@@ -27,7 +27,7 @@ var (
 	deployment = "deployment"
 )
 
-//NewResumeCommand resume deployment command
+// NewResumeCommand resume deployment command
 func NewResumeCommand() cli.Command {
 	return cli.Command{
 		Name:  "resume",

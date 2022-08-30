@@ -16,10 +16,14 @@ package models
 import "time"
 
 const (
+	// PermBackendTypeDefault TODO
 	PermBackendTypeDefault = iota + 1
+	// PermBackendTypeSyncOnce TODO
 	PermBackendTypeSyncOnce
 
+	// ClusterPermNameView TODO
 	ClusterPermNameView = "view"
+	// ClusterPermNameEdit TODO
 	ClusterPermNameEdit = "edit"
 )
 

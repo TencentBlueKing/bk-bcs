@@ -53,6 +53,7 @@ func (h *NetServiceHandler) Delete(data interface{}) error {
 	return nil
 }
 
+// Update xxx
 // Delete handle delete event for netservice resources.
 func (h *NetServiceHandler) Update(data interface{}) error {
 	started := time.Now()

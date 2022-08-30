@@ -13,7 +13,7 @@
 
 package qcloud
 
-//Parameters from environment variable
+// Parameters from environment variable
 const (
 
 	// ConfigBcsClbRegion lb region from environment variable

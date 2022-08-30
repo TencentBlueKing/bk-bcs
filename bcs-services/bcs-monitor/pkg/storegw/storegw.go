@@ -11,6 +11,7 @@
  *
  */
 
+// Package storegw xxx
 package storegw
 
 import (
@@ -46,7 +47,8 @@ type StoreGW struct {
 }
 
 // NewStoreGW :
-func NewStoreGW(ctx context.Context, logger log.Logger, reg *prometheus.Registry, gprcAdvertiseIP string, grpcAdvertisePortRangeStr string, confs []*config.StoreConf, storeFunc StoreFactory) (*StoreGW, error) {
+func NewStoreGW(ctx context.Context, logger log.Logger, reg *prometheus.Registry, gprcAdvertiseIP string,
+	grpcAdvertisePortRangeStr string, confs []*config.StoreConf, storeFunc StoreFactory) (*StoreGW, error) {
 	portRange, err := NewPortRange(grpcAdvertisePortRangeStr)
 	if err != nil {
 		return nil, err
@@ -108,7 +110,7 @@ func (s *StoreGW) Run() error {
 	return nil
 }
 
-// Shutdown
+// Shutdown xxx
 func (s *StoreGW) Shutdown(err error) {
 	s.stop()
 }

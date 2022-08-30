@@ -194,7 +194,7 @@ func (p *ClusterHourPolicy) ImplementPolicy(ctx context.Context, opts *types.Job
 		return
 	}
 	minuteMetric := minuteMetrics[0]
-	//统计上一个小时出现过的workload总数
+	// 统计上一个小时出现过的workload总数
 	hourBucket, _ := utils.GetBucketTime(opts.CurrentTime.Add(-1*time.Hour), types.DimensionHour)
 	workloadCount, err := p.store.GetWorkloadCount(ctx, opts, hourBucket, opts.CurrentTime.Add(-1*time.Hour))
 	if err != nil {

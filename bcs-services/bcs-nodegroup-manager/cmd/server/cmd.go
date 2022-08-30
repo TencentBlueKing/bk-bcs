@@ -40,7 +40,7 @@ func NewServerCommand() *cobra.Command {
 	http webhook for NodeGroup finnal desired node number.
 		`,
 		RunE: func(cmd *cobra.Command, args []string) error { // nolint
-			//loading configuration file for options
+			// loading configuration file for options
 			if err := loadConfigFile(configFile, option); err != nil {
 				fmt.Fprintf(os.Stderr, "server load json config file failure, %s\n", err.Error())
 				return err
@@ -65,7 +65,7 @@ func NewServerCommand() *cobra.Command {
 			return serv.Run()
 		},
 	}
-	//setting server configuration flag
+	// setting server configuration flag
 	cmd.Flags().StringVarP(&configFile, "config", "c", configFile, "server configuration json file")
 	return cmd
 }

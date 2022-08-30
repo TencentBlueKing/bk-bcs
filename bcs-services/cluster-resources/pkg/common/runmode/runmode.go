@@ -12,15 +12,16 @@
  * limitations under the License.
  */
 
+// Package runmode xxx
 package runmode
 
 const (
 	// Prod 运行模式
 	Prod = "Prod"
-	// Stag ...
+	// Stag xxx
 	Stag = "Stag"
-	// Dev ...
+	// Dev xxx
 	Dev = "Dev"
-	// UnitTest ...
+	// UnitTest xxx
 	UnitTest = "UnitTest"
 )

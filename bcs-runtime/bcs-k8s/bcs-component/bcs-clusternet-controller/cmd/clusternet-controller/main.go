@@ -143,7 +143,7 @@ func run() {
 		ClientConfig: cfg,
 	}
 	resyncDuration := time.Duration(resyncPeriod) * time.Second
-	//kubeClient := kubernetes.NewForConfigOrDie(rootClientBuilder.ConfigOrDie("kube-client"))
+	// kubeClient := kubernetes.NewForConfigOrDie(rootClientBuilder.ConfigOrDie("kube-client"))
 	clusternetClient := clusternet.NewForConfigOrDie(rootClientBuilder.ConfigOrDie("bcs-clusternet-controller-client"))
 	clusternetInformerFactory := informers.NewSharedInformerFactory(clusternetClient, resyncDuration)
 

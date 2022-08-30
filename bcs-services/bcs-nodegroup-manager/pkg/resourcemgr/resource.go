@@ -57,7 +57,7 @@ type ClientOptions struct {
 	Cache storage.Storage
 }
 
-//Client for resource-manager
+// Client for resource-manager
 type Client interface {
 	// ListResourcePools list all RessourcePool in resource-manager
 	ListResourcePools(option *ListOptions) ([]*storage.ResourcePool, error)
@@ -67,7 +67,7 @@ type Client interface {
 
 // New create resource-manager client instance
 func New(opt *ClientOptions) Client {
-	//init go-micro v2 client instance
+	// init go-micro v2 client instance
 	c := grpc.NewClient(
 		client.Registry(etcd.NewRegistry(
 			registry.Addrs(opt.Etcd...),
@@ -120,7 +120,7 @@ func (c *innerClient) GetResourcePool(poolID string, option *GetOptions) (*stora
 		blog.Errorf("get resource pool details failed, resource-manager logic err: %s", resp.GetMessage())
 		return nil, fmt.Errorf("resource-manager logic failure, %s", resp.GetMessage())
 	}
-	//convert details to local ResourcePool definition
+	// convert details to local ResourcePool definition
 	if len(resp.Data) == 0 {
 		blog.Errorf("resource-manager response empty Resource from ResourcePool %s", poolID)
 		return nil, fmt.Errorf("empty resources response")

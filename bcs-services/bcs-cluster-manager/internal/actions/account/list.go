@@ -48,8 +48,8 @@ func NewListAction(model store.ClusterManagerModel, iam iam.PermClient) *ListAct
 
 func (la *ListAction) listCloudAccount() error {
 	condM := make(operator.M)
-	//! we don't setting bson tag in proto file
-	//! all fields are in lowcase
+	// ! we don't setting bson tag in proto file
+	// ! all fields are in lowcase
 	if len(la.req.CloudID) != 0 {
 		condM["cloudid"] = la.req.CloudID
 	}
@@ -192,8 +192,8 @@ func NewListPermAction(model store.ClusterManagerModel) *ListPermDataAction {
 
 func (la *ListPermDataAction) listCloudAccount() error {
 	condEqual := make(operator.M)
-	//! we don't setting bson tag in proto file
-	//! all fields are in lowcase
+	// ! we don't setting bson tag in proto file
+	// ! all fields are in lowcase
 	if len(la.req.ProjectID) != 0 {
 		condEqual["projectid"] = la.req.ProjectID
 	}

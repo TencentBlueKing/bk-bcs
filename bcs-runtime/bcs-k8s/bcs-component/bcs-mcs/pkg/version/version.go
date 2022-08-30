@@ -11,6 +11,7 @@
  *
  */
 
+// Package version xxx
 package version
 
 import (

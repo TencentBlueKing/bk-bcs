@@ -29,6 +29,7 @@ var Codecs = serializer.NewCodecFactory(scheme)
 // ParameterCodec handles versioning of objects that are converted to query parameters.
 var ParameterCodec = runtime.NewParameterCodec(scheme)
 
+// init xxx
 // Unlike other API groups, meta internal knows about all meta external versions, but keeps
 // the logic for conversion private.
 func init() {

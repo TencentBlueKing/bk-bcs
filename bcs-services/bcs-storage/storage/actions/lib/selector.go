@@ -20,6 +20,7 @@ import (
 var opCharacterSet = []byte{'=', '!'}
 var specialCharacterSet = []byte{',', '+', '(', ')'}
 
+// Selector xxx
 type Selector struct {
 	Prefix      string
 	SelectorStr string
@@ -27,6 +28,7 @@ type Selector struct {
 	conditions  []*operator.Condition
 }
 
+// GetNextCondition xxx
 // TODO: error operation
 // GetNextCondition get next label selector condition unit
 func (s *Selector) GetNextCondition() *operator.Condition {

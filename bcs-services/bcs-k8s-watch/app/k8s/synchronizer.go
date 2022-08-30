@@ -38,7 +38,7 @@ type Synchronizer struct {
 	// id of current cluster.
 	clusterID string
 
-	//指定单个要同步的namespace
+	// 指定单个要同步的namespace
 	namespace string
 
 	// watchers that products metadata.
@@ -52,7 +52,8 @@ type Synchronizer struct {
 }
 
 // NewSynchronizer creates a new Synchronizer instance.
-func NewSynchronizer(clusterID string, namespace string, watchers, crdWatchers map[string]WatcherInterface, storageService *bcs.InnerService) *Synchronizer {
+func NewSynchronizer(clusterID string, namespace string, watchers, crdWatchers map[string]WatcherInterface,
+	storageService *bcs.InnerService) *Synchronizer {
 	return &Synchronizer{
 		clusterID:      clusterID,
 		watchers:       watchers,
@@ -113,7 +114,7 @@ func (sync *Synchronizer) RunOnce() error {
 			namespaces = namespacesWatcher.(*Watcher).store.ListKeys()
 		}
 	} else {
-		//如果指定了namespace
+		// 如果指定了namespace
 		namespaces = []string{sync.namespace}
 	}
 
@@ -292,6 +293,7 @@ func (sync *Synchronizer) doSync(localKeys []string, data []map[string]string, w
 	}
 }
 
+// doRequest xxx
 // get resource from storage, namespace can be empty.
 func (sync *Synchronizer) doRequest(namespace string, kind string) (data []interface{}, err error) {
 	targets := sync.storageService.Servers()

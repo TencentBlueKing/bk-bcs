@@ -95,7 +95,8 @@ func (pr PermissionRequest) MakeRequestWithResources(actionID string, nodes []Re
 }
 
 // MakeRequestMultiActionResources make request for multi actions and signal resource
-func (pr PermissionRequest) MakeRequestMultiActionResources(actions []string, nodes []ResourceNode) iam.MultiActionRequest {
+func (pr PermissionRequest) MakeRequestMultiActionResources(actions []string,
+	nodes []ResourceNode) iam.MultiActionRequest {
 	subject := iam.Subject{
 		Type: "user",
 		ID:   pr.UserName,
@@ -145,7 +146,8 @@ type RelatedResourceType struct {
 }
 
 // BuildRelatedResource build level instances
-func (rrt RelatedResourceType) BuildRelatedResource(instances []iam.ApplicationResourceInstance) iam.ApplicationRelatedResourceType {
+func (rrt RelatedResourceType) BuildRelatedResource(
+	instances []iam.ApplicationResourceInstance) iam.ApplicationRelatedResourceType {
 	return iam.ApplicationRelatedResourceType{
 		SystemID:  rrt.SystemID,
 		Type:      rrt.RType,
@@ -177,8 +179,9 @@ type ApplicationAction struct {
 	RelatedResources []iam.ApplicationRelatedResourceType
 }
 
-// BuildRelatedResourceTypes: instanceList for same resourceType resource
-func BuildRelatedResourceTypes(systemID, resourceType string, instanceList []iam.ApplicationResourceInstance) iam.ApplicationRelatedResourceType {
+// BuildRelatedResourceTypes : instanceList for same resourceType resource
+func BuildRelatedResourceTypes(systemID, resourceType string,
+	instanceList []iam.ApplicationResourceInstance) iam.ApplicationRelatedResourceType {
 	return iam.ApplicationRelatedResourceType{
 		SystemID:  systemID,
 		Type:      resourceType,
@@ -225,7 +228,8 @@ type LevelResource struct {
 }
 
 // BuildAuthorizationScope 同一实例视图资源授权范围
-func BuildAuthorizationScope(resourceType TypeID, actions []ActionID, resourceLevel []LevelResource) AuthorizationScope {
+func BuildAuthorizationScope(resourceType TypeID, actions []ActionID,
+	resourceLevel []LevelResource) AuthorizationScope {
 	iamActions := make([]iam.Action, 0)
 	for i := range actions {
 		iamActions = append(iamActions, iam.Action{ID: string(actions[i])})
@@ -273,7 +277,7 @@ type AuthorizationScope struct {
 	Resources []ResourcePath `json:"resources"`
 }
 
-// Resource xxx
+// ResourcePath xxx
 type ResourcePath struct {
 	System string `json:"system"`
 	RType  string `json:"type"`

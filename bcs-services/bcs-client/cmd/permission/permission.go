@@ -11,6 +11,7 @@
  *
  */
 
+// Package permission xxx
 package permission
 
 import (
@@ -19,7 +20,7 @@ import (
 	"github.com/urfave/cli"
 )
 
-//NewPermissionCommand sub command permission registration
+// NewPermissionCommand sub command permission registration
 func NewPermissionCommand() cli.Command {
 	return cli.Command{
 		Name:  "permission",

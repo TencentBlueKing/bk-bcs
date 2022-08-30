@@ -19,6 +19,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/schetypes"
 )
 
+// CommitImage xxx
 func (b *backend) CommitImage(taskgroup, image, url string) (*types.BcsMessage, error) {
 
 	taskGroup, err := b.store.FetchTaskGroup(taskgroup)

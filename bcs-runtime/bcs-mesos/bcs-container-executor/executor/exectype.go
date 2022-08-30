@@ -17,18 +17,19 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/mesosproto/mesos"
 )
 
-//Executor callback interface to be implemented by frameworks' executors. Note
-//that only one callback will be invoked at a time, so it is not
-//recommended that you block within a callback because it may cause a
-//deadlock.
+// Executor callback interface to be implemented by frameworks' executors. Note
+// that only one callback will be invoked at a time, so it is not
+// recommended that you block within a callback because it may cause a
+// deadlock.
 //
-//Each callback includes an instance to the executor driver that was
-//used to run this executor. The driver will not change for the
-//duration of an executor (i.e., from the point you do
-//ExecutorDriver.Start() to the point that ExecutorDriver.Join()
-//returns). This is intended for convenience so that an executor
-//doesn't need to store a pointer to the driver itself.
+// Each callback includes an instance to the executor driver that was
+// used to run this executor. The driver will not change for the
+// duration of an executor (i.e., from the point you do
+// ExecutorDriver.Start() to the point that ExecutorDriver.Join()
+// returns). This is intended for convenience so that an executor
+// doesn't need to store a pointer to the driver itself.
 type Executor interface {
+	// Registered TODO
 	/**
 	 * Invoked once the executor driver has been able to successfully
 	 * connect with Mesos. In particular, a scheduler can pass some
@@ -37,17 +38,20 @@ type Executor interface {
 	 */
 	Registered(ExecutorDriver, *mesos.ExecutorInfo, *mesos.FrameworkInfo, *mesos.AgentInfo)
 
+	// Reregistered TODO
 	/**
 	 * Invoked when the executor re-registers with a restarted slave.
 	 */
 	Reregistered(ExecutorDriver, *mesos.AgentInfo)
 
+	// Disconnected TODO
 	/**
 	 * Invoked when the executor becomes "disconnected" from the slave
 	 * (e.g., the slave is being restarted due to an upgrade).
 	 */
 	Disconnected(ExecutorDriver)
 
+	// LaunchTask TODO
 	/**
 	 * Invoked when a task has been launched on this executor (initiated
 	 * via SchedulerDriver.LaunchTasks). Note that this task can be realized
@@ -57,6 +61,7 @@ type Executor interface {
 	 */
 	LaunchTask(ExecutorDriver, *mesos.TaskInfo)
 
+	// LaunchTaskGroup TODO
 	/**
 	 * Invoked when a task has been launched on this executor (initiated
 	 * via SchedulerDriver.LaunchTasks). Note that this task can be realized
@@ -66,6 +71,7 @@ type Executor interface {
 	 */
 	LaunchTaskGroup(ExecutorDriver, *mesos.TaskGroupInfo)
 
+	// KillTask TODO
 	/**
 	 * Invoked when a task running within this executor has been killed
 	 * (via SchedulerDriver.KillTask). Note that no status update will
@@ -75,6 +81,7 @@ type Executor interface {
 	 */
 	KillTask(ExecutorDriver, *mesos.TaskID)
 
+	// FrameworkMessage TODO
 	/**
 	 * Invoked when a framework message has arrived for this
 	 * executor. These messages are best effort; do not expect a
@@ -82,6 +89,7 @@ type Executor interface {
 	 */
 	FrameworkMessage(ExecutorDriver, string)
 
+	// Shutdown TODO
 	/**
 	 * Invoked when the executor should terminate all of its currently
 	 * running tasks. Note that after Mesos has determined that an
@@ -91,6 +99,7 @@ type Executor interface {
 	 */
 	Shutdown(ExecutorDriver)
 
+	// Error TODO
 	/**
 	 * Invoked when a fatal error has occured with the executor and/or
 	 * executor driver. The driver will be aborted BEFORE invoking this
@@ -98,31 +107,35 @@ type Executor interface {
 	 */
 	Error(ExecutorDriver, string)
 
+	// SetDriver TODO
 	/**
 	 * driver injection
 	 */
 	SetDriver(driver ExecutorDriver)
 }
 
-//ExecutorDriver interface for connecting an executor to Mesos. This
-//interface is used both to manage the executor's lifecycle (start
-//it, stop it, or wait for it to finish) and to interact with Mesos
-//(e.g., send status updates, send framework messages, etc.).
-//A driver method is expected to fail-fast and return an error when possible.
-//Other internal errors (or remote error) that occur asynchronously are handled
-//using the the Executor.Error() callback.
+// ExecutorDriver interface for connecting an executor to Mesos. This
+// interface is used both to manage the executor's lifecycle (start
+// it, stop it, or wait for it to finish) and to interact with Mesos
+// (e.g., send status updates, send framework messages, etc.).
+// A driver method is expected to fail-fast and return an error when possible.
+// Other internal errors (or remote error) that occur asynchronously are handled
+// using the the Executor.Error() callback.
 type ExecutorDriver interface {
+	// Start TODO
 	/**
 	 * Starts the executor driver. This needs to be called before any
 	 * other driver calls are made.
 	 */
 	Start() (mesos.Status, error)
 
+	// Stop TODO
 	/**
 	 * Stops the executor driver.
 	 */
 	Stop() (mesos.Status, error)
 
+	// Abort TODO
 	/**
 	 * Aborts the driver so that no more callbacks can be made to the
 	 * executor. The semantics of abort and stop have deliberately been
@@ -134,6 +147,7 @@ type ExecutorDriver interface {
 	 */
 	Abort() (mesos.Status, error)
 
+	// Join TODO
 	/**
 	 * Waits for the driver to be stopped or aborted, possibly
 	 * blocking the calling goroutine indefinitely. The return status of
@@ -142,11 +156,13 @@ type ExecutorDriver interface {
 	 */
 	Join() (mesos.Status, error)
 
+	// Run TODO
 	/**
 	 * Starts and immediately joins (i.e., blocks on) the driver.
 	 */
 	Run() (mesos.Status, error)
 
+	// SendStatusUpdate TODO
 	/**
 	 * Sends a status update to the framework scheduler, retrying as
 	 * necessary until an acknowledgement has been received or the
@@ -156,6 +172,7 @@ type ExecutorDriver interface {
 	 */
 	SendStatusUpdate(*mesos.TaskStatus) (mesos.Status, error)
 
+	// SendFrameworkMessage TODO
 	/**
 	 * Sends a message to the framework scheduler. These messages are
 	 * best effort; do not expect a framework message to be
@@ -163,9 +180,9 @@ type ExecutorDriver interface {
 	 */
 	SendFrameworkMessage(string) (mesos.Status, error)
 
-	//Status return ExecutorDriver Status
+	// Status return ExecutorDriver Status
 	Status() mesos.Status
 
-	//ExecutorID get ExecutorID from mesos slave
+	// ExecutorID get ExecutorID from mesos slave
 	ExecutorID() string
 }

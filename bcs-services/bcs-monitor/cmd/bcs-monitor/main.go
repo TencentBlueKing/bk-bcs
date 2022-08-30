@@ -53,7 +53,7 @@ func runCmd(cmd *cobra.Command, cmdFunc CmdFunc) {
 	}
 }
 
-// 停止命令
+// stopCmd 停止命令
 func stopCmd(cmd *cobra.Command) {
 	_, _, opt := cmdOption(cmd)
 	opt.cancel()

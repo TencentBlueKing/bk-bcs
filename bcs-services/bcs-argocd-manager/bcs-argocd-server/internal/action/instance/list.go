@@ -67,7 +67,8 @@ func (action *ListArgocdInstancesAction) Handle(ctx context.Context,
 	return nil
 }
 
-func (action *ListArgocdInstancesAction) setResp(err common.ArgocdServerError, message string, instances *v1alpha1.ArgocdInstanceList) {
+func (action *ListArgocdInstancesAction) setResp(err common.ArgocdServerError, message string,
+	instances *v1alpha1.ArgocdInstanceList) {
 	code := err.Int32()
 	msg := err.ErrorMessage(message)
 	action.resp.Code = &code

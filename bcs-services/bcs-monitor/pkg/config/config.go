@@ -11,6 +11,7 @@
  *
  */
 
+// Package config xxx
 package config
 
 import (
@@ -77,7 +78,7 @@ func (c *Configuration) init() error {
 	return nil
 }
 
-// newConfigurations 新增配置
+// newConfiguration s 新增配置
 func newConfiguration() (*Configuration, error) {
 	c := &Configuration{}
 
@@ -123,7 +124,7 @@ func newConfiguration() (*Configuration, error) {
 // G : Global Configurations
 var G *Configuration
 
-// 初始化
+// init 初始化
 func init() {
 	g, err := newConfiguration()
 	if err != nil {

@@ -11,6 +11,7 @@
  *
  */
 
+// Package options xxx
 package options
 
 import (
@@ -58,9 +59,13 @@ func (o *Options) AddFlags(fs *pflag.FlagSet) {
 	fs.IntVar(&o.HealthCheckPort, "health-check-port", defaultHealthCheckPort,
 		"The port on which to serve health checks.")
 	fs.IntVar(&o.MetricsPort, "metrics-port", defaultMetricsPort, "The port on which to serve metrics.")
-	fs.BoolVar(&o.LeaderElection.LeaderElect, "leader-elect", true, "Start a leader election client and gain leadership before executing the main loop. Enable this when running replicated components for high availability.")
-	fs.StringVar(&o.LeaderElection.ResourceNamespace, "leader-elect-resource-namespace", "kube-system", "The namespace of resource object that is used for locking during leader election.")
+	fs.BoolVar(&o.LeaderElection.LeaderElect, "leader-elect", true,
+		"Start a leader election client and gain leadership before executing the main loop. Enable this when running replicated components for high availability.")
+	fs.StringVar(&o.LeaderElection.ResourceNamespace, "leader-elect-resource-namespace", "kube-system",
+		"The namespace of resource object that is used for locking during leader election.")
 	fs.StringVar(&o.AgentID, "agent-id", "", "The agent id of MCS agent.")
-	fs.StringVar(&o.KubeconfigPath, "kubeconfig", "", "The path to the kubeconfig file to use for talking to the apiserver.")
-	fs.StringVar(&o.ParentKubeconfigPath, "parent-kubeconfig", "", "The path to the kubeconfig file to use for talking to the apiserver. for parent cluster.")
+	fs.StringVar(&o.KubeconfigPath, "kubeconfig", "",
+		"The path to the kubeconfig file to use for talking to the apiserver.")
+	fs.StringVar(&o.ParentKubeconfigPath, "parent-kubeconfig", "",
+		"The path to the kubeconfig file to use for talking to the apiserver. for parent cluster.")
 }

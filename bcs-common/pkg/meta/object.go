@@ -19,13 +19,13 @@ import (
 	"time"
 )
 
-//ObjectNewFn return target data object pointer
+// ObjectNewFn return target data object pointer
 type ObjectNewFn func() Object
 
-//ObjectListNewFn creat Object List
+// ObjectListNewFn creat Object List
 type ObjectListNewFn func(raw []byte) ([]Object, error)
 
-//Object offer common interface to access all data objects
+// Object offer common interface to access all data objects
 type Object interface {
 	GetName() string
 	SetName(name string)
@@ -41,15 +41,17 @@ type Object interface {
 	SetClusterName(clusterName string)
 }
 
-//List list for objects
+// List list for objects
 type List interface {
 	GetItems() []Object
 	SetItems([]Object)
 }
 
 const (
+	// NamespaceIndex TODO
 	NamespaceIndex string = "namespace"
-	//only taskgroup has the application index
+	// ApplicationIndex TODO
+	// only taskgroup has the application index
 	ApplicationIndex string = "application"
 )
 
@@ -71,8 +73,8 @@ func NamespaceIndexFunc(obj interface{}) ([]string, error) {
 func ApplicationIndexFunc(obj interface{}) ([]string, error) {
 	switch t := obj.(type) {
 	case Object:
-		//name: mars-test-lb-0 and mars-test-lb is appname
-		//application is appname.namespace
+		// name: mars-test-lb-0 and mars-test-lb is appname
+		// application is appname.namespace
 		index := strings.LastIndex(t.GetName(), "-")
 		if index == -1 {
 			return nil, fmt.Errorf("Taskgroup(%s:%s) is invalid", t.GetNamespace(), t.GetName())

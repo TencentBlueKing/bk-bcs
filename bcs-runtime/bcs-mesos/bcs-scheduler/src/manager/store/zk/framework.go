@@ -20,6 +20,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/schetypes"
 )
 
+// SaveFrameworkID xxx
 func (store *managerStore) SaveFrameworkID(frameworkId string) error {
 
 	framework := &types.Framework{ID: frameworkId}
@@ -34,6 +35,7 @@ func (store *managerStore) SaveFrameworkID(frameworkId string) error {
 	return store.Db.Insert(path, string(data))
 }
 
+// FetchFrameworkID xxx
 func (store *managerStore) FetchFrameworkID() (string, error) {
 
 	path := "/" + bcsRootNode + "/" + frameWorkNode
@@ -53,6 +55,7 @@ func (store *managerStore) FetchFrameworkID() (string, error) {
 	return framework.ID, nil
 }
 
+// HasFrameworkID xxx
 func (store *managerStore) HasFrameworkID() (bool, error) {
 	_, err := store.FetchFrameworkID()
 	if err != nil {

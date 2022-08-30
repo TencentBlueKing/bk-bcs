@@ -32,12 +32,16 @@ import (
 )
 
 const (
-	RequestMethodGET  = "GET"
+	// RequestMethodGET xxx
+	RequestMethodGET = "GET"
+	// RequestMethodPOST xxx
 	RequestMethodPOST = "POST"
 
+	// SignatureMethodHMacSha256 xxx
 	SignatureMethodHMacSha256 = "HmacSHA256"
 )
 
+// Client xxx
 type Client struct {
 	*http.Client
 
@@ -45,6 +49,7 @@ type Client struct {
 	opts       Opts
 }
 
+// Opts xxx
 type Opts struct {
 	Method          string
 	Region          string
@@ -56,6 +61,7 @@ type Opts struct {
 	Logger *logrus.Logger
 }
 
+// CredentialInterface xxx
 type CredentialInterface interface {
 	GetSecretId() (string, error)
 	GetSecretKey() (string, error)
@@ -63,25 +69,31 @@ type CredentialInterface interface {
 	Values() (CredentialValues, error)
 }
 
+// CredentialValues xxx
 type CredentialValues map[string]string
 
+// Credential xxx
 type Credential struct {
 	SecretId  string
 	SecretKey string
 }
 
+// GetSecretId xxx
 func (cred Credential) GetSecretId() (string, error) {
 	return cred.SecretId, nil
 }
 
+// GetSecretKey xxx
 func (cred Credential) GetSecretKey() (string, error) {
 	return cred.SecretKey, nil
 }
 
+// Values xxx
 func (cred Credential) Values() (CredentialValues, error) {
 	return CredentialValues{}, nil
 }
 
+// NewClient xxx
 func NewClient(credential CredentialInterface, opts Opts) (*Client, error) {
 	if opts.Method == "" {
 		opts.Method = RequestMethodGET
@@ -109,6 +121,7 @@ func NewClient(credential CredentialInterface, opts Opts) (*Client, error) {
 	}, nil
 }
 
+// Invoke xxx
 func (client *Client) Invoke(action string, args interface{}, response interface{}) error {
 	switch client.opts.Method {
 	case "GET":
@@ -150,6 +163,7 @@ func (client *Client) signGetRequest(secretId, secretKey string, values *url.Val
 	return b64Encoded
 }
 
+// InvokeWithGET xxx
 func (client *Client) InvokeWithGET(action string, args interface{}, response interface{}) error {
 	reqValues := url.Values{}
 
@@ -221,7 +235,8 @@ func (client *Client) InvokeWithGET(action string, args interface{}, response in
 		return makeClientError(err)
 	}
 
-	if legacyErrorResponse.Code != NoErr || (legacyErrorResponse.CodeDesc != "" && legacyErrorResponse.CodeDesc != NoErrCodeDesc) {
+	if legacyErrorResponse.Code != NoErr || (legacyErrorResponse.CodeDesc != "" &&
+		legacyErrorResponse.CodeDesc != NoErrCodeDesc) {
 		client.opts.Logger.WithField("Action", action).Errorf(
 			"%s %s %d %s %v", "GET", req.URL, resp.StatusCode, body, legacyErrorResponse,
 		)
@@ -242,6 +257,7 @@ func (client *Client) InvokeWithGET(action string, args interface{}, response in
 	return nil
 }
 
+// InvokeWithPOST xxx
 func (client *Client) InvokeWithPOST(action string, args interface{}, response interface{}) error {
 	return nil
 }

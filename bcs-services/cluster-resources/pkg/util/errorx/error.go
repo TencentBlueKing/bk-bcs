@@ -22,17 +22,17 @@ type BaseError struct {
 	err  error
 }
 
-// Error ...
+// Error xxx
 func (e *BaseError) Error() string {
 	return e.err.Error()
 }
 
-// Code ...
+// Code xxx
 func (e *BaseError) Code() int {
 	return e.code
 }
 
-// New ...
+// New xxx
 func New(code int, msg string, vars ...interface{}) error {
 	return &BaseError{code: code, err: fmt.Errorf(msg, vars...)}
 }

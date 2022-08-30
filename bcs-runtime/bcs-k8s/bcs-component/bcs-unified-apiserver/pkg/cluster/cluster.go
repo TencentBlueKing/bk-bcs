@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package cluster xxx
 package cluster
 
 import (
@@ -64,7 +65,8 @@ func ClusterFactory(clusterId string) (rest.Handler, error) {
 
 // ServeHTTP serves http request
 func (h *Handler) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
-	zap.L().Info("receive request", zap.String("client", req.RemoteAddr), zap.String("method", req.Method), zap.String("path", req.URL.Path))
+	zap.L().Info("receive request", zap.String("client", req.RemoteAddr), zap.String("method", req.Method),
+		zap.String("path", req.URL.Path))
 
 	vars := mux.Vars(req)
 	clusterId := config.G.APIServer.ClusterId

@@ -185,7 +185,7 @@ func (a *GeneralController) Run(stopCh <-chan struct{}) {
 	}
 
 	// start a single worker (we may wish to start more in the future)
-	//go wait.Until(a.worker, time.Second, stopCh)
+	// go wait.Until(a.worker, time.Second, stopCh)
 
 	// Launch workers to process gpa
 	for i := 0; i < a.workers; i++ {
@@ -195,11 +195,13 @@ func (a *GeneralController) Run(stopCh <-chan struct{}) {
 	<-stopCh
 }
 
+// updateGPA xxx
 // obj could be an *v1.GeneralPodAutoscaler, or a DeletionFinalStateUnknown marker item.
 func (a *GeneralController) updateGPA(old, cur interface{}) {
 	a.enqueueGPA(cur)
 }
 
+// enqueueGPA xxx
 // obj could be an *v1.GeneralPodAutoscaler, or a DeletionFinalStateUnknown marker item.
 func (a *GeneralController) enqueueGPA(obj interface{}) {
 	key, err := cache.DeletionHandlingMetaNamespaceKeyFunc(obj)
@@ -492,6 +494,7 @@ func (a *GeneralController) computeStatusForResourceMG(
 		metricNameProposal, autoscaling.GeneralPodAutoscalerCondition{}, nil
 }
 
+// computeReplicasForMetric xxx
 // Computes the desired number of replicas for a specific gpa and metric specification,
 // returning the metric status and a proposed condition to be set on the GPA object.
 func (a *GeneralController) computeReplicasForMetric(
@@ -1070,7 +1073,7 @@ func (a *GeneralController) reconcileAutoscaler(gpa *autoscaling.GeneralPodAutos
 		}
 		klog.V(4).Infof("All-Mode: the desired replicas is %d", metricDesiredReplicas)
 
-		//Record event when the metricDesiredReplicas is greater than gpa.Spec.MaxReplicas
+		// Record event when the metricDesiredReplicas is greater than gpa.Spec.MaxReplicas
 		if metricDesiredReplicas > gpa.Spec.MaxReplicas {
 			a.eventRecorder.Eventf(
 				gpa,
@@ -1111,7 +1114,8 @@ func (a *GeneralController) reconcileAutoscaler(gpa *autoscaling.GeneralPodAutos
 		startTime := time.Now()
 		_, err = a.scaleNamespacer.Scales(gpa.Namespace).Update(targetGR, scale)
 		if err != nil {
-			metricsServer.RecordScalerUpdateDuration(gpa.Namespace, gpa.Name, getTargetRefKey(gpa), "failure", time.Since(startTime))
+			metricsServer.RecordScalerUpdateDuration(gpa.Namespace, gpa.Name, getTargetRefKey(gpa), "failure",
+				time.Since(startTime))
 			a.eventRecorder.Eventf(gpa, v1.EventTypeWarning, "FailedRescale",
 				"New size: %d; reason: %s; error: %v", desiredReplicas, rescaleReason, err.Error())
 			setCondition(gpa, autoscaling.AbleToScale, v1.ConditionFalse, "FailedUpdateScale",
@@ -1122,7 +1126,8 @@ func (a *GeneralController) reconcileAutoscaler(gpa *autoscaling.GeneralPodAutos
 			}
 			return fmt.Errorf("failed to rescale %s: %v", reference, err)
 		}
-		metricsServer.RecordScalerUpdateDuration(gpa.Namespace, gpa.Name, getTargetRefKey(gpa), "success", time.Since(startTime))
+		metricsServer.RecordScalerUpdateDuration(gpa.Namespace, gpa.Name, getTargetRefKey(gpa), "success",
+			time.Since(startTime))
 		setCondition(gpa, autoscaling.AbleToScale, v1.ConditionTrue, "SucceededRescale",
 			"the GPA controller was able to update the target scale to %d", desiredReplicas)
 		a.eventRecorder.Eventf(gpa, v1.EventTypeNormal, "SuccessfulRescale", "New size: %d; reason: %s",
@@ -1172,7 +1177,7 @@ func (a *GeneralController) updateLabelsIfNeeded(gpa *autoscaling.GeneralPodAuto
 	return err
 }
 
-// stabilizeRecommendation:
+// stabilizeRecommendation :
 // - replaces old recommendation with the newest recommendation,
 // - returns max of recommendations that are not older than downscaleStabilisationWindow.
 func (a *GeneralController) stabilizeRecommendation(key string, prenormalizedDesiredReplicas int32) int32 {
@@ -1578,7 +1583,7 @@ func calculateScaleUpLimitWithSR(currentReplicas int32, scaleEvents []timestampe
 
 // calculateScaleDownLimitWithB 原方法名 calculateScaleDownLimitWithBehaviors
 //
-//calculateScaleDownLimitWithB returns the maximum number of pods
+// calculateScaleDownLimitWithB returns the maximum number of pods
 // that could be deleted for the given GPAScalingRules
 func calculateScaleDownLimitWithB(currentReplicas int32, scaleEvents []timestampedScaleEvent,
 	scalingRules *autoscaling.GPAScalingRules) int32 {

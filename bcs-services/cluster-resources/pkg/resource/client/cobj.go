@@ -33,23 +33,23 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/slice"
 )
 
-// CRDClient ...
+// CRDClient xxx
 type CRDClient struct {
 	ResClient
 }
 
-// NewCRDClient ...
+// NewCRDClient xxx
 func NewCRDClient(ctx context.Context, conf *res.ClusterConf) *CRDClient {
 	CRDRes, _ := res.GetGroupVersionResource(ctx, conf, res.CRD, "")
 	return &CRDClient{ResClient{NewDynamicClient(conf), conf, CRDRes}}
 }
 
-// NewCRDCliByClusterID ...
+// NewCRDCliByClusterID xxx
 func NewCRDCliByClusterID(ctx context.Context, clusterID string) *CRDClient {
 	return NewCRDClient(ctx, res.NewClusterConfig(clusterID))
 }
 
-// List ...
+// List xxx
 func (c *CRDClient) List(ctx context.Context, opts metav1.ListOptions) (map[string]interface{}, error) {
 	// 共享集群 CRD 不做权限检查，直接过滤出允许的数类
 	clusterInfo, err := cluster.FromContext(ctx)
@@ -80,7 +80,7 @@ func (c *CRDClient) List(ctx context.Context, opts metav1.ListOptions) (map[stri
 	return ret.UnstructuredContent(), nil
 }
 
-// Get ...
+// Get xxx
 func (c *CRDClient) Get(ctx context.Context, name string, opts metav1.GetOptions) (map[string]interface{}, error) {
 	// 共享集群 CRD 获取，如果在允许的数类内，不做权限检查
 	clusterInfo, err := cluster.FromContext(ctx)
@@ -106,7 +106,7 @@ func (c *CRDClient) Get(ctx context.Context, name string, opts metav1.GetOptions
 	return ret.UnstructuredContent(), nil
 }
 
-// Watch ...
+// Watch xxx
 func (c *CRDClient) Watch(
 	ctx context.Context, clusterType string, opts metav1.ListOptions,
 ) (watch.Interface, error) {
@@ -119,14 +119,14 @@ func IsSharedClusterEnabledCRD(name string) bool {
 	return slice.StringInSlice(name, conf.G.SharedCluster.EnabledCRDs)
 }
 
-// CRDWatcher ...
+// CRDWatcher xxx
 type CRDWatcher struct {
 	watch.Interface
 
 	clusterType string
 }
 
-// ResultChan ...
+// ResultChan xxx
 func (w *CRDWatcher) ResultChan() <-chan watch.Event {
 	if w.clusterType == cluster.ClusterTypeSingle {
 		return w.Interface.ResultChan()

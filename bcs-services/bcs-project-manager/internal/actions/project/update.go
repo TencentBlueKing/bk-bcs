@@ -31,7 +31,7 @@ import (
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/proto/bcsproject"
 )
 
-// UpdateAction ...
+// UpdateAction xxx
 type UpdateAction struct {
 	ctx   context.Context
 	model store.ProjectModel

@@ -128,12 +128,12 @@ func (m *NodeGroupCache) regenerateCacheForInternal() error {
 
 	newCache := make(map[InstanceRef]*NodeGroup)
 	newTypeCache := make(map[InstanceRef]CreationType)
-	//groupIds := make([]*string, 0)
+	// groupIds := make([]*string, 0)
 
 	for _, group := range m.registeredGroups {
 		klog.V(4).Infof("Refresh Regenerating NodeGroup information for %s", group.nodeGroupID)
 		groupID := group.nodeGroupID
-		//groupIds = append(groupIds, &groupID)
+		// groupIds = append(groupIds, &groupID)
 
 		ins, err := m.getNodes(groupID)
 		if err != nil {

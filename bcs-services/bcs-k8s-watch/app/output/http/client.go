@@ -49,43 +49,57 @@ type Client interface {
 const (
 	// ResourceTypeEvent is resource type of event.
 	ResourceTypeEvent = "Event"
+	// NamespaceScopeURLFmt xxx
 	// bcsstorage/v1/k8s/dynamic/namespace_resources/clusters/{clusterId}/namespaces/{namespace}/{resourceType}/{resourceName}
 	NamespaceScopeURLFmt = "%s/bcsstorage/v1/k8s/dynamic/namespace_resources/clusters/%s/namespaces/%s/%s/%s"
+	// HandlerGetNamespaceName xxx
 	// handler namespace type name resource
 	HandlerGetNamespaceName = "k8s_cluster_namespace_type_name"
 
+	// ListNamespaceScopeURLFmt xxx
 	// bcsstorage/v1/k8s/dynamic/namespace_resources/clusters/{clusterId}/namespaces/{namespace}/{resourceType}
 	ListNamespaceScopeURLFmt = "%s/bcsstorage/v1/k8s/dynamic/namespace_resources/clusters/%s/namespaces/%s/%s"
+	// HandlerListNamespaceName xxx
 	// handler namespace type resource
 	HandlerListNamespaceName = "k8s_cluster_namespace_type"
 
+	// ClusterScopeURLFmt xxx
 	// bcsstorage/v1/k8s/dynamic/cluster_resources/clusters/{clusterId}/{resourceType}/{resourceName}
 	ClusterScopeURLFmt = "%s/bcsstorage/v1/k8s/dynamic/cluster_resources/clusters/%s/%s/%s"
+	// HandlerGetClusterName xxx
 	// handler cluster type resource
 	HandlerGetClusterName = "k8s_cluster_type_name"
 
+	// ListClusterScopeURLFmt xxx
 	// bcsstorage/v1/k8s/dynamic/cluster_resources/clusters/{clusterId}/{resourceType}
 	ListClusterScopeURLFmt = "%s/bcsstorage/v1/k8s/dynamic/cluster_resources/clusters/%s/%s"
+	// HandlerListClusterName xxx
 	// handler cluster resource
 	HandlerListClusterName = "k8s_cluster_type"
 
+	// EventScopeURLFmt xxx
 	// event url
 	EventScopeURLFmt = "%s/bcsstorage/v1/events"
+	// HandlerEventName xxx
 	// handler event name
 	HandlerEventName = "events"
 
+	// StorageRequestTimeoutSeconds xxx
 	// request timeout
 	StorageRequestTimeoutSeconds = 5
 
 	// StorageRequestLimit is max entries of request.
 	StorageRequestLimit = 500
 
+	// NamespaceScopeWatchURLFmt xxx
 	// bcsstorage/v1/k8s/watch/clusters/{clusterId}/namespaces/{namespace}/{resourceType}/{resourceName}
 	NamespaceScopeWatchURLFmt = "%s/bcsstorage/v1/k8s/watch/clusters/%s/namespaces/%s/%s/%s"
+	// HandlerWatchNamespaceName xxx
 	// handler watch namespace name
 	HandlerWatchNamespaceName = "k8s_watch_cluster_namespace_type_name"
 )
 
+// WatchKindSet xxx
 var WatchKindSet = map[string]struct{}{
 	"ExportService": {},
 }
@@ -132,12 +146,14 @@ func (client *StorageClient) GetURL() (string, string) {
 	// namespace resource
 	if client.Namespace != "" {
 		return fmt.Sprintf(
-				NamespaceScopeURLFmt, client.HTTPClientConfig.URL, client.ClusterID, client.Namespace, client.ResourceType, client.ResourceName),
+				NamespaceScopeURLFmt, client.HTTPClientConfig.URL, client.ClusterID, client.Namespace, client.ResourceType,
+				client.ResourceName),
 			HandlerGetNamespaceName
 	}
 
 	// cluster resource
-	return fmt.Sprintf(ClusterScopeURLFmt, client.HTTPClientConfig.URL, client.ClusterID, client.ResourceType, client.ResourceName), HandlerGetClusterName
+	return fmt.Sprintf(ClusterScopeURLFmt, client.HTTPClientConfig.URL, client.ClusterID, client.ResourceType,
+		client.ResourceName), HandlerGetClusterName
 }
 
 // GetBody get body
@@ -311,7 +327,8 @@ func (client *StorageClient) PUT(data interface{}) (storageResp StorageResponse,
 		if err != nil {
 			glog.Errorf("method=PUT url=%s, body=%v, errors=%s, resp=%v, storageResp=%v", url, body, errs, resp, storageResp)
 		} else {
-			glog.Debug(fmt.Sprintf("method=PUT url=%s, body=%s, errors=%s, resp=%v, storageResp=%v", url, string(debugBody), errs, resp, storageResp))
+			glog.Debug(fmt.Sprintf("method=PUT url=%s, body=%s, errors=%s, resp=%v, storageResp=%v", url, string(debugBody),
+				errs, resp, storageResp))
 		}
 		status = metrics.ErrStatus
 	}

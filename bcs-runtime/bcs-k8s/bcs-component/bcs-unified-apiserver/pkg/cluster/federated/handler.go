@@ -116,7 +116,7 @@ func (h *Handler) isAllowedNamespaceOp(c *rest.RequestContext) bool {
 	return true
 }
 
-// ServeHTTP serves http request
+// Serve HTTP serves http request
 func (h *Handler) Serve(c *rest.RequestContext) {
 	err := rest.ErrInit
 

@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package base xxx
 package base
 
 import (
@@ -54,36 +55,63 @@ func (n *NodeInfo) PromSeries(t time.Time) []*prompb.TimeSeries {
 	return series
 }
 
-// MetricHandler
+// MetricHandler xxx
 type MetricHandler interface {
-	GetClusterCPUTotal(ctx context.Context, projectId, clusterId string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error)
-	GetClusterCPUUsed(ctx context.Context, projectId, clusterId string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error)
-	GetClusterCPUUsage(ctx context.Context, projectId, clusterId string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error)
-	GetClusterMemoryTotal(ctx context.Context, projectId, clusterId string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error)
-	GetClusterMemoryUsed(ctx context.Context, projectId, clusterId string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error)
-	GetClusterMemoryUsage(ctx context.Context, projectId, clusterId string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error)
-	GetClusterDiskTotal(ctx context.Context, projectId, clusterId string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error)
-	GetClusterDiskUsed(ctx context.Context, projectId, clusterId string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error)
-	GetClusterDiskUsage(ctx context.Context, projectId, clusterId string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error)
+	GetClusterCPUTotal(ctx context.Context, projectId, clusterId string, start, end time.Time,
+		step time.Duration) ([]*prompb.TimeSeries, error)
+	GetClusterCPUUsed(ctx context.Context, projectId, clusterId string, start, end time.Time,
+		step time.Duration) ([]*prompb.TimeSeries, error)
+	GetClusterCPUUsage(ctx context.Context, projectId, clusterId string, start, end time.Time,
+		step time.Duration) ([]*prompb.TimeSeries, error)
+	GetClusterMemoryTotal(ctx context.Context, projectId, clusterId string, start, end time.Time,
+		step time.Duration) ([]*prompb.TimeSeries, error)
+	GetClusterMemoryUsed(ctx context.Context, projectId, clusterId string, start, end time.Time,
+		step time.Duration) ([]*prompb.TimeSeries, error)
+	GetClusterMemoryUsage(ctx context.Context, projectId, clusterId string, start, end time.Time,
+		step time.Duration) ([]*prompb.TimeSeries, error)
+	GetClusterDiskTotal(ctx context.Context, projectId, clusterId string, start, end time.Time,
+		step time.Duration) ([]*prompb.TimeSeries, error)
+	GetClusterDiskUsed(ctx context.Context, projectId, clusterId string, start, end time.Time,
+		step time.Duration) ([]*prompb.TimeSeries, error)
+	GetClusterDiskUsage(ctx context.Context, projectId, clusterId string, start, end time.Time,
+		step time.Duration) ([]*prompb.TimeSeries, error)
 	GetNodeInfo(ctx context.Context, projectId, clusterId, ip string, t time.Time) (*NodeInfo, error)
-	GetNodeCPUUsage(ctx context.Context, projectId, clusterId, ip string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error)
-	GetNodeMemoryUsage(ctx context.Context, projectId, clusterId, ip string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error)
-	GetNodeDiskUsage(ctx context.Context, projectId, clusterId, ip string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error)
-	GetNodeDiskioUsage(ctx context.Context, projectId, clusterId, ip string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error)
-	GetNodeNetworkTransmit(ctx context.Context, projectId, clusterId, ip string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error)
-	GetNodeNetworkReceive(ctx context.Context, projectId, clusterId, ip string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error)
-	GetNodePodCount(ctx context.Context, projectId, clusterId, ip string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error)
-	GetNodeContainerCount(ctx context.Context, projectId, clusterId, ip string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error)
-	GetPodCPUUsage(ctx context.Context, projectId, clusterId, namespace string, podNameList []string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error)
-	GetPodMemoryUsed(ctx context.Context, projectId, clusterId, namespace string, podNameList []string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error)
-	GetPodNetworkReceive(ctx context.Context, projectId, clusterId, namespace string, podNameList []string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error)
-	GetPodNetworkTransmit(ctx context.Context, projectId, clusterId, namespace string, podNameList []string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error)
-	GetContainerCPUUsage(ctx context.Context, projectId, clusterId, namespace, podname string, containerNameList []string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error)
-	GetContainerMemoryUsed(ctx context.Context, projectId, clusterId, namespace, podname string, containerNameList []string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error)
-	GetContainerCPULimit(ctx context.Context, projectId, clusterId, namespace, podname string, containerNameList []string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error)
-	GetContainerMemoryLimit(ctx context.Context, projectId, clusterId, namespace, podname string, containerNameList []string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error)
-	GetContainerDiskReadTotal(ctx context.Context, projectId, clusterId, namespace, podname string, containerNameList []string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error)
-	GetContainerDiskWriteTotal(ctx context.Context, projectId, clusterId, namespace, podname string, containerNameList []string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error)
+	GetNodeCPUUsage(ctx context.Context, projectId, clusterId, ip string, start, end time.Time,
+		step time.Duration) ([]*prompb.TimeSeries, error)
+	GetNodeMemoryUsage(ctx context.Context, projectId, clusterId, ip string, start, end time.Time,
+		step time.Duration) ([]*prompb.TimeSeries, error)
+	GetNodeDiskUsage(ctx context.Context, projectId, clusterId, ip string, start, end time.Time,
+		step time.Duration) ([]*prompb.TimeSeries, error)
+	GetNodeDiskioUsage(ctx context.Context, projectId, clusterId, ip string, start, end time.Time,
+		step time.Duration) ([]*prompb.TimeSeries, error)
+	GetNodeNetworkTransmit(ctx context.Context, projectId, clusterId, ip string, start, end time.Time,
+		step time.Duration) ([]*prompb.TimeSeries, error)
+	GetNodeNetworkReceive(ctx context.Context, projectId, clusterId, ip string, start, end time.Time,
+		step time.Duration) ([]*prompb.TimeSeries, error)
+	GetNodePodCount(ctx context.Context, projectId, clusterId, ip string, start, end time.Time,
+		step time.Duration) ([]*prompb.TimeSeries, error)
+	GetNodeContainerCount(ctx context.Context, projectId, clusterId, ip string, start, end time.Time,
+		step time.Duration) ([]*prompb.TimeSeries, error)
+	GetPodCPUUsage(ctx context.Context, projectId, clusterId, namespace string, podNameList []string, start, end time.Time,
+		step time.Duration) ([]*prompb.TimeSeries, error)
+	GetPodMemoryUsed(ctx context.Context, projectId, clusterId, namespace string, podNameList []string, start,
+		end time.Time, step time.Duration) ([]*prompb.TimeSeries, error)
+	GetPodNetworkReceive(ctx context.Context, projectId, clusterId, namespace string, podNameList []string, start,
+		end time.Time, step time.Duration) ([]*prompb.TimeSeries, error)
+	GetPodNetworkTransmit(ctx context.Context, projectId, clusterId, namespace string, podNameList []string, start,
+		end time.Time, step time.Duration) ([]*prompb.TimeSeries, error)
+	GetContainerCPUUsage(ctx context.Context, projectId, clusterId, namespace, podname string, containerNameList []string,
+		start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error)
+	GetContainerMemoryUsed(ctx context.Context, projectId, clusterId, namespace, podname string,
+		containerNameList []string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error)
+	GetContainerCPULimit(ctx context.Context, projectId, clusterId, namespace, podname string, containerNameList []string,
+		start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error)
+	GetContainerMemoryLimit(ctx context.Context, projectId, clusterId, namespace, podname string,
+		containerNameList []string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error)
+	GetContainerDiskReadTotal(ctx context.Context, projectId, clusterId, namespace, podname string,
+		containerNameList []string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error)
+	GetContainerDiskWriteTotal(ctx context.Context, projectId, clusterId, namespace, podname string,
+		containerNameList []string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error)
 }
 
 // GetNodeMatch 按集群node节点正则匹配

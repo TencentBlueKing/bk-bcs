@@ -20,25 +20,25 @@ type Ing struct {
 	Spec     IngSpec  `structs:"spec"`
 }
 
-// IngSpec ...
+// IngSpec xxx
 type IngSpec struct {
 	RuleConf       IngRuleConf       `structs:"ruleConf"`
 	DefaultBackend IngDefaultBackend `structs:"defaultBackend"`
 	Cert           IngCert           `structs:"cert"`
 }
 
-// IngRuleConf ...
+// IngRuleConf xxx
 type IngRuleConf struct {
 	Rules []IngRule `structs:"rules"`
 }
 
-// IngRule ...
+// IngRule xxx
 type IngRule struct {
 	Domain string    `structs:"domain"`
 	Paths  []IngPath `structs:"paths"`
 }
 
-// IngPath ...
+// IngPath xxx
 type IngPath struct {
 	Type      string `structs:"type"`
 	Path      string `structs:"path"`
@@ -46,18 +46,18 @@ type IngPath struct {
 	Port      int64  `structs:"port"`
 }
 
-// IngDefaultBackend ...
+// IngDefaultBackend xxx
 type IngDefaultBackend struct {
 	TargetSVC string `structs:"targetSVC"`
 	Port      int64  `structs:"port"`
 }
 
-// IngCert ...
+// IngCert xxx
 type IngCert struct {
 	TLS []IngTLS `structs:"tls"`
 }
 
-// IngTLS ...
+// IngTLS xxx
 type IngTLS struct {
 	SecretName string   `structs:"secretName"`
 	Hosts      []string `structs:"hosts"`
@@ -69,7 +69,7 @@ type SVC struct {
 	Spec     SVCSpec  `structs:"spec"`
 }
 
-// SVCSpec ...
+// SVCSpec xxx
 type SVCSpec struct {
 	PortConf        SVCPortConf     `structs:"portConf"`
 	Selector        SVCSelector     `structs:"selector"`
@@ -77,13 +77,13 @@ type SVCSpec struct {
 	IP              IPConf          `structs:"ip"`
 }
 
-// SVCPortConf ...
+// SVCPortConf xxx
 type SVCPortConf struct {
 	Type  string    `structs:"type"`
 	Ports []SVCPort `structs:"ports"`
 }
 
-// SVCPort ...
+// SVCPort xxx
 type SVCPort struct {
 	Name       string `structs:"name"`
 	Port       int64  `structs:"port"`
@@ -92,18 +92,18 @@ type SVCPort struct {
 	NodePort   int64  `structs:"nodePort"`
 }
 
-// SVCSelector ...
+// SVCSelector xxx
 type SVCSelector struct {
 	Labels []LabelSelector `structs:"labels"`
 }
 
-// SessionAffinity ...
+// SessionAffinity xxx
 type SessionAffinity struct {
 	Type       string `structs:"type"`
 	StickyTime int64  `structs:"stickyTime"`
 }
 
-// IPConf ...
+// IPConf xxx
 type IPConf struct {
 	Address  string   `structs:"address"`
 	External []string `structs:"external"`
@@ -115,13 +115,13 @@ type EP struct {
 	Spec     EPSpec   `structs:"spec"`
 }
 
-// EPSpec ...
+// EPSpec xxx
 type EPSpec struct {
 	Address []string `structs:"address"`
 	Ports   []EPPort `structs:"ports"`
 }
 
-// EPPort ...
+// EPPort xxx
 type EPPort struct {
 	Name     string `structs:"name"`
 	Port     int64  `structs:"port"`

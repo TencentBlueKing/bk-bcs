@@ -18,6 +18,7 @@ type Node interface {
 	PrimaryKey() string
 	Payload() []byte
 
+	// OwnsPayload TODO
 	// It knows if given payload was genereate from node
 	OwnsPayload([]byte) bool
 }

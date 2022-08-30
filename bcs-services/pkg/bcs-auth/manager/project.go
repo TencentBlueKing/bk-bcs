@@ -208,7 +208,8 @@ func (p *Project) buildNamespaceViewScope() iam.AuthorizationScope {
 
 func (p *Project) buildNamespaceScopedScope() iam.AuthorizationScope {
 	return iam.BuildAuthorizationScope(namespace.SysNamespace, []iam.ActionID{
-		namespace.NameSpaceScopedCreate, namespace.NameSpaceScopedDelete, namespace.NameSpaceScopedUpdate, namespace.NameSpaceScopedView,
+		namespace.NameSpaceScopedCreate, namespace.NameSpaceScopedDelete, namespace.NameSpaceScopedUpdate,
+		namespace.NameSpaceScopedView,
 	}, []iam.LevelResource{
 		iam.LevelResource{
 			Type: string(project.SysProject),
@@ -243,7 +244,8 @@ func (p *Project) buildTemplateSetCreateScope() iam.AuthorizationScope {
 
 func (p *Project) buildTemplateSetOtherScope() iam.AuthorizationScope {
 	return iam.BuildAuthorizationScope(templateset.SysTemplateSet, []iam.ActionID{
-		templateset.TemplateSetView, templateset.TemplateSetCopy, templateset.TemplateSetUpdate, templateset.TemplateSetDelete, templateset.TemplateSetInstantiate,
+		templateset.TemplateSetView, templateset.TemplateSetCopy, templateset.TemplateSetUpdate,
+		templateset.TemplateSetDelete, templateset.TemplateSetInstantiate,
 	}, []iam.LevelResource{
 		iam.LevelResource{
 			Type: string(project.SysProject),

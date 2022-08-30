@@ -31,7 +31,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-// ListAction ...
+// ListAction xxx
 type ListAction struct {
 	ctx   context.Context
 	model store.ProjectModel
@@ -45,7 +45,7 @@ func NewListAction(model store.ProjectModel) *ListAction {
 	}
 }
 
-// Do ...
+// Do xxx
 func (la *ListAction) Do(ctx context.Context, req *proto.ListProjectsRequest) (*map[string]interface{}, error) {
 	la.ctx = ctx
 	la.req = req
@@ -99,7 +99,7 @@ func (la *ListAction) listProjects() ([]*pm.Project, int64, error) {
 	return projectList, total, nil
 }
 
-// ListAuthorizedProject ...
+// ListAuthorizedProject xxx
 type ListAuthorizedProject struct {
 	model store.ProjectModel
 }
@@ -111,8 +111,9 @@ func NewListAuthorizedProj(model store.ProjectModel) *ListAuthorizedProject {
 	}
 }
 
-// Do ...
-func (lap *ListAuthorizedProject) Do(ctx context.Context, req *proto.ListAuthorizedProjReq) (*map[string]interface{}, error) {
+// Do xxx
+func (lap *ListAuthorizedProject) Do(ctx context.Context, req *proto.ListAuthorizedProjReq) (*map[string]interface{},
+	error) {
 	username := auth.GetUserFromCtx(ctx)
 	ids, err := perm.ListAuthorizedProjectIDs(username)
 	// 没有权限的项目时，返回为空，并记录信息

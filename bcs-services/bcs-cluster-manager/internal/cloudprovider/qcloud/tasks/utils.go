@@ -84,7 +84,7 @@ func updateClusterStatus(clusterID string, status string) error {
 	return nil
 }
 
-// updateNodeStatus set node status
+// updateNodeStatusByIP set node status
 func updateNodeStatusByIP(ipList []string, status string) error {
 	if len(ipList) == 0 {
 		return nil
@@ -178,7 +178,8 @@ func importClusterNodesToCM(ctx context.Context, ipList []string, opt *cloudprov
 // releaseClusterCIDR release cluster CIDR
 func releaseClusterCIDR(cls *cmproto.Cluster) error {
 	if len(cls.NetworkSettings.ClusterIPv4CIDR) > 0 {
-		cidr, err := cloudprovider.GetStorageModel().GetTkeCidr(context.Background(), cls.VpcID, cls.NetworkSettings.ClusterIPv4CIDR)
+		cidr, err := cloudprovider.GetStorageModel().GetTkeCidr(context.Background(), cls.VpcID,
+			cls.NetworkSettings.ClusterIPv4CIDR)
 		if err != nil && !errors.Is(err, drivers.ErrTableRecordNotFound) {
 			return err
 		}

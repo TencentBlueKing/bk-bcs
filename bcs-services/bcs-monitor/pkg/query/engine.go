@@ -28,9 +28,11 @@ import (
 	"github.com/thanos-io/thanos/pkg/store"
 )
 
-// NewQueryableCreator
-func NewQueryableCreator(reg *prometheus.Registry, kitLogger gokit.Logger, discoveryClient *DiscoveryClient) query.QueryableCreator {
-	proxy := store.NewProxyStore(kitLogger, reg, discoveryClient.Endpoints().GetStoreClients, component.Query, nil, storeResponseTimeout)
+// NewQueryableCreator xxx
+func NewQueryableCreator(reg *prometheus.Registry, kitLogger gokit.Logger,
+	discoveryClient *DiscoveryClient) query.QueryableCreator {
+	proxy := store.NewProxyStore(kitLogger, reg, discoveryClient.Endpoints().GetStoreClients, component.Query, nil,
+		storeResponseTimeout)
 
 	queryableCreator := query.NewQueryableCreator(
 		kitLogger,
@@ -42,7 +44,7 @@ func NewQueryableCreator(reg *prometheus.Registry, kitLogger gokit.Logger, disco
 	return queryableCreator
 }
 
-// NewQueryEngine
+// NewQueryEngine xxx
 func NewQueryEngine(reg *prometheus.Registry, kitLogger gokit.Logger) func(int64) *promql.Engine {
 	engineOpts := promql.EngineOpts{
 		Logger:        kitLogger,

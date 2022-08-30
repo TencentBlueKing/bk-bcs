@@ -17,7 +17,7 @@ import (
 	"encoding/json"
 )
 
-//NewPtrExportService create default ExportService
+// NewPtrExportService create default ExportService
 func NewPtrExportService() *ExportService {
 	svr := new(ExportService)
 	svr.Balance = "roundrobin"
@@ -26,7 +26,7 @@ func NewPtrExportService() *ExportService {
 	return svr
 }
 
-//NewExportService return ExportService default object
+// NewExportService return ExportService default object
 func NewExportService() ExportService {
 	return ExportService{
 		Balance: "roundrobin",
@@ -35,7 +35,7 @@ func NewExportService() ExportService {
 	}
 }
 
-//ExportPort hold port reflection info
+// ExportPort hold port reflection info
 type ExportPort struct {
 	BCSVHost    string `json:"BCSVHost"`
 	Protocol    string `json:"protocol"`
@@ -43,31 +43,31 @@ type ExportPort struct {
 	TargetPort  int    `json:"targetPort"`
 }
 
-//DeepCopy copy src to dst by json
+// DeepCopy copy src to dst by json
 func DeepCopy(src, dst *ExportService) {
 	dataBytes, _ := json.Marshal(src)
 	json.Unmarshal(dataBytes, dst)
 }
 
-//ExportService info to hold export service
+// ExportService info to hold export service
 type ExportService struct {
-	Cluster     string       `json:"cluster"`     //cluster info
-	Namespace   string       `json:"namespace"`   //namespace info, for business
-	ServiceName string       `json:"serviceName"` //service name
-	ServicePort []ExportPort `json:"ports"`       //export ports info
-	Backends    []string     `json:"backend"`     //backend ip list
-	BCSGroup    []string     `json:"BCSGroup"`    //service export group
-	SSLCert     bool         `json:"sslcert"`     //SSL certificate for ser
-	Balance     string       `json:"balance"`     //loadbalance algorithm, default source
-	MaxConn     int          `json:"maxconn"`     //max connection setting
+	Cluster     string       `json:"cluster"`     // cluster info
+	Namespace   string       `json:"namespace"`   // namespace info, for business
+	ServiceName string       `json:"serviceName"` // service name
+	ServicePort []ExportPort `json:"ports"`       // export ports info
+	Backends    []string     `json:"backend"`     // backend ip list
+	BCSGroup    []string     `json:"BCSGroup"`    // service export group
+	SSLCert     bool         `json:"sslcert"`     // SSL certificate for ser
+	Balance     string       `json:"balance"`     // loadbalance algorithm, default source
+	MaxConn     int          `json:"maxconn"`     // max connection setting
 }
 
-//AddBackend add single backend to service Backends list
+// AddBackend add single backend to service Backends list
 func (es *ExportService) AddBackend(ip string) {
 	es.Backends = append(es.Backends, ip)
 }
 
-//EptServiceList define ExportService list implementing sorter interface
+// EptServiceList define ExportService list implementing sorter interface
 type EptServiceList []ExportService
 
 // Len is the number of elements in the collection.

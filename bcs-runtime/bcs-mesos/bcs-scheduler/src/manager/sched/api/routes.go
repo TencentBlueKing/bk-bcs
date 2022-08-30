@@ -76,7 +76,7 @@ func (r *Router) initRoutes() {
 	/*-------------- taskgroup ---------------*/
 
 	/*-------------- task ---------------*/
-	//r.actions = append(r.actions, httpserver.NewAction("GET", "/apps/{runAs}/{appId}/tasks", nil, r.listApplicationTasks))
+	// r.actions = append(r.actions, httpserver.NewAction("GET", "/apps/{runAs}/{appId}/tasks", nil, r.listApplicationTasks))
 	/*-------------- task ---------------*/
 
 	/*-------------- message ---------------*/
@@ -162,9 +162,9 @@ func (r *Router) initRoutes() {
 	r.actions = append(r.actions, httpserver.NewAction("POST", "/agentsetting/{IP}/enable", nil, r.enableAgent))
 	r.actions = append(r.actions, httpserver.NewAction("POST", "/agentsetting/{IP}/disable", nil, r.disableAgent))
 	r.actions = append(r.actions, httpserver.NewAction("GET", "/agentsettings", nil, r.queryAgentSettingList))
-	//r.actions = append(r.actions, httpserver.NewAction("POST", "/agentsettings/delete", nil, r.deleteAgentSettingList))
+	// r.actions = append(r.actions, httpserver.NewAction("POST", "/agentsettings/delete", nil, r.deleteAgentSettingList))
 	r.actions = append(r.actions, httpserver.NewAction("POST", "/agentsettings", nil, r.setAgentSettingList))
-	//r.actions = append(r.actions, httpserver.NewAction("POST", "/agentsettings/update", nil, r.updateAgentSettingList))
+	// r.actions = append(r.actions, httpserver.NewAction("POST", "/agentsettings/update", nil, r.updateAgentSettingList))
 	r.actions = append(r.actions, httpserver.NewAction("POST", "/agentsettings/enable", nil, r.enableAgentList))
 	r.actions = append(r.actions, httpserver.NewAction("POST", "/agentsettings/disable", nil, r.disableAgentList))
 	r.actions = append(r.actions, httpserver.NewAction("PUT", "/agentsettings/taint", nil, r.taintAgents))
@@ -233,6 +233,7 @@ func (r *Router) initRoutes() {
 
 	/*--------------transaction---------------------*/
 	r.actions = append(r.actions, httpserver.NewAction("GET", "/transactions/{namespace}", nil, r.listTransaction))
-	r.actions = append(r.actions, httpserver.NewAction("DELETE", "/transactions/{namespace}/{name}", nil, r.deleteTransaction))
+	r.actions = append(r.actions, httpserver.NewAction("DELETE", "/transactions/{namespace}/{name}", nil,
+		r.deleteTransaction))
 	/*--------------transaction---------------------*/
 }

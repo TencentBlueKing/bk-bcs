@@ -42,9 +42,9 @@ multiple yaml format must like below:
 */
 
 const (
-	//JSONFormat json list detail for content
+	// JSONFormat json list detail for content
 	JSONFormat = "json"
-	//YAMLFormat yaml list detail for content
+	// YAMLFormat yaml list detail for content
 	YAMLFormat = "yaml"
 )
 
@@ -53,20 +53,20 @@ type metaObject struct {
 	mesostype.ObjectMeta `json:"metadata,omitempty"`
 }
 
-//NewMetaStream create stream implementation
+// NewMetaStream create stream implementation
 func NewMetaStream(r io.Reader, ft string) Stream {
 	allDatas, err := ioutil.ReadAll(r)
 	if err != nil || len(allDatas) == 0 {
 		return &jsonArray{}
 	}
 	rawList := strings.Split(string(allDatas), "---\n")
-	//clean empty line
+	// clean empty line
 	var clearList []string
 	for _, line := range rawList {
 		newLine := strings.Trim(line, " \n")
-		//line has apiVersion & kind inforamtion at least
+		// line has apiVersion & kind inforamtion at least
 		if len(newLine) > 20 {
-			//convert format from yaml to json
+			// convert format from yaml to json
 			if YAMLFormat == ft {
 				newJSON, err := yaml.YAMLToJSON([]byte(newLine))
 				if err != nil {
@@ -74,7 +74,7 @@ func NewMetaStream(r io.Reader, ft string) Stream {
 					continue
 				}
 				newLine = string(newJSON)
-				//fmt.Printf("original yaml convert to json: %s\n", newLine)
+				// fmt.Printf("original yaml convert to json: %s\n", newLine)
 			}
 			clearList = append(clearList, newLine)
 		}
@@ -86,19 +86,19 @@ func NewMetaStream(r io.Reader, ft string) Stream {
 	return js
 }
 
-//jsonArray implementation for Stream
+// jsonArray implementation for Stream
 type jsonArray struct {
 	index        int
 	rawDatas     []string
 	indexRawJson string
 }
 
-//Length check if stream has Next JSON data
+// Length check if stream has Next JSON data
 func (js *jsonArray) Length() int {
 	return len(js.rawDatas)
 }
 
-//HasNext check if stream has Next JSON data
+// HasNext check if stream has Next JSON data
 func (js *jsonArray) HasNext() bool {
 	if js.index >= len(js.rawDatas) {
 		return false
@@ -108,7 +108,7 @@ func (js *jsonArray) HasNext() bool {
 	return true
 }
 
-//GetResourceKind return apiVersion and Kind
+// GetResourceKind return apiVersion and Kind
 func (js *jsonArray) GetResourceKind() (string, string, error) {
 	meta := &mesostype.TypeMeta{}
 	err := json.Unmarshal([]byte(js.indexRawJson), meta)
@@ -121,7 +121,7 @@ func (js *jsonArray) GetResourceKind() (string, string, error) {
 	return meta.APIVersion, string(meta.Kind), nil
 }
 
-//GetResourceKey return JSON object index: namespace & name
+// GetResourceKey return JSON object index: namespace & name
 func (js *jsonArray) GetResourceKey() (string, string, error) {
 	objMeta := &metaObject{}
 	err := json.Unmarshal([]byte(js.indexRawJson), objMeta)
@@ -137,7 +137,7 @@ func (js *jsonArray) GetResourceKey() (string, string, error) {
 	return objMeta.NameSpace, objMeta.Name, nil
 }
 
-//GetRawJSON return  detail raw json string
+// GetRawJSON return  detail raw json string
 func (js *jsonArray) GetRawJSON() []byte {
 	if len(js.indexRawJson) == 0 {
 		return nil

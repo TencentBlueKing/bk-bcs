@@ -29,7 +29,7 @@ func init() {
 type Cluster struct {
 }
 
-//CreateCluster create kubenretes cluster according cloudprovider
+// CreateCluster create kubenretes cluster according cloudprovider
 func (c *Cluster) CreateCluster(cls *proto.Cluster, opt *cloudprovider.CreateClusterOption) (*proto.Task, error) {
 	// call blueking interface to create cluster
 	if cls == nil {
@@ -99,7 +99,7 @@ func (c *Cluster) ImportCluster(cls *proto.Cluster, opt *cloudprovider.ImportClu
 	return task, nil
 }
 
-//DeleteCluster delete kubernetes cluster according cloudprovider
+// DeleteCluster delete kubernetes cluster according cloudprovider
 func (c *Cluster) DeleteCluster(cls *proto.Cluster, opt *cloudprovider.DeleteClusterOption) (*proto.Task, error) {
 	if cls == nil {
 		return nil, fmt.Errorf("blueking DeleteCluster cluster is empty")
@@ -129,7 +129,7 @@ func (c *Cluster) DeleteCluster(cls *proto.Cluster, opt *cloudprovider.DeleteClu
 	return task, nil
 }
 
-//GetCluster get kubernetes cluster detail information according cloudprovider
+// GetCluster get kubernetes cluster detail information according cloudprovider
 func (c *Cluster) GetCluster(cloudID string, opt *cloudprovider.GetClusterOption) (*proto.Cluster, error) {
 	return nil, nil
 }
@@ -139,13 +139,14 @@ func (c *Cluster) ListCluster(opt *cloudprovider.ListClusterOption) ([]*proto.Cl
 	return nil, nil
 }
 
-//GetNodesInCluster get all nodes belong to cluster according cloudprovider
+// GetNodesInCluster get all nodes belong to cluster according cloudprovider
 func (c *Cluster) GetNodesInCluster(cls *proto.Cluster, opt *cloudprovider.GetNodesOption) ([]*proto.Node, error) {
 	return nil, nil
 }
 
 // AddNodesToCluster add new node to cluster according cloudprovider
-func (c *Cluster) AddNodesToCluster(cls *proto.Cluster, nodes []*proto.Node, opt *cloudprovider.AddNodesOption) (*proto.Task, error) {
+func (c *Cluster) AddNodesToCluster(cls *proto.Cluster, nodes []*proto.Node,
+	opt *cloudprovider.AddNodesOption) (*proto.Task, error) {
 	if cls == nil {
 		return nil, fmt.Errorf("blueking AddNodesToCluster cluster is empty")
 	}
@@ -178,7 +179,8 @@ func (c *Cluster) AddNodesToCluster(cls *proto.Cluster, nodes []*proto.Node, opt
 }
 
 // DeleteNodesFromCluster delete specified nodes from cluster according cloudprovider
-func (c *Cluster) DeleteNodesFromCluster(cls *proto.Cluster, nodes []*proto.Node, opt *cloudprovider.DeleteNodesOption) (*proto.Task, error) {
+func (c *Cluster) DeleteNodesFromCluster(cls *proto.Cluster, nodes []*proto.Node,
+	opt *cloudprovider.DeleteNodesOption) (*proto.Task, error) {
 	if cls == nil {
 		return nil, fmt.Errorf("blueking DeleteNodesFromCluster cluster is empty")
 	}
@@ -211,7 +213,8 @@ func (c *Cluster) DeleteNodesFromCluster(cls *proto.Cluster, nodes []*proto.Node
 }
 
 // CheckClusterCidrAvailable check cluster CIDR nodesNum when add nodes
-func (c *Cluster) CheckClusterCidrAvailable(cls *proto.Cluster, opt *cloudprovider.CheckClusterCIDROption) (bool, error) {
+func (c *Cluster) CheckClusterCidrAvailable(cls *proto.Cluster, opt *cloudprovider.CheckClusterCIDROption) (bool,
+	error) {
 	if cls == nil || opt == nil {
 		return true, nil
 	}

@@ -36,11 +36,12 @@ import (
 
 const (
 	// BKMONITOR 蓝鲸监控数据源
-	BKMONITOR  config.StoreProvider = "BK_MONITOR"
+	BKMONITOR config.StoreProvider = "BK_MONITOR"
+	// BCS_SYSTEM TODO
 	BCS_SYSTEM config.StoreProvider = "BCS_SYSTEM"
 )
 
-// StoreGW Store 基类
+// Store GW Store 基类
 type Store struct {
 	*config.StoreConf
 	Address string
@@ -78,7 +79,8 @@ func (l *NilLogger) Log(keyvals ...interface{}) error {
 }
 
 // NewStore :
-func NewStore(ctx context.Context, logger log.Logger, reg *prometheus.Registry, address string, conf *config.StoreConf, storeSvr storepb.StoreServer) (*Store, error) {
+func NewStore(ctx context.Context, logger log.Logger, reg *prometheus.Registry, address string, conf *config.StoreConf,
+	storeSvr storepb.StoreServer) (*Store, error) {
 	ctx, cancel := context.WithCancel(ctx)
 
 	// 重新初始化, 解决 duplicate metrics collector registration attempted

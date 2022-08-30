@@ -36,15 +36,18 @@ type PodMetricsInfo map[string]PodMetric
 type MetricsClient interface {
 	// GetResourceMetric gets the given resource metric (and an associated oldest timestamp)
 	// for all pods matching the specified selector in the given namespace
-	GetResourceMetric(resource v1.ResourceName, namespace string, selector labels.Selector, container string) (PodMetricsInfo, time.Time, error)
+	GetResourceMetric(resource v1.ResourceName, namespace string, selector labels.Selector,
+		container string) (PodMetricsInfo, time.Time, error)
 
 	// GetRawMetric gets the given metric (and an associated oldest timestamp)
 	// for all pods matching the specified selector in the given namespace
-	GetRawMetric(metricName string, namespace string, selector labels.Selector, metricSelector labels.Selector) (PodMetricsInfo, time.Time, error)
+	GetRawMetric(metricName string, namespace string, selector labels.Selector,
+		metricSelector labels.Selector) (PodMetricsInfo, time.Time, error)
 
 	// GetObjectMetric gets the given metric (and an associated timestamp) for the given
 	// object in the given namespace
-	GetObjectMetric(metricName string, namespace string, objectRef *autoscaling.CrossVersionObjectReference, metricSelector labels.Selector) (int64, time.Time, error)
+	GetObjectMetric(metricName string, namespace string, objectRef *autoscaling.CrossVersionObjectReference,
+		metricSelector labels.Selector) (int64, time.Time, error)
 
 	// GetExternalMetric gets all the values of a given external metric
 	// that match the specified selector.

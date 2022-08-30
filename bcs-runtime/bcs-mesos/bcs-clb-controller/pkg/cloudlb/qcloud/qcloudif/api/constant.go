@@ -18,49 +18,49 @@ import (
 )
 
 const (
-	//Clb type
+	// Clb type
 
-	//ClbPublic face internet
+	// ClbPublic face internet
 	ClbPublic = 2
-	//ClbPrivate face internal network
+	// ClbPrivate face internal network
 	ClbPrivate = 3
-	//ClbApplicationType application type lb
+	// ClbApplicationType application type lb
 	ClbApplicationType = 1
-	//ClbTraditionalType traditional type lb (never used)
+	// ClbTraditionalType traditional type lb (never used)
 	ClbTraditionalType = 0
 
-	//ClbListenerProtocolHTTP clb listener http protocol
+	// ClbListenerProtocolHTTP clb listener http protocol
 	ClbListenerProtocolHTTP = 1
-	//ClbListenerProtocolHTTPS clb listener https protocol
+	// ClbListenerProtocolHTTPS clb listener https protocol
 	ClbListenerProtocolHTTPS = 4
-	//ClbListenerProtocolTCP clb listener tcp protocol
+	// ClbListenerProtocolTCP clb listener tcp protocol
 	ClbListenerProtocolTCP = 2
-	//ClbListenerProtocolUDP clb listener udp protocol
+	// ClbListenerProtocolUDP clb listener udp protocol
 	ClbListenerProtocolUDP = 3
 
-	//ClbInstanceRunningStatus clb instance running normally
+	// ClbInstanceRunningStatus clb instance running normally
 	ClbInstanceRunningStatus = 1
-	//ClbInstanceCreatingStatus clb instance is under creating
+	// ClbInstanceCreatingStatus clb instance is under creating
 	ClbInstanceCreatingStatus = 0
 
-	//ClbSecurityGroupDefaultFromPort clb security group default begin port
+	// ClbSecurityGroupDefaultFromPort clb security group default begin port
 	ClbSecurityGroupDefaultFromPort = 31000
-	//ClbSecurityGroupDefaultEndPort clb security group default end port
+	// ClbSecurityGroupDefaultEndPort clb security group default end port
 	ClbSecurityGroupDefaultEndPort = 32000
 
-	//ClbConfigPath clb config file path
+	// ClbConfigPath clb config file path
 	ClbConfigPath = "conf/clbConf/clbConfig.conf"
 
-	//ClbSecurityGroupPolicyIndex 修改安全组的第0条规则
+	// ClbSecurityGroupPolicyIndex 修改安全组的第0条规则
 	ClbSecurityGroupPolicyIndex = 0
-	//ClbVIPSgPolicyIndex 对VIP开放的安全策略位置，在第一条规则上创建，排在端口策略后面
+	// ClbVIPSgPolicyIndex 对VIP开放的安全策略位置，在第一条规则上创建，排在端口策略后面
 	ClbVIPSgPolicyIndex = 1
 
-	//LBAlgorithmIPHash IP Hash
+	// LBAlgorithmIPHash IP Hash
 	LBAlgorithmIPHash = "ip_hash"
-	//LBAlgorithmLeastConn least conn
+	// LBAlgorithmLeastConn least conn
 	LBAlgorithmLeastConn = "least_conn"
-	//LBAlgorithmRoundRobin round robin
+	// LBAlgorithmRoundRobin round robin
 	LBAlgorithmRoundRobin = "wrr"
 
 	// HealthSwitchOn 开启健康检查
@@ -89,7 +89,7 @@ const (
 	// QCloudDfwURL tencent cloud dfw url
 	QCloudDfwURL = "https://dfw.api.qcloud.com/v2/index.php"
 
-	//ClbMaxTimeout 异步clb接口超时时间，之所以定三分钟是因为之前遇到过最久的接口是一分多钟
+	// ClbMaxTimeout 异步clb接口超时时间，之所以定三分钟是因为之前遇到过最久的接口是一分多钟
 	ClbMaxTimeout = 180
 
 	// RequestLimitExceededCode code for request exceeded limit

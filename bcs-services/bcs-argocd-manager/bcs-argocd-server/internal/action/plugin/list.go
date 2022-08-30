@@ -79,7 +79,8 @@ func (action *ListArgocdPluginsAction) getMatchLabels() map[string]string {
 	return r
 }
 
-func (action *ListArgocdPluginsAction) setResp(err common.ArgocdServerError, message string, ps *v1alpha1.ArgocdPluginList) {
+func (action *ListArgocdPluginsAction) setResp(err common.ArgocdServerError, message string,
+	ps *v1alpha1.ArgocdPluginList) {
 	code := err.Int32()
 	msg := err.ErrorMessage(message)
 	action.resp.Code = &code

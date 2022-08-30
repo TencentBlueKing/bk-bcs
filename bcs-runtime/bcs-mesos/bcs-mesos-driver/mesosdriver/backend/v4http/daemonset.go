@@ -27,13 +27,13 @@ import (
 )
 
 func (s *Scheduler) createDaemonsetHandler(req *restful.Request, resp *restful.Response) {
-	//get http request body data
+	// get http request body data
 	body, err := s.getRequestInfo(req)
 	if err != nil {
 		resp.Write([]byte(err.Error()))
 		return
 	}
-	//check whether daemonset type
+	// check whether daemonset type
 	err = util.CheckKind(bcstype.BcsDataType_Daemonset, body)
 	if err != nil {
 		blog.Error("fail to create daemonset(%s). err(%s)", string(body), err.Error())
@@ -52,10 +52,11 @@ func (s *Scheduler) createDaemonsetHandler(req *restful.Request, resp *restful.R
 	resp.Write([]byte(reply))
 }
 
+// CreateDaemonset xxx
 func (s *Scheduler) CreateDaemonset(body []byte) (string, error) {
 	blog.Info("create daemonset. param(%s)", string(body))
 	var param bcstype.BcsDaemonset
-	//encoding param by json
+	// encoding param by json
 	if err := json.Unmarshal(body, &param); err != nil {
 		blog.Error("parse daemonset failed. param(%s), err(%s)", string(body), err.Error())
 		err = bhttp.InternalError(common.BcsErrCommJsonDecode, common.BcsErrCommJsonDecodeStr)
@@ -89,18 +90,18 @@ func (s *Scheduler) CreateDaemonset(body []byte) (string, error) {
 }
 
 func (s *Scheduler) newDaemonsetDefWithParam(param *bcstype.BcsDaemonset) (*types.BcsDaemonsetDef, error) {
-	//check ObjectMeta is valid
+	// check ObjectMeta is valid
 	err := param.MetaIsValid()
 	if err != nil {
 		return nil, err
 	}
 
-	//new daemonset definition
+	// new daemonset definition
 	def := &types.BcsDaemonsetDef{
 		ObjectMeta: param.ObjectMeta,
 	}
 
-	//var version types.Version
+	// var version types.Version
 	version := &types.Version{
 		ID:          "",
 		Instances:   0,
@@ -112,7 +113,7 @@ func (s *Scheduler) newDaemonsetDefWithParam(param *bcstype.BcsDaemonset) (*type
 		Ip:          []string{},
 		Mode:        "",
 	}
-	//init version parameters
+	// init version parameters
 	version.ObjectMeta = param.ObjectMeta
 	version.ID = param.Name
 	version.KillPolicy = &param.KillPolicy
@@ -120,7 +121,7 @@ func (s *Scheduler) newDaemonsetDefWithParam(param *bcstype.BcsDaemonset) (*type
 	if version.RestartPolicy == nil {
 		version.RestartPolicy = &bcstype.RestartPolicy{}
 	}
-	//default onfailure restart policy
+	// default onfailure restart policy
 	if version.RestartPolicy.Policy == "" {
 		version.RestartPolicy.Policy = bcstype.RestartPolicy_ONFAILURE
 	}
@@ -139,7 +140,7 @@ func (s *Scheduler) newDaemonsetDefWithParam(param *bcstype.BcsDaemonset) (*type
 	for k, v := range param.Labels {
 		version.Labels[k] = v
 	}
-	//the version belongs daemonset
+	// the version belongs daemonset
 	version.Kind = bcstype.BcsDataType_Daemonset
 	version, err = s.setVersionWithPodSpec(version, param.Spec.Template)
 	if err != nil {
@@ -151,11 +152,11 @@ func (s *Scheduler) newDaemonsetDefWithParam(param *bcstype.BcsDaemonset) (*type
 }
 
 func (s *Scheduler) deleteDaemonsetHandler(req *restful.Request, resp *restful.Response) {
-	//namespace
+	// namespace
 	ns := req.PathParameter("ns")
-	//daemonset name
+	// daemonset name
 	name := req.PathParameter("name")
-	//whether enforce delete daemonset
+	// whether enforce delete daemonset
 	enforce := req.QueryParameter("enforce")
 	reply, err := s.deleteDaemonset(ns, name, enforce)
 	if err != nil {

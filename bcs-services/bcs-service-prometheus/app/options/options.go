@@ -11,13 +11,14 @@
  *
  */
 
+// Package options xxx
 package options
 
 import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
 )
 
-//PrometheusControllerOption is option in flags
+// PrometheusControllerOption is option in flags
 type PrometheusControllerOption struct {
 	conf.FileConfig
 	conf.ServiceConfig
@@ -42,7 +43,7 @@ type PrometheusControllerOption struct {
 	ClusterModules       []string `json:"cluster_modules" value:"" usage:"cluster module list"`
 }
 
-//NewPrometheusControllerOption create PrometheusControllerOption object
+// NewPrometheusControllerOption create PrometheusControllerOption object
 func NewPrometheusControllerOption() *PrometheusControllerOption {
 	return &PrometheusControllerOption{}
 }

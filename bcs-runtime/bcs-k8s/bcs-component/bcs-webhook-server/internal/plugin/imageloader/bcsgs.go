@@ -211,8 +211,10 @@ func (b *bcsgsWorkload) imageDiff(o, n *bcsgstkexv1alpha1.GameStatefulSet) (stri
 			// TODO do not create the job if the image is already on the node
 			// this is an image update
 			// generate mutate patch
-			revertPatch[imageChangeCount] = fmt.Sprintf("{\"op\":\"replace\",\"path\":\"/spec/template/spec/containers/%d/image\",\"value\":\"%s\"}", i, oi)
-			updatePatch[imageChangeCount] = fmt.Sprintf("{\"op\":\"replace\",\"path\":\"/spec/template/spec/containers/%d/image\",\"value\":\"%s\"}", i, c.Image)
+			revertPatch[imageChangeCount] = fmt.Sprintf(
+				"{\"op\":\"replace\",\"path\":\"/spec/template/spec/containers/%d/image\",\"value\":\"%s\"}", i, oi)
+			updatePatch[imageChangeCount] = fmt.Sprintf(
+				"{\"op\":\"replace\",\"path\":\"/spec/template/spec/containers/%d/image\",\"value\":\"%s\"}", i, c.Image)
 			imageChangeCount++
 			// add a image loader container
 			retContainers = append(retContainers,
@@ -249,7 +251,7 @@ func (b *bcsgsWorkload) JobDoneHook(namespace, name string, event *corev1.Event)
 		// add event to gs and return
 		// add object ref
 		// finish the job
-		//event.Name = gs.Name + "-imageloadfailed"
+		// event.Name = gs.Name + "-imageloadfailed"
 		event.Namespace = gs.Namespace
 		event.InvolvedObject = corev1.ObjectReference{
 			Kind:            "GameStatefulSet",

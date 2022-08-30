@@ -31,15 +31,16 @@ import (
 	"golang.org/x/net/context"
 )
 
-//EndpointInfo wrapper for BCSEndpoint
+// EndpointInfo wrapper for BCSEndpoint
 type EndpointInfo struct {
 	data       *commtypes.BcsEndpoint
 	syncTime   int64
 	reportTime int64
 }
 
-//NewEndpointWatch create endpoint watch
-func NewEndpointWatch(cxt context.Context, informer bkbcsv2.BcsEndpointInformer, reporter cluster.Reporter) *EndpointWatch {
+// NewEndpointWatch create endpoint watch
+func NewEndpointWatch(cxt context.Context, informer bkbcsv2.BcsEndpointInformer,
+	reporter cluster.Reporter) *EndpointWatch {
 
 	keyFunc := func(data interface{}) (string, error) {
 		dataType, ok := data.(*EndpointInfo)
@@ -57,17 +58,17 @@ func NewEndpointWatch(cxt context.Context, informer bkbcsv2.BcsEndpointInformer,
 	}
 }
 
-//EndpointWatch watch for Endpoint and store all datas to local cache
+// EndpointWatch watch for Endpoint and store all datas to local cache
 type EndpointWatch struct {
-	eventLock sync.Mutex       //lock for event
-	report    cluster.Reporter //reporter
-	cancelCxt context.Context  //context for cancel
-	dataCache cache.Store      //cache for all app data
+	eventLock sync.Mutex       // lock for event
+	report    cluster.Reporter // reporter
+	cancelCxt context.Context  // context for cancel
+	dataCache cache.Store      // cache for all app data
 	watchPath string
 	informer  bkbcsv2.BcsEndpointInformer
 }
 
-//Work handle all Endpoint datas periodically
+// Work handle all Endpoint datas periodically
 func (watch *EndpointWatch) Work() {
 	watch.ProcessAllEndpoints()
 	tick := time.NewTicker(10 * time.Second)
@@ -84,7 +85,7 @@ func (watch *EndpointWatch) Work() {
 	}
 }
 
-//ProcessAllEndpoints handle all namespace Endpoint data
+// ProcessAllEndpoints handle all namespace Endpoint data
 func (watch *EndpointWatch) ProcessAllEndpoints() error {
 
 	currTime := time.Now().Unix()
@@ -113,7 +114,7 @@ func (watch *EndpointWatch) ProcessAllEndpoints() error {
 				continue
 			}
 			blog.V(3).Infof("endpoint %s is in cache, update sync time(%d)", key, currTime)
-			//watch.UpdateEvent(cacheDataInfo.data, data)
+			// watch.UpdateEvent(cacheDataInfo.data, data)
 			if reflect.DeepEqual(cacheDataInfo.data, data) {
 				if cacheDataInfo.reportTime > currTime {
 					cacheDataInfo.reportTime = currTime
@@ -174,7 +175,7 @@ func (watch *EndpointWatch) ProcessAllEndpoints() error {
 	return nil
 }
 
-//AddEvent call when data added
+// AddEvent call when data added
 func (watch *EndpointWatch) AddEvent(obj interface{}) {
 	endpointData, ok := obj.(*commtypes.BcsEndpoint)
 	if !ok {
@@ -191,15 +192,16 @@ func (watch *EndpointWatch) AddEvent(obj interface{}) {
 	watch.report.ReportData(data)
 }
 
-//DeleteEvent when delete
+// DeleteEvent when delete
 func (watch *EndpointWatch) DeleteEvent(obj interface{}) {
 	endpointData, ok := obj.(*commtypes.BcsEndpoint)
 	if !ok {
 		blog.Error("can not convert object to Bcsendpoint in DeleteEvent, object %v", obj)
 		return
 	}
-	blog.Info("EVENT:: Delete Event for Bcsendpoint %s.%s", endpointData.ObjectMeta.NameSpace, endpointData.ObjectMeta.Name)
-	//report to cluster
+	blog.Info("EVENT:: Delete Event for Bcsendpoint %s.%s", endpointData.ObjectMeta.NameSpace,
+		endpointData.ObjectMeta.Name)
+	// report to cluster
 	data := &types.BcsSyncData{
 		DataType: "Endpoint",
 		Action:   "Delete",
@@ -208,7 +210,7 @@ func (watch *EndpointWatch) DeleteEvent(obj interface{}) {
 	watch.report.ReportData(data)
 }
 
-//UpdateEvent when update
+// UpdateEvent when update
 func (watch *EndpointWatch) UpdateEvent(old, cur interface{}) {
 	endpointData, ok := cur.(*commtypes.BcsEndpoint)
 	if !ok {
@@ -216,13 +218,14 @@ func (watch *EndpointWatch) UpdateEvent(old, cur interface{}) {
 		return
 	}
 
-	//if reflect.DeepEqual(old, cur) {
+	// if reflect.DeepEqual(old, cur) {
 	//	blog.V(3).Infof("Bcsendpoint %s.%s data do not changed", endpointData.ObjectMeta.NameSpace, endpointData.ObjectMeta.Name)
 	//	return
-	//}
-	blog.V(3).Infof("EVENT:: Update Event for Bcsendpoint %s.%s", endpointData.ObjectMeta.NameSpace, endpointData.ObjectMeta.Name)
+	// }
+	blog.V(3).Infof("EVENT:: Update Event for Bcsendpoint %s.%s", endpointData.ObjectMeta.NameSpace,
+		endpointData.ObjectMeta.Name)
 
-	//report to cluster
+	// report to cluster
 	data := &types.BcsSyncData{
 		DataType: "Endpoint",
 		Action:   "Update",

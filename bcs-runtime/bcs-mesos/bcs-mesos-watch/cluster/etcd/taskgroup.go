@@ -31,14 +31,15 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-mesos/bcs-mesos-watch/util"
 )
 
-//TaskControlInfo store all task info under one namespace
+// TaskControlInfo store all task info under one namespace
 type TaskControlInfo struct {
-	cxt    context.Context    //context for creating sub context
-	cancel context.CancelFunc //for cancel sub goroutine
+	cxt    context.Context    // context for creating sub context
+	cancel context.CancelFunc // for cancel sub goroutine
 }
 
-//NewTaskGroupWatch create default taskgroup watch
-func NewTaskGroupWatch(cxt context.Context, informer bkbcsv2.TaskGroupInformer, reporter cluster.Reporter) *TaskGroupWatch {
+// NewTaskGroupWatch create default taskgroup watch
+func NewTaskGroupWatch(cxt context.Context, informer bkbcsv2.TaskGroupInformer,
+	reporter cluster.Reporter) *TaskGroupWatch {
 	return &TaskGroupWatch{
 		cancelCxt: cxt,
 		report:    reporter,
@@ -46,11 +47,11 @@ func NewTaskGroupWatch(cxt context.Context, informer bkbcsv2.TaskGroupInformer, 
 	}
 }
 
-//TaskGroupWatch watch for taskGroup
+// TaskGroupWatch watch for taskGroup
 type TaskGroupWatch struct {
-	eventLock sync.Mutex       //lock for event
-	cancelCxt context.Context  //context for cancel
-	report    cluster.Reporter //reporter to cluster
+	eventLock sync.Mutex       // lock for event
+	cancelCxt context.Context  // context for cancel
+	report    cluster.Reporter // reporter to cluster
 	informer  bkbcsv2.TaskGroupInformer
 }
 
@@ -116,7 +117,7 @@ func (task *TaskGroupWatch) syncAlltaskgroups() {
 	}
 }
 
-//AddEvent call when data added
+// AddEvent call when data added
 func (task *TaskGroupWatch) AddEvent(obj interface{}) {
 	taskData, ok := obj.(*schedulertypes.TaskGroup)
 	if !ok {
@@ -126,7 +127,7 @@ func (task *TaskGroupWatch) AddEvent(obj interface{}) {
 	blog.Info("EVENT:: Add Event for Taskgroup %s", taskData.ID)
 
 	data := &types.BcsSyncData{
-		//DataType: "TaskGroup",
+		// DataType: "TaskGroup",
 		DataType: task.GetTaskGroupChannelV2(taskData),
 		Action:   types.ActionAdd,
 		Item:     obj,
@@ -138,7 +139,7 @@ func (task *TaskGroupWatch) AddEvent(obj interface{}) {
 	}
 }
 
-//DeleteEvent when delete
+// DeleteEvent when delete
 func (task *TaskGroupWatch) DeleteEvent(obj interface{}) {
 	taskData, ok := obj.(*schedulertypes.TaskGroup)
 	if !ok {
@@ -147,9 +148,9 @@ func (task *TaskGroupWatch) DeleteEvent(obj interface{}) {
 	}
 	blog.Info("EVENT:: Delete Event for TaskGroup %s", taskData.ID)
 
-	//report to cluster
+	// report to cluster
 	data := &types.BcsSyncData{
-		//DataType: "TaskGroup",
+		// DataType: "TaskGroup",
 		DataType: task.GetTaskGroupChannelV2(taskData),
 		Action:   types.ActionDelete,
 		Item:     obj,
@@ -161,7 +162,7 @@ func (task *TaskGroupWatch) DeleteEvent(obj interface{}) {
 	}
 }
 
-//UpdateEvent when update
+// UpdateEvent when update
 func (task *TaskGroupWatch) UpdateEvent(old, cur interface{}, force bool) {
 	taskData, ok := cur.(*schedulertypes.TaskGroup)
 	if !ok {
@@ -173,9 +174,9 @@ func (task *TaskGroupWatch) UpdateEvent(old, cur interface{}, force bool) {
 		return
 	}*/
 	blog.V(3).Infof("EVENT:: Update Event for TaskGroup %s", taskData.ID)
-	//report to cluster
+	// report to cluster
 	data := &types.BcsSyncData{
-		//DataType: "TaskGroup",
+		// DataType: "TaskGroup",
 		DataType: task.GetTaskGroupChannelV2(taskData),
 		Action:   types.ActionUpdate,
 		Item:     cur,
@@ -187,14 +188,14 @@ func (task *TaskGroupWatch) UpdateEvent(old, cur interface{}, force bool) {
 	}
 }
 
-//GetTaskGroupChannel get taskgroup dispatch channel
+// GetTaskGroupChannel get taskgroup dispatch channel
 func (task *TaskGroupWatch) GetTaskGroupChannel(taskGroup *schedulertypes.TaskGroup) string {
 
 	return "TaskGroup_" + strconv.Itoa(int(taskGroup.InstanceID%100))
 
 }
 
-//GetTaskGroupChannelV2 get taskgroup dispatch channel
+// GetTaskGroupChannelV2 get taskgroup dispatch channel
 func (task *TaskGroupWatch) GetTaskGroupChannelV2(taskGroup *schedulertypes.TaskGroup) string {
 
 	index := util.GetHashId(taskGroup.ID, TaskgroupThreadNum)

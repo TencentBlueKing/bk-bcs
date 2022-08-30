@@ -37,15 +37,15 @@ import (
 	k8scache "k8s.io/client-go/tools/cache"
 )
 
-//svcController for dataType resource
+// svcController for dataType resource
 type svcController struct {
 	cxt          context.Context
 	stopFn       context.CancelFunc
-	eventStorage storage.Storage      //remote event storage
-	svcCache     k8scache.Store       //local cache
-	reflector    *reflector.Reflector //reflector list/watch all datas to local memory cache
-	svcCh        chan *svcEvent       //event for service==>AppSvc
-	svcQueue     queue.Queue          //queue for event message
+	eventStorage storage.Storage      // remote event storage
+	svcCache     k8scache.Store       // local cache
+	reflector    *reflector.Reflector // reflector list/watch all datas to local memory cache
+	svcCh        chan *svcEvent       // event for service==>AppSvc
+	svcQueue     queue.Queue          // queue for event message
 }
 
 func (s *svcController) run() {
@@ -71,13 +71,14 @@ func (s *svcController) ListAppSvcs(selector labels.Selector) ([]*v1.AppSvc, err
 	return nil, nil
 }
 
-// RegisterAppSvcHandler register event callback for AppSvc
+// RegisterAppSvcQueue register event callback for AppSvc
 func (s *svcController) RegisterAppSvcQueue(handler queue.Queue) {
 	s.svcQueue = handler
 	blog.Infof("bk-bcs service Controller starting backend goroutine for queue handling")
 	go s.handleService()
 }
 
+// OnAdd xxx
 func (s *svcController) OnAdd(obj interface{}) {
 	if obj == nil {
 		return
@@ -98,6 +99,7 @@ func (s *svcController) OnAdd(obj interface{}) {
 	s.svcCh <- e
 }
 
+// OnUpdate xxx
 func (s *svcController) OnUpdate(old, cur interface{}) {
 	if cur == nil || old == nil {
 		return
@@ -124,6 +126,7 @@ func (s *svcController) OnUpdate(old, cur interface{}) {
 	s.svcCh <- e
 }
 
+// OnDelete xxx
 func (s *svcController) OnDelete(obj interface{}) {
 	if obj == nil {
 		return
@@ -145,7 +148,7 @@ func (s *svcController) OnDelete(obj interface{}) {
 }
 
 func (s *svcController) isValid(svc *bcstypes.BcsService) bool {
-	//verify BcsService data
+	// verify BcsService data
 	if len(svc.Spec.Selector) == 0 {
 		blog.Errorf("bk-bcs service %s/%s lost Selector info", svc.GetNamespace(), svc.GetName())
 		return false
@@ -169,7 +172,7 @@ func (s *svcController) handleService() {
 				blog.Infof("bk-bcs service event channel broken, ready to exit.")
 				return
 			}
-			//event can only watch.EventAdded, watch.EventUpdated, watch.EventDeleted:
+			// event can only watch.EventAdded, watch.EventUpdated, watch.EventDeleted:
 			e := &queue.Event{
 				Type: event.EventType,
 			}
@@ -222,7 +225,7 @@ func (s *svcController) convertBkServicePort(ports []bcstypes.ServicePort) []v1.
 
 func newServiceCache(hosts []string) (*svcController, error) {
 	ss := k8scache.NewIndexer(ServiceObjectKeyFn, k8scache.Indexers{})
-	//create namespace client for zookeeper
+	// create namespace client for zookeeper
 	zkConfig := &zookeeper.ZkConfig{
 		Hosts:         hosts,
 		PrefixPath:    "/blueking/service",
@@ -235,7 +238,7 @@ func newServiceCache(hosts []string) (*svcController, error) {
 		blog.Errorf("bcs mesos discovery create service namespace client failed, %s", err)
 		return nil, err
 	}
-	//create listwatcher
+	// create listwatcher
 	listwatcher := &reflector.ListWatch{
 		ListFn: func() ([]meta.Object, error) {
 			return nsclient.List(context.Background(), "", nil)
@@ -252,12 +255,13 @@ func newServiceCache(hosts []string) (*svcController, error) {
 		svcCache:     ss,
 		svcCh:        make(chan *svcEvent, 1024),
 	}
-	//create reflector
-	ctl.reflector = reflector.NewReflector(fmt.Sprintf("Reflector-%s", zkConfig.Name), ss, listwatcher, time.Second*600, ctl)
+	// create reflector
+	ctl.reflector = reflector.NewReflector(fmt.Sprintf("Reflector-%s", zkConfig.Name), ss, listwatcher, time.Second*600,
+		ctl)
 	return ctl, nil
 }
 
-//ServiceObjectKeyFn create key for ServiceObject
+// ServiceObjectKeyFn create key for ServiceObject
 func ServiceObjectKeyFn(obj interface{}) (string, error) {
 	svc, ok := obj.(*bcstypes.BcsService)
 	if !ok {
@@ -266,7 +270,7 @@ func ServiceObjectKeyFn(obj interface{}) (string, error) {
 	return path.Join(svc.NameSpace, svc.Name), nil
 }
 
-//ServiceObjectNewFn create new Service Object
+// ServiceObjectNewFn create new Service Object
 func ServiceObjectNewFn() meta.Object {
 	return new(bcstypes.BcsService)
 }

@@ -11,6 +11,7 @@
  *
  */
 
+// Package alert xxx
 package alert
 
 import (
@@ -28,6 +29,7 @@ import (
 )
 
 const (
+	// DefaultAlarmProjectID xxx
 	DefaultAlarmProjectID = "5805f1b824134fa39318fb0cf59f694b"
 )
 

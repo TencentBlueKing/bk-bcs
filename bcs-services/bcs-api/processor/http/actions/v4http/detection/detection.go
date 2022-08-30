@@ -11,6 +11,7 @@
  *
  */
 
+// Package detection xxx
 package detection
 
 import (
@@ -31,7 +32,9 @@ import (
 )
 
 const (
-	BCSAPIPrefix         = "/bcsapi/v4/detection/"
+	// BCSAPIPrefix xxx
+	BCSAPIPrefix = "/bcsapi/v4/detection/"
+	// BCSDetectionPrefixV4 xxx
 	BCSDetectionPrefixV4 = "/detection/v4/"
 )
 
@@ -43,10 +46,14 @@ var (
 )
 
 func init() {
-	actions.RegisterAction(actions.Action{Verb: "POST", Path: "/bcsapi/v4/detection/{uri:*}", Params: nil, Handler: detectionProxyActions})
-	actions.RegisterAction(actions.Action{Verb: "PUT", Path: "/bcsapi/v4/detection/{uri:*}", Params: nil, Handler: detectionProxyActions})
-	actions.RegisterAction(actions.Action{Verb: "GET", Path: "/bcsapi/v4/detection/{uri:*}", Params: nil, Handler: detectionProxyActions})
-	actions.RegisterAction(actions.Action{Verb: "DELETE", Path: "/bcsapi/v4/detection/{uri:*}", Params: nil, Handler: detectionProxyActions})
+	actions.RegisterAction(actions.Action{Verb: "POST", Path: "/bcsapi/v4/detection/{uri:*}", Params: nil,
+		Handler: detectionProxyActions})
+	actions.RegisterAction(actions.Action{Verb: "PUT", Path: "/bcsapi/v4/detection/{uri:*}", Params: nil,
+		Handler: detectionProxyActions})
+	actions.RegisterAction(actions.Action{Verb: "GET", Path: "/bcsapi/v4/detection/{uri:*}", Params: nil,
+		Handler: detectionProxyActions})
+	actions.RegisterAction(actions.Action{Verb: "DELETE", Path: "/bcsapi/v4/detection/{uri:*}", Params: nil,
+		Handler: detectionProxyActions})
 }
 
 // defaultdetectionTransport is default detection transport instance.
@@ -87,7 +94,8 @@ func detectionDirector(req *http.Request) {
 	}
 	serv, err := rd.GetModuleServers(types.BCS_MODULE_NETWORKDETECTION)
 	if err != nil {
-		blog.Error("detection director, can't get target server module[%s] from RD, %+v", types.BCS_MODULE_NETWORKDETECTION, err)
+		blog.Error("detection director, can't get target server module[%s] from RD, %+v", types.BCS_MODULE_NETWORKDETECTION,
+			err)
 		return
 	}
 	ser, ok := serv.(*types.NetworkDetectionServInfo)

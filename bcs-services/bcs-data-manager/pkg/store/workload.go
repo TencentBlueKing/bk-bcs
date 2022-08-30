@@ -471,6 +471,7 @@ func (m *ModelWorkload) generateWorkloadResponse(public types.WorkloadPublicMetr
 	return response
 }
 
+// preAggregateMax xxx
 // pre aggregate max value before update
 func (m *ModelWorkload) preAggregateMax(data *types.WorkloadData, newMetric *types.WorkloadMetrics) {
 	if data.MaxInstanceTime != nil && newMetric.MaxInstanceTime != nil {
@@ -504,6 +505,7 @@ func (m *ModelWorkload) preAggregateMax(data *types.WorkloadData, newMetric *typ
 	}
 }
 
+// preAggregateMin xxx
 // pre aggregate min value before update
 func (m *ModelWorkload) preAggregateMin(data *types.WorkloadData, newMetric *types.WorkloadMetrics) {
 	if data.MinInstanceTime != nil && newMetric.MinInstanceTime != nil {
@@ -551,7 +553,7 @@ func getMin(old *bcsdatamanager.ExtremumRecord, new *bcsdatamanager.ExtremumReco
 	return new
 }
 
-// generate cond according to job options
+// generateCond cond according to job options
 func (m *ModelWorkload) generateCond(opts *types.JobCommonOpts, bucket string) []*operator.Condition {
 	cond := make([]*operator.Condition, 0)
 	if opts.ProjectID != "" {

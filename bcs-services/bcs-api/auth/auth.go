@@ -11,6 +11,7 @@
  *
  */
 
+// Package auth xxx
 package auth
 
 import (
@@ -20,21 +21,28 @@ import (
 	"time"
 )
 
+// BcsAuth xxx
 type BcsAuth interface {
 	GetToken(header http.Header) (*Token, error)
 	Allow(token *Token, action Action, resource Resource) (bool, error)
 }
 
+// Action xxx
 type Action string
 
 const (
+	// ActionManage xxx
 	ActionManage Action = "cluster-manager"
-	ActionRead   Action = "cluster-readonly"
+	// ActionRead xxx
+	ActionRead Action = "cluster-readonly"
 
+	// TokenDefaultExpireTime xxx
 	TokenDefaultExpireTime = 2 * time.Hour
-	TokenRandomLength      = 10
+	// TokenRandomLength xxx
+	TokenRandomLength = 10
 )
 
+// Token xxx
 type Token struct {
 	Token      string    `json:"token"`
 	Username   string    `json:"username"`
@@ -45,6 +53,7 @@ type Token struct {
 	UpdateTime time.Time `json:"update_time"`
 }
 
+// Sign xxx
 func (t *Token) Sign(duration time.Duration) {
 	if duration == 0 {
 		duration = TokenDefaultExpireTime
@@ -52,10 +61,12 @@ func (t *Token) Sign(duration time.Duration) {
 	t.ExpireTime = time.Now().Add(duration)
 }
 
+// Generate xxx
 func (t *Token) Generate() {
 	t.Token = fmt.Sprintf("%d_%s", time.Now().Unix(), randomString())
 }
 
+// Resource xxx
 type Resource struct {
 	ClusterID string `json:"cluster_id"`
 	Namespace string `json:"namespace"`

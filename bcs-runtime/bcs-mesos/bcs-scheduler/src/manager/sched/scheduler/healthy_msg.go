@@ -61,9 +61,11 @@ func (s *Scheduler) HealthyReport(healthyResult *bcstype.HealthCheckResult) {
 			if healthStatus.Result != healthy {
 				blog.Infof("healthy report: Task(%s) running, remote healthy change to %t(%s)", taskID, healthy, message)
 				if healthy == false {
-					s.SendHealthMsg(alarm.WarnKind, taskGroup.RunAs, task.ID+"("+taskGroup.HostName+")"+" remote healthy false: "+message, "", nil)
+					s.SendHealthMsg(alarm.WarnKind, taskGroup.RunAs, task.ID+"("+taskGroup.HostName+")"+" remote healthy false: "+
+						message, "", nil)
 				} else {
-					s.SendHealthMsg(alarm.InfoKind, taskGroup.RunAs, task.ID+"("+taskGroup.HostName+")"+" remote healthy true: "+message, "", nil)
+					s.SendHealthMsg(alarm.InfoKind, taskGroup.RunAs, task.ID+"("+taskGroup.HostName+")"+" remote healthy true: "+
+						message, "", nil)
 				}
 			}
 

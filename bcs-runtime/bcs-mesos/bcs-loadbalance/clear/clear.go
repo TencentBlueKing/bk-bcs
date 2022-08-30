@@ -11,6 +11,7 @@
  *
  */
 
+// Package clear xxx
 package clear
 
 import (
@@ -24,40 +25,41 @@ import (
 
 type fileInfo []os.FileInfo
 
-//Less sort Less interface
+// Less sort Less interface
 func (fi fileInfo) Less(i, j int) bool {
 	return fi[i].ModTime().Unix() < fi[j].ModTime().Unix()
 }
 
-//Len sort Len interface
+// Len sort Len interface
 func (fi fileInfo) Len() int {
 	return len(fi)
 }
 
-//Swap sort swap interface
+// Swap sort swap interface
 func (fi fileInfo) Swap(i, j int) {
 	fi[i], fi[j] = fi[j], fi[i]
 }
 
-//NewClearManager new a ClearManager
+// NewClearManager new a ClearManager
 func NewClearManager() *Manager {
 	return &Manager{
 		exit: make(chan struct{}),
 	}
 }
 
-//Manager timer clear go runtinue
+// Manager timer clear go runtinue
 type Manager struct {
-	exit chan struct{} //flag for processor exit
+	exit chan struct{} // flag for processor exit
 }
 
-//Start start the runtinue
+// Start start the runtinue
 func (cm *Manager) Start() {
 	go cm.run()
 }
 
-//main goruntine to run timer to clear older files
-//and cacth the signal to exit
+// run xxx
+// main goruntine to run timer to clear older files
+// and cacth the signal to exit
 func (cm *Manager) run() {
 	tick := time.NewTicker(time.Second * time.Duration(int64(120)))
 	defer tick.Stop()
@@ -68,14 +70,14 @@ func (cm *Manager) run() {
 			return
 		case <-tick.C:
 			blog.Infof("begin to clearFiles")
-			//clear oldest template file when files more than 100
+			// clear oldest template file when files more than 100
 			cm.clearFiles()
 			blog.Infof("finish clearFiles")
 		}
 	}
 }
 
-//clearFiles clear files more than 100,sort then by time,oldest in the list head
+// clearFiles clear files more than 100,sort then by time,oldest in the list head
 func (cm *Manager) clearFiles() {
 	files, e := ioutil.ReadDir("/bcs-lb/generate")
 	if e != nil {
@@ -104,7 +106,7 @@ func (cm *Manager) clearFiles() {
 	}
 }
 
-//Stop stop the runtinue
+// Stop stop the runtinue
 func (cm *Manager) Stop() {
 	close(cm.exit)
 }

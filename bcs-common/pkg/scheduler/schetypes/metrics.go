@@ -14,9 +14,11 @@
 package types
 
 const (
-	//namespace
+	// MetricsNamespaceScheduler TODO
+	// namespace
 	MetricsNamespaceScheduler = "bkbcs"
 
-	//subsystem
+	// MetricsSubsystemScheduler TODO
+	// subsystem
 	MetricsSubsystemScheduler = "scheduler"
 )

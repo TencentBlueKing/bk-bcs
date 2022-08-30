@@ -26,7 +26,8 @@ func CopyStruct(dstStructPtr interface{}, srcStructPtr interface{}) *errorx.Proj
 	dstv := reflect.ValueOf(dstStructPtr)
 	srct := reflect.TypeOf(srcStructPtr)
 	dstt := reflect.TypeOf(dstStructPtr)
-	if srct.Kind() != reflect.Ptr || dstt.Kind() != reflect.Ptr || srct.Elem().Kind() == reflect.Ptr || dstt.Elem().Kind() == reflect.Ptr {
+	if srct.Kind() != reflect.Ptr || dstt.Kind() != reflect.Ptr || srct.Elem().Kind() == reflect.Ptr || dstt.Elem().
+		Kind() == reflect.Ptr {
 		return errorx.NewInnerErr("Fatal error:type of parameters must be Ptr of value")
 	}
 	if srcv.IsNil() || dstv.IsNil() {

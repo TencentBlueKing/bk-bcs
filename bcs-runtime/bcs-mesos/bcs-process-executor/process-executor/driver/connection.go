@@ -27,14 +27,16 @@ import (
 	"github.com/golang/protobuf/proto"
 )
 
+// HttpConnection xxx
 type HttpConnection struct {
-	endpoint string //remote http endpoint info
-	uri      string //remote http endpoint uri
-	streamID string //http header Mesos-Stream-Id
+	endpoint string // remote http endpoint info
+	uri      string // remote http endpoint uri
+	streamID string // http header Mesos-Stream-Id
 
 	client *http.Client
 }
 
+// NewHttpConnection xxx
 func NewHttpConnection(endpoint, uri string) *HttpConnection {
 	httpTransport := &http.Transport{
 		Dial: (&net.Dialer{
@@ -53,8 +55,9 @@ func NewHttpConnection(endpoint, uri string) *HttpConnection {
 	}
 }
 
+// Send xxx
 func (conn *HttpConnection) Send(call *protoExec.Call, keepAlive bool) (*http.Response, error) {
-	//create targetURL
+	// create targetURL
 	targetURL := fmt.Sprintf("%s%s", conn.endpoint, conn.uri)
 	// proto serialization
 	payLoad, err := proto.Marshal(call)
@@ -63,7 +66,7 @@ func (conn *HttpConnection) Send(call *protoExec.Call, keepAlive bool) (*http.Re
 		return nil, err
 	}
 
-	//create http request
+	// create http request
 	request, err := http.NewRequest("POST", targetURL, bytes.NewReader(payLoad))
 	if err != nil {
 		blog.Errorf("NewRequest url %s error %s", targetURL, err.Error())

@@ -106,7 +106,7 @@ func TestIsElasticNodeGroupEssentialForScaleDown(t *testing.T) {
 		expectedScaleDown bool
 		message           string
 	}{
-		{ //resource is not idle
+		{ // resource is not idle
 			strategy: &storage.NodeGroupMgrStrategy{
 				Strategy: &storage.Strategy{
 					MaxIdleDelay:   3,
@@ -129,7 +129,7 @@ func TestIsElasticNodeGroupEssentialForScaleDown(t *testing.T) {
 			expectedScaleDown: true,
 			message:           "resource is not idle",
 		},
-		{ //resource is idle
+		{ // resource is idle
 			strategy: &storage.NodeGroupMgrStrategy{
 				Strategy: &storage.Strategy{
 					MaxIdleDelay:   3,
@@ -171,7 +171,7 @@ func TestIsResourcePoolIdleForScaleUp(t *testing.T) {
 		expectedScaleDown bool
 		message           string
 	}{
-		{ //resource is not idle enough
+		{ // resource is not idle enough
 			strategy: &storage.NodeGroupMgrStrategy{
 				Strategy: &storage.Strategy{
 					MaxIdleDelay:   3,
@@ -194,7 +194,7 @@ func TestIsResourcePoolIdleForScaleUp(t *testing.T) {
 			expectedScaleDown: false,
 			message:           "resource is not idle enough",
 		},
-		{ //resource is not idle enough time
+		{ // resource is not idle enough time
 			strategy: &storage.NodeGroupMgrStrategy{
 				Strategy: &storage.Strategy{
 					MaxIdleDelay:   3,
@@ -347,7 +347,7 @@ func TestScaleUp_createActionErr(t *testing.T) {
 	store.On("GetNodeGroup", nodeGroups[0].NodeGroupID, &storage.GetOptions{}).Return(nodeGroups[0], nil)
 	store.On("GetNodeGroup", nodeGroups[1].NodeGroupID, &storage.GetOptions{}).Return(nodeGroups[1], nil)
 	store.On("UpdateNodeGroup", nodeGroups[0], &storage.UpdateOptions{}).Return(nodeGroups[0], nil)
-	//store.On("UpdateNodeGroup", nodeGroups[1], &storage.UpdateOptions{}).Return(nodeGroups[1], nil)
+	// store.On("UpdateNodeGroup", nodeGroups[1], &storage.UpdateOptions{}).Return(nodeGroups[1], nil)
 	store.On("CreateNodeGroupAction",
 		basemock.MatchedBy(func(action *storage.NodeGroupAction) bool {
 			return action.NodeGroupID == expectedActions[0].NodeGroupID &&
@@ -504,7 +504,7 @@ func TestScaleDown_createActionErr(t *testing.T) {
 	store.On("GetNodeGroup", nodeGroups[0].NodeGroupID, &storage.GetOptions{}).Return(nodeGroups[0], nil)
 	store.On("GetNodeGroup", nodeGroups[1].NodeGroupID, &storage.GetOptions{}).Return(nodeGroups[1], nil)
 	store.On("UpdateNodeGroup", nodeGroups[0], &storage.UpdateOptions{}).Return(nodeGroups[0], nil)
-	//store.On("UpdateNodeGroup", nodeGroups[1], &storage.UpdateOptions{}).Return(nodeGroups[1], nil)
+	// store.On("UpdateNodeGroup", nodeGroups[1], &storage.UpdateOptions{}).Return(nodeGroups[1], nil)
 	store.On("CreateNodeGroupAction",
 		basemock.MatchedBy(func(action *storage.NodeGroupAction) bool {
 			t.Logf("ScaleDown number by weight, DesiredSize: %d, DeltaNum: %d", action.NewDesiredNum, action.DeltaNum)
@@ -591,7 +591,7 @@ func TestTracingDown_cleanActionsErr(t *testing.T) {
 	}
 	// init test data, two
 	strategy := getTestStrategy()
-	//nodeGroups := getScaleDownNodeGroups()
+	// nodeGroups := getScaleDownNodeGroups()
 	scaleDownNum := 10
 	scaleDownActions := []*storage.NodeGroupAction{
 		{

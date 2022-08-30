@@ -11,6 +11,7 @@
  *
  */
 
+// Package metrics xxx
 package metrics
 
 import (
@@ -86,13 +87,13 @@ func init() {
 	prometheus.MustRegister(requestLatencyHandler)
 }
 
-//ReportAlertAPIMetrics report all api action metrics
+// ReportAlertAPIMetrics report all api action metrics
 func ReportAlertAPIMetrics(handler, method, status string, started time.Time) {
 	requestsTotalAlert.WithLabelValues(handler, method, status).Inc()
 	requestLatencyAlert.WithLabelValues(handler, method, status).Observe(time.Since(started).Seconds())
 }
 
-//ReportAlertManagerAPIMetrics report all api action metrics
+// ReportAlertManagerAPIMetrics report all api action metrics
 func ReportAlertManagerAPIMetrics(handler, method, status string, started time.Time) {
 	requestTotalAPI.WithLabelValues(handler, method, status).Inc()
 	requestLatencyAPI.WithLabelValues(handler, method, status).Observe(time.Since(started).Seconds())

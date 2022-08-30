@@ -11,6 +11,7 @@
  *
  */
 
+// Package tcpserver xxx
 package tcpserver
 
 import (
@@ -37,7 +38,7 @@ func New(listenIP string, listenPort uint, handlerIf protocol.HandlerIf) ServerI
 	return &tcpServer{listenIP: listenIP, listenPort: listenPort, handler: handlerIf}
 }
 
-// HandleConnection 新连接注册
+// handleConnection 新连接注册
 func (cli *tcpServer) handleConnection(conn net.Conn) {
 
 	// 为每个conn 创建一个ProtocolBuffer的
@@ -70,7 +71,8 @@ func (cli *tcpServer) handleConnection(conn net.Conn) {
 		// 流式数据，由系统自己读取并路由给接收者
 		_, copyErr := io.Copy(protoBuffer, conn)
 		if nil != copyErr {
-			blog.Errorf("read error, will close the connection[%s] error information is %s", conn.RemoteAddr().String(), copyErr.Error())
+			blog.Errorf("read error, will close the connection[%s] error information is %s", conn.RemoteAddr().String(),
+				copyErr.Error())
 			conn.Close()
 			return
 		}

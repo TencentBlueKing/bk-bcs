@@ -11,6 +11,7 @@
  *
  */
 
+// Package env xxx
 package env
 
 import (
@@ -19,6 +20,7 @@ import (
 	"github.com/urfave/cli"
 )
 
+// NewEnvCommand xxx
 func NewEnvCommand() cli.Command {
 	return cli.Command{
 		Name:  "env",

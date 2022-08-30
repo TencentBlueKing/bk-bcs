@@ -23,7 +23,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
 )
 
-// ParseDeploy ...
+// ParseDeploy xxx
 func ParseDeploy(manifest map[string]interface{}) map[string]interface{} {
 	deploy := model.Deploy{}
 	common.ParseMetadata(manifest, &deploy.Metadata)
@@ -33,7 +33,7 @@ func ParseDeploy(manifest map[string]interface{}) map[string]interface{} {
 	return structs.Map(deploy)
 }
 
-// ParseDeploySpec ...
+// ParseDeploySpec xxx
 func ParseDeploySpec(manifest map[string]interface{}, spec *model.DeploySpec) {
 	ParseDeployReplicas(manifest, &spec.Replicas)
 	tmplSpec, _ := mapx.GetItems(manifest, "spec.template.spec")
@@ -46,7 +46,7 @@ func ParseDeploySpec(manifest map[string]interface{}, spec *model.DeploySpec) {
 	ParseSpecOther(podSpec, &spec.Other)
 }
 
-// ParseDeployReplicas ...
+// ParseDeployReplicas xxx
 func ParseDeployReplicas(manifest map[string]interface{}, replicas *model.DeployReplicas) {
 	replicas.Cnt = mapx.GetInt64(manifest, "spec.replicas")
 	replicas.UpdateStrategy = mapx.Get(manifest, "spec.strategy.type", DefaultUpdateStrategy).(string)

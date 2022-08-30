@@ -12,6 +12,7 @@
  * limitations under the License.
  */
 
+// Package redis xxx
 package redis
 
 import (
@@ -30,7 +31,7 @@ const (
 	CacheKeyPrefix = "bcs-services-cr"
 )
 
-// Cache ...
+// Cache xxx
 type Cache struct {
 	name      string        // 缓存键名
 	keyPrefix string        // 缓存键前缀
@@ -63,7 +64,7 @@ func (c *Cache) genKey(key string) string {
 	return c.keyPrefix + ":" + key
 }
 
-// Set ...
+// Set xxx
 func (c *Cache) Set(key crCache.Key, value interface{}, duration time.Duration) error {
 	if duration == time.Duration(0) {
 		duration = c.exp
@@ -77,20 +78,20 @@ func (c *Cache) Set(key crCache.Key, value interface{}, duration time.Duration) 
 	})
 }
 
-// Exists ...
+// Exists xxx
 func (c *Cache) Exists(key crCache.Key) bool {
 	k := c.genKey(key.Key())
 	count, err := c.cli.Exists(context.TODO(), k).Result()
 	return err == nil && count == 1
 }
 
-// Get ...
+// Get xxx
 func (c *Cache) Get(key crCache.Key, value interface{}) error {
 	k := c.genKey(key.Key())
 	return c.codec.Get(context.TODO(), k, value)
 }
 
-// Delete ...
+// Delete xxx
 func (c *Cache) Delete(key crCache.Key) error {
 	k := c.genKey(key.Key())
 	_, err := c.cli.Del(context.TODO(), k).Result()

@@ -22,9 +22,9 @@ import (
 // LocationForwardStrategy forward strategy for location
 type LocationForwardStrategy struct {
 	Type string `json:"type,omitempty"`
-	//1.DEFAULT: detail默认为”wrr”,根据rs的权重转发请求数, detai:[“wrr”, “ip_hash”, “least_conn”]
-	//2.REDIRECT: 无RS，将请求重定向到detail指定的url,
-	//3.RETRUNFAIL:无RS,直接返回错误码,detail为错误码
+	// 1.DEFAULT: detail默认为”wrr”,根据rs的权重转发请求数, detai:[“wrr”, “ip_hash”, “least_conn”]
+	// 2.REDIRECT: 无RS，将请求重定向到detail指定的url,
+	// 3.RETRUNFAIL:无RS,直接返回错误码,detail为错误码
 	Detail string `json:"detail,omitempty"`
 }
 

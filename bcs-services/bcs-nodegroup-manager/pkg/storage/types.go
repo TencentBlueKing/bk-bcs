@@ -26,7 +26,7 @@ const (
 	ScaleDownState = "Scaledown"
 	// ErrState error happened
 	ErrState = "ErrState"
-	// TimeoutState
+	// TimeoutState TODO
 	TimeoutState = "TimeoutState"
 	// InitState information initialization
 	InitState = "InitState"

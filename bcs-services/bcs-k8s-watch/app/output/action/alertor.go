@@ -74,7 +74,7 @@ func (alertor *Alertor) genHealthInfo(syncData *SyncData) *api.HealthInfo {
 	}
 
 	// 2018-07-11: change IP from event source IP to module IP
-	//IP:        event.Source.Host,
+	// IP:        event.Source.Host,
 	message := fmt.Sprintf("[%s %s]%s:%s", event.InvolvedObject.Kind,
 		event.InvolvedObject.Name, event.Reason, event.Message)
 	seconds := uint16(60)
@@ -82,7 +82,7 @@ func (alertor *Alertor) genHealthInfo(syncData *SyncData) *api.HealthInfo {
 		AlarmName: "podEventWarnning",
 		Kind:      api.WarnKind,
 		Message:   message,
-		//AlarmID:            string(event.InvolvedObject.UID),
+		// AlarmID:            string(event.InvolvedObject.UID),
 		AlarmID:            syncData.OwnerUID,
 		ConvergenceSeconds: &seconds,
 		ResourceType:       event.InvolvedObject.Kind,
@@ -105,7 +105,7 @@ func (alertor *Alertor) sendAlarm(healthInfo *api.HealthInfo) bool {
 
 	glog.Errorf("Add Event Pod Warnning: %v", healthInfo)
 
-	//return true
+	// return true
 
 	if err := api.SendHealthInfo(healthInfo); err != nil {
 		glog.Errorf("SendHealthInfo failed:%s", err.Error())

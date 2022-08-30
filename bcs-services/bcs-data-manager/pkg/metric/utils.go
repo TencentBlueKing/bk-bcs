@@ -22,61 +22,100 @@ import (
 )
 
 const (
+	// WorkloadCPUUsage TODO
 	WorkloadCPUUsage = "sum(rate(container_cpu_usage_seconds_total{%s}[%s]))by(%s)"
-	ClusterCPUUsage  = "sum(irate(node_cpu_seconds_total{cluster_id=\"%s\", job=\"node-exporter\", " +
+	// ClusterCPUUsage TODO
+	ClusterCPUUsage = "sum(irate(node_cpu_seconds_total{cluster_id=\"%s\", job=\"node-exporter\", " +
 		"mode!=\"idle\"}[%s]))"
-	NamespaceCPUUsage        = "sum(rate(container_cpu_usage_seconds_total{%s}[%s]))by(%s)"
-	InstanceCount            = "count(sum(rate(container_cpu_usage_seconds_total{%s}[%s]))by(%s))"
-	K8sWorkloadCPURequest    = "sum(sum(kube_pod_container_resource_requests_cpu_cores{%s})by(%s))"
-	K8sCPURequest            = "sum(kube_pod_container_resource_requests_cpu_cores{%s})by(%s)"
-	WorkloadMemoryUsed       = "sum(sum(container_memory_rss{%s})by(%s))"
-	NamespaceMemoryUsed      = "sum(container_memory_rss{%s})by(%s)"
-	ClusterMemoryUsed        = "sum(container_memory_rss{%s})by(%s)"
+	// NamespaceCPUUsage TODO
+	NamespaceCPUUsage = "sum(rate(container_cpu_usage_seconds_total{%s}[%s]))by(%s)"
+	// InstanceCount TODO
+	InstanceCount = "count(sum(rate(container_cpu_usage_seconds_total{%s}[%s]))by(%s))"
+	// K8sWorkloadCPURequest TODO
+	K8sWorkloadCPURequest = "sum(sum(kube_pod_container_resource_requests_cpu_cores{%s})by(%s))"
+	// K8sCPURequest TODO
+	K8sCPURequest = "sum(kube_pod_container_resource_requests_cpu_cores{%s})by(%s)"
+	// WorkloadMemoryUsed TODO
+	WorkloadMemoryUsed = "sum(sum(container_memory_rss{%s})by(%s))"
+	// NamespaceMemoryUsed TODO
+	NamespaceMemoryUsed = "sum(container_memory_rss{%s})by(%s)"
+	// ClusterMemoryUsed TODO
+	ClusterMemoryUsed = "sum(container_memory_rss{%s})by(%s)"
+	// K8sWorkloadMemoryRequest TODO
 	K8sWorkloadMemoryRequest = "sum(sum(kube_pod_container_resource_requests_memory_bytes{%s})by(%s))"
-	K8sMemoryRequest         = "sum(kube_pod_container_resource_requests_memory_bytes{%s})by(%s)"
-	WorkloadInstance         = "count(sum(container_memory_rss{%s}) by (%s))"
-	NamespaceResourceQuota   = "kube_resourcequota{%s, type=\"hard\", %s}"
-	PromMasterIP             = "sum(kube_node_role{cluster_id=\"%s\"})by(node)"
-	PromNodeIP               = "sum(kube_node_created{cluster_id=\"%s\",%s})by(node)"
-	NodeCount                = "count(sum(kube_node_created{cluster_id=\"%s\",%s})by(node))"
-	ClusterTotalCPU          = "sum(machine_cpu_cores{cluster_id=\"%s\"})by(cluster_id)"
-	ClusterTotalMemory       = "sum(machine_memory_bytes{cluster_id=\"%s\"})by(cluster_id)"
-	NodeUsageQuantile        = "quantile(%s,%s)"
+	// K8sMemoryRequest TODO
+	K8sMemoryRequest = "sum(kube_pod_container_resource_requests_memory_bytes{%s})by(%s)"
+	// WorkloadInstance TODO
+	WorkloadInstance = "count(sum(container_memory_rss{%s}) by (%s))"
+	// NamespaceResourceQuota TODO
+	NamespaceResourceQuota = "kube_resourcequota{%s, type=\"hard\", %s}"
+	// PromMasterIP TODO
+	PromMasterIP = "sum(kube_node_role{cluster_id=\"%s\"})by(node)"
+	// PromNodeIP TODO
+	PromNodeIP = "sum(kube_node_created{cluster_id=\"%s\",%s})by(node)"
+	// NodeCount TODO
+	NodeCount = "count(sum(kube_node_created{cluster_id=\"%s\",%s})by(node))"
+	// ClusterTotalCPU TODO
+	ClusterTotalCPU = "sum(machine_cpu_cores{cluster_id=\"%s\"})by(cluster_id)"
+	// ClusterTotalMemory TODO
+	ClusterTotalMemory = "sum(machine_memory_bytes{cluster_id=\"%s\"})by(cluster_id)"
+	// NodeUsageQuantile TODO
+	NodeUsageQuantile = "quantile(%s,%s)"
+	// MesosWorkloadMemoryLimit TODO
 	MesosWorkloadMemoryLimit = "sum(sum(container_spec_memory_limit_bytes{%s})by(%s))"
-	MesosWorkloadCPULimit    = "sum(sum(container_spec_cpu_quota{%s})by(%s)/100000)"
-	MesosMemoryLimit         = "sum(container_spec_memory_limit_bytes{%s})by(%s)"
-	MesosCPULimit            = "sum(container_spec_cpu_quota{%s})by(%s)/100000"
-	NodeCPUUsage             = "sum(irate(node_cpu_seconds_total{cluster_id=\"%s\", job=\"node-exporter\", " +
+	// MesosWorkloadCPULimit TODO
+	MesosWorkloadCPULimit = "sum(sum(container_spec_cpu_quota{%s})by(%s)/100000)"
+	// MesosMemoryLimit TODO
+	MesosMemoryLimit = "sum(container_spec_memory_limit_bytes{%s})by(%s)"
+	// MesosCPULimit TODO
+	MesosCPULimit = "sum(container_spec_cpu_quota{%s})by(%s)/100000"
+	// NodeCPUUsage TODO
+	NodeCPUUsage = "sum(irate(node_cpu_seconds_total{cluster_id=\"%s\", job=\"node-exporter\", " +
 		"mode!=\"idle\",%s}[1m]))by(instance)/" +
 		"sum(count without(cpu, mode) (node_cpu_seconds_total{cluster_id=\"%s\", job=\"node-exporter\", " +
 		"mode=\"idle\",%s}))by(instance)"
+	// ClusterAutoscalerUpCount TODO
 	ClusterAutoscalerUpCount = "sum(kube_event_unique_events_total{cluster_id=\"%s\", " +
 		"source=\"/cluster-autoscaler\",reason=\"ScaledUpGroup\",involved_object_namespace=\"bcs-system\"})"
+	// ClusterAutoscalerDownCount TODO
 	ClusterAutoscalerDownCount = "sum(kube_event_unique_events_total{cluster_id=\"%s\", " +
 		"source=\"/cluster-autoscaler\",reason=\"ScaleDown\", involved_object_namespace=\"bcs-system\"})"
+	// GeneralPodAutoscalerCount TODO
 	GeneralPodAutoscalerCount = "kube_event_unique_events_total{cluster_id=\"%s\", " +
 		"involved_object_kind=\"GeneralPodAutoscaler\",involved_object_name=\"%s\",namespace=\"%s\"," +
 		"source=\"/pod-autoscaler\",reason=\"SuccessfulRescale\"}"
+	// HorizontalPodAutoscalerCount TODO
 	HorizontalPodAutoscalerCount = "kube_event_unique_events_total{cluster_id=\"%s\", " +
 		"involved_object_kind=\"HorizontalPodAutoscaler\",involved_object_name=\"%s\",namespace=\"%s\"," +
 		"source=\"/horizontal-pod-autoscaler\",reason=\"SuccessfulRescale\"}"
+	// MinOverTime TODO
 	MinOverTime = "min_over_time(%s[%s])"
+	// MaxOverTime TODO
 	MaxOverTime = "max_over_time(%s[%s])"
 )
 
 const (
+	// DeploymentPodCondition TODO
 	DeploymentPodCondition = "cluster_id=\"%s\", namespace=\"%s\",pod=~\"%s-[0-9a-z]*-[0-9a-z]*$\"," +
 		"container_name!=\"POD\""
+	// OtherPodCondition TODO
 	OtherPodCondition = "cluster_id=\"%s\", namespace=\"%s\",pod=~\"%s-[0-9a-z]*$\"," +
 		"container_name!=\"POD\""
+	// MesosPodCondition TODO
 	MesosPodCondition = "cluster_id=\"%s\", namespace=\"%s\",name=~\".*.%s.%s.%s.*\"," +
 		"container_name!=\"POD\""
-	PodSumCondition       = "pod"
-	MesosPodSumCondition  = "name"
-	NamespaceCondition    = "cluster_id=\"%s\", namespace=\"%s\""
+	// PodSumCondition TODO
+	PodSumCondition = "pod"
+	// MesosPodSumCondition TODO
+	MesosPodSumCondition = "name"
+	// NamespaceCondition TODO
+	NamespaceCondition = "cluster_id=\"%s\", namespace=\"%s\""
+	// NamespaceSumCondition TODO
 	NamespaceSumCondition = "namespace"
-	ClusterCondition      = "cluster_id=\"%s\""
-	ClusterSumCondition   = "cluster_id"
+	// ClusterCondition TODO
+	ClusterCondition = "cluster_id=\"%s\""
+	// ClusterSumCondition TODO
+	ClusterSumCondition = "cluster_id"
 )
 
 // GetFloatData parse data to float64
@@ -154,7 +193,7 @@ func generateMesosPodCondition(clusterID, namespace, workloadName string) string
 	return fmt.Sprintf(MesosPodCondition, clusterID, namespace, workloadName, namespace, s[len(s)-1])
 }
 
-// 获取数组内所有递增区间的差值，比如[0,1,2,1,2],返回结果为3
+// getIncreasingIntervalDifference 获取数组内所有递增区间的差值，比如[0,1,2,1,2],返回结果为3
 func getIncreasingIntervalDifference(initialNums []int) int {
 	if len(initialNums) == 0 {
 		return 0
@@ -182,7 +221,7 @@ func getIncreasingIntervalDifference(initialNums []int) int {
 	return total
 }
 
-// 时间不连续的地方用0填充
+// fillMetrics 时间不连续的地方用0填充
 func fillMetrics(firstTime float64, initialSlice [][]interface{}, step float64) []int {
 	fillSlice := make([]int, 0)
 	lastTime := initialSlice[0][0].(float64)

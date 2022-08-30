@@ -11,34 +11,36 @@
  *
  */
 
+// Package config xxx
 package config
 
 import "github.com/Tencent/bk-bcs/bcs-common/common/types"
 
+// Config xxx
 type Config struct {
-	//address, exmaple: 127.0.0.1
+	// address, exmaple: 127.0.0.1
 	Address string
-	//port
+	// port
 	Port uint
-	//bcs zookeeper address
+	// bcs zookeeper address
 	BcsZk string
-	//deploy detection node cluster list
-	//example: BCS-MESOS-10000,BCS-MESOS-10001,BCS-MESOS-10002...
+	// deploy detection node cluster list
+	// example: BCS-MESOS-10000,BCS-MESOS-10001,BCS-MESOS-10002...
 	Clusters string
-	//esb app code
+	// esb app code
 	AppCode string
-	//esb app secret
+	// esb app secret
 	AppSecret string
-	//esb operator
+	// esb operator
 	Operator string
-	//esb url
+	// esb url
 	EsbUrl string
-	//cmdb app id
+	// cmdb app id
 	AppId int
-	//http client cert config
+	// http client cert config
 	ClientCert *types.CertConfig
-	//http server cert config
+	// http server cert config
 	ServerCert *types.CertConfig
-	//deployment template json file path
+	// deployment template json file path
 	Template string
 }

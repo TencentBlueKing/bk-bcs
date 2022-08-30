@@ -11,6 +11,7 @@
  *
  */
 
+// Package prometheus xxx
 package prometheus
 
 import (
@@ -32,7 +33,7 @@ import (
 )
 
 const (
-	//ProviderType indicates the provider is prometheus
+	// ProviderType indicates the provider is prometheus
 	ProviderType = "Prometheus"
 )
 
@@ -53,7 +54,7 @@ func (p *Provider) Run(run *v1alpha1.HookRun, metric v1alpha1.Metric) v1alpha1.M
 		StartedAt: &startTime,
 	}
 
-	//TODO(dthomson) make timeout configuriable
+	// TODO(dthomson) make timeout configuriable
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
@@ -81,14 +82,18 @@ func (p *Provider) Run(run *v1alpha1.HookRun, metric v1alpha1.Metric) v1alpha1.M
 }
 
 // Resume should not be used the prometheus provider since all the work should occur in the Run method
-func (p *Provider) Resume(run *v1alpha1.HookRun, metric v1alpha1.Metric, measurement v1alpha1.Measurement) v1alpha1.Measurement {
-	klog.Warningf("HookRun: %s/%s, metric: %s. Prometheus provider should not execute the Resume method", run.Namespace, run.Name, metric.Name)
+func (p *Provider) Resume(run *v1alpha1.HookRun, metric v1alpha1.Metric,
+	measurement v1alpha1.Measurement) v1alpha1.Measurement {
+	klog.Warningf("HookRun: %s/%s, metric: %s. Prometheus provider should not execute the Resume method", run.Namespace,
+		run.Name, metric.Name)
 	return measurement
 }
 
 // Terminate should not be used the prometheus provider since all the work should occur in the Run method
-func (p *Provider) Terminate(run *v1alpha1.HookRun, metric v1alpha1.Metric, measurement v1alpha1.Measurement) v1alpha1.Measurement {
-	klog.Warningf("HookRun: %s/%s, metric: %s. Prometheus provider should not execute the Terminate method", run.Namespace, run.Name, metric.Name)
+func (p *Provider) Terminate(run *v1alpha1.HookRun, metric v1alpha1.Metric,
+	measurement v1alpha1.Measurement) v1alpha1.Measurement {
+	klog.Warningf("HookRun: %s/%s, metric: %s. Prometheus provider should not execute the Terminate method", run.Namespace,
+		run.Name, metric.Name)
 	return measurement
 }
 
@@ -118,7 +123,7 @@ func (p *Provider) evaluateResult(result interface{}, metric v1alpha1.Metric) v1
 
 	switch {
 	case metric.SuccessCondition == "" && metric.FailureCondition == "":
-		//Always return success unless there is an error
+		// Always return success unless there is an error
 		return v1alpha1.HookPhaseSuccessful
 	case metric.SuccessCondition != "" && metric.FailureCondition == "":
 		// Without a failure condition, a measurement is considered a failure if the measurement's success condition is not true

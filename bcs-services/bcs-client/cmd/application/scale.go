@@ -21,6 +21,7 @@ import (
 	"github.com/urfave/cli"
 )
 
+// NewScaleCommand xxx
 func NewScaleCommand() cli.Command {
 	return cli.Command{
 		Name:  "scale",
@@ -77,12 +78,14 @@ func scale(c *utils.ClientContext) error {
 }
 
 func scaleApplication(c *utils.ClientContext) error {
-	if err := c.MustSpecified(utils.OptionClusterID, utils.OptionNamespace, utils.OptionName, utils.OptionInstance); err != nil {
+	if err := c.MustSpecified(utils.OptionClusterID, utils.OptionNamespace, utils.OptionName,
+		utils.OptionInstance); err != nil {
 		return err
 	}
 
 	scheduler := v4.NewBcsScheduler(utils.GetClientOption())
-	err := scheduler.ScaleApplication(c.ClusterID(), c.Namespace(), c.String(utils.OptionName), c.Int(utils.OptionInstance))
+	err := scheduler.ScaleApplication(c.ClusterID(), c.Namespace(), c.String(utils.OptionName),
+		c.Int(utils.OptionInstance))
 	if err != nil {
 		return fmt.Errorf("failed to scale application: %v", err)
 	}
@@ -92,7 +95,8 @@ func scaleApplication(c *utils.ClientContext) error {
 }
 
 func scaleProcess(c *utils.ClientContext) error {
-	if err := c.MustSpecified(utils.OptionClusterID, utils.OptionNamespace, utils.OptionName, utils.OptionInstance); err != nil {
+	if err := c.MustSpecified(utils.OptionClusterID, utils.OptionNamespace, utils.OptionName,
+		utils.OptionInstance); err != nil {
 		return err
 	}
 

@@ -26,11 +26,13 @@ import (
 	restful "github.com/emicklei/go-restful"
 )
 
+// BcsClientAPIHandler xxx
 type BcsClientAPIHandler struct {
 	KubeMasterUrl string
 	TLSConfig     options.TLSConfig
 }
 
+// Handler xxx
 func (h *BcsClientAPIHandler) Handler(request *restful.Request, response *restful.Response) {
 	subPath := request.PathParameter("subpath")
 	targetPath := strings.Split(subPath, "bcsclient/")[1]
@@ -90,12 +92,14 @@ func (h *BcsClientAPIHandler) Handler(request *restful.Request, response *restfu
 	response.Write(respBody)
 }
 
+// Config xxx
 func (h *BcsClientAPIHandler) Config(KubeMasterURL string, TLSConfig options.TLSConfig) error {
 	h.KubeMasterUrl = KubeMasterURL
 	h.TLSConfig = TLSConfig
 	return nil
 }
 
+// IfKubeNeedTls xxx
 func (h *BcsClientAPIHandler) IfKubeNeedTls() bool {
 	kubeURL, _ := urllib.Parse(h.KubeMasterUrl)
 	return kubeURL.Scheme == options.HTTPS

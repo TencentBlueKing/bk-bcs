@@ -47,7 +47,8 @@ func (s *StaticMetricsStore) Info(_ context.Context, _ *storepb.InfoRequest) (*s
 }
 
 // GetMatcherSeries : 获取 匹配的 series
-func (s *StaticMetricsStore) GetMatcherSeries(rawSeries []*prompb.TimeSeries, matchers []*labels.Matcher, minTime int64, maxTime int64) []*prompb.TimeSeries {
+func (s *StaticMetricsStore) GetMatcherSeries(rawSeries []*prompb.TimeSeries, matchers []*labels.Matcher, minTime int64,
+	maxTime int64) []*prompb.TimeSeries {
 	seriesMap := map[uint64]*prompb.TimeSeries{}
 
 	for _, raw := range rawSeries {
@@ -156,18 +157,21 @@ func (s *StaticMetricsStore) SendSeries(
 
 // Series 需要继承函数实现
 func (s *StaticMetricsStore) Series(r *storepb.SeriesRequest, srv storepb.Store_SeriesServer) error {
-	logger.Infow("Series func not implemented", "PromQL", clientutil.DumpPromQL(r), "minTime", r.MinTime, "maxTime", r.MaxTime)
+	logger.Infow("Series func not implemented", "PromQL", clientutil.DumpPromQL(r), "minTime", r.MinTime, "maxTime",
+		r.MaxTime)
 	return nil
 }
 
 // LabelNames 只返回__name__
-func (s *StaticMetricsStore) LabelNames(ctx context.Context, r *storepb.LabelNamesRequest) (*storepb.LabelNamesResponse, error) {
+func (s *StaticMetricsStore) LabelNames(ctx context.Context, r *storepb.LabelNamesRequest) (*storepb.LabelNamesResponse,
+	error) {
 	names := &storepb.LabelNamesResponse{Names: []string{labels.MetricName}}
 	return names, nil
 }
 
 // LabelValues 只返回metrics names
-func (s *StaticMetricsStore) LabelValues(ctx context.Context, r *storepb.LabelValuesRequest) (*storepb.LabelValuesResponse, error) {
+func (s *StaticMetricsStore) LabelValues(ctx context.Context, r *storepb.LabelValuesRequest) (
+	*storepb.LabelValuesResponse, error) {
 	values := &storepb.LabelValuesResponse{}
 	if r.Label == labels.MetricName {
 		values.Values = s.MetricNames

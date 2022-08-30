@@ -13,6 +13,7 @@
 
 package types
 
+// BcsDeployment xxx
 type BcsDeployment struct {
 	TypeMeta   `json:",inline"`
 	ObjectMeta `json:"metadata"`
@@ -25,9 +26,10 @@ type BcsDeployment struct {
 	Constraints   *Constraint   `json:"constraint,omitempty"`
 }
 
+// BcsDeploymentSpec xxx
 type BcsDeploymentSpec struct {
 	Instance int `json:"instance"`
-	//RestartPolicy RestartPolicy     `json:"restartPolicy,omitempty"`
+	// RestartPolicy RestartPolicy     `json:"restartPolicy,omitempty"`
 	Selector map[string]string `json:"selector,omitempty"`
 	Template *PodTemplateSpec  `json:"template"`
 	Strategy UpgradeStrategy   `json:"strategy"`
@@ -37,18 +39,25 @@ type BcsDeploymentSpec struct {
 	PauseDeployment bool `json:"pauseDeployment"`
 }
 
+// UpgradeStrategy xxx
 type UpgradeStrategy struct {
 	Type          UpgradeStrategyType `json:"type"`
 	RollingUpdate *RollingUpdate      `json:"rollingupdate"`
 }
 
+// UpgradeStrategyType xxx
 type UpgradeStrategyType string
+
+// RollingOrderType xxx
 type RollingOrderType string
 
 const (
-	RecreateUpgradeStrategyType      UpgradeStrategyType = "Recreate"
+	// RecreateUpgradeStrategyType xxx
+	RecreateUpgradeStrategyType UpgradeStrategyType = "Recreate"
+	// RollingUpdateUpgradeStrategyType xxx
 	RollingUpdateUpgradeStrategyType UpgradeStrategyType = "RollingUpdate"
 
+	// ForceUpdateStrategyType xxx
 	// ForceUpdate means that all the old pods will be deleted. and then recreate
 	// pods with new deployment.
 	// ForceUpdate is "valid" only when you call the k8s update restful api.
@@ -57,9 +66,11 @@ const (
 	// CreateFirstOrder means that the new pod will be created and then delete the old pod
 	// during the whole rolling update operation process. DeleteFirstOrder is quite the opposite.
 	CreateFirstOrder RollingOrderType = "CreateFirst"
+	// DeleteFirstOrder xxx
 	DeleteFirstOrder RollingOrderType = "DeleteFirst"
 )
 
+// RollingUpdate xxx
 type RollingUpdate struct {
 	// The maximum number of pods that can be unavailable during the update.
 	// This can not be 0 if MaxSurge is 0.

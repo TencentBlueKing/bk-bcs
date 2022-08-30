@@ -14,24 +14,24 @@
 
 package cache
 
-// Key ...
+// Key xxx
 type Key interface {
 	Key() string
 }
 
-// StringKey ...
+// StringKey xxx
 type StringKey struct {
 	key string
 }
 
-// NewStringKey ...
+// NewStringKey xxx
 func NewStringKey(key string) StringKey {
 	return StringKey{
 		key: key,
 	}
 }
 
-// Key ...
+// Key xxx
 func (s StringKey) Key() string {
 	return s.key
 }

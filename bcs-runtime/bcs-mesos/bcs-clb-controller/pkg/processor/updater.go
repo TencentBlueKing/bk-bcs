@@ -101,7 +101,7 @@ func init() {
 type Updater struct {
 	// Processor options
 	opt    *Option
-	lbInfo *cloudListenerType.CloudLoadBalancer //loadbalance info for cloud-lb
+	lbInfo *cloudListenerType.CloudLoadBalancer // loadbalance info for cloud-lb
 	// interface to operate cloud lb instance
 	cloudlbCtl cloudlb.Interface
 	// service client for service discovery
@@ -270,6 +270,7 @@ func (updater *Updater) Update() error {
 	return nil
 }
 
+// validateFourLayerRuleConflict xxx
 // if ok, return nil
 // check port conflicts
 func (updater *Updater) validateFourLayerRuleConflict(
@@ -289,6 +290,7 @@ func (updater *Updater) validateFourLayerRuleConflict(
 	return nil
 }
 
+// validateSevenLayerRuleConflict xxx
 // if ok, return nil
 // check ports conflicts and (domain, url) conflicts
 func (updater *Updater) validateSevenLayerRuleConflict(
@@ -365,6 +367,7 @@ func (updater *Updater) validateStsHTTPRuleConflict(
 	return nil
 }
 
+// validateStatefulSetIngress xxx
 // validate StatefulSet Ingress
 func (updater *Updater) validateStatefulSetIngress(
 	ingressSts *ingressType.ClbStatefulSet, fourLayerMap map[int]*ingressType.ClbRule,
@@ -396,6 +399,7 @@ func (updater *Updater) validateStatefulSetIngress(
 	return nil
 }
 
+// validateClbIngress xxx
 // validate all ingresses
 func (updater *Updater) validateClbIngress(ingressList []*ingressType.ClbIngress) bool {
 	fourLayerMap := make(map[int]*ingressType.ClbRule)
@@ -754,6 +758,7 @@ func (updater *Updater) generate7LayerListener(layer7Rule *ingressType.ClbHttpRu
 	return listener, nil
 }
 
+// combineHTTPListener xxx
 // for http listener and https listener, multiple rules may listen the same port
 // merge listener with same port here
 func (updater *Updater) combineHTTPListener(
@@ -860,6 +865,7 @@ func (updater *Updater) bindBackendForStsListenerList(statefulSetRule *ingressTy
 	return nil
 }
 
+// convertStatefulSetRuleToListener xxx
 // [Design]
 // for statfulset rule, we expose [statefulSetRule.SegmentLength] ports for each pod,
 // ports number depends on the [StartIndex and EndIndex and statefulSetRule.SegmentLength] in statefulSetRule
@@ -1029,6 +1035,7 @@ func (updater *Updater) bindBackendForStsHTTPListenerList(statefulSetRule *ingre
 	return nil
 }
 
+// convertStatefulSetHTTPToListener xxx
 // like convertStatefulSetRuleToListener, but set extra config (health check, tls)
 func (updater *Updater) convertStatefulSetHTTPToListener(statefulSetRule *ingressType.ClbStatefulSetHttpRule,
 	protocol string) ([]*cloudListenerType.CloudListener, error) {
@@ -1177,6 +1184,7 @@ func (updater *Updater) getCloudListenerFromCache() ([]*cloudListenerType.CloudL
 	return updater.listenerClient.ListListeners()
 }
 
+// getDiffCloudListeners xxx
 // get diff cloud listener
 func (updater *Updater) getDiffCloudListeners(olds, curs []*cloudListenerType.CloudListener) (
 	[]*cloudListenerType.CloudListener, []*cloudListenerType.CloudListener) {
@@ -1211,6 +1219,7 @@ func (updater *Updater) getDiffCloudListeners(olds, curs []*cloudListenerType.Cl
 	return dels, adds
 }
 
+// getUpdateCloudListeners xxx
 // get cloud listener to be updated
 func (updater *Updater) getUpdateCloudListeners(olds, curs []*cloudListenerType.CloudListener) (
 	[]*cloudListenerType.CloudListener, []*cloudListenerType.CloudListener) {

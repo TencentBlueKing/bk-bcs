@@ -30,13 +30,13 @@ const (
 	ccAllClusterPath = "/v1/projects/resource?access_token=%s"
 	// ccSearchClusterConfigPath :cc get cluster config
 	ccSearchClusterConfigPath = "/v1/clusters/%s/cluster_config?access_token=%s"
-	//ccVersionConfigPath :cc cluster version config
+	// ccVersionConfigPath :cc cluster version config
 	ccVersionConfigPath = "/v1/clusters/%s/cluster_config?access_token=%s"
-	//ccClusterInfoPath :cc get cluster info
+	// ccClusterInfoPath :cc get cluster info
 	ccClusterInfoPath = "/projects/%s/clusters/%s?access_token=%s"
-	//ccAllNodeListPath :cc get all node
+	// ccAllNodeListPath :cc get all node
 	ccAllNodeListPath = "/v1/nodes/all_node_list/?access_token=%s"
-	//ccAllMasterListPath :cc get all master
+	// ccAllMasterListPath :cc get all master
 	ccAllMasterListPath = "/v1/masters/all_master_list/?desire_all_data=1&access_token=%s"
 	// cmCreateProjectPath : cm project path post
 	cmCreateProjectPath = "/clustermanager/v1/project"

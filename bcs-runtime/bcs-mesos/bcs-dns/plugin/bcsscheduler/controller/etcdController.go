@@ -38,24 +38,26 @@ const (
 	watchTypeEndpoint = "endpoint"
 )
 
+// EtcdController xxx
 type EtcdController struct {
-	conCxt         context.Context              //context for exit signal
-	conCancel      context.CancelFunc           //stop all goroutine
-	resyncperiod   int                          //resync all data period
-	resynced       bool                         //status resynced
-	kubeconfig     string                       //kubeconfig for kube-apiserver
-	bkbcsClientSet *internalclientset.Clientset //kube bkbcs clientset
+	conCxt         context.Context              // context for exit signal
+	conCancel      context.CancelFunc           // stop all goroutine
+	resyncperiod   int                          // resync all data period
+	resynced       bool                         // status resynced
+	kubeconfig     string                       // kubeconfig for kube-apiserver
+	bkbcsClientSet *internalclientset.Clientset // kube bkbcs clientset
 	serviceLister  listers.BcsServiceLister
 	endpointLister listers.BcsEndpointLister
-	watchType      string                                   //resource type to watch
-	storage        cache.Store                              //cache storage
-	nsStorage      map[string]context.CancelFunc            //storage for all namespace watcher
-	nsLock         sync.Mutex                               //lock for nsStorage
-	funcs          *clientGoCache.ResourceEventHandlerFuncs //funcs for callback
+	watchType      string                                   // resource type to watch
+	storage        cache.Store                              // cache storage
+	nsStorage      map[string]context.CancelFunc            // storage for all namespace watcher
+	nsLock         sync.Mutex                               // lock for nsStorage
+	funcs          *clientGoCache.ResourceEventHandlerFuncs // funcs for callback
 }
 
-//NewEtcdController create controller according Store, Decoder end EventFuncs
-func NewEtcdController(kconfig, wType string, period int, cache cache.Store, eventFunc *clientGoCache.ResourceEventHandlerFuncs) (*EtcdController, error) {
+// NewEtcdController create controller according Store, Decoder end EventFuncs
+func NewEtcdController(kconfig, wType string, period int, cache cache.Store,
+	eventFunc *clientGoCache.ResourceEventHandlerFuncs) (*EtcdController, error) {
 	if kconfig == "" {
 		return nil, fmt.Errorf("create Controller failed, no kubeconfig provided")
 	}
@@ -89,7 +91,7 @@ func NewEtcdController(kconfig, wType string, period int, cache cache.Store, eve
 	return controller, nil
 }
 
-//RunController running controller, create goroutine watch kube-api data
+// RunController running controller, create goroutine watch kube-api data
 func (ctrl *EtcdController) RunController(stopCh <-chan struct{}) error {
 
 	if ctrl.watchType == watchTypeService {
@@ -97,7 +99,7 @@ func (ctrl *EtcdController) RunController(stopCh <-chan struct{}) error {
 		serviceInformer := factory.Bkbcs().V2().BcsServices()
 		serviceLister := serviceInformer.Lister()
 		ctrl.serviceLister = serviceLister
-		//defer runtime.HandleCrash()
+		// defer runtime.HandleCrash()
 
 		serviceInformer.Informer().AddEventHandler(clientGoCache.ResourceEventHandlerFuncs{
 			AddFunc:    ctrl.AddEvent,
@@ -117,7 +119,7 @@ func (ctrl *EtcdController) RunController(stopCh <-chan struct{}) error {
 		endpointInformer := factory.Bkbcs().V2().BcsEndpoints()
 		endpointLister := endpointInformer.Lister()
 		ctrl.endpointLister = endpointLister
-		//defer runtime.HandleCrash()
+		// defer runtime.HandleCrash()
 
 		endpointInformer.Informer().AddEventHandler(clientGoCache.ResourceEventHandlerFuncs{
 			AddFunc:    ctrl.AddEvent,
@@ -135,9 +137,9 @@ func (ctrl *EtcdController) RunController(stopCh <-chan struct{}) error {
 
 	return nil
 
-	////create resync event for all data
-	//tick := time.NewTicker(time.Second * time.Duration(ctrl.resyncperiod))
-	//for {
+	// //create resync event for all data
+	// tick := time.NewTicker(time.Second * time.Duration(ctrl.resyncperiod))
+	// for {
 	//	select {
 	//	case <-ctrl.conCxt.Done():
 	//		log.Printf("[WARN] controller ask exist")
@@ -154,7 +156,7 @@ func (ctrl *EtcdController) RunController(stopCh <-chan struct{}) error {
 	//		log.Printf("[INFO] resync %s tick, end: %s", ctrl.watchType, time.Now().String())
 	//		ctrl.resynced = false
 	//	}
-	//}
+	// }
 }
 
 func convertToService(obj interface{}) (interface{}, bool, string) {
@@ -185,6 +187,7 @@ func convertToEndpoint(obj interface{}) (interface{}, bool, string) {
 	return ep, true, key
 }
 
+// AddEvent xxx
 func (ctrl *EtcdController) AddEvent(obj interface{}) {
 	if ctrl.watchType == watchTypeService {
 		srv, ok, key := convertToService(obj)
@@ -201,6 +204,7 @@ func (ctrl *EtcdController) AddEvent(obj interface{}) {
 	}
 }
 
+// UpdateEvent xxx
 func (ctrl *EtcdController) UpdateEvent(oldObj, newObj interface{}) {
 	/*if reflect.DeepEqual(oldObj, newObj) {
 		dMeta := newObj.(metav1.Object)
@@ -225,6 +229,7 @@ func (ctrl *EtcdController) UpdateEvent(oldObj, newObj interface{}) {
 	}
 }
 
+// DeleteEvent xxx
 func (ctrl *EtcdController) DeleteEvent(obj interface{}) {
 	if ctrl.watchType == watchTypeService {
 		_, ok, key := convertToService(obj)
@@ -270,18 +275,18 @@ func (ctrl *EtcdController) deleteStorageData(key string) {
 	}
 }
 
-//StopController stop controller event, clean all data
+// StopController stop controller event, clean all data
 func (ctrl *EtcdController) StopController() {
 	log.Printf("[INFO] controller %s stop", ctrl.watchType)
 	ctrl.conCancel()
 }
 
-//Resynced check controller is under resynced
+// Resynced check controller is under resynced
 func (ctrl *EtcdController) Resynced() bool {
 	return ctrl.resynced
 }
 
-//dataResync resync all data from kube-apiserver
+// dataResync resync all data from kube-apiserver
 func (ctrl *EtcdController) dataResync() {
 	if ctrl.watchType == watchTypeService {
 		ctrl.serviceResync()
@@ -290,19 +295,19 @@ func (ctrl *EtcdController) dataResync() {
 	}
 }
 
-//serviceResync resync all service data from kube-apiserver
+// serviceResync resync all service data from kube-apiserver
 func (ctrl *EtcdController) serviceResync() {
-	//bcsServiceList, err := ctrl.bkbcsClientSet.BkbcsV2().BcsServices("").List(metav1.ListOptions{})
+	// bcsServiceList, err := ctrl.bkbcsClientSet.BkbcsV2().BcsServices("").List(metav1.ListOptions{})
 	bcsServiceList, err := ctrl.serviceLister.List(labels.Everything())
 	if err != nil {
 		log.Printf("etcdcontroller list bcs services failed, %s", err.Error())
 	}
 
-	//when we iterator all data in kube-api, we checking:
-	//1. update cache with kube-api data by force
-	//2. cache data is dirty or not(exist in cache but lost in kube-api)
+	// when we iterator all data in kube-api, we checking:
+	// 1. update cache with kube-api data by force
+	// 2. cache data is dirty or not(exist in cache but lost in kube-api)
 
-	//step 1
+	// step 1
 	existsIndex := make(map[string]bool)
 	for _, bcsService := range bcsServiceList {
 		srv := &bcsService.Spec.BcsService
@@ -317,9 +322,9 @@ func (ctrl *EtcdController) serviceResync() {
 			ctrl.funcs.UpdateFunc(old, srv)
 			existsIndex[key] = true
 		} else {
-			//todo(developer): lost data in cache, we add it to cache,
-			//and we still need add watch goroutine for
-			//updating data from zookeeper
+			// todo(developer): lost data in cache, we add it to cache,
+			// and we still need add watch goroutine for
+			// updating data from zookeeper
 			log.Printf("[WARN] RESYNC found service ###%s### lost in cache", key)
 			ctrl.storage.Add(srv)
 			ctrl.funcs.AddFunc(srv)
@@ -327,37 +332,38 @@ func (ctrl *EtcdController) serviceResync() {
 		}
 	}
 
-	//step 2
+	// step 2
 	cacheIndexs := ctrl.storage.ListKeys()
 	for _, indexKey := range cacheIndexs {
 		if _, ok := existsIndex[indexKey]; ok {
 			continue
 		}
 		ns, name := strings.Split(indexKey, "/")[0], strings.Split(indexKey, "/")[1]
-		//bcsService, _ := ctrl.bkbcsClientSet.BkbcsV2().BcsServices(ns).Get(name, metav1.GetOptions{})
+		// bcsService, _ := ctrl.bkbcsClientSet.BkbcsV2().BcsServices(ns).Get(name, metav1.GetOptions{})
 		bcsService, _ := ctrl.serviceLister.BcsServices(ns).Get(name)
 		if bcsService != nil {
-			log.Printf("[WARN] %s all in cache& kube-api, but lost in tmp map, maybe added latest or trigger RESYNC warn", indexKey)
+			log.Printf("[WARN] %s all in cache& kube-api, but lost in tmp map, maybe added latest or trigger RESYNC warn",
+				indexKey)
 			continue
 		}
 		log.Printf("[WARN] %s lost in kube-api, TODO: delete in cache.", indexKey)
-		//todo(developer): logs statistic for repairing this warnning
+		// todo(developer): logs statistic for repairing this warnning
 	}
 }
 
-//endpointResync resync all endpoint data from kube-apiserver
+// endpointResync resync all endpoint data from kube-apiserver
 func (ctrl *EtcdController) endpointResync() {
-	//bcsEndpointList, err := ctrl.bkbcsClientSet.BkbcsV2().BcsEndpoints("").List(metav1.ListOptions{})
+	// bcsEndpointList, err := ctrl.bkbcsClientSet.BkbcsV2().BcsEndpoints("").List(metav1.ListOptions{})
 	bcsEndpointList, err := ctrl.endpointLister.List(labels.Everything())
 	if err != nil {
 		log.Printf("etcdcontroller list bcs endpoints failed, %s", err.Error())
 	}
 
-	//when we iterator all data in kube-api, we checking:
-	//1. update cache with kube-api data by force
-	//2. cache data is dirty or not(exist in cache but lost in kube-api)
+	// when we iterator all data in kube-api, we checking:
+	// 1. update cache with kube-api data by force
+	// 2. cache data is dirty or not(exist in cache but lost in kube-api)
 
-	//step 1
+	// step 1
 	existsIndex := make(map[string]bool)
 	for _, bcsEndpoint := range bcsEndpointList {
 		ep := &bcsEndpoint.Spec.BcsEndpoint
@@ -372,9 +378,9 @@ func (ctrl *EtcdController) endpointResync() {
 			ctrl.funcs.UpdateFunc(old, ep)
 			existsIndex[key] = true
 		} else {
-			//todo(developer): lost data in cache, we add it to cache,
-			//and we still need add watch goroutine for
-			//updating data from zookeeper
+			// todo(developer): lost data in cache, we add it to cache,
+			// and we still need add watch goroutine for
+			// updating data from zookeeper
 			log.Printf("[WARN] RESYNC found endpoint ###%s### lost in cache", key)
 			ctrl.storage.Add(ep)
 			ctrl.funcs.AddFunc(ep)
@@ -382,20 +388,21 @@ func (ctrl *EtcdController) endpointResync() {
 		}
 	}
 
-	//step 2
+	// step 2
 	cacheIndexs := ctrl.storage.ListKeys()
 	for _, indexKey := range cacheIndexs {
 		if _, ok := existsIndex[indexKey]; ok {
 			continue
 		}
 		ns, name := strings.Split(indexKey, "/")[0], strings.Split(indexKey, "/")[1]
-		//bcsEndpoint, _ := ctrl.bkbcsClientSet.BkbcsV2().BcsEndpoints(ns).Get(name, metav1.GetOptions{})
+		// bcsEndpoint, _ := ctrl.bkbcsClientSet.BkbcsV2().BcsEndpoints(ns).Get(name, metav1.GetOptions{})
 		bcsEndpoint, _ := ctrl.endpointLister.BcsEndpoints(ns).Get(name)
 		if bcsEndpoint != nil {
-			log.Printf("[WARN] %s all in cache& kube-api, but lost in tmp map, maybe added latest or trigger RESYNC warn", indexKey)
+			log.Printf("[WARN] %s all in cache& kube-api, but lost in tmp map, maybe added latest or trigger RESYNC warn",
+				indexKey)
 			continue
 		}
 		log.Printf("[WARN] %s lost in kube-api, TODO: delete in cache.", indexKey)
-		//todo(developer): logs statistic for repairing this warnning
+		// todo(developer): logs statistic for repairing this warnning
 	}
 }

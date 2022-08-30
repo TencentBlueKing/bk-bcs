@@ -11,6 +11,7 @@
  *
  */
 
+// Package config xxx
 package config
 
 import (

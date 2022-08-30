@@ -12,13 +12,14 @@
  * limitations under the License.
  */
 
+// Package config xxx
 package config
 
 import (
 	"io/ioutil"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/envs"
-	
+
 	"gopkg.in/yaml.v2"
 )
 
@@ -30,7 +31,7 @@ type EtcdConfig struct {
 	EtcdCa        string `yaml:"ca" usage:"ca file for etcd"`
 }
 
-// MongoConfig
+// MongoConfig xxx
 type MongoConfig struct {
 	Address        string `yaml:"address"`
 	ConnectTimeout uint   `yaml:"connecttimeout"`
@@ -76,12 +77,13 @@ type LogConfig struct {
 	AlsoToStdErr  bool   `yaml:"alsoToStdErr" usage:"also write log to stdErr"`
 }
 
-// SwaggerConfig
+// SwaggerConfig xxx
 type SwaggerConfig struct {
 	Enable bool   `yaml:"enable" usage:"enable swagger"`
 	Dir    string `yaml:"dir" usage:"swagger dir"`
 }
 
+// JWTConfig xxx
 // JwtConfig
 type JWTConfig struct {
 	Enable         bool   `yaml:"enable" usage:"enable jwt"`
@@ -126,6 +128,7 @@ type CMDBConfig struct {
 	Debug             bool   `yaml:"debug" usage:"debug"`
 }
 
+// BCSCCConfig xxx
 // BCSGatewayConfig 请求的 bcs cc 服务配置
 type BCSCCConfig struct {
 	Host string `yaml:"host" usage:"access bcs cc api host"`

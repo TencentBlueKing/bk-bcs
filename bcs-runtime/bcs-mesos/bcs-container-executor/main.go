@@ -22,7 +22,7 @@ import (
 
 func main() {
 	cmd := app.ParseCmdFlags()
-	//rnning with
+	// rnning with
 	if err := app.Run(cmd); err != nil {
 		fmt.Fprintf(os.Stderr, "bcs-container-executor running failed: %s\n", err.Error())
 		os.Exit(1)

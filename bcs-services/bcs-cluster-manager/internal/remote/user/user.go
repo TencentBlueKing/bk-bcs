@@ -11,6 +11,7 @@
  *
  */
 
+// Package user xxx
 package user
 
 import (

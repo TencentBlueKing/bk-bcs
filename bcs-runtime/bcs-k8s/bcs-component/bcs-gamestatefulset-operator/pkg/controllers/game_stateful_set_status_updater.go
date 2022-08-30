@@ -44,7 +44,8 @@ type GameStatefulSetStatusUpdaterInterface interface {
 // NewRealGameStatefulSetStatusUpdater returns a GameStatefulSetStatusUpdaterInterface that updates the Status of a GameStatefulSet,
 // using the supplied client and setLister.
 func NewRealGameStatefulSetStatusUpdater(
-	gstsClient gstsclientset.Interface, setLister gstslister.GameStatefulSetLister, recorder record.EventRecorder) GameStatefulSetStatusUpdaterInterface {
+	gstsClient gstsclientset.Interface, setLister gstslister.GameStatefulSetLister,
+	recorder record.EventRecorder) GameStatefulSetStatusUpdaterInterface {
 	return &realGameStatefulSetStatusUpdater{gstsClient, setLister, recorder}
 }
 
@@ -174,7 +175,8 @@ func completeCurrentCanaryStep(set *gstsv1alpha1.GameStatefulSet, canaryCtx *can
 		}
 	}
 
-	if currentStep.Pause != nil && currentStep.Pause.Duration == nil && pauseCondition != nil && !set.Spec.UpdateStrategy.Paused {
+	if currentStep.Pause != nil && currentStep.Pause.Duration == nil && pauseCondition != nil &&
+		!set.Spec.UpdateStrategy.Paused {
 		klog.Info("GameStatefulSet has been unpaused")
 		return true
 	}
@@ -205,7 +207,8 @@ func completeCurrentCanaryStep(set *gstsv1alpha1.GameStatefulSet, canaryCtx *can
 }
 
 // calculateConditionStatus calculate condition of GameStatefulSet, return true if exist pause condition
-func (ssu *realGameStatefulSetStatusUpdater) calculateConditionStatus(deploy *gstsv1alpha1.GameStatefulSet, canaryCtx *canaryContext) bool {
+func (ssu *realGameStatefulSetStatusUpdater) calculateConditionStatus(deploy *gstsv1alpha1.GameStatefulSet,
+	canaryCtx *canaryContext) bool {
 	newPauseConditions := []hookv1alpha1.PauseCondition{}
 	pauseAlreadyExists := map[hookv1alpha1.PauseReason]bool{}
 	for _, cond := range deploy.Status.PauseConditions {
@@ -231,7 +234,8 @@ func (ssu *realGameStatefulSetStatusUpdater) calculateConditionStatus(deploy *gs
 }
 
 // updateStatus update status and updateStrategy pause of a GameStatefulSet to k8s
-func (ssu *realGameStatefulSetStatusUpdater) updateStatus(set *gstsv1alpha1.GameStatefulSet, newStatus *gstsv1alpha1.GameStatefulSetStatus, newPause *bool) error {
+func (ssu *realGameStatefulSetStatusUpdater) updateStatus(set *gstsv1alpha1.GameStatefulSet,
+	newStatus *gstsv1alpha1.GameStatefulSetStatus, newPause *bool) error {
 	specCopy := set.Spec.DeepCopy()
 	paused := specCopy.UpdateStrategy.Paused
 	if newPause != nil {

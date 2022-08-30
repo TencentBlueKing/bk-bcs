@@ -60,7 +60,7 @@ func (da *DeleteAction) Handle(
 		da.setResp(common.BcsErrClusterManagerInvalidParameter, err.Error())
 		return
 	}
-	//try to get original data for return
+	// try to get original data for return
 	deletedProject, err := da.model.GetProject(da.ctx, da.req.ProjectID)
 	if err != nil {
 		da.setResp(common.BcsErrClusterManagerDBOperation, err.Error())

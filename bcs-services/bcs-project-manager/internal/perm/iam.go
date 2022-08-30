@@ -56,13 +56,17 @@ func NewPermClient() (*iamPerm.BCSProjectPerm, error) {
 }
 
 const (
+	// CreateAction xxx
 	CreateAction = "create"
-	ViewAction   = "view"
+	// ViewAction xxx
+	ViewAction = "view"
+	// UpdateAction xxx
 	UpdateAction = "update"
+	// DeleteAction xxx
 	DeleteAction = "delete"
 )
 
-// 是否豁免权限
+// canExemptClientPerm 是否豁免权限
 func canExemptClientPerm(clientID string, action string) bool {
 	clientActions := config.GlobalConf.ClientActionExemptPerm.ClientActions
 	for _, ca := range clientActions {
@@ -73,7 +77,7 @@ func canExemptClientPerm(clientID string, action string) bool {
 	return false
 }
 
-// CanCreateProject ...
+// CanCreateProject xxx
 func CanCreateProject(authUser auth.AuthUser) error {
 	// 判断是否校验权限
 	if canExemptClientPerm(authUser.ClientID, CreateAction) {
@@ -96,7 +100,7 @@ func CanCreateProject(authUser auth.AuthUser) error {
 	return nil
 }
 
-// CanViewProject ...
+// CanViewProject xxx
 func CanViewProject(authUser auth.AuthUser, projectID string) error {
 	// 判断是否校验权限
 	if canExemptClientPerm(authUser.ClientID, ViewAction) {
@@ -118,7 +122,7 @@ func CanViewProject(authUser auth.AuthUser, projectID string) error {
 	return nil
 }
 
-// CanEditProject ...
+// CanEditProject xxx
 func CanEditProject(authUser auth.AuthUser, projectID string) error {
 	// 判断是否校验权限
 	if canExemptClientPerm(authUser.ClientID, UpdateAction) {
@@ -140,7 +144,7 @@ func CanEditProject(authUser auth.AuthUser, projectID string) error {
 	return nil
 }
 
-// CanDeleteProject ...
+// CanDeleteProject xxx
 func CanDeleteProject(authUser auth.AuthUser, projectID string) error {
 	// 判断是否校验权限
 	if canExemptClientPerm(authUser.ClientID, DeleteAction) {
@@ -162,7 +166,7 @@ func CanDeleteProject(authUser auth.AuthUser, projectID string) error {
 	return nil
 }
 
-// CanCreateVariable ...
+// CanCreateVariable xxx
 func CanCreateVariable(authUser auth.AuthUser, projectCode string) error {
 	// 判断是否校验权限
 	if canExemptClientPerm(authUser.ClientID, CreateAction) {

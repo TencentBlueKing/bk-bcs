@@ -61,6 +61,7 @@ const (
 
 	namespaceTag = "namespace"
 
+	// EventResource TODO
 	EventResource = "Event"
 )
 

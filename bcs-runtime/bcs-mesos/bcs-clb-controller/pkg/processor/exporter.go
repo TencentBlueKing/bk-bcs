@@ -24,6 +24,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 )
 
+// newClbIngressRuleMetricDesc xxx
 // metric desc for normal clb ingress rule
 func newClbIngressRuleMetricDesc(clbname string) *prometheus.Desc {
 	return prometheus.NewDesc(
@@ -36,6 +37,7 @@ func newClbIngressRuleMetricDesc(clbname string) *prometheus.Desc {
 	)
 }
 
+// newClbStatefulSetRuleMetricDesc xxx
 // metric desc for statefulset ingress rule
 func newClbStatefulSetRuleMetricDesc(clbname string) *prometheus.Desc {
 	return prometheus.NewDesc(
@@ -48,6 +50,7 @@ func newClbStatefulSetRuleMetricDesc(clbname string) *prometheus.Desc {
 	)
 }
 
+// newAppNodeMetricDesc xxx
 // metric desc for appnode
 func newAppNodeMetricDesc(clbname string) *prometheus.Desc {
 	return prometheus.NewDesc(
@@ -60,6 +63,7 @@ func newAppNodeMetricDesc(clbname string) *prometheus.Desc {
 	)
 }
 
+// newClbListenerMetricDesc xxx
 // metric desc for listener
 func newClbListenerMetricDesc(clbname string) *prometheus.Desc {
 	return prometheus.NewDesc(
@@ -72,6 +76,7 @@ func newClbListenerMetricDesc(clbname string) *prometheus.Desc {
 	)
 }
 
+// newClbBackendMetricDesc xxx
 // metric desc for clb backends
 func newClbBackendMetricDesc(clbname string) *prometheus.Desc {
 	return prometheus.NewDesc(
@@ -84,6 +89,7 @@ func newClbBackendMetricDesc(clbname string) *prometheus.Desc {
 	)
 }
 
+// newRemoteBackendMetricDesc xxx
 // metric desc for remote backend
 func newRemoteBackendMetricDesc(clbname string) *prometheus.Desc {
 	return prometheus.NewDesc(
@@ -107,6 +113,7 @@ func (p *Processor) Describe(ch chan<- *prometheus.Desc) {
 	ch <- newRemoteBackendMetricDesc(clbname)
 }
 
+// collectAppService xxx
 // collect app node info from AppService cache
 // TODO: for mesos bridge network, the metric is not suitable
 func (p *Processor) collectAppService(ch chan<- prometheus.Metric, appService *serviceclient.AppService) {
@@ -133,6 +140,7 @@ func (p *Processor) collectAppService(ch chan<- prometheus.Metric, appService *s
 	}
 }
 
+// collectIngress xxx
 // collect ingress info from clb cache
 func (p *Processor) collectIngress(
 	ch chan<- prometheus.Metric,
@@ -253,6 +261,7 @@ func (p *Processor) collectStatefulSetIngress(
 	}
 }
 
+// collectRemoteListener xxx
 // collect cloud listener info from cloud api
 func (p *Processor) collectRemoteListener(ch chan<- prometheus.Metric, listeners []*loadbalance.CloudListener) {
 	if len(listeners) == 0 {

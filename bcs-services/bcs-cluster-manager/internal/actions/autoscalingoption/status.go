@@ -51,7 +51,7 @@ func (ua *UpdateAutoScalingStatusAction) setResp(code uint32, msg string) {
 }
 
 func (ua *UpdateAutoScalingStatusAction) getRelativeResource() error {
-	//get relative cluster for information injection
+	// get relative cluster for information injection
 	asOption, err := ua.model.GetAutoScalingOption(ua.ctx, ua.req.ClusterID)
 	if err != nil {
 		ua.setResp(common.BcsErrClusterManagerDBOperation, err.Error())

@@ -11,6 +11,7 @@
  *
  */
 
+// Package haproxy xxx
 package haproxy
 
 import (
@@ -30,12 +31,14 @@ import (
 )
 
 // NewManager create haproxy config file manager
-func NewManager(lbName, binPath, cfgPath, generatePath, backupPath, templatePath string, statusFetchPeriod int) (conf.Manager, error) {
+func NewManager(lbName, binPath, cfgPath, generatePath, backupPath, templatePath string,
+	statusFetchPeriod int) (conf.Manager, error) {
 	envConfig := loadEnvConfig()
 	haproxyClient, err := NewRuntimeClient(envConfig.SockPath)
 	if err != nil {
 		blog.Infof("create haproxy runtime client with sockpath %s failed, err %s", envConfig.SockPath, err.Error())
-		return nil, fmt.Errorf("create haproxy runtime client with sockpath %s failed, err %s", envConfig.SockPath, err.Error())
+		return nil, fmt.Errorf("create haproxy runtime client with sockpath %s failed, err %s", envConfig.SockPath,
+			err.Error())
 	}
 	manager := &Manager{
 		LoadbalanceName:   lbName,
@@ -63,21 +66,21 @@ func NewManager(lbName, binPath, cfgPath, generatePath, backupPath, templatePath
 type Manager struct {
 	Cluster           string // cluster id
 	LoadbalanceName   string // loadbalance instance id
-	haproxyBin        string //absolute path for haproxy executable binary
-	cfgFile           string //absolute path for haproxy cfg file
-	backupDir         string //absolute path for cfg file backup storage
-	tmpDir            string //temporary file for create new file
-	templateFile      string //template file
+	haproxyBin        string // absolute path for haproxy executable binary
+	cfgFile           string // absolute path for haproxy cfg file
+	backupDir         string // absolute path for cfg file backup storage
+	tmpDir            string // temporary file for create new file
+	templateFile      string // template file
 	envConfig         *EnvConfig
 	haproxyClient     *RuntimeClient
 	currentConfig     *Config
 	ConfigCache       *Config
 	statusFetchPeriod int           // period for fetch haproxy stats data
 	stopCh            chan struct{} // chan for stop fetching haproxy stats data
-	stats             *Status       //stats for haproxy
+	stats             *Status       // stats for haproxy
 	statsMutex        sync.Mutex    // lock for stats haproxy
 	sockMutex         sync.Mutex
-	healthInfo        metric.HealthMeta //Health information
+	healthInfo        metric.HealthMeta // Health information
 	healthLock        sync.RWMutex
 }
 
@@ -241,7 +244,7 @@ func (m *Manager) Reload(cfgFile string) error {
 	return nil
 }
 
-// convertHTTPData
+// convertHTTPData xxx
 func (m *Manager) convertHTTPData(HTTP types.HTTPServiceInfoList, protocol string) map[int]*HTTPFrontend {
 	httpMap := make(map[int]*HTTPFrontend)
 	for _, http := range HTTP {
@@ -354,7 +357,8 @@ func (m *Manager) convertData(tmpData *types.TemplateData) *Config {
 // needReload: true means should reload haproxy to do this change
 // needUpdate: true means should call haproxy runtime command
 // haproxyCommand: haproxy runtime commands that should be executed
-func (m *Manager) checkConfigDifference(newConfig *Config) (needReload bool, needUpdate bool, haproxyCommands []string) {
+func (m *Manager) checkConfigDifference(newConfig *Config) (needReload bool, needUpdate bool,
+	haproxyCommands []string) {
 	configNeedReload := false
 	configNeedUpdate := false
 	var configCommands []string
@@ -403,12 +407,14 @@ func (m *Manager) checkConfigDifference(newConfig *Config) (needReload bool, nee
 	}
 	// http frontend
 	if len(newConfig.HTTPMap) != len(m.ConfigCache.HTTPMap) {
-		blog.Infof("new HTTP frontend list is different from cached HTTP frontend list, new length %d, old length %d", len(newConfig.HTTPMap), len(m.ConfigCache.HTTPMap))
+		blog.Infof("new HTTP frontend list is different from cached HTTP frontend list, new length %d, old length %d",
+			len(newConfig.HTTPMap), len(m.ConfigCache.HTTPMap))
 		return true, false, nil
 	}
 	if len(newConfig.HTTPMap) != 0 {
 		for port, httpFrontend := range newConfig.HTTPMap {
-			frontendNeedReload, frontendNeedUpdate, frontendCommands := checkConfigDiffBetweenHTTPFrontend(httpFrontend, m.ConfigCache.HTTPMap[port])
+			frontendNeedReload, frontendNeedUpdate, frontendCommands := checkConfigDiffBetweenHTTPFrontend(httpFrontend,
+				m.ConfigCache.HTTPMap[port])
 			if frontendNeedReload {
 				return true, false, nil
 			}
@@ -420,12 +426,14 @@ func (m *Manager) checkConfigDifference(newConfig *Config) (needReload bool, nee
 	}
 	// https frontend
 	if len(newConfig.HTTPSMap) != len(m.ConfigCache.HTTPSMap) {
-		blog.Infof("new HTTPS frontend list is different from cached HTTPS frontend list, new length %d, old length %d", len(newConfig.HTTPSMap), len(m.ConfigCache.HTTPSMap))
+		blog.Infof("new HTTPS frontend list is different from cached HTTPS frontend list, new length %d, old length %d",
+			len(newConfig.HTTPSMap), len(m.ConfigCache.HTTPSMap))
 		return true, false, nil
 	}
 	if len(newConfig.HTTPSMap) != 0 {
 		for port, httpFrontend := range newConfig.HTTPSMap {
-			frontendNeedReload, frontendNeedUpdate, frontendCommands := checkConfigDiffBetweenHTTPFrontend(httpFrontend, m.ConfigCache.HTTPSMap[port])
+			frontendNeedReload, frontendNeedUpdate, frontendCommands := checkConfigDiffBetweenHTTPFrontend(httpFrontend,
+				m.ConfigCache.HTTPSMap[port])
 			if frontendNeedReload {
 				return true, false, nil
 			}
@@ -437,12 +445,14 @@ func (m *Manager) checkConfigDifference(newConfig *Config) (needReload bool, nee
 	}
 	// tcp listener
 	if len(newConfig.TCPMap) != len(m.ConfigCache.TCPMap) {
-		blog.Infof("new TCP frontend list is different from cache TCP frontend list , new length %d, old length %d", len(newConfig.TCPMap), len(m.ConfigCache.TCPMap))
+		blog.Infof("new TCP frontend list is different from cache TCP frontend list , new length %d, old length %d",
+			len(newConfig.TCPMap), len(m.ConfigCache.TCPMap))
 		return true, false, nil
 	}
 	if len(newConfig.TCPMap) != 0 {
 		for port, tcpListener := range newConfig.TCPMap {
-			listenerNeedReload, listenerNeedUpdate, listenerCommands := checkConfigDiffBetweenTCPListener(tcpListener, m.ConfigCache.TCPMap[port])
+			listenerNeedReload, listenerNeedUpdate, listenerCommands := checkConfigDiffBetweenTCPListener(tcpListener,
+				m.ConfigCache.TCPMap[port])
 			if listenerNeedReload {
 				return true, false, nil
 			}
@@ -456,7 +466,8 @@ func (m *Manager) checkConfigDifference(newConfig *Config) (needReload bool, nee
 	return configNeedReload, configNeedUpdate, configCommands
 }
 
-func checkConfigDiffBetweenTCPListener(newListener *TCPListener, oldListener *TCPListener) (needReload bool, needUpdate bool, haproxyCommands []string) {
+func checkConfigDiffBetweenTCPListener(newListener *TCPListener, oldListener *TCPListener) (needReload bool,
+	needUpdate bool, haproxyCommands []string) {
 	if newListener == nil && oldListener == nil {
 		return false, false, nil
 	}
@@ -473,7 +484,8 @@ func checkConfigDiffBetweenTCPListener(newListener *TCPListener, oldListener *TC
 		return true, false, nil
 	}
 	if len(newListener.Servers) > len(oldListener.Servers) {
-		blog.Infof("new listener %s has %d servers, the old only has %d servers", newListener.Name, len(newListener.Servers), len(oldListener.Servers))
+		blog.Infof("new listener %s has %d servers, the old only has %d servers", newListener.Name, len(newListener.Servers),
+			len(oldListener.Servers))
 		return true, false, nil
 	}
 
@@ -481,7 +493,8 @@ func checkConfigDiffBetweenTCPListener(newListener *TCPListener, oldListener *TC
 
 }
 
-func checkConfigDiffBetweenHTTPFrontend(newFront *HTTPFrontend, oldFront *HTTPFrontend) (needReload bool, needUpdate bool, haproxyCommands []string) {
+func checkConfigDiffBetweenHTTPFrontend(newFront *HTTPFrontend, oldFront *HTTPFrontend) (needReload bool,
+	needUpdate bool, haproxyCommands []string) {
 	frontendNeedReload := false
 	frontendNeedUpdate := false
 	var frontendCommands []string
@@ -511,7 +524,8 @@ func checkConfigDiffBetweenHTTPFrontend(newFront *HTTPFrontend, oldFront *HTTPFr
 			blog.Infof("backend %v is newly added", newFrontBackend)
 			return true, false, nil
 		}
-		backendNeedReload, backendNeedUpdate, backendCommands := checkConfigDiffBetweenHTTPBackend(newFrontBackend, oldFrontBackend)
+		backendNeedReload, backendNeedUpdate, backendCommands := checkConfigDiffBetweenHTTPBackend(newFrontBackend,
+			oldFrontBackend)
 		if backendNeedReload {
 			return true, false, nil
 		}
@@ -523,7 +537,8 @@ func checkConfigDiffBetweenHTTPFrontend(newFront *HTTPFrontend, oldFront *HTTPFr
 	return frontendNeedReload, frontendNeedUpdate, frontendCommands
 }
 
-func checkConfigDiffBetweenHTTPBackend(newBack *HTTPBackend, oldBack *HTTPBackend) (needReload bool, needUpdate bool, haproxyCommands []string) {
+func checkConfigDiffBetweenHTTPBackend(newBack *HTTPBackend, oldBack *HTTPBackend) (needReload bool, needUpdate bool,
+	haproxyCommands []string) {
 	if newBack == nil && oldBack == nil {
 		return false, false, nil
 	}
@@ -536,13 +551,15 @@ func checkConfigDiffBetweenHTTPBackend(newBack *HTTPBackend, oldBack *HTTPBacken
 		return true, false, nil
 	}
 	if len(newBack.Servers) > len(oldBack.Servers) {
-		blog.Infof("newBackend %s has %d servers, the old only has %d servers", newBack.Name, len(newBack.Servers), len(oldBack.Servers))
+		blog.Infof("newBackend %s has %d servers, the old only has %d servers", newBack.Name, len(newBack.Servers),
+			len(oldBack.Servers))
 		return true, false, nil
 	}
 	return checkConfigDiffBetweenRealServer(newBack.Name, newBack.Servers, oldBack.Servers)
 }
 
-func checkConfigDiffBetweenRealServer(backendName string, newServers map[string]*RealServer, oldServers map[string]*RealServer) (needReload bool, needUpdate bool, haproxyCommands []string) {
+func checkConfigDiffBetweenRealServer(backendName string, newServers map[string]*RealServer,
+	oldServers map[string]*RealServer) (needReload bool, needUpdate bool, haproxyCommands []string) {
 	backendNeedReload := false
 	backendNeedUpdate := false
 	var backendCommands []string
@@ -590,7 +607,8 @@ func checkConfigDiffBetweenRealServer(backendName string, newServers map[string]
 					newEnableServerCommand(backendName, oldServer.Name))
 				oldServer.Disabled = false
 			}
-			backendCommands = append(backendCommands, newSetServerAddrCommand(backendName, oldServer.Name, newServer.IP, newServer.Port))
+			backendCommands = append(backendCommands, newSetServerAddrCommand(backendName, oldServer.Name, newServer.IP,
+				newServer.Port))
 			newServer.Name = oldServer.Name
 			occupiedServerMap[oldServer.Key()] = oldServer
 			delete(oldServers, oldServer.Key())

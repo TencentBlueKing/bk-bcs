@@ -11,6 +11,7 @@
  *
  */
 
+// Package discovery xxx
 package discovery
 
 import (
@@ -35,7 +36,8 @@ type serviceDiscovery struct {
 }
 
 // NewServiceDiscovery :
-func NewServiceDiscovery(ctx context.Context, name, version, bindaddr, advertiseAddr string) (*serviceDiscovery, error) {
+func NewServiceDiscovery(ctx context.Context, name, version, bindaddr, advertiseAddr string) (*serviceDiscovery,
+	error) {
 	svr := server.NewServer(
 		server.Name(name+serverNameSuffix),
 		server.Version(version),
@@ -58,7 +60,7 @@ func NewServiceDiscovery(ctx context.Context, name, version, bindaddr, advertise
 	return sd, nil
 }
 
-// Run
+// Run xxx
 func (s *serviceDiscovery) Run() error {
 	return s.srv.Run()
 }

@@ -22,7 +22,7 @@ import (
 )
 
 const (
-	//defaultPage = 0
+	// defaultPage = 0
 	defaultSize = 10
 )
 
@@ -44,6 +44,7 @@ func ensureTable(ctx context.Context, public *Public) error {
 	return nil
 }
 
+// ensure xxx
 // EnsureTable ensure object database table and table indexes
 func ensure(ctx context.Context, db drivers.DB, tableName string, indexes []drivers.Index) error {
 	hasTable, err := db.HasTable(ctx, tableName)

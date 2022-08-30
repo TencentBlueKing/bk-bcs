@@ -53,11 +53,11 @@ func (store *managerStore) SaveDaemonset(daemon *types.BcsDaemonset) error {
 
 	var err error
 	rv, exist := store.CheckDaemonsetExist(daemon)
-	//if exist, then update
+	// if exist, then update
 	if exist {
 		v2Daemonset.ResourceVersion = rv
 		v2Daemonset, err = client.Update(context.Background(), v2Daemonset, metav1.UpdateOptions{})
-		//else not exist, then create it
+		// else not exist, then create it
 	} else {
 		v2Daemonset, err = client.Create(context.Background(), v2Daemonset, metav1.CreateOptions{})
 	}
@@ -65,16 +65,16 @@ func (store *managerStore) SaveDaemonset(daemon *types.BcsDaemonset) error {
 		return err
 	}
 
-	//update kube-apiserver ResourceVersion
+	// update kube-apiserver ResourceVersion
 	daemon.ResourceVersion = v2Daemonset.ResourceVersion
-	//save daemonset in cache
+	// save daemonset in cache
 	saveCacheDaemonset(daemon)
 	return nil
 }
 
 // FetchDaemonset fetch agent for agent InnerIP
 func (store *managerStore) FetchDaemonset(ns, name string) (*types.BcsDaemonset, error) {
-	//fetch agent in cache
+	// fetch agent in cache
 	agent := getCacheDaemonset(ns, name)
 	if agent == nil {
 		return nil, schStore.ErrNoFound
@@ -111,7 +111,7 @@ func (store *managerStore) DeleteDaemonset(ns, name string) error {
 		return err
 	}
 
-	//delete daemonset in cache
+	// delete daemonset in cache
 	deleteCacheDaemonset(ns, name)
 	return nil
 }
@@ -120,8 +120,8 @@ func (store *managerStore) DeleteDaemonset(ns, name string) error {
 func (store *managerStore) ListDaemonsetTaskGroups(namespace, name string) ([]*types.TaskGroup, error) {
 	taskgroups := make([]*types.TaskGroup, 0)
 	daemonset, err := store.FetchDaemonset(namespace, name)
-	//if err!=nil, show application not found
-	//then return empty
+	// if err!=nil, show application not found
+	// then return empty
 	if err != nil {
 		return taskgroups, nil
 	}

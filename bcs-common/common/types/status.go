@@ -17,15 +17,22 @@ import (
 	"time"
 )
 
+// ReplicaControllerStatus xxx
 type ReplicaControllerStatus string
 
 const (
-	RC_Staging   ReplicaControllerStatus = "Staging"
+	// RC_Staging xxx
+	RC_Staging ReplicaControllerStatus = "Staging"
+	// RC_Deploying xxx
 	RC_Deploying ReplicaControllerStatus = "Deploying"
-	RC_Running   ReplicaControllerStatus = "Running"
+	// RC_Running xxx
+	RC_Running ReplicaControllerStatus = "Running"
+	// RC_Operating xxx
 	RC_Operating ReplicaControllerStatus = "Operating"
-	RC_Finish    ReplicaControllerStatus = "Finish"
-	RC_Error     ReplicaControllerStatus = "Error"
+	// RC_Finish xxx
+	RC_Finish ReplicaControllerStatus = "Finish"
+	// RC_Error xxx
+	RC_Error ReplicaControllerStatus = "Error"
 )
 
 // BcsReplicaControllerStatus define ReplicaController status
@@ -55,24 +62,34 @@ type BcsReplicaControllerStatus struct {
 	Kind BcsDataType `json:"kind"`
 }
 
+// PodStatus xxx
 type PodStatus string
 
 const (
-	Pod_Staging  PodStatus = "Staging"
+	// Pod_Staging xxx
+	Pod_Staging PodStatus = "Staging"
+	// Pod_Starting xxx
 	Pod_Starting PodStatus = "Starting"
-	Pod_Running  PodStatus = "Running"
-	Pod_Error    PodStatus = "Error"
-	Pod_Killing  PodStatus = "Killing"
-	Pod_Killed   PodStatus = "Killed"
-	Pod_Failed   PodStatus = "Failed"
-	Pod_Finish   PodStatus = "Finish"
+	// Pod_Running xxx
+	Pod_Running PodStatus = "Running"
+	// Pod_Error xxx
+	Pod_Error PodStatus = "Error"
+	// Pod_Killing xxx
+	Pod_Killing PodStatus = "Killing"
+	// Pod_Killed xxx
+	Pod_Killed PodStatus = "Killed"
+	// Pod_Failed xxx
+	Pod_Failed PodStatus = "Failed"
+	// Pod_Finish xxx
+	Pod_Finish PodStatus = "Finish"
 )
 
+// BcsPodIndex xxx
 type BcsPodIndex struct {
 	Name string `json:"name"`
 }
 
-//BcsPodStatus define pod status
+// BcsPodStatus define pod status
 type BcsPodStatus struct {
 	ObjectMeta `json:"metadata"`
 	// RcName the rc name who create this pod. if this pod is created by pod, RcName is empty
@@ -101,7 +118,7 @@ type BcsPodStatus struct {
 	RestartPolicy *RestartPolicy `json:"restartPolicy,omitempty"`
 	// ContainerStatus is the container status
 	ContainerStatuses []*BcsContainerStatus `json:"containerStatuses,omitempty"`
-	//bcs message
+	// bcs message
 	BcsMessage string `json:"bcsMessage,omitempty"`
 	// added  20181011, add for differentiate process/application
 	Kind BcsDataType `json:"kind"`
@@ -117,6 +134,7 @@ type BcsHealthCheckStatus struct {
 	Message string `json:"message,omitempty"`
 }
 
+// ContainerStatus xxx
 type ContainerStatus string
 
 // There are the valid statuses of container
@@ -131,7 +149,7 @@ const (
 	Container_Error    ContainerStatus = "Error"
 )
 
-//BcsContainerStatus define container status
+// BcsContainerStatus define container status
 type BcsContainerStatus struct {
 	// container name
 	Name string `json:"name"`
@@ -158,11 +176,11 @@ type BcsContainerStatus struct {
 	HealthCheckStatus []*BcsHealthCheckStatus `json:"healCheckStatus,omitempty"`
 	// ports
 	Ports []ContainerPort `json:"containerPort,omitempty"`
-	//command
+	// command
 	Command string `json:"command,omitempty"`
 	// arguments
 	Args []string `json:"args,omitempty"`
-	//volumes
+	// volumes
 	Volumes []Volume `json:"volumes,omitempty"`
 	// network
 	Network string `json:"networkMode,omitempty"`
@@ -170,10 +188,11 @@ type BcsContainerStatus struct {
 	Labels map[string]string `json:"labels,omitempty"`
 	// Resources
 	Resources ResourceRequirements `json:"resources,omitempty"`
-	//envs
+	// envs
 	Env map[string]string `json:"env,omitempty"`
 }
 
+// BcsDeploymentStatus xxx
 type BcsDeploymentStatus struct {
 	ObjectMeta `json:"metadata"`
 	Instance   int32 `json:"instance"`

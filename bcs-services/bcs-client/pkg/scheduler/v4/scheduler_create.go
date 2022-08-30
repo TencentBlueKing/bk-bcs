@@ -18,30 +18,37 @@ import (
 	"net/http"
 )
 
+// CreateApplication xxx
 func (bs *bcsScheduler) CreateApplication(clusterID, namespace string, data []byte) error {
 	return bs.createResource(clusterID, namespace, BcsSchedulerResourceApplication, data)
 }
 
+// CreateProcess xxx
 func (bs *bcsScheduler) CreateProcess(clusterID, namespace string, data []byte) error {
 	return bs.createResource(clusterID, namespace, BcsSchedulerResourceProcess, data)
 }
 
+// CreateConfigMap xxx
 func (bs *bcsScheduler) CreateConfigMap(clusterID, namespace string, data []byte) error {
 	return bs.createResource(clusterID, namespace, BcsSchedulerResourceConfigMap, data)
 }
 
+// CreateSecret xxx
 func (bs *bcsScheduler) CreateSecret(clusterID, namespace string, data []byte) error {
 	return bs.createResource(clusterID, namespace, BcsSchedulerResourceSecret, data)
 }
 
+// CreateService xxx
 func (bs *bcsScheduler) CreateService(clusterID, namespace string, data []byte) error {
 	return bs.createResource(clusterID, namespace, BcsSchedulerResourceService, data)
 }
 
+// CreateDeployment xxx
 func (bs *bcsScheduler) CreateDeployment(clusterID, namespace string, data []byte) error {
 	return bs.createResource(clusterID, namespace, BcsSchedulerResourceDeployment, data)
 }
 
+// CreateDaemonset xxx
 func (bs *bcsScheduler) CreateDaemonset(clusterID, namespace string, data []byte) error {
 	return bs.createResource(clusterID, namespace, BcsSchedulerResourceDaemonset, data)
 }

@@ -34,7 +34,7 @@ var (
 	globalClient *resty.Client
 )
 
-// GetClient
+// GetClient xxx
 func GetClient() *resty.Client {
 	if globalClient == nil {
 		clientOnce.Do(func() {
@@ -55,7 +55,7 @@ type BKResult struct {
 	Data    interface{} `json:"data"`
 }
 
-// 分页配置
+// Pagination 分页配置
 type Pagination struct {
 	Total    int64 `json:"total"`
 	PageSize int64 `json:"pageSize"`

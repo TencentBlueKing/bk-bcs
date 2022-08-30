@@ -11,6 +11,7 @@
  *
  */
 
+// Package utils xxx
 package utils
 
 import (
@@ -26,6 +27,7 @@ import (
 	restclient "k8s.io/client-go/rest"
 )
 
+// TurnCredentialsIntoConfig xxx
 func TurnCredentialsIntoConfig(clusterCredentials *m.ClusterCredentials) *restclient.Config {
 	tlsClientConfig := restclient.TLSClientConfig{
 		CAData: []byte(clusterCredentials.CaCertData),
@@ -38,6 +40,7 @@ func TurnCredentialsIntoConfig(clusterCredentials *m.ClusterCredentials) *restcl
 	}
 }
 
+// GetKubeClient xxx
 func GetKubeClient(clusterId string) (*kubernetes.Clientset, error) {
 	clusterCredentials := sqlstore.GetCredentials(clusterId)
 	if clusterCredentials == nil {
@@ -56,6 +59,7 @@ func GetKubeClient(clusterId string) (*kubernetes.Clientset, error) {
 	return nil, fmt.Errorf("couldn't find an available apiserver for cluster: %s", clusterId)
 }
 
+// pingEndpoint xxx
 // probe the health of the apiserver address for 3 times
 func pingEndpoint(host string) error {
 	var err error

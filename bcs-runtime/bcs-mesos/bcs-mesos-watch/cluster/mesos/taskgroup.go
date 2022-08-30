@@ -33,14 +33,14 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-mesos/bcs-mesos-watch/util"
 )
 
-//TaskControlInfo store all app info under one namespace
+// TaskControlInfo store all app info under one namespace
 type TaskControlInfo struct {
-	path   string             //parent zk node, namespace absolute path
-	cxt    context.Context    //context for creating sub context
-	cancel context.CancelFunc //for cancel sub goroutine
+	path   string             // parent zk node, namespace absolute path
+	cxt    context.Context    // context for creating sub context
+	cancel context.CancelFunc // for cancel sub goroutine
 }
 
-//NewTaskGroupWatch create default taskgroup watch
+// NewTaskGroupWatch create default taskgroup watch
 func NewTaskGroupWatch(cxt context.Context, client ZkClient, reporter cluster.Reporter) *TaskGroupWatch {
 	taskKeyFunc := func(data interface{}) (string, error) {
 		meta, ok := data.(*schedulertypes.TaskGroup)
@@ -65,17 +65,18 @@ func NewTaskGroupWatch(cxt context.Context, client ZkClient, reporter cluster.Re
 	}
 }
 
-//TaskGroupWatch watch for taskGroup
+// TaskGroupWatch watch for taskGroup
 type TaskGroupWatch struct {
-	eventLock    sync.Mutex       //lock for event
-	cancelCxt    context.Context  //context for cancel
-	report       cluster.Reporter //reporter to cluster
-	client       ZkClient         //zookeeper client
-	tasksCache   cache.Store      //taskgroup info cache
-	controlCache cache.Store      //app cache info
+	eventLock    sync.Mutex       // lock for event
+	cancelCxt    context.Context  // context for cancel
+	report       cluster.Reporter // reporter to cluster
+	client       ZkClient         // zookeeper client
+	tasksCache   cache.Store      // taskgroup info cache
+	controlCache cache.Store      // app cache info
 }
 
-//run AppWatch running with namespace node, watch all app node under it
+// addWatch xxx
+// run AppWatch running with namespace node, watch all app node under it
 func (task *TaskGroupWatch) addWatch(appPath string) error {
 	task.eventLock.Lock()
 	defer task.eventLock.Unlock()
@@ -83,7 +84,7 @@ func (task *TaskGroupWatch) addWatch(appPath string) error {
 	if ok {
 		return fmt.Errorf("Path %s is Under watch", appPath)
 	}
-	//ready to watch path
+	// ready to watch path
 	tskCxt, tskCancel := context.WithCancel(task.cancelCxt)
 	blog.Info("WATCH:: taskgroup pathwatch(%s) begin", appPath)
 	control := &TaskControlInfo{
@@ -96,7 +97,7 @@ func (task *TaskGroupWatch) addWatch(appPath string) error {
 	return nil
 }
 
-//cleanWatch clean wath by path
+// cleanWatch clean wath by path
 func (task *TaskGroupWatch) cleanWatch(appPath string) error {
 	task.eventLock.Lock()
 	defer task.eventLock.Unlock()
@@ -111,10 +112,10 @@ func (task *TaskGroupWatch) cleanWatch(appPath string) error {
 	return nil
 }
 
-//pathWatch watch taskgroup list under application path
+// pathWatch watch taskgroup list under application path
 func (task *TaskGroupWatch) pathWatch(cxt context.Context, path string) {
 
-	//Get all children node & setting watch
+	// Get all children node & setting watch
 	children, state, eventChan, wErr := task.client.ChildrenW(path)
 	if wErr != nil {
 		blog.Infof("WATCH:: taskgroup pathwatch %s exit : %s", path, wErr.Error())
@@ -125,11 +126,11 @@ func (task *TaskGroupWatch) pathWatch(cxt context.Context, path string) {
 		task.cleanWatch(path)
 		return
 	}
-	//Get taskGroup detail data & store to local cache
+	// Get taskGroup detail data & store to local cache
 	blog.V(3).Infof("watch taskgroup path(%s), handle grouplist under it", path)
 	task.handleTaskGroupList(cxt, path, children)
 
-	//watch children node event
+	// watch children node event
 	tick := time.NewTicker(240 * time.Second)
 	defer tick.Stop()
 	for {
@@ -185,7 +186,7 @@ func (task *TaskGroupWatch) handleTaskGroupList(cxt context.Context, base string
 	return nil
 }
 
-//taskGroupNodeWatch watch zookeeper taskgroup data node. focus on UPDATE & DELETE event
+// taskGroupNodeWatch watch zookeeper taskgroup data node. focus on UPDATE & DELETE event
 func (task *TaskGroupWatch) taskGroupNodeWatch(cxt context.Context, taskpath string) error {
 
 	_, state, eventChan, err := task.client.GetW(taskpath)
@@ -288,7 +289,7 @@ func (task *TaskGroupWatch) taskGroupNodeWatch(cxt context.Context, taskpath str
 	}
 }
 
-//stop ask appwatch stop, clean all data
+// stop ask appwatch stop, clean all data
 func (task *TaskGroupWatch) stop() {
 	keys := task.controlCache.ListKeys()
 	for _, key := range keys {
@@ -297,7 +298,7 @@ func (task *TaskGroupWatch) stop() {
 	task.tasksCache.Clear()
 }
 
-//IsExist check data exist in local dataCache
+// IsExist check data exist in local dataCache
 func (task *TaskGroupWatch) IsExist(data interface{}) bool {
 	taskData, ok := data.(*schedulertypes.TaskGroup)
 	if !ok {
@@ -310,7 +311,7 @@ func (task *TaskGroupWatch) IsExist(data interface{}) bool {
 	return false
 }
 
-//AddEvent call when data added
+// AddEvent call when data added
 func (task *TaskGroupWatch) AddEvent(obj interface{}) {
 	taskData, ok := obj.(*schedulertypes.TaskGroup)
 	if !ok {
@@ -320,7 +321,7 @@ func (task *TaskGroupWatch) AddEvent(obj interface{}) {
 	blog.Info("EVENT:: Add Event for Taskgroup %s", taskData.ID)
 
 	data := &types.BcsSyncData{
-		//DataType: "TaskGroup",
+		// DataType: "TaskGroup",
 		DataType: task.GetTaskGroupChannelV2(taskData),
 		Action:   types.ActionAdd,
 		Item:     obj,
@@ -332,7 +333,7 @@ func (task *TaskGroupWatch) AddEvent(obj interface{}) {
 	}
 }
 
-//DeleteEvent when delete
+// DeleteEvent when delete
 func (task *TaskGroupWatch) DeleteEvent(obj interface{}) {
 	taskData, ok := obj.(*schedulertypes.TaskGroup)
 	if !ok {
@@ -341,9 +342,9 @@ func (task *TaskGroupWatch) DeleteEvent(obj interface{}) {
 	}
 	blog.Info("EVENT:: Delete Event for TaskGroup %s", taskData.ID)
 
-	//report to cluster
+	// report to cluster
 	data := &types.BcsSyncData{
-		//DataType: "TaskGroup",
+		// DataType: "TaskGroup",
 		DataType: task.GetTaskGroupChannelV2(taskData),
 		Action:   types.ActionDelete,
 		Item:     obj,
@@ -355,7 +356,7 @@ func (task *TaskGroupWatch) DeleteEvent(obj interface{}) {
 	}
 }
 
-//UpdateEvent when update
+// UpdateEvent when update
 func (task *TaskGroupWatch) UpdateEvent(old, cur interface{}, force bool) {
 	taskData, ok := cur.(*schedulertypes.TaskGroup)
 	if !ok {
@@ -367,9 +368,9 @@ func (task *TaskGroupWatch) UpdateEvent(old, cur interface{}, force bool) {
 		return
 	}
 	blog.V(3).Infof("EVENT:: Update Event for TaskGroup %s", taskData.ID)
-	//report to cluster
+	// report to cluster
 	data := &types.BcsSyncData{
-		//DataType: "TaskGroup",
+		// DataType: "TaskGroup",
 		DataType: task.GetTaskGroupChannelV2(taskData),
 		Action:   types.ActionUpdate,
 		Item:     cur,
@@ -381,14 +382,14 @@ func (task *TaskGroupWatch) UpdateEvent(old, cur interface{}, force bool) {
 	}
 }
 
-//GetTaskGroupChannel get taskgroup dispatch channel
+// GetTaskGroupChannel get taskgroup dispatch channel
 func (task *TaskGroupWatch) GetTaskGroupChannel(taskGroup *schedulertypes.TaskGroup) string {
 
 	return "TaskGroup_" + strconv.Itoa(int(taskGroup.InstanceID%100))
 
 }
 
-//GetTaskGroupChannelV2 get taskgroup dispatch channel
+// GetTaskGroupChannelV2 get taskgroup dispatch channel
 func (task *TaskGroupWatch) GetTaskGroupChannelV2(taskGroup *schedulertypes.TaskGroup) string {
 
 	index := util.GetHashId(taskGroup.ID, TaskgroupThreadNum)

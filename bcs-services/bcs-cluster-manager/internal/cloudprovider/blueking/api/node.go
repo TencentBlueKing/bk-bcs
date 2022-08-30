@@ -24,7 +24,7 @@ var nodeMgr sync.Once
 
 func init() {
 	nodeMgr.Do(func() {
-		//init Node
+		// init Node
 		cloudprovider.InitNodeManager("blueking", &NodeManager{})
 	})
 }
@@ -72,7 +72,8 @@ func (nm *NodeManager) ListNodesByIP(ips []string, opt *cloudprovider.ListNodesO
 }
 
 // ListNodeInstanceType list node type by zone and node family
-func (nm *NodeManager) ListNodeInstanceType(zone, nodeFamily string, cpu, memory uint32, opt *cloudprovider.CommonOption) (
+func (nm *NodeManager) ListNodeInstanceType(zone, nodeFamily string, cpu, memory uint32,
+	opt *cloudprovider.CommonOption) (
 	[]*proto.InstanceType, error) {
 	return nil, cloudprovider.ErrCloudNotImplemented
 }

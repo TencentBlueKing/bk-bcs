@@ -31,7 +31,7 @@ var clsMgr sync.Once
 
 func init() {
 	clsMgr.Do(func() {
-		//init Node
+		// init Node
 		cloudprovider.InitClusterManager("qcloud", &Cluster{})
 	})
 }
@@ -144,7 +144,7 @@ func (c *Cluster) DeleteCluster(cls *proto.Cluster, opt *cloudprovider.DeleteClu
 
 // GetCluster get kubernetes cluster detail information according cloudprovider
 func (c *Cluster) GetCluster(cloudID string, opt *cloudprovider.GetClusterOption) (*proto.Cluster, error) {
-	//qcloud.GetClusterClient(opt)
+	// qcloud.GetClusterClient(opt)
 
 	return nil, cloudprovider.ErrCloudNotImplemented
 }
@@ -190,7 +190,8 @@ func transTKEClusterToCloudCluster(clusters []*tke.Cluster) []*proto.CloudCluste
 }
 
 // AddNodesToCluster add new node to cluster according cloudprovider
-func (c *Cluster) AddNodesToCluster(cls *proto.Cluster, nodes []*proto.Node, opt *cloudprovider.AddNodesOption) (*proto.Task, error) {
+func (c *Cluster) AddNodesToCluster(cls *proto.Cluster, nodes []*proto.Node,
+	opt *cloudprovider.AddNodesOption) (*proto.Task, error) {
 	if cls == nil {
 		return nil, fmt.Errorf("qcloud AddNodesToCluster cluster is empty")
 	}
@@ -227,7 +228,8 @@ func (c *Cluster) AddNodesToCluster(cls *proto.Cluster, nodes []*proto.Node, opt
 }
 
 // DeleteNodesFromCluster delete specified nodes from cluster according cloudprovider
-func (c *Cluster) DeleteNodesFromCluster(cls *proto.Cluster, nodes []*proto.Node, opt *cloudprovider.DeleteNodesOption) (*proto.Task, error) {
+func (c *Cluster) DeleteNodesFromCluster(cls *proto.Cluster, nodes []*proto.Node,
+	opt *cloudprovider.DeleteNodesOption) (*proto.Task, error) {
 	if cls == nil {
 		return nil, fmt.Errorf("qcloud DeleteNodesFromCluster cluster is empty")
 	}
@@ -264,7 +266,8 @@ func (c *Cluster) DeleteNodesFromCluster(cls *proto.Cluster, nodes []*proto.Node
 }
 
 // CheckClusterCidrAvailable check cluster CIDR nodesNum when add nodes
-func (c *Cluster) CheckClusterCidrAvailable(cls *proto.Cluster, opt *cloudprovider.CheckClusterCIDROption) (bool, error) {
+func (c *Cluster) CheckClusterCidrAvailable(cls *proto.Cluster, opt *cloudprovider.CheckClusterCIDROption) (bool,
+	error) {
 	if cls == nil || opt == nil {
 		return true, nil
 	}
@@ -289,10 +292,13 @@ func (c *Cluster) CheckClusterCidrAvailable(cls *proto.Cluster, opt *cloudprovid
 	}
 
 	// CIDR IP 数量 - 集群内 Service 数量上限）/ 单节点 Pod 数量上限
-	clusterTotalNodes := uint64(math.Floor(float64((ipCount - uint64(cls.NetworkSettings.MaxServiceNum)) / uint64(cls.NetworkSettings.MaxNodePodNum))))
+	clusterTotalNodes := uint64(math.Floor(float64((ipCount - uint64(cls.NetworkSettings.MaxServiceNum)) / uint64(
+		cls.NetworkSettings.MaxNodePodNum))))
 
-	blog.Infof("cluster[%s] cloud[%s] CheckClusterCidrAvailable ipCount[%v] totalNodesCnt[%v] currentNodes[%v] masterCnt[%v]"+
-		"addNodeCnt[%v]", cls.ClusterID, cloudName, ipCount, clusterTotalNodes, opt.CurrentNodeCnt, len(cls.Master), opt.IncomingNodeCnt)
+	blog.Infof(
+		"cluster[%s] cloud[%s] CheckClusterCidrAvailable ipCount[%v] totalNodesCnt[%v] currentNodes[%v] masterCnt[%v]"+
+			"addNodeCnt[%v]", cls.ClusterID, cloudName, ipCount, clusterTotalNodes, opt.CurrentNodeCnt, len(cls.Master),
+		opt.IncomingNodeCnt)
 
 	availableNodesCnt := clusterTotalNodes - uint64(len(cls.Master)) - opt.CurrentNodeCnt
 	if availableNodesCnt-opt.IncomingNodeCnt < 0 {

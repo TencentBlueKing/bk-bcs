@@ -21,6 +21,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-k8s-custom-scheduler/pkg/actions"
 )
 
+// CustomScheduler xxx
 type CustomScheduler struct {
 	config   *config.CustomSchedulerConfig
 	httpServ *httpserver.HttpServer
@@ -46,6 +47,7 @@ func NewCustomScheduler(conf *config.CustomSchedulerConfig) *CustomScheduler {
 	return customSched
 }
 
+// Start xxx
 func (p *CustomScheduler) Start() error {
 
 	p.httpServ.RegisterWebServer("", nil, actions.GetApiAction())

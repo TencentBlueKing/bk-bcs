@@ -20,17 +20,28 @@ import (
 // MetricList contains the metric resource which order by namespaces
 type MetricList []*metricTypes.Metric
 
-func (m MetricList) Len() int           { return len(m) }
+// Len 用于排序
+func (m MetricList) Len() int { return len(m) }
+
+// Less 用于排序
 func (m MetricList) Less(i, j int) bool { return m[i].Namespace < m[j].Namespace }
-func (m MetricList) Swap(i, j int)      { m[i], m[j] = m[j], m[i] }
+
+// Swap 用于排序
+func (m MetricList) Swap(i, j int) { m[i], m[j] = m[j], m[i] }
 
 type listMetricQuery struct {
 	ClusterID []string `json:"clusterID"`
 	Name      string   `json:"name"`
 }
 
+// MetricTaskList xxx
 type MetricTaskList []*metricTypes.MetricTask
 
-func (m MetricTaskList) Len() int           { return len(m) }
+// Len 用于排序
+func (m MetricTaskList) Len() int { return len(m) }
+
+// Less 用于排序
 func (m MetricTaskList) Less(i, j int) bool { return m[i].Namespace < m[j].Namespace }
-func (m MetricTaskList) Swap(i, j int)      { m[i], m[j] = m[j], m[i] }
+
+// Swap 用于排序
+func (m MetricTaskList) Swap(i, j int) { m[i], m[j] = m[j], m[i] }

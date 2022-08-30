@@ -41,10 +41,10 @@ func XRequestID() context.Context {
 func NewClusterManager(config *Config) cm.ClusterManagerClient {
 	rand.Seed(time.Now().UnixNano())
 	if len(config.Hosts) == 0 {
-		//! pay more attention for nil return
+		// ! pay more attention for nil return
 		return nil
 	}
-	//create grpc connection
+	// create grpc connection
 	header := map[string]string{
 		"x-content-type": "application/grpc+proto",
 		"Content-Type":   "application/grpc",
@@ -82,6 +82,6 @@ func NewClusterManager(config *Config) cm.ClusterManagerClient {
 		blog.Errorf("create no cluster manager client after all instance tries")
 		return nil
 	}
-	//init cluster manager client
+	// init cluster manager client
 	return cm.NewClusterManagerClient(conn)
 }

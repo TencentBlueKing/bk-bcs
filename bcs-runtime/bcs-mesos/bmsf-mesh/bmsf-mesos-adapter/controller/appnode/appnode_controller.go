@@ -54,7 +54,7 @@ func newReconciler(mgr manager.Manager, q queue.Queue) reconcile.Reconciler {
 		scheme:     mgr.GetScheme(),
 		eventQ:     q,
 	}
-	//starting gorutine for event handling
+	// starting gorutine for event handling
 	go r.handleQueue()
 	return r
 }
@@ -79,9 +79,9 @@ var _ reconcile.Reconciler = &ReconcileAppNode{}
 
 // ReconcileAppNode reconciles a AppNode object
 type ReconcileAppNode struct {
-	//client for data operation
+	// client for data operation
 	client.Client
-	//cache for reading data from locally
+	// cache for reading data from locally
 	localCache cache.Cache
 	scheme     *runtime.Scheme
 	eventQ     queue.Queue
@@ -143,7 +143,7 @@ func (r *ReconcileAppNode) handleQueue() {
 			default:
 				blog.Warnf("ReconcileAppNode get unknown Event Type: %s.", event.Type)
 			}
-			//todo(DeveloperJim) default info for timeout?
+			// todo(DeveloperJim) default info for timeout?
 		}
 	}
 }
@@ -154,7 +154,8 @@ func (r *ReconcileAppNode) onAdd(node *meshv1.AppNode) {
 	instance := &meshv1.AppNode{}
 	key, kerr := client.ObjectKeyFromObject(node)
 	if kerr != nil {
-		blog.Errorf("ReconcileAppNode formate %s/%s to Object key failed, %s", node.GetNamespace(), node.GetName(), kerr.Error())
+		blog.Errorf("ReconcileAppNode formate %s/%s to Object key failed, %s", node.GetNamespace(), node.GetName(),
+			kerr.Error())
 		return
 	}
 	if err := ns.CheckNamespace(r.localCache, r, node.GetNamespace()); err != nil {
@@ -176,15 +177,15 @@ func (r *ReconcileAppNode) onAdd(node *meshv1.AppNode) {
 		blog.Errorf("AppNode reads local cache %s failed, %s", key.String(), err.Error())
 		return
 	}
-	//get exist data, ready to update
+	// get exist data, ready to update
 	if reflect.DeepEqual(instance.Spec, node.Spec) {
 		blog.Warnf("ReconcileAppNode get deepEqual in EventAdded, key: %s", key.String())
 		return
 	}
-	//fix(DeveloperJim): change Spec data & Status
+	// fix(DeveloperJim): change Spec data & Status
 	instance.Spec = node.Spec
 	instance.Status.LastUpdateTime = metav1.Now()
-	//ready to Udpate
+	// ready to Udpate
 	if err := r.Update(context.TODO(), instance); err != nil {
 		blog.Errorf("ReconcileAppNode update %s in EventAdded failed, %s", key.String(), err.Error())
 		return
@@ -193,14 +194,16 @@ func (r *ReconcileAppNode) onAdd(node *meshv1.AppNode) {
 		blog.Errorf("ReconcileAppNode update %s Status in EventAdded failed, %s", key.String(), err.Error())
 		return
 	}
-	blog.Warnf("ReconcileAppNode update %s successfully in EventAdded, maybe TaskGroup cache lost in cluster", key.String())
+	blog.Warnf("ReconcileAppNode update %s successfully in EventAdded, maybe TaskGroup cache lost in cluster",
+		key.String())
 }
 
 func (r *ReconcileAppNode) onUpdate(node *meshv1.AppNode) {
 	instance := &meshv1.AppNode{}
 	key, kerr := client.ObjectKeyFromObject(node)
 	if kerr != nil {
-		blog.Errorf("ReconcileAppNode formate %s/%s to Object key failed, %s", node.GetNamespace(), node.GetName(), kerr.Error())
+		blog.Errorf("ReconcileAppNode formate %s/%s to Object key failed, %s", node.GetNamespace(), node.GetName(),
+			kerr.Error())
 		return
 	}
 	err := r.Get(context.TODO(), key, instance)
@@ -211,22 +214,23 @@ func (r *ReconcileAppNode) onUpdate(node *meshv1.AppNode) {
 				blog.Errorf("ReconcileAppNode create new AppNode %s on EventUpated failed, %s", key.String(), err.Error())
 				return
 			}
-			blog.Warnf("ReconcileAppNode creat new AppNode %s on EventUpated successfully, maybe local cache lost data", key.String())
+			blog.Warnf("ReconcileAppNode creat new AppNode %s on EventUpated successfully, maybe local cache lost data",
+				key.String())
 			return
 		}
 		// Error reading the object
 		blog.Errorf("AppNode reads local cache %s on EventUpdated failed, %s", key.String(), err.Error())
 		return
 	}
-	//get exist data, ready to update
+	// get exist data, ready to update
 	if reflect.DeepEqual(instance.Spec, node.Spec) {
 		blog.Warnf("ReconcileAppNode get deepEqual in EventAdded, key: %s", key.String())
 		return
 	}
-	//fix(DeveloperJim): change Spec data & Status
+	// fix(DeveloperJim): change Spec data & Status
 	instance.Spec = node.Spec
 	instance.Status.LastUpdateTime = metav1.Now()
-	//ready to Udpate Spec
+	// ready to Udpate Spec
 	if err := r.Update(context.TODO(), instance); err != nil {
 		blog.Errorf("ReconcileAppNode update %s in EventUpdated failed, %s", key.String(), err.Error())
 		return
@@ -239,7 +243,7 @@ func (r *ReconcileAppNode) onUpdate(node *meshv1.AppNode) {
 }
 
 func (r *ReconcileAppNode) onDelete(node *meshv1.AppNode) {
-	//ready to Udpate
+	// ready to Udpate
 	if err := r.Delete(context.TODO(), node); err != nil {
 		blog.Errorf("ReconcileAppNode DELETE %s/%s failed, %s", node.GetNamespace(), node.GetName(), err.Error())
 		return

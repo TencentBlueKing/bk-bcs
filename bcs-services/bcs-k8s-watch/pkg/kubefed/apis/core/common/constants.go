@@ -13,6 +13,7 @@
 
 package common
 
+// ClusterConditionType xxx
 type ClusterConditionType string
 
 // These are valid conditions of a cluster.
@@ -24,5 +25,6 @@ const (
 )
 
 const (
+	// NamespaceName xxx
 	NamespaceName = "namespaces"
 )

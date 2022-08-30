@@ -36,7 +36,7 @@ func InitMongo(conf *config.MongoConfig) {
 	})
 }
 
-// NewMongo ...
+// NewMongo xxx
 func NewMongo(conf *config.MongoConfig) *mongo.DB {
 	if len(conf.Address) == 0 {
 		panic("mongo address cannot be empty")

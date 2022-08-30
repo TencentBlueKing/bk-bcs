@@ -24,6 +24,7 @@ import (
 var cmdLocks map[string]*sync.Mutex
 var cmdRWlock sync.RWMutex
 
+// InitCmdLockPool xxx
 func (store *managerStore) InitCmdLockPool() {
 	if cmdLocks == nil {
 		blog.Info("init command lock pool")
@@ -31,6 +32,7 @@ func (store *managerStore) InitCmdLockPool() {
 	}
 }
 
+// LockCommand xxx
 func (store *managerStore) LockCommand(cmdId string) {
 
 	cmdRWlock.RLock()
@@ -54,6 +56,7 @@ func (store *managerStore) LockCommand(cmdId string) {
 	return
 }
 
+// UnLockCommand xxx
 func (store *managerStore) UnLockCommand(cmdId string) {
 	cmdRWlock.RLock()
 	myLock, ok := cmdLocks[cmdId]
@@ -70,6 +73,7 @@ func getCommandRootPath() string {
 	return "/" + bcsRootNode + "/" + commandNode
 }
 
+// SaveCommand xxx
 func (store *managerStore) SaveCommand(command *commtypes.BcsCommandInfo) error {
 
 	data, err := json.Marshal(command)
@@ -82,6 +86,7 @@ func (store *managerStore) SaveCommand(command *commtypes.BcsCommandInfo) error 
 	return store.Db.Insert(path, string(data))
 }
 
+// FetchCommand xxx
 func (store *managerStore) FetchCommand(ID string) (*commtypes.BcsCommandInfo, error) {
 
 	path := getCommandRootPath() + "/" + ID
@@ -101,6 +106,7 @@ func (store *managerStore) FetchCommand(ID string) (*commtypes.BcsCommandInfo, e
 	return command, nil
 }
 
+// DeleteCommand xxx
 func (store *managerStore) DeleteCommand(ID string) error {
 
 	path := getCommandRootPath() + "/" + ID

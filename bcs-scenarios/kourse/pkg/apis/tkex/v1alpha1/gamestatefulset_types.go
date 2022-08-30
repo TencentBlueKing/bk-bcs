@@ -21,17 +21,17 @@ import (
 )
 
 const (
-	//ControllerRevisionHashLabelKey controller revision hash tag
+	// ControllerRevisionHashLabelKey controller revision hash tag
 	ControllerRevisionHashLabelKey = "controller-revision-hash"
-	//GameStatefulSetRevisionLabel controller revision hash tag
+	// GameStatefulSetRevisionLabel controller revision hash tag
 	GameStatefulSetRevisionLabel = ControllerRevisionHashLabelKey
-	//DeprecatedRollbackTo deprecated label
+	// DeprecatedRollbackTo deprecated label
 	DeprecatedRollbackTo = "deprecated.deployment.rollback.to"
-	//DeprecatedTemplateGeneration deprecated label
+	// DeprecatedTemplateGeneration deprecated label
 	DeprecatedTemplateGeneration = "deprecated.daemonset.template.generation"
-	//GameStatefulSetPodNameLabel pod name reference label
+	// GameStatefulSetPodNameLabel pod name reference label
 	GameStatefulSetPodNameLabel = "gamestatefulset.kubernetes.io/pod-name"
-	//GameStatefulSetPodOrdinal pod ordinal reference label
+	// GameStatefulSetPodOrdinal pod ordinal reference label
 	GameStatefulSetPodOrdinal = "gamestatefulset.kubernetes.io/pod-ordinal"
 )
 
@@ -317,7 +317,7 @@ type GameStatefulSetStatus struct {
 	PostInplaceHookConditions []PostInplaceHookCondition `json:"postInplaceHookCondition,omitempty"`
 }
 
-//GameStatefulSetConditionType condition type for statefulset
+// GameStatefulSetConditionType condition type for statefulset
 type GameStatefulSetConditionType string
 
 // GameStatefulSetCondition describes the state of a statefulset at a certain point.

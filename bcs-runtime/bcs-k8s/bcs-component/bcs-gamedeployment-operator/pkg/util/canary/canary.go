@@ -11,6 +11,7 @@
  *
  */
 
+// Package canary xxx
 package canary
 
 import (
@@ -97,7 +98,8 @@ func ResetCurrentStepIndex(deploy *gdv1alpha1.GameDeployment) *int32 {
 }
 
 // GetPauseCondition get pause condition with a pause reason
-func GetPauseCondition(deploy *gdv1alpha1.GameDeployment, reason hookv1alpha1.PauseReason) *hookv1alpha1.PauseCondition {
+func GetPauseCondition(deploy *gdv1alpha1.GameDeployment,
+	reason hookv1alpha1.PauseReason) *hookv1alpha1.PauseCondition {
 	for i := range deploy.Status.PauseConditions {
 		cond := deploy.Status.PauseConditions[i]
 		if cond.Reason == reason {

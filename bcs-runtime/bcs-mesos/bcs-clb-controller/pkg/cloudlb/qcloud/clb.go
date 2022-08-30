@@ -79,7 +79,7 @@ func (clb *ClbClient) LoadConfig() error {
 	}
 	clb.clbCfg = clbCfg
 	if clb.clbCfg.ImplementMode == ConfigBcsClbImplementAPI {
-		//create api client
+		// create api client
 		clb.clbAdapter = api.NewCloudClbAPI(
 			clbCfg.ProjectID, clbCfg.Region, clbCfg.SubnetID,
 			clbCfg.VpcID, clbCfg.SecretID, clbCfg.SecretKey, clbCfg.BackendMode,

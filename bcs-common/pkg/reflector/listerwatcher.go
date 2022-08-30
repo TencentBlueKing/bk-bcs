@@ -27,14 +27,14 @@ type ListerWatcher interface {
 	Watch() (watch.Interface, error)
 }
 
-//ListFunc define list function for ListerWatcher
+// ListFunc define list function for ListerWatcher
 type ListFunc func() ([]meta.Object, error)
 
-//WatchFunc define watch function for ListerWatcher
+// WatchFunc define watch function for ListerWatcher
 type WatchFunc func() (watch.Interface, error)
 
-//ListWatch implements ListerWatcher interface
-//protect ListFunc or WatchFunc is nil
+// ListWatch implements ListerWatcher interface
+// protect ListFunc or WatchFunc is nil
 type ListWatch struct {
 	ListFn  ListFunc
 	WatchFn WatchFunc

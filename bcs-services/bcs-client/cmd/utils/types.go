@@ -50,8 +50,8 @@ const (
 	OptionOnlyUpdateResource = "only-update-resource"
 )
 
-//ValidateCustomResourceType check if speicifed CustomResource was registered before.
-//return plural for api request, error if happened
+// ValidateCustomResourceType check if speicifed CustomResource was registered before.
+// return plural for api request, error if happened
 func ValidateCustomResourceType(sche v4.Scheduler, clusterID, apiVersion, kind, cmdType string) (string, error) {
 	list, err := sche.ListCustomResourceDefinition(clusterID)
 	if err != nil {
@@ -62,7 +62,7 @@ func ValidateCustomResourceType(sche v4.Scheduler, clusterID, apiVersion, kind, 
 		return "", fmt.Errorf("invalid type %s", cmdType)
 	}
 	DebugPrintf("##DEBUG##: %v", list.Items)
-	//validate apiVersion, kind & type
+	// validate apiVersion, kind & type
 	found := false
 	plural := ""
 	for _, item := range list.Items {
@@ -82,8 +82,8 @@ func ValidateCustomResourceType(sche v4.Scheduler, clusterID, apiVersion, kind, 
 	return plural, nil
 }
 
-//GetCustomResourceType get Custom Resource type from command line option
-//returns: apiVersion, plural, errror if happened
+// GetCustomResourceType get Custom Resource type from command line option
+// returns: apiVersion, plural, errror if happened
 func GetCustomResourceType(sche v4.Scheduler, cluster, cmdType string) (string, string, error) {
 	list, err := sche.ListCustomResourceDefinition(cluster)
 	if err != nil {
@@ -94,7 +94,7 @@ func GetCustomResourceType(sche v4.Scheduler, cluster, cmdType string) (string, 
 		return "", "", fmt.Errorf("invalid type %s", cmdType)
 	}
 	DebugPrintf("##DEBUG##: %v", list.Items)
-	//validate apiVersion, kind & type
+	// validate apiVersion, kind & type
 	for _, item := range list.Items {
 		if item.Spec.Names.Singular == cmdType {
 			apiVersion := item.Spec.Group + "/" + item.Spec.Version
@@ -104,8 +104,8 @@ func GetCustomResourceType(sche v4.Scheduler, cluster, cmdType string) (string, 
 	return "", "", fmt.Errorf("invalid type: %s, even not match CustomResource", cmdType)
 }
 
-//GetCustomResourceTypeByKind get Custom Resource type by
-//returns: apiVersion, plural, errror if happened
+// GetCustomResourceTypeByKind get Custom Resource type by
+// returns: apiVersion, plural, errror if happened
 func GetCustomResourceTypeByKind(sche v4.Scheduler, cluster, kind string) (string, string, error) {
 	list, err := sche.ListCustomResourceDefinition(cluster)
 	if err != nil {
@@ -116,7 +116,7 @@ func GetCustomResourceTypeByKind(sche v4.Scheduler, cluster, kind string) (strin
 		return "", "", fmt.Errorf("invalid kind %s", kind)
 	}
 	DebugPrintf("##DEBUG##: %v", list.Items)
-	//validate apiVersion, kind & type
+	// validate apiVersion, kind & type
 	for _, item := range list.Items {
 		if item.Spec.Names.Kind == kind {
 			apiVersion := item.Spec.Group + "/" + item.Spec.Version

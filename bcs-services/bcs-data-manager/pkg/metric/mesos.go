@@ -150,7 +150,8 @@ func (g *MetricGetter) getMesosNodeCount(opts *types.JobCommonOpts,
 	return nodeCount, availableNode, nil
 }
 
-// TODO
+// getMesosClusterMemoryMetrics xxx
+// xxx
 func (g *MetricGetter) getMesosClusterMemoryMetrics(opts *types.JobCommonOpts,
 	clients *types.Clients) (int64, int64, int64, float64, error) {
 	var totalMemory, memoryRequest, memoryUsed int64

@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package app xxx
 package app
 
 import (
@@ -411,6 +412,7 @@ func (hm *HelmManager) initMetric() error {
 	return nil
 }
 
+// initTLSConfig xxx
 // init server and client tls config
 func (hm *HelmManager) initTLSConfig() error {
 	if len(hm.opt.ServerCert) != 0 && len(hm.opt.ServerKey) != 0 && len(hm.opt.ServerCa) != 0 {
@@ -454,6 +456,7 @@ func (hm *HelmManager) initJWTClient() error {
 	return nil
 }
 
+// initIAMClient xxx
 // init iam client for perm
 func (hm *HelmManager) initIAMClient() error {
 	iamClient, err := iam.NewIamClient(&iam.Options{

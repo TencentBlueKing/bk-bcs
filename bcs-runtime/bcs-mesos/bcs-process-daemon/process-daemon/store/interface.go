@@ -17,13 +17,17 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-mesos/bcs-process-executor/process-executor/types"
 )
 
+// Store xxx
 type Store interface {
-	//Store process info
+	// StoreProcessInfo xxx
+	// Store process info
 	StoreProcessInfo(processInfo *types.ProcessInfo) error
 
-	//Get all process infos
+	// GetAllProcessInfos xxx
+	// Get all process infos
 	GetAllProcessInfos() ([]*types.ProcessInfo, error)
 
-	//delete process info
+	// DeleteProcessInfo xxx
+	// delete process info
 	DeleteProcessInfo(processInfo *types.ProcessInfo) error
 }

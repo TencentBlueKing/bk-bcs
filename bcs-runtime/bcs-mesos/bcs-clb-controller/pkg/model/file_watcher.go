@@ -91,7 +91,7 @@ func (fw *FileWatcher) WatchFile(path string) (chan FileEvent, error) {
 					return
 				}
 				blog.V(5).Infof("fsnotify watch event %s", event.String())
-				filename := event.Name //filepath.Join(fw.CurrentDir, event.Name)
+				filename := event.Name // filepath.Join(fw.CurrentDir, event.Name)
 				if event.Op&fsnotify.Write == fsnotify.Write {
 					md5Str, err := FileMd5(filename)
 					if err != nil {
@@ -161,7 +161,7 @@ func (fw *FileWatcher) WatchDir(path string) (chan FileEvent, error) {
 					return
 				}
 				blog.V(5).Infof("fsnotify watch event %s", event.String())
-				filename := event.Name //filepath.Join(fw.CurrentDir, event.Name)
+				filename := event.Name // filepath.Join(fw.CurrentDir, event.Name)
 				if event.Op&fsnotify.Write == fsnotify.Write {
 					md5Str, err := FileMd5(filename)
 					if err != nil {

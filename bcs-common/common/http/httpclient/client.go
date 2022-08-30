@@ -34,6 +34,7 @@ type HttpRespone struct {
 	Status     string
 	Header     http.Header
 }
+
 // HttpClient http client object
 type HttpClient struct {
 	caFile   string

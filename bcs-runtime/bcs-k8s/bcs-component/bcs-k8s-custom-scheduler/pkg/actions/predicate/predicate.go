@@ -11,6 +11,7 @@
  *
  */
 
+// Package predicate xxx
 package predicate
 
 import (
@@ -26,11 +27,13 @@ import (
 )
 
 const (
+	// PredicatePrefix xxx
 	PredicatePrefix = "predicate"
 )
 
 func init() {
-	actions.RegisterAction(actions.Action{Verb: "POST", Path: actions.BcsCustomSchedulerPrefix + "ipscheduler/" + "{version}/" + PredicatePrefix,
+	actions.RegisterAction(actions.Action{Verb: "POST", Path: actions.BcsCustomSchedulerPrefix + "ipscheduler/" +
+		"{version}/" + PredicatePrefix,
 		Params: nil, Handler: handleIpSchedulerPredicate})
 }
 

@@ -11,6 +11,7 @@
  *
  */
 
+// Package delete xxx
 package delete
 
 import (
@@ -19,7 +20,7 @@ import (
 	"github.com/urfave/cli"
 )
 
-//NewDeleteCommand delete sub command
+// NewDeleteCommand delete sub command
 func NewDeleteCommand() cli.Command {
 	return cli.Command{
 		Name:  "delete",
@@ -83,7 +84,7 @@ func deleteF(c *utils.ClientContext) error {
 	case "meshcluster":
 		return deleteMeshCluster(c)
 	default:
-		//unkown type, try Custom Resource
+		// unkown type, try Custom Resource
 		return deleteCustomResource(c)
 	}
 }

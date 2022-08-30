@@ -28,7 +28,7 @@ import (
 // DeleteCloudNodeGroupTask delete cloud node group task
 func DeleteCloudNodeGroupTask(taskID string, stepName string) error {
 	start := time.Now()
-	//get task information and validate
+	// get task information and validate
 	state, step, err := cloudprovider.GetTaskStateAndCurrentStep(taskID, stepName)
 	if err != nil {
 		return err
@@ -94,7 +94,8 @@ func DeleteCloudNodeGroupTask(taskID string, stepName string) error {
 					taskID, nodeGroupID, group.CloudNodeGroupID, stepName, stepName)
 				found = false
 			} else {
-				blog.Errorf("DeleteCloudNodeGroupTask[%s]: call DescribeClusterNodePoolDetail[%s] api in task %s step %s failed, %s",
+				blog.Errorf(
+					"DeleteCloudNodeGroupTask[%s]: call DescribeClusterNodePoolDetail[%s] api in task %s step %s failed, %s",
 					taskID, nodeGroupID, taskID, stepName, err.Error())
 				retErr := fmt.Errorf("call DescribeClusterNodePoolDetail[%s] api err, %s", nodeGroupID, err.Error())
 				_ = state.UpdateStepFailure(start, stepName, retErr)

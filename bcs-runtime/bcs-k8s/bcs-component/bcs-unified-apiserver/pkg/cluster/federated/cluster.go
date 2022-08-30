@@ -20,13 +20,14 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-// ClusterStor
+// ClusterStor xxx
 type ClusterStor struct {
 	members      []string
 	masterClient *kubernetes.Clientset
 	k8sClientMap map[string]*kubernetes.Clientset
 }
 
+// NewClusterStor xxx
 // NewDeploymentStor
 func NewClusterStor(masterClientId string, members []string) (*ClusterStor, error) {
 	stor := &ClusterStor{members: members, k8sClientMap: make(map[string]*kubernetes.Clientset)}
@@ -45,6 +46,7 @@ func NewClusterStor(masterClientId string, members []string) (*ClusterStor, erro
 	return stor, nil
 }
 
+// GetAPIVersions xxx
 // GetServerGroups /api 返回
 func (s *ClusterStor) GetAPIVersions(ctx context.Context) (*metav1.APIVersions, error) {
 	v := &metav1.APIVersions{}
@@ -54,6 +56,7 @@ func (s *ClusterStor) GetAPIVersions(ctx context.Context) (*metav1.APIVersions, 
 	return v, nil
 }
 
+// ServerCoreV1Resources xxx
 // GetServerGroups /apis/v1 返回
 func (s *ClusterStor) ServerCoreV1Resources(ctx context.Context) (*metav1.APIResourceList, error) {
 	v := &metav1.APIResourceList{}
@@ -85,7 +88,9 @@ func (s *ClusterStor) GetServerGroups(ctx context.Context) (*metav1.APIGroupList
 	return result, nil
 }
 
+// ServerResourcesForGroupVersion xxx
 // GetServerGroups /apis/{group}/{version} 返回
-func (s *ClusterStor) ServerResourcesForGroupVersion(ctx context.Context, groupVersion string) (*metav1.APIResourceList, error) {
+func (s *ClusterStor) ServerResourcesForGroupVersion(ctx context.Context, groupVersion string) (*metav1.APIResourceList,
+	error) {
 	return s.masterClient.ServerResourcesForGroupVersion("/apps/v1")
 }

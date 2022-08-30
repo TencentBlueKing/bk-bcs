@@ -656,7 +656,7 @@ func TestBufferedAutoscalerRunOncePodsWithFilterOutSchedulablePodsUsesPackingFal
 		ScaleDownUnreadyTime:          time.Minute,
 		ScaleDownUnneededTime:         time.Minute,
 		ExpendablePodsPriorityCutoff:  10,
-		//Turn off filtering schedulables using packing
+		// Turn off filtering schedulables using packing
 		FilterOutSchedulablePodsUsesPacking: false,
 	}
 	processorCallbacks := newBufferedAutoscalerProcessorCallbacks()

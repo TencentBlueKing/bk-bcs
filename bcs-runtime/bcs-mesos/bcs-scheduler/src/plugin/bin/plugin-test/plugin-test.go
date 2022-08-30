@@ -25,19 +25,22 @@ import (
 // func input: *types.InitPluginParameter
 // func output: error
 
-//for example
+// for example
 
 var initPara *plugin.InitPluginParameter
 
+// Init xxx
 func Init(para *plugin.InitPluginParameter) error {
 	initPara = para
 	return nil
 }
 
+// Uninit xxx
 func Uninit() {
-	//TODO
+	// xxx
 }
 
+// GetHostAttributes xxx
 func GetHostAttributes(para *plugin.HostPluginParameter) (map[string]*plugin.HostAttributes, error) {
 	atrrs := make(map[string]*plugin.HostAttributes)
 

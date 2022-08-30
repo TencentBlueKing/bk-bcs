@@ -17,7 +17,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
 	"github.com/Tencent/bk-bcs/bcs-common/common/static"
 
-	//"github.com/urfave/cli"
+	// "github.com/urfave/cli"
 	"os"
 	"strconv"
 )
@@ -103,7 +103,7 @@ type Scheduler struct {
 	Kubeconfig  string
 	StoreDriver string
 
-	//whether use pprof
+	// whether use pprof
 	DebugMode bool
 }
 
@@ -112,7 +112,7 @@ type HttpListener struct {
 	TCPAddr  string
 	UnixAddr string
 	IsSSL    bool
-	//CertDir    string
+	// CertDir    string
 	CAFile     string
 	CertFile   string
 	KeyFile    string
@@ -133,7 +133,7 @@ func NewSchedulerCfg() *SchedConfig {
 			TCPAddr:  "",
 			UnixAddr: "",
 			IsSSL:    false,
-			//CertDir:    "",
+			// CertDir:    "",
 			CAFile:     "",
 			CertFile:   "",
 			KeyFile:    "",
@@ -143,7 +143,7 @@ func NewSchedulerCfg() *SchedConfig {
 		Scheduler: Scheduler{
 			MesosMasterZK: "",
 			BcsZK:         "",
-			//ClientCertDir:			"",
+			// ClientCertDir:			"",
 			ClientCAFile:   "",
 			ClientCertFile: "",
 			ClientKeyFile:  "",
@@ -159,13 +159,14 @@ func NewSchedulerCfg() *SchedConfig {
 	return &config
 }
 
+// SetSchedulerCfg xxx
 func SetSchedulerCfg(config *SchedConfig, op *SchedulerOptions) {
 
 	config.ZkHost = op.ZkHost
 
 	config.Scheduler.MesosMasterZK = op.MesosMasterZK
 	config.Scheduler.BcsZK = op.BCSZk
-	//config.Scheduler.ClientCertDir = op.ClientCertDir
+	// config.Scheduler.ClientCertDir = op.ClientCertDir
 	config.Scheduler.ClientCAFile = op.CAFile
 	config.Scheduler.ClientCertFile = op.ClientCertFile
 	config.Scheduler.ClientKeyFile = op.ClientKeyFile
@@ -188,7 +189,7 @@ func SetSchedulerCfg(config *SchedConfig, op *SchedulerOptions) {
 	config.Scheduler.NetImage = op.NetImage
 
 	config.HttpListener.TCPAddr = op.ServiceConfig.Address + ":" + strconv.Itoa(int(op.Port))
-	//config.HttpListener.CertDir = op.ServerCertDir
+	// config.HttpListener.CertDir = op.ServerCertDir
 	config.HttpListener.CAFile = op.CAFile
 	config.HttpListener.CertFile = op.ServerCertFile
 	config.HttpListener.KeyFile = op.ServerKeyFile

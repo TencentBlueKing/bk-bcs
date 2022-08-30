@@ -78,36 +78,48 @@ func init() {
 	rootCmd.AddCommand(serverCmd)
 	// option for clb controller server process
 	serverCmd.Flags().IntVar(&port, "port", 18080, "port for clb controller server")
-	serverCmd.Flags().StringVar(&serviceRegistry, "serviceRegistry", "kubernetes", "service registry for clb controller, available: [kubernetes, custom, mesos]")
+	serverCmd.Flags().StringVar(&serviceRegistry, "serviceRegistry", "kubernetes",
+		"service registry for clb controller, available: [kubernetes, custom, mesos]")
 	serverCmd.Flags().StringVar(&cluster, "cluster", "", "lb name for controller")
-	serverCmd.Flags().StringVar(&backendIPType, "backendIPType", "", "backend pod ip network type, available: [overlay, underlay]")
+	serverCmd.Flags().StringVar(&backendIPType, "backendIPType", "",
+		"backend pod ip network type, available: [overlay, underlay]")
 	serverCmd.Flags().IntVar(&updateInterval, "updateInterval", 10, "interval for update operations")
 	serverCmd.Flags().StringVar(&gwZkHosts, "gwZkHosts", "127.0.0.1:2181", "zk address for gw service")
 	serverCmd.Flags().StringVar(&gwZkPath, "gwZkPath", "", "zk path for discovery gw service")
 	serverCmd.Flags().StringVar(&gwBizID, "gwBizID", "", "biz id for gw service")
-	serverCmd.Flags().StringVar(&serviceLabelKey, "serviceLabelkey", "gw.bkbcs.tencent.com", "label key for select service")
+	serverCmd.Flags().StringVar(&serviceLabelKey, "serviceLabelkey", "gw.bkbcs.tencent.com",
+		"label key for select service")
 	serverCmd.Flags().StringVar(&serviceLabelValue, "servicelabelValue", "", "label value select service")
-	serverCmd.Flags().StringVar(&domainLabelKey, "domainLabelKey", "domain.gw.bkbcs.tencent.com", "label key for gw domain")
-	serverCmd.Flags().StringVar(&proxyPortLabelKey, "proxyPortLabelKey", "proxyport.gw.bkbcs.tencent.com", "label key for gw proxy port")
+	serverCmd.Flags().StringVar(&domainLabelKey, "domainLabelKey", "domain.gw.bkbcs.tencent.com",
+		"label key for gw domain")
+	serverCmd.Flags().StringVar(&proxyPortLabelKey, "proxyPortLabelKey", "proxyport.gw.bkbcs.tencent.com",
+		"label key for gw proxy port")
 	serverCmd.Flags().StringVar(&portLabelkey, "portLabelKey", "port.gw.bkbcs.tencent.com", "label key for service port")
 	serverCmd.Flags().StringVar(&pathLabelKey, "pathLabelKey", "path.gw.bkbcs.tencent.com", "label key for gw path")
 	// for kube registry
-	serverCmd.Flags().StringVar(&kubeconfig, "kubeconfig", "", "kubeconfig for access kube-apiserver, if empty, use in-cluster config, default: empty")
+	serverCmd.Flags().StringVar(&kubeconfig, "kubeconfig", "",
+		"kubeconfig for access kube-apiserver, if empty, use in-cluster config, default: empty")
 	serverCmd.Flags().IntVar(&syncPeriod, "syncPeriod", 30, "period for synchronize k8s services")
 	// log option
 	serverCmd.Flags().StringVar(&logDir, "log_dir", "./logs", "If non-empty, write log files in this directory")
 	serverCmd.Flags().Uint64Var(&logMaxSize, "log_max_size", 500, "Max size (MB) per log file.")
-	serverCmd.Flags().IntVar(&logMaxNum, "log_max_num", 10, "Max num of log file. The oldest will be removed if there is a extra file created.")
+	serverCmd.Flags().IntVar(&logMaxNum, "log_max_num", 10,
+		"Max num of log file. The oldest will be removed if there is a extra file created.")
 	serverCmd.Flags().BoolVar(&toStdErr, "logtostderr", false, "log to standard error instead of files")
 	serverCmd.Flags().BoolVar(&alsoToStdErr, "alsologtostderr", false, "log to standard error as well as files")
 	serverCmd.Flags().Int32Var(&verbosity, "v", 0, "log level for V logs")
 	serverCmd.Flags().StringVar(&stdErrThreshold, "stderrthreshold", "2", "logs at or above this threshold go to stderr")
-	serverCmd.Flags().StringVar(&vModule, "vmodule", "", "comma-separated list of pattern=N settings for file-filtered logging")
-	serverCmd.Flags().StringVar(&traceLocation, "log_backtrace_at", "", "when logging hits line file:N, emit a stack trace")
+	serverCmd.Flags().StringVar(&vModule, "vmodule", "",
+		"comma-separated list of pattern=N settings for file-filtered logging")
+	serverCmd.Flags().StringVar(&traceLocation, "log_backtrace_at", "",
+		"when logging hits line file:N, emit a stack trace")
 	// tls config
-	serverCmd.Flags().StringVar(&caFile, "ca_file", "", "CA file. If server_cert_file/server_key_file/ca_file are all set, it will set up an HTTPS server required and verified client cert")
-	serverCmd.Flags().StringVar(&serverCertFile, "server_cert_file", "", "Server public key file(*.crt). If both server_cert_file and server_key_file are set, it will set up an HTTPS server")
-	serverCmd.Flags().StringVar(&serverKeyFile, "server_key_file", "", "Server private key file(*.key). If both server_cert_file and server_key_file are set, it will set up an HTTPS server")
+	serverCmd.Flags().StringVar(&caFile, "ca_file", "",
+		"CA file. If server_cert_file/server_key_file/ca_file are all set, it will set up an HTTPS server required and verified client cert")
+	serverCmd.Flags().StringVar(&serverCertFile, "server_cert_file", "",
+		"Server public key file(*.crt). If both server_cert_file and server_key_file are set, it will set up an HTTPS server")
+	serverCmd.Flags().StringVar(&serverKeyFile, "server_key_file", "",
+		"Server private key file(*.key). If both server_cert_file and server_key_file are set, it will set up an HTTPS server")
 	serverCmd.Flags().StringVar(&clientCertFile, "client_cert_file", "", "Client public key file(*.crt)")
 	serverCmd.Flags().StringVar(&clientKeyFile, "client_key_file", "", "Client private key file(*.key)")
 }
@@ -148,11 +160,13 @@ func validateArgs() bool {
 		return false
 	}
 
-	reg, _ = regexp.Compile("[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*(\\/([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])?")
+	reg, _ = regexp.Compile(
+		"[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*(\\/([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])?")
 	if !reg.MatchString(serviceLabelKey) || !reg.MatchString(domainLabelKey) ||
 		!reg.MatchString(portLabelkey) || !reg.MatchString(proxyPortLabelKey) {
-		blog.Errorf("one of serviceLabelkey %s, domainLabelKey %s, portLabelkey %s, proxyPortLabelKey %s, invalid, must be form of "+
-			"[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*(\\/([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])?",
+		blog.Errorf(
+			"one of serviceLabelkey %s, domainLabelKey %s, portLabelkey %s, proxyPortLabelKey %s, invalid, must be form of "+
+				"[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*(\\/([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])?",
 			serviceLabelKey, domainLabelKey, portLabelkey, proxyPortLabelKey)
 	}
 	reg, _ = regexp.Compile("(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])?")

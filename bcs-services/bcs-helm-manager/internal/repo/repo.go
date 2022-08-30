@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package repo xxx
 package repo
 
 import (
@@ -107,8 +108,11 @@ type Repository struct {
 type RepositoryType int
 
 const (
+	// RepositoryTypeUnknown xxx
 	RepositoryTypeUnknown RepositoryType = iota
+	// RepositoryTypeHelm xxx
 	RepositoryTypeHelm
+	// RepositoryTypeOCI xxx
 	RepositoryTypeOCI
 )
 

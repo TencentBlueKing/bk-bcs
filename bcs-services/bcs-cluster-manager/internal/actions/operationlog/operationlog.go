@@ -11,6 +11,7 @@
  *
  */
 
+// Package operationlog xxx
 package operationlog
 
 import (
@@ -147,7 +148,8 @@ func (ua *ListOperationLogsAction) appendTasks(taskIDs []string) error {
 }
 
 // Handle handles list operation logs
-func (ua *ListOperationLogsAction) Handle(ctx context.Context, req *cmproto.ListOperationLogsRequest, resp *cmproto.ListOperationLogsResponse) {
+func (ua *ListOperationLogsAction) Handle(ctx context.Context, req *cmproto.ListOperationLogsRequest,
+	resp *cmproto.ListOperationLogsResponse) {
 	if req == nil || resp == nil {
 		blog.Errorf("list operation logs failed, req or resp is empty")
 		return

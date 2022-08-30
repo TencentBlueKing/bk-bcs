@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package tke xxx
 package tke
 
 import (
@@ -29,8 +30,8 @@ import (
 
 const (
 	tkeCidrTableName = "tkecidrs"
-	//! we don't setting bson tag in proto file,
-	//! all struct key in mongo is lowcase in default
+	// ! we don't setting bson tag in proto file,
+	// ! all struct key in mongo is lowcase in default
 	tkeCidrKeyVPC            = "vpc"
 	tkeCidrKeyCIDR           = "cidr"
 	defaultTkeCidrListLength = 3000
@@ -67,6 +68,7 @@ func New(db drivers.DB) *ModelTkeCidr {
 	}
 }
 
+// ensureTable xxx
 // ensure table
 func (m *ModelTkeCidr) ensureTable(ctx context.Context) error {
 	m.isTableEnsuredMutex.RLock()

@@ -84,7 +84,8 @@ func NewLogWrapper(fn server.HandlerFunc) server.HandlerFunc {
 		md, _ := metadata.FromContext(ctx)
 		logging.Info("request func %s, request_id: %s, ctx: %v", req.Endpoint(), ctx.Value(requestIDKey), md)
 		if err := fn(ctx, req, rsp); err != nil {
-			logging.Error("request func %s failed, request_id: %s, ctx: %v, body: %v", req.Endpoint(), ctx.Value(requestIDKey), md, req.Body())
+			logging.Error("request func %s failed, request_id: %s, ctx: %v, body: %v", req.Endpoint(), ctx.Value(requestIDKey),
+				md, req.Body())
 			return err
 		}
 		return nil

@@ -11,6 +11,7 @@
  *
  */
 
+// Package iam xxx
 package iam
 
 import (
@@ -37,10 +38,12 @@ type PermClient interface {
 	IsAllowedWithResource(actionID string, request PermissionRequest, nodes []ResourceNode, cache bool) (bool, error)
 	BatchResourceIsAllowed(actionID string, request PermissionRequest, nodes [][]ResourceNode) (map[string]bool, error)
 	ResourceMultiActionsAllowed(actions []string, request PermissionRequest, nodes []ResourceNode) (map[string]bool, error)
-	BatchResourceMultiActionsAllowed(actions []string, request PermissionRequest, nodes [][]ResourceNode) (map[string]map[string]bool, error)
+	BatchResourceMultiActionsAllowed(actions []string, request PermissionRequest,
+		nodes [][]ResourceNode) (map[string]map[string]bool, error)
 	GetToken() (string, error)
 	IsBasicAuthAllowed(user BkUser) error
 	GetApplyURL(request ApplicationRequest, relatedResources []ApplicationAction, user BkUser) (string, error)
+	// CreateGradeManagers xxx
 	// perm management API
 	CreateGradeManagers(ctx context.Context, request GradeManagerRequest) (uint64, error)
 	CreateUserGroup(ctx context.Context, gradeManagerID uint64, request CreateUserGroupRequest) ([]uint64, error)
@@ -189,7 +192,8 @@ func (ic *iamClient) IsAllowedWithoutResource(actionID string, request Permissio
 }
 
 // IsAllowedWithResource query signal action signal resource permission(cache use withoutResource or managerPerm)
-func (ic *iamClient) IsAllowedWithResource(actionID string, request PermissionRequest, nodes []ResourceNode, cache bool) (bool, error) {
+func (ic *iamClient) IsAllowedWithResource(actionID string, request PermissionRequest, nodes []ResourceNode,
+	cache bool) (bool, error) {
 	if ic == nil {
 		return false, ErrServerNotInit
 	}
@@ -203,7 +207,8 @@ func (ic *iamClient) IsAllowedWithResource(actionID string, request PermissionRe
 
 // BatchResourceIsAllowed batch resource check permission, signalAction multiResources
 // resources []iam.ResourceNode: len=1, return node.ID; len > 1, node.Type:node.ID/node.Type:node.ID
-func (ic *iamClient) BatchResourceIsAllowed(actionID string, request PermissionRequest, nodes [][]ResourceNode) (map[string]bool, error) {
+func (ic *iamClient) BatchResourceIsAllowed(actionID string, request PermissionRequest,
+	nodes [][]ResourceNode) (map[string]bool, error) {
 	if ic == nil {
 		return nil, ErrServerNotInit
 	}
@@ -224,7 +229,8 @@ func (ic *iamClient) BatchResourceIsAllowed(actionID string, request PermissionR
 }
 
 // ResourceMultiActionsAllowed for multiActions signalResource
-func (ic *iamClient) ResourceMultiActionsAllowed(actions []string, request PermissionRequest, nodes []ResourceNode) (map[string]bool, error) {
+func (ic *iamClient) ResourceMultiActionsAllowed(actions []string, request PermissionRequest,
+	nodes []ResourceNode) (map[string]bool, error) {
 	if ic == nil {
 		return nil, ErrServerNotInit
 	}
@@ -235,7 +241,8 @@ func (ic *iamClient) ResourceMultiActionsAllowed(actions []string, request Permi
 
 // BatchResourceMultiActionsAllowed will check the permissions of batch-resource with multi-actions, multi actions and multi resource
 // resource action isAllow
-func (ic *iamClient) BatchResourceMultiActionsAllowed(actions []string, request PermissionRequest, nodes [][]ResourceNode) (map[string]map[string]bool, error) {
+func (ic *iamClient) BatchResourceMultiActionsAllowed(actions []string, request PermissionRequest,
+	nodes [][]ResourceNode) (map[string]map[string]bool, error) {
 	if ic == nil {
 		return nil, ErrServerNotInit
 	}
@@ -264,6 +271,7 @@ func (ic *iamClient) GetToken() (string, error) {
 	return ic.cli.GetToken()
 }
 
+// IsBasicAuthAllowed xxx
 // check iam callback request auth
 func (ic *iamClient) IsBasicAuthAllowed(user BkUser) error {
 	if ic == nil {
@@ -274,7 +282,8 @@ func (ic *iamClient) IsBasicAuthAllowed(user BkUser) error {
 }
 
 // GetApplyURL will generate the application URL
-func (ic *iamClient) GetApplyURL(request ApplicationRequest, relatedResources []ApplicationAction, user BkUser) (string, error) {
+func (ic *iamClient) GetApplyURL(request ApplicationRequest, relatedResources []ApplicationAction, user BkUser) (string,
+	error) {
 	if ic == nil {
 		return "", ErrServerNotInit
 	}
@@ -290,7 +299,7 @@ func (ic *iamClient) GetApplyURL(request ApplicationRequest, relatedResources []
 	return url, nil
 }
 
-// GradeManagers 分级管理员相关接口
+// CreateGradeManagers 分级管理员相关接口
 // CreateGradeManagers create gradeManagers
 func (ic *iamClient) CreateGradeManagers(ctx context.Context, request GradeManagerRequest) (uint64, error) {
 	if ic == nil {
@@ -339,8 +348,10 @@ func (ic *iamClient) CreateGradeManagers(ctx context.Context, request GradeManag
 
 // UserGroup 用户组相关接口
 
+// CreateUserGroup xxx
 // CreateGradeManagers create gradeManagers
-func (ic *iamClient) CreateUserGroup(ctx context.Context, gradeManagerID uint64, request CreateUserGroupRequest) ([]uint64, error) {
+func (ic *iamClient) CreateUserGroup(ctx context.Context, gradeManagerID uint64,
+	request CreateUserGroupRequest) ([]uint64, error) {
 	if ic == nil {
 		return nil, ErrServerNotInit
 	}
@@ -477,7 +488,8 @@ func (ic *iamClient) AddUserGroupMembers(ctx context.Context, groupID uint64, re
 }
 
 // DeleteUserGroupMembers delete user group members
-func (ic *iamClient) DeleteUserGroupMembers(ctx context.Context, groupID uint64, request DeleteGroupMemberRequest) error {
+func (ic *iamClient) DeleteUserGroupMembers(ctx context.Context, groupID uint64,
+	request DeleteGroupMemberRequest) error {
 	if ic == nil {
 		return ErrServerNotInit
 	}

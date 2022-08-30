@@ -72,22 +72,23 @@ func IsFileExist(filename string) bool {
 
 // Manager define interface for manager
 type Manager interface {
-	//Start point, do not block
+	// Start point, do not block
 	Start() error
-	//Stop
+	// Stop TODO
 	Stop()
-	//Create config file with tmpData,
+	// Create config file with tmpData,
 	Create(tmpData *types.TemplateData) (string, error)
-	//CheckDifference two file are difference, true is difference
+	// CheckDifference two file are difference, true is difference
 	CheckDifference(oldFile, curFile string) bool
-	//Validate new cfg file grammar is OK
+	// Validate new cfg file grammar is OK
 	Validate(newFile string) bool
-	//Replace old cfg file with cur one, return old file backup
+	// Replace old cfg file with cur one, return old file backup
 	Replace(oldFile, curFile string) error
-	//Reload haproxy with new config file
+	// Reload haproxy with new config file
 	Reload(cfgFile string) error
 	TryUpdateWithoutReload(tmpData *types.TemplateData) bool
-	//GetHealthInfo response healthz info
+	// GetStatusFunction TODO
+	// GetHealthInfo response healthz info
 	// GetHealthInfo() metric.HealthMeta
 	// //Get metric meta
 	// GetMetricMeta() *metric.MetricMeta

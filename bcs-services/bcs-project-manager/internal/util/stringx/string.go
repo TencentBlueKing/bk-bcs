@@ -25,6 +25,7 @@ func SplitString(str string) []string {
 	return strings.Split(str, ",")
 }
 
+// JoinString xxx
 // AddString 拼接字符串
 func JoinString(str ...string) string {
 	var strList []string

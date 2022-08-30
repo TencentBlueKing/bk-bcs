@@ -20,7 +20,8 @@ import (
 )
 
 // ListLogCollectionTask call ListLogCollectionTask of LogManager grpc server
-func (m *LogManager) ListLogCollectionTask(req *proto.ListLogCollectionTaskReq) ([]*proto.ListLogCollectionTaskRespItem, error) {
+func (m *LogManager) ListLogCollectionTask(req *proto.ListLogCollectionTaskReq) ([]*proto.ListLogCollectionTaskRespItem,
+	error) {
 	resp, err := m.client.ListLogCollectionTask(m.ctx, req)
 	if err != nil {
 		return nil, err

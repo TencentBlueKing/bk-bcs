@@ -25,7 +25,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-mesos/bcs-clb-controller/pkg/cloudlb/qcloud/qcloudif"
 )
 
-//ClbAPI Clb api operator
+// ClbAPI Clb api operator
 type ClbAPI struct {
 	// api for tencent cloud clb v2 api
 	api qcloud.APIInterface
@@ -50,7 +50,7 @@ type ClbAPI struct {
 	ExpireTimeForHTTPSession int
 }
 
-//NewCloudClbAPI new clb api operator
+// NewCloudClbAPI new clb api operator
 func NewCloudClbAPI(projectID int, region, subnet, vpcID, secretID, secretKey, backendType string,
 	waitPeriodLBDealing, waitPeriodExceedLimit, expireTime int) qcloudif.ClbAdapter {
 	lbClient := qcloud.NewClient(QCloudLBURL, secretKey)
@@ -146,7 +146,7 @@ func (clb *ClbAPI) CreateLoadBalance(lb *loadbalance.CloudLoadBalancer) (string,
 	return "", nil, fmt.Errorf("empty ids map in create clb output %v", output)
 }
 
-//DescribeLoadBalance describe clb by name
+// DescribeLoadBalance describe clb by name
 func (clb *ClbAPI) DescribeLoadBalance(name string) (*loadbalance.CloudLoadBalancer, bool, error) {
 	output, err := clb.doDescribeLoadBalance(name)
 	if err != nil {
@@ -184,7 +184,7 @@ func (clb *ClbAPI) DescribeLoadBalance(name string) (*loadbalance.CloudLoadBalan
 	return cloudLBInfo, true, nil
 }
 
-//CreateListener create listener
+// CreateListener create listener
 func (clb *ClbAPI) CreateListener(listener *loadbalance.CloudListener) (string, error) {
 	protocol, ok := ProtocolTypeBcs2QCloudMap[listener.Spec.Protocol]
 	if !ok {
@@ -210,12 +210,12 @@ func (clb *ClbAPI) CreateListener(listener *loadbalance.CloudListener) (string, 
 	return listenerID, nil
 }
 
-//DeleteListener delete listener
+// DeleteListener delete listener
 func (clb *ClbAPI) DeleteListener(lbID, listenerID string) error {
 	return clb.doDeleteListener(lbID, listenerID)
 }
 
-//ModifyListenerAttribute modify listener attribute
+// ModifyListenerAttribute modify listener attribute
 func (clb *ClbAPI) ModifyListenerAttribute(listener *loadbalance.CloudListener) error {
 	protocol, ok := ProtocolTypeBcs2QCloudMap[listener.Spec.Protocol]
 	if !ok {
@@ -306,12 +306,12 @@ func (clb *ClbAPI) DescribeListener(lbID, listenerID string, port int) (*loadbal
 	return listener, true, nil
 }
 
-//CreateRules create rules
+// CreateRules create rules
 func (clb *ClbAPI) CreateRules(lbID, listenerID string, rules loadbalance.RuleList) error {
 	return clb.doCreateRules(lbID, listenerID, rules)
 }
 
-//DescribeRuleByDomainAndURL query rule by domain and url
+// DescribeRuleByDomainAndURL query rule by domain and url
 func (clb *ClbAPI) DescribeRuleByDomainAndURL(loadBalanceID, listenerID, Domain, URL string) (
 	*loadbalance.Rule, bool, error) {
 	listenerInfo, err := clb.doDescribeListener(loadBalanceID, listenerID)
@@ -347,7 +347,7 @@ func (clb *ClbAPI) DescribeRuleByDomainAndURL(loadBalanceID, listenerID, Domain,
 	return nil, false, nil
 }
 
-//DeleteRule delete rule by domain and url
+// DeleteRule delete rule by domain and url
 func (clb *ClbAPI) DeleteRule(lbID, listenerID, domain, url string) error {
 
 	validDomain := domain
@@ -363,6 +363,7 @@ func (clb *ClbAPI) ModifyRuleAttribute(loadBalanceID, listenerID string, rule *l
 	return clb.doModifyRule(loadBalanceID, listenerID, rule)
 }
 
+// getBackends xxx
 // when backend mode is cvm, describe cvm instance id by ips,
 // when backend mode is eni, use original ip
 func (clb *ClbAPI) getBackends(backends loadbalance.BackendList) (qcloud.BackendTargetList, error) {
@@ -396,7 +397,7 @@ func (clb *ClbAPI) getBackends(backends loadbalance.BackendList) (qcloud.Backend
 	return bList, nil
 }
 
-//Register7LayerBackends register 7 layer backends
+// Register7LayerBackends register 7 layer backends
 func (clb *ClbAPI) Register7LayerBackends(
 	lbID, listenerID, ruleID string, backendsRegister loadbalance.BackendList) error {
 	bList, err := clb.getBackends(backendsRegister)
@@ -406,7 +407,7 @@ func (clb *ClbAPI) Register7LayerBackends(
 	return clb.registerInsWith7thLayerListener(lbID, listenerID, ruleID, bList)
 }
 
-//_Register7LayerBackends register 7 layer backends
+// _Register7LayerBackends register 7 layer backends
 func (clb *ClbAPI) _Register7LayerBackends(
 	lbID, listenerID, ruleID string, backendsRegister loadbalance.BackendList) error {
 	if len(backendsRegister) == 0 {
@@ -443,7 +444,7 @@ func (clb *ClbAPI) DeRegister7LayerBackends(
 	return clb.deRegisterInstances7thListener(lbID, listenerID, ruleID, bList)
 }
 
-//Register4LayerBackends register 4 layer backends
+// Register4LayerBackends register 4 layer backends
 func (clb *ClbAPI) Register4LayerBackends(lbID, listenerID string, backendsRegister loadbalance.BackendList) error {
 	if len(backendsRegister) == 0 {
 		blog.Infof("lb %s, listener %s has no backend, no need to register")
@@ -456,7 +457,7 @@ func (clb *ClbAPI) Register4LayerBackends(lbID, listenerID string, backendsRegis
 	return clb.registerInsWith4thLayerListener(lbID, listenerID, bList)
 }
 
-//_Register4LayerBackends register 4 layer backends
+// _Register4LayerBackends register 4 layer backends
 // deprecated
 func (clb *ClbAPI) _Register4LayerBackends(lbID, listenerID string, backendsRegister loadbalance.BackendList) error {
 	if len(backendsRegister) == 0 {

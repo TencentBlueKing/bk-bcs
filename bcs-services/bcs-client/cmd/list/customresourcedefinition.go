@@ -22,7 +22,7 @@ import (
 	simplejson "github.com/bitly/go-simplejson"
 )
 
-//listCustomResourceDefinition list all CRDs from mesos-driver
+// listCustomResourceDefinition list all CRDs from mesos-driver
 func listCustomResourceDefinition(c *utils.ClientContext) error {
 	if err := c.MustSpecified(utils.OptionClusterID); err != nil {
 		return err
@@ -32,8 +32,8 @@ func listCustomResourceDefinition(c *utils.ClientContext) error {
 	if err != nil {
 		return fmt.Errorf("failed to List all CustomResourceDefinition: %v", err)
 	}
-	//print all datas
-	//Name - ShortName - apiVersion - Kind - CreatedTime
+	// print all datas
+	// Name - ShortName - apiVersion - Kind - CreatedTime
 	fmt.Printf(
 		"%-50s %-20s %-25s %-20s %-21s\n",
 		"NAME",
@@ -69,7 +69,7 @@ func listCustomResource(c *utils.ClientContext) error {
 		namespace = v4.AllNamespace
 	}
 	scheduler := v4.NewBcsScheduler(utils.GetClientOption())
-	//validate command line option type
+	// validate command line option type
 	apiVersion, plural, err := utils.GetCustomResourceType(scheduler, c.ClusterID(), c.String(utils.OptionType))
 	if err != nil {
 		return err
@@ -78,7 +78,7 @@ func listCustomResource(c *utils.ClientContext) error {
 	if err != nil {
 		return fmt.Errorf("failed to List %s, %v", plural, err)
 	}
-	//parse item list formation
+	// parse item list formation
 	json, err := simplejson.NewJson(allBytes)
 	if err != nil {
 		return fmt.Errorf("list %s failed, response is not expected json format: %s", plural, err.Error())
@@ -93,7 +93,7 @@ func listCustomResource(c *utils.ClientContext) error {
 		fmt.Printf("Found No Resources\n")
 		return nil
 	}
-	//print simple information
+	// print simple information
 	fmt.Printf(
 		"%-30s %-20s %-25s\n",
 		"NAME",

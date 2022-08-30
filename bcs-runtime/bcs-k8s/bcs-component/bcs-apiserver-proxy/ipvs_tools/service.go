@@ -30,6 +30,7 @@ var (
 	ErrLvsCareNotInited = errors.New("LvsCare not inited")
 )
 
+// Scheduler xxx
 type Scheduler string
 
 func (s Scheduler) validate() bool {

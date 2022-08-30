@@ -15,8 +15,9 @@ package utils
 
 import discoveryv1beta1 "k8s.io/api/discovery/v1beta1"
 
-//FindNeedDeleteEndpointSlice find need delete endpoint slice
-func FindNeedDeleteEndpointSlice(newEndpointSlices []*discoveryv1beta1.EndpointSlice, oldEndpointSlices []discoveryv1beta1.EndpointSlice) []discoveryv1beta1.EndpointSlice {
+// FindNeedDeleteEndpointSlice find need delete endpoint slice
+func FindNeedDeleteEndpointSlice(newEndpointSlices []*discoveryv1beta1.EndpointSlice,
+	oldEndpointSlices []discoveryv1beta1.EndpointSlice) []discoveryv1beta1.EndpointSlice {
 	needDeleteEndpointSlices := make([]discoveryv1beta1.EndpointSlice, 0)
 	if len(oldEndpointSlices) == 0 {
 		return nil
@@ -25,7 +26,8 @@ func FindNeedDeleteEndpointSlice(newEndpointSlices []*discoveryv1beta1.EndpointS
 		find := false
 	innerLoop:
 		for _, newEndpointSlice := range newEndpointSlices {
-			generateEndpointSliceName := GenerateEndpointSliceName(newEndpointSlice.Name, newEndpointSlice.Labels[ConfigClusterLabel])
+			generateEndpointSliceName := GenerateEndpointSliceName(newEndpointSlice.Name,
+				newEndpointSlice.Labels[ConfigClusterLabel])
 			if generateEndpointSliceName == oldEndpointSlice.Name {
 				find = true
 				break innerLoop

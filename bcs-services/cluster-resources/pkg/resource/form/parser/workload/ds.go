@@ -23,7 +23,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
 )
 
-// ParseDS ...
+// ParseDS xxx
 func ParseDS(manifest map[string]interface{}) map[string]interface{} {
 	ds := model.DS{}
 	common.ParseMetadata(manifest, &ds.Metadata)
@@ -33,7 +33,7 @@ func ParseDS(manifest map[string]interface{}) map[string]interface{} {
 	return structs.Map(ds)
 }
 
-// ParseDSSpec ...
+// ParseDSSpec xxx
 func ParseDSSpec(manifest map[string]interface{}, spec *model.DSSpec) {
 	ParseDSReplicas(manifest, &spec.Replicas)
 	tmplSpec, _ := mapx.GetItems(manifest, "spec.template.spec")
@@ -46,7 +46,7 @@ func ParseDSSpec(manifest map[string]interface{}, spec *model.DSSpec) {
 	ParseSpecOther(podSpec, &spec.Other)
 }
 
-// ParseDSReplicas ...
+// ParseDSReplicas xxx
 func ParseDSReplicas(manifest map[string]interface{}, replicas *model.DSReplicas) {
 	replicas.UpdateStrategy = mapx.Get(manifest, "spec.updateStrategy.type", DefaultUpdateStrategy).(string)
 	replicas.MaxUnavailable, replicas.MUAUnit = DefaultMaxUnavailable, util.UnitPercent

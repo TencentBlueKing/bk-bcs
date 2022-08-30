@@ -12,6 +12,7 @@
  * limitations under the License.
  */
 
+// Package namespace xxx
 package namespace
 
 import (
@@ -27,15 +28,15 @@ import (
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
 )
 
-// Handler ...
+// Handler xxx
 type Handler struct{}
 
-// New ...
+// New xxx
 func New() *Handler {
 	return &Handler{}
 }
 
-// ListNS ...
+// ListNS xxx
 func (h *Handler) ListNS(
 	ctx context.Context, req *clusterRes.ResListReq, resp *clusterRes.CommonResp,
 ) (err error) {

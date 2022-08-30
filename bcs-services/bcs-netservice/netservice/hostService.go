@@ -22,7 +22,7 @@ import (
 	"time"
 )
 
-//AddHost update host info
+// AddHost update host info
 func (srv *NetService) AddHost(info *types.HostInfo) error {
 	started := time.Now()
 	info.Created = time.Now().Format("2006-01-02 15:04:05")
@@ -38,7 +38,7 @@ func (srv *NetService) AddHost(info *types.HostInfo) error {
 		reportMetrics("addHost", stateNonExistFailure, started)
 		return fmt.Errorf("host %s is already exist", info.IPAddr)
 	}
-	//check pool path first
+	// check pool path first
 	poolpath := filepath.Join(defaultPoolInfoPath, info.Cluster, info.Pool)
 	if exist, _ := srv.store.Exist(poolpath); !exist {
 		blog.Errorf("Host %s creat relation to pool %s failed, pool lost", info.IPAddr, info.Pool)
@@ -50,7 +50,7 @@ func (srv *NetService) AddHost(info *types.HostInfo) error {
 		reportMetrics("addHost", stateStorageFailure, started)
 		return fmt.Errorf("host %s add failed, %s", info.IPAddr, err.Error())
 	}
-	//create relation to pool
+	// create relation to pool
 	phpath := filepath.Join(poolpath, "hosts", info.IPAddr)
 	if err := srv.store.Add(phpath, data); err != nil {
 		blog.Errorf("Host %s create node under pool %s/%s err, %v", info.IPAddr, info.Cluster, info.Pool, err)
@@ -62,7 +62,7 @@ func (srv *NetService) AddHost(info *types.HostInfo) error {
 	return nil
 }
 
-//DeleteHost update host info
+// DeleteHost update host info
 func (srv *NetService) DeleteHost(hostIP string, ipsDel []string) error {
 	started := time.Now()
 	hostpath := filepath.Join(defaultHostInfoPath, hostIP)
@@ -71,7 +71,7 @@ func (srv *NetService) DeleteHost(hostIP string, ipsDel []string) error {
 		reportMetrics("deleteHost", stateNonExistFailure, started)
 		return fmt.Errorf("host %s do not exist", hostIP)
 	}
-	//get host info
+	// get host info
 	hostData, hostErr := srv.store.Get(hostpath)
 	if hostErr != nil {
 		blog.Errorf("Get Host %s detail data failed, %v", hostIP, hostErr)
@@ -90,7 +90,7 @@ func (srv *NetService) DeleteHost(hostIP string, ipsDel []string) error {
 		return fmt.Errorf("delete failed: Host %s lost pool info", hostIP)
 	}
 
-	//try to lock
+	// try to lock
 	lockpath := filepath.Join(defaultLockerPath, hostInfo.Cluster, hostInfo.Pool)
 	poolLocker, lErr := srv.store.GetLocker(lockpath)
 	if lErr != nil {
@@ -105,7 +105,7 @@ func (srv *NetService) DeleteHost(hostIP string, ipsDel []string) error {
 		return fmt.Errorf("lock pool %s err, %s", hostInfo.Pool, err.Error())
 	}
 
-	//try to delete ips from pool
+	// try to delete ips from pool
 	if len(ipsDel) != 0 {
 		if err := srv.cleanIPAssignToHost(&hostInfo, ipsDel); err != nil {
 			reportMetrics("deleteHost", stateLogicFailure, started)
@@ -130,7 +130,7 @@ func (srv *NetService) DeleteHost(hostIP string, ipsDel []string) error {
 		return err
 	}
 
-	//prepare delete host node in pool
+	// prepare delete host node in pool
 	poolHostPath := filepath.Join(defaultPoolInfoPath, hostInfo.Cluster, hostInfo.Pool, "hosts", hostIP)
 	if _, err := srv.store.Delete(poolHostPath); err != nil {
 		blog.Errorf("Host %s delete node under pool %s/%s err, %s", hostIP, hostInfo.Cluster, hostInfo.Pool, err.Error())
@@ -138,7 +138,7 @@ func (srv *NetService) DeleteHost(hostIP string, ipsDel []string) error {
 		return fmt.Errorf("host %s delete node under pool %s failed, %s", hostIP, hostInfo.Pool, err.Error())
 	}
 
-	//if no host in the pool, we will delete the pool automatically
+	// if no host in the pool, we will delete the pool automatically
 	/*poolPath := filepath.Join(defaultPoolInfoPath, hostInfo.Cluster, hostInfo.Pool, "hosts")
 	hostList, err := srv.store.List(poolPath)
 	if err != nil {
@@ -191,13 +191,13 @@ func (srv *NetService) cleanIPAssignToHost(hostInfo *types.HostInfo, ips []strin
 				return fmt.Errorf("ip %s is active, cannot be deleted", ip)
 			}
 		}
-		//dose not find in pool, error
-		//TODO: deal with delete failure
+		// dose not find in pool, error
+		// TODO: deal with delete failure
 		if !foundFlag {
 			blog.Errorf("ip %s is not in pool %s, cannot be deleted", ip, poolKey)
-			//if the ip is not found in reserved or available, just show error log, don't return
-			//So user can do a second chance when ip zk node deletion failed
-			//return fmt.Errorf("ip %s is not in pool %s, cannot be deleted", ip, poolKey)
+			// if the ip is not found in reserved or available, just show error log, don't return
+			// So user can do a second chance when ip zk node deletion failed
+			// return fmt.Errorf("ip %s is not in pool %s, cannot be deleted", ip, poolKey)
 		}
 	}
 	for _, ip := range ipsDelReserved {
@@ -219,12 +219,12 @@ func (srv *NetService) cleanIPAssignToHost(hostInfo *types.HostInfo, ips []strin
 	return nil
 }
 
-//UpdateHost update host info
+// UpdateHost update host info
 func (srv *NetService) UpdateHost() error {
 	return nil
 }
 
-//ListHost list all host info
+// ListHost list all host info
 func (srv *NetService) ListHost() ([]*types.HostInfo, error) {
 	started := time.Now()
 	paths, err := srv.store.List(defaultHostInfoPath)
@@ -252,7 +252,7 @@ func (srv *NetService) ListHost() ([]*types.HostInfo, error) {
 	return hosts, nil
 }
 
-//ListHostByKey list host by ip
+// ListHostByKey list host by ip
 func (srv *NetService) ListHostByKey(ip string) (*types.HostInfo, error) {
 	started := time.Now()
 	blog.Infof("try to get host %s info.", ip)
@@ -269,7 +269,7 @@ func (srv *NetService) ListHostByKey(ip string) (*types.HostInfo, error) {
 		reportMetrics("listHostByIP", stateJSONFailure, started)
 		return nil, fmt.Errorf("decode host %s data err, %s", ip, err.Error())
 	}
-	//get container info under host
+	// get container info under host
 	containerList, listErr := srv.store.List(hostpath)
 	if listErr != nil {
 		blog.Errorf("Host %s list container node err, %s", ip, listErr.Error())
@@ -297,8 +297,8 @@ func (srv *NetService) ListHostByKey(ip string) (*types.HostInfo, error) {
 	return host, nil
 }
 
-//GetHostInfo get host node content info, container info are exclude
-//note: if err is nil & HostInfo is nil, no hostInfo in storage
+// GetHostInfo get host node content info, container info are exclude
+// note: if err is nil & HostInfo is nil, no hostInfo in storage
 func (srv *NetService) GetHostInfo(ip string) (*types.HostInfo, error) {
 	started := time.Now()
 	blog.Infof("try to get host %s info.", ip)

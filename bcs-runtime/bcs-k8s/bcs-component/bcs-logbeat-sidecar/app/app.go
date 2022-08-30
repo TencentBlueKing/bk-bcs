@@ -11,6 +11,7 @@
  *
  */
 
+// Package app xxx
 package app
 
 import (
@@ -25,11 +26,12 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-logbeat-sidecar/sidecar"
 )
 
+// Run xxx
 func Run(op *options.SidecarOption) error {
 
 	conf := &config.Config{}
 	setConfig(conf, op)
-	//pid
+	// pid
 	if err := common.SavePid(op.ProcessConfig); err != nil {
 		blog.Error("fail to save pid: err:%s", err.Error())
 	}

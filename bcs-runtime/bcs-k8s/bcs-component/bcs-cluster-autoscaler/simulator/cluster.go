@@ -155,7 +155,8 @@ candidateloop:
 			if err != nil {
 				klog.V(2).Infof("%s: node %s cannot be removed: %v", evaluationType, node.Name, err)
 				if blockingPod != nil {
-					unremovable = append(unremovable, &UnremovableNode{Node: nodeInfo.Node(), Reason: BlockedByPod, BlockingPod: blockingPod})
+					unremovable = append(unremovable, &UnremovableNode{Node: nodeInfo.Node(), Reason: BlockedByPod,
+						BlockingPod: blockingPod})
 				} else {
 					unremovable = append(unremovable, &UnremovableNode{Node: nodeInfo.Node(), Reason: UnexpectedError})
 				}
@@ -205,8 +206,10 @@ func FindEmptyNodesToRemove(candidates []*apiv1.Node, pods []*apiv1.Pod) []*apiv
 	return result
 }
 
+// findPlaceFor xxx
 // TODO: We don't need to pass list of nodes here as they are already available in nodeInfos.
-func findPlaceFor(removedNode string, pods []*apiv1.Pod, nodes []*apiv1.Node, nodeInfos map[string]*schedulernodeinfo.NodeInfo,
+func findPlaceFor(removedNode string, pods []*apiv1.Pod, nodes []*apiv1.Node,
+	nodeInfos map[string]*schedulernodeinfo.NodeInfo,
 	predicateChecker *simulatorinternal.PredicateChecker, oldHints map[string]string, newHints map[string]string,
 	usageTracker *simulatorinternal.UsageTracker, timestamp time.Time) error {
 

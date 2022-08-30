@@ -19,37 +19,37 @@ import (
 	v1 "k8s.io/api/core/v1"
 )
 
-// LightPodCondition ...
+// LightPodCondition xxx
 type LightPodCondition struct {
 	Type   v1.PodConditionType
 	Status v1.ConditionStatus
 }
 
-// LightContainerStateWaiting ...
+// LightContainerStateWaiting xxx
 type LightContainerStateWaiting struct {
 	Reason string
 }
 
-// LightContainerStateRunning ...
+// LightContainerStateRunning xxx
 type LightContainerStateRunning struct {
 	StartedAt string
 }
 
-// LightContainerStateTerminated ...
+// LightContainerStateTerminated xxx
 type LightContainerStateTerminated struct {
 	ExitCode int32
 	Signal   int32
 	Reason   string
 }
 
-// LightContainerState ...
+// LightContainerState xxx
 type LightContainerState struct {
 	Waiting    *LightContainerStateWaiting
 	Running    *LightContainerStateRunning
 	Terminated *LightContainerStateTerminated
 }
 
-// LightContainerStatus ...
+// LightContainerStatus xxx
 type LightContainerStatus struct {
 	State LightContainerState
 	Ready bool
@@ -64,7 +64,7 @@ type LightPodStatus struct {
 	ContainerStatuses     []LightContainerStatus
 }
 
-// LightMetricTarget ...
+// LightMetricTarget xxx
 type LightMetricTarget struct {
 	Type               v2beta2.MetricTargetType
 	Value              string
@@ -72,7 +72,7 @@ type LightMetricTarget struct {
 	AverageUtilization int
 }
 
-// LightMetricSource ...
+// LightMetricSource xxx
 type LightMetricSource struct {
 	Target LightMetricTarget
 }
@@ -87,14 +87,14 @@ type LightHPAMetricSpec struct {
 	External          LightMetricSource
 }
 
-// LightMetricValueStatus ...
+// LightMetricValueStatus xxx
 type LightMetricValueStatus struct {
 	Value              string
 	AverageValue       string
 	AverageUtilization int
 }
 
-// LightMetricStatus ...
+// LightMetricStatus xxx
 type LightMetricStatus struct {
 	Current LightMetricValueStatus
 }

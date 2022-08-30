@@ -25,7 +25,7 @@ type ApplyURLGenerator struct {
 	cli *bkiam.IAM
 }
 
-// NewApplyURLGenerator ...
+// NewApplyURLGenerator xxx
 func NewApplyURLGenerator() *ApplyURLGenerator {
 	return &ApplyURLGenerator{cli: conf.G.IAM.Cli}
 }

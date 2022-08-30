@@ -118,6 +118,7 @@ func (p *ProjectService) Run() error {
 	return nil
 }
 
+// initTLSConfig xxx
 // init server and client tls config
 func (p *ProjectService) initTLSConfig() error {
 	if len(p.opt.Server.Cert) != 0 && len(p.opt.Server.Key) != 0 && len(p.opt.Server.Ca) != 0 {
@@ -154,6 +155,7 @@ func (p *ProjectService) initTLSConfig() error {
 	return nil
 }
 
+// initMongo xxx
 // init mongo client
 func (p *ProjectService) initMongo() error {
 	store.InitMongo(&p.opt.Mongo)
@@ -200,6 +202,7 @@ func (p *ProjectService) initDiscovery() error {
 	return nil
 }
 
+// initMicro xxx
 // init micro service
 func (p *ProjectService) initMicro() error {
 	// max size: 50M, add grpc address to access
@@ -259,6 +262,7 @@ func (p *ProjectService) initMicro() error {
 	return nil
 }
 
+// initHTTPGateway xxx
 // init http gateway
 func (p *ProjectService) initHTTPGateway(router *mux.Router) error {
 	gwMux := runtime.NewServeMux(
@@ -319,6 +323,7 @@ func (p *ProjectService) registerGatewayFromEndPoint(gwMux *runtime.ServeMux, gr
 	return nil
 }
 
+// initSwagger xxx
 // init swagger
 func (p *ProjectService) initSwagger(mux *http.ServeMux) {
 	if p.opt.Swagger.Enable {
@@ -329,6 +334,7 @@ func (p *ProjectService) initSwagger(mux *http.ServeMux) {
 	}
 }
 
+// initHttpService xxx
 // init http service
 func (p *ProjectService) initHttpService() error {
 	router := mux.NewRouter()

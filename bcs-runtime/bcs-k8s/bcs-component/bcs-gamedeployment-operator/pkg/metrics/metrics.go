@@ -11,6 +11,7 @@
  *
  */
 
+// Package metrics xxx
 package metrics
 
 import (
@@ -22,26 +23,33 @@ import (
 
 var namespace = "bkbcs"
 var subsystem = "gamedeployment"
+
+// IsGrace xxx
 var IsGrace string
 
 const (
-	SuccessStatus          = "success"
-	FailureStatus          = "failure"
-	InplaceUpdateStrategy  = "inplaceUpdate"
+	// SuccessStatus xxx
+	SuccessStatus = "success"
+	// FailureStatus xxx
+	FailureStatus = "failure"
+	// InplaceUpdateStrategy xxx
+	InplaceUpdateStrategy = "inplaceUpdate"
+	// HotPatchUpdateStrategy xxx
 	HotPatchUpdateStrategy = "hotPatchUpdate"
-	DeletePodAction        = "deletePod"
+	// DeletePodAction xxx
+	DeletePodAction = "deletePod"
 )
 
 const initialMinVal = 999999
 
 // Metrics used to collect prom metrics for gamedeployment operator
 type Metrics struct {
-	podCreateDurationMaxVal float64 //save the max create duration(seconds) value of pod
-	podCreateDurationMinVal float64 //save the min create duration(seconds) value of pod
-	podUpdateDurationMaxVal float64 //save the max update duration(seconds) value of pod
-	podUpdateDurationMinVal float64 //save the min update duration(seconds) value of pod
-	podDeleteDurationMaxVal float64 //save the max delete duration(seconds) value of pod
-	podDeleteDurationMinVal float64 //save the min delete duration(seconds) value of pod
+	podCreateDurationMaxVal float64 // save the max create duration(seconds) value of pod
+	podCreateDurationMinVal float64 // save the min create duration(seconds) value of pod
+	podUpdateDurationMaxVal float64 // save the max update duration(seconds) value of pod
+	podUpdateDurationMinVal float64 // save the min update duration(seconds) value of pod
+	podDeleteDurationMaxVal float64 // save the max delete duration(seconds) value of pod
+	podDeleteDurationMinVal float64 // save the min delete duration(seconds) value of pod
 
 	// reconcileDuration is reconcile duration(seconds) for gamedeployment operator
 	reconcileDuration *prometheus.HistogramVec

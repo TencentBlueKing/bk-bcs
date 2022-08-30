@@ -33,7 +33,7 @@ const (
 	HPAMetricTargetDefaultVal = "<auto>"
 )
 
-// FormatHPA ...
+// FormatHPA xxx
 func FormatHPA(manifest map[string]interface{}) map[string]interface{} {
 	ret := CommonFormatRes(manifest)
 	ref, _ := mapx.GetItems(manifest, "spec.scaleTargetRef")
@@ -54,6 +54,7 @@ type hpaTargetsParser struct {
 	metrics  []string
 }
 
+// Parse xxx
 // targets 解析逻辑，参考来源：https://github.com/kubernetes/kubernetes/blob/master/pkg/printers/internalversion/printers.go#L2025
 func (p *hpaTargetsParser) Parse() string {
 	specs := mapx.Get(p.manifest, "spec.metrics", []interface{}{})
@@ -100,7 +101,7 @@ func (p *hpaTargetsParser) Parse() string {
 	return ret
 }
 
-// 解析来源自 External 的指标信息
+// parseExternalMetric 解析来源自 External 的指标信息
 func (p *hpaTargetsParser) parseExternalMetric(idx int, spec LightHPAMetricSpec) string {
 	current := HPAMetricCurrentDefaultVal
 	if spec.External.Target.AverageValue != "" {
@@ -115,7 +116,7 @@ func (p *hpaTargetsParser) parseExternalMetric(idx int, spec LightHPAMetricSpec)
 	return fmt.Sprintf("%s/%s", current, spec.External.Target.Value)
 }
 
-// 解析来源自 Pods 的指标信息
+// parsePodMetric 解析来源自 Pods 的指标信息
 func (p *hpaTargetsParser) parsePodMetric(idx int, spec LightHPAMetricSpec) string {
 	current := HPAMetricCurrentDefaultVal
 	if len(p.statuses) > idx && p.statuses[idx].Pods != nil {
@@ -124,7 +125,7 @@ func (p *hpaTargetsParser) parsePodMetric(idx int, spec LightHPAMetricSpec) stri
 	return fmt.Sprintf("%s/%s", current, spec.Pods.Target.AverageValue)
 }
 
-// 解析来源自 Object 的指标信息
+// parseObjectMetric 解析来源自 Object 的指标信息
 func (p *hpaTargetsParser) parseObjectMetric(idx int, spec LightHPAMetricSpec) string {
 	current := HPAMetricCurrentDefaultVal
 	if spec.Object.Target.AverageValue != "" {
@@ -139,7 +140,7 @@ func (p *hpaTargetsParser) parseObjectMetric(idx int, spec LightHPAMetricSpec) s
 	return fmt.Sprintf("%s/%s", current, spec.Object.Target.Value)
 }
 
-// 解析来源自 Resource 的指标信息
+// parseResourceMetric 解析来源自 Resource 的指标信息
 func (p *hpaTargetsParser) parseResourceMetric(idx int, spec LightHPAMetricSpec) string {
 	current := HPAMetricCurrentDefaultVal
 	if spec.Resource.Target.AverageValue != "" {
@@ -148,7 +149,8 @@ func (p *hpaTargetsParser) parseResourceMetric(idx int, spec LightHPAMetricSpec)
 		}
 		return fmt.Sprintf("%s/%s", current, spec.Resource.Target.AverageValue)
 	}
-	if len(p.statuses) > idx && p.statuses[idx].Resource != nil && p.statuses[idx].Resource.Current.AverageUtilization != 0 { // nolint:lll
+	if len(p.statuses) > idx && p.statuses[idx].Resource != nil && p.statuses[idx].Resource.Current.AverageUtilization !=
+		0 { // nolint:lll
 		current = fmt.Sprintf("%d%%", p.statuses[idx].Resource.Current.AverageUtilization)
 	}
 	target := HPAMetricTargetDefaultVal
@@ -158,7 +160,7 @@ func (p *hpaTargetsParser) parseResourceMetric(idx int, spec LightHPAMetricSpec)
 	return fmt.Sprintf("%s/%s", current, target)
 }
 
-// 解析来源自 ContainerResource 的指标信息
+// parseContainerResourceMetric 解析来源自 ContainerResource 的指标信息
 func (p *hpaTargetsParser) parseContainerResourceMetric(idx int, spec LightHPAMetricSpec) string {
 	current := HPAMetricCurrentDefaultVal
 	if spec.ContainerResource.Target.AverageValue != "" {
@@ -167,7 +169,8 @@ func (p *hpaTargetsParser) parseContainerResourceMetric(idx int, spec LightHPAMe
 		}
 		return fmt.Sprintf("%s/%s", current, spec.ContainerResource.Target.AverageValue)
 	}
-	if len(p.statuses) > idx && p.statuses[idx].ContainerResource != nil && p.statuses[idx].ContainerResource.Current.AverageUtilization != 0 { // nolint:lll
+	if len(p.statuses) > idx && p.statuses[idx].ContainerResource != nil &&
+		p.statuses[idx].ContainerResource.Current.AverageUtilization != 0 { // nolint:lll
 		current = fmt.Sprintf("%d%%", p.statuses[idx].ContainerResource.Current.AverageUtilization)
 	}
 	target := HPAMetricTargetDefaultVal

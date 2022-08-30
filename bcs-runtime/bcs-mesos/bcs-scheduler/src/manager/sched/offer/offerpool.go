@@ -32,18 +32,24 @@ import (
 )
 
 const (
+	// DefaultLostSlaveGracePeriod xxx
 	// lost mesos slave's grace period time
 	DefaultLostSlaveGracePeriod = 180
 
-	//mesos slave offer life period
+	// DefaultOfferLifePeriod xxx
+	// mesos slave offer life period
 	DefaultOfferLifePeriod = 240
 
-	//decline offer grace period
+	// DefaultDeclineOfferGracePeriod xxx
+	// decline offer grace period
 	DefaultDeclineOfferGracePeriod = 5
 
+	// DeclineOfferChannelLength xxx
 	DeclineOfferChannelLength = 1024
-	DefaultOfferEventLength   = 1024
-	DefaultMiniResourceCpu    = 0.05
+	// DefaultOfferEventLength xxx
+	DefaultOfferEventLength = 1024
+	// DefaultMiniResourceCpu xxx
+	DefaultMiniResourceCpu = 0.05
 )
 
 type offerPool struct {
@@ -61,9 +67,9 @@ type offerPool struct {
 
 	offerEvents chan []*mesos.Offer
 
-	//scheduler manager
+	// scheduler manager
 	scheduler SchedManager
-	//store
+	// store
 	store store.Store
 
 	lostSlaveGracePeriod int
@@ -74,6 +80,7 @@ type offerPool struct {
 	cancel context.CancelFunc
 }
 
+// NewOfferPool xxx
 // new struct OfferPool
 func NewOfferPool(para *OfferPara) OfferPool {
 	o := &offerPool{
@@ -121,7 +128,7 @@ type innerOffer struct {
 	deltaMem  float64
 	deltaDisk float64
 
-	//point, (cpu-allocated/cpu)+(mem-allocated/mem)
+	// point, (cpu-allocated/cpu)+(mem-allocated/mem)
 	point float64
 }
 
@@ -137,14 +144,16 @@ func (p *offerPool) stop() {
 	p.cancel()
 }
 
-//the implements of interface OfferPool's function AddOffers
+// AddOffers xxx
+// the implements of interface OfferPool's function AddOffers
 func (p *offerPool) AddOffers(offers []*mesos.Offer) error {
 	p.offerEvents <- offers
 
 	return nil
 }
 
-//the implements of interface OfferPool's function GetOffersLength
+// GetOffersLength xxx
+// the implements of interface OfferPool's function GetOffersLength
 func (p *offerPool) GetOffersLength() int {
 	p.RLock()
 	length := p.offerList.Len()
@@ -153,7 +162,8 @@ func (p *offerPool) GetOffersLength() int {
 	return length
 }
 
-//the implements of interface OfferPool's function GetFirstOffer
+// GetFirstOffer xxx
+// the implements of interface OfferPool's function GetFirstOffer
 func (p *offerPool) GetFirstOffer() *Offer {
 	p.RLock()
 	var offer *Offer
@@ -197,7 +207,8 @@ func (p *offerPool) GetFirstOffer() *Offer {
 	return offer
 }
 
-//the implements of interface OfferPool's function GetNextOffer
+// GetNextOffer xxx
+// the implements of interface OfferPool's function GetNextOffer
 func (p *offerPool) GetNextOffer(o *Offer) *Offer {
 	p.RLock()
 	defer p.RUnlock()
@@ -290,7 +301,8 @@ func (p *offerPool) GetNextOffer(o *Offer) *Offer {
 	return nil
 }
 
-//the implements of interface OfferPool's function GetAllOffers
+// GetAllOffers xxx
+// the implements of interface OfferPool's function GetAllOffers
 func (p *offerPool) GetAllOffers() []*Offer {
 	p.RLock()
 	defer p.RUnlock()
@@ -325,7 +337,7 @@ func (p *offerPool) GetAllOffers() []*Offer {
 	return offers
 }
 
-//the implements of interface OfferPool's function GetOfferGreaterThan
+// the implements of interface OfferPool's function GetOfferGreaterThan
 /*func (p *offerPool) GetOfferGreaterThan(id int64) *Offer {
 	p.RLock()
 	var offer *Offer
@@ -368,7 +380,8 @@ func (p *offerPool) GetAllOffers() []*Offer {
 	return offer
 }*/
 
-//the implements of interface OfferPool's function UseOffer
+// UseOffer xxx
+// the implements of interface OfferPool's function UseOffer
 func (p *offerPool) UseOffer(o *Offer) bool {
 	p.Lock()
 	defer p.Unlock()
@@ -386,7 +399,8 @@ func (p *offerPool) UseOffer(o *Offer) bool {
 	return true
 }
 
-//the implements of interface OfferPool's function AddLostSlave
+// AddLostSlave xxx
+// the implements of interface OfferPool's function AddLostSlave
 func (p *offerPool) AddLostSlave(hostname string) {
 	p.slaveLock.Lock()
 	blog.Infof("slave %s lost", hostname)
@@ -416,7 +430,7 @@ func (p *offerPool) addOffers(offers []*mesos.Offer) bool {
 	defer p.Unlock()
 
 	blog.Infof("before add offers, offers num(%d)", p.offerList.Len())
-	//sort.Sort(offerSorter(offers))
+	// sort.Sort(offerSorter(offers))
 	for _, o := range offers {
 		cpu, mem, disk, port := p.offeredResources(o)
 		blog.Infof("add offer(%s:%s) cpu %f mem %f disk %f port %s",
@@ -438,8 +452,8 @@ func (p *offerPool) addOffers(offers []*mesos.Offer) bool {
 		} else {
 			blog.V(3).Infof("validateOffer offer(%s:%s) is ok", o.GetId().GetValue(), o.GetHostname())
 		}
-		//calculate offer point
-		//point, (cpu-allocated/cpu)+(mem-allocated/mem)
+		// calculate offer point
+		// point, (cpu-allocated/cpu)+(mem-allocated/mem)
 		offerIp, _ := p.getOfferIp(o)
 		var point float64
 		agent, err := p.store.FetchAgent(offerIp)
@@ -454,9 +468,9 @@ func (p *offerPool) addOffers(offers []*mesos.Offer) bool {
 			blog.Infof("offer %s point=Cpu(%f/%f)+Mem(%f/%f)=%f", offerIp, cpu,
 				agentinfo.CpuTotal, mem, agentinfo.MemTotal, point)
 		}
-		//set offer attributes
+		// set offer attributes
 		p.setOffersAttributes([]*mesos.Offer{o})
-		//print offer info
+		// print offer info
 		p.printOffer(o)
 
 		// add agent delta resource for each offer, delta resource is used by inplace update
@@ -638,7 +652,7 @@ func (p *offerPool) checkOffers() {
 				cpu, mem, disk, port := p.offeredResources(offer.offer)
 				blog.V(3).Infof("checkOffers offer(%d | %s:%s) cpu %f mem %f disk %f port %s",
 					offer.id, offer.offerId, offer.hostname, cpu, mem, disk, port)
-				//p.printOffer(offer.offer)
+				// p.printOffer(offer.offer)
 
 				if offer.isValid && offer.createdTime+int64(p.offerLifePeriod) <= now {
 					blog.Infof("offer(%d | %s:%s) is invalid", offer.id, offer.offerId, offer.hostname)
@@ -723,7 +737,7 @@ func (p *offerPool) addOfferAttributes(offer *mesos.Offer, agentSetting *commtyp
 		return nil
 	}
 
-	//customized definition agent setting
+	// customized definition agent setting
 	for k, v := range agentSetting.AttrStrings {
 		blog.Infof("offer(%s:%s) add attribute(%s:%s) from agentsetting",
 			offer.GetId().GetValue(), offer.GetHostname(), k, v)
@@ -739,7 +753,7 @@ func (p *offerPool) addOfferAttributes(offer *mesos.Offer, agentSetting *commtyp
 		attr.Text = &attrValue
 		offer.Attributes = append(offer.Attributes, &attr)
 	}
-	//customized definition agent setting
+	// customized definition agent setting
 	for k, v := range agentSetting.AttrScalars {
 		blog.Infof("offer(%s:%s) add attribute(%s:%f) from agentsetting",
 			offer.GetId().GetValue(), offer.GetHostname(), k, v)
@@ -756,7 +770,7 @@ func (p *offerPool) addOfferAttributes(offer *mesos.Offer, agentSetting *commtyp
 		offer.Attributes = append(offer.Attributes, &attr)
 	}
 
-	//noSchedule, likes k8s Taints\Tolerations
+	// noSchedule, likes k8s Taints\Tolerations
 	name := types.MesosAttributeNoSchedule
 	t := mesos.Value_SET
 	noScheduleAttr := &mesos.Attribute{
@@ -779,7 +793,7 @@ func (p *offerPool) addOfferAttributes(offer *mesos.Offer, agentSetting *commtyp
 	}
 
 	pods := make([]*types.TaskGroup, 0, len(agentSetting.Pods))
-	//get node's pod list
+	// get node's pod list
 	for _, id := range agentSetting.Pods {
 		pod, err := p.scheduler.FetchTaskGroup(id)
 		if err != nil {
@@ -794,13 +808,13 @@ func (p *offerPool) addOfferAttributes(offer *mesos.Offer, agentSetting *commtyp
 		pods = append(pods, pod)
 	}
 
-	//all extended resources of the node already allocated
+	// all extended resources of the node already allocated
 	allocatedResources := make(map[string]*commtype.ExtendedResource)
 	for _, pod := range pods {
 		ers := pod.GetExtendedResources()
 		for _, er := range ers {
 			o := allocatedResources[er.Name]
-			//if extended resources already exist, then superposition
+			// if extended resources already exist, then superposition
 			if o != nil {
 				o.Value += er.Value
 			} else {
@@ -810,9 +824,9 @@ func (p *offerPool) addOfferAttributes(offer *mesos.Offer, agentSetting *commtyp
 	}
 	by, _ := json.Marshal(allocatedResources)
 	blog.Infof("extended resources %s", string(by))
-	//extended resources, agentsetting have total extended resources
+	// extended resources, agentsetting have total extended resources
 	for _, ex := range agentSetting.ExtendedResources {
-		//if the extended resources have allocated, then minus it
+		// if the extended resources have allocated, then minus it
 		allocated := allocatedResources[ex.Name]
 		var value float64
 		if allocated != nil {
@@ -820,7 +834,7 @@ func (p *offerPool) addOfferAttributes(offer *mesos.Offer, agentSetting *commtyp
 		} else {
 			value = ex.Capacity
 		}
-		//current device plugin socket set int mesos.resource.Role parameter
+		// current device plugin socket set int mesos.resource.Role parameter
 		socket := ex.Socket
 		r := &mesos.Resource{
 			Name: &ex.Name,
@@ -1088,6 +1102,7 @@ func (p *offerPool) offeredResources(offer *mesos.Offer) (cpus, mem, disk float6
 	return
 }
 
+// GetOfferAttribute xxx
 func GetOfferAttribute(offer *mesos.Offer, name string) (*mesos.Attribute, error) {
 
 	attributes := offer.GetAttributes()
@@ -1107,6 +1122,7 @@ func GetOfferAttribute(offer *mesos.Offer, name string) (*mesos.Attribute, error
 	return nil, nil
 }
 
+// GetOfferIp xxx
 func GetOfferIp(offer *mesos.Offer) (string, bool) {
 	attributes := offer.GetAttributes()
 	ip := ""

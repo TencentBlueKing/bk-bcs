@@ -11,6 +11,7 @@
  *
  */
 
+// Package bk_monitor xxx
 package bk_monitor
 
 import (
@@ -48,7 +49,7 @@ type BKMonitorStore struct {
 	metadataURL *url.URL
 }
 
-// NewBKMonitorStore
+// NewBKMonitorStore xxx
 func NewBKMonitorStore(conf []byte) (*BKMonitorStore, error) {
 	var config Config
 	if err := yaml.UnmarshalStrict(conf, &config); err != nil {
@@ -118,13 +119,15 @@ func (s *BKMonitorStore) Info(ctx context.Context, r *storepb.InfoRequest) (*sto
 }
 
 // LabelNames 返回 labels 列表
-func (s *BKMonitorStore) LabelNames(ctx context.Context, r *storepb.LabelNamesRequest) (*storepb.LabelNamesResponse, error) {
+func (s *BKMonitorStore) LabelNames(ctx context.Context, r *storepb.LabelNamesRequest) (*storepb.LabelNamesResponse,
+	error) {
 	names := []string{"__name__"}
 	return &storepb.LabelNamesResponse{Names: names}, nil
 }
 
 // LabelValues 返回 label values 列表
-func (s *BKMonitorStore) LabelValues(ctx context.Context, r *storepb.LabelValuesRequest) (*storepb.LabelValuesResponse, error) {
+func (s *BKMonitorStore) LabelValues(ctx context.Context, r *storepb.LabelValuesRequest) (*storepb.LabelValuesResponse,
+	error) {
 	values := []string{}
 	if r.Label == "__name__" {
 		values = []string{"container_network_receive_bytes_total"}
@@ -201,7 +204,8 @@ func (s *BKMonitorStore) Series(r *storepb.SeriesRequest, srv storepb.Store_Seri
 		return err
 	}
 
-	promSeriesSet, err := bkmonitor_client.QueryByPromQL(srv.Context(), s.config.URL, cluster.BKBizID, start, end, r.Step, newMatchers)
+	promSeriesSet, err := bkmonitor_client.QueryByPromQL(srv.Context(), s.config.URL, cluster.BKBizID, start, end, r.Step,
+		newMatchers)
 	if err != nil {
 		return err
 	}

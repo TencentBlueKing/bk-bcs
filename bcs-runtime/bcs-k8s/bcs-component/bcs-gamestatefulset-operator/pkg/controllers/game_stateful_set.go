@@ -435,6 +435,7 @@ func (ssc *GameStatefulSetController) getPodsForGameStatefulSet(set *gstsv1alpha
 	return cm.ClaimPods(pods, filter)
 }
 
+// canAdoptFunc xxx
 // If any adoptions are attempted, we should first recheck for deletion with
 // an uncached quorum read sometime after listing Pods/ControllerRevisions (see #42639).
 func (ssc *GameStatefulSetController) canAdoptFunc(set *gstsv1alpha1.GameStatefulSet) func() error {
@@ -612,6 +613,7 @@ func (ssc *GameStatefulSetController) sync(key string) (retErr error) {
 	return ssc.syncGameStatefulSet(set, pods)
 }
 
+// enqueueGameStatefulSetAfter xxx
 // obj could be an GameStatefulSet, or a DeletionFinalStateUnknown marker item.
 func (ssc *GameStatefulSetController) enqueueGameStatefulSetAfter(obj interface{}, after time.Duration) {
 	key, err := controller.KeyFunc(obj)
@@ -624,7 +626,7 @@ func (ssc *GameStatefulSetController) enqueueGameStatefulSetAfter(obj interface{
 
 // syncGameStatefulSet syncs a tuple of (statefulset, []*v1.Pod).
 func (ssc *GameStatefulSetController) syncGameStatefulSet(set *gstsv1alpha1.GameStatefulSet, pods []*v1.Pod) error {
-	//klog.Infof("Syncing GameStatefulSet %s/%s with %d pods", set.Namespace, set.Name, len(pods))
+	// klog.Infof("Syncing GameStatefulSet %s/%s with %d pods", set.Namespace, set.Name, len(pods))
 	// TODO: investigate where we mutate the set during the update as it is not obvious.
 	err := ssc.control.UpdateGameStatefulSet(set.DeepCopy(), pods)
 

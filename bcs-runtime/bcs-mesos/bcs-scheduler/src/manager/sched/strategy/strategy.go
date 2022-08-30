@@ -11,6 +11,7 @@
  *
  */
 
+// Package strategy xxx
 package strategy
 
 import (
@@ -32,7 +33,7 @@ import (
 // ConstraintsFit Check whether an offer matches with the constraints for an application
 func ConstraintsFit(version *types.Version, offer *mesos.Offer, store store.Store, taskgroupID string) (bool, error) {
 	constraints := version.Constraints
-	//taints & toleration
+	// taints & toleration
 	attribute, _ := offerP.GetOfferAttribute(offer, types.MesosAttributeNoSchedule)
 	if attribute != nil {
 		fit, _ := checkToleration(offer, version)
@@ -83,7 +84,8 @@ func ConstraintsFit(version *types.Version, offer *mesos.Offer, store store.Stor
 	return true, nil
 }
 
-func constraintDataItemFit(constraintItem *commtypes.ConstraintDataItem, offer *mesos.Offer, version *types.Version, store store.Store) (bool, error) {
+func constraintDataItemFit(constraintItem *commtypes.ConstraintDataItem, offer *mesos.Offer, version *types.Version,
+	store store.Store) (bool, error) {
 
 	i := 0
 	for _, constraintData := range constraintItem.UnionData {
@@ -105,18 +107,20 @@ func constraintDataItemFit(constraintItem *commtypes.ConstraintDataItem, offer *
 	return false, nil
 }
 
-func contraintDataFit(constraint *commtypes.ConstraintData, offer *mesos.Offer, version *types.Version, store store.Store) (bool, error) {
+func contraintDataFit(constraint *commtypes.ConstraintData, offer *mesos.Offer, version *types.Version,
+	store store.Store) (bool, error) {
 
 	name := constraint.Name
 	operate := constraint.Operate
 
-	//there's no need to judge toleration here, always true
+	// there's no need to judge toleration here, always true
 	if constraint.Operate == commtypes.Constraint_Type_TOLERATION {
 		return true, nil
 	}
 
 	valueType := constraint.Type
-	blog.V(3).Infof("check constraint(%s) for (name:%s, type:%d) for offer from %s", operate, name, valueType, offer.GetHostname())
+	blog.V(3).Infof("check constraint(%s) for (name:%s, type:%d) for offer from %s", operate, name, valueType,
+		offer.GetHostname())
 
 	if operate == commtypes.Constraint_Type_EXCLUDE {
 		return checkExclude(constraint, offer.GetHostname(), version, store)
@@ -158,7 +162,7 @@ func contraintDataFit(constraint *commtypes.ConstraintData, offer *mesos.Offer, 
 		return checkUnLike(constraint, attribute)
 	case commtypes.Constraint_Type_GREATER:
 		return checkGreater(constraint, attribute)
-	//there's no need to judge toleration here, always true
+	// there's no need to judge toleration here, always true
 	case commtypes.Constraint_Type_TOLERATION:
 		return true, nil
 	default:
@@ -283,7 +287,8 @@ func isVersionRequestIp(version *types.Version) bool {
 	return false
 }
 
-func checkUnique(constraint *commtypes.ConstraintData, attribute *mesos.Attribute, version *types.Version, store store.Store) (bool, error) {
+func checkUnique(constraint *commtypes.ConstraintData, attribute *mesos.Attribute, version *types.Version,
+	store store.Store) (bool, error) {
 
 	blog.V(3).Infof("constraint UNIQUE for attribute(name: %s)", attribute.GetName())
 
@@ -302,8 +307,10 @@ func checkUnique(constraint *commtypes.ConstraintData, attribute *mesos.Attribut
 		for _, taskGroup := range taskGroups {
 			for _, taskGroupAttr := range taskGroup.Attributes {
 				isSame, _ := compareAttribute(taskGroupAttr, attribute)
-				if isSame == true && taskGroup.Status != types.TASKGROUP_STATUS_FINISH && taskGroup.Status != types.TASKGROUP_STATUS_FAIL {
-					blog.V(3).Infof("constraint UNIQUE: taskgroup(%s) attribute(%s) is the same, so UNIQUE not fit", taskGroup.ID, attribute.GetName())
+				if isSame == true && taskGroup.Status != types.TASKGROUP_STATUS_FINISH &&
+					taskGroup.Status != types.TASKGROUP_STATUS_FAIL {
+					blog.V(3).Infof("constraint UNIQUE: taskgroup(%s) attribute(%s) is the same, so UNIQUE not fit", taskGroup.ID,
+						attribute.GetName())
 					return false, nil
 				}
 			}
@@ -320,7 +327,8 @@ func checkGreater(constraint *commtypes.ConstraintData, attribute *mesos.Attribu
 	case commtypes.ConstValueType_Scalar:
 		scalar := constraint.Scalar.Value
 		if attribute.GetType() != mesos.Value_SCALAR {
-			blog.Errorf("constraint %s type ConstValueType_Scalar, but attribute type %s", constraint.Name, attribute.GetType().String())
+			blog.Errorf("constraint %s type ConstValueType_Scalar, but attribute type %s", constraint.Name, attribute.GetType().
+				String())
 			return false, nil
 		}
 
@@ -435,7 +443,8 @@ func checkLike(constraint *commtypes.ConstraintData, attribute *mesos.Attribute)
 			return false, nil
 		}
 
-		blog.Error("unprocessed constraint(Like) for attribute value type(%d) and constrain value type(%d)", attrValueType, constraint.Type)
+		blog.Error("unprocessed constraint(Like) for attribute value type(%d) and constrain value type(%d)", attrValueType,
+			constraint.Type)
 		return true, nil
 	default:
 		blog.Error("unprocessed constraint(Like) for attribute value type(%s)", attrValueType)
@@ -501,7 +510,8 @@ func checkUnLike(constraint *commtypes.ConstraintData, attribute *mesos.Attribut
 			return true, nil
 		}
 
-		blog.Error("unprocessed constraint(UnLike) for attribute value type(%d) and constrain value type(%d)", attrValueType, constraint.Type)
+		blog.Error("unprocessed constraint(UnLike) for attribute value type(%d) and constrain value type(%d)", attrValueType,
+			constraint.Type)
 		return true, nil
 	default:
 		blog.Error("unprocessed constraint(UnLike) for attribute value type(%s)", attrValueType)
@@ -534,7 +544,8 @@ func checkCluster(constraint *commtypes.ConstraintData, attribute *mesos.Attribu
 			}
 			return false, nil
 		}
-		blog.Error("constraint CLUSTER: unprocessed constraint(Cluster) for attribute value type(%d) and constrain value type(%d)", attrValueType, constraint.Type)
+		blog.Error(
+			"constraint CLUSTER: unprocessed constraint(Cluster) for attribute value type(%d) and constrain value type(%d)", attrValueType, constraint.Type)
 
 	default:
 		blog.Error("constraint CLUSTER: unprocessed constraint(Cluster) for attribute value type(%s)", attrValueType)
@@ -544,7 +555,8 @@ func checkCluster(constraint *commtypes.ConstraintData, attribute *mesos.Attribu
 
 }
 
-func checkGroupBy(constraint *commtypes.ConstraintData, attribute *mesos.Attribute, version *types.Version, store store.Store) (bool, error) {
+func checkGroupBy(constraint *commtypes.ConstraintData, attribute *mesos.Attribute, version *types.Version,
+	store store.Store) (bool, error) {
 
 	blog.V(3).Infof("constraint GROUPBY by attribute(name:%s)", constraint.Name)
 
@@ -613,8 +625,10 @@ func checkGroupBy(constraint *commtypes.ConstraintData, attribute *mesos.Attribu
 		for _, taskGroup := range taskGroups {
 			for _, taskGroupAttr := range taskGroup.Attributes {
 				isSame, _ := compareAttribute(taskGroupAttr, attribute)
-				if isSame == true && taskGroup.Status != types.TASKGROUP_STATUS_FINISH && taskGroup.Status != types.TASKGROUP_STATUS_FAIL {
-					blog.V(3).Infof("constraint GROUPBY: taskgroup(%s) attribute(%s) is the same, num++", taskGroup.ID, attribute.GetName())
+				if isSame == true && taskGroup.Status != types.TASKGROUP_STATUS_FINISH &&
+					taskGroup.Status != types.TASKGROUP_STATUS_FAIL {
+					blog.V(3).Infof("constraint GROUPBY: taskgroup(%s) attribute(%s) is the same, num++", taskGroup.ID,
+						attribute.GetName())
 					num++
 					break
 				}
@@ -630,7 +644,8 @@ func checkGroupBy(constraint *commtypes.ConstraintData, attribute *mesos.Attribu
 	return true, nil
 }
 
-func checkMaxPer(constraint *commtypes.ConstraintData, attribute *mesos.Attribute, version *types.Version, store store.Store) (bool, error) {
+func checkMaxPer(constraint *commtypes.ConstraintData, attribute *mesos.Attribute, version *types.Version,
+	store store.Store) (bool, error) {
 
 	blog.V(3).Infof("constraint MAXPER: for attribute(name: %s)", attribute.GetName())
 
@@ -667,8 +682,10 @@ func checkMaxPer(constraint *commtypes.ConstraintData, attribute *mesos.Attribut
 		for _, taskGroup := range taskGroups {
 			for _, taskGroupAttr := range taskGroup.Attributes {
 				isSame, _ := compareAttribute(taskGroupAttr, attribute)
-				if isSame == true && taskGroup.Status != types.TASKGROUP_STATUS_FINISH && taskGroup.Status != types.TASKGROUP_STATUS_FAIL {
-					blog.V(3).Infof("constraint MAXPER: taskgroup(%s) attribute(%s) is the same, num++", taskGroup.ID, attribute.GetName())
+				if isSame == true && taskGroup.Status != types.TASKGROUP_STATUS_FINISH &&
+					taskGroup.Status != types.TASKGROUP_STATUS_FAIL {
+					blog.V(3).Infof("constraint MAXPER: taskgroup(%s) attribute(%s) is the same, num++", taskGroup.ID,
+						attribute.GetName())
 					num++
 					break
 				}
@@ -685,7 +702,8 @@ func checkMaxPer(constraint *commtypes.ConstraintData, attribute *mesos.Attribut
 	return true, nil
 }
 
-func checkExclude(constraint *commtypes.ConstraintData, hostname string, appVersion *types.Version, store store.Store) (bool, error) {
+func checkExclude(constraint *commtypes.ConstraintData, hostname string, appVersion *types.Version,
+	store store.Store) (bool, error) {
 
 	blog.V(3).Infof("constraint EXCLUDE on host(%s)", hostname)
 
@@ -721,7 +739,8 @@ func checkExclude(constraint *commtypes.ConstraintData, hostname string, appVers
 				return false, err
 			}
 
-			if appVersion.ObjectMeta.Name == version.ObjectMeta.Name && appVersion.ObjectMeta.NameSpace == version.ObjectMeta.NameSpace {
+			if appVersion.ObjectMeta.Name == version.ObjectMeta.Name && appVersion.ObjectMeta.NameSpace ==
+				version.ObjectMeta.NameSpace {
 				blog.V(3).Infof("constraint EXCLUDE: app(%s.%s) is the same as current application, pass", runAs, appID)
 				continue
 			}
@@ -746,7 +765,7 @@ func checkExclude(constraint *commtypes.ConstraintData, hostname string, appVers
 				continue
 			}
 
-			//check taskgroups
+			// check taskgroups
 			store.LockApplication(runAs + "." + appID)
 			taskGroups, err := store.ListTaskGroups(runAs, appID)
 			store.UnLockApplication(runAs + "." + appID)
@@ -757,7 +776,8 @@ func checkExclude(constraint *commtypes.ConstraintData, hostname string, appVers
 
 			for _, taskGroup := range taskGroups {
 				if taskGroup.HostName == hostname {
-					blog.Info("constraint EXCLUDE: taskgroup(%s) is on offered host(%s), constraint not pass", taskGroup.ID, taskGroup.HostName)
+					blog.Info("constraint EXCLUDE: taskgroup(%s) is on offered host(%s), constraint not pass", taskGroup.ID,
+						taskGroup.HostName)
 					return false, nil
 				}
 			}

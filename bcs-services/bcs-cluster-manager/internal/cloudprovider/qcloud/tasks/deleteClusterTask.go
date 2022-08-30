@@ -29,10 +29,11 @@ import (
 // DeleteTKEClusterTask delete cluster task
 func DeleteTKEClusterTask(taskID string, stepName string) error {
 	start := time.Now()
-	//get task information and validate
+	// get task information and validate
 	task, err := cloudprovider.GetStorageModel().GetTask(context.Background(), taskID)
 	if err != nil {
-		blog.Errorf("DeleteTKEClusterTask[%s]: task %s get detail task information from storage failed, %s. task retry", taskID, taskID, err.Error())
+		blog.Errorf("DeleteTKEClusterTask[%s]: task %s get detail task information from storage failed, %s. task retry",
+			taskID, taskID, err.Error())
 		return err
 	}
 
@@ -43,7 +44,8 @@ func DeleteTKEClusterTask(taskID string, stepName string) error {
 	}
 	step, err := state.IsReadyToStep(stepName)
 	if err != nil {
-		blog.Errorf("DeleteTKEClusterTask[%s]: task %s not turn to run step %s, err %s", taskID, taskID, stepName, err.Error())
+		blog.Errorf("DeleteTKEClusterTask[%s]: task %s not turn to run step %s, err %s", taskID, taskID, stepName,
+			err.Error())
 		return err
 	}
 	// previous step successful when retry task
@@ -109,7 +111,8 @@ func DeleteTKEClusterTask(taskID string, stepName string) error {
 		_ = updateClusterSystemID(clusterID, "")
 		blog.Infof("DeleteTKEClusterTask[%s]: task %s DeleteTKECluster[%s] successful", taskID, taskID, cluster.SystemID)
 	} else {
-		blog.Infof("DeleteTKEClusterTask[%s]: task %s DeleteTKECluster skip current step because SystemID empty", taskID, taskID)
+		blog.Infof("DeleteTKEClusterTask[%s]: task %s DeleteTKECluster skip current step because SystemID empty", taskID,
+			taskID)
 	}
 
 	if err := state.UpdateStepSucc(start, stepName); err != nil {
@@ -124,10 +127,11 @@ func CleanClusterDBInfoTask(taskID string, stepName string) error {
 	// delete node && nodeGroup && cluster
 	// get relative nodes by clusterID
 	start := time.Now()
-	//get task information and validate
+	// get task information and validate
 	task, err := cloudprovider.GetStorageModel().GetTask(context.Background(), taskID)
 	if err != nil {
-		blog.Errorf("CleanClusterDBInfoTask[%s]: task %s get detail task information from storage failed, %s. task retry", taskID, taskID, err.Error())
+		blog.Errorf("CleanClusterDBInfoTask[%s]: task %s get detail task information from storage failed, %s. task retry",
+			taskID, taskID, err.Error())
 		return err
 	}
 
@@ -138,7 +142,8 @@ func CleanClusterDBInfoTask(taskID string, stepName string) error {
 	}
 	step, err := state.IsReadyToStep(stepName)
 	if err != nil {
-		blog.Errorf("CleanClusterDBInfoTask[%s]: task %s not turn to run step %s, err %s", taskID, taskID, stepName, err.Error())
+		blog.Errorf("CleanClusterDBInfoTask[%s]: task %s not turn to run step %s, err %s", taskID, taskID, stepName,
+			err.Error())
 		return err
 	}
 	// previous step successful when retry task

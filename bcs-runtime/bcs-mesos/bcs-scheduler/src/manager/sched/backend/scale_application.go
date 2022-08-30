@@ -23,8 +23,9 @@ import (
 	"time"
 )
 
-//ScaleApplication is used to scale application instances.
-func (b *backend) ScaleApplication(runAs, appID string, instances uint64, kind commontypes.BcsDataType, isFromAPI bool) error {
+// ScaleApplication is used to scale application instances.
+func (b *backend) ScaleApplication(runAs, appID string, instances uint64, kind commontypes.BcsDataType,
+	isFromAPI bool) error {
 	blog.V(3).Infof("scale application(%s.%s) to instances:%d", runAs, appID, instances)
 
 	b.store.LockApplication(runAs + "." + appID)

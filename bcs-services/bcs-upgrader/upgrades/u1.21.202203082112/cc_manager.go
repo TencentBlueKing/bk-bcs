@@ -39,6 +39,7 @@ type ccManager struct {
 	Token   string
 }
 
+// NewCcManager xxx
 func NewCcManager(ccHost string) CcManager {
 	return &ccManager{
 		httpCli: httpclient.NewHttpClient(),
@@ -123,10 +124,10 @@ func (c *ccManager) versionConfig(clusterID string) (*ccVersionConfigData, error
 	resp := new(ccVersionConfigData)
 	_ = json.Unmarshal(replyData, resp)
 
-	//val, ok := replyData.(ccVersionConfigData)
-	//if !ok {
+	// val, ok := replyData.(ccVersionConfigData)
+	// if !ok {
 	//	return nil, fmt.Errorf("")
-	//}
+	// }
 
 	return resp, nil
 }

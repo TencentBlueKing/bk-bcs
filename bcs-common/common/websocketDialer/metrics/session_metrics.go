@@ -18,6 +18,7 @@ import (
 )
 
 var (
+	// TotalAddWS xxx
 	TotalAddWS = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
 			Namespace: "bcs_api",
@@ -27,6 +28,7 @@ var (
 		},
 		[]string{"clientkey", "peer"})
 
+	// TotalRemoveWS xxx
 	TotalRemoveWS = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
 			Namespace: "bcs_api",
@@ -36,6 +38,7 @@ var (
 		},
 		[]string{"clientkey", "peer"})
 
+	// TotalAddConnectionsForWS xxx
 	TotalAddConnectionsForWS = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
 			Namespace: "bcs_api",
@@ -46,6 +49,7 @@ var (
 		[]string{"clientkey", "proto", "addr"},
 	)
 
+	// TotalRemoveConnectionsForWS xxx
 	TotalRemoveConnectionsForWS = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
 			Namespace: "bcs_api",
@@ -56,6 +60,7 @@ var (
 		[]string{"clientkey", "proto", "addr"},
 	)
 
+	// TotalTransmitBytesOnWS xxx
 	TotalTransmitBytesOnWS = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
 			Namespace: "bcs_api",
@@ -66,6 +71,7 @@ var (
 		[]string{"clientkey"},
 	)
 
+	// TotalTransmitErrorBytesOnWS xxx
 	TotalTransmitErrorBytesOnWS = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
 			Namespace: "bcs_api",
@@ -76,6 +82,7 @@ var (
 		[]string{"clientkey"},
 	)
 
+	// TotalReceiveBytesOnWS xxx
 	TotalReceiveBytesOnWS = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
 			Namespace: "bcs_api",
@@ -86,6 +93,7 @@ var (
 		[]string{"clientkey"},
 	)
 
+	// TotalAddPeerAttempt xxx
 	TotalAddPeerAttempt = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
 			Namespace: "bcs_api",
@@ -95,6 +103,7 @@ var (
 		},
 		[]string{"peer"},
 	)
+	// TotalPeerConnected xxx
 	TotalPeerConnected = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
 			Namespace: "bcs_api",
@@ -104,6 +113,7 @@ var (
 		},
 		[]string{"peer"},
 	)
+	// TotalPeerDisConnected xxx
 	TotalPeerDisConnected = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
 			Namespace: "bcs_api",
@@ -129,6 +139,7 @@ func init() {
 	prometheus.MustRegister(TotalPeerDisConnected)
 }
 
+// IncSMTotalAddWS xxx
 func IncSMTotalAddWS(clientKey string, peer bool) {
 	var peerStr string
 	if peer {
@@ -144,6 +155,7 @@ func IncSMTotalAddWS(clientKey string, peer bool) {
 		}).Inc()
 }
 
+// IncSMTotalRemoveWS xxx
 func IncSMTotalRemoveWS(clientKey string, peer bool) {
 	var peerStr string
 	if peer {
@@ -158,6 +170,7 @@ func IncSMTotalRemoveWS(clientKey string, peer bool) {
 		}).Inc()
 }
 
+// AddSMTotalTransmitErrorBytesOnWS xxx
 func AddSMTotalTransmitErrorBytesOnWS(clientKey string, size float64) {
 	TotalTransmitErrorBytesOnWS.With(
 		prometheus.Labels{
@@ -165,6 +178,7 @@ func AddSMTotalTransmitErrorBytesOnWS(clientKey string, size float64) {
 		}).Add(size)
 }
 
+// AddSMTotalTransmitBytesOnWS xxx
 func AddSMTotalTransmitBytesOnWS(clientKey string, size float64) {
 	TotalTransmitBytesOnWS.With(
 		prometheus.Labels{
@@ -172,6 +186,7 @@ func AddSMTotalTransmitBytesOnWS(clientKey string, size float64) {
 		}).Add(size)
 }
 
+// AddSMTotalReceiveBytesOnWS xxx
 func AddSMTotalReceiveBytesOnWS(clientKey string, size float64) {
 	TotalReceiveBytesOnWS.With(
 		prometheus.Labels{
@@ -179,6 +194,7 @@ func AddSMTotalReceiveBytesOnWS(clientKey string, size float64) {
 		}).Add(size)
 }
 
+// IncSMTotalAddConnectionsForWS xxx
 func IncSMTotalAddConnectionsForWS(clientKey, proto, addr string) {
 	TotalAddConnectionsForWS.With(
 		prometheus.Labels{
@@ -188,6 +204,7 @@ func IncSMTotalAddConnectionsForWS(clientKey, proto, addr string) {
 		}).Inc()
 }
 
+// IncSMTotalRemoveConnectionsForWS xxx
 func IncSMTotalRemoveConnectionsForWS(clientKey, proto, addr string) {
 	TotalRemoveConnectionsForWS.With(
 		prometheus.Labels{
@@ -197,6 +214,7 @@ func IncSMTotalRemoveConnectionsForWS(clientKey, proto, addr string) {
 		}).Inc()
 }
 
+// IncSMTotalAddPeerAttempt xxx
 func IncSMTotalAddPeerAttempt(peer string) {
 	TotalAddPeerAttempt.With(
 		prometheus.Labels{
@@ -204,6 +222,7 @@ func IncSMTotalAddPeerAttempt(peer string) {
 		}).Inc()
 }
 
+// IncSMTotalPeerConnected xxx
 func IncSMTotalPeerConnected(peer string) {
 	TotalPeerConnected.With(
 		prometheus.Labels{
@@ -211,6 +230,7 @@ func IncSMTotalPeerConnected(peer string) {
 		}).Inc()
 }
 
+// IncSMTotalPeerDisConnected xxx
 func IncSMTotalPeerDisConnected(peer string) {
 	TotalPeerDisConnected.With(
 		prometheus.Labels{

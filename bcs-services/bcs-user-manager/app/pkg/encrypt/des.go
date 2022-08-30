@@ -20,21 +20,21 @@ import (
 	"encoding/base64"
 )
 
-//PKCS5Padding size padding
+// PKCS5Padding size padding
 func PKCS5Padding(ciphertext []byte, blockSize int) []byte {
 	padding := blockSize - len(ciphertext)%blockSize
 	padtext := bytes.Repeat([]byte{byte(padding)}, padding)
 	return append(ciphertext, padtext...)
 }
 
-//PKCS5UnPadding size unpadding
+// PKCS5UnPadding size unpadding
 func PKCS5UnPadding(origData []byte) []byte {
 	length := len(origData)
 	unpadding := int(origData[length-1])
 	return origData[:(length - unpadding)]
 }
 
-//DesEncryptToBase encrypt with priKey simply, out base64 string
+// DesEncryptToBase encrypt with priKey simply, out base64 string
 func DesEncryptToBase(src []byte, priKey string) ([]byte, error) {
 	if len(priKey) != 0 {
 		block, err := des.NewTripleDESCipher([]byte(priKey))
@@ -51,7 +51,7 @@ func DesEncryptToBase(src []byte, priKey string) ([]byte, error) {
 	return src, nil
 }
 
-//DesDecryptFromBase base64 decoding, and decrypt with priKey
+// DesDecryptFromBase base64 decoding, and decrypt with priKey
 func DesDecryptFromBase(src []byte, priKey string) ([]byte, error) {
 	if len(priKey) != 0 {
 		ori, _ := base64.StdEncoding.DecodeString(string(src))

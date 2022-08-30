@@ -16,11 +16,13 @@ package config
 import "time"
 
 const (
+	// MinBlockDuration TODO
 	// tsdb 块最小时间, 默认 2 个小时
 	MinBlockDuration = time.Hour * 2
+	// MaxBlockDuration TODO
 	// tsdb 块最大时间, 默认 2 个小时, 最大/最小时间需要一致
 	MaxBlockDuration = time.Hour * 2
-	// 数据滚动时间, 默认 2 天
+	// RetentionDuration 数据滚动时间, 默认 2 天
 	RetentionDuration = time.Hour * 24 * 2
 )
 

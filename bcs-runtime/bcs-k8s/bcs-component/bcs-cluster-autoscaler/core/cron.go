@@ -26,6 +26,7 @@ import (
 	contextinternal "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/context"
 )
 
+// TIME_LAYOUT xxx
 const TIME_LAYOUT = "2006-01-02 15:04:05"
 
 // doCron set the minSize of nodegroups according to the rules

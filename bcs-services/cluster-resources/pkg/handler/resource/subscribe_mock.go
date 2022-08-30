@@ -24,23 +24,27 @@ import (
 
 type mockSubscribeStream struct{}
 
+// Context xxx
 func (x *mockSubscribeStream) Context() context.Context {
 	panic("not implement")
 }
 
+// SendMsg xxx
 func (x *mockSubscribeStream) SendMsg(i interface{}) error {
 	panic("not implement")
 }
 
+// RecvMsg xxx
 func (x *mockSubscribeStream) RecvMsg(i interface{}) error {
 	panic("not implement")
 }
 
+// Close xxx
 func (x *mockSubscribeStream) Close() error {
 	panic("not implement")
 }
 
-// 目前单测中仅使用该方法，可按需实现其他方法的 Mock
+// Send 目前单测中仅使用该方法，可按需实现其他方法的 Mock
 func (x *mockSubscribeStream) Send(m *clusterRes.SubscribeResp) error {
 	return errorx.New(errcode.General, "force break websocket loop")
 }

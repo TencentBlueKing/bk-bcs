@@ -18,7 +18,7 @@ import (
 	"github.com/prometheus/prometheus/discovery/targetgroup"
 )
 
-// QueryStore 配置
+// QueryStoreConf 配置
 type QueryStoreConf struct {
 	StaticConfigs []*targetgroup.Group      `yaml:"static_configs,omitempty"`
 	HTTPSDConfigs []*httpdiscovery.SDConfig `yaml:"http_sd_configs,omitempty"`

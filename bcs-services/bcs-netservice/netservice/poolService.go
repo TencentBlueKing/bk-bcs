@@ -55,15 +55,15 @@ func stringInSlice(str string, strs []string) bool {
 	return false
 }
 
-//AddPool construct pool info
+// AddPool construct pool info
 func (srv *NetService) AddPool(pool *types.NetPool) error {
 	started := time.Now()
-	//check & construct data
+	// check & construct data
 	pool.Created = time.Now().Format("2006-01-02 15:04:05")
 	pool.Update = pool.Created
 	poolPath := filepath.Join(defaultPoolInfoPath, pool.GetKey())
 	blog.Info("try to Add pool %s", poolPath)
-	//creat netpool node with pool data
+	// creat netpool node with pool data
 	poolData, jerr := json.Marshal(pool)
 	if jerr != nil {
 		blog.Errorf("Pool %s json err: %s", pool.GetKey(), jerr.Error())
@@ -100,13 +100,13 @@ func (srv *NetService) AddPool(pool *types.NetPool) error {
 		}
 		blog.Info("Pool create reserved node %s success.", inst.GetKey())
 	}
-	//create available node
+	// create available node
 	if err := srv.store.Add(poolPath+"/available", []byte("available")); err != nil {
 		blog.Errorf("Pool %s create reserved node err: %s", pool.GetKey(), err)
 		reportMetrics("addpool", stateLogicFailure, started)
 		return err
 	}
-	//create available ip instance with certain ip
+	// create available ip instance with certain ip
 	blog.Info("Pool create available ip instance with certain ip")
 	for _, ip := range pool.Available {
 		inst := &types.IPInst{
@@ -130,12 +130,12 @@ func (srv *NetService) AddPool(pool *types.NetPool) error {
 		blog.Info("Pool create available node %s success.", inst.GetKey())
 	}
 
-	//如果Reserved和Available都没有填，默认就是整个网段都是Available
+	// 如果Reserved和Available都没有填，默认就是整个网段都是Available
 	if len(pool.Reserved) == 0 && len(pool.Available) == 0 {
 		blog.Info("Pool create available ip instance with net pool")
 		allIps, _ := getAllHosts(pool.Net + "/" + strconv.Itoa(pool.Mask))
 		for _, ip := range allIps {
-			//fix(DeveloperJim): clean gateway in available ip address
+			// fix(DeveloperJim): clean gateway in available ip address
 			if ip == pool.Gateway {
 				continue
 			}
@@ -164,7 +164,7 @@ func (srv *NetService) AddPool(pool *types.NetPool) error {
 		}
 	}
 
-	//create host node for query
+	// create host node for query
 	for _, host := range pool.Hosts {
 		pHostPath := filepath.Join(poolPath, "hosts", host)
 		hostInfo := &types.HostInfo{
@@ -204,7 +204,7 @@ func (srv *NetService) initPoolPath(pool *types.NetPool, poolPath string, poolDa
 		blog.Errorf("Pool %s create hosts node err: %s", pool.GetKey(), err)
 		return err
 	}
-	//creat reserved node
+	// creat reserved node
 	if err := srv.store.Add(poolPath+"/reserved", []byte("reserved")); err != nil {
 		blog.Errorf("Pool %s create reserved node err: %s", pool.GetKey(), err)
 		return err
@@ -212,10 +212,10 @@ func (srv *NetService) initPoolPath(pool *types.NetPool, poolPath string, poolDa
 	return nil
 }
 
-//DeletePool update Pool info
+// DeletePool update Pool info
 func (srv *NetService) DeletePool(netKey string) error {
 	started := time.Now()
-	//check pool existence
+	// check pool existence
 	poolPath := filepath.Join(defaultPoolInfoPath, netKey)
 	blog.Info("try to delete pool %s", poolPath)
 	if exist, _ := srv.store.Exist(poolPath); !exist {
@@ -223,7 +223,7 @@ func (srv *NetService) DeletePool(netKey string) error {
 		reportMetrics("deletePool", stateNonExistFailure, started)
 		return fmt.Errorf("pool %s do not exist", netKey)
 	}
-	//try to lock
+	// try to lock
 	lockPath := filepath.Join(defaultLockerPath, netKey)
 	distLocker, err := srv.store.GetLocker(lockPath)
 	if err != nil {
@@ -238,7 +238,7 @@ func (srv *NetService) DeletePool(netKey string) error {
 		return fmt.Errorf("lock pool %s err, %v", netKey, err)
 	}
 	blog.Info("Lock pool %s in deletion success.", lockPath)
-	//check active node is empty
+	// check active node is empty
 	activepath := filepath.Join(defaultPoolInfoPath, netKey, "active")
 	activeIPList, listErr := srv.store.List(activepath)
 	if listErr != nil {
@@ -246,41 +246,41 @@ func (srv *NetService) DeletePool(netKey string) error {
 		reportMetrics("deletePool", stateLogicFailure, started)
 		return fmt.Errorf("check active ip list err, %v", listErr)
 	}
-	//check delete permision
+	// check delete permision
 	if len(activeIPList) != 0 {
 		blog.Errorf("pool %s has %d ip in active, delete is deny", netKey, len(activeIPList))
 		reportMetrics("deletePool", stateLogicFailure, started)
 		return fmt.Errorf("delete pool %s is deny, pool is still active", netKey)
 	}
-	//clean active node
+	// clean active node
 	if _, err := srv.store.Delete(activepath); err != nil {
 		blog.Errorf("Delete pool %s active path err, %v", activepath, err)
 		reportMetrics("deletePool", stateLogicFailure, started)
 		return fmt.Errorf("delete pool %s active path err, %s", netKey, err.Error())
 	}
 	blog.Info("delete pool %s active path %s success", lockPath, activepath)
-	//clean reserved node
+	// clean reserved node
 	reservedpath := filepath.Join(defaultPoolInfoPath, netKey, "reserved")
 	if err := srv.cleanChildrenNode(reservedpath); err != nil {
 		blog.Errorf("delete pool %s reserved node err, %v", netKey, err)
 		reportMetrics("deletePool", stateLogicFailure, started)
 		return fmt.Errorf("delete pool %s reserved err, %s", netKey, err.Error())
 	}
-	//clean available node
+	// clean available node
 	availablepath := filepath.Join(defaultPoolInfoPath, netKey, "available")
 	if err := srv.cleanChildrenNode(availablepath); err != nil {
 		blog.Errorf("delete pool %s available node err, %v", netKey, err)
 		reportMetrics("deletePool", stateLogicFailure, started)
 		return fmt.Errorf("delete pool %s available err, %s", netKey, err.Error())
 	}
-	//clean host query node
+	// clean host query node
 	hostpath := filepath.Join(defaultPoolInfoPath, netKey, "hosts")
 	if err := srv.cleanChildrenNode(hostpath); err != nil {
 		blog.Errorf("delete pool %s host node err, %v", netKey, err)
 		reportMetrics("deletePool", stateLogicFailure, started)
 		return fmt.Errorf("delete pool %s host err, %s", netKey, err.Error())
 	}
-	//clean pool node
+	// clean pool node
 	if _, err := srv.store.Delete(poolPath); err != nil {
 		blog.Errorf("delete pool %s node err, %v", netKey, err)
 		reportMetrics("deletePool", stateLogicFailure, started)
@@ -290,13 +290,13 @@ func (srv *NetService) DeletePool(netKey string) error {
 	return nil
 }
 
-//UpdatePool update Pool info
+// UpdatePool update Pool info
 func (srv *NetService) UpdatePool(pool *types.NetPool, netKey string) error {
 	started := time.Now()
-	//check & construct data
+	// check & construct data
 	poolPath := filepath.Join(defaultPoolInfoPath, pool.GetKey())
 	blog.Infof("try to Update pool %s", poolPath)
-	//update netpool node with pool data
+	// update netpool node with pool data
 	if exist, _ := srv.store.Exist(poolPath); !exist {
 		blog.Errorf("Pool %s is not exist, can not update", pool.GetKey())
 		reportMetrics("updatePool", stateNonExistFailure, started)
@@ -307,7 +307,7 @@ func (srv *NetService) UpdatePool(pool *types.NetPool, netKey string) error {
 		reportMetrics("updatePool", stateLogicFailure, started)
 		return fmt.Errorf("can not update pool %s with Active info", pool.GetKey())
 	}
-	//try to lock
+	// try to lock
 	lockPath := filepath.Join(defaultLockerPath, netKey)
 	distLocker, lockErr := srv.store.GetLocker(lockPath)
 	if lockErr != nil {
@@ -322,15 +322,15 @@ func (srv *NetService) UpdatePool(pool *types.NetPool, netKey string) error {
 		return fmt.Errorf("lock pool %s err, %v", netKey, err)
 	}
 	blog.Infof("Lock pool %s in update success.", lockPath)
-	//Get pool info
+	// Get pool info
 	oldPool, poolErr := srv.ListPoolByKey(netKey)
 	if poolErr != nil {
 		blog.Errorf("get old pool %s info failed, %v", netKey, poolErr)
 		reportMetrics("updatePool", stateStorageFailure, started)
 		return fmt.Errorf("check old pool info failed, %v", poolErr)
 	}
-	//filter duplicated ips, pool is left data for add,
-	//oldPool is full data for update
+	// filter duplicated ips, pool is left data for add,
+	// oldPool is full data for update
 	if err := srv.filterDuplicateIP(pool, oldPool); err != nil {
 		blog.Errorf("filtDuplicateIP failed: %v", err)
 		reportMetrics("updatePool", stateLogicFailure, started)
@@ -341,7 +341,7 @@ func (srv *NetService) UpdatePool(pool *types.NetPool, netKey string) error {
 		reportMetrics("updatePool", stateSuccess, started)
 		return nil
 	}
-	//append Reserved info
+	// append Reserved info
 	for _, ip := range pool.Reserved {
 		inst := &types.IPInst{
 			IPAddr:     ip,
@@ -387,7 +387,7 @@ func (srv *NetService) UpdatePool(pool *types.NetPool, netKey string) error {
 		blog.Infof("Pool %s append available node %s success.", pool.GetKey(), inst.GetKey())
 	}
 
-	//todo here create host node for query
+	// todo here create host node for query
 	for _, host := range pool.Hosts {
 		hostPath := filepath.Join(defaultHostInfoPath, host)
 		exist, eErr := srv.store.Exist(hostPath)
@@ -422,7 +422,7 @@ func (srv *NetService) UpdatePool(pool *types.NetPool, netKey string) error {
 		}
 		blog.Infof("Create Host node %s under pool %s success", host, pool.GetKey())
 	}
-	//update pool node
+	// update pool node
 	newPoolData, _ := json.Marshal(oldPool)
 	if err := srv.store.Update(poolPath, newPoolData); err != nil {
 		blog.Errorf("Update Pool %s value failed:%v", pool.GetKey(), err)
@@ -458,7 +458,7 @@ func (srv *NetService) filterDuplicateIP(update *types.NetPool, old *types.NetPo
 	}
 	update.Hosts = hostList
 
-	//check reserved ip info duplicated or not
+	// check reserved ip info duplicated or not
 	var tempReservedList []string
 	for _, ip := range update.Reserved {
 		if _, ok := existIPs[ip]; ok {
@@ -468,7 +468,7 @@ func (srv *NetService) filterDuplicateIP(update *types.NetPool, old *types.NetPo
 		old.Reserved = append(old.Reserved, ip)
 		tempReservedList = append(tempReservedList, ip)
 	}
-	//filter out reserved
+	// filter out reserved
 	update.Reserved = tempReservedList
 
 	var availableList []string
@@ -484,10 +484,10 @@ func (srv *NetService) filterDuplicateIP(update *types.NetPool, old *types.NetPo
 	return nil
 }
 
-//ListPool update Pool info
+// ListPool update Pool info
 func (srv *NetService) ListPool() ([]*types.NetPool, error) {
 	started := time.Now()
-	//list all pool from defaultPoolPath
+	// list all pool from defaultPoolPath
 	clusters, err := srv.store.List(defaultPoolInfoPath)
 	if err != nil {
 		blog.Errorf("list all net pool err, %v", err)
@@ -515,7 +515,7 @@ func (srv *NetService) ListPool() ([]*types.NetPool, error) {
 	return pools, nil
 }
 
-//ListPoolByKey Get pool info by net
+// ListPoolByKey Get pool info by net
 func (srv *NetService) ListPoolByKey(net string) (*types.NetPool, error) {
 	started := time.Now()
 	blog.Info("try to get pool %s info.", net)
@@ -532,7 +532,7 @@ func (srv *NetService) ListPoolByKey(net string) (*types.NetPool, error) {
 		reportMetrics("listPoolByKey", stateJSONFailure, started)
 		return nil, fmt.Errorf("decode pool %s data err, %s", net, err.Error())
 	}
-	//get hosts
+	// get hosts
 	hostpath := filepath.Join(defaultPoolInfoPath, net, "hosts")
 	hosts, err := srv.store.List(hostpath)
 	if err != nil {
@@ -541,7 +541,7 @@ func (srv *NetService) ListPoolByKey(net string) (*types.NetPool, error) {
 		return nil, fmt.Errorf("list pool %s host path failed, %v", net, err)
 	}
 	pool.Hosts = hosts
-	//get reserved list
+	// get reserved list
 	rpath := filepath.Join(defaultPoolInfoPath, net, "reserved")
 	reserved, err := srv.store.List(rpath)
 	if err != nil {
@@ -571,10 +571,10 @@ func (srv *NetService) ListPoolByKey(net string) (*types.NetPool, error) {
 	return pool, nil
 }
 
-//ListPoolByCluster list all pool under cluster
+// ListPoolByCluster list all pool under cluster
 func (srv *NetService) ListPoolByCluster(cluster string) ([]*types.NetPool, error) {
 	started := time.Now()
-	//list all pool from defaultPoolPath
+	// list all pool from defaultPoolPath
 	clusterpath := filepath.Join(defaultPoolInfoPath, cluster)
 	ok, err := srv.store.Exist(clusterpath)
 	if err != nil {
@@ -612,7 +612,7 @@ func (srv *NetService) ListPoolByCluster(cluster string) ([]*types.NetPool, erro
 	return pools, nil
 }
 
-//cleanChildrenNode clean all children node and node itself
+// cleanChildrenNode clean all children node and node itself
 func (srv *NetService) cleanChildrenNode(nodepath string) error {
 	nodeList, err := srv.store.List(nodepath)
 	if err != nil {
@@ -626,7 +626,7 @@ func (srv *NetService) cleanChildrenNode(nodepath string) error {
 			return err
 		}
 	}
-	//clean self node
+	// clean self node
 	if _, err := srv.store.Delete(nodepath); err != nil {
 		blog.Errorf("Delete node %s err, %v", nodepath, err)
 		return err
@@ -634,7 +634,7 @@ func (srv *NetService) cleanChildrenNode(nodepath string) error {
 	return nil
 }
 
-//GetPoolAvailable get pool available ip list only
+// GetPoolAvailable get pool available ip list only
 func (srv *NetService) GetPoolAvailable(net string) (*types.NetPool, error) {
 	started := time.Now()
 	blog.Info("try to get pool %s info.", net)
@@ -651,7 +651,7 @@ func (srv *NetService) GetPoolAvailable(net string) (*types.NetPool, error) {
 		reportMetrics("getPoolAvailable", stateJSONFailure, started)
 		return nil, fmt.Errorf("decode pool %s data err, %s", net, err.Error())
 	}
-	//get available node
+	// get available node
 	apath := filepath.Join(defaultPoolInfoPath, net, "available")
 	available, err := srv.store.List(apath)
 	if err != nil {

@@ -23,16 +23,16 @@ import (
 	restful "github.com/emicklei/go-restful"
 )
 
-//RegisterIPInstanceHandler create pool handler,
-//url link : v1/ipinstanace
+// RegisterIPInstanceHandler create pool handler,
+// url link : v1/ipinstanace
 func RegisterIPInstanceHandler(httpSvr *HTTPService, logic *netservice.NetService) *IPInstanceHandler {
 	handler := &IPInstanceHandler{
 		netSvr: logic,
 	}
 	webSvr := new(restful.WebService)
-	//add http handler
+	// add http handler
 	webSvr.Path("/v1/ipinstance").Consumes(restful.MIME_JSON).Produces(restful.MIME_JSON)
-	//update ipinstanace
+	// update ipinstanace
 	webSvr.Route(webSvr.PUT("").To(handler.Update))
 	webSvr.Route(webSvr.PUT("status").To(handler.TransferIPAttr))
 	httpSvr.Register(webSvr)
@@ -40,12 +40,12 @@ func RegisterIPInstanceHandler(httpSvr *HTTPService, logic *netservice.NetServic
 	return handler
 }
 
-//IPInstanceHandler http request handler
+// IPInstanceHandler http request handler
 type IPInstanceHandler struct {
 	netSvr *netservice.NetService
 }
 
-//Update update pool by ip segment
+// Update update pool by ip segment
 func (inst *IPInstanceHandler) Update(request *restful.Request, response *restful.Response) {
 	started := time.Now()
 	netReq := &types.IPInst{}
@@ -74,7 +74,7 @@ func (inst *IPInstanceHandler) Update(request *restful.Request, response *restfu
 	reportMetrics("updateAvailableIP", "2xx", started)
 }
 
-//TransferIPAttr transfer ip attr from available/reserved to reserved/available
+// TransferIPAttr transfer ip attr from available/reserved to reserved/available
 func (inst *IPInstanceHandler) TransferIPAttr(request *restful.Request, response *restful.Response) {
 	started := time.Now()
 	tranInput := &types.TranIPAttrInput{}
@@ -88,7 +88,8 @@ func (inst *IPInstanceHandler) TransferIPAttr(request *restful.Request, response
 	tranOutput := &types.TranIPAttrOutput{}
 	if !tranInput.IsValid() {
 		tranOutput.Code = 1
-		tranOutput.Message = "invalid param,please check net and cluster and iplist can not be empty,src and dest must be available/reserved"
+		tranOutput.Message =
+			"invalid param,please check net and cluster and iplist can not be empty,src and dest must be available/reserved"
 		blog.Errorf("invalid param:%v", tranInput)
 		response.WriteEntity(tranOutput)
 		reportMetrics("transferIPAttr", "4xx", started)

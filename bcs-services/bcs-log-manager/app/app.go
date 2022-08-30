@@ -11,6 +11,7 @@
  *
  */
 
+// Package app xxx
 package app
 
 import (
@@ -83,7 +84,8 @@ func setManagerConfig(op *options.LogManagerOption, conf *config.ManagerConfig) 
 	// conf.BcsAPIConfig.TLSConfig = ssl.ClientTslConfNoVerity()
 	if op.CAFile != "" {
 		var err error
-		conf.BcsAPIConfig.TLSConfig, err = ssl.ClientTslConfVerity(op.CAFile, op.ClientCertFile, op.ClientKeyFile, static.ClientCertPwd)
+		conf.BcsAPIConfig.TLSConfig, err = ssl.ClientTslConfVerity(op.CAFile, op.ClientCertFile, op.ClientKeyFile,
+			static.ClientCertPwd)
 		if err != nil {
 			blog.Errorf("ClientTslConfVerity of bcsapi failed: %s", err.Error())
 			conf.BcsAPIConfig.TLSConfig = ssl.ClientTslConfNoVerity()

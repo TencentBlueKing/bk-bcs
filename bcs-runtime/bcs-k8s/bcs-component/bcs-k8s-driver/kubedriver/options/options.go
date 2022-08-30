@@ -11,6 +11,7 @@
  *
  */
 
+// Package options xxx
 package options
 
 import (
@@ -34,18 +35,26 @@ import (
 
 var json = jsoniter.ConfigCompatibleWithStandardLibrary
 
+// ServerType xxx
 type ServerType int
 
 const (
-	HTTP                          = "http"
-	HTTPS                         = "https"
-	ServerTypeSecure   ServerType = 1
+	// HTTP xxx
+	HTTP = "http"
+	// HTTPS xxx
+	HTTPS = "https"
+	// ServerTypeSecure xxx
+	ServerTypeSecure ServerType = 1
+	// ServerTypeInsecure xxx
 	ServerTypeInsecure ServerType = 2
 
+	// TLSTypeClient xxx
 	TLSTypeClient = 1
+	// TLSTypeServer xxx
 	TLSTypeServer = 2
 )
 
+// TLSConfig xxx
 type TLSConfig struct {
 	TLSType int
 
@@ -56,7 +65,7 @@ type TLSConfig struct {
 	Password string
 }
 
-// ToServerConfigObj read current TLS Config files and return a Config object
+// ToConfigObj read current TLS Config files and return a Config object
 func (c TLSConfig) ToConfigObj() (config *tls.Config, err error) {
 	if c.CertFile == "" || c.CAFile == "" || c.KeyFile == "" {
 		err = errors.New("missing argument, must provide all certfile/keyfile/cafile")
@@ -80,6 +89,7 @@ func (c TLSConfig) ToConfigObj() (config *tls.Config, err error) {
 	return config, nil
 }
 
+// KubeDriverServerOptions xxx
 type KubeDriverServerOptions struct {
 	BindAddress      net.IP
 	HostIP           string
@@ -107,6 +117,7 @@ type KubeDriverServerOptions struct {
 	InsecureSkipVerify    bool
 }
 
+// NewKubeDriverServerOptions xxx
 func NewKubeDriverServerOptions() *KubeDriverServerOptions {
 	return &KubeDriverServerOptions{
 		ClusterClientTLS: TLSConfig{TLSType: TLSTypeClient},
@@ -118,7 +129,8 @@ func NewKubeDriverServerOptions() *KubeDriverServerOptions {
 // BindFlagSet binds a ServerOptions with a FlagSet, when it get parsed, ServerOptions's values will be set
 // by input flags.
 func (o *KubeDriverServerOptions) BindFlagSet(fs *pflag.FlagSet) {
-	fs.StringVar(&o.Environment, "environment", "prod", "Environment, prod default, (prod, stag, develop). Set develop to avoid failure of fetching clusterID")
+	fs.StringVar(&o.Environment, "environment", "prod",
+		"Environment, prod default, (prod, stag, develop). Set develop to avoid failure of fetching clusterID")
 	fs.IPVar(&o.BindAddress, "address", net.ParseIP("127.0.0.1"), "The ip address for the serve on")
 	fs.StringVar(&o.HostIP, "host-ip", "", "host ip which is used.")
 
@@ -163,10 +175,12 @@ func (o *KubeDriverServerOptions) BindFlagSet(fs *pflag.FlagSet) {
 
 }
 
+// SecureServerConfigured xxx
 func (o *KubeDriverServerOptions) SecureServerConfigured() bool {
 	return o.SecurePort > 0
 }
 
+// InsecureServerConfigured xxx
 func (o *KubeDriverServerOptions) InsecureServerConfigured() bool {
 	return o.InsecurePort > 0
 }
@@ -191,11 +205,13 @@ func (o *KubeDriverServerOptions) Validate() error {
 	return nil
 }
 
+// NeedClientTLSConfig xxx
 func (o *KubeDriverServerOptions) NeedClientTLSConfig() bool {
 	kubeURL, _ := url.Parse(o.KubeMasterUrl)
 	return kubeURL.Scheme == HTTPS
 }
 
+// NeedClusterTLSConfig xxx
 func (o *KubeDriverServerOptions) NeedClusterTLSConfig() bool {
 	clusterURL, _ := url.Parse(o.ClusterKeeperUrl)
 	return clusterURL.Scheme == HTTPS
@@ -213,6 +229,7 @@ func (o *KubeDriverServerOptions) MakeServerAddress(serverType ServerType) strin
 	return net.JoinHostPort(o.BindAddress.String(), strconv.FormatUint(uint64(port), 10))
 }
 
+// GetClusterKeeperAddr xxx
 func (o *KubeDriverServerOptions) GetClusterKeeperAddr() error {
 	blog.Infof("start to get cluster keeper api addr.")
 	disc := regd.NewRegDiscoverEx(o.ZkServers, time.Duration(5*time.Second))
@@ -251,7 +268,7 @@ func (o *KubeDriverServerOptions) GetClusterKeeperAddr() error {
 			blog.V(3).Infof("get valid cluster keeper  url: %s", clusterKeeperUrl)
 			o.ClusterKeeperUrl = clusterKeeperUrl
 			return nil
-			//case <-timeout:
+			// case <-timeout:
 			//	return "", errors.New("watch cluster keeper  api address timeout.")
 		default:
 			time.Sleep(time.Duration(1 * time.Second))

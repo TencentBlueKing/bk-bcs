@@ -11,6 +11,7 @@
  *
  */
 
+// Package evaluate xxx
 package evaluate
 
 import (
@@ -23,6 +24,7 @@ import (
 	"k8s.io/klog"
 )
 
+// EvaluateResult xxx
 func EvaluateResult(result interface{}, metric v1alpha1.Metric) v1alpha1.HookPhase {
 	successCondition := false
 	failCondition := false
@@ -45,7 +47,7 @@ func EvaluateResult(result interface{}, metric v1alpha1.Metric) v1alpha1.HookPha
 
 	switch {
 	case metric.SuccessCondition == "" && metric.FailureCondition == "":
-		//Always return success unless there is an error
+		// Always return success unless there is an error
 		return v1alpha1.HookPhaseSuccessful
 	case metric.SuccessCondition != "" && metric.FailureCondition == "":
 		// Without a failure condition, a measurement is considered a failure if the measurement's success condition is not true

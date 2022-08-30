@@ -21,7 +21,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/registry"
 )
 
-//! v4 version binding~
+// ! v4 version binding~
 
 const (
 	gatewayPrefix   = "/bcsapi/v4/"

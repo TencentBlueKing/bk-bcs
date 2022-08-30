@@ -11,6 +11,7 @@
  *
  */
 
+// Package options xxx
 package options
 
 import (
@@ -53,7 +54,7 @@ func makeMicroConf(filePath string) (microConf.Config, error) {
 	return conf, nil
 }
 
-// MultiCredConf 新增
+// NewMultiCredConf 新增
 func NewMultiCredConf(filePaths []string) (*MultiCredConf, error) {
 	multiCredConf := &MultiCredConf{
 		confMap:    make(map[string]microConf.Config),

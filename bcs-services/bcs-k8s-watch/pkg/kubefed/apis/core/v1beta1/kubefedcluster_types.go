@@ -20,11 +20,15 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-k8s-watch/pkg/kubefed/apis/core/common"
 )
 
+// TLSValidation xxx
 type TLSValidation string
 
 const (
-	TLSAll            TLSValidation = "*"
-	TLSSubjectName    TLSValidation = "SubjectName"
+	// TLSAll xxx
+	TLSAll TLSValidation = "*"
+	// TLSSubjectName xxx
+	TLSSubjectName TLSValidation = "SubjectName"
+	// TLSValidityPeriod xxx
 	TLSValidityPeriod TLSValidation = "ValidityPeriod"
 )
 

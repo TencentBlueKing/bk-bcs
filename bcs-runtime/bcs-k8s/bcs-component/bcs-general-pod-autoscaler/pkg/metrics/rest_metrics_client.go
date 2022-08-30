@@ -63,7 +63,8 @@ type resourceMetricsClient struct {
 
 // GetResourceMetric gets the given resource metric (and an associated oldest timestamp)
 // for all pods matching the specified selector in the given namespace
-func (c *resourceMetricsClient) GetResourceMetric(resource v1.ResourceName, namespace string, selector labels.Selector, container string) (PodMetricsInfo, time.Time, error) {
+func (c *resourceMetricsClient) GetResourceMetric(resource v1.ResourceName, namespace string, selector labels.Selector,
+	container string) (PodMetricsInfo, time.Time, error) {
 	metrics, err := c.client.PodMetricses(namespace).List(metav1.ListOptions{LabelSelector: selector.String()})
 	if err != nil {
 		return nil, time.Time{}, fmt.Errorf("unable to fetch metrics from resource metrics API: %v", err)
@@ -86,7 +87,8 @@ func (c *resourceMetricsClient) GetResourceMetric(resource v1.ResourceName, name
 	return res, timestamp, nil
 }
 
-func getContainerMetrics(rawMetrics []v1beta1.PodMetrics, resource v1.ResourceName, container string) (PodMetricsInfo, error) {
+func getContainerMetrics(rawMetrics []v1beta1.PodMetrics, resource v1.ResourceName, container string) (PodMetricsInfo,
+	error) {
 	res := make(PodMetricsInfo, len(rawMetrics))
 	for _, m := range rawMetrics {
 		containerFound := false
@@ -144,8 +146,10 @@ type customMetricsClient struct {
 
 // GetRawMetric gets the given metric (and an associated oldest timestamp)
 // for all pods matching the specified selector in the given namespace
-func (c *customMetricsClient) GetRawMetric(metricName string, namespace string, selector labels.Selector, metricSelector labels.Selector) (PodMetricsInfo, time.Time, error) {
-	metrics, err := c.client.NamespacedMetrics(namespace).GetForObjects(schema.GroupKind{Kind: "Pod"}, selector, metricName, metricSelector)
+func (c *customMetricsClient) GetRawMetric(metricName string, namespace string, selector labels.Selector,
+	metricSelector labels.Selector) (PodMetricsInfo, time.Time, error) {
+	metrics, err := c.client.NamespacedMetrics(namespace).GetForObjects(schema.GroupKind{Kind: "Pod"}, selector,
+		metricName, metricSelector)
 	if err != nil {
 		return nil, time.Time{}, fmt.Errorf("unable to fetch metrics from custom metrics API: %v", err)
 	}
@@ -190,7 +194,8 @@ func (c *customMetricsClient) GetObjectMetric(
 		// supposed to allow you to escape your namespace
 		metricValue, err = c.client.RootScopedMetrics().GetForObject(gvk.GroupKind(), namespace, metricName, metricSelector)
 	} else {
-		metricValue, err = c.client.NamespacedMetrics(namespace).GetForObject(gvk.GroupKind(), objectRef.Name, metricName, metricSelector)
+		metricValue, err = c.client.NamespacedMetrics(namespace).GetForObject(gvk.GroupKind(), objectRef.Name, metricName,
+			metricSelector)
 	}
 
 	if err != nil {
@@ -208,7 +213,8 @@ type externalMetricsClient struct {
 
 // GetExternalMetric gets all the values of a given external metric
 // that match the specified selector.
-func (c *externalMetricsClient) GetExternalMetric(metricName, namespace string, selector labels.Selector) ([]int64, time.Time, error) {
+func (c *externalMetricsClient) GetExternalMetric(metricName, namespace string, selector labels.Selector) ([]int64,
+	time.Time, error) {
 	metrics, err := c.client.NamespacedMetrics(namespace).List(metricName, selector)
 	if err != nil {
 		return []int64{}, time.Time{}, fmt.Errorf("unable to fetch metrics from external metrics API: %v", err)

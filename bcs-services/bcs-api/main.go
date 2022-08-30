@@ -60,30 +60,30 @@ func main() {
 
 	blog.Info("init config success")
 
-	//run apiserver
+	// run apiserver
 	run(op)
 
 	ch := make(chan int)
 	<-ch
 }
 
-//Run the apiserver
+// run the apiserver
 func run(op *options.ServerOption) {
 
 	conf := parseConfig(op)
 
-	//run register and discover
+	// run register and discover
 	regdiscv.RunRDiscover(conf.RegDiscvSrv, conf)
 
 	proc := processor.NewProcessor(conf)
-	//start processor, and http & websokect service
+	// start processor, and http & websokect service
 	err := proc.Start()
 	if err != nil {
 		blog.Errorf("start processor error %s, and exit", err.Error())
 		os.Exit(1)
 	}
 
-	//pid
+	// pid
 	if err := common.SavePid(op.ProcessConfig); err != nil {
 		blog.Error("fail to save pid: err:%s", err.Error())
 	}
@@ -116,7 +116,7 @@ func parseConfig(op *options.ServerOption) *config.ApiServConfig {
 	config.TkeConf = op.TKE
 	apiServConfig.PeerToken = op.PeerToken
 
-	//server cert directory
+	// server cert directory
 	if op.CertConfig.ServerCertFile != "" && op.CertConfig.ServerKeyFile != "" {
 		apiServConfig.ServCert.CertFile = op.CertConfig.ServerCertFile
 		apiServConfig.ServCert.KeyFile = op.CertConfig.ServerKeyFile
@@ -124,7 +124,7 @@ func parseConfig(op *options.ServerOption) *config.ApiServConfig {
 		apiServConfig.ServCert.IsSSL = true
 	}
 
-	//client cert directory
+	// client cert directory
 	if op.CertConfig.ClientCertFile != "" && op.CertConfig.ClientKeyFile != "" {
 		apiServConfig.ClientCert.CertFile = op.CertConfig.ClientCertFile
 		apiServConfig.ClientCert.KeyFile = op.CertConfig.ClientKeyFile

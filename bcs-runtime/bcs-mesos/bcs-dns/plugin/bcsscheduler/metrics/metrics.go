@@ -11,6 +11,7 @@
  *
  */
 
+// Package metrics xxx
 package metrics
 
 import (
@@ -19,10 +20,15 @@ import (
 )
 
 const (
-	Success         = "success"
-	Failure         = "failure"
-	AddOperation    = "add"
+	// Success xxx
+	Success = "success"
+	// Failure xxx
+	Failure = "failure"
+	// AddOperation xxx
+	AddOperation = "add"
+	// UpdateOperation xxx
 	UpdateOperation = "update"
+	// DeleteOperation xxx
 	DeleteOperation = "delete"
 )
 

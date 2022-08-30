@@ -11,6 +11,7 @@
  *
  */
 
+// Package operationlog xxx
 package operationlog
 
 import (
@@ -69,6 +70,7 @@ func New(db drivers.DB) *ModelOperationLog {
 	}
 }
 
+// ensureTable xxx
 // ensure table
 func (m *ModelOperationLog) ensureTable(ctx context.Context) error {
 	m.isTableEnsuredMutex.RLock()

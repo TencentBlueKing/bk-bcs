@@ -97,7 +97,7 @@ func main() {
 	}
 }
 
-//MesosWatchOptions options for mesos watch
+// MesosWatchOptions options for mesos watch
 type MesosWatchOptions struct {
 	conf.FileConfig
 	conf.ServiceConfig

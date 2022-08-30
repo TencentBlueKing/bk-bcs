@@ -232,7 +232,8 @@ func (client *Client) InvokeWithGET(action string, args interface{}, response in
 		return makeClientError(err)
 	}
 
-	if legacyErrorResponse.Code != NoErr || (legacyErrorResponse.CodeDesc != "" && legacyErrorResponse.CodeDesc != NoErrCodeDesc) {
+	if legacyErrorResponse.Code != NoErr || (legacyErrorResponse.CodeDesc != "" &&
+		legacyErrorResponse.CodeDesc != NoErrCodeDesc) {
 		client.opts.Logger.WithField("Action", action).Errorf(
 			"%s %s %d %s %v", "GET", req.URL, resp.StatusCode, body, legacyErrorResponse,
 		)

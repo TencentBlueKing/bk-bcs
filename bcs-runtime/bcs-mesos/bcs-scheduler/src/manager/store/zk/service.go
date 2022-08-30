@@ -24,6 +24,7 @@ func getServiceRootPath() string {
 	return "/" + bcsRootNode + "/" + serviceNode
 }
 
+// SaveService xxx
 func (store *managerStore) SaveService(service *commtypes.BcsService) error {
 
 	data, err := json.Marshal(service)
@@ -36,6 +37,7 @@ func (store *managerStore) SaveService(service *commtypes.BcsService) error {
 	return store.Db.Insert(path, string(data))
 }
 
+// FetchService xxx
 func (store *managerStore) FetchService(ns, name string) (*commtypes.BcsService, error) {
 
 	path := getServiceRootPath() + "/" + ns + "/" + name
@@ -54,6 +56,7 @@ func (store *managerStore) FetchService(ns, name string) (*commtypes.BcsService,
 	return service, nil
 }
 
+// DeleteService xxx
 func (store *managerStore) DeleteService(ns, name string) error {
 
 	path := getServiceRootPath() + "/" + ns + "/" + name
@@ -65,9 +68,10 @@ func (store *managerStore) DeleteService(ns, name string) error {
 	return nil
 }
 
+// ListServices xxx
 func (store *managerStore) ListServices(runAs string) ([]*commtypes.BcsService, error) {
 
-	path := getServiceRootPath() + "/" + runAs //defaultRunAs
+	path := getServiceRootPath() + "/" + runAs // defaultRunAs
 	IDs, err := store.Db.List(path)
 	if err != nil {
 		blog.Error("fail to list service ids, err:%s", err.Error())
@@ -94,6 +98,7 @@ func (store *managerStore) ListServices(runAs string) ([]*commtypes.BcsService, 
 	return objs, nil
 }
 
+// ListAllServices xxx
 func (store *managerStore) ListAllServices() ([]*commtypes.BcsService, error) {
 	nss, err := store.ListObjectNamespaces(serviceNode)
 	if err != nil {

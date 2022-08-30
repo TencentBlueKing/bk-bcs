@@ -33,7 +33,7 @@ import (
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
 )
 
-// ListCObj ...
+// ListCObj xxx
 func (h *Handler) ListCObj(
 	ctx context.Context, req *clusterRes.CObjListReq, resp *clusterRes.CommonResp,
 ) error {
@@ -62,7 +62,7 @@ func (h *Handler) ListCObj(
 	return err
 }
 
-// GetCObj ...
+// GetCObj xxx
 func (h *Handler) GetCObj(
 	ctx context.Context, req *clusterRes.CObjGetReq, resp *clusterRes.CommonResp,
 ) error {
@@ -91,7 +91,7 @@ func (h *Handler) GetCObj(
 	return err
 }
 
-// CreateCObj ...
+// CreateCObj xxx
 func (h *Handler) CreateCObj(
 	ctx context.Context, req *clusterRes.CObjCreateReq, resp *clusterRes.CommonResp,
 ) (err error) {
@@ -124,7 +124,7 @@ func (h *Handler) CreateCObj(
 	return err
 }
 
-// UpdateCObj ...
+// UpdateCObj xxx
 func (h *Handler) UpdateCObj(
 	ctx context.Context, req *clusterRes.CObjUpdateReq, resp *clusterRes.CommonResp,
 ) error {
@@ -154,7 +154,7 @@ func (h *Handler) UpdateCObj(
 	return err
 }
 
-// DeleteCObj ...
+// DeleteCObj xxx
 func (h *Handler) DeleteCObj(
 	ctx context.Context, req *clusterRes.CObjDeleteReq, resp *clusterRes.CommonResp,
 ) error {
@@ -174,7 +174,7 @@ func (h *Handler) DeleteCObj(
 	)
 }
 
-// 校验 CObj 相关请求中命名空间参数，若 CRD 中定义为集群维度，则不需要，否则需要指定命名空间
+// validateNSParam 校验 CObj 相关请求中命名空间参数，若 CRD 中定义为集群维度，则不需要，否则需要指定命名空间
 func validateNSParam(ctx context.Context, crdInfo map[string]interface{}, namespace string) error {
 	if namespace == "" && crdInfo["scope"].(string) == res.NamespacedScope {
 		return errorx.New(errcode.ValidateErr, i18n.GetMsg(ctx, "查看/操作自定义资源 %s 需要指定命名空间"), crdInfo["name"])

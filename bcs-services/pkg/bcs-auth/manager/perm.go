@@ -37,7 +37,8 @@ func NewBCSPermManagerClient(cli iam.PermClient) *PermManager {
 }
 
 // CreateProjectGradeManager create project grade manager
-func (pm *PermManager) CreateProjectGradeManager(ctx context.Context, users []string, info *GradeManagerInfo) (uint64, error) {
+func (pm *PermManager) CreateProjectGradeManager(ctx context.Context, users []string, info *GradeManagerInfo) (uint64,
+	error) {
 	if pm == nil {
 		return 0, utils.ErrServerNotInited
 	}
@@ -172,6 +173,7 @@ func (pm *PermManager) createUserGroup(ctx context.Context, gradeManagerID uint6
 	return groups[0], nil
 }
 
+// addUserGroupMember xxx
 // createUserGroup create single userGroup
 func (pm *PermManager) addUserGroupMember(ctx context.Context, userGroupID uint64, members []string) error {
 	if pm == nil {

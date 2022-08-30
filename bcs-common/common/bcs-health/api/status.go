@@ -55,13 +55,13 @@ func newStatusController(zkServers string, tls TLSConfig) (*Status, error) {
 	return status, nil
 }
 
-//Servers health http api server
+// Servers health http api server
 type Servers struct {
 	locker        sync.RWMutex
 	healthServers map[string]*cli.HttpClient
 }
 
-//Status health http api server status
+// Status health http api server status
 type Status struct {
 	tlsConfig    TLSConfig
 	Servers      Servers
@@ -144,7 +144,8 @@ func (s *Status) TryDoAlarmRequest(data string) error {
 	return s.doOneRequest(url, data)
 }
 
-//func (s *Status) doOneRequest(client *cli.HttpClient, req *http.Request) error {
+// doOneRequest xxx
+// func (s *Status) doOneRequest(client *cli.HttpClient, req *http.Request) error {
 func (s *Status) doOneRequest(url, data string) error {
 	server, client := s.getServers()
 	if nil == client {

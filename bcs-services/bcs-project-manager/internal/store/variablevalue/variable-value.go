@@ -53,7 +53,7 @@ var (
 	}
 )
 
-// VariableValue ...
+// VariableValue xxx
 type VariableValue struct {
 	ID               string `json:"id" bson:"_id"`
 	VariableDefineID string `json:"variableDefineID" bson:"variableDefineID"`
@@ -89,6 +89,7 @@ func New(db drivers.DB) *ModelVariableValue {
 	}
 }
 
+// ensureTable xxx
 // ensure table
 func (m *ModelVariableValue) ensureTable(ctx context.Context) error {
 	m.isTableEnsuredMutex.RLock()

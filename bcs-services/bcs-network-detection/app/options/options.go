@@ -11,13 +11,14 @@
  *
  */
 
+// Package options xxx
 package options
 
 import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
 )
 
-//Option is option in flags
+// Option is option in flags
 type Option struct {
 	conf.FileConfig
 	conf.ServiceConfig
@@ -36,7 +37,7 @@ type Option struct {
 	Template  string `json:"template" value:"./template/deployment.json" usage:"deployment template json file path"`
 }
 
-//NewOption create Option object
+// NewOption create Option object
 func NewOption() *Option {
 	return &Option{}
 }

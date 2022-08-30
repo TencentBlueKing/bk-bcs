@@ -17,11 +17,12 @@
  * the License.
  */
 
+// Package constants xxx
 package constants
 
 const (
-	//OperatorName for operator register in kubernetes
+	// OperatorName for operator register in kubernetes
 	OperatorName = "bcs-gamestatefulset-operator"
-	//DefaultRevisionHistoryLimit limit version for rollback, maybe setting in command line args?
+	// DefaultRevisionHistoryLimit limit version for rollback, maybe setting in command line args?
 	DefaultRevisionHistoryLimit = 10
 )

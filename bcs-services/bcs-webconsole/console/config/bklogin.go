@@ -5,7 +5,7 @@ type BKLoginConf struct {
 	Host string `yaml:"host"`
 }
 
-// Init
+// Init xxx
 func (c *BKLoginConf) Init() error {
 	c.Host = ""
 	return nil

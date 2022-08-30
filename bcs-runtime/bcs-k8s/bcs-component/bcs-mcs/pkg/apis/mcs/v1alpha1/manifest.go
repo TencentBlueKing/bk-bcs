@@ -19,7 +19,7 @@ import (
 )
 
 const (
-	//ReservedNamespace objects will be store into Manifest with ReservedNamespace
+	// ReservedNamespace objects will be store into Manifest with ReservedNamespace
 	ReservedNamespace = "bcs-mcs-reserved"
 )
 

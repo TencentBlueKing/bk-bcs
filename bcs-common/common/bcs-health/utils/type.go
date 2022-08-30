@@ -17,22 +17,32 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/bcs-health/types"
 )
 
+// AlarmFactory xxx
 type AlarmFactory interface {
 	SendAlarm(op *AlarmOptions, source string) error
 }
 
 const (
-	VoiceMsgLabelKey      = "bcs-health-voice-msg"
-	VoiceAlarmLabelKey    = "bcs-health-voice-alarm"
+	// VoiceMsgLabelKey xxx
+	VoiceMsgLabelKey = "bcs-health-voice-msg"
+	// VoiceAlarmLabelKey xxx
+	VoiceAlarmLabelKey = "bcs-health-voice-alarm"
+	// EndpointsNameLabelKey xxx
 	EndpointsNameLabelKey = "bcs-endpoints-name"
-	LBEndpoints           = "loadbalance"
-	KubeEndpoints         = "kubernetes"
-	DefaultBcsEndpoints   = "bcsdefault"
+	// LBEndpoints xxx
+	LBEndpoints = "loadbalance"
+	// KubeEndpoints xxx
+	KubeEndpoints = "kubernetes"
+	// DefaultBcsEndpoints xxx
+	DefaultBcsEndpoints = "bcsdefault"
+	// EndpointsEventKindLabelKey xxx
 	// values should be AlarmType's values
 	EndpointsEventKindLabelKey = "bcs-endpoints-event-kind"
-	DataIDLabelKey             = "bcs-health-dataid"
+	// DataIDLabelKey xxx
+	DataIDLabelKey = "bcs-health-dataid"
 )
 
+// AlarmOptions xxx
 type AlarmOptions struct {
 	// which is used to do convergence operation
 	AlarmID string `json:"alarmID"`

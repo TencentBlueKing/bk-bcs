@@ -29,7 +29,8 @@ func getCrdRootPath() string {
 	return "/" + bcsRootNode + "/" + crdNode
 }
 
-//save custom resource register
+// SaveCustomResourceRegister xxx
+// save custom resource register
 func (store *managerStore) SaveCustomResourceRegister(crr *commtypes.Crr) error {
 	by, err := json.Marshal(crr)
 	if err != nil {
@@ -40,12 +41,14 @@ func (store *managerStore) SaveCustomResourceRegister(crr *commtypes.Crr) error 
 	return store.Db.Insert(key, string(by))
 }
 
+// DeleteCustomResourceRegister xxx
 func (store *managerStore) DeleteCustomResourceRegister(name string) error {
 	key := fmt.Sprintf("%s/%s", getCrrRootPath(), name)
 
 	return store.Db.Delete(key)
 }
 
+// ListCustomResourceRegister xxx
 func (store *managerStore) ListCustomResourceRegister() ([]*commtypes.Crr, error) {
 	list, err := store.Db.List(getCrrRootPath())
 	if err != nil {
@@ -77,6 +80,7 @@ func (store *managerStore) ListCustomResourceRegister() ([]*commtypes.Crr, error
 	return crrs, nil
 }
 
+// SaveCustomResourceDefinition xxx
 func (store *managerStore) SaveCustomResourceDefinition(crd *commtypes.Crd) error {
 	by, err := json.Marshal(crd)
 	if err != nil {
@@ -87,12 +91,14 @@ func (store *managerStore) SaveCustomResourceDefinition(crd *commtypes.Crd) erro
 	return store.Db.Insert(key, string(by))
 }
 
+// DeleteCustomResourceDefinition xxx
 func (store *managerStore) DeleteCustomResourceDefinition(kind, ns, name string) error {
 	key := fmt.Sprintf("%s/%s/%s/%s", getCrdRootPath(), kind, ns, name)
 
 	return store.Db.Delete(key)
 }
 
+// ListAllCrds xxx
 func (store *managerStore) ListAllCrds(kind string) ([]*commtypes.Crd, error) {
 	rootPath := fmt.Sprintf("/%s/crd/%s", bcsRootNode, kind)
 	runAses, err := store.Db.List(rootPath)
@@ -118,6 +124,7 @@ func (store *managerStore) ListAllCrds(kind string) ([]*commtypes.Crd, error) {
 	return crds, nil
 }
 
+// ListCustomResourceDefinition xxx
 func (store *managerStore) ListCustomResourceDefinition(kind, ns string) ([]*commtypes.Crd, error) {
 	nsKey := fmt.Sprintf("%s/%s/%s", getCrdRootPath(), kind, ns)
 
@@ -151,6 +158,7 @@ func (store *managerStore) ListCustomResourceDefinition(kind, ns string) ([]*com
 	return crds, nil
 }
 
+// FetchCustomResourceDefinition xxx
 func (store *managerStore) FetchCustomResourceDefinition(kind, ns, name string) (*commtypes.Crd, error) {
 	key := fmt.Sprintf("%s/%s/%s/%s", getCrdRootPath(), kind, ns, name)
 	by, err := store.Db.Fetch(key)

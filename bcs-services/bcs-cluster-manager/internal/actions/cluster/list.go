@@ -207,7 +207,8 @@ func (la *ListAction) listCluster() error {
 }
 
 // GetProjectClustersV3Perm get iam v3 perm
-func (la *ListAction) GetProjectClustersV3Perm(user actions.PermInfo, clusterList []string) (map[string]*spb.Struct, error) {
+func (la *ListAction) GetProjectClustersV3Perm(user actions.PermInfo, clusterList []string) (map[string]*spb.Struct,
+	error) {
 	var (
 		v3Perm map[string]map[string]interface{}
 		err    error
@@ -233,7 +234,8 @@ func (la *ListAction) GetProjectClustersV3Perm(user actions.PermInfo, clusterLis
 	return v3ResultPerm, nil
 }
 
-func (la *ListAction) getUserClusterPermList(user actions.PermInfo, clusterList []string) (map[string]map[string]interface{}, error) {
+func (la *ListAction) getUserClusterPermList(user actions.PermInfo, clusterList []string) (
+	map[string]map[string]interface{}, error) {
 	permissions := make(map[string]map[string]interface{})
 	clusterPerm := cluster.NewBCSClusterPermClient(la.iam)
 

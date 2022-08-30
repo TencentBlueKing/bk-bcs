@@ -32,23 +32,25 @@ type PodInterface interface {
 	ListByStor(ctx context.Context, namespace string, opts metav1.ListOptions) (*v1.PodList, error)
 	ListAsTable(ctx context.Context, namespace string, acceptHeader string, opts metav1.ListOptions) (*metav1.Table, error)
 	Get(ctx context.Context, namespace string, name string, opts metav1.GetOptions) (*v1.Pod, error)
-	GetAsTable(ctx context.Context, namespace string, name string, acceptHeader string, opts metav1.GetOptions) (*metav1.Table, error)
+	GetAsTable(ctx context.Context, namespace string, name string, acceptHeader string,
+		opts metav1.GetOptions) (*metav1.Table, error)
 	Delete(ctx context.Context, namespace string, name string, opts metav1.DeleteOptions) (*v1.Pod, error)
 	Watch(ctx context.Context, namespace string, opts metav1.ListOptions) (watch.Interface, error)
 	GetLogs(ctx context.Context, namespace string, name string, opts *v1.PodLogOptions) (*restclient.Request, error)
 	Exec(ctx context.Context, namespace string, name string, opts metav1.GetOptions) (*proxy.ProxyHandler, error)
 }
 
-// PodHandler
+// PodHandler xxx
 type PodHandler struct {
 	handler PodInterface
 }
 
-// NewPodHandler
+// NewPodHandler xxx
 func NewPodHandler(handler PodInterface) *PodHandler {
 	return &PodHandler{handler: handler}
 }
 
+// Serve xxx
 // Pod Resource Verb Handler
 func (h *PodHandler) Serve(c *rest.RequestContext) error {
 	var (

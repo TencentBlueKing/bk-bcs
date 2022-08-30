@@ -21,6 +21,7 @@ import (
 	bcstype "github.com/Tencent/bk-bcs/bcs-common/common/types"
 )
 
+// DeleteApplication xxx
 func (s *Scheduler) DeleteApplication(ns, name, enforce string, kind bcstype.BcsDataType) (string, error) {
 	blog.Info("delete application (%s.%s) enforce(%s)", ns, name, enforce)
 
@@ -43,10 +44,11 @@ func (s *Scheduler) DeleteApplication(ns, name, enforce string, kind bcstype.Bcs
 	return string(reply), nil
 }
 
+// DeleteApplicationTaskGroups xxx
 func (s *Scheduler) DeleteApplicationTaskGroups(body []byte) (string, error) {
 	blog.Info("delete application taskgroups, param(%s)", string(body))
 
-	//encodings the parameter of deleting taskgroups operation
+	// encodings the parameter of deleting taskgroups operation
 	var param DeleteTaskGroupsOpeParam
 	if err := json.Unmarshal(body, &param); err != nil {
 		blog.Error("parse deleting application taskgroups operation parameters failed, err(%s)", err.Error())
@@ -73,10 +75,11 @@ func (s *Scheduler) DeleteApplicationTaskGroups(body []byte) (string, error) {
 	return string(reply), nil
 }
 
+// DeleteApplicationTaskGroup xxx
 func (s *Scheduler) DeleteApplicationTaskGroup(body []byte) (string, error) {
 	blog.Info("delete application taskgroup, param(%s)", string(body))
 
-	//encoding the parameter of deleting taskgroup operation
+	// encoding the parameter of deleting taskgroup operation
 	var param DeleteTaskGroupOpeParam
 	if err := json.Unmarshal(body, &param); err != nil {
 		blog.Error("parse deleting application taskgroup operation parameters failed, err(%s)", err.Error())

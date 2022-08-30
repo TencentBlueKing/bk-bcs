@@ -21,30 +21,43 @@ import (
 )
 
 const (
-	ObjectResourceService     = "service"
-	ObjectResourceDeployment  = "deployment"
+	// ObjectResourceService xxx
+	ObjectResourceService = "service"
+	// ObjectResourceDeployment xxx
+	ObjectResourceDeployment = "deployment"
+	// ObjectResourceApplication xxx
 	ObjectResourceApplication = "application"
-	ObjectResourceConfigmap   = "configmap"
-	ObjectResourceSecret      = "secret"
+	// ObjectResourceConfigmap xxx
+	ObjectResourceConfigmap = "configmap"
+	// ObjectResourceSecret xxx
+	ObjectResourceSecret = "secret"
 
-	ResourceStatusRunning   = "running"
-	ResourceStatusFailed    = "failed"
-	ResourceStatusFinish    = "finish"
+	// ResourceStatusRunning xxx
+	ResourceStatusRunning = "running"
+	// ResourceStatusFailed xxx
+	ResourceStatusFailed = "failed"
+	// ResourceStatusFinish xxx
+	ResourceStatusFinish = "finish"
+	// ResourceStatusOperating xxx
 	ResourceStatusOperating = "operating"
 )
 
 const (
+	// StoreOperatorCreate xxx
 	StoreOperatorCreate = "create"
+	// StoreOperatorDelete xxx
 	StoreOperatorDelete = "delete"
+	// StoreOperatorUpdate xxx
 	StoreOperatorUpdate = "update"
-	StoreOperatorFetch  = "fetch"
+	// StoreOperatorFetch xxx
+	StoreOperatorFetch = "fetch"
 )
 
 // Metrics the store info
 var (
-	//metric value is object status
-	//service、configmap、secret、deployment status only 0 show success
-	//application status 0 show Staging、Deploying、Operating、RollingUpdate; 1 show Running; 2 show Finish; 3 show Abnormal,Error
+	// metric value is object status
+	// service、configmap、secret、deployment status only 0 show success
+	// application status 0 show Staging、Deploying、Operating、RollingUpdate; 1 show Running; 2 show Finish; 3 show Abnormal,Error
 	ObjectResourceInfo = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Namespace: types.MetricsNamespaceScheduler,
 		Subsystem: types.MetricsSubsystemScheduler,
@@ -52,8 +65,8 @@ var (
 		Help:      "Object resource info",
 	}, []string{"resource", "namespace", "name", "status"})
 
-	//metric value is taskgroup status
-	//0 show Staging、Starting; 1 show Running; 2 show Finish、Killing、Killed; 3 show Error、Failed; 4 show Lost
+	// metric value is taskgroup status
+	// 0 show Staging、Starting; 1 show Running; 2 show Finish、Killing、Killed; 3 show Error、Failed; 4 show Lost
 	TaskgroupInfo = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Namespace: types.MetricsNamespaceScheduler,
 		Subsystem: types.MetricsSubsystemScheduler,
@@ -168,6 +181,7 @@ func init() {
 		ClusterMemoryResourceAvailable)
 }
 
+// ReportObjectResourceInfoMetrics xxx
 func ReportObjectResourceInfoMetrics(resource, ns, name, status string) {
 	var str string
 	switch status {
@@ -186,6 +200,7 @@ func ReportObjectResourceInfoMetrics(resource, ns, name, status string) {
 	ObjectResourceInfo.WithLabelValues(resource, ns, name, str).Set(1)
 }
 
+// ReportTaskgroupInfoMetrics xxx
 func ReportTaskgroupInfoMetrics(ns, name, taskgroupId, status string) {
 	var val float64
 	switch status {
@@ -206,6 +221,7 @@ func ReportTaskgroupInfoMetrics(ns, name, taskgroupId, status string) {
 	TaskgroupInfo.WithLabelValues(ns, name, taskgroupId).Set(val)
 }
 
+// ReportAgentInfoMetrics xxx
 func ReportAgentInfoMetrics(ip, clusterId string, totalCpu, remainCpu, totalMem, remainMem, remainIp float64) {
 	AgentCpuResourceTotal.WithLabelValues(ip, clusterId).Set(totalCpu)
 	AgentCpuResourceRemain.WithLabelValues(ip, clusterId).Set(remainCpu)
@@ -214,6 +230,7 @@ func ReportAgentInfoMetrics(ip, clusterId string, totalCpu, remainCpu, totalMem,
 	AgentIpResourceRemain.WithLabelValues(ip, clusterId).Set(remainIp)
 }
 
+// ReportClusterInfoMetrics xxx
 func ReportClusterInfoMetrics(clusterId string, remainCpu, availableCpu, totalCpu, remainMem,
 	availableMem, totalMem float64) {
 	ClusterCpuResourceRemain.WithLabelValues(clusterId).Set(remainCpu)
@@ -224,6 +241,7 @@ func ReportClusterInfoMetrics(clusterId string, remainCpu, availableCpu, totalCp
 	ClusterMemoryResourceAvailable.WithLabelValues(clusterId).Set(availableMem)
 }
 
+// ReportStorageOperatorMetrics xxx
 func ReportStorageOperatorMetrics(operator string, started time.Time, failed bool) {
 	StorageOperatorTotal.WithLabelValues(operator).Inc()
 	d := time.Duration(time.Since(started).Nanoseconds())

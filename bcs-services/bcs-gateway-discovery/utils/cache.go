@@ -18,11 +18,13 @@ import (
 	"time"
 )
 
+// Cache xxx
 type Cache interface {
 	SetData(interface{})
 	GetData() interface{}
 }
 
+// ResourceCache xxx
 type ResourceCache struct {
 	sync.RWMutex
 	lasteUpdateTime *time.Time
@@ -30,10 +32,12 @@ type ResourceCache struct {
 	data            interface{}
 }
 
+// NewResourceCache xxx
 func NewResourceCache(timeout time.Duration) Cache {
 	return &ResourceCache{timeout: timeout}
 }
 
+// SetData xxx
 func (rc *ResourceCache) SetData(data interface{}) {
 	rc.Lock()
 	defer rc.Unlock()
@@ -42,6 +46,7 @@ func (rc *ResourceCache) SetData(data interface{}) {
 	rc.lasteUpdateTime = &now
 }
 
+// GetData xxx
 func (rc *ResourceCache) GetData() interface{} {
 	rc.RLock()
 	defer rc.RUnlock()

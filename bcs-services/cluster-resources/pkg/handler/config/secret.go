@@ -26,7 +26,7 @@ import (
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
 )
 
-// ListSecret ...
+// ListSecret xxx
 func (h *Handler) ListSecret(
 	ctx context.Context, req *clusterRes.ResListReq, resp *clusterRes.CommonResp,
 ) (err error) {
@@ -42,7 +42,7 @@ func (h *Handler) ListSecret(
 	return err
 }
 
-// GetSecret ...
+// GetSecret xxx
 func (h *Handler) GetSecret(
 	ctx context.Context, req *clusterRes.ResGetReq, resp *clusterRes.CommonResp,
 ) (err error) {
@@ -58,7 +58,7 @@ func (h *Handler) GetSecret(
 	return err
 }
 
-// CreateSecret ...
+// CreateSecret xxx
 func (h *Handler) CreateSecret(
 	ctx context.Context, req *clusterRes.ResCreateReq, resp *clusterRes.CommonResp,
 ) (err error) {
@@ -68,7 +68,7 @@ func (h *Handler) CreateSecret(
 	return err
 }
 
-// UpdateSecret ...
+// UpdateSecret xxx
 func (h *Handler) UpdateSecret(
 	ctx context.Context, req *clusterRes.ResUpdateReq, resp *clusterRes.CommonResp,
 ) (err error) {
@@ -78,7 +78,7 @@ func (h *Handler) UpdateSecret(
 	return err
 }
 
-// DeleteSecret ...
+// DeleteSecret xxx
 func (h *Handler) DeleteSecret(
 	ctx context.Context, req *clusterRes.ResDeleteReq, _ *clusterRes.CommonResp,
 ) error {

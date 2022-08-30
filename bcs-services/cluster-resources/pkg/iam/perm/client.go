@@ -23,12 +23,12 @@ import (
 // IAMCacheTTL IAM 权限校验缓存时间，单位：s
 const IAMCacheTTL = 10
 
-// IAMClient ...
+// IAMClient xxx
 type IAMClient struct {
 	cli *bkiam.IAM
 }
 
-// NewIAMClient ...
+// NewIAMClient xxx
 func NewIAMClient() *IAMClient {
 	return &IAMClient{cli: conf.G.IAM.Cli}
 }
@@ -43,7 +43,8 @@ func (c *IAMClient) ResTypeAllowed(username, actionID string, useCache bool) (bo
 }
 
 // ResInstAllowed 判断用户对某个资源实例是否具有指定操作的权限
-func (c *IAMClient) ResInstAllowed(username, actionID string, resources []bkiam.ResourceNode, useCache bool) (bool, error) {
+func (c *IAMClient) ResInstAllowed(username, actionID string, resources []bkiam.ResourceNode, useCache bool) (bool,
+	error) {
 	req := c.makeRequest(username, actionID, resources)
 	if useCache {
 		return c.cli.IsAllowedWithCache(req, IAMCacheTTL)

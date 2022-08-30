@@ -28,9 +28,9 @@ type balancer interface {
 
 type nodeGroup struct {
 	storage.GroupInfo
-	//partition
+	// partition
 	partition int
-	//limitation max limit for allocatedNum
+	// limitation max limit for allocatedNum
 	limitation int
 }
 
@@ -72,7 +72,7 @@ func (s *simpleBalancer) distribute(n int) []*nodeGroup {
 		node.partition = int(math.Floor(distn * float64(node.Weight) / float64(s.max)))
 		total += node.partition
 	}
-	//add left resource to max weight node simply
+	// add left resource to max weight node simply
 	left := n - total
 	if left > 0 {
 		s.nodes[len(s.nodes)-1].partition += left
@@ -81,7 +81,7 @@ func (s *simpleBalancer) distribute(n int) []*nodeGroup {
 }
 
 func newWeightBalancer(groups []*storage.GroupInfo, nodegroups map[string]*storage.NodeGroup) balancer {
-	//sort slice
+	// sort slice
 	sort.SliceStable(groups, func(i, j int) bool {
 		return groups[i].Weight < groups[j].Weight
 	})

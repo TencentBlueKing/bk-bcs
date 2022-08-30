@@ -88,6 +88,7 @@ type realControl struct {
 	metrics            *gdmetrics.Metrics
 }
 
+// Manage xxx
 func (c *realControl) Manage(deploy, updateDeploy *gdv1alpha1.GameDeployment,
 	updateRevision *apps.ControllerRevision, revisions []*apps.ControllerRevision,
 	pods []*v1.Pod, newStatus *gdv1alpha1.GameDeploymentStatus,

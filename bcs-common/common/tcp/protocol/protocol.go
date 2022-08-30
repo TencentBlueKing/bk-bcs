@@ -11,6 +11,7 @@
  *
  */
 
+// Package protocol xxx
 package protocol
 
 import (

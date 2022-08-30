@@ -23,29 +23,29 @@ import (
 	restful "github.com/emicklei/go-restful"
 )
 
-//RegisterAllocator ip resource allocation
+// RegisterAllocator ip resource allocation
 func RegisterAllocator(httpSvr *HTTPService, logic *netservice.NetService) *Allocator {
 	handler := &Allocator{
 		netSvr: logic,
 	}
 	webSvr := new(restful.WebService)
-	//add http handler
+	// add http handler
 	webSvr.Path("/v1/allocator").Consumes(restful.MIME_JSON).Produces(restful.MIME_JSON)
 	webSvr.Route(webSvr.POST("").To(handler.Add))
 	webSvr.Route(webSvr.DELETE("").To(handler.Delete))
 	webSvr.Route(webSvr.DELETE("/host/{hostip}").To(handler.HostVIPRelease))
-	//list all allocation ip resource by net
-	//webSvr.Route(webSvr.GET("/{ip}").To(handler.ListByID))
+	// list all allocation ip resource by net
+	// webSvr.Route(webSvr.GET("/{ip}").To(handler.ListByID))
 	httpSvr.Register(webSvr)
 	return handler
 }
 
-//Allocator ip resource lean & release
+// Allocator ip resource lean & release
 type Allocator struct {
 	netSvr *netservice.NetService
 }
 
-//Add iplease
+// Add iplease
 func (allo *Allocator) Add(request *restful.Request, response *restful.Response) {
 	started := time.Now()
 	netReq := &types.NetRequest{}
@@ -67,7 +67,7 @@ func (allo *Allocator) Add(request *restful.Request, response *restful.Response)
 		reportMetrics("iplease", "4xx", started)
 		return
 	}
-	//check container id & host ip
+	// check container id & host ip
 	if netReq.Lease.Host == "" || netReq.Lease.Container == "" {
 		blog.Errorf("Allocator lost Host/Container info in IPLease")
 		netRes.Code = 1
@@ -80,14 +80,16 @@ func (allo *Allocator) Add(request *restful.Request, response *restful.Response)
 	netRes.Data = netReq.Lease
 	info, err := allo.netSvr.IPLean(netReq.Lease)
 	if err != nil {
-		blog.Errorf("Allocator lease ip for host %s to container %s failed, %v", netReq.Lease.Host, netReq.Lease.Container, err)
+		blog.Errorf("Allocator lease ip for host %s to container %s failed, %v", netReq.Lease.Host, netReq.Lease.Container,
+			err)
 		netRes.Code = 2
 		netRes.Message = err.Error()
 		response.WriteEntity(netRes)
 		reportMetrics("iplease", "5xx", started)
 		return
 	}
-	blog.Infof("Allocator lease ip [%s] for Host %s container %s success.", info.IPAddr, netRes.Lease.Host, netRes.Lease.Container)
+	blog.Infof("Allocator lease ip [%s] for Host %s container %s success.", info.IPAddr, netRes.Lease.Host,
+		netRes.Lease.Container)
 	netRes.Info = append(netRes.Info, info)
 	netRes.Code = 0
 	netRes.Message = SUCCESS
@@ -95,7 +97,7 @@ func (allo *Allocator) Add(request *restful.Request, response *restful.Response)
 	reportMetrics("iplease", "2xx", started)
 }
 
-//Delete relesase ip address
+// Delete relesase ip address
 func (allo *Allocator) Delete(request *restful.Request, response *restful.Response) {
 	started := time.Now()
 	netReq := &types.NetRequest{}
@@ -106,7 +108,7 @@ func (allo *Allocator) Delete(request *restful.Request, response *restful.Respon
 		reportMetrics("ipRelease", "4xx", started)
 		return
 	}
-	//check data needed
+	// check data needed
 	netRes := &types.NetResponse{
 		Type: types.ResponseType_RELEASE,
 	}
@@ -142,22 +144,22 @@ func (allo *Allocator) Delete(request *restful.Request, response *restful.Respon
 	reportMetrics("ipRelease", "2xx", started)
 }
 
-//Update update pool by ip segment
+// Update update pool by ip segment
 func (allo *Allocator) Update(request *restful.Request, response *restful.Response) {
 	blog.Warn("#######Allocator [Update] Not implemented#######")
 	response.AddHeader("Content-Type", "text/plain")
 	response.WriteErrorString(http.StatusForbidden, "Not implemented")
 }
 
-//List list all ip address under active
+// List list all ip address under active
 func (allo *Allocator) List(request *restful.Request, response *restful.Response) {
-	//list all active ip address
+	// list all active ip address
 	blog.Warn("#######Allocator [GET] Not implemented#######")
 	response.AddHeader("Content-Type", "text/plain")
 	response.WriteErrorString(http.StatusForbidden, "Not implemented")
 }
 
-//HostVIPRelease release all the vip in the host
+// HostVIPRelease release all the vip in the host
 func (allo *Allocator) HostVIPRelease(request *restful.Request, response *restful.Response) {
 	started := time.Now()
 	hostIP := request.PathParameter("hostip")

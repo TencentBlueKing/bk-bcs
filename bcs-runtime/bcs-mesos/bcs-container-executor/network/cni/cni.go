@@ -11,6 +11,7 @@
  *
  */
 
+// Package cni xxx
 package cni
 
 import (
@@ -30,12 +31,12 @@ import (
 )
 
 const (
-	//defaultCNIVersion = "0.3.0"
+	// defaultCNIVersion = "0.3.0"
 	defautNICName = "eth1"
 )
 
-//NewPlugin loading config for designated
-//cni command line tool
+// NewPlugin loading config for designated
+// cni command line tool
 func NewPlugin(binpath, confFile string) (string, network.NetworkPlugin) {
 	var (
 		conf        *libcni.NetworkConfig
@@ -60,10 +61,10 @@ func NewPlugin(binpath, confFile string) (string, network.NetworkPlugin) {
 		networkName = conflist.Name
 	}
 
-	//if binpath is not set, use system executable path
+	// if binpath is not set, use system executable path
 	var path []string
 	if binpath == "" {
-		//Get executable bianry from system path
+		// Get executable bianry from system path
 		syspathstr := os.Getenv("PATH")
 		syspath := strings.Split(syspathstr, ":")
 		path = append(path, syspath...)
@@ -85,48 +86,48 @@ func NewPlugin(binpath, confFile string) (string, network.NetworkPlugin) {
 	return networkName, plugin
 }
 
-//CNIPlugin plugin for cni
+// CNIPlugin plugin for cni
 type CNIPlugin struct {
-	fileName    string                //config file name
-	binDir      string                //binary file path
-	netConf     *libcni.NetworkConfig //cni standard network configure
+	fileName    string                // config file name
+	binDir      string                // binary file path
+	netConf     *libcni.NetworkConfig // cni standard network configure
 	netConfList *libcni.NetworkConfigList
-	status      *network.NetStatus //status for network, only available after SetUpPod
-	cniNet      *libcni.CNIConfig  //cni invoke depends on libcni
-	networkName string             //network name
+	status      *network.NetStatus // status for network, only available after SetUpPod
+	cniNet      *libcni.CNIConfig  // cni invoke depends on libcni
+	networkName string             // network name
 	isCniList   bool               // whether is plugin list
 }
 
-//Name Get plugin name
+// Name Get plugin name
 func (plugin *CNIPlugin) Name() string {
 	return plugin.networkName
 }
 
-//Type Get plugin executable binary name
+// Type Get plugin executable binary name
 /*func (plugin *CNIPlugin) Type() string {
 	return plugin.netConf.Network.Type
 }*/
 
-//Init init Plugin
+// Init init Plugin
 func (plugin *CNIPlugin) Init(host string) error {
 	return nil
 }
 
-//SetUpPod Setup Network info for pod
+// SetUpPod Setup Network info for pod
 func (plugin *CNIPlugin) SetUpPod(podInfo container.Pod) error {
-	//build runtime conf for libcni
+	// build runtime conf for libcni
 	runConf := &libcni.RuntimeConf{
 		ContainerID: podInfo.GetContainerID(),
 		NetNS:       podInfo.GetNetns(),
 		IfName:      defautNICName,
 	}
 
-	//setting network flow limit
+	// setting network flow limit
 	if len(podInfo.GetNetArgs()) > 0 {
 		runConf.Args = append(runConf.Args, podInfo.GetNetArgs()...)
 	}
 
-	//setting ip address if needed
+	// setting ip address if needed
 	if podInfo.Injection() {
 		logs.Infof("CNI plugin %s ADD COMMAND with ip address %s\n", plugin.networkName, podInfo.GetIPAddr())
 		runConf.Args = append(runConf.Args, [2]string{"IP", podInfo.GetIPAddr()})
@@ -142,7 +143,8 @@ func (plugin *CNIPlugin) SetUpPod(podInfo container.Pod) error {
 	}
 
 	if result.IPs == nil || len(result.IPs) == 0 {
-		logs.Errorf("CNI plugin %s apply ip resource failed, lack of resource or netservice err, result: %s", plugin.networkName, result.String())
+		logs.Errorf("CNI plugin %s apply ip resource failed, lack of resource or netservice err, result: %s",
+			plugin.networkName, result.String())
 		return fmt.Errorf("lack of ip resource")
 	}
 
@@ -154,21 +156,21 @@ func (plugin *CNIPlugin) SetUpPod(podInfo container.Pod) error {
 	return nil
 }
 
-//TearDownPod Teardown pod network info
+// TearDownPod Teardown pod network info
 func (plugin *CNIPlugin) TearDownPod(podInfo container.Pod) error {
-	//build runtime conf for libcni
+	// build runtime conf for libcni
 	runConf := &libcni.RuntimeConf{
 		ContainerID: podInfo.GetContainerID(),
 		NetNS:       podInfo.GetNetns(),
 		IfName:      defautNICName,
 	}
 
-	//setting network flow limit
+	// setting network flow limit
 	if len(podInfo.GetNetArgs()) > 0 {
 		runConf.Args = append(runConf.Args, podInfo.GetNetArgs()...)
 	}
 
-	//pod ip was injected by other, releasing it with ip address
+	// pod ip was injected by other, releasing it with ip address
 	if podInfo.Injection() {
 		logs.Infof("CNI plugin %s DEL command with ip address %s\n", plugin.networkName, podInfo.GetIPAddr())
 		runConf.Args = append(runConf.Args, [2]string{"IP", podInfo.GetIPAddr()})
@@ -217,7 +219,8 @@ func (plugin *CNIPlugin) addNetwork(runConf *libcni.RuntimeConf) (*current.Resul
 		// Convert whatever the IPAM result was into the current Result type
 		cr, err := current.NewResultFromResult(r)
 		if err != nil {
-			logs.Errorf("CNI plugin %s format json result err, %s, original result: %s\n", plugin.networkName, err.Error(), r.String())
+			logs.Errorf("CNI plugin %s format json result err, %s, original result: %s\n", plugin.networkName, err.Error(),
+				r.String())
 			return nil, err
 		}
 
@@ -247,7 +250,8 @@ func (plugin *CNIPlugin) addNetworkV2(runConf *libcni.RuntimeConf) (*current.Res
 	// Convert whatever the IPAM result was into the current Result type
 	cr, err := current.NewResultFromResult(r)
 	if err != nil {
-		logs.Errorf("CNI plugin %s format json result err, %s, original result: %s\n", plugin.networkName, err.Error(), r.String())
+		logs.Errorf("CNI plugin %s format json result err, %s, original result: %s\n", plugin.networkName, err.Error(),
+			r.String())
 		return nil, err
 	}
 

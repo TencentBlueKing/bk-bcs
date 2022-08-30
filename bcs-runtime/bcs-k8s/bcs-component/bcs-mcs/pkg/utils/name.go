@@ -28,6 +28,6 @@ func GenerateEndpointSliceName(endpointSliceName string, cluster string) string 
 
 // GenerateDerivedServiceName generates the service name derived from ServiceImport.
 func GenerateDerivedServiceName(serviceName string) string {
-	//TODO 允许自定义导入的service名称，比如通过serviceImport中的annotation
+	// TODO 允许自定义导入的service名称，比如通过serviceImport中的annotation
 	return fmt.Sprintf("%s-%s", derivedServicePrefix, serviceName)
 }

@@ -47,11 +47,12 @@ func init() {
 	runtimeScheme.AddKnownTypes(v1alpha1.SchemeGroupVersion)
 }
 
-//NewWebhookServer new web hook server
+// NewWebhookServer new web hook server
 func NewWebhookServer() *webhookServer {
 	return &webhookServer{}
 }
 
+// mutate xxx
 // validate deployments and services
 func (whsvr *webhookServer) mutate(ar *v1beta1.AdmissionReview) *v1beta1.AdmissionResponse {
 	req := ar.Request

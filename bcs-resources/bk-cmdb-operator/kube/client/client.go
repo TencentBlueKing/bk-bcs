@@ -11,6 +11,7 @@
  *
  */
 
+// Package client xxx
 package client
 
 import (
@@ -27,12 +28,14 @@ import (
 	k8sClient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
+// NewClient xxx
 func NewClient(c k8sClient.Client) Client {
 	return client{
 		Client: c,
 	}
 }
 
+// Client xxx
 type Client interface {
 	k8sClient.Client
 	CreateOrUpdateDeploy(deploy *appsv1.Deployment) error

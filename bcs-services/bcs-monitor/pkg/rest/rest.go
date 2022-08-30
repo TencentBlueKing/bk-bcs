@@ -11,6 +11,7 @@
  *
  */
 
+// Package rest xxx
 package rest
 
 import (
@@ -36,10 +37,10 @@ type Result struct {
 	Data      interface{} `json:"data"`
 }
 
-// HandlerFunc
+// HandlerFunc xxx
 type HandlerFunc func(*Context) (interface{}, error)
 
-// StreamHandlerFunc
+// StreamHandlerFunc xxx
 type StreamHandlerFunc func(*Context)
 
 // AbortWithBadRequestError 请求失败
@@ -91,7 +92,7 @@ func InitRestContext(c *gin.Context) *Context {
 	return restContext
 }
 
-// GetAuthContext 查询鉴权信息
+// GetRestContext 查询鉴权信息
 func GetRestContext(c *gin.Context) (*Context, error) {
 	ctxObj, ok := c.Get("rest_context")
 	if !ok {

@@ -70,7 +70,9 @@ type APIResource struct {
 type PropagationMode string
 
 const (
-	PropagationEnabled  PropagationMode = "Enabled"
+	// PropagationEnabled xxx
+	PropagationEnabled PropagationMode = "Enabled"
+	// PropagationDisabled xxx
 	PropagationDisabled PropagationMode = "Disabled"
 )
 
@@ -78,7 +80,9 @@ const (
 type StatusCollectionMode string
 
 const (
-	StatusCollectionEnabled  StatusCollectionMode = "Enabled"
+	// StatusCollectionEnabled xxx
+	StatusCollectionEnabled StatusCollectionMode = "Enabled"
+	// StatusCollectionDisabled xxx
 	StatusCollectionDisabled StatusCollectionMode = "Disabled"
 )
 
@@ -161,6 +165,7 @@ func SetFederatedTypeConfigDefaults(obj *FederatedTypeConfig) {
 	}
 }
 
+// setStringDefault xxx
 // GetDefaultedString returns the value if provided, and otherwise
 // returns the provided default.
 func setStringDefault(value *string, defaultValue string) {
@@ -197,6 +202,7 @@ func (f *FederatedTypeConfig) GetTargetType() metav1.APIResource {
 	return apiResourceToMeta(f.Spec.TargetType, f.GetNamespaced())
 }
 
+// GetNamespaced xxx
 // TODO(font): This method should be removed from the interface in favor of
 // checking the namespaced property of the appropriate APIResource (TargetType,
 // FederatedType) depending on context.
@@ -231,6 +237,7 @@ func (f *FederatedTypeConfig) GetStatusEnabled() bool {
 		f.Name == "services"
 }
 
+// GetFederatedNamespaced xxx
 // TODO(font): This method should be removed from the interface i.e. remove
 // special-case handling for namespaces, in favor of checking the namespaced
 // property of the appropriate APIResource (TargetType, FederatedType)

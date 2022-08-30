@@ -46,6 +46,7 @@ type reqDynamic struct {
 	body      operator.M
 }
 
+// newReqDynamic xxx
 // get a new instance of reqDynamic, getNewTank() will be called and
 // return a init Tank which is ready for operating
 func newReqDynamic(req *restful.Request, filter qFilter, name string) *reqDynamic {
@@ -106,6 +107,7 @@ func (rd *reqDynamic) getQueryParamJSON() []byte {
 	return getQueryJSON(query)
 }
 
+// getTable xxx
 // dynamic data table is like: "clusterId_Type", for instance: "BCS-K8S-10001_Deployment".
 // rd.table will be save since first call, so reset() should be called if doing another op.
 func (rd *reqDynamic) getTable() string {

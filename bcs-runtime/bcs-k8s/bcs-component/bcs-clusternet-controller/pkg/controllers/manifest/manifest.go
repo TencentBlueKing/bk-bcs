@@ -11,6 +11,7 @@
  *
  */
 
+// Package manifest xxx
 package manifest
 
 import (

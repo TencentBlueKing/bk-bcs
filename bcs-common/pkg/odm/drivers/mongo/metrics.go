@@ -44,7 +44,7 @@ func init() {
 	prometheus.MustRegister(operatorLatency)
 }
 
-//reportAPIMetrics report all api action metrics
+// reportMongdbMetrics report all api action metrics
 func reportMongdbMetrics(method string, err error, started time.Time) {
 	status := operationStatusSuccess
 	if err != nil {

@@ -42,17 +42,18 @@ import (
 	"golang.org/x/net/context"
 )
 
-//error definition
+// error definition
 var errNoItems = errors.New("no items found")
 var errInvalidRequest = errors.New("invalid query name")
 
-//var errZoneMisMatch = errors.New("zone group dismatch")
+// var errZoneMisMatch = errors.New("zone group dismatch")
 
 // ForwardClusterIpDomainError err
 type ForwardClusterIpDomainError struct {
 	ClusterIP string
 }
 
+// Error 用于错误处理
 func (fc ForwardClusterIpDomainError) Error() string {
 	return fmt.Sprintf("need to forward cluster ip domain: %s", fc.ClusterIP)
 }
@@ -61,15 +62,16 @@ const (
 	defaultDNSPath = "/bcs/services/endpoints/dns"
 )
 
-//NewScheduler create bcs scheduler backend
+// NewScheduler create bcs scheduler backend
 func NewScheduler(config *ConfigItem) *BcsScheduler {
 	scheduler := &BcsScheduler{
 		conf: config,
 	}
-	//create storage
+	// create storage
 	var err error
 	if len(config.Storage) != 0 {
-		scheduler.storage, err = etcdstorage.NewStorage(config.StoragePath, config.Storage, config.StorageCA, config.StorageCert, config.StorageKey)
+		scheduler.storage, err = etcdstorage.NewStorage(config.StoragePath, config.Storage, config.StorageCA,
+			config.StorageCert, config.StorageKey)
 	}
 	if err != nil {
 		log.Printf("[ERROR] scheduler create storage failed, %s", err.Error())
@@ -98,36 +100,38 @@ func NewScheduler(config *ConfigItem) *BcsScheduler {
 	return scheduler
 }
 
-//recordRequest parse dns request to local info
+// recordRequest parse dns request to local info
 type recordRequest struct {
-	port        string //port for endpoint
-	protocol    string //protocol for endpoint
+	port        string // port for endpoint
+	protocol    string // protocol for endpoint
 	podname     string // pod's name
-	serviceName string //service name
-	namespace   string //namespace from domain
-	typeName    string //type name, like svc/pod, pod is not supported
-	zone        string //zone info
+	serviceName string // service name
+	namespace   string // namespace from domain
+	typeName    string // type name, like svc/pod, pod is not supported
+	zone        string // zone info
 }
 
+// IsPodDNS xxx
 func (r recordRequest) IsPodDNS() bool {
 	return len(r.podname) != 0
 }
 
-//BcsScheduler plugin for reading service/endpoints info from bcs-scheduler
+// BcsScheduler plugin for reading service/endpoints info from bcs-scheduler
 type BcsScheduler struct {
-	conf               *ConfigItem                     //all config item from configuration file
-	svcController      controller.Controller           //service controller for cache
-	svcCache           *bcsSchedulerUtil.ServiceCache  //service cache
-	endpointController controller.Controller           //endpoint controller for cache
-	endpointCache      *bcsSchedulerUtil.EndpointCache //endpoint cache
-	storage            storage.Storage                 //remote etcd storage for all cluster
-	registery          master.Master                   //Master interface
-	Next               plugin.Handler                  //next plugin
+	conf               *ConfigItem                     // all config item from configuration file
+	svcController      controller.Controller           // service controller for cache
+	svcCache           *bcsSchedulerUtil.ServiceCache  // service cache
+	endpointController controller.Controller           // endpoint controller for cache
+	endpointCache      *bcsSchedulerUtil.EndpointCache // endpoint cache
+	storage            storage.Storage                 // remote etcd storage for all cluster
+	registery          master.Master                   // Master interface
+	Next               plugin.Handler                  // next plugin
 }
 
 // Services communicates with the backend to retrieve the service definition. if func Services is called,
 // it means domain must belong to this cluster, Exact indicates on exact much are that we are allowed to recurs.
-func (bcs *BcsScheduler) Services(state request.Request, exact bool, opt plugin.Options) (svcs []msg.Service, err error) {
+func (bcs *BcsScheduler) Services(state request.Request, exact bool, opt plugin.Options) (svcs []msg.Service,
+	err error) {
 	r := bcs.parseRequest(state.Name(), state.QType())
 
 	switch state.QType() {
@@ -156,25 +160,26 @@ func (bcs *BcsScheduler) Services(state request.Request, exact bool, opt plugin.
 
 // Reverse communicates with the backend to retrieve service definition based on a IP address
 // instead of a name. I.e. a reverse DNS lookup.
-func (bcs *BcsScheduler) Reverse(state request.Request, exact bool, opt plugin.Options) (svcList []msg.Service, err error) {
+func (bcs *BcsScheduler) Reverse(state request.Request, exact bool, opt plugin.Options) (svcList []msg.Service,
+	err error) {
 	ip := dnsutil.ExtractAddressFromReverse(state.Name())
 	if ip == "" {
 		return nil, nil
 	}
-	//search ip in all endpoints
+	// search ip in all endpoints
 	bcsEndpoints := bcs.endpointCache.ListEndpoints()
 	if len(bcsEndpoints) == 0 {
 		return svcList, errNoItems
 	}
 	for _, endpoint := range bcsEndpoints {
-		//check sub item from
+		// check sub item from
 		if len(endpoint.Endpoints) == 0 {
 			continue
 		}
 		for _, pod := range endpoint.Endpoints {
 			if ip == pod.ContainerIP || ip == pod.NodeIP {
-				//construct domain for this request ip, format:
-				//serviceName.Namespace.svc.$cluster.$zone
+				// construct domain for this request ip, format:
+				// serviceName.Namespace.svc.$cluster.$zone
 				domain := endpoint.GetName() + "." + endpoint.GetNamespace() + ".svc." + bcs.PrimaryZone()
 				svc := msg.Service{Host: domain}
 				svcList = append(svcList, svc)
@@ -219,16 +224,16 @@ func (bcs *BcsScheduler) Debug() string {
  * inner method for data
  */
 
-//InitSchedulerCache bcs scheduler backend init it
+// InitSchedulerCache bcs scheduler backend init it
 func (bcs *BcsScheduler) InitSchedulerCache() error {
-	//Register for master
+	// Register for master
 	if err := bcs.registery.Init(); err != nil {
 		return err
 	}
 	if err := bcs.registery.Register(); err != nil {
 		return err
 	}
-	//create bcs-service controller
+	// create bcs-service controller
 	store := cache.CreateCache(bcsSchedulerUtil.DNSDataKeyFunc)
 	bcs.svcCache = &bcsSchedulerUtil.ServiceCache{
 		Store: store,
@@ -240,7 +245,7 @@ func (bcs *BcsScheduler) InitSchedulerCache() error {
 		DeleteFunc: bcs.svcOnDelete,
 	}
 
-	//create bcs endpoint controller
+	// create bcs endpoint controller
 	estore := cache.CreateCache(bcsSchedulerUtil.DNSDataKeyFunc)
 	bcs.endpointCache = &bcsSchedulerUtil.EndpointCache{
 		Store: estore,
@@ -255,25 +260,29 @@ func (bcs *BcsScheduler) InitSchedulerCache() error {
 	var svcErr error
 	var epErr error
 	if len(bcs.conf.Endpoints) != 0 {
-		bcs.svcController, svcErr = controller.NewZkController(bcs.conf.Endpoints, svc, bcs.conf.ResyncPeriod, bcs.svcCache.Store, &bcsSchedulerUtil.SvcDecoder{}, svcEvents)
+		bcs.svcController, svcErr = controller.NewZkController(bcs.conf.Endpoints, svc, bcs.conf.ResyncPeriod,
+			bcs.svcCache.Store, &bcsSchedulerUtil.SvcDecoder{}, svcEvents)
 		if svcErr != nil {
 			log.Printf("[ERROR] Scheduler create BcsService Controller failed, %s", svcErr.Error())
 			return svcErr
 		}
 
-		bcs.endpointController, epErr = controller.NewZkController(bcs.conf.Endpoints, endpoint, bcs.conf.ResyncPeriod, bcs.endpointCache.Store, &bcsSchedulerUtil.EndpointDecoder{}, endpointEvents)
+		bcs.endpointController, epErr = controller.NewZkController(bcs.conf.Endpoints, endpoint, bcs.conf.ResyncPeriod,
+			bcs.endpointCache.Store, &bcsSchedulerUtil.EndpointDecoder{}, endpointEvents)
 		if epErr != nil {
 			log.Printf("[ERROR] Scheduler create BcsEndpoint Controller failed, %s", epErr.Error())
 			return epErr
 		}
 	} else if bcs.conf.KubeConfig != "" {
-		bcs.svcController, svcErr = controller.NewEtcdController(bcs.conf.KubeConfig, "service", bcs.conf.ResyncPeriod, bcs.svcCache.Store, svcEvents)
+		bcs.svcController, svcErr = controller.NewEtcdController(bcs.conf.KubeConfig, "service", bcs.conf.ResyncPeriod,
+			bcs.svcCache.Store, svcEvents)
 		if svcErr != nil {
 			log.Printf("[ERROR] Scheduler create BcsService Controller failed, %s", svcErr.Error())
 			return svcErr
 		}
 
-		bcs.endpointController, svcErr = controller.NewEtcdController(bcs.conf.KubeConfig, "endpoint", bcs.conf.ResyncPeriod, bcs.endpointCache.Store, endpointEvents)
+		bcs.endpointController, svcErr = controller.NewEtcdController(bcs.conf.KubeConfig, "endpoint", bcs.conf.ResyncPeriod,
+			bcs.endpointCache.Store, endpointEvents)
 		if epErr != nil {
 			log.Printf("[ERROR] Scheduler create BcsEndpoint Controller failed, %s", epErr.Error())
 			return epErr
@@ -282,12 +291,12 @@ func (bcs *BcsScheduler) InitSchedulerCache() error {
 		return fmt.Errorf("scheduler create controller failed, no endpoints and kubeconfig provided")
 	}
 
-	//todo(developer): create etcdStorage for data persistence
+	// todo(developer): create etcdStorage for data persistence
 
 	return nil
 }
 
-//Start start all go event with context
+// Start start all go event with context
 func (bcs *BcsScheduler) Start() error {
 	log.Printf("%s", version.GetVersion())
 	time.Sleep(time.Second * 1)
@@ -295,11 +304,11 @@ func (bcs *BcsScheduler) Start() error {
 	stopCh := signals.SetupSignalHandler()
 	go bcs.svcController.RunController(stopCh)
 	go bcs.endpointController.RunController(stopCh)
-	//todo(developer): starting etcdStorage event goroutine
+	// todo(developer): starting etcdStorage event goroutine
 	return nil
 }
 
-//Stop stop all event, clean cache and exit
+// Stop stop all event, clean cache and exit
 func (bcs *BcsScheduler) Stop() error {
 	bcs.registery.Clean()
 	bcs.registery.Finit()
@@ -309,18 +318,18 @@ func (bcs *BcsScheduler) Stop() error {
 	return nil
 }
 
-//PrimaryZone Get zone info
+// PrimaryZone Get zone info
 func (bcs *BcsScheduler) PrimaryZone() string {
 	return bcs.conf.Cluster + "." + bcs.conf.Zones[0]
 }
 
 func (bcs *BcsScheduler) parseRequest(name string, dnsType uint16) (req recordRequest) {
-	//only support two request:
+	// only support two request:
 	// * SRV Request: _port._protocol.service.namespace.svc.zone
 	// * A Request (service): service.namespace.svc.zone
 	// * A Request (pod): podname.service.namespace.svc.zone
 
-	//defer log.Printf("[DEBUG] -> parse [%s] request: %+v", name, req)
+	// defer log.Printf("[DEBUG] -> parse [%s] request: %+v", name, req)
 	var segments []string
 	segments = dns.SplitDomainName(name)
 	segments = segments[:len(segments)-dns.CountLabel(bcs.PrimaryZone())]
@@ -338,10 +347,10 @@ func (bcs *BcsScheduler) parseRequest(name string, dnsType uint16) (req recordRe
 
 	req.zone = bcs.PrimaryZone()
 
-	//now, segments contains all part without zone info
-	//svcIndex := 0
+	// now, segments contains all part without zone info
+	// svcIndex := 0
 	if dnsType == dns.TypeSRV {
-		//construct port & protocol
+		// construct port & protocol
 		if strings.HasPrefix(segments[0], "_") {
 			req.port = strings.Replace(segments[0], "_", "", 1)
 		} else if isWildchard(segments[0]) {

@@ -23,7 +23,8 @@ import (
 )
 
 // GetResParseFunc 获取资源对应 Parser
-func GetResParseFunc(ctx context.Context, kind string) (func(manifest map[string]interface{}) map[string]interface{}, error) {
+func GetResParseFunc(ctx context.Context, kind string) (func(manifest map[string]interface{}) map[string]interface{},
+	error) {
 	parseFunc, exists := Kind2ParseFuncMap[kind]
 	if !exists {
 		return nil, errorx.New(errcode.Unsupported, i18n.GetMsg(ctx, "资源类型 `%s` 不支持表单化"), kind)

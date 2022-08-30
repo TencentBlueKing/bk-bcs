@@ -19,7 +19,7 @@ import (
 
 // ReplicaSchedulingPreferenceSpec defines the desired state of ReplicaSchedulingPreference
 type ReplicaSchedulingPreferenceSpec struct {
-	//TODO (@irfanurrehman); upgrade this to label selector only if need be.
+	// TODO (@irfanurrehman); upgrade this to label selector only if need be.
 	// The idea of this API is to have a a set of preferences which can
 	// be used for a target FederatedDeployment or FederatedReplicaset.
 	// Although the set of preferences in question can be applied to multiple
@@ -50,6 +50,7 @@ type ReplicaSchedulingPreferenceSpec struct {
 	Clusters map[string]ClusterPreferences `json:"clusters,omitempty"`
 }
 
+// ClusterPreferences xxx
 // Preferences regarding number of replicas assigned to a cluster workload object (dep, rs, ..) within
 // a federated workload object.
 type ClusterPreferences struct {
@@ -74,7 +75,7 @@ type ReplicaSchedulingPreferenceStatus struct {
 // +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// ReplicaSchedulingPreference
+// ReplicaSchedulingPreference xxx
 // +k8s:openapi-gen=true
 // +kubebuilder:resource:path=replicaschedulingpreferences
 type ReplicaSchedulingPreference struct {

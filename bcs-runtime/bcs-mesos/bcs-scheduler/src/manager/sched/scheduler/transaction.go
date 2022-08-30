@@ -35,6 +35,7 @@ const (
 // the lifeperoid for all not specified transactions are set to this
 const TRANSACTION_DEFAULT_LIFEPERIOD = 480
 
+// TRANSACTION_APPLICATION_LAUNCH_LIFEPERIOD xxx
 const TRANSACTION_APPLICATION_LAUNCH_LIFEPERIOD = 1800
 
 // TRANSACTION_DEPLOYMENT_ROLLING_UP_LIFEPERIOD Max lifeperoid for every rolling transaction, 300 seconds

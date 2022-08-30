@@ -26,7 +26,7 @@ import (
 	swaggerfiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 
-	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/docs"
+	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/docs" // docs xxx
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/api/metrics"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/api/pod"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/api/telemetry"
@@ -70,6 +70,7 @@ func (a *APIServer) Close() error {
 	return a.srv.Shutdown(a.ctx)
 }
 
+// newRoutes xxx
 // @Title     BCS-Monitor OpenAPI
 // @BasePath  /bcsapi/v4/monitor/api/projects/:projectId/clusters/:clusterId
 func (a *APIServer) newRoutes(engine *gin.Engine) {
@@ -141,16 +142,23 @@ func registerMetricsRoutes(engine *gin.RouterGroup) {
 		route.GET("/nodes/:ip/network_receive", rest.RestHandlerFunc(metrics.GetNodeNetworkReceiveUsage))
 		route.GET("/nodes/:ip/network_transmit", rest.RestHandlerFunc(metrics.GetNodeNetworkTransmitUsage))
 		route.GET("/nodes/:ip/diskio_usage", rest.RestHandlerFunc(metrics.GetNodeDiskioUsage))
-		route.POST("/namespaces/:namespace/pods/cpu_usage", rest.RestHandlerFunc(metrics.PodCPUUsage)) // 多个Pod场景, 可能有几十，上百Pod场景, 需要使用 Post 传递参数
+		route.POST("/namespaces/:namespace/pods/cpu_usage", rest.RestHandlerFunc(
+			metrics.PodCPUUsage)) // 多个Pod场景, 可能有几十，上百Pod场景, 需要使用 Post 传递参数
 		route.POST("/namespaces/:namespace/pods/memory_used", rest.RestHandlerFunc(metrics.PodMemoryUsed))
 		route.POST("/namespaces/:namespace/pods/network_receive", rest.RestHandlerFunc(metrics.PodNetworkReceive))
 		route.POST("/namespaces/:namespace/pods/network_transmit", rest.RestHandlerFunc(metrics.PodNetworkTransmit))
-		route.GET("/namespaces/:namespace/pods/:pod/containers/:container/cpu_usage", rest.RestHandlerFunc(metrics.ContainerCPUUsage))
-		route.GET("/namespaces/:namespace/pods/:pod/containers/:container/memory_used", rest.RestHandlerFunc(metrics.ContainerMemoryUsed))
-		route.GET("/namespaces/:namespace/pods/:pod/containers/:container/cpu_limit", rest.RestHandlerFunc(metrics.ContainerCPULimit))
-		route.GET("/namespaces/:namespace/pods/:pod/containers/:container/memory_limit", rest.RestHandlerFunc(metrics.ContainerMemoryLimit))
-		route.GET("/namespaces/:namespace/pods/:pod/containers/:container/disk_read_total", rest.RestHandlerFunc(metrics.ContainerDiskReadTotal))
-		route.GET("/namespaces/:namespace/pods/:pod/containers/:container/disk_write_total", rest.RestHandlerFunc(metrics.ContainerDiskWriteTotal))
+		route.GET("/namespaces/:namespace/pods/:pod/containers/:container/cpu_usage",
+			rest.RestHandlerFunc(metrics.ContainerCPUUsage))
+		route.GET("/namespaces/:namespace/pods/:pod/containers/:container/memory_used",
+			rest.RestHandlerFunc(metrics.ContainerMemoryUsed))
+		route.GET("/namespaces/:namespace/pods/:pod/containers/:container/cpu_limit",
+			rest.RestHandlerFunc(metrics.ContainerCPULimit))
+		route.GET("/namespaces/:namespace/pods/:pod/containers/:container/memory_limit",
+			rest.RestHandlerFunc(metrics.ContainerMemoryLimit))
+		route.GET("/namespaces/:namespace/pods/:pod/containers/:container/disk_read_total",
+			rest.RestHandlerFunc(metrics.ContainerDiskReadTotal))
+		route.GET("/namespaces/:namespace/pods/:pod/containers/:container/disk_write_total",
+			rest.RestHandlerFunc(metrics.ContainerDiskWriteTotal))
 	}
 }
 

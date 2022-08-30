@@ -84,7 +84,7 @@ func (p *ProjectDayPolicy) ImplementPolicy(ctx context.Context, opts *types.JobC
 	}
 }
 
-// CalculateCpu calculate cpu
+// calculateCpu calculate cpu
 func (p *ProjectDayPolicy) calculateCpu(clusters []*types.ClusterData) (float64, float64) {
 	var total, load float64
 	for key := range clusters {

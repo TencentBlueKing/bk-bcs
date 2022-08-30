@@ -21,6 +21,7 @@ import (
 )
 
 const (
+	// ProcessDaemonEndpoint xxx
 	ProcessDaemonEndpoint = "/var/run/process.sock"
 )
 
@@ -28,12 +29,14 @@ type daemon struct {
 	cli *HttpConnection
 }
 
+// NewDaemon xxx
 func NewDaemon() ProcDaemon {
 	return &daemon{
 		cli: NewHttpConnection(ProcessDaemonEndpoint),
 	}
 }
 
+// CreateProcess xxx
 func (d *daemon) CreateProcess(processInfo *types.ProcessInfo) error {
 	by, _ := json.Marshal(processInfo)
 	_, err := d.cli.requestProcessDaemon("POST", "/process", by)
@@ -45,6 +48,7 @@ func (d *daemon) CreateProcess(processInfo *types.ProcessInfo) error {
 	return nil
 }
 
+// InspectProcessStatus xxx
 func (d *daemon) InspectProcessStatus(procId string) (*types.ProcessStatusInfo, error) {
 	by, err := d.cli.requestProcessDaemon("GET", fmt.Sprintf("/process/%s/status", procId), nil)
 	if err != nil {
@@ -62,6 +66,7 @@ func (d *daemon) InspectProcessStatus(procId string) (*types.ProcessStatusInfo, 
 	return status, nil
 }
 
+// StopProcess xxx
 func (d *daemon) StopProcess(procId string, timeout int) error {
 	_, err := d.cli.requestProcessDaemon("PUT", fmt.Sprintf("/process/%s/stop/%d", procId, timeout), nil)
 	if err != nil {
@@ -72,6 +77,7 @@ func (d *daemon) StopProcess(procId string, timeout int) error {
 	return nil
 }
 
+// DeleteProcess xxx
 func (d *daemon) DeleteProcess(procId string) error {
 	_, err := d.cli.requestProcessDaemon("DELETE", fmt.Sprintf("/process/%s", procId), nil)
 	if err != nil {
@@ -82,10 +88,12 @@ func (d *daemon) DeleteProcess(procId string) error {
 	return nil
 }
 
+// ReloadProcess xxx
 func (d *daemon) ReloadProcess(procId string) error {
 	return nil
 }
 
+// RestartProcess xxx
 func (d *daemon) RestartProcess(procId string) error {
 	return nil
 }

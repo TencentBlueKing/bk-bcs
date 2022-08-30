@@ -33,18 +33,18 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-mesos/bcs-mesos-watch/util"
 )
 
-//NSControlInfo store all app info under one namespace
+// NSControlInfo store all app info under one namespace
 type NSControlInfo struct {
-	path   string             //parent zk node, namespace absolute path
-	cxt    context.Context    //context for creating sub context
-	cancel context.CancelFunc //for cancel sub goroutine
+	path   string             // parent zk node, namespace absolute path
+	cxt    context.Context    // context for creating sub context
+	cancel context.CancelFunc // for cancel sub goroutine
 }
 
 func reportAppMetrics(clusterID, action, status string) {
 	util.ReportSyncTotal(clusterID, cluster.DataTypeApp, action, status)
 }
 
-//NewAppWatch return a new application watch
+// NewAppWatch return a new application watch
 func NewAppWatch(cxt context.Context, client ZkClient, reporter cluster.Reporter) *AppWatch {
 	keyFunc := func(data interface{}) (string, error) {
 		meta, ok := data.(*schedulertypes.Application)
@@ -70,18 +70,19 @@ func NewAppWatch(cxt context.Context, client ZkClient, reporter cluster.Reporter
 	}
 }
 
-//AppWatch for app data in zookeeper, app wath is base on namespace.
-//AppWatch will record all namespace path,
+// AppWatch for app data in zookeeper, app wath is base on namespace.
+// AppWatch will record all namespace path,
 type AppWatch struct {
-	eventLock sync.Mutex       //lock for event
-	report    cluster.Reporter //reporter
-	cancelCxt context.Context  //context for cancel
-	client    ZkClient         //client for zookeeper
-	dataCache cache.Store      //cache for all app data
-	nsCache   cache.Store      //all namespace path / namespace goroutine control info
+	eventLock sync.Mutex       // lock for event
+	report    cluster.Reporter // reporter
+	cancelCxt context.Context  // context for cancel
+	client    ZkClient         // client for zookeeper
+	dataCache cache.Store      // cache for all app data
+	nsCache   cache.Store      // all namespace path / namespace goroutine control info
 }
 
-//run AppWatch running with namespace node, watch all app node under it
+// addWatch xxx
+// run AppWatch running with namespace node, watch all app node under it
 func (app *AppWatch) addWatch(appPath string) error {
 	app.eventLock.Lock()
 	defer app.eventLock.Unlock()
@@ -91,7 +92,7 @@ func (app *AppWatch) addWatch(appPath string) error {
 		return fmt.Errorf("Path %s is Under watch", appPath)
 	}
 
-	//ready to watch path
+	// ready to watch path
 	nsCxt, nsCancel := context.WithCancel(app.cancelCxt)
 	blog.Info("WATCH:: app pathwatch(%s) begin", appPath)
 	ns := &NSControlInfo{
@@ -104,7 +105,7 @@ func (app *AppWatch) addWatch(appPath string) error {
 	return nil
 }
 
-//cleanWatch clean wath by path
+// cleanWatch clean wath by path
 func (app *AppWatch) cleanWatch(appPath string) error {
 	blog.V(3).Infof("appwatch clean watch path %s", appPath)
 	app.eventLock.Lock()
@@ -121,7 +122,7 @@ func (app *AppWatch) cleanWatch(appPath string) error {
 	return nil
 }
 
-//pathWatch watch app list under namespace path
+// pathWatch watch app list under namespace path
 func (app *AppWatch) pathWatch(cxt context.Context, path string) {
 
 	// Get all children node & setting watch
@@ -165,8 +166,9 @@ func (app *AppWatch) pathWatch(cxt context.Context, path string) {
 	}
 }
 
-//updateList check app node list in zookeeper, force update if we read data from zookeeper
-//add goroutine for new app node and listening node DEELTE & UPDATE events
+// handleAppList xxx
+// updateList check app node list in zookeeper, force update if we read data from zookeeper
+// add goroutine for new app node and listening node DEELTE & UPDATE events
 func (app *AppWatch) handleAppList(cxt context.Context, base string, appList []string) error {
 
 	for _, appNode := range appList {
@@ -301,7 +303,7 @@ func (app *AppWatch) appNodeWatch(cxt context.Context, apppath string, ns string
 	}
 }
 
-//stop ask appwatch stop, clean all data
+// stop ask appwatch stop, clean all data
 func (app *AppWatch) stop() {
 
 	blog.Info("appwatch stop...")
@@ -313,7 +315,7 @@ func (app *AppWatch) stop() {
 	app.dataCache.Clear()
 }
 
-//IsExist check data exist in local dataCache
+// IsExist check data exist in local dataCache
 func (app *AppWatch) IsExist(data interface{}) bool {
 	appData, ok := data.(*schedulertypes.Application)
 	if !ok {
@@ -326,7 +328,7 @@ func (app *AppWatch) IsExist(data interface{}) bool {
 	return false
 }
 
-//AddEvent call when data added
+// AddEvent call when data added
 func (app *AppWatch) AddEvent(obj interface{}) {
 	appData, ok := obj.(*schedulertypes.Application)
 	if !ok {
@@ -347,7 +349,7 @@ func (app *AppWatch) AddEvent(obj interface{}) {
 	}
 }
 
-//DeleteEvent when delete
+// DeleteEvent when delete
 func (app *AppWatch) DeleteEvent(obj interface{}) {
 	appData, ok := obj.(*schedulertypes.Application)
 	if !ok {
@@ -356,7 +358,7 @@ func (app *AppWatch) DeleteEvent(obj interface{}) {
 	}
 	blog.Info("EVENT:: Delete Event for Application %s/%s", appData.RunAs, appData.ID)
 
-	//report to cluster
+	// report to cluster
 	data := &types.BcsSyncData{
 		DataType: app.GetApplicationChannel(appData),
 		Action:   types.ActionDelete,
@@ -369,7 +371,7 @@ func (app *AppWatch) DeleteEvent(obj interface{}) {
 	}
 }
 
-//UpdateEvent when update
+// UpdateEvent when update
 func (app *AppWatch) UpdateEvent(old, cur interface{}, force bool) {
 	appData, ok := cur.(*schedulertypes.Application)
 	if !ok {
@@ -383,7 +385,7 @@ func (app *AppWatch) UpdateEvent(old, cur interface{}, force bool) {
 	}
 	blog.V(3).Infof("EVENT:: Update Event for Application %s/%s", appData.RunAs, appData.ID)
 
-	//report to cluster
+	// report to cluster
 	data := &types.BcsSyncData{
 		DataType: app.GetApplicationChannel(appData),
 		Action:   types.ActionUpdate,
@@ -396,7 +398,7 @@ func (app *AppWatch) UpdateEvent(old, cur interface{}, force bool) {
 	}
 }
 
-//GetApplicationChannel get distribution channel for Application
+// GetApplicationChannel get distribution channel for Application
 func (app *AppWatch) GetApplicationChannel(application *schedulertypes.Application) string {
 	index := util.GetHashId(application.ID, ApplicationThreadNum)
 

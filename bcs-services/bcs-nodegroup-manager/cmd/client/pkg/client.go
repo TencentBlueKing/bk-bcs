@@ -45,7 +45,8 @@ func NewClientWithConfiguration(ctx context.Context) (nodegroupmanager.Nodegroup
 }
 
 // NewNodeGroupMgrCli create client for bcs-nodegroup-manager
-func NewNodeGroupMgrCli(ctx context.Context, config *Config) (nodegroupmanager.NodegroupManagerClient, context.Context, error) {
+func NewNodeGroupMgrCli(ctx context.Context, config *Config) (nodegroupmanager.NodegroupManagerClient, context.Context,
+	error) {
 	header := map[string]string{
 		"x-content-type": "application/grpc+proto",
 		"Content-Type":   "application/grpc",

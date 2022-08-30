@@ -13,14 +13,14 @@
 
 package types
 
-//RequestApi old version api request for bcs-client & bcs-api
+// RequestApi old version api request for bcs-client & bcs-api
 type RequestApi struct {
 	AppId    string      `json:"appid,omitempty"`
 	Operator string      `json:"operator,omitempty"`
 	Request  interface{} `json:"request,omitempty"`
 }
 
-//BcsRequest request for bcs-api & bcs-client
+// BcsRequest request for bcs-api & bcs-client
 type BcsRequest struct {
 	AppId             string            `json:"appid,omitempty"`
 	Operator          string            `json:"operator,omitempty"`
@@ -49,6 +49,7 @@ const (
 	HttpMethod_PATCH  = "PATCH"
 )
 
+// APIResponse xxx
 type APIResponse struct {
 	Result  bool        `json:"result"`
 	Code    int         `json:"code"`

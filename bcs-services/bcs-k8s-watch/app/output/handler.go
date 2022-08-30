@@ -88,7 +88,7 @@ func (h *Handler) HandleWithTimeout(data *action.SyncData, timeout time.Duration
 	}
 }
 
-// debugs here.
+// debug s here.
 func (h *Handler) debug() {
 	for {
 		time.Sleep(debugInterval)
@@ -96,7 +96,7 @@ func (h *Handler) debug() {
 	}
 }
 
-// reportQueueLength report datatype length to prometheus metrics
+// reportHandlerQueueLength report datatype length to prometheus metrics
 func (h *Handler) reportHandlerQueueLength() {
 	metrics.ReportK8sWatchHandlerQueueLength(h.clusterID, h.dataType, float64(len(h.queue)))
 }
@@ -137,5 +137,5 @@ func (h *Handler) Run(stopCh <-chan struct{}) {
 	go wait.Until(h.reportHandlerQueueLength, defaultHandlerReportPeriod, stopCh)
 
 	// setup debug.
-	//go h.debug()
+	// go h.debug()
 }

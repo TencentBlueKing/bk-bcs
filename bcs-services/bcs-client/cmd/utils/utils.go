@@ -11,6 +11,7 @@
  *
  */
 
+// Package utils xxx
 package utils
 
 import (
@@ -42,7 +43,7 @@ var env BcsEnv
 
 var envPath = "/var/bcs/bcsenv.conf"
 
-//InitEnv reading pre-Store ENV in client specified ENV file
+// InitEnv reading pre-Store ENV in client specified ENV file
 func InitEnv() error {
 	file, err := ioutil.ReadFile(envPath)
 
@@ -57,13 +58,13 @@ func InitEnv() error {
 	return nil
 }
 
-//ShowEnv for client release version
+// ShowEnv for client release version
 func ShowEnv() {
 	fmt.Printf("CLUSTERID=%s\n", env.ClusterID)
 	fmt.Printf("NAMESPACE=%s\n", env.Namespace)
 }
 
-//SetEnv store clusterID & namespace in client cache file
+// SetEnv store clusterID & namespace in client cache file
 func SetEnv(clusterID, namespace string) error {
 	env.ClusterID = clusterID
 	env.Namespace = namespace
@@ -109,7 +110,7 @@ type BcsCfg struct {
 
 var cfg BcsCfg
 
-//InitCfg init configuration before clent run
+// InitCfg init configuration before clent run
 func InitCfg() error {
 	filePath := "/var/bcs/bcs.conf"
 	file, err := ioutil.ReadFile(filePath)
@@ -148,7 +149,7 @@ func InitCfg() error {
 	return nil
 }
 
-//GetClientOption init option for scheduler
+// GetClientOption init option for scheduler
 func GetClientOption() types.ClientOptions {
 	return types.ClientOptions{
 		BcsApiAddress: cfg.ApiHost,
@@ -157,14 +158,14 @@ func GetClientOption() types.ClientOptions {
 	}
 }
 
-//DebugPrintln print only when debug mode
+// DebugPrintln print only when debug mode
 func DebugPrintln(a ...interface{}) {
 	if cfg.EnableDebug {
 		fmt.Println(a...)
 	}
 }
 
-//DebugPrintf print only when debug mode
+// DebugPrintf print only when debug mode
 func DebugPrintf(format string, a ...interface{}) {
 	if cfg.EnableDebug {
 		fmt.Printf(format, a...)
@@ -180,14 +181,14 @@ type ClientContext struct {
 	allNamespace bool
 }
 
-//NewClientContext client context wrapper for bcs-client
+// NewClientContext client context wrapper for bcs-client
 func NewClientContext(c *cli.Context) *ClientContext {
 	cc := &ClientContext{Context: c}
 	cc.initEnv()
 	return cc
 }
 
-//MustSpecified validate required command line option
+// MustSpecified validate required command line option
 func (cc *ClientContext) MustSpecified(key ...string) error {
 	for _, k := range key {
 		if k == OptionClusterID {
@@ -227,22 +228,22 @@ func (cc *ClientContext) initEnv() {
 	}
 }
 
-//ClusterID get command line clusterid
+// ClusterID get command line clusterid
 func (cc *ClientContext) ClusterID() string {
 	return cc.clusterID
 }
 
-//Namespace get command line namespace
+// Namespace get command line namespace
 func (cc *ClientContext) Namespace() string {
 	return cc.namespace
 }
 
-//IsAllNamespace check if client get all namespaces data
+// IsAllNamespace check if client get all namespaces data
 func (cc *ClientContext) IsAllNamespace() bool {
 	return cc.allNamespace
 }
 
-//FileData get --from-file details
+// FileData get --from-file details
 func (cc *ClientContext) FileData() ([]byte, error) {
 	if err := cc.MustSpecified(OptionFile); err != nil {
 		return nil, err
@@ -251,7 +252,7 @@ func (cc *ClientContext) FileData() ([]byte, error) {
 	return ioutil.ReadFile(cc.String(OptionFile))
 }
 
-//TryIndent try to indent json
+// TryIndent try to indent json
 func TryIndent(data interface{}) []byte {
 	var bytesData []byte
 	if err := codec.EncJson(data, &bytesData); err != nil {
@@ -260,7 +261,7 @@ func TryIndent(data interface{}) []byte {
 	return TryBytesIndent(bytesData)
 }
 
-//TryBytesIndent pretty print
+// TryBytesIndent pretty print
 func TryBytesIndent(data []byte) []byte {
 	indented := &bytes.Buffer{}
 	if err := json.Indent(indented, data, "", "  "); err == nil {
@@ -269,7 +270,7 @@ func TryBytesIndent(data []byte) []byte {
 	return data
 }
 
-//ParseNamespaceFromJSON reading namespace from specified json file
+// ParseNamespaceFromJSON reading namespace from specified json file
 func ParseNamespaceFromJSON(ctx []byte) (string, error) {
 	js, err := simplejson.NewJson(ctx)
 	if err != nil {
@@ -284,7 +285,7 @@ func ParseNamespaceFromJSON(ctx []byte) (string, error) {
 	return namespace, nil
 }
 
-//ParseNameFromJSON reading name from specified json file
+// ParseNameFromJSON reading name from specified json file
 func ParseNameFromJSON(ctx []byte) (string, error) {
 	js, err := simplejson.NewJson(ctx)
 	if err != nil {
@@ -299,7 +300,7 @@ func ParseNameFromJSON(ctx []byte) (string, error) {
 	return name, nil
 }
 
-//ParseNamespaceNameFromJSON reading namespace & name from specified json file
+// ParseNamespaceNameFromJSON reading namespace & name from specified json file
 func ParseNamespaceNameFromJSON(ctx []byte) (string, string, error) {
 	js, err := simplejson.NewJson(ctx)
 	if err != nil {
@@ -318,7 +319,7 @@ func ParseNamespaceNameFromJSON(ctx []byte) (string, string, error) {
 	return namespace, name, nil
 }
 
-//ParseAPIVersionAndKindFromJSON pase apiVersion & kind for validation
+// ParseAPIVersionAndKindFromJSON pase apiVersion & kind for validation
 func ParseAPIVersionAndKindFromJSON(ctx []byte) (string, string, error) {
 	js, err := simplejson.NewJson(ctx)
 	if err != nil {
@@ -336,7 +337,7 @@ func ParseAPIVersionAndKindFromJSON(ctx []byte) (string, string, error) {
 	return version, kind, nil
 }
 
-//GetIPList split ip string by comma
+// GetIPList split ip string by comma
 func GetIPList(ip string) []string {
 	if len(ip) == 0 {
 		return make([]string, 0)

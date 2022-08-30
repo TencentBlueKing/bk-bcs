@@ -103,7 +103,8 @@ func (ca *CreateAction) createProject() error {
 func (ca *CreateAction) validate() error {
 	// check projectID、projectCode、name
 	projectID, projectCode, name := ca.req.ProjectID, ca.req.ProjectCode, ca.req.Name
-	if p, _ := ca.model.GetProjectByField(ca.ctx, &pm.ProjectField{ProjectID: projectID, ProjectCode: projectCode, Name: name}); p != nil {
+	if p, _ := ca.model.GetProjectByField(ca.ctx, &pm.ProjectField{ProjectID: projectID, ProjectCode: projectCode,
+		Name: name}); p != nil {
 		if p.ProjectID == projectID {
 			return fmt.Errorf("projectID: %s is already exists", projectID)
 		}

@@ -112,7 +112,8 @@ func NewHookTemplate() *hookv1alpha1.HookTemplate {
 }
 
 // NewHookRunFromTemplate creates a new HookRun object.
-func NewHookRunFromTemplate(hookTemplate *hookv1alpha1.HookTemplate, sts *gstsv1alpha1.GameStatefulSet) *hookv1alpha1.HookRun {
+func NewHookRunFromTemplate(hookTemplate *hookv1alpha1.HookTemplate,
+	sts *gstsv1alpha1.GameStatefulSet) *hookv1alpha1.HookRun {
 	run, _ := commonhookutil.NewHookRunFromTemplate(hookTemplate, nil,
 		fmt.Sprintf("predelete---%s", hookTemplate.Name), "", hookTemplate.Namespace)
 	run.Labels = map[string]string{
@@ -170,7 +171,8 @@ func CompareAction(x, y clientTesting.Action) bool {
 }
 
 // FilterActions filters actions by the specified verb.
-func FilterActions(actions []clientTesting.Action, filterFns ...func(action clientTesting.Action) clientTesting.Action) []clientTesting.Action {
+func FilterActions(actions []clientTesting.Action, filterFns ...func(
+	action clientTesting.Action) clientTesting.Action) []clientTesting.Action {
 	for i := range actions {
 		for _, fn := range filterFns {
 			actions[i] = fn(actions[i])

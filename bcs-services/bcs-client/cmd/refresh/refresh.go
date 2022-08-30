@@ -11,6 +11,7 @@
  *
  */
 
+// Package refresh xxx
 package refresh
 
 import (
@@ -20,7 +21,7 @@ import (
 	"github.com/urfave/cli"
 )
 
-//NewRefreshCommand sub command refresh registration
+// NewRefreshCommand sub command refresh registration
 func NewRefreshCommand() cli.Command {
 	return cli.Command{
 		Name:  "refresh",

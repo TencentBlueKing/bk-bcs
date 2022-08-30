@@ -29,7 +29,7 @@ import (
 // DeleteAKSClusterTask delete cluster task
 func DeleteAKSClusterTask(taskID string, stepName string) error {
 	start := time.Now()
-	//get task information and validate
+	// get task information and validate
 	state, step, err := cloudprovider.GetTaskStateAndCurrentStep(taskID, stepName)
 	if err != nil {
 		return err
@@ -87,7 +87,8 @@ func DeleteAKSClusterTask(taskID string, stepName string) error {
 		_ = cloudprovider.UpdateClusterSystemID(clusterID, "")
 		blog.Infof("DeleteAKSClusterTask[%s]: task %s DeleteAKSCluster[%s] successful", taskID, taskID, cluster.SystemID)
 	} else {
-		blog.Infof("DeleteAKSClusterTask[%s]: task %s DeleteAKSCluster skip current step because SystemID empty", taskID, taskID)
+		blog.Infof("DeleteAKSClusterTask[%s]: task %s DeleteAKSCluster skip current step because SystemID empty", taskID,
+			taskID)
 	}
 
 	if err := state.UpdateStepSucc(start, stepName); err != nil {
@@ -102,7 +103,7 @@ func CleanClusterDBInfoTask(taskID string, stepName string) error {
 	// delete node && nodeGroup && cluster
 	// get relative nodes by clusterID
 	start := time.Now()
-	//get task information and validate
+	// get task information and validate
 	state, step, err := cloudprovider.GetTaskStateAndCurrentStep(taskID, stepName)
 	if err != nil {
 		return err

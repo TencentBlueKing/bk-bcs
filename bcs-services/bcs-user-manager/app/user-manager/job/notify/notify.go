@@ -11,6 +11,7 @@
  *
  */
 
+// Package notify xxx
 package notify
 
 import (
@@ -171,7 +172,8 @@ func (t *tokenNotify) do() {
 
 func (t *tokenNotify) sendEmail(token models.BcsUser) *APIResponse {
 	// get email content
-	emailContent, err := generateNotifyContent(t.emailContent, notifyUser{Username: token.Name, ExpiredAt: token.ExpiresAt})
+	emailContent, err := generateNotifyContent(t.emailContent, notifyUser{Username: token.Name,
+		ExpiredAt: token.ExpiresAt})
 	if err != nil {
 		blog.Errorf("generate email content err: %s", err.Error())
 	}
@@ -274,18 +276,18 @@ func (t *tokenNotify) requestEsb(method, url string, payload map[string]interfac
 	if payload == nil {
 		return nil, fmt.Errorf("payload can't be nil")
 	}
-	//set payload app parameter
+	// set payload app parameter
 	payload[esb.EsbRequestPayloadAppcode] = t.appCode
 	payload[esb.EsbRequestPayloadAppsecret] = t.appSecret
 	payloadBytes, _ := json.Marshal(payload)
-	//new request body
+	// new request body
 	body := bytes.NewBuffer(payloadBytes)
-	//request url
+	// request url
 	url = fmt.Sprintf("%s%s", t.apiHost, url)
 
-	//new request object
+	// new request object
 	req, _ := http.NewRequest(method, url, body)
-	//set header application/json
+	// set header application/json
 	req.Header.Set("Content-Type", "application/json")
 	httpClient := &http.Client{}
 	resp, err := httpClient.Do(req)
@@ -304,7 +306,7 @@ func (t *tokenNotify) requestEsb(method, url string, payload map[string]interfac
 		return nil, fmt.Errorf("non-Json body(%s) response: %s", string(respBody), err.Error())
 	}
 
-	//http response status code != 200
+	// http response status code != 200
 	if resp.StatusCode != 200 {
 		return nil, fmt.Errorf("response code %d body %s", resp.StatusCode, respBody)
 	}

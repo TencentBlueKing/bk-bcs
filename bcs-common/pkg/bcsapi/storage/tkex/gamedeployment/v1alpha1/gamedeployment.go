@@ -11,6 +11,7 @@
  *
  */
 
+// Package gamedeployment xxx
 // +kubebuilder:validation:Optional
 package gamedeployment
 
@@ -39,6 +40,7 @@ const (
 	DefaultGameDeploymentMaxUnavailable = "20%"
 )
 
+// GameDeploymentSpec xxx
 type GameDeploymentSpec struct {
 	// replicas is the desired number of replicas of the given Template.
 	// These are replicas in the sense that they are instantiations of the
@@ -92,16 +94,19 @@ type GameDeploymentSpec struct {
 	MinReadySeconds int32 `json:"minReadySeconds,omitempty"`
 }
 
+// GameDeploymentPodIndexRange xxx
 type GameDeploymentPodIndexRange struct {
 	PodStartIndex int `json:"podStartIndex,omitempty"`
 	PodEndIndex   int `json:"podEndIndex,omitempty"`
 }
 
+// GameDeploymentPreDeleteUpdateStrategy xxx
 type GameDeploymentPreDeleteUpdateStrategy struct {
 	Hook                 *hookv1alpha1.HookStep `json:"hook,omitempty"`
 	RetryUnexpectedHooks bool                   `json:"retry,omitempty"`
 }
 
+// GameDeploymentPreInplaceUpdateStrategy xxx
 type GameDeploymentPreInplaceUpdateStrategy struct {
 	Hook                 *hookv1alpha1.HookStep `json:"hook,omitempty"`
 	RetryUnexpectedHooks bool                   `json:"retry,omitempty"`
@@ -113,12 +118,14 @@ type GameDeploymentPostInplaceUpdateStrategy struct {
 	RetryUnexpectedHooks bool                   `json:"retry,omitempty"`
 }
 
+// GameDeploymentScaleStrategy xxx
 type GameDeploymentScaleStrategy struct {
 	// PodsToDelete is the names of Pod should be deleted.
 	// Note that this list will be truncated for non-existing pod names.
 	PodsToDelete []string `json:"podsToDelete,omitempty"`
 }
 
+// GameDeploymentUpdateStrategy xxx
 type GameDeploymentUpdateStrategy struct {
 	// Type indicates the type of the GameDeploymentUpdateStrategy.
 	// Default is RollingUpdate.
@@ -152,17 +159,20 @@ type GameDeploymentUpdateStrategy struct {
 	InPlaceUpdateStrategy *inplaceupdate.InPlaceUpdateStrategy `json:"inPlaceUpdateStrategy,omitempty"`
 }
 
+// CanaryStrategy xxx
 type CanaryStrategy struct {
 	// +kubebuilder:validation:Required
 	Steps []CanaryStep `json:"steps,omitempty"`
 }
 
+// CanaryStep xxx
 type CanaryStep struct {
 	Partition *int32                 `json:"partition,omitempty"`
 	Pause     *CanaryPause           `json:"pause,omitempty"`
 	Hook      *hookv1alpha1.HookStep `json:"hook,omitempty"`
 }
 
+// CanaryPause xxx
 type CanaryPause struct {
 	// Duration the amount of time to wait before moving to the next step.
 	// +optional
@@ -235,6 +245,7 @@ type GameDeploymentStatus struct {
 	PostInplaceHookConditions []hookv1alpha1.PostInplaceHookCondition `json:"postInplaceHookCondition,omitempty"`
 }
 
+// CanaryStatus xxx
 type CanaryStatus struct {
 	Revision           string       `json:"revision,omitempty"`
 	PauseStartTime     *metav1.Time `json:"pauseStartTime,omitempty"`

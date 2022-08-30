@@ -27,15 +27,15 @@ import (
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
 )
 
-// Handler ...
+// Handler xxx
 type Handler struct{}
 
-// New ...
+// New xxx
 func New() *Handler {
 	return &Handler{}
 }
 
-// ListIng ...
+// ListIng xxx
 func (h *Handler) ListIng(
 	ctx context.Context, req *clusterRes.ResListReq, resp *clusterRes.CommonResp,
 ) (err error) {
@@ -51,7 +51,7 @@ func (h *Handler) ListIng(
 	return err
 }
 
-// GetIng ...
+// GetIng xxx
 func (h *Handler) GetIng(
 	ctx context.Context, req *clusterRes.ResGetReq, resp *clusterRes.CommonResp,
 ) (err error) {
@@ -67,7 +67,7 @@ func (h *Handler) GetIng(
 	return err
 }
 
-// CreateIng ...
+// CreateIng xxx
 func (h *Handler) CreateIng(
 	ctx context.Context, req *clusterRes.ResCreateReq, resp *clusterRes.CommonResp,
 ) (err error) {
@@ -77,7 +77,7 @@ func (h *Handler) CreateIng(
 	return err
 }
 
-// UpdateIng ...
+// UpdateIng xxx
 func (h *Handler) UpdateIng(
 	ctx context.Context, req *clusterRes.ResUpdateReq, resp *clusterRes.CommonResp,
 ) (err error) {
@@ -87,7 +87,7 @@ func (h *Handler) UpdateIng(
 	return err
 }
 
-// DeleteIng ...
+// DeleteIng xxx
 func (h *Handler) DeleteIng(
 	ctx context.Context, req *clusterRes.ResDeleteReq, _ *clusterRes.CommonResp,
 ) error {

@@ -26,10 +26,10 @@ import (
 
 // 此包中实现thanos的metadata，target，rule，exemplar 的proxy接口 替换掉query模块中的各种各个用不到的模块
 
-// NotImplementErr
+// NotImplementErr xxx
 var NotImplementErr = errors.New("api not implement")
 
-// NewEmptyMetaDataClient
+// NewEmptyMetaDataClient xxx
 func NewEmptyMetaDataClient() *emptyMetadataClient {
 	return &emptyMetadataClient{}
 }
@@ -52,27 +52,31 @@ func NewEmptyExemplarClient() *emptyExemplarClient {
 type emptyMetadataClient struct{}
 
 // MetricMetadata :
-func (e *emptyMetadataClient) MetricMetadata(_ context.Context, _ *metadatapb.MetricMetadataRequest) (map[string][]metadatapb.Meta, storage.Warnings, error) {
+func (e *emptyMetadataClient) MetricMetadata(_ context.Context, _ *metadatapb.MetricMetadataRequest) (
+	map[string][]metadatapb.Meta, storage.Warnings, error) {
 	return nil, []error{NotImplementErr}, nil
 }
 
 type emptyTargetClient struct{}
 
 // Targets :
-func (e *emptyTargetClient) Targets(_ context.Context, _ *targetspb.TargetsRequest) (*targetspb.TargetDiscovery, storage.Warnings, error) {
+func (e *emptyTargetClient) Targets(_ context.Context, _ *targetspb.TargetsRequest) (*targetspb.TargetDiscovery,
+	storage.Warnings, error) {
 	return nil, []error{NotImplementErr}, nil
 }
 
 type emptyRuleClient struct{}
 
 // Rules :
-func (e *emptyRuleClient) Rules(_ context.Context, _ *rulespb.RulesRequest) (*rulespb.RuleGroups, storage.Warnings, error) {
+func (e *emptyRuleClient) Rules(_ context.Context, _ *rulespb.RulesRequest) (*rulespb.RuleGroups, storage.Warnings,
+	error) {
 	return nil, []error{NotImplementErr}, nil
 }
 
 type emptyExemplarClient struct{}
 
 // Exemplars :
-func (e *emptyExemplarClient) Exemplars(_ context.Context, _ *exemplarspb.ExemplarsRequest) ([]*exemplarspb.ExemplarData, storage.Warnings, error) {
+func (e *emptyExemplarClient) Exemplars(_ context.Context, _ *exemplarspb.ExemplarsRequest) (
+	[]*exemplarspb.ExemplarData, storage.Warnings, error) {
 	return nil, []error{NotImplementErr}, nil
 }

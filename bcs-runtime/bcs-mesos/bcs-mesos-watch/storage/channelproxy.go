@@ -23,15 +23,15 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-mesos/bcs-mesos-watch/util"
 )
 
-//ChannelProxy Proxy offer particular channel for
-//handling data in private goroutine
+// ChannelProxy Proxy offer particular channel for
+// handling data in private goroutine
 type ChannelProxy struct {
 	clusterID     string
-	dataQueue     chan *types.BcsSyncData //queue for async
-	actionHandler InfoHandler             //data operator interface
+	dataQueue     chan *types.BcsSyncData // queue for async
+	actionHandler InfoHandler             // data operator interface
 }
 
-//Run ChannelProxy running a dataType handler channel, stop Run() By external context
+// Run ChannelProxy running a dataType handler channel, stop Run() By external context
 func (proxy *ChannelProxy) Run(ctx context.Context) {
 	// report handler queue length periodically
 	go proxy.reportHandlerQueueLength(ctx)
@@ -77,7 +77,7 @@ func (proxy *ChannelProxy) Run(ctx context.Context) {
 	}
 }
 
-//Handle for handling data action like Add, Delete, Update
+// Handle for handling data action like Add, Delete, Update
 func (proxy *ChannelProxy) Handle(data *types.BcsSyncData) {
 	if data == nil {
 		blog.Error("ChannelProxy Get nil BcsSyncData")

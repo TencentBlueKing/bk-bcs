@@ -11,6 +11,7 @@
  *
  */
 
+// Package app xxx
 package app
 
 import (
@@ -21,12 +22,12 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-service-prometheus/controller"
 )
 
-//Run the prometheus controller
+// Run the prometheus controller
 func Run(op *options.PrometheusControllerOption) error {
 
 	conf := &config.Config{}
 	setConfig(conf, op)
-	//pid
+	// pid
 	if err := common.SavePid(op.ProcessConfig); err != nil {
 		blog.Error("fail to save pid: err:%s", err.Error())
 	}

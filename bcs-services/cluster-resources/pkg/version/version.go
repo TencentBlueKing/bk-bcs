@@ -12,6 +12,7 @@
  * limitations under the License.
  */
 
+// Package version xxx
 package version
 
 import (
@@ -21,15 +22,20 @@ import (
 )
 
 var (
-	Version   = ""
+	// Version xxx
+	Version = ""
+	// GitCommit xxx
 	GitCommit = ""
+	// BuildTime xxx
 	BuildTime = ""
+	// GoVersion xxx
 	GoVersion = runtime.Version()
 )
 
 // GetVersion 获取版本信息
 func GetVersion() string {
-	return fmt.Sprintf("\nVersion  : %s\nGitCommit: %s\nBuildTime: %s\nGoVersion: %s\n", Version, GitCommit, BuildTime, GoVersion) // nolint:lll
+	return fmt.Sprintf("\nVersion  : %s\nGitCommit: %s\nBuildTime: %s\nGoVersion: %s\n", Version, GitCommit, BuildTime,
+		GoVersion) // nolint:lll
 }
 
 // ShowVersionAndExit 打印版本信息并退出

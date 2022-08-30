@@ -11,6 +11,7 @@
  *
  */
 
+// Package cluster xxx
 package cluster
 
 import (
@@ -74,7 +75,8 @@ func CreateCluster(request *restful.Request, response *restful.Response) {
 		if form.TkeClusterID == "" || form.TkeClusterRegion == "" {
 			metrics.ReportRequestAPIMetrics("CreateCluster", request.Request.Method, metrics.ErrStatus, start)
 			blog.Warnf("create tke cluster failed, empty tke clusterid or region")
-			message := fmt.Sprintf("errcode: %d, create tke cluster failed, empty tke clusterid or region", common.BcsErrApiBadRequest)
+			message := fmt.Sprintf("errcode: %d, create tke cluster failed, empty tke clusterid or region",
+				common.BcsErrApiBadRequest)
 			utils.WriteClientError(response, common.BcsErrApiBadRequest, message)
 			return
 		}
@@ -92,7 +94,8 @@ func CreateCluster(request *restful.Request, response *restful.Response) {
 	if clusterInDb != nil {
 		metrics.ReportRequestAPIMetrics("CreateCluster", request.Request.Method, metrics.ErrStatus, start)
 		blog.Warnf("create cluster failed, cluster [%s] already exist", cluster.ID)
-		message := fmt.Sprintf("errcode: %d, create cluster failed, cluster [%s] already exist", common.BcsErrApiBadRequest, cluster.ID)
+		message := fmt.Sprintf("errcode: %d, create cluster failed, cluster [%s] already exist", common.BcsErrApiBadRequest,
+			cluster.ID)
 		utils.WriteClientError(response, common.BcsErrApiBadRequest, message)
 		return
 	}
@@ -101,7 +104,8 @@ func CreateCluster(request *restful.Request, response *restful.Response) {
 	if err != nil {
 		metrics.ReportRequestAPIMetrics("CreateCluster", request.Request.Method, metrics.ErrStatus, start)
 		blog.Errorf("failed to create cluster [%s]: %s", cluster.ID, err.Error())
-		message := fmt.Sprintf("errcode: %d, create cluster [%s] failed, error: %s", common.BcsErrApiInternalDbError, cluster.ID, err.Error())
+		message := fmt.Sprintf("errcode: %d, create cluster [%s] failed, error: %s", common.BcsErrApiInternalDbError,
+			cluster.ID, err.Error())
 		utils.WriteServerError(response, common.BcsErrApiInternalDbError, message)
 		return
 	}

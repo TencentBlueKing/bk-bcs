@@ -45,8 +45,10 @@ const (
 	// DimensionKey key for time dimension
 	DimensionKey = "dimension"
 	// MetricTimeKey key for metric time
-	MetricTimeKey        = "metrics.time"
+	MetricTimeKey = "metrics.time"
+	// PodAutoscalerTypeKey xxx
 	PodAutoscalerTypeKey = "pod_autoscaler_type"
+	// PodAutoscalerNameKey xxx
 	PodAutoscalerNameKey = "pod_autoscaler_name"
 )
 
@@ -84,6 +86,7 @@ func ensureTable(ctx context.Context, public *Public) error {
 	return nil
 }
 
+// ensure xxx
 // EnsureTable ensure object database table and table indexes
 func ensure(ctx context.Context, db drivers.DB, tableName string, indexes []drivers.Index) error {
 	hasTable, err := db.HasTable(ctx, tableName)

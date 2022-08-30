@@ -11,6 +11,7 @@
  *
  */
 
+// Package utils xxx
 package utils
 
 import (
@@ -27,8 +28,10 @@ import (
 )
 
 const (
+	// IpvsPersistFileName xxx
 	IpvsPersistFileName = "ipvsConfig.yaml"
-	RcLocalIpvsFlag     = "IPVS_START_UP"
+	// RcLocalIpvsFlag xxx
+	RcLocalIpvsFlag = "IPVS_START_UP"
 )
 
 // EndPoint wrap IP&Port
@@ -85,6 +88,7 @@ func BuildRealServer(real string) *ipvs.RealServer {
 	return realServer
 }
 
+// WriteToFile xxx
 func WriteToFile(filePath string, content string) error {
 	var file *os.File
 	var err error
@@ -103,6 +107,7 @@ func WriteToFile(filePath string, content string) error {
 	return nil
 }
 
+// SetIpvsStartup xxx
 func SetIpvsStartup(ipvsPersistDir string, toolPath string) error {
 	command := "chmod +x /etc/rc.d/rc.local"
 	cmd := exec.Command("/bin/sh", "-c", command)

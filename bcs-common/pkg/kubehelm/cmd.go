@@ -22,7 +22,7 @@ import (
 	"k8s.io/klog"
 )
 
-//command to use helm struct
+// command to use helm struct
 type cmdHelm struct{}
 
 // NewCmdHelm new cmd helm struct, the object requires helm command-line tool
@@ -30,7 +30,8 @@ func NewCmdHelm() KubeHelm {
 	return &cmdHelm{}
 }
 
-//helm install --name xxxx chart-dir --set k1=v1 --set k2=v2 --kube-apiserver=xxxx --kube-token=xxxxx --kubeconfig kubeconfig
+// InstallChart xxx
+// helm install --name xxxx chart-dir --set k1=v1 --set k2=v2 --kube-apiserver=xxxx --kube-token=xxxxx --kubeconfig kubeconfig
 func (h *cmdHelm) InstallChart(inf InstallFlags, glf GlobalFlags) error {
 	gPara, err := glf.ParseParameters()
 	if err != nil {

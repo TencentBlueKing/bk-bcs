@@ -32,6 +32,7 @@ SOFTWARE.
  *
  */
 
+// Package adapter xxx
 package adapter
 
 import (
@@ -47,8 +48,9 @@ import (
 	"k8s.io/client-go/tools/cache"
 )
 
-//NewClient adapter for create different implemented service client
-func NewClient(serviceRegistry, kubeconfig string, handler cache.ResourceEventHandler, syncPeriod int) (serviceclient.Client, error) {
+// NewClient adapter for create different implemented service client
+func NewClient(serviceRegistry, kubeconfig string, handler cache.ResourceEventHandler,
+	syncPeriod int) (serviceclient.Client, error) {
 	switch serviceRegistry {
 	case serviceclient.ServiceRegistryKubernetes:
 		k8sSvcClient, err := kubesvcclient.NewClient(kubeconfig, handler, (time.Duration(syncPeriod) * time.Second))

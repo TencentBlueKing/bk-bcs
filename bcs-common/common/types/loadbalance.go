@@ -13,7 +13,7 @@
 
 package types
 
-//ServiceLoadBalance loadbalance between multiple service with weight
+// ServiceLoadBalance loadbalance between multiple service with weight
 type ServiceLoadBalance struct {
 	ServiceName string `json:"name"`
 	Protocol    string `json:"protocol"`
@@ -22,10 +22,10 @@ type ServiceLoadBalance struct {
 	Weight      uint   `json:"weight"`
 }
 
-//BcsLoadBalance loadbalance for bcs-api
+// BcsLoadBalance loadbalance for bcs-api
 type BcsLoadBalance struct {
 	TypeMeta `json:",inline"`
-	//AppMeta     `json:",inline"`
+	// AppMeta     `json:",inline"`
 	ObjectMeta  `json:"metadata"`
 	Protocol    string               `json:"protocol"`
 	Port        int                  `json:"port"`

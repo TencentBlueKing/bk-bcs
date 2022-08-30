@@ -25,7 +25,7 @@ import (
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
 )
 
-// GetK8SResTemplate ...
+// GetK8SResTemplate xxx
 func (h *Handler) GetK8SResTemplate(
 	ctx context.Context, req *clusterRes.GetK8SResTemplateReq, resp *clusterRes.CommonResp,
 ) (err error) {

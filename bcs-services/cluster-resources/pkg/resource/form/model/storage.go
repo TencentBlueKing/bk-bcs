@@ -20,7 +20,7 @@ type PV struct {
 	Spec     PVSpec   `structs:"spec"`
 }
 
-// PVSpec ...
+// PVSpec xxx
 type PVSpec struct {
 	Type        string          `structs:"type"`
 	SCName      string          `structs:"scName"`
@@ -35,7 +35,7 @@ type PVC struct {
 	Spec     PVCSpec  `structs:"spec"`
 }
 
-// PVCSpec ...
+// PVCSpec xxx
 type PVCSpec struct {
 	ClaimType   string   `structs:"claimType"`
 	PVName      string   `structs:"pvName"`
@@ -50,7 +50,7 @@ type SC struct {
 	Spec     SCSpec   `structs:"spec"`
 }
 
-// SCSpec ...
+// SCSpec xxx
 type SCSpec struct {
 	SetAsDefault      bool      `structs:"setAsDefault"`
 	Provisioner       string    `structs:"provisioner"`
@@ -60,7 +60,7 @@ type SCSpec struct {
 	MountOpts         []string  `structs:"mountOpts"`
 }
 
-// SCParam ...
+// SCParam xxx
 type SCParam struct {
 	Key   string `structs:"key"`
 	Value string `structs:"value"`

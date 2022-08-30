@@ -15,6 +15,8 @@
 package constant
 
 const (
-	VariableCategorySys    = "sys"
+	// VariableCategorySys TODO
+	VariableCategorySys = "sys"
+	// VariableCategoryCustom TODO
 	VariableCategoryCustom = "custom"
 )

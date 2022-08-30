@@ -15,18 +15,20 @@ package RegisterDiscover
 
 // RegDiscvServer define the register and discover function interface
 type RegDiscvServer interface {
-	// start the register and discover service
+	// Start the register and discover service
 	Start() error
-	// stop the register and discover service
+	// Stop the register and discover service
 	Stop() error
-	// register server info into registe-discover service platform
+	// Register server info into registe-discover service platform
 	Register(key string, data []byte) error
 	// RegisterAndWatch register server info into registe-discover service platform, and watch the info, if not exist, then register again
 	RegisterAndWatch(key string, data []byte) error
-	// discover server from the registe-discover service platform
+	// Discover server from the registe-discover service platform
 	Discover(key string) (<-chan *DiscoverEvent, error)
-	//discover nodes from path
+	// DiscoverNodes TODO
+	// discover nodes from path
 	DiscoverNodes(path string) (*DiscoverEvent, error)
-	//discover nodes from path v2
+	// DiscoverNodesV2 TODO
+	// discover nodes from path v2
 	DiscoverNodesV2(path string) (*DiscoverEvent, error)
 }

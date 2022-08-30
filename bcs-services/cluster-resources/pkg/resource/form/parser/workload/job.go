@@ -22,7 +22,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
 )
 
-// ParseJob ...
+// ParseJob xxx
 func ParseJob(manifest map[string]interface{}) map[string]interface{} {
 	job := model.Job{}
 	common.ParseMetadata(manifest, &job.Metadata)
@@ -32,7 +32,7 @@ func ParseJob(manifest map[string]interface{}) map[string]interface{} {
 	return structs.Map(job)
 }
 
-// ParseJobSpec ...
+// ParseJobSpec xxx
 func ParseJobSpec(manifest map[string]interface{}, spec *model.JobSpec) {
 	ParseJobManage(manifest, &spec.JobManage)
 	tmplSpec, _ := mapx.GetItems(manifest, "spec.template.spec")
@@ -45,7 +45,7 @@ func ParseJobSpec(manifest map[string]interface{}, spec *model.JobSpec) {
 	ParseSpecOther(podSpec, &spec.Other)
 }
 
-// ParseJobManage ...
+// ParseJobManage xxx
 func ParseJobManage(manifest map[string]interface{}, jm *model.JobManage) {
 	jm.Completions = mapx.GetInt64(manifest, "spec.completions")
 	jm.Parallelism = mapx.GetInt64(manifest, "spec.parallelism")

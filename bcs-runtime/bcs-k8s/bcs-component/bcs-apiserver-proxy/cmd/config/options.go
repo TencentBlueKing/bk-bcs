@@ -50,6 +50,7 @@ type ProxyLvs struct {
 	Scheduler      string `json:"lvsScheduler" value:"sh" usage:"one of rr|wrr|lc|wlc|lblc|lblcr|dh|sh|sed|nq"`
 }
 
+// PersistConfig xxx
 type PersistConfig struct {
 	IpvsPersistDir string `json:"ipvsPersistDir" value:"/root/.bcs" usage:"persist ipvs rules"`
 }

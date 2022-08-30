@@ -66,13 +66,13 @@ func GenRetrieveCObjWebAnnos(
 	return NewAnnos(annoFuncs...).ToPbStruct()
 }
 
-// 判断是否需要提供删除保护的 webAnnotations 信息
+// requireDeletionProtectWebAnno 判断是否需要提供删除保护的 webAnnotations 信息
 func requireDeletionProtectWebAnno(kind, format string) bool {
 	return slice.StringInSlice(kind, []string{res.GDeploy, res.HookTmpl, res.GSTS}) &&
 		(format == action.DefaultFormat || format == action.ManifestFormat)
 }
 
-// 生成 GameDeployment/HookTemplate 各行操作权限的 web 注解（目前主要用于删除保护的标识）
+// genResListDeleteProtectAnnoFuncs 生成 GameDeployment/HookTemplate 各行操作权限的 web 注解（目前主要用于删除保护的标识）
 func genResListDeleteProtectAnnoFuncs(ctx context.Context, manifests []interface{}, kind string) []AnnoFunc {
 	annoFuncs := []AnnoFunc{}
 	for _, manifest := range manifests {
@@ -85,7 +85,7 @@ func genResListDeleteProtectAnnoFuncs(ctx context.Context, manifests []interface
 	return annoFuncs
 }
 
-// 生成删除保护相关的 Tips，为空表示允许删除
+// genDeleteProtectTips 生成删除保护相关的 Tips，为空表示允许删除
 func genDeleteProtectTips(ctx context.Context, manifest map[string]interface{}, kind string) string {
 	replicas := mapx.GetInt64(manifest, "spec.replicas")
 	editMode := mapx.Get(manifest, []string{"metadata", "annotations", res.EditModeAnnoKey}, res.EditModeYaml)

@@ -18,8 +18,10 @@ import "time"
 const (
 	// heartbeat:{run_env}
 	webConsoleHeartbeatKey = "bcs::webconsole::heartbeat::%s"
-	Namespace              = "bcs-webconsole"
-	KubectlContainerName   = "kubectl"
+	// Namespace TODO
+	Namespace = "bcs-webconsole"
+	// KubectlContainerName TODO
+	KubectlContainerName = "kubectl"
 	// CleanUserPodInterval pod清理时间间隔
 	CleanUserPodInterval = time.Second * 60
 

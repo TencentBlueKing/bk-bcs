@@ -22,17 +22,26 @@ import (
 )
 
 const (
+	// LaunchTaskgroupType TODO
 	/*schedule taskgroup type*/
-	LaunchTaskgroupType     = "launch"
+	LaunchTaskgroupType = "launch"
+	// RescheduleTaskgroupType TODO
 	RescheduleTaskgroupType = "reschedule"
-	ScaleTaskgroupType      = "scale"
-	UpdateTaskgroupType     = "update"
+	// ScaleTaskgroupType TODO
+	ScaleTaskgroupType = "scale"
+	// UpdateTaskgroupType TODO
+	UpdateTaskgroupType = "update"
 
+	// LaunchApplicationType TODO
 	/*operate application type*/
-	LaunchApplicationType        = "launch"
-	DeleteApplicationType        = "delete"
-	ScaleApplicationType         = "scale"
-	UpdateApplicationType        = "update"
+	LaunchApplicationType = "launch"
+	// DeleteApplicationType TODO
+	DeleteApplicationType = "delete"
+	// ScaleApplicationType TODO
+	ScaleApplicationType = "scale"
+	// UpdateApplicationType TODO
+	UpdateApplicationType = "update"
+	// RollingupdateApplicationType TODO
 	RollingupdateApplicationType = "rollingupdate"
 )
 

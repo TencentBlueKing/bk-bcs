@@ -116,6 +116,7 @@ type managerStore struct {
 	clusterId string
 }
 
+// initKubeCrd xxx
 // init bcs mesos custom resources
 // connect kube-apiserver, and create custom resources definition
 func (s *managerStore) initKubeCrd() error {
@@ -180,6 +181,7 @@ func (s *managerStore) initKubeCrd() error {
 	return nil
 }
 
+// StopStoreMetrics xxx
 func (s *managerStore) StopStoreMetrics() {
 	if s.cancel == nil {
 		return
@@ -189,6 +191,7 @@ func (s *managerStore) StopStoreMetrics() {
 	time.Sleep(time.Second)
 }
 
+// StartStoreObjectMetrics xxx
 // store metrics report prometheus
 func (s *managerStore) StartStoreObjectMetrics() {
 	s.ctx, s.cancel = context.WithCancel(context.Background())
@@ -362,6 +365,7 @@ func float2Float(num float64) float64 {
 	return float_num
 }
 
+// NewEtcdStore xxx
 // etcd store, based on kube-apiserver
 func NewEtcdStore(kubeconfig string, pm *pluginManager.PluginManager, clusterId string) (store.Store, error) {
 	// build kube-apiserver config
@@ -428,6 +432,7 @@ func NewEtcdStore(kubeconfig string, pm *pluginManager.PluginManager, clusterId 
 	return m, nil
 }
 
+// checkNamespace xxx
 // check namespace exist, if not exist, then create it
 func (store *managerStore) checkNamespace(ns string) error {
 	if cacheMgr != nil && cacheMgr.isOK {
@@ -463,6 +468,7 @@ func (store *managerStore) checkNamespace(ns string) error {
 	return nil
 }
 
+// ListRunAs xxx
 // list all namespaces
 func (store *managerStore) ListRunAs() ([]string, error) {
 	client := store.k8sClient.CoreV1().Namespaces()
@@ -479,11 +485,13 @@ func (store *managerStore) ListRunAs() ([]string, error) {
 	return runAses, nil
 }
 
+// ListDeploymentRunAs xxx
 func (store *managerStore) ListDeploymentRunAs() ([]string, error) {
 
 	return store.ListRunAs()
 }
 
+// filterSpecialLabels xxx
 // filter invalid labels
 func (store *managerStore) filterSpecialLabels(oriLabels map[string]string) map[string]string {
 	if oriLabels == nil {
@@ -507,6 +515,7 @@ func (store *managerStore) filterSpecialLabels(oriLabels map[string]string) map[
 	return labels
 }
 
+// ObjectNotLatestErr xxx
 func (store *managerStore) ObjectNotLatestErr(err error) bool {
 	return strings.Contains(err.Error(), ObjectVersionNotLatestError)
 }

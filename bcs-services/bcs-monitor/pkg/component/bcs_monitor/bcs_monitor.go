@@ -25,7 +25,8 @@ import (
 )
 
 // QueryInstant 查询实时数据, 带格式化
-func QueryInstant(ctx context.Context, projectId string, promql string, params map[string]interface{}, t time.Time) (*promclient.Result, error) {
+func QueryInstant(ctx context.Context, projectId string, promql string, params map[string]interface{},
+	t time.Time) (*promclient.Result, error) {
 	var rawQL string
 	if params == nil {
 		rawQL = promql
@@ -38,7 +39,8 @@ func QueryInstant(ctx context.Context, projectId string, promql string, params m
 }
 
 // QueryInstantVector 查询实时数据, 带格式化
-func QueryInstantVector(ctx context.Context, projectId string, promql string, params map[string]interface{}, t time.Time) (model.Vector, []string, error) {
+func QueryInstantVector(ctx context.Context, projectId string, promql string, params map[string]interface{},
+	t time.Time) (model.Vector, []string, error) {
 	var rawQL string
 	if params == nil {
 		rawQL = promql
@@ -51,7 +53,8 @@ func QueryInstantVector(ctx context.Context, projectId string, promql string, pa
 }
 
 // QueryRange 查询历史数据 带格式的查询
-func QueryRange(ctx context.Context, projectId string, promql string, params map[string]interface{}, start time.Time, end time.Time, step time.Duration) (*promclient.Result, error) {
+func QueryRange(ctx context.Context, projectId string, promql string, params map[string]interface{}, start time.Time,
+	end time.Time, step time.Duration) (*promclient.Result, error) {
 	var rawQL string
 	if params == nil {
 		rawQL = promql
@@ -64,7 +67,8 @@ func QueryRange(ctx context.Context, projectId string, promql string, params map
 }
 
 // QueryRangeMatrix 查询历史数据, 包含租户等信息
-func QueryRangeMatrix(ctx context.Context, projectId string, promql string, params map[string]interface{}, start time.Time, end time.Time, step time.Duration) (model.Matrix, []string, error) {
+func QueryRangeMatrix(ctx context.Context, projectId string, promql string, params map[string]interface{},
+	start time.Time, end time.Time, step time.Duration) (model.Matrix, []string, error) {
 	var rawQL string
 	if params == nil {
 		rawQL = promql
@@ -77,7 +81,8 @@ func QueryRangeMatrix(ctx context.Context, projectId string, promql string, para
 }
 
 // QueryValue 查询第一个值 format 格式 %<var>s
-func QueryValue(ctx context.Context, projectId string, promql string, params map[string]interface{}, t time.Time) (string, error) {
+func QueryValue(ctx context.Context, projectId string, promql string, params map[string]interface{},
+	t time.Time) (string, error) {
 	vector, _, err := QueryInstantVector(ctx, projectId, promql, params, t)
 	if err != nil {
 		return "", err
@@ -86,7 +91,8 @@ func QueryValue(ctx context.Context, projectId string, promql string, params map
 }
 
 // QueryMultiValues 查询第一个值 format 格式 %<var>s
-func QueryMultiValues(ctx context.Context, projectId string, promqlMap map[string]string, params map[string]interface{}, t time.Time) (map[string]string, error) {
+func QueryMultiValues(ctx context.Context, projectId string, promqlMap map[string]string, params map[string]interface{},
+	t time.Time) (map[string]string, error) {
 	var (
 		wg  sync.WaitGroup
 		mtx sync.Mutex
@@ -122,7 +128,8 @@ func QueryMultiValues(ctx context.Context, projectId string, promqlMap map[strin
 }
 
 // QueryLabelSet 查询
-func QueryLabelSet(ctx context.Context, projectId string, promql string, params map[string]interface{}, t time.Time) (map[string]string, error) {
+func QueryLabelSet(ctx context.Context, projectId string, promql string, params map[string]interface{},
+	t time.Time) (map[string]string, error) {
 	vector, _, err := QueryInstantVector(ctx, projectId, promql, params, t)
 	if err != nil {
 		return nil, err

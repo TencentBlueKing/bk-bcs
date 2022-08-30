@@ -12,7 +12,7 @@
 
 package cluster
 
-//Node for kubernetes node
+// Node for kubernetes node
 type Node struct {
 	Name   string
 	IP     string

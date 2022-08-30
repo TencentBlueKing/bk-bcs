@@ -11,6 +11,7 @@
  *
  */
 
+// Package regdiscv xxx
 package regdiscv
 
 import (
@@ -35,6 +36,7 @@ import (
 
 var rd *RDiscover
 
+// GetRDiscover xxx
 func GetRDiscover() (*RDiscover, error) {
 	if rd == nil {
 		return nil, fmt.Errorf("RDiscover is't init")
@@ -43,7 +45,7 @@ func GetRDiscover() (*RDiscover, error) {
 	return rd, nil
 }
 
-//RDiscover route register and discover
+// RDiscover route register and discover
 type RDiscover struct {
 	sync.RWMutex
 
@@ -54,14 +56,14 @@ type RDiscover struct {
 	rootCxt context.Context
 	cancel  context.CancelFunc
 
-	servers map[string][]interface{} //key=BCS_MODULE_K8SAPISERVER...; value=[]*types.BcsK8sApiserverInfo...
+	servers map[string][]interface{} // key=BCS_MODULE_K8SAPISERVER...; value=[]*types.BcsK8sApiserverInfo...
 	events  chan *RegisterDiscover.DiscoverEvent
 
 	k8sapiClustersNodes   map[string]struct{}
 	mesosapiClustersNodes map[string]struct{}
 }
 
-//NewRDiscover create a object of RDiscover
+// RunRDiscover create a object of RDiscover
 func RunRDiscover(zkserv string, conf *config.ApiServConfig) error {
 	rd = &RDiscover{
 		rd:   RegisterDiscover.NewRegDiscoverEx(zkserv, 10*time.Second),
@@ -81,7 +83,8 @@ func RunRDiscover(zkserv string, conf *config.ApiServConfig) error {
 	}
 
 	if conf.ClientCert.IsSSL {
-		cliTls, err := ssl.ClientTslConfVerity(conf.ClientCert.CAFile, conf.ClientCert.CertFile, conf.ClientCert.KeyFile, conf.ClientCert.CertPasswd)
+		cliTls, err := ssl.ClientTslConfVerity(conf.ClientCert.CAFile, conf.ClientCert.CertFile, conf.ClientCert.KeyFile,
+			conf.ClientCert.CertPasswd)
 		if err != nil {
 			blog.Errorf("set client tls config error %s", err.Error())
 		} else {
@@ -93,7 +96,8 @@ func RunRDiscover(zkserv string, conf *config.ApiServConfig) error {
 	return rd.start()
 }
 
-//input: types.BCS_MODULE_STORAGE...
+// GetModuleServers xxx
+// input: types.BCS_MODULE_STORAGE...
 func (r *RDiscover) GetModuleServers(moduleName string) (interface{}, error) {
 	r.RLock()
 	defer r.RUnlock()
@@ -107,12 +111,13 @@ func (r *RDiscover) GetModuleServers(moduleName string) (interface{}, error) {
 		return nil, fmt.Errorf("Module %s have no servers endpoints", moduleName)
 	}
 
-	//rand
+	// rand
 	rand.Seed(int64(time.Now().Nanosecond()))
 	serv := servs[rand.Intn(len(servs))]
 	return serv, nil
 }
 
+// GetClientTls xxx
 func (r *RDiscover) GetClientTls() (*tls.Config, error) {
 	if r.cliTls == nil {
 		return nil, fmt.Errorf("client tls is empty")
@@ -121,25 +126,25 @@ func (r *RDiscover) GetClientTls() (*tls.Config, error) {
 	return r.cliTls, nil
 }
 
-//Start the rdiscover
+// start the rdiscover
 func (r *RDiscover) start() error {
-	//create root context
+	// create root context
 	r.rootCxt, r.cancel = context.WithCancel(context.Background())
 
-	//start regdiscover
+	// start regdiscover
 	if err := r.rd.Start(); err != nil {
 		blog.Error("fail to start register and discover serv. err:%s", err.Error())
 		return err
 	}
 
-	//register apiserver
+	// register apiserver
 	err := r.registerAPI()
 	if err != nil {
 		blog.Errorf("register apiserver error %s", err.Error())
 		return err
 	}
 
-	//discover other bcs service
+	// discover other bcs service
 	for k := range r.servers {
 		go r.discoverServices(k)
 	}
@@ -168,7 +173,7 @@ func (r *RDiscover) discoverServices(k string) {
 			}
 
 			switch path.Base(eve.Key) {
-			//storage
+			// storage
 			case types.BCS_MODULE_STORAGE:
 				r.discoverStorageServ(eve.Server)
 			// mesos apiserver
@@ -180,10 +185,10 @@ func (r *RDiscover) discoverServices(k string) {
 			// metric service
 			case types.BCS_MODULE_METRICSERVICE:
 				r.discoverMetricServer(eve.Server)
-			//k8s apiserver
+			// k8s apiserver
 			case types.BCS_MODULE_K8SAPISERVER:
 				r.discoverK8sApiserver(eve.Nodes)
-			//cluster keeper
+			// cluster keeper
 			case types.BCS_MODULE_CLUSTERKEEPER:
 				r.discoverClusterkeeper(eve.Server)
 			// network detection
@@ -198,7 +203,7 @@ func (r *RDiscover) discoverServices(k string) {
 	}
 }
 
-//Stop the rdiscover
+// stop the rdiscover
 func (r *RDiscover) stop() error {
 	r.cancel()
 

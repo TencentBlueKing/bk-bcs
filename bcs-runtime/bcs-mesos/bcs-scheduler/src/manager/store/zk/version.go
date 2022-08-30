@@ -148,7 +148,8 @@ func (store *managerStore) GetVersion(runAs, appId string) (*types.Version, erro
 
 		newestVersion, err := store.FetchVersion(runAs, appId, versions[len(versions)-1])
 		if err != nil {
-			blog.Error("fail to fetch version by runAs(%s), appId(%s), versionNo(%s). err:%s", runAs, appId, versions[len(versions)-1], err.Error())
+			blog.Error("fail to fetch version by runAs(%s), appId(%s), versionNo(%s). err:%s", runAs, appId,
+				versions[len(versions)-1], err.Error())
 			return nil, err
 		}
 		return newestVersion, nil

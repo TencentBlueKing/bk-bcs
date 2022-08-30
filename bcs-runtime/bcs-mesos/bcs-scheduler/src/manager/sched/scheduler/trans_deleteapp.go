@@ -40,6 +40,7 @@ func (s *Scheduler) RunDeleteApplication(transaction *types.Transaction) bool {
 	return true
 }
 
+// doDeleteAppTrans xxx
 // the return value indicates whether the transaction need to continue
 func (s *Scheduler) doDeleteAppTrans(trans *types.Transaction) bool {
 	appID := trans.ObjectName

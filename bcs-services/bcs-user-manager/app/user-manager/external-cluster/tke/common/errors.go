@@ -15,7 +15,7 @@ package common
 
 const (
 	// NoErr flag
-	NoErr         = 0
+	NoErr = 0
 	// NoErrCodeDesc description
 	NoErrCodeDesc = "Success"
 )
@@ -27,6 +27,7 @@ type LegacyAPIError struct {
 	CodeDesc string `json:"codeDesc"`
 }
 
+// Error 用于错误处理
 func (lae LegacyAPIError) Error() string {
 	return lae.Message
 }
@@ -43,6 +44,7 @@ type apiErrorResponse struct {
 	Message string `json:"Message"`
 }
 
+// Error 用于错误处理
 func (vae VersionAPIError) Error() string {
 	return vae.Response.Error.Message
 }
@@ -52,6 +54,7 @@ type ClientError struct {
 	Message string
 }
 
+// Error 用于错误处理
 func (ce ClientError) Error() string {
 	return ce.Message
 }

@@ -24,8 +24,8 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/template"
 )
 
-//* here are common tasks that for backgroup running
-//* backgroup task running depends on machinery framework
+// * here are common tasks that for backgroup running
+// * backgroup task running depends on machinery framework
 
 // RunBKsopsJob running bksops job and wait for results
 func RunBKsopsJob(taskID string, stepName string) error {
@@ -147,7 +147,8 @@ func RunBKsopsJob(taskID string, stepName string) error {
 		select {
 		case <-ctx.Done():
 			blog.Errorf("RunBKsopsJob[%s] GetTaskStatus task[%s] step[%s] failed; %v", taskID, taskID, stepName, ctx.Err())
-			retErr := fmt.Errorf("GetTaskStatus %s %s err: %s, url: %s", startTaskReq.TaskID, "timeOut", ctx.Err(), taskRes.Data.TaskURL)
+			retErr := fmt.Errorf("GetTaskStatus %s %s err: %s, url: %s", startTaskReq.TaskID, "timeOut", ctx.Err(),
+				taskRes.Data.TaskURL)
 			_ = state.UpdateStepFailure(start, stepName, retErr)
 			return nil
 		case <-ticker.C:
@@ -165,9 +166,11 @@ func RunBKsopsJob(taskID string, stepName string) error {
 			_ = state.UpdateStepSucc(start, stepName)
 			break
 		}
-		if data.Data.State == FAILED.String() || data.Data.State == REVOKED.String() || data.Data.State == SUSPENDED.String() {
+		if data.Data.State == FAILED.String() || data.Data.State == REVOKED.String() ||
+			data.Data.State == SUSPENDED.String() {
 			blog.Errorf("RunBKsopsJob[%s] GetTaskStatus task[%s] step[%s] failed: %v", taskID, taskID, stepName, err)
-			retErr := fmt.Errorf("GetTaskStatus %s %s err: %v, url: %s", startTaskReq.TaskID, data.Data.State, err, taskRes.Data.TaskURL)
+			retErr := fmt.Errorf("GetTaskStatus %s %s err: %v, url: %s", startTaskReq.TaskID, data.Data.State, err,
+				taskRes.Data.TaskURL)
 			_ = state.UpdateStepFailure(start, stepName, retErr)
 			return retErr
 		}

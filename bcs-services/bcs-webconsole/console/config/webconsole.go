@@ -23,7 +23,9 @@ import (
 )
 
 const (
+	// InternalMode xxx
 	InternalMode = "internal" // 用户自己集群 inCluster 模式
+	// ExternalMode xxx
 	ExternalMode = "external" // 平台集群, 外部模式, 需要设置 AdminClusterId
 )
 
@@ -43,12 +45,12 @@ type Version struct {
 	MajorVer *version.Version
 }
 
-// String
+// String xxx
 func (v *Version) String() string {
 	return fmt.Sprintf("%s<%s>", v.Tag, v.MajorVer.String())
 }
 
-// Init
+// Init xxx
 func (c *WebConsoleConf) Init() error {
 	// only for development
 	c.KubectldImage = ""

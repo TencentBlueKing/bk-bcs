@@ -24,17 +24,20 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cc-agent/config"
 )
 
+// PropertyFilter xxx
 type PropertyFilter struct {
 	Condition string `json:"condition"`
 	Rules     []Rule `json:"rules"`
 }
 
+// Rule xxx
 type Rule struct {
 	Field    string `json:"field"`
 	Operator string `json:"operator"`
 	Value    string `json:"value"`
 }
 
+// APIResponse xxx
 type APIResponse struct {
 	Result  bool     `json:"result"`
 	Code    int      `json:"code"`
@@ -42,11 +45,13 @@ type APIResponse struct {
 	Message string   `json:"message"`
 }
 
+// RespData xxx
 type RespData struct {
 	Count int          `json:"count"`
 	Info  []Properties `json:"info"`
 }
 
+// Properties xxx
 type Properties struct {
 	HostInnerIP string `json:"bk_host_innerip"`
 	IdcId       int    `json:"idc_id"`
@@ -112,7 +117,8 @@ func getInfoFromBkCmdb(config *config.BcsCcAgentConfig, hostIp string) (*Propert
 		return nil, fmt.Errorf("non-Json response: %s", err.Error())
 	}
 	if !result.Result {
-		return nil, fmt.Errorf("failed to get host info from bk-cmdb, response code: %d, response message: %s", result.Code, result.Message)
+		return nil, fmt.Errorf("failed to get host info from bk-cmdb, response code: %d, response message: %s", result.Code,
+			result.Message)
 	}
 
 	if result.Data.Count != 1 {

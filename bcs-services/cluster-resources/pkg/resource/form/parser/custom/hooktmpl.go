@@ -26,7 +26,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/stringx"
 )
 
-// ParseHookTmpl ...
+// ParseHookTmpl xxx
 func ParseHookTmpl(manifest map[string]interface{}) map[string]interface{} {
 	tmpl := model.HookTmpl{}
 	common.ParseMetadata(manifest, &tmpl.Metadata)
@@ -34,7 +34,7 @@ func ParseHookTmpl(manifest map[string]interface{}) map[string]interface{} {
 	return structs.Map(tmpl)
 }
 
-// ParseHookTmplSpec ...
+// ParseHookTmplSpec xxx
 func ParseHookTmplSpec(manifest map[string]interface{}, spec *model.HookTmplSpec) {
 	for _, arg := range mapx.GetList(manifest, "spec.args") {
 		a := arg.(map[string]interface{})

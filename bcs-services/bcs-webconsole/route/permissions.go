@@ -68,7 +68,7 @@ func PermissionRequired() gin.HandlerFunc {
 	}
 }
 
-// ValidateProjectCluster
+// ValidateProjectCluster xxx
 func ValidateProjectCluster(c *gin.Context, authCtx *AuthContext) error {
 	projectId := GetProjectIdOrCode(c)
 	if projectId == "" {
@@ -102,10 +102,11 @@ func ValidateProjectCluster(c *gin.Context, authCtx *AuthContext) error {
 	return nil
 }
 
-// initContextWithDevEnv Dev环境, 可以设置环境变量
+// initContextWithIAMProject Dev环境, 可以设置环境变量
 func initContextWithIAMProject(c *gin.Context, authCtx *AuthContext) error {
 	namespace := GetNamespace(c)
-	allow, err := iam.IsAllowedWithResource(c.Request.Context(), authCtx.ProjectId, authCtx.ClusterId, namespace, authCtx.Username)
+	allow, err := iam.IsAllowedWithResource(c.Request.Context(), authCtx.ProjectId, authCtx.ClusterId, namespace,
+		authCtx.Username)
 	if err != nil {
 		return err
 	}
@@ -116,7 +117,7 @@ func initContextWithIAMProject(c *gin.Context, authCtx *AuthContext) error {
 	return nil
 }
 
-// CredentialRequired
+// CredentialRequired xxx
 func CredentialRequired() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if c.Request.Method == http.MethodOptions {

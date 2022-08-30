@@ -20,7 +20,7 @@ import (
 	conf "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/config"
 )
 
-// ActionResourcesRequest ...
+// ActionResourcesRequest xxx
 type ActionResourcesRequest struct {
 	ActionID    string
 	ResType     string
@@ -28,7 +28,7 @@ type ActionResourcesRequest struct {
 	ParentChain []IAMRes
 }
 
-// ToAction ...
+// ToAction xxx
 func (r *ActionResourcesRequest) ToAction() bkiam.ApplicationAction {
 	parentChainNodes := r.getParentChainNodes()
 	instances := []bkiam.ApplicationResourceInstance{}

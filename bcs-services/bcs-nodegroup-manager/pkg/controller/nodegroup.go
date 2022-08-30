@@ -43,11 +43,11 @@ type control struct {
 
 // Init NodeGroupController init implementation
 func (c *control) Init(opts ...Option) error {
-	//init all custom Option
+	// init all custom Option
 	for _, opt := range opts {
 		opt(c.opt)
 	}
-	//init all dependent resource, such as storage, client and etc.
+	// init all dependent resource, such as storage, client and etc.
 
 	if c.opt.ResourceManager == nil {
 		blog.Errorf("Controller lost resource-manager interface in Init Stage")
@@ -71,7 +71,7 @@ func (c *control) Run(cxt context.Context) {
 	for {
 		select {
 		case now := <-tick.C:
-			//main loops
+			// main loops
 			blog.Infof("##############ticker: %s################", now.Format(time.RFC3339))
 			c.controllerLoops()
 		case <-cxt.Done():
@@ -168,7 +168,7 @@ func (c *control) handleStrategy(strategy *storage.NodeGroupMgrStrategy) {
 		if len(allActions) == 0 {
 			// no operation before, handle it simply
 			if err := c.handleElasticNodeGroupScaleDown(strategy, scaleDownNum); err != nil {
-				//local storage error, controller try the best effort to update Mgr Strategy Status
+				// local storage error, controller try the best effort to update Mgr Strategy Status
 				blog.Errorf("Controller scaleDown %d resources for resourcePool %s failed: %s. "+
 					"wait next tick(best effort to storage)",
 					scaleDownNum, strategy.ResourcePool, err.Error())
@@ -182,7 +182,7 @@ func (c *control) handleStrategy(strategy *storage.NodeGroupMgrStrategy) {
 				strategy.Name, strategy.ResourcePool, msg)
 			return
 		}
-		//tracing scaleDown actions
+		// tracing scaleDown actions
 		if err := c.tracingScaleDownAction(strategy, scaleDownNum, allActions); err != nil {
 			blog.Errorf("Controller tracks scaledDown actions under strategy %s failed, "+
 				"wait next tick(best effort to storage)", strategy.Name)
@@ -213,7 +213,7 @@ func (c *control) handleStrategy(strategy *storage.NodeGroupMgrStrategy) {
 				strategy.Name, strategy.ResourcePool, msg)
 			return
 		}
-		//tracing scaleUp actions
+		// tracing scaleUp actions
 		if err := c.tracingScaleUpAction(strategy, scaleUpNum, allActions); err != nil {
 			blog.Errorf("Controller tracks scaleUp actions under strategy %s failed, "+
 				"wait next tick(best effort to storage)", strategy.Name)
@@ -263,7 +263,7 @@ func (c *control) handleStrategy(strategy *storage.NodeGroupMgrStrategy) {
 // tracingScaleDownAction track exist nodegroup scaledown action
 func (c *control) tracingScaleDownAction(strategy *storage.NodeGroupMgrStrategy,
 	scaleDownNum int, actions []*storage.NodeGroupAction) error {
-	//check exist nodegroup action is suitable for tracing
+	// check exist nodegroup action is suitable for tracing
 	trackedActions := make(map[string]*storage.NodeGroupAction)
 	for _, action := range actions {
 		clean, err := c.cleanUnexpectedNodeGroupActions(action, storage.ScaleDownState)
@@ -368,7 +368,7 @@ func (c *control) tracingScaleDownAction(strategy *storage.NodeGroupMgrStrategy,
 // tracingScaleUpAction track
 func (c *control) tracingScaleUpAction(strategy *storage.NodeGroupMgrStrategy,
 	scaleUpNum int, actions []*storage.NodeGroupAction) error {
-	//check exist nodegroup action is suitable for tracing
+	// check exist nodegroup action is suitable for tracing
 	trackedActions := make(map[string]*storage.NodeGroupAction)
 	for _, action := range actions {
 		clean, err := c.cleanUnexpectedNodeGroupActions(action, storage.ScaleUpState)
@@ -467,7 +467,7 @@ func (c *control) tracingScaleUpAction(strategy *storage.NodeGroupMgrStrategy,
 	return nil
 }
 
-// cleanUnexpectedNodeGroupActions清理掉操作方向不一致的记录.
+// cleanUnexpectedNodeGroupActions 清理掉操作方向不一致的记录.
 // return:
 //   bool, true if nodegroupAction was delete， otherwise false
 //   error, if any error happened
@@ -475,7 +475,7 @@ func (c *control) cleanUnexpectedNodeGroupActions(action *storage.NodeGroupActio
 	if action.Event != expectedState {
 		blog.Infof("exist %s/%s nodegroup action is not %s, clean outdated action. details: %+v",
 			action.ClusterID, action.NodeGroupID, expectedState, action)
-		//clean nodegroup action
+		// clean nodegroup action
 		if _, err := c.opt.Storage.DeleteNodeGroupAction(action, &storage.DeleteOptions{}); err != nil {
 			blog.Errorf("controller cleans outdated nodegroupAction %s/%s failed, event %s, %s",
 				action.ClusterID, action.NodeGroupID, action.Event, err.Error())
@@ -490,7 +490,7 @@ func (c *control) cleanUnexpectedNodeGroupActions(action *storage.NodeGroupActio
 // !pay more attention: NodeGroup information in storage are only created after
 // !cluster-autoscaler making webhook requests.
 func (c *control) listElasticNodeGroups(elasticGroups []*storage.GroupInfo) (map[string]*storage.NodeGroup, error) {
-	//try to get elastic nodeGroups information
+	// try to get elastic nodeGroups information
 	nodeGroups := make(map[string]*storage.NodeGroup)
 	for _, info := range elasticGroups {
 		nodegroup, err := c.opt.Storage.GetNodeGroup(info.NodeGroupID, &storage.GetOptions{})
@@ -638,12 +638,12 @@ func isElasticNodeGroupEssentialForScaleDown(strategy *storage.NodeGroupMgrStrat
 	blog.Infof("strategy %s, resourcePool:%s: total:%d, idleNum:%d, warnBuffer:%d, reservedNum:%d",
 		strategy.Name, pool.ID, int(total), idleNum, int(warnBuffer), reservedNum)
 	if idleNum >= reservedNum {
-		//resource is enough, do nothing
+		// resource is enough, do nothing
 		blog.Infof("ResourcePool %s resource is idle %d >= reserved %d, elasticNodeGroup don't scaleDown",
 			pool.ID, idleNum, reservedNum)
 		return 0, false
 	}
-	//buffer resource is not enough, calculate necessary number for scale down
+	// buffer resource is not enough, calculate necessary number for scale down
 	scaleDownNum := reservedNum - idleNum
 	blog.Infof("strategy:%s, scaleDownNum:%d", strategy.Name, scaleDownNum)
 	return scaleDownNum, true
@@ -659,7 +659,7 @@ func isResourcePoolIdleForScaleUp(strategy *storage.NodeGroupMgrStrategy, pool *
 	blog.Infof("strategy %s, resourcePool:%s: total:%d, idleNum:%d, warnBuffer:%d, reservedNum:%d",
 		strategy.Name, pool.ID, int(total), idleNum, int(warnBuffer), reservedNum)
 	if idleNum <= reservedNum {
-		//resource is not idle enough
+		// resource is not idle enough
 		blog.Infof("ResourcePool %s idle resource %d <= reserved %d, elasticNodeGroup don't scaleUp",
 			pool.ID, idleNum, reservedNum)
 		return 0, false
@@ -740,7 +740,7 @@ func upComingElasticResources(actions map[string]*storage.NodeGroupAction,
 					action.NodeGroupID, action.Event, action.UpdatedTime.Format(time.RFC3339))
 				continue
 			}
-			//realNodes := len(nodeGroup.NodeIPs)
+			// realNodes := len(nodeGroup.NodeIPs)
 			realNodes := nodeGroup.CmDesiredSize
 			if nodeGroup.DesiredSize <= realNodes {
 				blog.Errorf("Nodegroup %s DesiredSize %d <= RealNodes %d, lastStatus maybe ScaleDown, "+
@@ -760,7 +760,7 @@ func upComingElasticResources(actions map[string]*storage.NodeGroupAction,
 					action.NodeGroupID, action.Event, action.UpdatedTime.Format(time.RFC3339))
 				continue
 			}
-			//realNodes := len(nodeGroup.NodeIPs)
+			// realNodes := len(nodeGroup.NodeIPs)
 			realNodes := nodeGroup.CmDesiredSize
 			if nodeGroup.DesiredSize >= realNodes {
 				blog.Errorf("Nodegroup %s DesiredSize %d >= RealNodes %d, lastStatus maybe ScaleUp, "+

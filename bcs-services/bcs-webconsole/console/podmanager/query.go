@@ -47,8 +47,9 @@ func queryByContainerId(ctx context.Context, clusterId, username, containerId st
 	return podCtx, nil
 }
 
-// queryContainerName 通过cluster_id, namespace, podName, containerName 直连容器
-func queryByContainerName(ctx context.Context, clusterId, username, namespace, podName, containerName string) (*types.PodContext, error) {
+// queryByContainerName 通过cluster_id, namespace, podName, containerName 直连容器
+func queryByContainerName(ctx context.Context, clusterId, username, namespace, podName,
+	containerName string) (*types.PodContext, error) {
 	startupMgr, err := NewStartupManager(ctx, clusterId)
 	if err != nil {
 		return nil, err
@@ -72,7 +73,8 @@ func queryByContainerName(ctx context.Context, clusterId, username, namespace, p
 }
 
 // queryByClusterIdExternal 通过clusterId, 使用外部集群的方式访问 kubectl 容器
-func queryByClusterIdExternal(ctx context.Context, clusterId, username, targetClusterId string) (*types.PodContext, error) {
+func queryByClusterIdExternal(ctx context.Context, clusterId, username, targetClusterId string) (*types.PodContext,
+	error) {
 	startupMgr, err := NewStartupManager(ctx, clusterId)
 	if err != nil {
 		return nil, err
@@ -210,7 +212,8 @@ func (q *ConsoleQuery) IsContainerDirectMode() bool {
 }
 
 // QueryAuthPodCtx web鉴权模式
-func QueryAuthPodCtx(ctx context.Context, clusterId, username string, consoleQuery *ConsoleQuery) (*types.PodContext, error) {
+func QueryAuthPodCtx(ctx context.Context, clusterId, username string, consoleQuery *ConsoleQuery) (*types.PodContext,
+	error) {
 	//  直连模式
 	if consoleQuery.Namespace != "" && consoleQuery.PodName != "" && consoleQuery.ContainerName != "" {
 		podCtx, err := queryByContainerName(

@@ -26,16 +26,17 @@ import (
 
 type resourceMetrics struct {
 	sync.RWMutex
-	//hpa controller config
+	// hpa controller config
 	config *config.Config
 
 	// Reflector watches a specified resource and causes all changes to be reflected in the given store
 	store reflector.Reflector
 
-	//hpa autoscaler work queue, key = BcsAutoscaler.GetUuid()
+	// hpa autoscaler work queue, key = BcsAutoscaler.GetUuid()
 	workQueue map[string]*resourcesCollector
 }
 
+// NewResourceMetrics xxx
 func NewResourceMetrics(conf *config.Config, store reflector.Reflector) metrics.MetricsController {
 	resources := &resourceMetrics{
 		config:    conf,
@@ -46,7 +47,8 @@ func NewResourceMetrics(conf *config.Config, store reflector.Reflector) metrics.
 	return resources
 }
 
-//start to collect scaler metrics
+// StartScalerMetrics xxx
+// start to collect scaler metrics
 func (resources *resourceMetrics) StartScalerMetrics(scaler *commtypes.BcsAutoscaler) {
 	resources.Lock()
 	defer resources.Unlock()
@@ -56,13 +58,14 @@ func (resources *resourceMetrics) StartScalerMetrics(scaler *commtypes.BcsAutosc
 		return
 	}
 
-	//start collector scaler target ref resources metrics
+	// start collector scaler target ref resources metrics
 	resources.workQueue[scaler.GetUuid()] = newResourcesCollector(resources, scaler)
 	resources.workQueue[scaler.GetUuid()].start()
 	blog.Infof("start collector scaler %s resources metrics", scaler.GetUuid())
 }
 
-//stop to collect scaler metrics
+// StopScalerMetrics xxx
+// stop to collect scaler metrics
 func (resources *resourceMetrics) StopScalerMetrics(scaler *commtypes.BcsAutoscaler) {
 	resources.Lock()
 	defer resources.Unlock()

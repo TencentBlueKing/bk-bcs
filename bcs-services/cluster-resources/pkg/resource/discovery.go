@@ -59,7 +59,7 @@ type RedisCacheClient struct {
 	cacheValid bool
 }
 
-// RESTClient ...
+// RESTClient xxx
 func (d *RedisCacheClient) RESTClient() rest.Interface {
 	return d.delegate.RESTClient()
 }
@@ -195,7 +195,7 @@ func (d *RedisCacheClient) ServerResourcesForGroupVersion(groupVersion string) (
 	return liveResources, nil
 }
 
-// 根据指定的 Group, Version 获取对应资源信息
+// getResWithGroupVersion 根据指定的 Group, Version 获取对应资源信息
 func (d *RedisCacheClient) getResWithGroupVersion(kind, groupVersion string) (schema.GroupVersionResource, error) {
 	all, err := d.ServerResourcesForGroupVersion(groupVersion)
 	if err != nil {
@@ -204,7 +204,7 @@ func (d *RedisCacheClient) getResWithGroupVersion(kind, groupVersion string) (sc
 	return filterResByKind(kind, d.clusterID, groupVersion, []*metav1.APIResourceList{all})
 }
 
-// 获取指定资源当前集群 Preferred 版本
+// getPreferredResource 获取指定资源当前集群 Preferred 版本
 func (d *RedisCacheClient) getPreferredResource(kind string) (schema.GroupVersionResource, error) {
 	all, err := d.ServerPreferredResources()
 	if err != nil {
@@ -214,7 +214,7 @@ func (d *RedisCacheClient) getPreferredResource(kind string) (schema.GroupVersio
 	return filterResByKind(kind, d.clusterID, "", all)
 }
 
-// 读缓存逻辑
+// readCache 读缓存逻辑
 func (d *RedisCacheClient) readCache(groupVersion string) ([]byte, error) {
 	if !d.Fresh() {
 		return nil, errorx.New(errcode.General, "cache invalidated")
@@ -230,7 +230,7 @@ func (d *RedisCacheClient) readCache(groupVersion string) ([]byte, error) {
 	return ret, err
 }
 
-// 写缓存逻辑
+// writeCache 写缓存逻辑
 func (d *RedisCacheClient) writeCache(groupVersion string, obj runtime.Object) error {
 	key := genCacheKey(d.clusterID, groupVersion)
 
@@ -300,7 +300,7 @@ func NewRedisCacheClient4Conf(ctx context.Context, conf *ClusterConf) (*RedisCac
 	return newRedisCacheClient(ctx, delegate, conf.ClusterID, rdsCache), nil
 }
 
-// 根据 kind 过滤出对应的资源信息
+// filterResByKind 根据 kind 过滤出对应的资源信息
 func filterResByKind(
 	kind, clusterID, groupVersion string, allRes []*metav1.APIResourceList,
 ) (schema.GroupVersionResource, error) {

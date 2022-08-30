@@ -20,7 +20,7 @@ import (
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
-//ControllerRef refference for egress controller
+// ControllerRef refference for egress controller
 type ControllerRef struct {
 	// +kubebuilder:default=bcs-system
 	Namespace string `json:"namespace"`
@@ -30,27 +30,27 @@ type ControllerRef struct {
 
 // HTTP http egress definition
 type HTTP struct {
-	//Name for http management
+	// Name for http management
 	// +kubebuilder:validation:Required
 	Name string `json:"name"`
-	//Host for domain, use for acl
+	// Host for domain, use for acl
 	// +kubebuilder:validation:MinLength=4
 	Host string `json:"host"`
-	//Destination port for remote host
+	// Destination port for remote host
 	// +kubebuilder:default=80
 	DestPort uint `json:"destport"`
 }
 
 // TCP tcp egress definition
 type TCP struct {
-	//name for tcp management
+	// name for tcp management
 	// +kubebuilder:validation:Required
 	Name string `json:"name"`
-	//Domain for destination, domain first
+	// Domain for destination, domain first
 	Domain string `json:"domain"`
-	//iplist(split by comma)
+	// iplist(split by comma)
 	IPs string `json:"ips"`
-	//source & dest port use for tcp network flow control
+	// source & dest port use for tcp network flow control
 	// +kubebuilder:validation:Mininm=1024
 	SourcePort uint `json:"sourceport"`
 	// +kubebuilder:validation:Mininm=1
@@ -63,20 +63,20 @@ type TCP struct {
 
 // BCSEgressSpec defines the desired state of BCSEgress
 type BCSEgressSpec struct {
-	//Controller can be empty, we use egress-controller.bcs-system for default
+	// Controller can be empty, we use egress-controller.bcs-system for default
 	Controller ControllerRef `json:"controller"`
 	HTTPS      []HTTP        `json:"https"`
 	TCPS       []TCP         `json:"tcps"`
 }
 
 const (
-	//EgressStatePending pending state when egress created
+	// EgressStatePending pending state when egress created
 	EgressStatePending = "Pending"
-	//EgressStateError when rule error or controller error
+	// EgressStateError when rule error or controller error
 	EgressStateError = "Error"
-	//EgressStateUnknown unknown when controller lost
+	// EgressStateUnknown unknown when controller lost
 	EgressStateUnknown = "Unknown"
-	//EgressStateSynced all working correct
+	// EgressStateSynced all working correct
 	EgressStateSynced = "Synced"
 )
 
@@ -87,9 +87,9 @@ type BCSEgressStatus struct {
 	State       string `json:"state"`
 	HTTPActives uint   `json:"httpActives"`
 	TCPActives  uint   `json:"tcpActives"`
-	//Reason when some error happened
+	// Reason when some error happened
 	Reason string `json:"reason"`
-	//all egress sync timestamp
+	// all egress sync timestamp
 	SyncedAt metav1.Time `json:"syncedat"`
 }
 

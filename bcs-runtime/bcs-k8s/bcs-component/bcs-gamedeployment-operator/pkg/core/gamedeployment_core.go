@@ -40,15 +40,18 @@ type commonControl struct {
 
 var _ Control = &commonControl{}
 
+// IsInitializing xxx
 func (c *commonControl) IsInitializing() bool {
 	return false
 }
 
+// SetRevisionTemplate xxx
 func (c *commonControl) SetRevisionTemplate(revisionSpec map[string]interface{}, template map[string]interface{}) {
 	revisionSpec["template"] = template
 	template["$patch"] = "replace"
 }
 
+// ApplyRevisionPatch xxx
 func (c *commonControl) ApplyRevisionPatch(patched []byte) (*gdv1alpha1.GameDeployment, error) {
 	restoredDeploy := &gdv1alpha1.GameDeployment{}
 	if err := json.Unmarshal(patched, restoredDeploy); err != nil {
@@ -57,10 +60,12 @@ func (c *commonControl) ApplyRevisionPatch(patched []byte) (*gdv1alpha1.GameDepl
 	return restoredDeploy, nil
 }
 
+// IsReadyToScale xxx
 func (c *commonControl) IsReadyToScale() bool {
 	return true
 }
 
+// NewVersionedPods xxx
 func (c *commonControl) NewVersionedPods(currentGD, updateGD *gdv1alpha1.GameDeployment,
 	currentRevision, updateRevision string,
 	expectedCreations, expectedCurrentCreations int,
@@ -72,7 +77,8 @@ func (c *commonControl) NewVersionedPods(currentGD, updateGD *gdv1alpha1.GameDep
 	} else {
 		newPods = c.newVersionedPods(currentGD, currentRevision, expectedCurrentCreations, &availableIDs, &availableIndex)
 		newPods = append(newPods,
-			c.newVersionedPods(updateGD, updateRevision, expectedCreations-expectedCurrentCreations, &availableIDs, &availableIndex)...)
+			c.newVersionedPods(updateGD, updateRevision, expectedCreations-expectedCurrentCreations, &availableIDs,
+				&availableIndex)...)
 	}
 	return newPods, nil
 }
@@ -111,10 +117,12 @@ func (c *commonControl) newVersionedPods(cs *gdv1alpha1.GameDeployment, revision
 	return newPods
 }
 
+// IsPodUpdatePaused xxx
 func (c *commonControl) IsPodUpdatePaused(pod *v1.Pod) bool {
 	return false
 }
 
+// IsPodUpdateReady xxx
 func (c *commonControl) IsPodUpdateReady(pod *v1.Pod, minReadySeconds int32) bool {
 	if !gdutil.IsRunningAndAvailable(pod, minReadySeconds) {
 		return false
@@ -126,15 +134,17 @@ func (c *commonControl) IsPodUpdateReady(pod *v1.Pod, minReadySeconds int32) boo
 	return true
 }
 
+// GetPodsSortFunc xxx
 func (c *commonControl) GetPodsSortFunc(pods []*v1.Pod, waitUpdateIndexes []int) func(i, j int) bool {
 	// not-ready < ready, unscheduled < scheduled, and pending < running
-	//TODO (by bryanhe) consider some pods maybe crashed or status changed, then the pods order to be PreDeleteHook maybe
+	// TODO (by bryanhe) consider some pods maybe crashed or status changed, then the pods order to be PreDeleteHook maybe
 	// change, maybe we should use a simple alphabetical sort
 	return func(i, j int) bool {
 		return kubecontroller.ActivePods(pods).Less(waitUpdateIndexes[i], waitUpdateIndexes[j])
 	}
 }
 
+// GetUpdateOptions xxx
 func (c *commonControl) GetUpdateOptions() *inplaceupdate.UpdateOptions {
 	opts := &inplaceupdate.UpdateOptions{}
 	if c.Spec.UpdateStrategy.InPlaceUpdateStrategy != nil {
@@ -143,6 +153,7 @@ func (c *commonControl) GetUpdateOptions() *inplaceupdate.UpdateOptions {
 	return opts
 }
 
+// ValidateGameDeploymentUpdate xxx
 func (c *commonControl) ValidateGameDeploymentUpdate(oldGD, newGD *gdv1alpha1.GameDeployment) error {
 	if newGD.Spec.UpdateStrategy.Type != gdv1alpha1.InPlaceGameDeploymentUpdateStrategyType {
 		return nil

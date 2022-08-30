@@ -23,7 +23,7 @@ Network Interface object
 url: https://vpc.api.qcloud.com/v2/index.php
 */
 
-//PrivateIPAddressSet address for New NIC application
+// PrivateIPAddressSet address for New NIC application
 type PrivateIPAddressSet struct {
 	Primary          bool   `url:"primary" json:"primary"`
 	PrivateIPAddress string `url:"privateIpAddress" json:"privateIpAddress"`
@@ -33,10 +33,10 @@ type PrivateIPAddressSet struct {
 	EipId            string `url:"eipId,omitempty" json:"eipId,omitempty"`
 }
 
-//IPSet for ip address list url encoding
+// IPSet for ip address list url encoding
 type IPSet []PrivateIPAddressSet
 
-//EncodeValues interface for url encoding
+// EncodeValues interface for url encoding
 func (ips IPSet) EncodeValues(key string, urlv *url.Values) error {
 	for i, v := range ips {
 		primary := fmt.Sprintf("%s.%d.primary", key, i)
@@ -47,7 +47,7 @@ func (ips IPSet) EncodeValues(key string, urlv *url.Values) error {
 	return nil
 }
 
-//CreateNIC object for qcloud api to create new network interface
+// CreateNIC object for qcloud api to create new network interface
 type CreateNIC struct {
 	APIMeta                        `url:",inline"`
 	EniDescription                 string    `url:"eniDescription,omitempty"`
@@ -59,7 +59,7 @@ type CreateNIC struct {
 	VpcID                          string    `url:"vpcId"`
 }
 
-//AssignPrivateIPAddr assign more ip address to network interface
+// AssignPrivateIPAddr assign more ip address to network interface
 type AssignPrivateIPAddr struct {
 	APIMeta                        `url:",inline"`
 	VpcID                          string `url:"vpcId"`
@@ -67,7 +67,7 @@ type AssignPrivateIPAddr struct {
 	SecondaryPrivateIPAddressCount int    `url:"secondaryPrivateIpAddressCount"`
 }
 
-//ModifyNIC object for modifing via api
+// ModifyNIC object for modifing via api
 type ModifyNIC struct {
 	EniName            string `url:"eniName,omitempty"`
 	EniDescription     string `url:"eniDescription,omitempty"`
@@ -75,7 +75,7 @@ type ModifyNIC struct {
 	VpcID              string `url:"vpcId"`
 }
 
-//DescribeNIC query NIC info in cloud host
+// DescribeNIC query NIC info in cloud host
 type DescribeNIC struct {
 	APIMeta            `url:",inline"`
 	EniDescription     string `url:"eniDescription,omitempty"`
@@ -89,7 +89,7 @@ type DescribeNIC struct {
 	VpcID              string `url:"vpcId,omitempty"`
 }
 
-//NICAttachHost attach one nic to host
+// NICAttachHost attach one nic to host
 type NICAttachHost struct {
 	APIMeta            `url:",inline"`
 	InstanceID         string `url:"instanceId"`
@@ -97,20 +97,20 @@ type NICAttachHost struct {
 	VpcID              string `url:"vpcId"`
 }
 
-//InstanceRef info for host
+// InstanceRef info for host
 type InstanceRef struct {
 	InstanceID string `json:"instanceId"`
 	AttachTime string `json:"attachTime"`
 }
 
-//SecureGroup group
+// SecureGroup group
 type SecureGroup struct {
 	SgID      string `json:"sgId"`
 	SgName    string `json:"sgName"`
 	ProjectID int    `json:"projectId"`
 }
 
-//NIC network interface card
+// NIC network interface card
 type NIC struct {
 	VpcID              string        `json:"vpcId"`
 	VpcName            string        `json:"vpcName,omitempty"`
@@ -126,13 +126,13 @@ type NIC struct {
 	GroupSet           []SecureGroup `json:"groupSet,omitempty"`
 }
 
-//NICResponse response for DescribeNetworkInterface
+// NICResponse response for DescribeNetworkInterface
 type NICResponse struct {
 	Response `json:",inline"`
 	Data     NICList `json:"data"`
 }
 
-//NICList list of nic
+// NICList list of nic
 type NICList struct {
 	TotalCnt int    `json:"totalNum"`
 	Data     []*NIC `json:"data"`

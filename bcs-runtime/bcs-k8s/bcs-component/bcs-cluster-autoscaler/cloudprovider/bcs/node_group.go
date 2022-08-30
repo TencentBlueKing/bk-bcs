@@ -233,7 +233,7 @@ func (group *NodeGroup) DeleteNodes(nodes []*apiv1.Node) error {
 		ips = append(ips, ip)
 	}
 
-	//TODO： max support 100, separates to multi requests
+	// TODO： max support 100, separates to multi requests
 	if len(ips) < maxRecordsReturnedByAPI {
 		klog.Infof("DeleteInstances len(%d)", len(ips))
 		return group.deleteInstances(ips)
@@ -324,7 +324,7 @@ func (group *NodeGroup) GetNodeGroup() (*clustermanager.NodeGroup, error) {
 	return group.client.GetPool(group.nodeGroupID)
 }
 
-// GetGroupNodes returns NodeGroup nodes.
+// getGroupNodes returns NodeGroup nodes.
 func (group *NodeGroup) getGroupNodes() ([]string, error) {
 	nodes, err := group.client.GetNodes(group.nodeGroupID)
 	if err != nil {

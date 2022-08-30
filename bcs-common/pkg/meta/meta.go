@@ -11,6 +11,7 @@
  *
  */
 
+// Package meta xxx
 package meta
 
 import (
@@ -22,13 +23,13 @@ const (
 	NamespaceAll string = ""
 )
 
-//TypeMeta define version & type
+// TypeMeta define version & type
 type TypeMeta struct {
 	APIVersion string `json:"apiVersion,omitempty"`
 	Kind       string `json:"kind,omitempty"`
 }
 
-//ObjectMeta common meta info for all Object
+// ObjectMeta common meta info for all Object
 type ObjectMeta struct {
 	Name              string            `json:"name"`
 	Namespace         string            `json:"namespace,omitempty"`
@@ -38,82 +39,83 @@ type ObjectMeta struct {
 	ClusterName       string            `json:"clusterName,omitempty"`
 }
 
-//GetName get object name
+// GetName get object name
 func (obj *ObjectMeta) GetName() string {
 	return obj.Name
 }
 
-//SetName set object name
+// SetName set object name
 func (obj *ObjectMeta) SetName(name string) {
 	obj.Name = name
 }
 
-//GetNamespace get object namespace
+// GetNamespace get object namespace
 func (obj *ObjectMeta) GetNamespace() string {
 	return obj.Namespace
 }
 
-//SetNamespace set object namespace
+// SetNamespace set object namespace
 func (obj *ObjectMeta) SetNamespace(ns string) {
 	obj.Namespace = ns
 }
 
-//GetCreationTimestamp get create timestamp
+// GetCreationTimestamp get create timestamp
 func (obj *ObjectMeta) GetCreationTimestamp() time.Time {
 	return obj.CreationTimestamp
 }
 
-//SetCreationTimestamp set creat timestamp
+// SetCreationTimestamp set creat timestamp
 func (obj *ObjectMeta) SetCreationTimestamp(timestamp time.Time) {
 	obj.CreationTimestamp = timestamp
 }
 
-//GetLabels get object labels
+// GetLabels get object labels
 func (obj *ObjectMeta) GetLabels() map[string]string {
 	return obj.Labels
 }
 
-//SetLabels set objec labels
+// SetLabels set objec labels
 func (obj *ObjectMeta) SetLabels(labels map[string]string) {
 	obj.Labels = labels
 }
 
-//GetAnnotations get object annotation
+// GetAnnotations get object annotation
 func (obj *ObjectMeta) GetAnnotations() map[string]string {
 	return obj.Annotations
 }
 
-//SetAnnotations get annotation name
+// SetAnnotations get annotation name
 func (obj *ObjectMeta) SetAnnotations(annotation map[string]string) {
 	obj.Annotations = annotation
 }
 
-//GetClusterName get cluster name
+// GetClusterName get cluster name
 func (obj *ObjectMeta) GetClusterName() string {
 	return obj.ClusterName
 }
 
-//SetClusterName set cluster name
+// SetClusterName set cluster name
 func (obj *ObjectMeta) SetClusterName(clusterName string) {
 	obj.ClusterName = clusterName
 }
 
-//Objects define list for object
+// Objects define list for object
 type Objects struct {
 	ObjectMeta `json:"meta"`
 	Items      []Object `json:"items"`
 }
 
-//GetItems implements List interface
+// GetItems implements List interface
 func (objs *Objects) GetItems() []Object {
 	return objs.Items
 }
 
-//SetItems implements List interface
+// SetItems implements List interface
 func (objs *Objects) SetItems(list []Object) {
 	objs.Items = list
 }
 
+// Accessor xxx
 func Accessor(obj interface{}) (Object, error) {
 	switch t := obj.(type) {
 	case Object:

@@ -61,17 +61,17 @@ const (
 	DefaultDockerCPUPeriod = 100000
 )
 
-//DockerContainer implement container interface
-//to handle all operator with docker command line.
+// DockerContainer implement container interface
+// to handle all operator with docker command line.
 type DockerContainer struct {
-	user     string               //login docker user name
-	passwd   string               //login docker user password
-	client   *dockerclient.Client //docker operator client
-	endpoint string               //docker daemon endpoint for client
+	user     string               // login docker user name
+	passwd   string               // login docker user password
+	client   *dockerclient.Client // docker operator client
+	endpoint string               // docker daemon endpoint for client
 }
 
-//NewDockerContainer create DockerContainer manager tool
-//endpoint can be http, https, tcp, or unix domain sock
+// NewDockerContainer create DockerContainer manager tool
+// endpoint can be http, https, tcp, or unix domain sock
 func NewDockerContainer(endpoint, user, passwd string) Container {
 	client, err := dockerclient.NewClient(endpoint)
 	if err != nil {
@@ -84,13 +84,13 @@ func NewDockerContainer(endpoint, user, passwd string) Container {
 		client:   client,
 		endpoint: endpoint,
 	}
-	//check connection for remote docker daemon
+	// check connection for remote docker daemon
 	return container
 }
 
-//RunCommand running command in Container
+// RunCommand running command in Container
 func (docker *DockerContainer) RunCommand(containerID string, command []string) error {
-	//create exec with command
+	// create exec with command
 	createOpt := dockerclient.CreateExecOptions{
 		AttachStdin:  true,
 		AttachStdout: true,
@@ -106,7 +106,7 @@ func (docker *DockerContainer) RunCommand(containerID string, command []string) 
 		fmt.Fprintf(os.Stderr, "Create docker exec failed: %s", err.Error())
 		return err
 	}
-	//start exec
+	// start exec
 	startOpt := dockerclient.StartExecOptions{
 		Detach: true,
 		Tty:    true,
@@ -119,13 +119,14 @@ func (docker *DockerContainer) RunCommand(containerID string, command []string) 
 }
 
 // RunCommandV2 v2 version run command
-func (docker *DockerContainer) RunCommandV2(ops *schedTypes.RequestCommandTask) (*schedTypes.ResponseCommandTask, error) {
+func (docker *DockerContainer) RunCommandV2(ops *schedTypes.RequestCommandTask) (*schedTypes.ResponseCommandTask,
+	error) {
 	if ops.User == "" {
 		ops.User = "root"
 	}
 	by, _ := json.Marshal(ops)
 	logs.Infof("docker run command %s", string(by))
-	//create exec with command
+	// create exec with command
 	createOpt := dockerclient.CreateExecOptions{
 		AttachStdin:  true,
 		AttachStdout: true,
@@ -150,7 +151,7 @@ func (docker *DockerContainer) RunCommandV2(ops *schedTypes.RequestCommandTask) 
 		resp.Message = err.Error()
 		return resp, nil
 	}
-	//start exec
+	// start exec
 	var outBuf bytes.Buffer
 	var errBuf bytes.Buffer
 	startOpt := dockerclient.StartExecOptions{
@@ -195,9 +196,9 @@ func (docker *DockerContainer) RunCommandV2(ops *schedTypes.RequestCommandTask) 
 	return resp, nil
 }
 
-//UploadToContainer upload file from host to Container
+// UploadToContainer upload file from host to Container
 func (docker *DockerContainer) UploadToContainer(containerID string, source, dest string) error {
-	//create tarfile by source
+	// create tarfile by source
 	tarFile, err := os.Create(source + ".tar")
 	defer tarFile.Close()
 	if err != nil {
@@ -206,7 +207,7 @@ func (docker *DockerContainer) UploadToContainer(containerID string, source, des
 	}
 	tw := tar.NewWriter(tarFile)
 	defer tw.Close()
-	//get fileinfo from source
+	// get fileinfo from source
 	fileInfo, statErr := os.Stat(source)
 	if statErr != nil {
 		fmt.Fprintf(os.Stderr, "State %s failed.\n", source)
@@ -221,7 +222,7 @@ func (docker *DockerContainer) UploadToContainer(containerID string, source, des
 		fmt.Fprintln(os.Stderr, "Write tar file Header failed!")
 		return err
 	}
-	//open source file
+	// open source file
 	sfile, sErr := os.Open(source)
 	if sErr != nil {
 		fmt.Fprintf(os.Stderr, "Open source %s failed!\n", source)
@@ -238,7 +239,7 @@ func (docker *DockerContainer) UploadToContainer(containerID string, source, des
 		fmt.Fprintf(os.Stderr, "Open tar file for input stream failed\n")
 		return iErr
 	}
-	//upload to Container
+	// upload to Container
 	destPath, absErr := filepath.Abs(filepath.Dir(dest))
 	if absErr != nil {
 		fmt.Fprintf(os.Stderr, "Get dest %s abs Err: %s\n", dest, absErr.Error())
@@ -252,14 +253,15 @@ func (docker *DockerContainer) UploadToContainer(containerID string, source, des
 	return docker.client.UploadToContainer(containerID, uploadOpt)
 }
 
-//ListContainer list all running containner info
+// ListContainer list all running containner info
 func (docker *DockerContainer) ListContainer() {
 
 }
 
-//CreateContainer Start Container with docker client.
-func (docker *DockerContainer) CreateContainer(containerName string, containerTask *BcsContainerTask) (*BcsContainerInfo, error) {
-	//Container Config
+// CreateContainer Start Container with docker client.
+func (docker *DockerContainer) CreateContainer(containerName string, containerTask *BcsContainerTask) (
+	*BcsContainerInfo, error) {
+	// Container Config
 	config := &dockerclient.Config{
 		Hostname:        containerTask.HostName,
 		ExposedPorts:    make(map[dockerclient.Port]struct{}),
@@ -273,7 +275,7 @@ func (docker *DockerContainer) CreateContainer(containerName string, containerTa
 		NetworkDisabled: false,
 		Image:           containerTask.Image,
 	}
-	//HostConfig
+	// HostConfig
 	hostConfig := &dockerclient.HostConfig{
 		CapAdd:          []string{"SYS_PTRACE"},
 		ExtraHosts:      containerTask.Hosts,
@@ -284,7 +286,7 @@ func (docker *DockerContainer) CreateContainer(containerName string, containerTa
 		ShmSize:         containerTask.ShmSize,
 		IpcMode:         containerTask.Ipc,
 	}
-	//setting ulimit from docker parameter
+	// setting ulimit from docker parameter
 	for _, item := range containerTask.Ulimits {
 		value, _ := strconv.Atoi(item.Value)
 		u := dockerclient.ULimit{
@@ -295,16 +297,16 @@ func (docker *DockerContainer) CreateContainer(containerName string, containerTa
 		hostConfig.Ulimits = append(hostConfig.Ulimits, u)
 	}
 
-	//check images
+	// check images
 	imageList, _ := docker.ListImage(containerTask.Image)
-	//ready to pull if user setting pullImageForce
+	// ready to pull if user setting pullImageForce
 	if len(imageList) == 0 || containerTask.ForcePullImage {
 		if pullErr := docker.PullImage(containerTask.Image); pullErr != nil {
 			return nil, pullErr
 		}
 	}
 	fmt.Fprintf(os.Stdout, "CreateContainer %s, hostname: %s\n", containerName, containerTask.HostName)
-	//from BcsContainerTask.Volumes to dockerclient.Config
+	// from BcsContainerTask.Volumes to dockerclient.Config
 	for _, volumn := range containerTask.Volums {
 		mount := dockerclient.Mount{
 			Source:      volumn.HostPath,
@@ -312,34 +314,34 @@ func (docker *DockerContainer) CreateContainer(containerName string, containerTa
 			RW:          !volumn.ReadOnly,
 		}
 		config.Mounts = append(config.Mounts, mount)
-		//done(developerJim): setting HostConfig.Binds
+		// done(developerJim): setting HostConfig.Binds
 		bind := fmt.Sprintf("%s:%s", volumn.HostPath, volumn.ContainerPath)
 		hostConfig.Binds = append(hostConfig.Binds, bind)
 	}
-	//setting network
+	// setting network
 	if containerTask.NetworkName == "bridge" {
 		hostConfig.NetworkMode = "default"
 	} else {
 		hostConfig.NetworkMode = containerTask.NetworkName
 	}
-	//enviroments
+	// enviroments
 	if containerTask.Env != nil {
 		for _, env := range containerTask.Env {
 			item := fmt.Sprintf("%s=%s", env.Key, env.Value)
 			config.Env = append(config.Env, item)
 		}
 	}
-	//setting Cmd in config, if docker image setting entrypoint
-	//empty CommandInfo.Value is acceptable, and arguments will become
-	//entrypoint's arguments
+	// setting Cmd in config, if docker image setting entrypoint
+	// empty CommandInfo.Value is acceptable, and arguments will become
+	// entrypoint's arguments
 	if containerTask.Command != "" {
 		config.Cmd = append(config.Cmd, containerTask.Command)
 	}
 	if containerTask.Args != nil && len(containerTask.Args) > 0 {
 		config.Cmd = append(config.Cmd, containerTask.Args...)
 	}
-	//resource setting
-	//overlay2 do not support storage limitation
+	// resource setting
+	// overlay2 do not support storage limitation
 	// if containerTask.Resource.Disk != 0 {
 	// 	hostConfig.StorageOpt = make(map[string]string)
 	// 	hostConfig.StorageOpt["size"] = strconv.Itoa(int(containerTask.Resource.Disk)) + "M"
@@ -363,7 +365,7 @@ func (docker *DockerContainer) CreateContainer(containerName string, containerTa
 		hostConfig.MemorySwap = int64(containerTask.LimitResource.Mem * 1024 * 1024)
 	}
 
-	//done(developerJim): setting portMapping
+	// done(developerJim): setting portMapping
 	for key, value := range containerTask.PortBindings {
 		var tmp struct{}
 		config.ExposedPorts[dockerclient.Port(key)] = tmp
@@ -374,18 +376,19 @@ func (docker *DockerContainer) CreateContainer(containerName string, containerTa
 		list = append(list, bind)
 		hostConfig.PortBindings[dockerclient.Port(key)] = list
 	}
-	//setting lables
+	// setting lables
 	for _, kv := range containerTask.Labels {
 		config.Labels[kv.Key] = kv.Value
 	}
-	//CreateContainer
+	// CreateContainer
 	option := dockerclient.CreateContainerOptions{
 		Name:       containerName,
 		Config:     config,
 		HostConfig: hostConfig,
 	}
 
-	if containerTask.NetworkName != "none" && containerTask.NetworkName != "bridge" && containerTask.NetworkName != "host" {
+	if containerTask.NetworkName != "none" && containerTask.NetworkName != "bridge" &&
+		containerTask.NetworkName != "host" {
 		if containerTask.NetworkIPAddr != "" {
 			EndpointsConfig := make(map[string]*dockerclient.EndpointConfig, 0)
 			EndpointsConfig[containerTask.NetworkName] = &dockerclient.EndpointConfig{
@@ -417,9 +420,9 @@ func (docker *DockerContainer) CreateContainer(containerName string, containerTa
 	return bcs, nil
 }
 
-//StartContainer starting container with container id return by CreateContainer
+// StartContainer starting container with container id return by CreateContainer
 func (docker *DockerContainer) StartContainer(containerID string) error {
-	//to start container
+	// to start container
 	fmt.Fprintf(os.Stdout, "begin to start container(ID:%s)\n", containerID)
 	err := docker.client.StartContainer(containerID, nil)
 	if err != nil {
@@ -430,7 +433,7 @@ func (docker *DockerContainer) StartContainer(containerID string) error {
 	return nil
 }
 
-//StopContainer with container name. container will be killed when timeout
+// StopContainer with container name. container will be killed when timeout
 func (docker *DockerContainer) StopContainer(containerName string, timeout int) error {
 	duration := time.Duration(timeout + StopContainerGraceTime)
 	ticker := time.Tick(time.Second * duration)
@@ -452,7 +455,7 @@ func (docker *DockerContainer) StopContainer(containerName string, timeout int) 
 	}
 }
 
-//RemoveContainer remove container by name
+// RemoveContainer remove container by name
 func (docker *DockerContainer) RemoveContainer(containerName string, force bool) error {
 	opt := dockerclient.RemoveContainerOptions{
 		ID:    containerName,
@@ -466,7 +469,7 @@ func (docker *DockerContainer) RemoveContainer(containerName string, force bool)
 	return nil
 }
 
-//KillContainer kill container by name with designate signal
+// KillContainer kill container by name with designate signal
 func (docker *DockerContainer) KillContainer(containerName string, signal int) error {
 	option := dockerclient.KillContainerOptions{
 		ID:     containerName,
@@ -475,7 +478,7 @@ func (docker *DockerContainer) KillContainer(containerName string, signal int) e
 	return docker.client.KillContainer(option)
 }
 
-//InspectContainer inspect container by name
+// InspectContainer inspect container by name
 func (docker *DockerContainer) InspectContainer(containerName string) (*BcsContainerInfo, error) {
 	container, err := docker.client.InspectContainer(containerName)
 	if err != nil {
@@ -501,20 +504,20 @@ func (docker *DockerContainer) InspectContainer(containerName string) (*BcsConta
 	bcsContainer.Name = strings.Replace(bcsContainer.Name, "/", "", 1)
 	networkMap := container.NetworkSettings.Networks
 	if networkMap != nil && len(networkMap) > 0 {
-		//ip address is in networkMap
-		//fix: change default to bridge
+		// ip address is in networkMap
+		// fix: change default to bridge
 		if bcsContainer.NetworkMode == "default" {
 			bcsContainer.NetworkMode = "bridge"
 		}
 		if info, ok := networkMap[bcsContainer.NetworkMode]; ok {
 			bcsContainer.IPAddress = info.IPAddress
 		}
-		//Get no IPAddress for this
+		// Get no IPAddress for this
 	}
 	return bcsContainer, nil
 }
 
-//PullImage pull image from hub
+// PullImage pull image from hub
 func (docker *DockerContainer) PullImage(image string) error {
 	repo, tag := dockerclient.ParseRepositoryTag(image)
 	pullOpt := dockerclient.PullImageOptions{
@@ -529,7 +532,7 @@ func (docker *DockerContainer) PullImage(image string) error {
 	return docker.client.PullImage(pullOpt, auth)
 }
 
-//ListImage list all image from local
+// ListImage list all image from local
 func (docker *DockerContainer) ListImage(filter string) ([]*BcsImage, error) {
 	opt := dockerclient.ListImagesOptions{
 		All:    true,

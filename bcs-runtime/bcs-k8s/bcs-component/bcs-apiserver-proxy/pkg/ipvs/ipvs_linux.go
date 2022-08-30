@@ -1,3 +1,4 @@
+//go:build linux
 // +build linux
 
 /*
@@ -82,6 +83,7 @@ func (runner *runner) DeleteVirtualServer(vs *VirtualServer) error {
 	return runner.ipvsHandle.DelService(svc)
 }
 
+// GetVirtualServer xxx
 // IsVirtualServerAvailable is part of ipvs.Interface.
 func (runner *runner) GetVirtualServer(vs *VirtualServer) (*VirtualServer, error) {
 	svc, err := toIPVSService(vs)
@@ -128,7 +130,7 @@ func (runner *runner) Flush() error {
 	return runner.ipvsHandle.Flush()
 }
 
-// CreateRealServer is part of ipvs.Interface.
+// AddRealServer is part of ipvs.Interface.
 func (runner *runner) AddRealServer(vs *VirtualServer, rs *RealServer) error {
 	svc, err := toIPVSService(vs)
 	if err != nil {
@@ -278,7 +280,7 @@ func toIPVSDestination(rs *RealServer) (*libipvs.Destination, error) {
 	}, nil
 }
 
-// stringToProtocolType returns the protocol type for the given name
+// stringToProtocol Type returns the protocol type for the given name
 func stringToProtocol(protocol string) uint16 {
 	switch strings.ToLower(protocol) {
 	case "tcp":
@@ -291,7 +293,7 @@ func stringToProtocol(protocol string) uint16 {
 	return uint16(0)
 }
 
-// protocolTypeToString returns the name for the given protocol.
+// protocolToString returns the name for the given protocol.
 func protocolToString(proto Protocol) string {
 	switch proto {
 	case syscall.IPPROTO_TCP:

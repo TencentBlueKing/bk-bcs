@@ -11,6 +11,7 @@
  *
  */
 
+// Package conf xxx
 package conf
 
 import (
@@ -50,7 +51,7 @@ func (c *Config) InitConfig(path string) {
 		}
 
 		s := strings.TrimSpace(string(b))
-		//fmt.Println(s)
+		// fmt.Println(s)
 		if strings.Index(s, "#") == 0 {
 			continue
 		}

@@ -75,9 +75,12 @@ type Result struct {
 	Data []byte `json:"data"`
 }
 
+// ResultErrorCode xxx
 type ResultErrorCode int
 
 const (
+	// ResultErrorCodeSuccess xxx
 	ResultErrorCodeSuccess ResultErrorCode = iota
+	// ResultErrorCodeFailure xxx
 	ResultErrorCodeFailure
 )

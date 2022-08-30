@@ -25,7 +25,7 @@ import (
 	"github.com/emicklei/go-restful"
 )
 
-//CreateRegisterToken http handler for register specified cluster token
+// CreateRegisterToken http handler for register specified cluster token
 func CreateRegisterToken(request *restful.Request, response *restful.Response) {
 	start := time.Now()
 
@@ -56,8 +56,8 @@ func CreateRegisterToken(request *restful.Request, response *restful.Response) {
 	metrics.ReportRequestAPIMetrics("CreateRegisterToken", request.Request.Method, metrics.SucStatus, start)
 }
 
-//GetRegisterToken http handler for search specified cluster token
-//it's served for bcs-gateway-discovery for cluster service discovery
+// GetRegisterToken http handler for search specified cluster token
+// it's served for bcs-gateway-discovery for cluster service discovery
 func GetRegisterToken(request *restful.Request, response *restful.Response) {
 	start := time.Now()
 

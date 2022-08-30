@@ -33,16 +33,21 @@ import (
 )
 
 const (
-	//BcsApiPrefix k8s driver url prefix
+	// BcsApiPrefix k8s driver url prefix
 	BcsApiPrefix = "/bcsapi/v4/scheduler/k8s/"
 )
 
 func init() {
-	actions.RegisterAction(actions.Action{Verb: "POST", Path: "/bcsapi/v4/scheduler/k8s/{uri:*}", Params: nil, Handler: handlerPostActions})
-	actions.RegisterAction(actions.Action{Verb: "PUT", Path: "/bcsapi/v4/scheduler/k8s/{uri:*}", Params: nil, Handler: handlerPutActions})
-	actions.RegisterAction(actions.Action{Verb: "GET", Path: "/bcsapi/v4/scheduler/k8s/{uri:*}", Params: nil, Handler: handlerGetActions})
-	actions.RegisterAction(actions.Action{Verb: "DELETE", Path: "/bcsapi/v4/scheduler/k8s/{uri:*}", Params: nil, Handler: handlerDeleteActions})
-	actions.RegisterAction(actions.Action{Verb: "PATCH", Path: "/bcsapi/v4/scheduler/k8s/{uri:*}", Params: nil, Handler: handlerPatchActions})
+	actions.RegisterAction(actions.Action{Verb: "POST", Path: "/bcsapi/v4/scheduler/k8s/{uri:*}", Params: nil,
+		Handler: handlerPostActions})
+	actions.RegisterAction(actions.Action{Verb: "PUT", Path: "/bcsapi/v4/scheduler/k8s/{uri:*}", Params: nil,
+		Handler: handlerPutActions})
+	actions.RegisterAction(actions.Action{Verb: "GET", Path: "/bcsapi/v4/scheduler/k8s/{uri:*}", Params: nil,
+		Handler: handlerGetActions})
+	actions.RegisterAction(actions.Action{Verb: "DELETE", Path: "/bcsapi/v4/scheduler/k8s/{uri:*}", Params: nil,
+		Handler: handlerDeleteActions})
+	actions.RegisterAction(actions.Action{Verb: "PATCH", Path: "/bcsapi/v4/scheduler/k8s/{uri:*}", Params: nil,
+		Handler: handlerPatchActions})
 }
 
 func request2k8sapi(req *restful.Request, uri, method string) (string, error) {
@@ -111,7 +116,7 @@ func request2k8sapi(req *restful.Request, uri, method string) (string, error) {
 			return err1.Error(), nil
 		}
 
-		//host := servInfo.Scheme + "://" + servInfo.IP + ":" + strconv.Itoa(int(servInfo.Port))
+		// host := servInfo.Scheme + "://" + servInfo.IP + ":" + strconv.Itoa(int(servInfo.Port))
 		var host string
 		if ser.ExternalIp != "" && ser.ExternalPort != 0 {
 			host = fmt.Sprintf("%s://%s:%d", ser.Scheme, ser.ExternalIp, ser.ExternalPort)
@@ -119,7 +124,7 @@ func request2k8sapi(req *restful.Request, uri, method string) (string, error) {
 			host = fmt.Sprintf("%s://%s:%d", ser.Scheme, ser.IP, ser.Port)
 		}
 
-		//url := routeHost + "/api/v1/" + uri //a.Conf.BcsRoute
+		// url := routeHost + "/api/v1/" + uri //a.Conf.BcsRoute
 		url = fmt.Sprintf("%s/k8sdriver/v4/%s", host, uri)
 		blog.V(3).Infof("do request to url(%s), method(%s)", url, method)
 

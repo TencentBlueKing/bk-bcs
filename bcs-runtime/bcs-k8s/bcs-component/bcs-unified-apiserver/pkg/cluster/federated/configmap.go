@@ -24,14 +24,14 @@ import (
 	"k8s.io/client-go/kubernetes/scheme"
 )
 
-// ConfigMapStor
+// ConfigMapStor xxx
 type ConfigMapStor struct {
 	members      []string
 	masterClient *kubernetes.Clientset
 	k8sClientMap map[string]*kubernetes.Clientset
 }
 
-// NewConfigMapStor
+// NewConfigMapStor xxx
 func NewConfigMapStor(masterClientId string, members []string) (*ConfigMapStor, error) {
 	stor := &ConfigMapStor{members: members, k8sClientMap: make(map[string]*kubernetes.Clientset)}
 	for _, k := range members {
@@ -50,7 +50,8 @@ func NewConfigMapStor(masterClientId string, members []string) (*ConfigMapStor, 
 }
 
 // List 查询 ConfigMap 列表, Json格式返回
-func (s *ConfigMapStor) List(ctx context.Context, namespace string, opts metav1.ListOptions) (*v1.ConfigMapList, error) {
+func (s *ConfigMapStor) List(ctx context.Context, namespace string, opts metav1.ListOptions) (*v1.ConfigMapList,
+	error) {
 	result, err := s.masterClient.CoreV1().ConfigMaps(namespace).List(ctx, opts)
 	if err != nil {
 		return nil, err
@@ -60,7 +61,8 @@ func (s *ConfigMapStor) List(ctx context.Context, namespace string, opts metav1.
 }
 
 // ListAsTable 查询 ConfigMap 列表, kubectl 格式返回
-func (s *ConfigMapStor) ListAsTable(ctx context.Context, namespace string, acceptHeader string, opts metav1.ListOptions) (*metav1.Table, error) {
+func (s *ConfigMapStor) ListAsTable(ctx context.Context, namespace string, acceptHeader string,
+	opts metav1.ListOptions) (*metav1.Table, error) {
 	var timeout time.Duration
 	if opts.TimeoutSeconds != nil {
 		timeout = time.Duration(*opts.TimeoutSeconds) * time.Second
@@ -83,7 +85,8 @@ func (s *ConfigMapStor) ListAsTable(ctx context.Context, namespace string, accep
 }
 
 // Get 获取单个 ConfigMap, Json格式返回
-func (s *ConfigMapStor) Get(ctx context.Context, namespace string, name string, opts metav1.GetOptions) (*v1.ConfigMap, error) {
+func (s *ConfigMapStor) Get(ctx context.Context, namespace string, name string, opts metav1.GetOptions) (*v1.ConfigMap,
+	error) {
 	result, err := s.masterClient.CoreV1().ConfigMaps(namespace).Get(ctx, name, opts)
 	if err != nil {
 		return nil, err
@@ -92,7 +95,8 @@ func (s *ConfigMapStor) Get(ctx context.Context, namespace string, name string, 
 }
 
 // GetAsTable 获取单个 ConfigMap, Table 格式返回
-func (s *ConfigMapStor) GetAsTable(ctx context.Context, namespace string, name string, acceptHeader string, opts metav1.GetOptions) (*metav1.Table, error) {
+func (s *ConfigMapStor) GetAsTable(ctx context.Context, namespace string, name string, acceptHeader string,
+	opts metav1.GetOptions) (*metav1.Table, error) {
 	result := &metav1.Table{}
 	err := s.masterClient.CoreV1().RESTClient().Get().
 		Namespace(namespace).
@@ -110,7 +114,8 @@ func (s *ConfigMapStor) GetAsTable(ctx context.Context, namespace string, name s
 }
 
 // Create 创建 ConfigMap
-func (s *ConfigMapStor) Create(ctx context.Context, namespace string, ConfigMap *v1.ConfigMap, opts metav1.CreateOptions) (*v1.ConfigMap, error) {
+func (s *ConfigMapStor) Create(ctx context.Context, namespace string, ConfigMap *v1.ConfigMap,
+	opts metav1.CreateOptions) (*v1.ConfigMap, error) {
 	result, err := s.masterClient.CoreV1().ConfigMaps(namespace).Create(ctx, ConfigMap, opts)
 	if err != nil {
 		return nil, err
@@ -119,7 +124,8 @@ func (s *ConfigMapStor) Create(ctx context.Context, namespace string, ConfigMap 
 }
 
 // Update 更新 ConfigMap
-func (s *ConfigMapStor) Update(ctx context.Context, namespace string, ConfigMap *v1.ConfigMap, opts metav1.UpdateOptions) (*v1.ConfigMap, error) {
+func (s *ConfigMapStor) Update(ctx context.Context, namespace string, ConfigMap *v1.ConfigMap,
+	opts metav1.UpdateOptions) (*v1.ConfigMap, error) {
 	result, err := s.masterClient.CoreV1().ConfigMaps(namespace).Update(ctx, ConfigMap, opts)
 	if err != nil {
 		return nil, err
@@ -128,7 +134,8 @@ func (s *ConfigMapStor) Update(ctx context.Context, namespace string, ConfigMap 
 }
 
 // Patch Edit/Apply ConfigMap
-func (s *ConfigMapStor) Patch(ctx context.Context, namespace string, name string, pt types.PatchType, data []byte, opts metav1.PatchOptions, subresources ...string) (*v1.ConfigMap, error) {
+func (s *ConfigMapStor) Patch(ctx context.Context, namespace string, name string, pt types.PatchType, data []byte,
+	opts metav1.PatchOptions, subresources ...string) (*v1.ConfigMap, error) {
 	result, err := s.masterClient.CoreV1().ConfigMaps(namespace).Patch(ctx, name, pt, data, opts, subresources...)
 	if err != nil {
 		return nil, err
@@ -137,7 +144,8 @@ func (s *ConfigMapStor) Patch(ctx context.Context, namespace string, name string
 }
 
 // Delete 删除单个 ConfigMap
-func (s *ConfigMapStor) Delete(ctx context.Context, namespace string, name string, opts metav1.DeleteOptions) (*metav1.Status, error) {
+func (s *ConfigMapStor) Delete(ctx context.Context, namespace string, name string,
+	opts metav1.DeleteOptions) (*metav1.Status, error) {
 	result, err := s.masterClient.CoreV1().ConfigMaps(namespace).Get(ctx, name, metav1.GetOptions{})
 	if err != nil {
 		return nil, err

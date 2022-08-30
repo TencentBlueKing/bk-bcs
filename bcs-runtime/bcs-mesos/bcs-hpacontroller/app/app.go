@@ -11,6 +11,7 @@
  *
  */
 
+// Package app xxx
 package app
 
 import (
@@ -25,37 +26,37 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-mesos/bcs-hpacontroller/hpacontroller/scaler"
 )
 
-//Run the health check
+// Run the health check
 func Run(op *options.HpaControllerOption) error {
 
 	setConfig(op)
-	//pid
+	// pid
 	if err := common.SavePid(op.ProcessConfig); err != nil {
 		blog.Error("fail to save pid: err:%s", err.Error())
 	}
 
-	//init store
+	// init store
 	var store reflector.Reflector
 	if op.Conf.ClusterZkAddr != "" {
 		// init zk store
 		store = reflector.NewZkReflector(op.Conf)
 		blog.Infof("init cluster store zk %s success", op.Conf.ClusterZkAddr)
 	} else if op.Conf.KubeConfig != "" {
-		//init etcd store
+		// init etcd store
 		store = reflector.NewEtcdReflector(op.Conf)
 		blog.Infof("init cluster store kubeconfig %s success", op.Conf.KubeConfig)
 	} else {
 		blog.Errorf("cluster zk addresses and kubeconfig not provided, exit")
 		os.Exit(1)
 	}
-	//store := reflector.NewZkReflector(op.Conf)
-	//blog.Infof("init cluster store zk %s success", op.Conf.ClusterZkAddr)
+	// store := reflector.NewZkReflector(op.Conf)
+	// blog.Infof("init cluster store zk %s success", op.Conf.ClusterZkAddr)
 
-	//init bcs mesos driver
+	// init bcs mesos driver
 	scaleController := scaler.NewBcsMesosScalerController(op.Conf)
 	blog.Infof("init cluster mesos driver controller success")
 
-	//init cluster resource metrics
+	// init cluster resource metrics
 	resoucesCollector := resources.NewResourceMetrics(op.Conf, store)
 	blog.Infof("init cluster resouces metrics collector success")
 
@@ -73,7 +74,7 @@ func setConfig(op *options.HpaControllerOption) {
 	op.Conf.BcsZkAddr = op.BCSZk
 	op.Conf.ClusterID = op.ClusterID
 
-	//client cert directoty
+	// client cert directoty
 	if op.CertConfig.ClientCertFile != "" && op.CertConfig.CAFile != "" &&
 		op.CertConfig.ClientKeyFile != "" {
 

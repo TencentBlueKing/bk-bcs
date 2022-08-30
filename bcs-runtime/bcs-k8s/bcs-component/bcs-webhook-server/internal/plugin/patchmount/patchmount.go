@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package patchmount xxx
 package patchmount
 
 import (
@@ -99,6 +100,7 @@ func (p *PatchMount) Handle(review v1beta1.AdmissionReview) *v1beta1.AdmissionRe
 	}
 }
 
+// injectRequired xxx
 // check if pod injection needed
 func (p *PatchMount) injectRequired(pod *corev1.Pod) bool {
 	value := pod.Annotations[pluginAnnotationKey]

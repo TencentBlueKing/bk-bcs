@@ -24,6 +24,7 @@ func getEndpointRootPath() string {
 	return "/" + bcsRootNode + "/" + endpointNode
 }
 
+// SaveEndpoint xxx
 func (store *managerStore) SaveEndpoint(endpoint *commtypes.BcsEndpoint) error {
 
 	data, err := json.Marshal(endpoint)
@@ -36,6 +37,7 @@ func (store *managerStore) SaveEndpoint(endpoint *commtypes.BcsEndpoint) error {
 	return store.Db.Insert(path, string(data))
 }
 
+// FetchEndpoint xxx
 func (store *managerStore) FetchEndpoint(ns, name string) (*commtypes.BcsEndpoint, error) {
 
 	path := getEndpointRootPath() + "/" + ns + "/" + name
@@ -54,6 +56,7 @@ func (store *managerStore) FetchEndpoint(ns, name string) (*commtypes.BcsEndpoin
 	return endpoint, nil
 }
 
+// DeleteEndpoint xxx
 func (store *managerStore) DeleteEndpoint(ns, name string) error {
 
 	path := getEndpointRootPath() + "/" + ns + "/" + name

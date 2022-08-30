@@ -11,6 +11,7 @@
  *
  */
 
+// Package utils xxx
 package utils
 
 import (
@@ -107,7 +108,7 @@ func DeleteBcsAgentToken(cluster *proto.Cluster) error {
 
 	token, err = user.GetUserManagerClient().GetUserToken(cluster.ClusterID)
 	if err != nil {
-		return  err
+		return err
 	}
 
 	if token != "" {
@@ -136,7 +137,7 @@ func DeleteBcsAgentToken(cluster *proto.Cluster) error {
 // DeleteClusterCredentialInfo delete cluster credential info
 func DeleteClusterCredentialInfo(clusterID string) error {
 	err := cloudprovider.GetStorageModel().DeleteClusterCredential(context.Background(), clusterID)
-	if err != nil{
+	if err != nil {
 		blog.Errorf("DeleteClusterCredentialInfo[%s] failed: %v", clusterID, err)
 		return err
 	}

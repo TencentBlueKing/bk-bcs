@@ -48,7 +48,8 @@ func StoreGWCmd() *cobra.Command {
 	}
 
 	flags := cmd.Flags()
-	flags.StringVar(&config.G.StoreGW.HTTP.Address, "http-address", config.G.StoreGW.HTTP.Address, "Listen host:port for HTTP endpoints.")
+	flags.StringVar(&config.G.StoreGW.HTTP.Address, "http-address", config.G.StoreGW.HTTP.Address,
+		"Listen host:port for HTTP endpoints.")
 	flags.StringVar(&config.G.StoreGW.GRPC.Address, "grpc-advertise-ip", "127.0.0.1", "grpc advertise ip")
 	flags.StringVar(&grpcAdvertisePortRangeStr, "grpc-advertise-port-range", "28000-29000", "grpc advertise port range")
 
@@ -61,7 +62,8 @@ func StoreGWCmd() *cobra.Command {
 
 func runStoreGW(ctx context.Context, g *run.Group, opt *option) error {
 	kitLogger := gokit.NewLogger(logger.StandardLogger())
-	gw, err := storegw.NewStoreGW(ctx, kitLogger, opt.reg, config.G.StoreGW.GRPC.Address, grpcAdvertisePortRangeStr, config.G.StoreGWList, storegw.GetStoreSvr)
+	gw, err := storegw.NewStoreGW(ctx, kitLogger, opt.reg, config.G.StoreGW.GRPC.Address, grpcAdvertisePortRangeStr,
+		config.G.StoreGWList, storegw.GetStoreSvr)
 	if err != nil {
 		return err
 	}

@@ -111,7 +111,8 @@ func makeAdminServerContainers(z *bkcmdbv1.Bkcmdb) []v1.Container {
 			ImagePullPolicy: "IfNotPresent",
 			WorkingDir:      "/data/bin/bk-cmdb/cmdb_adminserver/",
 			Command:         []string{"./cmdb_adminserver"},
-			Args:            []string{"--addrport=$(POD_IP):80", "--config=/etc/configures/migrate.conf", "--log-dir", "./logs", "--v", "3", "--enable-auth", "false"},
+			Args: []string{"--addrport=$(POD_IP):80", "--config=/etc/configures/migrate.conf", "--log-dir", "./logs",
+				"--v", "3", "--enable-auth", "false"},
 			LivenessProbe: &v1.Probe{
 				Handler: v1.Handler{
 					HTTPGet: &v1.HTTPGetAction{

@@ -11,6 +11,7 @@
  *
  */
 
+// Package tke xxx
 package tke
 
 import (
@@ -123,7 +124,8 @@ func (t *tkeCluster) SyncClusterCredentials() error {
 		return fmt.Errorf("error when invoking tke api %s: %s", TkeSdkToGetCredentials, err.Error())
 	}
 	if response.Code != 0 {
-		return fmt.Errorf("%s cluster %s failed, codeDesc: %s, message: %s", TkeSdkToGetCredentials, t.TkeClusterID, response.CodeDesc, response.Message)
+		return fmt.Errorf("%s cluster %s failed, codeDesc: %s, message: %s", TkeSdkToGetCredentials, t.TkeClusterID,
+			response.CodeDesc, response.Message)
 	}
 
 	if response.Data.PgwEndpoint == "" || response.Data.Domain == "" {
@@ -132,7 +134,8 @@ func (t *tkeCluster) SyncClusterCredentials() error {
 
 	serverAddress := HTTPScheme + response.Data.PgwEndpoint + TkeClusterPort
 	clusterDomainURL := HTTPScheme + response.Data.Domain + "/"
-	err = sqlstore.SaveCredentials(t.ClusterID, serverAddress, response.Data.CertificationAuthority, response.Data.Password, clusterDomainURL)
+	err = sqlstore.SaveCredentials(t.ClusterID, serverAddress, response.Data.CertificationAuthority,
+		response.Data.Password, clusterDomainURL)
 	if err != nil {
 		return fmt.Errorf("error when updating external cluster credentials to db: %s", err.Error())
 	}

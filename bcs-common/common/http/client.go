@@ -41,7 +41,7 @@ func Request(url, method string, header http.Header, body io.Reader) (string, er
 
 	req.Close = true
 
-	//header
+	// header
 	if header != nil {
 		req.Header = header
 	}

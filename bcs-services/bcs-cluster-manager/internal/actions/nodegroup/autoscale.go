@@ -60,7 +60,7 @@ func (ua *EnableNodeGroupAutoScaleAction) validate() error {
 }
 
 func (ua *EnableNodeGroupAutoScaleAction) getRelativeResource() error {
-	//get relative cluster for information injection
+	// get relative cluster for information injection
 	group, err := ua.model.GetNodeGroup(ua.ctx, ua.req.NodeGroupID)
 	if err != nil {
 		ua.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
@@ -122,7 +122,8 @@ func (ua *EnableNodeGroupAutoScaleAction) enableNodeGroupAutoScale() error {
 	}
 
 	// cloud provider nodeGroup
-	task, err := mgr.SwitchNodeGroupAutoScaling(ua.group, true, &cloudprovider.SwitchNodeGroupAutoScalingOption{CommonOption: *cmOption})
+	task, err := mgr.SwitchNodeGroupAutoScaling(ua.group, true, &cloudprovider.SwitchNodeGroupAutoScalingOption{
+		CommonOption: *cmOption})
 	if err != nil {
 		blog.Errorf("enable nodegroup auto scale in cloudprovider %s/%s for group %s failed, %s",
 			ua.cloud.CloudID, ua.cloud.CloudProvider, ua.group.NodeGroupID, err.Error())
@@ -231,7 +232,7 @@ func (ua *DisableNodeGroupAutoScaleAction) validate() error {
 }
 
 func (ua *DisableNodeGroupAutoScaleAction) getRelativeResource() error {
-	//get relative cluster for information injection
+	// get relative cluster for information injection
 	group, err := ua.model.GetNodeGroup(ua.ctx, ua.req.NodeGroupID)
 	if err != nil {
 		ua.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
@@ -293,7 +294,8 @@ func (ua *DisableNodeGroupAutoScaleAction) disableNodeGroupAutoScale() error {
 	}
 
 	// cloud provider nodeGroup
-	task, err := mgr.SwitchNodeGroupAutoScaling(ua.group, false, &cloudprovider.SwitchNodeGroupAutoScalingOption{CommonOption: *cmOption})
+	task, err := mgr.SwitchNodeGroupAutoScaling(ua.group, false, &cloudprovider.SwitchNodeGroupAutoScalingOption{
+		CommonOption: *cmOption})
 	if err != nil {
 		blog.Errorf("disable nodegroup auto scale in cloudprovider %s/%s for group %s failed, %s",
 			ua.cloud.CloudID, ua.cloud.CloudProvider, ua.group.NodeGroupID, err.Error())

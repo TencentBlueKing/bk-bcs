@@ -11,6 +11,7 @@
  *
  */
 
+// Package utils xxx
 package utils
 
 import (
@@ -205,7 +206,7 @@ func GetRequestHeaderInfo(ctx context.Context) (*RequestHeaderInfo, error) {
 	}, nil
 }
 
-// requestTraceIDFromContext
+// requestTraceIDFromContext xxx
 func requestTraceIDFromContext(ctx context.Context) (string, error) {
 	meta, ok := grpcmeta.FromIncomingContext(ctx)
 	if !ok {
@@ -222,6 +223,7 @@ func requestTraceIDFromContext(ctx context.Context) (string, error) {
 	return requestIDs[0], nil
 }
 
+// getClientIPFromContext xxx
 // GetClientIPFromContext
 func getClientIPFromContext(ctx context.Context) (string, error) {
 	pr, ok := peer.FromContext(ctx)

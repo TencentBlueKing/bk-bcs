@@ -11,6 +11,7 @@
  *
  */
 
+// Package manager xxx
 package manager
 
 import (
@@ -33,7 +34,7 @@ type TerminalSize struct {
 	Cols uint16 `json:"cols"`
 }
 
-// 自定义 Manager 函数
+// ManagerFunc 自定义 Manager 函数
 type ManagerFunc func(podCtx *types.PodContext) error
 
 // ConsoleManager websocket 流式处理器
@@ -73,6 +74,7 @@ func (c *ConsoleManager) HandleInputMsg(msg []byte) ([]byte, error) {
 	return msg, nil
 }
 
+// HandleResizeMsg xxx
 // HandleInputMsg : 处理 Resize 数据流
 func (c *ConsoleManager) HandleResizeMsg(msg []byte) (*TerminalSize, error) {
 	resizeMsg := TerminalSize{}
@@ -86,12 +88,12 @@ func (c *ConsoleManager) HandleResizeMsg(msg []byte) (*TerminalSize, error) {
 	return &resizeMsg, nil
 }
 
-// HandleOutputMsg: 处理输出数据流
+// HandleOutputMsg : 处理输出数据流
 func (c *ConsoleManager) HandleOutputMsg(msg []byte) ([]byte, error) {
 	return msg, nil
 }
 
-// Run: Manager 后台任务等
+// Run : Manager 后台任务等
 func (c *ConsoleManager) Run() error {
 	interval := time.NewTicker(10 * time.Second)
 	defer interval.Stop()
@@ -135,13 +137,13 @@ func (c *ConsoleManager) tickTimeout() error {
 	return nil
 }
 
-// 提交数据
+// emit 提交数据
 func (c *ConsoleManager) emit(data *types.AuditRecord) {
 	dataByte, _ := json.Marshal(data)
 	c.redisClient.RPush(context.Background(), queueName, dataByte)
 }
 
-// 审计
+// startRecord 审计
 func (c *ConsoleManager) startRecord() {
 	c.emit(nil)
 }

@@ -210,7 +210,7 @@ func (ch *chartHandler) downloadOCIChartVersionOrigin(_ context.Context, version
 		return nil, err
 	}
 
-	r, err := cli.Pull(ch.getOciUrl("/"+ch.projectID+"/"+ch.repository+"/"+ch.chartName+":"+version))
+	r, err := cli.Pull(ch.getOciUrl("/" + ch.projectID + "/" + ch.repository + "/" + ch.chartName + ":" + version))
 	if err != nil {
 		blog.Errorf("download helm chart version origin from bk-repo pull chart failed, %s, "+
 			err.Error(), ch.projectID, ch.repository, ch.chartName, version)

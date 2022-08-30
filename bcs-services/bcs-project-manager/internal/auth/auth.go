@@ -12,6 +12,7 @@
  * limitations under the License.
  */
 
+// Package auth xxx
 package auth
 
 import (
@@ -55,6 +56,7 @@ func GetAuthUserFromCtx(ctx context.Context) AuthUser {
 	}
 }
 
+// AuthUser xxx
 type AuthUser struct {
 	Username string
 	UserType string
@@ -124,7 +126,7 @@ var NoAuthEndpoints = []string{
 	"Healthz.Healthz",
 }
 
-// 检查当前请求是否允许免除用户认证
+// CanExemptAuth 检查当前请求是否允许免除用户认证
 func CanExemptAuth(ep string) bool {
 	// 禁用身份认证
 	if !config.GlobalConf.JWT.Enable {

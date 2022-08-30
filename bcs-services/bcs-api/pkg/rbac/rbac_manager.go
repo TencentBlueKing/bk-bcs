@@ -51,7 +51,7 @@ func newRbacManager(cluster string, client *kubernetes.Clientset) *rbacManager {
 	}
 }
 
-// ensureRoles确保待sync的clusterrole在集群中已经存在，如果不存在，则创建
+// ensureRoles 确保待sync的clusterrole在集群中已经存在，如果不存在，则创建
 func (rm *rbacManager) ensureRoles(rolesList []string) error {
 	for _, role := range rolesList {
 		err := rm.ensureRole(role)
@@ -62,13 +62,15 @@ func (rm *rbacManager) ensureRoles(rolesList []string) error {
 	return nil
 }
 
-// ensureRoleBindings 从配置文件中全量同步 rbac 数据
+// ensureClusterRoleBindings 从配置文件中全量同步 rbac 数据
 func (rm *rbacManager) ensureClusterRoleBindings(username string, rolesList []string) error {
 	// 获取该用户已创建的bindings
 	label := map[string]string{clusterRoleBindingLabelUser: username}
-	alreadyRoleBindings, err := rm.kubeClient.RbacV1().ClusterRoleBindings().List(metav1.ListOptions{LabelSelector: labels.Set(label).AsSelector().String()})
+	alreadyRoleBindings, err := rm.kubeClient.RbacV1().ClusterRoleBindings().List(metav1.ListOptions{
+		LabelSelector: labels.Set(label).AsSelector().String()})
 	if err != nil {
-		return fmt.Errorf("error when list clusterrolebindings from cluster %s for user %s: %s", rm.clusterId, username, err.Error())
+		return fmt.Errorf("error when list clusterrolebindings from cluster %s for user %s: %s", rm.clusterId, username,
+			err.Error())
 	}
 	alreadyBinded := make(map[string]string)
 	for _, existedRb := range alreadyRoleBindings.Items {
@@ -84,14 +86,16 @@ func (rm *rbacManager) ensureClusterRoleBindings(username string, rolesList []st
 	for _, role := range toCreate {
 		err := rm.createClusterRoleBinding(username, role, "")
 		if err != nil {
-			return fmt.Errorf("error when creating clusterrolebinding for user %s to bind clusterrole %s: %s", username, role, err.Error())
+			return fmt.Errorf("error when creating clusterrolebinding for user %s to bind clusterrole %s: %s", username, role,
+				err.Error())
 		}
 	}
 
 	for _, role := range toDelete {
 		err := rm.deleteClusterRoleBinding(alreadyBinded[role])
 		if err != nil {
-			return fmt.Errorf("error when deleting clusterrolebinding %s for username %s: %s", alreadyBinded[role], username, err.Error())
+			return fmt.Errorf("error when deleting clusterrolebinding %s for username %s: %s", alreadyBinded[role], username,
+				err.Error())
 		}
 	}
 
@@ -154,22 +158,26 @@ func (rm *rbacManager) updateClusterRole(clusterRole *rbacv1.ClusterRole) error 
 func (rm *rbacManager) ensureAddClusterRoleBinding(username, role, bindingType string) error {
 	// 获取该用户已创建的bindings
 	label := map[string]string{clusterRoleBindingLabelUser: username, clusterRoleBindingLabelFrom: bindingType}
-	alreadyClusterRoleBindings, err := rm.kubeClient.RbacV1().ClusterRoleBindings().List(metav1.ListOptions{LabelSelector: labels.Set(label).AsSelector().String()})
+	alreadyClusterRoleBindings, err := rm.kubeClient.RbacV1().ClusterRoleBindings().List(metav1.ListOptions{
+		LabelSelector: labels.Set(label).AsSelector().String()})
 	if err != nil {
-		return fmt.Errorf("error when list clusterrolebindings from cluster %s for user %s: %s", rm.clusterId, username, err.Error())
+		return fmt.Errorf("error when list clusterrolebindings from cluster %s for user %s: %s", rm.clusterId, username,
+			err.Error())
 	}
 
 	clusterRole := template.ClusterRolePrefix + role
 	for _, clusterRoleBinding := range alreadyClusterRoleBindings.Items {
 		if clusterRoleBinding.RoleRef.Name == clusterRole {
-			blog.Info("clusterrolebinding %s already existed, binded to clusterrole %s for user %s", clusterRoleBinding.Name, role, username)
+			blog.Info("clusterrolebinding %s already existed, binded to clusterrole %s for user %s", clusterRoleBinding.Name,
+				role, username)
 			return nil
 		}
 	}
 
 	err = rm.createClusterRoleBinding(username, clusterRole, bindingType)
 	if err != nil {
-		return fmt.Errorf("error when creating clusterrolebinding for user %s to bind clusterrole %s in cluster %s: %s", username, role, rm.clusterId, err.Error())
+		return fmt.Errorf("error when creating clusterrolebinding for user %s to bind clusterrole %s in cluster %s: %s",
+			username, role, rm.clusterId, err.Error())
 	}
 	return nil
 }
@@ -178,9 +186,11 @@ func (rm *rbacManager) ensureAddClusterRoleBinding(username, role, bindingType s
 func (rm *rbacManager) ensureDeleteClusterRoleBinding(username, role, bindingType string) error {
 	// 获取该用户已创建的bindings
 	label := map[string]string{clusterRoleBindingLabelUser: username, clusterRoleBindingLabelFrom: bindingType}
-	alreadyClusterRoleBindings, err := rm.kubeClient.RbacV1().ClusterRoleBindings().List(metav1.ListOptions{LabelSelector: labels.Set(label).AsSelector().String()})
+	alreadyClusterRoleBindings, err := rm.kubeClient.RbacV1().ClusterRoleBindings().List(metav1.ListOptions{
+		LabelSelector: labels.Set(label).AsSelector().String()})
 	if err != nil {
-		return fmt.Errorf("error when list clusterrolebindings from cluster %s for user %s: %s", rm.clusterId, username, err.Error())
+		return fmt.Errorf("error when list clusterrolebindings from cluster %s for user %s: %s", rm.clusterId, username,
+			err.Error())
 	}
 
 	clusterRole := template.ClusterRolePrefix + role
@@ -230,22 +240,26 @@ func (rm *rbacManager) deleteClusterRoleBinding(clusterRoleBindingName string) e
 func (rm *rbacManager) ensureAddRoleBinding(username, role, namespace string) error {
 	// 获取该用户已创建的bindings
 	label := map[string]string{roleBindingLabelUser: username}
-	alreadyRoleBindings, err := rm.kubeClient.RbacV1().RoleBindings(namespace).List(metav1.ListOptions{LabelSelector: labels.Set(label).AsSelector().String()})
+	alreadyRoleBindings, err := rm.kubeClient.RbacV1().RoleBindings(namespace).List(metav1.ListOptions{
+		LabelSelector: labels.Set(label).AsSelector().String()})
 	if err != nil {
-		return fmt.Errorf("error when list rolebindings from cluster %s namespace %s for user %s: %s", rm.clusterId, namespace, username, err.Error())
+		return fmt.Errorf("error when list rolebindings from cluster %s namespace %s for user %s: %s", rm.clusterId,
+			namespace, username, err.Error())
 	}
 
 	clusterRole := template.ClusterRolePrefix + role
 	for _, roleBinding := range alreadyRoleBindings.Items {
 		if roleBinding.RoleRef.Name == clusterRole {
-			blog.Infof("rolebinding %s already existed, binded to role %s in namespace %s for user %s", roleBinding.Name, role, namespace, username)
+			blog.Infof("rolebinding %s already existed, binded to role %s in namespace %s for user %s", roleBinding.Name, role,
+				namespace, username)
 			return nil
 		}
 	}
 
 	err = rm.createRoleBinding(username, clusterRole, namespace)
 	if err != nil {
-		return fmt.Errorf("error when creating rolebinding for user %s to bind role %s in cluster %s namespace %s: %s", username, role, rm.clusterId, namespace, err.Error())
+		return fmt.Errorf("error when creating rolebinding for user %s to bind role %s in cluster %s namespace %s: %s",
+			username, role, rm.clusterId, namespace, err.Error())
 	}
 	return nil
 }
@@ -254,9 +268,11 @@ func (rm *rbacManager) ensureAddRoleBinding(username, role, namespace string) er
 func (rm *rbacManager) ensureDeleteRoleBinding(username, role, namespace string) error {
 	// 获取该用户已创建的bindings
 	label := map[string]string{roleBindingLabelUser: username}
-	alreadyRoleBindings, err := rm.kubeClient.RbacV1().RoleBindings(namespace).List(metav1.ListOptions{LabelSelector: labels.Set(label).AsSelector().String()})
+	alreadyRoleBindings, err := rm.kubeClient.RbacV1().RoleBindings(namespace).List(metav1.ListOptions{
+		LabelSelector: labels.Set(label).AsSelector().String()})
 	if err != nil {
-		return fmt.Errorf("error when list rolebindings from cluster %s namespace %s for user %s: %s", rm.clusterId, namespace, username, err.Error())
+		return fmt.Errorf("error when list rolebindings from cluster %s namespace %s for user %s: %s", rm.clusterId,
+			namespace, username, err.Error())
 	}
 
 	clusterRole := template.ClusterRolePrefix + role

@@ -11,6 +11,7 @@
  *
  */
 
+// Package status xxx
 package status
 
 import (

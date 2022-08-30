@@ -27,19 +27,21 @@ type EventInterface interface {
 	List(ctx context.Context, namespace string, opts metav1.ListOptions) (*v1.EventList, error)
 	ListAsTable(ctx context.Context, namespace string, acceptHeader string, opts metav1.ListOptions) (*metav1.Table, error)
 	Get(ctx context.Context, namespace string, name string, opts metav1.GetOptions) (*v1.Event, error)
-	GetAsTable(ctx context.Context, namespace string, name string, acceptHeader string, opts metav1.GetOptions) (*metav1.Table, error)
+	GetAsTable(ctx context.Context, namespace string, name string, acceptHeader string,
+		opts metav1.GetOptions) (*metav1.Table, error)
 }
 
-// EventHandler
+// EventHandler xxx
 type EventHandler struct {
 	handler EventInterface
 }
 
-// NewEventHandler
+// NewEventHandler xxx
 func NewEventHandler(handler EventInterface) *EventHandler {
 	return &EventHandler{handler: handler}
 }
 
+// Serve xxx
 // Event Resource Verb Handler
 func (h *EventHandler) Serve(c *rest.RequestContext) error {
 	var (

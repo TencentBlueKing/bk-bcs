@@ -66,7 +66,8 @@ func NewUserManager(conf *config.UserMgrConfig) *UserManager {
 	}
 
 	if conf.ServCert.IsSSL {
-		userManager.httpServ.SetSsl(conf.ServCert.CAFile, conf.ServCert.CertFile, conf.ServCert.KeyFile, conf.ServCert.CertPasswd)
+		userManager.httpServ.SetSsl(conf.ServCert.CAFile, conf.ServCert.CertFile, conf.ServCert.KeyFile,
+			conf.ServCert.CertPasswd)
 	}
 
 	userManager.httpServ.SetInsecureServer(conf.InsecureAddress, conf.InsecurePort)

@@ -23,13 +23,13 @@ import (
 	gozk "github.com/samuel/go-zookeeper/zk"
 )
 
-//dbZk is a struct of the zookeeper client
+// dbZk is a struct of the zookeeper client
 type dbZk struct {
 	ZkHost []string
 	ZkCli  *zkclient.ZkClient
 }
 
-//NewDbZk create a dbZk object
+// NewDbZk create a dbZk object
 func NewDbZk(host []string) store.Dbdrvier {
 	zk := dbZk{
 		ZkHost: host[:],
@@ -39,14 +39,17 @@ func NewDbZk(host []string) store.Dbdrvier {
 	return &zk
 }
 
+// Connect xxx
 func (zk *dbZk) Connect() error {
 	return zk.ZkCli.Connect()
 }
 
+// Close xxx
 func (zk *dbZk) Close() {
 	zk.ZkCli.Close()
 }
 
+// Insert xxx
 func (zk *dbZk) Insert(path string, value string) error {
 	var failed bool
 	started := time.Now()
@@ -60,6 +63,7 @@ func (zk *dbZk) Insert(path string, value string) error {
 	return err
 }
 
+// Fetch xxx
 func (zk *dbZk) Fetch(path string) ([]byte, error) {
 	var failed bool
 	started := time.Now()
@@ -76,6 +80,7 @@ func (zk *dbZk) Fetch(path string) ([]byte, error) {
 	return []byte(data), err
 }
 
+// Update xxx
 func (zk *dbZk) Update(path string, value string) error {
 	var failed bool
 	started := time.Now()

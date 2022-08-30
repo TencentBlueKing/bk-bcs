@@ -19,7 +19,7 @@ import (
 )
 
 func init() {
-	//init all flags
+	// init all flags
 	viper.SetEnvPrefix("BCS")
 	pflag.String("namespace", "bcs-system", "namespace that BCSEgress controller is running in")
 	viper.BindEnv("namespace")
@@ -32,7 +32,7 @@ func init() {
 	viper.BindPFlags(pflag.CommandLine)
 }
 
-//NewOptionFromFlagAndEnv create option from env or command line
+// NewOptionFromFlagAndEnv create option from env or command line
 func NewOptionFromFlagAndEnv() *EgressOption {
 	egress := &EgressOption{
 		Namespace:    viper.GetString("namespace"),
@@ -43,7 +43,7 @@ func NewOptionFromFlagAndEnv() *EgressOption {
 	return egress
 }
 
-//EgressOption all options that required for BCSEgressController
+// EgressOption all options that required for BCSEgressController
 type EgressOption struct {
 	Namespace       string
 	Name            string

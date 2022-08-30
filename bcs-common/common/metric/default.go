@@ -38,7 +38,8 @@ func newVersionMetric(m MetaData) *prometheus.GaugeVec {
 		Help:      "version infos about this module",
 	}, []string{module_cluster_id_label, module_name_label, module_ip_label, "version", "tag", "build_time", "git_hash"})
 
-	verMetric.WithLabelValues(m.ClusterID, m.Module, m.IP, version.BcsVersion, version.BcsTag, version.BcsBuildTime, version.BcsGitHash).Set(1)
+	verMetric.WithLabelValues(m.ClusterID, m.Module, m.IP, version.BcsVersion, version.BcsTag, version.BcsBuildTime,
+		version.BcsGitHash).Set(1)
 
 	return verMetric
 }

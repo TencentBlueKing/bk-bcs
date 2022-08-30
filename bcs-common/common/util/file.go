@@ -15,7 +15,7 @@ package util
 
 import "os"
 
-//FileExists check file exists
+// FileExists check file exists
 func FileExists(filename string) (bool, error) {
 	if _, err := os.Stat(filename); os.IsNotExist(err) {
 		return false, nil

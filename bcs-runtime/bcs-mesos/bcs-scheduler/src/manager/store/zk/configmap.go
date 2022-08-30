@@ -24,6 +24,7 @@ func getConfigMapRootPath() string {
 	return "/" + bcsRootNode + "/" + configMapNode
 }
 
+// SaveConfigMap xxx
 func (store *managerStore) SaveConfigMap(configmap *commtypes.BcsConfigMap) error {
 
 	data, err := json.Marshal(configmap)
@@ -36,6 +37,7 @@ func (store *managerStore) SaveConfigMap(configmap *commtypes.BcsConfigMap) erro
 	return store.Db.Insert(path, string(data))
 }
 
+// FetchConfigMap xxx
 func (store *managerStore) FetchConfigMap(ns, name string) (*commtypes.BcsConfigMap, error) {
 
 	path := getConfigMapRootPath() + "/" + ns + "/" + name
@@ -54,6 +56,7 @@ func (store *managerStore) FetchConfigMap(ns, name string) (*commtypes.BcsConfig
 	return configmap, nil
 }
 
+// DeleteConfigMap xxx
 func (store *managerStore) DeleteConfigMap(ns, name string) error {
 
 	path := getConfigMapRootPath() + "/" + ns + "/" + name
@@ -65,9 +68,10 @@ func (store *managerStore) DeleteConfigMap(ns, name string) error {
 	return nil
 }
 
+// ListConfigmaps xxx
 func (store *managerStore) ListConfigmaps(runAs string) ([]*commtypes.BcsConfigMap, error) {
 
-	path := getConfigMapRootPath() + "/" + runAs //defaultRunAs
+	path := getConfigMapRootPath() + "/" + runAs // defaultRunAs
 
 	IDs, err := store.Db.List(path)
 	if err != nil {
@@ -95,6 +99,7 @@ func (store *managerStore) ListConfigmaps(runAs string) ([]*commtypes.BcsConfigM
 	return objs, nil
 }
 
+// ListAllConfigmaps xxx
 func (store *managerStore) ListAllConfigmaps() ([]*commtypes.BcsConfigMap, error) {
 	nss, err := store.ListObjectNamespaces(configMapNode)
 	if err != nil {

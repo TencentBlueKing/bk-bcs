@@ -204,7 +204,7 @@ func (nc *NetserviceCli) UpdatePool(pool *types.NetPool) error {
 	if len(pool.Available) == 0 && len(pool.Reserved) == 0 {
 		return fmt.Errorf("lost ip address info")
 	}
-	//create net request
+	// create net request
 	netRequest := &types.NetRequest{
 		Type: types.RequestType_POOL,
 		Pool: pool,
@@ -590,7 +590,7 @@ func (nc *NetserviceCli) LeaseIPAddr(lease *types.IPLease, timeout int) (*types.
 		httpRequest.Header.Set("Content-Type", "application/json")
 		httpResponse, err := httpClient.Do(httpRequest)
 		if err != nil {
-			//do err, try next one
+			// do err, try next one
 			lastErr = err.Error()
 			continue
 		}

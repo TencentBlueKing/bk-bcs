@@ -33,9 +33,9 @@ type ThreadSafeStore interface {
 	Get(key string) (item interface{}, exists bool)
 	List() []interface{}
 	ListKeys() []string
-	//Num will return data counts in Store
+	// Num will return data counts in Store
 	Num() int
-	//Clear will drop all data in Store
+	// Clear will drop all data in Store
 	Clear()
 	// Replace will delete the contents of the store, using instead the
 	// given list. Store takes ownership of the list, you should not reference
@@ -49,18 +49,21 @@ type threadSafeMap struct {
 	items map[string]interface{}
 }
 
+// Add xxx
 func (c *threadSafeMap) Add(key string, obj interface{}) {
 	c.lock.Lock()
 	defer c.lock.Unlock()
 	c.items[key] = obj
 }
 
+// Update xxx
 func (c *threadSafeMap) Update(key string, obj interface{}) {
 	c.lock.Lock()
 	defer c.lock.Unlock()
 	c.items[key] = obj
 }
 
+// Delete xxx
 func (c *threadSafeMap) Delete(key string) {
 	c.lock.Lock()
 	defer c.lock.Unlock()
@@ -69,6 +72,7 @@ func (c *threadSafeMap) Delete(key string) {
 	}
 }
 
+// Get xxx
 func (c *threadSafeMap) Get(key string) (item interface{}, exists bool) {
 	c.lock.RLock()
 	defer c.lock.RUnlock()
@@ -76,6 +80,7 @@ func (c *threadSafeMap) Get(key string) (item interface{}, exists bool) {
 	return item, exists
 }
 
+// List xxx
 func (c *threadSafeMap) List() []interface{} {
 	c.lock.RLock()
 	defer c.lock.RUnlock()
@@ -98,14 +103,14 @@ func (c *threadSafeMap) ListKeys() []string {
 	return list
 }
 
-//Num will return data counts in Store
+// Num will return data counts in Store
 func (c *threadSafeMap) Num() int {
 	c.lock.RLock()
 	defer c.lock.RUnlock()
 	return len(c.items)
 }
 
-//Clear will drop all data in Store
+// Clear will drop all data in Store
 func (c *threadSafeMap) Clear() {
 	c.lock.Lock()
 	defer c.lock.Unlock()
@@ -123,7 +128,7 @@ func (c *threadSafeMap) Replace(items map[string]interface{}) {
 	c.items = items
 }
 
-//NewThreadSafeStore create default safe map implementation
+// NewThreadSafeStore create default safe map implementation
 func NewThreadSafeStore() ThreadSafeStore {
 	return &threadSafeMap{
 		items: map[string]interface{}{},

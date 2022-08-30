@@ -44,7 +44,8 @@ type nodeEtcdDiscovery struct {
 }
 
 // NewNodeEtcdDiscovery new nodeEtcdDiscovery for discovery node cadvisor targets
-func NewNodeEtcdDiscovery(kubeconfig string, promFilePrefix, module string, cadvisorPort, nodeExportPort int) (Discovery, error) {
+func NewNodeEtcdDiscovery(kubeconfig string, promFilePrefix, module string, cadvisorPort,
+	nodeExportPort int) (Discovery, error) {
 	disc := &nodeEtcdDiscovery{
 		kubeconfig:     kubeconfig,
 		promFilePrefix: promFilePrefix,
@@ -75,7 +76,7 @@ func (disc *nodeEtcdDiscovery) Start() error {
 		return err
 	}
 	stopCh := make(chan struct{})
-	//internal clientset for informer BcsLogConfig Crd
+	// internal clientset for informer BcsLogConfig Crd
 	internalClientset, err := internalclientset.NewForConfig(cfg)
 	if err != nil {
 		blog.Errorf("build internal clientset by kubeconfig %s error %s", disc.kubeconfig, err.Error())
@@ -97,6 +98,7 @@ func (disc *nodeEtcdDiscovery) Start() error {
 	return nil
 }
 
+// GetPrometheusSdConfig xxx
 func (disc *nodeEtcdDiscovery) GetPrometheusSdConfig(module string) ([]*types.PrometheusSdConfig, error) {
 	promConfigs := make([]*types.PrometheusSdConfig, 0)
 	for nodeIP := range disc.nodes {
@@ -126,10 +128,12 @@ func (disc *nodeEtcdDiscovery) GetPrometheusSdConfig(module string) ([]*types.Pr
 	return promConfigs, nil
 }
 
+// GetPromSdConfigFile xxx
 func (disc *nodeEtcdDiscovery) GetPromSdConfigFile(module string) string {
 	return path.Join(disc.promFilePrefix, fmt.Sprintf("%s%s", module, DiscoveryFileName))
 }
 
+// RegisterEventFunc xxx
 func (disc *nodeEtcdDiscovery) RegisterEventFunc(handleFunc EventHandleFunc) {
 	disc.eventHandler = handleFunc
 }
@@ -154,7 +158,7 @@ func (disc *nodeEtcdDiscovery) OnAdd(obj interface{}) {
 
 // OnUpdate if on update event, then don't need to update sd config
 func (disc *nodeEtcdDiscovery) OnUpdate(old, cur interface{}) {
-	//do nothing
+	// do nothing
 }
 
 // OnDelete delete event handler

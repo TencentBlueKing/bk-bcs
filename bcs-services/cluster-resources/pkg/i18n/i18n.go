@@ -12,6 +12,7 @@
  * limitations under the License.
  */
 
+// Package i18n xxx
 package i18n
 
 import (

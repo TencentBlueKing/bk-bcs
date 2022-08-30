@@ -116,6 +116,7 @@ func (ca *CreateAction) listQuotasByCluster(cluster string) ([]cmproto.ResourceQ
 	return quotaList, nil
 }
 
+// allocateOneCluster xxx
 // allocate one cluster for the request resource quota
 func (ca *CreateAction) allocateOneCluster() error {
 	// 计算已经分配的quota与集群总资源的比值，最后算出比值最小的集群
@@ -162,6 +163,7 @@ func (ca *CreateAction) allocateOneCluster() error {
 	return nil
 }
 
+// createQuotaToStore xxx
 // create namespace resoucequota to store
 func (ca *CreateAction) createQuotaToStore() error {
 	createTime := time.Now().Format(time.RFC3339)

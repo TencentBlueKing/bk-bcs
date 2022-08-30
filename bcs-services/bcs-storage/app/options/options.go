@@ -11,6 +11,7 @@
  *
  */
 
+// Package options xxx
 package options
 
 import (
@@ -20,7 +21,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/tracing"
 )
 
-//CertConfig is configuration of Cert
+// CertConfig is configuration of Cert
 type CertConfig struct {
 	CAFile   string
 	CertFile string
@@ -29,7 +30,7 @@ type CertConfig struct {
 	IsSSL    bool
 }
 
-//StorageOptions is options in flags
+// StorageOptions is options in flags
 type StorageOptions struct {
 	conf.FileConfig
 	conf.ServiceConfig
@@ -57,7 +58,7 @@ type StorageOptions struct {
 	DebugMode    bool   `json:"debug_mode" value:"false" usage:"Debug mode, use pprof."`
 }
 
-//NewStorageOptions create StorageOptions object
+// NewStorageOptions create StorageOptions object
 func NewStorageOptions() *StorageOptions {
 	return &StorageOptions{
 		ServerCert: &CertConfig{

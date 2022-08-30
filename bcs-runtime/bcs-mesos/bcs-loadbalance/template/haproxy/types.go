@@ -367,14 +367,17 @@ type HTTPFrontend struct {
 // HTTPFrontendList http frontend list, sorted by service port
 type HTTPFrontendList []*HTTPFrontend
 
+// Len 用于排序
 func (hl HTTPFrontendList) Len() int {
 	return len(hl)
 }
 
+// Less 用于排序
 func (hl HTTPFrontendList) Less(i, j int) bool {
 	return hl[i].ServicePort < hl[j].ServicePort
 }
 
+// Swap 用于排序
 func (hl HTTPFrontendList) Swap(i, j int) {
 	hl[i], hl[j] = hl[j], hl[i]
 }
@@ -406,14 +409,17 @@ type HTTPBackend struct {
 // HTTPBackendList http backend list
 type HTTPBackendList []*HTTPBackend
 
+// Len 用于排序
 func (hl HTTPBackendList) Len() int {
 	return len(hl)
 }
 
+// Less 用于排序
 func (hl HTTPBackendList) Less(i, j int) bool {
 	return hl[i].Name < hl[j].Name
 }
 
+// Swap 用于排序
 func (hl HTTPBackendList) Swap(i, j int) {
 	hl[i], hl[j] = hl[j], hl[i]
 }
@@ -443,14 +449,17 @@ type TCPListener struct {
 // TCPListenerList tcp listener list for sort
 type TCPListenerList []*TCPListener
 
+// Len 用于排序
 func (hl TCPListenerList) Len() int {
 	return len(hl)
 }
 
+// Less 用于排序
 func (hl TCPListenerList) Less(i, j int) bool {
 	return hl[i].Name < hl[j].Name
 }
 
+// Swap 用于排序
 func (hl TCPListenerList) Swap(i, j int) {
 	hl[i], hl[j] = hl[j], hl[i]
 }
@@ -480,14 +489,17 @@ func (rs *RealServer) Key() string {
 // RealServerList real server list, sorted by name
 type RealServerList []*RealServer
 
+// Len 用于排序
 func (hl RealServerList) Len() int {
 	return len(hl)
 }
 
+// Less 用于排序
 func (hl RealServerList) Less(i, j int) bool {
 	return hl[i].Name < hl[j].Name
 }
 
+// Swap 用于排序
 func (hl RealServerList) Swap(i, j int) {
 	hl[i], hl[j] = hl[j], hl[i]
 }
@@ -495,14 +507,17 @@ func (hl RealServerList) Swap(i, j int) {
 // IPRealServerList real server list, sorted by ip
 type IPRealServerList []*RealServer
 
+// Len 用于排序
 func (hl IPRealServerList) Len() int {
 	return len(hl)
 }
 
+// Less 用于排序
 func (hl IPRealServerList) Less(i, j int) bool {
 	return hl[i].IP < hl[j].IP
 }
 
+// Swap 用于排序
 func (hl IPRealServerList) Swap(i, j int) {
 	hl[i], hl[j] = hl[j], hl[i]
 }

@@ -12,6 +12,7 @@
  * limitations under the License.
  */
 
+// Package version xxx
 package version
 
 import (
@@ -19,8 +20,12 @@ import (
 )
 
 var (
-	Version   = ""
+	// Version xxx
+	Version = ""
+	// GitCommit xxx
 	GitCommit = ""
+	// BuildTime xxx
 	BuildTime = ""
+	// GoVersion xxx
 	GoVersion = runtime.Version()
 )

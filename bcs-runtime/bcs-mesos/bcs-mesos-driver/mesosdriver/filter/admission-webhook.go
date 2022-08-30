@@ -47,13 +47,13 @@ type AdmissionWebhookFilter struct {
 	sync.RWMutex
 
 	scheduler backend.Scheduler
-	//request scheduler http client
+	// request scheduler http client
 	schedClient *httpclient.HttpClient
 
-	//key = Operation_Kind
+	// key = Operation_Kind
 	admissionHooks map[string]*commtypes.AdmissionWebhookConfiguration
 
-	//admissionwebhook cache.SharedIndexInformer
+	// admissionwebhook cache.SharedIndexInformer
 	adInformer cache.SharedIndexInformer
 	adLister   v2lister.AdmissionWebhookConfigurationLister
 }
@@ -207,7 +207,8 @@ func (hook *AdmissionWebhookFilter) Execute(req *restful.Request) (int, error) {
 				if webhook.FailurePolicy == commtypes.WebhookFailurePolicyFail {
 					blog.Errorf("AdmissionWebhookFilter handler url %s method %s failed, and policy fail return",
 						req.Request.RequestURI, req.Request.Method)
-					return common.BcsErrMesosDriverHttpFilterFailed, fmt.Errorf("request webhoook %s error %s", webhook.Name, err.Error())
+					return common.BcsErrMesosDriverHttpFilterFailed, fmt.Errorf("request webhoook %s error %s", webhook.Name,
+						err.Error())
 				}
 				blog.Infof("AdmissionWebhookFilter handler url %s method %s failed, and policy ignore continue",
 					req.Request.RequestURI, req.Request.Method)
@@ -224,7 +225,8 @@ func (hook *AdmissionWebhookFilter) Execute(req *restful.Request) (int, error) {
 	return 0, nil
 }
 
-func (hook *AdmissionWebhookFilter) requestAdmissionWebhook(webhook *commtypes.AdmissionWebhook, body []byte) ([]byte, error) {
+func (hook *AdmissionWebhookFilter) requestAdmissionWebhook(webhook *commtypes.AdmissionWebhook, body []byte) ([]byte,
+	error) {
 	if len(webhook.WebhookServers) == 0 {
 		return nil, fmt.Errorf("webhook %s not found servers", webhook.Name)
 	}
@@ -284,7 +286,7 @@ func (hook *AdmissionWebhookFilter) addAdmissionWebhook(ad *commtypes.AdmissionW
 		blog.Errorf("AdmissionWebhookConfiguration %s have no AdmissionWebhooks, and return", ad.Name)
 		return
 	}
-	//get webhook servers info
+	// get webhook servers info
 	for _, webhook := range ad.AdmissionWebhooks {
 		var server string
 		if webhook.ClientConfig.Url != "" {

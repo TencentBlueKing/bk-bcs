@@ -21,6 +21,7 @@ import (
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 )
 
+// NewTracerProvider xxx
 func NewTracerProvider(exporterURL, serviceName string) (*sdktrace.TracerProvider, error) {
 	// Create the Jaeger exporter
 	traceExp, err := jaeger.New(jaeger.WithCollectorEndpoint(jaeger.WithEndpoint(exporterURL)))

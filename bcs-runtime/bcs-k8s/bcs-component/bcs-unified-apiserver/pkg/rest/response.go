@@ -71,7 +71,7 @@ func (c *RequestContext) WriteChunk(obj watch.Event, firstChunk bool) {
 		c.Writer.Header().Set("Transfer-Encoding", "chunked")
 		c.Writer.WriteHeader(http.StatusOK)
 	}
-	eJsons, err := json.Marshal(obj) //转换成JSON返回的是byte[]
+	eJsons, err := json.Marshal(obj) // 转换成JSON返回的是byte[]
 	if err != nil {
 		panic(err)
 	}

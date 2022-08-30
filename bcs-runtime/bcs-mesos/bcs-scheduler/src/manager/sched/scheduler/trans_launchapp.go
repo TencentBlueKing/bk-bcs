@@ -91,6 +91,7 @@ func (s *Scheduler) RunLaunchApplication(transaction *types.Transaction) bool {
 	return true
 }
 
+// doLaunchTrans xxx
 // the return value indicates whether the transaction need to continue
 func (s *Scheduler) doLaunchTrans(trans *types.Transaction, outOffer *offer.Offer, started time.Time) bool {
 

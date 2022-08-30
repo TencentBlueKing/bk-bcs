@@ -21,6 +21,7 @@ import (
 )
 
 const (
+	// VERSION xxx
 	VERSION = "v1alpha1"
 )
 
@@ -44,6 +45,7 @@ var (
 	AddToScheme = SchemeBuilder.AddToScheme
 )
 
+// addKnownTypes xxx
 // Adds the list of known types to Scheme.
 func addKnownTypes(scheme *runtime.Scheme) error {
 	scheme.AddKnownTypes(SchemeGroupVersion,

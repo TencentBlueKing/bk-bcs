@@ -12,9 +12,10 @@
  * limitations under the License.
  */
 
+// Package ctxkey xxx
 package ctxkey
 
-// ContextKey ...
+// ContextKey xxx
 type ContextKey string
 
 const (

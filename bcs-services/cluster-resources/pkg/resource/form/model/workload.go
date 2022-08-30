@@ -22,7 +22,7 @@ type Deploy struct {
 	ContainerGroup ContainerGroup `structs:"containerGroup"`
 }
 
-// DeploySpec ...
+// DeploySpec xxx
 type DeploySpec struct {
 	Replicas   DeployReplicas `structs:"replicas"`
 	NodeSelect NodeSelect     `structs:"nodeSelect"`
@@ -33,7 +33,7 @@ type DeploySpec struct {
 	Other      SpecOther      `structs:"other"`
 }
 
-// DeployReplicas ...
+// DeployReplicas xxx
 type DeployReplicas struct {
 	Cnt                  int64  `structs:"cnt"`                  // 副本数量
 	UpdateStrategy       string `structs:"updateStrategy"`       // 更新策略
@@ -45,7 +45,7 @@ type DeployReplicas struct {
 	ProgressDeadlineSecs int64  `structs:"progressDeadlineSecs"` // 进程截止时间
 }
 
-// WorkloadVolume ...
+// WorkloadVolume xxx
 type WorkloadVolume struct {
 	PVC       []PVCVolume      `structs:"pvc"`
 	HostPath  []HostPathVolume `structs:"hostPath"`
@@ -55,7 +55,7 @@ type WorkloadVolume struct {
 	NFS       []NFSVolume      `structs:"nfs"`
 }
 
-// ContainerGroup ...
+// ContainerGroup xxx
 type ContainerGroup struct {
 	InitContainers []Container `structs:"initContainers"`
 	Containers     []Container `structs:"containers"`
@@ -69,7 +69,7 @@ type DS struct {
 	ContainerGroup ContainerGroup `structs:"containerGroup"`
 }
 
-// DSSpec ...
+// DSSpec xxx
 type DSSpec struct {
 	Replicas   DSReplicas     `structs:"replicas"`
 	NodeSelect NodeSelect     `structs:"nodeSelect"`
@@ -80,7 +80,7 @@ type DSSpec struct {
 	Other      SpecOther      `structs:"other"`
 }
 
-// DSReplicas ...
+// DSReplicas xxx
 type DSReplicas struct {
 	UpdateStrategy string `structs:"updateStrategy"`
 	MaxUnavailable int64  `structs:"maxUnavailable"`
@@ -96,7 +96,7 @@ type STS struct {
 	ContainerGroup ContainerGroup `structs:"containerGroup"`
 }
 
-// STSSpec ...
+// STSSpec xxx
 type STSSpec struct {
 	Replicas        STSReplicas        `structs:"replicas"`
 	VolumeClaimTmpl STSVolumeClaimTmpl `structs:"volumeClaimTmpl"`
@@ -108,7 +108,7 @@ type STSSpec struct {
 	Other           SpecOther          `structs:"other"`
 }
 
-// STSReplicas ...
+// STSReplicas xxx
 type STSReplicas struct {
 	SVCName        string `structs:"svcName"`
 	Cnt            int64  `structs:"cnt"`
@@ -117,12 +117,12 @@ type STSReplicas struct {
 	Partition      int64  `structs:"partition"`
 }
 
-// STSVolumeClaimTmpl ...
+// STSVolumeClaimTmpl xxx
 type STSVolumeClaimTmpl struct {
 	Claims []VolumeClaim `structs:"claims"`
 }
 
-// VolumeClaim ...
+// VolumeClaim xxx
 type VolumeClaim struct {
 	PVCName     string   `structs:"pvcName"`
 	ClaimType   string   `structs:"claimType"`
@@ -140,7 +140,7 @@ type CJ struct {
 	ContainerGroup ContainerGroup `structs:"containerGroup"`
 }
 
-// CJSpec ...
+// CJSpec xxx
 type CJSpec struct {
 	JobManage  CJJobManage    `structs:"jobManage"`
 	NodeSelect NodeSelect     `structs:"nodeSelect"`
@@ -151,7 +151,7 @@ type CJSpec struct {
 	Other      SpecOther      `structs:"other"`
 }
 
-// CJJobManage ...
+// CJJobManage xxx
 type CJJobManage struct {
 	Schedule                   string `structs:"schedule"`                   // 调度规则
 	ConcurrencyPolicy          string `structs:"concurrencyPolicy"`          // 并发策略
@@ -173,7 +173,7 @@ type Job struct {
 	ContainerGroup ContainerGroup `structs:"containerGroup"`
 }
 
-// JobSpec ...
+// JobSpec xxx
 type JobSpec struct {
 	JobManage  JobManage      `structs:"jobManage"`
 	NodeSelect NodeSelect     `structs:"nodeSelect"`
@@ -184,7 +184,7 @@ type JobSpec struct {
 	Other      SpecOther      `structs:"other"`
 }
 
-// JobManage ...
+// JobManage xxx
 type JobManage struct {
 	Completions   int64 `structs:"completions"`   // 需完成数
 	Parallelism   int64 `structs:"parallelism"`   // 并发数
@@ -200,7 +200,7 @@ type Po struct {
 	ContainerGroup ContainerGroup `structs:"containerGroup"`
 }
 
-// PoSpec ...
+// PoSpec xxx
 type PoSpec struct {
 	NodeSelect NodeSelect     `structs:"nodeSelect"`
 	Affinity   Affinity       `structs:"affinity"`

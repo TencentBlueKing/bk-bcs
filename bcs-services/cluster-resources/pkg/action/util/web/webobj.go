@@ -17,10 +17,10 @@ package web
 const (
 	// DetailBtn 页面对象：详情按钮/跳转链接
 	DetailBtn ObjName = "detailBtn"
-	// CreateBtn ...
+	// CreateBtn TODO
 	CreateBtn ObjName = "createBtn"
-	// UpdateBtn ...
+	// UpdateBtn TODO
 	UpdateBtn ObjName = "updateBtn"
-	// DeleteBtn ...
+	// DeleteBtn TODO
 	DeleteBtn ObjName = "deleteBtn"
 )

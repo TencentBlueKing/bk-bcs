@@ -26,13 +26,13 @@ import (
 	"time"
 )
 
-//ZkConfig only data type node config
+// ZkConfig only data type node config
 type ZkConfig struct {
-	Hosts         []string         //http api host link, ip:host
-	PrefixPath    string           //basic path for namespace data
-	Name          string           //data type name
-	Codec         meta.Codec       //Codec for encoder & decoder
-	ObjectNewFunc meta.ObjectNewFn //object pointer for serialization
+	Hosts         []string         // http api host link, ip:host
+	PrefixPath    string           // basic path for namespace data
+	Name          string           // data type name
+	Codec         meta.Codec       // Codec for encoder & decoder
+	ObjectNewFunc meta.ObjectNewFn // object pointer for serialization
 }
 
 func convertToNodeConfig(config *ZkConfig, pushEventfn PushWatchEventFn) map[int]*Layer {
@@ -58,7 +58,7 @@ func convertToNamespaceConfig(config *ZkConfig, pushEventfn PushWatchEventFn) ma
 		IsWatchChildren: true,
 	}
 	namespaceConfig[nslayer.Index] = nslayer
-	//detail data node
+	// detail data node
 	datalayer := &Layer{
 		Index:           1,
 		Name:            config.Name,
@@ -72,7 +72,7 @@ func convertToNamespaceConfig(config *ZkConfig, pushEventfn PushWatchEventFn) ma
 
 func convertToTypeConfig(config *ZkConfig, pushEventfn PushWatchEventFn) map[int]*Layer {
 	layerConfig := make(map[int]*Layer)
-	//create first layer for namespace node
+	// create first layer for namespace node
 	typelayer := &Layer{
 		Index:           0,
 		Name:            config.Name,
@@ -89,7 +89,7 @@ func convertToTypeConfig(config *ZkConfig, pushEventfn PushWatchEventFn) map[int
 		IsWatchChildren: true,
 	}
 	layerConfig[nslayer.Index] = nslayer
-	//detail data node
+	// detail data node
 	datalayer := &Layer{
 		Index:           2,
 		Name:            config.Name,
@@ -101,19 +101,19 @@ func convertToTypeConfig(config *ZkConfig, pushEventfn PushWatchEventFn) map[int
 	return layerConfig
 }
 
-//NewStorage create etcd accessor implemented storage interface
+// NewStorage create etcd accessor implemented storage interface
 func NewStorage(config *ZkConfig) (storage.Storage, error) {
 	return NewNSClient(config)
 }
 
-//NewNSClient create new client for namespace-based datas that store in zookeeper.
-//namespace-based datas store in path {namespace}/{name}, namespace nodes store
-//nothing, only name nodes store json data
+// NewNSClient create new client for namespace-based datas that store in zookeeper.
+// namespace-based datas store in path {namespace}/{name}, namespace nodes store
+// nothing, only name nodes store json data
 func NewNSClient(config *ZkConfig) (*NSClient, error) {
 	if len(config.Hosts) == 0 {
 		return nil, fmt.Errorf("Lost http api hosts info")
 	}
-	//create client for zookeeper
+	// create client for zookeeper
 	c := zkclient.NewZkClient(config.Hosts)
 	if err := c.ConnectEx(time.Second * 3); err != nil {
 		return nil, fmt.Errorf("zookeeper connect: %s", err)
@@ -128,24 +128,24 @@ func NewNSClient(config *ZkConfig) (*NSClient, error) {
 	return s, nil
 }
 
-//NSClient implementation storage interface with zookeeper client, all operations
-//are based on namespace-like data types. All data store with namespace feature.
-//so full paths of objects are like /prefix/{dataType}/{namespace}/{name},
-//all object json contents are hold by name node
+// NSClient implementation storage interface with zookeeper client, all operations
+// are based on namespace-like data types. All data store with namespace feature.
+// so full paths of objects are like /prefix/{dataType}/{namespace}/{name},
+// all object json contents are hold by name node
 type NSClient struct {
-	config      *ZkConfig          //configuration for nsclient
-	client      *zkclient.ZkClient //http client
-	codec       meta.Codec         //json Codec for object
-	objectNewFn meta.ObjectNewFn   //create new object for json Decode
-	prefixPath  string             //zookeeper storage prefix, like /bcs/mesh/v1/discovery
+	config      *ZkConfig          // configuration for nsclient
+	client      *zkclient.ZkClient // http client
+	codec       meta.Codec         // json Codec for object
+	objectNewFn meta.ObjectNewFn   // create new object for json Decode
+	prefixPath  string             // zookeeper storage prefix, like /bcs/mesh/v1/discovery
 }
 
-//Create implements storage interface
-//param cxt: context for use decline Creation, not used
-//param key: http full api path
-//param obj: object for creation
-//param ttl: second for time-to-live, not used
-//return out: exist object data
+// Create implements storage interface
+// param cxt: context for use decline Creation, not used
+// param key: http full api path
+// param obj: object for creation
+// param ttl: second for time-to-live, not used
+// return out: exist object data
 func (s *NSClient) Create(cxt context.Context, key string, obj meta.Object, ttl int) (out meta.Object, err error) {
 	if len(key) == 0 {
 		return nil, fmt.Errorf("zk client lost object key")
@@ -155,7 +155,7 @@ func (s *NSClient) Create(cxt context.Context, key string, obj meta.Object, ttl 
 		return nil, fmt.Errorf("lost object data")
 	}
 	fullPath := path.Join(s.prefixPath, key)
-	//check history node's data
+	// check history node's data
 	exist, err := s.client.Exist(fullPath)
 	if err != nil {
 		blog.V(3).Infof("zk client check %s old Object failed, %s", fullPath, err)
@@ -172,7 +172,7 @@ func (s *NSClient) Create(cxt context.Context, key string, obj meta.Object, ttl 
 			}
 		}
 	}
-	//create new data
+	// create new data
 	targetBytes, err := s.codec.Encode(obj)
 	if err != nil {
 		blog.V(3).Infof("zk client encode %s object to json failed, %s", fullPath, err)
@@ -186,11 +186,11 @@ func (s *NSClient) Create(cxt context.Context, key string, obj meta.Object, ttl 
 	return out, nil
 }
 
-//Delete implements storage interface
-//for http api operation, there are three situations for key
-//* if key likes apis/v1/dns, clean all dns data under version v1
-//* if key likes apis/v1/dns/namespace/bmsf-system, delete all data under namespace
-//* if key likes apis/v1/dns/namespace/bmsf-system/data, delete detail data
+// Delete implements storage interface
+// for http api operation, there are three situations for key
+// * if key likes apis/v1/dns, clean all dns data under version v1
+// * if key likes apis/v1/dns/namespace/bmsf-system, delete all data under namespace
+// * if key likes apis/v1/dns/namespace/bmsf-system/data, delete detail data
 // in this version, no delete objects reply
 func (s *NSClient) Delete(ctx context.Context, key string) (obj meta.Object, err error) {
 	if strings.HasSuffix(key, "/") {
@@ -210,15 +210,15 @@ func (s *NSClient) Delete(ctx context.Context, key string) (obj meta.Object, err
 	return nil, nil
 }
 
-//Watch implements storage interface
-//* if key empty, watch all data
-//* if key is namespace, watch all data under namespace
-//* if key is namespace/name, watch detail data
-//watch is Stopped when any error occure, close event channel immediatly
-//param cxt: context for background running, not used, only reserved now
-//param version: data version, not used, reserved
-//param selector: labels selector
-//return:
+// Watch implements storage interface
+// * if key empty, watch all data
+// * if key is namespace, watch all data under namespace
+// * if key is namespace/name, watch detail data
+// watch is Stopped when any error occure, close event channel immediatly
+// param cxt: context for background running, not used, only reserved now
+// param version: data version, not used, reserved
+// param selector: labels selector
+// return:
 //  watch: watch implementation for changing event, need to Stop manually
 func (s *NSClient) Watch(cxt context.Context, key, version string, selector storage.Selector) (watch.Interface, error) {
 	if strings.HasSuffix(key, "/") {
@@ -239,21 +239,22 @@ func (s *NSClient) Watch(cxt context.Context, key, version string, selector stor
 		layer = convertToNodeConfig(s.config, nswatch.pushEventFunc)
 	}
 	nswatch.setLayerConfig(layer)
-	//running watch
+	// running watch
 	go nswatch.run()
 	return nswatch, nil
 }
 
-//WatchList implements storage interface
-//Watch & WatchList are the same for http api
-func (s *NSClient) WatchList(ctx context.Context, key, version string, selector storage.Selector) (watch.Interface, error) {
+// WatchList implements storage interface
+// Watch & WatchList are the same for http api
+func (s *NSClient) WatchList(ctx context.Context, key, version string, selector storage.Selector) (watch.Interface,
+	error) {
 	return s.Watch(ctx, key, version, selector)
 }
 
-//Get implements storage interface
-//get exactly data object from http event storage. so key must be resource fullpath
-//param cxt: not used
-//param version: reserved for future
+// Get implements storage interface
+// get exactly data object from http event storage. so key must be resource fullpath
+// param cxt: not used
+// param version: reserved for future
 func (s *NSClient) Get(cxt context.Context, key, version string, ignoreNotFound bool) (meta.Object, error) {
 	if len(key) == 0 {
 		return nil, fmt.Errorf("lost object key")
@@ -283,11 +284,11 @@ func (s *NSClient) Get(cxt context.Context, key, version string, ignoreNotFound 
 	return target, nil
 }
 
-//List implements storage interface
-//list namespace-based data or all data, detail node should use Get
-//* if key is empty, list all data under prefix, data must be target object
-//* if key is not empty, list all data under prefix/key, data must be target object.
-//if one node errors, we consider all errors. List Function only list leaf data nodes
+// List implements storage interface
+// list namespace-based data or all data, detail node should use Get
+// * if key is empty, list all data under prefix, data must be target object
+// * if key is not empty, list all data under prefix/key, data must be target object.
+// if one node errors, we consider all errors. List Function only list leaf data nodes
 func (s *NSClient) List(cxt context.Context, key string, selector storage.Selector) ([]meta.Object, error) {
 	if strings.HasSuffix(key, "/") {
 		return nil, fmt.Errorf("error key format")
@@ -297,7 +298,7 @@ func (s *NSClient) List(cxt context.Context, key string, selector storage.Select
 		fullPath = path.Join(s.prefixPath, key)
 	}
 	blog.V(3).Infof("zk ready to list all objects under %s...", fullPath)
-	//detecte all leaf nodes for reading detail contents
+	// detecte all leaf nodes for reading detail contents
 	nodes, err := s.getLeafNode(fullPath)
 	if err != nil {
 		blog.V(3).Infof("zk client got all childrens under %s failed, %s", fullPath, err)
@@ -309,12 +310,12 @@ func (s *NSClient) List(cxt context.Context, key string, selector storage.Select
 	}
 	var outs []meta.Object
 	for _, node := range nodes {
-		//get node content from zookeeper
+		// get node content from zookeeper
 		rawBytes, _, err := s.client.GetEx(node)
 		if err != nil {
 			if err == zkclient.ErrNoNode {
-				//data consistency problem here, maybe node is deleted after we
-				//got it, just skip disappearing nodes
+				// data consistency problem here, maybe node is deleted after we
+				// got it, just skip disappearing nodes
 				blog.V(3).Infof("zk namespace client find %s lost when getting contents", node)
 				continue
 			}
@@ -338,13 +339,13 @@ func (s *NSClient) List(cxt context.Context, key string, selector storage.Select
 	return outs, nil
 }
 
-//Close storage conenction, clean resource
+// Close storage conenction, clean resource
 func (s *NSClient) Close() {
 	blog.V(3).Infof("zookeeper event storage %s exit.", s.prefixPath)
 	s.client.Close()
 }
 
-//getLeafNode recursive get all leaf nodes, pay more attension
+// getLeafNode recursive get all leaf nodes, pay more attension
 func (s *NSClient) getLeafNode(node string) ([]string, error) {
 	if len(node) == 0 {
 		return nil, fmt.Errorf("empty node")
@@ -365,9 +366,9 @@ func (s *NSClient) getLeafNode(node string) ([]string, error) {
 			return nil, err
 		}
 		if len(subNodes) == 0 {
-			//based-on namespace data path rule,
-			//check if leafNode is a really data node
-			//for example:
+			// based-on namespace data path rule,
+			// check if leafNode is a really data node
+			// for example:
 			//  prefix is /data/application
 			//  data node is /data/application/namespace/mydata
 			//  sub is namespace/mydata
@@ -382,7 +383,8 @@ func (s *NSClient) getLeafNode(node string) ([]string, error) {
 	return leafNodes, nil
 }
 
-//newZookeeperWatch create zookeeper watch
+// newNSWatch xxx
+// newZookeeperWatch create zookeeper watch
 func newNSWatch(basic string, config *ZkConfig, c *zkclient.ZkClient, s storage.Selector) *nsWatch {
 	w := &nsWatch{
 		selfpath:    basic,
@@ -395,7 +397,7 @@ func newNSWatch(basic string, config *ZkConfig, c *zkclient.ZkClient, s storage.
 	return w
 }
 
-//NSWatch implements watch interface, and wrap for zookeeper layer watch
+// NSWatch implements watch interface, and wrap for zookeeper layer watch
 type nsWatch struct {
 	selfpath    string
 	config      *ZkConfig
@@ -411,7 +413,7 @@ func (e *nsWatch) setLayerConfig(c map[int]*Layer) {
 	e.layers = c
 }
 
-//Stop watch channel
+// Stop watch channel
 func (e *nsWatch) Stop() {
 	e.isStop = true
 	e.nodeWatch.Stop()
@@ -429,15 +431,15 @@ func (e *nsWatch) run() error {
 	return nil
 }
 
-//WatchEvent get watch events, if watch stopped/error, watch must close
+// WatchEvent get watch events, if watch stopped/error, watch must close
 // channel and exit, watch user must read channel like
 // e, ok := <-channel
 func (e *nsWatch) WatchEvent() <-chan watch.Event {
 	return e.dataChannel
 }
 
-//pushEventFunc callback event when object data trigger
-//warnning(DeveloperJim): nsWatch do not support detail data node watch
+// pushEventFunc callback event when object data trigger
+// warnning(DeveloperJim): nsWatch do not support detail data node watch
 func (e *nsWatch) pushEventFunc(eventType watch.EventType, nodepath string, rawBytes []byte) {
 	if e.isStop {
 		return
@@ -452,11 +454,11 @@ func (e *nsWatch) pushEventFunc(eventType watch.EventType, nodepath string, rawB
 		}
 		event.Data = target
 	}
-	//check delete eventType
+	// check delete eventType
 	if eventType == watch.EventDeleted {
-		//deletion, this event is especial because
-		//no data can obtain from zookeeper, we only know node is deleted.
-		//so we construct empty data for this object from nodepath
+		// deletion, this event is especial because
+		// no data can obtain from zookeeper, we only know node is deleted.
+		// so we construct empty data for this object from nodepath
 		nodes := strings.Split(nodepath, "/")
 		if len(nodes) < 2 {
 			blog.Errorf("zk namespace watch match error path in zookeeper, %s", nodepath)

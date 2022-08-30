@@ -334,6 +334,7 @@ func (c *ReplicaCalculator) GetObjectPerPodMetricReplicas(statusReplicas int32, 
 	return replicaCount, utilization, timestamp, nil
 }
 
+// getReadyPodsCount xxx
 // Many different functions in this module use variations
 // of this function. Make this function generic, so we don't repeat the same
 // logic in multiple places.

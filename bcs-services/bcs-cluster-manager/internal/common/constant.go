@@ -19,7 +19,7 @@ import (
 // ResourceType resource type
 type ResourceType string
 
-// String()
+// String ()
 func (rt ResourceType) String() string {
 	return string(rt)
 }
@@ -114,9 +114,9 @@ const (
 	// MicroMetaKeyHTTPPort http port in micro service meta
 	MicroMetaKeyHTTPPort = "httpport"
 
-	//ClusterManageTypeManaged cloud manage cluster
+	// ClusterManageTypeManaged cloud manage cluster
 	ClusterManageTypeManaged = "MANAGED_CLUSTER"
-	//ClusterManageTypeIndependent BCS manage cluster
+	// ClusterManageTypeIndependent BCS manage cluster
 	ClusterManageTypeIndependent = "INDEPENDENT_CLUSTER"
 
 	// TkeCidrStatusAvailable available tke cidr status
@@ -126,23 +126,23 @@ const (
 	// TkeCidrStatusReserved reserved tke cidr status
 	TkeCidrStatusReserved = "reserved"
 
-	//StatusInitialization node/cluster/nodegroup status
+	// StatusInitialization node/cluster/nodegroup status
 	StatusInitialization = "INITIALIZATION"
-	//StatusCreateClusterFailed status create failed
+	// StatusCreateClusterFailed status create failed
 	StatusCreateClusterFailed = "CREATE-FAILURE"
-	//StatusImportClusterFailed status import failed
+	// StatusImportClusterFailed status import failed
 	StatusImportClusterFailed = "IMPORT-FAILURE"
-	//StatusRunning status running
+	// StatusRunning status running
 	StatusRunning = "RUNNING"
-	//StatusDeleting status deleting for scaling down
+	// StatusDeleting status deleting for scaling down
 	StatusDeleting = "DELETING"
-	//StatusDeleted status deleted
+	// StatusDeleted status deleted
 	StatusDeleted = "DELETED"
-	//StatusDeleteClusterFailed status delete failed
+	// StatusDeleteClusterFailed status delete failed
 	StatusDeleteClusterFailed = "DELETE-FAILURE"
-	//StatusAddNodesFailed status add nodes failed
+	// StatusAddNodesFailed status add nodes failed
 	StatusAddNodesFailed = "ADD-FAILURE"
-	//StatusRemoveNodesFailed status remove nodes failed
+	// StatusRemoveNodesFailed status remove nodes failed
 	StatusRemoveNodesFailed = "REMOVE-FAILURE"
 	// StatusNodeRemovable node is removable
 	StatusNodeRemovable = "REMOVABLE"

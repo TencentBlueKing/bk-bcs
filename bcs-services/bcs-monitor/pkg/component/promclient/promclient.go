@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package promclient xxx
 package promclient
 
 import (
@@ -27,7 +28,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component"
 )
 
-// Result
+// Result xxx
 // Decode only ResultType and load Result only as RawJson since we don't know
 // structure of the Result yet.
 type Result struct {
@@ -75,7 +76,8 @@ func QueryInstant(ctx context.Context, rawURL string, header http.Header, promql
 }
 
 // QueryRange 查询历史数据
-func QueryRange(ctx context.Context, rawURL string, header http.Header, promql string, start time.Time, end time.Time, step time.Duration) (*Result, error) {
+func QueryRange(ctx context.Context, rawURL string, header http.Header, promql string, start time.Time, end time.Time,
+	step time.Duration) (*Result, error) {
 	data := map[string]string{
 		"query": promql,
 		"start": start.Format(time.RFC3339Nano),
@@ -108,7 +110,8 @@ func QueryRange(ctx context.Context, rawURL string, header http.Header, promql s
 }
 
 // QueryInstantVector 查询实时数据
-func QueryInstantVector(ctx context.Context, rawURL string, header http.Header, promql string, t time.Time) (model.Vector, []string, error) {
+func QueryInstantVector(ctx context.Context, rawURL string, header http.Header, promql string,
+	t time.Time) (model.Vector, []string, error) {
 	m, err := QueryInstant(ctx, rawURL, header, promql, t)
 	if err != nil {
 		return nil, nil, err
@@ -130,7 +133,8 @@ func QueryInstantVector(ctx context.Context, rawURL string, header http.Header, 
 		}
 	default:
 		if m.Warnings != nil {
-			return nil, nil, errors.Errorf("error: %s, type: %s, warning: %s", m.Error, m.ErrorType, strings.Join(m.Warnings, ", "))
+			return nil, nil, errors.Errorf("error: %s, type: %s, warning: %s", m.Error, m.ErrorType, strings.Join(m.Warnings,
+				", "))
 		}
 		if m.Error != "" {
 			return nil, nil, errors.Errorf("error: %s, type: %s", m.Error, m.ErrorType)
@@ -141,8 +145,9 @@ func QueryInstantVector(ctx context.Context, rawURL string, header http.Header, 
 	return vectorResult, m.Warnings, nil
 }
 
-// QueryRange 查询历史数据
-func QueryRangeMatrix(ctx context.Context, rawURL string, header http.Header, promql string, start time.Time, end time.Time, step time.Duration) (model.Matrix, []string, error) {
+// QueryRangeMatrix 查询历史数据
+func QueryRangeMatrix(ctx context.Context, rawURL string, header http.Header, promql string, start time.Time,
+	end time.Time, step time.Duration) (model.Matrix, []string, error) {
 	m, err := QueryRange(ctx, rawURL, header, promql, start, end, step)
 	if err != nil {
 		return nil, nil, err
@@ -158,7 +163,8 @@ func QueryRangeMatrix(ctx context.Context, rawURL string, header http.Header, pr
 		}
 	default:
 		if m.Warnings != nil {
-			return nil, nil, errors.Errorf("error: %s, type: %s, warning: %s", m.Error, m.ErrorType, strings.Join(m.Warnings, ", "))
+			return nil, nil, errors.Errorf("error: %s, type: %s, warning: %s", m.Error, m.ErrorType, strings.Join(m.Warnings,
+				", "))
 		}
 		if m.Error != "" {
 			return nil, nil, errors.Errorf("error: %s, type: %s", m.Error, m.ErrorType)
@@ -171,6 +177,7 @@ func QueryRangeMatrix(ctx context.Context, rawURL string, header http.Header, pr
 
 }
 
+// convertScalarJSONToVector xxx
 // Scalar response consists of array with mixed types so it needs to be
 // unmarshaled separately.
 func convertScalarJSONToVector(scalarJSONResult json.RawMessage) (model.Vector, error) {

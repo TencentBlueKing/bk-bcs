@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package metrics xxx
 package metrics
 
 import (
@@ -19,6 +20,7 @@ import (
 )
 
 const (
+	// BkBcsHelmManager xxx
 	BkBcsHelmManager = "bkbcs_helmmanager"
 )
 

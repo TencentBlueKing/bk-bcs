@@ -11,13 +11,14 @@
  *
  */
 
+// Package storage xxx
 package storage
 
 import "github.com/coredns/coredns/plugin/etcd/msg"
 
-//storage for data persistence
+// storage for data persistence
 
-//ServiceList define sort interface for msg.Service list
+// ServiceList define sort interface for msg.Service list
 type ServiceList []msg.Service
 
 // Len is the number of elements in the collection.
@@ -42,7 +43,7 @@ func (sl ServiceList) Swap(i, j int) {
 	sl[i], sl[j] = sl[j], sl[i]
 }
 
-//Storage interface for dns data persistence
+// Storage interface for dns data persistence
 type Storage interface {
 	AddService(domain string, msg []msg.Service) error
 	UpdateService(domain string, old, cur []msg.Service) error

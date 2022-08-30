@@ -30,15 +30,19 @@ import (
 )
 
 const (
-	SubRoot   = "/bcs/services/auth"
+	// SubRoot xxx
+	SubRoot = "/bcs/services/auth"
+	// TokenPath xxx
 	TokenPath = SubRoot + "/token"
-	KeyPath   = SubRoot + "/key"
+	// KeyPath xxx
+	KeyPath = SubRoot + "/key"
 )
 
 var (
 	tokenKeyAlreadyExists = fmt.Errorf("token key already exists")
 )
 
+// NewTokenCache xxx
 func NewTokenCache(conf *config.ApiServConfig) (*TokenCache, error) {
 	tokenCache := &TokenCache{
 		conf: conf,
@@ -67,6 +71,7 @@ func NewTokenCache(conf *config.ApiServConfig) (*TokenCache, error) {
 	return tokenCache, nil
 }
 
+// TokenCache xxx
 type TokenCache struct {
 	conf *config.ApiServConfig
 
@@ -82,6 +87,7 @@ type TokenCache struct {
 	queueLock  sync.RWMutex
 }
 
+// Update xxx
 func (tc *TokenCache) Update(token *auth.Token) {
 	tc.queueLock.Lock()
 	defer tc.queueLock.Unlock()
@@ -90,6 +96,7 @@ func (tc *TokenCache) Update(token *auth.Token) {
 	tc.cacheQueue[token.Username] = token
 }
 
+// Get xxx
 func (tc *TokenCache) Get(tokenKey string) (*auth.Token, error) {
 	tc.realLock.RLock()
 	defer tc.realLock.RUnlock()
@@ -238,7 +245,8 @@ func (tc *TokenCache) createToken(token *auth.Token) error {
 		blog.Errorf("createToken occupy key(token: %s, user: %s) failed: %v", token.Token, token.Username, err)
 		return err
 	} else if !ok {
-		blog.Errorf("createToken occupy key(token: %s, user: %s) failed: %v", token.Token, token.Username, tokenKeyAlreadyExists)
+		blog.Errorf("createToken occupy key(token: %s, user: %s) failed: %v", token.Token, token.Username,
+			tokenKeyAlreadyExists)
 		return tokenKeyAlreadyExists
 	}
 

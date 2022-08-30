@@ -61,7 +61,7 @@ func init() {
 	prometheus.MustRegister(pluginLatency)
 }
 
-//ReportBcsWebhookServerAPIMetrics report all api action metrics
+// ReportBcsWebhookServerAPIMetrics report all api action metrics
 func ReportBcsWebhookServerAPIMetrics(handler, method, status string, started time.Time) {
 	requestTotalAPI.WithLabelValues(handler, method, status).Inc()
 	requestLatencyAPI.WithLabelValues(handler, method, status).Observe(time.Since(started).Seconds())

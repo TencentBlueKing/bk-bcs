@@ -21,11 +21,17 @@ import (
 type ArgocdServerError uint32
 
 const (
+	// ErrArgocdServerSuccess TODO
 	ErrArgocdServerSuccess ArgocdServerError = iota
+	// ErrArgocdServerReqOrRespEmpty TODO
 	ErrArgocdServerReqOrRespEmpty
+	// ErrActionFailed TODO
 	ErrActionFailed
+	// ErrProjectNotExist TODO
 	ErrProjectNotExist
+	// ErrInstanceNotFound TODO
 	ErrInstanceNotFound
+	// ErrPluginNotFound TODO
 	ErrPluginNotFound
 )
 

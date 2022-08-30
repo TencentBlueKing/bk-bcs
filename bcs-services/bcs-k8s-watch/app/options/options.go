@@ -11,6 +11,7 @@
  *
  */
 
+// Package options xxx
 package options
 
 import (
@@ -78,7 +79,7 @@ type K8sConfig struct {
 
 // WatchResource 指定监听的资源
 type WatchResource struct {
-	//监听指定的namespace，暂时支持一个
+	// 监听指定的namespace，暂时支持一个
 	Namespace         string            `json:"namespace"`
 	DisableCRD        bool              `json:"disable_crd"`
 	DisableNetservice bool              `json:"disable_netservice"`
@@ -107,7 +108,7 @@ func NewWatchOptions() *WatchConfig {
 	return &WatchConfig{}
 }
 
-// FileConfig the file config
+// FilterConfig the file config
 type FilterConfig struct {
 	APIResourceSpecification []APIResourceFilter `json:"apiResourceSpecification"`
 	APIResourceException     []APIResourceFilter `json:"apiResourceException"`

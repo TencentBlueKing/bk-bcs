@@ -67,10 +67,11 @@ func (ua *UpdateAction) validate() error {
 	return nil
 }
 
+// modifyNodeGroupField xxx
 // trans request args to node group
 func (ua *UpdateAction) modifyNodeGroupField() {
 	timeStr := time.Now().Format(time.RFC3339)
-	//update field if required
+	// update field if required
 	group := ua.group
 	group.UpdateTime = timeStr
 	group.Updater = ua.req.Updater
@@ -219,7 +220,7 @@ func (ua *UpdateAction) getRelativeResource() error {
 }
 
 func (ua *UpdateAction) updateCloudNodeGroup() error {
-	//get credential for cloudprovider operation
+	// get credential for cloudprovider operation
 	cmOption, err := cloudprovider.GetCredential(&cloudprovider.CredentialData{
 		Cloud:     ua.cloud,
 		AccountID: ua.cluster.CloudAccountID,
@@ -230,7 +231,7 @@ func (ua *UpdateAction) updateCloudNodeGroup() error {
 		)
 		return err
 	}
-	//create nodegroup with cloudprovider
+	// create nodegroup with cloudprovider
 	mgr, err := cloudprovider.GetNodeGroupMgr(ua.cloud.CloudProvider)
 	if err != nil {
 		blog.Errorf("get NodeGroup Manager cloudprovider %s/%s for update nodegroup %s in cluster %s failed, %s",
@@ -274,7 +275,8 @@ func (ua *UpdateAction) saveDB() error {
 
 func (ua *UpdateAction) checkStatus() error {
 	// if nodegroup is creating/deleting/deleted, return error
-	if ua.group.Status == common.StatusCreateNodeGroupCreating || ua.group.Status == common.StatusDeleting || ua.group.Status == common.StatusDeleted {
+	if ua.group.Status == common.StatusCreateNodeGroupCreating || ua.group.Status == common.StatusDeleting ||
+		ua.group.Status == common.StatusDeleted {
 		err := fmt.Errorf("nodegroup %s status is not running, can not disable auto scale", ua.group.NodeGroupID)
 		return err
 	}
@@ -369,14 +371,14 @@ func (ua *MoveNodeAction) validate() error {
 		ua.setResp(common.BcsErrClusterManagerInvalidParameter, err.Error())
 		return err
 	}
-	//get nodegroup for validation
+	// get nodegroup for validation
 	destGroup, err := ua.model.GetNodeGroup(ua.ctx, ua.req.NodeGroupID)
 	if err != nil {
 		ua.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
 		blog.Errorf("Get NodeGroup %s in pre-MoveNode checking failed, err %s", ua.req.NodeGroupID, err.Error())
 		return err
 	}
-	//check cluster info consistency
+	// check cluster info consistency
 	if destGroup.ClusterID != ua.req.ClusterID {
 		blog.Errorf(
 			"request ClusterID %s is not same with NodeGroup.ClusterID %s when MoveNode",
@@ -399,7 +401,7 @@ func (ua *MoveNodeAction) validate() error {
 		return err
 	}
 	ua.cluster = cluster
-	//get specified node for move validation
+	// get specified node for move validation
 	condM := make(operator.M)
 	condM["clusterid"] = ua.group.ClusterID
 	cond := operator.NewLeafCondition(operator.Eq, condM)
@@ -441,14 +443,14 @@ func (ua *MoveNodeAction) Handle(
 	ua.resp = resp
 
 	if err := ua.validate(); err != nil {
-		//valiate already setting response message
+		// valiate already setting response message
 		return
 	}
 	if err := ua.moveCloudNodeGroupNodes(); err != nil {
 		ua.setResp(common.BcsErrClusterManagerCloudProviderErr, err.Error())
 		return
 	}
-	//try to update Node
+	// try to update Node
 	for _, node := range ua.moveNodes {
 		node.NodeGroupID = ua.group.NodeGroupID
 		if err := ua.model.UpdateNode(ctx, node); err != nil {
@@ -478,7 +480,7 @@ func (ua *MoveNodeAction) Handle(
 }
 
 func (ua *MoveNodeAction) moveCloudNodeGroupNodes() error {
-	//try to move node in cloudprovider
+	// try to move node in cloudprovider
 	cloud, cluster, err := actions.GetCloudAndCluster(ua.model, ua.group.Provider, ua.group.ClusterID)
 	if err != nil {
 		blog.Errorf("get cloud %s and project %s when move nodes %v to NodeGroup %s failed, %s",
@@ -632,7 +634,8 @@ func (ua *UpdateDesiredNodeAction) handleTask(scaling uint32) error {
 
 	ua.task = task
 	ua.resp.Data = task
-	blog.Infof("scaling %d node, %v desired node task for NodeGroup successfully for %s", scaling, ua.req.DesiredNode, ua.group.NodeGroupID)
+	blog.Infof("scaling %d node, %v desired node task for NodeGroup successfully for %s", scaling, ua.req.DesiredNode,
+		ua.group.NodeGroupID)
 	return nil
 }
 

@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package project xxx
 package project
 
 import (
@@ -29,8 +30,8 @@ import (
 
 const (
 	tableName = "project"
-	//! we don't setting bson tag in proto file,
-	//! all struct key in mongo is lowcase in default
+	// ! we don't setting bson tag in proto file,
+	// ! all struct key in mongo is lowcase in default
 	tableKey                 = "projectid"
 	defaultProjectListLength = 1000
 )
@@ -65,6 +66,7 @@ func New(db drivers.DB) *ModelProject {
 	}
 }
 
+// ensureTable xxx
 // ensure table
 func (m *ModelProject) ensureTable(ctx context.Context) error {
 	m.isTableEnsuredMutex.RLock()

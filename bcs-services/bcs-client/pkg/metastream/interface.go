@@ -13,17 +13,17 @@
 
 package metastream
 
-//Stream json stream interface for CLI reading multiple string lines
+// Stream json stream interface for CLI reading multiple string lines
 //	and parse them into specified json objects
 type Stream interface {
-	//Length get object number from stream
+	// Length get object number from stream
 	Length() int
-	//HasNext check if stream has Next JSON data
+	// HasNext check if stream has Next JSON data
 	HasNext() bool
-	//GetResourceKind return apiVersion and Kind
+	// GetResourceKind return apiVersion and Kind
 	GetResourceKind() (string, string, error)
-	//GetResourceKey return JSON object index: namespace & name
+	// GetResourceKey return JSON object index: namespace & name
 	GetResourceKey() (string, string, error)
-	//GetRawJSON return  detail raw json string
+	// GetRawJSON return  detail raw json string
 	GetRawJSON() []byte
 }

@@ -27,6 +27,7 @@ const (
 	bcsK8sClusterDomain = "kubernetes"
 )
 
+// ExtractIpAddress xxx
 func ExtractIpAddress(serverAddress string) (*url.URL, error) {
 	if !strings.HasSuffix(serverAddress, "/") {
 		serverAddress = serverAddress + "/"
@@ -38,6 +39,7 @@ func ExtractIpAddress(serverAddress string) (*url.URL, error) {
 	return ipAddress, nil
 }
 
+// TurnCredentialsIntoConfig xxx
 func TurnCredentialsIntoConfig(clusterCredentials *m.ClusterCredentials) (*restclient.Config, error) {
 
 	tlsClientConfig := restclient.TLSClientConfig{
@@ -51,6 +53,7 @@ func TurnCredentialsIntoConfig(clusterCredentials *m.ClusterCredentials) (*restc
 	}, nil
 }
 
+// CheckTcpConn xxx
 // check tcp connection to addr
 func CheckTcpConn(addr string) error {
 	checkUrl, err := url.Parse(addr)

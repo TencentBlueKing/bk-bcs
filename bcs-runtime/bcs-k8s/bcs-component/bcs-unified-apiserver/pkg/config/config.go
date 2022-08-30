@@ -11,6 +11,7 @@
  *
  */
 
+// Package config xxx
 package config
 
 import (
@@ -33,6 +34,7 @@ type Configurations struct {
 	ClusterResourceMap map[string]*ClusterResource `yaml:"-"`
 }
 
+// Init xxx
 // ReadFrom : read from file
 func (c *Configurations) Init() error {
 	c.Base = &BaseConf{}
@@ -60,7 +62,7 @@ func (c *Configurations) IsDevMode() bool {
 // G : Global Configurations
 var G = &Configurations{}
 
-// 初始化
+// init 初始化
 func init() {
 	G.Init()
 }
@@ -94,7 +96,7 @@ func (c *Configurations) ReadFrom(content []byte) error {
 	return nil
 }
 
-// InitClusterResources
+// InitClusterResources xxx
 func (c *Configurations) InitClusterResources() error {
 	c.ClusterResourceMap = make(map[string]*ClusterResource)
 	for _, v := range c.ClusterResources {
@@ -103,7 +105,7 @@ func (c *Configurations) InitClusterResources() error {
 	return nil
 }
 
-// GetMember
+// GetMember xxx
 func (c *Configurations) GetMember(clusterId string) (*ClusterResource, bool) {
 	resource, ok := c.ClusterResourceMap[clusterId]
 	if !ok {

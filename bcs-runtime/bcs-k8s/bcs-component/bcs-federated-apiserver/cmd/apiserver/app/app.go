@@ -11,6 +11,7 @@
  *
  */
 
+// Package app xxx
 package app
 
 import (
@@ -55,17 +56,20 @@ func NewAggregationCommand() *cobra.Command {
 			}
 			completedConfig := apiserverConfig.Complete()
 
-			//genericAPIServer
-			genericServer, err := completedConfig.GenericConfig.New("bcs-federated-apiserver", genericapiserver.NewEmptyDelegate())
+			// genericAPIServer
+			genericServer, err := completedConfig.GenericConfig.New("bcs-federated-apiserver",
+				genericapiserver.NewEmptyDelegate())
 			if err != nil {
 				klog.Fatalf("Error in initializing configuration: %v", err)
 			}
 			c := make(chan struct{})
 			completedConfig.GenericConfig.SharedInformerFactory.Start(c)
 
-			//bcsStorage
-			bcsStorage := storage.NewBcsStorage(opts.GetConfig().BcsStorageAddress, opts.GetConfig().BcsStorageToken, opts.GetConfig().BcsStorageURLPrefix)
-			genericServer.AddPostStartHookOrDie("start-federated-aggregationapis", func(context genericapiserver.PostStartHookContext) error {
+			// bcsStorage
+			bcsStorage := storage.NewBcsStorage(opts.GetConfig().BcsStorageAddress, opts.GetConfig().BcsStorageToken,
+				opts.GetConfig().BcsStorageURLPrefix)
+			genericServer.AddPostStartHookOrDie("start-federated-aggregationapis", func(
+				context genericapiserver.PostStartHookContext) error {
 				if genericServer != nil {
 					cfg, err := clientcmd.BuildConfigFromFlags("", "")
 					if err != nil {

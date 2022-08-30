@@ -24,6 +24,7 @@ func getSecretRootPath() string {
 	return "/" + bcsRootNode + "/" + secretNode
 }
 
+// SaveSecret xxx
 func (store *managerStore) SaveSecret(secret *commtypes.BcsSecret) error {
 
 	data, err := json.Marshal(secret)
@@ -36,6 +37,7 @@ func (store *managerStore) SaveSecret(secret *commtypes.BcsSecret) error {
 	return store.Db.Insert(path, string(data))
 }
 
+// FetchSecret xxx
 func (store *managerStore) FetchSecret(ns, name string) (*commtypes.BcsSecret, error) {
 
 	path := getSecretRootPath() + "/" + ns + "/" + name
@@ -54,6 +56,7 @@ func (store *managerStore) FetchSecret(ns, name string) (*commtypes.BcsSecret, e
 	return secret, nil
 }
 
+// DeleteSecret xxx
 func (store *managerStore) DeleteSecret(ns, name string) error {
 
 	path := getSecretRootPath() + "/" + ns + "/" + name
@@ -65,9 +68,10 @@ func (store *managerStore) DeleteSecret(ns, name string) error {
 	return nil
 }
 
+// ListSecrets xxx
 func (store *managerStore) ListSecrets(runAs string) ([]*commtypes.BcsSecret, error) {
 
-	path := getSecretRootPath() + "/" + runAs //defaultRunAs
+	path := getSecretRootPath() + "/" + runAs // defaultRunAs
 
 	IDs, err := store.Db.List(path)
 	if err != nil {
@@ -95,6 +99,7 @@ func (store *managerStore) ListSecrets(runAs string) ([]*commtypes.BcsSecret, er
 	return objs, nil
 }
 
+// ListAllSecrets xxx
 func (store *managerStore) ListAllSecrets() ([]*commtypes.BcsSecret, error) {
 	nss, err := store.ListObjectNamespaces(secretNode)
 	if err != nil {

@@ -11,6 +11,7 @@
  *
  */
 
+// Package util xxx
 package util
 
 import (
@@ -25,9 +26,9 @@ import (
 	"github.com/deckarep/golang-set"
 )
 
-//ExeCommand execute shell command, command like:
-//haproxy -f config.cfg -c
-//haproxy -f haproxy.cfg -p haproxy.pid -sf $(cat haproxy.pid)
+// ExeCommand execute shell command, command like:
+// haproxy -f config.cfg -c
+// haproxy -f haproxy.cfg -p haproxy.pid -sf $(cat haproxy.pid)
 func ExeCommand(command string) (string, bool) {
 	cmd := exec.Command("/bin/sh", "-c", command)
 	output, err := cmd.CombinedOutput()
@@ -37,7 +38,7 @@ func ExeCommand(command string) (string, bool) {
 	return string(output), true
 }
 
-//Md5SumForFile calculate md5sum of file
+// Md5SumForFile calculate md5sum of file
 func Md5SumForFile(filename string) (string, error) {
 	filePtr, err := os.Open(filename)
 	defer func() {
@@ -60,9 +61,9 @@ func Md5SumForFile(filename string) (string, error) {
 	return md5Str, nil
 }
 
-//ReplaceFile
+// ReplaceFile xxx
 func ReplaceFile(oldFile, curFile string) error {
-	//backup file first
+	// backup file first
 	src, sErr := os.Open(curFile)
 	defer func() {
 		err := src.Close()
@@ -85,7 +86,7 @@ func ReplaceFile(oldFile, curFile string) error {
 		blog.Errorf("Read old config file %s failed: %s", oldFile, dErr.Error())
 		return dErr
 	}
-	//mv file
+	// mv file
 	_, err := io.Copy(dst, src)
 	if err != nil {
 		blog.Errorf("Copy new nginx.cfg failed: %s", err.Error())
@@ -95,7 +96,7 @@ func ReplaceFile(oldFile, curFile string) error {
 	return nil
 }
 
-//GetSubsection return slice come from first - second
+// GetSubsection return slice come from first - second
 func GetSubsection(first, second []string) (sub []string) {
 	if len(first) == 0 {
 		return []string{}
@@ -119,9 +120,9 @@ func GetSubsection(first, second []string) (sub []string) {
 	return sub
 }
 
-//TrimSpecialChar trim special char
+// TrimSpecialChar trim special char
 func TrimSpecialChar(src string) string {
-	//trim special char
+	// trim special char
 	validPath := strings.Replace(src, "/", "", -1)
 	validPath = strings.Replace(validPath, " ", "", -1)
 	validPath = strings.Replace(validPath, "~", "", -1)
@@ -132,12 +133,12 @@ func TrimSpecialChar(src string) string {
 	return validPath
 }
 
-//GetValidZookeeperPath 去除/等特殊字符，/转换为_
+// GetValidZookeeperPath 去除/等特殊字符，/转换为_
 func GetValidZookeeperPath(src string) string {
 	if src == "/" {
 		return ""
 	}
-	//trim special char
+	// trim special char
 	validPath := strings.Replace(src, "/", "_", -1)
 	validPath = strings.Replace(validPath, " ", "", -1)
 	validPath = strings.Replace(validPath, "~", "", -1)
@@ -153,7 +154,7 @@ func GetValidTargetGroupSub(src string) string {
 	if src == "/" {
 		return ""
 	}
-	//trim special char
+	// trim special char
 	validPath := strings.Replace(src, "/", "-", -1)
 	validPath = strings.Replace(validPath, " ", "", -1)
 	validPath = strings.Replace(validPath, "~", "", -1)

@@ -31,6 +31,7 @@ const (
 	appSecretKey = "X-BK-APP-SECRET"
 )
 
+// NewClient xxx
 func NewClient(conf *config.ApiServConfig) (*Client, error) {
 	c := &Client{
 		conf: conf,
@@ -57,6 +58,7 @@ func NewClient(conf *config.ApiServConfig) (*Client, error) {
 	return c, nil
 }
 
+// Client xxx
 type Client struct {
 	conf *config.ApiServConfig
 
@@ -76,6 +78,7 @@ type Client struct {
 	client *httpclient.HttpClient
 }
 
+// Query xxx
 func (c *Client) Query(username string, action auth.Action, resource auth.Resource) (bool, error) {
 	param := &QueryParam{
 		PrincipalType: "user",
@@ -104,13 +107,15 @@ func (c *Client) query(param *QueryParam) (*QueryResp, error) {
 
 	raw, err := c.client.Request(c.queryAuthURL, "POST", c.queryAuthHeader, data)
 	if err != nil {
-		blog.Errorf("bkiam auth query request failed: %v, url(%s), body(%s), resp(%s)", err, c.queryAuthURL, string(data), string(raw))
+		blog.Errorf("bkiam auth query request failed: %v, url(%s), body(%s), resp(%s)", err, c.queryAuthURL, string(data),
+			string(raw))
 		return nil, err
 	}
 
 	var resp QueryResp
 	if err := codec.DecJson(raw, &resp); err != nil {
-		blog.Errorf("bkiam auth query decode resp failed: %v, url(%s), body(%s), resp(%s)", err, c.queryAuthURL, string(data), string(raw))
+		blog.Errorf("bkiam auth query decode resp failed: %v, url(%s), body(%s), resp(%s)", err, c.queryAuthURL, string(data),
+			string(raw))
 		return nil, err
 	}
 

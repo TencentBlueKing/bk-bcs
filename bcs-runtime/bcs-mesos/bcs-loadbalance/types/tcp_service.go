@@ -15,7 +15,7 @@ package types
 
 import "sort"
 
-//NewFourLayerServiceInfo to new a FourLayerServiceInfo
+// NewFourLayerServiceInfo to new a FourLayerServiceInfo
 func NewFourLayerServiceInfo(s ServiceInfo, bl BackendList) FourLayerServiceInfo {
 	return FourLayerServiceInfo{
 		ServiceInfo: s,
@@ -23,23 +23,23 @@ func NewFourLayerServiceInfo(s ServiceInfo, bl BackendList) FourLayerServiceInfo
 	}
 }
 
-//FourLayerServiceInfo to hold tcp and udp service info
+// FourLayerServiceInfo to hold tcp and udp service info
 type FourLayerServiceInfo struct {
 	ServiceInfo
-	Backends BackendList //tcp Backend
+	Backends BackendList // tcp Backend
 }
 
-//AddBackend add backend to list
+// AddBackend add backend to list
 func (tsi *FourLayerServiceInfo) AddBackend(b Backend) {
 	tsi.Backends = append(tsi.Backends, b)
 }
 
-//SortBackends sort backend list
+// SortBackends sort backend list
 func (tsi *FourLayerServiceInfo) SortBackends() {
 	sort.Sort(tsi.Backends)
 }
 
-//FourLayerServiceInfoList define serviceInfo list implementing sorter interface
+// FourLayerServiceInfoList define serviceInfo list implementing sorter interface
 type FourLayerServiceInfoList []FourLayerServiceInfo
 
 // Len is the number of elements in the collection.

@@ -18,11 +18,15 @@ import (
 )
 
 const (
+	// CidrStatusAvailable xxx
 	CidrStatusAvailable = "available"
-	CidrStatusUsed      = "used"
-	CidrStatusReserved  = "reserved"
+	// CidrStatusUsed xxx
+	CidrStatusUsed = "used"
+	// CidrStatusReserved xxx
+	CidrStatusReserved = "reserved"
 )
 
+// CidrCount xxx
 type CidrCount struct {
 	Count    int    `json:"count"`
 	Vpc      string `json:"vpc"`
@@ -30,6 +34,7 @@ type CidrCount struct {
 	Status   string `json:"status"`
 }
 
+// SaveTkeLbSubnet xxx
 func SaveTkeLbSubnet(clusterRegion, subnetId string) error {
 	var tkeLbSubnet m.TkeLbSubnet
 	dbScoped := GCoreDB.Where(m.TkeLbSubnet{ClusterRegion: clusterRegion}).Assign(
@@ -41,6 +46,7 @@ func SaveTkeLbSubnet(clusterRegion, subnetId string) error {
 	return dbScoped.Error
 }
 
+// GetSubnetByClusterRegion xxx
 func GetSubnetByClusterRegion(clusterRegion string) *m.TkeLbSubnet {
 	tkeLbSubnet := m.TkeLbSubnet{}
 	GCoreDB.Where(&m.TkeLbSubnet{ClusterRegion: clusterRegion}).First(&tkeLbSubnet)
@@ -50,6 +56,7 @@ func GetSubnetByClusterRegion(clusterRegion string) *m.TkeLbSubnet {
 	return nil
 }
 
+// QueryTkeCidr xxx
 func QueryTkeCidr(tkeCidr *m.TkeCidr) *m.TkeCidr {
 	result := m.TkeCidr{}
 	GCoreDB.Where(tkeCidr).First(&result)
@@ -60,6 +67,7 @@ func QueryTkeCidr(tkeCidr *m.TkeCidr) *m.TkeCidr {
 
 }
 
+// SaveTkeCidr xxx
 func SaveTkeCidr(vpc, cidr string, ipNumber uint, status, cluster string) error {
 	tkeCidr := &m.TkeCidr{
 		Vpc:      vpc,
@@ -73,13 +81,16 @@ func SaveTkeCidr(vpc, cidr string, ipNumber uint, status, cluster string) error 
 	return err
 }
 
+// UpdateTkeCidr xxx
 func UpdateTkeCidr(tkeCidr, updatedTkeCidr *m.TkeCidr) error {
 	err := GCoreDB.Model(tkeCidr).Updates(*updatedTkeCidr).Error
 	return err
 }
 
+// CountTkeCidr xxx
 func CountTkeCidr() []CidrCount {
 	var cidrCounts []CidrCount
-	GCoreDB.Table("tke_cidrs").Select("count(*) as count, vpc, ip_number, status").Group("vpc, ip_number, status").Scan(&cidrCounts)
+	GCoreDB.Table("tke_cidrs").Select("count(*) as count, vpc, ip_number, status").Group("vpc, ip_number, status").
+		Scan(&cidrCounts)
 	return cidrCounts
 }

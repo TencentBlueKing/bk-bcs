@@ -30,7 +30,7 @@ import (
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
 )
 
-// GenResListReq ...
+// GenResListReq xxx
 func GenResListReq() clusterRes.ResListReq {
 	return clusterRes.ResListReq{
 		ProjectID: envs.TestProjectID,
@@ -40,7 +40,7 @@ func GenResListReq() clusterRes.ResListReq {
 	}
 }
 
-// GenResCreateReq ...
+// GenResCreateReq xxx
 func GenResCreateReq(manifest *spb.Struct) clusterRes.ResCreateReq {
 	return clusterRes.ResCreateReq{
 		ProjectID: envs.TestProjectID,
@@ -50,7 +50,7 @@ func GenResCreateReq(manifest *spb.Struct) clusterRes.ResCreateReq {
 	}
 }
 
-// GenResUpdateReq ...
+// GenResUpdateReq xxx
 func GenResUpdateReq(manifest *spb.Struct, name string) clusterRes.ResUpdateReq {
 	return clusterRes.ResUpdateReq{
 		ProjectID: envs.TestProjectID,
@@ -62,7 +62,7 @@ func GenResUpdateReq(manifest *spb.Struct, name string) clusterRes.ResUpdateReq 
 	}
 }
 
-// GenResGetReq ...
+// GenResGetReq xxx
 func GenResGetReq(name string) clusterRes.ResGetReq {
 	return clusterRes.ResGetReq{
 		ProjectID: envs.TestProjectID,
@@ -73,7 +73,7 @@ func GenResGetReq(name string) clusterRes.ResGetReq {
 	}
 }
 
-// GenResDeleteReq ...
+// GenResDeleteReq xxx
 func GenResDeleteReq(name string) clusterRes.ResDeleteReq {
 	return clusterRes.ResDeleteReq{
 		ProjectID: envs.TestProjectID,
@@ -110,10 +110,10 @@ func GetOrCreateNS(namespace string) error {
 	return err
 }
 
-// CRDName4Test ...
+// CRDName4Test xxx
 var CRDName4Test = "crontabs.stable.example.com"
 
-// CRDManifest4Test ...
+// CRDManifest4Test xxx
 var CRDManifest4Test = map[string]interface{}{
 	"apiVersion": "apiextensions.k8s.io/v1",
 	"kind":       "CustomResourceDefinition",

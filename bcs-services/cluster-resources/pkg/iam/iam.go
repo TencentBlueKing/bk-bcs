@@ -12,6 +12,7 @@
  * limitations under the License.
  */
 
+// Package iam xxx
 package iam
 
 import (
@@ -22,7 +23,7 @@ import (
 	nsAuth "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/iam/perm/resource/namespace"
 )
 
-// NewNSPerm ...
+// NewNSPerm xxx
 func NewNSPerm(projectID, clusterID string) perm.Perm {
 	if runtime.RunMode == runmode.Dev || runtime.RunMode == runmode.UnitTest {
 		return &MockPerm{}
@@ -30,7 +31,7 @@ func NewNSPerm(projectID, clusterID string) perm.Perm {
 	return nsAuth.NewPerm(projectID, clusterID)
 }
 
-// NewNSScopedPerm ...
+// NewNSScopedPerm xxx
 func NewNSScopedPerm(projectID, clusterID string) perm.Perm {
 	if runtime.RunMode == runmode.Dev || runtime.RunMode == runmode.UnitTest {
 		return &MockPerm{}
@@ -38,7 +39,7 @@ func NewNSScopedPerm(projectID, clusterID string) perm.Perm {
 	return nsAuth.NewScopedPerm(projectID, clusterID)
 }
 
-// NewClusterPerm ...
+// NewClusterPerm xxx
 func NewClusterPerm(projectID string) perm.Perm {
 	if runtime.RunMode == runmode.Dev || runtime.RunMode == runmode.UnitTest {
 		return &MockPerm{}
@@ -46,7 +47,7 @@ func NewClusterPerm(projectID string) perm.Perm {
 	return clusterAuth.NewPerm(projectID)
 }
 
-// NewClusterScopedPerm ...
+// NewClusterScopedPerm xxx
 func NewClusterScopedPerm(projectID string) perm.Perm {
 	if runtime.RunMode == runmode.Dev || runtime.RunMode == runmode.UnitTest {
 		return &MockPerm{}

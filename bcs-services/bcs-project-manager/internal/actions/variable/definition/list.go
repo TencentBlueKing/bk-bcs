@@ -27,7 +27,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-// ListAction ...
+// ListAction xxx
 type ListAction struct {
 	ctx   context.Context
 	model store.ProjectModel
@@ -41,7 +41,7 @@ func NewListAction(model store.ProjectModel) *ListAction {
 	}
 }
 
-// Do ...
+// Do xxx
 func (la *ListAction) Do(ctx context.Context,
 	req *proto.ListVariableDefinitionsRequest) (*map[string]interface{}, error) {
 	la.ctx = ctx

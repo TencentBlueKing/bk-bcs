@@ -68,7 +68,7 @@ type VerifyClusterPermissionRequest struct {
 	ClusterType ClusterType `json:"cluster_type"`
 	ClusterID   string      `json:"cluster_id"`
 	Namespace   string      `json:"namespace"`
-	//ResourceNames string `json:"resource_names"`
+	// ResourceNames string `json:"resource_names"`
 	// URL for check not namespace resource
 	RequestURL string `json:"request_url"`
 

@@ -77,16 +77,16 @@ func newtask() *Task {
 	// create nodeGroup task
 	task.works[createCloudNodeGroupTask] = tasks.CreateCloudNodeGroupTask
 	task.works[checkCloudNodeGroupStatusTask] = tasks.CheckCloudNodeGroupStatusTask
-	//task.works[updateCreateNodeGroupDBInfoTask] = tasks.UpdateCreateNodeGroupDBInfoTask
+	// task.works[updateCreateNodeGroupDBInfoTask] = tasks.UpdateCreateNodeGroupDBInfoTask
 
 	// delete nodeGroup task
 	task.works[deleteNodeGroupTask] = tasks.DeleteCloudNodeGroupTask
-	//task.works[updateDeleteNodeGroupDBInfoTask] = tasks.UpdateDeleteNodeGroupDBInfoTask
+	// task.works[updateDeleteNodeGroupDBInfoTask] = tasks.UpdateDeleteNodeGroupDBInfoTask
 
 	// clean node in nodeGroup task
 	task.works[cleanNodeGroupNodesTask] = tasks.CleanNodeGroupNodesTask
-	//task.works[checkCleanNodeGroupNodesStatusTask] = tasks.CheckCleanNodeGroupNodesStatusTask
-	//task.works[updateCleanNodeGroupNodesDBInfoTask] = tasks.UpdateCleanNodeGroupNodesDBInfoTask
+	// task.works[checkCleanNodeGroupNodesStatusTask] = tasks.CheckCleanNodeGroupNodesStatusTask
+	// task.works[updateCleanNodeGroupNodesDBInfoTask] = tasks.UpdateCleanNodeGroupNodesDBInfoTask
 
 	// update desired nodes task
 	task.works[applyInstanceMachinesTask] = tasks.ApplyInstanceMachinesTask
@@ -98,7 +98,7 @@ func newtask() *Task {
 	return task
 }
 
-//Task background task manager
+// Task background task manager
 type Task struct {
 	works map[string]interface{}
 }
@@ -108,7 +108,7 @@ func (t *Task) Name() string {
 	return cloudName
 }
 
-//GetAllTask register all backgroup task for worker running
+// GetAllTask register all backgroup task for worker running
 func (t *Task) GetAllTask() map[string]interface{} {
 	return t.works
 }
@@ -270,7 +270,7 @@ func (t *Task) BuildImportClusterTask(cls *proto.Cluster, opt *cloudprovider.Imp
 		return nil, fmt.Errorf("BuildImportClusterTask TaskOptions is lost")
 	}
 
-	//init task information
+	// init task information
 	nowStr := time.Now().Format(time.RFC3339)
 	task := &proto.Task{
 		TaskID:         uuid.New().String(),
@@ -441,7 +441,8 @@ func (t *Task) BuildDeleteClusterTask(cls *proto.Cluster, opt *cloudprovider.Del
 }
 
 // BuildAddNodesToClusterTask build addNodes task
-func (t *Task) BuildAddNodesToClusterTask(cls *proto.Cluster, nodes []*proto.Node, opt *cloudprovider.AddNodesOption) (*proto.Task, error) {
+func (t *Task) BuildAddNodesToClusterTask(cls *proto.Cluster, nodes []*proto.Node,
+	opt *cloudprovider.AddNodesOption) (*proto.Task, error) {
 	// addNodesToCluster has three steps:
 	// 1. call qcloud AddExistedInstancesToCluster to add node
 	// 2. call qcloud QueryTkeClusterInstances to check instance status(running initializing failed))
@@ -469,7 +470,7 @@ func (t *Task) BuildAddNodesToClusterTask(cls *proto.Cluster, nodes []*proto.Nod
 		nodeIDs = append(nodeIDs, nodes[i].NodeID)
 	}
 
-	//init task information
+	// init task information
 	nowStr := time.Now().Format(time.RFC3339)
 	task := &proto.Task{
 		TaskID:         uuid.New().String(),
@@ -592,7 +593,8 @@ func (t *Task) BuildAddNodesToClusterTask(cls *proto.Cluster, nodes []*proto.Nod
 }
 
 // BuildRemoveNodesFromClusterTask build removeNodes task
-func (t *Task) BuildRemoveNodesFromClusterTask(cls *proto.Cluster, nodes []*proto.Node, opt *cloudprovider.DeleteNodesOption) (*proto.Task, error) {
+func (t *Task) BuildRemoveNodesFromClusterTask(cls *proto.Cluster, nodes []*proto.Node,
+	opt *cloudprovider.DeleteNodesOption) (*proto.Task, error) {
 	// removeNodesFromCluster has two steps:
 	// 1. call qcloud DeleteTkeClusterInstance to delete node
 	// 2. update node DB info when delete node successful
@@ -616,7 +618,7 @@ func (t *Task) BuildRemoveNodesFromClusterTask(cls *proto.Cluster, nodes []*prot
 		nodeIDs = append(nodeIDs, node.NodeID)
 	}
 
-	//init task information
+	// init task information
 	nowStr := time.Now().Format(time.RFC3339)
 	task := &proto.Task{
 		TaskID:         uuid.New().String(),
@@ -640,7 +642,8 @@ func (t *Task) BuildRemoveNodesFromClusterTask(cls *proto.Cluster, nodes []*prot
 	task.CommonParams["taskName"] = taskName
 
 	// bk-sops preAction
-	if opt.Cloud != nil && opt.Cloud.ClusterManagement != nil && opt.Cloud.ClusterManagement.DeleteNodesFromCluster != nil {
+	if opt.Cloud != nil && opt.Cloud.ClusterManagement != nil && opt.Cloud.ClusterManagement.DeleteNodesFromCluster !=
+		nil {
 		action := opt.Cloud.ClusterManagement.DeleteNodesFromCluster
 
 		for i := range action.PreActions {
@@ -876,7 +879,8 @@ func (t *Task) BuildCleanNodesInGroupTask(nodes []*proto.Node, group *proto.Node
 			NodeIPList:     strings.Join(nodeIPs, ","),
 		})
 		if err != nil {
-			return nil, fmt.Errorf("BuildCleanNodesInGroupTask BcsScaleInAddons.PreActions BuildBkSopsStepAction failed: %v", err)
+			return nil, fmt.Errorf("BuildCleanNodesInGroupTask BcsScaleInAddons.PreActions BuildBkSopsStepAction failed: %v",
+				err)
 		}
 	}
 
@@ -893,7 +897,8 @@ func (t *Task) BuildCleanNodesInGroupTask(nodes []*proto.Node, group *proto.Node
 			NodeIPList:     strings.Join(nodeIPs, ","),
 		})
 		if err != nil {
-			return nil, fmt.Errorf("BuildCleanNodesInGroupTask ScaleInExtraAddons.PreActions BuildBkSopsStepAction failed: %v", err)
+			return nil, fmt.Errorf("BuildCleanNodesInGroupTask ScaleInExtraAddons.PreActions BuildBkSopsStepAction failed: %v",
+				err)
 		}
 	}
 
@@ -935,10 +940,10 @@ func (t *Task) BuildCleanNodesInGroupTask(nodes []*proto.Node, group *proto.Node
 	return task, nil
 }
 
-//BuildDeleteNodeGroupTask when delete nodegroup, we need to create background
-//task to clean all nodes in nodegroup, release all resource in cloudprovider,
-//finnally delete nodes information in local storage.
-//@param group: need to delete
+// BuildDeleteNodeGroupTask when delete nodegroup, we need to create background
+// task to clean all nodes in nodegroup, release all resource in cloudprovider,
+// finnally delete nodes information in local storage.
+// @param group: need to delete
 func (t *Task) BuildDeleteNodeGroupTask(group *proto.NodeGroup, nodes []*proto.Node,
 	opt *cloudprovider.DeleteNodeGroupOption) (*proto.Task, error) {
 	// validate request params
@@ -1110,7 +1115,8 @@ func (t *Task) BuildUpdateDesiredNodesTask(desired uint32, group *proto.NodeGrou
 	task.StepSequence = append(task.StepSequence, checkClusterNodesStatusTask)
 
 	// step3. bcs default steps
-	if opt.NodeGroup != nil && opt.NodeGroup.NodeTemplate.BcsScaleOutAddons != nil && len(opt.NodeGroup.NodeTemplate.BcsScaleOutAddons.PostActions) > 0 {
+	if opt.NodeGroup != nil && opt.NodeGroup.NodeTemplate.BcsScaleOutAddons != nil &&
+		len(opt.NodeGroup.NodeTemplate.BcsScaleOutAddons.PostActions) > 0 {
 		step := &template.BkSopsStepAction{
 			TaskName: taskName,
 			Actions:  opt.NodeGroup.NodeTemplate.BcsScaleOutAddons.PostActions,
@@ -1126,7 +1132,8 @@ func (t *Task) BuildUpdateDesiredNodesTask(desired uint32, group *proto.NodeGrou
 	}
 
 	// step4. business user define flow
-	if opt.NodeGroup != nil && opt.NodeGroup.NodeTemplate.ScaleOutExtraAddons != nil && len(opt.NodeGroup.NodeTemplate.ScaleOutExtraAddons.PostActions) > 0 {
+	if opt.NodeGroup != nil && opt.NodeGroup.NodeTemplate.ScaleOutExtraAddons != nil &&
+		len(opt.NodeGroup.NodeTemplate.ScaleOutExtraAddons.PostActions) > 0 {
 		step := &template.BkSopsStepAction{
 			TaskName: taskName,
 			Actions:  opt.NodeGroup.NodeTemplate.ScaleOutExtraAddons.PostActions,
@@ -1155,7 +1162,8 @@ func (t *Task) BuildUpdateDesiredNodesTask(desired uint32, group *proto.NodeGrou
 }
 
 // BuildSwitchNodeGroupAutoScalingTask ensure auto scaler status and update nodegroup status to normal
-func (t *Task) BuildSwitchNodeGroupAutoScalingTask(group *proto.NodeGroup, enable bool, opt *cloudprovider.SwitchNodeGroupAutoScalingOption) (*proto.Task, error) {
+func (t *Task) BuildSwitchNodeGroupAutoScalingTask(group *proto.NodeGroup, enable bool,
+	opt *cloudprovider.SwitchNodeGroupAutoScalingOption) (*proto.Task, error) {
 	// validate request params
 	if group == nil {
 		return nil, fmt.Errorf("BuildSwitchNodeGroupAutoScalingTask nodegroup info empty")
@@ -1216,7 +1224,8 @@ func (t *Task) BuildSwitchNodeGroupAutoScalingTask(group *proto.NodeGroup, enabl
 }
 
 // BuildUpdateAutoScalingOptionTask build update auto scaler option task
-func (t *Task) BuildUpdateAutoScalingOptionTask(scalingOption *proto.ClusterAutoScalingOption, opt *cloudprovider.UpdateScalingOption) (*proto.Task, error) {
+func (t *Task) BuildUpdateAutoScalingOptionTask(scalingOption *proto.ClusterAutoScalingOption,
+	opt *cloudprovider.UpdateScalingOption) (*proto.Task, error) {
 	// validate request params
 	if scalingOption == nil {
 		return nil, fmt.Errorf("BuildUpdateAutoScalingOptionTask scaling option info empty")
@@ -1275,7 +1284,8 @@ func (t *Task) BuildUpdateAutoScalingOptionTask(scalingOption *proto.ClusterAuto
 }
 
 // BuildSwitchAutoScalingOptionStatusTask build switch auto scaler option status task
-func (t *Task) BuildSwitchAutoScalingOptionStatusTask(scalingOption *proto.ClusterAutoScalingOption, enable bool, opt *cloudprovider.CommonOption) (*proto.Task, error) {
+func (t *Task) BuildSwitchAutoScalingOptionStatusTask(scalingOption *proto.ClusterAutoScalingOption, enable bool,
+	opt *cloudprovider.CommonOption) (*proto.Task, error) {
 	// validate request params
 	if scalingOption == nil {
 		return nil, fmt.Errorf("BuildSwitchAutoScalingOptionStatusTask scalingOption info empty")

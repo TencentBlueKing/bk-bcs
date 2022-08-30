@@ -106,7 +106,7 @@ func (p *patcher) do(data *bytes.Buffer) (*bytes.Buffer, error) {
 	return bytes.NewBuffer(out.Files[0].Bytes()), nil
 }
 
-// 兼容逻辑，目的是向metadata注入label
+// inject4MetadataLabels 兼容逻辑，目的是向metadata注入label
 func inject4MetadataLabels(j map[interface{}]interface{}) map[interface{}]interface{} {
 	// 限制下面几个注入指定的 key:val
 	kinds := []string{"Deployment", "DaemonSet", "Job", "DaemonSet"}

@@ -70,9 +70,11 @@ func NewEventProcessor(config *option.LBConfig) *LBEventProcessor {
 	// service zookeeper for health check, service register
 	// cluster zookeeper for prometheus metrics collector
 	zkSubRegPath := config.ClusterID + "/" + config.Group
-	processor.rd = rdiscover.NewRDiscover(config.BcsZkAddr, zkSubRegPath, config.ClusterID, config.Proxy, config.Address, uint(config.MetricPort))
+	processor.rd = rdiscover.NewRDiscover(config.BcsZkAddr, zkSubRegPath, config.ClusterID, config.Proxy, config.Address,
+		uint(config.MetricPort))
 	if len(config.ClusterZk) != 0 {
-		processor.clusterRd = rdiscover.NewRDiscover(config.ClusterZk, config.Group, config.ClusterID, config.Proxy, config.Address, uint(config.MetricPort))
+		processor.clusterRd = rdiscover.NewRDiscover(config.ClusterZk, config.Group, config.ClusterID, config.Proxy,
+			config.Address, uint(config.MetricPort))
 	}
 
 	processor.reflector = NewReflector(config, processor)
@@ -121,17 +123,17 @@ func NewEventProcessor(config *option.LBConfig) *LBEventProcessor {
 
 // LBEventProcessor event loop for handling data change event.
 type LBEventProcessor struct {
-	update       bool                 //update flag
-	generate     bool                 //flag for resetting HAProxy configuration
-	reload       bool                 //flag for reloading HAProxy
-	signals      chan os.Signal       //handle all signal we need, reserved
-	exit         chan struct{}        //flag for processor exit
-	config       *option.LBConfig     //config item from config file
-	reflector    DataReflector        //data cache holder
-	cfgManager   template.Manager     //template manager
-	rd           *rdiscover.RDiscover //bcs zookeeper register
-	clusterRd    *rdiscover.RDiscover //cluster zookeeper register
-	clearManager *clear.Manager       //timer to clear template file
+	update       bool                 // update flag
+	generate     bool                 // flag for resetting HAProxy configuration
+	reload       bool                 // flag for reloading HAProxy
+	signals      chan os.Signal       // handle all signal we need, reserved
+	exit         chan struct{}        // flag for processor exit
+	config       *option.LBConfig     // config item from config file
+	reflector    DataReflector        // data cache holder
+	cfgManager   template.Manager     // template manager
+	rd           *rdiscover.RDiscover // bcs zookeeper register
+	clusterRd    *rdiscover.RDiscover // cluster zookeeper register
+	clearManager *clear.Manager       // timer to clear template file
 	monitor      *monitor.Monitor     // monitor to support metric and status api
 }
 
@@ -244,6 +246,7 @@ func (lp *LBEventProcessor) configHandle() {
 	}
 }
 
+// findConficts xxx
 // detectConflicts detect port conflict
 // true for conflicts found
 func (lp *LBEventProcessor) findConficts(data *types.TemplateData) (bool, string) {

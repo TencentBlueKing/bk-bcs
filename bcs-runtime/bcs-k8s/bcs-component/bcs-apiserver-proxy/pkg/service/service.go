@@ -11,6 +11,7 @@
  *
  */
 
+// Package service xxx
 package service
 
 import (
@@ -26,11 +27,12 @@ import (
 )
 
 var (
+	// ErrLvsServiceNotInited xxx
 	// ErrEndpointsClientNotInited show endpointsClient not inited
 	ErrLvsServiceNotInited = errors.New("lvsService not inited")
 )
 
-//LvsProxy is lvs virtualServer and realServer operation interface
+// LvsProxy is lvs virtualServer and realServer operation interface
 type LvsProxy interface {
 	// CreateVirtualServer create the specified VirtualServer by vs
 	CreateVirtualServer(vs string) error
@@ -90,6 +92,7 @@ func (l *lvsProxy) CreateVirtualServer(vs string) error {
 	return nil
 }
 
+// GetVirtualServer xxx
 func (l *lvsProxy) GetVirtualServer() (string, error) {
 	if l.vs == nil || l.vs.String() == "" {
 		return "", ErrLvsServiceNotInited
@@ -271,6 +274,7 @@ func (l *lvsProxy) DeleteRealServer(rs string) error {
 	return nil
 }
 
+// GetScheduler xxx
 func (l *lvsProxy) GetScheduler() (string, error) {
 	if l.scheduler == "" {
 		return "", ErrLvsServiceNotInited

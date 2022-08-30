@@ -38,10 +38,11 @@ type cacheManager struct {
 
 var cacheMgr *cacheManager
 
+// InitCacheMgr xxx
 // Init cache manager, use cache or not
 func (store *managerStore) InitCacheMgr(isUsed bool) error {
 
-	//zk store always don't use cache
+	// zk store always don't use cache
 	isUsed = false
 	if isUsed {
 		blog.Infof("init cache begin: use cache for storage")
@@ -62,6 +63,7 @@ func (store *managerStore) InitCacheMgr(isUsed bool) error {
 	return nil
 }
 
+// UnInitCacheMgr xxx
 // Unint cache manager
 func (store *managerStore) UnInitCacheMgr() error {
 
@@ -131,7 +133,7 @@ func syncAppCacheNode(runAs, appID string, taskGroups []*types.TaskGroup) error 
 	}
 
 	blog.Infof("app(%s) sync taskgroups in cache", key)
-	//set empty list
+	// set empty list
 	app.Taskgroups = nil
 	for _, taskGroup := range taskGroups {
 		blog.Infof("app(%s) sync taskgroup(%s) in cache", key, taskGroup.ID)
@@ -154,11 +156,11 @@ func getCacheAppNode(runAs, appID string) *applicationCacheNode {
 	app, ok := cacheMgr.Applications[key]
 	cacheMgr.mapLock.RUnlock()
 	if ok {
-		//blog.V(3).Infof("app(%s.%s) is in cache", runAs, appID)
+		// blog.V(3).Infof("app(%s.%s) is in cache", runAs, appID)
 		return app
 	}
 
-	//blog.V(3).Infof("app(%s.%s) not in cache", runAs, appID)
+	// blog.V(3).Infof("app(%s.%s) not in cache", runAs, appID)
 	return nil
 }
 

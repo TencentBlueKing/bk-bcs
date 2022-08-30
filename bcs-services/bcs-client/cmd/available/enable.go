@@ -22,6 +22,7 @@ import (
 	"github.com/urfave/cli"
 )
 
+// NewEnableCommand xxx
 func NewEnableCommand() cli.Command {
 	return cli.Command{
 		Name:  "enable",

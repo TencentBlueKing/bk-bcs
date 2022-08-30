@@ -31,20 +31,20 @@ const (
 )
 
 func main() {
-    opts := trace.Options{
-    	TracingSwitch: "on",
-    	TracingType: "jaeger",
-        ServiceName: service,
-        ExporterURL: "http://localhost:14268/api/traces",
-        ResourceAttrs: []attribute.KeyValue{
-    		attribute.String("environment", environment),
+	opts := trace.Options{
+		TracingSwitch: "on",
+		TracingType:   "jaeger",
+		ServiceName:   service,
+		ExporterURL:   "http://localhost:14268/api/traces",
+		ResourceAttrs: []attribute.KeyValue{
+			attribute.String("environment", environment),
 			attribute.Int64("ID", id),
-    	},
-    }
+		},
+	}
 
-    op := []trace.Option{}
-    if opts.TracingSwitch != "" {
-    	op = append(op, trace.TracerSwitch(opts.TracingSwitch))
+	op := []trace.Option{}
+	if opts.TracingSwitch != "" {
+		op = append(op, trace.TracerSwitch(opts.TracingSwitch))
 	}
 	if opts.TracingType != "" {
 		op = append(op, trace.TracerType(opts.TracingType))
@@ -59,7 +59,7 @@ func main() {
 		op = append(op, trace.ResourceAttrs(opts.ResourceAttrs))
 	}
 
-    tp, err := trace.InitTracerProvider(opts.ServiceName, op...)
+	tp, err := trace.InitTracerProvider(opts.ServiceName, op...)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -70,7 +70,7 @@ func main() {
 	// Cleanly shutdown and flush telemetry when the application exits.
 	defer func(ctx context.Context) {
 		// Do not make the application hang when it is shutdown.
-		ctx, cancel = context.WithTimeout(ctx, time.Second * 5)
+		ctx, cancel = context.WithTimeout(ctx, time.Second*5)
 		defer cancel()
 		if err := tp.Shutdown(ctx); err != nil {
 			log.Fatal(err)

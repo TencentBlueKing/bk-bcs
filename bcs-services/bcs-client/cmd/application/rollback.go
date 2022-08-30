@@ -22,6 +22,7 @@ import (
 	"github.com/urfave/cli"
 )
 
+// NewRollBackCommand xxx
 func NewRollBackCommand() cli.Command {
 	return cli.Command{
 		Name:  "rollback",

@@ -13,31 +13,38 @@
 
 package types
 
-//SecretDataItem secret detail
+// SecretDataItem secret detail
 type SecretDataItem struct {
-	//Path    string `json:"path,omitempty"` //mesos only
+	// Path    string `json:"path,omitempty"` //mesos only
 	Content string `json:"content"`
 }
 
-//BcsSecretType type for secret
+// BcsSecretType type for secret
 type BcsSecretType string
 
 const (
-	BcsSecretTypeOpaque              BcsSecretType = "Opaque"
+	// BcsSecretTypeOpaque TODO
+	BcsSecretTypeOpaque BcsSecretType = "Opaque"
+	// BcsSecretTypeServiceAccountToken TODO
 	BcsSecretTypeServiceAccountToken BcsSecretType = "kubernetes.io/service-account-token"
-	BcsSecretTypeDockercfg           BcsSecretType = "kubernetes.io/dockercfg"
-	BcsSecretTypeDockerConfigJson    BcsSecretType = "kubernetes.io/dockerconfigjson"
-	BcsSecretTypeBasicAuth           BcsSecretType = "kubernetes.io/basic-auth"
-	BcsSecretTypeSSHAuth             BcsSecretType = "kubernetes.io/ssh-auth"
-	BcsSecretTypeTLS                 BcsSecretType = "kubernetes.io/tls"
+	// BcsSecretTypeDockercfg TODO
+	BcsSecretTypeDockercfg BcsSecretType = "kubernetes.io/dockercfg"
+	// BcsSecretTypeDockerConfigJson TODO
+	BcsSecretTypeDockerConfigJson BcsSecretType = "kubernetes.io/dockerconfigjson"
+	// BcsSecretTypeBasicAuth TODO
+	BcsSecretTypeBasicAuth BcsSecretType = "kubernetes.io/basic-auth"
+	// BcsSecretTypeSSHAuth TODO
+	BcsSecretTypeSSHAuth BcsSecretType = "kubernetes.io/ssh-auth"
+	// BcsSecretTypeTLS TODO
+	BcsSecretTypeTLS BcsSecretType = "kubernetes.io/tls"
 )
 
-//BcsSecret bcs secret definition
+// BcsSecret bcs secret definition
 type BcsSecret struct {
 	TypeMeta `json:",inline"`
-	//AppMeta    `json:",inline"`
+	// AppMeta    `json:",inline"`
 	ObjectMeta `json:"metadata"`
-	Type       BcsSecretType             `json:"type,omitempty"` //k8s only
+	Type       BcsSecretType             `json:"type,omitempty"` // k8s only
 	Data       map[string]SecretDataItem `json:"datas"`
 }
 

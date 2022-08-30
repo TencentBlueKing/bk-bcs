@@ -25,7 +25,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// getListOptionsFromQueryParam 从查询参数获取 ListOptions
+// GetListOptionsFromQueryParam 从查询参数获取 ListOptions
 func GetListOptionsFromQueryParam(q url.Values) (*metav1.ListOptions, error) {
 	var errReturn error = nil
 	allowWatchBookmarksStr := strings.ToLower(q.Get("allowWatchBookmarks"))
@@ -85,6 +85,7 @@ func MakeCreateOptions(q url.Values) (*metav1.CreateOptions, error) {
 	return opts, nil
 }
 
+// MakePatchOptions xxx
 // MakeCreateOpMakePatchOptionstions 组装 Patch 参数
 func MakePatchOptions(q url.Values) (*metav1.PatchOptions, error) {
 	opts := &metav1.PatchOptions{}
@@ -179,7 +180,8 @@ func MakePodLogOptions(q url.Values) (*v1.PodLogOptions, error) {
 		options.Follow = follow
 	}
 
-	if InsecureSkipTLSVerifyBackendStr := strings.ToLower(q.Get("insecureSkipTLSVerifyBackend")); InsecureSkipTLSVerifyBackendStr != "" {
+	if InsecureSkipTLSVerifyBackendStr := strings.ToLower(q.Get(
+		"insecureSkipTLSVerifyBackend")); InsecureSkipTLSVerifyBackendStr != "" {
 		InsecureSkipTLSVerifyBackend, err := strconv.ParseBool(InsecureSkipTLSVerifyBackendStr)
 		if err != nil {
 			return nil, errors.New("cannot parse 'insecureSkipTLSVerifyBackend'")

@@ -22,38 +22,48 @@ import (
 	commonTypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
 )
 
+// ListAgentInfo xxx
 func (bs *bcsScheduler) ListAgentInfo(clusterID string, ipList []string) ([]*commonTypes.BcsClusterAgentInfo, error) {
 	return bs.listAgentInfo(clusterID, ipList)
 }
 
-func (bs *bcsScheduler) ListAgentSetting(clusterID string, ipList []string) ([]*commonTypes.BcsClusterAgentSetting, error) {
+// ListAgentSetting xxx
+func (bs *bcsScheduler) ListAgentSetting(clusterID string, ipList []string) ([]*commonTypes.BcsClusterAgentSetting,
+	error) {
 	return bs.listAgentSetting(clusterID, ipList)
 }
 
+// UpdateStringAgentSetting xxx
 func (bs *bcsScheduler) UpdateStringAgentSetting(clusterID string, ipList []string, key, value string) error {
 	return bs.updateStringAgentSetting(clusterID, ipList, key, value)
 }
 
+// UpdateScalarAgentSetting xxx
 func (bs *bcsScheduler) UpdateScalarAgentSetting(clusterID string, ipList []string, key string, value float64) error {
 	return bs.updateScalarAgentSetting(clusterID, ipList, key, value)
 }
 
+// UpdateAgentSetting xxx
 func (bs *bcsScheduler) UpdateAgentSetting(clusterID string, data []byte) error {
 	return bs.updateAgentSetting(clusterID, data)
 }
 
+// SetAgentSetting xxx
 func (bs *bcsScheduler) SetAgentSetting(clusterID string, data []byte) error {
 	return bs.setAgentSetting(clusterID, data)
 }
 
+// DeleteAgentSetting xxx
 func (bs *bcsScheduler) DeleteAgentSetting(clusterID string, ipList []string) error {
 	return bs.deleteAgentSetting(clusterID, ipList)
 }
 
+// EnableAgent xxx
 func (bs *bcsScheduler) EnableAgent(clusterID string, ipList []string) error {
 	return bs.enableAgent(clusterID, ipList)
 }
 
+// DisableAgent xxx
 func (bs *bcsScheduler) DisableAgent(clusterID string, ipList []string) error {
 	return bs.disableAgent(clusterID, ipList)
 }
@@ -94,7 +104,8 @@ func (bs *bcsScheduler) listAgentInfo(clusterID string, ipList []string) ([]*com
 	return result, nil
 }
 
-func (bs *bcsScheduler) listAgentSetting(clusterID string, ipList []string) ([]*commonTypes.BcsClusterAgentSetting, error) {
+func (bs *bcsScheduler) listAgentSetting(clusterID string, ipList []string) ([]*commonTypes.BcsClusterAgentSetting,
+	error) {
 	resp, err := bs.requester.Do(
 		fmt.Sprintf(bcsSchedulerAgentSettingURI, bs.bcsAPIAddress, strings.Join(ipList, ",")),
 		http.MethodGet,

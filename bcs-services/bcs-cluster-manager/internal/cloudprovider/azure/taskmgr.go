@@ -49,7 +49,7 @@ func newtask() *Task {
 	return task
 }
 
-//Task background task manager
+// Task background task manager
 type Task struct {
 	works map[string]interface{}
 }
@@ -59,7 +59,7 @@ func (t *Task) Name() string {
 	return cloudName
 }
 
-//GetAllTask register all backgroup task for worker running
+// GetAllTask register all backgroup task for worker running
 func (t *Task) GetAllTask() map[string]interface{} {
 	return t.works
 }
@@ -79,7 +79,7 @@ func (t *Task) BuildImportClusterTask(cls *proto.Cluster, opt *cloudprovider.Imp
 		return nil, fmt.Errorf("BuildImportClusterTask TaskOptions is lost")
 	}
 
-	//init task information
+	// init task information
 	nowStr := time.Now().Format(time.RFC3339)
 	task := &proto.Task{
 		TaskID:         uuid.New().String(),
@@ -269,10 +269,10 @@ func (t *Task) BuildCleanNodesInGroupTask(nodes []*proto.Node, group *proto.Node
 	return nil, cloudprovider.ErrCloudNotImplemented
 }
 
-//BuildDeleteNodeGroupTask when delete nodegroup, we need to create background
-//task to clean all nodes in nodegroup, release all resource in cloudprovider,
-//finnally delete nodes information in local storage.
-//@param group: need to delete
+// BuildDeleteNodeGroupTask when delete nodegroup, we need to create background
+// task to clean all nodes in nodegroup, release all resource in cloudprovider,
+// finnally delete nodes information in local storage.
+// @param group: need to delete
 func (t *Task) BuildDeleteNodeGroupTask(group *proto.NodeGroup, nodes []*proto.Node,
 	opt *cloudprovider.DeleteNodeGroupOption) (*proto.Task, error) {
 	return nil, cloudprovider.ErrCloudNotImplemented
@@ -297,11 +297,13 @@ func (t *Task) BuildSwitchNodeGroupAutoScalingTask(group *proto.NodeGroup, enabl
 }
 
 // BuildUpdateAutoScalingOptionTask update auto scaling option
-func (t *Task) BuildUpdateAutoScalingOptionTask(scalingOption *proto.ClusterAutoScalingOption, opt *cloudprovider.UpdateScalingOption) (*proto.Task, error) {
+func (t *Task) BuildUpdateAutoScalingOptionTask(scalingOption *proto.ClusterAutoScalingOption,
+	opt *cloudprovider.UpdateScalingOption) (*proto.Task, error) {
 	return nil, cloudprovider.ErrCloudNotImplemented
 }
 
 // BuildSwitchAutoScalingOptionStatusTask switch auto scaling option status
-func (t *Task) BuildSwitchAutoScalingOptionStatusTask(scalingOption *proto.ClusterAutoScalingOption, enable bool, opt *cloudprovider.CommonOption) (*proto.Task, error) {
+func (t *Task) BuildSwitchAutoScalingOptionStatusTask(scalingOption *proto.ClusterAutoScalingOption, enable bool,
+	opt *cloudprovider.CommonOption) (*proto.Task, error) {
 	return nil, cloudprovider.ErrCloudNotImplemented
 }

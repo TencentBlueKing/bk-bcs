@@ -28,12 +28,12 @@ type IAMPermError struct {
 	ActionReqList []ActionResourcesRequest
 }
 
-// Error ...
+// Error xxx
 func (e *IAMPermError) Error() string {
 	return strconv.Itoa(e.Code) + ": " + e.Msg
 }
 
-// Perms ...
+// Perms xxx
 func (e *IAMPermError) Perms() (map[string]interface{}, error) {
 	applyURL, err := NewApplyURLGenerator().Gen(e.Username, e.ActionReqList)
 	if err != nil {
@@ -53,7 +53,7 @@ func (e *IAMPermError) Perms() (map[string]interface{}, error) {
 	}, nil
 }
 
-// NewIAMPermErr ...
+// NewIAMPermErr xxx
 func NewIAMPermErr(username, msg string, actionReqList []ActionResourcesRequest) error {
 	return &IAMPermError{Code: errcode.NoIAMPerm, Username: username, Msg: msg, ActionReqList: actionReqList}
 }

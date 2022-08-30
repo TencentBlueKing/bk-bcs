@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package resourcequota xxx
 package resourcequota
 
 import (
@@ -27,8 +28,8 @@ import (
 )
 
 const (
-	//! we don't setting bson tag in proto file,
-	//! all struct key in mongo is lowcase in default
+	// ! we don't setting bson tag in proto file,
+	// ! all struct key in mongo is lowcase in default
 	quotaKeyNamespace           = "namespace"
 	quotaKeyFederationClusterID = "federationclusterid"
 	quotaKeyClusterID           = "clusterid"
@@ -68,6 +69,7 @@ func New(db drivers.DB) *ModelResourceQuota {
 	}
 }
 
+// ensureTable xxx
 // ensure table
 func (m *ModelResourceQuota) ensureTable(ctx context.Context) error {
 	m.isTableEnsuredMutex.RLock()

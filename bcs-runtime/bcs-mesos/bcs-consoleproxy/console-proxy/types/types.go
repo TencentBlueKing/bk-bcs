@@ -11,6 +11,7 @@
  *
  */
 
+// Package types xxx
 package types
 
 // WebSocketConfig is config

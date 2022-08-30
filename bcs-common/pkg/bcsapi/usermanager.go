@@ -44,16 +44,16 @@ func NewUserManager(config *Config) UserManager {
 	return c
 }
 
-//ClusterCredential holds one kubernetes api-server connection credential
+// ClusterCredential holds one kubernetes api-server connection credential
 type ClusterCredential struct {
 	ClusterID     string `json:"clusterId,omitempty"`
 	ClusterDomain string `json:"cluster_domain"`
-	//kubernetes api-server addresses, splited by comma
+	// kubernetes api-server addresses, splited by comma
 	ServerAddresses string `json:"server_addresses"`
 	UserToken       string `json:"user_token"`
 }
 
-//UserManagerCli client for bcs-user-manager
+// UserManagerCli client for bcs-user-manager
 type UserManagerCli struct {
 	Config *Config
 	Client *restclient.RESTClient
@@ -61,7 +61,7 @@ type UserManagerCli struct {
 
 func (cli *UserManagerCli) getRequestPath() string {
 	if cli.Config.Gateway {
-		//format bcs-api-gateway path
+		// format bcs-api-gateway path
 		return fmt.Sprintf("%s%s/", gatewayPrefix, usermanagerPrefix)
 	}
 	return fmt.Sprintf("/%s/", usermanagerPrefix)
@@ -82,13 +82,13 @@ func (cli *UserManagerCli) ListAllClusters() ([]*ClusterCredential, error) {
 	if !response.Result {
 		return nil, fmt.Errorf(response.Message)
 	}
-	//decode specified cluster credentials
+	// decode specified cluster credentials
 	clusterMap := make(map[string]*ClusterCredential)
 	if err := json.Unmarshal(response.Data, &clusterMap); err != nil {
 		return nil, fmt.Errorf("cluster data decode err: %s", err.Error())
 	}
 	if len(clusterMap) == 0 {
-		//No data retrieve from bcs-user-manager
+		// No data retrieve from bcs-user-manager
 		return nil, nil
 	}
 	var clusters []*ClusterCredential

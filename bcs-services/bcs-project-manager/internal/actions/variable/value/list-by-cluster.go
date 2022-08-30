@@ -28,7 +28,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 )
 
-// ListClusterVariablesAction ...
+// ListClusterVariablesAction xxx
 type ListClusterVariablesAction struct {
 	ctx   context.Context
 	model store.ProjectModel
@@ -42,7 +42,7 @@ func NewListClusterVariablesAction(model store.ProjectModel) *ListClusterVariabl
 	}
 }
 
-// Do ...
+// Do xxx
 func (la *ListClusterVariablesAction) Do(ctx context.Context,
 	req *proto.ListClusterVariablesRequest) ([]*proto.ClusterVariable, error) {
 	la.ctx = ctx

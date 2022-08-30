@@ -102,7 +102,8 @@ func (npc *NodePoolClient) GetPoolNodeTemplate(np string) (*LaunchConfiguration,
 func (npc *NodePoolClient) GetNodes(np string) ([]*Node, error) {
 	ctx, cancelFunc := context.WithCancel(context.Background())
 	defer cancelFunc()
-	contents, err := WithoutTLSClient(npc.header, npc.url).Get().WithContext(ctx).Resource("nodegroup").Name(np).Resource("node").Do()
+	contents, err := WithoutTLSClient(npc.header, npc.url).Get().WithContext(ctx).Resource("nodegroup").Name(np).
+		Resource("node").Do()
 	if err != nil {
 		return nil, fmt.Errorf("failed to finish http request: %v", err)
 	}
@@ -217,7 +218,8 @@ func (npc *NodePoolClient) RemoveNodes(np string, ips []string) error {
 	res := CleanNodesInGroupResponse{}
 	err = json.Unmarshal(contents, &res)
 	if err != nil {
-		return fmt.Errorf("can not finish the request UpdateDesiredNode, response: %v, err: %v", string(contents), res.Message)
+		return fmt.Errorf("can not finish the request UpdateDesiredNode, response: %v, err: %v", string(contents),
+			res.Message)
 	}
 	if res.Code != 0 {
 		return fmt.Errorf("can not finish the request, message: %v, response: %v", res.Message, string(contents))

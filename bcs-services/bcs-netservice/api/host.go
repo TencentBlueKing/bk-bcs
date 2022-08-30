@@ -23,33 +23,33 @@ import (
 	restful "github.com/emicklei/go-restful"
 )
 
-//RegisterHostHandler init host url info
+// RegisterHostHandler init host url info
 func RegisterHostHandler(httpSvr *HTTPService, logic *netservice.NetService) *HostHandler {
 	handler := &HostHandler{
 		netSvr: logic,
 	}
 	webSvr := new(restful.WebService)
-	//add http handler
+	// add http handler
 	webSvr.Path("/v1/host").Consumes(restful.MIME_JSON).Produces(restful.MIME_JSON)
 	webSvr.Route(webSvr.POST("").To(handler.Add))
 	webSvr.Route(webSvr.DELETE("/{host}").To(handler.Delete))
-	//update by host ip
+	// update by host ip
 	webSvr.Route(webSvr.PUT("/{host}").To(handler.Update))
-	//get all host info
+	// get all host info
 	webSvr.Route(webSvr.GET("").To(handler.List))
-	//get host by ip
+	// get host by ip
 	webSvr.Route(webSvr.GET("/{host}").To(handler.ListByID))
 
 	httpSvr.Register(webSvr)
 	return handler
 }
 
-//HostHandler for http host handler
+// HostHandler for http host handler
 type HostHandler struct {
 	netSvr *netservice.NetService
 }
 
-//Add add host to ip pool
+// Add add host to ip pool
 func (host *HostHandler) Add(request *restful.Request, response *restful.Response) {
 	started := time.Now()
 	netReq := &types.NetRequest{}
@@ -71,7 +71,7 @@ func (host *HostHandler) Add(request *restful.Request, response *restful.Respons
 		reportMetrics("addHostToIPPool", "4xx", started)
 		return
 	}
-	//check host data
+	// check host data
 	if !netReq.Host.IsValid() {
 		netRes.Code = 1
 		netRes.Message = "Request host data lost"
@@ -94,7 +94,7 @@ func (host *HostHandler) Add(request *restful.Request, response *restful.Respons
 	reportMetrics("addHostToIPPool", "2xx", started)
 }
 
-//Delete delete specified by host IPaddress, also clean IPAddress assign to this host
+// Delete delete specified by host IPaddress, also clean IPAddress assign to this host
 func (host *HostHandler) Delete(request *restful.Request, response *restful.Response) {
 	started := time.Now()
 	hostIP := request.PathParameter("host")
@@ -124,17 +124,17 @@ func (host *HostHandler) Delete(request *restful.Request, response *restful.Resp
 	reportMetrics("deleteHostFromIPPool", "2xx", started)
 }
 
-//Update update pool by ip segment
+// Update update pool by ip segment
 func (host *HostHandler) Update(request *restful.Request, response *restful.Response) {
 	blog.Warn("#######HostHandler [Update] Not implemented#######")
 	response.AddHeader("Content-Type", "text/plain")
 	response.WriteErrorString(http.StatusForbidden, "Not implemented")
 }
 
-//List list all pools
+// List list all pools
 func (host *HostHandler) List(request *restful.Request, response *restful.Response) {
 	started := time.Now()
-	//list all hosts
+	// list all hosts
 	netRes := &types.NetResponse{
 		Type: types.ResponseType_HOST,
 	}
@@ -158,10 +158,10 @@ func (host *HostHandler) List(request *restful.Request, response *restful.Respon
 	reportMetrics("listHostFromIPPool", "2xx", started)
 }
 
-//ListByID list host by ip
+// ListByID list host by ip
 func (host *HostHandler) ListByID(request *restful.Request, response *restful.Response) {
 	started := time.Now()
-	//list host by host ip
+	// list host by host ip
 	ip := request.PathParameter("host")
 	netRes := &types.NetResponse{
 		Type: types.ResponseType_HOST,

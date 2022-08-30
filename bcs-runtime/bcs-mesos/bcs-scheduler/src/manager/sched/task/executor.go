@@ -29,10 +29,10 @@ import (
 	proto "github.com/golang/protobuf/proto"
 )
 
-//BcsContainerExecutorPath default container binary path
+// BcsContainerExecutorPath default container binary path
 var BcsContainerExecutorPath string
 
-//BcsProcessExecutorPath default process binary path
+// BcsProcessExecutorPath default process binary path
 var BcsProcessExecutorPath string
 
 // BcsCniDir default bcs cni plugin directory
@@ -47,7 +47,7 @@ var Passwd = static.BcsDefaultPasswd
 // User registry user
 var User = static.BcsDefaultUser
 
-//InitExecutorInfo init mesos executor info
+// InitExecutorInfo init mesos executor info
 func InitExecutorInfo(CExec, PExec, CniDir, netImage string) {
 	if CExec != "" {
 		BcsContainerExecutorPath = CExec
@@ -70,7 +70,7 @@ func InitExecutorInfo(CExec, PExec, CniDir, netImage string) {
 	}
 }
 
-//CreateBcsExecutorInfo special the bcs executor
+// CreateBcsExecutorInfo special the bcs executor
 func CreateBcsExecutorInfo(offer *mesos.Offer, taskGroupID *string,
 	version *types.Version, store store.Store) (*mesos.ExecutorInfo, error) {
 
@@ -102,7 +102,7 @@ func CreateBcsExecutorInfo(offer *mesos.Offer, taskGroupID *string,
 		var passwd string
 		if version.Container[0].Docker.ImagePullUser != "" {
 			userConf := version.Container[0].Docker.ImagePullUser
-			//user in secret
+			// user in secret
 			if strings.HasPrefix(userConf, "secret::") {
 				userConfSplit := strings.Split(userConf, "::")
 				if len(userConfSplit) != 2 {
@@ -153,18 +153,18 @@ func CreateBcsExecutorInfo(offer *mesos.Offer, taskGroupID *string,
 					blog.Infof("user in secret(%s.%s::%s) is empty", secretNs, secretName, secretKey)
 					user = ""
 				}
-				//raw user
+				// raw user
 			} else {
 				user = userConf
 			}
-			//default user
+			// default user
 		} else {
 			user = User
 		}
 
 		if version.Container[0].Docker.ImagePullPasswd != "" {
 			passwdConf := version.Container[0].Docker.ImagePullPasswd
-			//passwd in secret
+			// passwd in secret
 			if strings.HasPrefix(passwdConf, "secret::") {
 				passwdConfSplit := strings.Split(passwdConf, "::")
 				if len(passwdConfSplit) != 2 {
@@ -213,11 +213,11 @@ func CreateBcsExecutorInfo(offer *mesos.Offer, taskGroupID *string,
 					blog.Infof("passwd in secret(%s.%s::%s) is empty", secretNs, secretName, secretKey)
 					passwd = ""
 				}
-				//raw passwd
+				// raw passwd
 			} else {
 				passwd = passwdConf
 			}
-			//default passwd
+			// default passwd
 		} else {
 			passwd = Passwd
 		}
@@ -238,7 +238,8 @@ func CreateBcsExecutorInfo(offer *mesos.Offer, taskGroupID *string,
 		}
 
 		uuid, _ := encrypt.DesEncryptToBase([]byte(passwd))
-		execCommand = fmt.Sprintf("./%s --user %s --uuid %s %s %s %s", base, user, string(uuid), networkType, cniDir, netImage)
+		execCommand = fmt.Sprintf("./%s --user %s --uuid %s %s %s %s", base, user, string(uuid), networkType, cniDir,
+			netImage)
 	}
 
 	var resources []*mesos.Resource

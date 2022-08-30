@@ -41,8 +41,8 @@ type DataCheckMgr struct {
 
 	msgQueue chan *DataCheckMsg
 
-	//appCheckStatusTime int64
-	//appTimeoutTime     int64
+	// appCheckStatusTime int64
+	// appTimeoutTime     int64
 
 	openCheck bool
 }
@@ -144,7 +144,7 @@ func (mgr *DataCheckMgr) doCheck() {
 		return
 	}
 
-	//check application taskgroup whether lost
+	// check application taskgroup whether lost
 	for _, runAs := range runAses {
 		blog.Info("data checker: to check runAs(%s)", runAs)
 		appIDs, err := mgr.store.ListApplicationNodes(runAs)
@@ -158,11 +158,11 @@ func (mgr *DataCheckMgr) doCheck() {
 		}
 		for _, appID := range appIDs {
 			blog.Info("data checker: to check application:%s.%s ", runAs, appID)
-			//mgr.checkApplication(runAs, appID)
+			// mgr.checkApplication(runAs, appID)
 			mgr.checkTaskgroup(runAs, appID)
 		}
 	}
-	//check daemonsets taskgroup whether lost
+	// check daemonsets taskgroup whether lost
 	daemonsets, err := mgr.store.ListAllDaemonset()
 	if err != nil {
 		blog.Error("data checker ListAllDaemonset failed: %s", err.Error())
@@ -170,7 +170,7 @@ func (mgr *DataCheckMgr) doCheck() {
 	}
 	for _, daemon := range daemonsets {
 		blog.Info("data checker: to check daemonest(%s) taskgroup status", daemon.GetUuid())
-		//lock
+		// lock
 		util.Lock.Lock(types.BcsDaemonset{}, daemon.GetUuid())
 		taskgroups, _ := mgr.store.ListDaemonsetTaskGroups(daemon.NameSpace, daemon.Name)
 		lostNum := mgr.checkTaskgroupWhetherLost(taskgroups, false)
@@ -178,7 +178,7 @@ func (mgr *DataCheckMgr) doCheck() {
 			util.Lock.UnLock(types.BcsDaemonset{}, daemon.GetUuid())
 			continue
 		}
-		//if have new lost taskgroup, then update daemonset status
+		// if have new lost taskgroup, then update daemonset status
 		mgr.sched.updateDaemonsetStatus(daemon.NameSpace, daemon.Name)
 		util.Lock.UnLock(types.BcsDaemonset{}, daemon.GetUuid())
 	}
@@ -192,7 +192,7 @@ func (mgr *DataCheckMgr) checkTaskgroup(runAs, appID string) {
 
 	blog.Info("data checker: to check taskgroups:%s.%s ", runAs, appID)
 	taskGroups, _ := mgr.store.ListTaskGroups(runAs, appID)
-	//check taskgroup whether lost
+	// check taskgroup whether lost
 	lostNum := mgr.checkTaskgroupWhetherLost(taskGroups, true)
 	if lostNum == 0 {
 		return
@@ -215,8 +215,9 @@ func (mgr *DataCheckMgr) checkTaskgroup(runAs, appID string) {
 	mgr.sched.applicationStatusUpdated(app, appStatus)
 }
 
-//if taskgroup status long time no update, then show taskgroup lost
-//application't taskgroup trigger reschedule, and daemonset't taskgroup don't trigger reschedule
+// checkTaskgroupWhetherLost xxx
+// if taskgroup status long time no update, then show taskgroup lost
+// application't taskgroup trigger reschedule, and daemonset't taskgroup don't trigger reschedule
 func (mgr *DataCheckMgr) checkTaskgroupWhetherLost(taskGroups []*types.TaskGroup, reschedule bool) int {
 	now := time.Now().Unix()
 	lostnum := 0
@@ -239,7 +240,8 @@ func (mgr *DataCheckMgr) checkTaskgroupWhetherLost(taskGroups []*types.TaskGroup
 
 		if taskGroup.LastUpdateTime+updateInterval < now {
 			for _, task := range taskGroup.Taskgroup {
-				if task.Status != types.TASK_STATUS_RUNNING && task.Status != types.TASK_STATUS_STAGING && task.Status != types.TASK_STATUS_STARTING {
+				if task.Status != types.TASK_STATUS_RUNNING && task.Status != types.TASK_STATUS_STAGING &&
+					task.Status != types.TASK_STATUS_STARTING {
 					continue
 				}
 				if task.LastUpdateTime+updateInterval < now {
@@ -248,7 +250,8 @@ func (mgr *DataCheckMgr) checkTaskgroupWhetherLost(taskGroups []*types.TaskGroup
 					task.LastStatus = task.Status
 					task.Status = types.TASK_STATUS_LOST
 					task.LastUpdateTime = now
-					mgr.sched.SendHealthMsg(alarm.WarnKind, taskGroup.RunAs, task.ID+"("+taskGroup.HostName+")"+"long time not report status, set status to lost", "", nil)
+					mgr.sched.SendHealthMsg(alarm.WarnKind, taskGroup.RunAs, task.ID+"("+taskGroup.HostName+")"+
+						"long time not report status, set status to lost", "", nil)
 				}
 			}
 
@@ -259,7 +262,7 @@ func (mgr *DataCheckMgr) checkTaskgroupWhetherLost(taskGroups []*types.TaskGroup
 			taskGroup.LastStatus = taskGroup.Status
 			taskGroup.Status = types.TASKGROUP_STATUS_LOST
 			taskGroup.LastUpdateTime = now
-			//if reschedule==true, then trigger reschedule function
+			// if reschedule==true, then trigger reschedule function
 			if reschedule {
 				mgr.sched.taskGroupStatusUpdated(taskGroup, taskGroupStatus)
 				mgr.sched.ServiceMgr.TaskgroupUpdate(taskGroup)
@@ -274,7 +277,8 @@ func (mgr *DataCheckMgr) checkTaskgroupWhetherLost(taskGroups []*types.TaskGroup
 	return lostnum
 }
 
-//donot call this function !!!!!!!!!!!
+// doRecover xxx
+// donot call this function !!!!!!!!!!!
 func (mgr *DataCheckMgr) doRecover() {
 
 	now := time.Now().Unix()

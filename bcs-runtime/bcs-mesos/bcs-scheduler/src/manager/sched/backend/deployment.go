@@ -66,7 +66,7 @@ func (b *backend) CreateDeployment(deploymentDef *types.DeploymentDef) (int, err
 		return comm.BcsErrCommCreateZkNodeFail, errin
 	}
 
-	//check current matching applications
+	// check current matching applications
 	matchCount := 0
 	matchApp := ""
 	if deployment.Selector != nil {
@@ -347,7 +347,7 @@ func (b *backend) UpdateDeployment(deployment *types.DeploymentDef) (int, error)
 		}
 	}
 
-	//create extension application but not launch
+	// create extension application but not launch
 	version := deployment.Version
 	version.ID = version.ID + "-v" + strconv.Itoa(int(time.Now().Unix()))
 	blog.Info("update deployment(%s.%s): create application(%s.%s)",
@@ -431,7 +431,7 @@ func (b *backend) UpdateDeployment(deployment *types.DeploymentDef) (int, error)
 	currDeployment.CurrRollingOp = types.DEPLOYMENT_OPERATION_NIL
 	currDeployment.IsInRolling = false
 
-	//store deployment definition
+	// store deployment definition
 	currDeployment.RawJsonBackup = currDeployment.RawJson
 	currDeployment.RawJson = deployment.RawJson
 
@@ -439,7 +439,7 @@ func (b *backend) UpdateDeployment(deployment *types.DeploymentDef) (int, error)
 		blog.Error("update deployment(%s.%s), save deployment err: %s", ns, name, err.Error())
 		return comm.BcsErrCommCreateZkNodeFail, err
 	}
-	//set applications status to RollingUpdate
+	// set applications status to RollingUpdate
 	app, err = b.store.FetchApplication(ns, currDeployment.Application.ApplicationName)
 	if err != nil {
 		blog.Error("update deployment, fetch application(%s.%s) err:%s",
@@ -494,7 +494,8 @@ func (b *backend) CancelUpdateDeployment(ns string, name string) error {
 	}
 
 	blog.Info("cancelupdate deployment(%s.%s): current status(%s)", ns, name, deployment.Status)
-	if deployment.Status != types.DEPLOYMENT_STATUS_ROLLINGUPDATE && deployment.Status != types.DEPLOYMENT_STATUS_ROLLINGUPDATE_PAUSED && deployment.Status != types.DEPLOYMENT_STATUS_ROLLINGUPDATE_SUSPEND {
+	if deployment.Status != types.DEPLOYMENT_STATUS_ROLLINGUPDATE && deployment.Status !=
+		types.DEPLOYMENT_STATUS_ROLLINGUPDATE_PAUSED && deployment.Status != types.DEPLOYMENT_STATUS_ROLLINGUPDATE_SUSPEND {
 		err := errors.New("deployment is in not rollingupdate")
 		blog.Warn("request cancelupdate deployment(%s.%s): status(%s) err", ns, name, deployment.Status)
 		return err
@@ -737,7 +738,8 @@ func (b *backend) ResumeUpdateDeployment(ns string, name string) error {
 	}
 
 	blog.Info("resumeupdate deployment(%s.%s): current status(%s)", ns, name, deployment.Status)
-	if deployment.Status != types.DEPLOYMENT_STATUS_ROLLINGUPDATE_PAUSED && deployment.Status != types.DEPLOYMENT_STATUS_ROLLINGUPDATE_SUSPEND {
+	if deployment.Status != types.DEPLOYMENT_STATUS_ROLLINGUPDATE_PAUSED && deployment.Status !=
+		types.DEPLOYMENT_STATUS_ROLLINGUPDATE_SUSPEND {
 		err := errors.New("deployment is not update paused or suspend")
 		blog.Warn("resumeupdate deployment(%s.%s): status(%s) err", ns, name, deployment.Status)
 		return err

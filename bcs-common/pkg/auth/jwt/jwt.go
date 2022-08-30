@@ -11,6 +11,7 @@
  *
  */
 
+// Package jwt xxx
 package jwt
 
 import (
@@ -36,6 +37,7 @@ type BCSJWTAuthentication interface {
 // BCSJWTSigningMethod default sign method
 var BCSJWTSigningMethod = jwt.SigningMethodRS256
 
+// UserType xxx
 type UserType string
 
 // String to string
@@ -44,7 +46,9 @@ func (ut UserType) String() string {
 }
 
 var (
-	User   UserType = "user"
+	// User xxx
+	User UserType = "user"
+	// Client xxx
 	Client UserType = "client"
 )
 

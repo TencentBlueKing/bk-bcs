@@ -19,14 +19,14 @@ import (
 	"io/ioutil"
 )
 
-//BcsConfig config item for ipam
+// BcsConfig config item for ipam
 type BcsConfig struct {
 	ZkHost   string         `json:"zkHost"`
 	TLS      *types.SSLInfo `json:"tls,omitempty"`
 	Interval int            `json:"interval,omitempty"`
 }
 
-//LoadConfigFromFile load config item from file
+// LoadConfigFromFile load config item from file
 func LoadConfigFromFile(f string) (*BcsConfig, error) {
 	data, err := ioutil.ReadFile(f)
 	if err != nil {

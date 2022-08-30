@@ -40,7 +40,8 @@ func deleteCustomResource(c *utils.ClientContext) error {
 	if err != nil {
 		return err
 	}
-	if err := scheduler.DeleteCustomResource(c.ClusterID(), apiVersion, plural, c.Namespace(), c.String(utils.OptionName)); err != nil {
+	if err := scheduler.DeleteCustomResource(c.ClusterID(), apiVersion, plural, c.Namespace(),
+		c.String(utils.OptionName)); err != nil {
 		return fmt.Errorf("failed to delete custom resource: %v", err)
 	}
 	fmt.Printf("success to delete %s: %s/%s\n", plural, c.Namespace(), c.String(utils.OptionName))

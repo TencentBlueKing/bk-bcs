@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package service xxx
 package service
 
 import (
@@ -23,8 +24,10 @@ import (
 )
 
 const (
+	// SvcPort xxx
 	SvcPort = "8080"
 
+	// PluginNameKey xxx
 	PluginNameKey = "BCS_PLUGIN_NAME"
 )
 

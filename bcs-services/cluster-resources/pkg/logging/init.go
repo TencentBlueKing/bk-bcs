@@ -41,7 +41,7 @@ var levelMap = map[string]zapcore.Level{
 	"fatal": zapcore.FatalLevel,
 }
 
-// InitLogger ...
+// InitLogger xxx
 func InitLogger(logConf *config.LogConf) {
 	loggerInitOnce.Do(func() {
 		// 使用 zap 记录日志，格式为 json
@@ -49,7 +49,7 @@ func InitLogger(logConf *config.LogConf) {
 	})
 }
 
-// 修改时间并设置日志级别为大写，例如 日志级别: DEBUG/INFO, 时间格式: 2022-01-04 10:33:08
+// getEncoder 修改时间并设置日志级别为大写，例如 日志级别: DEBUG/INFO, 时间格式: 2022-01-04 10:33:08
 func getEncoder() zapcore.Encoder {
 	return zapcore.NewJSONEncoder(zapcore.EncoderConfig{
 		MessageKey:    "msg",
@@ -90,7 +90,7 @@ func newZapJSONLogger(conf *config.LogConf) *zap.Logger {
 	return zap.New(core, zap.AddCaller(), zap.AddCallerSkip(1), zap.AddStacktrace(zap.ErrorLevel))
 }
 
-// GetLogger ...
+// GetLogger xxx
 // TODO: 是否分为不同的类型，比如请求第三方、API等，根据不同的配置，设置不同的日志
 func GetLogger() *zap.Logger {
 	// 未执行日志组件初始化时，日志输出到 stderr
@@ -119,7 +119,7 @@ func Warn(ctx context.Context, msg string, vars ...interface{}) {
 	GetLogger().Warn(wrapLogMsg(ctx, fmt.Sprintf(msg, vars...)))
 }
 
-// Error ...
+// Error xxx
 func Error(ctx context.Context, msg string, vars ...interface{}) {
 	GetLogger().Error(wrapLogMsg(ctx, fmt.Sprintf(msg, vars...)))
 }

@@ -14,7 +14,7 @@
 
 package model
 
-// Metadata ...
+// Metadata xxx
 type Metadata struct {
 	APIVersion  string       `structs:"apiVersion"`
 	Kind        string       `structs:"kind"`
@@ -24,13 +24,13 @@ type Metadata struct {
 	Annotations []Annotation `structs:"annotations"`
 }
 
-// Label ...
+// Label xxx
 type Label struct {
 	Key   string `structs:"key"`
 	Value string `structs:"value"`
 }
 
-// Annotation ...
+// Annotation xxx
 type Annotation struct {
 	Key   string `structs:"key"`
 	Value string `structs:"value"`

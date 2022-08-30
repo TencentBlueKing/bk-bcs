@@ -34,12 +34,13 @@ var (
 	ErrNotInited = errors.New("server not init")
 )
 
-// ClsManClient ...
+// ClsManClient xxx
 type ClsManClient struct {
 	tlsConfig *tls.Config
 	disc      *discovery.ModuleDiscovery
 }
 
+// ClusterClient xxx
 var ClusterClient *ClsManClient
 
 // SetClusterManagerClient set cluster manager client config
@@ -86,10 +87,10 @@ type Config struct {
 func NewClusterManager(config *Config) (ClusterManagerClient, func()) {
 	rand.Seed(time.Now().UnixNano())
 	if len(config.Hosts) == 0 {
-		//! pay more attention for nil return
+		// ! pay more attention for nil return
 		return nil, nil
 	}
-	//create grpc connection
+	// create grpc connection
 	header := map[string]string{
 		"x-content-type": "application/grpc+proto",
 		"Content-Type":   "application/grpc",
@@ -125,6 +126,6 @@ func NewClusterManager(config *Config) (ClusterManagerClient, func()) {
 		return nil, nil
 	}
 
-	//init cluster manager client
+	// init cluster manager client
 	return NewClusterManagerClient(conn), func() { conn.Close() }
 }

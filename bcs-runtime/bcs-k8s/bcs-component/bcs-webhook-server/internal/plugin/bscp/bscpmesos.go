@@ -24,7 +24,7 @@ import (
 
 // MesosInject implements MesosInject
 type MesosInject struct {
-	//template containers
+	// template containers
 	temContainers []commtypes.Container
 }
 
@@ -38,6 +38,7 @@ func (bi *MesosInject) Init(configFile string) error {
 	return bi.initTemplate(configFile)
 }
 
+// initTemplate xxx
 // load template from file
 func (bi *MesosInject) initTemplate(templatePath string) error {
 	by, err := ioutil.ReadFile(templatePath)
@@ -48,7 +49,7 @@ func (bi *MesosInject) initTemplate(templatePath string) error {
 
 	err = json.Unmarshal(by, &bi.temContainers)
 	if err != nil {
-		//template format err, then exit
+		// template format err, then exit
 		blog.Errorf("bscp Unmarshal template file %s error %s", templatePath, err.Error())
 		return fmt.Errorf("bscp Unmarshal template file %s error %s", templatePath, err.Error())
 	}
@@ -88,7 +89,8 @@ func checkAnnotations(typeMeta commtypes.TypeMeta, objMeta commtypes.ObjectMeta)
 }
 
 // InjectApplicationContent inject SideCar into mesos application
-func (bi *MesosInject) InjectApplicationContent(application *commtypes.ReplicaController) (*commtypes.ReplicaController, error) {
+func (bi *MesosInject) InjectApplicationContent(application *commtypes.ReplicaController) (*commtypes.ReplicaController,
+	error) {
 	// if get no bscp inject annotations, just return original content
 	if !checkAnnotations(application.TypeMeta, application.ObjectMeta) {
 		return application, nil
@@ -136,7 +138,8 @@ func (bi *MesosInject) InjectDeployContent(deploy *commtypes.BcsDeployment) (*co
 	return deploy, nil
 }
 
-func (bi *MesosInject) retrieveEnvFromContainer(containers []commtypes.Container, name string) ([]commtypes.Container, map[string]string, error) {
+func (bi *MesosInject) retrieveEnvFromContainer(containers []commtypes.Container, name string) ([]commtypes.Container,
+	map[string]string, error) {
 	envMap := make(map[string]string)
 	var retContainers []commtypes.Container
 	for _, c := range containers {
@@ -145,7 +148,7 @@ func (bi *MesosInject) retrieveEnvFromContainer(containers []commtypes.Container
 				envMap[env.Name] = env.Value
 				blog.Infof("Injection for %s [%s=%s]", name, env.Name, env.Value)
 			}
-			//check specified directory for share within pod
+			// check specified directory for share within pod
 			if env.Name == SideCarCfgPath {
 				v := commtypes.VolumeUnit{
 					Name: SideCarVolumeName,
@@ -184,17 +187,18 @@ func (bi *MesosInject) retrieveEnvFromContainer(containers []commtypes.Container
 	return retContainers, envMap, nil
 }
 
-func (bi *MesosInject) injectEnvToContainer(tempContainers []commtypes.Container, envs map[string]string) []commtypes.Container {
+func (bi *MesosInject) injectEnvToContainer(tempContainers []commtypes.Container,
+	envs map[string]string) []commtypes.Container {
 	var injectContainers []commtypes.Container
 	for _, container := range tempContainers {
-		//inject environments
+		// inject environments
 		for key, value := range envs {
 			env := commtypes.EnvVar{
 				Name:  key,
 				Value: value,
 			}
 			container.Env = append(container.Env, env)
-			//check specified directory for share within pod
+			// check specified directory for share within pod
 			if key == SideCarCfgPath {
 				v := commtypes.VolumeUnit{
 					Name: SideCarVolumeName,

@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package dbprivilege xxx
 package dbprivilege
 
 import (
@@ -101,6 +102,7 @@ func (h *Hooker) InjectDeployContent(deploy *commtypes.BcsDeployment) (*commtype
 	return nil, nil
 }
 
+// createBcsDbPrivCrd xxx
 // create crd of BcsDbPrivConfig
 func (h *Hooker) createBcsDbPrivCrd(clientset apiextensionsclient.Interface) (bool, error) {
 	bcsDbPrivConfigPlural := "bcsdbprivconfigs"
@@ -123,7 +125,8 @@ func (h *Hooker) createBcsDbPrivCrd(clientset apiextensionsclient.Interface) (bo
 		},
 	}
 
-	_, err := clientset.ApiextensionsV1beta1().CustomResourceDefinitions().Create(context.Background(), crd, metav1.CreateOptions{})
+	_, err := clientset.ApiextensionsV1beta1().CustomResourceDefinitions().Create(context.Background(), crd,
+		metav1.CreateOptions{})
 	if err != nil {
 		if apierrors.IsAlreadyExists(err) {
 			blog.Infof("crd is already exists: %s", err)

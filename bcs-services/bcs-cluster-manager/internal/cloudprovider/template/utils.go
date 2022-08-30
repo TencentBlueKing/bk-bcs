@@ -42,7 +42,7 @@ var (
 	BCSClientCert BcsKey = "bcs_client_cert"
 	// BCSClientKey xxx
 	BCSClientKey BcsKey = "bcs_client_key"
-	// BCSToken xxx
+	// BCSTokenKey xxx
 	BCSTokenKey BcsKey = "bcs_token"
 )
 
@@ -103,7 +103,7 @@ func getEnv(k, v string) string {
 	return fmt.Sprintf("%s=%s", k, v)
 }
 
-func getFileContent(file string) (string, error){
+func getFileContent(file string) (string, error) {
 	body, err := ioutil.ReadFile(file)
 	if err != nil {
 		return "", err

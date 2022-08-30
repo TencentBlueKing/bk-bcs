@@ -77,7 +77,7 @@ func (pm *PeerManager) Start() error {
 	return nil
 }
 
-// discoveryEventHandler
+// discoveryEventHandler xxx
 func (pm *PeerManager) discoveryEventHandler(svcs []*registry.Service) {
 	nodes := make([]*registry.Node, 0)
 	for _, svc := range svcs {

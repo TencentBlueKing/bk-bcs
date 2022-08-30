@@ -19,12 +19,16 @@ import (
 	"github.com/dgrijalva/jwt-go"
 )
 
+// BCSClusterEnv xxx
 type BCSClusterEnv string
 
 const (
-	ProdCluster  BCSClusterEnv = "prod"  // 正式环境
+	// ProdCluster xxx
+	ProdCluster BCSClusterEnv = "prod" // 正式环境
+	// DebugCLuster xxx
 	DebugCLuster BCSClusterEnv = "debug" // debug 环境
-	UatCluster   BCSClusterEnv = "uat"   // uat 环境
+	// UatCluster xxx
+	UatCluster BCSClusterEnv = "uat" // uat 环境
 )
 
 // BCSConf 配置
@@ -37,7 +41,7 @@ type BCSConf struct {
 	ClusterEnv   BCSClusterEnv  `yaml:"cluster_env"`
 }
 
-// Init
+// Init xxx
 func (c *BCSConf) Init() error {
 	// only for development
 	c.Host = ""
@@ -49,7 +53,7 @@ func (c *BCSConf) Init() error {
 	return nil
 }
 
-// InitJWTPubKey
+// InitJWTPubKey xxx
 func (c *BCSConf) InitJWTPubKey() error {
 	if c.JWTPubKey == "" {
 		return nil

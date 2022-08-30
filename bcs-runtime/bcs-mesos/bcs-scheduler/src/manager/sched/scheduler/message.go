@@ -28,7 +28,7 @@ import (
 	"github.com/golang/protobuf/proto"
 )
 
-//SendMessage send msg by scheduler to executor, msg is handled by master with MESSAGE call
+// SendMessage send msg by scheduler to executor, msg is handled by master with MESSAGE call
 func (s *Scheduler) SendMessage(taskGroup *types.TaskGroup, msg []byte) (*http.Response, error) {
 	blog.Info("Send %d msg(%s) to executor %s", len(msg), msg, taskGroup.ID)
 	call := &sched.Call{
@@ -44,7 +44,7 @@ func (s *Scheduler) SendMessage(taskGroup *types.TaskGroup, msg []byte) (*http.R
 	return s.send(call)
 }
 
-//SendBcsMessage send bcs message to TaskGroup
+// SendBcsMessage send bcs message to TaskGroup
 func (s *Scheduler) SendBcsMessage(taskGroup *types.TaskGroup, bcsMsg *types.BcsMessage) (*types.BcsMessage, error) {
 	if taskGroup.Status != types.TASKGROUP_STATUS_RUNNING {
 		return nil, fmt.Errorf("taskgroup %s must be running", taskGroup.ID)
@@ -72,14 +72,14 @@ func (s *Scheduler) SendBcsMessage(taskGroup *types.TaskGroup, bcsMsg *types.Bcs
 		bcsMsg.Message = err.Error()
 	}
 
-	//if taskGroup.BcsMessages==nil {
+	// if taskGroup.BcsMessages==nil {
 	//	taskGroup.BcsMessages = make(map[int64]*types.BcsMessage)
-	//}
-	//taskGroup.BcsMessages[bcsMsg.Id] = bcsMsg
+	// }
+	// taskGroup.BcsMessages[bcsMsg.Id] = bcsMsg
 
 	taskGroup.BcsEventMsg = bcsMsg
 
-	//save taskGroup into zk, in this function, task will alse be saved
+	// save taskGroup into zk, in this function, task will alse be saved
 	if err = s.store.SaveTaskGroup(taskGroup); err != nil {
 		blog.Error("status report: save taskgroup: %s information into db failed! err:%s", taskGroup.ID, err.Error())
 	}
@@ -87,8 +87,9 @@ func (s *Scheduler) SendBcsMessage(taskGroup *types.TaskGroup, bcsMsg *types.Bcs
 	return bcsMsg, err
 }
 
-//SendLocalFile send local file to executor
-func (s *Scheduler) SendLocalFile(taskGroup *types.TaskGroup, ctxBase64, to, right, user string) (*types.BcsMessage, error) {
+// SendLocalFile send local file to executor
+func (s *Scheduler) SendLocalFile(taskGroup *types.TaskGroup, ctxBase64, to, right, user string) (*types.BcsMessage,
+	error) {
 	msg := &types.Msg_LocalFile{
 		To:     proto.String(to),
 		Right:  proto.String(right),
@@ -96,18 +97,19 @@ func (s *Scheduler) SendLocalFile(taskGroup *types.TaskGroup, ctxBase64, to, rig
 		Base64: proto.String(ctxBase64),
 	}
 
-	//TODO specify a specific Task with TaskID that is not used now
+	// TODO specify a specific Task with TaskID that is not used now
 	bcsMsg := &types.BcsMessage{
 		Type:  types.Msg_LOCALFILE.Enum(),
 		Local: msg,
-		//TaskID : null,
+		// TaskID : null,
 	}
 
 	return s.SendBcsMessage(taskGroup, bcsMsg)
 }
 
-//SendRemoteFile send remote file to executor
-func (s *Scheduler) SendRemoteFile(taskGroup *types.TaskGroup, from, to, right, user string) (*types.BcsMessage, error) {
+// SendRemoteFile send remote file to executor
+func (s *Scheduler) SendRemoteFile(taskGroup *types.TaskGroup, from, to, right, user string) (*types.BcsMessage,
+	error) {
 	msg := &types.Msg_Remote{
 		To:    proto.String(to),
 		Right: proto.String(right),
@@ -115,53 +117,54 @@ func (s *Scheduler) SendRemoteFile(taskGroup *types.TaskGroup, from, to, right, 
 		From:  proto.String(from),
 	}
 
-	//TODO specify a specific Task with TaskID that is not used now
+	// TODO specify a specific Task with TaskID that is not used now
 	bcsMsg := &types.BcsMessage{
 		Type:   types.Msg_REMOTE.Enum(),
 		Remote: msg,
-		//TaskID : null,
+		// TaskID : null,
 	}
 
 	return s.SendBcsMessage(taskGroup, bcsMsg)
 }
 
-//SendSignal send any user specifyed signal to the executor
+// SendSignal send any user specifyed signal to the executor
 func (s *Scheduler) SendSignal(taskGroup *types.TaskGroup, signal uint32) (*types.BcsMessage, error) {
 	msg := &types.Msg_Signal{
 		Signal: proto.Uint32(signal),
 	}
 
-	//TODO specify a specific Task with TaskID that is not used now
+	// TODO specify a specific Task with TaskID that is not used now
 	bcsMsg := &types.BcsMessage{
 		Type: types.Msg_SIGNAL.Enum(),
 		Sig:  msg,
-		//TaskID : null,
+		// TaskID : null,
 	}
 
 	return s.SendBcsMessage(taskGroup, bcsMsg)
 }
 
-//SendEnv send env to the executor, name is the env value key,
-//replace indicates whether to replace an existing one if it is exist already
-//if replace is false, addition or creation is the default behavior
-func (s *Scheduler) SendEnv(taskGroup *types.TaskGroup, name, value string /*replace bool*/) (*types.BcsMessage, error) {
+// SendEnv send env to the executor, name is the env value key,
+// replace indicates whether to replace an existing one if it is exist already
+// if replace is false, addition or creation is the default behavior
+func (s *Scheduler) SendEnv(taskGroup *types.TaskGroup, name, value string /*replace bool*/) (*types.BcsMessage,
+	error) {
 	msg := &types.Msg_Env{
 		Name:  proto.String(name),
 		Value: proto.String(value),
-		//Rep:   replace,
+		// Rep:   replace,
 	}
 
-	//TODO specify a specific Task with TaskID that is not used now
+	// TODO specify a specific Task with TaskID that is not used now
 	bcsMsg := &types.BcsMessage{
 		Type: types.Msg_ENV.Enum(),
 		Env:  msg,
-		//TaskID : null,
+		// TaskID : null,
 	}
 
 	return s.SendBcsMessage(taskGroup, bcsMsg)
 }
 
-//ProcessCommandMessage handle response bcs message
+// ProcessCommandMessage handle response bcs message
 func (s *Scheduler) ProcessCommandMessage(bcsMsg *types.BcsMessage) {
 
 	if bcsMsg.ResponseCommandTask == nil {

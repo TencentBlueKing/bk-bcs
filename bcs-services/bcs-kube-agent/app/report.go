@@ -161,6 +161,7 @@ func getNodeInternalIP(node k8scorev1.Node) (string, error) {
 	return "", fmt.Errorf("node %s internal ip is not found", node.GetName())
 }
 
+// getMasterNodes xxx
 // get the k8s cluster master node
 func getMasterNodes(kubeClient *kubernetes.Clientset) ([]k8scorev1.Node, error) {
 	var retNodes []k8scorev1.Node
@@ -176,6 +177,7 @@ func getMasterNodes(kubeClient *kubernetes.Clientset) ([]k8scorev1.Node, error) 
 	return retNodes, nil
 }
 
+// getApiserverAdresses xxx
 // get the k8s cluster apiserver addresses
 func getApiserverAdresses(kubeClient *kubernetes.Clientset) (string, error) {
 	var apiserverPort int32
@@ -242,6 +244,7 @@ func getBkeAgentInfo() string {
 	return bkeURL
 }
 
+// pingEndpoint xxx
 // probe the health of the apiserver address for 3 times
 func pingEndpoint(host string) error {
 	var err error

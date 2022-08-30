@@ -21,21 +21,21 @@ var (
 	_, classC, _ = net.ParseCIDR("192.168.0.0/16")
 )
 
-//GetIPAddress get local usable inner ip address
+// GetIPAddress get local usable inner ip address
 // check eth1 and eth0 first, if no IP address from eth1 and eth0,
 // try to filter all network interface with private address
 func GetIPAddress() string {
-	//try eth1 first
+	// try eth1 first
 	eth1Addr := getInterfaceIPv4Addr("eth1")
 	if len(eth1Addr) != 0 {
 		return eth1Addr
 	}
-	//try eth0
+	// try eth0
 	eth0Addr := getInterfaceIPv4Addr("eth0")
 	if len(eth0Addr) != 0 {
 		return eth0Addr
 	}
-	//try all private network address
+	// try all private network address
 	addrs, err := net.InterfaceAddrs()
 	if err != nil {
 		return ""
@@ -56,7 +56,7 @@ func GetIPAddress() string {
 	return ""
 }
 
-//getInterfaceIPv4Addr get specified network interface IPv4 address
+// getInterfaceIPv4Addr get specified network interface IPv4 address
 // if interface has multiple available IP addresses and already UP
 // just return the first one
 func getInterfaceIPv4Addr(name string) string {

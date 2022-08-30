@@ -16,7 +16,6 @@ package templateset
 import "github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
 
 const (
-	// TemplateSelection templateSet selection
+	// TemplatesetSelection templateSet selection
 	TemplatesetSelection iam.InstanceSelectionID = "templateset_list"
 )
-

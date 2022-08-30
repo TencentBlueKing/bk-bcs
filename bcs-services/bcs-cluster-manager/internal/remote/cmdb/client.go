@@ -210,7 +210,7 @@ func (c *Client) QueryHostByBizID(bizID int, page Page) (int, []HostData, error)
 		blog.Errorf("call api QueryHostNumByBizID failed: %v", respData.Message)
 		return 0, nil, fmt.Errorf(respData.Message)
 	}
-	//successfully request
+	// successfully request
 	blog.Infof("call api QueryHostNumByBizID with url(%s) successfully", reqURL)
 
 	if len(respData.Data.Info) > 0 {
@@ -255,7 +255,7 @@ func (c *Client) GetBusinessMaintainer(bizID int) (*BusinessData, error) {
 		blog.Errorf("call api GetBS2IDByBizID failed: %v", respData.Message)
 		return nil, fmt.Errorf(respData.Message)
 	}
-	//successfully request
+	// successfully request
 	blog.Infof("call api GetBS2IDByBizID with url(%s) successfully", reqURL)
 
 	if len(respData.Data.Info) > 0 {
@@ -300,7 +300,7 @@ func (c *Client) GetBS2IDByBizID(bizID int64) (int, error) {
 		blog.Errorf("call api GetBS2IDByBizID failed: %v", respData.Message)
 		return 0, fmt.Errorf(respData.Message)
 	}
-	//successfully request
+	// successfully request
 	blog.Infof("call api GetBS2IDByBizID with url(%s) successfully", reqURL)
 
 	if len(respData.Data.Info) > 0 {

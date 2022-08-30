@@ -14,7 +14,7 @@
 package constant
 
 const (
-	//CurrentUserAttr user header
+	// CurrentUserAttr user header
 	CurrentUserAttr = "current-user"
 
 	// DefaultTokenLength user token default length

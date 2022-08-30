@@ -13,6 +13,7 @@
 
 package types
 
+// HaProxyRequest xxx
 type HaProxyRequest struct {
 	User      string `json:"user"`
 	SetID     string `json:"set_id"`

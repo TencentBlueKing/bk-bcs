@@ -11,6 +11,7 @@
  *
  */
 
+// Package app xxx
 package app
 
 import (
@@ -66,7 +67,7 @@ type WebConsoleManager struct {
 	multiCredConf *options.MultiCredConf
 }
 
-// NewWebConsoleManager
+// NewWebConsoleManager xxx
 func NewWebConsoleManager(opt *options.WebConsoleManagerOption) *WebConsoleManager {
 	return &WebConsoleManager{
 		ctx: context.Background(),

@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package token xxx
 package token
 
 import (
@@ -93,6 +94,7 @@ type UpdateTokenForm struct {
 	Expiration int `json:"expiration" validate:"required"`
 }
 
+// checkTokenCreateBy xxx
 // check user token permission, if user is admin, then allow all.
 // if user is not admin, then check the token is belonged to user.
 func checkTokenCreateBy(request *restful.Request, targetUser string) (allow bool, createBy string) {
@@ -533,7 +535,8 @@ func (t *TokenHandler) CreateClientToken(request *restful.Request, response *res
 	if err != nil {
 		blog.Errorf("set client %s token fail", form.ClientName)
 		metrics.ReportRequestAPIMetrics("CreateClientToken", request.Request.Method, metrics.ErrStatus, start)
-		message := fmt.Sprintf("errcode: %d, creating client [%s] token failed", common.BcsErrApiInternalDbError, form.ClientName)
+		message := fmt.Sprintf("errcode: %d, creating client [%s] token failed", common.BcsErrApiInternalDbError,
+			form.ClientName)
 		utils.WriteServerError(response, common.BcsErrApiInternalDbError, message)
 		return
 	}

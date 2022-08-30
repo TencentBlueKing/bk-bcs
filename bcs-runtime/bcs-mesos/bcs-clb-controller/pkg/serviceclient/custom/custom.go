@@ -11,6 +11,7 @@
  *
  */
 
+// Package custom xxx
 package custom
 
 import (
@@ -44,7 +45,7 @@ const (
 	typeAppSvc     = "appsvc"
 	typeAppNode    = "appnode"
 	typeAppService = "appservice"
-	//state for event
+	// state for event
 	statusSuccess   = "success"
 	statusFailure   = "failure"
 	statusNotFinish = "notfinish"
@@ -77,10 +78,12 @@ func newInnerAppSvcEventHandler() *innerAppSvcEventHandler {
 	return &innerAppSvcEventHandler{}
 }
 
+// RegisterManager xxx
 func (h *innerAppSvcEventHandler) RegisterManager(manager *CustomizedManager) {
 	h.manager = manager
 }
 
+// OnAdd xxx
 // AppSvc add event
 // when AppSvc add or update, do update AppService in cache
 func (h *innerAppSvcEventHandler) OnAdd(obj interface{}) {
@@ -93,6 +96,7 @@ func (h *innerAppSvcEventHandler) OnAdd(obj interface{}) {
 	h.manager.updateAppService(svc)
 }
 
+// OnUpdate xxx
 // AppSvc update event
 func (h *innerAppSvcEventHandler) OnUpdate(oldObj, newObj interface{}) {
 	oldSvc, okOld := oldObj.(*v1.AppSvc)
@@ -105,7 +109,7 @@ func (h *innerAppSvcEventHandler) OnUpdate(oldObj, newObj interface{}) {
 		blog.Warnf("AppSvc event handler get unknown type newObj %v OnUpdate", newObj)
 		return
 	}
-	//protection: bcs-scheduler will update timestamp every 3 minutes
+	// protection: bcs-scheduler will update timestamp every 3 minutes
 	//            event if nothing is changed
 	newSvc.SetCreationTimestamp(oldSvc.GetCreationTimestamp())
 	if reflect.DeepEqual(oldObj, newObj) {
@@ -118,6 +122,7 @@ func (h *innerAppSvcEventHandler) OnUpdate(oldObj, newObj interface{}) {
 	return
 }
 
+// OnDelete xxx
 // AppSvc delete event
 func (h *innerAppSvcEventHandler) OnDelete(obj interface{}) {
 	svc, ok := obj.(*v1.AppSvc)
@@ -139,10 +144,12 @@ func newInnerAppNodeEventHandler() *innerAppNodeEventHandler {
 	return &innerAppNodeEventHandler{}
 }
 
+// RegisterManager xxx
 func (h *innerAppNodeEventHandler) RegisterManager(manager *CustomizedManager) {
 	h.manager = manager
 }
 
+// OnAdd xxx
 // AppNode add event
 // when AppNode add or update, find each associated service and update corresponding AppService in cache
 func (h *innerAppNodeEventHandler) OnAdd(obj interface{}) {
@@ -167,6 +174,7 @@ func (h *innerAppNodeEventHandler) OnAdd(obj interface{}) {
 	return
 }
 
+// OnUpdate xxx
 // AppNode update event
 func (h *innerAppNodeEventHandler) OnUpdate(oldObj, newObj interface{}) {
 	oldNode, okOld := oldObj.(*v1.AppNode)
@@ -179,7 +187,7 @@ func (h *innerAppNodeEventHandler) OnUpdate(oldObj, newObj interface{}) {
 		blog.Warnf("AppNode event handler get unknown type newObj %v OnUpdate", newObj)
 		return
 	}
-	//TODO: GetCreationTimestamp() will cause process crash??? Jim leave this
+	// TODO: GetCreationTimestamp() will cause process crash??? Jim leave this
 	newNode.SetCreationTimestamp(oldNode.GetCreationTimestamp())
 	if reflect.DeepEqual(oldObj, newObj) {
 		customEvent.WithLabelValues(typeAppNode, eventUpdate, statusNotFinish).Inc()
@@ -202,6 +210,7 @@ func (h *innerAppNodeEventHandler) OnUpdate(oldObj, newObj interface{}) {
 	}
 }
 
+// OnDelete xxx
 // AppNode delete event
 func (h *innerAppNodeEventHandler) OnDelete(obj interface{}) {
 	node, ok := obj.(*v1.AppNode)
@@ -237,7 +246,7 @@ func NewClient(config string, handler cache.ResourceEventHandler, syncPeriod tim
 			return nil, err
 		}
 	} else {
-		//parse configuration
+		// parse configuration
 		restConfig, err = clientcmd.BuildConfigFromFlags("", config)
 		if err != nil {
 			blog.Errorf("create internal client with kubeconfig %s failed, err %s", config, err.Error())
@@ -327,7 +336,7 @@ func (cm *CustomizedManager) GetAppService(ns, name string) (*svcclient.AppServi
 // ListAppService list AppService
 func (cm *CustomizedManager) ListAppService(l map[string]string) ([]*svcclient.AppService, error) {
 	selector := labels.Set(l).AsSelector()
-	//getting all specified datas from local cache with ListOptions
+	// getting all specified datas from local cache with ListOptions
 	svcs, err := cm.svcLister.List(selector)
 	if err != nil {
 		customCritical.WithLabelValues(typeAppService, eventList).Inc()
@@ -347,12 +356,14 @@ func (cm *CustomizedManager) ListAppService(l map[string]string) ([]*svcclient.A
 		}
 		nodes, err := cm.getAppNodesBySvc(svc)
 		if err != nil {
-			blog.Errorf("BcsManager get mesh.V1.AppNode by AppSvc %s/%s failed, %s. skip", svc.GetNamespace(), svc.GetName(), err.Error())
+			blog.Errorf("BcsManager get mesh.V1.AppNode by AppSvc %s/%s failed, %s. skip", svc.GetNamespace(), svc.GetName(),
+				err.Error())
 			continue
 		}
 		localSvc, err := cm.convert(svc, nodes)
 		if err != nil {
-			blog.Errorf("BcsManager convert mesh.V1.AppSvc %s/%s to local AppService failed, %s", svc.GetNamespace(), svc.GetName(), err.Error())
+			blog.Errorf("BcsManager convert mesh.V1.AppSvc %s/%s to local AppService failed, %s", svc.GetNamespace(),
+				svc.GetName(), err.Error())
 			continue
 		}
 		internalAppSvcs = append(internalAppSvcs, localSvc)
@@ -396,7 +407,8 @@ func (cm *CustomizedManager) convert(svc *v1.AppSvc, nodes []*v1.AppNode) (*svcc
 	for _, node := range nodes {
 		if len(node.Spec.Ports) == 0 {
 			// some container in a pod has no port, log it in a high level
-			blog.V(3).Infof("mesh.V1.AppNode %s/%s get no port definition, #lost expected data#.", node.GetNamespace(), node.GetName())
+			blog.V(3).Infof("mesh.V1.AppNode %s/%s get no port definition, #lost expected data#.", node.GetNamespace(),
+				node.GetName())
 			continue
 		}
 		localNode := svcclient.AppNode{
@@ -415,7 +427,7 @@ func (cm *CustomizedManager) convert(svc *v1.AppSvc, nodes []*v1.AppNode) (*svcc
 	return localSvc, nil
 }
 
-// isMatch
+// isMatch xxx
 func isMatch(svc *v1.AppSvc, node *v1.AppNode) bool {
 	if svc == nil || node == nil {
 		return false
@@ -427,6 +439,7 @@ func isMatch(svc *v1.AppSvc, node *v1.AppNode) bool {
 	return false
 }
 
+// servicePortConvert xxx
 // convert ServicePort of AppSvc to ServicePort of AppService
 func servicePortConvert(ports []v1.ServicePort) (ret []svcclient.ServicePort) {
 	for _, p := range ports {
@@ -442,6 +455,7 @@ func servicePortConvert(ports []v1.ServicePort) (ret []svcclient.ServicePort) {
 	return ret
 }
 
+// nodePortConvert xxx
 // convert NodePort of AppNode to NodePort of AppService
 func nodePortConvert(ports []v1.NodePort) (ret []svcclient.NodePort) {
 	for _, p := range ports {
@@ -455,7 +469,8 @@ func nodePortConvert(ports []v1.NodePort) (ret []svcclient.NodePort) {
 	return ret
 }
 
-//TODO: 考虑建立node到svc的反向索引
+// updateAppService xxx
+// TODO: 考虑建立node到svc的反向索引
 func (cm *CustomizedManager) updateAppService(svc *v1.AppSvc) {
 	// get all AppNode object by AppSvc
 	nodes, err := cm.getAppNodesBySvc(svc)
@@ -482,7 +497,8 @@ func (cm *CustomizedManager) updateAppService(svc *v1.AppSvc) {
 		err = cm.appServiceCache.Add(newAppService)
 		if err != nil {
 			customCritical.WithLabelValues(typeAppService, eventAdd).Inc()
-			blog.Warnf("add AppService %s/%s in AppService cache failed, err %s", newAppService.GetName(), newAppService.GetNamespace(), err.Error())
+			blog.Warnf("add AppService %s/%s in AppService cache failed, err %s", newAppService.GetName(),
+				newAppService.GetNamespace(), err.Error())
 			return
 		}
 		cm.appServiceHandler.OnAdd(newAppService)
@@ -491,7 +507,8 @@ func (cm *CustomizedManager) updateAppService(svc *v1.AppSvc) {
 		err = cm.appServiceCache.Update(newAppService)
 		if err != nil {
 			customCritical.WithLabelValues(typeAppService, eventUpdate).Inc()
-			blog.Warnf("update AppService %s/%s in AppService cache failed, err %s", newAppService.GetName(), newAppService.GetNamespace(), err.Error())
+			blog.Warnf("update AppService %s/%s in AppService cache failed, err %s", newAppService.GetName(),
+				newAppService.GetNamespace(), err.Error())
 			return
 		}
 		cm.appServiceHandler.OnUpdate(oldAppService, newAppService)

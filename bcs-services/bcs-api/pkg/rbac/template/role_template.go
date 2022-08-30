@@ -18,17 +18,20 @@ import (
 )
 
 const (
+	// ClusterRolePrefix xxx
 	ClusterRolePrefix = "bke-"
 )
 
+// RoleTemplate xxx
 type RoleTemplate struct {
 	Name  string
 	Rules []rbacv1.PolicyRule
 }
 
+// RoleTemplateStore xxx
 var RoleTemplateStore map[string]*RoleTemplate
 
-// 初始化所有clusterrole角色，定义每个clusterrole的权限
+// InitRbacTemplates 初始化所有clusterrole角色，定义每个clusterrole的权限
 func InitRbacTemplates() {
 	RoleTemplateStore = make(map[string]*RoleTemplate)
 	addRoleTemplate("cluster-manage", clusterManageRules)

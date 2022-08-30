@@ -54,7 +54,8 @@ func (bcp *BCSClusterPerm) CanCreateCluster(user string, projectID string) (bool
 	projectNode := project.ProjectResourceNode{SystemID: iam.SystemIDBKBCS, ProjectID: projectID}.BuildResourceNodes()
 
 	// get cluster permission by iam
-	perms, err := bcp.iamClient.BatchResourceMultiActionsAllowed(relatedActionIDs, req, [][]iam.ResourceNode{clusterNode, projectNode})
+	perms, err := bcp.iamClient.BatchResourceMultiActionsAllowed(relatedActionIDs, req, [][]iam.ResourceNode{clusterNode,
+		projectNode})
 	if err != nil {
 		return false, "", err
 	}
@@ -119,7 +120,8 @@ func (bcp *BCSClusterPerm) CanManageCluster(user string, projectID string, clust
 		ProjectID: projectID, ClusterID: clusterID}.BuildResourceNodes()
 	projectNode := project.ProjectResourceNode{SystemID: iam.SystemIDBKBCS, ProjectID: projectID}.BuildResourceNodes()
 
-	perms, err := bcp.iamClient.BatchResourceMultiActionsAllowed(relatedActionIDs, req, [][]iam.ResourceNode{clusterNode, projectNode})
+	perms, err := bcp.iamClient.BatchResourceMultiActionsAllowed(relatedActionIDs, req, [][]iam.ResourceNode{clusterNode,
+		projectNode})
 	if err != nil {
 		return false, "", err
 	}
@@ -180,7 +182,8 @@ func (bcp *BCSClusterPerm) CanDeleteCluster(user string, projectID string, clust
 		ProjectID: projectID, ClusterID: clusterID}.BuildResourceNodes()
 	projectNode := project.ProjectResourceNode{SystemID: iam.SystemIDBKBCS, ProjectID: projectID}.BuildResourceNodes()
 
-	perms, err := bcp.iamClient.BatchResourceMultiActionsAllowed(relatedActionIDs, req, [][]iam.ResourceNode{clusterNode, projectNode})
+	perms, err := bcp.iamClient.BatchResourceMultiActionsAllowed(relatedActionIDs, req, [][]iam.ResourceNode{clusterNode,
+		projectNode})
 	if err != nil {
 		return false, "", err
 	}
@@ -241,7 +244,8 @@ func (bcp *BCSClusterPerm) CanViewCluster(user string, projectID string, cluster
 		ProjectID: projectID, ClusterID: clusterID}.BuildResourceNodes()
 	projectNode := project.ProjectResourceNode{SystemID: iam.SystemIDBKBCS, ProjectID: projectID}.BuildResourceNodes()
 
-	perms, err := bcp.iamClient.BatchResourceMultiActionsAllowed(relatedActionIDs, req, [][]iam.ResourceNode{clusterNode, projectNode})
+	perms, err := bcp.iamClient.BatchResourceMultiActionsAllowed(relatedActionIDs, req, [][]iam.ResourceNode{clusterNode,
+		projectNode})
 	if err != nil {
 		return false, "", err
 	}
@@ -280,7 +284,8 @@ func (bcp *BCSClusterPerm) CanViewCluster(user string, projectID string, cluster
 }
 
 // GenerateIAMApplicationURL build permission URL
-func (bcp *BCSClusterPerm) GenerateIAMApplicationURL(systemID string, applications []iam.ApplicationAction) (string, error) {
+func (bcp *BCSClusterPerm) GenerateIAMApplicationURL(systemID string, applications []iam.ApplicationAction) (string,
+	error) {
 	if bcp == nil {
 		return iam.IamAppURL, utils.ErrServerNotInited
 	}
@@ -296,7 +301,8 @@ func (bcp *BCSClusterPerm) GenerateIAMApplicationURL(systemID string, applicatio
 }
 
 // GetClusterMultiActionPermission only support same instanceSelection
-func (bcp *BCSClusterPerm) GetClusterMultiActionPermission(user, projectID, clusterID string, actionIDs []string) (map[string]bool, error) {
+func (bcp *BCSClusterPerm) GetClusterMultiActionPermission(user, projectID, clusterID string,
+	actionIDs []string) (map[string]bool, error) {
 	if bcp == nil {
 		return nil, utils.ErrServerNotInited
 	}
@@ -310,8 +316,9 @@ func (bcp *BCSClusterPerm) GetClusterMultiActionPermission(user, projectID, clus
 		UserName: user}, clusterNode)
 }
 
-// GetClusterMultiActionPermission only support same instanceSelection
-func (bcp *BCSClusterPerm) GetMultiClusterMultiActionPermission(user, projectID string, clusterIDs []string, actionIDs []string) (map[string]map[string]bool, error) {
+// GetMultiClusterMultiActionPermission only support same instanceSelection
+func (bcp *BCSClusterPerm) GetMultiClusterMultiActionPermission(user, projectID string, clusterIDs []string,
+	actionIDs []string) (map[string]map[string]bool, error) {
 	if bcp == nil {
 		return nil, utils.ErrServerNotInited
 	}

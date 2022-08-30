@@ -11,6 +11,7 @@
  *
  */
 
+// Package options xxx
 package options
 
 import (
@@ -66,7 +67,7 @@ func (o *AggregationOptions) Complete() error {
 	if err != nil {
 		return err
 	}
-	//base64decode
+	// base64decode
 	if c.BcsStorageToken != "" {
 		tokenBytes, err := base64.StdEncoding.DecodeString(c.BcsStorageToken)
 		if err != nil {
@@ -87,12 +88,14 @@ func (o *AggregationOptions) GetConfig() *config.Config {
 // APIServerConfig returns config for the api server given AggregationOptions
 func (o *AggregationOptions) APIServerConfig() (*apiserver.Config, error) {
 	// TODO have a "real" external address
-	if err := o.RecommendedOptions.SecureServing.MaybeDefaultWithSelfSignedCerts("localhost", nil, []net.IP{net.ParseIP("127.0.0.1")}); err != nil {
+	if err := o.RecommendedOptions.SecureServing.MaybeDefaultWithSelfSignedCerts("localhost", nil, []net.IP{
+		net.ParseIP("127.0.0.1")}); err != nil {
 		return nil, fmt.Errorf("error creating self-signed certificates: %v", err)
 	}
 
 	// remove NamespaceLifecycle admission plugin explicitly
-	o.RecommendedOptions.Admission.DisablePlugins = append(o.RecommendedOptions.Admission.DisablePlugins, lifecycle.PluginName)
+	o.RecommendedOptions.Admission.DisablePlugins = append(o.RecommendedOptions.Admission.DisablePlugins,
+		lifecycle.PluginName)
 
 	serverConfig := genericapiserver.NewRecommendedConfig(apiserver.Codecs)
 	serverConfig.Config.RequestTimeout = time.Duration(40) * time.Second // override default 60s
@@ -119,6 +122,7 @@ func (o *AggregationOptions) APIServerConfig() (*apiserver.Config, error) {
 	return apiserverConfig, nil
 }
 
+// AddFlags xxx
 func (o *AggregationOptions) AddFlags(fs *pflag.FlagSet) {
 	o.addRecommendedOptionsFlags(fs)
 	fs.StringVar(&o.configFile, "config", "", "The path to the configuration file.")
@@ -154,10 +158,12 @@ func (o *AggregationOptions) recommendedOptionsApplyTo(config *genericapiserver.
 	// Copied from k8s.io/apiserver/pkg/server/options/recommended.go
 	// and remove unused ApplyTo
 
-	if err := o.RecommendedOptions.SecureServing.ApplyTo(&config.Config.SecureServing, &config.Config.LoopbackClientConfig); err != nil {
+	if err := o.RecommendedOptions.SecureServing.ApplyTo(&config.Config.SecureServing,
+		&config.Config.LoopbackClientConfig); err != nil {
 		return err
 	}
-	if err := o.RecommendedOptions.Authentication.ApplyTo(&config.Config.Authentication, config.SecureServing, config.OpenAPIConfig); err != nil {
+	if err := o.RecommendedOptions.Authentication.ApplyTo(&config.Config.Authentication, config.SecureServing,
+		config.OpenAPIConfig); err != nil {
 		return err
 	}
 	if err := o.RecommendedOptions.Authorization.ApplyTo(&config.Config.Authorization); err != nil {
@@ -174,7 +180,8 @@ func (o *AggregationOptions) recommendedOptionsApplyTo(config *genericapiserver.
 	}
 	if initializers, err := o.RecommendedOptions.ExtraAdmissionInitializers(config); err != nil {
 		return err
-	} else if err := o.RecommendedOptions.Admission.ApplyTo(&config.Config, config.SharedInformerFactory, config.ClientConfig, o.RecommendedOptions.FeatureGate, initializers...); err != nil {
+	} else if err := o.RecommendedOptions.Admission.ApplyTo(&config.Config, config.SharedInformerFactory,
+		config.ClientConfig, o.RecommendedOptions.FeatureGate, initializers...); err != nil {
 		return err
 	}
 	if utilfeature.DefaultFeatureGate.Enabled(features.APIPriorityAndFairness) {
@@ -186,7 +193,8 @@ func (o *AggregationOptions) recommendedOptionsApplyTo(config *genericapiserver.
 				config.RequestTimeout/4,
 			)
 		} else {
-			klog.Warningf("Neither kubeconfig is provided nor service-account is mounted, so APIPriorityAndFairness will be disabled")
+			klog.Warningf(
+				"Neither kubeconfig is provided nor service-account is mounted, so APIPriorityAndFairness will be disabled")
 		}
 	}
 	return nil

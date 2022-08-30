@@ -29,12 +29,12 @@ var PVAccessMode2ShortMap = map[string]string{
 
 const defaultSCAnnoKey = "storageclass.kubernetes.io/is-default-class"
 
-// FormatStorageRes ...
+// FormatStorageRes xxx
 func FormatStorageRes(manifest map[string]interface{}) map[string]interface{} {
 	return CommonFormatRes(manifest)
 }
 
-// FormatPV ...
+// FormatPV xxx
 func FormatPV(manifest map[string]interface{}) map[string]interface{} {
 	ret := FormatStorageRes(manifest)
 
@@ -52,14 +52,14 @@ func FormatPV(manifest map[string]interface{}) map[string]interface{} {
 	return ret
 }
 
-// FormatPVC ...
+// FormatPVC xxx
 func FormatPVC(manifest map[string]interface{}) map[string]interface{} {
 	ret := FormatStorageRes(manifest)
 	ret["accessModes"] = parseShortAccessModes(manifest)
 	return ret
 }
 
-// FormatSC ...
+// FormatSC xxx
 func FormatSC(manifest map[string]interface{}) map[string]interface{} {
 	ret := FormatStorageRes(manifest)
 	ret["isDefault"] = mapx.GetStr(manifest, []string{"metadata", "annotations", defaultSCAnnoKey}) == "true"
@@ -68,7 +68,7 @@ func FormatSC(manifest map[string]interface{}) map[string]interface{} {
 
 // 工具方法
 
-// 解析 AccessModes (缩写)
+// parseShortAccessModes 解析 AccessModes (缩写)
 func parseShortAccessModes(manifest map[string]interface{}) (shortAccessModes []string) {
 	accessModes, _ := mapx.GetItems(manifest, "spec.accessModes")
 	for _, am := range accessModes.([]interface{}) {
