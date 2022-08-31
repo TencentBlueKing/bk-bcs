@@ -79,6 +79,7 @@ func NewEventHandler(opt EventHandlerOption) *EventHandler {
 
 // PushQueue push item into queue
 func (h *EventHandler) PushQueue(nsName k8stypes.NamespacedName) {
+	blog.Infof("listener '%s' was pushed in event queue", nsName.String())
 	h.eventQueue.Forget(nsName)
 	h.eventQueue.Add(nsName)
 }
@@ -100,10 +101,13 @@ func (h *EventHandler) handleQueue() bool {
 	h.queueLock.Lock()
 	defer h.queueLock.Unlock()
 
+	blog.Infof("listener '%s' got from event queue", nsName.String())
+
 	listener := &networkextensionv1.Listener{}
 	err := h.k8sCli.Get(context.Background(), nsName, listener)
 	if err != nil {
 		if k8serrors.IsNotFound(err) {
+			blog.Infof("not found listener '%s', forget", nsName.String())
 			h.eventQueue.Forget(obj)
 			h.eventQueue.Done(obj)
 			return true

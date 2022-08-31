@@ -204,7 +204,7 @@ func (pbr *PortBindingReconciler) cleanPortBinding(portBinding *networkextension
 			portBinding.Finalizers = bcsnetcommon.RemoveString(
 				portBinding.Finalizers, constant.FinalizerNameBcsIngressController)
 			if err := pbr.k8sClient.Update(pbr.ctx, portBinding, &client.UpdateOptions{}); err != nil {
-				blog.Warnf("remote finalizer from port binding %s/%s failed, err %s",
+				blog.Warnf("remove finalizer from port binding %s/%s failed, err %s",
 					portBinding.GetName(), portBinding.GetNamespace(), err.Error())
 				return ctrl.Result{
 					Requeue:      true,

@@ -230,7 +230,15 @@ func (s *Server) validatingWebhook(ar v1beta1.AdmissionReview) *v1beta1.Admissio
 	return &v1beta1.AdmissionResponse{Allowed: true}
 }
 
-func (s *Server) mutatingWebhook(ar v1beta1.AdmissionReview) *v1beta1.AdmissionResponse {
+func (s *Server) mutatingWebhook(ar v1beta1.AdmissionReview) (response *v1beta1.AdmissionResponse) {
+	defer func() {
+		if response == nil || response.Allowed == false {
+			metrics.IncreasePodCreateCounter(false)
+		} else {
+			metrics.IncreasePodCreateCounter(true)
+		}
+	}()
+
 	req := ar.Request
 	if req.Operation != v1beta1.Create {
 		blog.Warnf("operation is not create, ignore")
