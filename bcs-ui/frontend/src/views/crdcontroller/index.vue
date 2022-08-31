@@ -17,6 +17,7 @@
               :search-key.sync="searchKeyword"
               :search-scope.sync="searchScope"
               :cluster-fixed="!!curClusterId"
+              :show-search-input="false"
               @search="search"
               @refresh="refresh">
             </bk-data-searcher>
