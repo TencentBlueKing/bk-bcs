@@ -116,11 +116,11 @@ const (
 	// PortPoolPortProtocolTCPUDP protocol of port in pool is tcp&udp
 	PortPoolPortProtocolTCPUDP = "TCP_UDP"
 
-	//LoadBalanceCheckFormatWithAp regular expression for check lb format "ap-xxxxx:lb-xxxxx"
+	// LoadBalanceCheckFormatWithAp regular expression for check lb format "ap-xxxxx:lb-xxxxx"
 	LoadBalanceCheckFormatWithApLbID = "^(ap|na|eu|sa)-[A-Za-z0-9-]+:lb-[A-Za-z0-9]+"
-	//LoadBalanceCheckFormat regular expression for check lb format "lb-xxxxx"
+	// LoadBalanceCheckFormat regular expression for check lb format "lb-xxxxx"
 	LoadBalanceCheckFormat = "^lb-[A-Za-z0-9]+"
-	//LoadBalanceCheckFormatWithApLbName
+	// LoadBalanceCheckFormatWithApLbName
 	LoadBalanceCheckFormatWithApLbName = "^(ap|na|eu|sa)-[A-Za-z0-9-]+:[A-Za-z0-9]+"
 
 	// LeaderLabel label
@@ -134,4 +134,15 @@ const (
 	EnvIngressPodName = "INGRESS_POD_NAME"
 	// EnvIngressPodNamespace env for ingress pod namespace
 	EnvIngressPodNamespace = "INGRESS_POD_NAMESPACE"
+
+	// KindIngress kind of ingress
+	KindIngress = "Ingress"
+	// KindPortPool kind of port pool
+	KindPortPool = "PortPool"
+	// KindListener kind of listener
+	KindListener = "Listener"
+	// KindPortBinding kind of port binding
+	KindPortBinding = "PortBinding"
+	// KindCRD of CRD
+	KindCRD = "CustomResourceDefinition"
 )
