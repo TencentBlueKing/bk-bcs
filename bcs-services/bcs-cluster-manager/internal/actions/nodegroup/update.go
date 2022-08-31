@@ -261,8 +261,8 @@ func (ua *UpdateAction) setNodeGroupUpdating() error {
 	return nil
 }
 
-func (ua *UpdateAction) saveDB() error {
-	ua.group.Status = common.StatusRunning
+func (ua *UpdateAction) saveDB(status string) error {
+	ua.group.Status = status
 	if err := ua.model.UpdateNodeGroup(ua.ctx, ua.group); err != nil {
 		blog.Errorf("nodegroup %s update in cloudprovider %s success, but update failed in local storage, %s. detail: %+v",
 			ua.group.NodeGroupID, ua.group.Provider, err.Error(), utils.ToJSONString(ua.group),
@@ -317,11 +317,12 @@ func (ua *UpdateAction) Handle(
 
 	ua.modifyNodeGroupField()
 	if err := ua.updateCloudNodeGroup(); err != nil {
+		_ = ua.saveDB(common.StatusNodeGroupUpdateFailed)
 		ua.setResp(common.BcsErrClusterManagerCloudProviderErr, err.Error())
 		return
 	}
 
-	if err := ua.saveDB(); err != nil {
+	if err := ua.saveDB(common.StatusRunning); err != nil {
 		ua.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
 		return
 	}
