@@ -23,7 +23,7 @@ import (
 )
 
 // PrintRepositoryInTable print repository data in table format
-func PrintRepositoryInTable(wide bool, repository *helmmanager.RepositoryListData) {
+func PrintRepositoryInTable(wide bool, repository []*helmmanager.Repository) {
 	if repository == nil {
 		return
 	}
@@ -48,10 +48,10 @@ func PrintRepositoryInTable(wide bool, repository *helmmanager.RepositoryListDat
 	table.SetTablePadding("    ")
 	table.SetNoWhiteSpace(true)
 
-	for _, repo := range repository.Data {
+	for _, repo := range repository {
 		table.Append(func() []string {
 			r := []string{
-				repo.GetName(), repo.GetProjectID(), repo.GetType(), fmt.Sprintf("%t", repo.GetRemote()),
+				repo.GetName(), repo.GetProjectCode(), repo.GetType(), fmt.Sprintf("%t", repo.GetRemote()),
 			}
 
 			if wide {
@@ -64,13 +64,13 @@ func PrintRepositoryInTable(wide bool, repository *helmmanager.RepositoryListDat
 	table.Render()
 }
 
-// PrintRepositoryInJson print repository data in json format
-func PrintRepositoryInJson(repository *helmmanager.RepositoryListData) {
+// PrintRepositoryInJSON print repository data in json format
+func PrintRepositoryInJSON(repository []*helmmanager.Repository) {
 	if repository == nil {
 		return
 	}
 
-	for _, repo := range repository.Data {
+	for _, repo := range repository {
 		var data []byte
 		_ = encodeJsonWithIndent(4, repo, &data)
 

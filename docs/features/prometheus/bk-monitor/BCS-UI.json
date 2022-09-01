@@ -1,0 +1,1267 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "datasource",
+          "uid": "grafana"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "target": {
+          "limit": 100,
+          "matchAny": false,
+          "tags": [],
+          "type": "dashboard"
+        },
+        "type": "dashboard"
+      }
+    ]
+  },
+  "description": "蓝鲸容器服务 UI 监控 Dashboard",
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": 73,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": {
+        "type": "bkmonitor-timeseries-datasource"
+      },
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 0
+      },
+      "hiddenSeries": false,
+      "id": 10,
+      "legend": {
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "show": true,
+        "total": false,
+        "values": false
+      },
+      "lines": true,
+      "linewidth": 1,
+      "nullPointMode": "null",
+      "options": {
+        "alertThreshold": true
+      },
+      "percentage": false,
+      "pluginVersion": "9.0.2",
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "alias": "",
+          "cluster": [],
+          "datasource": {
+            "type": "bkmonitor-timeseries-datasource"
+          },
+          "display": false,
+          "expression": "",
+          "hide": false,
+          "host": [],
+          "module": [],
+          "only_promql": true,
+          "query_configs": [
+            {
+              "alias": "",
+              "data_source_label": "bk_monitor",
+              "data_type_label": "time_series",
+              "display": true,
+              "filter_dict": {},
+              "functions": [
+                {
+                  "id": "increase",
+                  "params": [
+                    {
+                      "id": "window",
+                      "value": "1m"
+                    }
+                  ]
+                }
+              ],
+              "group_by": [],
+              "interval": 60,
+              "interval_unit": "s",
+              "method": "SUM",
+              "metric_field": "django_http_requests_total_by_method_total",
+              "refId": "a",
+              "result_table_id": "",
+              "result_table_label": "kubernetes",
+              "time_field": "",
+              "where": []
+            }
+          ],
+          "refId": "A",
+          "source": "sum(increase(django_http_requests_total_by_view_transport_method_total{bk_service=\"bcs-ui-app\"}[1m]))"
+        }
+      ],
+      "thresholds": [],
+      "timeRegions": [],
+      "title": "请求量",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "mode": "time",
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "$$hashKey": "object:306",
+          "format": "short",
+          "logBase": 1,
+          "show": true
+        },
+        {
+          "$$hashKey": "object:307",
+          "format": "short",
+          "logBase": 1,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": {
+        "type": "bkmonitor-timeseries-datasource"
+      },
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 0
+      },
+      "hiddenSeries": false,
+      "id": 12,
+      "legend": {
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "show": true,
+        "total": false,
+        "values": false
+      },
+      "lines": true,
+      "linewidth": 1,
+      "nullPointMode": "null",
+      "options": {
+        "alertThreshold": true
+      },
+      "percentage": false,
+      "pluginVersion": "9.0.2",
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "alias": "",
+          "cluster": [],
+          "datasource": {
+            "type": "bkmonitor-timeseries-datasource"
+          },
+          "display": false,
+          "expression": "",
+          "hide": false,
+          "host": [],
+          "module": [],
+          "only_promql": true,
+          "query_configs": [
+            {
+              "alias": "",
+              "data_source_label": "bk_monitor",
+              "data_type_label": "time_series",
+              "display": true,
+              "filter_dict": {},
+              "functions": [
+                {
+                  "id": "increase",
+                  "params": [
+                    {
+                      "id": "window",
+                      "value": "1m"
+                    }
+                  ]
+                }
+              ],
+              "group_by": [],
+              "interval": 60,
+              "interval_unit": "s",
+              "method": "SUM",
+              "metric_field": "django_http_requests_total_by_method_total",
+              "refId": "a",
+              "result_table_id": "",
+              "result_table_label": "kubernetes",
+              "time_field": "",
+              "where": []
+            }
+          ],
+          "refId": "A",
+          "source": "sum(increase(django_http_requests_total_by_view_transport_method_total{bk_service=\"bcs-ui-app\", view=~\".*open_apis.*\"}[1m]))"
+        }
+      ],
+      "thresholds": [],
+      "timeRegions": [],
+      "title": "OpenAPI 请求量",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "mode": "time",
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "$$hashKey": "object:306",
+          "format": "short",
+          "logBase": 1,
+          "show": true
+        },
+        {
+          "$$hashKey": "object:307",
+          "format": "short",
+          "logBase": 1,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": {
+        "type": "bkmonitor-timeseries-datasource"
+      },
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 8
+      },
+      "hiddenSeries": false,
+      "id": 14,
+      "legend": {
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "show": true,
+        "total": false,
+        "values": false
+      },
+      "lines": true,
+      "linewidth": 1,
+      "nullPointMode": "null",
+      "options": {
+        "alertThreshold": true
+      },
+      "percentage": false,
+      "pluginVersion": "9.0.2",
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "alias": "P95",
+          "cluster": [],
+          "datasource": {
+            "type": "bkmonitor-timeseries-datasource"
+          },
+          "display": false,
+          "expression": "",
+          "hide": false,
+          "host": [],
+          "module": [],
+          "only_promql": true,
+          "query_configs": [
+            {
+              "alias": "",
+              "data_source_label": "bk_monitor",
+              "data_type_label": "time_series",
+              "display": true,
+              "filter_dict": {},
+              "functions": [
+                {
+                  "id": "increase",
+                  "params": [
+                    {
+                      "id": "window",
+                      "value": "1m"
+                    }
+                  ]
+                }
+              ],
+              "group_by": [],
+              "interval": 60,
+              "interval_unit": "s",
+              "method": "SUM",
+              "metric_field": "django_http_requests_total_by_method_total",
+              "refId": "a",
+              "result_table_id": "",
+              "result_table_label": "kubernetes",
+              "time_field": "",
+              "where": []
+            }
+          ],
+          "refId": "A",
+          "source": "histogram_quantile(0.95, sum(rate(django_http_requests_latency_including_middlewares_seconds_bucket{bk_service=\"bcs-ui-app\"}[1m])) by (le))"
+        },
+        {
+          "alias": "P90",
+          "cluster": [],
+          "datasource": {
+            "type": "bkmonitor-timeseries-datasource"
+          },
+          "display": false,
+          "expression": "",
+          "hide": false,
+          "host": [],
+          "module": [],
+          "only_promql": true,
+          "query_configs": [
+            {
+              "alias": "",
+              "data_source_label": "bk_monitor",
+              "data_type_label": "time_series",
+              "display": true,
+              "filter_dict": {},
+              "functions": [
+                {
+                  "id": "increase",
+                  "params": [
+                    {
+                      "id": "window",
+                      "value": "1m"
+                    }
+                  ]
+                }
+              ],
+              "group_by": [],
+              "interval": 60,
+              "interval_unit": "s",
+              "method": "SUM",
+              "metric_field": "django_http_requests_total_by_method_total",
+              "refId": "a",
+              "result_table_id": "",
+              "result_table_label": "kubernetes",
+              "time_field": "",
+              "where": []
+            }
+          ],
+          "refId": "B",
+          "source": "histogram_quantile(0.90, sum(rate(django_http_requests_latency_including_middlewares_seconds_bucket{bk_service=\"bcs-ui-app\"}[1m])) by (le))"
+        },
+        {
+          "alias": "P75",
+          "cluster": [],
+          "datasource": {
+            "type": "bkmonitor-timeseries-datasource"
+          },
+          "display": false,
+          "expression": "",
+          "hide": false,
+          "host": [],
+          "module": [],
+          "only_promql": true,
+          "query_configs": [
+            {
+              "alias": "",
+              "data_source_label": "bk_monitor",
+              "data_type_label": "time_series",
+              "display": true,
+              "filter_dict": {},
+              "functions": [
+                {
+                  "id": "increase",
+                  "params": [
+                    {
+                      "id": "window",
+                      "value": "1m"
+                    }
+                  ]
+                }
+              ],
+              "group_by": [],
+              "interval": 60,
+              "interval_unit": "s",
+              "method": "SUM",
+              "metric_field": "django_http_requests_total_by_method_total",
+              "refId": "a",
+              "result_table_id": "",
+              "result_table_label": "kubernetes",
+              "time_field": "",
+              "where": []
+            }
+          ],
+          "refId": "C",
+          "source": "histogram_quantile(0.75, sum(rate(django_http_requests_latency_including_middlewares_seconds_bucket{bk_service=\"bcs-ui-app\"}[1m])) by (le))"
+        },
+        {
+          "alias": "P50",
+          "cluster": [],
+          "datasource": {
+            "type": "bkmonitor-timeseries-datasource"
+          },
+          "display": false,
+          "expression": "",
+          "hide": false,
+          "host": [],
+          "module": [],
+          "only_promql": true,
+          "query_configs": [
+            {
+              "alias": "",
+              "data_source_label": "bk_monitor",
+              "data_type_label": "time_series",
+              "display": true,
+              "filter_dict": {},
+              "functions": [
+                {
+                  "id": "increase",
+                  "params": [
+                    {
+                      "id": "window",
+                      "value": "1m"
+                    }
+                  ]
+                }
+              ],
+              "group_by": [],
+              "interval": 60,
+              "interval_unit": "s",
+              "method": "SUM",
+              "metric_field": "django_http_requests_total_by_method_total",
+              "refId": "a",
+              "result_table_id": "",
+              "result_table_label": "kubernetes",
+              "time_field": "",
+              "where": []
+            }
+          ],
+          "refId": "D",
+          "source": "histogram_quantile(0.50, sum(rate(django_http_requests_latency_including_middlewares_seconds_bucket{bk_service=\"bcs-ui-app\"}[1m])) by (le))"
+        }
+      ],
+      "thresholds": [],
+      "timeRegions": [],
+      "title": "接口响应耗时分布",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "mode": "time",
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "$$hashKey": "object:306",
+          "format": "s",
+          "logBase": 1,
+          "show": true
+        },
+        {
+          "$$hashKey": "object:307",
+          "format": "short",
+          "logBase": 1,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": {
+        "type": "bkmonitor-timeseries-datasource"
+      },
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 8
+      },
+      "hiddenSeries": false,
+      "id": 16,
+      "legend": {
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "show": true,
+        "total": false,
+        "values": false
+      },
+      "lines": true,
+      "linewidth": 1,
+      "nullPointMode": "null",
+      "options": {
+        "alertThreshold": true
+      },
+      "percentage": false,
+      "pluginVersion": "9.0.2",
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "alias": "P95",
+          "cluster": [],
+          "datasource": {
+            "type": "bkmonitor-timeseries-datasource"
+          },
+          "display": false,
+          "expression": "",
+          "hide": false,
+          "host": [],
+          "module": [],
+          "only_promql": true,
+          "query_configs": [
+            {
+              "alias": "",
+              "data_source_label": "bk_monitor",
+              "data_type_label": "time_series",
+              "display": true,
+              "filter_dict": {},
+              "functions": [
+                {
+                  "id": "increase",
+                  "params": [
+                    {
+                      "id": "window",
+                      "value": "1m"
+                    }
+                  ]
+                }
+              ],
+              "group_by": [],
+              "interval": 60,
+              "interval_unit": "s",
+              "method": "SUM",
+              "metric_field": "django_http_requests_total_by_method_total",
+              "refId": "a",
+              "result_table_id": "",
+              "result_table_label": "kubernetes",
+              "time_field": "",
+              "where": []
+            }
+          ],
+          "refId": "A",
+          "source": "histogram_quantile(0.95, sum(rate(django_http_requests_latency_seconds_by_view_method_bucket{bk_service=\"bcs-ui-app\", view=~\".*open_apis.*\"}[1m])) by (le))"
+        },
+        {
+          "alias": "P90",
+          "cluster": [],
+          "datasource": {
+            "type": "bkmonitor-timeseries-datasource"
+          },
+          "display": false,
+          "expression": "",
+          "hide": false,
+          "host": [],
+          "module": [],
+          "only_promql": true,
+          "query_configs": [
+            {
+              "alias": "",
+              "data_source_label": "bk_monitor",
+              "data_type_label": "time_series",
+              "display": true,
+              "filter_dict": {},
+              "functions": [
+                {
+                  "id": "increase",
+                  "params": [
+                    {
+                      "id": "window",
+                      "value": "1m"
+                    }
+                  ]
+                }
+              ],
+              "group_by": [],
+              "interval": 60,
+              "interval_unit": "s",
+              "method": "SUM",
+              "metric_field": "django_http_requests_total_by_method_total",
+              "refId": "a",
+              "result_table_id": "",
+              "result_table_label": "kubernetes",
+              "time_field": "",
+              "where": []
+            }
+          ],
+          "refId": "B",
+          "source": "histogram_quantile(0.90, sum(rate(django_http_requests_latency_seconds_by_view_method_bucket{bk_service=\"bcs-ui-app\", view=~\".*open_apis.*\"}[1m])) by (le))"
+        },
+        {
+          "alias": "P75",
+          "cluster": [],
+          "datasource": {
+            "type": "bkmonitor-timeseries-datasource"
+          },
+          "display": false,
+          "expression": "",
+          "hide": false,
+          "host": [],
+          "module": [],
+          "only_promql": true,
+          "query_configs": [
+            {
+              "alias": "",
+              "data_source_label": "bk_monitor",
+              "data_type_label": "time_series",
+              "display": true,
+              "filter_dict": {},
+              "functions": [
+                {
+                  "id": "increase",
+                  "params": [
+                    {
+                      "id": "window",
+                      "value": "1m"
+                    }
+                  ]
+                }
+              ],
+              "group_by": [],
+              "interval": 60,
+              "interval_unit": "s",
+              "method": "SUM",
+              "metric_field": "django_http_requests_total_by_method_total",
+              "refId": "a",
+              "result_table_id": "",
+              "result_table_label": "kubernetes",
+              "time_field": "",
+              "where": []
+            }
+          ],
+          "refId": "C",
+          "source": "histogram_quantile(0.75, sum(rate(django_http_requests_latency_seconds_by_view_method_bucket{bk_service=\"bcs-ui-app\", view=~\".*open_apis.*\"}[1m])) by (le))"
+        },
+        {
+          "alias": "P50",
+          "cluster": [],
+          "datasource": {
+            "type": "bkmonitor-timeseries-datasource"
+          },
+          "display": false,
+          "expression": "",
+          "hide": false,
+          "host": [],
+          "module": [],
+          "only_promql": true,
+          "query_configs": [
+            {
+              "alias": "",
+              "data_source_label": "bk_monitor",
+              "data_type_label": "time_series",
+              "display": true,
+              "filter_dict": {},
+              "functions": [
+                {
+                  "id": "increase",
+                  "params": [
+                    {
+                      "id": "window",
+                      "value": "1m"
+                    }
+                  ]
+                }
+              ],
+              "group_by": [],
+              "interval": 60,
+              "interval_unit": "s",
+              "method": "SUM",
+              "metric_field": "django_http_requests_total_by_method_total",
+              "refId": "a",
+              "result_table_id": "",
+              "result_table_label": "kubernetes",
+              "time_field": "",
+              "where": []
+            }
+          ],
+          "refId": "D",
+          "source": "histogram_quantile(0.50, sum(rate(django_http_requests_latency_seconds_by_view_method_bucket{bk_service=\"bcs-ui-app\", view=~\".*open_apis.*\"}[1m])) by (le))"
+        }
+      ],
+      "thresholds": [],
+      "timeRegions": [],
+      "title": "OpenAPI接口响应耗时分布",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "mode": "time",
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "$$hashKey": "object:306",
+          "format": "s",
+          "logBase": 1,
+          "show": true
+        },
+        {
+          "$$hashKey": "object:307",
+          "format": "short",
+          "logBase": 1,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": {
+        "type": "bkmonitor-timeseries-datasource"
+      },
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 16
+      },
+      "hiddenSeries": false,
+      "id": 18,
+      "legend": {
+        "avg": false,
+        "current": false,
+        "hideEmpty": false,
+        "hideZero": false,
+        "max": false,
+        "min": false,
+        "show": true,
+        "total": false,
+        "values": false
+      },
+      "lines": true,
+      "linewidth": 1,
+      "nullPointMode": "null",
+      "options": {
+        "alertThreshold": true
+      },
+      "percentage": false,
+      "pluginVersion": "9.0.2",
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [
+        {
+          "$$hashKey": "object:1082"
+        }
+      ],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "alias": "P95",
+          "cluster": [],
+          "datasource": {
+            "type": "bkmonitor-timeseries-datasource"
+          },
+          "display": false,
+          "expression": "",
+          "hide": false,
+          "host": [],
+          "module": [],
+          "only_promql": true,
+          "query_configs": [
+            {
+              "alias": "",
+              "data_source_label": "bk_monitor",
+              "data_type_label": "time_series",
+              "display": true,
+              "filter_dict": {},
+              "functions": [
+                {
+                  "id": "increase",
+                  "params": [
+                    {
+                      "id": "window",
+                      "value": "1m"
+                    }
+                  ]
+                }
+              ],
+              "group_by": [],
+              "interval": 60,
+              "interval_unit": "s",
+              "method": "SUM",
+              "metric_field": "django_http_requests_total_by_method_total",
+              "refId": "a",
+              "result_table_id": "",
+              "result_table_label": "kubernetes",
+              "time_field": "",
+              "where": []
+            }
+          ],
+          "refId": "A",
+          "source": "1 - sum(django_http_requests_latency_seconds_by_view_method_bucket{bk_service=\"bcs-ui-app\", le=\"0.5\", view!=\"prometheus-django-metrics\", view!=\"backend.utils.healthz.healthz_view\"})  / sum(django_http_requests_latency_seconds_by_view_method_bucket{bk_service=\"bcs-ui-app\", le=\"+Inf\", view!=\"prometheus-django-metrics\", view!=\"backend.utils.healthz.healthz_view\"}) "
+        }
+      ],
+      "thresholds": [],
+      "timeRegions": [],
+      "title": "慢请求占比(>500ms)",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "mode": "time",
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "$$hashKey": "object:306",
+          "format": "percentunit",
+          "logBase": 1,
+          "show": true
+        },
+        {
+          "$$hashKey": "object:307",
+          "format": "short",
+          "logBase": 1,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": {
+        "type": "bkmonitor-timeseries-datasource"
+      },
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 16
+      },
+      "hiddenSeries": false,
+      "id": 20,
+      "legend": {
+        "avg": false,
+        "current": false,
+        "hideEmpty": false,
+        "hideZero": false,
+        "max": false,
+        "min": false,
+        "show": true,
+        "total": false,
+        "values": false
+      },
+      "lines": true,
+      "linewidth": 1,
+      "nullPointMode": "null",
+      "options": {
+        "alertThreshold": true
+      },
+      "percentage": false,
+      "pluginVersion": "9.0.2",
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [
+        {
+          "$$hashKey": "object:1082"
+        }
+      ],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "alias": "P95",
+          "cluster": [],
+          "datasource": {
+            "type": "bkmonitor-timeseries-datasource"
+          },
+          "display": false,
+          "expression": "",
+          "hide": false,
+          "host": [],
+          "module": [],
+          "only_promql": true,
+          "query_configs": [
+            {
+              "alias": "",
+              "data_source_label": "bk_monitor",
+              "data_type_label": "time_series",
+              "display": true,
+              "filter_dict": {},
+              "functions": [
+                {
+                  "id": "increase",
+                  "params": [
+                    {
+                      "id": "window",
+                      "value": "1m"
+                    }
+                  ]
+                }
+              ],
+              "group_by": [],
+              "interval": 60,
+              "interval_unit": "s",
+              "method": "SUM",
+              "metric_field": "django_http_requests_total_by_method_total",
+              "refId": "a",
+              "result_table_id": "",
+              "result_table_label": "kubernetes",
+              "time_field": "",
+              "where": []
+            }
+          ],
+          "refId": "A",
+          "source": "1 - sum(django_http_requests_latency_seconds_by_view_method_bucket{bk_service=\"bcs-ui-app\", view=~\".*open_apis.*\", le=\"0.5\"})  / sum(django_http_requests_latency_seconds_by_view_method_bucket{bk_service=\"bcs-ui-app\", view=~\".*open_apis.*\", le=\"+Inf\"}) "
+        }
+      ],
+      "thresholds": [],
+      "timeRegions": [],
+      "title": "OpenAPI慢请求占比(>500ms)",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "mode": "time",
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "$$hashKey": "object:306",
+          "format": "percentunit",
+          "logBase": 1,
+          "show": true
+        },
+        {
+          "$$hashKey": "object:307",
+          "format": "short",
+          "logBase": 1,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": {
+        "type": "bkmonitor-timeseries-datasource"
+      },
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 24
+      },
+      "hiddenSeries": false,
+      "id": 24,
+      "legend": {
+        "avg": false,
+        "current": false,
+        "hideEmpty": false,
+        "hideZero": false,
+        "max": false,
+        "min": false,
+        "show": true,
+        "total": false,
+        "values": false
+      },
+      "lines": true,
+      "linewidth": 1,
+      "nullPointMode": "null",
+      "options": {
+        "alertThreshold": true
+      },
+      "percentage": false,
+      "pluginVersion": "7.5.10",
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [
+        {
+          "$$hashKey": "object:1082"
+        }
+      ],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "alias": "百分比",
+          "cluster": [],
+          "datasource": {
+            "type": "bkmonitor-timeseries-datasource"
+          },
+          "display": false,
+          "expression": "",
+          "hide": false,
+          "host": [],
+          "module": [],
+          "only_promql": true,
+          "query_configs": [
+            {
+              "alias": "",
+              "data_source_label": "bk_monitor",
+              "data_type_label": "time_series",
+              "display": true,
+              "filter_dict": {},
+              "functions": [
+                {
+                  "id": "increase",
+                  "params": [
+                    {
+                      "id": "window",
+                      "value": "1m"
+                    }
+                  ]
+                }
+              ],
+              "group_by": [],
+              "interval": 60,
+              "interval_unit": "s",
+              "method": "SUM",
+              "metric_field": "django_http_requests_total_by_method_total",
+              "refId": "a",
+              "result_table_id": "",
+              "result_table_label": "kubernetes",
+              "time_field": "",
+              "where": []
+            }
+          ],
+          "refId": "A",
+          "source": "1 - sum(django_http_requests_latency_seconds_by_view_method_bucket{bk_service=\"bcs-ui-app\", le=\"0.25\", view!=\"prometheus-django-metrics\", view!=\"backend.utils.healthz.healthz_view\"})  / sum(django_http_requests_latency_seconds_by_view_method_bucket{bk_service=\"bcs-ui-app\", le=\"+Inf\", view!=\"prometheus-django-metrics\", view!=\"backend.utils.healthz.healthz_view\"}) "
+        }
+      ],
+      "thresholds": [],
+      "timeRegions": [],
+      "title": "慢请求占比(>250ms)",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "mode": "time",
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "$$hashKey": "object:306",
+          "format": "percentunit",
+          "logBase": 1,
+          "show": true
+        },
+        {
+          "$$hashKey": "object:307",
+          "format": "short",
+          "logBase": 1,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": {
+        "type": "bkmonitor-timeseries-datasource"
+      },
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 24
+      },
+      "hiddenSeries": false,
+      "id": 22,
+      "legend": {
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "show": true,
+        "total": false,
+        "values": false
+      },
+      "lines": true,
+      "linewidth": 1,
+      "nullPointMode": "null",
+      "options": {
+        "alertThreshold": true
+      },
+      "percentage": false,
+      "pluginVersion": "7.5.10",
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "datasource": {
+            "type": "bkmonitor-timeseries-datasource"
+          },
+          "refId": "A"
+        }
+      ],
+      "thresholds": [],
+      "timeRegions": [],
+      "title": "可用率（WIP）",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "mode": "time",
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "format": "short",
+          "logBase": 1,
+          "show": true
+        },
+        {
+          "format": "short",
+          "logBase": 1,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false
+      }
+    }
+  ],
+  "refresh": "5s",
+  "schemaVersion": 36,
+  "style": "dark",
+  "tags": [
+    "bcs"
+  ],
+  "templating": {
+    "list": []
+  },
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "",
+  "title": "[BlueKing] BCS-UI",
+  "uid": "rWzf492nk",
+  "version": 25,
+  "weekStart": ""
+}

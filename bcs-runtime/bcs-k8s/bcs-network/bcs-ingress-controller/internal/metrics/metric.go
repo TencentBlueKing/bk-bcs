@@ -35,6 +35,13 @@ const (
 	EventTypeDelete = "delete"
 	// EventTypeUnknown unknown event type
 	EventTypeUnknown = "other"
+
+	// ObjectPortbinding object for portbinding
+	ObjectPortbinding = "portbinding"
+	// ObjectIngress object for Ingress
+	ObjectIngress = "ingress"
+	// ObjectPortPool object for port pool
+	ObjectPortPool = "portpool"
 )
 
 var (
@@ -72,6 +79,13 @@ var (
 		Name:      "counter",
 		Help:      "The total event counter for different object",
 	}, []string{"object", "type"})
+
+	failCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Namespace: "bkbcs_ingressctrl",
+		Subsystem: "failed",
+		Name:      "counter",
+		Help:      "The total failed counter for different object",
+	}, []string{"object", "type"})
 )
 
 func init() {
@@ -80,6 +94,7 @@ func init() {
 	metrics.Registry.MustRegister(requestsTotalAPI)
 	metrics.Registry.MustRegister(requestLatencyAPI)
 	metrics.Registry.MustRegister(eventCounter)
+	metrics.Registry.MustRegister(failCounter)
 }
 
 // ReportLibRequestMetric report lib call metrics
@@ -97,4 +112,9 @@ func ReportAPIRequestMetric(handler, method, status string, started time.Time) {
 // IncreaseEventCounter increase event counter
 func IncreaseEventCounter(object, eventType string) {
 	eventCounter.WithLabelValues(object, eventType).Inc()
+}
+
+// IncreaseFailMetric increase fail counter
+func IncreaseFailMetric(object string, failedType string) {
+	failCounter.WithLabelValues(object, failedType).Inc()
 }

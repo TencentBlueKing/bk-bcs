@@ -14,9 +14,15 @@ package auth
 
 import (
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/cluster"
+	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/project"
 )
 
 // ActionPermissions action 对应权限中心的权限
 var ActionPermissions = map[string]string{
 	"HelmManager.GetReleaseHistory": cluster.CanViewClusterOperation,
+	"HelmManager.CreateRepository":  project.CanEditProjectOperation,
+	"HelmManager.UpdateRepository":  project.CanEditProjectOperation,
+	"HelmManager.GetRepository":     project.CanViewProjectOperation,
+	"HelmManager.DeleteRepository":  project.CanEditProjectOperation,
+	"HelmManager.ListRepository":    project.CanViewProjectOperation,
 }

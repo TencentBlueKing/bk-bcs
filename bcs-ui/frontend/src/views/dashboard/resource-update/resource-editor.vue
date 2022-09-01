@@ -8,6 +8,7 @@ import { computed, defineComponent, ref, toRefs, watch, onMounted, onBeforeMount
 import * as monaco from 'monaco-editor/esm/vs/editor/editor.main';
 import yamljs from 'js-yaml';
 import BcsEditorTheme from './theme.json';
+import { isObject } from '@/common/util';
 
 self.MonacoEnvironment = {
   getWorkerUrl(moduleId, label) {
@@ -173,9 +174,11 @@ export default defineComponent({
         editor.onDidChangeModelContent((event) => {
           const yamlValue = getValue();
           try {
-            let emitValue = {};
-            const tmpObj = yamljs.load(yamlValue);
-            emitValue = typeof tmpObj === 'object' ? tmpObj : {};
+            let emitValue = yamlValue;
+            if (isObject(value.value) && language.value === 'yaml') {
+              const tmpObj = yamljs.load(yamlValue);
+              emitValue = typeof tmpObj === 'object' ? tmpObj : {};
+            }
             editorErr.value = '';
 
             emitChange(emitValue, event);
@@ -242,6 +245,12 @@ export default defineComponent({
       });
     };
 
+    const update = () => {
+      setTimeout(() => {
+        setValue(yaml.value);
+      });
+    };
+
     return {
       diffStat,
       editorRef,
@@ -253,6 +262,7 @@ export default defineComponent({
       getValue,
       setValue,
       handleSetDiffStat,
+      update,
     };
   },
 });

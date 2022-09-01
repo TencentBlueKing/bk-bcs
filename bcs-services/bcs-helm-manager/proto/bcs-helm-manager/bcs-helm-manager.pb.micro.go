@@ -48,42 +48,35 @@ func NewHelmManagerEndpoints() []*api.Endpoint {
 		},
 		&api.Endpoint{
 			Name:    "HelmManager.CreateRepository",
-			Path:    []string{"/helmmanager/v1/repository/{projectID}/{name}"},
+			Path:    []string{"/helmmanager/v1/projects/{projectCode}/repos"},
 			Method:  []string{"POST"},
 			Body:    "*",
 			Handler: "rpc",
 		},
 		&api.Endpoint{
 			Name:    "HelmManager.UpdateRepository",
-			Path:    []string{"/helmmanager/v1/repository/{projectID}/{name}"},
+			Path:    []string{"/helmmanager/v1/projects/{projectCode}/repos/{name}"},
 			Method:  []string{"PUT"},
 			Body:    "*",
 			Handler: "rpc",
 		},
 		&api.Endpoint{
 			Name:    "HelmManager.GetRepository",
-			Path:    []string{"/helmmanager/v1/repository/{projectID}/{name}"},
+			Path:    []string{"/helmmanager/v1/projects/{projectCode}/repos/{name}"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
 		&api.Endpoint{
 			Name:    "HelmManager.DeleteRepository",
-			Path:    []string{"/helmmanager/v1/repository/{projectID}/{name}"},
+			Path:    []string{"/helmmanager/v1/projects/{projectCode}/repos/{name}"},
 			Method:  []string{"DELETE"},
 			Body:    "*",
 			Handler: "rpc",
 		},
 		&api.Endpoint{
 			Name:    "HelmManager.ListRepository",
-			Path:    []string{"/helmmanager/v1/repository/{projectID}"},
+			Path:    []string{"/helmmanager/v1/projects/{projectCode}/repos"},
 			Method:  []string{"GET"},
-			Handler: "rpc",
-		},
-		&api.Endpoint{
-			Name:    "HelmManager.DeleteRepositories",
-			Path:    []string{"/helmmanager/v1/repository/{projectID}"},
-			Method:  []string{"DELETE"},
-			Body:    "*",
 			Handler: "rpc",
 		},
 		&api.Endpoint{
@@ -158,13 +151,12 @@ func NewHelmManagerEndpoints() []*api.Endpoint {
 type HelmManagerService interface {
 	//* common service
 	Available(ctx context.Context, in *AvailableReq, opts ...client.CallOption) (*AvailableResp, error)
-	//* repository crud
+	//* repository service
 	CreateRepository(ctx context.Context, in *CreateRepositoryReq, opts ...client.CallOption) (*CreateRepositoryResp, error)
 	UpdateRepository(ctx context.Context, in *UpdateRepositoryReq, opts ...client.CallOption) (*UpdateRepositoryResp, error)
 	GetRepository(ctx context.Context, in *GetRepositoryReq, opts ...client.CallOption) (*GetRepositoryResp, error)
 	DeleteRepository(ctx context.Context, in *DeleteRepositoryReq, opts ...client.CallOption) (*DeleteRepositoryResp, error)
 	ListRepository(ctx context.Context, in *ListRepositoryReq, opts ...client.CallOption) (*ListRepositoryResp, error)
-	DeleteRepositories(ctx context.Context, in *DeleteRepositoriesReq, opts ...client.CallOption) (*DeleteRepositoriesResp, error)
 	//* chart service
 	ListChart(ctx context.Context, in *ListChartReq, opts ...client.CallOption) (*ListChartResp, error)
 	ListChartVersion(ctx context.Context, in *ListChartVersionReq, opts ...client.CallOption) (*ListChartVersionResp, error)
@@ -244,16 +236,6 @@ func (c *helmManagerService) DeleteRepository(ctx context.Context, in *DeleteRep
 func (c *helmManagerService) ListRepository(ctx context.Context, in *ListRepositoryReq, opts ...client.CallOption) (*ListRepositoryResp, error) {
 	req := c.c.NewRequest(c.name, "HelmManager.ListRepository", in)
 	out := new(ListRepositoryResp)
-	err := c.c.Call(ctx, req, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *helmManagerService) DeleteRepositories(ctx context.Context, in *DeleteRepositoriesReq, opts ...client.CallOption) (*DeleteRepositoriesResp, error) {
-	req := c.c.NewRequest(c.name, "HelmManager.DeleteRepositories", in)
-	out := new(DeleteRepositoriesResp)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -366,13 +348,12 @@ func (c *helmManagerService) GetReleaseHistory(ctx context.Context, in *GetRelea
 type HelmManagerHandler interface {
 	//* common service
 	Available(context.Context, *AvailableReq, *AvailableResp) error
-	//* repository crud
+	//* repository service
 	CreateRepository(context.Context, *CreateRepositoryReq, *CreateRepositoryResp) error
 	UpdateRepository(context.Context, *UpdateRepositoryReq, *UpdateRepositoryResp) error
 	GetRepository(context.Context, *GetRepositoryReq, *GetRepositoryResp) error
 	DeleteRepository(context.Context, *DeleteRepositoryReq, *DeleteRepositoryResp) error
 	ListRepository(context.Context, *ListRepositoryReq, *ListRepositoryResp) error
-	DeleteRepositories(context.Context, *DeleteRepositoriesReq, *DeleteRepositoriesResp) error
 	//* chart service
 	ListChart(context.Context, *ListChartReq, *ListChartResp) error
 	ListChartVersion(context.Context, *ListChartVersionReq, *ListChartVersionResp) error
@@ -395,7 +376,6 @@ func RegisterHelmManagerHandler(s server.Server, hdlr HelmManagerHandler, opts .
 		GetRepository(ctx context.Context, in *GetRepositoryReq, out *GetRepositoryResp) error
 		DeleteRepository(ctx context.Context, in *DeleteRepositoryReq, out *DeleteRepositoryResp) error
 		ListRepository(ctx context.Context, in *ListRepositoryReq, out *ListRepositoryResp) error
-		DeleteRepositories(ctx context.Context, in *DeleteRepositoriesReq, out *DeleteRepositoriesResp) error
 		ListChart(ctx context.Context, in *ListChartReq, out *ListChartResp) error
 		ListChartVersion(ctx context.Context, in *ListChartVersionReq, out *ListChartVersionResp) error
 		GetChartDetail(ctx context.Context, in *GetChartDetailReq, out *GetChartDetailResp) error
@@ -419,42 +399,35 @@ func RegisterHelmManagerHandler(s server.Server, hdlr HelmManagerHandler, opts .
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "HelmManager.CreateRepository",
-		Path:    []string{"/helmmanager/v1/repository/{projectID}/{name}"},
+		Path:    []string{"/helmmanager/v1/projects/{projectCode}/repos"},
 		Method:  []string{"POST"},
 		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "HelmManager.UpdateRepository",
-		Path:    []string{"/helmmanager/v1/repository/{projectID}/{name}"},
+		Path:    []string{"/helmmanager/v1/projects/{projectCode}/repos/{name}"},
 		Method:  []string{"PUT"},
 		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "HelmManager.GetRepository",
-		Path:    []string{"/helmmanager/v1/repository/{projectID}/{name}"},
+		Path:    []string{"/helmmanager/v1/projects/{projectCode}/repos/{name}"},
 		Method:  []string{"GET"},
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "HelmManager.DeleteRepository",
-		Path:    []string{"/helmmanager/v1/repository/{projectID}/{name}"},
+		Path:    []string{"/helmmanager/v1/projects/{projectCode}/repos/{name}"},
 		Method:  []string{"DELETE"},
 		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "HelmManager.ListRepository",
-		Path:    []string{"/helmmanager/v1/repository/{projectID}"},
+		Path:    []string{"/helmmanager/v1/projects/{projectCode}/repos"},
 		Method:  []string{"GET"},
-		Handler: "rpc",
-	}))
-	opts = append(opts, api.WithEndpoint(&api.Endpoint{
-		Name:    "HelmManager.DeleteRepositories",
-		Path:    []string{"/helmmanager/v1/repository/{projectID}"},
-		Method:  []string{"DELETE"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
@@ -550,10 +523,6 @@ func (h *helmManagerHandler) DeleteRepository(ctx context.Context, in *DeleteRep
 
 func (h *helmManagerHandler) ListRepository(ctx context.Context, in *ListRepositoryReq, out *ListRepositoryResp) error {
 	return h.HelmManagerHandler.ListRepository(ctx, in, out)
-}
-
-func (h *helmManagerHandler) DeleteRepositories(ctx context.Context, in *DeleteRepositoriesReq, out *DeleteRepositoriesResp) error {
-	return h.HelmManagerHandler.DeleteRepositories(ctx, in, out)
 }
 
 func (h *helmManagerHandler) ListChart(ctx context.Context, in *ListChartReq, out *ListChartResp) error {

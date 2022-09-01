@@ -63,12 +63,3 @@ func (hm *HelmManager) DeleteRepository(ctx context.Context,
 	action := actionRepository.NewDeleteRepositoryAction(hm.model)
 	return action.Handle(ctx, req, resp)
 }
-
-// DeleteRepositories provide the actions to delete multi repositories
-func (hm *HelmManager) DeleteRepositories(ctx context.Context,
-	req *helmmanager.DeleteRepositoriesReq, resp *helmmanager.DeleteRepositoriesResp) error {
-
-	defer recorder(ctx, "DeleteRepositories", req, resp)()
-	action := actionRepository.NewDeleteRepositoriesAction(hm.model)
-	return action.Handle(ctx, req, resp)
-}

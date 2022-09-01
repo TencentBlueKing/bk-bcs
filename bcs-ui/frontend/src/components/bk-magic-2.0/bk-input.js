@@ -39,6 +39,20 @@ export default {
         return vnode;
       });
 
+    // eslint-disable-next-line @typescript-eslint/naming-convention, @typescript-eslint/no-this-alias
+    const _self = this;
+    try {
+      this.$listeners.input = (value, event) => {
+        if (_self.$attrs.type === 'number') {
+          _self.$emit('input', _self.parseNumber ? Number(value) : String(value), event);
+        } else {
+          _self.$emit('input', value, event);
+        }
+      };
+    } catch (e) {
+      console.warn(e);
+    }
+
     return h('bcs-input', {
       ref: 'input',
       on: this.$listeners, // 透传事件

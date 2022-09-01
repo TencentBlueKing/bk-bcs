@@ -23,7 +23,7 @@ import (
 )
 
 const (
-	repositoryListHelmUri = "/repository/api/package/page"
+	repositoryListHelmURI = "/repository/api/package/page"
 )
 
 func (rh *repositoryHandler) listChart(ctx context.Context, option repo.ListOption) (*repo.ListChartData, error) {
@@ -46,7 +46,7 @@ func (rh *repositoryHandler) listOCIChart(ctx context.Context, option repo.ListO
 }
 
 func (rh *repositoryHandler) listHelmChart(ctx context.Context, option repo.ListOption) (*repo.ListChartData, error) {
-	resp, err := rh.handler.get(ctx, rh.getListHelmChartUri(option), nil, nil)
+	resp, err := rh.handler.get(ctx, rh.getListHelmChartURI(option), nil, nil)
 	if err != nil {
 		blog.Errorf("list helm chart from bk-repo get failed, %s, with projectID %s, repoName %s",
 			err.Error(), rh.projectID, rh.repository)
@@ -54,7 +54,7 @@ func (rh *repositoryHandler) listHelmChart(ctx context.Context, option repo.List
 	}
 
 	var r listPackResp
-	if err := codec.DecJson(resp.Reply, &r); err != nil {
+	if err = codec.DecJson(resp.Reply, &r); err != nil {
 		blog.Errorf("list helm chart from bk-repo decode failed, %s, with resp %s", err.Error(), resp.Reply)
 		return nil, err
 	}
@@ -76,8 +76,8 @@ func (rh *repositoryHandler) listHelmChart(ctx context.Context, option repo.List
 	}, nil
 }
 
-func (rh *repositoryHandler) getListHelmChartUri(option repo.ListOption) string {
-	return repositoryListHelmUri + "/" + rh.projectID + "/" + rh.repository + "/" +
+func (rh *repositoryHandler) getListHelmChartURI(option repo.ListOption) string {
+	return repositoryListHelmURI + "/" + rh.projectID + "/" + rh.repository + "/" +
 		"?pageNumber=" + strconv.FormatInt(option.Page, 10) +
 		"&pageSize=" + strconv.FormatInt(option.Size, 10)
 }

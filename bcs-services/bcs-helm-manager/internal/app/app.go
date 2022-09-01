@@ -316,6 +316,7 @@ func (hm *HelmManager) initMicro() error {
 		microSvc.WrapHandler(
 			wrapper.RequestIDWrapper,
 			authWrapper.AuthenticationFunc,
+			wrapper.ParseProjectIDWrapper,
 			authWrapper.AuthorizationFunc,
 		),
 	)

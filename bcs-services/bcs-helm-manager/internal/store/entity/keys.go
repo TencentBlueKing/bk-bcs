@@ -25,6 +25,7 @@ const (
 	FieldKeyRemoteURL      = "remoteURL"
 	FieldKeyRemoteUsername = "remoteUsername"
 	FieldKeyRemotePassword = "remotePassword"
+	FieldKeyRepoURL        = "repoURL"
 	FieldKeyUsername       = "username"
 	FieldKeyPassword       = "password"
 

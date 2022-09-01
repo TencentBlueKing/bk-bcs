@@ -57,6 +57,8 @@ require (
 	go.mongodb.org/mongo-driver v1.5.3
 	google.golang.org/genproto v0.0.0-20220422154200-b37d22cd5731
 	gopkg.in/yaml.v2 v2.4.0
+	gorm.io/driver/mysql v1.3.6
+	gorm.io/gorm v1.23.8
 	helm.sh/helm/v3 v3.8.2
 	k8s.io/apimachinery v0.23.5
 	k8s.io/cli-runtime v0.23.5
@@ -109,6 +111,7 @@ require (
 	github.com/go-playground/locales v0.13.0 // indirect
 	github.com/go-playground/universal-translator v0.17.0 // indirect
 	github.com/go-playground/validator/v10 v10.4.1 // indirect
+	github.com/go-sql-driver/mysql v1.6.0 // indirect
 	github.com/go-stack/stack v1.8.0 // indirect
 	github.com/gobwas/glob v0.2.3 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
@@ -126,6 +129,8 @@ require (
 	github.com/huandu/xstrings v1.3.2 // indirect
 	github.com/imdario/mergo v0.3.12 // indirect
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
+	github.com/jinzhu/inflection v1.0.0 // indirect
+	github.com/jinzhu/now v1.1.5 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/jmoiron/sqlx v1.3.4 // indirect
 	github.com/josharian/intern v1.0.0 // indirect

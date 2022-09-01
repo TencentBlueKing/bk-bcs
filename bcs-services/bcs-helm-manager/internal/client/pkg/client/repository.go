@@ -15,18 +15,15 @@ package client
 import (
 	"context"
 	"fmt"
-	"net/url"
-	"strconv"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/codec"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/client/pkg"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
 	helmmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/proto/bcs-helm-manager"
 )
 
 const (
-	urlRepository     = "/helmmanager/v1/repository/%s/%s"
-	urlRepositoryList = "/helmmanager/v1/repository/%s"
+	urlRepository = "/helmmanager/v1/projects/%s/repos"
 )
 
 // Repository return a pkg.RepositoryClient instance
@@ -44,20 +41,19 @@ func (rp *repository) Create(ctx context.Context, req *helmmanager.CreateReposit
 		return fmt.Errorf("create repository request is empty")
 	}
 
-	req.Operator = common.GetStringP(rp.conf.Operator)
 	name := req.GetName()
 	if name == "" {
 		return fmt.Errorf("repository name can not be empty")
 	}
-	projectID := req.GetProjectID()
-	if projectID == "" {
-		return fmt.Errorf("repository projectID can not be empty")
+	projectCode := req.GetProjectCode()
+	if projectCode == "" {
+		return fmt.Errorf("repository projectCode can not be empty")
 	}
 
 	var data []byte
 	_ = codec.EncJson(req, &data)
 
-	resp, err := rp.post(ctx, urlPrefix+fmt.Sprintf(urlRepository, projectID, name), nil, data)
+	resp, err := rp.post(ctx, urlPrefix+fmt.Sprintf(urlRepository, projectCode), nil, data)
 	if err != nil {
 		return err
 	}
@@ -80,20 +76,19 @@ func (rp *repository) Update(ctx context.Context, req *helmmanager.UpdateReposit
 		return fmt.Errorf("update repository request is empty")
 	}
 
-	req.Operator = common.GetStringP(rp.conf.Operator)
 	name := req.GetName()
 	if name == "" {
 		return fmt.Errorf("repository name can not be empty")
 	}
-	projectID := req.GetProjectID()
-	if projectID == "" {
-		return fmt.Errorf("repository projectID can not be empty")
+	projectCode := req.GetProjectCode()
+	if projectCode == "" {
+		return fmt.Errorf("repository projectCode can not be empty")
 	}
 
 	var data []byte
 	_ = codec.EncJson(req, &data)
 
-	resp, err := rp.put(ctx, urlPrefix+fmt.Sprintf(urlRepository, projectID, name), nil, data)
+	resp, err := rp.put(ctx, urlPrefix+fmt.Sprintf(urlRepository, projectCode)+"/"+name, nil, data)
 	if err != nil {
 		return err
 	}
@@ -116,20 +111,19 @@ func (rp *repository) Delete(ctx context.Context, req *helmmanager.DeleteReposit
 		return fmt.Errorf("delete repository request is empty")
 	}
 
-	req.Operator = common.GetStringP(rp.conf.Operator)
 	name := req.GetName()
 	if name == "" {
 		return fmt.Errorf("repository name can not be empty")
 	}
-	projectID := req.GetProjectID()
-	if projectID == "" {
-		return fmt.Errorf("repository projectID can not be empty")
+	projectCode := req.GetProjectCode()
+	if projectCode == "" {
+		return fmt.Errorf("repository projectCode can not be empty")
 	}
 
 	var data []byte
 	_ = codec.EncJson(req, &data)
 
-	resp, err := rp.delete(ctx, urlPrefix+fmt.Sprintf(urlRepository, projectID, name), nil, data)
+	resp, err := rp.delete(ctx, urlPrefix+fmt.Sprintf(urlRepository, projectCode, name), nil, data)
 	if err != nil {
 		return err
 	}
@@ -148,19 +142,19 @@ func (rp *repository) Delete(ctx context.Context, req *helmmanager.DeleteReposit
 
 // List repository
 func (rp *repository) List(ctx context.Context, req *helmmanager.ListRepositoryReq) (
-	*helmmanager.RepositoryListData, error) {
+	[]*helmmanager.Repository, error) {
 	if req == nil {
 		return nil, fmt.Errorf("list repository request is empty")
 	}
 
-	projectID := req.GetProjectID()
-	if projectID == "" {
+	projectCode := req.GetProjectCode()
+	if projectCode == "" {
 		return nil, fmt.Errorf("repository project can not be empty")
 	}
 
 	resp, err := rp.get(
 		ctx,
-		urlPrefix+fmt.Sprintf(urlRepositoryList, projectID)+"?"+rp.listRepositoryQuery(req).Encode(),
+		urlPrefix+fmt.Sprintf(urlRepository, projectCode),
 		nil,
 		nil,
 	)
@@ -178,25 +172,4 @@ func (rp *repository) List(ctx context.Context, req *helmmanager.ListRepositoryR
 	}
 
 	return r.Data, nil
-}
-
-func (rp *repository) listRepositoryQuery(req *helmmanager.ListRepositoryReq) url.Values {
-	query := url.Values{}
-	if req.Page != nil {
-		query.Set("page", strconv.FormatInt(int64(req.GetPage()), 10))
-	}
-	if req.Size != nil {
-		query.Set("size", strconv.FormatInt(int64(req.GetSize()), 10))
-	}
-	if req.ProjectID != nil {
-		query.Set("projectID", req.GetProjectID())
-	}
-	if req.Name != nil {
-		query.Set("name", req.GetName())
-	}
-	if req.Type != nil {
-		query.Set("type", req.GetType())
-	}
-	query.Set("sort", "createTime")
-	return query
 }

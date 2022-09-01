@@ -21,7 +21,10 @@
     <bk-exception type="403" v-else-if="!projectList.length">
       <span>{{$t('无项目权限')}}</span>
       <div class="text-subtitle">{{$t('你没有相应项目的访问权限，请前往申请相关项目权限')}}</div>
-      <a class="bk-text-button text-wrap" @click="handleGotoIAM">{{$t('去申请')}}</a>
+      <div style="display: flex;align-items: center; justify-content: center;">
+        <a class="bk-text-button text-wrap" @click="handleGotoIAM">{{$t('去申请')}}</a>
+        <a class="bk-text-button text-wrap" @click="handleGotoProjectManage">{{$t('创建项目')}}</a>
+      </div>
     </bk-exception>
   </div>
 </template>
@@ -85,7 +88,7 @@ export default defineComponent({
 
       // 2. 校验项目不存在，但是ProjectCode存在的情况
       const _projectCode = projectCode || localProjectCode;
-      if (!_projectCode) return false;
+      if (!_projectCode || !projectList.value.length) return false;
 
       const projectData = await getProjectList({
         project_code: _projectCode,
@@ -219,11 +222,22 @@ export default defineComponent({
       isLoading.value = false;
     });
 
+    function handleGotoProjectManage() {
+      if (window.REGION === 'ieod') {
+        window.open(`${window.DEVOPS_HOST}/console/pm`);
+      } else {
+        if ($route.name === 'projectManage') return;
+        $router.push({
+          name: 'projectManage',
+        });
+      }
+    }
     return {
       isLoading,
       curProject,
       handleGotoIAM,
       projectList,
+      handleGotoProjectManage,
     };
   },
 });

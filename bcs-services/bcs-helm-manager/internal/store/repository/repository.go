@@ -91,6 +91,7 @@ func (m *ModelRepository) CreateRepository(ctx context.Context, repository *enti
 	}
 
 	timestamp := time.Now().UTC().Unix()
+	repository.UpdateBy = repository.CreateBy
 	repository.CreateTime = timestamp
 	repository.UpdateTime = timestamp
 	if _, err := m.db.Table(m.tableName).Insert(ctx, []interface{}{repository}); err != nil {

@@ -68,6 +68,9 @@ func (hme HelmManagerError) Error() string {
 
 // ErrorMessage return HelmManagerError's builtin error message and add the custom message
 func (hme HelmManagerError) ErrorMessage(message string) string {
+	if hme == ErrHelmManagerSuccess {
+		return hme.Error()
+	}
 	return "[" + hme.Error() + "]" + message
 }
 

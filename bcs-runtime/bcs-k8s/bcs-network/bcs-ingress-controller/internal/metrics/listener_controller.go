@@ -10,7 +10,7 @@
  * limitations under the License.
  */
 
-package listenercontroller
+package metrics
 
 import (
 	"github.com/prometheus/client_golang/prometheus"
@@ -18,7 +18,7 @@ import (
 )
 
 var (
-	workerTotal = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+	WorkerTotal = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Namespace: "bkbcs_ingressctrl",
 		Subsystem: "controller",
 		Name:      "lbworker",
@@ -27,5 +27,5 @@ var (
 )
 
 func init() {
-	metrics.Registry.MustRegister(workerTotal)
+	metrics.Registry.MustRegister(WorkerTotal)
 }

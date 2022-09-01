@@ -385,6 +385,12 @@ func (client *StorageClient) listResource(url string, handlerName string) (data 
 
 // ListNamespaceResource list namespace resource
 func (client *StorageClient) ListNamespaceResource() (data []interface{}, err error) {
+	return client.ListNamespaceResourceWithLabelSelector("")
+}
+
+// ListNamespaceResourceWithLabelSelector list namespace resource with label selector
+func (client *StorageClient) ListNamespaceResourceWithLabelSelector(labelSelector string) (
+	[]interface{}, error) {
 	const (
 		handlerName = HandlerListNamespaceName
 	)
@@ -403,7 +409,18 @@ func (client *StorageClient) ListNamespaceResource() (data []interface{}, err er
 		urlWithParams = fmt.Sprintf("%s?field=resourceName", url)
 	}
 
+	if len(labelSelector) != 0 {
+		selectorMap, err := parseSelectors(labelSelector, "data.metadata.labels.")
+		if err != nil {
+			return nil, err
+		}
+		for labelKey, labelValue := range selectorMap {
+			urlWithParams = fmt.Sprintf("%s&%s=%s", urlWithParams, labelKey, labelValue)
+		}
+	}
+
 	offset := 0
+	var data []interface{}
 	for {
 		urlWithLimit := ""
 		if client.ResourceType == ResourceTypeEvent {
@@ -415,9 +432,8 @@ func (client *StorageClient) ListNamespaceResource() (data []interface{}, err er
 		glog.V(2).Infof("sync call list namespace resource: %s", urlWithLimit)
 		dataTmp, err := client.listResource(urlWithLimit, handlerName)
 		if err != nil {
-			data = nil
 			glog.Errorf("list namespace resource fail: %v", err)
-			return data, err
+			return nil, err
 		}
 		data = append(data, dataTmp...)
 		if len(dataTmp) == StorageRequestLimit {
@@ -429,16 +445,22 @@ func (client *StorageClient) ListNamespaceResource() (data []interface{}, err er
 
 	if client.ResourceType == ResourceTypeEvent {
 		for i := range data {
-			data[i].(map[string]interface{})["resourceName"] = data[i].(map[string]interface{})["data"].(map[string]interface{})["metadata"].(map[string]interface{})["name"]
+			data[i].(map[string]interface{})["resourceName"] =
+				data[i].(map[string]interface{})["data"].(map[string]interface{})["metadata"].(map[string]interface{})["name"]
 			delete(data[i].(map[string]interface{}), "data")
 		}
 	}
 
-	return
+	return data, nil
 }
 
 // ListClusterResource list cluster resource
 func (client *StorageClient) ListClusterResource() (data []interface{}, err error) {
+	return client.ListClusterResourceWithLabelSelector("")
+}
+
+// ListClusterResourceWithLabelSelector list cluster resource with label selector
+func (client *StorageClient) ListClusterResourceWithLabelSelector(labelSelector string) ([]interface{}, error) {
 	const (
 		handlerName = HandlerListClusterName
 	)
@@ -446,8 +468,16 @@ func (client *StorageClient) ListClusterResource() (data []interface{}, err erro
 		client.HTTPClientConfig.URL, client.ClusterID, client.ResourceType)
 
 	urlWithParams := fmt.Sprintf("%s?field=resourceName", url)
+	if len(labelSelector) != 0 {
+		selectorMap, err := parseSelectors(labelSelector, "data.metadata.labels.")
+		if err != nil {
+			return nil, err
+		}
+		for labelKey, labelValue := range selectorMap {
+			urlWithParams = fmt.Sprintf("%s&%s=%s", urlWithParams, labelKey, labelValue)
+		}
+	}
 
 	glog.V(2).Infof("sync call list cluster resource: %s", urlWithParams)
-	data, err = client.listResource(urlWithParams, handlerName)
-	return
+	return client.listResource(urlWithParams, handlerName)
 }

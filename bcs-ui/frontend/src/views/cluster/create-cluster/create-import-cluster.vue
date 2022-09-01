@@ -112,14 +112,15 @@
             @change="handleFileChange">
           {{$t('文件导入')}}
         </bk-button>
-        <Ace
+        <CodeEditor
           class="cube-config"
           lang="yaml"
           width="100%"
           :height="480"
+          :options="{ lineNumbers: 'off' }"
+          ref="codeEditorRef"
           v-model="importClusterInfo.yaml"
-          :show-gutter="false"
-        ></Ace>
+        ></CodeEditor>
       </BkFormItem>
       <BkFormItem class="mt16" v-if="importClusterInfo.importType === 'kubeconfig'">
         <bk-button
@@ -151,17 +152,17 @@
 </template>
 <script lang="ts">
 import { defineComponent, ref, computed, onMounted, watch } from '@vue/composition-api';
-import Ace from '@/components/ace-editor';
 import useGoHome from '@/common/use-gohome';
 import { useConfig } from '@/common/use-app';
 import useFormLabel from '@/common/use-form-label';
 import BkForm from 'bk-magic-vue/lib/form';
 import BkFormItem from 'bk-magic-vue/lib/form-item';
+import CodeEditor from '@/views/dashboard/resource-update/resource-editor.vue';
 
 export default defineComponent({
   name: 'CreateImportCluster',
   components: {
-    Ace,
+    CodeEditor,
     BkForm,
     BkFormItem,
   },
@@ -230,6 +231,7 @@ export default defineComponent({
     });
 
     // 导入文件
+    const codeEditorRef = ref<any>(null);
     const handleFileChange = (event) => {
       const [file] = event.target.files;
       if (!file) return;
@@ -237,6 +239,7 @@ export default defineComponent({
       reader.readAsText(file, 'UTF-8');
       reader.onload = (e) => {
         importClusterInfo.value.yaml = e?.target?.result as string || '';
+        codeEditorRef.value?.update();
       };
     };
 
@@ -249,7 +252,8 @@ export default defineComponent({
 
     // 云服务商
     const templateList = ref<any[]>([]);
-    const availableTemplateList = computed(() => templateList.value.filter(item => !item?.confInfo?.disableImportCluster));
+    const availableTemplateList = computed(() => templateList.value
+      .filter(item => !item?.confInfo?.disableImportCluster));
     const templateLoading = ref(false);
     const handleGetCloudList = async () => {
       templateLoading.value = true;
@@ -387,6 +391,7 @@ export default defineComponent({
       initFormLabelWidth(importFormRef.value);
     });
     return {
+      codeEditorRef,
       clusterLoading,
       accountsLoading,
       accountsList,

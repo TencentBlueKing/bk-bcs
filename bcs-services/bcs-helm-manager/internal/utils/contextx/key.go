@@ -22,6 +22,8 @@ const (
 	TraceIDContextKey ContextKey = "traceID"
 	// UsernamContextKey 用户名
 	UsernamContextKey ContextKey = "username"
+	// ProjectIDContextKey projectID context key
+	ProjectIDContextKey ContextKey = "projectID"
 )
 
 // HeaderKey string

@@ -113,7 +113,7 @@ func (pbih *portBindingItemHandler) ensureItem(
 		}
 		blog.V(3).Infof("update listener %s/%s successfully", listenerName, item.PoolNamespace)
 	}
-	if countReady == len(item.PoolItemLoadBalancers) {
+	if countReady == len(item.PoolItemLoadBalancers) && countReady != 0 {
 		return pbih.generateStatus(item, constant.PortBindingItemStatusReady)
 	}
 	return pbih.generateStatus(item, constant.PortBindingItemStatusNotReady)

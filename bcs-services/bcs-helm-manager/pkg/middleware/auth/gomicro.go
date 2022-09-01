@@ -25,9 +25,9 @@ import (
 
 // GoMicroAuth is the authentication middleware for go-micro
 type GoMicroAuth struct {
-	skipHandler   func(req server.Request) bool
-	exemptClient  func(req server.Request, client string) bool
-	checkUserPerm func(req server.Request, username string) (bool, error)
+	skipHandler   func(ctx context.Context, req server.Request) bool
+	exemptClient  func(ctx context.Context, req server.Request, client string) bool
+	checkUserPerm func(ctx context.Context, req server.Request, username string) (bool, error)
 	jwtClient     *jwt.JWTClient
 }
 
@@ -39,19 +39,20 @@ func NewGoMicroAuth(jwtClient *jwt.JWTClient) *GoMicroAuth {
 }
 
 // EnableSkipHandler enable skip method, if skipHandler return true, skip authorization, like Health handler
-func (g *GoMicroAuth) EnableSkipHandler(skipHandler func(req server.Request) bool) *GoMicroAuth {
+func (g *GoMicroAuth) EnableSkipHandler(skipHandler func(ctx context.Context, req server.Request) bool) *GoMicroAuth {
 	g.skipHandler = skipHandler
 	return g
 }
 
 // EnableSkipClient enable skip client, if skip client return true, skip authorization
-func (g *GoMicroAuth) EnableSkipClient(exemptClient func(req server.Request, client string) bool) *GoMicroAuth {
+func (g *GoMicroAuth) EnableSkipClient(exemptClient func(ctx context.Context, req server.Request,
+	client string) bool) *GoMicroAuth {
 	g.exemptClient = exemptClient
 	return g
 }
 
 // SetCheckUserPerm set check user permission function
-func (g *GoMicroAuth) SetCheckUserPerm(checkUserPerm func(
+func (g *GoMicroAuth) SetCheckUserPerm(checkUserPerm func(ctx context.Context,
 	req server.Request, username string) (bool, error)) *GoMicroAuth {
 	g.checkUserPerm = checkUserPerm
 	return g
@@ -102,7 +103,7 @@ func (g *GoMicroAuth) AuthenticationFunc(fn server.HandlerFunc) server.HandlerFu
 // AuthorizationFunc is the authorization function for go-micro
 func (g *GoMicroAuth) AuthorizationFunc(fn server.HandlerFunc) server.HandlerFunc {
 	return func(ctx context.Context, req server.Request, rsp interface{}) (err error) {
-		if g.skipHandler != nil && g.skipHandler(req) {
+		if g.skipHandler != nil && g.skipHandler(ctx, req) {
 			return fn(ctx, req, rsp)
 		}
 
@@ -115,7 +116,7 @@ func (g *GoMicroAuth) AuthorizationFunc(fn server.HandlerFunc) server.HandlerFun
 			return fn(ctx, req, rsp)
 		}
 
-		if g.exemptClient != nil && g.exemptClient(req, authUser.ClientName) {
+		if g.exemptClient != nil && g.exemptClient(ctx, req, authUser.ClientName) {
 			return fn(ctx, req, rsp)
 		}
 
@@ -127,7 +128,7 @@ func (g *GoMicroAuth) AuthorizationFunc(fn server.HandlerFunc) server.HandlerFun
 			return errors.New("check user permission function is not set")
 		}
 
-		if allow, err := g.checkUserPerm(req, authUser.Username); err != nil {
+		if allow, err := g.checkUserPerm(ctx, req, authUser.Username); err != nil {
 			return err
 		} else if !allow {
 			return errors.New("user not authorized")

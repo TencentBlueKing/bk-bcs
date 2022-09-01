@@ -21,6 +21,7 @@ import (
 	"time"
 
 	jsonpatch "github.com/evanphx/json-patch"
+	v1 "k8s.io/api/admission/v1"
 	"k8s.io/api/admission/v1beta1"
 	k8sunstruct "k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -28,6 +29,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/serializer"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-webhook-server/internal/convert"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-webhook-server/internal/metrics"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-webhook-server/internal/pluginutil"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-webhook-server/internal/types"
@@ -36,6 +38,8 @@ import (
 
 var (
 	runtimeScheme = runtime.NewScheme()
+	_             = v1.AddToScheme(runtimeScheme)
+	_             = v1beta1.AddToScheme(runtimeScheme)
 	codecs        = serializer.NewCodecFactory(runtimeScheme)
 	deserializer  = codecs.UniversalDeserializer()
 
@@ -79,24 +83,65 @@ func (ws *WebhookServer) K8sHook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var reviewResponse *v1beta1.AdmissionResponse
-	ar := v1beta1.AdmissionReview{}
-	if _, _, err := deserializer.Decode(body, nil, &ar); err != nil {
-		blog.Errorf("Could not decode body: %s", err.Error())
-		reviewResponse = pluginutil.ToAdmissionResponse(err)
-	} else {
-		reviewResponse = ws.doK8sHook(ar)
+	obj, gvk, err := deserializer.Decode(body, nil, nil)
+	if err != nil {
+		blog.Errorf("deserializer.Decode error: %s", err.Error())
+		http.Error(w, fmt.Sprintf("could not decode body: %v", err), http.StatusBadRequest)
+		metrics.ReportBcsWebhookServerAPIMetrics(handler, method, strconv.Itoa(http.StatusBadRequest), started)
+		return
 	}
 
-	response := v1beta1.AdmissionReview{}
-	if reviewResponse != nil {
-		response.Response = reviewResponse
-		if ar.Request != nil {
-			response.Response.UID = ar.Request.UID
+	var responseObj runtime.Object
+
+	switch *gvk {
+	case v1beta1.SchemeGroupVersion.WithKind("AdmissionReview"):
+		ar, ok := obj.(*v1beta1.AdmissionReview)
+		if !ok {
+			blog.Errorf("AdmissionReview is not a v1beta1.AdmissionReview object")
+			http.Error(w, "AdmissionReview is not a v1beta1.AdmissionReview object", http.StatusBadRequest)
+			metrics.ReportBcsWebhookServerAPIMetrics(handler, method, strconv.Itoa(http.StatusBadRequest), started)
+			return
 		}
+		reviewResponse := ws.doK8sHook(*ar)
+		response := v1beta1.AdmissionReview{}
+		response.SetGroupVersionKind(*gvk)
+		if reviewResponse != nil {
+			response.Response = reviewResponse
+			if ar.Request != nil {
+				response.Response.UID = ar.Request.UID
+			}
+		}
+
+		responseObj = &response
+	case v1.SchemeGroupVersion.WithKind("AdmissionReview"):
+		ar, ok := obj.(*v1.AdmissionReview)
+		if !ok {
+			blog.Errorf("AdmissionReview is not a v1.AdmissionReview object")
+			http.Error(w, "AdmissionReview is not a v1.AdmissionReview object", http.StatusBadRequest)
+			metrics.ReportBcsWebhookServerAPIMetrics(handler, method, strconv.Itoa(http.StatusBadRequest), started)
+			return
+		}
+		v1beta1AdmissionReview := v1beta1.AdmissionReview{
+			Request: convert.ConvertAdmissionRequestToV1beta1(ar.Request),
+		}
+		reviewResponse := ws.doK8sHook(v1beta1AdmissionReview)
+		response := v1.AdmissionReview{}
+		response.SetGroupVersionKind(*gvk)
+		if reviewResponse != nil {
+			response.Response = convert.ConvertAdmissionResponseToV1(reviewResponse)
+			if ar.Request != nil {
+				response.Response.UID = ar.Request.UID
+			}
+		}
+		responseObj = &response
+	default:
+		blog.Errorf("gvk=%s, expect v1beta1.AdmissionReview or v1.AdmissionReview", gvk.String())
+		http.Error(w, "invalid gvk, want v1beta1.AdmissionReview or v1.AdmissionReview", http.StatusBadRequest)
+		metrics.ReportBcsWebhookServerAPIMetrics(handler, method, strconv.Itoa(http.StatusBadRequest), started)
+		return
 	}
 
-	resp, err := json.Marshal(response)
+	resp, err := json.Marshal(responseObj)
 	if err != nil {
 		blog.Errorf("Could not encode response: %v", err)
 		http.Error(w, fmt.Sprintf("could encode response: %v", err), http.StatusInternalServerError)

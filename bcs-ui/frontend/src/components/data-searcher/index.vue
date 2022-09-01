@@ -16,12 +16,14 @@
         ></ClusterSelect>
       </template>
     </template>
-    <div class="biz-search-input" style="width: 300px;">
+    <div class="biz-search-input">
       <bkbcs-input
         v-model="localKey"
         clearable
         :placeholder="placeholderRender"
         :right-icon="'bk-icon icon-search'"
+        style="width: 300px;"
+        v-if="showSearchInput"
         @enter="handleSearch"
         @clear="clearSearch">
       </bkbcs-input>
@@ -80,6 +82,10 @@ export default {
       default: false,
     },
     searchable: {
+      type: Boolean,
+      default: true,
+    },
+    showSearchInput: {
       type: Boolean,
       default: true,
     },
