@@ -14,10 +14,8 @@ specific language governing permissions and limitations under the License.
 
 模板集的公共方法
 """
-import json
 import logging
 import re
-from collections import Counter
 
 from django.utils.translation import ugettext_lazy as _
 from rest_framework.exceptions import ValidationError
@@ -98,60 +96,6 @@ def get_all_template_info_by_project(project_id):
                         'config': config,
                     }
                 )
-    return resource_list
-
-
-# TODO refactor
-def get_all_template_config(project_id):
-    # 暂时不支持YAML模板查询
-    tem_ids = Template.objects.filter(project_id=project_id, edit_mode=TemplateEditMode.PageForm.value).values_list(
-        'id', flat=True
-    )
-    tem_ids = list(tem_ids)
-    real_version_ids = ShowVersion.objects.filter(template_id__in=tem_ids).values_list('real_version_id', flat=True)
-    real_version_ids = list(real_version_ids)
-    versioned_entity = VersionedEntity.objects.filter(id__in=real_version_ids).values('entity', 'id')
-    # 多个 show_ver 对应 一个 real_version，real_version 需要按show_ver出现的次数重复计数
-    real_version_count_dict = Counter(real_version_ids)
-
-    category_dict = {}
-    for ver in versioned_entity:
-        try:
-            entity = json.loads(ver['entity'])
-        except Exception as error:
-            logger.exception('load entity error, %s, %s', ver, error)
-            continue
-
-        # 重复出现的id，需要重复添加
-        count = real_version_count_dict.get(ver['id'])
-        i = 0
-        while i < count:
-            for category in entity:
-                ids = entity.get(category)
-                id_list = ids.split(',') if ids else []
-                id_list = [int(_id) for _id in id_list]
-                if category in category_dict:
-                    category_dict[category].extend(id_list)
-                else:
-                    category_dict[category] = id_list
-            i = i + 1
-
-    resource_list = []
-    for category in category_dict:
-        # NOTE: 忽略不在MODULE_DICT中的资源类型
-        if category not in MODULE_DICT:
-            continue
-        category_id_list = category_dict[category]
-        # 统计每个id出现的次数
-        category_id_count_dict = Counter(category_id_list)
-        res_list = MODULE_DICT.get(category).objects.filter(id__in=category_id_list).values('config', 'id')
-        for resource in res_list:
-            # 重复出现的id，需要重复添加
-            count = category_id_count_dict.get(resource['id'])
-            i = 0
-            while i < count:
-                resource_list.append({'config': resource['config']})
-                i = i + 1
     return resource_list
 
 
