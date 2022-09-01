@@ -72,7 +72,8 @@ func NewWatcherManager(clusterID string, watchResource *options.WatchResource, w
 	}
 	mgr.initWatchers(clusterID, k8sConfig, storageService, netservice)
 
-	mgr.synchronizer = NewSynchronizer(clusterID, watchResource.Namespace, mgr.watchers, mgr.crdWatchers, storageService)
+	mgr.synchronizer = NewSynchronizer(clusterID, watchResource.Namespace, watchResource.LabelSelectors,
+		mgr.watchers, mgr.crdWatchers, storageService)
 	return mgr, nil
 }
 

@@ -47,17 +47,21 @@ type Synchronizer struct {
 	// watchers of crd
 	crdWatchers map[string]WatcherInterface
 
+	// labelSelectors for different object
+	labelSelectors map[string]string
+
 	// target storage service.
 	storageService *bcs.InnerService
 }
 
 // NewSynchronizer creates a new Synchronizer instance.
-func NewSynchronizer(clusterID string, namespace string, watchers, crdWatchers map[string]WatcherInterface,
-	storageService *bcs.InnerService) *Synchronizer {
+func NewSynchronizer(clusterID, namespace string, labelSelectors map[string]string,
+	watchers, crdWatchers map[string]WatcherInterface, storageService *bcs.InnerService) *Synchronizer {
 	return &Synchronizer{
 		clusterID:      clusterID,
 		watchers:       watchers,
 		crdWatchers:    crdWatchers,
+		labelSelectors: labelSelectors,
 		storageService: storageService,
 		namespace:      namespace,
 	}
@@ -119,13 +123,17 @@ func (sync *Synchronizer) RunOnce() error {
 	}
 
 	for resourceType, resourceObjType := range resources.WatcherConfigList {
+		labelSelector := sync.labelSelectors[resourceType]
+		if curSelector, ok := sync.labelSelectors[resourceType]; ok {
+			labelSelector = curSelector
+		}
 		if resourceObjType.Namespaced {
 			glog.Info("begin to sync %s", resourceType)
-			sync.syncNamespaceResource(resourceType, namespaces, sync.watchers[resourceType].(*Watcher))
+			sync.syncNamespaceResource(resourceType, namespaces, labelSelector, sync.watchers[resourceType].(*Watcher))
 			glog.Info("sync %s done", resourceType)
 		} else {
 			glog.Info("begin to sync %s", resourceType)
-			sync.syncClusterResource(resourceType, sync.watchers[resourceType].(*Watcher))
+			sync.syncClusterResource(resourceType, labelSelector, sync.watchers[resourceType].(*Watcher))
 			glog.Info("sync %s done", resourceType)
 		}
 	}
@@ -137,11 +145,11 @@ func (sync *Synchronizer) RunOnce() error {
 		}
 		if w.resourceNamespaced {
 			glog.Info("begin to sync %s", resourceType)
-			sync.syncNamespaceResource(resourceType, namespaces, w)
+			sync.syncNamespaceResource(resourceType, namespaces, "", w)
 			glog.Info("sync %s done", resourceType)
 		} else {
 			glog.Info("begin to sync %s", resourceType)
-			sync.syncClusterResource(resourceType, w)
+			sync.syncClusterResource(resourceType, "", w)
 			glog.Info("sync %s done", resourceType)
 		}
 	}
@@ -149,7 +157,7 @@ func (sync *Synchronizer) RunOnce() error {
 	return nil
 }
 
-func (sync *Synchronizer) syncNamespaceResource(kind string, namespaces []string, watcher *Watcher) {
+func (sync *Synchronizer) syncNamespaceResource(kind string, namespaces []string, selector string, watcher *Watcher) {
 	// get all resources from local store.
 
 	localKeys := watcher.store.ListKeys()
@@ -158,7 +166,7 @@ func (sync *Synchronizer) syncNamespaceResource(kind string, namespaces []string
 	totalData := []map[string]string{}
 
 	for _, namespace := range namespaces {
-		data, err := sync.doRequest(namespace, kind)
+		data, err := sync.doRequest(namespace, selector, kind)
 		if err != nil {
 			glog.Errorf("Sync %s fail: namespace=%s, type=Pod, err=%s", kind, namespace, err)
 			continue
@@ -180,10 +188,10 @@ func (sync *Synchronizer) syncNamespaceResource(kind string, namespaces []string
 	sync.doSync(localKeys, totalData, watcher)
 }
 
-func (sync *Synchronizer) syncClusterResource(kind string, watcher *Watcher) {
-	data, err := sync.doRequest("", kind)
+func (sync *Synchronizer) syncClusterResource(kind, selector string, watcher *Watcher) {
+	data, err := sync.doRequest("", selector, kind)
 	if err != nil {
-		glog.Errorf("sync cluster resource %s fail: err=%s", kind, err)
+		glog.Errorf("sync cluster resource %s selector %s fail: err=%s", kind, selector, err)
 		return
 	}
 
@@ -295,7 +303,7 @@ func (sync *Synchronizer) doSync(localKeys []string, data []map[string]string, w
 
 // doRequest xxx
 // get resource from storage, namespace can be empty.
-func (sync *Synchronizer) doRequest(namespace string, kind string) (data []interface{}, err error) {
+func (sync *Synchronizer) doRequest(namespace, selector, kind string) (data []interface{}, err error) {
 	targets := sync.storageService.Servers()
 	serversCount := len(targets)
 
@@ -322,11 +330,12 @@ func (sync *Synchronizer) doRequest(namespace string, kind string) (data []inter
 		ResourceName:     "",
 	}
 
-	glog.V(2).Infof("sync request: namespace=%s, kind=%s, client.ResourceType=%s", namespace, kind, client.ResourceType)
+	glog.V(2).Infof("sync request: namespace=%s, labelselector=%s, kind=%s, client.ResourceType=%s",
+		namespace, selector, kind, client.ResourceType)
 	if namespace != "" {
-		data, err = client.ListNamespaceResource()
+		data, err = client.ListNamespaceResourceWithLabelSelector(selector)
 	} else {
-		data, err = client.ListClusterResource()
+		data, err = client.ListClusterResourceWithLabelSelector(selector)
 	}
 	return
 
