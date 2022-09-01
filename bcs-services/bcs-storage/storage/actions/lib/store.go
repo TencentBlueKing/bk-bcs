@@ -128,7 +128,13 @@ func (a *Store) Get(ctx context.Context, resourceType string, opt *StoreGetOptio
 	mList := make([]operator.M, 0)
 
 	findCond := opt.Cond
-	if a.doSoftDelete {
+	getDeletionFlag := false
+
+	if v, ok := ctx.Value("getDeletionFlag").(bool); ok {
+		getDeletionFlag = v
+	}
+
+	if a.doSoftDelete && !getDeletionFlag {
 		// search for data which is not marked deleted
 		delFlagCond := operator.NewLeafCondition(operator.Ne, operator.M{databaseFieldNameForDeletionFlag: true})
 		findCond = operator.NewBranchCondition(operator.And, opt.Cond, delFlagCond)
@@ -162,7 +168,7 @@ func (a *Store) Get(ctx context.Context, resourceType string, opt *StoreGetOptio
 	for _, m := range mList {
 		tmpM := dollarRecover(m)
 		// remove delete flag in returned result
-		if a.doSoftDelete {
+		if a.doSoftDelete && !getDeletionFlag {
 			if _, found := tmpM[databaseFieldNameForDeletionFlag]; found {
 				delete(tmpM, databaseFieldNameForDeletionFlag)
 			}

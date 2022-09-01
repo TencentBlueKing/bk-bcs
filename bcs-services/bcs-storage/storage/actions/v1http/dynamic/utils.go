@@ -17,6 +17,7 @@ import (
 	"context"
 	"encoding/json"
 	"io/ioutil"
+	"strconv"
 	"time"
 
 	"github.com/emicklei/go-restful"
@@ -58,6 +59,9 @@ const (
 	kindTag             = "data.kind"
 
 	eventResourceType = "Event"
+
+	databaseFieldNameForDeletionFlag    = "_isBcsObjectDeleted"
+	getDatabaseFieldNameForDeletionFlag = "getDeletionFlag"
 )
 
 var needTimeFormatList = []string{updateTimeTag, createTimeTag}
@@ -338,7 +342,72 @@ func PutData(ctx context.Context, data, features operator.M, resourceFeatList []
 		apiserver.GetAPIResource().GetDBClient(dbConfig),
 		apiserver.GetAPIResource().GetEventBus(dbConfig))
 	store.SetSoftDeletion(true)
-	err := store.Put(ctx, table, data, putOption)
+
+	getOption := &lib.StoreGetOption{
+		Cond: putOption.Cond,
+	}
+
+	ctx = context.WithValue(ctx, getDatabaseFieldNameForDeletionFlag, true)
+	getDataList, err := store.Get(ctx, table, getOption)
+	if err != nil {
+		blog.Errorf("PutData get data failed: %s", err.Error())
+	}
+	ctx = context.WithValue(ctx, getDatabaseFieldNameForDeletionFlag, false)
+	if len(getDataList) != 0 {
+		getData := getDataList[0]
+
+		if isDeleted, ok := getData[databaseFieldNameForDeletionFlag].(bool); ok {
+			if gData, ok := getData["data"].(map[string]interface{}); ok {
+				if gMetadata, ok := gData["metadata"].(map[string]interface{}); ok {
+					if gResourceVersion, ok := gMetadata["resourceVersion"].(string); ok {
+						if gUid, ok := gMetadata["uid"].(string); ok {
+
+							if dData, ok := data["data"].(map[string]interface{}); ok {
+								if dMetadata, ok := dData["metadata"].(map[string]interface{}); ok {
+									if dResourceVersion, ok := dMetadata["resourceVersion"].(string); ok {
+										if dUid, ok := dMetadata["uid"].(string); ok {
+											if isDeleted {
+												if gUid == dUid {
+													blog.Errorf("PutData was deleted, skip data.")
+													return nil
+												}
+											} else {
+												gRev, err := strconv.ParseUint(gResourceVersion, 10, 64)
+
+												if err != nil {
+													blog.Errorf("PutData strconv.ParseInt gResourceVersion failed: %s", err.Error())
+												} else {
+													dRev, err := strconv.ParseUint(dResourceVersion, 10, 64)
+													if err != nil {
+														blog.Errorf("PutData parse dResourceVersion failed: %s", err.Error())
+													} else {
+														if gRev > dRev {
+															blog.Errorf("PutData was updated, skip data")
+															blog.Errorf("PutData getData: %s", getData)
+															blog.Errorf("PutData data: %s", data)
+															return nil
+														}
+													}
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+
+				}
+			}
+			if !ok {
+				blog.Errorf("PutData get data failed")
+			}
+		} else {
+			blog.Errorf("PutData getData[%s] failed: %s", databaseFieldNameForDeletionFlag, err.Error())
+		}
+	}
+
+	err = store.Put(ctx, table, data, putOption)
 	if err != nil {
 		return err
 	}
