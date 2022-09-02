@@ -153,7 +153,6 @@ func (mgr *WatcherManager) AddEvent(obj interface{}) {
 
 // UpdateEvent handles update event.
 func (mgr *WatcherManager) UpdateEvent(oldObj, newObj interface{}) {
-	return
 }
 
 // DeleteEvent handles delete event.

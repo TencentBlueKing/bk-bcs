@@ -20,6 +20,8 @@ import (
 	"time"
 
 	jsoniter "github.com/json-iterator/go"
+	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/client-go/tools/cache"
 
 	glog "github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-k8s-watch/app/bcs"
@@ -254,8 +256,12 @@ func (sync *Synchronizer) doSync(localKeys []string, data []map[string]string, w
 
 			item, exists, err := watcher.store.GetByKey(key)
 			if exists && err == nil {
+				ns, name, _ := cache.SplitMetaNamespaceKey(key)
 				// build sync data.
-				syncData := watcher.genSyncData(item, action.SyncDataActionAdd)
+				syncData := watcher.genSyncData(types.NamespacedName{
+					Name:      name,
+					Namespace: ns,
+				}, item, action.SyncDataActionAdd)
 
 				if syncData == nil {
 					// maybe filtered.
@@ -292,6 +298,7 @@ func (sync *Synchronizer) doSync(localKeys []string, data []map[string]string, w
 					Name:      name,
 					Action:    action.SyncDataActionDelete,
 					Data:      "",
+					RequeueQ:  watcher.GetTriggerQueue(),
 				}
 
 				// sync delete event base on the reconciliation logic.

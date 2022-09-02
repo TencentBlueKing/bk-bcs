@@ -241,7 +241,7 @@ func (client *StorageClient) GET() (storageResp StorageResponse, err error) {
 	resp, _, errs := request.
 		Timeout(StorageRequestTimeoutSeconds*time.Second).
 		Get(url).
-		Retry(3, 1*time.Second, http.StatusBadRequest, http.StatusInternalServerError).
+		Retry(2, 2*time.Second, http.StatusBadRequest, http.StatusInternalServerError).
 		EndStruct(&storageResp)
 
 	if !storageResp.Result {
