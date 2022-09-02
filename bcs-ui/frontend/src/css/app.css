@@ -65,21 +65,14 @@ input:-webkit-autofill, textarea:-webkit-autofill, select:-webkit-autofill {
 .biz-header-wrapper {
     margin: 17px 20px;
 }
-.bcs-footer {
-    font-size: 12px;
-    text-align: center;
-    margin-top: 25px;
-    a {
-        color: #3c96ff;
-    }
-}
+
 .biz-copyright {
     font-size: 12px;
     color: #b7c0ca;
     width: 100%;
     text-align: center;
     line-height: 20px;
-    padding: 0px 15px 25px;
+    padding: 25px 15px;
 }
 
 .biz-container {
