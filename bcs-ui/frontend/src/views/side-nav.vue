@@ -164,6 +164,7 @@ export default defineComponent({
     });
     const projectCode = computed(() => $store.state.curProjectCode);
     const projectId = computed(() => $store.state.curProjectId);
+    const curProject = computed(() => $store.state.curProject);
     // 菜单切换
     const handleMenuChange = (item: IMenuItem) => {
       // 直接取$route会存在缓存，需要重新从root上获取最新路由信息
@@ -173,7 +174,7 @@ export default defineComponent({
         if ($INTERNAL.value) {
           window.open(`${window.DEVOPS_HOST}/console/monitor/${projectCode.value}/?project_id=${projectId.value}`);
         } else {
-          window.open(window.BKMONITOR_URL);
+          window.open(`${window.BKMONITOR_HOST}/?bizId=${curProject.value.cc_app_id}#/k8s`);
         }
       } else {
         $router.push({
