@@ -10,7 +10,7 @@ replace (
 	github.com/Tencent/bk-bcs/bcs-k8s/kubebkbcs => github.com/Tencent/bk-bcs/bcs-k8s/kubebkbcs v0.0.0-20210117140338-aeaed29b1997
 	github.com/Tencent/bk-bcs/bcs-services/bcs-log-manager => ../bcs-log-manager
 	github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager => ../bcs-mesh-manager
-	github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager => ../bcs-user-manager
+	github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager => github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager v0.0.0-20220329091816-5b868e90d386
 	github.com/Tencent/bk-bcs/bcs-services/bcs-webhook-server => ../bcs-webhook-server
 	github.com/coreos/bbolt v1.3.4 => go.etcd.io/bbolt v1.3.4
 	github.com/googleapis/gnostic => github.com/googleapis/gnostic v0.4.0 // indirect

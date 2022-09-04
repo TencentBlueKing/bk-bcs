@@ -51,3 +51,11 @@ func StringInSlice(s string, l []string) bool {
 	}
 	return false
 }
+
+// ContextValueKey define context value key
+type ContextValueKey string
+
+const (
+	// ContextValueKeyRequestID request_id in context value
+	ContextValueKeyRequestID ContextValueKey = "X-Request-Id"
+)
