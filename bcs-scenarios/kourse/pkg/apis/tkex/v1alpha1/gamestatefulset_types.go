@@ -241,21 +241,18 @@ type GameStatefulSetSpec struct {
 
 // GameStatefulSetPreDeleteUpdateStrategy defines the predelete strategy of GameStatefulSet
 type GameStatefulSetPreDeleteUpdateStrategy struct {
-	// +kubebuilder:validation:Required
 	Hook                 *HookStep `json:"hook,omitempty"`
 	RetryUnexpectedHooks bool      `json:"retry,omitempty"`
 }
 
 // GameStatefulSetPreInplaceUpdateStrategy defines the preinplace strategy of GameStatefulSet
 type GameStatefulSetPreInplaceUpdateStrategy struct {
-	// +kubebuilder:validation:Required
 	Hook                 *HookStep `json:"hook,omitempty"`
 	RetryUnexpectedHooks bool      `json:"retry,omitempty"`
 }
 
 // GameStatefulSetPostInplaceUpdateStrategy defines the postinplace strategy of GameStatefulSet
 type GameStatefulSetPostInplaceUpdateStrategy struct {
-	// +kubebuilder:validation:Required
 	Hook                 *HookStep `json:"hook,omitempty"`
 	RetryUnexpectedHooks bool      `json:"retry,omitempty"`
 }
