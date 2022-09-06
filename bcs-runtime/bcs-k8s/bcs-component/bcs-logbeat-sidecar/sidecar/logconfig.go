@@ -22,12 +22,14 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/capabilities"
 	bcsv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubebkbcs/apis/bkbcs/v1"
 	internalclientset "github.com/Tencent/bk-bcs/bcs-k8s/kubebkbcs/generated/clientset/versioned"
 	"github.com/Tencent/bk-bcs/bcs-k8s/kubebkbcs/generated/informers/externalversions"
 	dockertypes "github.com/docker/docker/api/types"
 
 	corev1 "k8s.io/api/core/v1"
+	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	apiextensionsv1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	apiextensionsclient "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -105,24 +107,21 @@ func (s *SidecarController) initKubeconfig() error {
 func (s *SidecarController) createBcsLogConfig() error {
 	bcsLogConfigPlural := "bcslogconfigs"
 	bcsLogConfigFullName := "bcslogconfigs" + "." + bcsv1.SchemeGroupVersion.Group
-	crd := &apiextensionsv1beta1.CustomResourceDefinition{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: bcsLogConfigFullName,
-		},
-		Spec: apiextensionsv1beta1.CustomResourceDefinitionSpec{
-			Group:   bcsv1.SchemeGroupVersion.Group,   // BcsLogConfigsGroup,
-			Version: bcsv1.SchemeGroupVersion.Version, // BcsLogConfigsVersion,
-			Scope:   apiextensionsv1beta1.NamespaceScoped,
-			Names: apiextensionsv1beta1.CustomResourceDefinitionNames{
-				Plural:   bcsLogConfigPlural,
-				Kind:     reflect.TypeOf(bcsv1.BcsLogConfig{}).Name(),
-				ListKind: reflect.TypeOf(bcsv1.BcsLogConfigList{}).Name(),
-			},
-		},
+
+	capabilities, err := capabilities.GetCapabilities(s.extensionClientset.Discovery())
+	if err != nil {
+		return fmt.Errorf("get kubernetes capabilities failed, err %s", err.Error())
+	}
+	blog.Infof("kubernetes capabilities %+v", capabilities.APIVersions)
+
+	if !capabilities.APIVersions.Has("apiextensions.k8s.io/v1beta1") {
+		blog.Infof("capabilities does not has apiextensions.k8s.io/v1beta1, create v1 version")
+		err = s.createCrdV1(bcsLogConfigPlural, bcsLogConfigFullName)
+	} else {
+		blog.Infof("capabilities has apiextensions.k8s.io/v1beta1, create v1 beta version")
+		err = s.createCrdV1Beta1(bcsLogConfigPlural, bcsLogConfigFullName)
 	}
 
-	_, err := s.extensionClientset.ApiextensionsV1beta1().CustomResourceDefinitions().Create(context.Background(), crd,
-		metav1.CreateOptions{TypeMeta: crd.TypeMeta})
 	if err != nil {
 		if apierrors.IsAlreadyExists(err) {
 			blog.Infof("BcsLogConfig Crd is already exists")
@@ -377,4 +376,62 @@ func buildSelector(selector bcsv1.PodSelector) (apilabels.Selector, error) {
 		podSelector = podSelector.Add(*require)
 	}
 	return podSelector, nil
+}
+
+func (s *SidecarController) createCrdV1(bcsLogConfigPlural, bcsLogConfigFullName string) error {
+	T := true
+	crd := &apiextensionsv1.CustomResourceDefinition{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: bcsLogConfigFullName,
+		},
+		Spec: apiextensionsv1.CustomResourceDefinitionSpec{
+			Group: bcsv1.SchemeGroupVersion.Group, // BcsLogConfigsGroup,
+			Versions: []apiextensionsv1.CustomResourceDefinitionVersion{{
+				Name:    bcsv1.SchemeGroupVersion.Version,
+				Served:  true,
+				Storage: true,
+				Schema: &apiextensionsv1.CustomResourceValidation{
+					OpenAPIV3Schema: &apiextensionsv1.JSONSchemaProps{
+						Properties: map[string]apiextensionsv1.JSONSchemaProps{
+							"apiVersion": {Type: "string"},
+							"kind":       {Type: "string"},
+							"metadata":   {Type: "object"},
+							"spec":       {Type: "object", XPreserveUnknownFields: &T},
+							"status":     {Type: "object", XPreserveUnknownFields: &T},
+						},
+						Required: []string{"metadata,spec"},
+						Type:     "object",
+					},
+				},
+			}}, // BcsLogConfigsVersion,
+			Scope: apiextensionsv1.NamespaceScoped,
+			Names: apiextensionsv1.CustomResourceDefinitionNames{
+				Plural:   bcsLogConfigPlural,
+				Kind:     reflect.TypeOf(bcsv1.BcsLogConfig{}).Name(),
+				ListKind: reflect.TypeOf(bcsv1.BcsLogConfigList{}).Name(),
+			},
+		},
+	}
+	_, err := s.extensionClientset.ApiextensionsV1().CustomResourceDefinitions().Create(context.Background(), crd, metav1.CreateOptions{TypeMeta: crd.TypeMeta})
+	return err
+}
+
+func (s *SidecarController) createCrdV1Beta1(bcsLogConfigPlural, bcsLogConfigFullName string) error {
+	crd := &apiextensionsv1beta1.CustomResourceDefinition{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: bcsLogConfigFullName,
+		},
+		Spec: apiextensionsv1beta1.CustomResourceDefinitionSpec{
+			Group:   bcsv1.SchemeGroupVersion.Group,   // BcsLogConfigsGroup,
+			Version: bcsv1.SchemeGroupVersion.Version, // BcsLogConfigsVersion,
+			Scope:   apiextensionsv1beta1.NamespaceScoped,
+			Names: apiextensionsv1beta1.CustomResourceDefinitionNames{
+				Plural:   bcsLogConfigPlural,
+				Kind:     reflect.TypeOf(bcsv1.BcsLogConfig{}).Name(),
+				ListKind: reflect.TypeOf(bcsv1.BcsLogConfigList{}).Name(),
+			},
+		},
+	}
+	_, err := s.extensionClientset.ApiextensionsV1beta1().CustomResourceDefinitions().Create(context.Background(), crd, metav1.CreateOptions{TypeMeta: crd.TypeMeta})
+	return err
 }
