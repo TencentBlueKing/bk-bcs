@@ -8,7 +8,7 @@
         {{$t('变量管理')}}
       </div>
       <bk-guide>
-        <bcs-button text @click="handleShowVarExample" v-if="!isSharedCluster">{{$t('如何从文件导入变量？')}}</bcs-button>
+        <a class="bk-text-button" href="javascript: void(0);" @click="handleShowVarExample" v-if="!isSharedCluster">{{$t('如何从文件导入变量？')}}</a>
       </bk-guide>
     </div>
     <div class="biz-content-wrapper" style="margin: 0; padding: 0;" v-bkloading="{ isLoading: isLoading, opacity: 0.1 }">
@@ -56,17 +56,21 @@
             <bk-table-column :label="$t('作用范围')" prop="scope_name" width="140"></bk-table-column>
             <bk-table-column :label="$t('操作')" width="260">
               <template slot-scope="{ row }">
-                <bcs-button class="mr10" v-show="row.category !== 'sys' && (row.scope === 'namespace' || row.scope === 'cluster')" text @click="batchUpdate(row)">{{$t('更新')}}</bcs-button>
+                <a href="javascript:void(0);" class="ml10 bk-text-button" @click="batchUpdate(row)" v-show="row.category !== 'sys' && (row.scope === 'namespace' || row.scope === 'cluster')">{{$t('更新')}}</a>
 
-                <span v-if="row.category === 'sys'" v-bk-tooltips.left="$t('系统内置变量，不能编辑')">
-                  <bcs-button text class="mr10" disabled>{{$t('编辑')}}</bcs-button>
-                </span>
-                <bcs-button v-else text class="mr10" @click="editVar(row)">{{$t('编辑')}}</bcs-button>
+                <template v-if="row.category === 'sys'">
+                  <a href="javascript:void(0);" class="bk-text-button is-disabled ml10" v-bk-tooltips.left="$t('系统内置变量，不能编辑')">{{$t('编辑')}}</a>
+                </template>
+                <template v-else>
+                  <a href="javascript:void(0);" class=" ml10 bk-text-button" @click="editVar(row)">{{$t('编辑')}}</a>
+                </template>
 
-                <span v-if="row.category === 'sys'" v-bk-tooltips.left="row.category === 'sys' ? $t('系统内置变量，不能删除') : $t('已经被引用，不能删除')">
-                  <bcs-button text disabled>{{$t('删除')}}</bcs-button>
-                </span>
-                <bcs-button v-else text @click="removeVar(row)">{{$t('删除')}}</bcs-button>
+                <template v-if="row.category === 'sys'">
+                  <a href="javascript:void(0);" class="ml10 bk-text-button is-disabled" v-bk-tooltips.left="row.category === 'sys' ? $t('系统内置变量，不能删除') : $t('已经被引用，不能删除')">{{$t('删除')}}</a>
+                </template>
+                <template v-else>
+                  <a href="javascript:void(0);" class="ml10 bk-text-button" @click="removeVar(row)">{{$t('删除')}}</a>
+                </template>
               </template>
             </bk-table-column>
           </bk-table>
@@ -266,7 +270,7 @@
               <bk-table-column :label="$t('上下文')" prop="context" width="150" key="context" />
               <bk-table-column :label="$t('操作')" key="action">
                 <template slot-scope="{ row }">
-                  <bcs-button text @click="checkVarQuote(row)">{{$t('查看详情')}}</bcs-button>
+                  <a href="javascript:void(0)" class="bk-text-button" @click="checkVarQuote(row)">{{$t('查看详情')}}</a>
                 </template>
               </bk-table-column>
             </bk-table>

@@ -40,13 +40,7 @@
     <!-- 菜单 -->
     <div class="side-nav">
       <SideMenu :list="menuList" :selected="selected" @change="handleMenuChange"></SideMenu>
-      <div class="bcs-footer">
-        <div>
-          <a href="wxwork://message?uin=8444252571319680">{{ $t('联系BK助手') }}</a> |
-          <a :href="window.PAAS_HOST" target="_blank">{{ $t('蓝鲸桌面') }}</a>
-        </div>
-        <p class="biz-copyright">Copyright © 2012-{{(new Date()).getFullYear()}} Tencent BlueKing. All Rights Reserved</p>
-      </div>
+      <p class="biz-copyright">Copyright © 2012-{{(new Date()).getFullYear()}} Tencent BlueKing. All Rights Reserved</p>
     </div>
   </div>
 </template>
