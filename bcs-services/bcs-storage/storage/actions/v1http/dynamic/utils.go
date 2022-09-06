@@ -17,7 +17,6 @@ import (
 	"context"
 	"encoding/json"
 	"io/ioutil"
-	"strconv"
 	"time"
 
 	"github.com/emicklei/go-restful"
@@ -75,6 +74,8 @@ var indexKeys = []string{resourceNameTag, namespaceTag}
 
 // Use Mongodb for storage.
 const dbConfig = "mongodb/dynamic"
+
+const eventDBConfig = "mongodb/event"
 
 func getSelector(req *restful.Request) []string {
 	return lib.GetQueryParamStringArray(req, fieldTag, ",")
@@ -191,11 +192,18 @@ func getResources(req *restful.Request, resourceFeatList []string) ([]operator.M
 	if err != nil {
 		return nil, err
 	}
+
+	table := getTable(req)
+	db := dbConfig
+	if table == eventResourceType {
+		db = eventDBConfig
+	}
+
 	store := lib.NewStore(
-		apiserver.GetAPIResource().GetDBClient(dbConfig),
-		apiserver.GetAPIResource().GetEventBus(dbConfig))
+		apiserver.GetAPIResource().GetDBClient(db),
+		apiserver.GetAPIResource().GetEventBus(db))
 	store.SetSoftDeletion(true)
-	mList, err := store.Get(req.Request.Context(), getTable(req), getOption)
+	mList, err := store.Get(req.Request.Context(), table, getOption)
 	if err != nil {
 		return nil, err
 	}
@@ -338,76 +346,18 @@ func PutData(ctx context.Context, data, features operator.M, resourceFeatList []
 		CreateTimeKey: createTimeTag,
 		UpdateTimeKey: updateTimeTag,
 	}
+
+	db := dbConfig
+	if table == eventResourceType {
+		db = eventDBConfig
+	}
+
 	store := lib.NewStore(
-		apiserver.GetAPIResource().GetDBClient(dbConfig),
-		apiserver.GetAPIResource().GetEventBus(dbConfig))
+		apiserver.GetAPIResource().GetDBClient(db),
+		apiserver.GetAPIResource().GetEventBus(db))
 	store.SetSoftDeletion(true)
 
-	getOption := &lib.StoreGetOption{
-		Cond: putOption.Cond,
-	}
-
-	ctx = context.WithValue(ctx, getDatabaseFieldNameForDeletionFlag, true)
-	getDataList, err := store.Get(ctx, table, getOption)
-	if err != nil {
-		blog.Errorf("PutData get data failed: %s", err.Error())
-	}
-	ctx = context.WithValue(ctx, getDatabaseFieldNameForDeletionFlag, false)
-	if len(getDataList) != 0 {
-		getData := getDataList[0]
-
-		if isDeleted, ok := getData[databaseFieldNameForDeletionFlag].(bool); ok {
-			if gData, ok := getData["data"].(map[string]interface{}); ok {
-				if gMetadata, ok := gData["metadata"].(map[string]interface{}); ok {
-					if gResourceVersion, ok := gMetadata["resourceVersion"].(string); ok {
-						if gUid, ok := gMetadata["uid"].(string); ok {
-
-							if dData, ok := data["data"].(map[string]interface{}); ok {
-								if dMetadata, ok := dData["metadata"].(map[string]interface{}); ok {
-									if dResourceVersion, ok := dMetadata["resourceVersion"].(string); ok {
-										if dUid, ok := dMetadata["uid"].(string); ok {
-											if isDeleted {
-												if gUid == dUid {
-													blog.Errorf("PutData was deleted, skip data.")
-													return nil
-												}
-											} else {
-												gRev, err := strconv.ParseUint(gResourceVersion, 10, 64)
-
-												if err != nil {
-													blog.Errorf("PutData strconv.ParseInt gResourceVersion failed: %s", err.Error())
-												} else {
-													dRev, err := strconv.ParseUint(dResourceVersion, 10, 64)
-													if err != nil {
-														blog.Errorf("PutData parse dResourceVersion failed: %s", err.Error())
-													} else {
-														if gRev > dRev {
-															blog.Errorf("PutData was updated, skip data")
-															blog.Errorf("PutData getData: %s", getData)
-															blog.Errorf("PutData data: %s", data)
-															return nil
-														}
-													}
-												}
-											}
-										}
-									}
-								}
-							}
-						}
-					}
-
-				}
-			}
-			if !ok {
-				blog.Errorf("PutData get data failed")
-			}
-		} else {
-			blog.Errorf("PutData getData[%s] failed: %s", databaseFieldNameForDeletionFlag, err.Error())
-		}
-	}
-
-	err = store.Put(ctx, table, data, putOption)
+	err := store.Put(ctx, table, data, putOption)
 	if err != nil {
 		return err
 	}
