@@ -124,7 +124,7 @@ export default {
         console.error(err);
       });
       this.isLoading = false;
-      document.title = this.$t('容器服务');
+      document.title = this.$t('容器管理平台 | 腾讯蓝鲸智云');
     },
     handleCreateProject() {
       this.showCreateDialog = true;
