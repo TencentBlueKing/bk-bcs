@@ -28,11 +28,6 @@ urlpatterns = [
     url(
         r'^api/configuration/(?P<project_id>\w{32})/variable/(?P<pk>\d+)/$', views.RetrieveUpdateVariableView.as_view()
     ),
-    # 变量被引用的信息
-    url(
-        r'^api/configuration/(?P<project_id>\w{32})/variable/quotes/(?P<pk>\d+)/$',
-        views.VariableOverView.as_view({"get": "get_quote_info"}),
-    ),
     # 查询集群变量信息
     url(
         r'^api/configuration/(?P<project_id>\w{32})/variable/cluster/(?P<cluster_id>[\w\-]+)/$',

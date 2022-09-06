@@ -40,7 +40,13 @@
     <!-- 菜单 -->
     <div class="side-nav">
       <SideMenu :list="menuList" :selected="selected" @change="handleMenuChange"></SideMenu>
-      <p class="biz-copyright">Copyright © 2012-{{(new Date()).getFullYear()}} Tencent BlueKing. All Rights Reserved</p>
+      <div class="bcs-footer">
+        <div>
+          <a href="wxwork://message?uin=8444252571319680">{{ $t('联系BK助手') }}</a> |
+          <a :href="paasHost" target="_blank">{{ $t('蓝鲸桌面') }}</a>
+        </div>
+        <p class="biz-copyright">Copyright © 2012-{{(new Date()).getFullYear()}} Tencent BlueKing. All Rights Reserved</p>
+      </div>
     </div>
   </div>
 </template>
@@ -68,6 +74,7 @@ export default defineComponent({
       const cluster = $store.state.cluster.curCluster;
       return cluster && Object.keys(cluster).length ? cluster : null;
     });
+    const paasHost = computed(() => window.PAAS_HOST)
     const clusterType = computed(() =>
     // eslint-disable-next-line camelcase
       (curCluster.value?.is_shared ? $i18n.t('共享') : $i18n.t('专用')));
@@ -164,6 +171,7 @@ export default defineComponent({
     });
     const projectCode = computed(() => $store.state.curProjectCode);
     const projectId = computed(() => $store.state.curProjectId);
+    const curProject = computed(() => $store.state.curProject);
     // 菜单切换
     const handleMenuChange = (item: IMenuItem) => {
       // 直接取$route会存在缓存，需要重新从root上获取最新路由信息
@@ -173,7 +181,7 @@ export default defineComponent({
         if ($INTERNAL.value) {
           window.open(`${window.DEVOPS_HOST}/console/monitor/${projectCode.value}/?project_id=${projectId.value}`);
         } else {
-          window.open(window.BKMONITOR_URL);
+          window.open(`${window.BKMONITOR_HOST}/?bizId=${curProject.value.cc_app_id}#/k8s`);
         }
       } else {
         $router.push({
@@ -195,6 +203,7 @@ export default defineComponent({
       menuList,
       selected,
       clusterType,
+      paasHost,
       handleChangeCluster,
       handleShowClusterSelector,
       handleChangeView,

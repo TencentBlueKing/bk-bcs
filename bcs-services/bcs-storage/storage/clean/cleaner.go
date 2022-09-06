@@ -155,8 +155,10 @@ func (dbc *DBCleaner) Run(ctx context.Context) {
 					}
 				}
 			} else if dbc.db.DataBase() == databaseAlarm || strings.HasPrefix(dbc.db.DataBase(), databaseEvent) {
-				if err := dbc.doNumClean(); err != nil {
-					blog.Errorf("do num clean failed, err %s", err.Error())
+				if dbc.tableName != tableEvent {
+					if err := dbc.doNumClean(); err != nil {
+						blog.Errorf("do num clean failed, err %s", err.Error())
+					}
 				}
 				if err := dbc.doTimeClean(); err != nil {
 					blog.Errorf("do time clean failed, err %s", err.Error())

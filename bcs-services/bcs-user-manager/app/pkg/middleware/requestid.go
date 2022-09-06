@@ -11,9 +11,24 @@
  *
  */
 
-package external_cluster
+package middleware
 
-// ExternalCluster sync cluster credentials interface
-type ExternalCluster interface {
-	SyncClusterCredentials() error
+import (
+	"context"
+
+	"github.com/emicklei/go-restful"
+	"github.com/google/uuid"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/utils"
+)
+
+// RequestIDFilter set request id to context
+func RequestIDFilter(request *restful.Request, response *restful.Response, chain *restful.FilterChain) {
+	requestID := request.Request.Header.Get(string(utils.ContextValueKeyRequestID))
+	if len(requestID) == 0 {
+		requestID = uuid.New().String()
+	}
+	ctx := context.WithValue(request.Request.Context(), utils.ContextValueKeyRequestID, requestID)
+	request.Request = request.Request.WithContext(ctx)
+	chain.ProcessFilter(request, response)
 }

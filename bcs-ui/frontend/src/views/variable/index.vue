@@ -8,7 +8,7 @@
         {{$t('变量管理')}}
       </div>
       <bk-guide>
-        <a class="bk-text-button" href="javascript: void(0);" @click="handleShowVarExample" v-if="!isSharedCluster">{{$t('如何从文件导入变量？')}}</a>
+        <bcs-button text @click="handleShowVarExample" v-if="!isSharedCluster">{{$t('如何从文件导入变量？')}}</bcs-button>
       </bk-guide>
     </div>
     <div class="biz-content-wrapper" style="margin: 0; padding: 0;" v-bkloading="{ isLoading: isLoading, opacity: 0.1 }">
@@ -56,22 +56,17 @@
             <bk-table-column :label="$t('作用范围')" prop="scope_name" width="140"></bk-table-column>
             <bk-table-column :label="$t('操作')" width="260">
               <template slot-scope="{ row }">
-                <a href="javascript:void(0);" class="bk-text-button" @click="getQuoteDetail(row)">{{$t('查看引用')}}</a>
-                <a href="javascript:void(0);" class="ml10 bk-text-button" @click="batchUpdate(row)" v-show="row.category !== 'sys' && (row.scope === 'namespace' || row.scope === 'cluster')">{{$t('更新')}}</a>
+                <bcs-button class="mr10" v-show="row.category !== 'sys' && (row.scope === 'namespace' || row.scope === 'cluster')" text @click="batchUpdate(row)">{{$t('更新')}}</bcs-button>
 
-                <template v-if="row.category === 'sys'">
-                  <a href="javascript:void(0);" class="bk-text-button is-disabled ml10" v-bk-tooltips.left="$t('系统内置变量，不能编辑')">{{$t('编辑')}}</a>
-                </template>
-                <template v-else>
-                  <a href="javascript:void(0);" class=" ml10 bk-text-button" @click="editVar(row)">{{$t('编辑')}}</a>
-                </template>
+                <span v-if="row.category === 'sys'" v-bk-tooltips.left="$t('系统内置变量，不能编辑')">
+                  <bcs-button text class="mr10" disabled>{{$t('编辑')}}</bcs-button>
+                </span>
+                <bcs-button v-else text class="mr10" @click="editVar(row)">{{$t('编辑')}}</bcs-button>
 
-                <template v-if="row.category === 'sys'">
-                  <a href="javascript:void(0);" class="ml10 bk-text-button is-disabled" v-bk-tooltips.left="row.category === 'sys' ? $t('系统内置变量，不能删除') : $t('已经被引用，不能删除')">{{$t('删除')}}</a>
-                </template>
-                <template v-else>
-                  <a href="javascript:void(0);" class="ml10 bk-text-button" @click="removeVar(row)">{{$t('删除')}}</a>
-                </template>
+                <span v-if="row.category === 'sys'" v-bk-tooltips.left="row.category === 'sys' ? $t('系统内置变量，不能删除') : $t('已经被引用，不能删除')">
+                  <bcs-button text disabled>{{$t('删除')}}</bcs-button>
+                </span>
+                <bcs-button v-else text @click="removeVar(row)">{{$t('删除')}}</bcs-button>
               </template>
             </bk-table-column>
           </bk-table>
@@ -176,7 +171,7 @@
       :width="varDialogConfig.width"
       :title="varDialogConfig.title"
       :quick-close="false"
-      @cancel="varDialogConfig.isShow = false">
+      @cancel="cancelVar">
       <template slot="content" v-bkloading="{ isLoading: isSaving }">
         <div class="content-inner">
           <div class="bk-form" style="margin-bottom: 20px; margin-right: 10px;">
@@ -187,14 +182,14 @@
                   <bk-radio
                     value="global"
                     style="margin-right: 15px;"
-                    :disabled="curVar.quote_num !== undefined && curVar.quote_num > 0"
+                    :disabled="varDialogConfig.isEdit"
                     v-if="!isSharedCluster">{{$t('全局变量')}}</bk-radio>
                   <bk-radio
                     value="cluster"
                     style="margin-right: 15px;"
-                    :disabled="curVar.quote_num !== undefined && curVar.quote_num > 0"
+                    :disabled="varDialogConfig.isEdit"
                     v-if="!isSharedCluster">{{$t('集群变量')}}</bk-radio>
-                  <bk-radio value="namespace" :disabled="curVar.quote_num !== undefined && curVar.quote_num > 0">{{$t('命名空间变量')}}</bk-radio>
+                  <bk-radio value="namespace" :disabled="varDialogConfig.isEdit">{{$t('命名空间变量')}}</bk-radio>
                 </bk-radio-group>
               </div>
             </div>
@@ -211,7 +206,7 @@
               <label class="bk-label" style="width: 95px;">KEY：</label>
               <div class="bk-form-content" style="margin-left: 95px;">
                 <bk-input
-                  :disabled="curVar.quote_num !== undefined && curVar.quote_num > 0"
+                  :disabled="varDialogConfig.isEdit"
                   maxlength="64"
                   :placeholder="$t('请输入')"
                   v-model="curVar.key" />
@@ -271,7 +266,7 @@
               <bk-table-column :label="$t('上下文')" prop="context" width="150" key="context" />
               <bk-table-column :label="$t('操作')" key="action">
                 <template slot-scope="{ row }">
-                  <a href="javascript:void(0)" class="bk-text-button" @click="checkVarQuote(row)">{{$t('查看详情')}}</a>
+                  <bcs-button text @click="checkVarQuote(row)">{{$t('查看详情')}}</bcs-button>
                 </template>
               </bk-table-column>
             </bk-table>
@@ -361,6 +356,7 @@ export default {
       searchKeyword: '',
       searchScope: '',
       varDialogConfig: {
+        isEdit: false,
         isShow: false,
         width: 640,
         title: this.$t('新增变量'),
@@ -605,6 +601,7 @@ export default {
       this.curVar = JSON.parse(JSON.stringify(data));
       this.varDialogConfig.title = this.$t('编辑变量');
       this.varDialogConfig.isShow = true;
+      this.varDialogConfig.isEdit = true;
     },
 
     /**
@@ -658,6 +655,7 @@ export default {
     cancelVar() {
       this.clearInput();
       this.varDialogConfig.isShow = false;
+      this.varDialogConfig.isEdit = false
     },
 
     /**
@@ -968,37 +966,6 @@ export default {
       } catch (e) {
         catchErrorHandler(e, this);
         this.isPageLoading = false;
-      }
-    },
-
-    /**
-             * 获取相应变量的引用列表
-             * @param {Object} variable 变量
-             */
-    async getQuoteDetail(variable) {
-      const { projectId } = this;
-      const varId = variable.id;
-      this.curVar = variable;
-      this.isQuoteLoading = true;
-      this.quoteDialogConf.isShow = true;
-      this.quoteList = [];
-      this.curQuotePageData = [];
-
-      try {
-        const res = await this.$store.dispatch('variable/getQuoteDetail', { projectId, varId });
-        this.quoteList = res.data.quote_list;
-        this.curProjectData = {
-          projectId: res.data.project_id,
-          projectCode: res.data.project_code,
-          projectKind: res.data.project_kind,
-        };
-        this.quotePageConf.curPage = 1;
-        this.initQuotePageConf();
-        this.curQuotePageData = this.getQuoteDataByPage(this.quotePageConf.curPage);
-      } catch (e) {
-        catchErrorHandler(e, this);
-      } finally {
-        this.isQuoteLoading = false;
       }
     },
 

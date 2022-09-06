@@ -86,7 +86,12 @@ export default {
       // eslint-disable-next-line camelcase
       const data = state.curCluster?.is_shared
         ? clusterList.filter(cluster => cluster.is_shared)
-        : clusterList.filter(cluster => !cluster.is_shared);
+          .sort((pre, current) => {
+            const preID = pre.clusterID.split('-').pop();
+            const currentID = current.clusterID.split('-').pop();
+            return preID - currentID;
+          }) // 共享集群按照集群ID排序
+        : clusterList.filter(cluster => !cluster.is_shared); // 普通集群按照时间排序
       state.clusterList.splice(0, state.clusterList.length, ...data);
       state.allClusterList.splice(0, state.allClusterList.length, ...clusterList);
       state.isClusterDataReady = true;

@@ -17,8 +17,8 @@ package tke
 import (
 	"fmt"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/external-cluster"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/external-cluster/tke/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/externalcluster"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/externalcluster/tke/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/storages/sqlstore"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/config"
 )
@@ -100,7 +100,7 @@ type DescribeClusterSecurityInfoResponse struct {
 }
 
 // NewTkeCluster init tkeCluster client
-func NewTkeCluster(clusterId, tkeClusterId, tkeClusterRegion string) external_cluster.ExternalCluster {
+func NewTkeCluster(clusterId, tkeClusterId, tkeClusterRegion string) externalcluster.ExternalCluster {
 	return &tkeCluster{
 		ClusterID:        clusterId,
 		TkeClusterID:     tkeClusterId,

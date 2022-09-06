@@ -16,7 +16,7 @@ import (
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/utils/contextx"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/pkg/middleware/auth"
+	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/middleware"
 )
 
 // CustomHeaderMatcher for http header
@@ -24,10 +24,10 @@ func CustomHeaderMatcher(key string) (string, bool) {
 	switch key {
 	case contextx.RequestIDHeaderKey:
 		return contextx.RequestIDHeaderKey, true
-	case auth.CustomUsernameHeaderKey:
-		return auth.CustomUsernameHeaderKey, true
-	case auth.InnerClientHeaderKey:
-		return auth.CustomUsernameHeaderKey, true
+	case middleware.CustomUsernameHeaderKey:
+		return middleware.CustomUsernameHeaderKey, true
+	case middleware.InnerClientHeaderKey:
+		return middleware.CustomUsernameHeaderKey, true
 	default:
 		return runtime.DefaultHeaderMatcher(key)
 	}

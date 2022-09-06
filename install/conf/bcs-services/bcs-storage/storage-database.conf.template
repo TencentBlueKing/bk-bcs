@@ -10,12 +10,12 @@ IsListener = true
 ListenerName = commonWatcher
 
 [mongodb/event]
-Addr = ${mongodbHost}
+Addr = ${mongodbEventHost}
 ConnectTimeout = 0
 Database = event
-Username = ${mongodbUsername}
-Password = ${mongodbPassword}
-MaxPoolSize = ${mongodbMaxPoolSize}
+Username = ${mongodbEventUsername}
+Password = ${mongodbEventPassword}
+MaxPoolSize = ${mongodbEventMaxPoolSize}
 ListenerName = commonWatcher
 
 [mongodb/alarm]

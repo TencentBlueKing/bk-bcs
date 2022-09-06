@@ -14,27 +14,33 @@
 package permission
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"net/http"
 	"strings"
 	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
+	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/cluster"
+	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/namespace"
+	"github.com/avast/retry-go"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/cmanager"
+	blog "github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/log"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/parser"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/passcc"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/utils"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/models"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/storages/sqlstore"
-	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/cluster"
-	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/namespace"
 )
 
 var (
 	// ErrServerNotInited err server not init
 	ErrServerNotInited = errors.New("VerifyPermissionClient server not init")
+
+	// ErrContextTimeout err context timeout
+	ErrContextTimeout = errors.New("operation timeout")
 )
 
 const (
@@ -44,6 +50,8 @@ const (
 
 	prefixClustersAPIK8S string = "/clusters"
 	prefixProjectsAPIK8S string = "/projects"
+
+	defaultTimeout = 2 * time.Second
 )
 
 // NewPermVerifyClient verify permission client
@@ -72,8 +80,8 @@ func returnClusterType(resource ClusterResource) ClusterType {
 }
 
 // VerifyClusterPermission verify cluster permission: single and shared cluster
-func (cli *PermVerifyClient) VerifyClusterPermission(user UserInfo, action string, resource ClusterResource) (bool,
-	string) {
+func (cli *PermVerifyClient) VerifyClusterPermission(ctx context.Context, user UserInfo, action string,
+	resource ClusterResource) (bool, string) {
 	if cli == nil {
 		return false, ErrServerNotInited.Error()
 	}
@@ -83,35 +91,52 @@ func (cli *PermVerifyClient) VerifyClusterPermission(user UserInfo, action strin
 		// extract namespace
 		requestInfo, err := getK8sRequestAPIInfo(action, resource.URL)
 		if err != nil {
-			blog.Infof("VerifyClusterPermission getK8sRequestAPIInfo failed: %v", err.Error())
+			blog.Log(ctx).Infof("VerifyClusterPermission getK8sRequestAPIInfo failed: %v", err.Error())
 			return false, fmt.Sprintf("VerifyClusterPermission getK8sRequestAPIInfo failed: %v", err.Error())
 		}
-		blog.V(4).Infof("PermVerifyClient VerifyClusterPermission getK8sRequestAPIInfo requestInfo %+v", requestInfo)
+		blog.Log(ctx).Infof("PermVerifyClient VerifyClusterPermission getK8sRequestAPIInfo requestInfo %+v",
+			requestInfo)
 
 		// extract URL namespace
 		if resource.Namespace == "" {
 			resource.Namespace = requestInfo.Namespace
 		}
 
+		allowed := false
 		message := ""
-		allowed, err := cli.verifyUserK8sClusterPermission(user.UserName, action, resource, requestInfo)
-		blog.Infof("user %s access to type: %s, resource: %v, action: %s, permission: %t",
-			user.UserName, resource.ClusterType, resource, action, allowed)
+		err = retry.Do(
+			func() error {
+				blog.Log(ctx).Infof("try to verify %s permission", user.UserName)
+				var err error
+				done := make(chan struct{}, 1)
 
+				go func() {
+					allowed, err = cli.verifyUserK8sClusterPermission(ctx, user.UserName, action, resource, requestInfo)
+					done <- struct{}{}
+				}()
+
+				select {
+				case <-done:
+					return err
+				case <-time.After(defaultTimeout):
+					return ErrContextTimeout
+				}
+			},
+			retry.Attempts(3),
+			retry.RetryIf(func(err error) bool {
+				return errors.Is(err, ErrContextTimeout)
+			}),
+		)
 		if err != nil {
 			message = err.Error()
 		}
-
-		// build operation log
-		err = buildK8sOperationLog(user.UserName, resource, requestInfo, allowed)
-		if err != nil {
-			blog.Errorf("VerifyClusterPermission buildK8sOperationLog failed: %v", err.Error())
-		}
+		blog.Log(ctx).Infof("user %s access to type: %s, resource: %v, action: %s, permission: %t",
+			user.UserName, resource.ClusterType, resource, action, allowed)
 
 		return allowed, message
 	case Mesos:
 		allowed, message := verifyResourceReplica(user.UserID, "cluster", resource.ClusterID, action)
-		blog.Infof("user %s access to type: %s, action: %s, permission: %t",
+		blog.Log(ctx).Infof("user %s access to type: %s, action: %s, permission: %t",
 			user.UserName, "cluster", action, allowed)
 
 		return allowed, message
@@ -120,7 +145,7 @@ func (cli *PermVerifyClient) VerifyClusterPermission(user UserInfo, action strin
 	}
 }
 
-func (cli *PermVerifyClient) verifyUserK8sClusterPermission(user, action string,
+func (cli *PermVerifyClient) verifyUserK8sClusterPermission(ctx context.Context, user, action string,
 	resource ClusterResource, requestInfo *parser.RequestInfo) (bool, error) {
 	if cli == nil {
 		return false, ErrServerNotInited
@@ -131,18 +156,18 @@ func (cli *PermVerifyClient) verifyUserK8sClusterPermission(user, action string,
 	if err != nil {
 		return false, err
 	}
-	blog.V(4).Infof("PermVerifyClient verifyUserK8sClusterPermission verifyType[%s]", verifyType)
+	blog.Log(ctx).Infof("PermVerifyClient verifyUserK8sClusterPermission verifyType[%s]", verifyType)
 
 	switch verifyType {
 	case clusterScopedType:
 		// clusterScopedType nonResourceRequest will just skip
 		if !requestInfo.IsResourceRequest {
-			blog.V(4).Infof("verifyUserClusterScopedPermission skip nonResourceRequest[%s]", requestInfo.Path)
+			blog.Log(ctx).Infof("verifyUserClusterScopedPermission skip nonResourceRequest[%s]", requestInfo.Path)
 			return true, nil
 		}
-		clusterScopedAllow, err := cli.verifyUserClusterScopedPermission(user, action, resource)
+		clusterScopedAllow, err := cli.verifyUserClusterScopedPermission(ctx, user, action, resource)
 		if err != nil {
-			blog.Errorf("verifyUserClusterScopedPermission failed: %v", err)
+			blog.Log(ctx).Errorf("verifyUserClusterScopedPermission failed: %v", err)
 			return false, err
 		}
 		if !clusterScopedAllow {
@@ -153,9 +178,9 @@ func (cli *PermVerifyClient) verifyUserK8sClusterPermission(user, action string,
 
 		return clusterScopedAllow, nil
 	case namespaceType:
-		namespaceAllow, err := cli.verifyUserNamespacePermission(user, action, resource)
+		namespaceAllow, err := cli.verifyUserNamespacePermission(ctx, user, action, resource)
 		if err != nil {
-			blog.Errorf("verifyUserNamespacePermission failed: %v", err)
+			blog.Log(ctx).Errorf("verifyUserNamespacePermission failed: %v", err)
 			return false, err
 		}
 		if !namespaceAllow {
@@ -166,9 +191,9 @@ func (cli *PermVerifyClient) verifyUserK8sClusterPermission(user, action string,
 
 		return namespaceAllow, nil
 	case namespaceScopedType:
-		namespaceScopedAllow, err := cli.verifyUserNamespaceScopedPermission(user, action, resource)
+		namespaceScopedAllow, err := cli.verifyUserNamespaceScopedPermission(ctx, user, action, resource)
 		if err != nil {
-			blog.Errorf("verifyUserNamespaceScopedPermission failed: %v", err)
+			blog.Log(ctx).Errorf("verifyUserNamespaceScopedPermission failed: %v", err)
 			return false, err
 		}
 		if !namespaceScopedAllow {
@@ -241,7 +266,7 @@ func (cli *PermVerifyClient) checkResourceType(resource ClusterResource, req *pa
 	return clusterScopedType, nil
 }
 
-func (cli *PermVerifyClient) verifyUserNamespaceScopedPermission(user string, action string,
+func (cli *PermVerifyClient) verifyUserNamespaceScopedPermission(ctx context.Context, user string, action string,
 	resource ClusterResource) (bool, error) {
 
 	actionID := ""
@@ -265,22 +290,22 @@ func (cli *PermVerifyClient) verifyUserNamespaceScopedPermission(user string, ac
 	if resource.ClusterID == "" || resource.Namespace == "" {
 		return false, errors.New("resource clusterID or resource namespace is null")
 	}
-	projectID, err := cli.getProjectIDFromResource(resource)
+	projectID, err := cli.getProjectIDFromResource(ctx, resource)
 	if err != nil {
 		return false, fmt.Errorf("getProjectIDByClusterID[%s] failed", resource.ClusterID)
 	}
 	// if clusterType is shared, need to check namespace belong to project
 	if clusterType == Shared {
-		exist, err := cli.checkNamespaceInProjectCluster(projectID, resource.ClusterID, resource.Namespace)
+		exist, err := cli.checkNamespaceInProjectCluster(ctx, projectID, resource.ClusterID, resource.Namespace)
 		if err != nil {
 			return false, err
 		}
 		if !exist {
-			blog.Infof("PermVerifyClient verifyUserNamespaceScopedPermission namespace[%s] not exist "+
+			blog.Log(ctx).Infof("PermVerifyClient verifyUserNamespaceScopedPermission namespace[%s] not exist "+
 				"project[%s] cluster[%s]", resource.Namespace, projectID, resource.ClusterID)
 			return false, nil
 		}
-		blog.Infof("PermVerifyClient verifyUserNamespaceScopedPermission namespace[%s] exist "+
+		blog.Log(ctx).Infof("PermVerifyClient verifyUserNamespaceScopedPermission namespace[%s] exist "+
 			"project[%s] cluster[%s]", resource.Namespace, projectID, resource.ClusterID)
 	}
 
@@ -299,31 +324,33 @@ func (cli *PermVerifyClient) verifyUserNamespaceScopedPermission(user string, ac
 			ClusterID: resource.ClusterID,
 		},
 	}
-	blog.Infof("PermVerifyClient verifyUserNamespaceScopedPermission user[%s] actionID[%s] resource[%+v]",
+	blog.Log(ctx).Infof("PermVerifyClient verifyUserNamespaceScopedPermission user[%s] actionID[%s] resource[%+v]",
 		user, actionID, rn1)
+	start := time.Now()
 
 	allow, err := cli.PermClient.IsAllowedWithResource(actionID, req, []iam.ResourceNode{rn1}, false)
+	blog.Log(ctx).Infof("PermVerifyClient verifyUserNamespaceScopedPermission taken %s", time.Since(start).String())
 	if err != nil {
-		blog.Errorf("perm_client check namespaceScoped resource permission failed: %v", err)
+		blog.Log(ctx).Errorf("perm_client check namespaceScoped resource permission failed: %v", err)
 		return false, err
 	}
 	return allow, nil
 }
 
-func (cli *PermVerifyClient) checkNamespaceInProjectCluster(projectID, clusterID string, namespace string) (bool,
-	error) {
+func (cli *PermVerifyClient) checkNamespaceInProjectCluster(ctx context.Context, projectID, clusterID string,
+	namespace string) (bool, error) {
 	// 获取共享集群所在项目的命名空间列表，检查是否属于该项目
 	namespaceList, err := passcc.GetCCClient().GetProjectSharedNamespaces(projectID, clusterID)
 	if err != nil {
-		blog.Errorf("checkNamespaceInProjectCluster failed: %v", err)
+		blog.Log(ctx).Errorf("checkNamespaceInProjectCluster failed: %v", err)
 		return false, err
 	}
 
 	return utils.StringInSlice(namespace, namespaceList), nil
 }
 
-func (cli *PermVerifyClient) verifyUserNamespacePermission(user string, action string, resource ClusterResource) (bool,
-	error) {
+func (cli *PermVerifyClient) verifyUserNamespacePermission(ctx context.Context, user string, action string,
+	resource ClusterResource) (bool, error) {
 
 	var (
 		actionID              = ""
@@ -357,7 +384,7 @@ func (cli *PermVerifyClient) verifyUserNamespacePermission(user string, action s
 			resource.ClusterID, namespaceScopedType, actionID)
 	}
 
-	projectID, err := cli.getProjectIDFromResource(resource)
+	projectID, err := cli.getProjectIDFromResource(ctx, resource)
 	if err != nil {
 		return false, err
 	}
@@ -382,16 +409,16 @@ func (cli *PermVerifyClient) verifyUserNamespacePermission(user string, action s
 	} else {
 		// if clusterType is shared, need to check namespace belong to project
 		if clusterType == Shared {
-			exist, err := cli.checkNamespaceInProjectCluster(projectID, resource.ClusterID, resource.Namespace)
+			exist, err := cli.checkNamespaceInProjectCluster(ctx, projectID, resource.ClusterID, resource.Namespace)
 			if err != nil {
 				return false, err
 			}
 			if !exist {
-				blog.Infof("PermVerifyClient verifyUserNamespacePermission namespace[%s] not exist "+
+				blog.Log(ctx).Infof("PermVerifyClient verifyUserNamespacePermission namespace[%s] not exist "+
 					"project[%s] cluster[%s]", resource.Namespace, projectID, resource.ClusterID)
 				return false, nil
 			}
-			blog.Infof("PermVerifyClient verifyUserNamespacePermission namespace[%s] exist "+
+			blog.Log(ctx).Infof("PermVerifyClient verifyUserNamespacePermission namespace[%s] exist "+
 				"project[%s] cluster[%s]", resource.Namespace, projectID, resource.ClusterID)
 		}
 		nameSpaceID, _ := utils.CalIAMNamespaceID(resource.ClusterID, resource.Namespace)
@@ -406,19 +433,21 @@ func (cli *PermVerifyClient) verifyUserNamespacePermission(user string, action s
 		}
 	}
 
-	blog.Infof("PermVerifyClient verifyUserNamespacePermission user[%s] actionID[%s] resource[%+v]",
+	blog.Log(ctx).Infof("PermVerifyClient verifyUserNamespacePermission user[%s] actionID[%s] resource[%+v]",
 		user, actionID, rn1)
+	start := time.Now()
 
 	allow, err := cli.PermClient.IsAllowedWithResource(actionID, req, []iam.ResourceNode{rn1}, false)
+	blog.Log(ctx).Infof("PermVerifyClient verifyUserNamespacePermission taken %s", time.Since(start).String())
 	if err != nil {
-		blog.Errorf("perm_client check namespace permission failed: %v", err)
+		blog.Log(ctx).Errorf("perm_client check namespace permission failed: %v", err)
 		return false, err
 	}
 
 	return allow, nil
 }
 
-func (cli *PermVerifyClient) getProjectIDFromResource(resource ClusterResource) (string, error) {
+func (cli *PermVerifyClient) getProjectIDFromResource(ctx context.Context, resource ClusterResource) (string, error) {
 	if resource.ClusterID == "" {
 		return "", fmt.Errorf("resource clusterID is null")
 	}
@@ -434,12 +463,13 @@ func (cli *PermVerifyClient) getProjectIDFromResource(resource ClusterResource) 
 		if err != nil {
 			return "", fmt.Errorf("getProjectIDByClusterID[%s] failed", resource.ClusterID)
 		}
+		blog.Log(ctx).Infof("get projectID %s from cluster %s", resource.ClusterID, projectID)
 	}
 
 	return projectID, nil
 }
 
-func (cli *PermVerifyClient) verifyUserClusterScopedPermission(user string, action string,
+func (cli *PermVerifyClient) verifyUserClusterScopedPermission(ctx context.Context, user string, action string,
 	resource ClusterResource) (bool, error) {
 	actionID := ""
 	clusterType := returnClusterType(resource)
@@ -461,11 +491,12 @@ func (cli *PermVerifyClient) verifyUserClusterScopedPermission(user string, acti
 		return false, fmt.Errorf("invalid action[%s]", action)
 	}
 
-	projectID, err := cli.getProjectIDFromResource(resource)
+	projectID, err := cli.getProjectIDFromResource(ctx, resource)
 	if err != nil {
 		return false, err
 	}
-	blog.Infof("verifyUserClusterScopedPermission getProjectIDByClusterID[%s]: %s", resource.ClusterID, projectID)
+	blog.Log(ctx).Infof("verifyUserClusterScopedPermission getProjectIDByClusterID[%s]: %s", resource.ClusterID,
+		projectID)
 
 	req := iam.PermissionRequest{
 		SystemID: iam.SystemIDBKBCS,
@@ -481,11 +512,13 @@ func (cli *PermVerifyClient) verifyUserClusterScopedPermission(user string, acti
 		},
 	}
 
-	blog.Infof("PermVerifyClient verifyUserClusterScopedPermission user[%s] actionID[%s] resource[%+v]",
+	start := time.Now()
+	blog.Log(ctx).Infof("PermVerifyClient verifyUserClusterScopedPermission user[%s] actionID[%s] resource[%+v]",
 		user, actionID, rn1)
 	allow, err := cli.PermClient.IsAllowedWithResource(actionID, req, []iam.ResourceNode{rn1}, false)
+	blog.Log(ctx).Infof("PermVerifyClient verifyUserClusterScopedPermission taken %s", time.Since(start).String())
 	if err != nil {
-		blog.Errorf("perm_client check cluster permission failed: %v", err)
+		blog.Log(ctx).Errorf("perm_client check cluster permission failed: %v", err)
 		return false, err
 	}
 

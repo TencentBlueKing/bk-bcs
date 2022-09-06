@@ -137,12 +137,14 @@ func CleanEvents() {
 		return
 	}
 	for _, table := range tables {
-		if strings.HasPrefix(table, tableName) {
-			cleaner := clean.NewDBCleaner(eventDBClient, table, time.Hour)
+		cleaner := clean.NewDBCleaner(eventDBClient, table, time.Hour)
+		if table == EventResource {
+			cleaner.WithMaxDuration(time.Duration(1)*time.Hour, eventTimeTag)
+		} else if strings.HasPrefix(table, tableName) {
 			cleaner.WithMaxEntryNum(maxCap)
 			cleaner.WithMaxDuration(time.Duration(maxTime*24)*time.Hour, createTimeTag)
-			go cleaner.Run(context.TODO())
 		}
+		go cleaner.Run(context.TODO())
 	}
 }
 

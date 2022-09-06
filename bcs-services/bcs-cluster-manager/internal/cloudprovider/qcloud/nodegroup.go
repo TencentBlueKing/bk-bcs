@@ -201,8 +201,12 @@ func (ng *NodeGroup) generateUpgradeLaunchConfigurationInput(
 	}
 	req.InstanceChargeType = common.StringPtr(group.LaunchTemplate.InstanceChargeType)
 	bw, _ := strconv.Atoi(group.LaunchTemplate.InternetAccess.InternetMaxBandwidth)
+	internetChargeType := group.LaunchTemplate.InternetAccess.InternetChargeType
+	if len(internetChargeType) == 0 {
+		internetChargeType = api.InternetChargeTypeTrafficPostpaidByHour
+	}
 	req.InternetAccessible = &as.InternetAccessible{
-		InternetChargeType:      common.StringPtr(group.LaunchTemplate.InternetAccess.InternetChargeType),
+		InternetChargeType:      common.StringPtr(internetChargeType),
 		InternetMaxBandwidthOut: common.Uint64Ptr(uint64(bw)),
 		PublicIpAssigned:        common.BoolPtr(group.LaunchTemplate.InternetAccess.PublicIPAssigned),
 	}

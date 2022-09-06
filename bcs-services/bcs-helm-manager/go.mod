@@ -48,7 +48,7 @@ require (
 
 require (
 	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20220808022940-b5e06f3b6fae
-	github.com/Tencent/bk-bcs/bcs-services/pkg v0.0.0-20220808022940-b5e06f3b6fae
+	github.com/Tencent/bk-bcs/bcs-services/pkg v0.0.0-20220830121041-4d2a646cb49e
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/micro/go-micro/v2 v2.9.1
 	github.com/parnurzeal/gorequest v0.2.16
