@@ -16,7 +16,23 @@ spec:
     singular: listener
   scope: Namespaced
   versions:
-  - name: v1
+  - additionalPrinterColumns:
+    - jsonPath: .status.status
+      name: status
+      type: string
+    - jsonPath: .spec.protocol
+      name: protocol
+      type: string
+    - jsonPath: .spec.port
+      name: port
+      type: integer
+    - jsonPath: .spec.endPort
+      name: endPort
+      type: integer
+    - jsonPath: .spec.loadbalancerID
+      name: loadbalancerID
+      type: string
+    name: v1
     schema:
       openAPIV3Schema:
         description: Listener is the Schema for the listeners API
@@ -295,6 +311,7 @@ spec:
         type: object
     served: true
     storage: true
+    subresources: {}
 status:
   acceptedNames:
     kind: ""

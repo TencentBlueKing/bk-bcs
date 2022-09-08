@@ -164,6 +164,11 @@ type ListenerStatus struct {
 // +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 // +kubebuilder:object:root=true
+// +kubebuilder:printcolumn:name="status",type=string,JSONPath=`.status.status`
+// +kubebuilder:printcolumn:name="protocol",type=string,JSONPath=`.spec.protocol`
+// +kubebuilder:printcolumn:name="port",type=integer,JSONPath=`.spec.port`
+// +kubebuilder:printcolumn:name="endPort",type=integer,JSONPath=`.spec.endPort`
+// +kubebuilder:printcolumn:name="loadbalancerID",type=string,JSONPath=`.spec.loadbalancerID`
 
 // Listener is the Schema for the listeners API
 type Listener struct {
