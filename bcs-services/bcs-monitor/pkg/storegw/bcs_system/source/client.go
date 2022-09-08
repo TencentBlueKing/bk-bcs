@@ -51,8 +51,8 @@ func IsBKMonitorEnabled(ctx context.Context, clusterId string) (bool, error) {
 }
 
 // ClientFactory 自动切换Prometheus/蓝鲸监控
-func ClientFactory(clusterId string) (base.MetricHandler, error) {
-	ok, err := IsBKMonitorEnabled(context.Background(), clusterId)
+func ClientFactory(ctx context.Context, clusterId string) (base.MetricHandler, error) {
+	ok, err := IsBKMonitorEnabled(ctx, clusterId)
 	if err != nil {
 		return nil, err
 	}

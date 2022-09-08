@@ -44,7 +44,7 @@ func handlePodMetric(c *rest.Context, promql string) (interface{}, error) {
 		"provider":    PROVIDER,
 	}
 
-	result, err := bcsmonitor.QueryRange(c.Context, c.ProjectCode, promql, params, queryTime.Start, queryTime.End,
+	result, err := bcsmonitor.QueryRange(c.Request.Context(), c.ProjectCode, promql, params, queryTime.Start, queryTime.End,
 		queryTime.Step)
 
 	if err != nil {

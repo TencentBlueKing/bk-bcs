@@ -22,6 +22,7 @@ import (
 	"github.com/prometheus/prometheus/model/labels"
 	"github.com/prometheus/prometheus/prompb"
 	"github.com/thanos-io/thanos/pkg/component"
+	"github.com/thanos-io/thanos/pkg/store"
 	"github.com/thanos-io/thanos/pkg/store/labelpb"
 	"github.com/thanos-io/thanos/pkg/store/storepb"
 	"k8s.io/klog/v2"
@@ -89,7 +90,9 @@ func (s *BCSSystemStore) LabelValues(ctx context.Context, r *storepb.LabelValues
 
 // Series 返回时序数据
 func (s *BCSSystemStore) Series(r *storepb.SeriesRequest, srv storepb.Store_SeriesServer) error {
-	klog.InfoS(clientutil.DumpPromQL(r), "minTime=", r.MinTime, "maxTime", r.MaxTime, "step", r.QueryHints.StepMillis)
+	ctx := srv.Context()
+
+	klog.InfoS(clientutil.DumpPromQL(r), "request_id", store.RequestIDValue(ctx), "minTime=", r.MinTime, "maxTime", r.MaxTime, "step", r.QueryHints.StepMillis)
 
 	// 最小1分钟维度
 	step := r.QueryHints.StepMillis
@@ -147,15 +150,13 @@ func (s *BCSSystemStore) Series(r *storepb.SeriesRequest, srv storepb.Store_Seri
 		return err
 	}
 
-	ctx := srv.Context()
-
 	bcsConf := k8sclient.GetBCSConfByClusterId(clusterId)
 	cluster, err := bcs.GetCluster(ctx, bcsConf, clusterId)
 	if err != nil {
 		return err
 	}
 
-	client, err := source.ClientFactory(cluster.ClusterId)
+	client, err := source.ClientFactory(ctx, cluster.ClusterId)
 	if err != nil {
 		return err
 	}

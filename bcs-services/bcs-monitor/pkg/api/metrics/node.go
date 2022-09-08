@@ -103,7 +103,7 @@ func handleNodeMetric(c *rest.Context, promql string) (interface{}, error) {
 		"provider":  PROVIDER,
 	}
 
-	result, err := bcsmonitor.QueryRange(c.Context, c.ProjectCode, promql, params, queryTime.Start, queryTime.End,
+	result, err := bcsmonitor.QueryRange(c.Request.Context(), c.ProjectCode, promql, params, queryTime.Start, queryTime.End,
 		queryTime.Step)
 	if err != nil {
 		return nil, err
@@ -124,7 +124,7 @@ func GetNodeInfo(c *rest.Context) (interface{}, error) {
 	}
 
 	promql := `bcs:node:info{cluster_id="%<clusterId>s", ip="%<ip>s", %<provider>s}`
-	labelSet, err := bcsmonitor.QueryLabelSet(c.Context, c.ProjectId, promql, params, time.Now())
+	labelSet, err := bcsmonitor.QueryLabelSet(c.Request.Context(), c.ProjectId, promql, params, time.Now())
 	if err != nil {
 		return nil, err
 	}
@@ -152,7 +152,7 @@ func GetNodeOverview(c *rest.Context) (interface{}, error) {
 		"pod_count":       `bcs:node:pod_count{cluster_id="%<clusterId>s", ip="%<ip>s", %<provider>s}`,
 	}
 
-	result, err := bcsmonitor.QueryMultiValues(c.Context, c.ProjectId, promqlMap, params, time.Now())
+	result, err := bcsmonitor.QueryMultiValues(c.Request.Context(), c.ProjectId, promqlMap, params, time.Now())
 	if err != nil {
 		return nil, err
 	}
