@@ -23,6 +23,7 @@ function api() {
 function query {
     ./bin/bcs-monitor query \
     --http-address 0.0.0.0:10902 \
+    --store 11.187.114.115:30911 \
     --advertise-address clb:11902 \
     --config ./etc/config_dev.yaml \
     --credential-config ./etc/credentials_dev.yaml \

@@ -52,7 +52,7 @@ func handleClusterMetric(c *rest.Context, promql string) (interface{}, error) {
 
 	end := time.Now()
 	start := end.Add(-time.Hour)
-	result, err := bcsmonitor.QueryRange(c.Context, c.ProjectCode, promql, params, start, end, time.Minute)
+	result, err := bcsmonitor.QueryRange(c.Request.Context(), c.ProjectCode, promql, params, start, end, time.Minute)
 	if err != nil {
 		return nil, err
 	}
@@ -79,7 +79,7 @@ func GetClusterOverview(c *rest.Context) (interface{}, error) {
 		"disk_total":   `bcs:cluster:disk:total{cluster_id="%<clusterId>s", %<provider>s}`,
 	}
 
-	result, err := bcsmonitor.QueryMultiValues(c.Context, c.ProjectId, promqlMap, params, time.Now())
+	result, err := bcsmonitor.QueryMultiValues(c.Request.Context(), c.ProjectId, promqlMap, params, time.Now())
 	if err != nil {
 		return nil, err
 	}

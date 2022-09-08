@@ -33,6 +33,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/rest"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/rest/middleware"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/rest/tracing"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/storegw"
 )
 
@@ -77,7 +78,7 @@ func (a *APIServer) newRoutes(engine *gin.Engine) {
 	// 添加 X-Request-Id 头部
 	requestIdMiddleware := requestid.New(
 		requestid.WithGenerator(func() string {
-			return rest.RequestIdGenerator()
+			return tracing.RequestIdGenerator()
 		}),
 	)
 
