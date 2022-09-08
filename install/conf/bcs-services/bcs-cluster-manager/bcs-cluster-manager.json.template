@@ -73,8 +73,7 @@
         "iamServer": "${bcsIAMHost}",
         "bkiIamServer": "${bcsIAMbkiHost}",
         "metric": ${bcsIAMMetric},
-        "debug": ${bcsIAMDebug},
-        "applyPermAddress": "${bcsIAMApplyPermAddress}"
+        "debug": ${bcsIAMDebug}
     },
     "bcsapp": {
         "server": "${bcsAppServer}",
@@ -84,11 +83,20 @@
         "enable": ${bcsAppEnable},
         "debug": ${bcsAppDebug}
     },
-    "autoScaler": {
-        "chartName": "${bcsCAChartName}",
-        "releaseName": "${bcsCAReleaseName}",
-        "releaseNamespace": "${bcsCAReleaseNamespace}",
-        "isPublicRepo": ${bcsCAIsPublicRepo},
+    "componentDeploy": {
+        "autoScaler": {
+            "chartName": "${bcsCAChartName}",
+            "releaseName": "${bcsCAReleaseName}",
+            "releaseNamespace": "${bcsCAReleaseNamespace}",
+            "isPublicRepo": ${bcsCAIsPublicRepo}
+        },
+        "watch": {
+            "chartName": "${bcsWatchChartName}",
+            "releaseName": "${bcsWatchReleaseName}",
+            "releaseNamespace": "${bcsWatchReleaseNamespace}",
+            "isPublicRepo": ${bcsWatchIsPublicRepo},
+            "storageServer": "${bcsStorageServer}"
+        },
         "bcsApiGateway": "${bcsCAApiGateway}",
         "token": "${bcsCAToken}"
     },

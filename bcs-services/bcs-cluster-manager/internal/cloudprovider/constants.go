@@ -58,6 +58,8 @@ var (
 	// TaskNameKey xxx
 	TaskNameKey ParamKey = "taskName"
 
+	// ProjectIDKey xxx
+	ProjectIDKey ParamKey = "projectID"
 	// ClusterIDKey xxx
 	ClusterIDKey ParamKey = "clusterID"
 	// NodeGroupIDKey xxx

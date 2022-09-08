@@ -25,6 +25,7 @@ import (
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
+	provider "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
 	storeopt "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/options"
@@ -138,9 +139,7 @@ func (da *DeleteAction) canDelete() error {
 	if len(da.quotaList) != 0 {
 		return fmt.Errorf("cannot delete cluster, there is quots in cluster")
 	}
-	if da.scalingOption != nil {
-		return fmt.Errorf("cannot delete cluster, there is relative AutoScalingOption")
-	}
+
 	return nil
 }
 
@@ -203,6 +202,7 @@ func (da *DeleteAction) cleanLocalInformation() error {
 	// delete cluster dependency info
 	deleteClusterExtraOperation(da.cluster)
 	deleteClusterCredentialInfo(da.model, da.cluster.ClusterID)
+	provider.DeleteWatchComponentByHelm(da.ctx, da.cluster.ProjectID, da.cluster.ClusterID)
 
 	// finally clean cluster
 	da.cluster.Status = common.StatusDeleted

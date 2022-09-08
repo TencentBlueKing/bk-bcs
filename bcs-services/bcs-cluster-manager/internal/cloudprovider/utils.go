@@ -33,8 +33,11 @@ import (
 )
 
 var (
+	defaultTaskID = "qwertyuiop123456"
 	// BKSOPTask bk-sops common job
 	BKSOPTask = "bksopsjob"
+	// WatchTask watch component common job
+	WatchTask = "watchjob"
 	// TaskID inject taskID into ctx
 	TaskID = "taskID"
 )
@@ -45,7 +48,7 @@ func GetTaskIDFromContext(ctx context.Context) string {
 		return id
 	}
 
-	return ""
+	return defaultTaskID
 }
 
 // WithTaskIDForContext will return a new context wrapped taskID flag around the original ctx

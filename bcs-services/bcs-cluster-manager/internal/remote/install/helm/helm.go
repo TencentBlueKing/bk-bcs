@@ -11,10 +11,17 @@
  *
  */
 
-package install
+package helm
 
 import (
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/install"
+
 	k8scorecliset "k8s.io/client-go/kubernetes"
+)
+
+var (
+	// Helm helmInstall
+	Helm install.InstallerType = "helm"
 )
 
 // HelmInstaller is the helm installer
@@ -39,7 +46,7 @@ func NewHelmInstaller(chartRepo, chartName, releaseName, releaseNamespace string
 	return hi, nil
 }
 
-var _ Installer = &HelmInstaller{}
+var _ install.Installer = &HelmInstaller{}
 
 // IsInstalled returns whether the app is installed
 func (h *HelmInstaller) IsInstalled(clusterID string) (bool, error) {

@@ -15,6 +15,7 @@ package utils
 
 import (
 	"encoding/json"
+	"io/ioutil"
 	"net/http"
 	"runtime/debug"
 	"strings"
@@ -96,4 +97,14 @@ func SplitStringsChunks(strList []string, limit int) [][]string {
 func ToJSONString(data interface{}) string {
 	b, _ := json.Marshal(data)
 	return string(b)
+}
+
+// GetFileContent get file content
+func GetFileContent(file string) (string, error) {
+	body, err := ioutil.ReadFile(file)
+	if err != nil {
+		return "", err
+	}
+
+	return string(body), nil
 }

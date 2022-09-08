@@ -3,17 +3,17 @@ module github.com/Tencent/bk-bcs/bcs-services/pkg
 go 1.17
 
 replace (
-	github.com/Tencent/bk-bcs/bcs-common => github.com/Tencent/bk-bcs/bcs-common v0.0.0-20220808022940-b5e06f3b6fae
 	github.com/coreos/bbolt v1.3.4 => go.etcd.io/bbolt v1.3.4
 	go.etcd.io/bbolt v1.3.4 => github.com/coreos/bbolt v1.3.4
 	google.golang.org/grpc => google.golang.org/grpc v1.26.0
-	github.com/Tencent/bk-bcs/bcs-common => ../../bcs-common
 )
 
 require (
-	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20220123082150-ac3c90791ab4
+	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20220825085514-e786722e8ecb
 	github.com/TencentBlueKing/iam-go-sdk v0.0.8
 )
+
+require github.com/micro/go-micro/v2 v2.9.1
 
 require (
 	github.com/beorn7/perks v1.0.1 // indirect
@@ -30,7 +30,6 @@ require (
 	github.com/kr/pretty v0.2.1 // indirect
 	github.com/leodido/go-urn v1.2.0 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.1 // indirect
-	github.com/micro/go-micro/v2 v2.9.1
 	github.com/miekg/dns v1.1.27 // indirect
 	github.com/mitchellh/mapstructure v1.4.1 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
