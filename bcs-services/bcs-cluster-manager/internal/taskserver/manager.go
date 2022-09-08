@@ -200,8 +200,9 @@ func (ts *TaskServer) initServer() error {
 		}
 	}
 
-	// register bksops job task
+	// register common job task(bksops、watch)
 	allTasks["bksopsjob"] = localtask.RunBKsopsJob
+	allTasks["watchjob"] = localtask.EnsureWatchComponentTask
 	if err := ts.server.RegisterTasks(allTasks); err != nil {
 		blog.Errorf("task server register tasks failed, %s", err.Error())
 		return err

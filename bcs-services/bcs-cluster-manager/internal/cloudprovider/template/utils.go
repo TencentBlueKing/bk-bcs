@@ -127,7 +127,7 @@ func getBcsEnvs(cluster *proto.Cluster) (string, error) {
 	}
 	if opts.ClientCert != "" {
 		clientCert, _ := getFileContent(opts.ClientCert)
-		bcsEnvs = append(bcsEnvs, getEnv(BCSCA.String(), base64.StdEncoding.EncodeToString([]byte(clientCert))))
+		bcsEnvs = append(bcsEnvs, getEnv(BCSClientCert.String(), base64.StdEncoding.EncodeToString([]byte(clientCert))))
 	}
 	if opts.ClientKey != "" {
 		clientKey, _ := getFileContent(opts.ClientKey)
@@ -148,5 +148,5 @@ func getBcsEnvs(cluster *proto.Cluster) (string, error) {
 		bcsEnvs = append(bcsEnvs, getEnv(BCSTokenKey.String(), token))
 	}
 
-	return strings.Join(bcsEnvs, ","), nil
+	return strings.Join(bcsEnvs, ";"), nil
 }

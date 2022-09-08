@@ -55,6 +55,7 @@ var (
 	// import cluster task
 	importClusterNodesTask        = fmt.Sprintf("%s-ImportClusterNodesTask", cloudName)
 	registerClusterKubeConfigTask = fmt.Sprintf("%s-RegisterClusterKubeConfigTask", cloudName)
+	installWatchComponentTask = fmt.Sprintf("%s-InstallWatchComponentTask", cloudName)
 
 	// create cluster task
 	createClusterShieldAlarmTask  = fmt.Sprintf("%s-CreateClusterShieldAlarmTask", cloudName)

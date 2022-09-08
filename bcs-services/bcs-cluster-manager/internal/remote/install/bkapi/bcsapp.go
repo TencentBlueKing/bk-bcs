@@ -11,35 +11,25 @@
  *
  */
 
-package common
+package bkapi
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/install"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
+
 	"github.com/avast/retry-go"
 	"github.com/parnurzeal/gorequest"
 )
 
-const (
-	retryCount    = 10
-	retryInterval = 5 * time.Second
+var (
+	// BcsApp bcsPlatform install
+	BcsApp install.InstallerType = "bcs_app"
 )
-
-// 重试状态码
-var retryStatusCode = []int{503, 504}
-
-// ErrThirdPartyTimeout is timeout error
-var ErrThirdPartyTimeout = fmt.Errorf("third party timeout")
-
-// 是否可重试判断，根据 err 判断
-var retryable = retry.RetryIf(func(err error) bool {
-	return errors.Is(err, ErrThirdPartyTimeout)
-})
 
 // BCSAppClient bcs app client
 type BCSAppClient struct {
@@ -78,29 +68,6 @@ func (c *BCSAppClient) generateGateWayAuth() (string, error) {
 	}
 
 	return string(userAuth), nil
-}
-
-// ListChartsResponse list charts response
-type ListChartsResponse struct {
-	Code      int              `json:"code"`
-	Message   string           `json:"message"`
-	RequestID string           `json:"request_id"`
-	Data      []ListChartsData `json:"data"`
-}
-
-// ListChartsData list charts data
-type ListChartsData struct {
-	ID         int    `json:"id"`
-	Name       string `json:"name"`
-	Repository struct {
-		ID   int    `json:"id"`
-		Name string `json:"name"`
-	} `json:"repository"`
-	DefaultChartVersion struct {
-		ID      int    `json:"id"`
-		Name    string `json:"name"`
-		Version string `json:"version"`
-	} `json:"defaultChartVersion"`
 }
 
 // ListCharts list charts
@@ -143,32 +110,6 @@ func (c *BCSAppClient) ListCharts(projectID string) (*ListChartsResponse, error)
 	return resp, nil
 }
 
-// GetAppResponse get app response
-type GetAppResponse struct {
-	Code      int         `json:"code"`
-	Message   string      `json:"message"`
-	RequestID string      `json:"request_id"`
-	Data      *GetAppData `json:"data"`
-}
-
-// GetAppData get app data
-type GetAppData struct {
-	ID                   int    `json:"id"`
-	Name                 string `json:"name"`
-	Namespace            string `json:"namespace"`
-	ClusterID            string `json:"cluster_id"`
-	TransitioningOn      bool   `json:"transitioning_on"`
-	TransitioningMessage string `json:"transitioning_message"`
-	TransitioningResult  bool   `json:"transitioning_result"`
-	Release              struct {
-		ID                   int `json:"id"`
-		ChartVersionSnapshot struct {
-			ID        int `json:"id"`
-			VersionID int `json:"version_id"`
-		} `json:"chartVersionSnapshot"`
-	} `json:"release"`
-}
-
 // GetApp get app
 func (c *BCSAppClient) GetApp(projectID string, appID int) (*GetAppResponse, error) {
 	if c == nil {
@@ -209,19 +150,52 @@ func (c *BCSAppClient) GetApp(projectID string, appID int) (*GetAppResponse, err
 	return resp, nil
 }
 
-// ListNamespaceResponse list namespace response
-type ListNamespaceResponse struct {
-	Code      int                 `json:"code"`
-	Message   string              `json:"message"`
-	RequestID string              `json:"request_id"`
-	Data      []ListNamespaceData `json:"data"`
-}
+// CreateNamespace create namespace wait bcs-gateway cluster normal
+func (c *BCSAppClient) CreateNamespace(projectID, clusterID string, req CreateNamespaceRequest) (
+	*CreateNamespaceResponse, error) {
+	if c == nil {
+		return nil, ErrServerNotInit
+	}
 
-// ListNamespaceData list namespace data
-type ListNamespaceData struct {
-	ID        int    `json:"id"`
-	Name      string `json:"name"`
-	ClusterID string `json:"cluster_id"`
+	url := fmt.Sprintf("%s/apis/resources/projects/%s/clusters/%s/namespaces/", c.server, projectID, clusterID)
+	userAuth, err := c.generateGateWayAuth()
+	if err != nil {
+		blog.Errorf("bcs app client generateGateWayAuth failed: %v", err)
+		return nil, err
+	}
+
+	var (
+		defaultRetryCnt  uint = 10
+		defaultRetryTime      = 10 * time.Second
+	)
+	resp := &CreateNamespaceResponse{}
+	err = retry.Do(func() error {
+		_, _, errs := gorequest.New().
+			Timeout(defaultTimeOut).
+			Post(url).
+			Set("Content-Type", "application/json").
+			Set("Accept", "application/json").
+			Set("X-Bkapi-Authorization", userAuth).
+			SetDebug(c.debug).
+			Send(req).
+			EndStruct(resp)
+		if len(errs) > 0 {
+			blog.Errorf("call api CreateNamespace failed: %v", errs[0])
+			return errs[0]
+		}
+		if resp.Code != 0 {
+			blog.Warnf("call api CreateNamespace failed: %s", utils.ToJSONString(resp))
+			return ErrThirdPartyTimeout
+		}
+		return nil
+	}, retry.Attempts(defaultRetryCnt), retry.Delay(defaultRetryTime))
+	if err != nil {
+		return nil, fmt.Errorf("call api CreateNamespace failed: %v, resp: %s", err, utils.ToJSONString(resp))
+	}
+
+	blog.Infof("BCSAppClient CreateNamespace successful[%s:%s:%s]", projectID, clusterID, req.Name)
+
+	return resp, nil
 }
 
 // ListNamespace list namespace
@@ -266,32 +240,6 @@ func (c *BCSAppClient) ListNamespace(projectID, clusterID string) (*ListNamespac
 	return resp, nil
 }
 
-// ListAppsResponse list apps response
-type ListAppsResponse struct {
-	Code      int          `json:"code"`
-	Message   string       `json:"message"`
-	RequestID string       `json:"request_id"`
-	Data      ListAppsData `json:"data"`
-}
-
-// ListAppsData list apps data
-type ListAppsData struct {
-	Count   int              `json:"count"`
-	Results []ListAppsResult `json:"results"`
-}
-
-// ListAppsResult list apps result
-type ListAppsResult struct {
-	ID                   int    `json:"id"`
-	Name                 string `json:"name"`
-	Namespace            string `json:"namespace"`
-	ClusterID            string `json:"cluster_id"`
-	ProjectID            string `json:"project_id"`
-	TransitioningOn      bool   `json:"transitioning_on"`
-	TransitioningMessage string `json:"transitioning_message"`
-	TransitioningResult  bool   `json:"transitioning_result"`
-}
-
 // ListApps list apps
 func (c *BCSAppClient) ListApps(projectID, clusterID, namespace string,
 	page, limit, offset int) (*ListAppsResponse, error) {
@@ -331,24 +279,6 @@ func (c *BCSAppClient) ListApps(projectID, clusterID, namespace string,
 		return nil, fmt.Errorf("call api ListApps failed: %v, resp: %s", err, utils.ToJSONString(resp))
 	}
 	return resp, nil
-}
-
-// CreateAppRequest create app request
-type CreateAppRequest struct {
-	ProjectID     string
-	Answers       []string `json:"answers"`
-	Name          string   `json:"name"`
-	ClusterID     string   `json:"cluster_id"`
-	ChartVersion  int      `json:"chart_version"`
-	NamespaceInfo int      `json:"namespace_info"`
-	ValueFile     string   `json:"valuefile"`
-}
-
-// CreateAppResponse create app response
-type CreateAppResponse struct {
-	Code      int    `json:"code"`
-	Message   string `json:"message"`
-	RequestID string `json:"request_id"`
 }
 
 // CreateApp create app
@@ -392,33 +322,6 @@ func (c *BCSAppClient) CreateApp(req *CreateAppRequest) (*CreateAppResponse, err
 	return resp, nil
 }
 
-// UpdateAppRequest update app request
-type UpdateAppRequest struct {
-	ProjectID      string
-	AppID          int
-	Answers        []string `json:"answers"`
-	UpgradeVersion int      `json:"upgrade_verion"`
-	ValueFile      string   `json:"valuefile"`
-}
-
-// UpdateAppResponse update app response
-type UpdateAppResponse struct {
-	Code      int           `json:"code"`
-	Message   string        `json:"message"`
-	RequestID string        `json:"request_id"`
-	Data      UpdateAppData `json:"data"`
-}
-
-// UpdateAppData struct for update app
-type UpdateAppData struct {
-	Name                 string `json:"name"`
-	Namespace            string `json:"namespace"`
-	ClusterID            string `json:"cluster_id"`
-	TransitioningOn      bool   `json:"transitioning_on"`
-	TransitioningMessage string `json:"transitioning_message"`
-	TransitioningResult  bool   `json:"transitioning_result"`
-}
-
 // UpdateApp update app
 func (c *BCSAppClient) UpdateApp(req *UpdateAppRequest) (*UpdateAppResponse, error) {
 	if c == nil {
@@ -458,4 +361,47 @@ func (c *BCSAppClient) UpdateApp(req *UpdateAppRequest) (*UpdateAppResponse, err
 		return nil, fmt.Errorf("call api UpdateApp failed: %v, resp: %s", err, utils.ToJSONString(resp))
 	}
 	return resp, nil
+}
+
+// DeleteApp delete app
+func (c *BCSAppClient) DeleteApp(req *DeleteAppRequest) error {
+	if c == nil {
+		return ErrServerNotInit
+	}
+
+	url := fmt.Sprintf("%s/backend/apis/projects/%s/helm/apps/%d", c.server, req.ProjectID, req.AppID)
+	userAuth, err := c.generateGateWayAuth()
+	if err != nil {
+		blog.Errorf("bcs app client generateGateWayAuth failed: %v", err)
+		return err
+	}
+
+	resp := &DeleteAppResponse{}
+	err = retry.Do(func() error {
+		_, bt, errs := gorequest.New().
+			Timeout(defaultTimeOut).
+			Retry(retryCount, retryInterval, retryStatusCode...).
+			Delete(url).
+			Set("Content-Type", "application/json").
+			Set("Accept", "application/json").
+			Set("X-Bkapi-Authorization", userAuth).
+			SetDebug(c.debug).
+			EndStruct(resp)
+		if len(errs) > 0 {
+			blog.Errorf("call api DeleteApp failed: %v, resp: %s", errs[0], string(bt))
+			return errs[0]
+		}
+		if resp.Code != 0 {
+			blog.Warnf("call api DeleteApp failed: %s", utils.ToJSONString(resp))
+			return ErrThirdPartyTimeout
+		}
+
+		return nil
+	}, retry.Attempts(retryCount), retry.Delay(retryInterval))
+	if err != nil {
+		return fmt.Errorf("call api DeleteApp failed: %v, resp: %s", err, utils.ToJSONString(resp))
+	}
+
+	blog.Infof("bcs app client DeleteApp successful[%s:%v]", req.ProjectID, req.AppID)
+	return nil
 }

@@ -11,7 +11,7 @@
  *
  */
 
-package install
+package bkapi
 
 import (
 	"context"
@@ -20,7 +20,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/install"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
@@ -33,13 +33,13 @@ type BKAPIInstaller struct {
 	projectID        string
 	// 已安装应用的 ID，用于更新应用
 	appID  int
-	client *common.BCSAppClient
+	client *BCSAppClient
 	debug  bool
 }
 
 // NewBKAPIInstaller creates a new bk-api helm installer
 func NewBKAPIInstaller(projectID, chartName, releaseName, releaseNamespace string,
-	isPublicRepo bool, client *common.BCSAppClient, debug bool) *BKAPIInstaller {
+	isPublicRepo bool, client *BCSAppClient, debug bool) *BKAPIInstaller {
 	in := &BKAPIInstaller{
 		chartName:        chartName,
 		releaseName:      releaseName,
@@ -52,7 +52,7 @@ func NewBKAPIInstaller(projectID, chartName, releaseName, releaseNamespace strin
 	return in
 }
 
-var _ Installer = &BKAPIInstaller{}
+var _ install.Installer = &BKAPIInstaller{}
 
 // IsInstalled returns whether the app is installed
 func (h *BKAPIInstaller) IsInstalled(clusterID string) (bool, error) {
@@ -101,7 +101,7 @@ func (h *BKAPIInstaller) Install(clusterID, values string) error {
 	}
 
 	// create app
-	req := &common.CreateAppRequest{
+	req := &CreateAppRequest{
 		ProjectID:     h.projectID,
 		Answers:       []string{},
 		Name:          h.releaseName,
@@ -109,6 +109,7 @@ func (h *BKAPIInstaller) Install(clusterID, values string) error {
 		ChartVersion:  chartID,
 		NamespaceInfo: nsID,
 		ValueFile:     values,
+		CmdFlags:      defaultCmdFlag,
 	}
 	resp, err := h.client.CreateApp(req)
 	if err != nil {
@@ -140,13 +141,31 @@ func (h *BKAPIInstaller) getNamespaceID(clusterID string) (int, error) {
 		blog.Errorf("[BKAPIInstaller] list namespace failed, code: %d, message: %s", nsList.Code, nsList.Message)
 		return 0, fmt.Errorf("list namespace failed, code: %d, message: %s", nsList.Code, nsList.Message)
 	}
+
+	var nsID int
 	for _, v := range nsList.Data {
 		if v.ClusterID == clusterID && v.Name == h.releaseNamespace {
-			return v.ID, nil
+			blog.Infof("[BKAPIInstaller] list namespace success: %v", h.releaseNamespace)
+			nsID = v.ID
 		}
 	}
-	blog.Errorf("[BKAPIInstaller] list namespace failed, namespace %s not found", h.releaseNamespace)
-	return 0, fmt.Errorf("list namespace failed, namespace %s not found", h.releaseNamespace)
+	if nsID == 0 {
+		// create namespace
+		resp, err := h.client.CreateNamespace(h.projectID, clusterID, CreateNamespaceRequest{
+			Name: h.releaseNamespace,
+		})
+		if err != nil {
+			blog.Errorf("[BKAPIInstaller] create namespace[%s] failed: %v", h.releaseNamespace, err)
+			return 0, fmt.Errorf("create namespace failed: %v", err)
+		}
+
+		blog.Infof("[BKAPIInstaller] getNamespaceID CreateNamespace success: %+v", resp.Data)
+		nsID = int(resp.Data.ID)
+
+		return nsID, nil
+	}
+
+	return nsID, nil
 }
 
 func (h *BKAPIInstaller) getChartID() (int, error) {
@@ -220,13 +239,14 @@ func (h *BKAPIInstaller) Upgrade(clusterID, values string) error {
 	}
 
 	// update app
-	req := &common.UpdateAppRequest{
+	req := &UpdateAppRequest{
 		ProjectID: h.projectID,
 		AppID:     h.appID,
 		Answers:   []string{},
 		// 不更新版本
 		UpgradeVersion: -1,
 		ValueFile:      values,
+		CmdFlags:       defaultCmdFlag,
 	}
 	resp, err := h.client.UpdateApp(req)
 	if err != nil {
@@ -251,6 +271,26 @@ func (h *BKAPIInstaller) Uninstall(clusterID string) error {
 		return nil
 	}
 
-	// not implement
+	// get project cluster appID
+	ok, err := h.IsInstalled(clusterID)
+	if err != nil {
+		blog.Errorf("[BKAPIInstaller] check app installed failed, err: %s", err.Error())
+		return err
+	}
+	if !ok {
+		blog.Infof("app %s not installed", h.releaseName)
+		return nil
+	}
+	// delete app
+	err = h.client.DeleteApp(&DeleteAppRequest{
+		ProjectID: h.projectID,
+		AppID:     h.appID,
+	})
+	if err != nil {
+		blog.Errorf("[BKAPIInstaller] delete app failed, err: %s", err.Error())
+		return err
+	}
+
+	blog.Infof("[BKAPIInstaller] delete app successful[%s:%v]", h.projectID, h.appID)
 	return nil
 }

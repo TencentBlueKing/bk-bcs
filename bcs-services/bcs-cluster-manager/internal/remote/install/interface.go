@@ -20,3 +20,11 @@ type Installer interface {
 	Upgrade(clusterID, values string) error
 	Uninstall(clusterID string) error
 }
+
+// InstallerType type
+type InstallerType string
+
+// String toString
+func (it InstallerType) String() string {
+	return string(it)
+}

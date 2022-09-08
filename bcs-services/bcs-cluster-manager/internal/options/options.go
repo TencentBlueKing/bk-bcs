@@ -175,8 +175,23 @@ type AutoScaler struct {
 	ReleaseName      string `json:"releaseName"`
 	ReleaseNamespace string `json:"releaseNamespace"`
 	IsPublicRepo     bool   `json:"isPublicRepo"`
-	BCSAPIGateway    string `json:"bcsApiGateway"`
-	Token            string `json:"token"`
+}
+
+// BcsWatch config
+type BcsWatch struct {
+	ChartName        string `json:"chartName"`
+	ReleaseName      string `json:"releaseName"`
+	ReleaseNamespace string `json:"releaseNamespace"`
+	IsPublicRepo     bool   `json:"isPublicRepo"`
+	StorageServer    string `json:"storageServer"`
+}
+
+// ComponentDeploy config
+type ComponentDeploy struct {
+	AutoScaler    AutoScaler `json:"autoScaler"`
+	Watch         BcsWatch   `json:"watch"`
+	BCSAPIGateway string     `json:"bcsApiGateway"`
+	Token         string     `json:"token"`
 }
 
 // ClusterManagerOptions options of cluster manager
@@ -197,7 +212,7 @@ type ClusterManagerOptions struct {
 	Alarm              AlarmConfig           `json:"alarm"`
 	IAM                IAMConfig             `json:"iam_config"`
 	BCSAppConfig       BCSAppConfig          `json:"bcsapp"`
-	AutoScaler         AutoScaler            `json:"autoScaler"`
+	ComponentDeploy    ComponentDeploy       `json:"componentDeploy"`
 	ResourceSchemaPath string                `json:"resourceSchemaPath"`
 	Debug              bool                  `json:"debug"`
 	ServerConfig

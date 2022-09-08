@@ -22,39 +22,13 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
-	cli "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/common"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/install"
-	cmoptions "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/options"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/component/autoscaler"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/options"
 )
 
 const (
 	defaultReplicas = 1
 )
-
-func getInstaller(projectID string) install.Installer {
-	op := cmoptions.GetGlobalCMOptions()
-	client := cli.NewBCSAppClient(
-		op.BCSAppConfig.Server,
-		op.BCSAppConfig.AppCode,
-		op.BCSAppConfig.AppSecret,
-		op.BCSAppConfig.BkUserName,
-		op.BCSAppConfig.Debug,
-	)
-	debug := false
-	if !op.BCSAppConfig.Enable || op.BCSAppConfig.Debug {
-		debug = true
-	}
-	return install.NewBKAPIInstaller(
-		projectID,
-		op.AutoScaler.ChartName,
-		op.AutoScaler.ReleaseName,
-		op.AutoScaler.ReleaseNamespace,
-		op.AutoScaler.IsPublicRepo,
-		client,
-		debug,
-	)
-}
 
 // EnsureAutoScalerTask ensure auto scaler task, if not exist, create it, if exist, update it
 func EnsureAutoScalerTask(taskID string, stepName string) error {
@@ -92,9 +66,7 @@ func EnsureAutoScalerTask(taskID string, stepName string) error {
 		return retErr
 	}
 
-	// ensure
-	if err := ensureAutoScalerWithInstaller(getInstaller(asOption.ProjectID), clusterID, nodegroupList,
-		asOption); err != nil {
+	if err := ensureAutoScalerWithInstaller(nodegroupList, asOption); err != nil {
 		blog.Errorf("EnsureAutoScalerTask[%s] for %s failed", taskID, clusterID)
 		retErr := fmt.Errorf("EnsureAutoScalerTask failed, %s", err.Error())
 		_ = state.UpdateStepFailure(start, stepName, retErr)
@@ -110,15 +82,17 @@ func EnsureAutoScalerTask(taskID string, stepName string) error {
 	return nil
 }
 
-func ensureAutoScalerWithInstaller(installer install.Installer, clusterID string, nodeGroups []cmproto.NodeGroup,
-	as *cmproto.ClusterAutoScalingOption) error {
-	installed, err := installer.IsInstalled(clusterID)
+func ensureAutoScalerWithInstaller(nodeGroups []cmproto.NodeGroup, as *cmproto.ClusterAutoScalingOption) error {
+	installer, err := autoscaler.GetAutoScalerInstaller(as.ProjectID)
 	if err != nil {
+		blog.Errorf("ensureAutoScalerWithInstaller GetAutoScalerInstaller failed: %v", err)
 		return err
 	}
 
-	if as == nil {
-		return fmt.Errorf("cluster %s ClusterAutoScalingOption is nil", clusterID)
+	installed, err := installer.IsInstalled(as.ClusterID)
+	if err != nil {
+		blog.Errorf("ensureAutoScalerWithInstaller IsInstalled failed: %v", err)
+		return err
 	}
 
 	// 开了自动伸缩，但是没有安装，则安装
@@ -126,26 +100,37 @@ func ensureAutoScalerWithInstaller(installer install.Installer, clusterID string
 	// 没有开自动伸缩，但是安装了，则卸载
 	// 没有开自动伸缩，且没有安装，则不做处理
 
+	scaler := autoscaler.AutoScaler{
+		NodeGroups:        nodeGroups,
+		AutoScalingOption: as,
+	}
 	// 开启了自动伸缩
 	if as.EnableAutoscale {
-		values, err := transAutoScalingOptionToValues(nodeGroups, *as, defaultReplicas)
+		scaler.Replicas = defaultReplicas
+
+		values, err := scaler.GetValues()
 		if err != nil {
 			return fmt.Errorf("transAutoScalingOptionToValues failed, err: %s", err)
 		}
 		if installed {
-			return installer.Upgrade(clusterID, values)
+			return installer.Upgrade(as.ClusterID, values)
 		}
-		return installer.Install(clusterID, values)
+
+		return installer.Install(as.ClusterID, values)
 	}
 
 	// 如果已经安装且关闭了自动伸缩，则卸载
 	if installed {
 		// 副本数设置为 0，则停止应用
-		values, err := transAutoScalingOptionToValues(nodeGroups, *as, 0)
+		scaler.Replicas = 0
+
+		values, err := scaler.GetValues()
 		if err != nil {
 			return fmt.Errorf("transAutoScalingOptionToValues failed, err: %s", err)
 		}
-		return installer.Upgrade(clusterID, values)
+
+		return installer.Upgrade(as.ClusterID, values)
 	}
+
 	return nil
 }
