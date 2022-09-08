@@ -126,7 +126,14 @@ func (h *Hooker) createBcsDbPrivCrd(clientset apiextensionsclient.Interface) (bo
 				Group: bcsv1.SchemeGroupVersion.Group, // BcsDbPrivConfigsGroup,
 				Versions: []apiextensionsv1.CustomResourceDefinitionVersion{
 					{
-						Name: bcsv1.SchemeGroupVersion.Version, // BcsDbPrivConfigsVersion,
+						Name:    bcsv1.SchemeGroupVersion.Version, // BcsDbPrivConfigsVersion,
+						Served:  true,
+						Storage: true,
+						Schema: &apiextensionsv1.CustomResourceValidation{
+							OpenAPIV3Schema: &apiextensionsv1.JSONSchemaProps{
+								Type: "object",
+							},
+						},
 					},
 				},
 				Scope: apiextensionsv1.NamespaceScoped,
