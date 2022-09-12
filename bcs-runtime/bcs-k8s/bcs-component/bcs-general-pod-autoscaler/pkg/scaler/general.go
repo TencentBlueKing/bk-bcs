@@ -106,6 +106,10 @@ type GeneralController struct {
 	scaleUpEvents   map[string][]timestampedScaleEvent
 	scaleDownEvents map[string][]timestampedScaleEvent
 
+	// Multi goroutine read and write scaleUp/scaleDown events may unsafe.
+	scaleUpEventsLock sync.Mutex
+	scaleDownEventsLock sync.Mutex
+
 	doingCron sync.Map
 
 	// Multi goroutines for autoscaler
@@ -575,9 +579,18 @@ func (a *GeneralController) reconcileKey(key string) (deleted bool, err error) {
 	gpa, err := a.gpaLister.GeneralPodAutoscalers(namespace).Get(name)
 	if errors.IsNotFound(err) {
 		klog.Infof("General Pod Autoscaler %s has been deleted in %s", name, namespace)
+		a.recommendationsLock.Lock()
+		defer a.recommendationsLock.Unlock()
 		delete(a.recommendations, key)
+
+		a.scaleUpEventsLock.Lock()
+		defer a.scaleUpEventsLock.Unlock()
 		delete(a.scaleUpEvents, key)
+
+		a.scaleDownEventsLock.Lock()
+		defer a.scaleDownEventsLock.Unlock()
 		delete(a.scaleDownEvents, key)
+
 		return true, nil
 	}
 	if err != nil {
@@ -1323,6 +1336,7 @@ func (a *GeneralController) storeScaleEvent(behavior *autoscaling.GeneralPodAuto
 	if behavior == nil {
 		return // we should not store any event as they will not be used
 	}
+
 	var oldSampleIndex int
 	var longestPolicyPeriod int32
 	foundOldSample := false
@@ -1337,6 +1351,8 @@ func (a *GeneralController) storeScaleEvent(behavior *autoscaling.GeneralPodAuto
 			}
 		}
 		newEvent := timestampedScaleEvent{replicaChange, time.Now(), false}
+		a.scaleUpEventsLock.Lock()
+		defer a.scaleUpEventsLock.Unlock()
 		if foundOldSample {
 			a.scaleUpEvents[key][oldSampleIndex] = newEvent
 		} else {
@@ -1353,6 +1369,8 @@ func (a *GeneralController) storeScaleEvent(behavior *autoscaling.GeneralPodAuto
 			}
 		}
 		newEvent := timestampedScaleEvent{replicaChange, time.Now(), false}
+		a.scaleDownEventsLock.Lock()
+		defer a.scaleDownEventsLock.Unlock()
 		if foundOldSample {
 			a.scaleDownEvents[key][oldSampleIndex] = newEvent
 		} else {
@@ -1400,6 +1418,9 @@ func (a *GeneralController) stabilizeRecommendationWB(args NormalizationArg) (in
 			oldSampleIndex = i
 		}
 	}
+
+	a.recommendationsLock.Lock()
+	defer a.recommendationsLock.Unlock()
 	if foundOldSample {
 		a.recommendations[args.Key][oldSampleIndex] = timestampedRecommendation{args.DesiredReplicas,
 			time.Now()}
@@ -1407,6 +1428,7 @@ func (a *GeneralController) stabilizeRecommendationWB(args NormalizationArg) (in
 		a.recommendations[args.Key] = append(a.recommendations[args.Key],
 			timestampedRecommendation{args.DesiredReplicas, time.Now()})
 	}
+
 	return recommendation, reason, message
 }
 
@@ -1418,6 +1440,8 @@ func (a *GeneralController) convertDesiredReplicasWithBR(args NormalizationArg) 
 	var possibleLimitingReason, possibleLimitingMessage string
 
 	if args.DesiredReplicas > args.CurrentReplicas {
+		a.scaleUpEventsLock.Lock()
+		defer a.scaleUpEventsLock.Unlock()
 		scaleUpLimit := calculateScaleUpLimitWithSR(args.CurrentReplicas,
 			a.scaleUpEvents[args.Key], args.ScaleUpBehavior)
 		if scaleUpLimit < args.CurrentReplicas {
@@ -1437,6 +1461,8 @@ func (a *GeneralController) convertDesiredReplicasWithBR(args NormalizationArg) 
 			return maximumAllowedReplicas, possibleLimitingReason, possibleLimitingMessage
 		}
 	} else if args.DesiredReplicas < args.CurrentReplicas {
+		a.scaleDownEventsLock.Lock()
+		defer a.scaleDownEventsLock.Unlock()
 		scaleDownLimit := calculateScaleDownLimitWithB(args.CurrentReplicas,
 			a.scaleDownEvents[args.Key], args.ScaleDownBehavior)
 		if scaleDownLimit > args.CurrentReplicas {
