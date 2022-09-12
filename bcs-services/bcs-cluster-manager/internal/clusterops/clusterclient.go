@@ -32,7 +32,7 @@ import (
 )
 
 var (
-	// ErrServerNotInited error for server not init
+	// ErrServerNotInit ed error for server not init
 	ErrServerNotInit = errors.New("server not init")
 )
 

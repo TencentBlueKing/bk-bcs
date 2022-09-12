@@ -12,18 +12,19 @@
  * limitations under the License.
  */
 
+// Package ctxkey xxx
 package ctxkey
 
 import "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/types"
 
 const (
-	// RequestIDKey ...
+	// RequestIDKey xxx
 	RequestIDKey = types.ContextKey("requestID")
-	// UsernameKey ...
+	// UsernameKey xxx
 	UsernameKey = types.ContextKey("username")
-	// ProjKey ...
+	// ProjKey xxx
 	ProjKey = types.ContextKey("project")
-	// ClusterKey ...
+	// ClusterKey xxx
 	ClusterKey = types.ContextKey("cluster")
 	// LangKey 语言版本
 	LangKey = types.ContextKey("lang")

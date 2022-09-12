@@ -11,6 +11,7 @@ import (
 	"net/mail"
 	"net/url"
 	"regexp"
+	"sort"
 	"strings"
 	"time"
 	"unicode/utf8"
@@ -31,18 +32,53 @@ var (
 	_ = (*url.URL)(nil)
 	_ = (*mail.Address)(nil)
 	_ = anypb.Any{}
+	_ = sort.Sort
 )
 
 // Validate checks the field values on AvailableReq with the rules defined in
-// the proto definition for this message. If any rules are violated, an error
-// is returned.
+// the proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
 func (m *AvailableReq) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on AvailableReq with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in AvailableReqMultiError, or
+// nil if none found.
+func (m *AvailableReq) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *AvailableReq) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
 
+	var errors []error
+
+	if len(errors) > 0 {
+		return AvailableReqMultiError(errors)
+	}
+
 	return nil
 }
+
+// AvailableReqMultiError is an error wrapping multiple validation errors
+// returned by AvailableReq.ValidateAll() if the designated constraints aren't met.
+type AvailableReqMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m AvailableReqMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m AvailableReqMultiError) AllErrors() []error { return m }
 
 // AvailableReqValidationError is the validation error returned by
 // AvailableReq.Validate if the designated constraints aren't met.
@@ -99,12 +135,26 @@ var _ interface {
 } = AvailableReqValidationError{}
 
 // Validate checks the field values on AvailableResp with the rules defined in
-// the proto definition for this message. If any rules are violated, an error
-// is returned.
+// the proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
 func (m *AvailableResp) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on AvailableResp with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in AvailableRespMultiError, or
+// nil if none found.
+func (m *AvailableResp) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *AvailableResp) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
+
+	var errors []error
 
 	// no validation rules for Code
 
@@ -112,8 +162,29 @@ func (m *AvailableResp) Validate() error {
 
 	// no validation rules for Result
 
+	if len(errors) > 0 {
+		return AvailableRespMultiError(errors)
+	}
+
 	return nil
 }
+
+// AvailableRespMultiError is an error wrapping multiple validation errors
+// returned by AvailableResp.ValidateAll() if the designated constraints
+// aren't met.
+type AvailableRespMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m AvailableRespMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m AvailableRespMultiError) AllErrors() []error { return m }
 
 // AvailableRespValidationError is the validation error returned by
 // AvailableResp.Validate if the designated constraints aren't met.
@@ -171,46 +242,89 @@ var _ interface {
 
 // Validate checks the field values on CreateRepositoryReq with the rules
 // defined in the proto definition for this message. If any rules are
-// violated, an error is returned.
+// violated, the first error encountered is returned, or nil if there are no violations.
 func (m *CreateRepositoryReq) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on CreateRepositoryReq with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// CreateRepositoryReqMultiError, or nil if none found.
+func (m *CreateRepositoryReq) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *CreateRepositoryReq) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
 
-	if l := utf8.RuneCountInString(m.GetProjectID()); l < 1 || l > 64 {
-		return CreateRepositoryReqValidationError{
-			field:  "ProjectID",
-			reason: "value length must be between 1 and 64 runes, inclusive",
+	var errors []error
+
+	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 32 {
+		err := CreateRepositoryReqValidationError{
+			field:  "ProjectCode",
+			reason: "value length must be between 1 and 32 runes, inclusive",
 		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
 	}
 
-	if l := utf8.RuneCountInString(m.GetName()); l < 1 || l > 64 {
-		return CreateRepositoryReqValidationError{
+	if l := utf8.RuneCountInString(m.GetName()); l < 1 || l > 32 {
+		err := CreateRepositoryReqValidationError{
 			field:  "Name",
-			reason: "value length must be between 1 and 64 runes, inclusive",
+			reason: "value length must be between 1 and 32 runes, inclusive",
 		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
 	}
 
 	// no validation rules for Type
 
-	// no validation rules for Remote
+	// no validation rules for Takeover
 
-	// no validation rules for RemoteURL
+	// no validation rules for RepoURL
 
 	// no validation rules for Username
 
 	// no validation rules for Password
 
-	// no validation rules for Operator
+	// no validation rules for Remote
 
-	// no validation rules for Takeover
+	// no validation rules for RemoteURL
 
 	// no validation rules for RemoteUsername
 
 	// no validation rules for RemotePassword
 
+	if len(errors) > 0 {
+		return CreateRepositoryReqMultiError(errors)
+	}
+
 	return nil
 }
+
+// CreateRepositoryReqMultiError is an error wrapping multiple validation
+// errors returned by CreateRepositoryReq.ValidateAll() if the designated
+// constraints aren't met.
+type CreateRepositoryReqMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m CreateRepositoryReqMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m CreateRepositoryReqMultiError) AllErrors() []error { return m }
 
 // CreateRepositoryReqValidationError is the validation error returned by
 // CreateRepositoryReq.Validate if the designated constraints aren't met.
@@ -270,11 +384,25 @@ var _ interface {
 
 // Validate checks the field values on CreateRepositoryResp with the rules
 // defined in the proto definition for this message. If any rules are
-// violated, an error is returned.
+// violated, the first error encountered is returned, or nil if there are no violations.
 func (m *CreateRepositoryResp) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on CreateRepositoryResp with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// CreateRepositoryRespMultiError, or nil if none found.
+func (m *CreateRepositoryResp) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *CreateRepositoryResp) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
+
+	var errors []error
 
 	// no validation rules for Code
 
@@ -282,7 +410,26 @@ func (m *CreateRepositoryResp) Validate() error {
 
 	// no validation rules for Result
 
-	if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
+	if all {
+		switch v := interface{}(m.GetData()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, CreateRepositoryRespValidationError{
+					field:  "Data",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, CreateRepositoryRespValidationError{
+					field:  "Data",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
 		if err := v.Validate(); err != nil {
 			return CreateRepositoryRespValidationError{
 				field:  "Data",
@@ -292,8 +439,29 @@ func (m *CreateRepositoryResp) Validate() error {
 		}
 	}
 
+	if len(errors) > 0 {
+		return CreateRepositoryRespMultiError(errors)
+	}
+
 	return nil
 }
+
+// CreateRepositoryRespMultiError is an error wrapping multiple validation
+// errors returned by CreateRepositoryResp.ValidateAll() if the designated
+// constraints aren't met.
+type CreateRepositoryRespMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m CreateRepositoryRespMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m CreateRepositoryRespMultiError) AllErrors() []error { return m }
 
 // CreateRepositoryRespValidationError is the validation error returned by
 // CreateRepositoryResp.Validate if the designated constraints aren't met.
@@ -353,24 +521,46 @@ var _ interface {
 
 // Validate checks the field values on UpdateRepositoryReq with the rules
 // defined in the proto definition for this message. If any rules are
-// violated, an error is returned.
+// violated, the first error encountered is returned, or nil if there are no violations.
 func (m *UpdateRepositoryReq) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on UpdateRepositoryReq with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// UpdateRepositoryReqMultiError, or nil if none found.
+func (m *UpdateRepositoryReq) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *UpdateRepositoryReq) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
 
-	if l := utf8.RuneCountInString(m.GetProjectID()); l < 1 || l > 64 {
-		return UpdateRepositoryReqValidationError{
-			field:  "ProjectID",
-			reason: "value length must be between 1 and 64 runes, inclusive",
+	var errors []error
+
+	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 32 {
+		err := UpdateRepositoryReqValidationError{
+			field:  "ProjectCode",
+			reason: "value length must be between 1 and 32 runes, inclusive",
 		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
 	}
 
-	if l := utf8.RuneCountInString(m.GetName()); l < 1 || l > 64 {
-		return UpdateRepositoryReqValidationError{
+	if l := utf8.RuneCountInString(m.GetName()); l < 1 || l > 32 {
+		err := UpdateRepositoryReqValidationError{
 			field:  "Name",
-			reason: "value length must be between 1 and 64 runes, inclusive",
+			reason: "value length must be between 1 and 32 runes, inclusive",
 		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
 	}
 
 	// no validation rules for Type
@@ -383,10 +573,29 @@ func (m *UpdateRepositoryReq) Validate() error {
 
 	// no validation rules for Password
 
-	// no validation rules for Operator
+	if len(errors) > 0 {
+		return UpdateRepositoryReqMultiError(errors)
+	}
 
 	return nil
 }
+
+// UpdateRepositoryReqMultiError is an error wrapping multiple validation
+// errors returned by UpdateRepositoryReq.ValidateAll() if the designated
+// constraints aren't met.
+type UpdateRepositoryReqMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m UpdateRepositoryReqMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m UpdateRepositoryReqMultiError) AllErrors() []error { return m }
 
 // UpdateRepositoryReqValidationError is the validation error returned by
 // UpdateRepositoryReq.Validate if the designated constraints aren't met.
@@ -446,11 +655,25 @@ var _ interface {
 
 // Validate checks the field values on UpdateRepositoryResp with the rules
 // defined in the proto definition for this message. If any rules are
-// violated, an error is returned.
+// violated, the first error encountered is returned, or nil if there are no violations.
 func (m *UpdateRepositoryResp) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on UpdateRepositoryResp with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// UpdateRepositoryRespMultiError, or nil if none found.
+func (m *UpdateRepositoryResp) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *UpdateRepositoryResp) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
+
+	var errors []error
 
 	// no validation rules for Code
 
@@ -458,7 +681,26 @@ func (m *UpdateRepositoryResp) Validate() error {
 
 	// no validation rules for Result
 
-	if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
+	if all {
+		switch v := interface{}(m.GetData()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, UpdateRepositoryRespValidationError{
+					field:  "Data",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, UpdateRepositoryRespValidationError{
+					field:  "Data",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
 		if err := v.Validate(); err != nil {
 			return UpdateRepositoryRespValidationError{
 				field:  "Data",
@@ -468,8 +710,29 @@ func (m *UpdateRepositoryResp) Validate() error {
 		}
 	}
 
+	if len(errors) > 0 {
+		return UpdateRepositoryRespMultiError(errors)
+	}
+
 	return nil
 }
+
+// UpdateRepositoryRespMultiError is an error wrapping multiple validation
+// errors returned by UpdateRepositoryResp.ValidateAll() if the designated
+// constraints aren't met.
+type UpdateRepositoryRespMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m UpdateRepositoryRespMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m UpdateRepositoryRespMultiError) AllErrors() []error { return m }
 
 // UpdateRepositoryRespValidationError is the validation error returned by
 // UpdateRepositoryResp.Validate if the designated constraints aren't met.
@@ -528,29 +791,72 @@ var _ interface {
 } = UpdateRepositoryRespValidationError{}
 
 // Validate checks the field values on GetRepositoryReq with the rules defined
-// in the proto definition for this message. If any rules are violated, an
-// error is returned.
+// in the proto definition for this message. If any rules are violated, the
+// first error encountered is returned, or nil if there are no violations.
 func (m *GetRepositoryReq) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on GetRepositoryReq with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// GetRepositoryReqMultiError, or nil if none found.
+func (m *GetRepositoryReq) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *GetRepositoryReq) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
 
-	if l := utf8.RuneCountInString(m.GetProjectID()); l < 1 || l > 64 {
-		return GetRepositoryReqValidationError{
-			field:  "ProjectID",
-			reason: "value length must be between 1 and 64 runes, inclusive",
+	var errors []error
+
+	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 32 {
+		err := GetRepositoryReqValidationError{
+			field:  "ProjectCode",
+			reason: "value length must be between 1 and 32 runes, inclusive",
 		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
 	}
 
-	if l := utf8.RuneCountInString(m.GetName()); l < 1 || l > 64 {
-		return GetRepositoryReqValidationError{
+	if l := utf8.RuneCountInString(m.GetName()); l < 1 || l > 32 {
+		err := GetRepositoryReqValidationError{
 			field:  "Name",
-			reason: "value length must be between 1 and 64 runes, inclusive",
+			reason: "value length must be between 1 and 32 runes, inclusive",
 		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if len(errors) > 0 {
+		return GetRepositoryReqMultiError(errors)
 	}
 
 	return nil
 }
+
+// GetRepositoryReqMultiError is an error wrapping multiple validation errors
+// returned by GetRepositoryReq.ValidateAll() if the designated constraints
+// aren't met.
+type GetRepositoryReqMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m GetRepositoryReqMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m GetRepositoryReqMultiError) AllErrors() []error { return m }
 
 // GetRepositoryReqValidationError is the validation error returned by
 // GetRepositoryReq.Validate if the designated constraints aren't met.
@@ -607,12 +913,26 @@ var _ interface {
 } = GetRepositoryReqValidationError{}
 
 // Validate checks the field values on GetRepositoryResp with the rules defined
-// in the proto definition for this message. If any rules are violated, an
-// error is returned.
+// in the proto definition for this message. If any rules are violated, the
+// first error encountered is returned, or nil if there are no violations.
 func (m *GetRepositoryResp) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on GetRepositoryResp with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// GetRepositoryRespMultiError, or nil if none found.
+func (m *GetRepositoryResp) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *GetRepositoryResp) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
+
+	var errors []error
 
 	// no validation rules for Code
 
@@ -620,7 +940,26 @@ func (m *GetRepositoryResp) Validate() error {
 
 	// no validation rules for Result
 
-	if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
+	if all {
+		switch v := interface{}(m.GetData()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, GetRepositoryRespValidationError{
+					field:  "Data",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, GetRepositoryRespValidationError{
+					field:  "Data",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
 		if err := v.Validate(); err != nil {
 			return GetRepositoryRespValidationError{
 				field:  "Data",
@@ -630,8 +969,29 @@ func (m *GetRepositoryResp) Validate() error {
 		}
 	}
 
+	if len(errors) > 0 {
+		return GetRepositoryRespMultiError(errors)
+	}
+
 	return nil
 }
+
+// GetRepositoryRespMultiError is an error wrapping multiple validation errors
+// returned by GetRepositoryResp.ValidateAll() if the designated constraints
+// aren't met.
+type GetRepositoryRespMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m GetRepositoryRespMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m GetRepositoryRespMultiError) AllErrors() []error { return m }
 
 // GetRepositoryRespValidationError is the validation error returned by
 // GetRepositoryResp.Validate if the designated constraints aren't met.
@@ -690,34 +1050,61 @@ var _ interface {
 } = GetRepositoryRespValidationError{}
 
 // Validate checks the field values on ListRepositoryReq with the rules defined
-// in the proto definition for this message. If any rules are violated, an
-// error is returned.
+// in the proto definition for this message. If any rules are violated, the
+// first error encountered is returned, or nil if there are no violations.
 func (m *ListRepositoryReq) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ListRepositoryReq with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// ListRepositoryReqMultiError, or nil if none found.
+func (m *ListRepositoryReq) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ListRepositoryReq) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
 
-	// no validation rules for Sort
+	var errors []error
 
-	// no validation rules for Desc
-
-	// no validation rules for Page
-
-	// no validation rules for Size
-
-	if l := utf8.RuneCountInString(m.GetProjectID()); l < 1 || l > 64 {
-		return ListRepositoryReqValidationError{
-			field:  "ProjectID",
-			reason: "value length must be between 1 and 64 runes, inclusive",
+	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 32 {
+		err := ListRepositoryReqValidationError{
+			field:  "ProjectCode",
+			reason: "value length must be between 1 and 32 runes, inclusive",
 		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
 	}
 
-	// no validation rules for Name
-
-	// no validation rules for Type
+	if len(errors) > 0 {
+		return ListRepositoryReqMultiError(errors)
+	}
 
 	return nil
 }
+
+// ListRepositoryReqMultiError is an error wrapping multiple validation errors
+// returned by ListRepositoryReq.ValidateAll() if the designated constraints
+// aren't met.
+type ListRepositoryReqMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ListRepositoryReqMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ListRepositoryReqMultiError) AllErrors() []error { return m }
 
 // ListRepositoryReqValidationError is the validation error returned by
 // ListRepositoryReq.Validate if the designated constraints aren't met.
@@ -777,11 +1164,25 @@ var _ interface {
 
 // Validate checks the field values on ListRepositoryResp with the rules
 // defined in the proto definition for this message. If any rules are
-// violated, an error is returned.
+// violated, the first error encountered is returned, or nil if there are no violations.
 func (m *ListRepositoryResp) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ListRepositoryResp with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// ListRepositoryRespMultiError, or nil if none found.
+func (m *ListRepositoryResp) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ListRepositoryResp) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
+
+	var errors []error
 
 	// no validation rules for Code
 
@@ -789,18 +1190,63 @@ func (m *ListRepositoryResp) Validate() error {
 
 	// no validation rules for Result
 
-	if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
-		if err := v.Validate(); err != nil {
-			return ListRepositoryRespValidationError{
-				field:  "Data",
-				reason: "embedded message failed validation",
-				cause:  err,
+	for idx, item := range m.GetData() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, ListRepositoryRespValidationError{
+						field:  fmt.Sprintf("Data[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, ListRepositoryRespValidationError{
+						field:  fmt.Sprintf("Data[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return ListRepositoryRespValidationError{
+					field:  fmt.Sprintf("Data[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
 			}
 		}
+
+	}
+
+	if len(errors) > 0 {
+		return ListRepositoryRespMultiError(errors)
 	}
 
 	return nil
 }
+
+// ListRepositoryRespMultiError is an error wrapping multiple validation errors
+// returned by ListRepositoryResp.ValidateAll() if the designated constraints
+// aren't met.
+type ListRepositoryRespMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ListRepositoryRespMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ListRepositoryRespMultiError) AllErrors() []error { return m }
 
 // ListRepositoryRespValidationError is the validation error returned by
 // ListRepositoryResp.Validate if the designated constraints aren't met.
@@ -860,30 +1306,71 @@ var _ interface {
 
 // Validate checks the field values on DeleteRepositoryReq with the rules
 // defined in the proto definition for this message. If any rules are
-// violated, an error is returned.
+// violated, the first error encountered is returned, or nil if there are no violations.
 func (m *DeleteRepositoryReq) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on DeleteRepositoryReq with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// DeleteRepositoryReqMultiError, or nil if none found.
+func (m *DeleteRepositoryReq) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *DeleteRepositoryReq) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
 
-	if l := utf8.RuneCountInString(m.GetProjectID()); l < 1 || l > 64 {
-		return DeleteRepositoryReqValidationError{
-			field:  "ProjectID",
-			reason: "value length must be between 1 and 64 runes, inclusive",
+	var errors []error
+
+	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 32 {
+		err := DeleteRepositoryReqValidationError{
+			field:  "ProjectCode",
+			reason: "value length must be between 1 and 32 runes, inclusive",
 		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
 	}
 
-	if l := utf8.RuneCountInString(m.GetName()); l < 1 || l > 64 {
-		return DeleteRepositoryReqValidationError{
+	if l := utf8.RuneCountInString(m.GetName()); l < 1 || l > 32 {
+		err := DeleteRepositoryReqValidationError{
 			field:  "Name",
-			reason: "value length must be between 1 and 64 runes, inclusive",
+			reason: "value length must be between 1 and 32 runes, inclusive",
 		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
 	}
 
-	// no validation rules for Operator
+	if len(errors) > 0 {
+		return DeleteRepositoryReqMultiError(errors)
+	}
 
 	return nil
 }
+
+// DeleteRepositoryReqMultiError is an error wrapping multiple validation
+// errors returned by DeleteRepositoryReq.ValidateAll() if the designated
+// constraints aren't met.
+type DeleteRepositoryReqMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m DeleteRepositoryReqMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m DeleteRepositoryReqMultiError) AllErrors() []error { return m }
 
 // DeleteRepositoryReqValidationError is the validation error returned by
 // DeleteRepositoryReq.Validate if the designated constraints aren't met.
@@ -943,11 +1430,25 @@ var _ interface {
 
 // Validate checks the field values on DeleteRepositoryResp with the rules
 // defined in the proto definition for this message. If any rules are
-// violated, an error is returned.
+// violated, the first error encountered is returned, or nil if there are no violations.
 func (m *DeleteRepositoryResp) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on DeleteRepositoryResp with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// DeleteRepositoryRespMultiError, or nil if none found.
+func (m *DeleteRepositoryResp) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *DeleteRepositoryResp) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
+
+	var errors []error
 
 	// no validation rules for Code
 
@@ -955,8 +1456,29 @@ func (m *DeleteRepositoryResp) Validate() error {
 
 	// no validation rules for Result
 
+	if len(errors) > 0 {
+		return DeleteRepositoryRespMultiError(errors)
+	}
+
 	return nil
 }
+
+// DeleteRepositoryRespMultiError is an error wrapping multiple validation
+// errors returned by DeleteRepositoryResp.ValidateAll() if the designated
+// constraints aren't met.
+type DeleteRepositoryRespMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m DeleteRepositoryRespMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m DeleteRepositoryRespMultiError) AllErrors() []error { return m }
 
 // DeleteRepositoryRespValidationError is the validation error returned by
 // DeleteRepositoryResp.Validate if the designated constraints aren't met.
@@ -1014,261 +1536,47 @@ var _ interface {
 	ErrorName() string
 } = DeleteRepositoryRespValidationError{}
 
-// Validate checks the field values on DeleteRepositoriesReq with the rules
-// defined in the proto definition for this message. If any rules are
-// violated, an error is returned.
-func (m *DeleteRepositoriesReq) Validate() error {
-	if m == nil {
-		return nil
-	}
-
-	if l := utf8.RuneCountInString(m.GetProjectID()); l < 1 || l > 64 {
-		return DeleteRepositoriesReqValidationError{
-			field:  "ProjectID",
-			reason: "value length must be between 1 and 64 runes, inclusive",
-		}
-	}
-
-	return nil
-}
-
-// DeleteRepositoriesReqValidationError is the validation error returned by
-// DeleteRepositoriesReq.Validate if the designated constraints aren't met.
-type DeleteRepositoriesReqValidationError struct {
-	field  string
-	reason string
-	cause  error
-	key    bool
-}
-
-// Field function returns field value.
-func (e DeleteRepositoriesReqValidationError) Field() string { return e.field }
-
-// Reason function returns reason value.
-func (e DeleteRepositoriesReqValidationError) Reason() string { return e.reason }
-
-// Cause function returns cause value.
-func (e DeleteRepositoriesReqValidationError) Cause() error { return e.cause }
-
-// Key function returns key value.
-func (e DeleteRepositoriesReqValidationError) Key() bool { return e.key }
-
-// ErrorName returns error name.
-func (e DeleteRepositoriesReqValidationError) ErrorName() string {
-	return "DeleteRepositoriesReqValidationError"
-}
-
-// Error satisfies the builtin error interface
-func (e DeleteRepositoriesReqValidationError) Error() string {
-	cause := ""
-	if e.cause != nil {
-		cause = fmt.Sprintf(" | caused by: %v", e.cause)
-	}
-
-	key := ""
-	if e.key {
-		key = "key for "
-	}
-
-	return fmt.Sprintf(
-		"invalid %sDeleteRepositoriesReq.%s: %s%s",
-		key,
-		e.field,
-		e.reason,
-		cause)
-}
-
-var _ error = DeleteRepositoriesReqValidationError{}
-
-var _ interface {
-	Field() string
-	Reason() string
-	Key() bool
-	Cause() error
-	ErrorName() string
-} = DeleteRepositoriesReqValidationError{}
-
-// Validate checks the field values on DeleteRepositoriesResp with the rules
-// defined in the proto definition for this message. If any rules are
-// violated, an error is returned.
-func (m *DeleteRepositoriesResp) Validate() error {
-	if m == nil {
-		return nil
-	}
-
-	// no validation rules for Code
-
-	// no validation rules for Message
-
-	// no validation rules for Result
-
-	return nil
-}
-
-// DeleteRepositoriesRespValidationError is the validation error returned by
-// DeleteRepositoriesResp.Validate if the designated constraints aren't met.
-type DeleteRepositoriesRespValidationError struct {
-	field  string
-	reason string
-	cause  error
-	key    bool
-}
-
-// Field function returns field value.
-func (e DeleteRepositoriesRespValidationError) Field() string { return e.field }
-
-// Reason function returns reason value.
-func (e DeleteRepositoriesRespValidationError) Reason() string { return e.reason }
-
-// Cause function returns cause value.
-func (e DeleteRepositoriesRespValidationError) Cause() error { return e.cause }
-
-// Key function returns key value.
-func (e DeleteRepositoriesRespValidationError) Key() bool { return e.key }
-
-// ErrorName returns error name.
-func (e DeleteRepositoriesRespValidationError) ErrorName() string {
-	return "DeleteRepositoriesRespValidationError"
-}
-
-// Error satisfies the builtin error interface
-func (e DeleteRepositoriesRespValidationError) Error() string {
-	cause := ""
-	if e.cause != nil {
-		cause = fmt.Sprintf(" | caused by: %v", e.cause)
-	}
-
-	key := ""
-	if e.key {
-		key = "key for "
-	}
-
-	return fmt.Sprintf(
-		"invalid %sDeleteRepositoriesResp.%s: %s%s",
-		key,
-		e.field,
-		e.reason,
-		cause)
-}
-
-var _ error = DeleteRepositoriesRespValidationError{}
-
-var _ interface {
-	Field() string
-	Reason() string
-	Key() bool
-	Cause() error
-	ErrorName() string
-} = DeleteRepositoriesRespValidationError{}
-
-// Validate checks the field values on RepositoryListData with the rules
-// defined in the proto definition for this message. If any rules are
-// violated, an error is returned.
-func (m *RepositoryListData) Validate() error {
-	if m == nil {
-		return nil
-	}
-
-	// no validation rules for Page
-
-	// no validation rules for Size
-
-	// no validation rules for Total
-
-	for idx, item := range m.GetData() {
-		_, _ = idx, item
-
-		if v, ok := interface{}(item).(interface{ Validate() error }); ok {
-			if err := v.Validate(); err != nil {
-				return RepositoryListDataValidationError{
-					field:  fmt.Sprintf("Data[%v]", idx),
-					reason: "embedded message failed validation",
-					cause:  err,
-				}
-			}
-		}
-
-	}
-
-	return nil
-}
-
-// RepositoryListDataValidationError is the validation error returned by
-// RepositoryListData.Validate if the designated constraints aren't met.
-type RepositoryListDataValidationError struct {
-	field  string
-	reason string
-	cause  error
-	key    bool
-}
-
-// Field function returns field value.
-func (e RepositoryListDataValidationError) Field() string { return e.field }
-
-// Reason function returns reason value.
-func (e RepositoryListDataValidationError) Reason() string { return e.reason }
-
-// Cause function returns cause value.
-func (e RepositoryListDataValidationError) Cause() error { return e.cause }
-
-// Key function returns key value.
-func (e RepositoryListDataValidationError) Key() bool { return e.key }
-
-// ErrorName returns error name.
-func (e RepositoryListDataValidationError) ErrorName() string {
-	return "RepositoryListDataValidationError"
-}
-
-// Error satisfies the builtin error interface
-func (e RepositoryListDataValidationError) Error() string {
-	cause := ""
-	if e.cause != nil {
-		cause = fmt.Sprintf(" | caused by: %v", e.cause)
-	}
-
-	key := ""
-	if e.key {
-		key = "key for "
-	}
-
-	return fmt.Sprintf(
-		"invalid %sRepositoryListData.%s: %s%s",
-		key,
-		e.field,
-		e.reason,
-		cause)
-}
-
-var _ error = RepositoryListDataValidationError{}
-
-var _ interface {
-	Field() string
-	Reason() string
-	Key() bool
-	Cause() error
-	ErrorName() string
-} = RepositoryListDataValidationError{}
-
 // Validate checks the field values on Repository with the rules defined in the
-// proto definition for this message. If any rules are violated, an error is returned.
+// proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
 func (m *Repository) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on Repository with the rules defined in
+// the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in RepositoryMultiError, or
+// nil if none found.
+func (m *Repository) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *Repository) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
 
-	// no validation rules for ProjectID
+	var errors []error
+
+	// no validation rules for ProjectCode
 
 	// no validation rules for Name
 
 	// no validation rules for Type
 
-	// no validation rules for Remote
-
-	// no validation rules for RemoteURL
+	// no validation rules for RepoURL
 
 	// no validation rules for Username
 
 	// no validation rules for Password
+
+	// no validation rules for Remote
+
+	// no validation rules for RemoteURL
+
+	// no validation rules for RemoteUsername
+
+	// no validation rules for RemotePassword
 
 	// no validation rules for CreateBy
 
@@ -1278,14 +1586,28 @@ func (m *Repository) Validate() error {
 
 	// no validation rules for UpdateTime
 
-	// no validation rules for RemoteUsername
-
-	// no validation rules for RemotePassword
-
-	// no validation rules for RepoURL
+	if len(errors) > 0 {
+		return RepositoryMultiError(errors)
+	}
 
 	return nil
 }
+
+// RepositoryMultiError is an error wrapping multiple validation errors
+// returned by Repository.ValidateAll() if the designated constraints aren't met.
+type RepositoryMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m RepositoryMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m RepositoryMultiError) AllErrors() []error { return m }
 
 // RepositoryValidationError is the validation error returned by
 // Repository.Validate if the designated constraints aren't met.
@@ -1342,35 +1664,77 @@ var _ interface {
 } = RepositoryValidationError{}
 
 // Validate checks the field values on ListChartReq with the rules defined in
-// the proto definition for this message. If any rules are violated, an error
-// is returned.
+// the proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
 func (m *ListChartReq) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ListChartReq with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in ListChartReqMultiError, or
+// nil if none found.
+func (m *ListChartReq) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ListChartReq) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
+
+	var errors []error
 
 	// no validation rules for Page
 
 	// no validation rules for Size
 
 	if l := utf8.RuneCountInString(m.GetProjectID()); l < 1 || l > 64 {
-		return ListChartReqValidationError{
+		err := ListChartReqValidationError{
 			field:  "ProjectID",
 			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
 	}
 
 	if l := utf8.RuneCountInString(m.GetRepository()); l < 1 || l > 64 {
-		return ListChartReqValidationError{
+		err := ListChartReqValidationError{
 			field:  "Repository",
 			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
 	}
 
 	// no validation rules for Operator
 
+	if len(errors) > 0 {
+		return ListChartReqMultiError(errors)
+	}
+
 	return nil
 }
+
+// ListChartReqMultiError is an error wrapping multiple validation errors
+// returned by ListChartReq.ValidateAll() if the designated constraints aren't met.
+type ListChartReqMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ListChartReqMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ListChartReqMultiError) AllErrors() []error { return m }
 
 // ListChartReqValidationError is the validation error returned by
 // ListChartReq.Validate if the designated constraints aren't met.
@@ -1427,12 +1791,26 @@ var _ interface {
 } = ListChartReqValidationError{}
 
 // Validate checks the field values on ListChartResp with the rules defined in
-// the proto definition for this message. If any rules are violated, an error
-// is returned.
+// the proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
 func (m *ListChartResp) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ListChartResp with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in ListChartRespMultiError, or
+// nil if none found.
+func (m *ListChartResp) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ListChartResp) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
+
+	var errors []error
 
 	// no validation rules for Code
 
@@ -1440,7 +1818,26 @@ func (m *ListChartResp) Validate() error {
 
 	// no validation rules for Result
 
-	if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
+	if all {
+		switch v := interface{}(m.GetData()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, ListChartRespValidationError{
+					field:  "Data",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, ListChartRespValidationError{
+					field:  "Data",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
 		if err := v.Validate(); err != nil {
 			return ListChartRespValidationError{
 				field:  "Data",
@@ -1450,8 +1847,29 @@ func (m *ListChartResp) Validate() error {
 		}
 	}
 
+	if len(errors) > 0 {
+		return ListChartRespMultiError(errors)
+	}
+
 	return nil
 }
+
+// ListChartRespMultiError is an error wrapping multiple validation errors
+// returned by ListChartResp.ValidateAll() if the designated constraints
+// aren't met.
+type ListChartRespMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ListChartRespMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ListChartRespMultiError) AllErrors() []error { return m }
 
 // ListChartRespValidationError is the validation error returned by
 // ListChartResp.Validate if the designated constraints aren't met.
@@ -1508,12 +1926,26 @@ var _ interface {
 } = ListChartRespValidationError{}
 
 // Validate checks the field values on ChartListData with the rules defined in
-// the proto definition for this message. If any rules are violated, an error
-// is returned.
+// the proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
 func (m *ChartListData) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ChartListData with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in ChartListDataMultiError, or
+// nil if none found.
+func (m *ChartListData) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ChartListData) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
+
+	var errors []error
 
 	// no validation rules for Page
 
@@ -1524,7 +1956,26 @@ func (m *ChartListData) Validate() error {
 	for idx, item := range m.GetData() {
 		_, _ = idx, item
 
-		if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, ChartListDataValidationError{
+						field:  fmt.Sprintf("Data[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, ChartListDataValidationError{
+						field:  fmt.Sprintf("Data[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
 			if err := v.Validate(); err != nil {
 				return ChartListDataValidationError{
 					field:  fmt.Sprintf("Data[%v]", idx),
@@ -1536,8 +1987,29 @@ func (m *ChartListData) Validate() error {
 
 	}
 
+	if len(errors) > 0 {
+		return ChartListDataMultiError(errors)
+	}
+
 	return nil
 }
+
+// ChartListDataMultiError is an error wrapping multiple validation errors
+// returned by ChartListData.ValidateAll() if the designated constraints
+// aren't met.
+type ChartListDataMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ChartListDataMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ChartListDataMultiError) AllErrors() []error { return m }
 
 // ChartListDataValidationError is the validation error returned by
 // ChartListData.Validate if the designated constraints aren't met.
@@ -1594,11 +2066,25 @@ var _ interface {
 } = ChartListDataValidationError{}
 
 // Validate checks the field values on Chart with the rules defined in the
-// proto definition for this message. If any rules are violated, an error is returned.
+// proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
 func (m *Chart) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on Chart with the rules defined in the
+// proto definition for this message. If any rules are violated, the result is
+// a list of violation errors wrapped in ChartMultiError, or nil if none found.
+func (m *Chart) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *Chart) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
+
+	var errors []error
 
 	// no validation rules for ProjectID
 
@@ -1624,8 +2110,28 @@ func (m *Chart) Validate() error {
 
 	// no validation rules for UpdateTime
 
+	if len(errors) > 0 {
+		return ChartMultiError(errors)
+	}
+
 	return nil
 }
+
+// ChartMultiError is an error wrapping multiple validation errors returned by
+// Chart.ValidateAll() if the designated constraints aren't met.
+type ChartMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ChartMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ChartMultiError) AllErrors() []error { return m }
 
 // ChartValidationError is the validation error returned by Chart.Validate if
 // the designated constraints aren't met.
@@ -1683,41 +2189,88 @@ var _ interface {
 
 // Validate checks the field values on ListChartVersionReq with the rules
 // defined in the proto definition for this message. If any rules are
-// violated, an error is returned.
+// violated, the first error encountered is returned, or nil if there are no violations.
 func (m *ListChartVersionReq) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ListChartVersionReq with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// ListChartVersionReqMultiError, or nil if none found.
+func (m *ListChartVersionReq) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ListChartVersionReq) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
+
+	var errors []error
 
 	// no validation rules for Page
 
 	// no validation rules for Size
 
 	if l := utf8.RuneCountInString(m.GetProjectID()); l < 1 || l > 64 {
-		return ListChartVersionReqValidationError{
+		err := ListChartVersionReqValidationError{
 			field:  "ProjectID",
 			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
 	}
 
 	if l := utf8.RuneCountInString(m.GetRepository()); l < 1 || l > 64 {
-		return ListChartVersionReqValidationError{
+		err := ListChartVersionReqValidationError{
 			field:  "Repository",
 			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
 	}
 
 	if l := utf8.RuneCountInString(m.GetName()); l < 1 || l > 64 {
-		return ListChartVersionReqValidationError{
+		err := ListChartVersionReqValidationError{
 			field:  "Name",
 			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
 	}
 
 	// no validation rules for Operator
 
+	if len(errors) > 0 {
+		return ListChartVersionReqMultiError(errors)
+	}
+
 	return nil
 }
+
+// ListChartVersionReqMultiError is an error wrapping multiple validation
+// errors returned by ListChartVersionReq.ValidateAll() if the designated
+// constraints aren't met.
+type ListChartVersionReqMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ListChartVersionReqMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ListChartVersionReqMultiError) AllErrors() []error { return m }
 
 // ListChartVersionReqValidationError is the validation error returned by
 // ListChartVersionReq.Validate if the designated constraints aren't met.
@@ -1777,11 +2330,25 @@ var _ interface {
 
 // Validate checks the field values on ListChartVersionResp with the rules
 // defined in the proto definition for this message. If any rules are
-// violated, an error is returned.
+// violated, the first error encountered is returned, or nil if there are no violations.
 func (m *ListChartVersionResp) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ListChartVersionResp with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// ListChartVersionRespMultiError, or nil if none found.
+func (m *ListChartVersionResp) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ListChartVersionResp) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
+
+	var errors []error
 
 	// no validation rules for Code
 
@@ -1789,7 +2356,26 @@ func (m *ListChartVersionResp) Validate() error {
 
 	// no validation rules for Result
 
-	if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
+	if all {
+		switch v := interface{}(m.GetData()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, ListChartVersionRespValidationError{
+					field:  "Data",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, ListChartVersionRespValidationError{
+					field:  "Data",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
 		if err := v.Validate(); err != nil {
 			return ListChartVersionRespValidationError{
 				field:  "Data",
@@ -1799,8 +2385,29 @@ func (m *ListChartVersionResp) Validate() error {
 		}
 	}
 
+	if len(errors) > 0 {
+		return ListChartVersionRespMultiError(errors)
+	}
+
 	return nil
 }
+
+// ListChartVersionRespMultiError is an error wrapping multiple validation
+// errors returned by ListChartVersionResp.ValidateAll() if the designated
+// constraints aren't met.
+type ListChartVersionRespMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ListChartVersionRespMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ListChartVersionRespMultiError) AllErrors() []error { return m }
 
 // ListChartVersionRespValidationError is the validation error returned by
 // ListChartVersionResp.Validate if the designated constraints aren't met.
@@ -1860,11 +2467,25 @@ var _ interface {
 
 // Validate checks the field values on ChartVersionListData with the rules
 // defined in the proto definition for this message. If any rules are
-// violated, an error is returned.
+// violated, the first error encountered is returned, or nil if there are no violations.
 func (m *ChartVersionListData) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ChartVersionListData with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// ChartVersionListDataMultiError, or nil if none found.
+func (m *ChartVersionListData) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ChartVersionListData) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
+
+	var errors []error
 
 	// no validation rules for Page
 
@@ -1875,7 +2496,26 @@ func (m *ChartVersionListData) Validate() error {
 	for idx, item := range m.GetData() {
 		_, _ = idx, item
 
-		if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, ChartVersionListDataValidationError{
+						field:  fmt.Sprintf("Data[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, ChartVersionListDataValidationError{
+						field:  fmt.Sprintf("Data[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
 			if err := v.Validate(); err != nil {
 				return ChartVersionListDataValidationError{
 					field:  fmt.Sprintf("Data[%v]", idx),
@@ -1887,8 +2527,29 @@ func (m *ChartVersionListData) Validate() error {
 
 	}
 
+	if len(errors) > 0 {
+		return ChartVersionListDataMultiError(errors)
+	}
+
 	return nil
 }
+
+// ChartVersionListDataMultiError is an error wrapping multiple validation
+// errors returned by ChartVersionListData.ValidateAll() if the designated
+// constraints aren't met.
+type ChartVersionListDataMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ChartVersionListDataMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ChartVersionListDataMultiError) AllErrors() []error { return m }
 
 // ChartVersionListDataValidationError is the validation error returned by
 // ChartVersionListData.Validate if the designated constraints aren't met.
@@ -1947,12 +2608,26 @@ var _ interface {
 } = ChartVersionListDataValidationError{}
 
 // Validate checks the field values on ChartVersion with the rules defined in
-// the proto definition for this message. If any rules are violated, an error
-// is returned.
+// the proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
 func (m *ChartVersion) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ChartVersion with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in ChartVersionMultiError, or
+// nil if none found.
+func (m *ChartVersion) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ChartVersion) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
+
+	var errors []error
 
 	// no validation rules for Name
 
@@ -1970,8 +2645,28 @@ func (m *ChartVersion) Validate() error {
 
 	// no validation rules for UpdateTime
 
+	if len(errors) > 0 {
+		return ChartVersionMultiError(errors)
+	}
+
 	return nil
 }
+
+// ChartVersionMultiError is an error wrapping multiple validation errors
+// returned by ChartVersion.ValidateAll() if the designated constraints aren't met.
+type ChartVersionMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ChartVersionMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ChartVersionMultiError) AllErrors() []error { return m }
 
 // ChartVersionValidationError is the validation error returned by
 // ChartVersion.Validate if the designated constraints aren't met.
@@ -2028,45 +2723,96 @@ var _ interface {
 } = ChartVersionValidationError{}
 
 // Validate checks the field values on GetChartDetailReq with the rules defined
-// in the proto definition for this message. If any rules are violated, an
-// error is returned.
+// in the proto definition for this message. If any rules are violated, the
+// first error encountered is returned, or nil if there are no violations.
 func (m *GetChartDetailReq) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on GetChartDetailReq with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// GetChartDetailReqMultiError, or nil if none found.
+func (m *GetChartDetailReq) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *GetChartDetailReq) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
 
+	var errors []error
+
 	if l := utf8.RuneCountInString(m.GetProjectID()); l < 1 || l > 64 {
-		return GetChartDetailReqValidationError{
+		err := GetChartDetailReqValidationError{
 			field:  "ProjectID",
 			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
 	}
 
 	if l := utf8.RuneCountInString(m.GetRepository()); l < 1 || l > 64 {
-		return GetChartDetailReqValidationError{
+		err := GetChartDetailReqValidationError{
 			field:  "Repository",
 			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
 	}
 
 	if l := utf8.RuneCountInString(m.GetName()); l < 1 || l > 64 {
-		return GetChartDetailReqValidationError{
+		err := GetChartDetailReqValidationError{
 			field:  "Name",
 			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
 	}
 
 	if l := utf8.RuneCountInString(m.GetVersion()); l < 1 || l > 64 {
-		return GetChartDetailReqValidationError{
+		err := GetChartDetailReqValidationError{
 			field:  "Version",
 			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
 	}
 
 	// no validation rules for Operator
 
+	if len(errors) > 0 {
+		return GetChartDetailReqMultiError(errors)
+	}
+
 	return nil
 }
+
+// GetChartDetailReqMultiError is an error wrapping multiple validation errors
+// returned by GetChartDetailReq.ValidateAll() if the designated constraints
+// aren't met.
+type GetChartDetailReqMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m GetChartDetailReqMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m GetChartDetailReqMultiError) AllErrors() []error { return m }
 
 // GetChartDetailReqValidationError is the validation error returned by
 // GetChartDetailReq.Validate if the designated constraints aren't met.
@@ -2126,11 +2872,25 @@ var _ interface {
 
 // Validate checks the field values on GetChartDetailResp with the rules
 // defined in the proto definition for this message. If any rules are
-// violated, an error is returned.
+// violated, the first error encountered is returned, or nil if there are no violations.
 func (m *GetChartDetailResp) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on GetChartDetailResp with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// GetChartDetailRespMultiError, or nil if none found.
+func (m *GetChartDetailResp) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *GetChartDetailResp) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
+
+	var errors []error
 
 	// no validation rules for Code
 
@@ -2138,7 +2898,26 @@ func (m *GetChartDetailResp) Validate() error {
 
 	// no validation rules for Result
 
-	if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
+	if all {
+		switch v := interface{}(m.GetData()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, GetChartDetailRespValidationError{
+					field:  "Data",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, GetChartDetailRespValidationError{
+					field:  "Data",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
 		if err := v.Validate(); err != nil {
 			return GetChartDetailRespValidationError{
 				field:  "Data",
@@ -2148,8 +2927,29 @@ func (m *GetChartDetailResp) Validate() error {
 		}
 	}
 
+	if len(errors) > 0 {
+		return GetChartDetailRespMultiError(errors)
+	}
+
 	return nil
 }
+
+// GetChartDetailRespMultiError is an error wrapping multiple validation errors
+// returned by GetChartDetailResp.ValidateAll() if the designated constraints
+// aren't met.
+type GetChartDetailRespMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m GetChartDetailRespMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m GetChartDetailRespMultiError) AllErrors() []error { return m }
 
 // GetChartDetailRespValidationError is the validation error returned by
 // GetChartDetailResp.Validate if the designated constraints aren't met.
@@ -2208,12 +3008,26 @@ var _ interface {
 } = GetChartDetailRespValidationError{}
 
 // Validate checks the field values on ChartDetail with the rules defined in
-// the proto definition for this message. If any rules are violated, an error
-// is returned.
+// the proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
 func (m *ChartDetail) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ChartDetail with the rules defined in
+// the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in ChartDetailMultiError, or
+// nil if none found.
+func (m *ChartDetail) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ChartDetail) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
+
+	var errors []error
 
 	// no validation rules for Name
 
@@ -2221,25 +3035,74 @@ func (m *ChartDetail) Validate() error {
 
 	// no validation rules for Readme
 
-	for key, val := range m.GetContents() {
-		_ = val
+	{
+		sorted_keys := make([]string, len(m.GetContents()))
+		i := 0
+		for key := range m.GetContents() {
+			sorted_keys[i] = key
+			i++
+		}
+		sort.Slice(sorted_keys, func(i, j int) bool { return sorted_keys[i] < sorted_keys[j] })
+		for _, key := range sorted_keys {
+			val := m.GetContents()[key]
+			_ = val
 
-		// no validation rules for Contents[key]
+			// no validation rules for Contents[key]
 
-		if v, ok := interface{}(val).(interface{ Validate() error }); ok {
-			if err := v.Validate(); err != nil {
-				return ChartDetailValidationError{
-					field:  fmt.Sprintf("Contents[%v]", key),
-					reason: "embedded message failed validation",
-					cause:  err,
+			if all {
+				switch v := interface{}(val).(type) {
+				case interface{ ValidateAll() error }:
+					if err := v.ValidateAll(); err != nil {
+						errors = append(errors, ChartDetailValidationError{
+							field:  fmt.Sprintf("Contents[%v]", key),
+							reason: "embedded message failed validation",
+							cause:  err,
+						})
+					}
+				case interface{ Validate() error }:
+					if err := v.Validate(); err != nil {
+						errors = append(errors, ChartDetailValidationError{
+							field:  fmt.Sprintf("Contents[%v]", key),
+							reason: "embedded message failed validation",
+							cause:  err,
+						})
+					}
+				}
+			} else if v, ok := interface{}(val).(interface{ Validate() error }); ok {
+				if err := v.Validate(); err != nil {
+					return ChartDetailValidationError{
+						field:  fmt.Sprintf("Contents[%v]", key),
+						reason: "embedded message failed validation",
+						cause:  err,
+					}
 				}
 			}
-		}
 
+		}
+	}
+
+	if len(errors) > 0 {
+		return ChartDetailMultiError(errors)
 	}
 
 	return nil
 }
+
+// ChartDetailMultiError is an error wrapping multiple validation errors
+// returned by ChartDetail.ValidateAll() if the designated constraints aren't met.
+type ChartDetailMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ChartDetailMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ChartDetailMultiError) AllErrors() []error { return m }
 
 // ChartDetailValidationError is the validation error returned by
 // ChartDetail.Validate if the designated constraints aren't met.
@@ -2296,12 +3159,26 @@ var _ interface {
 } = ChartDetailValidationError{}
 
 // Validate checks the field values on FileContent with the rules defined in
-// the proto definition for this message. If any rules are violated, an error
-// is returned.
+// the proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
 func (m *FileContent) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on FileContent with the rules defined in
+// the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in FileContentMultiError, or
+// nil if none found.
+func (m *FileContent) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *FileContent) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
+
+	var errors []error
 
 	// no validation rules for Name
 
@@ -2309,8 +3186,28 @@ func (m *FileContent) Validate() error {
 
 	// no validation rules for Content
 
+	if len(errors) > 0 {
+		return FileContentMultiError(errors)
+	}
+
 	return nil
 }
+
+// FileContentMultiError is an error wrapping multiple validation errors
+// returned by FileContent.ValidateAll() if the designated constraints aren't met.
+type FileContentMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m FileContentMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m FileContentMultiError) AllErrors() []error { return m }
 
 // FileContentValidationError is the validation error returned by
 // FileContent.Validate if the designated constraints aren't met.
@@ -2367,30 +3264,69 @@ var _ interface {
 } = FileContentValidationError{}
 
 // Validate checks the field values on ListReleaseReq with the rules defined in
-// the proto definition for this message. If any rules are violated, an error
-// is returned.
+// the proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
 func (m *ListReleaseReq) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ListReleaseReq with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in ListReleaseReqMultiError,
+// or nil if none found.
+func (m *ListReleaseReq) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ListReleaseReq) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
+
+	var errors []error
 
 	// no validation rules for Page
 
 	// no validation rules for Size
 
 	if l := utf8.RuneCountInString(m.GetClusterID()); l < 1 || l > 64 {
-		return ListReleaseReqValidationError{
+		err := ListReleaseReqValidationError{
 			field:  "ClusterID",
 			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
 	}
 
 	// no validation rules for Namespace
 
 	// no validation rules for Name
 
+	if len(errors) > 0 {
+		return ListReleaseReqMultiError(errors)
+	}
+
 	return nil
 }
+
+// ListReleaseReqMultiError is an error wrapping multiple validation errors
+// returned by ListReleaseReq.ValidateAll() if the designated constraints
+// aren't met.
+type ListReleaseReqMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ListReleaseReqMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ListReleaseReqMultiError) AllErrors() []error { return m }
 
 // ListReleaseReqValidationError is the validation error returned by
 // ListReleaseReq.Validate if the designated constraints aren't met.
@@ -2447,12 +3383,26 @@ var _ interface {
 } = ListReleaseReqValidationError{}
 
 // Validate checks the field values on ListReleaseResp with the rules defined
-// in the proto definition for this message. If any rules are violated, an
-// error is returned.
+// in the proto definition for this message. If any rules are violated, the
+// first error encountered is returned, or nil if there are no violations.
 func (m *ListReleaseResp) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ListReleaseResp with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// ListReleaseRespMultiError, or nil if none found.
+func (m *ListReleaseResp) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ListReleaseResp) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
+
+	var errors []error
 
 	// no validation rules for Code
 
@@ -2460,7 +3410,26 @@ func (m *ListReleaseResp) Validate() error {
 
 	// no validation rules for Result
 
-	if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
+	if all {
+		switch v := interface{}(m.GetData()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, ListReleaseRespValidationError{
+					field:  "Data",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, ListReleaseRespValidationError{
+					field:  "Data",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
 		if err := v.Validate(); err != nil {
 			return ListReleaseRespValidationError{
 				field:  "Data",
@@ -2470,8 +3439,29 @@ func (m *ListReleaseResp) Validate() error {
 		}
 	}
 
+	if len(errors) > 0 {
+		return ListReleaseRespMultiError(errors)
+	}
+
 	return nil
 }
+
+// ListReleaseRespMultiError is an error wrapping multiple validation errors
+// returned by ListReleaseResp.ValidateAll() if the designated constraints
+// aren't met.
+type ListReleaseRespMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ListReleaseRespMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ListReleaseRespMultiError) AllErrors() []error { return m }
 
 // ListReleaseRespValidationError is the validation error returned by
 // ListReleaseResp.Validate if the designated constraints aren't met.
@@ -2529,35 +3519,82 @@ var _ interface {
 
 // Validate checks the field values on GetReleaseDetailReq with the rules
 // defined in the proto definition for this message. If any rules are
-// violated, an error is returned.
+// violated, the first error encountered is returned, or nil if there are no violations.
 func (m *GetReleaseDetailReq) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on GetReleaseDetailReq with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// GetReleaseDetailReqMultiError, or nil if none found.
+func (m *GetReleaseDetailReq) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *GetReleaseDetailReq) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
 
+	var errors []error
+
 	if l := utf8.RuneCountInString(m.GetClusterID()); l < 1 || l > 64 {
-		return GetReleaseDetailReqValidationError{
+		err := GetReleaseDetailReqValidationError{
 			field:  "ClusterID",
 			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
 	}
 
 	if l := utf8.RuneCountInString(m.GetNamespace()); l < 1 || l > 64 {
-		return GetReleaseDetailReqValidationError{
+		err := GetReleaseDetailReqValidationError{
 			field:  "Namespace",
 			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
 	}
 
 	if l := utf8.RuneCountInString(m.GetName()); l < 1 || l > 64 {
-		return GetReleaseDetailReqValidationError{
+		err := GetReleaseDetailReqValidationError{
 			field:  "Name",
 			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if len(errors) > 0 {
+		return GetReleaseDetailReqMultiError(errors)
 	}
 
 	return nil
 }
+
+// GetReleaseDetailReqMultiError is an error wrapping multiple validation
+// errors returned by GetReleaseDetailReq.ValidateAll() if the designated
+// constraints aren't met.
+type GetReleaseDetailReqMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m GetReleaseDetailReqMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m GetReleaseDetailReqMultiError) AllErrors() []error { return m }
 
 // GetReleaseDetailReqValidationError is the validation error returned by
 // GetReleaseDetailReq.Validate if the designated constraints aren't met.
@@ -2617,11 +3654,25 @@ var _ interface {
 
 // Validate checks the field values on GetReleaseDetailResp with the rules
 // defined in the proto definition for this message. If any rules are
-// violated, an error is returned.
+// violated, the first error encountered is returned, or nil if there are no violations.
 func (m *GetReleaseDetailResp) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on GetReleaseDetailResp with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// GetReleaseDetailRespMultiError, or nil if none found.
+func (m *GetReleaseDetailResp) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *GetReleaseDetailResp) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
+
+	var errors []error
 
 	// no validation rules for Code
 
@@ -2629,7 +3680,26 @@ func (m *GetReleaseDetailResp) Validate() error {
 
 	// no validation rules for Result
 
-	if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
+	if all {
+		switch v := interface{}(m.GetData()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, GetReleaseDetailRespValidationError{
+					field:  "Data",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, GetReleaseDetailRespValidationError{
+					field:  "Data",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
 		if err := v.Validate(); err != nil {
 			return GetReleaseDetailRespValidationError{
 				field:  "Data",
@@ -2639,8 +3709,29 @@ func (m *GetReleaseDetailResp) Validate() error {
 		}
 	}
 
+	if len(errors) > 0 {
+		return GetReleaseDetailRespMultiError(errors)
+	}
+
 	return nil
 }
+
+// GetReleaseDetailRespMultiError is an error wrapping multiple validation
+// errors returned by GetReleaseDetailResp.ValidateAll() if the designated
+// constraints aren't met.
+type GetReleaseDetailRespMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m GetReleaseDetailRespMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m GetReleaseDetailRespMultiError) AllErrors() []error { return m }
 
 // GetReleaseDetailRespValidationError is the validation error returned by
 // GetReleaseDetailResp.Validate if the designated constraints aren't met.
@@ -2699,12 +3790,26 @@ var _ interface {
 } = GetReleaseDetailRespValidationError{}
 
 // Validate checks the field values on ReleaseListData with the rules defined
-// in the proto definition for this message. If any rules are violated, an
-// error is returned.
+// in the proto definition for this message. If any rules are violated, the
+// first error encountered is returned, or nil if there are no violations.
 func (m *ReleaseListData) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ReleaseListData with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// ReleaseListDataMultiError, or nil if none found.
+func (m *ReleaseListData) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ReleaseListData) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
+
+	var errors []error
 
 	// no validation rules for Page
 
@@ -2715,7 +3820,26 @@ func (m *ReleaseListData) Validate() error {
 	for idx, item := range m.GetData() {
 		_, _ = idx, item
 
-		if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, ReleaseListDataValidationError{
+						field:  fmt.Sprintf("Data[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, ReleaseListDataValidationError{
+						field:  fmt.Sprintf("Data[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
 			if err := v.Validate(); err != nil {
 				return ReleaseListDataValidationError{
 					field:  fmt.Sprintf("Data[%v]", idx),
@@ -2727,8 +3851,29 @@ func (m *ReleaseListData) Validate() error {
 
 	}
 
+	if len(errors) > 0 {
+		return ReleaseListDataMultiError(errors)
+	}
+
 	return nil
 }
+
+// ReleaseListDataMultiError is an error wrapping multiple validation errors
+// returned by ReleaseListData.ValidateAll() if the designated constraints
+// aren't met.
+type ReleaseListDataMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ReleaseListDataMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ReleaseListDataMultiError) AllErrors() []error { return m }
 
 // ReleaseListDataValidationError is the validation error returned by
 // ReleaseListData.Validate if the designated constraints aren't met.
@@ -2785,11 +3930,25 @@ var _ interface {
 } = ReleaseListDataValidationError{}
 
 // Validate checks the field values on Release with the rules defined in the
-// proto definition for this message. If any rules are violated, an error is returned.
+// proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
 func (m *Release) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on Release with the rules defined in the
+// proto definition for this message. If any rules are violated, the result is
+// a list of violation errors wrapped in ReleaseMultiError, or nil if none found.
+func (m *Release) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *Release) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
+
+	var errors []error
 
 	// no validation rules for Name
 
@@ -2807,8 +3966,28 @@ func (m *Release) Validate() error {
 
 	// no validation rules for ChartVersion
 
+	if len(errors) > 0 {
+		return ReleaseMultiError(errors)
+	}
+
 	return nil
 }
+
+// ReleaseMultiError is an error wrapping multiple validation errors returned
+// by Release.ValidateAll() if the designated constraints aren't met.
+type ReleaseMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ReleaseMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ReleaseMultiError) AllErrors() []error { return m }
 
 // ReleaseValidationError is the validation error returned by Release.Validate
 // if the designated constraints aren't met.
@@ -2865,12 +4044,26 @@ var _ interface {
 } = ReleaseValidationError{}
 
 // Validate checks the field values on ReleaseDetail with the rules defined in
-// the proto definition for this message. If any rules are violated, an error
-// is returned.
+// the proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
 func (m *ReleaseDetail) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ReleaseDetail with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in ReleaseDetailMultiError, or
+// nil if none found.
+func (m *ReleaseDetail) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ReleaseDetail) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
+
+	var errors []error
 
 	// no validation rules for Name
 
@@ -2888,8 +4081,29 @@ func (m *ReleaseDetail) Validate() error {
 
 	// no validation rules for ChartVersion
 
+	if len(errors) > 0 {
+		return ReleaseDetailMultiError(errors)
+	}
+
 	return nil
 }
+
+// ReleaseDetailMultiError is an error wrapping multiple validation errors
+// returned by ReleaseDetail.ValidateAll() if the designated constraints
+// aren't met.
+type ReleaseDetailMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ReleaseDetailMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ReleaseDetailMultiError) AllErrors() []error { return m }
 
 // ReleaseDetailValidationError is the validation error returned by
 // ReleaseDetail.Validate if the designated constraints aren't met.
@@ -2946,68 +4160,131 @@ var _ interface {
 } = ReleaseDetailValidationError{}
 
 // Validate checks the field values on InstallReleaseReq with the rules defined
-// in the proto definition for this message. If any rules are violated, an
-// error is returned.
+// in the proto definition for this message. If any rules are violated, the
+// first error encountered is returned, or nil if there are no violations.
 func (m *InstallReleaseReq) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on InstallReleaseReq with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// InstallReleaseReqMultiError, or nil if none found.
+func (m *InstallReleaseReq) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *InstallReleaseReq) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
 
+	var errors []error
+
 	if l := utf8.RuneCountInString(m.GetName()); l < 1 || l > 64 {
-		return InstallReleaseReqValidationError{
+		err := InstallReleaseReqValidationError{
 			field:  "Name",
 			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
 	}
 
 	if l := utf8.RuneCountInString(m.GetNamespace()); l < 1 || l > 64 {
-		return InstallReleaseReqValidationError{
+		err := InstallReleaseReqValidationError{
 			field:  "Namespace",
 			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
 	}
 
 	if l := utf8.RuneCountInString(m.GetClusterID()); l < 1 || l > 64 {
-		return InstallReleaseReqValidationError{
+		err := InstallReleaseReqValidationError{
 			field:  "ClusterID",
 			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
 	}
 
 	if l := utf8.RuneCountInString(m.GetProjectID()); l < 1 || l > 64 {
-		return InstallReleaseReqValidationError{
+		err := InstallReleaseReqValidationError{
 			field:  "ProjectID",
 			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
 	}
 
 	if l := utf8.RuneCountInString(m.GetRepository()); l < 1 || l > 64 {
-		return InstallReleaseReqValidationError{
+		err := InstallReleaseReqValidationError{
 			field:  "Repository",
 			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
 	}
 
 	if l := utf8.RuneCountInString(m.GetChart()); l < 1 || l > 64 {
-		return InstallReleaseReqValidationError{
+		err := InstallReleaseReqValidationError{
 			field:  "Chart",
 			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
 	}
 
 	if l := utf8.RuneCountInString(m.GetVersion()); l < 1 || l > 64 {
-		return InstallReleaseReqValidationError{
+		err := InstallReleaseReqValidationError{
 			field:  "Version",
 			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
 	}
 
 	// no validation rules for Operator
 
 	// no validation rules for BcsSysVar
 
+	if len(errors) > 0 {
+		return InstallReleaseReqMultiError(errors)
+	}
+
 	return nil
 }
+
+// InstallReleaseReqMultiError is an error wrapping multiple validation errors
+// returned by InstallReleaseReq.ValidateAll() if the designated constraints
+// aren't met.
+type InstallReleaseReqMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m InstallReleaseReqMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m InstallReleaseReqMultiError) AllErrors() []error { return m }
 
 // InstallReleaseReqValidationError is the validation error returned by
 // InstallReleaseReq.Validate if the designated constraints aren't met.
@@ -3067,11 +4344,25 @@ var _ interface {
 
 // Validate checks the field values on InstallReleaseResp with the rules
 // defined in the proto definition for this message. If any rules are
-// violated, an error is returned.
+// violated, the first error encountered is returned, or nil if there are no violations.
 func (m *InstallReleaseResp) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on InstallReleaseResp with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// InstallReleaseRespMultiError, or nil if none found.
+func (m *InstallReleaseResp) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *InstallReleaseResp) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
+
+	var errors []error
 
 	// no validation rules for Code
 
@@ -3079,7 +4370,26 @@ func (m *InstallReleaseResp) Validate() error {
 
 	// no validation rules for Result
 
-	if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
+	if all {
+		switch v := interface{}(m.GetData()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, InstallReleaseRespValidationError{
+					field:  "Data",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, InstallReleaseRespValidationError{
+					field:  "Data",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
 		if err := v.Validate(); err != nil {
 			return InstallReleaseRespValidationError{
 				field:  "Data",
@@ -3089,8 +4399,29 @@ func (m *InstallReleaseResp) Validate() error {
 		}
 	}
 
+	if len(errors) > 0 {
+		return InstallReleaseRespMultiError(errors)
+	}
+
 	return nil
 }
+
+// InstallReleaseRespMultiError is an error wrapping multiple validation errors
+// returned by InstallReleaseResp.ValidateAll() if the designated constraints
+// aren't met.
+type InstallReleaseRespMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m InstallReleaseRespMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m InstallReleaseRespMultiError) AllErrors() []error { return m }
 
 // InstallReleaseRespValidationError is the validation error returned by
 // InstallReleaseResp.Validate if the designated constraints aren't met.
@@ -3150,37 +4481,84 @@ var _ interface {
 
 // Validate checks the field values on UninstallReleaseReq with the rules
 // defined in the proto definition for this message. If any rules are
-// violated, an error is returned.
+// violated, the first error encountered is returned, or nil if there are no violations.
 func (m *UninstallReleaseReq) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on UninstallReleaseReq with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// UninstallReleaseReqMultiError, or nil if none found.
+func (m *UninstallReleaseReq) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *UninstallReleaseReq) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
 
+	var errors []error
+
 	if l := utf8.RuneCountInString(m.GetName()); l < 1 || l > 64 {
-		return UninstallReleaseReqValidationError{
+		err := UninstallReleaseReqValidationError{
 			field:  "Name",
 			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
 	}
 
 	if l := utf8.RuneCountInString(m.GetNamespace()); l < 1 || l > 64 {
-		return UninstallReleaseReqValidationError{
+		err := UninstallReleaseReqValidationError{
 			field:  "Namespace",
 			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
 	}
 
 	if l := utf8.RuneCountInString(m.GetClusterID()); l < 1 || l > 64 {
-		return UninstallReleaseReqValidationError{
+		err := UninstallReleaseReqValidationError{
 			field:  "ClusterID",
 			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
 	}
 
 	// no validation rules for Operator
 
+	if len(errors) > 0 {
+		return UninstallReleaseReqMultiError(errors)
+	}
+
 	return nil
 }
+
+// UninstallReleaseReqMultiError is an error wrapping multiple validation
+// errors returned by UninstallReleaseReq.ValidateAll() if the designated
+// constraints aren't met.
+type UninstallReleaseReqMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m UninstallReleaseReqMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m UninstallReleaseReqMultiError) AllErrors() []error { return m }
 
 // UninstallReleaseReqValidationError is the validation error returned by
 // UninstallReleaseReq.Validate if the designated constraints aren't met.
@@ -3240,11 +4618,25 @@ var _ interface {
 
 // Validate checks the field values on UninstallReleaseResp with the rules
 // defined in the proto definition for this message. If any rules are
-// violated, an error is returned.
+// violated, the first error encountered is returned, or nil if there are no violations.
 func (m *UninstallReleaseResp) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on UninstallReleaseResp with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// UninstallReleaseRespMultiError, or nil if none found.
+func (m *UninstallReleaseResp) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *UninstallReleaseResp) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
+
+	var errors []error
 
 	// no validation rules for Code
 
@@ -3252,8 +4644,29 @@ func (m *UninstallReleaseResp) Validate() error {
 
 	// no validation rules for Result
 
+	if len(errors) > 0 {
+		return UninstallReleaseRespMultiError(errors)
+	}
+
 	return nil
 }
+
+// UninstallReleaseRespMultiError is an error wrapping multiple validation
+// errors returned by UninstallReleaseResp.ValidateAll() if the designated
+// constraints aren't met.
+type UninstallReleaseRespMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m UninstallReleaseRespMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m UninstallReleaseRespMultiError) AllErrors() []error { return m }
 
 // UninstallReleaseRespValidationError is the validation error returned by
 // UninstallReleaseResp.Validate if the designated constraints aren't met.
@@ -3312,68 +4725,131 @@ var _ interface {
 } = UninstallReleaseRespValidationError{}
 
 // Validate checks the field values on UpgradeReleaseReq with the rules defined
-// in the proto definition for this message. If any rules are violated, an
-// error is returned.
+// in the proto definition for this message. If any rules are violated, the
+// first error encountered is returned, or nil if there are no violations.
 func (m *UpgradeReleaseReq) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on UpgradeReleaseReq with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// UpgradeReleaseReqMultiError, or nil if none found.
+func (m *UpgradeReleaseReq) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *UpgradeReleaseReq) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
 
+	var errors []error
+
 	if l := utf8.RuneCountInString(m.GetName()); l < 1 || l > 64 {
-		return UpgradeReleaseReqValidationError{
+		err := UpgradeReleaseReqValidationError{
 			field:  "Name",
 			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
 	}
 
 	if l := utf8.RuneCountInString(m.GetNamespace()); l < 1 || l > 64 {
-		return UpgradeReleaseReqValidationError{
+		err := UpgradeReleaseReqValidationError{
 			field:  "Namespace",
 			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
 	}
 
 	if l := utf8.RuneCountInString(m.GetClusterID()); l < 1 || l > 64 {
-		return UpgradeReleaseReqValidationError{
+		err := UpgradeReleaseReqValidationError{
 			field:  "ClusterID",
 			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
 	}
 
 	if l := utf8.RuneCountInString(m.GetProjectID()); l < 1 || l > 64 {
-		return UpgradeReleaseReqValidationError{
+		err := UpgradeReleaseReqValidationError{
 			field:  "ProjectID",
 			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
 	}
 
 	if l := utf8.RuneCountInString(m.GetRepository()); l < 1 || l > 64 {
-		return UpgradeReleaseReqValidationError{
+		err := UpgradeReleaseReqValidationError{
 			field:  "Repository",
 			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
 	}
 
 	if l := utf8.RuneCountInString(m.GetChart()); l < 1 || l > 64 {
-		return UpgradeReleaseReqValidationError{
+		err := UpgradeReleaseReqValidationError{
 			field:  "Chart",
 			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
 	}
 
 	if l := utf8.RuneCountInString(m.GetVersion()); l < 1 || l > 64 {
-		return UpgradeReleaseReqValidationError{
+		err := UpgradeReleaseReqValidationError{
 			field:  "Version",
 			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
 	}
 
 	// no validation rules for Operator
 
 	// no validation rules for BcsSysVar
 
+	if len(errors) > 0 {
+		return UpgradeReleaseReqMultiError(errors)
+	}
+
 	return nil
 }
+
+// UpgradeReleaseReqMultiError is an error wrapping multiple validation errors
+// returned by UpgradeReleaseReq.ValidateAll() if the designated constraints
+// aren't met.
+type UpgradeReleaseReqMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m UpgradeReleaseReqMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m UpgradeReleaseReqMultiError) AllErrors() []error { return m }
 
 // UpgradeReleaseReqValidationError is the validation error returned by
 // UpgradeReleaseReq.Validate if the designated constraints aren't met.
@@ -3433,11 +4909,25 @@ var _ interface {
 
 // Validate checks the field values on UpgradeReleaseResp with the rules
 // defined in the proto definition for this message. If any rules are
-// violated, an error is returned.
+// violated, the first error encountered is returned, or nil if there are no violations.
 func (m *UpgradeReleaseResp) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on UpgradeReleaseResp with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// UpgradeReleaseRespMultiError, or nil if none found.
+func (m *UpgradeReleaseResp) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *UpgradeReleaseResp) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
+
+	var errors []error
 
 	// no validation rules for Code
 
@@ -3445,7 +4935,26 @@ func (m *UpgradeReleaseResp) Validate() error {
 
 	// no validation rules for Result
 
-	if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
+	if all {
+		switch v := interface{}(m.GetData()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, UpgradeReleaseRespValidationError{
+					field:  "Data",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, UpgradeReleaseRespValidationError{
+					field:  "Data",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
 		if err := v.Validate(); err != nil {
 			return UpgradeReleaseRespValidationError{
 				field:  "Data",
@@ -3455,8 +4964,29 @@ func (m *UpgradeReleaseResp) Validate() error {
 		}
 	}
 
+	if len(errors) > 0 {
+		return UpgradeReleaseRespMultiError(errors)
+	}
+
 	return nil
 }
+
+// UpgradeReleaseRespMultiError is an error wrapping multiple validation errors
+// returned by UpgradeReleaseResp.ValidateAll() if the designated constraints
+// aren't met.
+type UpgradeReleaseRespMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m UpgradeReleaseRespMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m UpgradeReleaseRespMultiError) AllErrors() []error { return m }
 
 // UpgradeReleaseRespValidationError is the validation error returned by
 // UpgradeReleaseResp.Validate if the designated constraints aren't met.
@@ -3516,39 +5046,86 @@ var _ interface {
 
 // Validate checks the field values on RollbackReleaseReq with the rules
 // defined in the proto definition for this message. If any rules are
-// violated, an error is returned.
+// violated, the first error encountered is returned, or nil if there are no violations.
 func (m *RollbackReleaseReq) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on RollbackReleaseReq with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// RollbackReleaseReqMultiError, or nil if none found.
+func (m *RollbackReleaseReq) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *RollbackReleaseReq) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
 
+	var errors []error
+
 	if l := utf8.RuneCountInString(m.GetName()); l < 1 || l > 64 {
-		return RollbackReleaseReqValidationError{
+		err := RollbackReleaseReqValidationError{
 			field:  "Name",
 			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
 	}
 
 	if l := utf8.RuneCountInString(m.GetNamespace()); l < 1 || l > 64 {
-		return RollbackReleaseReqValidationError{
+		err := RollbackReleaseReqValidationError{
 			field:  "Namespace",
 			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
 	}
 
 	if l := utf8.RuneCountInString(m.GetClusterID()); l < 1 || l > 64 {
-		return RollbackReleaseReqValidationError{
+		err := RollbackReleaseReqValidationError{
 			field:  "ClusterID",
 			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
 	}
 
 	// no validation rules for Revision
 
 	// no validation rules for Operator
 
+	if len(errors) > 0 {
+		return RollbackReleaseReqMultiError(errors)
+	}
+
 	return nil
 }
+
+// RollbackReleaseReqMultiError is an error wrapping multiple validation errors
+// returned by RollbackReleaseReq.ValidateAll() if the designated constraints
+// aren't met.
+type RollbackReleaseReqMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m RollbackReleaseReqMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m RollbackReleaseReqMultiError) AllErrors() []error { return m }
 
 // RollbackReleaseReqValidationError is the validation error returned by
 // RollbackReleaseReq.Validate if the designated constraints aren't met.
@@ -3608,11 +5185,25 @@ var _ interface {
 
 // Validate checks the field values on RollbackReleaseResp with the rules
 // defined in the proto definition for this message. If any rules are
-// violated, an error is returned.
+// violated, the first error encountered is returned, or nil if there are no violations.
 func (m *RollbackReleaseResp) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on RollbackReleaseResp with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// RollbackReleaseRespMultiError, or nil if none found.
+func (m *RollbackReleaseResp) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *RollbackReleaseResp) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
+
+	var errors []error
 
 	// no validation rules for Code
 
@@ -3620,8 +5211,29 @@ func (m *RollbackReleaseResp) Validate() error {
 
 	// no validation rules for Result
 
+	if len(errors) > 0 {
+		return RollbackReleaseRespMultiError(errors)
+	}
+
 	return nil
 }
+
+// RollbackReleaseRespMultiError is an error wrapping multiple validation
+// errors returned by RollbackReleaseResp.ValidateAll() if the designated
+// constraints aren't met.
+type RollbackReleaseRespMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m RollbackReleaseRespMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m RollbackReleaseRespMultiError) AllErrors() []error { return m }
 
 // RollbackReleaseRespValidationError is the validation error returned by
 // RollbackReleaseResp.Validate if the designated constraints aren't met.
@@ -3678,3 +5290,411 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = RollbackReleaseRespValidationError{}
+
+// Validate checks the field values on GetReleaseHistoryReq with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *GetReleaseHistoryReq) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on GetReleaseHistoryReq with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// GetReleaseHistoryReqMultiError, or nil if none found.
+func (m *GetReleaseHistoryReq) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *GetReleaseHistoryReq) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if l := utf8.RuneCountInString(m.GetName()); l < 1 || l > 64 {
+		err := GetReleaseHistoryReqValidationError{
+			field:  "Name",
+			reason: "value length must be between 1 and 64 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if l := utf8.RuneCountInString(m.GetNamespace()); l < 1 || l > 64 {
+		err := GetReleaseHistoryReqValidationError{
+			field:  "Namespace",
+			reason: "value length must be between 1 and 64 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if l := utf8.RuneCountInString(m.GetClusterID()); l < 1 || l > 64 {
+		err := GetReleaseHistoryReqValidationError{
+			field:  "ClusterID",
+			reason: "value length must be between 1 and 64 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 32 {
+		err := GetReleaseHistoryReqValidationError{
+			field:  "ProjectCode",
+			reason: "value length must be between 1 and 32 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if len(errors) > 0 {
+		return GetReleaseHistoryReqMultiError(errors)
+	}
+
+	return nil
+}
+
+// GetReleaseHistoryReqMultiError is an error wrapping multiple validation
+// errors returned by GetReleaseHistoryReq.ValidateAll() if the designated
+// constraints aren't met.
+type GetReleaseHistoryReqMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m GetReleaseHistoryReqMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m GetReleaseHistoryReqMultiError) AllErrors() []error { return m }
+
+// GetReleaseHistoryReqValidationError is the validation error returned by
+// GetReleaseHistoryReq.Validate if the designated constraints aren't met.
+type GetReleaseHistoryReqValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetReleaseHistoryReqValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetReleaseHistoryReqValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetReleaseHistoryReqValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetReleaseHistoryReqValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetReleaseHistoryReqValidationError) ErrorName() string {
+	return "GetReleaseHistoryReqValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetReleaseHistoryReqValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetReleaseHistoryReq.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetReleaseHistoryReqValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetReleaseHistoryReqValidationError{}
+
+// Validate checks the field values on GetReleaseHistoryResp with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *GetReleaseHistoryResp) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on GetReleaseHistoryResp with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// GetReleaseHistoryRespMultiError, or nil if none found.
+func (m *GetReleaseHistoryResp) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *GetReleaseHistoryResp) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	// no validation rules for Result
+
+	for idx, item := range m.GetData() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, GetReleaseHistoryRespValidationError{
+						field:  fmt.Sprintf("Data[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, GetReleaseHistoryRespValidationError{
+						field:  fmt.Sprintf("Data[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return GetReleaseHistoryRespValidationError{
+					field:  fmt.Sprintf("Data[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	if len(errors) > 0 {
+		return GetReleaseHistoryRespMultiError(errors)
+	}
+
+	return nil
+}
+
+// GetReleaseHistoryRespMultiError is an error wrapping multiple validation
+// errors returned by GetReleaseHistoryResp.ValidateAll() if the designated
+// constraints aren't met.
+type GetReleaseHistoryRespMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m GetReleaseHistoryRespMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m GetReleaseHistoryRespMultiError) AllErrors() []error { return m }
+
+// GetReleaseHistoryRespValidationError is the validation error returned by
+// GetReleaseHistoryResp.Validate if the designated constraints aren't met.
+type GetReleaseHistoryRespValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetReleaseHistoryRespValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetReleaseHistoryRespValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetReleaseHistoryRespValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetReleaseHistoryRespValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetReleaseHistoryRespValidationError) ErrorName() string {
+	return "GetReleaseHistoryRespValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetReleaseHistoryRespValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetReleaseHistoryResp.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetReleaseHistoryRespValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetReleaseHistoryRespValidationError{}
+
+// Validate checks the field values on ReleaseHistory with the rules defined in
+// the proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *ReleaseHistory) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ReleaseHistory with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in ReleaseHistoryMultiError,
+// or nil if none found.
+func (m *ReleaseHistory) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ReleaseHistory) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Revision
+
+	// no validation rules for Name
+
+	// no validation rules for Namespace
+
+	// no validation rules for UpdateTime
+
+	// no validation rules for Description
+
+	// no validation rules for Status
+
+	// no validation rules for Chart
+
+	// no validation rules for ChartVersion
+
+	// no validation rules for AppVersion
+
+	// no validation rules for Values
+
+	if len(errors) > 0 {
+		return ReleaseHistoryMultiError(errors)
+	}
+
+	return nil
+}
+
+// ReleaseHistoryMultiError is an error wrapping multiple validation errors
+// returned by ReleaseHistory.ValidateAll() if the designated constraints
+// aren't met.
+type ReleaseHistoryMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ReleaseHistoryMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ReleaseHistoryMultiError) AllErrors() []error { return m }
+
+// ReleaseHistoryValidationError is the validation error returned by
+// ReleaseHistory.Validate if the designated constraints aren't met.
+type ReleaseHistoryValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ReleaseHistoryValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ReleaseHistoryValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ReleaseHistoryValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ReleaseHistoryValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ReleaseHistoryValidationError) ErrorName() string { return "ReleaseHistoryValidationError" }
+
+// Error satisfies the builtin error interface
+func (e ReleaseHistoryValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sReleaseHistory.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ReleaseHistoryValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ReleaseHistoryValidationError{}

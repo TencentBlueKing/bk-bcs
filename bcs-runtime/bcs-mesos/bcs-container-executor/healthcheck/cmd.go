@@ -25,7 +25,7 @@ import (
 	"golang.org/x/net/context"
 )
 
-//NewCommandChecker create http checker
+// NewCommandChecker create http checker
 func NewCommandChecker(cmd string, endpoint string, mechanism *TimeMechanism) (Checker, error) {
 	if mechanism.IntervalSeconds <= mechanism.TimeoutSeconds {
 		return nil, fmt.Errorf("Interval Seconds must larger than Timeout Seconds")
@@ -54,31 +54,32 @@ func NewCommandChecker(cmd string, endpoint string, mechanism *TimeMechanism) (C
 	return checker, nil
 }
 
-//CommandChecker check for http protocol health check
+// CommandChecker check for http protocol health check
 type CommandChecker struct {
 	CheckerStat
-	containerId string //container id
-	cmd         string //command value
+	containerId string // container id
+	cmd         string // command value
 
-	endpoint string //docker.sock
+	endpoint string // docker.sock
 	client   *dockerclient.Client
 
-	isPause   bool               //pause checker
-	cxt       context.Context    //context to control exit
-	canceler  context.CancelFunc //canceler
-	mechanism *TimeMechanism     //time config for checker
+	isPause   bool               // pause checker
+	cxt       context.Context    // context to control exit
+	canceler  context.CancelFunc // canceler
+	mechanism *TimeMechanism     // time config for checker
 }
 
+// IsStarting xxx
 func (check *CommandChecker) IsStarting() bool {
 	return check.Started
 }
 
-//SetHost setting container_id
+// SetHost setting container_id
 func (check *CommandChecker) SetHost(containerid string) {
 	check.containerId = containerid
 }
 
-//Start start checker
+// Start start checker
 func (check *CommandChecker) Start() {
 	check.Started = true
 	check.StartPoint = time.Now()
@@ -104,8 +105,8 @@ func (check *CommandChecker) Start() {
 func (check *CommandChecker) check() {
 	check.Ticks++
 	healthy := check.ReCheck()
-	//notGrace := int(check.LastCheck.Unix()-check.StartPoint.Unix()) > check.mechanism.GracePeriodSeconds
-	//if !healthy && notGrace {
+	// notGrace := int(check.LastCheck.Unix()-check.StartPoint.Unix()) > check.mechanism.GracePeriodSeconds
+	// if !healthy && notGrace {
 	if !healthy {
 		check.LastFailure = check.LastCheck
 		check.ConsecutiveFailures++
@@ -117,15 +118,15 @@ func (check *CommandChecker) check() {
 	}
 }
 
-//Stop stop checker
+// Stop stop checker
 func (check *CommandChecker) Stop() {
 	check.canceler()
 }
 
-//ReCheck ask checker to check
+// ReCheck ask checker to check
 func (check *CommandChecker) ReCheck() bool {
 	cmds := strings.Split(strings.TrimSpace(check.cmd), " ")
-	//create exec with command
+	// create exec with command
 	createOpt := dockerclient.CreateExecOptions{
 		AttachStdin:  true,
 		AttachStdout: true,
@@ -141,7 +142,7 @@ func (check *CommandChecker) ReCheck() bool {
 			check.containerId, check.cmd, err.Error())
 		return false
 	}
-	//start exec
+	// start exec
 	var outBuf bytes.Buffer
 	var errBuf bytes.Buffer
 	startOpt := dockerclient.StartExecOptions{
@@ -171,24 +172,24 @@ func (check *CommandChecker) ReCheck() bool {
 	return false
 }
 
-//Pause pause check
+// Pause pause check
 func (check *CommandChecker) Pause() error {
 	check.isPause = true
 	return nil
 }
 
-//Resume arouse checker
+// Resume arouse checker
 func (check *CommandChecker) Resume() error {
 	check.isPause = false
 	return nil
 }
 
-//Name get check name
+// Name get check name
 func (check *CommandChecker) Name() string {
 	return CommandHealthcheck
 }
 
-//Relation checker relative to container
+// Relation checker relative to container
 func (check *CommandChecker) Relation() string {
 	return check.containerId
 }

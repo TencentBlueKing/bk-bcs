@@ -37,29 +37,29 @@ var (
 	checkMode = false
 )
 
-//BcsIPAMConfig represents the IP related network configuration.
+// BcsIPAMConfig represents the IP related network configuration.
 type BcsIPAMConfig struct {
 	Name   string
-	Type   string           `json:"type"` //bcs-ipam
-	Host   string           `json:"host"` //local host ip
+	Type   string           `json:"type"` // bcs-ipam
+	Host   string           `json:"host"` // local host ip
 	Routes []types.Route    `json:"routes"`
 	Args   *bcsconf.CNIArgs `json:"-"`
 }
 
-//NetConf network configuration from json config, reading from stdin
+// NetConf network configuration from json config, reading from stdin
 type NetConf struct {
 	Name       string         `json:"name"`
 	CNIVersion string         `json:"cniVersion"`
 	IPAM       *BcsIPAMConfig `json:"ipam"`
 }
 
-//LoadBcsIPAMConfig creates a NetworkConfig from the given network name.
+// LoadBcsIPAMConfig creates a NetworkConfig from the given network name.
 func LoadBcsIPAMConfig(bytes []byte, args string) (*BcsIPAMConfig, string, error) {
 	n := NetConf{}
 	if err := json.Unmarshal(bytes, &n); err != nil {
 		return nil, "", err
 	}
-	//check ipam item from stdin json file
+	// check ipam item from stdin json file
 	if n.IPAM == nil {
 		return nil, "", fmt.Errorf("IPAM config missing 'ipam' key")
 	}
@@ -80,22 +80,22 @@ func init() {
 	util.InitFlags()
 }
 
-//cmdAdd handle add command, reply available ip info
+// cmdAdd handle add command, reply available ip info
 func cmdAdd(args *skel.CmdArgs) error {
-	//loading config from stdin
+	// loading config from stdin
 	ipamConf, cniVersion, err := LoadBcsIPAMConfig(args.StdinData, args.Args)
 	if err != nil {
 		return err
 	}
-	//check host ip if configuration designated
+	// check host ip if configuration designated
 	if len(ipamConf.Host) == 0 {
-		//get one available host ip from system
+		// get one available host ip from system
 		ipamConf.Host = util.GetIPAddress()
 	}
 	if len(ipamConf.Host) == 0 {
 		return fmt.Errorf("Get no available host ip for request")
 	}
-	//Get available ip address from resource
+	// Get available ip address from resource
 	ipDriver, driverErr := manager.GetIPDriver()
 	if driverErr != nil {
 		return driverErr
@@ -108,16 +108,16 @@ func cmdAdd(args *skel.CmdArgs) error {
 	if getErr != nil {
 		return getErr
 	}
-	//create results
+	// create results
 	result := &current.Result{}
-	//mac address
+	// mac address
 	if info.MacAddr != "" {
 		netInterface := &current.Interface{}
 		netInterface.Name = args.IfName
 		netInterface.Mac = info.MacAddr
 		result.Interfaces = []*current.Interface{netInterface}
 	}
-	//ip info
+	// ip info
 	ip, ipAddr, _ := net.ParseCIDR(info.IPAddr + "/" + strconv.Itoa(info.Mask))
 	iface := 0
 	ipConf := &current.IPConfig{
@@ -127,7 +127,7 @@ func cmdAdd(args *skel.CmdArgs) error {
 		Gateway:   net.ParseIP(info.Gateway),
 	}
 	result.IPs = []*current.IPConfig{ipConf}
-	//route info, if no gateway info ,use ipinfo.Gateway
+	// route info, if no gateway info ,use ipinfo.Gateway
 	for _, configRoute := range ipamConf.Routes {
 		if configRoute.GW == nil {
 			route := &types.Route{
@@ -143,16 +143,16 @@ func cmdAdd(args *skel.CmdArgs) error {
 	return types.PrintResult(result, cniVersion)
 }
 
-//cmdDel release ip address
+// cmdDel release ip address
 func cmdDel(args *skel.CmdArgs) error {
-	//loading config from stdin
+	// loading config from stdin
 	ipamConf, _, err := LoadBcsIPAMConfig(args.StdinData, args.Args)
 	if err != nil {
 		return err
 	}
-	//check host ip if configuration designated
+	// check host ip if configuration designated
 	if len(ipamConf.Host) == 0 {
-		//get one available host ip from system
+		// get one available host ip from system
 		ipamConf.Host = util.GetIPAddress()
 	}
 	if len(ipamConf.Host) == 0 {
@@ -166,7 +166,7 @@ func cmdDel(args *skel.CmdArgs) error {
 	if ipamConf.Args != nil && ipamConf.Args.IP != nil {
 		ipInfo.IPAddr = ipamConf.Args.IP.String()
 	}
-	//release ip with IPInfo
+	// release ip with IPInfo
 	return ipDriver.ReleaseIPAddr(ipamConf.Host, args.ContainerID, ipInfo)
 }
 

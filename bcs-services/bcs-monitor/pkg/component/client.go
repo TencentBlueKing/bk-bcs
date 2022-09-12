@@ -19,14 +19,17 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"strconv"
-	"sync"
 	"time"
 
 	"github.com/dustin/go-humanize"
 	resty "github.com/go-resty/resty/v2"
 	"github.com/pkg/errors"
+	"github.com/thanos-io/thanos/pkg/store"
 	"k8s.io/klog/v2"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/rest/tracing"
 )
 
 const (
@@ -34,9 +37,7 @@ const (
 )
 
 var (
-	clientOnce   sync.Once
-	globalClient *resty.Client
-	maskKeys     = map[string]struct{}{
+	maskKeys = map[string]struct{}{
 		"bk_app_secret": {},
 	}
 )
@@ -60,7 +61,7 @@ func restyReqToCurl(r *resty.Request) string {
 	}
 	rawURL.RawQuery = queryValue.Encode()
 
-	reqMsg := fmt.Sprintf("curl -X %s %s%s", r.Method, rawURL.String(), headers)
+	reqMsg := fmt.Sprintf("curl -X %s '%s'%s", r.Method, rawURL.String(), headers)
 	if r.Body != nil {
 		switch body := r.Body.(type) {
 		case []byte:
@@ -79,7 +80,10 @@ func restyReqToCurl(r *resty.Request) string {
 		}
 	}
 	if r.FormData.Encode() != "" {
-		reqMsg += fmt.Sprintf(" -d %q", r.FormData.Encode())
+		encodeStr := r.FormData.Encode()
+		reqMsg += fmt.Sprintf(" -d %q", encodeStr)
+		rawStr, _ := url.QueryUnescape(encodeStr)
+		reqMsg += fmt.Sprintf(" -raw `%s`", rawStr)
 	}
 
 	return reqMsg
@@ -98,29 +102,31 @@ func restyResponseToCurl(resp *resty.Response) string {
 }
 
 func restyErrHook(r *resty.Request, err error) {
-	klog.Infof("REQ: %s", restyReqToCurl(r))
-	klog.Infof("RESP: [err] %s", err)
+	klog.Infof("[%s] REQ: %s", store.RequestIDValue(r.RawRequest.Context()), restyReqToCurl(r))
+	klog.Infof("[%s] RESP: [err] %s", store.RequestIDValue(r.RawRequest.Context()), err)
 }
 
 func restyAfterResponseHook(c *resty.Client, r *resty.Response) error {
-	klog.Infof("REQ: %s", restyReqToCurl(r.Request))
-	klog.Infof("RESP: %s", restyResponseToCurl(r))
+	klog.Infof("[%s] REQ: %s", store.RequestIDValue(r.Request.Context()), restyReqToCurl(r.Request))
+	klog.Infof("[%s] RESP: %s", store.RequestIDValue(r.Request.Context()), restyResponseToCurl(r))
 	return nil
 }
 
-// GetClient
+func restyBeforeRequestHook(c *resty.Client, r *http.Request) error {
+	tracing.SetRequestIDValue(r, store.RequestIDValue(r.Context()))
+	return nil
+}
+
+// GetClient : 新建Client, 设置公共参数，每次新建，cookies不复用
 func GetClient() *resty.Client {
-	if globalClient == nil {
-		clientOnce.Do(func() {
-			globalClient = resty.New().SetTimeout(timeout)
-			globalClient = globalClient.SetDebug(false) // 更多详情, 可以开启为 true
-			globalClient.SetDebugBodyLimit(1024)
-			globalClient.OnAfterResponse(restyAfterResponseHook)
-			globalClient.OnError(restyErrHook)
-			globalClient.SetTLSClientConfig(&tls.Config{InsecureSkipVerify: true})
-		})
-	}
-	return globalClient
+	client := resty.New().SetTimeout(timeout)
+	client = client.SetDebug(false) // 更多详情, 可以开启为 true
+	client.SetDebugBodyLimit(1024)
+	client.OnAfterResponse(restyAfterResponseHook)
+	client.SetPreRequestHook(restyBeforeRequestHook)
+	client.OnError(restyErrHook)
+	client.SetTLSClientConfig(&tls.Config{InsecureSkipVerify: true})
+	return client
 }
 
 // BKResult 蓝鲸返回规范的结构体

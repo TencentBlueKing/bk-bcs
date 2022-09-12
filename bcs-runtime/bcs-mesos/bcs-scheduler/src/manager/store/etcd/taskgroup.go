@@ -99,6 +99,7 @@ func (store *managerStore) syncTaskgroupInCache(taskgroupId string) {
 	saveCacheTaskGroup(taskgroup)
 }
 
+// ListClusterTaskgroups xxx
 // list mesos cluster taskgroups, include: application、deployment、daemonset...
 func (store *managerStore) ListClusterTaskgroups() ([]*types.TaskGroup, error) {
 	return listCacheTaskgroups()
@@ -177,7 +178,7 @@ func (store *managerStore) FetchTaskGroup(taskGroupID string) (*types.TaskGroup,
 	return cacheTaskgroup, nil
 }
 
-// FetchTaskGroup fetch a types.TaskGroup
+// FetchDBTaskGroup fetch a types.TaskGroup
 func (store *managerStore) FetchDBTaskGroup(taskGroupID string) (*types.TaskGroup, error) {
 	runAs, _ := types.GetRunAsAndAppIDbyTaskGroupID(taskGroupID)
 	client := store.BkbcsClient.TaskGroups(runAs)

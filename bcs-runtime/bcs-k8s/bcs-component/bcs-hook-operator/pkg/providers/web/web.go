@@ -11,6 +11,7 @@
  *
  */
 
+// Package web xxx
 package web
 
 import (
@@ -32,11 +33,13 @@ import (
 	"k8s.io/klog"
 )
 
+// Provider xxx
 type Provider struct {
 	client     *http.Client
 	jsonParser *jsonpath.JSONPath
 }
 
+// Run xxx
 func (p *Provider) Run(run *v1alpha1.HookRun, metric v1alpha1.Metric) v1alpha1.Measurement {
 	startTime := metav1.Now()
 
@@ -76,7 +79,8 @@ func (p *Provider) Run(run *v1alpha1.HookRun, metric v1alpha1.Metric) v1alpha1.M
 	if err != nil {
 		return metricutil.MarkMeasurementError(measurement, err)
 	} else if response.StatusCode < 200 || response.StatusCode >= 300 {
-		return metricutil.MarkMeasurementError(measurement, fmt.Errorf("received non 2xx response code: %v", response.StatusCode))
+		return metricutil.MarkMeasurementError(measurement, fmt.Errorf("received non 2xx response code: %v",
+			response.StatusCode))
 	}
 
 	value, status, err := p.parseResponse(metric, response)
@@ -93,14 +97,18 @@ func (p *Provider) Run(run *v1alpha1.HookRun, metric v1alpha1.Metric) v1alpha1.M
 }
 
 // Resume should not be used the WebMetric provider since all the work should occur in the Run method
-func (p *Provider) Resume(run *v1alpha1.HookRun, metric v1alpha1.Metric, measurement v1alpha1.Measurement) v1alpha1.Measurement {
-	klog.Warningf("HookRun: %s/%s, metric: %s. WebMetric provider should not execute the Resume method", run.Namespace, run.Name, metric.Name)
+func (p *Provider) Resume(run *v1alpha1.HookRun, metric v1alpha1.Metric,
+	measurement v1alpha1.Measurement) v1alpha1.Measurement {
+	klog.Warningf("HookRun: %s/%s, metric: %s. WebMetric provider should not execute the Resume method", run.Namespace,
+		run.Name, metric.Name)
 	return measurement
 }
 
 // Terminate should not be used the WebMetric provider since all the work should occur in the Run method
-func (p *Provider) Terminate(run *v1alpha1.HookRun, metric v1alpha1.Metric, measurement v1alpha1.Measurement) v1alpha1.Measurement {
-	klog.Warningf("HookRun: %s/%s, metric: %s. WebMetric provider should not execute the Terminate method", run.Namespace, run.Name, metric.Name)
+func (p *Provider) Terminate(run *v1alpha1.HookRun, metric v1alpha1.Metric,
+	measurement v1alpha1.Measurement) v1alpha1.Measurement {
+	klog.Warningf("HookRun: %s/%s, metric: %s. WebMetric provider should not execute the Terminate method", run.Namespace,
+		run.Name, metric.Name)
 	return measurement
 }
 
@@ -133,6 +141,7 @@ func (p *Provider) parseResponse(metric v1alpha1.Metric, response *http.Response
 	return out, status, nil
 }
 
+// NewWebMetricHttpClient xxx
 func NewWebMetricHttpClient(metric v1alpha1.Metric) *http.Client {
 	var timeout time.Duration
 
@@ -149,6 +158,7 @@ func NewWebMetricHttpClient(metric v1alpha1.Metric) *http.Client {
 	return c
 }
 
+// NewWebMetricJsonParser xxx
 func NewWebMetricJsonParser(metric v1alpha1.Metric) (*jsonpath.JSONPath, error) {
 	jsonParser := jsonpath.New("metrics")
 
@@ -157,6 +167,7 @@ func NewWebMetricJsonParser(metric v1alpha1.Metric) (*jsonpath.JSONPath, error) 
 	return jsonParser, err
 }
 
+// NewWebMetricProvider xxx
 func NewWebMetricProvider(client *http.Client, jsonParser *jsonpath.JSONPath) *Provider {
 	return &Provider{
 		client:     client,

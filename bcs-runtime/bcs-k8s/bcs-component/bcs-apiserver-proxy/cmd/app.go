@@ -361,12 +361,14 @@ func (pm *ProxyManager) initClusterEndpointsClient() error {
 	return nil
 }
 
+// initMetrics xxx
 // init prometheus metrics handler
 func (pm *ProxyManager) initMetrics(router *mux.Router) {
 	blog.Infof("init metrics handler")
 	router.Handle("/metrics", promhttp.Handler())
 }
 
+// initPProf xxx
 // init pprof handler
 func (pm *ProxyManager) initPProf(router *mux.Router) {
 	if pm == nil {
@@ -387,6 +389,7 @@ func (pm *ProxyManager) initPProf(router *mux.Router) {
 	router.HandleFunc("/debug/pprof/trace", pprof.Trace)
 }
 
+// initHTTPServer xxx
 // init extra http server(metrics, serverSwagger, pprof)
 func (pm *ProxyManager) initHTTPServer() error {
 	if pm == nil {

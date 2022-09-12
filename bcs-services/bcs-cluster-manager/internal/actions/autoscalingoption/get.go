@@ -14,8 +14,11 @@ package autoscalingoption
 
 import (
 	"context"
+	"errors"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
@@ -43,6 +46,61 @@ func (ga *GetAction) setResp(code uint32, msg string) {
 	ga.resp.Result = (code == common.BcsErrClusterManagerSuccess)
 }
 
+func (ga *GetAction) getOption() error {
+	option, err := ga.model.GetAutoScalingOption(ga.ctx, ga.req.ClusterID)
+	if err == nil {
+		ga.resp.Data = option
+		return nil
+	}
+	// if not found, create a default option
+	if errors.Is(err, drivers.ErrTableRecordNotFound) {
+		return ga.setDefaultOption()
+	}
+	return err
+}
+
+func (ga *GetAction) setDefaultOption() error {
+	cluster, err := ga.model.GetCluster(ga.ctx, ga.req.ClusterID)
+	if err != nil {
+		return err
+	}
+	option := &cmproto.ClusterAutoScalingOption{
+		ProjectID:                        cluster.ProjectID,
+		ClusterID:                        cluster.ClusterID,
+		Creator:                          "admin",
+		Updater:                          "admin",
+		CreateTime:                       time.Now().Format(time.RFC3339),
+		UpdateTime:                       time.Now().Format(time.RFC3339),
+		Provider:                         cluster.Provider,
+		EnableAutoscale:                  false,
+		IsScaleDownEnable:                true,
+		Expander:                         "random",
+		MaxEmptyBulkDelete:               10,
+		ScaleDownDelay:                   600,
+		ScaleDownUnneededTime:            600,
+		ScaleDownUtilizationThreahold:    50,
+		ScaleDownGpuUtilizationThreshold: 50,
+		OkTotalUnreadyCount:              3,
+		MaxTotalUnreadyPercentage:        45,
+		ScaleDownUnreadyTime:             1200,
+		BufferResourceRatio:              100,
+		MaxGracefulTerminationSec:        600,
+		ScanInterval:                     10,
+		MaxNodeProvisionTime:             900,
+		ScaleUpFromZero:                  true,
+		ScaleDownDelayAfterAdd:           1200,
+		ScaleDownDelayAfterDelete:        0,
+		ScaleDownDelayAfterFailure:       180,
+		Status:                           common.StatusAutoScalingOptionStopped,
+	}
+	err = ga.model.CreateAutoScalingOption(ga.ctx, option)
+	if err != nil {
+		return err
+	}
+	ga.resp.Data = option
+	return nil
+}
+
 // Handle handle get cluster credential
 func (ga *GetAction) Handle(
 	ctx context.Context, req *cmproto.GetAutoScalingOptionRequest, resp *cmproto.GetAutoScalingOptionResponse) {
@@ -58,12 +116,12 @@ func (ga *GetAction) Handle(
 		ga.setResp(common.BcsErrClusterManagerInvalidParameter, err.Error())
 		return
 	}
-	option, err := ga.model.GetAutoScalingOption(ctx, req.ClusterID)
-	if err != nil {
+
+	if err := ga.getOption(); err != nil {
 		ga.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
 		return
 	}
-	resp.Data = option
+
 	ga.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
 	return
 }

@@ -316,7 +316,7 @@ func (e *BcsDataManager) GetPodAutoscaler(ctx context.Context, req *bcsdatamanag
 		"type: %s, name: %s",
 		req.GetClusterID(), req.GetNamespace(), req.Dimension, req.GetPodAutoscalerType(), req.GetPodAutoscalerName())
 	start := time.Now()
-	//TODO:
+	// TODO:
 	result, err := e.model.GetPodAutoscalerInfo(ctx, req)
 	if err != nil {
 		rsp.Message = fmt.Sprintf("get podAutoscaler info error: %v", err)

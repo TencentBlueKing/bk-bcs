@@ -11,6 +11,7 @@
  *
  */
 
+// Package tcpclient xxx
 package tcpclient
 
 import (
@@ -86,7 +87,8 @@ func (cli *tcpClient) heartBeat(ctx context.Context) {
 			_, sendErr := cli.conn.Write(packageData)
 			if sendErr != nil {
 
-				blog.Error("fail to send data to server[%s], error %s", fmt.Sprintf("%s:%d", cli.serverIP, cli.serverPort), sendErr.Error())
+				blog.Error("fail to send data to server[%s], error %s", fmt.Sprintf("%s:%d", cli.serverIP, cli.serverPort),
+					sendErr.Error())
 
 				cli.conn.Close()
 				cli.conn = nil
@@ -98,7 +100,7 @@ func (cli *tcpClient) heartBeat(ctx context.Context) {
 	}
 }
 
-//Write 实现HandlerIf 接口，接收网络发送来的数据
+// Write 实现HandlerIf 接口，接收网络发送来的数据
 func (cli *tcpClient) Write(head *protocol.MsgHead, data []byte) (int, error) {
 
 	switch head.Type {

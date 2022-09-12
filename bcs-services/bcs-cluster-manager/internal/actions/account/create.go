@@ -118,10 +118,7 @@ func (ca *CreateAction) validate() error {
 	if err != nil {
 		return err
 	}
-	err = vm.ImportCloudAccountValidate(&cmproto.Account{
-		SecretID:  ca.req.Account.SecretID,
-		SecretKey: ca.req.Account.SecretKey,
-	})
+	err = vm.ImportCloudAccountValidate(ca.req.Account)
 	if err != nil {
 		return err
 	}
@@ -144,6 +141,7 @@ func (ca *CreateAction) checkCloudAccountName() error {
 	return nil
 }
 
+// generateAccountID xxx
 // generate random accountID
 func generateAccountID(cloud *cmproto.Cloud) string {
 	randomStr := utils.RandomString(8)

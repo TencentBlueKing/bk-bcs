@@ -348,6 +348,7 @@ func (c *InstanceController) doInstallArgocd(
 	return nil
 }
 
+// updateArgocdInstanceStatus xxx
 // updateDatabaseManagerStatus update ArgocdInstance status
 func (c *InstanceController) updateArgocdInstanceStatus(
 	instance *tkexv1alpha1.ArgocdInstance,
@@ -365,6 +366,7 @@ func (c *InstanceController) updateArgocdInstanceStatus(
 	return nil
 }
 
+// enqueueArgocdInstance xxx
 // cache object and enqueue key
 func (c *InstanceController) enqueueArgocdInstance(obj interface{}) {
 	var key string
@@ -378,6 +380,7 @@ func (c *InstanceController) enqueueArgocdInstance(obj interface{}) {
 	c.workqueue.AddRateLimited(key)
 }
 
+// enqueueArgocdInstanceForDelete xxx
 // delete object cache and enqueue key
 func (c *InstanceController) enqueueArgocdInstanceForDelete(obj interface{}) {
 	var key string

@@ -11,6 +11,7 @@
  *
  */
 
+// Package config xxx
 package config
 
 import (
@@ -101,7 +102,7 @@ func (c *Configurations) IsDevMode() bool {
 // G : Global Configurations
 var G *Configurations
 
-// 初始化
+// init 初始化
 func init() {
 	g, err := newConfigurations()
 	if err != nil {
@@ -114,7 +115,7 @@ func init() {
 	G = g
 }
 
-// ReadCred
+// ReadCred xxx
 func (c *Configurations) ReadCred(name string, content []byte) error {
 	c.mtx.Lock()
 	defer c.mtx.Unlock()
@@ -134,7 +135,8 @@ func (c *Configurations) ReadCred(name string, content []byte) error {
 }
 
 // ValidateCred 校验凭证是否合法
-func (c *Configurations) ValidateCred(credType CredentialType, credName string, scopeType ScopeType, scopeValue string) bool {
+func (c *Configurations) ValidateCred(credType CredentialType, credName string, scopeType ScopeType,
+	scopeValue string) bool {
 	for _, creds := range c.Credentials {
 		for _, cred := range creds {
 			if cred.Matches(credType, credName, scopeType, scopeValue) {

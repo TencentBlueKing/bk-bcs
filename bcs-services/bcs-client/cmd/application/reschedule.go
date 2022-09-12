@@ -24,6 +24,7 @@ import (
 	"github.com/urfave/cli"
 )
 
+// NewRescheduleCommand xxx
 func NewRescheduleCommand() cli.Command {
 	return cli.Command{
 		Name:  "reschedule",
@@ -105,7 +106,8 @@ func rescheduleTaskGroupByIP(c *utils.ClientContext) error {
 
 	scheduler := v4.NewBcsScheduler(utils.GetClientOption())
 	for _, single := range list {
-		if err := scheduler.RescheduleTaskGroup(c.ClusterID(), single.Data.NameSpace, single.Data.RcName, single.Data.Name); err != nil {
+		if err := scheduler.RescheduleTaskGroup(c.ClusterID(), single.Data.NameSpace, single.Data.RcName,
+			single.Data.Name); err != nil {
 			successMsg += fmt.Sprintf("success to reschedule taskgroup %s\n", single.Data.Name)
 			successCnt++
 		} else {
@@ -123,12 +125,14 @@ func rescheduleTaskGroupByIP(c *utils.ClientContext) error {
 }
 
 func rescheduleTaskGroup(c *utils.ClientContext) error {
-	if err := c.MustSpecified(utils.OptionClusterID, utils.OptionNamespace, utils.OptionName, utils.OptionTaskGroupName); err != nil {
+	if err := c.MustSpecified(utils.OptionClusterID, utils.OptionNamespace, utils.OptionName,
+		utils.OptionTaskGroupName); err != nil {
 		return err
 	}
 
 	scheduler := v4.NewBcsScheduler(utils.GetClientOption())
-	err := scheduler.RescheduleTaskGroup(c.ClusterID(), c.Namespace(), c.String(utils.OptionName), c.String(utils.OptionTaskGroupName))
+	err := scheduler.RescheduleTaskGroup(c.ClusterID(), c.Namespace(), c.String(utils.OptionName),
+		c.String(utils.OptionTaskGroupName))
 	if err != nil {
 		return fmt.Errorf("failed to reschedule taskgroup: %v", err)
 	}

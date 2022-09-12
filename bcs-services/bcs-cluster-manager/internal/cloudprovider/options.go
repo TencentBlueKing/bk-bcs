@@ -20,38 +20,38 @@ import (
 )
 
 var (
-	//ErrCloudCredentialLost credential lost in option
+	// ErrCloudCredentialLost credential lost in option
 	ErrCloudCredentialLost = errors.New("credential info lost")
-	//ErrCloudRegionLost region information lost in option
+	// ErrCloudRegionLost region information lost in option
 	ErrCloudRegionLost = errors.New("region info lost")
-	//ErrCloudLostResponse lost response information in cloud response
+	// ErrCloudLostResponse lost response information in cloud response
 	ErrCloudLostResponse = errors.New("lost response information")
-	//ErrCloudNoHost no specified instance
+	// ErrCloudNoHost no specified instance
 	ErrCloudNoHost = errors.New("no such host in region")
-	//ErrCloudNoProvider no specified cloud provider
+	// ErrCloudNoProvider no specified cloud provider
 	ErrCloudNoProvider = errors.New("no such cloudprovider")
-	//ErrCloudNotImplemented no implementation
+	// ErrCloudNotImplemented no implementation
 	ErrCloudNotImplemented = errors.New("not implemented")
 	// ErrCloudInitFailed init failed
 	ErrCloudInitFailed = errors.New("failed to init cloud client")
 	// ErrServerIsNil server nil
 	ErrServerIsNil = errors.New("server is nil")
-	//ErrCloudNodeVPCDiffWithClusterResponse for node VPC different cluster VPC
+	// ErrCloudNodeVPCDiffWithClusterResponse for node VPC different cluster VPC
 	ErrCloudNodeVPCDiffWithClusterResponse = "node[%s] VPC is different from cluster VPC"
 )
 
 const (
-	//StatusInitialization node initialization
+	// StatusInitialization node initialization
 	StatusInitialization = "INITIALIZATION"
-	//StatusFailed status failed
+	// StatusFailed status failed
 	StatusFailed = "FAILURE"
-	//StatusRunning status running
+	// StatusRunning status running
 	StatusRunning = "RUNNING"
-	//StatusDeleting status deleting for scaling down
+	// StatusDeleting status deleting for scaling down
 	StatusDeleting = "DELETING"
-	//StatusCreating node status creating for scaling up
+	// StatusCreating node status creating for scaling up
 	StatusCreating = "CREATING"
-	//StatusDeleted status deleted
+	// StatusDeleted status deleted
 	StatusDeleted = "DELETED"
 
 	// TaskStatusInit INIT task status
@@ -72,11 +72,9 @@ const (
 
 // CommonOption for all option
 type CommonOption struct {
-	//request ID for tracing
+	// request ID for tracing
 	RequestID string
-	//key and secret for api authentication
-	Key    string // tencentcloudSecretID
-	Secret string // tencentcloudSecretKey
+	Account   *proto.Account
 	// region information for cloudprovider
 	// region is unnecessary in some api
 	Region string
@@ -282,7 +280,7 @@ type CleanNodesOption struct {
 	Operator string
 }
 
-//CleanNodesResponse response for clean nodes in NodeGroup
+// CleanNodesResponse response for clean nodes in NodeGroup
 type CleanNodesResponse struct {
 	ClusterID       string
 	ResponseOrderID []string

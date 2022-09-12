@@ -11,6 +11,7 @@
  *
  */
 
+// Package ipvs xxx
 package ipvs
 
 import (
@@ -33,11 +34,12 @@ type Interface interface {
 	UpdateVirtualServer(*VirtualServer) error
 	// DeleteVirtualServer deletes the specified virtual server.  If the virtual server does not exist, return error.
 	DeleteVirtualServer(*VirtualServer) error
+	// GetVirtualServer xxx
 	// Given a partial virtual server, IsVirtualServerAvailable will return the specified virtual server information in the system.
 	GetVirtualServer(*VirtualServer) (*VirtualServer, error)
 	// GetVirtualServers lists all virtual servers in the system.
 	GetVirtualServers() ([]*VirtualServer, error)
-	// CreateRealServer creates the specified real server for the specified virtual server.
+	// AddRealServer creates the specified real server for the specified virtual server.
 	AddRealServer(*VirtualServer, *RealServer) error
 	// GetRealServers returns all real servers for the specified virtual server.
 	GetRealServers(*VirtualServer) ([]*RealServer, error)
@@ -140,9 +142,11 @@ func GetKernelVersionAndIPVSMods(executor exec.Interface) (kernelVersion string,
 	ver2, _ := version.ParseGeneric("4.19")
 	// get required ipvs modules
 	if ver1.LessThan(ver2) {
-		ipvsModules = append(ipvsModules, KernelModuleIPVS, KernelModuleIPVSRR, KernelModuleIPVSWRR, KernelModuleIPVSSH, KernelModuleNfConntrackIPV4)
+		ipvsModules = append(ipvsModules, KernelModuleIPVS, KernelModuleIPVSRR, KernelModuleIPVSWRR, KernelModuleIPVSSH,
+			KernelModuleNfConntrackIPV4)
 	} else {
-		ipvsModules = append(ipvsModules, KernelModuleIPVS, KernelModuleIPVSRR, KernelModuleIPVSWRR, KernelModuleIPVSSH, KernelModuleNfConntrack)
+		ipvsModules = append(ipvsModules, KernelModuleIPVS, KernelModuleIPVSRR, KernelModuleIPVSWRR, KernelModuleIPVSSH,
+			KernelModuleNfConntrack)
 	}
 
 	return kernelVersion, ipvsModules, nil

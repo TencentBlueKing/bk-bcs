@@ -11,6 +11,7 @@
  *
  */
 
+// Package processor xxx
 package processor
 
 import (
@@ -81,7 +82,7 @@ func NewProcessor(opt *Option) (*Processor, error) {
 	}
 	blog.Infof("success to create app service client")
 
-	//parse config
+	// parse config
 	var restConfig *rest.Config
 	if len(opt.Kubeconfig) == 0 {
 		blog.Infof("use in-cluster kube config")
@@ -91,14 +92,14 @@ func NewProcessor(opt *Option) (*Processor, error) {
 			return nil, err
 		}
 	} else {
-		//parse configuration
+		// parse configuration
 		restConfig, err = clientcmd.BuildConfigFromFlags("", opt.Kubeconfig)
 		if err != nil {
 			blog.Errorf("create internal client with kubeconfig %s failed, err %s", opt.Kubeconfig, err.Error())
 			return nil, err
 		}
 	}
-	//initialize specified client implementation
+	// initialize specified client implementation
 	cliset, err := clientSet.NewForConfig(restConfig)
 	if err != nil {
 		blog.Errorf("create clientset failed, with rest config %v, err %s", restConfig, err.Error())

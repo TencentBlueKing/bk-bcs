@@ -60,7 +60,7 @@ func (ua *EnableNodeGroupAutoScaleAction) validate() error {
 }
 
 func (ua *EnableNodeGroupAutoScaleAction) getRelativeResource() error {
-	//get relative cluster for information injection
+	// get relative cluster for information injection
 	group, err := ua.model.GetNodeGroup(ua.ctx, ua.req.NodeGroupID)
 	if err != nil {
 		ua.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
@@ -122,34 +122,38 @@ func (ua *EnableNodeGroupAutoScaleAction) enableNodeGroupAutoScale() error {
 	}
 
 	// cloud provider nodeGroup
-	task, err := mgr.SwitchNodeGroupAutoScaling(ua.group, true, &cloudprovider.SwitchNodeGroupAutoScalingOption{CommonOption: *cmOption})
+	task, err := mgr.SwitchNodeGroupAutoScaling(ua.group, true, &cloudprovider.SwitchNodeGroupAutoScalingOption{
+		CommonOption: *cmOption})
 	if err != nil {
 		blog.Errorf("enable nodegroup auto scale in cloudprovider %s/%s for group %s failed, %s",
 			ua.cloud.CloudID, ua.cloud.CloudProvider, ua.group.NodeGroupID, err.Error())
 		return err
 	}
-
-	// create task and dispatch task
-	if err := ua.model.CreateTask(ua.ctx, task); err != nil {
-		blog.Errorf("save enable nodegroup auto scale task for nodegroup %s failed, %s",
-			ua.group.NodeGroupID, err.Error(),
-		)
-		return err
-	}
-	if err := taskserver.GetTaskServer().Dispatch(task); err != nil {
-		blog.Errorf("dispatch enable nodegroup auto scale task for nodegroup %s failed, %s",
-			ua.group.NodeGroupID, err.Error(),
-		)
-		return err
+	taskID := ""
+	if task != nil {
+		taskID = task.TaskID
+		// create task and dispatch task
+		if err := ua.model.CreateTask(ua.ctx, task); err != nil {
+			blog.Errorf("save enable nodegroup auto scale task for nodegroup %s failed, %s",
+				ua.group.NodeGroupID, err.Error(),
+			)
+			return err
+		}
+		if err := taskserver.GetTaskServer().Dispatch(task); err != nil {
+			blog.Errorf("dispatch enable nodegroup auto scale task for nodegroup %s failed, %s",
+				ua.group.NodeGroupID, err.Error(),
+			)
+			return err
+		}
 	}
 
 	err = ua.model.CreateOperationLog(ua.ctx, &cmproto.OperationLog{
 		ResourceType: common.NodeGroup.String(),
 		ResourceID:   ua.group.NodeGroupID,
-		TaskID:       "",
+		TaskID:       taskID,
 		Message:      fmt.Sprintf("%s 开启自动扩缩容", ua.group.NodeGroupID),
 		OpUser:       ua.group.Updater,
-		CreateTime:   time.Now().String(),
+		CreateTime:   time.Now().Format(time.RFC3339),
 	})
 	if err != nil {
 		blog.Errorf("EnableNodeGroupAutoScale[%s] CreateOperationLog failed: %v", ua.group.NodeGroupID, err)
@@ -228,7 +232,7 @@ func (ua *DisableNodeGroupAutoScaleAction) validate() error {
 }
 
 func (ua *DisableNodeGroupAutoScaleAction) getRelativeResource() error {
-	//get relative cluster for information injection
+	// get relative cluster for information injection
 	group, err := ua.model.GetNodeGroup(ua.ctx, ua.req.NodeGroupID)
 	if err != nil {
 		ua.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
@@ -290,34 +294,39 @@ func (ua *DisableNodeGroupAutoScaleAction) disableNodeGroupAutoScale() error {
 	}
 
 	// cloud provider nodeGroup
-	task, err := mgr.SwitchNodeGroupAutoScaling(ua.group, false, &cloudprovider.SwitchNodeGroupAutoScalingOption{CommonOption: *cmOption})
+	task, err := mgr.SwitchNodeGroupAutoScaling(ua.group, false, &cloudprovider.SwitchNodeGroupAutoScalingOption{
+		CommonOption: *cmOption})
 	if err != nil {
 		blog.Errorf("disable nodegroup auto scale in cloudprovider %s/%s for group %s failed, %s",
 			ua.cloud.CloudID, ua.cloud.CloudProvider, ua.group.NodeGroupID, err.Error())
 		return err
 	}
+	taskID := ""
 
-	// create task and dispatch task
-	if err := ua.model.CreateTask(ua.ctx, task); err != nil {
-		blog.Errorf("save disable nodegroup auto scale task for nodegroup %s failed, %s",
-			ua.group.NodeGroupID, err.Error(),
-		)
-		return err
-	}
-	if err := taskserver.GetTaskServer().Dispatch(task); err != nil {
-		blog.Errorf("dispatch disable nodegroup auto scale task for nodegroup %s failed, %s",
-			ua.group.NodeGroupID, err.Error(),
-		)
-		return err
+	if task != nil {
+		taskID = task.TaskID
+		// create task and dispatch task
+		if err := ua.model.CreateTask(ua.ctx, task); err != nil {
+			blog.Errorf("save disable nodegroup auto scale task for nodegroup %s failed, %s",
+				ua.group.NodeGroupID, err.Error(),
+			)
+			return err
+		}
+		if err := taskserver.GetTaskServer().Dispatch(task); err != nil {
+			blog.Errorf("dispatch disable nodegroup auto scale task for nodegroup %s failed, %s",
+				ua.group.NodeGroupID, err.Error(),
+			)
+			return err
+		}
 	}
 
 	err = ua.model.CreateOperationLog(ua.ctx, &cmproto.OperationLog{
 		ResourceType: common.NodeGroup.String(),
 		ResourceID:   ua.group.NodeGroupID,
-		TaskID:       "",
+		TaskID:       taskID,
 		Message:      fmt.Sprintf("%s 关闭自动扩缩容", ua.group.NodeGroupID),
 		OpUser:       ua.group.Updater,
-		CreateTime:   time.Now().String(),
+		CreateTime:   time.Now().Format(time.RFC3339),
 	})
 	if err != nil {
 		blog.Errorf("DisableNodeGroupAutoScale[%s] CreateOperationLog failed: %v", ua.group.NodeGroupID, err)

@@ -407,7 +407,7 @@ func (p *Producer) getSingleClusterWorkloadList(jobTime time.Time, dimension str
 		len(workloadList))
 }
 
-//PodAutoscalerProducer is the function to produce podAutoscaler data job and send to message queue
+// PodAutoscalerProducer is the function to produce podAutoscaler data job and send to message queue
 func (p *Producer) PodAutoscalerProducer(dimension string) {
 	startTime := time.Now()
 	jobTime := utils.FormatTime(time.Now(), dimension)

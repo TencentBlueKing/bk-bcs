@@ -28,8 +28,8 @@ const (
 	allNamespace          = "*"
 	policyFromPattern     = "pattern_policy"
 	policyFromCommon      = "common"
-	//operationAdd          = "add"
-	//operationDelete       = "delete"
+	// operationAdd          = "add"
+	// operationDelete       = "delete"
 )
 
 // syncAuthRbacData sync rbac data to clusters
@@ -71,7 +71,8 @@ func extractClusterLevelData(rbacData *AuthRbacData) error {
 
 	// 如果该权限是用户直接申请特定集群的权限，则对之后的 clusterrolebinding 打上 clusterRoleBindingTypeFromCommon 的 label
 	if rbacData.PolicyFrom == policyFromCommon {
-		return syncClusterLevelData(username, rbacData.Action, rbacData.Operation, cluster.ID, clusterRoleBindingTypeFromCommon)
+		return syncClusterLevelData(username, rbacData.Action, rbacData.Operation, cluster.ID,
+			clusterRoleBindingTypeFromCommon)
 	} else if rbacData.PolicyFrom == policyFromPattern {
 		// 如果该权限是从用户申请任意集群的权限而来，则带上 clusterRoleBindingTypeFromAny 的 label
 		return syncClusterLevelData(username, rbacData.Action, rbacData.Operation, cluster.ID, clusterRoleBindingTypeFromAny)
@@ -125,15 +126,18 @@ func extractNamespaceLevelData(rbacData *AuthRbacData) error {
 
 	// 如果是任意 namespace 的权限，则创建 clusterrolebinding
 	if rbacData.ResourceInstance.Namespace == allNamespace {
-		return syncClusterLevelData(username, rbacData.Action, rbacData.Operation, cluster.ID, clusterRoleBindingTypeFromNamespace)
+		return syncClusterLevelData(username, rbacData.Action, rbacData.Operation, cluster.ID,
+			clusterRoleBindingTypeFromNamespace)
 	}
 
 	// 如果 type 是 pattern_policy ， 说明已经在这个集群中为任意 namespace 的权限创建 clusterrolebinding， 跳过
 	if rbacData.PolicyFrom == policyFromPattern {
-		blog.Infof("sync namespace level rbac from pattern_policy, skipping. cluster: %s, namespace: %s, user: %s, action: %s", clusterIdFromAuth, rbacData.ResourceInstance.Namespace, username, rbacData.Action)
+		blog.Infof(
+			"sync namespace level rbac from pattern_policy, skipping. cluster: %s, namespace: %s, user: %s, action: %s", clusterIdFromAuth, rbacData.ResourceInstance.Namespace, username, rbacData.Action)
 		return nil
 	} else if rbacData.PolicyFrom == policyFromCommon {
-		return syncNamespaceLevelData(username, rbacData.Action, rbacData.Operation, cluster.ID, rbacData.ResourceInstance.Namespace)
+		return syncNamespaceLevelData(username, rbacData.Action, rbacData.Operation, cluster.ID,
+			rbacData.ResourceInstance.Namespace)
 	}
 
 	return fmt.Errorf("invalid policyfrom: %s", rbacData.PolicyFrom)

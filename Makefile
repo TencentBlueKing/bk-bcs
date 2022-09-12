@@ -61,7 +61,8 @@ bcs-mesos:executor mesos-driver mesos-watch scheduler loadbalance netservice hpa
 
 bcs-services:api client bkcmdb-synchronizer cpuset gateway log-manager \
 	mesh-manager netservice sd-prometheus storage \
-	user-manager cluster-manager tools alert-manager k8s-watch kube-agent data-manager
+	user-manager cluster-manager tools alert-manager k8s-watch kube-agent data-manager \
+    helm-manager project-manager nodegroup-manager
 
 bcs-scenarios: kourse
 
@@ -380,7 +381,7 @@ cluster-manager:pre
 	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-cluster-manager/swagger
 	cp -R ${BCS_SERVICES_PATH}/bcs-cluster-manager/third_party/swagger-ui ${PACKAGEPATH}/bcs-services/bcs-cluster-manager/swagger/
 	cp ${BCS_SERVICES_PATH}/bcs-cluster-manager/api/clustermanager/clustermanager.swagger.json ${PACKAGEPATH}/bcs-services/bcs-cluster-manager/swagger/swagger-ui/clustermanager.swagger.json
-	cd ${BCS_SERVICES_PATH}/bcs-cluster-manager && go mod tidy && go build ${GITHUB_LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-cluster-manager/bcs-cluster-manager ./main.go
+	cd ${BCS_SERVICES_PATH}/bcs-cluster-manager && go mod tidy -compat=1.17 && go build ${GITHUB_LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-cluster-manager/bcs-cluster-manager ./main.go
 
 alert-manager:pre
 	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-alert-manager/swagger
@@ -389,12 +390,39 @@ alert-manager:pre
 	cp ./bcs-services/bcs-alert-manager/pkg/proto/alertmanager/alertmanager.swagger.json ${PACKAGEPATH}/bcs-services/bcs-alert-manager/swagger/alertmanager.swagger.json
 	cd ./bcs-services/bcs-alert-manager/ && go mod tidy && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-alert-manager/bcs-alert-manager ./main.go
 
-project:
-	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-project/swagger
-	cp -R ${BCS_CONF_SERVICES_PATH}/bcs-project ${PACKAGEPATH}/bcs-services
-	cp -R ${BCS_SERVICES_PATH}/bcs-project/third_party/swagger-ui ${PACKAGEPATH}/bcs-services/bcs-project/swagger/swagger-ui
-	cp ${BCS_SERVICES_PATH}/bcs-project/proto/bcsproject/bcsproject.swagger.json ${PACKAGEPATH}/bcs-services/bcs-project/swagger/bcsproject.swagger.json
-	cd ${BCS_SERVICES_PATH}/bcs-project &&  go mod tidy && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-project/bcs-project-service ./main.go
+project-manager:pre
+	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-project-manager/swagger
+	cp -R ${BCS_CONF_SERVICES_PATH}/bcs-project-manager/* ${PACKAGEPATH}/bcs-services/bcs-project-manager
+	cp -R ${BCS_SERVICES_PATH}/bcs-project-manager/third_party/swagger-ui ${PACKAGEPATH}/bcs-services/bcs-project-manager/swagger/swagger-ui
+	cp ${BCS_SERVICES_PATH}/bcs-project-manager/proto/bcsproject/bcsproject.swagger.json ${PACKAGEPATH}/bcs-services/bcs-project-manager/swagger/bcsproject.swagger.json
+	cd ${BCS_SERVICES_PATH}/bcs-project-manager && go mod tidy && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-project-manager/bcs-project-manager ./main.go
+
+CR_LDFLAG_EXT=" -X github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/version.Version=${VERSION} \
+ -X github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/version.GitCommit=${GITHASH} \
+ -X github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/version.BuildTime=${BUILDTIME}"
+
+cluster-resources:pre
+	mkdir -p ${PACKAGEPATH}/bcs-services/cluster-resources
+	cp -R ${BCS_CONF_SERVICES_PATH}/cluster-resources/* ${PACKAGEPATH}/bcs-services/cluster-resources
+	# etc config files
+	mkdir -p ${PACKAGEPATH}/bcs-services/cluster-resources/etc
+	cp -R ${BCS_SERVICES_PATH}/cluster-resources/etc/ ${PACKAGEPATH}/bcs-services/cluster-resources/etc/
+	# swagger files
+	mkdir -p ${PACKAGEPATH}/bcs-services/cluster-resources/swagger
+	cp -R ${BCS_SERVICES_PATH}/cluster-resources/third_party/swagger-ui/ ${PACKAGEPATH}/bcs-services/cluster-resources/swagger/swagger-ui/
+	cp ${BCS_SERVICES_PATH}/cluster-resources/swagger/data/cluster-resources.swagger.json ${PACKAGEPATH}/bcs-services/cluster-resources/swagger/cluster-resources.swagger.json
+	# example files
+	mkdir -p ${PACKAGEPATH}/bcs-services/cluster-resources/example/
+	cp -R ${BCS_SERVICES_PATH}/cluster-resources/pkg/resource/example/config/ ${PACKAGEPATH}/bcs-services/cluster-resources/example/config/
+	cp -R ${BCS_SERVICES_PATH}/cluster-resources/pkg/resource/example/manifest/ ${PACKAGEPATH}/bcs-services/cluster-resources/example/manifest/
+	cp -R ${BCS_SERVICES_PATH}/cluster-resources/pkg/resource/example/reference/ ${PACKAGEPATH}/bcs-services/cluster-resources/example/reference/
+	# form tmpl & schema files
+	mkdir -p ${PACKAGEPATH}/bcs-services/cluster-resources/tmpl/
+	cp -R ${BCS_SERVICES_PATH}/cluster-resources/pkg/resource/form/tmpl/ ${PACKAGEPATH}/bcs-services/cluster-resources/tmpl/
+	# i18n files
+	cp ${BCS_SERVICES_PATH}/cluster-resources/pkg/i18n/locale/lc_msgs.yaml ${PACKAGEPATH}/bcs-services/cluster-resources/lc_msgs.yaml
+	# go build
+	cd ${BCS_SERVICES_PATH}/cluster-resources && go mod tidy -compat=1.17 && CGO_ENABLED=0 go build ${LDFLAG}${CR_LDFLAG_EXT} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/cluster-resources/bcs-cluster-resources *.go
 
 # end of bcs-service section
 
@@ -416,6 +444,21 @@ data-manager:pre
 	cp -R ${BCS_SERVICES_PATH}/bcs-data-manager/third_party/swagger-ui/* ${PACKAGEPATH}/bcs-services/bcs-data-manager/swagger/
 	cp ${BCS_SERVICES_PATH}/bcs-data-manager/proto/bcs-data-manager/bcs-data-manager.swagger.json  ${PACKAGEPATH}/bcs-services/bcs-data-manager/swagger/bcs-data-manager.swagger.json
 	cd bcs-services/bcs-data-manager/ && go mod tidy -go=1.16 && go mod tidy -go=1.17 && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-data-manager/bcs-data-manager ./main.go
+
+helm-manager:pre
+	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-helm-manager
+	cp -R ${BCS_SERVICES_PATH}/bcs-helm-manager/images/bcs-helm-manager/* ${PACKAGEPATH}/bcs-services/bcs-helm-manager/
+	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-helm-manager/swagger
+	cp -R ${BCS_SERVICES_PATH}/bcs-helm-manager/third_party/swagger-ui ${PACKAGEPATH}/bcs-services/bcs-helm-manager/swagger/
+	cp ${BCS_SERVICES_PATH}/bcs-helm-manager/proto/bcs-helm-manager/bcs-helm-manager.swagger.json ${PACKAGEPATH}/bcs-services/bcs-helm-manager/swagger/swagger-ui/bcs-helm-manager.swagger.json
+	cd ${BCS_SERVICES_PATH}/bcs-helm-manager && go mod tidy && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-helm-manager/bcs-helm-manager ./main.go
+	cd ${BCS_SERVICES_PATH}/bcs-helm-manager && go mod tidy && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-helm-manager/bcs-helm-manager-migrator ./cmd/bcs-helm-manager-migrator/main.go
+
+
+nodegroup-manager:pre
+	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-nodegroup-manager
+	cp -R ${BCS_CONF_SERVICES_PATH}/bcs-nodegroup-manager ${PACKAGEPATH}/bcs-services
+	cd bcs-services/bcs-nodegroup-manager/ && go mod tidy -go=1.16 && go mod tidy -go=1.17 && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-nodegroup-manager/bcs-nodegroup-manager ./main.go
 
 test: test-bcs-runtime
 

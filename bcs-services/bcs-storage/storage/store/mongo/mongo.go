@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package mongo xxx
 package mongo
 
 import (
@@ -294,7 +295,8 @@ func (s *Store) List(ctx context.Context, objectType types.ObjectType, opts *sto
 }
 
 // Watch object with certain type
-func (s *Store) Watch(ctx context.Context, resourceType types.ObjectType, opt *store.WatchOptions) (chan *store.Event, error) {
+func (s *Store) Watch(ctx context.Context, resourceType types.ObjectType, opt *store.WatchOptions) (chan *store.Event,
+	error) {
 	if opt == nil {
 		return nil, fmt.Errorf("update options cannot be empty")
 	}

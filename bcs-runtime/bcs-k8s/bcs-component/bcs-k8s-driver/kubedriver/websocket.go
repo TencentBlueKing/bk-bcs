@@ -30,10 +30,14 @@ import (
 )
 
 const (
-	Module        = "BCS-API-Tunnel-Module"
+	// Module TODO
+	Module = "BCS-API-Tunnel-Module"
+	// RegisterToken TODO
 	RegisterToken = "BCS-API-Tunnel-Token"
-	Params        = "BCS-API-Tunnel-Params"
-	Cluster       = "BCS-API-Tunnel-ClusterId"
+	// Params TODO
+	Params = "BCS-API-Tunnel-Params"
+	// Cluster TODO
+	Cluster = "BCS-API-Tunnel-ClusterId"
 )
 
 func buildWebsocketToApi(o *options.KubeDriverServerOptions) error {
@@ -94,7 +98,8 @@ func buildWebsocketToApi(o *options.KubeDriverServerOptions) error {
 			wsURL := fmt.Sprintf("wss://%s/bcsapi/v1/websocket/connect", bcsApiUrl.Host)
 			blog.Infof("Connecting to %s with token %s", wsURL, o.RegisterToken)
 
-			websocketDialer.ClientConnect(context.Background(), wsURL, headers, tlsConfig, nil, func(proto, address string) bool {
+			websocketDialer.ClientConnect(context.Background(), wsURL, headers, tlsConfig, nil, func(proto,
+				address string) bool {
 				switch proto {
 				case "tcp":
 					return true

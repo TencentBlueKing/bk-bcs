@@ -11,22 +11,30 @@
  *
  */
 
+// Package static xxx
 package static
 
 var (
+	// ZookeeperClientUser xxx
 	// zookeeper acl config
 	ZookeeperClientUser = ""
-	ZookeeperClientPwd  = ""
+	// ZookeeperClientPwd xxx
+	ZookeeperClientPwd = ""
 
-	// encryption salt key
+	// EncryptionKey salt key
 	EncryptionKey = ""
 
+	// ServerCertPwd xxx
 	// cert key password config
-	ServerCertPwd              = ""
-	ClientCertPwd              = ""
+	ServerCertPwd = ""
+	// ClientCertPwd xxx
+	ClientCertPwd = ""
+	// LicenseServerClientCertPwd xxx
 	LicenseServerClientCertPwd = ""
 
+	// BcsDefaultUser xxx
 	// default docker registry config for pulling images
-	BcsDefaultUser   = ""
+	BcsDefaultUser = ""
+	// BcsDefaultPasswd xxx
 	BcsDefaultPasswd = ""
 )

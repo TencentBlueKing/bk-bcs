@@ -18,7 +18,7 @@ import (
 	"sort"
 )
 
-//SimpleHTTPConfig init one simple config
+// SimpleHTTPConfig init one simple config
 func SimpleHTTPConfig(name, domain string, port uint) *HTTPConfig {
 	c := &HTTPConfig{
 		Name:            name,
@@ -30,21 +30,21 @@ func SimpleHTTPConfig(name, domain string, port uint) *HTTPConfig {
 	return c
 }
 
-//HTTPConfig configuration for http proxy
+// HTTPConfig configuration for http proxy
 type HTTPConfig struct {
 	indexer string
 	Name    string
 	Domain  string
-	//backend ip list, reserved for extention
+	// backend ip list, reserved for extention
 	IPs             []string
 	DestinationPort uint
-	//Label use for custom information storage
-	//all control informations are depend on Label,
-	//! Label is reqired
+	// Label use for custom information storage
+	// all control informations are depend on Label,
+	// ! Label is reqired
 	Label map[string]string
 }
 
-//Key indexer for cache storage
+// Key indexer for cache storage
 func (config *HTTPConfig) Key() string {
 	if len(config.indexer) == 0 {
 		if config.DestinationPort != 80 {
@@ -56,7 +56,7 @@ func (config *HTTPConfig) Key() string {
 	return config.indexer
 }
 
-//IsChanged check if destination Config changed
+// IsChanged check if destination Config changed
 func (config *HTTPConfig) IsChanged(dest *HTTPConfig) bool {
 	if config.Name != dest.Name {
 		return true
@@ -70,7 +70,7 @@ func (config *HTTPConfig) IsChanged(dest *HTTPConfig) bool {
 	return false
 }
 
-//LabelFilter find specified Config, if filter match exactly
+// LabelFilter find specified Config, if filter match exactly
 // then return true, otherwise false
 func (config *HTTPConfig) LabelFilter(filter map[string]string) bool {
 	if len(filter) == 0 {
@@ -89,31 +89,31 @@ func (config *HTTPConfig) LabelFilter(filter map[string]string) bool {
 	return true
 }
 
-//TCPConfig configuration for tcp proxy
+// TCPConfig configuration for tcp proxy
 // indexer: name_port
 type TCPConfig struct {
 	indexer string
-	//Name for management & first indexer
+	// Name for management & first indexer
 	Name string
-	//port for second indexer
+	// port for second indexer
 	ProxyPort uint
-	//check if we need to create backend
+	// check if we need to create backend
 	HasBackend bool
-	//domain for destination
+	// domain for destination
 	Domain string
-	//specified destination
+	// specified destination
 	IPs []string
-	//algorithm only use for IP mode
+	// algorithm only use for IP mode
 	Algorithm string
-	//DestinationPort work for domain & iplist
+	// DestinationPort work for domain & iplist
 	DestinationPort uint
-	//Label use for custom information storage
-	//all control informations are depend on Label,
-	//! Label is reqired
+	// Label use for custom information storage
+	// all control informations are depend on Label,
+	// ! Label is reqired
 	Label map[string]string
 }
 
-//IsChanged check if destination Config changed
+// IsChanged check if destination Config changed
 func (config *TCPConfig) IsChanged(dest *TCPConfig) bool {
 	if config.Domain != dest.Domain {
 		return true
@@ -135,7 +135,7 @@ func (config *TCPConfig) IsChanged(dest *TCPConfig) bool {
 	return false
 }
 
-//Key config key for cache
+// Key config key for cache
 func (config *TCPConfig) Key() string {
 	if len(config.indexer) == 0 {
 		config.indexer = fmt.Sprintf("%s_%d", config.Name, config.ProxyPort)
@@ -143,7 +143,7 @@ func (config *TCPConfig) Key() string {
 	return config.indexer
 }
 
-//LabelFilter find specified Config, if filter match exactly
+// LabelFilter find specified Config, if filter match exactly
 // then return true, otherwise false
 func (config *TCPConfig) LabelFilter(filter map[string]string) bool {
 	if len(filter) == 0 {
@@ -162,15 +162,15 @@ func (config *TCPConfig) LabelFilter(filter map[string]string) bool {
 	return true
 }
 
-//SortIPs sort IP list when for destination
+// SortIPs sort IP list when for destination
 func (config *TCPConfig) SortIPs() {
 	sort.Strings(config.IPs)
 }
 
-//TCPList list for sort tcpConfig
+// TCPList list for sort tcpConfig
 type TCPList []*TCPConfig
 
-//Len return list length
+// Len return list length
 func (l TCPList) Len() int {
 	return len(l)
 }
@@ -189,10 +189,10 @@ func (l TCPList) Swap(i, j int) {
 	l[i], l[j] = l[j], l[i]
 }
 
-//HTTPList list for sort http config
+// HTTPList list for sort http config
 type HTTPList []*HTTPConfig
 
-//Len return list length
+// Len return list length
 func (l HTTPList) Len() int {
 	return len(l)
 }

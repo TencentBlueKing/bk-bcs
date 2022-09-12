@@ -24,7 +24,8 @@ import (
 )
 
 // InjectApplicationContent inject log envs to application
-func (h *Hooker) InjectApplicationContent(application *commtypes.ReplicaController) (*commtypes.ReplicaController, error) {
+func (h *Hooker) InjectApplicationContent(application *commtypes.ReplicaController) (*commtypes.ReplicaController,
+	error) {
 	// get all BcsLogConfig
 	bcsLogConfs, err := h.bcsLogConfigLister.BcsLogConfigs(application.NameSpace).List(labels.Everything())
 	if err != nil {
@@ -32,7 +33,7 @@ func (h *Hooker) InjectApplicationContent(application *commtypes.ReplicaControll
 		return nil, err
 	}
 
-	//handle bcs-system modules' log inject
+	// handle bcs-system modules' log inject
 	namespaceSet := mapset.NewSet()
 	for _, namespace := range IgnoredNamespaces {
 		namespaceSet.Add(namespace)
@@ -103,7 +104,7 @@ func (h *Hooker) InjectDeployContent(deploy *commtypes.BcsDeployment) (*commtype
 		return nil, err
 	}
 
-	//handle bcs-system modules' log inject
+	// handle bcs-system modules' log inject
 	namespaceSet := mapset.NewSet()
 	for _, namespace := range IgnoredNamespaces {
 		namespaceSet.Add(namespace)
@@ -160,7 +161,8 @@ func (h *Hooker) InjectDeployContent(deploy *commtypes.BcsDeployment) (*commtype
 }
 
 // injectMesosContainers injects bcs log config to all containers
-func (h *Hooker) injectMesosContainers(namespace string, podTemplate *commtypes.PodTemplateSpec, bcsLogConf *bcsv1.BcsLogConfig) *commtypes.PodTemplateSpec { // nolint
+func (h *Hooker) injectMesosContainers(namespace string, podTemplate *commtypes.PodTemplateSpec,
+	bcsLogConf *bcsv1.BcsLogConfig) *commtypes.PodTemplateSpec { // nolint
 
 	var injectedContainers []commtypes.Container
 	for _, container := range podTemplate.PodSpec.Containers {
@@ -173,7 +175,8 @@ func (h *Hooker) injectMesosContainers(namespace string, podTemplate *commtypes.
 }
 
 // injectMesosContainer injects bcs log config to an container
-func (h *Hooker) injectMesosContainer(namespace string, container commtypes.Container, bcsLogConf *bcsv1.BcsLogConfig, index int) commtypes.Container { // nolint
+func (h *Hooker) injectMesosContainer(namespace string, container commtypes.Container, bcsLogConf *bcsv1.BcsLogConfig,
+	index int) commtypes.Container { // nolint
 	var envs []commtypes.EnvVar
 
 	clusterIDEnv := commtypes.EnvVar{

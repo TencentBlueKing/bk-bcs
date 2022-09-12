@@ -19,14 +19,17 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
+// SchemeGroupVersion xxx
 var SchemeGroupVersion = schema.GroupVersion{
 	Group:   tkex.GroupName,
 	Version: tkex.Version,
 }
 
 var (
+	// SchemeBuilder xxx
 	SchemeBuilder = runtime.NewSchemeBuilder(addKnownTypes)
-	AddToScheme   = SchemeBuilder.AddToScheme
+	// AddToScheme xxx
+	AddToScheme = SchemeBuilder.AddToScheme
 )
 
 // Resource returns GroupResource of a resource

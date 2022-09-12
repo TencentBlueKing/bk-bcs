@@ -11,6 +11,7 @@
  *
  */
 
+// Package sharedcommand xxx
 package sharedcommand
 
 import (

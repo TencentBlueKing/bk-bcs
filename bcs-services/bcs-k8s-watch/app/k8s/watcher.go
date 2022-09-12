@@ -35,6 +35,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
+	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/rest"
@@ -74,12 +75,19 @@ type Watcher struct {
 	stopChan           chan struct{}
 	namespace          string
 	labelSelector      string
+	labelMap           map[string]string
 }
 
 // NewWatcher creates a new watcher of target type resource.
-func NewWatcher(client *rest.Interface, namespace string, resourceType string, resourceName string, objType runtime.Object,
-	writer *output.Writer, sharedWatchers map[string]WatcherInterface, resourceNamespaced bool, labelSelector string) *Watcher {
+func NewWatcher(client *rest.Interface, namespace string, resourceType string, resourceName string,
+	objType runtime.Object,
+	writer *output.Writer, sharedWatchers map[string]WatcherInterface, resourceNamespaced bool,
+	labelSelector string) (*Watcher, error) {
 
+	labelSet, err := labels.ConvertSelectorToLabelsMap(labelSelector)
+	if err != nil {
+		return nil, err
+	}
 	watcher := &Watcher{
 		resourceType:       resourceType,
 		writer:             writer,
@@ -88,9 +96,11 @@ func NewWatcher(client *rest.Interface, namespace string, resourceType string, r
 		queue:              queue.New(),
 		namespace:          namespace,
 		labelSelector:      labelSelector,
+		labelMap:           labelSet,
 	}
 
-	glog.Infof("NewWatcher with resource type: %s, resource name: %s, namespace: %s, labelSelector: %s", resourceType, resourceName, namespace, labelSelector)
+	glog.Infof("NewWatcher with resource type: %s, resource name: %s, namespace: %s, labelSelector: %s", resourceType,
+		resourceName, namespace, labelSelector)
 
 	// build list watch.
 	listWatch := cache.NewListWatchFromClient(*client, resourceName, namespace, fields.Everything())
@@ -117,7 +127,7 @@ func NewWatcher(client *rest.Interface, namespace string, resourceType string, r
 	watcher.store = store
 	watcher.controller = controller
 
-	return watcher
+	return watcher, nil
 }
 
 // GetByKey returns object data by target key.
@@ -167,11 +177,13 @@ func (w *Watcher) handleQueueData(stopCh <-chan struct{}) {
 			continue
 		}
 
-		glog.V(4).Infof("queue length[%s:%d] resource[%s:%s:%s]", w.resourceType, w.queue.Length(), sData.Action, sData.Namespace, sData.Name)
+		glog.V(4).Infof("queue length[%s:%d] resource[%s:%s:%s]", w.resourceType, w.queue.Length(), sData.Action,
+			sData.Namespace, sData.Name)
 		w.writer.Sync(sData)
 	}
 }
 
+// distributeDataToHandler xxx
 // distribute data to handler at watcher handlers.
 func (w *Watcher) distributeDataToHandler(data *action.SyncData) {
 	handlerKey := w.writer.GetHandlerKeyBySyncData(data)
@@ -291,15 +303,41 @@ func (w *Watcher) isEventShouldFilter(meta metav1.Object, eventAction string) bo
 }
 
 func (w *Watcher) genSyncData(obj interface{}, eventAction string) *action.SyncData {
+	dMeta, isObj := obj.(metav1.Object)
 
-	// construct and send
-	dMeta := obj.(metav1.Object)
+	if !isObj {
+		deletedState, ok := obj.(cache.DeletedFinalStateUnknown)
+		if !ok {
+			glog.Errorf("Error casting to DeletedFinalStateUnknown, obj: %+v", obj)
+			return nil
+		}
+		dMeta, ok = deletedState.Obj.(metav1.Object)
+		if !ok {
+			glog.Errorf("Error DeletedFinalStateUnknown contained Obj, obj: %+v", obj)
+			return nil
+		}
+	}
+
 	namespace := dMeta.GetNamespace()
 	name := dMeta.GetName()
 
 	if w.isEventShouldFilter(dMeta, eventAction) {
 		glog.V(2).Infof("watcher metadata is filtered %s %s: %s/%s", eventAction, w.resourceType, namespace, name)
 		return nil
+	}
+
+	// don't remove this code
+	// in a specific scenario, when using label selector to watch multiple sub-clusters of a karmada federated cluster,
+	// returned data may not carry the label selector, so we add label selector into object returned.
+	if len(w.labelMap) != 0 {
+		tmpLabels := dMeta.GetLabels()
+		if tmpLabels == nil {
+			tmpLabels = make(map[string]string)
+		}
+		for k, v := range w.labelMap {
+			tmpLabels[k] = v
+		}
+		dMeta.SetLabels(tmpLabels)
 	}
 
 	ownerUID := ""

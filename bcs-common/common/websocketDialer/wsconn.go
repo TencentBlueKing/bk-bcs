@@ -34,6 +34,7 @@ func newWSConn(conn *websocket.Conn) *wsConn {
 	return w
 }
 
+// WriteMessage xxx
 func (w *wsConn) WriteMessage(messageType int, data []byte) error {
 	w.Lock()
 	defer w.Unlock()
@@ -41,6 +42,7 @@ func (w *wsConn) WriteMessage(messageType int, data []byte) error {
 	return w.conn.WriteMessage(messageType, data)
 }
 
+// NextReader xxx
 func (w *wsConn) NextReader() (int, io.Reader, error) {
 	return w.conn.NextReader()
 }

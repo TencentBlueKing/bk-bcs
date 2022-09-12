@@ -109,7 +109,8 @@ func HandleIpSchedulerPredicate(extenderArgs schedulerapi.ExtenderArgs) (*schedu
 	}
 	canSchedule := make([]v1.Node, 0, len(extenderArgs.Nodes.Items))
 	canNotSchedule := make(map[string]string)
-	metrics.ReportK8sCustomSchedulerNodeNum(actions.IpSchedulerV1, actions.TotalNodeNumKey, float64(len(extenderArgs.Nodes.Items)))
+	metrics.ReportK8sCustomSchedulerNodeNum(actions.IpSchedulerV1, actions.TotalNodeNumKey,
+		float64(len(extenderArgs.Nodes.Items)))
 
 	if extenderArgs.Pod.Spec.HostNetwork == true {
 		blog.Infof("hostNetwork pod %s, skip to interact with netService", extenderArgs.Pod.Name)
@@ -128,8 +129,10 @@ func HandleIpSchedulerPredicate(extenderArgs schedulerapi.ExtenderArgs) (*schedu
 		}
 	}
 
-	metrics.ReportK8sCustomSchedulerNodeNum(actions.IpSchedulerV1, actions.CanSchedulerNodeNumKey, float64(len(canSchedule)))
-	metrics.ReportK8sCustomSchedulerNodeNum(actions.IpSchedulerV1, actions.CanNotSchedulerNodeNumKey, float64(len(canNotSchedule)))
+	metrics.ReportK8sCustomSchedulerNodeNum(actions.IpSchedulerV1, actions.CanSchedulerNodeNumKey,
+		float64(len(canSchedule)))
+	metrics.ReportK8sCustomSchedulerNodeNum(actions.IpSchedulerV1, actions.CanNotSchedulerNodeNumKey,
+		float64(len(canNotSchedule)))
 	blog.Info("%v", canNotSchedule)
 	scheduleResult := schedulerapi.ExtenderFilterResult{
 		Nodes: &v1.NodeList{

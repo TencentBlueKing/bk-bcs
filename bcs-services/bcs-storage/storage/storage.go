@@ -166,7 +166,7 @@ func (s *StorageServer) Start() error {
 	}
 }
 
-//runPrometheusMetrics starting prometheus metrics handler
+// runPrometheusMetrics starting prometheus metrics handler
 func runPrometheusMetrics(op *options.StorageOptions) {
 	http.Handle("/metrics", promhttp.Handler())
 	addr := op.Address + ":" + strconv.Itoa(int(op.MetricPort))

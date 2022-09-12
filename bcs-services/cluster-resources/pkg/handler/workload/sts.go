@@ -78,6 +78,25 @@ func (h *Handler) UpdateSTS(
 	return err
 }
 
+// ScaleSTS StatefulSet 扩缩容
+func (h *Handler) ScaleSTS(
+	ctx context.Context, req *clusterRes.ResScaleReq, resp *clusterRes.CommonResp,
+) (err error) {
+	resp.Data, err = resAction.NewResMgr(req.ClusterID, "", res.STS).Scale(
+		ctx, req.Namespace, req.Name, req.Replicas, metav1.PatchOptions{},
+	)
+	return err
+}
+
+// RescheduleSTSPo 批量重新调度 StatefulSet 下的 Pod
+func (h *Handler) RescheduleSTSPo(
+	ctx context.Context, req *clusterRes.ResBatchRescheduleReq, _ *clusterRes.CommonResp,
+) (err error) {
+	return resAction.NewResMgr(req.ClusterID, "", res.STS).Reschedule(
+		ctx, req.Namespace, req.Name, req.LabelSelector, req.PodNames,
+	)
+}
+
 // DeleteSTS 删除 StatefulSet
 func (h *Handler) DeleteSTS(
 	ctx context.Context, req *clusterRes.ResDeleteReq, _ *clusterRes.CommonResp,

@@ -33,19 +33,20 @@ import (
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
 )
 
-// Handler ...
+// Handler xxx
 type Handler struct{}
 
-// New ...
+// New xxx
 func New() *Handler {
 	return &Handler{}
 }
 
-// ListCRD ...
+// ListCRD xxx
 func (h *Handler) ListCRD(
 	ctx context.Context, req *clusterRes.ResListReq, resp *clusterRes.CommonResp,
 ) error {
-	ret, err := cli.NewCRDCliByClusterID(ctx, req.ClusterID).List(ctx, metav1.ListOptions{LabelSelector: req.LabelSelector})
+	ret, err := cli.NewCRDCliByClusterID(ctx, req.ClusterID).List(ctx, metav1.ListOptions{
+		LabelSelector: req.LabelSelector})
 	if err != nil {
 		return err
 	}
@@ -69,7 +70,7 @@ func (h *Handler) ListCRD(
 	return err
 }
 
-// GetCRD ...
+// GetCRD xxx
 func (h *Handler) GetCRD(
 	ctx context.Context, req *clusterRes.ResGetReq, resp *clusterRes.CommonResp,
 ) error {

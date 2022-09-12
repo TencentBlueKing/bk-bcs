@@ -48,18 +48,21 @@ type ServiceImportController struct {
 	EventRecorder       record.EventRecorder
 }
 
-func (c *ServiceImportController) Reconcile(ctx context.Context, req controllerruntime.Request) (controllerruntime.Result, error) {
+// Reconcile xxx
+func (c *ServiceImportController) Reconcile(ctx context.Context, req controllerruntime.Request) (
+	controllerruntime.Result, error) {
 	klog.V(4).Infof("Reconciling ServiceImport %s.", req.NamespacedName.String())
 	serviceImport := &mcsv1alpha1.ServiceImport{}
 	if err := c.Get(ctx, req.NamespacedName, serviceImport); err != nil {
 		klog.ErrorS(err, "unable to fetch serviceImport", "serviceImport", req.NamespacedName.String())
 		return controllerruntime.Result{}, client.IgnoreNotFound(err)
 	}
-	//删除
+	// 删除
 	if !serviceImport.DeletionTimestamp.IsZero() {
 		if utils.ContainsString(serviceImport.Finalizers, utils.BcsMcsFinalizerName) {
 			klog.V(4).Infof("Reconciling serviceImport %s. Deleting.", req.NamespacedName.String())
-			serviceImport.ObjectMeta.Finalizers = utils.RemoveString(serviceImport.ObjectMeta.Finalizers, utils.BcsMcsFinalizerName)
+			serviceImport.ObjectMeta.Finalizers = utils.RemoveString(serviceImport.ObjectMeta.Finalizers,
+				utils.BcsMcsFinalizerName)
 			if err := c.Update(context.Background(), serviceImport); err != nil {
 				return controllerruntime.Result{}, client.IgnoreNotFound(err)
 			}
@@ -75,12 +78,12 @@ func (c *ServiceImportController) Reconcile(ctx context.Context, req controllerr
 		}
 	}
 
-	//create or update service
+	// create or update service
 	if err := c.syncToDerivedService(ctx, serviceImport); err != nil {
 		klog.ErrorS(err, "unable to create or update service", "service", req.NamespacedName.String())
 		return controllerruntime.Result{}, client.IgnoreNotFound(err)
 	}
-	//同步Endpoint
+	// 同步Endpoint
 	if err := c.syncToEndpointSlice(ctx, serviceImport); err != nil {
 		klog.ErrorS(err, "unable to sync endpoint", "serviceImport", req.NamespacedName.String())
 		return controllerruntime.Result{}, client.IgnoreNotFound(err)
@@ -88,7 +91,8 @@ func (c *ServiceImportController) Reconcile(ctx context.Context, req controllerr
 	return controllerruntime.Result{}, nil
 }
 
-func (c *ServiceImportController) syncToDerivedService(ctx context.Context, serviceImport *mcsv1alpha1.ServiceImport) error {
+func (c *ServiceImportController) syncToDerivedService(ctx context.Context,
+	serviceImport *mcsv1alpha1.ServiceImport) error {
 	newDerivedService := &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: serviceImport.Namespace,
@@ -119,35 +123,41 @@ func (c *ServiceImportController) syncToDerivedService(ctx context.Context, serv
 	if err != nil {
 		if errors.IsNotFound(err) {
 			if err = c.Client.Create(ctx, newDerivedService); err != nil {
-				klog.Errorf("Create derived service(%s/%s) failed, Error: %v", newDerivedService.Namespace, newDerivedService.Name, err)
+				klog.Errorf("Create derived service(%s/%s) failed, Error: %v", newDerivedService.Namespace, newDerivedService.Name,
+					err)
 				return err
 			}
-			c.EventRecorder.Eventf(serviceImport, corev1.EventTypeNormal, "CreateService", "Create Service %s/%s successfully.", newDerivedService.Namespace, newDerivedService.Name)
+			c.EventRecorder.Eventf(serviceImport, corev1.EventTypeNormal, "CreateService", "Create Service %s/%s successfully.",
+				newDerivedService.Namespace, newDerivedService.Name)
 			return c.updateServiceStatus(serviceImport, newDerivedService)
 		}
 		return err
 	}
-	//service存在，判断是否是本controller创建的
+	// service存在，判断是否是本controller创建的
 	if oldDerivedService.Annotations[utils.ConfigCreatedBy] != ServiceImportControllerName {
-		//冲突
-		klog.Errorf("Service(%s/%s) is created by other controller, Error: %v", oldDerivedService.Namespace, oldDerivedService.Name, err)
-		c.EventRecorder.Eventf(serviceImport, corev1.EventTypeWarning, "Conflict", "Service %s is created by other controller", serviceImport.Name)
+		// 冲突
+		klog.Errorf("Service(%s/%s) is created by other controller, Error: %v", oldDerivedService.Namespace,
+			oldDerivedService.Name, err)
+		c.EventRecorder.Eventf(serviceImport, corev1.EventTypeWarning, "Conflict",
+			"Service %s is created by other controller", serviceImport.Name)
 		return nil
 	}
 
 	retainServiceFields(oldDerivedService, newDerivedService)
 	err = c.Client.Update(context.TODO(), newDerivedService)
 	if err != nil {
-		klog.Errorf("Update derived service(%s/%s) failed, Error: %v", newDerivedService.Namespace, newDerivedService.Name, err)
+		klog.Errorf("Update derived service(%s/%s) failed, Error: %v", newDerivedService.Namespace, newDerivedService.Name,
+			err)
 		return err
 	}
 
 	return c.updateServiceStatus(serviceImport, newDerivedService)
 }
 
-func (c *ServiceImportController) syncToEndpointSlice(ctx context.Context, serviceImport *mcsv1alpha1.ServiceImport) error {
+func (c *ServiceImportController) syncToEndpointSlice(ctx context.Context,
+	serviceImport *mcsv1alpha1.ServiceImport) error {
 	klog.V(4).Infof("syncToEndpointSlice, serviceImport is %s/%s", serviceImport.Namespace, serviceImport.Name)
-	//查找本地endpoint，以及远端Manifest中的对比差异
+	// 查找本地endpoint，以及远端Manifest中的对比差异
 	endpointSliceList := &discoveryv1beta1.EndpointSliceList{}
 	listEndpointSliceOpts := []client.ListOption{
 		client.InNamespace(serviceImport.Namespace),
@@ -160,7 +170,7 @@ func (c *ServiceImportController) syncToEndpointSlice(ctx context.Context, servi
 	if err != nil {
 		return err
 	}
-	//查找远端Manifest中的endpoint
+	// 查找远端Manifest中的endpoint
 	manifestList := &bcsmcsv1alpha1.ManifestList{}
 	listManifestOpts := []client.ListOption{
 		client.MatchingLabels(map[string]string{
@@ -174,32 +184,37 @@ func (c *ServiceImportController) syncToEndpointSlice(ctx context.Context, servi
 		return err
 	}
 
-	//需要删除哪些本地的endpoint
-	//从manifest中解析出endpoint
+	// 需要删除哪些本地的endpoint
+	// 从manifest中解析出endpoint
 	remoteEndpointSlices := make([]*discoveryv1beta1.EndpointSlice, 0)
 	for _, manifest := range manifestList.Items {
 		remoteEndpointSlice, err := utils.UnmarshalEndpointSlice(&manifest)
 		if err != nil {
 			klog.ErrorS(err, "unable to unmarshal endpointSlice", "manifest", manifest.Name)
-			c.EventRecorder.Eventf(serviceImport, corev1.EventTypeWarning, "UnmarshalEndpointSliceFailed", "UnmarshalEndpointSliceFailed %s/%s", manifest.Namespace, manifest.Name)
+			c.EventRecorder.Eventf(serviceImport, corev1.EventTypeWarning, "UnmarshalEndpointSliceFailed",
+				"UnmarshalEndpointSliceFailed %s/%s", manifest.Namespace, manifest.Name)
 			continue
 		}
 		remoteEndpointSlices = append(remoteEndpointSlices, remoteEndpointSlice)
 	}
 	needDeleteLocalEndpointSlices := utils.FindNeedDeleteEndpointSlice(remoteEndpointSlices, endpointSliceList.Items)
 	for _, needDeleteLocalEndpointSlice := range needDeleteLocalEndpointSlices {
-		klog.V(4).Infof("delete local endpointSlice %s/%s", needDeleteLocalEndpointSlice.Namespace, needDeleteLocalEndpointSlice.Name)
+		klog.V(4).Infof("delete local endpointSlice %s/%s", needDeleteLocalEndpointSlice.Namespace,
+			needDeleteLocalEndpointSlice.Name)
 		err := c.Delete(ctx, &needDeleteLocalEndpointSlice)
 		if err != nil && !errors.IsNotFound(err) {
 			klog.ErrorS(err, "delete endpointSlice failed", "endpointSlice", needDeleteLocalEndpointSlice.Name)
-			c.EventRecorder.Eventf(serviceImport, corev1.EventTypeWarning, "Delete", "Delete endpointSlice %s failed", needDeleteLocalEndpointSlice.Name)
+			c.EventRecorder.Eventf(serviceImport, corev1.EventTypeWarning, "Delete", "Delete endpointSlice %s failed",
+				needDeleteLocalEndpointSlice.Name)
 			continue
 		}
-		c.EventRecorder.Eventf(serviceImport, corev1.EventTypeNormal, "Delete", "Delete endpointSlice %s successfully", needDeleteLocalEndpointSlice.Name)
+		c.EventRecorder.Eventf(serviceImport, corev1.EventTypeNormal, "Delete", "Delete endpointSlice %s successfully",
+			needDeleteLocalEndpointSlice.Name)
 	}
 
 	for _, remoteEndpointSlice := range remoteEndpointSlices {
-		generateEndpointSliceName := utils.GenerateEndpointSliceName(remoteEndpointSlice.Name, remoteEndpointSlice.Labels[utils.ConfigClusterLabel])
+		generateEndpointSliceName := utils.GenerateEndpointSliceName(remoteEndpointSlice.Name,
+			remoteEndpointSlice.Labels[utils.ConfigClusterLabel])
 		desiredEndpointSlice := remoteEndpointSlice.DeepCopy()
 		desiredEndpointSlice.ObjectMeta = metav1.ObjectMeta{
 			Namespace: remoteEndpointSlice.Namespace,
@@ -262,7 +277,8 @@ func (c *ServiceImportController) filterManifest() handler.MapFunc {
 }
 
 // updateServiceStatus update loadbalanacer status with provided clustersetIPs
-func (c *ServiceImportController) updateServiceStatus(serviceImport *mcsv1alpha1.ServiceImport, derivedService *corev1.Service) error {
+func (c *ServiceImportController) updateServiceStatus(serviceImport *mcsv1alpha1.ServiceImport,
+	derivedService *corev1.Service) error {
 	ingress := make([]corev1.LoadBalancerIngress, 0)
 	for _, ip := range serviceImport.Spec.IPs {
 		ingress = append(ingress, corev1.LoadBalancerIngress{
@@ -276,15 +292,17 @@ func (c *ServiceImportController) updateServiceStatus(serviceImport *mcsv1alpha1
 	}
 
 	if err := c.Client.Status().Update(context.TODO(), derivedService); err != nil {
-		klog.Errorf("Update derived service(%s/%s) status failed, Error: %v", derivedService.Namespace, derivedService.Name, err)
+		klog.Errorf("Update derived service(%s/%s) status failed, Error: %v", derivedService.Namespace, derivedService.Name,
+			err)
 		return err
 	}
 
 	return nil
 }
 
-// CreateOrUpdateEndpointSlice creates a EndpointSlice object if not exist, or updates if it already exist.
-func (c *ServiceImportController) createOrUpdateEndpointSlice(serviceImport *mcsv1alpha1.ServiceImport, endpointSlice *discoveryv1beta1.EndpointSlice) error {
+// createOrUpdateEndpointSlice creates a EndpointSlice object if not exist, or updates if it already exist.
+func (c *ServiceImportController) createOrUpdateEndpointSlice(serviceImport *mcsv1alpha1.ServiceImport,
+	endpointSlice *discoveryv1beta1.EndpointSlice) error {
 	runtimeObject := endpointSlice.DeepCopy()
 	operationResult, err := controllerutil.CreateOrUpdate(context.TODO(), c.Client, runtimeObject, func() error {
 		runtimeObject.AddressType = endpointSlice.AddressType
@@ -294,17 +312,21 @@ func (c *ServiceImportController) createOrUpdateEndpointSlice(serviceImport *mcs
 		return nil
 	})
 	if err != nil {
-		klog.Errorf("Failed to create/update EndpointSlice %s/%s. Error: %v", endpointSlice.GetNamespace(), endpointSlice.GetName(), err)
-		c.EventRecorder.Eventf(serviceImport, corev1.EventTypeWarning, "CreateOrUpdateEndpointSliceFailed", "Failed to create/update EndpointSlice %s/%s. Error: %v", endpointSlice.GetNamespace(), endpointSlice.GetName(), err)
+		klog.Errorf("Failed to create/update EndpointSlice %s/%s. Error: %v", endpointSlice.GetNamespace(),
+			endpointSlice.GetName(), err)
+		c.EventRecorder.Eventf(serviceImport, corev1.EventTypeWarning, "CreateOrUpdateEndpointSliceFailed",
+			"Failed to create/update EndpointSlice %s/%s. Error: %v", endpointSlice.GetNamespace(), endpointSlice.GetName(), err)
 		return err
 	}
 
 	if operationResult == controllerutil.OperationResultCreated {
 		klog.V(2).Infof("Create EndpointSlice %s/%s successfully.", endpointSlice.GetNamespace(), endpointSlice.GetName())
-		c.EventRecorder.Eventf(serviceImport, corev1.EventTypeNormal, "CreateEndpointSlice", "Create EndpointSlice %s/%s successfully.", endpointSlice.GetNamespace(), endpointSlice.GetName())
+		c.EventRecorder.Eventf(serviceImport, corev1.EventTypeNormal, "CreateEndpointSlice",
+			"Create EndpointSlice %s/%s successfully.", endpointSlice.GetNamespace(), endpointSlice.GetName())
 	} else if operationResult == controllerutil.OperationResultUpdated {
 		klog.V(2).Infof("Update EndpointSlice %s/%s successfully.", endpointSlice.GetNamespace(), endpointSlice.GetName())
-		c.EventRecorder.Eventf(serviceImport, corev1.EventTypeNormal, "UpdateEndpointSlice", "Update EndpointSlice %s/%s successfully.", endpointSlice.GetNamespace(), endpointSlice.GetName())
+		c.EventRecorder.Eventf(serviceImport, corev1.EventTypeNormal, "UpdateEndpointSlice",
+			"Update EndpointSlice %s/%s successfully.", endpointSlice.GetNamespace(), endpointSlice.GetName())
 	} else {
 		klog.V(2).Infof("EndpointSlice %s/%s is up to date.", endpointSlice.GetNamespace(), endpointSlice.GetName())
 	}

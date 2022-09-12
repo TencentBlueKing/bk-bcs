@@ -10,3 +10,7 @@ src/components/ace-editor
 src/components/bk-diff
 src/components/bk-magic/bk-magic*
 node_modules/
+ip-selector.js
+src/components/tree/tree.vue
+src/components/ring.vue
+src/i18n/lang.js

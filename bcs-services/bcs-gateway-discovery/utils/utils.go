@@ -11,8 +11,10 @@
  *
  */
 
+// Package utils xxx
 package utils
 
+// IgnoreErr xxx
 func IgnoreErr(f interface{}, err error) interface{} {
 	return f
 }

@@ -16,7 +16,7 @@ package cluster
 
 import "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/envs"
 
-// 获取单测用集群信息
+// fetchMockClusterInfo 获取单测用集群信息
 func fetchMockClusterInfo(clusterID string) (map[string]interface{}, error) {
 	ret := map[string]interface{}{
 		"id":     clusterID,

@@ -56,7 +56,7 @@ make build
 go run main.go --conf xxx.yaml
 
 # 或 执行二进制文件
-./cluster-resources-service --conf xxx.yaml
+./bcs-cluster-resources --conf xxx.yaml
 ```
 
 #### 采集国际化数据

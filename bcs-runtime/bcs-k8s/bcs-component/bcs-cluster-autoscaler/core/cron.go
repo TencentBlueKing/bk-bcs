@@ -26,6 +26,7 @@ import (
 	contextinternal "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/context"
 )
 
+// TIME_LAYOUT xxx
 const TIME_LAYOUT = "2006-01-02 15:04:05"
 
 // doCron set the minSize of nodegroups according to the rules
@@ -108,6 +109,7 @@ func (b *BufferedAutoscaler) doCron(context *contextinternal.Context,
 		}
 		klog.V(4).Infof("CronMode: set minsize of %v to %v Successfully", ng.Id(), desired)
 	}
+	clusterStateRegistry.Recalculate()
 	return nil
 }
 
@@ -157,7 +159,7 @@ func getFinalMatchAndMisMatch(schedule string, currentTime time.Time, zone strin
 		match = t
 		break
 	}
-	if currentTime.Sub(misMatch).Minutes() <= 1 {
+	if currentTime.Sub(misMatch).Minutes() < 1 {
 		return &misMatch, &match, nil
 	}
 

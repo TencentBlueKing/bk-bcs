@@ -26,6 +26,7 @@ import (
 // AppendFunc is used to add a matching item to whatever list the caller is using
 type AppendFunc func(interface{})
 
+// ListAll xxx
 func ListAll(store k8scache.Indexer, selector labels.Selector, appendFn AppendFunc) error {
 	selectAll := selector.Empty()
 	for _, m := range store.List() {
@@ -46,7 +47,9 @@ func ListAll(store k8scache.Indexer, selector labels.Selector, appendFn AppendFu
 	return nil
 }
 
-func ListAllByNamespace(indexer k8scache.Indexer, namespace string, selector labels.Selector, appendFn AppendFunc) error {
+// ListAllByNamespace xxx
+func ListAllByNamespace(indexer k8scache.Indexer, namespace string, selector labels.Selector,
+	appendFn AppendFunc) error {
 	selectAll := selector.Empty()
 	if namespace == meta.NamespaceAll {
 		for _, m := range indexer.List() {
@@ -102,8 +105,10 @@ func ListAllByNamespace(indexer k8scache.Indexer, namespace string, selector lab
 	return nil
 }
 
-//only taskgroup has the application index
-func ListAllByApplication(indexer k8scache.Indexer, ns, appname string, selector labels.Selector, appendFn AppendFunc) error {
+// ListAllByApplication xxx
+// only taskgroup has the application index
+func ListAllByApplication(indexer k8scache.Indexer, ns, appname string, selector labels.Selector,
+	appendFn AppendFunc) error {
 	selectAll := selector.Empty()
 	if ns == meta.NamespaceAll {
 		for _, m := range indexer.List() {
@@ -149,6 +154,7 @@ func ListAllByApplication(indexer k8scache.Indexer, ns, appname string, selector
 	return nil
 }
 
+// EverythingSelector xxx
 func EverythingSelector() labels.Selector {
 	return labels.Everything()
 }

@@ -141,6 +141,7 @@ func (f *TunnelProxyDispatcher) ServeHTTP(rw http.ResponseWriter, req *http.Requ
 	return
 }
 
+// stripLeaveSlash xxx
 // like http.StripPrefix, but always leaves an initial slash. (so that our
 // regexps will work.)
 func stripLeaveSlash(prefix string, h http.Handler) http.Handler {

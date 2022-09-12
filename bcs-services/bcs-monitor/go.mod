@@ -6,6 +6,7 @@ require (
 	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20220123082150-ac3c90791ab4
 	github.com/TencentBlueKing/bkmonitor-kits v0.2.0
 	github.com/asim/go-micro/plugins/registry/etcd/v4 v4.0.0-20220530075002-cf51ddeb26c8
+	github.com/chonla/format v0.0.0-20220105105701-1119f4a3f36f
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/dustin/go-humanize v1.0.0
 	github.com/fsnotify/fsnotify v1.5.4
@@ -18,6 +19,7 @@ require (
 	github.com/go-resty/resty/v2 v2.7.0
 	github.com/golang-jwt/jwt v3.2.1+incompatible
 	github.com/google/uuid v1.3.0
+	github.com/hashicorp/go-version v1.2.0
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/oklog/run v1.1.0
@@ -207,7 +209,7 @@ require (
 replace (
 	github.com/coreos/bbolt v1.3.4 => go.etcd.io/bbolt v1.3.4
 	github.com/prometheus/prometheus => github.com/prometheus/prometheus v1.8.2-0.20220308163432-03831554a519
-	github.com/thanos-io/thanos => github.com/ifooth/thanos v0.26.1-0.20220531081442-48c240c2d0b2
+	github.com/thanos-io/thanos => github.com/ifooth/thanos v0.26.1-0.20220907075819-8a2eac0dd9d5
 	github.com/vimeo/galaxycache => github.com/thanos-community/galaxycache v0.0.0-20211122094458-3a32041a1f1e
 	go.etcd.io/bbolt v1.3.4 => github.com/coreos/bbolt v1.3.4
 )

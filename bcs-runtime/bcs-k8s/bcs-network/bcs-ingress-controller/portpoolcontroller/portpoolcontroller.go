@@ -22,6 +22,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/cloud"
 	ingresscommon "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/constant"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/metrics"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/option"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/portpoolcache"
 	pkgcommon "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/pkg/common"
@@ -90,6 +91,9 @@ func (ppr *PortPoolReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) 
 	if portPool.DeletionTimestamp != nil {
 		retry, err := handler.deletePortPool(portPool)
 		if err != nil {
+			blog.Warnf("delete port pool '%s/%s' failed, err: %s", portPool.GetNamespace(), portPool.GetName(),
+				err.Error())
+			metrics.IncreaseFailMetric(metrics.ObjectPortPool, metrics.EventTypeDelete)
 			ppr.recordListenerEvent(portPool, k8scorev1.EventTypeWarning, "delete port pool failed", err.Error())
 			return ctrl.Result{
 				Requeue:      true,
@@ -117,6 +121,9 @@ func (ppr *PortPoolReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) 
 	// do update
 	retry, err := handler.ensurePortPool(portPool)
 	if err != nil {
+		blog.Errorf("ensure portPool '%s/%s' failed, err: %s", portPool.GetNamespace(), portPool.GetName(),
+			err.Error())
+		metrics.IncreaseFailMetric(metrics.ObjectPortPool, metrics.EventTypeUnknown)
 		ppr.recordListenerEvent(portPool, k8scorev1.EventTypeWarning, "update port pool failed", err.Error())
 		return ctrl.Result{
 			Requeue:      true,

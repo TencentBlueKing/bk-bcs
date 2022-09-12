@@ -11,6 +11,7 @@
  *
  */
 
+// Package versions xxx
 package versions
 
 import (
@@ -24,7 +25,7 @@ import (
 	jsoniter "github.com/json-iterator/go"
 )
 
-//ClientSetter client set for multiple version
+// ClientSetter client set for multiple version
 type ClientSetter struct {
 	ClientSet   string
 	BodyContent *[]byte
@@ -32,7 +33,7 @@ type ClientSetter struct {
 
 var json = jsoniter.ConfigCompatibleWithStandardLibrary
 
-//IfWithClientSet check api prefix
+// IfWithClientSet check api prefix
 func (cs *ClientSetter) IfWithClientSet(uri string) bool {
 	if strings.HasPrefix(uri, "api") || strings.HasPrefix(uri, "apis") {
 		return true
@@ -40,7 +41,7 @@ func (cs *ClientSetter) IfWithClientSet(uri string) bool {
 	return false
 }
 
-//GetClientSetUrl get uri relative version + group
+// GetClientSetUrl get uri relative version + group
 func (cs *ClientSetter) GetClientSetUrl(uri string, version string, apiPrefer map[string]string) error {
 	formattedUri := FormatURI(uri)
 	allUrl := apiVersionMap[version]
@@ -70,7 +71,7 @@ func (cs *ClientSetter) GetClientSetUrl(uri string, version string, apiPrefer ma
 	return errors.New("url not found, please check k8s api docs")
 }
 
-//AddVersionIntoBody AddVersionIntoBody
+// AddVersionIntoBody AddVersionIntoBody
 func (cs *ClientSetter) AddVersionIntoBody() error {
 	bodyJson := json.Get(*cs.BodyContent).GetInterface().(map[string]interface{})
 	bodyJson["apiVersion"] = cs.ClientSet
@@ -82,7 +83,7 @@ func (cs *ClientSetter) AddVersionIntoBody() error {
 	return nil
 }
 
-//FormatURI FormatURI
+// FormatURI FormatURI
 func FormatURI(uri string) string {
 	uriSplitParts := strings.Split(uri, "/")
 	for index, uriSplitPart := range uriSplitParts {
@@ -104,7 +105,7 @@ func FormatURI(uri string) string {
 	return strings.Join(uriSplitParts, "/")
 }
 
-//SplitUrlByVersion SplitUrlByVersion
+// SplitUrlByVersion SplitUrlByVersion
 func SplitUrlByVersion(url string) (string, string, error) {
 	r, err := regexp.Compile("/v[0-9][a-z0-9]*/")
 	if err != nil {
@@ -118,7 +119,7 @@ func SplitUrlByVersion(url string) (string, string, error) {
 	return url[0:lastPosition], url[lastPosition:], nil
 }
 
-//FetchAllUrl fetch all k8s api list from
+// FetchAllUrl fetch all k8s api list from
 func FetchAllUrl(version string) ([]string, error) {
 	jsonFiles, err := FetchAllJsonFiles("metadata/*.json")
 
@@ -138,7 +139,7 @@ func FetchAllUrl(version string) ([]string, error) {
 	return nil, fmt.Errorf("%s version is not supported yet", version)
 }
 
-//FetchAllJsonFiles FetchAllJsonFiles
+// FetchAllJsonFiles FetchAllJsonFiles
 func FetchAllJsonFiles(jsonPath string) ([]string, error) {
 	files, err := filepath.Glob(jsonPath)
 	if err != nil {
@@ -147,7 +148,7 @@ func FetchAllJsonFiles(jsonPath string) ([]string, error) {
 	return files, nil
 }
 
-//ReadJsonFile ReadJsonFile
+// ReadJsonFile ReadJsonFile
 func ReadJsonFile(jsonFile string, path string) (jsoniter.Any, error) {
 	bytes, err := ioutil.ReadFile(jsonFile)
 	if err != nil {

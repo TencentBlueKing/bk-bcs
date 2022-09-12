@@ -1,298 +1,316 @@
 <template>
-    <div>
-        <bcs-navigation navigation-type="top-bottom" :need-menu="false">
-            <template slot="side-header">
-                <span class="title-icon"><img src="@/images/bcs.svg" class="all-icon"></span>
-                <span class="title-desc bcs-title-desc" @click="handleGoHome">{{ $INTERNAL ? $t('TKEx-IEG 容器平台') : $t('蓝鲸容器管理平台') }}</span>
-            </template>
-            <template #header>
-                <div class="bcs-navigation-header">
-                    <div class="nav-left">
-                        <bcs-select ref="projectSelectRef" class="header-select" :clearable="false" searchable
-                            :value="curProjectCode"
-                            v-show="$route.name !== 'projectManage'"
-                            @change="handleProjectChange">
-                            <bcs-option v-for="option in onlineProjectList"
-                                :key="option.project_code"
-                                :id="option.project_code"
-                                :name="option.project_name">
-                            </bcs-option>
-                            <template #extension>
-                                <div class="extension-item" @click="handleGotoIAM"><i class="bk-icon icon-plus-circle mr5"></i>{{$t('申请权限')}}</div>
-                                <div class="extension-item" @click="handleGotoProjectManage"><i class="bcs-icon bcs-icon-apps mr5"></i>{{$t('项目管理')}}</div>
-                            </template>
-                        </bcs-select>
-                        <bcs-popover ref="clusterManagePopover" theme="navigation-cluster-manage" :arrow="false" placement="bottom-start" :tippy-options="{ 'hideOnClick': false }">
-                            <div class="cluster-manage-angle">
-                                <a>{{ $t('集群管理') }}</a>
-                                <i class="bk-select-angle bk-icon icon-angle-down angle-down"></i>
-                            </div>
-                            <template slot="content">
-                                <ul class="cluster-manage-angle-content">
-                                    <li :class="['angle-item', { active: !isSharedCluster }]" @click="handleGotoProjectCluster">{{$t('专用集群')}}</li>
-                                    <li :class="[
-                                            'angle-item',
-                                            {
-                                                active: isSharedCluster,
-                                                disable: !firstShareCluster
-                                            }]"
-                                        v-if="$INTERNAL"
-                                        @click="handleGotoShareCluster"
-                                    >{{$t('共享集群')}}<span class="beta">beta</span>
-                                    </li>
-                                </ul>
-                            </template>
-                        </bcs-popover>
-                    </div>
-                    <div class="nav-right">
-                        <!-- <bcs-popover theme="light navigation-message" class="mr10" offset="0, 20" placement="bottom" :arrow="false">
-                            <div class="flag-box">
-                                <i :class="['bcs-icon', curLang.icon]"></i>
-                            </div>
-                            <template slot="content">
-                                <ul class="bcs-navigation-admin">
-                                    <li v-for="(item, index) in langs" :key="index"
-                                        :class="['nav-item', { active: activeLangId === item.id }]"
-                                        @click="handleChangeLang(item)"
-                                    >
-                                        <i :class="['bcs-icon mr5', item.icon]"></i>
-                                        {{item.name}}
-                                    </li>
-                                </ul>
-                            </template>
-                        </bcs-popover> -->
-                        <bcs-popover theme="light navigation-message" class="mr5" offset="0, 20" placement="bottom" :arrow="false">
-                            <div class="flag-box">
-                                <i id="siteHelp" class="bcs-icon bcs-icon-help-document-fill"></i>
-                            </div>
-                            <template slot="content">
-                                <ul class="bcs-navigation-admin">
-                                    <li class="nav-item" @click="handleGotoHelp">{{ $t('产品文档') }}</li>
-                                    <li class="nav-item" @click="handleShowSystemLog">{{ $t('版本日志') }}</li>
-                                    <li class="nav-item" @click="handleShowFeatures">{{ $t('功能特性') }}</li>
-                                </ul>
-                            </template>
-                        </bcs-popover>
-                        <bcs-popover theme="light navigation-message" :arrow="false" offset="0, 20" placement="bottom-start" :tippy-options="{ 'hideOnClick': false }">
-                            <div class="header-user">
-                                {{user.username}}
-                                <i class="bk-icon icon-down-shape"></i>
-                            </div>
-                            <template slot="content">
-                                <ul class="bcs-navigation-admin">
-                                    <li class="nav-item" @click="handleGotoUserToken">{{ $t('API密钥') }}</li>
-                                    <li class="nav-item" @click="handleGotoProjectManage">{{ $t('项目管理') }}</li>
-                                    <li class="nav-item" @click="handleLogout">{{ $t('退出') }}</li>
-                                </ul>
-                            </template>
-                        </bcs-popover>
-                    </div>
+  <div>
+    <bcs-navigation navigation-type="top-bottom" :need-menu="false">
+      <template slot="side-header">
+        <span class="title-icon"><img src="@/images/bcs.svg" class="all-icon"></span>
+        <span
+          class="title-desc bcs-title-desc"
+          @click="handleGoHome">{{ $INTERNAL ? $t('TKEx-IEG 容器平台') : $t('蓝鲸容器管理平台') }}</span>
+      </template>
+      <template #header>
+        <div class="bcs-navigation-header">
+          <div class="nav-left">
+            <bcs-select
+              ref="projectSelectRef" class="header-select" :clearable="false" searchable
+              :value="curProjectCode"
+              v-show="$route.name !== 'projectManage'"
+              @change="handleProjectChange">
+              <bcs-option
+                v-for="option in onlineProjectList"
+                :key="option.project_code"
+                :id="option.project_code"
+                :name="option.project_name">
+                <div
+                  class="project-item" v-bk-tooltips="{
+                    content: `${$t('项目名称')}: ${option.project_name}<br/>${$t('业务ID')}: ${option.cc_app_id}`,
+                    placement: 'right',
+                    boundary: 'window'
+                  }">
+                  {{option.project_name}}
+                  <span class="biz-id">{{`(${option.cc_app_id})`}}</span>
                 </div>
-            </template>
-            <template #default>
-                <slot></slot>
-            </template>
-        </bcs-navigation>
-        <system-log v-model="showSystemLog" @show-feature="handleShowFeatures"></system-log>
-        <bcs-dialog v-model="showFeatures"
-            class="version-feature-dialog"
-            :title="$t('产品功能特性')"
-            :show-footer="false"
-            width="480">
-            <BcsMd :code="featureMd"></BcsMd>
-        </bcs-dialog>
-    </div>
+              </bcs-option>
+              <template #extension>
+                <div
+                  class="extension-item"
+                  @click="handleGotoIAM"><i class="bk-icon icon-plus-circle mr5"></i>{{$t('申请权限')}}</div>
+                <div
+                  class="extension-item"
+                  @click="handleGotoProjectManage"><i class="bcs-icon bcs-icon-apps mr5"></i>{{$t('项目管理')}}</div>
+              </template>
+            </bcs-select>
+            <bcs-popover
+              ref="clusterManagePopover"
+              theme="navigation-cluster-manage"
+              :arrow="false"
+              placement="bottom-start"
+              :tippy-options="{ 'hideOnClick': false }">
+              <div class="cluster-manage-angle">
+                <a>{{ $t('集群管理') }}</a>
+                <i class="bk-select-angle bk-icon icon-angle-down angle-down"></i>
+              </div>
+              <template slot="content">
+                <ul class="cluster-manage-angle-content">
+                  <li
+                    :class="['angle-item', { active: !isSharedCluster }]"
+                    @click="handleGotoProjectCluster">{{$t('专用集群')}}</li>
+                  <li
+                    :class="[
+                      'angle-item',
+                      {
+                        active: isSharedCluster,
+                        disable: !firstShareCluster
+                      }]"
+                    v-if="$INTERNAL"
+                    @click="handleGotoShareCluster"
+                  >{{$t('共享集群')}}<span class="beta">beta</span>
+                  </li>
+                </ul>
+              </template>
+            </bcs-popover>
+          </div>
+          <div class="nav-right">
+            <bcs-popover theme="light navigation-message" class="mr5" offset="0, 20" placement="bottom" :arrow="false">
+              <div class="flag-box">
+                <i id="siteHelp" class="bcs-icon bcs-icon-help-document-fill"></i>
+              </div>
+              <template slot="content">
+                <ul class="bcs-navigation-admin">
+                  <li class="nav-item" @click="handleGotoHelp">{{ $t('产品文档') }}</li>
+                  <li class="nav-item" @click="handleShowSystemLog">{{ $t('版本日志') }}</li>
+                  <li class="nav-item" @click="handleShowFeatures">{{ $t('功能特性') }}</li>
+                </ul>
+              </template>
+            </bcs-popover>
+            <bcs-popover
+              theme="light navigation-message"
+              :arrow="false" offset="0, 20"
+              placement="bottom-start"
+              :tippy-options="{ 'hideOnClick': false }">
+              <div class="header-user">
+                {{user.username}}
+                <i class="bk-icon icon-down-shape"></i>
+              </div>
+              <template slot="content">
+                <ul class="bcs-navigation-admin">
+                  <li class="nav-item" @click="handleGotoUserToken">{{ $t('API密钥') }}</li>
+                  <li class="nav-item" @click="handleGotoProjectManage">{{ $t('项目管理') }}</li>
+                  <li class="nav-item" @click="handleLogout">{{ $t('退出') }}</li>
+                </ul>
+              </template>
+            </bcs-popover>
+          </div>
+        </div>
+      </template>
+      <template #default>
+        <slot></slot>
+      </template>
+    </bcs-navigation>
+    <system-log v-model="showSystemLog" @show-feature="handleShowFeatures"></system-log>
+    <bcs-dialog
+      v-model="showFeatures"
+      class="version-feature-dialog"
+      :title="$t('产品功能特性')"
+      :show-footer="false"
+      width="480">
+      <BcsMd :code="featureMd"></BcsMd>
+    </bcs-dialog>
+  </div>
 </template>
 <script>
-    import { BCS_CLUSTER } from '@/common/constant'
-    import { mapGetters } from 'vuex'
-    import useGoHome from '@/common/use-gohome'
-    import { bus } from '@/common/bus'
-    import systemLog from '@/components/system-log/index.vue'
-    import BcsMd from '@/components/bcs-md/index.vue'
-    import featureMd from '../../static/features.md'
+import { BCS_CLUSTER } from '@/common/constant';
+import { mapGetters } from 'vuex';
+import useGoHome from '@/common/use-gohome';
+import { bus } from '@/common/bus';
+import systemLog from '@/components/system-log/index.vue';
+import BcsMd from '@/components/bcs-md/index.vue';
+import featureMd from '../../static/features.md';
 
-    export default {
-        name: "Navigation",
-        components: {
-            systemLog,
-            BcsMd
+export default {
+  name: 'NewNavigation',
+  components: {
+    systemLog,
+    BcsMd,
+  },
+  data() {
+    return {
+      showSystemLog: false,
+      activeLangId: this.$i18n.locale,
+      langs: [
+        {
+          icon: 'bcs-icon-lang-en',
+          name: 'English',
+          id: 'en-US',
         },
-        data () {
-            return {
-                showSystemLog: false,
-                activeLangId: this.$i18n.locale,
-                langs: [
-                    {
-                        icon: 'bcs-icon-lang-en',
-                        name: 'English',
-                        id: 'en-US'
-                    },
-                    {
-                        icon: 'bcs-icon-lang-ch',
-                        name: '中文',
-                        id: "zh-CN"
-                    }
-                ],
-                showFeatures: false,
-                featureMd
-            }
+        {
+          icon: 'bcs-icon-lang-ch',
+          name: '中文',
+          id: 'zh-CN',
         },
-        computed: {
-            curLang () {
-                return this.langs.find(item => item.id === this.activeLangId)
-            },
-            user () {
-                return this.$store.state.user
-            },
-            onlineProjectList () {
-                return this.$store.state.sideMenu.onlineProjectList
-            },
-            curProjectCode () {
-                return this.$store.state.curProjectCode || this.$route.params.projectCode
-            },
-            curCluster () {
-                const cluster = this.$store.state.cluster.curCluster
-                return cluster && Object.keys(cluster).length ? cluster : null
-            },
-            curProject () {
-                return this.$store.state.curProject
-            },
-            allClusterList () {
-                return this.$store.state.cluster.allClusterList || []
-            },
-            firstShareCluster () {
-                return this.allClusterList.find(item => item.is_shared)
-            },
-            ...mapGetters('cluster', ['isSharedCluster'])
-        },
-        methods: {
-            async handleProjectChange (code) {
-                // 解决组件初始化时触发change事件问题
-                if (code === this.curProjectCode) return
-                // 切换项目跳转区分:
-                // 1.共享集群下切换项目跳到命名空间
-                // 2.专用集群下切换项目跳转到集群列表
+      ],
+      showFeatures: false,
+      featureMd,
+    };
+  },
+  computed: {
+    curLang() {
+      return this.langs.find(item => item.id === this.activeLangId);
+    },
+    user() {
+      return this.$store.state.user;
+    },
+    onlineProjectList() {
+      return this.$store.state.sideMenu.onlineProjectList;
+    },
+    curProjectCode() {
+      return this.$store.state.curProjectCode || this.$route.params.projectCode;
+    },
+    curCluster() {
+      const cluster = this.$store.state.cluster.curCluster;
+      return cluster && Object.keys(cluster).length ? cluster : null;
+    },
+    curProject() {
+      return this.$store.state.curProject;
+    },
+    allClusterList() {
+      return this.$store.state.cluster.allClusterList || [];
+    },
+    firstShareCluster() {
+      return this.allClusterList.find(item => item.is_shared);
+    },
+    ...mapGetters('cluster', ['isSharedCluster']),
+  },
+  methods: {
+    async handleProjectChange(code) {
+      // 解决组件初始化时触发change事件问题
+      if (code === this.curProjectCode) return;
+      // 切换项目跳转区分:
+      // 1.共享集群下切换项目跳到命名空间
+      // 2.专用集群下切换项目跳转到集群列表
 
-                const name = this.isSharedCluster ? 'namespace' : 'clusterMain'
-                const item = this.onlineProjectList.find(item => item.project_code === code)
-                if (item?.kind !== this.curProject.kind) {
-                    // 切换不同项目时刷新界面
-                    const route = this.$router.resolve({
-                        name,
-                        params: {
-                            projectCode: code,
-                            // eslint-disable-next-line camelcase
-                            projectId: item?.project_id
-                        }
-                    })
-                    location.href = route.href
-                } else {
-                    this.$router.push({
-                        name,
-                        params: {
-                            projectCode: code,
-                            // eslint-disable-next-line camelcase
-                            projectId: item?.project_id
-                        }
-                    })
-                }
-            },
-            handleGotoUserToken () {
-                if (this.$route.name === 'token') return
-                this.$router.push({
-                    name: 'token'
-                })
-            },
-            // 申请项目权限
-            handleGotoIAM () {
-                window.open(window.BK_IAM_APP_URL)
-            },
-            handleGotoProjectManage () {
-                this.$refs.projectSelectRef && this.$refs.projectSelectRef.close()
-                if (window.REGION === 'ieod') {
-                    window.open(`${window.DEVOPS_HOST}/console/pm`)
-                } else {
-                    if (this.$route.name === 'projectManage') return
-                    this.$router.push({
-                        name: 'projectManage'
-                    })
-                }
-            },
-            handleCreateProject () {
-                this.$refs.projectSelectRef && this.$refs.projectSelectRef.close()
-                this.$emit('create-project')
-            },
-            
-            handleGotoHelp () {
-                window.open(window.BCS_CONFIG?.doc?.help)
-            },
+      const name = this.isSharedCluster ? 'namespace' : 'clusterMain';
+      const item = this.onlineProjectList.find(item => item.project_code === code);
+      if (item?.kind !== this.curProject.kind) {
+        // 切换不同项目时刷新界面
+        const route = this.$router.resolve({
+          name,
+          params: {
+            projectCode: code,
+            // eslint-disable-next-line camelcase
+            projectId: item?.project_id,
+          },
+        });
+        location.href = route.href;
+      } else {
+        this.$router.push({
+          name,
+          params: {
+            projectCode: code,
+            // eslint-disable-next-line camelcase
+            projectId: item?.project_id,
+          },
+        });
+      }
+    },
+    handleGotoUserToken() {
+      if (this.$route.name === 'token') return;
+      this.$router.push({
+        name: 'token',
+      });
+    },
+    // 申请项目权限
+    handleGotoIAM() {
+      window.open(window.BK_IAM_APP_URL);
+    },
+    handleGotoProjectManage() {
+      this.$refs.projectSelectRef?.close();
+      if (window.REGION === 'ieod') {
+        window.open(`${window.DEVOPS_HOST}/console/pm`);
+      } else {
+        if (this.$route.name === 'projectManage') return;
+        this.$router.push({
+          name: 'projectManage',
+        });
+      }
+    },
+    handleCreateProject() {
+      this.$refs.projectSelectRef?.close();
+      this.$emit('create-project');
+    },
 
-            /**
+    handleGotoHelp() {
+      window.open(window.BCS_CONFIG?.doc?.help);
+    },
+
+    /**
              * 打开版本日志弹框
              */
-            handleShowSystemLog () {
-                this.showSystemLog = true
-            },
+    handleShowSystemLog() {
+      this.showSystemLog = true;
+    },
 
-            // 跳转首页
-            handleGoHome () {
-                const { goHome } = useGoHome()
-                goHome(this.$route)
-            },
-            // 注销
-            handleLogout () {
-                window.location.href = `${LOGIN_FULL}?c_url=${window.location}`
-            },
-            // 项目集群
-            async handleGotoProjectCluster () {
-                await this.handleSaveClusterInfo({})
-                this.handleGoHome()
-                this.$refs.clusterManagePopover.hideHandler()
-            },
-            // 共享集群
-            async handleGotoShareCluster () {
-                if (!this.firstShareCluster) return
-                if (!this.isSharedCluster) {
-                    bus.$emit('show-shared-cluster-tips')
-                }
-                await this.handleSaveClusterInfo(this.firstShareCluster)
-                this.handleGoHome()
-                this.$refs.clusterManagePopover.hideHandler()
-            },
-            // 保存cluster信息
-            async handleSaveClusterInfo (cluster) {
-                localStorage.setItem(BCS_CLUSTER, cluster.cluster_id)
-                sessionStorage.setItem(BCS_CLUSTER, cluster.cluster_id)
-                this.$store.commit('cluster/forceUpdateCurCluster', cluster.cluster_id ? cluster : {})
-                this.$store.commit('updateCurClusterId', cluster.cluster_id)
-                this.$store.commit('updateViewMode', 'cluster')
-                this.$store.commit('cluster/forceUpdateClusterList', this.$store.state.cluster.allClusterList)
-                this.$store.dispatch('getFeatureFlag')
-            },
-            handleChangeLang (item) {
-                document.cookie = `blueking_language=${item.id};`
-                window.location.reload()
-                // this.activeLangId = item.id
-                // this.$i18n.locale = this.activeLangId
-                // locale.getCurLang().bk.lang = this.activeLangId
-            },
-            handleShowFeatures () {
-                this.showFeatures = true
-            }
-        }
-    }
+    // 跳转首页
+    handleGoHome() {
+      const { goHome } = useGoHome();
+      goHome(this.$route);
+    },
+    // 注销
+    handleLogout() {
+      window.location.href = `${LOGIN_FULL}?c_url=${window.location}`;
+    },
+    // 项目集群
+    async handleGotoProjectCluster() {
+      await this.handleSaveClusterInfo({});
+      this.handleGoHome();
+      this.$refs.clusterManagePopover.hideHandler();
+    },
+    // 共享集群
+    async handleGotoShareCluster() {
+      if (!this.firstShareCluster) return;
+      if (!this.isSharedCluster) {
+        bus.$emit('show-shared-cluster-tips');
+      }
+      await this.handleSaveClusterInfo(this.firstShareCluster);
+      this.handleGoHome();
+      this.$refs.clusterManagePopover.hideHandler();
+    },
+    // 保存cluster信息
+    async handleSaveClusterInfo(cluster) {
+      localStorage.setItem(BCS_CLUSTER, cluster.cluster_id);
+      sessionStorage.setItem(BCS_CLUSTER, cluster.cluster_id);
+      this.$store.commit('cluster/forceUpdateCurCluster', cluster.cluster_id ? cluster : {});
+      this.$store.commit('updateCurClusterId', cluster.cluster_id);
+      this.$store.commit('updateViewMode', 'cluster');
+      this.$store.commit('cluster/forceUpdateClusterList', this.$store.state.cluster.allClusterList);
+      this.$store.dispatch('getFeatureFlag');
+    },
+    handleChangeLang(item) {
+      document.cookie = `blueking_language=${item.id};`;
+      window.location.reload();
+      // this.activeLangId = item.id
+      // this.$i18n.locale = this.activeLangId
+      // locale.getCurLang().bk.lang = this.activeLangId
+    },
+    handleShowFeatures() {
+      this.showFeatures = true;
+    },
+  },
+};
 </script>
 <style lang="postcss" scoped>
 /deep/ .bk-navigation-wrapper .container-content {
-    padding: 0;
-    overflow-x: hidden;
+  max-height: calc(100vh - 52px);
+  padding: 0;
+  overflow: hidden;
 }
 /deep/ .bk-select .bk-tooltip.bk-select-dropdown {
     background: transparent;
 }
 /deep/ .bcs-title-desc {
     cursor: pointer;
+}
+.project-item .biz-id {
+    color: #C4C6CC;
 }
 .all-icon {
     width: 28px;

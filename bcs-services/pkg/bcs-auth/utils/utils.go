@@ -11,6 +11,7 @@
  *
  */
 
+// Package utils xxx
 package utils
 
 import (
@@ -72,8 +73,9 @@ type ClusterApplication struct {
 	ActionID string
 }
 
-// BuildApplication only support same system same cluster
-func BuildIAMApplication(app ClusterApplication, resourceTypes []bkiam.ApplicationRelatedResourceType) iam.ApplicationAction {
+// BuildIAMApplication only support same system same cluster
+func BuildIAMApplication(app ClusterApplication,
+	resourceTypes []bkiam.ApplicationRelatedResourceType) iam.ApplicationAction {
 	applicationAction := iam.ApplicationAction{
 		ActionID:         app.ActionID,
 		RelatedResources: make([]bkiam.ApplicationRelatedResourceType, 0),
@@ -86,7 +88,8 @@ func BuildIAMApplication(app ClusterApplication, resourceTypes []bkiam.Applicati
 }
 
 // BuildRelatedSystemResource build application related resourceInstance
-func BuildRelatedSystemResource(systemID, resourceType string, instances [][]iam.Instance) bkiam.ApplicationRelatedResourceType {
+func BuildRelatedSystemResource(systemID, resourceType string,
+	instances [][]iam.Instance) bkiam.ApplicationRelatedResourceType {
 	relatedResource := bkiam.ApplicationRelatedResourceType{
 		SystemID:  systemID,
 		Type:      resourceType,

@@ -22,18 +22,18 @@ import (
 	"time"
 )
 
-//UpdateAvailableIPInstance update ip instance info.
-//only support: MacAddress, App
+// UpdateAvailableIPInstance update ip instance info.
+// only support: MacAddress, App
 func (srv *NetService) UpdateAvailableIPInstance(ipinst *types.IPInst) error {
 	started := time.Now()
-	//check ip instance path first, only focus on available ip instance
+	// check ip instance path first, only focus on available ip instance
 	instpath := filepath.Join(defaultPoolInfoPath, ipinst.Cluster, ipinst.Pool, "available", ipinst.IPAddr)
 	if exist, _ := srv.store.Exist(instpath); !exist {
 		blog.Errorf("Update Available ip instance failed, no instance data: %s", instpath)
 		reportMetrics("updateAvailableIPInstance", stateNonExistFailure, started)
 		return fmt.Errorf("lost available ip instance %s", ipinst.IPAddr)
 	}
-	//get ip instance data
+	// get ip instance data
 	data, instErr := srv.store.Get(instpath)
 	if instErr != nil {
 		blog.Errorf("Get no ip instance data from path %s failed, %s", instpath, instErr)
@@ -46,7 +46,7 @@ func (srv *NetService) UpdateAvailableIPInstance(ipinst *types.IPInst) error {
 		reportMetrics("updateAvailableIPInstance", stateJSONFailure, started)
 		return fmt.Errorf("ip instance data format err: %s", err)
 	}
-	//update ip instance data
+	// update ip instance data
 	if ipinst.MacAddr != "" {
 		oldInst.MacAddr = ipinst.MacAddr
 	}
@@ -54,7 +54,7 @@ func (srv *NetService) UpdateAvailableIPInstance(ipinst *types.IPInst) error {
 		oldInst.App = ipinst.App
 	}
 	oldInst.Update = time.Now().Format("2006-01-02 15:04:05")
-	//format json data
+	// format json data
 	newData, _ := json.Marshal(oldInst)
 	if err := srv.store.Add(instpath, newData); err != nil {
 		blog.Errorf("UpdatAvailable ip instance %s failed, %v", instpath, err)
@@ -66,10 +66,10 @@ func (srv *NetService) UpdateAvailableIPInstance(ipinst *types.IPInst) error {
 	return nil
 }
 
-//TransferIPAttribute change IP status
+// TransferIPAttribute change IP status
 func (srv *NetService) TransferIPAttribute(tranInput *types.TranIPAttrInput) (int, error) {
 	started := time.Now()
-	//try to lock
+	// try to lock
 	lockpath := filepath.Join(defaultLockerPath, tranInput.Cluster, tranInput.Net)
 	poolLocker, lErr := srv.store.GetLocker(lockpath)
 	if lErr != nil {
@@ -86,14 +86,14 @@ func (srv *NetService) TransferIPAttribute(tranInput *types.TranIPAttrInput) (in
 	srcSubPath := filepath.Join(defaultPoolInfoPath, tranInput.Cluster, tranInput.Net, tranInput.SrcStatus)
 	destSubPath := filepath.Join(defaultPoolInfoPath, tranInput.Cluster, tranInput.Net, tranInput.DestStatus)
 	failedCode := types.ALL_IP_FAILED
-	//var failedIPList []string
+	// var failedIPList []string
 	for i, IP := range tranInput.IPList {
 		if i != 0 {
 			failedCode = types.SOME_IP_FAILED
 		}
 		srcIPPath := filepath.Join(srcSubPath, IP)
 		destIPPath := filepath.Join(destSubPath, IP)
-		//delete old node
+		// delete old node
 		ipData, dErr := srv.store.Delete(srcIPPath)
 		if dErr != nil {
 			blog.Errorf("delete src ip %s failed:%s", srcIPPath, dErr.Error())
@@ -110,7 +110,7 @@ func (srv *NetService) TransferIPAttribute(tranInput *types.TranIPAttrInput) (in
 			reportMetrics("transferIPAttribute", stateJSONFailure, started)
 			return failedCode, fmt.Errorf("ip %s data json decode err:%s,failedIPList %v", srcIPPath, err.Error(), failedIPList)
 		}
-		//change ip status record in storage
+		// change ip status record in storage
 		ipInst.LastStatus = tranInput.SrcStatus
 		ipInst.Status = tranInput.DestStatus
 		ipInst.Update = time.Now().Format("2006-01-02 15:04:05")
@@ -122,13 +122,14 @@ func (srv *NetService) TransferIPAttribute(tranInput *types.TranIPAttrInput) (in
 			reportMetrics("transferIPAttribute", stateJSONFailure, started)
 			return failedCode, fmt.Errorf("Marshal %v failed:%s,failedIPList %s", ipInst, jsonErr.Error(), failedIPList)
 		}
-		//add dest node
+		// add dest node
 		if err := srv.store.Add(destIPPath, destIPData); err != nil {
 			blog.Errorf("move ip %s to %s failed:%s", IP, destIPPath, err.Error())
 			failedIPList := make([]string, len(tranInput.IPList)-i)
 			copy(failedIPList, tranInput.IPList[i:])
 			reportMetrics("transferIPAttribute", stateLogicFailure, started)
-			return failedCode, fmt.Errorf("move ip %s to %s failed:%s,failedIPList %s", IP, destIPPath, err.Error(), failedIPList)
+			return failedCode, fmt.Errorf("move ip %s to %s failed:%s,failedIPList %s", IP, destIPPath, err.Error(),
+				failedIPList)
 		}
 		blog.Infof("move IP %s from %s to %s success", IP, srcIPPath, destIPPath)
 	}

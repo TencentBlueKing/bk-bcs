@@ -74,8 +74,10 @@ type LeaderElectConfig struct {
 type ResourceLockType string
 
 const (
+	// ConfigMapsResourceLock xxx
 	ConfigMapsResourceLock ResourceLockType = "configmaps"
-	EndpointsResourceLock  ResourceLockType = "endpoints"
+	// EndpointsResourceLock xxx
+	EndpointsResourceLock ResourceLockType = "endpoints"
 )
 
 // FeatureGatesConfig defines the feature gates of the KubeFed control plane.
@@ -88,7 +90,9 @@ type FeatureGatesConfig struct {
 type ConfigurationMode string
 
 const (
-	ConfigurationEnabled  ConfigurationMode = "Enabled"
+	// ConfigurationEnabled xxx
+	ConfigurationEnabled ConfigurationMode = "Enabled"
+	// ConfigurationDisabled xxx
 	ConfigurationDisabled ConfigurationMode = "Disabled"
 )
 
@@ -120,14 +124,16 @@ type SyncControllerConfig struct {
 type ResourceAdoption string
 
 const (
-	AdoptResourcesEnabled  ResourceAdoption = "Enabled"
+	// AdoptResourcesEnabled xxx
+	AdoptResourcesEnabled ResourceAdoption = "Enabled"
+	// AdoptResourcesDisabled xxx
 	AdoptResourcesDisabled ResourceAdoption = "Disabled"
 )
 
 // +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// KubeFedConfig
+// KubeFedConfig xxx
 // +k8s:openapi-gen=true
 // +kubebuilder:resource:path=kubefedconfigs
 type KubeFedConfig struct {

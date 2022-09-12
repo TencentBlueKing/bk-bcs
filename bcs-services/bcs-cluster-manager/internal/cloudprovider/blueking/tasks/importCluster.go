@@ -51,7 +51,8 @@ func ImportClusterNodesTask(taskID string, stepName string) error {
 	}
 	step, err := state.IsReadyToStep(stepName)
 	if err != nil {
-		blog.Errorf("ImportClusterNodesTask[%s]: task %s not turn to run step %s, err %s", taskID, taskID, stepName, err.Error())
+		blog.Errorf("ImportClusterNodesTask[%s]: task %s not turn to run step %s, err %s", taskID, taskID, stepName,
+			err.Error())
 		return err
 	}
 	// previous step successful when retry task

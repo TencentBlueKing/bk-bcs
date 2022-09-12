@@ -34,11 +34,11 @@ type ArgocdProjectStatus struct {
 	// Important: Run "make" to regenerate code after modifying this file
 }
 
-//+genclient
-//+genclient:noStatus
-//+k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
-//+kubebuilder:object:root=true
-//+kubebuilder:subresource:status
+// +genclient
+// +genclient:noStatus
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +kubebuilder:object:root=true
+// +kubebuilder:subresource:status
 
 // ArgocdProject is the Schema for the argocdprojects API
 type ArgocdProject struct {
@@ -49,8 +49,8 @@ type ArgocdProject struct {
 	Status ArgocdProjectStatus `json:"status,omitempty" protobuf:"bytes,3,opt,name=status"`
 }
 
-//+k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
-//+kubebuilder:object:root=true
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +kubebuilder:object:root=true
 
 // ArgocdProjectList contains a list of ArgocdProject
 type ArgocdProjectList struct {

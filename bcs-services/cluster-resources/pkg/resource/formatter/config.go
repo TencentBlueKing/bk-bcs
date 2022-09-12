@@ -14,7 +14,7 @@
 
 package formatter
 
-// FormatConfigRes ...
+// FormatConfigRes xxx
 func FormatConfigRes(manifest map[string]interface{}) map[string]interface{} {
 	ret := CommonFormatRes(manifest)
 	data := []string{}

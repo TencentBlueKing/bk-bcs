@@ -22,7 +22,7 @@ import (
 )
 
 const (
-	userCreateRepoUri = "/auth/api/user/create/repo"
+	userCreateRepoURI = "/auth/api/user/create/repo"
 )
 
 func (rh *repositoryHandler) createUser(ctx context.Context) (string, string, error) {
@@ -43,7 +43,7 @@ func (rh *repositoryHandler) createUser(ctx context.Context) (string, string, er
 		return "", "", err
 	}
 
-	resp, err := rh.post(ctx, userCreateRepoUri, nil, data)
+	resp, err := rh.post(ctx, userCreateRepoURI, nil, data)
 	if err != nil {
 		blog.Errorf("create user to bk-repo for repository %s in project %s failed, %s",
 			rh.repository, rh.projectID, err.Error())
@@ -71,7 +71,7 @@ func (rh *repositoryHandler) createUser(ctx context.Context) (string, string, er
 }
 
 func (rh *repositoryHandler) generateUserUsername() string {
-	return rh.generateUserCode("user-", 6)
+	return rh.generateUserCode("admin-", 6)
 }
 
 func (rh *repositoryHandler) generateUserPassword() string {

@@ -12,14 +12,14 @@
 -- specific language governing permissions and limitations under the License.
 --
 local core = require("apisix.core")
-local upstream   = require("apisix.upstream")
+local upstream = require("apisix.upstream")
 local bcs_upstreams_util = require("apisix.plugins.bcs-common.upstreams")
 local stringx = require('pl.stringx')
 local timers = require("apisix.timers")
 local http = require("resty.http")
-local ipmatcher  = require("resty.ipmatcher")
-local sub_str     = string.sub
-local str_find    = core.string.find
+local ipmatcher = require("resty.ipmatcher")
+local sub_str = string.sub
+local str_find = core.string.find
 
 local ngx = ngx
 local ngx_shared = ngx.shared
@@ -35,44 +35,106 @@ local clustermanager_tunnel_path = "/clustermanager/clusters/"
 local last_sync_time
 local last_sync_status
 local credential_global_cache = ngx_shared[plugin_name]
-local credential_worker_cache = core.lrucache.new({
-    ttl = 30,
-    count = 5000,
-    serial_creating = true,
-    invalid_stale = true,
-})
+local credential_worker_cache = core.lrucache.new(
+    {
+        ttl = 30,
+        count = 5000,
+        serial_creating = true,
+        invalid_stale = true,
+    }
+)
 local attr = {}
 
 local schema = {
     type = "object",
     properties = {
-        reg_extract_pattern = {type = "string", default = "/clusters/(BCS-K8S-[0-9]+)/(.*)", description = "regex pattern which will be used to extract clusterID ($1) and request uri ($2) from url"},
-        clustermanager_upstream_name = {type = "string", default = "clustermanager-http", description = "clustermanager upstream name"},
-        grayscale_clusterid_pattern = {type = "string", default = "BCS-K8S-2[0-9]+", description = "regex pattern for grayscale environment"},
-        grayscale_clustermanager_address = {type = "string", description = "grayscale clustermanager url (For example, your.url:port)"},
-        grayscale_gateway_token = {type = "string", description = "gateway token for access clustermanager via grayscale_clustermanager_address. If not specified, plugin attr config's gateway token will be used"},
-        grayscale_clustermanager_upstream_name = {type = "string", description = "grayscale clustermanager upstream name (will use upstream when upstream is specified)"},
+        reg_extract_pattern = {
+            type = "string",
+            default = "/clusters/(BCS-K8S-[0-9]+)/(.*)",
+            description = "regex pattern which will be used to extract clusterID ($1) and request uri ($2) from url",
+        },
+        clustermanager_upstream_name = {
+            type = "string",
+            default = "clustermanager-http",
+            description = "clustermanager upstream name",
+        },
+        grayscale_clusterid_pattern = {
+            type = "string",
+            default = "BCS-K8S-2[0-9]+",
+            description = "regex pattern for grayscale environment",
+        },
+        grayscale_clustermanager_address = {
+            type = "string",
+            description = "grayscale clustermanager url (For example, your.url:port)",
+        },
+        grayscale_gateway_token = {
+            type = "string",
+            description = "gateway token for access clustermanager via grayscale_clustermanager_address. If not specified, plugin attr config's gateway token will be used",
+        },
+        grayscale_clustermanager_upstream_name = {
+            type = "string",
+            description = "grayscale clustermanager upstream name (will use upstream when upstream is specified)",
+        },
         timeout = {
             type = "object",
             properties = {
-                send = {type = "integer", default = 60, description = "send timeout for proxying to cluster apiserver"},
-                read = {type = "integer", default = 3600, description = "read timeout for proxying to cluster apiserver"},
-                connect = {type = "integer", default = 60, description = "connect timeout for proxying to cluster apiserver"},
+                send = {
+                    type = "integer",
+                    default = 60,
+                    description = "send timeout for proxying to cluster apiserver",
+                },
+                read = {
+                    type = "integer",
+                    default = 3600,
+                    description = "read timeout for proxying to cluster apiserver",
+                },
+                connect = {
+                    type = "integer",
+                    default = 60,
+                    description = "connect timeout for proxying to cluster apiserver",
+                },
             },
-            default = {send = 60, read = 3600, connect = 60}
+            default = {
+                send = 60,
+                read = 3600,
+                connect = 60,
+            },
         },
-    }
+    },
 }
 
 local attr_schema = {
     type = "object",
     properties = {
-        gateway_token = {type = "string", description = "gateway token for access clustermanager via apisix"},
-        sync_cluster_credential_interval = {type = "integer", default = 10, description = "time interval for syncing cluster credential (s)"},
-        gateway_insecure_port = {type = "integer", default = 8000, description = "apisix gateway insecure port"},
-        cm_timeout = {description = "timeout seconds for request to clustermanager module", type = "number", minimum = 1, maxnum = 10, default = 10},
-        cm_keepalive = {description = "keepalive seconds for request to clustermanager module", type = "number", minimum = 1, maxnum = 60, default = 60},
-    }
+        gateway_token = {
+            type = "string",
+            description = "gateway token for access clustermanager via apisix",
+        },
+        sync_cluster_credential_interval = {
+            type = "integer",
+            default = 10,
+            description = "time interval for syncing cluster credential (s)",
+        },
+        gateway_insecure_port = {
+            type = "integer",
+            default = 8000,
+            description = "apisix gateway insecure port",
+        },
+        cm_timeout = {
+            description = "timeout seconds for request to clustermanager module",
+            type = "number",
+            minimum = 1,
+            maxnum = 10,
+            default = 10,
+        },
+        cm_keepalive = {
+            description = "keepalive seconds for request to clustermanager module",
+            type = "number",
+            minimum = 1,
+            maxnum = 60,
+            default = 60,
+        },
+    },
 }
 
 local _M = {
@@ -84,9 +146,7 @@ local _M = {
 
 local function parse_domain_for_node(node)
     local host = node.host
-    if not ipmatcher.parse_ipv4(host)
-       and not ipmatcher.parse_ipv6(host)
-    then
+    if not ipmatcher.parse_ipv4(host) and not ipmatcher.parse_ipv6(host) then
         node.domain = host
 
         local ip, err = core.resolver.parse_domain(host)
@@ -124,7 +184,7 @@ local function set_upstream(upstream_info, ctx)
     upstream_info["timeout"] = {
         send = upstream_info.timeout and upstream_info.timeout.send or 15,
         read = upstream_info.timeout and upstream_info.timeout.read or 15,
-        connect = upstream_info.timeout and upstream_info.timeout.connect or 15
+        connect = upstream_info.timeout and upstream_info.timeout.connect or 15,
     }
 
     core.log.info("upstream_info: ", core.json.delay_encode(upstream_info, true))
@@ -135,9 +195,9 @@ local function set_upstream(upstream_info, ctx)
         return 500, err
     end
 
-    local matched_route = ctx.matched_route
+    upstream_info.parent = ctx.matched_route
     ctx.matched_upstream = upstream_info
-    upstream.set_by_route(matched_route, ctx)
+    upstream.set_by_route(ctx.matched_route, ctx)
 end
 
 -- time check
@@ -155,7 +215,7 @@ local function periodly_sync_cluster_credentials_in_master()
     elseif last_sync_status == false then
         core.log.warn("Last syncing cluster credential failed, retry")
     end
-    
+
     -- start sync
     local httpCli = http.new()
     httpCli:set_timeout(attr.cm_timeout * 1000)
@@ -165,12 +225,14 @@ local function periodly_sync_cluster_credentials_in_master()
         ssl_verify = false,
         keepalive = attr.cm_timeout * 1000,
         headers = {
-          ["Content-Type"] = "application/json",
-          ["Accept"] = "application/json",
-          ["Authorization"] = "Bearer " .. attr.gateway_token
-        }
+            ["Content-Type"] = "application/json",
+            ["Accept"] = "application/json",
+            ["Authorization"] = "Bearer " .. attr.gateway_token,
+        },
     }
-    local res, err = httpCli:request_uri("http://127.0.0.1:" .. attr.gateway_insecure_port .. bcsapi_prefix .. clustermanager_credential_path, params)
+    local res, err = httpCli:request_uri(
+        "http://127.0.0.1:" .. attr.gateway_insecure_port .. bcsapi_prefix .. clustermanager_credential_path, params
+    )
     if not res then
         core.log.error("request clustermanager error: ", err)
         last_sync_status = false
@@ -203,10 +265,11 @@ local function periodly_sync_cluster_credentials_in_master()
             type = "roundrobin",
             scheme = "https",
         }
-        if cluster_credential["clientCert"] and type(cluster_credential["clientCert"]) == "string" and #(cluster_credential["clientCert"])>0
-            and cluster_credential["clientKey"] and type(cluster_credential["clientKey"]) == "string" and #(cluster_credential["clientKey"])>0 then
+        if cluster_credential["clientCert"] and type(cluster_credential["clientCert"]) == "string" and
+            #(cluster_credential["clientCert"]) > 0 and cluster_credential["clientKey"] and
+            type(cluster_credential["clientKey"]) == "string" and #(cluster_credential["clientKey"]) > 0 then
             upstream["tls"] = {
-                client_cert = cluster_credential["clientCert"], 
+                client_cert = cluster_credential["clientCert"],
                 client_key = cluster_credential["clientKey"],
             }
             upstream["pass_host"] = "node"
@@ -236,7 +299,7 @@ local function periodly_sync_cluster_credentials_in_master()
                     core.log.warn("apiserver port auto-derived as 80 with scheme http")
                     upstream_nodes[i].port = 80
                 else
-                    core.log.warn("apiserver port auto-derived as 443 with scheme "..scheme)
+                    core.log.warn("apiserver port auto-derived as 443 with scheme " .. scheme)
                     upstream_nodes[i].port = 443
                 end
             else
@@ -253,7 +316,9 @@ local function periodly_sync_cluster_credentials_in_master()
         if not cluster_info_cache or cluster_info_cache ~= cluster_info_str then
             local succ, err = credential_global_cache:set(cluster_credential["clusterID"], cluster_info_str)
             if not succ then
-                core.log.error("insert cluster info into shared dict failed: ", err, "ClusterID: ", cluster_credential["clusterID"])
+                core.log.error(
+                    "insert cluster info into shared dict failed: ", err, "ClusterID: ", cluster_credential["clusterID"]
+                )
                 goto continue
             end
             core.log.info("Sync cluster: ", cluster_credential["clusterID"])
@@ -293,7 +358,7 @@ local function traffic_to_clustermanager(conf, ctx, clusterID, upstream_uri)
                 -- ctx.upstream_id = conf.grayscale_clustermanager_upstream_name
                 -- return
             end
-            
+
             -- clustermanager url
             local host, port = core.utils.parse_addr(conf.grayscale_clustermanager_address)
             if not port then
@@ -311,7 +376,7 @@ local function traffic_to_clustermanager(conf, ctx, clusterID, upstream_uri)
                         weight = 100,
                     },
                 },
-                timeout = conf.timeout
+                timeout = conf.timeout,
             }
             local token = ""
             if conf.grayscale_gateway_token and conf.grayscale_gateway_token ~= "" then
@@ -348,12 +413,18 @@ function _M.access(conf, ctx)
     local captures, err = ngx_re.match(ngx.var.uri, conf.reg_extract_pattern, "jo")
     if not captures then
         core.log.error("extract clusterid and request path from url failed: ", err)
-        return 404, {message = "Cluster not found"}
+        return 404, {
+            message = "Cluster not found",
+        }
     end
     local clusterID = ""
     if #captures < 2 then
-        core.log.error("regex captures does not contain clusterID or request path, captures:  ", core.json.encode(captures, true))
-        return 404, {message = "Resource not found"}
+        core.log.error(
+            "regex captures does not contain clusterID or request path, captures:  ", core.json.encode(captures, true)
+        )
+        return 404, {
+            message = "Resource not found",
+        }
     end
     clusterID = captures[1]
     local upstream_uri = captures[2]
@@ -361,8 +432,7 @@ function _M.access(conf, ctx)
     -- append url query parameter to upsrteam_uri
     local index = str_find(upstream_uri, "?")
     if index then
-        upstream_uri = core.utils.uri_safe_encode(sub_str(upstream_uri, 1, index-1)) ..
-                       sub_str(upstream_uri, index)
+        upstream_uri = core.utils.uri_safe_encode(sub_str(upstream_uri, 1, index - 1)) .. sub_str(upstream_uri, index)
     else
         upstream_uri = core.utils.uri_safe_encode(upstream_uri)
     end
@@ -380,7 +450,10 @@ function _M.access(conf, ctx)
 
     local cluster_credential = credential_worker_cache(clusterID, nil, load_cluster_info, clusterID)
     if cluster_credential then
-        core.log.debug("ClusterID: ", clusterID, " matches cluster upstream: ", core.json.delay_encode(cluster_credential["upstream"], true))
+        core.log.debug(
+            "ClusterID: ", clusterID, " matches cluster upstream: ",
+            core.json.delay_encode(cluster_credential["upstream"], true)
+        )
     else
         core.log.debug("ClusterID: ", clusterID, " does not match any cluster upstream")
     end
@@ -395,7 +468,7 @@ function _M.init()
     local local_conf = core.config.local_conf()
     attr = core.table.try_read_attr(local_conf, "plugin_attr", plugin_name)
     local ok, err = core.schema.check(attr_schema, attr)
-    timers.register_timer("plugin#"..plugin_name, periodly_sync_cluster_credentials_in_master, true)
+    timers.register_timer("plugin#" .. plugin_name, periodly_sync_cluster_credentials_in_master, true)
     if not ok then
         core.log.error("failed to check the plugin_attr[", plugin_name, "]", ": ", err)
         return
@@ -403,7 +476,7 @@ function _M.init()
 end
 
 function _M.destroy()
-    timers.unregister_timer("plugin#"..plugin_name, true)
+    timers.unregister_timer("plugin#" .. plugin_name, true)
 end
 
 return _M

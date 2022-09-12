@@ -11,6 +11,7 @@
  *
  */
 
+// Package install xxx
 package install
 
 import (

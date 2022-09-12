@@ -11,6 +11,7 @@
  *
  */
 
+// Package query xxx
 package query
 
 import (
@@ -47,7 +48,7 @@ type QueryAPI struct {
 	ctx          context.Context
 }
 
-// 这个包对thanos的query做一些封装，重新调用等
+// NewQueryAPI 这个包对thanos的query做一些封装，重新调用等
 // 使用配置文件配置
 // 启动 query 模块，暴露http
 // query模块对应我们的store

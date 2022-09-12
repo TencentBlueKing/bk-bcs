@@ -11,6 +11,7 @@
  *
  */
 
+// Package container xxx
 package container
 
 import (
@@ -21,46 +22,52 @@ import (
 )
 
 const (
-	ContainerStatus_PAUSED     = "paused"
+	// ContainerStatus_PAUSED xxx
+	ContainerStatus_PAUSED = "paused"
+	// ContainerStatus_RESTARTING xxx
 	ContainerStatus_RESTARTING = "restarting"
-	ContainerStatus_RUNNING    = "running"
-	ContainerStatus_DEAD       = "dead"
-	ContainerStatus_CREATED    = "created"
-	ContainerStatus_EXITED     = "exited"
+	// ContainerStatus_RUNNING xxx
+	ContainerStatus_RUNNING = "running"
+	// ContainerStatus_DEAD xxx
+	ContainerStatus_DEAD = "dead"
+	// ContainerStatus_CREATED xxx
+	ContainerStatus_CREATED = "created"
+	// ContainerStatus_EXITED xxx
+	ContainerStatus_EXITED = "exited"
 )
 
-//BcsImage image info from hub
+// BcsImage image info from hub
 type BcsImage struct {
-	ID         string   //image id
-	Repository []string //repository, including tag
-	Created    int64    //create time
-	Size       int64    //image size
+	ID         string   // image id
+	Repository []string // repository, including tag
+	Created    int64    // create time
+	Size       int64    // image size
 }
 
-//BcsContainerInfo only for BcsExecutor
+// BcsContainerInfo only for BcsExecutor
 type BcsContainerInfo struct {
-	ID                      string                 `json:"ID,omitempty"`          //container ID
-	Name                    string                 `json:"Name,omitempty"`        //container name
-	Pid                     int                    `json:"Pid,omitempty"`         //container pid
-	StartAt                 time.Time              `json:"StartAt,omitempty"`     //startting time
-	FinishAt                time.Time              `json:"FinishAt,omitempty"`    //Exit time
-	Status                  string                 `json:"Status,omitempty"`      //status string, paused, restarting, running, dead, created, exited
-	Healthy                 bool                   `json:"Healthy,omitempty"`     //Container healthy
-	IsChecked               bool                   `json:",omitempty"`            //is health check
-	ConsecutiveFailureTimes int                    `json:",omitempty"`            //consecutive failure times
-	ExitCode                int                    `json:"ExitCode,omitempty"`    //container exit code
-	Hostname                string                 `json:"Hostname,omitempty"`    //container host name
-	NetworkMode             string                 `json:"NetworkMode,omitempty"` //Network mode for container
-	IPAddress               string                 `json:"IPAddress,omitempty"`   //Contaienr IP address
-	NodeAddress             string                 `json:"NodeAddress,omitempty"` //node host address
-	Ports                   []BcsPort              `json:"Ports,omitempty"`       //ports info for report
-	Message                 string                 `json:"Message,omitempty"`     //status message for container
+	ID                      string                 `json:"ID,omitempty"`          // container ID
+	Name                    string                 `json:"Name,omitempty"`        // container name
+	Pid                     int                    `json:"Pid,omitempty"`         // container pid
+	StartAt                 time.Time              `json:"StartAt,omitempty"`     // startting time
+	FinishAt                time.Time              `json:"FinishAt,omitempty"`    // Exit time
+	Status                  string                 `json:"Status,omitempty"`      // status string, paused, restarting, running, dead, created, exited
+	Healthy                 bool                   `json:"Healthy,omitempty"`     // Container healthy
+	IsChecked               bool                   `json:",omitempty"`            // is health check
+	ConsecutiveFailureTimes int                    `json:",omitempty"`            // consecutive failure times
+	ExitCode                int                    `json:"ExitCode,omitempty"`    // container exit code
+	Hostname                string                 `json:"Hostname,omitempty"`    // container host name
+	NetworkMode             string                 `json:"NetworkMode,omitempty"` // Network mode for container
+	IPAddress               string                 `json:"IPAddress,omitempty"`   // Contaienr IP address
+	NodeAddress             string                 `json:"NodeAddress,omitempty"` // node host address
+	Ports                   []BcsPort              `json:"Ports,omitempty"`       // ports info for report
+	Message                 string                 `json:"Message,omitempty"`     // status message for container
 	Resource                *schedTypes.Resource   `json:"Resource,omitempty"`
 	BcsMessage              *schedTypes.BcsMessage `json:",omitempty"`
-	OOMKilled               bool                   `json:"OOMKilled,omitempty"` //container exited, whether oom
+	OOMKilled               bool                   `json:"OOMKilled,omitempty"` // container exited, whether oom
 }
 
-//Update data from other info
+// Update data from other info
 func (info *BcsContainerInfo) Update(other *BcsContainerInfo) {
 	if info.Name != other.Name {
 		return
@@ -98,41 +105,44 @@ func (info *BcsContainerInfo) Update(other *BcsContainerInfo) {
 	}
 }
 
-//Container define interface for operating containers
+// Container define interface for operating containers
 type Container interface {
-	//RunCommand running command in Container
+	// RunCommand running command in Container
 	RunCommand(containerID string, command []string) error
-	//UploadToContainer upload file from host to Container
+	// UploadToContainer upload file from host to Container
 	UploadToContainer(containerID string, source, dest string) error
-	//ListContainer list all running containner info
+	// ListContainer list all running containner info
 	ListContainer()
-	//CreateContainer create Container with info, after container created,
-	//return container id & container name in BcsContainerInfo. if we need conntainer
-	//running, StartContainer must be call with container id
+	// CreateContainer create Container with info, after container created,
+	// return container id & container name in BcsContainerInfo. if we need conntainer
+	// running, StartContainer must be call with container id
 	CreateContainer(containerName string, containerTask *BcsContainerTask) (*BcsContainerInfo, error)
-	//StartContainer starting container with container id return by CreateContainer
+	// StartContainer starting container with container id return by CreateContainer
 	StartContainer(containerID string) error
-	//StopContainer with container name. container will be killed when timeout
+	// StopContainer with container name. container will be killed when timeout
 	StopContainer(containerName string, timeout int) error
-	//RemoveContainer remove container by name
+	// RemoveContainer remove container by name
 	RemoveContainer(containerName string, force bool) error
-	//KillContainer kill container by name with designate signal
+	// KillContainer kill container by name with designate signal
 	KillContainer(containerName string, signal int) error
-	//InspectContainer inspect container by name
+	// InspectContainer inspect container by name
 	InspectContainer(containerName string) (*BcsContainerInfo, error)
-	//PullImage pull image from hub
+	// PullImage pull image from hub
 	PullImage(image string) error
-	//ListImage list all image from local
+	// ListImage list all image from local
 	ListImage(filter string) ([]*BcsImage, error)
-	//update container resources limit
-	//para1: container id
-	//para2: resources,cpu mem
+	// UpdateResources xxx
+	// update container resources limit
+	// para1: container id
+	// para2: resources,cpu mem
 	UpdateResources(string, *schedTypes.TaskResources) error
+	// CommitImage xxx
 	// commit image
-	//para1: container id
-	//para2: image name
+	// para1: container id
+	// para2: image name
 	CommitImage(string, string) error
 
-	//exec command
+	// RunCommandV2 xxx
+	// exec command
 	RunCommandV2(ops *schedTypes.RequestCommandTask) (*schedTypes.ResponseCommandTask, error)
 }

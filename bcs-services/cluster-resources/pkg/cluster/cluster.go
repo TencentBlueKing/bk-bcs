@@ -12,6 +12,7 @@
  * limitations under the License.
  */
 
+// Package cluster xxx
 package cluster
 
 import (
@@ -32,7 +33,7 @@ type Cluster struct {
 	ProjID string
 }
 
-// GetClusterInfo ...
+// GetClusterInfo xxx
 func GetClusterInfo(ctx context.Context, clusterID string) (*Cluster, error) {
 	info, err := fetchClusterInfo(ctx, clusterID)
 	if err != nil {
@@ -55,7 +56,7 @@ func FromContext(ctx context.Context) (*Cluster, error) {
 	return c.(*Cluster), nil
 }
 
-// 获取集群信息（ClusterManager）
+// fetchClusterInfo 获取集群信息（ClusterManager）
 func fetchClusterInfo(ctx context.Context, clusterID string) (map[string]interface{}, error) {
 	if runtime.RunMode == runmode.Dev || runtime.RunMode == runmode.UnitTest {
 		return fetchMockClusterInfo(clusterID)

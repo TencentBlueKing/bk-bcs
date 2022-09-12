@@ -15,6 +15,7 @@ package bcsmonitor
 import (
 	"context"
 	"fmt"
+	"sync"
 	"testing"
 	"time"
 
@@ -24,7 +25,7 @@ import (
 
 func TestQueryInstant(t *testing.T) {
 	promql := fmt.Sprintf(`up{cluster_id="%s"}`, bcstesting.GetTestClusterId())
-	vector, warnings, err := QueryInstant(context.Background(), bcstesting.GetTestProjectId(), promql, time.Now())
+	vector, warnings, err := QueryInstantVector(context.Background(), bcstesting.GetTestProjectId(), promql, nil, time.Now())
 	assert.NoError(t, err)
 	fmt.Println(vector, warnings)
 }
@@ -33,7 +34,26 @@ func TestQueryRange(t *testing.T) {
 	promql := fmt.Sprintf(`up{cluster_id="%s"}`, bcstesting.GetTestClusterId())
 	end := time.Now()
 	start := end.Add(-time.Minute * 5)
-	vector, warnings, err := QueryRange(context.Background(), bcstesting.GetTestProjectId(), promql, start, end, time.Minute)
+	vector, warnings, err := QueryRangeMatrix(context.Background(), bcstesting.GetTestProjectId(), promql, nil, start, end, time.Minute)
 	assert.NoError(t, err)
 	fmt.Println(vector, warnings)
+}
+
+func TestQueryMultiValues(t *testing.T) {
+	promqlMap := map[string]string{
+		"up1": fmt.Sprintf(`up{cluster_id="%s"}`, bcstesting.GetTestClusterId()),
+		"up2": fmt.Sprintf(`up{cluster_id="%s"}`, bcstesting.GetTestClusterId()),
+	}
+	var wg sync.WaitGroup
+	for i := 0; i < 5; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+
+			vector, err := QueryMultiValues(context.Background(), bcstesting.GetTestProjectId(), promqlMap, nil, time.Now())
+			assert.NoError(t, err)
+			fmt.Println(vector)
+		}()
+	}
+	wg.Wait()
 }

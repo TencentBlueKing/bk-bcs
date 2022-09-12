@@ -83,7 +83,7 @@ func NewRequestContext(rw http.ResponseWriter, req *http.Request) (*RequestConte
 	return reqInfo, nil
 }
 
-// ParserOptions 解析request头部操作, header等
+// ParseOptions 解析request头部操作, header等
 func ParseOptions(req *http.Request, reqInfo *apirequest.RequestInfo, rawVerb string) (*Options, error) {
 	options := new(Options)
 

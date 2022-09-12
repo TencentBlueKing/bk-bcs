@@ -34,7 +34,7 @@ type Project struct {
 	RawCreateTime string `json:"createTime"`
 }
 
-// String
+// String :
 func (p *Project) String() string {
 	var displayCode string
 	if p.Code == "" {
@@ -45,6 +45,7 @@ func (p *Project) String() string {
 	return fmt.Sprintf("project<%s, %s|%s|%s>", p.Name, displayCode, p.ProjectId, p.CcBizID)
 }
 
+// CreateTime xxx
 func (p *Project) CreateTime() (time.Time, error) {
 	return time.ParseInLocation("2006-01-02T15:04:05Z", p.RawCreateTime, config.G.Base.Location)
 }

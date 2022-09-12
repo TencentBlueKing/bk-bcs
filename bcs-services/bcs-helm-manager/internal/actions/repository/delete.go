@@ -56,24 +56,24 @@ func (d *DeleteRepositoryAction) Handle(ctx context.Context,
 		return nil
 	}
 
-	return d.delete(d.req.GetProjectID(), d.req.GetName())
+	return d.delete(d.req.GetProjectCode(), d.req.GetName())
 }
 
-func (d *DeleteRepositoryAction) delete(projectID, name string) error {
-	if projectID == "" || name == "" {
-		blog.Errorf("delete repository failed, get empty projectID or name")
-		d.setResp(common.ErrHelmManagerRequestParamInvalid, "projectID or name can not be empty")
+func (d *DeleteRepositoryAction) delete(projectCode, name string) error {
+	if projectCode == "" || name == "" {
+		blog.Errorf("delete repository failed, get empty projectCode or name")
+		d.setResp(common.ErrHelmManagerRequestParamInvalid, "projectCode or name can not be empty")
 		return nil
 	}
 
-	if err := d.model.DeleteRepository(d.ctx, projectID, name); err != nil {
-		blog.Errorf("delete repository failed, %s, projectID: %s, name: %s", err.Error(), projectID, name)
+	if err := d.model.DeleteRepository(d.ctx, projectCode, name); err != nil {
+		blog.Errorf("delete repository failed, %s, projectCode: %s, name: %s", err.Error(), projectCode, name)
 		d.setResp(common.ErrHelmManagerDeleteActionFailed, err.Error())
 		return nil
 	}
 
 	d.setResp(common.ErrHelmManagerSuccess, "ok")
-	blog.Infof("delete repository successfully, projectID: %s, name: %s", projectID, name)
+	blog.Infof("delete repository successfully, projectCode: %s, name: %s", projectCode, name)
 	return nil
 }
 

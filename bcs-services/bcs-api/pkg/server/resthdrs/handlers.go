@@ -26,18 +26,20 @@ func AddAuthF(rb *restful.RouteBuilder) *restful.RouteBuilder {
 	return rb
 }
 
-// AddClusterF appends filters required for cluster validation to given RouteBuilder object
+// AddAuthClusterF appends filters required for cluster validation to given RouteBuilder object
 func AddAuthClusterF(rb *restful.RouteBuilder) *restful.RouteBuilder {
 	AddAuthF(rb)
 	rb.Filter(filters.ClusterIdVerify)
 	return rb
 }
 
+// AddSuperUserAuthF xxx
 func AddSuperUserAuthF(rb *restful.RouteBuilder) *restful.RouteBuilder {
 	rb.Filter(filters.SuperTokenAuthenticate)
 	return rb
 }
 
+// CreateRestContainer xxx
 func CreateRestContainer(pathPrefix string) *restful.Container {
 	// ws
 	ws := new(restful.WebService)

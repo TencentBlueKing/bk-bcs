@@ -303,7 +303,7 @@ func TestSyncGameDeploymentCreatePods(t *testing.T) {
 	// create a simple game deployment, it should create 3 pods and 1 controller revision
 	f.expectGetGameDeploymentAction(deploy.Namespace, deploy.Name)
 	// controller revision created by fake informer, so we don't need to expect it in the client actions
-	//f.expectCreateControllerRevision(test.NewGDControllerRevision(deploy, 1))
+	// f.expectCreateControllerRevision(test.NewGDControllerRevision(deploy, 1))
 	f.expectCreatePodAction(test.NewPod(0))
 	f.expectCreatePodAction(test.NewPod(1))
 	f.expectCreatePodAction(test.NewPod(2))
@@ -363,7 +363,7 @@ func TestSyncInPlaceUpdate(t *testing.T) {
 	labels[apps.ControllerRevisionHashLabelKey] = cr.Name
 	pod := newPod(0, deploy.Spec.Template.Labels, true)
 	f.podLister = append(f.podLister, pod)
-	//cr := test.NewGDControllerRevision(deploy, 1)
+	// cr := test.NewGDControllerRevision(deploy, 1)
 	f.controllerLister = append(f.controllerLister, cr)
 
 	// for the first sync, it will get object with kube client

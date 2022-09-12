@@ -59,6 +59,9 @@ const (
 	resourceKindTag = "resourceKind"
 	resourceNameTag = "resourceName"
 
+	namespaceTag = "namespace"
+
+	// EventResource TODO
 	EventResource = "Event"
 )
 
@@ -68,6 +71,8 @@ var conditionTagList = [...]string{
 	"extraInfo.name", "extraInfo.namespace", "extraInfo.kind"}
 var eventFeatTags = []string{idTag, envTag, kindTag, levelTag, componentTag, typeTag,
 	clusterIDTag, nameSpaceTag, resourceTypeTag, resourceKindTag, resourceNameTag}
+
+var nsFeatTags = []string{clusterIDTag, namespaceTag, resourceTypeTag, resourceNameTag}
 
 var eventIndexKeys = []string{"data.metadata.name", "data.metadata.resourceVersion"}
 
@@ -132,12 +137,14 @@ func CleanEvents() {
 		return
 	}
 	for _, table := range tables {
-		if strings.HasPrefix(table, tableName) {
-			cleaner := clean.NewDBCleaner(eventDBClient, table, time.Hour)
+		cleaner := clean.NewDBCleaner(eventDBClient, table, time.Hour)
+		if table == EventResource {
+			cleaner.WithMaxDuration(time.Duration(1)*time.Hour, eventTimeTag)
+		} else if strings.HasPrefix(table, tableName) {
 			cleaner.WithMaxEntryNum(maxCap)
 			cleaner.WithMaxDuration(time.Duration(maxTime*24)*time.Hour, createTimeTag)
-			go cleaner.Run(context.TODO())
 		}
+		go cleaner.Run(context.TODO())
 	}
 }
 

@@ -11,6 +11,7 @@
  *
  */
 
+// Package rdiscover xxx
 package rdiscover
 
 import (
@@ -55,10 +56,10 @@ func NewRegDiscover(conf *options.StorageOptions) *RegDiscover {
 
 // Start the register and discover
 func (r *RegDiscover) Start() error {
-	//create root context
+	// create root context
 	r.rootCtx, r.cancel = context.WithCancel(context.Background())
 
-	//start regdiscover
+	// start regdiscover
 	if err := r.rd.Start(); err != nil {
 		blog.Error("fail to start register and discover serv. err:%s", err.Error())
 		return err
@@ -70,7 +71,7 @@ func (r *RegDiscover) Start() error {
 		return err
 	}
 
-	//here: discover other bcs services
+	// here: discover other bcs services
 
 	for {
 		select {

@@ -11,6 +11,7 @@
  *
  */
 
+// Package rdiscover xxx
 package rdiscover
 
 import (
@@ -37,7 +38,7 @@ var (
 	_, classC, _  = net.ParseCIDR("192.168.0.0/16")
 )
 
-//RDiscover register and discover
+// RDiscover register and discover
 type RDiscover struct {
 	isMaster   bool
 	zkSubPath  string
@@ -53,7 +54,7 @@ type RDiscover struct {
 	bcsLBLock  sync.RWMutex
 }
 
-//NewRDiscover new a register discover object to register zookeeper
+// NewRDiscover new a register discover object to register zookeeper
 func NewRDiscover(zkserv, subPath, clusterid, proxy, address string, metricPort uint) *RDiscover {
 	return &RDiscover{
 		zkSubPath:  subPath,
@@ -65,18 +66,18 @@ func NewRDiscover(zkserv, subPath, clusterid, proxy, address string, metricPort 
 	}
 }
 
-//Start the register and discover
+// Start the register and discover
 func (r *RDiscover) Start() error {
-	//create root context
+	// create root context
 	r.rootCxt, r.cancel = context.WithCancel(context.Background())
 
-	//start regdiscover
+	// start regdiscover
 	if err := r.rd.Start(); err != nil {
 		blog.Errorf("fail to start register and discover serv. err:%s", err.Error())
 		return err
 	}
 
-	//register loadbalance to bcs zk
+	// register loadbalance to bcs zk
 	if err := r.registerLoadBalance(); err != nil {
 		blog.Errorf("fail to register err:%s", err.Error())
 		return err
@@ -92,7 +93,7 @@ func (r *RDiscover) Start() error {
 	}
 	blog.Infof("register bcs lb path %s discover success", bcsLBPath)
 
-	//here: discover other bcs services
+	// here: discover other bcs services
 	go r.CheckMasterStatus()
 	for {
 		select {
@@ -108,7 +109,7 @@ func (r *RDiscover) Start() error {
 	}
 }
 
-//Stop the register and discover
+// Stop the register and discover
 func (r *RDiscover) Stop() error {
 	r.cancel()
 	if err := r.rd.Stop(); err != nil {
@@ -117,7 +118,7 @@ func (r *RDiscover) Stop() error {
 	return nil
 }
 
-//CheckMasterStatus timer to check master status
+// CheckMasterStatus timer to check master status
 func (r *RDiscover) CheckMasterStatus() {
 	for {
 		r.bcsLBLock.Lock()
@@ -136,12 +137,12 @@ func (r *RDiscover) CheckMasterStatus() {
 	}
 }
 
-//IsMaster return a bool to indicate whether i am a master
+// IsMaster return a bool to indicate whether i am a master
 func (r *RDiscover) IsMaster() bool {
 	return r.isMaster
 }
 
-//GetBCSLBServList get bcs lb as awselb/awsclb target
+// GetBCSLBServList get bcs lb as awselb/awsclb target
 func (r *RDiscover) GetBCSLBServList() []types.LoadBalanceInfo {
 	r.bcsLBLock.Lock()
 	defer r.bcsLBLock.Unlock()
@@ -174,12 +175,12 @@ func (r *RDiscover) discoverBCSLBServ(servInfos []string) error {
 
 func (r *RDiscover) registerLoadBalance() error {
 	lbInfo := new(types.LoadBalanceInfo)
-	//need to judge getInnerIP() succeed or not, because must go ahead
+	// need to judge getInnerIP() succeed or not, because must go ahead
 	lbInfo.IP = r.address
-	//metric port, let healthz check
+	// metric port, let healthz check
 	lbInfo.Port = r.metricPort
 	lbInfo.MetricPort = r.metricPort
-	//include http must, may be include tcp ,https also
+	// include http must, may be include tcp ,https also
 	lbInfo.Scheme = "http"
 	lbInfo.Version = version.GetVersion()
 	lbInfo.Pid = os.Getpid()

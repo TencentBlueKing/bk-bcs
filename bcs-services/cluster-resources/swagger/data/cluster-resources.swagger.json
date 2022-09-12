@@ -3486,6 +3486,122 @@
         ]
       }
     },
+    "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/deployments/{name}/reschedule": {
+      "put": {
+        "summary": "RescheduleDeployPo API",
+        "description": "重新调度 Deployment 所属的 Pod",
+        "operationId": "Workload_RescheduleDeployPo",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCommonResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "clusterID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "namespace",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesResBatchRescheduleReq"
+            }
+          }
+        ],
+        "tags": [
+          "Workload"
+        ]
+      }
+    },
+    "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/deployments/{name}/scale": {
+      "put": {
+        "summary": "ScaleDeploy API",
+        "description": "Deployment 扩缩容",
+        "operationId": "Workload_ScaleDeploy",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCommonResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "clusterID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "namespace",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesResScaleReq"
+            }
+          }
+        ],
+        "tags": [
+          "Workload"
+        ]
+      }
+    },
     "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/jobs": {
       "get": {
         "summary": "ListJob API",
@@ -4596,6 +4712,122 @@
             "required": true,
             "schema": {
               "$ref": "#/definitions/clusterresourcesResUpdateReq"
+            }
+          }
+        ],
+        "tags": [
+          "Workload"
+        ]
+      }
+    },
+    "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/statefulsets/{name}/reschedule": {
+      "put": {
+        "summary": "RescheduleSTSPo API",
+        "description": "重新调度 StatefulSets 所属的 Pod",
+        "operationId": "Workload_RescheduleSTSPo",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCommonResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "clusterID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "namespace",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesResBatchRescheduleReq"
+            }
+          }
+        ],
+        "tags": [
+          "Workload"
+        ]
+      }
+    },
+    "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/statefulsets/{name}/scale": {
+      "put": {
+        "summary": "ScaleSTS API",
+        "description": "StatefulSet 扩缩容",
+        "operationId": "Workload_ScaleSTS",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCommonResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "clusterID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "namespace",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesResScaleReq"
             }
           }
         ],
@@ -6205,6 +6437,40 @@
       "description": "Ping API 响应",
       "title": "PingResp"
     },
+    "clusterresourcesResBatchRescheduleReq": {
+      "type": "object",
+      "properties": {
+        "projectID": {
+          "type": "string",
+          "title": "项目 ID"
+        },
+        "clusterID": {
+          "type": "string",
+          "title": "集群 ID"
+        },
+        "namespace": {
+          "type": "string",
+          "title": "命名空间"
+        },
+        "name": {
+          "type": "string",
+          "title": "资源名称"
+        },
+        "labelSelector": {
+          "type": "string",
+          "title": "标签选择器"
+        },
+        "podNames": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "待重新调度 Pod 名称列表"
+        }
+      },
+      "description": "删除单个 k8s 资源请求体",
+      "title": "ResDeleteReq"
+    },
     "clusterresourcesResCreateReq": {
       "type": "object",
       "properties": {
@@ -6227,6 +6493,34 @@
       },
       "description": "创建单个 k8s 资源请求体",
       "title": "ResCreateReq"
+    },
+    "clusterresourcesResScaleReq": {
+      "type": "object",
+      "properties": {
+        "projectID": {
+          "type": "string",
+          "title": "项目 ID"
+        },
+        "clusterID": {
+          "type": "string",
+          "title": "集群 ID"
+        },
+        "namespace": {
+          "type": "string",
+          "title": "命名空间"
+        },
+        "name": {
+          "type": "string",
+          "title": "资源名称"
+        },
+        "replicas": {
+          "type": "string",
+          "format": "int64",
+          "title": "副本数量（0-8192）"
+        }
+      },
+      "description": "单个 k8s 资源扩缩容请求体",
+      "title": "ResScaleReq"
     },
     "clusterresourcesResUpdateReq": {
       "type": "object",

@@ -80,10 +80,10 @@ func (s *HttpServer) SetSsl(cafile, certfile, keyfile, certPasswd string) {
 
 // RegisterWebServer register http webserver
 func (s *HttpServer) RegisterWebServer(rootPath string, filters []restful.FilterFunction, actions []*Action) error {
-	//new a web service
+	// new a web service
 	ws := s.NewWebService(rootPath, filters)
 
-	//register action
+	// register action
 	s.RegisterActions(ws, actions)
 
 	return nil
@@ -156,7 +156,7 @@ func (s *HttpServer) RegisterActions(ws *restful.WebService, actions []*Action) 
 func (s *HttpServer) ListenAndServe() error {
 
 	var chError = make(chan error)
-	//list and serve by addrport
+	// list and serve by addrport
 	go func() {
 		addrport := net.JoinHostPort(s.addr, strconv.FormatUint(uint64(s.port), 10))
 		httpserver := &http.Server{Addr: addrport, Handler: s.webContainer}
@@ -182,7 +182,7 @@ func (s *HttpServer) ListenAndServe() error {
 // ListenAndServeMux  listen httpServer by serverMux
 func (s *HttpServer) ListenAndServeMux(verifyClientTLS bool) error {
 
-	//list and serve by addrport
+	// list and serve by addrport
 	if s.isSSL {
 		addrport := net.JoinHostPort(s.addr, strconv.FormatUint(uint64(s.port), 10))
 		httpserver := &http.Server{Addr: addrport, Handler: s.router}
@@ -220,7 +220,7 @@ func (s *HttpServer) ListenAndServeMux(verifyClientTLS bool) error {
 func (s *HttpServer) Serve(l net.Listener) error {
 
 	var chError = make(chan error)
-	//list and serve by addrport
+	// list and serve by addrport
 	go func() {
 		httpserver := &http.Server{Handler: s.webContainer}
 		if s.isSSL {

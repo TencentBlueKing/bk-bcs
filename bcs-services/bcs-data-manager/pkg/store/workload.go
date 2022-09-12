@@ -331,8 +331,8 @@ func (m *ModelWorkload) GetWorkloadInfo(ctx context.Context,
 	if dimension == "" {
 		dimension = types.DimensionMinute
 	}
+	metricStartTime := getStartTime(dimension)
 	pipeline := make([]map[string]interface{}, 0)
-	pipeline = append(pipeline, map[string]interface{}{"$unwind": "$metrics"})
 	pipeline = append(pipeline, map[string]interface{}{"$match": map[string]interface{}{
 		ClusterIDKey:    request.ClusterID,
 		DimensionKey:    dimension,
@@ -340,32 +340,38 @@ func (m *ModelWorkload) GetWorkloadInfo(ctx context.Context,
 		WorkloadTypeKey: request.WorkloadType,
 		WorkloadNameKey: request.WorkloadName,
 		MetricTimeKey: map[string]interface{}{
-			"$gte": primitive.NewDateTimeFromTime(getStartTime(dimension)),
+			"$gte": primitive.NewDateTimeFromTime(metricStartTime),
 		},
-	}})
-	pipeline = append(pipeline, map[string]interface{}{"$project": map[string]interface{}{
-		"_id":           0,
-		"metrics":       1,
-		"business_id":   1,
-		"project_id":    1,
-		"project_code":  1,
-		"namespace":     1,
-		"cluster_id":    1,
-		"workload_name": 1,
-		"workload_type": 1,
-		"label":         1,
-	}}, map[string]interface{}{"$group": map[string]interface{}{
-		"_id":           nil,
-		"cluster_id":    map[string]interface{}{"$first": "$cluster_id"},
-		"namespace":     map[string]interface{}{"$first": "$namespace"},
-		"project_id":    map[string]interface{}{"$first": "$project_id"},
-		"workload_type": map[string]interface{}{"$first": "$workload_type"},
-		"workload_name": map[string]interface{}{"$first": "$workload_name"},
-		"business_id":   map[string]interface{}{"$max": "$business_id"},
-		"metrics":       map[string]interface{}{"$push": "$metrics"},
-		"label":         map[string]interface{}{"$max": "$label"},
-		"project_code":  map[string]interface{}{"$max": "$project_code"},
-	}})
+	}}, map[string]interface{}{"$unwind": "$metrics"},
+		map[string]interface{}{"$match": map[string]interface{}{
+			MetricTimeKey: map[string]interface{}{
+				"$gte": primitive.NewDateTimeFromTime(metricStartTime),
+			},
+		}},
+		map[string]interface{}{"$project": map[string]interface{}{
+			"_id":           0,
+			"metrics":       1,
+			"business_id":   1,
+			"project_id":    1,
+			"project_code":  1,
+			"namespace":     1,
+			"cluster_id":    1,
+			"workload_name": 1,
+			"workload_type": 1,
+			"label":         1,
+		}}, map[string]interface{}{"$group": map[string]interface{}{
+			"_id":           nil,
+			"cluster_id":    map[string]interface{}{"$first": "$cluster_id"},
+			"namespace":     map[string]interface{}{"$first": "$namespace"},
+			"project_id":    map[string]interface{}{"$first": "$project_id"},
+			"workload_type": map[string]interface{}{"$first": "$workload_type"},
+			"workload_name": map[string]interface{}{"$first": "$workload_name"},
+			"business_id":   map[string]interface{}{"$max": "$business_id"},
+			"metrics":       map[string]interface{}{"$push": "$metrics"},
+			"label":         map[string]interface{}{"$max": "$label"},
+			"project_code":  map[string]interface{}{"$max": "$project_code"},
+		}},
+	)
 	err = m.DB.Table(m.TableName).Aggregation(ctx, pipeline, &workloadMetricsMap)
 	if err != nil {
 		blog.Errorf("find workload data fail, err:%v", err)
@@ -465,6 +471,7 @@ func (m *ModelWorkload) generateWorkloadResponse(public types.WorkloadPublicMetr
 	return response
 }
 
+// preAggregateMax xxx
 // pre aggregate max value before update
 func (m *ModelWorkload) preAggregateMax(data *types.WorkloadData, newMetric *types.WorkloadMetrics) {
 	if data.MaxInstanceTime != nil && newMetric.MaxInstanceTime != nil {
@@ -498,6 +505,7 @@ func (m *ModelWorkload) preAggregateMax(data *types.WorkloadData, newMetric *typ
 	}
 }
 
+// preAggregateMin xxx
 // pre aggregate min value before update
 func (m *ModelWorkload) preAggregateMin(data *types.WorkloadData, newMetric *types.WorkloadMetrics) {
 	if data.MinInstanceTime != nil && newMetric.MinInstanceTime != nil {
@@ -545,7 +553,7 @@ func getMin(old *bcsdatamanager.ExtremumRecord, new *bcsdatamanager.ExtremumReco
 	return new
 }
 
-// generate cond according to job options
+// generateCond cond according to job options
 func (m *ModelWorkload) generateCond(opts *types.JobCommonOpts, bucket string) []*operator.Condition {
 	cond := make([]*operator.Condition, 0)
 	if opts.ProjectID != "" {

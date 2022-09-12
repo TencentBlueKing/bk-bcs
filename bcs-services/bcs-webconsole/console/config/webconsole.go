@@ -23,18 +23,20 @@ import (
 )
 
 const (
+	// InternalMode xxx
 	InternalMode = "internal" // 用户自己集群 inCluster 模式
+	// ExternalMode xxx
 	ExternalMode = "external" // 平台集群, 外部模式, 需要设置 AdminClusterId
 )
 
 // WebConsoleConf webconsole 配置
 type WebConsoleConf struct {
 	AdminClusterId      string     `yaml:"admin_cluster_id"`
-	Mode                string     `yaml:"mode"`           // internal , external
-	KubectldImage       string     `yaml:"kubectld_image"` // 镜像路径
-	KubectldTags        []string   `yaml:"kubectld_tags"`  // 镜像tags
-	KubectldTagPatterns []*Version `yaml:"-"`              // 镜像解析后的版本
-	GuideDocLink        string     `yaml:"guide_doc_link"` // 使用文档链接
+	Mode                string     `yaml:"mode"`            // internal , external
+	KubectldImage       string     `yaml:"kubectld_image"`  // 镜像路径
+	KubectldTags        []string   `yaml:"kubectld_tags"`   // 镜像tags
+	KubectldTagPatterns []*Version `yaml:"-"`               // 镜像解析后的版本
+	GuideDocLinks       []string   `yaml:"guide_doc_links"` // 使用文档链接
 }
 
 // Version kubectld 版本
@@ -43,19 +45,19 @@ type Version struct {
 	MajorVer *version.Version
 }
 
-// String
+// String xxx
 func (v *Version) String() string {
 	return fmt.Sprintf("%s<%s>", v.Tag, v.MajorVer.String())
 }
 
-// Init
+// Init xxx
 func (c *WebConsoleConf) Init() error {
 	// only for development
 	c.KubectldImage = ""
 	c.AdminClusterId = ""
 	c.Mode = InternalMode
 	c.KubectldTags = []string{}
-	c.GuideDocLink = ""
+	c.GuideDocLinks = []string{}
 
 	return nil
 }

@@ -20,12 +20,15 @@ import (
 	v1 "k8s.io/api/core/v1"
 )
 
+// Control xxx
 type Control interface {
+	// IsInitializing xxx
 	// common
 	IsInitializing() bool
 	SetRevisionTemplate(revisionSpec map[string]interface{}, template map[string]interface{})
 	ApplyRevisionPatch(patched []byte) (*gdv1alpha1.GameDeployment, error)
 
+	// IsReadyToScale xxx
 	// scale
 	IsReadyToScale() bool
 	NewVersionedPods(currentCS, updateCS *gdv1alpha1.GameDeployment,
@@ -34,16 +37,19 @@ type Control interface {
 		availableIDs []string, availableIndex []int,
 	) ([]*v1.Pod, error)
 
+	// IsPodUpdatePaused xxx
 	// update
 	IsPodUpdatePaused(pod *v1.Pod) bool
 	IsPodUpdateReady(pod *v1.Pod, minReadySeconds int32) bool
 	GetPodsSortFunc(pods []*v1.Pod, waitUpdateIndexes []int) func(i, j int) bool
 	GetUpdateOptions() *inplaceupdate.UpdateOptions
 
+	// ValidateGameDeploymentUpdate xxx
 	// validation
 	ValidateGameDeploymentUpdate(oldCS, newCS *gdv1alpha1.GameDeployment) error
 }
 
+// New xxx
 func New(gd *gdv1alpha1.GameDeployment) Control {
 	return &commonControl{GameDeployment: gd}
 }

@@ -34,7 +34,7 @@ import (
 // CreateCloudNodeGroupTask create cloud node group task
 func CreateCloudNodeGroupTask(taskID string, stepName string) error {
 	start := time.Now()
-	//get task information and validate
+	// get task information and validate
 	state, step, err := cloudprovider.GetTaskStateAndCurrentStep(taskID, stepName)
 	if err != nil {
 		return err
@@ -87,29 +87,17 @@ func CreateCloudNodeGroupTask(taskID string, stepName string) error {
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return err
 	}
-	nodePool := api.CreateNodePoolInput{
-		ClusterID:                &cluster.SystemID,
-		AutoScalingGroupPara:     generateAutoScalingGroupPara(group.AutoScaling),
-		LaunchConfigurePara:      generateLaunchConfigurePara(group.LaunchTemplate, group.NodeTemplate),
-		InstanceAdvancedSettings: generateInstanceAdvanceSettings(group.NodeTemplate),
-		// 不开启腾讯云 CA 组件，因为需要部署 BCS 自己的 CA 组件
-		EnableAutoscale:  common.BoolPtr(false),
-		Name:             &group.Name,
-		Tags:             api.MapToTags(group.Tags),
-		ContainerRuntime: &group.ContainerRuntime,
-		RuntimeVersion:   &group.RuntimeVersion,
+
+	// set default value for nodegroup
+	if group.AutoScaling != nil && group.AutoScaling.VpcID == "" {
+		group.AutoScaling.VpcID = cluster.VpcID
 	}
-	if group.LaunchTemplate != nil && group.LaunchTemplate.ImageInfo != nil && group.LaunchTemplate.ImageInfo.ImageID != "" {
-		nodePool.NodePoolOs = &group.LaunchTemplate.ImageInfo.ImageID
+	if group.LaunchTemplate != nil {
+		if group.LaunchTemplate.InstanceChargeType == "" {
+			group.LaunchTemplate.InstanceChargeType = "POSTPAID_BY_HOUR"
+		}
 	}
-	if group.NodeTemplate != nil {
-		nodePool.Taints = api.MapToTaints(group.NodeTemplate.Taints)
-		nodePool.Labels = api.MapToLabels(group.NodeTemplate.Labels)
-	}
-	if nodePool.AutoScalingGroupPara != nil && nodePool.AutoScalingGroupPara.VpcID == nil {
-		nodePool.AutoScalingGroupPara.VpcID = &cluster.VpcID
-	}
-	npID, err := tkeCli.CreateClusterNodePool(&nodePool)
+	npID, err := tkeCli.CreateClusterNodePool(generateCreateNodePoolInput(group, cluster))
 	if err != nil {
 		blog.Errorf("CreateCloudNodeGroupTask[%s]: call CreateClusterNodePool[%s] api in task %s step %s failed, %s",
 			taskID, nodeGroupID, taskID, stepName, err.Error())
@@ -121,15 +109,17 @@ func CreateCloudNodeGroupTask(taskID string, stepName string) error {
 	group.CloudNodeGroupID = npID
 
 	// update nodegorup cloudNodeGroupID
-	err = updateNodeGroupCloudNodeGroupID(nodeGroupID, npID)
+	err = updateNodeGroupCloudNodeGroupID(nodeGroupID, group)
 	if err != nil {
 		blog.Errorf("CreateCloudNodeGroupTask[%s]: updateNodeGroupCloudNodeGroupID[%s] in task %s step %s failed, %s",
 			taskID, nodeGroupID, taskID, stepName, err.Error())
-		retErr := fmt.Errorf("call CreateCloudNodeGroupTask updateNodeGroupCloudNodeGroupID[%s] api err, %s", nodeGroupID, err.Error())
+		retErr := fmt.Errorf("call CreateCloudNodeGroupTask updateNodeGroupCloudNodeGroupID[%s] api err, %s", nodeGroupID,
+			err.Error())
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
 	}
-	blog.Infof("CreateCloudNodeGroupTask[%s]: call CreateClusterNodePool updateNodeGroupCloudNodeGroupID successful", taskID)
+	blog.Infof("CreateCloudNodeGroupTask[%s]: call CreateClusterNodePool updateNodeGroupCloudNodeGroupID successful",
+		taskID)
 
 	// update response information to task common params
 	if state.Task.CommonParams == nil {
@@ -145,10 +135,39 @@ func CreateCloudNodeGroupTask(taskID string, stepName string) error {
 	return nil
 }
 
+func generateCreateNodePoolInput(group *proto.NodeGroup, cluster *proto.Cluster) *api.CreateNodePoolInput {
+	nodePool := api.CreateNodePoolInput{
+		ClusterID:                &cluster.SystemID,
+		AutoScalingGroupPara:     generateAutoScalingGroupPara(group.AutoScaling),
+		LaunchConfigurePara:      generateLaunchConfigurePara(group.LaunchTemplate, group.NodeTemplate),
+		InstanceAdvancedSettings: generateInstanceAdvanceSettings(group.NodeTemplate),
+		// 不开启腾讯云 CA 组件，因为需要部署 BCS 自己的 CA 组件
+		EnableAutoscale: common.BoolPtr(false),
+		Name:            &group.Name,
+		Tags:            api.MapToTags(group.Tags),
+	}
+	if group.LaunchTemplate != nil && group.LaunchTemplate.ImageInfo != nil && group.LaunchTemplate.ImageInfo.ImageID !=
+		"" {
+		nodePool.NodePoolOs = &group.LaunchTemplate.ImageInfo.ImageID
+	}
+	if group.NodeTemplate != nil {
+		nodePool.Taints = api.MapToTaints(group.NodeTemplate.Taints)
+		nodePool.Labels = api.MapToLabels(group.NodeTemplate.Labels)
+		if group.NodeTemplate.Runtime != nil {
+			nodePool.ContainerRuntime = &group.NodeTemplate.Runtime.ContainerRuntime
+			nodePool.RuntimeVersion = &group.NodeTemplate.Runtime.RuntimeVersion
+		}
+	}
+	if nodePool.AutoScalingGroupPara != nil && nodePool.AutoScalingGroupPara.VpcID == nil {
+		nodePool.AutoScalingGroupPara.VpcID = &cluster.VpcID
+	}
+	return &nodePool
+}
+
 // CheckCloudNodeGroupStatusTask check cloud node group status task
 func CheckCloudNodeGroupStatusTask(taskID string, stepName string) error {
 	start := time.Now()
-	//get task information and validate
+	// get task information and validate
 	state, step, err := cloudprovider.GetTaskStateAndCurrentStep(taskID, stepName)
 	if err != nil {
 		return err
@@ -259,11 +278,13 @@ func CheckCloudNodeGroupStatusTask(taskID string, stepName string) error {
 		return err
 	}
 
-	err = cloudprovider.GetStorageModel().UpdateNodeGroup(context.Background(), generateNodeGroupFromAsgAndAsc(group, cloudNodeGroup, asgArr, ascArr[0]))
+	err = cloudprovider.GetStorageModel().UpdateNodeGroup(context.Background(), generateNodeGroupFromAsgAndAsc(group,
+		cloudNodeGroup, asgArr, ascArr[0]))
 	if err != nil {
 		blog.Errorf("CreateCloudNodeGroupTask[%s]: updateNodeGroupCloudArgsID[%s] in task %s step %s failed, %s",
 			taskID, nodeGroupID, taskID, stepName, err.Error())
-		retErr := fmt.Errorf("call CreateCloudNodeGroupTask updateNodeGroupCloudArgsID[%s] api err, %s", nodeGroupID, err.Error())
+		retErr := fmt.Errorf("call CreateCloudNodeGroupTask updateNodeGroupCloudArgsID[%s] api err, %s", nodeGroupID,
+			err.Error())
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
 	}
@@ -281,8 +302,14 @@ func CheckCloudNodeGroupStatusTask(taskID string, stepName string) error {
 	return nil
 }
 
-func generateNodeGroupFromAsgAndAsc(group *proto.NodeGroup, cloudNodeGroup *tke.NodePool, asg *as.AutoScalingGroup, asc *as.LaunchConfiguration) *proto.NodeGroup {
-	// asg
+func generateNodeGroupFromAsgAndAsc(group *proto.NodeGroup, cloudNodeGroup *tke.NodePool, asg *as.AutoScalingGroup,
+	asc *as.LaunchConfiguration) *proto.NodeGroup {
+	group = generateNodeGroupFromAsg(group, cloudNodeGroup, asg)
+	return generateNodeGroupFromAsc(group, cloudNodeGroup, asc)
+}
+
+func generateNodeGroupFromAsg(group *proto.NodeGroup, cloudNodeGroup *tke.NodePool,
+	asg *as.AutoScalingGroup) *proto.NodeGroup {
 	if asg.AutoScalingGroupId != nil {
 		group.AutoScaling.AutoScalingID = *asg.AutoScalingGroupId
 	}
@@ -323,8 +350,11 @@ func generateNodeGroupFromAsgAndAsc(group *proto.NodeGroup, cloudNodeGroup *tke.
 	if asg.ServiceSettings != nil && asg.ServiceSettings.ScalingMode != nil {
 		group.AutoScaling.ScalingMode = *asg.ServiceSettings.ScalingMode
 	}
+	return group
+}
 
-	// asc
+func generateNodeGroupFromAsc(group *proto.NodeGroup, cloudNodeGroup *tke.NodePool,
+	asc *as.LaunchConfiguration) *proto.NodeGroup {
 	if asc.LaunchConfigurationId != nil {
 		group.LaunchTemplate.LaunchConfigurationID = *asc.LaunchConfigurationId
 	}
@@ -341,16 +371,7 @@ func generateNodeGroupFromAsgAndAsc(group *proto.NodeGroup, cloudNodeGroup *tke.
 		group.LaunchTemplate.InstanceChargeType = *asc.InstanceChargeType
 	}
 	if asc.InternetAccessible != nil {
-		group.LaunchTemplate.InternetAccess = &proto.InternetAccessible{}
-		if asc.InternetAccessible.InternetChargeType != nil {
-			group.LaunchTemplate.InternetAccess.InternetChargeType = *asc.InternetAccessible.InternetChargeType
-		}
-		if asc.InternetAccessible.InternetMaxBandwidthOut != nil {
-			group.LaunchTemplate.InternetAccess.InternetMaxBandwidth = strconv.Itoa(int(*asc.InternetAccessible.InternetMaxBandwidthOut))
-		}
-		if asc.InternetAccessible.PublicIpAssigned != nil {
-			group.LaunchTemplate.InternetAccess.PublicIPAssigned = *asc.InternetAccessible.PublicIpAssigned
-		}
+		group.LaunchTemplate.InternetAccess = generateInternetAccessible(asc)
 	}
 	if asc.SecurityGroupIds != nil {
 		group.LaunchTemplate.SecurityGroupIDs = make([]string, 0)
@@ -359,10 +380,7 @@ func generateNodeGroupFromAsgAndAsc(group *proto.NodeGroup, cloudNodeGroup *tke.
 		}
 	}
 	if asc.ImageId != nil {
-		group.LaunchTemplate.ImageInfo = &proto.ImageInfo{ImageID: *asc.ImageId}
-		if cloudNodeGroup != nil && cloudNodeGroup.NodePoolOs != nil {
-			group.LaunchTemplate.ImageInfo.ImageName = *cloudNodeGroup.NodePoolOs
-		}
+		group.LaunchTemplate.ImageInfo = generateImageInfo(cloudNodeGroup, group, *asc.ImageId)
 	}
 	if asc.UserData != nil {
 		group.LaunchTemplate.UserData = *asc.UserData
@@ -381,10 +399,34 @@ func generateNodeGroupFromAsgAndAsc(group *proto.NodeGroup, cloudNodeGroup *tke.
 	return group
 }
 
+func generateInternetAccessible(asc *as.LaunchConfiguration) *proto.InternetAccessible {
+	internetAccess := &proto.InternetAccessible{}
+	if asc.InternetAccessible.InternetMaxBandwidthOut != nil {
+		internetAccess.InternetMaxBandwidth = strconv.Itoa(int(*asc.InternetAccessible.InternetMaxBandwidthOut))
+	}
+	if asc.InternetAccessible.PublicIpAssigned != nil {
+		internetAccess.PublicIPAssigned = *asc.InternetAccessible.PublicIpAssigned
+	}
+	return internetAccess
+}
+
+func generateImageInfo(cloudNodeGroup *tke.NodePool, group *proto.NodeGroup, imageID string) *proto.ImageInfo {
+	imageInfo := &proto.ImageInfo{ImageID: imageID}
+	if cloudNodeGroup != nil && cloudNodeGroup.NodePoolOs != nil {
+		for _, v := range api.ImageOsList {
+			if v.ImageID == imageID {
+				imageInfo.ImageName = v.Alias
+				break
+			}
+		}
+	}
+	return imageInfo
+}
+
 // UpdateCreateNodeGroupDBInfoTask update create node group db info task
 func UpdateCreateNodeGroupDBInfoTask(taskID string, stepName string) error {
 	start := time.Now()
-	//get task information and validate
+	// get task information and validate
 	state, step, err := cloudprovider.GetTaskStateAndCurrentStep(taskID, stepName)
 	if err != nil {
 		return err
@@ -450,7 +492,8 @@ func generateAutoScalingGroupPara(as *proto.AutoScalingGroup) *api.AutoScalingGr
 	return asg
 }
 
-func generateLaunchConfigurePara(template *proto.LaunchConfiguration, nodeTemplate *proto.NodeTemplate) *api.LaunchConfiguration {
+func generateLaunchConfigurePara(template *proto.LaunchConfiguration,
+	nodeTemplate *proto.NodeTemplate) *api.LaunchConfiguration {
 	if template == nil {
 		return nil
 	}
@@ -482,6 +525,9 @@ func generateLaunchConfigurePara(template *proto.LaunchConfiguration, nodeTempla
 		conf.InternetAccessible = &api.InternetAccessible{
 			PublicIPAssigned:        common.BoolPtr(template.InternetAccess.PublicIPAssigned),
 			InternetMaxBandwidthOut: common.Uint64Ptr(uint64(bw)),
+		}
+		if !template.InternetAccess.PublicIPAssigned {
+			conf.InternetAccessible.InternetMaxBandwidthOut = common.Uint64Ptr(0)
 		}
 		if template.InternetAccess.InternetChargeType != "" {
 			conf.InternetAccessible.InternetChargeType = common.StringPtr(template.InternetAccess.InternetChargeType)

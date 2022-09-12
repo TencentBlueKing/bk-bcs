@@ -80,7 +80,7 @@ func (h httpServer) CreateDomain(req *restful.Request, resp *restful.Response) {
 		h.writeResponse(resp, bresp.APIRespone{Result: false, Code: http.StatusBadRequest, Message: err.Error()})
 		return
 	}
-	//fixme: how to make a transaction create
+	// fixme: how to make a transaction create
 	for _, dmsg := range dns.Messages {
 		if len(dmsg.Alias) == 0 {
 			// generate a hash key
@@ -109,7 +109,8 @@ func (h httpServer) CreateDomain(req *restful.Request, resp *restful.Response) {
 		_, err = h.EtcdCli.Put(h.Ctx, key, emsg)
 		if err != nil {
 			log.Printf("[ERROR] received create domain request ,but set domain[%s] failed. err: %v", dns.DomainName, err)
-			h.writeResponse(resp, bresp.APIRespone{Result: false, Code: http.StatusBadRequest, Message: fmt.Sprintf("set domain[%s] failed. err: %v", dns.DomainName, err)})
+			h.writeResponse(resp, bresp.APIRespone{Result: false, Code: http.StatusBadRequest,
+				Message: fmt.Sprintf("set domain[%s] failed. err: %v", dns.DomainName, err)})
 			return
 		}
 	}
@@ -119,12 +120,14 @@ func (h httpServer) CreateDomain(req *restful.Request, resp *restful.Response) {
 	log.Printf("create domain[%s] success.", dns.DomainName)
 }
 
+// UpdateDomain xxx
 func (h httpServer) UpdateDomain(req *restful.Request, resp *restful.Response) {
 	var err error
 	data, err := ioutil.ReadAll(req.Request.Body)
 	if nil != err {
 		log.Printf("[ERROR] read update domain request body failed. err: %v", err)
-		h.writeResponse(resp, bresp.APIRespone{Result: false, Code: http.StatusBadRequest, Message: fmt.Sprintf("read request body failed. err: %v", err)})
+		h.writeResponse(resp, bresp.APIRespone{Result: false, Code: http.StatusBadRequest,
+			Message: fmt.Sprintf("read request body failed. err: %v", err)})
 		return
 	}
 	log.Printf("[INFO] received update domain request, source[%s], req data:%s", req.Request.RemoteAddr, string(data))
@@ -132,7 +135,8 @@ func (h httpServer) UpdateDomain(req *restful.Request, resp *restful.Response) {
 	dns := new(DNS)
 	if err = json.Unmarshal(data, dns); err != nil {
 		log.Printf("[ERROR] unmarshal request body failed. err: %v", err)
-		h.writeResponse(resp, bresp.APIRespone{Result: false, Code: http.StatusBadRequest, Message: fmt.Sprintf("unmarshal request body failed. err: %v", err)})
+		h.writeResponse(resp, bresp.APIRespone{Result: false, Code: http.StatusBadRequest,
+			Message: fmt.Sprintf("unmarshal request body failed. err: %v", err)})
 		return
 	}
 
@@ -159,13 +163,15 @@ func (h httpServer) UpdateDomain(req *restful.Request, resp *restful.Response) {
 		emsg, err := dmsg.toService()
 		if err != nil {
 			log.Printf("[ERROR] convert update domain request body failed. err: %v", err)
-			h.writeResponse(resp, bresp.APIRespone{Result: false, Code: http.StatusBadRequest, Message: fmt.Sprintf("invalid request, err: %v", err)})
+			h.writeResponse(resp, bresp.APIRespone{Result: false, Code: http.StatusBadRequest,
+				Message: fmt.Sprintf("invalid request, err: %v", err)})
 			return
 		}
 		_, err = h.EtcdCli.Put(h.Ctx, key, emsg)
 		if err != nil {
 			log.Printf("[ERROR] received update domain request ,but set domain[%s] failed. err: %v", dns.DomainName, err)
-			h.writeResponse(resp, bresp.APIRespone{Result: false, Code: http.StatusBadRequest, Message: fmt.Sprintf("set domain[%s] failed. err: %v", dns.DomainName, err)})
+			h.writeResponse(resp, bresp.APIRespone{Result: false, Code: http.StatusBadRequest,
+				Message: fmt.Sprintf("set domain[%s] failed. err: %v", dns.DomainName, err)})
 			return
 		}
 		log.Printf("[INFO] update domain[%s] alias[%s] with value: %s success.", dns.DomainName, dmsg.Alias, emsg)
@@ -174,10 +180,12 @@ func (h httpServer) UpdateDomain(req *restful.Request, resp *restful.Response) {
 	h.writeResponse(resp, bresp.APIRespone{Result: true, Code: 0, Message: "update success"})
 }
 
+// GetDomain xxx
 func (h httpServer) GetDomain(req *restful.Request, resp *restful.Response) {
 	domain := req.Request.FormValue("domain")
 	if len(domain) == 0 {
-		h.writeResponse(resp, bresp.APIRespone{Result: false, Code: http.StatusBadRequest, Message: "invalid value with empty domain."})
+		h.writeResponse(resp, bresp.APIRespone{Result: false, Code: http.StatusBadRequest,
+			Message: "invalid value with empty domain."})
 		log.Printf("[ERROR] received get domain reqeust, but get empty domain.")
 		return
 	}
@@ -224,27 +232,32 @@ func (h httpServer) GetDomain(req *restful.Request, resp *restful.Response) {
 	log.Printf("[INFO] get domain[%s] alias[%s] success. data: %s", domain, alias, js)
 }
 
+// DeleteDomain xxx
 func (h httpServer) DeleteDomain(req *restful.Request, resp *restful.Response) {
 	domain := req.Request.FormValue("domain")
 	if len(domain) == 0 {
 		log.Printf("[ERROR] received delete domain reqeust, but get empty domain.")
-		h.writeResponse(resp, bresp.APIRespone{Result: false, Code: http.StatusBadRequest, Message: "invalid value with empty domain."})
+		h.writeResponse(resp, bresp.APIRespone{Result: false, Code: http.StatusBadRequest,
+			Message: "invalid value with empty domain."})
 		return
 	}
 	h.deleteDomain(req, resp, domain, "")
 }
 
+// DeleteAlias xxx
 func (h httpServer) DeleteAlias(req *restful.Request, resp *restful.Response) {
 	domain := req.Request.FormValue("domain")
 	if len(domain) == 0 {
 		log.Printf("[ERROR] received delete domain reqeust, but get empty domain.")
-		h.writeResponse(resp, bresp.APIRespone{Result: false, Code: http.StatusBadRequest, Message: "invalid value with empty domain."})
+		h.writeResponse(resp, bresp.APIRespone{Result: false, Code: http.StatusBadRequest,
+			Message: "invalid value with empty domain."})
 		return
 	}
 	alias := req.Request.FormValue("alias")
 	if len(alias) == 0 {
 		log.Printf("[ERROR] received delete domain reqeust, but get empty alias.")
-		h.writeResponse(resp, bresp.APIRespone{Result: false, Code: http.StatusBadRequest, Message: "invalid value with empty alias."})
+		h.writeResponse(resp, bresp.APIRespone{Result: false, Code: http.StatusBadRequest,
+			Message: "invalid value with empty alias."})
 		return
 	}
 	h.deleteDomain(req, resp, domain, alias)
@@ -302,7 +315,7 @@ func (h httpServer) deleteDomain(req *restful.Request, resp *restful.Response, d
 		return
 	}
 
-	//todo: when alias is empty, delete option must be WithPrefix()
+	// todo: when alias is empty, delete option must be WithPrefix()
 	_, err = h.EtcdCli.Delete(h.Ctx, key, etcdcv3.WithPrefix())
 	if err != nil {
 		log.Printf("[ERROR] delete domain[%s] failed. err: %v", domain, err)
@@ -315,11 +328,13 @@ func (h httpServer) deleteDomain(req *restful.Request, resp *restful.Response, d
 	log.Printf("[INFO] delete domain[%s] success.", domain)
 }
 
+// ListDomain xxx
 func (h httpServer) ListDomain(req *restful.Request, resp *restful.Response) {
 	zone := req.Request.FormValue("zone")
 	if len(zone) == 0 {
 		log.Printf("[ERROR] received list domain reqeust, but get empty domain.")
-		h.writeResponse(resp, bresp.APIRespone{Result: false, Code: http.StatusBadRequest, Message: "invalid value with empty domain."})
+		h.writeResponse(resp, bresp.APIRespone{Result: false, Code: http.StatusBadRequest,
+			Message: "invalid value with empty domain."})
 		return
 	}
 
@@ -402,7 +417,7 @@ type DNSMessage struct {
 	Group string `json:"group,omitempty"`
 }
 
-// ToService make hsoue
+// toService make hsoue
 func (m DNSMessage) toService() (string, error) {
 	if len(m.Alias) == 0 {
 		return "", errors.New("alias can not be empty")

@@ -28,6 +28,7 @@ const (
 	defaultIngressDomain = "bk-cmdb.blueking.domain"
 )
 
+// CmdbConfig xxx
 type CmdbConfig struct {
 	MongoHost     string
 	MongoUsername string
@@ -45,6 +46,7 @@ type CmdbConfig struct {
 	IngressDomain string
 }
 
+// RenderedContent xxx
 type RenderedContent struct {
 	ApiserverConf      string
 	AuditCtrlConf      string

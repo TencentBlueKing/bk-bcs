@@ -254,7 +254,7 @@ func (w *Writer) GetHandlerKeyBySyncData(data *action.SyncData) string {
 	return handlerKey
 }
 
-// debugs here.
+// debug s here.
 func (w *Writer) debug() {
 	for {
 		time.Sleep(debugInterval)
@@ -262,7 +262,7 @@ func (w *Writer) debug() {
 	}
 }
 
-// reportQueueLength report writer module queueInfo to prometheus metrics
+// reportWriterQueueLength report writer module queueInfo to prometheus metrics
 func (w *Writer) reportWriterQueueLength() {
 	metrics.ReportK8sWatchHandlerQueueLength(w.clusterID, NormalQueue, float64(len(w.queue)))
 }
@@ -291,7 +291,7 @@ func (w *Writer) Run(stopCh <-chan struct{}) error {
 	// report writer module queueLen metrics
 	go wait.Until(w.reportWriterQueueLength, defaultHandlerReportPeriod, w.stopCh)
 	// setup debug.
-	//go w.debug()
+	// go w.debug()
 
 	return nil
 }

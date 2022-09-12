@@ -20,6 +20,7 @@ import (
 	bhttp "github.com/Tencent/bk-bcs/bcs-common/common/http"
 )
 
+// RegisterCustomResource xxx
 func (s *Scheduler) RegisterCustomResource(body []byte) (string, error) {
 
 	blog.Info("Register custom resource data(%s)", string(body))
@@ -43,6 +44,7 @@ func (s *Scheduler) RegisterCustomResource(body []byte) (string, error) {
 	return string(reply), nil
 }
 
+// CreateCustomResource xxx
 func (s *Scheduler) CreateCustomResource(ns, kind string, body []byte) (string, error) {
 
 	blog.Info("Create custom resource(%s %s) data(%s)", ns, kind, string(body))
@@ -66,6 +68,7 @@ func (s *Scheduler) CreateCustomResource(ns, kind string, body []byte) (string, 
 	return string(reply), nil
 }
 
+// UpdateCustomResource xxx
 func (s *Scheduler) UpdateCustomResource(ns, kind string, body []byte) (string, error) {
 
 	blog.Info("Update custom resource(%s %s) data(%s)", ns, kind, string(body))
@@ -89,6 +92,7 @@ func (s *Scheduler) UpdateCustomResource(ns, kind string, body []byte) (string, 
 	return string(reply), nil
 }
 
+// DeleteCustomResource xxx
 func (s *Scheduler) DeleteCustomResource(ns, kind, name string) (string, error) {
 
 	blog.Info("Delete custom resource(%s %s %s)", ns, kind, name)
@@ -112,6 +116,7 @@ func (s *Scheduler) DeleteCustomResource(ns, kind, name string) (string, error) 
 	return string(reply), nil
 }
 
+// ListCustomResource xxx
 func (s *Scheduler) ListCustomResource(ns, kind string) (string, error) {
 
 	blog.Info("List custom resource(%s %s)", ns, kind)
@@ -135,6 +140,7 @@ func (s *Scheduler) ListCustomResource(ns, kind string) (string, error) {
 	return string(reply), nil
 }
 
+// ListAllCustomResource xxx
 func (s *Scheduler) ListAllCustomResource(kind string) (string, error) {
 
 	blog.Info("List all custom resource(%s)", kind)
@@ -158,6 +164,7 @@ func (s *Scheduler) ListAllCustomResource(kind string) (string, error) {
 	return string(reply), nil
 }
 
+// GetCustomResource xxx
 func (s *Scheduler) GetCustomResource(ns, kind, name string) (string, error) {
 
 	blog.Info("Get custom resource(%s %s %s)", ns, kind, name)

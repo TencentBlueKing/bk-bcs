@@ -35,14 +35,14 @@ func reportAppMetrics(clusterID, action, status string) {
 	util.ReportSyncTotal(clusterID, cluster.DataTypeApp, action, status)
 }
 
-//NSControlInfo store all app info under one namespace
+// NSControlInfo store all app info under one namespace
 type NSControlInfo struct {
-	path   string             //parent zk node, namespace absolute path
-	cxt    context.Context    //context for creating sub context
-	cancel context.CancelFunc //for cancel sub goroutine
+	path   string             // parent zk node, namespace absolute path
+	cxt    context.Context    // context for creating sub context
+	cancel context.CancelFunc // for cancel sub goroutine
 }
 
-//NewAppWatch return a new application watch
+// NewAppWatch return a new application watch
 func NewAppWatch(cxt context.Context, informer bkbcsv2.ApplicationInformer, reporter cluster.Reporter) *AppWatch {
 	return &AppWatch{
 		report:    reporter,
@@ -51,12 +51,12 @@ func NewAppWatch(cxt context.Context, informer bkbcsv2.ApplicationInformer, repo
 	}
 }
 
-//AppWatch for app data in zookeeper, app wath is base on namespace.
-//AppWatch will record all namespace path,
+// AppWatch for app data in zookeeper, app wath is base on namespace.
+// AppWatch will record all namespace path,
 type AppWatch struct {
-	eventLock sync.Mutex       //lock for event
-	report    cluster.Reporter //reporter
-	cancelCxt context.Context  //context for cancel
+	eventLock sync.Mutex       // lock for event
+	report    cluster.Reporter // reporter
+	cancelCxt context.Context  // context for cancel
 	informer  bkbcsv2.ApplicationInformer
 }
 
@@ -119,7 +119,7 @@ func (app *AppWatch) syncAllApplications() {
 	}
 }
 
-//AddEvent call when data added
+// AddEvent call when data added
 func (app *AppWatch) AddEvent(obj interface{}) {
 	appData, ok := obj.(*schedulertypes.Application)
 	if !ok {
@@ -140,7 +140,7 @@ func (app *AppWatch) AddEvent(obj interface{}) {
 	}
 }
 
-//DeleteEvent when delete
+// DeleteEvent when delete
 func (app *AppWatch) DeleteEvent(obj interface{}) {
 	appData, ok := obj.(*schedulertypes.Application)
 	if !ok {
@@ -149,7 +149,7 @@ func (app *AppWatch) DeleteEvent(obj interface{}) {
 	}
 	blog.Info("EVENT:: Delete Event for Application %s/%s", appData.RunAs, appData.ID)
 
-	//report to cluster
+	// report to cluster
 	data := &types.BcsSyncData{
 		DataType: app.GetApplicationChannel(appData),
 		Action:   types.ActionDelete,
@@ -162,7 +162,7 @@ func (app *AppWatch) DeleteEvent(obj interface{}) {
 	}
 }
 
-//UpdateEvent when update
+// UpdateEvent when update
 func (app *AppWatch) UpdateEvent(old, cur interface{}, force bool) {
 	appData, ok := cur.(*schedulertypes.Application)
 	if !ok {
@@ -176,7 +176,7 @@ func (app *AppWatch) UpdateEvent(old, cur interface{}, force bool) {
 	}*/
 	blog.V(3).Infof("EVENT:: Update Event for Application %s/%s", appData.RunAs, appData.ID)
 
-	//report to cluster
+	// report to cluster
 	data := &types.BcsSyncData{
 		DataType: app.GetApplicationChannel(appData),
 		Action:   types.ActionUpdate,
@@ -189,7 +189,7 @@ func (app *AppWatch) UpdateEvent(old, cur interface{}, force bool) {
 	}
 }
 
-//GetApplicationChannel get distribution channel for Application
+// GetApplicationChannel get distribution channel for Application
 func (app *AppWatch) GetApplicationChannel(application *schedulertypes.Application) string {
 	index := util.GetHashId(application.ID, ApplicationThreadNum)
 

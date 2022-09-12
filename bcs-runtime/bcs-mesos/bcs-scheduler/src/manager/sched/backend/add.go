@@ -54,6 +54,7 @@ func (b *backend) SaveVersion(runAs, appId string, version *types.Version) error
 	return b.store.SaveVersion(version)
 }
 
+// GetVersion xxx
 func (b *backend) GetVersion(runAs, appId string) (*types.Version, error) {
 	return b.store.GetVersion(runAs, appId)
 }

@@ -11,7 +11,7 @@
     --color-text-tertiary: #6a737d;
     --color-markdown-table-border: #e0e3e6;
     --color-bg-primary: #fff;
-    --color-bg-tertiary: #f6f8fa;
+    --color-bg-tertiary: black;
     --color-markdown-table-tr-border: #c6cbd2;
     --color-markdown-code-bg: rgba(27,31,35,0.05);
     --color-diff-blob-num-text: rgba(27,31,35,0.3);

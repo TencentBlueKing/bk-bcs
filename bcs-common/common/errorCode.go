@@ -16,10 +16,10 @@ package common
 // AdditionErrorCode BCS error code
 const AdditionErrorCode = 1405000
 
-//bcs container service
-//Bcs error number defined in this file
-//Errno name is composed of the following format BcsErr{Module}{Type}
-//all error code range 1401 001 ~ 14001 999
+// bcs container service
+// Bcs error number defined in this file
+// Errno name is composed of the following format BcsErr{Module}{Type}
+// all error code range 1401 001 ~ 14001 999
 const (
 	// BcsSuccess success code
 	BcsSuccess = 0
@@ -29,7 +29,7 @@ const (
 	/*Common error code 1401 001~1401 049
 	All common errno name is as a beginning to BcsErrComm*/
 
-	//BcsErrCommZkConnectFail zookeeper error code
+	// BcsErrCommZkConnectFail zookeeper error code
 	BcsErrCommZkConnectFail       = AdditionErrorCode + 1
 	BcsErrCommZkConnectFailStr    = "connect to zookeeper failed"
 	BcsErrCommCreateZkNodeFail    = AdditionErrorCode + 2
@@ -63,7 +63,7 @@ const (
 
 	/*Common error code 1401 050~1401 079
 	bcs api module errno name is as a beginning to BcsErrApi*/
-	//BcsErrApi
+	// BcsErrApi
 	BcsErrApiInternalFail            = AdditionErrorCode + 50
 	BcsErrApiInternalFailStr         = "bcs apiserver internal error"
 	BcsErrApiGetMesosApiFail         = AdditionErrorCode + 51
@@ -94,7 +94,7 @@ const (
 	/*Common error code 1401 080~1401 109
 	bcs storage module errno name is as a beginning to BcsErrStorage*/
 
-	//BcsErrStorageRestRequestDataIsNotJson storage err code
+	// BcsErrStorageRestRequestDataIsNotJson storage err code
 	BcsErrStorageRestRequestDataIsNotJson    = AdditionErrorCode + 80
 	BcsErrStorageRestRequestDataIsNotJsonStr = "request data unmarshal failed."
 	BcsErrStorageReturnDataIsNotJson         = AdditionErrorCode + 81
@@ -117,7 +117,7 @@ const (
 	/*Common error code 1401 110~1401 139
 	bcs metric service module errno name is as a beginning to BcsErrMetric*/
 
-	//BcsErrMetricSetMetricFailed metric service
+	// BcsErrMetricSetMetricFailed metric service
 	BcsErrMetricSetMetricFailed              = AdditionErrorCode + 110
 	BcsErrMetricSetMetricFailedStr           = "failed to set metric"
 	BcsErrMetricSubscriptionUnknown          = AdditionErrorCode + 111
@@ -164,18 +164,18 @@ const (
 	/*Common error code 1401 140~1401 169
 	bcs health service module errno name is as a beginning to BcsErrHealth*/
 
-	//BcsErrHealthGetHealthzInfoErr health service
+	// BcsErrHealthGetHealthzInfoErr health service
 	BcsErrHealthGetHealthzInfoErr    = AdditionErrorCode + 140
 	BcsErrHealthGetHealthzInfoErrStr = "get healthz info error"
 
 	/*Common error code 1401 170~1401 199
 	bcs mesos api service module errno name is as a beginning to BcsErrMesosApi*/
-	//BcsErrMesosApi
+	// BcsErrMesosApi
 
 	/*Common error code 1401 200~1401 229
 	bcs mesos scheduler service module errno name is as a beginning to BcsErrMesosSched*/
 
-	//BcsErrMesosSchedCommon scheduler error code
+	// BcsErrMesosSchedCommon scheduler error code
 	BcsErrMesosSchedCommon           = AdditionErrorCode + 200
 	BcsErrMesosSchedCommonStr        = "scheduler common error"
 	BcsErrMesosSchedResourceExist    = AdditionErrorCode + 201
@@ -185,7 +185,7 @@ const (
 
 	/*Common error code 1401 230~1401 259
 	bcs mesos driver module errno name is as a beginning to BcsErrMesosDriver*/
-	//BcsErrMesosDriver
+	// BcsErrMesosDriver
 	BcsErrMesosDriverCommon               = AdditionErrorCode + 230
 	BcsErrMesosDriverCommonStr            = "mesos driver common error"
 	BcsErrMesosDriverParameterErr         = AdditionErrorCode + 231
@@ -209,29 +209,29 @@ const (
 	BcsErrDaemonDeleteProcessFailedStr  = "failed to delete process"
 
 	/*Common error code 1401 290~1401 319*/
-	//bcs-netservice error code
+	// bcs-netservice error code
 
-	//BcsErrNetservicePartialErr     = AdditionErrorCode + 290
+	// BcsErrNetservicePartialErr     = AdditionErrorCode + 290
 	BcsErrNetservicePartialErr = AdditionErrorCode + 290
-	//BcsErrNetservicePartialErrStr = "partial error for requst"
+	// BcsErrNetservicePartialErrStr = "partial error for requst"
 	BcsErrNetservicePartialErrStr = "partial error for requst"
-	//BcsErrNetserviceFailed          = AdditionErrorCode + 291
+	// BcsErrNetserviceFailed          = AdditionErrorCode + 291
 	BcsErrNetserviceFailed = AdditionErrorCode + 291
-	//BcsErrNetserviceParameterErr   = AdditionErrorCode + 292
+	// BcsErrNetserviceParameterErr   = AdditionErrorCode + 292
 	BcsErrNetserviceParameterErr = AdditionErrorCode + 292
-	//BcsErrNetserviceThirdpartyErr  = AdditionErrorCode + 293
+	// BcsErrNetserviceThirdpartyErr  = AdditionErrorCode + 293
 	BcsErrNetserviceThirdpartyErr = AdditionErrorCode + 293
 
 	/*Common error code 1401 320~1401 349*/
-	//bcs-ipservice error code
+	// bcs-ipservice error code
 
-	//BcsErrIPServicePartialErr    = AdditionErrorCode + 320
+	// BcsErrIPServicePartialErr    = AdditionErrorCode + 320
 	BcsErrIPServicePartialErr = AdditionErrorCode + 320
-	//BcsErrIPServiceFailed         = AdditionErrorCode + 321
+	// BcsErrIPServiceFailed         = AdditionErrorCode + 321
 	BcsErrIPServiceFailed = AdditionErrorCode + 321
-	//BcsErrIPServiceParameterErr  = AdditionErrorCode + 322
+	// BcsErrIPServiceParameterErr  = AdditionErrorCode + 322
 	BcsErrIPServiceParameterErr = AdditionErrorCode + 322
-	//BcsErrIPServiceThirdPartyErr = AdditionErrorCode + 323
+	// BcsErrIPServiceThirdPartyErr = AdditionErrorCode + 323
 	BcsErrIPServiceThirdPartyErr = AdditionErrorCode + 323
 
 	// BCSModuleClusterManager error code definition

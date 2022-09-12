@@ -11,6 +11,7 @@
  *
  */
 
+// Package providers xxx
 package providers
 
 import (
@@ -29,6 +30,7 @@ type Provider interface {
 	// Run start a new external system call for a measurement
 	// Should be idempotent and do nothing if a call has already been started
 	Run(*v1alpha1.HookRun, v1alpha1.Metric) v1alpha1.Measurement
+	// Resume xxx
 	// Checks if the external system call is finished and returns the current measurement
 	Resume(*v1alpha1.HookRun, v1alpha1.Metric, v1alpha1.Measurement) v1alpha1.Measurement
 	// Terminate will terminate an in-progress measurement
@@ -37,6 +39,7 @@ type Provider interface {
 	GarbageCollect(*v1alpha1.HookRun, v1alpha1.Metric, int) error
 }
 
+// ProviderFactory xxx
 type ProviderFactory struct {
 	KubeClient kubernetes.Interface
 }

@@ -52,7 +52,7 @@ func GetTaskServer() *TaskServer {
 	return taskSvc
 }
 
-//TaskServer server for go-machinery
+// TaskServer server for go-machinery
 type TaskServer struct {
 	brokerOption  *options.BrokerConfig
 	backendOption *cmongo.Options
@@ -64,7 +64,7 @@ type TaskServer struct {
 	worker *machinery.Worker
 }
 
-//Init register all background task, init server
+// Init register all background task, init server
 func (ts *TaskServer) Init(opt *options.BrokerConfig, backend *cmongo.Options) error {
 	if opt == nil || backend == nil {
 		blog.Errorf("TaskServer lost Broker or backend Config")
@@ -76,7 +76,7 @@ func (ts *TaskServer) Init(opt *options.BrokerConfig, backend *cmongo.Options) e
 		blog.Errorf("taskserver validate broker/backend Option failed, %s", err.Error())
 		return err
 	}
-	//init server & worker
+	// init server & worker
 	if err := ts.initServer(); err != nil {
 		blog.Errorf("task server init go-machinery server failed, %s", err.Error())
 		return err
@@ -88,24 +88,24 @@ func (ts *TaskServer) Init(opt *options.BrokerConfig, backend *cmongo.Options) e
 	return nil
 }
 
-//Run running server & worker
+// Run running server & worker
 func (ts *TaskServer) Run() error {
 	return nil
 }
 
-//Stop running
+// Stop running
 func (ts *TaskServer) Stop() {
 	ts.cancel()
 }
 
-//Dispatch dispatch task to worker
+// Dispatch dispatch task to worker
 func (ts *TaskServer) Dispatch(task *proto.Task) error {
-	//store all task information and then dispatch to remote worker
+	// store all task information and then dispatch to remote worker
 	if err := validateTask(task); err != nil {
 		blog.Errorf("task %s/%s is not validate, %s", task.TaskID, task.TaskType, err.Error())
 		return err
 	}
-	//create all task to signature
+	// create all task to signature
 	blog.Infof("task %s/%s with steps %v ready to dispatch worker", task.TaskID, task.TaskType, task.StepSequence)
 	var signatures []*tasks.Signature
 	for _, stepName := range task.StepSequence {
@@ -121,7 +121,7 @@ func (ts *TaskServer) Dispatch(task *proto.Task) error {
 	ts.lock.Lock()
 	defer ts.lock.Unlock()
 
-	//sending to workers
+	// sending to workers
 	chain, _ := tasks.NewChain(signatures...)
 	cxt, cancel := context.WithCancel(ts.cxt)
 	defer cancel()
@@ -134,14 +134,14 @@ func (ts *TaskServer) Dispatch(task *proto.Task) error {
 	}
 
 	go func(t *proto.Task, c *tasks.Chain) {
-		//check async results
+		// check async results
 		for retry := 3; retry > 0; retry-- {
 			results, err := asyncResult.Get(time.Second * 5)
 			if err != nil {
 				blog.Errorf("tracing task %s result failed, %s. retry %d", t.TaskID, err.Error(), retry)
 				continue
 			}
-			//check results
+			// check results
 			blog.Infof("tracing task %s result %s", t.TaskID, tasks.HumanReadableResults(results))
 		}
 	}(task, chain)
@@ -156,6 +156,7 @@ func (ts *TaskServer) validateOption() error {
 	return nil
 }
 
+// initServer xxx
 // init server
 func (ts *TaskServer) initServer() error {
 	mongoCli, err := NewMongoCli(ts.backendOption)
@@ -186,7 +187,7 @@ func (ts *TaskServer) initServer() error {
 	}
 	lock := eager.New()
 	ts.server = machinery.NewServer(config, broker, backend, lock)
-	//get all task for registry
+	// get all task for registry
 	allTasks := make(map[string]interface{})
 	for _, mgr := range cloudprovider.GetAllTaskManager() {
 		taskList := mgr.GetAllTask()
@@ -199,7 +200,7 @@ func (ts *TaskServer) initServer() error {
 		}
 	}
 
-	//register bksops job task
+	// register bksops job task
 	allTasks["bksopsjob"] = localtask.RunBKsopsJob
 	if err := ts.server.RegisterTasks(allTasks); err != nil {
 		blog.Errorf("task server register tasks failed, %s", err.Error())
@@ -208,10 +209,11 @@ func (ts *TaskServer) initServer() error {
 	return nil
 }
 
-//init worker
+// initWorker xxx
+// init worker
 func (ts *TaskServer) initWorker() error {
 	ts.worker = ts.server.NewWorker("", 10)
-	//int all kinds handler, here we inject some custom code for error handling,
+	// int all kinds handler, here we inject some custom code for error handling,
 	// start and end of task hooks, useful for metrics
 	errorHandler := func(err error) {
 		blog.Errorf("task error handler: %s", err)

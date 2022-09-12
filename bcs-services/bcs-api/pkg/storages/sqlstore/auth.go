@@ -18,6 +18,7 @@ import (
 	"time"
 )
 
+// GetUserClusterPerm xxx
 func GetUserClusterPerm(user *m.User, cluster *m.Cluster, name string) *m.UserClusterPermission {
 	var result m.UserClusterPermission
 	GCoreDB.Where(m.UserClusterPermission{UserID: user.ID, ClusterID: cluster.ID, Name: name}).First(&result)

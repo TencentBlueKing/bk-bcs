@@ -67,6 +67,7 @@ func UpdateTkeCidr(tkeCidr, updatedTkeCidr *models.TkeCidr) error {
 // CountTkeCidr count tke cidr
 func CountTkeCidr() []CidrCount {
 	var cidrCounts []CidrCount
-	GCoreDB.Table("tke_cidrs").Select("count(*) as count, vpc, ip_number, status").Group("vpc, ip_number, status").Scan(&cidrCounts)
+	GCoreDB.Table("tke_cidrs").Select("count(*) as count, vpc, ip_number, status").Group("vpc, ip_number, status").
+		Scan(&cidrCounts)
 	return cidrCounts
 }

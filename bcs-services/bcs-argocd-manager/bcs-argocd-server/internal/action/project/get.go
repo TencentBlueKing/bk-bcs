@@ -63,7 +63,8 @@ func (action *GetArgocdProjectAction) Handle(ctx context.Context,
 	return nil
 }
 
-func (action *GetArgocdProjectAction) setResp(err common.ArgocdServerError, message string, project *v1alpha1.ArgocdProject) {
+func (action *GetArgocdProjectAction) setResp(err common.ArgocdServerError, message string,
+	project *v1alpha1.ArgocdProject) {
 	code := err.Int32()
 	msg := err.ErrorMessage(message)
 	action.resp.Code = &code

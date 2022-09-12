@@ -1,6 +1,6 @@
 {
   "kind": "Endpoints",
-  "class": "networks",
+  "class": "network",
   "references": null,
   "items": [
     {

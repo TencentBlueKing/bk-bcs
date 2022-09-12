@@ -231,10 +231,10 @@ func TestPodName(t *testing.T) {
 }
 
 func TestHPA(t *testing.T) {
-	//query := "kube_event_unique_events_total{cluster_id=\"BCS-K8S-15202\", source=\"/cluster-autoscaler\",reason=~\"ScaledUpGroup|ScaleDown\"}"
-	//query := "min_over_time(sum(kube_event_unique_events_total{cluster_id=\"BCS-K8S-15202\", source=\"/cluster-autoscaler\",reason=~\"ScaleDown\"}))"
+	// query := "kube_event_unique_events_total{cluster_id=\"BCS-K8S-15202\", source=\"/cluster-autoscaler\",reason=~\"ScaledUpGroup|ScaleDown\"}"
+	// query := "min_over_time(sum(kube_event_unique_events_total{cluster_id=\"BCS-K8S-15202\", source=\"/cluster-autoscaler\",reason=~\"ScaleDown\"}))"
 	query := "kube_event_unique_events_total{cluster_id=\"BCS-K8S-15202\", involved_object_kind=\"GeneralPodAutoscaler\",involved_object_name=\"gpa-test\",namespace=\"default\",source=\"/pod-autoscaler\",reason=\"SuccessfulRescale\"}"
-	//query := "sum(kube_event_unique_events_total{cluster_id=\"BCS-K8S-15202\", source=\"/cluster-autoscaler\",reason=~\"ScaleDown\"})"
+	// query := "sum(kube_event_unique_events_total{cluster_id=\"BCS-K8S-15202\", source=\"/cluster-autoscaler\",reason=~\"ScaleDown\"})"
 	monitorCli := newMonitor()
 	start := time.Now().Add(-1 * time.Hour)
 	end := time.Now()

@@ -27,14 +27,17 @@ import (
 )
 
 const (
+	// DefaultHttpDomain xxx
 	DefaultHttpDomain = "http://xxxxxxx"
 )
 
+// HttpConnection xxx
 type HttpConnection struct {
-	endpoint string //remote http endpoint info
+	endpoint string // remote http endpoint info
 	client   *http.Client
 }
 
+// NewHttpConnection xxx
 func NewHttpConnection(endpoint string) *HttpConnection {
 	httpTransport := &http.Transport{
 		Dial: func(proto, addr string) (conn net.Conn, err error) {

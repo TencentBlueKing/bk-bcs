@@ -93,7 +93,7 @@ podAffinity:
                     - maxLength128
               type: object
             ui:component:
-              name: noTitleArray
+              name: bfArray
           labels:
             type: array
             items:
@@ -111,7 +111,7 @@ podAffinity:
                     - maxLength128
               type: object
             ui:component:
-              name: noTitleArray
+              name: bfArray
       topologyKey:
         title: {{ i18n "拓扑键" .lang }}
         type: string
@@ -232,7 +232,7 @@ nodeAffinity:
               type: object
             type: array
             ui:component:
-              name: noTitleArray
+              name: bfArray
           fields:
             items:
               properties:
@@ -282,7 +282,7 @@ nodeAffinity:
               type: object
             type: array
             ui:component:
-              name: noTitleArray
+              name: bfArray
       weight:
         default: 10
         title: {{ i18n "权重" .lang }}

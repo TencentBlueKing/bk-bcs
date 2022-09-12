@@ -31,7 +31,8 @@ func UpdateAddNodeDBInfoTask(taskID string, stepName string) error {
 	// get task form database
 	task, err := cloudprovider.GetStorageModel().GetTask(context.Background(), taskID)
 	if err != nil {
-		blog.Errorf("UpdateAddNodeDBInfoTask[%s] task %s get detail task information from storage failed: %s, task retry", taskID, taskID, err.Error())
+		blog.Errorf("UpdateAddNodeDBInfoTask[%s] task %s get detail task information from storage failed: %s, task retry",
+			taskID, taskID, err.Error())
 		return err
 	}
 
@@ -48,7 +49,8 @@ func UpdateAddNodeDBInfoTask(taskID string, stepName string) error {
 	// workflow switch current step to stepName when previous task exec successful
 	step, err := state.IsReadyToStep(stepName)
 	if err != nil {
-		blog.Errorf("UpdateAddNodeDBInfoTask[%s] task %s not turn ro run step %s, err %s", taskID, taskID, stepName, err.Error())
+		blog.Errorf("UpdateAddNodeDBInfoTask[%s] task %s not turn ro run step %s, err %s", taskID, taskID, stepName,
+			err.Error())
 		return err
 	}
 	// previous step successful when retry task

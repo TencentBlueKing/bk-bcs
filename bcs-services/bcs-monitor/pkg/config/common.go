@@ -16,28 +16,30 @@ package config
 import "time"
 
 const (
+	// MinBlockDuration TODO
 	// tsdb 块最小时间, 默认 2 个小时
 	MinBlockDuration = time.Hour * 2
+	// MaxBlockDuration TODO
 	// tsdb 块最大时间, 默认 2 个小时, 最大/最小时间需要一致
 	MaxBlockDuration = time.Hour * 2
-	// 数据滚动时间, 默认 2 天
+	// RetentionDuration 数据滚动时间, 默认 2 天
 	RetentionDuration = time.Hour * 24 * 2
 )
 
-// EndpointConfig
+// EndpointConfig :
 type EndpointConfig struct {
 	Address     string        `yaml:"address" mapstructure:"address"`
 	GracePeriod time.Duration `yaml:"grace_period" mapstructure:"grace_period"`
 }
 
-// TSDBConfig
+// TSDBConfig :
 type TSDBConfig struct {
 	MinBlockDuration time.Duration `yaml:"min-block-duration" mapstructure:"min-block-duration"`
 	MaxBlockDuration time.Duration `yaml:"max-block-duration" mapstructure:"max-block-duration"`
 	Retention        time.Duration `yaml:"retention" mapstructure:"retention"`
 }
 
-// Init
+// Init :
 func (c *TSDBConfig) Init() error {
 	c.MinBlockDuration = MinBlockDuration
 	c.MaxBlockDuration = MaxBlockDuration

@@ -260,7 +260,7 @@ func (in *TransDeploymentUpdateOpData) DeepCopy() *TransDeploymentUpdateOpData {
 	return out
 }
 
-// TransactionOperation operation strut for transaction
+// TransactionOperartion operation strut for transaction
 type TransactionOperartion struct {
 	OpType           string                       `json:"opType"`
 	OpLaunchData     *TransAPILaunchOpdata        `json:"opLaunchData,omitempty"`

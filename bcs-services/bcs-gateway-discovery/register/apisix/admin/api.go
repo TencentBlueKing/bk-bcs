@@ -18,7 +18,7 @@ import (
 	"encoding/json"
 )
 
-//Option client option
+// Option client option
 type Option struct {
 	AdminToken string
 	TLSConfig  *tls.Config
@@ -40,8 +40,8 @@ type Data struct {
 	Key           string `json:"key"`
 	CreateIndex   uint   `json:"createdIndex"`
 	ModifiedIndex uint   `json:"modifiedIndex"`
-	//! when no data response from apisix, response.Data.Nodes is {} and Basic.Count is 1.
-	//* if any services response from apisix, response.Data.Node is slice
+	// ! when no data response from apisix, response.Data.Nodes is {} and Basic.Count is 1.
+	// * if any services response from apisix, response.Data.Node is slice
 	Nodes json.RawMessage `json:"nodes,omitempty"`
 	Value json.RawMessage `json:"value,omitempty"`
 }
@@ -54,27 +54,30 @@ type Node struct {
 	Value         json.RawMessage `json:"value"`
 }
 
-//Nodes for Data.Nodes
+// Nodes for Data.Nodes
 type Nodes []*Node
 
 // Client definition for apisix admin api
 type Client interface {
-	//upstream operation
+	// GetUpstream operation
 	GetUpstream(id string) (*Upstream, error)
 	ListUpstream() ([]*Upstream, error)
-	//create upstream, upstream id will auto generate by apisix when not setting
+	// CreateUpstream TODO
+	// create upstream, upstream id will auto generate by apisix when not setting
 	CreateUpstream(upstr *Upstream) error
 	UpdateUpstream(upstr *Upstream) error
 	DeleteUpstream(id string) error
 
-	//service operation
+	// GetService TODO
+	// service operation
 	GetService(id string) (*Service, error)
 	ListService() ([]*Service, error)
 	CreateService(svc *Service) error
 	UpdateService(svc *Service) error
 	DeleteService(id string) error
 
-	//route operation
+	// GetRoute TODO
+	// route operation
 	GetRoute(id string) (*Route, error)
 	ListRoute() ([]*Route, error)
 	CreateRoute(route *Route) error

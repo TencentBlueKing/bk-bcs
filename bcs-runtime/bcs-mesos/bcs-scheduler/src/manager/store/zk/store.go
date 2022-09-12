@@ -38,6 +38,7 @@ type managerStore struct {
 	clusterId string
 }
 
+// NewManagerStore xxx
 // Create a store manager by a db driver
 func NewManagerStore(dbDriver store.Dbdrvier, pm *pluginManager.PluginManager, clusterId string) store.Store {
 	s := &managerStore{
@@ -49,6 +50,7 @@ func NewManagerStore(dbDriver store.Dbdrvier, pm *pluginManager.PluginManager, c
 	return s
 }
 
+// StopStoreMetrics xxx
 func (s *managerStore) StopStoreMetrics() {
 	if s.cancel == nil {
 		return
@@ -57,6 +59,7 @@ func (s *managerStore) StopStoreMetrics() {
 	time.Sleep(time.Second)
 }
 
+// StartStoreObjectMetrics xxx
 func (s *managerStore) StartStoreObjectMetrics() {
 	s.ctx, s.cancel = context.WithCancel(context.Background())
 
@@ -116,7 +119,8 @@ func (s *managerStore) StartStoreObjectMetrics() {
 			blog.Errorf("list all deployment error %s", err.Error())
 		}
 		for _, deployment := range deployments {
-			store.ReportObjectResourceInfoMetrics(store.ObjectResourceDeployment, deployment.ObjectMeta.NameSpace, deployment.ObjectMeta.Name, "")
+			store.ReportObjectResourceInfoMetrics(store.ObjectResourceDeployment, deployment.ObjectMeta.NameSpace,
+				deployment.ObjectMeta.Name, "")
 		}
 
 		// handle configmap metrics
@@ -233,6 +237,7 @@ func float2Float(num float64) float64 {
 	return float_num
 }
 
+// ListObjectNamespaces xxx
 func (store *managerStore) ListObjectNamespaces(objectNode string) ([]string, error) {
 
 	rootPath := "/" + bcsRootNode + "/" + objectNode
@@ -279,11 +284,12 @@ const (
 	deploymentNode string = "deployment"
 	// crr zk node
 	crrNode string = "crr"
-	//crd zk node
+	// crd zk node
 	crdNode string = "crd"
-	//command zk node
+	// command zk node
 	commandNode string = "command"
-	//admission webhook zk node
+	// AdmissionWebhookNode xxx
+	// admission webhook zk node
 	AdmissionWebhookNode string = "admissionwebhook"
 	// Transaction zk node
 	transactionNode string = "transaction"

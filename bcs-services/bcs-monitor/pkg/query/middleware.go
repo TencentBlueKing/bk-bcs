@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/TencentBlueKing/bkmonitor-kits/logger"
 	"github.com/pkg/errors"
 	"github.com/prometheus/prometheus/model/labels"
 	"github.com/prometheus/prometheus/promql/parser"
@@ -25,7 +26,7 @@ import (
 	extpromhttp "github.com/thanos-io/thanos/pkg/extprom/http"
 	"github.com/thanos-io/thanos/pkg/store"
 
-	"github.com/TencentBlueKing/bkmonitor-kits/logger"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/rest/tracing"
 )
 
 const (
@@ -39,7 +40,8 @@ type tenantAuthMiddleware struct {
 }
 
 // NewTenantAuthMiddleware 租户鉴权中间件
-func NewTenantAuthMiddleware(ctx context.Context, ins extpromhttp.InstrumentationMiddleware) (*tenantAuthMiddleware, error) {
+func NewTenantAuthMiddleware(ctx context.Context, ins extpromhttp.InstrumentationMiddleware) (*tenantAuthMiddleware,
+	error) {
 	return &tenantAuthMiddleware{ctx: ctx, ins: ins}, nil
 }
 
@@ -71,9 +73,19 @@ func (t *tenantAuthMiddleware) NewHandler(handlerName string, handler http.Handl
 			return
 		}
 
-		logger.Infow("handle request", "handler_name", handlerName, "label_matchers", fmt.Sprintf("%s", labelMatchers), "url", r.URL)
+		requestID := tracing.RequestIDValue(r, true)
+		logger.Infow("handle request",
+			"request_id", requestID,
+			"handler_name", handlerName,
+			"label_matchers", fmt.Sprintf("%s", labelMatchers),
+			"req", fmt.Sprintf("%s %s", r.Method, r.URL),
+		)
+
+		// 返回的 header 写入 request_id
+		w.Header().Set(store.RequestIdHeaderKey(), requestID)
 
 		ctx := store.WithLabelMatchValue(r.Context(), labelMatchers)
+		ctx = store.WithRequestIDValue(ctx, requestID)
 		r = r.WithContext(ctx)
 		handleFunc(w, r)
 	}

@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package app xxx
 package app
 
 import (
@@ -43,6 +44,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/common"
 	clusterops "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/clusterops"
 	cmcommon "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common/marshal"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/discovery"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/handler"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/lock"
@@ -141,6 +143,7 @@ func NewClusterManager(opt *options.ClusterManagerOptions) *ClusterManager {
 	}
 }
 
+// initTLSConfig xxx
 // init server and client tls config
 func (cm *ClusterManager) initTLSConfig() error {
 	if len(cm.opt.ServerCert) != 0 && len(cm.opt.ServerKey) != 0 && len(cm.opt.ServerCa) != 0 {
@@ -167,6 +170,7 @@ func (cm *ClusterManager) initTLSConfig() error {
 	return nil
 }
 
+// initLocker xxx
 // init lock
 func (cm *ClusterManager) initLocker() error {
 	etcdEndpoints := utils.SplitAddrString(cm.opt.Etcd.EtcdEndpoints)
@@ -194,6 +198,7 @@ func (cm *ClusterManager) initLocker() error {
 	return nil
 }
 
+// initModel xxx
 // init mongo client
 func (cm *ClusterManager) initModel() error {
 	if len(cm.opt.Mongo.Address) == 0 {
@@ -234,10 +239,11 @@ func (cm *ClusterManager) initModel() error {
 	return nil
 }
 
+// initTaskServer xxx
 // init task server
 func (cm *ClusterManager) initTaskServer() error {
 	cloudprovider.InitStorageModel(cm.model)
-	//get taskserver and init
+	// get taskserver and init
 	taskMgr := taskserver.GetTaskServer()
 
 	if err := taskMgr.Init(&cm.opt.Broker, cm.mongoOptions); err != nil {
@@ -248,6 +254,7 @@ func (cm *ClusterManager) initTaskServer() error {
 	return nil
 }
 
+// initRemoteClient xxx
 // init remote client for cloud dependent data client, client may be disable or empty
 func (cm *ClusterManager) initRemoteClient() error {
 	// init tags client
@@ -299,6 +306,7 @@ func (cm *ClusterManager) initRemoteClient() error {
 	return nil
 }
 
+// initBKOpsClient xxx
 // init bk-ops client
 func (cm *ClusterManager) initBKOpsClient() error {
 	err := common.SetBKOpsClient(common.Options{
@@ -318,6 +326,7 @@ func (cm *ClusterManager) initBKOpsClient() error {
 	return nil
 }
 
+// initIAMClient xxx
 // init iam client for perm
 func (cm *ClusterManager) initIAMClient() error {
 	var err error
@@ -448,6 +457,7 @@ func (cm *ClusterManager) updateCloudConfig(cloud *cmproto.Cloud) error {
 	return nil
 }
 
+// initK8SOperator xxx
 // init k8s operator
 func (cm *ClusterManager) initK8SOperator() {
 	cm.k8sops = clusterops.NewK8SOperator(cm.opt, cm.model)
@@ -557,13 +567,16 @@ func CustomMatcher(key string) (string, bool) {
 	}
 }
 
+// initHTTPGateway xxx
 // init http grpc gateway
 func (cm *ClusterManager) initHTTPGateway(router *mux.Router) error {
 	gwmux := runtime.NewServeMux(
 		runtime.WithIncomingHeaderMatcher(CustomMatcher),
-		runtime.WithMarshalerOption(runtime.MIMEWildcard, &runtime.JSONPb{
-			OrigName:     true,
-			EmitDefaults: true,
+		runtime.WithMarshalerOption(runtime.MIMEWildcard, &marshal.JSONBcs{
+			JSONPb: &runtime.JSONPb{
+				OrigName:     true,
+				EmitDefaults: true,
+			},
 		}),
 	)
 	grpcDialOpts := []grpc.DialOption{}
@@ -709,6 +722,7 @@ func (cm *ClusterManager) initMicro() error {
 		KubeClient: cm.k8sops,
 		Locker:     cm.locker,
 		IAMClient:  cm.iamClient,
+		CmOptions:  cm.opt,
 	})
 	// Register handler
 	cmproto.RegisterClusterManagerHandler(microService.Server(), cm.serverHandler)

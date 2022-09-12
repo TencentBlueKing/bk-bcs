@@ -70,7 +70,8 @@ func (cph *ClusterResourceAPIHandler) Handler(request *restful.Request, response
 OutLoop:
 	for _, node := range nodes.Items {
 		for _, condition := range node.Status.Conditions {
-			if condition.Type == "Ready" && condition.Status != "True" || node.ObjectMeta.Labels["node-role.kubernetes.io/master"] == "true" {
+			if condition.Type == "Ready" && condition.Status != "True" ||
+				node.ObjectMeta.Labels["node-role.kubernetes.io/master"] == "true" {
 				continue OutLoop
 			}
 		}
@@ -108,9 +109,9 @@ func (cph *ClusterResourceAPIHandler) Config(KubeMasterURL string, TLSConfig opt
 
 func (cph *ClusterResourceAPIHandler) describeNodeMetrc(node *v1.Node) *ClusterResourceStatus {
 	allocatable := node.Status.Capacity
-	//if len(node.Status.Allocatable) > 0 {
+	// if len(node.Status.Allocatable) > 0 {
 	//	allocatable = node.Status.Allocatable
-	//}
+	// }
 
 	return &ClusterResourceStatus{
 		Capacity: ResourceStatus{
@@ -122,7 +123,8 @@ func (cph *ClusterResourceAPIHandler) describeNodeMetrc(node *v1.Node) *ClusterR
 
 func (cph *ClusterResourceAPIHandler) describePodsMetric(nodeNonTerminatedPodsList *v1.PodList) *ClusterResourceStatus {
 	reqs, limits := getPodsTotalRequestsAndLimits(nodeNonTerminatedPodsList)
-	cpuReqs, cpuLimits, memoryReqs, memoryLimits := reqs[v1.ResourceCPU], limits[v1.ResourceCPU], reqs[v1.ResourceMemory], limits[v1.ResourceMemory]
+	cpuReqs, cpuLimits, memoryReqs, memoryLimits := reqs[v1.ResourceCPU], limits[v1.ResourceCPU], reqs[v1.ResourceMemory],
+		limits[v1.ResourceMemory]
 	return &ClusterResourceStatus{
 		Limit: ResourceStatus{
 			Cpu:    float64(cpuLimits.MilliValue() / 1000),
@@ -151,7 +153,8 @@ func (cph *ClusterResourceAPIHandler) FetchAllPods() (allPodsInNode *v1.PodList)
 }
 
 // PodRequestsAndLimits parse pod request & limit resource
-func PodRequestsAndLimits(pod *v1.Pod) (reqs map[v1.ResourceName]resource.Quantity, limits map[v1.ResourceName]resource.Quantity) {
+func PodRequestsAndLimits(pod *v1.Pod) (reqs map[v1.ResourceName]resource.Quantity,
+	limits map[v1.ResourceName]resource.Quantity) {
 	reqs, limits = map[v1.ResourceName]resource.Quantity{}, map[v1.ResourceName]resource.Quantity{}
 	for _, container := range pod.Spec.Containers {
 		for name, quantity := range container.Resources.Requests {
@@ -197,7 +200,8 @@ func PodRequestsAndLimits(pod *v1.Pod) (reqs map[v1.ResourceName]resource.Quanti
 	return reqs, limits
 }
 
-func getPodsTotalRequestsAndLimits(podList *v1.PodList) (reqs map[v1.ResourceName]resource.Quantity, limits map[v1.ResourceName]resource.Quantity) {
+func getPodsTotalRequestsAndLimits(podList *v1.PodList) (reqs map[v1.ResourceName]resource.Quantity,
+	limits map[v1.ResourceName]resource.Quantity) {
 	reqs, limits = map[v1.ResourceName]resource.Quantity{}, map[v1.ResourceName]resource.Quantity{}
 	for _, pod := range podList.Items {
 		podReqs, podLimits := PodRequestsAndLimits(&pod)

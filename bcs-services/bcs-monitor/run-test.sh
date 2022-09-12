@@ -23,8 +23,8 @@ function api() {
 function query {
     ./bin/bcs-monitor query \
     --http-address 0.0.0.0:10902 \
+    --store 11.187.114.115:30911 \
     --advertise-address clb:11902 \
-    --store.http-sd-url=http://127.0.0.1:13902/api/discovery/targetgroups \
     --config ./etc/config_dev.yaml \
     --credential-config ./etc/credentials_dev.yaml \
     --credential-config ./etc/credentials_mgr_dev.yaml

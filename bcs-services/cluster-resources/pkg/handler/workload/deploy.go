@@ -26,10 +26,10 @@ import (
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
 )
 
-// Handler ...
+// Handler xxx
 type Handler struct{}
 
-// New ...
+// New xxx
 func New() *Handler {
 	return &Handler{}
 }
@@ -84,6 +84,25 @@ func (h *Handler) UpdateDeploy(
 		ctx, req.Namespace, req.Name, req.RawData, req.Format, metav1.UpdateOptions{},
 	)
 	return err
+}
+
+// ScaleDeploy Deployment 扩缩容
+func (h *Handler) ScaleDeploy(
+	ctx context.Context, req *clusterRes.ResScaleReq, resp *clusterRes.CommonResp,
+) (err error) {
+	resp.Data, err = resAction.NewResMgr(req.ClusterID, "", res.Deploy).Scale(
+		ctx, req.Namespace, req.Name, req.Replicas, metav1.PatchOptions{},
+	)
+	return err
+}
+
+// RescheduleDeployPo 批量重新调度 Deployment 下的 Pod
+func (h *Handler) RescheduleDeployPo(
+	ctx context.Context, req *clusterRes.ResBatchRescheduleReq, _ *clusterRes.CommonResp,
+) (err error) {
+	return resAction.NewResMgr(req.ClusterID, "", res.Deploy).Reschedule(
+		ctx, req.Namespace, req.Name, req.LabelSelector, req.PodNames,
+	)
 }
 
 // DeleteDeploy 删除 Deployment

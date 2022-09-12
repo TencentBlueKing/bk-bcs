@@ -13,7 +13,6 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 import json
-import re
 import time
 
 from django.db import transaction
@@ -25,14 +24,13 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.renderers import BrowsableAPIRenderer
 from rest_framework.response import Response
 
-from backend.accounts import bcs_perm
 from backend.bcs_web.audit_log.audit.decorators import log_audit, log_audit_on_view
 from backend.bcs_web.audit_log.constants import ActivityType
 from backend.components import paas_cc
 from backend.container_service.clusters.constants import ClusterType
 from backend.container_service.projects.base.constants import LIMIT_FOR_ALL_DATA
 from backend.templatesets.legacy_apps.configuration.models import MODULE_DICT
-from backend.templatesets.legacy_apps.configuration.utils import check_var_by_config, get_all_template_info_by_project
+from backend.templatesets.legacy_apps.configuration.utils import check_var_by_config
 from backend.utils.error_codes import error_codes
 from backend.utils.renderers import BKAPIRenderer
 from backend.utils.views import FinalizeResponseMixin
@@ -91,11 +89,7 @@ class ListCreateVariableView(generics.ListCreateAPIView):
 
         offset, limit = data['offset'], data['limit']
         variables = self.get_variables_by_search_params(data)
-        serializer = serializers.ListVariableSLZ(
-            variables[offset : limit + offset],
-            many=True,
-            context={'search_type': data['type'], 'project_id': project_id},
-        )
+        serializer = serializers.ListVariableSLZ(variables[offset : limit + offset], many=True)
         num_of_variables = variables.count()
         return Response(
             {
@@ -221,55 +215,6 @@ class VariableOverView(viewsets.ViewSet):
         )
 
         return Response({"code": 0, "message": "OK", "data": {"deled_id_list": deled_id_list}})
-
-    def get_quote_info(self, request, project_id, pk):
-        qs = Variable.objects.filter((Q(project_id=project_id) | Q(project_id=0)), id=pk)
-        if not qs:
-            raise ValidationError(u"not found")
-        qs = qs.first()
-        quote_list = []
-        all_template_info = get_all_template_info_by_project(project_id)
-        for tem in all_template_info:
-            config = tem.get('config') or ''
-
-            key_pattern = re.compile(r'"([^"]+)":\s*"([^"]*{{%s}}[^"]*)"' % qs.key)
-            search_list = key_pattern.findall(config)
-
-            for _q in search_list:
-                quote_key = _q[0]
-                context = _q[1]
-                quote_list.append(
-                    {
-                        "context": context,
-                        "quote_location": "%s/%s/%s/%s/%s"
-                        % (
-                            tem['template_name'],
-                            tem['show_version_name'],
-                            tem['category_name'],
-                            tem['resource_name'],
-                            quote_key,
-                        ),
-                        "key": qs.key,
-                        'template_id': tem['template_id'],
-                        'template_name': tem['template_name'],
-                        'show_version_id': tem['show_version_id'],
-                        'category': tem['category'],
-                        'resource_id': tem['resource_id'],
-                    }
-                )
-
-        return Response(
-            {
-                "code": 0,
-                "message": "OK",
-                "data": {
-                    'quote_list': quote_list,
-                    'project_kind': request.project.kind,
-                    'project_id': request.project.project_id,
-                    'project_code': request.project.english_name,
-                },
-            }
-        )
 
     def batch_import(self, request, project_id):
         try:

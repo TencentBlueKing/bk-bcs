@@ -244,6 +244,7 @@ type skippedReasons struct {
 	message []string
 }
 
+// Reasons xxx
 func (sr *skippedReasons) Reasons() []string {
 	return sr.message
 }
@@ -397,6 +398,16 @@ func ScaleUp(context *contextinternal.Context, processors *ca_processors.Autosca
 			klog.V(4).Infof("Skipping node group %s; maximal limit exceeded for %v", nodeGroup.Id(),
 				checkResult.exceededResources)
 			skippedNodeGroups[nodeGroup.Id()] = maxResourceLimitReached(checkResult.exceededResources)
+			for _, resource := range checkResult.exceededResources {
+				switch resource {
+				case cloudprovider.ResourceNameCores:
+					metrics.RegisterSkippedScaleUpCPU()
+				case cloudprovider.ResourceNameMemory:
+					metrics.RegisterSkippedScaleUpMemory()
+				default:
+					continue
+				}
+			}
 			continue
 		}
 
@@ -439,9 +450,9 @@ func ScaleUp(context *contextinternal.Context, processors *ca_processors.Autosca
 		if len(option.Pods) > 0 || bufferNotEnough {
 			estimator := context.ExtendedEstimatorBuilder(context.PredicateChecker, existingNodeInfos)
 			if len(upcomingNodes) > 0 {
-				klog.Infof("option.Pods: %+v, upcomingNodes: %v", len(upcomingNodes), upcomingNodes[0])
+				klog.Infof("option.Pods: %+v, upcomingNodes: %v", len(option.Pods), upcomingNodes[0])
 			} else {
-				klog.Infof("option.Pods: %+v, upcomingNodes: %v", len(upcomingNodes), upcomingNodes)
+				klog.Infof("option.Pods: %+v, upcomingNodes: %v", len(option.Pods), upcomingNodes)
 			}
 			option.NodeCount = estimator.Estimate(option.Pods, nodeInfo, upcomingNodes)
 			if option.NodeCount > 0 {

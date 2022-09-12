@@ -25,6 +25,7 @@ const (
 	// InstanceNamePrefix argocd instance name prefix
 	InstanceNamePrefix = "bcs-argocd"
 
+	// ProjectNamePrefix TODO
 	// InstanceNamePrefix argocd instance name prefix
 	ProjectNamePrefix = "bcs-project"
 
@@ -32,6 +33,7 @@ const (
 	PluginNamePrefix = "bcs-argocd-plugin"
 
 	// ArgocdProjectLabel ArgocdInstance label for project
-	ArgocdProjectLabel  = "argocdmanager.tkex.tencent.com/project"
+	ArgocdProjectLabel = "argocdmanager.tkex.tencent.com/project"
+	// ArgocdNickNameLabel TODO
 	ArgocdNickNameLabel = "argocdmanager.tkex.tencent.com/nickName"
 )

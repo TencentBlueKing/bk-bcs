@@ -12,6 +12,7 @@
  * limitations under the License.
  */
 
+// Package resp xxx
 package resp
 
 import (
@@ -21,6 +22,7 @@ import (
 	"google.golang.org/protobuf/types/known/structpb"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/types"
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
 	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
@@ -30,7 +32,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/pbstruct"
 )
 
-// BuildListAPIResp ...
+// BuildListAPIResp xxx
 func BuildListAPIResp(
 	ctx context.Context, clusterID, resKind, groupVersion, namespace, format string, opts metav1.ListOptions,
 ) (*structpb.Struct, error) {
@@ -42,7 +44,7 @@ func BuildListAPIResp(
 	return pbstruct.Map2pbStruct(respData)
 }
 
-// BuildRetrieveAPIResp ...
+// BuildRetrieveAPIResp xxx
 func BuildRetrieveAPIResp(
 	ctx context.Context, clusterID, resKind, groupVersion, namespace, name, format string, opts metav1.GetOptions,
 ) (*structpb.Struct, error) {
@@ -53,9 +55,10 @@ func BuildRetrieveAPIResp(
 	return pbstruct.Map2pbStruct(respData)
 }
 
-// BuildCreateAPIResp ...
+// BuildCreateAPIResp xxx
 func BuildCreateAPIResp(
-	ctx context.Context, clusterID, resKind, groupVersion string, manifest map[string]interface{}, isNSScoped bool, opts metav1.CreateOptions,
+	ctx context.Context, clusterID, resKind, groupVersion string, manifest map[string]interface{}, isNSScoped bool,
+	opts metav1.CreateOptions,
 ) (*structpb.Struct, error) {
 	clusterConf := res.NewClusterConfig(clusterID)
 	k8sRes, err := res.GetGroupVersionResource(ctx, clusterConf, resKind, groupVersion)
@@ -71,9 +74,10 @@ func BuildCreateAPIResp(
 	return pbstruct.Unstructured2pbStruct(ret), nil
 }
 
-// BuildUpdateAPIResp ...
+// BuildUpdateAPIResp xxx
 func BuildUpdateAPIResp(
-	ctx context.Context, clusterID, resKind, groupVersion, namespace, name string, manifest map[string]interface{}, opts metav1.UpdateOptions,
+	ctx context.Context, clusterID, resKind, groupVersion, namespace, name string, manifest map[string]interface{},
+	opts metav1.UpdateOptions,
 ) (*structpb.Struct, error) {
 	clusterConf := res.NewClusterConfig(clusterID)
 	k8sRes, err := res.GetGroupVersionResource(ctx, clusterConf, resKind, groupVersion)
@@ -89,7 +93,26 @@ func BuildUpdateAPIResp(
 	return pbstruct.Unstructured2pbStruct(ret), nil
 }
 
-// BuildDeleteAPIResp ...
+// BuildPatchAPIResp xxx
+func BuildPatchAPIResp(
+	ctx context.Context, clusterID, resKind, groupVersion, namespace, name string, pt types.PatchType, data []byte,
+	opts metav1.PatchOptions,
+) (*structpb.Struct, error) {
+	clusterConf := res.NewClusterConfig(clusterID)
+	k8sRes, err := res.GetGroupVersionResource(ctx, clusterConf, resKind, groupVersion)
+	if err != nil {
+		return nil, err
+	}
+
+	var ret *unstructured.Unstructured
+	ret, err = cli.NewResClient(clusterConf, k8sRes).Patch(ctx, namespace, name, pt, data, opts)
+	if err != nil {
+		return nil, err
+	}
+	return pbstruct.Unstructured2pbStruct(ret), nil
+}
+
+// BuildDeleteAPIResp xxx
 func BuildDeleteAPIResp(
 	ctx context.Context, clusterID, resKind, groupVersion, namespace, name string, opts metav1.DeleteOptions,
 ) error {
@@ -101,7 +124,7 @@ func BuildDeleteAPIResp(
 	return cli.NewResClient(clusterConf, k8sRes).Delete(ctx, namespace, name, opts)
 }
 
-// BuildListPodRelatedResResp ...
+// BuildListPodRelatedResResp xxx
 func BuildListPodRelatedResResp(
 	ctx context.Context, clusterID, namespace, podName, format, resKind string,
 ) (*structpb.Struct, error) {
@@ -120,7 +143,7 @@ func BuildListPodRelatedResResp(
 	return pbstruct.Map2pbStruct(respData)
 }
 
-// BuildListContainerAPIResp ...
+// BuildListContainerAPIResp xxx
 func BuildListContainerAPIResp(ctx context.Context, clusterID, namespace, podName string) (*structpb.ListValue, error) {
 	podManifest, err := cli.NewPodCliByClusterID(ctx, clusterID).GetManifest(ctx, namespace, podName)
 	if err != nil {
@@ -151,8 +174,9 @@ func BuildListContainerAPIResp(ctx context.Context, clusterID, namespace, podNam
 	return pbstruct.MapSlice2ListValue(containers)
 }
 
-// BuildGetContainerAPIResp ...
-func BuildGetContainerAPIResp(ctx context.Context, clusterID, namespace, podName, containerName string) (*structpb.Struct, error) {
+// BuildGetContainerAPIResp xxx
+func BuildGetContainerAPIResp(ctx context.Context, clusterID, namespace, podName,
+	containerName string) (*structpb.Struct, error) {
 	podManifest, err := cli.NewPodCliByClusterID(ctx, clusterID).GetManifest(ctx, namespace, podName)
 	if err != nil {
 		return nil, err
@@ -211,7 +235,8 @@ func BuildGetContainerAPIResp(ctx context.Context, clusterID, namespace, podName
 
 // BuildUpdateCObjAPIResp 构建更新自定义资源请求响应结果
 func BuildUpdateCObjAPIResp(
-	ctx context.Context, clusterID, resKind, groupVersion, namespace, name string, manifest map[string]interface{}, opts metav1.UpdateOptions,
+	ctx context.Context, clusterID, resKind, groupVersion, namespace, name string, manifest map[string]interface{},
+	opts metav1.UpdateOptions,
 ) (*structpb.Struct, error) {
 	clusterConf := res.NewClusterConfig(clusterID)
 	cobjRes, err := res.GetGroupVersionResource(ctx, clusterConf, resKind, groupVersion)
@@ -242,7 +267,7 @@ func BuildUpdateCObjAPIResp(
 	return pbstruct.Unstructured2pbStruct(ret), nil
 }
 
-// 去除容器 ID 前缀，原格式：docker://[a-zA-Z0-9]{64}
+// extractContainerID 去除容器 ID 前缀，原格式：docker://[a-zA-Z0-9]{64}
 func extractContainerID(rawContainerID string) string {
 	return strings.Replace(rawContainerID, "docker://", "", 1)
 }

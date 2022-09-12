@@ -23,7 +23,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
 )
 
-// ParseSTS ...
+// ParseSTS xxx
 func ParseSTS(manifest map[string]interface{}) map[string]interface{} {
 	sts := model.STS{}
 	common.ParseMetadata(manifest, &sts.Metadata)
@@ -33,7 +33,7 @@ func ParseSTS(manifest map[string]interface{}) map[string]interface{} {
 	return structs.Map(sts)
 }
 
-// ParseSTSSpec ...
+// ParseSTSSpec xxx
 func ParseSTSSpec(manifest map[string]interface{}, spec *model.STSSpec) {
 	ParseSTSReplicas(manifest, &spec.Replicas)
 	ParseSTSVolumeClaimTmpl(manifest, &spec.VolumeClaimTmpl)
@@ -47,15 +47,16 @@ func ParseSTSSpec(manifest map[string]interface{}, spec *model.STSSpec) {
 	ParseSpecOther(podSpec, &spec.Other)
 }
 
-// ParseSTSReplicas ...
+// ParseSTSReplicas xxx
 func ParseSTSReplicas(manifest map[string]interface{}, replicas *model.STSReplicas) {
 	replicas.SVCName = mapx.GetStr(manifest, "spec.serviceName")
 	replicas.Cnt = mapx.GetInt64(manifest, "spec.replicas")
 	replicas.UpdateStrategy = mapx.Get(manifest, "spec.updateStrategy.type", DefaultUpdateStrategy).(string)
 	replicas.PodManPolicy = mapx.Get(manifest, "spec.podManagementPolicy", "OrderedReady").(string)
+	replicas.Partition = mapx.GetInt64(manifest, "spec.updateStrategy.rollingUpdate.partition")
 }
 
-// ParseSTSVolumeClaimTmpl ...
+// ParseSTSVolumeClaimTmpl xxx
 func ParseSTSVolumeClaimTmpl(manifest map[string]interface{}, claimTmpl *model.STSVolumeClaimTmpl) {
 	if claims, _ := mapx.GetItems(manifest, "spec.volumeClaimTemplates"); claims != nil {
 		for _, c := range claims.([]interface{}) {
@@ -64,7 +65,7 @@ func ParseSTSVolumeClaimTmpl(manifest map[string]interface{}, claimTmpl *model.S
 	}
 }
 
-// 解析卷声明结构
+// parseVolumeClaim 解析卷声明结构
 func parseVolumeClaim(raw map[string]interface{}) model.VolumeClaim {
 	vc := model.VolumeClaim{
 		PVCName:     mapx.GetStr(raw, "metadata.name"),

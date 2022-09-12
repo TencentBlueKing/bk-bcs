@@ -20,6 +20,7 @@ import (
 	bhttp "github.com/Tencent/bk-bcs/bcs-common/common/http"
 )
 
+// RescheduleTaskgroup xxx
 func (s *Scheduler) RescheduleTaskgroup(taskgroupId, hostRetainTime string) (string, error) {
 	blog.Info("rescheduler taskgroup(%s)", taskgroupId)
 
@@ -43,6 +44,7 @@ func (s *Scheduler) RescheduleTaskgroup(taskgroupId, hostRetainTime string) (str
 	return string(reply), nil
 }
 
+// RestartTaskGroup xxx
 func (s *Scheduler) RestartTaskGroup(taskGroupID string) (string, error) {
 	blog.Info("restart taskGroup(%s)", taskGroupID)
 
@@ -66,6 +68,7 @@ func (s *Scheduler) RestartTaskGroup(taskGroupID string) (string, error) {
 	return string(reply), nil
 }
 
+// ReloadTaskGroup xxx
 func (s *Scheduler) ReloadTaskGroup(taskGroupID string) (string, error) {
 	blog.Info("reload taskGroup(%s)", taskGroupID)
 

@@ -11,6 +11,7 @@
  *
  */
 
+// Package options xxx
 package options
 
 import (
@@ -18,7 +19,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-mesos/bcs-consoleproxy/console-proxy/config"
 )
 
-//ConsoleProxyOption is option in flags
+// ConsoleProxyOption is option in flags
 type ConsoleProxyOption struct {
 	conf.FileConfig
 	conf.ServiceConfig
@@ -38,7 +39,7 @@ type ConsoleProxyOption struct {
 	Conf config.ConsoleProxyConfig
 }
 
-//NewConsoleProxyOption create ConsoleProxyOption object
+// NewConsoleProxyOption create ConsoleProxyOption object
 func NewConsoleProxyOption() *ConsoleProxyOption {
 	return &ConsoleProxyOption{
 		Conf: config.NewConsoleProxyConfig(),

@@ -23,29 +23,29 @@ import (
 	restful "github.com/emicklei/go-restful"
 )
 
-//RegisterResourceHandler init host url info
+// RegisterResourceHandler init host url info
 func RegisterResourceHandler(httpSvr *HTTPService, logic *netservice.NetService) *ResourceHandler {
 	handler := &ResourceHandler{
 		netSvr: logic,
 	}
 	webSvr := new(restful.WebService)
-	//add http handler
+	// add http handler
 	webSvr.Path("/v1/resource").Consumes(restful.MIME_JSON).Produces(restful.MIME_JSON)
-	//get all host info
+	// get all host info
 	webSvr.Route(webSvr.POST("").To(handler.List))
 	httpSvr.Register(webSvr)
 	return handler
 }
 
-//ResourceHandler for http host handler
+// ResourceHandler for http host handler
 type ResourceHandler struct {
 	netSvr *netservice.NetService
 }
 
-//List list all pools
+// List list all pools
 func (resource *ResourceHandler) List(request *restful.Request, response *restful.Response) {
 	started := time.Now()
-	//request json decode
+	// request json decode
 	req := &types.ResourceRequest{}
 	if err := request.ReadEntity(req); err != nil {
 		response.AddHeader("Content-Type", "text/plain")
@@ -65,14 +65,14 @@ func (resource *ResourceHandler) List(request *restful.Request, response *restfu
 		return
 	}
 	for _, host := range req.Hosts {
-		//default num for error
+		// default num for error
 		res.HostResource[host] = -1
 	}
-	//host: cluster/pool
+	// host: cluster/pool
 	hostMap := make(map[string]string)
 	clusterMap := make(map[string]int)
 	for k := range res.HostResource {
-		//get HostInfo without container info
+		// get HostInfo without container info
 		host, err := resource.netSvr.GetHostInfo(k)
 		if err != nil {
 			blog.Errorf("Get Host %s Node info failed in ResourceHandler, skip", k)
@@ -86,7 +86,7 @@ func (resource *ResourceHandler) List(request *restful.Request, response *restfu
 		hostMap[k] = key
 		clusterMap[key] = -1
 	}
-	//get cluster
+	// get cluster
 	for k := range clusterMap {
 		pool, err := resource.netSvr.GetPoolAvailable(k)
 		if err != nil {

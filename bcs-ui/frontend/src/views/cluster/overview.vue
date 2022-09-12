@@ -1,269 +1,272 @@
 <template>
-    <div class="biz-content">
-        <div class="biz-content-wrapper biz-cluster-overview" v-bkloading="{ isLoading: showLoading }">
-            <app-exception
-                v-if="exceptionCode && !showLoading"
-                :type="exceptionCode.code"
-                :text="exceptionCode.msg">
-            </app-exception>
-            <div v-if="!exceptionCode && !showLoading" class="biz-cluster-overview-wrapper">
-                <div class="biz-cluster-tab-content">
-                    <div class="biz-cluster-overview-chart">
-                        <div class="chart-box top">
-                            <div class="info">
-                                <div class="left">
-                                    {{$t('CPU使用率')}}
-                                </div>
-                                <div class="right">
-                                    <div><span>{{cpuUsagePercent}}</span><sup>%</sup></div>
-                                    <div class="cpu"><span>{{cpuUsage}} of {{cpuTotal}}</span></div>
-                                </div>
-                            </div>
-                            <cluster-overview-chart
-                                :result-type="cpuChartResultType"
-                                :show-loading="cpuChartLoading"
-                                :chart-type="'cpu'"
-                                :data="cpuChartData">
-                            </cluster-overview-chart>
-                        </div>
-
-                        <div class="chart-box top">
-                            <div class="info">
-                                <div class="left">
-                                    {{$t('内存使用率')}}
-                                </div>
-                                <div class="right">
-                                    <div><span>{{memUsagePercent}}</span><sup>%</sup></div>
-                                    <div class="memory"><span>{{memUsage}} of {{memTotal}}</span></div>
-                                </div>
-                            </div>
-                            <cluster-overview-chart
-                                :result-type="memChartResultType"
-                                :show-loading="memChartLoading"
-                                :chart-type="'mem'"
-                                :data="memChartData">
-                            </cluster-overview-chart>
-                        </div>
-
-                        <div class="chart-box top">
-                            <div class="info">
-                                <div class="left">{{$t('磁盘使用率')}}</div>
-                                <div class="right">
-                                    <div><span>{{diskUsagePercent}}</span><sup>%</sup></div>
-                                    <div class="disk"><span>{{diskUsage}} of {{diskTotal}}</span></div>
-                                </div>
-                            </div>
-                            <cluster-overview-chart
-                                :result-type="diskChartResultType"
-                                :show-loading="diskChartLoading"
-                                :chart-type="'disk'"
-                                :data="diskChartData">
-                            </cluster-overview-chart>
-                        </div>
-                    </div>
-
-                    <div class="biz-cluster-overview-chart">
-                        <div class="chart-box bottom">
-                            <div class="info">
-                                <div class="left">{{$t('节点')}}</div>
-                                <div class="right">
-                                    <div>
-                                        <i class="bcs-icon bcs-icon-circle"></i>
-                                        <span>{{$t('使用中')}}</span>
-                                        <span>{{nodeActived}}</span>
-                                    </div>
-                                    <div>
-                                        <i class="bcs-icon bcs-icon-circle"></i>
-                                        <span>{{$t('未使用')}}</span>
-                                        <span>{{nodeDisabled}}</span>
-                                    </div>
-                                </div>
-                            </div>
-                            <Ring :percent="nodePercent" :size="210" :text="'none'"
-                                :stroke-width="10" :fill-width="10" :fill-color="'#3ede78'"
-                                :percent-change-handler="percentChangeHandler('node')"
-                                :ext-cls="'biz-cluster-ring'">
-                                <div slot="text" class="ring-text-inner">
-                                    <div class="number">{{nodePercentStr}}</div>
-                                </div>
-                            </Ring>
-                        </div>
-
-                        <div class="chart-box bottom">
-                            <div class="info">
-                                <div class="left">{{$t('命名空间')}}</div>
-                                <div class="right">
-                                    <div>
-                                        <i class="bcs-icon bcs-icon-circle"></i>
-                                        <span>{{$t('已使用')}}</span>
-                                        <span>{{namespaceActived}}</span>
-                                    </div>
-                                    <div>
-                                        <i class="bcs-icon bcs-icon-circle"></i>
-                                        <span>{{$t('总量')}}</span>
-                                        <span>{{namespaceTotal}}</span>
-                                    </div>
-                                </div>
-                            </div>
-                            <Ring :percent="namespacePercent" :size="210" :text="'none'"
-                                :stroke-width="10" :fill-width="10" :fill-color="'#3ede78'"
-                                :percent-change-handler="percentChangeHandler('namespace')"
-                                :ext-cls="'biz-cluster-ring'">
-                                <div slot="text" class="ring-text-inner">
-                                    <div class="number">{{namespacePercentStr}}</div>
-                                </div>
-                            </Ring>
-                        </div>
-
-                        <div class="chart-box bottom">
-                            <div class="info">
-                                <div class="left">{{$t('集群IP')}}</div>
-                                <div class="right">
-                                    <div>
-                                        <i class="bcs-icon bcs-icon-circle"></i>
-                                        <span>{{$t('可用')}}</span>
-                                        <span>{{ipTotal}}</span>
-                                    </div>
-                                    <div>
-                                        <i class="bcs-icon bcs-icon-circle"></i>
-                                        <span>{{$t('已使用')}}</span>
-                                        <span>{{ipUsed}}</span>
-                                    </div>
-                                </div>
-                            </div>
-                            <Ring :percent="ipPercent" :size="210" :text="'none'"
-                                :stroke-width="10" :fill-width="10" :fill-color="'#3ede78'"
-                                :percent-change-handler="percentChangeHandler('ip')"
-                                :ext-cls="'biz-cluster-ring'">
-                                <div slot="text" class="ring-text-inner">
-                                    <div class="number">{{ipPercentStr}}</div>
-                                </div>
-                            </Ring>
-                        </div>
-                    </div>
+  <div>
+    <div class="biz-cluster-overview" v-bkloading="{ isLoading: showLoading }">
+      <app-exception
+        v-if="exceptionCode && !showLoading"
+        :type="exceptionCode.code"
+        :text="exceptionCode.msg">
+      </app-exception>
+      <div v-if="!exceptionCode && !showLoading" class="biz-cluster-overview-wrapper">
+        <div class="biz-cluster-tab-content">
+          <div class="biz-cluster-overview-chart">
+            <div class="chart-box top">
+              <div class="info">
+                <div class="left">
+                  {{$t('CPU使用率')}}
                 </div>
+                <div class="right">
+                  <div><span>{{cpuUsagePercent}}</span><sup>%</sup></div>
+                  <div class="cpu"><span>{{cpuUsage}} of {{cpuTotal}}</span></div>
+                </div>
+              </div>
+              <cluster-overview-chart
+                :result-type="cpuChartResultType"
+                :show-loading="cpuChartLoading"
+                :chart-type="'cpu'"
+                :data="cpuChartData">
+              </cluster-overview-chart>
             </div>
+
+            <div class="chart-box top">
+              <div class="info">
+                <div class="left">
+                  {{$t('内存使用率')}}
+                </div>
+                <div class="right">
+                  <div><span>{{memUsagePercent}}</span><sup>%</sup></div>
+                  <div class="memory"><span>{{memUsage}} of {{memTotal}}</span></div>
+                </div>
+              </div>
+              <cluster-overview-chart
+                :result-type="memChartResultType"
+                :show-loading="memChartLoading"
+                :chart-type="'mem'"
+                :data="memChartData">
+              </cluster-overview-chart>
+            </div>
+
+            <div class="chart-box top">
+              <div class="info">
+                <div class="left">{{$t('磁盘使用率')}}</div>
+                <div class="right">
+                  <div><span>{{diskUsagePercent}}</span><sup>%</sup></div>
+                  <div class="disk"><span>{{diskUsage}} of {{diskTotal}}</span></div>
+                </div>
+              </div>
+              <cluster-overview-chart
+                :result-type="diskChartResultType"
+                :show-loading="diskChartLoading"
+                :chart-type="'disk'"
+                :data="diskChartData">
+              </cluster-overview-chart>
+            </div>
+          </div>
+
+          <div class="biz-cluster-overview-chart">
+            <div class="chart-box bottom">
+              <div class="info">
+                <div class="left">{{$t('节点')}}</div>
+                <div class="right">
+                  <div>
+                    <i class="bcs-icon bcs-icon-circle"></i>
+                    <span>{{$t('使用中')}}</span>
+                    <span>{{nodeActived}}</span>
+                  </div>
+                  <div>
+                    <i class="bcs-icon bcs-icon-circle"></i>
+                    <span>{{$t('未使用')}}</span>
+                    <span>{{nodeDisabled}}</span>
+                  </div>
+                </div>
+              </div>
+              <Ring
+                :percent="nodePercent" :size="210" :text="'none'"
+                :stroke-width="10" :fill-width="10" :fill-color="'#3ede78'"
+                :percent-change-handler="percentChangeHandler('node')"
+                :ext-cls="'biz-cluster-ring'">
+                <div slot="text" class="ring-text-inner">
+                  <div class="number">{{nodePercentStr}}</div>
+                </div>
+              </Ring>
+            </div>
+
+            <div class="chart-box bottom">
+              <div class="info">
+                <div class="left">{{$t('命名空间')}}</div>
+                <div class="right">
+                  <div>
+                    <i class="bcs-icon bcs-icon-circle"></i>
+                    <span>{{$t('已使用')}}</span>
+                    <span>{{namespaceActived}}</span>
+                  </div>
+                  <div>
+                    <i class="bcs-icon bcs-icon-circle"></i>
+                    <span>{{$t('总量')}}</span>
+                    <span>{{namespaceTotal}}</span>
+                  </div>
+                </div>
+              </div>
+              <Ring
+                :percent="namespacePercent" :size="210" :text="'none'"
+                :stroke-width="10" :fill-width="10" :fill-color="'#3ede78'"
+                :percent-change-handler="percentChangeHandler('namespace')"
+                :ext-cls="'biz-cluster-ring'">
+                <div slot="text" class="ring-text-inner">
+                  <div class="number">{{namespacePercentStr}}</div>
+                </div>
+              </Ring>
+            </div>
+
+            <div class="chart-box bottom">
+              <div class="info">
+                <div class="left">{{$t('集群IP')}}</div>
+                <div class="right">
+                  <div>
+                    <i class="bcs-icon bcs-icon-circle"></i>
+                    <span>{{$t('可用')}}</span>
+                    <span>{{ipTotal}}</span>
+                  </div>
+                  <div>
+                    <i class="bcs-icon bcs-icon-circle"></i>
+                    <span>{{$t('已使用')}}</span>
+                    <span>{{ipUsed}}</span>
+                  </div>
+                </div>
+              </div>
+              <Ring
+                :percent="ipPercent" :size="210" :text="'none'"
+                :stroke-width="10" :fill-width="10" :fill-color="'#3ede78'"
+                :percent-change-handler="percentChangeHandler('ip')"
+                :ext-cls="'biz-cluster-ring'">
+                <div slot="text" class="ring-text-inner">
+                  <div class="number">{{ipPercentStr}}</div>
+                </div>
+              </Ring>
+            </div>
+          </div>
         </div>
+      </div>
     </div>
+  </div>
 </template>
 
 <script>
-    import Ring from '@/components/ring'
-    import { catchErrorHandler, formatBytes } from '@/common/util'
+import Ring from '@/components/ring';
+import { catchErrorHandler, formatBytes } from '@/common/util';
 
-    import ClusterOverviewChart from './cluster-overview-chart'
+import ClusterOverviewChart from './cluster-overview-chart';
 
-    export default {
-        components: {
-            Ring,
-            ClusterOverviewChart
-        },
-        data () {
-            return {
-                nodePercent: 0,
-                nodePercentStr: 0,
-                nodeActived: '',
-                nodeDisabled: '',
-                namespacePercent: 0,
-                namespacePercentStr: 0,
-                namespaceActived: '',
-                namespaceTotal: '',
-                ipPercent: 0,
-                ipPercentStr: 0,
-                ipUsed: '',
-                ipTotal: '',
-                bkMessageInstance: null,
-                curClusterInPage: {},
-                exceptionCode: null,
-                showLoading: false,
+export default {
+  name: 'NodeOverview',
+  components: {
+    Ring,
+    ClusterOverviewChart,
+  },
+  data() {
+    return {
+      nodePercent: 0,
+      nodePercentStr: 0,
+      nodeActived: '',
+      nodeDisabled: '',
+      namespacePercent: 0,
+      namespacePercentStr: 0,
+      namespaceActived: '',
+      namespaceTotal: '',
+      ipPercent: 0,
+      ipPercentStr: 0,
+      ipUsed: '',
+      ipTotal: '',
+      bkMessageInstance: null,
+      curClusterInPage: {},
+      exceptionCode: null,
+      showLoading: false,
 
-                cpuUsagePercent: 0,
-                cpuUsage: 0,
-                cpuTotal: 0,
-                memUsagePercent: 0,
-                memUsage: 0,
-                memTotal: 0,
-                diskUsagePercent: 0,
-                diskUsage: 0,
-                diskTotal: 0,
-                cpuChartData: [],
-                cpuChartLoading: true,
-                cpuChartResultType: 'matrix',
-                memChartData: [],
-                memChartLoading: true,
-                memChartResultType: 'matrix',
-                diskChartData: [],
-                diskChartLoading: true,
-                diskChartResultType: 'matrix'
-            }
-        },
-        computed: {
-            projectId () {
-                return this.$route.params.projectId
-            },
-            projectCode () {
-                return this.$route.params.projectCode
-            },
-            clusterId () {
-                return this.$route.params.clusterId
-            },
-            curClusterId () {
-                return this.$store.state.curClusterId
-            },
-            curCluster () {
-                const data = this.$store.state.cluster.clusterList.find(item => item.cluster_id === this.clusterId) || {}
-                this.curClusterInPage = Object.assign({}, data)
-                return JSON.parse(JSON.stringify(data))
-            },
-            isEn () {
-                return this.$store.state.isEn
-            },
-            curProject () {
-                return this.$store.state.curProject
-            }
-        },
-        async mounted () {
-            if (this.curCluster.project_id && this.curCluster.cluster_id) {
-                await this.fetchClusterOverview()
-                this.fetchClusterMetrics()
-                this.prepareChartData()
-            }
-        },
-        destroyed () {
-        },
-        methods: {
-            /**
+      cpuUsagePercent: 0,
+      cpuUsage: 0,
+      cpuTotal: 0,
+      memUsagePercent: 0,
+      memUsage: 0,
+      memTotal: 0,
+      diskUsagePercent: 0,
+      diskUsage: 0,
+      diskTotal: 0,
+      cpuChartData: [],
+      cpuChartLoading: true,
+      cpuChartResultType: 'matrix',
+      memChartData: [],
+      memChartLoading: true,
+      memChartResultType: 'matrix',
+      diskChartData: [],
+      diskChartLoading: true,
+      diskChartResultType: 'matrix',
+    };
+  },
+  computed: {
+    projectId() {
+      return this.$route.params.projectId;
+    },
+    projectCode() {
+      return this.$route.params.projectCode;
+    },
+    clusterId() {
+      return this.$route.params.clusterId;
+    },
+    curClusterId() {
+      return this.$store.state.curClusterId;
+    },
+    curCluster() {
+      const data = this.$store.state.cluster.clusterList.find(item => item.cluster_id === this.clusterId) || {};
+      this.curClusterInPage = Object.assign({}, data);
+      return JSON.parse(JSON.stringify(data));
+    },
+    isEn() {
+      return this.$store.state.isEn;
+    },
+    curProject() {
+      return this.$store.state.curProject;
+    },
+  },
+  async mounted() {
+    if (this.curCluster.project_id && this.curCluster.cluster_id) {
+      await this.fetchClusterOverview();
+      this.fetchClusterMetrics();
+      this.prepareChartData();
+    }
+  },
+  destroyed() {
+  },
+  methods: {
+    /**
              * 集群使用率概览
              */
-            async fetchClusterOverview () {
-                if (!this.curCluster.project_id || !this.curCluster.cluster_id) return
+    async fetchClusterOverview() {
+      if (!this.curCluster.project_id || !this.curCluster.cluster_id) return;
 
-                try {
-                    const res = await this.$store.dispatch('cluster/clusterOverview', {
-                        projectId: this.curCluster.project_id,
-                        clusterId: this.curCluster.cluster_id
-                    })
-                    const data = res.data || {}
-                    const cpu = data.cpu_usage || {}
-                    this.cpuUsage = parseFloat(cpu.used || 0).toFixed(2)
-                    this.cpuTotal = parseFloat(cpu.total || 0).toFixed(2)
-                    this.cpuUsagePercent = this.conversionPercentUsed(cpu.used, cpu.total)
+      try {
+        const data = await this.$store.dispatch('metric/clusterOverview', {
+          $projectCode: this.projectCode,
+          $clusterId: this.curCluster.cluster_id,
+        });
+        const cpu = data.cpu_usage || {};
+        this.cpuUsage = parseFloat(cpu.used || 0).toFixed(2);
+        this.cpuTotal = parseFloat(cpu.total || 0).toFixed(2);
+        this.cpuUsagePercent = this.conversionPercentUsed(cpu.used, cpu.total);
 
-                    const mem = data.memory_usage || {}
-                    this.memUsage = formatBytes(mem.used_bytes || 0)
-                    this.memTotal = formatBytes(mem.total_bytes || 0)
-                    this.memUsagePercent = this.conversionPercentUsed(mem.used_bytes, mem.total_bytes)
+        const mem = data.memory_usage || {};
+        this.memUsage = formatBytes(mem.used_bytes || 0);
+        this.memTotal = formatBytes(mem.total_bytes || 0);
+        this.memUsagePercent = this.conversionPercentUsed(mem.used_bytes, mem.total_bytes);
 
-                    const disk = data.disk_usage || {}
-                    this.diskUsage = formatBytes(disk.used_bytes || 0)
-                    this.diskTotal = formatBytes(disk.total_bytes || 0)
-                    this.diskUsagePercent = this.conversionPercentUsed(disk.used_bytes, disk.total_bytes)
-                } catch (e) {
-                    catchErrorHandler(e, this)
-                }
-            },
+        const disk = data.disk_usage || {};
+        this.diskUsage = formatBytes(disk.used_bytes || 0);
+        this.diskTotal = formatBytes(disk.total_bytes || 0);
+        this.diskUsagePercent = this.conversionPercentUsed(disk.used_bytes, disk.total_bytes);
+      } catch (e) {
+        catchErrorHandler(e, this);
+      }
+    },
 
-            /**
+    /**
              * 转换百分比
              *
              * @param {number} used 使用量
@@ -271,19 +274,19 @@
              *
              * @return {number} 百分比数字
              */
-            conversionPercentUsed (used, total) {
-                if (!total || parseFloat(total) === 0) {
-                    return 0
-                }
+    conversionPercentUsed(used, total) {
+      if (!total || parseFloat(total) === 0) {
+        return 0;
+      }
 
-                let ret = parseFloat(used) / parseFloat(total) * 100
-                if (ret !== 0 && ret !== 100) {
-                    ret = ret.toFixed(2)
-                }
-                return ret
-            },
+      let ret = parseFloat(used) / parseFloat(total) * 100;
+      if (ret !== 0 && ret !== 100) {
+        ret = ret.toFixed(2);
+      }
+      return ret;
+    },
 
-            /**
+    /**
              * 转换百分比
              *
              * @param {number} remain 剩下的数量
@@ -291,183 +294,183 @@
              *
              * @return {number} 百分比数字
              */
-            conversionPercent (remain, total) {
-                if (!remain || !total) {
-                    return 0
-                }
-                return total === 0 ? 0 : ((total - remain) / total * 100).toFixed(2)
-            },
+    conversionPercent(remain, total) {
+      if (!remain || !total) {
+        return 0;
+      }
+      return total === 0 ? 0 : ((total - remain) / total * 100).toFixed(2);
+    },
 
-            /**
+    /**
              * 构建图表数据
              */
-            async prepareChartData () {
-                if (!this.curCluster.project_id || !this.curCluster.cluster_id) return
-                try {
-                    this.cpuChartLoading = true
-                    this.memChartLoading = true
-                    this.diskChartLoading = true
-                    const promises = [
-                        this.$store.dispatch('cluster/clusterCpuUsage', {
-                            projectId: this.curCluster.project_id, // 这里用 this.curCluster 来获取是为了使计算属性生效
-                            clusterId: this.curCluster.cluster_id
-                        }),
-                        this.$store.dispatch('cluster/clusterMemUsage', {
-                            projectId: this.curCluster.project_id, // 这里用 this.curCluster 来获取是为了使计算属性生效
-                            clusterId: this.curCluster.cluster_id
-                        }),
-                        this.$store.dispatch('cluster/clusterDiskUsage', {
-                            projectId: this.curCluster.project_id, // 这里用 this.curCluster 来获取是为了使计算属性生效
-                            clusterId: this.curCluster.cluster_id
-                        })
-                    ]
+    async prepareChartData() {
+      if (!this.curCluster.project_id || !this.curCluster.cluster_id) return;
+      try {
+        this.cpuChartLoading = true;
+        this.memChartLoading = true;
+        this.diskChartLoading = true;
+        const promises = [
+          this.$store.dispatch('metric/clusterCpuUsage', {
+            $projectCode: this.projectCode, // 这里用 this.curCluster 来获取是为了使计算属性生效
+            $clusterId: this.curCluster.cluster_id,
+          }),
+          this.$store.dispatch('metric/clusterMemoryUsage', {
+            $projectCode: this.projectCode, // 这里用 this.curCluster 来获取是为了使计算属性生效
+            $clusterId: this.curCluster.cluster_id,
+          }),
+          this.$store.dispatch('metric/clusterDiskUsage', {
+            $projectCode: this.projectCode, // 这里用 this.curCluster 来获取是为了使计算属性生效
+            $clusterId: this.curCluster.cluster_id,
+          }),
+        ];
 
-                    const res = await Promise.all(promises)
-                    // Promise.all 返回的顺序与 promises 数组的顺序是一致的
-                    // 如果为空，那么在 res.data.result 这里就是空数组
-                    // 如果不是空数组，那么 res.data.result 里的任何都是有数据的，所以不判断里面的了
-                    this.cpuChartData.splice(0, this.cpuChartData.length, ...(res[0].data.result || []))
-                    this.cpuChartResultType = res[0].data.resultType
-                    this.cpuChartLoading = false
+        const res = await Promise.all(promises);
+        // Promise.all 返回的顺序与 promises 数组的顺序是一致的
+        // 如果为空，那么在 res.data.result 这里就是空数组
+        // 如果不是空数组，那么 res.data.result 里的任何都是有数据的，所以不判断里面的了
+        this.cpuChartData.splice(0, this.cpuChartData.length, ...(res[0].result || []));
+        this.cpuChartResultType = res[0].resultType;
+        this.cpuChartLoading = false;
 
-                    this.memChartData.splice(0, this.memChartData.length, ...(res[1].data.result || []))
-                    this.memChartResultType = res[1].data.resultType
-                    this.memChartLoading = false
+        this.memChartData.splice(0, this.memChartData.length, ...(res[1].result || []));
+        this.memChartResultType = res[1].resultType;
+        this.memChartLoading = false;
 
-                    this.diskChartData.splice(0, this.diskChartData.length, ...(res[2].data.result || []))
-                    this.diskChartResultType = res[2].data.resultType
-                    this.diskChartLoading = false
-                } catch (e) {
-                    catchErrorHandler(e, this)
-                }
-            },
+        this.diskChartData.splice(0, this.diskChartData.length, ...(res[2].result || []));
+        this.diskChartResultType = res[2].resultType;
+        this.diskChartLoading = false;
+      } catch (e) {
+        catchErrorHandler(e, this);
+      }
+    },
 
-            /**
+    /**
              * 获取下面三个圈的数据
              */
-            async fetchClusterMetrics () {
-                if (!this.curCluster.project_id || !this.curCluster.cluster_id) return
+    async fetchClusterMetrics() {
+      if (!this.curCluster.project_id || !this.curCluster.cluster_id) return;
 
-                try {
-                    const res = await this.$store.dispatch('cluster/getClusterMetrics', {
-                        projectId: this.curCluster.project_id,
-                        clusterId: this.curCluster.cluster_id
-                    })
+      try {
+        const res = await this.$store.dispatch('cluster/getClusterMetrics', {
+          projectId: this.curCluster.project_id,
+          clusterId: this.curCluster.cluster_id,
+        });
 
-                    const nodeActived = res.data.node.actived || 0
-                    const nodeTotal = res.data.node.total || 0
-                    if (nodeTotal === 0) {
-                        this.nodePercent = 0
-                        this.nodePercentStr = 0
-                    } else {
-                        const nodePercent = nodeActived * 100 / nodeTotal
-                        this.nodePercent = nodePercent
-                        this.nodePercentStr = nodePercent === 100 ? '100%' : nodePercent.toFixed(1) + '%'
-                    }
-                    this.nodeActived = this.isEn ? `${nodeActived} set` : `${nodeActived}台`
-                    this.nodeDisabled = this.isEn ? `${res.data.node.disabled || 0} set` : `${res.data.node.disabled || 0}台`
+        const nodeActived = res.data.node.actived || 0;
+        const nodeTotal = res.data.node.total || 0;
+        if (nodeTotal === 0) {
+          this.nodePercent = 0;
+          this.nodePercentStr = 0;
+        } else {
+          const nodePercent = nodeActived * 100 / nodeTotal;
+          this.nodePercent = nodePercent;
+          this.nodePercentStr = nodePercent === 100 ? '100%' : `${nodePercent.toFixed(1)}%`;
+        }
+        this.nodeActived = this.isEn ? `${nodeActived} set` : `${nodeActived}台`;
+        this.nodeDisabled = this.isEn ? `${res.data.node.disabled || 0} set` : `${res.data.node.disabled || 0}台`;
 
-                    const namespaceActived = res.data.namespace.actived || 0
-                    const namespaceTotal = res.data.namespace.total || 0
-                    if (namespaceTotal === 0) {
-                        this.namespacePercent = 0
-                        this.namespacePercentStr = 0
-                    } else {
-                        const namespacePercent = namespaceActived * 100 / namespaceTotal
-                        this.namespacePercent = namespacePercent
-                        this.namespacePercentStr = namespacePercent === 100 ? '100%' : namespacePercent.toFixed(1) + '%'
-                    }
-                    this.namespaceActived = this.isEn ? namespaceActived : `${namespaceActived}个`
-                    this.namespaceTotal = this.isEn ? namespaceTotal : `${namespaceTotal}个`
+        const namespaceActived = res.data.namespace.actived || 0;
+        const namespaceTotal = res.data.namespace.total || 0;
+        if (namespaceTotal === 0) {
+          this.namespacePercent = 0;
+          this.namespacePercentStr = 0;
+        } else {
+          const namespacePercent = namespaceActived * 100 / namespaceTotal;
+          this.namespacePercent = namespacePercent;
+          this.namespacePercentStr = namespacePercent === 100 ? '100%' : `${namespacePercent.toFixed(1)}%`;
+        }
+        this.namespaceActived = this.isEn ? namespaceActived : `${namespaceActived}个`;
+        this.namespaceTotal = this.isEn ? namespaceTotal : `${namespaceTotal}个`;
 
-                    const ipUsed = res.data.ip_resource.used || 0
-                    const ipTotal = res.data.ip_resource.total || 0
-                    if (ipTotal === 0) {
-                        this.ipPercent = 0
-                        this.ipPercentStr = 0
-                    } else {
-                        const ipPercent = ipUsed * 100 / ipTotal
-                        this.ipPercent = ipPercent
-                        this.ipPercentStr = ipPercent === 100 ? '100%' : ipPercent.toFixed(1) + '%'
-                    }
-                    this.ipUsed = this.isEn ? ipUsed : `${ipUsed}个`
-                    this.ipTotal = this.isEn ? ipTotal : `${ipTotal}个`
-                } catch (e) {
-                    catchErrorHandler(e, this)
-                }
-            },
+        const ipUsed = res.data.ip_resource.used || 0;
+        const ipTotal = res.data.ip_resource.total || 0;
+        if (ipTotal === 0) {
+          this.ipPercent = 0;
+          this.ipPercentStr = 0;
+        } else {
+          const ipPercent = ipUsed * 100 / ipTotal;
+          this.ipPercent = ipPercent;
+          this.ipPercentStr = ipPercent === 100 ? '100%' : `${ipPercent.toFixed(1)}%`;
+        }
+        this.ipUsed = this.isEn ? ipUsed : `${ipUsed}个`;
+        this.ipTotal = this.isEn ? ipTotal : `${ipTotal}个`;
+      } catch (e) {
+        catchErrorHandler(e, this);
+      }
+    },
 
-            /**
+    /**
              * 刷新当前 router
              */
-            refreshCurRouter () {
-                typeof this.$parent.refreshRouterView === 'function' && this.$parent.refreshRouterView()
-            },
+    refreshCurRouter() {
+      typeof this.$parent.refreshRouterView === 'function' && this.$parent.refreshRouterView();
+    },
 
-            /**
+    /**
              * 返回集群首页列表
              */
-            goIndex () {
-                const { params } = this.$route
-                if (params.backTarget) {
-                    this.$router.push({
-                        name: params.backTarget,
-                        params: {
-                            projectId: this.projectId,
-                            projectCode: this.projectCode
-                        }
-                    })
-                } else {
-                    this.$router.push({
-                        name: 'clusterMain',
-                        params: {
-                            projectId: this.projectId,
-                            projectCode: this.projectCode
-                        }
-                    })
-                }
-            },
+    goIndex() {
+      const { params } = this.$route;
+      if (params.backTarget) {
+        this.$router.push({
+          name: params.backTarget,
+          params: {
+            projectId: this.projectId,
+            projectCode: this.projectCode,
+          },
+        });
+      } else {
+        this.$router.push({
+          name: 'clusterMain',
+          params: {
+            projectId: this.projectId,
+            projectCode: this.projectCode,
+          },
+        });
+      }
+    },
 
-            /**
+    /**
              * 切换到节点管理
              */
-            goNode () {
-                this.$router.push({
-                    name: 'clusterNode',
-                    params: {
-                        projectId: this.projectId,
-                        projectCode: this.projectCode,
-                        clusterId: this.clusterId,
-                        backTarget: this.$route.params.backTarget
-                    }
-                })
-            },
+    goNode() {
+      this.$router.push({
+        name: 'clusterNode',
+        params: {
+          projectId: this.projectId,
+          projectCode: this.projectCode,
+          clusterId: this.clusterId,
+          backTarget: this.$route.params.backTarget,
+        },
+      });
+    },
 
-            /**
+    /**
              * ring 组件百分比变化回调函数
              *
              * @param {string} indicator 标识当前是哪个 ring 组件
              */
-            percentChangeHandler (indicator) {
-                return percent => (this[`${indicator}PercentStr`] = `${percent}%`)
-            },
+    percentChangeHandler(indicator) {
+      return percent => (this[`${indicator}PercentStr`] = `${percent}%`);
+    },
 
-            /**
+    /**
              * 切换到集群信息列表
              */
-            goInfo () {
-                this.$router.push({
-                    name: 'clusterInfo',
-                    params: {
-                        projectId: this.projectId,
-                        projectCode: this.projectCode,
-                        clusterId: this.clusterId,
-                        backTarget: this.$route.params.backTarget
-                    }
-                })
-            }
-        }
-    }
+    goInfo() {
+      this.$router.push({
+        name: 'clusterInfo',
+        params: {
+          projectId: this.projectId,
+          projectCode: this.projectCode,
+          clusterId: this.clusterId,
+          backTarget: this.$route.params.backTarget,
+        },
+      });
+    },
+  },
+};
 </script>
 <style scoped lang="postcss">
     @import '@/css/variable.css';

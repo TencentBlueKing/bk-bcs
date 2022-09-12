@@ -30,13 +30,15 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
+// MeshHandler xxx
 type MeshHandler struct {
-	//config
+	// config
 	conf config.Config
-	//kubeclient
+	// kubeclient
 	client client.Client
 }
 
+// NewMeshHandler xxx
 func NewMeshHandler(conf config.Config, client client.Client) *MeshHandler {
 	m := &MeshHandler{
 		conf:   conf,
@@ -46,10 +48,11 @@ func NewMeshHandler(conf config.Config, client client.Client) *MeshHandler {
 }
 
 // CreateMeshCluster is a single request handler called via client.Call or the generated client code
-func (e *MeshHandler) CreateMeshCluster(ctx context.Context, req *meshmanager.CreateMeshClusterReq, resp *meshmanager.CreateMeshClusterResp) error {
+func (e *MeshHandler) CreateMeshCluster(ctx context.Context, req *meshmanager.CreateMeshClusterReq,
+	resp *meshmanager.CreateMeshClusterResp) error {
 	klog.Infof("Received MeshManager.CreateMeshCluster request(%s)", req.String())
 	resp.ErrCode = meshmanager.ErrCode_ERROR_OK
-	//check MeshCluster whether exist
+	// check MeshCluster whether exist
 	mCluster, err := e.getMeshClusterByClusterID(req.Clusterid)
 	if err != nil {
 		resp.ErrCode = meshmanager.ErrCode_ERROR_MESH_CLUSTER_FAILED
@@ -90,7 +93,8 @@ func (e *MeshHandler) CreateMeshCluster(ctx context.Context, req *meshmanager.Cr
 }
 
 // DeleteMeshCluster is a server side stream handler called via client.DeleteMeshCluster or the generated client code
-func (e *MeshHandler) DeleteMeshCluster(ctx context.Context, req *meshmanager.DeleteMeshClusterReq, resp *meshmanager.DeleteMeshClusterResp) error {
+func (e *MeshHandler) DeleteMeshCluster(ctx context.Context, req *meshmanager.DeleteMeshClusterReq,
+	resp *meshmanager.DeleteMeshClusterResp) error {
 	klog.Infof("Received meshmanager.DeleteMeshCluster request(%s)", req.String())
 	resp.ErrCode = meshmanager.ErrCode_ERROR_OK
 	mCluster, err := e.getMeshClusterByClusterID(req.Clusterid)
@@ -116,7 +120,8 @@ func (e *MeshHandler) DeleteMeshCluster(ctx context.Context, req *meshmanager.De
 }
 
 // ListMeshCluster is a bidirectional stream handler called via client.ListMeshCluster or the generated client code
-func (e *MeshHandler) ListMeshCluster(ctx context.Context, req *meshmanager.ListMeshClusterReq, resp *meshmanager.ListMeshClusterResp) error {
+func (e *MeshHandler) ListMeshCluster(ctx context.Context, req *meshmanager.ListMeshClusterReq,
+	resp *meshmanager.ListMeshClusterResp) error {
 	klog.Infof("Received meshmanager.ListMeshCluster request with(%s)", req.String())
 	resp.ErrCode = meshmanager.ErrCode_ERROR_OK
 	resp.MeshClusters = make([]*meshmanager.MeshCluster, 0)
@@ -170,7 +175,8 @@ func (e *MeshHandler) getMeshClusterByClusterID(clusterId string) (*meshv1.MeshC
 	return nil, nil
 }
 
-//list all meshclusters
+// listMeshClusters xxx
+// list all meshclusters
 func (e *MeshHandler) listMeshClusters() (*meshv1.MeshClusterList, error) {
 	mClusterList := &meshv1.MeshClusterList{}
 	err := e.client.List(context.TODO(), mClusterList)

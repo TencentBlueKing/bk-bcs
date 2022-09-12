@@ -19,11 +19,11 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/component/project"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/release"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/repo"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/store"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/store/entity"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/utils/contextx"
 	helmmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/proto/bcs-helm-manager"
 )
 
@@ -119,11 +119,6 @@ func (u *UpgradeReleaseAction) upgrade() error {
 			Content: []byte(v),
 		})
 	}
-	patchProjectID, err := project.GetProjectIDByCode(username, projectID)
-	if err != nil {
-		blog.Errorf("get project id error, projectCode: %s, err: %s", projectID, err.Error())
-		patchProjectID = ""
-	}
 	// 执行upgrade操作
 	result, err := u.releaseHandler.Cluster(clusterID).Upgrade(
 		u.ctx,
@@ -137,7 +132,7 @@ func (u *UpgradeReleaseAction) upgrade() error {
 			Args:   u.req.GetArgs(),
 			Values: vls,
 			PatchTemplateValues: map[string]string{
-				common.PTKProjectID: patchProjectID,
+				common.PTKProjectID: contextx.GetProjectIDFromCtx(u.ctx),
 				common.PTKClusterID: clusterID,
 				common.PTKNamespace: releaseNamespace,
 				common.PTKUpdator:   username,

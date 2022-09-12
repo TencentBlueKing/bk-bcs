@@ -18,17 +18,24 @@ func NewMetricController(conf Config, healthFunc HealthFunc, metrics ...*MetricC
 	return newMetricHandler(conf, healthFunc, metrics...)
 }
 
+// RunModeType xxx
 type RunModeType string
 
+// RoleType xxx
 // used when your module running with Master_Slave_Mode mode
 type RoleType string
 
 const (
-	Master_Slave_Mode  RunModeType = "master-slave"
+	// Master_Slave_Mode xxx
+	Master_Slave_Mode RunModeType = "master-slave"
+	// Master_Master_Mode xxx
 	Master_Master_Mode RunModeType = "master-master"
-	MasterRole         RoleType    = "master"
-	SlaveRole          RoleType    = "slave"
-	UnknownRole        RoleType    = "unknown"
+	// MasterRole xxx
+	MasterRole RoleType = "master"
+	// SlaveRole xxx
+	SlaveRole RoleType = "slave"
+	// UnknownRole xxx
+	UnknownRole RoleType = "unknown"
 )
 
 // Config xxx

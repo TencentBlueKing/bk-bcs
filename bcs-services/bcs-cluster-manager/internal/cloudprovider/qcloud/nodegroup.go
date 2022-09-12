@@ -14,6 +14,7 @@
 package qcloud
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 	"sync"
@@ -23,7 +24,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/api"
-	intercommon "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 
 	as "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/as/v20180419"
@@ -35,7 +35,7 @@ var groupMgr sync.Once
 
 func init() {
 	groupMgr.Do(func() {
-		//init Node
+		// init Node
 		cloudprovider.InitNodeGroupManager(cloudName, &NodeGroup{})
 	})
 }
@@ -121,10 +121,17 @@ func (ng *NodeGroup) UpdateNodeGroup(group *proto.NodeGroup, opt *cloudprovider.
 	if err := asCli.UpgradeLaunchConfiguration(ng.generateUpgradeLaunchConfigurationInput(group)); err != nil {
 		return err
 	}
+
+	// update imageName
+	if err := ng.updateImageInfo(group); err != nil {
+		return err
+	}
+
 	return nil
 }
 
-func (ng *NodeGroup) generateModifyClusterNodePoolInput(group *proto.NodeGroup, clusterID string) *tke.ModifyClusterNodePoolRequest {
+func (ng *NodeGroup) generateModifyClusterNodePoolInput(group *proto.NodeGroup,
+	clusterID string) *tke.ModifyClusterNodePoolRequest {
 	// modify nodegroup
 	req := tke.NewModifyClusterNodePoolRequest()
 	req.ClusterId = &clusterID
@@ -140,13 +147,14 @@ func (ng *NodeGroup) generateModifyClusterNodePoolInput(group *proto.NodeGroup, 
 	if group.NodeTemplate != nil {
 		req.Unschedulable = common.Int64Ptr(int64(group.NodeTemplate.UnSchedulable))
 	}
-	if group.LaunchTemplate != nil && group.LaunchTemplate.ImageInfo != nil && group.LaunchTemplate.ImageInfo.ImageID != "" {
+	if group.LaunchTemplate != nil && group.LaunchTemplate.ImageInfo != nil && group.LaunchTemplate.ImageInfo.ImageID !=
+		"" {
 		req.OsName = &group.LaunchTemplate.ImageInfo.ImageID
 	}
 	return req
 }
 
-// 根据需要修改 asg
+// generateModifyAutoScalingGroupInput 根据需要修改 asg
 func (ng *NodeGroup) generateModifyAutoScalingGroupInput(group *proto.NodeGroup) *as.ModifyAutoScalingGroupRequest {
 	req := as.NewModifyAutoScalingGroupRequest()
 	if group.AutoScaling == nil {
@@ -165,7 +173,8 @@ func (ng *NodeGroup) generateModifyAutoScalingGroupInput(group *proto.NodeGroup)
 	return req
 }
 
-func (ng *NodeGroup) generateUpgradeLaunchConfigurationInput(group *proto.NodeGroup) *as.UpgradeLaunchConfigurationRequest {
+func (ng *NodeGroup) generateUpgradeLaunchConfigurationInput(
+	group *proto.NodeGroup) *as.UpgradeLaunchConfigurationRequest {
 	req := as.NewUpgradeLaunchConfigurationRequest()
 	if group.LaunchTemplate == nil || group.LaunchTemplate.InternetAccess == nil {
 		blog.Warnf("group launch template is nil, %v", utils.ToJSONString(group))
@@ -192,8 +201,12 @@ func (ng *NodeGroup) generateUpgradeLaunchConfigurationInput(group *proto.NodeGr
 	}
 	req.InstanceChargeType = common.StringPtr(group.LaunchTemplate.InstanceChargeType)
 	bw, _ := strconv.Atoi(group.LaunchTemplate.InternetAccess.InternetMaxBandwidth)
+	internetChargeType := group.LaunchTemplate.InternetAccess.InternetChargeType
+	if len(internetChargeType) == 0 {
+		internetChargeType = api.InternetChargeTypeTrafficPostpaidByHour
+	}
 	req.InternetAccessible = &as.InternetAccessible{
-		InternetChargeType:      common.StringPtr(group.LaunchTemplate.InternetAccess.InternetChargeType),
+		InternetChargeType:      common.StringPtr(internetChargeType),
 		InternetMaxBandwidthOut: common.Uint64Ptr(uint64(bw)),
 		PublicIpAssigned:        common.BoolPtr(group.LaunchTemplate.InternetAccess.PublicIPAssigned),
 	}
@@ -213,8 +226,27 @@ func (ng *NodeGroup) generateUpgradeLaunchConfigurationInput(group *proto.NodeGr
 	return req
 }
 
+func (ng *NodeGroup) updateImageInfo(group *proto.NodeGroup) error {
+	if group.LaunchTemplate == nil || group.LaunchTemplate.ImageInfo == nil {
+		return nil
+	}
+	imageName := group.LaunchTemplate.ImageInfo.ImageName
+	for _, v := range api.ImageOsList {
+		if v.ImageID == group.LaunchTemplate.ImageInfo.ImageID {
+			imageName = v.Alias
+			break
+		}
+	}
+	if imageName == group.LaunchTemplate.ImageInfo.ImageName {
+		return nil
+	}
+	group.LaunchTemplate.ImageInfo.ImageName = imageName
+	return cloudprovider.GetStorageModel().UpdateNodeGroup(context.TODO(), group)
+}
+
 // GetNodesInGroup get all nodes belong to NodeGroup
-func (ng *NodeGroup) GetNodesInGroup(group *proto.NodeGroup, opt *cloudprovider.CommonOption) ([]*proto.Node, error) {
+func (ng *NodeGroup) GetNodesInGroup(group *proto.NodeGroup, opt *cloudprovider.CommonOption) ([]*proto.NodeGroupNode,
+	error) {
 	if group.ClusterID == "" || group.NodeGroupID == "" {
 		blog.Errorf("nodegroup id or cluster id is empty")
 		return nil, fmt.Errorf("nodegroup id or cluster id is empty")
@@ -229,52 +261,45 @@ func (ng *NodeGroup) GetNodesInGroup(group *proto.NodeGroup, opt *cloudprovider.
 		blog.Errorf("create tke client failed, err: %s", err.Error())
 		return nil, err
 	}
-	nodePool, err := tkecli.DescribeClusterNodePoolDetail(cluster.SystemID, group.CloudNodeGroupID)
+	nodes, err := tkecli.GetNodeGroupInstances(cluster.SystemID, group.CloudNodeGroupID)
 	if err != nil {
-		blog.Errorf("DescribeClusterNodePoolDetail failed, err: %s", err.Error())
+		blog.Errorf("GetNodeGroupInstances failed, err: %s", err.Error())
 		return nil, err
 	}
-	if nodePool == nil || nodePool.AutoscalingGroupId == nil {
-		err = fmt.Errorf("GetNodesInGroup failed, node pool is empty")
-		blog.Errorf("%s", err.Error())
-		return nil, err
+	groupNodes := make([]*proto.NodeGroupNode, 0)
+	for _, v := range nodes {
+		if v.InstanceId == nil {
+			continue
+		}
+		node := transTkeNodeToNode(v)
+		node.NodeGroupID = group.NodeGroupID
+		node.ClusterID = group.ClusterID
+		groupNodes = append(groupNodes, node)
 	}
-	asCli, err := api.NewASClient(opt)
-	if err != nil {
-		blog.Errorf("create as client failed, err: %s", err.Error())
-		return nil, err
-	}
-	ins, err := asCli.DescribeAutoScalingInstances(*nodePool.AutoscalingGroupId)
-	if err != nil {
-		blog.Errorf("DescribeAutoScalingInstances failed, err: %s", err.Error())
-		return nil, err
-	}
-	insIDs := make([]string, 0)
-	for _, v := range ins {
-		insIDs = append(insIDs, *v.InstanceID)
-	}
-	if len(insIDs) == 0 {
-		return nil, nil
-	}
-	nm := api.NodeManager{}
-	nodes, err := nm.ListNodesByInstanceID(insIDs, &cloudprovider.ListNodesOption{
-		Common:       opt,
-		ClusterVPCID: group.AutoScaling.VpcID,
-	})
-	if err != nil {
-		blog.Errorf("DescribeInstances failed, err: %s", err.Error())
-		return nil, err
-	}
+	return groupNodes, nil
+}
 
-	groupNodes := make([]*proto.Node, 0)
-	for i := range nodes {
-		nodes[i].Status = intercommon.StatusRunning
-		nodes[i].ClusterID = group.ClusterID
-		nodes[i].NodeGroupID = group.NodeGroupID
-		groupNodes = append(groupNodes, nodes[i])
+func transTkeNodeToNode(node *tke.Instance) *proto.NodeGroupNode {
+	n := &proto.NodeGroupNode{NodeID: *node.InstanceId}
+	if node.InstanceRole != nil {
+		n.InstanceRole = *node.InstanceRole
 	}
-
-	return nodes, nil
+	if node.InstanceState != nil {
+		switch *node.InstanceState {
+		case "running":
+			n.Status = "RUNNING"
+		case "initializing":
+			n.Status = "INITIALIZATION"
+		case "failed":
+			n.Status = "FAILED"
+		default:
+			n.Status = *node.InstanceState
+		}
+	}
+	if node.LanIP != nil {
+		n.InnerIP = *node.LanIP
+	}
+	return n
 }
 
 // MoveNodesToGroup add cluster nodes to NodeGroup
@@ -360,7 +385,8 @@ func (ng *NodeGroup) UpdateDesiredNodes(desired uint32, group *proto.NodeGroup,
 
 	// check incoming nodes
 	inComingNodes, err := cloudprovider.GetNodesNumWhenApplyInstanceTask(opt.Cluster.ClusterID, group.NodeGroupID,
-		cloudprovider.GetTaskType(opt.Cloud.CloudProvider, cloudprovider.UpdateNodeGroupDesiredNode), cloudprovider.TaskStatusRunning,
+		cloudprovider.GetTaskType(opt.Cloud.CloudProvider, cloudprovider.UpdateNodeGroupDesiredNode),
+		cloudprovider.TaskStatusRunning,
 		[]string{cloudprovider.GetTaskType(opt.Cloud.CloudProvider, cloudprovider.ApplyInstanceMachinesTask)})
 	if err != nil {
 		blog.Errorf("UpdateDesiredNodes GetNodesNumWhenApplyInstanceTask failed: %v", err)
@@ -381,9 +407,10 @@ func (ng *NodeGroup) UpdateDesiredNodes(desired uint32, group *proto.NodeGroup,
 		blog.Infof("NodeGroup %s current capable nodes %d larger than desired %d nodes, nothing to do",
 			group.NodeGroupID, current, desired)
 		return &cloudprovider.ScalingResponse{
-			ScalingUp:    0,
-			CapableNodes: nodeNames,
-		}, fmt.Errorf("NodeGroup %s UpdateDesiredNodes nodes %d larger than desired %d nodes", group.NodeGroupID, current, desired)
+				ScalingUp:    0,
+				CapableNodes: nodeNames,
+			}, fmt.Errorf("NodeGroup %s UpdateDesiredNodes nodes %d larger than desired %d nodes", group.NodeGroupID, current,
+				desired)
 	}
 
 	// current scale nodeNum
@@ -433,6 +460,40 @@ func (ng *NodeGroup) DeleteAutoScalingOption(scalingOption *proto.ClusterAutoSca
 // cluster-autoscaler configuration in backgroup according cloudprovider implementation.
 // Implementation is optional.
 func (ng *NodeGroup) UpdateAutoScalingOption(scalingOption *proto.ClusterAutoScalingOption,
-	opt *cloudprovider.DeleteScalingOption) (*proto.Task, error) {
-	return nil, cloudprovider.ErrCloudNotImplemented
+	opt *cloudprovider.UpdateScalingOption) (*proto.Task, error) {
+	mgr, err := cloudprovider.GetTaskManager(cloudName)
+	if err != nil {
+		blog.Errorf("get cloud %s TaskManager when UpdateAutoScalingOption %s failed, %s",
+			cloudName, scalingOption.ClusterID, err.Error(),
+		)
+		return nil, err
+	}
+	task, err := mgr.BuildUpdateAutoScalingOptionTask(scalingOption, opt)
+	if err != nil {
+		blog.Errorf("build UpdateAutoScalingOption task for cluster %s with cloudprovider %s failed, %s",
+			scalingOption.ClusterID, cloudName, err.Error(),
+		)
+		return nil, err
+	}
+	return task, nil
+}
+
+// SwitchAutoScalingOptionStatus switch cluster autoscaling option status
+func (ng *NodeGroup) SwitchAutoScalingOptionStatus(scalingOption *proto.ClusterAutoScalingOption, enable bool,
+	opt *cloudprovider.CommonOption) (*proto.Task, error) {
+	mgr, err := cloudprovider.GetTaskManager(cloudName)
+	if err != nil {
+		blog.Errorf("get cloud %s TaskManager when SwitchAutoScalingOptionStatus %s failed, %s",
+			cloudName, scalingOption.ClusterID, err.Error(),
+		)
+		return nil, err
+	}
+	task, err := mgr.BuildSwitchAutoScalingOptionStatusTask(scalingOption, enable, opt)
+	if err != nil {
+		blog.Errorf("build SwitchAutoScalingOptionStatus task for cluster %s with cloudprovider %s failed, %s",
+			scalingOption.ClusterID, cloudName, err.Error(),
+		)
+		return nil, err
+	}
+	return task, nil
 }

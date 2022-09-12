@@ -11,6 +11,7 @@
  *
  */
 
+// Package metric xxx
 package metric
 
 import (
@@ -19,6 +20,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+// MarkMeasurementError xxx
 func MarkMeasurementError(m v1alpha1.Measurement, err error) v1alpha1.Measurement {
 	m.Phase = v1alpha1.HookPhaseError
 	m.Message = err.Error()

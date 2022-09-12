@@ -23,6 +23,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-upgrader/app/options"
 )
 
+// MigrateHandle xxx
 type MigrateHandle interface {
 	getMigrateProjectData() error
 	getMigrateClusterData() error
@@ -42,6 +43,7 @@ type migrateHandle struct {
 	nodes    []node
 }
 
+// NewMigrateHandle xxx
 func NewMigrateHandle(conf options.HttpCliConfig) MigrateHandle {
 	return &migrateHandle{
 		conf:     conf,
@@ -298,7 +300,7 @@ func (h *migrateHandle) migrateNode() error {
 	return nil
 }
 
-// 数据转换
+// cc2CmProject 数据转换
 func cc2CmProject(data project) cmCreateProject {
 	return cmCreateProject{
 		ProjectID:   data.ProjectID,

@@ -17,23 +17,29 @@ import (
 	"os"
 	"testing"
 
+	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
+
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common/regions"
 )
 
 var nodeManager = &NodeManager{}
 
 var defaultCommonOption = &cloudprovider.CommonOption{
-	Key:    os.Getenv(TencentCloudSecretIDEnv),
-	Secret: os.Getenv(TencentCloudSecretKeyEnv),
+	Account: &cmproto.Account{
+		SecretID:  os.Getenv(TencentCloudSecretIDEnv),
+		SecretKey: os.Getenv(TencentCloudSecretKeyEnv),
+	},
 }
 
 func TestNodeManager_GetCVMImageIDByImageName(t *testing.T) {
 	imageName1 := "Tencent tlinux xxx"
 	imageID, err := nodeManager.GetCVMImageIDByImageName(imageName1, &cloudprovider.CommonOption{
-		Key:    os.Getenv(TencentCloudSecretIDEnv),
-		Secret: os.Getenv(TencentCloudSecretKeyEnv),
+		Account: &cmproto.Account{
+			SecretID:  os.Getenv(TencentCloudSecretIDEnv),
+			SecretKey: os.Getenv(TencentCloudSecretKeyEnv),
+		},
 		Region: regions.Nanjing,
 	})
 	if err != nil {
@@ -111,8 +117,10 @@ func TestNodeManager_ListNodesByInstance(t *testing.T) {
 
 func TestGetZoneInfoByRegion(t *testing.T) {
 	cli, err := GetCVMClient(&cloudprovider.CommonOption{
-		Key:    os.Getenv(TencentCloudSecretIDEnv),
-		Secret: os.Getenv(TencentCloudSecretKeyEnv),
+		Account: &cmproto.Account{
+			SecretID:  os.Getenv(TencentCloudSecretIDEnv),
+			SecretKey: os.Getenv(TencentCloudSecretKeyEnv),
+		},
 		Region: regions.Nanjing,
 	})
 	if err != nil {
@@ -132,8 +140,10 @@ func TestDescribeInstanceTypeConfigs(t *testing.T) {
 		{Name: "zone", Values: []string{"ap-guangzhou-3"}},
 	}
 	instanceTypeConfigs, err := nodeManager.DescribeInstanceTypeConfigs(filters, &cloudprovider.CommonOption{
-		Key:    os.Getenv(TencentCloudSecretIDEnv),
-		Secret: os.Getenv(TencentCloudSecretKeyEnv),
+		Account: &cmproto.Account{
+			SecretID:  os.Getenv(TencentCloudSecretIDEnv),
+			SecretKey: os.Getenv(TencentCloudSecretKeyEnv),
+		},
 		Region: regions.Guangzhou,
 	})
 	if err != nil {
@@ -145,8 +155,10 @@ func TestDescribeInstanceTypeConfigs(t *testing.T) {
 
 func TestListNodeInstanceType(t *testing.T) {
 	instanceTypeConfigs, err := nodeManager.ListNodeInstanceType("", "", 4, 0, &cloudprovider.CommonOption{
-		Key:    os.Getenv(TencentCloudSecretIDEnv),
-		Secret: os.Getenv(TencentCloudSecretKeyEnv),
+		Account: &cmproto.Account{
+			SecretID:  os.Getenv(TencentCloudSecretIDEnv),
+			SecretKey: os.Getenv(TencentCloudSecretKeyEnv),
+		},
 		Region: regions.Guangzhou,
 	})
 	if err != nil {

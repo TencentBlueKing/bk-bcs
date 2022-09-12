@@ -28,8 +28,8 @@ import (
 )
 
 func (s *Scheduler) startBuildDaemonsets() {
-	//start check and build daemonset
-	//only master do the function
+	// start check and build daemonset
+	// only master do the function
 	s.stopDaemonset = make(chan struct{})
 	for {
 		time.Sleep(time.Second * 5)
@@ -38,9 +38,9 @@ func (s *Scheduler) startBuildDaemonsets() {
 			blog.Warnf("stop check and build daemonset")
 			return
 		default:
-			//ticker check and build daemonset
+			// ticker check and build daemonset
 		}
-		//fetch all daemonsets in cluster
+		// fetch all daemonsets in cluster
 		daemonsets, err := s.store.ListAllDaemonset()
 		if err != nil {
 			blog.Errorf("ListAllDaemonset failed: %s", err.Error())
@@ -57,27 +57,28 @@ func (s *Scheduler) startBuildDaemonsets() {
 	}
 }
 
-//stop check and build daemonset
+// stopBuildDaemonset xxx
+// stop check and build daemonset
 func (s *Scheduler) stopBuildDaemonset() {
 	if s.stopDaemonset != nil {
 		close(s.stopDaemonset)
 	}
 }
 
-//checkDaemonsetPod check taskgroup status
-//if some offers don't deploy daemonset, then build new taskgroup in the offer
+// checkDaemonsetPod check taskgroup status
+// if some offers don't deploy daemonset, then build new taskgroup in the offer
 func (s *Scheduler) checkDaemonsetPod(daemon *types.BcsDaemonset) {
 	blog.V(3).Infof("start check daemonset(%s) pods, and build taskgroup on new offer", daemon.GetUuid())
-	//get current all mesos offers
+	// get current all mesos offers
 	offers := s.GetAllOffers()
 	if len(offers) == 0 {
 		blog.V(3).Infof("the cluster don't have any mesos-slave now")
 		return
 	}
 	for _, inoffer := range offers {
-		//get offer hostip
+		// get offer hostip
 		hostIP, ok := offer.GetOfferIp(inoffer.Offer)
-		//if offer don't have InnerIP attribute, then continue
+		// if offer don't have InnerIP attribute, then continue
 		if !ok {
 			blog.Warnf("launch daemonset(%s) offer(%s:%s) don't have attribute InnerIP",
 				daemon.GetUuid(), inoffer.Offer.GetId().GetValue(), inoffer.Offer.GetHostname())
@@ -85,19 +86,20 @@ func (s *Scheduler) checkDaemonsetPod(daemon *types.BcsDaemonset) {
 		}
 
 		exist := s.checkofferWhetherBuildPod(daemon, hostIP)
-		//if exist==true, then continue
+		// if exist==true, then continue
 		if exist {
 			continue
 		}
 		blog.Infof("daemonset(%s) don't have taskgroup in agent(%s), then will launch", daemon.GetUuid(), hostIP)
-		//the offer don't contain the damonset instance, then build new taskgroup on new pod
+		// the offer don't contain the damonset instance, then build new taskgroup on new pod
 		s.doLaunchDaemonset(daemon, inoffer)
 	}
 	blog.V(3).Infof("check daemonset(%s) pods and build taskgroup on new offer done", daemon.GetUuid())
 }
 
-//check daemonset whether build taskgroup in offer(hostIp)
-//if build taskgroup return true, then return false
+// checkofferWhetherBuildPod xxx
+// check daemonset whether build taskgroup in offer(hostIp)
+// if build taskgroup return true, then return false
 func (s *Scheduler) checkofferWhetherBuildPod(daemon *types.BcsDaemonset, hostIP string) bool {
 	var err error
 	util.Lock.Lock(types.BcsDaemonset{}, daemon.GetUuid())
@@ -107,7 +109,7 @@ func (s *Scheduler) checkofferWhetherBuildPod(daemon *types.BcsDaemonset, hostIP
 		blog.Errorf("launch daemonset(%s) taskgroup(%s) FetchDaemonset error %s", daemon.GetUuid(), err.Error())
 		return true
 	}
-	//if daemonset don't have any pod, return false
+	// if daemonset don't have any pod, return false
 	if len(daemon.Pods) <= 0 {
 		return false
 	}
@@ -123,11 +125,12 @@ func (s *Scheduler) checkofferWhetherBuildPod(daemon *types.BcsDaemonset, hostIP
 				util.Lock.Lock(types.BcsDaemonset{}, daemon.GetUuid())
 				indaemon, _ := s.store.FetchDaemonset(daemon.NameSpace, daemon.Name)
 				if indaemon != nil {
-					//delete daemonset pods index
+					// delete daemonset pods index
 					delete(indaemon.Pods, podID)
 					err = s.store.SaveDaemonset(indaemon)
 					if err != nil {
-						blog.Errorf("delete daemonset(%s) TaskGroupIndex(%s), but SaveDaemonset error %s", daemon.GetUuid(), podID, err.Error())
+						blog.Errorf("delete daemonset(%s) TaskGroupIndex(%s), but SaveDaemonset error %s", daemon.GetUuid(), podID,
+							err.Error())
 					} else {
 						blog.Infof("delete daemonset(%s) TaskGroupIndex(%s) success", daemon.GetUuid(), podID)
 					}
@@ -136,7 +139,7 @@ func (s *Scheduler) checkofferWhetherBuildPod(daemon *types.BcsDaemonset, hostIP
 			}
 			continue
 		}
-		//if taskgroup failed or finished, then delete it
+		// if taskgroup failed or finished, then delete it
 		if pod.Status == types.TASKGROUP_STATUS_FINISH || pod.Status == types.TASKGROUP_STATUS_FAIL {
 			util.Lock.Lock(types.BcsDaemonset{}, daemon.GetUuid())
 			indaemon, err := s.store.FetchDaemonset(daemon.NameSpace, daemon.Name)
@@ -154,7 +157,7 @@ func (s *Scheduler) checkofferWhetherBuildPod(daemon *types.BcsDaemonset, hostIP
 				blog.Infof("daemonset(%s) TaskGroup(%s) status(%s), and delete it success", daemon.GetUuid(), podID, pod.Status)
 			}
 			util.Lock.UnLock(types.BcsDaemonset{}, daemon.GetUuid())
-			//if pod.AgentIp == hostIp, show the offer have builded the daemonset taskgroup
+			// if pod.AgentIp == hostIp, show the offer have builded the daemonset taskgroup
 		} else if hostIP == pod.GetAgentIp() {
 			blog.V(3).Infof("daemonset(%s) have taskgroup(%s) in agent(%s)", daemon.GetUuid(), podID, hostIP)
 			return true
@@ -173,12 +176,12 @@ func (s *Scheduler) doLaunchDaemonset(o *types.BcsDaemonset, outOffer *offer.Off
 		blog.Errorf("launch daemonset(%s) taskgroup(%s) FetchDaemonset error %s", daemon.GetUuid(), err.Error())
 		return
 	}
-	//when daemon.status==deleting, don't launch taskgroup anymore
+	// when daemon.status==deleting, don't launch taskgroup anymore
 	if daemon.Status == types.Daemonset_Status_Deleting {
 		blog.Infof("Daemonset(%s) status %s, then don't need launch taskgroup", daemon.GetUuid(), daemon.Status)
 		return
 	}
-	//get offer innerip、cpu、mem、dis
+	// get offer innerip、cpu、mem、dis
 	offerIP, _ := offer.GetOfferIp(outOffer.Offer)
 	offer := outOffer.Offer
 	cpus, mem, disk := s.OfferedResources(offer)
@@ -192,10 +195,11 @@ func (s *Scheduler) doLaunchDaemonset(o *types.BcsDaemonset, outOffer *offer.Off
 	}
 	resources := task.BuildResources(version.AllResource())
 	var taskgroupID string
-	//check offer resource whether fit launch daemonset
-	if s.IsOfferResourceFitLaunch(version.AllResource(), outOffer) && s.IsOfferExtendedResourcesFitLaunch(version.GetExtendedResources(), outOffer) {
-		//use the offer to build daemonset taskgroup
-		//if others use the offer, the UseOffer will return false
+	// check offer resource whether fit launch daemonset
+	if s.IsOfferResourceFitLaunch(version.AllResource(), outOffer) && s.IsOfferExtendedResourcesFitLaunch(
+		version.GetExtendedResources(), outOffer) {
+		// use the offer to build daemonset taskgroup
+		// if others use the offer, the UseOffer will return false
 		if !s.UseOffer(outOffer) {
 			blog.Warnf("launch daemonset(%s) use offer(%s) failed", daemon.GetUuid(), offerIP)
 			return
@@ -203,25 +207,25 @@ func (s *Scheduler) doLaunchDaemonset(o *types.BcsDaemonset, outOffer *offer.Off
 		blog.Info("launch daemonset(%s.%s) with offer:%s||%s, cpu:%f, mem:%f, disk:%f",
 			daemon.NameSpace, daemon.Name, offerIP, *(offer.Id.Value), cpus, mem, disk)
 		instanceID := uint64(len(daemon.Pods))
-		//create taskgroup base on version
+		// create taskgroup base on version
 		taskgroup, err := task.CreateTaskGroup(version, "", instanceID, s.ClusterId, "", s.store)
 		if err != nil {
 			blog.Errorf("launch daemonset(%s) create taskgroup err: %s", daemon.GetUuid(), err.Error())
 			s.DeclineResource(offer.Id.Value)
 			return
 		}
-		//save taskgroup
+		// save taskgroup
 		err = s.store.SaveTaskGroup(taskgroup)
 		if err != nil {
 			blog.Errorf("launch daemonset(%s) save taskgroup(%s) err: %s", daemon.GetUuid(), taskgroup.ID, err.Error())
 			s.DeclineResource(offer.Id.Value)
 			return
 		}
-		//update daemonset information
+		// update daemonset information
 		taskgroupID = taskgroup.ID
 		daemon.Pods[taskgroupID] = struct{}{}
 		daemon.Instances = uint64(len(daemon.Pods))
-		//create mesos taskgroup base inner taskgroup
+		// create mesos taskgroup base inner taskgroup
 		taskGroupInfo := task.CreateTaskGroupInfo(offer, version, resources, taskgroup)
 		if taskGroupInfo == nil {
 			blog.Errorf("launch daemonset(%s) build taskgroupinfo fail", daemon.GetUuid())
@@ -237,9 +241,9 @@ func (s *Scheduler) doLaunchDaemonset(o *types.BcsDaemonset, outOffer *offer.Off
 			return
 		}
 		taskGroupInfos = append(taskGroupInfos, taskGroupInfo)
-		//lock agentsetting
+		// lock agentsetting
 		util.Lock.Lock(commtypes.BcsClusterAgentSetting{}, taskgroup.GetAgentIp())
-		//update agentsettings taskgroup index info
+		// update agentsettings taskgroup index info
 		agentsetting, _ := s.store.FetchAgentSetting(taskgroup.GetAgentIp())
 		if agentsetting != nil {
 			agentsetting.Pods = append(agentsetting.Pods, taskgroup.ID)
@@ -258,7 +262,7 @@ func (s *Scheduler) doLaunchDaemonset(o *types.BcsDaemonset, outOffer *offer.Off
 		return
 	}
 
-	//launch taskgroup to mesos cluster
+	// launch taskgroup to mesos cluster
 	resp, err := s.LaunchTaskGroups(offer, taskGroupInfos, version)
 	if err != nil {
 		blog.Errorf("launch daemonset(%s) taskgroup(%s) err:%s", daemon.GetUuid(), taskgroupID, err.Error())
@@ -266,14 +270,15 @@ func (s *Scheduler) doLaunchDaemonset(o *types.BcsDaemonset, outOffer *offer.Off
 		return
 	}
 	if resp != nil && resp.StatusCode != http.StatusAccepted {
-		blog.Error("launch daemonset(%s) taskgroup(%s) resp status err code : %d", daemon.GetUuid(), taskgroupID, resp.StatusCode)
+		blog.Error("launch daemonset(%s) taskgroup(%s) resp status err code : %d", daemon.GetUuid(), taskgroupID,
+			resp.StatusCode)
 		s.DeclineResource(offer.Id.Value)
 		return
 	}
 
-	//launch taskgroup success, and metrics
+	// launch taskgroup success, and metrics
 	reportScheduleTaskgroupMetrics(daemon.NameSpace, daemon.Name, taskgroupID, LaunchTaskgroupType, time.Now())
-	//update daemonset info
+	// update daemonset info
 	daemon.LastUpdateTime = time.Now().Unix()
 	err = s.store.SaveDaemonset(daemon)
 	if err != nil {
@@ -283,7 +288,8 @@ func (s *Scheduler) doLaunchDaemonset(o *types.BcsDaemonset, outOffer *offer.Off
 	return
 }
 
-//check taskgroup't status, update daemonset status
+// updateDaemonsetStatus xxx
+// check taskgroup't status, update daemonset status
 func (s *Scheduler) updateDaemonsetStatus(namespace, name string) {
 	daemon, err := s.store.FetchDaemonset(namespace, name)
 	if err != nil {
@@ -292,7 +298,7 @@ func (s *Scheduler) updateDaemonsetStatus(namespace, name string) {
 	}
 	now := time.Now().Unix()
 	updateTime := now - MAX_DATA_UPDATE_INTERVAL
-	//when daemonset.status==deleting, not need change daemonset status
+	// when daemonset.status==deleting, not need change daemonset status
 	if daemon.Status == types.Daemonset_Status_Deleting {
 		blog.V(3).Infof("daemonset(%s) status %s, then not need change it", daemon.GetUuid(), daemon.Status)
 		return
@@ -311,7 +317,7 @@ func (s *Scheduler) updateDaemonsetStatus(namespace, name string) {
 			continue
 		}
 
-		//when any pod exit, then daemonset.status==abnormal
+		// when any pod exit, then daemonset.status==abnormal
 		if pod.Status == types.TASKGROUP_STATUS_FINISH || pod.Status == types.TASKGROUP_STATUS_FAIL ||
 			pod.Status == types.TASKGROUP_STATUS_LOST {
 			failedInstance++
@@ -323,19 +329,22 @@ func (s *Scheduler) updateDaemonsetStatus(namespace, name string) {
 			startingInstance++
 		}
 	}
-	//if some  taskgroup failed
+	// if some  taskgroup failed
 	if failedInstance > 0 {
-		blog.V(3).Infof("daemonset(%s) have failed(%d), running(%d), starting(%d) taskgroups", daemon.GetUuid(), failedInstance, runningInstance, startingInstance)
+		blog.V(3).Infof("daemonset(%s) have failed(%d), running(%d), starting(%d) taskgroups", daemon.GetUuid(),
+			failedInstance, runningInstance, startingInstance)
 		nowStatus = types.Daemonset_Status_Abnormal
 	} else if startingInstance > 0 {
-		blog.V(3).Infof("daemonset(%s) have failed(%d), running(%d), starting(%d) taskgroups", daemon.GetUuid(), failedInstance, runningInstance, startingInstance)
+		blog.V(3).Infof("daemonset(%s) have failed(%d), running(%d), starting(%d) taskgroups", daemon.GetUuid(),
+			failedInstance, runningInstance, startingInstance)
 		nowStatus = types.Daemonset_Status_Starting
 	} else {
-		blog.V(3).Infof("daemonset(%s) have failed(%d), running(%d), starting(%d) taskgroups", daemon.GetUuid(), failedInstance, runningInstance, startingInstance)
+		blog.V(3).Infof("daemonset(%s) have failed(%d), running(%d), starting(%d) taskgroups", daemon.GetUuid(),
+			failedInstance, runningInstance, startingInstance)
 		nowStatus = types.Daemonset_Status_Running
 	}
 
-	//if daemonset information changed
+	// if daemonset information changed
 	if nowStatus != daemon.Status {
 		blog.Infof("update daemonset(%s) status from(%s)->to(%s)", daemon.GetUuid(), daemon.Status, nowStatus)
 		daemon.LastStatus = daemon.Status
@@ -347,7 +356,7 @@ func (s *Scheduler) updateDaemonsetStatus(namespace, name string) {
 		updated = true
 	}
 
-	//daemonset status not changed, then return
+	// daemonset status not changed, then return
 	if !updated && daemon.LastUpdateTime > updateTime {
 		return
 	}
@@ -356,19 +365,21 @@ func (s *Scheduler) updateDaemonsetStatus(namespace, name string) {
 	if err != nil {
 		blog.Errorf("update daemonset(%s) status, but SaveDaemonset failed: %s", daemon.GetUuid(), err.Error())
 	} else {
-		blog.V(3).Infof("update daemonset(%s) lastStatus(%s) Status(%s) success", daemon.GetUuid(), daemon.LastStatus, daemon.Status)
+		blog.V(3).Infof("update daemonset(%s) lastStatus(%s) Status(%s) success", daemon.GetUuid(), daemon.LastStatus,
+			daemon.Status)
 	}
 }
 
-//delete daemonset
+// deleteDaemonset xxx
+// delete daemonset
 func (s *Scheduler) deleteDaemonset(daemon *types.BcsDaemonset) {
-	//lock
+	// lock
 	util.Lock.Lock(types.BcsDaemonset{}, daemon.GetUuid())
 	defer util.Lock.UnLock(types.BcsDaemonset{}, daemon.GetUuid())
 	blog.Infof("check daemonset(%s) taskgroup status and force(%t) delete it", daemon.GetUuid(), daemon.ForceDeleting)
-	//whether have running taskgroup
+	// whether have running taskgroup
 	hasRunning := false
-	//check taskgroup whether exit, if taskgroup is running, then kill it
+	// check taskgroup whether exit, if taskgroup is running, then kill it
 	for podID := range daemon.Pods {
 		taskgroup, err := s.store.FetchTaskGroup(podID)
 		if err != nil {
@@ -377,28 +388,30 @@ func (s *Scheduler) deleteDaemonset(daemon *types.BcsDaemonset) {
 			continue
 		}
 
-		//if running, kill it
+		// if running, kill it
 		if !task.IsTaskGroupEnd(taskgroup) {
 			hasRunning = true
 			if task.CanTaskGroupShutdown(taskgroup) {
-				blog.Info("delete daemonset(%s): taskGroup(%s) not end status(%s), kill it", daemon.GetUuid(), taskgroup.ID, taskgroup.Status)
+				blog.Info("delete daemonset(%s): taskGroup(%s) not end status(%s), kill it", daemon.GetUuid(), taskgroup.ID,
+					taskgroup.Status)
 				s.KillTaskGroup(taskgroup)
 			} else {
-				blog.Info("delete daemonset(%s): taskGroup(%s) not end status(%s) at current", daemon.GetUuid(), taskgroup.ID, taskgroup.Status)
+				blog.Info("delete daemonset(%s): taskGroup(%s) not end status(%s) at current", daemon.GetUuid(), taskgroup.ID,
+					taskgroup.Status)
 			}
 		} else {
 			blog.Infof("delete daemonset(%s): taskGroup(%s) in end status(%s)", daemon.GetUuid(), taskgroup.ID, taskgroup.Status)
 		}
 	}
 
-	//if have running taskgroup and not force deleting daemonset, waiting for taskgroup exit
+	// if have running taskgroup and not force deleting daemonset, waiting for taskgroup exit
 	if hasRunning && !daemon.ForceDeleting {
 		blog.Infof("daemonset(%s) have some running taskgroups, then waiting for taskgroup exit", daemon.GetUuid())
 		return
 	}
 
-	//delete damonset taskgroup and daemonset definition
-	//first delete taskgroup
+	// delete damonset taskgroup and daemonset definition
+	// first delete taskgroup
 	for podID := range daemon.Pods {
 		taskgroup, err := s.store.FetchTaskGroup(podID)
 		if err != nil {
@@ -408,7 +421,7 @@ func (s *Scheduler) deleteDaemonset(daemon *types.BcsDaemonset) {
 		s.DeleteDaemonsetTaskGroup(daemon, taskgroup)
 		blog.Infof("delete daemonset(%s) TaskGroup(%s) success", daemon.GetUuid(), podID)
 	}
-	//delete versions
+	// delete versions
 	versions, err := s.store.ListVersions(daemon.NameSpace, daemon.Name)
 	if err != nil {
 		blog.Errorf("delete daemonset(%s) Fetch versions failed %s", daemon.GetUuid(), err.Error())
@@ -424,7 +437,7 @@ func (s *Scheduler) deleteDaemonset(daemon *types.BcsDaemonset) {
 	if err = s.store.DeleteVersionNode(daemon.NameSpace, daemon.Name); err != nil {
 		blog.Error("delete daemonset(%s) versionNode err:%s", daemon.GetUuid(), err.Error())
 	}
-	//delete daemonset
+	// delete daemonset
 	err = s.store.DeleteDaemonset(daemon.NameSpace, daemon.Name)
 	if err != nil {
 		blog.Errorf("delete daemonset(%s) error %s", daemon.GetUuid(), err.Error())
@@ -436,7 +449,7 @@ func (s *Scheduler) deleteDaemonset(daemon *types.BcsDaemonset) {
 // DeleteDaemonsetTaskGroup Delete a taskgroup:
 // the taskgroup will delete from DB, application and service
 func (s *Scheduler) DeleteDaemonsetTaskGroup(daemon *types.BcsDaemonset, taskGroup *types.TaskGroup) {
-	//delete daemonset pods index
+	// delete daemonset pods index
 	delete(daemon.Pods, taskGroup.ID)
 	s.deleteTaskGroup(taskGroup)
 }

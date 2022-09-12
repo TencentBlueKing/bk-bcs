@@ -24,14 +24,14 @@ import (
 	"k8s.io/client-go/kubernetes/scheme"
 )
 
-// StatefulSetStor
+// StatefulSetStor xxx
 type StatefulSetStor struct {
 	members      []string
 	masterClient *kubernetes.Clientset
 	k8sClientMap map[string]*kubernetes.Clientset
 }
 
-// NewStatefulSetStor
+// NewStatefulSetStor xxx
 func NewStatefulSetStor(masterClientId string, members []string) (*StatefulSetStor, error) {
 	stor := &StatefulSetStor{members: members, k8sClientMap: make(map[string]*kubernetes.Clientset)}
 	for _, k := range members {
@@ -50,7 +50,8 @@ func NewStatefulSetStor(masterClientId string, members []string) (*StatefulSetSt
 }
 
 // List 查询 StatefulSet 列表, Json格式返回
-func (s *StatefulSetStor) List(ctx context.Context, namespace string, opts metav1.ListOptions) (*appsv1.StatefulSetList, error) {
+func (s *StatefulSetStor) List(ctx context.Context, namespace string, opts metav1.ListOptions) (*appsv1.StatefulSetList,
+	error) {
 	result, err := s.masterClient.AppsV1().StatefulSets(namespace).List(ctx, opts)
 	if err != nil {
 		return nil, err
@@ -60,7 +61,8 @@ func (s *StatefulSetStor) List(ctx context.Context, namespace string, opts metav
 }
 
 // ListAsTable 查询 StatefulSet 列表, kubectl 格式返回
-func (s *StatefulSetStor) ListAsTable(ctx context.Context, namespace string, acceptHeader string, opts metav1.ListOptions) (*metav1.Table, error) {
+func (s *StatefulSetStor) ListAsTable(ctx context.Context, namespace string, acceptHeader string,
+	opts metav1.ListOptions) (*metav1.Table, error) {
 	var timeout time.Duration
 	if opts.TimeoutSeconds != nil {
 		timeout = time.Duration(*opts.TimeoutSeconds) * time.Second
@@ -83,7 +85,8 @@ func (s *StatefulSetStor) ListAsTable(ctx context.Context, namespace string, acc
 }
 
 // Get 获取单个 StatefulSet, Json格式返回
-func (s *StatefulSetStor) Get(ctx context.Context, namespace string, name string, opts metav1.GetOptions) (*appsv1.StatefulSet, error) {
+func (s *StatefulSetStor) Get(ctx context.Context, namespace string, name string,
+	opts metav1.GetOptions) (*appsv1.StatefulSet, error) {
 	result, err := s.masterClient.AppsV1().StatefulSets(namespace).Get(ctx, name, opts)
 	if err != nil {
 		return nil, err
@@ -92,7 +95,8 @@ func (s *StatefulSetStor) Get(ctx context.Context, namespace string, name string
 }
 
 // GetAsTable 获取单个 StatefulSet, Table 格式返回
-func (s *StatefulSetStor) GetAsTable(ctx context.Context, namespace string, name string, acceptHeader string, opts metav1.GetOptions) (*metav1.Table, error) {
+func (s *StatefulSetStor) GetAsTable(ctx context.Context, namespace string, name string, acceptHeader string,
+	opts metav1.GetOptions) (*metav1.Table, error) {
 	result := &metav1.Table{}
 	err := s.masterClient.AppsV1().RESTClient().Get().
 		Namespace(namespace).
@@ -110,7 +114,8 @@ func (s *StatefulSetStor) GetAsTable(ctx context.Context, namespace string, name
 }
 
 // Create 创建 StatefulSet
-func (s *StatefulSetStor) Create(ctx context.Context, namespace string, StatefulSet *appsv1.StatefulSet, opts metav1.CreateOptions) (*appsv1.StatefulSet, error) {
+func (s *StatefulSetStor) Create(ctx context.Context, namespace string, StatefulSet *appsv1.StatefulSet,
+	opts metav1.CreateOptions) (*appsv1.StatefulSet, error) {
 	result, err := s.masterClient.AppsV1().StatefulSets(namespace).Create(ctx, StatefulSet, opts)
 	if err != nil {
 		return nil, err
@@ -119,7 +124,8 @@ func (s *StatefulSetStor) Create(ctx context.Context, namespace string, Stateful
 }
 
 // Update 更新 StatefulSet
-func (s *StatefulSetStor) Update(ctx context.Context, namespace string, StatefulSet *appsv1.StatefulSet, opts metav1.UpdateOptions) (*appsv1.StatefulSet, error) {
+func (s *StatefulSetStor) Update(ctx context.Context, namespace string, StatefulSet *appsv1.StatefulSet,
+	opts metav1.UpdateOptions) (*appsv1.StatefulSet, error) {
 	result, err := s.masterClient.AppsV1().StatefulSets(namespace).Update(ctx, StatefulSet, opts)
 	if err != nil {
 		return nil, err
@@ -128,7 +134,8 @@ func (s *StatefulSetStor) Update(ctx context.Context, namespace string, Stateful
 }
 
 // Patch Edit/Apply StatefulSet
-func (s *StatefulSetStor) Patch(ctx context.Context, namespace string, name string, pt types.PatchType, data []byte, opts metav1.PatchOptions, subresources ...string) (*appsv1.StatefulSet, error) {
+func (s *StatefulSetStor) Patch(ctx context.Context, namespace string, name string, pt types.PatchType, data []byte,
+	opts metav1.PatchOptions, subresources ...string) (*appsv1.StatefulSet, error) {
 	result, err := s.masterClient.AppsV1().StatefulSets(namespace).Patch(ctx, name, pt, data, opts, subresources...)
 	if err != nil {
 		return nil, err
@@ -137,7 +144,8 @@ func (s *StatefulSetStor) Patch(ctx context.Context, namespace string, name stri
 }
 
 // Delete 删除单个StatefulSet
-func (s *StatefulSetStor) Delete(ctx context.Context, namespace string, name string, opts metav1.DeleteOptions) (*metav1.Status, error) {
+func (s *StatefulSetStor) Delete(ctx context.Context, namespace string, name string,
+	opts metav1.DeleteOptions) (*metav1.Status, error) {
 	result, err := s.masterClient.AppsV1().StatefulSets(namespace).Get(ctx, name, metav1.GetOptions{})
 	if err != nil {
 		return nil, err

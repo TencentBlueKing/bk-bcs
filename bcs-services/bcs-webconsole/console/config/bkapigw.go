@@ -26,7 +26,7 @@ type BKAPIGWConf struct {
 	JWTPubKeyObj *rsa.PublicKey `yaml:"-"`
 }
 
-// Init
+// Init xxx
 func (c *BKAPIGWConf) Init() error {
 	// only for development
 	c.Host = ""
@@ -34,7 +34,7 @@ func (c *BKAPIGWConf) Init() error {
 	return nil
 }
 
-// InitJWTPubKey
+// InitJWTPubKey xxx
 func (c *BKAPIGWConf) InitJWTPubKey() error {
 	if c.JWTPubKey == "" {
 		return nil

@@ -9,6 +9,7 @@ import (
 	appv1 "k8s.io/api/apps/v1"
 	autoscalingv1 "k8s.io/api/autoscaling/v1"
 	corev1 "k8s.io/api/core/v1"
+	storagev1 "k8s.io/api/storage/v1"
 	"time"
 )
 
@@ -75,7 +76,7 @@ type Hpa struct {
 	Data *autoscalingv1.HorizontalPodAutoscaler
 }
 
-// Gps is bcs generalpodautoscaler
+// Gpa is bcs generalpodautoscaler
 type Gpa struct {
 	CommonDataHeader
 	Data *gpav1alpha1.GeneralPodAutoscaler
@@ -100,11 +101,29 @@ type Application struct {
 	LastUpdateTime  time.Time
 	ReportTime      time.Time
 
-	//we should replace the next three BcsXXX, using ObjectMeta.Labels directly
+	// we should replace the next three BcsXXX, using ObjectMeta.Labels directly
 	BcsAppID    string
 	BcsSetID    string
 	BcsModuleID string
 
 	Message string
 	Pods    []*commtypes.BcsPodIndex
+}
+
+// Pvc is k8s pvc
+type Pvc struct {
+	CommonDataHeader
+	Data *corev1.PersistentVolumeClaim
+}
+
+// StorageClass is k8s storageclass
+type StorageClass struct {
+	CommonDataHeader
+	Data *storagev1.StorageClass
+}
+
+// ResourceQuota is k8s resourcequota
+type ResourceQuota struct {
+	CommonDataHeader
+	Data *corev1.ResourceQuota
 }

@@ -16,11 +16,16 @@ package clusterops
 import (
 	"context"
 	"encoding/json"
+	"io"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/strategicpatch"
+	cmdutil "k8s.io/kubectl/pkg/cmd/util"
+	"k8s.io/kubectl/pkg/drain"
 )
 
 // NodeInfo node info
@@ -72,4 +77,71 @@ func (ko *K8SOperator) ClusterUpdateScheduleNode(ctx context.Context, nodeInfo N
 	}
 
 	return err
+}
+
+// ListClusterNodes list nodes in cluster
+func (ko *K8SOperator) ListClusterNodes(ctx context.Context, clusterID string) (*v1.NodeList, error) {
+	if ko == nil {
+		return nil, ErrServerNotInit
+	}
+	clientInterface, err := ko.GetClusterClient(clusterID)
+	if err != nil {
+		blog.Errorf("ListClusterNodes GetClusterClient failed: %v", err)
+		return nil, err
+	}
+
+	return clientInterface.CoreV1().Nodes().List(ctx, metav1.ListOptions{})
+}
+
+// DrainHelper describe drain args
+type DrainHelper struct {
+	Force               bool
+	GracePeriodSeconds  int
+	IgnoreAllDaemonSets bool
+	Timeout             int
+	DeleteLocalData     bool
+	Selector            string
+	PodSelector         string
+
+	// DisableEviction forces drain to use delete rather than evict
+	DisableEviction bool
+
+	DryRun bool
+
+	// SkipWaitForDeleteTimeoutSeconds ignores pods that have a
+	// DeletionTimeStamp > N seconds. It's up to the user to decide when this
+	// option is appropriate; examples include the Node is unready and the pods
+	// won't drain otherwise
+	SkipWaitForDeleteTimeoutSeconds int
+}
+
+// DrainNode drain node
+func (ko *K8SOperator) DrainNode(ctx context.Context, clusterID, nodeName string, drainHelper DrainHelper) error {
+	if ko == nil {
+		return ErrServerNotInit
+	}
+	clientInterface, err := ko.GetClusterClient(clusterID)
+	if err != nil {
+		blog.Errorf("DrainNode GetClusterClient failed: %v", err)
+		return err
+	}
+
+	drainer := &drain.Helper{
+		Ctx:                 ctx,
+		Client:              clientInterface,
+		Force:               drainHelper.Force,
+		GracePeriodSeconds:  drainHelper.GracePeriodSeconds,
+		IgnoreAllDaemonSets: drainHelper.IgnoreAllDaemonSets,
+		Timeout:             time.Second * time.Duration(drainHelper.Timeout),
+		DeleteLocalData:     drainHelper.DeleteLocalData,
+		Selector:            drainHelper.Selector,
+		PodSelector:         drainHelper.PodSelector,
+		DisableEviction:     drainHelper.DisableEviction,
+		Out:                 io.Discard,
+		ErrOut:              io.Discard,
+	}
+	if drainHelper.DryRun {
+		drainer.DryRunStrategy = cmdutil.DryRunServer
+	}
+	return drain.RunNodeDrain(drainer, nodeName)
 }

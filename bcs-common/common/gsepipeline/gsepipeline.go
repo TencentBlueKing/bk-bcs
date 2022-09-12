@@ -11,6 +11,7 @@
  *
  */
 
+// Package gsepipeline xxx
 package gsepipeline
 
 import (
@@ -23,7 +24,7 @@ type gseStorage struct {
 	client gseclient.AsyncProducer
 }
 
-//NewGseStorage create a new gseclient
+// NewGseStorage create a new gseclient
 func NewGseStorage(endpoint string) (Storage, error) {
 
 	blog.Info("endpoint:%v", endpoint)

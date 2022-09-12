@@ -32,15 +32,15 @@ import (
 )
 
 type taskgroupStats struct {
-	id        string                //taskgroup id
-	taskgroup *schedtypes.TaskGroup //taskgroup info
-	//key = contianerId, value = *cadvisorV1.ContainerStats
+	id        string                // taskgroup id
+	taskgroup *schedtypes.TaskGroup // taskgroup info
+	// key = contianerId, value = *cadvisorV1.ContainerStats
 	containerStats map[string]*cadvisorV1.ContainerStats
-	//cadvisor client
+	// cadvisor client
 	cadvisorClient *cadClient.Client
-	//colletor numbers
+	// colletor numbers
 	number int
-	//collector time stamp
+	// collector time stamp
 	timeStamp time.Time
 }
 
@@ -50,13 +50,13 @@ type resourcesCollector struct {
 
 	scaler *commtypes.BcsAutoscaler
 
-	//key = taskgroupid
-	//value = TaskgroupMetricsInfo
+	// key = taskgroupid
+	// value = TaskgroupMetricsInfo
 	cpuMetricsInfo    metrics.TaskgroupMetricsInfo
 	memoryMetricsInfo metrics.TaskgroupMetricsInfo
 
-	//key = taskgroupid
-	//value = taskgroupStats
+	// key = taskgroupid
+	// value = taskgroupStats
 	taskgroupStats map[string]*taskgroupStats
 
 	// the latest value of metrics as an average aggregated across window minutes
@@ -65,7 +65,7 @@ type resourcesCollector struct {
 
 	validMetricsWindow int
 
-	//container resources cadvisor port
+	// container resources cadvisor port
 	cadvisorPort int
 
 	ctx    context.Context
@@ -90,7 +90,7 @@ func newResourcesCollector(controller *resourceMetrics, scaler *commtypes.BcsAut
 }
 
 func (collector *resourcesCollector) start() {
-	//start ticker collector metrics
+	// start ticker collector metrics
 	go collector.tickerCollectorMetrics()
 }
 
@@ -132,7 +132,7 @@ func (collector *resourcesCollector) tickerCollectorMetrics() {
 }
 
 func (collector *resourcesCollector) collectorMetrics() {
-	//sync the latest taskgroup to collector.taskgroupStats queue
+	// sync the latest taskgroup to collector.taskgroupStats queue
 	blog.Infof("sync scaler %s target ref taskgroups start...", collector.scaler.GetUuid())
 	err := collector.syncTargetRefTaskgroups()
 	if err != nil {
@@ -149,11 +149,12 @@ func (collector *resourcesCollector) collectorMetrics() {
 
 		oldContainerStats := stats.containerStats
 		oldTimestamp := stats.timeStamp
-		//collector from cadvisor service
+		// collector from cadvisor service
 		success := true
 		newContainerStats := make(map[string]*cadvisorV1.ContainerStats)
 		for containerId := range oldContainerStats {
-			containerInfo, err := stats.cadvisorClient.DockerContainer(containerId, &cadvisorV1.ContainerInfoRequest{NumStats: 1})
+			containerInfo, err := stats.cadvisorClient.DockerContainer(containerId, &cadvisorV1.ContainerInfoRequest{
+				NumStats: 1})
 			if err != nil {
 				blog.Errorf("scaler %s taskgroup %s docker stats error %s, and continue collector metrics",
 					collector.scaler.GetUuid(), stats.id, err.Error())
@@ -163,16 +164,16 @@ func (collector *resourcesCollector) collectorMetrics() {
 
 			newContainerStats[containerId] = containerInfo.Stats[0]
 		}
-		//if get cadvisor container stats failed, then continue
+		// if get cadvisor container stats failed, then continue
 		if !success {
 			continue
 		}
 
-		//update current container stats
+		// update current container stats
 		stats.containerStats = newContainerStats
 		stats.timeStamp = time.Now()
 		stats.number++
-		//if old container stats ==nil or stats timestamp is too old, and don't need to compute metrics
+		// if old container stats ==nil or stats timestamp is too old, and don't need to compute metrics
 		for containerid, cStats := range oldContainerStats {
 			if cStats == nil {
 				blog.Errorf("scaler %s taskgroup %s container %s stats is nil, and continue collector metrics",
@@ -188,7 +189,7 @@ func (collector *resourcesCollector) collectorMetrics() {
 				break
 			}
 		}
-		//if old cadvisor container stats == nil, then continue
+		// if old cadvisor container stats == nil, then continue
 		if !success {
 			continue
 		}
@@ -196,8 +197,10 @@ func (collector *resourcesCollector) collectorMetrics() {
 		duration := float32(stats.timeStamp.Unix() - oldTimestamp.Unix())
 		cpuMetric := collector.computeCpuMetricsInfo(oldContainerStats, stats, duration)
 		memMetric := collector.computeMemoryMetricsInfo(stats, duration)
-		blog.Infof("scaler %s compute taskgroup %s cpu metrics %.2f", collector.scaler.GetUuid(), stats.taskgroup.ID, cpuMetric.Value)
-		blog.Infof("scaler %s compute taskgroup %s memory metrics %.2f", collector.scaler.GetUuid(), stats.taskgroup.ID, memMetric.Value)
+		blog.Infof("scaler %s compute taskgroup %s cpu metrics %.2f", collector.scaler.GetUuid(), stats.taskgroup.ID,
+			cpuMetric.Value)
+		blog.Infof("scaler %s compute taskgroup %s memory metrics %.2f", collector.scaler.GetUuid(), stats.taskgroup.ID,
+			memMetric.Value)
 
 		collector.Lock()
 		collector.memoryMetricsInfo[stats.taskgroup.ID] = memMetric
@@ -217,7 +220,7 @@ func (collector *resourcesCollector) computeCpuMetricsInfo(oldStats map[string]*
 			blog.Errorf("taskgroup %s not found container %s", taskgroupStats.taskgroup.ID, cid)
 			continue
 		}
-		//cpu usage, cpu_usage*100 = docker stats cpu usage
+		// cpu usage, cpu_usage*100 = docker stats cpu usage
 		usage := float32(newCpu.Total-stats.Cpu.Usage.Total) / duration / 1000000000
 		total += usage
 
@@ -235,12 +238,13 @@ func (collector *resourcesCollector) computeCpuMetricsInfo(oldStats map[string]*
 	return metric
 }
 
-func (collector *resourcesCollector) computeMemoryMetricsInfo(taskgroupStats *taskgroupStats, duration float32) metrics.TaskgroupMetric {
+func (collector *resourcesCollector) computeMemoryMetricsInfo(taskgroupStats *taskgroupStats,
+	duration float32) metrics.TaskgroupMetric {
 
-	var total float32 //MB
+	var total float32 // MB
 	for cid, stats := range taskgroupStats.containerStats {
 
-		//Bytes to MB
+		// Bytes to MB
 		usage := stats.Memory.Usage / 1024 / 1024
 		total += float32(usage)
 
@@ -257,7 +261,8 @@ func (collector *resourcesCollector) computeMemoryMetricsInfo(taskgroupStats *ta
 	return metric
 }
 
-func (collector *resourcesCollector) getContainerByContainerid(taskgroup *schedtypes.TaskGroup, containerId string) *schedtypes.Task {
+func (collector *resourcesCollector) getContainerByContainerid(taskgroup *schedtypes.TaskGroup,
+	containerId string) *schedtypes.Task {
 	for _, task := range taskgroup.Taskgroup {
 		if strings.Contains(task.StatusData, containerId) {
 			return task
@@ -267,7 +272,8 @@ func (collector *resourcesCollector) getContainerByContainerid(taskgroup *schedt
 	return nil
 }
 
-//sync the latest taskgroup to collector.taskgroupStats queue
+// syncTargetRefTaskgroups xxx
+// sync the latest taskgroup to collector.taskgroupStats queue
 func (collector *resourcesCollector) syncTargetRefTaskgroups() error {
 	var taskgroups []*schedtypes.TaskGroup
 	var err error
@@ -287,14 +293,14 @@ func (collector *resourcesCollector) syncTargetRefTaskgroups() error {
 	}
 
 	collector.Lock()
-	//key = taskgroupid
+	// key = taskgroupid
 	currentQueue := make(map[string]struct{}, len(collector.taskgroupStats))
 	for k := range collector.taskgroupStats {
 		currentQueue[k] = struct{}{}
 	}
 
 	for _, taskgroup := range taskgroups {
-		//if taskgroup status is not running, contine
+		// if taskgroup status is not running, contine
 		if taskgroup.Status != schedtypes.TASKGROUP_STATUS_RUNNING {
 			blog.Warnf("scaler %s taskgroup %s status %s", collector.scaler.GetUuid(), taskgroup.ID, taskgroup.Status)
 			continue
@@ -303,7 +309,7 @@ func (collector *resourcesCollector) syncTargetRefTaskgroups() error {
 		// if zk taskgroup exist, then delete currentQueue
 		delete(currentQueue, taskgroup.ID)
 
-		//if taskgroup is already in the workQueue, then continue
+		// if taskgroup is already in the workQueue, then continue
 		_, ok := collector.taskgroupStats[taskgroup.ID]
 		if ok {
 			/*blog.V(3).Infof("ticker sync scaler %s taskgroup %s already exists",
@@ -311,7 +317,7 @@ func (collector *resourcesCollector) syncTargetRefTaskgroups() error {
 			continue
 		}
 
-		//add taskgroup into workqueue
+		// add taskgroup into workqueue
 		blog.Infof("add taskgroup %s into scaler %s workqueue", taskgroup.ID, collector.scaler.GetUuid())
 		collector.taskgroupStats[taskgroup.ID] = &taskgroupStats{
 			id:             taskgroup.ID,
@@ -340,14 +346,14 @@ func (collector *resourcesCollector) syncTargetRefTaskgroups() error {
 		url := fmt.Sprintf("http://%s:%d/", hostIp, collector.cadvisorPort)
 		collector.taskgroupStats[taskgroup.ID].cadvisorClient, _ = cadClient.NewClientWithTimeout(url, time.Second*5)
 
-		//add TaskgroupMetric
+		// add TaskgroupMetric
 		collector.cpuMetricsInfo[taskgroup.ID] = metrics.TaskgroupMetric{}
 		collector.memoryMetricsInfo[taskgroup.ID] = metrics.TaskgroupMetric{}
 	}
 
-	//delete invalid taskgroup in workqueue
+	// delete invalid taskgroup in workqueue
 	for k := range currentQueue {
-		//add taskgroup into workqueue
+		// add taskgroup into workqueue
 		blog.Infof("delete taskgroup %s into scaler %s workqueue", k, collector.scaler.GetUuid())
 		delete(collector.taskgroupStats, k)
 		delete(collector.cpuMetricsInfo, k)

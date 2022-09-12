@@ -207,7 +207,8 @@ func (bpp *BCSProjectPerm) CanViewProject(user string, projectID string) (bool, 
 }
 
 // GenerateIAMApplicationURL build permission URL
-func (bpp *BCSProjectPerm) GenerateIAMApplicationURL(systemID string, applications []iam.ApplicationAction) (string, error) {
+func (bpp *BCSProjectPerm) GenerateIAMApplicationURL(systemID string, applications []iam.ApplicationAction) (string,
+	error) {
 	if bpp == nil {
 		return iam.IamAppURL, utils.ErrServerNotInited
 	}
@@ -223,7 +224,8 @@ func (bpp *BCSProjectPerm) GenerateIAMApplicationURL(systemID string, applicatio
 }
 
 // GetProjectMultiActionPermission only support same instanceSelection
-func (bpp *BCSProjectPerm) GetProjectMultiActionPermission(user, projectID string, actionIDs []string) (map[string]bool, error) {
+func (bpp *BCSProjectPerm) GetProjectMultiActionPermission(user, projectID string, actionIDs []string) (map[string]bool,
+	error) {
 	if bpp == nil {
 		return nil, utils.ErrServerNotInited
 	}
@@ -238,7 +240,8 @@ func (bpp *BCSProjectPerm) GetProjectMultiActionPermission(user, projectID strin
 }
 
 // GetMultiProjectMultiActionPermission only support same instanceSelection
-func (bpp *BCSProjectPerm) GetMultiProjectMultiActionPermission(user string, projectIDs, actionIDs []string) (map[string]map[string]bool, error) {
+func (bpp *BCSProjectPerm) GetMultiProjectMultiActionPermission(user string, projectIDs,
+	actionIDs []string) (map[string]map[string]bool, error) {
 	if bpp == nil {
 		return nil, utils.ErrServerNotInited
 	}

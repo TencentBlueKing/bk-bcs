@@ -33,7 +33,7 @@ var cloudInfoMgr sync.Once
 
 func init() {
 	cloudInfoMgr.Do(func() {
-		//init Cluster
+		// init Cluster
 		cloudprovider.InitCloudInfoManager(cloudName, &CloudInfoManager{})
 	})
 }
@@ -42,8 +42,9 @@ func init() {
 type CloudInfoManager struct {
 }
 
-// ImportClusterValidate check importCluster operation
-func (c *CloudInfoManager) InitCloudClusterDefaultInfo(cls *cmproto.Cluster, opt *cloudprovider.InitClusterConfigOption) error {
+// InitCloudClusterDefaultInfo init cloud defaultInfo
+func (c *CloudInfoManager) InitCloudClusterDefaultInfo(cls *cmproto.Cluster,
+	opt *cloudprovider.InitClusterConfigOption) error {
 	// call qcloud interface to init cluster defaultConfig
 	if c == nil || cls == nil {
 		return fmt.Errorf("%s InitCloudClusterDefaultInfo request is empty", cloudName)
@@ -73,7 +74,8 @@ func (c *CloudInfoManager) InitCloudClusterDefaultInfo(cls *cmproto.Cluster, opt
 }
 
 // SyncClusterCloudInfo get cluster cloudInfo by clusterID or kubeConfig
-func (c *CloudInfoManager) SyncClusterCloudInfo(cls *cmproto.Cluster, opt *cloudprovider.SyncClusterCloudInfoOption) error {
+func (c *CloudInfoManager) SyncClusterCloudInfo(cls *cmproto.Cluster,
+	opt *cloudprovider.SyncClusterCloudInfoOption) error {
 	// call qcloud interface to init cluster defaultConfig
 	if c == nil || cls == nil {
 		return fmt.Errorf("%s SyncClusterCloudInfo request is empty", cloudName)
@@ -127,6 +129,7 @@ func getCloudCluster(opt *cloudprovider.SyncClusterCloudInfoOption) (*tke.Cluste
 	return cli.GetTKECluster(cloudID)
 }
 
+// getCloudIDByKubeConfig xxx
 // kubeConfig cluster name must be cloud clusterID
 func getCloudIDByKubeConfig(opt *cloudprovider.SyncClusterCloudInfoOption) (string, error) {
 	config, err := types.GetKubeConfigFromYAMLBody(false, types.YamlInput{

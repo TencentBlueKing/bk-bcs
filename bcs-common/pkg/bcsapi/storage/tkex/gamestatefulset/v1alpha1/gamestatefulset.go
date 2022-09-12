@@ -11,6 +11,7 @@
  *
  */
 
+// Package gamestatefulset xxx
 // +kubebuilder:validation:Optional
 package gamestatefulset
 
@@ -23,17 +24,17 @@ import (
 )
 
 const (
-	//ControllerRevisionHashLabelKey controller revision hash tag
+	// ControllerRevisionHashLabelKey controller revision hash tag
 	ControllerRevisionHashLabelKey = "controller-revision-hash"
-	//GameStatefulSetRevisionLabel controller revision hash tag
+	// GameStatefulSetRevisionLabel controller revision hash tag
 	GameStatefulSetRevisionLabel = ControllerRevisionHashLabelKey
-	//DeprecatedRollbackTo deprecated label
+	// DeprecatedRollbackTo deprecated label
 	DeprecatedRollbackTo = "deprecated.deployment.rollback.to"
-	//DeprecatedTemplateGeneration deprecated label
+	// DeprecatedTemplateGeneration deprecated label
 	DeprecatedTemplateGeneration = "deprecated.daemonset.template.generation"
-	//GameStatefulSetPodNameLabel pod name reference label
+	// GameStatefulSetPodNameLabel pod name reference label
 	GameStatefulSetPodNameLabel = "gamestatefulset.kubernetes.io/pod-name"
-	//GameStatefulSetPodOrdinal pod ordinal reference label
+	// GameStatefulSetPodOrdinal pod ordinal reference label
 	GameStatefulSetPodOrdinal = "gamestatefulset.kubernetes.io/pod-ordinal"
 )
 
@@ -101,17 +102,20 @@ type GameStatefulSetUpdateStrategy struct {
 	Paused bool `json:"paused,omitempty"`
 }
 
+// CanaryStrategy xxx
 type CanaryStrategy struct {
 	// +kubebuilder:validation:Required
 	Steps []CanaryStep `json:"steps,omitempty"`
 }
 
+// CanaryStep xxx
 type CanaryStep struct {
 	Partition *intstr.IntOrString    `json:"partition,omitempty"`
 	Pause     *CanaryPause           `json:"pause,omitempty"`
 	Hook      *hookv1alpha1.HookStep `json:"hook,omitempty"`
 }
 
+// CanaryPause xxx
 type CanaryPause struct {
 	// Duration the amount of time to wait before moving to the next step.
 	// +optional
@@ -251,12 +255,14 @@ type GameStatefulSetSpec struct {
 	RevisionHistoryLimit *int32 `json:"revisionHistoryLimit,omitempty" protobuf:"varint,8,opt,name=revisionHistoryLimit"`
 }
 
+// GameStatefulSetPreDeleteUpdateStrategy xxx
 type GameStatefulSetPreDeleteUpdateStrategy struct {
 	// +kubebuilder:validation:Required
 	Hook                 *hookv1alpha1.HookStep `json:"hook,omitempty"`
 	RetryUnexpectedHooks bool                   `json:"retry,omitempty"`
 }
 
+// GameStatefulSetPreInplaceUpdateStrategy xxx
 type GameStatefulSetPreInplaceUpdateStrategy struct {
 	// +kubebuilder:validation:Required
 	Hook                 *hookv1alpha1.HookStep `json:"hook,omitempty"`
@@ -327,13 +333,14 @@ type GameStatefulSetStatus struct {
 	PostInplaceHookConditions []hookv1alpha1.PostInplaceHookCondition `json:"postInplaceHookCondition,omitempty"`
 }
 
+// CanaryStatus xxx
 type CanaryStatus struct {
 	Revision           string       `json:"revision,omitempty"`
 	PauseStartTime     *metav1.Time `json:"pauseStartTime,omitempty"`
 	CurrentStepHookRun string       `json:"currentStepHookRun,omitempty"`
 }
 
-//GameStatefulSetConditionType condition type for statefulset
+// GameStatefulSetConditionType condition type for statefulset
 type GameStatefulSetConditionType string
 
 // GameStatefulSetCondition describes the state of a statefulset at a certain point.

@@ -233,7 +233,7 @@ func (group *NodeGroup) DeleteNodes(nodes []*apiv1.Node) error {
 		ips = append(ips, ip)
 	}
 
-	//TODO： max support 100, separates to multi requests
+	// TODO： max support 100, separates to multi requests
 	if len(ips) < maxRecordsReturnedByAPI {
 		klog.Infof("DeleteInstances len(%d)", len(ips))
 		return group.deleteInstances(ips)
@@ -280,7 +280,7 @@ func (group *NodeGroup) Nodes() ([]cloudprovider.Instance, error) {
 		}
 
 		i := cloudprovider.Instance{
-			Id:     fmt.Sprintf("qcloud:///%v/%s", instance.Zone, instance.NodeID),
+			Id:     instance.InnerIP,
 			Status: &cloudprovider.InstanceStatus{},
 		}
 		cache[instance.NodeID] = instance.InnerIP
@@ -324,7 +324,7 @@ func (group *NodeGroup) GetNodeGroup() (*clustermanager.NodeGroup, error) {
 	return group.client.GetPool(group.nodeGroupID)
 }
 
-// GetGroupNodes returns NodeGroup nodes.
+// getGroupNodes returns NodeGroup nodes.
 func (group *NodeGroup) getGroupNodes() ([]string, error) {
 	nodes, err := group.client.GetNodes(group.nodeGroupID)
 	if err != nil {
@@ -399,7 +399,9 @@ func (group *NodeGroup) buildNodeFromTemplate(template *nodeTemplate) (*apiv1.No
 	// GenericLabels
 	node.Labels = cloudprovider.JoinStringMaps(node.Labels, buildGenericLabels(template, nodeName))
 
-	node.Spec.Taints = make([]apiv1.Taint, 0)
+	node.Spec = apiv1.NodeSpec{
+		Taints: make([]apiv1.Taint, 0),
+	}
 	for _, t := range template.Taint {
 		node.Spec.Taints = append(node.Spec.Taints, apiv1.Taint{
 			Key:    t.Key,

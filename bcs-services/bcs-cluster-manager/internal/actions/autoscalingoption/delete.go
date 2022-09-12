@@ -59,7 +59,7 @@ func (da *DeleteAction) Handle(
 		return
 	}
 
-	//try to get original data for return
+	// try to get original data for return
 	deleteOption, err := da.model.GetAutoScalingOption(da.ctx, da.req.ClusterID)
 	if err != nil {
 		da.setResp(common.BcsErrClusterManagerDBOperation, err.Error())

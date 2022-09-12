@@ -134,7 +134,7 @@ func (da *DeleteAction) Handle(
 		da.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
 		return
 	}
-	//get dependency resource for cloudprovider operation
+	// get dependency resource for cloudprovider operation
 	cmOption, err := cloudprovider.GetCredential(&cloudprovider.CredentialData{
 		Cloud:     cloud,
 		AccountID: cluster.CloudAccountID,
@@ -209,7 +209,7 @@ func (da *DeleteAction) Handle(
 		}(),
 		Message:    fmt.Sprintf("集群%s删除节点池%s", da.group.ClusterID, da.group.NodeGroupID),
 		OpUser:     req.Operator,
-		CreateTime: time.Now().String(),
+		CreateTime: time.Now().Format(time.RFC3339),
 	})
 	if err != nil {
 		blog.Errorf("DeleteNodeGroup[%s] CreateOperationLog failed: %v", da.group.NodeGroupID, err)
@@ -248,14 +248,14 @@ func (da *RemoveNodeAction) validate() error {
 		da.setResp(common.BcsErrClusterManagerInvalidParameter, err.Error())
 		return err
 	}
-	//get nodegroup for validation
+	// get nodegroup for validation
 	destGroup, err := da.model.GetNodeGroup(da.ctx, da.req.NodeGroupID)
 	if err != nil {
 		da.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
 		blog.Errorf("Get NodeGroup %s in pre-RemoveNode checking failed, err %s", da.req.NodeGroupID, err.Error())
 		return err
 	}
-	//check cluster info consistency
+	// check cluster info consistency
 	if destGroup.ClusterID != da.req.ClusterID {
 		blog.Errorf(
 			"request ClusterID %s is not same with NodeGroup.ClusterID %s when RemoveNode",
@@ -268,7 +268,7 @@ func (da *RemoveNodeAction) validate() error {
 		return err
 	}
 	da.group = destGroup
-	//check cluster existence
+	// check cluster existence
 	cluster, err := da.model.GetCluster(da.ctx, destGroup.ClusterID)
 	if err != nil {
 		blog.Errorf("get Cluster %s for NodeGroup %s to remove Node failed, %s",
@@ -278,7 +278,7 @@ func (da *RemoveNodeAction) validate() error {
 		return err
 	}
 	da.cluster = cluster
-	//get specified node for remove validation
+	// get specified node for remove validation
 	condM := make(operator.M)
 	condM["nodegroupid"] = da.group.NodeGroupID
 	condM["clusterid"] = da.group.ClusterID
@@ -293,7 +293,7 @@ func (da *RemoveNodeAction) validate() error {
 	for i := range nodes {
 		allNodes[nodes[i].InnerIP] = nodes[i]
 	}
-	//Nodes validation for remove
+	// Nodes validation for remove
 	for _, ip := range da.req.Nodes {
 		node, ok := allNodes[ip]
 		if !ok {
@@ -325,7 +325,7 @@ func (da *RemoveNodeAction) Handle(
 		// validate already setting error message
 		return
 	}
-	//get dependency resource and release it
+	// get dependency resource and release it
 	cloud, cluster, err := actions.GetCloudAndCluster(da.model, da.group.Provider, da.group.ClusterID)
 	if err != nil {
 		blog.Errorf("get Cloud %s for NodeGroup %s to remove Node failed, %s",
@@ -334,7 +334,7 @@ func (da *RemoveNodeAction) Handle(
 		da.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
 		return
 	}
-	//get dependency resource for cloudprovider operation
+	// get dependency resource for cloudprovider operation
 	cmOption, err := cloudprovider.GetCredential(&cloudprovider.CredentialData{
 		Cloud:     cloud,
 		AccountID: cluster.CloudAccountID,
@@ -346,7 +346,7 @@ func (da *RemoveNodeAction) Handle(
 		da.setResp(common.BcsErrClusterManagerCloudProviderErr, err.Error())
 		return
 	}
-	//get cloudprovider and then start to remove
+	// get cloudprovider and then start to remove
 	mgr, err := cloudprovider.GetNodeGroupMgr(cloud.CloudProvider)
 	if err != nil {
 		blog.Errorf("get cloudprovider %s/%s for NodeGroup %s to remove Node failed, %s",
@@ -371,7 +371,7 @@ func (da *RemoveNodeAction) Handle(
 		"Nodes %v remove out NodeGroup %s in cloudprovider %s/%s successfully",
 		req.Nodes, da.group.NodeGroupID, cloud.CloudID, cloud.CloudProvider,
 	)
-	//try to update Node
+	// try to update Node
 	for _, node := range da.removeNodes {
 		node.NodeGroupID = ""
 		if err = da.model.UpdateNode(ctx, node); err != nil {
@@ -390,7 +390,7 @@ func (da *RemoveNodeAction) Handle(
 		TaskID:       "",
 		Message:      fmt.Sprintf("集群%s节点池%s移除节点", da.group.ClusterID, da.group.NodeGroupID),
 		OpUser:       da.group.Creator,
-		CreateTime:   time.Now().String(),
+		CreateTime:   time.Now().Format(time.RFC3339),
 	})
 	if err != nil {
 		blog.Errorf("RemoveNodesFromNodeGroup[%s] CreateOperationLog failed: %v", da.group.NodeGroupID, err)
@@ -503,7 +503,7 @@ func (da *CleanNodesAction) validate() error {
 }
 
 func (da *CleanNodesAction) getRelativeData() error {
-	//get dependency resource
+	// get dependency resource
 	cloud, cluster, err := actions.GetCloudAndCluster(da.model, da.group.Provider, da.group.ClusterID)
 	if err != nil {
 		blog.Errorf("get Cloud %s Project %s for NodeGroup %s to clean Node failed, %s",
@@ -536,7 +536,7 @@ func (da *CleanNodesAction) updateCleanNodesStatus() error {
 }
 
 func (da *CleanNodesAction) handleTask() error {
-	//ready to create background task
+	// ready to create background task
 	nodeGroupMgr, err := cloudprovider.GetNodeGroupMgr(da.cloud.CloudProvider)
 	if err != nil {
 		blog.Errorf("get cloudprovider %s/%s for NodeGroup %s to clean Nodes %v failed, %s",
@@ -591,7 +591,7 @@ func (da *CleanNodesAction) Handle(
 	da.resp = resp
 
 	if err := da.validate(); err != nil {
-		//validate already sets response information
+		// validate already sets response information
 		return
 	}
 	if err := da.getRelativeData(); err != nil {
@@ -614,7 +614,7 @@ func (da *CleanNodesAction) Handle(
 		TaskID:       da.task.TaskID,
 		Message:      fmt.Sprintf("集群%s节点池%s删除节点%v", da.group.ClusterID, da.group.NodeGroupID, da.req.Nodes),
 		OpUser:       req.Operator,
-		CreateTime:   time.Now().String(),
+		CreateTime:   time.Now().Format(time.RFC3339),
 	})
 	if err != nil {
 		blog.Errorf("CleanNodesFromNodeGroup[%s] CreateOperationLog failed: %v", da.group.NodeGroupID, err)

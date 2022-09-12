@@ -18,6 +18,7 @@ import (
 	"github.com/urfave/cli"
 )
 
+// NewAgentSettingCommand xxx
 func NewAgentSettingCommand() cli.Command {
 	return cli.Command{
 		Name:  "as",

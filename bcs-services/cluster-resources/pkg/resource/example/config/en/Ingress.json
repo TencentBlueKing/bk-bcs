@@ -1,6 +1,6 @@
 {
   "kind": "Ingress",
-  "class": "networks",
+  "class": "network",
   "references": null,
   "items": [
     {

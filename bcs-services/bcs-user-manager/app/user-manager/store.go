@@ -74,15 +74,15 @@ func createBootstrapUsers(users []options.BootStrapUser) error {
 		var expiresAt time.Time
 		switch u.UserType {
 		case "admin":
-			userType = sqlstore.AdminUser
+			userType = models.AdminUser
 			subType = jwt.Client
 			expiresAt = time.Now().Add(sqlstore.AdminSaasUserExpiredTime)
 		case "saas":
-			userType = sqlstore.SaasUser
+			userType = models.SaasUser
 			subType = jwt.Client
 			expiresAt = time.Now().Add(sqlstore.AdminSaasUserExpiredTime)
 		case "plain":
-			userType = sqlstore.PlainUser
+			userType = models.PlainUser
 			subType = jwt.User
 			expiresAt = time.Now().Add(sqlstore.PlainUserExpiredTime)
 		default:
@@ -162,7 +162,7 @@ func syncTokenToRedis() {
 			ExpiredTime: int64(time.Until(v.ExpiresAt).Seconds()),
 			Issuer:      jwt.JWTIssuer,
 		}
-		if v.UserType == sqlstore.AdminUser || v.UserType == sqlstore.SaasUser {
+		if v.IsClient() {
 			userInfo.SubType = jwt.Client.String()
 			userInfo.ClientName = v.Name
 		} else {

@@ -1,6 +1,6 @@
 {
   "kind": "CronJob",
-  "class": "workloads",
+  "class": "workload",
   "references": null,
   "items": [
     {

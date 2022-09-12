@@ -14,7 +14,7 @@
 
 package formatter
 
-// FormatNS ...
+// FormatNS xxx
 func FormatNS(manifest map[string]interface{}) map[string]interface{} {
 	return CommonFormatRes(manifest)
 }

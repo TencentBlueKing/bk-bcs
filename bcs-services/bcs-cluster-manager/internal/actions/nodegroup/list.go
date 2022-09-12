@@ -18,10 +18,11 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
+	v1 "k8s.io/api/core/v1"
 
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/clusterops"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
 	storeopt "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/options"
@@ -109,14 +110,16 @@ type ListNodesAction struct {
 	group   *cmproto.NodeGroup
 	cluster *cmproto.Cluster
 	cloud   *cmproto.Cloud
-	req     *cmproto.GetNodeGroupRequest
+	k8sOp   *clusterops.K8SOperator
+	req     *cmproto.ListNodesInGroupRequest
 	resp    *cmproto.ListNodesInGroupResponse
 }
 
 // NewListNodesAction create list action for cluster credential
-func NewListNodesAction(model store.ClusterManagerModel) *ListNodesAction {
+func NewListNodesAction(model store.ClusterManagerModel, k8sOp *clusterops.K8SOperator) *ListNodesAction {
 	return &ListNodesAction{
 		model: model,
+		k8sOp: k8sOp,
 	}
 }
 
@@ -134,7 +137,7 @@ func (la *ListNodesAction) getRelativeResource() error {
 	}
 	la.group = group
 
-	//get relative cluster for information injection
+	// get relative cluster for information injection
 	cluster, err := la.model.GetCluster(la.ctx, la.group.ClusterID)
 	if err != nil {
 		blog.Errorf("can not get relative Cluster %s when list nodes in group", la.group.ClusterID)
@@ -155,43 +158,73 @@ func (la *ListNodesAction) getRelativeResource() error {
 }
 
 func (la *ListNodesAction) listNodesInGroup() error {
-	// create nodegroup with cloudprovider
-	mgr, err := cloudprovider.GetNodeGroupMgr(la.cloud.CloudProvider)
-	if err != nil {
-		blog.Errorf("get NodeGroup Manager cloudprovider %s/%s for list nodes in group %s failed, %s",
-			la.cloud.CloudID, la.cloud.CloudProvider, la.group.NodeGroupID, err.Error(),
-		)
-		return err
-	}
-	cmOption, err := cloudprovider.GetCredential(&cloudprovider.CredentialData{
-		Cloud:     la.cloud,
-		AccountID: la.cluster.CloudAccountID,
+	cond := operator.NewLeafCondition(operator.Eq, operator.M{
+		"nodegroupid": la.req.NodeGroupID,
 	})
+	nodes, err := la.model.ListNode(la.ctx, cond, &storeopt.ListOption{All: true})
 	if err != nil {
-		blog.Errorf("get Credential for Cloud %s/%s when list nodes in group for cluster %s failed, %s",
-			la.cloud.CloudID, la.cloud.CloudProvider, la.cluster.ClusterID, err.Error(),
+		blog.Errorf("list group nodes in nodegroup %s for Cluster %s failed, %s",
+			la.req.NodeGroupID, la.cluster.ClusterID, err.Error(),
 		)
 		return err
 	}
-	cmOption.Region = la.cluster.Region
-	// cloud provider nodeGroup
-	nodes, err := mgr.GetNodesInGroup(la.group, cmOption)
-	if err != nil {
-		blog.Errorf("list group nodes in cloudprovider %s/%s for Cluster %s failed, %s",
-			la.cloud.CloudID, la.cloud.CloudProvider, la.cluster.ClusterID, err.Error(),
-		)
-		return err
+	for _, v := range nodes {
+		la.resp.Data = append(la.resp.Data, &cmproto.NodeGroupNode{
+			NodeID:       v.NodeID,
+			InnerIP:      v.InnerIP,
+			InstanceType: v.InstanceType,
+			CPU:          v.CPU,
+			Mem:          v.Mem,
+			GPU:          v.GPU,
+			Status:       v.Status,
+			ZoneID:       v.ZoneID,
+			NodeGroupID:  v.NodeGroupID,
+			ClusterID:    v.ClusterID,
+			VPC:          v.VPC,
+			Region:       v.Region,
+			Zone:         v.Zone,
+		})
 	}
-	la.resp.Data = nodes
-	for i := range la.resp.Data {
-		la.resp.Data[i].Passwd = ""
+
+	// get node schedulable status
+	if la.req.Output == "wide" {
+		la.appendNodeInfo()
 	}
 	return nil
 }
 
+func (la *ListNodesAction) appendNodeInfo() {
+	k8sNodes, err := la.k8sOp.ListClusterNodes(la.ctx, la.group.ClusterID)
+	if err != nil {
+		blog.Warnf("ListClusterNodes %s failed, %s", la.group.ClusterID, err.Error())
+	}
+	nodeMap := make(map[string]v1.Node)
+	for _, v := range k8sNodes.Items {
+		for _, addr := range v.Status.Addresses {
+			if addr.Type == v1.NodeInternalIP {
+				nodeMap[addr.Address] = v
+			}
+		}
+	}
+	for i := range la.resp.Data {
+		if node, ok := nodeMap[la.resp.Data[i].InnerIP]; ok {
+			la.resp.Data[i].UnSchedulable = 0
+			if node.Spec.Unschedulable {
+				// append unschedulable status
+				la.resp.Data[i].UnSchedulable = 1
+				// append REMOVABLE status
+				if la.resp.Data[i].Status == common.StatusRunning {
+					la.resp.Data[i].Status = common.StatusNodeRemovable
+				}
+			}
+		}
+	}
+	return
+}
+
 // Handle handle list cluster credential
 func (la *ListNodesAction) Handle(
-	ctx context.Context, req *cmproto.GetNodeGroupRequest, resp *cmproto.ListNodesInGroupResponse) {
+	ctx context.Context, req *cmproto.ListNodesInGroupRequest, resp *cmproto.ListNodesInGroupResponse) {
 	if req == nil || resp == nil {
 		blog.Errorf("list NodeGroup failed, req or resp is empty")
 		return

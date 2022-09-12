@@ -33,6 +33,7 @@ type Project struct {
 	Kind      uint   `json:"kind"`
 }
 
+// String 用于打印
 func (p *Project) String() string {
 	var displayCode string
 	if p.Code == "" {

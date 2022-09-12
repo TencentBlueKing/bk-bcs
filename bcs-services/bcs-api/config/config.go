@@ -11,6 +11,7 @@
  *
  */
 
+// Package config xxx
 package config
 
 import (
@@ -18,7 +19,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/options"
 )
 
-//CertConfig is configuration of Cert
+// CertConfig is configuration of Cert
 type CertConfig struct {
 	CAFile     string
 	CertFile   string
@@ -27,7 +28,7 @@ type CertConfig struct {
 	IsSSL      bool
 }
 
-//ApiServConfig is a configuration of apiserver
+// ApiServConfig is a configuration of apiserver
 type ApiServConfig struct {
 	Address         string
 	Port            uint
@@ -62,15 +63,21 @@ type ApiServConfig struct {
 }
 
 var (
-	Edition                    = ""
-	TurnOnRBAC                 = false
-	BKIamAuth                  options.AuthOption
+	// Edition xxx
+	Edition = ""
+	// TurnOnRBAC xxx
+	TurnOnRBAC = false
+	// BKIamAuth xxx
+	BKIamAuth options.AuthOption
+	// ClusterCredentialsFixtures xxx
 	ClusterCredentialsFixtures options.CredentialsFixturesOptions
-	MesosWebconsoleProxyPort   uint
-	TkeConf                    options.TKEOptions
+	// MesosWebconsoleProxyPort xxx
+	MesosWebconsoleProxyPort uint
+	// TkeConf xxx
+	TkeConf options.TKEOptions
 )
 
-//NewApiServConfig create a config object
+// NewApiServConfig create a config object
 func NewApiServConfig() *ApiServConfig {
 	return &ApiServConfig{
 		Address: "127.0.0.1",

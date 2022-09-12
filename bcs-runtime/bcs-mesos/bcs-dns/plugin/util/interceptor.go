@@ -15,12 +15,13 @@ package util
 
 import "github.com/miekg/dns"
 
+// ResponseInterceptor xxx
 type ResponseInterceptor struct {
 	dns.ResponseWriter
 	Msg *dns.Msg
 }
 
-// NewResponseReverter returns a pointer to a new ResponseReverter.
+// NewResponseInterceptor returns a pointer to a new ResponseReverter.
 func NewResponseInterceptor(w dns.ResponseWriter) *ResponseInterceptor {
 	return &ResponseInterceptor{ResponseWriter: w}
 }

@@ -26,7 +26,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-mesos/bcs-mesos-driver/mesosdriver/config"
 )
 
-//NewHttpReverseProxy create golang library reverse proxy for normal http request
+// NewHttpReverseProxy create golang library reverse proxy for normal http request
 func NewHttpReverseProxy(target *url.URL, certConfig *config.CertConfig) (*httputil.ReverseProxy, error) {
 	if certConfig.IsSSL {
 		target.Scheme = "https"
@@ -40,7 +40,8 @@ func NewHttpReverseProxy(target *url.URL, certConfig *config.CertConfig) (*httpu
 	}
 	reverseProxy := &httputil.ReverseProxy{Director: director}
 	if certConfig.IsSSL {
-		cliTls, err := ssl.ClientTslConfVerity(certConfig.CAFile, certConfig.CertFile, certConfig.KeyFile, certConfig.CertPasswd)
+		cliTls, err := ssl.ClientTslConfVerity(certConfig.CAFile, certConfig.CertFile, certConfig.KeyFile,
+			certConfig.CertPasswd)
 		if err != nil {
 			blog.Errorf("set client tls config error %s", err.Error())
 			return nil, fmt.Errorf("set client tls config error %s", err.Error())

@@ -99,14 +99,14 @@ func ReportDiscoveryEventChanLengthDec() {
 	discoveryEventChanLength.Dec()
 }
 
-//ReportBcsGatewayAPIMetrics report all api action metrics
+// ReportBcsGatewayAPIMetrics report all api action metrics
 func ReportBcsGatewayAPIMetrics(metricData APIMetricsMeta) {
 	requestTotalAPI.WithLabelValues(metricData.System, metricData.Handler, metricData.Method, metricData.Status).Inc()
 	requestLatencyAPI.WithLabelValues(metricData.System, metricData.Handler, metricData.Method, metricData.Status).
 		Observe(time.Since(metricData.Started).Seconds())
 }
 
-//ReportBcsGatewayRegistryMetrics report all register interface metrics
+// ReportBcsGatewayRegistryMetrics report all register interface metrics
 func ReportBcsGatewayRegistryMetrics(metricData APIMetricsMeta) {
 	requestTotalRegister.WithLabelValues(metricData.System, metricData.Handler, metricData.Status).Inc()
 	requestLatencyRegister.WithLabelValues(metricData.System, metricData.Handler, metricData.Status).

@@ -11,6 +11,7 @@
  *
  */
 
+// Package bcs xxx
 package bcs
 
 import (
@@ -24,19 +25,24 @@ import (
 )
 
 const (
+	// TokenExpired xxx
 	TokenExpired = time.Hour * 24
 )
 
+// BCSTokenUserType xxx
 // bcs-usermamager 用户类型
 type BCSTokenUserType int
 
 const (
-	AdminUser   BCSTokenUserType = 1
-	SaaSUser    BCSTokenUserType = 2
+	// AdminUser xxx
+	AdminUser BCSTokenUserType = 1
+	// SaaSUser xxx
+	SaaSUser BCSTokenUserType = 2
+	// GeneralUser xxx
 	GeneralUser BCSTokenUserType = 3
 )
 
-// Cluster
+// Cluster xxx
 type Cluster struct {
 	ProjectId   string `json:"projectID"`
 	ClusterId   string `json:"clusterID"`
@@ -45,7 +51,7 @@ type Cluster struct {
 	IsShared    bool   `json:"is_shared"`
 }
 
-// String
+// String xxx
 func (c *Cluster) String() string {
 	return fmt.Sprintf("cluster<%s, %s>", c.ClusterName, c.ClusterId)
 }
@@ -107,7 +113,7 @@ func GetCluster(ctx context.Context, bcsConf *config.BCSConf, projectId, cluster
 	return cluster, nil
 }
 
-// Token
+// Token xxx
 type Token struct {
 	Token     string `json:"token"`
 	ExpiredAt string `json:"expired_at"`

@@ -25,12 +25,14 @@ import (
 	mesosjson "github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/mesosproto/json"
 )
 
+// Client xxx
 type Client struct {
 	StreamID string
 	url      string
 	client   *http.Client
 }
 
+// New xxx
 func New(addr, path string) *Client {
 	return &Client{
 		url: "http://" + addr + path,
@@ -45,6 +47,7 @@ func New(addr, path string) *Client {
 	}
 }
 
+// Send xxx
 func (c *Client) Send(payload []byte) (*http.Response, error) {
 
 	httpReq, err := http.NewRequest("POST", c.url, bytes.NewReader(payload))
@@ -58,7 +61,7 @@ func (c *Client) Send(payload []byte) (*http.Response, error) {
 	if c.StreamID != "" {
 		httpReq.Header.Set("Mesos-Stream-Id", c.StreamID)
 	}
-	//log.Printf("SENDING:%v", httpReq)
+	// log.Printf("SENDING:%v", httpReq)
 
 	httpResp, err := c.client.Do(httpReq)
 	if err != nil {
@@ -70,6 +73,7 @@ func (c *Client) Send(payload []byte) (*http.Response, error) {
 	return httpResp, nil
 }
 
+// SendAsJson xxx
 func (c *Client) SendAsJson(call *mesosjson.Call) (*http.Response, error) {
 	payload := new(bytes.Buffer)
 	if err := json.NewEncoder(payload).Encode(call); err != nil {

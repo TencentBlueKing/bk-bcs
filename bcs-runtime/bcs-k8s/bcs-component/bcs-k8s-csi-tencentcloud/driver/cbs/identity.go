@@ -24,14 +24,18 @@ func newCbsIdentity() (*cbsIdentity, error) {
 	return &cbsIdentity{}, nil
 }
 
-func (identity *cbsIdentity) GetPluginInfo(context.Context, *csi.GetPluginInfoRequest) (*csi.GetPluginInfoResponse, error) {
+// GetPluginInfo xxx
+func (identity *cbsIdentity) GetPluginInfo(context.Context, *csi.GetPluginInfoRequest) (*csi.GetPluginInfoResponse,
+	error) {
 	return &csi.GetPluginInfoResponse{
 		Name:          DriverName,
 		VendorVersion: DriverVerision,
 	}, nil
 }
 
-func (identity *cbsIdentity) GetPluginCapabilities(context.Context, *csi.GetPluginCapabilitiesRequest) (*csi.GetPluginCapabilitiesResponse, error) {
+// GetPluginCapabilities xxx
+func (identity *cbsIdentity) GetPluginCapabilities(context.Context, *csi.GetPluginCapabilitiesRequest) (
+	*csi.GetPluginCapabilitiesResponse, error) {
 	return &csi.GetPluginCapabilitiesResponse{
 		Capabilities: []*csi.PluginCapability{
 			{
@@ -45,6 +49,7 @@ func (identity *cbsIdentity) GetPluginCapabilities(context.Context, *csi.GetPlug
 	}, nil
 }
 
+// Probe xxx
 func (identity *cbsIdentity) Probe(context.Context, *csi.ProbeRequest) (*csi.ProbeResponse, error) {
 	return &csi.ProbeResponse{}, nil
 }

@@ -12,6 +12,7 @@
  * limitations under the License.
  */
 
+// Package slice xxx
 package slice
 
 // StringInSlice 判断字符串是否存在 Slice 中
@@ -22,6 +23,16 @@ func StringInSlice(str string, list []string) bool {
 		}
 	}
 	return false
+}
+
+// AllInt64Equal 判断 Int64 列表中是否每个值都相等
+func AllInt64Equal(list []int64) bool {
+	for idx := 1; idx < len(list); idx++ {
+		if list[idx] != list[0] {
+			return false
+		}
+	}
+	return true
 }
 
 // MatchKVInSlice 对 MapList 中每项进行检查，

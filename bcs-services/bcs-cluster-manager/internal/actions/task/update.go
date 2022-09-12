@@ -42,7 +42,7 @@ func NewUpdateAction(model store.ClusterManagerModel) *UpdateAction {
 
 func (ua *UpdateAction) updateTask(tsk *cmproto.Task) error {
 	timeStr := time.Now().Format(time.RFC3339)
-	//update field if required
+	// update field if required
 	tsk.LastUpdate = timeStr
 	tsk.Updater = ua.req.Updater
 	if len(ua.req.Status) != 0 {
@@ -92,7 +92,7 @@ func (ua *UpdateAction) Handle(
 		return
 	}
 
-	//get old Task information, update fields if required
+	// get old Task information, update fields if required
 	destTsk, err := ua.model.GetTask(ua.ctx, req.TaskID)
 	if err != nil {
 		ua.setResp(common.BcsErrClusterManagerDBOperation, err.Error())

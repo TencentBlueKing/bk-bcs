@@ -35,6 +35,7 @@ type reader struct {
 	pending uint64
 }
 
+// Read 用于常见IO
 func (rr *reader) Read(p []byte) (n int, err error) {
 	for err == nil && len(p) > 0 {
 		if rr.pending == 0 {

@@ -11,6 +11,7 @@
  *
  */
 
+// Package util xxx
 package util
 
 import (

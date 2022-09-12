@@ -48,12 +48,12 @@ const (
 	PurgeExpiredCacheTime = 60
 )
 
-// 获取项目信息缓存键
+// genProjInfoCacheKey 获取项目信息缓存键
 func genProjInfoCacheKey(projectID string) string {
 	return ProjectInfoCacheKeyPrefix + "-" + projectID
 }
 
-// ProjClient ...
+// ProjClient xxx
 type ProjClient struct {
 	ServiceName  string
 	EtcdRtr      registry.Registry
@@ -78,7 +78,7 @@ func InitProjClient(microRtr registry.Registry, cliTLSConf *tls.Config) {
 	})
 }
 
-// NewProjClient ...
+// NewProjClient xxx
 func NewProjClient(microRtr registry.Registry, cliTLSConf *tls.Config) (*ProjClient, error) {
 	ctx, cancel := context.WithCancel(context.Background())
 	cli := ProjClient{
@@ -96,7 +96,7 @@ func NewProjClient(microRtr registry.Registry, cliTLSConf *tls.Config) (*ProjCli
 	return &cli, nil
 }
 
-// 获取项目信息（支持缓存）
+// fetchProjInfoWithCache 获取项目信息（支持缓存）
 func (c *ProjClient) fetchProjInfoWithCache(ctx context.Context, projectID string) (map[string]interface{}, error) {
 	cacheKey := genProjInfoCacheKey(projectID)
 	if info, ok := c.cache.Get(cacheKey); info != nil && ok {
@@ -115,7 +115,7 @@ func (c *ProjClient) fetchProjInfoWithCache(ctx context.Context, projectID strin
 	return projInfo, nil
 }
 
-// 获取项目信息
+// fetchProjInfo 获取项目信息
 func (c *ProjClient) fetchProjInfo(ctx context.Context, projectID string) (map[string]interface{}, error) {
 	cli, grpcConn, err := c.genAvailableCli(ctx)
 	if err != nil {
@@ -139,7 +139,7 @@ func (c *ProjClient) fetchProjInfo(ctx context.Context, projectID string) (map[s
 	return projInfo, nil
 }
 
-// 获取可用的 ProjManager 服务
+// genAvailableCli 获取可用的 ProjManager 服务
 func (c *ProjClient) genAvailableCli(ctx context.Context) (bcsapiProj.BCSProjectClient, *grpc.ClientConn, error) {
 	node, err := c.discovery.GetRandServiceInst(ctx)
 	if err != nil {

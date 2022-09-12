@@ -19,5 +19,6 @@ const (
 	// MicroMetaKeyHTTPPort http port in micro-service meta
 	MicroMetaKeyHTTPPort = "httpport"
 
+	// MetaKeyHTTPPort TODO
 	MetaKeyHTTPPort = "httpport"
 )

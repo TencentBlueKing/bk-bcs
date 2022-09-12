@@ -11,13 +11,14 @@
  *
  */
 
+// Package options xxx
 package options
 
 import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
 )
 
-//SidecarOption is option in flags
+// SidecarOption is option in flags
 type SidecarOption struct {
 	conf.FileConfig
 	conf.ServiceConfig
@@ -40,7 +41,7 @@ type SidecarOption struct {
 	LogbeatPIDFilePath  string `json:"logbeat_pid_file_path" value:"" usage:"logbeat pid file path, which is used to reload logbeat"`
 }
 
-//NewSidecarOption create SidecarOption object
+// NewSidecarOption create SidecarOption object
 func NewSidecarOption() *SidecarOption {
 	return &SidecarOption{}
 }

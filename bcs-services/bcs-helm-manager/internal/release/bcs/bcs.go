@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package bcs xxx
 package bcs
 
 import (
@@ -92,4 +93,9 @@ func (c *cluster) Upgrade(ctx context.Context, conf release.HelmUpgradeConfig) (
 // Rollback release
 func (c *cluster) Rollback(ctx context.Context, conf release.HelmRollbackConfig) (*release.HelmRollbackResult, error) {
 	return c.rollback(ctx, conf)
+}
+
+// History get release history
+func (c *cluster) History(ctx context.Context, option release.HelmHistoryOption) ([]*release.Release, error) {
+	return c.history(ctx, option)
 }

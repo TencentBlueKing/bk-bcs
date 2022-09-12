@@ -22,14 +22,14 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
 )
 
-// PermCtx ...
+// PermCtx xxx
 type PermCtx struct {
 	Username   string
 	ProjectID  string
 	forceRaise bool
 }
 
-// Validate ...
+// Validate xxx
 func (c *PermCtx) Validate(_ []string) error {
 	// 尽管创建项目动作是不需要关联 ProjectID 的，但是 ClusterResources 中不涉及项目管理，因此这里要求 ProjectID 必填
 	if c.Username == "" || c.ProjectID == "" {
@@ -38,47 +38,47 @@ func (c *PermCtx) Validate(_ []string) error {
 	return nil
 }
 
-// GetProjID ...
+// GetProjID xxx
 func (c *PermCtx) GetProjID() string {
 	return c.ProjectID
 }
 
-// GetClusterID ...
+// GetClusterID xxx
 func (c *PermCtx) GetClusterID() string {
 	return ""
 }
 
-// GetResID ...
+// GetResID xxx
 func (c *PermCtx) GetResID() string {
 	return c.ProjectID
 }
 
-// GetUsername ...
+// GetUsername xxx
 func (c *PermCtx) GetUsername() string {
 	return c.Username
 }
 
-// GetParentChain ...
+// GetParentChain xxx
 func (c *PermCtx) GetParentChain() []perm.IAMRes {
 	return []perm.IAMRes{}
 }
 
-// SetForceRaise ...
+// SetForceRaise xxx
 func (c *PermCtx) SetForceRaise() {
 	c.forceRaise = true
 }
 
-// ForceRaise ...
+// ForceRaise xxx
 func (c *PermCtx) ForceRaise() bool {
 	return c.forceRaise
 }
 
-// ToMap ...
+// ToMap xxx
 func (c *PermCtx) ToMap() map[string]interface{} {
 	return structs.Map(c)
 }
 
-// FromMap ...
+// FromMap xxx
 func (c *PermCtx) FromMap(m map[string]interface{}) perm.Ctx {
 	if username, ok := m["Username"]; ok {
 		c.Username = username.(string)

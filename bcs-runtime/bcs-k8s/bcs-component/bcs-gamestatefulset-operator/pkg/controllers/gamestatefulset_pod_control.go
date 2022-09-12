@@ -57,7 +57,7 @@ type GameStatefulSetPodControlInterface interface {
 	ForceDeleteGameStatefulSetPod(set *stsplus.GameStatefulSet, pod *v1.Pod) (bool, error)
 }
 
-//NewRealGameStatefulSetPodControl create implementation according GameStatefulSetPodControlInterface
+// NewRealGameStatefulSetPodControl create implementation according GameStatefulSetPodControlInterface
 func NewRealGameStatefulSetPodControl(
 	client clientset.Interface,
 	podLister corelisters.PodLister,
@@ -131,11 +131,13 @@ func (spc *realGameStatefulSetPodControl) UpdateGameStatefulSetPod(set *stsplus.
 		// commit the update, retrying on conflicts
 		_, updateErr := spc.client.CoreV1().Pods(set.Namespace).Update(context.TODO(), pod, metav1.UpdateOptions{})
 		if updateErr == nil {
-			spc.metrics.collectPodUpdateDurations(set.Namespace, set.Name, successStatus, "updateGameStatefulSetPod", isGrace, time.Since(startTime))
+			spc.metrics.collectPodUpdateDurations(set.Namespace, set.Name, successStatus, "updateGameStatefulSetPod", isGrace,
+				time.Since(startTime))
 			klog.Infof("Pod %s/%s is updating successfully in UpdateGameStatefulSetPod", pod.Namespace, pod.Name)
 			return nil
 		}
-		spc.metrics.collectPodUpdateDurations(set.Namespace, set.Name, failureStatus, "updateGameStatefulSetPod", isGrace, time.Since(startTime))
+		spc.metrics.collectPodUpdateDurations(set.Namespace, set.Name, failureStatus, "updateGameStatefulSetPod", isGrace,
+			time.Since(startTime))
 		klog.Errorf("Pod %s/%s update err in UpdateGameStatefulSetPod: %+v", pod.Namespace, pod.Name, updateErr)
 		if updated, err := spc.podLister.Pods(set.Namespace).Get(pod.Name); err == nil {
 			// make a copy so we don't mutate the shared cache
@@ -191,19 +193,22 @@ func (spc *realGameStatefulSetPodControl) ForceDeleteGameStatefulSetPod(set *sts
 	startTime := time.Now()
 	err := spc.client.CoreV1().Pods(set.Namespace).Delete(context.TODO(), pod.Name, *metav1.NewDeleteOptions(0))
 	if err != nil {
-		spc.metrics.collectPodDeleteDurations(set.Namespace, set.Name, failureStatus, forceDeletePodAction, "false", time.Since(startTime))
+		spc.metrics.collectPodDeleteDurations(set.Namespace, set.Name, failureStatus, forceDeletePodAction, "false",
+			time.Since(startTime))
 		klog.Errorf("GameStatefulSet %s/%s's Pod %s/%s force delete error", set.Namespace, set.Name,
 			pod.Namespace, pod.Name)
 		return false, err
 	}
-	spc.metrics.collectPodDeleteDurations(set.Namespace, set.Name, successStatus, forceDeletePodAction, "false", time.Since(startTime))
+	spc.metrics.collectPodDeleteDurations(set.Namespace, set.Name, successStatus, forceDeletePodAction, "false",
+		time.Since(startTime))
 	spc.recordPodEvent("force delete", set, pod, err)
 	return true, err
 }
 
 // recordPodEvent records an event for verb applied to a Pod in a GameStatefulSet. If err is nil the generated event will
 // have a reason of v1.EventTypeNormal. If err is not nil the generated event will have a reason of v1.EventTypeWarning.
-func (spc *realGameStatefulSetPodControl) recordPodEvent(verb string, set *stsplus.GameStatefulSet, pod *v1.Pod, err error) {
+func (spc *realGameStatefulSetPodControl) recordPodEvent(verb string, set *stsplus.GameStatefulSet, pod *v1.Pod,
+	err error) {
 	if err == nil {
 		reason := fmt.Sprintf("Successful%s", strings.Title(verb))
 		message := fmt.Sprintf("%s Pod %s in GameStatefulSet %s successful",
@@ -220,7 +225,8 @@ func (spc *realGameStatefulSetPodControl) recordPodEvent(verb string, set *stspl
 // recordClaimEvent records an event for verb applied to the PersistentVolumeClaim of a Pod in a GameStatefulSet. If err is
 // nil the generated event will have a reason of v1.EventTypeNormal. If err is not nil the generated event will have a
 // reason of v1.EventTypeWarning.
-func (spc *realGameStatefulSetPodControl) recordClaimEvent(verb string, set *stsplus.GameStatefulSet, pod *v1.Pod, claim *v1.PersistentVolumeClaim, err error) {
+func (spc *realGameStatefulSetPodControl) recordClaimEvent(verb string, set *stsplus.GameStatefulSet, pod *v1.Pod,
+	claim *v1.PersistentVolumeClaim, err error) {
 	if err == nil {
 		reason := fmt.Sprintf("Successful%s", strings.Title(verb))
 		message := fmt.Sprintf("%s Claim %s Pod %s in GameStatefulSet %s success",
@@ -238,7 +244,8 @@ func (spc *realGameStatefulSetPodControl) recordClaimEvent(verb string, set *sts
 // set. If all of the claims for Pod are successfully created, the returned error is nil. If creation fails, this method
 // may be called again until no error is returned, indicating the PersistentVolumeClaims for pod are consistent with
 // set's Spec.
-func (spc *realGameStatefulSetPodControl) createPersistentVolumeClaims(set *stsplus.GameStatefulSet, pod *v1.Pod) error {
+func (spc *realGameStatefulSetPodControl) createPersistentVolumeClaims(set *stsplus.GameStatefulSet,
+	pod *v1.Pod) error {
 	var errs []error
 	for _, claim := range getPersistentVolumeClaims(set, pod) {
 		_, err := spc.pvcLister.PersistentVolumeClaims(claim.Namespace).Get(claim.Name)

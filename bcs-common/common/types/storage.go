@@ -62,42 +62,56 @@ type BcsStorageEventIf struct {
 	Data interface{} `json:"data"`
 }
 
+// EventExtraInfo xxx
 type EventExtraInfo struct {
 	Namespace string    `json:"namespace"`
 	Name      string    `json:"name"`
 	Kind      ExtraKind `json:"kind"`
 }
 
+// ExtraKind xxx
 type ExtraKind string
 
 const (
+	// ApplicationExtraKind xxx
 	ApplicationExtraKind ExtraKind = "application"
 )
 
+// EventEnv xxx
 type EventEnv string
 
 const (
-	Event_Env_K8s   EventEnv = "k8s"
+	// Event_Env_K8s xxx
+	Event_Env_K8s EventEnv = "k8s"
+	// Event_Env_Mesos xxx
 	Event_Env_Mesos EventEnv = "mesos"
 )
 
+// EventKind xxx
 type EventKind string
 
 const (
+	// TaskEventKind xxx
 	TaskEventKind EventKind = "task"
 )
 
+// EventLevel xxx
 type EventLevel string
 
 const (
+	// Event_Level_Warning xxx
 	Event_Level_Warning EventLevel = "warning"
-	Event_Level_Normal  EventLevel = "normal"
+	// Event_Level_Normal xxx
+	Event_Level_Normal EventLevel = "normal"
 )
 
+// EventComponent xxx
 type EventComponent string
 
 const (
-	Event_Component_Scheduler  EventComponent = "scheduler"
+	// Event_Component_Scheduler xxx
+	Event_Component_Scheduler EventComponent = "scheduler"
+	// Event_Component_Controller xxx
 	Event_Component_Controller EventComponent = "controller"
 )
 

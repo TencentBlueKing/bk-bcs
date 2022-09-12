@@ -18,10 +18,12 @@ import (
 	"net/http"
 )
 
+// ScaleApplication xxx
 func (bs *bcsScheduler) ScaleApplication(clusterID, namespace, name string, instance int) error {
 	return bs.scale(clusterID, namespace, BcsSchedulerResourceApplication, name, instance)
 }
 
+// ScaleProcess xxx
 func (bs *bcsScheduler) ScaleProcess(clusterID, namespace, name string, instance int) error {
 	return bs.scale(clusterID, namespace, BcsSchedulerResourceProcess, name, instance)
 }

@@ -30,24 +30,28 @@ type ConfigMapInterface interface {
 	List(ctx context.Context, namespace string, opts metav1.ListOptions) (*v1.ConfigMapList, error)
 	ListAsTable(ctx context.Context, namespace string, acceptHeader string, opts metav1.ListOptions) (*metav1.Table, error)
 	Get(ctx context.Context, namespace string, name string, opts metav1.GetOptions) (*v1.ConfigMap, error)
-	GetAsTable(ctx context.Context, namespace string, name string, acceptHeader string, opts metav1.GetOptions) (*metav1.Table, error)
-	Create(ctx context.Context, namespace string, ConfigMap *v1.ConfigMap, opts metav1.CreateOptions) (*v1.ConfigMap, error)
-	Update(ctx context.Context, namespace string, ConfigMap *v1.ConfigMap, opts metav1.UpdateOptions) (*v1.ConfigMap, error)
-	Patch(ctx context.Context, namespace string, name string, pt types.PatchType, data []byte, opts metav1.PatchOptions, subresources ...string) (*v1.ConfigMap, error)
+	GetAsTable(ctx context.Context, namespace string, name string, acceptHeader string,
+		opts metav1.GetOptions) (*metav1.Table, error)
+	Create(ctx context.Context, namespace string, ConfigMap *v1.ConfigMap, opts metav1.CreateOptions) (*v1.ConfigMap,
+		error)
+	Update(ctx context.Context, namespace string, ConfigMap *v1.ConfigMap, opts metav1.UpdateOptions) (*v1.ConfigMap,
+		error)
+	Patch(ctx context.Context, namespace string, name string, pt types.PatchType, data []byte, opts metav1.PatchOptions,
+		subresources ...string) (*v1.ConfigMap, error)
 	Delete(ctx context.Context, namespace string, name string, opts metav1.DeleteOptions) (*metav1.Status, error)
 }
 
-// ConfigMapHandler
+// ConfigMapHandler xxx
 type ConfigMapHandler struct {
 	handler ConfigMapInterface
 }
 
-// NewConfigMapHandler
+// NewConfigMapHandler xxx
 func NewConfigMapHandler(handler ConfigMapInterface) *ConfigMapHandler {
 	return &ConfigMapHandler{handler: handler}
 }
 
-// Service Resource Verb Handler
+// Serve Resource Verb Handler
 func (h *ConfigMapHandler) Serve(c *rest.RequestContext) error {
 	var (
 		obj runtime.Object
@@ -80,7 +84,8 @@ func (h *ConfigMapHandler) Serve(c *rest.RequestContext) error {
 		if rErr != nil {
 			return rErr
 		}
-		obj, err = h.handler.Patch(ctx, c.Namespace, c.Name, c.Options.PatchType, data, *c.Options.PatchOptions, c.Subresource)
+		obj, err = h.handler.Patch(ctx, c.Namespace, c.Name, c.Options.PatchType, data, *c.Options.PatchOptions,
+			c.Subresource)
 	case rest.DeleteVerb: // kubectl delete 操作
 		obj, err = h.handler.Delete(ctx, c.Namespace, c.Name, *c.Options.DeleteOptions)
 	default:

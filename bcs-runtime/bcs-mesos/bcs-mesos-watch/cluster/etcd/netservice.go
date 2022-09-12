@@ -62,7 +62,8 @@ type NetServiceWatcher struct {
 }
 
 // NewNetServiceWatcher return a new netservice watcher.
-func NewNetServiceWatcher(clusterID string, reporter cluster.Reporter, netservice *service.InnerService) *NetServiceWatcher {
+func NewNetServiceWatcher(clusterID string, reporter cluster.Reporter,
+	netservice *service.InnerService) *NetServiceWatcher {
 	return &NetServiceWatcher{
 		clusterID:  clusterID,
 		report:     reporter,

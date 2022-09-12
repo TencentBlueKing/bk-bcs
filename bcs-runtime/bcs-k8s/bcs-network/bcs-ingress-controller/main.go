@@ -22,6 +22,10 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	clbv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubedeprecated/apis/clb/v1"
+	"github.com/pkg/errors"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
+
 	ingressctrl "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/ingresscontroller"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/cloud"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/cloud/aws"
@@ -30,6 +34,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/cloud/tencentcloud"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/cloudcollector"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/constant"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/eventer"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/generator"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/option"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/portpoolcache"
@@ -184,6 +189,9 @@ func main() {
 		} else {
 			lbClient = namespacedlb.NewNamespacedLB(mgr.GetClient(), gcp.NewGclbWithSecret)
 		}
+	default:
+		blog.Errorf("unknown cloud type '%s'", opts.Cloud)
+		os.Exit(1)
 	}
 
 	if len(opts.Region) == 0 {
@@ -240,6 +248,17 @@ func main() {
 		os.Exit(1)
 	}
 
+	// init event watcher
+	k8sClient, err := initInClusterClient()
+	if err != nil {
+		blog.Fatalf("init in-cluster client failed: %v", err)
+	}
+	eventClient := eventer.NewKubeEventer(k8sClient)
+	if err = eventClient.Init(); err != nil {
+		blog.Fatalf("init event watcher failed: %v", err)
+	}
+	go eventClient.Start(context.Background())
+
 	// init webhook server
 	webhookServerOpts := &webhookserver.ServerOption{
 		Addr:           opts.Address,
@@ -247,7 +266,7 @@ func main() {
 		ServerCertFile: opts.ServerCertFile,
 		ServerKeyFile:  opts.ServerKeyFile,
 	}
-	webhookServer, err := webhookserver.NewHookServer(webhookServerOpts, mgr.GetClient(), portPoolCache)
+	webhookServer, err := webhookserver.NewHookServer(webhookServerOpts, mgr.GetClient(), portPoolCache, eventClient)
 	if err != nil {
 		blog.Errorf("create hook server failed, err %s", err.Error())
 		os.Exit(1)
@@ -264,4 +283,16 @@ func main() {
 		blog.Errorf("problem running manager, err %s", err.Error())
 		os.Exit(1)
 	}
+}
+
+func initInClusterClient() (*kubernetes.Clientset, error) {
+	cfg, err := rest.InClusterConfig()
+	if err != nil {
+		return nil, errors.Wrapf(err, "get in-cluster config failed")
+	}
+	client, err := kubernetes.NewForConfig(cfg)
+	if err != nil {
+		return nil, errors.Wrapf(err, "create in-cluster client failed")
+	}
+	return client, nil
 }

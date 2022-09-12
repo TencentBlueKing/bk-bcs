@@ -11,6 +11,7 @@
  *
  */
 
+// Package config xxx
 package config
 
 import (
@@ -21,15 +22,18 @@ import (
 )
 
 const (
+	// IpvsConfigFileName xxx
 	IpvsConfigFileName = "ipvsConfig.yaml"
 )
 
+// IpvsConfig xxx
 type IpvsConfig struct {
 	Scheduler     string   `json:"scheduler"`
 	VirtualServer string   `json:"vs"`
 	RealServer    []string `json:"rs"`
 }
 
+// WriteIpvsConfig xxx
 func WriteIpvsConfig(dir string, config IpvsConfig) error {
 	_, exist := os.Stat(dir)
 	if os.IsNotExist(exist) {
@@ -51,6 +55,7 @@ func WriteIpvsConfig(dir string, config IpvsConfig) error {
 	return nil
 }
 
+// ReadIpvsConfig xxx
 func ReadIpvsConfig(dir string) (*IpvsConfig, error) {
 	_, exist := os.Stat(dir)
 	if os.IsNotExist(exist) {

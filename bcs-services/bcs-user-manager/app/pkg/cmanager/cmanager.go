@@ -11,6 +11,7 @@
  *
  */
 
+// Package cmanager xxx
 package cmanager
 
 import (
@@ -24,6 +25,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi"
 	bcsapicm "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/discovery"
+	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/middleware"
 
 	"github.com/micro/go-micro/v2/registry"
 	"github.com/patrickmn/go-cache"
@@ -202,6 +204,9 @@ func (cm *ClusterManagerClient) getClusterManagerClient() (bcsapicm.ClusterManag
 	// discovery hosts
 	cfg.Hosts = []string{node.Address}
 	cfg.TLSConfig = cm.opts.ClientTLSConfig
+	cfg.Header = map[string]string{
+		middleware.InnerClientHeaderKey: "bcs-user-manager",
+	}
 	clusterCli := bcsapi.NewClusterManager(&cfg)
 
 	if clusterCli == nil {

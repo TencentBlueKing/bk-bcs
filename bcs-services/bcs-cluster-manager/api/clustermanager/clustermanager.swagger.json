@@ -14,6 +14,57 @@
     "application/json"
   ],
   "paths": {
+    "/clustermanager/v1/accounts": {
+      "get": {
+        "summary": "查询Cloud 账号列表, 主要用于权限资源查询",
+        "description": "根据查询条件过滤Cloud 账号列表，如果某项条件值为空，则忽略此条件。如果所有条件都为空，则默认查询所有账号",
+        "operationId": "ClusterManager_ListCloudAccountToPerm",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerListCloudAccountPermResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectID",
+            "description": "projectID. CloudAccount所属的项目信息，用于查询所属项目的云凭证",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "accountID",
+            "description": "accountID. 云账号列表",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "multi"
+          },
+          {
+            "name": "accountName",
+            "description": "accountName. 查询具体cloud账号详情",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      }
+    },
     "/clustermanager/v1/addfederatedcluster": {
       "post": {
         "summary": "将Cluster加入联邦Cluster",
@@ -206,7 +257,7 @@
         ]
       },
       "put": {
-        "summary": "更新ClusterAutoScalingOption",
+        "summary": "更新ClusterAutoScalingOption，该接口为全量更新",
         "description": "更新ClusterAutoscalingOption，一个ClusterAutoScalingOption对应一个集群，索引信息为clusterID",
         "operationId": "ClusterManager_UpdateAutoScalingOption",
         "responses": {
@@ -237,6 +288,47 @@
             "required": true,
             "schema": {
               "$ref": "#/definitions/clustermanagerUpdateAutoScalingOptionRequest"
+            }
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      }
+    },
+    "/clustermanager/v1/autoscalingoption/{clusterID}/status": {
+      "put": {
+        "summary": "开启/关闭集群弹性扩缩容",
+        "description": "开启/关闭集群弹性扩缩容",
+        "operationId": "ClusterManager_UpdateAutoScalingStatus",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerUpdateAutoScalingStatusResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "clusterID",
+            "description": "BCS集群ID，关联的集群ID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clustermanagerUpdateAutoScalingStatusRequest"
             }
           }
         ],
@@ -576,6 +668,13 @@
           {
             "name": "projectID",
             "description": "projectID. CloudAccount所属的项目信息，用于查询所属项目的云凭证",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "operator",
+            "description": "operator. operator云账号权限列表",
             "in": "query",
             "required": false,
             "type": "string"
@@ -2705,6 +2804,40 @@
         ]
       }
     },
+    "/clustermanager/v1/node/drain": {
+      "post": {
+        "summary": "节点pod迁移,将节点上的 Pod 驱逐",
+        "description": "节点pod迁移",
+        "operationId": "ClusterManager_DrainNode",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerDrainNodeResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clustermanagerDrainNodeRequest"
+            }
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      }
+    },
     "/clustermanager/v1/node/uncordon": {
       "put": {
         "summary": "节点可调度态",
@@ -3231,6 +3364,13 @@
             "in": "path",
             "required": true,
             "type": "string"
+          },
+          {
+            "name": "output",
+            "description": "output. 输出字段，可选值 wide(全部字段), basic(基本字段)，默认基本字段",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -3308,6 +3448,127 @@
             "required": true,
             "schema": {
               "$ref": "#/definitions/clustermanagerMoveNodesToGroupRequest"
+            }
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      }
+    },
+    "/clustermanager/v1/operationlogs": {
+      "get": {
+        "summary": "查询操作日志列表",
+        "description": "查询操作日志列表",
+        "operationId": "ClusterManager_ListOperationLogs",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerListOperationLogsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "resourceType",
+            "description": "resourceType. 资源类型,可选值: cluster, autoscalingoption, cloud, cloudvpc, nodegroup, task",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "resourceID",
+            "description": "resourceID. 资源ID",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "startTime",
+            "description": "startTime. 开始时间，GMT 时间戳，秒",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "uint64"
+          },
+          {
+            "name": "endTime",
+            "description": "endTime. 结束时间，GMT 时间戳，秒",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "uint64"
+          },
+          {
+            "name": "limit",
+            "description": "limit. 每页数量",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "page",
+            "description": "page. 页码",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "simple",
+            "description": "simple. 只展示 operationLogs 信息",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      }
+    },
+    "/clustermanager/v1/perms/actions/{actionID}": {
+      "post": {
+        "summary": "校验用户权限,当无权限时返回无权限URL",
+        "description": "校验用户权限,当无权限时返回无权限URL",
+        "operationId": "ClusterManager_QueryPermByActionID",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerQueryPermByActionIDResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "actionID",
+            "description": "权限actionID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clustermanagerQueryPermByActionIDRequest"
             }
           }
         ],
@@ -3585,6 +3846,79 @@
             "schema": {
               "$ref": "#/definitions/clustermanagerUpdateProjectRequest"
             }
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      }
+    },
+    "/clustermanager/v1/resourceschema/{cloudID}": {
+      "get": {
+        "summary": "查询资源模型列表",
+        "description": "查询资源模型列表",
+        "operationId": "ClusterManager_ListResourceSchema",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerListResourceSchemaResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "cloudID",
+            "description": "云 ID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      }
+    },
+    "/clustermanager/v1/resourceschema/{cloudID}/{name}": {
+      "get": {
+        "summary": "查询资源模型详情",
+        "description": "查询资源模型详情",
+        "operationId": "ClusterManager_GetResourceSchema",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerGetResourceSchemaResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "cloudID",
+            "description": "云 ID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "description": "资源名称",
+            "in": "path",
+            "required": true,
+            "type": "string"
           }
         ],
         "tags": [
@@ -3907,6 +4241,60 @@
           "ClusterManager"
         ]
       }
+    },
+    "/clustermanager/v2/nodegroup/{nodeGroupID}/groupnode": {
+      "delete": {
+        "summary": "回收节点组中的节点，使用query参数指定需要清理的节点",
+        "description": "指定IP地址从节点组中移除，也从集群中移除，并清理资源回收节点。该接口为异步接口，当该接口正常返回时，仅能确认清理任务正常创建，不能保证节点清理已经完成，如果需要确认进度，需要通过返回的Task进行详细查询。",
+        "operationId": "ClusterManager_CleanNodesInGroupV2",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerCleanNodesInGroupV2Response"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "nodeGroupID",
+            "description": "关联的NodeGroupID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "clusterID",
+            "description": "clusterID. 集群ID",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "nodes",
+            "description": "nodes. 需要清理回收的IP列表，使用','分割",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "operator",
+            "description": "operator. 操作者",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      }
     }
   },
   "definitions": {
@@ -3930,6 +4318,286 @@
         }
       }
     },
+    "apiextensionsExternalDocumentation": {
+      "type": "object",
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "url": {
+          "type": "string"
+        }
+      },
+      "description": "ExternalDocumentation allows referencing an external resource for extended documentation."
+    },
+    "apiextensionsJSON": {
+      "type": "object",
+      "properties": {
+        "raw": {
+          "type": "string",
+          "format": "byte"
+        }
+      },
+      "description": "JSON represents any valid JSON value.\nThese types are supported: bool, int64, float64, string, []interface{}, map[string]interface{} and nil."
+    },
+    "apiextensionsJSONSchemaProps": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "schema": {
+          "type": "string"
+        },
+        "ref": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string"
+        },
+        "format": {
+          "type": "string",
+          "description": "- bsonobjectid: a bson object ID, i.e. a 24 characters hex string\n- uri: an URI as parsed by Golang net/url.ParseRequestURI\n- email: an email address as parsed by Golang net/mail.ParseAddress\n- hostname: a valid representation for an Internet host name, as defined by RFC 1034, section 3.1 [RFC1034].\n- ipv4: an IPv4 IP as parsed by Golang net.ParseIP\n- ipv6: an IPv6 IP as parsed by Golang net.ParseIP\n- cidr: a CIDR as parsed by Golang net.ParseCIDR\n- mac: a MAC address as parsed by Golang net.ParseMAC\n- uuid: an UUID that allows uppercase defined by the regex (?i)^[0-9a-f]{8}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{12}$\n- uuid3: an UUID3 that allows uppercase defined by the regex (?i)^[0-9a-f]{8}-?[0-9a-f]{4}-?3[0-9a-f]{3}-?[0-9a-f]{4}-?[0-9a-f]{12}$\n- uuid4: an UUID4 that allows uppercase defined by the regex (?i)^[0-9a-f]{8}-?[0-9a-f]{4}-?4[0-9a-f]{3}-?[89ab][0-9a-f]{3}-?[0-9a-f]{12}$\n- uuid5: an UUID5 that allows uppercase defined by the regex (?i)^[0-9a-f]{8}-?[0-9a-f]{4}-?5[0-9a-f]{3}-?[89ab][0-9a-f]{3}-?[0-9a-f]{12}$\n- isbn: an ISBN10 or ISBN13 number string like \"0321751043\" or \"978-0321751041\"\n- isbn10: an ISBN10 number string like \"0321751043\"\n- isbn13: an ISBN13 number string like \"978-0321751041\"\n- creditcard: a credit card number defined by the regex ^(?:4[0-9]{12}(?:[0-9]{3})?|5[1-5][0-9]{14}|6(?:011|5[0-9][0-9])[0-9]{12}|3[47][0-9]{13}|3(?:0[0-5]|[68][0-9])[0-9]{11}|(?:2131|1800|35\\\\d{3})\\\\d{11})$ with any non digit characters mixed in\n- ssn: a U.S. social security number following the regex ^\\\\d{3}[- ]?\\\\d{2}[- ]?\\\\d{4}$\n- hexcolor: an hexadecimal color code like \"#FFFFFF: following the regex ^#?([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$\n- rgbcolor: an RGB color code like rgb like \"rgb(255,255,2559\"\n- byte: base64 encoded binary data\n- password: any kind of string\n- date: a date string like \"2006-01-02\" as defined by full-date in RFC3339\n- duration: a duration string like \"22 ns\" as parsed by Golang time.ParseDuration or compatible with Scala duration format\n- datetime: a date time string like \"2014-12-15T19:30:20.000Z\" as defined by date-time in RFC3339.",
+          "title": "format is an OpenAPI v3 format string. Unknown formats are ignored. The following formats are validated:"
+        },
+        "title": {
+          "type": "string"
+        },
+        "default": {
+          "$ref": "#/definitions/apiextensionsJSON",
+          "description": "default is a default value for undefined object fields.\nDefaulting is a beta feature under the CustomResourceDefaulting feature gate.\nDefaulting requires spec.preserveUnknownFields to be false."
+        },
+        "maximum": {
+          "type": "number",
+          "format": "double"
+        },
+        "exclusiveMaximum": {
+          "type": "boolean",
+          "format": "boolean"
+        },
+        "minimum": {
+          "type": "number",
+          "format": "double"
+        },
+        "exclusiveMinimum": {
+          "type": "boolean",
+          "format": "boolean"
+        },
+        "maxLength": {
+          "type": "string",
+          "format": "int64"
+        },
+        "minLength": {
+          "type": "string",
+          "format": "int64"
+        },
+        "pattern": {
+          "type": "string"
+        },
+        "maxItems": {
+          "type": "string",
+          "format": "int64"
+        },
+        "minItems": {
+          "type": "string",
+          "format": "int64"
+        },
+        "uniqueItems": {
+          "type": "boolean",
+          "format": "boolean"
+        },
+        "multipleOf": {
+          "type": "number",
+          "format": "double"
+        },
+        "enum": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/apiextensionsJSON"
+          }
+        },
+        "maxProperties": {
+          "type": "string",
+          "format": "int64"
+        },
+        "minProperties": {
+          "type": "string",
+          "format": "int64"
+        },
+        "required": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "items": {
+          "$ref": "#/definitions/apiextensionsJSONSchemaPropsOrArray"
+        },
+        "allOf": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/apiextensionsJSONSchemaProps"
+          }
+        },
+        "oneOf": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/apiextensionsJSONSchemaProps"
+          }
+        },
+        "anyOf": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/apiextensionsJSONSchemaProps"
+          }
+        },
+        "not": {
+          "$ref": "#/definitions/apiextensionsJSONSchemaProps"
+        },
+        "properties": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/apiextensionsJSONSchemaProps"
+          }
+        },
+        "additionalProperties": {
+          "$ref": "#/definitions/apiextensionsJSONSchemaPropsOrBool"
+        },
+        "patternProperties": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/apiextensionsJSONSchemaProps"
+          }
+        },
+        "dependencies": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/apiextensionsJSONSchemaPropsOrStringArray"
+          }
+        },
+        "additionalItems": {
+          "$ref": "#/definitions/apiextensionsJSONSchemaPropsOrBool"
+        },
+        "definitions": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/apiextensionsJSONSchemaProps"
+          }
+        },
+        "externalDocs": {
+          "$ref": "#/definitions/apiextensionsExternalDocumentation"
+        },
+        "example": {
+          "$ref": "#/definitions/apiextensionsJSON"
+        },
+        "nullable": {
+          "type": "boolean",
+          "format": "boolean"
+        },
+        "xKubernetesPreserveUnknownFields": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "x-kubernetes-preserve-unknown-fields stops the API server\ndecoding step from pruning fields which are not specified\nin the validation schema. This affects fields recursively,\nbut switches back to normal pruning behaviour if nested\nproperties or additionalProperties are specified in the schema.\nThis can either be true or undefined. False is forbidden."
+        },
+        "xKubernetesEmbeddedResource": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "x-kubernetes-embedded-resource defines that the value is an\nembedded Kubernetes runtime.Object, with TypeMeta and\nObjectMeta. The type must be object. It is allowed to further\nrestrict the embedded object. kind, apiVersion and metadata\nare validated automatically. x-kubernetes-preserve-unknown-fields\nis allowed to be true, but does not have to be if the object\nis fully specified (up to kind, apiVersion, metadata)."
+        },
+        "xKubernetesIntOrString": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "1) anyOf:\n   - type: integer\n   - type: string\n2) allOf:\n   - anyOf:\n     - type: integer\n     - type: string\n   - ... zero or more",
+          "title": "x-kubernetes-int-or-string specifies that this value is\neither an integer or a string. If this is true, an empty\ntype is allowed and type as child of anyOf is permitted\nif following one of the following patterns:"
+        },
+        "xKubernetesListMapKeys": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "x-kubernetes-list-map-keys annotates an array with the x-kubernetes-list-type `map` by specifying the keys used\nas the index of the map.\n\nThis tag MUST only be used on lists that have the \"x-kubernetes-list-type\"\nextension set to \"map\". Also, the values specified for this attribute must\nbe a scalar typed field of the child structure (no nesting is supported).\n\nThe properties specified must either be required or have a default value,\nto ensure those properties are present for all list items.\n\n+optional"
+        },
+        "xKubernetesListType": {
+          "type": "string",
+          "description": "1) `atomic`: the list is treated as a single entity, like a scalar.\n     Atomic lists will be entirely replaced when updated. This extension\n     may be used on any type of list (struct, scalar, ...).\n2) `set`:\n     Sets are lists that must not have multiple items with the same value. Each\n     value must be a scalar, an object with x-kubernetes-map-type `atomic` or an\n     array with x-kubernetes-list-type `atomic`.\n3) `map`:\n     These lists are like maps in that their elements have a non-index key\n     used to identify them. Order is preserved upon merge. The map tag\n     must only be used on a list with elements of type object.\nDefaults to atomic for arrays.\n+optional",
+          "title": "x-kubernetes-list-type annotates an array to further describe its topology.\nThis extension must only be used on lists and may have 3 possible values:"
+        },
+        "xKubernetesMapType": {
+          "type": "string",
+          "description": "1) `granular`:\n     These maps are actual maps (key-value pairs) and each fields are independent\n     from each other (they can each be manipulated by separate actors). This is\n     the default behaviour for all maps.\n2) `atomic`: the list is treated as a single entity, like a scalar.\n     Atomic maps will be entirely replaced when updated.\n+optional",
+          "title": "x-kubernetes-map-type annotates an object to further describe its topology.\nThis extension must only be used when type is object and may have 2 possible values:"
+        },
+        "xKubernetesValidations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/apiextensionsValidationRule"
+          },
+          "title": "x-kubernetes-validations describes a list of validation rules written in the CEL expression language.\nThis field is an alpha-level. Using this field requires the feature gate `CustomResourceValidationExpressions` to be enabled.\n+patchMergeKey=rule\n+patchStrategy=merge\n+listType=map\n+listMapKey=rule"
+        }
+      },
+      "description": "JSONSchemaProps is a JSON-Schema following Specification Draft 4 (http://json-schema.org/)."
+    },
+    "apiextensionsJSONSchemaPropsOrArray": {
+      "type": "object",
+      "properties": {
+        "schema": {
+          "$ref": "#/definitions/apiextensionsJSONSchemaProps"
+        },
+        "jSONSchemas": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/apiextensionsJSONSchemaProps"
+          }
+        }
+      },
+      "description": "JSONSchemaPropsOrArray represents a value that can either be a JSONSchemaProps\nor an array of JSONSchemaProps. Mainly here for serialization purposes."
+    },
+    "apiextensionsJSONSchemaPropsOrBool": {
+      "type": "object",
+      "properties": {
+        "allows": {
+          "type": "boolean",
+          "format": "boolean"
+        },
+        "schema": {
+          "$ref": "#/definitions/apiextensionsJSONSchemaProps"
+        }
+      },
+      "description": "JSONSchemaPropsOrBool represents JSONSchemaProps or a boolean value.\nDefaults to true for the boolean property."
+    },
+    "apiextensionsJSONSchemaPropsOrStringArray": {
+      "type": "object",
+      "properties": {
+        "schema": {
+          "$ref": "#/definitions/apiextensionsJSONSchemaProps"
+        },
+        "property": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "description": "JSONSchemaPropsOrStringArray represents a JSONSchemaProps or a string array."
+    },
+    "apiextensionsValidationRule": {
+      "type": "object",
+      "properties": {
+        "rule": {
+          "type": "string",
+          "description": "If the Rule is scoped to an object with properties, the accessible properties of the object are field selectable\nvia `self.field` and field presence can be checked via `has(self.field)`. Null valued fields are treated as\nabsent fields in CEL expressions.\nIf the Rule is scoped to an object with additionalProperties (i.e. a map) the value of the map\nare accessible via `self[mapKey]`, map containment can be checked via `mapKey in self` and all entries of the map\nare accessible via CEL macros and functions such as `self.all(...)`.\nIf the Rule is scoped to an array, the elements of the array are accessible via `self[i]` and also by macros and\nfunctions.\nIf the Rule is scoped to a scalar, `self` is bound to the scalar value.\nExamples:\n- Rule scoped to a map of objects: {\"rule\": \"self.components['Widget'].priority \u003c 10\"}\n- Rule scoped to a list of integers: {\"rule\": \"self.values.all(value, value \u003e= 0 \u0026\u0026 value \u003c 100)\"}\n- Rule scoped to a string value: {\"rule\": \"self.startsWith('kube')\"}\n\nThe `apiVersion`, `kind`, `metadata.name` and `metadata.generateName` are always accessible from the root of the\nobject and from any x-kubernetes-embedded-resource annotated objects. No other metadata properties are accessible.\n\nUnknown data preserved in custom resources via x-kubernetes-preserve-unknown-fields is not accessible in CEL\nexpressions. This includes:\n- Unknown field values that are preserved by object schemas with x-kubernetes-preserve-unknown-fields.\n- Object properties where the property schema is of an \"unknown type\". An \"unknown type\" is recursively defined as:\n  - A schema with no type and x-kubernetes-preserve-unknown-fields set to true\n  - An array where the items schema is of an \"unknown type\"\n  - An object where the additionalProperties schema is of an \"unknown type\"\n\nOnly property names of the form `[a-zA-Z_.-/][a-zA-Z0-9_.-/]*` are accessible.\nAccessible property names are escaped according to the following rules when accessed in the expression:\n- '__' escapes to '__underscores__'\n- '.' escapes to '__dot__'\n- '-' escapes to '__dash__'\n- '/' escapes to '__slash__'\n- Property names that exactly match a CEL RESERVED keyword escape to '__{keyword}__'. The keywords are:\n\t  \"true\", \"false\", \"null\", \"in\", \"as\", \"break\", \"const\", \"continue\", \"else\", \"for\", \"function\", \"if\",\n\t  \"import\", \"let\", \"loop\", \"package\", \"namespace\", \"return\".\nExamples:\n  - Rule accessing a property named \"namespace\": {\"rule\": \"self.__namespace__ \u003e 0\"}\n  - Rule accessing a property named \"x-prop\": {\"rule\": \"self.x__dash__prop \u003e 0\"}\n  - Rule accessing a property named \"redact__d\": {\"rule\": \"self.redact__underscores__d \u003e 0\"}\n\nEquality on arrays with x-kubernetes-list-type of 'set' or 'map' ignores element order, i.e. [1, 2] == [2, 1].\nConcatenation on arrays with x-kubernetes-list-type use the semantics of the list type:\n  - 'set': `X + Y` performs a union where the array positions of all elements in `X` are preserved and\n    non-intersecting elements in `Y` are appended, retaining their partial order.\n  - 'map': `X + Y` performs a merge where the array positions of all keys in `X` are preserved but the values\n    are overwritten by values in `Y` when the key sets of `X` and `Y` intersect. Elements in `Y` with\n    non-intersecting keys are appended, retaining their partial order.",
+          "title": "Rule represents the expression which will be evaluated by CEL.\nref: https://github.com/google/cel-spec\nThe Rule is scoped to the location of the x-kubernetes-validations extension in the schema.\nThe `self` variable in the CEL expression is bound to the scoped value.\nExample:\n- Rule scoped to the root of a resource with a status subresource: {\"rule\": \"self.status.actual \u003c= self.spec.maxDesired\"}"
+        },
+        "message": {
+          "type": "string",
+          "title": "Message represents the message displayed when validation fails. The message is required if the Rule contains\nline breaks. The message must not contain line breaks.\nIf unset, the message is \"failed rule: {Rule}\".\ne.g. \"must be a URL with the host matching spec.host\""
+        }
+      },
+      "description": "ValidationRule describes a validation rule written in the CEL expression language."
+    },
     "clustermanagerAccount": {
       "type": "object",
       "properties": {
@@ -3942,6 +4610,31 @@
           "type": "string",
           "description": "腾讯云账号secretKey",
           "title": "secretKey"
+        },
+        "subscriptionID": {
+          "type": "string",
+          "description": "Azure 订阅ID",
+          "title": "subscriptionID"
+        },
+        "tenantID": {
+          "type": "string",
+          "description": "Azure 租户ID",
+          "title": "tenantID"
+        },
+        "resourceGroupName": {
+          "type": "string",
+          "description": "Azure 资源组名称",
+          "title": "resourceGroupName"
+        },
+        "clientID": {
+          "type": "string",
+          "description": "Azure Service Principal ClientID",
+          "title": "clientID"
+        },
+        "clientSecret": {
+          "type": "string",
+          "description": "Azure Service Principal ClientSecret",
+          "title": "clientSecret"
         }
       },
       "description": "用于存储不同cloud的账号信息，不同cloud格式兼容处理",
@@ -4334,6 +5027,35 @@
       "description": "清理节点返回，由于该请求为异步请求，该返回仅能确认清理任务是否正常创建",
       "title": "CleanNodesInGroupResponse"
     },
+    "clustermanagerCleanNodesInGroupV2Response": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "$ref": "#/definitions/clustermanagerTask",
+          "description": "返回的清理任务",
+          "title": "data"
+        }
+      },
+      "description": "清理节点返回，由于该请求为异步请求，该返回仅能确认清理任务是否正常创建",
+      "title": "CleanNodesInGroupV2Response"
+    },
     "clustermanagerCloud": {
       "type": "object",
       "properties": {
@@ -4600,6 +5322,12 @@
           "format": "boolean",
           "description": "cloud是否关闭导入集群特性",
           "title": "disableImportCluster"
+        },
+        "disableNodeGroup": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "cloud是否关闭节点池特性",
+          "title": "disableNodeGroup"
         }
       },
       "description": "用于记录云公共配置信息",
@@ -4950,18 +5678,18 @@
         "isScaleDownEnable": {
           "type": "boolean",
           "format": "boolean",
-          "description": "是否开启缩容，默认为false",
+          "description": "scale-down-enabled,是否允许缩容节点",
           "title": "isScaleDownEnable"
         },
         "expander": {
           "type": "string",
-          "description": "多个伸缩组下扩容算法，（默认）random, least-waste, most-pod, priority",
+          "description": "expander,扩容算法，（默认）random, least-waste, most-pod, priority",
           "title": "expander"
         },
         "maxEmptyBulkDelete": {
           "type": "integer",
           "format": "int64",
-          "description": "并发扩容数，不设置默认为10",
+          "description": "max-empty-bulk-delete,单次缩容最大节点数",
           "title": "maxEmptyBulkDelete"
         },
         "scaleDownDelay": {
@@ -4973,13 +5701,13 @@
         "scaleDownUnneededTime": {
           "type": "integer",
           "format": "int64",
-          "description": "节点连续空闲多少分钟后被缩容，默认10分钟",
+          "description": "scale-down-unneeded-time,执行缩容等待时间，节点连续空闲多少分钟后被缩容，默认10分钟",
           "title": "scaleDownUnneededTime"
         },
         "scaleDownUtilizationThreahold": {
           "type": "integer",
           "format": "int64",
-          "description": "节点资源使用量低于多少百分比判定为空闲，默认为50",
+          "description": "scale-down-utilization-threshold,触发缩容资源阈值，节点资源使用量低于多少百分比判定为空闲，默认为50",
           "title": "scaleDownUtilizationThreahold"
         },
         "skipNodesWithLocalStorage": {
@@ -5003,19 +5731,19 @@
         "okTotalUnreadyCount": {
           "type": "integer",
           "format": "int64",
-          "description": "cluster-autoscaler在超过该周期次数后，会对节点进行健康判断，默认3次",
+          "description": "ok-total-unready-count,允许 unready 节点的数量",
           "title": "okTotalUnreadyCount"
         },
         "maxTotalUnreadyPercentage": {
           "type": "integer",
           "format": "int64",
-          "description": "最大未就绪节点比例，超过该比例之后，cluster-autoscaler会停止全部操作，默认45%",
+          "description": "max-total-unready-percentage,unready节点超过集群总节点的百分比，超过此阈值则停止自动扩容",
           "title": "maxTotalUnreadyPercentage"
         },
         "scaleDownUnreadyTime": {
           "type": "integer",
           "format": "int64",
-          "description": "未就绪节点停留多长时间之后，将开始判定可以进行裁剪，默认为20分钟",
+          "description": "scale-down-unready-time,unready节点缩容等待时间，单位秒",
           "title": "scaleDownUnreadyTime"
         },
         "unregisteredNodeRemovalTime": {
@@ -5068,8 +5796,61 @@
         "bufferResourceRatio": {
           "type": "integer",
           "format": "int64",
-          "description": "触发扩容资源阈值，集群资源使用率超过该值，则出发扩容，默认 100%",
+          "description": "buffer-resource-ratio,触发扩容资源阈值百分比，集群资源使用率超过该值，则触发扩容，默认 100",
           "title": "bufferResourceRatio"
+        },
+        "maxGracefulTerminationSec": {
+          "type": "integer",
+          "format": "int64",
+          "description": "max-graceful-termination-sec,缩容时，等待 Pod 退出最长时间",
+          "title": "maxGracefulTerminationSec"
+        },
+        "scanInterval": {
+          "type": "integer",
+          "format": "int64",
+          "description": "scan-interval,自动扩缩容检测时间间隔，单位为秒，默认为 10",
+          "title": "scanInterval"
+        },
+        "maxNodeProvisionTime": {
+          "type": "integer",
+          "format": "int64",
+          "description": "max-node-provision-time,等待节点提供最长时间，单位秒，默认 900",
+          "title": "maxNodeProvisionTime"
+        },
+        "scaleUpFromZero": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "scale-up-from-zero,允许自动扩容（没有 ready 节点时）",
+          "title": "scaleUpFromZero"
+        },
+        "scaleDownDelayAfterAdd": {
+          "type": "integer",
+          "format": "int64",
+          "description": "scale-down-delay-after-add,扩容后判断缩容时间间隔，单位秒",
+          "title": "scaleDownDelayAfterAdd"
+        },
+        "scaleDownDelayAfterDelete": {
+          "type": "integer",
+          "format": "int64",
+          "description": "scale-down-delay-after-delete,连续两次缩容时间间隔，单位秒",
+          "title": "scaleDownDelayAfterDelete"
+        },
+        "scaleDownDelayAfterFailure": {
+          "type": "integer",
+          "format": "int64",
+          "description": "scale-down-delay-after-failure,缩容失败后重试时间间隔，单位秒",
+          "title": "scaleDownDelayAfterFailure"
+        },
+        "scaleDownGpuUtilizationThreshold": {
+          "type": "integer",
+          "format": "int64",
+          "description": "scale-down-gpu-utilization-threshold,触发缩容资源阈值(GPU)，节点资源使用量低于多少百分比判定为空闲，默认为50",
+          "title": "scaleDownGpuUtilizationThreshold"
+        },
+        "status": {
+          "type": "string",
+          "description": "状态, NORMAL:正常，UPDATING:更新中，UPDATE-FAILED:更新失败，STOPPED:已停止",
+          "title": "status"
         }
       },
       "title": "ClusterAutoScalingOption cluster autoScaler module parameter"
@@ -5248,18 +6029,18 @@
         "isScaleDownEnable": {
           "type": "boolean",
           "format": "boolean",
-          "description": "是否开启缩容，默认为false",
+          "description": "scale-down-enabled,是否允许缩容节点",
           "title": "isScaleDownEnable"
         },
         "expander": {
           "type": "string",
-          "description": "多个伸缩组下扩容算法，（默认）random，most-pods，least-waste（最少浪费）",
+          "description": "expander,扩容算法，（默认）random, least-waste, most-pod, priority",
           "title": "expander"
         },
         "maxEmptyBulkDelete": {
           "type": "integer",
           "format": "int64",
-          "description": "并发扩容数，不设置默认为10",
+          "description": "max-empty-bulk-delete,单次缩容最大节点数",
           "title": "maxEmptyBulkDelete"
         },
         "scaleDownDelay": {
@@ -5271,13 +6052,13 @@
         "scaleDownUnneededTime": {
           "type": "integer",
           "format": "int64",
-          "description": "节点连续空闲多少分钟后被缩容，默认10分钟",
+          "description": "scale-down-unneeded-time,执行缩容等待时间，节点连续空闲多少分钟后被缩容，默认10分钟",
           "title": "scaleDownUnneededTime"
         },
         "scaleDownUtilizationThreahold": {
           "type": "integer",
           "format": "int64",
-          "description": "节点资源使用量低于多少百分比判定为空闲，默认为50",
+          "description": "scale-down-utilization-threshold,触发缩容资源阈值，节点资源使用量低于多少百分比判定为空闲，默认为50",
           "title": "scaleDownUtilizationThreahold"
         },
         "skipNodesWithLocalStorage": {
@@ -5295,25 +6076,25 @@
         "ignoreDaemonSetsUtilization": {
           "type": "boolean",
           "format": "boolean",
-          "description": "忽略DaemonSet的资源计算，默认false",
+          "description": "忽略DaemonSet的资源计算",
           "title": "ignoreDaemonSetsUtilization"
         },
         "okTotalUnreadyCount": {
           "type": "integer",
           "format": "int64",
-          "description": "cluster-autoscaler在超过该周期次数后，会对节点进行健康判断，默认3次",
+          "description": "ok-total-unready-count,允许 unready 节点的数量",
           "title": "okTotalUnreadyCount"
         },
         "maxTotalUnreadyPercentage": {
           "type": "integer",
           "format": "int64",
-          "description": "最大未就绪节点比例，超过该比例之后，cluster-autoscaler会停止全部操作，默认45%",
+          "description": "max-total-unready-percentage,unready节点超过集群总节点的百分比，超过此阈值则停止自动扩容",
           "title": "maxTotalUnreadyPercentage"
         },
         "scaleDownUnreadyTime": {
           "type": "integer",
           "format": "int64",
-          "description": "未就绪节点停留多长时间之后，将开始判定可以进行裁剪，默认为20分钟",
+          "description": "scale-down-unready-time,unready节点缩容等待时间，单位秒",
           "title": "scaleDownUnreadyTime"
         },
         "unregisteredNodeRemovalTime": {
@@ -5336,6 +6117,66 @@
           "type": "string",
           "description": "特性实现模式",
           "title": "provider"
+        },
+        "enableAutoscale": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "是否开启自动扩缩容，开启后会在该集群部署 ClusterAutoScaling 组件，默认为 false",
+          "title": "enableAutoscale"
+        },
+        "bufferResourceRatio": {
+          "type": "integer",
+          "format": "int64",
+          "description": "buffer-resource-ratio,触发扩容资源阈值百分比，集群资源使用率超过该值，则触发扩容，默认 100",
+          "title": "bufferResourceRatio"
+        },
+        "maxGracefulTerminationSec": {
+          "type": "integer",
+          "format": "int64",
+          "description": "max-graceful-termination-sec,缩容时，等待 Pod 退出最长时间",
+          "title": "maxGracefulTerminationSec"
+        },
+        "scanInterval": {
+          "type": "integer",
+          "format": "int64",
+          "description": "scan-interval,自动扩缩容检测时间间隔，单位为秒，默认为 10",
+          "title": "scanInterval"
+        },
+        "maxNodeProvisionTime": {
+          "type": "integer",
+          "format": "int64",
+          "description": "max-node-provision-time,等待节点提供最长时间，单位秒，默认 900",
+          "title": "maxNodeProvisionTime"
+        },
+        "scaleUpFromZero": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "scale-up-from-zero,允许自动扩容（没有 ready 节点时）",
+          "title": "scaleUpFromZero"
+        },
+        "scaleDownDelayAfterAdd": {
+          "type": "integer",
+          "format": "int64",
+          "description": "scale-down-delay-after-add,扩容后判断缩容时间间隔，单位秒",
+          "title": "scaleDownDelayAfterAdd"
+        },
+        "scaleDownDelayAfterDelete": {
+          "type": "integer",
+          "format": "int64",
+          "description": "scale-down-delay-after-delete,连续两次缩容时间间隔，单位秒",
+          "title": "scaleDownDelayAfterDelete"
+        },
+        "scaleDownDelayAfterFailure": {
+          "type": "integer",
+          "format": "int64",
+          "description": "scale-down-delay-after-failure,缩容失败后重试时间间隔，单位秒",
+          "title": "scaleDownDelayAfterFailure"
+        },
+        "scaleDownGpuUtilizationThreshold": {
+          "type": "integer",
+          "format": "int64",
+          "description": "scale-down-gpu-utilization-threshold,触发缩容资源阈值(GPU)，节点资源使用量低于多少百分比判定为空闲，默认为50",
+          "title": "scaleDownGpuUtilizationThreshold"
         }
       },
       "description": "创建AutoScalingOption请求",
@@ -6232,16 +7073,6 @@
           "additionalProperties": {
             "type": "string"
           }
-        },
-        "containerRuntime": {
-          "type": "string",
-          "description": "容器运行时",
-          "title": "containerRuntime"
-        },
-        "runtimeVersion": {
-          "type": "string",
-          "description": "运行时版本",
-          "title": "runtimeVersion"
         }
       },
       "description": "创建节点组请求",
@@ -6556,6 +7387,21 @@
           "type": "string"
         },
         "secret": {
+          "type": "string"
+        },
+        "subscriptionID": {
+          "type": "string"
+        },
+        "tenantID": {
+          "type": "string"
+        },
+        "resourceGroupName": {
+          "type": "string"
+        },
+        "clientID": {
+          "type": "string"
+        },
+        "clientSecret": {
           "type": "string"
         }
       },
@@ -6987,6 +7833,97 @@
       },
       "description": "关闭NodeGroup自动扩缩容返回结果",
       "title": "DisableNodeGroupAutoScaleResponse"
+    },
+    "clustermanagerDrainNodeRequest": {
+      "type": "object",
+      "properties": {
+        "innerIPs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "节点内网IP列表",
+          "title": "innerIPs"
+        },
+        "clusterID": {
+          "type": "string",
+          "description": "pod迁移节点所属的clusterID",
+          "title": "clusterID"
+        },
+        "updater": {
+          "type": "string",
+          "description": "更新者",
+          "title": "updater"
+        },
+        "force": {
+          "type": "boolean",
+          "format": "boolean"
+        },
+        "gracePeriodSeconds": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "ignoreAllDaemonSets": {
+          "type": "boolean",
+          "format": "boolean"
+        },
+        "timeout": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "deleteLocalData": {
+          "type": "boolean",
+          "format": "boolean"
+        },
+        "selector": {
+          "type": "string"
+        },
+        "podSelector": {
+          "type": "string"
+        },
+        "disableEviction": {
+          "type": "boolean",
+          "format": "boolean"
+        },
+        "skipWaitForDeleteTimeoutSeconds": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "dryRun": {
+          "type": "boolean",
+          "format": "boolean"
+        }
+      }
+    },
+    "clustermanagerDrainNodeResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "fail": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "返回操作失败的节点列表",
+          "title": "fail"
+        }
+      }
     },
     "clustermanagerEnableNodeGroupAutoScaleRequest": {
       "type": "object",
@@ -7442,6 +8379,35 @@
         "message",
         "data"
       ]
+    },
+    "clustermanagerGetResourceSchemaResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "$ref": "#/definitions/clustermanagerResourceSchema",
+          "description": "返回数据",
+          "title": "data"
+        }
+      },
+      "description": "查询资源模型详情返回",
+      "title": "GetResourceSchemaResponse"
     },
     "clustermanagerGetTaskResponse": {
       "type": "object",
@@ -8084,6 +9050,42 @@
         "message"
       ]
     },
+    "clustermanagerListCloudAccountPermResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clustermanagerCloudAccount"
+          },
+          "description": "cloud账号列表",
+          "title": "data"
+        }
+      },
+      "description": "查询云账号权限数据返回",
+      "title": "ListCloudAccountPermResponse",
+      "required": [
+        "code",
+        "message"
+      ]
+    },
     "clustermanagerListCloudAccountResponse": {
       "type": "object",
       "properties": {
@@ -8111,6 +9113,11 @@
           },
           "description": "cloud账号列表",
           "title": "data"
+        },
+        "web_annotations": {
+          "$ref": "#/definitions/clustermanagerWebAnnotations",
+          "description": "用户所属项目的云账号权限",
+          "title": "web_annotations"
         }
       },
       "description": "查询云账号返回",
@@ -8701,7 +9708,7 @@
         "data": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/clustermanagerNode"
+            "$ref": "#/definitions/clustermanagerNodeGroupNode"
           },
           "description": "nodes信息列表",
           "title": "data"
@@ -8713,6 +9720,52 @@
         "code",
         "data"
       ]
+    },
+    "clustermanagerListOperationLogsResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "$ref": "#/definitions/clustermanagerListOperationLogsResponseData",
+          "description": "返回数据",
+          "title": "data"
+        }
+      }
+    },
+    "clustermanagerListOperationLogsResponseData": {
+      "type": "object",
+      "properties": {
+        "count": {
+          "type": "integer",
+          "format": "int64",
+          "description": "操作日志数量",
+          "title": "count"
+        },
+        "results": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clustermanagerOperationLogDetail"
+          },
+          "description": "返回数据",
+          "title": "results"
+        }
+      }
     },
     "clustermanagerListProjectResponse": {
       "type": "object",
@@ -8749,6 +9802,38 @@
         "code",
         "message"
       ]
+    },
+    "clustermanagerListResourceSchemaResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clustermanagerResourceSchema"
+          },
+          "description": "返回数据",
+          "title": "data"
+        }
+      },
+      "description": "查询资源模型列表返回",
+      "title": "ListResourceSchemaResponse"
     },
     "clustermanagerListTaskResponse": {
       "type": "object",
@@ -8790,6 +9875,22 @@
         "code",
         "message"
       ]
+    },
+    "clustermanagerModuleInfo": {
+      "type": "object",
+      "properties": {
+        "ScaleOutModuleID": {
+          "type": "string",
+          "description": "CC模块ID,CA扩容节点转移模块",
+          "title": "scaleOutModuleID"
+        },
+        "ScaleInModuleID": {
+          "type": "string",
+          "description": "CC模块ID,CA缩容节点转移模块",
+          "title": "scaleInModuleID"
+        }
+      },
+      "title": "ModuleInfo 业务模块信息,主要涉及到节点模块转移"
     },
     "clustermanagerMoveNodesToGroupRequest": {
       "type": "object",
@@ -9170,16 +10271,6 @@
           "additionalProperties": {
             "type": "string"
           }
-        },
-        "containerRuntime": {
-          "type": "string",
-          "description": "容器运行时",
-          "title": "containerRuntime"
-        },
-        "runtimeVersion": {
-          "type": "string",
-          "description": "运行时版本",
-          "title": "runtimeVersion"
         }
       },
       "description": "节点组，对蓝鲸、腾讯云、AWS弹性伸缩能力封装",
@@ -9221,6 +10312,101 @@
       },
       "description": "用于记录集群弹性伸缩层面固定、模板信息，帮助弹性伸缩创建与维护, 和具体的cloud关联支持创建节点组、删除节点组、移动节点至节点组、从节点组删除节点、节点组扩容节点、节点组清理集群节点并销毁机器等操作",
       "title": "NodeGroupMgr"
+    },
+    "clustermanagerNodeGroupNode": {
+      "type": "object",
+      "properties": {
+        "nodeID": {
+          "type": "string",
+          "description": "节点云instanceID",
+          "title": "nodeID"
+        },
+        "innerIP": {
+          "type": "string",
+          "description": "节点内网主IP",
+          "title": "innerIP"
+        },
+        "instanceType": {
+          "type": "string",
+          "description": "机型信息字符串，可能为空",
+          "title": "instanceType"
+        },
+        "CPU": {
+          "type": "integer",
+          "format": "int64",
+          "description": "节点CPU信息",
+          "title": "CPU"
+        },
+        "mem": {
+          "type": "integer",
+          "format": "int64",
+          "description": "节点内存信息",
+          "title": "mem"
+        },
+        "GPU": {
+          "type": "integer",
+          "format": "int64",
+          "description": "节点GPU信息，可能为0",
+          "title": "GPU"
+        },
+        "status": {
+          "type": "string",
+          "description": "节点状态信息（根据弹性伸缩定义的），RUNNING, DELETEING, CREATING, FAILED, INITIALIZATION",
+          "title": "status"
+        },
+        "zoneID": {
+          "type": "string",
+          "description": "节点可用区，可能为空",
+          "title": "zone"
+        },
+        "nodeGroupID": {
+          "type": "string",
+          "description": "节点所属的NodeGroup ID, 可能为空(仅CA节点归属于nodeGroup)",
+          "title": "nodeGroupID"
+        },
+        "clusterID": {
+          "type": "string",
+          "description": "节点所属的ClusterID",
+          "title": "clusterID"
+        },
+        "VPC": {
+          "type": "string",
+          "description": "节点所属的VPC ID",
+          "title": "VPC"
+        },
+        "region": {
+          "type": "string",
+          "description": "节点所属区域，例如广州，深圳，加州等",
+          "title": "region"
+        },
+        "passwd": {
+          "type": "string",
+          "description": "实例初始化密码, 需要进行解密",
+          "title": "passwd"
+        },
+        "zone": {
+          "type": "integer",
+          "format": "int64",
+          "description": "节点可用区ID，可能为空; 该信息主要使用于CA",
+          "title": "zoneID"
+        },
+        "deviceID": {
+          "type": "string",
+          "description": "CA instance设备ID号",
+          "title": "deviceID"
+        },
+        "instanceRole": {
+          "type": "string",
+          "description": "节点角色，MASTER, WORKER, ETCD, MASTER_ETCD,ALL, 默认为WORKER",
+          "title": "instanceRole"
+        },
+        "unSchedulable": {
+          "type": "integer",
+          "format": "int64",
+          "description": "调度状态，默认值0表示参与调度，1表示不参与调度",
+          "title": "unSchedulable"
+        }
+      }
     },
     "clustermanagerNodeResult": {
       "type": "object",
@@ -9375,15 +10561,15 @@
           "description": "下架节点时进行BCS内置插件安装，该信息会索引云上默认配置信息进行对比与补充，Addons默认在集群正常初始化之后进行调用。",
           "title": "bcsScaleInAddons"
         },
-        "ScaleOutExtraAddons": {
+        "scaleOutExtraAddons": {
           "$ref": "#/definitions/clustermanagerAction",
           "description": "上架节点时用户额外扩展传递的信息，该部分为预留二方/三方/服务商扩展使用，Addons默认在集群状态正常之后进行调用与安装。",
-          "title": "ScaleOutExtraAddons"
+          "title": "scaleOutExtraAddons"
         },
-        "ScaleInExtraAddons": {
+        "scaleInExtraAddons": {
           "$ref": "#/definitions/clustermanagerAction",
           "description": "下架节点时额外扩展传递的信息，该部分为预留二方/三方/服务商扩展使用，Addons默认在集群状态正常之后进行调用与安装。",
-          "title": "ScaleInExtraAddons"
+          "title": "scaleInExtraAddons"
         },
         "nodeOS": {
           "type": "string",
@@ -9406,6 +10592,21 @@
         },
         "updateTime": {
           "type": "string"
+        },
+        "desc": {
+          "type": "string",
+          "description": "节点模板描述信息",
+          "title": "desc"
+        },
+        "runtime": {
+          "$ref": "#/definitions/clustermanagerRunTimeInfo",
+          "description": "节点池节点运行时可运行时版本信息",
+          "title": "runtime"
+        },
+        "module": {
+          "$ref": "#/definitions/clustermanagerModuleInfo",
+          "description": "节点池节点上下架时当前集群业务下转移模块信息",
+          "title": "module"
         }
       },
       "description": "节点模版, 主要用于对kubernetes集群节点的通用特性设置",
@@ -9447,6 +10648,46 @@
       },
       "description": "用于记录一些固定的系统信息，用于帮助OS层面信息展示",
       "title": "OSInfo"
+    },
+    "clustermanagerOperationLogDetail": {
+      "type": "object",
+      "properties": {
+        "resourceType": {
+          "type": "string",
+          "description": "资源类型",
+          "title": "resourceType"
+        },
+        "resourceID": {
+          "type": "string",
+          "description": "资源 ID",
+          "title": "resourceID"
+        },
+        "taskID": {
+          "type": "string",
+          "description": "任务 ID，可能为空",
+          "title": "taskID"
+        },
+        "message": {
+          "type": "string",
+          "description": "日志信息",
+          "title": "message"
+        },
+        "opUser": {
+          "type": "string",
+          "description": "操作者",
+          "title": "opUser"
+        },
+        "createTime": {
+          "type": "string",
+          "description": "发生时间",
+          "title": "createTime"
+        },
+        "task": {
+          "$ref": "#/definitions/clustermanagerTask",
+          "description": "任务详细信息，可能为空",
+          "title": "task"
+        }
+      }
     },
     "clustermanagerOsImage": {
       "type": "object",
@@ -9494,6 +10735,17 @@
       },
       "description": "操作系统镜像",
       "title": "OsImage"
+    },
+    "clustermanagerPerms": {
+      "type": "object",
+      "properties": {
+        "perms": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object"
+          }
+        }
+      }
     },
     "clustermanagerProject": {
       "type": "object",
@@ -9618,6 +10870,80 @@
       "description": "项目信息，整体对齐devops信息。每个业务可以有多个项目进行权限隔离",
       "title": "Project"
     },
+    "clustermanagerQueryPermByActionIDReqData": {
+      "type": "object",
+      "properties": {
+        "project_id": {
+          "type": "string",
+          "description": "项目ID",
+          "title": "project_id"
+        },
+        "cluster_id": {
+          "type": "string",
+          "description": "集群ID",
+          "title": "cluster_id"
+        },
+        "name": {
+          "type": "string",
+          "description": "命名空间名称",
+          "title": "name"
+        },
+        "template_id": {
+          "type": "string",
+          "description": "模板集ID",
+          "title": "template_id"
+        },
+        "account_id": {
+          "type": "string",
+          "description": "云账号ID",
+          "title": "account_id"
+        },
+        "operator": {
+          "type": "string",
+          "description": "操作者",
+          "title": "operator"
+        }
+      },
+      "description": "权限请求的上下文信息",
+      "title": "QueryPermByActionIDReqData"
+    },
+    "clustermanagerQueryPermByActionIDRequest": {
+      "type": "object",
+      "properties": {
+        "actionID": {
+          "type": "string",
+          "description": "权限actionID",
+          "title": "actionID"
+        },
+        "perm_ctx": {
+          "$ref": "#/definitions/clustermanagerQueryPermByActionIDReqData",
+          "description": "权限请求数据",
+          "title": "perm_ctx"
+        }
+      },
+      "description": "查询用户权限请求",
+      "title": "QueryPermByActionIDRequest",
+      "required": [
+        "actionID",
+        "perm_ctx"
+      ]
+    },
+    "clustermanagerQueryPermByActionIDResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "data": {
+          "$ref": "#/definitions/clustermanagerPerms",
+          "description": "返回结果",
+          "title": "data"
+        }
+      }
+    },
     "clustermanagerRegionInfo": {
       "type": "object",
       "properties": {
@@ -9732,6 +11058,36 @@
       "description": "记录联邦资源配额",
       "title": "ResourceQuota"
     },
+    "clustermanagerResourceSchema": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "资源名称",
+          "title": "name"
+        },
+        "displayName": {
+          "type": "string",
+          "description": "资源展示名称",
+          "title": "displayName"
+        },
+        "description": {
+          "type": "string",
+          "description": "资源描述",
+          "title": "description"
+        },
+        "schema": {
+          "$ref": "#/definitions/apiextensionsJSONSchemaProps",
+          "description": "资源模型",
+          "title": "schema"
+        },
+        "cloudID": {
+          "type": "string",
+          "description": "云 ID",
+          "title": "cloudID"
+        }
+      }
+    },
     "clustermanagerRetryCreateClusterReq": {
       "type": "object",
       "properties": {
@@ -9838,6 +11194,22 @@
           "title": "data"
         }
       }
+    },
+    "clustermanagerRunTimeInfo": {
+      "type": "object",
+      "properties": {
+        "containerRuntime": {
+          "type": "string",
+          "description": "容器运行时",
+          "title": "containerRuntime"
+        },
+        "runtimeVersion": {
+          "type": "string",
+          "description": "运行时版本",
+          "title": "runtimeVersion"
+        }
+      },
+      "title": "RunTimeInfo cluster runTime info"
     },
     "clustermanagerSecurityGroup": {
       "type": "object",
@@ -10228,21 +11600,21 @@
     "clustermanagerUpdateAutoScalingOptionRequest": {
       "type": "object",
       "properties": {
-        "isScaleDwonEnable": {
+        "isScaleDownEnable": {
           "type": "boolean",
           "format": "boolean",
-          "description": "是否开启缩容，默认为false",
-          "title": "isScaleDwonEnable"
+          "description": "scale-down-enabled,是否允许缩容节点",
+          "title": "isScaleDownEnable"
         },
         "expander": {
           "type": "string",
-          "description": "多个伸缩组下扩容算法，（默认）random，most-pods，least-waste（最少浪费）",
+          "description": "expander,扩容算法，（默认）random, least-waste, most-pod, priority",
           "title": "expander"
         },
         "maxEmptyBulkDelete": {
           "type": "integer",
           "format": "int64",
-          "description": "并发扩容数，不设置默认为10",
+          "description": "max-empty-bulk-delete,单次缩容最大节点数",
           "title": "maxEmptyBulkDelete"
         },
         "scaleDownDelay": {
@@ -10254,13 +11626,13 @@
         "scaleDownUnneededTime": {
           "type": "integer",
           "format": "int64",
-          "description": "节点连续空闲多少分钟后被缩容，默认10分钟",
+          "description": "scale-down-unneeded-time,执行缩容等待时间，节点连续空闲多少分钟后被缩容，默认10分钟",
           "title": "scaleDownUnneededTime"
         },
         "scaleDownUtilizationThreahold": {
           "type": "integer",
           "format": "int64",
-          "description": "节点资源使用量低于多少百分比判定为空闲，默认为50",
+          "description": "scale-down-utilization-threshold,触发缩容资源阈值，节点资源使用量低于多少百分比判定为空闲，默认为50",
           "title": "scaleDownUtilizationThreahold"
         },
         "skipNodesWithLocalStorage": {
@@ -10284,19 +11656,19 @@
         "okTotalUnreadyCount": {
           "type": "integer",
           "format": "int64",
-          "description": "cluster-autoscaler在超过该周期次数后，会对节点进行健康判断，默认3次",
+          "description": "ok-total-unready-count,允许 unready 节点的数量",
           "title": "okTotalUnreadyCount"
         },
         "maxTotalUnreadyPercentage": {
           "type": "integer",
           "format": "int64",
-          "description": "最大未就绪节点比例，超过该比例之后，cluster-autoscaler会停止全部操作，默认45%",
+          "description": "max-total-unready-percentage,unready节点超过集群总节点的百分比，超过此阈值则停止自动扩容",
           "title": "maxTotalUnreadyPercentage"
         },
         "scaleDownUnreadyTime": {
           "type": "integer",
           "format": "int64",
-          "description": "未就绪节点停留多长时间之后，将开始判定可以进行裁剪，默认为20分钟",
+          "description": "scale-down-unready-time,unready节点缩容等待时间，单位秒",
           "title": "scaleDownUnreadyTime"
         },
         "unregisteredNodeRemovalTime": {
@@ -10304,11 +11676,6 @@
           "format": "int64",
           "description": "cluster-autoscaler等待多长时间将删除未在kubernetes中注册的节点，默认30分钟",
           "title": "unregisteredNodeRemovalTime"
-        },
-        "projectID": {
-          "type": "string",
-          "description": "项目ID，关联的项目信息",
-          "title": "projectID"
         },
         "clusterID": {
           "type": "string",
@@ -10320,10 +11687,59 @@
           "description": "更新人",
           "title": "updater"
         },
-        "provider": {
-          "type": "string",
-          "description": "特性实现模式",
-          "title": "provider"
+        "scaleDownGpuUtilizationThreshold": {
+          "type": "integer",
+          "format": "int64",
+          "description": "scale-down-gpu-utilization-threshold,触发缩容资源阈值(GPU)，节点资源使用量低于多少百分比判定为空闲，默认为50",
+          "title": "scaleDownGpuUtilizationThreshold"
+        },
+        "bufferResourceRatio": {
+          "type": "integer",
+          "format": "int64",
+          "description": "buffer-resource-ratio,触发扩容资源阈值百分比，集群资源使用率超过该值，则触发扩容，默认 100",
+          "title": "bufferResourceRatio"
+        },
+        "maxGracefulTerminationSec": {
+          "type": "integer",
+          "format": "int64",
+          "description": "max-graceful-termination-sec,缩容时，等待 Pod 退出最长时间",
+          "title": "maxGracefulTerminationSec"
+        },
+        "scanInterval": {
+          "type": "integer",
+          "format": "int64",
+          "description": "scan-interval,自动扩缩容检测时间间隔，单位为秒，默认为 10",
+          "title": "scanInterval"
+        },
+        "maxNodeProvisionTime": {
+          "type": "integer",
+          "format": "int64",
+          "description": "max-node-provision-time,等待节点提供最长时间，单位秒，默认 900",
+          "title": "maxNodeProvisionTime"
+        },
+        "scaleUpFromZero": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "scale-up-from-zero,允许自动扩容（没有 ready 节点时）",
+          "title": "scaleUpFromZero"
+        },
+        "scaleDownDelayAfterAdd": {
+          "type": "integer",
+          "format": "int64",
+          "description": "scale-down-delay-after-add,扩容后判断缩容时间间隔，单位秒",
+          "title": "scaleDownDelayAfterAdd"
+        },
+        "scaleDownDelayAfterDelete": {
+          "type": "integer",
+          "format": "int64",
+          "description": "scale-down-delay-after-delete,连续两次缩容时间间隔，单位秒",
+          "title": "scaleDownDelayAfterDelete"
+        },
+        "scaleDownDelayAfterFailure": {
+          "type": "integer",
+          "format": "int64",
+          "description": "scale-down-delay-after-failure,缩容失败后重试时间间隔，单位秒",
+          "title": "scaleDownDelayAfterFailure"
         }
       },
       "description": "更新AutoScalingOption请求",
@@ -10358,6 +11774,49 @@
           "$ref": "#/definitions/clustermanagerClusterAutoScalingOption",
           "description": "更新后AutoScalingOption信息",
           "title": "data"
+        }
+      }
+    },
+    "clustermanagerUpdateAutoScalingStatusRequest": {
+      "type": "object",
+      "properties": {
+        "enable": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "是否开启集群扩缩容",
+          "title": "enable"
+        },
+        "clusterID": {
+          "type": "string",
+          "description": "BCS集群ID，关联的集群ID",
+          "title": "clusterID"
+        },
+        "updater": {
+          "type": "string",
+          "description": "更新人",
+          "title": "updater"
+        }
+      }
+    },
+    "clustermanagerUpdateAutoScalingStatusResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
         }
       }
     },

@@ -60,7 +60,7 @@ func (da *DeleteAction) Handle(
 		da.setResp(common.BcsErrClusterManagerInvalidParameter, err.Error())
 		return
 	}
-	//try to get original data for return
+	// try to get original data for return
 	deletedProject, err := da.model.GetProject(da.ctx, da.req.ProjectID)
 	if err != nil {
 		da.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
@@ -72,7 +72,7 @@ func (da *DeleteAction) Handle(
 		blog.Infof("project %s does not exist, No Deletion handle.", da.req.ProjectID)
 		return
 	}
-	if err := da.model.DeleteProject(da.ctx, da.req.ProjectID); err != nil {
+	if err = da.model.DeleteProject(da.ctx, da.req.ProjectID); err != nil {
 		da.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
 		return
 	}

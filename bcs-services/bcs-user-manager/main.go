@@ -78,6 +78,7 @@ func main() {
 	return
 }
 
+// turnOnEtcdRegistry xxx
 // register user-manager service to etcd
 func turnOnEtcdRegistry(opt *options.UserManagerOptions) (registry.Registry, error) {
 	if !opt.Etcd.Feature {

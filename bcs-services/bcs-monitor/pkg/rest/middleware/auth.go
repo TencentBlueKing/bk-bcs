@@ -26,7 +26,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-// APIAuthRequired API类型, 兼容多种鉴权模式
+// AuthRequired API类型, 兼容多种鉴权模式
 func AuthRequired() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		restContext := rest.InitRestContext(c)
@@ -162,7 +162,7 @@ func initContextWithAPIGW(c *rest.Context) bool {
 	return true
 }
 
-// GetProjectIdOrCode
+// GetProjectIdOrCode :
 func GetProjectIdOrCode(c *gin.Context) string {
 	if c.Param("projectId") != "" {
 		return c.Param("projectId")
@@ -170,7 +170,15 @@ func GetProjectIdOrCode(c *gin.Context) string {
 	return ""
 }
 
-// GetClusterId
+// GetProjectCode 获取 projectCode 参数
+func GetProjectCode(c *gin.Context) string {
+	if c.Param("projectCode") != "" {
+		return c.Param("projectCode")
+	}
+	return ""
+}
+
+// GetClusterId :
 func GetClusterId(c *gin.Context) string {
 	if c.Param("clusterId") != "" {
 		return c.Param("clusterId")
@@ -178,7 +186,7 @@ func GetClusterId(c *gin.Context) string {
 	return ""
 }
 
-// GetSessionId
+// GetSessionId :
 func GetSessionId(c *gin.Context) string {
 	if c.Param("sessionId") != "" {
 		return c.Param("sessionId")

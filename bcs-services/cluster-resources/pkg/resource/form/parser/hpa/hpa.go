@@ -12,6 +12,7 @@
  * limitations under the License.
  */
 
+// Package hpa xxx
 package hpa
 
 import (
@@ -25,7 +26,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
 )
 
-// ParseHPA ...
+// ParseHPA xxx
 func ParseHPA(manifest map[string]interface{}) map[string]interface{} {
 	hpa := model.HPA{}
 	common.ParseMetadata(manifest, &hpa.Metadata)
@@ -33,7 +34,7 @@ func ParseHPA(manifest map[string]interface{}) map[string]interface{} {
 	return structs.Map(hpa)
 }
 
-// ParseHPASpec ...
+// ParseHPASpec xxx
 func ParseHPASpec(manifest map[string]interface{}, spec *model.HPASpec) {
 	spec.Ref.APIVersion = mapx.GetStr(manifest, "spec.scaleTargetRef.apiVersion")
 	spec.Ref.Kind = mapx.GetStr(manifest, "spec.scaleTargetRef.kind")
@@ -109,7 +110,7 @@ func genPodMetricItem(m map[string]interface{}) model.PodMetricItem {
 	}
 }
 
-// 通过 metricSource 获取 metric value
+// getMetricValue 通过 metricSource 获取 metric value
 func getMetricValue(ms map[string]interface{}) string {
 	switch mapx.GetStr(ms, "target.type") {
 	case HPATargetTypeAverageValue:
@@ -123,7 +124,7 @@ func getMetricValue(ms map[string]interface{}) string {
 	}
 }
 
-// 通过 metricSource 获取 metric selector
+// genMetricSelector 通过 metricSource 获取 metric selector
 func genMetricSelector(ms map[string]interface{}) model.MetricSelector {
 	selector := model.MetricSelector{}
 	for _, exp := range mapx.GetList(ms, "metric.selector.matchExpressions") {

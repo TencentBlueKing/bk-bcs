@@ -23,6 +23,7 @@ import (
 )
 
 type qFilter interface {
+	// getCondition TODO
 	// get the condition for querying
 	getCondition() *operator.Condition
 }

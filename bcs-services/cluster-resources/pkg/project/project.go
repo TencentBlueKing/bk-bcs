@@ -12,6 +12,7 @@
  * limitations under the License.
  */
 
+// Package project xxx
 package project
 
 import (
@@ -31,7 +32,7 @@ type Project struct {
 	Code string
 }
 
-// GetProjectInfo ...
+// GetProjectInfo xxx
 func GetProjectInfo(ctx context.Context, projectID string) (*Project, error) {
 	projInfo, err := fetchProjectInfo(ctx, projectID)
 	if err != nil {
@@ -53,7 +54,7 @@ func FromContext(ctx context.Context) (*Project, error) {
 	return p.(*Project), nil
 }
 
-// 获取项目信息（bcsProject）
+// fetchProjectInfo 获取项目信息（bcsProject）
 func fetchProjectInfo(ctx context.Context, projectID string) (map[string]interface{}, error) {
 	if runtime.RunMode == runmode.Dev || runtime.RunMode == runmode.UnitTest {
 		return fetchMockProjectInfo(projectID)

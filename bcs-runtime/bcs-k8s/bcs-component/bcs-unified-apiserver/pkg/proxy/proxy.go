@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package proxy xxx
 package proxy
 
 import (
@@ -91,7 +92,7 @@ type ProxyHandler struct {
 	config  *rest.Config
 }
 
-// NewProxyHandler
+// NewProxyHandler xxx
 func NewProxyHandler(clusterId string) (*ProxyHandler, error) {
 	kubeConf, err := clientutil.GetKubeConfByClusterId(clusterId)
 	if err != nil {
@@ -110,7 +111,7 @@ func NewProxyHandler(clusterId string) (*ProxyHandler, error) {
 	return handler, nil
 }
 
-// ServeHTTP
+// ServeHTTP xxx
 func (h *ProxyHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	// exec 需要 Upgrade
 	if req.Header.Get("X-Stream-Protocol-Version") != "" {

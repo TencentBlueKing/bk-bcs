@@ -11,6 +11,7 @@
  *
  */
 
+// Package metrics xxx
 package metrics
 
 import (
@@ -77,7 +78,7 @@ func ReportWatchRequestDec(handler, table string) {
 	watchRequestTotal.WithLabelValues(handler, table).Dec()
 }
 
-// ObserveHTTPResponseSize report responseSize metrics when break connection
+// ReportWatchHTTPResponseSize report responseSize metrics when break connection
 func ReportWatchHTTPResponseSize(handler, table string, sizeBytes int64) {
 	watchHTTPResponseSize.WithLabelValues(handler, table).Observe(float64(sizeBytes))
 }

@@ -36,6 +36,7 @@ import (
 
 var json = jsoniter.ConfigCompatibleWithStandardLibrary
 
+// APIResponse xxx
 type APIResponse struct {
 	Result  bool        `json:"result"`
 	Message string      `json:"message"`
@@ -116,7 +117,8 @@ func request2clusterkeeper(req *restful.Request, uri string) (respBody []byte, e
 	}
 
 	goReq.Set("Content-Type", "application/json")
-	reflect.ValueOf(goReq).MethodByName(strings.Title(strings.ToLower(req.Request.Method))).Call([]reflect.Value{reflect.ValueOf(url)})
+	reflect.ValueOf(goReq).MethodByName(strings.Title(strings.ToLower(req.Request.Method))).Call([]reflect.Value{
+		reflect.ValueOf(url)})
 	if len(body) != 0 {
 		goReq.SendString(json.Get(body).ToString())
 	}
@@ -135,8 +137,12 @@ func request2clusterkeeper(req *restful.Request, uri string) (respBody []byte, e
 }
 
 func init() {
-	actions.RegisterAction(actions.Action{Verb: "POST", Path: "/bcsapi/v4/clusterkeeper/{uri:*}", Params: nil, Handler: handlerActions})
-	actions.RegisterAction(actions.Action{Verb: "PUT", Path: "/bcsapi/v4/clusterkeeper/{uri:*}", Params: nil, Handler: handlerActions})
-	actions.RegisterAction(actions.Action{Verb: "GET", Path: "/bcsapi/v4/clusterkeeper/{uri:*}", Params: nil, Handler: handlerActions})
-	actions.RegisterAction(actions.Action{Verb: "DELETE", Path: "/bcsapi/v4/clusterkeeper/{uri:*}", Params: nil, Handler: handlerActions})
+	actions.RegisterAction(actions.Action{Verb: "POST", Path: "/bcsapi/v4/clusterkeeper/{uri:*}", Params: nil,
+		Handler: handlerActions})
+	actions.RegisterAction(actions.Action{Verb: "PUT", Path: "/bcsapi/v4/clusterkeeper/{uri:*}", Params: nil,
+		Handler: handlerActions})
+	actions.RegisterAction(actions.Action{Verb: "GET", Path: "/bcsapi/v4/clusterkeeper/{uri:*}", Params: nil,
+		Handler: handlerActions})
+	actions.RegisterAction(actions.Action{Verb: "DELETE", Path: "/bcsapi/v4/clusterkeeper/{uri:*}", Params: nil,
+		Handler: handlerActions})
 }

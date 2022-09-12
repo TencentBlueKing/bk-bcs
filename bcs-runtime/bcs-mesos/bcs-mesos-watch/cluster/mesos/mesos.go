@@ -11,6 +11,7 @@
  *
  */
 
+// Package mesos xxx
 package mesos
 
 import (
@@ -34,8 +35,8 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-mesos/bcs-mesos-watch/types"
 )
 
-//ZkClient interface to define zk operation
-//interface is only use for dependency injection
+// ZkClient interface to define zk operation
+// interface is only use for dependency injection
 type ZkClient interface {
 	ConnectEx(sessionTimeOut time.Duration) error
 	GetEx(path string) ([]byte, *zk.Stat, error)
@@ -47,16 +48,16 @@ type ZkClient interface {
 	Close()
 }
 
-//WatchInterface define interface for watch
+// WatchInterface define interface for watch
 type WatchInterface interface {
 	cluster.DataExister
 	cluster.EventHandler
-	addWatch(path string) error       //post path for watch
-	cleanWatch(path string) error     //post path to clean path
-	setClient(client ZkClient)        //setting new client
-	postData(data *types.BcsSyncData) //post single data manually/fix error data
-	sync()                            //force sync all data
-	stop()                            //stop all watch, reset all data
+	addWatch(path string) error       // post path for watch
+	cleanWatch(path string) error     // post path to clean path
+	setClient(client ZkClient)        // setting new client
+	postData(data *types.BcsSyncData) // post single data manually/fix error data
+	sync()                            // force sync all data
+	stop()                            // stop all watch, reset all data
 }
 
 var (
@@ -65,17 +66,17 @@ var (
 )
 
 var (
-	//ApplicationThreadNum goroutine number for Application channel
+	// ApplicationThreadNum goroutine number for Application channel
 	ApplicationThreadNum int
-	//TaskgroupThreadNum goroutine number for taskgroup channel
+	// TaskgroupThreadNum goroutine number for taskgroup channel
 	TaskgroupThreadNum int
-	//ExportserviceThreadNum goroutine number for exportservice channel
+	// ExportserviceThreadNum goroutine number for exportservice channel
 	ExportserviceThreadNum int
-	//DeploymentThreadNum goroutine number for deployment channel
+	// DeploymentThreadNum goroutine number for deployment channel
 	DeploymentThreadNum int
 )
 
-//NewMesosCluster create mesos cluster
+// NewMesosCluster create mesos cluster
 func NewMesosCluster(cfg *types.CmdConfig, st storage.Storage, netservice *service.InnerService) cluster.Cluster {
 
 	blog.Info("mesos cluster(%s) will be created ...", cfg.ClusterID)
@@ -95,7 +96,7 @@ func NewMesosCluster(cfg *types.CmdConfig, st storage.Storage, netservice *servi
 		reportCallback: make(map[string]cluster.ReportFunc),
 		existCallback:  make(map[string]cluster.DataExister),
 	}
-	//mesos watch initialize
+	// mesos watch initialize
 	if err := mesos.initialize(); err != nil {
 		blog.Error("mesos cluster initialize failed, %s", err.Error())
 		return nil
@@ -103,23 +104,23 @@ func NewMesosCluster(cfg *types.CmdConfig, st storage.Storage, netservice *servi
 	return mesos
 }
 
-//MesosCluster cluster implements all cluster interface
+// MesosCluster cluster implements all cluster interface
 type MesosCluster struct {
-	zkLinks           string                         //zk connection link, like 127.0.0.1:2181,127.0.0.2:2181
-	watchPath         string                         //zk watching path, like /blueking
-	clusterID         string                         //watch cluster id
-	client            ZkClient                       //client for zookeeper
-	retry             bool                           //flag for reconnect zookeeper
-	connCxt           context.Context                //context for client disconnected
-	cancel            context.CancelFunc             //cancel func when client disconnected
-	reportCallback    map[string]cluster.ReportFunc  //report map for handling registery data type
-	existCallback     map[string]cluster.DataExister //check data exist in local cache
-	storage           storage.Storage                //storage interface for remote Storage, like CC
+	zkLinks           string                         // zk connection link, like 127.0.0.1:2181,127.0.0.2:2181
+	watchPath         string                         // zk watching path, like /blueking
+	clusterID         string                         // watch cluster id
+	client            ZkClient                       // client for zookeeper
+	retry             bool                           // flag for reconnect zookeeper
+	connCxt           context.Context                // context for client disconnected
+	cancel            context.CancelFunc             // cancel func when client disconnected
+	reportCallback    map[string]cluster.ReportFunc  // report map for handling registery data type
+	existCallback     map[string]cluster.DataExister // check data exist in local cache
+	storage           storage.Storage                // storage interface for remote Storage, like CC
 	netservice        *service.InnerService
-	app               *AppWatch           //watch for application
-	taskGroup         *TaskGroupWatch     //watch for taskgroup
-	exportSvr         *ExportServiceWatch //watch for exportservice
-	Status            string              //curr status
+	app               *AppWatch           // watch for application
+	taskGroup         *TaskGroupWatch     // watch for taskgroup
+	exportSvr         *ExportServiceWatch // watch for exportservice
+	Status            string              // curr status
 	configmap         *ConfigMapWatch
 	secret            *SecretWatch
 	service           *ServiceWatch
@@ -129,7 +130,7 @@ type MesosCluster struct {
 	stopCh            chan struct{}
 }
 
-//createZkConn create zookeeper connection with cluster
+// createZkConn create zookeeper connection with cluster
 func (ms *MesosCluster) createZkConn() error {
 
 	blog.Info("mesos cluster create ZK connection ...")
@@ -151,12 +152,12 @@ func GenerateRandnum() int {
 	return rnd
 }
 
-//zkConnMonitor monitor zookeeper connection state
+// zkConnMonitor monitor zookeeper connection state
 func (ms *MesosCluster) zkConnMonitor() {
 
 	state := ms.client.State()
 	if state == zk.StateConnected {
-		//connection ok
+		// connection ok
 		blog.V(3).Infof("############ZK Connection status is connected#####")
 		return
 	}
@@ -262,7 +263,7 @@ func (ms *MesosCluster) createDatTypeWatch() error {
 	return nil
 }
 
-//ProcessAppPathes handle all Application datas
+// ProcessAppPathes handle all Application datas
 func (ms *MesosCluster) ProcessAppPathes() error {
 
 	appPath := ms.watchPath + "/application"
@@ -289,19 +290,19 @@ func (ms *MesosCluster) initialize() error {
 
 	blog.Info("mesos cluster(%s) initialize ...", ms.clusterID)
 
-	//register ReporterHandler
+	// register ReporterHandler
 	if err := ms.registerReportHandler(); err != nil {
 
 		blog.Error("Mesos cluster register report handler err:%s", err.Error())
 		return err
 	}
-	//register ExistHandler
+	// register ExistHandler
 	if err := ms.registerExistHandler(); err != nil {
 		blog.Error("Mesos cluster register exist handler err:%s", err.Error())
 		return err
 	}
 
-	//create connection to zookeeper
+	// create connection to zookeeper
 	if err := ms.createZkConn(); err != nil {
 		blog.Error("Mesos cluster create ZK err:%s", err.Error())
 		return err
@@ -310,7 +311,7 @@ func (ms *MesosCluster) initialize() error {
 	ms.connCxt, ms.cancel = context.WithCancel(context.Background())
 	ms.stopCh = make(chan struct{})
 
-	//create datatype watch
+	// create datatype watch
 	if err := ms.createDatTypeWatch(); err != nil {
 		blog.Error("Mesos cluster create wathers err:%s", err.Error())
 		return err
@@ -321,7 +322,7 @@ func (ms *MesosCluster) initialize() error {
 	return nil
 }
 
-//ReportData report data to reportHandler, handle all data independently
+// ReportData report data to reportHandler, handle all data independently
 func (ms *MesosCluster) ReportData(data *types.BcsSyncData) error {
 	callBack, ok := ms.reportCallback[data.DataType]
 	if !ok {
@@ -413,13 +414,13 @@ func (ms *MesosCluster) reportIPPoolStaticDetail(data *types.BcsSyncData) error 
 	return nil
 }
 
-//reportTaskGroup
+// reportTaskGroup xxx
 func (ms *MesosCluster) reportTaskGroup(data *types.BcsSyncData) error {
 
 	taskgroup := data.Item.(*schedtypes.TaskGroup)
 	blog.V(3).Infof("mesos cluster report taskgroup(%s) for action(%s)", taskgroup.ID, data.Action)
 
-	//post to ExportService first
+	// post to ExportService first
 	ms.exportSvr.postData(data)
 	if err := ms.storage.SyncTimeout(data, SyncDefaultTimeOut); err != nil {
 		blog.Error("TaskGroup sync dispatch failed: %+v", err)
@@ -428,14 +429,14 @@ func (ms *MesosCluster) reportTaskGroup(data *types.BcsSyncData) error {
 	return nil
 }
 
-//reportApplication
+// reportApplication xxx
 func (ms *MesosCluster) reportApplication(data *types.BcsSyncData) error {
 
 	app := data.Item.(*schedtypes.Application)
 	blog.V(3).Infof("mesos cluster report app(%s %s) for action(%s)", app.RunAs, app.ID, data.Action)
 
 	path := ms.watchPath + "/application/" + app.RunAs + "/" + app.ID
-	//check acton for Add & Delete
+	// check acton for Add & Delete
 	if data.Action == types.ActionAdd {
 		blog.Info("app(%s.%s) added, so add taskgroup pathwatch(%s)", app.RunAs, app.ID, path)
 		ms.taskGroup.addWatch(path)
@@ -454,7 +455,7 @@ func (ms *MesosCluster) reportApplication(data *types.BcsSyncData) error {
 	return nil
 }
 
-//reportExportService
+// reportExportService xxx
 func (ms *MesosCluster) reportExportService(data *types.BcsSyncData) error {
 
 	blog.V(3).Infof("mesos cluster report service for action(%s)", data.Action)
@@ -466,12 +467,12 @@ func (ms *MesosCluster) reportExportService(data *types.BcsSyncData) error {
 	return nil
 }
 
-//Run running cluster watch
+// Run running cluster watch
 func (ms *MesosCluster) Run(cxt context.Context) {
 
 	blog.Info("mesos cluster run ...")
 
-	//ready to start zk connection monitor
+	// ready to start zk connection monitor
 	tick := time.NewTicker(5 * time.Second)
 	defer tick.Stop()
 	for {
@@ -489,7 +490,7 @@ func (ms *MesosCluster) Run(cxt context.Context) {
 	}
 }
 
-//Sync ask cluster to sync data to local cache
+// Sync ask cluster to sync data to local cache
 func (ms *MesosCluster) Sync(tp string) error {
 
 	blog.Info("mesos cluster sync ...")
@@ -497,7 +498,7 @@ func (ms *MesosCluster) Sync(tp string) error {
 	return nil
 }
 
-//Stop ask cluster stopped
+// Stop ask cluster stopped
 func (ms *MesosCluster) Stop() {
 
 	blog.Info("mesos cluster stop ...")
@@ -520,7 +521,7 @@ func (ms *MesosCluster) Stop() {
 	}
 }
 
-//GetClusterStatus get synchronization status
+// GetClusterStatus get synchronization status
 func (ms *MesosCluster) GetClusterStatus() string {
 	return ms.Status
 }

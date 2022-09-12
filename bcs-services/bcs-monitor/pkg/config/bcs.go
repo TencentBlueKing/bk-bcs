@@ -19,29 +19,30 @@ import (
 	"github.com/dgrijalva/jwt-go"
 )
 
-// BCSClusterEnv
+// BCSClusterEnv xxx
 type BCSClusterEnv string
 
 const (
-	// ProdCluster
+	// ProdCluster xxx
 	ProdCluster BCSClusterEnv = "prod" // 正式环境
-	// DebugCLuster
+	// DebugCLuster xxx
 	DebugCLuster BCSClusterEnv = "debug" // debug 环境
-	// UatCluster
+	// UatCluster xxx
 	UatCluster BCSClusterEnv = "uat" // uat 环境
 )
 
-// BCSConf
+// BCSConf :
 type BCSConf struct {
 	Host         string         `yaml:"host"`
 	Token        string         `yaml:"token"`
 	Verify       bool           `yaml:"verify"`
 	JWTPubKey    string         `yaml:"jwt_public_key"`
+	QueryURL     string         `yaml:"query_url"`
 	JWTPubKeyObj *rsa.PublicKey `yaml:"-"`
 	ClusterEnv   BCSClusterEnv  `yaml:"cluster_env"`
 }
 
-// Init
+// Init :
 func (c *BCSConf) Init() error {
 	// only for development
 	c.Host = ""
@@ -53,7 +54,7 @@ func (c *BCSConf) Init() error {
 	return nil
 }
 
-// InitJWTPubKey
+// InitJWTPubKey :
 func (c *BCSConf) InitJWTPubKey() error {
 	if c.JWTPubKey == "" {
 		return nil

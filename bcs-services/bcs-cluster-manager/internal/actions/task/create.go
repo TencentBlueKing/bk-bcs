@@ -56,7 +56,7 @@ func (ca *CreateAction) createTask() error {
 		LastUpdate:   timeStr,
 	}
 	ca.resp.Data = t
-	//write to database before push to worker
+	// write to database before push to worker
 	if err := ca.model.CreateTask(ca.ctx, t); err != nil {
 		blog.Errorf("write task to storage failed, %s", err.Error())
 		return err

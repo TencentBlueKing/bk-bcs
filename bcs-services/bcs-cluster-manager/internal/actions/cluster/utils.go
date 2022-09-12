@@ -25,6 +25,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/cmdb"
@@ -40,7 +41,7 @@ import (
 
 type clusterInfo struct {
 	clusterName string
-	clusterID string
+	clusterID   string
 }
 
 const (
@@ -52,7 +53,7 @@ const (
 	// KubeConfig import
 	KubeConfig = "kubeConfig"
 	// Cloud import
-	Cloud      = "cloud"
+	Cloud = "cloud"
 
 	// Prod environment
 	Prod = "prod"
@@ -213,14 +214,9 @@ func getAllIPList(provider string, model store.ClusterManagerModel) map[string]s
 	return ipList
 }
 
-// PermInfo for perm request
-type PermInfo struct {
-	ProjectID string
-	UserID    string
-}
-
 // GetUserClusterPermList get user cluster permission
-func GetUserClusterPermList(iam iam.PermClient, user PermInfo, clusterList []string) (map[string]map[string]interface{}, error) {
+func GetUserClusterPermList(iam iam.PermClient, user actions.PermInfo, clusterList []string) (
+	map[string]map[string]interface{}, error) {
 	permissions := make(map[string]map[string]interface{})
 	clusterPerm := cluster.NewBCSClusterPermClient(iam)
 
@@ -374,4 +370,3 @@ func deleteClusterCredentialInfo(store store.ClusterManagerModel, clusterID stri
 
 	blog.V(4).Infof("deleteClusterCredentialInfo[%s] successful", clusterID)
 }
-

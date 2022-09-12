@@ -48,7 +48,7 @@ RUN apk --update --no-cache add bash ca-certificates vim
 
 WORKDIR /data/workspace
 
-COPY --from=builder /go/src/cluster-resources-service /usr/bin/cluster-resources-service
+COPY --from=builder /go/src/bcs-cluster-resources /usr/bin/bcs-cluster-resources
 
 COPY --from=builder /go/src/etc /data/workspace/etc
 

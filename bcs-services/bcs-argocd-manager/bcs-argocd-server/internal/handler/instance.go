@@ -58,7 +58,7 @@ func (handler *InstanceHandler) GetArgocdInstance(ctx context.Context,
 	return action.Handle(ctx, request, response)
 }
 
-// ListArgocdInstance list argocd instance
+// ListArgocdInstances list argocd instance
 func (handler *InstanceHandler) ListArgocdInstances(ctx context.Context,
 	request *instance.ListArgocdInstancesRequest, response *instance.ListArgocdInstancesResponse) error {
 	action := actions.NewListArgocdInstancesAction(handler.tkexIf)

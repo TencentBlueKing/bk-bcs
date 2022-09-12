@@ -11,6 +11,7 @@
  *
  */
 
+// Package types xxx
 package types
 
 import (
@@ -20,39 +21,39 @@ import (
 
 // NodeInfo mesos node information
 type NodeInfo struct {
-	//node ip, example 127.0.0.1
+	// node ip, example 127.0.0.1
 	Ip string
-	//clusterid, example BCS-MESOS-10001
+	// clusterid, example BCS-MESOS-10001
 	Clusterid string
-	//node module, distinguish between switches, example 上海-周浦-M3
-	//scheduler detection container best locate different switches
-	//so best locate different switches
+	// node module, distinguish between switches, example 上海-周浦-M3
+	// scheduler detection container best locate different switches
+	// so best locate different switches
 	Module string
-	//idc info, example 上海-周浦
-	//every idc deploy three detection containers
-	//when all(three) detection containers can't ping, then give an alarm
+	// idc info, example 上海-周浦
+	// every idc deploy three detection containers
+	// when all(three) detection containers can't ping, then give an alarm
 	Idc string
-	//idc unit,对应cmdb机房管理单元
+	// idc unit,对应cmdb机房管理单元
 	IdcUnit string
 }
 
 // DeployDetection detection record
 type DeployDetection struct {
-	//clusterid
+	// clusterid
 	Clusterid string
-	//deploy idc
+	// deploy idc
 	Idc string
-	//idc unit
+	// idc unit
 	IdcUnit string
-	//deployment json
+	// deployment json
 	Template commtypes.BcsDeployment
-	//cluster nodes
+	// cluster nodes
 	Nodes []*NodeInfo
-	//created application info, include status
-	//if Application!=nil, then the idc has deployed detection node
-	//other else nothing
+	// created application info, include status
+	// if Application!=nil, then the idc has deployed detection node
+	// other else nothing
 	Application *schedtypes.Application
-	//application's taskgroup
+	// application's taskgroup
 	Pods []*schedtypes.TaskGroup
 }
 

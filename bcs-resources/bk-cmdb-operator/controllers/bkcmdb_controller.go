@@ -44,6 +44,7 @@ type BkcmdbReconciler struct {
 
 type reconcileFun func(cluster *bkcmdbv1.Bkcmdb) error
 
+// Reconcile xxx
 // +kubebuilder:rbac:groups=bkcmdb.bkbcs.tencent.com,resources=bkcmdbs,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=bkcmdb.bkbcs.tencent.com,resources=bkcmdbs/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=apps,resources=deployments,verbs=get;list;watch;create;update;patch;delete
@@ -58,7 +59,7 @@ type reconcileFun func(cluster *bkcmdbv1.Bkcmdb) error
 // +kubebuilder:rbac:groups=apps,resources=configmaps/status,verbs=get;update;patch
 func (r *BkcmdbReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	ctx := context.Background()
-	//log = r.Log.WithValues("bkcmdb", req.NamespacedName)
+	// log = r.Log.WithValues("bkcmdb", req.NamespacedName)
 
 	var instance bkcmdbv1.Bkcmdb
 	if err := r.Client.Get(ctx, req.NamespacedName, &instance); err != nil {
@@ -119,6 +120,7 @@ func (r *BkcmdbReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	return ctrl.Result{}, nil
 }
 
+// SetupWithManager xxx
 func (r *BkcmdbReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	// set services index filed
 	if err := mgr.GetFieldIndexer().IndexField(&v1.Service{}, ownerKey, func(rawObj runtime.Object) []string {
@@ -206,19 +208,20 @@ func (r *BkcmdbReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	}
 
 	// set ingresses index filed
-	if err := mgr.GetFieldIndexer().IndexField(&extensionsV1beta1.Ingress{}, ownerKey, func(rawObj runtime.Object) []string {
-		ingress := rawObj.(*extensionsV1beta1.Ingress)
-		owner := metav1.GetControllerOf(ingress)
-		if owner == nil {
-			return nil
-		}
-		if owner.APIVersion != apiGVStr || owner.Kind != "Bkcmdb" {
-			return nil
-		}
+	if err := mgr.GetFieldIndexer().IndexField(&extensionsV1beta1.Ingress{}, ownerKey,
+		func(rawObj runtime.Object) []string {
+			ingress := rawObj.(*extensionsV1beta1.Ingress)
+			owner := metav1.GetControllerOf(ingress)
+			if owner == nil {
+				return nil
+			}
+			if owner.APIVersion != apiGVStr || owner.Kind != "Bkcmdb" {
+				return nil
+			}
 
-		// ...and if so, return it
-		return []string{owner.Name}
-	}); err != nil {
+			// ...and if so, return it
+			return []string{owner.Name}
+		}); err != nil {
 		return err
 	}
 

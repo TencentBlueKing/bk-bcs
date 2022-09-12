@@ -56,10 +56,7 @@ func (la *ListNodeTypeAction) validate() error {
 		return err
 	}
 
-	err = validate.ListInstanceTypeValidate(la.req, &cmproto.Account{
-		SecretID:  la.account.Account.SecretID,
-		SecretKey: la.account.Account.SecretKey,
-	})
+	err = validate.ListInstanceTypeValidate(la.req, la.account.Account)
 	if err != nil {
 		return err
 	}

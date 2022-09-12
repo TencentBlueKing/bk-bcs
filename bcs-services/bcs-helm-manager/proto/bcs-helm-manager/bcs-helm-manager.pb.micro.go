@@ -48,42 +48,35 @@ func NewHelmManagerEndpoints() []*api.Endpoint {
 		},
 		&api.Endpoint{
 			Name:    "HelmManager.CreateRepository",
-			Path:    []string{"/helmmanager/v1/repository/{projectID}/{name}"},
+			Path:    []string{"/helmmanager/v1/projects/{projectCode}/repos"},
 			Method:  []string{"POST"},
 			Body:    "*",
 			Handler: "rpc",
 		},
 		&api.Endpoint{
 			Name:    "HelmManager.UpdateRepository",
-			Path:    []string{"/helmmanager/v1/repository/{projectID}/{name}"},
+			Path:    []string{"/helmmanager/v1/projects/{projectCode}/repos/{name}"},
 			Method:  []string{"PUT"},
 			Body:    "*",
 			Handler: "rpc",
 		},
 		&api.Endpoint{
 			Name:    "HelmManager.GetRepository",
-			Path:    []string{"/helmmanager/v1/repository/{projectID}/{name}"},
+			Path:    []string{"/helmmanager/v1/projects/{projectCode}/repos/{name}"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
 		&api.Endpoint{
 			Name:    "HelmManager.DeleteRepository",
-			Path:    []string{"/helmmanager/v1/repository/{projectID}/{name}"},
+			Path:    []string{"/helmmanager/v1/projects/{projectCode}/repos/{name}"},
 			Method:  []string{"DELETE"},
 			Body:    "*",
 			Handler: "rpc",
 		},
 		&api.Endpoint{
 			Name:    "HelmManager.ListRepository",
-			Path:    []string{"/helmmanager/v1/repository/{projectID}"},
+			Path:    []string{"/helmmanager/v1/projects/{projectCode}/repos"},
 			Method:  []string{"GET"},
-			Handler: "rpc",
-		},
-		&api.Endpoint{
-			Name:    "HelmManager.DeleteRepositories",
-			Path:    []string{"/helmmanager/v1/repository/{projectID}"},
-			Method:  []string{"DELETE"},
-			Body:    "*",
 			Handler: "rpc",
 		},
 		&api.Endpoint{
@@ -144,6 +137,12 @@ func NewHelmManagerEndpoints() []*api.Endpoint {
 			Body:    "*",
 			Handler: "rpc",
 		},
+		&api.Endpoint{
+			Name:    "HelmManager.GetReleaseHistory",
+			Path:    []string{"/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/releases/{name}/history"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
 	}
 }
 
@@ -152,13 +151,12 @@ func NewHelmManagerEndpoints() []*api.Endpoint {
 type HelmManagerService interface {
 	//* common service
 	Available(ctx context.Context, in *AvailableReq, opts ...client.CallOption) (*AvailableResp, error)
-	//* repository crud
+	//* repository service
 	CreateRepository(ctx context.Context, in *CreateRepositoryReq, opts ...client.CallOption) (*CreateRepositoryResp, error)
 	UpdateRepository(ctx context.Context, in *UpdateRepositoryReq, opts ...client.CallOption) (*UpdateRepositoryResp, error)
 	GetRepository(ctx context.Context, in *GetRepositoryReq, opts ...client.CallOption) (*GetRepositoryResp, error)
 	DeleteRepository(ctx context.Context, in *DeleteRepositoryReq, opts ...client.CallOption) (*DeleteRepositoryResp, error)
 	ListRepository(ctx context.Context, in *ListRepositoryReq, opts ...client.CallOption) (*ListRepositoryResp, error)
-	DeleteRepositories(ctx context.Context, in *DeleteRepositoriesReq, opts ...client.CallOption) (*DeleteRepositoriesResp, error)
 	//* chart service
 	ListChart(ctx context.Context, in *ListChartReq, opts ...client.CallOption) (*ListChartResp, error)
 	ListChartVersion(ctx context.Context, in *ListChartVersionReq, opts ...client.CallOption) (*ListChartVersionResp, error)
@@ -170,6 +168,7 @@ type HelmManagerService interface {
 	UninstallRelease(ctx context.Context, in *UninstallReleaseReq, opts ...client.CallOption) (*UninstallReleaseResp, error)
 	UpgradeRelease(ctx context.Context, in *UpgradeReleaseReq, opts ...client.CallOption) (*UpgradeReleaseResp, error)
 	RollbackRelease(ctx context.Context, in *RollbackReleaseReq, opts ...client.CallOption) (*RollbackReleaseResp, error)
+	GetReleaseHistory(ctx context.Context, in *GetReleaseHistoryReq, opts ...client.CallOption) (*GetReleaseHistoryResp, error)
 }
 
 type helmManagerService struct {
@@ -237,16 +236,6 @@ func (c *helmManagerService) DeleteRepository(ctx context.Context, in *DeleteRep
 func (c *helmManagerService) ListRepository(ctx context.Context, in *ListRepositoryReq, opts ...client.CallOption) (*ListRepositoryResp, error) {
 	req := c.c.NewRequest(c.name, "HelmManager.ListRepository", in)
 	out := new(ListRepositoryResp)
-	err := c.c.Call(ctx, req, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *helmManagerService) DeleteRepositories(ctx context.Context, in *DeleteRepositoriesReq, opts ...client.CallOption) (*DeleteRepositoriesResp, error) {
-	req := c.c.NewRequest(c.name, "HelmManager.DeleteRepositories", in)
-	out := new(DeleteRepositoriesResp)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -344,18 +333,27 @@ func (c *helmManagerService) RollbackRelease(ctx context.Context, in *RollbackRe
 	return out, nil
 }
 
+func (c *helmManagerService) GetReleaseHistory(ctx context.Context, in *GetReleaseHistoryReq, opts ...client.CallOption) (*GetReleaseHistoryResp, error) {
+	req := c.c.NewRequest(c.name, "HelmManager.GetReleaseHistory", in)
+	out := new(GetReleaseHistoryResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // Server API for HelmManager service
 
 type HelmManagerHandler interface {
 	//* common service
 	Available(context.Context, *AvailableReq, *AvailableResp) error
-	//* repository crud
+	//* repository service
 	CreateRepository(context.Context, *CreateRepositoryReq, *CreateRepositoryResp) error
 	UpdateRepository(context.Context, *UpdateRepositoryReq, *UpdateRepositoryResp) error
 	GetRepository(context.Context, *GetRepositoryReq, *GetRepositoryResp) error
 	DeleteRepository(context.Context, *DeleteRepositoryReq, *DeleteRepositoryResp) error
 	ListRepository(context.Context, *ListRepositoryReq, *ListRepositoryResp) error
-	DeleteRepositories(context.Context, *DeleteRepositoriesReq, *DeleteRepositoriesResp) error
 	//* chart service
 	ListChart(context.Context, *ListChartReq, *ListChartResp) error
 	ListChartVersion(context.Context, *ListChartVersionReq, *ListChartVersionResp) error
@@ -367,6 +365,7 @@ type HelmManagerHandler interface {
 	UninstallRelease(context.Context, *UninstallReleaseReq, *UninstallReleaseResp) error
 	UpgradeRelease(context.Context, *UpgradeReleaseReq, *UpgradeReleaseResp) error
 	RollbackRelease(context.Context, *RollbackReleaseReq, *RollbackReleaseResp) error
+	GetReleaseHistory(context.Context, *GetReleaseHistoryReq, *GetReleaseHistoryResp) error
 }
 
 func RegisterHelmManagerHandler(s server.Server, hdlr HelmManagerHandler, opts ...server.HandlerOption) error {
@@ -377,7 +376,6 @@ func RegisterHelmManagerHandler(s server.Server, hdlr HelmManagerHandler, opts .
 		GetRepository(ctx context.Context, in *GetRepositoryReq, out *GetRepositoryResp) error
 		DeleteRepository(ctx context.Context, in *DeleteRepositoryReq, out *DeleteRepositoryResp) error
 		ListRepository(ctx context.Context, in *ListRepositoryReq, out *ListRepositoryResp) error
-		DeleteRepositories(ctx context.Context, in *DeleteRepositoriesReq, out *DeleteRepositoriesResp) error
 		ListChart(ctx context.Context, in *ListChartReq, out *ListChartResp) error
 		ListChartVersion(ctx context.Context, in *ListChartVersionReq, out *ListChartVersionResp) error
 		GetChartDetail(ctx context.Context, in *GetChartDetailReq, out *GetChartDetailResp) error
@@ -387,6 +385,7 @@ func RegisterHelmManagerHandler(s server.Server, hdlr HelmManagerHandler, opts .
 		UninstallRelease(ctx context.Context, in *UninstallReleaseReq, out *UninstallReleaseResp) error
 		UpgradeRelease(ctx context.Context, in *UpgradeReleaseReq, out *UpgradeReleaseResp) error
 		RollbackRelease(ctx context.Context, in *RollbackReleaseReq, out *RollbackReleaseResp) error
+		GetReleaseHistory(ctx context.Context, in *GetReleaseHistoryReq, out *GetReleaseHistoryResp) error
 	}
 	type HelmManager struct {
 		helmManager
@@ -400,42 +399,35 @@ func RegisterHelmManagerHandler(s server.Server, hdlr HelmManagerHandler, opts .
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "HelmManager.CreateRepository",
-		Path:    []string{"/helmmanager/v1/repository/{projectID}/{name}"},
+		Path:    []string{"/helmmanager/v1/projects/{projectCode}/repos"},
 		Method:  []string{"POST"},
 		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "HelmManager.UpdateRepository",
-		Path:    []string{"/helmmanager/v1/repository/{projectID}/{name}"},
+		Path:    []string{"/helmmanager/v1/projects/{projectCode}/repos/{name}"},
 		Method:  []string{"PUT"},
 		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "HelmManager.GetRepository",
-		Path:    []string{"/helmmanager/v1/repository/{projectID}/{name}"},
+		Path:    []string{"/helmmanager/v1/projects/{projectCode}/repos/{name}"},
 		Method:  []string{"GET"},
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "HelmManager.DeleteRepository",
-		Path:    []string{"/helmmanager/v1/repository/{projectID}/{name}"},
+		Path:    []string{"/helmmanager/v1/projects/{projectCode}/repos/{name}"},
 		Method:  []string{"DELETE"},
 		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "HelmManager.ListRepository",
-		Path:    []string{"/helmmanager/v1/repository/{projectID}"},
+		Path:    []string{"/helmmanager/v1/projects/{projectCode}/repos"},
 		Method:  []string{"GET"},
-		Handler: "rpc",
-	}))
-	opts = append(opts, api.WithEndpoint(&api.Endpoint{
-		Name:    "HelmManager.DeleteRepositories",
-		Path:    []string{"/helmmanager/v1/repository/{projectID}"},
-		Method:  []string{"DELETE"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
@@ -496,6 +488,12 @@ func RegisterHelmManagerHandler(s server.Server, hdlr HelmManagerHandler, opts .
 		Body:    "*",
 		Handler: "rpc",
 	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "HelmManager.GetReleaseHistory",
+		Path:    []string{"/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/releases/{name}/history"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
 	return s.Handle(s.NewHandler(&HelmManager{h}, opts...))
 }
 
@@ -525,10 +523,6 @@ func (h *helmManagerHandler) DeleteRepository(ctx context.Context, in *DeleteRep
 
 func (h *helmManagerHandler) ListRepository(ctx context.Context, in *ListRepositoryReq, out *ListRepositoryResp) error {
 	return h.HelmManagerHandler.ListRepository(ctx, in, out)
-}
-
-func (h *helmManagerHandler) DeleteRepositories(ctx context.Context, in *DeleteRepositoriesReq, out *DeleteRepositoriesResp) error {
-	return h.HelmManagerHandler.DeleteRepositories(ctx, in, out)
 }
 
 func (h *helmManagerHandler) ListChart(ctx context.Context, in *ListChartReq, out *ListChartResp) error {
@@ -565,4 +559,8 @@ func (h *helmManagerHandler) UpgradeRelease(ctx context.Context, in *UpgradeRele
 
 func (h *helmManagerHandler) RollbackRelease(ctx context.Context, in *RollbackReleaseReq, out *RollbackReleaseResp) error {
 	return h.HelmManagerHandler.RollbackRelease(ctx, in, out)
+}
+
+func (h *helmManagerHandler) GetReleaseHistory(ctx context.Context, in *GetReleaseHistoryReq, out *GetReleaseHistoryResp) error {
+	return h.HelmManagerHandler.GetReleaseHistory(ctx, in, out)
 }

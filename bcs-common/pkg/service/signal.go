@@ -29,7 +29,7 @@ func SetupSignalContext() context.Context {
 	closeHandler := make(chan os.Signal, 2)
 	ctx, cancel := context.WithCancel(context.Background())
 	signal.Notify(closeHandler, syscall.SIGINT, syscall.SIGTERM)
-	//waiting for signal
+	// waiting for signal
 	go func() {
 		<-closeHandler
 		blog.Infof("service catch exit signal, exit in 3 seconds...")

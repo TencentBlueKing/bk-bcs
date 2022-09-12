@@ -115,7 +115,7 @@ func (stat *TaskState) IsReadyToStep(stepName string) (*proto.Step, error) {
 				GetStorageModel().UpdateTask(context.Background(), stat.Task)
 				return step, nil
 			}
-			//check this step is ok
+			// check this step is ok
 			if step.Status != TaskStatusSuccess {
 				ok = false
 				break
@@ -136,7 +136,7 @@ func (stat *TaskState) IsReadyToStep(stepName string) (*proto.Step, error) {
 	stat.Task.Message = fmt.Sprintf("step %s is running", stepName)
 	stat.Task.LastUpdate = curStep.LastUpdate
 
-	//update state in storage
+	// update state in storage
 	if err := GetStorageModel().UpdateTask(context.Background(), stat.Task); err != nil {
 		blog.Errorf("task %s fatal, update task status failed, %s. required admin intervetion",
 			stat.Task.TaskID, err.Error())
@@ -146,7 +146,7 @@ func (stat *TaskState) IsReadyToStep(stepName string) (*proto.Step, error) {
 	return curStep, nil
 }
 
-//UpdateStepSucc update step to success
+// UpdateStepSucc update step to success
 func (stat *TaskState) UpdateStepSucc(start time.Time, stepName string) error {
 	step := stat.Task.Steps[stepName]
 	end := time.Now()

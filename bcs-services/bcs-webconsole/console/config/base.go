@@ -1,3 +1,4 @@
+// Package config xxx
 /*
  * Tencent is pleased to support the open source community by making Blueking Container Service available.
  * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
@@ -14,16 +15,19 @@ package config
 
 import (
 	"time"
-	_ "time/tzdata"
+	_ "time/tzdata" // tzdata xxx
 )
 
 const (
-	DevEnv  = "dev"
+	// DevEnv xxx
+	DevEnv = "dev"
+	// StagEnv xxx
 	StagEnv = "stag"
+	// ProdEnv xxx
 	ProdEnv = "prod"
 )
 
-// BaseConf
+// BaseConf xxx
 type BaseConf struct {
 	AppCode      string              `yaml:"app_code"`
 	AppSecret    string              `yaml:"app_secret"`
@@ -37,7 +41,7 @@ type BaseConf struct {
 	Location     *time.Location      `yaml:"-"`
 }
 
-// Init
+// Init xxx
 func (c *BaseConf) Init() error {
 	var err error
 	c.AppCode = ""
@@ -55,7 +59,7 @@ func (c *BaseConf) Init() error {
 	return nil
 }
 
-// InitManagers
+// InitManagers xxx
 func (c *BaseConf) InitManagers() error {
 	for _, manager := range c.Managers {
 		c.ManagerMap[manager] = struct{}{}

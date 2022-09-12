@@ -16,31 +16,34 @@ package netservice
 import "strings"
 
 const (
-	IPStatus_RESERVED  = "reserved"
-	IPStatus_ACTIVE    = "active"
+	// IPStatus_RESERVED TODO
+	IPStatus_RESERVED = "reserved"
+	// IPStatus_ACTIVE TODO
+	IPStatus_ACTIVE = "active"
+	// IPStatus_AVAILABLE TODO
 	IPStatus_AVAILABLE = "available"
 )
 
-//NetPool pool info
+// NetPool pool info
 type NetPool struct {
-	Net       string   `json:"net"`                 //network string
-	Mask      int      `json:"mask"`                //network mask
-	Gateway   string   `json:"gateway"`             //network gateway
-	Cluster   string   `json:"cluster,omitempty"`   //cluster that ip pool belongs to
-	Hosts     []string `json:"hosts,omitempty"`     //host using network, can be none
-	Available []string `json:"available,omitempty"` //available ip address
-	Reserved  []string `json:"reserved,omitempty"`  //reserved ip address
-	Active    []string `json:"active,omitempty"`    //active ip address
-	Created   string   `json:"created,omitempty"`   //node create time
-	Update    string   `json:"update,omitempty"`    //pool update time
+	Net       string   `json:"net"`                 // network string
+	Mask      int      `json:"mask"`                // network mask
+	Gateway   string   `json:"gateway"`             // network gateway
+	Cluster   string   `json:"cluster,omitempty"`   // cluster that ip pool belongs to
+	Hosts     []string `json:"hosts,omitempty"`     // host using network, can be none
+	Available []string `json:"available,omitempty"` // available ip address
+	Reserved  []string `json:"reserved,omitempty"`  // reserved ip address
+	Active    []string `json:"active,omitempty"`    // active ip address
+	Created   string   `json:"created,omitempty"`   // node create time
+	Update    string   `json:"update,omitempty"`    // pool update time
 }
 
-//GetKey get key for pool
+// GetKey get key for pool
 func (pool *NetPool) GetKey() string {
 	return pool.Cluster + "/" + pool.Net
 }
 
-//IsValid check pool data is valid
+// IsValid check pool data is valid
 func (pool *NetPool) IsValid() bool {
 	if strings.TrimSpace(pool.Net) == "" {
 		return false
@@ -57,7 +60,7 @@ func (pool *NetPool) IsValid() bool {
 	return true
 }
 
-//IPInst ip address instance in a pool
+// IPInst ip address instance in a pool
 type IPInst struct {
 	IPAddr     string `json:"ipaddr"`
 	MacAddr    string `json:"macaddr,omitempty"`
@@ -73,12 +76,12 @@ type IPInst struct {
 	App        string `json:"app,omitempty"`
 }
 
-//GetKey get key for ip instance
+// GetKey get key for ip instance
 func (inst *IPInst) GetKey() string {
 	return inst.IPAddr
 }
 
-//HostInfo for host node
+// HostInfo for host node
 type HostInfo struct {
 	IPAddr     string             `json:"ipaddr"`
 	MacAddr    string             `json:"macaddr,omitempty"`
@@ -90,12 +93,12 @@ type HostInfo struct {
 	Containers map[string]*IPInst `json:"containers,omitempty"`
 }
 
-//GetKey get key for ip instance
+// GetKey get key for ip instance
 func (host *HostInfo) GetKey() string {
 	return host.IPAddr
 }
 
-//IsValid check host data is valid
+// IsValid check host data is valid
 func (host *HostInfo) IsValid() bool {
 	if strings.TrimSpace(host.IPAddr) == "" {
 		return false
@@ -109,7 +112,7 @@ func (host *HostInfo) IsValid() bool {
 	return true
 }
 
-//IPInfo ip information for ip resource request
+// IPInfo ip information for ip resource request
 type IPInfo struct {
 	IPAddr  string `json:"ipaddr"`
 	MacAddr string `json:"macaddr,omitempty"`
@@ -118,7 +121,7 @@ type IPInfo struct {
 	Gateway string `json:"gateway"`
 }
 
-//IPLease lease ip address
+// IPLease lease ip address
 type IPLease struct {
 	Host      string `json:"host"`
 	Container string `json:"container"`
@@ -126,14 +129,14 @@ type IPLease struct {
 	App       string `json:"app,omitempty"`
 }
 
-//IPRelease release ip address from host
+// IPRelease release ip address from host
 type IPRelease struct {
 	Host      string `json:"host"`
 	Container string `json:"container"`
 	App       string `json:"app,omitempty"`
 }
 
-//NetStatic static info for net pool
+// NetStatic static info for net pool
 type NetStatic struct {
 	PoolNum     int `json:"poolnum"`
 	ActiveIP    int `json:"activeip"`
@@ -141,7 +144,7 @@ type NetStatic struct {
 	ReservedIP  int `json:"reservedip"`
 }
 
-//SSLInfo path for ca, privKey, pubKey
+// SSLInfo path for ca, privKey, pubKey
 type SSLInfo struct {
 	Key    string `json:"key"`
 	PubKey string `json:"pubkey"`
@@ -149,30 +152,40 @@ type SSLInfo struct {
 	Passwd string `json:"passwd,omitempty"`
 }
 
-//######################################################################################
+// ######################################################################################
 //
-//IP Pool management HTTP Request/Response definition
+// IP Pool management HTTP Request/Response definition
 //
-//######################################################################################
+// ######################################################################################
 
-//NetType type for bcs-netservice http request
+// NetType type for bcs-netservice http request
 type NetType int
 
 const (
-	RequestType_POOL    NetType = 1
-	RequestType_HOST    NetType = 2
-	RequestType_LEASE   NetType = 3
+	// RequestType_POOL TODO
+	RequestType_POOL NetType = 1
+	// RequestType_HOST TODO
+	RequestType_HOST NetType = 2
+	// RequestType_LEASE TODO
+	RequestType_LEASE NetType = 3
+	// RequestType_RELEASE TODO
 	RequestType_RELEASE NetType = 4
 
-	ResponseType_POOL      NetType = 5
-	ResponseType_HOST      NetType = 6
-	ResponseType_LEASE     NetType = 7
-	ResponseType_RELEASE   NetType = 8
-	ResponseType_PSTATIC   NetType = 9
+	// ResponseType_POOL TODO
+	ResponseType_POOL NetType = 5
+	// ResponseType_HOST TODO
+	ResponseType_HOST NetType = 6
+	// ResponseType_LEASE TODO
+	ResponseType_LEASE NetType = 7
+	// ResponseType_RELEASE TODO
+	ResponseType_RELEASE NetType = 8
+	// ResponseType_PSTATIC TODO
+	ResponseType_PSTATIC NetType = 9
+	// ResponseType_VIRTUALIP TODO
 	ResponseType_VIRTUALIP NetType = 10
 )
 
-//NetRequest bcs-netservice http json request
+// NetRequest bcs-netservice http json request
 type NetRequest struct {
 	Type    NetType    `json:"type"`
 	Pool    *NetPool   `json:"pool,omitempty"`
@@ -182,7 +195,7 @@ type NetRequest struct {
 	IPs     []string   `json:"ips,omitempty"`
 }
 
-//NetResponse bcs-netservice http json request
+// NetResponse bcs-netservice http json request
 type NetResponse struct {
 	Type    NetType     `json:"type"`
 	Code    int         `json:"code"`
@@ -197,7 +210,7 @@ type NetResponse struct {
 	Data    interface{} `json:"data,omitempty"`
 }
 
-//IsSucc check NetResponse is success when request
+// IsSucc check NetResponse is success when request
 func (nr *NetResponse) IsSucc() bool {
 	if nr.Code == 0 {
 		return true
@@ -205,13 +218,13 @@ func (nr *NetResponse) IsSucc() bool {
 	return false
 }
 
-//ResourceRequest for host available ip qeury
+// ResourceRequest for host available ip qeury
 type ResourceRequest struct {
 	Cluster string   `json:"cluster"`
 	Hosts   []string `json:"hosts"`
 }
 
-//IsValid check data is valid
+// IsValid check data is valid
 func (req *ResourceRequest) IsValid() bool {
 	if strings.TrimSpace(req.Cluster) == "" {
 		return false
@@ -222,7 +235,7 @@ func (req *ResourceRequest) IsValid() bool {
 	return true
 }
 
-//ResourceResponse response for IPInfoResponse
+// ResourceResponse response for IPInfoResponse
 type ResourceResponse struct {
 	Code         int            `json:"code"`
 	Message      string         `json:"message"`
@@ -230,22 +243,24 @@ type ResourceResponse struct {
 	HostResource map[string]int `json:"resource,omitempty"`
 }
 
-/////////////////////////////////////////////////////////////////
-///////////////// IP transfer request/response  ////////////////
-///////////////////////////////////////////////////////////////
+// ///////////////////////////////////////////////////////////////
+// /////////////// IP transfer request/response  ////////////////
+// /////////////////////////////////////////////////////////////
 
 const (
-	ALL_IP_FAILED  int = 1
+	// ALL_IP_FAILED TODO
+	ALL_IP_FAILED int = 1
+	// SOME_IP_FAILED TODO
 	SOME_IP_FAILED int = 2
 )
 
-//TranIPAttrInput request info
+// TranIPAttrInput request info
 type TranIPAttrInput struct {
-	Net        string   `json:"net"`     //network string
-	Cluster    string   `json:"cluster"` //cluster that ip pool belongs to
-	IPList     []string `json:"iplist"`  //tran ip address
-	SrcStatus  string   `json:"src"`     //src status
-	DestStatus string   `json:"dest"`    //src status
+	Net        string   `json:"net"`     // network string
+	Cluster    string   `json:"cluster"` // cluster that ip pool belongs to
+	IPList     []string `json:"iplist"`  // tran ip address
+	SrcStatus  string   `json:"src"`     // src status
+	DestStatus string   `json:"dest"`    // src status
 }
 
 // IsValid if trans ip attribute input is valid
@@ -273,7 +288,7 @@ func (tr *TranIPAttrInput) IsValid() bool {
 	return true
 }
 
-//TranIPAttrOutput response info
+// TranIPAttrOutput response info
 type TranIPAttrOutput struct {
 	Result
 }

@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package sdk xxx
 package sdk
 
 import (
@@ -107,6 +108,7 @@ type Client interface {
 	Upgrade(ctx context.Context, config release.HelmUpgradeConfig) (*release.HelmUpgradeResult, error)
 	Uninstall(ctx context.Context, config release.HelmUninstallConfig) (*release.HelmUninstallResult, error)
 	Rollback(ctx context.Context, config release.HelmRollbackConfig) (*release.HelmRollbackResult, error)
+	History(ctx context.Context, namespace, name string, max int) ([]*rspb.Release, error)
 }
 
 type client struct {
@@ -123,7 +125,14 @@ func (c *client) List(_ context.Context, namespace string) ([]*rspb.Release, err
 		return nil, err
 	}
 
-	return action.NewList(conf).Run()
+	releases, err := action.NewList(conf).Run()
+	if err != nil {
+		return nil, err
+	}
+	for i := range releases {
+		releases[i].Config = removeValuesTemplate(releases[i].Config)
+	}
+	return releases, nil
 }
 
 // Install helm release through helm client
@@ -291,6 +300,24 @@ func (c *client) Rollback(_ context.Context, config release.HelmRollbackConfig) 
 	return &release.HelmRollbackResult{}, nil
 }
 
+// History get helm release history
+func (c *client) History(_ context.Context, namespace, name string, max int) ([]*rspb.Release, error) {
+	conf := new(action.Configuration)
+	if err := conf.Init(c.getConfigFlag(namespace), namespace, "", blog.Infof); err != nil {
+		return nil, err
+	}
+	conf.Releases.MaxHistory = max
+
+	releases, err := action.NewHistory(conf).Run(name)
+	if err != nil {
+		return nil, err
+	}
+	for i := range releases {
+		releases[i].Config = removeValuesTemplate(releases[i].Config)
+	}
+	return releases, nil
+}
+
 // getConfigFlag 获取helm-client配置
 func (c *client) getConfigFlag(namespace string) *genericclioptions.ConfigFlags {
 	flags := genericclioptions.NewConfigFlags(false)
@@ -359,6 +386,24 @@ func mergeMaps(a, b map[string]interface{}) map[string]interface{} {
 		out[k] = v
 	}
 	return out
+}
+
+// removeValuesTemplate 移除 values 中的 bcs 模版变量
+func removeValuesTemplate(values map[string]interface{}) map[string]interface{} {
+	delete(values, common.BCSPrefix)
+	if _, ok := values[common.ValuesDefaultKey]; !ok {
+		return values
+	}
+	if _, ok := values[common.ValuesDefaultKey].(map[string]interface{})[common.BCSPrefix]; ok {
+		// 因为 ValuesDefaultKey 是 bcs-ui 下发添加的键，如果只包含 bcs 变量，则直接删除 ValuesDefaultKey,
+		// 如果还有其他值，则表示 ValuesDefaultKey 下还有用户添加的值，则需要保留其他的值。
+		if len(values[common.ValuesDefaultKey].(map[string]interface{})) == 1 {
+			delete(values, common.ValuesDefaultKey)
+		} else {
+			delete(values[common.ValuesDefaultKey].(map[string]interface{}), common.BCSPrefix)
+		}
+	}
+	return values
 }
 
 // replaceVarTplKey 替换掉varTemplate中的模版变量, 用于作为最后的values文件, 让用户能够在chart中直接引用.Values.__BCS__相关配置

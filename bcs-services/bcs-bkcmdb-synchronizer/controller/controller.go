@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package controller xxx
 package controller
 
 import (
@@ -146,7 +147,7 @@ func (c *Controller) Run(ctx context.Context) {
 	c.masterLoop()
 }
 
-// masterLoop
+// masterLoop xxx
 func (c *Controller) masterLoop() {
 	ticker := time.NewTicker(5 * time.Second)
 	for {

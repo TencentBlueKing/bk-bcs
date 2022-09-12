@@ -26,24 +26,25 @@ import (
 	swaggerfiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 
-	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/docs"
+	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/docs" // docs xxx
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/api/metrics"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/api/pod"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/api/telemetry"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/rest"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/rest/middleware"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/rest/tracing"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/storegw"
 )
 
-// APIServer
+// APIServer :
 type APIServer struct {
 	ctx    context.Context
 	engine *gin.Engine
 	srv    *http.Server
 }
 
-// NewAPIServer
+// NewAPIServer :
 func NewAPIServer(ctx context.Context, addr string) (*APIServer, error) {
 	gin.SetMode(gin.ReleaseMode)
 	engine := gin.Default()
@@ -60,23 +61,24 @@ func NewAPIServer(ctx context.Context, addr string) (*APIServer, error) {
 	return s, nil
 }
 
-// Run
+// Run :
 func (a *APIServer) Run() error {
 	return a.srv.ListenAndServe()
 }
 
-// Close
+// Close :
 func (a *APIServer) Close() error {
 	return a.srv.Shutdown(a.ctx)
 }
 
+// newRoutes xxx
 // @Title     BCS-Monitor OpenAPI
 // @BasePath  /bcsapi/v4/monitor/api/projects/:projectId/clusters/:clusterId
 func (a *APIServer) newRoutes(engine *gin.Engine) {
 	// 添加 X-Request-Id 头部
 	requestIdMiddleware := requestid.New(
 		requestid.WithGenerator(func() string {
-			return rest.RequestIdGenerator()
+			return tracing.RequestIdGenerator()
 		}),
 	)
 
@@ -90,10 +92,14 @@ func (a *APIServer) newRoutes(engine *gin.Engine) {
 
 	// 注册 HTTP 请求
 	registerRoutes(engine.Group(""))
+	registerMetricsRoutes(engine.Group(""))
+
 	if config.G.Web.RoutePrefix != "" {
 		registerRoutes(engine.Group(config.G.Web.RoutePrefix))
+		registerMetricsRoutes(engine.Group(config.G.Web.RoutePrefix))
 	}
 	registerRoutes(engine.Group(path.Join(config.G.Web.RoutePrefix, config.APIServicePrefix)))
+	registerMetricsRoutes(engine.Group(path.Join(config.G.Web.RoutePrefix, config.APIServicePrefix)))
 }
 
 func registerRoutes(engine *gin.RouterGroup) {
@@ -111,7 +117,49 @@ func registerRoutes(engine *gin.RouterGroup) {
 
 		// 蓝鲸监控采集器
 		route.GET("/telemetry/bkmonitor_agent/", rest.STDRestHandlerFunc(telemetry.IsBKMonitorAgent))
-		route.GET("/metrics/overview", rest.RestHandlerFunc(metrics.GetClusterOverview))
+	}
+}
+
+// registerMetricsRoutes metrics 相关接口
+func registerMetricsRoutes(engine *gin.RouterGroup) {
+
+	engine.Use(middleware.AuthRequired())
+
+	// 命名规范
+	// usage 代表 百分比
+	// used 代表已使用
+	// overview, info 数值量
+
+	route := engine.Group("/metrics/projects/:projectCode/clusters/:clusterId")
+	{
+		route.GET("/overview", rest.RestHandlerFunc(metrics.GetClusterOverview))
+		route.GET("/cpu_usage", rest.RestHandlerFunc(metrics.ClusterCPUUsage))
+		route.GET("/memory_usage", rest.RestHandlerFunc(metrics.ClusterMemoryUsage))
+		route.GET("/disk_usage", rest.RestHandlerFunc(metrics.ClusterDiskUsage))
+		route.GET("/nodes/:ip/info", rest.RestHandlerFunc(metrics.GetNodeInfo))
+		route.GET("/nodes/:ip/overview", rest.RestHandlerFunc(metrics.GetNodeOverview))
+		route.GET("/nodes/:ip/cpu_usage", rest.RestHandlerFunc(metrics.GetNodeCPUUsage))
+		route.GET("/nodes/:ip/memory_usage", rest.RestHandlerFunc(metrics.GetNodeMemoryUsage))
+		route.GET("/nodes/:ip/network_receive", rest.RestHandlerFunc(metrics.GetNodeNetworkReceiveUsage))
+		route.GET("/nodes/:ip/network_transmit", rest.RestHandlerFunc(metrics.GetNodeNetworkTransmitUsage))
+		route.GET("/nodes/:ip/diskio_usage", rest.RestHandlerFunc(metrics.GetNodeDiskioUsage))
+		route.POST("/namespaces/:namespace/pods/cpu_usage", rest.RestHandlerFunc(
+			metrics.PodCPUUsage)) // 多个Pod场景, 可能有几十，上百Pod场景, 需要使用 Post 传递参数
+		route.POST("/namespaces/:namespace/pods/memory_used", rest.RestHandlerFunc(metrics.PodMemoryUsed))
+		route.POST("/namespaces/:namespace/pods/network_receive", rest.RestHandlerFunc(metrics.PodNetworkReceive))
+		route.POST("/namespaces/:namespace/pods/network_transmit", rest.RestHandlerFunc(metrics.PodNetworkTransmit))
+		route.GET("/namespaces/:namespace/pods/:pod/containers/:container/cpu_usage",
+			rest.RestHandlerFunc(metrics.ContainerCPUUsage))
+		route.GET("/namespaces/:namespace/pods/:pod/containers/:container/memory_used",
+			rest.RestHandlerFunc(metrics.ContainerMemoryUsed))
+		route.GET("/namespaces/:namespace/pods/:pod/containers/:container/cpu_limit",
+			rest.RestHandlerFunc(metrics.ContainerCPULimit))
+		route.GET("/namespaces/:namespace/pods/:pod/containers/:container/memory_limit",
+			rest.RestHandlerFunc(metrics.ContainerMemoryLimit))
+		route.GET("/namespaces/:namespace/pods/:pod/containers/:container/disk_read_total",
+			rest.RestHandlerFunc(metrics.ContainerDiskReadTotal))
+		route.GET("/namespaces/:namespace/pods/:pod/containers/:container/disk_write_total",
+			rest.RestHandlerFunc(metrics.ContainerDiskWriteTotal))
 	}
 }
 

@@ -6588,33 +6588,35 @@ spec:
                     anyOf:
                     - type: integer
                     - type: string
-                    default: 0
+                    default: 25%
                     description: 'The maximum number of pods that can be scheduled
                       above the desired replicas during the update. Value can be an
                       absolute number (ex: 5) or a percentage of desired pods (ex:
                       10%). Absolute number is calculated from percentage by rounding
-                      up. Defaults to 0.'
+                      up. Defaults to 25%. Keep same with Deployment.'
                     x-kubernetes-int-or-string: true
                   maxUnavailable:
                     anyOf:
                     - type: integer
                     - type: string
-                    default: 20%
+                    default: 25%
                     description: 'The maximum number of pods that can be unavailable
                       during the update. Value can be an absolute number (ex: 5) or
                       a percentage of desired pods (ex: 10%). Absolute number is calculated
                       from percentage by rounding up by default. When maxSurge > 0,
                       absolute number is calculated from percentage by rounding down.
-                      Defaults to 20%.'
+                      Defaults to 25%. Keep same with Deployment.'
                     x-kubernetes-int-or-string: true
                   partition:
+                    anyOf:
+                    - type: integer
+                    - type: string
                     default: 0
                     description: Partition is the desired number of pods in old revisions.
                       It means when partition is set during pods updating, (replicas
                       - partition) number of pods will be updated. Default value is
                       0.
-                    format: int32
-                    type: integer
+                    x-kubernetes-int-or-string: true
                   paused:
                     default: false
                     description: Paused indicates that the GameDeployment is paused.

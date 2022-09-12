@@ -11,6 +11,7 @@
  *
  */
 
+// Package controller xxx
 package controller
 
 import (
@@ -49,9 +50,11 @@ func NewPrometheusController(conf *config.Config) *PrometheusController {
 		clusterID:      conf.ClusterID,
 		promFilePrefix: conf.PromFilePrefix,
 		discoverys:     make(map[string]discovery.Discovery),
-		mesosModules: []string{commtypes.BCS_MODULE_SCHEDULER, commtypes.BCS_MODULE_MESOSDATAWATCH, commtypes.BCS_MODULE_MESOSAPISERVER,
+		mesosModules: []string{commtypes.BCS_MODULE_SCHEDULER, commtypes.BCS_MODULE_MESOSDATAWATCH,
+			commtypes.BCS_MODULE_MESOSAPISERVER,
 			commtypes.BCS_MODULE_DNS, commtypes.BCS_MODULE_LOADBALANCE},
-		serviceModules: []string{commtypes.BCS_MODULE_APISERVER, commtypes.BCS_MODULE_STORAGE, commtypes.BCS_MODULE_NETSERVICE},
+		serviceModules: []string{commtypes.BCS_MODULE_APISERVER, commtypes.BCS_MODULE_STORAGE,
+			commtypes.BCS_MODULE_NETSERVICE},
 		nodeModules:    []string{discovery.CadvisorModule, discovery.NodeexportModule},
 		serviceMonitor: ServiceMonitorModule,
 	}
@@ -67,14 +70,14 @@ func NewPrometheusController(conf *config.Config) *PrometheusController {
 
 // Start to work update prometheus sd config
 func (prom *PrometheusController) Start() error {
-	//init bcs mesos module discovery
+	// init bcs mesos module discovery
 	if prom.conf.EnableMesos {
 		dis, err := discovery.NewBcsDiscovery(prom.conf.ClusterZk, prom.promFilePrefix, prom.mesosModules)
 		if err != nil {
 			blog.Errorf("NewBcsDiscovery ClusterZk %s error %s", prom.conf.ClusterZk, err.Error())
 			return err
 		}
-		//register event handle function
+		// register event handle function
 		dis.RegisterEventFunc(prom.handleDiscoveryEvent)
 		for _, module := range prom.mesosModules {
 			prom.discoverys[module] = dis
@@ -86,23 +89,25 @@ func (prom *PrometheusController) Start() error {
 		}
 	}
 
-	//init node discovery
+	// init node discovery
 	if prom.conf.EnableNode {
 		for _, module := range prom.nodeModules {
 			var nodeDiscovery discovery.Discovery
 			var err error
 			if prom.conf.Kubeconfig != "" {
-				nodeDiscovery, err = discovery.NewNodeEtcdDiscovery(prom.conf.Kubeconfig, prom.promFilePrefix, module, prom.conf.CadvisorPort, prom.conf.NodeExportPort)
+				nodeDiscovery, err = discovery.NewNodeEtcdDiscovery(prom.conf.Kubeconfig, prom.promFilePrefix, module,
+					prom.conf.CadvisorPort, prom.conf.NodeExportPort)
 			} else {
 				zkAddr := strings.Split(prom.conf.ClusterZk, ",")
-				nodeDiscovery, err = discovery.NewNodeZkDiscovery(zkAddr, prom.promFilePrefix, module, prom.conf.CadvisorPort, prom.conf.NodeExportPort)
+				nodeDiscovery, err = discovery.NewNodeZkDiscovery(zkAddr, prom.promFilePrefix, module, prom.conf.CadvisorPort,
+					prom.conf.NodeExportPort)
 
 			}
 			if err != nil {
 				blog.Errorf("NewNodeDiscovery ClusterZk %s error %s", prom.conf.ClusterZk, err.Error())
 				return err
 			}
-			//register event handle function
+			// register event handle function
 			nodeDiscovery.RegisterEventFunc(prom.handleDiscoveryEvent)
 			prom.discoverys[module] = nodeDiscovery
 			err = nodeDiscovery.Start()
@@ -112,14 +117,14 @@ func (prom *PrometheusController) Start() error {
 		}
 	}
 
-	//init bcs service module discovery
+	// init bcs service module discovery
 	if prom.conf.EnableService {
 		serviceDiscovery, err := discovery.NewBcsDiscovery(prom.conf.ServiceZk, prom.promFilePrefix, prom.serviceModules)
 		if err != nil {
 			blog.Errorf("NewBcsDiscovery ClusterZk %s error %s", prom.conf.ServiceZk, err.Error())
 			return err
 		}
-		//register event handle function
+		// register event handle function
 		serviceDiscovery.RegisterEventFunc(prom.handleDiscoveryEvent)
 		for _, module := range prom.serviceModules {
 			prom.discoverys[module] = serviceDiscovery
@@ -131,14 +136,14 @@ func (prom *PrometheusController) Start() error {
 		}
 	}
 
-	//init taskgroup ServiceMonitor discovery
+	// init taskgroup ServiceMonitor discovery
 	if prom.conf.EnableServiceMonitor {
 		serviceDiscovery, err := discovery.NewServiceMonitor(prom.conf.Kubeconfig, prom.promFilePrefix, prom.serviceMonitor)
 		if err != nil {
 			blog.Errorf("NewBcsDiscovery ClusterZk %s error %s", prom.conf.ServiceZk, err.Error())
 			return err
 		}
-		//register event handle function
+		// register event handle function
 		serviceDiscovery.RegisterEventFunc(prom.handleDiscoveryEvent)
 		prom.discoverys[prom.serviceMonitor] = serviceDiscovery
 		err = serviceDiscovery.Start()
@@ -161,7 +166,7 @@ func (prom *PrometheusController) handleDiscoveryEvent(dInfo discovery.Info) {
 
 	sdConfig, err := disc.GetPrometheusSdConfig(dInfo.Key)
 	if err != nil {
-		//if serviceMonitor Not Found, then delete the specify config file
+		// if serviceMonitor Not Found, then delete the specify config file
 		if strings.Contains(err.Error(), "Not Found") {
 			prom.deletePrometheusConfigFile(dInfo)
 			return

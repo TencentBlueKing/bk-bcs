@@ -27,10 +27,10 @@ import (
 
 // MessageQueue is an interface used for asynchronous messaging.
 type MessageQueue interface {
-	// publish pub data to queue
+	// Publish pub data to queue
 	// data.Header  map[string]string id: cluster_id; resourceType:Pod; namespace:default; resourceName: name; event: Update
 	Publish(data *broker.Message) error
-	// subscribe specified data type
+	// Subscribe specified data type
 	Subscribe(handler Handler, filters []Filter, resourceType string) (UnSub, error)
 	// SubscribeWithQueueName subscribe topic with custom quenename
 	SubscribeWithQueueName(handler Handler, filters []Filter, queuename, topic string) (UnSub, error)
@@ -108,12 +108,14 @@ func (mq *MsgQueue) Publish(data *broker.Message) error {
 		return errors.New("unsupported queue kind")
 	}
 	if err != nil {
-		errMsg := fmt.Errorf("[pub] message failed: [messageType: %s], [messageQueue: %s], [cluster_id: %s], [namespace: %s], [resourceName: %s]",
+		errMsg := fmt.Errorf(
+			"[pub] message failed: [messageType: %s], [messageQueue: %s], [cluster_id: %s], [namespace: %s], [resourceName: %s]",
 			data.Header["resourceType"], queueName, data.Header["id"], data.Header["namespace"], data.Header["resourceName"])
 		return errMsg
 	}
 
-	glog.V(4).Infof("[pub] message successful: [messageType: %s], [messageQueue: %s], [cluster_id: %s], [namespace: %s], [resourceName: %s]",
+	glog.V(4).Infof(
+		"[pub] message successful: [messageType: %s], [messageQueue: %s], [cluster_id: %s], [namespace: %s], [resourceName: %s]",
 		data.Header["resourceType"], queueName, data.Header["id"], data.Header["namespace"], data.Header["resourceName"])
 
 	return nil
@@ -129,7 +131,8 @@ func (mq *MsgQueue) Subscribe(handler Handler, filters []Filter, resourceType st
 }
 
 // SubscribeWithQueueName subscribe resourceType data with specific handler and filters
-func (mq *MsgQueue) SubscribeWithQueueName(handler Handler, filters []Filter, queueName, resourceType string) (UnSub, error) {
+func (mq *MsgQueue) SubscribeWithQueueName(handler Handler, filters []Filter, queueName, resourceType string) (UnSub,
+	error) {
 	if !mq.queueOptions.CommonOptions.QueueFlag {
 		return nil, errors.New("queue flag is off")
 	}
@@ -158,6 +161,7 @@ func (mq *MsgQueue) SubscribeWithQueueName(handler Handler, filters []Filter, qu
 	return subscribe, nil
 }
 
+// isExistResourceQueue xxx
 // Handlers of all topics
 func (mq *MsgQueue) isExistResourceQueue(resourceType string) (string, error) {
 	q, ok := mq.queueOptions.CommonOptions.ResourceToQueue[resourceType]

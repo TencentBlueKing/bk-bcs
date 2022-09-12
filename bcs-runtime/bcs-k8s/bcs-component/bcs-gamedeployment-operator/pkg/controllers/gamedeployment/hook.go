@@ -33,7 +33,8 @@ import (
 )
 
 // getHookRunsForGameDeployment list all HookRuns owned by a GameDeployment
-func (gdc *defaultGameDeploymentControl) getHookRunsForGameDeployment(deploy *gdv1alpha1.GameDeployment) ([]*hookv1alpha1.HookRun, error) {
+func (gdc *defaultGameDeploymentControl) getHookRunsForGameDeployment(deploy *gdv1alpha1.GameDeployment) (
+	[]*hookv1alpha1.HookRun, error) {
 	hookRuns, err := gdc.hookRunLister.HookRuns(deploy.Namespace).List(labels.Everything())
 	if err != nil {
 		return nil, err
@@ -91,16 +92,19 @@ func (gdc *defaultGameDeploymentControl) reconcileHookRuns(canaryCtx *canaryCont
 }
 
 // cancelHookRuns terminate HookRuns
-func (gdc *defaultGameDeploymentControl) cancelHookRuns(canaryCtx *canaryContext, hookRuns []*hookv1alpha1.HookRun) error {
+func (gdc *defaultGameDeploymentControl) cancelHookRuns(canaryCtx *canaryContext,
+	hookRuns []*hookv1alpha1.HookRun) error {
 	for _, hr := range hookRuns {
 		isNotCompleted := hr == nil || !hr.Status.Phase.Completed()
 		if hr != nil && !hr.Spec.Terminate && isNotCompleted {
-			klog.Infof("canceling the HookRun %s for GameDeployment %s/%s", hr.Name, canaryCtx.deploy.Namespace, canaryCtx.deploy.Name)
+			klog.Infof("canceling the HookRun %s for GameDeployment %s/%s", hr.Name, canaryCtx.deploy.Namespace,
+				canaryCtx.deploy.Name)
 			_, err := gdc.hookClient.TkexV1alpha1().HookRuns(hr.Namespace).Patch(
 				context.TODO(), hr.Name, patchtypes.MergePatchType, []byte(commonhookutil.CancelHookRun), metav1.PatchOptions{})
 			if err != nil {
 				if k8serrors.IsNotFound(err) {
-					klog.Warningf("HookRun %s not found for GameDeployment %s/%s", hr.Name, canaryCtx.deploy.Namespace, canaryCtx.deploy.Name)
+					klog.Warningf("HookRun %s not found for GameDeployment %s/%s", hr.Name, canaryCtx.deploy.Namespace,
+						canaryCtx.deploy.Name)
 					continue
 				}
 				return err
@@ -145,7 +149,8 @@ func (gdc *defaultGameDeploymentControl) reconcileStepHookRun(canaryCtx *canaryC
 		stepLabels := commonhookutil.StepLabels(*index, revision)
 		currentHr, err := gdc.createHookRun(canaryCtx, step.Hook, index, stepLabels)
 		if err == nil {
-			klog.Infof("Created HookRun %s for step %d of GameDeployment %s/%s", currentHr.Name, *index, deploy.Namespace, deploy.Name)
+			klog.Infof("Created HookRun %s for step %d of GameDeployment %s/%s", currentHr.Name, *index, deploy.Namespace,
+				deploy.Name)
 		}
 		return currentHr, err
 	}
@@ -158,7 +163,8 @@ func (gdc *defaultGameDeploymentControl) reconcileStepHookRun(canaryCtx *canaryC
 }
 
 // createHookRun create HookRun
-func (gdc *defaultGameDeploymentControl) createHookRun(canaryCtx *canaryContext, hookStep *hookv1alpha1.HookStep, stepIndex *int32,
+func (gdc *defaultGameDeploymentControl) createHookRun(canaryCtx *canaryContext, hookStep *hookv1alpha1.HookStep,
+	stepIndex *int32,
 	labels map[string]string) (*hookv1alpha1.HookRun, error) {
 	arguments := []hookv1alpha1.Argument{}
 	for _, arg := range hookStep.Args {
@@ -176,7 +182,8 @@ func (gdc *defaultGameDeploymentControl) createHookRun(canaryCtx *canaryContext,
 	}
 	arguments = append(arguments, hostArgs)
 
-	hr, err := gdc.newHookRunFromGameDeployment(canaryCtx, hookStep, arguments, canaryCtx.newStatus.UpdateRevision, stepIndex, labels)
+	hr, err := gdc.newHookRunFromGameDeployment(canaryCtx, hookStep, arguments, canaryCtx.newStatus.UpdateRevision,
+		stepIndex, labels)
 	if err != nil {
 		return nil, err
 	}
@@ -185,13 +192,16 @@ func (gdc *defaultGameDeploymentControl) createHookRun(canaryCtx *canaryContext,
 }
 
 // newHookRunFromGameDeployment generate a HookRun from GameDeployment and HookTemplate
-func (gdc *defaultGameDeploymentControl) newHookRunFromGameDeployment(canaryCtx *canaryContext, hookStep *hookv1alpha1.HookStep,
-	args []hookv1alpha1.Argument, revision string, stepIdx *int32, labels map[string]string) (*hookv1alpha1.HookRun, error) {
+func (gdc *defaultGameDeploymentControl) newHookRunFromGameDeployment(canaryCtx *canaryContext,
+	hookStep *hookv1alpha1.HookStep,
+	args []hookv1alpha1.Argument, revision string, stepIdx *int32, labels map[string]string) (*hookv1alpha1.HookRun,
+	error) {
 	deploy := canaryCtx.deploy
 	template, err := gdc.hookTemplateLister.HookTemplates(deploy.Namespace).Get(hookStep.TemplateName)
 	if err != nil {
 		if k8serrors.IsNotFound(err) {
-			klog.Warningf("HookTemplate '%s' not found for GameDeployment %s/%s", hookStep.TemplateName, deploy.Namespace, deploy.Name)
+			klog.Warningf("HookTemplate '%s' not found for GameDeployment %s/%s", hookStep.TemplateName, deploy.Namespace,
+				deploy.Name)
 		}
 		return nil, err
 	}

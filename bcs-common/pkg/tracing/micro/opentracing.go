@@ -39,7 +39,8 @@ type otWrapper struct {
 
 // StartSpanFromContext returns a new span with the given operation name and options. If a span
 // is found in the context, it will be used as the parent of the resulting span.
-func StartSpanFromContext(ctx context.Context, tracer opentracing.Tracer, name string, opts ...opentracing.StartSpanOption) (context.Context, opentracing.Span, error) {
+func StartSpanFromContext(ctx context.Context, tracer opentracing.Tracer, name string,
+	opts ...opentracing.StartSpanOption) (context.Context, opentracing.Span, error) {
 	md, ok := metadata.FromContext(ctx)
 	if !ok {
 		md = make(metadata.Metadata)
@@ -141,7 +142,8 @@ func NewClientWrapper(ot opentracing.Tracer) client.Wrapper {
 // NewCallWrapper accepts an opentracing Tracer and returns a Call Wrapper
 func NewCallWrapper(ot opentracing.Tracer) client.CallWrapper {
 	return func(cf client.CallFunc) client.CallFunc {
-		return func(ctx context.Context, node *registry.Node, req client.Request, rsp interface{}, opts client.CallOptions) error {
+		return func(ctx context.Context, node *registry.Node, req client.Request, rsp interface{},
+			opts client.CallOptions) error {
 			if ot == nil {
 				ot = opentracing.GlobalTracer()
 			}

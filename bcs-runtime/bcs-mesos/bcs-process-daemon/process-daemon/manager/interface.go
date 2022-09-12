@@ -18,32 +18,39 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-mesos/bcs-process-executor/process-executor/types"
 )
 
+// Manager xxx
 type Manager interface {
-	//init func
+	// Init func
 	Init() error
 
-	//Start func
+	// Start func
 	Start()
 
-	//get config
+	// GetConfig xxx
+	// get config
 	GetConfig() *config.Config
 
-	//heartbeat
+	// HeartBeat xxx
+	// heartbeat
 	HeartBeat(heartbeat *types.HeartBeat)
 
-	//Create process
+	// CreateProcess xxx
+	// Create process
 	CreateProcess(processInfo *types.ProcessInfo) error
 
-	//inspect process status info
-	//processId = types.ProcessInfo.Id
+	// InspectProcessStatus xxx
+	// inspect process status info
+	// processId = types.ProcessInfo.Id
 	InspectProcessStatus(processId string) (*types.ProcessStatusInfo, error)
 
-	//Stop process
-	//processId = types.ProcessInfo.Id
-	//process will be killed when timeout seconds
+	// StopProcess xxx
+	// Stop process
+	// processId = types.ProcessInfo.Id
+	// process will be killed when timeout seconds
 	StopProcess(processId string, timeout int) error
 
-	//delete process
-	//processId = types.ProcessInfo.Id
+	// DeleteProcess xxx
+	// delete process
+	// processId = types.ProcessInfo.Id
 	DeleteProcess(processId string) error
 }

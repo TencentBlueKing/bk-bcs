@@ -28,9 +28,16 @@ import (
 
 var validate = validator.New()
 
+// WriteClientError xxx
 var WriteClientError = utils.WriteClientError
+
+// WriteForbiddenError xxx
 var WriteForbiddenError = utils.WriteForbiddenError
+
+// WriteNotFoundError xxx
 var WriteNotFoundError = utils.WriteNotFoundError
+
+// WriteServerError xxx
 var WriteServerError = utils.WriteServerError
 
 func init() {
@@ -70,10 +77,12 @@ func FormatValidationError(errList error) *types.ErrorResponse {
 	var message string
 	for _, err := range errList.(validator.ValidationErrors) {
 		if err.Tag() == "required" {
-			message = fmt.Sprintf("errcode: %d, ", common.BcsErrApiBadRequest) + fmt.Sprintf(`field '%s' is required`, err.Field())
+			message = fmt.Sprintf("errcode: %d, ", common.BcsErrApiBadRequest) + fmt.Sprintf(`field '%s' is required`,
+				err.Field())
 			break
 		}
-		message = fmt.Sprintf("errcode: %d, ", common.BcsErrApiBadRequest) + fmt.Sprintf(`'%s' failed on the '%s' tag`, err.Field(), err.Tag())
+		message = fmt.Sprintf("errcode: %d, ", common.BcsErrApiBadRequest) + fmt.Sprintf(`'%s' failed on the '%s' tag`,
+			err.Field(), err.Tag())
 	}
 	return &types.ErrorResponse{
 		CodeName: "VALIDATION_ERROR",

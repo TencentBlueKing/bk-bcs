@@ -11,6 +11,7 @@
  *
  */
 
+// Package app xxx
 package app
 
 import (
@@ -46,14 +47,14 @@ func NewConsoleProxy(op *options.ConsoleProxyOption) *ConsoleProxy {
 		os.Exit(1)
 	}
 
-	//http server
+	// http server
 	c.route = api.NewRouter(c.backend, c.conf)
 	return c
 }
 
 // Run create a pid
 func (c *ConsoleProxy) Run() {
-	//pid
+	// pid
 	if err := common.SavePid(comconf.ProcessConfig{}); err != nil {
 		blog.Error("fail to save pid: err:%s", err.Error())
 	}
@@ -70,7 +71,7 @@ func setConfig(op *options.ConsoleProxyOption) {
 	op.Conf.IsAuth = op.IsAuth
 	op.Conf.IsOneSeesion = op.IsOneSession
 
-	//server cert directoty
+	// server cert directoty
 	if op.CertConfig.ServerCertFile != "" && op.CertConfig.CAFile != "" &&
 		op.CertConfig.ServerKeyFile != "" {
 

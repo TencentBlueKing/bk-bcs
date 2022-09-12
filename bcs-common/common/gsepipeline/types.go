@@ -49,7 +49,7 @@ type ContainerMount struct {
 	Destination string
 }
 
-//ContainerReference Container reference contains enough information to uniquely identify a container
+// ContainerReference Container reference contains enough information to uniquely identify a container
 type ContainerReference struct {
 	// The container id
 	ID string `json:"id,omitempty"`
@@ -77,7 +77,7 @@ type ContainerReference struct {
 	ContainerInfo types.ContainerJSON `json:"-"`
 }
 
-//LogMsg log object
+// LogMsg log object
 type LogMsg struct {
 	FileName     string              `json:"filename,omitempty"`
 	Timestamp    time.Time           `json:"timestamp"`

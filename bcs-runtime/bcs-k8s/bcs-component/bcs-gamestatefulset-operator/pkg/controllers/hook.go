@@ -33,7 +33,8 @@ import (
 )
 
 // getHookRunsForGameStatefulSet list all HookRuns owned by a GameStatefulSet
-func (ssc *defaultGameStatefulSetControl) getHookRunsForGameStatefulSet(set *gstsv1alpha1.GameStatefulSet) ([]*hookv1alpha1.HookRun, error) {
+func (ssc *defaultGameStatefulSetControl) getHookRunsForGameStatefulSet(set *gstsv1alpha1.GameStatefulSet) (
+	[]*hookv1alpha1.HookRun, error) {
 	hookRuns, err := ssc.hookRunLister.HookRuns(set.Namespace).List(labels.Everything())
 	if err != nil {
 		return nil, err
@@ -91,16 +92,19 @@ func (ssc *defaultGameStatefulSetControl) reconcileHookRuns(canaryCtx *canaryCon
 }
 
 // cancelHookRuns terminate HookRuns
-func (ssc *defaultGameStatefulSetControl) cancelHookRuns(canaryCtx *canaryContext, hookRuns []*hookv1alpha1.HookRun) error {
+func (ssc *defaultGameStatefulSetControl) cancelHookRuns(canaryCtx *canaryContext,
+	hookRuns []*hookv1alpha1.HookRun) error {
 	for _, hr := range hookRuns {
 		isNotCompleted := hr == nil || !hr.Status.Phase.Completed()
 		if hr != nil && !hr.Spec.Terminate && isNotCompleted {
-			klog.Infof("canceling the HookRun %s for GameStatefulSet %s/%s", hr.Name, canaryCtx.set.Namespace, canaryCtx.set.Name)
+			klog.Infof("canceling the HookRun %s for GameStatefulSet %s/%s", hr.Name, canaryCtx.set.Namespace,
+				canaryCtx.set.Name)
 			_, err := ssc.hookClient.TkexV1alpha1().HookRuns(hr.Namespace).Patch(context.TODO(),
 				hr.Name, patchtypes.MergePatchType, []byte(commonhookutil.CancelHookRun), metav1.PatchOptions{})
 			if err != nil {
 				if k8serrors.IsNotFound(err) {
-					klog.Warningf("HookRun %s not found for GameDeployment %s/%s", hr.Name, canaryCtx.set.Namespace, canaryCtx.set.Name)
+					klog.Warningf("HookRun %s not found for GameDeployment %s/%s", hr.Name, canaryCtx.set.Namespace,
+						canaryCtx.set.Name)
 					continue
 				}
 				return err
@@ -125,7 +129,8 @@ func (ssc *defaultGameStatefulSetControl) deleteHookRuns(hrs []*hookv1alpha1.Hoo
 }
 
 // reconcileStepHookRun reconcile canary step HookRun
-func (ssc *defaultGameStatefulSetControl) reconcileStepHookRun(canaryCtx *canaryContext) (*hookv1alpha1.HookRun, error) {
+func (ssc *defaultGameStatefulSetControl) reconcileStepHookRun(canaryCtx *canaryContext) (*hookv1alpha1.HookRun,
+	error) {
 	set := canaryCtx.set
 	currentHrs := canaryCtx.CurrentHookRuns()
 	step, index := canaryutil.GetCurrentCanaryStep(set)
@@ -176,7 +181,8 @@ func (ssc *defaultGameStatefulSetControl) createHookRun(canaryCtx *canaryContext
 	}
 	arguments = append(arguments, hostArgs)
 
-	hr, err := ssc.newHookRunFromGameStatefulSet(canaryCtx, hookStep, arguments, canaryCtx.newStatus.UpdateRevision, stepIndex, labels)
+	hr, err := ssc.newHookRunFromGameStatefulSet(canaryCtx, hookStep, arguments, canaryCtx.newStatus.UpdateRevision,
+		stepIndex, labels)
 	if err != nil {
 		return nil, err
 	}
@@ -184,14 +190,17 @@ func (ssc *defaultGameStatefulSetControl) createHookRun(canaryCtx *canaryContext
 	return commonhookutil.CreateWithCollisionCounter(hookRunIf, *hr)
 }
 
-// newHookRunFromGameDeployment generate a HookRun from GameDeployment and HookTemplate
-func (ssc *defaultGameStatefulSetControl) newHookRunFromGameStatefulSet(canaryCtx *canaryContext, hookStep *hookv1alpha1.HookStep,
-	args []hookv1alpha1.Argument, revision string, stepIdx *int32, labels map[string]string) (*hookv1alpha1.HookRun, error) {
+// newHookRunFromGameStatefulSet generate a HookRun from GameDeployment and HookTemplate
+func (ssc *defaultGameStatefulSetControl) newHookRunFromGameStatefulSet(canaryCtx *canaryContext,
+	hookStep *hookv1alpha1.HookStep,
+	args []hookv1alpha1.Argument, revision string, stepIdx *int32, labels map[string]string) (*hookv1alpha1.HookRun,
+	error) {
 	set := canaryCtx.set
 	template, err := ssc.hookTemplateLister.HookTemplates(set.Namespace).Get(hookStep.TemplateName)
 	if err != nil {
 		if k8serrors.IsNotFound(err) {
-			klog.Warningf("HookTemplate '%s' not found for GameStatefulSet %s/%s", hookStep.TemplateName, set.Namespace, set.Name)
+			klog.Warningf("HookTemplate '%s' not found for GameStatefulSet %s/%s", hookStep.TemplateName, set.Namespace,
+				set.Name)
 		}
 		return nil, err
 	}

@@ -20,11 +20,6 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	ingresscommon "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/common"
-	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/constant"
-	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/portpoolcache"
-	bcsnetcommon "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/pkg/common"
-	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
 	k8scorev1 "k8s.io/api/core/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -32,6 +27,12 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/source"
+
+	ingresscommon "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/common"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/constant"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/portpoolcache"
+	bcsnetcommon "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/pkg/common"
+	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
 )
 
 // PortBindingReconciler reconciler for bcs port pool
@@ -88,10 +89,26 @@ func (pbr *PortBindingReconciler) Reconcile(req ctrl.Request) (ctrl.Result, erro
 			RequeueAfter: 3 * time.Second,
 		}, nil
 	}
-	// if pod is found but portbinding is not found, create portbinding for pod
+	// 如果 PortBinding 不存在:
+	//   - Pod 中无相关 annotation，则认为 Pod 不需要端口池功能，直接返回
+	//   - Pod 中存在相关 annotation，则为其创建 PortBinding
 	if !isPortBindingFound {
-		blog.V(3).Infof("create portbinding %s/%s", pod.GetName(), pod.GetNamespace())
+		if !checkPortPoolAnnotationForPod(pod) {
+			blog.Infof("pod '%s/%s' not have annotation '%s', no need to handle it",
+				constant.AnnotationForPortPool)
+			return ctrl.Result{}, nil
+		}
+		blog.Infof("create portbinding for pod '%s/%s'", pod.GetNamespace(), pod.GetName())
 		return pbr.createPortBinding(pod)
+	}
+
+	// 如果 PortBinding 存在：
+	//   - Pod 若无相关 annotation，则认为 Pod 不需要端口池功能，将 PortBinding 进行清理
+	//   - PortBinding 若在 Deleting 状态，则继续进行清理
+	if !checkPortPoolAnnotationForPod(pod) {
+		blog.Warnf("pod '%s/%s' portpool annotation not exist, so clean portbinding",
+			pod.GetNamespace(), pod.GetName())
+		return pbr.cleanPortBinding(portBinding)
 	}
 	// when statefulset pod is recreated, the old portbinding may be deleting
 	if portBinding.DeletionTimestamp != nil {
@@ -105,6 +122,7 @@ func (pbr *PortBindingReconciler) Reconcile(req ctrl.Request) (ctrl.Result, erro
 			RequeueAfter: 300 * time.Millisecond,
 		}, nil
 	}
+
 	pbhandler := newPortBindingHandler(pbr.ctx, pbr.k8sClient)
 	retry, err := pbhandler.ensurePortBinding(pod, portBinding)
 	if err != nil {
@@ -127,10 +145,6 @@ func (pbr *PortBindingReconciler) Reconcile(req ctrl.Request) (ctrl.Result, erro
 }
 
 func (pbr *PortBindingReconciler) createPortBinding(pod *k8scorev1.Pod) (ctrl.Result, error) {
-	if !checkPortPoolAnnotationForPod(pod) {
-		blog.Warnf("check pod %s/%s annotation for port binding failed", pod.GetName(), pod.GetNamespace())
-		return ctrl.Result{}, nil
-	}
 	annotationValue, ok := pod.Annotations[constant.AnnotationForPortPoolBindings]
 	if !ok {
 		blog.Warnf("pod %s/%s has no annotation %s",
@@ -190,7 +204,7 @@ func (pbr *PortBindingReconciler) cleanPortBinding(portBinding *networkextension
 			portBinding.Finalizers = bcsnetcommon.RemoveString(
 				portBinding.Finalizers, constant.FinalizerNameBcsIngressController)
 			if err := pbr.k8sClient.Update(pbr.ctx, portBinding, &client.UpdateOptions{}); err != nil {
-				blog.Warnf("remote finalizer from port binding %s/%s failed, err %s",
+				blog.Warnf("remove finalizer from port binding %s/%s failed, err %s",
 					portBinding.GetName(), portBinding.GetNamespace(), err.Error())
 				return ctrl.Result{
 					Requeue:      true,

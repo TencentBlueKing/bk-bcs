@@ -27,7 +27,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/mock/jwt"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/mock/store"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/models"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/storages/sqlstore"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/utils"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -56,7 +55,7 @@ func newTestToken(form CreateTokenForm) (*testToken, error) {
 	r := httptest.NewRequest("POST", "/any", body)
 	r.Header.Add("Content-Type", "application/json")
 	request := restful.NewRequest(r)
-	request.SetAttribute(constant.CurrentUserAttr, &models.BcsUser{Name: form.Username, UserType: sqlstore.PlainUser})
+	request.SetAttribute(constant.CurrentUserAttr, &models.BcsUser{Name: form.Username, UserType: models.PlainUser})
 	recorder := httptest.NewRecorder()
 	response := restful.NewResponse(recorder)
 	response.SetRequestAccepts("application/json")
@@ -97,7 +96,7 @@ func TestCreateToken(t *testing.T) {
 		tt, err := newTestToken(form)
 		require.NoError(t, err)
 
-		tt.request.SetAttribute(constant.CurrentUserAttr, &models.BcsUser{Name: "admin", UserType: sqlstore.AdminUser})
+		tt.request.SetAttribute(constant.CurrentUserAttr, &models.BcsUser{Name: "admin", UserType: models.AdminUser})
 		tt.mockTokenStore.On("GetUserTokensByName", form.Username).Once().
 			Return([]models.BcsUser{}, nil)
 		tt.mockCache.On("Set", mock.Anything, mock.Anything, time.Duration(form.Expiration)*time.Second).Once().
@@ -123,7 +122,7 @@ func TestCreateToken(t *testing.T) {
 		tt, err := newTestToken(form)
 		require.NoError(t, err)
 
-		tt.request.SetAttribute(constant.CurrentUserAttr, &models.BcsUser{Name: "user1", UserType: sqlstore.PlainUser})
+		tt.request.SetAttribute(constant.CurrentUserAttr, &models.BcsUser{Name: "user1", UserType: models.PlainUser})
 		tt.tokenHandler.CreateToken(tt.request, tt.response)
 		res := &utils.ErrorResponse{}
 		err = json.Unmarshal(tt.recorder.Body.Bytes(), res)
@@ -231,7 +230,7 @@ func TestGetToken(t *testing.T) {
 		require.NoError(t, err)
 
 		// we can't set path parameter here, so we use empty username to check user token permission
-		tt.request.SetAttribute(constant.CurrentUserAttr, &models.BcsUser{Name: "", UserType: sqlstore.PlainUser})
+		tt.request.SetAttribute(constant.CurrentUserAttr, &models.BcsUser{Name: "", UserType: models.PlainUser})
 		tt.mockTokenStore.On("GetUserTokensByName", mock.Anything).Once().
 			Return([]models.BcsUser{}, nil)
 		tt.tokenHandler.GetToken(tt.request, tt.response)
@@ -248,7 +247,7 @@ func TestGetToken(t *testing.T) {
 
 		// we can't set path parameter here, so we use empty username to check user token permission
 		now := time.Now()
-		tt.request.SetAttribute(constant.CurrentUserAttr, &models.BcsUser{Name: "", UserType: sqlstore.PlainUser})
+		tt.request.SetAttribute(constant.CurrentUserAttr, &models.BcsUser{Name: "", UserType: models.PlainUser})
 		tt.mockTokenStore.On("GetUserTokensByName", mock.Anything).Once().
 			Return([]models.BcsUser{{Name: "test", UserToken: "token", ExpiresAt: now.Add(time.Hour)}}, nil)
 		tt.tokenHandler.GetToken(tt.request, tt.response)
@@ -270,7 +269,7 @@ func TestGetToken(t *testing.T) {
 		require.NoError(t, err)
 
 		// we can't set path parameter here, so we use empty username to check user token permission
-		tt.request.SetAttribute(constant.CurrentUserAttr, &models.BcsUser{Name: "", UserType: sqlstore.PlainUser})
+		tt.request.SetAttribute(constant.CurrentUserAttr, &models.BcsUser{Name: "", UserType: models.PlainUser})
 		tt.mockTokenStore.On("GetUserTokensByName", mock.Anything).Once().
 			Return([]models.BcsUser{{Name: "test", UserToken: "token", ExpiresAt: time.Unix(1, 1)}}, nil)
 		tt.tokenHandler.GetToken(tt.request, tt.response)
@@ -293,7 +292,7 @@ func TestGetToken(t *testing.T) {
 
 		// we can't set path parameter here, so we use empty username to check user token permission
 		now := time.Now()
-		tt.request.SetAttribute(constant.CurrentUserAttr, &models.BcsUser{Name: "", UserType: sqlstore.PlainUser})
+		tt.request.SetAttribute(constant.CurrentUserAttr, &models.BcsUser{Name: "", UserType: models.PlainUser})
 		tt.mockTokenStore.On("GetUserTokensByName", mock.Anything).Once().
 			Return([]models.BcsUser{{Name: "test", UserToken: "token", ExpiresAt: now.Add(math.MaxInt64)}}, nil)
 		tt.tokenHandler.GetToken(tt.request, tt.response)
@@ -403,7 +402,7 @@ func TestCreateTempToken(t *testing.T) {
 		tt, err := newTestToken(form)
 		require.NoError(t, err)
 
-		tt.request.SetAttribute(constant.CurrentUserAttr, &models.BcsUser{Name: "admin", UserType: sqlstore.AdminUser})
+		tt.request.SetAttribute(constant.CurrentUserAttr, &models.BcsUser{Name: "admin", UserType: models.AdminUser})
 		tt.mockJWTClient.On("JWTSign", mock.Anything).Once().Return("", nil)
 		tt.mockCache.On("Set", mock.Anything, mock.Anything, time.Duration(form.Expiration)*time.Second).Once().
 			Return("", nil)
@@ -427,7 +426,7 @@ func TestCreateTempToken(t *testing.T) {
 		tt, err := newTestToken(form)
 		require.NoError(t, err)
 
-		tt.request.SetAttribute(constant.CurrentUserAttr, &models.BcsUser{Name: "admin", UserType: sqlstore.ClientUser})
+		tt.request.SetAttribute(constant.CurrentUserAttr, &models.BcsUser{Name: "admin", UserType: models.ClientUser})
 		tt.mockJWTClient.On("JWTSign", mock.Anything).Once().Return("", nil)
 		tt.mockCache.On("Set", mock.Anything, mock.Anything, time.Duration(form.Expiration)*time.Second).Once().
 			Return("", nil)
@@ -451,7 +450,7 @@ func TestCreateTempToken(t *testing.T) {
 		tt, err := newTestToken(form)
 		require.NoError(t, err)
 
-		tt.request.SetAttribute(constant.CurrentUserAttr, &models.BcsUser{Name: "user1", UserType: sqlstore.PlainUser})
+		tt.request.SetAttribute(constant.CurrentUserAttr, &models.BcsUser{Name: "user1", UserType: models.PlainUser})
 		tt.tokenHandler.CreateTempToken(tt.request, tt.response)
 		res := &utils.ErrorResponse{}
 		err = json.Unmarshal(tt.recorder.Body.Bytes(), res)
@@ -466,7 +465,7 @@ func TestCreateTempToken(t *testing.T) {
 		tt, err := newTestToken(form)
 		require.NoError(t, err)
 
-		tt.request.SetAttribute(constant.CurrentUserAttr, &models.BcsUser{Name: "test", UserType: sqlstore.PlainUser})
+		tt.request.SetAttribute(constant.CurrentUserAttr, &models.BcsUser{Name: "test", UserType: models.PlainUser})
 		tt.tokenHandler.CreateTempToken(tt.request, tt.response)
 		res := &utils.ErrorResponse{}
 		err = json.Unmarshal(tt.recorder.Body.Bytes(), res)

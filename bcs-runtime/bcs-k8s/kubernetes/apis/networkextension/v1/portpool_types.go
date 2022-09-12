@@ -38,6 +38,7 @@ type PortPoolItem struct {
 	// +kubebuilder:validation:Minimum=1
 	EndPort       uint32 `json:"endPort"`
 	SegmentLength uint32 `json:"segmentLength,omitempty"`
+	External      string `json:"external,omitempty"`
 }
 
 // GetKey get port pool item key
@@ -78,6 +79,7 @@ type PortPoolItemStatus struct {
 	PoolItemLoadBalancers []*IngressLoadBalancer `json:"poolItemLoadBalancers,omitempty"`
 	Status                string                 `json:"status"`
 	Message               string                 `json:"message"`
+	External              string                 `json:"external,omitempty"`
 }
 
 // GetKey get port pool item key

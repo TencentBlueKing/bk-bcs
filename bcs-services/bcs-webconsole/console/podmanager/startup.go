@@ -37,14 +37,14 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
-// StartupManager
+// StartupManager xxx
 type StartupManager struct {
 	ctx       context.Context
 	clusterId string // 这里是 Pod 所在集群
 	k8sClient *kubernetes.Clientset
 }
 
-// NewStartupManager
+// NewStartupManager xxx
 func NewStartupManager(ctx context.Context, clusterId string) (*StartupManager, error) {
 	mgr := &StartupManager{
 		ctx:       ctx,
@@ -152,7 +152,7 @@ func (m *StartupManager) ensureNamespace(name string) error {
 	return err
 }
 
-// ensureConfigmap: 确保 configmap 配置正确
+// ensureConfigmap : 确保 configmap 配置正确
 func (m *StartupManager) ensureConfigmap(namespace, name string, kubeConfig *clientcmdv1.Config) error {
 	_, err := m.k8sClient.CoreV1().ConfigMaps(namespace).Get(m.ctx, name, metav1.GetOptions{})
 
@@ -180,7 +180,8 @@ func (m *StartupManager) ensurePod(namespace, name string, podManifest *v1.Pod) 
 	_, err := m.k8sClient.CoreV1().Pods(namespace).Get(m.ctx, name, metav1.GetOptions{})
 
 	if k8sErr.IsNotFound(err) {
-		if _, createErr := m.k8sClient.CoreV1().Pods(namespace).Create(m.ctx, podManifest, metav1.CreateOptions{}); createErr != nil {
+		if _, createErr := m.k8sClient.CoreV1().Pods(namespace).Create(m.ctx, podManifest,
+			metav1.CreateOptions{}); createErr != nil {
 			return createErr
 		}
 
@@ -246,24 +247,28 @@ func (m *StartupManager) getInternalKubeConfig(namespace, username string) (*cli
 func (m *StartupManager) ensureServiceAccountRBAC(name string) error {
 	// ensure serviceAccount
 	serviceAccount := genServiceAccount(name)
-	if _, err := m.k8sClient.CoreV1().ServiceAccounts(name).Get(m.ctx, serviceAccount.Name, metav1.GetOptions{}); err != nil {
+	if _, err := m.k8sClient.CoreV1().ServiceAccounts(name).Get(m.ctx, serviceAccount.Name,
+		metav1.GetOptions{}); err != nil {
 		if !k8sErr.IsNotFound(err) {
 			return err
 		}
 
-		if _, err := m.k8sClient.CoreV1().ServiceAccounts(name).Create(m.ctx, serviceAccount, metav1.CreateOptions{}); err != nil {
+		if _, err := m.k8sClient.CoreV1().ServiceAccounts(name).Create(m.ctx, serviceAccount,
+			metav1.CreateOptions{}); err != nil {
 			return err
 		}
 	}
 
 	// ensure rolebind
 	clusterRoleBinding := genClusterRoleBinding(name)
-	if _, err := m.k8sClient.RbacV1().ClusterRoleBindings().Get(m.ctx, clusterRoleBinding.Name, metav1.GetOptions{}); err != nil {
+	if _, err := m.k8sClient.RbacV1().ClusterRoleBindings().Get(m.ctx, clusterRoleBinding.Name,
+		metav1.GetOptions{}); err != nil {
 		if !k8sErr.IsNotFound(err) {
 			return err
 		}
 
-		if _, err = m.k8sClient.RbacV1().ClusterRoleBindings().Create(m.ctx, clusterRoleBinding, metav1.CreateOptions{}); err != nil {
+		if _, err = m.k8sClient.RbacV1().ClusterRoleBindings().Create(m.ctx, clusterRoleBinding,
+			metav1.CreateOptions{}); err != nil {
 			return err
 		}
 	}
@@ -296,7 +301,7 @@ func (m *StartupManager) getServiceAccountToken(namespace string) (string, error
 	return "", errors.New("not found ServiceAccountToken")
 }
 
-// 等待pod启动成功
+// waitPodReady 等待pod启动成功
 func (m *StartupManager) waitPodReady(namespace, name string) error {
 	// 错误次数
 	errorCount := 0
@@ -336,7 +341,7 @@ func (m *StartupManager) waitPodReady(namespace, name string) error {
 
 }
 
-// GetAdminClusterId
+// GetAdminClusterId xxx
 func GetAdminClusterId(clusterId string) string {
 	if config.G.WebConsole.IsExternalMode() {
 		return config.G.WebConsole.AdminClusterId
@@ -344,7 +349,7 @@ func GetAdminClusterId(clusterId string) string {
 	return clusterId
 }
 
-// GetNamespace
+// GetNamespace xxx
 func GetNamespace() string {
 	// 正式环境使用 web-console 命名空间
 	if config.G.Base.RunEnv == config.ProdEnv {
@@ -375,7 +380,7 @@ func makeSlugName(username string) string {
 	return fmt.Sprintf("%s-%s", hashId, username)
 }
 
-// 获取configMap名称
+// getConfigMapName 获取configMap名称
 func getConfigMapName(clusterID, username string) string {
 	username = makeSlugName(username)
 	cmName := fmt.Sprintf("kube-config-%s-u%s", clusterID, username)
@@ -384,7 +389,7 @@ func getConfigMapName(clusterID, username string) string {
 	return cmName
 }
 
-// 获取pod名称
+// GetPodName 获取pod名称
 func GetPodName(clusterID, username string) string {
 	username = makeSlugName(username)
 	podName := fmt.Sprintf("kubectld-%s-u%s", clusterID, username)

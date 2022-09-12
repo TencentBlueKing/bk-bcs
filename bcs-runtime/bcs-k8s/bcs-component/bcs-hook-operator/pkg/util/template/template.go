@@ -11,6 +11,7 @@
  *
  */
 
+// Package template xxx
 package template
 
 import (

@@ -28,12 +28,12 @@ const largeNumber = float64(999999)
 
 // metrics used to collect prom metrics for gamestatefulset operator
 type metrics struct {
-	podCreateDurationMaxVal map[string]float64 //save the max create duration(seconds) value of pod
-	podCreateDurationMinVal map[string]float64 //save the min create duration(seconds) value of pod
-	podUpdateDurationMaxVal map[string]float64 //save the max update duration(seconds) value of pod
-	podUpdateDurationMinVal map[string]float64 //save the min update duration(seconds) value of pod
-	podDeleteDurationMaxVal map[string]float64 //save the max delete duration(seconds) value of pod
-	podDeleteDurationMinVal map[string]float64 //save the min delete duration(seconds) value of pod
+	podCreateDurationMaxVal map[string]float64 // save the max create duration(seconds) value of pod
+	podCreateDurationMinVal map[string]float64 // save the min create duration(seconds) value of pod
+	podUpdateDurationMaxVal map[string]float64 // save the max update duration(seconds) value of pod
+	podUpdateDurationMinVal map[string]float64 // save the min update duration(seconds) value of pod
+	podDeleteDurationMaxVal map[string]float64 // save the max delete duration(seconds) value of pod
+	podDeleteDurationMinVal map[string]float64 // save the min delete duration(seconds) value of pod
 
 	// reconcileDuration is reconcile duration(seconds) for gamestatefulset operator
 	reconcileDuration *prometheus.HistogramVec
@@ -335,7 +335,7 @@ func (m *metrics) collectPodDeleteDurations(namespace, name, status, action, gra
 	}
 }
 
-// CollectRelatedReplicas collect replicas, readyReplicas, availableReplicas, updatedReplicas, updatedReadyReplicas
+// collectRelatedReplicas collect replicas, readyReplicas, availableReplicas, updatedReplicas, updatedReadyReplicas
 func (m *metrics) collectRelatedReplicas(namespace, name string,
 	replicas, readyReplicas, availableReplicas, updatedReplicas, updatedReadyReplicas int32) {
 	m.replicas.WithLabelValues(namespace, name).Set(float64(replicas))

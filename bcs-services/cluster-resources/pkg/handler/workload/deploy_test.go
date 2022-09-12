@@ -76,6 +76,19 @@ func TestDeploy(t *testing.T) {
 	assert.Equal(t, "Deployment", mapx.GetStr(respData, "manifest.kind"))
 	assert.Equal(t, float64(5), mapx.Get(respData, "manifest.spec.replicas", 0))
 
+	// Scale
+	resp := clusterRes.CommonResp{}
+	scaleReq := clusterRes.ResScaleReq{
+		ProjectID: envs.TestProjectID,
+		ClusterID: envs.TestClusterID,
+		Namespace: envs.TestNamespace,
+		Name:      resName,
+		Replicas:  0,
+	}
+	err = h.ScaleDeploy(ctx, &scaleReq, &resp)
+	assert.Nil(t, err)
+	assert.Equal(t, float64(0), mapx.Get(resp.Data.AsMap(), "spec.replicas", 1).(float64))
+
 	// Delete
 	deleteReq := handler.GenResDeleteReq(resName)
 	err = h.DeleteDeploy(ctx, &deleteReq, &clusterRes.CommonResp{})

@@ -21,6 +21,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions"
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/cluster"
 
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
@@ -181,7 +182,7 @@ func (la *ListAction) listCluster() error {
 
 	// projectID / operator get user perm
 	if la.req.ProjectID != "" && la.req.Operator != "" {
-		v3Perm, err := la.GetProjectClustersV3Perm(PermInfo{
+		v3Perm, err := la.GetProjectClustersV3Perm(actions.PermInfo{
 			ProjectID: la.req.ProjectID,
 			UserID:    la.req.Operator,
 		}, clusterIDList)
@@ -206,7 +207,8 @@ func (la *ListAction) listCluster() error {
 }
 
 // GetProjectClustersV3Perm get iam v3 perm
-func (la *ListAction) GetProjectClustersV3Perm(user PermInfo, clusterList []string) (map[string]*spb.Struct, error) {
+func (la *ListAction) GetProjectClustersV3Perm(user actions.PermInfo, clusterList []string) (map[string]*spb.Struct,
+	error) {
 	var (
 		v3Perm map[string]map[string]interface{}
 		err    error
@@ -232,7 +234,8 @@ func (la *ListAction) GetProjectClustersV3Perm(user PermInfo, clusterList []stri
 	return v3ResultPerm, nil
 }
 
-func (la *ListAction) getUserClusterPermList(user PermInfo, clusterList []string) (map[string]map[string]interface{}, error) {
+func (la *ListAction) getUserClusterPermList(user actions.PermInfo, clusterList []string) (
+	map[string]map[string]interface{}, error) {
 	permissions := make(map[string]map[string]interface{})
 	clusterPerm := cluster.NewBCSClusterPermClient(la.iam)
 

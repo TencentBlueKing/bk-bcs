@@ -556,6 +556,7 @@ type ResourceMetricStatus struct {
 	Current MetricValueStatus `json:"current" protobuf:"bytes,2,name=current"`
 }
 
+// ContainerResourceMetricStatus xxx
 // container resource refers to a resource metric (such as those specified in
 // requests and limits) known to Kubernetes describing a single container in each pod in the
 // current scale target (e.g. CPU or memory). Such metrics are built in to

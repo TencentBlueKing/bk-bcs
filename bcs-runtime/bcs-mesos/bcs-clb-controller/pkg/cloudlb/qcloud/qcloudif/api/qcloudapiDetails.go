@@ -49,8 +49,8 @@ func (clb *ClbAPI) waitForTaskResult(id int) error {
 	return fmt.Errorf("wait for task %d result timeout", id)
 }
 
-//describeLoadBalancersTaskResult query asynchronous clb api result
-//status 1 for failed, 0 for successful, 2 for dealing
+// describeLoadBalancersTaskResult query asynchronous clb api result
+// status 1 for failed, 0 for successful, 2 for dealing
 func (clb *ClbAPI) describeLoadBalancersTaskResult(requestID int) (int, error) {
 	desc := new(qcloud.DescribeLoadBalancersTaskResultInput)
 	desc.Action = "DescribeLoadBalancersTaskResult"
@@ -66,7 +66,7 @@ func (clb *ClbAPI) describeLoadBalancersTaskResult(requestID int) (int, error) {
 			desc, err.Error())
 	}
 
-	//when request exceeds limits, should have a rest, we treated it as dealing status but with sleeping 5 seconds more
+	// when request exceeds limits, should have a rest, we treated it as dealing status but with sleeping 5 seconds more
 	/*
 		{
 			"code":4400,
@@ -99,9 +99,10 @@ func (clb *ClbAPI) describeLoadBalancersTaskResult(requestID int) (int, error) {
 	return output.Data.Status, nil
 }
 
-//describeLoadBalance
-//return (nil, nil) when lb does not exit bu no error happened
-//**CAUTION** DescribeLoadBalancers for application lb must set Forward to 1, default Forward is 0
+// doDescribeLoadBalance xxx
+// describeLoadBalance
+// return (nil, nil) when lb does not exit bu no error happened
+// **CAUTION** DescribeLoadBalancers for application lb must set Forward to 1, default Forward is 0
 func (clb *ClbAPI) doDescribeLoadBalance(name string) (*qcloud.DescribeLBOutput, error) {
 	desc := new(qcloud.DescribeLBInput)
 	desc.Action = "DescribeLoadBalancers"
@@ -130,7 +131,7 @@ func (clb *ClbAPI) doDescribeLoadBalance(name string) (*qcloud.DescribeLBOutput,
 	return output, nil
 }
 
-//create7LayerListener
+// create7LayerListener xxx
 func (clb *ClbAPI) create7LayerListener(listener *loadbalance.CloudListener) (string, error) {
 	desc := new(qcloud.CreateSeventhLayerListenerInput)
 	desc.Action = "CreateForwardLBSeventhLayerListeners"
@@ -200,7 +201,7 @@ func (clb *ClbAPI) create7LayerListener(listener *loadbalance.CloudListener) (st
 		desc.ListenersListenerName, desc.ListenersProtocol, desc.ListenersLoadBalancerPort)
 }
 
-//create4LayerListener
+// create4LayerListener xxx
 func (clb *ClbAPI) create4LayerListener(listener *loadbalance.CloudListener) (string, error) {
 	desc := new(qcloud.CreateForwardLBFourthLayerListenersInput)
 	desc.Action = "CreateForwardLBFourthLayerListeners"
@@ -211,7 +212,7 @@ func (clb *ClbAPI) create4LayerListener(listener *loadbalance.CloudListener) (st
 	desc.ListenersListenerName = listener.GetName()
 	desc.ListenersLoadBalancerPort = listener.Spec.ListenPort
 	desc.LoadBalanceID = listener.Spec.LoadBalancerID
-	//we will validate the field in upper function
+	// we will validate the field in upper function
 	protocol, _ := ProtocolTypeBcs2QCloudMap[listener.Spec.Protocol]
 	desc.ListenersProtocol = protocol
 	if listener.Spec.TargetGroup != nil {
@@ -282,8 +283,8 @@ func (clb *ClbAPI) create4LayerListener(listener *loadbalance.CloudListener) (st
 	return output.ListenerIds[0], nil
 }
 
-//doDescribeListener describe clb listener
-//return (nil, nil) when listener does not existed
+// doDescribeListener describe clb listener
+// return (nil, nil) when listener does not existed
 func (clb *ClbAPI) doDescribeListener(loadBalanceID, listenerID string) (*qcloud.ListenerInfo, error) {
 	desc := new(qcloud.DescribeListenerInput)
 	desc.Action = "DescribeForwardLBListeners"
@@ -320,7 +321,7 @@ func (clb *ClbAPI) doDescribeListener(loadBalanceID, listenerID string) (*qcloud
 	return &output.Listeners[0], nil
 }
 
-//doDescribeListenerByPort describe listener by port
+// doDescribeListenerByPort describe listener by port
 func (clb *ClbAPI) doDescribeListenerByPort(loadBalanceID string, port int) (*qcloud.ListenerInfo, error) {
 	desc := new(qcloud.DescribeListenerInput)
 	desc.Action = "DescribeForwardLBListeners"
@@ -358,7 +359,7 @@ func (clb *ClbAPI) doDescribeListenerByPort(loadBalanceID string, port int) (*qc
 	return &output.Listeners[0], nil
 }
 
-//doDeleteListener delete listener
+// doDeleteListener delete listener
 func (clb *ClbAPI) doDeleteListener(loadBalanceID, listenerID string) error {
 	desc := new(qcloud.DeleteForwardLBListenerInput)
 	desc.Action = "DeleteForwardLBListener"
@@ -466,7 +467,7 @@ func (clb *ClbAPI) doModify4LayerListenerAttribute(listener *loadbalance.CloudLi
 	return nil
 }
 
-//doCreateRule create rule
+// doCreateRules create rule
 func (clb *ClbAPI) doCreateRules(loadBalanceID, listenerID string, rules loadbalance.RuleList) error {
 	desc := new(qcloud.CreateForwardLBListenerRulesInput)
 	desc.Action = "CreateForwardLBListenerRules"
@@ -479,7 +480,7 @@ func (clb *ClbAPI) doCreateRules(loadBalanceID, listenerID string, rules loadbal
 
 	var ruleCreateList qcloud.RuleCreateInfoList
 	for _, rule := range rules {
-		//**CAUTION** domains like lol.qq.com:8080 is invalid, domain name should not contain port info
+		// **CAUTION** domains like lol.qq.com:8080 is invalid, domain name should not contain port info
 		var domain string
 		if strings.Contains(rule.Domain, ":") {
 			validDomains := strings.Split(rule.Domain, ":")
@@ -524,7 +525,7 @@ func (clb *ClbAPI) doCreateRules(loadBalanceID, listenerID string, rules loadbal
 	return nil
 }
 
-//doDeleteRule delete rules
+// doDeleteRule delete rules
 func (clb *ClbAPI) doDeleteRule(loadBalanceID, listenerID, domain, url string) error {
 	desc := new(qcloud.DeleteForwardLBListenerRulesInput)
 	desc.Action = "DeleteForwardLBListenerRules"
@@ -554,7 +555,7 @@ func (clb *ClbAPI) doDeleteRule(loadBalanceID, listenerID, domain, url string) e
 	return nil
 }
 
-//doModifyRule()
+// doModifyRule ()
 func (clb *ClbAPI) doModifyRule(loadBalanceID, listenerID string, rule *loadbalance.Rule) error {
 	desc := new(qcloud.ModifyLoadBalancerRulesProbeInput)
 	desc.Action = "ModifyLoadBalancerRulesProbe"
@@ -594,7 +595,7 @@ func (clb *ClbAPI) doModifyRule(loadBalanceID, listenerID string, rule *loadbala
 	return nil
 }
 
-//registerInsWith7thLayerListener
+// registerInsWith7thLayerListener xxx
 func (clb *ClbAPI) registerInsWith7thLayerListener(
 	loadBalanceID, listenerID, locationID string, bdTargets qcloud.BackendTargetList) error {
 	desc := new(qcloud.RegisterInstancesWithForwardLBSeventhListenerInput)
@@ -627,7 +628,8 @@ func (clb *ClbAPI) registerInsWith7thLayerListener(
 	return nil
 }
 
-//registerInstanceWith4thLayerListener
+// registerInsWith4thLayerListener xxx
+// registerInstanceWith4thLayerListener
 func (clb *ClbAPI) registerInsWith4thLayerListener(
 	loadBalanceID, listenerID string, bdTargets qcloud.BackendTargetList) error {
 	desc := new(qcloud.RegisterInstancesWithForwardLBFourthListenerInput)
@@ -658,7 +660,7 @@ func (clb *ClbAPI) registerInsWith4thLayerListener(
 	return nil
 }
 
-//deRegisterInstances7thListener
+// deRegisterInstances7thListener xxx
 func (clb *ClbAPI) deRegisterInstances7thListener(
 	loadBalanceID, listenerID, ruleID string, bdTargets qcloud.BackendTargetList) error {
 	desc := new(qcloud.DeregisterInstancesFromForwardLBSeventhListenerInput)
@@ -690,7 +692,7 @@ func (clb *ClbAPI) deRegisterInstances7thListener(
 	return nil
 }
 
-//deRegisterInstances4thListener
+// deRegisterInstances4thListener xxx
 func (clb *ClbAPI) deRegisterInstances4thListener(
 	loadBalanceID, listenerID string, bdTargets qcloud.BackendTargetList) error {
 	desc := new(qcloud.DeregisterInstancesFromForwardLBFourthListenerInput)
@@ -741,8 +743,8 @@ func (clb *ClbAPI) getCVMInstanceIDs(backends loadbalance.BackendList) ([]string
 	return ids, nil
 }
 
-//describeCVMInstanceV3 v3 api
-//https://cloud.tencent.com/document/api/213/9388
+// describeCVMInstanceV3 v3 api
+// https://cloud.tencent.com/document/api/213/9388
 func (clb *ClbAPI) describeCVMInstanceV3(lanIPs []string) (*qcloud.DescribeCVMInstanceV3Output, error) {
 	desc := new(qcloud.DescribeCVMInstanceV3Input)
 	desc.Action = "DescribeInstances"

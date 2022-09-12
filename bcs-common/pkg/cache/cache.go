@@ -11,13 +11,14 @@
  *
  */
 
+// Package cache xxx
 package cache
 
 import (
 	"sync"
 )
 
-//NewCache create cache with designated ObjectKeyFunc
+// NewCache create cache with designated ObjectKeyFunc
 func NewCache(kfunc ObjectKeyFunc) Store {
 	return &Cache{
 		dataMap: make(map[string]interface{}),
@@ -25,7 +26,7 @@ func NewCache(kfunc ObjectKeyFunc) Store {
 	}
 }
 
-//CreateCache create Cache object
+// CreateCache create Cache object
 func CreateCache(kfunc ObjectKeyFunc) *Cache {
 	return &Cache{
 		dataMap: make(map[string]interface{}),
@@ -33,11 +34,11 @@ func CreateCache(kfunc ObjectKeyFunc) *Cache {
 	}
 }
 
-//Cache implements Store interface with a safe map
+// Cache implements Store interface with a safe map
 type Cache struct {
-	lock    sync.RWMutex           //lock for datamap
-	dataMap map[string]interface{} //map to hold data
-	keyFunc ObjectKeyFunc          //func to create key
+	lock    sync.RWMutex           // lock for datamap
+	dataMap map[string]interface{} // map to hold data
+	keyFunc ObjectKeyFunc          // func to create key
 }
 
 // Add inserts an item into the cache.
@@ -116,14 +117,14 @@ func (c *Cache) GetByKey(key string) (item interface{}, exists bool, err error) 
 	return item, exists, nil
 }
 
-//Num will return data counts in Store
+// Num will return data counts in Store
 func (c *Cache) Num() int {
 	c.lock.RLock()
 	defer c.lock.RUnlock()
 	return len(c.dataMap)
 }
 
-//Clear will drop all data in Store
+// Clear will drop all data in Store
 func (c *Cache) Clear() {
 	c.lock.Lock()
 	defer c.lock.Unlock()

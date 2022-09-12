@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package common xxx
 package common
 
 import (
@@ -50,7 +51,7 @@ type GetterInterface interface {
 		k8sStorageCli bcsapi.Storage) ([]*types.WorkloadMeta, error)
 	// GetMesosWorkloadList get mesos workload list by cluster
 	GetMesosWorkloadList(cluster *types.ClusterMeta, mesosStorageCli bcsapi.Storage) ([]*types.WorkloadMeta, error)
-	//GetPodAutoscalerList get podAutoscaler list by namespace
+	// GetPodAutoscalerList get podAutoscaler list by namespace
 	GetPodAutoscalerList(podAutoscalerType string, namespace []*types.NamespaceMeta,
 		k8sStorageCli bcsapi.Storage) ([]*types.PodAutoscalerMeta, error)
 }

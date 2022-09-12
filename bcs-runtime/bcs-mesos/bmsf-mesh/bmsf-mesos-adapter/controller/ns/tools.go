@@ -25,7 +25,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-//CheckNamespace if namespace exists
+// CheckNamespace if namespace exists
 func CheckNamespace(c cache.Cache, cli client.Client, name string) error {
 	namespaceName := types.NamespacedName{
 		Name: name,
@@ -38,7 +38,7 @@ func CheckNamespace(c cache.Cache, cli client.Client, name string) error {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: name,
 		},
-		//todo(DeveloperJim): add spec & status after testing
+		// todo(DeveloperJim): add spec & status after testing
 	}
 	err := c.Get(context.TODO(), namespaceName, ns)
 	if err == nil {

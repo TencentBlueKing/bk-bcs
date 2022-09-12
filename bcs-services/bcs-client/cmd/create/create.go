@@ -11,6 +11,7 @@
  *
  */
 
+// Package create xxx
 package create
 
 import (
@@ -19,7 +20,7 @@ import (
 	"github.com/urfave/cli"
 )
 
-//NewCreateCommand sub command create registration
+// NewCreateCommand sub command create registration
 func NewCreateCommand() cli.Command {
 	return cli.Command{
 		Name:  "create",
@@ -87,7 +88,7 @@ func create(c *utils.ClientContext) error {
 	case "meshcluster":
 		return createMeshCluster(c)
 	default:
-		//unkown type, try CustomResource
+		// unkown type, try CustomResource
 		return createCustomResource(c)
 	}
 }

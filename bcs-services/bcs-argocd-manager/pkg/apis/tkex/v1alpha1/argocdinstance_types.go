@@ -37,10 +37,10 @@ type ArgocdInstanceStatus struct {
 	ServerHost string `json:"serverHost,omitempty" protobuf:"bytes,1,opt,name=serverHost"`
 }
 
-//+genclient
-//+k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
-//+kubebuilder:object:root=true
-//+kubebuilder:subresource:status
+// +genclient
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +kubebuilder:object:root=true
+// +kubebuilder:subresource:status
 
 // ArgocdInstance is the Schema for the argocdinstances API
 type ArgocdInstance struct {
@@ -51,8 +51,8 @@ type ArgocdInstance struct {
 	Status ArgocdInstanceStatus `json:"status,omitempty" protobuf:"bytes,3,opt,name=status"`
 }
 
-//+k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
-//+kubebuilder:object:root=true
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +kubebuilder:object:root=true
 
 // ArgocdInstanceList contains a list of ArgocdInstance
 type ArgocdInstanceList struct {

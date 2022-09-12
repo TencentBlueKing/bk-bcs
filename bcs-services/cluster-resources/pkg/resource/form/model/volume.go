@@ -14,21 +14,21 @@
 
 package model
 
-// PVCVolume ...
+// PVCVolume xxx
 type PVCVolume struct {
 	Name     string `structs:"name"`
 	PVCName  string `structs:"pvcName"`
 	ReadOnly bool   `structs:"readOnly"`
 }
 
-// HostPathVolume ...
+// HostPathVolume xxx
 type HostPathVolume struct {
 	Name string `structs:"name"`
 	Path string `structs:"path"`
 	Type string `structs:"type"`
 }
 
-// CMVolume ...
+// CMVolume xxx
 type CMVolume struct {
 	Name        string      `structs:"name"`
 	DefaultMode string      `structs:"defaultMode"`
@@ -36,7 +36,7 @@ type CMVolume struct {
 	Items       []KeyToPath `structs:"items"`
 }
 
-// SecretVolume ...
+// SecretVolume xxx
 type SecretVolume struct {
 	Name        string      `structs:"name"`
 	DefaultMode string      `structs:"defaultMode"`
@@ -44,18 +44,18 @@ type SecretVolume struct {
 	Items       []KeyToPath `structs:"items"`
 }
 
-// KeyToPath ...
+// KeyToPath xxx
 type KeyToPath struct {
 	Key  string `structs:"key"`
 	Path string `structs:"path"`
 }
 
-// EmptyDirVolume ...
+// EmptyDirVolume xxx
 type EmptyDirVolume struct {
 	Name string `structs:"name"`
 }
 
-// NFSVolume ...
+// NFSVolume xxx
 type NFSVolume struct {
 	Name     string `structs:"name"`
 	Path     string `structs:"path"`

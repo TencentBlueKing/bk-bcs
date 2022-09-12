@@ -13,7 +13,8 @@
 
 package types
 
-//BcsPod pod for bcs
+// BcsTaskgroup xxx
+// BcsPod pod for bcs
 type BcsTaskgroup struct {
 	TypeMeta      `json:",inline"`
 	ObjectMeta    `json:"metadata"`

@@ -11,6 +11,7 @@
  *
  */
 
+// Package ssl xxx
 package ssl
 
 import (
@@ -21,12 +22,14 @@ import (
 	"io/ioutil"
 )
 
+// ClientTslConfNoVerity xxx
 func ClientTslConfNoVerity() *tls.Config {
 	return &tls.Config{
 		InsecureSkipVerify: true,
 	}
 }
 
+// ClientTslConfVerityServer xxx
 func ClientTslConfVerityServer(caFile string) (*tls.Config, error) {
 	caPool, err := loadCa(caFile)
 	if err != nil {
@@ -40,6 +43,7 @@ func ClientTslConfVerityServer(caFile string) (*tls.Config, error) {
 	return conf, nil
 }
 
+// ClientTslConfVerity xxx
 func ClientTslConfVerity(caFile, certFile, keyFile, passwd string) (*tls.Config, error) {
 	caPool, err := loadCa(caFile)
 	if err != nil {
@@ -60,6 +64,7 @@ func ClientTslConfVerity(caFile, certFile, keyFile, passwd string) (*tls.Config,
 	return conf, nil
 }
 
+// ServerTslConf xxx
 func ServerTslConf(caFile, certFile, keyFile, passwd string) (*tls.Config, error) {
 	if "" == caFile {
 		return ServerTslConfVerity(certFile, keyFile, passwd)
@@ -68,6 +73,7 @@ func ServerTslConf(caFile, certFile, keyFile, passwd string) (*tls.Config, error
 	return ServerTslConfVerityClient(caFile, certFile, keyFile, passwd)
 }
 
+// ServerTslConfVerity xxx
 func ServerTslConfVerity(certFile, keyFile, passwd string) (*tls.Config, error) {
 
 	cert, err := loadCertificates(certFile, keyFile, passwd)
@@ -82,6 +88,7 @@ func ServerTslConfVerity(certFile, keyFile, passwd string) (*tls.Config, error) 
 	return conf, nil
 }
 
+// ServerTslConfVerityClient xxx
 func ServerTslConfVerityClient(caFile, certFile, keyFile, passwd string) (*tls.Config, error) {
 	caPool, err := loadCa(caFile)
 	if err != nil {
@@ -117,7 +124,7 @@ func loadCa(caFile string) (*x509.CertPool, error) {
 }
 
 func loadCertificates(certFile, keyFile, passwd string) (*tls.Certificate, error) {
-	//key file
+	// key file
 	priKey, err := ioutil.ReadFile(keyFile)
 	if err != nil {
 		return nil, err
@@ -140,7 +147,7 @@ func loadCertificates(certFile, keyFile, passwd string) (*tls.Certificate, error
 		})
 	}
 
-	//certificate
+	// certificate
 	certData, err := ioutil.ReadFile(certFile)
 	if err != nil {
 		return nil, err

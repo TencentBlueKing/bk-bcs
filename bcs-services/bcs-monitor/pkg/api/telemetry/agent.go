@@ -20,7 +20,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/rest"
 )
 
-// 是否安装蓝鲸监控采集器, 灰度使用
+// IsBKMonitorAgent 是否安装蓝鲸监控采集器, 灰度使用
 func IsBKMonitorAgent(c *rest.Context) (interface{}, error) {
 	clusterId := c.Param("clusterId")
 	conf := k8sclient.GetBCSConfByClusterId(clusterId)

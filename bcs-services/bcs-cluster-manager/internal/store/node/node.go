@@ -11,6 +11,7 @@
  *
  */
 
+// Package node xxx
 package node
 
 import (
@@ -28,8 +29,8 @@ import (
 )
 
 const (
-	//! we don't setting bson tag in proto file,
-	//! all struct key in mongo is lowcase in default
+	// ! we don't setting bson tag in proto file,
+	// ! all struct key in mongo is lowcase in default
 	nodeIDKeyName         = "nodeid"
 	nodeIPKeyName         = "innerip"
 	nodeClusterIDKey      = "clusterid"
@@ -69,6 +70,7 @@ func New(db drivers.DB) *ModelNode {
 	}
 }
 
+// ensureTable xxx
 // ensure table
 func (m *ModelNode) ensureTable(ctx context.Context) error {
 	m.isTableEnsuredMutex.RLock()

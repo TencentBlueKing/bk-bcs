@@ -11,6 +11,7 @@
  *
  */
 
+// Package executor xxx
 package executor
 
 import (
@@ -37,28 +38,29 @@ import (
 )
 
 const (
-	//report task status time
-	ReportTaskStatusPeriod = 30 //seconds
+	// ReportTaskStatusPeriod xxx
+	// report task status time
+	ReportTaskStatusPeriod = 30 // seconds
 )
 
 type bcsExecutor struct {
 	sync.RWMutex
 
-	tasks         map[string]*types.ProcessTaskInfo //key: taskinfo id
+	tasks         map[string]*types.ProcessTaskInfo // key: taskinfo id
 	status        types.ExecutorStatus
 	callbackFuncs map[types.CallbackFuncType]interface{}
 	procDaemon    proc_daemon.ProcDaemon
 
-	ackUpdates   map[string]*mesos.TaskStatus //key: taskinfo id
+	ackUpdates   map[string]*mesos.TaskStatus // key: taskinfo id
 	updatesLocks sync.RWMutex
 
-	cxt    context.Context    //context for cancel
-	cancel context.CancelFunc //function for cancel
+	cxt    context.Context    // context for cancel
+	cancel context.CancelFunc // function for cancel
 
-	isAskedShutdown bool //scheduler shutdown the exeutor, and is true
+	isAskedShutdown bool // scheduler shutdown the exeutor, and is true
 }
 
-//NewExecutor
+// NewExecutor xxx
 func NewExecutor(cxt context.Context) Executor {
 	executor := &bcsExecutor{
 		tasks:         make(map[string]*types.ProcessTaskInfo),
@@ -72,17 +74,17 @@ func NewExecutor(cxt context.Context) Executor {
 	return executor
 }
 
-//RegisterCallbackFunc
+// RegisterCallbackFunc xxx
 func (e *bcsExecutor) RegisterCallbackFunc(funcType types.CallbackFuncType, fun interface{}) {
 	e.callbackFuncs[funcType] = fun
 }
 
-// GetExecutorStatus
+// GetExecutorStatus xxx
 func (e *bcsExecutor) GetExecutorStatus() types.ExecutorStatus {
 	return e.status
 }
 
-//LaunchTaskgroup
+// LaunchTaskgroup xxx
 func (e *bcsExecutor) LaunchTaskgroup(taskgroup *mesos.TaskGroupInfo) {
 	var err error
 
@@ -96,7 +98,7 @@ func (e *bcsExecutor) LaunchTaskgroup(taskgroup *mesos.TaskGroupInfo) {
 	e.status = types.ExecutorStatusLaunching
 	e.Unlock()
 
-	//craete process taskinfo
+	// craete process taskinfo
 	for _, task := range taskgroup.GetTasks() {
 		proc, err := createProcessTaskinfo(task)
 		if err != nil {
@@ -110,11 +112,12 @@ func (e *bcsExecutor) LaunchTaskgroup(taskgroup *mesos.TaskGroupInfo) {
 	}
 
 	for id, task := range e.tasks {
-		//write local file
+		// write local file
 		for _, file := range task.LocalFiles {
 			err = writeLocalFile(file)
 			if err != nil {
-				blog.Errorf("Launch task %s write file %s error %s, update task status TASK_FAILED", task.TaskId, file.To, err.Error())
+				blog.Errorf("Launch task %s write file %s error %s, update task status TASK_FAILED", task.TaskId, file.To,
+					err.Error())
 				e.updateTaskStatus(id, types.TaskStatusFailed, err.Error())
 				go e.innerShutdown()
 				return
@@ -135,7 +138,7 @@ func (e *bcsExecutor) LaunchTaskgroup(taskgroup *mesos.TaskGroupInfo) {
 	go e.loopInspectTasks()
 }
 
-//loopInspectTasks
+// loopInspectTasks xxx
 func (e *bcsExecutor) loopInspectTasks() {
 	var inspectNum uint64
 
@@ -191,28 +194,28 @@ func (e *bcsExecutor) loopInspectTasks() {
 	}
 }
 
-//getTaskStatusFromProcessStatus
+// getTaskStatusFromProcessStatus xxx
 func (e *bcsExecutor) getTaskStatusFromProcessStatus(status types.ProcessStatusType) (types.TaskStatus, error) {
 	switch status {
-	//process status staging
-	//show executor receive the tasks
+	// process status staging
+	// show executor receive the tasks
 	case types.ProcessStatusStaging:
 		return types.TaskStatusStaging, nil
-	//process status starting
-	//show executor check tasks valid, starting it
+	// process status starting
+	// show executor check tasks valid, starting it
 	case types.ProcessStatusStarting:
 		return types.TaskStatusStarting, nil
-	//process status running
-	//started tasks, process running
+	// process status running
+	// started tasks, process running
 	case types.ProcessStatusRunning:
 		return types.TaskStatusRunning, nil
-	//process status stopping
-	//executor receive shutdown command
-	//then stop process
+	// process status stopping
+	// executor receive shutdown command
+	// then stop process
 	case types.ProcessStatusStopping:
 		return types.TaskStatusKilling, nil
-	//process status stopped
-	//executor stopped process
+	// process status stopped
+	// executor stopped process
 	case types.ProcessStatusStopped:
 		if e.isAskedShutdown {
 			return types.TaskStatusFinish, nil
@@ -224,18 +227,18 @@ func (e *bcsExecutor) getTaskStatusFromProcessStatus(status types.ProcessStatusT
 	}
 }
 
-//Shutdown
-//receive the shutdown command
-//will stop all process tasks
-//exit 0
+// Shutdown xxx
+// receive the shutdown command
+// will stop all process tasks
+// exit 0
 func (e *bcsExecutor) Shutdown() {
 	e.isAskedShutdown = true
 
-	//shutdown
+	// shutdown
 	e.innerShutdown()
 }
 
-//innerShutdown
+// innerShutdown xxx
 func (e *bcsExecutor) innerShutdown() {
 	e.Lock()
 	if e.status == types.ExecutorStatusShutdown || e.status == types.ExecutorStatusFinish {
@@ -268,7 +271,7 @@ func (e *bcsExecutor) innerShutdown() {
 				e.updateTaskStatus(taskid, task.Status, status.Message)
 			}
 
-			//if process status starting or running, then stop it
+			// if process status starting or running, then stop it
 			if task.Status == types.TaskStatusStarting || task.Status == types.TaskStatusRunning {
 				blog.Infof("stop process %s status %s", task.TaskId, task.Status)
 				err = e.procDaemon.StopProcess(taskid, task.ProcInfo.StopTimeout)
@@ -281,7 +284,7 @@ func (e *bcsExecutor) innerShutdown() {
 				task.Status == types.TaskStatusFinish {
 
 				downNum++
-				//delete process info
+				// delete process info
 				err = e.procDaemon.DeleteProcess(taskid)
 				if err != nil {
 					blog.Errorf("delete process %s error %s", taskid, err.Error())
@@ -290,7 +293,7 @@ func (e *bcsExecutor) innerShutdown() {
 		}
 
 		if downNum == len(e.tasks) {
-			//wait for mesos slave acknowledge task status message
+			// wait for mesos slave acknowledge task status message
 			e.waitForAckAndExit()
 			blog.Infof("executor's tasks all are down, then executor will exit")
 			e.status = types.ExecutorStatusFinish
@@ -299,8 +302,8 @@ func (e *bcsExecutor) innerShutdown() {
 	}
 }
 
-//ReloadTasks
-//command task reload command
+// ReloadTasks xxx
+// command task reload command
 func (e *bcsExecutor) ReloadTasks() error {
 	for _, task := range e.tasks {
 		blog.Infof("reload task %s start...", task.TaskId)
@@ -314,8 +317,8 @@ func (e *bcsExecutor) ReloadTasks() error {
 	return nil
 }
 
-// RestartTasks
-//restart process tasks
+// RestartTasks xxx
+// restart process tasks
 func (e *bcsExecutor) RestartTasks() error {
 	for _, task := range e.tasks {
 		blog.Infof("reload task %s start...", task.TaskId)
@@ -329,14 +332,14 @@ func (e *bcsExecutor) RestartTasks() error {
 	return nil
 }
 
-//waitForAckAndExit
+// waitForAckAndExit xxx
 func (e *bcsExecutor) waitForAckAndExit() {
 	if len(e.ackUpdates) == 0 {
 		blog.Infof("bcsExecutor ack updates message is empty, and exit")
 		return
 	}
 
-	//check all update info acknowledged
+	// check all update info acknowledged
 	checkTick := time.NewTicker(500 * time.Microsecond)
 	timeoutTick := time.NewTicker(5 * time.Second)
 	for {
@@ -353,7 +356,7 @@ func (e *bcsExecutor) waitForAckAndExit() {
 	}
 }
 
-// AckTaskStatusMessage
+// AckTaskStatusMessage xxx
 func (e *bcsExecutor) AckTaskStatusMessage(taskId string, uid []byte) {
 	e.updatesLocks.Lock()
 	defer e.updatesLocks.Unlock()
@@ -371,7 +374,7 @@ func (e *bcsExecutor) AckTaskStatusMessage(taskId string, uid []byte) {
 	}
 }
 
-// updateTaskStatus
+// updateTaskStatus xxx
 // ticker report tasks status
 func (e *bcsExecutor) updateTaskStatus(taskId string, status types.TaskStatus, msg string) {
 	var state mesos.TaskState
@@ -432,7 +435,7 @@ func (e *bcsExecutor) updateTaskStatus(taskId string, status types.TaskStatus, m
 	return
 }
 
-// createProcessTaskinfo
+// createProcessTaskinfo xxx
 func createProcessTaskinfo(task *mesos.TaskInfo) (*types.ProcessTaskInfo, error) {
 	if task.GetCommand() == nil {
 		err := fmt.Errorf("task %s is not command task", task.GetTaskId().GetValue())
@@ -458,10 +461,10 @@ func createProcessTaskinfo(task *mesos.TaskInfo) (*types.ProcessTaskInfo, error)
 		return nil, err
 	}
 
-	//set process task parameters by dataclass
+	// set process task parameters by dataclass
 	setProcessTaskParams(processTask, dc)
 
-	//setting Env
+	// setting Env
 	envs := task.GetCommand().GetEnvironment()
 	if envs != nil {
 		for _, env := range envs.GetVariables() {
@@ -497,7 +500,8 @@ func createProcessTaskinfo(task *mesos.TaskInfo) (*types.ProcessTaskInfo, error)
 	return processTask, nil
 }
 
-//set dataclass messages to processtaskinfo, include: secret info, envs, local file, remote file
+// setProcessTaskParams xxx
+// set dataclass messages to processtaskinfo, include: secret info, envs, local file, remote file
 func setProcessTaskParams(processInfo *types.ProcessTaskInfo, dataClass *bcstype.DataClass) error {
 	if dataClass.Msgs == nil || len(dataClass.Msgs) == 0 {
 		return nil
@@ -544,7 +548,7 @@ func setProcessTaskParams(processInfo *types.ProcessTaskInfo, dataClass *bcstype
 			processInfo.LocalFiles = append(processInfo.LocalFiles, file)
 
 		case bcstype.Msg_ENV:
-			//base64 decoding
+			// base64 decoding
 			value, err := base64.StdEncoding.DecodeString(*item.Env.Value)
 			if err != nil {
 				blog.Errorf("decode bcs custom Environment error %s", err.Error())
@@ -555,7 +559,7 @@ func setProcessTaskParams(processInfo *types.ProcessTaskInfo, dataClass *bcstype
 			processInfo.ProcInfo.Envs = append(processInfo.ProcInfo.Envs, env)
 
 		case bcstype.Msg_LOCALFILE:
-			//base64 decoding
+			// base64 decoding
 			value, err := base64.StdEncoding.DecodeString(*item.Local.Base64)
 			if err != nil {
 				blog.Errorf("decode bcs localfile Base64 %s error %s", *item.Local.Base64, err.Error())
@@ -577,7 +581,7 @@ func setProcessTaskParams(processInfo *types.ProcessTaskInfo, dataClass *bcstype
 	return nil
 }
 
-// getBcsDataClass
+// getBcsDataClass xxx
 func getBcsDataClass(taskInfo *mesos.TaskInfo) (*bcstype.DataClass, error) {
 	data := taskInfo.GetData()
 	if data == nil || len(data) == 0 {
@@ -596,16 +600,17 @@ func getBcsDataClass(taskInfo *mesos.TaskInfo) (*bcstype.DataClass, error) {
 	var dc *bcstype.DataClass
 	err = json.Unmarshal(by, &dc)
 	if err != nil {
-		blog.Errorf("task %s Unmarshal data %s to DataClass error: %s", taskInfo.GetTaskId().GetValue(), string(by), err.Error())
+		blog.Errorf("task %s Unmarshal data %s to DataClass error: %s", taskInfo.GetTaskId().GetValue(), string(by),
+			err.Error())
 		return nil, err
 	}
 
 	return dc, nil
 }
 
-//downloadRemoteFile download remote file, change to local one
+// downloadRemoteFile download remote file, change to local one
 func downloadRemoteFile(from, user, pwd string) (string, error) {
-	//download content from remote http url.
+	// download content from remote http url.
 	client := http.Client{
 		Timeout: time.Duration(120 * time.Second),
 	}
@@ -641,7 +646,7 @@ func downloadRemoteFile(from, user, pwd string) (string, error) {
 	return string(data), nil
 }
 
-// writeLocalFile
+// writeLocalFile xxx
 func writeLocalFile(localFile *types.LocalFile) error {
 	file, err := os.Create(localFile.To)
 	if err != nil {
@@ -651,14 +656,14 @@ func writeLocalFile(localFile *types.LocalFile) error {
 	defer file.Close()
 
 	blog.Infof("write local file %s user %s", localFile.To, localFile.User)
-	//write file value
+	// write file value
 	_, err = file.Write([]byte(localFile.Value))
 	if err != nil {
 		blog.Errorf("write local file %s error %s", localFile.To, err.Error())
 		return err
 	}
 
-	//set file user
+	// set file user
 	if localFile.User != "root" {
 		u, err := user.Lookup(localFile.User)
 		if err != nil {
@@ -673,7 +678,7 @@ func writeLocalFile(localFile *types.LocalFile) error {
 		}
 	}
 
-	//set file chmod
+	// set file chmod
 	if localFile.Right == "rw" {
 		err = file.Chmod(0664)
 	} else {

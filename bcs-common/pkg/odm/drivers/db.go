@@ -30,7 +30,7 @@ type Index struct {
 
 // DB interface for database
 type DB interface {
-	// DataBase() get database name
+	// DataBase () get database name
 	DataBase() string
 
 	// Ping ping the database server
@@ -145,13 +145,13 @@ type Table interface {
 	// CreateIndex create index
 	CreateIndex(ctx context.Context, index Index) error
 
-	// DropIndex
+	// DropIndex TODO
 	DropIndex(ctx context.Context, indexName string) error
 
-	// HasIndex
+	// HasIndex TODO
 	HasIndex(ctx context.Context, indexName string) (bool, error)
 
-	// Indexes
+	// Indexes TODO
 	Indexes(ctx context.Context) ([]Index, error)
 
 	// Find get find object

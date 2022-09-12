@@ -20,7 +20,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-netservice/bcs-ipam/resource"
 
 	"go4.org/lock"
-	//import sqlite3
+	// import sqlite3
 	_ "github.com/mattn/go-sqlite3"
 )
 
@@ -29,7 +29,7 @@ const (
 	defaultBcsIPAMLocker  = "/data/bcs/bcs-cni/bin/ipam.lock"
 )
 
-//NewDriver create SQLite3 standard IPDriver
+// NewDriver create SQLite3 standard IPDriver
 func NewDriver() (resource.IPDriver, error) {
 	db, err := sql.Open("sqlite3", defaultSQLiteDatabase)
 	if err != nil {
@@ -41,14 +41,14 @@ func NewDriver() (resource.IPDriver, error) {
 	return driver, nil
 }
 
-//SQLiteDriver driver for sqlite3
+// SQLiteDriver driver for sqlite3
 type SQLiteDriver struct {
 	database *sql.DB
 }
 
-//GetIPAddr get available ip resource for contaienr
+// GetIPAddr get available ip resource for contaienr
 func (driver *SQLiteDriver) GetIPAddr(host string, containerID, requestIP string) (*types.IPInfo, error) {
-	//safe lock for multiprocess
+	// safe lock for multiprocess
 	closer, lockErr := lock.Lock(defaultBcsIPAMLocker)
 	if lockErr != nil {
 		return nil, fmt.Errorf("get bcs-ipam lock err: %v", lockErr)
@@ -71,7 +71,7 @@ func (driver *SQLiteDriver) GetIPAddr(host string, containerID, requestIP string
 			return nil, fmt.Errorf("Read available ip failed, %s", readErr.Error())
 		}
 		rows.Close()
-		//active ip address selected
+		// active ip address selected
 		stmt, _ := driver.database.Prepare("update Resource set Status = ?, Container = ? where Host = ?")
 		defer stmt.Close()
 		_, exErr := stmt.Exec("active", containerID, info.IPAddr)
@@ -83,9 +83,9 @@ func (driver *SQLiteDriver) GetIPAddr(host string, containerID, requestIP string
 	return nil, fmt.Errorf("No available ip resource")
 }
 
-//ReleaseIPAddr release ip address for container
+// ReleaseIPAddr release ip address for container
 func (driver *SQLiteDriver) ReleaseIPAddr(host string, containerID string, ipInfo *types.IPInfo) error {
-	//safe lock for multiprocess
+	// safe lock for multiprocess
 	closer, lockErr := lock.Lock(defaultBcsIPAMLocker)
 	if lockErr != nil {
 		return fmt.Errorf("get bcs-ipam lock err: %v", lockErr)
@@ -95,7 +95,7 @@ func (driver *SQLiteDriver) ReleaseIPAddr(host string, containerID string, ipInf
 	if len(ipInfo.IPAddr) != 0 {
 		status = "reserved"
 	}
-	//release ip address
+	// release ip address
 	stmt, _ := driver.database.Prepare("update Resource set Status = ?, Container = ? where Container = ? and Status = ?")
 	defer stmt.Close()
 	res, exErr := stmt.Exec(status, "none container", containerID, "active")
@@ -109,9 +109,9 @@ func (driver *SQLiteDriver) ReleaseIPAddr(host string, containerID string, ipInf
 	return nil
 }
 
-//GetHostInfo Get host info from driver
+// GetHostInfo Get host info from driver
 func (driver *SQLiteDriver) GetHostInfo(host string) (*types.HostInfo, error) {
-	//safe lock for multiprocess
+	// safe lock for multiprocess
 	closer, lockErr := lock.Lock(defaultBcsIPAMLocker)
 	if lockErr != nil {
 		return nil, fmt.Errorf("get bcs-ipam lock err: %v", lockErr)

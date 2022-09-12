@@ -270,10 +270,11 @@ func generateRunInstance(cluster *proto.Cluster, passwd string) *api.RunInstance
 // CreateClusterShieldAlarmTask call alarm interface to shield alarm
 func CreateClusterShieldAlarmTask(taskID string, stepName string) error {
 	start := time.Now()
-	//get task information and validate
+	// get task information and validate
 	task, err := cloudprovider.GetStorageModel().GetTask(context.Background(), taskID)
 	if err != nil {
-		blog.Errorf("CreateClusterShieldAlarmTask[%s]: task %s get detail task information from storage failed, %s. task retry", taskID, taskID, err.Error())
+		blog.Errorf(
+			"CreateClusterShieldAlarmTask[%s]: task %s get detail task information from storage failed, %s. task retry", taskID, taskID, err.Error())
 		return err
 	}
 
@@ -284,7 +285,8 @@ func CreateClusterShieldAlarmTask(taskID string, stepName string) error {
 	}
 	step, err := state.IsReadyToStep(stepName)
 	if err != nil {
-		blog.Errorf("CreateClusterShieldAlarmTask[%s]: task %s not turn to run step %s, err %s", taskID, taskID, stepName, err.Error())
+		blog.Errorf("CreateClusterShieldAlarmTask[%s]: task %s not turn to run step %s, err %s", taskID, taskID, stepName,
+			err.Error())
 		return err
 	}
 	// previous step successful when retry task
@@ -329,13 +331,14 @@ func CreateClusterShieldAlarmTask(taskID string, stepName string) error {
 // CreateTkeClusterTask call qcloud interface to create cluster
 func CreateTkeClusterTask(taskID string, stepName string) error {
 	start := time.Now()
-	//get task information and validate
+	// get task information and validate
 	task, err := cloudprovider.GetStorageModel().GetTask(context.Background(), taskID)
 	if err != nil {
-		blog.Errorf("CreateTkeClusterTask[%s]: task %s get detail task information from storage failed, %s. task retry", taskID, taskID, err.Error())
+		blog.Errorf("CreateTkeClusterTask[%s]: task %s get detail task information from storage failed, %s. task retry",
+			taskID, taskID, err.Error())
 		return err
 	}
-	//defer utils.RecoverPrintStack("CreateTkeClusterTask")
+	// defer utils.RecoverPrintStack("CreateTkeClusterTask")
 
 	state := &cloudprovider.TaskState{Task: task, JobResult: cloudprovider.NewJobSyncResult(task)}
 	if state.IsTerminated() {
@@ -344,7 +347,8 @@ func CreateTkeClusterTask(taskID string, stepName string) error {
 	}
 	step, err := state.IsReadyToStep(stepName)
 	if err != nil {
-		blog.Errorf("CreateTkeClusterTask[%s]: task %s not turn to run step %s, err %s", taskID, taskID, stepName, err.Error())
+		blog.Errorf("CreateTkeClusterTask[%s]: task %s not turn to run step %s, err %s", taskID, taskID, stepName,
+			err.Error())
 		return err
 	}
 	// previous step successful when retry task
@@ -497,10 +501,11 @@ func CreateTkeClusterTask(taskID string, stepName string) error {
 // CheckTkeClusterStatusTask check cluster create status
 func CheckTkeClusterStatusTask(taskID string, stepName string) error {
 	start := time.Now()
-	//get task information and validate
+	// get task information and validate
 	task, err := cloudprovider.GetStorageModel().GetTask(context.Background(), taskID)
 	if err != nil {
-		blog.Errorf("CheckTkeClusterStatusTask[%s]: task %s get detail task information from storage failed, %s. task retry", taskID, taskID, err.Error())
+		blog.Errorf("CheckTkeClusterStatusTask[%s]: task %s get detail task information from storage failed, %s. task retry",
+			taskID, taskID, err.Error())
 		return err
 	}
 
@@ -511,7 +516,8 @@ func CheckTkeClusterStatusTask(taskID string, stepName string) error {
 	}
 	step, err := state.IsReadyToStep(stepName)
 	if err != nil {
-		blog.Errorf("CheckTkeClusterStatusTask[%s]: task %s not turn to run step %s, err %s", taskID, taskID, stepName, err.Error())
+		blog.Errorf("CheckTkeClusterStatusTask[%s]: task %s not turn to run step %s, err %s", taskID, taskID, stepName,
+			err.Error())
 		return err
 	}
 	// previous step successful when retry task
@@ -622,7 +628,8 @@ func EnableTkeClusterVpcCniTask(taskID string, stepName string) error {
 	// get task information and validate
 	task, err := cloudprovider.GetStorageModel().GetTask(context.Background(), taskID)
 	if err != nil {
-		blog.Errorf("EnableTkeClusterVpcCniTask[%s]: task %s get detail task information from storage failed, %s. task retry", taskID, taskID, err.Error())
+		blog.Errorf("EnableTkeClusterVpcCniTask[%s]: task %s get detail task information from storage failed, %s. task retry",
+			taskID, taskID, err.Error())
 		return err
 	}
 
@@ -633,7 +640,8 @@ func EnableTkeClusterVpcCniTask(taskID string, stepName string) error {
 	}
 	step, err := state.IsReadyToStep(stepName)
 	if err != nil {
-		blog.Errorf("EnableTkeClusterVpcCniTask[%s]: task %s not turn to run step %s, err %s", taskID, taskID, stepName, err.Error())
+		blog.Errorf("EnableTkeClusterVpcCniTask[%s]: task %s not turn to run step %s, err %s", taskID, taskID, stepName,
+			err.Error())
 		return err
 	}
 	// previous step successful when retry task
@@ -759,10 +767,11 @@ func EnableTkeClusterVpcCniTask(taskID string, stepName string) error {
 // UpdateCreateClusterDBInfoTask update cluster DB info
 func UpdateCreateClusterDBInfoTask(taskID string, stepName string) error {
 	start := time.Now()
-	//get task information and validate
+	// get task information and validate
 	task, err := cloudprovider.GetStorageModel().GetTask(context.Background(), taskID)
 	if err != nil {
-		blog.Errorf("UpdateCreateClusterDBInfoTask[%s]: task %s get detail task information from storage failed, %s. task retry", taskID, taskID, err.Error())
+		blog.Errorf(
+			"UpdateCreateClusterDBInfoTask[%s]: task %s get detail task information from storage failed, %s. task retry", taskID, taskID, err.Error())
 		return err
 	}
 
@@ -773,7 +782,8 @@ func UpdateCreateClusterDBInfoTask(taskID string, stepName string) error {
 	}
 	step, err := state.IsReadyToStep(stepName)
 	if err != nil {
-		blog.Errorf("UpdateCreateClusterDBInfoTask[%s]: task %s not turn to run step %s, err %s", taskID, taskID, stepName, err.Error())
+		blog.Errorf("UpdateCreateClusterDBInfoTask[%s]: task %s not turn to run step %s, err %s", taskID, taskID, stepName,
+			err.Error())
 		return err
 	}
 	// previous step successful when retry task

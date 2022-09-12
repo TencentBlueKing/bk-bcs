@@ -25,6 +25,7 @@ var (
 	workloads = make(map[string]Workload)
 )
 
+// Workload xxx
 type Workload interface {
 	// Name return name of the workload for imageloader handler to dispatch.
 	Name() string
@@ -38,6 +39,7 @@ type Workload interface {
 	WaitForCacheSync(chan struct{}) bool
 }
 
+// InitWorkloads xxx
 // Init inits all workloads.
 func InitWorkloads(i *imageLoader) (map[string]Workload, error) {
 	// TODO add other workloads

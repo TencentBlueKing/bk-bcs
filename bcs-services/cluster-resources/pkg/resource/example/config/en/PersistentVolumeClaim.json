@@ -1,6 +1,6 @@
 {
   "kind": "PersistentVolumeClaim",
-  "class": "storages",
+  "class": "storage",
   "references": null,
   "items": [
     {

@@ -220,10 +220,10 @@ func TestBufferedAutoscalerRunOnce(t *testing.T) {
 	// Scale up.
 	readyNodeLister.SetNodes([]*apiv1.Node{n1})
 	allNodeLister.SetNodes([]*apiv1.Node{n1})
-	scheduledPodMock.On("List").Return([]*apiv1.Pod{p1}, nil).Times(3)
+	scheduledPodMock.On("List").Return([]*apiv1.Pod{p1}, nil).Times(4)
 	unschedulablePodMock.On("List").Return([]*apiv1.Pod{p2}, nil).Once()
 	daemonSetListerMock.On("List", labels.Everything()).Return([]*appsv1.DaemonSet{}, nil).Twice()
-	onScaleUpMock.On("ScaleUp", "ng1", 1).Return(nil).Once()
+	podDisruptionBudgetListerMock.On("List").Return([]*policyv1.PodDisruptionBudget{}, nil).Once()
 
 	context.MaxNodesTotal = 10
 	err = autoscaler.RunOnce(time.Now().Add(time.Hour))
@@ -238,6 +238,7 @@ func TestBufferedAutoscalerRunOnce(t *testing.T) {
 	unschedulablePodMock.On("List").Return([]*apiv1.Pod{}, nil).Once()
 	daemonSetListerMock.On("List", labels.Everything()).Return([]*appsv1.DaemonSet{}, nil).Twice()
 	podDisruptionBudgetListerMock.On("List").Return([]*policyv1.PodDisruptionBudget{}, nil).Once()
+	onScaleDownMock.On("ScaleDown", "ng1", "n1").Return(nil)
 
 	provider.AddNode("ng1", n2)
 	ng1.SetTargetSize(2)
@@ -254,7 +255,6 @@ func TestBufferedAutoscalerRunOnce(t *testing.T) {
 	unschedulablePodMock.On("List").Return([]*apiv1.Pod{}, nil).Once()
 	daemonSetListerMock.On("List", labels.Everything()).Return([]*appsv1.DaemonSet{}, nil).Twice()
 	podDisruptionBudgetListerMock.On("List").Return([]*policyv1.PodDisruptionBudget{}, nil).Once()
-	onScaleDownMock.On("ScaleDown", "ng1", "n2").Return(nil).Once()
 
 	err = autoscaler.RunOnce(time.Now().Add(3 * time.Hour))
 	waitForDeleteToFinish(t, autoscaler.scaleDown)
@@ -269,6 +269,7 @@ func TestBufferedAutoscalerRunOnce(t *testing.T) {
 	unschedulablePodMock.On("List").Return([]*apiv1.Pod{p2}, nil).Once()
 	daemonSetListerMock.On("List", labels.Everything()).Return([]*appsv1.DaemonSet{}, nil).Twice()
 	podDisruptionBudgetListerMock.On("List").Return([]*policyv1.PodDisruptionBudget{}, nil).Once()
+	onScaleUpMock.On("ScaleUp", "ng1", 1).Return(nil)
 
 	provider.AddNodeGroup("ng2", 0, 10, 1)
 	provider.AddNode("ng2", n3)
@@ -573,7 +574,7 @@ func TestBufferedAutoscalerRunOnceWithALongUnregisteredNode(t *testing.T) {
 	allNodeLister.SetNodes([]*apiv1.Node{n1, n2})
 	scheduledPodMock.On("List").Return([]*apiv1.Pod{p1}, nil).Times(4)
 	unschedulablePodMock.On("List").Return([]*apiv1.Pod{p2}, nil).Once()
-	onScaleDownMock.On("ScaleDown", "ng1", "broken").Return(nil).Once()
+	onScaleDownMock.On("ScaleDown", "ng1", "n1").Return(nil).Once()
 	daemonSetListerMock.On("List", labels.Everything()).Return([]*appsv1.DaemonSet{}, nil).Twice()
 	podDisruptionBudgetListerMock.On("List").Return([]*policyv1.PodDisruptionBudget{}, nil).Once()
 
@@ -655,7 +656,7 @@ func TestBufferedAutoscalerRunOncePodsWithFilterOutSchedulablePodsUsesPackingFal
 		ScaleDownUnreadyTime:          time.Minute,
 		ScaleDownUnneededTime:         time.Minute,
 		ExpendablePodsPriorityCutoff:  10,
-		//Turn off filtering schedulables using packing
+		// Turn off filtering schedulables using packing
 		FilterOutSchedulablePodsUsesPacking: false,
 	}
 	processorCallbacks := newBufferedAutoscalerProcessorCallbacks()
@@ -823,6 +824,9 @@ func TestBufferedAutoscalerRunOncePodsWithPriorities(t *testing.T) {
 	unschedulablePodMock.On("List").Return([]*apiv1.Pod{p4, p5}, nil).Once()
 	daemonSetListerMock.On("List", labels.Everything()).Return([]*appsv1.DaemonSet{}, nil).Twice()
 	podDisruptionBudgetListerMock.On("List").Return([]*policyv1.PodDisruptionBudget{}, nil).Once()
+	onScaleDownMock.On("ScaleDown", "ng1", "n1").Return(nil)
+	onScaleDownMock.On("ScaleDown", "ng2", "n2").Return(nil)
+	onScaleDownMock.On("ScaleDown", "ng2", "n3").Return(nil)
 
 	ng2.SetTargetSize(2)
 
@@ -838,7 +842,7 @@ func TestBufferedAutoscalerRunOncePodsWithPriorities(t *testing.T) {
 	unschedulablePodMock.On("List").Return([]*apiv1.Pod{p5}, nil).Once()
 	daemonSetListerMock.On("List", labels.Everything()).Return([]*appsv1.DaemonSet{}, nil).Twice()
 	podDisruptionBudgetListerMock.On("List").Return([]*policyv1.PodDisruptionBudget{}, nil).Once()
-	onScaleDownMock.On("ScaleDown", "ng1", "n1").Return(nil).Once()
+	onScaleDownMock.On("ScaleDown", "ng1", "n1").Return(nil)
 
 	p4.Spec.NodeName = "n2"
 

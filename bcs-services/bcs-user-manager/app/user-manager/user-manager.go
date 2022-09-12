@@ -27,18 +27,19 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/http/httpserver"
 	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
+	"github.com/emicklei/go-restful"
+	"github.com/micro/go-micro/v2/registry"
+	"github.com/micro/go-micro/v2/registry/etcd"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/cmanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/middleware"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/passcc"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/storages/cache"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/v1http"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/v1http/permission"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/utils"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/config"
-
-	"github.com/emicklei/go-restful"
-	"github.com/micro/go-micro/v2/registry"
-	"github.com/micro/go-micro/v2/registry/etcd"
 )
 
 var (
@@ -66,7 +67,8 @@ func NewUserManager(conf *config.UserMgrConfig) *UserManager {
 	}
 
 	if conf.ServCert.IsSSL {
-		userManager.httpServ.SetSsl(conf.ServCert.CAFile, conf.ServCert.CertFile, conf.ServCert.KeyFile, conf.ServCert.CertPasswd)
+		userManager.httpServ.SetSsl(conf.ServCert.CAFile, conf.ServCert.CertFile, conf.ServCert.KeyFile,
+			conf.ServCert.CertPasswd)
 	}
 
 	userManager.httpServ.SetInsecureServer(conf.InsecureAddress, conf.InsecurePort)
@@ -131,6 +133,7 @@ func Filter(req *restful.Request, resp *restful.Response, chain *restful.FilterC
 
 // initRouters init usermanager http router
 func (u *UserManager) initRouters(ws *restful.WebService) {
+	ws.Filter(middleware.RequestIDFilter)
 	v1http.InitV1Routers(ws, u.permService)
 	// register pull resource API
 }

@@ -11,6 +11,7 @@
  *
  */
 
+// Package auth xxx
 package auth
 
 import (
@@ -151,7 +152,7 @@ func (ta *TokenAuthenticater) GetJWTUser() *models.BcsUser {
 	if user == nil {
 		user = &models.BcsUser{
 			Name:      username,
-			UserType:  sqlstore.PlainUser,
+			UserType:  models.PlainUser,
 			ExpiresAt: time.Unix(jwtUser.ExpiresAt, 0),
 		}
 	}
@@ -182,13 +183,14 @@ func AdminTokenAuthenticate(request *restful.Request, response *restful.Response
 		SourceBearerEnabled: true,
 	})
 	user := authenticater.GetUser()
-	if user != nil && !user.HasExpired() && user.UserType == sqlstore.AdminUser {
+	if user != nil && !user.HasExpired() && user.UserType == models.AdminUser {
 		request.SetAttribute(constant.CurrentUserAttr, user)
 		chain.ProcessFilter(request, response)
 		return
 	}
 
-	message := fmt.Sprintf("errcode: %d,  anonymous requests is forbidden, please provide a valid token", common.BcsErrApiUnauthorized)
+	message := fmt.Sprintf("errcode: %d,  anonymous requests is forbidden, please provide a valid token",
+		common.BcsErrApiUnauthorized)
 	utils.WriteUnauthorizedError(response, common.BcsErrApiUnauthorized, message)
 	return
 }
@@ -199,12 +201,13 @@ func TokenAuthenticate(request *restful.Request, response *restful.Response, cha
 		SourceBearerEnabled: true,
 	})
 	user := authenticater.GetUser()
-	if user != nil && !user.HasExpired() && (user.UserType == sqlstore.AdminUser || user.UserType == sqlstore.SaasUser) {
+	if user != nil && !user.HasExpired() && (user.UserType == models.AdminUser || user.UserType == models.SaasUser) {
 		chain.ProcessFilter(request, response)
 		return
 	}
 
-	message := fmt.Sprintf("errcode: %d,  anonymous requests is forbidden, please provide a valid token", common.BcsErrApiUnauthorized)
+	message := fmt.Sprintf("errcode: %d,  anonymous requests is forbidden, please provide a valid token",
+		common.BcsErrApiUnauthorized)
 	utils.WriteUnauthorizedError(response, common.BcsErrApiUnauthorized, message)
 	return
 }
@@ -217,7 +220,8 @@ func TokenAuthAuthenticate(request *restful.Request, response *restful.Response,
 	})
 	user := authenticater.GetUser()
 	if user == nil || user.HasExpired() {
-		message := fmt.Sprintf("errcode: %d,  anonymous requests is forbidden, please provide a valid token", common.BcsErrApiUnauthorized)
+		message := fmt.Sprintf("errcode: %d,  anonymous requests is forbidden, please provide a valid token",
+			common.BcsErrApiUnauthorized)
 		utils.WriteUnauthorizedError(response, common.BcsErrApiUnauthorized, message)
 		return
 	}

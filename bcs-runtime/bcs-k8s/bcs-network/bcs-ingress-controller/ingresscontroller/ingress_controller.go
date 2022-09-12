@@ -91,7 +91,7 @@ func (ir *IngressReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		blog.Errorf("get ingress %s/%s failed, err %s", req.Name, req.Namespace, err.Error())
 		return ctrl.Result{
 			Requeue:      true,
-			RequeueAfter: time.Duration(5 * time.Second),
+			RequeueAfter: 5 * time.Second,
 		}, err
 	}
 
@@ -99,16 +99,17 @@ func (ir *IngressReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	if ingress.DeletionTimestamp != nil {
 		// should remove ingress finalizer in ProcessDeleteIngress
 		if err := ir.IngressConverter.ProcessDeleteIngress(req.Name, req.Namespace); err != nil {
+			metrics.IncreaseFailMetric(metrics.ObjectIngress, metrics.EventTypeDelete)
 			blog.Errorf("process deleted ingress %s/%s failed, err %s", req.Name, req.Namespace, err.Error())
 			return ctrl.Result{
 				Requeue:      true,
-				RequeueAfter: time.Duration(5 * time.Second),
+				RequeueAfter: 5 * time.Second,
 			}, nil
 		}
 		if err := ir.removeFinalizerForIngress(ingress); err != nil {
 			return ctrl.Result{
 				Requeue:      true,
-				RequeueAfter: time.Duration(5 * time.Second),
+				RequeueAfter: 5 * time.Second,
 			}, nil
 		}
 		return ctrl.Result{}, nil
@@ -119,20 +120,21 @@ func (ir *IngressReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		if err := ir.addFinalizerForIngress(ingress); err != nil {
 			return ctrl.Result{
 				Requeue:      true,
-				RequeueAfter: time.Duration(5 * time.Second),
+				RequeueAfter: 5 * time.Second,
 			}, nil
 		}
 		return ctrl.Result{}, nil
 	}
 
 	if err := ir.IngressConverter.ProcessUpdateIngress(ingress); err != nil {
+		metrics.IncreaseFailMetric(metrics.ObjectIngress, metrics.EventTypeUnknown)
 		// create event for ingress
 		ir.IngressEventer.Eventf(ingress, k8scorev1.EventTypeWarning,
 			"process ingress failed", "error: %s", err.Error())
 		blog.Errorf("process ingress %s/%s event failed, err %s", req.Name, req.Namespace, err.Error())
 		return ctrl.Result{
 			Requeue:      true,
-			RequeueAfter: time.Duration(5 * time.Second),
+			RequeueAfter: 5 * time.Second,
 		}, nil
 	}
 

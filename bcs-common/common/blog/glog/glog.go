@@ -258,6 +258,7 @@ func (m *modulePat) match(file string) bool {
 	return match
 }
 
+// String 用于打印
 func (m *moduleSpec) String() string {
 	// Lock because the type is not atomic. TODO: clean this up.
 	logging.mu.Lock()
@@ -280,6 +281,7 @@ func (m *moduleSpec) Get() interface{} {
 
 var errVmoduleSyntax = errors.New("syntax error: expect comma-separated list of filename=N")
 
+// Set xxx
 // Syntax: -vmodule=recordio=2,file=1,gfs*=3
 func (m *moduleSpec) Set(value string) error {
 	var filter []modulePat
@@ -343,6 +345,7 @@ func (t *traceLocation) match(file string, line int) bool {
 	return t.file == file
 }
 
+// String 用于打印
 func (t *traceLocation) String() string {
 	// Lock because the type is not atomic. TODO: clean this up.
 	logging.mu.Lock()
@@ -358,6 +361,7 @@ func (t *traceLocation) Get() interface{} {
 
 var errTraceSyntax = errors.New("syntax error: expect file.go:234")
 
+// Set xxx
 // Syntax: -log_backtrace_at=gopherflakes.go:234
 // Note that unlike vmodule the file extension is included here.
 func (t *traceLocation) Set(value string) error {
@@ -513,6 +517,7 @@ func (l *loggingT) putBuffer(b *buffer) {
 
 var timeNow = time.Now // Stubbed out for testing.
 
+// header xxx
 /*
 header formats a log header as defined by the C++ implementation.
 It returns a buffer containing the formatted header and the user's file and line number.
@@ -810,14 +815,17 @@ type syncBuffer struct {
 	nbytes uint64 // The number of bytes written to this file
 }
 
+// Reset xxx
 func (sb *syncBuffer) Reset() {
 	sb.Writer.Reset(sb.file)
 }
 
+// Sync xxx
 func (sb *syncBuffer) Sync() error {
 	return sb.file.Sync()
 }
 
+// Write 用于常见IO
 func (sb *syncBuffer) Write(p []byte) (n int, err error) {
 	if sb.nbytes+uint64(len(p)) >= MaxSize() {
 		if err := sb.rotateFile(time.Now()); err != nil {
@@ -851,7 +859,8 @@ func (sb *syncBuffer) rotateFile(now time.Time) error {
 	var buf bytes.Buffer
 	fmt.Fprintf(&buf, "Log file created at: %s\n", now.Format("2006/01/02 15:04:05"))
 	fmt.Fprintf(&buf, "Running on machine: %s\n", host)
-	fmt.Fprintf(&buf, "Binary: Built with %s %s for %s/%s\n", runtime.Compiler, runtime.Version(), runtime.GOOS, runtime.GOARCH)
+	fmt.Fprintf(&buf, "Binary: Built with %s %s for %s/%s\n", runtime.Compiler, runtime.Version(), runtime.GOOS,
+		runtime.GOARCH)
 	fmt.Fprintf(&buf, "Log line format: [IWEF]mmdd hh:mm:ss.uuuuuu threadid file:line] msg\n")
 	n, err := sb.file.Write(buf.Bytes())
 	sb.nbytes += uint64(n)

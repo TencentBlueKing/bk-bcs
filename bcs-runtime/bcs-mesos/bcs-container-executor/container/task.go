@@ -22,68 +22,68 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-mesos/bcs-container-executor/logs"
 )
 
-//BcsPort port service for container port reflection
+// BcsPort port service for container port reflection
 type BcsPort struct {
 	Name          string `json:"name,omitempty"`
 	ContainerPort string `json:"containerPort,omitempty"`
 	HostPort      string `json:"hostPort,omitempty"`
 	Protocol      string `json:"protocol,omitempty"`
-	HostIP        string `json:"hostIP,omitempty"` //use for host has multiple ip address
+	HostIP        string `json:"hostIP,omitempty"` // use for host has multiple ip address
 }
 
-//BcsKV key/value structure for anywhere necessary
+// BcsKV key/value structure for anywhere necessary
 type BcsKV struct {
 	Key   string
 	Value string
 }
 
-//BcsVolume volume info from mesos to container
+// BcsVolume volume info from mesos to container
 type BcsVolume struct {
 	ReadOnly      bool
 	HostPath      string
 	ContainerPath string
 }
 
-//BcsContainerTask task info for running container
+// BcsContainerTask task info for running container
 type BcsContainerTask struct {
-	Name              string                       //container name
-	Image             string                       //container image
-	HostName          string                       //container hostname
-	Hosts             []string                     //host:ip pair for /etc/hosts in container
-	Command           string                       //container command
-	Args              []string                     //args for command
-	Env               []BcsKV                      //environments
-	Volums            []BcsVolume                  //host path mount
-	NetworkName       string                       //container network name
-	NetworkIPAddr     string                       //container ip address request
-	ForcePullImage    bool                         //pull image every time
-	OOMKillDisabled   bool                         //OOM kill feature, default is true
-	AutoRemove        bool                         //remove container when exit, default false
-	Ulimits           []BcsKV                      //ulimit for docker parameter
-	ShmSize           int64                        //docker hostconfig shm size, 1 = 1B
-	Privileged        bool                         //setting container privileged
-	PublishAllPorts   bool                         //publish all ports in container
-	PortBindings      map[string]BcsPort           //port for container reflection, only useful for docker bridge
-	Labels            []BcsKV                      //label for container
-	Resource          *bcstypes.Resource           //container resource request
+	Name              string                       // container name
+	Image             string                       // container image
+	HostName          string                       // container hostname
+	Hosts             []string                     // host:ip pair for /etc/hosts in container
+	Command           string                       // container command
+	Args              []string                     // args for command
+	Env               []BcsKV                      // environments
+	Volums            []BcsVolume                  // host path mount
+	NetworkName       string                       // container network name
+	NetworkIPAddr     string                       // container ip address request
+	ForcePullImage    bool                         // pull image every time
+	OOMKillDisabled   bool                         // OOM kill feature, default is true
+	AutoRemove        bool                         // remove container when exit, default false
+	Ulimits           []BcsKV                      // ulimit for docker parameter
+	ShmSize           int64                        // docker hostconfig shm size, 1 = 1B
+	Privileged        bool                         // setting container privileged
+	PublishAllPorts   bool                         // publish all ports in container
+	PortBindings      map[string]BcsPort           // port for container reflection, only useful for docker bridge
+	Labels            []BcsKV                      // label for container
+	Resource          *bcstypes.Resource           // container resource request
 	LimitResource     *bcstypes.Resource           // container resource limit
-	ExtendedResources []*comtypes.ExtendedResource //extended resources
-	BcsMessages       []*bcstypes.BcsMessage       //bcs define message
-	RuntimeConf       *BcsContainerInfo            //container runtime info
-	HealthCheck       healthcheck.Checker          //for health check
-	KillPolicy        int                          //kill policy timeout, unit is seconds
-	//container network flow limit args
+	ExtendedResources []*comtypes.ExtendedResource // extended resources
+	BcsMessages       []*bcstypes.BcsMessage       // bcs define message
+	RuntimeConf       *BcsContainerInfo            // container runtime info
+	HealthCheck       healthcheck.Checker          // for health check
+	KillPolicy        int                          // kill policy timeout, unit is seconds
+	// container network flow limit args
 	NetLimit *comtypes.NetLimit
 	TaskId   string
 
-	Ipc string //IPC namespace to use
+	Ipc string // IPC namespace to use
 
 	/*Healthy                 bool `json:"Healthy,omitempty"` //Container healthy
 	IsChecked               bool `json:",omitempty"`        //is health check
 	ConsecutiveFailureTimes int  `json:",omitempty"`        //consecutive failure times*/
 }
 
-//EnvOperCopy environment $ operation support
+// EnvOperCopy environment $ operation support
 func EnvOperCopy(task *BcsContainerTask) {
 	tmp := make(map[string]string)
 	for _, e := range task.Env {

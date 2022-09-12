@@ -11,6 +11,7 @@
  *
  */
 
+// Package manager xxx
 package manager
 
 import (

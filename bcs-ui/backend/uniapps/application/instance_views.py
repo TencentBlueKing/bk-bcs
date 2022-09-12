@@ -816,6 +816,11 @@ class TaskgroupEvents(InstanceAPI):
         if not flag:
             return pod_resp
         pod_name = ",".join([info["resourceName"] for info in pod_resp if info.get("resourceName")])
+        # NOTE 若该资源没有关联的 Pod，则不会有事件，直接返回即可
+        # 否则会因 extraInfo.name 为空，查询到同命名空间下的所有 Pod 事件
+        if not pod_name:
+            return APIResponse({"data": {"data": [], "total": 0}})
+
         params.update({"env": "k8s", "kind": "Pod", "extraInfo.name": pod_name, "extraInfo.namespace": inst_namespace})
         # 添加创建失败的instance消息后，查询返回
         return self.query_events(request, project_id, cluster_id, params)

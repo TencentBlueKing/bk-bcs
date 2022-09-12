@@ -34,6 +34,19 @@ func TestStringInSlice(t *testing.T) {
 	assert.False(t, slice.StringInSlice("", []string{"str1"}))
 }
 
+func TestAllInt64Equal(t *testing.T) {
+	// 所有元素都相等
+	assert.True(t, slice.AllInt64Equal([]int64{}))
+	assert.True(t, slice.AllInt64Equal([]int64{1}))
+	assert.True(t, slice.AllInt64Equal([]int64{2, 2}))
+	assert.True(t, slice.AllInt64Equal([]int64{0, 0, 0}))
+
+	// 存在不相等
+	assert.False(t, slice.AllInt64Equal([]int64{1, 2}))
+	assert.False(t, slice.AllInt64Equal([]int64{0, 1, 1}))
+	assert.False(t, slice.AllInt64Equal([]int64{0, 0, 2, 2}))
+}
+
 var typeMapList = []interface{}{
 	map[string]interface{}{
 		"type": "a",

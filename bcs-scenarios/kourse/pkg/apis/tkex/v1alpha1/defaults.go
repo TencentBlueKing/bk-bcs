@@ -28,43 +28,98 @@ func SetDefaults_GameStatefulSet(obj *GameStatefulSet) {
 		obj.Spec.PodManagementPolicy = OrderedReadyPodManagement
 	}
 
+	if obj.Spec.Replicas == nil {
+		obj.Spec.Replicas = new(int32)
+		*obj.Spec.Replicas = 1
+	}
+
+	if obj.Spec.RevisionHistoryLimit == nil {
+		obj.Spec.RevisionHistoryLimit = new(int32)
+		*obj.Spec.RevisionHistoryLimit = 10
+	}
+
 	if obj.Spec.UpdateStrategy.Type == "" {
 		obj.Spec.UpdateStrategy.Type = OnDeleteGameStatefulSetStrategyType
 	}
 
-	if obj.Spec.UpdateStrategy.Type != OnDeleteGameStatefulSetStrategyType &&
-		obj.Spec.UpdateStrategy.RollingUpdate == nil {
-		rollingUpate := RollingUpdateStatefulSetStrategy{}
-		obj.Spec.UpdateStrategy.RollingUpdate = &rollingUpate
+	if obj.Spec.UpdateStrategy.Type == OnDeleteGameStatefulSetStrategyType {
+		return
 	}
 
-	if obj.Spec.UpdateStrategy.Type != OnDeleteGameStatefulSetStrategyType &&
-		obj.Spec.UpdateStrategy.RollingUpdate != nil &&
-		obj.Spec.UpdateStrategy.RollingUpdate.Partition == nil {
+	setDefaultsRollingUpdate(obj)
+
+	if obj.Spec.UpdateStrategy.Type == InplaceUpdateGameStatefulSetStrategyType {
+		if obj.Spec.UpdateStrategy.InPlaceUpdateStrategy == nil {
+			inplaceUpdate := InPlaceUpdateStrategy{}
+			obj.Spec.UpdateStrategy.InPlaceUpdateStrategy = &inplaceUpdate
+		}
+		if obj.Spec.UpdateStrategy.InPlaceUpdateStrategy.Policy == "" {
+			obj.Spec.UpdateStrategy.InPlaceUpdateStrategy.Policy = DisOrderedInplaceUpdatePolicy
+		}
+	}
+}
+
+func setDefaultsRollingUpdate(obj *GameStatefulSet) {
+	if obj.Spec.UpdateStrategy.RollingUpdate == nil {
+		rollingUpdate := RollingUpdateStatefulSetStrategy{}
+		obj.Spec.UpdateStrategy.RollingUpdate = &rollingUpdate
+	}
+
+	if obj.Spec.UpdateStrategy.RollingUpdate.Partition == nil {
 		partition := intstr.FromInt(0)
 		obj.Spec.UpdateStrategy.RollingUpdate.Partition = &partition
 	}
 
-	if obj.Spec.UpdateStrategy.Type != OnDeleteGameStatefulSetStrategyType &&
-		obj.Spec.UpdateStrategy.RollingUpdate != nil &&
-		obj.Spec.UpdateStrategy.RollingUpdate.MaxUnavailable == nil {
+	if obj.Spec.UpdateStrategy.RollingUpdate.MaxUnavailable == nil {
 		maxUnavailable := intstr.FromString("25%")
 		obj.Spec.UpdateStrategy.RollingUpdate.MaxUnavailable = &maxUnavailable
 	}
 
-	if obj.Spec.UpdateStrategy.Type != OnDeleteGameStatefulSetStrategyType &&
-		obj.Spec.UpdateStrategy.RollingUpdate != nil &&
-		obj.Spec.UpdateStrategy.RollingUpdate.MaxSurge == nil {
+	if obj.Spec.UpdateStrategy.RollingUpdate.MaxSurge == nil {
 		maxSurge := intstr.FromInt(0)
 		obj.Spec.UpdateStrategy.RollingUpdate.MaxSurge = &maxSurge
 	}
+}
+
+// SetDefaults_GameDeployment sets defaults for gamedeployment
+func SetDefaults_GameDeployment(obj *GameDeployment) {
 
 	if obj.Spec.Replicas == nil {
 		obj.Spec.Replicas = new(int32)
 		*obj.Spec.Replicas = 1
 	}
+
 	if obj.Spec.RevisionHistoryLimit == nil {
 		obj.Spec.RevisionHistoryLimit = new(int32)
 		*obj.Spec.RevisionHistoryLimit = 10
+	}
+
+	if obj.Spec.UpdateStrategy.Type == "" {
+		obj.Spec.UpdateStrategy.Type = RollingGameDeploymentUpdateStrategyType
+	}
+
+	if obj.Spec.UpdateStrategy.Partition == nil {
+		partition := intstr.FromInt(0)
+		obj.Spec.UpdateStrategy.Partition = &partition
+	}
+
+	if obj.Spec.UpdateStrategy.MaxUnavailable == nil {
+		maxUnavailable := intstr.FromString("25%")
+		obj.Spec.UpdateStrategy.MaxUnavailable = &maxUnavailable
+	}
+
+	if obj.Spec.UpdateStrategy.MaxSurge == nil {
+		maxSurge := intstr.FromString("25%")
+		obj.Spec.UpdateStrategy.MaxSurge = &maxSurge
+	}
+
+	if obj.Spec.UpdateStrategy.Type == InPlaceGameDeploymentUpdateStrategyType {
+		if obj.Spec.UpdateStrategy.InPlaceUpdateStrategy == nil {
+			inplaceUpdate := InPlaceUpdateStrategy{}
+			obj.Spec.UpdateStrategy.InPlaceUpdateStrategy = &inplaceUpdate
+		}
+		if obj.Spec.UpdateStrategy.InPlaceUpdateStrategy.Policy == "" {
+			obj.Spec.UpdateStrategy.InPlaceUpdateStrategy.Policy = DisOrderedInplaceUpdatePolicy
+		}
 	}
 }

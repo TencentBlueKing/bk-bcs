@@ -26,7 +26,7 @@ import (
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
 )
 
-// GetResFormSchema ...
+// GetResFormSchema xxx
 func (h *Handler) GetResFormSchema(
 	ctx context.Context, req *clusterRes.GetResFormSchemaReq, resp *clusterRes.CommonResp,
 ) error {
@@ -38,7 +38,7 @@ func (h *Handler) GetResFormSchema(
 	return err
 }
 
-// GetFormSupportedAPIVersions ...
+// GetFormSupportedAPIVersions xxx
 func (h *Handler) GetFormSupportedAPIVersions(
 	ctx context.Context, req *clusterRes.GetFormSupportedApiVersionsReq, resp *clusterRes.CommonResp,
 ) (err error) {

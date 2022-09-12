@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package base xxx
 package base
 
 import (
@@ -22,15 +23,99 @@ import (
 	"github.com/prometheus/prometheus/prompb"
 )
 
-// MetricHandler
+// NodeInfo 节点信息
+type NodeInfo struct {
+	CPUCount      string `json:"cpu_count"`     // CPU
+	Memory        string `json:"memory"`        // 内存, 单位 Byte
+	Disk          string `json:"disk"`          // 存储, 单位 Byte
+	Provider      string `json:"provider"`      // IP来源, BKMonitor / Prometheus
+	Release       string `json:"release"`       // 内核, 3.10.107-1-tlinux2_kvm_guest-0052
+	DockerVersion string `json:"dockerVersion"` // Docker, 18.6.3-ce-tke.1
+	Sysname       string `json:"sysname"`       // 操作系统, linux
+}
+
+// PromSeries 给 series
+func (n *NodeInfo) PromSeries(t time.Time) []*prompb.TimeSeries {
+	labelSet := []prompb.Label{
+		{Name: "cpu_count", Value: n.CPUCount},
+		{Name: "memory", Value: n.Memory},
+		{Name: "disk", Value: n.Disk},
+		{Name: "provider", Value: n.Provider},
+		{Name: "release", Value: n.Release},
+		{Name: "dockerVersion", Value: n.DockerVersion},
+		{Name: "sysname", Value: n.Sysname},
+	}
+
+	sample := []prompb.Sample{
+		{Value: float64(1), Timestamp: t.UnixMilli()},
+	}
+	series := []*prompb.TimeSeries{
+		{Labels: labelSet, Samples: sample},
+	}
+	return series
+}
+
+// MetricHandler xxx
 type MetricHandler interface {
-	GetClusterCPUTotal(ctx context.Context, projectId, clusterId string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error)
-	GetClusterCPUUsed(ctx context.Context, projectId, clusterId string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error)
-	// GetClusterCPUUsage(ctx context.Context, clusterId string) (*prompb.TimeSeries, error)
+	GetClusterCPUTotal(ctx context.Context, projectId, clusterId string, start, end time.Time,
+		step time.Duration) ([]*prompb.TimeSeries, error)
+	GetClusterCPUUsed(ctx context.Context, projectId, clusterId string, start, end time.Time,
+		step time.Duration) ([]*prompb.TimeSeries, error)
+	GetClusterCPUUsage(ctx context.Context, projectId, clusterId string, start, end time.Time,
+		step time.Duration) ([]*prompb.TimeSeries, error)
+	GetClusterMemoryTotal(ctx context.Context, projectId, clusterId string, start, end time.Time,
+		step time.Duration) ([]*prompb.TimeSeries, error)
+	GetClusterMemoryUsed(ctx context.Context, projectId, clusterId string, start, end time.Time,
+		step time.Duration) ([]*prompb.TimeSeries, error)
+	GetClusterMemoryUsage(ctx context.Context, projectId, clusterId string, start, end time.Time,
+		step time.Duration) ([]*prompb.TimeSeries, error)
+	GetClusterDiskTotal(ctx context.Context, projectId, clusterId string, start, end time.Time,
+		step time.Duration) ([]*prompb.TimeSeries, error)
+	GetClusterDiskUsed(ctx context.Context, projectId, clusterId string, start, end time.Time,
+		step time.Duration) ([]*prompb.TimeSeries, error)
+	GetClusterDiskUsage(ctx context.Context, projectId, clusterId string, start, end time.Time,
+		step time.Duration) ([]*prompb.TimeSeries, error)
+	GetNodeInfo(ctx context.Context, projectId, clusterId, ip string, t time.Time) (*NodeInfo, error)
+	GetNodeCPUUsage(ctx context.Context, projectId, clusterId, ip string, start, end time.Time,
+		step time.Duration) ([]*prompb.TimeSeries, error)
+	GetNodeMemoryUsage(ctx context.Context, projectId, clusterId, ip string, start, end time.Time,
+		step time.Duration) ([]*prompb.TimeSeries, error)
+	GetNodeDiskUsage(ctx context.Context, projectId, clusterId, ip string, start, end time.Time,
+		step time.Duration) ([]*prompb.TimeSeries, error)
+	GetNodeDiskioUsage(ctx context.Context, projectId, clusterId, ip string, start, end time.Time,
+		step time.Duration) ([]*prompb.TimeSeries, error)
+	GetNodeNetworkTransmit(ctx context.Context, projectId, clusterId, ip string, start, end time.Time,
+		step time.Duration) ([]*prompb.TimeSeries, error)
+	GetNodeNetworkReceive(ctx context.Context, projectId, clusterId, ip string, start, end time.Time,
+		step time.Duration) ([]*prompb.TimeSeries, error)
+	GetNodePodCount(ctx context.Context, projectId, clusterId, ip string, start, end time.Time,
+		step time.Duration) ([]*prompb.TimeSeries, error)
+	GetNodeContainerCount(ctx context.Context, projectId, clusterId, ip string, start, end time.Time,
+		step time.Duration) ([]*prompb.TimeSeries, error)
+	GetPodCPUUsage(ctx context.Context, projectId, clusterId, namespace string, podNameList []string, start, end time.Time,
+		step time.Duration) ([]*prompb.TimeSeries, error)
+	GetPodMemoryUsed(ctx context.Context, projectId, clusterId, namespace string, podNameList []string, start,
+		end time.Time, step time.Duration) ([]*prompb.TimeSeries, error)
+	GetPodNetworkReceive(ctx context.Context, projectId, clusterId, namespace string, podNameList []string, start,
+		end time.Time, step time.Duration) ([]*prompb.TimeSeries, error)
+	GetPodNetworkTransmit(ctx context.Context, projectId, clusterId, namespace string, podNameList []string, start,
+		end time.Time, step time.Duration) ([]*prompb.TimeSeries, error)
+	GetContainerCPUUsage(ctx context.Context, projectId, clusterId, namespace, podname string, containerNameList []string,
+		start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error)
+	GetContainerMemoryUsed(ctx context.Context, projectId, clusterId, namespace, podname string,
+		containerNameList []string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error)
+	GetContainerCPULimit(ctx context.Context, projectId, clusterId, namespace, podname string, containerNameList []string,
+		start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error)
+	GetContainerMemoryLimit(ctx context.Context, projectId, clusterId, namespace, podname string,
+		containerNameList []string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error)
+	GetContainerDiskReadTotal(ctx context.Context, projectId, clusterId, namespace, podname string,
+		containerNameList []string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error)
+	GetContainerDiskWriteTotal(ctx context.Context, projectId, clusterId, namespace, podname string,
+		containerNameList []string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error)
 }
 
 // GetNodeMatch 按集群node节点正则匹配
-func GetNodeMatch(ctx context.Context, clusterId string) (string, error) {
+func GetNodeMatch(ctx context.Context, clusterId string, withRegex bool) (string, error) {
 	nodeList, err := k8sclient.GetNodeList(ctx, clusterId, true)
 	if err != nil {
 		return "", err
@@ -38,8 +123,11 @@ func GetNodeMatch(ctx context.Context, clusterId string) (string, error) {
 
 	instanceList := make([]string, 0, len(nodeList))
 	for _, node := range nodeList {
-		instanceList = append(instanceList, node+`:.*`)
-
+		if withRegex {
+			instanceList = append(instanceList, node+`:.*`)
+		} else {
+			instanceList = append(instanceList, node)
+		}
 	}
 	return strings.Join(instanceList, "|"), nil
 }
@@ -68,4 +156,24 @@ func MatrixToSeries(matrix model.Matrix) []*prompb.TimeSeries {
 		series = append(series, sampleStreamToSeries(m))
 	}
 	return series
+}
+
+// GetFirstValue 获取第一个值
+func GetFirstValue(vector model.Vector) string {
+	if len(vector) == 0 {
+		return "0"
+	}
+	return vector[0].Value.String()
+}
+
+// GetLabelSet 获取第一个值的labels
+func GetLabelSet(vector model.Vector) map[string]string {
+	labelSet := map[string]string{}
+	if len(vector) == 0 {
+		return labelSet
+	}
+	for k, v := range vector[0].Metric {
+		labelSet[string(k)] = string(v)
+	}
+	return labelSet
 }

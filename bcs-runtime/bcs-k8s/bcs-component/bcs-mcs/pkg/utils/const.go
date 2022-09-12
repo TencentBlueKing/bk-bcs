@@ -19,16 +19,27 @@ const (
 	// EndpointsSliceResourceName is the name of the endpoints resource
 	EndpointsSliceResourceName = "endpointslices"
 
+	// ServiceExportKind TODO
 	ServiceExportKind = "ServiceExport"
+	// ServiceImportKind TODO
 	ServiceImportKind = "ServiceImport"
+	// EndpointSliceKind TODO
 	EndpointSliceKind = "EndpointSlice"
 
-	ConfigGroupLabel     = "mcs.bkbcs.tencent.com/config.group"
-	ConfigVersionLabel   = "mcs.bkbcs.tencent.com/config.version"
-	ConfigKindLabel      = "mcs.bkbcs.tencent.com/config.kind"
-	ConfigNameLabel      = "mcs.bkbcs.tencent.com/config.name"
+	// ConfigGroupLabel TODO
+	ConfigGroupLabel = "mcs.bkbcs.tencent.com/config.group"
+	// ConfigVersionLabel TODO
+	ConfigVersionLabel = "mcs.bkbcs.tencent.com/config.version"
+	// ConfigKindLabel TODO
+	ConfigKindLabel = "mcs.bkbcs.tencent.com/config.kind"
+	// ConfigNameLabel TODO
+	ConfigNameLabel = "mcs.bkbcs.tencent.com/config.name"
+	// ConfigNamespaceLabel TODO
 	ConfigNamespaceLabel = "mcs.bkbcs.tencent.com/config.namespace"
-	ConfigUIDLabel       = "mcs.bkbcs.tencent.com/config.uid"
-	ConfigClusterLabel   = "mcs.bkbcs.tencent.com/config.cluster"
-	ConfigCreatedBy      = "mcs.bkbcs.tencent.com/created-by"
+	// ConfigUIDLabel TODO
+	ConfigUIDLabel = "mcs.bkbcs.tencent.com/config.uid"
+	// ConfigClusterLabel TODO
+	ConfigClusterLabel = "mcs.bkbcs.tencent.com/config.cluster"
+	// ConfigCreatedBy TODO
+	ConfigCreatedBy = "mcs.bkbcs.tencent.com/created-by"
 )

@@ -42,6 +42,7 @@ type cmManager struct {
 	gatewayToken string
 }
 
+// NewCmManager xxx
 func NewCmManager(cmHost, gatewayToken string) CmManager {
 
 	httpCli := httpclient.NewHttpClient()
@@ -170,11 +171,12 @@ func (c *cmManager) findClusterNode(clustersID string) ([]bcsNodeListData, error
 	return resp, nil
 }
 
-//method=http.method: POST、GET、PUT、DELETE
-//request url = address/url
-//payload is request body
-//if error!=nil, then request mesos failed, errom.Error() is failed message
-//if error==nil, []byte is response body information
+// requestApiServer xxx
+// method=http.method: POST、GET、PUT、DELETE
+// request url = address/url
+// payload is request body
+// if error!=nil, then request mesos failed, errom.Error() is failed message
+// if error==nil, []byte is response body information
 func (c *cmManager) requestApiServer(method, url string, payload []byte) ([]byte, error) {
 
 	var err error
@@ -197,13 +199,13 @@ func (c *cmManager) requestApiServer(method, url string, payload []byte) ([]byte
 		return nil, err
 	}
 
-	//unmarshal response.body
+	// unmarshal response.body
 	var result *commtypes.APIResponse
 	err = json.Unmarshal(by, &result)
 	if err != nil {
 		return nil, fmt.Errorf("unmarshal body(%s) failed: %s", string(by), err.Error())
 	}
-	//if result.Result==false, then request failed
+	// if result.Result==false, then request failed
 	if !result.Result {
 		return nil, fmt.Errorf("request %s failed: %s", url, result.Message)
 	}

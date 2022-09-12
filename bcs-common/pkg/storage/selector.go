@@ -18,15 +18,15 @@ import (
 	"strings"
 )
 
-//Selector is a filter when reading data from event-storage
-//if data object is matched, object will push to watch tunnel
+// Selector is a filter when reading data from event-storage
+// if data object is matched, object will push to watch tunnel
 type Selector interface {
 	String() string
 	Matchs(obj meta.Object) (bool, error)
 	MatchList(objs []meta.Object) ([]meta.Object, error)
 }
 
-//NewSelectors create multiple selector
+// NewSelectors create multiple selector
 func NewSelectors(s ...Selector) Selector {
 	ss := &Selectors{}
 	for _, se := range s {
@@ -41,12 +41,12 @@ func NewSelectors(s ...Selector) Selector {
 	return ss
 }
 
-//Selectors compose multiple Selector
+// Selectors compose multiple Selector
 type Selectors struct {
 	list []Selector
 }
 
-//String match string
+// String match string
 func (ss *Selectors) String() string {
 	var strs []string
 	for _, s := range ss.list {
@@ -55,7 +55,7 @@ func (ss *Selectors) String() string {
 	return strings.Join(strs, "|")
 }
 
-//Matchs match object
+// Matchs match object
 func (ss *Selectors) Matchs(obj meta.Object) (bool, error) {
 	if obj == nil {
 		return false, nil
@@ -73,7 +73,7 @@ func (ss *Selectors) Matchs(obj meta.Object) (bool, error) {
 	return true, nil
 }
 
-//MatchList match object list
+// MatchList match object list
 func (ss *Selectors) MatchList(objs []meta.Object) ([]meta.Object, error) {
 	var targets []meta.Object
 	for _, obj := range objs {
@@ -84,15 +84,15 @@ func (ss *Selectors) MatchList(objs []meta.Object) ([]meta.Object, error) {
 	return targets, nil
 }
 
-//Everything filter nothing
+// Everything filter nothing
 type Everything struct{}
 
-//String match string
+// String match string
 func (e *Everything) String() string {
 	return "Everything"
 }
 
-//Matchs match object
+// Matchs match object
 func (e *Everything) Matchs(obj meta.Object) (bool, error) {
 	if obj == nil {
 		return false, nil
@@ -100,12 +100,12 @@ func (e *Everything) Matchs(obj meta.Object) (bool, error) {
 	return true, nil
 }
 
-//MatchList match object list
+// MatchList match object list
 func (e *Everything) MatchList(objs []meta.Object) ([]meta.Object, error) {
 	return objs, nil
 }
 
-//LabelAsSelector create selector from labels
+// LabelAsSelector create selector from labels
 func LabelAsSelector(l meta.Labels) Selector {
 	if l != nil {
 		return &LabelSelector{
@@ -115,19 +115,19 @@ func LabelAsSelector(l meta.Labels) Selector {
 	return &Everything{}
 }
 
-//LabelSelector implements selector interface with Labels
+// LabelSelector implements selector interface with Labels
 type LabelSelector struct {
 	labels meta.Labels
 }
 
-//String match string
+// String match string
 func (ls *LabelSelector) String() string {
-	//modified by marsjma
-	//return ls.labels.String()
+	// modified by marsjma
+	// return ls.labels.String()
 	return "labelSelector=" + ls.labels.String()
 }
 
-//Matchs match object
+// Matchs match object
 func (ls *LabelSelector) Matchs(obj meta.Object) (bool, error) {
 	if obj == nil {
 		return false, nil
@@ -143,7 +143,7 @@ func (ls *LabelSelector) Matchs(obj meta.Object) (bool, error) {
 	return matched, nil
 }
 
-//MatchList match object list
+// MatchList match object list
 func (ls *LabelSelector) MatchList(objs []meta.Object) ([]meta.Object, error) {
 	var targets []meta.Object
 	for _, obj := range objs {
@@ -154,17 +154,17 @@ func (ls *LabelSelector) MatchList(objs []meta.Object) ([]meta.Object, error) {
 	return targets, nil
 }
 
-//NamespaceSelector select expected namespace
+// NamespaceSelector select expected namespace
 type NamespaceSelector struct {
 	Namespace string
 }
 
-//String match string
+// String match string
 func (ns *NamespaceSelector) String() string {
 	return ns.Namespace
 }
 
-//Matchs match object
+// Matchs match object
 func (ns *NamespaceSelector) Matchs(obj meta.Object) (bool, error) {
 	if obj == nil {
 		return false, nil
@@ -176,7 +176,7 @@ func (ns *NamespaceSelector) Matchs(obj meta.Object) (bool, error) {
 	return false, nil
 }
 
-//MatchList match object list
+// MatchList match object list
 func (ns *NamespaceSelector) MatchList(objs []meta.Object) ([]meta.Object, error) {
 	var targets []meta.Object
 	for _, obj := range objs {

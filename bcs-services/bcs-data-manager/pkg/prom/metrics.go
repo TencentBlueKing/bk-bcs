@@ -37,6 +37,7 @@ const (
 	BkBcsClusterManager = "bcs_cluster_manager"
 )
 
+// InstanceIP xxx
 var InstanceIP string
 
 var (

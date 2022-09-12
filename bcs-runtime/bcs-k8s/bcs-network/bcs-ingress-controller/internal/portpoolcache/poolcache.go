@@ -20,7 +20,7 @@ import (
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
 )
 
-// Cache cache for ports in port pools
+// Cache for ports in port pools
 type Cache struct {
 	sync.Mutex
 	portPoolMap map[string]*CachePool
@@ -67,6 +67,9 @@ func (c *Cache) IsItemExisted(poolKey, poolItemKey string) bool {
 
 // AddPortPoolItem add port pool item to port pool
 func (c *Cache) AddPortPoolItem(poolKey string, itemStatus *networkextensionv1.PortPoolItemStatus) error {
+	// if itemStatus.Status != constant.PortPoolItemStatusReady {
+	// 	return fmt.Errorf("item %s in pool %s is not ready, cannot add to cache", itemStatus.GetKey(), poolKey)
+	// }
 	if _, ok := c.portPoolMap[poolKey]; !ok {
 		c.portPoolMap[poolKey] = NewCachePool(poolKey)
 	}

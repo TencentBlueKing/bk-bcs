@@ -24,73 +24,86 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-mesos/bcs-scheduler/src/manager/store"
 )
 
-//A SchedManager is a struct Scheduler, it is responsible for interacting with struct
-//Offer.
+// SchedManager xxx
+// A SchedManager is a struct Scheduler, it is responsible for interacting with struct
+// Offer.
 type SchedManager interface {
-	//GetHostAttributes is used to get variable mesos slave's attributes.
-	//Examples for ip-resources, netflow.
-	//If slave don't have variable attributes, it return nil
+	// GetHostAttributes is used to get variable mesos slave's attributes.
+	// Examples for ip-resources, netflow.
+	// If slave don't have variable attributes, it return nil
 	GetHostAttributes(*typesplugin.HostPluginParameter) (map[string]*typesplugin.HostAttributes, error)
 
-	//FetchAgentSetting is used to get user custom mesos slave's attributes.
-	//input is slave's ip
+	// FetchAgentSetting is used to get user custom mesos slave's attributes.
+	// input is slave's ip
 	FetchAgentSetting(string) (*commtype.BcsClusterAgentSetting, error)
 
-	//FetchAgentSchedInfo is used to get agent DeltaCPU, DeltaDisk, DeltaMem
-	//input is slave's hostname
+	// FetchAgentSchedInfo is used to get agent DeltaCPU, DeltaDisk, DeltaMem
+	// input is slave's hostname
 	FetchAgentSchedInfo(string) (*types.AgentSchedInfo, error)
 
-	//Get mesos cluster id
+	// GetClusterId xxx
+	// Get mesos cluster id
 	GetClusterId() string
 
-	//decline mesos slave's offer, mesos will resubmit this offer after a few
-	//seconds.
-	//input is mesos offer's id
+	// DeclineResource xxx
+	// decline mesos slave's offer, mesos will resubmit this offer after a few
+	// seconds.
+	// input is mesos offer's id
 	DeclineResource(*string) (*http.Response, error)
 
-	//fetch taskgroup
+	// FetchTaskGroup xxx
+	// fetch taskgroup
 	FetchTaskGroup(taskGroupID string) (*types.TaskGroup, error)
 
-	//update mesos agents
+	// UpdateMesosAgents xxx
+	// update mesos agents
 	UpdateMesosAgents()
 }
 
-//OfferPool is mesos offer pool, it is responsible for the managements of the mesos's offers.
-//OfferPool maintains an ordered list of offers, we can use it by the following functions.
+// OfferPool is mesos offer pool, it is responsible for the managements of the mesos's offers.
+// OfferPool maintains an ordered list of offers, we can use it by the following functions.
 type OfferPool interface {
-	//get the first offer from the offer pool.
-	//if the offer pool don't have offer,it return nil
+	// GetFirstOffer xxx
+	// get the first offer from the offer pool.
+	// if the offer pool don't have offer,it return nil
 	GetFirstOffer() *Offer
 
-	//get the specified offer's next offer.
-	//if the offer don't have next offer,it return nil
+	// GetNextOffer xxx
+	// get the specified offer's next offer.
+	// if the offer don't have next offer,it return nil
 	GetNextOffer(*Offer) *Offer
 
-	//get all valid offers at the moment
+	// GetAllOffers xxx
+	// get all valid offers at the moment
 	GetAllOffers() []*Offer
 
-	//the offer list is a sequence sorted by id.
-	//this function can return the repecified id's next offer.
-	//if not have, it return nil
-	//GetOfferGreaterThan(id int64) *Offer
+	// the offer list is a sequence sorted by id.
+	// this function can return the repecified id's next offer.
+	// if not have, it return nil
+	// GetOfferGreaterThan(id int64) *Offer
 
-	//scheduler can use the offer by function UseOffer.
-	//offer pool don't manage the offer after scheduler use it.
-	//at concurrency,it is possible that multiple threads will use the same offer.
-	//so only return true, indicating use the offer successful.
+	// UseOffer xxx
+	// scheduler can use the offer by function UseOffer.
+	// offer pool don't manage the offer after scheduler use it.
+	// at concurrency,it is possible that multiple threads will use the same offer.
+	// so only return true, indicating use the offer successful.
 	UseOffer(*Offer) bool
 
-	//add mesos's offers in offer pool
+	// AddOffers xxx
+	// add mesos's offers in offer pool
 	AddOffers([]*mesos.Offer) error
 
-	//when mesos slave lost, the slave need grace period to recover after re-registration.
-	//so sign the lost slave, it's offer is invalid for the moment
+	// AddLostSlave xxx
+	// when mesos slave lost, the slave need grace period to recover after re-registration.
+	// so sign the lost slave, it's offer is invalid for the moment
 	AddLostSlave(string)
 
-	//get offer pool's length
+	// GetOffersLength xxx
+	// get offer pool's length
 	GetOffersLength() int
 }
 
+// Offer xxx
 type Offer struct {
 	// offer id, int64
 	Id int64
@@ -99,7 +112,7 @@ type Offer struct {
 	offerId  string
 	hostname string
 
-	//mesos slave offer
+	// mesos slave offer
 	Offer *mesos.Offer
 
 	DeltaCPU  float64
@@ -107,19 +120,20 @@ type Offer struct {
 	DeltaDisk float64
 }
 
-//NewOfferPool's input parameter.
+// OfferPara xxx
+// NewOfferPool's input parameter.
 type OfferPara struct {
 	// struct SchedManager
 	Sched SchedManager
 
-	//LostSlaveGracePeriod
-	//if you don't specify, it will the const DefaultLostSlaveGracePeriod
+	// LostSlaveGracePeriod
+	// if you don't specify, it will the const DefaultLostSlaveGracePeriod
 	LostSlaveGracePeriod int
 
-	//DefaultLostSlaveGracePeriod
-	//if you don't specify, it will the const DefaultOfferLifePeriod
+	// DefaultLostSlaveGracePeriod
+	// if you don't specify, it will the const DefaultOfferLifePeriod
 	OfferlifePeriod int
 
-	//store
+	// store
 	Store store.Store
 }

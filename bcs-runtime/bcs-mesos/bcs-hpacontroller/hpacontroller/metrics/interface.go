@@ -22,12 +22,14 @@ import (
 // TaskgroupMetric contains pod metric value (the metric values are expected to be the metric as a milli-value)
 type TaskgroupMetric struct {
 	Timestamp time.Time
-	Window    int //seconds
+	Window    int // seconds
 	Value     float32
 }
 
 const (
-	TaskgroupResourcesCpuMetricsName    = "cpu"
+	// TaskgroupResourcesCpuMetricsName TODO
+	TaskgroupResourcesCpuMetricsName = "cpu"
+	// TaskgroupResourcesMemoryMetricsName TODO
 	TaskgroupResourcesMemoryMetricsName = "memory"
 )
 
@@ -36,10 +38,12 @@ type TaskgroupMetricsInfo map[string]TaskgroupMetric
 
 // MetricsController collect external metrics or taskgroup resource metrics
 type MetricsController interface {
-	//start to collect scaler metrics
+	// StartScalerMetrics TODO
+	// start to collect scaler metrics
 	StartScalerMetrics(scaler *commtypes.BcsAutoscaler)
 
-	//stop to collect scaler metrics
+	// StopScalerMetrics TODO
+	// stop to collect scaler metrics
 	StopScalerMetrics(scaler *commtypes.BcsAutoscaler)
 
 	// GetResourceMetric gets the given resource metric (and an associated oldest timestamp)

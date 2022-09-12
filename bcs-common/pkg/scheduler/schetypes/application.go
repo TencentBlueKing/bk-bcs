@@ -23,7 +23,7 @@ import (
 	mesos_master "github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/mesosproto/mesos/master"
 )
 
-//executor or task default resources limits
+// executor or task default resources limits
 const (
 	CPUS_PER_EXECUTOR = 0.01
 	CPUS_PER_TASK     = 1
@@ -44,7 +44,7 @@ const (
 	OPERATION_UPDATE     = "UPDATE"
 )
 
-//operation status
+// operation status
 const (
 	OPERATION_STATUS_INIT    = "INIT"
 	OPERATION_STATUS_FINISH  = "FINISH"
@@ -57,7 +57,7 @@ const (
 	Ext_TaskState_TASK_RESTARTING int32 = 101
 )
 
-//daemonset status
+// daemonset status
 const (
 	Daemonset_Status_Starting = "Starting"
 	Daemonset_Status_Running  = "Running"
@@ -65,7 +65,7 @@ const (
 	Daemonset_Status_Deleting = "Deleting"
 )
 
-//app status
+// app status
 const (
 	APP_STATUS_STAGING       = "Staging"
 	APP_STATUS_DEPLOYING     = "Deploying"
@@ -78,20 +78,20 @@ const (
 	APP_STATUS_ABNORMAL      = "Abnormal"
 )
 
-//app status
+// app status
 const (
 	APP_STATUS_RUNNING_STR  = "application is running"
 	APP_STATUS_ABNORMAL_STR = "application is abnormal"
 )
 
-//app substatus
+// app substatus
 const (
 	APP_SUBSTATUS_UNKNOWN            = "Unknown"
 	APP_SUBSTATUS_ROLLINGUPDATE_DOWN = "RollingUpdateDown"
 	APP_SUBSTATUS_ROLLINGUPDATE_UP   = "RollingUpdateUp"
 )
 
-//task status
+// task status
 const (
 	TASK_STATUS_STAGING  = "Staging"
 	TASK_STATUS_STARTING = "Starting"
@@ -108,7 +108,7 @@ const (
 	TASK_STATUS_UNKOWN = "Unknown"
 )
 
-//taskgroup status
+// taskgroup status
 const (
 	TASKGROUP_STATUS_STAGING  = "Staging"
 	TASKGROUP_STATUS_STARTING = "Starting"
@@ -126,32 +126,49 @@ const (
 )
 
 const (
-	TASK_TEMPLATE_KEY_FORMAT      = "${%s}"
+	// TASK_TEMPLATE_KEY_FORMAT xxx
+	TASK_TEMPLATE_KEY_FORMAT = "${%s}"
+	// TASK_TEMPLATE_KEY_PORT_FORMAT xxx
 	TASK_TEMPLATE_KEY_PORT_FORMAT = "ports.%s"
+	// TASK_TEMPLATE_KEY_PROCESSNAME xxx
 	TASK_TEMPLATE_KEY_PROCESSNAME = "processname"
-	TASK_TEMPLATE_KEY_INSTANCEID  = "instanceid"
-	TASK_TEMPLATE_KEY_HOSTIP      = "hostip"
-	TASK_TEMPLATE_KEY_NAMESPACE   = "namespace"
-	TASK_TEMPLATE_KEY_WORKPATH    = "workPath"
-	TASK_TEMPLATE_KEY_PIDFILE     = "pidFile"
+	// TASK_TEMPLATE_KEY_INSTANCEID xxx
+	TASK_TEMPLATE_KEY_INSTANCEID = "instanceid"
+	// TASK_TEMPLATE_KEY_HOSTIP xxx
+	TASK_TEMPLATE_KEY_HOSTIP = "hostip"
+	// TASK_TEMPLATE_KEY_NAMESPACE xxx
+	TASK_TEMPLATE_KEY_NAMESPACE = "namespace"
+	// TASK_TEMPLATE_KEY_WORKPATH xxx
+	TASK_TEMPLATE_KEY_WORKPATH = "workPath"
+	// TASK_TEMPLATE_KEY_PIDFILE xxx
+	TASK_TEMPLATE_KEY_PIDFILE = "pidFile"
 )
 
 const (
-	APP_TASK_TEMPLATE_KEY_FORMAT      = "${%s}"
+	// APP_TASK_TEMPLATE_KEY_FORMAT xxx
+	APP_TASK_TEMPLATE_KEY_FORMAT = "${%s}"
+	// APP_TASK_TEMPLATE_KEY_PORT_FORMAT xxx
 	APP_TASK_TEMPLATE_KEY_PORT_FORMAT = "bcs.ports.%s"
-	APP_TASK_TEMPLATE_KEY_APPNAME     = "bcs.appname"
-	APP_TASK_TEMPLATE_KEY_INSTANCEID  = "bcs.instanceid"
-	APP_TASK_TEMPLATE_KEY_HOSTIP      = "bcs.hostip"
-	APP_TASK_TEMPLATE_KEY_NAMESPACE   = "bcs.namespace"
-	APP_TASK_TEMPLATE_KEY_PODID       = "bcs.taskgroupid"
-	APP_TASK_TEMPLATE_KEY_PODNAME     = "bcs.taskgroupname"
+	// APP_TASK_TEMPLATE_KEY_APPNAME xxx
+	APP_TASK_TEMPLATE_KEY_APPNAME = "bcs.appname"
+	// APP_TASK_TEMPLATE_KEY_INSTANCEID xxx
+	APP_TASK_TEMPLATE_KEY_INSTANCEID = "bcs.instanceid"
+	// APP_TASK_TEMPLATE_KEY_HOSTIP xxx
+	APP_TASK_TEMPLATE_KEY_HOSTIP = "bcs.hostip"
+	// APP_TASK_TEMPLATE_KEY_NAMESPACE xxx
+	APP_TASK_TEMPLATE_KEY_NAMESPACE = "bcs.namespace"
+	// APP_TASK_TEMPLATE_KEY_PODID xxx
+	APP_TASK_TEMPLATE_KEY_PODID = "bcs.taskgroupid"
+	// APP_TASK_TEMPLATE_KEY_PODNAME xxx
+	APP_TASK_TEMPLATE_KEY_PODNAME = "bcs.taskgroupname"
 )
 
 const (
+	// MesosAttributeNoSchedule xxx
 	MesosAttributeNoSchedule = "NoSchedule"
 )
 
-//Version for api resources application or deployment
+// Version for api resources application or deployment
 type Version struct {
 	ID            string
 	Name          string
@@ -160,7 +177,7 @@ type Version struct {
 	Instances     int32
 	RunAs         string
 	Container     []*Container
-	//add  20180802
+	// add  20180802
 	Process       []*commtypes.Process
 	Labels        map[string]string
 	KillPolicy    *commtypes.KillPolicy
@@ -191,12 +208,13 @@ func (in *Version) DeepCopy() *Version {
 	return out
 }
 
+// GetExtendedResources xxx
 func (in *Version) GetExtendedResources() map[string]*commtypes.ExtendedResource {
 	ers := make(map[string]*commtypes.ExtendedResource)
 	for _, c := range in.Container {
 		for _, ex := range c.DataClass.ExtendedResources {
 			o := ers[ex.Name]
-			//if extended resources already exist, then superposition
+			// if extended resources already exist, then superposition
 			if o != nil {
 				o.Value += ex.Value
 			} else {
@@ -207,15 +225,15 @@ func (in *Version) GetExtendedResources() map[string]*commtypes.ExtendedResource
 	return ers
 }
 
-//Resource describe resources needed by a task
+// Resource describe resources needed by a task
 type Resource struct {
-	//cpu核数
+	// cpu核数
 	Cpus float64
-	//MB
+	// MB
 	Mem  float64
 	Disk float64
-	//IOTps  uint32 //default times per second
-	//IOBps  uint32 //default MB/s
+	// IOTps  uint32 //default times per second
+	// IOBps  uint32 //default MB/s
 }
 
 // DeepCopyInto is an autogenerated deepcopy function, copying the receiver, writing into out. in must be non-nil.
@@ -234,7 +252,7 @@ func (in *Resource) DeepCopy() *Resource {
 	return out
 }
 
-//CheckAndDefaultResource check the resource of each container, if no resource, set default value
+// CheckAndDefaultResource check the resource of each container, if no resource, set default value
 func (version *Version) CheckAndDefaultResource() error {
 	switch version.Kind {
 	case commtypes.BcsDataType_PROCESS:
@@ -269,7 +287,8 @@ func (version *Version) CheckAndDefaultResource() error {
 	return nil
 }
 
-//check application constraints whether is valid
+// CheckConstraints xxx
+// check application constraints whether is valid
 func (version *Version) CheckConstraints() bool {
 	if version.Constraints == nil {
 		return true
@@ -305,7 +324,7 @@ func (version *Version) CheckConstraints() bool {
 	return true
 }
 
-//AllCpus return taskgroup will use cpu resources
+// AllCpus return taskgroup will use cpu resources
 func (version *Version) AllCpus() float64 {
 	var allCpus float64
 	allCpus = 0
@@ -325,7 +344,7 @@ func (version *Version) AllCpus() float64 {
 	return allCpus
 }
 
-//AllMems return taskgroup will use memory resource
+// AllMems return taskgroup will use memory resource
 func (version *Version) AllMems() float64 {
 	var allMem float64
 	allMem = 0
@@ -344,7 +363,7 @@ func (version *Version) AllMems() float64 {
 	return allMem + float64(MEM_PER_EXECUTOR)
 }
 
-//AllDisk return taskgroup will use disk resources
+// AllDisk return taskgroup will use disk resources
 func (version *Version) AllDisk() float64 {
 	var allDisk float64
 	allDisk = 0
@@ -363,7 +382,7 @@ func (version *Version) AllDisk() float64 {
 	return allDisk + float64(DISK_PER_EXECUTOR)
 }
 
-//AllResource return  taskgroup used cpu, memory, disk resources
+// AllResource return  taskgroup used cpu, memory, disk resources
 func (version *Version) AllResource() *Resource {
 	return &Resource{
 		Cpus: version.AllCpus(),
@@ -372,14 +391,14 @@ func (version *Version) AllResource() *Resource {
 	}
 }
 
-//Container for Version
+// Container for Version
 type Container struct {
 	Type          string
 	Docker        *Docker
 	Volumes       []*Volume
 	Resources     *Resource
 	LimitResoures *Resource
-	//ExtendedResources []*commtypes.ExtendedResource
+	// ExtendedResources []*commtypes.ExtendedResource
 	DataClass *DataClass
 
 	ConfigMaps []commtypes.ConfigMap
@@ -387,11 +406,11 @@ type Container struct {
 
 	HealthChecks []*commtypes.HealthCheck
 
-	//network flow limit
+	// network flow limit
 	NetLimit *commtypes.NetLimit
 }
 
-//Docker for container
+// Docker for container
 type Docker struct {
 	Hostname        string
 	ForcePullImage  bool
@@ -408,13 +427,13 @@ type Docker struct {
 	Privileged      bool
 }
 
-//Parameter for container
+// Parameter for container
 type Parameter struct {
 	Key   string
 	Value string
 }
 
-//PortMapping for container
+// PortMapping for container
 type PortMapping struct {
 	ContainerPort int32
 	HostPort      int32
@@ -422,15 +441,15 @@ type PortMapping struct {
 	Protocol      string
 }
 
-//Volume for container
+// Volume for container
 type Volume struct {
 	ContainerPath string
 	HostPath      string
 	Mode          string
 }
 
-//HealthCheck
-//type HealthCheck struct {
+// HealthCheck
+// type HealthCheck struct {
 //	ID                     string
 //	Address                string
 //	TaskID                 string
@@ -447,14 +466,14 @@ type Volume struct {
 //	TimeoutSeconds         float64
 //	DelaySeconds           float64
 //	ConsecutiveFailures    uint32
-//}
+// }
 
-//Command
+// Command xxx
 type Command struct {
 	Value string
 }
 
-//Task
+// Task xxx
 type Task struct {
 	Kind            commtypes.BcsDataType
 	ID              string
@@ -475,7 +494,7 @@ type Task struct {
 	Env             map[string]string
 	Labels          map[string]string
 	DataClass       *DataClass
-	//whether cpuset
+	// whether cpuset
 	Cpuset       bool
 	HealthChecks []*commtypes.HealthCheck
 	// health check status
@@ -499,7 +518,7 @@ type Task struct {
 	Uris           []string
 	LastUpdateTime int64
 	Message        string
-	//network flow limit
+	// network flow limit
 	NetLimit *commtypes.NetLimit
 	// Populated by the system.
 	// Read-only.
@@ -507,7 +526,8 @@ type Task struct {
 	ResourceVersion string `json:"-"`
 }
 
-//get taskgroup allocated node ip
+// GetAgentIp xxx
+// get taskgroup allocated node ip
 func (t *TaskGroup) GetAgentIp() string {
 	if len(t.Taskgroup) == 0 {
 		return ""
@@ -516,18 +536,19 @@ func (t *TaskGroup) GetAgentIp() string {
 	return t.Taskgroup[0].AgentIPAddress
 }
 
-//return namespace, appid
+// GetRunAsAndAppIDbyTaskID xxx
+// return namespace, appid
 func GetRunAsAndAppIDbyTaskID(taskId string) (string, string) {
 	appID := ""
 	runAs := ""
 
 	szSplit := strings.Split(taskId, ".")
-	//RunAs
+	// RunAs
 	if len(szSplit) >= 6 {
 		runAs = szSplit[4]
 	}
 
-	//appID
+	// appID
 	if len(szSplit) >= 6 {
 		appID = szSplit[3]
 	}
@@ -535,7 +556,8 @@ func GetRunAsAndAppIDbyTaskID(taskId string) (string, string) {
 	return runAs, appID
 }
 
-//return taskgroupId by taskid
+// GetTaskGroupID xxx
+// return taskgroupId by taskid
 func GetTaskGroupID(taskID string) string {
 
 	splitID := strings.Split(taskID, ".")
@@ -658,7 +680,7 @@ func (in *Task) DeepCopy() *Task {
 	return out
 }
 
-// taskgroup describes the implements of multiple tasks
+// TaskGroup describes the implements of multiple tasks
 type TaskGroup struct {
 	Kind            commtypes.BcsDataType
 	ID              string
@@ -681,15 +703,15 @@ type TaskGroup struct {
 	UpdateTime      int64
 	ReschededTimes  int
 	LastReschedTime int64
-	//we should replace the next three BcsXXX, using ObjectMeta.Labels directly
-	//BcsAppID       string
-	//BcsSetID       string
-	//BcsModuleID    string
+	// we should replace the next three BcsXXX, using ObjectMeta.Labels directly
+	// BcsAppID       string
+	// BcsSetID       string
+	// BcsModuleID    string
 	HostName       string
 	Message        string
 	LaunchResource *Resource
 	CurrResource   *Resource
-	//BcsMessages map[int64]*BcsMessage
+	// BcsMessages map[int64]*BcsMessage
 	BcsEventMsg *BcsMessage
 	// Populated by the system.
 	// Read-only.
@@ -697,12 +719,13 @@ type TaskGroup struct {
 	ResourceVersion string `json:"-"`
 }
 
+// GetExtendedResources xxx
 func (in *TaskGroup) GetExtendedResources() map[string]*commtypes.ExtendedResource {
 	ers := make(map[string]*commtypes.ExtendedResource)
 	for _, task := range in.Taskgroup {
 		for _, ex := range task.DataClass.ExtendedResources {
 			o := ers[ex.Name]
-			//if extended resources already exist, then superposition
+			// if extended resources already exist, then superposition
 			if o != nil {
 				o.Value += ex.Value
 			} else {
@@ -713,18 +736,19 @@ func (in *TaskGroup) GetExtendedResources() map[string]*commtypes.ExtendedResour
 	return ers
 }
 
+// GetRunAsAndAppIDbyTaskGroupID xxx
 // return namespace, appid
 func GetRunAsAndAppIDbyTaskGroupID(taskGroupId string) (string, string) {
 	appID := ""
 	runAs := ""
 
 	szSplit := strings.Split(taskGroupId, ".")
-	//RunAs
+	// RunAs
 	if len(szSplit) >= 3 {
 		runAs = szSplit[2]
 	}
 
-	//appID
+	// appID
 	if len(szSplit) >= 2 {
 		appID = szSplit[1]
 	}
@@ -769,7 +793,7 @@ func (in *TaskGroup) DeepCopyInto(out *TaskGroup) {
 		in, out := &in.BcsEventMsg, &out.BcsEventMsg
 		*out = (*in).DeepCopy()
 	}*/
-	//there are no externally modified fields, so deepCopy is not required
+	// there are no externally modified fields, so deepCopy is not required
 	/*if in.Attributes != nil {
 		in, out := &in.Attributes, &out.Attributes
 		*out = make([]*mesos.Attribute, len(*in))
@@ -797,7 +821,7 @@ func (in *TaskGroup) DeepCopy() *TaskGroup {
 	return out
 }
 
-//Application for container
+// Application for container
 type Application struct {
 	Kind             commtypes.BcsDataType
 	ID               string
@@ -815,10 +839,10 @@ type Application struct {
 	UpdateTime       int64
 	Mode             string
 	LastUpdateTime   int64
-	//we should replace the next three BcsXXX, using ObjectMeta.Labels directly
-	//BcsAppID    string
-	//BcsSetID    string
-	//BcsModuleID string
+	// we should replace the next three BcsXXX, using ObjectMeta.Labels directly
+	// BcsAppID    string
+	// BcsSetID    string
+	// BcsModuleID string
 	Message string
 	Pods    []*commtypes.BcsPodIndex
 	// Populated by the system.
@@ -826,9 +850,10 @@ type Application struct {
 	// Value must be treated as opaque by clients and .
 	ResourceVersion string `json:"-"`
 	// RC current original definition
-	//RawJson []byte `json:"raw_json,omitempty"`
+	// RawJson []byte `json:"raw_json,omitempty"`
 }
 
+// GetUuid xxx
 func (in *Application) GetUuid() string {
 	uuid := fmt.Sprintf("%s.%s", in.RunAs, in.ID)
 	return uuid
@@ -863,7 +888,7 @@ func (in *Application) DeepCopy() *Application {
 	return out
 }
 
-//Operation for application
+// Operation for application
 type Operation struct {
 	ID             string
 	RunAs          string
@@ -875,10 +900,12 @@ type Operation struct {
 	ErrorStr       string
 }
 
+// OperationIndex xxx
 type OperationIndex struct {
 	Operation string
 }
 
+// Agent xxx
 // mesos slave info
 type Agent struct {
 	Key          string
@@ -915,9 +942,10 @@ func (in *Agent) DeepCopy() *Agent {
 	return out
 }
 
+// GetAgentInfo xxx
 func (om *Agent) GetAgentInfo() *commtypes.BcsClusterAgentInfo {
 	agent := new(commtypes.BcsClusterAgentInfo)
-	//blog.V(3).Infof("get agents: ===>agent[%d]: %+v", index, om.AgentInfo)
+	// blog.V(3).Infof("get agents: ===>agent[%d]: %+v", index, om.AgentInfo)
 	agent.HostName = om.AgentInfo.GetAgentInfo().GetHostname()
 
 	szSplit := strings.Split(om.AgentInfo.GetPid(), "@")
@@ -969,6 +997,7 @@ func (om *Agent) GetAgentInfo() *commtypes.BcsClusterAgentInfo {
 	return agent
 }
 
+// GetAgentIP xxx
 func (om *Agent) GetAgentIP() string {
 	if om.AgentInfo == nil || om.AgentInfo.AgentInfo == nil {
 		return ""
@@ -1046,6 +1075,7 @@ func mesosAttribute2commonAttribute(oldAttributeList []*mesos.Attribute) []*comm
 	return attributeList
 }
 
+// Check xxx
 type Check struct {
 	ID          string   `json:"id"`
 	Protocol    string   `json:"protocol"`
@@ -1061,6 +1091,7 @@ type Check struct {
 	AppID       string   `json:"app_id"`
 }
 
+// ProcDef xxx
 type ProcDef struct {
 	ProcName   string           `json:"procName"`
 	WorkPath   string           `json:"workPath"`
@@ -1078,16 +1109,17 @@ type ProcDef struct {
 	StartGracePeriod int `json:"startGracePeriod"`
 }
 
+// DataClass xxx
 type DataClass struct {
-	//resources request cpu\memory
+	// resources request cpu\memory
 	Resources *Resource
-	//resources limit cpu\memory
+	// resources limit cpu\memory
 	LimitResources *Resource
-	//extended resources, key=ExtendedResource.Name
+	// extended resources, key=ExtendedResource.Name
 	ExtendedResources []*commtypes.ExtendedResource
 	Msgs              []*BcsMessage
 	NetLimit          *commtypes.NetLimit
-	//add for proc 20180730
+	// add for proc 20180730
 	ProcInfo *ProcDef
 }
 
@@ -1179,6 +1211,7 @@ func (in *ProcDef) DeepCopy() *ProcDef {
 	return out
 }
 
+// DeploymentDef xxx
 type DeploymentDef struct {
 	ObjectMeta commtypes.ObjectMeta      `json:"metadata"`
 	Selector   map[string]string         `json:"selector,omitempty"`
@@ -1189,21 +1222,32 @@ type DeploymentDef struct {
 }
 
 const (
-	DEPLOYMENT_STATUS_DEPLOYING             = "Deploying"
-	DEPLOYMENT_STATUS_RUNNING               = "Running"
-	DEPLOYMENT_STATUS_ROLLINGUPDATE         = "Update"
-	DEPLOYMENT_STATUS_ROLLINGUPDATE_PAUSED  = "UpdatePaused"
+	// DEPLOYMENT_STATUS_DEPLOYING xxx
+	DEPLOYMENT_STATUS_DEPLOYING = "Deploying"
+	// DEPLOYMENT_STATUS_RUNNING xxx
+	DEPLOYMENT_STATUS_RUNNING = "Running"
+	// DEPLOYMENT_STATUS_ROLLINGUPDATE xxx
+	DEPLOYMENT_STATUS_ROLLINGUPDATE = "Update"
+	// DEPLOYMENT_STATUS_ROLLINGUPDATE_PAUSED xxx
+	DEPLOYMENT_STATUS_ROLLINGUPDATE_PAUSED = "UpdatePaused"
+	// DEPLOYMENT_STATUS_ROLLINGUPDATE_SUSPEND xxx
 	DEPLOYMENT_STATUS_ROLLINGUPDATE_SUSPEND = "UpdateSuspend"
-	DEPLOYMENT_STATUS_DELETING              = "Deleting"
-	DEPLOYMENT_STATUS_UPDATERESOURCE        = "UpdateResource"
+	// DEPLOYMENT_STATUS_DELETING xxx
+	DEPLOYMENT_STATUS_DELETING = "Deleting"
+	// DEPLOYMENT_STATUS_UPDATERESOURCE xxx
+	DEPLOYMENT_STATUS_UPDATERESOURCE = "UpdateResource"
 )
 
 const (
-	DEPLOYMENT_OPERATION_NIL    = ""
+	// DEPLOYMENT_OPERATION_NIL xxx
+	DEPLOYMENT_OPERATION_NIL = ""
+	// DEPLOYMENT_OPERATION_DELETE xxx
 	DEPLOYMENT_OPERATION_DELETE = "DELETE"
-	DEPLOYMENT_OPERATION_START  = "START"
+	// DEPLOYMENT_OPERATION_START xxx
+	DEPLOYMENT_OPERATION_START = "START"
 )
 
+// Deployment xxx
 type Deployment struct {
 	ObjectMeta      commtypes.ObjectMeta        `json:"metadata"`
 	Selector        map[string]string           `json:"selector,omitempty"`
@@ -1222,6 +1266,7 @@ type Deployment struct {
 	RawJsonBackup *commtypes.BcsDeployment `json:"raw_json_backup,omitempty"`
 }
 
+// DeploymentReferApplication xxx
 type DeploymentReferApplication struct {
 	ApplicationName         string `json:"name"`
 	CurrentTargetInstances  int    `json:"curr_target_instances"`
@@ -1270,6 +1315,7 @@ func (in *Deployment) DeepCopy() *Deployment {
 	return out
 }
 
+// AgentSchedInfo xxx
 type AgentSchedInfo struct {
 	HostName   string  `json:"host_name"`
 	DeltaCPU   float64 `json:"delta_cpu"`
@@ -1309,6 +1355,7 @@ func (in *AgentSchedInfo) DeepCopy() *AgentSchedInfo {
 	return out
 }
 
+// TaskGroupOpResult xxx
 type TaskGroupOpResult struct {
 	ID     string
 	Status string

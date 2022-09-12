@@ -20,18 +20,17 @@ type StoreProvider string
 
 // StoreConf :
 type StoreConf struct {
-	Type     StoreProvider `yaml:"type"`
-	GRPCPort int           `yaml:"grpc_port"`
-	Config   interface{}   `yaml:"config,omitempty"`
+	Type   StoreProvider `yaml:"type"`
+	Config interface{}   `yaml:"config,omitempty"`
 }
 
-// StoreGWConf
+// StoreGWConf :
 type StoreGWConf struct {
 	HTTP *EndpointConfig `yaml:"http" mapstructure:"http"`
 	GRPC *EndpointConfig `yaml:"grpc" mapstructure:"grpc"`
 }
 
-// Init
+// Init :
 func (s *StoreGWConf) Init() error {
 
 	s.HTTP = &EndpointConfig{

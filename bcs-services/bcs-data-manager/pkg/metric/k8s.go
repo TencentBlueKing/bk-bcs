@@ -86,7 +86,7 @@ func (g *MetricGetter) getK8sClusterMemoryMetrics(opts *types.JobCommonOpts,
 	return totalMemory, memoryRequest, memoryUsed, usage, nil
 }
 
-// GetK8sNodeCount get k8s node count
+// getK8sNodeCount get k8s node count
 func (g *MetricGetter) getK8sNodeCount(opts *types.JobCommonOpts,
 	clients *types.Clients) (int64, int64, error) {
 	var nodeCount, availableNode int64

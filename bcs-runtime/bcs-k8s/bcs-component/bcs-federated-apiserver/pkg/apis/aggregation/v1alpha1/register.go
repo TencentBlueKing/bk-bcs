@@ -26,7 +26,7 @@ const GroupName = "aggregation.federated.bkbcs.tencent.com"
 var SchemeGroupVersion = schema.GroupVersion{Group: GroupName, Version: "v1alpha1"}
 
 var (
-	// localSchemeBuilder and AddToScheme will stay in k8s.io/kubernetes.
+	// SchemeBuilder and AddToScheme will stay in k8s.io/kubernetes.
 	// SchemeBuilder is the scheme builder with scheme init functions to run for this API package
 	SchemeBuilder      runtime.SchemeBuilder
 	localSchemeBuilder = &SchemeBuilder
@@ -41,6 +41,7 @@ func init() {
 	localSchemeBuilder.Register(addKnownTypes, addDefaultingFuncs)
 }
 
+// addKnownTypes xxx
 // Adds the list of known types to the given scheme.
 func addKnownTypes(scheme *runtime.Scheme) error {
 	scheme.AddKnownTypes(SchemeGroupVersion)

@@ -192,10 +192,14 @@ func (metricsServer PrometheusMetricServer) RecordGPAScalerDesiredReplicas(names
 // RecordGPAReplicas record final replicas value for GPA
 func (metricsServer PrometheusMetricServer) RecordGPAReplicas(namespace string, name string, scaledObject string,
 	minReplicas, maxReplicas, desiredReplicas, currentReplicas int32) {
-	gpaMinReplicasValue.With(prometheus.Labels{"namespace": namespace, "name": name, "scaledObject": scaledObject}).Set(float64(minReplicas))
-	gpaMaxReplicasValue.With(prometheus.Labels{"namespace": namespace, "name": name, "scaledObject": scaledObject}).Set(float64(maxReplicas))
-	gpaDesiredReplicasValue.With(prometheus.Labels{"namespace": namespace, "name": name, "scaledObject": scaledObject}).Set(float64(desiredReplicas))
-	gpaCurrentReplicasValue.With(prometheus.Labels{"namespace": namespace, "name": name, "scaledObject": scaledObject}).Set(float64(currentReplicas))
+	gpaMinReplicasValue.With(prometheus.Labels{"namespace": namespace, "name": name, "scaledObject": scaledObject}).
+		Set(float64(minReplicas))
+	gpaMaxReplicasValue.With(prometheus.Labels{"namespace": namespace, "name": name, "scaledObject": scaledObject}).
+		Set(float64(maxReplicas))
+	gpaDesiredReplicasValue.With(prometheus.Labels{"namespace": namespace, "name": name, "scaledObject": scaledObject}).
+		Set(float64(desiredReplicas))
+	gpaCurrentReplicasValue.With(prometheus.Labels{"namespace": namespace, "name": name, "scaledObject": scaledObject}).
+		Set(float64(currentReplicas))
 }
 
 // RecordScalerExecDuration records duration by seconds when executing scaler.
@@ -252,5 +256,6 @@ func (metricsServer PrometheusMetricServer) RecordScalerObjectError(namespace st
 }
 
 func getLabels(namespace string, name string, scaledObject string, scaler string, metric string) prometheus.Labels {
-	return prometheus.Labels{"namespace": namespace, "name": name, "scaledObject": scaledObject, "scaler": scaler, "metric": metric}
+	return prometheus.Labels{"namespace": namespace, "name": name, "scaledObject": scaledObject, "scaler": scaler,
+		"metric": metric}
 }

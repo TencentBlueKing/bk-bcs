@@ -27,7 +27,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/discovery"
 )
 
-// APIServerCmd
+// APIServerCmd :
 func APIServerCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "api",

@@ -29,13 +29,14 @@ func GenManifestName(resourceType string, namespace, name string) string {
 	return resourceType + "." + name
 }
 
-// GenManifestNamespace	 generates manifest namespace
+// GenManifestNamespace 	 generates manifest namespace
 func GenManifestNamespace(agentID string) string {
 	return "bcs-mcs-" + agentID
 }
 
 // FindNeedDeleteManifest finds need delete manifest
-func FindNeedDeleteManifest(manifestList *bcsmcsv1alpha1.ManifestList, endpointSliceList *discoveryv1beta1.EndpointSliceList) []*bcsmcsv1alpha1.Manifest {
+func FindNeedDeleteManifest(manifestList *bcsmcsv1alpha1.ManifestList,
+	endpointSliceList *discoveryv1beta1.EndpointSliceList) []*bcsmcsv1alpha1.Manifest {
 	if manifestList == nil {
 		return nil
 	}
@@ -60,7 +61,7 @@ func FindNeedDeleteManifest(manifestList *bcsmcsv1alpha1.ManifestList, endpointS
 	return toDeleteManifest
 }
 
-//UnmarshalEndpointSlice 解析出EndpointSlice
+// UnmarshalEndpointSlice 解析出EndpointSlice
 func UnmarshalEndpointSlice(manifest *bcsmcsv1alpha1.Manifest) (*discoveryv1beta1.EndpointSlice, error) {
 	unstructObj := &unstructured.Unstructured{}
 	if err := unstructObj.UnmarshalJSON(manifest.Template.Raw); err != nil {
@@ -71,8 +72,10 @@ func UnmarshalEndpointSlice(manifest *bcsmcsv1alpha1.Manifest) (*discoveryv1beta
 	unstructObj.SetAnnotations(manifest.Annotations)
 
 	typedObj := &discoveryv1beta1.EndpointSlice{}
-	if err := runtime.DefaultUnstructuredConverter.FromUnstructured(unstructObj.UnstructuredContent(), typedObj); err != nil {
-		klog.ErrorS(err, "Failed to convert unstructured to EndpointSlice", "namespace", manifest.Namespace, "name", manifest.Name)
+	if err := runtime.DefaultUnstructuredConverter.FromUnstructured(unstructObj.UnstructuredContent(),
+		typedObj); err != nil {
+		klog.ErrorS(err, "Failed to convert unstructured to EndpointSlice", "namespace", manifest.Namespace, "name",
+			manifest.Name)
 		return nil, err
 	}
 	return typedObj, nil

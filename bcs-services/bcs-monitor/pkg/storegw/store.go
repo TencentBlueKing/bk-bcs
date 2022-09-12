@@ -36,11 +36,12 @@ import (
 
 const (
 	// BKMONITOR 蓝鲸监控数据源
-	BKMONITOR  config.StoreProvider = "BK_MONITOR"
+	BKMONITOR config.StoreProvider = "BK_MONITOR"
+	// BCS_SYSTEM TODO
 	BCS_SYSTEM config.StoreProvider = "BCS_SYSTEM"
 )
 
-// StoreGW Store 基类
+// Store GW Store 基类
 type Store struct {
 	*config.StoreConf
 	Address string
@@ -69,13 +70,17 @@ func GetStoreSvr(logger log.Logger, reg *prometheus.Registry, conf *config.Store
 	}
 }
 
-// NewStore
-func NewStore(ctx context.Context, logger log.Logger, reg *prometheus.Registry, address string, conf *config.StoreConf) (*Store, error) {
-	storeSvr, err := GetStoreSvr(logger, reg, conf)
-	if err != nil {
-		return nil, err
-	}
+// NilLogger grpc log, 不打印无效日志
+type NilLogger struct{}
 
+// Log :
+func (l *NilLogger) Log(keyvals ...interface{}) error {
+	return nil
+}
+
+// NewStore :
+func NewStore(ctx context.Context, logger log.Logger, reg *prometheus.Registry, address string, conf *config.StoreConf,
+	storeSvr storepb.StoreServer) (*Store, error) {
 	ctx, cancel := context.WithCancel(ctx)
 
 	// 重新初始化, 解决 duplicate metrics collector registration attempted
@@ -83,7 +88,9 @@ func NewStore(ctx context.Context, logger log.Logger, reg *prometheus.Registry, 
 
 	grpcProbe := prober.NewGRPC()
 
-	g := grpcserver.New(logger, _reg, nil, nil, nil, component.Store, grpcProbe,
+	nilLogger := &NilLogger{}
+
+	g := grpcserver.New(nilLogger, _reg, nil, nil, nil, component.Store, grpcProbe,
 		grpcserver.WithServer(store.RegisterStoreServer(storeSvr)),
 		grpcserver.WithListen(address),
 		grpcserver.WithGracePeriod(time.Duration(0)),

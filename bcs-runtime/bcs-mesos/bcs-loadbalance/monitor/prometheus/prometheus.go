@@ -11,6 +11,7 @@
  *
  */
 
+// Package prometheus xxx
 package prometheus
 
 import (

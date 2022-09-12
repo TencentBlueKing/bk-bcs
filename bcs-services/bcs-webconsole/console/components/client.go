@@ -35,7 +35,7 @@ var (
 	globalClient *req.Client
 )
 
-// GetClient
+// GetClient xxx
 func GetClient() *req.Client {
 	if globalClient == nil {
 		clientOnce.Do(func() {

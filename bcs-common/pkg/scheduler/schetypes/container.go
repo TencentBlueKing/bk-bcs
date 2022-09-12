@@ -19,12 +19,18 @@ import (
 )
 
 const (
-	ContainerStatus_PAUSED     = "paused"
+	// ContainerStatus_PAUSED TODO
+	ContainerStatus_PAUSED = "paused"
+	// ContainerStatus_RESTARTING TODO
 	ContainerStatus_RESTARTING = "restarting"
-	ContainerStatus_RUNNING    = "running"
-	ContainerStatus_DEAD       = "dead"
-	ContainerStatus_CREATED    = "created"
-	ContainerStatus_EXITED     = "exited"
+	// ContainerStatus_RUNNING TODO
+	ContainerStatus_RUNNING = "running"
+	// ContainerStatus_DEAD TODO
+	ContainerStatus_DEAD = "dead"
+	// ContainerStatus_CREATED TODO
+	ContainerStatus_CREATED = "created"
+	// ContainerStatus_EXITED TODO
+	ContainerStatus_EXITED = "exited"
 )
 
 // BcsPort port service for container port reflection
@@ -33,38 +39,38 @@ type BcsPort struct {
 	ContainerPort string `json:"containerPort,omitempty"`
 	HostPort      string `json:"hostPort,omitempty"`
 	Protocol      string `json:"protocol,omitempty"`
-	HostIP        string `json:"hostIP,omitempty"` //use for host has multiple ip address
+	HostIP        string `json:"hostIP,omitempty"` // use for host has multiple ip address
 }
 
 // BcsImage image info from hub
 type BcsImage struct {
-	ID         string   //image id
-	Repository []string //repository, including tag
-	Created    int64    //create time
-	Size       int64    //image size
+	ID         string   // image id
+	Repository []string // repository, including tag
+	Created    int64    // create time
+	Size       int64    // image size
 }
 
 // BcsContainerInfo only for BcsExecutor
 type BcsContainerInfo struct {
-	ID                      string      `json:"ID,omitempty"`          //container ID
-	Name                    string      `json:"Name,omitempty"`        //container name
-	Pid                     int         `json:"Pid,omitempty"`         //container pid
-	StartAt                 time.Time   `json:"StartAt,omitempty"`     //startting time
-	FinishAt                time.Time   `json:"FinishAt,omitempty"`    //Exit time
-	Status                  string      `json:"Status,omitempty"`      //status string, paused, restarting, running, dead, created, exited
-	Healthy                 bool        `json:"Healthy,omitempty"`     //Container healthy
-	IsChecked               bool        `json:",omitempty"`            //is health check
-	ConsecutiveFailureTimes int         `json:",omitempty"`            //consecutive failure times
-	ExitCode                int         `json:"ExitCode,omitempty"`    //container exit code
-	Hostname                string      `json:"Hostname,omitempty"`    //container host name
-	NetworkMode             string      `json:"NetworkMode,omitempty"` //Network mode for container
-	IPAddress               string      `json:"IPAddress,omitempty"`   //Contaienr IP address
-	NodeAddress             string      `json:"NodeAddress,omitempty"` //node host address
-	Ports                   []BcsPort   `json:"Ports,omitempty"`       //ports info for report
-	Message                 string      `json:"Message,omitempty"`     //status message for container
+	ID                      string      `json:"ID,omitempty"`          // container ID
+	Name                    string      `json:"Name,omitempty"`        // container name
+	Pid                     int         `json:"Pid,omitempty"`         // container pid
+	StartAt                 time.Time   `json:"StartAt,omitempty"`     // startting time
+	FinishAt                time.Time   `json:"FinishAt,omitempty"`    // Exit time
+	Status                  string      `json:"Status,omitempty"`      // status string, paused, restarting, running, dead, created, exited
+	Healthy                 bool        `json:"Healthy,omitempty"`     // Container healthy
+	IsChecked               bool        `json:",omitempty"`            // is health check
+	ConsecutiveFailureTimes int         `json:",omitempty"`            // consecutive failure times
+	ExitCode                int         `json:"ExitCode,omitempty"`    // container exit code
+	Hostname                string      `json:"Hostname,omitempty"`    // container host name
+	NetworkMode             string      `json:"NetworkMode,omitempty"` // Network mode for container
+	IPAddress               string      `json:"IPAddress,omitempty"`   // Contaienr IP address
+	NodeAddress             string      `json:"NodeAddress,omitempty"` // node host address
+	Ports                   []BcsPort   `json:"Ports,omitempty"`       // ports info for report
+	Message                 string      `json:"Message,omitempty"`     // status message for container
 	Resource                *Resource   `json:"Resource,omitempty"`
 	BcsMessage              *BcsMessage `json:",omitempty"`
-	OOMKilled               bool        `json:"OOMKilled,omitempty"` //container exited, whether oom
+	OOMKilled               bool        `json:"OOMKilled,omitempty"` // container exited, whether oom
 }
 
 // Update data from other info

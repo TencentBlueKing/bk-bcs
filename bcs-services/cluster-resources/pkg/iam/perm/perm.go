@@ -12,6 +12,7 @@
  * limitations under the License.
  */
 
+// Package perm xxx
 package perm
 
 import (
@@ -20,7 +21,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
 )
 
-// IAMPerm ...
+// IAMPerm xxx
 type IAMPerm struct {
 	Cli           *IAMClient
 	ResType       string
@@ -120,7 +121,7 @@ func (p *IAMPerm) canMultiActions(ctx Ctx, perms map[string]bool) (bool, error) 
 	}
 }
 
-// 生成权限中心校验异常错误，包含缺失权限及申请链接
+// genIAMPermError 生成权限中心校验异常错误，包含缺失权限及申请链接
 func (p *IAMPerm) genIAMPermError(ctx Ctx, actionID string) error {
 	resType := p.ResType
 	resIDs := []string{}

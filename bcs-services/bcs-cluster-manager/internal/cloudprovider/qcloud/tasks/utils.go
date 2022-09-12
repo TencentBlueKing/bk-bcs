@@ -84,7 +84,7 @@ func updateClusterStatus(clusterID string, status string) error {
 	return nil
 }
 
-// updateNodeStatus set node status
+// updateNodeStatusByIP set node status
 func updateNodeStatusByIP(ipList []string, status string) error {
 	if len(ipList) == 0 {
 		return nil
@@ -178,7 +178,8 @@ func importClusterNodesToCM(ctx context.Context, ipList []string, opt *cloudprov
 // releaseClusterCIDR release cluster CIDR
 func releaseClusterCIDR(cls *cmproto.Cluster) error {
 	if len(cls.NetworkSettings.ClusterIPv4CIDR) > 0 {
-		cidr, err := cloudprovider.GetStorageModel().GetTkeCidr(context.Background(), cls.VpcID, cls.NetworkSettings.ClusterIPv4CIDR)
+		cidr, err := cloudprovider.GetStorageModel().GetTkeCidr(context.Background(), cls.VpcID,
+			cls.NetworkSettings.ClusterIPv4CIDR)
 		if err != nil && !errors.Is(err, drivers.ErrTableRecordNotFound) {
 			return err
 		}
@@ -204,13 +205,19 @@ func releaseClusterCIDR(cls *cmproto.Cluster) error {
 }
 
 // updateNodeGroupCloudNodeGroupID set nodegroup cloudNodeGroupID
-func updateNodeGroupCloudNodeGroupID(nodeGroupID string, cloudNodeGroupID string) error {
+func updateNodeGroupCloudNodeGroupID(nodeGroupID string, newGroup *cmproto.NodeGroup) error {
 	group, err := cloudprovider.GetStorageModel().GetNodeGroup(context.Background(), nodeGroupID)
 	if err != nil {
 		return err
 	}
 
-	group.CloudNodeGroupID = cloudNodeGroupID
+	group.CloudNodeGroupID = newGroup.CloudNodeGroupID
+	if group.AutoScaling != nil && group.AutoScaling.VpcID == "" {
+		group.AutoScaling.VpcID = newGroup.AutoScaling.VpcID
+	}
+	if group.LaunchTemplate != nil {
+		group.LaunchTemplate.InstanceChargeType = newGroup.LaunchTemplate.InstanceChargeType
+	}
 	err = cloudprovider.GetStorageModel().UpdateNodeGroup(context.Background(), group)
 	if err != nil {
 		return err

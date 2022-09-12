@@ -271,3 +271,10 @@ type CommonAction struct {
 	EnglishName string         `json:"name_en"`
 	Actions     []ActionWithID `json:"actions"`
 }
+
+// AuthInfo auth info
+type AuthInfo struct {
+	BkAppCode   string `json:"bk_app_code"`
+	BkAppSecret string `json:"bk_app_secret"`
+	BkUserName  string `json:"bk_username"`
+}

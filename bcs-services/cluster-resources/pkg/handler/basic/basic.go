@@ -30,7 +30,7 @@ import (
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
 )
 
-// Handler ...
+// Handler xxx
 type Handler struct{}
 
 // New 创建服务处理逻辑集
@@ -108,7 +108,7 @@ func (h *Handler) Healthz(
 	return nil
 }
 
-// 生成可读状态信息
+// genHealthzStatus 生成可读状态信息
 func genHealthzStatus(isOK bool, moreInfo string) string {
 	if isOK {
 		return "OK"

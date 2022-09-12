@@ -1,10 +1,10 @@
-FROM centos:centos7
+ARG APISIX_VERSION="2.13.1"
+FROM apache/apisix:$APISIX_VERSION-centos
 
 #for command envsubst
-RUN yum install -y gettext
+RUN yum install -y yum-utils which less iproute jq gettext sudo make wget unzip &&
+    rm -rf /usr/local/apisix/logs/*
 
-# install openresty & apisix
-RUN yum install -y yum-utils && yum-config-manager --releasever 7 --add-repo https://openresty.org/package/centos/openresty.repo && yum-config-manager --releasever 7 --add-repo https://repos.apiseven.com/packages/centos/apache-apisix.repo && yum install -y apisix-2.13.1
 #install apisix plugin
 COPY ./apisix/ /usr/local/apisix/apisix/plugins/
 #apisix configuration

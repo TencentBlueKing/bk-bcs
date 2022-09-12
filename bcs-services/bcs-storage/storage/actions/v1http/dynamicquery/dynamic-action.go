@@ -50,7 +50,8 @@ func doQuery(req *restful.Request, resp *restful.Response, filter qFilter, name 
 	r, err := request.queryDynamic()
 	if err != nil {
 		blog.Errorf("%s | err: %v", common.BcsErrStorageListResourceFailStr, err)
-		lib.ReturnRest(&lib.RestResponse{Resp: resp, Data: []string{}, ErrCode: common.BcsErrStorageListResourceFail, Message: common.BcsErrStorageListResourceFailStr})
+		lib.ReturnRest(&lib.RestResponse{Resp: resp, Data: []string{}, ErrCode: common.BcsErrStorageListResourceFail,
+			Message: common.BcsErrStorageListResourceFailStr})
 		return err
 	}
 	lib.ReturnRest(&lib.RestResponse{Resp: resp, Data: r})
@@ -78,42 +79,48 @@ func GetNameSpace(req *restful.Request, resp *restful.Response) {
 	// grep application
 	if result, err = grepNamespace(req, &ApplicationFilter{Kind: ",application"}, "application", result); err != nil {
 		blog.Errorf("%s | err: %v", common.BcsErrStorageListResourceFailStr, err)
-		lib.ReturnRest(&lib.RestResponse{Resp: resp, Data: []string{}, ErrCode: common.BcsErrStorageListResourceFail, Message: common.BcsErrStorageListResourceFailStr})
+		lib.ReturnRest(&lib.RestResponse{Resp: resp, Data: []string{}, ErrCode: common.BcsErrStorageListResourceFail,
+			Message: common.BcsErrStorageListResourceFailStr})
 		return
 	}
 
 	// grep process
 	if result, err = grepNamespace(req, &ProcessFilter{Kind: "process"}, "application", result); err != nil {
 		blog.Errorf("%s | err: %v", common.BcsErrStorageListResourceFailStr, err)
-		lib.ReturnRest(&lib.RestResponse{Resp: resp, Data: []string{}, ErrCode: common.BcsErrStorageListResourceFail, Message: common.BcsErrStorageListResourceFailStr})
+		lib.ReturnRest(&lib.RestResponse{Resp: resp, Data: []string{}, ErrCode: common.BcsErrStorageListResourceFail,
+			Message: common.BcsErrStorageListResourceFailStr})
 		return
 	}
 
 	// grep deployment
 	if result, err = grepNamespace(req, &DeploymentFilter{}, "deployment", result); err != nil {
 		blog.Errorf("%s | err: %v", common.BcsErrStorageListResourceFailStr, err)
-		lib.ReturnRest(&lib.RestResponse{Resp: resp, Data: []string{}, ErrCode: common.BcsErrStorageListResourceFail, Message: common.BcsErrStorageListResourceFailStr})
+		lib.ReturnRest(&lib.RestResponse{Resp: resp, Data: []string{}, ErrCode: common.BcsErrStorageListResourceFail,
+			Message: common.BcsErrStorageListResourceFailStr})
 		return
 	}
 
 	// grep service
 	if result, err = grepNamespace(req, &ServiceFilter{}, "service", result); err != nil {
 		blog.Errorf("%s | err: %v", common.BcsErrStorageListResourceFailStr, err)
-		lib.ReturnRest(&lib.RestResponse{Resp: resp, Data: []string{}, ErrCode: common.BcsErrStorageListResourceFail, Message: common.BcsErrStorageListResourceFailStr})
+		lib.ReturnRest(&lib.RestResponse{Resp: resp, Data: []string{}, ErrCode: common.BcsErrStorageListResourceFail,
+			Message: common.BcsErrStorageListResourceFailStr})
 		return
 	}
 
 	// grep configMap
 	if result, err = grepNamespace(req, &ConfigMapFilter{}, "configmap", result); err != nil {
 		blog.Errorf("%s | err: %v", common.BcsErrStorageListResourceFailStr, err)
-		lib.ReturnRest(&lib.RestResponse{Resp: resp, Data: []string{}, ErrCode: common.BcsErrStorageListResourceFail, Message: common.BcsErrStorageListResourceFailStr})
+		lib.ReturnRest(&lib.RestResponse{Resp: resp, Data: []string{}, ErrCode: common.BcsErrStorageListResourceFail,
+			Message: common.BcsErrStorageListResourceFailStr})
 		return
 	}
 
 	// grep secret
 	if result, err = grepNamespace(req, &SecretFilter{}, "secret", result); err != nil {
 		blog.Errorf("%s | err: %v", common.BcsErrStorageListResourceFailStr, err)
-		lib.ReturnRest(&lib.RestResponse{Resp: resp, Data: []string{}, ErrCode: common.BcsErrStorageListResourceFail, Message: common.BcsErrStorageListResourceFailStr})
+		lib.ReturnRest(&lib.RestResponse{Resp: resp, Data: []string{}, ErrCode: common.BcsErrStorageListResourceFail,
+			Message: common.BcsErrStorageListResourceFailStr})
 		return
 	}
 

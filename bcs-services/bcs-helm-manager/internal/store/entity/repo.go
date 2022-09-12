@@ -46,18 +46,18 @@ type Repository struct {
 // Transfer2Proto transfer the data into protobuf struct
 func (r *Repository) Transfer2Proto() *helmmanager.Repository {
 	return &helmmanager.Repository{
-		ProjectID:  common.GetStringP(r.ProjectID),
-		Name:       common.GetStringP(r.Name),
-		Type:       common.GetStringP(r.Type),
-		RepoURL:    common.GetStringP(r.RepoURL),
-		Remote:     common.GetBoolP(r.Remote),
-		RemoteURL:  common.GetStringP(r.RemoteURL),
-		Username:   common.GetStringP(r.Username),
-		Password:   common.GetStringP(r.Password),
-		CreateBy:   common.GetStringP(r.CreateBy),
-		UpdateBy:   common.GetStringP(r.UpdateBy),
-		CreateTime: common.GetStringP(time.Unix(r.CreateTime, 0).Local().String()),
-		UpdateTime: common.GetStringP(time.Unix(r.UpdateTime, 0).Local().String()),
+		ProjectCode: common.GetStringP(r.ProjectID),
+		Name:        common.GetStringP(r.Name),
+		Type:        common.GetStringP(r.Type),
+		RepoURL:     common.GetStringP(r.RepoURL),
+		Remote:      common.GetBoolP(r.Remote),
+		RemoteURL:   common.GetStringP(r.RemoteURL),
+		Username:    common.GetStringP(r.Username),
+		Password:    common.GetStringP(r.Password),
+		CreateBy:    common.GetStringP(r.CreateBy),
+		UpdateBy:    common.GetStringP(r.UpdateBy),
+		CreateTime:  common.GetStringP(time.Unix(r.CreateTime, 0).Local().String()),
+		UpdateTime:  common.GetStringP(time.Unix(r.UpdateTime, 0).Local().String()),
 	}
 }
 
@@ -68,8 +68,8 @@ func (r *Repository) LoadFromProto(repository *helmmanager.Repository) M {
 	}
 	m := make(M)
 
-	if repository.ProjectID != nil {
-		r.ProjectID = repository.GetProjectID()
+	if repository.ProjectCode != nil {
+		r.ProjectID = repository.GetProjectCode()
 		m[FieldKeyProjectID] = r.ProjectID
 	}
 	if repository.Name != nil {
@@ -95,6 +95,10 @@ func (r *Repository) LoadFromProto(repository *helmmanager.Repository) M {
 	if repository.RemotePassword != nil {
 		r.RemotePassword = repository.GetRemotePassword()
 		m[FieldKeyRemotePassword] = r.RemotePassword
+	}
+	if repository.RepoURL != nil {
+		r.RepoURL = repository.GetRepoURL()
+		m[FieldKeyRepoURL] = r.RepoURL
 	}
 	if repository.Username != nil {
 		r.Username = repository.GetUsername()

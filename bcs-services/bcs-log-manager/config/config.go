@@ -11,6 +11,7 @@
  *
  */
 
+// Package config xxx
 package config
 
 import (
@@ -39,7 +40,7 @@ type ManagerConfig struct {
 // CollectionConfig defines some customed information of log collection.
 // For example, customed dataid of some Cluster.
 type CollectionConfig struct {
-	//Config Spec.
+	// Config Spec.
 	ConfigName      string                 `json:"config_name"`
 	ConfigNamespace string                 `json:"config_namespace"`
 	ConfigSpec      bcsv1.BcsLogConfigSpec `json:"config_spec"`

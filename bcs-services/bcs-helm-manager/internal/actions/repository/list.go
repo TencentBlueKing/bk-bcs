@@ -68,7 +68,7 @@ func (l *ListRepositoryAction) Handle(ctx context.Context,
 
 func (l *ListRepositoryAction) list() error {
 	option := l.getOption()
-	total, origin, err := l.model.ListRepository(l.ctx, l.getCondition(), option)
+	_, origin, err := l.model.ListRepository(l.ctx, l.getCondition(), option)
 	if err != nil {
 		blog.Errorf("list repository failed, %s", err.Error())
 		l.setResp(common.ErrHelmManagerListActionFailed, err.Error(), nil)
@@ -80,54 +80,28 @@ func (l *ListRepositoryAction) list() error {
 		r = append(r, item.Transfer2Proto())
 	}
 
-	l.setResp(common.ErrHelmManagerSuccess, "ok", &helmmanager.RepositoryListData{
-		Page:  common.GetUint32P(uint32(option.Page)),
-		Size:  common.GetUint32P(uint32(option.Size)),
-		Total: common.GetUint32P(uint32(total)),
-		Data:  r,
-	})
+	l.setResp(common.ErrHelmManagerSuccess, "ok", r)
 	blog.Infof("list repository successfully")
 	return nil
 }
 
 func (l *ListRepositoryAction) getCondition() *operator.Condition {
 	cond := make(operator.M)
-	if l.req.ProjectID != nil {
-		cond.Update(entity.FieldKeyProjectID, l.req.GetProjectID())
-	}
-	if l.req.Name != nil {
-		cond.Update(entity.FieldKeyName, l.req.GetName())
-	}
-	if l.req.Type != nil {
-		cond.Update(entity.FieldKeyType, l.req.GetType())
-	}
-
+	cond.Update(entity.FieldKeyProjectID, l.req.GetProjectCode())
 	return operator.NewLeafCondition(operator.Eq, cond)
 }
 
 func (l *ListRepositoryAction) getOption() *utils.ListOption {
 	var sortOpt map[string]int
-	if sort := l.req.GetSort(); len(sort) > 0 {
-		v := 1
-		if !l.req.GetDesc() {
-			v = -1
-		}
-		sortOpt = map[string]int{sort: v}
-	}
-
-	size := l.req.GetSize()
-	if size == 0 {
-		size = defaultSize
-	}
 
 	return &utils.ListOption{
 		Sort: sortOpt,
-		Page: int64(l.req.GetPage()),
-		Size: int64(size),
+		Page: 0,
+		Size: 0,
 	}
 }
 
-func (l *ListRepositoryAction) setResp(err common.HelmManagerError, message string, r *helmmanager.RepositoryListData) {
+func (l *ListRepositoryAction) setResp(err common.HelmManagerError, message string, r []*helmmanager.Repository) {
 	code := err.Int32()
 	msg := err.ErrorMessage(message)
 	l.resp.Code = &code

@@ -34,38 +34,66 @@ import (
 )
 
 const (
-	CoreV1GroupVersion             = "v1"
-	AppsV1GroupVersion             = "apps/v1"
-	AppsV1Beta1GroupVersion        = "apps/v1beta1"
-	AppsV1Beta2GroupVersion        = "apps/v1beta2"
-	ExtensionsV1Beta1GroupVersion  = "extensions/v1beta1"
-	AutoScalingV1GroupVersion      = "autoscaling/v1"
+	// CoreV1GroupVersion TODO
+	CoreV1GroupVersion = "v1"
+	// AppsV1GroupVersion TODO
+	AppsV1GroupVersion = "apps/v1"
+	// AppsV1Beta1GroupVersion TODO
+	AppsV1Beta1GroupVersion = "apps/v1beta1"
+	// AppsV1Beta2GroupVersion TODO
+	AppsV1Beta2GroupVersion = "apps/v1beta2"
+	// ExtensionsV1Beta1GroupVersion TODO
+	ExtensionsV1Beta1GroupVersion = "extensions/v1beta1"
+	// AutoScalingV1GroupVersion TODO
+	AutoScalingV1GroupVersion = "autoscaling/v1"
+	// AutoScalingV2Beta1GroupVersion TODO
 	AutoScalingV2Beta1GroupVersion = "autoscaling/v2beta1"
+	// AutoScalingV2Beta2GroupVersion TODO
 	AutoScalingV2Beta2GroupVersion = "autoscaling/v2beta2"
-	StorageV1GroupVersion          = "storage.k8s.io/v1"
+	// StorageV1GroupVersion TODO
+	StorageV1GroupVersion = "storage.k8s.io/v1"
 
-	BatchV1GroupVersion                      = "batch/v1"
-	BatchV1Beta1GroupVersion                 = "batch/v1beta1"
-	RbacV1GroupVersion                       = "rbac.authorization.k8s.io/v1"
-	RbacV1Beta1GroupVersion                  = "rbac.authorization.k8s.io/v1beta1"
+	// BatchV1GroupVersion TODO
+	BatchV1GroupVersion = "batch/v1"
+	// BatchV1Beta1GroupVersion TODO
+	BatchV1Beta1GroupVersion = "batch/v1beta1"
+	// RbacV1GroupVersion TODO
+	RbacV1GroupVersion = "rbac.authorization.k8s.io/v1"
+	// RbacV1Beta1GroupVersion TODO
+	RbacV1Beta1GroupVersion = "rbac.authorization.k8s.io/v1beta1"
+	// AdmissionRegistrationV1Beta1GroupVersion TODO
 	AdmissionRegistrationV1Beta1GroupVersion = "admissionregistration.k8s.io/v1beta1"
-	ApiExtensionsV1Beta1GroupVersion         = "apiextensions.k8s.io/v1beta1"
+	// ApiExtensionsV1Beta1GroupVersion TODO
+	ApiExtensionsV1Beta1GroupVersion = "apiextensions.k8s.io/v1beta1"
 
-	BkbcsGroupName        = "bkbcs.tencent.com"
-	MesosV2GroupVersion   = "bkbcs.tencent.com/v2"
+	// BkbcsGroupName TODO
+	BkbcsGroupName = "bkbcs.tencent.com"
+	// MesosV2GroupVersion TODO
+	MesosV2GroupVersion = "bkbcs.tencent.com/v2"
+	// WebhookV1GroupVersion TODO
 	WebhookV1GroupVersion = "bkbcs.tencent.com/v1"
 
-	TkexV1alpha1GroupName    = "tkex.tencent.com"
+	// TkexV1alpha1GroupName TODO
+	TkexV1alpha1GroupName = "tkex.tencent.com"
+	// TkexV1alpha1GroupVersion TODO
 	TkexV1alpha1GroupVersion = "tkex.tencent.com/v1alpha1"
-	TkexGameDeploymentName   = "gamedeployments.tkex.tencent.com"
-	TkexGameStatefulSetName  = "gamestatefulsets.tkex.tencent.com"
-	TkexGPAName              = "generalpodautoscalers.autoscaling.tkex.tencent.com"
+	// TkexGameDeploymentName TODO
+	TkexGameDeploymentName = "gamedeployments.tkex.tencent.com"
+	// TkexGameStatefulSetName TODO
+	TkexGameStatefulSetName = "gamestatefulsets.tkex.tencent.com"
+	// TkexGPAName TODO
+	TkexGPAName = "generalpodautoscalers.autoscaling.tkex.tencent.com"
 
-	KubefedTypesV1Beta1GroupVersion            = "types.kubefed.io/v1beta1"
-	KubefedCoreV1Alpha1GroupVersion            = "core.kubefed.io/v1alpha1"
-	KubefedCoreV1Beta1GroupVersion             = "core.kubefed.io/v1beta1"
+	// KubefedTypesV1Beta1GroupVersion TODO
+	KubefedTypesV1Beta1GroupVersion = "types.kubefed.io/v1beta1"
+	// KubefedCoreV1Alpha1GroupVersion TODO
+	KubefedCoreV1Alpha1GroupVersion = "core.kubefed.io/v1alpha1"
+	// KubefedCoreV1Beta1GroupVersion TODO
+	KubefedCoreV1Beta1GroupVersion = "core.kubefed.io/v1beta1"
+	// KubefedMultiClusterDnsV1Alpha1GroupVersion TODO
 	KubefedMultiClusterDnsV1Alpha1GroupVersion = "multiclusterdns.kubefed.io/v1alpha1"
-	KubefedSchedulingV1Alpha1GroupVersion      = "scheduling.kubefed.io/v1alpha1"
+	// KubefedSchedulingV1Alpha1GroupVersion TODO
+	KubefedSchedulingV1Alpha1GroupVersion = "scheduling.kubefed.io/v1alpha1"
 )
 
 // resource list to watch
@@ -81,7 +109,8 @@ type ResourceObjType struct {
 }
 
 // InitResourceList init resource list to watch
-func InitResourceList(k8sConfig *options.K8sConfig, filterConfig *options.FilterConfig, watchResource *options.WatchResource) error {
+func InitResourceList(k8sConfig *options.K8sConfig, filterConfig *options.FilterConfig,
+	watchResource *options.WatchResource) error {
 	restConfig, err := GetRestConfig(k8sConfig)
 	if err != nil {
 		return fmt.Errorf("error creating rest config: %s", err.Error())
@@ -228,7 +257,8 @@ func initTkexClient(restConfig *rest.Config) (map[string]rest.Interface, error) 
 }
 
 // initK8sWatcherConfigList init k8s resource
-func initK8sWatcherConfigList(restConfig *rest.Config, filter *ResourceFilter, onlyWatchNamespacedResource bool) (map[string]ResourceObjType, error) {
+func initK8sWatcherConfigList(restConfig *rest.Config, filter *ResourceFilter,
+	onlyWatchNamespacedResource bool) (map[string]ResourceObjType, error) {
 	// create k8s clientset.
 	clientSet, err := kubernetes.NewForConfig(restConfig)
 	if err != nil {
@@ -283,7 +313,7 @@ func initK8sWatcherConfigList(restConfig *rest.Config, filter *ResourceFilter, o
 					// 如果 deployment, daemonset 在apps和extensions下面都有，则只watch apps下面的资源
 					continue
 				}
-				//如果指定了namespace则不监听非namespace的资源
+				// 如果指定了namespace则不监听非namespace的资源
 				if onlyWatchNamespacedResource && !apiResource.Namespaced {
 					continue
 				}

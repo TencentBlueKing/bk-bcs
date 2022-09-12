@@ -30,9 +30,13 @@ import (
 	"github.com/parnurzeal/gorequest"
 )
 
+// CodeRequestFailed xxx
 const CodeRequestFailed = 4001
+
+// CodeRequestSuccess xxx
 const CodeRequestSuccess = 0
 
+// KubeSmartProxier xxx
 type KubeSmartProxier struct {
 	KubeMasterURL string
 	TLSConfig     options.TLSConfig
@@ -42,6 +46,7 @@ type KubeSmartProxier struct {
 	serverVersion   KubeVersion
 }
 
+// NewKubeSmartProxier xxx
 func NewKubeSmartProxier(kubeMasterURL string, TLSConfig options.TLSConfig) KubeSmartProxier {
 	return KubeSmartProxier{
 		KubeMasterURL: kubeMasterURL,
@@ -50,6 +55,7 @@ func NewKubeSmartProxier(kubeMasterURL string, TLSConfig options.TLSConfig) Kube
 	}
 }
 
+// IfKubeNeedTls xxx
 func (c *KubeSmartProxier) IfKubeNeedTls() bool {
 	kubeURL, _ := urllib.Parse(c.KubeMasterURL)
 	return kubeURL.Scheme == options.HTTPS
@@ -98,6 +104,7 @@ func (c *KubeSmartProxier) RequestServerVersion() (KubeVersion, error) {
 	return result, nil
 }
 
+// RequestAPIPrefer xxx
 // RequestServerVersion request API server to get version
 func (c *KubeSmartProxier) RequestAPIPrefer() error {
 	url := fmt.Sprintf("%s/apis", strings.TrimSuffix(c.KubeMasterURL, "/"))
@@ -122,7 +129,7 @@ func (c *KubeSmartProxier) RequestAPIPrefer() error {
 	return nil
 }
 
-//GeneralAPIHandle create
+// GeneralAPIHandle create
 func (c *KubeSmartProxier) GeneralAPIHandle(request *restful.Request, response *restful.Response) {
 	subPath := request.PathParameter("subpath")
 
@@ -168,11 +175,11 @@ func (c *KubeSmartProxier) ForwardToKubeAPI(request *restful.Request, response *
 		return
 	}
 
-	//if json contains apiVersion, then use it
+	// if json contains apiVersion, then use it
 	apiVersion := json.Get(body, "apiVersion").ToString()
 	apiVersion = strings.TrimSpace(apiVersion)
 	if apiVersion != "" {
-		//clientSetter.ClientSet = /apis/extensions/v1beta1/
+		// clientSetter.ClientSet = /apis/extensions/v1beta1/
 		clientSet := strings.Trim(clientSetter.ClientSet, "/")
 		group := strings.Split(clientSet, "/")[0]
 		clientSetter.ClientSet = fmt.Sprintf("%s/%s", group, apiVersion)

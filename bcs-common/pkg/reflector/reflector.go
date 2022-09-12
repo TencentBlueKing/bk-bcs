@@ -11,6 +11,7 @@
  *
  */
 
+// Package reflector xxx
 package reflector
 
 import (
@@ -24,7 +25,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/watch"
 )
 
-//NewReflector create new reflector
+// NewReflector create new reflector
 func NewReflector(name string, store k8scache.Indexer,
 	lw ListerWatcher, fullSyncPeriod time.Duration, handler EventInterface) *Reflector {
 
@@ -41,17 +42,17 @@ func NewReflector(name string, store k8scache.Indexer,
 	}
 }
 
-//Reflector offers lister & watcher mechanism to sync event-storage data
-//to local memory store, and meanwhile push data event to predifine event handler
+// Reflector offers lister & watcher mechanism to sync event-storage data
+// to local memory store, and meanwhile push data event to predifine event handler
 type Reflector struct {
-	name       string //reflector name
+	name       string // reflector name
 	cxt        context.Context
 	stopFn     context.CancelFunc
-	listWatch  ListerWatcher    //lister & watcher for object data
-	syncPeriod time.Duration    //period for resync all data
-	store      k8scache.Indexer //memory store for all data object
-	handler    EventInterface   //event callback when processing store data
-	underWatch bool             //flag for watch handler
+	listWatch  ListerWatcher    // lister & watcher for object data
+	syncPeriod time.Duration    // period for resync all data
+	store      k8scache.Indexer // memory store for all data object
+	handler    EventInterface   // event callback when processing store data
+	underWatch bool             // flag for watch handler
 
 	// used for delete object in ListAllData
 	keyFunc k8scache.KeyFunc
@@ -62,19 +63,19 @@ func (r *Reflector) SetKeyFunc(keyFunc k8scache.KeyFunc) {
 	r.keyFunc = keyFunc
 }
 
-//Run running reflector, list all data in period and create stable watcher for
-//all data events
+// Run running reflector, list all data in period and create stable watcher for
+// all data events
 func (r *Reflector) Run() {
 	blog.V(3).Infof("%s ready to start, begin to cache data", r.name)
-	//sync all data object from remote event storage
-	//r.listAllData()
+	// sync all data object from remote event storage
+	// r.listAllData()
 	watchCxt, _ := context.WithCancel(r.cxt)
 	go r.handleWatch(watchCxt)
 	blog.V(3).Infof("%s first resynchronization & watch success, register all ticker", r.name)
-	//create ticker for data object resync
+	// create ticker for data object resync
 	syncTick := time.NewTicker(r.syncPeriod)
 	defer syncTick.Stop()
-	//create ticker check stable watcher
+	// create ticker check stable watcher
 	watchTick := time.NewTicker(time.Second * 2)
 	defer watchTick.Stop()
 	for {
@@ -83,22 +84,22 @@ func (r *Reflector) Run() {
 			blog.Warnf("%s running exit, lister & watcher stopped", r.name)
 			return
 		case <-syncTick.C:
-			//fully resync all datas in period
+			// fully resync all datas in period
 			blog.Infof("%s trigger all data synchronization", r.name)
 			r.ListAllData()
 		case <-watchTick.C:
-			//check watch is running
+			// check watch is running
 			if r.underWatch {
 				continue
 			}
-			//watch is out, recovery watch loop
+			// watch is out, recovery watch loop
 			blog.Warnf("%s long watch is out, start watch loop to recovery.", r.name)
 			go r.handleWatch(watchCxt)
 		}
 	}
 }
 
-//Stop stop reflector
+// Stop stop reflector
 func (r *Reflector) Stop() {
 	blog.V(3).Infof("%s is asked to stop", r.name)
 	r.stopFn()
@@ -110,7 +111,7 @@ func (r *Reflector) ListAllData() error {
 	objMap := make(map[string]meta.Object)
 	objs, err := r.listWatch.List()
 	if err != nil {
-		//some err response, wait for next resync ticker
+		// some err response, wait for next resync ticker
 		blog.Errorf("%s List all data failed, %s", r.name, err)
 		return err
 	}
@@ -193,7 +194,7 @@ func (r *Reflector) handleWatch(cxt context.Context) {
 			case watch.EventDeleted:
 				r.processDeletion(&event)
 			case watch.EventErr:
-				//some unexpected err occured, but channel & watach is still work
+				// some unexpected err occured, but channel & watach is still work
 				blog.V(3).Infof("Reflector %s catch some data err in watch.Event channel, keep watch running", r.name)
 			}
 		}
@@ -220,9 +221,9 @@ func (r *Reflector) processAddUpdate(event *watch.Event) {
 }
 
 func (r *Reflector) processDeletion(event *watch.Event) {
-	//fix(DeveloperJim): 2018-06-26 16:42:10
-	//when deletion happens in zookeeper, no Object dispatchs, so we
-	//need to get object from local cache
+	// fix(DeveloperJim): 2018-06-26 16:42:10
+	// when deletion happens in zookeeper, no Object dispatchs, so we
+	// need to get object from local cache
 	oldObj, exist, err := r.store.Get(event.Data)
 	if err != nil {
 		blog.V(3).Infof("Reflector %s gets local store err in DeleteEvent, %s", r.name, err)
@@ -233,7 +234,7 @@ func (r *Reflector) processDeletion(event *watch.Event) {
 		if event.Data.GetAnnotations() != nil &&
 			event.Data.GetAnnotations()["bk-bcs-inner-storage"] == "bkbcs-zookeeper" {
 
-			//tricky here, zookeeper can't get creation time when deletion
+			// tricky here, zookeeper can't get creation time when deletion
 			if r.handler != nil {
 				r.handler.OnDelete(oldObj)
 			}
@@ -248,11 +249,11 @@ func (r *Reflector) processDeletion(event *watch.Event) {
 		}
 		return
 	}
-	//local cache do not exist, nothing happens
+	// local cache do not exist, nothing happens
 	blog.V(3).Infof("reflector %s lost local cache for %s/%s", r.name, event.Data.GetNamespace(), event.Data.GetName())
 }
 
-//EventInterface register interface for event notification
+// EventInterface register interface for event notification
 type EventInterface interface {
 	OnAdd(obj interface{})
 	OnUpdate(old, cur interface{})

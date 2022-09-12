@@ -31,7 +31,9 @@ import (
 )
 
 const (
-	BCSAPIPrefix       = "/bcsapi/v4/storage/"
+	// BCSAPIPrefix TODO
+	BCSAPIPrefix = "/bcsapi/v4/storage/"
+	// BCSStoragePrefixV1 TODO
 	BCSStoragePrefixV1 = "/bcsstorage/v1/"
 )
 
@@ -43,10 +45,14 @@ var (
 )
 
 func init() {
-	actions.RegisterAction(actions.Action{Verb: "POST", Path: "/bcsapi/v4/storage/{uri:*}", Params: nil, Handler: storageProxyActions})
-	actions.RegisterAction(actions.Action{Verb: "PUT", Path: "/bcsapi/v4/storage/{uri:*}", Params: nil, Handler: storageProxyActions})
-	actions.RegisterAction(actions.Action{Verb: "GET", Path: "/bcsapi/v4/storage/{uri:*}", Params: nil, Handler: storageProxyActions})
-	actions.RegisterAction(actions.Action{Verb: "DELETE", Path: "/bcsapi/v4/storage/{uri:*}", Params: nil, Handler: storageProxyActions})
+	actions.RegisterAction(actions.Action{Verb: "POST", Path: "/bcsapi/v4/storage/{uri:*}", Params: nil,
+		Handler: storageProxyActions})
+	actions.RegisterAction(actions.Action{Verb: "PUT", Path: "/bcsapi/v4/storage/{uri:*}", Params: nil,
+		Handler: storageProxyActions})
+	actions.RegisterAction(actions.Action{Verb: "GET", Path: "/bcsapi/v4/storage/{uri:*}", Params: nil,
+		Handler: storageProxyActions})
+	actions.RegisterAction(actions.Action{Verb: "DELETE", Path: "/bcsapi/v4/storage/{uri:*}", Params: nil,
+		Handler: storageProxyActions})
 }
 
 // defaultStorageTransport is default storage transport instance.

@@ -48,7 +48,7 @@ const (
 	PurgeExpiredCacheTime = 60
 )
 
-// 获取集群信息缓存键
+// genClusterInfoCacheKey 获取集群信息缓存键
 func genClusterInfoCacheKey(clusterID string) string {
 	return ClusterInfoCacheKeyPrefix + "-" + clusterID
 }
@@ -78,7 +78,7 @@ func InitCMClient(microRtr registry.Registry, cliTLSConf *tls.Config) {
 	})
 }
 
-// NewCMClient ...
+// NewCMClient xxx
 func NewCMClient(microRtr registry.Registry, cliTLSConf *tls.Config) (*CMClient, error) {
 	ctx, cancel := context.WithCancel(context.Background())
 	cli := CMClient{
@@ -96,7 +96,7 @@ func NewCMClient(microRtr registry.Registry, cliTLSConf *tls.Config) (*CMClient,
 	return &cli, nil
 }
 
-// 获取集群信息（支持缓存）
+// fetchClusterInfoWithCache 获取集群信息（支持缓存）
 func (c *CMClient) fetchClusterInfoWithCache(ctx context.Context, clusterID string) (map[string]interface{}, error) {
 	cacheKey := genClusterInfoCacheKey(clusterID)
 	if info, ok := c.cache.Get(cacheKey); info != nil && ok {
@@ -115,7 +115,7 @@ func (c *CMClient) fetchClusterInfoWithCache(ctx context.Context, clusterID stri
 	return clusterInfo, nil
 }
 
-// 获取集群信息
+// fetchClusterInfo 获取集群信息
 func (c *CMClient) fetchClusterInfo(ctx context.Context, clusterID string) (map[string]interface{}, error) {
 	cli, grpcConn, err := c.genAvailableCli(ctx)
 	if err != nil {
@@ -144,7 +144,7 @@ func (c *CMClient) fetchClusterInfo(ctx context.Context, clusterID string) (map[
 	return clusterInfo, nil
 }
 
-// 获取可用的 ClusterManager 服务
+// genAvailableCli 获取可用的 ClusterManager 服务
 func (c *CMClient) genAvailableCli(ctx context.Context) (bcsapicm.ClusterManagerClient, *grpc.ClientConn, error) {
 	node, err := c.discovery.GetRandServiceInst(ctx)
 	if err != nil {

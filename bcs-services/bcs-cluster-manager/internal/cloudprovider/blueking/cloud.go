@@ -26,7 +26,7 @@ var cloudInfoMgr sync.Once
 
 func init() {
 	cloudInfoMgr.Do(func() {
-		//init Cluster
+		// init Cluster
 		cloudprovider.InitCloudInfoManager(cloudName, &CloudInfoManager{})
 	})
 }
@@ -35,8 +35,10 @@ func init() {
 type CloudInfoManager struct {
 }
 
+// InitCloudClusterDefaultInfo xxx
 // ImportClusterValidate check importCluster operation
-func (c *CloudInfoManager) InitCloudClusterDefaultInfo(cls *proto.Cluster, opt *cloudprovider.InitClusterConfigOption) error {
+func (c *CloudInfoManager) InitCloudClusterDefaultInfo(cls *proto.Cluster,
+	opt *cloudprovider.InitClusterConfigOption) error {
 	// call blueking interface to init cluster defaultConfig
 	if c == nil || cls == nil {
 		return fmt.Errorf("%s InitCloudClusterDefaultInfo request is empty", cloudName)
@@ -55,7 +57,8 @@ func (c *CloudInfoManager) InitCloudClusterDefaultInfo(cls *proto.Cluster, opt *
 }
 
 // SyncClusterCloudInfo get cluster cloudInfo by clusterID or kubeConfig
-func (c *CloudInfoManager) SyncClusterCloudInfo(cls *proto.Cluster, opt *cloudprovider.SyncClusterCloudInfoOption) error {
+func (c *CloudInfoManager) SyncClusterCloudInfo(cls *proto.Cluster,
+	opt *cloudprovider.SyncClusterCloudInfoOption) error {
 	// call blueking interface to init cluster defaultConfig
 	if c == nil || cls == nil {
 		return fmt.Errorf("%s SyncClusterCloudInfo request is empty", cloudName)

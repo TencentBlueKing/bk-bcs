@@ -31,6 +31,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-unified-apiserver/pkg/proxy"
 )
 
+// ClusterIdLabel xxx
 // BCS 集群ID Label
 const ClusterIdLabel = "bkbcs.tencent.com/cluster-id"
 
@@ -41,7 +42,7 @@ type PodStor struct {
 	proxyHandlerMap map[string]*proxy.ProxyHandler
 }
 
-// NewPodStor
+// NewPodStor xxx
 func NewPodStor(members []string) (*PodStor, error) {
 	stor := &PodStor{
 		members:         members,
@@ -164,7 +165,8 @@ func (p *PodStor) selfLink(namespace, name string) string {
 }
 
 // ListAsTable 查询Pod列表, kubectl格式返回, 不支持分页，调试使用
-func (p *PodStor) ListAsTable(ctx context.Context, namespace string, acceptHeader string, opts metav1.ListOptions) (*metav1.Table, error) {
+func (p *PodStor) ListAsTable(ctx context.Context, namespace string, acceptHeader string,
+	opts metav1.ListOptions) (*metav1.Table, error) {
 	typeMata := metav1.TypeMeta{APIVersion: "meta.k8s.io/v1", Kind: "Table"}
 	listMeta := metav1.ListMeta{
 		SelfLink:        p.selfLink(namespace, ""),
@@ -256,7 +258,8 @@ func (p *PodStor) Get(ctx context.Context, namespace string, name string, opts m
 }
 
 // GetAsTable 获取单个Pod, Table格式返回
-func (p *PodStor) GetAsTable(ctx context.Context, namespace string, name string, acceptHeader string, opts metav1.GetOptions) (*metav1.Table, error) {
+func (p *PodStor) GetAsTable(ctx context.Context, namespace string, name string, acceptHeader string,
+	opts metav1.GetOptions) (*metav1.Table, error) {
 	typeMata := metav1.TypeMeta{APIVersion: "meta.k8s.io/v1", Kind: "Table"}
 	listMeta := metav1.ListMeta{
 		SelfLink:        p.selfLink(namespace, name),
@@ -327,7 +330,8 @@ func (p *PodStor) getClientByPod(pod *v1.Pod) (*kubernetes.Clientset, error) {
 }
 
 // Delete 删除单个Pod
-func (p *PodStor) Delete(ctx context.Context, namespace string, name string, opts metav1.DeleteOptions) (*v1.Pod, error) {
+func (p *PodStor) Delete(ctx context.Context, namespace string, name string, opts metav1.DeleteOptions) (*v1.Pod,
+	error) {
 	pod, err := p.Get(ctx, namespace, name, metav1.GetOptions{})
 	if err != nil {
 		return nil, err
@@ -372,7 +376,8 @@ func (p *PodStor) Watch(ctx context.Context, namespace string, opts metav1.ListO
 }
 
 // GetLogs kubectl logs 命令
-func (p *PodStor) GetLogs(ctx context.Context, namespace string, name string, opts *v1.PodLogOptions) (*restclient.Request, error) {
+func (p *PodStor) GetLogs(ctx context.Context, namespace string, name string,
+	opts *v1.PodLogOptions) (*restclient.Request, error) {
 	for k, v := range p.k8sClientMap {
 		_, nsErr := v.CoreV1().Namespaces().Get(ctx, namespace, metav1.GetOptions{})
 		if nsErr != nil {
@@ -394,7 +399,8 @@ func (p *PodStor) GetLogs(ctx context.Context, namespace string, name string, op
 }
 
 // Exec kubectl exec 命令
-func (p *PodStor) Exec(ctx context.Context, namespace string, name string, opts metav1.GetOptions) (*proxy.ProxyHandler, error) {
+func (p *PodStor) Exec(ctx context.Context, namespace string, name string, opts metav1.GetOptions) (*proxy.ProxyHandler,
+	error) {
 	for k, v := range p.k8sClientMap {
 		_, err := v.CoreV1().Pods(namespace).Get(ctx, name, opts)
 		if err != nil {

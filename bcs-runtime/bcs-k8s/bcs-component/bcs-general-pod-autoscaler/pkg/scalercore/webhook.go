@@ -132,7 +132,8 @@ func (s *WebhookScaler) GetReplicas(gpa *autoscalingv1.GeneralPodAutoscaler, cur
 	klog.Infof("Webhook Response: Scale: %v, Replicas: %v, CurrentReplicas: %v",
 		faResp.Response.Scale, faResp.Response.Replicas, currentReplicas)
 	if faResp.Response.Scale {
-		recordWebhookPromMetrics(gpa, metricsServer, key, metricName, startTime, faResp.Response.Replicas, currentReplicas, false)
+		recordWebhookPromMetrics(gpa, metricsServer, key, metricName, startTime, faResp.Response.Replicas, currentReplicas,
+			false)
 		return faResp.Response.Replicas, nil
 	}
 	recordWebhookPromMetrics(gpa, metricsServer, key, metricName, startTime, -1, currentReplicas, false)
@@ -188,6 +189,7 @@ func (s *WebhookScaler) buildURLFromWebhookPolicy() (u *url.URL, err error) {
 	return createURL(scheme, w.Service.Name, w.Service.Namespace, *w.Service.Path, w.Service.Port), nil
 }
 
+// createURL xxx
 // moved to a separate method to cover it with unit tests and check that URL corresponds to a proper pattern
 func createURL(scheme, name, namespace, path string, port *int32) *url.URL {
 	var hostPort int32 = 8000
@@ -220,7 +222,8 @@ func setCABundle(caBundle []byte) error {
 func recordWebhookPromMetrics(gpa *autoscalingv1.GeneralPodAutoscaler, ms metrics.PrometheusMetricServer,
 	key, metricName string, t time.Time, targetReplicas, currentReplicas int32, isErr bool) {
 	ms.RecordGPAScalerError(gpa.Namespace, gpa.Name, key, "webhook", metricName, isErr)
-	ms.RecordGPAScalerMetric(gpa.Namespace, gpa.Name, key, "webhook", metricName, int64(targetReplicas), int64(currentReplicas))
+	ms.RecordGPAScalerMetric(gpa.Namespace, gpa.Name, key, "webhook", metricName, int64(targetReplicas),
+		int64(currentReplicas))
 	ms.RecordGPAScalerDesiredReplicas(gpa.Namespace, gpa.Name, key, "webhook", targetReplicas)
 	if isErr {
 		ms.RecordScalerExecDuration(gpa.Namespace, gpa.Name, key, metricName, "webhook", "failure", time.Since(t))

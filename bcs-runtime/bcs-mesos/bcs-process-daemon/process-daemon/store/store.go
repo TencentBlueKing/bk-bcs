@@ -11,6 +11,7 @@
  *
  */
 
+// Package store xxx
 package store
 
 import (
@@ -29,6 +30,7 @@ type store struct {
 	processInfoDir string
 }
 
+// NewStore xxx
 func NewStore(dir string) Store {
 	return &store{
 		dataDir:        dir,
@@ -36,8 +38,10 @@ func NewStore(dir string) Store {
 	}
 }
 
+// StoreProcessInfo xxx
 func (s *store) StoreProcessInfo(processInfo *types.ProcessInfo) error {
-	file, err := os.OpenFile(path.Join(s.processInfoDir, fmt.Sprintf("%s.info", processInfo.Id)), os.O_CREATE|os.O_RDWR, 0644)
+	file, err := os.OpenFile(path.Join(s.processInfoDir, fmt.Sprintf("%s.info", processInfo.Id)), os.O_CREATE|os.O_RDWR,
+		0644)
 	if err != nil {
 		return err
 	}
@@ -53,6 +57,7 @@ func (s *store) StoreProcessInfo(processInfo *types.ProcessInfo) error {
 	return err
 }
 
+// DeleteProcessInfo xxx
 func (s *store) DeleteProcessInfo(processInfo *types.ProcessInfo) error {
 	err := os.Remove(path.Join(s.processInfoDir, fmt.Sprintf("%s.info", processInfo.Id)))
 	if err != nil {
@@ -62,6 +67,7 @@ func (s *store) DeleteProcessInfo(processInfo *types.ProcessInfo) error {
 	return nil
 }
 
+// GetAllProcessInfos xxx
 func (s *store) GetAllProcessInfos() ([]*types.ProcessInfo, error) {
 	files, err := ioutil.ReadDir(s.processInfoDir)
 	if err != nil {

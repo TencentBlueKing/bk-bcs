@@ -100,7 +100,8 @@ func (m *MesosDriver) buildWebsocketToAPI() error {
 			wsURL := fmt.Sprintf("wss://%s/bcsapi/v4/clustermanager/v1/websocket/connect", bcsAPIURL.Host)
 			blog.Infof("Connecting to %s with token %s", wsURL, m.config.RegisterToken)
 
-			websocketDialer.ClientConnect(context.Background(), wsURL, headers, tlsConfig, nil, func(proto, address string) bool {
+			websocketDialer.ClientConnect(context.Background(), wsURL, headers, tlsConfig, nil, func(proto,
+				address string) bool {
 				switch proto {
 				case "tcp":
 					return true

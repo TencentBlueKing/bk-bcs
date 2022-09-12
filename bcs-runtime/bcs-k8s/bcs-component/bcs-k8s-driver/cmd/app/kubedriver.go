@@ -26,6 +26,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/json"
 )
 
+// Run xxx
 func Run() error {
 	runtime.GOMAXPROCS(runtime.NumCPU())
 

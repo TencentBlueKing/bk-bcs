@@ -11,6 +11,7 @@
  *
  */
 
+// Package sched xxx
 package sched
 
 import (
@@ -28,12 +29,14 @@ import (
 	restful "github.com/emicklei/go-restful"
 )
 
+// Sched xxx
 type Sched struct {
 	config    util.Scheduler
 	scheduler *scheduler.Scheduler
 	scontext  *schedcontext.SchedContext
 }
 
+// New xxx
 func New(config util.Scheduler, scontext *schedcontext.SchedContext) *Sched {
 	s := &Sched{
 		config:    config,
@@ -46,7 +49,7 @@ func New(config util.Scheduler, scontext *schedcontext.SchedContext) *Sched {
 	r := api.NewRouter(backend)
 	apiActions := r.GetActions()
 	s.scontext.ApiServer2.RegisterWebServer("/v1", nil, apiActions)
-	//use pprof
+	// use pprof
 	if s.config.DebugMode {
 		s.initDebug()
 	}
@@ -54,6 +57,7 @@ func New(config util.Scheduler, scontext *schedcontext.SchedContext) *Sched {
 	return s
 }
 
+// Start xxx
 func (s *Sched) Start() error {
 	if err := s.scheduler.Start(); err != nil {
 		return err

@@ -11,9 +11,10 @@
  *
  */
 
+// Package config xxx
 package config
 
-//BcsCcAgentConfig is a configuration of  bcs-cc-agent
+// BcsCcAgentConfig is a configuration of  bcs-cc-agent
 type BcsCcAgentConfig struct {
 	MetricPort uint
 	EngineType string
@@ -25,7 +26,7 @@ type BcsCcAgentConfig struct {
 	BkUsername string
 }
 
-//NewCcAgentConfig create a config object
+// NewBcsCcAgentConfig create a config object
 func NewBcsCcAgentConfig() *BcsCcAgentConfig {
 	return &BcsCcAgentConfig{}
 }

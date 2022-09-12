@@ -63,7 +63,7 @@ var (
 // ActivityStatus activity status
 type ActivityStatus string
 
-// Status return es
+// String return es
 func (as ActivityStatus) String() string {
 	return string(as)
 }
@@ -86,7 +86,7 @@ var (
 // InstanceAsStatus 实例在伸缩活动中的状态
 type InstanceAsStatus string
 
-// Status return es
+// String return es
 func (is InstanceAsStatus) String() string {
 	return string(is)
 }
@@ -105,7 +105,7 @@ var (
 // InstanceTkeStatus tke集群中实例状态
 type InstanceTkeStatus string
 
-// Status return es
+// String return es
 func (is InstanceTkeStatus) String() string {
 	return string(is)
 }
@@ -148,7 +148,7 @@ const (
 
 // QueryFilter xxx
 type QueryFilter interface {
-	// BuildFilters() build filters
+	// BuildFilters () build filters
 	BuildFilters() []*tke.Filter
 }
 
@@ -397,15 +397,15 @@ type NodePoolOption struct {
 
 // CreateCVMRequest create cluster cvm request
 type CreateCVMRequest struct {
-	//tke clusterId, required
+	// tke clusterId, required
 	ClusterID string `json:"clusterId"`
-	//VPCID, required
+	// VPCID, required
 	VPCID string `json:"vpcId"`
-	//subnet, required
+	// subnet, required
 	SubNetID string `json:"subnetId"`
-	//available zone, required
+	// available zone, required
 	Zone string `json:"zone"`
-	//cvm number, required
+	// cvm number, required
 	ApplyNum uint32 `json:"applyNum"`
 	// cvm instance type, required
 	InstanceType string `json:"instanceType"`
@@ -415,15 +415,15 @@ type CreateCVMRequest struct {
 	SystemDiskSize uint32 `json:"systemDiskSize"`
 	// dataDisk, optional
 	DataDisks []*DataDisk `json:"dataDisk"`
-	//image information for system, required
+	// image information for system, required
 	Image *ImageInfo `json:"image"`
-	//security group, optional
+	// security group, optional
 	Security *SecurityGroup `json:"security"`
-	//setup security service, optional, default 0
+	// setup security service, optional, default 0
 	IsSecurityService uint32 `json:"isSecurityService,omitempty"`
-	//cloud monitor, optional, default 1
+	// cloud monitor, optional, default 1
 	IsMonitorService uint32 `json:"isMonitorService"`
-	//cvm instance name, optional
+	// cvm instance name, optional
 	InstanceName string `json:"instanceName,omitempty"`
 	// instance login setting
 	Login LoginSettings `json:"login"`
@@ -433,17 +433,17 @@ type CreateCVMRequest struct {
 
 // ImageInfo for system
 type ImageInfo struct {
-	ID   string `json:"imageId"`           //required
-	Name string `json:"imageName"`         //required
-	OS   string `json:"imageOs,omitempty"` //optional
-	Type string `json:"imageType"`         //optional
+	ID   string `json:"imageId"`           // required
+	Name string `json:"imageName"`         // required
+	OS   string `json:"imageOs,omitempty"` // optional
+	Type string `json:"imageType"`         // optional
 }
 
-//SecurityGroup sg information
+// SecurityGroup sg information
 type SecurityGroup struct {
-	ID   string `json:"securityGroupId"`             //required
-	Name string `json:"securityGroupName,omitempty"` //optional
-	Desc string `json:"securityGroupDesc,omitempty"` //optional
+	ID   string `json:"securityGroupId"`             // required
+	Name string `json:"securityGroupName,omitempty"` // optional
+	Desc string `json:"securityGroupDesc,omitempty"` // optional
 }
 
 // DataDisk for CVMOrder
@@ -808,7 +808,7 @@ type AutoScalingGroup struct {
 	// <br><li> 按照 PRIORITY 策略创建实例时，先保证多机型的策略，后保证多可用区/子网的策略。例如多机型A、B，多子网1、2、3，会按照A1、A2、A3、B1、B2、B3 进行尝试，如果A1售罄，会尝试A2（而非B1）。
 	MultiZoneSubnetPolicy *string `json:"MultiZoneSubnetPolicy,omitempty" name:"MultiZoneSubnetPolicy"`
 
-	// 伸缩组实例健康检查类型，取值如下：<br><li>CVM：根据实例网络状态判断实例是否处于不健康状态，不健康的网络状态即发生实例 PING 不可达事件，详细判断标准可参考[实例健康检查](https://cloud.tencent.com/document/product/377/8553)<br><li>CLB：根据 CLB 的健康检查状态判断实例是否处于不健康状态，CLB健康检查原理可参考[健康检查](https://cloud.tencent.com/document/product/214/6097) <br>如果选择了`CLB`类型，伸缩组将同时检查实例网络状态与CLB健康检查状态，如果出现实例网络状态不健康，实例将被标记为 UNHEALTHY 状态；如果出现 CLB 健康检查状态异常，实例将被标记为CLB_UNHEALTHY 状态，如果两个异常状态同时出现，实例`HealthStatus`字段将返回 UNHEALTHY|CLB_UNHEALTHY。默认值：CLB
+	// 伸缩组实例健康检查类型
 	HealthCheckType *string `json:"HealthCheckType,omitempty" name:"HealthCheckType"`
 
 	// CLB健康检查宽限期，当扩容的实例进入`IN_SERVICE`后，在宽限期时间范围内将不会被标记为不健康`CLB_UNHEALTHY`。<br>默认值：0。取值范围[0, 7200]，单位：秒。
@@ -908,14 +908,14 @@ type LaunchConfiguration struct {
 	// 启动配置显示名称。名称仅支持中文、英文、数字、下划线、分隔符"-"、小数点，最大长度不能超60个字节。
 	LaunchConfigurationName *string `json:"LaunchConfigurationName,omitempty" name:"LaunchConfigurationName"`
 
-	// 指定有效的[镜像](https://cloud.tencent.com/document/product/213/4940)ID，格式形如`img-8toqc6s3`。镜像类型分为四种：<br/><li>公共镜像</li><li>自定义镜像</li><li>共享镜像</li><li>服务市场镜像</li><br/>可通过以下方式获取可用的镜像ID：<br/><li>`公共镜像`、`自定义镜像`、`共享镜像`的镜像ID可通过登录[控制台](https://console.cloud.tencent.com/cvm/image?rid=1&imageType=PUBLIC_IMAGE)查询；`服务镜像市场`的镜像ID可通过[云市场](https://market.cloud.tencent.com/list)查询。</li><li>通过调用接口 [DescribeImages](https://cloud.tencent.com/document/api/213/15715) ，取返回信息中的`ImageId`字段。</li>
+	// 指定有效的[镜像]ID，格式形如`img-8toqc6s3`。com/list)查询。
 	ImageID *string `json:"ImageId,omitempty" name:"ImageId"`
 
 	// 启动配置所属项目ID。不填为默认项目。
 	// 注意：伸缩组内实例所属项目ID取伸缩组项目ID，与这里取值无关。
 	ProjectID *uint64 `json:"ProjectId,omitempty" name:"ProjectId"`
 
-	// 实例机型。不同实例机型指定了不同的资源规格，具体取值可通过调用接口 [DescribeInstanceTypeConfigs](https://cloud.tencent.com/document/api/213/15749) 来获得最新的规格表或参见[实例类型](https://cloud.tencent.com/document/product/213/11518)描述。
+	// 实例机型。不同实例机型指定了不同的资源规格
 	// `InstanceType`和`InstanceTypes`参数互斥，二者必填一个且只能填写一个。
 	InstanceType *string `json:"InstanceType,omitempty" name:"InstanceType"`
 
@@ -986,8 +986,7 @@ type LaunchConfiguration struct {
 // SystemDisk 系统盘配置信息。
 type SystemDisk struct {
 
-	// 系统盘类型。系统盘类型限制详见[云硬盘类型](https://cloud.tencent.com/document/product/362/2353)。取值范围：<br><li>LOCAL_BASIC：本地硬盘<br><li>LOCAL_SSD：本地SSD硬盘<br><li>CLOUD_BASIC：普通云硬盘<br><li>CLOUD_PREMIUM：高性能云硬盘<br><li>CLOUD_SSD：SSD云硬盘<br><br>默认取值：CLOUD_PREMIUM。
-	// 注意：此字段可能返回 null，表示取不到有效值。
+	// 系统盘类型。取值范围：LOCAL_BASIC：本地硬盘 LOCAL_SSD：本地SSD硬盘 CLOUD_BASIC：普通云硬盘 CLOUD_PREMIUM：高性能云硬盘 CLOUD_SSD：SSD云硬盘 默认取值：CLOUD_PREMIUM。
 	DiskType *string `json:"DiskType,omitempty" name:"DiskType"`
 
 	// 系统盘大小，单位：GB。默认值为 50
@@ -998,20 +997,18 @@ type SystemDisk struct {
 // LaunchConfigureDataDisk 数据盘配置信息。
 type LaunchConfigureDataDisk struct {
 
-	// 数据盘类型。数据盘类型限制详见[云硬盘类型](https://cloud.tencent.com/document/product/362/2353)。取值范围：<br><li>LOCAL_BASIC：本地硬盘<br><li>LOCAL_SSD：本地SSD硬盘<br><li>CLOUD_BASIC：普通云硬盘<br><li>CLOUD_PREMIUM：高性能云硬盘<br><li>CLOUD_SSD：SSD云硬盘<br><li>CLOUD_HSSD：增强型SSD云硬盘<br><li>CLOUD_TSSD：极速型SSD云硬盘<br><br>默认取值与系统盘类型（SystemDisk.DiskType）保持一致。
-	// 注意：此字段可能返回 null，表示取不到有效值。
+	// 数据盘类型。
+	// 取值范围：LOCAL_BASIC：本地硬盘 LOCAL_SSD：本地SSD硬盘 CLOUD_BASIC：普通云硬盘 CLOUD_PREMIUM：高性能云硬盘 CLOUD_SSD：SSD云硬盘 CLOUD_HSSD：增强型SSD云硬盘 CLOUD_TSSD：极速型SSD云硬盘 默认取值与系统盘类型（SystemDisk.DiskType）保持一致。
 	DiskType *string `json:"DiskType,omitempty" name:"DiskType"`
 
-	// 数据盘大小，单位：GB。最小调整步长为10G，不同数据盘类型取值范围不同，具体限制详见：[CVM实例配置](https://cloud.tencent.com/document/product/213/2177)。默认值为0，表示不购买数据盘。更多限制详见产品文档。
-	// 注意：此字段可能返回 null，表示取不到有效值。
+	// 数据盘大小，单位：GB。最小调整步长为10G
 	DiskSize *uint64 `json:"DiskSize,omitempty" name:"DiskSize"`
 }
 
 // InternetAccessible 网络计费类型。
 type InternetAccessible struct {
 
-	// 网络计费类型。取值范围：<br><li>BANDWIDTH_PREPAID：预付费按带宽结算<br><li>TRAFFIC_POSTPAID_BY_HOUR：流量按小时后付费<br><li>BANDWIDTH_POSTPAID_BY_HOUR：带宽按小时后付费<br><li>BANDWIDTH_PACKAGE：带宽包用户<br>默认取值：TRAFFIC_POSTPAID_BY_HOUR。
-	// 注意：此字段可能返回 null，表示取不到有效值。
+	// 网络计费类型
 	InternetChargeType *string `json:"InternetChargeType,omitempty" name:"InternetChargeType"`
 
 	// 公网出带宽上限，单位：Mbps。默认值：0Mbps。不同机型带宽上限范围不一致，具体限制详见[购买网络带宽](https://cloud.tencent.com/document/product/213/509)。
@@ -1077,7 +1074,7 @@ type InstanceChargePrepaid struct {
 	// 购买实例的时长，单位：月。取值范围：1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 24, 36。
 	Period *int64 `json:"Period,omitempty" name:"Period"`
 
-	// 自动续费标识。取值范围：<br><li>NOTIFY_AND_AUTO_RENEW：通知过期且自动续费<br><li>NOTIFY_AND_MANUAL_RENEW：通知过期不自动续费<br><li>DISABLE_NOTIFY_AND_MANUAL_RENEW：不通知过期不自动续费<br><br>默认取值：NOTIFY_AND_MANUAL_RENEW。若该参数指定为NOTIFY_AND_AUTO_RENEW，在账户余额充足的情况下，实例到期后将按月自动续费。
+	// 自动续费标识。
 	RenewFlag *string `json:"RenewFlag,omitempty" name:"RenewFlag"`
 }
 

@@ -12,6 +12,7 @@
  * limitations under the License.
  */
 
+// Package path xxx
 package path
 
 import (

@@ -11,6 +11,7 @@
  *
  */
 
+// Package app xxx
 package app
 
 import (
@@ -35,9 +36,9 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 )
 
-//Run entry for bmsf-mesos-adaptor
+// Run entry for bmsf-mesos-adaptor
 func Run(config *Config) error {
-	//pid configuration
+	// pid configuration
 	if pidErr := pidfile.SavePid(config.ProcessConfig); pidErr != nil {
 		blog.Errorf("bmsf-mesos-adaptor save pid file failed, %s", pidErr)
 	}
@@ -112,7 +113,7 @@ func handleEvent(s *Server, config *Config, event <-chan rdiscover.RoleEvent) {
 }
 
 func settingManager(kubeconfig string, port int, svc queue.Queue, node queue.Queue) manager.Manager {
-	//init manager
+	// init manager
 	blog.Infof("setting up manager...")
 	restConfig, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
 	if err != nil {
@@ -140,14 +141,14 @@ func settingManager(kubeconfig string, port int, svc queue.Queue, node queue.Que
 	return mgr
 }
 
-//Server discovery server, holding all resources
+// Server discovery server, holding all resources
 type Server struct {
-	config    *Config           //server config
-	mgrStop   chan struct{}     //stop signal chan for manager
-	mgr       manager.Manager   //manager of all Reconciler
-	cluster   discovery.Cluster //cluster instance
-	svcQueue  queue.Queue       //queue for AppSvc
-	nodeQueue queue.Queue       //queue for AppNode
+	config    *Config           // server config
+	mgrStop   chan struct{}     // stop signal chan for manager
+	mgr       manager.Manager   // manager of all Reconciler
+	cluster   discovery.Cluster // cluster instance
+	svcQueue  queue.Queue       // queue for AppSvc
+	nodeQueue queue.Queue       // queue for AppNode
 	isRunning bool
 	isMaster  bool
 }
@@ -168,7 +169,7 @@ func (s *Server) createManager() error {
 	s.mgrStop = make(chan struct{})
 	s.mgr = settingManager(s.config.KubeConfig, int(s.config.MetricPort), s.svcQueue, s.nodeQueue)
 
-	//starting manager
+	// starting manager
 	go func() {
 		if err := s.mgr.Start(s.mgrStop); err != nil {
 			blog.Errorf("mesos-adaptor starting kubemanager failed, %s", err.Error())
@@ -176,7 +177,7 @@ func (s *Server) createManager() error {
 		}
 	}()
 
-	//wait for Cache ready
+	// wait for Cache ready
 	blog.Infof("mesos-adaptor is waiting for kubemanager sync all cache datas.")
 	caches := s.mgr.GetCache()
 	if ok := caches.WaitForCacheSync(s.mgrStop); !ok {
@@ -188,7 +189,7 @@ func (s *Server) createManager() error {
 	return nil
 }
 
-//Run running server loop
+// Run running server loop
 func (s *Server) Run() {
 	// create controller manager
 	if err := s.createManager(); err != nil {
@@ -196,7 +197,7 @@ func (s *Server) Run() {
 		return
 	}
 
-	//create cluster plugin
+	// create cluster plugin
 	clusterZkHosts := strings.Split(s.config.Zookeeper, ",")
 	bkBcsCluster, err := bcs.NewCluster(s.config.Cluster, clusterZkHosts)
 	if err != nil {
@@ -204,14 +205,14 @@ func (s *Server) Run() {
 		return
 	}
 	s.cluster = bkBcsCluster
-	//starting cluster
+	// starting cluster
 	s.cluster.AppSvcs().RegisterAppSvcQueue(s.svcQueue)
 	s.cluster.AppNodes().RegisterAppNodeQueue(s.nodeQueue)
 	s.cluster.Run()
 	s.isRunning = true
 }
 
-//Stop stop server
+// Stop stop server
 func (s *Server) Stop() {
 	s.cluster.Stop()
 	s.mgrStop <- struct{}{}

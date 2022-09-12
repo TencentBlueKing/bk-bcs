@@ -11,6 +11,7 @@
  *
  */
 
+// Package bk_monitor xxx
 package bk_monitor
 
 import (
@@ -20,10 +21,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/TencentBlueKing/bkmonitor-kits/logger"
 	"github.com/pkg/errors"
 	"github.com/prometheus/prometheus/model/labels"
 	"github.com/thanos-io/thanos/pkg/component"
+	"github.com/thanos-io/thanos/pkg/store"
 	"github.com/thanos-io/thanos/pkg/store/labelpb"
 	"github.com/thanos-io/thanos/pkg/store/storepb"
 	"gopkg.in/yaml.v2"
@@ -49,7 +50,7 @@ type BKMonitorStore struct {
 	metadataURL *url.URL
 }
 
-// NewBKMonitorStore
+// NewBKMonitorStore xxx
 func NewBKMonitorStore(conf []byte) (*BKMonitorStore, error) {
 	var config Config
 	if err := yaml.UnmarshalStrict(conf, &config); err != nil {
@@ -119,13 +120,15 @@ func (s *BKMonitorStore) Info(ctx context.Context, r *storepb.InfoRequest) (*sto
 }
 
 // LabelNames 返回 labels 列表
-func (s *BKMonitorStore) LabelNames(ctx context.Context, r *storepb.LabelNamesRequest) (*storepb.LabelNamesResponse, error) {
+func (s *BKMonitorStore) LabelNames(ctx context.Context, r *storepb.LabelNamesRequest) (*storepb.LabelNamesResponse,
+	error) {
 	names := []string{"__name__"}
 	return &storepb.LabelNamesResponse{Names: names}, nil
 }
 
 // LabelValues 返回 label values 列表
-func (s *BKMonitorStore) LabelValues(ctx context.Context, r *storepb.LabelValuesRequest) (*storepb.LabelValuesResponse, error) {
+func (s *BKMonitorStore) LabelValues(ctx context.Context, r *storepb.LabelValuesRequest) (*storepb.LabelValuesResponse,
+	error) {
 	values := []string{}
 	if r.Label == "__name__" {
 		values = []string{"container_network_receive_bytes_total"}
@@ -137,7 +140,8 @@ func (s *BKMonitorStore) LabelValues(ctx context.Context, r *storepb.LabelValues
 
 // Series 返回时序数据
 func (s *BKMonitorStore) Series(r *storepb.SeriesRequest, srv storepb.Store_SeriesServer) error {
-	logger.Infow(clientutil.DumpPromQL(r), "minTime", r.MinTime, "maxTime", r.MaxTime)
+	ctx := srv.Context()
+	klog.InfoS(clientutil.DumpPromQL(r), "request_id", store.RequestIDValue(ctx), "minTime", r.MinTime, "maxTime", r.MaxTime, "step", r.QueryHints.StepMillis)
 
 	if r.Step < 60 {
 		r.Step = 60
@@ -179,6 +183,10 @@ func (s *BKMonitorStore) Series(r *storepb.SeriesRequest, srv storepb.Store_Seri
 
 	newMatchers := make([]storepb.LabelMatcher, 0, len(r.Matchers))
 	for _, m := range r.Matchers {
+		if m.Name == "provider" {
+			continue
+		}
+
 		// 集群Id转换为 bcs 的规范
 		if m.Name == "cluster_id" {
 			// 对 bkmonitor: 为 蓝鲸监控主机的数据, 不能添加集群过滤
@@ -186,9 +194,10 @@ func (s *BKMonitorStore) Series(r *storepb.SeriesRequest, srv storepb.Store_Seri
 				continue
 			}
 			newMatchers = append(newMatchers, storepb.LabelMatcher{Name: "bcs_cluster_id", Value: m.Value})
-		} else {
-			newMatchers = append(newMatchers, m)
+			continue
 		}
+
+		newMatchers = append(newMatchers, m)
 	}
 
 	bcsConf := k8sclient.GetBCSConfByClusterId(clusterId)
@@ -197,7 +206,8 @@ func (s *BKMonitorStore) Series(r *storepb.SeriesRequest, srv storepb.Store_Seri
 		return err
 	}
 
-	promSeriesSet, err := bkmonitor_client.QueryByPromQL(srv.Context(), s.config.URL, cluster.BKBizID, start, end, r.Step, newMatchers)
+	promSeriesSet, err := bkmonitor_client.QueryByPromQL(srv.Context(), s.config.URL, cluster.BKBizID, start, end, r.Step,
+		newMatchers)
 	if err != nil {
 		return err
 	}

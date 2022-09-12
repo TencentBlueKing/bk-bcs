@@ -11,6 +11,7 @@ import (
 	_ "github.com/golang/protobuf/ptypes/wrappers"
 	_ "github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger/options"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
+	_ "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	math "math"
 )
 
@@ -153,6 +154,13 @@ func NewClusterManagerEndpoints() []*api.Endpoint {
 			Name:    "ClusterManager.UnCordonNode",
 			Path:    []string{"/clustermanager/v1/node/uncordon"},
 			Method:  []string{"PUT"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "ClusterManager.DrainNode",
+			Path:    []string{"/clustermanager/v1/node/drain"},
+			Method:  []string{"POST"},
 			Body:    "*",
 			Handler: "rpc",
 		},
@@ -429,6 +437,13 @@ func NewClusterManagerEndpoints() []*api.Endpoint {
 			Handler: "rpc",
 		},
 		&api.Endpoint{
+			Name:    "ClusterManager.CleanNodesInGroupV2",
+			Path:    []string{"/clustermanager/v2/nodegroup/{nodeGroupID}/groupnode"},
+			Method:  []string{"DELETE"},
+			Body:    "",
+			Handler: "rpc",
+		},
+		&api.Endpoint{
 			Name:    "ClusterManager.ListNodesInGroup",
 			Path:    []string{"/clustermanager/v1/nodegroup/{nodeGroupID}/node"},
 			Method:  []string{"GET"},
@@ -536,6 +551,13 @@ func NewClusterManagerEndpoints() []*api.Endpoint {
 			Handler: "rpc",
 		},
 		&api.Endpoint{
+			Name:    "ClusterManager.UpdateAutoScalingStatus",
+			Path:    []string{"/clustermanager/v1/autoscalingoption/{clusterID}/status"},
+			Method:  []string{"PUT"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		&api.Endpoint{
 			Name:    "ClusterManager.CreateCloudAccount",
 			Path:    []string{"/clustermanager/v1/clouds/{cloudID}/accounts"},
 			Method:  []string{"POST"},
@@ -559,6 +581,12 @@ func NewClusterManagerEndpoints() []*api.Endpoint {
 		&api.Endpoint{
 			Name:    "ClusterManager.ListCloudAccount",
 			Path:    []string{"/clustermanager/v1/clouds/{cloudID}/accounts"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "ClusterManager.ListCloudAccountToPerm",
+			Path:    []string{"/clustermanager/v1/accounts"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
@@ -604,6 +632,31 @@ func NewClusterManagerEndpoints() []*api.Endpoint {
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
+		&api.Endpoint{
+			Name:    "ClusterManager.ListOperationLogs",
+			Path:    []string{"/clustermanager/v1/operationlogs"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "ClusterManager.ListResourceSchema",
+			Path:    []string{"/clustermanager/v1/resourceschema/{cloudID}"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "ClusterManager.GetResourceSchema",
+			Path:    []string{"/clustermanager/v1/resourceschema/{cloudID}/{name}"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "ClusterManager.QueryPermByActionID",
+			Path:    []string{"/clustermanager/v1/perms/actions/{actionID}"},
+			Method:  []string{"POST"},
+			Body:    "*",
+			Handler: "rpc",
+		},
 	}
 }
 
@@ -629,6 +682,7 @@ type ClusterManagerService interface {
 	CheckNodeInCluster(ctx context.Context, in *CheckNodesRequest, opts ...client.CallOption) (*CheckNodesResponse, error)
 	CordonNode(ctx context.Context, in *CordonNodeRequest, opts ...client.CallOption) (*CordonNodeResponse, error)
 	UnCordonNode(ctx context.Context, in *UnCordonNodeRequest, opts ...client.CallOption) (*UnCordonNodeResponse, error)
+	DrainNode(ctx context.Context, in *DrainNodeRequest, opts ...client.CallOption) (*DrainNodeResponse, error)
 	//* cluster credential management
 	GetClusterCredential(ctx context.Context, in *GetClusterCredentialReq, opts ...client.CallOption) (*GetClusterCredentialResp, error)
 	UpdateClusterCredential(ctx context.Context, in *UpdateClusterCredentialReq, opts ...client.CallOption) (*UpdateClusterCredentialResp, error)
@@ -678,7 +732,8 @@ type ClusterManagerService interface {
 	MoveNodesToGroup(ctx context.Context, in *MoveNodesToGroupRequest, opts ...client.CallOption) (*MoveNodesToGroupResponse, error)
 	RemoveNodesFromGroup(ctx context.Context, in *RemoveNodesFromGroupRequest, opts ...client.CallOption) (*RemoveNodesFromGroupResponse, error)
 	CleanNodesInGroup(ctx context.Context, in *CleanNodesInGroupRequest, opts ...client.CallOption) (*CleanNodesInGroupResponse, error)
-	ListNodesInGroup(ctx context.Context, in *GetNodeGroupRequest, opts ...client.CallOption) (*ListNodesInGroupResponse, error)
+	CleanNodesInGroupV2(ctx context.Context, in *CleanNodesInGroupV2Request, opts ...client.CallOption) (*CleanNodesInGroupV2Response, error)
+	ListNodesInGroup(ctx context.Context, in *ListNodesInGroupRequest, opts ...client.CallOption) (*ListNodesInGroupResponse, error)
 	UpdateGroupDesiredNode(ctx context.Context, in *UpdateGroupDesiredNodeRequest, opts ...client.CallOption) (*UpdateGroupDesiredNodeResponse, error)
 	UpdateGroupDesiredSize(ctx context.Context, in *UpdateGroupDesiredSizeRequest, opts ...client.CallOption) (*UpdateGroupDesiredSizeResponse, error)
 	EnableNodeGroupAutoScale(ctx context.Context, in *EnableNodeGroupAutoScaleRequest, opts ...client.CallOption) (*EnableNodeGroupAutoScaleResponse, error)
@@ -696,11 +751,13 @@ type ClusterManagerService interface {
 	DeleteAutoScalingOption(ctx context.Context, in *DeleteAutoScalingOptionRequest, opts ...client.CallOption) (*DeleteAutoScalingOptionResponse, error)
 	GetAutoScalingOption(ctx context.Context, in *GetAutoScalingOptionRequest, opts ...client.CallOption) (*GetAutoScalingOptionResponse, error)
 	ListAutoScalingOption(ctx context.Context, in *ListAutoScalingOptionRequest, opts ...client.CallOption) (*ListAutoScalingOptionResponse, error)
+	UpdateAutoScalingStatus(ctx context.Context, in *UpdateAutoScalingStatusRequest, opts ...client.CallOption) (*UpdateAutoScalingStatusResponse, error)
 	// Cloud Account information management
 	CreateCloudAccount(ctx context.Context, in *CreateCloudAccountRequest, opts ...client.CallOption) (*CreateCloudAccountResponse, error)
 	UpdateCloudAccount(ctx context.Context, in *UpdateCloudAccountRequest, opts ...client.CallOption) (*UpdateCloudAccountResponse, error)
 	DeleteCloudAccount(ctx context.Context, in *DeleteCloudAccountRequest, opts ...client.CallOption) (*DeleteCloudAccountResponse, error)
 	ListCloudAccount(ctx context.Context, in *ListCloudAccountRequest, opts ...client.CallOption) (*ListCloudAccountResponse, error)
+	ListCloudAccountToPerm(ctx context.Context, in *ListCloudAccountPermRequest, opts ...client.CallOption) (*ListCloudAccountPermResponse, error)
 	// Cloud Resource management
 	GetCloudRegions(ctx context.Context, in *GetCloudRegionsRequest, opts ...client.CallOption) (*GetCloudRegionsResponse, error)
 	GetCloudRegionZones(ctx context.Context, in *GetCloudRegionZonesRequest, opts ...client.CallOption) (*GetCloudRegionZonesResponse, error)
@@ -709,6 +766,15 @@ type ClusterManagerService interface {
 	ListCloudSecurityGroups(ctx context.Context, in *ListCloudSecurityGroupsRequest, opts ...client.CallOption) (*ListCloudSecurityGroupsResponse, error)
 	ListCloudInstanceTypes(ctx context.Context, in *ListCloudInstanceTypeRequest, opts ...client.CallOption) (*ListCloudInstanceTypeResponse, error)
 	ListCloudOsImage(ctx context.Context, in *ListCloudOsImageRequest, opts ...client.CallOption) (*ListCloudOsImageResponse, error)
+	// Operation logs
+	ListOperationLogs(ctx context.Context, in *ListOperationLogsRequest, opts ...client.CallOption) (*ListOperationLogsResponse, error)
+	// ** ResourceSchema **
+	// ListResourceSchema
+	ListResourceSchema(ctx context.Context, in *ListResourceSchemaRequest, opts ...client.CallOption) (*ListResourceSchemaResponse, error)
+	// GetResourceSchema
+	GetResourceSchema(ctx context.Context, in *GetResourceSchemaRequest, opts ...client.CallOption) (*GetResourceSchemaResponse, error)
+	// Perm interface
+	QueryPermByActionID(ctx context.Context, in *QueryPermByActionIDRequest, opts ...client.CallOption) (*QueryPermByActionIDResponse, error)
 }
 
 type clusterManagerService struct {
@@ -886,6 +952,16 @@ func (c *clusterManagerService) CordonNode(ctx context.Context, in *CordonNodeRe
 func (c *clusterManagerService) UnCordonNode(ctx context.Context, in *UnCordonNodeRequest, opts ...client.CallOption) (*UnCordonNodeResponse, error) {
 	req := c.c.NewRequest(c.name, "ClusterManager.UnCordonNode", in)
 	out := new(UnCordonNodeResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerService) DrainNode(ctx context.Context, in *DrainNodeRequest, opts ...client.CallOption) (*DrainNodeResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.DrainNode", in)
+	out := new(DrainNodeResponse)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -1303,7 +1379,17 @@ func (c *clusterManagerService) CleanNodesInGroup(ctx context.Context, in *Clean
 	return out, nil
 }
 
-func (c *clusterManagerService) ListNodesInGroup(ctx context.Context, in *GetNodeGroupRequest, opts ...client.CallOption) (*ListNodesInGroupResponse, error) {
+func (c *clusterManagerService) CleanNodesInGroupV2(ctx context.Context, in *CleanNodesInGroupV2Request, opts ...client.CallOption) (*CleanNodesInGroupV2Response, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.CleanNodesInGroupV2", in)
+	out := new(CleanNodesInGroupV2Response)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerService) ListNodesInGroup(ctx context.Context, in *ListNodesInGroupRequest, opts ...client.CallOption) (*ListNodesInGroupResponse, error) {
 	req := c.c.NewRequest(c.name, "ClusterManager.ListNodesInGroup", in)
 	out := new(ListNodesInGroupResponse)
 	err := c.c.Call(ctx, req, out, opts...)
@@ -1463,6 +1549,16 @@ func (c *clusterManagerService) ListAutoScalingOption(ctx context.Context, in *L
 	return out, nil
 }
 
+func (c *clusterManagerService) UpdateAutoScalingStatus(ctx context.Context, in *UpdateAutoScalingStatusRequest, opts ...client.CallOption) (*UpdateAutoScalingStatusResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.UpdateAutoScalingStatus", in)
+	out := new(UpdateAutoScalingStatusResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *clusterManagerService) CreateCloudAccount(ctx context.Context, in *CreateCloudAccountRequest, opts ...client.CallOption) (*CreateCloudAccountResponse, error) {
 	req := c.c.NewRequest(c.name, "ClusterManager.CreateCloudAccount", in)
 	out := new(CreateCloudAccountResponse)
@@ -1496,6 +1592,16 @@ func (c *clusterManagerService) DeleteCloudAccount(ctx context.Context, in *Dele
 func (c *clusterManagerService) ListCloudAccount(ctx context.Context, in *ListCloudAccountRequest, opts ...client.CallOption) (*ListCloudAccountResponse, error) {
 	req := c.c.NewRequest(c.name, "ClusterManager.ListCloudAccount", in)
 	out := new(ListCloudAccountResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerService) ListCloudAccountToPerm(ctx context.Context, in *ListCloudAccountPermRequest, opts ...client.CallOption) (*ListCloudAccountPermResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.ListCloudAccountToPerm", in)
+	out := new(ListCloudAccountPermResponse)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -1573,6 +1679,46 @@ func (c *clusterManagerService) ListCloudOsImage(ctx context.Context, in *ListCl
 	return out, nil
 }
 
+func (c *clusterManagerService) ListOperationLogs(ctx context.Context, in *ListOperationLogsRequest, opts ...client.CallOption) (*ListOperationLogsResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.ListOperationLogs", in)
+	out := new(ListOperationLogsResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerService) ListResourceSchema(ctx context.Context, in *ListResourceSchemaRequest, opts ...client.CallOption) (*ListResourceSchemaResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.ListResourceSchema", in)
+	out := new(ListResourceSchemaResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerService) GetResourceSchema(ctx context.Context, in *GetResourceSchemaRequest, opts ...client.CallOption) (*GetResourceSchemaResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.GetResourceSchema", in)
+	out := new(GetResourceSchemaResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerService) QueryPermByActionID(ctx context.Context, in *QueryPermByActionIDRequest, opts ...client.CallOption) (*QueryPermByActionIDResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.QueryPermByActionID", in)
+	out := new(QueryPermByActionIDResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // Server API for ClusterManager service
 
 type ClusterManagerHandler interface {
@@ -1595,6 +1741,7 @@ type ClusterManagerHandler interface {
 	CheckNodeInCluster(context.Context, *CheckNodesRequest, *CheckNodesResponse) error
 	CordonNode(context.Context, *CordonNodeRequest, *CordonNodeResponse) error
 	UnCordonNode(context.Context, *UnCordonNodeRequest, *UnCordonNodeResponse) error
+	DrainNode(context.Context, *DrainNodeRequest, *DrainNodeResponse) error
 	//* cluster credential management
 	GetClusterCredential(context.Context, *GetClusterCredentialReq, *GetClusterCredentialResp) error
 	UpdateClusterCredential(context.Context, *UpdateClusterCredentialReq, *UpdateClusterCredentialResp) error
@@ -1644,7 +1791,8 @@ type ClusterManagerHandler interface {
 	MoveNodesToGroup(context.Context, *MoveNodesToGroupRequest, *MoveNodesToGroupResponse) error
 	RemoveNodesFromGroup(context.Context, *RemoveNodesFromGroupRequest, *RemoveNodesFromGroupResponse) error
 	CleanNodesInGroup(context.Context, *CleanNodesInGroupRequest, *CleanNodesInGroupResponse) error
-	ListNodesInGroup(context.Context, *GetNodeGroupRequest, *ListNodesInGroupResponse) error
+	CleanNodesInGroupV2(context.Context, *CleanNodesInGroupV2Request, *CleanNodesInGroupV2Response) error
+	ListNodesInGroup(context.Context, *ListNodesInGroupRequest, *ListNodesInGroupResponse) error
 	UpdateGroupDesiredNode(context.Context, *UpdateGroupDesiredNodeRequest, *UpdateGroupDesiredNodeResponse) error
 	UpdateGroupDesiredSize(context.Context, *UpdateGroupDesiredSizeRequest, *UpdateGroupDesiredSizeResponse) error
 	EnableNodeGroupAutoScale(context.Context, *EnableNodeGroupAutoScaleRequest, *EnableNodeGroupAutoScaleResponse) error
@@ -1662,11 +1810,13 @@ type ClusterManagerHandler interface {
 	DeleteAutoScalingOption(context.Context, *DeleteAutoScalingOptionRequest, *DeleteAutoScalingOptionResponse) error
 	GetAutoScalingOption(context.Context, *GetAutoScalingOptionRequest, *GetAutoScalingOptionResponse) error
 	ListAutoScalingOption(context.Context, *ListAutoScalingOptionRequest, *ListAutoScalingOptionResponse) error
+	UpdateAutoScalingStatus(context.Context, *UpdateAutoScalingStatusRequest, *UpdateAutoScalingStatusResponse) error
 	// Cloud Account information management
 	CreateCloudAccount(context.Context, *CreateCloudAccountRequest, *CreateCloudAccountResponse) error
 	UpdateCloudAccount(context.Context, *UpdateCloudAccountRequest, *UpdateCloudAccountResponse) error
 	DeleteCloudAccount(context.Context, *DeleteCloudAccountRequest, *DeleteCloudAccountResponse) error
 	ListCloudAccount(context.Context, *ListCloudAccountRequest, *ListCloudAccountResponse) error
+	ListCloudAccountToPerm(context.Context, *ListCloudAccountPermRequest, *ListCloudAccountPermResponse) error
 	// Cloud Resource management
 	GetCloudRegions(context.Context, *GetCloudRegionsRequest, *GetCloudRegionsResponse) error
 	GetCloudRegionZones(context.Context, *GetCloudRegionZonesRequest, *GetCloudRegionZonesResponse) error
@@ -1675,6 +1825,15 @@ type ClusterManagerHandler interface {
 	ListCloudSecurityGroups(context.Context, *ListCloudSecurityGroupsRequest, *ListCloudSecurityGroupsResponse) error
 	ListCloudInstanceTypes(context.Context, *ListCloudInstanceTypeRequest, *ListCloudInstanceTypeResponse) error
 	ListCloudOsImage(context.Context, *ListCloudOsImageRequest, *ListCloudOsImageResponse) error
+	// Operation logs
+	ListOperationLogs(context.Context, *ListOperationLogsRequest, *ListOperationLogsResponse) error
+	// ** ResourceSchema **
+	// ListResourceSchema
+	ListResourceSchema(context.Context, *ListResourceSchemaRequest, *ListResourceSchemaResponse) error
+	// GetResourceSchema
+	GetResourceSchema(context.Context, *GetResourceSchemaRequest, *GetResourceSchemaResponse) error
+	// Perm interface
+	QueryPermByActionID(context.Context, *QueryPermByActionIDRequest, *QueryPermByActionIDResponse) error
 }
 
 func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, opts ...server.HandlerOption) error {
@@ -1696,6 +1855,7 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		CheckNodeInCluster(ctx context.Context, in *CheckNodesRequest, out *CheckNodesResponse) error
 		CordonNode(ctx context.Context, in *CordonNodeRequest, out *CordonNodeResponse) error
 		UnCordonNode(ctx context.Context, in *UnCordonNodeRequest, out *UnCordonNodeResponse) error
+		DrainNode(ctx context.Context, in *DrainNodeRequest, out *DrainNodeResponse) error
 		GetClusterCredential(ctx context.Context, in *GetClusterCredentialReq, out *GetClusterCredentialResp) error
 		UpdateClusterCredential(ctx context.Context, in *UpdateClusterCredentialReq, out *UpdateClusterCredentialResp) error
 		DeleteClusterCredential(ctx context.Context, in *DeleteClusterCredentialReq, out *DeleteClusterCredentialResp) error
@@ -1737,7 +1897,8 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		MoveNodesToGroup(ctx context.Context, in *MoveNodesToGroupRequest, out *MoveNodesToGroupResponse) error
 		RemoveNodesFromGroup(ctx context.Context, in *RemoveNodesFromGroupRequest, out *RemoveNodesFromGroupResponse) error
 		CleanNodesInGroup(ctx context.Context, in *CleanNodesInGroupRequest, out *CleanNodesInGroupResponse) error
-		ListNodesInGroup(ctx context.Context, in *GetNodeGroupRequest, out *ListNodesInGroupResponse) error
+		CleanNodesInGroupV2(ctx context.Context, in *CleanNodesInGroupV2Request, out *CleanNodesInGroupV2Response) error
+		ListNodesInGroup(ctx context.Context, in *ListNodesInGroupRequest, out *ListNodesInGroupResponse) error
 		UpdateGroupDesiredNode(ctx context.Context, in *UpdateGroupDesiredNodeRequest, out *UpdateGroupDesiredNodeResponse) error
 		UpdateGroupDesiredSize(ctx context.Context, in *UpdateGroupDesiredSizeRequest, out *UpdateGroupDesiredSizeResponse) error
 		EnableNodeGroupAutoScale(ctx context.Context, in *EnableNodeGroupAutoScaleRequest, out *EnableNodeGroupAutoScaleResponse) error
@@ -1753,10 +1914,12 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		DeleteAutoScalingOption(ctx context.Context, in *DeleteAutoScalingOptionRequest, out *DeleteAutoScalingOptionResponse) error
 		GetAutoScalingOption(ctx context.Context, in *GetAutoScalingOptionRequest, out *GetAutoScalingOptionResponse) error
 		ListAutoScalingOption(ctx context.Context, in *ListAutoScalingOptionRequest, out *ListAutoScalingOptionResponse) error
+		UpdateAutoScalingStatus(ctx context.Context, in *UpdateAutoScalingStatusRequest, out *UpdateAutoScalingStatusResponse) error
 		CreateCloudAccount(ctx context.Context, in *CreateCloudAccountRequest, out *CreateCloudAccountResponse) error
 		UpdateCloudAccount(ctx context.Context, in *UpdateCloudAccountRequest, out *UpdateCloudAccountResponse) error
 		DeleteCloudAccount(ctx context.Context, in *DeleteCloudAccountRequest, out *DeleteCloudAccountResponse) error
 		ListCloudAccount(ctx context.Context, in *ListCloudAccountRequest, out *ListCloudAccountResponse) error
+		ListCloudAccountToPerm(ctx context.Context, in *ListCloudAccountPermRequest, out *ListCloudAccountPermResponse) error
 		GetCloudRegions(ctx context.Context, in *GetCloudRegionsRequest, out *GetCloudRegionsResponse) error
 		GetCloudRegionZones(ctx context.Context, in *GetCloudRegionZonesRequest, out *GetCloudRegionZonesResponse) error
 		ListCloudRegionCluster(ctx context.Context, in *ListCloudRegionClusterRequest, out *ListCloudRegionClusterResponse) error
@@ -1764,6 +1927,10 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		ListCloudSecurityGroups(ctx context.Context, in *ListCloudSecurityGroupsRequest, out *ListCloudSecurityGroupsResponse) error
 		ListCloudInstanceTypes(ctx context.Context, in *ListCloudInstanceTypeRequest, out *ListCloudInstanceTypeResponse) error
 		ListCloudOsImage(ctx context.Context, in *ListCloudOsImageRequest, out *ListCloudOsImageResponse) error
+		ListOperationLogs(ctx context.Context, in *ListOperationLogsRequest, out *ListOperationLogsResponse) error
+		ListResourceSchema(ctx context.Context, in *ListResourceSchemaRequest, out *ListResourceSchemaResponse) error
+		GetResourceSchema(ctx context.Context, in *GetResourceSchemaRequest, out *GetResourceSchemaResponse) error
+		QueryPermByActionID(ctx context.Context, in *QueryPermByActionIDRequest, out *QueryPermByActionIDResponse) error
 	}
 	type ClusterManager struct {
 		clusterManager
@@ -1880,6 +2047,13 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		Name:    "ClusterManager.UnCordonNode",
 		Path:    []string{"/clustermanager/v1/node/uncordon"},
 		Method:  []string{"PUT"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.DrainNode",
+		Path:    []string{"/clustermanager/v1/node/drain"},
+		Method:  []string{"POST"},
 		Body:    "*",
 		Handler: "rpc",
 	}))
@@ -2156,6 +2330,13 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.CleanNodesInGroupV2",
+		Path:    []string{"/clustermanager/v2/nodegroup/{nodeGroupID}/groupnode"},
+		Method:  []string{"DELETE"},
+		Body:    "",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.ListNodesInGroup",
 		Path:    []string{"/clustermanager/v1/nodegroup/{nodeGroupID}/node"},
 		Method:  []string{"GET"},
@@ -2263,6 +2444,13 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.UpdateAutoScalingStatus",
+		Path:    []string{"/clustermanager/v1/autoscalingoption/{clusterID}/status"},
+		Method:  []string{"PUT"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.CreateCloudAccount",
 		Path:    []string{"/clustermanager/v1/clouds/{cloudID}/accounts"},
 		Method:  []string{"POST"},
@@ -2286,6 +2474,12 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.ListCloudAccount",
 		Path:    []string{"/clustermanager/v1/clouds/{cloudID}/accounts"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.ListCloudAccountToPerm",
+		Path:    []string{"/clustermanager/v1/accounts"},
 		Method:  []string{"GET"},
 		Handler: "rpc",
 	}))
@@ -2329,6 +2523,31 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		Name:    "ClusterManager.ListCloudOsImage",
 		Path:    []string{"/clustermanager/v1/clouds/{cloudID}/osimage"},
 		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.ListOperationLogs",
+		Path:    []string{"/clustermanager/v1/operationlogs"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.ListResourceSchema",
+		Path:    []string{"/clustermanager/v1/resourceschema/{cloudID}"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.GetResourceSchema",
+		Path:    []string{"/clustermanager/v1/resourceschema/{cloudID}/{name}"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.QueryPermByActionID",
+		Path:    []string{"/clustermanager/v1/perms/actions/{actionID}"},
+		Method:  []string{"POST"},
+		Body:    "*",
 		Handler: "rpc",
 	}))
 	return s.Handle(s.NewHandler(&ClusterManager{h}, opts...))
@@ -2404,6 +2623,10 @@ func (h *clusterManagerHandler) CordonNode(ctx context.Context, in *CordonNodeRe
 
 func (h *clusterManagerHandler) UnCordonNode(ctx context.Context, in *UnCordonNodeRequest, out *UnCordonNodeResponse) error {
 	return h.ClusterManagerHandler.UnCordonNode(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) DrainNode(ctx context.Context, in *DrainNodeRequest, out *DrainNodeResponse) error {
+	return h.ClusterManagerHandler.DrainNode(ctx, in, out)
 }
 
 func (h *clusterManagerHandler) GetClusterCredential(ctx context.Context, in *GetClusterCredentialReq, out *GetClusterCredentialResp) error {
@@ -2570,7 +2793,11 @@ func (h *clusterManagerHandler) CleanNodesInGroup(ctx context.Context, in *Clean
 	return h.ClusterManagerHandler.CleanNodesInGroup(ctx, in, out)
 }
 
-func (h *clusterManagerHandler) ListNodesInGroup(ctx context.Context, in *GetNodeGroupRequest, out *ListNodesInGroupResponse) error {
+func (h *clusterManagerHandler) CleanNodesInGroupV2(ctx context.Context, in *CleanNodesInGroupV2Request, out *CleanNodesInGroupV2Response) error {
+	return h.ClusterManagerHandler.CleanNodesInGroupV2(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) ListNodesInGroup(ctx context.Context, in *ListNodesInGroupRequest, out *ListNodesInGroupResponse) error {
 	return h.ClusterManagerHandler.ListNodesInGroup(ctx, in, out)
 }
 
@@ -2634,6 +2861,10 @@ func (h *clusterManagerHandler) ListAutoScalingOption(ctx context.Context, in *L
 	return h.ClusterManagerHandler.ListAutoScalingOption(ctx, in, out)
 }
 
+func (h *clusterManagerHandler) UpdateAutoScalingStatus(ctx context.Context, in *UpdateAutoScalingStatusRequest, out *UpdateAutoScalingStatusResponse) error {
+	return h.ClusterManagerHandler.UpdateAutoScalingStatus(ctx, in, out)
+}
+
 func (h *clusterManagerHandler) CreateCloudAccount(ctx context.Context, in *CreateCloudAccountRequest, out *CreateCloudAccountResponse) error {
 	return h.ClusterManagerHandler.CreateCloudAccount(ctx, in, out)
 }
@@ -2648,6 +2879,10 @@ func (h *clusterManagerHandler) DeleteCloudAccount(ctx context.Context, in *Dele
 
 func (h *clusterManagerHandler) ListCloudAccount(ctx context.Context, in *ListCloudAccountRequest, out *ListCloudAccountResponse) error {
 	return h.ClusterManagerHandler.ListCloudAccount(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) ListCloudAccountToPerm(ctx context.Context, in *ListCloudAccountPermRequest, out *ListCloudAccountPermResponse) error {
+	return h.ClusterManagerHandler.ListCloudAccountToPerm(ctx, in, out)
 }
 
 func (h *clusterManagerHandler) GetCloudRegions(ctx context.Context, in *GetCloudRegionsRequest, out *GetCloudRegionsResponse) error {
@@ -2676,4 +2911,20 @@ func (h *clusterManagerHandler) ListCloudInstanceTypes(ctx context.Context, in *
 
 func (h *clusterManagerHandler) ListCloudOsImage(ctx context.Context, in *ListCloudOsImageRequest, out *ListCloudOsImageResponse) error {
 	return h.ClusterManagerHandler.ListCloudOsImage(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) ListOperationLogs(ctx context.Context, in *ListOperationLogsRequest, out *ListOperationLogsResponse) error {
+	return h.ClusterManagerHandler.ListOperationLogs(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) ListResourceSchema(ctx context.Context, in *ListResourceSchemaRequest, out *ListResourceSchemaResponse) error {
+	return h.ClusterManagerHandler.ListResourceSchema(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) GetResourceSchema(ctx context.Context, in *GetResourceSchemaRequest, out *GetResourceSchemaResponse) error {
+	return h.ClusterManagerHandler.GetResourceSchema(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) QueryPermByActionID(ctx context.Context, in *QueryPermByActionIDRequest, out *QueryPermByActionIDResponse) error {
+	return h.ClusterManagerHandler.QueryPermByActionID(ctx, in, out)
 }

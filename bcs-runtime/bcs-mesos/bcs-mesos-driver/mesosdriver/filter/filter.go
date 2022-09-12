@@ -11,6 +11,7 @@
  *
  */
 
+// Package filter xxx
 package filter
 
 import (
@@ -34,7 +35,7 @@ type GeneralFilter struct {
 
 // RequestFilterFunction filter function definition
 type RequestFilterFunction interface {
-	//Execute check http request
+	// Execute check http request
 	Execute(req *restful.Request) (int, error)
 }
 

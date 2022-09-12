@@ -22,7 +22,7 @@ import (
 	"strings"
 )
 
-//BcsConfig config item for ipscheduler
+// BcsConfig config item for ipscheduler
 type BcsConfig struct {
 	ZkHost   string         `json:"zkHost"`
 	TLS      *types.SSLInfo `json:"tls,omitempty"`
@@ -40,7 +40,7 @@ func createNetSvcClient(conf *config.CustomSchedulerConfig) (bcsapi.Netservice, 
 		}
 	}
 
-	//client get bcs-netservice info
+	// client get bcs-netservice info
 	hosts := strings.Split(bcsConf.ZkHost, ";")
 	if err := client.GetNetService(hosts); err != nil {
 		return nil, fmt.Errorf("get netservice failed, %s", err.Error())

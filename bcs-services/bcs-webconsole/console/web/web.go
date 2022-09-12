@@ -11,6 +11,7 @@
  *
  */
 
+// Package web xxx
 package web
 
 import (
@@ -19,6 +20,7 @@ import (
 	"io/fs"
 )
 
+// FS xxx
 //go:embed templates static
 var FS embed.FS
 

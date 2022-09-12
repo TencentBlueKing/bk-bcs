@@ -16,7 +16,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/schetypes"
 )
 
-// ListAllTransaction list all transaction
+// ListTransaction list all transaction
 func (b *backend) ListTransaction(ns string) ([]*types.Transaction, error) {
 	return b.store.ListTransaction(ns)
 }

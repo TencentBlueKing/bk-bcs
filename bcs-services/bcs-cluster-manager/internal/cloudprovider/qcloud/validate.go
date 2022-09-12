@@ -16,6 +16,7 @@ package qcloud
 import (
 	"encoding/base64"
 	"fmt"
+	"strconv"
 	"sync"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -30,7 +31,7 @@ var validateMgr sync.Once
 
 func init() {
 	validateMgr.Do(func() {
-		//init Cluster
+		// init Cluster
 		cloudprovider.InitCloudValidateManager("qcloud", &CloudValidate{})
 	})
 }
@@ -50,7 +51,7 @@ func (c *CloudValidate) ImportClusterValidate(req *proto.ImportClusterReq, opt *
 		return fmt.Errorf("%s ImportClusterValidate options is empty", cloudName)
 	}
 
-	if len(opt.Key) == 0 || len(opt.Secret) == 0 || len(opt.Region) == 0 {
+	if len(opt.Account.SecretID) == 0 || len(opt.Account.SecretKey) == 0 || len(opt.Region) == 0 {
 		return fmt.Errorf("%s ImportClusterValidate opt lost valid crendential info", cloudName)
 	}
 
@@ -115,7 +116,8 @@ func (c *CloudValidate) ImportCloudAccountValidate(account *proto.Account) error
 }
 
 // GetCloudRegionZonesValidate xxx
-func (c *CloudValidate) GetCloudRegionZonesValidate(req *proto.GetCloudRegionZonesRequest, account *proto.Account) error {
+func (c *CloudValidate) GetCloudRegionZonesValidate(req *proto.GetCloudRegionZonesRequest,
+	account *proto.Account) error {
 	// call qcloud interface to check account
 	if c == nil || account == nil {
 		return fmt.Errorf("%s GetCloudRegionZonesValidate request is empty", cloudName)
@@ -133,7 +135,8 @@ func (c *CloudValidate) GetCloudRegionZonesValidate(req *proto.GetCloudRegionZon
 }
 
 // ListCloudRegionClusterValidate xxx
-func (c *CloudValidate) ListCloudRegionClusterValidate(req *proto.ListCloudRegionClusterRequest, account *proto.Account) error {
+func (c *CloudValidate) ListCloudRegionClusterValidate(req *proto.ListCloudRegionClusterRequest,
+	account *proto.Account) error {
 	// call qcloud interface to check account
 	if c == nil || account == nil {
 		return fmt.Errorf("%s ListCloudRegionClusterValidate request is empty", cloudName)
@@ -172,7 +175,8 @@ func (c *CloudValidate) ListCloudSubnetsValidate(req *proto.ListCloudSubnetsRequ
 }
 
 // ListSecurityGroupsValidate xxx
-func (c *CloudValidate) ListSecurityGroupsValidate(req *proto.ListCloudSecurityGroupsRequest, account *proto.Account) error {
+func (c *CloudValidate) ListSecurityGroupsValidate(req *proto.ListCloudSecurityGroupsRequest,
+	account *proto.Account) error {
 	// call qcloud interface to check account
 	if c == nil || account == nil {
 		return fmt.Errorf("%s ListSecurityGroupsValidate request is empty", cloudName)
@@ -190,7 +194,8 @@ func (c *CloudValidate) ListSecurityGroupsValidate(req *proto.ListCloudSecurityG
 }
 
 // ListInstanceTypeValidate xxx
-func (c *CloudValidate) ListInstanceTypeValidate(req *proto.ListCloudInstanceTypeRequest, account *proto.Account) error {
+func (c *CloudValidate) ListInstanceTypeValidate(req *proto.ListCloudInstanceTypeRequest,
+	account *proto.Account) error {
 	// call qcloud interface to check account
 	if c == nil || account == nil {
 		return fmt.Errorf("%s ListInstanceTypeValidate request is empty", cloudName)
@@ -220,6 +225,29 @@ func (c *CloudValidate) ListCloudOsImageValidate(req *proto.ListCloudOsImageRequ
 
 	if len(req.Region) == 0 {
 		return fmt.Errorf("%s ListCloudOsImageValidate request lost valid region info", cloudName)
+	}
+
+	return nil
+}
+
+// CreateNodeGroupValidate xxx
+func (c *CloudValidate) CreateNodeGroupValidate(req *proto.CreateNodeGroupRequest,
+	opt *cloudprovider.CommonOption) error {
+
+	if len(req.Region) == 0 {
+		return fmt.Errorf("%s ListCloudOsImageValidate request lost valid region info", cloudName)
+	}
+
+	// simply check instanceType conf info
+	if req.LaunchTemplate.CPU == 0 || req.LaunchTemplate.Mem == 0 {
+		return fmt.Errorf("validateLaunchTemplate cpu/mem empty")
+	}
+	// check internetAccess conf info
+	if req.LaunchTemplate.InternetAccess != nil {
+		bandwidth, _ := strconv.Atoi(req.LaunchTemplate.InternetAccess.InternetMaxBandwidth)
+		if req.LaunchTemplate.InternetAccess.PublicIPAssigned && bandwidth == 0 {
+			return fmt.Errorf("validateLaunchTemplate internetAccess bandwidth empty")
+		}
 	}
 
 	return nil

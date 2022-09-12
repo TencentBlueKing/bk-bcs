@@ -42,12 +42,14 @@ type peerManager struct {
 	peers     map[string]bool
 }
 
+// PeerRDiscover xxx
 type PeerRDiscover struct {
 	rd      *RegisterDiscover.RegDiscover
 	rootCxt context.Context
 	cancel  context.CancelFunc
 }
 
+// StartPeerManager xxx
 func StartPeerManager(conf *config.ApiServConfig, dialerServer *websocketDialer.Server) error {
 	dialerServer.PeerID = fmt.Sprintf("%s:%d", conf.LocalIp, conf.Port)
 	dialerServer.PeerToken = conf.PeerToken

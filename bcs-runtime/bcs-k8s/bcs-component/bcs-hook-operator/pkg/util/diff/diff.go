@@ -11,6 +11,7 @@
  *
  */
 
+// Package diff xxx
 package diff
 
 import (
@@ -19,6 +20,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/strategicpatch"
 )
 
+// CreateTwoWayMergePatch xxx
 func CreateTwoWayMergePatch(orig, new, dataStruct interface{}) ([]byte, bool, error) {
 	origBytes, err := json.Marshal(orig)
 	if err != nil {

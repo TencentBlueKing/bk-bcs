@@ -77,7 +77,7 @@ func NewContextInjectWrapper() server.HandlerWrapper {
 	}
 }
 
-// 尝试读取 X-Request-Id，若不存在则随机生成
+// getOrCreateReqID 尝试读取 X-Request-Id，若不存在则随机生成
 func getOrCreateReqID(md metadata.Metadata) string {
 	if reqID, ok := md.Get("x-request-id"); ok {
 		return reqID
@@ -94,7 +94,7 @@ var NoAuthEndpoints = []string{
 	"Resource.InvalidateDiscoveryCache",
 }
 
-// 检查当前请求是否允许免除用户认证
+// canExemptAuth 检查当前请求是否允许免除用户认证
 func canExemptAuth(req server.Request) bool {
 	// 禁用身份认证
 	if conf.G.Auth.Disabled {
@@ -108,7 +108,7 @@ func canExemptAuth(req server.Request) bool {
 	return slice.StringInSlice(req.Endpoint(), NoAuthEndpoints)
 }
 
-// 通过 micro metadata（headers）信息，解析出用户名
+// parseUsername 通过 micro metadata（headers）信息，解析出用户名
 func parseUsername(md metadata.Metadata) (string, error) {
 	authorization, ok := md.Get("Authorization")
 	if !ok {
@@ -125,7 +125,7 @@ func parseUsername(md metadata.Metadata) (string, error) {
 	return claims.UserName, nil
 }
 
-// 解析 jwt
+// jwtDecode 解析 jwt
 func jwtDecode(jwtToken string) (*bcsJwt.UserClaimsInfo, error) {
 	if conf.G.Auth.JWTPubKeyObj == nil {
 		return nil, errorx.New(errcode.Unauth, "jwt public key uninitialized")
@@ -169,12 +169,12 @@ var NoInjectProjClusterEndpoints = []string{
 	"Resource.InvalidateDiscoveryCache",
 }
 
-// 需要注入项目 & 集群信息
+// needInjectProjCluster 需要注入项目 & 集群信息
 func needInjectProjCluster(req server.Request) bool {
 	return !slice.StringInSlice(req.Endpoint(), NoInjectProjClusterEndpoints)
 }
 
-// 获取项目，集群信息
+// fetchProjCluster 获取项目，集群信息
 func fetchProjCluster(ctx context.Context, req server.Request) (*project.Project, *cluster.Cluster, error) {
 	projectID, err := goAttr.GetValue(req.Body(), "ProjectID")
 	if err != nil {

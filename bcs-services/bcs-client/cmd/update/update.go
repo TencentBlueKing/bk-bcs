@@ -11,6 +11,7 @@
  *
  */
 
+// Package update xxx
 package update
 
 import (
@@ -19,7 +20,7 @@ import (
 	"github.com/urfave/cli"
 )
 
-//NewUpdateCommand update sub command
+// NewUpdateCommand update sub command
 func NewUpdateCommand() cli.Command {
 	return cli.Command{
 		Name:  "update",
@@ -79,7 +80,7 @@ func update(c *utils.ClientContext) error {
 	case "crd", "customresourcedefinition":
 		return updateCustomResourceDefinition(c)
 	default:
-		//unkown type, try CustomResource
+		// unkown type, try CustomResource
 		return updateCustomResource(c)
 	}
 }

@@ -132,8 +132,9 @@ func (p *CleanUpManager) CleanUserPod() error {
 	return nil
 }
 
-// 清理用户下的相关集群pod
-func (p *CleanUpManager) cleanUserPodByCluster(clusterId string, namespace string, alivePodMap map[string]*types.TimestampPodContext) error {
+// cleanUserPodByCluster 清理用户下的相关集群pod
+func (p *CleanUpManager) cleanUserPodByCluster(clusterId string, namespace string,
+	alivePodMap map[string]*types.TimestampPodContext) error {
 	k8sClient, err := k8sclient.GetK8SClientByClusterId(clusterId)
 	if err != nil {
 		return err
@@ -157,7 +158,8 @@ func (p *CleanUpManager) cleanUserPodByCluster(clusterId string, namespace strin
 
 		// 小于一个周期的pod不清理
 		if expireTime.Before(pod.Status.StartTime.Time) {
-			logger.Infof("pod %s exist time %s < %s, just ignore", pod.Name, now.Sub(pod.Status.StartTime.Time), UserPodExpireTime)
+			logger.Infof("pod %s exist time %s < %s, just ignore", pod.Name, now.Sub(pod.Status.StartTime.Time),
+				UserPodExpireTime)
 			continue
 		}
 
@@ -203,7 +205,7 @@ func (p *CleanUpManager) cleanConfigMapByPod(k8sClient *kubernetes.Clientset, po
 	return nil
 }
 
-// Run
+// Run xxx
 func (p *CleanUpManager) Run() error {
 	interval := time.NewTicker(CleanUserPodInterval)
 	defer interval.Stop()

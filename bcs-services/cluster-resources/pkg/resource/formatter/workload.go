@@ -22,17 +22,32 @@ import (
 	v1 "k8s.io/api/core/v1"
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/slice"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/timex"
 )
 
-// FormatWorkloadRes ...
+// FormatWorkloadRes xxx
 func FormatWorkloadRes(manifest map[string]interface{}) map[string]interface{} {
 	ret := CommonFormatRes(manifest)
 	ret["images"] = parseContainerImages(manifest, "spec.template.spec.containers")
 	return ret
 }
 
-// FormatCJ ...
+// FormatDeploy xxx
+func FormatDeploy(manifest map[string]interface{}) map[string]interface{} {
+	ret := FormatWorkloadRes(manifest)
+	ret["status"] = newDeployStatusParser(manifest).Parse()
+	return ret
+}
+
+// FormatSTS xxx
+func FormatSTS(manifest map[string]interface{}) map[string]interface{} {
+	ret := FormatWorkloadRes(manifest)
+	ret["status"] = newSTSStatusParser(manifest).Parse()
+	return ret
+}
+
+// FormatCJ xxx
 func FormatCJ(manifest map[string]interface{}) map[string]interface{} {
 	ret := CommonFormatRes(manifest)
 	ret["images"] = parseContainerImages(manifest, "spec.jobTemplate.spec.template.spec.containers")
@@ -50,7 +65,7 @@ func FormatCJ(manifest map[string]interface{}) map[string]interface{} {
 	return ret
 }
 
-// FormatJob ...
+// FormatJob xxx
 func FormatJob(manifest map[string]interface{}) map[string]interface{} {
 	ret := FormatWorkloadRes(manifest)
 	ret["duration"] = "--"
@@ -63,7 +78,7 @@ func FormatJob(manifest map[string]interface{}) map[string]interface{} {
 	return ret
 }
 
-// FormatPo ...
+// FormatPo xxx
 func FormatPo(manifest map[string]interface{}) map[string]interface{} {
 	ret := CommonFormatRes(manifest)
 	ret["images"] = parseContainerImages(manifest, "spec.containers")
@@ -87,7 +102,70 @@ func FormatPo(manifest map[string]interface{}) map[string]interface{} {
 
 // 工具方法/解析器
 
-// 遍历每个容器，收集所有 image 信息并去重
+// StatusChecker xxx
+type StatusChecker interface {
+	// IsNormal 判断当前资源是否为正常状态
+	IsNormal(map[string]interface{}) bool
+}
+
+// DeployStatusChecker xxx
+type DeployStatusChecker struct{}
+
+// IsNormal xxx
+func (c *DeployStatusChecker) IsNormal(manifest map[string]interface{}) bool {
+	return slice.AllInt64Equal([]int64{
+		mapx.GetInt64(manifest, "status.availableReplicas"),
+		mapx.GetInt64(manifest, "status.readyReplicas"),
+		mapx.GetInt64(manifest, "status.updatedReplicas"),
+		mapx.GetInt64(manifest, "spec.replicas"),
+	})
+}
+
+// STSStatusChecker xxx
+type STSStatusChecker struct{}
+
+// IsNormal xxx
+func (c *STSStatusChecker) IsNormal(manifest map[string]interface{}) bool {
+	return slice.AllInt64Equal([]int64{
+		mapx.GetInt64(manifest, "status.currentReplicas"),
+		mapx.GetInt64(manifest, "status.readyReplicas"),
+		mapx.GetInt64(manifest, "status.updatedReplicas"),
+		mapx.GetInt64(manifest, "spec.replicas"),
+	})
+}
+
+// WorkloadStatusParser 工作负载资源 自定义状态 解析器
+type WorkloadStatusParser struct {
+	checker  StatusChecker
+	manifest map[string]interface{}
+}
+
+// Parse xxx
+func (p *WorkloadStatusParser) Parse() string {
+	// 删除中优先级最高，判断根据是 deletionTimestamp 存在
+	if dt := mapx.Get(p.manifest, "metadata.deletionTimestamp", nil); dt != nil {
+		return WorkloadStatusDeleting
+	}
+	// 不同资源类型正常判断条件不同
+	if p.checker.IsNormal(p.manifest) {
+		return WorkloadStatusNormal
+	}
+	// 若非正常情况，检查 generation，若为 1（第一个版本），则状态为创建中
+	if gen := mapx.GetInt64(p.manifest, "metadata.generation"); gen == int64(1) {
+		return WorkloadStatusCreating
+	}
+	return WorkloadStatusUpdating
+}
+
+func newDeployStatusParser(manifest map[string]interface{}) *WorkloadStatusParser {
+	return &WorkloadStatusParser{&DeployStatusChecker{}, manifest}
+}
+
+func newSTSStatusParser(manifest map[string]interface{}) *WorkloadStatusParser {
+	return &WorkloadStatusParser{&STSStatusChecker{}, manifest}
+}
+
+// parseContainerImages 遍历每个容器，收集所有 image 信息并去重
 func parseContainerImages(manifest map[string]interface{}, paths string) []string {
 	images := set.NewStringSet()
 	containers, _ := mapx.GetItems(manifest, paths)
@@ -144,7 +222,7 @@ func (p *PodStatusParser) Parse() string {
 	return p.totalStatus
 }
 
-// 根据 pod.Status.InitContainerStatuses 更新 总状态
+// updateStatusByInitContainerStatuses 根据 pod.Status.InitContainerStatuses 更新 总状态
 func (p *PodStatusParser) updateStatusByInitContainerStatuses(podStatus *LightPodStatus) {
 	for i := range podStatus.InitContainerStatuses {
 		container := podStatus.InitContainerStatuses[i]
@@ -162,7 +240,8 @@ func (p *PodStatusParser) updateStatusByInitContainerStatuses(podStatus *LightPo
 			}
 		} else {
 			p.initializing = true
-			if container.State.Waiting != nil && len(container.State.Waiting.Reason) > 0 && container.State.Waiting.Reason != "PodInitializing" { // nolint:lll
+			if container.State.Waiting != nil && len(container.State.Waiting.Reason) > 0 &&
+				container.State.Waiting.Reason != "PodInitializing" { // nolint:lll
 				p.totalStatus = fmt.Sprintf("Init: %s", container.State.Waiting.Reason)
 			} else {
 				initContainers, _ := mapx.GetItems(p.Manifest, "spec.initContainers")
@@ -173,7 +252,7 @@ func (p *PodStatusParser) updateStatusByInitContainerStatuses(podStatus *LightPo
 	}
 }
 
-// 根据 pod.Status.ContainerStatuses 更新 总状态
+// updateStatusByContainerStatuses 根据 pod.Status.ContainerStatuses 更新 总状态
 func (p *PodStatusParser) updateStatusByContainerStatuses(podStatus *LightPodStatus) { //nolint:cyclop
 	hasRunning := false
 	for i := len(podStatus.ContainerStatuses) - 1; i >= 0; i-- {

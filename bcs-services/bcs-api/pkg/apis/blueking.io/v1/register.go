@@ -19,6 +19,7 @@ import (
 	bluekingio "github.com/Tencent/bk-bcs/bcs-services/bcs-api/pkg/apis/blueking.io"
 )
 
+// SchemeGroupVersion xxx
 var SchemeGroupVersion = schema.GroupVersion{Group: bluekingio.GroupName, Version: "v1"}
 
 // Kind takes an unqualified kind and returns back a Group qualified GroupKind

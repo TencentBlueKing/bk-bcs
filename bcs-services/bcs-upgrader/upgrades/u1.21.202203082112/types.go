@@ -70,14 +70,14 @@ type cluster struct {
 type node struct {
 	ProjectID         string
 	ClusterID         string
-	InnerIP           string //nodeIP
+	InnerIP           string // nodeIP
 	InitLoginPassword string
 	NodeGroupID       string
 	OnlyCreateInfo    bool
 	Creator           string
 }
 
-//ccVersionConfigData :bcs cc request clusterConfig api data
+// ccVersionConfigData :bcs cc request clusterConfig api data
 type ccVersionConfigData struct {
 	ClusterId string    `json:"cluster_id"`
 	Configure string    `json:"configure"`
@@ -98,10 +98,10 @@ type reqDeleteNode struct {
 	Nodes     []string `json:"nodes"`
 	// DeleteMode :删除模式，RETAIN(移除集群，但是保留主机)，TERMINATE(只支持按量计费的机器)，默认是RETAIN
 	DeleteMode string `json:"deleteMode"`
-	//IsForce :不管节点处于任何状态都强制删除，例如可能刚初始化，NotReady等
+	// IsForce :不管节点处于任何状态都强制删除，例如可能刚初始化，NotReady等
 	IsForce  bool   `json:"isForce"`
 	Operator string `json:"operator"` // 操作者
-	//OnlyDeleteInfo :默认为false。设置为true时，仅删除cluster-manager所记录的信息，不会触发任何自动化流程.
+	// OnlyDeleteInfo :默认为false。设置为true时，仅删除cluster-manager所记录的信息，不会触发任何自动化流程.
 	OnlyDeleteInfo bool `json:"onlyDeleteInfo"`
 }
 
@@ -163,7 +163,7 @@ type bcsReqUpdateCluster struct {
 	ExtraInfo interface{} `json:"ExtraInfo"`
 	// 集群master节点的Instance id
 	MasterInstanceID []string `json:"masterInstanceID"`
-	//"集群状态，可能状态CREATING，RUNNING，DELETING，FALURE，INITIALIZATION，DELETED"
+	// "集群状态，可能状态CREATING，RUNNING，DELETING，FALURE，INITIALIZATION，DELETED"
 	Status string `json:"status"`
 	// kubernetes集群在各云平台上资源ID
 	SystemID string `json:"systemID"`
@@ -187,7 +187,7 @@ type bcsRespFindCluster struct {
 	ExtraInfo interface{} `json:"ExtraInfo"`
 	// 集群master节点的Instance id
 	MasterInstanceID []string `json:"masterInstanceID"`
-	//"集群状态，可能状态CREATING，RUNNING，DELETING，FALURE，INITIALIZATION，DELETED"
+	// "集群状态，可能状态CREATING，RUNNING，DELETING，FALURE，INITIALIZATION，DELETED"
 	Status string `json:"status"`
 	// kubernetes集群在各云平台上资源ID
 	SystemID string                              `json:"systemID"`
@@ -275,15 +275,15 @@ type ccGetAllProject struct {
 // cc获取所有cluster
 type ccGetAllClusterData struct {
 	Code        string             `json:"code"`
-	ProjectID   string             `json:"id"` //ProjectID :api返回为id，=> ProjectID
+	ProjectID   string             `json:"id"` // ProjectID :api返回为id，=> ProjectID
 	Name        string             `json:"name"`
 	ClusterList []ccAllClusterList `json:"cluster_list"`
 }
 
 type ccAllClusterList struct {
-	ClusterID     string `json:"id"` //ClusterID api返回为id，=> ClusterID
+	ClusterID     string `json:"id"` // ClusterID api返回为id，=> ClusterID
 	IsPublic      bool   `json:"is_public"`
-	ClusterName   string `json:"name"` //ClusterName api返回为name，=> ClusterName
+	ClusterName   string `json:"name"` // ClusterName api返回为name，=> ClusterName
 	NamespaceList []struct {
 		ID   int    `json:"id"`
 		Name string `json:"name"`
@@ -360,7 +360,7 @@ type ccGetAllMaster struct {
 
 // 需要迁移的数据
 type cmCreateProject struct {
-	ProjectID   string                 `json:"projectID,omitempty"` //项目ID，长度为32位字符串
+	ProjectID   string                 `json:"projectID,omitempty"` // 项目ID，长度为32位字符串
 	Name        string                 `json:"name,omitempty"`
 	EnglishName string                 `json:"englishName,omitempty"`
 	Creator     string                 `json:"creator,omitempty"`

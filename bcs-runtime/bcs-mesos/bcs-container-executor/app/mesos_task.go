@@ -21,17 +21,17 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-mesos/bcs-container-executor/container"
 )
 
-//BcsTaskInfo task info relate to Mesos TaskGroupInfo & ContainerInfo
-//we not only can find TaskInfo by containerID, but also can find ContainerInfo by TaskID
+// BcsTaskInfo task info relate to Mesos TaskGroupInfo & ContainerInfo
+// we not only can find TaskInfo by containerID, but also can find ContainerInfo by TaskID
 type BcsTaskInfo struct {
-	lock          sync.RWMutex                           //lock for four maps
-	ContainerRef  map[string]string                      //ContainerName to TaskID
-	TaskRef       map[string]string                      //TaskID to ContainerName
-	TaskInfo      map[string]*mesos.TaskInfo             //mesos task info, key is taskID
-	ContainerInfo map[string]*container.BcsContainerInfo //BcsContainerInfo, key is containerName
+	lock          sync.RWMutex                           // lock for four maps
+	ContainerRef  map[string]string                      // ContainerName to TaskID
+	TaskRef       map[string]string                      // TaskID to ContainerName
+	TaskInfo      map[string]*mesos.TaskInfo             // mesos task info, key is taskID
+	ContainerInfo map[string]*container.BcsContainerInfo // BcsContainerInfo, key is containerName
 }
 
-//SetTaskInfo Set TaskInfo
+// SetTaskInfo Set TaskInfo
 func (bcsTask *BcsTaskInfo) SetTaskInfo(task *mesos.TaskInfo) error {
 	bcsTask.lock.Lock()
 	defer bcsTask.lock.Unlock()
@@ -43,29 +43,29 @@ func (bcsTask *BcsTaskInfo) SetTaskInfo(task *mesos.TaskInfo) error {
 	return nil
 }
 
-//SetContainerWithTaskID setting container with taskID.
+// SetContainerWithTaskID setting container with taskID.
 func (bcsTask *BcsTaskInfo) SetContainerWithTaskID(taskID string, container *container.BcsContainerInfo) error {
 	bcsTask.lock.Lock()
 	defer bcsTask.lock.Unlock()
 	if _, exist := bcsTask.TaskInfo[taskID]; !exist {
 		return fmt.Errorf("No task %s in local", taskID)
 	}
-	//set container
+	// set container
 	bcsTask.ContainerInfo[container.Name] = container
-	//set reflection
+	// set reflection
 	bcsTask.ContainerRef[container.Name] = taskID
 	bcsTask.TaskRef[taskID] = container.Name
 	return nil
 }
 
-//GetTask get TaskInfo by taskId
+// GetTask get TaskInfo by taskId
 func (bcsTask *BcsTaskInfo) GetTask(taskID string) *mesos.TaskInfo {
 	bcsTask.lock.Lock()
 	defer bcsTask.lock.Unlock()
 	return bcsTask.TaskInfo[taskID]
 }
 
-//GetTaskGroup return task group
+// GetTaskGroup return task group
 func (bcsTask *BcsTaskInfo) GetTaskGroup() *mesos.TaskGroupInfo {
 	bcsTask.lock.Lock()
 	defer bcsTask.lock.Unlock()
@@ -79,14 +79,14 @@ func (bcsTask *BcsTaskInfo) GetTaskGroup() *mesos.TaskGroupInfo {
 	return group
 }
 
-//GetContainer get BcsContainer by containerId
+// GetContainer get BcsContainer by containerId
 func (bcsTask *BcsTaskInfo) GetContainer(containerID string) *container.BcsContainerInfo {
 	bcsTask.lock.Lock()
 	defer bcsTask.lock.Unlock()
 	return bcsTask.ContainerInfo[containerID]
 }
 
-//GetTaskByContainerID get container
+// GetTaskByContainerID get container
 func (bcsTask *BcsTaskInfo) GetTaskByContainerID(containerID string) *mesos.TaskInfo {
 	bcsTask.lock.Lock()
 	defer bcsTask.lock.Unlock()
@@ -100,7 +100,7 @@ func (bcsTask *BcsTaskInfo) GetTaskByContainerID(containerID string) *mesos.Task
 	return nil
 }
 
-//GetContainerByTaskID get container
+// GetContainerByTaskID get container
 func (bcsTask *BcsTaskInfo) GetContainerByTaskID(taskID string) *container.BcsContainerInfo {
 	bcsTask.lock.Lock()
 	defer bcsTask.lock.Unlock()
@@ -114,7 +114,7 @@ func (bcsTask *BcsTaskInfo) GetContainerByTaskID(taskID string) *container.BcsCo
 	return nil
 }
 
-//CleanTask clean task & container by taskID
+// CleanTask clean task & container by taskID
 func (bcsTask *BcsTaskInfo) CleanTask(taskID string) (*mesos.TaskInfo, *container.BcsContainerInfo) {
 	bcsTask.lock.Lock()
 	defer bcsTask.lock.Unlock()
@@ -137,7 +137,7 @@ func (bcsTask *BcsTaskInfo) CleanTask(taskID string) (*mesos.TaskInfo, *containe
 	return task, container
 }
 
-//CleanContainer clean task & container by containerID
+// CleanContainer clean task & container by containerID
 func (bcsTask *BcsTaskInfo) CleanContainer(containerID string) (*mesos.TaskInfo, *container.BcsContainerInfo) {
 	bcsTask.lock.Lock()
 	defer bcsTask.lock.Unlock()
@@ -160,7 +160,7 @@ func (bcsTask *BcsTaskInfo) CleanContainer(containerID string) (*mesos.TaskInfo,
 	return task, container
 }
 
-//Clean clean all data
+// Clean clean all data
 func (bcsTask *BcsTaskInfo) Clean() {
 	bcsTask.lock.Lock()
 	defer bcsTask.lock.Unlock()
@@ -174,7 +174,7 @@ func (bcsTask *BcsTaskInfo) Clean() {
 	}
 }
 
-//GetAllContainerID return all containerID
+// GetAllContainerID return all containerID
 func (bcsTask *BcsTaskInfo) GetAllContainerID() (list []string) {
 	bcsTask.lock.Lock()
 	defer bcsTask.lock.Unlock()

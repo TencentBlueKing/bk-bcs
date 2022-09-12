@@ -22,7 +22,7 @@ import (
 	"k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 )
 
-//CreateResourceDefinition create CRD by definition file
+// CreateCustomResourceDefinition create CRD by definition file
 func (bs *bcsScheduler) CreateCustomResourceDefinition(clusterID string, data []byte) error {
 	resp, err := bs.requester.DoForResponse(
 		fmt.Sprintf(bcsScheudlerCustomResourceDefinitionURL, bs.bcsAPIAddress),
@@ -33,7 +33,7 @@ func (bs *bcsScheduler) CreateCustomResourceDefinition(clusterID string, data []
 	if err != nil {
 		return err
 	}
-	//if there is no network error, bcs-api always response 200
+	// if there is no network error, bcs-api always response 200
 	// we need to verify response body object
 	// * if response is not json, low level http error
 	// * if response object is Status, we can read Status.message
@@ -47,16 +47,16 @@ func (bs *bcsScheduler) CreateCustomResourceDefinition(clusterID string, data []
 		msg, _ := json.Get("message").String()
 		return fmt.Errorf("%s", msg)
 	}
-	//resply is CRD object, ommit now
+	// resply is CRD object, ommit now
 	return nil
 }
 
-//UpdateResourceDefinition replace specified CRD
+// UpdateCustomResourceDefinition replace specified CRD
 func (bs *bcsScheduler) UpdateCustomResourceDefinition(clusterID, name string, data []byte) error {
 	if len(name) == 0 {
 		return fmt.Errorf("Lost specified crd name")
 	}
-	//get exist data for version validation
+	// get exist data for version validation
 	crd, err := bs.GetCustomResourceDefinition(clusterID, name)
 	if err != nil {
 		return err
@@ -65,7 +65,7 @@ func (bs *bcsScheduler) UpdateCustomResourceDefinition(clusterID, name string, d
 	json.Unmarshal(data, udpateObject)
 	udpateObject.ResourceVersion = crd.ResourceVersion
 	updateData, _ := json.Marshal(udpateObject)
-	//update work flow
+	// update work flow
 	preURL := fmt.Sprintf(bcsScheudlerCustomResourceDefinitionURL, bs.bcsAPIAddress)
 	reqURL := fmt.Sprintf("%s/%s", preURL, name)
 	resp, err := bs.requester.DoForResponse(
@@ -77,7 +77,7 @@ func (bs *bcsScheduler) UpdateCustomResourceDefinition(clusterID, name string, d
 	if err != nil {
 		return err
 	}
-	//if there is no network error, bcs-api always response 200
+	// if there is no network error, bcs-api always response 200
 	// we need to verify response body object
 	// * if response is not json, low level http error
 	// * if response object is Status, we can read Status.message
@@ -94,7 +94,7 @@ func (bs *bcsScheduler) UpdateCustomResourceDefinition(clusterID, name string, d
 	return nil
 }
 
-//ListCustomResourceDefinition list all created CRD
+// ListCustomResourceDefinition list all created CRD
 func (bs *bcsScheduler) ListCustomResourceDefinition(clusterID string) (*v1beta1.CustomResourceDefinitionList, error) {
 	resp, err := bs.requester.DoForResponse(
 		fmt.Sprintf(bcsScheudlerCustomResourceDefinitionURL, bs.bcsAPIAddress),
@@ -119,8 +119,9 @@ func (bs *bcsScheduler) ListCustomResourceDefinition(clusterID string) (*v1beta1
 	return crd, nil
 }
 
-//GetCustomResourceDefinition get specified CRD
-func (bs *bcsScheduler) GetCustomResourceDefinition(clusterID string, name string) (*v1beta1.CustomResourceDefinition, error) {
+// GetCustomResourceDefinition get specified CRD
+func (bs *bcsScheduler) GetCustomResourceDefinition(clusterID string, name string) (*v1beta1.CustomResourceDefinition,
+	error) {
 	preURL := fmt.Sprintf(bcsScheudlerCustomResourceDefinitionURL, bs.bcsAPIAddress)
 	reqURL := fmt.Sprintf("%s/%s", preURL, name)
 	resp, err := bs.requester.DoForResponse(
@@ -132,7 +133,7 @@ func (bs *bcsScheduler) GetCustomResourceDefinition(clusterID string, name strin
 	if err != nil {
 		return nil, err
 	}
-	//if there is no network error, bcs-api always response 200
+	// if there is no network error, bcs-api always response 200
 	// we need to verify response body object
 	// * if response is not json, low level http error
 	// * if response object is Status, we can read Status.message
@@ -148,15 +149,15 @@ func (bs *bcsScheduler) GetCustomResourceDefinition(clusterID string, name strin
 	}
 	crd := &v1beta1.CustomResourceDefinition{}
 	json.Unmarshal(resp.Reply, crd)
-	//clean info
+	// clean info
 	crd.SelfLink = ""
-	//crd.ResourceVersion = ""
+	// crd.ResourceVersion = ""
 	crd.Generation = 0
 	crd.UID = ""
 	return crd, nil
 }
 
-//DeleteCustomResourceDefinition delete specified CRD
+// DeleteCustomResourceDefinition delete specified CRD
 func (bs *bcsScheduler) DeleteCustomResourceDefinition(clusterID, name string) error {
 	preURL := fmt.Sprintf(bcsScheudlerCustomResourceDefinitionURL, bs.bcsAPIAddress)
 	reqURL := fmt.Sprintf("%s/%s", preURL, name)
@@ -169,7 +170,7 @@ func (bs *bcsScheduler) DeleteCustomResourceDefinition(clusterID, name string) e
 	if err != nil {
 		return err
 	}
-	//if there is no network error, bcs-api always response 200
+	// if there is no network error, bcs-api always response 200
 	// we need to verify response body object
 	// * if response is not json, low level http error
 	// * if response object is Status, we can read Status.message
@@ -186,7 +187,7 @@ func (bs *bcsScheduler) DeleteCustomResourceDefinition(clusterID, name string) e
 	return nil
 }
 
-//CreateResource create CRD by definition file
+// CreateCustomResource create CRD by definition file
 func (bs *bcsScheduler) CreateCustomResource(clusterID, apiVersion, plural, namespace string, data []byte) error {
 	if apiVersion == "" {
 		return fmt.Errorf("lost apiVersion for CustomResource")
@@ -210,7 +211,7 @@ func (bs *bcsScheduler) CreateCustomResource(clusterID, apiVersion, plural, name
 	if err != nil {
 		return err
 	}
-	//if there is no network error, bcs-api always response 200
+	// if there is no network error, bcs-api always response 200
 	// we need to verify response body object
 	// * if response is not json, low level http error
 	// * if response object is Status, we can read Status.message
@@ -227,7 +228,7 @@ func (bs *bcsScheduler) CreateCustomResource(clusterID, apiVersion, plural, name
 	return nil
 }
 
-//UpdateResource replace specified CRD
+// UpdateCustomResource replace specified CRD
 func (bs *bcsScheduler) UpdateCustomResource(clusterID, apiVersion, plural, namespace, name string, data []byte) error {
 	if apiVersion == "" {
 		return fmt.Errorf("lost apiVersion for CustomResource")
@@ -242,13 +243,13 @@ func (bs *bcsScheduler) UpdateCustomResource(clusterID, apiVersion, plural, name
 	if err != nil {
 		return err
 	}
-	//copy meta data for update
+	// copy meta data for update
 	oldObject, _ := simplejson.NewJson(oldData)
 	updateObject, _ := simplejson.NewJson(data)
 	oldMeta := oldObject.Get("metadata")
 	updateObject.Set("metadata", oldMeta)
 	updateData, _ := updateObject.Encode()
-	//ready to Update
+	// ready to Update
 	baseURL := fmt.Sprintf(bcsSchedulerCustomResourceURL, bs.bcsAPIAddress)
 	resp, err := bs.requester.DoForResponse(
 		fmt.Sprintf("%s/%s/namespaces/%s/%s/%s", baseURL, apiVersion, namespace, plural, name),
@@ -259,7 +260,7 @@ func (bs *bcsScheduler) UpdateCustomResource(clusterID, apiVersion, plural, name
 	if err != nil {
 		return err
 	}
-	//if there is no network error, bcs-api always response 200
+	// if there is no network error, bcs-api always response 200
 	// we need to verify response body object
 	// * if response is not json, low level http error
 	// * if response object is Status, we can read Status.message
@@ -276,7 +277,7 @@ func (bs *bcsScheduler) UpdateCustomResource(clusterID, apiVersion, plural, name
 	return nil
 }
 
-//ListCustomResource list all created CRD
+// ListCustomResource list all created CRD
 func (bs *bcsScheduler) ListCustomResource(clusterID, apiVersion, plural, namespace string) ([]byte, error) {
 	baseURL := fmt.Sprintf(bcsSchedulerCustomResourceURL, bs.bcsAPIAddress)
 	var reqURL string
@@ -295,7 +296,7 @@ func (bs *bcsScheduler) ListCustomResource(clusterID, apiVersion, plural, namesp
 	if err != nil {
 		return nil, err
 	}
-	//if there is no network error, bcs-api always response 200
+	// if there is no network error, bcs-api always response 200
 	// we need to verify response body object
 	// * if response is not json, low level http error
 	// * if response object is Status, we can read Status.message
@@ -312,7 +313,7 @@ func (bs *bcsScheduler) ListCustomResource(clusterID, apiVersion, plural, namesp
 	return resp.Reply, nil
 }
 
-//GetCustomResource get specified CRD
+// GetCustomResource get specified CRD
 func (bs *bcsScheduler) GetCustomResource(clusterID, apiVersion, plural, namespace, name string) ([]byte, error) {
 	baseURL := fmt.Sprintf(bcsSchedulerCustomResourceURL, bs.bcsAPIAddress)
 	reqURL := fmt.Sprintf("%s/%s/namespaces/%s/%s/%s", baseURL, apiVersion, namespace, plural, name)
@@ -325,7 +326,7 @@ func (bs *bcsScheduler) GetCustomResource(clusterID, apiVersion, plural, namespa
 	if err != nil {
 		return nil, err
 	}
-	//if there is no network error, bcs-api always response 200
+	// if there is no network error, bcs-api always response 200
 	// we need to verify response body object
 	// * if response is not json, low level http error
 	// * if response object is Status, we can read Status.message
@@ -342,7 +343,7 @@ func (bs *bcsScheduler) GetCustomResource(clusterID, apiVersion, plural, namespa
 	return resp.Reply, nil
 }
 
-//DeleteCustomResource delete specified CRD
+// DeleteCustomResource delete specified CRD
 func (bs *bcsScheduler) DeleteCustomResource(clusterID, apiVersion, plural, namespace, name string) error {
 	baseURL := fmt.Sprintf(bcsSchedulerCustomResourceURL, bs.bcsAPIAddress)
 	reqURL := fmt.Sprintf("%s/%s/namespaces/%s/%s/%s", baseURL, apiVersion, namespace, plural, name)
@@ -355,7 +356,7 @@ func (bs *bcsScheduler) DeleteCustomResource(clusterID, apiVersion, plural, name
 	if err != nil {
 		return err
 	}
-	//if there is no network error, bcs-api always response 200
+	// if there is no network error, bcs-api always response 200
 	// we need to verify response body object
 	// * if response is not json, low level http error
 	// * if response object is Status, we can read Status.message
@@ -368,7 +369,7 @@ func (bs *bcsScheduler) DeleteCustomResource(clusterID, apiVersion, plural, name
 	if replyKind == StatusKind {
 		msg, _ := json.Get("message").String()
 		if msg == "" {
-			//success
+			// success
 			return nil
 		}
 		return fmt.Errorf("%s", msg)

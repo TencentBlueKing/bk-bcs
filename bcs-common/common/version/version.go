@@ -11,15 +11,16 @@
  *
  */
 
+// Package version xxx
 package version
 
 import (
 	"fmt"
 )
 
-//BcsVersion discribes version
-//BcsTag show the git tag for this version
-//BcsBuildTime show the compile time
+// BcsVersion discribes version
+// BcsTag show the git tag for this version
+// BcsBuildTime show the compile time
 var (
 	BcsVersion   = "17.03.28"
 	BcsTag       = "2017-03-28 Release"
@@ -27,12 +28,14 @@ var (
 	BcsGitHash   = "unknown"
 )
 
-//ShowVersion is the default handler which match the --version flag
+// ShowVersion is the default handler which match the --version flag
 func ShowVersion() {
 	fmt.Printf("%s", GetVersion())
 }
 
+// GetVersion xxx
 func GetVersion() string {
-	version := fmt.Sprintf("Version  :%s\nTag      :%s\nBuildTime:  %s\nGitHash:  %s\n", BcsVersion, BcsTag, BcsBuildTime, BcsGitHash)
+	version := fmt.Sprintf("Version  :%s\nTag      :%s\nBuildTime:  %s\nGitHash:  %s\n", BcsVersion, BcsTag, BcsBuildTime,
+		BcsGitHash)
 	return version
 }

@@ -24,7 +24,7 @@ var (
 	defaultDatabase = "/data/bcs/bcs-cni/bin/bcs-ipam.db"
 )
 
-//GetIPDriver check sqlite3 database file to verify which driver to create
+// GetIPDriver check sqlite3 database file to verify which driver to create
 func GetIPDriver() (resource.IPDriver, error) {
 	if exist, _ := util.FileExists(defaultDatabase); exist {
 		return localdriver.NewDriver()

@@ -170,10 +170,12 @@ var (
 			"Can be used multiple times.")
 
 	estimatorFlag = flag.String("estimator", estimator.BinpackingEstimatorName,
-		"Type of resource estimator to be used in scale up. Available values: ["+strings.Join(estimator.AvailableEstimators, ",")+"]")
+		"Type of resource estimator to be used in scale up. Available values: ["+strings.Join(estimator.AvailableEstimators,
+			",")+"]")
 
 	expanderFlag = flag.String("expander", expander.RandomExpanderName,
-		"Type of node group expander to be used in scale up. Available values: ["+strings.Join(expander.AvailableExpanders, ",")+"]")
+		"Type of node group expander to be used in scale up. Available values: ["+strings.Join(expander.AvailableExpanders,
+			",")+"]")
 
 	ignoreDaemonSetsUtilization = flag.Bool("ignore-daemonsets-utilization", false,
 		"Should CA ignore DaemonSet pods when calculating resource utilization for scaling down")
@@ -206,8 +208,10 @@ var (
 		"Filtering out schedulable pods before CA scale up by trying to pack the schedulable pods on free capacity on existing nodes."+
 			"Setting it to false employs a more lenient filtering approach that does not try to pack the pods on the nodes."+
 			"Pods with nominatedNodeName set are always filtered out.")
+	emitPerNodeGroupMetrics = flag.Bool("emit-per-nodegroup-metrics", true, "If true, emit per node group metrics.")
 
-	ignoreTaintsFlag         = multiStringFlag("ignore-taint", "Specifies a taint to ignore in node templates when considering to scale a node group")
+	ignoreTaintsFlag = multiStringFlag("ignore-taint",
+		"Specifies a taint to ignore in node templates when considering to scale a node group")
 	awsUseStaticInstanceList = flag.Bool("aws-use-static-instance-list", false,
 		"Should CA fetch instance types in runtime or use a static list. AWS only")
 	bufferedResourceRatio = flag.Float64("buffer-resource-ratio", 0, "ratio of buffered resources")
@@ -218,6 +222,10 @@ var (
 		"maxNodeGroupBackoffDuration is the maximum backoff duration for a NodeGroup after new nodes failed to start.")
 	nodeGroupBackoffResetTimeout = flag.Duration("node-group-backoff-reset-timeout", 15*time.Minute,
 		"nodeGroupBackoffResetTimeout is the time after last failed scale-up when the backoff duration is reset.")
+	webhookMode       = flag.String("webhook-mode", "", "Webhook Mode. Available values: [ Web, ConfigMap ]")
+	webhookModeConfig = flag.String("webhook-mode-config", "", "Configuration of webhook mode."+
+		" It is a url for web, or namespace/name for configmap")
+	webhookModeToken = flag.String("webhook-mode-token", "", "Token for webhook mode")
 )
 
 func createAutoscalingOptions() scalingconfig.Options {
@@ -288,6 +296,9 @@ func createAutoscalingOptions() scalingconfig.Options {
 			AWSUseStaticInstanceList:            *awsUseStaticInstanceList,
 		},
 		BufferedResourceRatio: *bufferedResourceRatio,
+		WebhookMode:           *webhookMode,
+		WebhookModeConfig:     *webhookModeConfig,
+		WebhookModeToken:      *webhookModeToken,
 	}
 }
 
@@ -315,6 +326,8 @@ func getKubeConfig() *rest.Config {
 }
 
 func createKubeClient(kubeConfig *rest.Config) kube_client.Interface {
+	kubeConfig.QPS = 100
+	kubeConfig.Burst = 200
 	return kube_client.NewForConfigOrDie(kubeConfig)
 }
 
@@ -353,13 +366,16 @@ func buildAutoscaler() (core.Autoscaler, error) {
 
 	// This metric should be published only once.
 	metrics.UpdateNapEnabled(autoscalingOptions.NodeAutoprovisioningEnabled)
+	metrics.UpdateMaxNodesCount(autoscalingOptions.MaxNodesTotal)
+	metrics.UpdateCPULimitsCores(autoscalingOptions.MinCoresTotal, autoscalingOptions.MaxCoresTotal)
+	metrics.UpdateMemoryLimitsBytes(autoscalingOptions.MinMemoryTotal, autoscalingOptions.MaxMemoryTotal)
 
 	// Create autoscaler.
 	return coreinternal.NewAutoscaler(opts)
 }
 
 func run(healthCheck *metrics.HealthCheck) {
-	metrics.RegisterAll()
+	metrics.RegisterAll(*emitPerNodeGroupMetrics)
 
 	autoscaler, err := buildAutoscaler()
 	if err != nil {

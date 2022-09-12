@@ -13,7 +13,7 @@
 
 package types
 
-//EnvVar represents an environment variable present in a Container
+// EnvVar represents an environment variable present in a Container
 type EnvVar struct {
 	Name      string        `json:"name"`
 	Value     string        `json:"value,omitempty"`
@@ -34,9 +34,9 @@ type ResourceFieldSelector struct {
 	Resource string `json:"resource" protobuf:"bytes,2,opt,name=resource"`
 }
 
-//ContainerPort represents a network port in a single container
+// ContainerPort represents a network port in a single container
 type ContainerPort struct {
-	//each named port in a pod must have a unique name.
+	// each named port in a pod must have a unique name.
 	Name          string `json:"name"`
 	HostPort      int    `json:"hostPort,omitempty"`
 	ContainerPort int    `json:"containerPort"`
@@ -44,10 +44,12 @@ type ContainerPort struct {
 	Protocol      string `json:"protocol"`
 }
 
+// HostPathVolumeSource xxx
 type HostPathVolumeSource struct {
 	Path string `json:"path"`
 }
 
+// SecretItem xxx
 type SecretItem struct {
 	Type      DataUsageType `json:"type,omitempty"`
 	DataKey   string        `json:"dataKey,omitempty"`
@@ -57,45 +59,61 @@ type SecretItem struct {
 	User      string        `json:"user,omitempty"`
 }
 
+// Secret xxx
 type Secret struct {
 	SecretName string       `json:"secretName,omitempty"`
 	Items      []SecretItem `json:"items,omitempty"`
 }
 
+// SecretUnit xxx
 type SecretUnit struct {
 	Name   string `json:"name"`
 	Secret Secret `json:"secret"`
 }
 
+// ConfigMap xxx
 type ConfigMap struct {
 	Name  string      `json:"name"`
 	Items []KeyToPath `json:"items,omitempty"`
 }
 
+// DataUsageType xxx
 type DataUsageType string
 
 const (
+	// DataUsageType_UNKNOWN xxx
 	DataUsageType_UNKNOWN DataUsageType = "unknown"
-	DataUsageType_ENV     DataUsageType = "env"
-	DataUsageType_FILE    DataUsageType = "file"
+	// DataUsageType_ENV xxx
+	DataUsageType_ENV DataUsageType = "env"
+	// DataUsageType_FILE xxx
+	DataUsageType_FILE DataUsageType = "file"
 )
 
+// ConfigMapType xxx
 type ConfigMapType string
 
 const (
-	ConfigMap_Local   ConfigMapType = "local"
-	ConfigMap_Remote  ConfigMapType = "remote"
-	ConfigMap_Env     ConfigMapType = "env"
+	// ConfigMap_Local xxx
+	ConfigMap_Local ConfigMapType = "local"
+	// ConfigMap_Remote xxx
+	ConfigMap_Remote ConfigMapType = "remote"
+	// ConfigMap_Env xxx
+	ConfigMap_Env ConfigMapType = "env"
+	// ConfigMap_FileEnv xxx
 	ConfigMap_FileEnv ConfigMapType = "file_env"
 )
 
+// ConfigMapFileRight xxx
 type ConfigMapFileRight string
 
 const (
-	ConfigMapFileRight_R  ConfigMapFileRight = "r"
+	// ConfigMapFileRight_R xxx
+	ConfigMapFileRight_R ConfigMapFileRight = "r"
+	// ConfigMapFileRight_RW xxx
 	ConfigMapFileRight_RW ConfigMapFileRight = "rw"
 )
 
+// KeyToPath xxx
 type KeyToPath struct {
 	// the key to project
 	Type DataUsageType `json:"type"`
@@ -108,19 +126,21 @@ type KeyToPath struct {
 	// if you set Datakey = "key1", and DataKeyAlias = "alias/key1alias.txt", and KeyOrPath = /home/mountexample,
 	// then in your container you will find only "one" mounted file in path
 	// "/home/mountexample/alias/keyalias.txt" and the file content is "data for key1."
-	DataKey      string `json:"dataKey"`             //configmap sub item name
-	DataKeyAlias string `json:"dataKeyAlias"`        //k8s only
-	KeyOrPath    string `json:"keyOrPath,omitempty"` //indexs means ENV key, path means containerpath
+	DataKey      string `json:"dataKey"`             // configmap sub item name
+	DataKeyAlias string `json:"dataKeyAlias"`        // k8s only
+	KeyOrPath    string `json:"keyOrPath,omitempty"` // indexs means ENV key, path means containerpath
 	SubPath      string `json:"subPath,omitempty"`
 	ReadOnly     bool   `json:"readOnly,omitempty"`
 	User         string `json:"user,omitempty"`
 }
 
+// ConfigMapUnit xxx
 type ConfigMapUnit struct {
 	Name      string    `json:"name"`
 	ConfigMap ConfigMap `json:"configmap"`
 }
 
+// Volume xxx
 type Volume struct {
 	HostPath  string `json:"hostPath,omitempty"`
 	MountPath string `json:"mountPath,omitempty"`
@@ -128,8 +148,9 @@ type Volume struct {
 	ReadOnly  bool   `json:"readOnly,omitempty"`
 }
 
+// VolumeUnit xxx
 type VolumeUnit struct {
-	//Each volume in a pod must have a unique name
+	// Each volume in a pod must have a unique name
 	Name   string `json:"name"`
 	Volume Volume `json:"volume,omitempty"`
 }
@@ -141,30 +162,42 @@ type ResourceRequirements struct {
 	ExtendedResources []*ExtendedResource `json:"extendedResources,omitempty"`
 }
 
+// ResourceList xxx
 type ResourceList struct {
 	Cpu     string `json:"cpu,omitempty"`
 	Mem     string `json:"memory,omitempty"`
 	Storage string `json:"storage,omitempty"`
 }
 
+// ImagePullPolicyType xxx
 type ImagePullPolicyType string
 
 const (
-	ImagePullPolicy_ALWAYS       ImagePullPolicyType = "Always"
+	// ImagePullPolicy_ALWAYS xxx
+	ImagePullPolicy_ALWAYS ImagePullPolicyType = "Always"
+	// ImagePullPolicy_IFNOTPRESENT xxx
 	ImagePullPolicy_IFNOTPRESENT ImagePullPolicyType = "IfNotPresent"
-	ImagePullPolicy_NEVER        ImagePullPolicyType = "Never"
+	// ImagePullPolicy_NEVER xxx
+	ImagePullPolicy_NEVER ImagePullPolicyType = "Never"
 )
 
+// BcsHealthCheckType xxx
 type BcsHealthCheckType string
 
 const (
-	BcsHealthCheckType_COMMAND    BcsHealthCheckType = "COMMAND"
-	BcsHealthCheckType_HTTP       BcsHealthCheckType = "HTTP"
-	BcsHealthCheckType_TCP        BcsHealthCheckType = "TCP"
+	// BcsHealthCheckType_COMMAND xxx
+	BcsHealthCheckType_COMMAND BcsHealthCheckType = "COMMAND"
+	// BcsHealthCheckType_HTTP xxx
+	BcsHealthCheckType_HTTP BcsHealthCheckType = "HTTP"
+	// BcsHealthCheckType_TCP xxx
+	BcsHealthCheckType_TCP BcsHealthCheckType = "TCP"
+	// BcsHealthCheckType_REMOTEHTTP xxx
 	BcsHealthCheckType_REMOTEHTTP BcsHealthCheckType = "REMOTE_HTTP"
-	BcsHealthCheckType_REMOTETCP  BcsHealthCheckType = "REMOTE_TCP"
+	// BcsHealthCheckType_REMOTETCP xxx
+	BcsHealthCheckType_REMOTETCP BcsHealthCheckType = "REMOTE_TCP"
 )
 
+// Container xxx
 // a single container that is expected to be run on the host
 type Container struct {
 	Name            string               `json:"name,omitempty"`
@@ -188,6 +221,7 @@ type Container struct {
 	Secrets         []Secret             `json:"secrets,omitempty"`
 }
 
+// Process xxx
 // a single process that is expected to be run on the host
 type Process struct {
 	ProcName   string `json:"procName"`
@@ -215,13 +249,15 @@ type Process struct {
 	StartGracePeriod int `json:"startGracePeriod"`
 }
 
+// Uri xxx
 type Uri struct {
-	Value     string //process package registry uri, example for "http://xxx.registry.xxx.com/xxx/v1/pack.tar.gz"
-	User      string //package registry user
-	Pwd       string //package registry password, example for curl -u 'user:pwd' -X GET "http://xxx.registry.xxx.com/xxx/v1/pack.tar.gz"
+	Value     string // process package registry uri, example for "http://xxx.registry.xxx.com/xxx/v1/pack.tar.gz"
+	User      string // package registry user
+	Pwd       string // package registry password, example for curl -u 'user:pwd' -X GET "http://xxx.registry.xxx.com/xxx/v1/pack.tar.gz"
 	OutputDir string
 }
 
+// PodSpec xxx
 type PodSpec struct {
 	NodeSelector map[string]string `json:"nodeSelector,omitempty"`
 	Containers   []Container       `json:"containers,omitempty"`
@@ -231,7 +267,7 @@ type PodSpec struct {
 	NetLimit     *NetLimit         `json:"netLimit,omitempty"`
 }
 
-//PodTemplateSpec specification for pod
+// PodTemplateSpec specification for pod
 type PodTemplateSpec struct {
 	// Metadata of the pods created from this template
 	ObjectMeta `json:"metadata,omitempty"`
@@ -239,15 +275,17 @@ type PodTemplateSpec struct {
 	PodSpec PodSpec `json:"spec,omitempty"`
 }
 
+// ReplicaControllerSpec xxx
 type ReplicaControllerSpec struct {
 	Instance int               `json:"instance"`
 	Selector map[string]string `json:"selector,omitempty"`
 	Template *PodTemplateSpec  `json:"template"`
 }
 
+// ReplicaController xxx
 type ReplicaController struct {
 	TypeMeta `json:",inline"`
-	//AppMeta               `json:",inline"`
+	// AppMeta               `json:",inline"`
 	ObjectMeta            `json:"metadata"`
 	ReplicaControllerSpec ReplicaControllerSpec `json:"spec"`
 	UpPolicy              UpdatePolicy          `json:"updatePolicy,omitempty"`
@@ -256,6 +294,7 @@ type ReplicaController struct {
 	Constraints           *Constraint           `json:"constraint,omitempty"`
 }
 
+// HealthCheck xxx
 type HealthCheck struct {
 	Type                BcsHealthCheckType  `json:"type,omitempty"`
 	DelaySeconds        int                 `json:"delaySeconds,omitempty"`
@@ -299,10 +338,12 @@ func (in *HealthCheck) DeepCopy() *HealthCheck {
 	return out
 }
 
+// CommandHealthCheck xxx
 type CommandHealthCheck struct {
 	Value string `json:"value,omitempty"`
 }
 
+// HttpHealthCheck xxx
 type HttpHealthCheck struct {
 	Port     int32             `json:"port"`
 	PortName string            `json:"portName"`
@@ -334,11 +375,13 @@ func (in *HttpHealthCheck) DeepCopy() *HttpHealthCheck {
 	return out
 }
 
+// TcpHealthCheck xxx
 type TcpHealthCheck struct {
 	Port     int32  `json:"port"`
 	PortName string `json:"portName"`
 }
 
+// HealthCheckResult xxx
 type HealthCheckResult struct {
 	ID   string             `json:"id,omitempty"`
 	Type BcsHealthCheckType `json:"type,omitempty"`
@@ -350,6 +393,7 @@ type HealthCheckResult struct {
 	Message string `json:"message,omitempty"`
 }
 
+// UpdatePolicy xxx
 type UpdatePolicy struct {
 	UpdateDelay  int    `json:"updateDelay,omitempty"`
 	MaxRetries   int    `json:"maxRetries,omitempty"`
@@ -357,30 +401,34 @@ type UpdatePolicy struct {
 	Action       string `json:"action,omitempty"`
 }
 
-//RestartPolicyType type for restart strategy
+// RestartPolicyType type for restart strategy
 type RestartPolicyType string
 
 const (
-	RestartPolicy_NEVER     RestartPolicyType = "Never"
-	RestartPolicy_ALWAYS    RestartPolicyType = "Always"
+	// RestartPolicy_NEVER xxx
+	RestartPolicy_NEVER RestartPolicyType = "Never"
+	// RestartPolicy_ALWAYS xxx
+	RestartPolicy_ALWAYS RestartPolicyType = "Always"
+	// RestartPolicy_ONFAILURE xxx
 	RestartPolicy_ONFAILURE RestartPolicyType = "OnFailure"
 )
 
-//RestartPolicy for pod
+// RestartPolicy for pod
 type RestartPolicy struct {
-	Policy         RestartPolicyType `json:"policy"`                   //value: Nerver | Always | OnFailure
-	Interval       int               `json:"interval,omitempty"`       //only for mesos
-	Backoff        int               `json:"backoff,omitempty"`        //only for mesos
-	MaxTimes       int               `json:"maxtimes,omitempty"`       //only for mesos
-	HostRetainTime int64             `json:"hostRetainTime,omitempty"` //only for mesos
+	Policy         RestartPolicyType `json:"policy"`                   // value: Nerver | Always | OnFailure
+	Interval       int               `json:"interval,omitempty"`       // only for mesos
+	Backoff        int               `json:"backoff,omitempty"`        // only for mesos
+	MaxTimes       int               `json:"maxtimes,omitempty"`       // only for mesos
+	HostRetainTime int64             `json:"hostRetainTime,omitempty"` // only for mesos
 }
 
-//KillPolicy for container
+// KillPolicy for container
 type KillPolicy struct {
-	GracePeriod int64 `json:"gracePeriod"` //seconds
+	GracePeriod int64 `json:"gracePeriod"` // seconds
 }
 
-//network flow limit for container
+// NetLimit xxx
+// network flow limit for container
 type NetLimit struct {
 	EgressLimit int `json:"egressLimit"`
 }

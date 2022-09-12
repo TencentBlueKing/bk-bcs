@@ -25,7 +25,7 @@ spec:
               props:
                 placeholder: {{ i18n "值，可为空（由创建 HookRun 时传入）" .lang }}
       ui:component:
-        name: noTitleArray
+        name: bfArray
       ui:props:
         showTitle: true
     execPolicy:
@@ -177,7 +177,7 @@ spec:
             type: integer
             default: 10
             ui:component:
-              name: unitInput
+              name: bfInput
               props:
                 max: 86400
                 unit: s
@@ -242,7 +242,7 @@ spec:
                 - validator: "{{`{{`}} $widgetNode?.getSibling('hookType')?.instance?.value !== 'kubernetes' || $self.value.length > 0 {{`}}`}}"
                   message: {{ i18n "至少包含一对 fields" .lang }}
             ui:component:
-              name: noTitleArray
+              name: bfArray
             ui:props:
               showTitle: true
           count:
@@ -437,7 +437,7 @@ replicas:
       type: integer
       default: 0
       ui:component:
-        name: unitInput
+        name: bfInput
         props:
           max: 2147483647
           unit: s
@@ -447,7 +447,7 @@ replicas:
       type: integer
       default: 0
       ui:component:
-         name: unitInput
+         name: bfInput
          props:
            max: 4096
            unit: {{ i18n "个" .lang }}
@@ -456,7 +456,7 @@ replicas:
       type: integer
       default: 30
       ui:component:
-        name: unitInput
+        name: bfInput
         props:
           max: 86400
           unit: s
@@ -555,7 +555,7 @@ properties:
           ui:rules:
             - maxLength64
     ui:component:
-      name: noTitleArray
+      name: bfArray
     ui:props:
       showTitle: true
 {{- end }}

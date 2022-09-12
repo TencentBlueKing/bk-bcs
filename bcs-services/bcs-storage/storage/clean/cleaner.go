@@ -32,6 +32,8 @@ const (
 	databaseEvent                    = "event"
 	databaseDynamic                  = "dynamic"
 	databaseAlarm                    = "alarm"
+
+	tableEvent = "Event"
 )
 
 // DBCleaner db cleaner
@@ -147,9 +149,16 @@ func (dbc *DBCleaner) Run(ctx context.Context) {
 				if err := dbc.doSoftDeleteClean(); err != nil {
 					blog.Errorf("do soft delete clean failed, err %s", err.Error())
 				}
+				if dbc.tableName == tableEvent {
+					if err := dbc.doTimeClean(); err != nil {
+						blog.Errorf("do time clean failed, err %s", err.Error())
+					}
+				}
 			} else if dbc.db.DataBase() == databaseAlarm || strings.HasPrefix(dbc.db.DataBase(), databaseEvent) {
-				if err := dbc.doNumClean(); err != nil {
-					blog.Errorf("do num clean failed, err %s", err.Error())
+				if dbc.tableName != tableEvent {
+					if err := dbc.doNumClean(); err != nil {
+						blog.Errorf("do num clean failed, err %s", err.Error())
+					}
 				}
 				if err := dbc.doTimeClean(); err != nil {
 					blog.Errorf("do time clean failed, err %s", err.Error())

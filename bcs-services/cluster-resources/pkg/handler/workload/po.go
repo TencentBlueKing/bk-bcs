@@ -116,7 +116,7 @@ func (h *Handler) DeletePo(
 func (h *Handler) ListPoPVC(
 	ctx context.Context, req *clusterRes.ResGetReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	if err := perm.CheckNSAccess(ctx, req.ClusterID, req.Namespace); err != nil {
+	if err = perm.CheckNSAccess(ctx, req.ClusterID, req.Namespace); err != nil {
 		return err
 	}
 	resp.Data, err = respUtil.BuildListPodRelatedResResp(
@@ -129,7 +129,7 @@ func (h *Handler) ListPoPVC(
 func (h *Handler) ListPoCM(
 	ctx context.Context, req *clusterRes.ResGetReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	if err := perm.CheckNSAccess(ctx, req.ClusterID, req.Namespace); err != nil {
+	if err = perm.CheckNSAccess(ctx, req.ClusterID, req.Namespace); err != nil {
 		return err
 	}
 	resp.Data, err = respUtil.BuildListPodRelatedResResp(
@@ -142,7 +142,7 @@ func (h *Handler) ListPoCM(
 func (h *Handler) ListPoSecret(
 	ctx context.Context, req *clusterRes.ResGetReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	if err := perm.CheckNSAccess(ctx, req.ClusterID, req.Namespace); err != nil {
+	if err = perm.CheckNSAccess(ctx, req.ClusterID, req.Namespace); err != nil {
 		return err
 	}
 	resp.Data, err = respUtil.BuildListPodRelatedResResp(
@@ -155,7 +155,7 @@ func (h *Handler) ListPoSecret(
 func (h *Handler) ReschedulePo(
 	ctx context.Context, req *clusterRes.ResUpdateReq, _ *clusterRes.CommonResp,
 ) (err error) {
-	if err := perm.CheckNSAccess(ctx, req.ClusterID, req.Namespace); err != nil {
+	if err = perm.CheckNSAccess(ctx, req.ClusterID, req.Namespace); err != nil {
 		return err
 	}
 

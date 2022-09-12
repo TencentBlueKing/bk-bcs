@@ -45,6 +45,10 @@ const (
 	moveNodesToNodeGroupTaskTemplate = "tke-move nodes to node group: %s/%s"
 	// switchNodeGroupAutoScalingTaskTemplate bk-sops add task template
 	switchNodeGroupAutoScalingTaskTemplate = "tke-switch node group auto scaling: %s/%s"
+	// updateAutoScalingOptionTemplate bk-sops add task template
+	updateAutoScalingOptionTemplate = "tke-update auto scaling option: %s"
+	// switchAutoScalingOptionStatusTemplate bk-sops add task template
+	switchAutoScalingOptionStatusTemplate = "tke-switch auto scaling option status: %s"
 )
 
 var (
@@ -79,9 +83,7 @@ var (
 	updateCreateNodeGroupDBInfoTask = fmt.Sprintf("%s-UpdateCreateNodeGroupDBInfoTask", cloudName)
 
 	// delete nodeGroup task
-	deleteNodeGroupTask             = fmt.Sprintf("%s-DeleteNodeGroupTask", cloudName)
-	uninstallAutoScalerTask         = fmt.Sprintf("%s-UninstallAutoScalerTask", cloudName)
-	updateDeleteNodeGroupDBInfoTask = fmt.Sprintf("%s-UpdateDeleteNodeGroupDBInfoTask", cloudName)
+	deleteNodeGroupTask = fmt.Sprintf("%s-DeleteNodeGroupTask", cloudName)
 
 	// clean node in nodeGroup task
 	cleanNodeGroupNodesTask             = fmt.Sprintf("%s-CleanNodeGroupNodesTask", cloudName)
@@ -94,9 +96,5 @@ var (
 	updateDesiredNodesDBInfoTask = fmt.Sprintf("%s-UpdateDesiredNodesDBInfoTask", cloudName)
 
 	// auto scale task
-	ensureAutoScalerTask             = fmt.Sprintf("%s-EnsureAutoScalerTask", cloudName)
-	deleteAutoScalerTask             = fmt.Sprintf("%s-DeleteAutoScalerTask", cloudName)
-	updateNodeGroupAutoScalingDBTask = fmt.Sprintf("%s-UpdateNodeGroupAutoScalingDBTask", cloudName)
-
-	// move nodes to nodeGroup task
+	ensureAutoScalerTask = fmt.Sprintf("%s-EnsureAutoScalerTask", cloudName)
 )

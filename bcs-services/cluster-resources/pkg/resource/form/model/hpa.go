@@ -20,7 +20,7 @@ type HPA struct {
 	Spec     HPASpec  `structs:"spec"`
 }
 
-// HPASpec ...
+// HPASpec xxx
 type HPASpec struct {
 	Ref          HPATargetRef       `structs:"ref"`
 	Resource     ResourceMetric     `structs:"resource"`
@@ -30,7 +30,7 @@ type HPASpec struct {
 	Pod          PodMetric          `structs:"pod"`
 }
 
-// HPATargetRef ...
+// HPATargetRef xxx
 type HPATargetRef struct {
 	Kind        string `structs:"kind"`
 	APIVersion  string `structs:"apiVersion"`
@@ -39,12 +39,12 @@ type HPATargetRef struct {
 	MaxReplicas int64  `structs:"maxReplicas"`
 }
 
-// ResourceMetric ...
+// ResourceMetric xxx
 type ResourceMetric struct {
 	Items []ResourceMetricItem `structs:"items"`
 }
 
-// ResourceMetricItem ...
+// ResourceMetricItem xxx
 type ResourceMetricItem struct {
 	Name  string `structs:"name"`
 	Type  string `structs:"type"`
@@ -56,7 +56,7 @@ type ContainerResMetric struct {
 	Items []ContainerResMetricItem `structs:"items"`
 }
 
-// ContainerResMetricItem ...
+// ContainerResMetricItem xxx
 type ContainerResMetricItem struct {
 	Name          string `structs:"name"`
 	ContainerName string `structs:"containerName"`
@@ -64,12 +64,12 @@ type ContainerResMetricItem struct {
 	Value         string `structs:"value"`
 }
 
-// ExternalMetric ...
+// ExternalMetric xxx
 type ExternalMetric struct {
 	Items []ExternalMetricItem `structs:"items"`
 }
 
-// ExternalMetricItem ...
+// ExternalMetricItem xxx
 type ExternalMetricItem struct {
 	Name     string         `structs:"name"`
 	Type     string         `structs:"type"`
@@ -77,18 +77,18 @@ type ExternalMetricItem struct {
 	Selector MetricSelector `structs:"selector"`
 }
 
-// MetricSelector ...
+// MetricSelector xxx
 type MetricSelector struct {
 	Expressions []ExpSelector   `structs:"expressions"`
 	Labels      []LabelSelector `structs:"labels"`
 }
 
-// ObjectMetric ...
+// ObjectMetric xxx
 type ObjectMetric struct {
 	Items []ObjectMetricItem `structs:"items"`
 }
 
-// ObjectMetricItem ...
+// ObjectMetricItem xxx
 type ObjectMetricItem struct {
 	Name       string         `structs:"name"`
 	APIVersion string         `structs:"apiVersion"`
@@ -99,12 +99,12 @@ type ObjectMetricItem struct {
 	Selector   MetricSelector `structs:"selector"`
 }
 
-// PodMetric ...
+// PodMetric xxx
 type PodMetric struct {
 	Items []PodMetricItem `structs:"items"`
 }
 
-// PodMetricItem ...
+// PodMetricItem xxx
 type PodMetricItem struct {
 	Name     string         `structs:"name"`
 	Type     string         `structs:"type"`

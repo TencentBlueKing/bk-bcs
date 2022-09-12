@@ -39,6 +39,7 @@ const (
 	FailPolicyBlock = "block"
 )
 
+// Operators xxx
 var Operators = []string{OperatorStringEqual, OperatorStringNotEqual, OperatorJSONEqual, OperatorJSONNotEqual}
 
 // BlockUnit expression for blocker

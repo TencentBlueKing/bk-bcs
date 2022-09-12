@@ -11,6 +11,7 @@
  *
  */
 
+// Package servermetric xxx
 package servermetric
 
 import (
@@ -19,15 +20,18 @@ import (
 )
 
 var (
+	// Metrics xxx
 	Metrics    ServerMetric
 	metricLock sync.Mutex
 )
 
+// ServerMetric xxx
 type ServerMetric struct {
 	role        metric.RoleType
 	mesosMaster string
 }
 
+// SetRole xxx
 func SetRole(role metric.RoleType) {
 	metricLock.Lock()
 	defer metricLock.Unlock()
@@ -35,6 +39,7 @@ func SetRole(role metric.RoleType) {
 	Metrics.role = role
 }
 
+// SetMesosMaster xxx
 func SetMesosMaster(master string) {
 	metricLock.Lock()
 	defer metricLock.Unlock()
@@ -42,6 +47,7 @@ func SetMesosMaster(master string) {
 	Metrics.mesosMaster = master
 }
 
+// GetRole xxx
 func GetRole() metric.RoleType {
 	metricLock.Lock()
 	defer metricLock.Unlock()
@@ -49,6 +55,7 @@ func GetRole() metric.RoleType {
 	return Metrics.role
 }
 
+// IsHealthy xxx
 func IsHealthy() (bool, string) {
 	metricLock.Lock()
 	defer metricLock.Unlock()

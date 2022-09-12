@@ -54,7 +54,7 @@ func newReconciler(mgr manager.Manager, q queue.Queue) reconcile.Reconciler {
 		scheme:     mgr.GetScheme(),
 		eventQ:     q,
 	}
-	//starting goroutine for event handling
+	// starting goroutine for event handling
 	go r.handleQueue()
 	return r
 }
@@ -83,7 +83,7 @@ var _ reconcile.Reconciler = &ReconcileAppSvc{}
 // ReconcileAppSvc reconciles a AppSvc object
 type ReconcileAppSvc struct {
 	client.Client
-	//cache for reading data from locally
+	// cache for reading data from locally
 	localCache cache.Cache
 	scheme     *runtime.Scheme
 	eventQ     queue.Queue
@@ -143,7 +143,7 @@ func (r *ReconcileAppSvc) handleQueue() {
 			default:
 				blog.Warnf("ReconcilerAppSvc get unknown Event Type: %s.", event.Type)
 			}
-			//todo(DeveloperJim) default info for timeout?
+			// todo(DeveloperJim) default info for timeout?
 		}
 	}
 }
@@ -176,14 +176,14 @@ func (r *ReconcileAppSvc) onAdd(svc *meshv1.AppSvc) {
 		blog.Errorf("AppSvc reads local cache %s failed, %s", key.String(), err.Error())
 		return
 	}
-	//get exist data, ready to update?
+	// get exist data, ready to update?
 	if reflect.DeepEqual(instance.Spec, svc.Spec) {
 		blog.Warnf("ReconcileAppSvc get deepEqual in EventAdded, key: %s", key.String())
 		return
 	}
 	instance.Spec = svc.Spec
 	instance.Status.LastUpdateTime = metav1.Now()
-	//ready to Udpate
+	// ready to Udpate
 	if err := r.Update(context.TODO(), instance); err != nil {
 		blog.Errorf("ReconcileAppSvc update %s in EventAdded failed, %s", key.String(), err.Error())
 		return
@@ -210,21 +210,22 @@ func (r *ReconcileAppSvc) onUpdate(svc *meshv1.AppSvc) {
 				blog.Errorf("ReconcileAppSvc create new AppSvc %s on EventUpated failed, %s", key.String(), err.Error())
 				return
 			}
-			blog.Warnf("ReconcileAppSvc creat new AppSvc %s on EventUpated successfully, maybe local cache lost data", key.String())
+			blog.Warnf("ReconcileAppSvc creat new AppSvc %s on EventUpated successfully, maybe local cache lost data",
+				key.String())
 			return
 		}
 		// Error reading the object
 		blog.Errorf("AppSvc reads local cache %s on EventUpdated failed, %s", key.String(), err.Error())
 		return
 	}
-	//get exist data, ready to update
+	// get exist data, ready to update
 	if reflect.DeepEqual(instance.Spec, svc.Spec) && reflect.DeepEqual(instance.Labels, svc.Labels) {
 		blog.Warnf("ReconcileAppSvc get deepEqual in EventAdded, key: %s", key.String())
 		return
 	}
 	instance.Spec = svc.Spec
 	instance.Status.LastUpdateTime = metav1.Now()
-	//ready to Udpate
+	// ready to Udpate
 	if err := r.Update(context.TODO(), instance); err != nil {
 		blog.Errorf("ReconcileAppSvc update %s in EventUpdated failed, %s", key.String(), err.Error())
 		return
@@ -237,7 +238,7 @@ func (r *ReconcileAppSvc) onUpdate(svc *meshv1.AppSvc) {
 }
 
 func (r *ReconcileAppSvc) onDelete(svc *meshv1.AppSvc) {
-	//ready to Udpate
+	// ready to Udpate
 	if err := r.Delete(context.TODO(), svc); err != nil {
 		blog.Errorf("ReconcileAppSvc DELETE %s/%s failed, %s", svc.GetNamespace(), svc.GetName(), err.Error())
 		return

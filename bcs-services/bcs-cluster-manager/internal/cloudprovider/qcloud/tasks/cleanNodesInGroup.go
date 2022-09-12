@@ -147,7 +147,7 @@ func removeAsgInstances(ctx context.Context, info *cloudprovider.CloudDependBasi
 // CheckCleanNodeGroupNodesStatusTask ckeck clean node group nodes status task
 func CheckCleanNodeGroupNodesStatusTask(taskID string, stepName string) error {
 	start := time.Now()
-	//get task information and validate
+	// get task information and validate
 	state, step, err := cloudprovider.GetTaskStateAndCurrentStep(taskID, stepName)
 	if err != nil {
 		return err
@@ -170,7 +170,8 @@ func CheckCleanNodeGroupNodesStatusTask(taskID string, stepName string) error {
 
 	cloud, cluster, err := actions.GetCloudAndCluster(cloudprovider.GetStorageModel(), cloudID, group.ClusterID)
 	if err != nil {
-		blog.Errorf("CheckCleanNodeGroupNodesStatusTask[%s]: get cloud/cluster for nodegroup %s in task %s step %s failed, %s",
+		blog.Errorf(
+			"CheckCleanNodeGroupNodesStatusTask[%s]: get cloud/cluster for nodegroup %s in task %s step %s failed, %s",
 			taskID, nodeGroupID, taskID, stepName, err.Error())
 		retErr := fmt.Errorf("get cloud/cluster information failed, %s", err.Error())
 		_ = state.UpdateStepFailure(start, stepName, retErr)
@@ -237,7 +238,7 @@ func CheckCleanNodeGroupNodesStatusTask(taskID string, stepName string) error {
 // UpdateCleanNodeGroupNodesDBInfoTask update clean node group nodes db info task
 func UpdateCleanNodeGroupNodesDBInfoTask(taskID string, stepName string) error {
 	start := time.Now()
-	//get task information and validate
+	// get task information and validate
 	state, step, err := cloudprovider.GetTaskStateAndCurrentStep(taskID, stepName)
 	if err != nil {
 		return err
@@ -260,7 +261,8 @@ func UpdateCleanNodeGroupNodesDBInfoTask(taskID string, stepName string) error {
 
 	cloud, cluster, err := actions.GetCloudAndCluster(cloudprovider.GetStorageModel(), cloudID, group.ClusterID)
 	if err != nil {
-		blog.Errorf("UpdateCleanNodeGroupNodesDBInfoTask[%s]: get cloud/cluster for nodegroup %s in task %s step %s failed, %s",
+		blog.Errorf(
+			"UpdateCleanNodeGroupNodesDBInfoTask[%s]: get cloud/cluster for nodegroup %s in task %s step %s failed, %s",
 			taskID, nodeGroupID, taskID, stepName, err.Error())
 		retErr := fmt.Errorf("get cloud/cluster information failed, %s", err.Error())
 		_ = state.UpdateStepFailure(start, stepName, retErr)
@@ -300,7 +302,7 @@ func UpdateCleanNodeGroupNodesDBInfoTask(taskID string, stepName string) error {
 		return nil
 	}
 
-	// TODO update nodes info
+	// will do update nodes info
 	err = updateNodeGroupDesiredSize(nodeGroupID, uint32(*np.DesiredNodesNum))
 	if err != nil {
 		blog.Errorf("taskID[%s] updateNodeGroupDesiredSize[%s/%d] failed: %v", taskID, nodeGroupID,

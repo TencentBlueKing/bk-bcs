@@ -15,10 +15,10 @@
 // Package resource 集群资源相关接口实现
 package resource
 
-// Handler ...
+// Handler xxx
 type Handler struct{}
 
-// New ...
+// New xxx
 func New() *Handler {
 	return &Handler{}
 }

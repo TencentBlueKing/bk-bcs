@@ -27,13 +27,13 @@ import (
 
 // NewTkeClient init Tke client
 func NewTkeClient(opt *cloudprovider.CommonOption) (*TkeClient, error) {
-	if opt == nil || len(opt.Key) == 0 || len(opt.Secret) == 0 {
+	if opt == nil || len(opt.Account.SecretID) == 0 || len(opt.Account.SecretKey) == 0 {
 		return nil, cloudprovider.ErrCloudCredentialLost
 	}
 	if len(opt.Region) == 0 {
 		return nil, cloudprovider.ErrCloudRegionLost
 	}
-	credential := common.NewCredential(opt.Key, opt.Secret)
+	credential := common.NewCredential(opt.Account.SecretID, opt.Account.SecretKey)
 	cpf := profile.NewClientProfile()
 	if opt.CommonConf.CloudInternalEnable {
 		cpf.HttpProfile.Endpoint = opt.CommonConf.CloudDomain
@@ -79,7 +79,7 @@ func (cli *TkeClient) CreateTKECluster(createReq *CreateClusterRequest) (*Create
 		return nil, cloudprovider.ErrCloudLostResponse
 	}
 
-	//check response data
+	// check response data
 	blog.Infof("RequestId[%s] tke client DescribeClusters[%s] response successful",
 		response.RequestId, createReq.ClusterBasic.ClusterName)
 
@@ -117,7 +117,7 @@ func (cli *TkeClient) GetTKECluster(clusterID string) (*tke.Cluster, error) {
 		blog.Errorf("GetTKECluster client DescribeClusters[%s] but lost response information", clusterID)
 		return nil, cloudprovider.ErrCloudLostResponse
 	}
-	//check response data
+	// check response data
 	blog.Infof("RequestId[%s] tke client DescribeClusters[%s] response num %d",
 		response.RequestId, clusterID, *response.TotalCount,
 	)
@@ -153,7 +153,7 @@ func (cli *TkeClient) ListTKECluster() ([]*tke.Cluster, error) {
 		if err != nil {
 			return nil, err
 		}
-		//check response
+		// check response
 		response := resp.Response
 		if response == nil {
 			return nil, cloudprovider.ErrCloudLostResponse
@@ -203,7 +203,7 @@ func (cli *TkeClient) DeleteTKECluster(clusterID string, deleteMode DeleteMode) 
 		blog.Errorf("DeleteTKECluster client DeleteCluster[%s] but lost response information", clusterID)
 		return cloudprovider.ErrCloudLostResponse
 	}
-	//check response data
+	// check response data
 	blog.Infof("RequestId[%s] tke client DescribeClusters[%s] response successful",
 		response.RequestId, clusterID)
 
@@ -245,7 +245,7 @@ func (cli *TkeClient) QueryTkeClusterAllInstances(clusterID string, filter Query
 		if err != nil {
 			return nil, err
 		}
-		//check response
+		// check response
 		response := resp.Response
 		if response == nil {
 			return nil, cloudprovider.ErrCloudLostResponse
@@ -303,7 +303,7 @@ func (cli *TkeClient) QueryTkeClusterInstances(clusterReq *DescribeClusterInstan
 			clusterReq.ClusterID)
 		return nil, cloudprovider.ErrCloudLostResponse
 	}
-	//check response data
+	// check response data
 	blog.Infof("RequestId[%s] tke client DescribeClusterInstances[%s] response num %d",
 		response.RequestId, clusterReq.ClusterID, *response.TotalCount,
 	)
@@ -349,7 +349,7 @@ func (cli *TkeClient) DeleteTkeClusterInstance(deleteReq *DeleteInstancesRequest
 		blog.Errorf("DeleteTkeClusterInstance client DeleteCluster[%s] but lost response information", deleteReq.ClusterID)
 		return nil, cloudprovider.ErrCloudLostResponse
 	}
-	//check response data
+	// check response data
 	blog.Infof("RequestId[%s] tke client DeleteCluster[%s] response successful",
 		response.RequestId, deleteReq.ClusterID)
 
@@ -388,7 +388,7 @@ func (cli *TkeClient) AddExistedInstancesToCluster(addReq *AddExistedInstanceReq
 			addReq.ClusterID)
 		return nil, cloudprovider.ErrCloudLostResponse
 	}
-	//check response data
+	// check response data
 	blog.Infof("RequestId[%s] tke client AddExistedInstances[%s] response successful",
 		response.RequestId, addReq.ClusterID)
 
@@ -503,7 +503,7 @@ func (cli *TkeClient) GetTKEClusterVersions() ([]*Versions, error) {
 		blog.Errorf("GetTKEClusterVersions client DescribeVersions but lost response information")
 		return nil, cloudprovider.ErrCloudLostResponse
 	}
-	//check response data
+	// check response data
 	blog.Infof("RequestId[%s] tke client DescribeVersions response successful", response.RequestId)
 
 	if *response.TotalCount == 0 || len(response.VersionInstanceSet) == 0 {
@@ -541,7 +541,7 @@ func (cli *TkeClient) GetTKEClusterKubeConfig(clusterID string, isExtranet bool)
 		blog.Errorf("GetTKEClusterKubeConfig client DescribeClusterKubeconfig but lost response information")
 		return "", cloudprovider.ErrCloudLostResponse
 	}
-	//check response data
+	// check response data
 	blog.Infof("RequestId[%s] tke client DescribeClusterKubeconfig response successful", resp.Response.RequestId)
 	baseRet := base64.StdEncoding.EncodeToString([]byte(*resp.Response.Kubeconfig))
 
@@ -571,7 +571,7 @@ func (cli *TkeClient) GetClusterEndpointStatus(clusterID string, isExtranet bool
 		blog.Errorf("GetClusterEndpointStatus client DescribeClusterEndpointStatus but lost response information")
 		return "", cloudprovider.ErrCloudLostResponse
 	}
-	//check response data
+	// check response data
 	blog.Infof("RequestId[%s] tke client DescribeClusterEndpointStatus response successful", *resp.Response.RequestId)
 
 	if resp.Response.Status == nil {
@@ -601,7 +601,7 @@ func (cli *TkeClient) CreateClusterEndpoint(clusterID string) error {
 		return err
 	}
 
-	//check response data
+	// check response data
 	blog.Infof("RequestId[%s] tke client CreateClusterEndpoint response successful", *resp.Response.RequestId)
 
 	return nil
@@ -626,7 +626,7 @@ func (cli *TkeClient) DeleteClusterEndpoint(clusterID string) error {
 		return err
 	}
 
-	//check response data
+	// check response data
 	blog.Infof("RequestId[%s] tke client DeleteClusterEndpoint response successful", *resp.Response.RequestId)
 
 	return nil
@@ -651,7 +651,7 @@ func (cli *TkeClient) GetTKEClusterImages() ([]*Images, error) {
 		blog.Errorf("GetTKEClusterImages client DescribeImages but lost response information")
 		return nil, cloudprovider.ErrCloudLostResponse
 	}
-	//check response data
+	// check response data
 	blog.Infof("RequestId[%s] tke client DescribeImages response successful", response.RequestId)
 
 	if *response.TotalCount == 0 || len(response.ImageInstanceSet) == 0 {
@@ -672,6 +672,10 @@ func (cli *TkeClient) GetTKEClusterImages() ([]*Images, error) {
 // CreateClusterNodePool create cluster node pool, return cluster node pool id
 func (cli *TkeClient) CreateClusterNodePool(nodePool *CreateNodePoolInput) (string, error) {
 	blog.Infof("CreateClusterNodePool input: %", utils.ToJSONString(nodePool))
+	if *nodePool.LaunchConfigurePara.InternetAccessible.InternetChargeType == InternetChargeTypeBandwidthPrepaid {
+		nodePool.LaunchConfigurePara.InternetAccessible.InternetChargeType = common.StringPtr(
+			InternetChargeTypeBandwidthPostpaidByHour)
+	}
 	req := generateClusterNodePool(nodePool)
 	if req == nil {
 		blog.Errorf("CreateClusterNodePool failed: generateClusterNodePool failed, CreateClusterNodePoolRequest is nil")
@@ -873,4 +877,40 @@ func (cli *TkeClient) AddNodeToNodePool(clusterID string, nodePoolID string, nod
 		}
 	}
 	return nil
+}
+
+// GetNodeGroupInstances describe nodegroup instances
+func (cli *TkeClient) GetNodeGroupInstances(clusterID, nodeGroupID string) ([]*tke.Instance, error) {
+	blog.Infof("GetNodeGroupInstances input: clusterID: %s, nodeGroupID", clusterID, nodeGroupID)
+	req := tke.NewDescribeClusterInstancesRequest()
+	req.ClusterId = common.StringPtr(clusterID)
+	req.Limit = common.Int64Ptr(limit)
+	req.Filters = make([]*tke.Filter, 0)
+	req.Filters = append(req.Filters, &tke.Filter{
+		Name: common.StringPtr("nodepool-id"), Values: common.StringPtrs([]string{nodeGroupID})})
+	req.Filters = append(req.Filters, &tke.Filter{
+		Name: common.StringPtr("nodepool-instance-type"), Values: common.StringPtrs([]string{"ALL"})})
+	got, total := 0, 0
+	first := true
+	ins := make([]*tke.Instance, 0)
+	for got < total || first {
+		first = false
+		req.Offset = common.Int64Ptr(int64(got))
+		resp, err := cli.tke.DescribeClusterInstances(req)
+		if err != nil {
+			blog.Errorf("DescribeClusterInstances failed, err: %s", err.Error())
+			return nil, err
+		}
+		if resp == nil || resp.Response == nil {
+			blog.Errorf("DescribeClusterInstances resp is nil")
+			return nil, fmt.Errorf("DescribeClusterInstances resp is nil")
+		}
+		blog.Infof("DescribeClusterInstances success, requestID: %s", resp.Response.RequestId)
+		for i := range resp.Response.InstanceSet {
+			ins = append(ins, resp.Response.InstanceSet[i])
+		}
+		got += len(resp.Response.InstanceSet)
+		total = int(*resp.Response.TotalCount)
+	}
+	return ins, nil
 }

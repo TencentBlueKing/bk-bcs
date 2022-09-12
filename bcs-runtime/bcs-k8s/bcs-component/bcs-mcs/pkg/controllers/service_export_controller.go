@@ -50,14 +50,16 @@ type ServiceExportController struct {
 	EventRecorder       record.EventRecorder
 }
 
-func (c *ServiceExportController) Reconcile(ctx context.Context, req controllerruntime.Request) (controllerruntime.Result, error) {
+// Reconcile xxx
+func (c *ServiceExportController) Reconcile(ctx context.Context, req controllerruntime.Request) (
+	controllerruntime.Result, error) {
 	klog.V(4).Infof("Reconciling ServiceExport %s.", req.NamespacedName.String())
 	serviceExport := &mcsv1alpha1.ServiceExport{}
 	if err := c.Get(ctx, req.NamespacedName, serviceExport); err != nil {
 		klog.ErrorS(err, "unable to fetch serviceExport", "serviceExport", req.NamespacedName.String())
 		return controllerruntime.Result{}, client.IgnoreNotFound(err)
 	}
-	//删除
+	// 删除
 	if !serviceExport.DeletionTimestamp.IsZero() {
 		if utils.ContainsString(serviceExport.Finalizers, utils.BcsMcsFinalizerName) {
 			klog.V(4).Infof("Reconciling ServiceExport %s. Deleting.", req.NamespacedName.String())
@@ -65,7 +67,8 @@ func (c *ServiceExportController) Reconcile(ctx context.Context, req controllerr
 				klog.ErrorS(err, "unable to delete manifest", "serviceExport", req.NamespacedName.String())
 				return controllerruntime.Result{}, client.IgnoreNotFound(err)
 			}
-			serviceExport.ObjectMeta.Finalizers = utils.RemoveString(serviceExport.ObjectMeta.Finalizers, utils.BcsMcsFinalizerName)
+			serviceExport.ObjectMeta.Finalizers = utils.RemoveString(serviceExport.ObjectMeta.Finalizers,
+				utils.BcsMcsFinalizerName)
 			if err := c.Update(context.Background(), serviceExport); err != nil {
 				return controllerruntime.Result{}, client.IgnoreNotFound(err)
 			}
@@ -81,10 +84,11 @@ func (c *ServiceExportController) Reconcile(ctx context.Context, req controllerr
 		}
 	}
 
-	//同步至manifest
+	// 同步至manifest
 	if err := c.syncToManifest(ctx, serviceExport); err != nil {
 		klog.ErrorS(err, "unable to sync endpointSlice to manifest", "serviceExport", req.NamespacedName.String())
-		c.EventRecorder.Event(serviceExport, corev1.EventTypeWarning, "Error", fmt.Sprintf("sync endpointSlice to manifest failed: %s", err.Error()))
+		c.EventRecorder.Event(serviceExport, corev1.EventTypeWarning, "Error", fmt.Sprintf(
+			"sync endpointSlice to manifest failed: %s", err.Error()))
 		return controllerruntime.Result{}, client.IgnoreNotFound(err)
 	}
 	c.EventRecorder.Event(serviceExport, corev1.EventTypeNormal, "Synced", "Synced ServiceExport")
@@ -103,25 +107,29 @@ func (c *ServiceExportController) deleteManifest(ctx context.Context, serviceExp
 	if err != nil && !errors.IsNotFound(err) {
 		return err
 	}
-	c.EventRecorder.Eventf(serviceExport, corev1.EventTypeNormal, "DeleteManifest", "delete manifest by labels %v successful", matchManifestLabel)
+	c.EventRecorder.Eventf(serviceExport, corev1.EventTypeNormal, "DeleteManifest",
+		"delete manifest by labels %v successful", matchManifestLabel)
 	return nil
 }
 
 func (c *ServiceExportController) syncToManifest(ctx context.Context, serviceExport *mcsv1alpha1.ServiceExport) error {
-	klog.V(4).Infof("Syncing endpointSlice to manifest. serviceExport is %s/%s", serviceExport.Namespace, serviceExport.Name)
-	//收集EndpointSlices,并更新至manifest
+	klog.V(4).Infof("Syncing endpointSlice to manifest. serviceExport is %s/%s", serviceExport.Namespace,
+		serviceExport.Name)
+	// 收集EndpointSlices,并更新至manifest
 	endpointSliceList := &discoveryv1beta1.EndpointSliceList{}
 	listEndpointSliceOpts := []client.ListOption{
 		client.InNamespace(serviceExport.Namespace),
 		client.MatchingLabels(map[string]string{discoveryv1beta1.LabelServiceName: serviceExport.Name}),
 	}
 	if err := c.List(ctx, endpointSliceList, listEndpointSliceOpts...); err != nil {
-		klog.ErrorS(err, "unable to get endpointSliceList", "serviceExport", types.NamespacedName{Namespace: serviceExport.Namespace, Name: serviceExport.Name}.String())
-		c.EventRecorder.Event(serviceExport, corev1.EventTypeWarning, "Error", fmt.Sprintf("get endpointSlice failed: %s", err.Error()))
+		klog.ErrorS(err, "unable to get endpointSliceList", "serviceExport", types.NamespacedName{
+			Namespace: serviceExport.Namespace, Name: serviceExport.Name}.String())
+		c.EventRecorder.Event(serviceExport, corev1.EventTypeWarning, "Error", fmt.Sprintf("get endpointSlice failed: %s",
+			err.Error()))
 		return client.IgnoreNotFound(err)
 	}
 
-	//将endpointSliceList 同步至manifest
+	// 将endpointSliceList 同步至manifest
 	if endpointSliceList == nil {
 		return c.deleteManifest(ctx, serviceExport)
 	}
@@ -140,7 +148,7 @@ func (c *ServiceExportController) syncToManifest(ctx context.Context, serviceExp
 		return err
 	}
 
-	//判断哪些需要被删除
+	// 判断哪些需要被删除
 	toDeleteManifests := utils.FindNeedDeleteManifest(manifestList, endpointSliceList)
 	for _, toDeleteManifest := range toDeleteManifests {
 		klog.Infof("delete manifest: %s/%s", toDeleteManifest.Namespace, toDeleteManifest.Name)
@@ -149,12 +157,14 @@ func (c *ServiceExportController) syncToManifest(ctx context.Context, serviceExp
 				continue
 			}
 			klog.ErrorS(err, "unable to delete manifest", "manifest", toDeleteManifest.Name)
-			c.EventRecorder.Event(serviceExport, corev1.EventTypeWarning, "DeleteManifest", fmt.Sprintf("delete manifest %s/%s failed: %s", toDeleteManifest.Namespace, toDeleteManifest.Name, err.Error()))
+			c.EventRecorder.Event(serviceExport, corev1.EventTypeWarning, "DeleteManifest",
+				fmt.Sprintf("delete manifest %s/%s failed: %s", toDeleteManifest.Namespace, toDeleteManifest.Name, err.Error()))
 			return err
 		}
-		c.EventRecorder.Event(serviceExport, corev1.EventTypeNormal, "DeleteManifest", fmt.Sprintf("delete manifest %s/%s successful", toDeleteManifest.Namespace, toDeleteManifest.Name))
+		c.EventRecorder.Event(serviceExport, corev1.EventTypeNormal, "DeleteManifest",
+			fmt.Sprintf("delete manifest %s/%s successful", toDeleteManifest.Namespace, toDeleteManifest.Name))
 	}
-	//需要更新或创建的
+	// 需要更新或创建的
 	for _, endpointSlice := range endpointSliceList.Items {
 		manifestName := utils.GenManifestName(utils.EndpointsSliceResourceName, endpointSlice.Namespace, endpointSlice.Name)
 		manifestNamespace := utils.GenManifestNamespace(c.AgentID)
@@ -176,7 +186,7 @@ func (c *ServiceExportController) syncToManifest(ctx context.Context, serviceExp
 		manifest.Labels[utils.ConfigUIDLabel] = string(endpointSlice.UID)
 		manifest.Labels[utils.ConfigClusterLabel] = c.AgentID
 
-		//update template
+		// update template
 		if reflect.DeepEqual(manifest.Template.Object, &endpointSlice) {
 			continue
 		}
@@ -195,25 +205,30 @@ func (c *ServiceExportController) syncToManifest(ctx context.Context, serviceExp
 }
 
 // createOrUpdateManifest 创建或更新Manifest
-func (c *ServiceExportController) createOrUpdateManifest(serviceExport *mcsv1alpha1.ServiceExport, manifest *bcsmcsv1alpha1.Manifest) error {
+func (c *ServiceExportController) createOrUpdateManifest(serviceExport *mcsv1alpha1.ServiceExport,
+	manifest *bcsmcsv1alpha1.Manifest) error {
 	runtimeObject := manifest.DeepCopy()
-	operationResult, err := controllerutil.CreateOrUpdate(context.TODO(), c.ParentClusterClient, runtimeObject, func() error {
-		runtimeObject.Template = manifest.Template
-		runtimeObject.Labels = manifest.Labels
-		return nil
-	})
+	operationResult, err := controllerutil.CreateOrUpdate(context.TODO(), c.ParentClusterClient, runtimeObject,
+		func() error {
+			runtimeObject.Template = manifest.Template
+			runtimeObject.Labels = manifest.Labels
+			return nil
+		})
 	if err != nil {
 		klog.Errorf("Failed to create/update Manifest %s/%s. Error: %v", manifest.GetNamespace(), manifest.GetName(), err)
-		c.EventRecorder.Eventf(serviceExport, corev1.EventTypeWarning, "CreateOrUpdateManifestFailed", "Failed to create/update Manifest %s/%s. Error: %v", manifest.GetNamespace(), manifest.GetName(), err)
+		c.EventRecorder.Eventf(serviceExport, corev1.EventTypeWarning, "CreateOrUpdateManifestFailed",
+			"Failed to create/update Manifest %s/%s. Error: %v", manifest.GetNamespace(), manifest.GetName(), err)
 		return err
 	}
 
 	if operationResult == controllerutil.OperationResultCreated {
 		klog.V(2).Infof("Create Manifest %s/%s successfully.", manifest.GetNamespace(), manifest.GetName())
-		c.EventRecorder.Eventf(serviceExport, corev1.EventTypeNormal, "CreateManifest", "Create Manifest %s/%s successfully.", manifest.GetNamespace(), manifest.GetName())
+		c.EventRecorder.Eventf(serviceExport, corev1.EventTypeNormal, "CreateManifest", "Create Manifest %s/%s successfully.",
+			manifest.GetNamespace(), manifest.GetName())
 	} else if operationResult == controllerutil.OperationResultUpdated {
 		klog.V(2).Infof("Update Manifest %s/%s successfully.", manifest.GetNamespace(), manifest.GetName())
-		c.EventRecorder.Eventf(serviceExport, corev1.EventTypeNormal, "UpdateManifest", "Update Manifest %s/%s successfully.", manifest.GetNamespace(), manifest.GetName())
+		c.EventRecorder.Eventf(serviceExport, corev1.EventTypeNormal, "UpdateManifest", "Update Manifest %s/%s successfully.",
+			manifest.GetNamespace(), manifest.GetName())
 	} else {
 		klog.V(2).Infof("Manifest %s/%s is up to date.", manifest.GetNamespace(), manifest.GetName())
 	}
@@ -221,7 +236,8 @@ func (c *ServiceExportController) createOrUpdateManifest(serviceExport *mcsv1alp
 	return nil
 }
 
-func (c *ServiceExportController) matchEndpointSliceManifestLabel(serviceExport *mcsv1alpha1.ServiceExport) map[string]string {
+func (c *ServiceExportController) matchEndpointSliceManifestLabel(
+	serviceExport *mcsv1alpha1.ServiceExport) map[string]string {
 	return map[string]string{
 		utils.ConfigClusterLabel:          c.AgentID,
 		discoveryv1beta1.LabelServiceName: serviceExport.Name,
@@ -234,7 +250,8 @@ func (c *ServiceExportController) matchEndpointSliceManifestLabel(serviceExport 
 func (c *ServiceExportController) SetupWithManager(mgr controllerruntime.Manager) error {
 	return controllerruntime.NewControllerManagedBy(mgr).For(&mcsv1alpha1.ServiceExport{}).
 		// 同时监听EndpointSlice，通过  filterEndpointSliceFunc 方法过滤掉不需要的对象
-		Watches(&source.Kind{Type: &discoveryv1beta1.EndpointSlice{}}, handler.EnqueueRequestsFromMapFunc(c.filterEndpointSliceFunc())).Complete(c)
+		Watches(&source.Kind{Type: &discoveryv1beta1.EndpointSlice{}}, handler.EnqueueRequestsFromMapFunc(
+			c.filterEndpointSliceFunc())).Complete(c)
 }
 
 func (c *ServiceExportController) filterEndpointSliceFunc() handler.MapFunc {
@@ -249,7 +266,8 @@ func (c *ServiceExportController) filterEndpointSliceFunc() handler.MapFunc {
 			return nil
 		}
 		serviceExport := &mcsv1alpha1.ServiceExport{}
-		err := c.Client.Get(context.TODO(), types.NamespacedName{Name: serviceExportName, Namespace: namespace}, serviceExport)
+		err := c.Client.Get(context.TODO(), types.NamespacedName{Name: serviceExportName, Namespace: namespace},
+			serviceExport)
 		if err != nil {
 			if errors.IsNotFound(err) {
 				klog.V(5).Infof("serviceExport %s/%s is not exists, skip requeue", namespace, name)

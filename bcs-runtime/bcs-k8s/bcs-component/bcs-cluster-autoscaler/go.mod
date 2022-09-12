@@ -6,6 +6,8 @@ require (
 	bou.ke/monkey v1.0.2
 	github.com/go-ini/ini v1.62.0
 	github.com/golang/mock v1.4.1
+	github.com/google/uuid v1.1.2
+	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.11.0
 	github.com/robfig/cron v1.1.0
 	github.com/spf13/pflag v1.0.5
@@ -86,7 +88,6 @@ require (
 	github.com/google/go-cmp v0.5.5 // indirect
 	github.com/google/go-querystring v1.0.0 // indirect
 	github.com/google/gofuzz v1.0.0 // indirect
-	github.com/google/uuid v1.1.2 // indirect
 	github.com/googleapis/gax-go/v2 v2.0.5 // indirect
 	github.com/googleapis/gnostic v0.0.0-20170729233727-0c5108395e2d // indirect
 	github.com/gophercloud/gophercloud v0.3.0 // indirect
@@ -126,7 +127,6 @@ require (
 	github.com/opencontainers/runtime-spec v1.0.3-0.20210326190908-1c3f411f0417 // indirect
 	github.com/opencontainers/selinux v1.8.0 // indirect
 	github.com/pborman/uuid v1.2.0 // indirect
-	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/prometheus/client_model v0.2.0 // indirect
 	github.com/prometheus/common v0.10.0 // indirect
@@ -196,6 +196,7 @@ require (
 
 replace (
 	github.com/google/cadvisor => github.com/google/cadvisor v0.39.2
+	github.com/google/uuid => github.com/google/uuid v1.1.1
 	github.com/prometheus/client_golang => github.com/prometheus/client_golang v0.9.2
 	google.golang.org/api => google.golang.org/api v0.14.0
 	google.golang.org/grpc => google.golang.org/grpc v1.26.0
@@ -203,7 +204,7 @@ replace (
 	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.16.15
 	k8s.io/apimachinery => k8s.io/apimachinery v0.16.15
 	k8s.io/apiserver => k8s.io/apiserver v0.16.15
-	k8s.io/autoscaler/cluster-autoscaler => github.com/OvertimeDog/cluster-autoscaler v0.0.0-20220126030239-e40e4a967f24
+	k8s.io/autoscaler/cluster-autoscaler => github.com/OvertimeDog/cluster-autoscaler v0.0.0-20220818063726-8b4e8cf1c714
 	k8s.io/cli-runtime => k8s.io/cli-runtime v0.16.15
 	k8s.io/client-go => k8s.io/client-go v0.16.15
 	k8s.io/cloud-provider => k8s.io/cloud-provider v0.16.15

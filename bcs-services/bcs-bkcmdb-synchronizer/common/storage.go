@@ -16,20 +16,29 @@ import (
 	"encoding/json"
 )
 
+// EventType xxx
 type EventType int32
 
 const (
+	// Nop xxx
 	Nop EventType = iota
+	// Add xxx
 	Add
+	// Del xxx
 	Del
+	// Chg xxx
 	Chg
+	// SChg xxx
 	SChg
+	// Brk xxx
 	Brk EventType = -1
 )
 
 const (
+	// ResourceTypeTaskgroup xxx
 	ResourceTypeTaskgroup = "taskgroup"
-	ResourceTypePod       = "Pod"
+	// ResourceTypePod xxx
+	ResourceTypePod = "Pod"
 )
 
 // GetResTypeByClusterType get resource type by cluster type

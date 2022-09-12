@@ -48,7 +48,7 @@ type WatchServer struct {
 }
 
 var (
-	//DefaultWriter default json writer
+	// DefaultWriter default json writer
 	DefaultWriter = func(resp *restful.Response, event *Event) bool {
 		if err := codec.EncJsonWriter(event, resp.ResponseWriter); err != nil {
 			blog.Errorf("defaultWriter error: %v", err)
@@ -58,7 +58,7 @@ var (
 	}
 )
 
-//NewWatchServer create default json formate watchServer
+// NewWatchServer create default json formate watchServer
 func NewWatchServer(wopt *WatchServerOption) (*WatchServer, error) {
 	if wopt.Req == nil || wopt.Resp == nil || wopt.Store == nil {
 		return nil, fmt.Errorf("field in watch server option cannot be empty")
@@ -78,7 +78,7 @@ func NewWatchServer(wopt *WatchServerOption) (*WatchServer, error) {
 	}, nil
 }
 
-//Go running watchServer
+// Go running watchServer
 func (ws *WatchServer) Go(ctx context.Context) {
 	if ws.store == nil || ws.req == nil || ws.resp == nil {
 		blog.Errorf(ws.sprint("Go() error, tank or req or resp can not be nil"))

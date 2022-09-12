@@ -96,7 +96,7 @@ metadata:
               - labelValRegex
         type: object
       ui:component:
-        name: noTitleArray
+        name: bfArray
         # TODO 如果后续 common.tpl 对资源类型的定制增多的话，可以考虑封装成方法
         # HookTemplate 类型资源不展示 labels
         {{- if eq .kind "HookTemplate" }}
@@ -138,7 +138,7 @@ metadata:
             type: string
         type: object
       ui:component:
-        name: noTitleArray
+        name: bfArray
         {{- if eq .kind "HookTemplate" }}
         props:
           visible: false

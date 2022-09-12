@@ -47,6 +47,7 @@ import (
 )
 
 const (
+	// DefaultResyncPeriod TODO
 	DefaultResyncPeriod = 15 * 60
 )
 
@@ -130,12 +131,14 @@ func main() {
 
 func init() {
 	flag.StringVar(&kubeConfig, "kubeConfig", "", "Path to a kubeConfig. Only required if out-of-cluster.")
-	flag.StringVar(&masterURL, "master", "", "The address of the Kubernetes API server. Overrides any value in kubeConfig. Only required if out-of-cluster.")
+	flag.StringVar(&masterURL, "master", "",
+		"The address of the Kubernetes API server. Overrides any value in kubeConfig. Only required if out-of-cluster.")
 	flag.Int64Var(&resyncPeriod, "resync-period", DefaultResyncPeriod, "Time period in seconds for resync.")
 	flag.BoolVar(&LeaderElect, "leader-elect", false, "Enable leader election")
 	flag.StringVar(&LockNameSpace, "leader-elect-namespace", "bcs-system", "The resourcelock namespace")
 	flag.StringVar(&LockName, "leader-elect-name", "bcs-hook-operator", "The resourcelock name")
-	flag.StringVar(&LockComponentName, "leader-elect-componentname", "bcs-hook-operator", "The component name for event resource")
+	flag.StringVar(&LockComponentName, "leader-elect-componentname", "bcs-hook-operator",
+		"The component name for event resource")
 	flag.DurationVar(&LeaseDuration, "leader-elect-lease-duration", 15*time.Second, "The leader-elect LeaseDuration")
 	flag.DurationVar(&RenewDeadline, "leader-elect-renew-deadline", 10*time.Second, "The leader-elect RenewDeadline")
 	flag.DurationVar(&RetryPeriod, "leader-elect-retry-period", 2*time.Second, "The leader-elect RetryPeriod")
@@ -235,7 +238,7 @@ func NewLeader(id string) {
 	fmt.Printf("%s: new leader: %s\n", hostname(), id)
 }
 
-//runPrometheusMetrics starting prometheus metrics handler
+// runPrometheusMetricsServer starting prometheus metrics handler
 func runPrometheusMetricsServer() {
 	http.Handle("/metrics", promhttp.Handler())
 	addr := address + ":" + strconv.Itoa(int(metricPort))

@@ -11,6 +11,7 @@
  *
  */
 
+// Package options xxx
 package options
 
 import (
@@ -18,7 +19,7 @@ import (
 	logmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-log-manager/config"
 )
 
-//LogManagerOption is option in flags
+// LogManagerOption is option in flags
 type LogManagerOption struct {
 	conf.FileConfig
 	conf.ServiceConfig

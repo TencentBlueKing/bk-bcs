@@ -1,6 +1,6 @@
 {
   "kind": "ConfigMap",
-  "class": "configs",
+  "class": "config",
   "references": null,
   "items": [
     {

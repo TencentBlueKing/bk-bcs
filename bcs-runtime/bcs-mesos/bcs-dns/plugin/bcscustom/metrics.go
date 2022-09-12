@@ -19,7 +19,9 @@ import (
 )
 
 const (
+	// Success TODO
 	Success = "success"
+	// Failure TODO
 	Failure = "failure"
 )
 

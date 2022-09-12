@@ -14,9 +14,9 @@
 package config
 
 const (
-	// RedisStandAloneType
+	// RedisStandAloneType TODO
 	RedisStandAloneType = "standalone" // 单节点redis
-	// RedisSentinelType
+	// RedisSentinelType TODO
 	RedisSentinelType = "sentinel" // 哨兵模式redis，哨兵实例
 )
 
@@ -37,7 +37,7 @@ type RedisConf struct {
 	WriteTimeout     int      `yaml:"write_timeout" mapstructure:"write_timeout"`
 }
 
-// DefaultRedisConf
+// DefaultRedisConf :
 func DefaultRedisConf() *RedisConf {
 	// only for development
 	return &RedisConf{

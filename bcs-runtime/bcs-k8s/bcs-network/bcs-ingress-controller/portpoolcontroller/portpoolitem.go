@@ -19,6 +19,7 @@ import (
 	"strings"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/cloud"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/constant"
@@ -56,11 +57,13 @@ func (ppih *PortPoolItemHandler) ensurePortPoolItem(
 			StartPort:       item.StartPort,
 			EndPort:         item.EndPort,
 			SegmentLength:   item.SegmentLength,
+			External:        item.External,
 		}
 	} else {
 		// endport can be increased
 		retItemStatus = itemStatus.DeepCopy()
 		retItemStatus.EndPort = item.EndPort
+		retItemStatus.External = item.External
 	}
 	// check loadbalanceIDs
 	lbIDs := make([]string, len(item.LoadBalancerIDs))
@@ -69,7 +72,7 @@ func (ppih *PortPoolItemHandler) ensurePortPoolItem(
 
 	lbObjList, err := ppih.getCloudListenersByRegionIDs(lbIDs)
 	if err != nil {
-		blog.Infof("port pool item %s become %s, get loadbalancer info of %v failed, err %s",
+		blog.Warnf("port pool item %s become %s, get loadbalancer info of %v failed, err %s",
 			item.ItemName, constant.PortPoolItemStatusNotReady, lbIDs, err.Error())
 		retItemStatus.Status = constant.PortPoolItemStatusNotReady
 		retItemStatus.Message = fmt.Sprintf("get loadbalancer info of %v failed, err %s", lbIDs, err.Error())
@@ -128,7 +131,7 @@ func (ppih *PortPoolItemHandler) checkPortPoolItemDeletion(itemStatus *netextv1.
 	found := false
 	// check whether there is listener related to this port pool item
 	for _, lbObj := range itemStatus.PoolItemLoadBalancers {
-		listenerList, err := ppih.getListenerList(lbObj.LoadbalancerID, ppih.PortPoolName, itemStatus.ItemName)
+		listenerList, err := ppih.getListenerListWithItemName(lbObj.LoadbalancerID, ppih.PortPoolName, itemStatus.ItemName)
 		if err != nil {
 			return err
 		}
@@ -174,7 +177,7 @@ func (ppih *PortPoolItemHandler) getCloudListenersByRegionIDs(regionIDs []string
 			lbObj, err = ppih.LbClient.DescribeLoadBalancer(tmpRegion, tmpID, "")
 		}
 		if err != nil {
-			return nil, fmt.Errorf("describe lb %s info failed, err %s", lbID, err.Error())
+			return nil, fmt.Errorf("describe lb '%s/%s' info failed, err %s", tmpRegion, lbID, err.Error())
 		}
 
 		retLbs = append(retLbs, &netextv1.IngressLoadBalancer{
@@ -191,13 +194,27 @@ func (ppih *PortPoolItemHandler) getCloudListenersByRegionIDs(regionIDs []string
 	return retLbs, nil
 }
 
-// get listener from k8s apiserver
-func (ppih *PortPoolItemHandler) getListenerList(lbID, portpoolName, itemName string) (*netextv1.ListenerList, error) {
+// get lb's all listener, contains all portpool's listener with same lb
+func (ppih *PortPoolItemHandler) getLBListenerList(lbID string) (*netextv1.ListenerList, error) {
+	set := k8slabels.Set(map[string]string{
+		netextv1.LabelKeyForPortPoolListener: netextv1.LabelValueTrue,
+		netextv1.LabelKeyForLoadbalanceID:    generator.GetLabelLBId(lbID),
+	})
+	return ppih.getListenerList(set)
+}
+
+// get portpool item's listener
+func (ppih *PortPoolItemHandler) getListenerListWithItemName(lbID, portpoolName, itemName string) (*netextv1.ListenerList, error) {
 	set := k8slabels.Set(map[string]string{
 		netextv1.LabelKeyForPortPoolListener:                       netextv1.LabelValueTrue,
 		netextv1.LabelKeyForLoadbalanceID:                          generator.GetLabelLBId(lbID),
 		common.GetPortPoolListenerLabelKey(portpoolName, itemName): netextv1.LabelValueForPortPoolItemName,
 	})
+	return ppih.getListenerList(set)
+}
+
+// get listener from k8s apiserver by labelSelector
+func (ppih *PortPoolItemHandler) getListenerList(set k8slabels.Set) (*netextv1.ListenerList, error) {
 	selector, err := k8smetav1.LabelSelectorAsSelector(k8smetav1.SetAsLabelSelector(set))
 	if err != nil {
 		return nil, fmt.Errorf("get selector from set %v failed, err %s", set, err.Error())
@@ -215,7 +232,7 @@ func (ppih *PortPoolItemHandler) getListenerList(lbID, portpoolName, itemName st
 // ensure listeners about this port pool item
 func (ppih *PortPoolItemHandler) ensureListeners(region, lbID, itemName string, startPort, endPort,
 	segment uint32, protocol string) error {
-	listenerList, err := ppih.getListenerList(lbID, ppih.PortPoolName, itemName)
+	listenerList, err := ppih.getLBListenerList(lbID)
 	if err != nil {
 		return err
 	}

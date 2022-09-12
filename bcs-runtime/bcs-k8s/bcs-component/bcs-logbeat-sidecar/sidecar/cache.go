@@ -41,7 +41,7 @@ func (s *SidecarController) syncContainerCacheOnce() {
 	defer s.containerCacheMutex.Unlock()
 	s.containerCache = make(map[string]*dockertypes.ContainerJSON)
 
-	//list all running containers
+	// list all running containers
 	apiContainers, err := s.client.ContainerList(context.Background(), dockertypes.ContainerListOptions{All: true})
 	if err != nil {
 		blog.Errorf("docker ListContainers failed: %s", err.Error())

@@ -112,7 +112,7 @@ func (r *BkcmdbReconciler) reconcileRedis(instance *bkcmdbv1.Bkcmdb) error {
 // makeRedisSecret build redis secret object
 func makeRedisSecret(z *bkcmdbv1.Bkcmdb) *v1.Secret {
 	redisPassword = defaultRedisPassword
-	//base64Ps := base64.StdEncoding.EncodeToString([]byte(redisPassword))
+	// base64Ps := base64.StdEncoding.EncodeToString([]byte(redisPassword))
 	return &v1.Secret{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Secret",

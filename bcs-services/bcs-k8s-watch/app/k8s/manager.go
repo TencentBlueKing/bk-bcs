@@ -57,7 +57,8 @@ type WatcherManager struct {
 }
 
 // NewWatcherManager creates a new WatcherManager instance.
-func NewWatcherManager(clusterID string, watchResource *options.WatchResource, writer *output.Writer, k8sConfig *options.K8sConfig,
+func NewWatcherManager(clusterID string, watchResource *options.WatchResource, writer *output.Writer,
+	k8sConfig *options.K8sConfig,
 	storageService, netservice *bcs.InnerService, sc <-chan struct{}) (*WatcherManager, error) {
 
 	mgr := &WatcherManager{
@@ -71,7 +72,8 @@ func NewWatcherManager(clusterID string, watchResource *options.WatchResource, w
 	}
 	mgr.initWatchers(clusterID, k8sConfig, storageService, netservice)
 
-	mgr.synchronizer = NewSynchronizer(clusterID, watchResource.Namespace, mgr.watchers, mgr.crdWatchers, storageService)
+	mgr.synchronizer = NewSynchronizer(clusterID, watchResource.Namespace, watchResource.LabelSelectors,
+		mgr.watchers, mgr.crdWatchers, storageService)
 	return mgr, nil
 }
 
@@ -90,9 +92,12 @@ func (mgr *WatcherManager) initWatchers(clusterID string,
 		if val, ok := mgr.watchResource.LabelSelectors[name]; ok {
 			labelSelector = val
 		}
-		watcher := NewWatcher(resourceObjType.Client, mgr.watchResource.Namespace, name,
+		watcher, err := NewWatcher(resourceObjType.Client, mgr.watchResource.Namespace, name,
 			resourceObjType.ResourceName, resourceObjType.ObjType, mgr.writer, mgr.watchers,
 			resourceObjType.Namespaced, labelSelector)
+		if err != nil {
+			panic(err)
+		}
 		mgr.watchers[name] = watcher
 	}
 
@@ -193,8 +198,11 @@ func (mgr *WatcherManager) runCrdWatcher(obj *apiextensionsV1beta1.CustomResourc
 			labelSelector = val
 		}
 		// init and run watcher
-		watcher := NewWatcher(&crdClient, mgr.watchResource.Namespace, obj.Spec.Names.Kind, obj.Spec.Names.Plural,
+		watcher, err := NewWatcher(&crdClient, mgr.watchResource.Namespace, obj.Spec.Names.Kind, obj.Spec.Names.Plural,
 			runtimeObject, mgr.writer, mgr.watchers, namespaced, labelSelector)
+		if err != nil {
+			panic(err)
+		}
 		watcher.stopChan = stopChan
 		mgr.crdWatchers[obj.Spec.Names.Kind] = watcher
 		glog.Infof("watcher manager, start list-watcher[%+v]", obj.Spec.Names.Kind)

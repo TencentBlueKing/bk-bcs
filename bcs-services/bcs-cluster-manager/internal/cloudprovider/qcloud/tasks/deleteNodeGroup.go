@@ -23,13 +23,12 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/api"
-	icommon "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 )
 
 // DeleteCloudNodeGroupTask delete cloud node group task
 func DeleteCloudNodeGroupTask(taskID string, stepName string) error {
 	start := time.Now()
-	//get task information and validate
+	// get task information and validate
 	state, step, err := cloudprovider.GetTaskStateAndCurrentStep(taskID, stepName)
 	if err != nil {
 		return err
@@ -95,7 +94,8 @@ func DeleteCloudNodeGroupTask(taskID string, stepName string) error {
 					taskID, nodeGroupID, group.CloudNodeGroupID, stepName, stepName)
 				found = false
 			} else {
-				blog.Errorf("DeleteCloudNodeGroupTask[%s]: call DescribeClusterNodePoolDetail[%s] api in task %s step %s failed, %s",
+				blog.Errorf(
+					"DeleteCloudNodeGroupTask[%s]: call DescribeClusterNodePoolDetail[%s] api in task %s step %s failed, %s",
 					taskID, nodeGroupID, taskID, stepName, err.Error())
 				retErr := fmt.Errorf("call DescribeClusterNodePoolDetail[%s] api err, %s", nodeGroupID, err.Error())
 				_ = state.UpdateStepFailure(start, stepName, retErr)
@@ -125,43 +125,5 @@ func DeleteCloudNodeGroupTask(taskID string, stepName string) error {
 		blog.Errorf("DeleteCloudNodeGroupTask[%s] task %s %s update to storage fatal", taskID, taskID, stepName)
 		return err
 	}
-	return nil
-}
-
-// UpdateDeleteNodeGroupDBInfoTask update delete node group db info task
-func UpdateDeleteNodeGroupDBInfoTask(taskID string, stepName string) error {
-	start := time.Now()
-	//get task information and validate
-	state, step, err := cloudprovider.GetTaskStateAndCurrentStep(taskID, stepName)
-	if err != nil {
-		return err
-	}
-	if step == nil {
-		return nil
-	}
-
-	// step login started here
-	nodeGroupID := step.Params["NodeGroupID"]
-
-	np, err := cloudprovider.GetStorageModel().GetNodeGroup(context.Background(), nodeGroupID)
-	if err != nil {
-		blog.Errorf("UpdateDeleteNodeGroupDBInfoTask[%s]: get cluster for %s failed", taskID, nodeGroupID)
-		retErr := fmt.Errorf("get nodegroup information failed, %s", err.Error())
-		_ = state.UpdateStepFailure(start, stepName, retErr)
-		return retErr
-	}
-	np.Status = icommon.StatusDeleted
-
-	err = cloudprovider.GetStorageModel().UpdateNodeGroup(context.Background(), np)
-	if err != nil {
-		blog.Errorf("UpdateDeleteNodeGroupDBInfoTask[%s]: update nodegroup %s status to %s failed", taskID, nodeGroupID, np.Status)
-	}
-
-	// update step
-	if err := state.UpdateStepSucc(start, stepName); err != nil {
-		blog.Errorf("UpdateDeleteNodeGroupDBInfoTask[%s] task %s %s update to storage fatal", taskID, taskID, stepName)
-		return err
-	}
-
 	return nil
 }

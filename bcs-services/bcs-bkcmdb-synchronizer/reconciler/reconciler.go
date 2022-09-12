@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package reconciler xxx
 package reconciler
 
 import (
@@ -144,6 +145,7 @@ func (r *Reconciler) Run(ctx context.Context) {
 	}
 }
 
+// logPre xxx
 // log prefix for current reconciler
 func (r *Reconciler) logPre() string {
 	return fmt.Sprintf("[reconciler:%s]", r.clusterInfo.ClusterID)

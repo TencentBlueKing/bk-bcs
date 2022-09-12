@@ -1,0 +1,12 @@
+{{- if .Values.service.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "bcs-project-manager.fullname" . }}
+  labels:
+    {{- include "bcs-project-manager.labels" . | nindent 4 }}
+spec:
+  {{- toYaml .Values.service | nindent 2 }}
+  selector:
+    {{- include "bcs-project-manager.selectorLabels" . | nindent 4 }}
+{{- end}}

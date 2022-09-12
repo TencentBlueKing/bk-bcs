@@ -1,3 +1,4 @@
+//go:build clusterapi
 // +build clusterapi
 
 /*
@@ -30,7 +31,8 @@ var AvailableCloudProviders = []string{
 // DefaultCloudProvider is tenc.
 const DefaultCloudProvider = bcs.ProviderName
 
-func buildCloudProvider(opts config.AutoscalingOptions, do cloudprovider.NodeGroupDiscoveryOptions, rl *cloudprovider.ResourceLimiter) cloudprovider.CloudProvider {
+func buildCloudProvider(opts config.AutoscalingOptions, do cloudprovider.NodeGroupDiscoveryOptions,
+	rl *cloudprovider.ResourceLimiter) cloudprovider.CloudProvider {
 	switch opts.CloudProviderName {
 	case bcs.ProviderName:
 		return bcs.BuildCloudProvider(opts, do, rl)

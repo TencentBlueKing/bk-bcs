@@ -22,15 +22,18 @@ import (
 
 // ClientInterface client interface for cmdb
 type ClientInterface interface {
+	// CreatePod TODO
 	// container server
 	CreatePod(bizID int64, data *CreatePod) (*CreatedOneOptionResult, error)
 	CreateManyPod(bizID int64, data *CreateManyPod) (*CreatedManyOptionResult, error)
 	UpdatePod(bizID int64, data *UpdatePod) (*UpdatedOptionResult, error)
 	DeletePod(bizID int64, data *DeletePod) (*DeletedOptionResult, error)
 	ListClusterPods(bizID int64, clusterID string) (*ListPodsResult, error)
+	// SearchBusinessTopoWithStatistics TODO
 	// topo server
 	SearchBusinessTopoWithStatistics(bizID int64) (*SearchBusinessTopoWithStatisticsResult, error)
 
+	// ESBSearchBusiness TODO
 	// interfaces through esb
 	// 如果是通过ESB的请求，所有的参数都在post请求体中
 	ESBSearchBusiness(username string, condition map[string]interface{}) (*ESBSearchBusinessResult, error)

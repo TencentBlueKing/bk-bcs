@@ -47,7 +47,7 @@ import (
 const maxUpdateRetries = 10
 
 const (
-	//PodHotpatchContainerKey support hot update container in annotation
+	// PodHotpatchContainerKey support hot update container in annotation
 	PodHotpatchContainerKey = "io.kubernetes.hotpatch.container"
 )
 
@@ -100,6 +100,7 @@ func getParentName(pod *v1.Pod) string {
 	return parent
 }
 
+// getOrdinal xxx
 //  getOrdinal gets pod's ordinal. If pod has no ordinal, -1 is returned.
 func getOrdinal(pod *v1.Pod) int {
 	_, ordinal := getParentNameAndOrdinal(pod)
@@ -113,7 +114,8 @@ func getPodName(set *gstsv1alpha1.GameStatefulSet, ordinal int) string {
 
 // getPersistentVolumeClaimName gets the name of PersistentVolumeClaim for a Pod with an ordinal index of ordinal. claim
 // must be a PersistentVolumeClaim from set's VolumeClaims template.
-func getPersistentVolumeClaimName(set *gstsv1alpha1.GameStatefulSet, claim *v1.PersistentVolumeClaim, ordinal int) string {
+func getPersistentVolumeClaimName(set *gstsv1alpha1.GameStatefulSet, claim *v1.PersistentVolumeClaim,
+	ordinal int) string {
 	// NOTE: This name format is used by the heuristics for zone spreading in ChooseZoneForVolume
 	return fmt.Sprintf("%s-%s-%d", claim.Name, set.Name, ordinal)
 }
@@ -365,7 +367,8 @@ func getPatch(set *gstsv1alpha1.GameStatefulSet) ([]byte, error) {
 // The Revision of the returned ControllerRevision is set to revision. If the returned error is nil, the returned
 // ControllerRevision is valid. GameStatefulSet revisions are stored as patches that re-apply the current state of set
 // to a new GameStatefulSet using a strategic merge patch to replace the saved state of the new GameStatefulSet.
-func newRevision(set *gstsv1alpha1.GameStatefulSet, revision int64, collisionCount *int32) (*apps.ControllerRevision, error) {
+func newRevision(set *gstsv1alpha1.GameStatefulSet, revision int64, collisionCount *int32) (*apps.ControllerRevision,
+	error) {
 	patch, err := getPatch(set)
 	if err != nil {
 		return nil, err
@@ -391,9 +394,11 @@ func newRevision(set *gstsv1alpha1.GameStatefulSet, revision int64, collisionCou
 
 // ApplyRevision returns a new GameStatefulSet constructed by restoring the state in revision to set. If the returned error
 // is nil, the returned GameStatefulSet is valid.
-func ApplyRevision(set *gstsv1alpha1.GameStatefulSet, revision *apps.ControllerRevision) (*gstsv1alpha1.GameStatefulSet, error) {
+func ApplyRevision(set *gstsv1alpha1.GameStatefulSet, revision *apps.ControllerRevision) (*gstsv1alpha1.GameStatefulSet,
+	error) {
 	clone := set.DeepCopy()
-	patched, err := strategicpatch.StrategicMergePatch([]byte(runtime.EncodeOrDie(patchCodec, clone)), revision.Data.Raw, clone)
+	patched, err := strategicpatch.StrategicMergePatch([]byte(runtime.EncodeOrDie(patchCodec, clone)), revision.Data.Raw,
+		clone)
 	if err != nil {
 		return nil, err
 	}
@@ -463,7 +468,8 @@ func (ao ascendingOrdinal) Less(i, j int) bool {
 // GetPodGameStatefulSets returns a list of StatefulSets that potentially match a pod.
 // Only the one specified in the Pod's ControllerRef will actually manage it.
 // Returns an error only if no matching StatefulSets are found.
-func GetPodGameStatefulSets(pod *v1.Pod, sscLister gstslisters.GameStatefulSetLister) ([]*gstsv1alpha1.GameStatefulSet, error) {
+func GetPodGameStatefulSets(pod *v1.Pod, sscLister gstslisters.GameStatefulSetLister) ([]*gstsv1alpha1.GameStatefulSet,
+	error) {
 	var selector labels.Selector
 	var ps *gstsv1alpha1.GameStatefulSet
 
@@ -495,7 +501,8 @@ func GetPodGameStatefulSets(pod *v1.Pod, sscLister gstslisters.GameStatefulSetLi
 	}
 
 	if len(psList) == 0 {
-		return nil, fmt.Errorf("could not find StatefulSet for pod %s in namespace %s with labels: %v", pod.Name, pod.Namespace, pod.Labels)
+		return nil, fmt.Errorf("could not find StatefulSet for pod %s in namespace %s with labels: %v", pod.Name,
+			pod.Namespace, pod.Labels)
 	}
 
 	return psList, nil
@@ -515,7 +522,7 @@ func isOnDeleteUpdateStragtegy(set *gstsv1alpha1.GameStatefulSet) bool {
 	return true
 }
 
-//Contain check if object what we expected
+// Contain check if object what we expected
 func Contain(obj interface{}, target interface{}) (bool, error) {
 	targetValue := reflect.ValueOf(target)
 	switch reflect.TypeOf(target).Kind() {
@@ -534,7 +541,7 @@ func Contain(obj interface{}, target interface{}) (bool, error) {
 	return false, errors.New("not in array")
 }
 
-//isInplaceUpdate check if GameStatefulSet is in InplaceUpdate mode,
+// isInplaceUpdate check if GameStatefulSet is in InplaceUpdate mode,
 func isInplaceUpdate(set *gstsv1alpha1.GameStatefulSet) bool {
 	return set.Spec.UpdateStrategy.Type == gstsv1alpha1.InplaceUpdateGameStatefulSetStrategyType &&
 		set.Status.CurrentRevision != set.Status.UpdateRevision

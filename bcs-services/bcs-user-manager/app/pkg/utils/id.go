@@ -22,7 +22,7 @@ import (
 
 func md5V(str string) string {
 	h := md5.New()
-	h.Write([]byte(str))
+	_, _ = h.Write([]byte(str))
 	return hex.EncodeToString(h.Sum(nil))
 }
 
@@ -51,3 +51,11 @@ func StringInSlice(s string, l []string) bool {
 	}
 	return false
 }
+
+// ContextValueKey define context value key
+type ContextValueKey string
+
+const (
+	// ContextValueKeyRequestID request_id in context value
+	ContextValueKeyRequestID ContextValueKey = "X-Request-Id"
+)

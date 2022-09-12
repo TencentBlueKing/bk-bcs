@@ -18,30 +18,37 @@ import (
 	"net/http"
 )
 
+// DeleteApplication xxx
 func (bs *bcsScheduler) DeleteApplication(clusterID, namespace, name string, enforce bool) error {
 	return bs.deleteResource(clusterID, namespace, BcsSchedulerResourceApplication, name, enforce)
 }
 
+// DeleteProcess xxx
 func (bs *bcsScheduler) DeleteProcess(clusterID, namespace, name string, enforce bool) error {
 	return bs.deleteResource(clusterID, namespace, BcsSchedulerResourceProcess, name, enforce)
 }
 
+// DeleteConfigMap xxx
 func (bs *bcsScheduler) DeleteConfigMap(clusterID, namespace, name string, enforce bool) error {
 	return bs.deleteResource(clusterID, namespace, BcsSchedulerResourceConfigMap, name, enforce)
 }
 
+// DeleteSecret xxx
 func (bs *bcsScheduler) DeleteSecret(clusterID, namespace, name string, enforce bool) error {
 	return bs.deleteResource(clusterID, namespace, BcsSchedulerResourceSecret, name, enforce)
 }
 
+// DeleteService xxx
 func (bs *bcsScheduler) DeleteService(clusterID, namespace, name string, enforce bool) error {
 	return bs.deleteResource(clusterID, namespace, BcsSchedulerResourceService, name, enforce)
 }
 
+// DeleteDeployment xxx
 func (bs *bcsScheduler) DeleteDeployment(clusterID, namespace, name string, enforce bool) error {
 	return bs.deleteResource(clusterID, namespace, BcsSchedulerResourceDeployment, name, enforce)
 }
 
+// DeleteDaemonset xxx
 func (bs *bcsScheduler) DeleteDaemonset(clusterID, namespace, name string, enforce bool) error {
 	return bs.deleteResource(clusterID, namespace, BcsSchedulerResourceDaemonset, name, enforce)
 }

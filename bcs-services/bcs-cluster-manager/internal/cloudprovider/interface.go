@@ -234,7 +234,7 @@ type CloudValidateManager interface {
 	ImportCloudAccountValidate(account *proto.Account) error
 	// GetCloudRegionZonesValidate get cloud region zones validate
 	GetCloudRegionZonesValidate(req *proto.GetCloudRegionZonesRequest, account *proto.Account) error
-	// GetCloudRegionZonesValidate get cloud region zones validate
+	// ListCloudRegionClusterValidate get cloud region zones validate
 	ListCloudRegionClusterValidate(req *proto.ListCloudRegionClusterRequest, account *proto.Account) error
 	// ListCloudSubnetsValidate list subnets validate
 	ListCloudSubnetsValidate(req *proto.ListCloudSubnetsRequest, account *proto.Account) error
@@ -242,8 +242,10 @@ type CloudValidateManager interface {
 	ListSecurityGroupsValidate(req *proto.ListCloudSecurityGroupsRequest, account *proto.Account) error
 	// ListInstanceTypeValidate list instance type validate
 	ListInstanceTypeValidate(req *proto.ListCloudInstanceTypeRequest, account *proto.Account) error
-	// ListCloudImageOsValidate list tke image os validate
+	// ListCloudOsImageValidate list tke image os validate
 	ListCloudOsImageValidate(req *proto.ListCloudOsImageRequest, account *proto.Account) error
+	// CreateNodeGroupValidate create node group validate
+	CreateNodeGroupValidate(req *proto.CreateNodeGroupRequest, opt *CommonOption) error
 }
 
 // ClusterManager cloud interface for kubernetes cluster management
@@ -278,7 +280,7 @@ type NodeGroupManager interface {
 	// UpdateNodeGroup update specified nodegroup configuration
 	UpdateNodeGroup(group *proto.NodeGroup, opt *CommonOption) error
 	// GetNodesInGroup get all nodes belong to NodeGroup
-	GetNodesInGroup(group *proto.NodeGroup, opt *CommonOption) ([]*proto.Node, error)
+	GetNodesInGroup(group *proto.NodeGroup, opt *CommonOption) ([]*proto.NodeGroupNode, error)
 	// MoveNodesToGroup add cluster nodes to NodeGroup
 	MoveNodesToGroup(nodes []*proto.Node, group *proto.NodeGroup, opt *MoveNodesOption) (*proto.Task, error)
 
@@ -288,8 +290,9 @@ type NodeGroupManager interface {
 	CleanNodesInGroup(nodes []*proto.Node, group *proto.NodeGroup, opt *CleanNodesOption) (*proto.Task, error)
 	// UpdateDesiredNodes update nodegroup desired node
 	UpdateDesiredNodes(desired uint32, group *proto.NodeGroup, opt *UpdateDesiredNodeOption) (*ScalingResponse, error)
-	// SwitchNodeGroupAutoScale switch nodegroup auto scale
-	SwitchNodeGroupAutoScaling(group *proto.NodeGroup, enable bool, opt *SwitchNodeGroupAutoScalingOption) (*proto.Task, error)
+	// SwitchNodeGroupAutoScaling switch nodegroup auto scale
+	SwitchNodeGroupAutoScaling(group *proto.NodeGroup, enable bool, opt *SwitchNodeGroupAutoScalingOption) (*proto.Task,
+		error)
 
 	// CreateAutoScalingOption create cluster autoscaling option, cloudprovider will
 	// deploy cluster-autoscaler in backgroup according cloudprovider implementation
@@ -300,7 +303,10 @@ type NodeGroupManager interface {
 	// UpdateAutoScalingOption update cluster autoscaling option, cloudprovider will update
 	// cluster-autoscaler configuration in backgroup according cloudprovider implementation.
 	// Implementation is optional.
-	UpdateAutoScalingOption(scalingOption *proto.ClusterAutoScalingOption, opt *DeleteScalingOption) (*proto.Task, error)
+	UpdateAutoScalingOption(scalingOption *proto.ClusterAutoScalingOption, opt *UpdateScalingOption) (*proto.Task, error)
+	// SwitchAutoScalingOptionStatus switch cluster autoscaling option enable auto scaling status
+	SwitchAutoScalingOptionStatus(scalingOption *proto.ClusterAutoScalingOption, enable bool,
+		opt *CommonOption) (*proto.Task, error)
 }
 
 // VPCManager cloud interface for vpc management
@@ -317,9 +323,9 @@ type TaskManager interface {
 	// GetAllTask get all register task for worker running
 	GetAllTask() map[string]interface{}
 
-
 	// specific cloud different implement
 
+	// BuildCreateNodeGroupTask TODO
 	// NodeGroup taskList
 	// BuildCreateNodeGroupTask build create nodegroup task
 	BuildCreateNodeGroupTask(group *proto.NodeGroup, opt *CreateNodeGroupOption) (*proto.Task, error)
@@ -334,11 +340,18 @@ type TaskManager interface {
 	// BuildUpdateDesiredNodesTask update nodegroup desired node
 	BuildUpdateDesiredNodesTask(desired uint32, group *proto.NodeGroup, opt *UpdateDesiredNodeOption) (*proto.Task, error)
 	// BuildSwitchNodeGroupAutoScalingTask switch nodegroup autoscaling
-	BuildSwitchNodeGroupAutoScalingTask(group *proto.NodeGroup, enable bool, opt *SwitchNodeGroupAutoScalingOption) (*proto.Task, error)
+	BuildSwitchNodeGroupAutoScalingTask(group *proto.NodeGroup, enable bool, opt *SwitchNodeGroupAutoScalingOption) (
+		*proto.Task, error)
+	// BuildUpdateAutoScalingOptionTask update cluster autoscaling option
+	BuildUpdateAutoScalingOptionTask(scalingOption *proto.ClusterAutoScalingOption, opt *UpdateScalingOption) (*proto.Task,
+		error)
+	// BuildSwitchAutoScalingOptionStatusTask switch cluster autoscaling option enable auto scaling status
+	BuildSwitchAutoScalingOptionStatusTask(scalingOption *proto.ClusterAutoScalingOption, enable bool,
+		opt *CommonOption) (*proto.Task, error)
 
 	// ClusterManager taskList
 
-	// BuildCreateClusterTask create cluster by different cloud provider
+	// BuildImportClusterTask create cluster by different cloud provider
 	BuildImportClusterTask(cls *proto.Cluster, opt *ImportClusterOption) (*proto.Task, error)
 	// BuildCreateClusterTask create cluster by different cloud provider
 	BuildCreateClusterTask(cls *proto.Cluster, opt *CreateClusterOption) (*proto.Task, error)

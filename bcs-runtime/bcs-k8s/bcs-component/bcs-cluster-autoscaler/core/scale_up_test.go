@@ -899,7 +899,7 @@ func TestGetUpcomingNodes(t *testing.T) {
 	context := NewScaleTestAutoscalingContext(options, &fake.Clientset{}, listers, provider, nil)
 
 	nodes := []*apiv1.Node{t1, t2, t3}
-	//nodes = append(nodes, t1)
+	// nodes = append(nodes, t1)
 	nodeInfos, _ := getNodeInfosForGroups(nodes, nil, provider, listers,
 		[]*appsv1.DaemonSet{}, context.PredicateChecker, nil)
 	clusterState := clusterstate.NewClusterStateRegistry(provider, clusterstate.ClusterStateRegistryConfig{},

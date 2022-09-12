@@ -30,6 +30,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/schetypes"
 )
 
+// Backend xxx
 type Backend interface {
 	// ClusterId get mesos cluster'id, example for BCS-TESTBCSTEST01-10001
 	ClusterId() string
@@ -53,9 +54,9 @@ type Backend interface {
 	CheckVersion(*types.Version) error
 
 	// LaunchApplication launch application
-	//the function is asynchronous
-	//so you have to see the launch progress by getting the status
-	//of the application
+	// the function is asynchronous
+	// so you have to see the launch progress by getting the status
+	// of the application
 	LaunchApplication(*types.Version) error
 
 	// DeleteApplication will delete all data associated with application.
@@ -294,6 +295,7 @@ type Backend interface {
 	// DoCommand do command
 	DoCommand(command *commtypes.BcsCommandInfo) error
 
+	// SaveAdmissionWebhook xxx
 	/*=========AdmissionWebhook==========*/
 	// SaveAdmissionWebhook save admission webhook to store
 	SaveAdmissionWebhook(configmap *commtypes.AdmissionWebhookConfiguration) error
@@ -312,6 +314,7 @@ type Backend interface {
 	// DeleteDaemonset delete daemonset
 	DeleteDaemonset(namespace, name string, force bool) error
 
+	// ListTransaction xxx
 	/*==========Transaction==============*/
 	// ListTransaction list all transactions in one namespace
 	ListTransaction(ns string) ([]*types.Transaction, error)

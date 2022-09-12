@@ -81,14 +81,7 @@ var (
 func GetRepository(cmd *cobra.Command, args []string) {
 	req := &helmmanager.ListRepositoryReq{}
 
-	if !flagAll {
-		req.Size = common.GetUint32P(uint32(flagNum))
-	}
-	if len(args) > 0 {
-		req.Name = common.GetStringP(args[0])
-		req.Size = common.GetUint32P(1)
-	}
-	req.ProjectID = &flagProject
+	req.ProjectCode = &flagProject
 
 	c := newClientWithConfiguration()
 	r, err := c.Repository().List(cmd.Context(), req)
@@ -98,7 +91,7 @@ func GetRepository(cmd *cobra.Command, args []string) {
 	}
 
 	if flagOutput == outputTypeJson {
-		printer.PrintRepositoryInJson(r)
+		printer.PrintRepositoryInJSON(r)
 		return
 	}
 

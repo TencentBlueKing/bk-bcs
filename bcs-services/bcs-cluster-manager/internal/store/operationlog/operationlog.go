@@ -11,6 +11,7 @@
  *
  */
 
+// Package operationlog xxx
 package operationlog
 
 import (
@@ -69,6 +70,7 @@ func New(db drivers.DB) *ModelOperationLog {
 	}
 }
 
+// ensureTable xxx
 // ensure table
 func (m *ModelOperationLog) ensureTable(ctx context.Context) error {
 	m.isTableEnsuredMutex.RLock()
@@ -165,4 +167,10 @@ func (m *ModelOperationLog) ListOperationLog(ctx context.Context, cond *operator
 	}
 
 	return logList, nil
+}
+
+// CountOperationLog count operationLog
+func (m *ModelOperationLog) CountOperationLog(ctx context.Context, cond *operator.Condition) (
+	int64, error) {
+	return m.db.Table(m.tableName).Find(cond).Count(ctx)
 }

@@ -6,7 +6,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
 )
 
-//MeshManagerOptions new meshmanager options to parse command-line parameters
+// MeshManagerOptions new meshmanager options to parse command-line parameters
 type MeshManagerOptions struct {
 	conf.FileConfig
 	conf.MetricConfig
@@ -25,7 +25,7 @@ type MeshManagerOptions struct {
 	EtcdServers         string `json:"etcd-servers" value:"" usage:"List of etcd servers to connect with (scheme://ip:port), comma separated"`
 }
 
-//ParseConfig parse command-line parameters to mesh-manager config struct
+// ParseConfig parse command-line parameters to mesh-manager config struct
 func ParseConfig() Config {
 	op := &MeshManagerOptions{}
 	conf.Parse(op)
@@ -43,7 +43,7 @@ func ParseConfig() Config {
 	conf.EtcdServers = op.EtcdServers
 	conf.Kubeconfig = op.Kubeconfig
 	conf.IstioConfiguration = op.IstioConfiguration
-	//server cert directory
+	// server cert directory
 	if op.CertConfig.ServerCertFile != "" && op.CertConfig.ServerKeyFile != "" {
 		conf.ServerCertFile = op.CertConfig.ServerCertFile
 		conf.ServerKeyFile = op.CertConfig.ServerKeyFile
@@ -54,6 +54,6 @@ func ParseConfig() Config {
 
 // ValidateConfig check nessacessry
 func ValidateConfig() error {
-	//! for config item safety
+	// ! for config item safety
 	return nil
 }

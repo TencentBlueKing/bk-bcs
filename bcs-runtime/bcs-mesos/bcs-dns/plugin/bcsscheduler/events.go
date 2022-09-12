@@ -34,8 +34,8 @@ func (bcs *BcsScheduler) svcOnUpdate(old, cur interface{}) {
 	if bcs.storage == nil || !bcs.registery.IsMaster() {
 		return
 	}
-	//Service update, cluster ip list may be changed
-	//update remote storage
+	// Service update, cluster ip list may be changed
+	// update remote storage
 }
 
 func (bcs *BcsScheduler) svcOnDelete(obj interface{}) {
@@ -63,7 +63,7 @@ func (bcs *BcsScheduler) endpointOnAdd(obj interface{}) {
 	domain := endpoint.GetName() + "." + endpoint.GetNamespace() + ".svc." + bcs.PrimaryZone()
 	svc := bcs.endpoint2Message(endpoint)
 	if err := bcs.storage.AddService(domain, svc); err != nil {
-		//todo(developer): DELETE error, try again?
+		// todo(developer): DELETE error, try again?
 		log.Printf("[ERROR] scheduler ADD endpoint %s to storage failed, %s", domain, err.Error())
 		return
 	}
@@ -93,11 +93,11 @@ func (bcs *BcsScheduler) endpointOnUpdate(old, cur interface{}) {
 		return
 	}
 	domain := curEndpoint.GetName() + "." + curEndpoint.GetNamespace() + ".svc." + bcs.PrimaryZone()
-	//change to endpoints
+	// change to endpoints
 	oldSvc := bcs.endpoint2Message(oldEndpoint)
 	curSvc := bcs.endpoint2Message(curEndpoint)
 	if err := bcs.storage.UpdateService(domain, oldSvc, curSvc); err != nil {
-		//todo(developer): update error, try again?
+		// todo(developer): update error, try again?
 		log.Printf("[ERROR] scheduler update endpoint [%s] to storage failed, %s", domain, err.Error())
 		return
 	}
@@ -122,7 +122,7 @@ func (bcs *BcsScheduler) endpointOnDelete(obj interface{}) {
 	domain := endpoint.GetName() + "." + endpoint.GetNamespace() + ".svc." + bcs.PrimaryZone()
 	svc := bcs.endpoint2Message(endpoint)
 	if err := bcs.storage.DeleteService(domain, svc); err != nil {
-		//todo(developer): DELETE error, try again?
+		// todo(developer): DELETE error, try again?
 		log.Printf("[ERROR] scheduler delete endpoint %s to storage failed, %s", domain, err.Error())
 		return
 	}
@@ -131,9 +131,9 @@ func (bcs *BcsScheduler) endpointOnDelete(obj interface{}) {
 	metrics.StorageOperatorLatency.WithLabelValues(metrics.DeleteOperation).Observe(time.Since(start).Seconds())
 }
 
-//endpoint2Message create etcd message with BcsEndpoint
-//now only create etcd service for TypeA
-//todo(developer): PTR/SRV message will support future
+// endpoint2Message create etcd message with BcsEndpoint
+// now only create etcd service for TypeA
+// todo(developer): PTR/SRV message will support future
 func (bcs *BcsScheduler) endpoint2Message(endpoint *bcstypes.BcsEndpoint) (svcList []msg.Service) {
 	if endpoint == nil {
 		return svcList
@@ -141,11 +141,11 @@ func (bcs *BcsScheduler) endpoint2Message(endpoint *bcstypes.BcsEndpoint) (svcLi
 	if endpoint.Endpoints == nil || len(endpoint.Endpoints) == 0 {
 		return svcList
 	}
-	//check cluster ip address list
+	// check cluster ip address list
 	var clusterIPs []string
 	service := bcs.svcCache.GetServiceByEndpoint(endpoint)
 	if service == nil {
-		//todo(developer): lost bcs service info in cache. how to fix
+		// todo(developer): lost bcs service info in cache. how to fix
 		log.Printf("[ERROR] %s/%s endpoint lost bcs service in cache", endpoint.GetNamespace(), endpoint.GetName())
 	} else {
 		if service.Spec.ClusterIP != nil && len(service.Spec.ClusterIP) != 0 {
@@ -153,38 +153,38 @@ func (bcs *BcsScheduler) endpoint2Message(endpoint *bcstypes.BcsEndpoint) (svcLi
 		}
 	}
 	if len(clusterIPs) != 0 {
-		//get cluster ip address, push to cluster storage
-		//no matter what network mode is
+		// get cluster ip address, push to cluster storage
+		// no matter what network mode is
 		for _, ip := range clusterIPs {
 			svc := createDefaultMessage(ip)
 			svcList = append(svcList, svc)
 		}
 		return svcList
 	}
-	//no cluster ip, construct etcd service with endpoints
+	// no cluster ip, construct etcd service with endpoints
 	for _, ep := range endpoint.Endpoints {
 		mode := strings.ToLower(ep.NetworkMode)
 		if mode == "none" {
-			//filter none network mode
+			// filter none network mode
 			continue
 		}
 		var svc msg.Service
 		if mode == "bridge" || mode == "host" {
-			//in mesos: no solution for `bridge`, `host` interconnection.
-			//handle it with node ip address
+			// in mesos: no solution for `bridge`, `host` interconnection.
+			// handle it with node ip address
 			svc = createDefaultMessage(ep.NodeIP)
 		} else {
-			//importance: `default` mode is bridge in k8s.
-			//user mode also setting to container ip address
+			// importance: `default` mode is bridge in k8s.
+			// user mode also setting to container ip address
 			svc = createDefaultMessage(ep.ContainerIP)
 		}
 		svcList = append(svcList, svc)
 	}
 	return svcList
-	//todo(developer): SRV SUPPORT
+	// todo(developer): SRV SUPPORT
 }
 
-//createDefaultMessage default etcd service message
+// createDefaultMessage default etcd service message
 func createDefaultMessage(ip string) msg.Service {
 	return msg.Service{
 		Host:     ip,

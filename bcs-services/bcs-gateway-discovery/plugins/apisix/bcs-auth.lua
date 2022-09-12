@@ -36,10 +36,6 @@ local schema = {
         run_env = {type = "string", default = "ce", description = "apisix on ce or cloud env"}
     },
     required = {"bk_login_host", "private_key", "redis_host", "redis_password"},
-    oneOf = {
-        {required = {"bkapigw_jwt_verify_key"}},
-        {required = {"bkapigw_jwt_verify_key_map"}},
-    },
 }
 
 

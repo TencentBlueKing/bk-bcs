@@ -56,6 +56,12 @@ var (
 	CleanNodeGroupNodesJob JobType = "clean-nodegroup-nodes"
 	// MoveNodesToNodeGroupJob for moveNodesToNodeGroup job
 	MoveNodesToNodeGroupJob JobType = "move-nodes-to-nodegroup"
+	// SwitchNodeGroupAutoScalingJob for switchNodeGroupAutoScaling job
+	SwitchNodeGroupAutoScalingJob JobType = "switch-nodegroup-autoscaling"
+	// UpdateAutoScalingOptionJob for updateAutoScalingOption job
+	UpdateAutoScalingOptionJob JobType = "update-autoscalingoption"
+	// SwitchAutoScalingOptionStatusJob for switchAutoScalingOptionStatus job
+	SwitchAutoScalingOptionStatusJob JobType = "switch-autoscalingoption-status"
 )
 
 // String to string
@@ -117,6 +123,15 @@ func (sjr *SyncJobResult) UpdateJobResultStatus(isSuccess bool) error {
 	case CreateNodeGroupJob:
 		sjr.Status = generateStatusResult(common.StatusRunning, common.StatusCreateNodeGroupFailed)
 		return sjr.updateNodeGroupStatus(isSuccess)
+	case SwitchNodeGroupAutoScalingJob:
+		sjr.Status = generateStatusResult(common.StatusRunning, common.StatusNodeGroupUpdateFailed)
+		return sjr.updateNodeGroupStatus(isSuccess)
+	case UpdateAutoScalingOptionJob:
+		sjr.Status = generateStatusResult(common.StatusAutoScalingOptionNormal, common.StatusAutoScalingOptionUpdateFailed)
+		return sjr.updateAutoScalingStatus(isSuccess)
+	case SwitchAutoScalingOptionStatusJob:
+		sjr.Status = generateStatusResult(common.StatusAutoScalingOptionNormal, common.StatusAutoScalingOptionUpdateFailed)
+		return sjr.updateAutoScalingStatus(isSuccess)
 	}
 
 	return fmt.Errorf(ErrJobType, sjr.JobType)
@@ -154,7 +169,8 @@ func (sjr *SyncJobResult) updateNodeGroupDesiredNum() error {
 
 	group, err := GetStorageModel().GetNodeGroup(context.Background(), nodeGroupID)
 	if err != nil {
-		return fmt.Errorf("task[%s] updateNodeGroupDesiredNum get NodeGroup[%s] failed %s", sjr.TaskID, nodeGroupID, err.Error())
+		return fmt.Errorf("task[%s] updateNodeGroupDesiredNum get NodeGroup[%s] failed %s", sjr.TaskID, nodeGroupID,
+			err.Error())
 	}
 
 	blog.Infof("task[%s] update nodeGroup current[%d] clean[%d]", sjr.TaskID,
@@ -227,6 +243,31 @@ func (sjr *SyncJobResult) updateCANodesResultStatus(isSuccess bool) error {
 	}
 
 	return sjr.updateNodeStatusByIP(sjr.NodeIPs, sjr.Status.Success)
+}
+
+func (sjr *SyncJobResult) updateAutoScalingStatus(isSuccess bool) error {
+	if len(sjr.ClusterID) == 0 {
+		return fmt.Errorf("SyncJobResult updateAutoScalingStatus failed: %v", "ClusterID is empty")
+	}
+	option, err := GetStorageModel().GetAutoScalingOption(context.Background(), sjr.ClusterID)
+	if err != nil {
+		return err
+	}
+	blog.Infof("task[%s] cluster[%s] status[%s]", sjr.TaskID, sjr.ClusterID, option.Status)
+	if !option.EnableAutoscale {
+		sjr.Status.Success = common.StatusAutoScalingOptionStopped
+	}
+	if isSuccess {
+		option.Status = sjr.Status.Success
+	} else {
+		option.Status = sjr.Status.Failure
+	}
+	err = GetStorageModel().UpdateAutoScalingOption(context.Background(), option)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (sjr *SyncJobResult) updateNodeGroupStatus(isSuccess bool) error {
@@ -319,7 +360,7 @@ func (sjr *SyncJobResult) updateNodesResultStatus(isSuccess bool) error {
 	return sjr.updateNodeStatusByNodeID(sjr.NodeIDs, getStatus())
 }
 
-// updateNodeStatus set node status
+// updateNodeStatusByIP set node status
 func (sjr *SyncJobResult) updateNodeStatusByIP(ipList []string, status string) error {
 	if len(ipList) == 0 {
 		return nil
@@ -331,7 +372,8 @@ func (sjr *SyncJobResult) updateNodeStatusByIP(ipList []string, status string) e
 			continue
 		}
 		blog.Infof("task[%s] nodeIP[%s] status[%s]", sjr.TaskID, ip, node.Status)
-		if node.Status == status || utils.StringInSlice(node.Status, []string{common.StatusAddNodesFailed, common.StatusRunning}) {
+		if node.Status == status || utils.StringInSlice(node.Status, []string{common.StatusAddNodesFailed,
+			common.StatusRunning}) {
 			continue
 		}
 
@@ -357,7 +399,8 @@ func (sjr *SyncJobResult) updateNodeStatusByNodeID(idList []string, status strin
 			continue
 		}
 		blog.Infof("task[%s] nodeIP[%s] status[%s]", sjr.TaskID, id, node.Status)
-		if node.Status == status || utils.StringInSlice(node.Status, []string{common.StatusAddNodesFailed, common.StatusRunning}) {
+		if node.Status == status || utils.StringInSlice(node.Status, []string{common.StatusAddNodesFailed,
+			common.StatusRunning}) {
 			continue
 		}
 

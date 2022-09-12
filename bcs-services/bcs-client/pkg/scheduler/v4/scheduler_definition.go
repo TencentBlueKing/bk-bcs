@@ -21,19 +21,25 @@ import (
 	commonTypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
 )
 
-func (bs *bcsScheduler) GetApplicationDefinition(clusterID, namespace, name string) (*commonTypes.ReplicaController, error) {
+// GetApplicationDefinition xxx
+func (bs *bcsScheduler) GetApplicationDefinition(clusterID, namespace, name string) (*commonTypes.ReplicaController,
+	error) {
 	return bs.getApplicationDefinition(clusterID, namespace, name)
 }
 
-func (bs *bcsScheduler) GetProcessDefinition(clusterID, namespace, name string) (*commonTypes.ReplicaController, error) {
+// GetProcessDefinition xxx
+func (bs *bcsScheduler) GetProcessDefinition(clusterID, namespace, name string) (*commonTypes.ReplicaController,
+	error) {
 	return bs.getProcessDefinition(clusterID, namespace, name)
 }
 
+// GetDeploymentDefinition xxx
 func (bs *bcsScheduler) GetDeploymentDefinition(clusterID, namespace, name string) (*commonTypes.BcsDeployment, error) {
 	return bs.getDeploymentDefinition(clusterID, namespace, name)
 }
 
-func (bs *bcsScheduler) getApplicationDefinition(clusterID, namespace, name string) (*commonTypes.ReplicaController, error) {
+func (bs *bcsScheduler) getApplicationDefinition(clusterID, namespace, name string) (*commonTypes.ReplicaController,
+	error) {
 	resp, err := bs.requester.Do(
 		fmt.Sprintf(bcsSchedulerAppDefinitionURI, bs.bcsAPIAddress, namespace, name),
 		http.MethodGet,
@@ -63,7 +69,8 @@ func (bs *bcsScheduler) getApplicationDefinition(clusterID, namespace, name stri
 	return &result, err
 }
 
-func (bs *bcsScheduler) getProcessDefinition(clusterID, namespace, name string) (*commonTypes.ReplicaController, error) {
+func (bs *bcsScheduler) getProcessDefinition(clusterID, namespace, name string) (*commonTypes.ReplicaController,
+	error) {
 	resp, err := bs.requester.Do(
 		fmt.Sprintf(bcsSchedulerAppDefinitionURI, bs.bcsAPIAddress, namespace, name),
 		http.MethodGet,

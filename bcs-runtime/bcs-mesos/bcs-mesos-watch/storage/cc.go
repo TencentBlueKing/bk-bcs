@@ -42,7 +42,7 @@ const (
 	handlerCCStore = "ccstore"
 )
 
-//CCResponse response struct from CC
+// CCResponse response struct from CC
 type CCResponse struct {
 	Result  bool   `json:"result"`
 	Code    int    `json:"code"`
@@ -50,19 +50,19 @@ type CCResponse struct {
 	Data    string `json:"data,omitempty"`
 }
 
-//CCListData hold all data
+// CCListData hold all data
 type CCListData struct {
 	Apps          []map[string]*schedtypes.Application `json:"application,omitempty"`
 	TaskGroup     []map[string]*schedtypes.TaskGroup   `json:"taskgroup,omitempty"`
 	ExportService []map[string]*lbtypes.ExportService  `json:"exportservice,omitempty"`
 }
 
-//NewCCStorage create storage for cc
+// NewCCStorage create storage for cc
 func NewCCStorage(config *types.CmdConfig) (Storage, error) {
-	//init zookeeper writer
+	// init zookeeper writer
 	ccStorage := &CCStorage{
 		rwServers: new(sync.RWMutex),
-		//dcServer:  "",
+		// dcServer:  "",
 		queue:                  make(chan *types.BcsSyncData, defaultCCStoreQueueSize),
 		handlers:               make(map[string]*ChannelProxy),
 		ClusterID:              config.ClusterID,
@@ -85,17 +85,17 @@ func NewCCStorage(config *types.CmdConfig) (Storage, error) {
 	return ccStorage, nil
 }
 
-//CCStorage writing data to CC
+// CCStorage writing data to CC
 type CCStorage struct {
 	rwServers   *sync.RWMutex
 	dcServer    []string
 	dcServerIdx int
 
-	//zkServer  string
-	//zkClient  *zkclient.ZkClient
-	queue                  chan *types.BcsSyncData  //queue for handling data
-	exitCxt                context.Context          //context for exit
-	handlers               map[string]*ChannelProxy //channel proxy
+	// zkServer  string
+	// zkClient  *zkclient.ZkClient
+	queue                  chan *types.BcsSyncData  // queue for handling data
+	exitCxt                context.Context          // context for exit
+	handlers               map[string]*ChannelProxy // channel proxy
 	ClusterID              string                   //
 	applicationThreadNum   int
 	taskgroupThreadNum     int
@@ -104,7 +104,7 @@ type CCStorage struct {
 	client                 *httpclient.HttpClient // http client to do with request.
 }
 
-//init init CCStorage
+// init init CCStorage
 func (cc *CCStorage) init() error {
 	cc.handlers[dataTypeApp] = &ChannelProxy{
 		clusterID: cc.ClusterID,
@@ -267,7 +267,7 @@ func (cc *CCStorage) init() error {
 	return nil
 }
 
-//SetDCAddress had better add rwlock
+// SetDCAddress had better add rwlock
 func (cc *CCStorage) SetDCAddress(address []string) {
 	blog.Info("CCStorage set DC address: %s", address)
 	cc.rwServers.Lock()
@@ -277,7 +277,7 @@ func (cc *CCStorage) SetDCAddress(address []string) {
 	return
 }
 
-//GetDCAddress get bcs-storage address
+// GetDCAddress get bcs-storage address
 func (cc *CCStorage) GetDCAddress() string {
 
 	address := ""
@@ -296,7 +296,7 @@ func (cc *CCStorage) GetDCAddress() string {
 	return address
 }
 
-//Sync sync data to storage queue
+// Sync sync data to storage queue
 func (cc *CCStorage) Sync(data *types.BcsSyncData) error {
 	if data == nil {
 		blog.Error("CCWriter get nil BcsInstance pointer")
@@ -326,7 +326,7 @@ func (cc *CCStorage) SyncTimeout(data *types.BcsSyncData, timeout time.Duration)
 	return nil
 }
 
-//Run start point for StorageWriter
+// Run start point for StorageWriter
 func (cc *CCStorage) Run(ctx context.Context) error {
 	cc.exitCxt = ctx
 	for name, handler := range cc.handlers {
@@ -372,7 +372,7 @@ func (cc *CCStorage) Worker() {
 	}
 }
 
-//CreateDCNode bcs-storage create operation
+// CreateDCNode bcs-storage create operation
 func (cc *CCStorage) CreateDCNode(node string, value interface{}, action string) error {
 
 	if len(node) == 0 || value == nil {
@@ -397,7 +397,7 @@ func (cc *CCStorage) CreateDCNode(node string, value interface{}, action string)
 	if rerr != nil {
 		blog.Warn("DC [%s %s] err: %+v, retry", action, path, rerr)
 
-		//do retry
+		// do retry
 		resp, rerr = cc.client.Request(path, action, nil, valueBytes)
 		if rerr != nil {
 			blog.Error("retry DC [%s %s] err: %+v", action, path, rerr)
@@ -417,7 +417,7 @@ func (cc *CCStorage) CreateDCNode(node string, value interface{}, action string)
 	return nil
 }
 
-//DeleteDCNode storage delete operation
+// DeleteDCNode storage delete operation
 func (cc *CCStorage) DeleteDCNode(node, action string) error {
 	if len(node) == 0 {
 		blog.Error("CCStorage Get empty node")
@@ -426,7 +426,7 @@ func (cc *CCStorage) DeleteDCNode(node, action string) error {
 
 	path := cc.GetDCAddress() + node
 
-	//blog.V(3).Infof("DC [%s %s] begin", action, path)
+	// blog.V(3).Infof("DC [%s %s] begin", action, path)
 
 	begin := time.Now().UnixNano() / 1e6
 
@@ -434,7 +434,7 @@ func (cc *CCStorage) DeleteDCNode(node, action string) error {
 	if rerr != nil {
 		blog.Warn("DC [%s %s] err: %+v, retry", action, path, rerr)
 
-		//do retry
+		// do retry
 		resp, rerr = cc.client.Request(path, action, nil, nil)
 		if rerr != nil {
 			blog.Error("retry DC [%s %s] err: %+v", action, path, rerr)
@@ -455,7 +455,7 @@ func (cc *CCStorage) DeleteDCNode(node, action string) error {
 	return nil
 }
 
-//DeleteDCNodes bcs-storage delete operation
+// DeleteDCNodes bcs-storage delete operation
 func (cc *CCStorage) DeleteDCNodes(node string, value interface{}, action string) error {
 
 	if len(node) == 0 || value == nil {
@@ -471,12 +471,12 @@ func (cc *CCStorage) DeleteDCNodes(node string, value interface{}, action string
 		return err
 	}
 
-	//blog.V(3).Infof("DC [%s %s] begin", action, path)
+	// blog.V(3).Infof("DC [%s %s] begin", action, path)
 
 	resp, rerr := cc.client.Request(path, action, nil, valueBytes)
 	if rerr != nil {
 		blog.Warn("DC %s %s err: %+v, retry", action, path, rerr)
-		//do retry
+		// do retry
 		resp, rerr = cc.client.Request(path, action, nil, valueBytes)
 		if rerr != nil {
 			blog.Error("retry DC %s %s err: %+v", action, path, rerr)

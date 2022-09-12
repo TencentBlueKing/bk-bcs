@@ -44,11 +44,11 @@ type ArgocdPluginStatus struct {
 	// Important: Run "make" to regenerate code after modifying this file
 }
 
-//+genclient
-//+genclient:noStatus
-//+k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
-//+kubebuilder:object:root=true
-//+kubebuilder:subresource:status
+// +genclient
+// +genclient:noStatus
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +kubebuilder:object:root=true
+// +kubebuilder:subresource:status
 
 // ArgocdPlugin is the Schema for the argocdplugins API
 type ArgocdPlugin struct {
@@ -59,8 +59,8 @@ type ArgocdPlugin struct {
 	Status ArgocdPluginStatus `json:"status,omitempty" protobuf:"bytes,3,opt,name=status"`
 }
 
-//+k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
-//+kubebuilder:object:root=true
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +kubebuilder:object:root=true
 
 // ArgocdPluginList contains a list of ArgocdPlugin
 type ArgocdPluginList struct {

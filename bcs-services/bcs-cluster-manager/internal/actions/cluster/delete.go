@@ -213,7 +213,7 @@ func (da *DeleteAction) cleanLocalInformation() error {
 }
 
 func (da *DeleteAction) deleteRelativeResource() error {
-	//clean cluster autoscaling option, No relative entity in cloud infrastructure
+	// clean cluster autoscaling option, No relative entity in cloud infrastructure
 	if da.scalingOption != nil {
 		if err := da.model.DeleteAutoScalingOption(da.ctx, da.scalingOption.ClusterID); err != nil {
 			blog.Errorf("clean Cluster AutoScalingOption %s storage information failed, %s",
@@ -230,8 +230,8 @@ func (da *DeleteAction) deleteRelativeResource() error {
 			return err
 		}
 	}
-	//! NodeGroup update status for other operation deny, it manage Nodes,
-	//! we don't delete it here, we delete it after all Nodes are releasing
+	// ! NodeGroup update status for other operation deny, it manage Nodes,
+	// ! we don't delete it here, we delete it after all Nodes are releasing
 	for _, group := range da.nodeGroups {
 		group.Status = common.StatusDeleting
 		if err := da.model.UpdateNodeGroup(da.ctx, &group); err != nil {
@@ -316,7 +316,8 @@ func (da *DeleteAction) validate(req *cmproto.DeleteClusterReq) error {
 func (da *DeleteAction) getCloudInfo(ctx context.Context) error {
 	cloud, err := da.model.GetCloud(ctx, da.cluster.Provider)
 	if err != nil {
-		blog.Errorf("get Cluster %s provider %s information failed, %s", da.cluster.ClusterID, da.cluster.Provider, err.Error())
+		blog.Errorf("get Cluster %s provider %s information failed, %s", da.cluster.ClusterID, da.cluster.Provider,
+			err.Error())
 		da.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
 		return err
 	}
@@ -395,7 +396,7 @@ func (da *DeleteAction) Handle(ctx context.Context, req *cmproto.DeleteClusterRe
 	//     and IsForced = false (check resource, can't delete cluster if resource do not nil).
 	// if delete importer cluster need to delete cluster extra data, thus set IsForced = true
 	if req.OnlyDeleteInfo || da.isImporterCluster() {
-		//clean all relative resource then delete cluster finally
+		// clean all relative resource then delete cluster finally
 		if err := da.cleanLocalInformation(); err != nil {
 			blog.Errorf("only delete Cluster %s local information err, %s", req.ClusterID, err.Error())
 			da.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
@@ -711,7 +712,8 @@ func (da *DeleteNodesAction) checkClusterNodeInfoDeletion() ([]string, error) {
 }
 
 // Handle delete cluster nodes request
-func (da *DeleteNodesAction) Handle(ctx context.Context, req *cmproto.DeleteNodesRequest, resp *cmproto.DeleteNodesResponse) {
+func (da *DeleteNodesAction) Handle(ctx context.Context, req *cmproto.DeleteNodesRequest,
+	resp *cmproto.DeleteNodesResponse) {
 	if req == nil || resp == nil {
 		blog.Errorf("delete cluster failed, req or resp is empty")
 		return
@@ -730,7 +732,8 @@ func (da *DeleteNodesAction) Handle(ctx context.Context, req *cmproto.DeleteNode
 	if da.req.OnlyDeleteInfo {
 		nodeInnerIPs, err := da.checkClusterNodeInfoDeletion()
 		if err != nil || len(nodeInnerIPs) == 0 {
-			da.setResp(common.BcsErrClusterManagerDataEmptyErr, fmt.Sprintf("DeleteNodesAction checkClusterNodeInfoDeletion failed: %s",
+			da.setResp(common.BcsErrClusterManagerDataEmptyErr, fmt.Sprintf(
+				"DeleteNodesAction checkClusterNodeInfoDeletion failed: %s",
 				"nodeInnerIPs empty"))
 			return
 		}

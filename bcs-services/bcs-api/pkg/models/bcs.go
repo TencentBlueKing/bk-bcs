@@ -15,6 +15,7 @@ package models
 
 import "time"
 
+// BCSClusterInfo xxx
 type BCSClusterInfo struct {
 	ID uint `gorm:"primary_key"`
 	// ClusterId is a "one-to-one" field which connects this clsuterInfo to a bke cluster object

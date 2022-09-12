@@ -42,36 +42,40 @@ import (
 // NetworkDetection implementation
 type NetworkDetection struct {
 	sync.RWMutex
-	//network detection config
+	// network detection config
 	conf *config.Config
-	//network detection clusters
-	//example BCS-MESOS-10000
+	// network detection clusters
+	// example BCS-MESOS-10000
 	clusters []string
-	//deploy detection node infos
-	//key=clusterid/idc, example BCS-MESOS-10000/上海-周浦
+	// deploy detection node infos
+	// key=clusterid/idc, example BCS-MESOS-10000/上海-周浦
 	deploys map[string]*types.DeployDetection
-	//ContainerPlatform include mesos、k8s
+	// ContainerPlatform include mesos、k8s
 	platform ContainerPlatform
-	//cmdb client
+	// cmdb client
 	cmdb *CmdbClient
-	//deployment template json
+	// deployment template json
 	deployTemplate commtypes.BcsDeployment
-	//http server
+	// http server
 	httpServ *httpserver.HttpServer
-	//http actions
+	// http actions
 	acts []*httpserver.Action
 }
 
 // ContainerPlatform definition for fetch container info
 type ContainerPlatform interface {
-	//get cluster all nodes
+	// GetNodes xxx
+	// get cluster all nodes
 	GetNodes(clusterid string) ([]*types.NodeInfo, error)
-	//deploy application
-	//deploy is defination json
+	// CeateDeployment xxx
+	// deploy application
+	// deploy is defination json
 	CeateDeployment(clusterid string, deploy []byte) error
-	//fetch deployed deployment info
+	// FetchDeployment xxx
+	// fetch deployed deployment info
 	FetchDeployment(deploy *types.DeployDetection) (interface{}, error)
-	//fetch deloyment't pods
+	// FetchPods xxx
+	// fetch deloyment't pods
 	FetchPods(clusterid, ns, name string) ([]byte, error)
 }
 
@@ -84,7 +88,8 @@ func NewNetworkDetection(conf *config.Config) *NetworkDetection {
 		httpServ: httpserver.NewHttpServer(conf.Port, conf.Address, ""),
 	}
 	if conf.ServerCert.IsSSL {
-		n.httpServ.SetSsl(conf.ServerCert.CAFile, conf.ServerCert.CertFile, conf.ServerCert.KeyFile, conf.ServerCert.CertPasswd)
+		n.httpServ.SetSsl(conf.ServerCert.CAFile, conf.ServerCert.CertFile, conf.ServerCert.KeyFile,
+			conf.ServerCert.CertPasswd)
 	}
 	return n
 }
@@ -92,7 +97,7 @@ func NewNetworkDetection(conf *config.Config) *NetworkDetection {
 // Start networkdetection work
 func (n *NetworkDetection) Start() error {
 	var err error
-	//init deployment template
+	// init deployment template
 	by, err := ioutil.ReadFile(n.conf.Template)
 	if err != nil {
 		return err
@@ -101,7 +106,7 @@ func (n *NetworkDetection) Start() error {
 	if err != nil {
 		return err
 	}
-	//new mesos platform
+	// new mesos platform
 	conf := &mesosdriver.MesosDriverClientConfig{
 		ZkAddr:     n.conf.BcsZk,
 		ClientCert: n.conf.ClientCert,
@@ -110,18 +115,18 @@ func (n *NetworkDetection) Start() error {
 	if err != nil {
 		return err
 	}
-	//new cmdb client
+	// new cmdb client
 	n.cmdb, err = NewCmdbClient(n.conf)
 	if err != nil {
 		return err
 	}
-	//create DeployInfo
+	// create DeployInfo
 	n.createDeployInfo()
-	//ticker deploy detection nodes
+	// ticker deploy detection nodes
 	go n.tickerDeployNetworkDetectionNode()
-	//register endpoints in bcs zk
+	// register endpoints in bcs zk
 	go n.regDiscover()
-	//init http server
+	// init http server
 	n.initActions()
 	n.httpServ.RegisterWebServer("/detection/v4", nil, n.acts)
 	go func() {
@@ -144,10 +149,11 @@ func (n *NetworkDetection) createDeployInfo() {
 	}
 }
 
-//create DeployDetection object
-//include clusterid, idc, nodes
+// createClusterDeployInfo xxx
+// create DeployDetection object
+// include clusterid, idc, nodes
 func (n *NetworkDetection) createClusterDeployInfo(clusterid string) error {
-	//get cluster node list
+	// get cluster node list
 	nodes, err := n.platform.GetNodes(clusterid)
 	if err != nil {
 		blog.Errorf("get cluster %s nodes error %s", clusterid, err.Error())
@@ -155,15 +161,15 @@ func (n *NetworkDetection) createClusterDeployInfo(clusterid string) error {
 	}
 
 	for _, node := range nodes {
-		//update node cmdb info
-		//include Idc、modulename
+		// update node cmdb info
+		// include Idc、modulename
 		err = n.cmdb.updateNodeInfo(node)
 		if err != nil {
 			blog.Errorf("update node %s cmdb info error %s", node.Ip, err.Error())
 			continue
 		}
 
-		//n.deploys key, key=clusterid/idc, example BCS-MESOS-10000/上海-周浦
+		// n.deploys key, key=clusterid/idc, example BCS-MESOS-10000/上海-周浦
 		key := fmt.Sprintf("%s/%s", node.Clusterid, node.Idc)
 		if _, ok := n.deploys[key]; !ok {
 			deploy := &types.DeployDetection{
@@ -178,7 +184,7 @@ func (n *NetworkDetection) createClusterDeployInfo(clusterid string) error {
 		n.deploys[key].Nodes = append(n.deploys[key].Nodes, node)
 	}
 
-	//list all nodes info
+	// list all nodes info
 	for k, v := range n.deploys {
 		for _, node := range v.Nodes {
 			blog.Infof("%s %s", k, node.Ip)
@@ -195,17 +201,17 @@ func (n *NetworkDetection) tickerDeployNetworkDetectionNode() {
 }
 
 func (n *NetworkDetection) deployNetworkDetectionNode() {
-	//check region whether deploy detection nodes
+	// check region whether deploy detection nodes
 	for _, o := range n.deploys {
-		//if application=nil, then deploy detection application
+		// if application=nil, then deploy detection application
 		if o.Application == nil {
-			//if fetch deployment, then continue
+			// if fetch deployment, then continue
 			if !n.deployNodes(o) {
 				continue
 			}
 		}
 
-		//fetch taskgroup
+		// fetch taskgroup
 		by, err := n.platform.FetchPods(o.Clusterid, o.Application.RunAs, o.Application.Name)
 		if err != nil {
 			blog.Errorf("region(%s:%s) fetch deployment(%s:%s) pods failed: %s",
@@ -227,10 +233,11 @@ func (n *NetworkDetection) deployNetworkDetectionNode() {
 	}
 }
 
-//if return true, show fetch deployment success, then list relevant pods
-//if return false, show fetch deployment failed, then continue
+// deployNodes xxx
+// if return true, show fetch deployment success, then list relevant pods
+// if return false, show fetch deployment failed, then continue
 func (n *NetworkDetection) deployNodes(o *types.DeployDetection) bool {
-	//fetch deployment
+	// fetch deployment
 	i, err := n.platform.FetchDeployment(o)
 	if err != nil {
 		if err.Error() == "Not found" {
@@ -246,9 +253,9 @@ func (n *NetworkDetection) deployNodes(o *types.DeployDetection) bool {
 		return true
 	}
 
-	//create deployment in container cluster
+	// create deployment in container cluster
 	deployJSON := o.Template
-	//deepcopy Constraints
+	// deepcopy Constraints
 	by, _ := json.Marshal(o.Template.Constraints)
 	deployJSON.Constraints = new(commtypes.Constraint)
 	json.Unmarshal(by, &deployJSON.Constraints)
@@ -257,13 +264,13 @@ func (n *NetworkDetection) deployNodes(o *types.DeployDetection) bool {
 		"idc":     o.Idc,
 		"cluster": o.Clusterid,
 	}
-	//parse deploy constraint
+	// parse deploy constraint
 	for _, node := range o.Nodes {
 		union := deployJSON.Constraints.IntersectionItem[0].UnionData[0]
 		union.Set.Item = append(union.Set.Item, node.Ip)
 	}
 
-	//create deployment
+	// create deployment
 	by, _ = json.Marshal(deployJSON)
 	blog.Infof("region(%s:%s) deploy template json(%s)", o.Clusterid, o.Idc, string(by))
 	err = n.platform.CeateDeployment(o.Clusterid, by)
@@ -278,7 +285,7 @@ func (n *NetworkDetection) deployNodes(o *types.DeployDetection) bool {
 	return false
 }
 
-//register networkdetection module in bcs zk
+// regDiscover networkdetection module in bcs zk
 func (n *NetworkDetection) regDiscover() {
 	blog.Infof("NetworkDetection to do register bcszk...")
 	// register service
@@ -383,8 +390,9 @@ func (n *NetworkDetection) initActions() {
 	}
 }
 
-//http hander func
-//response []types.DetectionPod
+// getAllDetectionPods xxx
+// http hander func
+// response []types.DetectionPod
 func (n *NetworkDetection) getAllDetectionPods(req *restful.Request, resp *restful.Response) {
 	blog.V(3).Infof("hander detection pods request")
 

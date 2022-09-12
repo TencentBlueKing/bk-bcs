@@ -11,6 +11,7 @@
  *
  */
 
+// Package metrics xxx
 package metrics
 
 import (
@@ -38,7 +39,7 @@ const (
 )
 
 // TimeBuckets is based on Prometheus client_golang prometheus.DefBuckets
-var timeBuckets = prometheus.ExponentialBuckets(0.00025, 2, 16) // from 0.25ms to 8 seconds
+var timeBuckets = prometheus.ExponentialBuckets(0.00025, 2, 32) // from 0.25ms to 16 seconds
 
 // Metrics the bcs-user-manager exports.
 var (
@@ -72,7 +73,7 @@ func RunMetric(conf *config.UserMgrConfig) {
 	blog.Infof("run metric ok")
 }
 
-//ReportRequestAPIMetrics report API request metrics
+// ReportRequestAPIMetrics report API request metrics
 func ReportRequestAPIMetrics(handler, method, status string, started time.Time) {
 	requestCount.WithLabelValues(handler, method, status).Inc()
 	requestLatency.WithLabelValues(handler, method, status).Observe(time.Since(started).Seconds())

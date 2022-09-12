@@ -163,6 +163,7 @@ func (wts *WsTunnelServerCallback) authorizeTunnel(req *http.Request) (string, b
 	return "", false, fmt.Errorf("unknown client module")
 }
 
+// cleanCredential xxx
 // clean credential
 func (wts *WsTunnelServerCallback) cleanCredential(serverKey string) {
 	// when multiple kube-agent connect to cluster-manager with same clientKey,

@@ -24,8 +24,8 @@ import (
 )
 
 const (
-	chartVersionListHelmUri     = "/repository/api/version/page"
-	chartVersionDownloadHelmUri = "/repository/api/version/download"
+	chartVersionListHelmURI     = "/repository/api/version/page"
+	chartVersionDownloadHelmURI = "/repository/api/version/download"
 )
 
 func (ch *chartHandler) listChartVersion(ctx context.Context, option repo.ListOption) (
@@ -48,7 +48,7 @@ func (ch *chartHandler) listChartVersion(ctx context.Context, option repo.ListOp
 func (ch *chartHandler) listOCIChartVersion(ctx context.Context, option repo.ListOption) (
 	*repo.ListChartVersionData, error) {
 
-	resp, err := ch.handler.get(ctx, ch.getListOCIChartVersionUri(option), nil, nil)
+	resp, err := ch.handler.get(ctx, ch.getListOCIChartVersionURI(option), nil, nil)
 	if err != nil {
 		blog.Errorf(
 			"list helm chart version from bk-repo get failed, %s, with projectID %s, repoName %s, chartName %s",
@@ -57,7 +57,7 @@ func (ch *chartHandler) listOCIChartVersion(ctx context.Context, option repo.Lis
 	}
 
 	var r listPackVersionResp
-	if err := codec.DecJson(resp.Reply, &r); err != nil {
+	if err = codec.DecJson(resp.Reply, &r); err != nil {
 		blog.Errorf(
 			"list helm chart version from bk-repo decode failed, %s, with resp %s", err.Error(), resp.Reply)
 		return nil, err
@@ -85,7 +85,7 @@ func (ch *chartHandler) listOCIChartVersion(ctx context.Context, option repo.Lis
 func (ch *chartHandler) listHelmChartVersion(ctx context.Context, option repo.ListOption) (
 	*repo.ListChartVersionData, error) {
 
-	resp, err := ch.handler.get(ctx, ch.getListHelmChartVersionUri(option), nil, nil)
+	resp, err := ch.handler.get(ctx, ch.getListHelmChartVersionURI(option), nil, nil)
 	if err != nil {
 		blog.Errorf(
 			"list helm chart version from bk-repo get failed, %s, with projectID %s, repoName %s, chartName %s",
@@ -94,7 +94,7 @@ func (ch *chartHandler) listHelmChartVersion(ctx context.Context, option repo.Li
 	}
 
 	var r listPackVersionResp
-	if err := codec.DecJson(resp.Reply, &r); err != nil {
+	if err = codec.DecJson(resp.Reply, &r); err != nil {
 		blog.Errorf(
 			"list helm chart version from bk-repo decode failed, %s, with resp %s", err.Error(), resp.Reply)
 		return nil, err
@@ -119,15 +119,15 @@ func (ch *chartHandler) listHelmChartVersion(ctx context.Context, option repo.Li
 	}, nil
 }
 
-func (ch *chartHandler) getListHelmChartVersionUri(option repo.ListOption) string {
-	return chartVersionListHelmUri + "/" + ch.projectID + "/" + ch.repository + "/" +
+func (ch *chartHandler) getListHelmChartVersionURI(option repo.ListOption) string {
+	return chartVersionListHelmURI + "/" + ch.projectID + "/" + ch.repository + "/" +
 		"?packageKey=helm://" + ch.chartName +
 		"&pageNumber=" + strconv.FormatInt(option.Page, 10) +
 		"&pageSize=" + strconv.FormatInt(option.Size, 10)
 }
 
-func (ch *chartHandler) getListOCIChartVersionUri(option repo.ListOption) string {
-	return chartVersionListHelmUri + "/" + ch.projectID + "/" + ch.repository + "/" +
+func (ch *chartHandler) getListOCIChartVersionURI(option repo.ListOption) string {
+	return chartVersionListHelmURI + "/" + ch.projectID + "/" + ch.repository + "/" +
 		"?packageKey=oci://" + ch.chartName +
 		"&pageNumber=" + strconv.FormatInt(option.Page, 10) +
 		"&pageSize=" + strconv.FormatInt(option.Size, 10)
@@ -202,7 +202,7 @@ func (ch *chartHandler) downloadOCIChartVersionOrigin(_ context.Context, version
 		return nil, err
 	}
 
-	if err = cli.Login(ch.getOciUrl(""),
+	if err = cli.Login(ch.getOciURL(""),
 		registry.LoginOptBasicAuth(ch.user.Name, ch.user.Password),
 		registry.LoginOptInsecure(true)); err != nil {
 		blog.Errorf("download helm chart version origin from bk-repo login failed, %s, "+
@@ -210,7 +210,7 @@ func (ch *chartHandler) downloadOCIChartVersionOrigin(_ context.Context, version
 		return nil, err
 	}
 
-	r, err := cli.Pull(ch.getOciUrl("/"+ch.projectID+"/"+ch.repository+"/"+ch.chartName+":"+version))
+	r, err := cli.Pull(ch.getOciURL("/" + ch.projectID + "/" + ch.repository + "/" + ch.chartName + ":" + version))
 	if err != nil {
 		blog.Errorf("download helm chart version origin from bk-repo pull chart failed, %s, "+
 			err.Error(), ch.projectID, ch.repository, ch.chartName, version)
@@ -221,7 +221,7 @@ func (ch *chartHandler) downloadOCIChartVersionOrigin(_ context.Context, version
 }
 
 func (ch *chartHandler) downloadHelmChartVersionOrigin(ctx context.Context, version string) ([]byte, error) {
-	resp, err := ch.get(ctx, ch.getDownloadHelmChartVersionUri(version), nil, nil)
+	resp, err := ch.get(ctx, ch.getDownloadHelmChartVersionURI(version), nil, nil)
 	if err != nil {
 		blog.Errorf("download helm chart version origin from bk-repo get failed, %s, "+
 			"with projectID %s, repoName %s, chartName %s, version %s",
@@ -285,14 +285,14 @@ func (ch *chartHandler) getHelmChartVersionDetail(ctx context.Context, version s
 	return detail, nil
 }
 
-func (ch *chartHandler) getDownloadHelmChartVersionUri(version string) string {
-	return chartVersionDownloadHelmUri + "/" + ch.projectID + "/" + ch.repository + "/" +
+func (ch *chartHandler) getDownloadHelmChartVersionURI(version string) string {
+	return chartVersionDownloadHelmURI + "/" + ch.projectID + "/" + ch.repository + "/" +
 		"?packageKey=helm://" + ch.chartName +
 		"&version=" + version
 }
 
-func (ch *chartHandler) getDownloadOCIChartVersionUri(version string) string {
-	return chartVersionDownloadHelmUri + "/" + ch.projectID + "/" + ch.repository + "/" +
+func (ch *chartHandler) getDownloadOCIChartVersionURI(version string) string {
+	return chartVersionDownloadHelmURI + "/" + ch.projectID + "/" + ch.repository + "/" +
 		"?packageKey=oci://" + ch.chartName +
 		"&version=" + version
 }

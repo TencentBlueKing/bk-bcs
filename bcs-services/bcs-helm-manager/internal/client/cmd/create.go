@@ -57,7 +57,7 @@ func CreateRepository(cmd *cobra.Command, _ []string) {
 		os.Exit(1)
 	}
 
-	fmt.Printf("success to create repository %s under project %s\n", req.GetName(), req.GetProjectID())
+	fmt.Printf("success to create repository %s under project %s\n", req.GetName(), req.GetProjectCode())
 }
 
 func init() {

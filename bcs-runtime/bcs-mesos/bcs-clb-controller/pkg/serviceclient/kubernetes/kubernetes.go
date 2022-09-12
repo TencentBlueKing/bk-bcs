@@ -19,6 +19,7 @@
  * for Statefulset pods, we use pod data directly;
  */
 
+// Package kubernetes xxx
 package kubernetes
 
 import (
@@ -58,7 +59,7 @@ const (
 	eventDelete = "delete"
 	eventGet    = "get"
 	eventList   = "list"
-	//state for event
+	// state for event
 	statusSuccess   = "success"
 	statusFailure   = "failure"
 	statusNotFinish = "notfinish"
@@ -89,10 +90,12 @@ func newKubeSvcEventHandler() *kubeSvcEventHandler {
 	return &kubeSvcEventHandler{}
 }
 
+// RegisterManager xxx
 func (k *kubeSvcEventHandler) RegisterManager(manager *KubeManager) {
 	k.manager = manager
 }
 
+// OnAdd xxx
 // when getting add event and update event for service, call updateAppService
 // service add event
 func (k *kubeSvcEventHandler) OnAdd(obj interface{}) {
@@ -111,6 +114,7 @@ func (k *kubeSvcEventHandler) OnAdd(obj interface{}) {
 	k.manager.updateAppService(svc)
 }
 
+// OnUpdate xxx
 // service update event
 func (k *kubeSvcEventHandler) OnUpdate(oldObj, newObj interface{}) {
 	oldSvc, okOld := oldObj.(*k8scorev1.Service)
@@ -135,6 +139,7 @@ func (k *kubeSvcEventHandler) OnUpdate(oldObj, newObj interface{}) {
 	k.manager.updateAppService(newSvc)
 }
 
+// OnDelete xxx
 // service delete event
 func (k *kubeSvcEventHandler) OnDelete(obj interface{}) {
 	svc, ok := obj.(*k8scorev1.Service)
@@ -162,10 +167,12 @@ func newKubeEpsEventHandler() *kubeEpsEventHandler {
 	return &kubeEpsEventHandler{}
 }
 
+// RegisterManager xxx
 func (k *kubeEpsEventHandler) RegisterManager(manager *KubeManager) {
 	k.manager = manager
 }
 
+// OnAdd xxx
 // when getting add event or update event for endpoints, first find Service that the endpoints belongs to,
 // then call updateAppService
 // endpoint add event
@@ -194,6 +201,7 @@ func (k *kubeEpsEventHandler) OnAdd(obj interface{}) {
 	k8sEvent.WithLabelValues(eps.Kind, eventAdd, statusSuccess).Inc()
 }
 
+// OnUpdate xxx
 // endpoints update event
 func (k *kubeEpsEventHandler) OnUpdate(oldObj, newObj interface{}) {
 	oldEps, okOld := oldObj.(*k8scorev1.Endpoints)
@@ -231,6 +239,7 @@ func (k *kubeEpsEventHandler) OnUpdate(oldObj, newObj interface{}) {
 	k8sEvent.WithLabelValues(newEps.Kind, eventUpdate, statusSuccess).Inc()
 }
 
+// OnDelete xxx
 // endpoints delete event
 func (k *kubeEpsEventHandler) OnDelete(obj interface{}) {
 	eps, ok := obj.(*k8scorev1.Endpoints)
@@ -265,10 +274,12 @@ func newKubePodEventHandler() *kubePodEventHandler {
 	return &kubePodEventHandler{}
 }
 
+// RegisterManager xxx
 func (k *kubePodEventHandler) RegisterManager(manager *KubeManager) {
 	k.manager = manager
 }
 
+// OnAdd xxx
 // pod add
 func (k *kubePodEventHandler) OnAdd(obj interface{}) {
 	pod, ok := obj.(*k8scorev1.Pod)
@@ -284,6 +295,7 @@ func (k *kubePodEventHandler) OnAdd(obj interface{}) {
 	blog.V(5).Infof("k8s Pod add\n%s", pod.String())
 }
 
+// OnUpdate xxx
 // pod update
 func (k *kubePodEventHandler) OnUpdate(oldObj, newObj interface{}) {
 	oldPod, okOld := oldObj.(*k8scorev1.Pod)
@@ -309,6 +321,7 @@ func (k *kubePodEventHandler) OnUpdate(oldObj, newObj interface{}) {
 	blog.V(5).Infof("k8s Pod update\nnew %s,\n old %s", newPod.String(), oldPod.String())
 }
 
+// OnDelete xxx
 // pod delete
 func (k *kubePodEventHandler) OnDelete(obj interface{}) {
 	pod, ok := obj.(*k8scorev1.Pod)
@@ -338,14 +351,14 @@ func NewClient(config string, handler cache.ResourceEventHandler, syncPeriod tim
 			return nil, err
 		}
 	} else {
-		//parse configuration
+		// parse configuration
 		restConfig, err = clientcmd.BuildConfigFromFlags("", config)
 		if err != nil {
 			blog.Errorf("create internal client with kubeconfig %s failed, err %s", config, err.Error())
 			return nil, err
 		}
 	}
-	//initialize specified client implementation
+	// initialize specified client implementation
 	cliset, err := k8scorecliset.NewForConfig(restConfig)
 	if err != nil {
 		blog.Errorf("create clientset failed, with rest config %v, err %s", restConfig, err.Error())
@@ -368,7 +381,7 @@ func NewClient(config string, handler cache.ResourceEventHandler, syncPeriod tim
 	blog.Infof("create AppService cache")
 	// cache for app service
 	store := cache.NewStore(cache.DeletionHandlingMetaNamespaceKeyFunc)
-	//create informer, cache, reflector
+	// create informer, cache, reflector
 	kube := &KubeManager{
 		factory:             factory,
 		svcsInformer:        svcsInformer,
@@ -525,6 +538,7 @@ func (m *KubeManager) ListAppServiceFromStatefulSet(ns, name string) ([]*svcclie
 	return make([]*svcclient.AppService, 0), nil
 }
 
+// getIndexFromStatefulSetName xxx
 // get index from k8s statefulset pod name
 // example test-0, test-1
 func getIndexFromStatefulSetName(name string) (int, error) {
@@ -538,6 +552,7 @@ func getIndexFromStatefulSetName(name string) (int, error) {
 	return podIndex, nil
 }
 
+// sortStatefulSetPod xxx
 // sort statefulset pod by pod name
 // we should always keep statefulset pods in order
 func sortStatefulSetPod(pods []*k8scorev1.Pod) {
@@ -548,6 +563,7 @@ func sortStatefulSetPod(pods []*k8scorev1.Pod) {
 	})
 }
 
+// checkPodReady xxx
 // pod is ready when all the containers in pod is ready
 func checkPodReady(pod *k8scorev1.Pod) bool {
 	if len(pod.Spec.Containers) != len(pod.Status.ContainerStatuses) {
@@ -618,7 +634,7 @@ func (m *KubeManager) convertStatefulSet(pods []*k8scorev1.Pod) ([]*svcclient.Ap
 	return appServiceList, nil
 }
 
-// getPodByService get all pod by specified k8s Service
+// getEpsByService get all pod by specified k8s Service
 func (m *KubeManager) getEpsByService(svc *k8scorev1.Service) (*k8scorev1.Endpoints, error) {
 	key := fmt.Sprintf("%s/%s", svc.GetNamespace(), svc.GetName())
 	eps, err := m.epsLister.Endpoints(svc.GetNamespace()).Get(svc.GetName())
@@ -684,7 +700,7 @@ func (m *KubeManager) convert(svc *k8scorev1.Service, eps *k8scorev1.Endpoints) 
 						TypeMeta:   pod.TypeMeta,
 						ObjectMeta: pod.ObjectMeta,
 						Index:      pod.GetName(),
-						//TODO: to set weight for different app in same service
+						// TODO: to set weight for different app in same service
 						Weight:  10,
 						NodeIP:  addr.IP,
 						ProxyIP: pod.Status.HostIP,
@@ -762,6 +778,7 @@ func (m *KubeManager) updateAppService(svc *k8scorev1.Service) {
 	m.appServiceHandler.OnUpdate(oldAppService, newAppService)
 }
 
+// deleteAppService xxx
 // delete AppService from AppService cache
 // do nothing when AppService is not in cache
 func (m *KubeManager) deleteAppService(svc *k8scorev1.Service) {

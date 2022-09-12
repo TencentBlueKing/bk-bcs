@@ -1,52 +1,60 @@
 <template>
-    <section class="form-group">
-        <div class="form-group-title" @click="toggleActive">
-            <span class="left">
-                <span class="icon" :style="!active ? 'transform: rotate(-90deg);' : 'transform: rotate(0deg);'">
-                    <i class="bcs-icon bcs-icon-down-shape"></i>
-                </span>
-                <span class="label">{{ title }}</span>
-                <span class="desc">{{ desc }}</span>
-            </span>
-            <slot name="title"></slot>
-        </div>
-        <div class="form-group-content" v-show="active">
-            <slot></slot>
-        </div>
-    </section>
+  <section class="form-group">
+    <div class="form-group-title" @click="toggleActive">
+      <span class="left">
+        <span
+          class="icon"
+          :style="!active ? 'transform: rotate(-90deg);' : 'transform: rotate(0deg);'"
+          v-if="allowToggle">
+          <i class="bcs-icon bcs-icon-down-shape"></i>
+        </span>
+        <span class="label">{{ title }}</span>
+        <span class="desc">{{ desc }}</span>
+      </span>
+      <slot name="title"></slot>
+    </div>
+    <div class="form-group-content" v-show="active">
+      <slot></slot>
+    </div>
+  </section>
 </template>
 <script lang="ts">
-    import { defineComponent, ref } from '@vue/composition-api'
+import { defineComponent, ref } from '@vue/composition-api';
 
-    export default defineComponent({
-        name: 'FormGroup',
-        props: {
-            title: {
-                type: String,
-                default: ''
-            },
-            desc: {
-                type: String,
-                default: ''
-            },
-            defaultActive: {
-                type: Boolean,
-                default: true
-            }
-        },
-        setup (props, ctx) {
-            const { emit } = ctx
-            const active = ref(props.defaultActive)
-            const toggleActive = () => {
-                active.value = !active.value
-                emit('toggle', active.value)
-            }
-            return {
-                active,
-                toggleActive
-            }
-        }
-    })
+export default defineComponent({
+  name: 'FormGroup',
+  props: {
+    title: {
+      type: String,
+      default: '',
+    },
+    desc: {
+      type: String,
+      default: '',
+    },
+    defaultActive: {
+      type: Boolean,
+      default: true,
+    },
+    allowToggle: {
+      type: Boolean,
+      default: true,
+    },
+  },
+  setup(props, ctx) {
+    const { emit } = ctx;
+    const active = ref(props.defaultActive);
+    const toggleActive = () => {
+      if (!props.allowToggle) return;
+      active.value = !active.value;
+      emit('toggle', active.value);
+    };
+    return {
+      active,
+      toggleActive,
+    };
+  },
+});
 </script>
 <style lang="postcss" scoped>
 .form-group {

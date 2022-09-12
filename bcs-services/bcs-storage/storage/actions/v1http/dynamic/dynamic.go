@@ -11,6 +11,7 @@
  *
  */
 
+// Package dynamic xxx
 package dynamic
 
 import (
@@ -318,7 +319,7 @@ func DeleteCustomResources(req *restful.Request, resp *restful.Response) {
 	lib.ReturnRest(&lib.RestResponse{Resp: resp})
 }
 
-// CreateCustomResourceIndex create custom resource's index
+// CreateCustomResourcesIndex create custom resource's index
 func CreateCustomResourcesIndex(req *restful.Request, resp *restful.Response) {
 	const (
 		handler = "CreateCustomResourcesIndex"
@@ -338,7 +339,7 @@ func CreateCustomResourcesIndex(req *restful.Request, resp *restful.Response) {
 	lib.ReturnRest(&lib.RestResponse{Resp: resp})
 }
 
-// DeleteCustomResourceIndex delete custom resource's index
+// DeleteCustomResourcesIndex delete custom resource's index
 func DeleteCustomResourcesIndex(req *restful.Request, resp *restful.Response) {
 	const (
 		handler = "CreateCustomResourcesIndex"
@@ -358,6 +359,7 @@ func DeleteCustomResourcesIndex(req *restful.Request, resp *restful.Response) {
 	lib.ReturnRest(&lib.RestResponse{Resp: resp})
 }
 
+// CleanDynamic xxx
 func CleanDynamic() {
 	dynamicDBClient := apiserver.GetAPIResource().GetDBClient(dbConfig)
 	tables, err := dynamicDBClient.ListTableNames(context.TODO())
@@ -367,6 +369,9 @@ func CleanDynamic() {
 	}
 	for _, table := range tables {
 		cleaner := clean.NewDBCleaner(apiserver.GetAPIResource().GetDBClient(dbConfig), table, time.Hour)
+		if table == eventResourceType {
+			cleaner.WithMaxDuration(time.Duration(1)*time.Hour, eventTimeTag)
+		}
 		go cleaner.Run(context.TODO())
 	}
 }

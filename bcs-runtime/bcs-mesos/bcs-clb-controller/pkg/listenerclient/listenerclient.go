@@ -11,6 +11,7 @@
  *
  */
 
+// Package listenerclient xxx
 package listenerclient
 
 import (
@@ -26,13 +27,16 @@ import (
 	"k8s.io/apimachinery/pkg/selection"
 )
 
+// ListenerClient xxx
 type ListenerClient struct {
 	client  listenerClientV1.NetworkV1Interface
 	lister  listerV1.CloudListenerLister
 	clbName string
 }
 
-func NewListenerClient(clbname string, client listenerClientV1.NetworkV1Interface, lister listerV1.CloudListenerLister) (Interface, error) {
+// NewListenerClient xxx
+func NewListenerClient(clbname string, client listenerClientV1.NetworkV1Interface,
+	lister listerV1.CloudListenerLister) (Interface, error) {
 
 	return &ListenerClient{
 		client:  client,
@@ -41,6 +45,7 @@ func NewListenerClient(clbname string, client listenerClientV1.NetworkV1Interfac
 	}, nil
 }
 
+// ListListeners xxx
 func (lc *ListenerClient) ListListeners() ([]*cloudListenerType.CloudListener, error) {
 	selector := labels.NewSelector()
 	requirement, err := labels.NewRequirement("bmsf.tencent.com/clbname", selection.Equals, []string{lc.clbName})
@@ -50,11 +55,15 @@ func (lc *ListenerClient) ListListeners() ([]*cloudListenerType.CloudListener, e
 	selector = selector.Add(*requirement)
 	return lc.lister.List(selector)
 }
+
+// Create xxx
 func (lc *ListenerClient) Create(listener *cloudListenerType.CloudListener) error {
 	_, err := lc.client.CloudListeners(listener.GetNamespace()).Create(
 		context.Background(), listener, metav1.CreateOptions{})
 	return err
 }
+
+// Update xxx
 func (lc *ListenerClient) Update(listener *cloudListenerType.CloudListener) error {
 	old, err := lc.lister.CloudListeners(listener.GetNamespace()).Get(listener.GetName())
 	if err != nil {
@@ -67,6 +76,8 @@ func (lc *ListenerClient) Update(listener *cloudListenerType.CloudListener) erro
 		context.Background(), listener, metav1.UpdateOptions{})
 	return err
 }
+
+// Delete xxx
 func (lc *ListenerClient) Delete(listener *cloudListenerType.CloudListener) error {
 	return lc.client.CloudListeners(listener.GetNamespace()).Delete(
 		context.Background(), listener.GetName(), metav1.DeleteOptions{})

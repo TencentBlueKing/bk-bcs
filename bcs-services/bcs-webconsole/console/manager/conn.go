@@ -34,6 +34,7 @@ import (
 	"k8s.io/client-go/tools/remotecommand"
 )
 
+// EndOfTransmission xxx
 // End-of-Transmission character ctrl-d
 const EndOfTransmission = "\u0004"
 
@@ -56,7 +57,8 @@ type RemoteStreamConn struct {
 }
 
 // NewRemoteStreamConn :
-func NewRemoteStreamConn(ctx context.Context, wsConn *websocket.Conn, mgr *ConsoleManager, initTerminalSize *TerminalSize, hideBanner bool) *RemoteStreamConn {
+func NewRemoteStreamConn(ctx context.Context, wsConn *websocket.Conn, mgr *ConsoleManager,
+	initTerminalSize *TerminalSize, hideBanner bool) *RemoteStreamConn {
 	conn := &RemoteStreamConn{
 		ctx:           ctx,
 		wsConn:        wsConn,
@@ -80,7 +82,7 @@ func NewRemoteStreamConn(ctx context.Context, wsConn *websocket.Conn, mgr *Conso
 	return conn
 }
 
-// ReadInputMsg
+// ReadInputMsg xxx
 func (r *RemoteStreamConn) ReadInputMsg() <-chan wsMessage {
 	inputMsgChan := make(chan wsMessage)
 	go func() {
@@ -179,7 +181,7 @@ func (r *RemoteStreamConn) Next() *remotecommand.TerminalSize {
 	}
 }
 
-// Close
+// Close xxx
 func (r *RemoteStreamConn) Close() {
 	r.once.Do(func() {
 		close(r.outputMsgChan)
@@ -187,7 +189,7 @@ func (r *RemoteStreamConn) Close() {
 	})
 }
 
-// Run
+// Run xxx
 func (r *RemoteStreamConn) Run() error {
 	pingInterval := time.NewTicker(10 * time.Second)
 	defer pingInterval.Stop()
@@ -222,7 +224,7 @@ func (r *RemoteStreamConn) Run() error {
 	}
 }
 
-// WaitStreamDone: stream 流处理
+// WaitStreamDone : stream 流处理
 func (r *RemoteStreamConn) WaitStreamDone(podCtx *types.PodContext) error {
 	defer r.Close()
 
@@ -274,9 +276,10 @@ func (r *RemoteStreamConn) WaitStreamDone(podCtx *types.PodContext) error {
 	return nil
 }
 
-// PreparedGuideMessage, 使用 PreparedMessage, gorilla 有缓存, 提高性能
+// PreparedGuideMessage , 使用 PreparedMessage, gorilla 有缓存, 提高性能
 func PreparedGuideMessage(ctx context.Context, ws *websocket.Conn, guideMessages string) error {
-	preparedMsg, err := websocket.NewPreparedMessage(websocket.TextMessage, []byte(base64.StdEncoding.EncodeToString([]byte(guideMessages))))
+	preparedMsg, err := websocket.NewPreparedMessage(websocket.TextMessage, []byte(base64.StdEncoding.EncodeToString(
+		[]byte(guideMessages))))
 	if err != nil {
 		return err
 	}
@@ -314,15 +317,11 @@ func helloMessage(source string) string {
 	var messages []string
 
 	if source == "mgr" {
-		guideMsg = []string{
-			config.G.WebConsole.GuideDocLink,
-			i18n.GetMessage("mgrGuideMessage"),
-		}
+		guideMsg = []string{i18n.GetMessage("mgrGuideMessage")}
+		guideMsg = append(guideMsg, config.G.WebConsole.GuideDocLinks...)
 	} else {
-		guideMsg = []string{
-			config.G.WebConsole.GuideDocLink,
-			i18n.GetMessage("guideMessage"),
-		}
+		guideMsg = []string{i18n.GetMessage("guideMessage")}
+		guideMsg = append(guideMsg, config.G.WebConsole.GuideDocLinks...)
 	}
 
 	// 两边一个#字符，加一个空格

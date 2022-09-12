@@ -31,7 +31,7 @@ var clsMgr sync.Once
 
 func init() {
 	clsMgr.Do(func() {
-		//init Node
+		// init Node
 		cloudprovider.InitClusterManager("qcloud", &Cluster{})
 	})
 }
@@ -53,7 +53,7 @@ func (c *Cluster) CreateCluster(cls *proto.Cluster, opt *cloudprovider.CreateClu
 		return nil, fmt.Errorf("qcloud CreateCluster cluster opt or cloud is empty")
 	}
 
-	if len(opt.Key) == 0 || len(opt.Secret) == 0 || len(opt.Region) == 0 {
+	if len(opt.Account.SecretID) == 0 || len(opt.Account.SecretKey) == 0 || len(opt.Region) == 0 {
 		return nil, fmt.Errorf("qcloud CreateCluster opt lost valid crendential info")
 	}
 
@@ -88,7 +88,7 @@ func (c *Cluster) ImportCluster(cls *proto.Cluster, opt *cloudprovider.ImportClu
 		return nil, fmt.Errorf("qcloud ImportCluster cluster opt or cloud is empty")
 	}
 
-	if len(opt.Key) == 0 || len(opt.Secret) == 0 || len(opt.Region) == 0 {
+	if len(opt.Account.SecretID) == 0 || len(opt.Account.SecretKey) == 0 || len(opt.Region) == 0 {
 		return nil, fmt.Errorf("qcloud CreateCluster opt lost valid crendential info")
 	}
 
@@ -118,7 +118,7 @@ func (c *Cluster) DeleteCluster(cls *proto.Cluster, opt *cloudprovider.DeleteClu
 		return nil, fmt.Errorf("qcloud DeleteCluster cluster is empty")
 	}
 
-	if opt == nil || len(opt.Key) == 0 || len(opt.Secret) == 0 || len(opt.Region) == 0 {
+	if opt == nil || len(opt.Account.SecretID) == 0 || len(opt.Account.SecretKey) == 0 || len(opt.Region) == 0 {
 		return nil, fmt.Errorf("qcloud DeleteCluster cluster lost oprion")
 	}
 
@@ -144,7 +144,7 @@ func (c *Cluster) DeleteCluster(cls *proto.Cluster, opt *cloudprovider.DeleteClu
 
 // GetCluster get kubernetes cluster detail information according cloudprovider
 func (c *Cluster) GetCluster(cloudID string, opt *cloudprovider.GetClusterOption) (*proto.Cluster, error) {
-	//qcloud.GetClusterClient(opt)
+	// qcloud.GetClusterClient(opt)
 
 	return nil, cloudprovider.ErrCloudNotImplemented
 }
@@ -156,7 +156,7 @@ func (c *Cluster) GetNodesInCluster(cls *proto.Cluster, opt *cloudprovider.GetNo
 
 // ListCluster get cloud cluster list by region
 func (c *Cluster) ListCluster(opt *cloudprovider.ListClusterOption) ([]*proto.CloudClusterInfo, error) {
-	if opt == nil || len(opt.Key) == 0 || len(opt.Secret) == 0 || len(opt.Region) == 0 {
+	if opt == nil || len(opt.Account.SecretID) == 0 || len(opt.Account.SecretKey) == 0 || len(opt.Region) == 0 {
 		return nil, fmt.Errorf("qcloud ListCluster cluster lost operation")
 	}
 
@@ -176,13 +176,13 @@ func transTKEClusterToCloudCluster(clusters []*tke.Cluster) []*proto.CloudCluste
 	cloudClusterList := make([]*proto.CloudClusterInfo, 0)
 	for _, cls := range clusters {
 		cloudClusterList = append(cloudClusterList, &proto.CloudClusterInfo{
-			ClusterID:            *cls.ClusterId,
-			ClusterName:          *cls.ClusterName,
-			ClusterDescription:   *cls.ClusterDescription,
-			ClusterVersion:       *cls.ClusterVersion,
-			ClusterOS:            *cls.ClusterOs,
-			ClusterType:          *cls.ClusterType,
-			ClusterStatus:        *cls.ClusterStatus,
+			ClusterID:          *cls.ClusterId,
+			ClusterName:        *cls.ClusterName,
+			ClusterDescription: *cls.ClusterDescription,
+			ClusterVersion:     *cls.ClusterVersion,
+			ClusterOS:          *cls.ClusterOs,
+			ClusterType:        *cls.ClusterType,
+			ClusterStatus:      *cls.ClusterStatus,
 		})
 	}
 
@@ -190,7 +190,8 @@ func transTKEClusterToCloudCluster(clusters []*tke.Cluster) []*proto.CloudCluste
 }
 
 // AddNodesToCluster add new node to cluster according cloudprovider
-func (c *Cluster) AddNodesToCluster(cls *proto.Cluster, nodes []*proto.Node, opt *cloudprovider.AddNodesOption) (*proto.Task, error) {
+func (c *Cluster) AddNodesToCluster(cls *proto.Cluster, nodes []*proto.Node,
+	opt *cloudprovider.AddNodesOption) (*proto.Task, error) {
 	if cls == nil {
 		return nil, fmt.Errorf("qcloud AddNodesToCluster cluster is empty")
 	}
@@ -198,7 +199,7 @@ func (c *Cluster) AddNodesToCluster(cls *proto.Cluster, nodes []*proto.Node, opt
 		return nil, fmt.Errorf("qcloud AddNodesToCluster nodes is empty")
 	}
 
-	if opt == nil || len(opt.Key) == 0 || len(opt.Secret) == 0 || len(opt.Region) == 0 {
+	if opt == nil || len(opt.Account.SecretID) == 0 || len(opt.Account.SecretKey) == 0 || len(opt.Region) == 0 {
 		return nil, fmt.Errorf("qcloud AddNodesToCluster cluster lost operation")
 	}
 
@@ -227,7 +228,8 @@ func (c *Cluster) AddNodesToCluster(cls *proto.Cluster, nodes []*proto.Node, opt
 }
 
 // DeleteNodesFromCluster delete specified nodes from cluster according cloudprovider
-func (c *Cluster) DeleteNodesFromCluster(cls *proto.Cluster, nodes []*proto.Node, opt *cloudprovider.DeleteNodesOption) (*proto.Task, error) {
+func (c *Cluster) DeleteNodesFromCluster(cls *proto.Cluster, nodes []*proto.Node,
+	opt *cloudprovider.DeleteNodesOption) (*proto.Task, error) {
 	if cls == nil {
 		return nil, fmt.Errorf("qcloud DeleteNodesFromCluster cluster is empty")
 	}
@@ -235,7 +237,7 @@ func (c *Cluster) DeleteNodesFromCluster(cls *proto.Cluster, nodes []*proto.Node
 		return nil, fmt.Errorf("qcloud DeleteNodesFromCluster nodes is empty")
 	}
 
-	if opt == nil || len(opt.Key) == 0 || len(opt.Secret) == 0 || len(opt.Region) == 0 {
+	if opt == nil || len(opt.Account.SecretID) == 0 || len(opt.Account.SecretKey) == 0 || len(opt.Region) == 0 {
 		return nil, fmt.Errorf("qcloud DeleteNodesFromCluster cluster lost operation")
 	}
 
@@ -264,7 +266,8 @@ func (c *Cluster) DeleteNodesFromCluster(cls *proto.Cluster, nodes []*proto.Node
 }
 
 // CheckClusterCidrAvailable check cluster CIDR nodesNum when add nodes
-func (c *Cluster) CheckClusterCidrAvailable(cls *proto.Cluster, opt *cloudprovider.CheckClusterCIDROption) (bool, error) {
+func (c *Cluster) CheckClusterCidrAvailable(cls *proto.Cluster, opt *cloudprovider.CheckClusterCIDROption) (bool,
+	error) {
 	if cls == nil || opt == nil {
 		return true, nil
 	}
@@ -289,10 +292,13 @@ func (c *Cluster) CheckClusterCidrAvailable(cls *proto.Cluster, opt *cloudprovid
 	}
 
 	// CIDR IP 数量 - 集群内 Service 数量上限）/ 单节点 Pod 数量上限
-	clusterTotalNodes := uint64(math.Floor(float64((ipCount - uint64(cls.NetworkSettings.MaxServiceNum)) / uint64(cls.NetworkSettings.MaxNodePodNum))))
+	clusterTotalNodes := uint64(math.Floor(float64((ipCount - uint64(cls.NetworkSettings.MaxServiceNum)) / uint64(
+		cls.NetworkSettings.MaxNodePodNum))))
 
-	blog.Infof("cluster[%s] cloud[%s] CheckClusterCidrAvailable ipCount[%v] totalNodesCnt[%v] currentNodes[%v] masterCnt[%v]"+
-		"addNodeCnt[%v]", cls.ClusterID, cloudName, ipCount, clusterTotalNodes, opt.CurrentNodeCnt, len(cls.Master), opt.IncomingNodeCnt)
+	blog.Infof(
+		"cluster[%s] cloud[%s] CheckClusterCidrAvailable ipCount[%v] totalNodesCnt[%v] currentNodes[%v] masterCnt[%v]"+
+			"addNodeCnt[%v]", cls.ClusterID, cloudName, ipCount, clusterTotalNodes, opt.CurrentNodeCnt, len(cls.Master),
+		opt.IncomingNodeCnt)
 
 	availableNodesCnt := clusterTotalNodes - uint64(len(cls.Master)) - opt.CurrentNodeCnt
 	if availableNodesCnt-opt.IncomingNodeCnt < 0 {

@@ -11,6 +11,7 @@
  *
  */
 
+// Package metric xxx
 package metric
 
 import (
@@ -21,6 +22,7 @@ import (
 	"github.com/urfave/cli"
 )
 
+// NewMetricCommand xxx
 func NewMetricCommand() cli.Command {
 	return cli.Command{
 		Name:  "metric",

@@ -152,7 +152,8 @@ func (c *Client) ESBGetBizLocation(username string, bizIDs []int64) (*ESBGetBizL
 }
 
 // ESBGetBizInternalModule get module info by biz id and module name
-func (c *Client) ESBGetBizInternalModule(username string, bizID int64, bkSupplierAccount string) (*ESBGetBizInternalModuleResult, error) {
+func (c *Client) ESBGetBizInternalModule(username string, bizID int64, bkSupplierAccount string) (
+	*ESBGetBizInternalModuleResult, error) {
 	request := map[string]interface{}{
 		"bk_biz_id":           bizID,
 		"bk_username":         username,

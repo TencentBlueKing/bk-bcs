@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package store xxx
 package store
 
 import (
@@ -74,7 +75,8 @@ type ClusterManagerModel interface {
 	ListClusterCredential(ctx context.Context, cond *operator.Condition, opt *options.ListOption) (
 		[]types.ClusterCredential, error)
 
-	//TKE CIDR information storage management
+	// CreateTkeCidr xxx
+	// TKE CIDR information storage management
 	CreateTkeCidr(ctx context.Context, cidr *types.TkeCidr) error
 	UpdateTkeCidr(ctx context.Context, cidr *types.TkeCidr) error
 	DeleteTkeCidr(ctx context.Context, vpc string, cidr string) error
@@ -82,35 +84,40 @@ type ClusterManagerModel interface {
 	ListTkeCidr(ctx context.Context, cond *operator.Condition, opt *options.ListOption) ([]types.TkeCidr, error)
 	ListTkeCidrCount(ctx context.Context, opt *options.ListOption) ([]types.TkeCidrCount, error)
 
-	//project information storage management
+	// CreateProject xxx
+	// project information storage management
 	CreateProject(ctx context.Context, project *types.Project) error
 	UpdateProject(ctx context.Context, project *types.Project) error
 	DeleteProject(ctx context.Context, projectID string) error
 	GetProject(ctx context.Context, projectID string) (*types.Project, error)
 	ListProject(ctx context.Context, cond *operator.Condition, opt *options.ListOption) ([]types.Project, error)
 
-	//cloud information storage management
+	// CreateCloud xxx
+	// cloud information storage management
 	CreateCloud(ctx context.Context, cloud *types.Cloud) error
 	UpdateCloud(ctx context.Context, cloud *types.Cloud) error
 	DeleteCloud(ctx context.Context, cloudID string) error
 	GetCloud(ctx context.Context, cloudID string) (*types.Cloud, error)
 	ListCloud(ctx context.Context, cond *operator.Condition, opt *options.ListOption) ([]types.Cloud, error)
 
-	//cloud vpc information storage manager
+	// CreateCloudVPC xxx
+	// cloud vpc information storage manager
 	CreateCloudVPC(ctx context.Context, vpc *types.CloudVPC) error
 	UpdateCloudVPC(ctx context.Context, vpc *types.CloudVPC) error
 	DeleteCloudVPC(ctx context.Context, cloudID string, vpcID string) error
 	ListCloudVPC(ctx context.Context, cond *operator.Condition, opt *options.ListOption) ([]types.CloudVPC, error)
 	GetCloudVPC(ctx context.Context, cloudID, vpcID string) (*types.CloudVPC, error)
 
-	//cloud account info storage manager
+	// CreateCloudAccount xxx
+	// cloud account info storage manager
 	CreateCloudAccount(ctx context.Context, account *types.CloudAccount) error
 	UpdateCloudAccount(ctx context.Context, account *types.CloudAccount) error
 	DeleteCloudAccount(ctx context.Context, cloudID string, accountID string) error
 	ListCloudAccount(ctx context.Context, cond *operator.Condition, opt *options.ListOption) ([]types.CloudAccount, error)
 	GetCloudAccount(ctx context.Context, cloudID, accountID string) (*types.CloudAccount, error)
 
-	//nodegroup information storage management
+	// CreateNodeGroup xxx
+	// nodegroup information storage management
 	CreateNodeGroup(ctx context.Context, group *types.NodeGroup) error
 	UpdateNodeGroup(ctx context.Context, group *types.NodeGroup) error
 	DeleteNodeGroup(ctx context.Context, groupID string) error
@@ -118,7 +125,8 @@ type ClusterManagerModel interface {
 	ListNodeGroup(ctx context.Context, cond *operator.Condition, opt *options.ListOption) ([]types.NodeGroup, error)
 	DeleteNodeGroupByClusterID(ctx context.Context, clusterID string) error
 
-	//task information storage management
+	// CreateTask xxx
+	// task information storage management
 	CreateTask(ctx context.Context, task *types.Task) error
 	UpdateTask(ctx context.Context, task *types.Task) error
 	PatchTask(ctx context.Context, taskID string, patchs map[string]interface{}) error
@@ -126,18 +134,22 @@ type ClusterManagerModel interface {
 	GetTask(ctx context.Context, taskID string) (*types.Task, error)
 	ListTask(ctx context.Context, cond *operator.Condition, opt *options.ListOption) ([]types.Task, error)
 
+	// CreateOperationLog xxx
 	// OperationLog
 	CreateOperationLog(ctx context.Context, log *types.OperationLog) error
 	DeleteOperationLogByResourceID(ctx context.Context, resourceIndex string) error
 	DeleteOperationLogByResourceType(ctx context.Context, resType string) error
 	ListOperationLog(ctx context.Context, cond *operator.Condition, opt *options.ListOption) ([]types.OperationLog, error)
+	CountOperationLog(ctx context.Context, cond *operator.Condition) (int64, error)
 
-	//project information storage management
+	// CreateAutoScalingOption xxx
+	// project information storage management
 	CreateAutoScalingOption(ctx context.Context, option *types.ClusterAutoScalingOption) error
 	UpdateAutoScalingOption(ctx context.Context, option *types.ClusterAutoScalingOption) error
 	DeleteAutoScalingOption(ctx context.Context, clusterID string) error
 	GetAutoScalingOption(ctx context.Context, clusterID string) (*types.ClusterAutoScalingOption, error)
-	ListAutoScalingOption(ctx context.Context, cond *operator.Condition, opt *options.ListOption) ([]types.ClusterAutoScalingOption, error)
+	ListAutoScalingOption(ctx context.Context, cond *operator.Condition, opt *options.ListOption) (
+		[]types.ClusterAutoScalingOption, error)
 }
 
 // ModelSet a set of client

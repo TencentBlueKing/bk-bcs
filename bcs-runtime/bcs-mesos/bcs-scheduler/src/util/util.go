@@ -11,10 +11,12 @@
  *
  */
 
+// Package util xxx
 package util
 
 import "github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/mesosproto/mesos"
 
+// GetMesosAgentInnerIP xxx
 func GetMesosAgentInnerIP(attributes []*mesos.Attribute) (string, bool) {
 	ip := ""
 	ok := false
@@ -30,6 +32,7 @@ func GetMesosAgentInnerIP(attributes []*mesos.Attribute) (string, bool) {
 	return ip, ok
 }
 
+// ParseMesosResources xxx
 func ParseMesosResources(resources []*mesos.Resource) (float64, float64, float64, string) {
 	var cpus, mem, disk float64
 	var port string

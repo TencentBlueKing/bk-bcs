@@ -10,10 +10,12 @@
  * limitations under the License.
  */
 
+// Package release xxx
 package release
 
 import (
 	"context"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
 	helmmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/proto/bcs-helm-manager"
 )
@@ -30,6 +32,7 @@ type Cluster interface {
 	Uninstall(ctx context.Context, conf HelmUninstallConfig) (*HelmUninstallResult, error)
 	Upgrade(ctx context.Context, conf HelmUpgradeConfig) (*HelmUpgradeResult, error)
 	Rollback(ctx context.Context, conf HelmRollbackConfig) (*HelmRollbackResult, error)
+	History(ctx context.Context, option HelmHistoryOption) ([]*Release, error)
 }
 
 // Release 定义了集群中的helm release信息, 一般在命令行通过 helm list 获取
@@ -42,6 +45,8 @@ type Release struct {
 	ChartVersion string
 	AppVersion   string
 	UpdateTime   string
+	Description  string
+	Values       string
 }
 
 // Transfer2Proto transfer the data into protobuf struct
@@ -70,6 +75,40 @@ func (r *Release) Transfer2DetailProto() *helmmanager.ReleaseDetail {
 		AppVersion:   common.GetStringP(r.AppVersion),
 		UpdateTime:   common.GetStringP(r.UpdateTime),
 	}
+}
+
+// Transfer2HistoryProto transfer the data into history protobuf struct
+func (r *Release) Transfer2HistoryProto() *helmmanager.ReleaseHistory {
+	return &helmmanager.ReleaseHistory{
+		Revision:     common.GetUint32P(uint32(r.Revision)),
+		Name:         common.GetStringP(r.Name),
+		Namespace:    common.GetStringP(r.Namespace),
+		UpdateTime:   common.GetStringP(r.UpdateTime),
+		Description:  common.GetStringP(r.Description),
+		Status:       common.GetStringP(r.Status),
+		Chart:        common.GetStringP(r.Chart),
+		ChartVersion: common.GetStringP(r.ChartVersion),
+		AppVersion:   common.GetStringP(r.AppVersion),
+		Values:       common.GetStringP(r.Values),
+	}
+}
+
+// ReleasesSlice define a slice of Release
+type ReleasesSlice []*Release
+
+// Len return the length of the slice
+func (r ReleasesSlice) Len() int {
+	return len(r)
+}
+
+// Less return true if the i-th element is less than the j-th element
+func (r ReleasesSlice) Less(i, j int) bool {
+	return r[i].Revision > r[j].Revision
+}
+
+// Swap swap the i-th element and the j-th element
+func (r ReleasesSlice) Swap(i, j int) {
+	r[i], r[j] = r[j], r[i]
 }
 
 // Config 定义了 Handler 的配置参数
@@ -171,4 +210,11 @@ type HelmRollbackResult struct {
 type File struct {
 	Name    string
 	Content []byte
+}
+
+// HelmHistoryOption 定义了helm执行history时的查询参数
+type HelmHistoryOption struct {
+	Name      string
+	Namespace string
+	Max       int
 }

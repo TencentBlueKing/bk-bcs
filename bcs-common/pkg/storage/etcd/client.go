@@ -29,18 +29,18 @@ import (
 	"golang.org/x/net/context"
 )
 
-//Config etcd storage config
+// Config etcd storage config
 type Config struct {
-	Host       string           //etcd host info
-	PathPrefix string           //operation path prefix to join with key, if needed
-	User       string           //user name for authentication
-	Passwd     string           //password relative to user
-	NewFunc    meta.ObjectNewFn //func for object creation
-	Codec      meta.Codec       //Codec for encoder & decoder
-	TLS        *tls.Config      //tls config for https
+	Host       string           // etcd host info
+	PathPrefix string           // operation path prefix to join with key, if needed
+	User       string           // user name for authentication
+	Passwd     string           // password relative to user
+	NewFunc    meta.ObjectNewFn // func for object creation
+	Codec      meta.Codec       // Codec for encoder & decoder
+	TLS        *tls.Config      // tls config for https
 }
 
-//NewStorage create etcd accessor implemented storage interface
+// NewStorage create etcd accessor implemented storage interface
 func NewStorage(config *Config) (storage.Storage, error) {
 	endpoints := strings.Split(config.Host, ",")
 	if len(endpoints) == 0 {
@@ -67,16 +67,16 @@ func NewStorage(config *Config) (storage.Storage, error) {
 	return s, nil
 }
 
-//Storage implementation storage interface with etcd client
+// Storage implementation storage interface with etcd client
 type Storage struct {
-	client      *clientv3.Client //etcd client
-	objectNewFn meta.ObjectNewFn //create new object for codec.decode
-	codec       meta.Codec       //json Codec for object
-	pathPrefix  string           //etcd prefix
+	client      *clientv3.Client // etcd client
+	objectNewFn meta.ObjectNewFn // create new object for codec.decode
+	codec       meta.Codec       // json Codec for object
+	pathPrefix  string           // etcd prefix
 }
 
-//Create implements storage interface
-//param key: full path for etcd
+// Create implements storage interface
+// param key: full path for etcd
 func (s *Storage) Create(cxt context.Context, key string, obj meta.Object, ttl int) (out meta.Object, err error) {
 	if len(key) == 0 {
 		return nil, fmt.Errorf("lost object key")
@@ -89,7 +89,7 @@ func (s *Storage) Create(cxt context.Context, key string, obj meta.Object, ttl i
 	} else {
 		clientCxt = cxt
 	}
-	//serialize object
+	// serialize object
 	data, err := s.codec.Encode(obj)
 	if err != nil {
 		blog.V(5).Infof("etcd storage %s encode %s/%s failed, %s", s.pathPrefix, obj.GetNamespace(), obj.GetName(), err)
@@ -97,7 +97,8 @@ func (s *Storage) Create(cxt context.Context, key string, obj meta.Object, ttl i
 	}
 	fullPath := path.Join(s.pathPrefix, key)
 	if len(fullPath) == 0 {
-		blog.V(5).Infof("etcd storage %s construct path for %s/%s failed. discard operation", s.pathPrefix, obj.GetNamespace(), obj.GetName())
+		blog.V(5).Infof("etcd storage %s construct path for %s/%s failed. discard operation", s.pathPrefix,
+			obj.GetNamespace(), obj.GetName())
 		return nil, fmt.Errorf("empty object storage full path")
 	}
 	response, err := s.client.Put(clientCxt, fullPath, string(data), clientv3.WithPrevKV())
@@ -106,25 +107,27 @@ func (s *Storage) Create(cxt context.Context, key string, obj meta.Object, ttl i
 		return nil, err
 	}
 	if response.PrevKv != nil && len(response.PrevKv.Value) > 0 {
-		//we got previous key-value from creation
+		// we got previous key-value from creation
 		target := s.objectNewFn()
 		if err := s.codec.Decode(response.PrevKv.Value, target); err != nil {
-			blog.V(3).Infof("etcd storage %s decode %s/%s Previous value failed, %s", s.pathPrefix, obj.GetNamespace(), obj.GetName(), err)
-			//even got previous data failed, we still consider Create successfully
+			blog.V(3).Infof("etcd storage %s decode %s/%s Previous value failed, %s", s.pathPrefix, obj.GetNamespace(),
+				obj.GetName(), err)
+			// even got previous data failed, we still consider Create successfully
 			return nil, nil
 		}
-		blog.V(3).Infof("etcd storage %s update %s/%s & got previous kv success", s.pathPrefix, obj.GetNamespace(), obj.GetName())
+		blog.V(3).Infof("etcd storage %s update %s/%s & got previous kv success", s.pathPrefix, obj.GetNamespace(),
+			obj.GetName())
 		return target, nil
 	}
 	blog.V(3).Infof("etcd storage %s create %s/%s success", s.pathPrefix, obj.GetNamespace(), obj.GetName())
 	return nil, nil
 }
 
-//Delete implements storage interface
-//for etcd operation, there are two situations for key
-//* if key is empty, delete all data node under storage.pathPrefix
-//* if key is not empty, delete all data under pathPrefix/key
-//actually, Storage do not return object deleted
+// Delete implements storage interface
+// for etcd operation, there are two situations for key
+// * if key is empty, delete all data node under storage.pathPrefix
+// * if key is not empty, delete all data under pathPrefix/key
+// actually, Storage do not return object deleted
 func (s *Storage) Delete(ctx context.Context, key string) (obj meta.Object, err error) {
 	fullPath := s.pathPrefix
 	if len(key) != 0 {
@@ -139,32 +142,33 @@ func (s *Storage) Delete(ctx context.Context, key string) (obj meta.Object, err 
 	return nil, nil
 }
 
-//Watch implements storage interface
-//* if key empty, watch all data
-//* if key is namespace, watch all data under namespace
-//* if key is namespace/name, watch detail data
-//watch is Stopped when any error occure
+// Watch implements storage interface
+// * if key empty, watch all data
+// * if key is namespace, watch all data under namespace
+// * if key is namespace/name, watch detail data
+// watch is Stopped when any error occure
 func (s *Storage) Watch(cxt context.Context, key, version string, selector storage.Selector) (watch.Interface, error) {
 	fullPath := s.pathPrefix
 	if len(key) != 0 {
 		fullPath = path.Join(s.pathPrefix, key)
 	}
 	proxy := newEtcdProxyWatch(cxt, s.codec, selector)
-	//create watchchan
+	// create watchchan
 	etcdChan := s.client.Watch(cxt, fullPath, clientv3.WithPrefix(), clientv3.WithPrevKV())
 	go proxy.eventProxy(etcdChan, s.objectNewFn)
 	blog.V(3).Infof("etcd client is ready to watch %s", fullPath)
 	return proxy, nil
 }
 
-//WatchList implements storage interface
-//Watch & WatchList are the same for etcd storage
-func (s *Storage) WatchList(ctx context.Context, key, version string, selector storage.Selector) (watch.Interface, error) {
+// WatchList implements storage interface
+// Watch & WatchList are the same for etcd storage
+func (s *Storage) WatchList(ctx context.Context, key, version string, selector storage.Selector) (watch.Interface,
+	error) {
 	return s.Watch(ctx, key, version, selector)
 }
 
-//Get implements storage interface
-//get exactly data object from etcd client. so key must be resource fullpath
+// Get implements storage interface
+// get exactly data object from etcd client. so key must be resource fullpath
 func (s *Storage) Get(cxt context.Context, key, version string, ignoreNotFound bool) (obj meta.Object, err error) {
 	if len(key) == 0 {
 		return nil, fmt.Errorf("lost object key")
@@ -196,8 +200,8 @@ func (s *Storage) Get(cxt context.Context, key, version string, ignoreNotFound b
 	return target, nil
 }
 
-//List implements storage interface
-//list namespace-based data or all data
+// List implements storage interface
+// list namespace-based data or all data
 func (s *Storage) List(cxt context.Context, key string, selector storage.Selector) (objs []meta.Object, err error) {
 	fullPath := s.pathPrefix
 	if len(key) != 0 {
@@ -230,13 +234,13 @@ func (s *Storage) List(cxt context.Context, key string, selector storage.Selecto
 	return objs, nil
 }
 
-//Close storage conenction, clean resource
+// Close storage conenction, clean resource
 func (s *Storage) Close() {
 	blog.V(3).Infof("etcd storage %s exit.", s.pathPrefix)
 	s.client.Close()
 }
 
-//etcdProxyWatch create etcdproxy watch
+// newEtcdProxyWatch create etcdproxy watch
 func newEtcdProxyWatch(cxt context.Context, codec meta.Codec, s storage.Selector) *etcdProxyWatch {
 	localCxt, canceler := context.WithCancel(cxt)
 	proxy := &etcdProxyWatch{
@@ -249,24 +253,24 @@ func newEtcdProxyWatch(cxt context.Context, codec meta.Codec, s storage.Selector
 	return proxy
 }
 
-//etcdProxyWatch wrapper for etcd watch, filter data by selector if needed.
-//* delegates etcd client watch, decode raw bytes to object
-//* constructs event and dispaths to user channel
-//* maintains watch availability even if network connection is broken until user stop watach
+// etcdProxyWatch wrapper for etcd watch, filter data by selector if needed.
+// * delegates etcd client watch, decode raw bytes to object
+// * constructs event and dispaths to user channel
+// * maintains watch availability even if network connection is broken until user stop watach
 type etcdProxyWatch struct {
 	selector      storage.Selector
 	codec         meta.Codec
 	filterChannel chan watch.Event
-	cxt           context.Context //context from storage.Watch
+	cxt           context.Context // context from storage.Watch
 	stopFn        context.CancelFunc
 }
 
-//Stop watch channel
+// Stop watch channel
 func (e *etcdProxyWatch) Stop() {
 	e.stopFn()
 }
 
-//WatchEvent get watch events, if watch stopped/error, watch must close
+// WatchEvent get watch events, if watch stopped/error, watch must close
 // channel and exit, watch user must read channel like
 // e, ok := <-channel
 func (e *etcdProxyWatch) WatchEvent() <-chan watch.Event {
@@ -284,7 +288,7 @@ func (e *etcdProxyWatch) eventProxy(etcdCh clientv3.WatchChan, objectNewFn meta.
 			return
 		case response, ok := <-etcdCh:
 			if !ok || response.Err() != nil {
-				//etcd channel error happened
+				// etcd channel error happened
 				blog.V(3).Infof("etcd proxy watch got etcd channel err, channel[%v], response[%s]", ok, response.Err())
 				return
 			}

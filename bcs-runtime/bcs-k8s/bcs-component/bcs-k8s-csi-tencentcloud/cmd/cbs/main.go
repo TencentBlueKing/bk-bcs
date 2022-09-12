@@ -26,12 +26,15 @@ import (
 )
 
 const (
-	TENCENTCLOUD_CBS_API_SECRET_ID  = "TENCENTCLOUD_CBS_API_SECRET_ID"
+	// TENCENTCLOUD_CBS_API_SECRET_ID TODO
+	TENCENTCLOUD_CBS_API_SECRET_ID = "TENCENTCLOUD_CBS_API_SECRET_ID"
+	// TENCENTCLOUD_CBS_API_SECRET_KEY TODO
 	TENCENTCLOUD_CBS_API_SECRET_KEY = "TENCENTCLOUD_CBS_API_SECRET_KEY"
 )
 
 var (
-	endpoint  = flag.String("endpoint", fmt.Sprintf("unix:///var/lib/kubelet/plugins/%s/csi.sock", cbs.DriverName), "CSI endpoint")
+	endpoint = flag.String("endpoint", fmt.Sprintf("unix:///var/lib/kubelet/plugins/%s/csi.sock", cbs.DriverName),
+		"CSI endpoint")
 	secretId  = flag.String("secret_id", "", "tencent cloud api secret id")
 	secretKey = flag.String("secret_key", "", "tencent cloud api secret key")
 	region    = flag.String("region", "", "tencent cloud api region")

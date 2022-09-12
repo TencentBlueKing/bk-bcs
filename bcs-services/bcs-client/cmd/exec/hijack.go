@@ -141,7 +141,7 @@ func (h *hijackedIOStreamer) beginInputStream(restoreInput func()) (doneC <-chan
 
 	go func() {
 		if h.inputStream != nil {
-			//_, err := io.Copy(bufio.NewWriter(h.resp.Conn), h.inputStream)
+			// _, err := io.Copy(bufio.NewWriter(h.resp.Conn), h.inputStream)
 			_, err := io.Copy(h.resp.Ws, h.inputStream)
 			// We should restore the terminal as soon as possible
 			// once the connection ends so any following print
@@ -180,6 +180,7 @@ func setRawTerminal(streams Streams) error {
 	return streams.Out().SetRawTerminal()
 }
 
+// restoreTerminal xxx
 // nolint: unparam
 func restoreTerminal(streams Streams, in io.Closer) error {
 	streams.In().RestoreTerminal()

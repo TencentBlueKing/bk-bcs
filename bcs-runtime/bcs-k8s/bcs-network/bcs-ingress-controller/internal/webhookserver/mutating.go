@@ -16,16 +16,22 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"runtime/debug"
 	"strconv"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/constant"
-	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/portpoolcache"
-	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
+	"github.com/google/uuid"
+	"github.com/pkg/errors"
 	k8scorev1 "k8s.io/api/core/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	k8stypes "k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/constant"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/eventer"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/portpoolcache"
+	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
 )
 
 // PatchOperation struct for k8s webhook patch
@@ -111,23 +117,16 @@ func (s *Server) checkExistedPortBinding(pod *k8scorev1.Pod, portList []*portEnt
 		if k8serrors.IsNotFound(err) {
 			return nil, nil
 		}
-		blog.Warnf("get portbinding %s/%s failed, err %s",
-			pod.GetName(), pod.GetNamespace(), err.Error())
-		return nil, fmt.Errorf("get portbinding %s/%s failed, err %s",
-			pod.GetName(), pod.GetNamespace(), err.Error())
+		return nil, errors.Wrapf(err, "get portbinding '%s/%s' failed", pod.GetName(), pod.GetNamespace())
 	}
 	// to prevent pod from reusing the old portbinding without keep duration
 	if !isPortBindingKeepDurationExisted(portBinding) {
-		blog.Warnf("found previous uncleaned portbinding %s/%s, wait",
-			portBinding.GetName(), portBinding.GetNamespace())
-		return nil, fmt.Errorf("found previous uncleaned portbinding %s/%s, wait",
+		return nil, errors.Errorf("found previous uncleaned portbinding '%s/%s' and need wait",
 			portBinding.GetName(), portBinding.GetNamespace())
 	}
 	// to prevent pod from reusing the old portbinding which is being deleted
 	if portBinding.DeletionTimestamp != nil {
-		blog.Warnf("portbinding %s/%s is deleting",
-			portBinding.GetName(), portBinding.GetNamespace())
-		return nil, fmt.Errorf("portbinding %s/%s is deleting",
+		return nil, errors.Errorf("portbinding %s/%s is deleting",
 			portBinding.GetName(), portBinding.GetNamespace())
 	}
 	rsPortMap := make(map[int]struct{})
@@ -138,15 +137,15 @@ func (s *Server) checkExistedPortBinding(pod *k8scorev1.Pod, portList []*portEnt
 	}
 	for _, port := range portList {
 		if _, ok := rsPortMap[port.port]; !ok {
-			blog.Warnf("port %d is not in portbinding %s/%s, to delete portbinding first",
+			blog.Warnf("port '%d' is not in portbinding '%s/%s', need to delete portbinding first",
 				port.port, portBinding.GetName(), portBinding.GetNamespace())
 			if err := s.k8sClient.Delete(context.Background(), portBinding, &client.DeleteOptions{}); err != nil {
-				return nil, fmt.Errorf(
-					"port %d is not in portbinding %s/%s, to delete portbinding first, but delete failed, err %s",
-					port.port, portBinding.GetName(), portBinding.GetNamespace(), err.Error())
+				return nil, errors.Wrapf(err, "delete portbinding '%s/%s' failed",
+					portBinding.GetName(), portBinding.GetNamespace())
 			}
-			return nil, fmt.Errorf("port %d is not in portbinding %s/%s, to delete portbinding first",
-				port.port, portBinding.GetName(), portBinding.GetNamespace())
+			blog.Warnf("portbinding '%s/%s' is deleted because of port '%d' not in it",
+				portBinding.GetName(), portBinding.GetNamespace(), port)
+			return nil, nil
 		}
 	}
 	return portBinding, nil
@@ -175,16 +174,17 @@ func (s *Server) mutatingPod(pod *k8scorev1.Pod) ([]PatchOperation, error) {
 	// check for existed port binding
 	portBinding, err := s.checkExistedPortBinding(pod, portEntryList)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrapf(err, "check portbinding existed failed")
 	}
 	if portBinding != nil {
-		blog.Infof("pod %s/%s reuse portbinding", pod.GetName(), pod.GetNamespace())
+		blog.Infof("pod '%s/%s' reuse portbinding", pod.GetName(), pod.GetNamespace())
 		return s.patchPodByBinding(pod, portBinding)
 	}
 
-	var portPoolItemStatusList []*networkextensionv1.PortPoolItemStatus
-	var portItemListArr [][]portpoolcache.AllocatedPortItem
+	portPoolItemStatusList := make([]*networkextensionv1.PortPoolItemStatus, 0, len(portEntryList))
+	portItemListArr := make([][]portpoolcache.AllocatedPortItem, 0, len(portEntryList))
 
+	blog.Infof("pod '%s/%s' do port inject", pod.GetNamespace(), pod.GetName())
 	// allocate port from pool cache
 	s.poolCache.Lock()
 	defer s.poolCache.Unlock()
@@ -254,12 +254,85 @@ func (s *Server) mutatingPod(pod *k8scorev1.Pod) ([]PatchOperation, error) {
 			constant.PatchPathContainerEnv, index, container, portPoolItemStatusList, portItemListArr, portEntryList)
 		retPatches = append(retPatches, envPatch)
 	}
+
+	for _, itemList := range portItemListArr {
+		for _, item := range itemList {
+			blog.Infof("pod '%s/%s' allocate port from cache: %v", pod.GetNamespace(), pod.GetName(), item)
+		}
+	}
+	go s.handleForPodCreateFailed(pod, portItemListArr)
 	return retPatches, nil
+}
+
+const (
+	compensationPodCreateFailedDuration = 10
+)
+
+// handleForPodCreateFailed 补偿 GameWorkload 创建 Pod 失败导致缓存中的端口泄漏问题。当确认创建失败后，将已
+// 分配的端口清理掉
+func (s *Server) handleForPodCreateFailed(pod *k8scorev1.Pod, portItemListArr [][]portpoolcache.AllocatedPortItem) {
+	defer func() {
+		if r := recover(); r != nil {
+			blog.Errorf("pod '%s/%s' handle pod create failed: %v, occurred a panic: %s\n",
+				r, string(debug.Stack()))
+		}
+	}()
+
+	var workloadName string
+	for i := range pod.OwnerReferences {
+		kind := pod.OwnerReferences[i].Kind
+		if kind == eventer.KindGameDeployment || kind == eventer.KindGameStatefulSet {
+			workloadName = pod.OwnerReferences[i].Name
+			break
+		}
+	}
+	if workloadName == "" {
+		return
+	}
+	traceID := uuid.New().String()
+	triggered := make(chan struct{})
+	s.eventWatcher.RegisterPodCreateFailed(traceID, func(event *k8scorev1.Event) {
+		if event.InvolvedObject.Name != workloadName {
+			return
+		}
+		blog.Warnf("pod '%s/%s' workload '%s' got create failed event: %s",
+			pod.GetNamespace(), pod.GetName(), workloadName, event.Message)
+
+		tmpPod := new(k8scorev1.Pod)
+		if err := s.k8sClient.Get(context.Background(), k8stypes.NamespacedName{
+			Name:      pod.GetName(),
+			Namespace: pod.GetNamespace(),
+		}, tmpPod); err != nil {
+			// 如果确实发现 Pod 不存在则对分配的端口进行回收
+			if k8serrors.IsNotFound(err) {
+				blog.Warnf("pod '%s/%s' not exist, so delete the port it allocated",
+					pod.GetNamespace(), pod.GetName())
+				s.poolCache.Lock()
+				s.cleanAllocatedResource(portItemListArr)
+				s.poolCache.Unlock()
+				close(triggered)
+			} else {
+				blog.Errorf("pod '%s/%s' query from apiserver failed: %s",
+					pod.GetNamespace(), pod.GetName(), err.Error())
+			}
+			return
+		}
+		blog.Infof("pod '%s/%s' actually exist, so don't need to delete the port it allocated.",
+			pod.GetNamespace(), pod.GetName())
+	})
+	timeout := time.After(compensationPodCreateFailedDuration * time.Second)
+	select {
+	case <-triggered:
+		s.eventWatcher.UnRegisterPodCreateFailed(traceID)
+	case <-timeout:
+		s.eventWatcher.UnRegisterPodCreateFailed(traceID)
+	}
 }
 
 // patch pod by port binding object
 func (s *Server) patchPodByBinding(
 	pod *k8scorev1.Pod, portBinding *networkextensionv1.PortBinding) ([]PatchOperation, error) {
+	blog.Infof("pod '%s' reused portbinding do port inject", pod.GetNamespace(), pod.GetName())
 
 	// patch annotations
 	var retPatches []PatchOperation
@@ -364,6 +437,7 @@ func (s *Server) generatePortsAnnotationPatch(pod *k8scorev1.Pod,
 				EndPort:               item.EndPort,
 				RsStartPort:           portEntry.port,
 				HostPort:              portEntry.hostPort,
+				External:              portPoolItemStatusList[index].External,
 			}
 			generatedPortList = append(generatedPortList, tmpPort)
 		}

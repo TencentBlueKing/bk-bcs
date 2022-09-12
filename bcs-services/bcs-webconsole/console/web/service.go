@@ -30,18 +30,19 @@ type service struct {
 	opts *route.Options
 }
 
-// NewRouteRegistrar
+// NewRouteRegistrar xxx
 func NewRouteRegistrar(opts *route.Options) route.Registrar {
 	return service{opts: opts}
 }
 
-// RegisterRoute
+// RegisterRoute xxx
 func (s service) RegisterRoute(router gin.IRoutes) {
 	web := router.Use(route.WebAuthRequired())
 
 	// 跳转 URL
 	web.GET("/user/login/", metrics.RequestCollect("UserLoginRedirect"), s.UserLoginRedirect)
-	web.GET("/user/perm_request/", metrics.RequestCollect("UserPermRequestRedirect"), route.APIAuthRequired(), s.UserPermRequestRedirect)
+	web.GET("/user/perm_request/", metrics.RequestCollect("UserPermRequestRedirect"), route.APIAuthRequired(),
+		s.UserPermRequestRedirect)
 
 	// html 页面
 	web.GET("/projects/:projectId/clusters/:clusterId/", metrics.RequestCollect("IndexPage"), s.IndexPageHandler)
@@ -73,7 +74,8 @@ func (s *service) IndexPageHandler(c *gin.Context) {
 	promRequestUrl := path.Join(s.opts.RoutePrefix, "/user/perm_request") + "/" + "?" + promRequestQuery.Encode()
 
 	// webconsole Url
-	sessionUrl := path.Join(s.opts.RoutePrefix, fmt.Sprintf("/api/projects/%s/clusters/%s/session", projectId, clusterId)) + "/"
+	sessionUrl := path.Join(s.opts.RoutePrefix, fmt.Sprintf("/api/projects/%s/clusters/%s/session", projectId,
+		clusterId)) + "/"
 
 	encodedQuery := consoleQuery.MakeEncodedQuery()
 	if encodedQuery != "" {
@@ -150,12 +152,12 @@ func (s *service) ClusterGatePageHandler(c *gin.Context) {
 
 }
 
-// HealthyHandler
+// HealthyHandler xxx
 func (s *service) HealthyHandler(c *gin.Context) {
 	c.Data(http.StatusOK, "text/plain; charset=utf-8", []byte("OK"))
 }
 
-// ReadyHandler
+// ReadyHandler xxx
 func (s *service) ReadyHandler(c *gin.Context) {
 	c.Data(http.StatusOK, "text/plain; charset=utf-8", []byte("OK"))
 }

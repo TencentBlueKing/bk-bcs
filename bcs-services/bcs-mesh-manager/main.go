@@ -108,10 +108,10 @@ func main() {
 			os.Exit(1)
 		}
 	}()
-	//context for grpc gateway, go-micro and controllerManager
+	// context for grpc gateway, go-micro and controllerManager
 	ctx, cancel := context.WithCancel(context.Background())
 
-	//http server
+	// http server
 	grpcAddr := fmt.Sprintf("%s:%d", conf.Address, conf.Port)
 	grpcmux := grpcruntime.NewServeMux()
 	opts := []rawgrpc.DialOption{rawgrpc.WithInsecure()}
@@ -131,7 +131,7 @@ func main() {
 		}
 		if err != nil {
 			klog.Errorf("ListenAndServe %s failed: %s", httpserver.Addr, err.Error())
-			//when httpserver shutdown, wait for resource clean
+			// when httpserver shutdown, wait for resource clean
 			time.Sleep(time.Second * 3)
 			os.Exit(1)
 		}
@@ -139,7 +139,7 @@ func main() {
 
 	go signalWatch(cancel, managerStop, httpserver)
 
-	//grpc server setting
+	// grpc server setting
 	tlsConf, err := ssl.ClientTslConfVerity(conf.EtcdCaFile, conf.EtcdCertFile, conf.EtcdKeyFile, "")
 	if err != nil {
 		klog.Errorf("new client tsl conf failed: %s", err.Error())

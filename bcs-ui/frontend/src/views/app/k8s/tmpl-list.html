@@ -1145,51 +1145,55 @@
                             <template v-if="rollingUpdateDialogConf.newVersion.instance_num_var_flag">
                                 <template v-if="curInstance.hpa">
                                     <bcs-popover :content="$t('该应用已经设置HPA')" placement="top">
-                                        <bk-number-input
-                                            :value.sync="rollingUpdateDialogConf.newVersion.instance_num"
+                                        <bk-input
+                                            v-model="rollingUpdateDialogConf.newVersion.instance_num"
                                             :min="1"
                                             :max="1000"
                                             :disabled="curInstance.hpa"
-                                            :ex-style="{width: '80px'}"
+                                            :style="{width: '80px'}"
+                                            type="number"
                                             :placeholder="$t('请输入')">
-                                        </bk-number-input>
+                                        </bk-input>
                                     </bcs-popover>
                                 </template>
                                 <template v-else>
-                                    <bk-number-input
-                                        :value.sync="rollingUpdateDialogConf.newVersion.instance_num"
+                                    <bk-input
+                                        type="number"
+                                        v-model="rollingUpdateDialogConf.newVersion.instance_num"
                                         :min="1"
                                         :max="1000"
                                         :disabled="curInstance.hpa"
-                                        :ex-style="{width: '80px'}"
+                                        :style="{width: '80px'}"
                                         :placeholder="$t('请输入')">
-                                    </bk-number-input>
+                                    </bk-input>
                                 </template>
                             </template>
                             <template v-else>
                                 <template v-if="curInstance.hpa">
                                     <bcs-popover :content="$t('该应用已经设置HPA')" placement="top">
-                                        <bk-number-input
-                                            :value.sync="rollingUpdateDialogConf.newVersion.instance_num"
+                                        <bk-input
+                                            type="number"
+                                            v-model="rollingUpdateDialogConf.newVersion.instance_num"
                                             :min="1"
                                             :max="1000"
                                             :disabled="curInstance.hpa"
-                                            :ex-style="{width: '80px'}"
+                                            :style="{width: '80px'}"
                                             :placeholder="$t('请输入')"
                                             @change="instanceNumChange">
-                                        </bk-number-input>
+                                        </bk-input>
                                     </bcs-popover>
                                 </template>
                                 <template v-else>
-                                    <bk-number-input
-                                        :value.sync="rollingUpdateDialogConf.newVersion.instance_num"
+                                    <bk-input
+                                        type="number"
+                                        v-model="rollingUpdateDialogConf.newVersion.instance_num"
                                         :min="1"
                                         :max="1000"
                                         :disabled="curInstance.hpa"
-                                        :ex-style="{width: '80px'}"
+                                        :style="{width: '80px'}"
                                         :placeholder="$t('请输入')"
                                         @change="instanceNumChange">
-                                    </bk-number-input>
+                                    </bk-input>
                                 </template>
                             </template>
                         </span>
@@ -1226,13 +1230,14 @@
                                     <input type="text" class="bk-form-input" disabled v-model="variable.key">
                                     <span class="equals-sign">=</span>
                                     <template v-if="CATEGORY !== 'daemonset' && rollingUpdateDialogConf.newVersion.instance_num_var_flag && variable.key === rollingUpdateDialogConf.newVersion.instance_num_key">
-                                        <bk-number-input
-                                            :value.sync="variable.value"
+                                        <bk-input
+                                            type="number"
+                                            v-model="variable.value"
                                             :min="0"
-                                            :ex-style="{width: '210px'}"
+                                            :style="{width: '210px'}"
                                             :placeholder="$t('值')"
                                             @change="instanceNumVarChange">
-                                        </bk-number-input>
+                                        </bk-input>
                                     </template>
                                     <template v-else>
                                         <input type="text" class="bk-form-input right" :placeholder="$t('值')" v-model="variable.value">
@@ -1408,12 +1413,13 @@
                         {{$t('实例数量')}}
                     </label>
                     <div class="bk-form-content" style="display: inline-block; margin-left: 10px;">
-                        <bk-number-input
-                            :value.sync="instanceNum"
+                        <bk-input
+                            type="number"
+                            v-model="instanceNum"
                             :min="0"
-                            :ex-style="{ 'width': '260px' }"
+                            :style="{ 'width': '260px' }"
                             :placeholder="$t('请输入')">
-                        </bk-number-input>
+                        </bk-input>
                     </div>
                 </div>
             </div>

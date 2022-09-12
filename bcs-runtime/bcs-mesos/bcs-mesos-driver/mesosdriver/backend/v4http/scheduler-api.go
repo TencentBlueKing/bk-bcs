@@ -32,20 +32,20 @@ import (
 	restful "github.com/emicklei/go-restful"
 )
 
-//Scheduler is data struct of mesos scheduler
+// Scheduler is data struct of mesos scheduler
 type Scheduler struct {
 	config *config.MesosDriverConfig
 	client *httpclient.HttpClient
 	acts   []*httpserver.Action
 	hosts  []string
 	rwHost *sync.RWMutex
-	//reversProxy from 1.15.x for CustomResource
+	// reversProxy from 1.15.x for CustomResource
 	localProxy *kubeProxy
-	//proxy from 1.17.x for mesos webconsole
+	// proxy from 1.17.x for mesos webconsole
 	consoleProxy *webconsole.WebconsoleProxy
 }
 
-//NewScheduler create a scheduler
+// NewScheduler create a scheduler
 func NewScheduler() *Scheduler {
 	s := &Scheduler{
 		client: httpclient.NewHttpClient(),
@@ -54,34 +54,35 @@ func NewScheduler() *Scheduler {
 	return s
 }
 
-//InitConfig scheduler init configuration
+// InitConfig scheduler init configuration
 func (s *Scheduler) InitConfig(conf *config.MesosDriverConfig) {
 	s.config = conf
 
-	//s.SetHost([]string{s.config.MesosHost})
+	// s.SetHost([]string{s.config.MesosHost})
 
-	//client
+	// client
 	if s.config.ClientCert.IsSSL {
 		blog.Info("mesos driver scheduler API is SSL: CA:%s, Cert:%s, Key:%s",
 			s.config.ClientCert.CAFile, s.config.ClientCert.CertFile, s.config.ClientCert.KeyFile)
-		s.client.SetTlsVerity(s.config.ClientCert.CAFile, s.config.ClientCert.CertFile, s.config.ClientCert.KeyFile, s.config.ClientCert.CertPasswd)
+		s.client.SetTlsVerity(s.config.ClientCert.CAFile, s.config.ClientCert.CertFile, s.config.ClientCert.KeyFile,
+			s.config.ClientCert.CertPasswd)
 	}
 
 	s.client.SetHeader("Content-Type", "application/json")
 	s.client.SetHeader("Accept", "application/json")
-	//init kube client for CRD
+	// init kube client for CRD
 	s.initKube()
-	//init webconsole proxy
+	// init webconsole proxy
 	s.initMesosWebconsole()
 	s.initActions()
 }
 
-//Actions all http action implementation
+// Actions all http action implementation
 func (s *Scheduler) Actions() []*httpserver.Action {
 	return s.acts
 }
 
-//GetHttpClient get scheudler specified http client implementation
+// GetHttpClient get scheudler specified http client implementation
 func (s *Scheduler) GetHttpClient() *httpclient.HttpClient {
 	return s.client
 }
@@ -110,7 +111,8 @@ func (s *Scheduler) initActions() {
 
 		/*================= message ====================*/
 		httpserver.NewAction("POST", "/namespaces/{ns}/applications/{name}/message", nil, s.SendMessageApplicationHandler),
-		httpserver.NewAction("POST", "/namespaces/{ns}/applications/{name}/taskgroups/{taskgroup-name}/message", nil, s.SendMessageTaskgroupHandler),
+		httpserver.NewAction("POST", "/namespaces/{ns}/applications/{name}/taskgroups/{taskgroup-name}/message", nil,
+			s.SendMessageTaskgroupHandler),
 		/*================= message ====================*/
 
 		/*================= task ====================*/
@@ -118,15 +120,20 @@ func (s *Scheduler) initActions() {
 		/*================= task ====================*/
 
 		/*================= taskgroup ====================*/
-		httpserver.NewAction("GET", "/namespaces/{ns}/applications/{name}/taskgroups", nil, s.ListApplicationTaskGroupsHandler),
-		httpserver.NewAction("PUT", "/namespaces/{ns}/applications/{appid}/taskgroups/{taskgroupId}/rescheduler", nil, s.reschedulerTaskgroupHandler),
-		httpserver.NewAction("POST", "/namespaces/{ns}/applications/{appid}/taskgroups/{taskGroupID}/restart", nil, s.restartTaskGroupHandler),
-		httpserver.NewAction("POST", "/namespaces/{ns}/applications/{appid}/taskgroups/{taskGroupID}/reload", nil, s.reloadTaskGroupHandler),
+		httpserver.NewAction("GET", "/namespaces/{ns}/applications/{name}/taskgroups", nil,
+			s.ListApplicationTaskGroupsHandler),
+		httpserver.NewAction("PUT", "/namespaces/{ns}/applications/{appid}/taskgroups/{taskgroupId}/rescheduler", nil,
+			s.reschedulerTaskgroupHandler),
+		httpserver.NewAction("POST", "/namespaces/{ns}/applications/{appid}/taskgroups/{taskGroupID}/restart", nil,
+			s.restartTaskGroupHandler),
+		httpserver.NewAction("POST", "/namespaces/{ns}/applications/{appid}/taskgroups/{taskGroupID}/reload", nil,
+			s.reloadTaskGroupHandler),
 		/*================= taskgroup ====================*/
 
 		/*================= version ====================*/
 		httpserver.NewAction("GET", "/namespaces/{ns}/applications/{name}/versions", nil, s.ListApplicationVersionsHandler),
-		httpserver.NewAction("GET", "/namespaces/{ns}/applications/{name}/versions/{versionid}", nil, s.FetchApplicationVersionHandler),
+		httpserver.NewAction("GET", "/namespaces/{ns}/applications/{name}/versions/{versionid}", nil,
+			s.FetchApplicationVersionHandler),
 		/*================= version ====================*/
 
 		/*================= configmap ====================*/
@@ -181,7 +188,7 @@ func (s *Scheduler) initActions() {
 		httpserver.NewAction("GET", "/agentsettings", nil, s.getAgentSettingListHandler),
 		httpserver.NewAction("DELETE", "/agentsettings", nil, s.deleteAgentSettingListHandler),
 		httpserver.NewAction("POST", "/agentsettings", nil, s.setAgentSettingListHandler),
-		//httpserver.NewAction("POST", "/agentsettings/update", nil, s.updateAgentSettingListHandler),
+		// httpserver.NewAction("POST", "/agentsettings/update", nil, s.updateAgentSettingListHandler),
 		httpserver.NewAction("POST", "/agentsettings/enable", nil, s.enableAgentListHandler),
 		httpserver.NewAction("POST", "/agentsettings/disable", nil, s.disableAgentListHandler),
 		httpserver.NewAction("PUT", "/agentsettings/taint", nil, s.taintAgentsHandler),
@@ -223,14 +230,14 @@ func (s *Scheduler) initActions() {
 		httpserver.NewAction("GET", "/admissionwebhooks", nil, s.FetchAllAdmissionwebhooksHandler),
 		/*================= admissionwebhook ====================*/
 
-		//*-------------- mesos webconsole proxy-----------------*//
+		// *-------------- mesos webconsole proxy-----------------*//
 		httpserver.NewAction("GET", "/webconsole/{uri:*}", nil, s.webconsoleForwarding),
-		//httpserver.NewAction("DELETE", "/webconsole/{uri:*}", nil, s.webconsoleForwarding),
-		//httpserver.NewAction("PUT", "/webconsole/{uri:*}", nil, s.webconsoleForwarding),
+		// httpserver.NewAction("DELETE", "/webconsole/{uri:*}", nil, s.webconsoleForwarding),
+		// httpserver.NewAction("PUT", "/webconsole/{uri:*}", nil, s.webconsoleForwarding),
 		httpserver.NewAction("POST", "/webconsole/{uri:*}", nil, s.webconsoleForwarding),
-		//*-------------- mesos webconsole proxy-----------------*//
+		// *-------------- mesos webconsole proxy-----------------*//
 	}
-	//custom resource solution that compatible with k8s & mesos
+	// custom resource solution that compatible with k8s & mesos
 	if s.config.KubeConfig != "" {
 		crd := []*httpserver.Action{
 			/*-------------- custom resource definition implementation-----------------*/
@@ -245,14 +252,14 @@ func (s *Scheduler) initActions() {
 			httpserver.NewAction("DELETE", "/customresources/{uri:*}", nil, s.customResourceForwarding),
 			httpserver.NewAction("PUT", "/customresources/{uri:*}", nil, s.customResourceForwarding),
 			httpserver.NewAction("POST", "/customresources/{uri:*}", nil, s.customResourceForwarding),
-			//TODO(DeveloperJim): support custom resource watch if needed
-			//httpserver.NewAction("PATCH", "/customresources/{uri:*}", nil, s.customResourceForwarding),
+			// TODO(DeveloperJim): support custom resource watch if needed
+			// httpserver.NewAction("PATCH", "/customresources/{uri:*}", nil, s.customResourceForwarding),
 		}
 		s.acts = append(s.acts, crd...)
 	}
 }
 
-//GetHost scheduler implementation
+// GetHost scheduler implementation
 func (s *Scheduler) GetHost() string {
 	s.rwHost.RLock()
 	defer s.rwHost.RUnlock()
@@ -264,7 +271,7 @@ func (s *Scheduler) GetHost() string {
 	return s.hosts[0]
 }
 
-//SetHost scheduler implementation
+// SetHost scheduler implementation
 func (s *Scheduler) SetHost(hosts []string) {
 	s.rwHost.Lock()
 	defer s.rwHost.Unlock()
@@ -614,6 +621,7 @@ func (s *Scheduler) updateExtendedResourcesHandler(req *restful.Request, resp *r
 	resp.Write([]byte(reply))
 }
 
+// GetClusterResourcesHandler xxx
 func (s *Scheduler) GetClusterResourcesHandler(req *restful.Request, resp *restful.Response) {
 
 	blog.V(3).Infof("get cluster resources")
@@ -639,6 +647,7 @@ func (s *Scheduler) GetClusterResourcesHandler(req *restful.Request, resp *restf
 	resp.Write([]byte(reply))
 }
 
+// GetClusterEndpointsHandler xxx
 func (s *Scheduler) GetClusterEndpointsHandler(req *restful.Request, resp *restful.Response) {
 	blog.V(3).Infof("get cluster endpoints")
 
@@ -663,6 +672,7 @@ func (s *Scheduler) GetClusterEndpointsHandler(req *restful.Request, resp *restf
 	resp.Write([]byte(reply))
 }
 
+// GetClusterCurrentOffersHandler xxx
 func (s *Scheduler) GetClusterCurrentOffersHandler(req *restful.Request, resp *restful.Response) {
 	blog.V(3).Infof("get cluster current offers")
 
@@ -687,6 +697,7 @@ func (s *Scheduler) GetClusterCurrentOffersHandler(req *restful.Request, resp *r
 	resp.Write([]byte(reply))
 }
 
+// CreateConfigMapHandler xxx
 func (s *Scheduler) CreateConfigMapHandler(req *restful.Request, resp *restful.Response) {
 	body, err := s.getRequestInfo(req)
 	if err != nil {
@@ -712,6 +723,7 @@ func (s *Scheduler) CreateConfigMapHandler(req *restful.Request, resp *restful.R
 	resp.Write([]byte(reply))
 }
 
+// UpdateConfigMapHandler xxx
 func (s *Scheduler) UpdateConfigMapHandler(req *restful.Request, resp *restful.Response) {
 	body, err := s.getRequestInfo(req)
 	if err != nil {
@@ -737,6 +749,7 @@ func (s *Scheduler) UpdateConfigMapHandler(req *restful.Request, resp *restful.R
 	resp.Write([]byte(reply))
 }
 
+// DeleteConfigMapHandler xxx
 func (s *Scheduler) DeleteConfigMapHandler(req *restful.Request, resp *restful.Response) {
 
 	ns := req.PathParameter("ns")
@@ -748,6 +761,7 @@ func (s *Scheduler) DeleteConfigMapHandler(req *restful.Request, resp *restful.R
 	resp.Write([]byte(reply))
 }
 
+// CreateSecretHandler xxx
 func (s *Scheduler) CreateSecretHandler(req *restful.Request, resp *restful.Response) {
 	body, err := s.getRequestInfo(req)
 	if err != nil {
@@ -773,6 +787,7 @@ func (s *Scheduler) CreateSecretHandler(req *restful.Request, resp *restful.Resp
 	resp.Write([]byte(reply))
 }
 
+// UpdateSecretHandler xxx
 func (s *Scheduler) UpdateSecretHandler(req *restful.Request, resp *restful.Response) {
 	body, err := s.getRequestInfo(req)
 	if err != nil {
@@ -798,6 +813,7 @@ func (s *Scheduler) UpdateSecretHandler(req *restful.Request, resp *restful.Resp
 	resp.Write([]byte(reply))
 }
 
+// DeleteSecretHandler xxx
 func (s *Scheduler) DeleteSecretHandler(req *restful.Request, resp *restful.Response) {
 
 	ns := req.PathParameter("ns")
@@ -809,6 +825,7 @@ func (s *Scheduler) DeleteSecretHandler(req *restful.Request, resp *restful.Resp
 	resp.Write([]byte(reply))
 }
 
+// CreateServiceHandler xxx
 func (s *Scheduler) CreateServiceHandler(req *restful.Request, resp *restful.Response) {
 	body, err := s.getRequestInfo(req)
 	if err != nil {
@@ -834,6 +851,7 @@ func (s *Scheduler) CreateServiceHandler(req *restful.Request, resp *restful.Res
 	resp.Write([]byte(reply))
 }
 
+// UpdateServiceHandler xxx
 func (s *Scheduler) UpdateServiceHandler(req *restful.Request, resp *restful.Response) {
 	body, err := s.getRequestInfo(req)
 	if err != nil {
@@ -859,6 +877,7 @@ func (s *Scheduler) UpdateServiceHandler(req *restful.Request, resp *restful.Res
 	resp.Write([]byte(reply))
 }
 
+// DeleteServiceHandler xxx
 func (s *Scheduler) DeleteServiceHandler(req *restful.Request, resp *restful.Response) {
 
 	ns := req.PathParameter("ns")
@@ -870,6 +889,7 @@ func (s *Scheduler) DeleteServiceHandler(req *restful.Request, resp *restful.Res
 	resp.Write([]byte(reply))
 }
 
+// CreateApplicationHandler xxx
 func (s *Scheduler) CreateApplicationHandler(req *restful.Request, resp *restful.Response) {
 	body, err := s.getRequestInfo(req)
 	if err != nil {
@@ -895,6 +915,7 @@ func (s *Scheduler) CreateApplicationHandler(req *restful.Request, resp *restful
 	resp.Write([]byte(reply))
 }
 
+// CreateProcessHandler xxx
 func (s *Scheduler) CreateProcessHandler(req *restful.Request, resp *restful.Response) {
 	body, err := s.getRequestInfo(req)
 	if err != nil {
@@ -920,6 +941,7 @@ func (s *Scheduler) CreateProcessHandler(req *restful.Request, resp *restful.Res
 	resp.Write([]byte(reply))
 }
 
+// UpdateApplicationHandler xxx
 func (s *Scheduler) UpdateApplicationHandler(req *restful.Request, resp *restful.Response) {
 	body, err := s.getRequestInfo(req)
 	if err != nil {
@@ -948,6 +970,7 @@ func (s *Scheduler) UpdateApplicationHandler(req *restful.Request, resp *restful
 	resp.Write([]byte(reply))
 }
 
+// UpdateProcessHandler xxx
 func (s *Scheduler) UpdateProcessHandler(req *restful.Request, resp *restful.Response) {
 	body, err := s.getRequestInfo(req)
 	if err != nil {
@@ -976,6 +999,7 @@ func (s *Scheduler) UpdateProcessHandler(req *restful.Request, resp *restful.Res
 	resp.Write([]byte(reply))
 }
 
+// DeleteApplicationHandler xxx
 func (s *Scheduler) DeleteApplicationHandler(req *restful.Request, resp *restful.Response) {
 
 	ns := req.PathParameter("ns")
@@ -990,6 +1014,7 @@ func (s *Scheduler) DeleteApplicationHandler(req *restful.Request, resp *restful
 	resp.Write([]byte(reply))
 }
 
+// DeleteProcessHandler xxx
 func (s *Scheduler) DeleteProcessHandler(req *restful.Request, resp *restful.Response) {
 
 	ns := req.PathParameter("ns")
@@ -1004,6 +1029,7 @@ func (s *Scheduler) DeleteProcessHandler(req *restful.Request, resp *restful.Res
 	resp.Write([]byte(reply))
 }
 
+// DeleteApplicationTaskGroupsHandler xxx
 func (s *Scheduler) DeleteApplicationTaskGroupsHandler(req *restful.Request, resp *restful.Response) {
 	body, err := s.getRequestInfo(req)
 	if err != nil {
@@ -1019,6 +1045,7 @@ func (s *Scheduler) DeleteApplicationTaskGroupsHandler(req *restful.Request, res
 	resp.Write([]byte(reply))
 }
 
+// DeleteApplicationTaskGroupHandler xxx
 func (s *Scheduler) DeleteApplicationTaskGroupHandler(req *restful.Request, resp *restful.Response) {
 	body, err := s.getRequestInfo(req)
 	if err != nil {
@@ -1034,6 +1061,7 @@ func (s *Scheduler) DeleteApplicationTaskGroupHandler(req *restful.Request, resp
 	resp.Write([]byte(reply))
 }
 
+// RollbackApplicationHandler xxx
 func (s *Scheduler) RollbackApplicationHandler(req *restful.Request, resp *restful.Response) {
 	body, err := s.getRequestInfo(req)
 	if err != nil {
@@ -1059,6 +1087,7 @@ func (s *Scheduler) RollbackApplicationHandler(req *restful.Request, resp *restf
 	resp.Write([]byte(reply))
 }
 
+// RollbackProcessHandler xxx
 func (s *Scheduler) RollbackProcessHandler(req *restful.Request, resp *restful.Response) {
 	body, err := s.getRequestInfo(req)
 	if err != nil {
@@ -1084,6 +1113,7 @@ func (s *Scheduler) RollbackProcessHandler(req *restful.Request, resp *restful.R
 	resp.Write([]byte(reply))
 }
 
+// ScaleApplicationHandler xxx
 func (s *Scheduler) ScaleApplicationHandler(req *restful.Request, resp *restful.Response) {
 
 	ns := req.PathParameter("ns")
@@ -1098,6 +1128,7 @@ func (s *Scheduler) ScaleApplicationHandler(req *restful.Request, resp *restful.
 	resp.Write([]byte(reply))
 }
 
+// ScaleProcessHandler xxx
 func (s *Scheduler) ScaleProcessHandler(req *restful.Request, resp *restful.Response) {
 
 	ns := req.PathParameter("ns")
@@ -1112,6 +1143,7 @@ func (s *Scheduler) ScaleProcessHandler(req *restful.Request, resp *restful.Resp
 	resp.Write([]byte(reply))
 }
 
+// SendMessageApplicationHandler xxx
 func (s *Scheduler) SendMessageApplicationHandler(req *restful.Request, resp *restful.Response) {
 	body, err := s.getRequestInfo(req)
 	if err != nil {
@@ -1130,6 +1162,7 @@ func (s *Scheduler) SendMessageApplicationHandler(req *restful.Request, resp *re
 	resp.Write([]byte(reply))
 }
 
+// SendMessageTaskgroupHandler xxx
 func (s *Scheduler) SendMessageTaskgroupHandler(req *restful.Request, resp *restful.Response) {
 	body, err := s.getRequestInfo(req)
 	if err != nil {
@@ -1149,6 +1182,7 @@ func (s *Scheduler) SendMessageTaskgroupHandler(req *restful.Request, resp *rest
 	resp.Write([]byte(reply))
 }
 
+// ListApplicationsHandler xxx
 func (s *Scheduler) ListApplicationsHandler(req *restful.Request, resp *restful.Response) {
 
 	ns := req.PathParameter("ns")
@@ -1161,6 +1195,7 @@ func (s *Scheduler) ListApplicationsHandler(req *restful.Request, resp *restful.
 	resp.Write([]byte(reply))
 }
 
+// ListProcessesHandler xxx
 func (s *Scheduler) ListProcessesHandler(req *restful.Request, resp *restful.Response) {
 
 	ns := req.PathParameter("ns")
@@ -1173,6 +1208,7 @@ func (s *Scheduler) ListProcessesHandler(req *restful.Request, resp *restful.Res
 	resp.Write([]byte(reply))
 }
 
+// ListApplicationTasksHandler xxx
 func (s *Scheduler) ListApplicationTasksHandler(req *restful.Request, resp *restful.Response) {
 
 	ns := req.PathParameter("ns")
@@ -1186,6 +1222,7 @@ func (s *Scheduler) ListApplicationTasksHandler(req *restful.Request, resp *rest
 	resp.Write([]byte(reply))
 }
 
+// ListApplicationTaskGroupsHandler xxx
 func (s *Scheduler) ListApplicationTaskGroupsHandler(req *restful.Request, resp *restful.Response) {
 
 	ns := req.PathParameter("ns")
@@ -1199,6 +1236,7 @@ func (s *Scheduler) ListApplicationTaskGroupsHandler(req *restful.Request, resp 
 	resp.Write([]byte(reply))
 }
 
+// ListApplicationVersionsHandler xxx
 func (s *Scheduler) ListApplicationVersionsHandler(req *restful.Request, resp *restful.Response) {
 
 	ns := req.PathParameter("ns")
@@ -1212,6 +1250,7 @@ func (s *Scheduler) ListApplicationVersionsHandler(req *restful.Request, resp *r
 	resp.Write([]byte(reply))
 }
 
+// FetchApplicationHandler xxx
 func (s *Scheduler) FetchApplicationHandler(req *restful.Request, resp *restful.Response) {
 
 	ns := req.PathParameter("ns")
@@ -1225,6 +1264,7 @@ func (s *Scheduler) FetchApplicationHandler(req *restful.Request, resp *restful.
 	resp.Write([]byte(reply))
 }
 
+// FetchProcessHandler xxx
 func (s *Scheduler) FetchProcessHandler(req *restful.Request, resp *restful.Response) {
 
 	ns := req.PathParameter("ns")
@@ -1238,7 +1278,7 @@ func (s *Scheduler) FetchProcessHandler(req *restful.Request, resp *restful.Resp
 	resp.Write([]byte(reply))
 }
 
-//FetchApplicationVersionHandler get Application information
+// FetchApplicationVersionHandler get Application information
 func (s *Scheduler) FetchApplicationVersionHandler(req *restful.Request, resp *restful.Response) {
 
 	ns := req.PathParameter("ns")
@@ -1743,7 +1783,7 @@ func (s *Scheduler) deleteDeploymentCommandHandler(req *restful.Request, resp *r
 	resp.Write([]byte(reply))
 }
 
-//CreateAdmissionwebhookHandler create Admissionwebhook implementation
+// CreateAdmissionwebhookHandler create Admissionwebhook implementation
 func (s *Scheduler) CreateAdmissionwebhookHandler(req *restful.Request, resp *restful.Response) {
 	body, err := s.getRequestInfo(req)
 	if err != nil {
@@ -1769,7 +1809,7 @@ func (s *Scheduler) CreateAdmissionwebhookHandler(req *restful.Request, resp *re
 	resp.Write([]byte(reply))
 }
 
-//UpdateAdmissionwebhookHandler update Admissionwebhook
+// UpdateAdmissionwebhookHandler update Admissionwebhook
 func (s *Scheduler) UpdateAdmissionwebhookHandler(req *restful.Request, resp *restful.Response) {
 	body, err := s.getRequestInfo(req)
 	if err != nil {
@@ -1795,7 +1835,7 @@ func (s *Scheduler) UpdateAdmissionwebhookHandler(req *restful.Request, resp *re
 	resp.Write([]byte(reply))
 }
 
-//DeleteAdmissionwebhookHandler delete Admissionwebhook implementation
+// DeleteAdmissionwebhookHandler delete Admissionwebhook implementation
 func (s *Scheduler) DeleteAdmissionwebhookHandler(req *restful.Request, resp *restful.Response) {
 
 	ns := req.PathParameter("ns")
@@ -1807,7 +1847,7 @@ func (s *Scheduler) DeleteAdmissionwebhookHandler(req *restful.Request, resp *re
 	resp.Write([]byte(reply))
 }
 
-//FetchAdmissionwebhookHandler get specified admission webhook
+// FetchAdmissionwebhookHandler get specified admission webhook
 func (s *Scheduler) FetchAdmissionwebhookHandler(req *restful.Request, resp *restful.Response) {
 
 	ns := req.PathParameter("ns")
@@ -1819,7 +1859,7 @@ func (s *Scheduler) FetchAdmissionwebhookHandler(req *restful.Request, resp *res
 	resp.Write([]byte(reply))
 }
 
-//FetchAllAdmissionwebhooksHandler get all admission webhook request
+// FetchAllAdmissionwebhooksHandler get all admission webhook request
 func (s *Scheduler) FetchAllAdmissionwebhooksHandler(req *restful.Request, resp *restful.Response) {
 	reply, err := s.FetchAllAdmissionWebhooks()
 	if err != nil {

@@ -18,7 +18,7 @@ import (
 	"sync"
 )
 
-//Store is storage interface
+// Store is storage interface
 type Store interface {
 	Add(obj interface{}) error
 	Update(obj interface{}) error
@@ -27,9 +27,9 @@ type Store interface {
 	ListKeys() []string
 	Get(obj interface{}) (item interface{}, exists bool, err error)
 	GetByKey(key string) (item interface{}, exists bool, err error)
-	//Num will return data counts in Store
+	// Num will return data counts in Store
 	Num() int
-	//Clear will drop all data in Store
+	// Clear will drop all data in Store
 	Clear()
 	// Replace will delete the contents of the store, using instead the
 	// given list. Store takes ownership of the list, you should not reference
@@ -37,31 +37,31 @@ type Store interface {
 	Replace([]interface{}) error
 }
 
-//ObjectKeyFunc define make object to a uniq key
+// ObjectKeyFunc define make object to a uniq key
 type ObjectKeyFunc func(obj interface{}) (string, error)
 
-//KeyError wrapper error return from ObjectKeyFunc
+// KeyError wrapper error return from ObjectKeyFunc
 type KeyError struct {
 	Obj interface{}
 	Err error
 }
 
-//Error return string info for KeyError
+// Error return string info for KeyError
 func (k KeyError) Error() string {
 	return fmt.Sprintf("create key for object %+v failed: %v", k.Obj, k.Err)
 }
 
-//DataNoExist return when No data in Store
+// DataNoExist return when No data in Store
 type DataNoExist struct {
 	Obj interface{}
 }
 
-//Error return string info
+// Error return string info
 func (k DataNoExist) Error() string {
 	return fmt.Sprintf("no data object %+v in Store", k.Obj)
 }
 
-//NewCache create cache with designated ObjectKeyFunc
+// NewCache create cache with designated ObjectKeyFunc
 func NewCache(kfunc ObjectKeyFunc) Store {
 	return &Cache{
 		dataMap: make(map[string]interface{}),
@@ -69,11 +69,11 @@ func NewCache(kfunc ObjectKeyFunc) Store {
 	}
 }
 
-//Cache implements Store interface with a safe map
+// Cache implements Store interface with a safe map
 type Cache struct {
-	lock    sync.RWMutex           //lock for datamap
-	dataMap map[string]interface{} //map to hold data
-	keyFunc ObjectKeyFunc          //func to create key
+	lock    sync.RWMutex           // lock for datamap
+	dataMap map[string]interface{} // map to hold data
+	keyFunc ObjectKeyFunc          // func to create key
 }
 
 // Add inserts an item into the cache.
@@ -162,14 +162,14 @@ func (c *Cache) GetByKey(key string) (item interface{}, exists bool, err error) 
 	return item, exists, nil
 }
 
-//Num will return data counts in Store
+// Num will return data counts in Store
 func (c *Cache) Num() int {
 	c.lock.RLock()
 	defer c.lock.RUnlock()
 	return len(c.dataMap)
 }
 
-//Clear will drop all data in Store
+// Clear will drop all data in Store
 func (c *Cache) Clear() {
 	c.lock.Lock()
 	defer c.lock.Unlock()

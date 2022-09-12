@@ -92,7 +92,8 @@ func ApplyInstanceMachinesTask(taskID string, stepName string) error {
 }
 
 // applyInstanceMachines apply machines from asg
-func applyInstanceMachines(ctx context.Context, info *cloudprovider.CloudDependBasicInfo, nodeNum uint64) (*as.Activity, error) {
+func applyInstanceMachines(ctx context.Context, info *cloudprovider.CloudDependBasicInfo, nodeNum uint64) (*as.Activity,
+	error) {
 	taskID := cloudprovider.GetTaskIDFromContext(ctx)
 
 	var (
@@ -114,7 +115,8 @@ func applyInstanceMachines(ctx context.Context, info *cloudprovider.CloudDependB
 		activityID, err = asCli.ScaleOutInstances(asgID, nodeNum)
 		if err != nil {
 			if strings.Contains(err.Error(), as.RESOURCEUNAVAILABLE_AUTOSCALINGGROUPINACTIVITY) {
-				blog.Infof("applyInstanceMachines[%s] ScaleOutInstances: %v", taskID, as.RESOURCEUNAVAILABLE_AUTOSCALINGGROUPINACTIVITY)
+				blog.Infof("applyInstanceMachines[%s] ScaleOutInstances: %v", taskID,
+					as.RESOURCEUNAVAILABLE_AUTOSCALINGGROUPINACTIVITY)
 				return nil
 			}
 			blog.Errorf("applyInstanceMachines[%s] ScaleOutInstances failed: %v", taskID, err)
@@ -144,7 +146,8 @@ func applyInstanceMachines(ctx context.Context, info *cloudprovider.CloudDependB
 		case api.FailedActivity.String():
 			return fmt.Errorf("taskID[%s] DescribeAutoScalingActivities[%s] failed: %v", taskID, activityID, *activity.Cause)
 		case api.CancelledActivity.String():
-			return fmt.Errorf("taskID[%s] DescribeAutoScalingActivities[%s] failed: %v", taskID, activityID, api.CancelledActivity.String())
+			return fmt.Errorf("taskID[%s] DescribeAutoScalingActivities[%s] failed: %v", taskID, activityID,
+				api.CancelledActivity.String())
 		default:
 			blog.Infof("taskID[%s] DescribeAutoScalingActivities[%s] still creating, status[%s]",
 				taskID, activityID, *activity.StatusCode)
@@ -206,7 +209,8 @@ func recordClusterInstanceToDB(ctx context.Context, activity *as.Activity, state
 }
 
 // transInstancesToNode record success nodes to cm DB
-func transInstancesToNode(ctx context.Context, successInstanceID []string, info *cloudprovider.CloudDependBasicInfo) ([]string, error) {
+func transInstancesToNode(ctx context.Context, successInstanceID []string, info *cloudprovider.CloudDependBasicInfo) (
+	[]string, error) {
 	var (
 		cvmCli  = api.NodeManager{}
 		nodes   = make([]*proto.Node, 0)
@@ -276,7 +280,8 @@ func getAsgIDByNodePool(ctx context.Context, info *cloudprovider.CloudDependBasi
 	return *pool.AutoscalingGroupId, nil
 }
 
-func checkClusterInstanceStatus(ctx context.Context, info *cloudprovider.CloudDependBasicInfo, instanceIDs []string) ([]string, []string, error) {
+func checkClusterInstanceStatus(ctx context.Context, info *cloudprovider.CloudDependBasicInfo,
+	instanceIDs []string) ([]string, []string, error) {
 	var (
 		addSucessNodes  = make([]string, 0)
 		addFailureNodes = make([]string, 0)

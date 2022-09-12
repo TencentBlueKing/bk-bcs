@@ -34,7 +34,7 @@
     var UWORK_HOST = '{{ UWORK_HOST }}'
     var SNIPER_HOST = '{{ SNIPER_HOST }}'
     var MIRROR_HOST = '{{ MIRROR_HOST }}'
-    var BKMONITOR_URL = '{{ BKMONITOR_URL }}'
+    var BKMONITOR_HOST = '{{ BKMONITOR_HOST }}'
     var BCS_API_HOST = '{{ BCS_API_HOST }}'
     var PREFERRED_DOMAINS = '{{ PREFERRED_DOMAINS }}'
 
@@ -46,19 +46,5 @@
     script.parentNode.insertBefore(scriptDom, script)
 </script>
 <script src="{{ STATIC_URL }}<%= htmlWebpackPlugin.options.staticUrl %>/lib.bundle.js"></script>
-{% if REGION == "ieod" %}
-<script>
-    try {
-        if (window.RUN_ENV === 'prod') {
-            // siteName 是网站的唯一标识，请不要修改
-            BKANALYSIS.init({
-                siteName: 'custom:bcs-saas:default:default'
-            })
-        }
-    } catch (e) {
-        console.error(e)
-    }
-</script>
-{% endif %}
 </body>
 </html>

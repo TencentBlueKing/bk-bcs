@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package discovery xxx
 package discovery
 
 import (
@@ -28,17 +29,17 @@ import (
 
 // Discovery discovery interface
 type Discovery interface {
-	// Start() start discover in background
+	// Start () start discover in background
 	Start() error
 	// GetRandomServiceInstance get random service instance
 	GetRandomServiceInstance() (*registry.Node, error)
 	// RegisterEventHandler register callback handler
 	RegisterEventHandler(callBackHandler EventHandler)
-	// GetServiceList() get service instances list
+	// GetServiceList () get service instances list
 	GetServiceList() []*registry.Service
-	// GetModuleName() get service name
+	// GetModuleName () get service name
 	GetModuleName() string
-	// Stop() stop discover
+	// Stop () stop discover
 	Stop()
 }
 

@@ -194,7 +194,8 @@ func (ca *CheckNodeAction) checkNodesInCluster() error {
 	return nil
 }
 
-func (ca *CheckNodeAction) getNodeResultByNodeIP(nodeIP string, masterMapIPs map[string]clusterInfo) (*cmproto.NodeResult, error) {
+func (ca *CheckNodeAction) getNodeResultByNodeIP(nodeIP string, masterMapIPs map[string]clusterInfo) (
+	*cmproto.NodeResult, error) {
 	nodeResult := &cmproto.NodeResult{
 		IsExist:     false,
 		ClusterID:   "",
@@ -243,7 +244,8 @@ func (ca *CheckNodeAction) setResp(code uint32, msg string) {
 }
 
 // Handle handles check nodes in cluster request
-func (ca *CheckNodeAction) Handle(ctx context.Context, req *cmproto.CheckNodesRequest, resp *cmproto.CheckNodesResponse) {
+func (ca *CheckNodeAction) Handle(ctx context.Context, req *cmproto.CheckNodesRequest,
+	resp *cmproto.CheckNodesResponse) {
 	if req == nil || resp == nil {
 		blog.Errorf("check cluster node failed, req or resp is empty")
 		return

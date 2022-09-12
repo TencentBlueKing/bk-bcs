@@ -11,10 +11,11 @@
  *
  */
 
+// Package schedcontext xxx
 package schedcontext
 
 import (
-	//"github.com/Tencent/bk-bcs/bcs-runtime/bcs-mesos/bcs-scheduler/src/manager/apiserver"
+	// "github.com/Tencent/bk-bcs/bcs-runtime/bcs-mesos/bcs-scheduler/src/manager/apiserver"
 	"github.com/Tencent/bk-bcs/bcs-common/common/http/httpserver"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-mesos/bcs-scheduler/src/manager/remote/alertmanager"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-mesos/bcs-scheduler/src/manager/store"
@@ -26,7 +27,7 @@ type SchedContext struct {
 	Store store.Store
 
 	// change 0414
-	//ApiServer *apiserver.ApiServer
+	// ApiServer *apiserver.ApiServer
 	// for HTTPS
 	ApiServer2 *httpserver.HttpServer
 

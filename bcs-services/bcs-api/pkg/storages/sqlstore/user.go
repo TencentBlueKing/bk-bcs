@@ -22,12 +22,15 @@ import (
 )
 
 const (
+	// UserTokenForKubeconfigExpiredTime xxx
 	// expired after 24 hours
 	UserTokenForKubeconfigExpiredTime = 24 * time.Hour
+	// UserTokenForSessionExpiredTime xxx
 	// this means never expired
 	UserTokenForSessionExpiredTime = 10 * 365 * 24 * time.Hour
 )
 
+// GetUser xxx
 // Query user by user_id
 func GetUser(id uint) *m.User {
 	user := m.User{}
@@ -38,6 +41,7 @@ func GetUser(id uint) *m.User {
 	return nil
 }
 
+// GetUserByCondition xxx
 // Query user by condition
 func GetUserByCondition(cond *m.User) *m.User {
 	user := m.User{}
@@ -48,21 +52,25 @@ func GetUserByCondition(cond *m.User) *m.User {
 	return nil
 }
 
+// CreateUser xxx
 func CreateUser(user *m.User) error {
 	err := GCoreDB.Create(user).Error
 	return err
 }
 
+// CreateUserToken xxx
 func CreateUserToken(userToken *m.UserToken) error {
 	err := GCoreDB.Create(userToken).Error
 	return err
 }
 
+// UpdateUserToken xxx
 func UpdateUserToken(userToken, updatedUserToken *m.UserToken) error {
 	err := GCoreDB.Model(userToken).Updates(*updatedUserToken).Error
 	return err
 }
 
+// GetUserToken xxx
 func GetUserToken(token string) *m.UserToken {
 	if token == "" {
 		return nil
@@ -75,13 +83,15 @@ func GetUserToken(token string) *m.UserToken {
 	return nil
 }
 
+// GetExternalUserRecord xxx
 func GetExternalUserRecord(sourceType uint, userId, userType string) *m.ExternalUserRecord {
 	if userId == "" || userType == "" {
 		return nil
 	}
 
 	externalUserRecord := m.ExternalUserRecord{}
-	GCoreDB.Where(&m.ExternalUserRecord{SourceType: sourceType, SourceUserType: userType, SourceUserId: userId}).First(&externalUserRecord)
+	GCoreDB.Where(&m.ExternalUserRecord{SourceType: sourceType, SourceUserType: userType, SourceUserId: userId}).
+		First(&externalUserRecord)
 	if externalUserRecord.ID != 0 {
 		return &externalUserRecord
 	}
@@ -89,11 +99,13 @@ func GetExternalUserRecord(sourceType uint, userId, userType string) *m.External
 
 }
 
+// CreateExternalUserRecord xxx
 func CreateExternalUserRecord(record *m.ExternalUserRecord) error {
 	err := GCoreDB.Create(record).Error
 	return err
 }
 
+// GetOrCreateUser xxx
 func GetOrCreateUser(sourceType uint, userId, userType string) (*m.User, error) {
 	var user *m.User
 	externalUserRecord := GetExternalUserRecord(sourceType, userId, userType)
@@ -137,8 +149,10 @@ func GetUserTokenByUser(user *m.User, tokenType uint) *m.UserToken {
 	return nil
 }
 
+// DefaultTokenLength xxx
 const DefaultTokenLength = 32
 
+// GetOrCreateUserToken xxx
 func GetOrCreateUserToken(user *m.User, tokenType uint, defaultToken string) (*m.UserToken, error) {
 	var userToken *m.UserToken
 	userToken = GetUserTokenByUser(user, tokenType)

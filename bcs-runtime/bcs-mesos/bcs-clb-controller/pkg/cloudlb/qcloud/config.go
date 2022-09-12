@@ -100,7 +100,7 @@ func (clbCfg *CLBConfig) LoadFromEnv() error {
 		return fmt.Errorf("vpc id cannot be empty")
 	}
 
-	//load expire time
+	// load expire time
 	expireTime := os.Getenv(ConfigBcsClbExpireTime)
 	if len(expireTime) != 0 {
 		eTime, err := strconv.Atoi(expireTime)
@@ -108,7 +108,7 @@ func (clbCfg *CLBConfig) LoadFromEnv() error {
 			blog.Errorf("expire time %s invalid, set default value 0", expireTime)
 			clbCfg.ExpireTime = 0
 		} else {
-			//expire time: range 30~3600
+			// expire time: range 30~3600
 			if eTime < 30 {
 				clbCfg.ExpireTime = 30
 			} else if eTime > 3600 {
@@ -118,7 +118,7 @@ func (clbCfg *CLBConfig) LoadFromEnv() error {
 			}
 		}
 	} else {
-		//default 0: means do not set expire time
+		// default 0: means do not set expire time
 		clbCfg.ExpireTime = 0
 	}
 

@@ -10,20 +10,28 @@
  * limitations under the License.
  */
 
+// Package auth xxx
 package auth
 
 import (
 	"context"
+	"encoding/json"
+	"errors"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/jwt"
+	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/cluster"
+	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/project"
 	jwtGo "github.com/dgrijalva/jwt-go"
+	"github.com/micro/go-micro/v2/server"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common/ctxkey"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/util/stringx"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/utils/contextx"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/utils/stringx"
+	middleauth "github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/middleware"
 )
 
+// JWTClientConfig jwt client config
 type JWTClientConfig struct {
 	Enable         bool
 	PublicKey      string
@@ -35,15 +43,16 @@ type JWTClientConfig struct {
 
 var (
 	jwtClient *jwt.JWTClient
-	JWTConfig *JWTClientConfig
+	jwtConfig *JWTClientConfig
 )
 
+// NewJWTClient new a jwt client
 func NewJWTClient(c JWTClientConfig) (*jwt.JWTClient, error) {
 	jwtOpt, err := getJWTOpt(c)
 	if err != nil {
 		return nil, common.ErrHelmManagerAuthFailed.GenError()
 	}
-	JWTConfig = &c
+	jwtConfig = &c
 	jwtClient, err = jwt.NewJWTClient(*jwtOpt)
 	if err != nil {
 		return nil, err
@@ -52,43 +61,15 @@ func NewJWTClient(c JWTClientConfig) (*jwt.JWTClient, error) {
 	return jwtClient, nil
 }
 
+// GetJWTClient get jwt client
+func GetJWTClient() *jwt.JWTClient {
+	return jwtClient
+}
+
 // GetUserFromCtx 通过 ctx 获取当前用户
 func GetUserFromCtx(ctx context.Context) string {
-	username, ok := ctx.Value(ctxkey.UsernameKey).(string)
-	if !ok {
-		blog.Warnf("获取用户信息异常, 非字符串类型!")
-		return ""
-	}
-	return username
-}
-
-type AuthUser struct {
-	Username string
-	UserType string
-	ClientID string
-}
-
-// ParseUserFromJWT 通过 jwt token 解析当前用户
-func ParseUserFromJWT(jwtToken string) (*AuthUser, error) {
-	claims, err := parseClaims(jwtToken)
-	if err != nil {
-		return nil, err
-	}
-
-	return &AuthUser{
-		Username: claims.UserName,
-		UserType: claims.SubType,
-		ClientID: claims.ClientID,
-	}, nil
-}
-
-func parseClaims(jwtToken string) (*jwt.UserClaimsInfo, error) {
-	// 解析token
-	claims, err := jwtClient.JWTDecode(jwtToken)
-	if err != nil {
-		return nil, err
-	}
-	return claims, nil
+	authUser, _ := middleauth.GetUserFromContext(ctx)
+	return authUser.GetUsername()
 }
 
 func getJWTOpt(c JWTClientConfig) (*jwt.JWTOptions, error) {
@@ -116,17 +97,75 @@ func getJWTOpt(c JWTClientConfig) (*jwt.JWTOptions, error) {
 	return jwtOpt, nil
 }
 
-// NoAuthEndpoints 不需要用户身份认证的方法
-var NoAuthEndpoints = []string{
-	"Common.Available",
+// NoAuthMethod 不需要用户身份认证的方法
+var NoAuthMethod = []string{
+	"HelmManager.Available",
 }
 
-// 检查当前请求是否允许免除用户认证
-func CanExemptAuth(ep string) bool {
-	// 禁用身份认证
-	if !JWTConfig.Enable {
+// SkipHandler skip handler
+func SkipHandler(ctx context.Context, req server.Request) bool {
+	// disable auth
+	if !jwtConfig.Enable {
 		return true
 	}
-	// 特殊指定的Handler，不需要认证的方法
-	return stringx.StringInSlice(ep, NoAuthEndpoints)
+	return stringx.StringInSlice(req.Method(), NoAuthMethod)
+}
+
+// SkipClient skip client
+func SkipClient(ctx context.Context, req server.Request, client string) bool {
+	clientIDs := stringx.SplitString(jwtConfig.ExemptClients)
+	return stringx.StringInSlice(client, clientIDs)
+}
+
+// resourceID resource id
+type resourceID struct {
+	ProjectCode string `json:"projectCode,omitempty"`
+	ProjectID   string `json:"projectID,omitempty"`
+	ClusterID   string `json:"clusterID,omitempty"`
+}
+
+// CheckUserPerm check user perm
+func CheckUserPerm(ctx context.Context, req server.Request, username string) (bool, error) {
+	blog.Infof("CheckUserPerm: method/%s, username: %s", req.Method(), username)
+
+	body := req.Body()
+	b, err := json.Marshal(body)
+	if err != nil {
+		return false, err
+	}
+
+	resourceID := &resourceID{}
+	err = json.Unmarshal(b, resourceID)
+	if err != nil {
+		return false, err
+	}
+
+	action, ok := ActionPermissions[req.Method()]
+	if !ok {
+		return false, errors.New("operation has not authorized")
+	}
+
+	resourceID.ProjectID = contextx.GetProjectIDFromCtx(ctx)
+
+	allow, _, err := callIAM(username, action, *resourceID)
+	if err != nil {
+		return false, err
+	}
+	return allow, nil
+}
+
+func callIAM(username, action string, resourceID resourceID) (bool, string, error) {
+	// related actions
+	switch action {
+	case cluster.CanManageClusterOperation:
+		return ClusterIamClient.CanManageCluster(username, resourceID.ProjectID, resourceID.ClusterID)
+	case cluster.CanViewClusterOperation:
+		return ClusterIamClient.CanViewCluster(username, resourceID.ProjectID, resourceID.ClusterID)
+	case project.CanEditProjectOperation:
+		return ProjectIamClient.CanEditProject(username, resourceID.ProjectID)
+	case project.CanViewProjectOperation:
+		return ProjectIamClient.CanViewProject(username, resourceID.ProjectID)
+	default:
+		return false, "", errors.New("permission denied")
+	}
 }

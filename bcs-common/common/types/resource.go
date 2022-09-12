@@ -13,6 +13,7 @@
 
 package types
 
+// BcsClusterResource xxx
 type BcsClusterResource struct {
 	DiskTotal float64               `json:"disktotal"`
 	MemTotal  float64               `json:"memtotal"`
@@ -23,6 +24,7 @@ type BcsClusterResource struct {
 	Agents    []BcsClusterAgentInfo `json:"agents"`
 }
 
+// BcsClusterAgentInfo xxx
 type BcsClusterAgentInfo struct {
 	HostName  string  `json:"hostname"`
 	IP        string  `json:"ip"`
@@ -41,47 +43,58 @@ type BcsClusterAgentInfo struct {
 	ReRegisteredTime int64 `json:"reregistered_time"`
 }
 
+// MesosValue_Scalar xxx
 type MesosValue_Scalar struct {
 	Value float64 `json:"value"`
 }
 
+// MesosValue_Ranges xxx
 type MesosValue_Ranges struct {
 	Begin uint64 `json:"begin"`
 	End   uint64 `json:"end"`
 }
 
+// MesosValue_Text xxx
 type MesosValue_Text struct {
 	Value string `json:"value"`
 }
 
+// MesosValue_Set xxx
 type MesosValue_Set struct {
 	Item []string `json:"item"`
 }
 
+// MesosValue_Type xxx
 type MesosValue_Type int32
 
 const (
+	// MesosValueType_UNKNOW xxx
 	MesosValueType_UNKNOW MesosValue_Type = 0
+	// MesosValueType_Scalar xxx
 	MesosValueType_Scalar MesosValue_Type = 101
+	// MesosValueType_Ranges xxx
 	MesosValueType_Ranges MesosValue_Type = 102
-	MesosValueType_Text   MesosValue_Type = 103
-	MesosValueType_Set    MesosValue_Type = 104
+	// MesosValueType_Text xxx
+	MesosValueType_Text MesosValue_Type = 103
+	// MesosValueType_Set xxx
+	MesosValueType_Set MesosValue_Type = 104
 )
 
+// BcsClusterAgentSetting xxx
 type BcsClusterAgentSetting struct {
-	//agent ip
+	// agent ip
 	InnerIP string `json:"innerIP"`
-	//whether disable scheduler container
+	// whether disable scheduler container
 	Disabled bool `json:"disabled"`
-	//agent settings
+	// agent settings
 	AttrStrings map[string]MesosValue_Text `json:"strings"`
-	//agent settings
+	// agent settings
 	AttrScalars map[string]MesosValue_Scalar `json:"scalars"`
-	//taint agent
+	// taint agent
 	NoSchedule map[string]string `json:"noSchedule"`
-	//Pods index
+	// Pods index
 	Pods []string `json:"pods"`
-	//External Resources, key=ExtendedResource.Name
+	// External Resources, key=ExtendedResource.Name
 	ExtendedResources map[string]*ExtendedResource
 	// Populated by the system.
 	// Read-only.
@@ -89,16 +102,17 @@ type BcsClusterAgentSetting struct {
 	ResourceVersion string `json:"-"`
 }
 
+// ExtendedResource xxx
 type ExtendedResource struct {
-	//InnerIP, agent ip
+	// InnerIP, agent ip
 	InnerIP string
-	//external resource name, example: bkbcs/cpuset
+	// external resource name, example: bkbcs/cpuset
 	Name string
-	//Value, container need extended resource value, allocated value
+	// Value, container need extended resource value, allocated value
 	Value float64
-	//Capacity, extended resource total value
+	// Capacity, extended resource total value
 	Capacity float64
-	//device plugin socket address, exmaple: /data/bcs/cpuset.socket
+	// device plugin socket address, exmaple: /data/bcs/cpuset.socket
 	Socket string
 }
 
@@ -145,6 +159,7 @@ func (in *BcsClusterAgentSetting) DeepCopy() *BcsClusterAgentSetting {
 	return out
 }
 
+// BcsClusterAgentSettingUpdate xxx
 type BcsClusterAgentSettingUpdate struct {
 	IPs         []string           `json:"ips"`
 	SettingName string             `json:"name"`
@@ -153,6 +168,7 @@ type BcsClusterAgentSettingUpdate struct {
 	ValueScalar *MesosValue_Scalar `json:"scalar"`
 }
 
+// BcsAgentAttribute xxx
 type BcsAgentAttribute struct {
 	Name   string               `json:"name,omitempty"`
 	Type   MesosValue_Type      `json:"type,omitempty"`

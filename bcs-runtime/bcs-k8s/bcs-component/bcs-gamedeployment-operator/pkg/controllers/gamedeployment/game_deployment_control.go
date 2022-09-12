@@ -55,7 +55,8 @@ type GameDeploymentControlInterface interface {
 	// If an implementation returns a non-nil error, the invocation will be retried using a rate-limited strategy.
 	// Implementors should sink any errors that they do not wish to trigger a retry, and they may feel free to
 	// exit exceptionally at any point provided they wish the update to be re-run at a later point in time.
-	UpdateGameDeployment(deploy *gdv1alpha1.GameDeployment, pods []*v1.Pod, allPods []*v1.Pod) (time.Duration, *gdv1alpha1.GameDeploymentStatus, error)
+	UpdateGameDeployment(deploy *gdv1alpha1.GameDeployment, pods []*v1.Pod, allPods []*v1.Pod) (time.Duration,
+		*gdv1alpha1.GameDeploymentStatus, error)
 	// ListRevisions returns a array of the ControllerRevisions that represent the revisions of set. If the returned
 	// error is nil, the returns slice of ControllerRevisions is valid.
 	ListRevisions(deploy *gdv1alpha1.GameDeployment) ([]*apps.ControllerRevision, error)
@@ -114,6 +115,7 @@ type defaultGameDeploymentControl struct {
 	metrics            *gdmetrics.Metrics
 }
 
+// UpdateGameDeployment xxx
 func (gdc *defaultGameDeploymentControl) UpdateGameDeployment(deploy *gdv1alpha1.GameDeployment,
 	pods []*v1.Pod, allPods []*v1.Pod) (time.Duration, *gdv1alpha1.GameDeploymentStatus, error) {
 	if deploy.DeletionTimestamp != nil {
@@ -136,7 +138,8 @@ func (gdc *defaultGameDeploymentControl) UpdateGameDeployment(deploy *gdv1alpha1
 	history.SortControllerRevisions(revisions)
 
 	// get the current, and update revisions
-	currentRevision, updateRevision, collisionCount, err := gdc.getActiveRevisions(deploy, revisions, util.GetPodsRevisions(pods))
+	currentRevision, updateRevision, collisionCount, err := gdc.getActiveRevisions(deploy, revisions,
+		util.GetPodsRevisions(pods))
 	if err != nil {
 		return 0, nil, err
 	}
@@ -146,7 +149,8 @@ func (gdc *defaultGameDeploymentControl) UpdateGameDeployment(deploy *gdv1alpha1
 		updateExpectations.ObserveUpdated(key, updateRevision.Name, pod)
 	}
 	// If update expectations have not satisfied yet, just skip this reconcile.
-	if updateSatisfied, updateDirtyPods := updateExpectations.SatisfiedExpectations(key, updateRevision.Name); !updateSatisfied {
+	if updateSatisfied, updateDirtyPods := updateExpectations.SatisfiedExpectations(key,
+		updateRevision.Name); !updateSatisfied {
 		klog.V(4).Infof("Not satisfied update for %v, updateDirtyPods=%v", key, updateDirtyPods)
 		return 0, nil, nil
 	}
@@ -282,7 +286,8 @@ func (gdc *defaultGameDeploymentControl) updateGameDeployment(
 	var podsScaleErr error
 	var podsUpdateErr error
 
-	scaling, podsScaleErr = gdc.scaleControl.Manage(deploy, currentDeploy, updateDeploy, currentRevision.Name, updateRevision.Name,
+	scaling, podsScaleErr = gdc.scaleControl.Manage(deploy, currentDeploy, updateDeploy, currentRevision.Name,
+		updateRevision.Name,
 		filteredPods, allPods, newStatus)
 	if podsScaleErr != nil {
 		newStatus.Conditions = append(newStatus.Conditions, gdv1alpha1.GameDeploymentCondition{
@@ -297,7 +302,8 @@ func (gdc *defaultGameDeploymentControl) updateGameDeployment(
 		return delayDuration, podsScaleErr
 	}
 
-	delayDuration, podsUpdateErr = gdc.updateControl.Manage(deploy, updateDeploy, updateRevision, revisions, filteredPods, newStatus)
+	delayDuration, podsUpdateErr = gdc.updateControl.Manage(deploy, updateDeploy, updateRevision, revisions, filteredPods,
+		newStatus)
 	if podsUpdateErr != nil {
 		// update scale err count
 		newStatus.Conditions = append(newStatus.Conditions, gdv1alpha1.GameDeploymentCondition{
@@ -328,7 +334,8 @@ func (gdc *defaultGameDeploymentControl) deleteUnexpectedPreDeleteHookRuns(hrLis
 }
 
 // truncatePreDeleteHookConditions truncate unneeded PreDeleteHookConditions
-func (gdc *defaultGameDeploymentControl) truncatePreDeleteHookConditions(pods []*v1.Pod, newStatus *gdv1alpha1.GameDeploymentStatus) {
+func (gdc *defaultGameDeploymentControl) truncatePreDeleteHookConditions(pods []*v1.Pod,
+	newStatus *gdv1alpha1.GameDeploymentStatus) {
 	tmpPredeleteHookConditions := []hookv1alpha1.PreDeleteHookCondition{}
 	for _, cond := range newStatus.PreDeleteHookConditions {
 		for _, pod := range pods {
@@ -382,7 +389,8 @@ func (gdc *defaultGameDeploymentControl) deleteUnexpectedPreInplaceHookRuns(hrLi
 }
 
 // truncatePreInplaceHookConditions truncate unneeded PreInplaceHookConditions
-func (gdc *defaultGameDeploymentControl) truncatePreInplaceHookConditions(pods []*v1.Pod, newStatus *gdv1alpha1.GameDeploymentStatus) {
+func (gdc *defaultGameDeploymentControl) truncatePreInplaceHookConditions(pods []*v1.Pod,
+	newStatus *gdv1alpha1.GameDeploymentStatus) {
 	tmpPreInplaceHookConditions := []hookv1alpha1.PreInplaceHookCondition{}
 	for _, cond := range newStatus.PreInplaceHookConditions {
 		for _, pod := range pods {
@@ -439,7 +447,9 @@ func (gdc *defaultGameDeploymentControl) reconcilePause(deploy *gdv1alpha1.GameD
 	return timeRemaining
 }
 
-func (gdc *defaultGameDeploymentControl) ListRevisions(deploy *gdv1alpha1.GameDeployment) ([]*apps.ControllerRevision, error) {
+// ListRevisions xxx
+func (gdc *defaultGameDeploymentControl) ListRevisions(deploy *gdv1alpha1.GameDeployment) ([]*apps.ControllerRevision,
+	error) {
 	selector, err := metav1.LabelSelectorAsSelector(deploy.Spec.Selector)
 	if err != nil {
 		return nil, err
@@ -447,7 +457,8 @@ func (gdc *defaultGameDeploymentControl) ListRevisions(deploy *gdv1alpha1.GameDe
 	return gdc.controllerHistory.ListControllerRevisions(deploy, selector)
 }
 
-func (gdc *defaultGameDeploymentControl) getActiveRevisions(deploy *gdv1alpha1.GameDeployment, revisions []*apps.ControllerRevision,
+func (gdc *defaultGameDeploymentControl) getActiveRevisions(deploy *gdv1alpha1.GameDeployment,
+	revisions []*apps.ControllerRevision,
 	podsRevisions sets.String) (*apps.ControllerRevision, *apps.ControllerRevision, int32, error) {
 
 	var currentRevision, updateRevision *apps.ControllerRevision
@@ -476,12 +487,13 @@ func (gdc *defaultGameDeploymentControl) getActiveRevisions(deploy *gdv1alpha1.G
 	} else if equalCount > 0 {
 		// if the equivalent revision is not immediately prior we will roll back by incrementing the
 		// Revision of the equivalent revision
-		updateRevision, err = gdc.controllerHistory.UpdateControllerRevision(equalRevisions[equalCount-1], updateRevision.Revision)
+		updateRevision, err = gdc.controllerHistory.UpdateControllerRevision(equalRevisions[equalCount-1],
+			updateRevision.Revision)
 		if err != nil {
 			return nil, nil, collisionCount, err
 		}
 	} else {
-		//if there is no equivalent revision we create a new one
+		// if there is no equivalent revision we create a new one
 		updateRevision, err = gdc.controllerHistory.CreateControllerRevision(deploy, updateRevision, &collisionCount)
 		if err != nil {
 			return nil, nil, collisionCount, err

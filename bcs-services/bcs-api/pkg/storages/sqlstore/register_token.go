@@ -21,6 +21,7 @@ import (
 	"github.com/dchest/uniuri"
 )
 
+// RegisterTokenLen xxx
 const RegisterTokenLen = 128
 
 // GetRegisterToken return the registerToken by clusterId
@@ -33,7 +34,7 @@ func GetRegisterToken(clusterId string) *m.RegisterToken {
 	return nil
 }
 
-// CreateResterToken creates a new registerToken for given clusterId
+// CreateRegisterToken creates a new registerToken for given clusterId
 func CreateRegisterToken(clusterId string) error {
 	token := m.RegisterToken{
 		ClusterId: clusterId,

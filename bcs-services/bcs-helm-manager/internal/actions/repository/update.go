@@ -59,7 +59,7 @@ func (u *UpdateRepositoryAction) Handle(ctx context.Context,
 	}
 
 	username := auth.GetUserFromCtx(ctx)
-	return u.update(u.req.GetProjectID(), u.req.GetName(), (&entity.Repository{}).LoadFromProto(&helmmanager.Repository{
+	return u.update(u.req.GetProjectCode(), u.req.GetName(), (&entity.Repository{}).LoadFromProto(&helmmanager.Repository{
 		Type:      u.req.Type,
 		Remote:    u.req.Remote,
 		RemoteURL: u.req.RemoteURL,
@@ -69,28 +69,22 @@ func (u *UpdateRepositoryAction) Handle(ctx context.Context,
 	}))
 }
 
-func (u *UpdateRepositoryAction) update(projectID, name string, m entity.M) error {
-	if projectID == "" || name == "" {
-		blog.Errorf("update repository failed, get empty projectID or name")
-		u.setResp(common.ErrHelmManagerRequestParamInvalid, "projectID or name can not be empty", nil)
-		return nil
-	}
-
-	if err := u.model.UpdateRepository(u.ctx, projectID, name, m); err != nil {
-		blog.Errorf("update repository failed, %s, projectID: %s, name: %s", err.Error(), projectID, name)
+func (u *UpdateRepositoryAction) update(projectCode, name string, m entity.M) error {
+	if err := u.model.UpdateRepository(u.ctx, projectCode, name, m); err != nil {
+		blog.Errorf("update repository failed, %s, projectCode: %s, name: %s", err.Error(), projectCode, name)
 		u.setResp(common.ErrHelmManagerUpdateActionFailed, err.Error(), nil)
 		return nil
 	}
 
-	r, err := u.model.GetRepository(u.ctx, projectID, name)
+	r, err := u.model.GetRepository(u.ctx, projectCode, name)
 	if err != nil {
-		blog.Errorf("update repository failed, %s, projectID: %s, name: %s", err.Error(), projectID, name)
+		blog.Errorf("update repository failed, %s, projectCode: %s, name: %s", err.Error(), projectCode, name)
 		u.setResp(common.ErrHelmManagerUpdateActionFailed, err.Error(), nil)
 		return nil
 	}
 
 	u.setResp(common.ErrHelmManagerSuccess, "ok", r.Transfer2Proto())
-	blog.Infof("update repository successfully, projectID: %s, name: %s", projectID, name)
+	blog.Infof("update repository successfully, projectCode: %s, name: %s", projectCode, name)
 	return nil
 }
 

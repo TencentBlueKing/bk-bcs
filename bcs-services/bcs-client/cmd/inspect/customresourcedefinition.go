@@ -40,7 +40,7 @@ func inspectCustomResource(c *utils.ClientContext) error {
 	namespace := c.String(utils.OptionNamespace)
 	name := c.String(utils.OptionName)
 	scheduler := v4.NewBcsScheduler(utils.GetClientOption())
-	//validate command line option type
+	// validate command line option type
 	apiVersion, plural, err := utils.GetCustomResourceType(scheduler, c.ClusterID(), c.String(utils.OptionType))
 	if err != nil {
 		return err

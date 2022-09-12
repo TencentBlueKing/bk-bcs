@@ -26,10 +26,10 @@ var Kind2FormatFuncMap = map[string]func(manifest map[string]interface{}) map[st
 	// workload
 	resource.CJ:     FormatCJ,
 	resource.DS:     FormatWorkloadRes,
-	resource.Deploy: FormatWorkloadRes,
+	resource.Deploy: FormatDeploy,
 	resource.Job:    FormatJob,
 	resource.Po:     FormatPo,
-	resource.STS:    FormatWorkloadRes,
+	resource.STS:    FormatSTS,
 
 	// network
 	resource.Ing: FormatIng,
@@ -56,3 +56,17 @@ var Kind2FormatFuncMap = map[string]func(manifest map[string]interface{}) map[st
 	resource.GDeploy: FormatGDeploy,
 	resource.CObj:    FormatCObj,
 }
+
+const (
+	// WorkloadStatusNormal 正常状态
+	WorkloadStatusNormal = "normal"
+
+	// WorkloadStatusCreating 创建中
+	WorkloadStatusCreating = "creating"
+
+	// WorkloadStatusUpdating 更新中
+	WorkloadStatusUpdating = "updating"
+
+	// WorkloadStatusDeleting 删除中
+	WorkloadStatusDeleting = "deleting"
+)

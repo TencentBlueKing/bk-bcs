@@ -24,7 +24,10 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/pkg/errors"
+
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/constant"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/eventer"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/metrics"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/portpoolcache"
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
@@ -59,13 +62,15 @@ type Server struct {
 	server *http.Server
 	// k8s client
 	k8sClient    client.Client
+	eventWatcher eventer.WatchEventInterface
 	poolCache    *portpoolcache.Cache
 	podName      string
 	podNamespace string
 }
 
 // NewHookServer create new hook server object
-func NewHookServer(opt *ServerOption, k8sClient client.Client, poolCache *portpoolcache.Cache) (*Server, error) {
+func NewHookServer(opt *ServerOption, k8sClient client.Client, poolCache *portpoolcache.Cache,
+	eventWatcher eventer.WatchEventInterface) (*Server, error) {
 	pair, err := tls.LoadX509KeyPair(opt.ServerCertFile, opt.ServerKeyFile)
 	if err != nil {
 		return nil, fmt.Errorf("load x509 key pair cert %s, key %s failed, err %s",
@@ -78,6 +83,7 @@ func NewHookServer(opt *ServerOption, k8sClient client.Client, poolCache *portpo
 			TLSConfig: &tls.Config{Certificates: []tls.Certificate{pair}},
 		},
 		k8sClient:    k8sClient,
+		eventWatcher: eventWatcher,
 		poolCache:    poolCache,
 		podName:      os.Getenv(constant.EnvIngressPodName),
 		podNamespace: os.Getenv(constant.EnvIngressPodNamespace),
@@ -91,6 +97,7 @@ func (s *Server) Start(stop <-chan struct{}) error {
 	// register handler function
 	mux.HandleFunc("/portpool/v1/validate", s.HandleValidatingWebhook)
 	mux.HandleFunc("/portpool/v1/mutate", s.HandleMutatingWebhook)
+	mux.HandleFunc("/crd/v1/validate", s.HandleValidatingCRD)
 	s.server.Handler = mux
 
 	go func() {
@@ -131,6 +138,11 @@ func (s *Server) HandleValidatingWebhook(w http.ResponseWriter, r *http.Request)
 // HandleMutatingWebhook handle mutating webhook request
 func (s *Server) HandleMutatingWebhook(w http.ResponseWriter, r *http.Request) {
 	s.handleWebhook(w, r, "mutate", s.mutatingWebhook)
+}
+
+// HandleValidatingCRD handle validating CRD delete webhook request
+func (s *Server) HandleValidatingCRD(w http.ResponseWriter, r *http.Request) {
+	s.handleWebhook(w, r, "validateCRD", s.validatingCRDDelete)
 }
 
 func (s *Server) handleWebhook(
@@ -224,7 +236,15 @@ func (s *Server) validatingWebhook(ar v1beta1.AdmissionReview) *v1beta1.Admissio
 	return &v1beta1.AdmissionResponse{Allowed: true}
 }
 
-func (s *Server) mutatingWebhook(ar v1beta1.AdmissionReview) *v1beta1.AdmissionResponse {
+func (s *Server) mutatingWebhook(ar v1beta1.AdmissionReview) (response *v1beta1.AdmissionResponse) {
+	defer func() {
+		if response == nil || response.Allowed == false {
+			metrics.IncreasePodCreateCounter(false)
+		} else {
+			metrics.IncreasePodCreateCounter(true)
+		}
+	}()
+
 	req := ar.Request
 	if req.Operation != v1beta1.Create {
 		blog.Warnf("operation is not create, ignore")
@@ -240,24 +260,30 @@ func (s *Server) mutatingWebhook(ar v1beta1.AdmissionReview) *v1beta1.AdmissionR
 		blog.Warnf("decode %s to pod failed, err %s", string(req.Object.Raw), err.Error)
 		return errResponse(fmt.Errorf("decode %s to pod failed, err %s", string(req.Object.Raw), err.Error()))
 	}
-	pod.Namespace = req.Namespace
-	pod.Name = req.Name
+	if len(pod.Namespace) == 0 {
+		pod.Namespace = req.Namespace
+	}
+	if len(pod.Name) == 0 {
+		pod.Name = req.Name
+	}
 	_, ok := pod.Annotations[constant.AnnotationForPortPool]
 	if !ok {
 		blog.Warnf("pod %s/%s has no portpool annotation", pod.GetName(), pod.GetNamespace())
 		return &v1beta1.AdmissionResponse{Allowed: true}
 	}
-	// do mutate
-	blog.Infof("pod %s/%s do port inject", pod.GetName(), pod.GetNamespace())
+
+	blog.Infof("received pod '%s/%s' create event", pod.GetNamespace(), pod.GetName())
 	patches, err := s.mutatingPod(pod)
 	if err != nil {
-		blog.Warnf("mutating pod failed, err %s", err.Error())
-		return errResponse(fmt.Errorf("mutating pod failed, err %s", err.Error()))
+		blog.Errorf("mutating pod '%s/%s' got an error: %s", pod.GetNamespace(), pod.GetName(), err.Error())
+		return errResponse(errors.Wrapf(err, "mutating pod '%s/%s' failed",
+			pod.GetNamespace(), pod.GetNamespace()))
 	}
 	patchesBytes, err := json.Marshal(patches)
 	if err != nil {
-		blog.Warnf("encoding patches faile, err %s", err.Error())
-		return errResponse(fmt.Errorf("encoding patches faile, err %s", err.Error()))
+		blog.Errorf("marshal pod '%s/%s' patches failed: %s", pod.GetNamespace(), pod.GetName(), err.Error())
+		return errResponse(errors.Wrapf(err, "encoding patches for '%s/%s' failed",
+			pod.GetNamespace(), pod.GetNamespace()))
 	}
 	return &v1beta1.AdmissionResponse{
 		Allowed: true,
@@ -267,6 +293,31 @@ func (s *Server) mutatingWebhook(ar v1beta1.AdmissionReview) *v1beta1.AdmissionR
 			return &pt
 		}(),
 	}
+}
+
+func (s *Server) validatingCRDDelete(ar v1beta1.AdmissionReview) *v1beta1.AdmissionResponse {
+	allowResp := &v1beta1.AdmissionResponse{Allowed: true}
+
+	req := ar.Request
+	if req.Operation != v1beta1.Delete {
+		blog.Warnf("operation is not delete, ignore")
+		return allowResp
+	}
+	// only hook delete operation of CRD
+	if req.Kind.Kind != constant.KindCRD {
+		blog.Warnf("kind %s is not CRD", req.Kind.Kind)
+		return errResponse(fmt.Errorf("kind %s is not CRD", req.Kind.Kind))
+	}
+	labels, err := s.getCRDLabelFromAR(ar)
+	if err != nil {
+		blog.Warnf("get CRD from admissionReview failed, err: %s", err.Error())
+		return errResponse(err)
+	}
+	if err := s.validateCRDDeletion(labels); err != nil {
+		return errResponse(err)
+	}
+
+	return allowResp
 }
 
 // convert error to admission response

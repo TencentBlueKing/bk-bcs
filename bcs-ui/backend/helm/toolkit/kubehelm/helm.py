@@ -254,6 +254,11 @@ class KubeHelmClient:
         """
         # NOTE: helm3需要升级到3.3.1版本
         upgrade_cmd_args = [settings.HELM3_BIN, "upgrade", name, "--namespace", namespace, "--install"]
+
+        cmd_flags = kwargs.get("cmd_flags")
+        if cmd_flags:
+            cmd_flags.append({'--history-max': 100})
+
         return self._install_or_upgrade(upgrade_cmd_args, files, chart_values, bcs_inject_data, **kwargs)
 
     def _uninstall_or_rollback(self, cmd_args):

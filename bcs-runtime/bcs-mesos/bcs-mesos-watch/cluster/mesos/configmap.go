@@ -28,25 +28,26 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-mesos/bcs-mesos-watch/cluster"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-mesos/bcs-mesos-watch/types"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-mesos/bcs-mesos-watch/util"
-	//schedulertypes "github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/schetypes"
+	// schedulertypes "github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/schetypes"
 )
 
-//NSControlInfo store all app info under one namespace
-//type NSControlInfo struct {
+// NSControlInfo store all app info under one namespace
+// type NSControlInfo struct {
 //	path   string             //parent zk node, namespace absolute path
 //	cxt    context.Context    //context for creating sub context
 //	cancel context.CancelFunc //for cancel sub goroutine
-//}
+// }
 
-//ConfigMapInfo wrapper for BCS ConfigMap
+// ConfigMapInfo wrapper for BCS ConfigMap
 type ConfigMapInfo struct {
 	data       *commtypes.BcsConfigMap
 	syncTime   int64
 	reportTime int64
 }
 
-//NewConfigMapWatch create watch for BCS ConfigMap
-func NewConfigMapWatch(cxt context.Context, client ZkClient, reporter cluster.Reporter, watchPath string) *ConfigMapWatch {
+// NewConfigMapWatch create watch for BCS ConfigMap
+func NewConfigMapWatch(cxt context.Context, client ZkClient, reporter cluster.Reporter,
+	watchPath string) *ConfigMapWatch {
 
 	keyFunc := func(data interface{}) (string, error) {
 		dataType, ok := data.(*ConfigMapInfo)
@@ -71,22 +72,22 @@ func NewConfigMapWatch(cxt context.Context, client ZkClient, reporter cluster.Re
 		client:    client,
 		watchPath: watchPath,
 		dataCache: cache.NewCache(keyFunc),
-		//nsCache:   cache.NewCache(nsKeyFunc),
+		// nsCache:   cache.NewCache(nsKeyFunc),
 	}
 }
 
-//ConfigMapWatch watch for configmap, watch all detail and store to local cache
+// ConfigMapWatch watch for configmap, watch all detail and store to local cache
 type ConfigMapWatch struct {
-	eventLock sync.Mutex       //lock for event
-	report    cluster.Reporter //reporter
-	cancelCxt context.Context  //context for cancel
-	client    ZkClient         //client for zookeeper
-	dataCache cache.Store      //cache for all app data
-	//nsCache   cache.Store      //all namespace path / namespace goroutine control info
+	eventLock sync.Mutex       // lock for event
+	report    cluster.Reporter // reporter
+	cancelCxt context.Context  // context for cancel
+	client    ZkClient         // client for zookeeper
+	dataCache cache.Store      // cache for all app data
+	// nsCache   cache.Store      //all namespace path / namespace goroutine control info
 	watchPath string
 }
 
-//Work to add path and node watch
+// Work to add path and node watch
 func (watch *ConfigMapWatch) Work() {
 	watch.ProcessAllConfigmaps()
 	tick := time.NewTicker(12 * time.Second)
@@ -103,7 +104,7 @@ func (watch *ConfigMapWatch) Work() {
 	}
 }
 
-//ProcessAllConfigmaps handle all configmap under all namespace
+// ProcessAllConfigmaps handle all configmap under all namespace
 func (watch *ConfigMapWatch) ProcessAllConfigmaps() error {
 
 	currTime := time.Now().Unix()
@@ -159,7 +160,7 @@ func (watch *ConfigMapWatch) ProcessAllConfigmaps() error {
 					continue
 				}
 				blog.V(3).Infof("configmap %s is in cache, update sync time(%d)", key, currTime)
-				//watch.UpdateEvent(cacheDataInfo.data, data)
+				// watch.UpdateEvent(cacheDataInfo.data, data)
 				if reflect.DeepEqual(cacheDataInfo.data, data) {
 					if cacheDataInfo.reportTime > currTime {
 						cacheDataInfo.reportTime = currTime
@@ -222,14 +223,15 @@ func (watch *ConfigMapWatch) ProcessAllConfigmaps() error {
 	return nil
 }
 
-//AddEvent call when data added
+// AddEvent call when data added
 func (watch *ConfigMapWatch) AddEvent(obj interface{}) {
 	configmapData, ok := obj.(*commtypes.BcsConfigMap)
 	if !ok {
 		blog.Error("can not convert object to BcsConfigMap in AddEvent, object %v", obj)
 		return
 	}
-	blog.Info("EVENT:: Add Event for BcsConfigMap %s.%s", configmapData.ObjectMeta.NameSpace, configmapData.ObjectMeta.Name)
+	blog.Info("EVENT:: Add Event for BcsConfigMap %s.%s", configmapData.ObjectMeta.NameSpace,
+		configmapData.ObjectMeta.Name)
 
 	data := &types.BcsSyncData{
 		DataType: "ConfigMap",
@@ -243,15 +245,16 @@ func (watch *ConfigMapWatch) AddEvent(obj interface{}) {
 	}
 }
 
-//DeleteEvent when delete
+// DeleteEvent when delete
 func (watch *ConfigMapWatch) DeleteEvent(obj interface{}) {
 	configmapData, ok := obj.(*commtypes.BcsConfigMap)
 	if !ok {
 		blog.Error("can not convert object to BcsConfigMap in DeleteEvent, object %v", obj)
 		return
 	}
-	blog.Info("EVENT:: Delete Event for BcsConfigMap %s.%s", configmapData.ObjectMeta.NameSpace, configmapData.ObjectMeta.Name)
-	//report to cluster
+	blog.Info("EVENT:: Delete Event for BcsConfigMap %s.%s", configmapData.ObjectMeta.NameSpace,
+		configmapData.ObjectMeta.Name)
+	// report to cluster
 	data := &types.BcsSyncData{
 		DataType: "ConfigMap",
 		Action:   types.ActionDelete,
@@ -264,7 +267,7 @@ func (watch *ConfigMapWatch) DeleteEvent(obj interface{}) {
 	}
 }
 
-//UpdateEvent when update
+// UpdateEvent when update
 func (watch *ConfigMapWatch) UpdateEvent(old, cur interface{}) {
 	configmapData, ok := cur.(*commtypes.BcsConfigMap)
 	if !ok {
@@ -272,13 +275,14 @@ func (watch *ConfigMapWatch) UpdateEvent(old, cur interface{}) {
 		return
 	}
 
-	//if reflect.DeepEqual(old, cur) {
+	// if reflect.DeepEqual(old, cur) {
 	//	blog.V(3).Infof("BcsConfigMap %s.%s data do not changed", configmapData.ObjectMeta.NameSpace, configmapData.ObjectMeta.Name)
 	//	return
-	//}
+	// }
 
-	blog.V(3).Infof("EVENT:: Update Event for BcsConfigMap %s.%s", configmapData.ObjectMeta.NameSpace, configmapData.ObjectMeta.Name)
-	//report to cluster
+	blog.V(3).Infof("EVENT:: Update Event for BcsConfigMap %s.%s", configmapData.ObjectMeta.NameSpace,
+		configmapData.ObjectMeta.Name)
+	// report to cluster
 	data := &types.BcsSyncData{
 		DataType: "ConfigMap",
 		Action:   types.ActionUpdate,

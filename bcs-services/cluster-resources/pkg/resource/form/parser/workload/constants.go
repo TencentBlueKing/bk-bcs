@@ -44,28 +44,28 @@ const (
 )
 
 const (
-	// EnvVarTypeKeyVal ...
+	// EnvVarTypeKeyVal TODO
 	EnvVarTypeKeyVal = "keyValue"
-	// EnvVarTypePodField ...
+	// EnvVarTypePodField TODO
 	EnvVarTypePodField = "podField"
-	// EnvVarTypeResource ...
+	// EnvVarTypeResource TODO
 	EnvVarTypeResource = "resource"
-	// EnvVarTypeCMKey ...
+	// EnvVarTypeCMKey TODO
 	EnvVarTypeCMKey = "configMapKey"
-	// EnvVarTypeSecretKey ...
+	// EnvVarTypeSecretKey TODO
 	EnvVarTypeSecretKey = "secretKey"
-	// EnvVarTypeCM ...
+	// EnvVarTypeCM TODO
 	EnvVarTypeCM = "configMap"
-	// EnvVarTypeSecret ...
+	// EnvVarTypeSecret TODO
 	EnvVarTypeSecret = "secret"
 )
 
 const (
-	// ProbeTypeHTTPGet ...
+	// ProbeTypeHTTPGet TODO
 	ProbeTypeHTTPGet = "httpGet"
-	// ProbeTypeTCPSocket ...
+	// ProbeTypeTCPSocket TODO
 	ProbeTypeTCPSocket = "tcpSocket"
-	// ProbeTypeExec ...
+	// ProbeTypeExec TODO
 	ProbeTypeExec = "exec"
 )
 

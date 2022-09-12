@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package repo xxx
 package repo
 
 import (
@@ -29,6 +30,7 @@ type Platform interface {
 	User(User) Handler
 }
 
+// User 定义了repo的用户信息
 type User struct {
 	Name     string
 	Password string
@@ -106,8 +108,11 @@ type Repository struct {
 type RepositoryType int
 
 const (
+	// RepositoryTypeUnknown xxx
 	RepositoryTypeUnknown RepositoryType = iota
+	// RepositoryTypeHelm xxx
 	RepositoryTypeHelm
+	// RepositoryTypeOCI xxx
 	RepositoryTypeOCI
 )
 

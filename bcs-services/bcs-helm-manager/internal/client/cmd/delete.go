@@ -45,8 +45,8 @@ func DeleteRepository(cmd *cobra.Command, args []string) {
 	}
 
 	req := &helmmanager.DeleteRepositoryReq{
-		ProjectID: &flagProject,
-		Name:      common.GetStringP(args[0]),
+		ProjectCode: &flagProject,
+		Name:        common.GetStringP(args[0]),
 	}
 
 	c := newClientWithConfiguration()
@@ -55,7 +55,7 @@ func DeleteRepository(cmd *cobra.Command, args []string) {
 		os.Exit(1)
 	}
 
-	fmt.Printf("success to delete repository %s under project %s\n", req.GetName(), req.GetProjectID())
+	fmt.Printf("success to delete repository %s under project %s\n", req.GetName(), req.GetProjectCode())
 }
 
 func init() {

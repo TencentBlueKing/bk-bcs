@@ -12,6 +12,7 @@
  * limitations under the License.
  */
 
+// Package resource xxx
 package resource
 
 import (

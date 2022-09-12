@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package app xxx
 package app
 
 import (
@@ -30,7 +31,9 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
 	"github.com/Tencent/bk-bcs/bcs-common/common/static"
 	"github.com/Tencent/bk-bcs/bcs-common/common/version"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers/mongo"
+	middleauth "github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/middleware"
 	"github.com/gorilla/mux"
 	ggRuntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	microRgt "github.com/micro/go-micro/v2/registry"
@@ -52,8 +55,8 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/repo"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/repo/bkrepo"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/store"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/util/envx"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/util/runtimex"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/utils/envx"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/utils/runtimex"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/wrapper"
 	helmmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/proto/bcs-helm-manager"
 )
@@ -107,12 +110,13 @@ func (hm *HelmManager) Init() error {
 		hm.initPlatform,
 		hm.initReleaseHandler,
 		hm.initRegistry,
+		hm.initJWTClient,
+		hm.initIAMClient,
+		hm.InitComponentConfig,
 		hm.initDiscovery,
 		hm.initMicro,
 		hm.initHTTPService,
 		hm.initMetric,
-		hm.initJWTClient,
-		hm.InitComponentConfig,
 	} {
 		if err := f(); err != nil {
 			return err
@@ -171,9 +175,9 @@ func (hm *HelmManager) initModel() error {
 		blog.Errorf("ping mongo db failed, err %s", err.Error())
 		return err
 	}
-	blog.Infof("init mongo db successfully")
+	blog.Info("init mongo db successfully")
 	hm.model = store.New(mongoDB)
-	blog.Infof("init store successfully")
+	blog.Info("init store successfully")
 	return nil
 }
 
@@ -278,11 +282,15 @@ func (hm *HelmManager) initRegistry() error {
 
 func (hm *HelmManager) initDiscovery() error {
 	hm.discovery = discovery.NewModuleDiscovery(common.ServiceDomain, hm.microRgt)
-	blog.Infof("init discovery for helm manager successfully")
+	blog.Info("init discovery for helm manager successfully")
 	return nil
 }
 
 func (hm *HelmManager) initMicro() error {
+	authWrapper := middleauth.NewGoMicroAuth(auth.GetJWTClient()).
+		EnableSkipHandler(auth.SkipHandler).
+		EnableSkipClient(auth.SkipClient).
+		SetCheckUserPerm(auth.CheckUserPerm)
 	svc := microGrpc.NewService(
 		microSvc.Name(common.ServiceDomain),
 		microSvc.Metadata(map[string]string{
@@ -306,7 +314,10 @@ func (hm *HelmManager) initMicro() error {
 			return nil
 		}),
 		microSvc.WrapHandler(
-			wrapper.NewInjectContextWrapper,
+			wrapper.RequestIDWrapper,
+			authWrapper.AuthenticationFunc,
+			wrapper.ParseProjectIDWrapper,
+			authWrapper.AuthorizationFunc,
 		),
 	)
 	svc.Init()
@@ -318,11 +329,12 @@ func (hm *HelmManager) initMicro() error {
 	}
 
 	hm.microSvc = svc
-	blog.Infof("success to register helm manager handler to micro")
+	blog.Info("success to register helm manager handler to micro")
 	return nil
 }
 
 func (hm *HelmManager) initHTTPService() error {
+	router := mux.NewRouter()
 	rmMux := ggRuntime.NewServeMux(
 		ggRuntime.WithIncomingHeaderMatcher(runtimex.CustomHeaderMatcher),
 		ggRuntime.WithMarshalerOption(ggRuntime.MIMEWildcard, &ggRuntime.JSONPb{OrigName: true, EmitDefaults: true}),
@@ -345,24 +357,22 @@ func (hm *HelmManager) initHTTPService() error {
 		blog.Errorf("register http service failed, err %s", err.Error())
 		return fmt.Errorf("register http service failed, err %s", err.Error())
 	}
-
-	router := mux.NewRouter()
 	router.Handle("/{uri:.*}", rmMux)
-	blog.Info("register grpc service handler to path /")
 
-	originMux := http.NewServeMux()
-	originMux.Handle("/", router)
+	mux := http.NewServeMux()
 	if len(hm.opt.Swagger.Dir) != 0 {
-		blog.Infof("swagger doc is enabled")
-		originMux.HandleFunc("/swagger/", func(w http.ResponseWriter, r *http.Request) {
-			http.ServeFile(w, r, path.Join(hm.opt.Swagger.Dir, strings.TrimPrefix(r.URL.Path, "/swagger/")))
+		blog.Info("swagger doc is enabled")
+		mux.HandleFunc("/helmmanager/swagger/", func(w http.ResponseWriter, r *http.Request) {
+			http.ServeFile(w, r, path.Join(hm.opt.Swagger.Dir, strings.TrimPrefix(r.URL.Path, "/helmmanager/swagger/")))
 		})
 	}
+	mux.Handle("/", router)
+	blog.Info("register grpc service handler to path /")
 
 	httpAddr := hm.opt.Address + ":" + strconv.Itoa(int(hm.opt.HTTPPort))
 	hm.httpServer = &http.Server{
 		Addr:    httpAddr,
-		Handler: originMux,
+		Handler: mux,
 	}
 	go func() {
 		var err error
@@ -385,7 +395,7 @@ func (hm *HelmManager) initHTTPService() error {
 func (hm *HelmManager) initMetric() error {
 	metricAddr := hm.opt.Address + ":" + strconv.Itoa(int(hm.opt.MetricPort))
 	metricMux := http.NewServeMux()
-	blog.Infof("init metric handler")
+	blog.Info("init metric handler")
 	metricMux.Handle("/metrics", promhttp.Handler())
 	hm.metricServer = &http.Server{
 		Addr:    metricAddr,
@@ -403,6 +413,7 @@ func (hm *HelmManager) initMetric() error {
 	return nil
 }
 
+// initTLSConfig xxx
 // init server and client tls config
 func (hm *HelmManager) initTLSConfig() error {
 	if len(hm.opt.ServerCert) != 0 && len(hm.opt.ServerKey) != 0 && len(hm.opt.ServerCa) != 0 {
@@ -413,7 +424,7 @@ func (hm *HelmManager) initTLSConfig() error {
 			return err
 		}
 		hm.tlsConfig = tlsConfig
-		blog.Infof("load helm manager server tls config successfully")
+		blog.Info("load helm manager server tls config successfully")
 	}
 
 	if len(hm.opt.ClientCert) != 0 && len(hm.opt.ClientKey) != 0 && len(hm.opt.ClientCa) != 0 {
@@ -424,7 +435,7 @@ func (hm *HelmManager) initTLSConfig() error {
 			return err
 		}
 		hm.clientTLSConfig = tlsConfig
-		blog.Infof("load helm manager client tls config successfully")
+		blog.Info("load helm manager client tls config successfully")
 	}
 	return nil
 }
@@ -442,6 +453,30 @@ func (hm *HelmManager) initJWTClient() error {
 		blog.Error("init jwt client error, %s", err.Error())
 		return err
 	}
+	blog.Info("init jwt client successfully")
+	return nil
+}
+
+// initIAMClient xxx
+// init iam client for perm
+func (hm *HelmManager) initIAMClient() error {
+	iamClient, err := iam.NewIamClient(&iam.Options{
+		SystemID:    hm.opt.IAM.SystemID,
+		AppCode:     hm.opt.IAM.AppCode,
+		AppSecret:   hm.opt.IAM.AppSecret,
+		External:    hm.opt.IAM.External,
+		GateWayHost: hm.opt.IAM.GatewayServer,
+		IAMHost:     hm.opt.IAM.IAMServer,
+		BkiIAMHost:  hm.opt.IAM.BkiIAMServer,
+		Metric:      hm.opt.IAM.Metric,
+		Debug:       hm.opt.IAM.Debug,
+	})
+	if err != nil {
+		return err
+	}
+	auth.IAMClient = iamClient
+	auth.InitPermClient(iamClient)
+	blog.Info("init iam client successfully")
 	return nil
 }
 
@@ -480,9 +515,10 @@ func (hm *HelmManager) getServerAddress() error {
 	return nil
 }
 
+// InitComponentConfig init component config
 func (hm *HelmManager) InitComponentConfig() error {
 	c := project.ProjectClient{Host: hm.opt.ProjectService.Host, Token: hm.opt.App.Token}
 	project.NewClient(c)
-	blog.Infof("init project client successfully")
+	blog.Info("init project client successfully")
 	return nil
 }

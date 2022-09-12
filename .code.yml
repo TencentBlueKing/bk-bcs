@@ -42,6 +42,11 @@ source:
       - ".*/bcs-services/bcs-mesh-manager/third_party/.*"
       - ".*/bcs-services/bcs-cluster-manager/api/.*"
       - ".*/bcs-services/bcs-cluster-manager/third_party/.*"
+      - ".*/bcs-services/bcs-resource-manager/proto/.*"
+      - ".*/bcs-services/bcs-resource-manager/third_party/.*"
+      - ".*/bcs-services/bcs-project-manager/proto/.*"
+      - ".*/bcs-services/bcs-project-manager/third_party/.*"
+      - ".*/bcs-services/bcs-project-manager/internal/component/clustermanager/clustermanager.pb.go"
       - ".*/bcs-services/cluster-resources/pkg/resource/example/manifest/config/simple_secret.yaml"
       - ".*/bmsf-configuration/internal/protocol/.*"
       - ".*/bcs-runtime/bcs-mesos/bmsf-mesh/pkg/.*"
@@ -49,6 +54,14 @@ source:
       - ".*/bcs-runtime/bcs-k8s/bcs-component/cluster-autoscaler/.*"
       - ".*/bcs-ui/backend/templatesets/legacy_apps/configuration/yaml_mode/manifests/Secret.yaml"
       - ".*/bcs-ui/backend/resources/examples/manifests/configs/simple_secret.yaml"
+      - ".*/bcs-services/bcs-nodegroup-manager/proto/.*"
+      - ".*/bcs-services/bcs-data-manager/proto/.*"
+      - ".*/bcs-services/bcs-data-manager/pkg/mock/.*"
+      - ".*/bcs-services/bcs-project-manager/proto/.*"
+      - ".*/bcs-services/bcs-helm-manager/proto/.*"
+      - ".*/bcs-services/bcs-nodegroup-manager/pkg/resourcemgr/proto/.*"
+      - ".*/bcs-services/bcs-project-manager/internal/component/clustermanager/clustermanager.pb.go"
+
 
   # 提供产品代码库中直接以源码形式存在的第三方代码目录或代码文件名的正则表达。
   # 此处备注的第三方代码在后续统计代码量环节会被排除，若代码库中不存在需要排除的第三方代码，该项配置标识可为空
@@ -62,3 +75,10 @@ source:
       - ".*/bcs-runtime/bcs-mesos/bcs-scheduler/src/mesosproto/.*"
       - ".*/pkg/mod/.*"
       - ".*/bmsf-configuration/.*"
+      - ".*/bcs-services/bcs-nodegroup-manager/third_party/.*"
+      - ".*/bcs-services/bcs-helm-manager/third_party/.*"
+      - ".*/bcs-services/bcs-project-manager/third_party/.*"
+      - ".*/bcs-services/bcs-data-manager/third_party/.*"
+      - ".*/bcs-services/bcs-alert-manager/pkg/third_party/protoc-gen-swagger/.*"
+      - ".*/bcs-services/cluster-resources/third_party/protoc-gen-swagger/.*"
+

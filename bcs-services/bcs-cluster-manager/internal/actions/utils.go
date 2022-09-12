@@ -21,10 +21,16 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
 )
 
+// PermInfo for perm request
+type PermInfo struct {
+	ProjectID string
+	UserID    string
+}
+
 // GetCloudAndCluster get relative cloud & cluster information
 func GetCloudAndCluster(model store.ClusterManagerModel,
 	cloudID string, clusterID string) (*proto.Cloud, *proto.Cluster, error) {
-	//get relative Cluster for information injection
+	// get relative Cluster for information injection
 	cluster, err := model.GetCluster(context.Background(), clusterID)
 	if err != nil {
 		return nil, nil, fmt.Errorf("cluster %s err, %s", clusterID, err.Error())

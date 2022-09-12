@@ -106,7 +106,7 @@ replicas:
       type: integer
       default: 0
       ui:component:
-        name: unitInput
+        name: bfInput
         props:
           max: 2147483647
           unit: s
@@ -115,7 +115,7 @@ replicas:
       type: integer
       default: 600
       ui:component:
-        name: unitInput
+        name: bfInput
         props:
           max: 2147483647
           unit: s
@@ -184,7 +184,7 @@ replicas:
       type: integer
       default: 0
       ui:component:
-        name: unitInput
+        name: bfInput
         props:
           max: 86400
           unit: s
@@ -237,18 +237,37 @@ replicas:
               value: RollingUpdate
             - label: {{ i18n "手动删除" .lang }}
               value: OnDelete
+      ui:reactions:
+        - target: spec.replicas.partition
+          if: "{{`{{`}} $self.value === 'RollingUpdate' {{`}}`}}"
+          then:
+            state:
+              visible: true
+          else:
+            state:
+              visible: false
     podManPolicy:
       title: {{ i18n "Pod 管理策略" .lang }}
       type: string
       default: OrderedReady
+      description: {{ i18n "OrderedReady：顺序启动或停止 Pod，若前一个 Pod 启动或停止未完成，则不会操作下一个 Pod<br>Parallel：启动或停止 Pod 前，不会检查 Pod 状态，直接进行并发操作<br>注意：此选项只会影响扩缩容操作，对更新操作无效！" .lang | quote }}
       ui:component:
         name: radio
         props:
+          disabled: {{ eq .action "update" }}
           datasource:
             - label: OrderedReady
               value: OrderedReady
             - label: Parallel
               value: Parallel
+    partition:
+      title: {{ i18n "分区滚动更新" .lang }}
+      type: integer
+      default: 0
+      description: {{ i18n "更新策略可以实现分区，所有序号大于该值的 Pod 都会被更新<br>例如：存在 Pod web-0 至 web-9，这里设置为 5，则只会更新 web-5 至 web-9，其他 Pod 不会被更新" .lang | quote }}
+      ui:component:
+        props:
+          max: 8192
 {{- end }}
 
 {{- define "workload.stsVolumeClaimTmpl" }}
@@ -333,8 +352,9 @@ volumeClaimTmpl:
                 then:
                   actions:
                     - "{{`{{`}} $loadDataSource {{`}}`}}"
-            # ui:rules:
-            # TODO claimType == useExistPV 必填
+            ui:rules:
+              - validator: "{{`{{`}} $widgetNode?.getSibling('claimType')?.instance?.value !== 'useExistPV' || $self.value !== '' {{`}}`}}"
+                message: {{ i18n "值不能为空" .lang }}
           scName:
             title: {{ i18n "存储类名称" .lang }}
             type: string
@@ -352,19 +372,21 @@ volumeClaimTmpl:
                 then:
                   actions:
                     - "{{`{{`}} $loadDataSource {{`}}`}}"
-            # ui:rules:
-            # TODO claimType == createBySC 必填
+            ui:rules:
+              - validator: "{{`{{`}} $widgetNode?.getSibling('claimType')?.instance?.value !== 'createBySC' || $self.value !== '' {{`}}`}}"
+                message: {{ i18n "值不能为空" .lang }}
           storageSize:
             title: {{ i18n "容量" .lang }}
             type: integer
             default: 10
             ui:component:
-              name: unitInput
+              name: bfInput
               props:
                 max: 4096
                 unit: Gi
-            # ui:rules:
-            # TODO claimType == createBySC 必填
+            ui:rules:
+              - validator: "{{`{{`}} $widgetNode?.getSibling('claimType')?.instance?.value !== 'createBySC' || $self.value !== 0 {{`}}`}}"
+                message: {{ i18n "值不能为零" .lang }}
           accessModes:
             title: {{ i18n "访问模式" .lang }}
             type: array
@@ -457,7 +479,7 @@ jobManage:
       title: {{ i18n "活跃终止时间" .lang }}
       type: integer
       ui:component:
-        name: unitInput
+        name: bfInput
         props:
           max: 1209600
           unit: s
@@ -477,7 +499,7 @@ jobManage:
       title: {{ i18n "运行截止时间" .lang }}
       type: integer
       ui:component:
-        name: unitInput
+        name: bfInput
         props:
           max: 1209600
           unit: s
@@ -510,7 +532,7 @@ jobManage:
       title: {{ i18n "活跃终止时间" .lang }}
       type: integer
       ui:component:
-        name: unitInput
+        name: bfInput
         props:
           max: 1209600
           unit: s
@@ -595,7 +617,7 @@ nodeSelect:
               - maxLength128
         type: object
       ui:component:
-        name: noTitleArray
+        name: bfArray
       ui:rules:
         - validator: "{{`{{`}} $self.getValue('spec.nodeSelect.type') !== 'schedulingRule' || ($self.getValue('spec.nodeSelect.type') === 'schedulingRule' && $self.value.length > 0) {{`}}`}}"
           message: {{ i18n "至少包含一条调度规则" .lang }}
@@ -688,7 +710,7 @@ toleration:
             title: {{ i18n "容忍时间" .lang }}
             type: integer
             ui:component:
-              name: unitInput
+              name: bfInput
               props:
                 unit: s
                 max: 86400
@@ -699,7 +721,7 @@ toleration:
           - effect
           - tolerationSecs
       ui:component:
-        name: noTitleArray
+        name: bfArray
       ui:props:
         showTitle: false
 {{- end }}
@@ -769,7 +791,7 @@ networking:
         ui:rules:
           - maxLength128
       ui:component:
-        name: noTitleArray
+        name: bfArray
       ui:rules:
         - validator: "{{`{{`}} $self.getValue('spec.networking.dnsPolicy') !== 'None' || $self.value.length > 0 {{`}}`}}"
           message: {{ i18n "至少包含一个服务器地址" .lang }}
@@ -781,7 +803,7 @@ networking:
         ui:rules:
           - maxLength128
       ui:component:
-        name: noTitleArray
+        name: bfArray
     dnsResolverOpts:
       title: {{ i18n "DNS 解析" .lang }}
       type: array
@@ -799,7 +821,7 @@ networking:
             ui:rules:
               - maxLength128
       ui:component:
-        name: noTitleArray
+        name: bfArray
     hostAliases:
       title: {{ i18n "主机别名" .lang }}
       type: array
@@ -820,7 +842,7 @@ networking:
             ui:rules:
               - maxLength64
       ui:component:
-        name: noTitleArray
+        name: bfArray
 {{- end }}
 
 {{- define "workload.security" }}
@@ -954,7 +976,7 @@ other:
       title: {{ i18n "终止容忍期" .lang }}
       type: integer
       ui:component:
-        name: unitInput
+        name: bfInput
         props:
           max: 86400
           unit: s

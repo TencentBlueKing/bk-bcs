@@ -23,8 +23,8 @@ import (
 )
 
 const (
-	repositoryCreateUri = "/repository/api/repo/create"
-	repositoryGetUri    = "/repository/api/repo/info"
+	repositoryCreateURI = "/repository/api/repo/create"
+	repositoryGetURI    = "/repository/api/repo/info"
 )
 
 func (rh *repositoryHandler) getRepository(ctx context.Context) (*repo.Repository, error) {
@@ -32,7 +32,7 @@ func (rh *repositoryHandler) getRepository(ctx context.Context) (*repo.Repositor
 	blog.Infof("get repository from bk-repo projectID: %s, type: %s, name: %s",
 		rh.projectID, rh.repoType, rh.repository)
 
-	resp, err := rh.get(ctx, rh.getInfoRepositoryUri(), nil, nil)
+	resp, err := rh.get(ctx, rh.getInfoRepositoryURI(), nil, nil)
 	if err != nil {
 		blog.Errorf("get repository from bk-repo failed, %s, projectID: %s, type: %s, name: %s",
 			err.Error(), rh.projectID, rh.repoType, rh.repository)
@@ -69,8 +69,8 @@ func (rh *repositoryHandler) getRepository(ctx context.Context) (*repo.Repositor
 	}, nil
 }
 
-func (rh *repositoryHandler) getInfoRepositoryUri() string {
-	return repositoryGetUri + "/" + rh.projectID + "/" + rh.repository + "/" + rh.repoType.String()
+func (rh *repositoryHandler) getInfoRepositoryURI() string {
+	return repositoryGetURI + "/" + rh.projectID + "/" + rh.repository + "/" + rh.repoType.String()
 }
 
 func (rh *repositoryHandler) createRepository(ctx context.Context, rp *repo.Repository) (string, error) {
@@ -83,7 +83,7 @@ func (rh *repositoryHandler) createRepository(ctx context.Context, rp *repo.Repo
 	}
 
 	blog.Infof("create repository to bk-repo with data: %s", string(data))
-	resp, err := rh.post(ctx, repositoryCreateUri, nil, data)
+	resp, err := rh.post(ctx, repositoryCreateURI, nil, data)
 	if err != nil {
 		blog.Errorf("create repository to bk-repo post failed, %s, with data %v", err.Error(), rp)
 		return "", err
@@ -111,10 +111,10 @@ func (rh *repositoryHandler) createRepository(ctx context.Context, rp *repo.Repo
 
 func (rh *repositoryHandler) getRepoURL() string {
 	if rh.repoType == repo.RepositoryTypeOCI {
-		return rh.getOciUrl("/" + rh.projectID + "/" + rh.repository)
+		return rh.getOciURL("/" + rh.projectID + "/" + rh.repository)
 	}
 
-	return rh.getUri("/helm/" + rh.projectID + "/" + rh.repository)
+	return rh.getURI("/helm/" + rh.projectID + "/" + rh.repository)
 }
 
 type repository struct {
@@ -127,8 +127,8 @@ type repository struct {
 	Configuration *repositoryRemoteSettings `json:"configuration"`
 
 	// 未使用到的参数
-	//StorageCredentialsKey string      `json:"storageCredentialsKey"`
-	//Quota                 int64       `json:"quota"`
+	// StorageCredentialsKey string      `json:"storageCredentialsKey"`
+	// Quota                 int64       `json:"quota"`
 }
 
 func (r *repository) load(rp *repo.Repository) *repository {

@@ -18,7 +18,8 @@ import (
 	commtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
 )
 
-//custom resource register
+// RegisterCustomResource xxx
+// custom resource register
 func (b *backend) RegisterCustomResource(crr *commtypes.Crr) error {
 	crrs, err := b.store.ListCustomResourceRegister()
 	if err != nil {
@@ -34,12 +35,14 @@ func (b *backend) RegisterCustomResource(crr *commtypes.Crr) error {
 	return b.store.SaveCustomResourceRegister(crr)
 }
 
+// UnregisterCustomResource xxx
 func (b *backend) UnregisterCustomResource(string) error {
-	//TODO
+	// xxx
 
 	return nil
 }
 
+// CreateCustomResource xxx
 func (b *backend) CreateCustomResource(crd *commtypes.Crd) error {
 	crrs, err := b.store.ListCustomResourceRegister()
 	if err != nil {
@@ -60,6 +63,7 @@ func (b *backend) CreateCustomResource(crd *commtypes.Crd) error {
 	return b.store.SaveCustomResourceDefinition(crd)
 }
 
+// UpdateCustomResource xxx
 func (b *backend) UpdateCustomResource(crd *commtypes.Crd) error {
 	crrs, err := b.store.ListCustomResourceRegister()
 	if err != nil {
@@ -80,18 +84,22 @@ func (b *backend) UpdateCustomResource(crd *commtypes.Crd) error {
 	return b.store.SaveCustomResourceDefinition(crd)
 }
 
+// DeleteCustomResource xxx
 func (b *backend) DeleteCustomResource(kind, ns, name string) error {
 	return b.store.DeleteCustomResourceDefinition(kind, ns, name)
 }
 
+// ListCustomResourceDefinition xxx
 func (b *backend) ListCustomResourceDefinition(kind, ns string) ([]*commtypes.Crd, error) {
 	return b.store.ListCustomResourceDefinition(kind, ns)
 }
 
+// ListAllCrds xxx
 func (b *backend) ListAllCrds(kind string) ([]*commtypes.Crd, error) {
 	return b.store.ListAllCrds(kind)
 }
 
+// FetchCustomResourceDefinition xxx
 func (b *backend) FetchCustomResourceDefinition(kind, ns, name string) (*commtypes.Crd, error) {
 	return b.store.FetchCustomResourceDefinition(kind, ns, name)
 }

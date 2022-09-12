@@ -11,6 +11,7 @@
  *
  */
 
+// Package bcs xxx
 package bcs
 
 import (
@@ -38,7 +39,8 @@ type ResourceData struct {
 }
 
 // ListPodResources list Pod resources
-func ListPodResources(ctx context.Context, clusterIdList []string, namespace string, limit, offset int64) ([]*ResourceData, *component.Pagination, error) {
+func ListPodResources(ctx context.Context, clusterIdList []string, namespace string, limit,
+	offset int64) ([]*ResourceData, *component.Pagination, error) {
 	url := fmt.Sprintf("%s/bcsapi/v4/storage/dynamic/customresources/Pod", config.G.BCS.Host)
 
 	clusterId := strings.Join(clusterIdList, ",")

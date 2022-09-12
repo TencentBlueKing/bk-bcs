@@ -11,6 +11,7 @@
  *
  */
 
+// Package esb xxx
 package esb
 
 import (
@@ -24,11 +25,15 @@ import (
 )
 
 const (
-	EsbRequestPayloadAppcode   = "app_code"
+	// EsbRequestPayloadAppcode xxx
+	EsbRequestPayloadAppcode = "app_code"
+	// EsbRequestPayloadAppsecret xxx
 	EsbRequestPayloadAppsecret = "app_secret"
-	EsbRequestPayloadOperator  = "operator"
+	// EsbRequestPayloadOperator xxx
+	EsbRequestPayloadOperator = "operator"
 )
 
+// APIResponse xxx
 type APIResponse struct {
 	Result  bool        `json:"result"`
 	Code    string      `json:"code"`
@@ -36,24 +41,26 @@ type APIResponse struct {
 	Message string      `json:"message"`
 }
 
+// EsbClient xxx
 type EsbClient struct {
-	//esb app code
+	// esb app code
 	AppCode string
-	//esb app secret
+	// esb app secret
 	AppSecret string
-	//esb app operator
+	// esb app operator
 	AppOperator string
-	//esb url
+	// esb url
 	EsbUrl string
-	//request esb
+	// request esb
 }
 
+// NewEsbClient xxx
 func NewEsbClient(appCode, appSecret, appOperator, esbUrl string) (*EsbClient, error) {
 	esb := &EsbClient{
 		EsbUrl: esbUrl,
 	}
 
-	//Decrypt app parameters
+	// Decrypt app parameters
 	/*var err error
 	esb.AppCode, err = encrypt.DesDecryptFromBase([]byte(appCode))
 	if err != nil {
@@ -74,28 +81,29 @@ func NewEsbClient(appCode, appSecret, appOperator, esbUrl string) (*EsbClient, e
 	return esb, nil
 }
 
-//method=http.method: POST、GET、PUT、DELETE
-//request url = esb.EsbUrl/url
-//payload is request body
-//if error!=nil, then request esb failed, error.Error() is failed message
-//if error==nil, []byte is response body information
+// RequestEsb xxx
+// method=http.method: POST、GET、PUT、DELETE
+// request url = esb.EsbUrl/url
+// payload is request body
+// if error!=nil, then request esb failed, error.Error() is failed message
+// if error==nil, []byte is response body information
 func (esb *EsbClient) RequestEsb(method, url string, payload map[string]interface{}) ([]byte, error) {
 	if payload == nil {
 		return nil, fmt.Errorf("payload can't be nil")
 	}
-	//set payload app parameter
+	// set payload app parameter
 	payload[EsbRequestPayloadAppcode] = esb.AppCode
 	payload[EsbRequestPayloadAppsecret] = esb.AppSecret
 	payload[EsbRequestPayloadOperator] = esb.AppOperator
 	payloadBytes, _ := json.Marshal(payload)
-	//new request body
+	// new request body
 	body := bytes.NewBuffer(payloadBytes)
-	//request url
+	// request url
 	url = fmt.Sprintf("%s%s", esb.EsbUrl, url)
 
-	//new request object
+	// new request object
 	req, _ := http.NewRequest(method, url, body)
-	//set header application/json
+	// set header application/json
 	req.Header.Set("Content-Type", "application/json")
 	httpClient := &http.Client{}
 	resp, err := httpClient.Do(req)
@@ -114,15 +122,15 @@ func (esb *EsbClient) RequestEsb(method, url string, payload map[string]interfac
 		return nil, fmt.Errorf("non-Json body(%s) response: %s", string(respBody), err.Error())
 	}
 
-	//http response status code != 200
+	// http response status code != 200
 	if resp.StatusCode != 200 {
 		return nil, fmt.Errorf("response code %d body %s", resp.StatusCode, respBody)
 	}
-	//esb response result failed
+	// esb response result failed
 	if !result.Result {
 		return nil, fmt.Errorf("request esb %s failed, code:%s message:%s", url, result.Code, result.Message)
 	}
-	//marshal result.data to []byte
+	// marshal result.data to []byte
 	by, _ := json.Marshal(result.Data)
 	return by, nil
 }

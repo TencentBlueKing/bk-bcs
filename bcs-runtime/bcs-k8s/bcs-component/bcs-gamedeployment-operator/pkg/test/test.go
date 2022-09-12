@@ -11,6 +11,7 @@
  *
  */
 
+// Package test xxx
 package test
 
 import (
@@ -116,7 +117,8 @@ func NewHookRunFromTemplate(hookTemplate *v1alpha1.HookTemplate, deploy *gdv1alp
 		"instance-id":       "",
 		"workload-revision": "",
 	}
-	run.OwnerReferences = []metav1.OwnerReference{*metav1.NewControllerRef(deploy, deploy.GetObjectKind().GroupVersionKind())}
+	run.OwnerReferences = []metav1.OwnerReference{*metav1.NewControllerRef(deploy, deploy.GetObjectKind().
+		GroupVersionKind())}
 	return run
 }
 
@@ -165,7 +167,8 @@ func CompareAction(x, y clientTesting.Action) bool {
 }
 
 // FilterActions filter actions by filterFns.
-func FilterActions(actions []clientTesting.Action, filterFns ...func(action clientTesting.Action) clientTesting.Action) []clientTesting.Action {
+func FilterActions(actions []clientTesting.Action, filterFns ...func(
+	action clientTesting.Action) clientTesting.Action) []clientTesting.Action {
 	for i := range actions {
 		for _, fn := range filterFns {
 			actions[i] = fn(actions[i])

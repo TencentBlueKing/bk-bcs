@@ -14,5 +14,6 @@
 package bluekingio
 
 const (
+	// GroupName TODO
 	GroupName = "blueking.io"
 )

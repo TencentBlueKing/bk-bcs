@@ -371,7 +371,7 @@ func TestSyncInPlaceUpdate(t *testing.T) {
 	// only patch pod, no delete
 	f.expectPatchPodAction(pod.Namespace, pod.Name)
 	f.expectCreateControllerRevision(testutil.NewControllerRevision(sts, 2))
-	//f.expectGetPodAction(pod.Namespace, pod.Name)
+	// f.expectGetPodAction(pod.Namespace, pod.Name)
 	f.expectUpdatePodAction(pod.Namespace, nil)
 	f.expectGetPodAction(pod.Namespace, pod.Name)
 	// update game deployment status

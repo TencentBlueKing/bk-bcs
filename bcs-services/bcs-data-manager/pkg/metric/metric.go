@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package metric xxx
 package metric
 
 import (
@@ -72,29 +73,29 @@ func (g *MetricGetter) GetClusterNodeMetrics(opts *types.JobCommonOpts,
 	clients *types.Clients) (string, []*bcsdatamanager.NodeQuantile, error) {
 	var minUsageNode string
 	nodeQuantie := make([]*bcsdatamanager.NodeQuantile, 0)
-	//start := time.Now()
-	//cluster, err := clients.CmCli.Cli.GetCluster(clients.CmCli.Ctx, &cm.GetClusterReq{
+	// start := time.Now()
+	// cluster, err := clients.CmCli.Cli.GetCluster(clients.CmCli.Ctx, &cm.GetClusterReq{
 	//	ClusterID: opts.ClusterID,
-	//})
-	//if err != nil {
+	// })
+	// if err != nil {
 	//	prom.ReportLibRequestMetric(prom.BkBcsClusterManager, "GetCluster",
 	//		"GET", err, start)
 	//	return minUsageNode, nodeQuantie, err
-	//}
-	//prom.ReportLibRequestMetric(prom.BkBcsClusterManager, "ListNodesInCluster",
+	// }
+	// prom.ReportLibRequestMetric(prom.BkBcsClusterManager, "ListNodesInCluster",
 	//	"GET", err, start)
-	//queryCond := fmt.Sprintf(ClusterCondition, opts.ClusterID)
+	// queryCond := fmt.Sprintf(ClusterCondition, opts.ClusterID)
 	//
-	//for key := range cluster.Data.Master {
+	// for key := range cluster.Data.Master {
 	//	queryCond = fmt.Sprintf("%s,instance!=\"%s:9100\"", queryCond, cluster.Data.Master[key].InnerIP)
-	//}
-	//nodeCPUQuery := fmt.Sprintf(NodeCPUUsage, opts.ClusterID, queryCond, opts.ClusterID, queryCond)
-	//nodeCpuUsageList, err := clients.MonitorClient.QueryByPost(nodeCPUQuery, opts.CurrentTime)
-	//if err != nil {
+	// }
+	// nodeCPUQuery := fmt.Sprintf(NodeCPUUsage, opts.ClusterID, queryCond, opts.ClusterID, queryCond)
+	// nodeCpuUsageList, err := clients.MonitorClient.QueryByPost(nodeCPUQuery, opts.CurrentTime)
+	// if err != nil {
 	//	return minUsageNode, nodeQuantie, err
-	//}
-	//var minUsage float64
-	//for key := range nodeCpuUsageList.Data.Result {
+	// }
+	// var minUsage float64
+	// for key := range nodeCpuUsageList.Data.Result {
 	//	usage, ok := nodeCpuUsageList.Data.Result[key].Value[1].(string)
 	//	if ok {
 	//		nodeUsage, err := strconv.ParseFloat(usage, 64)
@@ -106,14 +107,14 @@ func (g *MetricGetter) GetClusterNodeMetrics(opts *types.JobCommonOpts,
 	//			minUsageNode = nodeCpuUsageList.Data.Result[key].Metric["node"]
 	//		}
 	//	}
-	//}
+	// }
 
-	//nodeQuantieResponse, err := clients.MonitorClient.QueryByPost(fmt.Sprintf(NodeUsageQuantile,
+	// nodeQuantieResponse, err := clients.MonitorClient.QueryByPost(fmt.Sprintf(NodeUsageQuantile,
 	//	"0.5", nodeCPUQuery), opts.CurrentTime)
-	//if err != nil {
+	// if err != nil {
 	//	return minUsageNode, nodeQuantie, err
-	//}
-	//if len(nodeQuantieResponse.Data.Result) != 0 {
+	// }
+	// if len(nodeQuantieResponse.Data.Result) != 0 {
 	//	nodeQuantileCPU, ok := nodeQuantieResponse.Data.Result[0].Value[1].(string)
 	//	if ok {
 	//		quantile := &bcsdatamanager.NodeQuantile{
@@ -122,7 +123,7 @@ func (g *MetricGetter) GetClusterNodeMetrics(opts *types.JobCommonOpts,
 	//		}
 	//		nodeQuantie = append(nodeQuantie, quantile)
 	//	}
-	//}
+	// }
 	return minUsageNode, nodeQuantie, nil
 }
 

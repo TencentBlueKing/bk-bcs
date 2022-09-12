@@ -64,9 +64,11 @@ func NewAutoscaler(opts AutoscalerOptions) (core.Autoscaler, errors.AutoscalerEr
 		opts.CloudProvider,
 		opts.ExpanderStrategy,
 		opts.EstimatorBuilder,
-		opts.Backoff, opts.BufferedResourceRatio), nil
+		opts.Backoff, opts.BufferedResourceRatio,
+		opts.KubeClient), nil
 }
 
+// initializeDefaultOptions xxx
 // Initialize default options if not provided.
 func initializeDefaultOptions(opts *AutoscalerOptions) error {
 	if opts.Processors == nil {

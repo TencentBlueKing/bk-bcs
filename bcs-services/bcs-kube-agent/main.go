@@ -34,7 +34,7 @@ var (
 	bkeAddress         string
 	clusterId          string
 	insecureSkipVerify bool
-	// 外网跨云部署时，需要上报的api-server的公网或代理地址
+	// ExternalProxyAddresses 外网跨云部署时，需要上报的api-server的公网或代理地址
 	ExternalProxyAddresses string
 	// 是否使用 websocket 进行注册
 	useWebsocket  bool

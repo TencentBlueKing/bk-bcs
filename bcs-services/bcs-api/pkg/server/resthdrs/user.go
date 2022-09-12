@@ -29,14 +29,17 @@ import (
 )
 
 const (
+	// PlainBCSUserType xxx
 	PlainBCSUserType = "plain"
 )
 
+// BCSUserForm xxx
 // CreateBCSUserForm
 type BCSUserForm struct {
 	UserName string `json:"user_name" validate:"required"`
 }
 
+// CreateUser xxx
 func CreateUser(request *restful.Request, response *restful.Response) {
 
 	start := time.Now()
@@ -63,7 +66,8 @@ func CreateUser(request *restful.Request, response *restful.Response) {
 	if userInDb != nil {
 		metric.RequestErrorCount.WithLabelValues("k8s_rest", request.Request.Method).Inc()
 		metric.RequestErrorLatency.WithLabelValues("k8s_rest", request.Request.Method).Observe(time.Since(start).Seconds())
-		message := fmt.Sprintf("errcode: %d, create failed, user with this username already exists", common.BcsErrApiBadRequest)
+		message := fmt.Sprintf("errcode: %d, create failed, user with this username already exists",
+			common.BcsErrApiBadRequest)
 		WriteClientError(response, "USER_ALREADY_EXISTS", message)
 		return
 	}
@@ -84,6 +88,7 @@ func CreateUser(request *restful.Request, response *restful.Response) {
 	metric.RequestLatency.WithLabelValues("k8s_rest", request.Request.Method).Observe(time.Since(start).Seconds())
 }
 
+// QueryBCSUserByName xxx
 func QueryBCSUserByName(request *restful.Request, response *restful.Response) {
 
 	start := time.Now()
@@ -107,6 +112,7 @@ func QueryBCSUserByName(request *restful.Request, response *restful.Response) {
 	metric.RequestLatency.WithLabelValues("k8s_rest", request.Request.Method).Observe(time.Since(start).Seconds())
 }
 
+// CreateUserToken xxx
 func CreateUserToken(request *restful.Request, response *restful.Response) {
 
 	start := time.Now()

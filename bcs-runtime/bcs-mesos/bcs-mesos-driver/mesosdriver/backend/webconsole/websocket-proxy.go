@@ -69,7 +69,8 @@ func NewWebsocketProxy(certConfig *config.CertConfig, backendUrl *url.URL) *Webs
 	// DefaultDialer is a dialer with all fields set to the default zero values.
 	defaultDialer := websocket.DefaultDialer
 	if certConfig.IsSSL {
-		cliTls, err := ssl.ClientTslConfVerity(certConfig.CAFile, certConfig.CertFile, certConfig.KeyFile, certConfig.CertPasswd)
+		cliTls, err := ssl.ClientTslConfVerity(certConfig.CAFile, certConfig.CertFile, certConfig.KeyFile,
+			certConfig.CertPasswd)
 		if err != nil {
 			blog.Errorf("set client tls config error %s", err.Error())
 			return nil
@@ -124,7 +125,8 @@ func (w *WebsocketProxy) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	connBackend, resp, err := w.Dialer.Dial(backendURL.String(), requestHeader)
 	if err != nil {
 		blog.Errorf("websocketproxy: couldn't dial to remote backend url %s", err)
-		message := fmt.Sprintf("errcode: %d, couldn't dial to remote backend url %s", common.BcsErrApiWebConsoleFailedCode, err.Error())
+		message := fmt.Sprintf("errcode: %d, couldn't dial to remote backend url %s", common.BcsErrApiWebConsoleFailedCode,
+			err.Error())
 		if resp != nil {
 			if err := copyResponse(rw, resp); err != nil {
 				blog.Errorf("websocketproxy: couldn't write response after failed remote backend handshake: %s", err)

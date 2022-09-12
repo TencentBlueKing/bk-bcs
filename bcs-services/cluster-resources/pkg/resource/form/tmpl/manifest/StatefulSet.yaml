@@ -11,6 +11,10 @@ spec:
   {{- end }}
   updateStrategy:
     type: {{ .spec.replicas.updateStrategy }}
+    {{- if eq .spec.replicas.updateStrategy "RollingUpdate" }}
+    rollingUpdate:
+      partition: {{ .spec.replicas.partition | default 0 }}
+    {{- end }}
   podManagementPolicy: {{ .spec.replicas.podManPolicy }}
   {{- include "workload.podTemplate" . | nindent 2 }}
   {{- include "workload.stsVolumeClaimTmpl" . | indent 2 }}

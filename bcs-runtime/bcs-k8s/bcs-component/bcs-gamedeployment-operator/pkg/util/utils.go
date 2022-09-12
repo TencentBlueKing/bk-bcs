@@ -101,7 +101,8 @@ func SplitPodsByRevision(pods []*v1.Pod, rev string) (matched, unmatched []*v1.P
 func DoItSlowly(count int, initialBatchSize int, fn func() error) (int, error) {
 	remaining := count
 	successes := 0
-	for batchSize := integer.IntMin(remaining, initialBatchSize); batchSize > 0; batchSize = integer.IntMin(2*batchSize, remaining) {
+	for batchSize := integer.IntMin(remaining, initialBatchSize); batchSize > 0; batchSize = integer.IntMin(2*batchSize,
+		remaining) {
 		errCh := make(chan error, batchSize)
 		var wg sync.WaitGroup
 		wg.Add(batchSize)
@@ -165,17 +166,23 @@ func GetPodGameDeployments(pod *v1.Pod, gdcLister gdlister.GameDeploymentLister)
 	}
 
 	if len(psList) == 0 {
-		return nil, fmt.Errorf("could not find GameDeployment for pod %s in namespace %s with labels: %v", pod.Name, pod.Namespace, pod.Labels)
+		return nil, fmt.Errorf("could not find GameDeployment for pod %s in namespace %s with labels: %v", pod.Name,
+			pod.Namespace, pod.Labels)
 	}
 
 	return psList, nil
 }
 
+// AlphabetSortPods xxx
 type AlphabetSortPods []*v1.Pod
 
-func (s AlphabetSortPods) Len() int      { return len(s) }
+// Len 用于排序
+func (s AlphabetSortPods) Len() int { return len(s) }
+
+// Swap 用于排序
 func (s AlphabetSortPods) Swap(i, j int) { s[i], s[j] = s[j], s[i] }
 
+// Less 用于排序
 func (s AlphabetSortPods) Less(i, j int) bool {
 	if strings.Compare(s[i].Name, s[j].Name) > 0 {
 		return false

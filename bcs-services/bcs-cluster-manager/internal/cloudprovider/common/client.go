@@ -33,7 +33,7 @@ var (
 // TaskState bkops task status
 type TaskState string
 
-// String() to string
+// String () to string
 func (ts TaskState) String() string {
 	return string(ts)
 }
@@ -146,7 +146,8 @@ func (c *Client) generateGateWayAuth(user string) (string, error) {
 }
 
 // CreateBkOpsTask create bkops task
-func (c *Client) CreateBkOpsTask(url string, paras *CreateTaskPathParas, request *CreateTaskRequest) (*CreateTaskResponse, error) {
+func (c *Client) CreateBkOpsTask(url string, paras *CreateTaskPathParas, request *CreateTaskRequest) (
+	*CreateTaskResponse, error) {
 	if c == nil {
 		return nil, ErrServerNotInit
 	}
@@ -196,13 +197,14 @@ func (c *Client) CreateBkOpsTask(url string, paras *CreateTaskPathParas, request
 		blog.Errorf("call api CreateBkOpsTask failed: %v", respData.Message)
 		return nil, fmt.Errorf(respData.Message)
 	}
-	//successfully request
+	// successfully request
 	blog.Infof("call api CreateBkOpsTask with url(%s) successfully", reqURL)
 	return respData, nil
 }
 
 // StartBkOpsTask start bkops task
-func (c *Client) StartBkOpsTask(url string, paras *TaskPathParas, request *StartTaskRequest) (*StartTaskResponse, error) {
+func (c *Client) StartBkOpsTask(url string, paras *TaskPathParas, request *StartTaskRequest) (*StartTaskResponse,
+	error) {
 	if c == nil {
 		return nil, ErrServerNotInit
 	}
@@ -253,13 +255,14 @@ func (c *Client) StartBkOpsTask(url string, paras *TaskPathParas, request *Start
 		return nil, fmt.Errorf(respData.Message)
 	}
 
-	//successfully request
+	// successfully request
 	blog.Infof("call api StartBkOpsTask with url(%s) successfully", reqURL)
 	return respData, nil
 }
 
 // GetTaskStatus get bkops task status
-func (c *Client) GetTaskStatus(url string, paras *TaskPathParas, request *StartTaskRequest) (*TaskStatusResponse, error) {
+func (c *Client) GetTaskStatus(url string, paras *TaskPathParas, request *StartTaskRequest) (*TaskStatusResponse,
+	error) {
 	if c == nil {
 		return nil, ErrServerNotInit
 	}
@@ -307,7 +310,7 @@ func (c *Client) GetTaskStatus(url string, paras *TaskPathParas, request *StartT
 		return nil, fmt.Errorf(respData.Message)
 	}
 
-	//successfully request
+	// successfully request
 	blog.Infof("call api GetTaskStatus with url(%s) successfully", reqURL)
 	return respData, nil
 }

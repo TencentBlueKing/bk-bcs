@@ -11,13 +11,14 @@
  *
  */
 
+// Package config xxx
 package config
 
 import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/static"
 )
 
-//CertConfig is configuration of Cert
+// CertConfig is configuration of Cert
 type CertConfig struct {
 	CAFile     string
 	CertFile   string
@@ -26,7 +27,7 @@ type CertConfig struct {
 	IsSSL      bool
 }
 
-//CustomSchedulerConfig is a configuration of CustomScheduler
+// CustomSchedulerConfig is a configuration of CustomScheduler
 type CustomSchedulerConfig struct {
 	Address         string
 	Port            uint
@@ -52,7 +53,7 @@ type CustomSchedulerConfig struct {
 	CloudNetserviceCert      *CertConfig
 }
 
-//NewCustomeSchedulerConfig create a config object
+// NewCustomSchedulerConfig create a config object
 func NewCustomSchedulerConfig() *CustomSchedulerConfig {
 	return &CustomSchedulerConfig{
 		Address: "127.0.0.1",

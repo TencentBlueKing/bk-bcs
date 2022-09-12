@@ -25,7 +25,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-mesos/bcs-process-daemon/process-daemon/manager"
 )
 
-//Option daemon process Option
+// Option daemon process Option
 type Option struct {
 	conf.FileConfig
 	conf.ServiceConfig

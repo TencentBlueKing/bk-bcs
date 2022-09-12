@@ -45,8 +45,10 @@ const (
 	// DimensionKey key for time dimension
 	DimensionKey = "dimension"
 	// MetricTimeKey key for metric time
-	MetricTimeKey        = "metrics.time"
+	MetricTimeKey = "metrics.time"
+	// PodAutoscalerTypeKey xxx
 	PodAutoscalerTypeKey = "pod_autoscaler_type"
+	// PodAutoscalerNameKey xxx
 	PodAutoscalerNameKey = "pod_autoscaler_name"
 )
 
@@ -84,6 +86,7 @@ func ensureTable(ctx context.Context, public *Public) error {
 	return nil
 }
 
+// ensure xxx
 // EnsureTable ensure object database table and table indexes
 func ensure(ctx context.Context, db drivers.DB, tableName string, indexes []drivers.Index) error {
 	hasTable, err := db.HasTable(ctx, tableName)
@@ -122,6 +125,19 @@ func getStartTime(dimension string) time.Time {
 	default:
 		return time.Now()
 
+	}
+}
+
+func getMinCreateTime(dimension string) time.Time {
+	switch dimension {
+	case types.DimensionDay:
+		return time.Now().AddDate(0, -1, 0)
+	case types.DimensionHour:
+		return time.Now().AddDate(0, 0, -1)
+	case types.DimensionMinute:
+		return time.Now().Add((-2) * time.Hour)
+	default:
+		return time.Now()
 	}
 }
 

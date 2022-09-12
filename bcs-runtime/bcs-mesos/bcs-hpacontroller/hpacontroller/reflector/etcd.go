@@ -36,21 +36,23 @@ import (
 )
 
 const (
+	// ApiversionV2 xxx
 	ApiversionV2      = "v2"
 	autoscalerCrdKind = "autoscaler"
 	crdCrd            = "Crd"
 )
 
 type etcdReflector struct {
-	//hpa controller config
+	// hpa controller config
 	config            *config.Config
-	bkbcsClientSet    *internalclientset.Clientset //kube bkbcs clientset
+	bkbcsClientSet    *internalclientset.Clientset // kube bkbcs clientset
 	crdLister         listers.CrdLister
 	deploymentLister  listers.DeploymentLister
 	applicationLister listers.ApplicationLister
 	taskgroupLister   listers.TaskGroupLister
 }
 
+// NewEtcdReflector xxx
 func NewEtcdReflector(conf *config.Config) Reflector {
 	// set up signals so we handle the first shutdown signal gracefully
 	stopCh := signals.SetupSignalHandler()
@@ -91,7 +93,8 @@ func NewEtcdReflector(conf *config.Config) Reflector {
 	go factory.Start(stopCh)
 
 	blog.Infof("Waiting for informer caches to sync")
-	if ok := clientGoCache.WaitForCacheSync(stopCh, crdInformer.Informer().HasSynced, deploymentInformer.Informer().HasSynced, applicationInformer.Informer().HasSynced, taskgroupInformer.Informer().HasSynced); !ok {
+	if ok := clientGoCache.WaitForCacheSync(stopCh, crdInformer.Informer().HasSynced, deploymentInformer.Informer().
+		HasSynced, applicationInformer.Informer().HasSynced, taskgroupInformer.Informer().HasSynced); !ok {
 		blog.Errorf("failed to wait for caches to sync")
 		os.Exit(1)
 	}
@@ -99,7 +102,8 @@ func NewEtcdReflector(conf *config.Config) Reflector {
 	return reflector
 }
 
-//list all namespace autoscaler
+// ListAutoscalers xxx
+// list all namespace autoscaler
 func (reflector *etcdReflector) ListAutoscalers() ([]*commtypes.BcsAutoscaler, error) {
 	bcsCrdList, err := reflector.crdLister.List(labels.Everything())
 	if err != nil {
@@ -124,14 +128,16 @@ func (reflector *etcdReflector) ListAutoscalers() ([]*commtypes.BcsAutoscaler, e
 	return scalers, nil
 }
 
-//crd namespace = crd.kind-crd.namespace
+// getCrdNamespace xxx
+// crd namespace = crd.kind-crd.namespace
 func getCrdNamespace(kind, ns string) string {
 	return fmt.Sprintf("%s-%s", kind, ns)
 }
 
+// CheckCustomResourceDefinitionExist xxx
 func (reflector *etcdReflector) CheckCustomResourceDefinitionExist(crd *commtypes.Crd) (string, bool) {
-	//client := reflector.bkbcsClientSet.BkbcsV2().Crds(getCrdNamespace(string(crd.Kind), crd.NameSpace))
-	//v2Crd, _ := client.Get(crd.Name, metav1.GetOptions{})
+	// client := reflector.bkbcsClientSet.BkbcsV2().Crds(getCrdNamespace(string(crd.Kind), crd.NameSpace))
+	// v2Crd, _ := client.Get(crd.Name, metav1.GetOptions{})
 	v2Crd, _ := reflector.crdLister.Crds(getCrdNamespace(string(crd.Kind), crd.NameSpace)).Get(crd.Name)
 	if v2Crd != nil {
 		return v2Crd.ResourceVersion, true
@@ -140,8 +146,9 @@ func (reflector *etcdReflector) CheckCustomResourceDefinitionExist(crd *commtype
 	return "", false
 }
 
+// StoreAutoscaler xxx
 func (reflector *etcdReflector) StoreAutoscaler(autoscaler *commtypes.BcsAutoscaler) error {
-	//crd namespace = crd.kind-crd.namespace
+	// crd namespace = crd.kind-crd.namespace
 	realNs := getCrdNamespace(autoscalerCrdKind, autoscaler.NameSpace)
 	client := reflector.bkbcsClientSet.BkbcsV2().Crds(realNs)
 
@@ -175,6 +182,7 @@ func (reflector *etcdReflector) StoreAutoscaler(autoscaler *commtypes.BcsAutosca
 	return err
 }
 
+// UpdateAutoscaler xxx
 func (reflector *etcdReflector) UpdateAutoscaler(autoscaler *commtypes.BcsAutoscaler) error {
 	etcdScaler, err := reflector.FetchAutoscalerByUuid(autoscaler.GetUuid())
 	if err != nil {
@@ -188,6 +196,7 @@ func (reflector *etcdReflector) UpdateAutoscaler(autoscaler *commtypes.BcsAutosc
 	return err
 }
 
+// FetchAutoscalerByUuid xxx
 // fetch autoscaler from kube-api
 func (reflector *etcdReflector) FetchAutoscalerByUuid(uuid string) (*commtypes.BcsAutoscaler, error) {
 	uids := strings.Split(uuid, "_")
@@ -195,8 +204,8 @@ func (reflector *etcdReflector) FetchAutoscalerByUuid(uuid string) (*commtypes.B
 		return nil, fmt.Errorf("uuid %s is invalid", uuid)
 	}
 
-	//client := reflector.bkbcsClientSet.BkbcsV2().Crds(getCrdNamespace(autoscalerCrdKind, uids[0]))
-	//v2Crd, err := client.Get(uids[1], metav1.GetOptions{})
+	// client := reflector.bkbcsClientSet.BkbcsV2().Crds(getCrdNamespace(autoscalerCrdKind, uids[0]))
+	// v2Crd, err := client.Get(uids[1], metav1.GetOptions{})
 	v2Crd, err := reflector.crdLister.Crds(getCrdNamespace(autoscalerCrdKind, uids[0])).Get(uids[1])
 	if err != nil {
 		return nil, err
@@ -214,7 +223,8 @@ func (reflector *etcdReflector) FetchAutoscalerByUuid(uuid string) (*commtypes.B
 	return scaler, nil
 }
 
-//fetch deployment info, if deployment status is not Running, then can't autoscale this deployment
+// FetchDeploymentInfo xxx
+// fetch deployment info, if deployment status is not Running, then can't autoscale this deployment
 func (reflector *etcdReflector) FetchDeploymentInfo(namespace, name string) (*schedtypes.Deployment, error) {
 	bcsDeployment, err := reflector.deploymentLister.Deployments(namespace).Get(name)
 	if err != nil {
@@ -224,7 +234,8 @@ func (reflector *etcdReflector) FetchDeploymentInfo(namespace, name string) (*sc
 	return &deploy, nil
 }
 
-//fetch application info, if application status is not Running or Abnormal, then can't autoscale this application
+// FetchApplicationInfo xxx
+// fetch application info, if application status is not Running or Abnormal, then can't autoscale this application
 func (reflector *etcdReflector) FetchApplicationInfo(namespace, name string) (*schedtypes.Application, error) {
 	bcsApplication, err := reflector.applicationLister.Applications(namespace).Get(name)
 	if err != nil {
@@ -234,7 +245,8 @@ func (reflector *etcdReflector) FetchApplicationInfo(namespace, name string) (*s
 	return &application, nil
 }
 
-//list selectorRef deployment taskgroup
+// ListTaskgroupRefDeployment xxx
+// list selectorRef deployment taskgroup
 func (reflector *etcdReflector) ListTaskgroupRefDeployment(namespace, name string) ([]*schedtypes.TaskGroup, error) {
 	bcsDeployment, err := reflector.deploymentLister.Deployments(namespace).Get(name)
 	if err != nil {
@@ -245,7 +257,8 @@ func (reflector *etcdReflector) ListTaskgroupRefDeployment(namespace, name strin
 	return reflector.ListTaskgroupRefApplication(namespace, deploy.Application.ApplicationName)
 }
 
-//list selectorRef application taskgroup
+// ListTaskgroupRefApplication xxx
+// list selectorRef application taskgroup
 func (reflector *etcdReflector) ListTaskgroupRefApplication(namespace, name string) ([]*schedtypes.TaskGroup, error) {
 	bcsTaskgroupList, err := reflector.taskgroupLister.TaskGroups(namespace).List(labels.Everything())
 	if err != nil {

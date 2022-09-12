@@ -2,17 +2,13 @@ module github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole
 
 go 1.17
 
-replace (
-	github.com/coreos/bbolt v1.3.4 => go.etcd.io/bbolt v1.3.4
-	go.etcd.io/bbolt v1.3.4 => github.com/coreos/bbolt v1.3.4
-)
-
 require (
 	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20220123082150-ac3c90791ab4
 	github.com/Tencent/bk-bcs/bcs-services/pkg v0.0.0-20220126063353-25e53b7ae285
-	github.com/asim/go-micro/plugins/config/encoder/yaml/v4 v4.0.0-20220117133501-23f1de80c578
-	github.com/asim/go-micro/plugins/registry/etcd/v4 v4.0.0-20220118152736-9e0be6c85d75
-	github.com/asim/go-micro/plugins/server/http/v4 v4.0.0-20220115202627-a612e09a341f
+	github.com/TencentBlueKing/iam-go-sdk v0.0.8
+	github.com/asim/go-micro/plugins/config/encoder/yaml/v4 v4.7.0
+	github.com/asim/go-micro/plugins/registry/etcd/v4 v4.7.0
+	github.com/asim/go-micro/plugins/server/http/v4 v4.7.0
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/gin-contrib/cors v1.3.1
 	github.com/gin-contrib/i18n v0.0.1
@@ -45,7 +41,6 @@ require (
 require (
 	github.com/Microsoft/go-winio v0.5.0 // indirect
 	github.com/ProtonMail/go-crypto v0.0.0-20210428141323-04723f9f07d7 // indirect
-	github.com/TencentBlueKing/iam-go-sdk v0.0.8 // indirect
 	github.com/acomagu/bufpipe v1.0.3 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bitly/go-simplejson v0.5.0 // indirect
@@ -129,4 +124,9 @@ require (
 	moul.io/http2curl v1.0.0 // indirect
 	sigs.k8s.io/json v0.0.0-20211020170558-c049b76a60c6 // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.1.2 // indirect
+)
+
+replace (
+	github.com/coreos/bbolt v1.3.4 => go.etcd.io/bbolt v1.3.4
+	go.etcd.io/bbolt v1.3.4 => github.com/coreos/bbolt v1.3.4
 )

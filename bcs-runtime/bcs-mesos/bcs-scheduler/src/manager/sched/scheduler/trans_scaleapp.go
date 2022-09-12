@@ -11,7 +11,7 @@
  *
  */
 
-//transaction for scaleup application
+// transaction for scaleup application
 
 package scheduler
 
@@ -168,6 +168,7 @@ func (s *Scheduler) RunInnerScaleApplication(transaction *types.Transaction) boo
 	return true
 }
 
+// doScaleUpAppTrans xxx
 // the return value indicates whether the transaction need to continue
 func (s *Scheduler) doScaleUpAppTrans(
 	trans *types.Transaction, outOffer *offer.Offer, isInner bool, started time.Time) bool {
@@ -303,6 +304,7 @@ func (s *Scheduler) doScaleUpAppTrans(
 	return true
 }
 
+// doScaleDownAppTrans xxx
 // the return value indicates whether the transaction need to continue
 func (s *Scheduler) doScaleDownAppTrans(trans *types.Transaction, isInner bool) bool {
 

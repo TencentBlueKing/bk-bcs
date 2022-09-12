@@ -11,18 +11,22 @@
  *
  */
 
+// Package types xxx
 package types
 
 // WebConsoleMode webconsole 类型
 type WebConsoleMode string
 
 const (
+	// ClusterInternalMode xxx
 	ClusterInternalMode WebConsoleMode = "cluster_internal" // 用户自己集群 inCluster 模式
+	// ClusterExternalMode xxx
 	ClusterExternalMode WebConsoleMode = "cluster_external" // 平台集群, 外部模式, 需要设置 AdminClusterId
+	// ContainerDirectMode xxx
 	ContainerDirectMode WebConsoleMode = "container_direct" // 直连容器
 )
 
-// APIResponse
+// APIResponse xxx
 type APIResponse struct {
 	Data      interface{} `json:"data,omitempty"`
 	Code      int         `json:"code"`
@@ -49,7 +53,7 @@ type Container struct {
 	ContainerName string
 }
 
-// PodContext
+// PodContext xxx
 type PodContext struct {
 	ProjectId      string         `json:"project_id"`
 	Username       string         `json:"username"`

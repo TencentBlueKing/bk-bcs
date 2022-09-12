@@ -27,10 +27,11 @@ import (
 // UpdateCreateClusterDBInfoTask update cluster DB info
 func UpdateCreateClusterDBInfoTask(taskID string, stepName string) error {
 	start := time.Now()
-	//get task information and validate
+	// get task information and validate
 	task, err := cloudprovider.GetStorageModel().GetTask(context.Background(), taskID)
 	if err != nil {
-		blog.Errorf("UpdateCreateClusterDBInfoTask[%s]: task %s get detail task information from storage failed, %s. task retry", taskID, taskID, err.Error())
+		blog.Errorf(
+			"UpdateCreateClusterDBInfoTask[%s]: task %s get detail task information from storage failed, %s. task retry", taskID, taskID, err.Error())
 		return err
 	}
 
@@ -41,7 +42,8 @@ func UpdateCreateClusterDBInfoTask(taskID string, stepName string) error {
 	}
 	step, err := state.IsReadyToStep(stepName)
 	if err != nil {
-		blog.Errorf("UpdateCreateClusterDBInfoTask[%s]: task %s not turn to run step %s, err %s", taskID, taskID, stepName, err.Error())
+		blog.Errorf("UpdateCreateClusterDBInfoTask[%s]: task %s not turn to run step %s, err %s", taskID, taskID, stepName,
+			err.Error())
 		return err
 	}
 	// previous step successful when retry task

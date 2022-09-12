@@ -26,9 +26,15 @@ const (
 	K8s ClusterType = "k8s"
 )
 
+const (
+	// Cluster cluster
+	Cluster = "cluster"
+)
+
 // ClusterType cluster type
 type ClusterType string
 
+// String to string
 func (ct ClusterType) String() string {
 	return string(ct)
 }
@@ -62,7 +68,7 @@ type VerifyClusterPermissionRequest struct {
 	ClusterType ClusterType `json:"cluster_type"`
 	ClusterID   string      `json:"cluster_id"`
 	Namespace   string      `json:"namespace"`
-	//ResourceNames string `json:"resource_names"`
+	// ResourceNames string `json:"resource_names"`
 	// URL for check not namespace resource
 	RequestURL string `json:"request_url"`
 
@@ -162,7 +168,7 @@ func (vpr *VerifyPermissionReq) validate() error {
 		return errors.New("VerifyPermissionRequest invalid action")
 	}
 
-	if vpr.ResourceType == "cluster" {
+	if vpr.ResourceType == Cluster {
 		if vpr.ClusterType != K8s && vpr.ClusterType != Mesos {
 			return fmt.Errorf("VerifyPermissionRequest invalid cluster_type[%s]", vpr.ClusterType)
 		}

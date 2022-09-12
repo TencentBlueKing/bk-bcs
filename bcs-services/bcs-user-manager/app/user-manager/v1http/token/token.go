@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package token xxx
 package token
 
 import (
@@ -63,7 +64,7 @@ func NewTokenHandler(tokenStore sqlstore.TokenStore, notifyStore sqlstore.TokenN
 
 // CreateTokenForm is a form for create token.
 type CreateTokenForm struct {
-	UserType uint    `json:"usertype"`
+	UserType uint   `json:"usertype"`
 	Username string `json:"username" validate:"required"`
 	// token expiration second, -1: never expire
 	Expiration int `json:"expiration" validate:"required"`
@@ -93,6 +94,7 @@ type UpdateTokenForm struct {
 	Expiration int `json:"expiration" validate:"required"`
 }
 
+// checkTokenCreateBy xxx
 // check user token permission, if user is admin, then allow all.
 // if user is not admin, then check the token is belonged to user.
 func checkTokenCreateBy(request *restful.Request, targetUser string) (allow bool, createBy string) {
@@ -104,8 +106,7 @@ func checkTokenCreateBy(request *restful.Request, targetUser string) (allow bool
 		return false, ""
 	}
 
-	if userToken.UserType == sqlstore.AdminUser || userToken.UserType == sqlstore.SaasUser ||
-		userToken.UserType == sqlstore.ClientUser {
+	if userToken.IsClient() {
 		return true, userToken.Name
 	}
 	if userToken.Name == targetUser {
@@ -181,7 +182,7 @@ func (t *TokenHandler) CreateToken(request *restful.Request, response *restful.R
 	userToken := &models.BcsUser{
 		Name:      form.Username,
 		UserToken: token,
-		UserType:  sqlstore.PlainUser,
+		UserType:  models.PlainUser,
 		CreatedBy: createBy,
 		ExpiresAt: expiredAt,
 	}
@@ -330,12 +331,18 @@ func (t *TokenHandler) UpdateToken(request *restful.Request, response *restful.R
 
 	// create jwt token
 	key := constant.TokenKeyPrefix + token
-	jwtString, err := t.jwtClient.JWTSign(&jwt.UserInfo{
-		SubType:     jwt.User.String(),
-		UserName:    tokenInDB.Name,
+	userInfo := &jwt.UserInfo{
 		ExpiredTime: int64(form.Expiration),
 		Issuer:      jwt.JWTIssuer,
-	})
+	}
+	if tokenInDB.IsClient() {
+		userInfo.SubType = jwt.Client.String()
+		userInfo.ClientName = tokenInDB.Name
+	} else {
+		userInfo.SubType = jwt.User.String()
+		userInfo.UserName = tokenInDB.Name
+	}
+	jwtString, err := t.jwtClient.JWTSign(userInfo)
 	if err != nil {
 		blog.Errorf("recreate jwt token failed, %s", err.Error())
 		metrics.ReportRequestAPIMetrics("UpdateToken", request.Request.Method, metrics.ErrStatus, start)
@@ -444,10 +451,10 @@ func (t *TokenHandler) CreateTempToken(request *restful.Request, response *restf
 
 func getTempTokenUserType(userType uint) uint {
 	switch userType {
-	case sqlstore.AdminUser, sqlstore.SaasUser, sqlstore.PlainUser, sqlstore.ClientUser:
+	case models.AdminUser, models.SaasUser, models.PlainUser, models.ClientUser:
 		return userType
 	default:
-		userType = sqlstore.PlainUser
+		userType = models.PlainUser
 	}
 
 	return userType
@@ -456,7 +463,7 @@ func getTempTokenUserType(userType uint) uint {
 // CreateClientTokenForm is the form of creating client token
 type CreateClientTokenForm struct {
 	// ClientName name
-	ClientName   string `json:"clientName" validate:"required"`
+	ClientName string `json:"clientName" validate:"required"`
 	// ClientSecret secret
 	ClientSecret string `json:"clientSecret"`
 	// Expiration token expiration second, -1: never expire
@@ -486,7 +493,7 @@ func (t *TokenHandler) CreateClientToken(request *restful.Request, response *res
 	}
 
 	// check exist token
-	exist := t.tokenStore.GetTokenByCondition(&models.BcsUser{Name: form.ClientName, UserType: sqlstore.ClientUser})
+	exist := t.tokenStore.GetTokenByCondition(&models.BcsUser{Name: form.ClientName, UserType: models.ClientUser})
 	if exist != nil {
 		jwtString, _ := t.cache.Get(constant.TokenKeyPrefix + exist.UserToken)
 		resp := &TokenResp{Token: exist.UserToken, ExpiredAt: &exist.ExpiresAt, JWT: jwtString}
@@ -528,7 +535,8 @@ func (t *TokenHandler) CreateClientToken(request *restful.Request, response *res
 	if err != nil {
 		blog.Errorf("set client %s token fail", form.ClientName)
 		metrics.ReportRequestAPIMetrics("CreateClientToken", request.Request.Method, metrics.ErrStatus, start)
-		message := fmt.Sprintf("errcode: %d, creating client [%s] token failed", common.BcsErrApiInternalDbError, form.ClientName)
+		message := fmt.Sprintf("errcode: %d, creating client [%s] token failed", common.BcsErrApiInternalDbError,
+			form.ClientName)
 		utils.WriteServerError(response, common.BcsErrApiInternalDbError, message)
 		return
 	}
@@ -537,7 +545,7 @@ func (t *TokenHandler) CreateClientToken(request *restful.Request, response *res
 	userToken := &models.BcsUser{
 		Name:      form.ClientName,
 		UserToken: token,
-		UserType:  sqlstore.ClientUser,
+		UserType:  models.ClientUser,
 		CreatedBy: createBy,
 		ExpiresAt: expiredAt,
 	}

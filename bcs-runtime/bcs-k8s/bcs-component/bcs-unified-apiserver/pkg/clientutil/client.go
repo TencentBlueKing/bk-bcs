@@ -38,7 +38,7 @@ func GetEnvByClusterId(clusterId string) config.BCSClusterEnv {
 	return config.ProdEnv
 }
 
-// GetK8SClientByClusterId 通过集群 ID 获取 k8s client 对象
+// GetKubeConfByClusterId 通过集群 ID 获取 k8s client 对象
 func GetKubeConfByClusterId(clusterId string) (*rest.Config, error) {
 	bcsConf := GetBCSConfByClusterId(clusterId)
 	host := fmt.Sprintf("%s/clusters/%s", bcsConf.Host, clusterId)
@@ -50,7 +50,7 @@ func GetKubeConfByClusterId(clusterId string) (*rest.Config, error) {
 	return config, nil
 }
 
-// GetK8SClientByClusterId 通过集群 ID 获取 k8s client 对象
+// GetKubeClientByClusterId 通过集群 ID 获取 k8s client 对象
 func GetKubeClientByClusterId(clusterId string) (*kubernetes.Clientset, error) {
 	bcsConf := GetBCSConfByClusterId(clusterId)
 	host := fmt.Sprintf("%s/clusters/%s", bcsConf.Host, clusterId)

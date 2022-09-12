@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package clustercredential xxx
 package clustercredential
 
 import (
@@ -29,8 +30,8 @@ import (
 
 const (
 	clusterCredentialTableName = "clustercredential"
-	//! we don't setting bson tag in proto file,
-	//! all struct key in mongo is lowcase in default
+	// ! we don't setting bson tag in proto file,
+	// ! all struct key in mongo is lowcase in default
 	credentialKeyName                  = "serverkey"
 	defaultClusterCredentialListLength = 1000
 )
@@ -65,6 +66,7 @@ func New(db drivers.DB) *ModelClusterCredential {
 	}
 }
 
+// ensureTable xxx
 // ensure table
 func (m *ModelClusterCredential) ensureTable(ctx context.Context) error {
 	m.isTableEnsuredMutex.RLock()
@@ -134,7 +136,8 @@ func (m *ModelClusterCredential) GetClusterCredential(ctx context.Context, serve
 }
 
 // ListClusterCredential list online clusters
-func (m *ModelClusterCredential) ListClusterCredential(ctx context.Context, cond *operator.Condition, opt *options.ListOption) (
+func (m *ModelClusterCredential) ListClusterCredential(ctx context.Context, cond *operator.Condition,
+	opt *options.ListOption) (
 	[]types.ClusterCredential, error) {
 	retClusterCredentialList := make([]types.ClusterCredential, 0)
 	finder := m.db.Table(m.tableName).Find(cond)

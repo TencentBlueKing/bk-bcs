@@ -17,6 +17,7 @@
  * the License.
  */
 
+// Package util xxx
 package util
 
 import (
@@ -26,7 +27,7 @@ import (
 )
 
 var (
-	// controllerKind contains the schema.GroupVersionKind for this controller type.
+	// ControllerKind contains the schema.GroupVersionKind for this controller type.
 	ControllerKind = gstsv1alpha1.SchemeGroupVersion.WithKind("GameStatefulSet")
 )
 

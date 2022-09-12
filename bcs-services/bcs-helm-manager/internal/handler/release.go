@@ -72,3 +72,12 @@ func (hm *HelmManager) RollbackRelease(ctx context.Context,
 	action := actionRelease.NewRollbackReleaseAction(hm.model, hm.platform, hm.releaseHandler)
 	return action.Handle(ctx, req, resp)
 }
+
+// GetReleaseHistory provide the actions to do get release history
+func (hm *HelmManager) GetReleaseHistory(ctx context.Context,
+	req *helmmanager.GetReleaseHistoryReq, resp *helmmanager.GetReleaseHistoryResp) error {
+
+	defer recorder(ctx, "GetReleaseHistory", req, resp)()
+	action := actionRelease.NewGetReleaseHistoryAction(hm.model, hm.releaseHandler)
+	return action.Handle(ctx, req, resp)
+}

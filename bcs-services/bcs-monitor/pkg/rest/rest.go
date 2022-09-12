@@ -8,19 +8,20 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
+// Package rest xxx
 package rest
 
 import (
 	"net/http"
-	"strings"
 
 	"github.com/gin-contrib/requestid"
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 	"github.com/pkg/errors"
+	"github.com/thanos-io/thanos/pkg/store"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/rest/tracing"
 )
 
 var (
@@ -36,10 +37,10 @@ type Result struct {
 	Data      interface{} `json:"data"`
 }
 
-// HandlerFunc
+// HandlerFunc xxx
 type HandlerFunc func(*Context) (interface{}, error)
 
-// StreamHandlerFunc
+// StreamHandlerFunc xxx
 type StreamHandlerFunc func(*Context)
 
 // AbortWithBadRequestError 请求失败
@@ -72,26 +73,25 @@ func APIResponse(c *Context, data interface{}) {
 	c.JSON(http.StatusOK, result)
 }
 
-// RequestIdGenerator
-func RequestIdGenerator() string {
-	uid := uuid.New().String()
-	requestId := strings.Replace(uid, "-", "", -1)
-	return requestId
-}
-
-// InitRestContext
+// InitRestContext :
 func InitRestContext(c *gin.Context) *Context {
+	requestId := requestid.Get(c)
+
 	restContext := &Context{
 		Context:   c,
-		RequestId: requestid.Get(c),
+		RequestId: requestId,
 		ClusterId: c.Param("clusterId"),
 		ProjectId: c.Param("projectId"),
 	}
 	c.Set("rest_context", restContext)
+
+	tracing.SetRequestIDValue(c.Request, requestId)
+	ctx := store.WithRequestIDValue(c.Request.Context(), requestId)
+	restContext.Request = restContext.Request.WithContext(ctx)
 	return restContext
 }
 
-// GetAuthContext 查询鉴权信息
+// GetRestContext 查询鉴权信息
 func GetRestContext(c *gin.Context) (*Context, error) {
 	ctxObj, ok := c.Get("rest_context")
 	if !ok {

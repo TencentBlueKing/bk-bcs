@@ -11,6 +11,7 @@
  *
  */
 
+// Package task xxx
 package task
 
 import (
@@ -55,7 +56,8 @@ func ReBuildTaskGroupID(taskGroupID string) (string, error) {
 // 1: you can create a taskgroup with the input of version(application definition), ID(taskgroup ID), reason and store
 // 2: you can create a taskgroup with the input of version(application definition), appInstances, appClusterID, reason and store.
 // taskgroup ID will be appInstances.$appname(version).$namespace(version).appClusterID.$timestamp
-func CreateTaskGroup(version *types.Version, ID string, appInstances uint64, appClusterID string, reason string, store store.Store) (*types.TaskGroup, error) {
+func CreateTaskGroup(version *types.Version, ID string, appInstances uint64, appClusterID string, reason string,
+	store store.Store) (*types.TaskGroup, error) {
 	appID := version.ID
 	runAs := version.RunAs
 	var taskgroup types.TaskGroup
@@ -81,7 +83,7 @@ func CreateTaskGroup(version *types.Version, ID string, appInstances uint64, app
 		return taskID, taskInstance
 	}
 
-	//branch for process or container
+	// branch for process or container
 	switch version.Kind {
 	case commtypes.BcsDataType_PROCESS:
 		for index, process := range version.Process {
@@ -197,7 +199,7 @@ func CreateTaskGroup(version *types.Version, ID string, appInstances uint64, app
 			task.Network = container.Docker.Network
 			task.NetworkType = container.Docker.NetworkType
 			task.NetLimit = container.NetLimit
-			//task.Cpuset = container.Cpuset
+			// task.Cpuset = container.Cpuset
 			if container.Docker.Parameters != nil {
 				for _, parameter := range container.Docker.Parameters {
 					task.Parameters = append(task.Parameters, &types.Parameter{
@@ -218,7 +220,7 @@ func CreateTaskGroup(version *types.Version, ID string, appInstances uint64, app
 			}
 			task.Privileged = container.Docker.Privileged
 			task.ForcePullImage = container.Docker.ForcePullImage
-			task.Env = container.Docker.Env //version.Env
+			task.Env = container.Docker.Env // version.Env
 			task.Volumes = container.Volumes
 			task.Command = container.Docker.Command
 			task.Arguments = container.Docker.Arguments
@@ -312,6 +314,7 @@ func CreateTaskGroup(version *types.Version, ID string, appInstances uint64, app
 	return &taskgroup, nil
 }
 
+// createTaskConfigMaps xxx
 // added  20180806, create configMaps for task
 func createTaskConfigMaps(task *types.Task, configMaps []commtypes.ConfigMap, store store.Store) error {
 	for _, configMap := range configMaps {
@@ -393,6 +396,7 @@ func createTaskConfigMaps(task *types.Task, configMaps []commtypes.ConfigMap, st
 	return nil
 }
 
+// createTaskSecrets xxx
 // added  20180806, create secrets for task
 func createTaskSecrets(task *types.Task, secrets []commtypes.Secret, store store.Store) error {
 	for _, secret := range secrets {
@@ -437,6 +441,7 @@ func createTaskSecrets(task *types.Task, secrets []commtypes.Secret, store store
 	return nil
 }
 
+// createTaskHealthChecks xxx
 // added  20180806, create healthChecks for task
 func createTaskHealthChecks(task *types.Task, healthChecks []*commtypes.HealthCheck) {
 	task.Healthy = true
@@ -505,9 +510,11 @@ func createTaskHealthChecks(task *types.Task, healthChecks []*commtypes.HealthCh
 	}
 }
 
-//add branch for process task, to do 20180802
+// createContainerTaskInfo xxx
+// add branch for process task, to do 20180802
 // #lizard forgives createContainerTaskInfo
-func createContainerTaskInfo(offer *mesos.Offer, resources []*mesos.Resource, task *types.Task, portUsed int) (*mesos.TaskInfo, int) {
+func createContainerTaskInfo(offer *mesos.Offer, resources []*mesos.Resource, task *types.Task,
+	portUsed int) (*mesos.TaskInfo, int) {
 	blog.V(3).Infof("Prepared task for launch with offer %s from %s", *offer.GetId().Value, offer.GetHostname())
 	taskInfo := mesos.TaskInfo{
 		Name: proto.String(task.Name),
@@ -593,7 +600,7 @@ func createContainerTaskInfo(offer *mesos.Offer, resources []*mesos.Resource, ta
 		labelsMap[k] = v
 	}
 	labelsMap["namespace"] = task.RunAs
-	//task.ID = 1536138501685462613.0.0.app-name.namespace.clusterid
+	// task.ID = 1536138501685462613.0.0.app-name.namespace.clusterid
 	taskids := strings.Split(task.ID, ".")
 	labelsMap["pod_name"] = fmt.Sprintf("%s-%s", taskids[3], taskids[2])
 
@@ -636,10 +643,11 @@ func createContainerTaskInfo(offer *mesos.Offer, resources []*mesos.Resource, ta
 			randomPort := false
 			cPort := m.ContainerPort
 			hPort := m.HostPort
-			//random port, get from offer
+			// random port, get from offer
 			if m.ContainerPort == 0 {
 				if len(ports) <= portUsed+portNum {
-					blog.Error("task(%s) Port not enough: offerPorts(%d)<=used(%d)+currUsed(%d)", task.ID, len(ports), portUsed, portNum)
+					blog.Error("task(%s) Port not enough: offerPorts(%d)<=used(%d)+currUsed(%d)", task.ID, len(ports), portUsed,
+						portNum)
 					return nil, portNum
 				}
 				cPort = int32(ports[portUsed+portNum])
@@ -647,7 +655,8 @@ func createContainerTaskInfo(offer *mesos.Offer, resources []*mesos.Resource, ta
 				randomPort = true
 				hPort = cPort
 				portNum++
-				blog.Info("task(%s) under HOST network, containerPort 0, so get Container and Host Port(%d) from offer", task.ID, cPort)
+				blog.Info("task(%s) under HOST network, containerPort 0, so get Container and Host Port(%d) from offer", task.ID,
+					cPort)
 				m.ContainerPort = cPort
 				m.HostPort = hPort
 			}
@@ -710,10 +719,11 @@ func createContainerTaskInfo(offer *mesos.Offer, resources []*mesos.Resource, ta
 			cPort := m.ContainerPort
 			hPort := m.HostPort
 			randomPort := false
-			//random port, get from offer
+			// random port, get from offer
 			if m.HostPort == 0 {
 				if len(ports) <= portUsed+portNum {
-					blog.Error("task(%s) Port not enough: offerPorts(%d), used(%d), I used(%d)", task.ID, len(ports), portUsed, portNum)
+					blog.Error("task(%s) Port not enough: offerPorts(%d), used(%d), I used(%d)", task.ID, len(ports), portUsed,
+						portNum)
 					return nil, portNum
 				}
 				hPort = int32(ports[portUsed+portNum])
@@ -734,7 +744,7 @@ func createContainerTaskInfo(offer *mesos.Offer, resources []*mesos.Resource, ta
 				blog.V(3).Infof("task(%s) HostPort(%d) < 0, set to 0", task.ID, hPort)
 				hPort = 0
 			}
-			//write back data to task
+			// write back data to task
 			m.ContainerPort = cPort
 			m.HostPort = hPort
 			taskInfo.Container.Docker.PortMappings = append(taskInfo.Container.Docker.PortMappings,
@@ -781,10 +791,11 @@ func createContainerTaskInfo(offer *mesos.Offer, resources []*mesos.Resource, ta
 				cPort := m.ContainerPort
 				hPort := m.HostPort
 				randomPort := false
-				//random port, get from offer
+				// random port, get from offer
 				if m.HostPort == 0 {
 					if len(ports) <= portUsed+portNum {
-						blog.Error("task(%s) Port not enough: offerPorts(%d), used(%d), I used(%d)", task.ID, len(ports), portUsed, portNum)
+						blog.Error("task(%s) Port not enough: offerPorts(%d), used(%d), I used(%d)", task.ID, len(ports), portUsed,
+							portNum)
 						return nil, portNum
 					}
 					hPort = int32(ports[portUsed+portNum])
@@ -871,10 +882,12 @@ func createContainerTaskInfo(offer *mesos.Offer, resources []*mesos.Resource, ta
 	return &taskInfo, portNum
 }
 
+// createProcessTaskInfo xxx
 // added  180807, create TaskInfo for process. By default, the process network is always HOST, and the port can be
 // specific or given by scheduler when port=0. The var template in Task.DataClass.ProDef and Task.Env will be rendered, and finally
 // the taskgroup in zookeeper(or other storage) and the taskinfo down to mesos are all rendered.
-func createProcessTaskInfo(offer *mesos.Offer, resources []*mesos.Resource, task *types.Task, portUsed int) (*mesos.TaskInfo, int) {
+func createProcessTaskInfo(offer *mesos.Offer, resources []*mesos.Resource, task *types.Task,
+	portUsed int) (*mesos.TaskInfo, int) {
 	blog.V(3).Infof("Prepared task for launch with offer %s from %s", *offer.GetId().Value, offer.GetHostname())
 	taskInfo := mesos.TaskInfo{
 		Name: proto.String(task.Name),
@@ -925,7 +938,8 @@ func createProcessTaskInfo(offer *mesos.Offer, resources []*mesos.Resource, task
 		hPort := m.HostPort
 		if hPort <= 0 {
 			if len(ports) <= portUsed+portNum {
-				blog.Error("task(%s) Port not enough: offerPorts(%d)<=used(%d)+currUsed(%d)", task.ID, len(ports), portUsed, portNum)
+				blog.Error("task(%s) Port not enough: offerPorts(%d)<=used(%d)+currUsed(%d)", task.ID, len(ports), portUsed,
+					portNum)
 				return nil, portNum
 			}
 			hPort = int32(ports[portUsed+portNum])
@@ -1076,6 +1090,7 @@ func createTaskInfoHealth(task *types.Task, taskInfo *mesos.TaskInfo) {
 	return
 }
 
+// renderProcessTaskVarTemplate xxx
 // added  180807, render the var templates in *types.Task, it will effect taskgroup and the following copy
 // operations from taskgroup to taskinfo.
 func renderProcessTaskVarTemplate(task *types.Task, offer *mesos.Offer) {
@@ -1145,7 +1160,7 @@ func renderProcessTaskVarTemplate(task *types.Task, offer *mesos.Offer) {
 }
 
 func renderAppTaskVarTemplate(task *types.Task, offer *mesos.Offer) {
-	//task.ID = 1536138501685462613.0.0.app-name.namespace.clusterid
+	// task.ID = 1536138501685462613.0.0.app-name.namespace.clusterid
 	taskids := strings.Split(task.ID, ".")
 	timestamp := taskids[0]
 	instanceid := taskids[2]
@@ -1170,9 +1185,10 @@ func renderAppTaskVarTemplate(task *types.Task, offer *mesos.Offer) {
 		m[types.APP_TASK_TEMPLATE_KEY_HOSTIP] = ip
 	}
 
-	//set taskgroup id
-	m[types.APP_TASK_TEMPLATE_KEY_PODID] = fmt.Sprintf("%s.%s.%s.%s.%s", instanceid, appname, namespace, clusterid, timestamp)
-	//set taskgroup name
+	// set taskgroup id
+	m[types.APP_TASK_TEMPLATE_KEY_PODID] = fmt.Sprintf("%s.%s.%s.%s.%s", instanceid, appname, namespace, clusterid,
+		timestamp)
+	// set taskgroup name
 	m[types.APP_TASK_TEMPLATE_KEY_PODNAME] = fmt.Sprintf("%s-%s", appname, instanceid)
 
 	// set port by name
@@ -1192,6 +1208,7 @@ func renderAppTaskVarTemplate(task *types.Task, offer *mesos.Offer) {
 	}
 }
 
+// renderString xxx
 // Replace all K in s with v and return the replaced string r.
 // K is the string after formatting k with TASK_TEMPLATE_KEY_FORMAT
 func renderString(s, k, v string) (r string) {
@@ -1311,16 +1328,16 @@ func CreateTaskGroupInfo(offer *mesos.Offer, version *types.Version,
 	executorResourceDone := false
 	for _, task := range taskgroup.Taskgroup {
 
-		//update task offer info
+		// update task offer info
 		task.OfferId = *offer.GetId().Value
 		task.AgentId = *offer.AgentId.Value
 		task.AgentHostname = *offer.Hostname
 		task.AgentIPAddress, _ = offerP.GetOfferIp(offer)
-		//if task contains extended resources, then set device plugin socket address int it
+		// if task contains extended resources, then set device plugin socket address int it
 		for _, ex := range task.DataClass.ExtendedResources {
 			for _, re := range offer.GetResources() {
 				if re.GetName() == ex.Name {
-					//device plugin socket setted in role parameter
+					// device plugin socket setted in role parameter
 					ex.Socket = re.GetRole()
 				}
 			}
@@ -1378,7 +1395,7 @@ func GetTaskGroupID(taskGroupInfo *mesos.TaskGroupInfo) *string {
 		return defID
 	}
 
-	//ID := strings.Join(splitID[2:], ".")
+	// ID := strings.Join(splitID[2:], ".")
 
 	// appInstances, appID, appRunAs, appClusterID, idTime
 	ID := fmt.Sprintf("%s.%s.%s.%s.%s", splitID[2], splitID[3], splitID[4], splitID[5], splitID[0])
@@ -1389,7 +1406,8 @@ func GetTaskGroupID(taskGroupInfo *mesos.TaskGroupInfo) *string {
 func IsTaskGroupEnd(taskGroup *types.TaskGroup) bool {
 	for _, task := range taskGroup.Taskgroup {
 		status := task.Status
-		if status == types.TASK_STATUS_LOST || status == types.TASK_STATUS_STAGING || status == types.TASK_STATUS_STARTING || status == types.TASK_STATUS_RUNNING || status == types.TASK_STATUS_KILLING { //nolint
+		if status == types.TASK_STATUS_LOST || status == types.TASK_STATUS_STAGING || status == types.TASK_STATUS_STARTING ||
+			status == types.TASK_STATUS_RUNNING || status == types.TASK_STATUS_KILLING { //nolint
 			blog.Info("task %s status(%s), not end status", task.ID, status)
 			return false
 		}
@@ -1416,7 +1434,8 @@ func CanTaskGroupReschedule(taskGroup *types.TaskGroup) bool {
 
 	for _, task := range taskGroup.Taskgroup {
 		status := task.Status
-		if status == types.TASK_STATUS_STAGING || status == types.TASK_STATUS_STARTING || status == types.TASK_STATUS_RUNNING || status == types.TASK_STATUS_KILLING {
+		if status == types.TASK_STATUS_STAGING || status == types.TASK_STATUS_STARTING ||
+			status == types.TASK_STATUS_RUNNING || status == types.TASK_STATUS_KILLING {
 			blog.Info("task %s status(%s), can not reschedule", task.ID, status)
 			return false
 		}
@@ -1447,7 +1466,8 @@ func CheckVersion(version *types.Version, store store.Store) error {
 				_, ok := bcsConfigMap.Data[confItem.DataKey]
 				if ok == false {
 					blog.Warn("bcsconfig item(key:%s) not exist in bcsconfig(%s, %s) ", confItem.DataKey, configMapNs, configMapName)
-					return fmt.Errorf("bcsconfig item(key:%s) not exist in bcsconfig(%s, %s) ", confItem.DataKey, configMapNs, configMapName)
+					return fmt.Errorf("bcsconfig item(key:%s) not exist in bcsconfig(%s, %s) ", confItem.DataKey, configMapNs,
+						configMapName)
 				}
 			}
 		}
@@ -1470,14 +1490,15 @@ func CheckVersion(version *types.Version, store store.Store) error {
 				_, ok := bcsSecret.Data[secretItem.DataKey]
 				if ok == false {
 					blog.Warn("bcssecret item(key:%s) not exist in bcssecret(%s, %s) ", secretItem.DataKey, secretNs, secretName)
-					return fmt.Errorf("bcssecret item(key:%s) not exist in bcssecret(%s, %s) ", secretItem.DataKey, secretNs, secretName)
+					return fmt.Errorf("bcssecret item(key:%s) not exist in bcssecret(%s, %s) ", secretItem.DataKey, secretNs,
+						secretName)
 				}
 			}
 		}
 
-		//check image pull secret
-		//"imagePullUser": "secret::imagesecret||user"
-		//"imagePullPasswd": "secret::imagesecret||pwd"
+		// check image pull secret
+		// "imagePullUser": "secret::imagesecret||user"
+		// "imagePullPasswd": "secret::imagesecret||pwd"
 		err := checkImageSecret(store, version.RunAs, container.Docker.ImagePullUser)
 		if err != nil {
 			blog.Errorf(err.Error())
@@ -1490,14 +1511,14 @@ func CheckVersion(version *types.Version, store store.Store) error {
 		}
 	}
 
-	//check requestIP labels "io.tencent.bcs.netsvc.requestip.*"
+	// check requestIP labels "io.tencent.bcs.netsvc.requestip.*"
 	requestIPLabelNum := 0
 	for k := range version.Labels {
 		splitK := strings.Split(k, ".")
 		if len(splitK) == 6 && splitK[3] == "netsvc" && splitK[4] == "requestip" {
-			//if strconv.Itoa(requestIPLabelNum) != splitK[5] {
+			// if strconv.Itoa(requestIPLabelNum) != splitK[5] {
 			//	return fmt.Errorf("label netsvc.requestip.%d not exist or not in correct position", requestIPLabelNum)
-			//}
+			// }
 			requestIPLabelNum++
 		}
 	}

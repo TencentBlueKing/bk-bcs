@@ -16,7 +16,7 @@ package cloudprovider
 // TaskName xxx
 type TaskName string
 
-// String() xxx
+// String xxx
 func (tn TaskName) String() string {
 	return string(tn)
 }
@@ -24,16 +24,16 @@ func (tn TaskName) String() string {
 // StepName xx
 type StepName string
 
-// String() xxx
+// String xxx
 func (sn StepName) String() string {
 	return string(sn)
 }
 
 var (
-	// CreateNodeGroup task
+	// CreateNodeGroupTask task
 	CreateNodeGroupTask TaskName = "创建节点池"
 
-	// UpdateDesiredNodes task
+	// UpdateDesiredNodesTask task
 	UpdateDesiredNodesTask TaskName = "扩容节点池"
 	// ApplyInstanceMachinesStep step
 	ApplyInstanceMachinesStep StepName = "申请节点任务"
@@ -49,7 +49,7 @@ var (
 // ParamKey xxx
 type ParamKey string
 
-// String() xxx
+// String xxx
 func (pk ParamKey) String() string {
 	return string(pk)
 }
@@ -72,26 +72,31 @@ var (
 	// OperatorKey xxx
 	OperatorKey ParamKey = "operator"
 
+	// NodeIPsKey TODO
 	// Task Common Instance
 	// NodeIPsKey xxx
 	NodeIPsKey ParamKey = "nodeIPs"
-	// NodeIPsKey xxx
+	// NodeIDsKey xxx
 	NodeIDsKey ParamKey = "nodeIDs"
 
 	// DynamicNodeIPListKey xxx
 	DynamicNodeIPListKey ParamKey = "NodeIPList"
 
+	// SuccessNodeIDsKey TODO
 	// CVM Instance
 	// SuccessNodeIDsKey xxx
 	SuccessNodeIDsKey ParamKey = "successNodeIDs"
 	// FailedNodeIDsKey xxx
 	FailedNodeIDsKey ParamKey = "failedNodeIDs"
 
+	// SuccessClusterNodeIDsKey TODO
 	// cloud cluster success & failed Instance
 	// SuccessClusterNodeIDsKey xxx
 	SuccessClusterNodeIDsKey ParamKey = "successClusterNodeIDs"
 	// FailedClusterNodeIDsKey xxx
 	FailedClusterNodeIDsKey ParamKey = "failedClusterNodeIDs"
+	// DeleteModeKey xxx
+	DeleteModeKey ParamKey = "deleteMode"
 
 	// JobTypeKey xxx
 	JobTypeKey ParamKey = "jobType"

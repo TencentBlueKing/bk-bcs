@@ -18,9 +18,9 @@ import (
 )
 
 // GetRole get bcsRole by roleName
-func GetRole(RoleName string) *models.BcsRole {
+func GetRole(roleName string) *models.BcsRole {
 	role := models.BcsRole{}
-	GCoreDB.Where(&models.BcsRole{Name: RoleName}).First(&role)
+	GCoreDB.Where(&models.BcsRole{Name: roleName}).First(&role)
 	if role.Name != "" {
 		return &role
 	}

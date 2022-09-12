@@ -27,7 +27,7 @@ type connection struct {
 	handler  protocol.HandlerIf // 逻辑层数据转发接口
 }
 
-// 发送心跳数据
+// sendHeartBeat 发送心跳数据
 func (cli *connection) sendHeartBeat() error {
 
 	msgHead := &protocol.MsgHead{}
@@ -53,7 +53,7 @@ func (cli *connection) sendHeartBeat() error {
 	return nil
 }
 
-//Write 实现HandlerIf 接口，接收网络发送来的数据
+// Write 实现HandlerIf 接口，接收网络发送来的数据
 func (cli *connection) Write(head *protocol.MsgHead, data []byte) (int, error) {
 
 	switch head.Type {

@@ -19,6 +19,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/timex"
 )
 
@@ -467,4 +468,59 @@ func TestFormatPo(t *testing.T) {
 	assert.Equal(t, 1, ret["totalCnt"])
 	assert.Equal(t, int64(2), ret["restartCnt"])
 	assert.Equal(t, "Running", ret["status"])
+}
+
+func TestDeployStatusParser(t *testing.T) {
+	// 正常
+	manifest := map[string]interface{}{
+		"metadata": map[string]interface{}{},
+		"spec": map[string]interface{}{
+			"replicas": int64(3),
+		},
+		"status": map[string]interface{}{
+			"availableReplicas": int64(3),
+			"readyReplicas":     int64(3),
+			"updatedReplicas":   int64(3),
+		},
+	}
+	assert.Equal(t, WorkloadStatusNormal, newDeployStatusParser(manifest).Parse())
+
+	// 创建中
+	_ = mapx.SetItems(manifest, "status.readyReplicas", int64(2))
+	_ = mapx.SetItems(manifest, "metadata.generation", int64(1))
+	assert.Equal(t, WorkloadStatusCreating, newDeployStatusParser(manifest).Parse())
+
+	// 更新中
+	_ = mapx.SetItems(manifest, "metadata.generation", int64(3))
+	assert.Equal(t, WorkloadStatusUpdating, newDeployStatusParser(manifest).Parse())
+
+	// 删除中
+	_ = mapx.SetItems(manifest, "metadata.deletionTimestamp", "2022-08-01T09:00:00Z")
+	assert.Equal(t, WorkloadStatusDeleting, newDeployStatusParser(manifest).Parse())
+}
+
+func TestSTSStatusParser(t *testing.T) {
+	// 创建中
+	manifest := map[string]interface{}{
+		"metadata": map[string]interface{}{
+			"generation": int64(1),
+		},
+		"spec": map[string]interface{}{
+			"replicas": int64(2),
+		},
+		"status": map[string]interface{}{
+			"currentReplicas": int64(2),
+			"readyReplicas":   int64(1),
+			"updatedReplicas": int64(2),
+		},
+	}
+	assert.Equal(t, WorkloadStatusCreating, newSTSStatusParser(manifest).Parse())
+
+	// 更新中
+	_ = mapx.SetItems(manifest, "metadata.generation", int64(2))
+	assert.Equal(t, WorkloadStatusUpdating, newSTSStatusParser(manifest).Parse())
+
+	// 正常
+	_ = mapx.SetItems(manifest, "status.readyReplicas", int64(2))
+	assert.Equal(t, WorkloadStatusNormal, newSTSStatusParser(manifest).Parse())
 }

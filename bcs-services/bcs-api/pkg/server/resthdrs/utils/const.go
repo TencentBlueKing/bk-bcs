@@ -14,7 +14,10 @@
 package utils
 
 const (
+	// BcsK8sCluster TODO
 	BcsK8sCluster = iota + 1
+	// BcsMesosCluster TODO
 	BcsMesosCluster
+	// BcsTkeCluster TODO
 	BcsTkeCluster
 )

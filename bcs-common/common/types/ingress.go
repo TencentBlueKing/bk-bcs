@@ -13,6 +13,7 @@
 
 package types
 
+// BcsIngress xxx
 type BcsIngress struct {
 	TypeMeta   `json:",inline"`
 	ObjectMeta `json:"metadata"`
@@ -42,7 +43,7 @@ type IngressRule struct {
 	TCPIngress  *TCPIngressRule  `json:"tcpIngress"`
 }
 
-// HTTPIngressRuleValue is a list of http selectors pointing to backends.
+// HTTPIngressRule Value is a list of http selectors pointing to backends.
 // In the example: http://<host>/<path>?<searchpart> -> backend where
 // where parts of the url correspond to RFC 3986, this resource will be used
 // to match against everything after the last '/' and before the first '?'
@@ -56,15 +57,22 @@ type HTTPIngressRule struct {
 	Paths []HTTPIngressPath `json:"paths"`
 }
 
+// BalanceType xxx
 type BalanceType string
+
+// IngressRuleKind xxx
 type IngressRuleKind string
 
 const (
+	// HttpIngressKind xxx
 	HttpIngressKind IngressRuleKind = "HTTP"
-	TCPIngressKind  IngressRuleKind = "TCP"
+	// TCPIngressKind xxx
+	TCPIngressKind IngressRuleKind = "TCP"
 
+	// RoundrobinBalanceType xxx
 	RoundrobinBalanceType BalanceType = "roundrobin"
-	SourceBalanceType     BalanceType = "source"
+	// SourceBalanceType xxx
+	SourceBalanceType BalanceType = "source"
 )
 
 // HTTPIngressPath associates a path regex with a backend. Incoming urls matching
@@ -87,6 +95,7 @@ type IngressBackend struct {
 	Weight      int32  `json:"weight"`
 }
 
+// TCPIngressRule xxx
 type TCPIngressRule struct {
 	ListenPort int32            `json:"listenPort"`
 	Backend    []IngressBackend `json:"backend"`

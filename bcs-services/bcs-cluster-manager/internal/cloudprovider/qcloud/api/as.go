@@ -26,13 +26,13 @@ import (
 
 // NewASClient init as client
 func NewASClient(opt *cloudprovider.CommonOption) (*ASClient, error) {
-	if opt == nil || len(opt.Key) == 0 || len(opt.Secret) == 0 {
+	if opt == nil || len(opt.Account.SecretID) == 0 || len(opt.Account.SecretKey) == 0 {
 		return nil, cloudprovider.ErrCloudCredentialLost
 	}
 	if len(opt.Region) == 0 {
 		return nil, cloudprovider.ErrCloudRegionLost
 	}
-	credential := common.NewCredential(opt.Key, opt.Secret)
+	credential := common.NewCredential(opt.Account.SecretID, opt.Account.SecretKey)
 	cpf := profile.NewClientProfile()
 
 	cli, err := as.NewClient(credential, opt.Region, cpf)
@@ -180,6 +180,9 @@ func (c *ASClient) ModifyLaunchConfigurationAttributes(req *as.ModifyLaunchConfi
 // https://cloud.tencent.com/document/api/377/35199
 func (c *ASClient) UpgradeLaunchConfiguration(req *as.UpgradeLaunchConfigurationRequest) error {
 	blog.Infof("UpgradeLaunchConfiguration input: %v", utils.ToJSONString(req))
+	if *req.InternetAccessible.InternetChargeType == InternetChargeTypeBandwidthPrepaid {
+		req.InternetAccessible.InternetChargeType = common.StringPtr(InternetChargeTypeBandwidthPostpaidByHour)
+	}
 	resp, err := c.as.UpgradeLaunchConfiguration(req)
 	if err != nil {
 		blog.Errorf("UpgradeLaunchConfiguration failed, err: %s", err.Error())
@@ -264,7 +267,7 @@ func (c *ASClient) ScaleOutInstances(asgID string, scaleOutNum uint64) (string, 
 	return *resp.Response.ActivityId, nil
 }
 
-// ScaleOutInstances 指定数量扩容实例, 返回伸缩活动ID
+// ScaleInInstances 指定数量缩容实例, 返回伸缩活动ID
 func (c *ASClient) ScaleInInstances(asgID string, scaleInNum uint64) (string, error) {
 	blog.Infof("ScaleInInstances input: asg %s; scaleIn %v", asgID, scaleInNum)
 

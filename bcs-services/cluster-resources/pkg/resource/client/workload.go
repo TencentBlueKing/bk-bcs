@@ -24,6 +24,7 @@ import (
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/tools/remotecommand"
 
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/action"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/ctxkey"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/i18n"
@@ -36,23 +37,23 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/stringx"
 )
 
-// PodClient ...
+// PodClient xxx
 type PodClient struct {
 	ResClient
 }
 
-// NewPodClient ...
+// NewPodClient xxx
 func NewPodClient(ctx context.Context, conf *res.ClusterConf) *PodClient {
 	podRes, _ := res.GetGroupVersionResource(ctx, conf, res.Po, "")
 	return &PodClient{ResClient{NewDynamicClient(conf), conf, podRes}}
 }
 
-// NewPodCliByClusterID ...
+// NewPodCliByClusterID xxx
 func NewPodCliByClusterID(ctx context.Context, clusterID string) *PodClient {
 	return NewPodClient(ctx, res.NewClusterConfig(clusterID))
 }
 
-// List ...
+// List xxx
 func (c *PodClient) List(
 	ctx context.Context, namespace, ownerKind, ownerName string, opts metav1.ListOptions,
 ) (map[string]interface{}, error) {
@@ -96,7 +97,7 @@ func (c *PodClient) ListAllPods(
 	return ret.UnstructuredContent(), nil
 }
 
-// 非直接关联 Pod 的资源，找到下层直接关联的子资源
+// getPodOwnerRefs 非直接关联 Pod 的资源，找到下层直接关联的子资源
 func (c *PodClient) getPodOwnerRefs(
 	ctx context.Context, clusterConf *res.ClusterConf, namespace, ownerKind, ownerName string, opts metav1.ListOptions,
 ) ([]map[string]string, error) {
@@ -123,7 +124,7 @@ func (c *PodClient) getPodOwnerRefs(
 	return ownerRefs, nil
 }
 
-// 根据 OwnerReferences 过滤关联的子资源
+// filterByOwnerRefs 根据 OwnerReferences 过滤关联的子资源
 func (c *PodClient) filterByOwnerRefs(subResItems []interface{}, ownerRefs []map[string]string) []interface{} {
 	rets := []interface{}{}
 	for _, subRes := range subResItems {
@@ -188,7 +189,7 @@ func (c *PodClient) ListPodRelatedRes(
 	return manifest, nil
 }
 
-// 获取 Pod 关联的某种资源的名称列表
+// getPodRelatedResNameList 获取 Pod 关联的某种资源的名称列表
 func (c *PodClient) getPodRelatedResNameList(
 	ctx context.Context, namespace, podName, resKind string,
 ) ([]string, error) {
@@ -247,4 +248,24 @@ func (c *PodClient) ExecCommand(
 		return "", "", err
 	}
 	return stdout.String(), stderr.String(), err
+}
+
+// BatchDelete 批量删除 Pod（需为同一命名空间下的）
+// NOTE 由于 DeleteCollection 是基于 LabelSelector 等而非 PodName，因此这里还是单个单个 Pod 删除
+// TODO 针对较多 Pod 同时删除的场景进行性能优化，比如拆分任务使用 goroutine 执行？
+func (c *PodClient) BatchDelete(
+	ctx context.Context, namespace string, podNames []string, opts metav1.DeleteOptions,
+) (err error) {
+	if len(podNames) == 0 {
+		return nil
+	}
+	if err = c.permValidate(ctx, action.Delete, namespace); err != nil {
+		return err
+	}
+	for _, pn := range podNames {
+		if err = c.cli.Resource(c.res).Namespace(namespace).Delete(ctx, pn, opts); err != nil {
+			return err
+		}
+	}
+	return nil
 }

@@ -133,6 +133,7 @@ func remove(req *restful.Request, condition *operator.Condition) error {
 	return store.Remove(req.Request.Context(), tableName, rmOption)
 }
 
+// cleanCluster xxx
 // List all host whose cluster equals clusterID
 // and make their cluster empty string
 func cleanCluster(req *restful.Request, clusterID string) error {

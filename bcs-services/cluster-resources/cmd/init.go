@@ -112,7 +112,7 @@ func (crSvc *clusterResourcesService) Run() error {
 	return nil
 }
 
-// 初始化 MicroService
+// initMicro 初始化 MicroService
 func (crSvc *clusterResourcesService) initMicro() error {
 	grpcServer := microGrpc.NewServer(
 		server.Name(conf.ServiceDomain),
@@ -149,7 +149,7 @@ func (crSvc *clusterResourcesService) initMicro() error {
 	return nil
 }
 
-// 注册多个 Handler
+// initHandler 注册多个 Handler
 func (crSvc *clusterResourcesService) initHandler() error { // nolint:cyclop
 	if err := clusterRes.RegisterBasicHandler(crSvc.microSvc.Server(), basicHdlr.New()); err != nil {
 		return err
@@ -187,7 +187,7 @@ func (crSvc *clusterResourcesService) initHandler() error { // nolint:cyclop
 	return nil
 }
 
-// 注册服务到 Etcd
+// initRegistry 注册服务到 Etcd
 func (crSvc *clusterResourcesService) initRegistry() error {
 	etcdEndpoints := stringx.Split(crSvc.conf.Etcd.EtcdEndpoints)
 	etcdSecure := false
@@ -217,7 +217,7 @@ func (crSvc *clusterResourcesService) initRegistry() error {
 	return nil
 }
 
-// 初始化 Server 与 client TLS 配置
+// initTLSConfig 初始化 Server 与 client TLS 配置
 func (crSvc *clusterResourcesService) initTLSConfig() error {
 	if crSvc.conf.Server.Cert != "" && crSvc.conf.Server.Key != "" && crSvc.conf.Server.Ca != "" {
 		tlsConfig, err := ssl.ServerTslConfVerityClient(
@@ -245,7 +245,7 @@ func (crSvc *clusterResourcesService) initTLSConfig() error {
 	return nil
 }
 
-// 初始化 HTTP 服务
+// initHTTPService 初始化 HTTP 服务
 func (crSvc *clusterResourcesService) initHTTPService() error {
 	rmMux := runtime.NewServeMux(
 		runtime.WithIncomingHeaderMatcher(httpUtil.CustomHeaderMatcher),
@@ -334,7 +334,7 @@ func (crSvc *clusterResourcesService) initHTTPService() error {
 	return nil
 }
 
-// 初始化 Metric 服务
+// initMetricService 初始化 Metric 服务
 func (crSvc *clusterResourcesService) initMetricService() error {
 	log.Info(crSvc.ctx, "init cluster resource metric service")
 
@@ -358,7 +358,7 @@ func (crSvc *clusterResourcesService) initMetricService() error {
 	return nil
 }
 
-// 初始化依赖组件 Client
+// initComponentClient 初始化依赖组件 Client
 func (crSvc *clusterResourcesService) initComponentClient() (err error) {
 	// ClusterManager
 	cluster.InitCMClient(crSvc.microRtr, crSvc.clientTLSConfig)

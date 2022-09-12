@@ -33,22 +33,22 @@ import (
 )
 
 const (
-	// 重试次数
+	// RetryTimes 重试次数
 	RetryTimes = 10
-	// 检查间隔，单位：秒
+	// CheckInterval 检查间隔，单位：秒
 	CheckInterval = 30
-	// 依赖服务检查失败退出码
+	// ExitCode 依赖服务检查失败退出码
 	ExitCode = 1
 )
 
-// DependencyServiceChecker ...
+// DependencyServiceChecker xxx
 type DependencyServiceChecker struct {
 	conf       *config.ClusterResourcesConf
 	microRtr   registry.Registry
 	cliTLSConf *tls.Config
 }
 
-// NewDependencyServiceChecker ...
+// NewDependencyServiceChecker xxx
 func NewDependencyServiceChecker(conf *config.ClusterResourcesConf) *DependencyServiceChecker {
 	return &DependencyServiceChecker{
 		conf:       conf,
@@ -98,6 +98,7 @@ func initCliTLSConf(conf config.ClientConf) *tls.Config {
 	return nil
 }
 
+// DoAndExit xxx
 func (c *DependencyServiceChecker) DoAndExit() {
 	for i := 0; i < RetryTimes; i++ {
 		fmt.Printf("try %d times\n", i) // nolint:forbidigo
@@ -115,7 +116,7 @@ func (c *DependencyServiceChecker) DoAndExit() {
 	os.Exit(ExitCode)
 }
 
-// 对依赖服务进行一次检查，任意服务不可用，都返回错误
+// doOnce 对依赖服务进行一次检查，任意服务不可用，都返回错误
 func (c *DependencyServiceChecker) doOnce() error {
 	// 检查 Redis 服务，若服务异常，则返回错误
 	rds := redis.NewStandaloneClient(&c.conf.Redis)

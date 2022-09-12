@@ -11,6 +11,7 @@
  *
  */
 
+// Package apiserver xxx
 package apiserver
 
 import (
@@ -98,6 +99,7 @@ type AggregationAPIServer struct {
 	bcsStorage *storage.BcsStorage
 }
 
+// NewAggregationAPIServer xxx
 func NewAggregationAPIServer(apiserver *genericapiserver.GenericAPIServer, config *config.Config,
 	maxRequestBodyBytes int64, minRequestTimeout int,
 	admissionControl admission.Interface,
@@ -114,6 +116,7 @@ func NewAggregationAPIServer(apiserver *genericapiserver.GenericAPIServer, confi
 	}
 }
 
+// InstallShadowAPIGroups xxx
 func (as *AggregationAPIServer) InstallShadowAPIGroups(stopCh <-chan struct{}, cl discovery.DiscoveryInterface) error {
 	apiGroupResources, err := restmapper.GetAPIGroupResources(cl)
 	if err != nil {
@@ -136,7 +139,8 @@ func (as *AggregationAPIServer) InstallShadowAPIGroups(stopCh <-chan struct{}, c
 			//  安需注册
 			var needInstallAPIResource bool
 			for _, configResource := range as.config.APIResources {
-				if configResource.Group == apiresource.Group && configResource.Version == apiresource.Version && configResource.Kind == apiresource.Kind {
+				if configResource.Group == apiresource.Group && configResource.Version == apiresource.Version &&
+					configResource.Kind == apiresource.Kind {
 					needInstallAPIResource = true
 					break
 				}
@@ -146,7 +150,8 @@ func (as *AggregationAPIServer) InstallShadowAPIGroups(stopCh <-chan struct{}, c
 			}
 
 			// register scheme for original GVK
-			Scheme.AddKnownTypeWithName(schema.GroupVersion{Group: apiGroupResource.Group.Name, Version: apiresource.Version}.WithKind(apiresource.Kind),
+			Scheme.AddKnownTypeWithName(schema.GroupVersion{Group: apiGroupResource.Group.Name,
+				Version: apiresource.Version}.WithKind(apiresource.Kind),
 				&unstructured.Unstructured{},
 			)
 			resourceRest := template.NewREST(as.kubeRESTClient, ParameterCodec, as.bcsStorage, as.config)
@@ -154,20 +159,21 @@ func (as *AggregationAPIServer) InstallShadowAPIGroups(stopCh <-chan struct{}, c
 			// name 换个名称
 			name := fmt.Sprintf("%saggregations", strings.ToLower(apiresource.Kind))
 			resourceRest.SetName(name)
-			//resourceRest.SetShortNames(apiresource.ShortNames)
+			// resourceRest.SetShortNames(apiresource.ShortNames)
 			resourceRest.SetKind(apiresource.Kind)
 			resourceRest.SetGroup(apiresource.Group)
 			resourceRest.SetVersion(apiresource.Version)
 			switch {
 			case strings.HasSuffix(apiresource.Name, "/scale"):
-				//TODO 单独处理scaler
+				// TODO 单独处理scaler
 			default:
 				aggregationv1alpha1storage[name] = resourceRest
 			}
 		}
 	}
 
-	aggertationAPIGroupInfo := genericapiserver.NewDefaultAPIGroupInfo(aggregationapi.GroupName, Scheme, ParameterCodec, Codecs)
+	aggertationAPIGroupInfo := genericapiserver.NewDefaultAPIGroupInfo(aggregationapi.GroupName, Scheme, ParameterCodec,
+		Codecs)
 	aggertationAPIGroupInfo.PrioritizedVersions = []schema.GroupVersion{
 		{
 			Group:   aggregationapi.GroupName,
@@ -178,6 +184,7 @@ func (as *AggregationAPIServer) InstallShadowAPIGroups(stopCh <-chan struct{}, c
 	return as.installAPIGroups(&aggertationAPIGroupInfo)
 }
 
+// installAPIGroups xxx
 // Exposes given api groups in the API.
 // copied from k8s.io/apiserver/pkg/server/genericapiserver.go and modified
 func (as *AggregationAPIServer) installAPIGroups(apiGroupInfos ...*genericapiserver.APIGroupInfo) error {
@@ -201,8 +208,8 @@ func (as *AggregationAPIServer) installAPIGroups(apiGroupInfos ...*genericapiser
 			var found bool
 			for _, ws := range as.GenericAPIServer.Handler.GoRestfulContainer.RegisteredWebServices() {
 				if ws.RootPath() == path.Join(genericapiserver.APIGroupPrefix, aggregationapi.SchemeGroupVersion.String()) {
-					//TODO crd handler
-					//as.crdHandler.SetRootWebService(ws)
+					// TODO crd handler
+					// as.crdHandler.SetRootWebService(ws)
 					found = true
 				}
 			}
@@ -234,14 +241,16 @@ func (as *AggregationAPIServer) installAPIGroups(apiGroupInfos ...*genericapiser
 			PreferredVersion: preferredVersionForDiscovery,
 		}
 		as.GenericAPIServer.DiscoveryGroupManager.AddGroup(apiGroup)
-		as.GenericAPIServer.Handler.GoRestfulContainer.Add(genericdiscovery.NewAPIGroupHandler(as.GenericAPIServer.Serializer, apiGroup).WebService())
+		as.GenericAPIServer.Handler.GoRestfulContainer.Add(genericdiscovery.NewAPIGroupHandler(as.GenericAPIServer.Serializer,
+			apiGroup).WebService())
 	}
 	return nil
 }
 
 // installAPIResources is a private method for installing the REST storage backing each api groupversionresource
 // copied from k8s.io/apiserver/pkg/server/genericapiserver.go and modified
-func (as *AggregationAPIServer) installAPIResources(apiPrefix string, apiGroupInfo *genericapiserver.APIGroupInfo) error {
+func (as *AggregationAPIServer) installAPIResources(apiPrefix string,
+	apiGroupInfo *genericapiserver.APIGroupInfo) error {
 	var resourceInfos []*storageversion.ResourceInfo
 	for _, groupVersion := range apiGroupInfo.PrioritizedVersions {
 		if len(apiGroupInfo.VersionedResourcesStorageMap[groupVersion.Version]) == 0 {
@@ -266,8 +275,10 @@ func (as *AggregationAPIServer) installAPIResources(apiPrefix string, apiGroupIn
 	return nil
 }
 
+// getAPIGroupVersion xxx
 // a private method that copied from k8s.io/apiserver/pkg/server/genericapiserver.go and modified
-func (as *AggregationAPIServer) getAPIGroupVersion(apiGroupInfo *genericapiserver.APIGroupInfo, groupVersion schema.GroupVersion, apiPrefix string) *genericapi.APIGroupVersion {
+func (as *AggregationAPIServer) getAPIGroupVersion(apiGroupInfo *genericapiserver.APIGroupInfo,
+	groupVersion schema.GroupVersion, apiPrefix string) *genericapi.APIGroupVersion {
 	storage := make(map[string]rest.Storage)
 	for k, v := range apiGroupInfo.VersionedResourcesStorageMap[groupVersion.Version] {
 		storage[strings.ToLower(k)] = v
@@ -278,8 +289,10 @@ func (as *AggregationAPIServer) getAPIGroupVersion(apiGroupInfo *genericapiserve
 	return version
 }
 
+// newAPIGroupVersion xxx
 // a private method that copied from k8s.io/apiserver/pkg/server/genericapiserver.go and modified
-func (as *AggregationAPIServer) newAPIGroupVersion(apiGroupInfo *genericapiserver.APIGroupInfo, groupVersion schema.GroupVersion) *genericapi.APIGroupVersion {
+func (as *AggregationAPIServer) newAPIGroupVersion(apiGroupInfo *genericapiserver.APIGroupInfo,
+	groupVersion schema.GroupVersion) *genericapi.APIGroupVersion {
 	return &genericapi.APIGroupVersion{
 		GroupVersion:     groupVersion,
 		MetaGroupVersion: apiGroupInfo.MetaGroupVersion,

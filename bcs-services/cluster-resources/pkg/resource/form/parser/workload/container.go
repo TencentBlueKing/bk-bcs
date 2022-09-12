@@ -22,7 +22,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
 )
 
-// ParseContainerGroup ...
+// ParseContainerGroup xxx
 func ParseContainerGroup(manifest map[string]interface{}, cGroup *model.ContainerGroup) {
 	// 初始容器
 	if cs, _ := mapx.GetItems(manifest, "spec.template.spec.initContainers"); cs != nil {
@@ -165,7 +165,7 @@ func parseProbe(raw map[string]interface{}, probe *model.Probe) {
 	}
 }
 
-// 预设探针默认值，但是不会启用
+// setDefaultProbe 预设探针默认值，但是不会启用
 func setDefaultProbe(probe *model.Probe) {
 	probe.Enabled = false
 	probe.Type = ProbeTypeHTTPGet

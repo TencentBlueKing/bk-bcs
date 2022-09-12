@@ -20,7 +20,7 @@ type HookTmpl struct {
 	Spec     HookTmplSpec `structs:"spec"`
 }
 
-// HookTmplSpec ...
+// HookTmplSpec xxx
 type HookTmplSpec struct {
 	Args                  []HookTmplArg    `structs:"args"`
 	ExecPolicy            string           `structs:"execPolicy"`
@@ -28,13 +28,13 @@ type HookTmplSpec struct {
 	Metrics               []HookTmplMetric `structs:"metrics"`
 }
 
-// HookTmplArg ...
+// HookTmplArg xxx
 type HookTmplArg struct {
 	Key   string `structs:"key"`
 	Value string `structs:"value"`
 }
 
-// HookTmplMetric ...
+// HookTmplMetric xxx
 type HookTmplMetric struct {
 	Name     string `structs:"name"`
 	HookType string `structs:"hookType"`
@@ -56,7 +56,7 @@ type HookTmplMetric struct {
 	SuccessCnt       int64  `structs:"successCnt"`
 }
 
-// HookTmplField ...
+// HookTmplField xxx
 type HookTmplField struct {
 	Key   string `structs:"key"`
 	Value string `structs:"value"`
@@ -70,7 +70,7 @@ type GDeploy struct {
 	ContainerGroup ContainerGroup `structs:"containerGroup"`
 }
 
-// GDeploySpec ...
+// GDeploySpec xxx
 type GDeploySpec struct {
 	Replicas        GDeployReplicas          `structs:"replicas"`
 	GracefulManage  GWorkloadGracefulManage  `structs:"gracefulManage"`
@@ -83,7 +83,7 @@ type GDeploySpec struct {
 	Other           SpecOther                `structs:"other"`
 }
 
-// GDeployReplicas ...
+// GDeployReplicas xxx
 type GDeployReplicas struct {
 	Cnt             int64  `structs:"cnt"`             // 副本数量
 	UpdateStrategy  string `structs:"updateStrategy"`  // 更新策略（RollingUpdate/InplaceUpdate）
@@ -92,7 +92,7 @@ type GDeployReplicas struct {
 	MaxUnavailable  int64  `structs:"maxUnavailable"`  // 最大不可用数量
 	MUAUnit         string `structs:"muaUnit"`         // 最大不可用数量单位（个/%）
 	MinReadySecs    int64  `structs:"minReadySecs"`    // 最小就绪时间
-	Partition       int64  `structs:"partition"`       // 保留旧版本示例数量
+	Partition       int64  `structs:"partition"`       // 保留旧版本实例数量
 	GracePeriodSecs int64  `structs:"gracePeriodSecs"` // 原地升级优雅更新时间
 }
 
@@ -103,7 +103,7 @@ type GWorkloadGracefulManage struct {
 	PostInplaceHook GWorkloadHookSpec `structs:"postInplaceHook"`
 }
 
-// GWorkloadHookSpec ...
+// GWorkloadHookSpec xxx
 type GWorkloadHookSpec struct {
 	Enabled  bool          `structs:"enabled"`
 	TmplName string        `structs:"tmplName"`
@@ -129,7 +129,7 @@ type GSTS struct {
 	ContainerGroup ContainerGroup `structs:"containerGroup"`
 }
 
-// GSTSSpec ...
+// GSTSSpec xxx
 type GSTSSpec struct {
 	Replicas        GSTSReplicas             `structs:"replicas"`
 	GracefulManage  GWorkloadGracefulManage  `structs:"gracefulManage"`
@@ -142,7 +142,7 @@ type GSTSSpec struct {
 	Other           SpecOther                `structs:"other"`
 }
 
-// GSTSReplicas ...
+// GSTSReplicas xxx
 type GSTSReplicas struct {
 	Cnt             int64  `structs:"cnt"`
 	SVCName         string `structs:"svcName"`

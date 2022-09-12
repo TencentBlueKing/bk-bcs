@@ -18,10 +18,12 @@ import (
 	"strings"
 )
 
+// PropagatedVersionName xxx
 func PropagatedVersionName(kind, resourceName string) string {
 	return fmt.Sprintf("%s%s", PropagatedVersionPrefix(kind), resourceName)
 }
 
+// PropagatedVersionPrefix xxx
 func PropagatedVersionPrefix(kind string) string {
 	return fmt.Sprintf("%s-", strings.ToLower(kind))
 }

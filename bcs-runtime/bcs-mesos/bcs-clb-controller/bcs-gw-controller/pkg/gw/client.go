@@ -36,7 +36,7 @@ type ServerInfo struct {
 	Port       uint   `json:"port"`
 	MetricPort uint   `json:"metric_port"`
 	HostName   string `json:"hostname"`
-	//http, https
+	// http, https
 	Scheme  string `json:"scheme"`
 	Version string `json:"version"`
 	Cluster string `json:"cluster"`
@@ -72,7 +72,8 @@ func NewClient(ctx context.Context, cluster string, r *rdiscover.RegDiscover, zk
 }
 
 // NewClientWithTLS create new client for tls gw server
-func NewClientWithTLS(ctx context.Context, cluster string, r *rdiscover.RegDiscover, zkPath string, tlsConfig *tls.Config) *Client {
+func NewClientWithTLS(ctx context.Context, cluster string, r *rdiscover.RegDiscover, zkPath string,
+	tlsConfig *tls.Config) *Client {
 	return &Client{
 		tlsConfig: tlsConfig,
 		Cluster:   cluster,
@@ -125,6 +126,7 @@ func (c *Client) Run() error {
 	}
 }
 
+// getMasterServer xxx
 // get the master gw server address and port
 // if get error from zk, return error
 func (c *Client) getMasterServer() (string, int, error) {
@@ -140,7 +142,7 @@ func (c *Client) getMasterServer() (string, int, error) {
 	return addr, port, nil
 }
 
-// getHttpClient create http client according tlsconfig
+// getHTTPClient create http client according tlsconfig
 func (c *Client) getHTTPClient(timeout int) (*http.Client, string) {
 	prefix := "http://"
 	// extend from Default Transport in package net, and disable keepalive
@@ -168,6 +170,7 @@ func (c *Client) getHTTPClient(timeout int) (*http.Client, string) {
 	return httpClient, prefix
 }
 
+// doRequest xxx
 // do http request to gw server master with certain path, method and data
 func (c *Client) doRequest(path, method string, data []byte) ([]byte, error) {
 	addr, port, err := c.getMasterServer()

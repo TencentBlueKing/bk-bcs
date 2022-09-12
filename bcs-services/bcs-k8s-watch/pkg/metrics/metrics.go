@@ -11,6 +11,7 @@
  *
  */
 
+// Package metrics xxx
 package metrics
 
 import (
@@ -100,10 +101,11 @@ func init() {
 	prometheus.MustRegister(handlerDiscardEvents)
 }
 
-//ReportK8sWatchAPIMetrics report all api action metrics
+// ReportK8sWatchAPIMetrics report all api action metrics
 func ReportK8sWatchAPIMetrics(clusterID, handler, namespace, resourceType, method, status string, started time.Time) {
 	requestTotalAPI.WithLabelValues(clusterID, handler, namespace, resourceType, method, status).Inc()
-	requestLatencyAPI.WithLabelValues(clusterID, handler, namespace, resourceType, method, status).Observe(time.Since(started).Seconds())
+	requestLatencyAPI.WithLabelValues(clusterID, handler, namespace, resourceType, method, status).
+		Observe(time.Since(started).Seconds())
 }
 
 // ReportK8sWatchHandlerQueueLength report handler chanQueue length
@@ -136,7 +138,7 @@ func ReportK8sWatcherQueueLengthDec(watcher string) {
 	requestsWatcherQueueLength.WithLabelValues(watcher).Dec()
 }
 
-// ReportK8sWatcherQueueLength report watcher queue length
+// ReportK8sWatcherCacheKeys report watcher queue length
 func ReportK8sWatcherCacheKeys(watcher string, queueLen float64) {
 	requestsWatcherCacheKeysLength.WithLabelValues(watcher).Set(queueLen)
 }

@@ -14,12 +14,11 @@ package nodegroup
 
 import (
 	"context"
-	"errors"
+	"encoding/base64"
 	"fmt"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions"
@@ -50,7 +49,7 @@ func NewCreateAction(model store.ClusterManagerModel) *CreateAction {
 }
 
 func (ca *CreateAction) getRelativeResource() error {
-	//get relative cluster for information injection
+	// get relative cluster for information injection
 	cluster, err := ca.model.GetCluster(ca.ctx, ca.req.ClusterID)
 	if err != nil {
 		blog.Errorf("can not get relative Cluster %s when create NodeGroup", ca.req.ClusterID)
@@ -79,26 +78,24 @@ func (ca *CreateAction) getRelativeResource() error {
 func (ca *CreateAction) constructNodeGroup() *cmproto.NodeGroup {
 	timeStr := time.Now().Format(time.RFC3339)
 	group := &cmproto.NodeGroup{
-		Name:             ca.req.Name,
-		ClusterID:        ca.req.ClusterID,
-		Region:           ca.req.Region,
-		ProjectID:        ca.cluster.ProjectID,
-		EnableAutoscale:  ca.req.EnableAutoscale,
-		AutoScaling:      ca.req.AutoScaling,
-		LaunchTemplate:   ca.req.LaunchTemplate,
-		NodeTemplate:     ca.req.NodeTemplate,
-		Labels:           ca.req.Labels,
-		Taints:           ca.req.Taints,
-		Tags:             ca.req.Tags,
-		NodeOS:           ca.req.NodeOS,
-		ContainerRuntime: ca.req.ContainerRuntime,
-		RuntimeVersion:   ca.req.RuntimeVersion,
-		Provider:         ca.req.Provider,
-		Status:           common.StatusCreateNodeGroupCreating,
-		ConsumerID:       ca.req.ConsumerID,
-		Creator:          ca.req.Creator,
-		CreateTime:       timeStr,
-		UpdateTime:       timeStr,
+		Name:            ca.req.Name,
+		ClusterID:       ca.req.ClusterID,
+		Region:          ca.req.Region,
+		ProjectID:       ca.cluster.ProjectID,
+		EnableAutoscale: ca.req.EnableAutoscale,
+		AutoScaling:     ca.req.AutoScaling,
+		LaunchTemplate:  ca.req.LaunchTemplate,
+		NodeTemplate:    ca.req.NodeTemplate,
+		Labels:          ca.req.Labels,
+		Taints:          ca.req.Taints,
+		Tags:            ca.req.Tags,
+		NodeOS:          ca.req.NodeOS,
+		Provider:        ca.req.Provider,
+		Status:          common.StatusCreateNodeGroupCreating,
+		ConsumerID:      ca.req.ConsumerID,
+		Creator:         ca.req.Creator,
+		CreateTime:      timeStr,
+		UpdateTime:      timeStr,
 	}
 	if group.Region == "" {
 		group.Region = ca.cluster.Region
@@ -108,6 +105,11 @@ func (ca *CreateAction) constructNodeGroup() *cmproto.NodeGroup {
 	}
 	if group.Provider == "" {
 		group.Provider = ca.cluster.Provider
+	}
+
+	// base64 userscript
+	if group.NodeTemplate != nil {
+		group.NodeTemplate.UserScript = base64.StdEncoding.EncodeToString([]byte(group.NodeTemplate.UserScript))
 	}
 
 	return group
@@ -137,23 +139,31 @@ func (ca *CreateAction) validate() error {
 	if ca.req.LaunchTemplate == nil {
 		return fmt.Errorf("launchTemplate is empty")
 	}
-	err := validateLaunchTemplate(ca.req.LaunchTemplate)
-	if err != nil {
-		return err
-	}
-
 	if ca.req.NodeTemplate == nil {
 		return fmt.Errorf("nodeTemplate is empty")
 	}
-	return nil
-}
 
-func validateLaunchTemplate(conf *cmproto.LaunchConfiguration) error {
-	// simply check instanceType conf info
-	if conf.CPU == 0 || conf.Mem == 0 {
-		return fmt.Errorf("validateLaunchTemplate cpu/mem empty")
+	// cloud validate
+	cloudValidate, err := cloudprovider.GetCloudValidateMgr(ca.cloud.CloudProvider)
+	if err != nil {
+		return err
 	}
+	// first, get cloud credentialInfo from project; second, get from cloud provider when failed to obtain
+	cOption, err := cloudprovider.GetCredential(&cloudprovider.CredentialData{
+		Cloud:     ca.cloud,
+		AccountID: ca.cluster.GetCloudAccountID(),
+	})
+	if err != nil {
+		blog.Errorf("Get Credential failed from Cloud %s: %s",
+			ca.cloud.CloudID, err.Error())
+		return err
+	}
+	cOption.Region = ca.cluster.Region
 
+	err = cloudValidate.CreateNodeGroupValidate(ca.req, cOption)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -171,19 +181,6 @@ func (ca *CreateAction) save() error {
 	ca.group = removeSensitiveInfo(group)
 	ca.resp.Data.NodeGroup = group
 	blog.Infof("create nodegroup %s information for Cluster %s to DB successfully", group, ca.cluster.ClusterID)
-
-	// ensure ClusterAutoScalingOption
-	if _, err := ca.model.GetAutoScalingOption(ca.ctx, ca.cluster.ClusterID); err != nil {
-		if !errors.Is(err, drivers.ErrTableRecordNotFound) {
-			blog.Errorf("get cluster %s autoScalingOption failed, %s", ca.cluster.ClusterID, err.Error())
-			return err
-		}
-		aso := actions.GetDefaultClusterAutoScalingOption(ca.cluster.ClusterID)
-		if err := ca.model.CreateAutoScalingOption(ca.ctx, aso); err != nil {
-			blog.Errorf("create cluster %s autoScalingOption failed, %s", ca.cluster.ClusterID, err.Error())
-			return err
-		}
-	}
 	return nil
 }
 
@@ -237,7 +234,7 @@ func (ca *CreateAction) createNodeGroup() error {
 		TaskID:       task.TaskID,
 		Message:      fmt.Sprintf("集群%s创建节点池%s", ca.cluster.ClusterID, ca.group.NodeGroupID),
 		OpUser:       ca.req.Creator,
-		CreateTime:   time.Now().String(),
+		CreateTime:   time.Now().Format(time.RFC3339),
 	})
 	if err != nil {
 		blog.Errorf("CreateNodeGroup[%s] CreateOperationLog failed: %v", ca.cluster.ClusterID, err)
@@ -257,14 +254,14 @@ func (ca *CreateAction) Handle(ctx context.Context,
 	ca.resp = resp
 	ca.resp.Data = &cmproto.CreateNodeGroupResponseData{}
 
-	if err := ca.validate(); err != nil {
-		ca.setResp(common.BcsErrClusterManagerInvalidParameter, err.Error())
-		return
-	}
-
 	// getRelativeResource get cluster / cloud provider
 	if err := ca.getRelativeResource(); err != nil {
 		ca.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
+		return
+	}
+
+	if err := ca.validate(); err != nil {
+		ca.setResp(common.BcsErrClusterManagerInvalidParameter, err.Error())
 		return
 	}
 

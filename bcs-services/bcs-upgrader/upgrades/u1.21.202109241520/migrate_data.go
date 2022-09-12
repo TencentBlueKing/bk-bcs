@@ -19,6 +19,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-upgrader/upgrader"
 )
 
+// migrateData xxx
 // TODO: 这里是具体的数据迁移逻辑
 func migrateData(ctx context.Context, helper upgrader.UpgradeHelper) (err error) {
 

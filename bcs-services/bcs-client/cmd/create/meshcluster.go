@@ -24,7 +24,7 @@ import (
 
 func createMeshCluster(c *utils.ClientContext) error {
 	meshManager := v1.NewMeshManager(utils.GetClientOption())
-	//fetch file data
+	// fetch file data
 	data, err := c.FileData()
 	if err != nil {
 		return err
