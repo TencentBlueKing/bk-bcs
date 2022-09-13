@@ -27,7 +27,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-// ListAction xxx
+// ListAction ...
 type ListAction struct {
 	ctx   context.Context
 	model store.ProjectModel
@@ -41,7 +41,7 @@ func NewListAction(model store.ProjectModel) *ListAction {
 	}
 }
 
-// Do xxx
+// Do ...
 func (la *ListAction) Do(ctx context.Context,
 	req *proto.ListVariableDefinitionsRequest) (*map[string]interface{}, error) {
 	la.ctx = ctx
@@ -79,7 +79,7 @@ func (la *ListAction) listVariableDefinitions() ([]*vdm.VariableDefinition, int6
 
 	// 查询变量信息
 	definitions, total, err := la.model.ListVariableDefinitions(la.ctx, cond, &page.Pagination{
-		Limit: la.req.Limit, Offset: la.req.Offset, All: la.req.All,
+		Sort: map[string]int{vdm.FieldKeyCreateTime: -1}, Limit: la.req.Limit, Offset: la.req.Offset, All: la.req.All,
 	})
 	if err != nil {
 		return nil, total, err

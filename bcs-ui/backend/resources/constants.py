@@ -70,6 +70,8 @@ class K8sResourceKind(ChoicesEnum):
     # CustomResource
     CustomResourceDefinition = "CustomResourceDefinition"
     CustomObject = "CustomObject"
+    GameDeployment = "GameDeployment"
+    GameStatefulSet = "GameStatefulSet"
     # hpa
     HorizontalPodAutoscaler = "HorizontalPodAutoscaler"
     # other
@@ -102,6 +104,8 @@ class K8sResourceKind(ChoicesEnum):
         # CustomResource
         (CustomResourceDefinition, "CustomResourceDefinition"),
         (CustomObject, "CustomObject"),
+        (GameDeployment, "GameDeployment"),
+        (GameStatefulSet, "GameStatefulSet"),
         # hpa
         (HorizontalPodAutoscaler, "HorizontalPodAutoscaler"),
         # other

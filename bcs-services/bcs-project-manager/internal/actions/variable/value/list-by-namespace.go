@@ -30,7 +30,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// ListNamespaceVariablesAction xxx
+// ListNamespaceVariablesAction ...
 type ListNamespaceVariablesAction struct {
 	ctx   context.Context
 	model store.ProjectModel
@@ -44,7 +44,7 @@ func NewListNamespaceVariablesAction(model store.ProjectModel) *ListNamespaceVar
 	}
 }
 
-// Do xxx
+// Do ...
 func (la *ListNamespaceVariablesAction) Do(ctx context.Context,
 	req *proto.ListNamespaceVariablesRequest) ([]*proto.NamespaceVariable, error) {
 	la.ctx = ctx
@@ -106,7 +106,7 @@ func (la *ListNamespaceVariablesAction) listNamespaceVariables() ([]*proto.Names
 			logging.Error("list namespaces in cluster %s failed, err: ", cluster.ClusterID)
 		}
 		for _, ns := range nsList.Items {
-			variableValue, err := la.model.GetVariableValue(la.ctx, la.req.GetProjectCode(),
+			variableValue, err := la.model.GetVariableValue(la.ctx,
 				la.req.GetVariableID(), cluster.ClusterID, ns.GetName(), vd.VariableDefinitionScopeNamespace)
 			if err == drivers.ErrTableRecordNotFound {
 				logging.Info("cannot get variable %s, clusterID %s, namespace %s",

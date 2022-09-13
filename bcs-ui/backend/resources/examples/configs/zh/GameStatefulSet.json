@@ -1,0 +1,13 @@
+{
+  "kind": "GameStatefulSet",
+  "class": "custom_objects",
+  "references": null,
+  "items": [
+    {
+      "name": "simple_gamestatefulset",
+      "alias": "GameStatefulSet 简单示例",
+      "description": "简单的 GameStatefulSet 示例，仅包含基础配置",
+      "manifest": null
+    }
+  ]
+}

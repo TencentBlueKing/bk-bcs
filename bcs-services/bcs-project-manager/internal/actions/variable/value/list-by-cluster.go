@@ -28,7 +28,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 )
 
-// ListClusterVariablesAction xxx
+// ListClusterVariablesAction ...
 type ListClusterVariablesAction struct {
 	ctx   context.Context
 	model store.ProjectModel
@@ -42,7 +42,7 @@ func NewListClusterVariablesAction(model store.ProjectModel) *ListClusterVariabl
 	}
 }
 
-// Do xxx
+// Do ...
 func (la *ListClusterVariablesAction) Do(ctx context.Context,
 	req *proto.ListClusterVariablesRequest) ([]*proto.ClusterVariable, error) {
 	la.ctx = ctx
@@ -94,7 +94,7 @@ func (la *ListClusterVariablesAction) listClusterVariables() ([]*proto.ClusterVa
 	var value string
 	for _, cluster := range clusters {
 		variableValue, err := la.model.GetVariableValue(la.ctx,
-			la.req.GetProjectCode(), la.req.GetVariableID(), cluster.ClusterID, "", vd.VariableDefinitionScopeCluster)
+			la.req.GetVariableID(), cluster.ClusterID, "", vd.VariableDefinitionScopeCluster)
 		if err == drivers.ErrTableRecordNotFound {
 			logging.Info("cannot get variable by id %s, clusterID %s", la.req.GetVariableID(), cluster.ClusterID)
 			value = variableDefinition.Default

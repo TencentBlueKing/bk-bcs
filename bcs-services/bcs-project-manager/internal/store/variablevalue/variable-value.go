@@ -19,21 +19,23 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/dbtable"
-
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 	"go.mongodb.org/mongo-driver/bson"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/dbtable"
 )
 
 const (
 	// table name
-	tableName        = "variable_value"
-	idField          = "_id"
-	projectCodeField = "projectCode"
-	clusterIDField   = "clusterID"
-	nameSpaceField   = "namespace"
-	keyField         = "key"
+	tableName           = "variable_value"
+	FieldKeyID          = "_id"
+	FieldKeyProjectCode = "projectCode"
+	FieldKeyClusterID   = "clusterID"
+	FieldKeyNamespace   = "namespace"
+	FieldKeyKey         = "key"
+	FieldKeyVariableID  = "variableID"
+	FieldKeyScope       = "scope"
 )
 
 var (
@@ -41,34 +43,29 @@ var (
 		{
 			Name: tableName + "_idx",
 			Key: bson.D{
-				bson.E{Key: idField, Value: 1},
-				bson.E{Key: projectCodeField, Value: 1},
-				bson.E{Key: keyField, Value: 1},
-				bson.E{Key: clusterIDField, Value: 1},
-				bson.E{Key: nameSpaceField, Value: 1},
+				bson.E{Key: FieldKeyVariableID, Value: 1},
+				bson.E{Key: FieldKeyClusterID, Value: 1},
+				bson.E{Key: FieldKeyNamespace, Value: 1},
+				bson.E{Key: FieldKeyScope, Value: 1},
 			},
-			// TODO: 确认 unique 含义
-			Unique: true,
+			Unique: false,
 		},
 	}
 )
 
-// VariableValue xxx
+// VariableValue ...
 type VariableValue struct {
-	ID               string `json:"id" bson:"_id"`
-	VariableDefineID string `json:"variableDefineID" bson:"variableDefineID"`
-	Key              string `json:"key" bson:"key"`
-	Name             string `json:"name" bson:"name"`
-	ProjectCode      string `json:"projectCode" bson:"projectCode"`
-	Value            string `json:"value" bson:"value"`
-	Scope            string `json:"scope" bson:"scope"`
-	ClusterID        string `json:"clusterID" bson:"clusterID"`
-	Namespace        string `json:"namespace" bson:"namespace"`
-	CreateTime       string `json:"createTime" bson:"createTime"`
-	UpdateTime       string `json:"updateTime" bson:"updateTime"`
-	Creator          string `json:"creator" bson:"creator"`
-	Updater          string `json:"updater" bson:"updater"`
-	IsDeleted        bool   `json:"isDeleted" bson:"isDeleted"`
+	// ID          string `json:"id" bson:"_id"`
+	VariableID string `json:"variableID" bson:"variableID"`
+	Key        string `json:"key" bson:"key"`
+	Value      string `json:"value" bson:"value"`
+	Scope      string `json:"scope" bson:"scope"`
+	ClusterID  string `json:"clusterID" bson:"clusterID"`
+	Namespace  string `json:"namespace" bson:"namespace"`
+	CreateTime string `json:"createTime" bson:"createTime"`
+	UpdateTime string `json:"updateTime" bson:"updateTime"`
+	Creator    string `json:"creator" bson:"creator"`
+	Updater    string `json:"updater" bson:"updater"`
 }
 
 // ModelVariableValue provide variable define db
@@ -84,12 +81,11 @@ type ModelVariableValue struct {
 func New(db drivers.DB) *ModelVariableValue {
 	return &ModelVariableValue{
 		tableName: dbtable.DataTableNamePrefix + tableName,
-		indexes:   variableDefineIndexes,
-		db:        db,
+		// indexes:   variableDefineIndexes,
+		db: db,
 	}
 }
 
-// ensureTable xxx
 // ensure table
 func (m *ModelVariableValue) ensureTable(ctx context.Context) error {
 	m.isTableEnsuredMutex.RLock()
@@ -125,22 +121,21 @@ func (m *ModelVariableValue) CreateVariableValue(ctx context.Context, vv *Variab
 
 // GetVariableValue get variable value
 func (m *ModelVariableValue) GetVariableValue(ctx context.Context,
-	projectCode, key, clusterID, namespace, scope string) (*VariableValue, error) {
+	variableID, clusterID, namespace, scope string) (*VariableValue, error) {
 	condM := make(operator.M)
 	if err := m.ensureTable(ctx); err != nil {
 		return nil, err
 	}
-	if key == "" {
-		return nil, fmt.Errorf("key cannot be empty")
+	if variableID == "" {
+		return nil, fmt.Errorf("variableID cannot be empty")
 	}
-	condM["key"] = key
-	condM["projectCode"] = projectCode
-	condM["scope"] = scope
+	condM[FieldKeyVariableID] = variableID
+	condM[FieldKeyScope] = scope
 	if clusterID != "" {
-		condM["clusterID"] = clusterID
+		condM[FieldKeyClusterID] = clusterID
 	}
 	if namespace != "" {
-		condM["namespace"] = namespace
+		condM[FieldKeyNamespace] = namespace
 	}
 	cond := operator.NewLeafCondition(operator.Eq, condM)
 	value := &VariableValue{}
@@ -148,4 +143,23 @@ func (m *ModelVariableValue) GetVariableValue(ctx context.Context,
 		return nil, err
 	}
 	return value, nil
+}
+
+// UpsertVariableValue upsert variable value
+func (m *ModelVariableValue) UpsertVariableValue(ctx context.Context,
+	value *VariableValue) error {
+	if err := m.ensureTable(ctx); err != nil {
+		return err
+	}
+	condM := make(operator.M)
+	condM[FieldKeyVariableID] = value.VariableID
+	condM[FieldKeyScope] = value.Scope
+	if value.ClusterID != "" {
+		condM[FieldKeyClusterID] = value.ClusterID
+	}
+	if value.Namespace != "" {
+		condM[FieldKeyNamespace] = value.Namespace
+	}
+	cond := operator.NewLeafCondition(operator.Eq, condM)
+	return m.db.Table(m.tableName).Upsert(ctx, cond, operator.M{"$set": value})
 }

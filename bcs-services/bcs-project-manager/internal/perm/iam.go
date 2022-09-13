@@ -144,7 +144,7 @@ func CanEditProject(authUser auth.AuthUser, projectID string) error {
 	return nil
 }
 
-// CanDeleteProject xxx
+// CanDeleteProject ...
 func CanDeleteProject(authUser auth.AuthUser, projectID string) error {
 	// 判断是否校验权限
 	if canExemptClientPerm(authUser.ClientID, DeleteAction) {
@@ -156,7 +156,7 @@ func CanDeleteProject(authUser auth.AuthUser, projectID string) error {
 		return errorx.NewIAMClientErr(err)
 	}
 	// NOTE: 不校验集群
-	canDelete, applyUrl, err := permClient.CanDeleteProject(authUser.Username, projectID, "")
+	canDelete, applyUrl, err := permClient.CanDeleteProject(authUser.Username, projectID)
 	if err != nil {
 		return errorx.NewRequestIAMErr(applyUrl, "projectDelete", canDelete, err)
 	}
@@ -166,7 +166,7 @@ func CanDeleteProject(authUser auth.AuthUser, projectID string) error {
 	return nil
 }
 
-// CanCreateVariable xxx
+// CanCreateVariable ...
 func CanCreateVariable(authUser auth.AuthUser, projectCode string) error {
 	// 判断是否校验权限
 	if canExemptClientPerm(authUser.ClientID, CreateAction) {

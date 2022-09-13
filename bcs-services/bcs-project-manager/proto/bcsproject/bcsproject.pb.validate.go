@@ -1977,21 +1977,40 @@ func (m *CreateVariableResponse) validate(all bool) error {
 
 	var errors []error
 
-	// no validation rules for Id
+	// no validation rules for Code
 
-	// no validation rules for ProjectCode
+	// no validation rules for Message
 
-	// no validation rules for Name
+	if all {
+		switch v := interface{}(m.GetData()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, CreateVariableResponseValidationError{
+					field:  "Data",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, CreateVariableResponseValidationError{
+					field:  "Data",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return CreateVariableResponseValidationError{
+				field:  "Data",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
 
-	// no validation rules for Key
-
-	// no validation rules for Scope
-
-	// no validation rules for Default
-
-	// no validation rules for Desc
-
-	// no validation rules for Category
+	// no validation rules for RequestID
 
 	if len(errors) > 0 {
 		return CreateVariableResponseMultiError(errors)
@@ -2257,21 +2276,40 @@ func (m *UpdateVariableResponse) validate(all bool) error {
 
 	var errors []error
 
-	// no validation rules for Id
+	// no validation rules for Code
 
-	// no validation rules for ProjectCode
+	// no validation rules for Message
 
-	// no validation rules for Name
+	if all {
+		switch v := interface{}(m.GetData()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, UpdateVariableResponseValidationError{
+					field:  "Data",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, UpdateVariableResponseValidationError{
+					field:  "Data",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return UpdateVariableResponseValidationError{
+				field:  "Data",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
 
-	// no validation rules for Key
-
-	// no validation rules for Scope
-
-	// no validation rules for Default
-
-	// no validation rules for Desc
-
-	// no validation rules for Category
+	// no validation rules for RequestID
 
 	if len(errors) > 0 {
 		return UpdateVariableResponseMultiError(errors)
@@ -2605,6 +2643,255 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = ListVariableDefinitionsResponseValidationError{}
+
+// Validate checks the field values on DeleteVariableDefinitionsRequest with
+// the rules defined in the proto definition for this message. If any rules
+// are violated, the first error encountered is returned, or nil if there are
+// no violations.
+func (m *DeleteVariableDefinitionsRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on DeleteVariableDefinitionsRequest with
+// the rules defined in the proto definition for this message. If any rules
+// are violated, the result is a list of violation errors wrapped in
+// DeleteVariableDefinitionsRequestMultiError, or nil if none found.
+func (m *DeleteVariableDefinitionsRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *DeleteVariableDefinitionsRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for ProjectCode
+
+	// no validation rules for IdList
+
+	if len(errors) > 0 {
+		return DeleteVariableDefinitionsRequestMultiError(errors)
+	}
+
+	return nil
+}
+
+// DeleteVariableDefinitionsRequestMultiError is an error wrapping multiple
+// validation errors returned by
+// DeleteVariableDefinitionsRequest.ValidateAll() if the designated
+// constraints aren't met.
+type DeleteVariableDefinitionsRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m DeleteVariableDefinitionsRequestMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m DeleteVariableDefinitionsRequestMultiError) AllErrors() []error { return m }
+
+// DeleteVariableDefinitionsRequestValidationError is the validation error
+// returned by DeleteVariableDefinitionsRequest.Validate if the designated
+// constraints aren't met.
+type DeleteVariableDefinitionsRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e DeleteVariableDefinitionsRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e DeleteVariableDefinitionsRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e DeleteVariableDefinitionsRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e DeleteVariableDefinitionsRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e DeleteVariableDefinitionsRequestValidationError) ErrorName() string {
+	return "DeleteVariableDefinitionsRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e DeleteVariableDefinitionsRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sDeleteVariableDefinitionsRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = DeleteVariableDefinitionsRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = DeleteVariableDefinitionsRequestValidationError{}
+
+// Validate checks the field values on DeleteVariableDefinitionsResponse with
+// the rules defined in the proto definition for this message. If any rules
+// are violated, the first error encountered is returned, or nil if there are
+// no violations.
+func (m *DeleteVariableDefinitionsResponse) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on DeleteVariableDefinitionsResponse
+// with the rules defined in the proto definition for this message. If any
+// rules are violated, the result is a list of violation errors wrapped in
+// DeleteVariableDefinitionsResponseMultiError, or nil if none found.
+func (m *DeleteVariableDefinitionsResponse) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *DeleteVariableDefinitionsResponse) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	if all {
+		switch v := interface{}(m.GetData()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, DeleteVariableDefinitionsResponseValidationError{
+					field:  "Data",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, DeleteVariableDefinitionsResponseValidationError{
+					field:  "Data",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return DeleteVariableDefinitionsResponseValidationError{
+				field:  "Data",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	// no validation rules for RequestID
+
+	if len(errors) > 0 {
+		return DeleteVariableDefinitionsResponseMultiError(errors)
+	}
+
+	return nil
+}
+
+// DeleteVariableDefinitionsResponseMultiError is an error wrapping multiple
+// validation errors returned by
+// DeleteVariableDefinitionsResponse.ValidateAll() if the designated
+// constraints aren't met.
+type DeleteVariableDefinitionsResponseMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m DeleteVariableDefinitionsResponseMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m DeleteVariableDefinitionsResponseMultiError) AllErrors() []error { return m }
+
+// DeleteVariableDefinitionsResponseValidationError is the validation error
+// returned by DeleteVariableDefinitionsResponse.Validate if the designated
+// constraints aren't met.
+type DeleteVariableDefinitionsResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e DeleteVariableDefinitionsResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e DeleteVariableDefinitionsResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e DeleteVariableDefinitionsResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e DeleteVariableDefinitionsResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e DeleteVariableDefinitionsResponseValidationError) ErrorName() string {
+	return "DeleteVariableDefinitionsResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e DeleteVariableDefinitionsResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sDeleteVariableDefinitionsResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = DeleteVariableDefinitionsResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = DeleteVariableDefinitionsResponseValidationError{}
 
 // Validate checks the field values on ListClusterVariablesRequest with the
 // rules defined in the proto definition for this message. If any rules are
@@ -3149,6 +3436,798 @@ var _ interface {
 	ErrorName() string
 } = ListNamespaceVariablesResponseValidationError{}
 
+// Validate checks the field values on UpdateClusterVariablesRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *UpdateClusterVariablesRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on UpdateClusterVariablesRequest with
+// the rules defined in the proto definition for this message. If any rules
+// are violated, the result is a list of violation errors wrapped in
+// UpdateClusterVariablesRequestMultiError, or nil if none found.
+func (m *UpdateClusterVariablesRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *UpdateClusterVariablesRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for ProjectCode
+
+	if utf8.RuneCountInString(m.GetVariableID()) > 32 {
+		err := UpdateClusterVariablesRequestValidationError{
+			field:  "VariableID",
+			reason: "value length must be at most 32 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if !_UpdateClusterVariablesRequest_VariableID_Pattern.MatchString(m.GetVariableID()) {
+		err := UpdateClusterVariablesRequestValidationError{
+			field:  "VariableID",
+			reason: "value does not match regex pattern \"^[a-zA-Z][a-zA-Z0-9-]*$\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	for idx, item := range m.GetData() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, UpdateClusterVariablesRequestValidationError{
+						field:  fmt.Sprintf("Data[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, UpdateClusterVariablesRequestValidationError{
+						field:  fmt.Sprintf("Data[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return UpdateClusterVariablesRequestValidationError{
+					field:  fmt.Sprintf("Data[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	if len(errors) > 0 {
+		return UpdateClusterVariablesRequestMultiError(errors)
+	}
+
+	return nil
+}
+
+// UpdateClusterVariablesRequestMultiError is an error wrapping multiple
+// validation errors returned by UpdateClusterVariablesRequest.ValidateAll()
+// if the designated constraints aren't met.
+type UpdateClusterVariablesRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m UpdateClusterVariablesRequestMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m UpdateClusterVariablesRequestMultiError) AllErrors() []error { return m }
+
+// UpdateClusterVariablesRequestValidationError is the validation error
+// returned by UpdateClusterVariablesRequest.Validate if the designated
+// constraints aren't met.
+type UpdateClusterVariablesRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e UpdateClusterVariablesRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e UpdateClusterVariablesRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e UpdateClusterVariablesRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e UpdateClusterVariablesRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e UpdateClusterVariablesRequestValidationError) ErrorName() string {
+	return "UpdateClusterVariablesRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e UpdateClusterVariablesRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sUpdateClusterVariablesRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = UpdateClusterVariablesRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = UpdateClusterVariablesRequestValidationError{}
+
+var _UpdateClusterVariablesRequest_VariableID_Pattern = regexp.MustCompile("^[a-zA-Z][a-zA-Z0-9-]*$")
+
+// Validate checks the field values on UpdateClusterVariablesResponse with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *UpdateClusterVariablesResponse) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on UpdateClusterVariablesResponse with
+// the rules defined in the proto definition for this message. If any rules
+// are violated, the result is a list of violation errors wrapped in
+// UpdateClusterVariablesResponseMultiError, or nil if none found.
+func (m *UpdateClusterVariablesResponse) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *UpdateClusterVariablesResponse) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	// no validation rules for RequestID
+
+	if len(errors) > 0 {
+		return UpdateClusterVariablesResponseMultiError(errors)
+	}
+
+	return nil
+}
+
+// UpdateClusterVariablesResponseMultiError is an error wrapping multiple
+// validation errors returned by UpdateClusterVariablesResponse.ValidateAll()
+// if the designated constraints aren't met.
+type UpdateClusterVariablesResponseMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m UpdateClusterVariablesResponseMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m UpdateClusterVariablesResponseMultiError) AllErrors() []error { return m }
+
+// UpdateClusterVariablesResponseValidationError is the validation error
+// returned by UpdateClusterVariablesResponse.Validate if the designated
+// constraints aren't met.
+type UpdateClusterVariablesResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e UpdateClusterVariablesResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e UpdateClusterVariablesResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e UpdateClusterVariablesResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e UpdateClusterVariablesResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e UpdateClusterVariablesResponseValidationError) ErrorName() string {
+	return "UpdateClusterVariablesResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e UpdateClusterVariablesResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sUpdateClusterVariablesResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = UpdateClusterVariablesResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = UpdateClusterVariablesResponseValidationError{}
+
+// Validate checks the field values on UpdateNamespaceVariablesRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *UpdateNamespaceVariablesRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on UpdateNamespaceVariablesRequest with
+// the rules defined in the proto definition for this message. If any rules
+// are violated, the result is a list of violation errors wrapped in
+// UpdateNamespaceVariablesRequestMultiError, or nil if none found.
+func (m *UpdateNamespaceVariablesRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *UpdateNamespaceVariablesRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for ProjectCode
+
+	if utf8.RuneCountInString(m.GetVariableID()) > 32 {
+		err := UpdateNamespaceVariablesRequestValidationError{
+			field:  "VariableID",
+			reason: "value length must be at most 32 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if !_UpdateNamespaceVariablesRequest_VariableID_Pattern.MatchString(m.GetVariableID()) {
+		err := UpdateNamespaceVariablesRequestValidationError{
+			field:  "VariableID",
+			reason: "value does not match regex pattern \"^[a-zA-Z][a-zA-Z0-9-]*$\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	for idx, item := range m.GetData() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, UpdateNamespaceVariablesRequestValidationError{
+						field:  fmt.Sprintf("Data[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, UpdateNamespaceVariablesRequestValidationError{
+						field:  fmt.Sprintf("Data[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return UpdateNamespaceVariablesRequestValidationError{
+					field:  fmt.Sprintf("Data[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	if len(errors) > 0 {
+		return UpdateNamespaceVariablesRequestMultiError(errors)
+	}
+
+	return nil
+}
+
+// UpdateNamespaceVariablesRequestMultiError is an error wrapping multiple
+// validation errors returned by UpdateNamespaceVariablesRequest.ValidateAll()
+// if the designated constraints aren't met.
+type UpdateNamespaceVariablesRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m UpdateNamespaceVariablesRequestMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m UpdateNamespaceVariablesRequestMultiError) AllErrors() []error { return m }
+
+// UpdateNamespaceVariablesRequestValidationError is the validation error
+// returned by UpdateNamespaceVariablesRequest.Validate if the designated
+// constraints aren't met.
+type UpdateNamespaceVariablesRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e UpdateNamespaceVariablesRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e UpdateNamespaceVariablesRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e UpdateNamespaceVariablesRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e UpdateNamespaceVariablesRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e UpdateNamespaceVariablesRequestValidationError) ErrorName() string {
+	return "UpdateNamespaceVariablesRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e UpdateNamespaceVariablesRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sUpdateNamespaceVariablesRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = UpdateNamespaceVariablesRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = UpdateNamespaceVariablesRequestValidationError{}
+
+var _UpdateNamespaceVariablesRequest_VariableID_Pattern = regexp.MustCompile("^[a-zA-Z][a-zA-Z0-9-]*$")
+
+// Validate checks the field values on UpdateNamespaceVariablesResponse with
+// the rules defined in the proto definition for this message. If any rules
+// are violated, the first error encountered is returned, or nil if there are
+// no violations.
+func (m *UpdateNamespaceVariablesResponse) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on UpdateNamespaceVariablesResponse with
+// the rules defined in the proto definition for this message. If any rules
+// are violated, the result is a list of violation errors wrapped in
+// UpdateNamespaceVariablesResponseMultiError, or nil if none found.
+func (m *UpdateNamespaceVariablesResponse) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *UpdateNamespaceVariablesResponse) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	// no validation rules for RequestID
+
+	if len(errors) > 0 {
+		return UpdateNamespaceVariablesResponseMultiError(errors)
+	}
+
+	return nil
+}
+
+// UpdateNamespaceVariablesResponseMultiError is an error wrapping multiple
+// validation errors returned by
+// UpdateNamespaceVariablesResponse.ValidateAll() if the designated
+// constraints aren't met.
+type UpdateNamespaceVariablesResponseMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m UpdateNamespaceVariablesResponseMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m UpdateNamespaceVariablesResponseMultiError) AllErrors() []error { return m }
+
+// UpdateNamespaceVariablesResponseValidationError is the validation error
+// returned by UpdateNamespaceVariablesResponse.Validate if the designated
+// constraints aren't met.
+type UpdateNamespaceVariablesResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e UpdateNamespaceVariablesResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e UpdateNamespaceVariablesResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e UpdateNamespaceVariablesResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e UpdateNamespaceVariablesResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e UpdateNamespaceVariablesResponseValidationError) ErrorName() string {
+	return "UpdateNamespaceVariablesResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e UpdateNamespaceVariablesResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sUpdateNamespaceVariablesResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = UpdateNamespaceVariablesResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = UpdateNamespaceVariablesResponseValidationError{}
+
+// Validate checks the field values on ImportVariablesRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *ImportVariablesRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ImportVariablesRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// ImportVariablesRequestMultiError, or nil if none found.
+func (m *ImportVariablesRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ImportVariablesRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for ProjectCode
+
+	for idx, item := range m.GetData() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, ImportVariablesRequestValidationError{
+						field:  fmt.Sprintf("Data[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, ImportVariablesRequestValidationError{
+						field:  fmt.Sprintf("Data[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return ImportVariablesRequestValidationError{
+					field:  fmt.Sprintf("Data[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	if len(errors) > 0 {
+		return ImportVariablesRequestMultiError(errors)
+	}
+
+	return nil
+}
+
+// ImportVariablesRequestMultiError is an error wrapping multiple validation
+// errors returned by ImportVariablesRequest.ValidateAll() if the designated
+// constraints aren't met.
+type ImportVariablesRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ImportVariablesRequestMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ImportVariablesRequestMultiError) AllErrors() []error { return m }
+
+// ImportVariablesRequestValidationError is the validation error returned by
+// ImportVariablesRequest.Validate if the designated constraints aren't met.
+type ImportVariablesRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ImportVariablesRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ImportVariablesRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ImportVariablesRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ImportVariablesRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ImportVariablesRequestValidationError) ErrorName() string {
+	return "ImportVariablesRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ImportVariablesRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sImportVariablesRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ImportVariablesRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ImportVariablesRequestValidationError{}
+
+// Validate checks the field values on ImportVariablesResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *ImportVariablesResponse) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ImportVariablesResponse with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// ImportVariablesResponseMultiError, or nil if none found.
+func (m *ImportVariablesResponse) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ImportVariablesResponse) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	// no validation rules for RequestID
+
+	if len(errors) > 0 {
+		return ImportVariablesResponseMultiError(errors)
+	}
+
+	return nil
+}
+
+// ImportVariablesResponseMultiError is an error wrapping multiple validation
+// errors returned by ImportVariablesResponse.ValidateAll() if the designated
+// constraints aren't met.
+type ImportVariablesResponseMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ImportVariablesResponseMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ImportVariablesResponseMultiError) AllErrors() []error { return m }
+
+// ImportVariablesResponseValidationError is the validation error returned by
+// ImportVariablesResponse.Validate if the designated constraints aren't met.
+type ImportVariablesResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ImportVariablesResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ImportVariablesResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ImportVariablesResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ImportVariablesResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ImportVariablesResponseValidationError) ErrorName() string {
+	return "ImportVariablesResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ImportVariablesResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sImportVariablesResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ImportVariablesResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ImportVariablesResponseValidationError{}
+
 // Validate checks the field values on VariableDefinition with the rules
 // defined in the proto definition for this message. If any rules are
 // violated, the first error encountered is returned, or nil if there are no violations.
@@ -3495,6 +4574,242 @@ var _ interface {
 	ErrorName() string
 } = NamespaceVariableValidationError{}
 
+// Validate checks the field values on CreateVariableData with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *CreateVariableData) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on CreateVariableData with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// CreateVariableDataMultiError, or nil if none found.
+func (m *CreateVariableData) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *CreateVariableData) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Id
+
+	// no validation rules for ProjectCode
+
+	// no validation rules for Name
+
+	// no validation rules for Key
+
+	// no validation rules for Scope
+
+	// no validation rules for Default
+
+	// no validation rules for Desc
+
+	// no validation rules for Category
+
+	if len(errors) > 0 {
+		return CreateVariableDataMultiError(errors)
+	}
+
+	return nil
+}
+
+// CreateVariableDataMultiError is an error wrapping multiple validation errors
+// returned by CreateVariableData.ValidateAll() if the designated constraints
+// aren't met.
+type CreateVariableDataMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m CreateVariableDataMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m CreateVariableDataMultiError) AllErrors() []error { return m }
+
+// CreateVariableDataValidationError is the validation error returned by
+// CreateVariableData.Validate if the designated constraints aren't met.
+type CreateVariableDataValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e CreateVariableDataValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e CreateVariableDataValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e CreateVariableDataValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e CreateVariableDataValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e CreateVariableDataValidationError) ErrorName() string {
+	return "CreateVariableDataValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e CreateVariableDataValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sCreateVariableData.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = CreateVariableDataValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = CreateVariableDataValidationError{}
+
+// Validate checks the field values on UpdateVariableData with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *UpdateVariableData) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on UpdateVariableData with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// UpdateVariableDataMultiError, or nil if none found.
+func (m *UpdateVariableData) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *UpdateVariableData) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Id
+
+	// no validation rules for ProjectCode
+
+	// no validation rules for Name
+
+	// no validation rules for Key
+
+	// no validation rules for Scope
+
+	// no validation rules for Default
+
+	// no validation rules for Desc
+
+	// no validation rules for Category
+
+	if len(errors) > 0 {
+		return UpdateVariableDataMultiError(errors)
+	}
+
+	return nil
+}
+
+// UpdateVariableDataMultiError is an error wrapping multiple validation errors
+// returned by UpdateVariableData.ValidateAll() if the designated constraints
+// aren't met.
+type UpdateVariableDataMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m UpdateVariableDataMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m UpdateVariableDataMultiError) AllErrors() []error { return m }
+
+// UpdateVariableDataValidationError is the validation error returned by
+// UpdateVariableData.Validate if the designated constraints aren't met.
+type UpdateVariableDataValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e UpdateVariableDataValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e UpdateVariableDataValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e UpdateVariableDataValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e UpdateVariableDataValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e UpdateVariableDataValidationError) ErrorName() string {
+	return "UpdateVariableDataValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e UpdateVariableDataValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sUpdateVariableData.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = UpdateVariableDataValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = UpdateVariableDataValidationError{}
+
 // Validate checks the field values on ListVariableDefinitionData with the
 // rules defined in the proto definition for this message. If any rules are
 // violated, the first error encountered is returned, or nil if there are no violations.
@@ -3632,6 +4947,111 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = ListVariableDefinitionDataValidationError{}
+
+// Validate checks the field values on DeleteVariableDefinitionsData with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *DeleteVariableDefinitionsData) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on DeleteVariableDefinitionsData with
+// the rules defined in the proto definition for this message. If any rules
+// are violated, the result is a list of violation errors wrapped in
+// DeleteVariableDefinitionsDataMultiError, or nil if none found.
+func (m *DeleteVariableDefinitionsData) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *DeleteVariableDefinitionsData) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Total
+
+	if len(errors) > 0 {
+		return DeleteVariableDefinitionsDataMultiError(errors)
+	}
+
+	return nil
+}
+
+// DeleteVariableDefinitionsDataMultiError is an error wrapping multiple
+// validation errors returned by DeleteVariableDefinitionsData.ValidateAll()
+// if the designated constraints aren't met.
+type DeleteVariableDefinitionsDataMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m DeleteVariableDefinitionsDataMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m DeleteVariableDefinitionsDataMultiError) AllErrors() []error { return m }
+
+// DeleteVariableDefinitionsDataValidationError is the validation error
+// returned by DeleteVariableDefinitionsData.Validate if the designated
+// constraints aren't met.
+type DeleteVariableDefinitionsDataValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e DeleteVariableDefinitionsDataValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e DeleteVariableDefinitionsDataValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e DeleteVariableDefinitionsDataValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e DeleteVariableDefinitionsDataValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e DeleteVariableDefinitionsDataValidationError) ErrorName() string {
+	return "DeleteVariableDefinitionsDataValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e DeleteVariableDefinitionsDataValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sDeleteVariableDefinitionsData.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = DeleteVariableDefinitionsDataValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = DeleteVariableDefinitionsDataValidationError{}
 
 // Validate checks the field values on ListClusterVariablesData with the rules
 // defined in the proto definition for this message. If any rules are
@@ -3908,6 +5328,520 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = ListNamespaceVariablesDataValidationError{}
+
+// Validate checks the field values on ClusterVariableEntry with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *ClusterVariableEntry) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ClusterVariableEntry with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// ClusterVariableEntryMultiError, or nil if none found.
+func (m *ClusterVariableEntry) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ClusterVariableEntry) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for ClusterID
+
+	// no validation rules for Value
+
+	if len(errors) > 0 {
+		return ClusterVariableEntryMultiError(errors)
+	}
+
+	return nil
+}
+
+// ClusterVariableEntryMultiError is an error wrapping multiple validation
+// errors returned by ClusterVariableEntry.ValidateAll() if the designated
+// constraints aren't met.
+type ClusterVariableEntryMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ClusterVariableEntryMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ClusterVariableEntryMultiError) AllErrors() []error { return m }
+
+// ClusterVariableEntryValidationError is the validation error returned by
+// ClusterVariableEntry.Validate if the designated constraints aren't met.
+type ClusterVariableEntryValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ClusterVariableEntryValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ClusterVariableEntryValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ClusterVariableEntryValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ClusterVariableEntryValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ClusterVariableEntryValidationError) ErrorName() string {
+	return "ClusterVariableEntryValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ClusterVariableEntryValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sClusterVariableEntry.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ClusterVariableEntryValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ClusterVariableEntryValidationError{}
+
+// Validate checks the field values on NamespaceVariableEntry with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *NamespaceVariableEntry) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on NamespaceVariableEntry with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// NamespaceVariableEntryMultiError, or nil if none found.
+func (m *NamespaceVariableEntry) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *NamespaceVariableEntry) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for ClusterID
+
+	// no validation rules for Namespace
+
+	// no validation rules for Value
+
+	if len(errors) > 0 {
+		return NamespaceVariableEntryMultiError(errors)
+	}
+
+	return nil
+}
+
+// NamespaceVariableEntryMultiError is an error wrapping multiple validation
+// errors returned by NamespaceVariableEntry.ValidateAll() if the designated
+// constraints aren't met.
+type NamespaceVariableEntryMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m NamespaceVariableEntryMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m NamespaceVariableEntryMultiError) AllErrors() []error { return m }
+
+// NamespaceVariableEntryValidationError is the validation error returned by
+// NamespaceVariableEntry.Validate if the designated constraints aren't met.
+type NamespaceVariableEntryValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e NamespaceVariableEntryValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e NamespaceVariableEntryValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e NamespaceVariableEntryValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e NamespaceVariableEntryValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e NamespaceVariableEntryValidationError) ErrorName() string {
+	return "NamespaceVariableEntryValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e NamespaceVariableEntryValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sNamespaceVariableEntry.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = NamespaceVariableEntryValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = NamespaceVariableEntryValidationError{}
+
+// Validate checks the field values on ImportVariableData with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *ImportVariableData) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ImportVariableData with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// ImportVariableDataMultiError, or nil if none found.
+func (m *ImportVariableData) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ImportVariableData) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if utf8.RuneCountInString(m.GetName()) > 32 {
+		err := ImportVariableDataValidationError{
+			field:  "Name",
+			reason: "value length must be at most 32 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetKey()) > 64 {
+		err := ImportVariableDataValidationError{
+			field:  "Key",
+			reason: "value length must be at most 64 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if !_ImportVariableData_Key_Pattern.MatchString(m.GetKey()) {
+		err := ImportVariableDataValidationError{
+			field:  "Key",
+			reason: "value does not match regex pattern \"^[a-zA-Z][a-zA-Z0-9_]*$\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if _, ok := _ImportVariableData_Scope_InLookup[m.GetScope()]; !ok {
+		err := ImportVariableDataValidationError{
+			field:  "Scope",
+			reason: "value must be in list [global cluster namespace]",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	// no validation rules for Value
+
+	// no validation rules for Desc
+
+	for idx, item := range m.GetVars() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, ImportVariableDataValidationError{
+						field:  fmt.Sprintf("Vars[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, ImportVariableDataValidationError{
+						field:  fmt.Sprintf("Vars[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return ImportVariableDataValidationError{
+					field:  fmt.Sprintf("Vars[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	if len(errors) > 0 {
+		return ImportVariableDataMultiError(errors)
+	}
+
+	return nil
+}
+
+// ImportVariableDataMultiError is an error wrapping multiple validation errors
+// returned by ImportVariableData.ValidateAll() if the designated constraints
+// aren't met.
+type ImportVariableDataMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ImportVariableDataMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ImportVariableDataMultiError) AllErrors() []error { return m }
+
+// ImportVariableDataValidationError is the validation error returned by
+// ImportVariableData.Validate if the designated constraints aren't met.
+type ImportVariableDataValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ImportVariableDataValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ImportVariableDataValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ImportVariableDataValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ImportVariableDataValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ImportVariableDataValidationError) ErrorName() string {
+	return "ImportVariableDataValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ImportVariableDataValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sImportVariableData.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ImportVariableDataValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ImportVariableDataValidationError{}
+
+var _ImportVariableData_Key_Pattern = regexp.MustCompile("^[a-zA-Z][a-zA-Z0-9_]*$")
+
+var _ImportVariableData_Scope_InLookup = map[string]struct{}{
+	"global":    {},
+	"cluster":   {},
+	"namespace": {},
+}
+
+// Validate checks the field values on ImportVariableVarData with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *ImportVariableVarData) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ImportVariableVarData with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// ImportVariableVarDataMultiError, or nil if none found.
+func (m *ImportVariableVarData) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ImportVariableVarData) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for ClusterID
+
+	// no validation rules for Namespace
+
+	// no validation rules for Value
+
+	if len(errors) > 0 {
+		return ImportVariableVarDataMultiError(errors)
+	}
+
+	return nil
+}
+
+// ImportVariableVarDataMultiError is an error wrapping multiple validation
+// errors returned by ImportVariableVarData.ValidateAll() if the designated
+// constraints aren't met.
+type ImportVariableVarDataMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ImportVariableVarDataMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ImportVariableVarDataMultiError) AllErrors() []error { return m }
+
+// ImportVariableVarDataValidationError is the validation error returned by
+// ImportVariableVarData.Validate if the designated constraints aren't met.
+type ImportVariableVarDataValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ImportVariableVarDataValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ImportVariableVarDataValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ImportVariableVarDataValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ImportVariableVarDataValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ImportVariableVarDataValidationError) ErrorName() string {
+	return "ImportVariableVarDataValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ImportVariableVarDataValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sImportVariableVarData.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ImportVariableVarDataValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ImportVariableVarDataValidationError{}
 
 // Validate checks the field values on HealthzRequest with the rules defined in
 // the proto definition for this message. If any rules are violated, the first

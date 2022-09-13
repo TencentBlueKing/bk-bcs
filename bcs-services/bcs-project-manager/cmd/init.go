@@ -272,6 +272,8 @@ func (p *ProjectService) initHTTPGateway(router *mux.Router) error {
 			EmitDefaults: true,
 		}),
 	)
+	// // handle import variables from file route
+	// gwMux.Handle("POST", "/bcsproject/v1/variables/import", handler.NewImportHandler(p.model))
 	grpcDialOpts := []grpc.DialOption{}
 	if p.tlsConfig != nil && p.clientTLSConfig != nil {
 		grpcDialOpts = append(grpcDialOpts, grpc.WithTransportCredentials(grpcCred.NewTLS(p.clientTLSConfig)))
@@ -328,8 +330,8 @@ func (p *ProjectService) registerGatewayFromEndPoint(gwMux *runtime.ServeMux, gr
 func (p *ProjectService) initSwagger(mux *http.ServeMux) {
 	if p.opt.Swagger.Enable {
 		logging.Info("swagger doc is enabled")
-		mux.HandleFunc("/swagger/", func(w http.ResponseWriter, r *http.Request) {
-			http.ServeFile(w, r, path.Join(p.opt.Swagger.Dir, strings.TrimPrefix(r.URL.Path, "/swagger/")))
+		mux.HandleFunc("/bcsproject/swagger/", func(w http.ResponseWriter, r *http.Request) {
+			http.ServeFile(w, r, path.Join(p.opt.Swagger.Dir, strings.TrimPrefix(r.URL.Path, "/bcsproject/swagger/")))
 		})
 	}
 }
@@ -338,15 +340,16 @@ func (p *ProjectService) initSwagger(mux *http.ServeMux) {
 // init http service
 func (p *ProjectService) initHttpService() error {
 	router := mux.NewRouter()
+
 	// init micro http gateway
 	if err := p.initHTTPGateway(router); err != nil {
 		return err
 	}
 
 	mux := http.NewServeMux()
-	mux.Handle("/", router)
 	// init swagger
 	p.initSwagger(mux)
+	mux.Handle("/", router)
 
 	httpAddr := p.opt.Server.Address + ":" + strconv.Itoa(int(p.opt.Server.HTTPPort))
 	p.httpServer = &http.Server{

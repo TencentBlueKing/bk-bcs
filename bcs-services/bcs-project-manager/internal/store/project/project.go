@@ -31,22 +31,34 @@ import (
 
 const (
 	// table name
-	tableName        = "project"
-	projectIDField   = "projectID"
-	projectNameField = "name"
-	projectCodeField = "projectCode"
+	tableName           = "project"
+	FieldKeyProjectID   = "projectID"
+	FieldKeyName        = "name"
+	FieldKeyProjectCode = "projectCode"
 )
 
 var (
 	projectIndexes = []drivers.Index{
 		{
-			Name: tableName + "_idx",
+			Name: tableName + "_projectID_idx",
 			Key: bson.D{
-				bson.E{Key: projectIDField, Value: 1},
-				bson.E{Key: projectCodeField, Value: 1},
-				bson.E{Key: projectNameField, Value: 1},
+				bson.E{Key: FieldKeyProjectID, Value: 1},
 			},
 			Unique: true,
+		},
+		{
+			Name: tableName + "_projectCode_idx",
+			Key: bson.D{
+				bson.E{Key: FieldKeyProjectCode, Value: 1},
+			},
+			Unique: true,
+		},
+		{
+			Name: tableName + "_name_idx",
+			Key: bson.D{
+				bson.E{Key: FieldKeyName, Value: 1},
+			},
+			Unique: false,
 		},
 	}
 )
@@ -132,8 +144,8 @@ func (m *ModelProject) CreateProject(ctx context.Context, project *Project) erro
 // GetProject get project info by projectID or projectCode
 func (m *ModelProject) GetProject(ctx context.Context, projectIDOrCode string) (*Project, error) {
 	// query project info by the `or` operation
-	projectIDCond := operator.NewLeafCondition(operator.Eq, operator.M{projectIDField: projectIDOrCode})
-	projectCodeCond := operator.NewLeafCondition(operator.Eq, operator.M{projectCodeField: projectIDOrCode})
+	projectIDCond := operator.NewLeafCondition(operator.Eq, operator.M{FieldKeyProjectID: projectIDOrCode})
+	projectCodeCond := operator.NewLeafCondition(operator.Eq, operator.M{FieldKeyProjectCode: projectIDOrCode})
 	cond := operator.NewBranchCondition(operator.Or, projectIDCond, projectCodeCond)
 
 	retProject := &Project{}
@@ -155,9 +167,9 @@ func (m *ModelProject) GetProjectByField(ctx context.Context, pf *ProjectField) 
 	if pf.ProjectID == "" && pf.Name == "" && pf.ProjectCode == "" {
 		return nil, fmt.Errorf("project field: [projectID, name, projectCode] cannot be empty")
 	}
-	projectIDCond := operator.NewLeafCondition(operator.Eq, operator.M{projectIDField: pf.ProjectID})
-	projectCodeCond := operator.NewLeafCondition(operator.Eq, operator.M{projectCodeField: pf.ProjectCode})
-	nameCond := operator.NewLeafCondition(operator.Eq, operator.M{projectNameField: pf.Name})
+	projectIDCond := operator.NewLeafCondition(operator.Eq, operator.M{FieldKeyProjectID: pf.ProjectID})
+	projectCodeCond := operator.NewLeafCondition(operator.Eq, operator.M{FieldKeyProjectCode: pf.ProjectCode})
+	nameCond := operator.NewLeafCondition(operator.Eq, operator.M{FieldKeyName: pf.Name})
 	cond := operator.NewBranchCondition(operator.Or, projectIDCond, projectCodeCond, nameCond)
 
 	retProject := &Project{}
@@ -173,7 +185,7 @@ func (m *ModelProject) UpdateProject(ctx context.Context, project *Project) erro
 		return err
 	}
 	cond := operator.NewLeafCondition(operator.Eq, operator.M{
-		projectIDField: project.ProjectID,
+		FieldKeyProjectID: project.ProjectID,
 	})
 	// update project info
 	return m.db.Table(m.tableName).Upsert(ctx, cond, operator.M{"$set": project})
@@ -185,7 +197,7 @@ func (m *ModelProject) DeleteProject(ctx context.Context, projectID string) erro
 		return err
 	}
 	cond := operator.NewLeafCondition(operator.Eq, operator.M{
-		projectIDField: projectID,
+		FieldKeyProjectID: projectID,
 	})
 	deleteCounter, err := m.db.Table(m.tableName).Delete(ctx, cond)
 	if err != nil {

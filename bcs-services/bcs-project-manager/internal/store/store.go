@@ -18,19 +18,20 @@ package store
 import (
 	"context"
 
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/page"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/project"
 	vd "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/variabledefinition"
 	vv "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/variablevalue"
-
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/entity"
 )
 
 // ProjectModel project interface
 type ProjectModel interface {
 	CreateProject(ctx context.Context, project *project.Project) error
-	GetProject(ctx context.Context, projectID string) (*project.Project, error)
+	GetProject(ctx context.Context, projectIDOrCode string) (*project.Project, error)
 	GetProjectByField(ctx context.Context, pf *project.ProjectField) (*project.Project, error)
 	DeleteProject(ctx context.Context, projectID string) error
 	UpdateProject(ctx context.Context, project *project.Project) error
@@ -38,15 +39,19 @@ type ProjectModel interface {
 	ListProjectByIDs(ctx context.Context, ids []string, opt *page.Pagination) ([]project.Project, int64, error)
 
 	CreateVariableDefinition(ctx context.Context, entity *vd.VariableDefinition) error
-	UpdateVariableDefinition(ctx context.Context, entity *vd.VariableDefinition) error
+	UpdateVariableDefinition(ctx context.Context, entity entity.M) (*vd.VariableDefinition, error)
+	UpsertVariableDefinition(ctx context.Context, entity *vd.VariableDefinition) error
 	GetVariableDefinition(ctx context.Context, variableID string) (*vd.VariableDefinition, error)
 	GetVariableDefinitionByKey(ctx context.Context, projectCode, key string) (*vd.VariableDefinition, error)
 	ListVariableDefinitions(ctx context.Context,
 		cond *operator.Condition, opt *page.Pagination) ([]vd.VariableDefinition, int64, error)
+	DeleteVariableDefinitions(ctx context.Context, ids []string) (int64, error)
 
 	CreateVariableValue(ctx context.Context, vv *vv.VariableValue) error
 	GetVariableValue(ctx context.Context,
-		projectCode, variableID, clusterID, namespace, scope string) (*vv.VariableValue, error)
+		variableID, clusterID, namespace, scope string) (*vv.VariableValue, error)
+	UpsertVariableValue(ctx context.Context,
+		value *vv.VariableValue) error
 }
 
 type modelSet struct {

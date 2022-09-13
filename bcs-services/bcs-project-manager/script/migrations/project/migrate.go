@@ -87,7 +87,7 @@ func main() {
 	fmt.Println("migrate success!")
 }
 
-// BCSCCProjectData xxx
+// BCSCCProjectData ...
 type BCSCCProjectData struct {
 	CreatedAt   time.Time
 	UpdatedAt   time.Time

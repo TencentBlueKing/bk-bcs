@@ -114,7 +114,7 @@ require (
 
 require (
 	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20220123082150-ac3c90791ab4
-	github.com/Tencent/bk-bcs/bcs-services/pkg v0.0.0-20220126063353-25e53b7ae285
+	github.com/Tencent/bk-bcs/bcs-services/pkg v0.0.0-20220901090711-36bfa115011f
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect

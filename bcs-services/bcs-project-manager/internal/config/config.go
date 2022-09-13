@@ -17,10 +17,10 @@ package config
 
 import (
 	"io/ioutil"
+	
+	"gopkg.in/yaml.v2"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/envs"
-
-	"gopkg.in/yaml.v2"
 )
 
 // EtcdConfig 依赖的 etcd 服务的配置
@@ -31,7 +31,7 @@ type EtcdConfig struct {
 	EtcdCa        string `yaml:"ca" usage:"ca file for etcd"`
 }
 
-// MongoConfig xxx
+// MongoConfig mongo db config
 type MongoConfig struct {
 	Address        string `yaml:"address"`
 	ConnectTimeout uint   `yaml:"connecttimeout"`
@@ -77,14 +77,13 @@ type LogConfig struct {
 	AlsoToStdErr  bool   `yaml:"alsoToStdErr" usage:"also write log to stdErr"`
 }
 
-// SwaggerConfig xxx
+// SwaggerConfig swagger config
 type SwaggerConfig struct {
 	Enable bool   `yaml:"enable" usage:"enable swagger"`
 	Dir    string `yaml:"dir" usage:"swagger dir"`
 }
 
-// JWTConfig xxx
-// JwtConfig
+// JWTConfig jwt config
 type JWTConfig struct {
 	Enable         bool   `yaml:"enable" usage:"enable jwt"`
 	PublicKey      string `yaml:"publicKey" usage:"public key"`
@@ -128,8 +127,7 @@ type CMDBConfig struct {
 	Debug             bool   `yaml:"debug" usage:"debug"`
 }
 
-// BCSCCConfig xxx
-// BCSGatewayConfig 请求的 bcs cc 服务配置
+// BCSCCConfig 请求的 bcs cc 服务配置
 type BCSCCConfig struct {
 	Host string `yaml:"host" usage:"access bcs cc api host"`
 }

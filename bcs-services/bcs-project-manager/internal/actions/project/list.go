@@ -77,7 +77,7 @@ func (la *ListAction) listProjects() ([]*pm.Project, int64, error) {
 			condM["name"] = stringx.SplitString(la.req.Names)
 		}
 		if la.req.ProjectCode != "" {
-			condM["projectcode"] = stringx.SplitString(la.req.ProjectCode)
+			condM["projectCode"] = stringx.SplitString(la.req.ProjectCode)
 		}
 		if la.req.Kind != "" {
 			condM["kind"] = []string{la.req.Kind}
@@ -112,7 +112,8 @@ func NewListAuthorizedProj(model store.ProjectModel) *ListAuthorizedProject {
 }
 
 // Do xxx
-func (lap *ListAuthorizedProject) Do(ctx context.Context, req *proto.ListAuthorizedProjReq) (*map[string]interface{},
+func (lap *ListAuthorizedProject) Do(ctx context.Context,
+	req *proto.ListAuthorizedProjReq) (*map[string]interface{},
 	error) {
 	username := auth.GetUserFromCtx(ctx)
 	ids, err := perm.ListAuthorizedProjectIDs(username)

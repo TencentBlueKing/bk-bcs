@@ -267,22 +267,29 @@ func NewVariableEndpoints() []*api.Endpoint {
 	return []*api.Endpoint{
 		&api.Endpoint{
 			Name:    "Variable.CreateVariable",
-			Path:    []string{"/bcsproject/v1/project/{projectCode}/variable"},
+			Path:    []string{"/bcsproject/v1/project/{projectCode}/variables"},
 			Method:  []string{"POST"},
 			Body:    "*",
 			Handler: "rpc",
 		},
 		&api.Endpoint{
 			Name:    "Variable.UpdateVariable",
-			Path:    []string{"/bcsproject/v1/project/{projectCode}/variable/{variableID}"},
+			Path:    []string{"/bcsproject/v1/project/{projectCode}/variables/{variableID}"},
 			Method:  []string{"PUT"},
 			Body:    "*",
 			Handler: "rpc",
 		},
 		&api.Endpoint{
 			Name:    "Variable.ListVariableDefinitions",
-			Path:    []string{"/bcsproject/v1/project/{projectCode}/variable/definitions"},
+			Path:    []string{"/bcsproject/v1/project/{projectCode}/variables"},
 			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "Variable.DeleteVariableDefinitions",
+			Path:    []string{"/bcsproject/v1/project/{projectCode}/variables"},
+			Method:  []string{"DELETE"},
+			Body:    "",
 			Handler: "rpc",
 		},
 		&api.Endpoint{
@@ -297,6 +304,27 @@ func NewVariableEndpoints() []*api.Endpoint {
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
+		&api.Endpoint{
+			Name:    "Variable.UpdateClusterVariables",
+			Path:    []string{"/bcsproject/v1/project/{projectCode}/variables/{variableID}/cluster"},
+			Method:  []string{"PUT"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "Variable.UpdateNamespaceVariables",
+			Path:    []string{"/bcsproject/v1/project/{projectCode}/variables/{variableID}/namespace"},
+			Method:  []string{"PUT"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "Variable.ImportVariables",
+			Path:    []string{"/bcsproject/v1/project/{projectCode}/variables/import"},
+			Method:  []string{"POST"},
+			Body:    "*",
+			Handler: "rpc",
+		},
 	}
 }
 
@@ -306,8 +334,12 @@ type VariableService interface {
 	CreateVariable(ctx context.Context, in *CreateVariableRequest, opts ...client.CallOption) (*CreateVariableResponse, error)
 	UpdateVariable(ctx context.Context, in *UpdateVariableRequest, opts ...client.CallOption) (*UpdateVariableResponse, error)
 	ListVariableDefinitions(ctx context.Context, in *ListVariableDefinitionsRequest, opts ...client.CallOption) (*ListVariableDefinitionsResponse, error)
+	DeleteVariableDefinitions(ctx context.Context, in *DeleteVariableDefinitionsRequest, opts ...client.CallOption) (*DeleteVariableDefinitionsResponse, error)
 	ListClusterVariables(ctx context.Context, in *ListClusterVariablesRequest, opts ...client.CallOption) (*ListClusterVariablesResponse, error)
 	ListNamespaceVariables(ctx context.Context, in *ListNamespaceVariablesRequest, opts ...client.CallOption) (*ListNamespaceVariablesResponse, error)
+	UpdateClusterVariables(ctx context.Context, in *UpdateClusterVariablesRequest, opts ...client.CallOption) (*UpdateClusterVariablesResponse, error)
+	UpdateNamespaceVariables(ctx context.Context, in *UpdateNamespaceVariablesRequest, opts ...client.CallOption) (*UpdateNamespaceVariablesResponse, error)
+	ImportVariables(ctx context.Context, in *ImportVariablesRequest, opts ...client.CallOption) (*ImportVariablesResponse, error)
 }
 
 type variableService struct {
@@ -352,6 +384,16 @@ func (c *variableService) ListVariableDefinitions(ctx context.Context, in *ListV
 	return out, nil
 }
 
+func (c *variableService) DeleteVariableDefinitions(ctx context.Context, in *DeleteVariableDefinitionsRequest, opts ...client.CallOption) (*DeleteVariableDefinitionsResponse, error) {
+	req := c.c.NewRequest(c.name, "Variable.DeleteVariableDefinitions", in)
+	out := new(DeleteVariableDefinitionsResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *variableService) ListClusterVariables(ctx context.Context, in *ListClusterVariablesRequest, opts ...client.CallOption) (*ListClusterVariablesResponse, error) {
 	req := c.c.NewRequest(c.name, "Variable.ListClusterVariables", in)
 	out := new(ListClusterVariablesResponse)
@@ -372,14 +414,48 @@ func (c *variableService) ListNamespaceVariables(ctx context.Context, in *ListNa
 	return out, nil
 }
 
+func (c *variableService) UpdateClusterVariables(ctx context.Context, in *UpdateClusterVariablesRequest, opts ...client.CallOption) (*UpdateClusterVariablesResponse, error) {
+	req := c.c.NewRequest(c.name, "Variable.UpdateClusterVariables", in)
+	out := new(UpdateClusterVariablesResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *variableService) UpdateNamespaceVariables(ctx context.Context, in *UpdateNamespaceVariablesRequest, opts ...client.CallOption) (*UpdateNamespaceVariablesResponse, error) {
+	req := c.c.NewRequest(c.name, "Variable.UpdateNamespaceVariables", in)
+	out := new(UpdateNamespaceVariablesResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *variableService) ImportVariables(ctx context.Context, in *ImportVariablesRequest, opts ...client.CallOption) (*ImportVariablesResponse, error) {
+	req := c.c.NewRequest(c.name, "Variable.ImportVariables", in)
+	out := new(ImportVariablesResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // Server API for Variable service
 
 type VariableHandler interface {
 	CreateVariable(context.Context, *CreateVariableRequest, *CreateVariableResponse) error
 	UpdateVariable(context.Context, *UpdateVariableRequest, *UpdateVariableResponse) error
 	ListVariableDefinitions(context.Context, *ListVariableDefinitionsRequest, *ListVariableDefinitionsResponse) error
+	DeleteVariableDefinitions(context.Context, *DeleteVariableDefinitionsRequest, *DeleteVariableDefinitionsResponse) error
 	ListClusterVariables(context.Context, *ListClusterVariablesRequest, *ListClusterVariablesResponse) error
 	ListNamespaceVariables(context.Context, *ListNamespaceVariablesRequest, *ListNamespaceVariablesResponse) error
+	UpdateClusterVariables(context.Context, *UpdateClusterVariablesRequest, *UpdateClusterVariablesResponse) error
+	UpdateNamespaceVariables(context.Context, *UpdateNamespaceVariablesRequest, *UpdateNamespaceVariablesResponse) error
+	ImportVariables(context.Context, *ImportVariablesRequest, *ImportVariablesResponse) error
 }
 
 func RegisterVariableHandler(s server.Server, hdlr VariableHandler, opts ...server.HandlerOption) error {
@@ -387,8 +463,12 @@ func RegisterVariableHandler(s server.Server, hdlr VariableHandler, opts ...serv
 		CreateVariable(ctx context.Context, in *CreateVariableRequest, out *CreateVariableResponse) error
 		UpdateVariable(ctx context.Context, in *UpdateVariableRequest, out *UpdateVariableResponse) error
 		ListVariableDefinitions(ctx context.Context, in *ListVariableDefinitionsRequest, out *ListVariableDefinitionsResponse) error
+		DeleteVariableDefinitions(ctx context.Context, in *DeleteVariableDefinitionsRequest, out *DeleteVariableDefinitionsResponse) error
 		ListClusterVariables(ctx context.Context, in *ListClusterVariablesRequest, out *ListClusterVariablesResponse) error
 		ListNamespaceVariables(ctx context.Context, in *ListNamespaceVariablesRequest, out *ListNamespaceVariablesResponse) error
+		UpdateClusterVariables(ctx context.Context, in *UpdateClusterVariablesRequest, out *UpdateClusterVariablesResponse) error
+		UpdateNamespaceVariables(ctx context.Context, in *UpdateNamespaceVariablesRequest, out *UpdateNamespaceVariablesResponse) error
+		ImportVariables(ctx context.Context, in *ImportVariablesRequest, out *ImportVariablesResponse) error
 	}
 	type Variable struct {
 		variable
@@ -396,22 +476,29 @@ func RegisterVariableHandler(s server.Server, hdlr VariableHandler, opts ...serv
 	h := &variableHandler{hdlr}
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "Variable.CreateVariable",
-		Path:    []string{"/bcsproject/v1/project/{projectCode}/variable"},
+		Path:    []string{"/bcsproject/v1/project/{projectCode}/variables"},
 		Method:  []string{"POST"},
 		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "Variable.UpdateVariable",
-		Path:    []string{"/bcsproject/v1/project/{projectCode}/variable/{variableID}"},
+		Path:    []string{"/bcsproject/v1/project/{projectCode}/variables/{variableID}"},
 		Method:  []string{"PUT"},
 		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "Variable.ListVariableDefinitions",
-		Path:    []string{"/bcsproject/v1/project/{projectCode}/variable/definitions"},
+		Path:    []string{"/bcsproject/v1/project/{projectCode}/variables"},
 		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Variable.DeleteVariableDefinitions",
+		Path:    []string{"/bcsproject/v1/project/{projectCode}/variables"},
+		Method:  []string{"DELETE"},
+		Body:    "",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
@@ -424,6 +511,27 @@ func RegisterVariableHandler(s server.Server, hdlr VariableHandler, opts ...serv
 		Name:    "Variable.ListNamespaceVariables",
 		Path:    []string{"/bcsproject/v1/project/{projectCode}/variables/{variableID}/namespace"},
 		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Variable.UpdateClusterVariables",
+		Path:    []string{"/bcsproject/v1/project/{projectCode}/variables/{variableID}/cluster"},
+		Method:  []string{"PUT"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Variable.UpdateNamespaceVariables",
+		Path:    []string{"/bcsproject/v1/project/{projectCode}/variables/{variableID}/namespace"},
+		Method:  []string{"PUT"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Variable.ImportVariables",
+		Path:    []string{"/bcsproject/v1/project/{projectCode}/variables/import"},
+		Method:  []string{"POST"},
+		Body:    "*",
 		Handler: "rpc",
 	}))
 	return s.Handle(s.NewHandler(&Variable{h}, opts...))
@@ -445,12 +553,28 @@ func (h *variableHandler) ListVariableDefinitions(ctx context.Context, in *ListV
 	return h.VariableHandler.ListVariableDefinitions(ctx, in, out)
 }
 
+func (h *variableHandler) DeleteVariableDefinitions(ctx context.Context, in *DeleteVariableDefinitionsRequest, out *DeleteVariableDefinitionsResponse) error {
+	return h.VariableHandler.DeleteVariableDefinitions(ctx, in, out)
+}
+
 func (h *variableHandler) ListClusterVariables(ctx context.Context, in *ListClusterVariablesRequest, out *ListClusterVariablesResponse) error {
 	return h.VariableHandler.ListClusterVariables(ctx, in, out)
 }
 
 func (h *variableHandler) ListNamespaceVariables(ctx context.Context, in *ListNamespaceVariablesRequest, out *ListNamespaceVariablesResponse) error {
 	return h.VariableHandler.ListNamespaceVariables(ctx, in, out)
+}
+
+func (h *variableHandler) UpdateClusterVariables(ctx context.Context, in *UpdateClusterVariablesRequest, out *UpdateClusterVariablesResponse) error {
+	return h.VariableHandler.UpdateClusterVariables(ctx, in, out)
+}
+
+func (h *variableHandler) UpdateNamespaceVariables(ctx context.Context, in *UpdateNamespaceVariablesRequest, out *UpdateNamespaceVariablesResponse) error {
+	return h.VariableHandler.UpdateNamespaceVariables(ctx, in, out)
+}
+
+func (h *variableHandler) ImportVariables(ctx context.Context, in *ImportVariablesRequest, out *ImportVariablesResponse) error {
+	return h.VariableHandler.ImportVariables(ctx, in, out)
 }
 
 // Api Endpoints for Healthz service

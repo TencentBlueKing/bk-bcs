@@ -12,7 +12,6 @@
  * limitations under the License.
  */
 
-// Package clientset xxx
 package clientset
 
 import (
@@ -24,7 +23,7 @@ import (
 	"k8s.io/client-go/rest"
 )
 
-// ClientGroup xxx
+// ClientGroup ...
 type ClientGroup struct {
 	AuthToken   string
 	GatewayHost string
@@ -41,7 +40,7 @@ func SetClientGroup(gatewayHost, authToken string) {
 	}
 }
 
-// GetClientGroup xxx
+// GetClientGroup ...
 func GetClientGroup() *ClientGroup {
 	return group
 }

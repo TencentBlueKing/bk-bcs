@@ -23,6 +23,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/logging"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store"
 	vdm "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/variabledefinition"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/entity"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/errorx"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/proto/bcsproject"
 
@@ -57,27 +58,33 @@ func (ca *UpdateAction) Do(ctx context.Context, req *proto.UpdateVariableRequest
 
 func (ca *UpdateAction) updateVariable() (*vdm.VariableDefinition, error) {
 	// check if key exists in project
-	_, err := ca.model.GetVariableDefinitionByKey(ca.ctx, ca.req.GetProjectCode(), ca.req.GetKey())
-	if err == nil {
-		return nil, fmt.Errorf("variable key %s alread exists in project", ca.req.GetKey())
-	} else if err != drivers.ErrTableRecordNotFound {
-		logging.Error("get variable definition from db failed, err: ", err.Error())
+	old, err := ca.model.GetVariableDefinition(ca.ctx, ca.req.GetVariableID())
+	if err != nil {
 		return nil, err
+	}
+	if old.Key != ca.req.GetKey() {
+		// confim new key available
+		_, err := ca.model.GetVariableDefinitionByKey(ca.ctx, ca.req.GetProjectCode(), ca.req.GetKey())
+		if err == nil {
+			return nil, fmt.Errorf("variable key %s alread exists in project", ca.req.GetKey())
+		} else if err != drivers.ErrTableRecordNotFound {
+			logging.Error("get variable definition from db failed, err: ", err.Error())
+			return nil, err
+		}
 	}
 	// construct variable definition and update
 	timeStr := time.Now().Format(time.RFC3339)
 	// 从 context 中获取 username
 	username := auth.GetUserFromCtx(ca.ctx)
-	vd := &vdm.VariableDefinition{
-		ID:          ca.req.GetVariableID(),
-		Key:         ca.req.GetKey(),
-		Default:     ca.req.GetDefault(),
-		Name:        ca.req.GetName(),
-		Description: ca.req.GetDesc(),
-		Scope:       ca.req.GetScope(),
-		Updater:     username,
-		UpdateTime:  timeStr,
+	vd := entity.M{
+		vdm.FieldKeyID:          ca.req.GetVariableID(),
+		vdm.FieldKeyKey:         ca.req.GetKey(),
+		vdm.FieldKeyDefault:     ca.req.GetDefault(),
+		vdm.FieldKeyName:        ca.req.GetName(),
+		vdm.FieldKeyDescription: ca.req.GetDesc(),
+		vdm.FieldKeyScope:       ca.req.GetScope(),
+		vdm.FieldKeyUpdater:     username,
+		vdm.FieldKeyUpdateTime:  timeStr,
 	}
-	err = ca.model.UpdateVariableDefinition(ca.ctx, vd)
-	return vd, nil
+	return ca.model.UpdateVariableDefinition(ca.ctx, vd)
 }

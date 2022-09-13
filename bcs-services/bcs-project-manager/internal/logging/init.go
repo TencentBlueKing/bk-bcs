@@ -19,11 +19,11 @@ import (
 	"os"
 	"sync"
 	"time"
-
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/config"
-
+	
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/config"
 )
 
 var loggerInitOnce sync.Once
