@@ -40,12 +40,16 @@ initContainers:
     imagePullPolicy: {{ .basic.pullPolicy }}
     {{- end }}
     {{- include "container.command" .command | indent 4 }}
+    {{- include "container.service" .service | nindent 4 }}
     {{- include "container.envs" .envs | indent 4 }}
     {{- if .resource }}
     {{- include "container.resource" .resource | nindent 4 }}
     {{- end }}
     {{- if .security }}
     {{- include "container.security" .security | nindent 4 }}
+    {{- end }}
+    {{- if .mount }}
+    {{- include "container.mount" .mount | nindent 4 }}
     {{- end }}
   {{- else }}
   []
