@@ -3,8 +3,8 @@ FROM centos:7
 LABEL maintainer="Tencent BlueKing"
 
 RUN mkdir -p /data/bcs/logs /data/bcs/cert /data/bcs/swagger
-ADD third_party/swagger-ui/* /data/bcs/swagger/
-ADD proto/bcsproject/bcsproject.swagger.json /data/bcs/swagger/bcsproject.swagger.json
+ADD swagger/swagger-ui/* /data/bcs/swagger/
+ADD swagger/bcsproject.swagger.json /data/bcs/swagger/bcsproject.swagger.json
 
 WORKDIR /data/bcs/
 
