@@ -55,4 +55,6 @@ RES_KIND_WITH_DEMO_MANIFEST = [
     K8sResourceKind.ServiceAccount.value,
     # CustomResource
     K8sResourceKind.CustomObject.value,
+    K8sResourceKind.GameDeployment.value,
+    K8sResourceKind.GameStatefulSet.value,
 ]
