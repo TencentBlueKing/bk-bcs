@@ -1,6 +1,5 @@
 FROM centos:7
 
-RUN mkdir -p /data/bcs/logs/bcs /data/bcs/cert /data/bcs/swagger
 RUN mkdir -p /data/bcs/bcs-project-manager-migration
 
 ADD bcs-project-manager-migration /data/bcs/bcs-project-manager-migration/

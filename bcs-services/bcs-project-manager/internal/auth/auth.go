@@ -56,7 +56,7 @@ func GetAuthUserFromCtx(ctx context.Context) AuthUser {
 	}
 }
 
-// AuthUser xxx
+// AuthUser ...
 type AuthUser struct {
 	Username string
 	UserType string

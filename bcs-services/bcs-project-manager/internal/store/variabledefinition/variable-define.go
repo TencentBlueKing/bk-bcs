@@ -18,58 +18,92 @@ import (
 	"context"
 	"fmt"
 	"sync"
-
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/page"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/logging"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/dbtable"
-	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/proto/bcsproject"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 	"go.mongodb.org/mongo-driver/bson"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/page"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/dbtable"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/entity"
+	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/proto/bcsproject"
 )
 
 const (
 	// table name
-	tableName        = "variable_definition"
-	idField          = "_id"
-	projectCodeField = "projectCode"
-	keyField         = "key"
+	tableName           = "variable_definition"
+	FieldKeyID          = "_id"
+	FieldKeyKey         = "key"
+	FieldKeyDefault     = "default"
+	FieldKeyName        = "name"
+	FieldKeyDescription = "description"
+	FieldKeyProjectCode = "projectCode"
+	FieldKeyScope       = "scope"
+	FieldKeyCategory    = "category"
+	FieldKeyCreateTime  = "createTime"
+	FieldKeyUpdateTime  = "updateTime"
+	FieldKeyCreator     = "creator"
+	FieldKeyUpdater     = "updater"
+	FieldKeyIsDeleted   = "isDeleted"
+	FieldKeyDeleteTime  = "deleteTime"
 )
 
 var (
+	// TODO: 确认索引使用方式
 	variableDefinitionIndexes = []drivers.Index{
 		{
 			Name: tableName + "_idx",
 			Key: bson.D{
-				bson.E{Key: projectCodeField, Value: 1},
-				bson.E{Key: keyField, Value: 1},
+				bson.E{Key: FieldKeyKey, Value: 1},
+				bson.E{Key: FieldKeyProjectCode, Value: 1},
+				bson.E{Key: FieldKeyIsDeleted, Value: 1},
 			},
-			Unique: true,
+			Unique: false,
 		},
 	}
 )
 
 var (
-	// VariableDefinitonCategorySys xxx
-	VariableDefinitonCategorySys = "sys"
-	// VariableDefinitionCategoryCustom xxx
+	VariableDefinitonCategorySys     = "sys"
 	VariableDefinitionCategoryCustom = "custom"
-	// VariableDefinitionScopeGlobal xxx
-	VariableDefinitionScopeGlobal = "global"
-	// VariableDefinitionScopeCluster xxx
-	VariableDefinitionScopeCluster = "cluster"
-	// VariableDefinitionScopeNamespace xxx
+	VariableDefinitionScopeGlobal    = "global"
+	VariableDefinitionScopeCluster   = "cluster"
 	VariableDefinitionScopeNamespace = "namespace"
 
-	// VariableIdPrefix xxx
 	VariableIdPrefix = "variable-"
 )
 
-// VariableDefinition xxx
+// GetScopeName get scope name by scope str
+func GetScopeName(scope string) string {
+	switch scope {
+	case VariableDefinitionScopeGlobal:
+		return "全局变量"
+	case VariableDefinitionScopeCluster:
+		return "集群变量"
+	case VariableDefinitionScopeNamespace:
+		return "命名空间变量"
+	default:
+		return "非法作用范围"
+	}
+
+}
+
+// GetCategoryName get category name by category str
+func GetCategoryName(category string) string {
+	switch category {
+	case VariableDefinitonCategorySys:
+		return "系统内置"
+	case VariableDefinitionCategoryCustom:
+		return "自定义"
+	default:
+		return "非法类型"
+	}
+}
+
+// VariableDefinition ...
 type VariableDefinition struct {
 	ID          string `json:"id" bson:"_id"`
-	VariableID  string `json:"variableID" bson:"variableID"`
 	Key         string `json:"key" bson:"key"`
 	Default     string `json:"default" bson:"default"`
 	Name        string `json:"name" bson:"name"`
@@ -81,6 +115,7 @@ type VariableDefinition struct {
 	UpdateTime  string `json:"updateTime" bson:"updateTime"`
 	Creator     string `json:"creator" bson:"creator"`
 	Updater     string `json:"updater" bson:"updater"`
+	DeleteTime  string `json:"deleteTime" bson:"deleteTime"`
 	IsDeleted   bool   `json:"isDeleted" bson:"isDeleted"`
 }
 
@@ -102,7 +137,6 @@ func New(db drivers.DB) *ModelVariableDefinition {
 	}
 }
 
-// ensureTable xxx
 // ensure table
 func (m *ModelVariableDefinition) ensureTable(ctx context.Context) error {
 	m.isTableEnsuredMutex.RLock()
@@ -125,20 +159,19 @@ func (m *ModelVariableDefinition) ensureTable(ctx context.Context) error {
 // Transfer2Proto transfer variable definition to proto
 func (m *VariableDefinition) Transfer2Proto() *proto.VariableDefinition {
 	return &proto.VariableDefinition{
-		Id:   m.ID,
-		Key:  m.Key,
-		Name: m.Name,
-		// TODO: Default
+		Id:           m.ID,
+		Key:          m.Key,
+		Name:         m.Name,
 		DefaultValue: m.Default,
 		Scope:        m.Scope,
-		// TODO: ScopeName
-		Category: m.Category,
-		// TODO: CategoryName
-		Desc:    m.Description,
-		Created: m.CreateTime,
-		Updated: m.UpdateTime,
-		Creator: m.Creator,
-		Updater: m.Updater,
+		ScopeName:    GetScopeName(m.Scope),
+		Category:     m.Category,
+		CategoryName: GetCategoryName(m.Category),
+		Desc:         m.Description,
+		Created:      m.CreateTime,
+		Updated:      m.UpdateTime,
+		Creator:      m.Creator,
+		Updater:      m.Updater,
 	}
 }
 
@@ -161,7 +194,8 @@ func (m *ModelVariableDefinition) GetVariableDefinition(ctx context.Context,
 	variableID string) (*VariableDefinition, error) {
 	// query variable definition info by the `and` operation
 	condM := make(operator.M)
-	condM[idField] = variableID
+	condM[FieldKeyID] = variableID
+	condM[FieldKeyIsDeleted] = false
 	cond := operator.NewLeafCondition(operator.Eq, condM)
 
 	retVariableDefinition := &VariableDefinition{}
@@ -176,8 +210,9 @@ func (m *ModelVariableDefinition) GetVariableDefinitionByKey(ctx context.Context
 	projectCode, key string) (*VariableDefinition, error) {
 	// query variable definition info by the `and` operation
 	condM := make(operator.M)
-	condM[projectCodeField] = projectCode
-	condM[keyField] = key
+	condM[FieldKeyProjectCode] = projectCode
+	condM[FieldKeyKey] = key
+	condM[FieldKeyIsDeleted] = false
 	cond := operator.NewLeafCondition(operator.Eq, condM)
 
 	retVariableDefinition := &VariableDefinition{}
@@ -188,38 +223,46 @@ func (m *ModelVariableDefinition) GetVariableDefinitionByKey(ctx context.Context
 }
 
 // UpdateVariableDefinition update variable definition info
-func (m *ModelVariableDefinition) UpdateVariableDefinition(ctx context.Context, vd *VariableDefinition) error {
-	if err := m.ensureTable(ctx); err != nil {
-		return err
+func (m *ModelVariableDefinition) UpdateVariableDefinition(
+	ctx context.Context, vd entity.M) (*VariableDefinition, error) {
+	if vd == nil {
+		return nil, fmt.Errorf("can not update empty variable definition")
 	}
-	condM := make(operator.M)
-	condM[idField] = vd.ID
-	cond := operator.NewLeafCondition(operator.Eq, condM)
-	// update variable definition info
-	return m.db.Table(m.tableName).Upsert(ctx, cond, operator.M{"$set": vd})
+
+	if err := m.ensureTable(ctx); err != nil {
+		return nil, err
+	}
+
+	cond := operator.NewLeafCondition(operator.Eq, operator.M{
+		FieldKeyID:        vd.GetString(FieldKeyID),
+		FieldKeyIsDeleted: false,
+	})
+
+	if err := m.db.Table(m.tableName).Update(ctx, cond, operator.M{"$set": vd}); err != nil {
+		return nil, err
+	}
+	variableDefinition := &VariableDefinition{}
+	if err := m.db.Table(m.tableName).Find(cond).One(ctx, variableDefinition); err != nil {
+		return nil, err
+	}
+	return variableDefinition, nil
 }
 
-// DeleteVariableDefinition delete variable definition record
-func (m *ModelVariableDefinition) DeleteVariableDefinition(ctx context.Context, key, projectCode string) error {
+// DeleteVariableDefinitions batch delete variable definition records
+func (m *ModelVariableDefinition) DeleteVariableDefinitions(ctx context.Context, ids []string) (int64, error) {
 	if err := m.ensureTable(ctx); err != nil {
-		return err
+		return 0, err
 	}
-	condKey := operator.NewLeafCondition(operator.Eq, operator.M{
-		keyField: key,
-	})
-	condProjectCode := operator.NewLeafCondition(operator.Eq, operator.M{
-		projectCodeField: projectCode,
-	})
-	cond := operator.NewBranchCondition(operator.And, condKey, condProjectCode)
 	// delete variable definition info
-	deleteCounter, err := m.db.Table(m.tableName).Delete(ctx, cond)
-	if err != nil {
-		return err
-	}
-	if deleteCounter == 0 {
-		logging.Warn("the variable key %s not found in project %s", key, projectCode)
-	}
-	return nil
+	cond := operator.NewLeafCondition(operator.In, operator.M{
+		FieldKeyID: ids,
+	})
+	cond = operator.NewBranchCondition(operator.And, cond,
+		operator.NewLeafCondition(operator.Eq, operator.M{FieldKeyIsDeleted: false}))
+	return m.db.Table(m.tableName).UpdateMany(ctx, cond, operator.M{"$set": operator.M{
+		FieldKeyIsDeleted:  true,
+		FieldKeyDeleteTime: time.Now().Format(time.RFC3339),
+	}})
 }
 
 // ListVariableDefinitions query variable definition list
@@ -227,6 +270,8 @@ func (m *ModelVariableDefinition) ListVariableDefinitions(ctx context.Context,
 	cond *operator.Condition, pagination *page.Pagination) (
 	[]VariableDefinition, int64, error) {
 	vdList := make([]VariableDefinition, 0)
+	cond = operator.NewBranchCondition(operator.And, cond,
+		operator.NewLeafCondition(operator.Eq, operator.M{FieldKeyIsDeleted: false}))
 	finder := m.db.Table(m.tableName).Find(cond)
 	// total 表示根据条件得到的总量
 	total, err := finder.Count(ctx)
@@ -238,7 +283,7 @@ func (m *ModelVariableDefinition) ListVariableDefinitions(ctx context.Context,
 		finder = finder.WithSort(dbtable.MapInt2MapIf(pagination.Sort))
 	}
 	if pagination.Offset != 0 {
-		finder = finder.WithStart(pagination.Offset * pagination.Limit)
+		finder = finder.WithStart(pagination.Offset)
 	}
 	if pagination.Limit == 0 {
 		finder = finder.WithLimit(page.DefaultPageLimit)
@@ -257,4 +302,18 @@ func (m *ModelVariableDefinition) ListVariableDefinitions(ctx context.Context,
 	}
 
 	return vdList, total, nil
+}
+
+// UpsertVariableDefinition upsert variable definition
+func (m *ModelVariableDefinition) UpsertVariableDefinition(ctx context.Context,
+	entity *VariableDefinition) error {
+	if err := m.ensureTable(ctx); err != nil {
+		return err
+	}
+	condM := make(operator.M)
+	condM[FieldKeyProjectCode] = entity.ProjectCode
+	condM[FieldKeyKey] = entity.Key
+	condM[FieldKeyIsDeleted] = false
+	cond := operator.NewLeafCondition(operator.Eq, condM)
+	return m.db.Table(m.tableName).Upsert(ctx, cond, operator.M{"$set": entity})
 }

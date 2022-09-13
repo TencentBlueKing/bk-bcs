@@ -25,7 +25,6 @@ import (
 	constant "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/ctxkey"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/headerkey"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/logging"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/errorx"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/stringx"
 )
@@ -74,20 +73,5 @@ func NewInjectContextWrapper(fn server.HandlerFunc) server.HandlerFunc {
 		}
 		ctx = context.WithValue(ctx, ctxkey.UsernameKey, username)
 		return fn(ctx, req, rsp)
-	}
-}
-
-// NewLogWrapper 记录流水
-func NewLogWrapper(fn server.HandlerFunc) server.HandlerFunc {
-	return func(ctx context.Context, req server.Request, rsp interface{}) error {
-		requestIDKey := ctxkey.RequestIDKey
-		md, _ := metadata.FromContext(ctx)
-		logging.Info("request func %s, request_id: %s, ctx: %v", req.Endpoint(), ctx.Value(requestIDKey), md)
-		if err := fn(ctx, req, rsp); err != nil {
-			logging.Error("request func %s failed, request_id: %s, ctx: %v, body: %v", req.Endpoint(), ctx.Value(requestIDKey),
-				md, req.Body())
-			return err
-		}
-		return nil
 	}
 }
