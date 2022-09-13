@@ -58,7 +58,7 @@ def get_project_clusters(access_token: str, project_id: str) -> ComponentData:
 
     clusters = cluster_info.get('data')
     for i in clusters.get('results') or ():
-        if i.get('status') == CommonStatus.Normal:
+        if not i.get('name', '').startswith('deleted'):
             data[i["cluster_id"]] = i
 
     return ComponentData(result, data, message)
