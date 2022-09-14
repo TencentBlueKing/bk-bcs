@@ -15,7 +15,7 @@ specific language governing permissions and limitations under the License.
 from django.conf import settings
 
 from backend.components.bcs import BCSClientBase
-from backend.components.utils import http_get
+from backend.components.utils import http_post
 
 CLUSTERKEEP_ENDPOINT = "{host_prefix}/v4/clusterkeeper"
 # 针对特定接口的超时时间
@@ -35,5 +35,5 @@ class BCSClient(BCSClientBase):
         注意需要针对不同的环境进行查询
         """
         url = f"{settings.BCS_APIGW_DOMAIN[self._bcs_server_stag]}/bcsapi/v4/storage/events"
-        resp = http_get(url, params=params, headers=self.headers)
+        resp = http_post(url, data=params, headers=self.headers)
         return resp
