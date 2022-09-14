@@ -69,6 +69,8 @@ env:
   token: "{{.Token}}"
   operator: "bcs"
   encryption: "no"
+
+nodeSelector: {}
 `
 
 // AutoScalerValues is the values for the autoscaler application
