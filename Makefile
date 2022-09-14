@@ -417,7 +417,6 @@ cluster-resources:pre
 	cp -R ${BCS_SERVICES_PATH}/cluster-resources/pkg/resource/example/manifest/ ${PACKAGEPATH}/bcs-services/cluster-resources/example/manifest/
 	cp -R ${BCS_SERVICES_PATH}/cluster-resources/pkg/resource/example/reference/ ${PACKAGEPATH}/bcs-services/cluster-resources/example/reference/
 	# form tmpl & schema files
-	mkdir -p ${PACKAGEPATH}/bcs-services/cluster-resources/tmpl/
 	cp -R ${BCS_SERVICES_PATH}/cluster-resources/pkg/resource/form/tmpl/ ${PACKAGEPATH}/bcs-services/cluster-resources/tmpl/
 	# i18n files
 	cp ${BCS_SERVICES_PATH}/cluster-resources/pkg/i18n/locale/lc_msgs.yaml ${PACKAGEPATH}/bcs-services/cluster-resources/lc_msgs.yaml
