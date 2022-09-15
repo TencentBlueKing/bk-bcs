@@ -20,11 +20,10 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/actions/project"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/iam"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/perm"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store"
 	pm "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/project"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/errorx"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/proto/bcsproject"
+	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/middleware"
 )
 
 // ProjectHandler xxx
@@ -42,19 +41,17 @@ func NewProject(model store.ProjectModel) *ProjectHandler {
 // CreateProject implement for CreateProject interface
 func (p *ProjectHandler) CreateProject(ctx context.Context,
 	req *proto.CreateProjectRequest, resp *proto.ProjectResponse) error {
-	// 判断是否有创建权限
-	authUser := auth.GetAuthUserFromCtx(ctx)
-	if err := perm.CanCreateProject(authUser); err != nil {
-		return err
-	}
 	// 创建项目
 	ca := project.NewCreateAction(p.model)
 	projectInfo, e := ca.Do(ctx, req)
 	if e != nil {
 		return e
 	}
-	// 授权创建者项目编辑和查看权限
-	iam.GrantResourceCreatorActions(authUser.Username, projectInfo.ProjectID, projectInfo.Name)
+	authUser, ok := ctx.Value(middleware.AuthUserKey).(middleware.AuthUser)
+	if ok && authUser.Username != "" {
+		// 授权创建者项目编辑和查看权限
+		iam.GrantResourceCreatorActions(authUser.Username, projectInfo.ProjectID, projectInfo.Name)
+	}
 	// 处理返回数据及权限
 	setResp(resp, projectInfo)
 	return nil
@@ -69,11 +66,6 @@ func (p *ProjectHandler) GetProject(ctx context.Context,
 	if err != nil {
 		return err
 	}
-	// 校验项目的查看权限
-	authUser := auth.GetAuthUserFromCtx(ctx)
-	if err := perm.CanViewProject(authUser, projectInfo.ProjectID); err != nil {
-		return err
-	}
 	// 处理返回数据及权限
 	setResp(resp, projectInfo)
 	return nil
@@ -82,11 +74,6 @@ func (p *ProjectHandler) GetProject(ctx context.Context,
 // DeleteProject delete a project record
 func (p *ProjectHandler) DeleteProject(ctx context.Context,
 	req *proto.DeleteProjectRequest, resp *proto.ProjectResponse) error {
-	// 校验项目的删除权限
-	authUser := auth.GetAuthUserFromCtx(ctx)
-	if err := perm.CanDeleteProject(authUser, req.ProjectID); err != nil {
-		return err
-	}
 	// 删除项目
 	da := project.NewDeleteAction(p.model)
 	if err := da.Do(ctx, req); err != nil {
@@ -100,12 +87,6 @@ func (p *ProjectHandler) DeleteProject(ctx context.Context,
 // UpdateProject update a project record
 func (p *ProjectHandler) UpdateProject(ctx context.Context,
 	req *proto.UpdateProjectRequest, resp *proto.ProjectResponse) error {
-	// 校验项目的删除权限
-	authUser := auth.GetAuthUserFromCtx(ctx)
-	if err := perm.CanEditProject(authUser, req.ProjectID); err != nil {
-		return err
-	}
-
 	ua := project.NewUpdateAction(p.model)
 	projectInfo, e := ua.Do(ctx, req)
 	if e != nil {
@@ -124,22 +105,24 @@ func (p *ProjectHandler) ListProjects(ctx context.Context,
 	if e != nil {
 		return e
 	}
-	// 获取权限
-	permClient, err := perm.NewPermClient()
-	if err != nil {
-		return errorx.NewIAMClientErr(err)
+	authUser, ok := ctx.Value(middleware.AuthUserKey).(middleware.AuthUser)
+	if ok && authUser.Username != "" {
+		// with username
+		// 获取 project id, 用以获取对应的权限
+		ids := getProjectIDs(projects)
+		perms, err := auth.ProjectIamClient.GetMultiProjectMultiActionPermission(
+			authUser.Username, ids,
+			[]string{auth.ProjectCreate, auth.ProjectView, auth.ProjectEdit, auth.ProjectDelete},
+		)
+		if err != nil {
+			return err
+		}
+		// 处理返回
+		setListPermsResp(resp, projects, perms)
+		return nil
 	}
-	// 获取 project id, 用以获取对应的权限
-	ids := getProjectIDs(projects)
-	perms, err := permClient.GetMultiProjectMultiActionPermission(
-		auth.GetUserFromCtx(ctx), ids,
-		[]string{perm.ProjectCreate, perm.ProjectView, perm.ProjectEdit, perm.ProjectDelete},
-	)
-	if err != nil {
-		return err
-	}
-	// 处理返回
-	setListPermsResp(resp, projects, perms)
+	// without username
+	setListPermsResp(resp, projects, nil)
 	return nil
 }
 

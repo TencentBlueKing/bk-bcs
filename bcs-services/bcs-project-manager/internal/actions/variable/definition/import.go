@@ -21,7 +21,6 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/logging"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store"
 	vdm "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/variabledefinition"
@@ -29,6 +28,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/entity"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/stringx"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/proto/bcsproject"
+	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/middleware"
 )
 
 // ImportAction action for import variables
@@ -49,7 +49,10 @@ func NewImportVariablesAction(model store.ProjectModel) *ImportAction {
 func (ca *ImportAction) Do(ctx context.Context, req *proto.ImportVariablesRequest) error {
 	ca.ctx = ctx
 	ca.req = req
-	username := auth.GetUserFromCtx(ca.ctx)
+	var username string
+	if authUser, err := middleware.GetUserFromContext(ca.ctx); err == nil {
+		username = authUser.GetUsername()
+	}
 	for _, variable := range ca.req.GetData() {
 		definition, err := ca.model.GetVariableDefinitionByKey(ca.ctx, ca.req.GetProjectCode(), variable.Key)
 		if err != nil && err != drivers.ErrTableRecordNotFound {

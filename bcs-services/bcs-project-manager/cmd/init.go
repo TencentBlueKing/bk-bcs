@@ -36,6 +36,7 @@ import (
 	"google.golang.org/grpc"
 	grpcCred "google.golang.org/grpc/credentials"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/clientset"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/clustermanager"
@@ -96,10 +97,12 @@ func (p *ProjectService) Init() error {
 		p.initMongo,
 		p.initRegistry,
 		p.initDiscovery,
+		p.initClientGroup,
+		p.initJwtClient,
+		p.initPermClient,
 		p.initMicro,
 		p.initHttpService,
 		p.initMetric,
-		p.initClientGroup,
 	} {
 		if err := f(); err != nil {
 			return err
@@ -159,7 +162,8 @@ func (p *ProjectService) initTLSConfig() error {
 // init mongo client
 func (p *ProjectService) initMongo() error {
 	store.InitMongo(&p.opt.Mongo)
-	p.model = store.New(store.GetMongo())
+	store.InitModel(store.GetMongo())
+	p.model = store.GetModel()
 	logging.Info("init mongo successfully")
 	return nil
 }
@@ -202,11 +206,28 @@ func (p *ProjectService) initDiscovery() error {
 	return nil
 }
 
-// initMicro xxx
-// init micro service
+func (p *ProjectService) initClientGroup() error {
+	logging.Info("init client group")
+	clientset.SetClientGroup(p.opt.BcsGateway.Host, p.opt.BcsGateway.Token)
+	return nil
+}
+
+func (p *ProjectService) initJwtClient() error {
+	logging.Info("init jwt client")
+	return auth.SetJwtClient()
+}
+
+func (p *ProjectService) initPermClient() error {
+	logging.Info("init perm client")
+	return auth.InitPermClient()
+}
+
+// initMicro init micro service
 func (p *ProjectService) initMicro() error {
+
 	// max size: 50M, add grpc address to access
 	// NOTE: 针对server的调整，需要放在前面，避免覆盖service内置的server
+	authWrapper := wrapper.NewAuthWrapper()
 	server := serverGrpc.NewServer(serverGrpc.MaxMsgSize(config.MaxMsgSize))
 	svc := microGrpc.NewService(
 		microSvc.Server(server),
@@ -237,6 +258,10 @@ func (p *ProjectService) initMicro() error {
 			wrapper.NewLogWrapper,
 			wrapper.NewResponseWrapper,
 			wrapper.NewValidatorWrapper,
+			wrapper.NewAuthHeaderAdapter,
+			authWrapper.AuthenticationFunc,
+			authWrapper.AuthorizationFunc,
+			wrapper.NewAuthLogWrapper,
 		),
 	)
 	svc.Init()
@@ -263,7 +288,6 @@ func (p *ProjectService) initMicro() error {
 }
 
 // initHTTPGateway xxx
-// init http gateway
 func (p *ProjectService) initHTTPGateway(router *mux.Router) error {
 	gwMux := runtime.NewServeMux(
 		runtime.WithIncomingHeaderMatcher(runtimex.CustomHeaderMatcher),
@@ -272,8 +296,6 @@ func (p *ProjectService) initHTTPGateway(router *mux.Router) error {
 			EmitDefaults: true,
 		}),
 	)
-	// // handle import variables from file route
-	// gwMux.Handle("POST", "/bcsproject/v1/variables/import", handler.NewImportHandler(p.model))
 	grpcDialOpts := []grpc.DialOption{}
 	if p.tlsConfig != nil && p.clientTLSConfig != nil {
 		grpcDialOpts = append(grpcDialOpts, grpc.WithTransportCredentials(grpcCred.NewTLS(p.clientTLSConfig)))
@@ -326,7 +348,6 @@ func (p *ProjectService) registerGatewayFromEndPoint(gwMux *runtime.ServeMux, gr
 }
 
 // initSwagger xxx
-// init swagger
 func (p *ProjectService) initSwagger(mux *http.ServeMux) {
 	if p.opt.Swagger.Enable {
 		logging.Info("swagger doc is enabled")
@@ -337,7 +358,6 @@ func (p *ProjectService) initSwagger(mux *http.ServeMux) {
 }
 
 // initHttpService xxx
-// init http service
 func (p *ProjectService) initHttpService() error {
 	router := mux.NewRouter()
 
@@ -391,11 +411,5 @@ func (p *ProjectService) initMetric() error {
 			p.stopCh <- struct{}{}
 		}
 	}()
-	return nil
-}
-
-func (p *ProjectService) initClientGroup() error {
-	logging.Info("init client group")
-	clientset.SetClientGroup(p.opt.BcsGateway.Host, p.opt.BcsGateway.Token)
 	return nil
 }

@@ -59,12 +59,12 @@ func (la *ListClusterVariablesAction) Do(ctx context.Context,
 func (la *ListClusterVariablesAction) listClusterVariables() ([]*proto.ClusterVariable, error) {
 	project, err := la.model.GetProject(la.ctx, la.req.GetProjectCode())
 	if err != nil {
-		logging.Info("get project from db failed, err: %s", err.Error())
+		logging.Error("get project from db failed, err: %s", err.Error())
 		return nil, err
 	}
 	variableDefinition, err := la.model.GetVariableDefinition(la.ctx, la.req.GetVariableID())
 	if err != nil {
-		logging.Info("get variable definition from db failed, err: %s", err.Error())
+		logging.Error("get variable definition from db failed, err: %s", err.Error())
 		return nil, err
 	}
 	if variableDefinition.Scope != vd.VariableDefinitionScopeCluster {
@@ -73,7 +73,7 @@ func (la *ListClusterVariablesAction) listClusterVariables() ([]*proto.ClusterVa
 	}
 	cli, closeCon, err := clustermanager.GetClusterManagerClient()
 	if err != nil {
-		logging.Info("get cluster manager client failed, err: %s", err.Error())
+		logging.Error("get cluster manager client failed, err: %s", err.Error())
 		return nil, err
 	}
 	defer func() {
@@ -86,7 +86,7 @@ func (la *ListClusterVariablesAction) listClusterVariables() ([]*proto.ClusterVa
 	}
 	resp, err := cli.ListCluster(context.Background(), req)
 	if err != nil {
-		logging.Info("list cluster from cluster manager failed, err: %s", err.Error())
+		logging.Error("list cluster from cluster manager failed, err: %s", err.Error())
 		return nil, err
 	}
 	clusters := resp.GetData()
@@ -99,7 +99,7 @@ func (la *ListClusterVariablesAction) listClusterVariables() ([]*proto.ClusterVa
 			logging.Info("cannot get variable by id %s, clusterID %s", la.req.GetVariableID(), cluster.ClusterID)
 			value = variableDefinition.Default
 		} else if err != nil {
-			logging.Info("get variable value from db failed, err: %s", err.Error())
+			logging.Error("get variable value from db failed, err: %s", err.Error())
 			return nil, err
 		} else {
 			value = variableValue.Value

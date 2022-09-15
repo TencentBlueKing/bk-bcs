@@ -19,13 +19,13 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/logging"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store"
 	vd "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/variabledefinition"
 	vv "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/variablevalue"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/errorx"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/proto/bcsproject"
+	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/middleware"
 )
 
 // UpdateNamespaceVariablesAction ...
@@ -70,21 +70,21 @@ func (la *UpdateNamespaceVariablesAction) updateNamespaceVariables() error {
 		return fmt.Errorf("variable %s scope is %s rather than namespace",
 			la.req.GetVariableID(), variableDefinition.Scope)
 	}
-	timeStr := time.Now().Format(time.RFC3339)
-	// 从 context 中获取 username
-	username := auth.GetUserFromCtx(la.ctx)
+	var username string
+	if authUser, err := middleware.GetUserFromContext(la.ctx); err == nil {
+		username = authUser.GetUsername()
+	}
 	entries := la.req.GetData()
 	for _, entry := range entries {
-		err := la.model.UpsertVariableValue(la.ctx, &vv.VariableValue{
+		if err := la.model.UpsertVariableValue(la.ctx, &vv.VariableValue{
 			VariableID: la.req.GetVariableID(),
 			ClusterID:  entry.ClusterID,
 			Namespace:  entry.Namespace,
 			Value:      entry.Value,
 			Scope:      vd.VariableDefinitionScopeNamespace,
-			UpdateTime: timeStr,
+			UpdateTime: time.Now().Format(time.RFC3339),
 			Updater:    username,
-		})
-		if err != nil {
+		}); err != nil {
 			return err
 		}
 	}

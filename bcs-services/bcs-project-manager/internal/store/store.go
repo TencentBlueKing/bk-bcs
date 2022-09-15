@@ -60,6 +60,8 @@ type modelSet struct {
 	*vv.ModelVariableValue
 }
 
+var model *modelSet
+
 // New new project model
 func New(db drivers.DB) ProjectModel {
 	return &modelSet{
@@ -67,4 +69,18 @@ func New(db drivers.DB) ProjectModel {
 		ModelVariableDefinition: vd.New(db),
 		ModelVariableValue:      vv.New(db),
 	}
+}
+
+// InitModel init model
+func InitModel(db drivers.DB) {
+	model = &modelSet{
+		ModelProject:            project.New(db),
+		ModelVariableDefinition: vd.New(db),
+		ModelVariableValue:      vv.New(db),
+	}
+}
+
+// GetModel get model
+func GetModel() ProjectModel {
+	return model
 }

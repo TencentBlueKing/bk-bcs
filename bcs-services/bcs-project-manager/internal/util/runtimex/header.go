@@ -18,6 +18,7 @@ import (
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/headerkey"
+	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/middleware"
 )
 
 // CustomHeaderMatcher for http header
@@ -27,6 +28,10 @@ func CustomHeaderMatcher(key string) (string, bool) {
 		return headerkey.RequestIDKey, true
 	case headerkey.UsernameKey:
 		return headerkey.UsernameKey, true
+	case middleware.InnerClientHeaderKey:
+		return middleware.InnerClientHeaderKey, true
+	case middleware.CustomUsernameHeaderKey:
+		return middleware.CustomUsernameHeaderKey, true
 	default:
 		return runtime.DefaultHeaderMatcher(key)
 	}

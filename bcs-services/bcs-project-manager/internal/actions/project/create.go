@@ -19,7 +19,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/auth"
+	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/middleware"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/bcscc"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store"
 	pm "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/project"
@@ -71,14 +72,10 @@ func (ca *CreateAction) Do(ctx context.Context, req *proto.CreateProjectRequest)
 }
 
 func (ca *CreateAction) createProject() error {
-	timeStr := time.Now().Format(time.RFC3339)
-	// 从 context 中获取 username
-	username := auth.GetUserFromCtx(ca.ctx)
 	p := &pm.Project{
 		ProjectID:   ca.req.ProjectID,
 		Name:        ca.req.Name,
 		ProjectCode: ca.req.ProjectCode,
-		Creator:     username,
 		ProjectType: ca.req.ProjectType,
 		UseBKRes:    ca.req.UseBKRes,
 		Description: ca.req.Description,
@@ -93,9 +90,13 @@ func (ca *CreateAction) createProject() error {
 		CenterID:    ca.req.CenterID,
 		CenterName:  ca.req.CenterName,
 		IsSecret:    ca.req.IsSecret,
-		CreateTime:  timeStr,
-		UpdateTime:  timeStr,
-		Managers:    username,
+		CreateTime:  time.Now().Format(time.RFC3339),
+		UpdateTime:  time.Now().Format(time.RFC3339),
+	}
+	// 从 context 中获取 username
+	if authUser, err := middleware.GetUserFromContext(ca.ctx); err == nil {
+		p.Creator = authUser.GetUsername()
+		p.Managers = authUser.GetUsername()
 	}
 	return ca.model.CreateProject(ca.ctx, p)
 }
