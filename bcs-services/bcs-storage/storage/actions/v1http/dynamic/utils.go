@@ -217,15 +217,22 @@ func getResourcesWithPageInfo(req *restful.Request, resourceFeatList []string) (
 	if err != nil {
 		return nil, nil, err
 	}
+
+	table := getTable(req)
+	db := dbConfig
+	if table == eventResourceType {
+		db = eventDBConfig
+	}
+
 	store := lib.NewStore(
-		apiserver.GetAPIResource().GetDBClient(dbConfig),
-		apiserver.GetAPIResource().GetEventBus(dbConfig))
+		apiserver.GetAPIResource().GetDBClient(db),
+		apiserver.GetAPIResource().GetEventBus(db))
 	store.SetSoftDeletion(true)
-	count, err := store.Count(req.Request.Context(), getTable(req), getOption)
+	count, err := store.Count(req.Request.Context(), table, getOption)
 	if err != nil {
 		return nil, nil, err
 	}
-	mList, err := store.Get(req.Request.Context(), getTable(req), getOption)
+	mList, err := store.Get(req.Request.Context(), table, getOption)
 	if err != nil {
 		return nil, nil, err
 	}
