@@ -92,3 +92,23 @@ type Constraint struct {
 	IntersectionItem []*ConstraintDataItem `json:"intersectionItem,omitempty"`
 	NodeSelector     map[string]string     `json:"nodeSelector,omitempty"`
 }
+
+// options metadata key
+const (
+	// UUID metadata key
+	UUID string = "UUID"
+	// IPV6 metadata key
+	IPV6 string = "IPv6"
+	// TCP tcp
+	TCP = "tcp"
+	// TCP4 tcp4
+	TCP4 = "tcp4"
+	// TCP6 tcp6
+	TCP6 = "tcp6"
+	// LOCALIPV6 ipv6环境变量
+	LOCALIPV6 string = "localIpv6"
+	// IPv4Loopback IPv4回环地址
+	IPv4Loopback = "127.0.0.1"
+	// DefaultPort 默认端口8080
+	DefaultPort = "8080"
+)

@@ -305,3 +305,11 @@ func wrapFieldFlag(fs *pflag.FlagSet, field reflect.StructField, fieldV reflect.
 		}
 	}
 }
+
+// InitIPv6AddressFiled 初始化 ServiceConfig 的 IPv6Address 字段
+// 1.检查当前字段 IPv6Address 是否为合法IPv6，若是合法IPv6，则结束执行；否则，执行下一步。
+// 2.依次遍历当前字段 IPv6Address、“localIpv6”环境变量，检查是否存在"IPv4,IPv6"地址表示法，并检查IPv6地址合法性，若，存在并合法，则把新的IPv6地址，赋值给 IPv6Address字段，并结束执行 ；否则，执行下一步。
+// 3.设置 IPv6Address 字段为默认值 "::1"
+func (sc *ServiceConfig) InitIPv6AddressFiled() {
+	sc.IPv6Address = util.InitIPv6Address(sc.IPv6Address)
+}

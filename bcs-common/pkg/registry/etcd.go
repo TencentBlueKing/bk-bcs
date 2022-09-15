@@ -21,6 +21,7 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/types"
 	"github.com/google/uuid"
 	"github.com/micro/go-micro/v2/registry"
 	"github.com/micro/go-micro/v2/registry/etcd"
@@ -46,7 +47,7 @@ func NewEtcdRegistry(option *Options) Registry {
 	if option.Meta == nil {
 		option.Meta = make(map[string]string)
 	}
-	option.Meta["UUID"] = option.id
+	option.Meta[types.UUID] = option.id
 	svc := &registry.Service{
 		Name:    option.Name,
 		Version: option.Version,
