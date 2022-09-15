@@ -137,5 +137,10 @@ func (r *ManifestRenderer) render2Map() error {
 		log.Warn(r.ctx, "failed to render template：%v", err)
 		return errorx.New(errcode.General, i18n.GetMsg(r.ctx, "渲染模板失败：%v"), err)
 	}
+
+	log.Info(
+		r.ctx, "render manifest template <cluster %s, kind: %s, namespace: %s, name: %s>",
+		r.clusterID, r.kind, mapx.GetStr(r.formData, "metadata.namespace"), mapx.GetStr(r.formData, "metadata.name"),
+	)
 	return yaml.Unmarshal(buf.Bytes(), r.manifest)
 }

@@ -54,8 +54,7 @@ type hpaTargetsParser struct {
 	metrics  []string
 }
 
-// Parse xxx
-// targets 解析逻辑，参考来源：https://github.com/kubernetes/kubernetes/blob/master/pkg/printers/internalversion/printers.go#L2025
+// Parse targets 解析逻辑，参考来源：https://github.com/kubernetes/kubernetes/blob/master/pkg/printers/internalversion/printers.go#L2025
 func (p *hpaTargetsParser) Parse() string {
 	specs := mapx.Get(p.manifest, "spec.metrics", []interface{}{})
 	if err := mapstructure.Decode(specs, &p.specs); err != nil {
@@ -149,8 +148,8 @@ func (p *hpaTargetsParser) parseResourceMetric(idx int, spec LightHPAMetricSpec)
 		}
 		return fmt.Sprintf("%s/%s", current, spec.Resource.Target.AverageValue)
 	}
-	if len(p.statuses) > idx && p.statuses[idx].Resource != nil && p.statuses[idx].Resource.Current.AverageUtilization !=
-		0 { // nolint:lll
+	if len(p.statuses) > idx && p.statuses[idx].Resource != nil &&
+		p.statuses[idx].Resource.Current.AverageUtilization != 0 {
 		current = fmt.Sprintf("%d%%", p.statuses[idx].Resource.Current.AverageUtilization)
 	}
 	target := HPAMetricTargetDefaultVal
@@ -170,7 +169,7 @@ func (p *hpaTargetsParser) parseContainerResourceMetric(idx int, spec LightHPAMe
 		return fmt.Sprintf("%s/%s", current, spec.ContainerResource.Target.AverageValue)
 	}
 	if len(p.statuses) > idx && p.statuses[idx].ContainerResource != nil &&
-		p.statuses[idx].ContainerResource.Current.AverageUtilization != 0 { // nolint:lll
+		p.statuses[idx].ContainerResource.Current.AverageUtilization != 0 {
 		current = fmt.Sprintf("%d%%", p.statuses[idx].ContainerResource.Current.AverageUtilization)
 	}
 	target := HPAMetricTargetDefaultVal

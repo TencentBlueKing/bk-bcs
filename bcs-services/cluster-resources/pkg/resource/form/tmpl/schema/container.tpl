@@ -531,6 +531,40 @@ resource:
             props:
               max: 256000
               unit: Mi
+        extra:
+          title: {{ i18n "自定义资源预留" .lang }}
+          type: array
+          maxItems: 3
+          items:
+            type: object
+            properties:
+              key:
+                title: {{ i18n "资源类型" .lang }}
+                type: string
+                ui:component:
+                  name: select
+                  props:
+                    clearable: false
+                    datasource:
+                      - label: {{ i18n "共享网卡（eip）" .lang }}
+                        value: tke.cloud.tencent.com/eip
+                      - label: {{ i18n "独立网卡（eni-ip）" .lang }}
+                        value: tke.cloud.tencent.com/eni-ip
+                      - label: {{ i18n "算力-GPU" .lang }}
+                        value: tencent.com/fgpu
+                ui:rules:
+                  - required
+                  - validator: "{{`{{`}} $self.widgetNode.parent.parent.children.every(node => node.children[0].instance === $self || node.children[0].instance.value !== $self.value) {{`}}`}}"
+                    message: {{ i18n "同类资源不可重复设置配额" .lang }}
+              value:
+                title: {{ i18n "值" .lang }}
+                type: string
+                ui:rules:
+                  - required
+                  - maxLength64
+                  - numberRegex
+          ui:component:
+            name: bfArray
     limits:
       type: object
       properties:
@@ -552,6 +586,40 @@ resource:
             props:
               max: 256000
               unit: Mi
+        extra:
+          title: {{ i18n "自定义资源限制" .lang }}
+          type: array
+          maxItems: 3
+          items:
+            type: object
+            properties:
+              key:
+                title: {{ i18n "资源类型" .lang }}
+                type: string
+                ui:component:
+                  name: select
+                  props:
+                    clearable: false
+                    datasource:
+                      - label: {{ i18n "共享网卡（eip）" .lang }}
+                        value: tke.cloud.tencent.com/eip
+                      - label: {{ i18n "独立网卡（eni-ip）" .lang }}
+                        value: tke.cloud.tencent.com/eni-ip
+                      - label: {{ i18n "算力-GPU" .lang }}
+                        value: tencent.com/fgpu
+                ui:rules:
+                  - required
+                  - validator: "{{`{{`}} $self.widgetNode.parent.parent.children.every(node => node.children[0].instance === $self || node.children[0].instance.value !== $self.value) {{`}}`}}"
+                    message: {{ i18n "同类资源不可重复设置配额" .lang }}
+              value:
+                title: {{ i18n "值" .lang }}
+                type: string
+                ui:rules:
+                  - required
+                  - maxLength64
+                  - numberRegex
+          ui:component:
+            name: bfArray
 {{- end }}
 
 {{- define "container.security" }}

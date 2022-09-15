@@ -20,8 +20,8 @@ import (
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	respUtil "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action/util/resp"
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action/util/web"
+	respUtil "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action/resp"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action/web"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/cluster"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/featureflag"
@@ -45,8 +45,9 @@ func New() *Handler {
 func (h *Handler) ListCRD(
 	ctx context.Context, req *clusterRes.ResListReq, resp *clusterRes.CommonResp,
 ) error {
-	ret, err := cli.NewCRDCliByClusterID(ctx, req.ClusterID).List(ctx, metav1.ListOptions{
-		LabelSelector: req.LabelSelector})
+	ret, err := cli.NewCRDCliByClusterID(ctx, req.ClusterID).List(
+		ctx, metav1.ListOptions{LabelSelector: req.LabelSelector},
+	)
 	if err != nil {
 		return err
 	}

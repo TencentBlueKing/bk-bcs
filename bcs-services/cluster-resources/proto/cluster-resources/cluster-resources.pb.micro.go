@@ -3411,10 +3411,24 @@ func NewCustomResEndpoints() []*api.Endpoint {
 			Handler: "rpc",
 		},
 		{
+			Name:    "CustomRes.ScaleCObj",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/crds/{CRDName}/custom_objects/{cobjName}/scale"},
+			Method:  []string{"PUT"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		{
 			Name:    "CustomRes.DeleteCObj",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/crds/{CRDName}/custom_objects/{cobjName}"},
 			Method:  []string{"DELETE"},
 			Body:    "",
+			Handler: "rpc",
+		},
+		{
+			Name:    "CustomRes.RescheduleCObjPo",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/crds/{CRDName}/custom_objects/{cobjName}/reschedule"},
+			Method:  []string{"PUT"},
+			Body:    "*",
 			Handler: "rpc",
 		},
 	}
@@ -3429,7 +3443,9 @@ type CustomResService interface {
 	GetCObj(ctx context.Context, in *CObjGetReq, opts ...client.CallOption) (*CommonResp, error)
 	CreateCObj(ctx context.Context, in *CObjCreateReq, opts ...client.CallOption) (*CommonResp, error)
 	UpdateCObj(ctx context.Context, in *CObjUpdateReq, opts ...client.CallOption) (*CommonResp, error)
+	ScaleCObj(ctx context.Context, in *CObjScaleReq, opts ...client.CallOption) (*CommonResp, error)
 	DeleteCObj(ctx context.Context, in *CObjDeleteReq, opts ...client.CallOption) (*CommonResp, error)
+	RescheduleCObjPo(ctx context.Context, in *CObjBatchRescheduleReq, opts ...client.CallOption) (*CommonResp, error)
 }
 
 type customResService struct {
@@ -3504,8 +3520,28 @@ func (c *customResService) UpdateCObj(ctx context.Context, in *CObjUpdateReq, op
 	return out, nil
 }
 
+func (c *customResService) ScaleCObj(ctx context.Context, in *CObjScaleReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "CustomRes.ScaleCObj", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *customResService) DeleteCObj(ctx context.Context, in *CObjDeleteReq, opts ...client.CallOption) (*CommonResp, error) {
 	req := c.c.NewRequest(c.name, "CustomRes.DeleteCObj", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *customResService) RescheduleCObjPo(ctx context.Context, in *CObjBatchRescheduleReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "CustomRes.RescheduleCObjPo", in)
 	out := new(CommonResp)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
@@ -3523,7 +3559,9 @@ type CustomResHandler interface {
 	GetCObj(context.Context, *CObjGetReq, *CommonResp) error
 	CreateCObj(context.Context, *CObjCreateReq, *CommonResp) error
 	UpdateCObj(context.Context, *CObjUpdateReq, *CommonResp) error
+	ScaleCObj(context.Context, *CObjScaleReq, *CommonResp) error
 	DeleteCObj(context.Context, *CObjDeleteReq, *CommonResp) error
+	RescheduleCObjPo(context.Context, *CObjBatchRescheduleReq, *CommonResp) error
 }
 
 func RegisterCustomResHandler(s server.Server, hdlr CustomResHandler, opts ...server.HandlerOption) error {
@@ -3534,7 +3572,9 @@ func RegisterCustomResHandler(s server.Server, hdlr CustomResHandler, opts ...se
 		GetCObj(ctx context.Context, in *CObjGetReq, out *CommonResp) error
 		CreateCObj(ctx context.Context, in *CObjCreateReq, out *CommonResp) error
 		UpdateCObj(ctx context.Context, in *CObjUpdateReq, out *CommonResp) error
+		ScaleCObj(ctx context.Context, in *CObjScaleReq, out *CommonResp) error
 		DeleteCObj(ctx context.Context, in *CObjDeleteReq, out *CommonResp) error
+		RescheduleCObjPo(ctx context.Context, in *CObjBatchRescheduleReq, out *CommonResp) error
 	}
 	type CustomRes struct {
 		customRes
@@ -3579,10 +3619,24 @@ func RegisterCustomResHandler(s server.Server, hdlr CustomResHandler, opts ...se
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "CustomRes.ScaleCObj",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/crds/{CRDName}/custom_objects/{cobjName}/scale"},
+		Method:  []string{"PUT"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "CustomRes.DeleteCObj",
 		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/crds/{CRDName}/custom_objects/{cobjName}"},
 		Method:  []string{"DELETE"},
 		Body:    "",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "CustomRes.RescheduleCObjPo",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/crds/{CRDName}/custom_objects/{cobjName}/reschedule"},
+		Method:  []string{"PUT"},
+		Body:    "*",
 		Handler: "rpc",
 	}))
 	return s.Handle(s.NewHandler(&CustomRes{h}, opts...))
@@ -3616,8 +3670,16 @@ func (h *customResHandler) UpdateCObj(ctx context.Context, in *CObjUpdateReq, ou
 	return h.CustomResHandler.UpdateCObj(ctx, in, out)
 }
 
+func (h *customResHandler) ScaleCObj(ctx context.Context, in *CObjScaleReq, out *CommonResp) error {
+	return h.CustomResHandler.ScaleCObj(ctx, in, out)
+}
+
 func (h *customResHandler) DeleteCObj(ctx context.Context, in *CObjDeleteReq, out *CommonResp) error {
 	return h.CustomResHandler.DeleteCObj(ctx, in, out)
+}
+
+func (h *customResHandler) RescheduleCObjPo(ctx context.Context, in *CObjBatchRescheduleReq, out *CommonResp) error {
+	return h.CustomResHandler.RescheduleCObjPo(ctx, in, out)
 }
 
 // Api Endpoints for Resource service

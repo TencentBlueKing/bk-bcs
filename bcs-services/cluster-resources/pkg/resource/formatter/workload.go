@@ -241,7 +241,7 @@ func (p *PodStatusParser) updateStatusByInitContainerStatuses(podStatus *LightPo
 		} else {
 			p.initializing = true
 			if container.State.Waiting != nil && len(container.State.Waiting.Reason) > 0 &&
-				container.State.Waiting.Reason != "PodInitializing" { // nolint:lll
+				container.State.Waiting.Reason != "PodInitializing" {
 				p.totalStatus = fmt.Sprintf("Init: %s", container.State.Waiting.Reason)
 			} else {
 				initContainers, _ := mapx.GetItems(p.Manifest, "spec.initContainers")

@@ -138,8 +138,7 @@ func (c *ResClient) Watch(ctx context.Context, namespace string, opts metav1.Lis
 	return c.cli.Resource(c.res).Namespace(namespace).Watch(ctx, opts)
 }
 
-// permValidate xxx
-// IAM 权限校验
+// permValidate IAM 权限校验
 func (c *ResClient) permValidate(ctx context.Context, action, namespace string) error {
 	projInfo, err := project.FromContext(ctx)
 	if err != nil {

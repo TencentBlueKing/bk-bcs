@@ -20,10 +20,10 @@ import (
 )
 
 // ScalableResKinds 允许扩缩容的资源类型
-var ScalableResKinds = []string{res.Deploy, res.STS}
+var ScalableResKinds = []string{res.Deploy, res.STS, res.GDeploy, res.GSTS}
 
 // ReschedulableResKinds 允许重新调度的资源类型（不含 Pod）
-var ReschedulableResKinds = []string{res.Deploy, res.STS}
+var ReschedulableResKinds = []string{res.Deploy, res.STS, res.GDeploy, res.GSTS}
 
 func isScalable(kind string) bool {
 	return slice.StringInSlice(kind, ScalableResKinds)

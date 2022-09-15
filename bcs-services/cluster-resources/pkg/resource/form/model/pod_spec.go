@@ -14,53 +14,53 @@
 
 package model
 
-// NodeSelect xxx
+// NodeSelect 节点选择
 type NodeSelect struct {
 	Type     string         `structs:"type"`
 	NodeName string         `structs:"nodeName"`
 	Selector []NodeSelector `structs:"selector"`
 }
 
-// NodeSelector xxx
+// NodeSelector 节点选择器
 type NodeSelector struct {
 	Key   string `structs:"key"`
 	Value string `structs:"value"`
 }
 
-// Affinity xxx
+// Affinity 亲和性配置
 type Affinity struct {
 	NodeAffinity []NodeAffinity `structs:"nodeAffinity"`
 	PodAffinity  []PodAffinity  `structs:"podAffinity"`
 }
 
-// NodeAffinity xxx
+// NodeAffinity 节点亲和性
 type NodeAffinity struct {
 	Priority string               `structs:"priority"`
 	Weight   int64                `structs:"weight"`
 	Selector NodeAffinitySelector `structs:"selector"`
 }
 
-// NodeAffinitySelector xxx
+// NodeAffinitySelector 节点亲和性选择器
 type NodeAffinitySelector struct {
 	Expressions []ExpSelector   `structs:"expressions"`
 	Fields      []FieldSelector `structs:"fields"`
 }
 
-// ExpSelector xxx
+// ExpSelector 表达式选择器
 type ExpSelector struct {
 	Key    string `structs:"key"`
 	Op     string `structs:"op"`
 	Values string `structs:"values"`
 }
 
-// FieldSelector xxx
+// FieldSelector 字段选择器
 type FieldSelector struct {
 	Key    string `structs:"key"`
 	Op     string `structs:"op"`
 	Values string `structs:"values"`
 }
 
-// PodAffinity xxx
+// PodAffinity Pod 亲和性
 type PodAffinity struct {
 	Type        string              `structs:"type"`
 	Priority    string              `structs:"priority"`
@@ -70,24 +70,24 @@ type PodAffinity struct {
 	Selector    PodAffinitySelector `structs:"selector"`
 }
 
-// PodAffinitySelector xxx
+// PodAffinitySelector Pod 亲和性选择器
 type PodAffinitySelector struct {
 	Expressions []ExpSelector   `structs:"expressions"`
 	Labels      []LabelSelector `structs:"labels"`
 }
 
-// LabelSelector xxx
+// LabelSelector 标签选择器
 type LabelSelector struct {
 	Key   string `structs:"key"`
 	Value string `structs:"value"`
 }
 
-// Toleration xxx
+// Toleration 容忍性
 type Toleration struct {
 	Rules []TolerationRule `structs:"rules"`
 }
 
-// TolerationRule xxx
+// TolerationRule 容忍规则
 type TolerationRule struct {
 	Key            string `structs:"key"`
 	Op             string `structs:"op" mapstructure:"operator"`
@@ -96,7 +96,7 @@ type TolerationRule struct {
 	TolerationSecs int64  `structs:"tolerationSecs" mapstructure:"tolerationSeconds"`
 }
 
-// Networking xxx
+// Networking 网络配置
 type Networking struct {
 	DNSPolicy             string           `structs:"dnsPolicy"`
 	HostIPC               bool             `structs:"hostIPC"`
@@ -111,19 +111,19 @@ type Networking struct {
 	HostAliases           []HostAlias      `structs:"hostAliases"`
 }
 
-// DNSResolverOpt xxx
+// DNSResolverOpt DNS 解析配置
 type DNSResolverOpt struct {
 	Name  string `structs:"name"`
 	Value string `structs:"value"`
 }
 
-// HostAlias xxx
+// HostAlias 主机别名
 type HostAlias struct {
 	IP    string `structs:"ip"`
 	Alias string `structs:"alias"`
 }
 
-// PodSecurityCtx xxx
+// PodSecurityCtx Pod 安全性上下文
 type PodSecurityCtx struct {
 	RunAsUser    int64      `structs:"runAsUser"`
 	RunAsNonRoot bool       `structs:"runAsNonRoot"`
@@ -132,7 +132,7 @@ type PodSecurityCtx struct {
 	SELinuxOpt   SELinuxOpt `structs:"seLinuxOpt" mapstructure:"seLinuxOptions"`
 }
 
-// SELinuxOpt xxx
+// SELinuxOpt Linux 安全配置
 type SELinuxOpt struct {
 	Level string `structs:"level"`
 	Role  string `structs:"role"`
@@ -140,7 +140,7 @@ type SELinuxOpt struct {
 	User  string `structs:"user"`
 }
 
-// SpecOther xxx
+// SpecOther 额外配置
 type SpecOther struct {
 	RestartPolicy              string   `structs:"restartPolicy"`              // 重启策略，其中 CJ，Job 没有 Always
 	TerminationGracePeriodSecs int64    `structs:"terminationGracePeriodSecs"` // 终止容忍期

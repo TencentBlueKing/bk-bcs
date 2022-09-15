@@ -44,28 +44,28 @@ const (
 )
 
 const (
-	// EnvVarTypeKeyVal TODO
+	// EnvVarTypeKeyVal Key-Value 类型
 	EnvVarTypeKeyVal = "keyValue"
-	// EnvVarTypePodField TODO
+	// EnvVarTypePodField PodField 类型
 	EnvVarTypePodField = "podField"
-	// EnvVarTypeResource TODO
+	// EnvVarTypeResource Resource 类型
 	EnvVarTypeResource = "resource"
-	// EnvVarTypeCMKey TODO
+	// EnvVarTypeCMKey ConfigMap Key 类型
 	EnvVarTypeCMKey = "configMapKey"
-	// EnvVarTypeSecretKey TODO
+	// EnvVarTypeSecretKey Secret Key 类型
 	EnvVarTypeSecretKey = "secretKey"
-	// EnvVarTypeCM TODO
+	// EnvVarTypeCM ConfigMap 类型
 	EnvVarTypeCM = "configMap"
-	// EnvVarTypeSecret TODO
+	// EnvVarTypeSecret Secret 类型
 	EnvVarTypeSecret = "secret"
 )
 
 const (
-	// ProbeTypeHTTPGet TODO
+	// ProbeTypeHTTPGet HTTP 探针
 	ProbeTypeHTTPGet = "httpGet"
-	// ProbeTypeTCPSocket TODO
+	// ProbeTypeTCPSocket TCP 探针
 	ProbeTypeTCPSocket = "tcpSocket"
-	// ProbeTypeExec TODO
+	// ProbeTypeExec 命令执行探针
 	ProbeTypeExec = "exec"
 )
 

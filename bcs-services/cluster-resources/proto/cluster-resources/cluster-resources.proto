@@ -1142,6 +1142,17 @@ service CustomRes {
 		};
 	}
 
+	rpc ScaleCObj(CObjScaleReq) returns (CommonResp) {
+		option (google.api.http) = {
+			put: "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/crds/{CRDName}/custom_objects/{cobjName}/scale"
+			body: "*"
+		};
+		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+			description: "自定义资源扩缩容（仅 GameDeployment, GameStatefulSet 可用）"
+			summary: "ScaleCObj API"
+		};
+	}
+
 	rpc DeleteCObj(CObjDeleteReq) returns (CommonResp) {
 		option (google.api.http) = {
 			delete: "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/crds/{CRDName}/custom_objects/{cobjName}"
@@ -1151,6 +1162,18 @@ service CustomRes {
 			summary: "DeleteCObj API"
 		};
 	}
+
+	rpc RescheduleCObjPo(CObjBatchRescheduleReq) returns (CommonResp) {
+		option (google.api.http) = {
+			put: "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/crds/{CRDName}/custom_objects/{cobjName}/reschedule"
+			body: "*"
+		};
+		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+			description: "重新调度自定义资源下属的 Pod（仅 GameDeployment, GameStatefulSet 可用）"
+			summary: "RescheduleCObjPo API"
+		};
+	}
+
 }
 
 service Resource {
@@ -1666,6 +1689,30 @@ message CObjUpdateReq {
 	}, (validate.rules).string = {in: ["", "manifest", "formData"]}];
 }
 
+message CObjScaleReq {
+	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {title: "ResScaleReq", description: "单个 k8s 自定义资源扩缩容请求体"}
+	};
+	string projectID = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "项目 ID"
+	}, (validate.rules).string = {pattern: "^[0-9a-f]{32}$"}];
+	string clusterID = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "集群 ID"
+	}, (validate.rules).string = {min_len: 13, max_len: 14}];
+	string namespace = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "命名空间"
+	}, (validate.rules).string = {max_len: 63, pattern: "^[0-9a-zA-Z-]*$"}];
+	string CRDName = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "CRD 名称"
+	}, (validate.rules).string = {max_len: 256}];
+	string cobjName = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "自定义资源名称"
+	}, (validate.rules).string = {max_len: 256}];
+	int64 replicas = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "副本数量（0-8192）"
+	}, (validate.rules).int64 = {lte: 8192, gte: 0}];
+}
+
 message CObjDeleteReq {
 	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
 		json_schema: {title: "CObjDeleteReq", description: "删除单个自定义资源请求体"}
@@ -1685,6 +1732,37 @@ message CObjDeleteReq {
 	string namespace = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "命名空间"
 	}, (validate.rules).string = {max_len: 63, pattern: "^[0-9a-zA-Z-]*$"}];
+}
+
+message CObjBatchRescheduleReq {
+	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {title: "CObjBatchRescheduleReq", description: "重新调度 k8s 自定义资源下属 Pod 请求体"}
+	};
+	string projectID = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "项目 ID"
+	}, (validate.rules).string = {pattern: "^[0-9a-f]{32}$"}];
+	string clusterID = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "集群 ID"
+	}, (validate.rules).string = {min_len: 13, max_len: 14}];
+	string namespace = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "命名空间"
+	}, (validate.rules).string = {max_len: 63, pattern: "^[0-9a-zA-Z-]*$"}];
+	string CRDName = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "CRD 名称"
+	}, (validate.rules).string = {max_len: 256}];
+	string cobjName = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "自定义资源名称"
+	}, (validate.rules).string = {max_len: 256}];
+	string labelSelector = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "标签选择器"
+	}, (validate.rules).string = {max_len: 2048}];
+	repeated string podNames = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "待重新调度 Pod 名称列表"
+	}, (validate.rules).repeated = {
+		unique: true, min_items: 1, items: {
+			string: {max_len: 253, pattern: "[a-z0-9]([-a-z0-9]*[a-z0-9])?(.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*"}
+		}
+	}];
 }
 
 message CommonResp {

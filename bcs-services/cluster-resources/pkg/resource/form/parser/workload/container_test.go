@@ -68,12 +68,14 @@ var containerConf4Test = []interface{}{
 		},
 		"resources": map[string]interface{}{
 			"requests": map[string]interface{}{
-				"memory": "128Mi",
-				"cpu":    "100m",
+				"memory":                    "128Mi",
+				"cpu":                       "100m",
+				"tke.cloud.tencent.com/eip": "2",
 			},
 			"limits": map[string]interface{}{
-				"memory": "1Gi",
-				"cpu":    "0.5",
+				"memory":           "1Gi",
+				"cpu":              "0.5",
+				"tencent.com/fgpu": "5",
 			},
 		},
 		"env": []interface{}{
@@ -275,10 +277,22 @@ var exceptedContainers = []model.Container{
 			Requests: model.ResRequirement{
 				CPU:    100,
 				Memory: 128,
+				Extra: []model.ResExtra{
+					{
+						Key:   "tke.cloud.tencent.com/eip",
+						Value: "2",
+					},
+				},
 			},
 			Limits: model.ResRequirement{
 				CPU:    500,
 				Memory: 1024,
+				Extra: []model.ResExtra{
+					{
+						Key:   "tencent.com/fgpu",
+						Value: "5",
+					},
+				},
 			},
 		},
 		Security: model.SecurityCtx{

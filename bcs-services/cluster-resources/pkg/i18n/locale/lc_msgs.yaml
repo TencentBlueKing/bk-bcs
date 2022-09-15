@@ -8,6 +8,8 @@
   en: "reschedule pod %s/%s is not allowed because ownerRef exists Job"
 - msgID: "获取容器环境变量失败，请确认容器处于 Running 状态"
   en: "failed to get container environment variables, please make sure the container is in Running state"
+- msgID: 预览表单渲染结果失败，请检查您填写的表单配置；错误信息：%w
+  en: "failed to preview the rendering result of the form, please check the form configuration you filled in; error: %w"
 - msgID: "获取项目 %s 信息失败：%v"
   en: "failed to get project %s info: %v"
 - msgID: "获取集群 %s 信息失败：%v"
@@ -52,8 +54,6 @@
   en: "scale resource %s is unsupported"
 - msgID: "资源类型 %s 不支持重新调度下属 Pod"
   en: "reschedule resource %s is unsupported"
-- msgID: "Pod %s 不属于 %s %s"
-  en: "Pod %s does not belong to %s %s"
 - msgID: "该请求资源类型 %s 在共享集群中不可用"
   en: "current resource %s unavailable in shared cluster"
 - msgID: "获取资源 APIVersion 信息失败：%v"
@@ -68,8 +68,8 @@
   en: "value required"
 - msgID: "仅支持小写字母，数字及 '-' 且需以字母数字开头和结尾"
   en: "only lowercase letters, numbers and '-' are supported and must start and end with an alphanumeric"
-- msgID: 仅可包含数字字符
-  en: "can only contain numeric characters"
+- msgID: 仅可包含数字字符与小数点
+  en: "can only contain numeric characters and decimal points"
 - msgID: 超过长度限制（64）
   en: "exceeds length limit (64)"
 - msgID: 超过长度限制（128）
@@ -248,6 +248,8 @@
   en: StorageClass
 - msgID: 容量
   en: Size
+- msgID: 值不能为零
+  en: "no zero value required"
 - msgID: 访问模式
   en: AccessModes
 - msgID: 任务管理
@@ -416,8 +418,6 @@
   en: Type
 - msgID: 端口
   en: Ports
-- msgID: 值不能为零
-  en: "no zero value required"
 - msgID: 请求路径
   en: RequestPath
 - msgID: 至少包含一条命令
@@ -438,10 +438,24 @@
   en: "CPU Requests"
 - msgID: 内存预留
   en: "Memory Requests"
+- msgID: 自定义资源预留
+  en: "Custom Resource Requests"
+- msgID: 资源类型
+  en: ResourceKind
+- msgID: 共享网卡（eip）
+  en: eip
+- msgID: 独立网卡（eni-ip）
+  en: eni-ip
+- msgID: 算力-GPU
+  en: Fgpu
+- msgID: 同类资源不可重复设置配额
+  en: "quotas cannot be set repeatedly for the same resources"
 - msgID: "CPU 限制"
   en: "CPU Limits"
 - msgID: 内存限制
   en: "Memory Limits"
+- msgID: 自定义资源限制
+  en: "Custom Resource Limits"
 - msgID: 特权模式
   en: Privileged
 - msgID: 允许提权
@@ -466,8 +480,6 @@
   en: "SubPath In Volume"
 - msgID: 关联对象
   en: ScaleTargetRef
-- msgID: 资源类型
-  en: ResourceKind
 - msgID: 资源名称
   en: ResourceName
 - msgID: 最小副本数

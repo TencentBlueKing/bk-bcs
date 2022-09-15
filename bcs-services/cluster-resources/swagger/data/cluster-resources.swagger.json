@@ -590,6 +590,122 @@
         ]
       }
     },
+    "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/crds/{CRDName}/custom_objects/{cobjName}/reschedule": {
+      "put": {
+        "summary": "RescheduleCObjPo API",
+        "description": "重新调度自定义资源下属的 Pod（仅 GameDeployment, GameStatefulSet 可用）",
+        "operationId": "CustomRes_RescheduleCObjPo",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCommonResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "clusterID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "CRDName",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "cobjName",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCObjBatchRescheduleReq"
+            }
+          }
+        ],
+        "tags": [
+          "CustomRes"
+        ]
+      }
+    },
+    "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/crds/{CRDName}/custom_objects/{cobjName}/scale": {
+      "put": {
+        "summary": "ScaleCObj API",
+        "description": "自定义资源扩缩容（仅 GameDeployment, GameStatefulSet 可用）",
+        "operationId": "CustomRes_ScaleCObj",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCommonResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "clusterID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "CRDName",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "cobjName",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCObjScaleReq"
+            }
+          }
+        ],
+        "tags": [
+          "CustomRes"
+        ]
+      }
+    },
     "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/crds/{name}": {
       "get": {
         "summary": "GetCRD API",
@@ -3489,7 +3605,7 @@
     "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/deployments/{name}/reschedule": {
       "put": {
         "summary": "RescheduleDeployPo API",
-        "description": "重新调度 Deployment 所属的 Pod",
+        "description": "重新调度 Deployment 下属的 Pod",
         "operationId": "Workload_RescheduleDeployPo",
         "responses": {
           "200": {
@@ -4723,7 +4839,7 @@
     "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/statefulsets/{name}/reschedule": {
       "put": {
         "summary": "RescheduleSTSPo API",
-        "description": "重新调度 StatefulSets 所属的 Pod",
+        "description": "重新调度 StatefulSets 下属的 Pod",
         "operationId": "Workload_RescheduleSTSPo",
         "responses": {
           "200": {
@@ -6206,6 +6322,44 @@
     }
   },
   "definitions": {
+    "clusterresourcesCObjBatchRescheduleReq": {
+      "type": "object",
+      "properties": {
+        "projectID": {
+          "type": "string",
+          "title": "项目 ID"
+        },
+        "clusterID": {
+          "type": "string",
+          "title": "集群 ID"
+        },
+        "namespace": {
+          "type": "string",
+          "title": "命名空间"
+        },
+        "CRDName": {
+          "type": "string",
+          "title": "CRD 名称"
+        },
+        "cobjName": {
+          "type": "string",
+          "title": "自定义资源名称"
+        },
+        "labelSelector": {
+          "type": "string",
+          "title": "标签选择器"
+        },
+        "podNames": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "待重新调度 Pod 名称列表"
+        }
+      },
+      "description": "重新调度 k8s 自定义资源下属 Pod 请求体",
+      "title": "CObjBatchRescheduleReq"
+    },
     "clusterresourcesCObjCreateReq": {
       "type": "object",
       "properties": {
@@ -6232,6 +6386,38 @@
       },
       "description": "创建单个自定义资源请求体",
       "title": "CObjCreateReq"
+    },
+    "clusterresourcesCObjScaleReq": {
+      "type": "object",
+      "properties": {
+        "projectID": {
+          "type": "string",
+          "title": "项目 ID"
+        },
+        "clusterID": {
+          "type": "string",
+          "title": "集群 ID"
+        },
+        "namespace": {
+          "type": "string",
+          "title": "命名空间"
+        },
+        "CRDName": {
+          "type": "string",
+          "title": "CRD 名称"
+        },
+        "cobjName": {
+          "type": "string",
+          "title": "自定义资源名称"
+        },
+        "replicas": {
+          "type": "string",
+          "format": "int64",
+          "title": "副本数量（0-8192）"
+        }
+      },
+      "description": "单个 k8s 自定义资源扩缩容请求体",
+      "title": "ResScaleReq"
     },
     "clusterresourcesCObjUpdateReq": {
       "type": "object",
@@ -6468,8 +6654,8 @@
           "title": "待重新调度 Pod 名称列表"
         }
       },
-      "description": "删除单个 k8s 资源请求体",
-      "title": "ResDeleteReq"
+      "description": "重新调度 k8s 资源下属 Pod 请求体",
+      "title": "ResBatchRescheduleReq"
     },
     "clusterresourcesResCreateReq": {
       "type": "object",

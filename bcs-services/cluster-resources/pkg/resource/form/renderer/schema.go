@@ -130,8 +130,8 @@ func genSchemaRules(ctx context.Context) map[string]interface{} {
 			"message":   i18n.GetMsg(ctx, "仅支持小写字母，数字及 '-' 且需以字母数字开头和结尾"),
 		},
 		"numberRegex": map[string]interface{}{
-			"validator": "/^[0-9]*$/",
-			"message":   i18n.GetMsg(ctx, "仅可包含数字字符"),
+			"validator": "/^[0-9]+(\\.[0-9])?[0-9]*$/",
+			"message":   i18n.GetMsg(ctx, "仅可包含数字字符与小数点"),
 		},
 		"maxLength64": map[string]interface{}{
 			"validator": "{{ $self.value.length < 64 }}",

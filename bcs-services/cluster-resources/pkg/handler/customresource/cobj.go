@@ -19,10 +19,11 @@ import (
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action/util/perm"
-	respUtil "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action/util/resp"
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action/util/trans"
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action/util/web"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action/perm"
+	resAction "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action/resource"
+	respUtil "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action/resp"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action/trans"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action/web"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/i18n"
 	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
@@ -33,7 +34,7 @@ import (
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
 )
 
-// ListCObj xxx
+// ListCObj 获取自定义资源列表
 func (h *Handler) ListCObj(
 	ctx context.Context, req *clusterRes.CObjListReq, resp *clusterRes.CommonResp,
 ) error {
@@ -62,7 +63,7 @@ func (h *Handler) ListCObj(
 	return err
 }
 
-// GetCObj xxx
+// GetCObj 获取某个自定义资源
 func (h *Handler) GetCObj(
 	ctx context.Context, req *clusterRes.CObjGetReq, resp *clusterRes.CommonResp,
 ) error {
@@ -91,7 +92,7 @@ func (h *Handler) GetCObj(
 	return err
 }
 
-// CreateCObj xxx
+// CreateCObj 创建自定义资源
 func (h *Handler) CreateCObj(
 	ctx context.Context, req *clusterRes.CObjCreateReq, resp *clusterRes.CommonResp,
 ) (err error) {
@@ -124,7 +125,7 @@ func (h *Handler) CreateCObj(
 	return err
 }
 
-// UpdateCObj xxx
+// UpdateCObj 更新某个自定义资源（replace）
 func (h *Handler) UpdateCObj(
 	ctx context.Context, req *clusterRes.CObjUpdateReq, resp *clusterRes.CommonResp,
 ) error {
@@ -154,7 +155,22 @@ func (h *Handler) UpdateCObj(
 	return err
 }
 
-// DeleteCObj xxx
+// ScaleCObj 自定义资源扩缩容（仅 GameDeployment, GameStatefulSet 可用）
+func (h *Handler) ScaleCObj(
+	ctx context.Context, req *clusterRes.CObjScaleReq, resp *clusterRes.CommonResp,
+) error {
+	crdInfo, err := cli.GetCRDInfo(ctx, req.ClusterID, req.CRDName)
+	if err != nil {
+		return err
+	}
+
+	resp.Data, err = resAction.NewResMgr(req.ClusterID, crdInfo["apiVersion"].(string), crdInfo["kind"].(string)).Scale(
+		ctx, req.Namespace, req.CobjName, req.Replicas, metav1.PatchOptions{},
+	)
+	return err
+}
+
+// DeleteCObj 删除某个自定义资源
 func (h *Handler) DeleteCObj(
 	ctx context.Context, req *clusterRes.CObjDeleteReq, resp *clusterRes.CommonResp,
 ) error {
@@ -171,6 +187,20 @@ func (h *Handler) DeleteCObj(
 	kind, apiVersion := crdInfo["kind"].(string), crdInfo["apiVersion"].(string)
 	return respUtil.BuildDeleteAPIResp(
 		ctx, req.ClusterID, kind, apiVersion, req.Namespace, req.CobjName, metav1.DeleteOptions{},
+	)
+}
+
+// RescheduleCObjPo 重新调度自定义资源下属的 Pod（仅 GameDeployment, GameStatefulSet 可用）
+func (h *Handler) RescheduleCObjPo(
+	ctx context.Context, req *clusterRes.CObjBatchRescheduleReq, resp *clusterRes.CommonResp,
+) error {
+	crdInfo, err := cli.GetCRDInfo(ctx, req.ClusterID, req.CRDName)
+	if err != nil {
+		return err
+	}
+
+	return resAction.NewResMgr(req.ClusterID, crdInfo["apiVersion"].(string), crdInfo["kind"].(string)).Reschedule(
+		ctx, req.Namespace, req.CobjName, req.LabelSelector, req.PodNames,
 	)
 }
 

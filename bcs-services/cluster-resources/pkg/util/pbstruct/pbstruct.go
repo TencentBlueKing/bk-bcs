@@ -49,8 +49,7 @@ func MapSlice2ListValue(l []map[string]interface{}) (*spb.ListValue, error) {
 	return x, nil
 }
 
-// map2StructValue xxx
-// map[string]interface{} => structpb.Value
+// map2StructValue map[string]interface{} => structpb.Value
 func map2StructValue(m map[string]interface{}) (*spb.Value, error) {
 	v2, err := Map2pbStruct(m)
 	if err != nil {
@@ -80,8 +79,7 @@ func Map2pbStruct(m map[string]interface{}) (*spb.Struct, error) {
 	return x, nil
 }
 
-// interface2pbValue xxx
-// interface -> structpb.Value
+// interface2pbValue interface -> structpb.Value
 // 参考 structpb.NewValue 实现，添加对 []string 类型的支持，若需要支持更多类型可按需添加
 func interface2pbValue(v interface{}) (*spb.Value, error) {
 	switch v := v.(type) {

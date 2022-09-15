@@ -27,8 +27,9 @@ import (
 )
 
 // NewRespDataBuilder 根据 Format 类型，生成不同的 Retrieve 请求响应数据生成器
-func NewRespDataBuilder(ctx context.Context, manifest map[string]interface{}, kind, format string) (DataBuilder,
-	error) {
+func NewRespDataBuilder(
+	ctx context.Context, manifest map[string]interface{}, kind, format string,
+) (DataBuilder, error) {
 	switch format {
 	case action.DefaultFormat, action.ManifestFormat:
 		return &ManifestRespBuilder{ctx: ctx, manifest: manifest, kind: kind}, nil

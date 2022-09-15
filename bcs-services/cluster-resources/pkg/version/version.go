@@ -22,20 +22,22 @@ import (
 )
 
 var (
-	// Version xxx
+	// Version 版本号
 	Version = ""
-	// GitCommit xxx
+	// GitCommit CommitID
 	GitCommit = ""
-	// BuildTime xxx
+	// BuildTime 二进制构建事件
 	BuildTime = ""
-	// GoVersion xxx
+	// GoVersion Go 版本号
 	GoVersion = runtime.Version()
 )
 
 // GetVersion 获取版本信息
 func GetVersion() string {
-	return fmt.Sprintf("\nVersion  : %s\nGitCommit: %s\nBuildTime: %s\nGoVersion: %s\n", Version, GitCommit, BuildTime,
-		GoVersion) // nolint:lll
+	return fmt.Sprintf(
+		"\nVersion  : %s\nGitCommit: %s\nBuildTime: %s\nGoVersion: %s\n",
+		Version, GitCommit, BuildTime, GoVersion,
+	)
 }
 
 // ShowVersionAndExit 打印版本信息并退出

@@ -14,7 +14,7 @@
 
 package model
 
-// Container xxx
+// Container 容器配置
 type Container struct {
 	Basic    ContainerBasic   `structs:"basic"`
 	Command  ContainerCommand `structs:"command"`
@@ -26,14 +26,14 @@ type Container struct {
 	Mount    ContainerMount   `structs:"mount"`
 }
 
-// ContainerBasic xxx
+// ContainerBasic 容器基础信息
 type ContainerBasic struct {
 	Name       string `structs:"name"`
 	Image      string `structs:"image"`
 	PullPolicy string `structs:"pullPolicy"`
 }
 
-// ContainerCommand xxx
+// ContainerCommand 容器命令
 type ContainerCommand struct {
 	WorkingDir string   `structs:"workingDir"`
 	Stdin      bool     `structs:"stdin"`
@@ -43,12 +43,12 @@ type ContainerCommand struct {
 	Args       []string `structs:"args"`
 }
 
-// ContainerService xxx
+// ContainerService 容器网络服务
 type ContainerService struct {
 	Ports []ContainerPort `structs:"ports"`
 }
 
-// ContainerPort xxx
+// ContainerPort 端口
 type ContainerPort struct {
 	Name          string `structs:"name"`
 	ContainerPort int64  `structs:"containerPort"`
@@ -56,12 +56,12 @@ type ContainerPort struct {
 	HostPort      int64  `structs:"hostPort"`
 }
 
-// ContainerEnvs xxx
+// ContainerEnvs 环境配置
 type ContainerEnvs struct {
 	Vars []EnvVar `structs:"vars"`
 }
 
-// EnvVar xxx
+// EnvVar 环境变量
 type EnvVar struct {
 	Type   string `structs:"type"`
 	Name   string `structs:"name"`
@@ -69,13 +69,13 @@ type EnvVar struct {
 	Value  string `structs:"value"`
 }
 
-// ContainerHealthz xxx
+// ContainerHealthz 健康检查
 type ContainerHealthz struct {
 	ReadinessProbe Probe `structs:"readinessProbe"`
 	LivenessProbe  Probe `structs:"livenessProbe"`
 }
 
-// Probe xxx
+// Probe 探针
 type Probe struct {
 	Enabled          bool     `structs:"enabled"`          // 是否启用
 	PeriodSecs       int64    `structs:"periodSecs"`       // 检查间隔
@@ -89,19 +89,26 @@ type Probe struct {
 	Command          []string `structs:"command"`
 }
 
-// ContainerRes xxx
+// ContainerRes 资源配置
 type ContainerRes struct {
 	Requests ResRequirement `structs:"requests"`
 	Limits   ResRequirement `structs:"limits"`
 }
 
-// ResRequirement xxx
+// ResRequirement 资源集
 type ResRequirement struct {
-	CPU    int `structs:"cpu"`
-	Memory int `structs:"memory"`
+	CPU    int        `structs:"cpu"`
+	Memory int        `structs:"memory"`
+	Extra  []ResExtra `structs:"extra"`
 }
 
-// SecurityCtx xxx
+// ResExtra 额外资源集
+type ResExtra struct {
+	Key   string `structs:"key"`
+	Value string `structs:"value"`
+}
+
+// SecurityCtx 安全性上下文
 type SecurityCtx struct {
 	Privileged               bool         `structs:"privileged"`               // 特权模式
 	AllowPrivilegeEscalation bool         `structs:"allowPrivilegeEscalation"` // 允许提权
@@ -114,18 +121,18 @@ type SecurityCtx struct {
 	SELinuxOpt               SELinuxOpt   `structs:"seLinuxOpt" mapstructure:"seLinuxOptions"`
 }
 
-// Capabilities xxx
+// Capabilities 特殊权限
 type Capabilities struct {
 	Add  []string `structs:"add"`
 	Drop []string `structs:"drop"`
 }
 
-// ContainerMount xxx
+// ContainerMount 挂载卷配置
 type ContainerMount struct {
 	Volumes []MountVolume `structs:"volumes"`
 }
 
-// MountVolume xxx
+// MountVolume 挂载卷
 type MountVolume struct {
 	Name      string `structs:"name"`
 	MountPath string `structs:"mountPath"`

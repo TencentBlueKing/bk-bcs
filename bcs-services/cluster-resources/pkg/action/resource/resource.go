@@ -24,8 +24,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action/util/resp"
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action/util/trans"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action/resp"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action/trans"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/cluster"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
 	conf "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/config"
@@ -53,8 +53,9 @@ func NewResMgr(clusterID, groupVersion, kind string) *ResMgr {
 }
 
 // List 请求某类资源（指定命名空间）下的所有资源列表，按指定 format 格式化后返回
-func (m *ResMgr) List(ctx context.Context, namespace, format string, opts metav1.ListOptions) (*structpb.Struct,
-	error) {
+func (m *ResMgr) List(
+	ctx context.Context, namespace, format string, opts metav1.ListOptions,
+) (*structpb.Struct, error) {
 	if err := m.checkAccess(ctx, namespace, nil); err != nil {
 		return nil, err
 	}
@@ -62,8 +63,9 @@ func (m *ResMgr) List(ctx context.Context, namespace, format string, opts metav1
 }
 
 // Get 请求某个资源详情，按指定 Format 格式化后返回
-func (m *ResMgr) Get(ctx context.Context, namespace, name, format string, opts metav1.GetOptions) (*structpb.Struct,
-	error) {
+func (m *ResMgr) Get(
+	ctx context.Context, namespace, name, format string, opts metav1.GetOptions,
+) (*structpb.Struct, error) {
 	if err := m.checkAccess(ctx, namespace, nil); err != nil {
 		return nil, err
 	}

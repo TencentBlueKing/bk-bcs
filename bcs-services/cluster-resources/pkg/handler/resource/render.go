@@ -17,7 +17,10 @@ package resource
 import (
 	"context"
 
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/i18n"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/renderer"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/pbstruct"
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
 )
@@ -28,7 +31,7 @@ func (h *Handler) FormDataRenderPreview(
 ) error {
 	manifest, err := renderer.NewManifestRenderer(ctx, req.FormData.AsMap(), req.ClusterID, req.Kind).Render()
 	if err != nil {
-		return err
+		return errorx.New(errcode.General, i18n.GetMsg(ctx, "预览表单渲染结果失败，请检查您填写的表单配置；错误信息：%w"), err)
 	}
 	resp.Data, err = pbstruct.Map2pbStruct(manifest)
 	return err

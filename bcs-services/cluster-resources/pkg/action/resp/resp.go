@@ -57,7 +57,10 @@ func BuildRetrieveAPIResp(
 
 // BuildCreateAPIResp xxx
 func BuildCreateAPIResp(
-	ctx context.Context, clusterID, resKind, groupVersion string, manifest map[string]interface{}, isNSScoped bool,
+	ctx context.Context,
+	clusterID, resKind, groupVersion string,
+	manifest map[string]interface{},
+	isNSScoped bool,
 	opts metav1.CreateOptions,
 ) (*structpb.Struct, error) {
 	clusterConf := res.NewClusterConfig(clusterID)
@@ -76,7 +79,9 @@ func BuildCreateAPIResp(
 
 // BuildUpdateAPIResp xxx
 func BuildUpdateAPIResp(
-	ctx context.Context, clusterID, resKind, groupVersion, namespace, name string, manifest map[string]interface{},
+	ctx context.Context,
+	clusterID, resKind, groupVersion, namespace, name string,
+	manifest map[string]interface{},
 	opts metav1.UpdateOptions,
 ) (*structpb.Struct, error) {
 	clusterConf := res.NewClusterConfig(clusterID)
@@ -95,7 +100,10 @@ func BuildUpdateAPIResp(
 
 // BuildPatchAPIResp xxx
 func BuildPatchAPIResp(
-	ctx context.Context, clusterID, resKind, groupVersion, namespace, name string, pt types.PatchType, data []byte,
+	ctx context.Context,
+	clusterID, resKind, groupVersion, namespace, name string,
+	pt types.PatchType,
+	data []byte,
 	opts metav1.PatchOptions,
 ) (*structpb.Struct, error) {
 	clusterConf := res.NewClusterConfig(clusterID)
@@ -175,8 +183,10 @@ func BuildListContainerAPIResp(ctx context.Context, clusterID, namespace, podNam
 }
 
 // BuildGetContainerAPIResp xxx
-func BuildGetContainerAPIResp(ctx context.Context, clusterID, namespace, podName,
-	containerName string) (*structpb.Struct, error) {
+func BuildGetContainerAPIResp(
+	ctx context.Context,
+	clusterID, namespace, podName, containerName string,
+) (*structpb.Struct, error) {
 	podManifest, err := cli.NewPodCliByClusterID(ctx, clusterID).GetManifest(ctx, namespace, podName)
 	if err != nil {
 		return nil, err
@@ -235,7 +245,9 @@ func BuildGetContainerAPIResp(ctx context.Context, clusterID, namespace, podName
 
 // BuildUpdateCObjAPIResp 构建更新自定义资源请求响应结果
 func BuildUpdateCObjAPIResp(
-	ctx context.Context, clusterID, resKind, groupVersion, namespace, name string, manifest map[string]interface{},
+	ctx context.Context,
+	clusterID, resKind, groupVersion, namespace, name string,
+	manifest map[string]interface{},
 	opts metav1.UpdateOptions,
 ) (*structpb.Struct, error) {
 	clusterConf := res.NewClusterConfig(clusterID)

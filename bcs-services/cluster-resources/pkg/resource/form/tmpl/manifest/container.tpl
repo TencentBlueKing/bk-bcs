@@ -189,6 +189,11 @@ resources:
     {{- if .requests.memory }}
     memory: {{ printf "%.0fMi" .requests.memory }}
     {{- end }}
+    {{- if .requests.extra }}
+    {{- range .requests.extra }}
+    {{ .key }}: {{ .value | quote }}
+    {{- end }}
+    {{- end }}
   {{- end }}
   {{- if .limits }}
   limits:
@@ -197,6 +202,11 @@ resources:
     {{- end }}
     {{- if .limits.memory }}
     memory: {{ printf "%.0fMi" .limits.memory }}
+    {{- end }}
+    {{- if .limits.extra }}
+    {{- range .limits.extra }}
+    {{ .key }}: {{ .value | quote }}
+    {{- end }}
     {{- end }}
   {{- end }}
 {{- end }}

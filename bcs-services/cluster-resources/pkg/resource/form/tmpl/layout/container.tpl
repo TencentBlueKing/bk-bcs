@@ -83,10 +83,23 @@
 {{- define "container.resource" }}
 - - group:
       - - group:
-            - [ "cpu", "memory" ]
+            - [ "cpu" ]
+            - [ "memory" ]
+            - - group:
+                  - [ "key", "value", "." ]
+                prop: extra
+                container:
+                  grid-template-columns: "1fr 1fr auto"
           prop: requests
-      - - group:
-            - [ "cpu", "memory" ]
+        # NOTE 这里只有一个 - 表示 requests, limits 是同组的，同行布局
+        - group:
+            - [ "cpu" ]
+            - [ "memory" ]
+            - - group:
+                  - [ "key", "value", "." ]
+                prop: extra
+                container:
+                  grid-template-columns: "1fr 1fr auto"
           prop: limits
     prop: resource
 {{- end }}
