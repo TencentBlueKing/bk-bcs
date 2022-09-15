@@ -21,7 +21,6 @@ from kubernetes.client.rest import ApiException
 from backend.components.bcs import BCSClientBase
 from backend.components.cluster_manager import get_shared_clusters
 from backend.components.utils import http_delete, http_get, http_patch, http_post
-from backend.utils.error_codes import error_codes
 
 from . import resources
 from .k8s_client import K8SProxyClient
@@ -329,7 +328,7 @@ class K8SClient(BCSClientBase):
     def get_events(self, params):
         # storage可以获取比较长的event信息，因此，通过storage查询event
         url = f"{settings.BCS_APIGW_DOMAIN[self._bcs_server_stag]}/bcsapi/v4/storage/events"
-        resp = http_get(url, params=params, headers=self.headers)
+        resp = http_post(url, data=params, headers=self.headers)
         return resp
 
     def get_used_namespace(self):

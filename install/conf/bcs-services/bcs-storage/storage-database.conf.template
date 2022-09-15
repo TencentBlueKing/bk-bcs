@@ -45,11 +45,11 @@ Password = ${mongodbPassword}
 MaxPoolSize = ${mongodbMaxPoolSize}
 
 [mongodb/clusterConfig]
-Addr = ${ConfigDbHost}
+Addr = ${mongodbHost}
 ConnectTimeout = 0
 Database = clusterConfig
-Username = ${ConfigDbUsername}
-Password = ${ConfigDbPassword}
+Username = ${mongodbUsername}
+Password = ${mongodbPassword}
 MaxPoolSize = ${mongodbMaxPoolSize}
 
 [zk/watch]

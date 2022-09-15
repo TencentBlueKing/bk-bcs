@@ -19,8 +19,8 @@ class BaseFeatureFlag(FeatureFlag):
     """对应左侧菜单功能，默认都开启"""
 
     NAMESPACE = FeatureFlagField(name='NAMESPACE', label='命名空间', default=True)
-    TEMPLATESET = FeatureFlagField(name='TEMPLATESET', label='模板集', default=True)
-    VARIABLE = FeatureFlagField(name='VARIABLE', label='变量管理', default=True)
+    TEMPLATESET = FeatureFlagField(name='TEMPLATESET', label='模板集', default=False)
+    VARIABLE = FeatureFlagField(name='VARIABLE', label='变量管理', default=False)
     HELM = FeatureFlagField(name='HELM', label='helm', default=True)
 
 
