@@ -14,42 +14,54 @@
 package httpserver
 
 import (
+	"crypto/tls"
 	"fmt"
+	"net"
+	"net/http"
+	"strconv"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/http/ipv6server"
 	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
 	"github.com/emicklei/go-restful"
 	restfulspec "github.com/emicklei/go-restful-openapi"
 	"github.com/gorilla/mux"
-	"net"
-	"net/http"
-	"strconv"
 )
 
 // HttpServer is data struct of http server
 type HttpServer struct {
-	addr         string
-	port         uint
-	insecureAddr string
-	insecurePort uint
-	sock         string
-	isSSL        bool
-	caFile       string
-	certFile     string
-	keyFile      string
-	certPasswd   string
-	webContainer *restful.Container
-	router       *mux.Router
+	addr                   string
+	addrIPv6               string // addrIPv6 IPv6地址
+	port                   uint
+	insecureAddr           string
+	insecurePort           uint
+	sock                   string
+	isSSL                  bool
+	caFile                 string
+	certFile               string
+	keyFile                string
+	certPasswd             string
+	webContainer           *restful.Container
+	router                 *mux.Router
+	*ipv6server.IPv6Server // IPv6 Server
 }
 
 // NewHttpServer init httpServer
 func NewHttpServer(port uint, addr, sock string) *HttpServer {
+	return NewIPv6HttpServer(port, addr, "", sock)
+}
+
+// NewIPv6HttpServer 创建一个支持同时支持IPv6、IPv4 httpServer
+func NewIPv6HttpServer(port uint, addr, addrIPv6, sock string) *HttpServer {
 	return &HttpServer{
 		addr:         addr,
+		addrIPv6:     addrIPv6,
 		port:         port,
 		sock:         sock,
 		webContainer: restful.NewContainer(),
 		router:       mux.NewRouter(),
 		isSSL:        false,
+		IPv6Server:   ipv6server.NewParameterlessIPv6Server(),
 	}
 }
 
@@ -158,16 +170,18 @@ func (s *HttpServer) ListenAndServe() error {
 	var chError = make(chan error)
 	// list and serve by addrport
 	go func() {
-		addrport := net.JoinHostPort(s.addr, strconv.FormatUint(uint64(s.port), 10))
-		httpserver := &http.Server{Addr: addrport, Handler: s.webContainer}
+		s.IPv6Server.SetHttpServerHandler(s.webContainer)            // 设置handler
+		s.IPv6Server.SetAddress([]string{s.addr, s.addrIPv6})        // 设置监听IP
+		s.IPv6Server.SetPort(strconv.FormatUint(uint64(s.port), 10)) // 设置监听端口
+		httpserver := s.IPv6Server
 		if s.isSSL {
-			tlsConf, err := ssl.ServerTslConf(s.caFile, s.certFile, s.keyFile, s.certPasswd)
+			tlsConfig, err := s.GetTLSConfig()
 			if err != nil {
 				blog.Error("fail to load certfile, err:%s", err.Error())
 				chError <- fmt.Errorf("fail to load certfile")
 				return
 			}
-			httpserver.TLSConfig = tlsConf
+			httpserver.TLSConfig = tlsConfig
 			blog.Info("Start https service on(%s:%d)", s.addr, s.port)
 			chError <- httpserver.ListenAndServeTLS("", "")
 		} else {
@@ -184,8 +198,10 @@ func (s *HttpServer) ListenAndServeMux(verifyClientTLS bool) error {
 
 	// list and serve by addrport
 	if s.isSSL {
-		addrport := net.JoinHostPort(s.addr, strconv.FormatUint(uint64(s.port), 10))
-		httpserver := &http.Server{Addr: addrport, Handler: s.router}
+		s.IPv6Server.SetHttpServerHandler(s.router)                  // 设置handler
+		s.IPv6Server.SetAddress([]string{s.addr, s.addrIPv6})        // 设置监听IP
+		s.IPv6Server.SetPort(strconv.FormatUint(uint64(s.port), 10)) // 设置监听端口
+		httpserver := s.IPv6Server
 
 		// listen to https single certification
 		tlsConf, err := ssl.ServerTslConfVerity(s.certFile, s.keyFile, s.certPasswd)
@@ -222,15 +238,16 @@ func (s *HttpServer) Serve(l net.Listener) error {
 	var chError = make(chan error)
 	// list and serve by addrport
 	go func() {
-		httpserver := &http.Server{Handler: s.webContainer}
+		s.IPv6Server.SetHttpServerHandler(s.webContainer) // 设置handler
+		httpserver := s.IPv6Server
 		if s.isSSL {
-			tlsConf, err := ssl.ServerTslConf(s.caFile, s.certFile, s.keyFile, s.certPasswd)
+			tlsConfig, err := s.GetTLSConfig()
 			if err != nil {
 				blog.Error("fail to load certfile, err:%s", err.Error())
 				chError <- fmt.Errorf("fail to load certfile")
 				return
 			}
-			httpserver.TLSConfig = tlsConf
+			httpserver.TLSConfig = tlsConfig
 			blog.Info("Start https service on(%s:%d)", s.addr, s.port)
 			chError <- httpserver.ServeTLS(l, "", "")
 		} else {
@@ -240,4 +257,24 @@ func (s *HttpServer) Serve(l net.Listener) error {
 	}()
 
 	return <-chError
+}
+
+// GetIsSSL 获取isSSL
+func (s *HttpServer) GetIsSSL() bool {
+	return s.isSSL
+}
+
+// GetTLSConfig 获取*http.TLSConfig
+func (s *HttpServer) GetTLSConfig() (*tls.Config, error) {
+	return ssl.ServerTslConf(s.caFile, s.certFile, s.keyFile, s.certPasswd)
+}
+
+// GetPort 获取端口号
+func (s *HttpServer) GetPort() string {
+	return strconv.FormatUint(uint64(s.port), 10)
+}
+
+// SetAddressIPv6 设置IPv6地址
+func (s *HttpServer) SetAddressIPv6(ipv6 string) {
+	s.addrIPv6 = ipv6
 }

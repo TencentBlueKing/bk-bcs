@@ -831,6 +831,9 @@ func (c *StorageCli) handlerEtcdEvent(svcName string) {
 	}
 	endpoints := make([]string, 0)
 	for _, node := range svc.Nodes {
+		if ipv6Address := node.Metadata[types.IPV6]; ipv6Address != "" {
+			endpoints = append(endpoints, ipv6Address)
+		}
 		endpoints = append(endpoints, node.Address)
 	}
 	c.Config.Hosts = endpoints
