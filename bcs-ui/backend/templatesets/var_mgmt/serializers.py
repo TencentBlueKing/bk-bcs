@@ -28,7 +28,6 @@ from backend.templatesets.legacy_apps.configuration.constants import VARIABLE_PA
 from ..legacy_apps.instance.serializers import InstanceNamespaceSLZ
 from .constants import VariableCategory, VariableScope
 from .models import Variable
-from .utils import get_variable_quote_num
 
 logger = logging.getLogger(__name__)
 
@@ -53,7 +52,6 @@ NAMESPACE_SCOPE = "namespace"
 
 
 class SearchVariableSLZ(serializers.Serializer):
-    type = serializers.CharField(default='with_quote_num')
     scope = serializers.CharField(default='')
     search_key = serializers.CharField(default='')
     limit = serializers.IntegerField(default=10)
@@ -70,7 +68,6 @@ class SearchVariableSLZ(serializers.Serializer):
 
 class ListVariableSLZ(serializers.ModelSerializer):
     default = serializers.DictField(source='get_default_data')
-    quote_num = serializers.SerializerMethodField()
     name = serializers.SerializerMethodField()
     category_name = serializers.SerializerMethodField()
     scope_name = serializers.SerializerMethodField()
@@ -88,18 +85,11 @@ class ListVariableSLZ(serializers.ModelSerializer):
             'category_name',
             'scope',
             'scope_name',
-            'quote_num',
             'creator',
             'created',
             'updated',
             'updator',
         )
-
-    def get_quote_num(self, obj):
-        search_type = self.context['search_type']
-        if search_type == 'base':
-            return 0
-        return get_variable_quote_num(obj.key, self.context['project_id'])
 
     def get_name(self, obj):
         return _(obj.name)
@@ -160,19 +150,12 @@ class UpdateVariableSLZ(VariableSLZ):
         if instance.category == VariableCategory.SYSTEM.value:
             raise ValidationError(_("系统内置变量不允许操作"))
 
-        old_key = instance.key
-        new_key = validated_data.get('key')
+        if validated_data.get('key') != instance.key:
+            raise ValidationError(_('变量 Key 不允许编辑'))
 
-        if new_key != old_key:
-            if get_variable_quote_num(old_key, validated_data.get('project_id')) > 0:
-                raise ValidationError('KEY{}{}'.format(old_key, _("已经被引用，不能修改KEY")))
+        if validated_data.get('scope') != instance.scope:
+            raise ValidationError(_('变量作用域不允许编辑'))
 
-            if Variable.objects.filter(key=new_key, project_id=validated_data['project_id']).exists():
-                detail = {'field': ['{}KEY{}{}'.format(_("变量"), validated_data['key'], _("已经存在"))]}
-                raise ValidationError(detail=detail)
-
-        instance.key = new_key
-        instance.scope = validated_data.get('scope')
         instance.name = validated_data.get('name')
         instance.default = validated_data.get('default')
         instance.desc = validated_data.get('desc')
