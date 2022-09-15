@@ -324,7 +324,6 @@ def get_container_pod_count(cluster_id, ip, bk_biz_id=None):
 
 def get_node_cpu_usage(cluster_id, ip, bk_biz_id=None):
     """获取CPU总使用率"""
-    bk_biz_id = "2"
     prom_query = f"""
         sum(bkmonitor:system:cpu_detail:usage{{bk_biz_id="{bk_biz_id}", ip="{ip}"}}) /
         count(bkmonitor:system:cpu_detail:usage{{bk_biz_id="{bk_biz_id}", ip="{ip}"}})"""  # noqa
