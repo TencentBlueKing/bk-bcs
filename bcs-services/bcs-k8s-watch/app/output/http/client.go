@@ -379,7 +379,15 @@ func (client *StorageClient) listResource(url string, handlerName string) (data 
 		return
 	}
 
-	data = storageResp.Data.([]interface{})
+	if storageResp.Data != nil {
+		d, ok := storageResp.Data.([]interface{})
+		if !ok {
+			status = metrics.ErrStatus
+			err = fmt.Errorf("listResource interface conversion error! [url=%s, resp=%v, errs=%s]", url, resp, errs)
+			return
+		}
+		data = d
+	}
 	return
 }
 
