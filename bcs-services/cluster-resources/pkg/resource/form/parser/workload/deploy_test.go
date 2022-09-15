@@ -17,6 +17,7 @@ package workload
 import (
 	"testing"
 
+	"github.com/fatih/structs"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/model"
@@ -36,7 +37,20 @@ var lightDeployManifest = map[string]interface{}{
 			},
 			"type": "RollingUpdate",
 		},
+		"template": map[string]interface{}{
+			"spec": map[string]interface{}{
+				"initContainers": containerConf4Test,
+				"containers":     containerConf4Test,
+				"volumes":        volumeConf4Test,
+			},
+		},
 	},
+}
+
+func TestParseDeploy(t *testing.T) {
+	formData := ParseDeploy(lightDeployManifest)
+	assert.Equal(t, structs.Map(exceptedContainerGroup), formData["containerGroup"])
+	assert.Equal(t, structs.Map(exceptedVolume), formData["volume"])
 }
 
 var exceptedDeployReplicas = model.DeployReplicas{

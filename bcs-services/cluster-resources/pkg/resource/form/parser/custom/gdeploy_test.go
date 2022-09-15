@@ -17,6 +17,7 @@ package custom
 import (
 	"testing"
 
+	"github.com/fatih/structs"
 	"github.com/stretchr/testify/assert"
 
 	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
@@ -24,6 +25,47 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/parser/util"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
 )
+
+var lightPodTmpl = map[string]interface{}{
+	"spec": map[string]interface{}{
+		"containers": []interface{}{
+			map[string]interface{}{
+				"image":           "busybox:latest",
+				"imagePullPolicy": "IfNotPresent",
+				"name":            "busybox",
+				"readinessProbe": map[string]interface{}{
+					"periodSeconds":    int64(10),
+					"timeoutSeconds":   int64(3),
+					"successThreshold": int64(1),
+					"failureThreshold": int64(3),
+					"tcpSocket": map[string]interface{}{
+						"port": int64(80),
+					},
+				},
+				"livenessProbe": map[string]interface{}{
+					"periodSeconds":    int64(10),
+					"timeoutSeconds":   int64(3),
+					"successThreshold": int64(1),
+					"failureThreshold": int64(3),
+					"exec": map[string]interface{}{
+						"command": []interface{}{
+							"echo hello",
+						},
+					},
+				},
+			},
+		},
+		"volumes": []interface{}{
+			map[string]interface{}{
+				"name": "nfs",
+				"nfs": map[string]interface{}{
+					"path":   "/data",
+					"server": "1.1.1.1",
+				},
+			},
+		},
+	},
+}
 
 var lightGDeployManifest = map[string]interface{}{
 	"apiVersion": "tkex.tencent.com/v1alpha1",
@@ -76,7 +118,59 @@ var lightGDeployManifest = map[string]interface{}{
 			"partition":      int64(1),
 			"type":           "InplaceUpdate",
 		},
+		"template": lightPodTmpl,
 	},
+}
+
+var exceptedContainerGroup = model.ContainerGroup{
+	Containers: []model.Container{
+		{
+			Basic: model.ContainerBasic{
+				Name:       "busybox",
+				Image:      "busybox:latest",
+				PullPolicy: "IfNotPresent",
+			},
+			Healthz: model.ContainerHealthz{
+				ReadinessProbe: model.Probe{
+					Enabled:          true,
+					PeriodSecs:       10,
+					InitialDelaySecs: 0,
+					TimeoutSecs:      3,
+					SuccessThreshold: 1,
+					FailureThreshold: 3,
+					Type:             "tcpSocket",
+					Port:             80,
+				},
+				LivenessProbe: model.Probe{
+					Enabled:          true,
+					PeriodSecs:       10,
+					InitialDelaySecs: 0,
+					TimeoutSecs:      3,
+					SuccessThreshold: 1,
+					FailureThreshold: 3,
+					Type:             "exec",
+					Command:          []string{"echo hello"},
+				},
+			},
+		},
+	},
+}
+
+var exceptedVolume = model.WorkloadVolume{
+	NFS: []model.NFSVolume{
+		{
+			Name:     "nfs",
+			Path:     "/data",
+			Server:   "1.1.1.1",
+			ReadOnly: false,
+		},
+	},
+}
+
+func TestParseGDeploy(t *testing.T) {
+	formData := ParseGDeploy(lightGDeployManifest)
+	assert.Equal(t, structs.Map(exceptedContainerGroup), formData["containerGroup"])
+	assert.Equal(t, structs.Map(exceptedVolume), formData["volume"])
 }
 
 var exceptedGDeployReplicas = model.GDeployReplicas{

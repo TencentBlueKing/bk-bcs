@@ -17,6 +17,7 @@ package workload
 import (
 	"github.com/mitchellh/mapstructure"
 
+	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/model"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/parser/util"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
@@ -24,14 +25,21 @@ import (
 
 // ParseContainerGroup xxx
 func ParseContainerGroup(manifest map[string]interface{}, cGroup *model.ContainerGroup) {
+	prefix := "spec.template.spec."
+	switch mapx.GetStr(manifest, "kind") {
+	case res.CJ:
+		prefix = "spec.jobTemplate.spec.template.spec."
+	case res.Po:
+		prefix = "spec."
+	}
 	// 初始容器
-	if cs, _ := mapx.GetItems(manifest, "spec.template.spec.initContainers"); cs != nil {
+	if cs, _ := mapx.GetItems(manifest, prefix+"initContainers"); cs != nil {
 		for _, c := range cs.([]interface{}) {
 			cGroup.InitContainers = append(cGroup.InitContainers, parseContainer(c.(map[string]interface{})))
 		}
 	}
 	// 标准容器
-	if cs, _ := mapx.GetItems(manifest, "spec.template.spec.containers"); cs != nil {
+	if cs, _ := mapx.GetItems(manifest, prefix+"containers"); cs != nil {
 		for _, c := range cs.([]interface{}) {
 			cGroup.Containers = append(cGroup.Containers, parseContainer(c.(map[string]interface{})))
 		}
