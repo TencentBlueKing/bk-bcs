@@ -137,12 +137,12 @@ func getTimeConds(req *restful.Request) []*operator.Condition {
 }
 
 func listEvent(req *restful.Request) ([]operator.M, int64, error) {
-	clusterID := req.QueryParameter(clusterIDTag)
-	if clusterID == "" {
-		blog.Errorf("request clusterID is empty")
-		return nil, 0, fmt.Errorf("request clusterID is empty")
+	clusterIDs := lib.GetQueryParamStringArray(req, clusterIDTag, ",")
+	if clusterIDs == nil {
+		return nil, 0, fmt.Errorf("clusterID is empty")
 	}
-	blog.Infof("clusterID: %s", clusterID)
+
+	blog.Infof("clusterIDs: %s", clusterIDs)
 	fields := lib.GetQueryParamStringArray(req, fieldTag, ",")
 	limit, err := lib.GetQueryParamInt64(req, limitTag, 0)
 	if err != nil {
@@ -172,16 +172,20 @@ func listEvent(req *restful.Request) ([]operator.M, int64, error) {
 	var mList []operator.M
 	var count int64
 
-	mList, err = store.Get(req.Request.Context(), tablePrefix+clusterID, getOption)
-	if err != nil {
-		blog.Errorf("get event list failed, err %s", err.Error())
-		return nil, 0, err
-	}
+	for _, clusterID := range clusterIDs {
+		eList, err := store.Get(req.Request.Context(), tablePrefix+clusterID, getOption)
+		if err != nil {
+			blog.Errorf("get event list failed, err %s", err.Error())
+			return nil, 0, err
+		}
+		c, err := store.Count(req.Request.Context(), tablePrefix+clusterID, getOption)
+		if err != nil {
+			blog.Errorf("count event list failed, err %s", err.Error())
+			return nil, 0, err
+		}
 
-	count, err = store.Count(req.Request.Context(), tablePrefix+clusterID, getOption)
-	if err != nil {
-		blog.Errorf("count event list failed, err %s", err.Error())
-		return nil, 0, err
+		mList = append(mList, eList...)
+		count += c
 	}
 
 	countTmp, err := store.Count(req.Request.Context(), tableName, getOption)
@@ -197,6 +201,8 @@ func listEvent(req *restful.Request) ([]operator.M, int64, error) {
 			return nil, 0, err
 		}
 		mList = append(mList, tmpList...)
+	} else if int64(len(mList)) > limit {
+		mList = mList[:limit]
 	}
 
 	lib.FormatTime(mList, []string{eventTimeTag})

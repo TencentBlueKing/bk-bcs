@@ -152,6 +152,8 @@ func init() {
 		Verb: "PUT", Path: eventPath, Params: nil, Handler: lib.MarkProcess(PutEvent)})
 	actions.RegisterV1Action(actions.Action{
 		Verb: "GET", Path: eventPath, Params: nil, Handler: lib.MarkProcess(ListEvent)})
+	actions.RegisterV1Action(actions.Action{
+		Verb: "POST", Path: eventPath, Params: nil, Handler: lib.MarkProcess(ListEvent)})
 
 	eventWatchPath := urlPath("/events/watch")
 	actions.RegisterV1Action(actions.Action{
