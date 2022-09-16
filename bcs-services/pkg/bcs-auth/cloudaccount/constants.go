@@ -21,4 +21,6 @@ const (
 	CanManageCloudAccountOperation = "CanManageCloudAccount"
 	// CanUseCloudAccountOperation useCloudAccount perm
 	CanUseCloudAccountOperation = "CanUseCloudAccount"
+	// CanCreateCloudAccountOperation createCloudAccount perm
+	CanCreateCloudAccountOperation = "CanCreateCloudAccount"
 )

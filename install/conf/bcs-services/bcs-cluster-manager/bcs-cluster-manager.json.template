@@ -73,7 +73,8 @@
         "iamServer": "${bcsIAMHost}",
         "bkiIamServer": "${bcsIAMbkiHost}",
         "metric": ${bcsIAMMetric},
-        "debug": ${bcsIAMDebug}
+        "debug": ${bcsIAMDebug},
+        "iamApplyServer": "${bcsIAMApplyPermAddress}"
     },
     "bcsapp": {
         "server": "${bcsAppServer}",

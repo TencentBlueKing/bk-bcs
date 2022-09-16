@@ -16,7 +16,6 @@ package account
 import (
 	"context"
 	"fmt"
-
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
@@ -239,10 +238,9 @@ func (la *ListPermDataAction) validate() error {
 		return err
 	}
 
-	if la.req.ProjectID == "" && len(la.req.AccountID) == 0 || len(la.req.AccountName) == 0 {
+	if la.req.ProjectID == "" && len(la.req.AccountID) == 0 && len(la.req.AccountName) == 0 {
 		return fmt.Errorf("ListPermDataAction query parameter is empty")
 	}
-
 	return nil
 }
 
