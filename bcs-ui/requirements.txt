@@ -73,7 +73,7 @@ mako==1.0.7
 markupsafe==2.0.1
 multidict==5.1.0
 natsort==5.4.1
-oauthlib==3.1.1
+oauthlib==3.2.1
 openpyxl==3.0.0
 opentelemetry-api==1.5.0
 opentelemetry-exporter-otlp-proto-grpc==1.5.0
