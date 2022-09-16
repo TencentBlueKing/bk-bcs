@@ -19,14 +19,12 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/release"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/store"
 	helmmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/proto/bcs-helm-manager"
 )
 
 // NewGetReleaseHistoryAction return a new GetReleaseHistoryAction instance
-func NewGetReleaseHistoryAction(model store.HelmManagerModel, releaseHandler release.Handler) *GetReleaseHistoryAction {
+func NewGetReleaseHistoryAction(releaseHandler release.Handler) *GetReleaseHistoryAction {
 	return &GetReleaseHistoryAction{
-		model:          model,
 		releaseHandler: releaseHandler,
 	}
 }
@@ -35,7 +33,6 @@ func NewGetReleaseHistoryAction(model store.HelmManagerModel, releaseHandler rel
 type GetReleaseHistoryAction struct {
 	ctx context.Context
 
-	model          store.HelmManagerModel
 	releaseHandler release.Handler
 
 	req  *helmmanager.GetReleaseHistoryReq
@@ -45,11 +42,6 @@ type GetReleaseHistoryAction struct {
 // Handle the release history getting process
 func (g *GetReleaseHistoryAction) Handle(ctx context.Context,
 	req *helmmanager.GetReleaseHistoryReq, resp *helmmanager.GetReleaseHistoryResp) error {
-
-	if req == nil || resp == nil {
-		blog.Errorf("get release history failed, req or resp is empty")
-		return common.ErrHelmManagerReqOrRespEmpty.GenError()
-	}
 	g.ctx = ctx
 	g.req = req
 	g.resp = resp

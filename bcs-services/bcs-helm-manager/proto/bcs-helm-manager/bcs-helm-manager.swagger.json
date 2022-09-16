@@ -290,6 +290,60 @@
         ]
       }
     },
+    "/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/releases/{name}/status": {
+      "get": {
+        "summary": "获取 release 资源的状态",
+        "description": "获取 release 下所有资源的部署状态，如果是 workload 则增加 pod 状态",
+        "operationId": "HelmManager_GetReleaseStatus",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/helmmanagerCommonListResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectCode",
+            "description": "项目代码",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "clusterID",
+            "description": "所在的集群ID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "namespace",
+            "description": "所在的namespace",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "description": "chart release名称",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "HelmManager"
+        ]
+      }
+    },
     "/helmmanager/v1/projects/{projectCode}/repos": {
       "get": {
         "summary": "查询仓库列表",
@@ -487,6 +541,278 @@
             "schema": {
               "$ref": "#/definitions/helmmanagerUpdateRepositoryReq"
             }
+          }
+        ],
+        "tags": [
+          "HelmManager"
+        ]
+      }
+    },
+    "/helmmanager/v1/projects/{projectCode}/repos/{repoName}/charts": {
+      "get": {
+        "summary": "批量查询chart包",
+        "description": "批量查询chart包",
+        "operationId": "HelmManager_ListChartV1",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/helmmanagerListChartV1Resp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectCode",
+            "description": "项目代码",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "repoName",
+            "description": "仓库名称",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "page",
+            "description": "page. 页数",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "size",
+            "description": "size. 每页数量",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          }
+        ],
+        "tags": [
+          "HelmManager"
+        ]
+      }
+    },
+    "/helmmanager/v1/projects/{projectCode}/repos/{repoName}/charts/{name}": {
+      "delete": {
+        "summary": "删除指定 chart",
+        "description": "删除指定 chart，将会从 chart 仓库中删除",
+        "operationId": "HelmManager_DeleteChart",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/helmmanagerDeleteChartResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectCode",
+            "description": "项目代码",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "repoName",
+            "description": "仓库名称",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "description": "chart名称",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "HelmManager"
+        ]
+      }
+    },
+    "/helmmanager/v1/projects/{projectCode}/repos/{repoName}/charts/{name}/versions": {
+      "get": {
+        "summary": "查询chart包的版本列表",
+        "description": "查询chart包的版本列表",
+        "operationId": "HelmManager_ListChartVersionV1",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/helmmanagerListChartVersionV1Resp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectCode",
+            "description": "项目代码",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "repoName",
+            "description": "仓库名称",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "description": "chart名称",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "page",
+            "description": "page. 页数",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "size",
+            "description": "size. 每页数量",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          }
+        ],
+        "tags": [
+          "HelmManager"
+        ]
+      }
+    },
+    "/helmmanager/v1/projects/{projectCode}/repos/{repoName}/charts/{name}/versions/{version}": {
+      "get": {
+        "summary": "查询指定版本的chart包详细信息",
+        "description": "查询指定版本的chart包详细信息",
+        "operationId": "HelmManager_GetChartDetailV1",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/helmmanagerGetChartDetailV1Resp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectCode",
+            "description": "项目代码",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "repoName",
+            "description": "仓库名称",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "description": "chart名称",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "version",
+            "description": "chart版本",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "HelmManager"
+        ]
+      },
+      "delete": {
+        "summary": "删除 chart 指定版本",
+        "description": "删除 chart 指定版本，将会从 chart 仓库中删除",
+        "operationId": "HelmManager_DeleteChartVersion",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/helmmanagerDeleteChartVersionResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectCode",
+            "description": "项目代码",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "repoName",
+            "description": "仓库名称",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "description": "chart名称",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "version",
+            "description": "chart版本",
+            "in": "path",
+            "required": true,
+            "type": "string"
           }
         ],
         "tags": [
@@ -918,6 +1244,11 @@
           "type": "string",
           "description": "更新时间",
           "title": "updateTime"
+        },
+        "projectCode": {
+          "type": "string",
+          "description": "项目代号",
+          "title": "projectCode"
         }
       }
     },
@@ -1062,6 +1393,38 @@
         }
       }
     },
+    "helmmanagerCommonListResp": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          },
+          "description": "返回数据",
+          "title": "data"
+        }
+      },
+      "description": "通用列表返回",
+      "title": "CommonListResp"
+    },
     "helmmanagerCreateRepositoryReq": {
       "type": "object",
       "properties": {
@@ -1155,6 +1518,54 @@
       "description": "创建仓库的返回",
       "title": "CreateRepositoryResp"
     },
+    "helmmanagerDeleteChartResp": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        }
+      },
+      "description": "删除 Chart 的返回",
+      "title": "DeleteChartResp"
+    },
+    "helmmanagerDeleteChartVersionResp": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        }
+      },
+      "description": "删除 Chart 版本的返回",
+      "title": "DeleteChartVersionResp"
+    },
     "helmmanagerDeleteRepositoryReq": {
       "type": "object",
       "properties": {
@@ -1244,6 +1655,35 @@
       },
       "description": "查询指定版本的chart包详细信息的返回",
       "title": "GetChartDetailResp"
+    },
+    "helmmanagerGetChartDetailV1Resp": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "$ref": "#/definitions/helmmanagerChartDetail",
+          "description": "查询指定版本的chart包详细信息",
+          "title": "data"
+        }
+      },
+      "description": "查询指定版本的chart包详细信息的返回",
+      "title": "GetChartDetailV1Resp"
     },
     "helmmanagerGetReleaseDetailResp": {
       "type": "object",
@@ -1462,6 +1902,35 @@
       "description": "批量查询chart的返回",
       "title": "ListChartResp"
     },
+    "helmmanagerListChartV1Resp": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "$ref": "#/definitions/helmmanagerChartListData",
+          "description": "查询的chart的信息",
+          "title": "data"
+        }
+      },
+      "description": "批量查询chart的返回",
+      "title": "ListChartV1Resp"
+    },
     "helmmanagerListChartVersionResp": {
       "type": "object",
       "properties": {
@@ -1490,6 +1959,35 @@
       },
       "description": "查询chart版本的返回",
       "title": "ListChartVersionResp"
+    },
+    "helmmanagerListChartVersionV1Resp": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "$ref": "#/definitions/helmmanagerChartVersionListData",
+          "description": "查询的chart的版本信息",
+          "title": "data"
+        }
+      },
+      "description": "查询chart版本的返回",
+      "title": "ListChartVersionV1Resp"
     },
     "helmmanagerListReleaseResp": {
       "type": "object",
@@ -2109,6 +2607,14 @@
         }
       },
       "description": "`Any` contains an arbitrary serialized protocol buffer message along with a\nURL that describes the type of the serialized message.\n\nProtobuf library provides support to pack/unpack Any values in the form\nof utility functions or additional generated methods of the Any type.\n\nExample 1: Pack and unpack a message in C++.\n\n    Foo foo = ...;\n    Any any;\n    any.PackFrom(foo);\n    ...\n    if (any.UnpackTo(\u0026foo)) {\n      ...\n    }\n\nExample 2: Pack and unpack a message in Java.\n\n    Foo foo = ...;\n    Any any = Any.pack(foo);\n    ...\n    if (any.is(Foo.class)) {\n      foo = any.unpack(Foo.class);\n    }\n\n Example 3: Pack and unpack a message in Python.\n\n    foo = Foo(...)\n    any = Any()\n    any.Pack(foo)\n    ...\n    if any.Is(Foo.DESCRIPTOR):\n      any.Unpack(foo)\n      ...\n\n Example 4: Pack and unpack a message in Go\n\n     foo := \u0026pb.Foo{...}\n     any, err := ptypes.MarshalAny(foo)\n     ...\n     foo := \u0026pb.Foo{}\n     if err := ptypes.UnmarshalAny(any, foo); err != nil {\n       ...\n     }\n\nThe pack methods provided by protobuf library will by default use\n'type.googleapis.com/full.type.name' as the type URL and the unpack\nmethods only use the fully qualified type name after the last '/'\nin the type URL, for example \"foo.bar.com/x/y.z\" will yield type\nname \"y.z\".\n\n\nJSON\n====\nThe JSON representation of an `Any` value uses the regular\nrepresentation of the deserialized, embedded message, with an\nadditional field `@type` which contains the type URL. Example:\n\n    package google.profile;\n    message Person {\n      string first_name = 1;\n      string last_name = 2;\n    }\n\n    {\n      \"@type\": \"type.googleapis.com/google.profile.Person\",\n      \"firstName\": \u003cstring\u003e,\n      \"lastName\": \u003cstring\u003e\n    }\n\nIf the embedded message type is well-known and has a custom JSON\nrepresentation, that representation will be embedded adding a field\n`value` which holds the custom JSON in addition to the `@type`\nfield. Example (for message [google.protobuf.Duration][]):\n\n    {\n      \"@type\": \"type.googleapis.com/google.protobuf.Duration\",\n      \"value\": \"1.212s\"\n    }"
+    },
+    "protobufNullValue": {
+      "type": "string",
+      "enum": [
+        "NULL_VALUE"
+      ],
+      "default": "NULL_VALUE",
+      "description": "`NullValue` is a singleton enumeration to represent the null value for the\n`Value` type union.\n\n The JSON representation for `NullValue` is JSON `null`.\n\n - NULL_VALUE: Null value."
     },
     "runtimeError": {
       "type": "object",

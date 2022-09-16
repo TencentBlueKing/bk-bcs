@@ -19,11 +19,14 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/codec"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/repo"
 )
 
 const (
-	repositoryListHelmURI = "/repository/api/package/page"
+	repositoryListHelmURI      = "/repository/api/package/page"
+	repositoryDeletePackageURI = "/repository/api/package/delete"
+	repositoryDeleteVersionURI = "/repository/api/version/delete"
 )
 
 func (rh *repositoryHandler) listChart(ctx context.Context, option repo.ListOption) (*repo.ListChartData, error) {
@@ -129,4 +132,60 @@ func (p *pack) convert2Chart() *repo.Chart {
 		CreateTime:  p.CreatedDate,
 		UpdateTime:  p.LastModifiedDate,
 	}
+}
+
+func (ch *chartHandler) deleteChart(ctx context.Context) error {
+	resp, err := ch.handler.delete(ctx, ch.getDeletePackageURI(), nil, nil)
+	if err != nil {
+		blog.Errorf(
+			"delete chart from bk-repo failed, %s, with projectID %s, repoName %s, chartName %s",
+			err.Error(), ch.projectID, ch.repository, ch.chartName)
+		return err
+	}
+
+	var r basicResp
+	if err = codec.DecJson(resp.Reply, &r); err != nil {
+		blog.Errorf(
+			"delete chart from bk-repo failed, %s, with resp %s", err.Error(), resp.Reply)
+		return err
+	}
+	if r.Code != respCodeOK {
+		blog.Errorf("delete chart from bk-repo get resp with error code %d, message %s, traceID %s",
+			r.Code, r.Message, r.TraceID)
+		return fmt.Errorf("delete chart err with code %d, message %s, traceID %s", r.Code, r.Message, r.TraceID)
+	}
+	return nil
+}
+
+func (ch *chartHandler) getDeletePackageURI() string {
+	return fmt.Sprintf("%s/%s/%s?packageKey=%s://%s", repositoryDeletePackageURI, ch.projectID, ch.repository,
+		ch.repoType.PackageKey(), ch.chartName)
+}
+
+func (ch *chartHandler) deleteChartVersion(ctx context.Context, version string) error {
+	resp, err := ch.handler.delete(ctx, ch.getDeleteVersionURI(version), nil, nil)
+	if err != nil {
+		blog.Errorf(
+			"delete chart version from bk-repo failed, %s, with projectID %s, repoName %s, chartName %s, version %s",
+			err.Error(), ch.projectID, ch.repository, ch.chartName, version)
+		return err
+	}
+
+	var r basicResp
+	if err = codec.DecJson(resp.Reply, &r); err != nil {
+		blog.Errorf(
+			"delete chart version from bk-repo failed, %s, with resp %s", err.Error(), resp.Reply)
+		return err
+	}
+	if r.Code != respCodeOK {
+		blog.Errorf("delete chart version from bk-repo get resp with error code %d, message %s, traceID %s",
+			r.Code, r.Message, r.TraceID)
+		return fmt.Errorf("delete chart version err with code %d, message %s, traceID %s", r.Code, r.Message, r.TraceID)
+	}
+	return nil
+}
+
+func (ch *chartHandler) getDeleteVersionURI(version string) string {
+	return fmt.Sprintf("%s/%s/%s?packageKey=%s://%s&version=%s", repositoryDeleteVersionURI, ch.projectID, ch.repository,
+		ch.repoType.PackageKey(), ch.chartName, version)
 }

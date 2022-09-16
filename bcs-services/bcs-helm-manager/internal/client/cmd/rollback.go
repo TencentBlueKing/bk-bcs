@@ -14,13 +14,13 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
 	"os"
 	"strconv"
 
-	helmmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/proto/bcs-helm-manager"
-
 	"github.com/spf13/cobra"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
+	helmmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/proto/bcs-helm-manager"
 )
 
 var rollbackCMD = &cobra.Command{

@@ -65,6 +65,8 @@ type ChartHandler interface {
 	ListVersion(ctx context.Context, option ListOption) (*ListChartVersionData, error)
 	Detail(ctx context.Context, version string) (*ChartDetail, error)
 	Download(ctx context.Context, version string) ([]byte, error)
+	Delete(ctx context.Context) error
+	DeleteVersion(ctx context.Context, version string) error
 }
 
 // Config 定义了 Platform 的配置
@@ -122,9 +124,24 @@ var repositoryTypes = map[RepositoryType]string{
 	RepositoryTypeOCI:     "OCI",
 }
 
+var repositoryPackageKeys = map[RepositoryType]string{
+	RepositoryTypeUnknown: "none",
+	RepositoryTypeHelm:    "helm",
+	RepositoryTypeOCI:     "oci",
+}
+
 // String return the string name of RepositoryType
 func (rt RepositoryType) String() string {
 	if s, ok := repositoryTypes[rt]; ok {
+		return s
+	}
+
+	return "UNKNOWN"
+}
+
+// PackageKey return the string name of Package key
+func (rt RepositoryType) PackageKey() string {
+	if s, ok := repositoryPackageKeys[rt]; ok {
 		return s
 	}
 

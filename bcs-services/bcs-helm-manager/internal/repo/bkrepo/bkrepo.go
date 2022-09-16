@@ -154,3 +154,13 @@ func (ch *chartHandler) Detail(ctx context.Context, version string) (*repo.Chart
 func (ch *chartHandler) Download(ctx context.Context, version string) ([]byte, error) {
 	return ch.downloadChartVersion(ctx, version)
 }
+
+// Delete delete chart
+func (ch *chartHandler) Delete(ctx context.Context) error {
+	return ch.deleteChart(ctx)
+}
+
+// DeleteVersion delete chart version
+func (ch *chartHandler) DeleteVersion(ctx context.Context, version string) error {
+	return ch.deleteChartVersion(ctx, version)
+}

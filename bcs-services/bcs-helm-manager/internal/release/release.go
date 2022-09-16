@@ -16,6 +16,8 @@ package release
 import (
 	"context"
 
+	"k8s.io/apimachinery/pkg/runtime"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
 	helmmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/proto/bcs-helm-manager"
 )
@@ -27,6 +29,7 @@ type Handler interface {
 
 // Cluster 定义了每个 helm release client 的操作能力, 用于直接与集群产生helm命令交互
 type Cluster interface {
+	Get(ctx context.Context, option GetOption) (*Release, error)
 	List(ctx context.Context, option ListOption) (int, []*Release, error)
 	Install(ctx context.Context, conf HelmInstallConfig) (*HelmInstallResult, error)
 	Uninstall(ctx context.Context, conf HelmUninstallConfig) (*HelmUninstallResult, error)
@@ -47,6 +50,8 @@ type Release struct {
 	UpdateTime   string
 	Description  string
 	Values       string
+	Manifest     string
+	Objects      []runtime.Object
 }
 
 // Transfer2Proto transfer the data into protobuf struct
@@ -121,6 +126,16 @@ type Config struct {
 
 	PatchTemplates []*File
 	VarTemplates   []*File
+}
+
+// GetOption 定义了 Cluster.Get 的查询参数
+type GetOption struct {
+	Namespace string
+	Name      string
+	// 需要获取的版本，如果为 0，则获取最新的版本
+	Revision int
+	// GetObject，是否从集群中获取资源
+	GetObject bool
 }
 
 // ListOption 定义了 Cluster.List 的查询参数

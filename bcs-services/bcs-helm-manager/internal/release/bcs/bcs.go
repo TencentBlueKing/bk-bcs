@@ -69,6 +69,11 @@ func (c *cluster) ensureSdkClient() sdk.Client {
 	return c.sdkClientSet
 }
 
+// Get release
+func (c *cluster) Get(ctx context.Context, option release.GetOption) (*release.Release, error) {
+	return c.get(ctx, option)
+}
+
 // List release
 func (c *cluster) List(ctx context.Context, option release.ListOption) (int, []*release.Release, error) {
 	return c.list(ctx, option)

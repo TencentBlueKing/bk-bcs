@@ -16,6 +16,7 @@ import (
 	"context"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/repo"
@@ -125,6 +126,112 @@ func (l *ListChartVersionAction) getOption() repo.ListOption {
 }
 
 func (l *ListChartVersionAction) setResp(
+	err common.HelmManagerError, message string, r *helmmanager.ChartVersionListData) {
+	code := err.Int32()
+	msg := err.ErrorMessage(message)
+	l.resp.Code = &code
+	l.resp.Message = &msg
+	l.resp.Result = err.OK()
+	l.resp.Data = r
+}
+
+// NewListChartVersionV1Action return a new ListChartVersionV1Action instance
+func NewListChartVersionV1Action(model store.HelmManagerModel, platform repo.Platform) *ListChartVersionV1Action {
+	return &ListChartVersionV1Action{
+		model:    model,
+		platform: platform,
+	}
+}
+
+// ListChartVersionV1Action provides the action to do list chart versions
+type ListChartVersionV1Action struct {
+	ctx context.Context
+
+	model    store.HelmManagerModel
+	platform repo.Platform
+
+	req  *helmmanager.ListChartVersionV1Req
+	resp *helmmanager.ListChartVersionV1Resp
+}
+
+// Handle the version listing process
+func (l *ListChartVersionV1Action) Handle(ctx context.Context,
+	req *helmmanager.ListChartVersionV1Req, resp *helmmanager.ListChartVersionV1Resp) error {
+	l.ctx = ctx
+	l.req = req
+	l.resp = resp
+
+	if err := l.req.Validate(); err != nil {
+		blog.Errorf("list chart version failed, invalid request, %s, param: %v", err.Error(), l.req)
+		l.setResp(common.ErrHelmManagerRequestParamInvalid, err.Error(), nil)
+		return nil
+	}
+
+	return l.list()
+}
+
+func (l *ListChartVersionV1Action) list() error {
+	projectCode := l.req.GetProjectCode()
+	repoName := l.req.GetRepoName()
+	chartName := l.req.GetName()
+	username := auth.GetUserFromCtx(l.ctx)
+
+	repository, err := l.model.GetRepository(l.ctx, projectCode, repoName)
+	if err != nil {
+		blog.Errorf(
+			"list chart version failed, %s, projectCode: %s, repository: %s, chartName: %s, operator: %s",
+			err.Error(), projectCode, repoName, chartName, username)
+		l.setResp(common.ErrHelmManagerListActionFailed, err.Error(), nil)
+		return nil
+	}
+
+	origin, err := l.platform.
+		User(repo.User{
+			Name:     repository.Username,
+			Password: repository.Password,
+		}).
+		Project(repository.ProjectID).
+		Repository(
+			repo.GetRepositoryType(repository.Type),
+			repository.Name,
+		).
+		Chart(chartName).
+		ListVersion(l.ctx, l.getOption())
+	if err != nil {
+		blog.Errorf("list chart version failed, %s, projectCode: %s, repository: %s, chartName: %s, operator: %s",
+			err.Error(), projectCode, repoName, chartName, username)
+		l.setResp(common.ErrHelmManagerListActionFailed, err.Error(), nil)
+		return nil
+	}
+
+	r := make([]*helmmanager.ChartVersion, 0, len(origin.Versions))
+	for _, item := range origin.Versions {
+		chart := item.Transfer2Proto()
+		r = append(r, chart)
+	}
+	l.setResp(common.ErrHelmManagerSuccess, "ok", &helmmanager.ChartVersionListData{
+		Page:  common.GetUint32P(uint32(origin.Page)),
+		Size:  common.GetUint32P(uint32(origin.Size)),
+		Total: common.GetUint32P(uint32(origin.Total)),
+		Data:  r,
+	})
+	blog.Infof("list chart version successfully")
+	return nil
+}
+
+func (l *ListChartVersionV1Action) getOption() repo.ListOption {
+	size := l.req.GetSize()
+	if size == 0 {
+		size = defaultSize
+	}
+
+	return repo.ListOption{
+		Page: int64(l.req.GetPage()),
+		Size: int64(size),
+	}
+}
+
+func (l *ListChartVersionV1Action) setResp(
 	err common.HelmManagerError, message string, r *helmmanager.ChartVersionListData) {
 	code := err.Int32()
 	msg := err.ErrorMessage(message)

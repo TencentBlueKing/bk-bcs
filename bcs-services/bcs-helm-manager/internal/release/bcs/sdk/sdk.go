@@ -59,6 +59,7 @@ func NewGroup(c Config) Group {
 // Group 定义了一组 Client
 type Group interface {
 	Cluster(clusterID string) Client
+	Config(clusterID string) *genericclioptions.ConfigFlags
 }
 
 type group struct {
@@ -71,6 +72,14 @@ type group struct {
 // Cluster 根据给定的Cluster, 返回一个能操作对应集群的Client
 func (g *group) Cluster(clusterID string) Client {
 	return g.getClient(clusterID)
+}
+
+// Config return cluster config
+func (g *group) Config(clusterID string) *genericclioptions.ConfigFlags {
+	g.getClient(clusterID)
+	g.RLock()
+	defer g.RUnlock()
+	return g.groups[clusterID].cf
 }
 
 func (g *group) getClient(clusterID string) Client {
@@ -103,6 +112,7 @@ func (g *group) getClient(clusterID string) Client {
 
 // Client 定义了支持的helm operation接口
 type Client interface {
+	Get(ctx context.Context, namespace, name string, revision int) (*rspb.Release, error)
 	List(ctx context.Context, namespace string) ([]*rspb.Release, error)
 	Install(ctx context.Context, config release.HelmInstallConfig) (*release.HelmInstallResult, error)
 	Upgrade(ctx context.Context, config release.HelmUpgradeConfig) (*release.HelmUpgradeResult, error)
@@ -116,6 +126,23 @@ type client struct {
 
 	clusterID string
 	cf        *genericclioptions.ConfigFlags
+}
+
+// Get helm release
+func (c *client) Get(_ context.Context, namespace, name string, revision int) (*rspb.Release, error) {
+	conf := new(action.Configuration)
+	if err := conf.Init(c.getConfigFlag(namespace), namespace, "", blog.Infof); err != nil {
+		return nil, err
+	}
+
+	get := action.NewGet(conf)
+	get.Version = revision
+	re, err := get.Run(name)
+	if err != nil {
+		return nil, err
+	}
+	re.Config = removeValuesTemplate(re.Config)
+	return re, nil
 }
 
 // List helm release

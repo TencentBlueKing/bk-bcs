@@ -19,10 +19,21 @@ import (
 
 // ActionPermissions action 对应权限中心的权限
 var ActionPermissions = map[string]string{
+	// Repo
+	"HelmManager.CreateRepository": project.CanEditProjectOperation,
+	"HelmManager.UpdateRepository": project.CanEditProjectOperation,
+	"HelmManager.GetRepository":    project.CanViewProjectOperation,
+	"HelmManager.DeleteRepository": project.CanEditProjectOperation,
+	"HelmManager.ListRepository":   project.CanViewProjectOperation,
+
+	// Chart
+	"HelmManager.ListChartV1":        project.CanViewProjectOperation,
+	"HelmManager.ListChartVersionV1": project.CanViewProjectOperation,
+	"HelmManager.GetChartDetailV1":   project.CanViewProjectOperation,
+	"HelmManager.DeleteChart":        project.CanEditProjectOperation,
+	"HelmManager.DeleteChartVersion": project.CanEditProjectOperation,
+
+	// Release
 	"HelmManager.GetReleaseHistory": cluster.CanViewClusterOperation,
-	"HelmManager.CreateRepository":  project.CanEditProjectOperation,
-	"HelmManager.UpdateRepository":  project.CanEditProjectOperation,
-	"HelmManager.GetRepository":     project.CanViewProjectOperation,
-	"HelmManager.DeleteRepository":  project.CanEditProjectOperation,
-	"HelmManager.ListRepository":    project.CanViewProjectOperation,
+	"HelmManager.GetReleaseStatus":  cluster.CanViewClusterOperation,
 }

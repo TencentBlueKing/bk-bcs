@@ -78,6 +78,15 @@ func (hm *HelmManager) GetReleaseHistory(ctx context.Context,
 	req *helmmanager.GetReleaseHistoryReq, resp *helmmanager.GetReleaseHistoryResp) error {
 
 	defer recorder(ctx, "GetReleaseHistory", req, resp)()
-	action := actionRelease.NewGetReleaseHistoryAction(hm.model, hm.releaseHandler)
+	action := actionRelease.NewGetReleaseHistoryAction(hm.releaseHandler)
+	return action.Handle(ctx, req, resp)
+}
+
+// GetReleaseStatus provide the actions to do get release status
+func (hm *HelmManager) GetReleaseStatus(ctx context.Context,
+	req *helmmanager.GetReleaseStatusReq, resp *helmmanager.CommonListResp) error {
+
+	defer recorder(ctx, "GetReleaseStatus", req, resp)()
+	action := actionRelease.NewGetReleaseStatusAction(hm.releaseHandler)
 	return action.Handle(ctx, req, resp)
 }

@@ -17,6 +17,7 @@ import (
 	"context"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
 	helmmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/proto/bcs-helm-manager"
 )
@@ -37,10 +38,6 @@ func NewAvailableAction() *AvailableAction {
 // Handle the available check process
 func (aa *AvailableAction) Handle(ctx context.Context,
 	req *helmmanager.AvailableReq, resp *helmmanager.AvailableResp) error {
-	if req == nil || resp == nil {
-		blog.Errorf("action/common/available: check available failed, req or resp is empty")
-		return common.ErrHelmManagerReqOrRespEmpty.GenError()
-	}
 	aa.ctx = ctx
 	aa.req = req
 	aa.resp = resp
