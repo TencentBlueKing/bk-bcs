@@ -1,143 +1,140 @@
-<!-- eslint-disable vue/no-v-html -->
-<!-- eslint-disable vue/no-mutating-props -->
 <template>
-  <bcs-dialog
-    class="system-log-dialog"
-    v-model="value"
-    :width="1105"
-    :close-icon="true"
-    :show-footer="false"
-    :esc-close="true"
-    @value-change="dialogChange">
-    <div ref="log" class="system-log-layout">
-      <div class="layout-left">
-        <div class="version-wraper">
-          <div
-            v-for="(log, index) in list"
-            :key="log.version"
-            class="log-tab"
-            :class="{ active: index === activeIndex }"
-            @click="handleTabChange(index)">
-            <div class="title">{{ log.version }}</div>
-            <div class="date">{{ log.date }}</div>
-            <div v-if="index === 0" class="new-flag">{{ $t('当前版本') }}</div>
-          </div>
+    <bcs-dialog
+        class="system-log-dialog"
+        v-model="value"
+        :width="1105"
+        :close-icon="true"
+        :show-footer="false"
+        :esc-close="true"
+        @value-change="dialogChange">
+        <div ref="log" class="system-log-layout">
+            <div class="layout-left">
+                <div class="version-wraper">
+                    <div
+                        v-for="(log, index) in list"
+                        :key="log.version"
+                        class="log-tab"
+                        :class="{ active: index === activeIndex }"
+                        @click="handleTabChange(index)">
+                        <div class="title">{{ log.version }}</div>
+                        <div class="date">{{ log.date }}</div>
+                        <div v-if="index === 0" class="new-flag">{{ $t('当前版本') }}</div>
+                    </div>
+                </div>
+                <bk-button class="version-features" text @click="handleShowFeature">{{$t('功能特性指引')}}</bk-button>
+            </div>
+            <div class="layout-right">
+                <div class="content-wraper">
+                    <div v-html="logContent" class="markdowm-container" />
+                </div>
+            </div>
         </div>
-        <bk-button class="version-features" text @click="handleShowFeature">{{$t('功能特性指引')}}</bk-button>
-      </div>
-      <div class="layout-right">
-        <div class="content-wraper">
-          <div v-html="logContent" class="markdowm-container" />
-        </div>
-      </div>
-    </div>
-  </bcs-dialog>
+    </bcs-dialog>
 </template>
 
 <script>
-import MarkdownIt from 'markdown-it';
-export default {
-  name: 'SystemLog',
-  props: {
-    value: {
-      type: Boolean,
-      default: false,
-    },
-  },
-  data() {
-    return {
-      isLoading: false,
-      activeIndex: 0,
-      list: [],
-    };
-  },
-  computed: {
-    logContent() {
-      if (this.list.length < 1) {
-        return '';
-      }
-      const md = new MarkdownIt();
-      const defaultRender = md.renderer.rules.link_open || function (tokens, idx, options, env, self) {
-        return self.renderToken(tokens, idx, options);
-      };
-      md.renderer.rules.link_open = function (tokens, idx, options, env, self) {
-        // If you are sure other plugins can't add `target` - drop check below
-        const aIndex = tokens[idx].attrIndex('target');
+    import MarkdownIt from 'markdown-it'
+    export default {
+        name: "SystemLog",
+        props: {
+            value: {
+                type: Boolean,
+                default: false
+            }
+        },
+        data () {
+            return {
+                isLoading: false,
+                activeIndex: 0,
+                list: []
+            }
+        },
+        computed: {
+            logContent () {
+                if (this.list.length < 1) {
+                    return ''
+                }
+                const md = new MarkdownIt()
+                const defaultRender = md.renderer.rules.link_open || function (tokens, idx, options, env, self) {
+                    return self.renderToken(tokens, idx, options)
+                }
+                md.renderer.rules.link_open = function (tokens, idx, options, env, self) {
+                    // If you are sure other plugins can't add `target` - drop check below
+                    const aIndex = tokens[idx].attrIndex('target')
 
-        if (aIndex < 0) {
-          tokens[idx].attrPush(['target', '_blank']); // add new attribute
-        } else {
-          // eslint-disable-next-line no-param-reassign
-          tokens[idx].attrs[aIndex][1] = '_blank'; // replace value of existing attr
+                    if (aIndex < 0) {
+                        tokens[idx].attrPush(['target', '_blank']) // add new attribute
+                    } else {
+                        tokens[idx].attrs[aIndex][1] = '_blank' // replace value of existing attr
+                    }
+
+                    // pass token to default renderer.
+                    return defaultRender(tokens, idx, options, env, self)
+                }
+                return md.render(this.list[this.activeIndex].content)
+            }
+        },
+        created () {
+            this.fetchData()
+        },
+        methods: {
+            async fetchData () {
+                this.isLoading = true
+                const res = await this.$store.dispatch('app/getVersionsLogList', this.projectId)
+                this.list = res.data || []
+                // 按发布日期顺序排序
+                this.list.sort((a, b) => (b.date).split('-').join('') * 1 - a.date.split('-').join('') * 1)
+                this.latestBcsVerSion = this.list[0]?.version || ''
+                this.isLoading = false
+                const curBcsVerSion = localStorage.getItem('bcs_supermen')
+                if (curBcsVerSion !== this.latestBcsVerSion && this.list.length) {
+                    this.$emit('input', true)
+                }
+            },
+            handleTabChange (index) {
+                this.activeIndex = index
+            },
+            handleClose () {
+                this.$emit('input', false)
+                
+                localStorage.setItem('bcs_supermen', this.latestBcsVerSion)
+                const $sourceEle = this.$refs.log.cloneNode(true)
+                const {
+                    top: sourceTop,
+                    left: sourceLeft,
+                    width: sourceWidth,
+                    height: sourceHeight
+                } = this.$refs.log.getBoundingClientRect()
+                $sourceEle.classList.add('hide')
+                const styles = $sourceEle.style
+                styles.position = 'fixed'
+                styles.top = `${sourceTop}px`
+                styles.left = `${sourceLeft}px`
+                styles.width = `${sourceWidth}px`
+                styles.height = `${sourceHeight}px`
+                styles.zIndex = window.__bk_zIndex_manager.nextZIndex()
+                document.body.appendChild($sourceEle)
+                setTimeout(() => {
+                    const $targetEle = document.querySelector('#siteHelp')
+                    const {
+                        top: targetTop,
+                        left: targetLeft,
+                        width: targetWidth,
+                        height: targetHeight
+                    } = $targetEle.getBoundingClientRect()
+                    const translateX = targetLeft + targetWidth / 2 - (sourceLeft + sourceWidth / 2)
+                    const translateY = -(sourceTop + sourceHeight / 2 - (targetTop + targetHeight / 2))
+                    styles.transform = `translate(${translateX}px, ${translateY}px) scale(0)`
+                })
+            },
+            dialogChange (val) {
+                if (!val) this.handleClose()
+            },
+            handleShowFeature () {
+                this.$emit('show-feature')
+            }
         }
-
-        // pass token to default renderer.
-        return defaultRender(tokens, idx, options, env, self);
-      };
-      return md.render(this.list[this.activeIndex].content);
-    },
-  },
-  created() {
-    this.fetchData();
-  },
-  methods: {
-    async fetchData() {
-      this.isLoading = true;
-      const res = await this.$store.dispatch('app/getVersionsLogList', this.projectId);
-      this.list = res.data || [];
-      // 按发布日期顺序排序
-      this.list.sort((a, b) => (b.date).split('-').join('') * 1 - a.date.split('-').join('') * 1)
-      this.latestBcsVerSion = this.list[0]?.version || '';
-      this.isLoading = false;
-      const curBcsVerSion = localStorage.getItem('bcs_supermen');
-      if (curBcsVerSion !== this.latestBcsVerSion && this.list.length) {
-        this.$emit('input', true);
-      }
-    },
-    handleTabChange(index) {
-      this.activeIndex = index;
-    },
-    handleClose() {
-      this.$emit('input', false);
-
-      localStorage.setItem('bcs_supermen', this.latestBcsVerSion);
-      const $sourceEle = this.$refs.log.cloneNode(true);
-      const {
-        top: sourceTop,
-        left: sourceLeft,
-        width: sourceWidth,
-        height: sourceHeight,
-      } = this.$refs.log.getBoundingClientRect();
-      $sourceEle.classList.add('hide');
-      const styles = $sourceEle.style;
-      styles.position = 'fixed';
-      styles.top = `${sourceTop}px`;
-      styles.left = `${sourceLeft}px`;
-      styles.width = `${sourceWidth}px`;
-      styles.height = `${sourceHeight}px`;
-      styles.zIndex = window.__bk_zIndex_manager.nextZIndex();
-      document.body.appendChild($sourceEle);
-      setTimeout(() => {
-        const $targetEle = document.querySelector('#siteHelp');
-        const {
-          top: targetTop,
-          left: targetLeft,
-          width: targetWidth,
-          height: targetHeight,
-        } = $targetEle.getBoundingClientRect();
-        const translateX = targetLeft + targetWidth / 2 - (sourceLeft + sourceWidth / 2);
-        const translateY = -(sourceTop + sourceHeight / 2 - (targetTop + targetHeight / 2));
-        styles.transform = `translate(${translateX}px, ${translateY}px) scale(0)`;
-      });
-    },
-    dialogChange(val) {
-      if (!val) this.handleClose();
-    },
-    handleShowFeature() {
-      this.$emit('show-feature');
-    },
-  },
-};
+    }
 </script>
 <style lang='postcss'>
     .system-log-dialog {
@@ -262,6 +259,7 @@ export default {
             h5 {
                 height: auto;
                 margin: 10px 0;
+                font: normal 14px/1.5 "Helvetica Neue", Helvetica, Arial, "Lantinghei SC", "Hiragino Sans GB", "Microsoft Yahei", sans-serif;
                 font-weight: bold;
                 color: #34383e;
             }

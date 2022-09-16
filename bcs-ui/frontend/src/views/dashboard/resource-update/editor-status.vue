@@ -1,39 +1,39 @@
 <template>
-  <div :class="['editor-status bcs-ellipsis', theme]">
-    <i :class="['bcs-icon', `bcs-icon-${icon}`]"></i>
-    <span class="message">{{ message }}</span>
-  </div>
+    <div :class="['editor-status bcs-ellipsis', theme]">
+        <i :class="['bcs-icon', `bcs-icon-${icon}`]"></i>
+        <span class="message">{{ message }}</span>
+    </div>
 </template>
 <script>
-import { computed, defineComponent, toRefs } from '@vue/composition-api';
+    import { computed, defineComponent, toRefs } from '@vue/composition-api'
 
-export default defineComponent({
-  name: 'EditorStatus',
-  props: {
-    theme: {
-      type: String,
-      default: 'error',
-    },
-    message: {
-      type: String,
-      default: '',
-    },
-  },
-  setup(props) {
-    const { theme } = toRefs(props);
-    const icon = computed(() => {
-      const iconMap = {
-        error: 'close-circle-shape',
-        default: 'info-circle-shape',
-      };
-      return iconMap[theme.value] || 'info-circle-shape';
-    });
+    export default defineComponent({
+        name: 'EditorStatus',
+        props: {
+            theme: {
+                type: String,
+                default: 'error'
+            },
+            message: {
+                type: String,
+                default: ''
+            }
+        },
+        setup (props) {
+            const { theme } = toRefs(props)
+            const icon = computed(() => {
+                const iconMap = {
+                    error: 'close-circle-shape',
+                    default: 'info-circle-shape'
+                }
+                return iconMap[theme.value] || 'info-circle-shape'
+            })
 
-    return {
-      icon,
-    };
-  },
-});
+            return {
+                icon
+            }
+        }
+    })
 </script>
 <style lang="postcss" scoped>
 .editor-status {

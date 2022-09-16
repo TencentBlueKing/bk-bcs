@@ -2,14 +2,13 @@
     <div class="biz-top-bar">
         <div class="biz-app-title">
             {{$t('应用列表')}}
-            <span class="biz-tip ml10">{{$t('通过Helm Chart、Client、模板集YAML模式创建的应用，请通过命名空间视图查询详情')}}</span>
         </div>
         <bk-guide></bk-guide>
     </div>
     <div class="biz-content-wrapper biz-app-loading" style="padding: 0;">
         <app-exception v-if="exceptionCode && !showLoading" :type="exceptionCode.code" :text="exceptionCode.msg"></app-exception>
         <div class="biz-panel-header biz-app-query" style="padding: 27px 20px 15px 20px;">
-            <div class="left">
+            <div class="left" v-if="$INTERNAL">
                 <bk-dropdown-menu :align="'center'" ref="toggleDropdown">
                     <a href="javascript:void(0);" slot="dropdown-trigger" class="dropdown-trigger-btn bk-text-button">
                         <template v-if="viewMode === 'template'">{{$t('集群模板视图')}}</template>
@@ -1411,6 +1410,7 @@
                         <bk-number-input
                             :value.sync="instanceNum"
                             :min="0"
+                            :max="5000"
                             :ex-style="{ 'width': '260px' }"
                             :placeholder="$t('请输入')">
                         </bk-number-input>

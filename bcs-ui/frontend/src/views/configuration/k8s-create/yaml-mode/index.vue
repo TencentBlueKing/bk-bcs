@@ -166,224 +166,222 @@
             </div>
         </section>
 
-        <div class="bcs-content-wrapper">
-            <p class="biz-tip m20 mb15">
-                {{$t('YAML中资源所属的命名空间不需要用户指定，由平台根据用户实例化时的选择自动生成')}}
-            </p>
+        <p class="biz-tip m20 mb15">
+            {{$t('YAML中资源所属的命名空间不需要用户指定，由平台根据用户实例化时的选择自动生成')}}
+        </p>
 
-            <section class="biz-yaml-content" v-bkloading="{ isLoading: isYamlTemplateLoading || isTemplateLocking, opacity: 0.3 }">
-                <resizer :class="['resize-layout fl']"
-                    direction="right"
-                    :handler-offset="3"
-                    :min="300"
-                    :max="500"
-                    @resize="reRenderEditor++">
-                    <div class="tree-box">
-                        <div class="biz-yaml-resources">
-                            <ul class="yaml-tab">
-                                <li :class="{ 'active': tabName === 'default' }" @click="handleToggleTab('default')">
-                                    {{$t('常用Manifest')}}
-                                </li>
-                                <li :class="{ 'active': tabName === 'custom' }" @click="handleToggleTab('custom')">
-                                    {{$t('自定义Manifest')}}
-                                </li>
-                            </ul>
+        <section class="biz-yaml-content" v-bkloading="{ isLoading: isYamlTemplateLoading || isTemplateLocking, opacity: 0.3 }">
+            <resizer :class="['resize-layout fl']"
+                direction="right"
+                :handler-offset="3"
+                :min="300"
+                :max="500"
+                @resize="reRenderEditor++">
+                <div class="tree-box">
+                    <div class="biz-yaml-resources">
+                        <ul class="yaml-tab">
+                            <li :class="{ 'active': tabName === 'default' }" @click="handleToggleTab('default')">
+                                {{$t('常用Manifest')}}
+                            </li>
+                            <li :class="{ 'active': tabName === 'custom' }" @click="handleToggleTab('custom')">
+                                {{$t('自定义Manifest')}}
+                            </li>
+                        </ul>
 
-                            <div class="tree-box">
-                                <div>
-                                    <bcs-tree
-                                        class="default-tree mt20"
-                                        ref="defaultTree"
-                                        v-show="tabName === 'default'"
-                                        :data="defaultTreeData"
-                                        :node-key="'id'"
-                                        :tpl="renderDefaultTree"
-                                        :has-border="true">
-                                    </bcs-tree>
+                        <div class="tree-box">
+                            <div>
+                                <bcs-tree
+                                    class="default-tree mt20"
+                                    ref="defaultTree"
+                                    v-show="tabName === 'default'"
+                                    :data="defaultTreeData"
+                                    :node-key="'id'"
+                                    :tpl="renderDefaultTree"
+                                    :has-border="true">
+                                </bcs-tree>
 
-                                    <bcs-tree
-                                        class="custom-tree mt20"
-                                        ref="customTree"
-                                        v-show="tabName === 'custom'"
-                                        :data="customTreeData"
-                                        :node-key="'id'"
-                                        :tpl="renderCustomTree"
-                                        :has-border="true">
-                                    </bcs-tree>
-                                </div>
+                                <bcs-tree
+                                    class="custom-tree mt20"
+                                    ref="customTree"
+                                    v-show="tabName === 'custom'"
+                                    :data="customTreeData"
+                                    :node-key="'id'"
+                                    :tpl="renderCustomTree"
+                                    :has-border="true">
+                                </bcs-tree>
                             </div>
-                        </div>
-                    </div>
-                </resizer>
-
-                <div class="biz-yaml-editor">
-                    <div class="yaml-header">
-                        <strong class="title" v-bk-tooltips="curTreeNode.value.fullName">
-                            {{curTreeNode.value.fullName}}
-                        </strong>
-                        <div class="yaml-header-action">
-                            <button
-                                v-if="curTreeNode.value.content !== curTreeNode.value.originContent || useEditorDiff"
-                                class="biz-template-btn"
-                                @click="toggleCompare">
-                                {{ useEditorDiff ? $t('返回编辑') : $t('修改对比') }}
-                            </button>
-                            <button class="biz-template-btn primary" :key="fileImportIndex" v-bk-tooltips="{ width: 400, content: zipTooltipText }">
-                                <i class="bcs-icon bcs-icon-upload"></i>
-                                {{$t('导入')}}
-                                <input ref="fileInput" type="file" name="upload" class="file-input" accept="application/zip,application/x-zip,application/x-zip-compressed" @change="handleFileInput(false)">
-                            </button>
-                            <template v-if="canTemplateExport">
-                                <button class="biz-template-btn" v-bk-tooltips="$t('请先保存模板集版本再导出')" @click.stop.prevent="handleExport(curTemplate)"><i class="bcs-icon bcs-icon-download"></i>{{$t('导出')}}</button>
-                            </template>
-                            <template v-else>
-                                <button class="biz-template-btn disabled" v-bk-tooltips="$t('请先保存模板集版本再导出')"><i class="bcs-icon bcs-icon-download"></i>{{$t('导出')}}</button>
-                            </template>
-                            <button class="biz-template-btn" @click.stop.prevent="handleToggleVarPanel">{{$t('变量列表')}}</button>
-                            <button class="biz-template-btn" @click.stop.prevent="handleToggleImagePanel">{{$t('镜像查询')}}</button>
-                        </div>
-                    </div>
-                    <div class="yaml-content">
-                        <template v-if="curTreeNode.value.id">
-                            <monaco-editor
-                                ref="yamlEditor"
-                                class="editor"
-                                theme="monokai"
-                                language="yaml"
-                                :style="{ height: `${editorHeight}px`, width: '100%' }"
-                                v-model="curTreeNode.value.content"
-                                :diff-editor="useEditorDiff"
-                                :options="yamlEditorOptions"
-                                :key="reRenderEditor"
-                                :original="curTreeNode.value.originContent"
-                                @mounted="handleEditorMount">
-                            </monaco-editor>
-                        </template>
-                        <template v-else>
-                            <div class="biz-editor-tip" v-if="!isYamlTemplateLoading">
-                                <i class="bcs-icon bcs-icon-edit2"></i>
-                                <p>
-                                    {{$t('你可以通过+号新建K8S资源yaml文件，也可以通过上方的')}}
-                                    <a :key="fileImportIndex" href="javascript: void(0);" style="color: #aaa; text-decoration: underline;">
-                                        {{$t('导入按钮')}}
-                                        <input ref="fileInputClone" type="file" name="upload" class="file-input" accept="application/zip,application/x-zip,application/x-zip-compressed" @change="handleFileInput(true)">
-                                    </a>
-                                    {{$t('导入zip包')}}
-                                </p>
-                            </div>
-                        </template>
-
-                        <div :class="['biz-var-panel', { 'show': isVarPanelShow }]" v-clickoutside="hideVarPanel">
-                            <div class="var-panel-header">
-                                <strong class="var-panel-title">{{$t('可用变量')}}<span class="f12">（{{$t('模板集中引入方式')}}：{{varUserWay}}）</span></strong>
-                            </div>
-                            <div class="var-panel-list">
-                                <table class="bk-table biz-var-table">
-                                    <thead>
-                                        <tr>
-                                            <th>{{$t('变量名')}}</th>
-                                            <th style="width: 230px;">KEY</th>
-                                            <th style="width: 43px;"></th>
-                                        </tr>
-                                    </thead>
-                                </table>
-                                <div class="var-list">
-                                    <table class="bk-table biz-var-table">
-                                        <tbody>
-                                            <template v-if="varList.length">
-                                                <tr v-for="item of varList" :key="item.name">
-                                                    <td>
-                                                        <bcs-popover :content="item.name" placement="right">
-                                                            <span class="var-name">{{item.name}}</span>
-                                                        </bcs-popover>
-                                                    </td>
-                                                    <td style="width: 230px;">
-                                                        <bcs-popover :content="item.key" placement="right">
-                                                            <span class="var-key">{{item.key}}</span>
-                                                        </bcs-popover>
-                                                    </td>
-                                                    <td style="width: 43px;">
-                                                        <bk-button class="var-copy-btn" :data-clipboard-text="`{{${item.key}}}`" type="default">
-                                                            <i class="bcs-icon bcs-icon-clipboard"></i>
-                                                        </bk-button>
-                                                    </td>
-                                                </tr>
-                                            </template>
-                                            <template v-else>
-                                                <tr>
-                                                    <td colspan="3">
-                                                        <bcs-exception type="empty" scene="part"></bcs-exception>
-                                                    </td>
-                                                </tr>
-                                            </template>
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div :class="['biz-image-content', { 'show': isImagePanelShow }]" v-clickoutside="hideImagePanel">
-                            <div class="biz-image-list" style="width: 600px;">
-                                <div class="bk-dropdown-box ml20 mb20" style="width: 300px;">
-                                    <bkbcs-input
-                                        style="width: 240px;"
-                                        type="text"
-                                        :placeholder="$t('选择镜像')"
-                                        :display-key="'_name'"
-                                        :setting-key="'_id'"
-                                        :search-key="'_name'"
-                                        :value.sync="imageName"
-                                        :list="varList"
-                                        :is-link="true"
-                                        :is-select-mode="true"
-                                        :default-list="imageList"
-                                        @item-selected="changeImage(...arguments)">
-                                    </bkbcs-input>
-                                    <bk-button class="bk-button bk-default is-outline is-icon" @click="initImageList">
-                                        <div class="bk-spin-loading bk-spin-loading-mini bk-spin-loading-default" style="margin-top: -3px;" v-if="isLoadingImageList">
-                                            <div class="rotate rotate1"></div>
-                                            <div class="rotate rotate2"></div>
-                                            <div class="rotate rotate3"></div>
-                                            <div class="rotate rotate4"></div>
-                                            <div class="rotate rotate5"></div>
-                                            <div class="rotate rotate6"></div>
-                                            <div class="rotate rotate7"></div>
-                                            <div class="rotate rotate8"></div>
-                                        </div>
-                                        <i class="bcs-icon bcs-icon-refresh" v-else></i>
-                                    </bk-button>
-                                </div>
-
-                                <div class="bk-dropdown-box mb20" style="width: 4;">
-                                    <bkbcs-input
-                                        type="text"
-                                        :placeholder="$t('版本号1')"
-                                        :display-key="'_name'"
-                                        :setting-key="'_id'"
-                                        :search-key="'_name'"
-                                        :value.sync="imageVersion"
-                                        :list="varList"
-                                        :is-select-mode="true"
-                                        :default-list="imageVersionList"
-                                        :disabled="!imageName"
-                                        @item-selected="setImageVersion"
-                                    >
-                                    </bkbcs-input>
-                                </div>
-
-                                <div class="image-box" v-show="image">
-                                    <input type="text" class="bk-form-input" readonly :value="image" style="width: 482px;">
-                                    <bk-button class="bk-button bk-primary image-copy-btn" :data-clipboard-text="`${image}`">{{$t('复制')}}</bk-button>
-                                </div>
-                            </div>
-                            <p class="biz-tip">
-                                {{$t('使用指南：请将镜像复制后填入所使用的YAML中')}}
-                            </p>
                         </div>
                     </div>
                 </div>
-            </section>
-        </div>
+            </resizer>
+
+            <div class="biz-yaml-editor">
+                <div class="yaml-header">
+                    <strong class="title" v-bk-tooltips="curTreeNode.value.fullName">
+                        {{curTreeNode.value.fullName}}
+                    </strong>
+                    <div class="yaml-header-action">
+                        <button
+                            v-if="curTreeNode.value.content !== curTreeNode.value.originContent || useEditorDiff"
+                            class="biz-template-btn"
+                            @click="toggleCompare">
+                            {{ useEditorDiff ? $t('返回编辑') : $t('修改对比') }}
+                        </button>
+                        <button class="biz-template-btn primary" :key="fileImportIndex" v-bk-tooltips="{ width: 400, content: zipTooltipText }">
+                            <i class="bcs-icon bcs-icon-upload"></i>
+                            {{$t('导入')}}
+                            <input ref="fileInput" type="file" name="upload" class="file-input" accept="application/zip,application/x-zip,application/x-zip-compressed" @change="handleFileInput(false)">
+                        </button>
+                        <template v-if="canTemplateExport">
+                            <button class="biz-template-btn" v-bk-tooltips="$t('请先保存模板集版本再导出')" @click.stop.prevent="handleExport(curTemplate)"><i class="bcs-icon bcs-icon-download"></i>{{$t('导出')}}</button>
+                        </template>
+                        <template v-else>
+                            <button class="biz-template-btn disabled" v-bk-tooltips="$t('请先保存模板集版本再导出')"><i class="bcs-icon bcs-icon-download"></i>{{$t('导出')}}</button>
+                        </template>
+                        <button class="biz-template-btn" @click.stop.prevent="handleToggleVarPanel">{{$t('变量列表')}}</button>
+                        <button class="biz-template-btn" @click.stop.prevent="handleToggleImagePanel">{{$t('镜像查询')}}</button>
+                    </div>
+                </div>
+                <div class="yaml-content">
+                    <template v-if="curTreeNode.value.id">
+                        <monaco-editor
+                            ref="yamlEditor"
+                            class="editor"
+                            theme="monokai"
+                            language="yaml"
+                            :style="{ height: `${editorHeight}px`, width: '100%' }"
+                            v-model="curTreeNode.value.content"
+                            :diff-editor="useEditorDiff"
+                            :options="yamlEditorOptions"
+                            :key="reRenderEditor"
+                            :original="curTreeNode.value.originContent"
+                            @mounted="handleEditorMount">
+                        </monaco-editor>
+                    </template>
+                    <template v-else>
+                        <div class="biz-editor-tip" v-if="!isYamlTemplateLoading">
+                            <i class="bcs-icon bcs-icon-edit2"></i>
+                            <p>
+                                {{$t('你可以通过+号新建K8S资源yaml文件，也可以通过上方的')}}
+                                <a :key="fileImportIndex" href="javascript: void(0);" style="color: #aaa; text-decoration: underline;">
+                                    {{$t('导入按钮')}}
+                                    <input ref="fileInputClone" type="file" name="upload" class="file-input" accept="application/zip,application/x-zip,application/x-zip-compressed" @change="handleFileInput(true)">
+                                </a>
+                                {{$t('导入zip包')}}
+                            </p>
+                        </div>
+                    </template>
+
+                    <div :class="['biz-var-panel', { 'show': isVarPanelShow }]" v-clickoutside="hideVarPanel">
+                        <div class="var-panel-header">
+                            <strong class="var-panel-title">{{$t('可用变量')}}<span class="f12">（{{$t('模板集中引入方式')}}：{{varUserWay}}）</span></strong>
+                        </div>
+                        <div class="var-panel-list">
+                            <table class="bk-table biz-var-table">
+                                <thead>
+                                    <tr>
+                                        <th>{{$t('变量名')}}</th>
+                                        <th style="width: 230px;">KEY</th>
+                                        <th style="width: 43px;"></th>
+                                    </tr>
+                                </thead>
+                            </table>
+                            <div class="var-list">
+                                <table class="bk-table biz-var-table">
+                                    <tbody>
+                                        <template v-if="varList.length">
+                                            <tr v-for="item of varList" :key="item.name">
+                                                <td>
+                                                    <bcs-popover :content="item.name" placement="right">
+                                                        <span class="var-name">{{item.name}}</span>
+                                                    </bcs-popover>
+                                                </td>
+                                                <td style="width: 230px;">
+                                                    <bcs-popover :content="item.key" placement="right">
+                                                        <span class="var-key">{{item.key}}</span>
+                                                    </bcs-popover>
+                                                </td>
+                                                <td style="width: 43px;">
+                                                    <bk-button class="var-copy-btn" :data-clipboard-text="`{{${item.key}}}`" type="default">
+                                                        <i class="bcs-icon bcs-icon-clipboard"></i>
+                                                    </bk-button>
+                                                </td>
+                                            </tr>
+                                        </template>
+                                        <template v-else>
+                                            <tr>
+                                                <td colspan="3">
+                                                    <bcs-exception type="empty" scene="part"></bcs-exception>
+                                                </td>
+                                            </tr>
+                                        </template>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div :class="['biz-image-content', { 'show': isImagePanelShow }]" v-clickoutside="hideImagePanel">
+                        <div class="biz-image-list" style="width: 600px;">
+                            <div class="bk-dropdown-box ml20 mb20" style="width: 300px;">
+                                <bkbcs-input
+                                    style="width: 240px;"
+                                    type="text"
+                                    :placeholder="$t('选择镜像')"
+                                    :display-key="'_name'"
+                                    :setting-key="'_id'"
+                                    :search-key="'_name'"
+                                    :value.sync="imageName"
+                                    :list="varList"
+                                    :is-link="true"
+                                    :is-select-mode="true"
+                                    :default-list="imageList"
+                                    @item-selected="changeImage(...arguments)">
+                                </bkbcs-input>
+                                <bk-button class="bk-button bk-default is-outline is-icon" @click="initImageList">
+                                    <div class="bk-spin-loading bk-spin-loading-mini bk-spin-loading-default" style="margin-top: -3px;" v-if="isLoadingImageList">
+                                        <div class="rotate rotate1"></div>
+                                        <div class="rotate rotate2"></div>
+                                        <div class="rotate rotate3"></div>
+                                        <div class="rotate rotate4"></div>
+                                        <div class="rotate rotate5"></div>
+                                        <div class="rotate rotate6"></div>
+                                        <div class="rotate rotate7"></div>
+                                        <div class="rotate rotate8"></div>
+                                    </div>
+                                    <i class="bcs-icon bcs-icon-refresh" v-else></i>
+                                </bk-button>
+                            </div>
+
+                            <div class="bk-dropdown-box mb20" style="width: 4;">
+                                <bkbcs-input
+                                    type="text"
+                                    :placeholder="$t('版本号1')"
+                                    :display-key="'_name'"
+                                    :setting-key="'_id'"
+                                    :search-key="'_name'"
+                                    :value.sync="imageVersion"
+                                    :list="varList"
+                                    :is-select-mode="true"
+                                    :default-list="imageVersionList"
+                                    :disabled="!imageName"
+                                    @item-selected="setImageVersion"
+                                >
+                                </bkbcs-input>
+                            </div>
+
+                            <div class="image-box" v-show="image">
+                                <input type="text" class="bk-form-input" readonly :value="image" style="width: 482px;">
+                                <bk-button class="bk-button bk-primary image-copy-btn" :data-clipboard-text="`${image}`">{{$t('复制')}}</bk-button>
+                            </div>
+                        </div>
+                        <p class="biz-tip">
+                            {{$t('使用指南：请将镜像复制后填入所使用的YAML中')}}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
         <bk-dialog
             :is-show.sync="versionDialogConf.isShow"
             :width="600"

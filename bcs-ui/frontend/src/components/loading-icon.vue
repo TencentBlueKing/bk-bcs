@@ -1,39 +1,43 @@
 <template>
-  <div class="status-loading">
-    <div class="loading mr5" :style="verticalAlign">
-      <section class="loading-origin">
-        <div class="loading-ball" v-for="index in 8" :key="index" :style="bgColor"></div>
-      </section>
+    <div class="status-loading">
+        <div class="loading mr5" :style="verticalAlign">
+            <section class="loading-origin">
+                <div class="loading-ball" v-for="index in 8" :key="index" :style="bgColor"></div>
+            </section>
+        </div>
+        <slot></slot>
     </div>
-    <slot></slot>
-  </div>
 </template>
 
 <script lang="ts">
-import { computed, defineComponent } from '@vue/composition-api';
+    import { computed, defineComponent } from '@vue/composition-api'
 
-export default defineComponent({
-  name: 'LoadingIcon',
-  props: {
-    color: {
-      type: String,
-      default: '#3A84FF',
-    },
-    vertical: {
-      type: String,
-      default: 'middle',
-    },
-  },
-
-  setup(props) {
-    const verticalAlign = computed(() => ({ verticalAlign: props.vertical }));
-    const bgColor = computed(() => ({ background: props.color }));
-    return {
-      verticalAlign,
-      bgColor,
-    };
-  },
-});
+    export default defineComponent({
+        name: 'LoadingIcon',
+        props: {
+            color: {
+                type: String,
+                default: '#3A84FF'
+            },
+            vertical: {
+                type: String,
+                default: 'middle'
+            }
+        },
+        
+        setup (props) {
+            const verticalAlign = computed(() => {
+                return { verticalAlign: props.vertical }
+            })
+            const bgColor = computed(() => {
+                return { background: props.color }
+            })
+            return {
+                verticalAlign,
+                bgColor
+            }
+        }
+    })
 </script>
 <style lang="postcss" scoped>
 .status-loading {

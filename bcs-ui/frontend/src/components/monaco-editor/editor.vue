@@ -1,214 +1,213 @@
 <template>
-  <div ref="mancoEditor" :class="['biz-manco-editor', { 'full-screen': isFullScreen }]">
-    <div class="build-code-fullscreen" :title="isFullScreen ? $t('关闭') : $t('全屏')" @click="setFullScreen()">
-      <i class="bcs-icon bcs-icon-full-screen" v-if="!isFullScreen"></i>
-      <i class="bcs-icon bcs-icon-close" v-else></i>
+    <div ref="mancoEditor" :class="['biz-manco-editor', { 'full-screen': isFullScreen }]">
+        <div class="build-code-fullscreen" :title="isFullScreen ? $t('关闭') : $t('全屏')" @click="setFullScreen()">
+            <i class="bcs-icon bcs-icon-full-screen" v-if="!isFullScreen"></i>
+            <i class="bcs-icon bcs-icon-close" v-else></i>
+        </div>
     </div>
-  </div>
 </template>
 
 <script>
-import assign from 'nano-assign';
-import monokaiTheme from './theme.json';
-import * as monaco from 'monaco-editor/esm/vs/editor/editor.main';
+    import assign from 'nano-assign'
+    import monokaiTheme from './theme.json'
+    import * as monaco from 'monaco-editor/esm/vs/editor/editor.main'
 
-self.MonacoEnvironment = {
-  getWorkerUrl(moduleId, label) {
-    if (label === 'json') {
-      return `${window.DEVOPS_BCS_HOST}${window.STATIC_URL}${window.VERSION_STATIC_URL}/json.worker.js`;
-    }
-    if (label === 'css') {
-      return `${window.DEVOPS_BCS_HOST}${window.STATIC_URL}${window.VERSION_STATIC_URL}/css.worker.js`;
-    }
-    if (label === 'html') {
-      return `${window.DEVOPS_BCS_HOST}${window.STATIC_URL}${window.VERSION_STATIC_URL}/html.worker.js`;
-    }
-    if (label === 'typescript' || label === 'javascript') {
-      return `${window.DEVOPS_BCS_HOST}${window.STATIC_URL}${window.VERSION_STATIC_URL}/ts.worker.js`;
-    }
-    return `${window.DEVOPS_BCS_HOST}${window.STATIC_URL}${window.VERSION_STATIC_URL}/editor.worker.js`;
-  },
-};
-
-export default {
-  name: 'MonacoEditor',
-
-  model: {
-    event: 'change',
-  },
-
-  props: {
-    original: {
-      type: String,
-      default: '',
-    },
-    value: {
-      type: String,
-      required: true,
-    },
-    theme: {
-      type: String,
-      default: 'vs',
-    },
-    language: {
-      type: String,
-      default: 'javascript',
-    },
-    options: {
-      type: Object,
-      default() {
-        return {};
-      },
-    },
-    amdRequire: {
-      type: Function,
-    },
-    diffEditor: {
-      type: Boolean,
-      default: false,
-    },
-  },
-
-  data() {
-    return {
-      isFullScreen: false,
-      defaultWidth: 0,
-      defaultHeight: 0,
-    };
-  },
-
-  watch: {
-    options: {
-      deep: true,
-      handler(options) {
-        if (this.editor) {
-          const editor = this.getModifiedEditor();
-          editor.updateOptions(options);
+    self.MonacoEnvironment = {
+        getWorkerUrl (moduleId, label) {
+            if (label === 'json') {
+                return `${window.DEVOPS_BCS_HOST}${window.STATIC_URL}${window.VERSION_STATIC_URL}/json.worker.js`
+            }
+            if (label === 'css') {
+                return `${window.DEVOPS_BCS_HOST}${window.STATIC_URL}${window.VERSION_STATIC_URL}/css.worker.js`
+            }
+            if (label === 'html') {
+                return `${window.DEVOPS_BCS_HOST}${window.STATIC_URL}${window.VERSION_STATIC_URL}/html.worker.js`
+            }
+            if (label === 'typescript' || label === 'javascript') {
+                return `${window.DEVOPS_BCS_HOST}${window.STATIC_URL}${window.VERSION_STATIC_URL}/ts.worker.js`
+            }
+            return `${window.DEVOPS_BCS_HOST}${window.STATIC_URL}${window.VERSION_STATIC_URL}/editor.worker.js`
         }
-      },
-    },
+    }
 
-    value(newValue) {
-      if (this.editor) {
-        const editor = this.getModifiedEditor();
-        if (newValue !== editor.getValue()) {
-          editor.setValue(newValue);
+    export default {
+        name: 'MonacoEditor',
+
+        model: {
+            event: 'change'
+        },
+
+        props: {
+            original: {
+                type: String,
+                default: ''
+            },
+            value: {
+                type: String,
+                required: true
+            },
+            theme: {
+                type: String,
+                default: 'vs'
+            },
+            language: {
+                type: String,
+                default: 'javascript'
+            },
+            options: {
+                type: Object,
+                default () {
+                    return {}
+                }
+            },
+            amdRequire: {
+                type: Function
+            },
+            diffEditor: {
+                type: Boolean,
+                default: false
+            }
+        },
+
+        data () {
+            return {
+                isFullScreen: false,
+                defaultWidth: 0,
+                defaultHeight: 0
+            }
+        },
+
+        watch: {
+            options: {
+                deep: true,
+                handler (options) {
+                    if (this.editor) {
+                        const editor = this.getModifiedEditor()
+                        editor.updateOptions(options)
+                    }
+                }
+            },
+
+            value (newValue) {
+                if (this.editor) {
+                    const editor = this.getModifiedEditor()
+                    if (newValue !== editor.getValue()) {
+                        editor.setValue(newValue)
+                    }
+                }
+            },
+
+            language (newVal) {
+                if (this.editor) {
+                    const editor = this.getModifiedEditor()
+                    this.monaco.editor.setModelLanguage(editor.getModel(), newVal)
+                }
+            },
+
+            theme (newVal) {
+                if (this.editor) {
+                    this.monaco.editor.setTheme(newVal)
+                }
+            }
+        },
+
+        mounted () {
+            this.monaco = monaco
+            this.monaco.editor.defineTheme('monokai', monokaiTheme)
+            this.initMonaco(monaco)
+            setTimeout(() => {
+                const rect = this.$refs.mancoEditor.getBoundingClientRect()
+                this.defaultWidth = rect.width
+                this.defaultHeight = rect.height
+            }, 500)
+        },
+
+        beforeDestroy () {
+            this.editor && this.editor.dispose()
+        },
+
+        methods: {
+            initMonaco (monaco) {
+                this.$emit('editorWillMount', this.monaco)
+
+                const options = assign({
+                    value: this.value,
+                    autoIndent: true,
+                    theme: this.theme,
+                    language: this.language
+                }, this.options)
+
+                if (this.diffEditor) {
+                    this.editor = monaco.editor.createDiffEditor(this.$el, options)
+                    const originalModel = monaco.editor.createModel(
+                        this.original,
+                        this.language
+                    )
+                    const modifiedModel = monaco.editor.createModel(
+                        this.value,
+                        this.language
+                    )
+                    this.editor.setModel({
+                        original: originalModel,
+                        modified: modifiedModel
+                    })
+                } else {
+                    this.editor = monaco.editor.create(this.$el, options)
+                }
+
+                // @event `change`
+                const editor = this.getModifiedEditor()
+                editor.onDidChangeModelContent(event => {
+                    const value = editor.getValue()
+                    if (this.value !== value) {
+                        this.$emit('change', value, event)
+                        this.$emit('input', value, event)
+                    }
+                })
+
+                this.$emit('mounted', this.editor, this.monaco.editor)
+            },
+
+            /** @deprecated */
+            getMonaco () {
+                return this.editor
+            },
+
+            getEditor () {
+                return this.editor
+            },
+
+            getModifiedEditor () {
+                return this.diffEditor ? this.editor.getModifiedEditor() : this.editor
+            },
+
+            focus () {
+                this.editor.focus()
+            },
+
+            setFullScreen () {
+                this.isFullScreen = !this.isFullScreen
+                const self = this
+                if (this.isFullScreen) {
+                    this.$nextTick(() => {
+                        this.editor.layout({
+                            width: window.innerWidth,
+                            height: window.innerHeight
+                        })
+                    })
+                    document.body.style.overflow = 'hidden'
+                } else {
+                    setTimeout(() => {
+                        this.editor.layout({
+                            width: self.defaultWidth,
+                            height: self.defaultHeight
+                        })
+                    }, 0)
+                    document.body.style.overflow = 'auto'
+                }
+            }
         }
-      }
-    },
-
-    language(newVal) {
-      if (this.editor) {
-        const editor = this.getModifiedEditor();
-        this.monaco.editor.setModelLanguage(editor.getModel(), newVal);
-      }
-    },
-
-    theme(newVal) {
-      if (this.editor) {
-        this.monaco.editor.setTheme(newVal);
-      }
-    },
-  },
-
-  mounted() {
-    this.monaco = monaco;
-    this.monaco.editor.defineTheme('monokai', monokaiTheme);
-    this.initMonaco(monaco);
-    setTimeout(() => {
-      const rect = this.$refs.mancoEditor.getBoundingClientRect();
-      this.defaultWidth = rect.width;
-      this.defaultHeight = rect.height;
-    }, 500);
-  },
-
-  beforeDestroy() {
-    this.editor?.dispose();
-  },
-
-  methods: {
-    initMonaco(monaco) {
-      this.$emit('editorWillMount', this.monaco);
-
-      const options = assign({
-        value: this.value,
-        autoIndent: true,
-        theme: this.theme,
-        language: this.language,
-      }, this.options);
-
-      if (this.diffEditor) {
-        this.editor = monaco.editor.createDiffEditor(this.$el, options);
-        const originalModel = monaco.editor.createModel(
-          this.original,
-          this.language,
-        );
-        const modifiedModel = monaco.editor.createModel(
-          this.value,
-          this.language,
-        );
-        this.editor.setModel({
-          original: originalModel,
-          modified: modifiedModel,
-        });
-      } else {
-        this.editor = monaco.editor.create(this.$el, options);
-      }
-
-      // @event `change`
-      const editor = this.getModifiedEditor();
-      editor.onDidChangeModelContent((event) => {
-        const value = editor.getValue();
-        if (this.value !== value) {
-          this.$emit('change', value, event);
-          this.$emit('input', value, event);
-        }
-      });
-
-      this.$emit('mounted', this.editor, this.monaco.editor);
-    },
-
-    /** @deprecated */
-    getMonaco() {
-      return this.editor;
-    },
-
-    getEditor() {
-      return this.editor;
-    },
-
-    getModifiedEditor() {
-      return this.diffEditor ? this.editor.getModifiedEditor() : this.editor;
-    },
-
-    focus() {
-      this.editor.focus();
-    },
-
-    setFullScreen() {
-      this.isFullScreen = !this.isFullScreen;
-      // eslint-disable-next-line @typescript-eslint/no-this-alias
-      const self = this;
-      if (this.isFullScreen) {
-        this.$nextTick(() => {
-          this.editor.layout({
-            width: window.innerWidth,
-            height: window.innerHeight,
-          });
-        });
-        document.body.style.overflow = 'hidden';
-      } else {
-        setTimeout(() => {
-          this.editor.layout({
-            width: self.defaultWidth,
-            height: self.defaultHeight,
-          });
-        }, 0);
-        document.body.style.overflow = 'auto';
-      }
-    },
-  },
-};
+    }
 </script>
 
 <style lang="postcss" scoped>

@@ -1,48 +1,45 @@
 <template>
-  <div class="content-header">
-    <div class="title">
-      <slot>
-        <i class="bcs-icon bcs-icon-arrows-left back" v-if="!hideBack" @click="goBack"></i>
-        {{ title }}
-        <span class="desc ml10" v-if="desc">{{ desc }}</span>
-      </slot>
+    <div class="content-header">
+        <div class="title">
+            <slot>
+                <i class="bcs-icon bcs-icon-arrows-left back" v-if="!hideBack" @click="goBack"></i>
+                {{ title }}
+                <span class="desc ml10" v-if="desc">{{ desc }}</span>
+            </slot>
+        </div>
+        <bk-guide></bk-guide>
     </div>
-    <div class="help-docs-wrapper">
-      <div class="help-docs"><slot name="right"></slot></div>
-      <bk-guide></bk-guide>
-    </div>
-  </div>
 </template>
 <script>
-import { defineComponent } from '@vue/composition-api';
+    import { defineComponent } from '@vue/composition-api'
 
-export default defineComponent({
-  name: 'ContentHeader',
-  props: {
-    title: {
-      type: String,
-      default: '',
-    },
-    desc: {
-      type: String,
-      default: '',
-    },
-    hideBack: {
-      type: Boolean,
-      default: false,
-    },
-  },
-  setup(props, ctx) {
-    const { $router } = ctx.root;
-    const goBack = () => {
-      $router.back();
-    };
+    export default defineComponent({
+        name: 'ContentHeader',
+        props: {
+            title: {
+                type: String,
+                default: ''
+            },
+            desc: {
+                type: String,
+                default: ''
+            },
+            hideBack: {
+                type: Boolean,
+                default: false
+            }
+        },
+        setup (props, ctx) {
+            const { $router } = ctx.root
+            const goBack = () => {
+                $router.back()
+            }
 
-    return {
-      goBack,
-    };
-  },
-});
+            return {
+                goBack
+            }
+        }
+    })
 </script>
 <style lang="postcss" scoped>
 .content-header {
@@ -65,14 +62,6 @@ export default defineComponent({
             color: #c3cdd7;
             font-size: 12px;
         }
-    }
-    .help-docs-wrapper {
-      font-size: 14px;
-      display: flex;
-      align-items: center;
-      .help-docs {
-        margin-right: -20px;
-      }
     }
 }
 </style>

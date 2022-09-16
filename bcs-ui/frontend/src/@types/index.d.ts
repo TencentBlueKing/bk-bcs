@@ -9,5 +9,3 @@ declare module '*.json'
 // declare module 'vue-echarts/components/ECharts.vue'
 
 declare module '*.vue'
-
-declare module '*.md'

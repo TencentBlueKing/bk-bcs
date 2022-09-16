@@ -1,47 +1,48 @@
 /* eslint-disable no-unused-expressions */
+/* eslint-disable @typescript-eslint/camelcase */
 /* eslint-disable camelcase */
-import { SetupContext, Ref, onBeforeUnmount, computed } from '@vue/composition-api';
-import BCSWebSocket from '@/components/bcs-log/common/websocket';
-import { crPrefix } from '@/api/base';
+import { SetupContext, ref, Ref } from '@vue/composition-api'
+
 export interface ISubscribeParams {
-  kind: string;
-  resourceVersion: string;
-  apiVersion?: string;
-  namespace?: string;
-  CRDName?: string;
+    kind: string;
+    resource_version: string;
+    api_version?: string;
+    namespace?: string;
+    crd_name?: string;
 }
 
 export interface IManifestExt {
-  [uid: string]: any;
+    [uid: string]: any;
 }
 
 export interface IMetaData {
-  resourceVersion: string;
+    resourceVersion: string;
 }
 
 export interface IManifest {
-  metadata?: IMetaData;
-  items?: any[];
+    metadata?: IMetaData;
+    items?: any[];
 }
 
 export interface IEvent {
-  type: 'ADDED' | 'DELETED' | 'MODIFIED';
-  uid: string;
-  manifestExt: IManifestExt;
-  manifest: any[]; // 订阅事件的 manifest 跟 ISubscribeData 的 manifest 不一样
+    operate: 'ADDED' | 'DELETED' | 'MODIFIED';
+    uid: string;
+    manifest_ext: IManifestExt;
+    manifest: any[]; // 订阅事件的 manifest 跟 ISubscribeData 的 manifest 不一样
 }
 
 export interface ISubscribeData {
-  manifest: IManifest;
-  manifestExt: IManifestExt;
-  webAnnotations?: any;
+    manifest: IManifest;
+    manifest_ext: IManifestExt;
+    web_annotations?: any;
 }
 
 export interface IUseSubscribeResult {
-  handleSubscribe: (params: Record<string, any>) => Promise<void>;
-  handleAddSubscribe: (event: IEvent) => void;
-  handleDeleteSubscribe: (event: IEvent) => void;
-  handleModifySubscribe: (event: IEvent) => void;
+    initParams: (params: ISubscribeParams) => void;
+    handleSubscribe: () => Promise<void>;
+    handleAddSubscribe: (event: IEvent) => void;
+    handleDeleteSubscribe: (event: IEvent) => void;
+    handleModifySubscribe: (event: IEvent) => void;
 }
 
 /**
@@ -50,87 +51,91 @@ export interface IUseSubscribeResult {
  * @param ctx
  * @returns
  */
-export default function useSubscribe(data: Ref<ISubscribeData>, ctx: SetupContext): IUseSubscribeResult {
-  const { $route } = ctx.root;
-  let bcsWebSocket: BCSWebSocket | null = null;
+export default function useSubscribe (data: Ref<ISubscribeData>, ctx: SetupContext): IUseSubscribeResult {
+    const { $store } = ctx.root
 
-  // 添加事件
-  const handleAddSubscribe = (event: IEvent) => {
-    const { manifest, uid, manifestExt } = event;
-    data.value.manifest.items?.unshift(manifest);
-    data.value.manifestExt[uid] = manifestExt;
-  };
-  // 删除事件
-  const handleDeleteSubscribe = (event: IEvent) => {
-    const { uid } = event;
-    const index = data.value.manifest.items?.findIndex(item => item.metadata.uid === uid);
+    // const data = ref<ISubscribeData>({
+    //     manifest: {},
+    //     manifest_ext: {}
+    // })
 
-    if (index !== undefined && index !== -1) {
-      data.value.manifest.items?.splice(index, 1);
+    const subscribeParams = ref<ISubscribeParams>({
+        kind: '',
+        resource_version: ''
+    })
+
+    // 添加事件
+    const handleAddSubscribe = (event: IEvent) => {
+        const { manifest, uid, manifest_ext } = event
+        data.value.manifest.items?.unshift(manifest)
+        data.value.manifest_ext[uid] = manifest_ext
     }
+    // 删除事件
+    const handleDeleteSubscribe = (event: IEvent) => {
+        const { uid } = event
+        const index = data.value.manifest.items?.findIndex(item => item.metadata.uid === uid)
 
-    if (data.value.manifestExt[uid]) {
-      delete data.value.manifestExt[uid];
-    }
-  };
-  // 修改事件
-  const handleModifySubscribe = (event: IEvent) => {
-    const { manifest, uid, manifestExt } = event;
-    const index = data.value.manifest.items?.findIndex(item => item.metadata.uid === uid);
-
-    if (index !== undefined && index !== -1) {
-      data.value.manifest.items?.splice(index, 1, manifest);
-      data.value.manifestExt[uid] = manifestExt;
-    }
-  };
-
-  const projectId = computed(() => $route.params.projectId);
-  const clusterId = computed(() => $route.params.clusterId);
-  const subscribeURL = computed(() => {
-    const host = window.BCS_API_HOST.replace(/(^\w+:|^)\/\//, '');
-    return `wss://${host}${crPrefix}/projects/${projectId.value}/clusters/${clusterId.value}/subscribe`;
-  });
-
-  // 订阅事件处理
-  const handleSubscribe = async (params: any) => {
-    const url = `${subscribeURL.value}?${new URLSearchParams(params as Record<string, any>)}`;
-    bcsWebSocket?.ws?.close();
-    bcsWebSocket = null;
-    bcsWebSocket = new BCSWebSocket(url);
-
-    bcsWebSocket.ws.onmessage = (event: MessageEvent) => {
-      try {
-        const { result } = JSON.parse(event.data);
-
-        if (!result) return;
-        console.log(result);
-        // 处理具体订阅事件
-        switch (result.type) {
-          case 'DELETED':
-            handleDeleteSubscribe(result);
-            break;
-          case 'ADDED':
-            handleAddSubscribe(result);
-            break;
-          case 'MODIFIED':
-            handleModifySubscribe(result);
-            break;
+        if (index !== undefined && index !== -1) {
+            data.value.manifest.items?.splice(index, 1)
         }
-      } catch (err) {
-        console.log(err);
-      }
-    };
-  };
 
-  onBeforeUnmount(() => {
-    bcsWebSocket?.ws?.close();
-    bcsWebSocket = null;
-  });
+        if (data.value.manifest_ext[uid]) {
+            delete data.value.manifest_ext[uid]
+        }
+    }
+    // 修改事件
+    const handleModifySubscribe = (event: IEvent) => {
+        const { manifest, uid, manifest_ext } = event
+        const index = data.value.manifest.items?.findIndex(item => item.metadata.uid === uid)
 
-  return {
-    handleSubscribe,
-    handleAddSubscribe,
-    handleDeleteSubscribe,
-    handleModifySubscribe,
-  };
+        if (index !== undefined && index !== -1) {
+            data.value.manifest.items?.splice(index, 1, manifest)
+            data.value.manifest_ext[uid] = manifest_ext
+        }
+    }
+
+    // 订阅事件处理
+    const handleSubscribe = async () => {
+        if (!subscribeParams.value.kind || !subscribeParams.value.resource_version) return
+
+        const data = await $store.dispatch('dashboard/subscribeList', {
+            ...subscribeParams.value
+        })
+
+        if (data.latest_rv) {
+            subscribeParams.value.resource_version = data.latest_rv
+        }
+
+        if (!data.events || !data.events.length) {
+            return
+        }
+        // 处理具体订阅事件
+        data.events.forEach((event: IEvent) => {
+            switch (event.operate) {
+                case 'DELETED':
+                    handleDeleteSubscribe(event)
+                    break
+                case 'ADDED':
+                    handleAddSubscribe(event)
+                    break
+                case 'MODIFIED':
+                    handleModifySubscribe(event)
+                    break
+            }
+        })
+    }
+
+    const initParams = (params: ISubscribeParams) => {
+        subscribeParams.value = {
+            ...params
+        }
+    }
+
+    return {
+        initParams,
+        handleSubscribe,
+        handleAddSubscribe,
+        handleDeleteSubscribe,
+        handleModifySubscribe
+    }
 }

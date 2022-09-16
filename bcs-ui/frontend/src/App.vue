@@ -1,136 +1,144 @@
 <template>
-  <div :class="systemCls" id="app">
-    <Navigation @create-project="handleCreateProject">
-      <router-view :key="routerKey" v-if="!isLoading" />
-    </Navigation>
-    <!-- 项目创建弹窗 -->
-    <ProjectCreate v-model="showCreateDialog" :project-data="null"></ProjectCreate>
-    <!-- 权限弹窗 -->
-    <app-apply-perm ref="bkApplyPerm"></app-apply-perm>
-    <!-- 登录弹窗 -->
-    <BkPaaSLogin ref="login" :width="width" :height="height"></BkPaaSLogin>
-    <SharedClusterTips ref="sharedClusterTips"></SharedClusterTips>
-  </div>
+    <div :class="systemCls" id="app">
+        <Navigation @create-project="handleCreateProject">
+            <router-view :key="routerKey" v-if="!isLoading" />
+        </Navigation>
+        <!-- 项目创建弹窗 -->
+        <ProjectCreate v-model="showCreateDialog" :project-data="null"></ProjectCreate>
+        <!-- 权限弹窗 -->
+        <app-apply-perm ref="bkApplyPerm"></app-apply-perm>
+        <!-- 登录弹窗 -->
+        <BkPaaSLogin ref="login" :width="width" :height="height"></BkPaaSLogin>
+        <SharedClusterTips ref="sharedClusterTips"></SharedClusterTips>
+    </div>
 </template>
 <script>
-import Navigation from '@/views/navigation.vue';
-import ProjectCreate from '@/views/project/project-create.vue';
-import SharedClusterTips from '@/components/shared-cluster-tips';
-import BkPaaSLogin from '@blueking/paas-login';
-import { bus } from '@/common/bus';
-import { userPermsByAction } from '@/api/base';
+    import Navigation from '@/views/navigation.vue'
+    import ProjectCreate from '@/views/project/project-create.vue'
+    import SharedClusterTips from '@/components/shared-cluster-tips'
+    import BkPaaSLogin from '@blueking/paas-login'
+    import { bus } from '@/common/bus'
+    import { userPermsByAction, newUserPermsByAction } from '@/api/base'
 
-export default {
-  name: 'App',
-  components: { Navigation, ProjectCreate, BkPaaSLogin, SharedClusterTips },
-  data() {
-    return {
-      isLoading: true,
-      showCreateDialog: false,
-    };
-  },
-  computed: {
-    systemCls() {
-      const platform = window.navigator.platform.toLowerCase();
-      const cls = platform.indexOf('win') === 0 ? 'win' : 'mac';
-      return this.$store.state.isEn ? `${cls} english` : cls;
-    },
-    routerKey() {
-      // 切换不同界面时刷新路由
-      return this.$route.params.projectCode || '';
-    },
-    width() {
-      return this.$INTERNAL ? 700 : 400;
-    },
-    height() {
-      return this.$INTERNAL ? 510 : 400;
-    },
-    projectList() {
-      return this.$store.state.sideMenu.onlineProjectList;
-    },
-  },
-  beforeCreate() {
-    const allowDomains = (window.PREFERRED_DOMAINS || '').split(',');
-    const item = allowDomains.find(item => item.trim() === location.hostname);
-    if (!item && allowDomains[0]) {
-      window.location.href = `//${allowDomains[0]}${location.pathname}`;
+    export default {
+        name: 'app',
+        components: { Navigation, ProjectCreate, BkPaaSLogin, SharedClusterTips },
+        data () {
+            return {
+                isLoading: true,
+                showCreateDialog: false
+            }
+        },
+        computed: {
+            systemCls () {
+                const platform = window.navigator.platform.toLowerCase()
+                const cls = platform.indexOf('win') === 0 ? 'win' : 'mac'
+                return this.$store.state.isEn ? `${cls} english` : cls
+            },
+            routerKey () {
+                // 切换不同界面时刷新路由
+                return this.$route.params.projectCode || ''
+            },
+            width () {
+                return this.$INTERNAL ? 700 : 400
+            },
+            height () {
+                return this.$INTERNAL ? 510 : 400
+            },
+            projectList () {
+                return this.$store.state.sideMenu.onlineProjectList
+            }
+        },
+        beforeCreate () {
+            const allowDomains = (window.PREFERRED_DOMAINS || '').split(',')
+            const item = allowDomains.find(item => item.trim() === location.hostname)
+            if (!item && allowDomains[0]) {
+                window.location.href = `//${allowDomains[0]}${location.pathname}`
+            }
+            if (!this.$INTERNAL) {
+                localStorage.setItem('appViewMode', 'namespace')
+            }
+        },
+        created () {
+            // 异步权限弹窗
+            bus.$on('show-apply-perm-modal-async', async ({ $actionId, permCtx, resourceName, newPerms }) => {
+                if (!this.$refs.bkApplyPerm) return
+                this.$refs.bkApplyPerm.dialogConf.isShow = true
+                this.$refs.bkApplyPerm.isLoading = true
+                const data = newPerms
+                    ? await newUserPermsByAction({
+                        $actionId: $actionId,
+                        perm_ctx: permCtx
+                    }).catch(() => ({}))
+                    : await userPermsByAction({
+                        $actionId: $actionId,
+                        perm_ctx: permCtx
+                    }).catch(() => ({}))
+                if (data?.perms?.[$actionId]) {
+                    this.$bkMessage({
+                        theme: 'warning',
+                        message: this.$t('当前操作有权限，请刷新界面')
+                    })
+                    this.$refs.bkApplyPerm.hide()
+                } else {
+                    // eslint-disable-next-line camelcase
+                    this.$refs.bkApplyPerm.applyUrl = data?.perms?.apply_url
+                    this.$refs.bkApplyPerm.actionList = [
+                        {
+                            action_id: $actionId,
+                            resource_name: resourceName
+                        }
+                    ]
+                }
+                
+                this.$refs.bkApplyPerm.isLoading = false
+            })
+            // 权限弹窗
+            bus.$on('show-apply-perm-modal', (data) => {
+                if (!data) return
+                this.$refs.bkApplyPerm && this.$refs.bkApplyPerm.show(data)
+            })
+            // 登录弹窗
+            bus.$on('close-login-modal', () => {
+                window.location.reload()
+            })
+            bus.$on('show-shared-cluster-tips', () => {
+                this.$refs.sharedClusterTips && this.$refs.sharedClusterTips.show()
+            })
+            window.addEventListener('message', (event) => {
+                if (event.data === 'closeLoginModal') {
+                    window.location.reload()
+                }
+            })
+            this.initBcsBaseData()
+        },
+        beforeDestroy () {
+            bus.$off('show-apply-perm-modal')
+            bus.$off('close-login-modal')
+            bus.$off('show-shared-cluster-tips')
+            bus.$off('show-apply-perm-modal-async')
+        },
+        mounted () {
+            window.$loginModal = this.$refs.login
+        },
+        methods: {
+            // 初始化BCS基本数据
+            async initBcsBaseData () {
+                this.isLoading = true
+                await Promise.all([
+                    this.$store.dispatch('userInfo'),
+                    this.$store.dispatch('getProjectList')
+                ]).catch((err) => {
+                    console.error(err)
+                })
+                this.isLoading = false
+                document.title = this.$t('容器管理平台 | 腾讯蓝鲸智云')
+            },
+            handleCreateProject () {
+                this.showCreateDialog = true
+            }
+        }
     }
-  },
-  created() {
-    // 异步权限弹窗
-    bus.$on('show-apply-perm-modal-async', async ({ $actionId, permCtx, resourceName }) => {
-      if (!this.$refs.bkApplyPerm) return;
-      this.$refs.bkApplyPerm.dialogConf.isShow = true;
-      this.$refs.bkApplyPerm.isLoading = true;
-      const data = await userPermsByAction({
-        $actionId,
-        perm_ctx: permCtx,
-      }).catch(() => ({}));
-      if (data?.perms?.[$actionId]) {
-        this.$bkMessage({
-          theme: 'warning',
-          message: this.$t('当前操作有权限，请刷新界面'),
-        });
-        this.$refs.bkApplyPerm.hide();
-      } else {
-        // eslint-disable-next-line camelcase
-        this.$refs.bkApplyPerm.applyUrl = data?.perms?.apply_url;
-        this.$refs.bkApplyPerm.actionList = [
-          {
-            action_id: $actionId,
-            resource_name: resourceName,
-          },
-        ];
-      }
-
-      this.$refs.bkApplyPerm.isLoading = false;
-    });
-    // 权限弹窗
-    bus.$on('show-apply-perm-modal', (data) => {
-      if (!data) return;
-      this.$refs.bkApplyPerm?.show(data);
-    });
-    // 登录弹窗
-    bus.$on('close-login-modal', () => {
-      window.location.reload();
-    });
-    bus.$on('show-shared-cluster-tips', () => {
-      this.$refs.sharedClusterTips?.show();
-    });
-    window.addEventListener('message', (event) => {
-      if (event.data === 'closeLoginModal') {
-        window.location.reload();
-      }
-    });
-    this.initBcsBaseData();
-  },
-  beforeDestroy() {
-    bus.$off('show-apply-perm-modal');
-    bus.$off('close-login-modal');
-    bus.$off('show-shared-cluster-tips');
-    bus.$off('show-apply-perm-modal-async');
-  },
-  mounted() {
-    window.$loginModal = this.$refs.login;
-  },
-  methods: {
-    // 初始化BCS基本数据
-    async initBcsBaseData() {
-      this.isLoading = true;
-      await Promise.all([
-        this.$store.dispatch('userInfo'),
-        this.$store.dispatch('getProjectList'),
-      ]).catch((err) => {
-        console.error(err);
-      });
-      this.isLoading = false;
-      document.title = this.$t('容器服务');
-    },
-    handleCreateProject() {
-      this.showCreateDialog = true;
-    },
-  },
-};
 </script>
 <style lang="postcss">
     @import '@/css/reset.css';

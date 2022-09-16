@@ -1,53 +1,53 @@
 <template>
-  <div class="detail p30">
-    <div class="detail-title">
-      {{ $t('基础信息') }}
+    <div class="detail p30">
+        <div class="detail-title">
+            {{ $t('基础信息') }}
+        </div>
+        <div class="detail-content basic-info">
+            <div class="basic-info-item">
+                <label>{{ $t('命名空间') }}</label>
+                <span>{{ data.metadata.namespace }}</span>
+            </div>
+            <div class="basic-info-item">
+                <label>UID</label>
+                <span class="bcs-ellipsis">{{ data.metadata.uid }}</span>
+            </div>
+            <div class="basic-info-item">
+                <label>{{ $t('创建时间') }}</label>
+                <span>{{ extData.createTime }}</span>
+            </div>
+            <div class="basic-info-item">
+                <label>{{ $t('存在时间') }}</label>
+                <span>{{ extData.age }}</span>
+            </div>
+        </div>
+        <div class="mt20 mb10">
+            Scerets
+        </div>
+        <div class="scerets-content">
+            <bk-table :data="data.secrets">
+                <bk-table-column label="name" prop="name"></bk-table-column>
+            </bk-table>
+        </div>
     </div>
-    <div class="detail-content basic-info">
-      <div class="basic-info-item">
-        <label>{{ $t('命名空间') }}</label>
-        <span>{{ data.metadata.namespace }}</span>
-      </div>
-      <div class="basic-info-item">
-        <label>UID</label>
-        <span class="bcs-ellipsis">{{ data.metadata.uid }}</span>
-      </div>
-      <div class="basic-info-item">
-        <label>{{ $t('创建时间') }}</label>
-        <span>{{ extData.createTime }}</span>
-      </div>
-      <div class="basic-info-item">
-        <label>{{ $t('存在时间') }}</label>
-        <span>{{ extData.age }}</span>
-      </div>
-    </div>
-    <div class="mt20 mb10">
-      Scerets
-    </div>
-    <div class="scerets-content">
-      <bk-table :data="data.secrets">
-        <bk-table-column label="name" prop="name"></bk-table-column>
-      </bk-table>
-    </div>
-  </div>
 </template>
 <script lang="ts">
-import { defineComponent } from '@vue/composition-api';
+    import { defineComponent } from '@vue/composition-api'
 
-export default defineComponent({
-  name: 'ConfigMapsDetail',
-  props: {
-    // 当前行数据
-    data: {
-      type: Object,
-      default: () => ({}),
-    },
-    extData: {
-      type: Object,
-      default: () => ({}),
-    },
-  },
-});
+    export default defineComponent({
+        name: 'ConfigMapsDetail',
+        props: {
+            // 当前行数据
+            data: {
+                type: Object,
+                default: () => ({})
+            },
+            extData: {
+                type: Object,
+                default: () => ({})
+            }
+        }
+    })
 </script>
 <style lang="postcss" scoped>
 .detail {

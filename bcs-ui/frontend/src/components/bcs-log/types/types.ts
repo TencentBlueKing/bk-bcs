@@ -1,55 +1,55 @@
 export interface IStyleStack {
-  backgroundColor: string[];
-  foregroundColor: string[];
-  boldDim: string[];
+    backgroundColor: string[];
+    foregroundColor: string[];
+    boldDim: string[];
 }
 
 export interface IStyleState {
-  italic: boolean;
-  underline: boolean;
-  inverse: boolean;
-  hidden: boolean;
-  strikethrough: boolean;
+    italic: boolean;
+    underline: boolean;
+    inverse: boolean;
+    hidden: boolean;
+    strikethrough: boolean;
 }
 
 export interface IDictionary {
-  [prop: string]: string;
+    [prop: string]: string;
 }
 
 export interface IAnsiConfig {
-  ansiTags: IDictionary; // tag配置
-  decorators: IDictionary;
+    ansiTags: IDictionary; // tag配置
+    decorators: IDictionary;
 }
 
 export interface IStyle {
-  italic?: boolean;
-  underline?: boolean;
-  inverse?: boolean;
-  hidden?: boolean;
-  strikethrough?: boolean;
-  dim?: boolean;
-  bold?: boolean;
-  backgroundColor?: string;
-  foregroundColor?: string;
+    italic?: boolean;
+    underline?: boolean;
+    inverse?: boolean;
+    hidden?: boolean;
+    strikethrough?: boolean;
+    dim?: boolean;
+    bold?: boolean;
+    backgroundColor?: string;
+    foregroundColor?: string;
 }
 
 export interface IChunk {
-  type: ChunkType;
-  value: string;
-  style?: IStyle;
+    type: ChunkType;
+    value: string;
+    style?: IStyle;
 }
 
 export interface IParseResult {
-  log: string;
-  plainText: string;
-  chunks: IChunk[];
+    log: string;
+    plainText: string;
+    chunks: IChunk[];
 }
 
-export type ChunkType = 'text' | 'ansi' | 'newline';
+export type ChunkType = 'text' | 'ansi' | 'newline'
 
 export interface IMeta {
-  foregroundColor: string;
-  html: string;
-  plainText: string;
-  firstForegroundColor: string;
+    foregroundColor: string;
+    html: string;
+    plainText: string;
+    firstForegroundColor: string;
 }

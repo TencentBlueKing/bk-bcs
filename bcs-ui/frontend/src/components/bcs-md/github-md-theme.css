@@ -727,7 +727,6 @@
 
 .markdown-body li {
   word-wrap: break-all;
-  list-style: circle;
 }
 
 .markdown-body li > p {
