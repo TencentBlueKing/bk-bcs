@@ -17,13 +17,22 @@ package workload
 import (
 	"strconv"
 
+	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/model"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
 )
 
 // ParseWorkloadVolume xxx
 func ParseWorkloadVolume(manifest map[string]interface{}, volume *model.WorkloadVolume) {
-	if volumes, _ := mapx.GetItems(manifest, "spec.template.spec.volumes"); volumes != nil { // nolint:nestif
+	prefix := "spec.template.spec."
+	switch mapx.GetStr(manifest, "kind") {
+	case res.CJ:
+		prefix = "spec.jobTemplate.spec.template.spec."
+	case res.Po:
+		prefix = "spec."
+	}
+
+	if volumes, _ := mapx.GetItems(manifest, prefix+"volumes"); volumes != nil { // nolint:nestif
 		for _, vol := range volumes.([]interface{}) {
 			v, _ := vol.(map[string]interface{})
 			if _, ok := v["configMap"]; ok {

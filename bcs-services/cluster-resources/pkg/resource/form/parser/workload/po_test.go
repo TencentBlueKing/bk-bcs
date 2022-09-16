@@ -17,13 +17,15 @@ package workload
 import (
 	"testing"
 
+	"github.com/fatih/structs"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/model"
 )
 
 var lightPodSpec = map[string]interface{}{
-	"containers": []interface{}{},
+	"initContainers": containerConf4Test,
+	"containers":     containerConf4Test,
 	"dnsConfig": map[string]interface{}{
 		"nameservers": []interface{}{
 			"1.1.1.1",
@@ -254,6 +256,19 @@ var lightPodSpec = map[string]interface{}{
 			},
 		},
 	},
+	"volumes": volumeConf4Test,
+}
+
+var lightPoManifest = map[string]interface{}{
+	"apiVersion": "v1",
+	"kind":       "Pod",
+	"spec":       lightPodSpec,
+}
+
+func TestParsePo(t *testing.T) {
+	formData := ParsePo(lightPoManifest)
+	assert.Equal(t, structs.Map(exceptedContainerGroup), formData["containerGroup"])
+	assert.Equal(t, structs.Map(exceptedVolume), formData["volume"])
 }
 
 var exceptedSelect = model.NodeSelect{

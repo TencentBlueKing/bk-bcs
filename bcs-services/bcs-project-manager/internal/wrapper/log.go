@@ -16,12 +16,14 @@ package wrapper
 
 import (
 	"context"
+	"encoding/json"
 
 	"github.com/micro/go-micro/v2/metadata"
 	"github.com/micro/go-micro/v2/server"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/ctxkey"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/logging"
+	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/middleware"
 )
 
 // NewLogWrapper 记录流水
@@ -36,5 +38,17 @@ func NewLogWrapper(fn server.HandlerFunc) server.HandlerFunc {
 			return err
 		}
 		return nil
+	}
+}
+
+// NewAuthLogWrapper 记录鉴权日志
+func NewAuthLogWrapper(fn server.HandlerFunc) server.HandlerFunc {
+	return func(ctx context.Context, req server.Request, rsp interface{}) error {
+		if authUser, err := middleware.GetUserFromContext(ctx); err == nil {
+			if b, err := json.Marshal(authUser); err == nil {
+				logging.Info("authUser: %s, method: %s", string(b), req.Method())
+			}
+		}
+		return fn(ctx, req, rsp)
 	}
 }

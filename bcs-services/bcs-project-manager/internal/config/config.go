@@ -17,7 +17,7 @@ package config
 
 import (
 	"io/ioutil"
-	
+
 	"gopkg.in/yaml.v2"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/envs"
@@ -111,6 +111,7 @@ type IAMConfig struct {
 type ClientActionsConfig struct {
 	ClientID string   `yaml:"clientID" usage:"client id"`
 	Actions  []string `yaml:"actions" usage:"action name"`
+	All      bool     `yaml:"all" usage:"exempt all permissions"`
 }
 
 // ClientActionExemptPermConfig 非用户态跳过指定动作的权限

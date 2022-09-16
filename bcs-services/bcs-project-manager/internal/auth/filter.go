@@ -12,7 +12,7 @@
  * limitations under the License.
  */
 
-package perm
+package auth
 
 import (
 	bcsIAM "github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"

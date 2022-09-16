@@ -19,11 +19,8 @@ import (
 
 	vda "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/actions/variable/definition"
 	vva "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/actions/variable/value"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/auth"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/perm"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store"
 	vdm "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/variabledefinition"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/errorx"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/proto/bcsproject"
 )
 
@@ -42,15 +39,6 @@ func NewVariable(model store.ProjectModel) *VariableHandler {
 // CreateVariable implement for CreateVariable interface
 func (p *VariableHandler) CreateVariable(ctx context.Context,
 	req *proto.CreateVariableRequest, resp *proto.CreateVariableResponse) error {
-	project, err := p.model.GetProject(ctx, req.GetProjectCode())
-	if err != nil {
-		return errorx.NewDBErr("get project %s failed, err:", req.GetProjectCode())
-	}
-	// 判断是否有项目查看权限
-	authUser := auth.GetAuthUserFromCtx(ctx)
-	if err = perm.CanViewProject(authUser, project.ProjectID); err != nil {
-		return err
-	}
 	ca := vda.NewCreateAction(p.model)
 	vd, err := ca.Do(ctx, req)
 	if err != nil {
@@ -75,16 +63,6 @@ func (p *VariableHandler) CreateVariable(ctx context.Context,
 // UpdateVariable implement for UpdateVariable interface
 func (p *VariableHandler) UpdateVariable(ctx context.Context,
 	req *proto.UpdateVariableRequest, resp *proto.UpdateVariableResponse) error {
-	// 判断是否有项目查看权限
-	project, err := p.model.GetProject(ctx, req.GetProjectCode())
-	if err != nil {
-		return errorx.NewDBErr("get project %s failed, err:", req.GetProjectCode())
-	}
-	// 判断是否有项目查看权限
-	authUser := auth.GetAuthUserFromCtx(ctx)
-	if err = perm.CanViewProject(authUser, project.ProjectID); err != nil {
-		return err
-	}
 	ca := vda.NewUpdateAction(p.model)
 	vd, err := ca.Do(ctx, req)
 	if err != nil {
@@ -109,15 +87,6 @@ func (p *VariableHandler) UpdateVariable(ctx context.Context,
 // ListVariableDefinitions implement for ListVariableDefinitions interface
 func (p *VariableHandler) ListVariableDefinitions(ctx context.Context,
 	req *proto.ListVariableDefinitionsRequest, resp *proto.ListVariableDefinitionsResponse) error {
-	project, err := p.model.GetProject(ctx, req.GetProjectCode())
-	if err != nil {
-		return errorx.NewDBErr("get project %s failed, err:", req.GetProjectCode())
-	}
-	// 判断是否有项目查看权限
-	authUser := auth.GetAuthUserFromCtx(ctx)
-	if err = perm.CanViewProject(authUser, project.ProjectID); err != nil {
-		return err
-	}
 	ca := vda.NewListAction(p.model)
 	vd, err := ca.Do(ctx, req)
 	if err != nil {
@@ -139,15 +108,6 @@ func (p *VariableHandler) ListVariableDefinitions(ctx context.Context,
 // ListClusterVariables implement for ListClusterVariables interface
 func (p *VariableHandler) ListClusterVariables(ctx context.Context,
 	req *proto.ListClusterVariablesRequest, resp *proto.ListClusterVariablesResponse) error {
-	project, err := p.model.GetProject(ctx, req.GetProjectCode())
-	if err != nil {
-		return errorx.NewDBErr("get project %s failed, err:", req.GetProjectCode())
-	}
-	// 判断是否有项目查看权限
-	authUser := auth.GetAuthUserFromCtx(ctx)
-	if err = perm.CanViewProject(authUser, project.ProjectID); err != nil {
-		return err
-	}
 	ca := vva.NewListClusterVariablesAction(p.model)
 	variables, err := ca.Do(ctx, req)
 	if err != nil {
@@ -165,15 +125,6 @@ func (p *VariableHandler) ListClusterVariables(ctx context.Context,
 // ListNamespaceVariables implement for ListNamespaceVariables interface
 func (p *VariableHandler) ListNamespaceVariables(ctx context.Context,
 	req *proto.ListNamespaceVariablesRequest, resp *proto.ListNamespaceVariablesResponse) error {
-	project, err := p.model.GetProject(ctx, req.GetProjectCode())
-	if err != nil {
-		return errorx.NewDBErr("get project %s failed, err:", req.GetProjectCode())
-	}
-	// 判断是否有项目查看权限
-	authUser := auth.GetAuthUserFromCtx(ctx)
-	if err = perm.CanViewProject(authUser, project.ProjectID); err != nil {
-		return err
-	}
 	ca := vva.NewListNamespaceVariablesAction(p.model)
 	variables, err := ca.Do(ctx, req)
 	if err != nil {
@@ -191,15 +142,6 @@ func (p *VariableHandler) ListNamespaceVariables(ctx context.Context,
 // DeleteVariableDefinitions implement for DeleteVariableDefinitions interface
 func (p *VariableHandler) DeleteVariableDefinitions(ctx context.Context,
 	req *proto.DeleteVariableDefinitionsRequest, resp *proto.DeleteVariableDefinitionsResponse) error {
-	project, err := p.model.GetProject(ctx, req.GetProjectCode())
-	if err != nil {
-		return errorx.NewDBErr("get project %s failed, err:", req.GetProjectCode())
-	}
-	// 判断是否有项目查看权限
-	authUser := auth.GetAuthUserFromCtx(ctx)
-	if err = perm.CanViewProject(authUser, project.ProjectID); err != nil {
-		return err
-	}
 	ca := vda.NewDeleteAction(p.model)
 	return ca.Do(ctx, req, resp)
 }
@@ -207,15 +149,6 @@ func (p *VariableHandler) DeleteVariableDefinitions(ctx context.Context,
 // UpdateClusterVariables implement for UpdateClusterVariables interface
 func (p *VariableHandler) UpdateClusterVariables(ctx context.Context,
 	req *proto.UpdateClusterVariablesRequest, resp *proto.UpdateClusterVariablesResponse) error {
-	project, err := p.model.GetProject(ctx, req.GetProjectCode())
-	if err != nil {
-		return errorx.NewDBErr("get project %s failed, err:", req.GetProjectCode())
-	}
-	// 判断是否有项目查看权限
-	authUser := auth.GetAuthUserFromCtx(ctx)
-	if err = perm.CanViewProject(authUser, project.ProjectID); err != nil {
-		return err
-	}
 	ua := vva.NewUpdateClusterVariablesAction(p.model)
 	return ua.Do(ctx, req)
 }
@@ -223,15 +156,6 @@ func (p *VariableHandler) UpdateClusterVariables(ctx context.Context,
 // UpdateNamespaceVariables implement for UpdateNamespaceVariables interface
 func (p *VariableHandler) UpdateNamespaceVariables(ctx context.Context,
 	req *proto.UpdateNamespaceVariablesRequest, resp *proto.UpdateNamespaceVariablesResponse) error {
-	project, err := p.model.GetProject(ctx, req.GetProjectCode())
-	if err != nil {
-		return errorx.NewDBErr("get project %s failed, err:", req.GetProjectCode())
-	}
-	// 判断是否有项目查看权限
-	authUser := auth.GetAuthUserFromCtx(ctx)
-	if err = perm.CanViewProject(authUser, project.ProjectID); err != nil {
-		return err
-	}
 	ua := vva.NewUpdateNamespaceVariablesAction(p.model)
 	return ua.Do(ctx, req)
 }
@@ -239,15 +163,6 @@ func (p *VariableHandler) UpdateNamespaceVariables(ctx context.Context,
 // ImportVariables implement for ImportVariables interface
 func (p *VariableHandler) ImportVariables(ctx context.Context,
 	req *proto.ImportVariablesRequest, resp *proto.ImportVariablesResponse) error {
-	project, err := p.model.GetProject(ctx, req.GetProjectCode())
-	if err != nil {
-		return errorx.NewDBErr("get project %s failed, err:", req.GetProjectCode())
-	}
-	// 判断是否有项目查看权限
-	authUser := auth.GetAuthUserFromCtx(ctx)
-	if err = perm.CanViewProject(authUser, project.ProjectID); err != nil {
-		return err
-	}
 	ia := vda.NewImportVariablesAction(p.model)
 	return ia.Do(ctx, req)
 }

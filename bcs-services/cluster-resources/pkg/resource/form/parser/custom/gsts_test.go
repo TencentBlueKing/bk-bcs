@@ -17,6 +17,7 @@ package custom
 import (
 	"testing"
 
+	"github.com/fatih/structs"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/model"
@@ -45,7 +46,14 @@ var lightGSTSManifest = map[string]interface{}{
 		},
 		"serviceName":         "service-au8j3kel",
 		"podManagementPolicy": "Parallel",
+		"template":            lightPodTmpl,
 	},
+}
+
+func TestParseGSTS(t *testing.T) {
+	formData := ParseGSTS(lightGSTSManifest)
+	assert.Equal(t, structs.Map(exceptedContainerGroup), formData["containerGroup"])
+	assert.Equal(t, structs.Map(exceptedVolume), formData["volume"])
 }
 
 var exceptedGSTSReplicas = model.GSTSReplicas{

@@ -19,13 +19,13 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/logging"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store"
 	vdm "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/variabledefinition"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/entity"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/errorx"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/proto/bcsproject"
+	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/middleware"
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 )
@@ -73,9 +73,6 @@ func (ca *UpdateAction) updateVariable() (*vdm.VariableDefinition, error) {
 		}
 	}
 	// construct variable definition and update
-	timeStr := time.Now().Format(time.RFC3339)
-	// 从 context 中获取 username
-	username := auth.GetUserFromCtx(ca.ctx)
 	vd := entity.M{
 		vdm.FieldKeyID:          ca.req.GetVariableID(),
 		vdm.FieldKeyKey:         ca.req.GetKey(),
@@ -83,8 +80,10 @@ func (ca *UpdateAction) updateVariable() (*vdm.VariableDefinition, error) {
 		vdm.FieldKeyName:        ca.req.GetName(),
 		vdm.FieldKeyDescription: ca.req.GetDesc(),
 		vdm.FieldKeyScope:       ca.req.GetScope(),
-		vdm.FieldKeyUpdater:     username,
-		vdm.FieldKeyUpdateTime:  timeStr,
+		vdm.FieldKeyUpdateTime:  time.Now().Format(time.RFC3339),
+	}
+	if authUser, err := middleware.GetUserFromContext(ca.ctx); err == nil {
+		vd[vdm.FieldKeyUpdater] = authUser.GetUsername()
 	}
 	return ca.model.UpdateVariableDefinition(ca.ctx, vd)
 }

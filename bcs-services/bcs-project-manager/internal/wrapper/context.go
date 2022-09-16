@@ -16,16 +16,10 @@ package wrapper
 
 import (
 	"context"
-	"strings"
 
-	"github.com/micro/go-micro/v2/metadata"
 	"github.com/micro/go-micro/v2/server"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/auth"
-	constant "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/ctxkey"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/headerkey"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/errorx"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/stringx"
 )
 
@@ -36,42 +30,6 @@ func NewInjectContextWrapper(fn server.HandlerFunc) server.HandlerFunc {
 		// TODO: trace id by opentelemetry
 		uuid := stringx.GenUUID()
 		ctx = context.WithValue(ctx, ctxkey.RequestIDKey, uuid)
-
-		// 解析jwt，获取username，并注入到context
-		var username string
-		if auth.CanExemptAuth(req.Endpoint()) {
-			username = constant.AnonymousUsername
-		} else {
-			md, ok := metadata.FromContext(ctx)
-			if !ok {
-				return RenderResponse(rsp, uuid, errorx.NewAuthErr("failed to get micro's metadata"))
-			}
-			// 解析到jwt
-			jwtToken, ok := md.Get("Authorization")
-			if !ok {
-				return errorx.NewAuthErr("failed to get authorization token!")
-			}
-			// 判断jwt格式正确
-			if len(jwtToken) == 0 || !strings.HasPrefix(jwtToken, "Bearer ") {
-				return errorx.NewAuthErr("authorization token error")
-			}
-			authUser, err := auth.ParseUserFromJWT(jwtToken[7:])
-			if err != nil {
-				return RenderResponse(rsp, uuid, err)
-			}
-			username = authUser.Username
-			// NOTE: 现阶段兼容处理非用户态token
-			// 当通过认证后，认为是合法的Token，然后判断用户类型为非用户态时，通过header中获取真正的操作者
-			if (*authUser).UserType != auth.UserType {
-				username, ok = md.Get(headerkey.UsernameKey)
-				if !ok {
-					return errorx.NewAuthErr("not found username from header")
-				}
-			}
-			// 注入client ID
-			ctx = context.WithValue(ctx, ctxkey.ClientID, authUser.ClientID)
-		}
-		ctx = context.WithValue(ctx, ctxkey.UsernameKey, username)
 		return fn(ctx, req, rsp)
 	}
 }

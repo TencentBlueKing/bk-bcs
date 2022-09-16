@@ -20,12 +20,12 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/page"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/logging"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/perm"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store"
 	pm "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/project"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/errorx"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/stringx"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/proto/bcsproject"
+	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/middleware"
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -113,21 +113,24 @@ func NewListAuthorizedProj(model store.ProjectModel) *ListAuthorizedProject {
 
 // Do xxx
 func (lap *ListAuthorizedProject) Do(ctx context.Context,
-	req *proto.ListAuthorizedProjReq) (*map[string]interface{},
-	error) {
-	username := auth.GetUserFromCtx(ctx)
-	ids, err := perm.ListAuthorizedProjectIDs(username)
-	// 没有权限的项目时，返回为空，并记录信息
-	if ids == nil || err != nil {
-		logging.Error("%s no permission project", username)
-		return nil, nil
+	req *proto.ListAuthorizedProjReq) (*map[string]interface{}, error) {
+	var projects []pm.Project
+	var total int64
+	authUser, ok := ctx.Value(middleware.AuthUserKey).(middleware.AuthUser)
+	if ok && authUser.Username != "" {
+		// with username
+		ids, err := auth.ListAuthorizedProjectIDs(authUser.Username)
+		// 没有权限的项目时，返回为空，并记录信息
+		if ids == nil || err != nil {
+			logging.Error("%s no permission project", authUser.Username)
+			return nil, nil
+		}
+		// 通过 project id 获取项目详情
+		projects, total, err = lap.model.ListProjectByIDs(ctx, ids, &page.Pagination{All: true})
+		if err != nil {
+			return nil, err
+		}
 	}
-	// 通过 project id 获取项目详情
-	projects, total, err := lap.model.ListProjectByIDs(ctx, ids, &page.Pagination{All: true})
-	if err != nil {
-		return nil, err
-	}
-
 	projectList := []*pm.Project{}
 	for i := range projects {
 		projectList = append(projectList, &projects[i])
@@ -136,6 +139,5 @@ func (lap *ListAuthorizedProject) Do(ctx context.Context,
 		"total":   uint32(total),
 		"results": projectList,
 	}
-
 	return &data, nil
 }

@@ -16,83 +16,38 @@
 package auth
 
 import (
-	"context"
-
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/jwt"
 	jwtGo "github.com/dgrijalva/jwt-go"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/ctxkey"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/logging"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/errorx"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/stringx"
 )
 
-// GetUserFromCtx 通过 ctx 获取当前用户
-func GetUserFromCtx(ctx context.Context) string {
-	username, ok := ctx.Value(ctxkey.UsernameKey).(string)
-	if !ok {
-		logging.Warn("获取用户信息异常, 非字符串类型!")
-		return ""
-	}
-	return username
-}
+var (
+	jwtClient *jwt.JWTClient
+)
 
-// GetClientIDFromCtx 通过 ctx 获取平台级用户
-func GetClientIDFromCtx(ctx context.Context) string {
-	clientID, ok := ctx.Value(ctxkey.ClientID).(string)
-	if !ok {
-		logging.Warn("获取平台级用户信息异常, 非字符串类型!")
-		return ""
-	}
-	return clientID
-}
-
-// GetAuthUserFromCtx get auth user info, include username client id
-func GetAuthUserFromCtx(ctx context.Context) AuthUser {
-	return AuthUser{
-		Username: GetUserFromCtx(ctx),
-		ClientID: GetClientIDFromCtx(ctx),
-	}
-}
-
-// AuthUser ...
-type AuthUser struct {
-	Username string
-	UserType string
-	ClientID string
-}
-
-// ParseUserFromJWT 通过 jwt token 解析当前用户
-func ParseUserFromJWT(jwtToken string) (*AuthUser, error) {
-	claims, err := parseClaims(jwtToken)
-	if err != nil {
-		return nil, err
-	}
-
-	return &AuthUser{
-		Username: claims.UserName,
-		UserType: claims.SubType,
-		ClientID: claims.ClientID,
-	}, nil
-}
-
-func parseClaims(jwtToken string) (*jwt.UserClaimsInfo, error) {
+// SetJwtClient init jwt client
+func SetJwtClient() error {
+	var err error
 	// 组装 jwt client
 	jwtOpt, err := getJWTOpt()
 	if err != nil {
-		return nil, errorx.NewAuthErr("parse jwt key error", err.Error())
+		logging.Error("init jwt client failed, err:%s", err.Error())
+		return errorx.NewAuthErr("parse jwt key error", err.Error())
 	}
-	jwtClient, err := jwt.NewJWTClient(*jwtOpt)
-	if err != nil {
-		return nil, err
+	if jwtClient, err = jwt.NewJWTClient(*jwtOpt); err != nil {
+		logging.Error("init jwt client failed, err:%s", err.Error())
+		return err
 	}
-	// 解析token
-	claims, err := jwtClient.JWTDecode(jwtToken)
-	if err != nil {
-		return nil, err
-	}
-	return claims, nil
+	return nil
+}
+
+// GetJwtClient return jwt client
+func GetJwtClient() *jwt.JWTClient {
+	// 组装 jwt client
+	return jwtClient
 }
 
 func getJWTOpt() (*jwt.JWTOptions, error) {
@@ -118,20 +73,4 @@ func getJWTOpt() (*jwt.JWTOptions, error) {
 		jwtOpt.SignKey = key
 	}
 	return jwtOpt, nil
-}
-
-// NoAuthEndpoints 不需要用户身份认证的方法
-var NoAuthEndpoints = []string{
-	"Healthz.Ping",
-	"Healthz.Healthz",
-}
-
-// CanExemptAuth 检查当前请求是否允许免除用户认证
-func CanExemptAuth(ep string) bool {
-	// 禁用身份认证
-	if !config.GlobalConf.JWT.Enable {
-		return true
-	}
-	// 特殊指定的Handler，不需要认证的方法
-	return stringx.StringInSlice(ep, NoAuthEndpoints)
 }

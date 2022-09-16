@@ -22,58 +22,60 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/model"
 )
 
+var volumeConf4Test = []interface{}{
+	map[string]interface{}{
+		"name": "nfs",
+		"nfs": map[string]interface{}{
+			"path":   "/data",
+			"server": "1.1.1.1",
+		},
+	},
+	map[string]interface{}{
+		"name": "pvc",
+		"persistentVolumeClaim": map[string]interface{}{
+			"claimName": "pvc-123456",
+		},
+	},
+	map[string]interface{}{
+		"name":     "emptydir",
+		"emptyDir": map[string]interface{}{},
+	},
+	map[string]interface{}{
+		"name": "hostpath",
+		"hostPath": map[string]interface{}{
+			"path": "/tmp/hostP.log",
+			"type": "FileOrCreate",
+		},
+	},
+	map[string]interface{}{
+		"name": "cm",
+		"configMap": map[string]interface{}{
+			"defaultMode": int64(420),
+			"items": []interface{}{
+				map[string]interface{}{
+					"key":  "ca.crt",
+					"path": "ca.crt",
+				},
+			},
+			"name": "kube-root-ca.crt",
+		},
+	},
+	map[string]interface{}{
+		"name": "secret",
+		"secret": map[string]interface{}{
+			"defaultMode": int64(420),
+			"secretName":  "ssh-auth-test",
+		},
+	},
+}
+
 var lightManifest4VolumeTest = map[string]interface{}{
 	"apiVersion": "apps/v1",
 	"kind":       "Deployment",
 	"spec": map[string]interface{}{
 		"template": map[string]interface{}{
 			"spec": map[string]interface{}{
-				"volumes": []interface{}{
-					map[string]interface{}{
-						"name": "nfs",
-						"nfs": map[string]interface{}{
-							"path":   "/data",
-							"server": "1.1.1.1",
-						},
-					},
-					map[string]interface{}{
-						"name": "pvc",
-						"persistentVolumeClaim": map[string]interface{}{
-							"claimName": "pvc-123456",
-						},
-					},
-					map[string]interface{}{
-						"name":     "emptydir",
-						"emptyDir": map[string]interface{}{},
-					},
-					map[string]interface{}{
-						"name": "hostpath",
-						"hostPath": map[string]interface{}{
-							"path": "/tmp/hostP.log",
-							"type": "FileOrCreate",
-						},
-					},
-					map[string]interface{}{
-						"name": "cm",
-						"configMap": map[string]interface{}{
-							"defaultMode": int64(420),
-							"items": []interface{}{
-								map[string]interface{}{
-									"key":  "ca.crt",
-									"path": "ca.crt",
-								},
-							},
-							"name": "kube-root-ca.crt",
-						},
-					},
-					map[string]interface{}{
-						"name": "secret",
-						"secret": map[string]interface{}{
-							"defaultMode": int64(420),
-							"secretName":  "ssh-auth-test",
-						},
-					},
-				},
+				"volumes": volumeConf4Test,
 			},
 		},
 	},

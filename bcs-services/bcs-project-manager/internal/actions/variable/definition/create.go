@@ -19,7 +19,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/constant"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/logging"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store"
@@ -27,6 +26,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/errorx"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/stringx"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/proto/bcsproject"
+	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/middleware"
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 )
@@ -67,9 +67,6 @@ func (ca *CreateAction) createVariable() (*vdm.VariableDefinition, error) {
 		return nil, err
 	}
 	// construct variable definition and create
-	timeStr := time.Now().Format(time.RFC3339)
-	// 从 context 中获取 username
-	username := auth.GetUserFromCtx(ca.ctx)
 	vd := &vdm.VariableDefinition{
 		Key:         ca.req.GetKey(),
 		Default:     ca.req.GetDefault(),
@@ -78,8 +75,10 @@ func (ca *CreateAction) createVariable() (*vdm.VariableDefinition, error) {
 		ProjectCode: ca.req.GetProjectCode(),
 		Scope:       ca.req.GetScope(),
 		Category:    constant.VariableCategoryCustom,
-		Creator:     username,
-		CreateTime:  timeStr,
+		CreateTime:  time.Now().Format(time.RFC3339),
+	}
+	if authUser, err := middleware.GetUserFromContext(ca.ctx); err == nil {
+		vd.Creator = authUser.GetUsername()
 	}
 	err = ca.tryGenerateIDAndDoCreate(vd)
 	if err != nil {

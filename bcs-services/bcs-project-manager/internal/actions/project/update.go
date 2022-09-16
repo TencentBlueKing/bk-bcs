@@ -20,7 +20,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/bcscc"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/cmdb"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/logging"
@@ -29,6 +28,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/errorx"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/stringx"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/proto/bcsproject"
+	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/middleware"
 )
 
 // UpdateAction xxx
@@ -73,9 +73,12 @@ func (ua *UpdateAction) Do(ctx context.Context, req *proto.UpdateProjectRequest)
 func (ua *UpdateAction) validate() error {
 	// 当业务ID不为空时，校验当前用户是否为要绑定业务的业务运维
 	if ua.req.BusinessID != "" {
-		if _, err := cmdb.IsMaintainer(
-			auth.GetUserFromCtx(ua.ctx), ua.req.BusinessID,
-		); err != nil {
+		var username string
+		authUser, ok := ua.ctx.Value(middleware.AuthUserKey).(middleware.AuthUser)
+		if !ok || authUser.Username == "" {
+			return errorx.NewAuthErr()
+		}
+		if _, err := cmdb.IsMaintainer(username, ua.req.BusinessID); err != nil {
 			return err
 		}
 	}
@@ -95,16 +98,15 @@ func (ua *UpdateAction) validate() error {
 }
 
 func (ua *UpdateAction) updateProject(p *pm.Project) error {
-	timeStr := time.Now().Format(time.RFC3339)
-	// 更新时间
-	p.UpdateTime = timeStr
+	p.UpdateTime = time.Now().Format(time.RFC3339)
 	// 从 context 中获取 username
-	username := auth.GetUserFromCtx(ua.ctx)
-	p.Updater = username
-	// 更新管理员，添加项目更新者，并且去重
-	managers := stringx.JoinString(p.Managers, username)
-	managerList := stringx.RemoveDuplicateValues(stringx.SplitString(managers))
-	p.Managers = strings.Join(managerList, ",")
+	if authUser, err := middleware.GetUserFromContext(ua.ctx); err == nil {
+		p.Updater = authUser.GetUsername()
+		// 更新管理员，添加项目更新者，并且去重
+		managers := stringx.JoinString(p.Managers, authUser.GetUsername())
+		managerList := stringx.RemoveDuplicateValues(stringx.SplitString(managers))
+		p.Managers = strings.Join(managerList, ",")
+	}
 
 	req := ua.req
 
