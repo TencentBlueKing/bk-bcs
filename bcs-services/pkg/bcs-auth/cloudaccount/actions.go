@@ -23,10 +23,13 @@ const (
 	AccountManage iam.ActionID = "cloud_account_manage"
 	// AccountUse xxx
 	AccountUse iam.ActionID = "cloud_account_use"
+	// AccountCreate xxx
+	AccountCreate iam.ActionID = "cloud_account_create"
 )
 
 // ActionIDNameMap map ActionID to name
 var ActionIDNameMap = map[iam.ActionID]string{
 	AccountManage: "云账号管理",
 	AccountUse:    "云账号使用",
+	AccountCreate: "云账号创建",
 }

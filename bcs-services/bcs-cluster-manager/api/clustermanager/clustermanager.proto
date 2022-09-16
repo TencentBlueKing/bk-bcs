@@ -1576,11 +1576,11 @@ message Account {
   string secretID = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "secretID",
     description: "腾讯云账号secretID"
-  }];
+  }, (validate.rules).string = {max_len : 64, pattern : "^[0-9a-zA-Z-]+$"}];
   string secretKey = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "secretKey",
     description: "腾讯云账号secretKey"
-  }];
+  }, (validate.rules).string = {max_len : 64, pattern : "^[0-9a-zA-Z-]+$"}];
   string subscriptionID = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "subscriptionID",
     description: "Azure 订阅ID"
@@ -4236,9 +4236,7 @@ message CheckNodesRequest {
     (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
       title : "innerIPs",
       description : "节点内网IP列表"
-    },
-    (validate.rules).repeated = {min_items: 1, max_items: 500}
-  ];
+    }];
 }
 
 message CheckNodesResponse {

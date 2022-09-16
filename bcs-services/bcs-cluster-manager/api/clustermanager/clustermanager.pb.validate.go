@@ -2843,9 +2843,49 @@ func (m *Account) validate(all bool) error {
 
 	var errors []error
 
-	// no validation rules for SecretID
+	if utf8.RuneCountInString(m.GetSecretID()) > 64 {
+		err := AccountValidationError{
+			field:  "SecretID",
+			reason: "value length must be at most 64 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
 
-	// no validation rules for SecretKey
+	if !_Account_SecretID_Pattern.MatchString(m.GetSecretID()) {
+		err := AccountValidationError{
+			field:  "SecretID",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetSecretKey()) > 64 {
+		err := AccountValidationError{
+			field:  "SecretKey",
+			reason: "value length must be at most 64 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if !_Account_SecretKey_Pattern.MatchString(m.GetSecretKey()) {
+		err := AccountValidationError{
+			field:  "SecretKey",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
 
 	// no validation rules for SubscriptionID
 
@@ -2933,6 +2973,10 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = AccountValidationError{}
+
+var _Account_SecretID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
+
+var _Account_SecretKey_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
 
 // Validate checks the field values on CloudAccount with the rules defined in
 // the proto definition for this message. If any rules are violated, the first
@@ -13513,17 +13557,6 @@ func (m *CheckNodesRequest) validate(all bool) error {
 	}
 
 	var errors []error
-
-	if l := len(m.GetInnerIPs()); l < 1 || l > 500 {
-		err := CheckNodesRequestValidationError{
-			field:  "InnerIPs",
-			reason: "value must contain between 1 and 500 items, inclusive",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
 
 	if len(errors) > 0 {
 		return CheckNodesRequestMultiError(errors)

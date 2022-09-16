@@ -30,6 +30,73 @@ func NewBCSAccountPermClient(cli iam.PermClient) *BCSCloudAccountPerm {
 	return &BCSCloudAccountPerm{iamClient: cli}
 }
 
+// CanCreateCloudAccount check user createCloudAccount perm
+func (bcp *BCSCloudAccountPerm) CanCreateCloudAccount(user string, projectID string) (bool, string, error) {
+	if bcp == nil {
+		return false, "", utils.ErrServerNotInited
+	}
+
+	// related actions
+	resources := []utils.ResourceAction{
+		{Resource: projectID, Action: AccountCreate.String()},
+		{Resource: projectID, Action: project.ProjectView.String()},
+	}
+
+	// build request iam.request resourceNodes
+	req := iam.PermissionRequest{
+		SystemID: iam.SystemIDBKBCS,
+		UserName: user,
+	}
+	relatedActionIDs := []string{AccountCreate.String(), project.ProjectView.String()}
+	accountNode := AccountResourceNode{
+		IsCreateAccount: true, SystemID: iam.SystemIDBKBCS,
+		ProjectID: projectID, AccountID: ""}.BuildResourceNodes()
+
+	projectNode := project.ProjectResourceNode{SystemID: iam.SystemIDBKBCS, ProjectID: projectID}.BuildResourceNodes()
+
+	// get account permission by iam
+	perms, err := bcp.iamClient.BatchResourceMultiActionsAllowed(relatedActionIDs, req, [][]iam.ResourceNode{accountNode,
+		projectNode})
+	if err != nil {
+		return false, "", err
+	}
+	blog.V(4).Infof("BCSClusterPerm CanCreateCloudAccount user[%s] %+v", user, perms)
+
+	// check account resource perms
+	allow, err := utils.CheckResourcePerms(utils.CheckResourceRequest{
+		Module:    BCSCloudAccountModule,
+		Operation: CanCreateCloudAccountOperation,
+		User:      user,
+	}, resources, perms)
+	if err != nil {
+		return false, "", err
+	}
+
+	if allow {
+		return allow, "", nil
+	}
+
+	// generate apply url if account perm notAllow
+	accountApp := BuildAccountApplicationInstance(AccountApplicationAction{
+		IsCreateAccount: true,
+		ActionID:        AccountCreate.String(),
+		Data: []ProjectAccountData{
+			{
+				Project: projectID,
+				Account: "",
+			},
+		},
+	})
+	projectApp := project.BuildProjectApplicationInstance(project.ProjectApplicationAction{
+		IsCreateProject: false,
+		ActionID:        project.ProjectView.String(),
+		Data:            []string{projectID},
+	})
+
+	url, _ := bcp.GenerateIAMApplicationURL(iam.SystemIDBKBCS, []iam.ApplicationAction{accountApp, projectApp})
+	return allow, url, nil
+}
+
 // CanManageCloudAccount check user manageAccount perm
 func (bcp *BCSCloudAccountPerm) CanManageCloudAccount(user string, projectID string, accountID string) (bool, string,
 	error) {
