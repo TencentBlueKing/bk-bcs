@@ -110,7 +110,7 @@
                         <span v-else class="disabled">{{$t('已关闭')}}</span>
                     </template>
                 </bcs-table-column> -->
-                <bcs-table-column :label="$t('操作')" width="150">
+                <bcs-table-column :label="$t('操作')" width="170">
                     <template #default="{ row }">
                         <div class="operate">
                             <bcs-button text @click="handleShowRecord(row)">{{$t('扩缩容记录')}}</bcs-button>

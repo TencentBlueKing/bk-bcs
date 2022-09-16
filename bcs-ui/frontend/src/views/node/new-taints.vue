@@ -35,7 +35,7 @@
     import { computed, defineComponent, ref, watch } from '@vue/composition-api'
     import Validate from '@/components/validate.vue'
     import $i18n from '@/i18n/i18n-setup'
-    import { KEY_REGEXP } from '@/common/constant'
+    import { LABEL_KEY_REGEXP } from '@/common/constant'
 
     interface ITaint {
         key: string;
@@ -72,8 +72,8 @@
                 ? props.keyRules
                 : [
                     {
-                        message: $i18n.t('必须小于等于 255 个字符，以字母数字字符（[a-z0-9A-Z]）开头和结尾'),
-                        validator: KEY_REGEXP
+                        message: $i18n.t('有效的标签键有两个段：可选的前缀和名称，用斜杠（/）分隔。 名称段是必需的，必须小于等于 63 个字符，以字母数字字符（[a-z0-9A-Z]）开头和结尾， 带有破折号（-），下划线（_），点（ .）和之间的字母数字。 前缀是可选的。如果指定，前缀必须是 DNS 子域：由点（.）分隔的一系列 DNS 标签，总共不超过 253 个字符， 后跟斜杠（/）。'),
+                        validator: LABEL_KEY_REGEXP
                     },
                     {
                         message: $i18n.t('重复键'),
@@ -125,7 +125,7 @@
                 }
                 
                 return data.every(key => {
-                    return new RegExp(KEY_REGEXP).test(key)
+                    return new RegExp(LABEL_KEY_REGEXP).test(key)
                 })
             }
             return {

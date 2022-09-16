@@ -86,7 +86,6 @@
     import { defineComponent, toRefs, watch, ref, computed } from '@vue/composition-api'
     import Validate from './validate.vue'
     import $i18n from '@/i18n/i18n-setup'
-    import { KEY_REGEXP } from '@/common/constant'
 
     export interface IData {
         key: string;
@@ -124,6 +123,10 @@
             keyAdvice: {
                 type: Array,
                 default: () => []
+            },
+            keyRules: {
+                type: Array,
+                default: () => []
             }
         },
         model: {
@@ -131,7 +134,7 @@
             event: 'change'
         },
         setup (props, ctx) {
-            const { modelValue } = toRefs(props)
+            const { modelValue, keyRules } = toRefs(props)
             const keyValueData = ref<IData[]>([])
             watch(modelValue, () => {
                 if (Array.isArray(modelValue.value)) {
@@ -187,10 +190,7 @@
             }
             const rules = ref(
                 [
-                    {
-                        message: $i18n.t('必须小于等于 255 个字符，以字母数字字符（[a-z0-9A-Z]）开头和结尾'),
-                        validator: KEY_REGEXP
-                    },
+                    ...keyRules.value,
                     {
                         message: $i18n.t('重复键'),
                         validator: (value, index) => {
@@ -212,7 +212,9 @@
                 }
                 
                 return data.every(key => {
-                    return new RegExp(KEY_REGEXP).test(key)
+                    return keyRules.value.every(rule => {
+                        return new RegExp(rule.validator).test(key)
+                    })
                 })
             }
 

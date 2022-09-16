@@ -258,7 +258,7 @@
             // 云服务商
             const templateList = ref<any[]>([])
             const availableTemplateList = computed(() => {
-                return templateList.value.filter(item => !item?.confInfo?.disableImportCluster)
+                return templateList.value.filter(item => item.enable === 'true' && !item?.confInfo?.disableImportCluster)
             })
             const templateLoading = ref(false)
             const handleGetCloudList = async () => {

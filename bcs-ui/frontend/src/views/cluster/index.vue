@@ -357,28 +357,51 @@
             // 集群删除
             const clusterNoticeDialog = ref<any>(null)
             const clusterNoticeList = computed(() => {
-                return [
-                    {
-                        id: 1,
-                        text: $i18n.t('您正在尝试删除集群 {clusterName}，此操作不可逆，请谨慎操作', { clusterName: curOperateCluster.value?.clusterID }),
-                        isChecked: false
-                    },
-                    {
-                        id: 2,
-                        text: $i18n.t('请确认已清理该集群下的所有应用与节点'),
-                        isChecked: false
-                    },
-                    {
-                        id: 3,
-                        text: $i18n.t('集群删除时会清理集群上的工作负载、服务、路由等集群上的所有资源'),
-                        isChecked: false
-                    },
-                    {
-                        id: 4,
-                        text: $i18n.t('集群删除后服务器如不再使用请尽快回收，避免产生不必要的成本'),
-                        isChecked: false
-                    }
-                ]
+                return curOperateCluster.value?.clusterCategory === 'importer'
+                    ? [
+                        {
+                            id: 1,
+                            text: $i18n.t('您正在尝试删除集群 {clusterName}，此操作不可逆，请谨慎操作', { clusterName: curOperateCluster.value?.clusterID }),
+                            isChecked: false
+                        },
+                        {
+                            id: 2,
+                            text: $i18n.t('删除导入集群不会对集群有任何操作'),
+                            isChecked: false
+                        },
+                        {
+                            id: 3,
+                            text: $i18n.t('删除导入集群后蓝鲸容器管理平台会丧失对该集群的管理能力'),
+                            isChecked: false
+                        },
+                        {
+                            id: 4,
+                            text: $i18n.t('删除导入集群不会清理集群上的任何资源，删除集群后请视情况手工清理'),
+                            isChecked: false
+                        }
+                    ]
+                    : [
+                        {
+                            id: 1,
+                            text: $i18n.t('您正在尝试删除集群 {clusterName}，此操作不可逆，请谨慎操作', { clusterName: curOperateCluster.value?.clusterID }),
+                            isChecked: false
+                        },
+                        {
+                            id: 2,
+                            text: $i18n.t('请确认已清理该集群下的所有应用与节点'),
+                            isChecked: false
+                        },
+                        {
+                            id: 3,
+                            text: $i18n.t('集群删除时会清理集群上的工作负载、服务、路由等集群上的所有资源'),
+                            isChecked: false
+                        },
+                        {
+                            id: 4,
+                            text: $i18n.t('集群删除后服务器如不再使用请尽快回收，避免产生不必要的成本'),
+                            isChecked: false
+                        }
+                    ]
             })
             const confirmDeleteCluster = async () => {
                 isLoading.value = true
@@ -581,7 +604,8 @@
             font-size: 16px;
         }
     }
-    .bk-dropdown-list {
+    /deep/.bk-dropdown-list {
+        overflow: hidden;
         li.disabled a {
             width: 100%;
             cursor: not-allowed;

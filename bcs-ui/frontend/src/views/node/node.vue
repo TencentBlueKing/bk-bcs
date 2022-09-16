@@ -439,6 +439,12 @@
                     :loading="setLabelConf.btnLoading"
                     :key-desc="setLabelConf.keyDesc"
                     v-bkloading="{ isLoading: setLabelConf.loading }"
+                    :key-rules="[
+                        {
+                            message: $i18n.t('有效的标签键有两个段：可选的前缀和名称，用斜杠（/）分隔。 名称段是必需的，必须小于等于 63 个字符，以字母数字字符（[a-z0-9A-Z]）开头和结尾， 带有破折号（-），下划线（_），点（ .）和之间的字母数字。 前缀是可选的。如果指定，前缀必须是 DNS 子域：由点（.）分隔的一系列 DNS 标签，总共不超过 253 个字符， 后跟斜杠（/）。'),
+                            validator: LABEL_KEY_REGEXP
+                        }
+                    ]"
                     @cancel="handleLabelEditCancel"
                     @confirm="handleLabelEditConfirm"
                 ></KeyValue>
@@ -495,7 +501,7 @@
     import StatusIcon from '@/views/dashboard/common/status-icon'
     import ClusterSelect from '@/components/cluster-selector/cluster-select.vue'
     import LoadingIcon from '@/components/loading-icon.vue'
-    import { nodeStatusColorMap, nodeStatusMap, taskStatusTextMap, taskStatusColorMap } from '@/common/constant'
+    import { nodeStatusColorMap, nodeStatusMap, taskStatusTextMap, taskStatusColorMap, LABEL_KEY_REGEXP } from '@/common/constant'
     import useNode from './use-node'
     import useTableSetting from './use-table-setting'
     import usePage from '@/views/dashboard/common/use-page'
@@ -1426,7 +1432,8 @@
                 podDisabled,
                 webAnnotations,
                 curProject,
-                isImportCluster
+                isImportCluster,
+                LABEL_KEY_REGEXP
             }
         }
     })

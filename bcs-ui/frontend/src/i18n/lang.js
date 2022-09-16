@@ -3039,7 +3039,7 @@ export default {
         "Delete node"
     ],
     "扩缩容记录": [
-        "Telescopic record"
+        "AutoScaler record"
     ],
     "多个过滤标签用回车键分隔": [
         "Multiple filter labels are separated by the carriage bond to separate"
@@ -3118,5 +3118,122 @@ export default {
     ],
     "弹性扩缩容": [
         "Cluster Autoscaler"
+    ],
+    "云凭证使用": [
+        "Cloud voucher use"
+    ],
+    "请输入3-32字符,以小写字母开头的项目英文名": [
+        "Please enter 3-32 characters, the English name of the project starting with a lowercase letter"
+    ],
+    "容器管理平台 | 腾讯蓝鲸智云": [
+        "Container management platform | Tencent Blue Whale Zhiyun"
+    ],
+    "技术支持": [
+        "Technical Support"
+    ],
+    "社区论坛": [
+        "Community forum"
+    ],
+    "产品官网": [
+        "Official website"
+    ],
+    "日志查询入口": [
+        "Log query entrance"
+    ],
+    "自动扩缩容保护机制，集群中unready节点大于允许unready节点数量，且unready节点的比例大于设置的比例，会停止Cluster Autoscaler功能，否则Cluster Autoscaler功能正常运行": [
+        "The automatic expansion capacity protection mechanism, the Unready node in the cluster is greater than allowing the number of Unready nodes, and the proportion of the Unready node is greater than the setting ratio, which will stop the CLuster AutoScaler function, otherwise the cluster autoscaler function runs normally"
+    ],
+    "时停止自动扩缩容": [
+        "Stop automatic expansion capacity when stopping"
+    ],
+    "random：在有多个节点池时，随机选择节点池<br/>least-waste：在有多个节点池时，以最小浪费原则选择，选择有最少可用资源的节点池<br/>most-pods：在有多个节点池时，选择容量最大（可以创建最多Pod）的节点池": [
+        "Random: When there are multiple node pools, choose the node pool random <br/> Least-WASTE: When there are multiple node pools, choose the node pool with the minimum waste of resources <br/> MOST- MOST- PODS: When there are multiple nodes, the selection of node pools with the largest capacity (which can create the most POD)"
+    ],
+    "如果节点池在设置的时间范围内没有提供可用资源，会导致此次自动扩容失败": [
+        "If the node pool does not provide available resources within the time range of the setting, it will cause the automatic expansion failure"
+    ],
+    "Cluster Autocaler组件评估集群可以缩容多久后开始执行缩容，防止集群容量在短时间内或高或低于设置的缩容阈值造成频繁扩缩容操作": [
+        "The cluster autocaler component assessment cluster can start to execute the contraction after how long it can be redeemed to prevent the cluster capacity from or lower or lower than the setting threshold in a short period of time"
+    ],
+    "缩容节点时，等待 pod 停止的最长时间（不会遵守 terminationGracefulPeriodSecond，超时强杀）": [
+        "When the reducing node, the maximum time to wait for the POD to stop (the TerminationGraceFuliodSecond will not be abide by the TerminationGraceFuliodSecond)"
+    ],
+    "扩容节点后多久才继续缩容判断，如果业务自定义初始化任务所需时间比较长，需要适当上调此值": [
+        "How long does it take to continue to retract the judgment after the expansion node."
+    ],
+    "缩容节点后多久再继续缩容节点，默认设置为0，代表与扩缩容检测时间间隔设置的值相同": [
+        "How long does it take to continue the replenishment node after the reducing node and set the default setting to 0, which means that the value of the expansion capacity detection time interval is the same"
+    ],
+    "扩容节点失败": [
+        "Faculture of expansion nodes"
+    ],
+    "缩容节点失败": [
+        "Failure to retract node"
+    ],
+    "Cluster Autoscaler配置": [
+        "Cluster autoscaler configuration"
+    ],
+    "Cluster Autoscaler": [
+        "Cluster autoscaler"
+    ],
+    "基本配置": [
+        "basic configuration"
+    ],
+    "自动扩容配置": [
+        "Automatic expansion configuration"
+    ],
+    "自动缩容配置": [
+        "Automatic contraction configuration"
+    ],
+    "允许缩容节点": [
+        "Allowing capsule nodes"
+    ],
+    "Cluster Autoscaler 需要至少一个节点池，请停用 Cluster Autoscaler 后再删除": [
+        "Cluster AutoScaler needs at least one node pool, please stop the cluster autoscaler before deleting"
+    ],
+    "命名空间配额": [
+        "Naming space quota"
+    ],
+    "该集群通过导入方式接入，不可以在此处使用节点管理功能": [
+        "The cluster cannot use node management functions here by importing methods."
+    ],
+    "K8S原生集群": [
+        "K8s native cluster"
+    ],
+    "腾讯云自研云集群（内部)": [
+        "Tencent Cloud Research Collection Group (internal)"
+    ],
+    "kubeconfig导入集群": [
+        "Kubeconfig import cluster"
+    ],
+    "腾讯云-云凭证导入集群": [
+        "Tencent Cloud-Cloud Import Cluster"
+    ],
+    "集群添加方式": [
+        "Cluster adding method"
+    ],
+    "托管集群": [
+        "Custody cluster"
+    ],
+    "独立集群": [
+        "Independent cluster"
+    ],
+    "该集群通过导入方式接入，不可以在此处添加节点": [
+        "The cluster cannot add nodes here by importing it."
+    ],
+    "查看YAML配置": [
+        "View yaml configuration"
+    ],
+    "container_memory_working_set_bytes，limit限制时oom判断依据": [
+        "container_memory_working_Set_bytes, limit restrictions OOM judgment basis"
+    ],
+    "对象": [
+        "Object"
+    ],
+    "级别": [
+        "level"
+    ],
+    "日志查询": [
+        "Log query"
     ]
 }

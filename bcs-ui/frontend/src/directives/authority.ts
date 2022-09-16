@@ -144,7 +144,7 @@ async function updatePerms (el: IElement, binding: DirectiveBinding, vNode: VNod
     const { resource_type, cluster_id, project_id, template_id, name } = permCtx || {}
     // 校验数据完整性
     if (!actionId
-        || !resource_type
+        || (!resource_type && actionId !== 'project_create')
         || (resource_type === 'cluster' && !cluster_id)
         || (resource_type === 'project' && !project_id)
         || (resource_type === 'templateset' && !template_id)

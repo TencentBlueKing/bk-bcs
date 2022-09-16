@@ -148,6 +148,13 @@
                         required: true,
                         message: $i18n.t('必填项'),
                         trigger: 'blur'
+                    },
+                    {
+                        message: $i18n.t('不支持中文字符'),
+                        trigger: 'blur',
+                        validator (val) {
+                            return !(/[\u4E00-\u9FA5]/g.test(val))
+                        }
                     }
                 ],
                 'account.secretKey': [
@@ -155,6 +162,13 @@
                         required: true,
                         message: $i18n.t('必填项'),
                         trigger: 'blur'
+                    },
+                    {
+                        message: $i18n.t('不支持中文字符'),
+                        trigger: 'blur',
+                        validator (val) {
+                            return !(/[\u4E00-\u9FA5]/g.test(val))
+                        }
                     }
                 ]
             })

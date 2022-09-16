@@ -23,7 +23,12 @@
             <div class="text-subtitle">{{$t('你没有相应项目的访问权限，请前往申请相关项目权限')}}</div>
             <div style="display: flex;align-items: center; justify-content: center;">
                 <a class="bk-text-button text-wrap" @click="handleGotoIAM">{{$t('去申请')}}</a>
-                <a class="bk-text-button text-wrap" @click="handleGotoProjectManage">{{$t('创建项目')}}</a>
+                <a class="bk-text-button text-wrap"
+                    v-authority="{
+                        actionId: 'project_create',
+                        permCtx: {}
+                    }"
+                    @click="handleGotoProjectManage">{{$t('创建项目')}}</a>
             </div>
         </bk-exception>
     </div>

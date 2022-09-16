@@ -24,7 +24,10 @@ export default {
 
         return h('bcs-pagination', {
             on: this.$listeners, // 透传事件
-            props: this.$props, // 透传props
+            props: {
+                ...this.$props,
+                showTotalCount: true
+            }, // 透传props
             scopedSlots: this.$scopedSlots, // 透传scopedSlots
             attrs: this.$attrs // 透传属性，非props
         }, slots)

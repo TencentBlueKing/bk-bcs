@@ -42,31 +42,31 @@
 
                 <div class="biz-namespace">
                     <div class="biz-table-wrapper">
-                        <bk-table
+                        <bcs-table
                             class="biz-namespace-table"
                             v-bkloading="{ isLoading: isPageLoading }"
                             :data="curPageData"
-                            :page-params="pageConf"
+                            :pagination="pageConf"
                             @page-change="pageChange"
                             @page-limit-change="changePageSize">
-                            <bk-table-column :label="$t('名称')" prop="name" :show-overflow-tooltip="true">
+                            <bcs-table-column :label="$t('名称')" prop="name" :show-overflow-tooltip="true">
                                 <template slot-scope="{ row }">
                                     <span class="text">{{row.name}}</span>
                                 </template>
-                            </bk-table-column>
-                            <bk-table-column :label="$t('所属集群')" :show-overflow-tooltip="false" prop="cluster_name">
+                            </bcs-table-column>
+                            <bcs-table-column :label="$t('所属集群')" :show-overflow-tooltip="false" prop="cluster_name">
                                 <template slot-scope="{ row }">
                                     <bcs-popover :content="row.cluster_id || '--'" placement="top">
                                         <p class="biz-text-wrapper">{{row.cluster_name ? row.cluster_name : '--'}}</p>
                                     </bcs-popover>
                                 </template>
-                            </bk-table-column>
-                            <bk-table-column :label="$t('变量')" prop="ns_vars" :min-width="150" :show-overflow-tooltip="false" v-if="$INTERNAL">
+                            </bcs-table-column>
+                            <bcs-table-column :label="$t('变量')" prop="ns_vars" :min-width="150" :show-overflow-tooltip="false" v-if="$INTERNAL">
                                 <template slot-scope="{ row, $index }">
                                     <div style="position: relative;" v-if="row.ns_vars.length">
                                         <bcs-popover :delay="300" placement="left">
                                             <div class="labels-container" :class="row.isExpandLabels ? 'expand' : ''">
-                                                <div class="labels-wrapper" :class="row.isExpandLabels ? 'expand' : ''" :ref="`${pageConf.curPage}-real${$index}`">
+                                                <div class="labels-wrapper" :class="row.isExpandLabels ? 'expand' : ''" :ref="`${pageConf.current}-real${$index}`">
                                                     <div class="labels-inner" v-for="(label, labelIndex) in row.ns_vars" :key="labelIndex">
                                                         <span class="key">{{label.key}}</span>
                                                         <template v-if="label.value">
@@ -93,11 +93,10 @@
                                     </div>
                                     <span v-else>--</span>
                                 </template>
-                            </bk-table-column>
-                            <bk-table-column :label="$t('操作')" prop="permissions" width="260" class-name="biz-table-action-column">
+                            </bcs-table-column>
+                            <bcs-table-column :label="$t('操作')" prop="permissions" width="260" class-name="biz-table-action-column">
                                 <template slot-scope="{ row }">
-                                    <a href="javascript:void(0)" class="bk-text-button mr10"
-                                        v-if="$INTERNAL"
+                                    <a href="javascript:void(0)" class="bk-text-button"
                                         @click="showEditNamespace(row, index)"
                                         v-authority="{
                                             clickable: web_annotations.perms[row.iam_ns_id]
@@ -111,6 +110,7 @@
                                                 name: row.name
                                             }
                                         }"
+                                        v-if="$INTERNAL"
                                     >
                                         {{$t('设置变量值')}}
                                     </a>
@@ -149,8 +149,8 @@
                                         {{$t('删除')}}
                                     </a>
                                 </template>
-                            </bk-table-column>
-                        </bk-table>
+                            </bcs-table-column>
+                        </bcs-table>
                     </div>
                 </div>
             </template>
@@ -525,11 +525,9 @@
                 editClusterId: -1,
                 isPageLoading: false,
                 pageConf: {
-                    total: 1,
-                    totalPage: 1,
-                    pageSize: 10,
-                    curPage: 1,
-                    show: true
+                    current: 1,
+                    count: 1,
+                    limit: 10
                 },
                 namespaceList: [],
                 // 缓存，用于搜索
@@ -732,7 +730,7 @@
              * 刷新列表
              */
             refresh () {
-                this.pageConf.curPage = 1
+                this.pageConf.current = 1
                 this.isPageLoading = true
                 this.fetchNamespaceList()
             },
@@ -743,10 +741,10 @@
              * @param {number} pageSize pageSize
              */
             changePageSize (pageSize) {
-                this.pageConf.pageSize = pageSize
-                this.pageConf.curPage = 1
+                this.pageConf.limit = pageSize
+                this.pageConf.current = 1
                 this.initPageConf()
-                this.pageChange(this.pageConf.curPage)
+                this.pageChange(this.pageConf.current)
             },
 
             /**
@@ -779,12 +777,12 @@
                     this.namespaceList.splice(0, this.namespaceList.length, ...list)
                     this.namespaceListTmp.splice(0, this.namespaceListTmp.length, ...list)
                     // this.initPageConf()
-                    // this.curPageData = this.getDataByPage(this.pageConf.curPage)
+                    // this.curPageData = this.getDataByPage(this.pageConf.current)
                     this.handleSearch()
 
                     setTimeout(() => {
                         this.curPageData.forEach((item, index) => {
-                            const real = this.$refs[`${this.pageConf.curPage}-real${index}`]
+                            const real = this.$refs[`${this.pageConf.current}-real${index}`]
                             if (real) {
                                 if (real.offsetHeight > 24 + 5) {
                                     item.showExpand = true
@@ -806,10 +804,9 @@
              * 初始化弹层翻页条
              */
             initPageConf () {
-                const total = this.namespaceList.length
-                this.pageConf.total = total
-                this.pageConf.curPage = 1
-                this.pageConf.totalPage = Math.ceil(total / this.pageConf.pageSize) || 1
+                const count = this.namespaceList.length
+                this.pageConf.count = count
+                this.pageConf.current = 1
             },
 
             /**
@@ -818,13 +815,13 @@
              * @param {number} page 当前页
              */
             pageChange (page) {
-                this.pageConf.curPage = page
+                this.pageConf.current = page
                 const data = this.getDataByPage(page)
                 this.curPageData.splice(0, this.curPageData.length, ...data)
                 this.isPageLoading = true
                 setTimeout(() => {
                     this.curPageData.forEach((item, index) => {
-                        const real = this.$refs[`${this.pageConf.curPage}-real${index}`]
+                        const real = this.$refs[`${this.pageConf.current}-real${index}`]
                         if (real) {
                             if (real.offsetHeight > 24 + 5) {
                                 item.showExpand = true
@@ -845,10 +842,10 @@
             getDataByPage (page) {
                 // 如果没有page，重置
                 if (!page) {
-                    this.pageConf.curPage = page = 1
+                    this.pageConf.current = page = 1
                 }
-                let startIndex = (page - 1) * this.pageConf.pageSize
-                let endIndex = page * this.pageConf.pageSize
+                let startIndex = (page - 1) * this.pageConf.limit
+                let endIndex = page * this.pageConf.limit
                 this.isPageLoading = true
                 if (startIndex < 0) {
                     startIndex = 0
@@ -1397,9 +1394,9 @@
                 // const beforeLen = this.namespaceListTmp.length
                 // const afterLen = results.length
                 this.namespaceList.splice(0, this.namespaceList.length, ...results)
-                // this.pageConf.curPage = beforeLen !== afterLen ? 1 : this.pageConf.curPage
+                // this.pageConf.current = beforeLen !== afterLen ? 1 : this.pageConf.current
                 this.initPageConf()
-                this.curPageData = this.getDataByPage(this.pageConf.curPage)
+                this.curPageData = this.getDataByPage(this.pageConf.current)
             },
             filterNamespace (name) {
                 const filterRule = this.projectCode + '-'

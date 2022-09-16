@@ -171,27 +171,36 @@
                 if (code === this.curProjectCode) return
 
                 const item = this.onlineProjectList.find(item => item.project_code === code)
-                if (item?.kind !== this.curProject.kind) {
-                    // 切换不同项目时刷新界面
-                    const route = this.$router.resolve({
-                        name: 'clusterMain',
-                        params: {
-                            projectCode: code,
-                            // eslint-disable-next-line camelcase
-                            projectId: item?.project_id
-                        }
-                    })
-                    location.href = route.href
-                } else {
-                    this.$router.push({
-                        name: 'clusterMain',
-                        params: {
-                            projectCode: code,
-                            // eslint-disable-next-line camelcase
-                            projectId: item?.project_id
-                        }
-                    })
-                }
+                const route = this.$router.resolve({
+                    name: 'clusterMain',
+                    params: {
+                        projectCode: code,
+                        // eslint-disable-next-line camelcase
+                        projectId: item?.project_id
+                    }
+                })
+                location.href = route.href
+                // if (item?.kind !== this.curProject.kind) {
+                //     // 切换不同项目时刷新界面
+                //     const route = this.$router.resolve({
+                //         name: 'clusterMain',
+                //         params: {
+                //             projectCode: code,
+                //             // eslint-disable-next-line camelcase
+                //             projectId: item?.project_id
+                //         }
+                //     })
+                //     location.href = route.href
+                // } else {
+                //     this.$router.resolve({
+                //         name: 'clusterMain',
+                //         params: {
+                //             projectCode: code,
+                //             // eslint-disable-next-line camelcase
+                //             projectId: item?.project_id
+                //         }
+                //     })
+                // }
             },
             handleGotoUserToken () {
                 if (this.$route.name === 'token') return

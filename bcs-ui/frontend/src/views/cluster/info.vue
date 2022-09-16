@@ -130,13 +130,13 @@
                                 <div class="left">
                                     <p>{{$t('创建时间')}}</p>
                                 </div>
-                                <div class="right">{{clusterInfo.createTime || '--'}}</div>
+                                <div class="right">{{ moment(clusterInfo.createTime).format('YYYY-MM-DD HH:mm:ss') || '--'}}</div>
                             </div>
                             <div class="row">
                                 <div class="left">
                                     <p>{{$t('更新时间')}}</p>
                                 </div>
-                                <div class="right">{{clusterInfo.updateTime || '--'}}</div>
+                                <div class="right">{{ moment(clusterInfo.updateTime).format('YYYY-MM-DD HH:mm:ss') || '--'}}</div>
                             </div>
                             <div class="row">
                                 <div class="left">
@@ -343,7 +343,7 @@
 </template>
 
 <script>
-    // import moment from 'moment'
+    import moment from 'moment'
     import StatusIcon from '@/views/dashboard/common/status-icon.tsx'
     export default {
         components: {
@@ -351,6 +351,7 @@
         },
         data () {
             return {
+                moment,
                 masterInfoLoading: false,
                 variableInfoLoading: false,
                 containerLoading: false,
@@ -378,7 +379,7 @@
                     '1': 'green',
                     '0': 'red'
                 },
-                clusterRegion: {},
+                clusterRegion: null,
                 typeMap: {
                     1: this.$t('K8S原生集群'),
                     2: this.$t('腾讯云自研云集群（内部)'),
@@ -418,14 +419,14 @@
                 return [...multiClusterCIDR, clusterIPv4CIDR].filter(cidr => !!cidr).join(', ')
             },
             clusterType () {
-                const { provider, importCategory, kubeConfig, cloudAccountID } = this.clusterInfo
-                if (provider === 'bluekingCloud' && importCategory !== 'importer') {
+                const { provider, clusterCategory, importCategory } = this.clusterInfo
+                if (provider === 'bluekingCloud' && clusterCategory !== 'importer') {
                     return 1
-                } else if (provider === 'tencentCloud' && importCategory !== 'importer') {
+                } else if (provider === 'tencentCloud' && clusterCategory !== 'importer') {
                     return 2
-                } else if (provider === 'bluekingCloud' && importCategory === 'importer' && kubeConfig.length) {
+                } else if (provider === 'bluekingCloud' && clusterCategory === 'importer' && importCategory === 'kubeConfig') {
                     return 3
-                } else if (provider === 'tencentCloud' && importCategory === "importer" && cloudAccountID.length) {
+                } else if (provider === 'tencentCloud' && importCategory === "importer" && importCategory === 'cloud') {
                     return 4
                 }
                 return ''
