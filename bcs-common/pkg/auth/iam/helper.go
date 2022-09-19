@@ -371,3 +371,57 @@ type DeleteGroupMemberRequest struct {
 	// IDs: users or departmentID
 	IDs []string `json:"ids"`
 }
+
+// ResourceCreatorActionRequest request
+type ResourceCreatorActionRequest struct {
+	System       string     `json:"system"`
+	ResourceType string     `json:"type"`
+	ResourceID   string     `json:"id"`
+	ResourceName string     `json:"name"`
+	Creator      string     `json:"creator"`
+	Ancestors    []Ancestor `json:"ancestors,omitempty"`
+}
+
+func buildResourceCreatorActionRequest(resource ResourceCreator, ancestors []Ancestor) *ResourceCreatorActionRequest {
+	request := &ResourceCreatorActionRequest{
+		System:       SystemIDBKBCS,
+		ResourceType: resource.ResourceType,
+		ResourceID:   resource.ResourceID,
+		ResourceName: resource.ResourceName,
+		Creator:      resource.Creator,
+	}
+	if len(ancestors) > 0 {
+		request.Ancestors = ancestors
+	}
+
+	return request
+}
+
+// ResourceCreatorActionResponse response
+type ResourceCreatorActionResponse struct {
+	BaseResponse
+	Data []ActionPolicy `json:"data"`
+}
+
+// ActionPolicy creator被授权对应的Action和策略ID列表
+type ActionPolicy struct {
+	Action struct {
+		ID string `json:"id"`
+	} `json:"action"`
+	PolicyID int `json:"policy_id"`
+}
+
+// ResourceCreator resource info
+type ResourceCreator struct {
+	ResourceType string `json:"type"`
+	ResourceID   string `json:"id"`
+	ResourceName string `json:"name"`
+	Creator      string `json:"creator"`
+}
+
+// Ancestor resource level parent
+type Ancestor struct {
+	System string `json:"system"`
+	Type   string `json:"type"`
+	ID     string `json:"id"`
+}
