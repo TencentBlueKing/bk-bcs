@@ -42,7 +42,8 @@ func newBackendHealthMetric(namespace string, metricName string,
 	docString string, constLabels map[string]string) *prometheus.Desc {
 	return prometheus.NewDesc(
 		prometheus.BuildFQName(namespace, "backendhealth", metricName),
-		docString, []string{"lbid", "listenerid", "port", "protocol", "host", "path", "rsip", "rsport"}, constLabels)
+		docString, []string{"lbid", "listenerid", "port", "protocol", "host", "path", "rsip", "rsport", "namespace"},
+		constLabels)
 }
 
 func getMapKeys(m map[string]struct{}) []string {

@@ -59,7 +59,7 @@ func (cc *CloudCollector) Collect(ch chan<- prometheus.Metric) {
 	cc.mutex.Lock()
 	defer cc.mutex.Unlock()
 
-	//get status cache
+	// get status cache
 	totalStatusMap := cc.cache.Get()
 	for lbid, lbStatusListt := range totalStatusMap {
 		for _, lbStatus := range lbStatusListt {
@@ -75,7 +75,7 @@ func (cc *CloudCollector) Collect(ch chan<- prometheus.Metric) {
 			ch <- prometheus.MustNewConstMetric(cc.banckendMetric,
 				prometheus.GaugeValue, float64(statuNum),
 				[]string{lbid, lbStatus.ListenerID, strconv.Itoa(lbStatus.ListenerPort), lbStatus.Protocol,
-					lbStatus.Host, lbStatus.Path, lbStatus.IP, strconv.Itoa(lbStatus.Port)}...)
+					lbStatus.Host, lbStatus.Path, lbStatus.IP, strconv.Itoa(lbStatus.Port), lbStatus.Namespace}...)
 		}
 	}
 
@@ -116,7 +116,7 @@ func (cc *CloudCollector) Start() {
 }
 
 func (cc *CloudCollector) update() {
-	//get status data
+	// get status data
 	ingressList := &networkextensionv1.IngressList{}
 	if err := cc.k8sClient.List(context.Background(), ingressList); err != nil {
 		blog.Errorf("list ext ingresses failed when collect metrics, err %s", err.Error())
@@ -144,6 +144,6 @@ func (cc *CloudCollector) update() {
 			}
 		}
 	}
-	//update status to cache
+	// update status to cache
 	cc.cache.UpdateCache(totalStatusMap)
 }
