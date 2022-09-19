@@ -122,8 +122,8 @@ func (c *StorageCli) QueryK8sPvc(cluster, namespace string) ([]*storage.Pvc, err
 	offset := 0
 	for {
 		var pvcsTmp []*storage.Pvc
-		subPath = fmt.Sprintf("%s?offset=%d&limit=%d", subPath, offset, storageRequestLimit)
-		response, err := c.query(cluster, subPath)
+		path := fmt.Sprintf("%s?offset=%d&limit=%d", subPath, offset, storageRequestLimit)
+		response, err := c.query(cluster, path)
 		if err != nil {
 			return nil, err
 		}
@@ -154,8 +154,8 @@ func (c *StorageCli) QueryK8sStorageClass(cluster string) ([]*storage.StorageCla
 	offset := 0
 	for {
 		var scsTmp []*storage.StorageClass
-		subPath = fmt.Sprintf("%s?offset=%d&limit=%d", subPath, offset, storageRequestLimit)
-		response, err := c.query(cluster, subPath)
+		path := fmt.Sprintf("%s?offset=%d&limit=%d", subPath, offset, storageRequestLimit)
+		response, err := c.query(cluster, path)
 		if err != nil {
 			return nil, err
 		}
@@ -185,8 +185,8 @@ func (c *StorageCli) QueryK8sResourceQuota(cluster, namespace string) ([]*storag
 	offset := 0
 	for {
 		var quotasTmp []*storage.ResourceQuota
-		subPath = fmt.Sprintf("%s?offset=%d&limit=%d", subPath, offset, storageRequestLimit)
-		response, err := c.query(cluster, subPath)
+		path := fmt.Sprintf("%s?offset=%d&limit=%d", subPath, offset, storageRequestLimit)
+		response, err := c.query(cluster, path)
 		if err != nil {
 			return nil, err
 		}
@@ -221,8 +221,8 @@ func (c *StorageCli) QueryK8sHPA(cluster, namespace string) ([]*storage.Hpa, err
 	offset := 0
 	for {
 		var hpasTmp []*storage.Hpa
-		subPath = fmt.Sprintf("%s?offset=%d&limit=%d", subPath, offset, storageRequestLimit)
-		response, err := c.query(cluster, subPath)
+		path := fmt.Sprintf("%s?offset=%d&limit=%d", subPath, offset, storageRequestLimit)
+		response, err := c.query(cluster, path)
 		if err != nil {
 			return nil, err
 		}
@@ -256,8 +256,8 @@ func (c *StorageCli) QueryK8sGPA(cluster, namespace string) ([]*storage.Gpa, err
 	offset := 0
 	for {
 		var gpasTmp []*storage.Gpa
-		subPath = fmt.Sprintf("%s?offset=%d&limit=%d", subPath, offset, storageRequestLimit)
-		response, err := c.query(cluster, subPath)
+		path := fmt.Sprintf("%s?offset=%d&limit=%d", subPath, offset, storageRequestLimit)
+		response, err := c.query(cluster, path)
 		if err != nil {
 			return nil, err
 		}
@@ -287,8 +287,8 @@ func (c *StorageCli) QueryK8SNode(cluster string) ([]*storage.K8sNode, error) {
 	offset := 0
 	for {
 		var k8sNodesTmp []*storage.K8sNode
-		subPath = fmt.Sprintf("%s?offset=%d&limit=%d", subPath, offset, storageRequestLimit)
-		response, err := c.query(cluster, subPath)
+		path := fmt.Sprintf("%s?offset=%d&limit=%d", subPath, offset, storageRequestLimit)
+		response, err := c.query(cluster, path)
 		if err != nil {
 			return nil, err
 		}
@@ -319,8 +319,8 @@ func (c *StorageCli) QueryMesosApplication(cluster string) ([]*storage.MesosAppl
 	offset := 0
 	for {
 		var applicationsTmp []*storage.MesosApplication
-		subPath = fmt.Sprintf("%s?offset=%d&limit=%d", subPath, offset, storageRequestLimit)
-		response, err := c.query(cluster, subPath)
+		path := fmt.Sprintf("%s?offset=%d&limit=%d", subPath, offset, storageRequestLimit)
+		response, err := c.query(cluster, path)
 		if err != nil {
 			return nil, err
 		}
@@ -351,8 +351,8 @@ func (c *StorageCli) QueryMesosDeployment(cluster string) ([]*storage.MesosDeplo
 	offset := 0
 	for {
 		var deploymentsTmp []*storage.MesosDeployment
-		subPath = fmt.Sprintf("%s?offset=%d&limit=%d", subPath, offset, storageRequestLimit)
-		response, err := c.query(cluster, subPath)
+		path := fmt.Sprintf("%s?offset=%d&limit=%d", subPath, offset, storageRequestLimit)
+		response, err := c.query(cluster, path)
 		if err != nil {
 			return nil, err
 		}
@@ -405,8 +405,8 @@ func (c *StorageCli) QueryK8SGameStatefulSet(cluster, namespace string) ([]*stor
 	offset := 0
 	for {
 		var gamestatefulsetsTmp []*storage.GameStatefulSet
-		subPath = fmt.Sprintf("%s?offset=%d&limit=%d", subPath, offset, storageRequestLimit)
-		response, err := c.query(cluster, subPath)
+		path := fmt.Sprintf("%s?offset=%d&limit=%d", subPath, offset, storageRequestLimit)
+		response, err := c.query(cluster, path)
 		if err != nil {
 			return nil, err
 		}
@@ -440,8 +440,8 @@ func (c *StorageCli) QueryK8SGameDeployment(cluster, namespace string) ([]*stora
 	offset := 0
 	for {
 		var gamedeploymentsTmp []*storage.GameDeployment
-		subPath = fmt.Sprintf("%s?offset=%d&limit=%d", subPath, offset, storageRequestLimit)
-		response, err := c.query(cluster, subPath)
+		path := fmt.Sprintf("%s?offset=%d&limit=%d", subPath, offset, storageRequestLimit)
+		response, err := c.query(cluster, path)
 		if err != nil {
 			return nil, err
 		}
@@ -475,8 +475,8 @@ func (c *StorageCli) QueryK8SStatefulSet(cluster, namespace string) ([]*storage.
 	offset := 0
 	for {
 		var statefulsetsTmp []*storage.StatefulSet
-		subPath = fmt.Sprintf("%s?offset=%d&limit=%d", subPath, offset, storageRequestLimit)
-		response, err := c.query(cluster, subPath)
+		path := fmt.Sprintf("%s?offset=%d&limit=%d", subPath, offset, storageRequestLimit)
+		response, err := c.query(cluster, path)
 		if err != nil {
 			return nil, err
 		}
@@ -510,8 +510,8 @@ func (c *StorageCli) QueryK8SDaemonSet(cluster, namespace string) ([]*storage.Da
 	offset := 0
 	for {
 		var daemonsetsTmp []*storage.DaemonSet
-		subPath = fmt.Sprintf("%s?offset=%d&limit=%d", subPath, offset, storageRequestLimit)
-		response, err := c.query(cluster, subPath)
+		path := fmt.Sprintf("%s?offset=%d&limit=%d", subPath, offset, storageRequestLimit)
+		response, err := c.query(cluster, path)
 		if err != nil {
 			return nil, err
 		}
@@ -545,8 +545,8 @@ func (c *StorageCli) QueryK8SDeployment(cluster, namespace string) ([]*storage.D
 	offset := 0
 	for {
 		var deploymentsTmp []*storage.Deployment
-		subPath = fmt.Sprintf("%s?offset=%d&limit=%d", subPath, offset, storageRequestLimit)
-		response, err := c.query(cluster, subPath)
+		path := fmt.Sprintf("%s?offset=%d&limit=%d", subPath, offset, storageRequestLimit)
+		response, err := c.query(cluster, path)
 		if err != nil {
 			return nil, err
 		}
@@ -577,8 +577,8 @@ func (c *StorageCli) QueryK8SNamespace(cluster string) ([]*storage.Namespace, er
 	offset := 0
 	for {
 		var namespacesTmp []*storage.Namespace
-		subPath = fmt.Sprintf("%s?offset=%d&limit=%d", subPath, offset, storageRequestLimit)
-		response, err := c.query(cluster, subPath)
+		path := fmt.Sprintf("%s?offset=%d&limit=%d", subPath, offset, storageRequestLimit)
+		response, err := c.query(cluster, path)
 		if err != nil {
 			return nil, err
 		}
@@ -638,8 +638,8 @@ func (c *StorageCli) QueryMesosTaskgroup(cluster string) ([]*storage.Taskgroup, 
 	offset := 0
 	for {
 		var taskgroupsTmp []*storage.Taskgroup
-		subPath = fmt.Sprintf("%s?offset=%d&limit=%d", subPath, offset, storageRequestLimit)
-		response, err := c.query(cluster, subPath)
+		path := fmt.Sprintf("%s?offset=%d&limit=%d", subPath, offset, storageRequestLimit)
+		response, err := c.query(cluster, path)
 		if err != nil {
 			return nil, err
 		}
@@ -670,8 +670,8 @@ func (c *StorageCli) QueryK8SPod(cluster, namespace string) ([]*storage.Pod, err
 	offset := 0
 	for {
 		var podsTmp []*storage.Pod
-		subPath = fmt.Sprintf("%s?offset=%d&limit=%d", subPath, offset, storageRequestLimit)
-		response, err := c.query(cluster, subPath)
+		path := fmt.Sprintf("%s?offset=%d&limit=%d", subPath, offset, storageRequestLimit)
+		response, err := c.query(cluster, path)
 		if err != nil {
 			return nil, err
 		}
