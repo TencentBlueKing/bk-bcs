@@ -23,10 +23,10 @@ import (
 )
 
 const (
-	AppCode   = "xxx"
-	AppSecret = "xxx"
+	AppCode   = ""
+	AppSecret = ""
 
-	GateWayHost = "xxx"
+	GateWayHost = ""
 )
 
 var opts = &Options{
@@ -509,4 +509,23 @@ func TestIamClient_GetApplyURL(t *testing.T) {
 	}
 
 	t.Log(url)
+}
+
+func TestIamClient_AuthResourceCreatorPerm(t *testing.T) {
+	cli, err := newIAMClient()
+	if err != nil {
+		t.Fatalf("newIAMClient failed: %v", err)
+	}
+
+	err = cli.AuthResourceCreatorPerm(context.Background(), ResourceCreator{
+		ResourceType: "cluster",
+		ResourceID:   "BCS-K8S-xxx",
+		ResourceName: "xxx",
+		Creator:      "xxx",
+	}, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	t.Log("success")
 }

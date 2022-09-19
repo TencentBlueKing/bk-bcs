@@ -51,6 +51,7 @@ type PermClient interface {
 	AddUserGroupMembers(ctx context.Context, groupID uint64, request AddGroupMemberRequest) error
 	DeleteUserGroupMembers(ctx context.Context, groupID uint64, request DeleteGroupMemberRequest) error
 	CreateUserGroupPolicies(ctx context.Context, groupID uint64, request AuthorizationScope) error
+	AuthResourceCreatorPerm(ctx context.Context, resource ResourceCreator, ancestors []Ancestor) error
 }
 
 var (
@@ -584,5 +585,50 @@ func (ic *iamClient) CreateUserGroupPolicies(ctx context.Context, groupID uint64
 	}
 
 	blog.Infof("CreateUserGroupPolicies[%s:%s] successful", request.System, groupID)
+	return nil
+}
+
+// AuthResourceCreatorPerm authorize creator resource perm
+func (ic *iamClient) AuthResourceCreatorPerm(ctx context.Context, resource ResourceCreator, ancestors []Ancestor) error {
+	var (
+		_    = "AuthResourceCreatorPerm"
+		path = "/api/v1/open/authorization/resource_creator_action/"
+	)
+
+	var (
+		url  = ic.opt.GateWayHost + path
+		resp = &ResourceCreatorActionResponse{}
+	)
+
+	auth, err := ic.generateGateWayAuth("")
+	if err != nil {
+		blog.Errorf("AuthResourceCreatorPerm generateGateWayAuth failed: %v", err)
+		return err
+	}
+
+	request := buildResourceCreatorActionRequest(resource, ancestors)
+
+	result, body, errs := gorequest.New().
+		Timeout(defaultTimeOut).
+		Post(url).
+		Set("Content-Type", "application/json").
+		Set("Accept", "application/json").
+		Set("X-Bkapi-Authorization", auth).
+		SetDebug(true).
+		Send(&request).
+		EndStruct(resp)
+
+	if len(errs) != 0 {
+		blog.Errorf("AuthResourceCreatorPerm gorequest errors=`%s`", errs)
+		return errs[0]
+	}
+	if result.StatusCode != http.StatusOK || resp.Code != 0 {
+		errMsg := fmt.Errorf("AuthResourceCreatorPerm API error: code[%v], body[%v], err[%s]",
+			result.StatusCode, string(body), resp.Message)
+		return errMsg
+	}
+
+	blog.Infof("AuthResourceCreatorPerm[%s:%s] successful[%+v]", request.System, resource.Creator, resp.Data)
+
 	return nil
 }
