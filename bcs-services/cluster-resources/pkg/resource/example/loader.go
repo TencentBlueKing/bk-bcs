@@ -19,6 +19,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"strings"
 
 	"gopkg.in/yaml.v3"
 
@@ -41,8 +42,8 @@ var (
 
 	// HasDemoManifestResKinds 支持获取示例的资源类型
 	HasDemoManifestResKinds = []string{
-		res.Deploy, res.STS, res.DS, res.CJ, res.Job, res.Po, res.Ing, res.SVC,
-		res.EP, res.CM, res.Secret, res.PV, res.PVC, res.SC, res.HPA, res.SA, res.CObj,
+		res.Deploy, res.STS, res.DS, res.CJ, res.Job, res.Po, res.Ing, res.SVC, res.EP, res.CM,
+		res.Secret, res.PV, res.PVC, res.SC, res.HPA, res.SA, res.GDeploy, res.GSTS, res.CObj,
 	}
 )
 
@@ -58,6 +59,9 @@ func LoadResConf(ctx context.Context, kind string) (map[string]interface{}, erro
 	lang := i18n.GetLangFromContext(ctx)
 	filepath := fmt.Sprintf("%s/%s/%s.json", ResConfDIR, lang, kind)
 	conf := map[string]interface{}{}
+	if strings.Contains(filepath, "..") {
+		return conf, nil
+	}
 
 	content, err := ioutil.ReadFile(filepath)
 	if err != nil {
@@ -71,6 +75,9 @@ func LoadResConf(ctx context.Context, kind string) (map[string]interface{}, erro
 func LoadResRefs(ctx context.Context, kind string) (string, error) {
 	lang := i18n.GetLangFromContext(ctx)
 	filepath := fmt.Sprintf("%s/%s/%s.md", ResRefsDIR, lang, kind)
+	if strings.Contains(filepath, "..") {
+		return "", nil
+	}
 	content, err := ioutil.ReadFile(filepath)
 	if err != nil {
 		return "", err
@@ -82,6 +89,9 @@ func LoadResRefs(ctx context.Context, kind string) (string, error) {
 func LoadDemoManifest(path, namespace string) (map[string]interface{}, error) {
 	filepath := fmt.Sprintf("%s/%s.yaml", ResDemoManifestDIR, path)
 	manifest := map[string]interface{}{}
+	if strings.Contains(filepath, "..") {
+		return manifest, nil
+	}
 
 	content, err := ioutil.ReadFile(filepath)
 	if err != nil {
