@@ -42,6 +42,8 @@ const (
 	PatchPathContainerContainerPort = "/spec/containers/%v/ports/%v/containerPort"
 	// PatchPathContainerEnv path for patching container env
 	PatchPathContainerEnv = "/spec/containers/%v/env"
+	// PatchPathInitContainerEnv path for patching init container env
+	PatchPathInitContainerEnv = "/spec/initContainers/%v/env"
 	// PatchPathPodLabel path for patching pod labels
 	PatchPathPodLabel = "/metadata/labels"
 	// PatchPathAffinity path for patching pod affinity

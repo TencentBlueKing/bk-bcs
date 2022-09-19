@@ -52,10 +52,9 @@ type HostPortInjectorConfig struct {
 
 // HostPortInjector host port injector
 type HostPortInjector struct {
-	kubeConfig *rest.Config
-	k8sClient  *kubernetes.Clientset
-	conf       *HostPortInjectorConfig
-	stopCh     chan struct{}
+	k8sClient *kubernetes.Clientset
+	conf      *HostPortInjectorConfig
+	stopCh    chan struct{}
 
 	podLister corev1lister.PodLister
 
@@ -279,55 +278,66 @@ func (hpi *HostPortInjector) injectToPod(pod *corev1.Pod) ([]types.PatchOperatio
 		}
 		// inject all hostport envs into all containers
 		envs := pod.Spec.Containers[containerIndex].Env
-		envPatchOp := PatchOperationReplace
-		if len(envs) == 0 {
-			envPatchOp = PatchOperationAdd
-		}
-		for tmpIndex, containerPort := range containerPortList {
-			envs = append(envs, corev1.EnvVar{
-				Name:  envRandHostportPrefix + strconv.FormatInt(int64(containerPort), 10),
-				Value: strconv.FormatUint(hostPorts[tmpIndex].Port, 10),
-			})
-		}
-
-		envs = append(envs, corev1.EnvVar{
-			Name: envRandHostportHostIP,
-			ValueFrom: &corev1.EnvVarSource{
-				FieldRef: &corev1.ObjectFieldSelector{
-					FieldPath: "status.hostIP",
-				},
-			},
-		},
-		)
-
-		envs = append(envs, corev1.EnvVar{
-			Name: envRandHostportPodName,
-			ValueFrom: &corev1.EnvVarSource{
-				FieldRef: &corev1.ObjectFieldSelector{
-					FieldPath: "metadata.name",
-				},
-			},
-		},
-		)
-
-		envs = append(envs, corev1.EnvVar{
-			Name: envRandHostportPodNamespace,
-			ValueFrom: &corev1.EnvVarSource{
-				FieldRef: &corev1.ObjectFieldSelector{
-					FieldPath: "metadata.namespace",
-				},
-			},
-		},
-		)
-
-		retPatches = append(retPatches, types.PatchOperation{
-			Path:  fmt.Sprintf(PatchPathContainerEnv, containerIndex),
-			Op:    envPatchOp,
-			Value: envs,
-		})
+		envPatch := hpi.generateEnvPatch(PatchPathContainerEnv, containerIndex, envs, containerPortList, hostPorts)
+		retPatches = append(retPatches, envPatch)
+	}
+	// injecto all hostport envs into all init containers
+	for containerIndex, container := range pod.Spec.InitContainers {
+		envPatch := hpi.generateEnvPatch(
+			PatchPathInitContainerEnv, containerIndex, container.Env, containerPortList, hostPorts)
+		retPatches = append(retPatches, envPatch)
 	}
 
 	return retPatches, nil
+}
+
+func (hpi *HostPortInjector) generateEnvPatch(
+	patchPath string, index int,
+	envs []corev1.EnvVar, containerPortList []int32, hostPorts []*PortEntry) types.PatchOperation {
+	envPatchOp := PatchOperationReplace
+	if len(envs) == 0 {
+		envPatchOp = PatchOperationAdd
+	}
+	for tmpIndex, containerPort := range containerPortList {
+		envs = append(envs, corev1.EnvVar{
+			Name:  envRandHostportPrefix + strconv.FormatInt(int64(containerPort), 10),
+			Value: strconv.FormatUint(hostPorts[tmpIndex].Port, 10),
+		})
+	}
+
+	envs = append(envs, corev1.EnvVar{
+		Name: envRandHostportHostIP,
+		ValueFrom: &corev1.EnvVarSource{
+			FieldRef: &corev1.ObjectFieldSelector{
+				FieldPath: "status.hostIP",
+			},
+		},
+	},
+	)
+	envs = append(envs, corev1.EnvVar{
+		Name: envRandHostportPodName,
+		ValueFrom: &corev1.EnvVarSource{
+			FieldRef: &corev1.ObjectFieldSelector{
+				FieldPath: "metadata.name",
+			},
+		},
+	},
+	)
+	envs = append(envs, corev1.EnvVar{
+		Name: envRandHostportPodNamespace,
+		ValueFrom: &corev1.EnvVarSource{
+			FieldRef: &corev1.ObjectFieldSelector{
+				FieldPath: "metadata.namespace",
+			},
+		},
+	},
+	)
+
+	return types.PatchOperation{
+		Path:  fmt.Sprintf(patchPath, index),
+		Op:    envPatchOp,
+		Value: envs,
+	}
 }
 
 // generateAffinityPath xxx
