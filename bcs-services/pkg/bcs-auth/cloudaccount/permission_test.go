@@ -18,13 +18,14 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/project"
+	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/utils"
 )
 
 const (
-	AppCode   = "bk_bcs"
+	AppCode   = "xxx"
 	AppSecret = "xxx"
 
-	GateWayHost = "http://xxx/stage"
+	GateWayHost = "http://xxx/prod"
 )
 
 var opts = &iam.Options{
@@ -97,4 +98,36 @@ func TestPerm_GetMultiActionPermission(t *testing.T) {
 	}
 
 	t.Log(allow)
+}
+
+func TestBCSCloudAccountPerm_CanCreateCloudAccount(t *testing.T) {
+	cli, err := newBcsClusterPermCli()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	allow, url, err := cli.CanCreateCloudAccount("xxx", "xxx")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	t.Log(allow, url)
+}
+
+func TestBCSCloudAccountPerm_AuthorizeResourceCreatorPerm(t *testing.T) {
+	cli, err := newBcsClusterPermCli()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	err = cli.AuthorizeResourceCreatorPerm("xxx", utils.ResourceInfo{
+		Type: "project",
+		ID:   "xxx",
+		Name: "xxx",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	t.Log("success")
 }
