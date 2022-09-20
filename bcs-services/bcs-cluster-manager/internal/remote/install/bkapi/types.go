@@ -42,7 +42,7 @@ var (
 	// ErrServerNotInit server notInit
 	ErrServerNotInit = errors.New("server not inited")
 
-	defaultCmdFlag = []map[string]interface{}{{"--insecure-skip-tls-verify": "", "--wait": true}}
+	defaultCmdFlag = []map[string]interface{}{{"--insecure-skip-tls-verify": ""}, {"--wait": true}}
 )
 
 // AuthInfo auth info
