@@ -14,6 +14,10 @@
 package cloudaccount
 
 import (
+	"context"
+	"fmt"
+	"time"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/project"
@@ -158,6 +162,43 @@ func (bcp *BCSCloudAccountPerm) CanUseCloudAccount(user string, projectID string
 
 	url, _ := bcp.GenerateIAMApplicationURL(iam.SystemIDBKBCS, []iam.ApplicationAction{accountApps, projectApp})
 	return allow, url, nil
+}
+
+// AuthorizeResourceCreatorPerm 授予资源创建者关联权限(https://bk.tencent.com/docs/document/6.1/229/23026)
+func (bcp *BCSCloudAccountPerm) AuthorizeResourceCreatorPerm(creator string, resource utils.ResourceInfo,
+	opts ...utils.AuthorizeCreatorOption) error {
+	if bcp == nil {
+		return utils.ErrServerNotInited
+	}
+
+	if len(creator) == 0 || resource.Validate() != nil {
+		return fmt.Errorf("BCSCloudAccountPerm AuthorizeResourceCreatorPerm paras empty")
+	}
+
+	// extract extend paras
+	options := &utils.AuthorizeCreatorOptions{
+		Ancestors: nil,
+	}
+	for _, opt := range opts {
+		opt(options)
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 60 * time.Second)
+	defer cancel()
+	err := bcp.iamClient.AuthResourceCreatorPerm(ctx, iam.ResourceCreator{
+		Creator:      creator,
+		ResourceType: resource.Type,
+		ResourceID:   resource.ID,
+		ResourceName: resource.Name,
+	}, options.Ancestors)
+	if err != nil {
+		blog.Errorf("BCSCloudAccountPerm AuthResourceCreatorPerm[%s:%s:%s] failed: %v", creator,
+			resource.ID, resource.Name, err)
+		return err
+	}
+
+	blog.Infof("BCSCloudAccountPerm AuthResourceCreatorPerm successful[%s:%s:%s]", creator, resource.ID, resource.Name)
+	return nil
 }
 
 // GetMultiAccountMultiActionPermission only support same instanceSelection

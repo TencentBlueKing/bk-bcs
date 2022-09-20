@@ -103,3 +103,33 @@ func BuildRelatedSystemResource(systemID, resourceType string,
 
 	return relatedResource
 }
+
+// ResourceInfo resource
+type ResourceInfo struct {
+	Type string `json:"type"`
+	ID   string `json:"id"`
+	Name string `json:"name"`
+}
+
+// Validate validate
+func (rs ResourceInfo) Validate() error {
+	if rs.ID == "" || rs.Type == "" || rs.Name == "" {
+		return fmt.Errorf("ResourceInfo resource empty")
+	}
+
+	return nil
+}
+
+type AuthorizeCreatorOptions struct {
+	Ancestors []iam.Ancestor
+}
+
+// AuthorizeCreatorOption xxx
+type AuthorizeCreatorOption func(options *AuthorizeCreatorOptions)
+
+// WithAncestors set authorizeCreatorOptions ancestors
+func WithAncestors(ancestors []iam.Ancestor) AuthorizeCreatorOption {
+	return func(q *AuthorizeCreatorOptions) {
+		q.Ancestors = ancestors
+	}
+}
