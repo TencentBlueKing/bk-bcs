@@ -24,7 +24,7 @@ from backend.container_service.clusters.open_apis.serializers import CreateNames
 from backend.container_service.clusters.permissions import AccessClusterPermMixin
 from backend.resources.namespace import Namespace
 from backend.resources.namespace import utils as ns_utils
-from backend.resources.namespace.constants import BCS_RESERVED_NAMESPACES, K8S_PLAT_NAMESPACE
+from backend.resources.namespace.constants import BCS_RESERVED_NAMESPACES, K8S_PLAT_NAMESPACE, K8S_SYS_NAMESPACE
 from backend.templatesets.var_mgmt.models import NameSpaceVariable
 from backend.utils.error_codes import error_codes
 
@@ -44,7 +44,7 @@ class NamespaceViewSet(AccessClusterPermMixin, UserViewSet):
         project_id = request.project.project_id
         params = self.params_validate(CreateNamespaceSLZ, context={'project_id': project_id})
         ns_name, variables = params['name'], params['variables']
-        if ns_name in BCS_RESERVED_NAMESPACES:
+        if ns_name in K8S_SYS_NAMESPACE:
             raise error_codes.ValidateError('不允许创建 BCS 保留的命名空间')
         # 更新操作审计信息
         request.audit_ctx.update_fields(resource_type=ResourceType.Namespace, resource=ns_name)
