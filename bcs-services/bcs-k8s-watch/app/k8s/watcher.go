@@ -190,30 +190,6 @@ func (w *Watcher) Run(stopCh <-chan struct{}) {
 	w.controller.Run(stopCh)
 }
 
-// func (w *Watcher) handleQueueData(stopCh <-chan struct{}) {
-// 	glog.Infof("watcher %s handleQueueData", w.resourceType)
-
-// 	for {
-// 		select {
-// 		case <-stopCh:
-// 			glog.Infof("receive stop signal, quit watcher: %s", w.resourceType)
-// 			return
-// 		default:
-// 		}
-
-// 		data := w.queue.Pop()
-// 		sData, ok := data.(*action.SyncData)
-// 		if !ok {
-// 			glog.Errorf("queue data trans to *action.SyncData failed")
-// 			continue
-// 		}
-
-// 		glog.V(4).Infof("queue length[%s:%d] resource[%s:%s:%s]", w.resourceType, w.queue.Length(), sData.Action,
-// 			sData.Namespace, sData.Name)
-// 		w.writer.Sync(sData)
-// 	}
-// }
-
 // distributeDataToHandler xxx
 // distribute data to handler at watcher handlers.
 func (w *Watcher) distributeDataToHandler(data *action.SyncData) {
@@ -243,13 +219,6 @@ func (w *Watcher) AddEvent(obj interface{}) {
 	}
 	w.eventQueue.Forget(item)
 	w.eventQueue.Add(item)
-
-	// data := w.genSyncData(obj, action.SyncDataActionAdd)
-	// if data == nil {
-	// 	return
-	// }
-
-	// w.distributeDataToHandler(data)
 }
 
 // DeleteEvent is event handler for delete resource event.
@@ -282,13 +251,6 @@ func (w *Watcher) DeleteEvent(obj interface{}) {
 	}
 	w.eventQueue.Forget(item)
 	w.eventQueue.Add(item)
-
-	// data := w.genSyncData(obj, action.SyncDataActionDelete)
-	// if data == nil {
-	// 	return
-	// }
-
-	// w.distributeDataToHandler(data)
 }
 
 // UpdateEvent is event handler for update resource event.
@@ -315,21 +277,29 @@ func (w *Watcher) UpdateEvent(oldObj, newObj interface{}) {
 			return
 		}
 
-		// NOTE: a best way is to use deepcopy function, save the common fields,
-		// update the change fields.
-		var tempLastTimes = make([]metav1.Time, len(newNode.Status.Conditions))
-		newNode.ResourceVersion = oldNode.ResourceVersion
+		if len(newNode.Status.Conditions) == len(oldNode.Status.Conditions) {
+			// NOTE: a best way is to use deepcopy function, save the common fields,
+			// update the change fields.
+			var tempLastTimes = make([]metav1.Time, len(newNode.Status.Conditions))
+			tempVersion := newNode.ResourceVersion
+			newNode.ResourceVersion = oldNode.ResourceVersion
 
-		for i := range newNode.Status.Conditions {
-			tempLastTimes[i] = newNode.Status.Conditions[i].LastHeartbeatTime
-			newNode.Status.Conditions[i].LastHeartbeatTime = oldNode.Status.Conditions[i].LastHeartbeatTime
-		}
+			for i := range newNode.Status.Conditions {
+				tempLastTimes[i] = newNode.Status.Conditions[i].LastHeartbeatTime
+				newNode.Status.Conditions[i].LastHeartbeatTime = oldNode.Status.Conditions[i].LastHeartbeatTime
+			}
 
-		// the first DeepEqual skips in obj level, the second DeepEqual skips
-		// the node data after save common fields.
-		if reflect.DeepEqual(oldNode, newNode) {
-			glog.V(2).Infof("skip unnecessary node %s update event", newNode.GetName())
-			return
+			// the first DeepEqual skips in obj level, the second DeepEqual skips
+			// the node data after save common fields.
+			if reflect.DeepEqual(oldNode, newNode) {
+				glog.V(2).Infof("skip unnecessary node %s update event", newNode.GetName())
+				return
+			}
+			// recover new node metadata after DeepEqual finally.
+			newNode.ResourceVersion = tempVersion
+			for i := range newNode.Status.Conditions {
+				newNode.Status.Conditions[i].LastHeartbeatTime = tempLastTimes[i]
+			}
 		}
 	}
 	item := types.NamespacedName{
@@ -338,14 +308,6 @@ func (w *Watcher) UpdateEvent(oldObj, newObj interface{}) {
 	}
 	w.eventQueue.Forget(item)
 	w.eventQueue.Add(item)
-
-	// // it's need to update finally, sync metadata now.
-	// data := w.genSyncData(newObj, action.SyncDataActionUpdate)
-	// if data == nil {
-	// 	return
-	// }
-
-	// w.distributeDataToHandler(data)
 }
 
 // processNextWorkItem will read a single work item off the workqueue and
@@ -428,21 +390,6 @@ func (w *Watcher) isEventShouldFilter(meta types.NamespacedName, eventAction str
 }
 
 func (w *Watcher) genSyncData(nsedName types.NamespacedName, obj interface{}, eventAction string) *action.SyncData {
-	// dMeta, isObj := obj.(metav1.Object)
-
-	// if !isObj {
-	// 	deletedState, ok := obj.(cache.DeletedFinalStateUnknown)
-	// 	if !ok {
-	// 		glog.Errorf("Error casting to DeletedFinalStateUnknown, obj: %+v", obj)
-	// 		return nil
-	// 	}
-	// 	dMeta, ok = deletedState.Obj.(metav1.Object)
-	// 	if !ok {
-	// 		glog.Errorf("Error DeletedFinalStateUnknown contained Obj, obj: %+v", obj)
-	// 		return nil
-	// 	}
-	// }
-
 	namespace := nsedName.Namespace
 	name := nsedName.Name
 
