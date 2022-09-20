@@ -2392,13 +2392,14 @@ export default {
              */
     updateLivenessHeader(list, data) {
       const result = [];
-      list.forEach((item) => {
-        const params = {
-          name: item.key,
-          value: item.value,
-        };
-        result.push(params);
-      });
+      list.filter(item => item.key)
+        .forEach((item) => {
+          const params = {
+            name: item.key,
+            value: item.value,
+          };
+          result.push(params);
+        });
       this.curContainer.livenessProbe.httpGet.httpHeaders = result;
     },
 
@@ -2409,13 +2410,14 @@ export default {
              */
     updateReadinessHeader(list, data) {
       const result = [];
-      list.forEach((item) => {
-        const params = {
-          name: item.key,
-          value: item.value,
-        };
-        result.push(params);
-      });
+      list.filter(item => item.key)
+        .forEach((item) => {
+          const params = {
+            name: item.key,
+            value: item.value,
+          };
+          result.push(params);
+        });
       this.curContainer.readinessProbe.httpGet.httpHeaders = result;
     },
 
@@ -3580,6 +3582,17 @@ export default {
           }
         });
         this.curContainer = container;
+        // 过滤空值的问题
+        if (this.curContainer.livenessProbe.httpGet.httpHeaders
+        && Array.isArray(this.curContainer.livenessProbe.httpGet.httpHeaders)) {
+          this.curContainer.livenessProbe.httpGet.httpHeaders = this.curContainer.livenessProbe.httpGet.httpHeaders
+            .filter(item => item.key);
+        }
+        if (this.curContainer.readinessProbe.httpGet.httpHeaders
+        && Array.isArray(this.curContainer.readinessProbe.httpGet.httpHeaders)) {
+          this.curContainer.readinessProbe.httpGet.httpHeaders = this.curContainer.readinessProbe.httpGet.httpHeaders
+            .filter(item => item.key);
+        }
         this.curContainerIndex = index;
 
         this.livenessProbeHeaders = this.getProbeHeaderList(this.curContainer.livenessProbe.httpGet.httpHeaders);

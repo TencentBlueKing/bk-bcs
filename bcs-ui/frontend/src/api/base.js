@@ -165,6 +165,18 @@ export const clusterNodeOverview = request('get', `${metricPrefix}/nodes/$nodeIP
 export const clusterPodMetric = request('post', `${metricPrefix}/namespaces/$namespaceId/pods/$metric`);
 export const clusterContainersMetric = request('get', `${metricPrefix}/namespaces/$namespaceId/pods/$podId/containers/$containerId/$metric`);
 
+// variable
+const variablePrefix = `${NODE_ENV === 'development' ? '' : window.BCS_API_HOST}/bcsapi/v4/bcsproject/v1/project/$projectCode`;
+export const createVariable = request('post', `${variablePrefix}/variables`);
+export const variableDefinitions = request('get', `${variablePrefix}/variables`);
+export const deleteDefinitions = request('delete', `${variablePrefix}/variables`);
+export const updateVariable = request('put', `${variablePrefix}/variables/$variableID`);
+export const importVariable = request('post', `${variablePrefix}/variables/import`);
+export const clusterVariable = request('get', `${variablePrefix}/variables/$variableID/cluster`);
+export const updateClusterVariable = request('put', `${variablePrefix}/variables/$variableID/cluster`);
+export const namespaceVariable = request('get', `${variablePrefix}/variables/$variableID/namespace`);
+export const updateNamespaceVariable = request('put', `${variablePrefix}/variables/$variableID/namespace`);
+
 export default {
   dashbordList,
   projectFeatureFlag,

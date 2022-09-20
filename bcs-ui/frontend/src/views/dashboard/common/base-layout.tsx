@@ -344,7 +344,7 @@ export default defineComponent({
       $router.push({
         name: 'dashboardResourceUpdate',
         params: {
-          defaultShowExample: (type.value !== 'crd') as any,
+          defaultShowExample: (kind.value !== 'CustomObject') as any,
           namespace: namespaceValue.value,
         },
         query: {

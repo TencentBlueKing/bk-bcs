@@ -25,7 +25,7 @@
 */
 
 // 变量管理
-const Variable = () => import(/* webpackChunkName: 'variable' */'@/views/variable');
+const Variable = () => import(/* webpackChunkName: 'variable' */'@/views/variable/variable.vue');
 
 // 首页
 const Configuration = () => import(/* webpackChunkName: 'configuration' */'@/views/configuration');

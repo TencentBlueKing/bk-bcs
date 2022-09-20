@@ -437,7 +437,7 @@ export default defineComponent({
 
       exampleLoading.value = true;
       examples.value = await $store.dispatch('dashboard/exampleManifests', {
-        kind: type.value === 'crd' ? 'CustomObject' : kind.value, // crd类型的模板kind固定为CustomObject
+        kind: kind.value, // crd类型的模板kind固定为CustomObject
         namespace: namespace.value,
       });
       activeExample.value = examples.value?.items?.[0] || {};

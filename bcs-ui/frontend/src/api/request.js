@@ -31,12 +31,24 @@ import store from '@/store';
 const methodsWithoutData = ['get', 'head', 'options', 'delete'];
 const defaultConfig = { needRes: false };
 
-export const parseUrl = (url, params = {}) => {
+// 转换URL为绝对路径
+export const resolveUrlPrefix = (url, { domain = window.DEVOPS_BCS_API_URL, prefix = '' } = {}) => {
+  if (/(http|https):\/\/([\w.]+\/?)\S*/.test(url) || url.indexOf(domain) === 0) {
+    return url;
+  }
+  return `${NODE_ENV === 'development' ? '' : domain}${prefix}${url}`;
+};
+
+export const parseUrl = (reqMethod, url, body = {}) => {
+  let params = JSON.parse(JSON.stringify(body));
   // 全局URL变量替换
   const { currentRoute } = router;
   const variableData = {
     $projectId: currentRoute.params.projectId,
     $clusterId: store.state.curClusterId || currentRoute.query.cluster_id || currentRoute.params.cluster_id,
+    $projectCode: store.state.sideMenu?.onlineProjectList
+      ?.find(item => item.project_id === currentRoute.params.projectId)
+      ?.project_code,
   };
   Object.keys(params).forEach((key) => {
     // 自定义url变量
@@ -44,7 +56,7 @@ export const parseUrl = (url, params = {}) => {
       variableData[key] = params[key];
     }
   });
-  let newUrl = `${/(http|https):\/\/([\w.]+\/?)\S*/.test(url) ? url : `${DEVOPS_BCS_API_URL}${url}`}`;
+  let newUrl = url;
   Object.keys(variableData).forEach((key) => {
     if (!variableData[key]) {
       // console.warn(`路由变量未配置${key}`)
@@ -53,26 +65,29 @@ export const parseUrl = (url, params = {}) => {
     } else {
       newUrl = newUrl.replace(new RegExp(`\\${key}`, 'g'), variableData[key]);
     }
+    // 删除URL上的参数
     delete params[key];
   });
-  return newUrl;
+  // 参数拼接在URL后面
+  if (methodsWithoutData.includes(reqMethod)) {
+    const query = json2Query(params, '');
+    if (query) {
+      newUrl += `?${query}`;
+    }
+    params = null;
+  }
+  return {
+    url: newUrl,
+    params,
+  };
 };
 
 export const request = (method, url) => (params = {}, config = {}) => {
   const reqMethod = method.toLowerCase();
   const reqConfig = Object.assign({}, defaultConfig, config);
 
-  let newUrl = parseUrl(url, params);
-  let req = null;
-  if (methodsWithoutData.includes(reqMethod)) {
-    const query = json2Query(params, '');
-    if (query) {
-      newUrl += `?${query}`;
-    }
-    req = http[reqMethod](newUrl, null, reqConfig);
-  } else {
-    req = http[reqMethod](newUrl, params, reqConfig);
-  }
+  const { url: newUrl, params: newParams } = parseUrl(reqMethod, resolveUrlPrefix(url), params);
+  const req = http[reqMethod](newUrl, newParams, reqConfig);
   return req.then((res) => {
     if (reqConfig.needRes) return Promise.resolve(res);
 
@@ -82,5 +97,7 @@ export const request = (method, url) => (params = {}, config = {}) => {
     return Promise.reject(err);
   });
 };
+
+export const createRequest = ({ domain, prefix = '' } = {}) => (method, url) => request(method, resolveUrlPrefix(url, { domain, prefix }));
 
 export default request;
