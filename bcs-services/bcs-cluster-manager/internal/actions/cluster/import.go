@@ -32,6 +32,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/taskserver"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/types"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/golang/protobuf/ptypes/wrappers"
 )
@@ -497,7 +498,9 @@ func checkKubeConfig(kubeConfig string) error {
 		return fmt.Errorf("checkKubeConfig validate failed: %v", err)
 	}
 
-	_, err = kubeCli.Discovery().ServerVersion()
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*120)
+	defer cancel()
+	_, err = kubeCli.CoreV1().Nodes().List(ctx, metav1.ListOptions{})
 	if err != nil {
 		return fmt.Errorf("checkKubeConfig connect cluster failed: %v", err)
 	}

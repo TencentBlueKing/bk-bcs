@@ -75,6 +75,8 @@ func CheckUserPermByActionID(ctx context.Context, iam iam.PermClient, permInfo U
 			return accountIAM.CanManageCloudAccount(permInfo.User, permInfo.ProjectID, permInfo.CloudAccountID)
 		case cloudaccount.AccountUse.String():
 			return accountIAM.CanUseCloudAccount(permInfo.User, permInfo.ProjectID, permInfo.CloudAccountID)
+		case cloudaccount.AccountCreate.String():
+			return accountIAM.CanCreateCloudAccount(permInfo.User, permInfo.ProjectID)
 		default:
 			return false, "", errFunc(permInfo.ActionID)
 		}

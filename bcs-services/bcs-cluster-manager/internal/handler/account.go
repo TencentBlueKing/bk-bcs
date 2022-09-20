@@ -32,7 +32,7 @@ func (cm *ClusterManager) CreateCloudAccount(ctx context.Context,
 		return err
 	}
 	start := time.Now()
-	ca := account.NewCreateAction(cm.model)
+	ca := account.NewCreateAction(cm.model, cm.iam)
 	ca.Handle(ctx, req, resp)
 	metrics.ReportAPIRequestMetric("CreateCloudAccount", "grpc", strconv.Itoa(int(resp.Code)), start)
 	blog.Infof("reqID: %s, action: CreateCloudAccount, req %v, resp %v", reqID, req, resp)

@@ -28,8 +28,8 @@ func GetAutoScalerInstaller(projectID string) (install.Installer, error) {
 		InstallType:      bkapi.BcsApp,
 		ProjectID:        projectID,
 		ChartName:        op.ComponentDeploy.AutoScaler.ChartName,
-		ReleaseNamespace: op.ComponentDeploy.AutoScaler.ReleaseName,
-		ReleaseName:      op.ComponentDeploy.AutoScaler.ReleaseNamespace,
+		ReleaseNamespace: op.ComponentDeploy.AutoScaler.ReleaseNamespace,
+		ReleaseName:      op.ComponentDeploy.AutoScaler.ReleaseName,
 		IsPublicRepo:     op.ComponentDeploy.AutoScaler.IsPublicRepo,
 	})
 }
