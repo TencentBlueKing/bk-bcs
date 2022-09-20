@@ -25,6 +25,8 @@ import (
 	"github.com/pkg/errors"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
+	"sigs.k8s.io/controller-runtime/pkg/cache"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	ingressctrl "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/ingresscontroller"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/cloud"
@@ -93,6 +95,9 @@ func main() {
 	flag.StringVar(&opts.ServerCertFile, "server_cert_file", "", "server cert file for webhook server")
 	flag.StringVar(&opts.ServerKeyFile, "server_key_file", "", "server key file for webhook server")
 
+	flag.IntVar(&opts.KubernetesQPS, "kubernetes_qps", 100, "the qps of k8s client request")
+	flag.IntVar(&opts.KubernetesBurst, "kubernetes_burst", 200, "the burst of k8s client request")
+
 	flag.Parse()
 
 	opts.Verbosity = int32(verbosity)
@@ -146,6 +151,24 @@ func main() {
 		LeaderElection:          true,
 		LeaderElectionID:        "33fb49e.cloudlbconroller.bkbcs.tencent.com",
 		LeaderElectionNamespace: opts.ElectionNamespace,
+		NewClient: func(cache cache.Cache, config *rest.Config, options client.Options) (client.Client, error) {
+			config.QPS = float32(opts.KubernetesQPS)
+			config.Burst = opts.KubernetesBurst
+			// Create the Client for Write operations.
+			c, err := client.New(config, options)
+			if err != nil {
+				return nil, err
+			}
+
+			return &client.DelegatingClient{
+				Reader: &client.DelegatingReader{
+					CacheReader:  cache,
+					ClientReader: c,
+				},
+				Writer:       c,
+				StatusClient: c,
+			}, nil
+		},
 	})
 	if err != nil {
 		blog.Errorf("unable to start manager, err %s", err.Error())

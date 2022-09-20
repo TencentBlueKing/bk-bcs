@@ -58,4 +58,9 @@ type ControllerOption struct {
 	ServerCertFile string
 	// ServerKeyFile server key file path
 	ServerKeyFile string
+
+	// KubernetesQPS the qps of k8s client request
+	KubernetesQPS int
+	// KubernetesBurst the burst of k8s client request
+	KubernetesBurst int
 }
