@@ -69,6 +69,13 @@
                         required: true,
                         message: $i18n.t('必填项'),
                         trigger: 'blur'
+                    },
+                    {
+                        message: $i18n.t('请输入4-12字符的项目名称'),
+                        trigger: 'blur',
+                        validator (value) {
+                            return /^[\w\W]{4,12}$/g.test(value)
+                        }
                     }
                 ],
                 english_name: [

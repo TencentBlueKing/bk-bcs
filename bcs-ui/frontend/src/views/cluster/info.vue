@@ -426,7 +426,7 @@
                     return 2
                 } else if (provider === 'bluekingCloud' && clusterCategory === 'importer' && importCategory === 'kubeConfig') {
                     return 3
-                } else if (provider === 'tencentCloud' && importCategory === "importer" && importCategory === 'cloud') {
+                } else if (provider === 'tencentCloud' && clusterCategory === "importer" && importCategory === 'cloud') {
                     return 4
                 }
                 return ''

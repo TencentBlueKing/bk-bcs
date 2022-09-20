@@ -621,6 +621,12 @@
              */
             hideErrorDialog () {
                 this.errorDialogConf.isShow = false
+                this.$router.push({
+                    name: 'helms',
+                    params: {
+                        clusterId: this.curClusterId
+                    }
+                })
             },
 
             /**

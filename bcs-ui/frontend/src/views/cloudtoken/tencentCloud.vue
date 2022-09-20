@@ -1,7 +1,18 @@
 <template>
     <div class="tencent-cloud">
         <div class="tencent-cloud-operate">
-            <bk-button theme="primary" @click="handleShowCreateDialog">{{$t('新建凭证')}}</bk-button>
+            <bk-button theme="primary"
+                v-authority="{
+                    actionId: 'cloud_account_create',
+                    resourceName: curProject.project_name,
+                    newPerms: true,
+                    permCtx: {
+                        resource_type: 'project',
+                        project_id: curProject.project_id,
+                        operator: user.username
+                    }
+                }"
+                @click="handleShowCreateDialog">{{$t('新建凭证')}}</bk-button>
             <bk-input class="w400"
                 :placeholder="$t('搜索名称、SecretID、集群ID')"
                 clearable
@@ -238,6 +249,7 @@
                 handleGetCloud()
             })
             return {
+                curProject,
                 user,
                 webAnnotations,
                 curPageData,

@@ -5,7 +5,7 @@ import { DirectiveBinding } from 'vue/types/options'
 import { VueConstructor, VNode } from 'vue'
 import { bus } from '@/common/bus'
 import bkTooltips from 'bk-magic-vue/lib/directives/tooltips'
-import { userPerms } from '@/api/base'
+import { newUserPermsByAction, userPerms } from '@/api/base'
 import { deepEqual } from '@/common/util'
 interface IElement extends HTMLElement {
     [prop: string]: any;
@@ -140,7 +140,7 @@ function destroy (cloneEl: IElement, vNode: VNode) {
 }
 
 async function updatePerms (el: IElement, binding: DirectiveBinding, vNode: VNode) {
-    const { actionId = '', permCtx } = binding.value as IOptions
+    const { actionId = '', permCtx, newPerms } = binding.value as IOptions
     const { resource_type, cluster_id, project_id, template_id, name } = permCtx || {}
     // 校验数据完整性
     if (!actionId
@@ -152,13 +152,21 @@ async function updatePerms (el: IElement, binding: DirectiveBinding, vNode: VNod
     ) return
 
     const actionIds = Array.isArray(actionId) ? actionId : [actionId]
-    const data = await userPerms({
-        action_ids: actionIds,
-        perm_ctx: permCtx
-    }, {
-        fromCache: true,
-        requestId: `${JSON.stringify(actionIds)}-${JSON.stringify(permCtx)}`
-    }).catch(() => ({}))
+    const data = newPerms
+        ? await newUserPermsByAction({
+            $actionId: actionIds[0], // 目前只兼容一个
+            perm_ctx: permCtx
+        }, {
+            fromCache: true,
+            requestId: `${JSON.stringify(actionIds)}-${JSON.stringify(permCtx)}`
+        })
+        : await userPerms({
+            action_ids: actionIds,
+            perm_ctx: permCtx
+        }, {
+            fromCache: true,
+            requestId: `${JSON.stringify(actionIds)}-${JSON.stringify(permCtx)}`
+        }).catch(() => ({}))
     const clickable = actionIds.every(actionId => data?.perms?.[actionId])
     el.dataset.clickable = clickable ? 'true' : ''
 

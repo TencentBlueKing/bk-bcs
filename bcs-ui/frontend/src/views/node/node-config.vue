@@ -36,7 +36,7 @@
                             :name="cpuItem">
                         </bcs-option>
                     </bcs-select>
-                    <span class="company">G</span>
+                    <span class="company">{{$t('核')}}</span>
                 </div>
                 <div class="prefix-select ml30">
                     <span class="prefix">{{$t('内存')}}</span>
@@ -71,7 +71,7 @@
                 <bcs-table-column :label="$t('规格')" prop="nodeType"></bcs-table-column>
                 <bcs-table-column label="CPU" prop="cpu" width="60" align="right">
                     <template #default="{ row }">
-                        <span>{{ row.cpu }}G</span>
+                        <span>{{ `${row.cpu}${$t('核')}` }}</span>
                     </template>
                 </bcs-table-column>
                 <bcs-table-column :label="$t('内存')" prop="memory" width="60" align="right">
@@ -104,7 +104,7 @@
                         </bcs-option>
                     </bcs-select>
                 </div>
-                <bcs-input class="max-width-130 ml10"
+                <bk-input class="max-width-130 ml10"
                     type="number"
                     min="50"
                     max="1024"
@@ -114,7 +114,7 @@
                     <template slot="append">
                         <div class="group-text">GB</div>
                     </template>
-                </bcs-input>
+                </bk-input>
             </div>
             <div class="mt20">
                 <bk-checkbox v-model="showDataDisks"
@@ -139,7 +139,7 @@
                                 </bcs-option>
                             </bcs-select>
                         </div>
-                        <bcs-input class="max-width-130 ml10"
+                        <bk-input class="max-width-130 ml10"
                             type="number"
                             :disabled="isEdit"
                             min="10"
@@ -149,7 +149,7 @@
                             <template slot="append">
                                 <div class="group-text">GB</div>
                             </template>
-                        </bcs-input>
+                        </bk-input>
                     </div>
                     <p class="error-tips" v-if="disk.diskSize % 10 !== 0">{{$t('范围: 10~32000, 步长: 10')}}</p>
                     <div class="panel-item mt10">
@@ -197,7 +197,7 @@
                 </div>
                 <div class="panel-item mt10">
                     <label class="label">{{$t('购买宽带')}}</label>
-                    <bcs-input class="max-width-150"
+                    <bk-input class="max-width-150"
                         type="number"
                         :disabled="isEdit"
                         :parse-number="false"
@@ -205,7 +205,7 @@
                         <template slot="append">
                             <div class="group-text">Mbps</div>
                         </template>
-                    </bcs-input>
+                    </bk-input>
                 </div>
             </div>
         </bk-form-item>

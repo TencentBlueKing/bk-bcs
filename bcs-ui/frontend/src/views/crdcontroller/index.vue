@@ -524,7 +524,7 @@
                         $toolId: id,
                         values: this.editorOptions.content
                     })
-                    // this.getCrdControllersByCluster()
+                    this.getCrdControllersByCluster()
                     this.getCrdcontrollerStatus(crdcontroller)
                 } catch (e) {
                     catchErrorHandler(e, this)

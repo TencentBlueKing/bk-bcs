@@ -28,5 +28,6 @@ export default {
     cluster_scoped_delete: window.i18n.t('集群域删除'),
     cluster_scoped_use: window.i18n.t('集群域使用'),
     cloud_account_manage: window.i18n.t('云凭证管理'),
-    cloud_account_use: window.i18n.t('云凭证使用')
+    cloud_account_use: window.i18n.t('云凭证使用'),
+    cloud_account_create: window.i18n.t('云凭证创建')
 }
