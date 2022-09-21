@@ -1,17 +1,26 @@
 <template>
     <div class="taint-wrapper" v-bkloading="{ isLoading, opacity: 1 }">
-        <div class="labels">
-            <span>{{$t('键')}}：</span>
-            <span>{{$t('值')}}：</span>
-            <span>{{$t('影响')}}：</span>
-        </div>
-        <BcsTaints
-            class="taints"
-            :min-item="1"
-            :effect-options="effectList"
-            ref="taintRef"
-            v-model="values">
-        </BcsTaints>
+        <template v-if="values.length">
+            <div class="labels">
+                <span>{{$t('键')}}：</span>
+                <span>{{$t('值')}}：</span>
+                <span>{{$t('影响')}}：</span>
+            </div>
+            <BcsTaints
+                class="taints"
+                :effect-options="effectList"
+                :min-items="0"
+                ref="taintRef"
+                v-model="values">
+            </BcsTaints>
+        </template>
+        <span
+            class="add-btn mb15"
+            v-else
+            @click="handleAddTaint">
+            <i class="bk-icon icon-plus-circle-shape mr5"></i>
+            {{$t('添加')}}
+        </span>
         <div class="footer">
             <bk-button theme="primary" :loading="isSubmitting" @click="handleSubmit">{{$t('确定')}}</bk-button>
             <bk-button theme="default" @click="handleCancel">{{$t('取消')}}</bk-button>
@@ -52,7 +61,7 @@
             // 提交数据
             const handleSubmit = async () => {
                 const result = taintRef.value?.validate()
-                if (!result) return
+                if (!result && values.value.length) return
 
                 isSubmitting.value = true
                 try {
@@ -82,6 +91,9 @@
             const handleCancel = (refetch: boolean = false) => {
                 ctx.emit('cancel', refetch)
             }
+            const handleAddTaint = () => {
+                values.value.push({ key: '', value: '', effect: 'PreferNoSchedule' })
+            }
             onMounted(async () => {
                 isLoading.value = true
                 const data = await $store.dispatch('cluster/getNodeTaints', {
@@ -103,7 +115,8 @@
                 values,
                 effectList,
                 handleSubmit,
-                handleCancel
+                handleCancel,
+                handleAddTaint
             }
         }
     })
@@ -113,6 +126,21 @@
 @define-mixin flex-layout {
     display: flex;
     align-items: center;
+}
+.add-btn {
+    cursor: pointer;
+    background: #fff;
+    border: 1px dashed #c4c6cc;
+    border-radius: 2px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 32px;
+    font-size: 14px;
+    &:hover {
+        border-color: #3a84ff;
+        color: #3a84ff;
+    }
 }
 .taint-wrapper {
     padding: 20px;

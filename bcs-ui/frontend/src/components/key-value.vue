@@ -1,73 +1,82 @@
 <template>
     <div class="key-value">
-        <div class="key-value-item" v-if="showHeader">
-            <span class="key desc">
-                {{$t('键')}}:
-                <i v-bk-tooltips="keyDesc"
-                    class="ml10 bcs-icon bcs-icon-question-circle"
-                    v-if="keyDesc"
+        <template v-if="keyValueData.length">
+            <div class="key-value-item" v-if="showHeader">
+                <span class="key desc">
+                    {{$t('键')}}:
+                    <i v-bk-tooltips="keyDesc"
+                        class="ml10 bcs-icon bcs-icon-question-circle"
+                        v-if="keyDesc"
+                    ></i>
+                </span>
+                <span class="value desc">
+                    {{$t('值')}}:
+                    <i v-bk-tooltips="valueDesc"
+                        class="ml10 bcs-icon bcs-icon-question-circle"
+                        v-if="valueDesc"
+                    ></i>
+                </span>
+            </div>
+            <div v-for="(item, index) in keyValueData"
+                :key="index"
+                class="key-value-item"
+            >
+                <bcs-dropdown-menu class="key" trigger="click"
+                    v-if="keyAdvice.length > 0 && !item.disabled">
+                    <template #dropdown-trigger>
+                        <Validate
+                            :rules="rules"
+                            :value="item.key"
+                            :meta="index">
+                            <bcs-input :placeholder="$t('键')"
+                                :disabled="item.disabled"
+                                v-model="item.key">
+                            </bcs-input>
+                        </Validate>
+                    </template>
+                    <template #dropdown-content>
+                        <ul class="bk-dropdown-list">
+                            <li v-for="(advice, i) in keyAdvice" :key="i"
+                                @click="handleAdvice(advice, item)">
+                                <a href="javascript:;"
+                                    v-bk-tooltips="{
+                                        content: advice.desc,
+                                        disabled: !advice.desc,
+                                        placement: 'right',
+                                        boundary: 'window'
+                                    }"
+                                >{{advice.name}}</a>
+                            </li>
+                        </ul>
+                    </template>
+                </bcs-dropdown-menu>
+                <Validate
+                    class="key"
+                    :rules="rules"
+                    :value="item.key"
+                    :meta="index"
+                    v-else>
+                    <bcs-input :placeholder="$t('键')"
+                        :disabled="item.disabled"
+                        v-model="item.key">
+                    </bcs-input>
+                </Validate>
+                <span class="equals-sign">=</span>
+                <bcs-input :placeholder="item.placeholder || $t('值')" class="value" v-model="item.value"></bcs-input>
+                <i class="bk-icon icon-plus-circle ml10 mr5" @click="handleAddKeyValue(index)"></i>
+                <i :class="['bk-icon icon-minus-circle', { disabled: disabledDelete }]"
+                    @click="handleDeleteKeyValue(index)"
                 ></i>
-            </span>
-            <span class="value desc">
-                {{$t('值')}}:
-                <i v-bk-tooltips="valueDesc"
-                    class="ml10 bcs-icon bcs-icon-question-circle"
-                    v-if="valueDesc"
-                ></i>
-            </span>
-        </div>
-        <div v-for="(item, index) in keyValueData"
-            :key="index"
-            class="key-value-item"
-        >
-            <bcs-dropdown-menu class="key" trigger="click"
-                v-if="keyAdvice.length > 0 && !item.disabled">
-                <template #dropdown-trigger>
-                    <Validate
-                        :rules="rules"
-                        :value="item.key"
-                        :meta="index">
-                        <bcs-input :placeholder="$t('键')"
-                            :disabled="item.disabled"
-                            v-model="item.key">
-                        </bcs-input>
-                    </Validate>
-                </template>
-                <template #dropdown-content>
-                    <ul class="bk-dropdown-list">
-                        <li v-for="(advice, i) in keyAdvice" :key="i"
-                            @click="handleAdvice(advice, item)">
-                            <a href="javascript:;"
-                                v-bk-tooltips="{
-                                    content: advice.desc,
-                                    disabled: !advice.desc,
-                                    placement: 'right',
-                                    boundary: 'window'
-                                }"
-                            >{{advice.name}}</a>
-                        </li>
-                    </ul>
-                </template>
-            </bcs-dropdown-menu>
-            <Validate
-                class="key"
-                :rules="rules"
-                :value="item.key"
-                :meta="index"
-                v-else>
-                <bcs-input :placeholder="$t('键')"
-                    :disabled="item.disabled"
-                    v-model="item.key">
-                </bcs-input>
-            </Validate>
-            <span class="equals-sign">=</span>
-            <bcs-input :placeholder="item.placeholder || $t('值')" class="value" v-model="item.value"></bcs-input>
-            <i class="bk-icon icon-plus-circle ml10 mr5" @click="handleAddKeyValue(index)"></i>
-            <i :class="['bk-icon icon-minus-circle', { disabled: keyValueData.length === 1 }]"
-                @click="handleDeleteKeyValue(index)"
-            ></i>
-        </div>
-        <div class="mt30" v-if="showFooter">
+            </div>
+        </template>
+        <span
+            class="add-btn mb15"
+            v-else
+            @click="handleAddKeyValue(-1)">
+            <i class="bk-icon icon-plus-circle-shape mr5"></i>
+            {{$t('添加')}}
+        </span>
+        <div class="mt15" v-if="showFooter">
             <bcs-button class="bcs-btn"
                 theme="primary"
                 :loading="loading"
@@ -127,6 +136,10 @@
             keyRules: {
                 type: Array,
                 default: () => []
+            },
+            minItems: {
+                type: Number,
+                default: 1
             }
         },
         model: {
@@ -134,8 +147,11 @@
             event: 'change'
         },
         setup (props, ctx) {
-            const { modelValue, keyRules } = toRefs(props)
+            const { modelValue, keyRules, minItems } = toRefs(props)
             const keyValueData = ref<IData[]>([])
+            const disabledDelete = computed(() => {
+                return keyValueData.value.length < minItems.value
+            })
             watch(modelValue, () => {
                 if (Array.isArray(modelValue.value)) {
                     keyValueData.value = modelValue.value.map((item: any) => ({
@@ -152,7 +168,7 @@
                     })
                 }
                 // 添加一组空值
-                if (!keyValueData.value.length) {
+                if (!keyValueData.value.length && minItems.value) {
                     keyValueData.value.push({
                         key: '',
                         value: ''
@@ -167,7 +183,7 @@
                 })
             }
             const handleDeleteKeyValue = (index) => {
-                if (keyValueData.value.length === 1) return
+                if (disabledDelete.value) return
                 keyValueData.value.splice(index, 1)
             }
             const labels = computed(() => {
@@ -219,6 +235,7 @@
             }
 
             return {
+                disabledDelete,
                 rules,
                 labels,
                 keyValueData,
@@ -233,6 +250,21 @@
     })
 </script>
 <style lang="postcss" scoped>
+.add-btn {
+    cursor: pointer;
+    background: #fff;
+    border: 1px dashed #c4c6cc;
+    border-radius: 2px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 32px;
+    font-size: 14px;
+    &:hover {
+        border-color: #3a84ff;
+        color: #3a84ff;
+    }
+}
 .key-value-item {
     display: flex;
     align-items: center;

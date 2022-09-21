@@ -15,10 +15,6 @@
     padding: 20px;
 }
 
-.biz-status-box {
-    margin-top: 20px;
-}
-
 .biz-cluster {
     width: 270px;
     height: 300px;
@@ -138,7 +134,7 @@
     }
 
     .biz-cluster-content {
-        padding: 30px 24px 0 24px;
+        padding: 24px;
         &.more-info {
             padding: 20px 24px 0 24px;
             .biz-progress-box {

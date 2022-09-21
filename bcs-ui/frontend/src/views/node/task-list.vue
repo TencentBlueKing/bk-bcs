@@ -47,7 +47,7 @@
                     <span v-else>--</span>
                     <span
                         class="copy-icon ml5"
-                        v-if="activeTask === row.revision"
+                        v-if="activeTask === row.taskName"
                         v-bk-tooltips="$t('复制内容')"
                         @click="handleCopyValues(row)">
                         <i class="bcs-icon bcs-icon-copy"></i>
@@ -71,8 +71,7 @@
                     </span>
                 </div>
             </template>
-            <div class="helm-release-dialog"></div>
-            <pre>{{curTaskRow.message}}</pre>
+            <div class="task-message">{{curTaskRow.message}}</div>
         </bcs-dialog>
     </div>
 </template>
@@ -117,7 +116,7 @@
                 })
             }
             const handleMouseEnter = (index, event, row) => {
-                activeTask.value = row.taskID
+                activeTask.value = row.taskName
             }
             const handleMouseLeave = () => {
                 activeTask.value = ''
@@ -152,5 +151,10 @@
     color: #3a84ff;
     cursor: pointer;
     font-size: 14px;
+}
+.task-message {
+    height: 500px;
+    overflow-y: scroll;
+    padding-right: 20px;
 }
 </style>

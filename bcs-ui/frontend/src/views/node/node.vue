@@ -445,6 +445,7 @@
                             validator: LABEL_KEY_REGEXP
                         }
                     ]"
+                    :min-items="0"
                     @cancel="handleLabelEditCancel"
                     @confirm="handleLabelEditConfirm"
                 ></KeyValue>

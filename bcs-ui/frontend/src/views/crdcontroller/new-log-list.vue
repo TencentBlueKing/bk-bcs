@@ -196,7 +196,16 @@
                 'selected_labels': $i18n.t('指定标签'),
                 'all_containers': $i18n.t('所有容器')
             }
-            const kinds = ref(['Deployment', 'DaemonSet', 'Job', 'StatefulSet', 'GameStatefulSet'])
+            const kinds = ref([
+                'Deployment',
+                'DaemonSet',
+                'StatefulSet',
+                'CronJob',
+                'Job',
+                'Pod',
+                'GameStatefulSet',
+                'GameDeployment'
+            ])
             
             // 日志规则列表
             const logList = ref<any[]>([])
