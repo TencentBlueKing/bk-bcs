@@ -41,7 +41,7 @@ def get_log_links(project_id: str, bk_biz_id: int, **kwargs) -> Dict:
     log_links = {}
     for container_id in container_ids:
         query = {
-            'addition': json.dumps([{'field': 'container_id', 'operator': 'is', 'value': container_id}]),
+            'addition': json.dumps([{'field': '__ext.container_id', 'operator': 'is', 'value': container_id}]),
         }
         log_links[container_id] = {
             'std_log_link': _generate_link(bk_biz_id, std_index_set_id, query=query),
