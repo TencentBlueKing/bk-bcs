@@ -21,21 +21,21 @@ from django.utils.translation import ugettext_lazy as _
 from rest_framework import views
 from rest_framework.exceptions import ValidationError
 
-from backend.accounts import bcs_perm
 from backend.celery_app.tasks.application import delete_instance_task
 from backend.components import paas_cc
 from backend.components.bcs.k8s import K8SClient
 from backend.container_service.projects.base.constants import ProjectKindID
+from backend.helm.app.utils import ruamel_yaml_dump
 from backend.iam.permissions.resources.namespace_scoped import NamespaceScopedPermCtx, NamespaceScopedPermission
 from backend.iam.permissions.resources.templateset import TemplatesetPermCtx, TemplatesetPermission
 from backend.templatesets.legacy_apps.configuration.constants import K8sResourceName
 from backend.templatesets.legacy_apps.configuration.models import Template
 from backend.templatesets.legacy_apps.instance.constants import EventType
 from backend.templatesets.legacy_apps.instance.models import InstanceConfig, InstanceEvent
+from backend.uniapps.utils import get_cluster_namespaces
 from backend.utils.basic import getitems
 from backend.utils.errcodes import ErrorCode
 from backend.utils.error_codes import error_codes
-from backend.helm.app.utils import ruamel_yaml_dump
 
 from .common_views.serializers import BaseNotTemplateInstanceParamsSLZ
 from .constants import FUNC_MAP, NOT_TMPL_SOURCE_TYPE, OWENER_REFERENCE_MAP
@@ -724,8 +724,13 @@ class InstanceAPI(BaseAPI):
         slz = BaseNotTemplateInstanceParamsSLZ(data=request.query_params)
         slz.is_valid(raise_exception=True)
         data = slz.validated_data
-        ns_name_id_map = self.get_namespace_name_id(request, project_id)
-        ns_id = ns_name_id_map.get(data['namespace'])
+
+        ns_id = 0
+        for ns in get_cluster_namespaces(request.user.token.access_token, project_id, data['cluster_id']):
+            if ns['name'] == data['namespace']:
+                ns_id = ns['id']
+                break
+
         # check perm
         self.validate_view_perms(request, project_id, None, ns_id, source_type=NOT_TMPL_SOURCE_TYPE)
         return data['cluster_id'], data['namespace'], data['name'], data['category']
