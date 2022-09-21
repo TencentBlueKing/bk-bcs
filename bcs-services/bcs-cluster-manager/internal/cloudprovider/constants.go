@@ -102,4 +102,6 @@ var (
 
 	// JobTypeKey xxx
 	JobTypeKey ParamKey = "jobType"
+	// BkSopsTaskUrlKey inject bksops task url
+	BkSopsTaskUrlKey ParamKey = "taskUrl"
 )

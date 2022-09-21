@@ -14,15 +14,12 @@ package task
 
 import (
 	"context"
-	"strings"
-
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
 	storeopt "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/options"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
 // ListAction action for list online cluster credential
@@ -75,11 +72,7 @@ func (la *ListAction) listTask() error {
 		return err
 	}
 	for i := range tasks {
-		for k, v := range tasks[i].CommonParams {
-			if utils.StringInSlice(strings.ToLower(k), Passwd) || utils.StringContainInSlice(v, Passwd) {
-				delete(tasks[i].CommonParams, k)
-			}
-		}
+		hiddenTaskPassword(&tasks[i])
 
 		if len(la.req.NodeIP) > 0 {
 			exist := strContains(tasks[i].NodeIPList, la.req.NodeIP)

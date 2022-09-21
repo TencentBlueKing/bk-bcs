@@ -188,7 +188,7 @@ func (c *BCSAppClient) CreateNamespace(projectID, clusterID string, req CreateNa
 			return ErrThirdPartyTimeout
 		}
 		return nil
-	}, retry.Attempts(defaultRetryCnt), retry.Delay(defaultRetryTime))
+	}, retry.Attempts(defaultRetryCnt), retry.Delay(defaultRetryTime), retry.DelayType(retry.FixedDelay))
 	if err != nil {
 		return nil, fmt.Errorf("call api CreateNamespace failed: %v, resp: %s", err, utils.ToJSONString(resp))
 	}

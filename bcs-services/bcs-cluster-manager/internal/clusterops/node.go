@@ -133,7 +133,6 @@ func (ko *K8SOperator) DrainNode(ctx context.Context, clusterID, nodeName string
 		GracePeriodSeconds:  drainHelper.GracePeriodSeconds,
 		IgnoreAllDaemonSets: drainHelper.IgnoreAllDaemonSets,
 		Timeout:             time.Second * time.Duration(drainHelper.Timeout),
-		DeleteLocalData:     drainHelper.DeleteLocalData,
 		Selector:            drainHelper.Selector,
 		PodSelector:         drainHelper.PodSelector,
 		DisableEviction:     drainHelper.DisableEviction,

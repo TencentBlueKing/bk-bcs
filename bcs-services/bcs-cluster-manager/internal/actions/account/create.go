@@ -20,6 +20,7 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions"
@@ -27,21 +28,26 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
+	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/cloudaccount"
+	authutils "github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/utils"
 )
 
 // CreateAction action for create cloud account
 type CreateAction struct {
 	ctx   context.Context
 	model store.ClusterManagerModel
+	iam   iam.PermClient
+
 	cloud *cmproto.Cloud
 	req   *cmproto.CreateCloudAccountRequest
 	resp  *cmproto.CreateCloudAccountResponse
 }
 
 // NewCreateAction create cloudVPC action
-func NewCreateAction(model store.ClusterManagerModel) *CreateAction {
+func NewCreateAction(model store.ClusterManagerModel, iam iam.PermClient) *CreateAction {
 	return &CreateAction{
 		model: model,
+		iam:   iam,
 	}
 }
 
@@ -62,7 +68,23 @@ func (ca *CreateAction) createCloudAccount() error {
 		CreatTime:   timeStr,
 		UpdateTime:  timeStr,
 	}
-	return ca.model.CreateCloudAccount(ca.ctx, cloudAccount)
+	err := ca.model.CreateCloudAccount(ca.ctx, cloudAccount)
+	if err != nil {
+		return err
+	}
+
+	err = cloudaccount.NewBCSAccountPermClient(ca.iam).AuthorizeResourceCreatorPerm(ca.req.Creator, authutils.ResourceInfo{
+		Type: string(cloudaccount.SysCloudAccount),
+		ID:   accountID,
+		Name: ca.req.AccountName,
+	})
+	if err != nil {
+		blog.Errorf("createCloudAccount AuthorizeResourceCreatorPerm[%s:%s] failed: %v", accountID,
+			ca.req.AccountName, err)
+		return err
+	}
+
+	return nil
 }
 
 func (ca *CreateAction) setResp(code uint32, msg string) {
