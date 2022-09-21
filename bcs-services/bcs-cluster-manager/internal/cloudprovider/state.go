@@ -55,6 +55,33 @@ func GetTaskStateAndCurrentStep(taskID, stepName string) (*TaskState, *proto.Ste
 	return state, step, nil
 }
 
+// SetTaskStepParas set task step key:value
+func SetTaskStepParas(taskID, stepName string, key, value string) error {
+	task, err := GetStorageModel().GetTask(context.Background(), taskID)
+	if err != nil {
+		blog.Errorf("task[%s] get task information from storage failed, %v", taskID, err)
+		return err
+	}
+
+	step, ok := task.Steps[stepName]
+	if !ok {
+		errMsg := fmt.Errorf("task[%s] not exist step[%s]", taskID, stepName)
+		blog.Errorf(errMsg.Error())
+		return errMsg
+	}
+	_, ok = step.Params[key]
+	if !ok {
+		step.Params[key] = value
+	}
+
+	err = GetStorageModel().UpdateTask(context.Background(), task)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // TaskState handle task state
 type TaskState struct {
 	Task      *proto.Task

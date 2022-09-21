@@ -33,9 +33,10 @@ type ValuesTemplate struct {
 		StorageServer string `yaml:"BK_BCS_customStorage"`
 	}
 	Secret struct {
-		ClientCaCrt  string `yaml:"ca_crt"`
-		ClientTlsCrt string `yaml:"tls_crt"`
-		ClientTlsKey string `yaml:"tls_key"`
+		CertsOverride bool   `yaml:"bcsCertsOverride"`
+		ClientCaCrt   string `yaml:"ca_crt"`
+		ClientTlsCrt  string `yaml:"tls_crt"`
+		ClientTlsKey  string `yaml:"tls_key"`
 	}
 }
 
@@ -70,13 +71,15 @@ func (bw *BcsWatch) GetValues() (string, error) {
 			StorageServer: op.ComponentDeploy.Watch.StorageServer,
 		},
 		Secret: struct {
-			ClientCaCrt  string `yaml:"ca_crt"`
-			ClientTlsCrt string `yaml:"tls_crt"`
-			ClientTlsKey string `yaml:"tls_key"`
+			CertsOverride bool   `yaml:"bcsCertsOverride"`
+			ClientCaCrt   string `yaml:"ca_crt"`
+			ClientTlsCrt  string `yaml:"tls_crt"`
+			ClientTlsKey  string `yaml:"tls_key"`
 		}{
-			ClientCaCrt:  clientCa,
-			ClientTlsCrt: clientCert,
-			ClientTlsKey: clientKey,
+			CertsOverride: true,
+			ClientCaCrt:   clientCa,
+			ClientTlsCrt:  clientCert,
+			ClientTlsKey:  clientKey,
 		},
 	}
 	renderValues, _ := yaml.Marshal(values)

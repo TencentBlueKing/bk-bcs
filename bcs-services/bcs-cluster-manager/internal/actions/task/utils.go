@@ -13,7 +13,13 @@
 
 package task
 
-import "strings"
+import (
+	"strings"
+
+	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
+)
 
 // Passwd flag
 var Passwd = []string{"password", "passwd"}
@@ -25,4 +31,25 @@ func strContains(ipList []string, ip string) bool {
 		}
 	}
 	return false
+}
+
+func hiddenTaskPassword(task *proto.Task) {
+	if task != nil && len(task.Steps) > 0 {
+		for i := range task.Steps {
+			for k := range task.Steps[i].Params {
+				if k == cloudprovider.BkSopsTaskUrlKey.String() {
+					continue
+				}
+				delete(task.Steps[i].Params, k)
+			}
+		}
+	}
+
+	if task != nil && len(task.CommonParams) > 0 {
+		for k, v := range task.CommonParams {
+			if utils.StringInSlice(strings.ToLower(k), Passwd) || utils.StringContainInSlice(v, Passwd) {
+				delete(task.CommonParams, k)
+			}
+		}
+	}
 }
