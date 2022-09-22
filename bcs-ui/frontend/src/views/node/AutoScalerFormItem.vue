@@ -16,8 +16,22 @@
                     :status="autoscalerData[item.prop]"
                     :status-color-map="scalerColorMap"
                     v-else>
-                    {{scalerStatusMap[autoscalerData[item.prop]] || $t('未知')}}
+                    <span :class="{ 'error-tips': autoscalerData[item.prop] === 'UPDATE-FAILURE' }"
+                        v-bk-tooltips="{
+                            content: autoscalerData.errorMessage,
+                            disabled: autoscalerData[item.prop] !== 'UPDATE-FAILURE' || !autoscalerData.errorMessage,
+                            width: 400
+                        }">
+                        {{scalerStatusMap[autoscalerData[item.prop]] || $t('未知')}}
+                    </span>
                 </StatusIcon>
+                <template v-if="autoscalerData[item.prop] === 'UPDATE-FAILURE'">
+                    <span class="ml10"
+                        v-bk-tooltips="$t('查看详情')"
+                        @click="handleGotoHelmRelease">
+                        <i class="bcs-icon bcs-icon-fenxiang"></i>
+                    </span>
+                </template>
             </template>
             <span v-else-if="typeof autoscalerData[item.prop] === 'boolean'">
                 {{autoscalerData[item.prop] ? $t('是') : $t('否')}}
@@ -32,9 +46,14 @@
 <script lang="ts">
     import { defineComponent } from '@vue/composition-api'
     import $i18n from '@/i18n/i18n-setup'
+    import StatusIcon from '@/views/dashboard/common/status-icon'
+    import LoadingIcon from '@/components/loading-icon.vue'
+    import $router from '@/router/index'
+    import { BCS_CLUSTER } from '@/common/constant'
 
     export default defineComponent({
         name: 'AutoScalerFormItem',
+        components: { StatusIcon, LoadingIcon },
         props: {
             list: {
                 type: Array,
@@ -45,7 +64,8 @@
                 default: () => ({})
             }
         },
-        setup () {
+        setup (props, ctx) {
+            const { $route } = ctx.root
             // 获取自动扩缩容配置
             const scalerStatusMap = { // 自动扩缩容状态
                 NORMAL: $i18n.t('正常'),
@@ -59,9 +79,16 @@
                 'UPDATE-FAILURE': 'red',
                 STOPPED: 'gray'
             }
+            const handleGotoHelmRelease = () => {
+                sessionStorage.setItem(BCS_CLUSTER, $route.params.clusterId)
+                $router.push({
+                    name: 'helms'
+                })
+            }
             return {
                 scalerStatusMap,
-                scalerColorMap
+                scalerColorMap,
+                handleGotoHelmRelease
             }
         }
     })
@@ -88,5 +115,14 @@
       display: flex;
       align-items: center;
   }
+}
+>>> .bcs-icon-fenxiang {
+    color: #3a84ff;
+    cursor: pointer;
+}
+>>> .error-tips {
+    line-height: 1;
+    padding: 2px 0;
+    border-bottom: 1px dashed #979BA5;
 }
 </style>

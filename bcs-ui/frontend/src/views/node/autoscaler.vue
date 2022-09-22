@@ -9,11 +9,14 @@
                         {{$t('Cluster Autoscaler')}}
                         <bcs-switcher size="small"
                             v-model="autoscalerData.enableAutoscale"
+                            :disabled="autoscalerData.status === 'UPDATING'"
                             :pre-check="handleToggleAutoScaler"
                         ></bcs-switcher>
                     </span>
                 </div>
-                <bcs-button theme="primary" @click="handleEditAutoScaler">{{$t('编辑配置')}}</bcs-button>
+                <bcs-button theme="primary"
+                    :disabled="autoscalerData.status === 'UPDATING'"
+                    @click="handleEditAutoScaler">{{$t('编辑配置')}}</bcs-button>
             </div>
             <div v-bkloading="{ isLoading: configLoading }">
                 <LayoutGroup :title="$t('基本配置')" class="mb10">
@@ -35,6 +38,7 @@
                             {{$t('允许缩容节点')}}
                             <bcs-switcher
                                 size="small"
+                                :disabled="autoscalerData.status === 'UPDATING'"
                                 v-model="autoscalerData.isScaleDownEnable"
                                 :pre-check="handleChangeScalerDown">
                             </bcs-switcher>

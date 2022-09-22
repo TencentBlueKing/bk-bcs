@@ -573,7 +573,8 @@
                     })
                 }
             },
-            curClusterId () {
+            curClusterId (value) {
+                if (!value) return
                 this.searchScope = this.curClusterId
                 this.searchNamespace = ''
                 this.handleSearch()

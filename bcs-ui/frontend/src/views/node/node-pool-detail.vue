@@ -68,7 +68,7 @@
                     {{nodePoolData.launchTemplate.instanceType}}
                 </bk-form-item>
                 <bk-form-item label="CPU">
-                    {{nodePoolData.launchTemplate.CPU}}G
+                    {{`${nodePoolData.launchTemplate.CPU}${$t('核')}`}}
                 </bk-form-item>
                 <bk-form-item label="内存">
                     {{nodePoolData.launchTemplate.Mem}}G
