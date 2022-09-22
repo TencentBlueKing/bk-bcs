@@ -15,9 +15,11 @@ package bcsmonitor
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/prom"
 	"net/http"
+	"net/url"
 	"time"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/prom"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/http/httpclient"
@@ -210,19 +212,20 @@ func (c *BcsMonitorClient) Query(promql string, requestTime time.Time) (*QueryRe
 func (c *BcsMonitorClient) QueryByPost(promql string, requestTime time.Time) (*QueryResponse, error) {
 	var queryString string
 	var err error
-	queryString = c.setQuery(queryString, "query", promql)
+	encodePromQl := url.QueryEscape(promql)
+	queryString = c.setQuery(queryString, "query", encodePromQl)
 	if !requestTime.IsZero() {
 		queryString = c.setQuery(queryString, "time", fmt.Sprintf("%d", requestTime.Unix()))
 	}
-	url := fmt.Sprintf("%s%s", c.completeEndpoint, QueryPath)
+	requestUrl := fmt.Sprintf("%s%s", c.completeEndpoint, QueryPath)
 	header := c.defaultHeader.Clone()
 	header.Add("Content-Type", "application/x-www-form-urlencoded")
-	url = c.addAppMessage(url)
+	requestUrl = c.addAppMessage(requestUrl)
 	start := time.Now()
 	defer func() {
 		prom.ReportLibRequestMetric(prom.BkBcsMonitor, "QueryByPost", "POST", err, start)
 	}()
-	rsp, err := c.requestClient.DoRequest(url, "POST", header, []byte(queryString))
+	rsp, err := c.requestClient.DoRequest(requestUrl, "POST", header, []byte(queryString))
 	if err != nil {
 		return nil, err
 	}
@@ -230,7 +233,7 @@ func (c *BcsMonitorClient) QueryByPost(promql string, requestTime time.Time) (*Q
 	err = json.Unmarshal(rsp, result)
 	if err != nil {
 		blog.Errorf("json unmarshal error:%v", err)
-		return nil, fmt.Errorf("do request error, url: %s, error:%v", url, err)
+		return nil, fmt.Errorf("do request error, url: %s, error:%v", requestUrl, err)
 	}
 	return result, nil
 }

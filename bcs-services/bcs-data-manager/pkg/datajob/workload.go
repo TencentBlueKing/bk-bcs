@@ -14,15 +14,17 @@ package datajob
 
 import (
 	"context"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/types"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/utils"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/types"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/utils"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/metric"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/store"
 	bcsdatamanager "github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/proto/bcs-data-manager"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // WorkloadDayPolicy workload day
@@ -69,11 +71,11 @@ func NewWorkloadMinutePolicy(getter metric.Server, store store.Server) *Workload
 
 // ImplementPolicy day policy implement
 func (p *WorkloadDayPolicy) ImplementPolicy(ctx context.Context, opts *types.JobCommonOpts, clients *types.Clients) {
-	cpuRequest, cpuUsed, cpuUsage, err := p.MetricGetter.GetWorkloadCPUMetrics(opts, clients)
+	cpuMetrics, err := p.MetricGetter.GetWorkloadCPUMetrics(opts, clients)
 	if err != nil {
 		blog.Errorf("do workload day policy error, opts: %v, err: %v", opts, err)
 	}
-	memoryRequest, memoryUsed, memoryUsage, err := p.MetricGetter.GetWorkloadMemoryMetrics(opts, clients)
+	memoryMetrics, err := p.MetricGetter.GetWorkloadMemoryMetrics(opts, clients)
 	if err != nil {
 		blog.Errorf("do workload day policy error, opts: %v, err: %v", opts, err)
 	}
@@ -103,12 +105,14 @@ func (p *WorkloadDayPolicy) ImplementPolicy(ctx context.Context, opts *types.Job
 	workloadMetric := &types.WorkloadMetrics{
 		Index:              utils.GetIndex(opts.CurrentTime, opts.Dimension),
 		Time:               primitive.NewDateTimeFromTime(opts.CurrentTime),
-		CPURequest:         cpuRequest,
-		CPUUsage:           cpuUsage,
-		CPUUsageAmount:     cpuUsed,
-		MemoryRequest:      memoryRequest,
-		MemoryUsage:        memoryUsage,
-		MemoryUsageAmount:  memoryUsed,
+		CPURequest:         cpuMetrics.CPURequest,
+		CPUUsage:           cpuMetrics.CPUUsage,
+		CPUUsageAmount:     cpuMetrics.CPUUsed,
+		MemoryRequest:      memoryMetrics.MemoryRequest,
+		MemoryUsage:        memoryMetrics.MemoryUsage,
+		MemoryUsageAmount:  memoryMetrics.MemoryUsed,
+		MemoryLimit:        memoryMetrics.MemoryLimit,
+		CPULimit:           cpuMetrics.CPULimit,
 		InstanceCount:      instanceCount,
 		MaxCPUUsageTime:    hourMetric.MaxCPUUsageTime,
 		MinCPUUsageTime:    hourMetric.MinCPUUsageTime,
@@ -129,11 +133,11 @@ func (p *WorkloadDayPolicy) ImplementPolicy(ctx context.Context, opts *types.Job
 
 // ImplementPolicy hour policy implement
 func (p *WorkloadHourPolicy) ImplementPolicy(ctx context.Context, opts *types.JobCommonOpts, clients *types.Clients) {
-	cpuRequest, cpuUsed, cpuUsage, err := p.MetricGetter.GetWorkloadCPUMetrics(opts, clients)
+	cpuMetrics, err := p.MetricGetter.GetWorkloadCPUMetrics(opts, clients)
 	if err != nil {
 		blog.Errorf("do workload hour policy error, opts: %v, err: %v", opts, err)
 	}
-	memoryRequest, memoryUsed, memoryUsage, err := p.MetricGetter.GetWorkloadMemoryMetrics(opts, clients)
+	memoryMetrics, err := p.MetricGetter.GetWorkloadMemoryMetrics(opts, clients)
 	if err != nil {
 		blog.Errorf("do workload hour policy error, opts: %v, err: %v", opts, err)
 	}
@@ -164,12 +168,14 @@ func (p *WorkloadHourPolicy) ImplementPolicy(ctx context.Context, opts *types.Jo
 	workloadMetric := &types.WorkloadMetrics{
 		Index:              utils.GetIndex(opts.CurrentTime, opts.Dimension),
 		Time:               primitive.NewDateTimeFromTime(opts.CurrentTime),
-		CPURequest:         cpuRequest,
-		CPUUsage:           cpuUsage,
-		CPUUsageAmount:     cpuUsed,
-		MemoryRequest:      memoryRequest,
-		MemoryUsage:        memoryUsage,
-		MemoryUsageAmount:  memoryUsed,
+		CPURequest:         cpuMetrics.CPURequest,
+		CPUUsage:           cpuMetrics.CPUUsage,
+		CPUUsageAmount:     cpuMetrics.CPUUsed,
+		MemoryRequest:      memoryMetrics.MemoryRequest,
+		MemoryUsage:        memoryMetrics.MemoryUsage,
+		MemoryUsageAmount:  memoryMetrics.MemoryUsed,
+		MemoryLimit:        memoryMetrics.MemoryLimit,
+		CPULimit:           cpuMetrics.CPULimit,
 		InstanceCount:      instanceCount,
 		MaxCPUUsageTime:    minuteMetric.MaxCPUUsageTime,
 		MinCPUUsageTime:    minuteMetric.MinCPUUsageTime,
@@ -191,11 +197,11 @@ func (p *WorkloadHourPolicy) ImplementPolicy(ctx context.Context, opts *types.Jo
 // ImplementPolicy minute policy implement
 func (p *WorkloadMinutePolicy) ImplementPolicy(ctx context.Context, opts *types.JobCommonOpts,
 	clients *types.Clients) {
-	cpuRequest, cpuUsed, cpuUsage, err := p.MetricGetter.GetWorkloadCPUMetrics(opts, clients)
+	cpuMetrics, err := p.MetricGetter.GetWorkloadCPUMetrics(opts, clients)
 	if err != nil {
 		blog.Errorf("do workload minute policy error, opts: %v, err: %v", opts, err)
 	}
-	memoryRequest, memoryUsed, memoryUsage, err := p.MetricGetter.GetWorkloadMemoryMetrics(opts, clients)
+	memoryMetrics, err := p.MetricGetter.GetWorkloadMemoryMetrics(opts, clients)
 	if err != nil {
 		blog.Errorf("do workload minute policy error, opts: %v, err: %v", opts, err)
 	}
@@ -206,35 +212,37 @@ func (p *WorkloadMinutePolicy) ImplementPolicy(ctx context.Context, opts *types.
 	workloadMetric := &types.WorkloadMetrics{
 		Index:             utils.GetIndex(opts.CurrentTime, opts.Dimension),
 		Time:              primitive.NewDateTimeFromTime(opts.CurrentTime),
-		CPURequest:        cpuRequest,
-		CPUUsage:          cpuUsage,
-		CPUUsageAmount:    cpuUsed,
-		MemoryRequest:     memoryRequest,
-		MemoryUsage:       memoryUsage,
-		MemoryUsageAmount: memoryUsed,
+		CPURequest:        cpuMetrics.CPURequest,
+		CPUUsage:          cpuMetrics.CPUUsage,
+		CPUUsageAmount:    cpuMetrics.CPUUsed,
+		MemoryLimit:       memoryMetrics.MemoryLimit,
+		CPULimit:          cpuMetrics.CPULimit,
+		MemoryRequest:     memoryMetrics.MemoryRequest,
+		MemoryUsage:       memoryMetrics.MemoryUsage,
+		MemoryUsageAmount: memoryMetrics.MemoryUsed,
 		InstanceCount:     instanceCount,
 		MaxCPUUsageTime: &bcsdatamanager.ExtremumRecord{
 			Name:       "MaxCpuUsage",
 			MetricName: "MaxCpuUsage",
-			Value:      cpuUsage,
+			Value:      cpuMetrics.CPUUsage,
 			Period:     opts.CurrentTime.String(),
 		},
 		MinCPUUsageTime: &bcsdatamanager.ExtremumRecord{
 			Name:       "MinCpuUsage",
 			MetricName: "MinCpuUsage",
-			Value:      cpuUsage,
+			Value:      cpuMetrics.CPUUsage,
 			Period:     opts.CurrentTime.String(),
 		},
 		MaxMemoryUsageTime: &bcsdatamanager.ExtremumRecord{
 			Name:       "MaxMemoryUsage",
 			MetricName: "MaxMemoryUsage",
-			Value:      memoryUsage,
+			Value:      memoryMetrics.MemoryUsage,
 			Period:     opts.CurrentTime.String(),
 		},
 		MinMemoryUsageTime: &bcsdatamanager.ExtremumRecord{
 			Name:       "MinMemoryUsage",
 			MetricName: "MinMemoryUsage",
-			Value:      memoryUsage,
+			Value:      memoryMetrics.MemoryUsage,
 			Period:     opts.CurrentTime.String(),
 		},
 		MaxInstanceTime: &bcsdatamanager.ExtremumRecord{
@@ -252,25 +260,25 @@ func (p *WorkloadMinutePolicy) ImplementPolicy(ctx context.Context, opts *types.
 		MaxCPUTime: &bcsdatamanager.ExtremumRecord{
 			Name:       "MaxCPU",
 			MetricName: "MaxCPU",
-			Value:      cpuUsed,
+			Value:      cpuMetrics.CPUUsed,
 			Period:     opts.CurrentTime.String(),
 		},
 		MinCPUTime: &bcsdatamanager.ExtremumRecord{
 			Name:       "MinCPU",
 			MetricName: "MinCPU",
-			Value:      cpuUsed,
+			Value:      cpuMetrics.CPUUsed,
 			Period:     opts.CurrentTime.String(),
 		},
 		MaxMemoryTime: &bcsdatamanager.ExtremumRecord{
 			Name:       "MaxMemory",
 			MetricName: "MaxMemory",
-			Value:      float64(memoryUsed),
+			Value:      float64(memoryMetrics.MemoryUsed),
 			Period:     opts.CurrentTime.String(),
 		},
 		MinMemoryTime: &bcsdatamanager.ExtremumRecord{
 			Name:       "MinMemory",
 			MetricName: "MinMemory",
-			Value:      float64(memoryUsed),
+			Value:      float64(memoryMetrics.MemoryUsed),
 			Period:     opts.CurrentTime.String(),
 		},
 	}

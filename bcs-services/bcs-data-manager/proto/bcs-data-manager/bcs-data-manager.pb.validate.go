@@ -3410,11 +3410,11 @@ func (m *ClusterMetrics) validate(all bool) error {
 	}
 
 	if all {
-		switch v := interface{}(m.GetMaxInstanceTime()).(type) {
+		switch v := interface{}(m.GetMaxInstance()).(type) {
 		case interface{ ValidateAll() error }:
 			if err := v.ValidateAll(); err != nil {
 				errors = append(errors, ClusterMetricsValidationError{
-					field:  "MaxInstanceTime",
+					field:  "MaxInstance",
 					reason: "embedded message failed validation",
 					cause:  err,
 				})
@@ -3422,16 +3422,16 @@ func (m *ClusterMetrics) validate(all bool) error {
 		case interface{ Validate() error }:
 			if err := v.Validate(); err != nil {
 				errors = append(errors, ClusterMetricsValidationError{
-					field:  "MaxInstanceTime",
+					field:  "MaxInstance",
 					reason: "embedded message failed validation",
 					cause:  err,
 				})
 			}
 		}
-	} else if v, ok := interface{}(m.GetMaxInstanceTime()).(interface{ Validate() error }); ok {
+	} else if v, ok := interface{}(m.GetMaxInstance()).(interface{ Validate() error }); ok {
 		if err := v.Validate(); err != nil {
 			return ClusterMetricsValidationError{
-				field:  "MaxInstanceTime",
+				field:  "MaxInstance",
 				reason: "embedded message failed validation",
 				cause:  err,
 			}
@@ -3443,6 +3443,126 @@ func (m *ClusterMetrics) validate(all bool) error {
 	// no validation rules for MemoryRequest
 
 	// no validation rules for CACount
+
+	// no validation rules for CpuLimit
+
+	// no validation rules for MemoryLimit
+
+	if all {
+		switch v := interface{}(m.GetMinCPU()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, ClusterMetricsValidationError{
+					field:  "MinCPU",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, ClusterMetricsValidationError{
+					field:  "MinCPU",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetMinCPU()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return ClusterMetricsValidationError{
+				field:  "MinCPU",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if all {
+		switch v := interface{}(m.GetMaxCPU()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, ClusterMetricsValidationError{
+					field:  "MaxCPU",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, ClusterMetricsValidationError{
+					field:  "MaxCPU",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetMaxCPU()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return ClusterMetricsValidationError{
+				field:  "MaxCPU",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if all {
+		switch v := interface{}(m.GetMinMemory()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, ClusterMetricsValidationError{
+					field:  "MinMemory",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, ClusterMetricsValidationError{
+					field:  "MinMemory",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetMinMemory()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return ClusterMetricsValidationError{
+				field:  "MinMemory",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if all {
+		switch v := interface{}(m.GetMaxMemory()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, ClusterMetricsValidationError{
+					field:  "MaxMemory",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, ClusterMetricsValidationError{
+					field:  "MaxMemory",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetMaxMemory()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return ClusterMetricsValidationError{
+				field:  "MaxMemory",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
 
 	if len(errors) > 0 {
 		return ClusterMetricsMultiError(errors)
@@ -4182,11 +4302,11 @@ func (m *NamespaceMetrics) validate(all bool) error {
 	// no validation rules for MemoryUsage
 
 	if all {
-		switch v := interface{}(m.GetMaxCPUUsageTime()).(type) {
+		switch v := interface{}(m.GetMaxCPU()).(type) {
 		case interface{ ValidateAll() error }:
 			if err := v.ValidateAll(); err != nil {
 				errors = append(errors, NamespaceMetricsValidationError{
-					field:  "MaxCPUUsageTime",
+					field:  "MaxCPU",
 					reason: "embedded message failed validation",
 					cause:  err,
 				})
@@ -4194,16 +4314,16 @@ func (m *NamespaceMetrics) validate(all bool) error {
 		case interface{ Validate() error }:
 			if err := v.Validate(); err != nil {
 				errors = append(errors, NamespaceMetricsValidationError{
-					field:  "MaxCPUUsageTime",
+					field:  "MaxCPU",
 					reason: "embedded message failed validation",
 					cause:  err,
 				})
 			}
 		}
-	} else if v, ok := interface{}(m.GetMaxCPUUsageTime()).(interface{ Validate() error }); ok {
+	} else if v, ok := interface{}(m.GetMaxCPU()).(interface{ Validate() error }); ok {
 		if err := v.Validate(); err != nil {
 			return NamespaceMetricsValidationError{
-				field:  "MaxCPUUsageTime",
+				field:  "MaxCPU",
 				reason: "embedded message failed validation",
 				cause:  err,
 			}
@@ -4211,11 +4331,11 @@ func (m *NamespaceMetrics) validate(all bool) error {
 	}
 
 	if all {
-		switch v := interface{}(m.GetMinCPUUsageTime()).(type) {
+		switch v := interface{}(m.GetMinCPU()).(type) {
 		case interface{ ValidateAll() error }:
 			if err := v.ValidateAll(); err != nil {
 				errors = append(errors, NamespaceMetricsValidationError{
-					field:  "MinCPUUsageTime",
+					field:  "MinCPU",
 					reason: "embedded message failed validation",
 					cause:  err,
 				})
@@ -4223,16 +4343,16 @@ func (m *NamespaceMetrics) validate(all bool) error {
 		case interface{ Validate() error }:
 			if err := v.Validate(); err != nil {
 				errors = append(errors, NamespaceMetricsValidationError{
-					field:  "MinCPUUsageTime",
+					field:  "MinCPU",
 					reason: "embedded message failed validation",
 					cause:  err,
 				})
 			}
 		}
-	} else if v, ok := interface{}(m.GetMinCPUUsageTime()).(interface{ Validate() error }); ok {
+	} else if v, ok := interface{}(m.GetMinCPU()).(interface{ Validate() error }); ok {
 		if err := v.Validate(); err != nil {
 			return NamespaceMetricsValidationError{
-				field:  "MinCPUUsageTime",
+				field:  "MinCPU",
 				reason: "embedded message failed validation",
 				cause:  err,
 			}
@@ -4240,11 +4360,11 @@ func (m *NamespaceMetrics) validate(all bool) error {
 	}
 
 	if all {
-		switch v := interface{}(m.GetMaxMemoryUsageTime()).(type) {
+		switch v := interface{}(m.GetMaxMemory()).(type) {
 		case interface{ ValidateAll() error }:
 			if err := v.ValidateAll(); err != nil {
 				errors = append(errors, NamespaceMetricsValidationError{
-					field:  "MaxMemoryUsageTime",
+					field:  "MaxMemory",
 					reason: "embedded message failed validation",
 					cause:  err,
 				})
@@ -4252,16 +4372,16 @@ func (m *NamespaceMetrics) validate(all bool) error {
 		case interface{ Validate() error }:
 			if err := v.Validate(); err != nil {
 				errors = append(errors, NamespaceMetricsValidationError{
-					field:  "MaxMemoryUsageTime",
+					field:  "MaxMemory",
 					reason: "embedded message failed validation",
 					cause:  err,
 				})
 			}
 		}
-	} else if v, ok := interface{}(m.GetMaxMemoryUsageTime()).(interface{ Validate() error }); ok {
+	} else if v, ok := interface{}(m.GetMaxMemory()).(interface{ Validate() error }); ok {
 		if err := v.Validate(); err != nil {
 			return NamespaceMetricsValidationError{
-				field:  "MaxMemoryUsageTime",
+				field:  "MaxMemory",
 				reason: "embedded message failed validation",
 				cause:  err,
 			}
@@ -4269,11 +4389,11 @@ func (m *NamespaceMetrics) validate(all bool) error {
 	}
 
 	if all {
-		switch v := interface{}(m.GetMinMemoryUsageTime()).(type) {
+		switch v := interface{}(m.GetMinMemory()).(type) {
 		case interface{ ValidateAll() error }:
 			if err := v.ValidateAll(); err != nil {
 				errors = append(errors, NamespaceMetricsValidationError{
-					field:  "MinMemoryUsageTime",
+					field:  "MinMemory",
 					reason: "embedded message failed validation",
 					cause:  err,
 				})
@@ -4281,16 +4401,16 @@ func (m *NamespaceMetrics) validate(all bool) error {
 		case interface{ Validate() error }:
 			if err := v.Validate(); err != nil {
 				errors = append(errors, NamespaceMetricsValidationError{
-					field:  "MinMemoryUsageTime",
+					field:  "MinMemory",
 					reason: "embedded message failed validation",
 					cause:  err,
 				})
 			}
 		}
-	} else if v, ok := interface{}(m.GetMinMemoryUsageTime()).(interface{ Validate() error }); ok {
+	} else if v, ok := interface{}(m.GetMinMemory()).(interface{ Validate() error }); ok {
 		if err := v.Validate(); err != nil {
 			return NamespaceMetricsValidationError{
-				field:  "MinMemoryUsageTime",
+				field:  "MinMemory",
 				reason: "embedded message failed validation",
 				cause:  err,
 			}
@@ -4302,11 +4422,11 @@ func (m *NamespaceMetrics) validate(all bool) error {
 	// no validation rules for InstanceCount
 
 	if all {
-		switch v := interface{}(m.GetMinInstanceTime()).(type) {
+		switch v := interface{}(m.GetMinInstance()).(type) {
 		case interface{ ValidateAll() error }:
 			if err := v.ValidateAll(); err != nil {
 				errors = append(errors, NamespaceMetricsValidationError{
-					field:  "MinInstanceTime",
+					field:  "MinInstance",
 					reason: "embedded message failed validation",
 					cause:  err,
 				})
@@ -4314,16 +4434,16 @@ func (m *NamespaceMetrics) validate(all bool) error {
 		case interface{ Validate() error }:
 			if err := v.Validate(); err != nil {
 				errors = append(errors, NamespaceMetricsValidationError{
-					field:  "MinInstanceTime",
+					field:  "MinInstance",
 					reason: "embedded message failed validation",
 					cause:  err,
 				})
 			}
 		}
-	} else if v, ok := interface{}(m.GetMinInstanceTime()).(interface{ Validate() error }); ok {
+	} else if v, ok := interface{}(m.GetMinInstance()).(interface{ Validate() error }); ok {
 		if err := v.Validate(); err != nil {
 			return NamespaceMetricsValidationError{
-				field:  "MinInstanceTime",
+				field:  "MinInstance",
 				reason: "embedded message failed validation",
 				cause:  err,
 			}
@@ -4331,11 +4451,11 @@ func (m *NamespaceMetrics) validate(all bool) error {
 	}
 
 	if all {
-		switch v := interface{}(m.GetMaxInstanceTime()).(type) {
+		switch v := interface{}(m.GetMaxInstance()).(type) {
 		case interface{ ValidateAll() error }:
 			if err := v.ValidateAll(); err != nil {
 				errors = append(errors, NamespaceMetricsValidationError{
-					field:  "MaxInstanceTime",
+					field:  "MaxInstance",
 					reason: "embedded message failed validation",
 					cause:  err,
 				})
@@ -4343,16 +4463,16 @@ func (m *NamespaceMetrics) validate(all bool) error {
 		case interface{ Validate() error }:
 			if err := v.Validate(); err != nil {
 				errors = append(errors, NamespaceMetricsValidationError{
-					field:  "MaxInstanceTime",
+					field:  "MaxInstance",
 					reason: "embedded message failed validation",
 					cause:  err,
 				})
 			}
 		}
-	} else if v, ok := interface{}(m.GetMaxInstanceTime()).(interface{ Validate() error }); ok {
+	} else if v, ok := interface{}(m.GetMaxInstance()).(interface{ Validate() error }); ok {
 		if err := v.Validate(); err != nil {
 			return NamespaceMetricsValidationError{
-				field:  "MaxInstanceTime",
+				field:  "MaxInstance",
 				reason: "embedded message failed validation",
 				cause:  err,
 			}
@@ -4416,6 +4536,10 @@ func (m *NamespaceMetrics) validate(all bool) error {
 			}
 		}
 	}
+
+	// no validation rules for CPULimit
+
+	// no validation rules for MemoryLimit
 
 	if len(errors) > 0 {
 		return NamespaceMetricsMultiError(errors)
@@ -5144,6 +5268,10 @@ func (m *WorkloadMetrics) validate(all bool) error {
 			}
 		}
 	}
+
+	// no validation rules for CPULimit
+
+	// no validation rules for MemoryLimit
 
 	if len(errors) > 0 {
 		return WorkloadMetricsMultiError(errors)

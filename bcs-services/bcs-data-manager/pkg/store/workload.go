@@ -15,17 +15,19 @@ package store
 import (
 	"context"
 	"errors"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/types"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/utils"
 	"strconv"
 	"time"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/types"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/utils"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
-	bcsdatamanager "github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/proto/bcs-data-manager"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+
+	bcsdatamanager "github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/proto/bcs-data-manager"
 )
 
 var (
@@ -452,7 +454,9 @@ func (m *ModelWorkload) generateWorkloadResponse(public types.WorkloadPublicMetr
 		responseMetric := &bcsdatamanager.WorkloadMetrics{
 			Time:               metric.Time.Time().String(),
 			CPURequest:         strconv.FormatFloat(metric.CPURequest, 'f', 2, 64),
+			CPULimit:           strconv.FormatFloat(metric.CPULimit, 'f', 2, 64),
 			MemoryRequest:      strconv.FormatInt(metric.MemoryRequest, 10),
+			MemoryLimit:        strconv.FormatInt(metric.MemoryLimit, 10),
 			CPUUsageAmount:     strconv.FormatFloat(metric.CPUUsageAmount, 'f', 2, 64),
 			MemoryUsageAmount:  strconv.FormatInt(metric.MemoryUsageAmount, 10),
 			CPUUsage:           strconv.FormatFloat(metric.CPUUsage, 'f', 4, 64),

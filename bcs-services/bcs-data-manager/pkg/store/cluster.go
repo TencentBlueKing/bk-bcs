@@ -15,17 +15,19 @@ package store
 import (
 	"context"
 	"errors"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/types"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/utils"
 	"strconv"
 	"time"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/types"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/utils"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
-	bcsdatamanager "github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/proto/bcs-data-manager"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+
+	bcsdatamanager "github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/proto/bcs-data-manager"
 )
 
 var (
@@ -171,7 +173,8 @@ func (m *ModelCluster) InsertClusterInfo(ctx context.Context, metrics *types.Clu
 				TotalCACount: metrics.CACount,
 				Label:        opts.Label,
 			}
-			m.preAggregate(newClusterBucket, metrics)
+			m.preAggregateMax(newClusterBucket, metrics)
+			m.preAggregateMin(newClusterBucket, metrics)
 			_, err = m.DB.Table(m.TableName).Insert(ctx, []interface{}{newClusterBucket})
 			if err != nil {
 				return err
@@ -180,7 +183,8 @@ func (m *ModelCluster) InsertClusterInfo(ctx context.Context, metrics *types.Clu
 		}
 		return err
 	}
-	m.preAggregate(retCluster, metrics)
+	m.preAggregateMax(retCluster, metrics)
+	m.preAggregateMin(retCluster, metrics)
 	retCluster.UpdateTime = primitive.NewDateTimeFromTime(time.Now())
 	if retCluster.BusinessID == "" {
 		retCluster.BusinessID = opts.BusinessID
@@ -393,10 +397,16 @@ func (m *ModelCluster) generateClusterResponse(metricSlice []*types.ClusterMetri
 			MemoryRequest:      strconv.FormatInt(metric.MemoryRequest, 10),
 			MinNode:            metric.MinNode,
 			MaxNode:            metric.MaxNode,
-			MaxInstanceTime:    metric.MaxInstance,
+			MaxInstance:        metric.MaxInstance,
 			MinInstance:        metric.MinInstance,
 			NodeQuantile:       metric.NodeQuantile,
+			MaxCPU:             metric.MaxCPU,
+			MinCPU:             metric.MinCPU,
+			MaxMemory:          metric.MaxMemory,
+			MinMemory:          metric.MinMemory,
 			CACount:            strconv.FormatInt(metric.CACount, 10),
+			CpuLimit:           strconv.FormatFloat(metric.CPULimit, 'f', 2, 64),
+			MemoryLimit:        strconv.FormatInt(metric.MemoryLimit, 10),
 		}
 		responseMetrics = append(responseMetrics, responseMetric)
 	}
@@ -404,28 +414,55 @@ func (m *ModelCluster) generateClusterResponse(metricSlice []*types.ClusterMetri
 	return response
 }
 
-func (m *ModelCluster) preAggregate(data *types.ClusterData, newMetric *types.ClusterMetrics) {
-	if data.MaxInstance == nil {
-		data.MaxInstance = newMetric.MaxInstance
-	} else if newMetric.MaxInstance.Value > data.MaxInstance.Value {
+func (m *ModelCluster) preAggregateMax(data *types.ClusterData, newMetric *types.ClusterMetrics) {
+	if data.MaxInstance != nil && newMetric.MaxInstance != nil {
+		data.MaxInstance = getMax(data.MaxInstance, newMetric.MaxInstance)
+	} else if newMetric.MaxInstance != nil {
 		data.MaxInstance = newMetric.MaxInstance
 	}
 
-	if data.MinInstance == nil {
-		data.MinInstance = newMetric.MinInstance
-	} else if newMetric.MinInstance.Value < data.MinInstance.Value {
-		data.MinInstance = newMetric.MinInstance
-	}
-
-	if data.MaxNode == nil {
-		data.MaxNode = newMetric.MaxNode
-	} else if newMetric.MaxNode.Value > data.MaxNode.Value {
+	if data.MaxNode != nil && newMetric.MaxNode != nil {
+		data.MaxNode = getMax(data.MaxNode, newMetric.MaxNode)
+	} else if newMetric.MaxNode != nil {
 		data.MaxNode = newMetric.MaxNode
 	}
 
-	if data.MinNode == nil {
-		data.MinNode = newMetric.MinNode
-	} else if newMetric.MinNode.Value < data.MinNode.Value {
+	if data.MaxCPU != nil && newMetric.MaxCPU != nil {
+		data.MaxCPU = getMax(data.MaxCPU, newMetric.MaxCPU)
+	} else if newMetric.MaxCPU != nil {
+		data.MaxCPU = newMetric.MaxCPU
+	}
+
+	if data.MaxMemory != nil && newMetric.MaxMemory != nil {
+		data.MaxMemory = getMax(data.MaxMemory, newMetric.MaxMemory)
+	} else if newMetric.MaxMemory != nil {
+		data.MaxMemory = newMetric.MaxMemory
+	}
+}
+
+func (m *ModelCluster) preAggregateMin(data *types.ClusterData, newMetric *types.ClusterMetrics) {
+	if data.MinInstance != nil && newMetric.MinInstance != nil {
+		data.MinInstance = getMin(data.MinInstance, newMetric.MinInstance)
+	} else if newMetric.MinInstance != nil {
+		data.MinInstance = newMetric.MinInstance
+	}
+
+	if data.MinNode != nil && newMetric.MinNode != nil {
+		data.MinNode = getMin(data.MinNode, newMetric.MinNode)
+	} else if newMetric.MinNode != nil {
 		data.MinNode = newMetric.MinNode
 	}
+
+	if data.MinCPU != nil && newMetric.MinCPU != nil {
+		data.MinCPU = getMin(data.MinCPU, newMetric.MinCPU)
+	} else if newMetric.MinCPU != nil {
+		data.MinCPU = newMetric.MinCPU
+	}
+
+	if data.MinMemory != nil && newMetric.MinMemory != nil {
+		data.MinMemory = getMin(data.MinMemory, newMetric.MinMemory)
+	} else if newMetric.MinMemory != nil {
+		data.MinMemory = newMetric.MinMemory
+	}
+
 }

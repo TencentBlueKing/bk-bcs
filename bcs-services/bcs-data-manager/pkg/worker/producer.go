@@ -14,22 +14,25 @@ package worker
 
 import (
 	"context"
+	"sync"
+	"time"
+
+	"github.com/panjf2000/ants/v2"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/prom"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/types"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/utils"
-	"github.com/panjf2000/ants/v2"
-	"sync"
-	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/codec"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/msgqueue"
+	"github.com/micro/go-micro/v2/broker"
+	"github.com/robfig/cron/v3"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/cmanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/datajob"
-	"github.com/micro/go-micro/v2/broker"
-	"github.com/robfig/cron/v3"
 )
 
 // Producer produce data job

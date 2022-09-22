@@ -14,15 +14,17 @@ package datajob
 
 import (
 	"context"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/types"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/utils"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/types"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/utils"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/metric"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/store"
 	bcsdatamanager "github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/proto/bcs-data-manager"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // ClusterDayPolicy cluster day policy
@@ -69,12 +71,11 @@ func NewClusterMinutePolicy(getter metric.Server, store store.Server) *ClusterMi
 
 // ImplementPolicy day policy implement, calculate every day
 func (p *ClusterDayPolicy) ImplementPolicy(ctx context.Context, opts *types.JobCommonOpts, clients *types.Clients) {
-	totalCPU, CPURequest, CPUUsed, cpuUsage, err := p.MetricGetter.GetClusterCPUMetrics(opts, clients)
+	cpuMetric, err := p.MetricGetter.GetClusterCPUMetrics(opts, clients)
 	if err != nil {
 		blog.Errorf("do cluster day policy error, opts: %v, err: %v", opts, err)
 	}
-	totalMemory, memoryRequest, memoryUsed, memoryUsage, err := p.MetricGetter.
-		GetClusterMemoryMetrics(opts, clients)
+	memoryMetric, err := p.MetricGetter.GetClusterMemoryMetrics(opts, clients)
 	if err != nil {
 		blog.Errorf("do cluster day policy error, opts: %v, err: %v", opts, err)
 	}
@@ -93,8 +94,8 @@ func (p *ClusterDayPolicy) ImplementPolicy(ctx context.Context, opts *types.JobC
 	var avgLoadCPU float64
 	var avgLoadMemory int64
 	if availableNode != 0 {
-		avgLoadCPU = CPUUsed / float64(availableNode)
-		avgLoadMemory = memoryUsed / availableNode
+		avgLoadCPU = cpuMetric.CPUUsed / float64(availableNode)
+		avgLoadMemory = memoryMetric.MemoryUsed / availableNode
 	}
 	hourOpts := &types.JobCommonOpts{
 		ObjectType: types.ClusterType,
@@ -121,13 +122,15 @@ func (p *ClusterDayPolicy) ImplementPolicy(ctx context.Context, opts *types.JobC
 	clusterMetric := &types.ClusterMetrics{
 		Index:              utils.GetIndex(opts.CurrentTime, opts.Dimension),
 		Time:               primitive.NewDateTimeFromTime(utils.FormatTime(opts.CurrentTime, opts.Dimension)),
-		TotalLoadCPU:       CPUUsed,
-		CPUUsage:           cpuUsage,
-		TotalLoadMemory:    memoryUsed,
-		MemoryRequest:      memoryRequest,
-		MemoryUsage:        memoryUsage,
+		TotalLoadCPU:       cpuMetric.CPUUsed,
+		CPUUsage:           cpuMetric.CPUUsage,
+		TotalLoadMemory:    memoryMetric.MemoryUsed,
+		MemoryRequest:      memoryMetric.MemoryRequest,
+		MemoryUsage:        memoryMetric.MemoryUsage,
 		InstanceCount:      instanceCount,
-		CpuRequest:         CPURequest,
+		CpuRequest:         cpuMetric.CPURequest,
+		MemoryLimit:        memoryMetric.MemoryLimit,
+		CPULimit:           cpuMetric.CPULimit,
 		AvgLoadMemory:      avgLoadMemory,
 		AvgLoadCPU:         avgLoadCPU,
 		NodeCount:          node,
@@ -137,10 +140,14 @@ func (p *ClusterDayPolicy) ImplementPolicy(ctx context.Context, opts *types.JobC
 		MaxNode:            hourMetric.MaxNode,
 		MinInstance:        hourMetric.MinInstance,
 		MaxInstance:        hourMetric.MaxInstance,
+		MaxCPU:             hourMetric.MaxCPU,
+		MinCPU:             hourMetric.MinCPU,
+		MaxMemory:          hourMetric.MaxMemory,
+		MinMemory:          hourMetric.MinMemory,
 		MinUsageNode:       minUsageNode,
 		NodeQuantile:       nodeQuantile,
-		TotalCPU:           totalCPU,
-		TotalMemory:        totalMemory,
+		TotalCPU:           cpuMetric.TotalCPU,
+		TotalMemory:        memoryMetric.TotalMemory,
 		CACount:            hourMetric.TotalCACount,
 	}
 	err = p.store.InsertClusterInfo(ctx, clusterMetric, opts)
@@ -151,12 +158,11 @@ func (p *ClusterDayPolicy) ImplementPolicy(ctx context.Context, opts *types.JobC
 
 // ImplementPolicy hour policy implement, calculate every hour
 func (p *ClusterHourPolicy) ImplementPolicy(ctx context.Context, opts *types.JobCommonOpts, clients *types.Clients) {
-	totalCPU, CPURequest, CPUUsed, cpuUsage, err := p.MetricGetter.GetClusterCPUMetrics(opts, clients)
+	cpuMetric, err := p.MetricGetter.GetClusterCPUMetrics(opts, clients)
 	if err != nil {
 		blog.Errorf("do cluster hour policy error, opts: %v, err: %v", opts, err)
 	}
-	totalMemory, memoryRequest, memoryUsed, memoryUsage, err := p.MetricGetter.
-		GetClusterMemoryMetrics(opts, clients)
+	memoryMetric, err := p.MetricGetter.GetClusterMemoryMetrics(opts, clients)
 	if err != nil {
 		blog.Errorf("do cluster hour policy error, opts: %v, err: %v", opts, err)
 	}
@@ -175,8 +181,8 @@ func (p *ClusterHourPolicy) ImplementPolicy(ctx context.Context, opts *types.Job
 	var avgLoadCPU float64
 	var avgLoadMemory int64
 	if availableNode != 0 {
-		avgLoadCPU = CPUUsed / float64(availableNode)
-		avgLoadMemory = memoryUsed / availableNode
+		avgLoadCPU = cpuMetric.CPUUsed / float64(availableNode)
+		avgLoadMemory = memoryMetric.MemoryUsed / availableNode
 	}
 	minuteOpts := &types.JobCommonOpts{
 		ObjectType: types.ClusterType,
@@ -203,13 +209,15 @@ func (p *ClusterHourPolicy) ImplementPolicy(ctx context.Context, opts *types.Job
 	clusterMetric := &types.ClusterMetrics{
 		Index:              utils.GetIndex(opts.CurrentTime, opts.Dimension),
 		Time:               primitive.NewDateTimeFromTime(utils.FormatTime(opts.CurrentTime, opts.Dimension)),
-		TotalLoadCPU:       CPUUsed,
-		CPUUsage:           cpuUsage,
-		TotalLoadMemory:    memoryUsed,
-		MemoryRequest:      memoryRequest,
-		MemoryUsage:        memoryUsage,
+		TotalLoadCPU:       cpuMetric.CPUUsed,
+		CPUUsage:           cpuMetric.CPUUsage,
+		TotalLoadMemory:    memoryMetric.MemoryUsed,
+		MemoryRequest:      memoryMetric.MemoryRequest,
+		MemoryLimit:        memoryMetric.MemoryLimit,
+		CPULimit:           cpuMetric.CPULimit,
+		MemoryUsage:        memoryMetric.MemoryUsage,
 		InstanceCount:      instanceCount,
-		CpuRequest:         CPURequest,
+		CpuRequest:         cpuMetric.CPURequest,
 		AvgLoadMemory:      avgLoadMemory,
 		AvgLoadCPU:         avgLoadCPU,
 		NodeCount:          node,
@@ -219,10 +227,14 @@ func (p *ClusterHourPolicy) ImplementPolicy(ctx context.Context, opts *types.Job
 		MaxNode:            minuteMetric.MaxNode,
 		MinInstance:        minuteMetric.MinInstance,
 		MaxInstance:        minuteMetric.MaxInstance,
+		MaxCPU:             minuteMetric.MaxCPU,
+		MinCPU:             minuteMetric.MinCPU,
+		MaxMemory:          minuteMetric.MaxMemory,
+		MinMemory:          minuteMetric.MinMemory,
 		MinUsageNode:       minUsageNode,
 		NodeQuantile:       nodeQuantile,
-		TotalCPU:           totalCPU,
-		TotalMemory:        totalMemory,
+		TotalCPU:           cpuMetric.TotalCPU,
+		TotalMemory:        memoryMetric.TotalMemory,
 		CACount:            minuteMetric.TotalCACount,
 	}
 	err = p.store.InsertClusterInfo(ctx, clusterMetric, opts)
@@ -234,11 +246,11 @@ func (p *ClusterHourPolicy) ImplementPolicy(ctx context.Context, opts *types.Job
 // ImplementPolicy minute policy implement, calculate every 10 min
 func (p *ClusterMinutePolicy) ImplementPolicy(ctx context.Context, opts *types.JobCommonOpts,
 	clients *types.Clients) {
-	totalCPU, CPURequest, CPUUsed, cpuUsage, err := p.MetricGetter.GetClusterCPUMetrics(opts, clients)
+	cpuMetric, err := p.MetricGetter.GetClusterCPUMetrics(opts, clients)
 	if err != nil {
 		blog.Errorf("do cluster minute policy error, opts: %v, err: %v", opts, err)
 	}
-	totalMemory, memoryRequest, memoryUsed, memoryUsage, err := p.MetricGetter.GetClusterMemoryMetrics(opts, clients)
+	memoryMetric, err := p.MetricGetter.GetClusterMemoryMetrics(opts, clients)
 	if err != nil {
 		blog.Errorf("do cluster minute policy error, opts: %v, err: %v", opts, err)
 	}
@@ -257,8 +269,8 @@ func (p *ClusterMinutePolicy) ImplementPolicy(ctx context.Context, opts *types.J
 	var avgLoadCPU float64
 	var avgLoadMemory int64
 	if availableNode != 0 {
-		avgLoadCPU = CPUUsed / float64(availableNode)
-		avgLoadMemory = memoryUsed / availableNode
+		avgLoadCPU = cpuMetric.CPUUsed / float64(availableNode)
+		avgLoadMemory = memoryMetric.MemoryUsed / availableNode
 	}
 	minuteBucket, _ := utils.GetBucketTime(opts.CurrentTime.Add(-10*time.Minute), types.DimensionMinute)
 	workloadCount, err := p.store.GetWorkloadCount(ctx, opts, minuteBucket, opts.CurrentTime.Add(-10*time.Minute))
@@ -272,13 +284,15 @@ func (p *ClusterMinutePolicy) ImplementPolicy(ctx context.Context, opts *types.J
 	clusterMetric := &types.ClusterMetrics{
 		Index:              utils.GetIndex(opts.CurrentTime, opts.Dimension),
 		Time:               primitive.NewDateTimeFromTime(utils.FormatTime(opts.CurrentTime, opts.Dimension)),
-		TotalLoadCPU:       CPUUsed,
-		CPUUsage:           cpuUsage,
-		TotalLoadMemory:    memoryUsed,
-		MemoryRequest:      memoryRequest,
-		MemoryUsage:        memoryUsage,
+		TotalLoadCPU:       cpuMetric.CPUUsed,
+		CPUUsage:           cpuMetric.CPUUsage,
+		TotalLoadMemory:    memoryMetric.MemoryUsed,
+		MemoryRequest:      memoryMetric.MemoryRequest,
+		MemoryUsage:        memoryMetric.MemoryUsage,
 		InstanceCount:      instanceCount,
-		CpuRequest:         CPURequest,
+		CpuRequest:         cpuMetric.CPURequest,
+		MemoryLimit:        memoryMetric.MemoryLimit,
+		CPULimit:           cpuMetric.CPULimit,
 		AvgLoadMemory:      avgLoadMemory,
 		AvgLoadCPU:         avgLoadCPU,
 		NodeCount:          node,
@@ -309,10 +323,34 @@ func (p *ClusterMinutePolicy) ImplementPolicy(ctx context.Context, opts *types.J
 			Value:      float64(instanceCount),
 			Period:     utils.FormatTime(opts.CurrentTime, opts.Dimension).String(),
 		},
+		MaxCPU: &bcsdatamanager.ExtremumRecord{
+			Name:       "MaxCPU",
+			MetricName: "MaxCPU",
+			Value:      cpuMetric.CPUUsage,
+			Period:     utils.FormatTime(opts.CurrentTime, opts.Dimension).String(),
+		},
+		MinCPU: &bcsdatamanager.ExtremumRecord{
+			Name:       "MinCPU",
+			MetricName: "MinCPU",
+			Value:      cpuMetric.CPUUsage,
+			Period:     utils.FormatTime(opts.CurrentTime, opts.Dimension).String(),
+		},
+		MaxMemory: &bcsdatamanager.ExtremumRecord{
+			Name:       "MaxMemory",
+			MetricName: "MaxMemory",
+			Value:      memoryMetric.MemoryUsage,
+			Period:     utils.FormatTime(opts.CurrentTime, opts.Dimension).String(),
+		},
+		MinMemory: &bcsdatamanager.ExtremumRecord{
+			Name:       "MinMemory",
+			MetricName: "MinMemory",
+			Value:      memoryMetric.MemoryUsage,
+			Period:     utils.FormatTime(opts.CurrentTime, opts.Dimension).String(),
+		},
 		MinUsageNode: minUsageNode,
 		NodeQuantile: nodeQuantile,
-		TotalCPU:     totalCPU,
-		TotalMemory:  totalMemory,
+		TotalCPU:     cpuMetric.TotalCPU,
+		TotalMemory:  memoryMetric.TotalMemory,
 	}
 	if err = p.store.InsertClusterInfo(ctx, clusterMetric, opts); err != nil {
 		blog.Errorf("do cluster minute policy error, opts: %v, err: %v", opts, err)

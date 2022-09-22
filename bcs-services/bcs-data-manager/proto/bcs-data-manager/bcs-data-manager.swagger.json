@@ -864,10 +864,10 @@
           "description": "最小实例数及所在时间段",
           "title": "minInstance"
         },
-        "MaxInstanceTime": {
+        "MaxInstance": {
           "$ref": "#/definitions/datamanagerExtremumRecord",
           "description": "最大实例数及所在时间段",
-          "title": "MaxInstanceTimeTime"
+          "title": "MaxInstance"
         },
         "CpuRequest": {
           "type": "string",
@@ -883,6 +883,36 @@
           "type": "string",
           "description": "ca触发次数",
           "title": "CACount"
+        },
+        "CpuLimit": {
+          "type": "string",
+          "description": "cpu限制量",
+          "title": "cpuLimit"
+        },
+        "MemoryLimit": {
+          "type": "string",
+          "description": "内存限制量",
+          "title": "memoryLimit"
+        },
+        "MinCPU": {
+          "$ref": "#/definitions/datamanagerExtremumRecord",
+          "description": "最小cpu及所在时间段",
+          "title": "MinCPU"
+        },
+        "MaxCPU": {
+          "$ref": "#/definitions/datamanagerExtremumRecord",
+          "description": "最大cpu及所在时间段",
+          "title": "MaxCPU"
+        },
+        "MinMemory": {
+          "$ref": "#/definitions/datamanagerExtremumRecord",
+          "description": "最小memory及所在时间段",
+          "title": "MinMemory"
+        },
+        "MaxMemory": {
+          "$ref": "#/definitions/datamanagerExtremumRecord",
+          "description": "最大memory及所在时间段",
+          "title": "MaxMemory"
         }
       }
     },
@@ -1397,25 +1427,25 @@
           "description": "内存使用率",
           "title": "MemoryUsage"
         },
-        "maxCPUUsageTime": {
+        "MaxCPU": {
           "$ref": "#/definitions/datamanagerExtremumRecord",
           "description": "CPU使用率最高时间段",
-          "title": "maxCPUUsageTime"
+          "title": "maxCPU"
         },
-        "minCPUUsageTime": {
+        "MinCPU": {
           "$ref": "#/definitions/datamanagerExtremumRecord",
           "description": "CPU使用率最低时间段",
-          "title": "minCPUUsageTime"
+          "title": "minCPU"
         },
-        "maxMemoryUsageTime": {
+        "MaxMemory": {
           "$ref": "#/definitions/datamanagerExtremumRecord",
           "description": "内存使用率最高时间段",
-          "title": "maxMemoryUsageTime"
+          "title": "maxMemory"
         },
-        "minMemoryUsageTime": {
+        "MinMemory": {
           "$ref": "#/definitions/datamanagerExtremumRecord",
           "description": "内存使用率最低时间段",
-          "title": "minMemoryUsageTime"
+          "title": "minMemory"
         },
         "workloadCount": {
           "type": "string",
@@ -1427,15 +1457,15 @@
           "description": "当前实例数",
           "title": "instanceCount"
         },
-        "minInstanceTime": {
+        "minInstance": {
           "$ref": "#/definitions/datamanagerExtremumRecord",
           "description": "最小实例数及所在时间段",
-          "title": "minInstanceTime"
+          "title": "minInstance"
         },
-        "MaxInstanceTime": {
+        "MaxInstance": {
           "$ref": "#/definitions/datamanagerExtremumRecord",
           "description": "最大实例数及所在时间段",
-          "title": "maxInstanceTime"
+          "title": "maxInstance"
         },
         "minWorkloadUsage": {
           "$ref": "#/definitions/datamanagerExtremumRecord",
@@ -1446,6 +1476,16 @@
           "$ref": "#/definitions/datamanagerExtremumRecord",
           "description": "使用率最高模块",
           "title": "maxWorkloadUsage"
+        },
+        "CPULimit": {
+          "type": "string",
+          "description": "cpu限制量",
+          "title": "CPULimit"
+        },
+        "MemoryLimit": {
+          "type": "string",
+          "description": "内存限制量",
+          "title": "memoryLimit"
         }
       }
     },
@@ -1910,6 +1950,16 @@
           "$ref": "#/definitions/datamanagerExtremumRecord",
           "description": "最大实例数及所在时间段",
           "title": "maxInstanceTime"
+        },
+        "CPULimit": {
+          "type": "string",
+          "description": "cpu限制量",
+          "title": "CPULimit"
+        },
+        "memoryLimit": {
+          "type": "string",
+          "description": "内存限制量",
+          "title": "memoryLimit"
         }
       }
     },

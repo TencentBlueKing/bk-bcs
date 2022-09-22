@@ -23,12 +23,13 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi"
 	bcsCm "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/clustermanager"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/discovery"
 	"github.com/micro/go-micro/v2/registry"
 	"github.com/patrickmn/go-cache"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/metadata"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/discovery"
 )
 
 const (
@@ -229,9 +230,10 @@ type ClusterManagerClientWithHeader struct {
 func (cm *clusterManagerClient) NewGrpcClientWithHeader(ctx context.Context,
 	conn *grpc.ClientConn) *ClusterManagerClientWithHeader {
 	header := make(map[string]string)
-	if len(cm.opts.AuthToken) != 0 {
+	if len(cm.opts.Address) != 0 && len(cm.opts.AuthToken) != 0 {
 		header["Authorization"] = fmt.Sprintf("Bearer %s", cm.opts.AuthToken)
 	}
+	header["X-Bcs-Client"] = "bcs-data-manager"
 	md := metadata.New(header)
 	return &ClusterManagerClientWithHeader{
 		Ctx: metadata.NewOutgoingContext(ctx, md),

@@ -14,20 +14,22 @@ package metric
 
 import (
 	"fmt"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/types"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/utils"
 	"net/http"
 	"regexp"
 	"testing"
 	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/bcsmonitor"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/types"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/utils"
+
 	"github.com/stretchr/testify/assert"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/bcsmonitor"
 )
 
 func newMonitor() bcsmonitor.ClientInterface {
 	opt := bcsmonitor.BcsMonitorClientOpt{
-		Schema:    "https",
+		Schema:    "",
 		Endpoint:  "",
 		UserName:  "",
 		Password:  "",
@@ -53,7 +55,7 @@ func Test_GetClusterCPUMetrics(t *testing.T) {
 	}
 	getter := &MetricGetter{}
 	clients := types.NewClients(monitorCli, nil, nil, nil)
-	_, _, _, _, err := getter.GetClusterCPUMetrics(opts, clients)
+	_, err := getter.GetClusterCPUMetrics(opts, clients)
 	assert.Nil(t, err)
 	fmt.Println(getter.GetClusterCPUMetrics(opts, clients))
 }
@@ -69,7 +71,7 @@ func Test_GetClusterMemoryMetrics(t *testing.T) {
 	}
 	getter := &MetricGetter{}
 	clients := types.NewClients(monitorCli, nil, nil, nil)
-	_, _, _, _, err := getter.GetClusterMemoryMetrics(opts, clients)
+	_, err := getter.GetClusterMemoryMetrics(opts, clients)
 	assert.Nil(t, err)
 	fmt.Println(getter.GetClusterMemoryMetrics(opts, clients))
 }
@@ -135,7 +137,7 @@ func Test_GetNamespaceCPUMetrics(t *testing.T) {
 	}
 	getter := &MetricGetter{}
 	clients := types.NewClients(monitorCli, nil, nil, nil)
-	_, _, _, err := getter.GetNamespaceCPUMetrics(opts, clients)
+	_, err := getter.GetNamespaceCPUMetrics(opts, clients)
 	assert.Nil(t, err)
 	fmt.Println(getter.GetNamespaceCPUMetrics(opts, clients))
 }
@@ -169,7 +171,7 @@ func Test_GetNamespaceMemoryMetrics(t *testing.T) {
 	}
 	getter := &MetricGetter{}
 	clients := types.NewClients(monitorCli, nil, nil, nil)
-	_, _, _, err := getter.GetNamespaceMemoryMetrics(opts, clients)
+	_, err := getter.GetNamespaceMemoryMetrics(opts, clients)
 	assert.Nil(t, err)
 	fmt.Println(getter.GetNamespaceMemoryMetrics(opts, clients))
 }
@@ -192,7 +194,7 @@ func Test_GetWorkloadCPUMetrics(t *testing.T) {
 	}
 	getter := &MetricGetter{}
 	clients := types.NewClients(monitorCli, nil, nil, nil)
-	_, _, _, err := getter.GetWorkloadCPUMetrics(opts, clients)
+	_, err := getter.GetWorkloadCPUMetrics(opts, clients)
 	assert.Nil(t, err)
 	fmt.Println(getter.GetWorkloadCPUMetrics(opts, clients))
 }
@@ -211,7 +213,7 @@ func Test_GetWorkloadMemoryMetrics(t *testing.T) {
 	}
 	getter := &MetricGetter{}
 	clients := types.NewClients(monitorCli, nil, nil, nil)
-	_, _, _, err := getter.GetWorkloadMemoryMetrics(opts, clients)
+	_, err := getter.GetWorkloadMemoryMetrics(opts, clients)
 	assert.Nil(t, err)
 	fmt.Println(getter.GetWorkloadMemoryMetrics(opts, clients))
 	fmt.Println(getter.GetInstanceCount(opts, clients))

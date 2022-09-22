@@ -14,15 +14,17 @@ package datajob
 
 import (
 	"context"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/types"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/utils"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/types"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/utils"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/metric"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/store"
 	bcsdatamanager "github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/proto/bcs-data-manager"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // NamespaceDayPolicy day policy
@@ -69,11 +71,11 @@ func NewNamespaceMinutePolicy(getter metric.Server, store store.Server) *Namespa
 
 // ImplementPolicy day policy implement
 func (p *NamespaceDayPolicy) ImplementPolicy(ctx context.Context, opts *types.JobCommonOpts, clients *types.Clients) {
-	CPURequest, CPUUsed, cpuUsage, err := p.MetricGetter.GetNamespaceCPUMetrics(opts, clients)
+	cpuMetrics, err := p.MetricGetter.GetNamespaceCPUMetrics(opts, clients)
 	if err != nil {
 		blog.Errorf("do namespace day policy error, opts: %v, err: %v", opts, err)
 	}
-	memoryRequest, memoryUsed, memoryUsage, err := p.MetricGetter.GetNamespaceMemoryMetrics(opts, clients)
+	memoryMetrics, err := p.MetricGetter.GetNamespaceMemoryMetrics(opts, clients)
 	if err != nil {
 		blog.Errorf("do namespace day policy error, opts: %v, err: %v", opts, err)
 	}
@@ -108,14 +110,16 @@ func (p *NamespaceDayPolicy) ImplementPolicy(ctx context.Context, opts *types.Jo
 	namespaceMetric := &types.NamespaceMetrics{
 		Index:              utils.GetIndex(opts.CurrentTime, opts.Dimension),
 		Time:               primitive.NewDateTimeFromTime(utils.FormatTime(opts.CurrentTime, opts.Dimension)),
-		CPUUsage:           cpuUsage,
-		MemoryRequest:      memoryRequest,
-		MemoryUsage:        memoryUsage,
+		CPUUsage:           cpuMetrics.CPUUsage,
+		MemoryRequest:      memoryMetrics.MemoryRequest,
+		MemoryUsage:        memoryMetrics.MemoryUsage,
 		InstanceCount:      instanceCount,
-		CPURequest:         CPURequest,
+		CPURequest:         cpuMetrics.CPURequest,
+		MemoryLimit:        memoryMetrics.MemoryLimit,
+		CPULimit:           cpuMetrics.CPULimit,
 		WorkloadCount:      workloadCount,
-		CPUUsageAmount:     CPUUsed,
-		MemoryUsageAmount:  memoryUsed,
+		CPUUsageAmount:     cpuMetrics.CPUUsed,
+		MemoryUsageAmount:  memoryMetrics.MemoryUsed,
 		MaxCPUUsageTime:    hourMetric.MaxCPUUsageTime,
 		MinCPUUsageTime:    hourMetric.MinCPUUsageTime,
 		MaxMemoryUsageTime: hourMetric.MaxMemoryUsageTime,
@@ -132,11 +136,11 @@ func (p *NamespaceDayPolicy) ImplementPolicy(ctx context.Context, opts *types.Jo
 // ImplementPolicy hour policy implement
 func (p *NamespaceHourPolicy) ImplementPolicy(ctx context.Context, opts *types.JobCommonOpts,
 	clients *types.Clients) {
-	CPURequest, CPUUsed, cpuUsage, err := p.MetricGetter.GetNamespaceCPUMetrics(opts, clients)
+	cpuMetrics, err := p.MetricGetter.GetNamespaceCPUMetrics(opts, clients)
 	if err != nil {
 		blog.Errorf("do namespace hour policy error, opts: %v, err: %v", opts, err)
 	}
-	memoryRequest, memoryUsed, memoryUsage, err := p.MetricGetter.GetNamespaceMemoryMetrics(opts, clients)
+	memoryMetrics, err := p.MetricGetter.GetNamespaceMemoryMetrics(opts, clients)
 	if err != nil {
 		blog.Errorf("do namespace hour policy error, opts: %v, err: %v", opts, err)
 	}
@@ -172,14 +176,16 @@ func (p *NamespaceHourPolicy) ImplementPolicy(ctx context.Context, opts *types.J
 	namespaceMetric := &types.NamespaceMetrics{
 		Index:              utils.GetIndex(opts.CurrentTime, opts.Dimension),
 		Time:               primitive.NewDateTimeFromTime(utils.FormatTime(opts.CurrentTime, opts.Dimension)),
-		CPUUsage:           cpuUsage,
-		MemoryRequest:      memoryRequest,
-		MemoryUsage:        memoryUsage,
+		CPUUsage:           cpuMetrics.CPUUsage,
+		MemoryRequest:      memoryMetrics.MemoryRequest,
+		MemoryUsage:        memoryMetrics.MemoryUsage,
 		InstanceCount:      instanceCount,
-		CPURequest:         CPURequest,
+		CPURequest:         cpuMetrics.CPURequest,
+		MemoryLimit:        memoryMetrics.MemoryLimit,
+		CPULimit:           cpuMetrics.CPULimit,
 		WorkloadCount:      workloadCount,
-		CPUUsageAmount:     CPUUsed,
-		MemoryUsageAmount:  memoryUsed,
+		CPUUsageAmount:     cpuMetrics.CPUUsed,
+		MemoryUsageAmount:  memoryMetrics.MemoryUsed,
 		MaxCPUUsageTime:    minuteMetric.MaxCPUUsageTime,
 		MinCPUUsageTime:    minuteMetric.MinCPUUsageTime,
 		MaxMemoryUsageTime: minuteMetric.MaxMemoryUsageTime,
@@ -196,11 +202,11 @@ func (p *NamespaceHourPolicy) ImplementPolicy(ctx context.Context, opts *types.J
 // ImplementPolicy minute policy implement
 func (p *NamespaceMinutePolicy) ImplementPolicy(ctx context.Context, opts *types.JobCommonOpts,
 	clients *types.Clients) {
-	CPURequest, CPUUsed, cpuUsage, err := p.MetricGetter.GetNamespaceCPUMetrics(opts, clients)
+	cpuMetrics, err := p.MetricGetter.GetNamespaceCPUMetrics(opts, clients)
 	if err != nil {
 		blog.Errorf("do namespace minute policy error, opts: %v, err: %v", opts, err)
 	}
-	memoryRequest, memoryUsed, memoryUsage, err := p.MetricGetter.GetNamespaceMemoryMetrics(opts, clients)
+	memoryMetrics, err := p.MetricGetter.GetNamespaceMemoryMetrics(opts, clients)
 	if err != nil {
 		blog.Errorf("do namespace minute policy error, opts: %v, err: %v", opts, err)
 	}
@@ -216,36 +222,38 @@ func (p *NamespaceMinutePolicy) ImplementPolicy(ctx context.Context, opts *types
 	namespaceMetric := &types.NamespaceMetrics{
 		Index:             utils.GetIndex(opts.CurrentTime, opts.Dimension),
 		Time:              primitive.NewDateTimeFromTime(utils.FormatTime(opts.CurrentTime, opts.Dimension)),
-		CPUUsage:          cpuUsage,
-		MemoryRequest:     memoryRequest,
-		MemoryUsage:       memoryUsage,
+		CPUUsage:          cpuMetrics.CPUUsage,
+		MemoryRequest:     memoryMetrics.MemoryRequest,
+		MemoryUsage:       memoryMetrics.MemoryUsage,
 		InstanceCount:     instanceCount,
-		CPURequest:        CPURequest,
+		CPURequest:        cpuMetrics.CPURequest,
+		MemoryLimit:       memoryMetrics.MemoryLimit,
+		CPULimit:          cpuMetrics.CPULimit,
 		WorkloadCount:     workloadCount,
-		CPUUsageAmount:    CPUUsed,
-		MemoryUsageAmount: memoryUsed,
+		CPUUsageAmount:    cpuMetrics.CPUUsed,
+		MemoryUsageAmount: memoryMetrics.MemoryUsed,
 		MaxCPUUsageTime: &bcsdatamanager.ExtremumRecord{
 			Name:       "MaxCPUUsage",
 			MetricName: "MaxCPUUsage",
-			Value:      cpuUsage,
+			Value:      cpuMetrics.CPUUsage,
 			Period:     opts.CurrentTime.String(),
 		},
 		MinCPUUsageTime: &bcsdatamanager.ExtremumRecord{
 			Name:       "MinCPUUsage",
 			MetricName: "MinCPUUsage",
-			Value:      cpuUsage,
+			Value:      cpuMetrics.CPUUsage,
 			Period:     opts.CurrentTime.String(),
 		},
 		MaxMemoryUsageTime: &bcsdatamanager.ExtremumRecord{
 			Name:       "MaxMemoryUsage",
 			MetricName: "MaxMemoryUsage",
-			Value:      memoryUsage,
+			Value:      memoryMetrics.MemoryUsage,
 			Period:     opts.CurrentTime.String(),
 		},
 		MinMemoryUsageTime: &bcsdatamanager.ExtremumRecord{
 			Name:       "MinMemoryUsage",
 			MetricName: "MinMemoryUsage",
-			Value:      memoryUsage,
+			Value:      memoryMetrics.MemoryUsage,
 			Period:     opts.CurrentTime.String(),
 		},
 		MinWorkloadUsage: nil,

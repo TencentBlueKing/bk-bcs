@@ -14,54 +14,44 @@ package metric
 
 import (
 	"fmt"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/types"
 	"strconv"
 	"strings"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/types"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/bcsmonitor"
 )
 
 const (
 	// WorkloadCPUUsage TODO
-	WorkloadCPUUsage = "sum(rate(container_cpu_usage_seconds_total{%s}[%s]))by(%s)"
+	WorkloadCPUUsage = "sum(rate(container_cpu_usage_seconds_total{%s,image!=\"\"}[%s]))by(%s)"
 	// ClusterCPUUsage TODO
 	ClusterCPUUsage = "sum(irate(node_cpu_seconds_total{cluster_id=\"%s\", job=\"node-exporter\", " +
 		"mode!=\"idle\"}[%s]))"
 	// NamespaceCPUUsage TODO
-	NamespaceCPUUsage = "sum(rate(container_cpu_usage_seconds_total{%s}[%s]))by(%s)"
-	// InstanceCount TODO
+	NamespaceCPUUsage = "sum(rate(container_cpu_usage_seconds_total{%s,image!=\"\"}[%s]))by(%s)"
+	// NamespaceCPUUsage TODO
 	InstanceCount = "count(sum(rate(container_cpu_usage_seconds_total{%s}[%s]))by(%s))"
-	// K8sWorkloadCPURequest TODO
-	K8sWorkloadCPURequest = "sum(sum(kube_pod_container_resource_requests_cpu_cores{%s})by(%s))"
 	// K8sCPURequest TODO
-	K8sCPURequest = "sum(kube_pod_container_resource_requests_cpu_cores{%s})by(%s)"
-	// WorkloadMemoryUsed TODO
-	WorkloadMemoryUsed = "sum(sum(container_memory_rss{%s})by(%s))"
-	// NamespaceMemoryUsed TODO
-	NamespaceMemoryUsed = "sum(container_memory_rss{%s})by(%s)"
-	// ClusterMemoryUsed TODO
-	ClusterMemoryUsed = "sum(container_memory_rss{%s})by(%s)"
-	// K8sWorkloadMemoryRequest TODO
-	K8sWorkloadMemoryRequest = "sum(sum(kube_pod_container_resource_requests_memory_bytes{%s})by(%s))"
-	// K8sMemoryRequest TODO
-	K8sMemoryRequest = "sum(kube_pod_container_resource_requests_memory_bytes{%s})by(%s)"
-	// WorkloadInstance TODO
-	WorkloadInstance = "count(sum(container_memory_rss{%s}) by (%s))"
-	// NamespaceResourceQuota TODO
-	NamespaceResourceQuota = "kube_resourcequota{%s, type=\"hard\", %s}"
-	// PromMasterIP TODO
-	PromMasterIP = "sum(kube_node_role{cluster_id=\"%s\"})by(node)"
-	// PromNodeIP TODO
-	PromNodeIP = "sum(kube_node_created{cluster_id=\"%s\",%s})by(node)"
-	// NodeCount TODO
-	NodeCount = "count(sum(kube_node_created{cluster_id=\"%s\",%s})by(node))"
-	// ClusterTotalCPU TODO
-	ClusterTotalCPU = "sum(machine_cpu_cores{cluster_id=\"%s\"})by(cluster_id)"
-	// ClusterTotalMemory TODO
-	ClusterTotalMemory = "sum(machine_memory_bytes{cluster_id=\"%s\"})by(cluster_id)"
-	// NodeUsageQuantile TODO
-	NodeUsageQuantile = "quantile(%s,%s)"
-	// MesosWorkloadMemoryLimit TODO
+	K8sCPURequest       = "sum(kube_pod_container_resource_requests_cpu_cores{%s})"
+	K8sCPULimits        = "sum(kube_pod_container_resource_limits_cpu_cores{%s})"
+	WorkloadMemoryUsed  = "sum(sum(container_memory_usage_bytes{%s,image!=\"\"})by(%s))"
+	NamespaceMemoryUsed = "sum(container_memory_usage_bytes{%s,image!=\"\"})by(%s)"
+	ClusterMemoryUsed   = "sum(node_memory_MemTotal_bytes{cluster_id=\"%s\",job=\"node-exporter\"})" +
+		"-sum(node_memory_MemFree_bytes{cluster_id=\"%s\",job=\"node-exporter\"})" +
+		"-sum(node_memory_Buffers_bytes{cluster_id=\"%s\",job=\"node-exporter\"})" +
+		"-sum(node_memory_Cached_bytes{cluster_id=\"%s\",job=\"node-exporter\"})" +
+		"+sum(node_memory_Shmem_bytes{cluster_id=\"%s\",job=\"node-exporter\"})"
+	K8sMemoryRequest         = "sum(kube_pod_container_resource_requests_memory_bytes{%s})"
+	K8sMemoryLimit           = "sum(kube_pod_container_resource_limits_memory_bytes{%s})"
+	WorkloadInstance         = "count(sum(container_memory_rss{%s}) by (%s))"
+	NamespaceResourceQuota   = "kube_resourcequota{%s, type=\"hard\", %s}"
+	PromMasterIP             = "sum(kube_node_role{cluster_id=\"%s\"})by(node)"
+	PromNodeIP               = "sum(kube_node_created{cluster_id=\"%s\",%s})by(node)"
+	NodeCount                = "count(sum(kube_node_created{cluster_id=\"%s\",%s})by(node))"
+	ClusterTotalCPU          = "sum(machine_cpu_cores{cluster_id=\"%s\"})by(cluster_id)"
+	ClusterTotalMemory       = "sum(machine_memory_bytes{cluster_id=\"%s\"})by(cluster_id)"
+	NodeUsageQuantile        = "quantile(%s,%s)"
 	MesosWorkloadMemoryLimit = "sum(sum(container_spec_memory_limit_bytes{%s})by(%s))"
 	// MesosWorkloadCPULimit TODO
 	MesosWorkloadCPULimit = "sum(sum(container_spec_cpu_quota{%s})by(%s)/100000)"
@@ -82,11 +72,11 @@ const (
 		"source=\"/cluster-autoscaler\",reason=\"ScaleDown\", involved_object_namespace=\"bcs-system\"})"
 	// GeneralPodAutoscalerCount TODO
 	GeneralPodAutoscalerCount = "kube_event_unique_events_total{cluster_id=\"%s\", " +
-		"involved_object_kind=\"GeneralPodAutoscaler\",involved_object_name=\"%s\",namespace=\"%s\"," +
+		"involved_object_kind=\"GeneralPodAutoscaler\",involved_object_name=\"%s\",involved_object_namespace=\"%s\"," +
 		"source=\"/pod-autoscaler\",reason=\"SuccessfulRescale\"}"
 	// HorizontalPodAutoscalerCount TODO
 	HorizontalPodAutoscalerCount = "kube_event_unique_events_total{cluster_id=\"%s\", " +
-		"involved_object_kind=\"HorizontalPodAutoscaler\",involved_object_name=\"%s\",namespace=\"%s\"," +
+		"involved_object_kind=\"HorizontalPodAutoscaler\",involved_object_name=\"%s\",involved_object_namespace=\"%s\"," +
 		"source=\"/horizontal-pod-autoscaler\",reason=\"SuccessfulRescale\"}"
 	// MinOverTime TODO
 	MinOverTime = "min_over_time(%s[%s])"

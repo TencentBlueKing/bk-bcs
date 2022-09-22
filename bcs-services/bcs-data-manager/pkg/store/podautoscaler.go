@@ -15,16 +15,18 @@ package store
 import (
 	"context"
 	"errors"
+	"strconv"
+	"time"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/types"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/utils"
 	bcsdatamanager "github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/proto/bcs-data-manager"
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
-	"strconv"
-	"time"
 )
 
 var (
@@ -50,16 +52,6 @@ var (
 		},
 		{
 			Name: types.PodAutoscalerTableName + "_list_idx",
-			Key: bson.D{
-				bson.E{Key: ClusterIDKey, Value: 1},
-				bson.E{Key: NamespaceKey, Value: 1},
-				bson.E{Key: DimensionKey, Value: 1},
-				bson.E{Key: PodAutoscalerTypeKey, Value: 1},
-				bson.E{Key: MetricTimeKey, Value: 1},
-			},
-		},
-		{
-			Name: types.PodAutoscalerTableName + "_list_idx2",
 			Key: bson.D{
 				bson.E{Key: ClusterIDKey, Value: 1},
 				bson.E{Key: NamespaceKey, Value: 1},

@@ -17,14 +17,16 @@ import (
 	"crypto/tls"
 	"errors"
 	"fmt"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	bcsProject "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/bcsproject"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/discovery"
 	"github.com/micro/go-micro/v2/registry"
 	"github.com/patrickmn/go-cache"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/metadata"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/discovery"
 )
 
 const (
@@ -109,10 +111,11 @@ func NewBcsProjectManagerClient(opts *Options) BcsProjectManagerClient {
 func (pm *bcsProjectManagerClient) NewGrpcClientWithHeader(ctx context.Context,
 	conn *grpc.ClientConn) *BcsProjectClientWithHeader {
 	header := make(map[string]string)
-	if len(pm.opts.AuthToken) != 0 {
+	if len(pm.opts.Address) != 0 && len(pm.opts.AuthToken) != 0 {
 		header["Authorization"] = fmt.Sprintf("Bearer %s", pm.opts.AuthToken)
 		header["X-Project-Username"] = pm.opts.UserName
 	}
+	header["X-Bcs-Client"] = "bcs-data-manager"
 	md := metadata.New(header)
 	return &BcsProjectClientWithHeader{
 		Ctx: metadata.NewOutgoingContext(ctx, md),

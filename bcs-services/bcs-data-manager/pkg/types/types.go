@@ -14,13 +14,16 @@
 package types
 
 import (
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/bcsmonitor"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/cmanager"
 	"time"
 
-	bcsdatamanager "github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/proto/bcs-data-manager"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/bcsmonitor"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/cmanager"
+
 	"go.mongodb.org/mongo-driver/bson/primitive"
+
+	bcsdatamanager "github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/proto/bcs-data-manager"
 )
 
 const (
@@ -269,6 +272,10 @@ type ClusterData struct {
 	MaxNode      *bcsdatamanager.ExtremumRecord `json:"maxNode,omitempty" bson:"max_node"`
 	MinInstance  *bcsdatamanager.ExtremumRecord `json:"minInstance,omitempty" bson:"min_instance"`
 	MaxInstance  *bcsdatamanager.ExtremumRecord `json:"maxInstance,omitempty" bson:"max_instance"`
+	MaxCPU       *bcsdatamanager.ExtremumRecord `json:"maxCPU" bson:"max_cpu"`
+	MinCPU       *bcsdatamanager.ExtremumRecord `json:"minCPU" bson:"min_cpu"`
+	MaxMemory    *bcsdatamanager.ExtremumRecord `json:"maxMemory" bson:"max_memory"`
+	MinMemory    *bcsdatamanager.ExtremumRecord `json:"minMemory" bson:"min_memory"`
 	Metrics      []*ClusterMetrics              `json:"metrics" bson:"metrics"`
 }
 
@@ -335,8 +342,14 @@ type ClusterMetrics struct {
 	InstanceCount      int64                          `json:"instanceCount,omitempty"`
 	MinInstance        *bcsdatamanager.ExtremumRecord `json:"minInstance,omitempty"`
 	MaxInstance        *bcsdatamanager.ExtremumRecord `json:"maxInstance,omitempty"`
+	MinCPU             *bcsdatamanager.ExtremumRecord `json:"minCPU,omitempty"`
+	MaxCPU             *bcsdatamanager.ExtremumRecord `json:"maxCPU,omitempty"`
+	MinMemory          *bcsdatamanager.ExtremumRecord `json:"minMemory,omitempty"`
+	MaxMemory          *bcsdatamanager.ExtremumRecord `json:"maxMemory,omitempty"`
 	CpuRequest         float64                        `json:"cpuRequest,omitempty"`
+	CPULimit           float64                        `json:"CPULimit,omitempty"`
 	MemoryRequest      int64                          `json:"memoryRequest,omitempty"`
+	MemoryLimit        int64                          `json:"memoryLimit,omitempty"`
 	CACount            int64                          `json:"CACount,omitempty"`
 }
 
@@ -345,7 +358,9 @@ type NamespaceMetrics struct {
 	Index              int                            `json:"index"`
 	Time               primitive.DateTime             `json:"time"`
 	CPURequest         float64                        `json:"CPURequest"`
+	CPULimit           float64                        `json:"CPULimit"`
 	MemoryRequest      int64                          `json:"memoryRequest"`
+	MemoryLimit        int64                          `json:"memoryLimit"`
 	CPUUsageAmount     float64                        `json:"CPUUsageAmount"`
 	MemoryUsageAmount  int64                          `json:"memoryUsageAmount"`
 	CPUUsage           float64                        `json:"CPUUsage"`
@@ -367,7 +382,9 @@ type WorkloadMetrics struct {
 	Index              int                            `json:"index"`
 	Time               primitive.DateTime             `json:"time"`
 	CPURequest         float64                        `json:"CPURequest"`
+	CPULimit           float64                        `json:"CPULimit"`
 	MemoryRequest      int64                          `json:"memoryRequest"`
+	MemoryLimit        int64                          `json:"memoryLimit"`
 	CPUUsageAmount     float64                        `json:"CPUUsageAmount"`
 	MemoryUsageAmount  int64                          `json:"memoryUsageAmount"`
 	CPUUsage           float64                        `json:"CPUUsage"`
@@ -423,4 +440,22 @@ func NewClients(monitorClient bcsmonitor.ClientInterface, k8sStorageCli, mesosSt
 	cmCli *cmanager.ClusterManagerClientWithHeader) *Clients {
 	return &Clients{MonitorClient: monitorClient, CmCli: cmCli,
 		K8sStorageCli: k8sStorageCli, MesosStorageCli: mesosStorageCli}
+}
+
+// CPUMetrics metrics of cpu
+type CPUMetrics struct {
+	TotalCPU   float64
+	CPURequest float64
+	CPULimit   float64
+	CPUUsage   float64
+	CPUUsed    float64
+}
+
+// MemoryMetrics metrics of memory
+type MemoryMetrics struct {
+	TotalMemory   int64
+	MemoryRequest int64
+	MemoryLimit   int64
+	MemoryUsage   float64
+	MemoryUsed    int64
 }

@@ -899,8 +899,8 @@ message ClusterMetrics {
     title: "minInstance",
     description: "最小实例数及所在时间段"
   }];
-  ExtremumRecord MaxInstanceTime = 23[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title: "MaxInstanceTimeTime",
+  ExtremumRecord MaxInstance = 23[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "MaxInstance",
     description: "最大实例数及所在时间段"
   }];
   string CpuRequest = 24[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
@@ -914,6 +914,30 @@ message ClusterMetrics {
   string CACount = 26 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "CACount",
     description: "ca触发次数"
+  }];
+  string CpuLimit = 27[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "cpuLimit",
+    description: "cpu限制量"
+  }];
+  string MemoryLimit = 28[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "memoryLimit",
+    description: "内存限制量"
+  }];
+  ExtremumRecord MinCPU = 29[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "MinCPU",
+    description: "最小cpu及所在时间段"
+  }];
+  ExtremumRecord MaxCPU = 30[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "MaxCPU",
+    description: "最大cpu及所在时间段"
+  }];
+  ExtremumRecord MinMemory = 31[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "MinMemory",
+    description: "最小memory及所在时间段"
+  }];
+  ExtremumRecord MaxMemory = 32[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "MaxMemory",
+    description: "最大memory及所在时间段"
   }];
 }
 
@@ -1071,20 +1095,20 @@ message NamespaceMetrics {
     title: "MemoryUsage",
     description: "内存使用率"
   }];
-  ExtremumRecord maxCPUUsageTime = 8[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title: "maxCPUUsageTime",
+  ExtremumRecord MaxCPU = 8[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "maxCPU",
     description: "CPU使用率最高时间段"
   }];
-  ExtremumRecord minCPUUsageTime = 9[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title: "minCPUUsageTime",
+  ExtremumRecord MinCPU = 9[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "minCPU",
     description: "CPU使用率最低时间段"
   }];
-  ExtremumRecord maxMemoryUsageTime = 10[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title: "maxMemoryUsageTime",
+  ExtremumRecord MaxMemory = 10[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "maxMemory",
     description: "内存使用率最高时间段"
   }];
-  ExtremumRecord minMemoryUsageTime = 11[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title: "minMemoryUsageTime",
+  ExtremumRecord MinMemory = 11[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "minMemory",
     description: "内存使用率最低时间段"
   }];
   string workloadCount = 18[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
@@ -1095,12 +1119,12 @@ message NamespaceMetrics {
     title: "instanceCount",
     description: "当前实例数"
   }];
-  ExtremumRecord minInstanceTime = 21[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title: "minInstanceTime",
+  ExtremumRecord minInstance = 21[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "minInstance",
     description: "最小实例数及所在时间段"
   }];
-  ExtremumRecord MaxInstanceTime = 23[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title: "maxInstanceTime",
+  ExtremumRecord MaxInstance = 23[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "maxInstance",
     description: "最大实例数及所在时间段"
   }];
   ExtremumRecord minWorkloadUsage = 24[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
@@ -1110,6 +1134,14 @@ message NamespaceMetrics {
   ExtremumRecord maxWorkloadUsage = 25[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "maxWorkloadUsage",
     description: "使用率最高模块"
+  }];
+  string CPULimit = 26[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "CPULimit",
+    description: "cpu限制量"
+  }];
+  string MemoryLimit = 27[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "memoryLimit",
+    description: "内存限制量"
   }];
 }
 
@@ -1283,6 +1315,14 @@ message WorkloadMetrics {
   ExtremumRecord maxInstanceTime = 23[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "maxInstanceTime",
     description: "最大实例数及所在时间段"
+  }];
+  string CPULimit = 24[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "CPULimit",
+    description: "cpu限制量"
+  }];
+  string memoryLimit = 25[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "memoryLimit",
+    description: "内存限制量"
   }];
 }
 

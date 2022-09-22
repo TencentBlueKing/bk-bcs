@@ -15,22 +15,21 @@ package metric
 
 import (
 	"fmt"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/types"
-	bcsdatamanager "github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/proto/bcs-data-manager"
 	"strconv"
 	"time"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/types"
+	bcsdatamanager "github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/proto/bcs-data-manager"
 )
 
 // Server metric interface
 type Server interface {
-	GetWorkloadCPUMetrics(opts *types.JobCommonOpts, clients *types.Clients) (float64, float64, float64, error)
-	GetWorkloadMemoryMetrics(opts *types.JobCommonOpts, clients *types.Clients) (int64, int64, float64, error)
-	GetNamespaceCPUMetrics(opts *types.JobCommonOpts, clients *types.Clients) (float64, float64, float64, error)
-	GetNamespaceMemoryMetrics(opts *types.JobCommonOpts, clients *types.Clients) (int64, int64, float64, error)
-	GetClusterCPUMetrics(opts *types.JobCommonOpts, clients *types.Clients) (float64,
-		float64, float64, float64, error)
-	GetClusterMemoryMetrics(opts *types.JobCommonOpts, clients *types.Clients) (int64,
-		int64, int64, float64, error)
+	GetWorkloadCPUMetrics(opts *types.JobCommonOpts, clients *types.Clients) (*types.CPUMetrics, error)
+	GetWorkloadMemoryMetrics(opts *types.JobCommonOpts, clients *types.Clients) (*types.MemoryMetrics, error)
+	GetNamespaceCPUMetrics(opts *types.JobCommonOpts, clients *types.Clients) (*types.CPUMetrics, error)
+	GetNamespaceMemoryMetrics(opts *types.JobCommonOpts, clients *types.Clients) (*types.MemoryMetrics, error)
+	GetClusterCPUMetrics(opts *types.JobCommonOpts, clients *types.Clients) (*types.CPUMetrics, error)
+	GetClusterMemoryMetrics(opts *types.JobCommonOpts, clients *types.Clients) (*types.MemoryMetrics, error)
 	GetInstanceCount(opts *types.JobCommonOpts, clients *types.Clients) (int64, error)
 	GetClusterNodeMetrics(opts *types.JobCommonOpts,
 		clients *types.Clients) (string, []*bcsdatamanager.NodeQuantile, error)
@@ -44,27 +43,27 @@ type MetricGetter struct{}
 
 // GetClusterCPUMetrics get cluster cpu metrics
 func (g *MetricGetter) GetClusterCPUMetrics(opts *types.JobCommonOpts,
-	clients *types.Clients) (float64, float64, float64, float64, error) {
+	clients *types.Clients) (*types.CPUMetrics, error) {
 	switch opts.ClusterType {
 	case types.Kubernetes:
 		return g.getK8sClusterCPUMetrics(opts, clients)
 	case types.Mesos:
 		return g.getMesosClusterCPUMetrics(opts, clients)
 	default:
-		return 0, 0, 0, 0, fmt.Errorf("wrong clusterType :%s", opts.ClusterType)
+		return nil, fmt.Errorf("wrong clusterType :%s", opts.ClusterType)
 	}
 }
 
 // GetClusterMemoryMetrics get cluster memory metrics
 func (g *MetricGetter) GetClusterMemoryMetrics(opts *types.JobCommonOpts,
-	clients *types.Clients) (int64, int64, int64, float64, error) {
+	clients *types.Clients) (*types.MemoryMetrics, error) {
 	switch opts.ClusterType {
 	case types.Kubernetes:
 		return g.getK8sClusterMemoryMetrics(opts, clients)
 	case types.Mesos:
 		return g.getMesosClusterMemoryMetrics(opts, clients)
 	default:
-		return 0, 0, 0, 0, fmt.Errorf("wrong clusterType :%s", opts.ClusterType)
+		return nil, fmt.Errorf("wrong clusterType :%s", opts.ClusterType)
 	}
 }
 
@@ -142,27 +141,27 @@ func (g *MetricGetter) GetClusterNodeCount(opts *types.JobCommonOpts,
 
 // GetNamespaceCPUMetrics get namespace cpu metrics
 func (g *MetricGetter) GetNamespaceCPUMetrics(opts *types.JobCommonOpts,
-	clients *types.Clients) (float64, float64, float64, error) {
+	clients *types.Clients) (*types.CPUMetrics, error) {
 	switch opts.ClusterType {
 	case types.Kubernetes:
 		return g.getK8sNamespaceCPUMetrics(opts, clients)
 	case types.Mesos:
 		return g.getMesosNamespaceCPUMetrics(opts, clients)
 	default:
-		return 0, 0, 0, fmt.Errorf("wrong clusterType :%s", opts.ClusterType)
+		return nil, fmt.Errorf("wrong clusterType :%s", opts.ClusterType)
 	}
 }
 
 // GetNamespaceMemoryMetrics get namespace memory metric
 func (g *MetricGetter) GetNamespaceMemoryMetrics(opts *types.JobCommonOpts,
-	clients *types.Clients) (int64, int64, float64, error) {
+	clients *types.Clients) (*types.MemoryMetrics, error) {
 	switch opts.ClusterType {
 	case types.Kubernetes:
 		return g.getK8sNamespaceMemoryMetrics(opts, clients)
 	case types.Mesos:
 		return g.getMesosNamespaceMemoryMetrics(opts, clients)
 	default:
-		return 0, 0, 0, fmt.Errorf("wrong clusterType :%s", opts.ClusterType)
+		return nil, fmt.Errorf("wrong clusterType :%s", opts.ClusterType)
 	}
 }
 
@@ -227,28 +226,28 @@ func (g *MetricGetter) GetNamespaceInstanceCount(opts *types.JobCommonOpts,
 }
 
 // GetWorkloadCPUMetrics get workload cpu metrics
-func (g *MetricGetter) GetWorkloadCPUMetrics(opts *types.JobCommonOpts, clients *types.Clients) (float64,
-	float64, float64, error) {
+func (g *MetricGetter) GetWorkloadCPUMetrics(opts *types.JobCommonOpts, clients *types.Clients) (*types.CPUMetrics,
+	error) {
 	switch opts.ClusterType {
 	case types.Kubernetes:
 		return g.getK8SWorkloadCPU(opts, clients)
 	case types.Mesos:
 		return g.getMesosWorkloadCPU(opts, clients)
 	default:
-		return 0, 0, 0, fmt.Errorf("wrong clusterType :%s", opts.ClusterType)
+		return nil, fmt.Errorf("wrong clusterType :%s", opts.ClusterType)
 	}
 }
 
 // GetWorkloadMemoryMetrics get workload memory metrics
-func (g *MetricGetter) GetWorkloadMemoryMetrics(opts *types.JobCommonOpts, clients *types.Clients) (int64,
-	int64, float64, error) {
+func (g *MetricGetter) GetWorkloadMemoryMetrics(opts *types.JobCommonOpts, clients *types.Clients) (*types.MemoryMetrics,
+	error) {
 	switch opts.ClusterType {
 	case types.Kubernetes:
 		return g.getK8sWorkloadMemory(opts, clients)
 	case types.Mesos:
 		return g.getMesosWorkloadMemory(opts, clients)
 	default:
-		return 0, 0, 0, fmt.Errorf("wrong clusterType :%s", opts.ClusterType)
+		return nil, fmt.Errorf("wrong clusterType :%s", opts.ClusterType)
 	}
 }
 
