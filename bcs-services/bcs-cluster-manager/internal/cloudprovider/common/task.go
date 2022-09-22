@@ -125,7 +125,10 @@ func RunBKsopsJob(taskID string, stepName string) error {
 	blog.Infof("RunBKsopsJob[%s] createBkSopsTask successful: taskID[%v]", taskID, taskRes.Data.TaskID)
 
 	// update bksops taskUrl to task
-	cloudprovider.SetTaskStepParas(taskID, stepName, cloudprovider.BkSopsTaskUrlKey.String(), taskRes.Data.TaskURL)
+	newTask, err := cloudprovider.SetTaskStepParas(taskID, stepName, cloudprovider.BkSopsTaskUrlKey.String(), taskRes.Data.TaskURL)
+	if err == nil {
+		state.Task = newTask
+	}
 
 	// start task
 	startTaskReq := &TaskPathParas{

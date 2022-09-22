@@ -14,6 +14,8 @@
 package helm
 
 import (
+	"time"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/install"
 
 	k8scorecliset "k8s.io/client-go/kubernetes"
@@ -66,4 +68,9 @@ func (h *HelmInstaller) Upgrade(clusterID, values string) error {
 // Uninstall uninstalls the app
 func (h *HelmInstaller) Uninstall(clusterID string) error {
 	return nil
+}
+
+// CheckAppStatus check app status
+func (h *HelmInstaller) CheckAppStatus(clusterID string, timeout time.Duration) (bool, error) {
+	return false, nil
 }

@@ -38,11 +38,12 @@ var retryable = retry.RetryIf(func(err error) bool {
 })
 
 var (
-	defaultTimeOut = time.Second * 60
+	defaultTimeOut         = time.Second * 60
+	defaultCheckAppTimeout = time.Minute * 10
 	// ErrServerNotInit server notInit
 	ErrServerNotInit = errors.New("server not inited")
 
-	defaultCmdFlag = []map[string]interface{}{{"--insecure-skip-tls-verify": ""}}
+	defaultCmdFlag = []map[string]interface{}{{"--insecure-skip-tls-verify": ""}, {"--wait": true}}
 )
 
 // AuthInfo auth info

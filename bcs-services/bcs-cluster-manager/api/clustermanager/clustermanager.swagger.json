@@ -5851,6 +5851,11 @@
           "type": "string",
           "description": "状态, NORMAL:正常，UPDATING:更新中，UPDATE-FAILED:更新失败，STOPPED:已停止",
           "title": "status"
+        },
+        "errorMessage": {
+          "type": "string",
+          "description": "错误信息",
+          "title": "errorMessage"
         }
       },
       "title": "ClusterAutoScalingOption cluster autoScaler module parameter"

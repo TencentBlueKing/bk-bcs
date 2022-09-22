@@ -257,10 +257,16 @@ func (sjr *SyncJobResult) updateAutoScalingStatus(isSuccess bool) error {
 	if !option.EnableAutoscale {
 		sjr.Status.Success = common.StatusAutoScalingOptionStopped
 	}
+	task, err := GetStorageModel().GetTask(context.Background(), sjr.TaskID)
+	if err != nil {
+		return err
+	}
 	if isSuccess {
 		option.Status = sjr.Status.Success
+		option.ErrorMessage = ""
 	} else {
 		option.Status = sjr.Status.Failure
+		option.ErrorMessage = task.Message
 	}
 	err = GetStorageModel().UpdateAutoScalingOption(context.Background(), option)
 	if err != nil {
