@@ -8861,6 +8861,8 @@ func (m *ClusterAutoScalingOption) validate(all bool) error {
 
 	// no validation rules for Status
 
+	// no validation rules for ErrorMessage
+
 	if len(errors) > 0 {
 		return ClusterAutoScalingOptionMultiError(errors)
 	}

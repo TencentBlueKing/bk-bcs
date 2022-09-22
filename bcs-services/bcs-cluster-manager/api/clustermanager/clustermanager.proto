@@ -2942,6 +2942,10 @@ message ClusterAutoScalingOption {
     title: "status",
     description: "状态, NORMAL:正常，UPDATING:更新中，UPDATE-FAILED:更新失败，STOPPED:已停止"
   }];
+  string errorMessage = 32[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "errorMessage",
+    description: "错误信息"
+  }];
 }
 
 // Taint for node taints

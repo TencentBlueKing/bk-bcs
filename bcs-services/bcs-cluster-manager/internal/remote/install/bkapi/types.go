@@ -38,7 +38,8 @@ var retryable = retry.RetryIf(func(err error) bool {
 })
 
 var (
-	defaultTimeOut = time.Second * 60
+	defaultTimeOut         = time.Second * 60
+	defaultCheckAppTimeout = time.Minute * 10
 	// ErrServerNotInit server notInit
 	ErrServerNotInit = errors.New("server not inited")
 

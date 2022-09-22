@@ -112,11 +112,27 @@ func ensureAutoScalerWithInstaller(nodeGroups []cmproto.NodeGroup, as *cmproto.C
 		if err != nil {
 			return fmt.Errorf("transAutoScalingOptionToValues failed, err: %s", err)
 		}
+
+		// install or upgrade
 		if installed {
-			return installer.Upgrade(as.ClusterID, values)
+			if err := installer.Upgrade(as.ClusterID, values); err != nil {
+				return fmt.Errorf("upgrade app failed, err %s", err)
+			}
+		} else {
+			if err := installer.Install(as.ClusterID, values); err != nil {
+				return fmt.Errorf("install app failed, err %s", err)
+			}
 		}
 
-		return installer.Install(as.ClusterID, values)
+		// check status
+		ok, err := installer.CheckAppStatus(as.ClusterID, time.Minute*10)
+		if err != nil {
+			return fmt.Errorf("check app status failed, err %s", err)
+		}
+		if !ok {
+			return fmt.Errorf("app install failed, err %s", err)
+		}
+		return nil
 	}
 
 	// 如果已经安装且关闭了自动伸缩，则卸载
@@ -129,7 +145,17 @@ func ensureAutoScalerWithInstaller(nodeGroups []cmproto.NodeGroup, as *cmproto.C
 			return fmt.Errorf("transAutoScalingOptionToValues failed, err: %s", err)
 		}
 
-		return installer.Upgrade(as.ClusterID, values)
+		if err := installer.Upgrade(as.ClusterID, values); err != nil {
+			return fmt.Errorf("upgrade app failed, err %s", err)
+		}
+		// check status
+		ok, err := installer.CheckAppStatus(as.ClusterID, time.Minute*10)
+		if err != nil {
+			return fmt.Errorf("check app status failed, err %s", err)
+		}
+		if !ok {
+			return fmt.Errorf("app install failed, err %s", err)
+		}
 	}
 
 	return nil

@@ -13,12 +13,15 @@
 
 package install
 
+import "time"
+
 // Installer is the interface for app installer
 type Installer interface {
 	IsInstalled(clusterID string) (bool, error)
 	Install(clusterID, values string) error
 	Upgrade(clusterID, values string) error
 	Uninstall(clusterID string) error
+	CheckAppStatus(clusterID string, timeout time.Duration) (bool, error)
 }
 
 // InstallerType type

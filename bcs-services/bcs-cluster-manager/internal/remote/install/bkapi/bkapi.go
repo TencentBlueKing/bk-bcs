@@ -201,6 +201,7 @@ func (h *BKAPIInstaller) Upgrade(clusterID, values string) error {
 		return nil
 	}
 
+	// 等待应用正常
 	ok, err := h.IsInstalled(clusterID)
 	if err != nil {
 		blog.Errorf("[BKAPIInstaller] check app installed failed, err: %s", err.Error())
@@ -293,4 +294,59 @@ func (h *BKAPIInstaller) Uninstall(clusterID string) error {
 
 	blog.Infof("[BKAPIInstaller] delete app successful[%s:%v]", h.projectID, h.appID)
 	return nil
+}
+
+// CheckAppStatus check app install status
+func (h *BKAPIInstaller) CheckAppStatus(clusterID string, timeout time.Duration) (bool, error) {
+	if h.debug {
+		return true, nil
+	}
+
+	// get project cluster appID
+	ok, err := h.IsInstalled(clusterID)
+	if err != nil {
+		blog.Errorf("[BKAPIInstaller] check app installed failed, err: %s", err.Error())
+		return false, err
+	}
+	if !ok {
+		blog.Errorf("app %s not installed", h.releaseName)
+		return false, fmt.Errorf("app %s not installed", h.releaseName)
+	}
+
+	// 等待应用正常
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+	err = cloudprovider.LoopDoFunc(ctx, func() error {
+		// get app
+		app, err := h.client.GetApp(h.projectID, h.appID)
+		if err != nil {
+			blog.Errorf("[BKAPIInstaller] get app failed, err: %s", err.Error())
+			return err
+		}
+		if app == nil {
+			return fmt.Errorf("get app failed, resp is empty")
+		}
+		if app.Code != 0 {
+			return fmt.Errorf("get app failed, code: %d, message: %s, requestID: %s", app.Code, app.Message,
+				app.RequestID)
+		}
+		// 运行中
+		if app.Data.TransitioningOn {
+			blog.Warnf("[BKAPIInstaller] app is on transitioning, waiting, %s", utils.ToJSONString(app.Data))
+			return nil
+		}
+		// 应用正常
+		if app.Data.TransitioningResult {
+			return cloudprovider.EndLoop
+		}
+		// 应用异常
+		return fmt.Errorf("check app failed, error: %s", app.Data.TransitioningMessage)
+	}, cloudprovider.LoopInterval(10*time.Second))
+	if err != nil {
+		blog.Errorf("[BKAPIInstaller] check app installed failed, err: %s", err.Error())
+		return false, err
+	}
+
+	blog.Infof("[BKAPIInstaller] app install successful[%s:%v]", h.projectID, h.appID)
+	return true, nil
 }
