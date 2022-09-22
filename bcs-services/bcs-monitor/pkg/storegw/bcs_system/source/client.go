@@ -14,12 +14,9 @@ package source
 
 import (
 	"context"
-	"fmt"
 
 	bkmonitor_client "github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component/bk_monitor"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/config"
-
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/storage"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/storegw/bcs_system/source/base"
 	bkmonitor "github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/storegw/bcs_system/source/bk_monitor"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/storegw/bcs_system/source/prometheus"
@@ -27,27 +24,13 @@ import (
 
 // IsBKMonitorEnabled 集群是否接入到蓝鲸监控
 func IsBKMonitorEnabled(ctx context.Context, clusterId string) (bool, error) {
-	cacheKey := fmt.Sprintf("storegw.IsBKMonitorEnabled:%s", clusterId)
-	if cacheResult, ok := storage.LocalCache.Slot.Get(cacheKey); ok {
-		return cacheResult.(bool), nil
-	}
-
-	clusterList, err := bkmonitor_client.QueryClusterList(ctx, config.G.BKMonitor.MetadataURL)
+	grayClusterMap, err := bkmonitor_client.QueryGrayClusterMap(ctx, config.G.BKMonitor.MetadataURL)
 	if err != nil {
 		return false, err
 	}
 
-	for _, enableClusterId := range clusterList.ClusterIdList {
-		if enableClusterId == clusterId {
-			if _, ok := config.G.BKMonitor.ClusterMap[enableClusterId]; ok {
-				storage.LocalCache.Slot.Set(cacheKey, true, storage.LocalCache.DefaultExpiration)
-				return true, nil
-			}
-		}
-	}
-
-	storage.LocalCache.Slot.Set(cacheKey, false, storage.LocalCache.DefaultExpiration)
-	return false, nil
+	_, ok := grayClusterMap[clusterId]
+	return ok, nil
 }
 
 // ClientFactory 自动切换Prometheus/蓝鲸监控
@@ -62,5 +45,4 @@ func ClientFactory(ctx context.Context, clusterId string) (base.MetricHandler, e
 	}
 
 	return prometheus.NewPrometheus(), nil
-
 }

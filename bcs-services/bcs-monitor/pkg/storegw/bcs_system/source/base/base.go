@@ -157,23 +157,3 @@ func MatrixToSeries(matrix model.Matrix) []*prompb.TimeSeries {
 	}
 	return series
 }
-
-// GetFirstValue 获取第一个值
-func GetFirstValue(vector model.Vector) string {
-	if len(vector) == 0 {
-		return "0"
-	}
-	return vector[0].Value.String()
-}
-
-// GetLabelSet 获取第一个值的labels
-func GetLabelSet(vector model.Vector) map[string]string {
-	labelSet := map[string]string{}
-	if len(vector) == 0 {
-		return labelSet
-	}
-	for k, v := range vector[0].Metric {
-		labelSet[string(k)] = string(v)
-	}
-	return labelSet
-}

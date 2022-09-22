@@ -194,13 +194,8 @@ func (c *GrayClusterList) initClusterMap() {
 	}
 }
 
-// QueryClusterList 查询已经接入蓝鲸监控的集群列表
-func QueryClusterList(ctx context.Context, host string) (*GrayClusterList, error) {
-	cacheKey := "bcs.QueryClusterList"
-	if cacheResult, ok := storage.LocalCache.Slot.Get(cacheKey); ok {
-		return cacheResult.(*GrayClusterList), nil
-	}
-
+// queryClusterList 查询已经接入蓝鲸监控的集群列表
+func queryClusterList(ctx context.Context, host string) (*GrayClusterList, error) {
 	url := fmt.Sprintf("%s/get_bcs_gray_cluster_list", host)
 
 	resp, err := component.GetClient().R().
@@ -227,7 +222,29 @@ func QueryClusterList(ctx context.Context, host string) (*GrayClusterList, error
 	}
 
 	bkMonitorResult.Data.initClusterMap()
-	storage.LocalCache.Slot.Set(cacheKey, bkMonitorResult.Data, time.Minute*10)
 
 	return bkMonitorResult.Data, nil
+}
+
+// QueryGrayClusterMap 查询灰度集群, 有缓存
+func QueryGrayClusterMap(ctx context.Context, host string) (map[string]struct{}, error) {
+	cacheKey := "bcs.QueryGrayClusterMap"
+	if cacheResult, ok := storage.LocalCache.Slot.Get(cacheKey); ok {
+		return cacheResult.(map[string]struct{}), nil
+	}
+
+	clusterList, err := queryClusterList(ctx, host)
+	if err != nil {
+		return nil, err
+	}
+
+	grepClusterMap := map[string]struct{}{}
+
+	for _, clusterId := range clusterList.ClusterIdList {
+		grepClusterMap[clusterId] = struct{}{}
+	}
+
+	storage.LocalCache.Slot.Set(cacheKey, grepClusterMap, time.Minute*10)
+
+	return grepClusterMap, nil
 }

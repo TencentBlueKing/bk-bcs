@@ -89,12 +89,12 @@ func (s *BKMonitorStore) Info(ctx context.Context, r *storepb.InfoRequest) (*sto
 		return nil, err
 	}
 
-	clusterList, err := bkmonitor_client.QueryClusterList(ctx, s.config.MetadataURL)
+	grayClusterMap, err := bkmonitor_client.QueryGrayClusterMap(ctx, s.config.MetadataURL)
 	if err != nil {
 		klog.Errorf("query bk_monitor cluster list error, %s", err)
-	} else if clusterList.Enabled {
-		lsets = make([]labelpb.ZLabelSet, 0, len(clusterList.ClusterIdList))
-		for _, clusterId := range clusterList.ClusterIdList {
+	} else {
+		lsets = make([]labelpb.ZLabelSet, 0, len(grayClusterMap))
+		for clusterId := range grayClusterMap {
 			// 不存在的，或者已经删除的集群，需要过滤
 			if _, ok := clusterMap[clusterId]; !ok {
 				continue

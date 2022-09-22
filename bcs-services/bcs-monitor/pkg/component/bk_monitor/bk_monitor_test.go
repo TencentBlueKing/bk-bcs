@@ -55,7 +55,7 @@ func TestQueryByPromQL(t *testing.T) {
 
 func TestQueryClusterList(t *testing.T) {
 	ctx := context.Background()
-	result, err := QueryClusterList(ctx, "")
+	result, err := queryClusterList(ctx, "")
 	assert.NoError(t, err)
 	assert.True(t, len(result.ClusterIdList) > 1)
 }

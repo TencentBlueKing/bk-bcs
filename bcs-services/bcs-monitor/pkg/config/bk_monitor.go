@@ -20,12 +20,10 @@ import (
 
 // BKMonitorConf :
 type BKMonitorConf struct {
-	URL                  string              `yaml:"url"`          // unify-query 访问地址
-	MetadataURL          string              `yaml:"metadata_url"` // 元数据地址, 目前只包含白名单
-	AgentEnableAfter     string              `yaml:"agent_enable_after"`
-	Clusters             []string            `yaml:"clusters"` // 集群灰度列表
-	ClusterMap           map[string]struct{} `yaml:"-"`
-	AgentEnableAfterTime time.Time           `yaml:"-"`
+	URL                  string    `yaml:"url"`          // unify-query 访问地址
+	MetadataURL          string    `yaml:"metadata_url"` // 元数据地址, 目前只包含白名单
+	AgentEnableAfter     string    `yaml:"agent_enable_after"`
+	AgentEnableAfterTime time.Time `yaml:"-"`
 }
 
 func (m *BKMonitorConf) init() error {
@@ -40,12 +38,6 @@ func (m *BKMonitorConf) init() error {
 		return errors.Wrap(err, "agent_enable_after")
 	}
 	m.AgentEnableAfterTime = t
-
-	m.ClusterMap = map[string]struct{}{}
-
-	for _, c := range m.Clusters {
-		m.ClusterMap[c] = struct{}{}
-	}
 
 	return nil
 }
