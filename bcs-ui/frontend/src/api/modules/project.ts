@@ -16,6 +16,10 @@ export const clusterVariable = request('get', '/variables/$variableID/cluster');
 export const updateClusterVariable = request('put', '/variables/$variableID/cluster');
 export const namespaceVariable = request('get', '/variables/$variableID/namespace');
 export const updateNamespaceVariable = request('put', '/variables/$variableID/namespace');
+export const getClusterVariables = request('get', '/cluster/$clusterId/variables');
+export const updateSpecifyClusterVariables = request('put', '/cluster/$clusterId/variables');
+export const getClusterNamespaceVariable = request('get', '/cluster/$clusterId/namespace/$namespace/variables');
+export const updateClusterNamespaceVariable = request('put', '/cluster/$clusterId/namespace/$namespace/variables');
 
 const request2 = createRequest({
   domain: window.DEVOPS_BCS_API_URL,

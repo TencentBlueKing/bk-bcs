@@ -308,13 +308,13 @@
               <div class="bk-form-content">
                 <div class="biz-key-value-wrapper mb10">
                   <div class="biz-key-value-item" v-for="variable in variableList" :key="variable.id">
-                    <bk-input style="width: 270px;" disabled :value="`${variable.name}(${variable.key})`"></bk-input>
+                    <bcs-input style="width: 270px;" disabled :value="`${variable.name}(${variable.key})`"></bcs-input>
                     <span class="equals-sign">=</span>
-                    <bk-input
+                    <bcs-input
                       class="right"
                       style="width: 270px; margin-left: 35px;"
                       :placeholder="$t('值')"
-                      v-model="variable.value"></bk-input>
+                      v-model="variable.value"></bcs-input>
                   </div>
                 </div>
               </div>
@@ -337,6 +337,7 @@
 <script>
 // import moment from 'moment'
 import StatusIcon from '@/views/dashboard/common/status-icon.tsx';
+import useVariable from '@/views/variable/use-variable';
 export default {
   name: 'NodeInfo',
   components: {
@@ -426,11 +427,9 @@ export default {
              * 获取变量信息
              */
     async fetchVariableInfo() {
-      const res = await this.$store.dispatch('cluster/getClusterVariableInfo', {
-        projectId: this.projectId,
-        clusterId: this.clusterId,
-      }).catch(() => ({ data: [] }));
-      this.variableList = res.data || [];
+      const { handleGetClusterVariables } = useVariable();
+      const data = await handleGetClusterVariables({ $clusterId: this.clusterId });
+      this.variableList = data.results;
     },
 
     handleEditClusterName() {
@@ -509,15 +508,15 @@ export default {
       this.fetchVariableInfo();
     },
     /**
-             * 设置变量 sideslder 确认按钮
-             */
+     * 设置变量 sideslder 确认按钮
+     */
     async confirmSetVariable() {
+      const { handleUpdateSpecifyClusterVariables } = useVariable();
       this.variableInfoLoading = true;
-      const result = await this.$store.dispatch('cluster/updateClusterVariableInfo', {
-        projectId: this.projectId,
-        clusterId: this.curCluster.cluster_id,
-        cluster_vars: this.variableList,
-      }).catch(() => false);
+      const result = await handleUpdateSpecifyClusterVariables({
+        $clusterId: this.curCluster.cluster_id,
+        data: this.variableList,
+      });
       this.variableInfoLoading = false;
       if (result) {
         this.$bkMessage({

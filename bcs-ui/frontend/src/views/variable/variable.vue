@@ -13,7 +13,7 @@
         <bcs-button class="ml10" :disabled="!selections.length" @click="handleBatchDelete">{{$t('批量删除')}}</bcs-button>
       </template>
       <template #right>
-        <bcs-select class="mw250" :clearable="false" :placeholder="' '" v-model="scope">
+        <bcs-select class="mw200" :clearable="false" :placeholder="' '" v-model="scope">
           <bcs-option id="" :name="$t('全部')"></bcs-option>
           <bcs-option v-for="item in scopeList" :key="item.id" :id="item.id" :name="item.name"></bcs-option>
         </bcs-select>
@@ -418,6 +418,7 @@ export default defineComponent({
               theme: 'success',
               message: $i18n.t('删除成功'),
             });
+            pagination.value.current = 1;
             getVariableDefinitions(params.value);
           }
         },
@@ -445,6 +446,7 @@ export default defineComponent({
               theme: 'success',
               message: $i18n.t('删除成功'),
             });
+            pagination.value.current = 1;
             getVariableDefinitions(params.value);
           }
         },
@@ -560,8 +562,8 @@ export default defineComponent({
 .mw320 {
   min-width: 320px;
 }
-.mw250 {
-  min-width: 250px;
+.mw200 {
+  min-width: 200px;
   background-color: #fff;
 }
 .file-input {

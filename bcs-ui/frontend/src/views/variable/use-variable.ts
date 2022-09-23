@@ -10,6 +10,12 @@ import {
   namespaceVariable,
   updateNamespaceVariable,
 } from '@/api/base';
+import {
+  getClusterVariables,
+  updateSpecifyClusterVariables,
+  getClusterNamespaceVariable,
+  updateClusterNamespaceVariable,
+} from '@/api/modules/project';
 import { usePage } from './use-table';
 
 export interface IParams {
@@ -60,6 +66,7 @@ export default function useVariable() {
     variableList.value = results;
     pagination.value.count = total;
     isLoading.value = false;
+    return { results, total };
   }
 
   async function getClusterVariable(params) {
@@ -80,6 +87,25 @@ export default function useVariable() {
       .catch(() => false);
     return result;
   }
+  async function  handleGetClusterVariables(params) {
+    const data = await getClusterVariables(params).catch(() => ({ results: [], total: 0 }));
+    return data;
+  }
+  async function handleUpdateSpecifyClusterVariables(params) {
+    const result = await updateSpecifyClusterVariables(params).then(() => true)
+      .catch(() => false);
+    return result;
+  }
+  async function handleGetClusterNamespaceVariable(params) {
+    const data = await getClusterNamespaceVariable(params).catch(() => ({ results: [], total: 0 }));
+    return data;
+  }
+
+  async function handleUpdateClusterNamespaceVariable(params) {
+    const result = await updateClusterNamespaceVariable(params).then(() => true)
+      .catch(() => false);
+    return result;
+  }
 
   return {
     isLoading,
@@ -96,5 +122,9 @@ export default function useVariable() {
     handleUpdateClusterVariable,
     getNamespaceVariable,
     handleUpdateNamespaceVariable,
+    handleGetClusterVariables,
+    handleUpdateSpecifyClusterVariables,
+    handleGetClusterNamespaceVariable,
+    handleUpdateClusterNamespaceVariable,
   };
 }

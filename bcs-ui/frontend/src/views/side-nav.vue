@@ -41,11 +41,13 @@
     <div class="side-nav">
       <SideMenu :list="menuList" :selected="selected" @change="handleMenuChange"></SideMenu>
       <div class="bcs-footer">
-        <div>
+        <div class="mb5">
           <a href="wxwork://message?uin=8444252571319680">{{ $t('联系BK助手') }}</a> |
           <a :href="paasHost" target="_blank">{{ $t('蓝鲸桌面') }}</a>
         </div>
-        <p class="biz-copyright">Copyright © 2012-{{(new Date()).getFullYear()}} Tencent BlueKing. All Rights Reserved</p>
+        <p class="biz-copyright">
+          Copyright © 2012-{{(new Date()).getFullYear()}} Tencent BlueKing. All Rights Reserved
+        </p>
       </div>
     </div>
   </div>
@@ -74,7 +76,7 @@ export default defineComponent({
       const cluster = $store.state.cluster.curCluster;
       return cluster && Object.keys(cluster).length ? cluster : null;
     });
-    const paasHost = computed(() => window.PAAS_HOST)
+    const paasHost = computed(() => window.PAAS_HOST);
     const clusterType = computed(() =>
     // eslint-disable-next-line camelcase
       (curCluster.value?.is_shared ? $i18n.t('共享') : $i18n.t('专用')));

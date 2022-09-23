@@ -677,40 +677,6 @@ export default {
     },
 
     /**
-         * 获取集群变量信息
-         *
-         * @param {Object} context store 上下文对象
-         * @param {Object} params 参数
-         * @param {Object} config 请求的配置
-         *
-         * @return {Promise} promise 对象
-         */
-    getClusterVariableInfo(context, { projectId, clusterId }, config = {}) {
-      // return http.get(`/api/projects/cluster?invoke=getClusterMasterInfo`).then(
-      return http.get(`${DEVOPS_BCS_API_URL}/api/configuration/${projectId}/variable/cluster/${clusterId}/`, {}, config);
-    },
-
-    /**
-         * 保存集群变量信息
-         *
-         * @param {Object} context store 上下文对象
-         * @param {Object} params 参数
-         * @param {Object} config 请求的配置
-         *
-         * @return {Promise} promise 对象
-         */
-    updateClusterVariableInfo(context, params, config = {}) {
-      const { projectId, clusterId } = params;
-      delete params.projectId;
-      delete params.clusterId;
-      return http.post(
-        `${DEVOPS_BCS_API_URL}/api/configuration/${projectId}/variable/cluster/${clusterId}/`,
-        params,
-        config,
-      );
-    },
-
-    /**
          * 移除节点 /api/projects/(?P[\w-]+)/cluster/(?P[\w-]+)/node/(?P\d+)/failed_delete/
          *
          * @param {Object} context store 上下文对象

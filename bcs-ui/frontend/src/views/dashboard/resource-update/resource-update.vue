@@ -133,6 +133,10 @@
             <span class="insert ml15">+{{ diffStat.insert }}</span>
             <span class="delete ml15">-{{ diffStat.delete }}</span>
           </span>
+          <span class="diff-tools">
+            <span @click="nextDiffChange"><i class="bcs-icon bcs-icon-arrows-down"></i></span>
+            <span class="ml5" @click="previousDiffChange"><i class="bcs-icon bcs-icon-arrows-up"></i></span>
+          </span>
         </div>
         <ResourceEditor
           key="diff"
@@ -144,6 +148,7 @@
           }"
           diff-editor
           readonly
+          ref="diffEditorRef"
           @diff-stat="handleDiffStatChange">
         </ResourceEditor>
         <EditorStatus
@@ -466,8 +471,15 @@ export default defineComponent({
       insert: 0,
       delete: 0,
     });
+    const diffEditorRef = ref<any>(null);
     const handleDiffStatChange = (stat) => {
       diffStat.value = stat;
+    };
+    const nextDiffChange = () => {
+      diffEditorRef.value?.nextDiffChange();
+    };
+    const previousDiffChange = () => {
+      diffEditorRef.value?.previousDiffChange();
     };
 
     // 4.====创建、更新、取消、显示差异====
@@ -659,6 +671,9 @@ export default defineComponent({
       handleDiffStatChange,
       clientHeight,
       handleChangeMode,
+      diffEditorRef,
+      nextDiffChange,
+      previousDiffChange,
     };
   },
 });
@@ -755,6 +770,13 @@ export default defineComponent({
                         color: #699df4;
                     }
                 }
+            }
+
+            .diff-tools {
+              font-size: 18px;
+              i {
+                cursor: pointer;
+              }
             }
         }
         .code-editor {

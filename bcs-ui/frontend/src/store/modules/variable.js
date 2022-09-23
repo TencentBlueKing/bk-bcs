@@ -25,6 +25,7 @@
 */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import http from '@/api';
+import useVariable from '@/views/variable/use-variable';
 
 export default {
   namespaced: true,
@@ -63,17 +64,11 @@ export default {
       );
     },
 
-    getBaseVarList(context, projectId, config = {}) {
-      return http.get(
-        `${DEVOPS_BCS_API_URL}/api/configuration/${projectId}/variables/?type=base&limit=10000&offset=0`,
-        {},
-        config,
-      ).then((response) => {
-        if (response.code === 0) {
-          context.commit('updateVarList', response.data.results);
-        }
-        return response.data;
-      });
+    async getBaseVarList(context, projectId, config = {}) {
+      const { getVariableDefinitions } = useVariable();
+      const data = await getVariableDefinitions({ all: true });
+      context.commit('updateVarList', data.results);
+      return data;
     },
 
     getQuoteDetail(context, { projectId, varId }, config = {}) {

@@ -207,6 +207,30 @@ export default defineComponent({
       ctx.emit('diff-stat', diffStat.value);
     };
 
+    const currentRevealLine = ref(0);
+    const nextDiffChange = () => {
+      const changes = editor.getLineChanges();
+      let index = changes.findIndex(change => change.originalEndLineNumber === currentRevealLine.value);
+      if (index === -1 || ((index + 1) >= changes.length)) {
+        index = changes.length - 1;
+      } else {
+        index = index + 1;
+      }
+      const nextChange = changes[index];
+      editor.revealLine(nextChange.originalEndLineNumber);
+    };
+    const previousDiffChange = () => {
+      const changes = editor.getLineChanges();
+      let index = changes.findIndex(change => change.originalEndLineNumber === currentRevealLine.value);
+      if (index === -1 || ((index - 1) < 0)) {
+        index = 0;
+      } else {
+        index = index - 1;
+      }
+      const previousChange = changes[index];
+      editor.revealLine(previousChange.originalEndLineNumber);
+    };
+
     const emitChange = (emitValue, event) => {
       ctx.emit('change', emitValue, event);
       ctx.emit('input', emitValue, event);
@@ -263,6 +287,8 @@ export default defineComponent({
       setValue,
       handleSetDiffStat,
       update,
+      nextDiffChange,
+      previousDiffChange,
     };
   },
 });

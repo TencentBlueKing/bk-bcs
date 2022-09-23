@@ -323,17 +323,6 @@ export default {
     },
 
     /**
-         * 查询命名空间的变量信息
-         *
-         * @param {Object} context store 上下文对象
-         *
-         * @return {Promise} promise 对象
-         */
-    getNamespaceVariable(context, { projectId, namespaceId }, config = {}) {
-      return http.get(`${DEVOPS_BCS_API_URL}/api/configuration/${projectId}/variable/namespace/${namespaceId}/`);
-    },
-
-    /**
          * 查询 lb 和 variable
          *
          * @param {Object} context store 上下文对象

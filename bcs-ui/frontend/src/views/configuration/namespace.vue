@@ -517,6 +517,7 @@
 /* eslint-disable @typescript-eslint/prefer-optional-chain */
 import { catchErrorHandler } from '@/common/util';
 import { mapGetters } from 'vuex';
+import useVariable from '../variable/use-variable';
 export default {
   data() {
     // 环境类型 list
@@ -699,6 +700,7 @@ export default {
     this.bkMessageInstance && this.bkMessageInstance.close();
   },
   methods: {
+    ...useVariable(),
     /**
              * 同步命名空间
              */
@@ -902,13 +904,15 @@ export default {
       this.clusterId = this.curClusterId ? this.curClusterId : '';
 
       try {
-        const res = await this.$store.dispatch('configuration/getNamespaceVariable', {
-          projectId: this.projectId,
-          namespaceId: 0,
-        });
-        const variableList = []
-                    ;(res.data || []).forEach((item) => {
+        // const { results } = await this.getVariableDefinitions({
+        //   scope: 'namespace',
+        //   all: true,
+        // });
+        const results = []; // 暂时隐藏
+        const variableList = [];
+        results.forEach((item) => {
           item.leftContent = `${item.name}(${item.key})`;
+          item.value = item.defaultValue;
           variableList.push(item);
         });
 
@@ -1078,12 +1082,12 @@ export default {
       this.editNamespaceConf.canEdit = false;
 
       try {
-        const res = await this.$store.dispatch('configuration/getNamespaceVariable', {
-          projectId: this.projectId,
-          namespaceId: ns.id,
+        const { results } = await this.handleGetClusterNamespaceVariable({
+          $clusterId: this.clusterId,
+          $namespace: ns.name,
         });
-        const variableList = []
-                    ;(res.data || []).forEach((item) => {
+        const variableList = [];
+        results.forEach((item) => {
           item.leftContent = `${item.name}(${item.key})`;
           variableList.push(item);
         });
@@ -1175,12 +1179,10 @@ export default {
 
       try {
         this.editNamespaceConf.loading = true;
-        await this.$store.dispatch('configuration/editNamespace', {
-          projectId: this.projectId,
-          cluster_id: this.clusterId,
-          name: namespaceName,
-          namespaceId: this.editNamespaceConf.ns.id,
-          ns_vars: variableList,
+        await this.handleUpdateClusterNamespaceVariable({
+          $clusterId: this.clusterId,
+          $namespace: this.editNamespaceConf.ns.name,
+          data: variableList,
         });
 
         this.hideEditNamespace();
