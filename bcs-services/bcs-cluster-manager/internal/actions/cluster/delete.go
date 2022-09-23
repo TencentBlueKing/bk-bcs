@@ -25,7 +25,6 @@ import (
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
-	provider "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
 	storeopt "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/options"
@@ -199,10 +198,8 @@ func (da *DeleteAction) cleanLocalInformation() error {
 		}
 	}
 
-	// delete cluster dependency info
-	deleteClusterExtraOperation(da.cluster)
-	deleteClusterCredentialInfo(da.model, da.cluster.ClusterID)
-	provider.DeleteWatchComponentByHelm(da.ctx, da.cluster.ProjectID, da.cluster.ClusterID)
+	// async delete cluster dependency info
+	go asyncDeleteImportedClusterInfo(context.Background(), da.model, da.cluster)
 
 	// finally clean cluster
 	da.cluster.Status = common.StatusDeleted

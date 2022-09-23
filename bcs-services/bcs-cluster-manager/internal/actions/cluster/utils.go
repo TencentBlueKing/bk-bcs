@@ -16,6 +16,8 @@ package cluster
 import (
 	"context"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
+	provider "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/common"
 	"math"
 	"sort"
 	"strconv"
@@ -369,4 +371,19 @@ func deleteClusterCredentialInfo(store store.ClusterManagerModel, clusterID stri
 	}
 
 	blog.V(4).Infof("deleteClusterCredentialInfo[%s] successful", clusterID)
+}
+
+func asyncDeleteImportedClusterInfo(ctx context.Context, store store.ClusterManagerModel, cluster *proto.Cluster) {
+	ctx = cloudprovider.WithTaskIDForContext(ctx,
+		fmt.Sprintf("asyncDeleteImportedClusterInfo:%s", cluster.ClusterID))
+	err := provider.DeleteWatchComponentByHelm(ctx, cluster.ProjectID, cluster.ClusterID)
+	if err != nil {
+		blog.Errorf("asyncDeleteImportedClusterInfo DeleteWatchComponentByHelm[%s] failed: %v",
+			cluster.ClusterID, err)
+	} else {
+		blog.Errorf("asyncDeleteImportedClusterInfo DeleteWatchComponentByHelm[%s] successful", cluster.ClusterID)
+	}
+
+	deleteClusterExtraOperation(cluster)
+	deleteClusterCredentialInfo(store, cluster.ClusterID)
 }

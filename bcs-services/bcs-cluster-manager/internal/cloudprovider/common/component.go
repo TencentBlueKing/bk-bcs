@@ -96,6 +96,28 @@ func DeleteWatchComponentByHelm(ctx context.Context, projectID, clusterID string
 		blog.Errorf("DeleteWatchComponentByHelm[%s] Uninstall failed: %v", err)
 		return err
 	}
+	// wait check delete component status
+	timeContext, cancel := context.WithTimeout(ctx, time.Minute * 2)
+	defer cancel()
+
+	err = cloudprovider.LoopDoFunc(timeContext, func() error {
+		exist, err := install.IsInstalled(clusterID)
+		if err != nil {
+			blog.Errorf("DeleteWatchComponentByHelm[%s] failed[%s:%s]: %v", traceID, projectID, clusterID, err)
+			return nil
+		}
+
+		blog.Infof("DeleteWatchComponentByHelm[%s] watchRelease[%s] status[%v]", traceID, clusterID, exist)
+		if !exist {
+			return cloudprovider.EndLoop
+		}
+
+		return nil
+	}, cloudprovider.LoopInterval(10*time.Second))
+	if err != nil {
+		blog.Errorf("DeleteWatchComponentByHelm[%s] watchRelease[%s] failed: %v", traceID, clusterID, err)
+		return err
+	}
 
 	blog.Infof("DeleteWatchComponentByHelm[%s] successful[%s:%s]", traceID, projectID, clusterID)
 	return nil
