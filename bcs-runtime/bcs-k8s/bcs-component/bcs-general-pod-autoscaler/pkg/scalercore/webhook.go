@@ -132,8 +132,8 @@ func (s *WebhookScaler) GetReplicas(gpa *autoscalingv1.GeneralPodAutoscaler, cur
 	klog.Infof("Webhook Response: Scale: %v, Replicas: %v, CurrentReplicas: %v",
 		faResp.Response.Scale, faResp.Response.Replicas, currentReplicas)
 	if faResp.Response.Scale {
-		recordWebhookPromMetrics(gpa, metricsServer, key, metricName, startTime, faResp.Response.Replicas, currentReplicas,
-			false)
+		recordWebhookPromMetrics(gpa, metricsServer, key, metricName, startTime, faResp.Response.Replicas,
+			currentReplicas, false)
 		return faResp.Response.Replicas, nil
 	}
 	recordWebhookPromMetrics(gpa, metricsServer, key, metricName, startTime, -1, currentReplicas, false)
@@ -227,7 +227,9 @@ func recordWebhookPromMetrics(gpa *autoscalingv1.GeneralPodAutoscaler, ms metric
 	ms.RecordGPAScalerDesiredReplicas(gpa.Namespace, gpa.Name, key, "webhook", targetReplicas)
 	if isErr {
 		ms.RecordScalerExecDuration(gpa.Namespace, gpa.Name, key, metricName, "webhook", "failure", time.Since(t))
+		ms.RecordScalerMetricExecDuration(gpa.Namespace, gpa.Name, key, metricName, "webhook", "failure", time.Since(t))
 	} else {
 		ms.RecordScalerExecDuration(gpa.Namespace, gpa.Name, key, metricName, "webhook", "success", time.Since(t))
+		ms.RecordScalerMetricExecDuration(gpa.Namespace, gpa.Name, key, metricName, "webhook", "success", time.Since(t))
 	}
 }

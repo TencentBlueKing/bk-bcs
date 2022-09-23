@@ -15,7 +15,7 @@ package scaler
 import (
 	"fmt"
 	"math"
-	"reflect"
+	// "reflect"
 	"sync"
 	"time"
 
@@ -29,7 +29,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime/schema"
-	"k8s.io/apimachinery/pkg/types"
+	// "k8s.io/apimachinery/pkg/types"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/apimachinery/pkg/util/wait"
 	coreinformers "k8s.io/client-go/informers/core/v1"
@@ -49,7 +49,7 @@ import (
 	autoscalinglisters "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-general-pod-autoscaler/pkg/client/listers/autoscaling/v1alpha1"
 	metricsclient "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-general-pod-autoscaler/pkg/metrics"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-general-pod-autoscaler/pkg/scalercore"
-	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-general-pod-autoscaler/pkg/util"
+	// "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-general-pod-autoscaler/pkg/util"
 )
 
 var (
@@ -107,7 +107,7 @@ type GeneralController struct {
 	scaleDownEvents map[string][]timestampedScaleEvent
 
 	// Multi goroutine read and write scaleUp/scaleDown events may unsafe.
-	scaleUpEventsLock sync.Mutex
+	scaleUpEventsLock   sync.Mutex
 	scaleDownEventsLock sync.Mutex
 
 	doingCron sync.Map
@@ -230,6 +230,13 @@ func (a *GeneralController) deleteGPA(obj interface{}) {
 		return
 	}
 
+	namespace, name, err := cache.SplitMetaNamespaceKey(key)
+	if err != nil {
+		utilruntime.HandleError(fmt.Errorf("couldn't get namespace/name for key %s: %v", key, err))
+		return
+	}
+	metricsServer.ResetScalerMetrics(namespace, name)
+
 	a.queue.Forget(key)
 }
 
@@ -326,6 +333,9 @@ func (a *GeneralController) computeReplicasForMetrics(gpa *autoscaling.GeneralPo
 		if err != nil {
 			metricsServer.RecordScalerExecDuration(gpa.Namespace, gpa.Name, getTargetRefKey(gpa), getMetricName(metricSpec),
 				"metric", "failure", time.Since(startTime))
+			metricsServer.RecordScalerMetricExecDuration(gpa.Namespace, gpa.Name, getTargetRefKey(gpa),
+				getMetricName(metricSpec),
+				"metric", "failure", time.Since(startTime))
 			metricsServer.RecordGPAScalerError(gpa.Namespace, gpa.Name, getTargetRefKey(gpa), "metric",
 				getMetricName(metricSpec), true)
 			if invalidMetricsCount <= 0 {
@@ -335,6 +345,8 @@ func (a *GeneralController) computeReplicasForMetrics(gpa *autoscaling.GeneralPo
 			invalidMetricsCount++
 		}
 		metricsServer.RecordScalerExecDuration(gpa.Namespace, gpa.Name, getTargetRefKey(gpa), getMetricName(metricSpec),
+			"metric", "success", time.Since(startTime))
+		metricsServer.RecordScalerMetricExecDuration(gpa.Namespace, gpa.Name, getTargetRefKey(gpa), getMetricName(metricSpec),
 			"metric", "success", time.Since(startTime))
 		if err == nil && (replicas == -1 || replicaCountProposal > replicas) {
 			timestamp = timestampProposal
@@ -1134,8 +1146,10 @@ func (a *GeneralController) reconcileAutoscaler(gpa *autoscaling.GeneralPodAutos
 		startTime := time.Now()
 		_, err = a.scaleNamespacer.Scales(gpa.Namespace).Update(targetGR, scale)
 		if err != nil {
-			metricsServer.RecordScalerUpdateDuration(gpa.Namespace, gpa.Name, getTargetRefKey(gpa), "failure",
-				time.Since(startTime))
+			metricsServer.RecordScalerUpdateDuration(gpa.Namespace, gpa.Name, getTargetRefKey(gpa),
+				"failure", time.Since(startTime))
+			metricsServer.RecordScalerReplicasUpdateDuration(gpa.Namespace, gpa.Name, getTargetRefKey(gpa),
+				"failure", time.Since(startTime))
 			a.eventRecorder.Eventf(gpa, v1.EventTypeWarning, "FailedRescale",
 				"New size: %d; reason: %s; error: %v", desiredReplicas, rescaleReason, err.Error())
 			setCondition(gpa, autoscaling.AbleToScale, v1.ConditionFalse, "FailedUpdateScale",
@@ -1146,8 +1160,10 @@ func (a *GeneralController) reconcileAutoscaler(gpa *autoscaling.GeneralPodAutos
 			}
 			return fmt.Errorf("failed to rescale %s: %v", reference, err)
 		}
-		metricsServer.RecordScalerUpdateDuration(gpa.Namespace, gpa.Name, getTargetRefKey(gpa), "success",
-			time.Since(startTime))
+		metricsServer.RecordScalerUpdateDuration(gpa.Namespace, gpa.Name, getTargetRefKey(gpa),
+			"success", time.Since(startTime))
+		metricsServer.RecordScalerReplicasUpdateDuration(gpa.Namespace, gpa.Name, getTargetRefKey(gpa),
+			"success", time.Since(startTime))
 		setCondition(gpa, autoscaling.AbleToScale, v1.ConditionTrue, "SucceededRescale",
 			"the GPA controller was able to update the target scale to %d", desiredReplicas)
 		a.eventRecorder.Eventf(gpa, v1.EventTypeNormal, "SuccessfulRescale", "New size: %d; reason: %s",
@@ -1164,38 +1180,38 @@ func (a *GeneralController) reconcileAutoscaler(gpa *autoscaling.GeneralPodAutos
 	return a.updateStatusIfNeeded(gpaStatusOriginal, gpa)
 }
 
-func (a *GeneralController) updateLabelsIfNeeded(gpa *autoscaling.GeneralPodAutoscaler,
-	labelMap map[string]string) error {
-	if len(labelMap) == 0 {
-		return nil
-	}
-	currentLabels := gpa.Labels
-	if currentLabels == nil {
-		currentLabels = map[string]string{}
-	}
-	for k, v := range labelMap {
-		currentLabels[k] = v
-	}
-	if reflect.DeepEqual(currentLabels, gpa.Labels) {
-		return nil
-	}
-	gpaCopy := gpa.DeepCopy()
-	gpaCopy.Labels = currentLabels
-	patch, err := util.CreateMergePatch(gpa, gpaCopy)
-	if err != nil {
-		return err
-	}
-	if apiequality.Semantic.DeepEqual(gpa, gpaCopy) {
-		return nil
-	}
-	gpaCopy, err = a.gpaNamespacer.GeneralPodAutoscalers(gpa.Namespace).Patch(gpa.Name, types.MergePatchType, patch)
-	if err == nil {
-		gpa = gpaCopy
-		return nil
-	}
-	klog.Errorf("patch gpa: %v error: %v", gpa.Name, err)
-	return err
-}
+// func (a *GeneralController) updateLabelsIfNeeded(gpa *autoscaling.GeneralPodAutoscaler,
+// 	labelMap map[string]string) error {
+// 	if len(labelMap) == 0 {
+// 		return nil
+// 	}
+// 	currentLabels := gpa.Labels
+// 	if currentLabels == nil {
+// 		currentLabels = map[string]string{}
+// 	}
+// 	for k, v := range labelMap {
+// 		currentLabels[k] = v
+// 	}
+// 	if reflect.DeepEqual(currentLabels, gpa.Labels) {
+// 		return nil
+// 	}
+// 	gpaCopy := gpa.DeepCopy()
+// 	gpaCopy.Labels = currentLabels
+// 	patch, err := util.CreateMergePatch(gpa, gpaCopy)
+// 	if err != nil {
+// 		return err
+// 	}
+// 	if apiequality.Semantic.DeepEqual(gpa, gpaCopy) {
+// 		return nil
+// 	}
+// 	gpaCopy, err = a.gpaNamespacer.GeneralPodAutoscalers(gpa.Namespace).Patch(gpa.Name, types.MergePatchType, patch)
+// 	if err == nil {
+// 		gpa = gpaCopy
+// 		return nil
+// 	}
+// 	klog.Errorf("patch gpa: %v error: %v", gpa.Name, err)
+// 	return err
+// }
 
 // stabilizeRecommendation :
 // - replaces old recommendation with the newest recommendation,
@@ -1732,15 +1748,15 @@ func (a *GeneralController) updateStatus(gpa *autoscaling.GeneralPodAutoscaler) 
 
 // patchStatus actually does the patch request for the status of the given GPA
 // do this because updateStatus is not supported by crd
-func (a *GeneralController) patchStatus(gpa *autoscaling.GeneralPodAutoscaler, patch []byte) error {
-	_, err := a.gpaNamespacer.GeneralPodAutoscalers(gpa.Namespace).Patch(gpa.Name, types.MergePatchType, patch)
-	if err != nil {
-		a.eventRecorder.Event(gpa, v1.EventTypeWarning, "FailedUpdateStatus", err.Error())
-		return fmt.Errorf("failed to update status for %s: %v", gpa.Name, err)
-	}
-	klog.V(2).Infof("Successfully updated status for %s", gpa.Name)
-	return nil
-}
+// func (a *GeneralController) patchStatus(gpa *autoscaling.GeneralPodAutoscaler, patch []byte) error {
+// 	_, err := a.gpaNamespacer.GeneralPodAutoscalers(gpa.Namespace).Patch(gpa.Name, types.MergePatchType, patch)
+// 	if err != nil {
+// 		a.eventRecorder.Event(gpa, v1.EventTypeWarning, "FailedUpdateStatus", err.Error())
+// 		return fmt.Errorf("failed to update status for %s: %v", gpa.Name, err)
+// 	}
+// 	klog.V(2).Infof("Successfully updated status for %s", gpa.Name)
+// 	return nil
+// }
 
 // setCondition sets the specific condition type on the given GPA to the specified value with the given reason
 // and message.  The message and args are treated like a format string.  The condition will be added if it is
