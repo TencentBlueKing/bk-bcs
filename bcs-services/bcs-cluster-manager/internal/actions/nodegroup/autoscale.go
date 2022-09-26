@@ -151,7 +151,7 @@ func (ua *EnableNodeGroupAutoScaleAction) enableNodeGroupAutoScale() error {
 		ResourceType: common.NodeGroup.String(),
 		ResourceID:   ua.group.NodeGroupID,
 		TaskID:       taskID,
-		Message:      fmt.Sprintf("%s 开启自动扩缩容", ua.group.NodeGroupID),
+		Message:      fmt.Sprintf("%s 开启节点池", ua.group.NodeGroupID),
 		OpUser:       ua.group.Updater,
 		CreateTime:   time.Now().Format(time.RFC3339),
 	})
@@ -184,10 +184,10 @@ func (ua *EnableNodeGroupAutoScaleAction) Handle(
 		return
 	}
 
-	// if nodegroup is not running, return error
-	if ua.group.Status != common.StatusRunning {
-		blog.Errorf("nodegroup %s status is not running, can not enable auto scale", ua.group.Name)
-		ua.setResp(common.BcsErrClusterManagerInvalidParameter, errors.New("nodegroup is not running").Error())
+	// if nodegroup is updating, return error
+	if ua.group.Status == common.StatusNodeGroupUpdating {
+		blog.Errorf("nodegroup %s status is updating, can not enable auto scale", ua.group.Name)
+		ua.setResp(common.BcsErrClusterManagerInvalidParameter, errors.New("nodegroup is updating").Error())
 		return
 	}
 
@@ -324,7 +324,7 @@ func (ua *DisableNodeGroupAutoScaleAction) disableNodeGroupAutoScale() error {
 		ResourceType: common.NodeGroup.String(),
 		ResourceID:   ua.group.NodeGroupID,
 		TaskID:       taskID,
-		Message:      fmt.Sprintf("%s 关闭自动扩缩容", ua.group.NodeGroupID),
+		Message:      fmt.Sprintf("%s 关闭节点池", ua.group.NodeGroupID),
 		OpUser:       ua.group.Updater,
 		CreateTime:   time.Now().Format(time.RFC3339),
 	})
@@ -357,10 +357,10 @@ func (ua *DisableNodeGroupAutoScaleAction) Handle(
 		return
 	}
 
-	// if nodegroup is not running, return error
-	if ua.group.Status != common.StatusRunning {
-		blog.Errorf("nodegroup %s status is not running, can not disable auto scale", ua.group.Name)
-		ua.setResp(common.BcsErrClusterManagerInvalidParameter, errors.New("nodegroup is not running").Error())
+	// if nodegroup is updating, return error
+	if ua.group.Status == common.StatusNodeGroupUpdating {
+		blog.Errorf("nodegroup %s status is updating, can not disable auto scale", ua.group.Name)
+		ua.setResp(common.BcsErrClusterManagerInvalidParameter, errors.New("nodegroup is updating").Error())
 		return
 	}
 
