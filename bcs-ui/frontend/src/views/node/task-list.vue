@@ -47,7 +47,7 @@
                     <span v-else>--</span>
                     <span
                         class="copy-icon ml5"
-                        v-if="activeTask === row.taskName"
+                        v-if="activeTask === row.taskName && row.message"
                         v-bk-tooltips="$t('复制内容')"
                         @click="handleCopyValues(row)">
                         <i class="bcs-icon bcs-icon-copy"></i>
@@ -65,7 +65,7 @@
                     <span>{{ curTaskRow.taskName }}</span>
                     <span
                         class="copy-icon ml10"
-                        v-bk-tooltips="$t('复制 Values')"
+                        v-bk-tooltips="$t('复制内容')"
                         @click="handleCopyValues(curTaskRow)">
                         <i class="bcs-icon bcs-icon-copy"></i>
                     </span>
@@ -150,11 +150,13 @@
 >>> .copy-icon {
     color: #3a84ff;
     cursor: pointer;
-    font-size: 14px;
 }
 .task-message {
     height: 500px;
-    overflow-y: scroll;
+    overflow-y: auto;
     padding-right: 20px;
+}
+>>> .bk-table .bk-table-header-wrapper {
+    border-top: none;
 }
 </style>

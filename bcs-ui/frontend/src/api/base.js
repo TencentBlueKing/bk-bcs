@@ -89,6 +89,7 @@ export const getTokens = request('get', `${prefix}/usermanager/v1/users/$usernam
 // auth
 export const userPerms = request('post', '/api/iam/user_perms/')
 export const userPermsByAction = request('post', '/api/iam/user_perms/actions/$actionId/')
+export const projectViewPerms = request('get', '/api/iam/user_perms/actions/project_view/apply_url/')
 export const newUserPermsByAction = request('post', `${prefix}/clustermanager/v1/perms/actions/$actionId`)
 // cluster tools
 export const clusterTools = request('get', '/api/cluster_tools/projects/$projectId/clusters/$clusterId/tools/')

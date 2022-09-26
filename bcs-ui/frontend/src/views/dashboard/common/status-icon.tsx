@@ -19,7 +19,8 @@ export default defineComponent({
                 failed: 'red',
                 terminating: 'blue',
                 true: 'green',
-                false: 'red'
+                false: 'red',
+                unknown: 'gray'
             })
         }
     },

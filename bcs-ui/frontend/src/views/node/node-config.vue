@@ -111,9 +111,7 @@
                     :parse-number="false"
                     v-model="nodePoolConfig.launchTemplate.systemDisk.diskSize"
                     :disabled="isEdit">
-                    <template slot="append">
-                        <div class="group-text">GB</div>
-                    </template>
+                    <div slot="append" class="group-text">GB</div>
                 </bk-input>
             </div>
             <div class="mt20">
@@ -146,9 +144,7 @@
                             max="32000"
                             :parse-number="false"
                             v-model="disk.diskSize">
-                            <template slot="append">
-                                <div class="group-text">GB</div>
-                            </template>
+                            <div slot="append" class="group-text">GB</div>
                         </bk-input>
                     </div>
                     <p class="error-tips" v-if="disk.diskSize % 10 !== 0">{{$t('范围: 10~32000, 步长: 10')}}</p>
@@ -202,9 +198,7 @@
                         :disabled="isEdit"
                         :parse-number="false"
                         v-model="nodePoolConfig.launchTemplate.internetAccess.internetMaxBandwidth">
-                        <template slot="append">
-                            <div class="group-text">Mbps</div>
-                        </template>
+                        <div slot="append" class="group-text">Mbps</div>
                     </bk-input>
                 </div>
             </div>
@@ -736,6 +730,9 @@
 <style lang="postcss" scoped>
 .node-config {
     font-size: 14px;
+    >>> .group-text {
+        line-height: 30px;
+    }
     >>> .bk-form-content {
         max-width: 600px;
         .bk-form-radio {

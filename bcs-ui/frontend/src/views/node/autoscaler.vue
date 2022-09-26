@@ -98,13 +98,18 @@
                 </bcs-table-column>
                 <bcs-table-column :label="$t('节点池状态')">
                     <template #default="{ row }">
-                        <LoadingIcon v-if="['CREATING', 'DELETING', 'UPDATING'].includes(row.status)">
-                            {{ statusTextMap[row.status] }}
-                        </LoadingIcon>
-                        <StatusIcon :status="row.status"
-                            :status-color-map="statusColorMap"
-                            v-else>
-                            {{ statusTextMap[row.status] }}
+                        <template v-if="row.enableAutoscale">
+                            <LoadingIcon v-if="['CREATING', 'DELETING', 'UPDATING'].includes(row.status)">
+                                {{ statusTextMap[row.status] }}
+                            </LoadingIcon>
+                            <StatusIcon :status="row.status"
+                                :status-color-map="statusColorMap"
+                                v-else>
+                                {{ statusTextMap[row.status] }}
+                            </StatusIcon>
+                        </template>
+                        <StatusIcon status="unknown" v-else>
+                            {{$t('已关闭')}}
                         </StatusIcon>
                     </template>
                 </bcs-table-column>
@@ -127,17 +132,17 @@
                                 <span class="more-icon"><i class="bcs-icon bcs-icon-more"></i></span>
                                 <div slot="content">
                                     <ul>
-                                        <!-- <li :class="['dropdown-item', {
+                                        <li :class="['dropdown-item', {
                                                 disabled: (row.enableAutoscale && disabledAutoscaler)
                                             }]"
                                             v-bk-tooltips="{
-                                                content: $t('Cluster Autoscaler 需要至少一个节点池开启自动扩缩容，请停用 Cluster Autoscaler 后再关闭'),
+                                                content: $t('Cluster Autoscaler 需要至少一个节点池开启，请停用 Cluster Autoscaler 后再关闭'),
                                                 disabled: !(row.enableAutoscale && disabledAutoscaler)
                                             }"
                                             @click="handleToggleNodeScaler(row)">
-                                            {{row.enableAutoscale ? $t('关闭自动扩缩容') : $t('启用自动扩缩容')}}
-                                        </li> -->
-                                        <li class="dropdown-item" @click="handleEditPool(row)">{{$t('编辑')}}</li>
+                                            {{row.enableAutoscale ? $t('关闭节点池') : $t('启用节点池')}}
+                                        </li>
+                                        <li class="dropdown-item" @click="handleEditPool(row)">{{$t('编辑节点池')}}</li>
                                         <li :class="['dropdown-item', { disabled: disabledDelete || !!row.autoScaling.desiredSize }]"
                                             v-bk-tooltips="{
                                                 content: !!row.autoScaling.desiredSize
@@ -146,7 +151,7 @@
                                                 disabled: !(disabledDelete || !!row.autoScaling.desiredSize),
                                                 placements: 'left'
                                             }"
-                                            @click="handleDeletePool(row)">{{$t('删除')}}</li>
+                                            @click="handleDeletePool(row)">{{$t('删除节点池')}}</li>
                                     </ul>
                                 </div>
                             </bcs-popover>

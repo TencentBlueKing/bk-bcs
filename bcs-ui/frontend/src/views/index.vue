@@ -18,19 +18,7 @@
         <template v-else-if="curProject && curProject.kind === 0">
             <Unregistry :cur-project="curProject"></Unregistry>
         </template>
-        <bk-exception type="403" v-else-if="!projectList.length">
-            <span>{{$t('无项目权限')}}</span>
-            <div class="text-subtitle">{{$t('你没有相应项目的访问权限，请前往申请相关项目权限')}}</div>
-            <div style="display: flex;align-items: center; justify-content: center;">
-                <a class="bk-text-button text-wrap" @click="handleGotoIAM">{{$t('去申请')}}</a>
-                <a class="bk-text-button text-wrap"
-                    v-authority="{
-                        actionId: 'project_create',
-                        permCtx: {}
-                    }"
-                    @click="handleGotoProjectManage">{{$t('创建项目')}}</a>
-            </div>
-        </bk-exception>
+        <EmptyProjectGUide v-else-if="!projectList.length"></EmptyProjectGUide>
     </div>
 </template>
 <script lang="ts">
@@ -41,6 +29,7 @@
     import Unregistry from '@/views/unregistry.vue'
     import ContentHeader from '@/views/content-header.vue'
     import { getProjectList } from '@/api/base'
+    import EmptyProjectGUide from './empty-project-guide.vue'
 
     export default defineComponent({
         name: 'BcsHome',
@@ -48,14 +37,13 @@
             SideNav,
             SideTerminal,
             Unregistry,
-            ContentHeader
+            ContentHeader,
+            EmptyProjectGUide
         },
         setup (props, ctx) {
             // 项目和集群的清空已经赋值操作有时序关系，请勿随意调整顺序
             const { $store, $route, $router, $bkMessage } = ctx.root
-            const handleGotoIAM = () => {
-                window.open(window.BK_IAM_APP_URL)
-            }
+            
             const handleSetClusterStorageInfo = (curCluster?) => {
                 if (curCluster) {
                     localStorage.setItem('bcs-cluster', curCluster.cluster_id)
@@ -226,23 +214,11 @@
                 })
                 isLoading.value = false
             })
-
-            function handleGotoProjectManage () {
-                if (window.REGION === 'ieod') {
-                    window.open(`${window.DEVOPS_HOST}/console/pm`)
-                } else {
-                    if ($route.name === 'projectManage') return
-                    $router.push({
-                        name: 'projectManage'
-                    })
-                }
-            }
+            
             return {
                 isLoading,
                 curProject,
-                handleGotoIAM,
-                projectList,
-                handleGotoProjectManage
+                projectList
             }
         }
     })

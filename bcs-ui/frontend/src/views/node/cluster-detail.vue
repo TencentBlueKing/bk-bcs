@@ -1,6 +1,6 @@
 <template>
     <!-- 集群详情 -->
-    <div v-bkloading="{ isLoading }">
+    <div>
         <ContentHeader :title="curCluster.name"
             :desc="`(${curCluster.clusterID})`"
             :hide-back="isSingleCluster"

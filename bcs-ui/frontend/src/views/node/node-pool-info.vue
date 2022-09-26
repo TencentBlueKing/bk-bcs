@@ -22,11 +22,11 @@
                 type="number">
             </bk-input>
         </bk-form-item>
-        <!-- <bk-form-item
-            :label="$t('是否启用自动扩缩容')"
-            :desc="$t('启用自动扩缩容后集群内容器缺少可用资源调度时将触发扩容，集群内空闲资源较多时将触发缩容')">
+        <bk-form-item
+            :label="$t('是否启用节点池')"
+            :desc="$t('节点池启用后Autoscaler组件将会根据扩容算法使用该节点池资源，开启Autoscaler组件后必须要开启至少一个节点池')">
             <bk-checkbox v-model="nodePoolInfo.enableAutoscale" :disabled="isEdit"></bk-checkbox>
-        </bk-form-item> -->
+        </bk-form-item>
         <!-- <bk-form-item :label="$t('是否开启调度')">
             <bk-checkbox :true-value="0" :false-value="1"
                 v-model="nodePoolInfo.nodeTemplate.unSchedulable"></bk-checkbox>

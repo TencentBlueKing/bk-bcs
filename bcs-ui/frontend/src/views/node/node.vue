@@ -368,6 +368,7 @@
                             </bk-button>
                             <bk-button text
                                 v-if="['INITIALIZATION', 'DELETING', 'REMOVE-FAILURE', 'ADD-FAILURE'].includes(row.status)"
+                                class="mr10"
                                 @click="handleShowLog(row)"
                             >
                                 {{$t('查看日志')}}
@@ -380,11 +381,16 @@
                                     {{ $t('pod迁移') }}
                                 </bk-button>
                             </template>
+                            <bk-button text
+                                class="mr10"
+                                v-if="['REMOVE-FAILURE', 'ADD-FAILURE'].includes(row.status)"
+                                @click="handleRetry(row)"
+                            >{{ $t('重试') }}</bk-button>
                             <span v-bk-tooltips="{
                                 disabled: !isImportCluster,
                                 content: $t('导入集群，节点管理功能不可用')
                             }">
-                                <bk-button text class="mr10"
+                                <bk-button text
                                     v-if="['REMOVE-FAILURE', 'ADD-FAILURE', 'REMOVABLE', 'NOTREADY'].includes(row.status)"
                                     :disabled="isImportCluster"
                                     @click="handleDeleteNode(row)"
@@ -392,10 +398,6 @@
                                     {{ $t('删除') }}
                                 </bk-button>
                             </span>
-                            <bk-button text
-                                v-if="['REMOVE-FAILURE', 'ADD-FAILURE'].includes(row.status)"
-                                @click="handleRetry(row)"
-                            >{{ $t('重试') }}</bk-button>
                         </div>
                     </template>
                 </bcs-table-column>
@@ -470,7 +472,7 @@
         <bk-sideslider
             :is-show.sync="logSideDialogConf.isShow"
             :title="logSideDialogConf.title"
-            :width="640"
+            :width="860"
             @hidden="closeLog"
             :quick-close="true">
             <div slot="content">
