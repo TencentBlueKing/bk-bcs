@@ -1193,7 +1193,7 @@ func (t *Task) BuildSwitchNodeGroupAutoScalingTask(group *proto.NodeGroup, enabl
 	task := &proto.Task{
 		TaskID:         uuid.New().String(),
 		TaskType:       cloudprovider.GetTaskType(cloudName, cloudprovider.SwitchNodeGroupAutoScaling),
-		TaskName:       "开启/关闭 NodeGroup 自动伸缩",
+		TaskName:       "开启/关闭 节点池",
 		Status:         cloudprovider.TaskStatusInit,
 		Message:        "task initializing",
 		Start:          nowStr,

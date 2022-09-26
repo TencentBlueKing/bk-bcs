@@ -70,7 +70,21 @@ env:
   operator: "bcs"
   encryption: "no"
 
-nodeSelector: {}
+nodeSelector: null
+
+tolerations:
+- effect: "NoSchedule"
+  key: "node-role.kubernetes.io/master"
+  operator: "Exists"
+
+affinity:
+  nodeAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+    - weight: 10
+      preference:
+        matchExpressions:
+        - key: node-role.kubernetes.io/master
+          operator: Exists
 `
 
 // AutoScalerValues is the values for the autoscaler application
