@@ -21,8 +21,12 @@ from rest_framework.response import Response
 from backend.bcs_web import viewsets
 
 from .perm_maker import make_perm_ctx, make_res_permission
+from .permissions.apply_url import ApplyURLGenerator
 from .permissions.client import IAMClient
 from .permissions.exceptions import AttrValidationError, PermissionDeniedError
+from .permissions.request import ActionResourcesRequest
+from .permissions.resources.constants import ResourceType
+from .permissions.resources.project import ProjectAction
 from .request_maker import make_request_resources
 from .serializers import ResourceActionSLZ, ResourceMultiActionsSLZ
 
@@ -79,3 +83,13 @@ class UserPermsViewSet(viewsets.SystemViewSet):
             return Response({'perms': {action_id: False, 'apply_url': e.data['perms']['apply_url']}})
 
         return Response({'perms': {action_id: True}})
+
+    def generate_apply_url(self, request, action_id):
+        if action_id != ProjectAction.VIEW.value:
+            raise ValidationError(f'only support {ProjectAction.VIEW.value}')
+
+        action_request_list = [
+            ActionResourcesRequest(ProjectAction.VIEW, ResourceType.Project, allow_instances_empty=True)
+        ]
+        apply_url = ApplyURLGenerator.generate_apply_url(request.user.username, action_request_list)
+        return Response({'perms': {action_id: False, 'apply_url': apply_url}})

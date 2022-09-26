@@ -59,6 +59,7 @@ class ActionResourcesRequest:
         resource_type: Optional[str] = None,
         resources: Optional[List[str]] = None,
         parent_chain: List[IAMResource] = None,
+        allow_instances_empty: bool = False,
     ):
         """
         :param action_id: 操作 ID
@@ -66,11 +67,13 @@ class ActionResourcesRequest:
         :param resources: 资源 ID 列表. 为 None 时, 表示资源无关; 资源实例相关时, resources 表示的资源必须具有相同的父实例.
             以命名空间为例, 它们必须是同项目同集群下
         :param parent_chain: 按照父类层级排序(父->子) [(resource_type, resource_id), ]
+        :param allow_instances_empty: 资源实例相关时, 允许资源 instances 为空
         """
         self.action_id = action_id
         self.resource_type = resource_type
         self.resources = resources
         self.parent_chain = parent_chain
+        self.allow_instances_empty = allow_instances_empty
 
     def to_action(self) -> Union[models.ActionWithResources, models.ActionWithoutResources]:
         # 资源实例相关
@@ -82,6 +85,12 @@ class ActionResourcesRequest:
             ]
             related_resource_type = models.RelatedResourceType(
                 settings.BK_IAM_SYSTEM_ID, self.resource_type, instances
+            )
+            return models.ActionWithResources(self.action_id, [related_resource_type])
+
+        if self.allow_instances_empty:
+            related_resource_type = models.RelatedResourceType(
+                settings.BK_IAM_SYSTEM_ID, self.resource_type, instances=[]
             )
             return models.ActionWithResources(self.action_id, [related_resource_type])
 

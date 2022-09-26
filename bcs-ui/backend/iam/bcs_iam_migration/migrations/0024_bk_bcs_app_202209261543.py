@@ -12,18 +12,24 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-from django.conf.urls import url
+import codecs
+import json
+import os
 
-from . import views
+from django.conf import settings
+from django.db import migrations
+from iam.contrib.iam_migration.migrator import IAMMigrator
 
-urlpatterns = [
-    url(r'^user_perms/$', views.UserPermsViewSet.as_view({'post': 'get_perms'})),
-    url(
-        r'^user_perms/actions/(?P<action_id>[\w]+)/$',
-        views.UserPermsViewSet.as_view({'post': 'get_perm_by_action_id'}),
-    ),
-    url(
-        r'^user_perms/actions/(?P<action_id>[\w]+)/apply_url/$',
-        views.UserPermsViewSet.as_view({'get': 'generate_apply_url'}),
-    ),
-]
+
+def forward_func(apps, schema_editor):
+    if settings.EDITION == settings.COMMUNITY_EDITION:
+        migrator = IAMMigrator(Migration.migration_json)
+        migrator.migrate()
+
+
+class Migration(migrations.Migration):
+    migration_json = "0024_update_action_groups_ce.json"
+
+    dependencies = [('bcs_iam_migration', '0023_bk_bcs_app_202209211612')]
+
+    operations = [migrations.RunPython(forward_func)]
