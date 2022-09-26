@@ -13,18 +13,16 @@
                     {{`${nodePoolData.nodeGroupID} (${nodePoolData.name}) `}}
                 </bk-form-item>
                 <bk-form-item :label="$t('节点池状态')">
-                    <template v-if="nodePoolData.enableAutoscale">
-                        <LoadingIcon v-if="['CREATING', 'DELETING', 'UPDATING'].includes(nodePoolData.status)">
-                            {{ statusTextMap[nodePoolData.status] }}
-                        </LoadingIcon>
-                        <StatusIcon :status="nodePoolData.status"
-                            :status-color-map="statusColorMap"
-                            v-else>
-                            {{ statusTextMap[nodePoolData.status] }}
-                        </StatusIcon>
-                    </template>
-                    <StatusIcon status="unknown" v-else>
+                    <LoadingIcon v-if="['CREATING', 'DELETING', 'UPDATING'].includes(nodePoolData.status)">
+                        {{ statusTextMap[nodePoolData.status] }}
+                    </LoadingIcon>
+                    <StatusIcon status="unknown" v-else-if="!nodePoolData.enableAutoscale && nodePoolData.status === 'RUNNING'">
                         {{$t('已关闭')}}
+                    </StatusIcon>
+                    <StatusIcon :status="nodePoolData.status"
+                        :status-color-map="statusColorMap"
+                        v-else>
+                        {{ statusTextMap[nodePoolData.status] }}
                     </StatusIcon>
                 </bk-form-item>
                 <!-- <bk-form-item :label="$t('是否启用自动扩缩容')">

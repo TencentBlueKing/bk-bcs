@@ -98,18 +98,16 @@
                 </bcs-table-column>
                 <bcs-table-column :label="$t('节点池状态')">
                     <template #default="{ row }">
-                        <template v-if="row.enableAutoscale">
-                            <LoadingIcon v-if="['CREATING', 'DELETING', 'UPDATING'].includes(row.status)">
-                                {{ statusTextMap[row.status] }}
-                            </LoadingIcon>
-                            <StatusIcon :status="row.status"
-                                :status-color-map="statusColorMap"
-                                v-else>
-                                {{ statusTextMap[row.status] }}
-                            </StatusIcon>
-                        </template>
-                        <StatusIcon status="unknown" v-else>
+                        <LoadingIcon v-if="['CREATING', 'DELETING', 'UPDATING'].includes(row.status)">
+                            {{ statusTextMap[row.status] }}
+                        </LoadingIcon>
+                        <StatusIcon status="unknown" v-else-if="!row.enableAutoscale && row.status === 'RUNNING'">
                             {{$t('已关闭')}}
+                        </StatusIcon>
+                        <StatusIcon :status="row.status"
+                            :status-color-map="statusColorMap"
+                            v-else>
+                            {{ statusTextMap[row.status] }}
                         </StatusIcon>
                     </template>
                 </bcs-table-column>
@@ -134,6 +132,7 @@
                                     <ul>
                                         <li :class="['dropdown-item', {
                                                 disabled: (row.enableAutoscale && disabledAutoscaler)
+                                                    || ['CREATING', 'DELETING', 'UPDATING'].includes(row.status)
                                             }]"
                                             v-bk-tooltips="{
                                                 content: $t('Cluster Autoscaler 需要至少一个节点池开启，请停用 Cluster Autoscaler 后再关闭'),
@@ -570,7 +569,7 @@
             })
             // 单节点开启和关闭弹性伸缩
             const handleToggleNodeScaler = async (row) => {
-                if (nodepoolLoading.value) return
+                if (nodepoolLoading.value || ['CREATING', 'DELETING', 'UPDATING'].includes(row.status)) return
 
                 ctx.refs[row.nodeGroupID] && (ctx.refs[row.nodeGroupID] as any).hideHandler()
                 nodepoolLoading.value = true
