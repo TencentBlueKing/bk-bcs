@@ -90,7 +90,6 @@ var lightHPAManifest = map[string]interface{}{
 							},
 							"matchLabels": map[string]interface{}{
 								"key1": "val1",
-								"key2": "val2",
 							},
 						},
 					},
@@ -258,10 +257,6 @@ var exceptedHPASpec = model.HPASpec{
 						{
 							Key:   "key1",
 							Value: "val1",
-						},
-						{
-							Key:   "key2",
-							Value: "val2",
 						},
 					},
 				},

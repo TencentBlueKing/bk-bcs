@@ -110,7 +110,7 @@ func LoadDemoManifest(path, namespace string) (map[string]interface{}, error) {
 	}
 
 	// 若指定命名空间，且原示例配置中有命名空间的，则覆盖命名空间
-	if _, err = mapx.GetItems(manifest, "metadata.namespace"); err == nil && namespace != "" {
+	if _, getNSErr := mapx.GetItems(manifest, "metadata.namespace"); getNSErr == nil && namespace != "" {
 		_ = mapx.SetItems(manifest, "metadata.namespace", namespace)
 	}
 	return manifest, err

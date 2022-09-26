@@ -20,6 +20,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/ctxkey"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/i18n"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/example"
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
 )
@@ -33,5 +35,12 @@ func TestGetK8SResTemplate(t *testing.T) {
 		err := hdlr.GetK8SResTemplate(ctx, &req, &resp)
 		assert.Nil(t, err)
 		assert.Equal(t, kind, resp.Data.AsMap()["kind"])
+	}
+
+	ctx = context.WithValue(ctx, ctxkey.LangKey, i18n.EN)
+	for _, kind := range example.HasDemoManifestResKinds {
+		req, resp := clusterRes.GetK8SResTemplateReq{Kind: kind}, clusterRes.CommonResp{}
+		err := hdlr.GetK8SResTemplate(ctx, &req, &resp)
+		assert.Nil(t, err)
 	}
 }

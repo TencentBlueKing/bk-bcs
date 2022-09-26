@@ -455,7 +455,7 @@ jobManage:
               value: Replace
     suspend:
       title: {{ i18n "暂停" .lang }}
-      type: bool
+      type: boolean
       default: false
     completions:
       title: {{ i18n "需完成数" .lang }}
