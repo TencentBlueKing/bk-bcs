@@ -26,6 +26,14 @@ def register_to_app():
         enum.FeatureFlagField(name='CLOUDTOKEN', label='云凭证', default=True),
         enum.FeatureFlagField(name='LOG', label='日志采集', default=True),
     ]
+    if settings.TEMPLATESET_FEATURE_FLAG:
+        ext_feature_flags.extend(
+            [
+                enum.FeatureFlagField(name='TEMPLATESET', label='模板集', default=True),
+                enum.FeatureFlagField(name='VARIABLE', label='变量管理', default=True),
+            ]
+        )
+
     for ext_feat_flag in ext_feature_flags:
         cluster_mgr.GlobalClusterFeatureFlag.register_feature_flag(ext_feat_flag)
         cluster_mgr.SingleClusterFeatureFlag.register_feature_flag(ext_feat_flag)
