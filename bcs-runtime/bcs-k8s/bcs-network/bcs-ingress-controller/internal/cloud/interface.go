@@ -105,6 +105,8 @@ type LoadBalanceObject struct {
 	Scheme string `json:"scheme,omitempty"`
 	// AWSLBType define aws lb type, application, network, or gateway
 	AWSLBType string `json:"awsLBType,omitempty"`
+	// AzureLBType define azure lb type, e.g. loadbalancer, applicationgateway
+	AzureLBType string `json:"azureLBType,omitempty"`
 }
 
 // BackendHealthStatus health status of cloud loadbalancer backend
@@ -123,10 +125,10 @@ type BackendHealthStatus struct {
 // LoadBalance interface for clb loadbalancer
 type LoadBalance interface {
 	// DescribeLoadBalancer get loadbalancer object by id or name
-	DescribeLoadBalancer(region, lbID, name string) (*LoadBalanceObject, error)
+	DescribeLoadBalancer(region, lbID, name, protocolLayer string) (*LoadBalanceObject, error)
 
 	// DescribeLoadBalancerWithNs get loadbalancer object by id or name with namespace specified
-	DescribeLoadBalancerWithNs(ns, region, lbID, name string) (*LoadBalanceObject, error)
+	DescribeLoadBalancerWithNs(ns, region, lbID, name, protocolLayer string) (*LoadBalanceObject, error)
 
 	// IsNamespaced if client is namespaced
 	IsNamespaced() bool

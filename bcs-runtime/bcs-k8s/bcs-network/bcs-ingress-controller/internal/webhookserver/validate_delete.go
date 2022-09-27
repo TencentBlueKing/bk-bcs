@@ -20,7 +20,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/constant"
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
 	"github.com/pkg/errors"
-	"k8s.io/api/admission/v1beta1"
+	v1 "k8s.io/api/admission/v1"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	apiextensionsv1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -36,7 +36,7 @@ const (
 	DeletionAllowTypeCascading = "Cascading"
 )
 
-func (s *Server) getCRDLabelFromAR(ar v1beta1.AdmissionReview) (map[string]string, error) {
+func (s *Server) getCRDLabelFromAR(ar v1.AdmissionReview) (map[string]string, error) {
 	resource := "customresourcedefinitions"
 	v1beta1GVR := metav1.GroupVersionResource{Group: apiextensionsv1beta1.GroupName,
 		Version: "v1beta1", Resource: resource}

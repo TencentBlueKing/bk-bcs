@@ -66,7 +66,7 @@ func NewElbWithSecret(secret *k8scorev1.Secret, _ client.Client) (cloud.LoadBala
 var _ cloud.LoadBalance = &Elb{}
 
 // DescribeLoadBalancer get loadbalancer object by id or name
-func (e *Elb) DescribeLoadBalancer(region, lbID, name string) (*cloud.LoadBalanceObject, error) {
+func (e *Elb) DescribeLoadBalancer(region, lbID, name, protocolLayer string) (*cloud.LoadBalanceObject, error) {
 	input := &elbv2.DescribeLoadBalancersInput{}
 	if len(lbID) != 0 {
 		input.LoadBalancerArns = []string{lbID}
@@ -117,8 +117,8 @@ func (e *Elb) DescribeLoadBalancer(region, lbID, name string) (*cloud.LoadBalanc
 }
 
 // DescribeLoadBalancerWithNs get loadbalancer object by id or name with namespace specified
-func (e *Elb) DescribeLoadBalancerWithNs(ns, region, lbID, name string) (*cloud.LoadBalanceObject, error) {
-	return e.DescribeLoadBalancer(region, lbID, name)
+func (e *Elb) DescribeLoadBalancerWithNs(ns, region, lbID, name, protocolLayer string) (*cloud.LoadBalanceObject, error) {
+	return e.DescribeLoadBalancer(region, lbID, name, protocolLayer)
 }
 
 // IsNamespaced if client is namespaced

@@ -54,7 +54,7 @@ bcs-component:k8s-driver \
 	apiserver-proxy-tools logbeat-sidecar webhook-server clusternet-controller mcs-agent \
 	general-pod-autoscaler cluster-autoscaler
 
-bcs-network:network networkpolicy ingress-controller cloud-netservice cloud-netcontroller cloud-netagent
+bcs-network:network networkpolicy cloud-netservice cloud-netcontroller cloud-netagent
 
 bcs-mesos:executor mesos-driver mesos-watch scheduler loadbalance netservice hpacontroller \
 	consoleproxy process-executor process-daemon bmsf-mesos-adapter detection clb-controller gw-controller

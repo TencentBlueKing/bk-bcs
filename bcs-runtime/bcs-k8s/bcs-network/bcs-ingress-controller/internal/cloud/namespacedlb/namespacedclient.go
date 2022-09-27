@@ -83,16 +83,19 @@ func (nc *NamespacedLB) getNsClient(ns string) (cloud.LoadBalance, error) {
 }
 
 // DescribeLoadBalancerWithNs describe loadbalances with ns
-func (nc *NamespacedLB) DescribeLoadBalancerWithNs(ns, region, lbID, name string) (*cloud.LoadBalanceObject, error) {
+func (nc *NamespacedLB) DescribeLoadBalancerWithNs(ns, region, lbID, name,
+	loadBalanceType string) (*cloud.LoadBalanceObject,
+	error) {
 	tmpClient, err := nc.getNsClient(ns)
 	if err != nil {
 		return nil, err
 	}
-	return tmpClient.DescribeLoadBalancer(region, lbID, name)
+	return tmpClient.DescribeLoadBalancer(region, lbID, name, loadBalanceType)
 }
 
 // DescribeLoadBalancer describe loadbalances with id or name
-func (nc *NamespacedLB) DescribeLoadBalancer(region, lbID, name string) (*cloud.LoadBalanceObject, error) {
+func (nc *NamespacedLB) DescribeLoadBalancer(region, lbID, name, loadBalanceType string) (*cloud.LoadBalanceObject,
+	error) {
 	return nil, fmt.Errorf("please use DescribeLoadBalancerWithNs for namespaced clb client")
 }
 

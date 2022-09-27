@@ -210,6 +210,8 @@ func MatchLbStrWithID(lbID string) bool {
 
 	// match aws arn
 	return arn.IsARN(lbID)
+
+	// todo 根据配置中云厂商选择ID校验方式
 }
 
 // MatchLbStrWithName check region info format

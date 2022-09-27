@@ -172,9 +172,9 @@ func (ppih *PortPoolItemHandler) getCloudListenersByRegionIDs(regionIDs []string
 			tmpID = lbID
 		}
 		if ppih.LbClient.IsNamespaced() {
-			lbObj, err = ppih.LbClient.DescribeLoadBalancerWithNs(ppih.Namespace, tmpRegion, tmpID, "")
+			lbObj, err = ppih.LbClient.DescribeLoadBalancerWithNs(ppih.Namespace, tmpRegion, tmpID, "", constant.ProtocolLayerTransport)
 		} else {
-			lbObj, err = ppih.LbClient.DescribeLoadBalancer(tmpRegion, tmpID, "")
+			lbObj, err = ppih.LbClient.DescribeLoadBalancer(tmpRegion, tmpID, "", constant.ProtocolLayerTransport)
 		}
 		if err != nil {
 			return nil, fmt.Errorf("describe lb '%s/%s' info failed, err %s", tmpRegion, lbID, err.Error())

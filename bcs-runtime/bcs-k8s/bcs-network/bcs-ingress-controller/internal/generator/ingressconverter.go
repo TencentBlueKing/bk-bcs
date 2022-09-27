@@ -20,6 +20,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/common"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	gocache "github.com/patrickmn/go-cache"
 	k8smetav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -78,7 +79,7 @@ func NewIngressConverter(opt *IngressConverterOpt,
 
 // get cloud loadbalance info by cloud loadbalance id pair
 // regionIDPair "ap-xxxxx:lb-xxxxxx" "arn:aws:elasticloadbalancing:xxx:xxx:xxx"
-func (g *IngressConverter) getLoadbalanceByID(ns, regionIDPair string) (*cloud.LoadBalanceObject, error) {
+func (g *IngressConverter) getLoadbalanceByID(ns, regionIDPair, protocolLayer string) (*cloud.LoadBalanceObject, error) {
 	var lbObj *cloud.LoadBalanceObject
 	var err error
 	strs := g.splitRegionIDPair(regionIDPair)
@@ -92,9 +93,9 @@ func (g *IngressConverter) getLoadbalanceByID(ns, regionIDPair string) (*cloud.L
 			return lbObj, nil
 		}
 		if g.lbClient.IsNamespaced() {
-			lbObj, err = g.lbClient.DescribeLoadBalancerWithNs(ns, g.defaultRegion, strs[0], "")
+			lbObj, err = g.lbClient.DescribeLoadBalancerWithNs(ns, g.defaultRegion, strs[0], "", protocolLayer)
 		} else {
-			lbObj, err = g.lbClient.DescribeLoadBalancer(g.defaultRegion, strs[0], "")
+			lbObj, err = g.lbClient.DescribeLoadBalancer(g.defaultRegion, strs[0], "", protocolLayer)
 		}
 		if err != nil {
 			return nil, err
@@ -109,9 +110,9 @@ func (g *IngressConverter) getLoadbalanceByID(ns, regionIDPair string) (*cloud.L
 			return lbObj, nil
 		}
 		if g.lbClient.IsNamespaced() {
-			lbObj, err = g.lbClient.DescribeLoadBalancerWithNs(ns, strs[0], strs[1], "")
+			lbObj, err = g.lbClient.DescribeLoadBalancerWithNs(ns, strs[0], strs[1], "", protocolLayer)
 		} else {
-			lbObj, err = g.lbClient.DescribeLoadBalancer(strs[0], strs[1], "")
+			lbObj, err = g.lbClient.DescribeLoadBalancer(strs[0], strs[1], "", protocolLayer)
 		}
 		if err != nil {
 			return nil, err
@@ -139,7 +140,7 @@ func (g *IngressConverter) splitRegionIDPair(regionIDPair string) []string {
 
 // get cloud loadbalance info by cloud loadbalance name pair
 // regionNamePair "ap-xxxxx:lbname"
-func (g *IngressConverter) getLoadbalanceByName(ns, regionNamePair string) (*cloud.LoadBalanceObject, error) {
+func (g *IngressConverter) getLoadbalanceByName(ns, regionNamePair, protocolLayer string) (*cloud.LoadBalanceObject, error) {
 	var lbObj *cloud.LoadBalanceObject
 	var err error
 	strs := strings.Split(regionNamePair, ":")
@@ -153,9 +154,9 @@ func (g *IngressConverter) getLoadbalanceByName(ns, regionNamePair string) (*clo
 			return lbObj, nil
 		}
 		if g.lbClient.IsNamespaced() {
-			lbObj, err = g.lbClient.DescribeLoadBalancerWithNs(ns, g.defaultRegion, "", strs[0])
+			lbObj, err = g.lbClient.DescribeLoadBalancerWithNs(ns, g.defaultRegion, "", strs[0], protocolLayer)
 		} else {
-			lbObj, err = g.lbClient.DescribeLoadBalancer(g.defaultRegion, "", strs[0])
+			lbObj, err = g.lbClient.DescribeLoadBalancer(g.defaultRegion, "", strs[0], protocolLayer)
 		}
 		if err != nil {
 			return nil, err
@@ -170,9 +171,9 @@ func (g *IngressConverter) getLoadbalanceByName(ns, regionNamePair string) (*clo
 			return lbObj, nil
 		}
 		if g.lbClient.IsNamespaced() {
-			lbObj, err = g.lbClient.DescribeLoadBalancerWithNs(ns, strs[0], "", strs[1])
+			lbObj, err = g.lbClient.DescribeLoadBalancerWithNs(ns, strs[0], "", strs[1], protocolLayer)
 		} else {
-			lbObj, err = g.lbClient.DescribeLoadBalancer(strs[0], "", strs[1])
+			lbObj, err = g.lbClient.DescribeLoadBalancer(strs[0], "", strs[1], protocolLayer)
 		}
 		if err != nil {
 			return nil, err
@@ -190,6 +191,7 @@ func (g *IngressConverter) getLoadbalanceByName(ns, regionNamePair string) (*clo
 // get ingress loadbalance objects by annotations
 func (g *IngressConverter) getIngressLoadbalances(ingress *networkextensionv1.Ingress) (
 	[]*cloud.LoadBalanceObject, error) {
+	protocolLayer := common.GetIngressProtocolLayer(ingress)
 	var lbs []*cloud.LoadBalanceObject
 	lbIDStrs, idOk := ingress.Annotations[networkextensionv1.AnnotationKeyForLoadbalanceIDs]
 	lbNameStrs, nameOk := ingress.Annotations[networkextensionv1.AnnotationKeyForLoadbalanceNames]
@@ -210,7 +212,7 @@ func (g *IngressConverter) getIngressLoadbalances(ingress *networkextensionv1.In
 			}
 		}
 		for _, regionIDPair := range lbIDs {
-			lbObj, err := g.getLoadbalanceByID(ingress.GetNamespace(), regionIDPair)
+			lbObj, err := g.getLoadbalanceByID(ingress.GetNamespace(), regionIDPair, protocolLayer)
 			if err != nil {
 				return nil, err
 			}
@@ -227,7 +229,7 @@ func (g *IngressConverter) getIngressLoadbalances(ingress *networkextensionv1.In
 			}
 		}
 		for _, regionNamePair := range names {
-			lbObj, err := g.getLoadbalanceByName(ingress.GetNamespace(), regionNamePair)
+			lbObj, err := g.getLoadbalanceByName(ingress.GetNamespace(), regionNamePair, protocolLayer)
 			if err != nil {
 				return nil, err
 			}

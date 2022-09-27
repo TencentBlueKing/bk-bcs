@@ -31,22 +31,19 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/metrics"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/portpoolcache"
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
+	v1 "k8s.io/api/admission/v1"
 
 	"k8s.io/api/admission/v1beta1"
 	k8scorev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/runtime/serializer"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/util/retry"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 var (
-	runtimeScheme = runtime.NewScheme()
-	codecs        = serializer.NewCodecFactory(runtimeScheme)
-	deserializer  = codecs.UniversalDeserializer()
-	defaulter     = runtime.ObjectDefaulter(runtimeScheme)
+	deserializer = codecs.UniversalDeserializer()
 )
 
 // ServerOption option of server
@@ -132,22 +129,22 @@ func (s *Server) NeedLeaderElection() bool {
 
 // HandleValidatingWebhook handle validating webhook request
 func (s *Server) HandleValidatingWebhook(w http.ResponseWriter, r *http.Request) {
-	s.handleWebhook(w, r, "validate", s.validatingWebhook)
+	s.handleWebhook(w, r, "validate", newDelegateToV1AdmitHandler(s.validatingWebhook))
 }
 
 // HandleMutatingWebhook handle mutating webhook request
 func (s *Server) HandleMutatingWebhook(w http.ResponseWriter, r *http.Request) {
-	s.handleWebhook(w, r, "mutate", s.mutatingWebhook)
+	s.handleWebhook(w, r, "mutate", newDelegateToV1AdmitHandler(s.mutatingWebhook))
 }
 
 // HandleValidatingCRD handle validating CRD delete webhook request
 func (s *Server) HandleValidatingCRD(w http.ResponseWriter, r *http.Request) {
-	s.handleWebhook(w, r, "validateCRD", s.validatingCRDDelete)
+	s.handleWebhook(w, r, "validateCRD", newDelegateToV1AdmitHandler(s.validatingCRDDelete))
 }
 
 func (s *Server) handleWebhook(
 	w http.ResponseWriter, r *http.Request, handleName string,
-	handleFunc func(ar v1beta1.AdmissionReview) *v1beta1.AdmissionResponse) {
+	admit admitHandler) {
 	startTime := time.Now()
 	var body []byte
 	if r.Body != nil {
@@ -167,32 +164,57 @@ func (s *Server) handleWebhook(
 		return
 	}
 
-	var reviewResponse *v1beta1.AdmissionResponse
-	ar := v1beta1.AdmissionReview{}
-	if _, _, err := deserializer.Decode(body, nil, &ar); err != nil {
-		blog.Errorf("Could not decode body: %s", err.Error())
-		reviewResponse = errResponse(err)
-	} else {
-		reviewResponse = handleFunc(ar)
-	}
-
-	response := v1beta1.AdmissionReview{}
-	if reviewResponse != nil {
-		response.Response = reviewResponse
-		if ar.Request != nil {
-			response.Response.UID = ar.Request.UID
-		}
-	}
-
-	resp, err := json.Marshal(response)
+	obj, gvk, err := deserializer.Decode(body, nil, nil)
 	if err != nil {
-		blog.Errorf("Could not encode response: %v", err)
+		werr := errors.Wrapf(err, "could not decode body")
+		blog.Error(werr.Error())
+		http.Error(w, werr.Error(), http.StatusBadRequest)
+		return
+	}
+
+	var responseObj runtime.Object
+	switch *gvk {
+	case v1beta1.SchemeGroupVersion.WithKind("AdmissionReview"):
+		requestedAdmissionReview, ok := obj.(*v1beta1.AdmissionReview)
+		if !ok {
+			blog.Errorf("Expected v1beta1.AdmissionReview but got: %T", obj)
+			return
+		}
+		responseAdmissionReview := &v1beta1.AdmissionReview{}
+		responseAdmissionReview.SetGroupVersionKind(*gvk)
+		responseAdmissionReview.Response = admit.v1beta1(*requestedAdmissionReview)
+		responseAdmissionReview.Response.UID = requestedAdmissionReview.Request.UID
+		responseObj = responseAdmissionReview
+	case v1.SchemeGroupVersion.WithKind("AdmissionReview"):
+		requestedAdmissionReview, ok := obj.(*v1.AdmissionReview)
+		if !ok {
+			blog.Errorf("Expected v1.AdmissionReview but got: %T", obj)
+			return
+		}
+		responseAdmissionReview := &v1.AdmissionReview{}
+		responseAdmissionReview.SetGroupVersionKind(*gvk)
+		responseAdmissionReview.Response = admit.v1(*requestedAdmissionReview)
+		responseAdmissionReview.Response.UID = requestedAdmissionReview.Request.UID
+		responseObj = responseAdmissionReview
+	default:
+		msg := fmt.Sprintf("Unsupported group version kind: %v", gvk)
+		blog.Error(msg)
+		http.Error(w, msg, http.StatusBadRequest)
+		return
+	}
+
+	blog.V(2).Info(fmt.Sprintf("sending response: %v", responseObj))
+	respBytes, err := json.Marshal(responseObj)
+	if err != nil {
+		blog.Error(err.Error())
 		http.Error(w, fmt.Sprintf("could encode response: %v", err), http.StatusInternalServerError)
 		metrics.ReportAPIRequestMetric(
 			handleName, r.Method, strconv.Itoa(http.StatusInternalServerError), startTime)
 		return
 	}
-	if _, err := w.Write(resp); err != nil {
+
+	w.Header().Set("Content-Type", "application/json")
+	if _, err := w.Write(respBytes); err != nil {
 		blog.Errorf("Could not write response: %v", err)
 		http.Error(w, fmt.Sprintf("could write response: %v", err), http.StatusInternalServerError)
 		metrics.ReportAPIRequestMetric(
@@ -203,12 +225,12 @@ func (s *Server) handleWebhook(
 	metrics.ReportAPIRequestMetric(handleName, r.Method, strconv.Itoa(http.StatusOK), startTime)
 }
 
-func (s *Server) validatingWebhook(ar v1beta1.AdmissionReview) *v1beta1.AdmissionResponse {
+func (s *Server) validatingWebhook(ar v1.AdmissionReview) *v1.AdmissionResponse {
 	req := ar.Request
 	// only hook create and update operation
-	if req.Operation != v1beta1.Create && req.Operation != v1beta1.Update {
+	if req.Operation != v1.Create && req.Operation != v1.Update {
 		blog.Warnf("operation is not create or update, ignore")
-		return &v1beta1.AdmissionResponse{Allowed: true}
+		return &v1.AdmissionResponse{Allowed: true}
 	}
 	// only hook portpool and ingress
 	if req.Kind.Kind != "PortPool" && req.Kind.Kind != "Ingress" {
@@ -224,7 +246,8 @@ func (s *Server) validatingWebhook(ar v1beta1.AdmissionReview) *v1beta1.Admissio
 		portPool := &networkextensionv1.PortPool{}
 		if err := json.Unmarshal(req.Object.Raw, portPool); err != nil {
 			blog.Warnf("decode %s to port pool failed, err %s", string(req.Object.Raw), err.Error)
-			return errResponse(fmt.Errorf("decode %s to port pool failed, err %s", string(req.Object.Raw), err.Error()))
+			return errResponse(fmt.Errorf("decode %s to port pool failed, err %s", string(req.Object.Raw),
+				err.Error()))
 		}
 		if err := s.validatePortPool(portPool); err != nil {
 			blog.Warnf("PortPool %s/%s is invalid, err %s", portPool.GetName(), portPool.GetNamespace(), err.Error())
@@ -233,10 +256,10 @@ func (s *Server) validatingWebhook(ar v1beta1.AdmissionReview) *v1beta1.Admissio
 		}
 	}
 
-	return &v1beta1.AdmissionResponse{Allowed: true}
+	return &v1.AdmissionResponse{Allowed: true}
 }
 
-func (s *Server) mutatingWebhook(ar v1beta1.AdmissionReview) (response *v1beta1.AdmissionResponse) {
+func (s *Server) mutatingWebhook(ar v1.AdmissionReview) (response *v1.AdmissionResponse) {
 	defer func() {
 		if response == nil || response.Allowed == false {
 			metrics.IncreasePodCreateCounter(false)
@@ -246,9 +269,9 @@ func (s *Server) mutatingWebhook(ar v1beta1.AdmissionReview) (response *v1beta1.
 	}()
 
 	req := ar.Request
-	if req.Operation != v1beta1.Create {
+	if req.Operation != v1.Create {
 		blog.Warnf("operation is not create, ignore")
-		return &v1beta1.AdmissionResponse{Allowed: true}
+		return &v1.AdmissionResponse{Allowed: true}
 	}
 	// only hook create operation of pod
 	if req.Kind.Kind != "Pod" {
@@ -269,7 +292,7 @@ func (s *Server) mutatingWebhook(ar v1beta1.AdmissionReview) (response *v1beta1.
 	_, ok := pod.Annotations[constant.AnnotationForPortPool]
 	if !ok {
 		blog.Warnf("pod %s/%s has no portpool annotation", pod.GetName(), pod.GetNamespace())
-		return &v1beta1.AdmissionResponse{Allowed: true}
+		return &v1.AdmissionResponse{Allowed: true}
 	}
 
 	blog.Infof("received pod '%s/%s' create event", pod.GetNamespace(), pod.GetName())
@@ -285,21 +308,21 @@ func (s *Server) mutatingWebhook(ar v1beta1.AdmissionReview) (response *v1beta1.
 		return errResponse(errors.Wrapf(err, "encoding patches for '%s/%s' failed",
 			pod.GetNamespace(), pod.GetNamespace()))
 	}
-	return &v1beta1.AdmissionResponse{
+	return &v1.AdmissionResponse{
 		Allowed: true,
 		Patch:   patchesBytes,
-		PatchType: func() *v1beta1.PatchType {
-			pt := v1beta1.PatchTypeJSONPatch
+		PatchType: func() *v1.PatchType {
+			pt := v1.PatchTypeJSONPatch
 			return &pt
 		}(),
 	}
 }
 
-func (s *Server) validatingCRDDelete(ar v1beta1.AdmissionReview) *v1beta1.AdmissionResponse {
-	allowResp := &v1beta1.AdmissionResponse{Allowed: true}
+func (s *Server) validatingCRDDelete(ar v1.AdmissionReview) *v1.AdmissionResponse {
+	allowResp := &v1.AdmissionResponse{Allowed: true}
 
 	req := ar.Request
-	if req.Operation != v1beta1.Delete {
+	if req.Operation != v1.Delete {
 		blog.Warnf("operation is not delete, ignore")
 		return allowResp
 	}
@@ -321,8 +344,8 @@ func (s *Server) validatingCRDDelete(ar v1beta1.AdmissionReview) *v1beta1.Admiss
 }
 
 // convert error to admission response
-func errResponse(err error) *v1beta1.AdmissionResponse {
-	return &v1beta1.AdmissionResponse{Result: &metav1.Status{Message: err.Error()}}
+func errResponse(err error) *v1.AdmissionResponse {
+	return &v1.AdmissionResponse{Result: &metav1.Status{Message: err.Error()}}
 }
 
 func (s *Server) patchPod(name, namespace, isLeader string) error {

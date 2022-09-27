@@ -13,6 +13,18 @@
 package constant
 
 const (
+	// LoadBalancerTypeLoadBalancer default type load balancer
+	LoadBalancerTypeLoadBalancer = "loadbalancer"
+	// LoadBalancerTypeApplicationGateway type for azure application gateway
+	LoadBalancerTypeApplicationGateway = "applicationgateway"
+
+	// ProtocolLayerDefault protocol layer default
+	ProtocolLayerDefault = "default"
+	// ProtocolLayerTransport protocol layer transport
+	ProtocolLayerTransport = "transport"
+	// ProtocolLayerApplication protocol layer application
+	ProtocolLayerApplication = "application"
+
 	// FinalizerNameBcsIngressController finalizer name of bcs ingress controller
 	FinalizerNameBcsIngressController = "ingresscontroller.bkbcs.tencent.com"
 	// CloudTencent tencent cloud
@@ -21,6 +33,8 @@ const (
 	CloudAWS = "aws"
 	// CloudGCP gcp cloud
 	CloudGCP = "gcp"
+	// CloudAzure Azure cloud
+	CloudAzure = "azure"
 
 	// EnvNameIsTCPUDPPortReuse env name for option if the loadbalancer provider support tcp udp port reuse
 	// if enabled, we will find protocol info in 4 layer listener name

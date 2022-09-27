@@ -65,7 +65,7 @@ func NewGclbWithSecret(secret *k8scorev1.Secret, k8sClient client.Client) (cloud
 var _ cloud.LoadBalance = &GCLB{}
 
 // DescribeLoadBalancer get loadbalancer object by id or name
-func (e *GCLB) DescribeLoadBalancer(region, lbID, name string) (*cloud.LoadBalanceObject, error) {
+func (e *GCLB) DescribeLoadBalancer(region, lbID, name, protocolLayer string) (*cloud.LoadBalanceObject, error) {
 	out, err := e.sdkWrapper.GetAddress(e.project, region, lbID)
 	if err != nil {
 		blog.Errorf("DescribeLoadBalancers failed, err %s", err.Error())
@@ -89,8 +89,8 @@ func (e *GCLB) DescribeLoadBalancer(region, lbID, name string) (*cloud.LoadBalan
 }
 
 // DescribeLoadBalancerWithNs get loadbalancer object by id or name with namespace specified
-func (e *GCLB) DescribeLoadBalancerWithNs(ns, region, lbID, name string) (*cloud.LoadBalanceObject, error) {
-	return e.DescribeLoadBalancer(region, lbID, name)
+func (e *GCLB) DescribeLoadBalancerWithNs(ns, region, lbID, name, protocolLayer string) (*cloud.LoadBalanceObject, error) {
+	return e.DescribeLoadBalancer(region, lbID, name, protocolLayer)
 }
 
 // IsNamespaced if client is namespaced

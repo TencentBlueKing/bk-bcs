@@ -94,7 +94,7 @@ func NewClbWithSecret(secret *k8scorev1.Secret, _ client.Client) (cloud.LoadBala
 }
 
 // DescribeLoadBalancer get loadbalancer object by id
-func (c *Clb) DescribeLoadBalancer(region, lbID, name string) (*cloud.LoadBalanceObject, error) {
+func (c *Clb) DescribeLoadBalancer(region, lbID, name, protocolLayer string) (*cloud.LoadBalanceObject, error) {
 	req := tclb.NewDescribeLoadBalancersRequest()
 	if len(lbID) != 0 {
 		req.LoadBalancerIds = tcommon.StringPtrs([]string{lbID})
@@ -148,8 +148,8 @@ func (c *Clb) DescribeLoadBalancer(region, lbID, name string) (*cloud.LoadBalanc
 }
 
 // DescribeLoadBalancerWithNs get loadbalancer object by id or name with namespace specified
-func (c *Clb) DescribeLoadBalancerWithNs(ns, region, lbID, name string) (*cloud.LoadBalanceObject, error) {
-	return c.DescribeLoadBalancer(region, lbID, name)
+func (c *Clb) DescribeLoadBalancerWithNs(ns, region, lbID, name, protocolLayer string) (*cloud.LoadBalanceObject, error) {
+	return c.DescribeLoadBalancer(region, lbID, name, protocolLayer)
 }
 
 // IsNamespaced if client is namespaced

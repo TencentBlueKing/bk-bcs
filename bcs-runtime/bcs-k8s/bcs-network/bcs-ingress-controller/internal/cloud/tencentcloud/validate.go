@@ -33,13 +33,13 @@ func (cv *ClbValidater) IsIngressValid(ingress *networkextensionv1.Ingress) (boo
 	}
 	for _, rule := range ingress.Spec.Rules {
 		if ok, msg := cv.validateIngressRule(&rule); !ok {
-			return ok, msg
+			return false, msg
 		}
 	}
 
 	for _, mapping := range ingress.Spec.PortMappings {
 		if ok, msg := cv.validateListenerMapping(&mapping); !ok {
-			return ok, msg
+			return false, msg
 		}
 	}
 	return true, ""
@@ -50,38 +50,34 @@ func (cv *ClbValidater) validateIngressRule(rule *networkextensionv1.IngressRule
 	if rule.Port <= 0 || rule.Port >= 65536 {
 		return false, fmt.Sprintf("invalid port %d, available [1-65535]", rule.Port)
 	}
-	if rule.Protocol != ClbProtocolHTTP &&
-		rule.Protocol != ClbProtocolHTTPS &&
-		rule.Protocol != ClbProtocolTCP &&
-		rule.Protocol != ClbProtocolUDP {
-		return false, fmt.Sprintf("invalid protocol %s, available [http, https, tcp, udp]", rule.Protocol)
-	}
 	if rule.Protocol == ClbProtocolHTTPS {
 		if rule.Certificate == nil {
 			return false, fmt.Sprintf("certificate cannot be empty for protocol https")
 		}
 		if ok, msg := cv.validateCertificate(rule.Certificate); !ok {
-			return ok, msg
+			return false, msg
 		}
 	}
 	if rule.ListenerAttribute != nil {
 		if ok, msg := cv.validateListenerAttribute(rule.ListenerAttribute); !ok {
-			return ok, msg
+			return false, msg
 		}
 	}
 	switch rule.Protocol {
 	case ClbProtocolHTTP, ClbProtocolHTTPS:
 		for _, r := range rule.Routes {
 			if ok, msg := cv.validateListenerRoute(&r); !ok {
-				return ok, msg
+				return false, msg
 			}
 		}
 	case ClbProtocolTCP, ClbProtocolUDP:
 		for _, svc := range rule.Services {
 			if ok, msg := cv.validateListenerService(&svc); !ok {
-				return ok, msg
+				return false, msg
 			}
 		}
+	default:
+		return false, fmt.Sprintf("invalid protocol %s, available [http, https, tcp, udp]", rule.Protocol)
 	}
 	return true, ""
 }
@@ -92,12 +88,12 @@ func (cv *ClbValidater) validateListenerRoute(r *networkextensionv1.Layer7Route)
 	}
 	if r.ListenerAttribute != nil {
 		if ok, msg := cv.validateListenerAttribute(r.ListenerAttribute); !ok {
-			return ok, msg
+			return false, msg
 		}
 	}
 	for _, svc := range r.Services {
 		if ok, msg := cv.validateListenerService(&svc); !ok {
-			return ok, msg
+			return false, msg
 		}
 	}
 	return true, ""
@@ -109,7 +105,7 @@ func (cv *ClbValidater) validatePortMappingRoute(r *networkextensionv1.IngressPo
 	}
 	if r.ListenerAttribute != nil {
 		if ok, msg := cv.validateListenerAttribute(r.ListenerAttribute); !ok {
-			return ok, msg
+			return false, msg
 		}
 	}
 	return true, ""

@@ -19,6 +19,7 @@ import (
 	"strings"
 
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/constant"
+	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 )
 
@@ -96,4 +97,34 @@ func GetNamespacedNameKey(name, ns string) string {
 // because item1 is an anomaly string, so we use md5 to encode it
 func GetPortPoolListenerLabelKey(portPoolName, itemName string) string {
 	return portPoolName + "/" + fmt.Sprintf("%x", (md5.Sum([]byte(itemName))))
+}
+
+func GetIngressProtocolLayer(ingress *networkextensionv1.Ingress) string {
+	transportCnt := 0
+	applicationCnt := 0
+	for _, rule := range ingress.Spec.Rules {
+		switch strings.ToLower(rule.Protocol) {
+		case "tcp", "udp":
+			transportCnt++
+		case "http", "https":
+			applicationCnt++
+		}
+	}
+	for _, portMapping := range ingress.Spec.PortMappings {
+		switch strings.ToLower(portMapping.Protocol) {
+		case "tcp", "udp":
+			transportCnt++
+		case "http", "https":
+			applicationCnt++
+		}
+	}
+
+	// portMapping only support tcp&udp
+	if transportCnt == 0 && len(ingress.Spec.PortMappings) == 0 {
+		return constant.ProtocolLayerApplication
+	}
+	if applicationCnt == 0 {
+		return constant.ProtocolLayerTransport
+	}
+	return constant.ProtocolLayerDefault
 }
