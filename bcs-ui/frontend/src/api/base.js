@@ -68,7 +68,9 @@ export const reschedulePod = request('put', `${CR_API_URL}/projects/$projectId/c
 export const renderManifestPreview = request('post', `${CR_API_URL}/projects/$projectId/clusters/$clusterId/render_manifest_preview`);
 export const fetchNodePodsData = request('get', `${CR_API_URL}/projects/$projectId/clusters/$clusterId/nodes/$nodename/workloads/pods`);
 export const enlargeCapacityChange = request('put', `${CR_API_URL}/projects/$projectId/clusters/$clusterId/namespaces/$namespace/workloads/$category/$name/scale`); // 扩缩容
-export const batchReschedulePod = request('put', `${CR_API_URL}/projects/$projectId/clusters/$clusterId/namespaces/$namespace/workloads/$category/$name/reschedule`); // 批量重新调度
+export const batchReschedulePod = request('put', `${CR_API_URL}/projects/$projectId/clusters/$clusterId/namespaces/$namespace/workloads/$category/$name/reschedule`); // pod批量重新调度
+export const crdEnlargeCapacityChange = request('put', `${CR_API_URL}/projects/$projectId/clusters/$clusterId/crds/$crdName/custom_objects/$cobjName/scale`); // crd扩缩容
+export const batchRescheduleCrdPod = request('put', `${CR_API_URL}/projects/$projectId/clusters/$clusterId/crds/$crdName/custom_objects/$cobjName/reschedule`) // crd-pod批量重新调度
 
 // apply hosts
 export const getBizMaintainers = request('get', '/api/projects/$projectId/biz_maintainers/');

@@ -51,7 +51,9 @@ import {
   formSchema,
   renderManifestPreview,
   enlargeCapacityChange,
+  crdEnlargeCapacityChange,
   batchReschedulePod,
+  batchRescheduleCrdPod,
 } from '@/api/base';
 
 export default {
@@ -320,9 +322,19 @@ export default {
       const data = await enlargeCapacityChange(params).catch(() => false);
       return data;
     },
-    // 批量重新调度
+    // pod批量重新调度
     async batchReschedulePod(context, params) {
       const data = await batchReschedulePod(params).then(() => true);
+      return data;
+    },
+    // crd扩缩容
+    async crdEnlargeCapacityChange(context, params) {
+      const data = await crdEnlargeCapacityChange(params).catch(() => false);
+      return data;
+    },
+    // crd重新调度
+    async batchRescheduleCrdPod(context, params) {
+      const data = await batchRescheduleCrdPod(params).then(() => true);
       return data;
     },
   },

@@ -424,7 +424,7 @@ export default defineComponent({
     // 是否展示升级策略
     const showUpdateStrategy = computed(() => ['deployments', 'statefulsets', 'custom_objects'].includes(props.category));
     // 是否展示批量调度功能
-    const showBatchDispatch = computed(() => ['deployments', 'statefulsets'].includes(props.category));
+    const showBatchDispatch = computed(() => ['Deployment', 'Statefulset', 'GameDeployment', 'GameStatefulSet'].includes(props.kind));
     // 获取pod manifestExt数据
     const handleGetExtData = (uid, prop) => workloadPods.value?.manifestExt?.[uid]?.[prop];
     // 指标参数
@@ -539,13 +539,24 @@ export default defineComponent({
         pre += `${index > 0 ? ',' : ''}${key}=${matchLabels[key]}`;
         return pre;
       }, '');
-      const result = await $store.dispatch('dashboard/batchReschedulePod', {
-        $namespace: props.namespace,
-        $name: metadata.value.name,
-        $category: props.category,
-        podNames: selectPods.value.map(pod => pod.metadata.name),
-        labelSelector,
-      });
+      let result = false
+      if (['Deployment', 'Statefulset'].includes(props.kind)) {
+        result = await $store.dispatch('dashboard/batchReschedulePod', {
+          $namespace: props.namespace,
+          $name: metadata.value.name,
+          $category: props.category,
+          podNames: selectPods.value.map(pod => pod.metadata.name),
+          labelSelector,
+        });
+      } else if (['GameDeployment', 'GameStatefulSet'].includes(props.kind)) {
+        result = await $store.dispatch('dashboard/batchRescheduleCrdPod', {
+          $crdName: props.crd,
+          $cobjName: metadata.value.name,
+          podNames: selectPods.value.map(pod => pod.metadata.name),
+          namespace: props.namespace,
+          labelSelector,
+        });
+      }
       if (result) {
         $bkMessage({
           theme: 'success',

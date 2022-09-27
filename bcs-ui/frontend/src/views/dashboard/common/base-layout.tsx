@@ -315,19 +315,30 @@ export default defineComponent({
     };
     // 确定扩缩容
     const handleConfirmChangeCapacity = async () => {
+      let result = false
       const { name, namespace } = curDetailRow.value.data?.metadata || {};
-      const result = await $store.dispatch('dashboard/enlargeCapacityChange', {
-        $namespace: namespace,
-        $category: category.value,
-        $name: name,
-        replicas: replicas.value,
-      });
+      if (type.value === 'crd') {
+        result = await $store.dispatch('dashboard/crdEnlargeCapacityChange', {
+          $crdName: defaultCrd.value,
+          $cobjName: name,
+          replicas: replicas.value,
+          namespace,
+        });
+      } else {
+        result = await $store.dispatch('dashboard/enlargeCapacityChange', {
+          $namespace: namespace,
+          $category: category.value,
+          $name: name,
+          replicas: replicas.value,
+        });
+      }
       result && $bkMessage({
         theme: 'success',
         message: $i18n.t('修改成功'),
       });
       handleGetTableData();
     };
+    
     // 切换详情类型
     const handleChangeDetailType = (type) => {
       detailType.value.active = type;

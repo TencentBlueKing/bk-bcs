@@ -69,11 +69,17 @@
             </span>
           </template>
         </bk-table-column>
-        <bk-table-column :label="$t('操作')" :resizable="false" width="150">
+        <bk-table-column :label="$t('操作')" :resizable="false" width="220">
           <template #default="{ row }">
             <bk-button
               text
               @click="handleUpdateResource(row)">{{ $t('更新') }}</bk-button>
+            <bk-button
+              class="ml10" text
+              @click="handleEnlargeCapacity(row)">{{ $t('扩缩容') }}</bk-button>
+            <bk-button
+              class="ml10" text
+              @click="gotoDetail(row)">{{ $t('重新调度') }}</bk-button>
             <bk-button
               class="ml10" text
               v-authority="{

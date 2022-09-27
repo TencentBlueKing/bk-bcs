@@ -423,7 +423,7 @@ export default defineComponent({
     const activeExample = ref<any>({});
     const exampleLoading = ref(false);
     const examples = ref<any>({});
-    const showDesc = ref(false);
+    const showDesc = ref(true);
     const showHelp = ref(false);
     const exampleWrapperRef = ref<Element|null>(null);
     const descWrapperHeight = ref(0);
@@ -445,6 +445,18 @@ export default defineComponent({
         kind: kind.value, // crd类型的模板kind固定为CustomObject
         namespace: namespace.value,
       });
+
+      // 特殊处理-> apiVersion、kind、metadata强制排序在前三位
+      examples.value.items.forEach(example => {
+        const newManifestMap = {
+          apiVersion: example.manifest.apiVersion,
+          kind: example.manifest.kind,
+          metadata: example.manifest.metadata,
+          ...example.manifest
+        }
+        example.manifest = newManifestMap
+      });
+
       activeExample.value = examples.value?.items?.[0] || {};
       exampleLoading.value = false;
       return examples.value;
@@ -685,7 +697,7 @@ export default defineComponent({
     .switch-button-pop {
         position: absolute;
         right: 32px;
-        top: 136px;
+        top: 200px;
         z-index: 1;
     }
     .icon-back {
@@ -800,6 +812,7 @@ export default defineComponent({
             flex: 1;
             width: 0;
             margin-left: 2px;
+            overflow: hidden;
             /deep/ .dropdown-trigger-text {
                 display: flex;
                 align-items: center;
