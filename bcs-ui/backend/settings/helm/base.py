@@ -402,3 +402,6 @@ OTLP_GRPC_HOST = os.environ.get("OTLP_GRPC_HOST", "")
 OTLP_DATA_ID = os.environ.get("OTLP_DATA_ID", "")
 # 上报时, 使用的服务名称
 OTLP_SERVICE_NAME = APP_ID
+
+# 是否开启模板集功能
+TEMPLATESET_FEATURE_FLAG = fields.BooleanField().to_internal_value(os.environ.get('TEMPLATESET_FEATURE_FLAG', False))
