@@ -14,6 +14,7 @@ replace (
 
 require (
 	github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common v0.0.0-20220330120237-0bbed74dcf6d
+	github.com/Tencent/bk-bcs/bcs-services/pkg v0.0.0-20220926153300-4e631deaebe4
 	github.com/TencentBlueKing/iam-go-sdk v0.0.8
 	github.com/bitly/go-simplejson v0.5.0
 	github.com/coreos/etcd v3.3.18+incompatible

@@ -14,8 +14,11 @@
 package bcsapi
 
 import (
+	"context"
 	"crypto/tls"
 	"encoding/json"
+
+	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/middleware"
 
 	cm "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/registry"
@@ -44,6 +47,8 @@ type Config struct {
 	Etcd registry.CMDOptions
 	// Header for request header
 	Header map[string]string
+	// InnerClientName for bcs inner auth, like bcs-cluster-manager
+	InnerClientName string
 }
 
 // BasicResponse basic http response for bkbcs
@@ -52,6 +57,26 @@ type BasicResponse struct {
 	Result  bool            `json:"result"`
 	Message string          `json:"message"`
 	Data    json.RawMessage `json:"data"`
+}
+
+// Authentication defines the common interface for the credentials which need to
+// attach auth info to every RPC
+type Authentication struct {
+	InnerClientName string
+	Insecure        bool
+}
+
+// GetRequestMetadata gets the current request metadata
+func (a *Authentication) GetRequestMetadata(context.Context, ...string) (
+	map[string]string, error,
+) {
+	return map[string]string{middleware.InnerClientHeaderKey: a.InnerClientName}, nil
+}
+
+// RequireTransportSecurity indicates whether the credentials requires
+// transport security.
+func (a *Authentication) RequireTransportSecurity() bool {
+	return !a.Insecure
 }
 
 // NewClient create new bcsapi instance

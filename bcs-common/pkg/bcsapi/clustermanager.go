@@ -19,13 +19,13 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	cm "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/clustermanager"
-
 	"github.com/google/uuid"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/metadata"
+
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	cm "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/clustermanager"
 )
 
 // XRequestID insert X-Request-ID
@@ -56,13 +56,16 @@ func NewClusterManager(config *Config) cm.ClusterManagerClient {
 		header[k] = v
 	}
 	md := metadata.New(header)
+	auth := &Authentication{InnerClientName: config.InnerClientName}
 	var opts []grpc.DialOption
 	opts = append(opts, grpc.WithDefaultCallOptions(grpc.Header(&md)))
 	if config.TLSConfig != nil {
 		opts = append(opts, grpc.WithTransportCredentials(credentials.NewTLS(config.TLSConfig)))
 	} else {
 		opts = append(opts, grpc.WithInsecure())
+		auth.Insecure = true
 	}
+	opts = append(opts, grpc.WithPerRPCCredentials(auth))
 	var conn *grpc.ClientConn
 	var err error
 	maxTries := 3

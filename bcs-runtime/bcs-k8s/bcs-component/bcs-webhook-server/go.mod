@@ -16,7 +16,7 @@ replace (
 )
 
 require (
-	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20210818040851-76fdc539dc33
+	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20220919094211-a1b246e54e5a
 	github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubebkbcs v0.0.0-20220118090807-f41aacaffdf9
 	github.com/deckarep/golang-set v1.7.1
 	github.com/evanphx/json-patch v4.12.0+incompatible
