@@ -180,6 +180,7 @@
     import useInterval from '../../common/use-interval'
     import BcsLog from '@/components/bcs-log/index'
     import useLog from './use-log'
+    import { storageEvents } from '@/api/base'
 
     export interface IDetail {
         manifest: any;
@@ -339,12 +340,12 @@
             // 事件列表
             const events = ref([])
             const eventLoading = ref(false)
-            const categoryMap = {
-                deployments: 'deployment',
-                daemonsets: 'daemonset',
-                statefulsets: 'statefulset',
-                jobs: 'job'
-            } // 兼容老接口 category 类型
+            // const categoryMap = {
+            //     deployments: 'deployment',
+            //     daemonsets: 'daemonset',
+            //     statefulsets: 'statefulset',
+            //     jobs: 'job'
+            // } // 兼容老接口 category 类型
             const pagination = ref({
                 current: 1,
                 count: 0,
@@ -352,23 +353,33 @@
             })
             const handleGetEventList = async () => {
                 // cronjobs 不支持事件查询
-                if (props.category === 'cronjobs') return
+                // if (props.category === 'cronjobs') return
 
                 eventLoading.value = true
+                const list = pods.value.map(item => item.metadata.name)
                 const params = {
-                    projectId: projectId.value,
-                    instanceId: 0,
-                    cluster_id: clusterId.value,
                     offset: (pagination.value.current - 1) * pagination.value.limit,
-                    limit: pagination.value.limit,
-                    name: props.name,
-                    namespace: props.namespace,
-                    category: categoryMap[props.category]
+                    length: pagination.value.limit,
+                    clusterId: clusterId.value,
+                    env: 'k8s',
+                    kind: 'Pod',
+                    extraInfo: {
+                        name: list.join(','),
+                        namespace: props.namespace
+                    }
+                    // projectId: projectId.value,
+                    // instanceId: 0,
+                    // cluster_id: clusterId.value,
+                    // offset: (pagination.value.current - 1) * pagination.value.limit,
+                    // limit: pagination.value.limit,
+                    // name: props.name,
+                    // namespace: props.namespace,
+                    // category: categoryMap[props.category]
                 }
-                const { data } = await $store.dispatch('app/getEventList', params)
-                    .catch(() => ({ data: { data: [], total: 0 } }))
-                pagination.value.count = data.total
-                events.value = data.data
+                const { data = [], total = 0 } = await storageEvents(params, { needRes: true })
+                    .catch(() => ({ data: [], total: 0 }))
+                pagination.value.count = total
+                events.value = data || []
                 eventLoading.value = false
             }
             const handlePageChange = (page) => {

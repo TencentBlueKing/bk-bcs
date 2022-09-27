@@ -22,7 +22,7 @@ export const request = (method, url) => (params = {}, config = {}) => {
             variableData[key] = params[key]
         }
     })
-    let newUrl = `${DEVOPS_BCS_API_URL}${url}`
+    let newUrl = url.indexOf('http') > -1 ? url : `${DEVOPS_BCS_API_URL}${url}`
     Object.keys(variableData).forEach(key => {
         if (!variableData[key]) {
             // console.warn(`路由变量未配置${key}`)

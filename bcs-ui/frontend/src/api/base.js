@@ -130,6 +130,8 @@ export const clusterNodeDrain = request('post', `${prefix}/clustermanager/v1/nod
 export const nodeCordon = request('put', `${prefix}/clustermanager/v1/node/cordon`)
 export const nodeUnCordon = request('put', `${prefix}/clustermanager/v1/node/uncordon`)
 
+const storagePrefix = `${NODE_ENV === 'development' ? '' : window.BCS_API_HOST}/bcsapi/v4/storage`
+export const storageEvents = request('get', `${storagePrefix}/events`)
 export default {
     stdLogs,
     stdLogsDownload,
