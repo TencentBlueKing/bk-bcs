@@ -183,6 +183,9 @@ LANGUAGES = [
 ]
 LOCALE_PATHS = (os.path.join(BASE_DIR, "locale"),)
 
+# 调用 cc 等 API 时在 headers 中使用
+LANGUAGE_HEADER_NAME = "blueking-language"
+
 TIME_ZONE = "Asia/Shanghai"
 
 USE_I18N = True

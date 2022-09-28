@@ -14,6 +14,7 @@ specific language governing permissions and limitations under the License.
 """
 import logging
 
+from django.conf import settings
 from django.utils.translation import ugettext_lazy as _
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -38,7 +39,8 @@ class CCViewSet(SystemViewSet):
     def biz_inst_topo(self, request, project_id):
         """查询业务实例拓扑"""
         try:
-            topo_info = cc.BizTopoQueryService(request.user.username, request.project.cc_app_id).fetch()
+            lang = request.COOKIES.get(settings.LANGUAGE_COOKIE_NAME, settings.LANGUAGE_CODE)
+            topo_info = cc.BizTopoQueryService(request.user.username, request.project.cc_app_id, lang).fetch()
         except CompParseBkCommonResponseError as e:
             raise error_codes.ComponentError(_('查询业务拓扑信息失败：{}').format(e))
         except BaseCompError as e:
