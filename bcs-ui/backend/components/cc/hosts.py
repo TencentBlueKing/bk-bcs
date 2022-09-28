@@ -106,13 +106,14 @@ class HostQueryService:
 class BizTopoQueryService:
     """业务拓扑信息查询"""
 
-    def __init__(self, username: str, bk_biz_id: int):
+    def __init__(self, username: str, bk_biz_id: int, lang: str = settings.LANGUAGE_CODE):
         """
         :param username: 用户名
         :param bk_biz_id: 业务 ID
         """
         self.cc_client = BkCCClient(username)
         self.bk_biz_id = bk_biz_id
+        self.lang = lang
 
     def _fetch_biz_inst_topo(self) -> List:
         """
@@ -128,7 +129,7 @@ class BizTopoQueryService:
 
         :return: 业务的空闲机/故障机/待回收模块
         """
-        return self.cc_client.get_biz_internal_module(self.bk_biz_id)
+        return self.cc_client.get_biz_internal_module(self.bk_biz_id, self.lang)
 
     def fetch(self) -> List:
         """

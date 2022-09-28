@@ -121,7 +121,7 @@ class BkCCClient(BkApiClient):
         return self._client.request_json('POST', url, json=params)
 
     @response_handler(default=dict)
-    def get_biz_internal_module(self, bk_biz_id: int) -> Dict:
+    def get_biz_internal_module(self, bk_biz_id: int, lang: str = settings.LANGUAGE_CODE) -> Dict:
         """
         查询内部模块拓扑
 
@@ -130,7 +130,8 @@ class BkCCClient(BkApiClient):
         """
         url = self._config.get_biz_internal_module_url
         params = {'bk_biz_id': bk_biz_id}
-        return self._client.request_json('POST', url, json=params)
+        headers = {settings.LANGUAGE_HEADER_NAME: lang}
+        return self._client.request_json('POST', url, json=params, headers=headers)
 
     @response_handler(default=dict)
     def list_biz_hosts(
