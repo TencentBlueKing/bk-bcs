@@ -73,12 +73,11 @@ func (ua *UpdateAction) Do(ctx context.Context, req *proto.UpdateProjectRequest)
 func (ua *UpdateAction) validate() error {
 	// 当业务ID不为空时，校验当前用户是否为要绑定业务的业务运维
 	if ua.req.BusinessID != "" {
-		var username string
 		authUser, ok := ua.ctx.Value(middleware.AuthUserKey).(middleware.AuthUser)
 		if !ok || authUser.Username == "" {
 			return errorx.NewAuthErr()
 		}
-		if _, err := cmdb.IsMaintainer(username, ua.req.BusinessID); err != nil {
+		if _, err := cmdb.IsMaintainer(authUser.Username, ua.req.BusinessID); err != nil {
 			return err
 		}
 	}
