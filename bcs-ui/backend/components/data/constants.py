@@ -32,7 +32,8 @@ APP_SECRET = settings.APP_TOKEN
 EXPIRE_TIME = "7d"
 
 # eslog不再支持新增, 按照数据平台要求切换至sz4集群
-STORAGE_CLUSTER = "eslog-sz4"
+# sz4 集群满, 临时切换至 sz3
+STORAGE_CLUSTER = 'eslog-sz3'
 
 DockerMetricFields = {
     "cpu_summary": ["cpuusage", "id", "container_name"],  # 使用率 cpuusage
