@@ -720,6 +720,7 @@ export default {
           //     me.refresh()
           // }
         });
+        this.fetchNamespaceList();
       } catch (e) {
         catchErrorHandler(e, this);
       } finally {

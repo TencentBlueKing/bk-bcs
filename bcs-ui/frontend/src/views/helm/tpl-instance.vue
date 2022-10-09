@@ -614,8 +614,8 @@ export default {
     },
 
     /**
-             * 访问模板详情
-             */
+     * 访问模板详情
+     */
     gotoHelmTplDetail() {
       const route = this.$router.resolve({
         name: 'helmTplDetail',
@@ -628,17 +628,23 @@ export default {
     },
 
     /**
-             * 隐藏错误弹窗
-             */
+     * 隐藏错误弹窗
+     */
     hideErrorDialog() {
       this.errorDialogConf.isShow = false;
+      this.$router.push({
+        name: 'helms',
+        params: {
+          clusterId: this.curClusterId,
+        },
+      });
     },
 
     /**
-             * 获取集群信息
-             * @param  {number} index 索引
-             * @param  {object} data 集群
-             */
+     * 获取集群信息
+     * @param  {number} index 索引
+     * @param  {object} data 集群
+     */
     async getClusterInfo(index, data) {
       const clusterId = data.cluster_id;
       const { projectId } = this;
@@ -1239,6 +1245,9 @@ export default {
             setTimeout(() => {
               this.$router.push({
                 name: 'helms',
+                params: {
+                  clusterId: this.curClusterId,
+                },
               });
             }, 200);
           } else {

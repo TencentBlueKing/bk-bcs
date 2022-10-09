@@ -1460,6 +1460,9 @@ export default defineComponent({
 });
 </script>
 <style lang="postcss" scoped>
+>>> .bk-table-header-wrapper {
+  border-top: 1px solid #dfe0e5;
+}
 >>> .more-operate {
   font-size: 18px;
   font-weight: bold;
@@ -1622,5 +1625,8 @@ export default defineComponent({
     /deep/ .bk-tooltip-ref {
         display: block;
     }
+}
+/deep/ .bk-table .cell {
+    -webkit-line-clamp: 1;
 }
 </style>

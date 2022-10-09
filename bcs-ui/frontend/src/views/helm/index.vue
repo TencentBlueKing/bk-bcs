@@ -682,14 +682,15 @@ export default {
         });
       }
     },
-    curClusterId() {
+    curClusterId(value) {
+      if (!value) return;
       this.searchScope = this.curClusterId;
       this.searchNamespace = '';
       this.handleSearch();
     },
   },
   created() {
-    this.searchScope = this.searchScopeList[0]?.id;
+    this.searchScope = this.$route.params.clusterId || this.searchScopeList[0]?.id;
   },
   mounted() {
     this.isRouterLeave = false;

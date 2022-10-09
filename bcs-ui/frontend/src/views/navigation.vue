@@ -190,27 +190,16 @@ export default {
 
       const name = this.isSharedCluster ? 'namespace' : 'clusterMain';
       const item = this.onlineProjectList.find(item => item.project_code === code);
-      if (item?.kind !== this.curProject.kind) {
-        // 切换不同项目时刷新界面
-        const route = this.$router.resolve({
-          name,
-          params: {
-            projectCode: code,
-            // eslint-disable-next-line camelcase
-            projectId: item?.project_id,
-          },
-        });
-        location.href = route.href;
-      } else {
-        this.$router.push({
-          name,
-          params: {
-            projectCode: code,
-            // eslint-disable-next-line camelcase
-            projectId: item?.project_id,
-          },
-        });
-      }
+      // 切换不同项目时刷新界面(解决在节点界面有轮询时切换项目集群ID和项目不对应报错问题)
+      const route = this.$router.resolve({
+        name,
+        params: {
+          projectCode: code,
+          // eslint-disable-next-line camelcase
+          projectId: item?.project_id,
+        },
+      });
+      location.href = route.href;
     },
     handleGotoUserToken() {
       if (this.$route.name === 'token') return;

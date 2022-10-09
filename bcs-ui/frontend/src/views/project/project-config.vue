@@ -33,7 +33,8 @@
               :name="item.name">
             </bcs-option>
           </bcs-select>
-          <bk-input :value="curProject.cc_app_name" disabled v-else></bk-input>
+          <!-- TODO: 用bk-input会导致 object is not extensible 报错 -->
+          <bcs-input :value="curProject.cc_app_name" disabled v-else></bcs-input>
           <span class="ml5" v-bk-tooltips="$t('关联业务后，您可以从对应的业务下选择机器，搭建容器集群')">
             <i class="bcs-icon bcs-icon-info-circle"></i>
           </span>

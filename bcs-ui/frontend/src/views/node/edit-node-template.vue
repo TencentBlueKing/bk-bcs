@@ -674,7 +674,9 @@ export default defineComponent({
       if (!kubelet) return {};
 
       return kubelet.split(';').reduce((pre, current) => {
-        const [key, value] = current.split('=');
+        const index = current.indexOf('=');
+        const key = current.slice(0, index);
+        const value = current.slice(index + 1, current.length);
         if (key) {
           pre[key] = value;
         }

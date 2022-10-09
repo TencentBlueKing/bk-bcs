@@ -349,6 +349,7 @@ export default defineComponent({
               theme: 'success',
               message: $i18n.t('导入成功'),
             });
+            getVariableDefinitions(params.value);
           }
         } catch (error) {
           console.error(error);

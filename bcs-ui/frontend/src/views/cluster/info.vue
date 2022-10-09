@@ -264,7 +264,11 @@
             </div>
           </div>
           <div style="min-height: 440px">
-            <bk-table :data="masterData">
+            <bk-table
+              :data="masterData"
+              :outer-border="false"
+              :header-border="false"
+              :header-cell-style="{ background: '#fff' }">
               <bk-table-column :label="$t('主机名称')" prop="host_name">
                 <template #default="{ row }">
                   {{ row.host_name || '--' }}
@@ -274,7 +278,7 @@
               <bk-table-column :label="$t('Agent状态')" prop="agent">
                 <template #default="{ row }">
                   <StatusIcon :status="String(row.agent)" :status-color-map="statusColorMap">
-                    {{ taskStatusTextMap[String(row.agent)] }}
+                    {{ taskStatusTextMap[String(row.agent)] || $t('未知') }}
                   </StatusIcon>
                 </template>
               </bk-table-column>
