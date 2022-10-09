@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pv-complex-noi2dhkbrh
+  annotations:
+    "io.tencent.bcs.editFormat": "form"
+spec:
+  storageClassName: local-path
+  capacity:
+    storage: 3Gi
+  accessModes:
+    - ReadOnlyMany
+    - ReadWriteOnce
+  local:
+    path: "/data0"

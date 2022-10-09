@@ -2,9 +2,6 @@ apiVersion: {{ .metadata.apiVersion }}
 kind: CronJob
 {{ include "common.metadata" .metadata }}
 spec:
-  selector:
-    matchLabels:
-      {{- include "common.labelSlice2Map" .metadata.labels | indent 6 }}
   schedule: {{ .spec.jobManage.schedule | quote }}
   concurrencyPolicy: {{ .spec.jobManage.concurrencyPolicy }}
   {{- if .spec.jobManage.suspend }}
@@ -24,6 +21,7 @@ spec:
       labels:
         {{- include "common.labelSlice2Map" .metadata.labels | indent 8 }}
     spec:
+      # Job 无需手动配置 Selector https://stackoverflow.com/questions/64223630/job-invalid-selector-not-auto-generated
       {{- if .spec.jobManage.completions }}
       completions: {{ .spec.jobManage.completions }}
       {{- end }}

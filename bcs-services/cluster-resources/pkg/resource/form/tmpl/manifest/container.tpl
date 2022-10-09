@@ -32,6 +32,7 @@ containers:
 {{- end }}
 
 {{- define "container.initContainers" -}}
+{{- if . }}
 initContainers:
   {{- range . }}
   - name: {{ .basic.name }}
@@ -54,6 +55,7 @@ initContainers:
   {{- else }}
   []
   {{- end }}
+{{- end }}
 {{- end }}
 
 {{- define "container.command" -}}
@@ -80,6 +82,7 @@ args:
 {{- end }}
 
 {{- define "container.service" -}}
+{{- if .ports }}
 ports:
   {{- range .ports }}
   - containerPort: {{ .containerPort }}
@@ -95,6 +98,7 @@ ports:
   {{- else }}
   []
   {{- end }}
+{{- end }}
 {{- end }}
 
 {{- define "container.envs" -}}
@@ -112,20 +116,20 @@ env:
         fieldPath: {{ .value }}
   {{- else if eq .type "resource" }}
   - name: {{ .name }}
-    valueForm:
+    valueFrom:
       resourceFieldRef:
         containerName: {{ .source }}
         divisor: 0
         resource: {{ .value }}
   {{- else if eq .type "configMapKey" }}
   - name: {{ .name }}
-    valueForm:
+    valueFrom:
       configMapKeyRef:
         name: {{ .source }}
         key: {{ .value }}
   {{- else if eq .type "secretKey" }}
   - name: {{ .name }}
-    valueForm:
+    valueFrom:
       secretKeyRef:
         name: {{ .source }}
         key: {{ .value }}
@@ -184,10 +188,10 @@ resources:
   {{- if .requests }}
   requests:
     {{- if .requests.cpu }}
-    cpu: {{ printf "%.0fm" .requests.cpu }}
+    cpu: {{ .requests.cpu }}m
     {{- end }}
     {{- if .requests.memory }}
-    memory: {{ printf "%.0fMi" .requests.memory }}
+    memory: {{ .requests.memory }}Mi
     {{- end }}
     {{- if .requests.extra }}
     {{- range .requests.extra }}
@@ -198,10 +202,10 @@ resources:
   {{- if .limits }}
   limits:
     {{- if .limits.cpu }}
-    cpu: {{ printf "%.0fm" .limits.cpu }}
+    cpu: {{ .limits.cpu }}m
     {{- end }}
     {{- if .limits.memory }}
-    memory: {{ printf "%.0fMi" .limits.memory }}
+    memory: {{ .limits.memory }}Mi
     {{- end }}
     {{- if .limits.extra }}
     {{- range .limits.extra }}

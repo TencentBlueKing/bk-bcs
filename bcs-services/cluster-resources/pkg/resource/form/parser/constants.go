@@ -16,8 +16,11 @@ package parser
 
 import (
 	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/parser/config"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/parser/custom"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/parser/hpa"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/parser/network"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/parser/storage"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/parser/workload"
 )
 
@@ -29,7 +32,15 @@ var Kind2ParseFuncMap = map[string]func(manifest map[string]interface{}) map[str
 	res.CJ:       workload.ParseCJ,
 	res.Job:      workload.ParseJob,
 	res.Po:       workload.ParsePo,
+	res.Ing:      network.ParseIng,
+	res.SVC:      network.ParseSVC,
+	res.EP:       network.ParseEP,
+	res.PV:       storage.ParsePV,
+	res.PVC:      storage.ParsePVC,
+	res.SC:       storage.ParseSC,
 	res.HPA:      hpa.ParseHPA,
+	res.CM:       config.ParseCM,
+	res.Secret:   config.ParseSecret,
 	res.HookTmpl: custom.ParseHookTmpl,
 	res.GDeploy:  custom.ParseGDeploy,
 	res.GSTS:     custom.ParseGSTS,

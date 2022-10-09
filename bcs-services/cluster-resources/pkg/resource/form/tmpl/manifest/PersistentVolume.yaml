@@ -1,0 +1,28 @@
+apiVersion: {{ .metadata.apiVersion }}
+kind: PersistentVolume
+{{ include "common.metadata" .metadata }}
+spec:
+  {{- if .spec.scName }}
+  storageClassName: {{ .spec.scName }}
+  {{- end }}
+  capacity:
+    storage: {{ .spec.storageSize | default 1 }}Gi
+  {{- if .spec.accessModes }}
+  accessModes:
+    {{- range .spec.accessModes }}
+    - {{ . }}
+    {{- end }}
+  {{- end }}
+  {{- if eq .spec.type "local" }}
+  local:
+    path: {{ .spec.localPath | default "" | quote }}
+  {{- else if eq .spec.type "hostPath" }}
+  hostPath:
+    path: {{ .spec.hostPath | default "" | quote }}
+    type: {{ .spec.hostPathType }}
+  {{- else if eq .spec.type "nfs" }}
+  nfs:
+    path: {{ .spec.nfsPath | default "" | quote }}
+    server: {{ .spec.nfsServer | default "" | quote }}
+    readOnly: {{ .spec.nfsReadOnly | default false }}
+  {{- end }}

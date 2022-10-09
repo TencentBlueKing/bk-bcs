@@ -32,10 +32,6 @@ func TestGetResFormSchema(t *testing.T) {
 	assert.Nil(t, i18n.InitMsgMap())
 
 	for kind := range validator.FormSupportedResAPIVersion {
-		// TODO 目前测试集群没有自定义的 CRD，先跳过相关测试
-		if validator.IsFormSupportedCObjKinds(kind) {
-			continue
-		}
 		req, resp := clusterRes.GetResFormSchemaReq{Kind: kind}, clusterRes.CommonResp{}
 		err := hdlr.GetResFormSchema(ctx, &req, &resp)
 		assert.Nil(t, err)

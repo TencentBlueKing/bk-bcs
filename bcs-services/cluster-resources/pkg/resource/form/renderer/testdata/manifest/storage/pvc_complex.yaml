@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pvc-complex-bkg54narnv
+  namespace: default
+  annotations:
+    "io.tencent.bcs.editFormat": "form"
+spec:
+  volumeName: task-pv-volume
+  resources:
+    requests:
+      storage: 5Gi
+  accessModes:
+    - ReadOnlyMany
+    - ReadWriteMany

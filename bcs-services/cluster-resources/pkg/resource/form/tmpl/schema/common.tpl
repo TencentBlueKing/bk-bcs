@@ -6,7 +6,10 @@ metadata:
     - apiVersion
     - name
     - namespace
+    # 部分资源类型允许不填写 labels
+    {{- if isLabelRequired .kind }}
     - labels
+    {{- end }}
   properties:
     apiVersion:
       title: apiVersion
@@ -16,9 +19,7 @@ metadata:
         name: select
         props:
           # 更新时候不允许编辑 APIVersion
-          {{- if eq .action "update" }}
-          disabled: true
-          {{- end }}
+          disabled: {{ eq .action "update" }}
           placeholder: " "
           clearable: false
           remoteConfig:
@@ -35,11 +36,9 @@ metadata:
       type: string
       default: {{ .resName }}
       # 更新时候不允许编辑资源名称
-      {{- if eq .action "update" }}
       ui:component:
         props:
-          disabled: true
-      {{- end }}
+          disabled: {{ eq .action "update" }}
       ui:rules:
         - required
         - maxLength128
@@ -51,10 +50,9 @@ metadata:
       ui:component:
         name: select
         props:
+          visible: {{ isNSRequired .kind }}
           # 更新时候不允许编辑命名空间
-          {{- if eq .action "update" }}
-          disabled: true
-          {{- end }}
+          disabled: {{ eq .action "update" }}
           clearable: false
           searchable: true
           remoteConfig:
@@ -74,11 +72,7 @@ metadata:
       title: {{ i18n "标签" .lang }}
       type: array
       description: {{ i18n "将作为 Pod & Selector 标签" .lang }}
-      {{- if eq .kind "HookTemplate" }}
-      minItems: 0
-      {{- else }}
-      minItems: 1
-      {{- end }}
+      minItems: {{ if isLabelRequired .kind }} 1 {{ else }} 0 {{ end }}
       items:
         properties:
           key:
@@ -97,15 +91,9 @@ metadata:
         type: object
       ui:component:
         name: bfArray
-        # TODO 如果后续 common.tpl 对资源类型的定制增多的话，可以考虑封装成方法
-        # HookTemplate 类型资源不展示 labels
-        {{- if eq .kind "HookTemplate" }}
         props:
-          visible: false
-        {{- else if eq .action "update" }}
-        props:
-          disabled: true
-        {{- end }}
+          visible: {{ isLabelVisible .kind }}
+          disabled: {{ eq .action "update" }}
     annotations:
       title: {{ i18n "注解" .lang }}
       type: array
@@ -139,13 +127,12 @@ metadata:
         type: object
       ui:component:
         name: bfArray
-        {{- if eq .kind "HookTemplate" }}
         props:
-          visible: false
-        {{- end }}
+          visible: {{ isAnnoVisible .kind }}
   ui:group:
     props:
       border: true
       showTitle: true
       type: card
+      hideEmptyRow: true
 {{- end }}

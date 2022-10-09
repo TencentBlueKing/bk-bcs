@@ -77,9 +77,9 @@ func (r *SchemaRenderer) Render() (ret map[string]interface{}, err error) {
 		return nil, errorx.New(errcode.Unsupported, i18n.GetMsg(r.ctx, "资源类型 `%s` 不支持表单化"), r.kind)
 	}
 
-	// 2. 预设 apiVersion，默认值为集群该类型资源的 PreferredVersion
+	// 2. 预设 apiVersion，默认值为集群该类型资源的 PreferredVersion，如果获取不到且不是支持表单化的自定义资源，则抛出错误
 	apiVersion, err := res.GetResPreferredVersion(r.ctx, r.clusterID, r.kind)
-	if err != nil {
+	if err != nil && !validator.IsFormSupportedCObjKinds(r.kind) {
 		return nil, err
 	}
 	// 若 PreferredVersion 不支持表单化，则渲染为支持表单化的首个 apiVersion

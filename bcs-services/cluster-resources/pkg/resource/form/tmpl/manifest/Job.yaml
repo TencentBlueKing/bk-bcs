@@ -2,6 +2,7 @@ apiVersion: {{ .metadata.apiVersion }}
 kind: Job
 {{ include "common.metadata" .metadata }}
 spec:
+  # Job 无需手动配置 Selector https://stackoverflow.com/questions/64223630/job-invalid-selector-not-auto-generated
   {{- if .spec.jobManage.completions }}
   completions: {{ .spec.jobManage.completions }}
   {{- end }}

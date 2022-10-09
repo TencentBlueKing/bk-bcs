@@ -20,13 +20,21 @@ type PV struct {
 	Spec     PVSpec   `structs:"spec"`
 }
 
-// PVSpec xxx
+// PVSpec ...
 type PVSpec struct {
-	Type        string          `structs:"type"`
-	SCName      string          `structs:"scName"`
-	StorageSize int             `structs:"storageSize"`
-	AccessModes []string        `structs:"accessModes"`
-	Selector    []FieldSelector `structs:"selector"`
+	Type        string   `structs:"type"`
+	SCName      string   `structs:"scName"`
+	StorageSize int      `structs:"storageSize"`
+	AccessModes []string `structs:"accessModes"`
+	// Local Volume
+	LocalPath string `structs:"localPath"`
+	// HostPath
+	HostPath     string `structs:"hostPath"`
+	HostPathType string `structs:"hostPathType"`
+	// NFS Share
+	NFSPath     string `structs:"nfsPath"`
+	NFSServer   string `structs:"nfsServer"`
+	NFSReadOnly bool   `structs:"nfsReadOnly"`
 }
 
 // PVC PersistentVolumeClaim 表单化建模
@@ -35,7 +43,7 @@ type PVC struct {
 	Spec     PVCSpec  `structs:"spec"`
 }
 
-// PVCSpec xxx
+// PVCSpec ...
 type PVCSpec struct {
 	ClaimType   string   `structs:"claimType"`
 	PVName      string   `structs:"pvName"`
@@ -50,7 +58,7 @@ type SC struct {
 	Spec     SCSpec   `structs:"spec"`
 }
 
-// SCSpec xxx
+// SCSpec ...
 type SCSpec struct {
 	SetAsDefault      bool      `structs:"setAsDefault"`
 	Provisioner       string    `structs:"provisioner"`
@@ -60,7 +68,7 @@ type SCSpec struct {
 	MountOpts         []string  `structs:"mountOpts"`
 }
 
-// SCParam xxx
+// SCParam ...
 type SCParam struct {
 	Key   string `structs:"key"`
 	Value string `structs:"value"`

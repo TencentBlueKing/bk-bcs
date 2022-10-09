@@ -15,6 +15,7 @@
 package renderer
 
 import (
+	"encoding/json"
 	"os"
 	"strings"
 	"text/template"
@@ -24,6 +25,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/i18n"
+	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/slice"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/stringx"
@@ -35,16 +37,23 @@ const RecursionMaxNums = 100
 // TmplRandomNameLength 模板随机名称长度
 const TmplRandomNameLength = 12
 
-// newTmplFuncMap xxx
 // ref: https://github.com/helm/helm/blob/a499b4b179307c267bdf3ec49b880e3dbd2a5591/pkg/engine/funcs.go#L44
 func newTmplFuncMap() template.FuncMap {
 	f := sprig.TxtFuncMap()
 
 	extra := template.FuncMap{
+		// 功能类方法
 		"toYaml":                 toYaml,
 		"filterMatchKVFormSlice": slice.FilterMatchKVFromSlice,
 		"matchKVInSlice":         slice.MatchKVInSlice,
 		"i18n":                   i18n.GetMsgWithLang,
+		"genDockerConfigJson":    genDockerConfigJSON,
+
+		// 辅助类方法
+		"isNSRequired":    isNSRequired,
+		"isLabelRequired": isLabelRequired,
+		"isLabelVisible":  isLabelVisible,
+		"isAnnoVisible":   isAnnoVisible,
 
 		// This is a placeholder for the "include" function, which is late-bound to a template.
 		// By declaring it here, we preserve the integrity of the linter.
@@ -62,13 +71,13 @@ func newTmplFuncMap() template.FuncMap {
 func toYaml(v interface{}) string {
 	data, err := yaml.Marshal(v)
 	if err != nil {
-		// Swallow errors inside of a template.
+		// Swallow errors inside a template.
 		return ""
 	}
 	return strings.TrimSuffix(string(data), "\n")
 }
 
-// initTemplate 模板初始化（含挂载 include 方法等）
+// 模板初始化（含挂载 include 方法等）
 func initTemplate(baseDir, tmplPattern string) (*template.Template, error) {
 	funcMap := newTmplFuncMap()
 	tmpl, err := template.New(
@@ -97,4 +106,42 @@ func initTemplate(baseDir, tmplPattern string) (*template.Template, error) {
 	}
 
 	return tmpl.Funcs(funcMap), nil
+}
+
+// 指定资源类型是否必须填写命名空间
+func isNSRequired(kind string) bool {
+	return !slice.StringInSlice(kind, []string{res.PV, res.SC})
+}
+
+// 指定资源类型是否必须填写 labels
+func isLabelRequired(kind string) bool {
+	return !slice.StringInSlice(kind, []string{
+		res.HookTmpl, res.Ing, res.SVC, res.EP, res.CM, res.Secret, res.PV, res.PVC, res.SC,
+	})
+}
+
+// 指定资源类型是否展示 labels
+func isLabelVisible(kind string) bool {
+	return !slice.StringInSlice(kind, []string{res.HookTmpl})
+}
+
+// 指定资源类型是否展示 annotations
+func isAnnoVisible(kind string) bool {
+	return !slice.StringInSlice(kind, []string{res.HookTmpl})
+}
+
+// 生成 dockerconfigjson
+func genDockerConfigJSON(registry, username, password string) string {
+	c, err := json.Marshal(map[string]interface{}{
+		"auths": map[string]interface{}{
+			registry: map[string]interface{}{
+				"username": username,
+				"password": password,
+			},
+		},
+	})
+	if err != nil {
+		return err.Error()
+	}
+	return string(c)
 }

@@ -1,0 +1,56 @@
+title: ingress
+type: object
+properties:
+  {{- include "common.metadata" . | indent 2 }}
+  controller:
+    title: {{ i18n "控制器" .lang }}
+    type: object
+    properties:
+      type:
+        title: {{ i18n "控制器类" .lang }}
+        type: string
+        default: qcloud
+        ui:component:
+          name: select
+          props:
+            clearable: false
+            datasource:
+              - label: qcloud
+                value: qcloud
+              - label: nginx
+                value: nginx
+              # TODO bcs 后续支持
+              # - label: bcs
+              #   value: bcs
+        # 当选择类型为 qcloud 时候，指定 apiVersion 为 extensions/v1beta1
+        ui:reactions:
+          - target: metadata.apiVersion
+            if: "{{`{{`}} $self.value === 'qcloud' {{`}}`}}"
+            then:
+              state:
+                value: "extensions/v1beta1"
+    ui:group:
+      props:
+        border: true
+        showTitle: true
+        type: card
+  spec:
+    title: {{ i18n "配置信息" .lang }}
+    type: object
+    properties:
+      {{- include "network.ingRules" . | indent 6 }}
+      {{- include "network.ingNetwork" . | indent 6 }}
+      {{- include "network.ingDefaultBackend" . | indent 6 }}
+      {{- include "network.ingCert" . | indent 6 }}
+    ui:group:
+      name: tab
+      props:
+        border: true
+        showTitle: true
+        type: card
+        verifiable: true
+    ui:order:
+      - ruleConf
+      - network
+      - defaultBackend
+      - cert

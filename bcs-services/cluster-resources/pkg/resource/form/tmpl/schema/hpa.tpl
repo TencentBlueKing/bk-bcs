@@ -147,9 +147,6 @@ resource:
             type: normal
           style:
             background: '#F5F7FA'
-    ui:group:
-      props:
-        showTitle: false
 {{- end }}
 
 # HPA 的 ContainerResource 先不启用，两点原因：
@@ -216,9 +213,6 @@ containerRes:
             type: normal
           style:
             background: '#F5F7FA'
-    ui:group:
-      props:
-        showTitle: false
 {{- end }}
 
 {{- define "hpa.externalMetric" }}
@@ -335,9 +329,6 @@ external:
             type: normal
           style:
             background: '#F5F7FA'
-    ui:group:
-      props:
-        showTitle: false
 {{- end }}
 
 {{- define "hpa.objMetric" }}
@@ -502,9 +493,6 @@ object:
             type: normal
           style:
             background: '#F5F7FA'
-    ui:group:
-      props:
-        showTitle: false
 {{- end }}
 
 {{- define "hpa.podMetric" }}
@@ -619,7 +607,4 @@ pod:
             type: normal
           style:
             background: '#F5F7FA'
-    ui:group:
-      props:
-        showTitle: false
 {{- end }}

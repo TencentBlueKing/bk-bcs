@@ -26,7 +26,7 @@ import (
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
 )
 
-// ListPVC xxx
+// ListPVC ...
 func (h *Handler) ListPVC(
 	ctx context.Context, req *clusterRes.ResListReq, resp *clusterRes.CommonResp,
 ) (err error) {
@@ -42,7 +42,7 @@ func (h *Handler) ListPVC(
 	return err
 }
 
-// GetPVC xxx
+// GetPVC ...
 func (h *Handler) GetPVC(
 	ctx context.Context, req *clusterRes.ResGetReq, resp *clusterRes.CommonResp,
 ) (err error) {
@@ -58,7 +58,7 @@ func (h *Handler) GetPVC(
 	return err
 }
 
-// CreatePVC xxx
+// CreatePVC ...
 func (h *Handler) CreatePVC(
 	ctx context.Context, req *clusterRes.ResCreateReq, resp *clusterRes.CommonResp,
 ) (err error) {
@@ -68,7 +68,7 @@ func (h *Handler) CreatePVC(
 	return err
 }
 
-// UpdatePVC xxx
+// UpdatePVC ...
 func (h *Handler) UpdatePVC(
 	ctx context.Context, req *clusterRes.ResUpdateReq, resp *clusterRes.CommonResp,
 ) (err error) {
@@ -78,7 +78,7 @@ func (h *Handler) UpdatePVC(
 	return err
 }
 
-// DeletePVC xxx
+// DeletePVC ...
 func (h *Handler) DeletePVC(
 	ctx context.Context, req *clusterRes.ResDeleteReq, _ *clusterRes.CommonResp,
 ) error {

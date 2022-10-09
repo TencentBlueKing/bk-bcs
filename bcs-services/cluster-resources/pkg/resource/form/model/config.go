@@ -20,7 +20,7 @@ type CM struct {
 	Data     CMData   `structs:"data"`
 }
 
-// CMData xxx
+// CMData ...
 type CMData struct {
 	Items []OpaqueData `structs:"items"`
 }
@@ -31,7 +31,7 @@ type Secret struct {
 	Data     SecretData `structs:"data"`
 }
 
-// SecretData xxx
+// SecretData ...
 type SecretData struct {
 	Type      string             `structs:"type"`
 	Opaque    []OpaqueData       `structs:"opaque"`
@@ -39,6 +39,7 @@ type SecretData struct {
 	BasicAuth BasicAuthData      `structs:"basicAuth"`
 	SSHAuth   SSHAuthData        `structs:"sshAuth"`
 	TLS       TLSData            `structs:"tls"`
+	SAToken   SATokenData        `structs:"saToken"`
 }
 
 // OpaqueData Key-Value 类型数据
@@ -49,25 +50,33 @@ type OpaqueData struct {
 
 // DockerRegistryData Docker 配置信息类型数据
 type DockerRegistryData struct {
-	RepoAddr string `structs:"repoAddr"`
+	Registry string `structs:"registry"`
 	Username string `structs:"username"`
 	Password string `structs:"password"`
 }
 
-// BasicAuthData xxx
+// BasicAuthData ...
 type BasicAuthData struct {
 	Username string `structs:"username"`
 	Password string `structs:"password"`
 }
 
-// SSHAuthData xxx
+// SSHAuthData ...
 type SSHAuthData struct {
 	PublicKey  string `structs:"publicKey"`
 	PrivateKey string `structs:"privateKey"`
 }
 
-// TLSData xxx
+// TLSData ...
 type TLSData struct {
-	PublicKey string `structs:"publicKey"`
+	PrivateKey string `structs:"privateKey"`
+	Cert       string `structs:"cert"`
+}
+
+// SATokenData ...
+type SATokenData struct {
+	Namespace string `structs:"namespace"`
+	SAName    string `structs:"saName"`
+	Token     string `structs:"token"`
 	Cert      string `structs:"cert"`
 }

@@ -24,3 +24,15 @@ func TestToYaml(t *testing.T) {
 	assert.Equal(t, "foo: bar\nkey: val", toYaml(map[string]interface{}{"foo": "bar", "key": "val"}))
 	assert.Equal(t, "- foo\n- bar", toYaml([]string{"foo", "bar"}))
 }
+
+func TestGenDockerConfigJson(t *testing.T) {
+	assert.Equal(
+		t, "{\"auths\":{\"docker.io\":{\"password\":\"pw4321\",\"username\":\"admin0\"}}}",
+		genDockerConfigJSON("docker.io", "admin0", "pw4321"),
+	)
+
+	assert.Equal(
+		t, "{\"auths\":{\"query.io\":{\"password\":\"pw1234\",\"username\":\"admin1\"}}}",
+		genDockerConfigJSON("query.io", "admin1", "pw1234"),
+	)
+}

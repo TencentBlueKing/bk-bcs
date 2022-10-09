@@ -27,15 +27,15 @@ import (
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
 )
 
-// Handler xxx
+// Handler ...
 type Handler struct{}
 
-// New xxx
+// New ...
 func New() *Handler {
 	return &Handler{}
 }
 
-// ListCM xxx
+// ListCM 获取 ConfigMap 列表
 func (h *Handler) ListCM(
 	ctx context.Context, req *clusterRes.ResListReq, resp *clusterRes.CommonResp,
 ) (err error) {
@@ -51,7 +51,7 @@ func (h *Handler) ListCM(
 	return err
 }
 
-// GetCM xxx
+// GetCM 获取单个 ConfigMap
 func (h *Handler) GetCM(
 	ctx context.Context, req *clusterRes.ResGetReq, resp *clusterRes.CommonResp,
 ) (err error) {
@@ -67,7 +67,7 @@ func (h *Handler) GetCM(
 	return err
 }
 
-// CreateCM xxx
+// CreateCM 创建 ConfigMap
 func (h *Handler) CreateCM(
 	ctx context.Context, req *clusterRes.ResCreateReq, resp *clusterRes.CommonResp,
 ) (err error) {
@@ -77,7 +77,7 @@ func (h *Handler) CreateCM(
 	return err
 }
 
-// UpdateCM xxx
+// UpdateCM 更新 ConfigMap
 func (h *Handler) UpdateCM(
 	ctx context.Context, req *clusterRes.ResUpdateReq, resp *clusterRes.CommonResp,
 ) (err error) {
@@ -87,7 +87,7 @@ func (h *Handler) UpdateCM(
 	return err
 }
 
-// DeleteCM xxx
+// DeleteCM 删除 ConfigMap
 func (h *Handler) DeleteCM(
 	ctx context.Context, req *clusterRes.ResDeleteReq, _ *clusterRes.CommonResp,
 ) error {

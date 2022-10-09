@@ -68,10 +68,3 @@ const (
 	// ProbeTypeExec 命令执行探针
 	ProbeTypeExec = "exec"
 )
-
-const (
-	// PVCTypeUseExistPV PVC 使用现有的 PV
-	PVCTypeUseExistPV = "useExistPV"
-	// PVCTypeCreateBySC 不指定 PV 而是使用 SC 创建
-	PVCTypeCreateBySC = "createBySC"
-)

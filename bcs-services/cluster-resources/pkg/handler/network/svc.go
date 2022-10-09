@@ -26,7 +26,7 @@ import (
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
 )
 
-// ListSVC xxx
+// ListSVC ...
 func (h *Handler) ListSVC(
 	ctx context.Context, req *clusterRes.ResListReq, resp *clusterRes.CommonResp,
 ) (err error) {
@@ -42,7 +42,7 @@ func (h *Handler) ListSVC(
 	return err
 }
 
-// GetSVC xxx
+// GetSVC ...
 func (h *Handler) GetSVC(
 	ctx context.Context, req *clusterRes.ResGetReq, resp *clusterRes.CommonResp,
 ) (err error) {
@@ -58,7 +58,7 @@ func (h *Handler) GetSVC(
 	return err
 }
 
-// CreateSVC xxx
+// CreateSVC ...
 func (h *Handler) CreateSVC(
 	ctx context.Context, req *clusterRes.ResCreateReq, resp *clusterRes.CommonResp,
 ) (err error) {
@@ -68,7 +68,7 @@ func (h *Handler) CreateSVC(
 	return err
 }
 
-// UpdateSVC xxx
+// UpdateSVC ...
 func (h *Handler) UpdateSVC(
 	ctx context.Context, req *clusterRes.ResUpdateReq, resp *clusterRes.CommonResp,
 ) (err error) {
@@ -78,7 +78,7 @@ func (h *Handler) UpdateSVC(
 	return err
 }
 
-// DeleteSVC xxx
+// DeleteSVC ...
 func (h *Handler) DeleteSVC(
 	ctx context.Context, req *clusterRes.ResDeleteReq, _ *clusterRes.CommonResp,
 ) error {

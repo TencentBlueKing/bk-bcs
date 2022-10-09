@@ -20,6 +20,7 @@ import (
 
 // FormSupportedResAPIVersion 支持表单化的资源版本
 var FormSupportedResAPIVersion = map[string][]string{
+	// 工作负载类
 	res.Deploy: {"apps/v1", "extensions/v1", "extensions/v1beta1"},
 	res.DS:     {"apps/v1", "extensions/v1", "extensions/v1beta1"},
 	res.STS:    {"apps/v1"},
@@ -27,6 +28,17 @@ var FormSupportedResAPIVersion = map[string][]string{
 	res.Job:    {"batch/v1"},
 	res.Po:     {"v1"},
 	res.HPA:    {"autoscaling/v2beta2", "autoscaling/v2"},
+	// 网络类
+	res.Ing: {"networking.k8s.io/v1", "networking.k8s.io/v1beta1", "extensions/v1beta1"},
+	res.SVC: {"v1"},
+	res.EP:  {"v1"},
+	// 存储类
+	res.PV:  {"v1"},
+	res.PVC: {"v1"},
+	res.SC:  {"storage.k8s.io/v1"},
+	// 配置类
+	res.CM:     {"v1"},
+	res.Secret: {"v1"},
 	// 自定义资源
 	res.GDeploy:  {"tkex.tencent.com/v1alpha1"},
 	res.HookTmpl: {"tkex.tencent.com/v1alpha1"},

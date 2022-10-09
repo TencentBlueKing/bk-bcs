@@ -15,7 +15,6 @@
 package mapx
 
 import (
-	"reflect"
 	"strings"
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
@@ -84,93 +83,4 @@ func GetList(obj map[string]interface{}, paths interface{}) []interface{} {
 // GetMap 获取 map[string]interface{} 类型快捷方法，默认值为 map[string]interface{}
 func GetMap(obj map[string]interface{}, paths interface{}) map[string]interface{} {
 	return Get(obj, paths, map[string]interface{}{}).(map[string]interface{})
-}
-
-// SetItems 对嵌套 Map 进行赋值
-// paths 参数支持 []string 类型，如 []string{"metadata", "namespace"}
-// 或 string 类型（以 '.' 为分隔符），如 "spec.template.spec.containers"
-func SetItems(obj map[string]interface{}, paths interface{}, val interface{}) error {
-	// 检查 paths 类型
-	switch t := paths.(type) {
-	case string:
-		if err := setItems(obj, strings.Split(paths.(string), "."), val); err != nil {
-			return err
-		}
-	case []string:
-		if err := setItems(obj, paths.([]string), val); err != nil {
-			return err
-		}
-	default:
-		return errorx.New(errcode.General, "paths's type must one of (string, []string), get %v", t)
-	}
-	return nil
-}
-
-func setItems(obj map[string]interface{}, paths []string, val interface{}) error {
-	if len(paths) == 0 {
-		return errorx.New(errcode.General, "paths is empty list")
-	}
-	if len(paths) == 1 {
-		obj[paths[0]] = val
-	} else if subMap, ok := obj[paths[0]].(map[string]interface{}); ok {
-		return setItems(subMap, paths[1:], val)
-	} else {
-		return errorx.New(errcode.General, "key %s not exists or obj[key] not map[string]interface{} type", paths[0])
-	}
-	return nil
-}
-
-// RemoveZeroSubItem 对 Map 中子项均为零值的项进行清理，返回值表示 Map 是否为空
-// TODO 可以考虑支持 options，支持忽略布尔值，空列表等...
-func RemoveZeroSubItem(raw map[string]interface{}) bool { // nolint:cyclop
-	for key, val := range raw {
-		switch v := val.(type) {
-		case map[string]interface{}:
-			if RemoveZeroSubItem(v) {
-				delete(raw, key)
-			}
-		case []interface{}:
-			if len(v) == 0 {
-				delete(raw, key)
-				continue
-			}
-			newList := []interface{}{}
-			for _, item := range v {
-				if it, ok := item.(map[string]interface{}); ok {
-					if !RemoveZeroSubItem(it) {
-						newList = append(newList, it)
-					}
-				} else if !isZeroVal(item) {
-					newList = append(newList, item)
-				}
-			}
-			raw[key] = newList
-		default:
-			if isZeroVal(v) {
-				delete(raw, key)
-			}
-		}
-	}
-	return len(raw) == 0
-}
-
-// isZeroVal 检查某个值是否为零值
-func isZeroVal(val interface{}) bool {
-	v := reflect.ValueOf(val)
-	switch v.Kind() {
-	case reflect.Array, reflect.Map, reflect.Slice, reflect.String:
-		return v.Len() == 0
-	case reflect.Bool:
-		return !v.Bool()
-	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-		return v.Int() == 0
-	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr:
-		return v.Uint() == 0
-	case reflect.Float32, reflect.Float64:
-		return v.Float() == 0
-	case reflect.Interface, reflect.Ptr:
-		return v.IsNil()
-	default:
-		return false
-	}
 }

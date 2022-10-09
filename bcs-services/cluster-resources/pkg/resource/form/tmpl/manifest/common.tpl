@@ -1,7 +1,9 @@
 {{- define "common.metadata" -}}
 metadata:
   name: {{ .name }}
+  {{- if isNSRequired .kind }}
   namespace: {{ .namespace }}
+  {{- end }}
   {{- if .labels }}
   labels:
     {{- include "common.labelSlice2Map" .labels | indent 4 }}

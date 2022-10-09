@@ -31,20 +31,14 @@ func TestSchemaRenderer(t *testing.T) {
 
 	// 默认版本（中文）
 	for kind := range validator.FormSupportedResAPIVersion {
-		// TODO 目前测试集群没有自定义的 CRD，先跳过相关测试
-		if validator.IsFormSupportedCObjKinds(kind) {
-			continue
-		}
 		_, err := NewSchemaRenderer(context.TODO(), envs.TestClusterID, kind, "default", "").Render()
 		assert.Nil(t, err)
+		// TODO 如何在单元测试中验证 schema 的合法性？（非标准 schema）
 	}
 
 	// 英文版本
 	ctx := context.WithValue(context.TODO(), ctxkey.LangKey, i18n.EN)
 	for kind := range validator.FormSupportedResAPIVersion {
-		if validator.IsFormSupportedCObjKinds(kind) {
-			continue
-		}
 		_, err := NewSchemaRenderer(ctx, envs.TestClusterID, kind, "default", "").Render()
 		assert.Nil(t, err)
 	}
@@ -52,9 +46,6 @@ func TestSchemaRenderer(t *testing.T) {
 	// 中文版本
 	ctx = context.WithValue(context.TODO(), ctxkey.LangKey, i18n.ZH)
 	for kind := range validator.FormSupportedResAPIVersion {
-		if validator.IsFormSupportedCObjKinds(kind) {
-			continue
-		}
 		_, err := NewSchemaRenderer(ctx, envs.TestClusterID, kind, "default", "").Render()
 		assert.Nil(t, err)
 	}

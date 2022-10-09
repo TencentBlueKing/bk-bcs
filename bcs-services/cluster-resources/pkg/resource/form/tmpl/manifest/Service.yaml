@@ -1,0 +1,39 @@
+apiVersion: {{ .metadata.apiVersion }}
+kind: Service
+{{ include "common.metadata" .metadata }}
+spec:
+  type: {{ .spec.portConf.type }}
+  {{- if .spec.portConf.ports }}
+  ports:
+  {{- range .spec.portConf.ports }}
+  - name: {{ .name }}
+    port: {{ .port }}
+    protocol: {{ .protocol }}
+    targetPort: {{ .targetPort }}
+    {{- if and (ne $.spec.portConf.type "ClusterIP") .nodePort }}
+    nodePort: {{ .nodePort }}
+    {{- end }}
+  {{- end }}
+  {{- end }}
+  # selector
+  {{- if .spec.selector.labels }}
+  selector:
+    {{- include "common.kvSlice2Map" .spec.selector.labels | indent 4 }}
+  {{- end }}
+  # sessionAffinity
+  sessionAffinity: {{ .spec.sessionAffinity.type }}
+  {{- if eq .spec.sessionAffinity.type "ClientIP" }}
+  sessionAffinityConfig:
+    clientIP:
+      timeoutSeconds: {{ .spec.sessionAffinity.stickyTime }}
+  {{- end }}
+  # ip
+  {{- if .spec.ip.address }}
+  clusterIP: {{ .spec.ip.address }}
+  {{- end }}
+  {{- if .spec.ip.external }}
+  externalIPs:
+    {{- range .spec.ip.external }}
+    - {{ . }}
+    {{- end }}
+  {{- end }}

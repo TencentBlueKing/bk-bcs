@@ -120,7 +120,9 @@ nodeSelector:
 {{- end }}
 
 {{- define "workload.network" -}}
+{{- if .dnsPolicy }}
 dnsPolicy: {{ .dnsPolicy }}
+{{- end }}
 {{- if .hostIPC }}
 hostIPC: {{ .hostIPC }}
 {{- end }}
@@ -197,12 +199,14 @@ restartPolicy: {{ .restartPolicy }}
 {{- if .terminationGracePeriodSecs }}
 terminationGracePeriodSeconds: {{ .terminationGracePeriodSecs }}
 {{- end }}
+{{- if .imagePullSecrets }}
 imagePullSecrets:
   {{- range .imagePullSecrets }}
   - name: {{ . | quote }}
   {{- else }}
   []
   {{- end }}
+{{- end }}
 {{- if .saName }}
 serviceAccountName: {{ .saName }}
 {{- end }}
