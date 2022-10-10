@@ -35,13 +35,21 @@ var _ Webhook = &WebScaler{}
 
 // WebScaler implements Webhook via web
 type WebScaler struct {
-	url   string
-	token string
+	url    string
+	token  string
+	client *http.Client
 }
 
-// NewWebScaler initilizes a WebScaler
+// NewWebScaler initializes a WebScaler
 func NewWebScaler(url, token string) Webhook {
-	return &WebScaler{url: url, token: token}
+	tr := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	}
+	client := &http.Client{
+		Transport: tr,
+		Timeout:   5 * time.Second,
+	}
+	return &WebScaler{url: url, token: token, client: client}
 }
 
 // DoWebhook get responses from webhook, then execute scale based on responses
@@ -86,7 +94,7 @@ func (w *WebScaler) GetResponses(context *contextinternal.Context,
 		return nil, nil, fmt.Errorf(
 			"Cannot marshal review to bytes, err: %s", err.Error())
 	}
-	result, err := postRequest(w.url, w.token, b)
+	result, err := postRequest(w.url, w.token, w.client, b)
 	if err != nil {
 		return nil, nil, fmt.Errorf(
 			"Failed to post review to url: %s err: %s", w.url, err.Error())
@@ -133,23 +141,19 @@ func (w *WebScaler) ExecuteScale(context *contextinternal.Context,
 	return nil
 }
 
-func postRequest(url, token string, data []byte) ([]byte, error) {
+func postRequest(url, token string, client *http.Client, data []byte) ([]byte, error) {
 	req, _ := http.NewRequest("POST", url, strings.NewReader(string(data)))
 	req.Header.Set("Authorization", fmt.Sprintf("Bearer %v", token))
 	req.Header.Set("Accept", "application/json")
 
-	tr := &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-	}
-	client := http.Client{
-		Transport: tr,
-		Timeout:   5 * time.Second,
-	}
 	resp, err := client.Do(req)
+	if resp != nil {
+		defer resp.Body.Close()
+	}
 	if err != nil {
 		return nil, fmt.Errorf("failed to finish this request: %v", err)
 	}
-	defer resp.Body.Close()
+
 	contentsBytes, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read body: %+v err: %v", resp, err)

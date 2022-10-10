@@ -282,6 +282,7 @@ func ScaleUp(context *contextinternal.Context, processors *ca_processors.Autosca
 			delete(pod.Spec.Containers[j].Resources.Requests, "cloud.bkbcs.tencent.com/eip")
 			delete(pod.Spec.Containers[j].Resources.Requests, "tke.cloud.tencent.com/eni-ip")
 			delete(pod.Spec.Containers[j].Resources.Requests, "tke.cloud.tencent.com/direct-eni")
+			delete(pod.Spec.Containers[j].Resources.Requests, "ephemeral-storage")
 		}
 		unschedulablePods = append(unschedulablePods, pod)
 	}

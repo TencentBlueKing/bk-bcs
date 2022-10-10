@@ -23,6 +23,7 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 
 	"k8s.io/klog"
 )
@@ -41,11 +42,13 @@ func WithoutTLSClient(header http.Header, url string) *Client {
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 	}
 	c := &Client{
-		header:     nil,
-		HttpClient: &http.Client{Transport: tr},
+		baseURL: url,
+		header:  header,
+		HttpClient: &http.Client{
+			Transport: tr,
+			Timeout:   time.Second * 5,
+		},
 	}
-	c.baseURL = url
-	c.header = header
 	return c
 }
 
@@ -243,17 +246,23 @@ func (c *Client) WithContext(ctx context.Context) *Client {
 // Do finishes the http request
 func (c *Client) Do() ([]byte, error) {
 	// klog.V(4).Infof("Query %v, header: %+v, body: %+v", c.URL.String(), c.Request.Header, c.Request.Body)
-	resp, err := c.HttpClient.Do(c.Request)
-	if err != nil {
-		return nil, fmt.Errorf("failed to finish this request: %v", err)
+	resp, clientErr := c.HttpClient.Do(c.Request)
+	if resp == nil && clientErr != nil {
+		return nil, fmt.Errorf("failed to finish this request: %v", clientErr)
 	}
 	defer resp.Body.Close()
+	if clientErr != nil {
+		return nil, fmt.Errorf("failed to finish this request: %v, err: %v",
+			resp.StatusCode, clientErr)
+	}
+
+	if resp.StatusCode/100 > 2 {
+		return nil, fmt.Errorf("failed to finish this request: %v, err: %v",
+			resp.StatusCode, clientErr)
+	}
 	contentsBytes, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read body: %+v err: %v", resp, err)
-	}
-	if resp.StatusCode/100 > 2 {
-		return nil, fmt.Errorf("failed to finish this request: %v, body: %v", resp.StatusCode, string(contentsBytes))
 	}
 	return contentsBytes, nil
 }

@@ -27,10 +27,12 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/spf13/pflag"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apiserver/pkg/server/mux"
+	"k8s.io/apiserver/pkg/server/routes"
 	"k8s.io/autoscaler/cluster-autoscaler/config"
 	"k8s.io/autoscaler/cluster-autoscaler/core"
 	"k8s.io/autoscaler/cluster-autoscaler/estimator"
@@ -215,6 +217,7 @@ var (
 	awsUseStaticInstanceList = flag.Bool("aws-use-static-instance-list", false,
 		"Should CA fetch instance types in runtime or use a static list. AWS only")
 	bufferedResourceRatio = flag.Float64("buffer-resource-ratio", 0, "ratio of buffered resources")
+	enableProfiling       = flag.Bool("profiling", false, "Is debug/pprof endpoint enabled")
 
 	initialNodeGroupBackoffDuration = flag.Duration("initial-node-group-backoff-duration", 30*time.Second,
 		"initialNodeGroupBackoffDuration is the duration of first backoff after a new node failed to start.")
@@ -432,9 +435,13 @@ func main() {
 	klog.V(1).Infof("Cluster Autoscaler %s", version.ClusterAutoscalerVersion)
 
 	go func() {
-		http.Handle("/metrics", prometheus.Handler())
-		http.Handle("/health-check", healthCheck)
-		err := http.ListenAndServe(*address, nil)
+		pathRecorderMux := mux.NewPathRecorderMux("cluster-autoscaler")
+		pathRecorderMux.HandleFunc("/metrics", promhttp.Handler().ServeHTTP)
+		pathRecorderMux.HandleFunc("/health-check", healthCheck.ServeHTTP)
+		if *enableProfiling {
+			routes.Profiling{}.Install(pathRecorderMux)
+		}
+		err := http.ListenAndServe(*address, pathRecorderMux)
 		klog.Fatalf("Failed to start metrics: %v", err)
 	}()
 

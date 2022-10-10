@@ -17,7 +17,7 @@
   "gnetId": 3831,
   "graphTooltip": 0,
   "id": 254,
-  "iteration": 1661238894065,
+  "iteration": 1661429507208,
   "links": [],
   "panels": [
     {
@@ -1204,7 +1204,7 @@
       "fontSize": "100%",
       "gridPos": {
         "h": 8,
-        "w": 12,
+        "w": 24,
         "x": 0,
         "y": 33
       },
@@ -1502,9 +1502,9 @@
       "fontSize": "100%",
       "gridPos": {
         "h": 8,
-        "w": 12,
-        "x": 12,
-        "y": 33
+        "w": 24,
+        "x": 0,
+        "y": 41
       },
       "id": 18,
       "interval": "",
@@ -1516,9 +1516,10 @@
       "repeatDirection": "h",
       "scopedVars": {
         "node_group": {
+          "isNone": true,
           "selected": true,
-          "text": "BCS-ng-LlISoVzv",
-          "value": "BCS-ng-LlISoVzv"
+          "text": "None",
+          "value": ""
         }
       },
       "showHeader": true,
@@ -1773,8 +1774,8 @@
       {
         "allValue": null,
         "current": {
-          "text": "BCS-K8S-15202",
-          "value": "BCS-K8S-15202"
+          "text": "BCS-K8S-15263",
+          "value": "BCS-K8S-15263"
         },
         "datasource": "BK-BCS-Prometheus",
         "definition": "label_values(cluster_autoscaler_nodes_count, cluster_id)",
@@ -1799,11 +1800,13 @@
       {
         "allValue": null,
         "current": {
-          "text": "BCS-ng-LlISoVzv",
-          "value": "BCS-ng-LlISoVzv"
+          "isNone": true,
+          "selected": false,
+          "text": "None",
+          "value": ""
         },
         "datasource": "BK-BCS-Prometheus",
-        "definition": "label_values(cluster_autoscaler_node_group_max_count, node_group)",
+        "definition": "label_values(cluster_autoscaler_node_group_max_count{cluster_id=\"$cluster_id\"}, node_group)",
         "hide": 0,
         "includeAll": false,
         "index": -1,
@@ -1811,7 +1814,7 @@
         "multi": true,
         "name": "node_group",
         "options": [],
-        "query": "label_values(cluster_autoscaler_node_group_max_count, node_group)",
+        "query": "label_values(cluster_autoscaler_node_group_max_count{cluster_id=\"$cluster_id\"}, node_group)",
         "refresh": 1,
         "regex": "",
         "skipUrlSync": false,
@@ -1859,5 +1862,5 @@
   "variables": {
     "list": []
   },
-  "version": 9
+  "version": 13
 }
