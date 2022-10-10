@@ -336,7 +336,16 @@ export default defineComponent({
         });
       }
       original.value = JSON.parse(JSON.stringify(res.data?.manifest || {})); // 缓存原始值
-      setDetail(res.data?.manifest);
+
+      // 特殊处理-> apiVersion、kind、metadata强制排序在前三位
+      const newManifest = {
+        apiVersion: res.data?.manifest.apiVersion,
+        kind: res.data?.manifest.kind,
+        metadata: res.data?.manifest.metadata,
+        ...res.data?.manifest
+      }
+      
+      setDetail(newManifest);
       webAnnotations.value = res.webAnnotations;
       isLoading.value = false;
       return detail.value;

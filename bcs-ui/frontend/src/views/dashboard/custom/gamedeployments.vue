@@ -16,7 +16,8 @@
         handleDeleteResource,handleSortChange,
         gotoDetail, renderCrdHeader,
         getJsonPathValue, additionalColumns,
-        webAnnotations, updateStrategyMap
+        webAnnotations, updateStrategyMap,
+        handleEnlargeCapacity
       }">
       <bk-table
         :data="curPageData"

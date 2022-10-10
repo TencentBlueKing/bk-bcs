@@ -407,7 +407,7 @@ export default defineComponent({
       $bkInfo({
         type: 'warning',
         clsName: 'custom-info-confirm',
-        title: $i18n.t('确认添加节点'),
+        title: $i18n.t('确认删除节点'),
         subTitle: $i18n.t('确认删除变量 {name}', { name: row.name }),
         defaultInfo: true,
         confirmFn: async () => {
@@ -429,7 +429,7 @@ export default defineComponent({
       $bkInfo({
         type: 'warning',
         clsName: 'custom-info-confirm',
-        title: $i18n.t('确认添加节点'),
+        title: $i18n.t('确认删除节点'),
         subTitle: $i18n.t(
           '确认删除 {name} 等 {count} 个变量',
           {
