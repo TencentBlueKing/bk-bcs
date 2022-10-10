@@ -40,16 +40,16 @@ func TestUpComingElasticResources_Up(t *testing.T) {
 	}
 	nodeGroups := map[string]*storage.NodeGroup{
 		"NodeGroup1": {NodeGroupID: "NodeGroup1", ClusterID: "ClusterID1", UpdatedTime: time.Now(),
-			MaxSize: 100, MinSize: 10, DesiredSize: 30,
+			MaxSize: 100, MinSize: 10, DesiredSize: 30, CmDesiredSize: 10,
 			NodeIPs: []string{"IP", "IP", "IP", "IP", "IP", "IP", "IP", "IP", "IP", "IP"}},
 		"NodeGroup2": {NodeGroupID: "NodeGroup2", ClusterID: "ClusterID1", UpdatedTime: time.Now(),
-			MaxSize: 100, MinSize: 10, DesiredSize: 15,
+			MaxSize: 100, MinSize: 10, DesiredSize: 15, CmDesiredSize: 10,
 			NodeIPs: []string{"IP", "IP", "IP", "IP", "IP", "IP", "IP", "IP", "IP", "IP"}},
 		"NodeGroup3": {NodeGroupID: "NodeGroup3", ClusterID: "ClusterID2", UpdatedTime: time.Now(),
-			MaxSize: 100, MinSize: 0, DesiredSize: 5,
+			MaxSize: 100, MinSize: 0, DesiredSize: 5, CmDesiredSize: 10,
 			NodeIPs: []string{"IP", "IP", "IP", "IP", "IP", "IP", "IP", "IP", "IP", "IP"}},
 		"NodeGroup4": {NodeGroupID: "NodeGroup4", ClusterID: "ClusterID2", UpdatedTime: time.Now(),
-			MaxSize: 100, MinSize: 10, DesiredSize: 20,
+			MaxSize: 100, MinSize: 10, DesiredSize: 20, CmDesiredSize: 10,
 			NodeIPs: []string{"IP", "IP", "IP", "IP", "IP", "IP", "IP", "IP", "IP", "IP"}},
 	}
 	strategy := &storage.NodeGroupMgrStrategy{
@@ -76,16 +76,16 @@ func TestUpComingElasticResources_Down(t *testing.T) {
 	}
 	nodeGroups := map[string]*storage.NodeGroup{
 		"NodeGroup1": {NodeGroupID: "NodeGroup1", ClusterID: "ClusterID1", UpdatedTime: time.Now(),
-			MaxSize: 100, MinSize: 0, DesiredSize: 5,
+			MaxSize: 100, MinSize: 0, DesiredSize: 5, CmDesiredSize: 10,
 			NodeIPs: []string{"IP", "IP", "IP", "IP", "IP", "IP", "IP", "IP", "IP", "IP"}},
 		"NodeGroup2": {NodeGroupID: "NodeGroup2", ClusterID: "ClusterID1", UpdatedTime: time.Now(),
-			MaxSize: 100, MinSize: 0, DesiredSize: 10,
+			MaxSize: 100, MinSize: 0, DesiredSize: 10, CmDesiredSize: 10,
 			NodeIPs: []string{"IP", "IP", "IP", "IP", "IP", "IP", "IP", "IP", "IP", "IP"}},
 		"NodeGroup3": {NodeGroupID: "NodeGroup3", ClusterID: "ClusterID2", UpdatedTime: time.Now(),
-			MaxSize: 100, MinSize: 0, DesiredSize: 12,
+			MaxSize: 100, MinSize: 0, DesiredSize: 12, CmDesiredSize: 10,
 			NodeIPs: []string{"IP", "IP", "IP", "IP", "IP", "IP", "IP", "IP", "IP", "IP"}},
 		"NodeGroup4": {NodeGroupID: "NodeGroup4", ClusterID: "ClusterID2", UpdatedTime: time.Now(),
-			MaxSize: 100, MinSize: 0, DesiredSize: 5,
+			MaxSize: 100, MinSize: 0, DesiredSize: 5, CmDesiredSize: 10,
 			NodeIPs: []string{"IP", "IP", "IP", "IP", "IP", "IP", "IP", "IP", "IP", "IP"}},
 	}
 	strategy := &storage.NodeGroupMgrStrategy{
@@ -94,180 +94,6 @@ func TestUpComingElasticResources_Down(t *testing.T) {
 	coming := upComingElasticResources(actions, nodeGroups, storage.ScaleDownState, strategy)
 	// only NodeGroup1 & NodeGroup4 can ScaleDown, total 10
 	assertion.Equal(10, coming)
-}
-
-func TestIsElasticNodeGroupEssentialForScaleDown(t *testing.T) {
-	assertion := assert.New(t)
-	// construct test data
-	testcases := []struct {
-		strategy          *storage.NodeGroupMgrStrategy
-		pool              *storage.ResourcePool
-		expectedNum       int
-		expectedScaleDown bool
-		message           string
-	}{
-		{ // resource is not idle
-			strategy: &storage.NodeGroupMgrStrategy{
-				Strategy: &storage.Strategy{
-					MaxIdleDelay:   3,
-					MinScaleUpSize: 3,
-					Buffer: &storage.BufferStrategy{
-						High: 15,
-						Low:  10,
-					},
-				},
-			},
-			pool: &storage.ResourcePool{
-				// pool max size 100
-				UpdatedTime: time.Now(),
-				InitNum:     2,
-				IdleNum:     3,
-				ReturnedNum: 0,
-				ConsumedNum: 95,
-			},
-			expectedNum:       5,
-			expectedScaleDown: true,
-			message:           "resource is not idle",
-		},
-		{ // resource is idle
-			strategy: &storage.NodeGroupMgrStrategy{
-				Strategy: &storage.Strategy{
-					MaxIdleDelay:   3,
-					MinScaleUpSize: 3,
-					Buffer: &storage.BufferStrategy{
-						High: 15,
-						Low:  10,
-					},
-				},
-			},
-			pool: &storage.ResourcePool{ // pool max size 100
-				UpdatedTime: time.Now(),
-				InitNum:     0,
-				IdleNum:     15,
-				ReturnedNum: 0,
-				ConsumedNum: 85,
-			},
-			expectedNum:       0,
-			expectedScaleDown: false,
-			message:           "resource is idle",
-		},
-	}
-	for _, testcase := range testcases {
-		scaleDownNum, isScaleDown := isElasticNodeGroupEssentialForScaleDown(
-			testcase.strategy, testcase.pool,
-		)
-		assertion.Equal(testcase.expectedScaleDown, isScaleDown, testcase.message)
-		assertion.Equal(testcase.expectedNum, scaleDownNum, testcase.message)
-	}
-}
-
-func TestIsResourcePoolIdleForScaleUp(t *testing.T) {
-	assertion := assert.New(t)
-	// construct test data
-	testcases := []struct {
-		strategy          *storage.NodeGroupMgrStrategy
-		pool              *storage.ResourcePool
-		expectedNum       int
-		expectedScaleDown bool
-		message           string
-	}{
-		{ // resource is not idle enough
-			strategy: &storage.NodeGroupMgrStrategy{
-				Strategy: &storage.Strategy{
-					MaxIdleDelay:   3,
-					MinScaleUpSize: 3,
-					Buffer: &storage.BufferStrategy{
-						High: 15,
-						Low:  10,
-					},
-				},
-			},
-			pool: &storage.ResourcePool{
-				// pool max size 100
-				UpdatedTime: time.Now(),
-				InitNum:     0,
-				IdleNum:     10,
-				ReturnedNum: 0,
-				ConsumedNum: 90,
-			},
-			expectedNum:       0,
-			expectedScaleDown: false,
-			message:           "resource is not idle enough",
-		},
-		{ // resource is not idle enough time
-			strategy: &storage.NodeGroupMgrStrategy{
-				Strategy: &storage.Strategy{
-					MaxIdleDelay:   3,
-					MinScaleUpSize: 3,
-					Buffer: &storage.BufferStrategy{
-						High: 15,
-						Low:  10,
-					},
-				},
-			},
-			pool: &storage.ResourcePool{ // pool max size 100
-				UpdatedTime: time.Now(),
-				InitNum:     0,
-				IdleNum:     20,
-				ReturnedNum: 0,
-				ConsumedNum: 80,
-			},
-			expectedNum:       0,
-			expectedScaleDown: false,
-			message:           "resource is not idle enough time",
-		},
-		{ // MinScaleUpSize limitation
-			strategy: &storage.NodeGroupMgrStrategy{
-				Strategy: &storage.Strategy{
-					MaxIdleDelay:   3,
-					MinScaleUpSize: 3,
-					Buffer: &storage.BufferStrategy{
-						High: 15,
-						Low:  10,
-					},
-				},
-			},
-			pool: &storage.ResourcePool{ // pool max size 100
-				UpdatedTime: time.Now().AddDate(0, 0, -1),
-				InitNum:     10,
-				IdleNum:     6,
-				ReturnedNum: 0,
-				ConsumedNum: 84,
-			},
-			expectedNum:       0,
-			expectedScaleDown: false,
-			message:           "limit by MinScaleUpSize",
-		},
-		{
-			strategy: &storage.NodeGroupMgrStrategy{
-				Strategy: &storage.Strategy{
-					MaxIdleDelay:   3,
-					MinScaleUpSize: 3,
-					Buffer: &storage.BufferStrategy{
-						High: 15,
-						Low:  10,
-					},
-				},
-			},
-			pool: &storage.ResourcePool{ // pool max size 100
-				UpdatedTime: time.Now().AddDate(0, 0, -1),
-				InitNum:     10,
-				IdleNum:     20,
-				ReturnedNum: 10,
-				ConsumedNum: 60,
-			},
-			expectedNum:       25,
-			expectedScaleDown: true,
-			message:           "normal situation failure",
-		},
-	}
-	for _, testcase := range testcases {
-		scaleUpNum, isScaleUp := isResourcePoolIdleForScaleUp(
-			testcase.strategy, testcase.pool,
-		)
-		assertion.Equal(testcase.expectedScaleDown, isScaleUp, testcase.message)
-		assertion.Equal(testcase.expectedNum, scaleUpNum, testcase.message)
-	}
 }
 
 func TestScaleUp_listNodeGroupError(t *testing.T) {
@@ -503,7 +329,7 @@ func TestScaleDown_createActionErr(t *testing.T) {
 
 	store.On("GetNodeGroup", nodeGroups[0].NodeGroupID, &storage.GetOptions{}).Return(nodeGroups[0], nil)
 	store.On("GetNodeGroup", nodeGroups[1].NodeGroupID, &storage.GetOptions{}).Return(nodeGroups[1], nil)
-	store.On("UpdateNodeGroup", nodeGroups[0], &storage.UpdateOptions{}).Return(nodeGroups[0], nil)
+	store.On("UpdateNodeGroup", nodeGroups[0], &storage.UpdateOptions{OverwriteZeroOrEmptyStr: true}).Return(nodeGroups[0], nil)
 	// store.On("UpdateNodeGroup", nodeGroups[1], &storage.UpdateOptions{}).Return(nodeGroups[1], nil)
 	store.On("CreateNodeGroupAction",
 		basemock.MatchedBy(func(action *storage.NodeGroupAction) bool {
@@ -548,11 +374,10 @@ func TestScaleDown_createNodeGroupEvent(t *testing.T) {
 
 	store.On("GetNodeGroup", nodeGroups[0].NodeGroupID, &storage.GetOptions{}).Return(nodeGroups[0], nil)
 	store.On("GetNodeGroup", nodeGroups[1].NodeGroupID, &storage.GetOptions{}).Return(nodeGroups[1], nil)
-	// !first loop, create Event failure but stil go on
-	store.On("UpdateNodeGroup", nodeGroups[0], &storage.UpdateOptions{}).Return(nodeGroups[0], nil)
+	// !first loop, create Event failure but still go on
+	store.On("UpdateNodeGroup", nodeGroups[0], &storage.UpdateOptions{OverwriteZeroOrEmptyStr: true}).Return(nodeGroups[0], nil)
 	store.On("CreateNodeGroupAction",
 		basemock.MatchedBy(func(action *storage.NodeGroupAction) bool {
-
 			return action.NodeGroupID == expectedActions[0].NodeGroupID &&
 				action.Event == expectedActions[0].Event && action.DeltaNum >= 4
 		}),
@@ -564,7 +389,7 @@ func TestScaleDown_createNodeGroupEvent(t *testing.T) {
 		&storage.CreateOptions{},
 	).Return(fmt.Errorf("database connection lost"))
 	// !second loop
-	store.On("UpdateNodeGroup", nodeGroups[1], &storage.UpdateOptions{}).Return(nodeGroups[1], nil)
+	store.On("UpdateNodeGroup", nodeGroups[1], &storage.UpdateOptions{OverwriteZeroOrEmptyStr: true}).Return(nodeGroups[1], nil)
 	store.On("CreateNodeGroupAction",
 		basemock.MatchedBy(func(action *storage.NodeGroupAction) bool {
 			return action.NodeGroupID == expectedActions[1].NodeGroupID &&
@@ -905,8 +730,8 @@ func getTestStrategy() *storage.NodeGroupMgrStrategy {
 		ResourcePool:      "test-resource-pool",
 		ReservedNodeGroup: &storage.GroupInfo{ClusterID: "reserved-clusterID", NodeGroupID: "reserved-nodeGroupID"},
 		ElasticNodeGroups: []*storage.GroupInfo{
-			{ClusterID: "Cluster1", NodeGroupID: "NodeGroup1", Weight: 5},
-			{ClusterID: "Cluster1", NodeGroupID: "NodeGroup2", Weight: 5},
+			{ClusterID: "Cluster1", NodeGroupID: "NodeGroup1", Weight: 5, ConsumerID: "consumer1"},
+			{ClusterID: "Cluster1", NodeGroupID: "NodeGroup2", Weight: 5, ConsumerID: "consumer2"},
 		},
 		Strategy: &storage.Strategy{
 			ScaleUpCoolDown: 0,
@@ -928,26 +753,28 @@ func getTestStrategy() *storage.NodeGroupMgrStrategy {
 func getStableNodeGroups() []*storage.NodeGroup {
 	nodeGroups := []*storage.NodeGroup{
 		{
-			NodeGroupID:  "NodeGroup1",
-			ClusterID:    "Cluster1",
-			MaxSize:      100,
-			MinSize:      0,
-			DesiredSize:  15,
-			UpcomingSize: 0,
-			NodeIPs:      []string{"IP", "IP", "IP", "IP", "IP", "IP", "IP", "IP", "IP", "IP", "IP", "IP", "IP", "IP", "IP"},
-			UpdatedTime:  time.Now(),
-			Status:       storage.StableState,
+			NodeGroupID:   "NodeGroup1",
+			ClusterID:     "Cluster1",
+			MaxSize:       100,
+			MinSize:       0,
+			DesiredSize:   15,
+			UpcomingSize:  0,
+			NodeIPs:       []string{"IP", "IP", "IP", "IP", "IP", "IP", "IP", "IP", "IP", "IP", "IP", "IP", "IP", "IP", "IP"},
+			CmDesiredSize: 15,
+			UpdatedTime:   time.Now(),
+			Status:        storage.StableState,
 		},
 		{
-			NodeGroupID:  "NodeGroup2",
-			ClusterID:    "Cluster1",
-			MaxSize:      100,
-			MinSize:      0,
-			DesiredSize:  10,
-			UpcomingSize: 0,
-			NodeIPs:      []string{"IP", "IP", "IP", "IP", "IP", "IP", "IP", "IP", "IP", "IP"},
-			UpdatedTime:  time.Now(),
-			Status:       storage.StableState,
+			NodeGroupID:   "NodeGroup2",
+			ClusterID:     "Cluster1",
+			MaxSize:       100,
+			MinSize:       0,
+			DesiredSize:   10,
+			UpcomingSize:  0,
+			NodeIPs:       []string{"IP", "IP", "IP", "IP", "IP", "IP", "IP", "IP", "IP", "IP"},
+			CmDesiredSize: 10,
+			UpdatedTime:   time.Now(),
+			Status:        storage.StableState,
 		},
 	}
 	return nodeGroups
@@ -984,26 +811,28 @@ func getScaleUpNodeGroups() []*storage.NodeGroup {
 func getScaleDownNodeGroups() []*storage.NodeGroup {
 	nodeGroups := []*storage.NodeGroup{
 		{
-			NodeGroupID:  "NodeGroup1",
-			ClusterID:    "Cluster1",
-			MaxSize:      100,
-			MinSize:      0,
-			DesiredSize:  10,
-			UpcomingSize: 0,
-			NodeIPs:      []string{"IP", "IP", "IP", "IP", "IP", "IP", "IP", "IP", "IP", "IP", "IP", "IP", "IP", "IP", "IP"},
-			UpdatedTime:  time.Now(),
-			Status:       storage.ScaleDownState,
+			NodeGroupID:   "NodeGroup1",
+			ClusterID:     "Cluster1",
+			MaxSize:       100,
+			MinSize:       0,
+			DesiredSize:   10,
+			UpcomingSize:  0,
+			NodeIPs:       []string{"IP", "IP", "IP", "IP", "IP", "IP", "IP", "IP", "IP", "IP", "IP", "IP", "IP", "IP", "IP"},
+			CmDesiredSize: 15,
+			UpdatedTime:   time.Now(),
+			Status:        storage.ScaleDownState,
 		},
 		{
-			NodeGroupID:  "NodeGroup2",
-			ClusterID:    "Cluster1",
-			MaxSize:      100,
-			MinSize:      0,
-			DesiredSize:  5,
-			UpcomingSize: 0,
-			NodeIPs:      []string{"IP", "IP", "IP", "IP", "IP", "IP", "IP", "IP", "IP", "IP"},
-			UpdatedTime:  time.Now(),
-			Status:       storage.ScaleDownState,
+			NodeGroupID:   "NodeGroup2",
+			ClusterID:     "Cluster1",
+			MaxSize:       100,
+			MinSize:       0,
+			DesiredSize:   5,
+			UpcomingSize:  0,
+			NodeIPs:       []string{"IP", "IP", "IP", "IP", "IP", "IP", "IP", "IP", "IP", "IP"},
+			CmDesiredSize: 10,
+			UpdatedTime:   time.Now(),
+			Status:        storage.ScaleDownState,
 		},
 	}
 	return nodeGroups

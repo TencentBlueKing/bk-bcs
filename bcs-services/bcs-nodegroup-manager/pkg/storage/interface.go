@@ -17,6 +17,7 @@ type ListOptions struct {
 	Limit                  int
 	Page                   int
 	ReturnSoftDeletedItems bool
+	DoPagination           bool
 }
 
 // CreateOptions for create strategy
@@ -47,6 +48,7 @@ type GetOptions struct {
 type Storage interface {
 	// ListNodeGroupStrategies operations
 	ListNodeGroupStrategies(opt *ListOptions) ([]*NodeGroupMgrStrategy, error)
+	ListNodeGroupStrategiesByType(strategyType string, opt *ListOptions) ([]*NodeGroupMgrStrategy, error)
 	GetNodeGroupStrategy(name string, opt *GetOptions) (*NodeGroupMgrStrategy, error)
 	CreateNodeGroupStrategy(strategy *NodeGroupMgrStrategy, opt *CreateOptions) error
 	UpdateNodeGroupStrategy(strategy *NodeGroupMgrStrategy, opt *UpdateOptions) (*NodeGroupMgrStrategy, error)
@@ -63,6 +65,7 @@ type Storage interface {
 	// NodeGroup scaleUp or scaleDown action operations
 	// ScaleUp and ScaleDown will happened at the same time sometimes.
 	ListNodeGroupAction(nodeGroupID string, opt *ListOptions) ([]*NodeGroupAction, error)
+	ListNodeGroupActionByTaskID(taskID string, opt *ListOptions) ([]*NodeGroupAction, error)
 	GetNodeGroupAction(nodeGroupID, event string, opt *GetOptions) (*NodeGroupAction, error)
 	CreateNodeGroupAction(action *NodeGroupAction, opt *CreateOptions) error
 	UpdateNodeGroupAction(action *NodeGroupAction, opt *UpdateOptions) (*NodeGroupAction, error)
@@ -72,4 +75,12 @@ type Storage interface {
 	// tracing Event for nodegroup
 	ListNodeGroupEvent(nodeGroupID string, opt *ListOptions) ([]*NodeGroupEvent, error)
 	CreateNodeGroupEvent(event *NodeGroupEvent, opt *CreateOptions) error
+
+	// task operation
+	CreateTask(task *ScaleDownTask, opt *CreateOptions) error
+	UpdateTask(task *ScaleDownTask, opt *UpdateOptions) (*ScaleDownTask, error)
+	GetTask(taskID string, opt *GetOptions) (*ScaleDownTask, error)
+	ListTasks(opt *ListOptions) ([]*ScaleDownTask, error)
+	ListTasksByStrategy(strategyName string, opt *ListOptions) ([]*ScaleDownTask, error)
+	DeleteTask(taskID string, opt *DeleteOptions) (*ScaleDownTask, error)
 }

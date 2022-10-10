@@ -16,9 +16,9 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-
 	v1 "k8s.io/api/core/v1"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-nodegroup-manager/pkg/cluster/requester"
 )
 
 const (
@@ -31,14 +31,15 @@ const (
 // Client for cluster operation
 type Client interface {
 	ListClusterNodes(clusterID string) ([]*Node, error)
-	UpdateNodeLabels(clusterID, nodeName string, labels map[string]string) error
+	UpdateNodeMetadata(clusterID, nodeName string, labels, annotations map[string]interface{}) error
+	ListNodesByLabel(clusterID string, labels map[string]interface{}) (map[string]*Node, error)
 }
 
-// ClientOptions option for actully api-gateway client
+// ClientOptions option for api-gateway client
 type ClientOptions struct {
 	Endpoint string
 	Token    string
-	Sender   Requester
+	Sender   requester.Requester
 }
 
 // apiGateway bcs apiGateway client
@@ -50,9 +51,9 @@ type apiGateway struct {
 // NewClient new bcs apiGateway client
 func NewClient(opts *ClientOptions) Client {
 	header := make(map[string]string)
-	header["Authorization"] = fmt.Sprintf("Bear %s", opts.Token)
+	header["Authorization"] = fmt.Sprintf("Bearer %s", opts.Token)
 	if opts.Sender == nil {
-		opts.Sender = NewRequester()
+		opts.Sender = requester.NewRequester()
 	}
 	return &apiGateway{
 		opt:           opts,
@@ -65,13 +66,12 @@ func (c *apiGateway) ListClusterNodes(clusterID string) ([]*Node, error) {
 	url := fmt.Sprintf("%s%s", c.opt.Endpoint, fmt.Sprintf(ListK8SNodePath, clusterID))
 	rawResponse, err := c.opt.Sender.DoGetRequest(url, c.defaultHeader)
 	if err != nil {
-		blog.Errorf("ListClusterNodes error, clusterID: %s, err: %s", clusterID, err.Error())
-		return nil, fmt.Errorf("network error happened %s", err.Error())
+		return nil, fmt.Errorf("DoGetRequest error: %s", err.Error())
 	}
 	var k8sNodeList v1.NodeList
 	if err := json.Unmarshal(rawResponse, &k8sNodeList); err != nil {
-		blog.Errorf("Decode NodeList response failed %s, raw response %s", err.Error(), string(rawResponse))
-		return nil, fmt.Errorf("decode NodeList failed: %s", err.Error())
+		return nil, fmt.Errorf("decode NodeList response failed %s, raw response %s",
+			err.Error(), string(rawResponse))
 	}
 	nodeList := make([]*Node, 0)
 	for _, k8sNode := range k8sNodeList.Items {
@@ -82,9 +82,16 @@ func (c *apiGateway) ListClusterNodes(clusterID string) ([]*Node, error) {
 				nodeIP = ip.Address
 			}
 		}
+		var status string
+		for _, condition := range k8sNode.Status.Conditions {
+			if condition.Type == "Ready" {
+				status = string(condition.Status)
+			}
+		}
 		node := &Node{
 			Name:   k8sNode.Name,
 			IP:     nodeIP,
+			Status: status,
 			Labels: k8sNode.ObjectMeta.Labels,
 		}
 		nodeList = append(nodeList, node)
@@ -92,24 +99,63 @@ func (c *apiGateway) ListClusterNodes(clusterID string) ([]*Node, error) {
 	return nodeList, nil
 }
 
-// UpdateNodeLabels update node labels by clusterID and nodeName
-func (c *apiGateway) UpdateNodeLabels(clusterID, nodeName string, labels map[string]string) error {
+// ListNodesByLabel list nodes by clusterID and label
+func (c *apiGateway) ListNodesByLabel(clusterID string, labels map[string]interface{}) (map[string]*Node, error) {
+	url := fmt.Sprintf("%s%s", c.opt.Endpoint, fmt.Sprintf(ListK8SNodePath, clusterID))
+	for key, value := range labels {
+		url = fmt.Sprintf("%s,%s=%s", url, key, value)
+	}
+	rawResponse, err := c.opt.Sender.DoGetRequest(url, c.defaultHeader)
+	if err != nil {
+		return nil, fmt.Errorf("DoGetRequest error: %s", err.Error())
+	}
+	var k8sNodeList v1.NodeList
+	if err := json.Unmarshal(rawResponse, &k8sNodeList); err != nil {
+		return nil, fmt.Errorf("decode NodeList response failed %s, raw response %s",
+			err.Error(), string(rawResponse))
+	}
+	nodeList := make(map[string]*Node, 0)
+	for _, k8sNode := range k8sNodeList.Items {
+		address := k8sNode.Status.Addresses
+		var nodeIP string
+		for _, ip := range address {
+			if ip.Type == v1.NodeInternalIP {
+				nodeIP = ip.Address
+			}
+		}
+		var status string
+		for _, condition := range k8sNode.Status.Conditions {
+			if condition.Type == "Ready" {
+				status = string(condition.Status)
+			}
+		}
+		node := &Node{
+			Name:   k8sNode.Name,
+			IP:     nodeIP,
+			Status: status,
+			Labels: k8sNode.ObjectMeta.Labels,
+		}
+		nodeList[k8sNode.Name] = node
+	}
+	return nodeList, nil
+}
+
+// UpdateNodeMetadata update node labels and annotations by clusterID and nodeName
+func (c *apiGateway) UpdateNodeMetadata(clusterID, nodeName string, labels map[string]interface{},
+	annotations map[string]interface{}) error {
 	url := fmt.Sprintf("%s%s", c.opt.Endpoint, fmt.Sprintf(UpdateK8SNodePath, clusterID, nodeName))
-	labelMap := map[string]interface{}{"labels": labels}
-	metaData := map[string]interface{}{"metadata": labelMap}
+	metaDataMap := map[string]interface{}{"labels": labels, "annotations": annotations}
+	metaData := map[string]interface{}{"metadata": metaDataMap}
 	metaDataStr, err := json.Marshal(metaData)
 	if err != nil {
-		blog.Errorf("json marshal metadata to byte err, clusterID:%s, nodeName:%s, err:%v",
-			clusterID, nodeName, err)
-		return err
+		return fmt.Errorf("json marshal metadata to byte err:%s", err.Error())
 	}
 	cloneHeader := CloneMap(c.defaultHeader)
 	cloneHeader["Content-Type"] = "application/merge-patch+json"
 	cloneHeader["Accept"] = "application/json"
 	_, err = c.opt.Sender.DoPatchRequest(url, cloneHeader, metaDataStr)
 	if err != nil {
-		blog.Errorf("UpdateNodeLabels error, clusterID: %s, nodeName:%s, err: %s", clusterID, nodeName, err.Error())
-		return fmt.Errorf("UpdateNodeLabels %s/%s failed %s", clusterID, nodeName, err.Error())
+		return fmt.Errorf("DoPatchRequest error: %s", err.Error())
 	}
 	return nil
 }

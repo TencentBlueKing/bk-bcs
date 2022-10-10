@@ -24,6 +24,7 @@ import (
 	"github.com/stretchr/testify/mock"
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-nodegroup-manager/pkg/storage"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-nodegroup-manager/pkg/storage/mongo/mocks"
 )
@@ -541,8 +542,6 @@ func Test_DeleteNodeGroupStrategy(t *testing.T) {
 			UpdatedTime: time.Now(),
 		},
 	}
-	deletedStrategy := strategy
-	deletedStrategy.IsDeleted = true
 	tests := []struct {
 		name         string
 		strategyName string

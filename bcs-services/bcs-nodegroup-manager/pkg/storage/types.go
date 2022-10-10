@@ -24,20 +24,35 @@ const (
 	ScaleUpState = "Scaleup"
 	// ScaleDownState elastic nodegroup is scaling down
 	ScaleDownState = "Scaledown"
+	// ScaleDownByTaskState nodegroup is scaling down by resource manager group
+	ScaleDownByTaskState = "ScaleDownByTask"
 	// ErrState error happened
 	ErrState = "ErrState"
 	// TimeoutState TODO
 	TimeoutState = "TimeoutState"
 	// InitState information initialization
 	InitState = "InitState"
-	// NodeInitState resource is initialize for idle state
+	// NodeInitState resource is initializing for idle state
 	NodeInitState = "INIT"
 	// NodeIdleState idle state
 	NodeIdleState = "IDLE"
 	// NodeConsumedState resource is used for specified nodegroup
 	NodeConsumedState = "CONSUMED"
-	// NodeReturnState resource return to resourcepool
+	// NodeReturnState resource return to resource pool
 	NodeReturnState = "RETURNED"
+	// TaskFinishedState task finished
+	TaskFinishedState = "FINISHED"
+	// TaskRequestingState task preparing
+	TaskRequestingState = "REQUESTED"
+	// TaskUnknownState  task unknown
+	TaskUnknownState = "UNKNOWN"
+	// TaskFailedState task failed
+	TaskFailedState = "FAILED"
+)
+
+const (
+	BufferStrategyType       = "buffer"
+	HierarchicalStrategyType = "hierarchicalBuffer"
 )
 
 // NodeGroupMgrStrategy 定义如何管理指定的NodeGroup策略
@@ -55,6 +70,7 @@ type NodeGroupMgrStrategy struct {
 // GroupInfo 定义
 type GroupInfo struct {
 	NodeGroupID string `json:"nodeGroupId" bson:"node_group_id"`
+	ConsumerID  string `json:"consumerID" bson:"consumer_id"`
 	ClusterID   string `json:"clusterId" bson:"cluster_id"`
 	Weight      int    `json:"weight" bson:"weight"`
 }
@@ -76,6 +92,8 @@ type Strategy struct {
 	ReservedTimeRange string `json:"reservedTimeRange" bson:"reserved_time_range"`
 	// Buffer策略
 	Buffer *BufferStrategy `json:"buffer" bson:"buffer"`
+	// ScaleDownBeforeDDL 在ddl指定分钟前执行缩容
+	ScaleDownBeforeDDL int `json:"scaleDownBeforeDDL" bson:"scale_down_before_ddl"`
 }
 
 // BufferStrategy 空闲资源水位策略
@@ -86,6 +104,8 @@ type BufferStrategy struct {
 	Low int `json:"low" bson:"low"`
 	// High高水位，空闲资源比例大于该水位时，elasticNodeGroup可以扩容消耗资源池资源
 	High int `json:"high" bson:"high"`
+	// ReservedDays 资源保留时间，单位天
+	ReservedDays int `json:"reservedDays" bson:"reserved_days"`
 }
 
 // State strategy status
@@ -165,6 +185,7 @@ type PoolOverview struct {
 type NodeGroupAction struct {
 	NodeGroupID string    `json:"nodeGroupId" bson:"node_group_id"`
 	ClusterID   string    `json:"clusterId" bson:"cluster_id"`
+	TaskID      string    `json:"taskID" bson:"task_id"`
 	CreatedTime time.Time `json:"createdTime" bson:"created_time"`
 	// Event scaleUp or scaleDown
 	Event string `json:"event" bson:"event"`
@@ -273,4 +294,65 @@ type ResourcePool struct {
 	ClusterNodes []*ClusterNode `json:"clusterNodes" bson:"cluster_nodes"`
 	// Resources池子下详细资源信息
 	Resources []*Resource `json:"resources" bson:"resources"`
+}
+
+// ScaleDownTask 记录从 resource manager获取到的任务信息，并记录筛选出的nodegroup及具体缩容ip
+type ScaleDownTask struct {
+	TaskID            string             `json:"taskID" bson:"task_id"`
+	TotalNum          int                `json:"totalNum" bson:"total_num"`
+	NodeGroupStrategy string             `json:"nodeGroupStrategy" bson:"node_group_strategy"`
+	ScaleDownGroups   []*ScaleDownDetail `json:"scaleDownGroups" bson:"scale_down_groups"`
+	DrainDelay        string             `json:"drainDelay" bson:"drain_delay"`
+	Deadline          time.Time          `json:"deadline" bson:"deadline"`
+	// CreatedTime task创建时间
+	CreatedTime time.Time `json:"createdTime" bson:"created_time"`
+	// UpdatedTime 任务更新时间
+	UpdatedTime      time.Time `json:"updateTime" bson:"update_time"`
+	BeginExecuteTime time.Time `json:"beginExecuteTime" bson:"begin_execute_time"`
+	IsDeleted        bool      `json:"isDeleted" bson:"is_deleted"`
+	IsExecuted       bool      `json:"isExecuted" bson:"is_executed"`
+	Status           string    `json:"status" bson:"status"`
+}
+
+// IsTerminated check task status
+func (t *ScaleDownTask) IsTerminated() bool {
+	if t.Status != TaskRequestingState {
+		return true
+	}
+	return false
+}
+
+// IsExecuting check task status
+func (t *ScaleDownTask) IsExecuting() bool {
+	if t.IsExecuted && !t.IsDeleted {
+		return true
+	}
+	return false
+}
+
+// ScaleDownDetail 记录根据 ScaleDownTask 筛选出的节点ip
+type ScaleDownDetail struct {
+	ConsumerID  string   `json:"consumerID" bson:"consumer_id"`
+	NodeGroupID string   `json:"nodeGroupID" bson:"node_group_id"`
+	ClusterID   string   `json:"clusterID" bson:"cluster_id"`
+	NodeIPs     []string `json:"nodeIPs" bson:"node_ips"`
+	NodeNum     int      `json:"nodeNum" bson:"node_num"`
+}
+
+// DeviceGroup 根据consumer id查询得到的资源组
+type DeviceGroup struct {
+	// ConsumerID nodegroup和resource manager交互的consumer id
+	ConsumerID string `json:"consumerID"`
+	// InitNum处于init状态的resource数量
+	InitNum int `json:"initNum"`
+	// IdleNum处于空闲状态的数量
+	IdleNum int `json:"idleNum"`
+	// ConsumedNum被NodeGroup消费掉的数量
+	ConsumedNum int `json:"consumedNum"`
+	// ReturnedNum在退还中的数量，状态变化会比较快
+	ReturnedNum int `json:"returnedNum"`
+	// Resources池子下详细资源信息
+	Resources []*Resource `json:"resources" bson:"resources"`
+	// UpdatedTime 资源池状态变化更新时间
+	UpdatedTime time.Time `json:"updateTime" bson:"update_time"`
 }

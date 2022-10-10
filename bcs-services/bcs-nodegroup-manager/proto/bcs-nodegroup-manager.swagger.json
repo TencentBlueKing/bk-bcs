@@ -284,6 +284,12 @@
           "format": "int32",
           "description": "定义resource pool中空闲资源的最高水位",
           "title": "high"
+        },
+        "reservedDays": {
+          "type": "integer",
+          "format": "int32",
+          "description": "定义资源池保留天数",
+          "title": "reservedDays"
         }
       }
     },
@@ -407,6 +413,11 @@
           "type": "string",
           "description": "nodeGroup id",
           "title": "nodeGroup"
+        },
+        "consumerId": {
+          "type": "string",
+          "description": "consumer id",
+          "title": "consumerId"
         },
         "weight": {
           "type": "integer",
@@ -693,6 +704,11 @@
           "type": "string",
           "description": "nodeGroup id",
           "title": "nodeGroup"
+        },
+        "consumerId": {
+          "type": "string",
+          "description": "consumer id",
+          "title": "consumerId"
         }
       }
     },
@@ -743,6 +759,12 @@
           "$ref": "#/definitions/nodegroupmanagerBuffer",
           "description": "预留水位详细定义",
           "title": "buffer"
+        },
+        "scaleDownBeforeDDL": {
+          "type": "integer",
+          "format": "int32",
+          "description": "在ddl多少分钟之前执行策略，用于分级资源池",
+          "title": "scaleDownBeforeDDL"
         }
       }
     },

@@ -15,11 +15,13 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-nodegroup-manager/cmd/client/pkg"
-	nodegroupmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-nodegroup-manager/proto"
+	"os"
+
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"os"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-nodegroup-manager/cmd/client/pkg"
+	nodegroupmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-nodegroup-manager/proto"
 )
 
 // NewCreateCmd new create cmd
@@ -38,7 +40,7 @@ func NewCreateCmd() *cobra.Command {
 // NewCreateStrategyCmd new createStrategy cmd
 func NewCreateStrategyCmd() *cobra.Command {
 	return &cobra.Command{
-		Use:   "create strategy -f FILENAME",
+		Use:   "strategy",
 		Short: "create strategy -f FILENAME",
 		Long:  "create strategy --file FILENAME",
 		Run: func(cmd *cobra.Command, args []string) {

@@ -13,6 +13,8 @@
 package controller
 
 import (
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-nodegroup-manager/pkg/cluster"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-nodegroup-manager/pkg/controller/strategy"
 	mgr "github.com/Tencent/bk-bcs/bcs-services/bcs-nodegroup-manager/pkg/resourcemgr"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-nodegroup-manager/pkg/storage"
 )
@@ -25,10 +27,16 @@ type Option func(o *Options)
 type Options struct {
 	// interval for one logic loop, unit is second
 	Interval uint
+	// Concurrency for handle cluster client request
+	Concurrency int
 	// resource manager interface for data retrieve
 	ResourceManager mgr.Client
 	// storage for access database
 	Storage storage.Storage
+	// client for cluster request
+	ClusterClient cluster.Client
+	// factory for strategy executor
+	StrategyExecutorFactory strategy.Factory
 }
 
 // ResourceManager implementation for injection
@@ -42,5 +50,19 @@ func ResourceManager(c mgr.Client) Option {
 func Storage(s storage.Storage) Option {
 	return func(o *Options) {
 		o.Storage = s
+	}
+}
+
+// ClusterClient implementation for injection
+func ClusterClient(c cluster.Client) Option {
+	return func(o *Options) {
+		o.ClusterClient = c
+	}
+}
+
+// StrategyExecutorFactory implementation for injection
+func StrategyExecutorFactory(f strategy.Factory) Option {
+	return func(o *Options) {
+		o.StrategyExecutorFactory = f
 	}
 }

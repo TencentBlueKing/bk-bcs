@@ -23,6 +23,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-nodegroup-manager/pkg/storage"
 )
 
@@ -65,13 +66,58 @@ func (m *ModelStrategy) ListNodeGroupStrategies(opt *storage.ListOptions) ([]*st
 	}
 	page := opt.Page
 	limit := opt.Limit
-	if opt.Limit == 0 {
-		limit = defaultSize
-	}
+
 	cond := make([]*operator.Condition, 0)
 	cond = append(cond, operator.NewLeafCondition(operator.Eq, operator.M{
 		isDeletedKey: opt.ReturnSoftDeletedItems,
 	}))
+	if !opt.DoPagination && opt.Limit == 0 {
+		count, err := m.DB.Table(m.TableName).Find(operator.NewBranchCondition(operator.And, cond...)).Count(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("get strategy count err:%v", err)
+		}
+		limit = int(count)
+	} else if limit == 0 {
+		limit = defaultSize
+	}
+	strategyList := make([]*storage.NodeGroupMgrStrategy, 0)
+	err = m.DB.Table(m.TableName).Find(operator.NewBranchCondition(operator.And, cond...)).
+		WithSort(map[string]interface{}{nameKey: 1}).
+		WithStart(int64(page*limit)).WithLimit(int64(limit)).All(ctx, &strategyList)
+	if err != nil {
+		return nil, fmt.Errorf("list nodeGroupMgrStrategy err:%v", err)
+	}
+	return strategyList, nil
+}
+
+// ListNodeGroupStrategiesByType 通过类型查询NodeGroupMgrStrategy列表，可设置page和limit，page默认值为0，limit默认值为10
+func (m *ModelStrategy) ListNodeGroupStrategiesByType(strategyType string,
+	opt *storage.ListOptions) ([]*storage.NodeGroupMgrStrategy, error) {
+	if opt == nil {
+		return nil, fmt.Errorf("ListOption is nil")
+	}
+	ctx := context.Background()
+	err := ensureTable(ctx, &m.Public)
+	if err != nil {
+		return nil, err
+	}
+	page := opt.Page
+	limit := opt.Limit
+
+	cond := make([]*operator.Condition, 0)
+	cond = append(cond, operator.NewLeafCondition(operator.Eq, operator.M{
+		strategyTypeKey: strategyType,
+		isDeletedKey:    opt.ReturnSoftDeletedItems,
+	}))
+	if !opt.DoPagination && opt.Limit == 0 {
+		count, err := m.DB.Table(m.TableName).Find(operator.NewBranchCondition(operator.And, cond...)).Count(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("get strategy count err:%v", err)
+		}
+		limit = int(count)
+	} else if limit == 0 {
+		limit = defaultSize
+	}
 	strategyList := make([]*storage.NodeGroupMgrStrategy, 0)
 	err = m.DB.Table(m.TableName).Find(operator.NewBranchCondition(operator.And, cond...)).
 		WithSort(map[string]interface{}{nameKey: 1}).

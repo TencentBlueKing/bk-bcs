@@ -23,6 +23,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-nodegroup-manager/pkg/storage"
 )
 
@@ -68,9 +69,7 @@ func (m *ModelAction) ListNodeGroupAction(nodeGroupID string,
 	}
 	page := opt.Page
 	limit := opt.Limit
-	if opt.Limit == 0 {
-		limit = defaultSize
-	}
+
 	cond := make([]*operator.Condition, 0)
 	if nodeGroupID != "" {
 		cond = append(cond, operator.NewLeafCondition(operator.Eq, operator.M{
@@ -80,6 +79,15 @@ func (m *ModelAction) ListNodeGroupAction(nodeGroupID string,
 	cond = append(cond, operator.NewLeafCondition(operator.Eq, operator.M{
 		isDeletedKey: opt.ReturnSoftDeletedItems,
 	}))
+	if !opt.DoPagination && opt.Limit == 0 {
+		count, err := m.DB.Table(m.TableName).Find(operator.NewBranchCondition(operator.And, cond...)).Count(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("get action count err:%v", err)
+		}
+		limit = int(count)
+	} else if limit == 0 {
+		limit = defaultSize
+	}
 	nodeGroupActionList := make([]*storage.NodeGroupAction, 0)
 	err = m.DB.Table(m.TableName).Find(operator.NewBranchCondition(operator.And, cond...)).
 		WithSort(map[string]interface{}{nodeGroupIDKey: 1}).
@@ -212,6 +220,7 @@ func (m *ModelAction) DeleteNodeGroupAction(action *storage.NodeGroupAction,
 		return nil, err
 	}
 	cond := operator.NewLeafCondition(operator.Eq, operator.M{
+		taskIDKey:      action.TaskID,
 		nodeGroupIDKey: action.NodeGroupID,
 		eventKey:       action.Event,
 		isDeletedKey:   false,
@@ -230,9 +239,52 @@ func (m *ModelAction) DeleteNodeGroupAction(action *storage.NodeGroupAction,
 		return nil, fmt.Errorf("find nodeGroupAction error: %v", err)
 	}
 	// 如果查到，删除
-	if err := m.DB.Table(m.TableName).Update(ctx, cond,
-		operator.M{"$set": map[string]interface{}{isDeletedKey: true}}); err != nil {
+	retNodeGroupAction.IsDeleted = true
+	retNodeGroupAction.UpdatedTime = time.Now()
+	if err := m.DB.Table(m.TableName).Update(ctx, cond, operator.M{"$set": retNodeGroupAction}); err != nil {
 		return nil, fmt.Errorf("soft delete nodeGroupAction error: %v", err)
 	}
 	return retNodeGroupAction, nil
+}
+
+// ListNodeGroupActionByTaskID list NodeGroupAction by taskID, if nodeGroupID is empty, return all
+func (m *ModelAction) ListNodeGroupActionByTaskID(taskID string,
+	opt *storage.ListOptions) ([]*storage.NodeGroupAction, error) {
+	if opt == nil {
+		return nil, fmt.Errorf("ListOption is nil")
+	}
+	ctx := context.Background()
+	err := ensureTable(ctx, &m.Public)
+	if err != nil {
+		return nil, err
+	}
+	page := opt.Page
+	limit := opt.Limit
+
+	cond := make([]*operator.Condition, 0)
+	if taskID != "" {
+		cond = append(cond, operator.NewLeafCondition(operator.Eq, operator.M{
+			taskIDKey: taskID,
+		}))
+	}
+	cond = append(cond, operator.NewLeafCondition(operator.Eq, operator.M{
+		isDeletedKey: opt.ReturnSoftDeletedItems,
+	}))
+	if !opt.DoPagination && opt.Limit == 0 {
+		count, err := m.DB.Table(m.TableName).Find(operator.NewBranchCondition(operator.And, cond...)).Count(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("get action count err:%v", err)
+		}
+		limit = int(count)
+	} else if limit == 0 {
+		limit = defaultSize
+	}
+	nodeGroupActionList := make([]*storage.NodeGroupAction, 0)
+	err = m.DB.Table(m.TableName).Find(operator.NewBranchCondition(operator.And, cond...)).
+		WithSort(map[string]interface{}{nodeGroupIDKey: 1}).
+		WithStart(int64(page*limit)).WithLimit(int64(limit)).All(ctx, &nodeGroupActionList)
+	if err != nil {
+		return nil, err
+	}
+	return nodeGroupActionList, nil
 }

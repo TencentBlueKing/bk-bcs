@@ -20,6 +20,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-nodegroup-manager/pkg/storage"
 	nodegroupmgr "github.com/Tencent/bk-bcs/bcs-services/bcs-nodegroup-manager/proto"
 )
@@ -60,10 +61,10 @@ func (e *NodegroupManager) GetClusterAutoscalerReview(ctx context.Context,
 			return err
 		}
 		if scaleUpPolicy != nil {
-			scaleUpPolicies = append(scaleUpPolicies, scaleUpPolicy)
+			scaleUpPolicies = append(scaleUpPolicies, scaleUpPolicy...)
 		}
 		if scaleDownPolicy != nil {
-			scaleDownPolicies = append(scaleDownPolicies, scaleDownPolicy)
+			scaleDownPolicies = append(scaleDownPolicies, scaleDownPolicy...)
 		}
 	}
 	rsp.Response.ScaleUps = scaleUpPolicies
@@ -82,8 +83,8 @@ func (e *NodegroupManager) CreateNodePoolMgrStrategy(ctx context.Context,
 		rsp.Result = false
 		return nil
 	}
-	blog.Infof("Received BcsNodegroupManager.CreateNodePoolMgrStrategy request. name:%s, operator:%s, overwrite:%s",
-		req.Strategy.Name, req.Option.Operator, req.Option.OverWriteIfExist)
+	blog.Infof("Received BcsNodegroupManager.CreateNodePoolMgrStrategy request. type:%s, name:%s, operator:%s, "+
+		"overwrite:%s", req.Strategy.Kind, req.Strategy.Name, req.Option.Operator, req.Option.OverWriteIfExist)
 	storageStrategy := transferToStorageStrategy(req.Strategy)
 	err := e.storage.CreateNodeGroupStrategy(storageStrategy,
 		&storage.CreateOptions{OverWriteIfExist: req.Option.OverWriteIfExist})
@@ -221,14 +222,16 @@ func transferToHandlerStrategy(original *storage.NodeGroupMgrStrategy) *nodegrou
 	if original.ReservedNodeGroup != nil {
 		reservedNodeGroup.ClusterId = original.ReservedNodeGroup.ClusterID
 		reservedNodeGroup.NodeGroup = original.ReservedNodeGroup.NodeGroupID
+		reservedNodeGroup.ConsumerId = original.ReservedNodeGroup.ConsumerID
 	}
 	elasticNodeGroups := make([]*nodegroupmgr.ElasticNodeGroup, 0)
 	if original.ElasticNodeGroups != nil {
 		for _, group := range original.ElasticNodeGroups {
 			elasticNodeGroups = append(elasticNodeGroups, &nodegroupmgr.ElasticNodeGroup{
-				ClusterId: group.ClusterID,
-				NodeGroup: group.NodeGroupID,
-				Weight:    int32(group.Weight),
+				ClusterId:  group.ClusterID,
+				NodeGroup:  group.NodeGroupID,
+				ConsumerId: group.ConsumerID,
+				Weight:     int32(group.Weight),
 			})
 		}
 	}
@@ -241,10 +244,12 @@ func transferToHandlerStrategy(original *storage.NodeGroupMgrStrategy) *nodegrou
 		strategy.ScaleUpDelay = int32(original.Strategy.ScaleUpDelay)
 		strategy.ScaleDownDelay = int32(original.Strategy.ScaleDownDelay)
 		strategy.ScaleUpCoolDown = int32(original.Strategy.ScaleUpCoolDown)
+		strategy.ScaleDownBeforeDDL = int32(original.Strategy.ScaleDownBeforeDDL)
 		if original.Strategy.Buffer != nil {
 			strategy.Buffer = &nodegroupmgr.Buffer{}
 			strategy.Buffer.Low = int32(original.Strategy.Buffer.Low)
 			strategy.Buffer.High = int32(original.Strategy.Buffer.High)
+			strategy.Buffer.ReservedDays = int32(original.Strategy.Buffer.ReservedDays)
 		}
 	}
 	return &nodegroupmgr.NodeGroupStrategy{
@@ -263,12 +268,14 @@ func transferToStorageStrategy(original *nodegroupmgr.NodeGroupStrategy) *storag
 	if original.ReservedNodeGroup != nil {
 		reservedNodeGroup.ClusterID = original.ReservedNodeGroup.ClusterId
 		reservedNodeGroup.NodeGroupID = original.ReservedNodeGroup.NodeGroup
+		reservedNodeGroup.ConsumerID = original.ReservedNodeGroup.ConsumerId
 	}
 	elasticNodeGroups := make([]*storage.GroupInfo, 0)
 	if original.ElasticNodeGroups != nil {
 		for _, group := range original.ElasticNodeGroups {
 			elasticNodeGroups = append(elasticNodeGroups, &storage.GroupInfo{
 				ClusterID:   group.ClusterId,
+				ConsumerID:  group.ConsumerId,
 				NodeGroupID: group.NodeGroup,
 				Weight:      int(group.Weight),
 			})
@@ -283,10 +290,12 @@ func transferToStorageStrategy(original *nodegroupmgr.NodeGroupStrategy) *storag
 		strategy.ScaleUpDelay = int(original.Strategy.ScaleUpDelay)
 		strategy.ScaleDownDelay = int(original.Strategy.ScaleDownDelay)
 		strategy.ScaleUpCoolDown = int(original.Strategy.ScaleUpCoolDown)
+		strategy.ScaleDownBeforeDDL = int(original.Strategy.ScaleDownBeforeDDL)
 		if original.Strategy.Buffer != nil {
 			strategy.Buffer = &storage.BufferStrategy{}
 			strategy.Buffer.Low = int(original.Strategy.Buffer.Low)
 			strategy.Buffer.High = int(original.Strategy.Buffer.High)
+			strategy.Buffer.ReservedDays = int(original.Strategy.Buffer.ReservedDays)
 		}
 	}
 	status := &storage.State{
@@ -351,7 +360,7 @@ func checkNodeGroupEqual(origin *nodegroupmgr.NodeGroup, storageNodegroup *stora
 }
 
 func (e *NodegroupManager) handleNodeGroup(nodegroup *nodegroupmgr.NodeGroup,
-	uid string) (*nodegroupmgr.NodeScaleUpPolicy, *nodegroupmgr.NodeScaleDownPolicy, error) {
+	uid string) ([]*nodegroupmgr.NodeScaleUpPolicy, []*nodegroupmgr.NodeScaleDownPolicy, error) {
 	nodegroupId := nodegroup.NodeGroupID
 	storageNodeGroup, err := e.storage.GetNodeGroup(nodegroupId, &storage.GetOptions{})
 	if err != nil {
@@ -373,32 +382,39 @@ func (e *NodegroupManager) handleNodeGroup(nodegroup *nodegroupmgr.NodeGroup,
 			return nil, nil, fmt.Errorf(errMessage)
 		}
 	}
-	scaleUpPolicy := &nodegroupmgr.NodeScaleUpPolicy{}
-	scaleDownPolicy := &nodegroupmgr.NodeScaleDownPolicy{}
-	storageScaleUp, err := e.storage.GetNodeGroupAction(nodegroupId, storage.ScaleUpState, &storage.GetOptions{})
+	scaleUpPolicies := make([]*nodegroupmgr.NodeScaleUpPolicy, 0)
+	scaleDownPolicies := make([]*nodegroupmgr.NodeScaleDownPolicy, 0)
+	actions, err := e.storage.ListNodeGroupAction(nodegroupId, &storage.ListOptions{})
 	if err != nil {
-		errMessage := fmt.Sprintf("[%s]get nodegroup[%s] scale up action err:%v", uid, nodegroupId, err)
+		errMessage := fmt.Sprintf("[%s]list nodegroup[%s] actions err:%v", uid, nodegroupId, err)
 		blog.Error(errMessage)
 		return nil, nil, fmt.Errorf(errMessage)
 	}
-	if storageScaleUp != nil {
-		scaleUpPolicy.NodeGroupID = storageScaleUp.NodeGroupID
-		scaleUpPolicy.DesiredSize = int32(storageUpdateNodegroup.DesiredSize)
-		return scaleUpPolicy, nil, nil
+	for _, action := range actions {
+		switch action.Event {
+		case storage.ScaleUpState:
+			scaleUp := &nodegroupmgr.NodeScaleUpPolicy{
+				NodeGroupID: action.NodeGroupID,
+				DesiredSize: int32(storageUpdateNodegroup.DesiredSize),
+			}
+			scaleUpPolicies = append(scaleUpPolicies, scaleUp)
+		case storage.ScaleDownState:
+			scaleDown := &nodegroupmgr.NodeScaleDownPolicy{
+				NodeGroupID: action.NodeGroupID,
+				Type:        "NodeNum",
+				NodeNum:     int32(storageUpdateNodegroup.DesiredSize),
+			}
+			scaleDownPolicies = append(scaleDownPolicies, scaleDown)
+		case storage.ScaleDownByTaskState:
+			scaleDown := &nodegroupmgr.NodeScaleDownPolicy{
+				NodeGroupID: action.NodeGroupID,
+				Type:        "NodeIPs",
+				NodeIPs:     action.NodeIPs,
+			}
+			scaleDownPolicies = append(scaleDownPolicies, scaleDown)
+		}
 	}
-	storageScaleDown, err := e.storage.GetNodeGroupAction(nodegroupId, storage.ScaleDownState, &storage.GetOptions{})
-	if err != nil {
-		errMessage := fmt.Sprintf("[%s]get nodegroup[%s] scale down action err:%v", uid, nodegroupId, err)
-		blog.Error(errMessage)
-		return nil, nil, fmt.Errorf(errMessage)
-	}
-	if storageScaleDown != nil {
-		scaleDownPolicy.NodeGroupID = storageScaleDown.NodeGroupID
-		scaleDownPolicy.NodeNum = int32(storageUpdateNodegroup.DesiredSize)
-		scaleDownPolicy.Type = "NodeNum"
-		return nil, scaleDownPolicy, nil
-	}
-	return nil, nil, nil
+	return scaleUpPolicies, scaleDownPolicies, nil
 }
 
 func (e *NodegroupManager) updateNodeGroupStatus(response *nodegroupmgr.ClusterAutoscalerReview) {
@@ -427,21 +443,23 @@ func (e *NodegroupManager) updateNodeGroupStatus(response *nodegroupmgr.ClusterA
 		}
 	}
 	for _, scaleDown := range response.Response.ScaleDowns {
-		desireNum := int(scaleDown.NodeNum)
-		currentNum := len(response.Request.NodeGroups[scaleDown.NodeGroupID].NodeIPs)
-		process := calculateProcess(currentNum, desireNum)
-		blog.Infof("calculate process: currentNum:%d, desireNum:%d, process:%d", currentNum, desireNum, process)
-		action := &storage.NodeGroupAction{
-			NodeGroupID: scaleDown.NodeGroupID,
-			Event:       storage.ScaleDownState,
-			Process:     process,
-			UpdatedTime: time.Now(),
+		if scaleDown.Type == "NodeNum" {
+			desireNum := int(scaleDown.NodeNum)
+			currentNum := len(response.Request.NodeGroups[scaleDown.NodeGroupID].NodeIPs)
+			process := calculateProcess(currentNum, desireNum)
+			blog.Infof("calculate process: currentNum:%d, desireNum:%d, process:%d", currentNum, desireNum, process)
+			action := &storage.NodeGroupAction{
+				NodeGroupID: scaleDown.NodeGroupID,
+				Event:       storage.ScaleDownState,
+				Process:     process,
+				UpdatedTime: time.Now(),
+			}
+			_, err := e.storage.UpdateNodeGroupAction(action, &storage.UpdateOptions{})
+			if err != nil {
+				blog.Errorf("update nodegroup[%s] scale down action error:%v", scaleDown.NodeGroupID, err)
+			}
 		}
-		_, err := e.storage.UpdateNodeGroupAction(action, &storage.UpdateOptions{})
-		if err != nil {
-			blog.Errorf("update nodegroup[%s] scale down action error:%v", scaleDown.NodeGroupID, err)
-		}
-		_, err = e.storage.UpdateNodeGroup(&storage.NodeGroup{
+		_, err := e.storage.UpdateNodeGroup(&storage.NodeGroup{
 			NodeGroupID: scaleDown.NodeGroupID,
 			HookConfirm: true,
 			UpdatedTime: time.Now(),

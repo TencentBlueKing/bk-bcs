@@ -22,6 +22,7 @@ import (
 	"github.com/stretchr/testify/mock"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-nodegroup-manager/pkg/storage"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-nodegroup-manager/pkg/storage/mocks"
 	nodegroupmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-nodegroup-manager/proto"
@@ -696,6 +697,12 @@ func Test_calculateProcess(t *testing.T) {
 			desire:  100,
 			current: 110,
 			want:    90,
+		},
+		{
+			name:    storage.ScaleDownState,
+			desire:  1,
+			current: 2,
+			want:    50,
 		},
 	}
 	for _, tt := range tests {
