@@ -9,6 +9,7 @@
       :namespace="namespace"
       :name="name"
       :kind="kind"
+      :crd="crd"
       :hidden-operate="true"
     ></component>
   </keep-alive>
@@ -68,8 +69,12 @@ const statefulsetInstantiation = () => import(
   /* webpackChunkName: 'app-instantiation' */'./k8s/statefulset-instantiation');
 const gamestatefulset = () => import(
   /* webpackChunkName: 'app-list' */'./k8s/gamestatefulset');
+const gamestatefulSetsInstanceDetail = () => import(
+  /* webpackChunkName: 'app-instance' */'@/views/dashboard/workload/detail/index.vue');
 const gamedeployments = () => import(
   /* webpackChunkName: 'app-list' */'./k8s/gamedeployments');
+const gamedeploymentsInstanceDetail = () => import(
+  /* webpackChunkName: 'app-instance' */'@/views/dashboard/workload/detail/index.vue');
 const customobjects = () => import(
   /* webpackChunkName: 'app-list' */'./k8s/customobjects');
 
@@ -106,7 +111,9 @@ export default {
     statefulsetInstantiation,
 
     gamestatefulset,
+    gamestatefulSetsInstanceDetail,
     gamedeployments,
+    gamedeploymentsInstanceDetail,
     customobjects,
   },
   data() {
@@ -138,7 +145,9 @@ export default {
         'statefulsetInstantiation',
 
         'gamestatefulset',
+        'gamestatefulSetsInstanceDetail',
         'gamedeployments',
+        'gamedeploymentsInstanceDetail', 
         'customobjects',
       ],
       isError: false,
@@ -168,6 +177,8 @@ export default {
         statefulsetInstanceDetail2: 'statefulsets',
         jobInstanceDetail: 'jobs',
         jobInstanceDetail2: 'jobs',
+        gamedeploymentsInstanceDetail: 'custom_objects',
+        gamestatefulSetsInstanceDetail: 'custom_objects'
       };
       return categoryMap[this.$route.name];
     },
@@ -187,9 +198,18 @@ export default {
         statefulsetInstanceDetail2: 'StatefulSet',
         jobInstanceDetail: 'Job',
         jobInstanceDetail2: 'Job',
+        gamedeploymentsInstanceDetail : 'GameDeployment',
+        gamestatefulSetsInstanceDetail : 'GameStatefulSet'
       };
       return kindMap[this.$route.name];
     },
+    crd() {
+      const crdMap = {
+        gamedeploymentsInstanceDetail : 'gamedeployments.tkex.tencent.com',
+        gamestatefulSetsInstanceDetail : 'gamestatefulsets.tkex.tencent.com'
+      }
+      return crdMap[this.$route.name]
+    }
   },
   mounted() {
     this.setCurProject();

@@ -70,7 +70,7 @@
                     <template v-if="column === 'name'">
                       <a
                         href="javascript:void(0);" class="bk-text-button name-col bcs-ellipsis"
-                        @click="showSideslider(row[column], row['namespace'])">{{row[column] || '--'}}</a>
+                        @click="showDetail(row[column], row['namespace'])">{{row[column] || '--'}}</a>
                     </template>
                     <template v-else-if="column === 'cluster_id'">
                       <span class="cluster-col bcs-ellipsis">{{row[column] || '--'}}</span>
@@ -96,13 +96,13 @@
         </div>
       </template>
     </div>
-    <gamestatefulset-sideslider
+    <!-- <gamestatefulset-sideslider
       :is-show="isShowSideslider"
       :cluster-id="selectedClusterId"
       :namespace-name="curShowNamespace"
       :name="curShowName"
       @hide-sideslider="hideSideslider">
-    </gamestatefulset-sideslider>
+    </gamestatefulset-sideslider> -->
 
     <gamestatefulset-update
       :is-show="isShowUpdateDialog"
@@ -565,20 +565,31 @@ export default {
     /**
              * 显示 sideslider
              */
-    async showSideslider(name, namespace) {
-      this.curShowName = name;
-      this.curShowNamespace = namespace;
-      this.isShowSideslider = true;
+    async showDetail(name, namespace) {
+      this.$router.push({
+        name: 'gamestatefulSetsInstanceDetail',
+        params: {
+          category: 'custom_objects',
+          name,
+          namespace,
+        },
+        query: {
+          kind: 'GameStatefulSet',
+          crd: 'gamestatefulsets.tkex.tencent.com',
+          name,
+          namespace
+        },
+      });
     },
 
     /**
              * 隐藏 sideslider
              */
-    hideSideslider() {
-      this.curShowName = '';
-      this.curShowNamespace = '';
-      this.isShowSideslider = false;
-    },
+    // hideSideslider() {
+    //   this.curShowName = '';
+    //   this.curShowNamespace = '';
+    //   this.isShowSideslider = false;
+    // },
 
     /**
              * 显示扩缩容弹框

@@ -216,11 +216,29 @@ const childRoutes = [
       {
         path: 'gamestatefulset',
         name: 'gamestatefulset',
+        children: [
+          {
+            path: ':category/detail',
+            name: 'gamestatefulSetsInstanceDetail',
+            meta: {
+              menuId: 'gamestatefulset',
+            },
+          },
+        ]
       },
       // k8s gamedeployments 应用
       {
         path: 'gamedeployments',
         name: 'gamedeployments',
+        children: [
+          {
+            path: ':category/detail',
+            name: 'gamedeploymentsInstanceDetail',
+            meta: {
+              menuId: 'gamedeployments',
+            },
+          },
+        ]
       },
       // k8s gamestatefulset 应用
       {
