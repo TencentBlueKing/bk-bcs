@@ -344,7 +344,7 @@ class K8SClient(BCSClientBase):
 
     def render_vars(self, project_code, cluster_id, namespace, username, keys):
         """变量渲染, keys=None 会获取全部自定义变量值"""
-        url = f"{self.vars_api_prefix}/project/{project_code}/cluster/{cluster_id}/namespace/{namespace}/variables/render"  # noqa
+        url = f"{self.vars_api_prefix}/projects/{project_code}/clusters/{cluster_id}/namespaces/{namespace}/variables/render"  # noqa
         params = {
             "keyList": keys,
         }

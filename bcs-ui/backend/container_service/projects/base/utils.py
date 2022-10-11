@@ -73,9 +73,6 @@ def create_project(access_token, data):
 def is_k8s_project(access_token, project_id):
     """是否k8s项目"""
     result = get_project(access_token, project_id)
-    if result.get("code") != 0:
-        # 默认使用k8s项目
-        return True
     kind = result["data"]["kind"]
 
     return kind == ProjectKindID
