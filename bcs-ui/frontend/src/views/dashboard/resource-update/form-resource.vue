@@ -234,7 +234,13 @@ export default {
     async showDiff(show) {
       if (show) {
         this.diffLoading = true;
-        this.detail = await this.handleGetManifestByFormData(this.schemaFormData);
+        const detail = await this.handleGetManifestByFormData(this.schemaFormData);
+        this.detail = {
+          apiVersion: detail.apiVersion,
+          kind: detail.kind,
+          metadata: detail.metadata,
+          ...detail
+        }
         this.diffLoading = false;
       }
     },
@@ -243,7 +249,13 @@ export default {
     this.isLoading = true;
     if (this.formData && !!Object.keys(this.formData).length) {
       // 从yaml模式切换到表单模式，初始化原始数据
-      this.original = await this.handleGetManifestByFormData(this.formData);
+      const original = await this.handleGetManifestByFormData(this.formData);
+      this.original = {
+        apiVersion: original.apiVersion,
+        kind: original.kind,
+        metadata: original.metadata,
+        ...original
+      }
     }
     await Promise.all([
       this.handleGetFormSchemaData(),
@@ -304,7 +316,13 @@ export default {
         });
       }
       this.schemaFormData = res.data.formData;
-      this.original = await this.handleGetManifestByFormData(res.data.formData);
+      const original = await this.handleGetManifestByFormData(res.data.formData);
+      this.original = {
+        apiVersion: original.apiVersion,
+        kind: original.kind,
+        metadata: original.metadata,
+        ...original
+      }
     },
     async handleGetFormSchemaData() {
       this.formSchema = await this.$store.dispatch('dashboard/getFormSchema', {
@@ -453,7 +471,14 @@ export default {
     // 表单预览
     async handlePreview() {
       this.previewLoading = true;
-      this.detail = await this.handleGetManifestByFormData(this.schemaFormData);
+      const detail = await this.handleGetManifestByFormData(this.schemaFormData);
+      // 特殊处理-> apiVersion、kind、metadata强制排序在前三位
+      this.detail = {
+        apiVersion: detail.apiVersion,
+        kind: detail.kind,
+        metadata: detail.metadata,
+        ...detail
+      }
       this.previewData = yamljs.dump(this.detail);
       this.showSideslider = true;
       this.previewLoading = false;

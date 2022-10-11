@@ -313,7 +313,14 @@ export default defineComponent({
       return !Object.keys(detail.value).length;
     });
     const setDetail = (data = {}) => { // 设置代码编辑器初始值
-      detail.value = data;
+      // 特殊处理-> apiVersion、kind、metadata强制排序在前三位
+      const newManifest = {
+        apiVersion: data.apiVersion,
+        kind: data.kind,
+        metadata: data.metadata,
+        ...data
+      }
+      detail.value = newManifest;
       editorRef.value?.setValue(Object.keys(detail.value).length ? detail.value : '');
     };
     const handleGetDetail = async () => { // 获取manifest详情
@@ -337,15 +344,7 @@ export default defineComponent({
       }
       original.value = JSON.parse(JSON.stringify(res.data?.manifest || {})); // 缓存原始值
 
-      // 特殊处理-> apiVersion、kind、metadata强制排序在前三位
-      const newManifest = {
-        apiVersion: res.data?.manifest.apiVersion,
-        kind: res.data?.manifest.kind,
-        metadata: res.data?.manifest.metadata,
-        ...res.data?.manifest
-      }
-      
-      setDetail(newManifest);
+      setDetail(res.data?.manifest);
       webAnnotations.value = res.webAnnotations;
       isLoading.value = false;
       return detail.value;

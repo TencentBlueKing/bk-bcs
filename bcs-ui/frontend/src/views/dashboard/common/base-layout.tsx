@@ -348,7 +348,16 @@ export default defineComponent({
       handleChangeDetailType(defaultActiveDetailType.value);
     });
     // yaml内容
-    const yaml = computed(() => yamljs.dump(curDetailRow.value.data || {}));
+    const yaml = computed(() => {
+      // 特殊处理-> apiVersion、kind、metadata强制排序在前三位
+      const newDetailRow = {
+        apiVersion: curDetailRow.value.data.apiVersion,
+        kind: curDetailRow.value.data.kind,
+        metadata: curDetailRow.value.data.metadata,
+        ...curDetailRow.value.data
+      }
+      return yamljs.dump(newDetailRow || {})
+    });
     // 创建资源
     const handleCreateResource = () => {
       const curKind = currentCrdExt.value.kind || kind.value;
