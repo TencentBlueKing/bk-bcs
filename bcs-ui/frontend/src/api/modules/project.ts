@@ -3,7 +3,7 @@ import { createRequest } from '../request';
 // 项目管理，变量变量，命名空间, Quota 管理，权限
 const request = createRequest({
   domain: window.BCS_API_HOST,
-  prefix: '/bcsapi/v4/bcsproject/v1/project/$projectCode',
+  prefix: '/bcsapi/v4/bcsproject/v1/projects/$projectCode',
 });
 
 // variable 变量管理
@@ -16,10 +16,10 @@ export const clusterVariable = request('get', '/variables/$variableID/cluster');
 export const updateClusterVariable = request('put', '/variables/$variableID/cluster');
 export const namespaceVariable = request('get', '/variables/$variableID/namespace');
 export const updateNamespaceVariable = request('put', '/variables/$variableID/namespace');
-export const getClusterVariables = request('get', '/cluster/$clusterId/variables');
-export const updateSpecifyClusterVariables = request('put', '/cluster/$clusterId/variables');
-export const getClusterNamespaceVariable = request('get', '/cluster/$clusterId/namespace/$namespace/variables');
-export const updateClusterNamespaceVariable = request('put', '/cluster/$clusterId/namespace/$namespace/variables');
+export const getClusterVariables = request('get', '/clusters/$clusterId/variables');
+export const updateSpecifyClusterVariables = request('put', '/clusters/$clusterId/variables');
+export const getClusterNamespaceVariable = request('get', '/clusters/$clusterId/namespace/$namespace/variables');
+export const updateClusterNamespaceVariable = request('put', '/clusters/$clusterId/namespace/$namespace/variables');
 
 const request2 = createRequest({
   domain: window.DEVOPS_BCS_API_URL,

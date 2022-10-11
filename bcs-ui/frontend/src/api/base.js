@@ -168,7 +168,7 @@ export const clusterPodMetric = request('post', `${metricPrefix}/namespaces/$nam
 export const clusterContainersMetric = request('get', `${metricPrefix}/namespaces/$namespaceId/pods/$podId/containers/$containerId/$metric`);
 
 // variable
-const variablePrefix = `${NODE_ENV === 'development' ? '' : window.BCS_API_HOST}/bcsapi/v4/bcsproject/v1/project/$projectCode`;
+const variablePrefix = `${NODE_ENV === 'development' ? '' : window.BCS_API_HOST}/bcsapi/v4/bcsproject/v1/projects/$projectCode`;
 export const createVariable = request('post', `${variablePrefix}/variables`);
 export const variableDefinitions = request('get', `${variablePrefix}/variables`);
 export const deleteDefinitions = request('delete', `${variablePrefix}/variables`);
