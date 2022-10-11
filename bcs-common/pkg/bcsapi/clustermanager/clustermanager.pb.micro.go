@@ -11,6 +11,7 @@ import (
 	_ "github.com/golang/protobuf/ptypes/wrappers"
 	_ "github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger/options"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
+	_ "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	math "math"
 )
 
@@ -129,12 +130,6 @@ func NewClusterManagerEndpoints() []*api.Endpoint {
 			Handler: "rpc",
 		},
 		&api.Endpoint{
-			Name:    "ClusterManager.GetNodeInfo",
-			Path:    []string{"/clustermanager/v1/node/{innerIP}/info"},
-			Method:  []string{"GET"},
-			Handler: "rpc",
-		},
-		&api.Endpoint{
 			Name:    "ClusterManager.UpdateNode",
 			Path:    []string{"/clustermanager/v1/node"},
 			Method:  []string{"PUT"},
@@ -159,6 +154,13 @@ func NewClusterManagerEndpoints() []*api.Endpoint {
 			Name:    "ClusterManager.UnCordonNode",
 			Path:    []string{"/clustermanager/v1/node/uncordon"},
 			Method:  []string{"PUT"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "ClusterManager.DrainNode",
+			Path:    []string{"/clustermanager/v1/node/drain"},
+			Method:  []string{"POST"},
 			Body:    "*",
 			Handler: "rpc",
 		},
@@ -435,6 +437,13 @@ func NewClusterManagerEndpoints() []*api.Endpoint {
 			Handler: "rpc",
 		},
 		&api.Endpoint{
+			Name:    "ClusterManager.CleanNodesInGroupV2",
+			Path:    []string{"/clustermanager/v2/nodegroup/{nodeGroupID}/groupnode"},
+			Method:  []string{"DELETE"},
+			Body:    "",
+			Handler: "rpc",
+		},
+		&api.Endpoint{
 			Name:    "ClusterManager.ListNodesInGroup",
 			Path:    []string{"/clustermanager/v1/nodegroup/{nodeGroupID}/node"},
 			Method:  []string{"GET"},
@@ -450,13 +459,6 @@ func NewClusterManagerEndpoints() []*api.Endpoint {
 		&api.Endpoint{
 			Name:    "ClusterManager.UpdateGroupDesiredSize",
 			Path:    []string{"/clustermanager/v1/nodegroup/{nodeGroupID}/desiredsize"},
-			Method:  []string{"POST"},
-			Body:    "*",
-			Handler: "rpc",
-		},
-		&api.Endpoint{
-			Name:    "ClusterManager.UpdateGroupMinMaxSize",
-			Path:    []string{"/clustermanager/v1/nodegroup/{nodeGroupID}/boundsize"},
 			Method:  []string{"POST"},
 			Body:    "*",
 			Handler: "rpc",
@@ -549,36 +551,10 @@ func NewClusterManagerEndpoints() []*api.Endpoint {
 			Handler: "rpc",
 		},
 		&api.Endpoint{
-			Name:    "ClusterManager.CreateNodeTemplate",
-			Path:    []string{"/clustermanager/v1/projects/{projectID}/nodetemplates"},
-			Method:  []string{"POST"},
-			Body:    "*",
-			Handler: "rpc",
-		},
-		&api.Endpoint{
-			Name:    "ClusterManager.UpdateNodeTemplate",
-			Path:    []string{"/clustermanager/v1/projects/{projectID}/nodetemplates/{nodeTemplateID}"},
+			Name:    "ClusterManager.UpdateAutoScalingStatus",
+			Path:    []string{"/clustermanager/v1/autoscalingoption/{clusterID}/status"},
 			Method:  []string{"PUT"},
 			Body:    "*",
-			Handler: "rpc",
-		},
-		&api.Endpoint{
-			Name:    "ClusterManager.DeleteNodeTemplate",
-			Path:    []string{"/clustermanager/v1/projects/{projectID}/nodetemplates/{nodeTemplateID}"},
-			Method:  []string{"DELETE"},
-			Body:    "",
-			Handler: "rpc",
-		},
-		&api.Endpoint{
-			Name:    "ClusterManager.ListNodeTemplate",
-			Path:    []string{"/clustermanager/v1/projects/{projectID}/nodetemplates"},
-			Method:  []string{"GET"},
-			Handler: "rpc",
-		},
-		&api.Endpoint{
-			Name:    "ClusterManager.GetNodeTemplate",
-			Path:    []string{"/clustermanager/v1/projects/{projectID}/nodetemplates/{nodeTemplateID}"},
-			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
 		&api.Endpoint{
@@ -605,6 +581,12 @@ func NewClusterManagerEndpoints() []*api.Endpoint {
 		&api.Endpoint{
 			Name:    "ClusterManager.ListCloudAccount",
 			Path:    []string{"/clustermanager/v1/clouds/{cloudID}/accounts"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "ClusterManager.ListCloudAccountToPerm",
+			Path:    []string{"/clustermanager/v1/accounts"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
@@ -651,61 +633,28 @@ func NewClusterManagerEndpoints() []*api.Endpoint {
 			Handler: "rpc",
 		},
 		&api.Endpoint{
-			Name:    "ClusterManager.GetBkSopsTemplateList",
-			Path:    []string{"/clustermanager/v1/bksops/business/{businessID}/templates"},
+			Name:    "ClusterManager.ListOperationLogs",
+			Path:    []string{"/clustermanager/v1/operationlogs"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
 		&api.Endpoint{
-			Name:    "ClusterManager.GetBkSopsTemplateInfo",
-			Path:    []string{"/clustermanager/v1/bksops/business/{businessID}/templates/{templateID}"},
+			Name:    "ClusterManager.ListResourceSchema",
+			Path:    []string{"/clustermanager/v1/resourceschema/{cloudID}"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
 		&api.Endpoint{
-			Name:    "ClusterManager.GetInnerTemplateValues",
-			Path:    []string{"/clustermanager/v1/bksops/templatevalues"},
+			Name:    "ClusterManager.GetResourceSchema",
+			Path:    []string{"/clustermanager/v1/resourceschema/{cloudID}/{name}"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
 		&api.Endpoint{
-			Name:    "ClusterManager.DebugBkSopsTask",
-			Path:    []string{"/clustermanager/v1/bksops/debug"},
+			Name:    "ClusterManager.QueryPermByActionID",
+			Path:    []string{"/clustermanager/v1/perms/actions/{actionID}"},
 			Method:  []string{"POST"},
 			Body:    "*",
-			Handler: "rpc",
-		},
-		&api.Endpoint{
-			Name:    "ClusterManager.CreateCloudModuleFlag",
-			Path:    []string{"/clustermanager/v1/clouds/{cloudID}/versions/{version}/modules"},
-			Method:  []string{"POST"},
-			Body:    "*",
-			Handler: "rpc",
-		},
-		&api.Endpoint{
-			Name:    "ClusterManager.UpdateCloudModuleFlag",
-			Path:    []string{"/clustermanager/v1/clouds/{cloudID}/versions/{version}/modules/{moduleID}"},
-			Method:  []string{"PUT"},
-			Body:    "*",
-			Handler: "rpc",
-		},
-		&api.Endpoint{
-			Name:    "ClusterManager.DeleteCloudModuleFlag",
-			Path:    []string{"/clustermanager/v1/clouds/{cloudID}/versions/{version}/modules/{moduleID}"},
-			Method:  []string{"DELETE"},
-			Body:    "",
-			Handler: "rpc",
-		},
-		&api.Endpoint{
-			Name:    "ClusterManager.ListCloudModuleFlag",
-			Path:    []string{"/clustermanager/v1/clouds/{cloudID}/versions/{version}/modules/{moduleID}"},
-			Method:  []string{"GET"},
-			Handler: "rpc",
-		},
-		&api.Endpoint{
-			Name:    "ClusterManager.Health",
-			Path:    []string{"/clustermanager/v1/health"},
-			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
 	}
@@ -729,11 +678,11 @@ type ClusterManagerService interface {
 	ListCommonCluster(ctx context.Context, in *ListCommonClusterReq, opts ...client.CallOption) (*ListCommonClusterResp, error)
 	//* node management
 	GetNode(ctx context.Context, in *GetNodeRequest, opts ...client.CallOption) (*GetNodeResponse, error)
-	GetNodeInfo(ctx context.Context, in *GetNodeInfoRequest, opts ...client.CallOption) (*GetNodeInfoResponse, error)
 	UpdateNode(ctx context.Context, in *UpdateNodeRequest, opts ...client.CallOption) (*UpdateNodeResponse, error)
 	CheckNodeInCluster(ctx context.Context, in *CheckNodesRequest, opts ...client.CallOption) (*CheckNodesResponse, error)
 	CordonNode(ctx context.Context, in *CordonNodeRequest, opts ...client.CallOption) (*CordonNodeResponse, error)
 	UnCordonNode(ctx context.Context, in *UnCordonNodeRequest, opts ...client.CallOption) (*UnCordonNodeResponse, error)
+	DrainNode(ctx context.Context, in *DrainNodeRequest, opts ...client.CallOption) (*DrainNodeResponse, error)
 	//* cluster credential management
 	GetClusterCredential(ctx context.Context, in *GetClusterCredentialReq, opts ...client.CallOption) (*GetClusterCredentialResp, error)
 	UpdateClusterCredential(ctx context.Context, in *UpdateClusterCredentialReq, opts ...client.CallOption) (*UpdateClusterCredentialResp, error)
@@ -783,10 +732,10 @@ type ClusterManagerService interface {
 	MoveNodesToGroup(ctx context.Context, in *MoveNodesToGroupRequest, opts ...client.CallOption) (*MoveNodesToGroupResponse, error)
 	RemoveNodesFromGroup(ctx context.Context, in *RemoveNodesFromGroupRequest, opts ...client.CallOption) (*RemoveNodesFromGroupResponse, error)
 	CleanNodesInGroup(ctx context.Context, in *CleanNodesInGroupRequest, opts ...client.CallOption) (*CleanNodesInGroupResponse, error)
-	ListNodesInGroup(ctx context.Context, in *GetNodeGroupRequest, opts ...client.CallOption) (*ListNodesInGroupResponse, error)
+	CleanNodesInGroupV2(ctx context.Context, in *CleanNodesInGroupV2Request, opts ...client.CallOption) (*CleanNodesInGroupV2Response, error)
+	ListNodesInGroup(ctx context.Context, in *ListNodesInGroupRequest, opts ...client.CallOption) (*ListNodesInGroupResponse, error)
 	UpdateGroupDesiredNode(ctx context.Context, in *UpdateGroupDesiredNodeRequest, opts ...client.CallOption) (*UpdateGroupDesiredNodeResponse, error)
 	UpdateGroupDesiredSize(ctx context.Context, in *UpdateGroupDesiredSizeRequest, opts ...client.CallOption) (*UpdateGroupDesiredSizeResponse, error)
-	UpdateGroupMinMaxSize(ctx context.Context, in *UpdateGroupMinMaxSizeRequest, opts ...client.CallOption) (*UpdateGroupMinMaxSizeResponse, error)
 	EnableNodeGroupAutoScale(ctx context.Context, in *EnableNodeGroupAutoScaleRequest, opts ...client.CallOption) (*EnableNodeGroupAutoScaleResponse, error)
 	DisableNodeGroupAutoScale(ctx context.Context, in *DisableNodeGroupAutoScaleRequest, opts ...client.CallOption) (*DisableNodeGroupAutoScaleResponse, error)
 	//* Task information management *
@@ -802,17 +751,13 @@ type ClusterManagerService interface {
 	DeleteAutoScalingOption(ctx context.Context, in *DeleteAutoScalingOptionRequest, opts ...client.CallOption) (*DeleteAutoScalingOptionResponse, error)
 	GetAutoScalingOption(ctx context.Context, in *GetAutoScalingOptionRequest, opts ...client.CallOption) (*GetAutoScalingOptionResponse, error)
 	ListAutoScalingOption(ctx context.Context, in *ListAutoScalingOptionRequest, opts ...client.CallOption) (*ListAutoScalingOptionResponse, error)
-	// Cloud NodeTemplate info management
-	CreateNodeTemplate(ctx context.Context, in *CreateNodeTemplateRequest, opts ...client.CallOption) (*CreateNodeTemplateResponse, error)
-	UpdateNodeTemplate(ctx context.Context, in *UpdateNodeTemplateRequest, opts ...client.CallOption) (*UpdateNodeTemplateResponse, error)
-	DeleteNodeTemplate(ctx context.Context, in *DeleteNodeTemplateRequest, opts ...client.CallOption) (*DeleteNodeTemplateResponse, error)
-	ListNodeTemplate(ctx context.Context, in *ListNodeTemplateRequest, opts ...client.CallOption) (*ListNodeTemplateResponse, error)
-	GetNodeTemplate(ctx context.Context, in *GetNodeTemplateRequest, opts ...client.CallOption) (*GetNodeTemplateResponse, error)
+	UpdateAutoScalingStatus(ctx context.Context, in *UpdateAutoScalingStatusRequest, opts ...client.CallOption) (*UpdateAutoScalingStatusResponse, error)
 	// Cloud Account information management
 	CreateCloudAccount(ctx context.Context, in *CreateCloudAccountRequest, opts ...client.CallOption) (*CreateCloudAccountResponse, error)
 	UpdateCloudAccount(ctx context.Context, in *UpdateCloudAccountRequest, opts ...client.CallOption) (*UpdateCloudAccountResponse, error)
 	DeleteCloudAccount(ctx context.Context, in *DeleteCloudAccountRequest, opts ...client.CallOption) (*DeleteCloudAccountResponse, error)
 	ListCloudAccount(ctx context.Context, in *ListCloudAccountRequest, opts ...client.CallOption) (*ListCloudAccountResponse, error)
+	ListCloudAccountToPerm(ctx context.Context, in *ListCloudAccountPermRequest, opts ...client.CallOption) (*ListCloudAccountPermResponse, error)
 	// Cloud Resource management
 	GetCloudRegions(ctx context.Context, in *GetCloudRegionsRequest, opts ...client.CallOption) (*GetCloudRegionsResponse, error)
 	GetCloudRegionZones(ctx context.Context, in *GetCloudRegionZonesRequest, opts ...client.CallOption) (*GetCloudRegionZonesResponse, error)
@@ -821,18 +766,15 @@ type ClusterManagerService interface {
 	ListCloudSecurityGroups(ctx context.Context, in *ListCloudSecurityGroupsRequest, opts ...client.CallOption) (*ListCloudSecurityGroupsResponse, error)
 	ListCloudInstanceTypes(ctx context.Context, in *ListCloudInstanceTypeRequest, opts ...client.CallOption) (*ListCloudInstanceTypeResponse, error)
 	ListCloudOsImage(ctx context.Context, in *ListCloudOsImageRequest, opts ...client.CallOption) (*ListCloudOsImageResponse, error)
-	// thirdParty interface(cmdb/bksops等)
-	GetBkSopsTemplateList(ctx context.Context, in *GetBkSopsTemplateListRequest, opts ...client.CallOption) (*GetBkSopsTemplateListResponse, error)
-	GetBkSopsTemplateInfo(ctx context.Context, in *GetBkSopsTemplateInfoRequest, opts ...client.CallOption) (*GetBkSopsTemplateInfoResponse, error)
-	GetInnerTemplateValues(ctx context.Context, in *GetInnerTemplateValuesRequest, opts ...client.CallOption) (*GetInnerTemplateValuesResponse, error)
-	DebugBkSopsTask(ctx context.Context, in *DebugBkSopsTaskRequest, opts ...client.CallOption) (*DebugBkSopsTaskResponse, error)
-	// Cloud module flag management
-	CreateCloudModuleFlag(ctx context.Context, in *CreateCloudModuleFlagRequest, opts ...client.CallOption) (*CreateCloudModuleFlagResponse, error)
-	UpdateCloudModuleFlag(ctx context.Context, in *UpdateCloudModuleFlagRequest, opts ...client.CallOption) (*UpdateCloudModuleFlagResponse, error)
-	DeleteCloudModuleFlag(ctx context.Context, in *DeleteCloudModuleFlagRequest, opts ...client.CallOption) (*DeleteCloudModuleFlagResponse, error)
-	ListCloudModuleFlag(ctx context.Context, in *ListCloudModuleFlagRequest, opts ...client.CallOption) (*ListCloudModuleFlagResponse, error)
-	// cluster manager health interface
-	Health(ctx context.Context, in *HealthRequest, opts ...client.CallOption) (*HealthResponse, error)
+	// Operation logs
+	ListOperationLogs(ctx context.Context, in *ListOperationLogsRequest, opts ...client.CallOption) (*ListOperationLogsResponse, error)
+	// ** ResourceSchema **
+	// ListResourceSchema
+	ListResourceSchema(ctx context.Context, in *ListResourceSchemaRequest, opts ...client.CallOption) (*ListResourceSchemaResponse, error)
+	// GetResourceSchema
+	GetResourceSchema(ctx context.Context, in *GetResourceSchemaRequest, opts ...client.CallOption) (*GetResourceSchemaResponse, error)
+	// Perm interface
+	QueryPermByActionID(ctx context.Context, in *QueryPermByActionIDRequest, opts ...client.CallOption) (*QueryPermByActionIDResponse, error)
 }
 
 type clusterManagerService struct {
@@ -977,16 +919,6 @@ func (c *clusterManagerService) GetNode(ctx context.Context, in *GetNodeRequest,
 	return out, nil
 }
 
-func (c *clusterManagerService) GetNodeInfo(ctx context.Context, in *GetNodeInfoRequest, opts ...client.CallOption) (*GetNodeInfoResponse, error) {
-	req := c.c.NewRequest(c.name, "ClusterManager.GetNodeInfo", in)
-	out := new(GetNodeInfoResponse)
-	err := c.c.Call(ctx, req, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func (c *clusterManagerService) UpdateNode(ctx context.Context, in *UpdateNodeRequest, opts ...client.CallOption) (*UpdateNodeResponse, error) {
 	req := c.c.NewRequest(c.name, "ClusterManager.UpdateNode", in)
 	out := new(UpdateNodeResponse)
@@ -1020,6 +952,16 @@ func (c *clusterManagerService) CordonNode(ctx context.Context, in *CordonNodeRe
 func (c *clusterManagerService) UnCordonNode(ctx context.Context, in *UnCordonNodeRequest, opts ...client.CallOption) (*UnCordonNodeResponse, error) {
 	req := c.c.NewRequest(c.name, "ClusterManager.UnCordonNode", in)
 	out := new(UnCordonNodeResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerService) DrainNode(ctx context.Context, in *DrainNodeRequest, opts ...client.CallOption) (*DrainNodeResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.DrainNode", in)
+	out := new(DrainNodeResponse)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -1437,7 +1379,17 @@ func (c *clusterManagerService) CleanNodesInGroup(ctx context.Context, in *Clean
 	return out, nil
 }
 
-func (c *clusterManagerService) ListNodesInGroup(ctx context.Context, in *GetNodeGroupRequest, opts ...client.CallOption) (*ListNodesInGroupResponse, error) {
+func (c *clusterManagerService) CleanNodesInGroupV2(ctx context.Context, in *CleanNodesInGroupV2Request, opts ...client.CallOption) (*CleanNodesInGroupV2Response, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.CleanNodesInGroupV2", in)
+	out := new(CleanNodesInGroupV2Response)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerService) ListNodesInGroup(ctx context.Context, in *ListNodesInGroupRequest, opts ...client.CallOption) (*ListNodesInGroupResponse, error) {
 	req := c.c.NewRequest(c.name, "ClusterManager.ListNodesInGroup", in)
 	out := new(ListNodesInGroupResponse)
 	err := c.c.Call(ctx, req, out, opts...)
@@ -1460,16 +1412,6 @@ func (c *clusterManagerService) UpdateGroupDesiredNode(ctx context.Context, in *
 func (c *clusterManagerService) UpdateGroupDesiredSize(ctx context.Context, in *UpdateGroupDesiredSizeRequest, opts ...client.CallOption) (*UpdateGroupDesiredSizeResponse, error) {
 	req := c.c.NewRequest(c.name, "ClusterManager.UpdateGroupDesiredSize", in)
 	out := new(UpdateGroupDesiredSizeResponse)
-	err := c.c.Call(ctx, req, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *clusterManagerService) UpdateGroupMinMaxSize(ctx context.Context, in *UpdateGroupMinMaxSizeRequest, opts ...client.CallOption) (*UpdateGroupMinMaxSizeResponse, error) {
-	req := c.c.NewRequest(c.name, "ClusterManager.UpdateGroupMinMaxSize", in)
-	out := new(UpdateGroupMinMaxSizeResponse)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -1607,49 +1549,9 @@ func (c *clusterManagerService) ListAutoScalingOption(ctx context.Context, in *L
 	return out, nil
 }
 
-func (c *clusterManagerService) CreateNodeTemplate(ctx context.Context, in *CreateNodeTemplateRequest, opts ...client.CallOption) (*CreateNodeTemplateResponse, error) {
-	req := c.c.NewRequest(c.name, "ClusterManager.CreateNodeTemplate", in)
-	out := new(CreateNodeTemplateResponse)
-	err := c.c.Call(ctx, req, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *clusterManagerService) UpdateNodeTemplate(ctx context.Context, in *UpdateNodeTemplateRequest, opts ...client.CallOption) (*UpdateNodeTemplateResponse, error) {
-	req := c.c.NewRequest(c.name, "ClusterManager.UpdateNodeTemplate", in)
-	out := new(UpdateNodeTemplateResponse)
-	err := c.c.Call(ctx, req, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *clusterManagerService) DeleteNodeTemplate(ctx context.Context, in *DeleteNodeTemplateRequest, opts ...client.CallOption) (*DeleteNodeTemplateResponse, error) {
-	req := c.c.NewRequest(c.name, "ClusterManager.DeleteNodeTemplate", in)
-	out := new(DeleteNodeTemplateResponse)
-	err := c.c.Call(ctx, req, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *clusterManagerService) ListNodeTemplate(ctx context.Context, in *ListNodeTemplateRequest, opts ...client.CallOption) (*ListNodeTemplateResponse, error) {
-	req := c.c.NewRequest(c.name, "ClusterManager.ListNodeTemplate", in)
-	out := new(ListNodeTemplateResponse)
-	err := c.c.Call(ctx, req, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *clusterManagerService) GetNodeTemplate(ctx context.Context, in *GetNodeTemplateRequest, opts ...client.CallOption) (*GetNodeTemplateResponse, error) {
-	req := c.c.NewRequest(c.name, "ClusterManager.GetNodeTemplate", in)
-	out := new(GetNodeTemplateResponse)
+func (c *clusterManagerService) UpdateAutoScalingStatus(ctx context.Context, in *UpdateAutoScalingStatusRequest, opts ...client.CallOption) (*UpdateAutoScalingStatusResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.UpdateAutoScalingStatus", in)
+	out := new(UpdateAutoScalingStatusResponse)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -1690,6 +1592,16 @@ func (c *clusterManagerService) DeleteCloudAccount(ctx context.Context, in *Dele
 func (c *clusterManagerService) ListCloudAccount(ctx context.Context, in *ListCloudAccountRequest, opts ...client.CallOption) (*ListCloudAccountResponse, error) {
 	req := c.c.NewRequest(c.name, "ClusterManager.ListCloudAccount", in)
 	out := new(ListCloudAccountResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerService) ListCloudAccountToPerm(ctx context.Context, in *ListCloudAccountPermRequest, opts ...client.CallOption) (*ListCloudAccountPermResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.ListCloudAccountToPerm", in)
+	out := new(ListCloudAccountPermResponse)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -1767,9 +1679,9 @@ func (c *clusterManagerService) ListCloudOsImage(ctx context.Context, in *ListCl
 	return out, nil
 }
 
-func (c *clusterManagerService) GetBkSopsTemplateList(ctx context.Context, in *GetBkSopsTemplateListRequest, opts ...client.CallOption) (*GetBkSopsTemplateListResponse, error) {
-	req := c.c.NewRequest(c.name, "ClusterManager.GetBkSopsTemplateList", in)
-	out := new(GetBkSopsTemplateListResponse)
+func (c *clusterManagerService) ListOperationLogs(ctx context.Context, in *ListOperationLogsRequest, opts ...client.CallOption) (*ListOperationLogsResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.ListOperationLogs", in)
+	out := new(ListOperationLogsResponse)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -1777,9 +1689,9 @@ func (c *clusterManagerService) GetBkSopsTemplateList(ctx context.Context, in *G
 	return out, nil
 }
 
-func (c *clusterManagerService) GetBkSopsTemplateInfo(ctx context.Context, in *GetBkSopsTemplateInfoRequest, opts ...client.CallOption) (*GetBkSopsTemplateInfoResponse, error) {
-	req := c.c.NewRequest(c.name, "ClusterManager.GetBkSopsTemplateInfo", in)
-	out := new(GetBkSopsTemplateInfoResponse)
+func (c *clusterManagerService) ListResourceSchema(ctx context.Context, in *ListResourceSchemaRequest, opts ...client.CallOption) (*ListResourceSchemaResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.ListResourceSchema", in)
+	out := new(ListResourceSchemaResponse)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -1787,9 +1699,9 @@ func (c *clusterManagerService) GetBkSopsTemplateInfo(ctx context.Context, in *G
 	return out, nil
 }
 
-func (c *clusterManagerService) GetInnerTemplateValues(ctx context.Context, in *GetInnerTemplateValuesRequest, opts ...client.CallOption) (*GetInnerTemplateValuesResponse, error) {
-	req := c.c.NewRequest(c.name, "ClusterManager.GetInnerTemplateValues", in)
-	out := new(GetInnerTemplateValuesResponse)
+func (c *clusterManagerService) GetResourceSchema(ctx context.Context, in *GetResourceSchemaRequest, opts ...client.CallOption) (*GetResourceSchemaResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.GetResourceSchema", in)
+	out := new(GetResourceSchemaResponse)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -1797,59 +1709,9 @@ func (c *clusterManagerService) GetInnerTemplateValues(ctx context.Context, in *
 	return out, nil
 }
 
-func (c *clusterManagerService) DebugBkSopsTask(ctx context.Context, in *DebugBkSopsTaskRequest, opts ...client.CallOption) (*DebugBkSopsTaskResponse, error) {
-	req := c.c.NewRequest(c.name, "ClusterManager.DebugBkSopsTask", in)
-	out := new(DebugBkSopsTaskResponse)
-	err := c.c.Call(ctx, req, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *clusterManagerService) CreateCloudModuleFlag(ctx context.Context, in *CreateCloudModuleFlagRequest, opts ...client.CallOption) (*CreateCloudModuleFlagResponse, error) {
-	req := c.c.NewRequest(c.name, "ClusterManager.CreateCloudModuleFlag", in)
-	out := new(CreateCloudModuleFlagResponse)
-	err := c.c.Call(ctx, req, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *clusterManagerService) UpdateCloudModuleFlag(ctx context.Context, in *UpdateCloudModuleFlagRequest, opts ...client.CallOption) (*UpdateCloudModuleFlagResponse, error) {
-	req := c.c.NewRequest(c.name, "ClusterManager.UpdateCloudModuleFlag", in)
-	out := new(UpdateCloudModuleFlagResponse)
-	err := c.c.Call(ctx, req, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *clusterManagerService) DeleteCloudModuleFlag(ctx context.Context, in *DeleteCloudModuleFlagRequest, opts ...client.CallOption) (*DeleteCloudModuleFlagResponse, error) {
-	req := c.c.NewRequest(c.name, "ClusterManager.DeleteCloudModuleFlag", in)
-	out := new(DeleteCloudModuleFlagResponse)
-	err := c.c.Call(ctx, req, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *clusterManagerService) ListCloudModuleFlag(ctx context.Context, in *ListCloudModuleFlagRequest, opts ...client.CallOption) (*ListCloudModuleFlagResponse, error) {
-	req := c.c.NewRequest(c.name, "ClusterManager.ListCloudModuleFlag", in)
-	out := new(ListCloudModuleFlagResponse)
-	err := c.c.Call(ctx, req, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *clusterManagerService) Health(ctx context.Context, in *HealthRequest, opts ...client.CallOption) (*HealthResponse, error) {
-	req := c.c.NewRequest(c.name, "ClusterManager.Health", in)
-	out := new(HealthResponse)
+func (c *clusterManagerService) QueryPermByActionID(ctx context.Context, in *QueryPermByActionIDRequest, opts ...client.CallOption) (*QueryPermByActionIDResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.QueryPermByActionID", in)
+	out := new(QueryPermByActionIDResponse)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -1875,11 +1737,11 @@ type ClusterManagerHandler interface {
 	ListCommonCluster(context.Context, *ListCommonClusterReq, *ListCommonClusterResp) error
 	//* node management
 	GetNode(context.Context, *GetNodeRequest, *GetNodeResponse) error
-	GetNodeInfo(context.Context, *GetNodeInfoRequest, *GetNodeInfoResponse) error
 	UpdateNode(context.Context, *UpdateNodeRequest, *UpdateNodeResponse) error
 	CheckNodeInCluster(context.Context, *CheckNodesRequest, *CheckNodesResponse) error
 	CordonNode(context.Context, *CordonNodeRequest, *CordonNodeResponse) error
 	UnCordonNode(context.Context, *UnCordonNodeRequest, *UnCordonNodeResponse) error
+	DrainNode(context.Context, *DrainNodeRequest, *DrainNodeResponse) error
 	//* cluster credential management
 	GetClusterCredential(context.Context, *GetClusterCredentialReq, *GetClusterCredentialResp) error
 	UpdateClusterCredential(context.Context, *UpdateClusterCredentialReq, *UpdateClusterCredentialResp) error
@@ -1929,10 +1791,10 @@ type ClusterManagerHandler interface {
 	MoveNodesToGroup(context.Context, *MoveNodesToGroupRequest, *MoveNodesToGroupResponse) error
 	RemoveNodesFromGroup(context.Context, *RemoveNodesFromGroupRequest, *RemoveNodesFromGroupResponse) error
 	CleanNodesInGroup(context.Context, *CleanNodesInGroupRequest, *CleanNodesInGroupResponse) error
-	ListNodesInGroup(context.Context, *GetNodeGroupRequest, *ListNodesInGroupResponse) error
+	CleanNodesInGroupV2(context.Context, *CleanNodesInGroupV2Request, *CleanNodesInGroupV2Response) error
+	ListNodesInGroup(context.Context, *ListNodesInGroupRequest, *ListNodesInGroupResponse) error
 	UpdateGroupDesiredNode(context.Context, *UpdateGroupDesiredNodeRequest, *UpdateGroupDesiredNodeResponse) error
 	UpdateGroupDesiredSize(context.Context, *UpdateGroupDesiredSizeRequest, *UpdateGroupDesiredSizeResponse) error
-	UpdateGroupMinMaxSize(context.Context, *UpdateGroupMinMaxSizeRequest, *UpdateGroupMinMaxSizeResponse) error
 	EnableNodeGroupAutoScale(context.Context, *EnableNodeGroupAutoScaleRequest, *EnableNodeGroupAutoScaleResponse) error
 	DisableNodeGroupAutoScale(context.Context, *DisableNodeGroupAutoScaleRequest, *DisableNodeGroupAutoScaleResponse) error
 	//* Task information management *
@@ -1948,17 +1810,13 @@ type ClusterManagerHandler interface {
 	DeleteAutoScalingOption(context.Context, *DeleteAutoScalingOptionRequest, *DeleteAutoScalingOptionResponse) error
 	GetAutoScalingOption(context.Context, *GetAutoScalingOptionRequest, *GetAutoScalingOptionResponse) error
 	ListAutoScalingOption(context.Context, *ListAutoScalingOptionRequest, *ListAutoScalingOptionResponse) error
-	// Cloud NodeTemplate info management
-	CreateNodeTemplate(context.Context, *CreateNodeTemplateRequest, *CreateNodeTemplateResponse) error
-	UpdateNodeTemplate(context.Context, *UpdateNodeTemplateRequest, *UpdateNodeTemplateResponse) error
-	DeleteNodeTemplate(context.Context, *DeleteNodeTemplateRequest, *DeleteNodeTemplateResponse) error
-	ListNodeTemplate(context.Context, *ListNodeTemplateRequest, *ListNodeTemplateResponse) error
-	GetNodeTemplate(context.Context, *GetNodeTemplateRequest, *GetNodeTemplateResponse) error
+	UpdateAutoScalingStatus(context.Context, *UpdateAutoScalingStatusRequest, *UpdateAutoScalingStatusResponse) error
 	// Cloud Account information management
 	CreateCloudAccount(context.Context, *CreateCloudAccountRequest, *CreateCloudAccountResponse) error
 	UpdateCloudAccount(context.Context, *UpdateCloudAccountRequest, *UpdateCloudAccountResponse) error
 	DeleteCloudAccount(context.Context, *DeleteCloudAccountRequest, *DeleteCloudAccountResponse) error
 	ListCloudAccount(context.Context, *ListCloudAccountRequest, *ListCloudAccountResponse) error
+	ListCloudAccountToPerm(context.Context, *ListCloudAccountPermRequest, *ListCloudAccountPermResponse) error
 	// Cloud Resource management
 	GetCloudRegions(context.Context, *GetCloudRegionsRequest, *GetCloudRegionsResponse) error
 	GetCloudRegionZones(context.Context, *GetCloudRegionZonesRequest, *GetCloudRegionZonesResponse) error
@@ -1967,18 +1825,15 @@ type ClusterManagerHandler interface {
 	ListCloudSecurityGroups(context.Context, *ListCloudSecurityGroupsRequest, *ListCloudSecurityGroupsResponse) error
 	ListCloudInstanceTypes(context.Context, *ListCloudInstanceTypeRequest, *ListCloudInstanceTypeResponse) error
 	ListCloudOsImage(context.Context, *ListCloudOsImageRequest, *ListCloudOsImageResponse) error
-	// thirdParty interface(cmdb/bksops等)
-	GetBkSopsTemplateList(context.Context, *GetBkSopsTemplateListRequest, *GetBkSopsTemplateListResponse) error
-	GetBkSopsTemplateInfo(context.Context, *GetBkSopsTemplateInfoRequest, *GetBkSopsTemplateInfoResponse) error
-	GetInnerTemplateValues(context.Context, *GetInnerTemplateValuesRequest, *GetInnerTemplateValuesResponse) error
-	DebugBkSopsTask(context.Context, *DebugBkSopsTaskRequest, *DebugBkSopsTaskResponse) error
-	// Cloud module flag management
-	CreateCloudModuleFlag(context.Context, *CreateCloudModuleFlagRequest, *CreateCloudModuleFlagResponse) error
-	UpdateCloudModuleFlag(context.Context, *UpdateCloudModuleFlagRequest, *UpdateCloudModuleFlagResponse) error
-	DeleteCloudModuleFlag(context.Context, *DeleteCloudModuleFlagRequest, *DeleteCloudModuleFlagResponse) error
-	ListCloudModuleFlag(context.Context, *ListCloudModuleFlagRequest, *ListCloudModuleFlagResponse) error
-	// cluster manager health interface
-	Health(context.Context, *HealthRequest, *HealthResponse) error
+	// Operation logs
+	ListOperationLogs(context.Context, *ListOperationLogsRequest, *ListOperationLogsResponse) error
+	// ** ResourceSchema **
+	// ListResourceSchema
+	ListResourceSchema(context.Context, *ListResourceSchemaRequest, *ListResourceSchemaResponse) error
+	// GetResourceSchema
+	GetResourceSchema(context.Context, *GetResourceSchemaRequest, *GetResourceSchemaResponse) error
+	// Perm interface
+	QueryPermByActionID(context.Context, *QueryPermByActionIDRequest, *QueryPermByActionIDResponse) error
 }
 
 func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, opts ...server.HandlerOption) error {
@@ -1996,11 +1851,11 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		ListCluster(ctx context.Context, in *ListClusterReq, out *ListClusterResp) error
 		ListCommonCluster(ctx context.Context, in *ListCommonClusterReq, out *ListCommonClusterResp) error
 		GetNode(ctx context.Context, in *GetNodeRequest, out *GetNodeResponse) error
-		GetNodeInfo(ctx context.Context, in *GetNodeInfoRequest, out *GetNodeInfoResponse) error
 		UpdateNode(ctx context.Context, in *UpdateNodeRequest, out *UpdateNodeResponse) error
 		CheckNodeInCluster(ctx context.Context, in *CheckNodesRequest, out *CheckNodesResponse) error
 		CordonNode(ctx context.Context, in *CordonNodeRequest, out *CordonNodeResponse) error
 		UnCordonNode(ctx context.Context, in *UnCordonNodeRequest, out *UnCordonNodeResponse) error
+		DrainNode(ctx context.Context, in *DrainNodeRequest, out *DrainNodeResponse) error
 		GetClusterCredential(ctx context.Context, in *GetClusterCredentialReq, out *GetClusterCredentialResp) error
 		UpdateClusterCredential(ctx context.Context, in *UpdateClusterCredentialReq, out *UpdateClusterCredentialResp) error
 		DeleteClusterCredential(ctx context.Context, in *DeleteClusterCredentialReq, out *DeleteClusterCredentialResp) error
@@ -2042,10 +1897,10 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		MoveNodesToGroup(ctx context.Context, in *MoveNodesToGroupRequest, out *MoveNodesToGroupResponse) error
 		RemoveNodesFromGroup(ctx context.Context, in *RemoveNodesFromGroupRequest, out *RemoveNodesFromGroupResponse) error
 		CleanNodesInGroup(ctx context.Context, in *CleanNodesInGroupRequest, out *CleanNodesInGroupResponse) error
-		ListNodesInGroup(ctx context.Context, in *GetNodeGroupRequest, out *ListNodesInGroupResponse) error
+		CleanNodesInGroupV2(ctx context.Context, in *CleanNodesInGroupV2Request, out *CleanNodesInGroupV2Response) error
+		ListNodesInGroup(ctx context.Context, in *ListNodesInGroupRequest, out *ListNodesInGroupResponse) error
 		UpdateGroupDesiredNode(ctx context.Context, in *UpdateGroupDesiredNodeRequest, out *UpdateGroupDesiredNodeResponse) error
 		UpdateGroupDesiredSize(ctx context.Context, in *UpdateGroupDesiredSizeRequest, out *UpdateGroupDesiredSizeResponse) error
-		UpdateGroupMinMaxSize(ctx context.Context, in *UpdateGroupMinMaxSizeRequest, out *UpdateGroupMinMaxSizeResponse) error
 		EnableNodeGroupAutoScale(ctx context.Context, in *EnableNodeGroupAutoScaleRequest, out *EnableNodeGroupAutoScaleResponse) error
 		DisableNodeGroupAutoScale(ctx context.Context, in *DisableNodeGroupAutoScaleRequest, out *DisableNodeGroupAutoScaleResponse) error
 		CreateTask(ctx context.Context, in *CreateTaskRequest, out *CreateTaskResponse) error
@@ -2059,15 +1914,12 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		DeleteAutoScalingOption(ctx context.Context, in *DeleteAutoScalingOptionRequest, out *DeleteAutoScalingOptionResponse) error
 		GetAutoScalingOption(ctx context.Context, in *GetAutoScalingOptionRequest, out *GetAutoScalingOptionResponse) error
 		ListAutoScalingOption(ctx context.Context, in *ListAutoScalingOptionRequest, out *ListAutoScalingOptionResponse) error
-		CreateNodeTemplate(ctx context.Context, in *CreateNodeTemplateRequest, out *CreateNodeTemplateResponse) error
-		UpdateNodeTemplate(ctx context.Context, in *UpdateNodeTemplateRequest, out *UpdateNodeTemplateResponse) error
-		DeleteNodeTemplate(ctx context.Context, in *DeleteNodeTemplateRequest, out *DeleteNodeTemplateResponse) error
-		ListNodeTemplate(ctx context.Context, in *ListNodeTemplateRequest, out *ListNodeTemplateResponse) error
-		GetNodeTemplate(ctx context.Context, in *GetNodeTemplateRequest, out *GetNodeTemplateResponse) error
+		UpdateAutoScalingStatus(ctx context.Context, in *UpdateAutoScalingStatusRequest, out *UpdateAutoScalingStatusResponse) error
 		CreateCloudAccount(ctx context.Context, in *CreateCloudAccountRequest, out *CreateCloudAccountResponse) error
 		UpdateCloudAccount(ctx context.Context, in *UpdateCloudAccountRequest, out *UpdateCloudAccountResponse) error
 		DeleteCloudAccount(ctx context.Context, in *DeleteCloudAccountRequest, out *DeleteCloudAccountResponse) error
 		ListCloudAccount(ctx context.Context, in *ListCloudAccountRequest, out *ListCloudAccountResponse) error
+		ListCloudAccountToPerm(ctx context.Context, in *ListCloudAccountPermRequest, out *ListCloudAccountPermResponse) error
 		GetCloudRegions(ctx context.Context, in *GetCloudRegionsRequest, out *GetCloudRegionsResponse) error
 		GetCloudRegionZones(ctx context.Context, in *GetCloudRegionZonesRequest, out *GetCloudRegionZonesResponse) error
 		ListCloudRegionCluster(ctx context.Context, in *ListCloudRegionClusterRequest, out *ListCloudRegionClusterResponse) error
@@ -2075,15 +1927,10 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		ListCloudSecurityGroups(ctx context.Context, in *ListCloudSecurityGroupsRequest, out *ListCloudSecurityGroupsResponse) error
 		ListCloudInstanceTypes(ctx context.Context, in *ListCloudInstanceTypeRequest, out *ListCloudInstanceTypeResponse) error
 		ListCloudOsImage(ctx context.Context, in *ListCloudOsImageRequest, out *ListCloudOsImageResponse) error
-		GetBkSopsTemplateList(ctx context.Context, in *GetBkSopsTemplateListRequest, out *GetBkSopsTemplateListResponse) error
-		GetBkSopsTemplateInfo(ctx context.Context, in *GetBkSopsTemplateInfoRequest, out *GetBkSopsTemplateInfoResponse) error
-		GetInnerTemplateValues(ctx context.Context, in *GetInnerTemplateValuesRequest, out *GetInnerTemplateValuesResponse) error
-		DebugBkSopsTask(ctx context.Context, in *DebugBkSopsTaskRequest, out *DebugBkSopsTaskResponse) error
-		CreateCloudModuleFlag(ctx context.Context, in *CreateCloudModuleFlagRequest, out *CreateCloudModuleFlagResponse) error
-		UpdateCloudModuleFlag(ctx context.Context, in *UpdateCloudModuleFlagRequest, out *UpdateCloudModuleFlagResponse) error
-		DeleteCloudModuleFlag(ctx context.Context, in *DeleteCloudModuleFlagRequest, out *DeleteCloudModuleFlagResponse) error
-		ListCloudModuleFlag(ctx context.Context, in *ListCloudModuleFlagRequest, out *ListCloudModuleFlagResponse) error
-		Health(ctx context.Context, in *HealthRequest, out *HealthResponse) error
+		ListOperationLogs(ctx context.Context, in *ListOperationLogsRequest, out *ListOperationLogsResponse) error
+		ListResourceSchema(ctx context.Context, in *ListResourceSchemaRequest, out *ListResourceSchemaResponse) error
+		GetResourceSchema(ctx context.Context, in *GetResourceSchemaRequest, out *GetResourceSchemaResponse) error
+		QueryPermByActionID(ctx context.Context, in *QueryPermByActionIDRequest, out *QueryPermByActionIDResponse) error
 	}
 	type ClusterManager struct {
 		clusterManager
@@ -2176,12 +2023,6 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
-		Name:    "ClusterManager.GetNodeInfo",
-		Path:    []string{"/clustermanager/v1/node/{innerIP}/info"},
-		Method:  []string{"GET"},
-		Handler: "rpc",
-	}))
-	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.UpdateNode",
 		Path:    []string{"/clustermanager/v1/node"},
 		Method:  []string{"PUT"},
@@ -2206,6 +2047,13 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		Name:    "ClusterManager.UnCordonNode",
 		Path:    []string{"/clustermanager/v1/node/uncordon"},
 		Method:  []string{"PUT"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.DrainNode",
+		Path:    []string{"/clustermanager/v1/node/drain"},
+		Method:  []string{"POST"},
 		Body:    "*",
 		Handler: "rpc",
 	}))
@@ -2482,6 +2330,13 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.CleanNodesInGroupV2",
+		Path:    []string{"/clustermanager/v2/nodegroup/{nodeGroupID}/groupnode"},
+		Method:  []string{"DELETE"},
+		Body:    "",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.ListNodesInGroup",
 		Path:    []string{"/clustermanager/v1/nodegroup/{nodeGroupID}/node"},
 		Method:  []string{"GET"},
@@ -2497,13 +2352,6 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.UpdateGroupDesiredSize",
 		Path:    []string{"/clustermanager/v1/nodegroup/{nodeGroupID}/desiredsize"},
-		Method:  []string{"POST"},
-		Body:    "*",
-		Handler: "rpc",
-	}))
-	opts = append(opts, api.WithEndpoint(&api.Endpoint{
-		Name:    "ClusterManager.UpdateGroupMinMaxSize",
-		Path:    []string{"/clustermanager/v1/nodegroup/{nodeGroupID}/boundsize"},
 		Method:  []string{"POST"},
 		Body:    "*",
 		Handler: "rpc",
@@ -2596,36 +2444,10 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
-		Name:    "ClusterManager.CreateNodeTemplate",
-		Path:    []string{"/clustermanager/v1/projects/{projectID}/nodetemplates"},
-		Method:  []string{"POST"},
-		Body:    "*",
-		Handler: "rpc",
-	}))
-	opts = append(opts, api.WithEndpoint(&api.Endpoint{
-		Name:    "ClusterManager.UpdateNodeTemplate",
-		Path:    []string{"/clustermanager/v1/projects/{projectID}/nodetemplates/{nodeTemplateID}"},
+		Name:    "ClusterManager.UpdateAutoScalingStatus",
+		Path:    []string{"/clustermanager/v1/autoscalingoption/{clusterID}/status"},
 		Method:  []string{"PUT"},
 		Body:    "*",
-		Handler: "rpc",
-	}))
-	opts = append(opts, api.WithEndpoint(&api.Endpoint{
-		Name:    "ClusterManager.DeleteNodeTemplate",
-		Path:    []string{"/clustermanager/v1/projects/{projectID}/nodetemplates/{nodeTemplateID}"},
-		Method:  []string{"DELETE"},
-		Body:    "",
-		Handler: "rpc",
-	}))
-	opts = append(opts, api.WithEndpoint(&api.Endpoint{
-		Name:    "ClusterManager.ListNodeTemplate",
-		Path:    []string{"/clustermanager/v1/projects/{projectID}/nodetemplates"},
-		Method:  []string{"GET"},
-		Handler: "rpc",
-	}))
-	opts = append(opts, api.WithEndpoint(&api.Endpoint{
-		Name:    "ClusterManager.GetNodeTemplate",
-		Path:    []string{"/clustermanager/v1/projects/{projectID}/nodetemplates/{nodeTemplateID}"},
-		Method:  []string{"GET"},
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
@@ -2652,6 +2474,12 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.ListCloudAccount",
 		Path:    []string{"/clustermanager/v1/clouds/{cloudID}/accounts"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.ListCloudAccountToPerm",
+		Path:    []string{"/clustermanager/v1/accounts"},
 		Method:  []string{"GET"},
 		Handler: "rpc",
 	}))
@@ -2698,61 +2526,28 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
-		Name:    "ClusterManager.GetBkSopsTemplateList",
-		Path:    []string{"/clustermanager/v1/bksops/business/{businessID}/templates"},
+		Name:    "ClusterManager.ListOperationLogs",
+		Path:    []string{"/clustermanager/v1/operationlogs"},
 		Method:  []string{"GET"},
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
-		Name:    "ClusterManager.GetBkSopsTemplateInfo",
-		Path:    []string{"/clustermanager/v1/bksops/business/{businessID}/templates/{templateID}"},
+		Name:    "ClusterManager.ListResourceSchema",
+		Path:    []string{"/clustermanager/v1/resourceschema/{cloudID}"},
 		Method:  []string{"GET"},
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
-		Name:    "ClusterManager.GetInnerTemplateValues",
-		Path:    []string{"/clustermanager/v1/bksops/templatevalues"},
+		Name:    "ClusterManager.GetResourceSchema",
+		Path:    []string{"/clustermanager/v1/resourceschema/{cloudID}/{name}"},
 		Method:  []string{"GET"},
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
-		Name:    "ClusterManager.DebugBkSopsTask",
-		Path:    []string{"/clustermanager/v1/bksops/debug"},
+		Name:    "ClusterManager.QueryPermByActionID",
+		Path:    []string{"/clustermanager/v1/perms/actions/{actionID}"},
 		Method:  []string{"POST"},
 		Body:    "*",
-		Handler: "rpc",
-	}))
-	opts = append(opts, api.WithEndpoint(&api.Endpoint{
-		Name:    "ClusterManager.CreateCloudModuleFlag",
-		Path:    []string{"/clustermanager/v1/clouds/{cloudID}/versions/{version}/modules"},
-		Method:  []string{"POST"},
-		Body:    "*",
-		Handler: "rpc",
-	}))
-	opts = append(opts, api.WithEndpoint(&api.Endpoint{
-		Name:    "ClusterManager.UpdateCloudModuleFlag",
-		Path:    []string{"/clustermanager/v1/clouds/{cloudID}/versions/{version}/modules/{moduleID}"},
-		Method:  []string{"PUT"},
-		Body:    "*",
-		Handler: "rpc",
-	}))
-	opts = append(opts, api.WithEndpoint(&api.Endpoint{
-		Name:    "ClusterManager.DeleteCloudModuleFlag",
-		Path:    []string{"/clustermanager/v1/clouds/{cloudID}/versions/{version}/modules/{moduleID}"},
-		Method:  []string{"DELETE"},
-		Body:    "",
-		Handler: "rpc",
-	}))
-	opts = append(opts, api.WithEndpoint(&api.Endpoint{
-		Name:    "ClusterManager.ListCloudModuleFlag",
-		Path:    []string{"/clustermanager/v1/clouds/{cloudID}/versions/{version}/modules/{moduleID}"},
-		Method:  []string{"GET"},
-		Handler: "rpc",
-	}))
-	opts = append(opts, api.WithEndpoint(&api.Endpoint{
-		Name:    "ClusterManager.Health",
-		Path:    []string{"/clustermanager/v1/health"},
-		Method:  []string{"GET"},
 		Handler: "rpc",
 	}))
 	return s.Handle(s.NewHandler(&ClusterManager{h}, opts...))
@@ -2814,10 +2609,6 @@ func (h *clusterManagerHandler) GetNode(ctx context.Context, in *GetNodeRequest,
 	return h.ClusterManagerHandler.GetNode(ctx, in, out)
 }
 
-func (h *clusterManagerHandler) GetNodeInfo(ctx context.Context, in *GetNodeInfoRequest, out *GetNodeInfoResponse) error {
-	return h.ClusterManagerHandler.GetNodeInfo(ctx, in, out)
-}
-
 func (h *clusterManagerHandler) UpdateNode(ctx context.Context, in *UpdateNodeRequest, out *UpdateNodeResponse) error {
 	return h.ClusterManagerHandler.UpdateNode(ctx, in, out)
 }
@@ -2832,6 +2623,10 @@ func (h *clusterManagerHandler) CordonNode(ctx context.Context, in *CordonNodeRe
 
 func (h *clusterManagerHandler) UnCordonNode(ctx context.Context, in *UnCordonNodeRequest, out *UnCordonNodeResponse) error {
 	return h.ClusterManagerHandler.UnCordonNode(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) DrainNode(ctx context.Context, in *DrainNodeRequest, out *DrainNodeResponse) error {
+	return h.ClusterManagerHandler.DrainNode(ctx, in, out)
 }
 
 func (h *clusterManagerHandler) GetClusterCredential(ctx context.Context, in *GetClusterCredentialReq, out *GetClusterCredentialResp) error {
@@ -2998,7 +2793,11 @@ func (h *clusterManagerHandler) CleanNodesInGroup(ctx context.Context, in *Clean
 	return h.ClusterManagerHandler.CleanNodesInGroup(ctx, in, out)
 }
 
-func (h *clusterManagerHandler) ListNodesInGroup(ctx context.Context, in *GetNodeGroupRequest, out *ListNodesInGroupResponse) error {
+func (h *clusterManagerHandler) CleanNodesInGroupV2(ctx context.Context, in *CleanNodesInGroupV2Request, out *CleanNodesInGroupV2Response) error {
+	return h.ClusterManagerHandler.CleanNodesInGroupV2(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) ListNodesInGroup(ctx context.Context, in *ListNodesInGroupRequest, out *ListNodesInGroupResponse) error {
 	return h.ClusterManagerHandler.ListNodesInGroup(ctx, in, out)
 }
 
@@ -3008,10 +2807,6 @@ func (h *clusterManagerHandler) UpdateGroupDesiredNode(ctx context.Context, in *
 
 func (h *clusterManagerHandler) UpdateGroupDesiredSize(ctx context.Context, in *UpdateGroupDesiredSizeRequest, out *UpdateGroupDesiredSizeResponse) error {
 	return h.ClusterManagerHandler.UpdateGroupDesiredSize(ctx, in, out)
-}
-
-func (h *clusterManagerHandler) UpdateGroupMinMaxSize(ctx context.Context, in *UpdateGroupMinMaxSizeRequest, out *UpdateGroupMinMaxSizeResponse) error {
-	return h.ClusterManagerHandler.UpdateGroupMinMaxSize(ctx, in, out)
 }
 
 func (h *clusterManagerHandler) EnableNodeGroupAutoScale(ctx context.Context, in *EnableNodeGroupAutoScaleRequest, out *EnableNodeGroupAutoScaleResponse) error {
@@ -3066,24 +2861,8 @@ func (h *clusterManagerHandler) ListAutoScalingOption(ctx context.Context, in *L
 	return h.ClusterManagerHandler.ListAutoScalingOption(ctx, in, out)
 }
 
-func (h *clusterManagerHandler) CreateNodeTemplate(ctx context.Context, in *CreateNodeTemplateRequest, out *CreateNodeTemplateResponse) error {
-	return h.ClusterManagerHandler.CreateNodeTemplate(ctx, in, out)
-}
-
-func (h *clusterManagerHandler) UpdateNodeTemplate(ctx context.Context, in *UpdateNodeTemplateRequest, out *UpdateNodeTemplateResponse) error {
-	return h.ClusterManagerHandler.UpdateNodeTemplate(ctx, in, out)
-}
-
-func (h *clusterManagerHandler) DeleteNodeTemplate(ctx context.Context, in *DeleteNodeTemplateRequest, out *DeleteNodeTemplateResponse) error {
-	return h.ClusterManagerHandler.DeleteNodeTemplate(ctx, in, out)
-}
-
-func (h *clusterManagerHandler) ListNodeTemplate(ctx context.Context, in *ListNodeTemplateRequest, out *ListNodeTemplateResponse) error {
-	return h.ClusterManagerHandler.ListNodeTemplate(ctx, in, out)
-}
-
-func (h *clusterManagerHandler) GetNodeTemplate(ctx context.Context, in *GetNodeTemplateRequest, out *GetNodeTemplateResponse) error {
-	return h.ClusterManagerHandler.GetNodeTemplate(ctx, in, out)
+func (h *clusterManagerHandler) UpdateAutoScalingStatus(ctx context.Context, in *UpdateAutoScalingStatusRequest, out *UpdateAutoScalingStatusResponse) error {
+	return h.ClusterManagerHandler.UpdateAutoScalingStatus(ctx, in, out)
 }
 
 func (h *clusterManagerHandler) CreateCloudAccount(ctx context.Context, in *CreateCloudAccountRequest, out *CreateCloudAccountResponse) error {
@@ -3100,6 +2879,10 @@ func (h *clusterManagerHandler) DeleteCloudAccount(ctx context.Context, in *Dele
 
 func (h *clusterManagerHandler) ListCloudAccount(ctx context.Context, in *ListCloudAccountRequest, out *ListCloudAccountResponse) error {
 	return h.ClusterManagerHandler.ListCloudAccount(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) ListCloudAccountToPerm(ctx context.Context, in *ListCloudAccountPermRequest, out *ListCloudAccountPermResponse) error {
+	return h.ClusterManagerHandler.ListCloudAccountToPerm(ctx, in, out)
 }
 
 func (h *clusterManagerHandler) GetCloudRegions(ctx context.Context, in *GetCloudRegionsRequest, out *GetCloudRegionsResponse) error {
@@ -3130,38 +2913,18 @@ func (h *clusterManagerHandler) ListCloudOsImage(ctx context.Context, in *ListCl
 	return h.ClusterManagerHandler.ListCloudOsImage(ctx, in, out)
 }
 
-func (h *clusterManagerHandler) GetBkSopsTemplateList(ctx context.Context, in *GetBkSopsTemplateListRequest, out *GetBkSopsTemplateListResponse) error {
-	return h.ClusterManagerHandler.GetBkSopsTemplateList(ctx, in, out)
+func (h *clusterManagerHandler) ListOperationLogs(ctx context.Context, in *ListOperationLogsRequest, out *ListOperationLogsResponse) error {
+	return h.ClusterManagerHandler.ListOperationLogs(ctx, in, out)
 }
 
-func (h *clusterManagerHandler) GetBkSopsTemplateInfo(ctx context.Context, in *GetBkSopsTemplateInfoRequest, out *GetBkSopsTemplateInfoResponse) error {
-	return h.ClusterManagerHandler.GetBkSopsTemplateInfo(ctx, in, out)
+func (h *clusterManagerHandler) ListResourceSchema(ctx context.Context, in *ListResourceSchemaRequest, out *ListResourceSchemaResponse) error {
+	return h.ClusterManagerHandler.ListResourceSchema(ctx, in, out)
 }
 
-func (h *clusterManagerHandler) GetInnerTemplateValues(ctx context.Context, in *GetInnerTemplateValuesRequest, out *GetInnerTemplateValuesResponse) error {
-	return h.ClusterManagerHandler.GetInnerTemplateValues(ctx, in, out)
+func (h *clusterManagerHandler) GetResourceSchema(ctx context.Context, in *GetResourceSchemaRequest, out *GetResourceSchemaResponse) error {
+	return h.ClusterManagerHandler.GetResourceSchema(ctx, in, out)
 }
 
-func (h *clusterManagerHandler) DebugBkSopsTask(ctx context.Context, in *DebugBkSopsTaskRequest, out *DebugBkSopsTaskResponse) error {
-	return h.ClusterManagerHandler.DebugBkSopsTask(ctx, in, out)
-}
-
-func (h *clusterManagerHandler) CreateCloudModuleFlag(ctx context.Context, in *CreateCloudModuleFlagRequest, out *CreateCloudModuleFlagResponse) error {
-	return h.ClusterManagerHandler.CreateCloudModuleFlag(ctx, in, out)
-}
-
-func (h *clusterManagerHandler) UpdateCloudModuleFlag(ctx context.Context, in *UpdateCloudModuleFlagRequest, out *UpdateCloudModuleFlagResponse) error {
-	return h.ClusterManagerHandler.UpdateCloudModuleFlag(ctx, in, out)
-}
-
-func (h *clusterManagerHandler) DeleteCloudModuleFlag(ctx context.Context, in *DeleteCloudModuleFlagRequest, out *DeleteCloudModuleFlagResponse) error {
-	return h.ClusterManagerHandler.DeleteCloudModuleFlag(ctx, in, out)
-}
-
-func (h *clusterManagerHandler) ListCloudModuleFlag(ctx context.Context, in *ListCloudModuleFlagRequest, out *ListCloudModuleFlagResponse) error {
-	return h.ClusterManagerHandler.ListCloudModuleFlag(ctx, in, out)
-}
-
-func (h *clusterManagerHandler) Health(ctx context.Context, in *HealthRequest, out *HealthResponse) error {
-	return h.ClusterManagerHandler.Health(ctx, in, out)
+func (h *clusterManagerHandler) QueryPermByActionID(ctx context.Context, in *QueryPermByActionIDRequest, out *QueryPermByActionIDResponse) error {
+	return h.ClusterManagerHandler.QueryPermByActionID(ctx, in, out)
 }
