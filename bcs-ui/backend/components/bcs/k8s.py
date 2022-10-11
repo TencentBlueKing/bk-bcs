@@ -331,6 +331,29 @@ class K8SClient(BCSClientBase):
         resp = http_post(url, data=params, headers=self.headers)
         return resp
 
+    @property
+    def vars_api_prefix(self):
+        """变量管理API"""
+        return f"{settings.BCS_APIGW_DOMAIN[self._bcs_server_stag]}/bcsapi/v4/bcsproject/v1"
+
+    def vars_api_headers(self, username):
+        """变量管理API"""
+        headers = self.headers.copy()
+        headers["X-Project-Username"] = username
+        return headers
+
+    def render_vars(self, project_code, cluster_id, namespace, username, keys):
+        """变量渲染, keys=None 会获取全部自定义变量值"""
+        url = f"{self.vars_api_prefix}/project/{project_code}/cluster/{cluster_id}/namespace/{namespace}/variables/render"  # noqa
+        params = {
+            "keyList": keys,
+        }
+        resp = http_get(url, params=params, headers=self.vars_api_headers(username))
+        vars_map = {}
+        for item in resp.get("data") or []:
+            vars_map[item['key']] = {"key": item["key"], "name": item["name"], "value": item["value"]}
+        return vars_map
+
     def get_used_namespace(self):
         """获取已经使用的命名空间名称"""
         params = {"used": 1}

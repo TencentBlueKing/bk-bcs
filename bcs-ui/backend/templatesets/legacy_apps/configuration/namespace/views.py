@@ -161,7 +161,8 @@ class NamespaceView(NamespaceBase, viewsets.ViewSet):
         if no_vars == '1':
             project_var = []
         else:
-            project_var = NameSpaceVariable.get_project_ns_vars(project_id)
+            # 查询 ns 命名空间变量, 需要轮询api，暂时忽略, 单个设置或者在变量管理中设置
+            project_var = []
 
         for i in results:
             # ns_vars = NameSpaceVariable.get_ns_vars(i['id'], project_id)

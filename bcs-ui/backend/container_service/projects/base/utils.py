@@ -12,11 +12,16 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+import logging
 from typing import Dict, List, Optional
 
 from backend.components import paas_cc
+from backend.utils.cache import region
 from backend.utils.basic import normalize_time
+from backend.container_service.projects.base.constants import ProjectKindID
 from backend.utils.decorators import parse_response_data
+
+logger = logging.getLogger(__name__)
 
 
 @parse_response_data(default_data={})
@@ -63,3 +68,14 @@ def update_project(access_token, project_id, data):
 @parse_response_data()
 def create_project(access_token, data):
     return paas_cc.create_project(access_token, data)
+
+
+def is_k8s_project(access_token, project_id):
+    """是否k8s项目"""
+    result = get_project(access_token, project_id)
+    if result.get("code") != 0:
+        # 默认使用k8s项目
+        return True
+    kind = result["data"]["kind"]
+
+    return kind == ProjectKindID

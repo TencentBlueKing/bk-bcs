@@ -23,10 +23,13 @@ from rest_framework import generics, views, viewsets
 from rest_framework.exceptions import ValidationError
 from rest_framework.renderers import BrowsableAPIRenderer
 from rest_framework.response import Response
+from django.conf import settings
 
 from backend.bcs_web.audit_log.audit.decorators import log_audit, log_audit_on_view
 from backend.bcs_web.audit_log.constants import ActivityType
 from backend.components import paas_cc
+from backend.components.bcs import k8s
+from backend.helm.helm import bcs_variable
 from backend.container_service.clusters.constants import ClusterType
 from backend.container_service.projects.base.constants import LIMIT_FOR_ALL_DATA
 from backend.templatesets.legacy_apps.configuration.models import MODULE_DICT
@@ -154,33 +157,11 @@ class ResourceVariableView(FinalizeResponseMixin, views.APIView):
                 key_list.extend(search_list)
 
         key_list = list(set(key_list))
-        variable_dict = {}
-        if key_list:
-            # 验证变量名是否符合规范，不符合抛出异常，否则后续用 django 模板渲染变量也会抛出异常
+        ns_list = slz_data['namespaces'].split(',') if slz_data['namespaces'] else []
+        if not key_list or not ns_list:
+            return Response({"code": 0, "message": "OK", "data": {"lb_services": lb_services, "variable_dict": {}}})
 
-            var_objects = Variable.objects.filter(Q(project_id=project_id) | Q(project_id=0))
-
-            access_token = request.user.token.access_token
-            namespace_res = paas_cc.get_namespace_list(access_token, project_id, limit=LIMIT_FOR_ALL_DATA)
-            namespace_data = namespace_res.get('data', {}).get('results') or []
-            namespace_dict = {str(i['id']): i['cluster_id'] for i in namespace_data}
-
-            ns_list = slz_data['namespaces'].split(',') if slz_data['namespaces'] else []
-            for ns_id in ns_list:
-                _v_list = []
-                for _key in key_list:
-                    key_obj = var_objects.filter(key=_key)
-                    if key_obj.exists():
-                        _obj = key_obj.first()
-                        # 只显示自定义变量
-                        if _obj.category == 'custom':
-                            cluster_id = namespace_dict.get(ns_id, 0)
-                            _v_list.append(
-                                {"key": _obj.key, "name": _obj.name, "value": _obj.get_show_value(cluster_id, ns_id)}
-                            )
-                    else:
-                        _v_list.append({"key": _key, "name": _key, "value": ""})
-                variable_dict[ns_id] = _v_list
+        variable_dict = bcs_variable.get_multi_ns_variables(project_id, "", ns_list, key_list)
         return Response(
             {"code": 0, "message": "OK", "data": {"lb_services": lb_services, "variable_dict": variable_dict}}
         )

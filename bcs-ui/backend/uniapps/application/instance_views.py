@@ -34,6 +34,7 @@ from backend.templatesets.legacy_apps.configuration.utils import check_var_by_co
 from backend.templatesets.legacy_apps.instance import utils as inst_utils
 from backend.templatesets.legacy_apps.instance.models import InstanceConfig, InstanceEvent, VersionInstance
 from backend.templatesets.var_mgmt.models import Variable
+from backend.helm.helm import bcs_variable
 from backend.utils.basic import getitems
 from backend.utils.errcodes import ErrorCode
 from backend.utils.renderers import BKAPIRenderer
@@ -1516,33 +1517,7 @@ class GetInstanceVersionConf(UpdateInstanceNew, UpdateVersionConfig, InstanceAPI
         """获取变量"""
         key_list = check_var_by_config(config)
         key_list = list(set(key_list))
-        v_list = []
-        if key_list:
-            # 验证变量名是否符合规范，不符合抛出异常，否则后续用 django 模板渲染变量也会抛出异常
-
-            var_objects = Variable.objects.filter(Q(project_id=project_id) | Q(project_id=0))
-
-            for _key in key_list:
-                key_obj = var_objects.filter(key=_key)
-                if key_obj.exists():
-                    _obj = key_obj.first()
-                    # 只显示自定义变量
-                    if _obj.category == 'custom':
-                        v_list.append(
-                            {
-                                "key": _obj.key,
-                                # "name": _obj.name,
-                                "value": _obj.get_show_value(cluster_id, ns_id),
-                            }
-                        )
-                else:
-                    v_list.append(
-                        {
-                            "key": _key,
-                            # "name": _key,
-                            "value": "",
-                        }
-                    )
+        v_list = bcs_variable.get_ns_variables(project_id, cluster_id, ns_id, key_list)
         return v_list
 
     def get_default_instance_value(self, variable_list, key, pre_instance_num):

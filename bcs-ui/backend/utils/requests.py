@@ -15,6 +15,7 @@ specific language governing permissions and limitations under the License.
 import json
 import logging
 import time
+from urllib.parse import urlparse
 
 import requests
 
@@ -69,6 +70,42 @@ def headers_for_apigw(access_token, jwt):
     if not jwt:
         return None
     return {"X-BKAPI-AUTHORIZATION": json.dumps({"access_token": access_token, "jwt": jwt})}
+
+
+def relay_request_to_mesos(request):
+    """复制请求到mesos
+    请求规则: url路径转换backend/mesos, 请求参数, body, 头部不动
+    返回规则: 返回json
+    """
+    params = dict(request.GET.copy())
+    data = request.body
+    headers = get_headers(request.META)
+    base_url = request.build_absolute_uri()
+    parsed_url = urlparse(base_url)
+    path = parsed_url.path
+    if path.startswith("/bcs"):
+        path = parsed_url.path[4:]
+    relay_url = parsed_url._replace(path='/backend/mesos' + path).geturl()
+
+    resp = rpool.request(request.method, relay_url, params=params, data=data, headers=headers)
+    logger.info("relay_request_to_mesos base_url: %s, %s, %s, %s, %s", base_url, relay_url, data, headers, resp.text)
+    return resp.json()
+
+
+def get_headers(environ):
+    """
+    Retrieve the HTTP headers from a WSGI environment dictionary.  See
+    https://docs.djangoproject.com/en/dev/ref/request-response/#django.http.HttpRequest.META
+    """
+    headers = {}
+    for key, value in environ.items():
+        # Sometimes, things don't like when you send the requesting host through.
+        if key.startswith('HTTP_') and key != 'HTTP_HOST':
+            headers[key[5:].replace('_', '-')] = value
+        elif key in ('CONTENT_TYPE', 'CONTENT_LENGTH'):
+            headers[key.replace('_', '-')] = value
+
+    return headers
 
 
 # raw http request

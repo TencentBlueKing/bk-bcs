@@ -24,6 +24,7 @@ from backend.components.base import BaseHttpClient, BkApiClient, ComponentAuth, 
 from backend.components.utils import http_delete, http_get, http_patch, http_post, http_put
 from backend.container_service.clusters.models import CommonStatus
 from backend.utils.basic import getitems
+from backend.utils.cache import region
 from backend.utils.decorators import parse_response_data
 from backend.utils.errcodes import ErrorCode
 from backend.utils.error_codes import error_codes
@@ -43,6 +44,16 @@ def get_project(access_token: str, project_id: str) -> Dict:
     params = {"access_token": access_token}
     project = http_get(url, params=params, timeout=20)
     return project
+
+
+def get_project_code(access_token: str, project_id: str) -> str:
+    """获取项目Code"""
+    result = get_project(access_token, project_id)
+    if result.get("code") != 0:
+        return ""
+
+    project_code = result["data"]["english_name"]
+    return project_code
 
 
 def get_projects(access_token, query_params=None):
@@ -346,6 +357,15 @@ def get_namespace(access_token, project_id, namespace_id, with_lb=None):
     if with_lb:
         params["with_lb"] = with_lb
     return http_get(url, params=params)
+
+
+def get_namespace_name(access_token, project_id, namespace_id):
+    """获取单个namespace, 有缓存"""
+    result = get_namespace(access_token, project_id, namespace_id)
+    if result.get("code") != 0:
+        return ""
+    namespace_name = result["data"]["name"]
+    return namespace_name
 
 
 def update_node_with_cluster(access_token, project_id, data):
