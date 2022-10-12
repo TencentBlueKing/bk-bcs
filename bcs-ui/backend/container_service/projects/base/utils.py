@@ -73,6 +73,6 @@ def create_project(access_token, data):
 def is_k8s_project(access_token, project_id):
     """是否k8s项目"""
     result = get_project(access_token, project_id)
-    kind = result["data"]["kind"]
-
-    return kind == ProjectKindID
+    kind = result["kind"]
+    # magic number, mesos projectKind = 2
+    return kind != 2

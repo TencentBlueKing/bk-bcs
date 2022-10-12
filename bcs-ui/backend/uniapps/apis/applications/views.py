@@ -967,7 +967,7 @@ class BatchUpdateInstance(BaseBatchHandleInstance, app_views.BaseAPI):
                 version_id = show_version_info[0].id
             namespace = metadata.get("namespace")
             pre_instance_num = 0
-            if category in ["Deployment", "StatefulSet"]:
+            if category in ["K8sDeployment", "K8sStatefulSet", "Deployment", "StatefulSet"]:
                 pre_instance_num = inst_conf["spec"]["replicas"]
             else:
                 pre_instance_num = inst_conf["spec"]["instance"]
