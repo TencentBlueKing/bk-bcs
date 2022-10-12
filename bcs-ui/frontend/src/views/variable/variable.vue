@@ -213,6 +213,7 @@ import BkFormItem from 'bk-magic-vue/lib/form-item';
 import BkForm from 'bk-magic-vue/lib/form';
 import CodeEditor from '@/views/dashboard/resource-update/resource-editor.vue';
 import exampleData from './variable.json';
+import $store from '@/store'
 
 export default defineComponent({
   name: 'VariableManager',
@@ -465,6 +466,9 @@ export default defineComponent({
         mode.value = 'form';
       }
     });
+    const isSharedCluster = computed(() => {
+      return $store.state.cluster.curCluster?.is_shared
+    })
     async function handleSetVariable(row) {
       showSetSlider.value = true;
       currentRow.value = row;
@@ -473,10 +477,12 @@ export default defineComponent({
       if (row.scope === 'cluster') {
         data = await getClusterVariable({
           $variableID: row.id,
+          isShared: isSharedCluster.value || false
         });
       } else {
         data = await getNamespaceVariable({
           $variableID: row.id,
+          isShared: isSharedCluster.value || false
         });
       }
       setData.value = data.results || [];
