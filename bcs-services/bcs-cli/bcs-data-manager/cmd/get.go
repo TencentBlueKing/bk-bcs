@@ -15,11 +15,12 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/types"
 	"os"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/client/cmd/printer"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/client/pkg"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-data-manager/cmd/printer"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-data-manager/pkg"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/types"
+
 	bcsdatamanager "github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/proto/bcs-data-manager"
 	"github.com/spf13/cobra"
 )

@@ -12,7 +12,9 @@
 
 package main
 
-import "github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/client/cmd"
+import (
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-data-manager/cmd"
+)
 
 func main() {
 	cmd.Execute()

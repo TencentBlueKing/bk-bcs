@@ -14,10 +14,11 @@ package printer
 
 import (
 	"fmt"
+	"os"
+
 	bcsdatamanager "github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/proto/bcs-data-manager"
 	"github.com/olekukonko/tablewriter"
 	"github.com/tidwall/pretty"
-	"os"
 )
 
 // PrintAutoscalerInTable print autoscaler data in table format
