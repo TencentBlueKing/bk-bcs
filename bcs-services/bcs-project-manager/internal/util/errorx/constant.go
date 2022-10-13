@@ -33,6 +33,8 @@ const (
 	DBErr = commErr.AdditionErrorCode + 501
 	// DBErrMsg DB操作失败消息
 	DBErrMsg = "db error"
+	// ClusterMsg 集群操作失败消息
+	ClusterMsg = "cluster error"
 	// UnauthErr 未认证/认证失败
 	UnauthErr = commErr.AdditionErrorCode + 401
 	// UnauthErrMsg 认证失败消息

@@ -18,13 +18,13 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/headerkey"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/logging"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/errorx"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/stringx"
 	middleauth "github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/middleware"
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/project"
@@ -119,7 +119,7 @@ func CheckUserPerm(ctx context.Context, req server.Request, username string) (bo
 	logging.Info("CheckUserPerm: method/%s, username: %s", req.Method(), username)
 
 	if len(username) == 0 {
-		return false, errors.New("username is empty")
+		return false, errorx.NewReadableErr(errorx.PermDeniedErr, "用户名为空")
 	}
 	body := req.Body()
 	b, err := json.Marshal(body)
@@ -133,17 +133,17 @@ func CheckUserPerm(ctx context.Context, req server.Request, username string) (bo
 	}
 
 	if cErr := resourceID.check(); cErr != nil {
-		return false, fmt.Errorf("auth failed: err %s", cErr.Error())
+		return false, errorx.NewReadableErr(errorx.ParamErr, "权限校验失败")
 	}
 
 	action, ok := auth.ActionPermissions[req.Method()]
 	if !ok {
-		return false, errors.New("operation has not authorized")
+		return false, errorx.NewReadableErr(errorx.PermDeniedErr, "校验用户权限失败")
 	}
 
 	allow, _, err := callIAM(username, action, *resourceID)
 	if err != nil {
-		return false, err
+		return false, errorx.NewReadableErr(errorx.PermDeniedErr, "校验用户权限失败")
 	}
 	return allow, nil
 }
@@ -160,6 +160,6 @@ func callIAM(username, action string, resourceID resourceID) (bool, string, erro
 	case project.CanDeleteProjectOperation:
 		return auth.ProjectIamClient.CanDeleteProject(username, resourceID.ProjectID)
 	default:
-		return false, "", errors.New("permission denied")
+		return false, "", errorx.NewReadableErr(errorx.PermDeniedErr, "校验用户权限失败")
 	}
 }

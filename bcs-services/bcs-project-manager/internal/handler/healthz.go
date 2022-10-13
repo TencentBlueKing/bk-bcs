@@ -31,7 +31,7 @@ func NewHealthz() *HealthzHandler {
 
 // Ping 用于liveness
 func (h *HealthzHandler) Ping(ctx context.Context, req *proto.PingRequest, resp *proto.PingResponse) error {
-	resp.Ret = "pong"
+	resp.Data = "pong"
 	return nil
 }
 
@@ -45,7 +45,10 @@ func (h *HealthzHandler) Healthz(ctx context.Context, req *proto.HealthzRequest,
 	}
 
 	// 现阶段仅依赖mongo，因此，返回一样
-	resp.Status = health
-	resp.MongoStatus = health
+	retData := &proto.HealthzData{
+		Status:      health,
+		MongoStatus: health,
+	}
+	resp.Data = retData
 	return nil
 }

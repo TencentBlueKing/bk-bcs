@@ -85,7 +85,364 @@
         ]
       }
     },
-    "/bcsproject/v1/project/{projectCode}/variables": {
+    "/bcsproject/v1/projects": {
+      "get": {
+        "summary": "查询项目列表",
+        "description": "通过查询参数过滤项目列表, 支持分页和全量数据",
+        "operationId": "BCSProject_ListProjects",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/bcsprojectListProjectsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectIDs",
+            "description": "projectIDs. 项目ID, 多个以半角逗号分隔",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "names",
+            "description": "names. 项目中文名称, 长度不能超过64字符, 多个以半角逗号分隔",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "projectCode",
+            "description": "projectCode. 项目编码(英文缩写), 全局唯一, 长度不能超过64字符",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "searchName",
+            "description": "searchName. 项目中文名称, 通过此字段模糊查询项目信息",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "kind",
+            "description": "kind. 项目中集群类型, 允许k8s/mesos",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "offset",
+            "description": "offset. 分页数据, 表示第几页",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "int64"
+          },
+          {
+            "name": "limit",
+            "description": "limit. 分页数据, 每页数量",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "int64"
+          },
+          {
+            "name": "all",
+            "description": "all. 表示查询全量数据",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
+          }
+        ],
+        "tags": [
+          "BCSProject"
+        ]
+      },
+      "post": {
+        "summary": "创建项目",
+        "description": "创建项目信息",
+        "operationId": "BCSProject_CreateProject",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/bcsprojectProjectResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/bcsprojectCreateProjectRequest"
+            }
+          }
+        ],
+        "tags": [
+          "BCSProject"
+        ]
+      }
+    },
+    "/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/variables": {
+      "get": {
+        "summary": "获取命名空间的所有变量值",
+        "description": "获取命名空间的所有变量值",
+        "operationId": "Variable_ListNamespaceVariables",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/bcsprojectListNamespaceVariablesResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectCode",
+            "description": "项目编码(英文缩写), 全局唯一, 长度不能超过64字符",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "clusterID",
+            "description": "集群 id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "namespace",
+            "description": "命名空间名称",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "Variable"
+        ]
+      },
+      "put": {
+        "summary": "更新命名空间的所有变量值",
+        "description": "更新命名空间的所有变量值",
+        "operationId": "Variable_UpdateNamespaceVariables",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/bcsprojectUpdateNamespaceVariablesResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectCode",
+            "description": "项目编码(英文缩写), 全局唯一, 长度不能超过64字符",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "clusterID",
+            "description": "集群 id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "namespace",
+            "description": "命名空间名称",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/bcsprojectUpdateNamespaceVariablesRequest"
+            }
+          }
+        ],
+        "tags": [
+          "Variable"
+        ]
+      }
+    },
+    "/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/variables/render": {
+      "get": {
+        "summary": "渲染变量在特定集群, 命名空间下的值",
+        "description": "渲染变量在特定集群, 命名空间下的值",
+        "operationId": "Variable_RenderVariables",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/bcsprojectRenderVariablesResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectCode",
+            "description": "项目编码(英文缩写), 全局唯一, 长度不能超过64字符",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "clusterID",
+            "description": "集群 id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "namespace",
+            "description": "命名空间名称",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "keyList",
+            "description": "keyList. 变量 key 列表, 以半角逗号、分号或空格作为分隔",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "Variable"
+        ]
+      }
+    },
+    "/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/variables": {
+      "get": {
+        "summary": "获取集群的所有变量值",
+        "description": "获取集群的所有变量值",
+        "operationId": "Variable_ListClusterVariables",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/bcsprojectListClusterVariablesResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectCode",
+            "description": "项目编码(英文缩写), 全局唯一, 长度不能超过64字符",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "clusterID",
+            "description": "集群 id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "Variable"
+        ]
+      },
+      "put": {
+        "summary": "更新集群的所有变量值",
+        "description": "更新集群的所有变量值",
+        "operationId": "Variable_UpdateClusterVariables",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/bcsprojectUpdateClusterVariablesResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectCode",
+            "description": "项目编码(英文缩写), 全局唯一, 长度不能超过64字符",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "clusterID",
+            "description": "集群 id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/bcsprojectUpdateClusterVariablesRequest"
+            }
+          }
+        ],
+        "tags": [
+          "Variable"
+        ]
+      }
+    },
+    "/bcsproject/v1/projects/{projectCode}/variables": {
       "get": {
         "summary": "获取项目下所有变量定义",
         "description": "获取项目下所有变量定义",
@@ -233,7 +590,7 @@
         ]
       }
     },
-    "/bcsproject/v1/project/{projectCode}/variables/import": {
+    "/bcsproject/v1/projects/{projectCode}/variables/import": {
       "post": {
         "summary": "从文件中导入变量",
         "description": "从文件中导入变量",
@@ -274,7 +631,7 @@
         ]
       }
     },
-    "/bcsproject/v1/project/{projectCode}/variables/{variableID}": {
+    "/bcsproject/v1/projects/{projectCode}/variables/{variableID}": {
       "put": {
         "summary": "更新变量",
         "description": "更新变量",
@@ -322,16 +679,16 @@
         ]
       }
     },
-    "/bcsproject/v1/project/{projectCode}/variables/{variableID}/cluster": {
+    "/bcsproject/v1/projects/{projectCode}/variables/{variableID}/cluster": {
       "get": {
         "summary": "获取所有集群的变量值",
         "description": "获取所有集群的变量值",
-        "operationId": "Variable_ListClusterVariables",
+        "operationId": "Variable_ListClustersVariables",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/bcsprojectListClusterVariablesResponse"
+              "$ref": "#/definitions/bcsprojectListClustersVariablesResponse"
             }
           },
           "default": {
@@ -355,6 +712,14 @@
             "in": "path",
             "required": true,
             "type": "string"
+          },
+          {
+            "name": "isShared",
+            "description": "isShared. 是否为共享集群",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
           }
         ],
         "tags": [
@@ -364,12 +729,12 @@
       "put": {
         "summary": "更新所有集群的变量值",
         "description": "更新所有集群的变量值",
-        "operationId": "Variable_UpdateClusterVariables",
+        "operationId": "Variable_UpdateClustersVariables",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/bcsprojectUpdateClusterVariablesResponse"
+              "$ref": "#/definitions/bcsprojectUpdateClustersVariablesResponse"
             }
           },
           "default": {
@@ -399,7 +764,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/bcsprojectUpdateClusterVariablesRequest"
+              "$ref": "#/definitions/bcsprojectUpdateClustersVariablesRequest"
             }
           }
         ],
@@ -408,16 +773,16 @@
         ]
       }
     },
-    "/bcsproject/v1/project/{projectCode}/variables/{variableID}/namespace": {
+    "/bcsproject/v1/projects/{projectCode}/variables/{variableID}/namespace": {
       "get": {
         "summary": "获取项目所有命名空间的变量值",
         "description": "获取项目所有命名空间的变量值",
-        "operationId": "Variable_ListNamespaceVariables",
+        "operationId": "Variable_ListNamespacesVariables",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/bcsprojectListNamespaceVariablesResponse"
+              "$ref": "#/definitions/bcsprojectListNamespacesVariablesResponse"
             }
           },
           "default": {
@@ -441,6 +806,14 @@
             "in": "path",
             "required": true,
             "type": "string"
+          },
+          {
+            "name": "isShared",
+            "description": "isShared. 是否为共享集群",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
           }
         ],
         "tags": [
@@ -450,12 +823,12 @@
       "put": {
         "summary": "更新项目所有命名空间的变量值",
         "description": "更新项目所有命名空间的变量值",
-        "operationId": "Variable_UpdateNamespaceVariables",
+        "operationId": "Variable_UpdateNamespacesVariables",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/bcsprojectUpdateNamespaceVariablesResponse"
+              "$ref": "#/definitions/bcsprojectUpdateNamespacesVariablesResponse"
             }
           },
           "default": {
@@ -485,129 +858,12 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/bcsprojectUpdateNamespaceVariablesRequest"
+              "$ref": "#/definitions/bcsprojectUpdateNamespacesVariablesRequest"
             }
           }
         ],
         "tags": [
           "Variable"
-        ]
-      }
-    },
-    "/bcsproject/v1/projects": {
-      "get": {
-        "summary": "查询项目列表",
-        "description": "通过查询参数过滤项目列表, 支持分页和全量数据",
-        "operationId": "BCSProject_ListProjects",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/bcsprojectListProjectsResponse"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response",
-            "schema": {
-              "$ref": "#/definitions/runtimeError"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "projectIDs",
-            "description": "projectIDs. 项目ID, 多个以半角逗号分隔",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "names",
-            "description": "names. 项目中文名称, 长度不能超过64字符, 多个以半角逗号分隔",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "projectCode",
-            "description": "projectCode. 项目编码(英文缩写), 全局唯一, 长度不能超过64字符",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "searchName",
-            "description": "searchName. 项目中文名称, 通过此字段模糊查询项目信息",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "kind",
-            "description": "kind. 项目中集群类型, 允许k8s/mesos",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "offset",
-            "description": "offset. 分页数据, 表示第几页",
-            "in": "query",
-            "required": false,
-            "type": "string",
-            "format": "int64"
-          },
-          {
-            "name": "limit",
-            "description": "limit. 分页数据, 每页数量",
-            "in": "query",
-            "required": false,
-            "type": "string",
-            "format": "int64"
-          },
-          {
-            "name": "all",
-            "description": "all. 表示查询全量数据",
-            "in": "query",
-            "required": false,
-            "type": "boolean",
-            "format": "boolean"
-          }
-        ],
-        "tags": [
-          "BCSProject"
-        ]
-      },
-      "post": {
-        "summary": "创建项目",
-        "description": "创建项目信息",
-        "operationId": "BCSProject_CreateProject",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/bcsprojectProjectResponse"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response",
-            "schema": {
-              "$ref": "#/definitions/runtimeError"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/bcsprojectCreateProjectRequest"
-            }
-          }
-        ],
-        "tags": [
-          "BCSProject"
         ]
       }
     },
@@ -717,41 +973,6 @@
     }
   },
   "definitions": {
-    "bcsprojectClusterVariable": {
-      "type": "object",
-      "properties": {
-        "clusterID": {
-          "type": "string",
-          "description": "集群ID",
-          "title": "clusterID"
-        },
-        "clusterName": {
-          "type": "string",
-          "description": "集群名称",
-          "title": "clusterName"
-        },
-        "value": {
-          "type": "string",
-          "description": "变量在该集群的值",
-          "title": "value"
-        }
-      }
-    },
-    "bcsprojectClusterVariableEntry": {
-      "type": "object",
-      "properties": {
-        "clusterID": {
-          "type": "string",
-          "description": "集群ID",
-          "title": "clusterID"
-        },
-        "value": {
-          "type": "string",
-          "description": "变量值",
-          "title": "value"
-        }
-      }
-    },
     "bcsprojectCreateProjectRequest": {
       "type": "object",
       "properties": {
@@ -1015,7 +1236,7 @@
         }
       }
     },
-    "bcsprojectHealthzResponse": {
+    "bcsprojectHealthzData": {
       "type": "object",
       "properties": {
         "status": {
@@ -1027,6 +1248,32 @@
           "type": "string",
           "description": "服务依赖的 mongo 状态",
           "title": "mongo status"
+        }
+      }
+    },
+    "bcsprojectHealthzResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "data": {
+          "$ref": "#/definitions/bcsprojectHealthzData",
+          "description": "返回服务状态, 包含服务整体状态和 mongo 状态",
+          "title": "data"
+        },
+        "requestID": {
+          "type": "string",
+          "description": "请求 ID",
+          "title": "request id"
         }
       }
     },
@@ -1158,27 +1405,6 @@
         }
       }
     },
-    "bcsprojectListClusterVariablesData": {
-      "type": "object",
-      "properties": {
-        "total": {
-          "type": "integer",
-          "format": "int64",
-          "description": "总量",
-          "title": "total"
-        },
-        "results": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/bcsprojectClusterVariable"
-          },
-          "description": "集群变量数据",
-          "title": "results"
-        }
-      },
-      "description": "集群变量列表数据",
-      "title": "ListClusterVariablesData"
-    },
     "bcsprojectListClusterVariablesResponse": {
       "type": "object",
       "properties": {
@@ -1194,8 +1420,8 @@
           "title": "message"
         },
         "data": {
-          "$ref": "#/definitions/bcsprojectListClusterVariablesData",
-          "description": "返回集群列表信息",
+          "$ref": "#/definitions/bcsprojectListVariableValuesData",
+          "description": "返回变量信息",
           "title": "data"
         },
         "requestID": {
@@ -1205,26 +1431,31 @@
         }
       }
     },
-    "bcsprojectListNamespaceVariablesData": {
+    "bcsprojectListClustersVariablesResponse": {
       "type": "object",
       "properties": {
-        "total": {
+        "code": {
           "type": "integer",
           "format": "int64",
-          "description": "总量",
-          "title": "total"
+          "description": "返回错误码",
+          "title": "code"
         },
-        "results": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/bcsprojectNamespaceVariable"
-          },
-          "description": "集群变量数据",
-          "title": "results"
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "data": {
+          "$ref": "#/definitions/bcsprojectListVariableValuesData",
+          "description": "返回集群列表信息",
+          "title": "data"
+        },
+        "requestID": {
+          "type": "string",
+          "description": "请求 ID",
+          "title": "request id"
         }
-      },
-      "description": "集群变量列表数据",
-      "title": "ListNamespaceVariablesData"
+      }
     },
     "bcsprojectListNamespaceVariablesResponse": {
       "type": "object",
@@ -1241,7 +1472,33 @@
           "title": "message"
         },
         "data": {
-          "$ref": "#/definitions/bcsprojectListNamespaceVariablesData",
+          "$ref": "#/definitions/bcsprojectListVariableValuesData",
+          "description": "返回命名空间列表信息",
+          "title": "data"
+        },
+        "requestID": {
+          "type": "string",
+          "description": "请求 ID",
+          "title": "request id"
+        }
+      }
+    },
+    "bcsprojectListNamespacesVariablesResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "data": {
+          "$ref": "#/definitions/bcsprojectListVariableValuesData",
           "description": "返回命名空间列表信息",
           "title": "data"
         },
@@ -1351,50 +1608,26 @@
         }
       }
     },
-    "bcsprojectNamespaceVariable": {
+    "bcsprojectListVariableValuesData": {
       "type": "object",
       "properties": {
-        "clusterID": {
-          "type": "string",
-          "description": "集群ID",
-          "title": "clusterID"
+        "total": {
+          "type": "integer",
+          "format": "int64",
+          "description": "总量",
+          "title": "total"
         },
-        "clusterName": {
-          "type": "string",
-          "description": "集群名称",
-          "title": "clusterName"
-        },
-        "namespace": {
-          "type": "string",
-          "description": "命名空间",
-          "title": "namespace"
-        },
-        "value": {
-          "type": "string",
-          "description": "变量在该命名空间的值",
-          "title": "value"
+        "results": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/bcsprojectVariableValue"
+          },
+          "description": "集群变量数据",
+          "title": "results"
         }
-      }
-    },
-    "bcsprojectNamespaceVariableEntry": {
-      "type": "object",
-      "properties": {
-        "clusterID": {
-          "type": "string",
-          "description": "集群ID",
-          "title": "clusterID"
-        },
-        "namespace": {
-          "type": "string",
-          "description": "命名空间",
-          "title": "namespace"
-        },
-        "value": {
-          "type": "string",
-          "description": "变量在该命名空间的值",
-          "title": "value"
-        }
-      }
+      },
+      "description": "集群变量列表数据",
+      "title": "ListVariableValuesData"
     },
     "bcsprojectPerms": {
       "type": "object",
@@ -1409,10 +1642,26 @@
     "bcsprojectPingResponse": {
       "type": "object",
       "properties": {
-        "ret": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
           "type": "string",
-          "description": "成功返回 Pong",
-          "title": "Ret"
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "data": {
+          "type": "string",
+          "description": "返回服务状态, 包含服务整体状态和 mongo 状态",
+          "title": "data"
+        },
+        "requestID": {
+          "type": "string",
+          "description": "请求 ID",
+          "title": "request id"
         }
       },
       "description": "Ping API 响应",
@@ -1571,7 +1820,86 @@
         }
       }
     },
+    "bcsprojectRenderVariablesResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/bcsprojectVariableValue"
+          },
+          "description": "变量数据",
+          "title": "results"
+        },
+        "requestID": {
+          "type": "string",
+          "description": "请求 ID",
+          "title": "request id"
+        }
+      }
+    },
     "bcsprojectUpdateClusterVariablesRequest": {
+      "type": "object",
+      "properties": {
+        "projectCode": {
+          "type": "string",
+          "description": "项目编码(英文缩写), 全局唯一, 长度不能超过64字符",
+          "title": "projectCode"
+        },
+        "clusterID": {
+          "type": "string",
+          "description": "集群 id",
+          "title": "clusterID"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/bcsprojectVariableValue"
+          },
+          "description": "集群变量值",
+          "title": "data"
+        }
+      },
+      "description": "更新集群所有变量值请求",
+      "title": "UpdateClusterVariablesRequest",
+      "required": [
+        "projectCode",
+        "clusterID"
+      ]
+    },
+    "bcsprojectUpdateClusterVariablesResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "requestID": {
+          "type": "string",
+          "description": "请求 ID",
+          "title": "request id"
+        }
+      }
+    },
+    "bcsprojectUpdateClustersVariablesRequest": {
       "type": "object",
       "properties": {
         "projectCode": {
@@ -1587,20 +1915,20 @@
         "data": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/bcsprojectClusterVariableEntry"
+            "$ref": "#/definitions/bcsprojectVariableValue"
           },
           "description": "集群变量值",
           "title": "data"
         }
       },
       "description": "更新项目下集群变量值请求",
-      "title": "UpdateClusterVariablesRequest",
+      "title": "UpdateClustersVariablesRequest",
       "required": [
         "projectCode",
         "variableID"
       ]
     },
-    "bcsprojectUpdateClusterVariablesResponse": {
+    "bcsprojectUpdateClustersVariablesResponse": {
       "type": "object",
       "properties": {
         "code": {
@@ -1629,6 +1957,61 @@
           "description": "项目编码(英文缩写), 全局唯一, 长度不能超过64字符",
           "title": "projectCode"
         },
+        "clusterID": {
+          "type": "string",
+          "description": "集群 id",
+          "title": "clusterID"
+        },
+        "namespace": {
+          "type": "string",
+          "description": "命名空间名称",
+          "title": "namespace"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/bcsprojectVariableValue"
+          },
+          "description": "命名空间变量值",
+          "title": "data"
+        }
+      },
+      "description": "更新命名空间所有变量值请求",
+      "title": "UpdateNamespaceVariablesRequest",
+      "required": [
+        "projectCode",
+        "variableID"
+      ]
+    },
+    "bcsprojectUpdateNamespaceVariablesResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "requestID": {
+          "type": "string",
+          "description": "请求 ID",
+          "title": "request id"
+        }
+      }
+    },
+    "bcsprojectUpdateNamespacesVariablesRequest": {
+      "type": "object",
+      "properties": {
+        "projectCode": {
+          "type": "string",
+          "description": "项目编码(英文缩写), 全局唯一, 长度不能超过64字符",
+          "title": "projectCode"
+        },
         "variableID": {
           "type": "string",
           "description": "变量 id",
@@ -1637,20 +2020,20 @@
         "data": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/bcsprojectNamespaceVariableEntry"
+            "$ref": "#/definitions/bcsprojectVariableValue"
           },
           "description": "命名空间变量值",
           "title": "data"
         }
       },
       "description": "更新项目下命名空间变量值请求",
-      "title": "UpdateNamespaceVariablesRequest",
+      "title": "UpdateNamespacesVariablesRequest",
       "required": [
         "projectCode",
         "variableID"
       ]
     },
-    "bcsprojectUpdateNamespaceVariablesResponse": {
+    "bcsprojectUpdateNamespacesVariablesResponse": {
       "type": "object",
       "properties": {
         "code": {
@@ -1957,6 +2340,51 @@
           "type": "string",
           "description": "修改人",
           "title": "updater"
+        }
+      }
+    },
+    "bcsprojectVariableValue": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "变量ID",
+          "title": "id"
+        },
+        "key": {
+          "type": "string",
+          "description": "变量key",
+          "title": "key"
+        },
+        "name": {
+          "type": "string",
+          "description": "变量名称",
+          "title": "name"
+        },
+        "clusterID": {
+          "type": "string",
+          "description": "集群ID",
+          "title": "clusterID"
+        },
+        "clusterName": {
+          "type": "string",
+          "description": "集群名称",
+          "title": "clusterName"
+        },
+        "namespace": {
+          "type": "string",
+          "description": "命名空间",
+          "title": "namespace"
+        },
+        "value": {
+          "type": "string",
+          "description": "变量在该集群的值",
+          "title": "value"
+        },
+        "scope": {
+          "type": "string",
+          "description": "变量作用域",
+          "title": "scope"
         }
       }
     },

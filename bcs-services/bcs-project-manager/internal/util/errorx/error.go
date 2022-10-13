@@ -52,6 +52,11 @@ func NewDBErr(msg ...interface{}) *ProjectError {
 	return NewProjectError(DBErr, DBErrMsg, msg...)
 }
 
+// NewClusterErr xxx
+func NewClusterErr(msg ...interface{}) *ProjectError {
+	return NewProjectError(DBErr, ClusterMsg, msg...)
+}
+
 // NewAuthErr xxx
 func NewAuthErr(msg ...interface{}) *ProjectError {
 	return NewProjectError(UnauthErr, UnauthErrMsg, msg...)
@@ -90,4 +95,8 @@ func NewNoMaintainerRoleErr(msg ...interface{}) *ProjectError {
 // NewRequestBCSCCErr xxx
 func NewRequestBCSCCErr(msg ...interface{}) *ProjectError {
 	return NewProjectError(RequestCMDBErr, RequestBCSCCErrMsg, msg...)
+}
+
+func NewReadableErr(code uint32, msg string) *ProjectError {
+	return NewProjectError(code, msg)
 }

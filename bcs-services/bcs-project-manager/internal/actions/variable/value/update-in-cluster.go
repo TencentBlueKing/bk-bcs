@@ -12,17 +12,15 @@
  * limitations under the License.
  */
 
-package definition
+package value
 
 import (
 	"context"
-	"fmt"
 	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/logging"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store"
-	vd "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/variabledefinition"
-	vv "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/variablevalue"
+	vdm "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/variabledefinition"
+	vvm "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/variablevalue"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/errorx"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/proto/bcsproject"
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/middleware"
@@ -56,32 +54,20 @@ func (la *UpdateClusterVariablesAction) Do(ctx context.Context,
 }
 
 func (la *UpdateClusterVariablesAction) updateClusterVariables() error {
-	_, err := la.model.GetProject(la.ctx, la.req.GetProjectCode())
-	if err != nil {
-		logging.Info("get project from db failed, err: %s", err.Error())
-		return err
-	}
-	// TODO: 鉴权
-	variableDefinition, err := la.model.GetVariableDefinition(la.ctx, la.req.GetVariableID())
-	if err != nil {
-		logging.Info("get variable definition from db failed, err: %s", err.Error())
-		return err
-	}
-	if variableDefinition.Scope != vd.VariableDefinitionScopeCluster {
-		return fmt.Errorf("variable %s scope is %s rather than cluster",
-			la.req.GetVariableID(), variableDefinition.Scope)
+	if la.req.GetClusterID() == "" {
+		return errorx.NewParamErr("clusterID cannot be empty")
 	}
 	var username string
 	if authUser, err := middleware.GetUserFromContext(la.ctx); err == nil {
 		username = authUser.GetUsername()
 	}
-	entries := la.req.GetData()
-	for _, entry := range entries {
-		if err := la.model.UpsertVariableValue(la.ctx, &vv.VariableValue{
-			VariableID: la.req.GetVariableID(),
-			ClusterID:  entry.ClusterID,
-			Value:      entry.Value,
-			Scope:      vd.VariableDefinitionScopeCluster,
+	variables := la.req.GetData()
+	for _, variable := range variables {
+		if err := la.model.UpsertVariableValue(la.ctx, &vvm.VariableValue{
+			VariableID: variable.Id,
+			ClusterID:  la.req.GetClusterID(),
+			Value:      variable.Value,
+			Scope:      vdm.VariableScopeCluster,
 			UpdateTime: time.Now().Format(time.RFC3339),
 			Updater:    username,
 		}); err != nil {

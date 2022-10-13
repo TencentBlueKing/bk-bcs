@@ -17,6 +17,7 @@ package wrapper
 import (
 	"context"
 	"fmt"
+	"reflect"
 
 	"github.com/micro/go-micro/v2/errors"
 	"github.com/micro/go-micro/v2/server"
@@ -50,23 +51,29 @@ func RenderResponse(rsp interface{}, requestID string, err error) error {
 				return nil
 			}
 		}
-	case *proto.ListProjectsResponse:
-		if r, ok := rsp.(*proto.ListProjectsResponse); ok {
-			r.RequestID = requestID
-			r.Message, r.Code = getMsgCode(err)
-			if err != nil {
-				r.Data = nil
+	default:
+		// support for data type string,slice and empty,haven't test for map and so on
+		msg, code := getMsgCode(err)
+		v := reflect.ValueOf(rsp)
+		v.Elem().FieldByName("RequestID").SetString(requestID)
+		v.Elem().FieldByName("Message").SetString(msg)
+		v.Elem().FieldByName("Code").SetUint(uint64(code))
+		if err != nil {
+			dataField := v.Elem().FieldByName("Data")
+			if !dataField.IsValid() {
 				return nil
 			}
-		}
-	case *proto.ListAuthorizedProjResp:
-		if r, ok := rsp.(*proto.ListAuthorizedProjResp); ok {
-			r.RequestID = requestID
-			r.Message, r.Code = getMsgCode(err)
-			if err != nil {
-				r.Data = nil
-				return nil
+			switch dataField.Kind() {
+			case reflect.Interface, reflect.Ptr:
+				if dataField.Elem().CanSet() {
+					tp := reflect.TypeOf(dataField.Elem().Interface())
+					dataField.Elem().Set(reflect.Zero(tp))
+				}
+			default:
+				tp := reflect.TypeOf(dataField.Interface())
+				dataField.Set(reflect.Zero(tp))
 			}
+			return nil
 		}
 	}
 	return err

@@ -27,6 +27,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/page"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/dbtable"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/entity"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/stringx"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/proto/bcsproject"
 )
 
@@ -65,23 +66,21 @@ var (
 )
 
 var (
-	VariableDefinitonCategorySys     = "sys"
-	VariableDefinitionCategoryCustom = "custom"
-	VariableDefinitionScopeGlobal    = "global"
-	VariableDefinitionScopeCluster   = "cluster"
-	VariableDefinitionScopeNamespace = "namespace"
-
-	VariableIdPrefix = "variable-"
+	VariableCategorySys    = "sys"
+	VariableCategoryCustom = "custom"
+	VariableScopeGlobal    = "global"
+	VariableScopeCluster   = "cluster"
+	VariableScopeNamespace = "namespace"
 )
 
 // GetScopeName get scope name by scope str
 func GetScopeName(scope string) string {
 	switch scope {
-	case VariableDefinitionScopeGlobal:
+	case VariableScopeGlobal:
 		return "全局变量"
-	case VariableDefinitionScopeCluster:
+	case VariableScopeCluster:
 		return "集群变量"
-	case VariableDefinitionScopeNamespace:
+	case VariableScopeNamespace:
 		return "命名空间变量"
 	default:
 		return "非法作用范围"
@@ -92,13 +91,75 @@ func GetScopeName(scope string) string {
 // GetCategoryName get category name by category str
 func GetCategoryName(category string) string {
 	switch category {
-	case VariableDefinitonCategorySys:
+	case VariableCategorySys:
 		return "系统内置"
-	case VariableDefinitionCategoryCustom:
+	case VariableCategoryCustom:
 		return "自定义"
 	default:
 		return "非法类型"
 	}
+}
+
+var SystemVariables = map[string]*VariableDefinition{
+	"SYS_NON_STANDARD_DATA_ID": {
+		ID:       "variable-sys-non-standard-data-id",
+		Key:      "SYS_NON_STANDARD_DATA_ID",
+		Name:     "非标准日志采集DataId",
+		Category: VariableCategorySys,
+		Scope:    VariableScopeGlobal,
+	},
+	"SYS_STANDARD_DATA_ID": {
+		ID:       "variable-sys-standard-data-id",
+		Key:      "SYS_STANDARD_DATA_ID",
+		Name:     "标准日志采集DataId",
+		Category: VariableCategorySys,
+		Scope:    VariableScopeGlobal,
+	},
+	"SYS_NAMESPACE": {
+		ID:       "variable-sys-namespace",
+		Key:      "SYS_NAMESPACE",
+		Name:     "命名空间",
+		Category: VariableCategorySys,
+		Scope:    VariableScopeNamespace,
+	},
+	"SYS_JFROG_DOMAIN": {
+		ID:       "variable-sys-jfrog-domain",
+		Key:      "SYS_JFROG_DOMAIN",
+		Name:     "仓库域名",
+		Category: VariableCategorySys,
+		Scope:    VariableScopeCluster,
+	},
+	"SYS_CLUSTER_ID": {
+		ID:       "variable-sys-cluster-id",
+		Key:      "SYS_CLUSTER_ID",
+		Name:     "集群ID",
+		Category: VariableCategorySys,
+		Scope:    VariableScopeCluster,
+	},
+	"SYS_CC_APP_ID": {
+		ID:       "variable-sys-cc-app-id",
+		Key:      "SYS_CC_APP_ID",
+		Name:     "业务ID",
+		Category: VariableCategorySys,
+		Scope:    VariableScopeGlobal,
+	},
+	"SYS_PROJECT_ID": {
+		ID:       "variable-sys-project-id",
+		Key:      "SYS_PROJECT_ID",
+		Name:     "项目ID",
+		Category: VariableCategorySys,
+		Scope:    VariableScopeGlobal,
+	},
+}
+
+func FilterSystemVariablesByScope(scope []string) []*VariableDefinition {
+	variables := []*VariableDefinition{}
+	for _, v := range SystemVariables {
+		if stringx.StringInSlice(v.Scope, scope) {
+			variables = append(variables, v)
+		}
+	}
+	return variables
 }
 
 // VariableDefinition ...
@@ -162,6 +223,7 @@ func (m *VariableDefinition) Transfer2Proto() *proto.VariableDefinition {
 		Id:           m.ID,
 		Key:          m.Key,
 		Name:         m.Name,
+		Default:      m.Default,
 		DefaultValue: m.Default,
 		Scope:        m.Scope,
 		ScopeName:    GetScopeName(m.Scope),

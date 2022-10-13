@@ -12,39 +12,42 @@
  * limitations under the License.
  */
 
-package definition
+package value
 
 import (
 	"context"
 	"fmt"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/logging"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store"
-	vd "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/variabledefinition"
+	vdm "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/variabledefinition"
+	vvm "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/variablevalue"
+	clusterutils "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/cluster"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/errorx"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/proto/bcsproject"
-
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
+	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/middleware"
+	"google.golang.org/grpc/metadata"
 )
 
-// ListClusterVariablesAction ...
-type ListClusterVariablesAction struct {
+// ListClustersVariablesAction ...
+type ListClustersVariablesAction struct {
 	ctx   context.Context
 	model store.ProjectModel
-	req   *proto.ListClusterVariablesRequest
+	req   *proto.ListClustersVariablesRequest
 }
 
-// NewListClusterVariablesAction new list cluster variables action
-func NewListClusterVariablesAction(model store.ProjectModel) *ListClusterVariablesAction {
-	return &ListClusterVariablesAction{
+// NewListClustersVariablesAction new list cluster variables action
+func NewListClustersVariablesAction(model store.ProjectModel) *ListClustersVariablesAction {
+	return &ListClustersVariablesAction{
 		model: model,
 	}
 }
 
 // Do ...
-func (la *ListClusterVariablesAction) Do(ctx context.Context,
-	req *proto.ListClusterVariablesRequest) ([]*proto.ClusterVariable, error) {
+func (la *ListClustersVariablesAction) Do(ctx context.Context,
+	req *proto.ListClustersVariablesRequest) ([]*proto.VariableValue, error) {
 	la.ctx = ctx
 	la.req = req
 
@@ -56,7 +59,7 @@ func (la *ListClusterVariablesAction) Do(ctx context.Context,
 	return variables, nil
 }
 
-func (la *ListClusterVariablesAction) listClusterVariables() ([]*proto.ClusterVariable, error) {
+func (la *ListClustersVariablesAction) listClusterVariables() ([]*proto.VariableValue, error) {
 	project, err := la.model.GetProject(la.ctx, la.req.GetProjectCode())
 	if err != nil {
 		logging.Error("get project from db failed, err: %s", err.Error())
@@ -67,7 +70,7 @@ func (la *ListClusterVariablesAction) listClusterVariables() ([]*proto.ClusterVa
 		logging.Error("get variable definition from db failed, err: %s", err.Error())
 		return nil, err
 	}
-	if variableDefinition.Scope != vd.VariableDefinitionScopeCluster {
+	if variableDefinition.Scope != vdm.VariableScopeCluster {
 		return nil, fmt.Errorf("variable %s scope is %s rather than cluster",
 			la.req.GetVariableID(), variableDefinition.Scope)
 	}
@@ -83,31 +86,40 @@ func (la *ListClusterVariablesAction) listClusterVariables() ([]*proto.ClusterVa
 	}()
 	req := &clustermanager.ListClusterReq{
 		ProjectID: project.ProjectID,
+		Status: clustermanager.ClusterStatusRunning,
 	}
-	resp, err := cli.ListCluster(context.Background(), req)
+
+	// TODO: need to optimize
+	listCtx := metadata.AppendToOutgoingContext(la.ctx, middleware.InnerClientHeaderKey, config.ServiceDomain)
+	resp, err := cli.ListCluster(listCtx, req)
 	if err != nil {
 		logging.Error("list cluster from cluster manager failed, err: %s", err.Error())
 		return nil, err
 	}
-	clusters := resp.GetData()
-	var variables []*proto.ClusterVariable
-	var value string
+	clusters := clusterutils.FilterClusters(resp.GetData(), la.req.GetIsShared())
+	var variables []*proto.VariableValue
+	clusterIDs := []string{}
 	for _, cluster := range clusters {
-		variableValue, err := la.model.GetVariableValue(la.ctx,
-			la.req.GetVariableID(), cluster.ClusterID, "", vd.VariableDefinitionScopeCluster)
-		if err == drivers.ErrTableRecordNotFound {
-			logging.Info("cannot get variable by id %s, clusterID %s", la.req.GetVariableID(), cluster.ClusterID)
-			value = variableDefinition.Default
-		} else if err != nil {
-			logging.Error("get variable value from db failed, err: %s", err.Error())
-			return nil, err
-		} else {
-			value = variableValue.Value
-		}
-		variable := &proto.ClusterVariable{
+		clusterIDs = append(clusterIDs, cluster.GetClusterID())
+	}
+	variableValues, err := la.model.ListClusterVariableValues(la.ctx,
+		la.req.GetVariableID())
+	if err != nil {
+		return variables, err
+	}
+	exists := make(map[string]vvm.VariableValue, len(variableValues))
+	for _, value := range variableValues {
+		exists[value.ClusterID] = value
+	}
+	for _, cluster := range clusters {
+		variable := &proto.VariableValue{
 			ClusterID:   cluster.ClusterID,
 			ClusterName: cluster.ClusterName,
-			Value:       value,
+		}
+		if value, ok := exists[variable.ClusterID]; ok {
+			variable.Value = value.Value
+		} else {
+			variable.Value = variableDefinition.Default
 		}
 		variables = append(variables, variable)
 	}

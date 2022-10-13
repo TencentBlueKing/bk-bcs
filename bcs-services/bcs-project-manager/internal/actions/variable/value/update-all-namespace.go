@@ -12,7 +12,7 @@
  * limitations under the License.
  */
 
-package definition
+package value
 
 import (
 	"context"
@@ -21,30 +21,30 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/logging"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store"
-	vd "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/variabledefinition"
-	vv "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/variablevalue"
+	vdm "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/variabledefinition"
+	vvm "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/variablevalue"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/errorx"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/proto/bcsproject"
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/middleware"
 )
 
-// UpdateNamespaceVariablesAction ...
-type UpdateNamespaceVariablesAction struct {
+// UpdateNamespacesVariablesAction ...
+type UpdateNamespacesVariablesAction struct {
 	ctx   context.Context
 	model store.ProjectModel
-	req   *proto.UpdateNamespaceVariablesRequest
+	req   *proto.UpdateNamespacesVariablesRequest
 }
 
-// NewUpdateNamespaceVariablesAction new update cluster variables action
-func NewUpdateNamespaceVariablesAction(model store.ProjectModel) *UpdateNamespaceVariablesAction {
-	return &UpdateNamespaceVariablesAction{
+// NewUpdateNamespacesVariablesAction new update cluster variables action
+func NewUpdateNamespacesVariablesAction(model store.ProjectModel) *UpdateNamespacesVariablesAction {
+	return &UpdateNamespacesVariablesAction{
 		model: model,
 	}
 }
 
 // Do ...
-func (la *UpdateNamespaceVariablesAction) Do(ctx context.Context,
-	req *proto.UpdateNamespaceVariablesRequest) error {
+func (la *UpdateNamespacesVariablesAction) Do(ctx context.Context,
+	req *proto.UpdateNamespacesVariablesRequest) error {
 	la.ctx = ctx
 	la.req = req
 
@@ -54,7 +54,7 @@ func (la *UpdateNamespaceVariablesAction) Do(ctx context.Context,
 	return nil
 }
 
-func (la *UpdateNamespaceVariablesAction) updateNamespaceVariables() error {
+func (la *UpdateNamespacesVariablesAction) updateNamespaceVariables() error {
 	_, err := la.model.GetProject(la.ctx, la.req.GetProjectCode())
 	if err != nil {
 		logging.Info("get project from db failed, err: %s", err.Error())
@@ -66,7 +66,7 @@ func (la *UpdateNamespaceVariablesAction) updateNamespaceVariables() error {
 		logging.Info("get variable definition from db failed, err: %s", err.Error())
 		return err
 	}
-	if variableDefinition.Scope != vd.VariableDefinitionScopeNamespace {
+	if variableDefinition.Scope != vdm.VariableScopeNamespace {
 		return fmt.Errorf("variable %s scope is %s rather than namespace",
 			la.req.GetVariableID(), variableDefinition.Scope)
 	}
@@ -76,12 +76,12 @@ func (la *UpdateNamespaceVariablesAction) updateNamespaceVariables() error {
 	}
 	entries := la.req.GetData()
 	for _, entry := range entries {
-		if err := la.model.UpsertVariableValue(la.ctx, &vv.VariableValue{
+		if err := la.model.UpsertVariableValue(la.ctx, &vvm.VariableValue{
 			VariableID: la.req.GetVariableID(),
 			ClusterID:  entry.ClusterID,
 			Namespace:  entry.Namespace,
 			Value:      entry.Value,
-			Scope:      vd.VariableDefinitionScopeNamespace,
+			Scope:      vdm.VariableScopeNamespace,
 			UpdateTime: time.Now().Format(time.RFC3339),
 			Updater:    username,
 		}); err != nil {

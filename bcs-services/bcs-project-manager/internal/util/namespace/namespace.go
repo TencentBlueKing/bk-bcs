@@ -12,26 +12,23 @@
  * limitations under the License.
  */
 
-package wrapper
+package namespace
 
 import (
-	"context"
-
-	"github.com/micro/go-micro/v2/server"
+	corev1 "k8s.io/api/core/v1"
 )
 
-type validator interface {
-	Validate() error
-}
+// AnnotationKeyProjectCode annotation key projectCode
+const AnnotationKeyProjectCode string = "io.tencent.bcs.projectcode"
 
-// NewValidatorWrapper 参数校验
-func NewValidatorWrapper(fn server.HandlerFunc) server.HandlerFunc {
-	return func(ctx context.Context, req server.Request, rsp interface{}) error {
-		if v, ok := req.Body().(validator); ok {
-			if err := v.Validate(); err != nil {
-				return err
-			}
+// FilterNamespaces filter shared namespace
+func FilterNamespaces(namespaceList *corev1.NamespaceList, shared bool, projectCode string) []corev1.Namespace {
+	nsList := []corev1.Namespace{}
+	for _, ns := range namespaceList.Items {
+		if shared && ns.Annotations[AnnotationKeyProjectCode] != projectCode {
+			continue
 		}
-		return fn(ctx, req, rsp)
+		nsList = append(nsList, ns)
 	}
+	return nsList
 }

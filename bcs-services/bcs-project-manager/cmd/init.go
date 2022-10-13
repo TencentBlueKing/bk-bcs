@@ -255,8 +255,8 @@ func (p *ProjectService) initMicro() error {
 		}),
 		microSvc.WrapHandler(
 			wrapper.NewInjectContextWrapper,
-			wrapper.NewLogWrapper,
 			wrapper.NewResponseWrapper,
+			wrapper.NewLogWrapper,
 			wrapper.NewValidatorWrapper,
 			wrapper.NewAuthHeaderAdapter,
 			authWrapper.AuthenticationFunc,

@@ -21,7 +21,9 @@ import (
 	"math/rand"
 	"time"
 
+	common "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/discovery"
+	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/middleware"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	grpc "google.golang.org/grpc"
@@ -32,6 +34,9 @@ import (
 var (
 	// ErrNotInited err server not init
 	ErrNotInited = errors.New("server not init")
+
+	// ClusterStatusRunning cluster status running
+	ClusterStatusRunning = "RUNNING"
 )
 
 // ClsManClient xxx
@@ -92,8 +97,9 @@ func NewClusterManager(config *Config) (ClusterManagerClient, func()) {
 	}
 	// create grpc connection
 	header := map[string]string{
-		"x-content-type": "application/grpc+proto",
-		"Content-Type":   "application/grpc",
+		"x-content-type":                "application/grpc+proto",
+		"Content-Type":                  "application/grpc",
+		middleware.InnerClientHeaderKey: common.ServiceDomain,
 	}
 	if len(config.AuthToken) != 0 {
 		header["Authorization"] = fmt.Sprintf("Bearer %s", config.AuthToken)

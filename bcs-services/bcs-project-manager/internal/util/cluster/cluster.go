@@ -12,11 +12,19 @@
  * limitations under the License.
  */
 
-package constant
+package cluster
 
-const (
-	// VariableCategorySys TODO
-	VariableCategorySys = "sys"
-	// VariableCategoryCustom TODO
-	VariableCategoryCustom = "custom"
+import (
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/clustermanager"
 )
+
+// FilterClusters filter clusters by shared
+func FilterClusters(clusters []*clustermanager.Cluster, shared bool) []*clustermanager.Cluster {
+	list := []*clustermanager.Cluster{}
+	for _, cluster := range clusters {
+		if shared == cluster.IsShared {
+			list = append(list, cluster)
+		}
+	}
+	return list
+}
