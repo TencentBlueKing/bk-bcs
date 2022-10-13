@@ -194,9 +194,7 @@
                 :label="$t('规格')"
                 prop="specifications" :show-overflow-tooltip="{ interactive: false }"></bk-table-column>
               <bk-table-column :label="$t('园区')" prop="zone" key="zone">
-                <template>
-                  {{ zoneName }}
-                </template>
+                {{ zoneName }}
               </bk-table-column>
               <bk-table-column label="CPU" prop="cpu" width="80"></bk-table-column>
               <bk-table-column :label="$t('内存')" prop="mem" width="80"></bk-table-column>
@@ -251,7 +249,6 @@ export default {
   },
   data() {
     return {
-      zoneName: '',
       cvmData: {},
       timer: null,
       // applyHostButton: {
@@ -409,6 +406,10 @@ export default {
     },
     userInfo() {
       return this.$store.state.user;
+    },
+    zoneName() {
+      const zone = this.zoneList.find(item => item.value === this.formdata.zone_id) || {};
+      return zone.label || '--';
     },
   },
   watch: {
@@ -632,8 +633,6 @@ export default {
           };
         });
         await this.getCvmCapacity();
-        const zone = this.zoneList.find(item => item.value === this.formdata.zone_id) || {};
-        this.zoneName = zone.label || '--';
         this.isHostLoading = false;
       } catch (e) {
         this.hostTableData = [];
