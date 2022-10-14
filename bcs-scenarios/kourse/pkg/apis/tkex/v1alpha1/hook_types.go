@@ -171,6 +171,8 @@ type MetricProvider struct {
 	Prometheus *PrometheusMetric `json:"prometheus,omitempty"`
 	// Kubernetes specifies the kubernetes metric to operate
 	Kubernetes *KubernetesMetric `json:"kubernetes,omitempty"`
+	// Exec specifies the exec metric to execute
+	Exec *ExecMetric `json:"exec,omitempty"`
 }
 
 // Field defines the path and vaule of Kubernetes metric type
@@ -179,6 +181,20 @@ type Field struct {
 	Path string `json:"path"`
 	// Value is the value of the field path
 	Value string `json:"value,omitempty"`
+}
+
+// ExecMetric defines the container and command of Exec metric type
+type ExecMetric struct {
+	// Container is the name of container where commands to execute inside.
+	// +kubebuilder:validation:Required
+	Container string `json:"container,omitempty"`
+	// Command is the command line to execute inside the container, the working directory for the
+	// command  is root ('/') in the container's filesystem. The command is simply exec'd, it is
+	// not run inside a shell, so traditional shell instructions ('|', etc) won't work. To use
+	// a shell, you need to explicitly call out to that shell.
+	// Exit status of 0 is treated as live/healthy and non-zero is unhealthy.
+	// +kubebuilder:validation:Required
+	Command []string `json:"command,omitempty"`
 }
 
 // KubernetesMetric is the metric type of kubernetes
