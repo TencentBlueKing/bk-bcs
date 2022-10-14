@@ -27,9 +27,12 @@ import (
 	"syscall"
 	"time"
 
+	cloudBuilder "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/cloudprovider/builder"
+	coreinternal "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/core"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/scalingconfig"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/simulator"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/spf13/pflag"
-
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apiserver/pkg/server/mux"
 	"k8s.io/apiserver/pkg/server/routes"
@@ -53,11 +56,6 @@ import (
 	componentbaseconfig "k8s.io/component-base/config"
 	"k8s.io/klog"
 	"k8s.io/kubernetes/pkg/client/leaderelectionconfig"
-
-	cloudBuilder "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/cloudprovider/builder"
-	coreinternal "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/core"
-	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/scalingconfig"
-	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/simulator"
 )
 
 // MultiStringFlag is a flag for passing multiple parameters using same flag
@@ -160,6 +158,10 @@ var (
 		"Should CA scale up when there 0 ready nodes.")
 	maxNodeProvisionTime = flag.Duration("max-node-provision-time", 15*time.Minute,
 		"Maximum time CA waits for node to be provisioned")
+	maxNodeStartupTime = flag.Duration("max-node-startup-time", 15*time.Minute,
+		"Maximum time CA waits for node to be ready")
+	maxNodeStartScheduleTime = flag.Duration("max-node-startup-time", 15*time.Minute,
+		"Maximum time CA waits for node to be schedulable")
 	nodeGroupsFlag = multiStringFlag("nodes",
 		"sets min,max size and other configuration data for a node group in a format accepted by cloud provider."+
 			"Can be used multiple times. Format: <min>:<max>:<other...>")
@@ -265,6 +267,8 @@ func createAutoscalingOptions() scalingconfig.Options {
 			MaxEmptyBulkDelete:                  *maxEmptyBulkDeleteFlag,
 			MaxGracefulTerminationSec:           *maxGracefulTerminationFlag,
 			MaxNodeProvisionTime:                *maxNodeProvisionTime,
+			MaxNodeStartupTime:                  *maxNodeStartupTime,
+			MaxNodeStartScheduleTime:            *maxNodeStartScheduleTime,
 			MaxNodesTotal:                       *maxNodesTotal,
 			MaxCoresTotal:                       maxCoresTotal,
 			MinCoresTotal:                       minCoresTotal,
