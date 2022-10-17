@@ -20,6 +20,7 @@ import (
 
 	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/example"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/pbstruct"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/slice"
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
@@ -41,7 +42,7 @@ func (h *Handler) GetK8SResTemplate(
 	if err != nil {
 		return err
 	}
-	for _, tmpl := range conf["items"].([]interface{}) {
+	for _, tmpl := range mapx.GetList(conf, "items") {
 		t, _ := tmpl.(map[string]interface{})
 		path := fmt.Sprintf("%s/%s", conf["class"], t["name"])
 		if t["manifest"], err = example.LoadDemoManifest(path, req.Namespace); err != nil {

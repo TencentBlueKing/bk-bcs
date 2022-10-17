@@ -70,8 +70,7 @@ func FormatSC(manifest map[string]interface{}) map[string]interface{} {
 
 // parseShortAccessModes 解析 AccessModes (缩写)
 func parseShortAccessModes(manifest map[string]interface{}) (shortAccessModes []string) {
-	accessModes, _ := mapx.GetItems(manifest, "spec.accessModes")
-	for _, am := range accessModes.([]interface{}) {
+	for _, am := range mapx.GetList(manifest, "spec.accessModes") {
 		shortAccessModes = append(shortAccessModes, PVAccessMode2ShortMap[am.(string)])
 	}
 	return shortAccessModes

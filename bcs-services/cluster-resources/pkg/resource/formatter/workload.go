@@ -85,16 +85,12 @@ func FormatPo(manifest map[string]interface{}) map[string]interface{} {
 	parser := PodStatusParser{Manifest: manifest}
 	ret["status"] = parser.Parse()
 	readyCnt, totalCnt, restartCnt := 0, 0, int64(0)
-	if status, ok := manifest["status"].(map[string]interface{}); ok {
-		if containerStatuses, ok := status["containerStatuses"]; ok {
-			for _, s := range containerStatuses.([]interface{}) {
-				if s.(map[string]interface{})["ready"].(bool) {
-					readyCnt++
-				}
-				totalCnt++
-				restartCnt += s.(map[string]interface{})["restartCount"].(int64)
-			}
+	for _, s := range mapx.GetList(manifest, "status.containerStatuses") {
+		if s.(map[string]interface{})["ready"].(bool) {
+			readyCnt++
 		}
+		totalCnt++
+		restartCnt += s.(map[string]interface{})["restartCount"].(int64)
 	}
 	ret["readyCnt"], ret["totalCnt"], ret["restartCnt"] = readyCnt, totalCnt, restartCnt
 	return ret
@@ -168,8 +164,7 @@ func newSTSStatusParser(manifest map[string]interface{}) *WorkloadStatusParser {
 // parseContainerImages 遍历每个容器，收集所有 image 信息并去重
 func parseContainerImages(manifest map[string]interface{}, paths string) []string {
 	images := set.NewStringSet()
-	containers, _ := mapx.GetItems(manifest, paths)
-	for _, c := range containers.([]interface{}) {
+	for _, c := range mapx.GetList(manifest, paths) {
 		if image, ok := c.(map[string]interface{})["image"]; ok {
 			images.Add(image.(string))
 		}
@@ -244,8 +239,8 @@ func (p *PodStatusParser) updateStatusByInitContainerStatuses(podStatus *LightPo
 				container.State.Waiting.Reason != "PodInitializing" {
 				p.totalStatus = fmt.Sprintf("Init: %s", container.State.Waiting.Reason)
 			} else {
-				initContainers, _ := mapx.GetItems(p.Manifest, "spec.initContainers")
-				p.totalStatus = fmt.Sprintf("Init: %d/%d", i, len(initContainers.([]interface{})))
+				initContainers := mapx.GetList(p.Manifest, "spec.initContainers")
+				p.totalStatus = fmt.Sprintf("Init: %d/%d", i, len(initContainers))
 			}
 		}
 		break

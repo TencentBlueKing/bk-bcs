@@ -147,7 +147,7 @@ func filterProjNSList(ctx context.Context, manifest map[string]interface{}) (map
 		return nil, err
 	}
 	projNSList := []interface{}{}
-	for _, ns := range manifest["items"].([]interface{}) {
+	for _, ns := range mapx.GetList(manifest, "items") {
 		if isProjNSinSharedCluster(ns.(map[string]interface{}), projInfo.Code) {
 			projNSList = append(projNSList, ns)
 		}

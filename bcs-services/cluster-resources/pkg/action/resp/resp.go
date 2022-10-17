@@ -159,8 +159,7 @@ func BuildListContainerAPIResp(ctx context.Context, clusterID, namespace, podNam
 	}
 
 	containers := []map[string]interface{}{}
-	containerStatuses, _ := mapx.GetItems(podManifest, "status.containerStatuses")
-	for _, containerStatus := range containerStatuses.([]interface{}) {
+	for _, containerStatus := range mapx.GetList(podManifest, "status.containerStatuses") {
 		cs, _ := containerStatus.(map[string]interface{})
 		status, reason, message := "", "", ""
 		// state 有且只有一对键值：running / terminated / waiting
@@ -194,15 +193,13 @@ func BuildGetContainerAPIResp(
 
 	// 遍历查找指定容器的 Spec 及 Status，若其中某项不存在，则抛出错误
 	var curContainerSpec, curContainerStatus map[string]interface{}
-	containerSpec, _ := mapx.GetItems(podManifest, "spec.containers")
-	for _, csp := range containerSpec.([]interface{}) {
+	for _, csp := range mapx.GetList(podManifest, "spec.containers") {
 		spec, _ := csp.(map[string]interface{})
 		if containerName == spec["name"].(string) {
 			curContainerSpec = spec
 		}
 	}
-	containerStatuses, _ := mapx.GetItems(podManifest, "status.containerStatuses")
-	for _, containerStatus := range containerStatuses.([]interface{}) {
+	for _, containerStatus := range mapx.GetList(podManifest, "status.containerStatuses") {
 		cs, _ := containerStatus.(map[string]interface{})
 		if containerName == cs["name"].(string) {
 			curContainerStatus = cs

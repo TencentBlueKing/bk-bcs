@@ -59,10 +59,8 @@ func ParseSTSReplicas(manifest map[string]interface{}, replicas *model.STSReplic
 
 // ParseSTSVolumeClaimTmpl ...
 func ParseSTSVolumeClaimTmpl(manifest map[string]interface{}, claimTmpl *model.STSVolumeClaimTmpl) {
-	if claims, _ := mapx.GetItems(manifest, "spec.volumeClaimTemplates"); claims != nil {
-		for _, c := range claims.([]interface{}) {
-			claimTmpl.Claims = append(claimTmpl.Claims, parseVolumeClaim(c.(map[string]interface{})))
-		}
+	for _, c := range mapx.GetList(manifest, "spec.volumeClaimTemplates") {
+		claimTmpl.Claims = append(claimTmpl.Claims, parseVolumeClaim(c.(map[string]interface{})))
 	}
 }
 

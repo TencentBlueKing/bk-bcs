@@ -159,13 +159,13 @@ func parseEndpoints(manifest map[string]interface{}) (endpoints []string) {
 		return endpoints
 	}
 	// endpoints 为 subsets ips 与 ports 的笛卡儿积
-	for _, subset := range manifest["subsets"].([]interface{}) {
+	for _, subset := range mapx.GetList(manifest, "subsets") {
 		ss, _ := subset.(map[string]interface{})
 		if _, exists := ss["addresses"]; !exists {
 			continue
 		}
-		for _, addr := range ss["addresses"].([]interface{}) {
-			for _, p := range ss["ports"].([]interface{}) {
+		for _, addr := range mapx.GetList(ss, "addresses") {
+			for _, p := range mapx.GetList(ss, "ports") {
 				addr, _ := addr.(map[string]interface{})
 				p, _ := p.(map[string]interface{})
 				endpoints = append(endpoints, fmt.Sprintf("%s:%d", addr["ip"], p["port"]))

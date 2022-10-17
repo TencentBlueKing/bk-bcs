@@ -8,6 +8,12 @@
       "alias": "Deployment Simple Demo",
       "description": "A simple deployment demo with only basic configuration",
       "manifest": null
+    },
+    {
+      "name": "k8s_wait_for_deploy",
+      "alias": "Deployment using k8sWaitFor",
+      "description": "Using the initContainer mirrored by k8s-wait-for can ensure that other k8s resources it depends on are ready before the standard container is started (which can be used by the API container to wait for the job to execute database migrate to complete)",
+      "manifest": null
     }
   ]
 }

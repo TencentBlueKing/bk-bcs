@@ -54,7 +54,7 @@ func (b *ManifestRespBuilder) BuildList() (map[string]interface{}, error) {
 	manifestExt := map[string]interface{}{}
 	formatFunc := formatter.GetFormatFunc(b.kind)
 	// 遍历列表中的每个资源，生成 manifestExt
-	for _, item := range b.manifest["items"].([]interface{}) {
+	for _, item := range mapx.GetList(b.manifest, "items") {
 		uid, _ := mapx.GetItems(item.(map[string]interface{}), "metadata.uid")
 		manifestExt[uid.(string)] = formatFunc(item.(map[string]interface{}))
 	}

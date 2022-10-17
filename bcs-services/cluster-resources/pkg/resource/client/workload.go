@@ -72,7 +72,7 @@ func (c *PodClient) List(
 	if err != nil {
 		return nil, err
 	}
-	manifest["items"] = c.filterByOwnerRefs(manifest["items"].([]interface{}), podOwnerRefs)
+	manifest["items"] = c.filterByOwnerRefs(mapx.GetList(manifest, "items"), podOwnerRefs)
 	return manifest, nil
 }
 
@@ -117,7 +117,7 @@ func (c *PodClient) getPodOwnerRefs(
 		return nil, err
 	}
 	ownerRefs := []map[string]string{}
-	for _, r := range c.filterByOwnerRefs(ret.UnstructuredContent()["items"].([]interface{}), subOwnerRefs) {
+	for _, r := range c.filterByOwnerRefs(mapx.GetList(ret.UnstructuredContent(), "items"), subOwnerRefs) {
 		resName, _ := mapx.GetItems(r.(map[string]interface{}), "metadata.name")
 		ownerRefs = append(ownerRefs, map[string]string{"kind": subResKind, "name": resName.(string)})
 	}
@@ -128,11 +128,8 @@ func (c *PodClient) getPodOwnerRefs(
 func (c *PodClient) filterByOwnerRefs(subResItems []interface{}, ownerRefs []map[string]string) []interface{} {
 	rets := []interface{}{}
 	for _, subRes := range subResItems {
-		resOwnerRefs, err := mapx.GetItems(subRes.(map[string]interface{}), "metadata.ownerReferences")
-		if err != nil {
-			continue
-		}
-		for _, resOwnerRef := range resOwnerRefs.([]interface{}) {
+		sr, _ := subRes.(map[string]interface{})
+		for _, resOwnerRef := range mapx.GetList(sr, "metadata.ownerReferences") {
 			for _, ref := range ownerRefs {
 				kind, name := "", ""
 				if r, ok := resOwnerRef.(map[string]interface{}); ok {
@@ -179,9 +176,9 @@ func (c *PodClient) ListPodRelatedRes(
 		return nil, err
 	}
 	relatedItems := []interface{}{}
-	for _, item := range manifest["items"].([]interface{}) {
-		name, _ := mapx.GetItems(item.(map[string]interface{}), "metadata.name")
-		if slice.StringInSlice(name.(string), resNameList) {
+	for _, item := range mapx.GetList(manifest, "items") {
+		name := mapx.GetStr(item.(map[string]interface{}), "metadata.name")
+		if slice.StringInSlice(name, resNameList) {
 			relatedItems = append(relatedItems, item)
 		}
 	}
@@ -201,8 +198,7 @@ func (c *PodClient) getPodRelatedResNameList(
 	kind, resNameKey := stringx.Decapitalize(resKind), res.Volume2ResNameKeyMap[resKind]
 	// 获取与指定 Pod 相关联的 某种资源 的资源名称列表
 	resNameList := []string{}
-	volumes, _ := mapx.GetItems(podManifest, "spec.volumes")
-	for _, vol := range volumes.([]interface{}) {
+	for _, vol := range mapx.GetList(podManifest, "spec.volumes") {
 		if v, ok := vol.(map[string]interface{})[kind]; ok {
 			resNameList = append(resNameList, v.(map[string]interface{})[resNameKey].(string))
 		}

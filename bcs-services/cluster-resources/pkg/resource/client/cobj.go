@@ -63,7 +63,7 @@ func (c *CRDClient) List(ctx context.Context, opts metav1.ListOptions) (map[stri
 		}
 		manifest := ret.UnstructuredContent()
 		crdList := []interface{}{}
-		for _, crd := range manifest["items"].([]interface{}) {
+		for _, crd := range mapx.GetList(manifest, "items") {
 			crdName := mapx.GetStr(crd.(map[string]interface{}), "metadata.name")
 			if IsSharedClusterEnabledCRD(crdName) {
 				crdList = append(crdList, crd)

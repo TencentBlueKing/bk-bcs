@@ -8,6 +8,12 @@
       "alias": "Deployment 简单示例",
       "description": "简单的 Deployment 示例，仅包含基础配置",
       "manifest": null
+    },
+    {
+      "name": "k8s_wait_for_deploy",
+      "alias": "使用 k8sWaitFor 的 Deployment",
+      "description": "使用以 k8s-wait-for 为镜像的初始容器，能够确保在标准容器启动前，其依赖的其他 k8s 资源已经就绪（可用于 API 容器等待执行数据库 migrate 的 Job 执行完毕）",
+      "manifest": null
     }
   ]
 }

@@ -33,16 +33,12 @@ func ParseContainerGroup(manifest map[string]interface{}, cGroup *model.Containe
 		prefix = "spec."
 	}
 	// 初始容器
-	if cs, _ := mapx.GetItems(manifest, prefix+"initContainers"); cs != nil {
-		for _, c := range cs.([]interface{}) {
-			cGroup.InitContainers = append(cGroup.InitContainers, parseContainer(c.(map[string]interface{})))
-		}
+	for _, c := range mapx.GetList(manifest, prefix+"initContainers") {
+		cGroup.InitContainers = append(cGroup.InitContainers, parseContainer(c.(map[string]interface{})))
 	}
 	// 标准容器
-	if cs, _ := mapx.GetItems(manifest, prefix+"containers"); cs != nil {
-		for _, c := range cs.([]interface{}) {
-			cGroup.Containers = append(cGroup.Containers, parseContainer(c.(map[string]interface{})))
-		}
+	for _, c := range mapx.GetList(manifest, prefix+"containers") {
+		cGroup.Containers = append(cGroup.Containers, parseContainer(c.(map[string]interface{})))
 	}
 }
 
@@ -75,24 +71,21 @@ func parseContainerService(raw map[string]interface{}, service *model.ContainerS
 
 func parseContainerEnvs(raw map[string]interface{}, cEnvs *model.ContainerEnvs) {
 	// container.env
-	if envs, ok := raw["env"]; ok {
-		for _, env := range envs.([]interface{}) {
-			e, _ := env.(map[string]interface{})
-			if value, ok := e["value"]; ok {
-				envVar := model.EnvVar{Name: e["name"].(string), Type: EnvVarTypeKeyVal, Value: value.(string)}
-				cEnvs.Vars = append(cEnvs.Vars, envVar)
-			} else if valFrom, ok := e["valueFrom"]; ok {
-				envVar := genValueFormEnvVar(valFrom.(map[string]interface{}), e["name"].(string))
-				cEnvs.Vars = append(cEnvs.Vars, envVar)
-			}
-		}
-	}
-	// container.envFrom
-	if envFroms, ok := raw["envFrom"]; ok {
-		for _, envFrom := range envFroms.([]interface{}) {
-			envVar := genEnvFromEnvVar(envFrom.(map[string]interface{}))
+	for _, env := range mapx.GetList(raw, "env") {
+		e, _ := env.(map[string]interface{})
+		if value, ok := e["value"]; ok {
+			envVar := model.EnvVar{Name: e["name"].(string), Type: EnvVarTypeKeyVal, Value: value.(string)}
+			cEnvs.Vars = append(cEnvs.Vars, envVar)
+		} else if valFrom, ok := e["valueFrom"]; ok {
+			envVar := genValueFormEnvVar(valFrom.(map[string]interface{}), e["name"].(string))
 			cEnvs.Vars = append(cEnvs.Vars, envVar)
 		}
+	}
+
+	// container.envFrom
+	for _, envFrom := range mapx.GetList(raw, "envFrom") {
+		envVar := genEnvFromEnvVar(envFrom.(map[string]interface{}))
+		cEnvs.Vars = append(cEnvs.Vars, envVar)
 	}
 }
 
@@ -167,7 +160,7 @@ func parseProbe(raw map[string]interface{}, probe *model.Probe) {
 	} else if exec, ok := raw["exec"]; ok {
 		probe.Enabled = true
 		probe.Type = ProbeTypeExec
-		for _, command := range exec.(map[string]interface{})["command"].([]interface{}) {
+		for _, command := range mapx.GetList(exec.(map[string]interface{}), "command") {
 			probe.Command = append(probe.Command, command.(string))
 		}
 	}

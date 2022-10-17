@@ -206,7 +206,7 @@ func (h *Handler) ListPoByNode(
 	podList := []map[string]interface{}{}
 	namespaces := set.NewStringSet()
 
-	for _, po := range ret["items"].([]interface{}) {
+	for _, po := range mapx.GetList(ret, "items") {
 		p := po.(map[string]interface{})
 		ns := mapx.GetStr(p, "metadata.namespace")
 		pod := formatter.FormatPo(p)

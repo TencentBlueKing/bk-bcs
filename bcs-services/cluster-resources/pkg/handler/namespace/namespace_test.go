@@ -59,7 +59,7 @@ func TestNSInSharedCluster(t *testing.T) {
 
 	// 确保列出来的，都是共享集群中，属于项目的命名空间
 	respData := listResp.Data.AsMap()
-	for _, ns := range respData["manifest"].(map[string]interface{})["items"].([]interface{}) {
+	for _, ns := range mapx.GetList(respData, "manifest.items") {
 		name := mapx.GetStr(ns.(map[string]interface{}), "metadata.name")
 		assert.True(t, strings.Contains(name, envs.TestProjectCode))
 	}
