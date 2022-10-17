@@ -17,16 +17,21 @@ import (
 	"fmt"
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
+
+	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/cluster"
 )
 
 // ResourceTypeIDMap xxx
 var ResourceTypeIDMap = map[iam.TypeID]string{
-	SysNamespace: "命名空间",
+	SysNamespace:       "命名空间",
+	SysNamespaceScoped: "命名空间域资源",
 }
 
 const (
 	// SysNamespace resource namespace
 	SysNamespace iam.TypeID = "namespace"
+	// SysNamespaceScoped resource namespace
+	SysNamespaceScoped iam.TypeID = "namespace_scoped"
 )
 
 // NamespaceResourcePath  build IAMPath for namespace resource
@@ -54,4 +59,67 @@ type NamespaceScopedResourcePath struct {
 // BuildIAMPath build IAMPath
 func (rp NamespaceScopedResourcePath) BuildIAMPath() string {
 	return fmt.Sprintf("/project,%s/cluster,%s/", rp.ProjectID, rp.ClusterID)
+}
+
+// NamespaceResourceNode build namespace resourceNode
+type NamespaceResourceNode struct {
+	IsClusterPerm bool
+
+	SystemID  string
+	ProjectID string
+	ClusterID string
+	Namespace string
+}
+
+// BuildResourceNodes build namespace iam.ResourceNode
+func (nrn NamespaceResourceNode) BuildResourceNodes() []iam.ResourceNode {
+	if nrn.IsClusterPerm {
+		return []iam.ResourceNode{
+			iam.ResourceNode{
+				System:    nrn.SystemID,
+				RType:     string(cluster.SysCluster),
+				RInstance: nrn.ClusterID,
+				Rp: NamespaceResourcePath{
+					ProjectID:     nrn.ProjectID,
+					ClusterID:     nrn.ClusterID,
+					IsClusterPerm: nrn.IsClusterPerm,
+				},
+			},
+		}
+	}
+
+	return []iam.ResourceNode{
+		iam.ResourceNode{
+			System:    nrn.SystemID,
+			RType:     string(SysNamespace),
+			RInstance: nrn.Namespace,
+			Rp: NamespaceResourcePath{
+				ProjectID: nrn.ProjectID,
+				ClusterID: nrn.ClusterID,
+			},
+		},
+	}
+}
+
+// NamespaceScopedResourceNode build namespace scoped resourceNode
+type NamespaceScopedResourceNode struct {
+	SystemID  string
+	ProjectID string
+	ClusterID string
+	Namespace string
+}
+
+// BuildResourceNodes build namespace scoped iam.ResourceNode
+func (nrn NamespaceScopedResourceNode) BuildResourceNodes() []iam.ResourceNode {
+	return []iam.ResourceNode{
+		iam.ResourceNode{
+			System:    nrn.SystemID,
+			RType:     string(SysNamespace),
+			RInstance: nrn.Namespace,
+			Rp: NamespaceScopedResourcePath{
+				ProjectID: nrn.ProjectID,
+				ClusterID: nrn.ClusterID,
+			},
+		},
+	}
 }

@@ -15,12 +15,15 @@
 package utils
 
 import (
+	"crypto/md5"
 	"errors"
 	"fmt"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
-	bkiam "github.com/TencentBlueKing/iam-go-sdk"
+	"io"
+	"strings"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
+	bkiam "github.com/TencentBlueKing/iam-go-sdk"
 )
 
 var (
@@ -132,4 +135,19 @@ func WithAncestors(ancestors []iam.Ancestor) AuthorizeCreatorOption {
 	return func(q *AuthorizeCreatorOptions) {
 		q.Ancestors = ancestors
 	}
+}
+
+// CalcIAMNsID 计算命名空间在 IAM 中的 ID，格式：{集群5位数字ID}:{md5(命名空间名称)}{命名空间名称前两位}
+// 如 `BCS-K8S-40000:default` 会被处理成 `40000:5f03d33dde`
+func CalcIAMNsID(clusterID, namespace string) string {
+	s := strings.Split(clusterID, "-")
+	clusterIDNum := s[len(s)-1]
+	h := md5.New()
+	io.WriteString(h, namespace)
+	b := h.Sum(nil)
+	name := namespace
+	if len(namespace) >= 2 {
+		name = namespace[:2]
+	}
+	return fmt.Sprintf("%s:%x%s", clusterIDNum, b[4:8], name)
 }
