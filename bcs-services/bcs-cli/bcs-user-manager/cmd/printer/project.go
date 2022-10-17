@@ -47,3 +47,84 @@ func PrintProjectsListInTable(flagOutput string, resp *pkg.GetAdminUserResponse)
 	}())
 	tw.Render()
 }
+
+// PrintAdminUserListInTable prints the response that list admin users
+func PrintAdminUserListInTable(flagOutput string, resp *pkg.GetAdminUserResponse) {
+	if flagOutput == outputTypeJSON {
+		if err := encodeJSON(resp); err != nil {
+			klog.Fatalf("list projects output json to stdout failed: %s", err.Error())
+		}
+	}
+	tw := defaultTableWriter()
+	tw.SetHeader(func() []string {
+		return []string{
+			"ID", "NAME", "TYPE", "TOKEN", "CREATED_BY", "CREATED_AT", "UPDATED_AT", "EXPIRES_AT", "DELETED_AT",
+		}
+	}())
+	tw.SetAutoMergeCells(true)
+	user := resp.Data
+	tw.Append(func() []string {
+		return []string{
+			strconv.Itoa(int(user.ID)), user.Name, strconv.Itoa(int(user.UserType)), user.UserToken, user.CreatedBy,
+			user.CreatedAt.Format(timeFormatter),
+			user.UpdatedAt.Format(timeFormatter),
+			user.ExpiresAt.Format(timeFormatter),
+			user.DeletedAt.Format(timeFormatter),
+		}
+	}())
+	tw.Render()
+}
+
+// PrintSaasUserListInTable prints the response that list saas users
+func PrintSaasUserListInTable(flagOutput string, resp *pkg.GetSaasUserResponse) {
+	if flagOutput == outputTypeJSON {
+		if err := encodeJSON(resp); err != nil {
+			klog.Fatalf("list saas users output json to stdout failed: %s", err.Error())
+		}
+	}
+	tw := defaultTableWriter()
+	tw.SetHeader(func() []string {
+		return []string{
+			"ID", "NAME", "TYPE", "TOKEN", "CREATED_BY", "CREATED_AT", "UPDATED_AT", "EXPIRES_AT", "DELETED_AT",
+		}
+	}())
+	tw.SetAutoMergeCells(true)
+	user := resp.Data
+	tw.Append(func() []string {
+		return []string{
+			strconv.Itoa(int(user.ID)), user.Name, strconv.Itoa(int(user.UserType)), user.UserToken, user.CreatedBy,
+			user.CreatedAt.Format(timeFormatter),
+			user.UpdatedAt.Format(timeFormatter),
+			user.ExpiresAt.Format(timeFormatter),
+			user.DeletedAt.Format(timeFormatter),
+		}
+	}())
+	tw.Render()
+}
+
+// PrintSaasUserListInTable prints the response that list saas users
+func PrintClusterListInTable(flagOutput string, resp *pkg.CreateClusterResponse) {
+	if flagOutput == outputTypeJSON {
+		if err := encodeJSON(resp); err != nil {
+			klog.Fatalf("list saas users output json to stdout failed: %s", err.Error())
+		}
+	}
+	tw := defaultTableWriter()
+	tw.SetHeader(func() []string {
+		return []string{
+			"ID", "NAME", "TYPE", "TOKEN", "CREATED_BY", "CREATED_AT", "UPDATED_AT", "EXPIRES_AT", "DELETED_AT",
+		}
+	}())
+	tw.SetAutoMergeCells(true)
+	//user := resp.Data
+	// tw.Append(func() []string {
+	// 	return []string{
+	// 		strconv.Itoa(int(user.ID)), user.Name, strconv.Itoa(int(user.UserType)), user.UserToken, user.CreatedBy,
+	// 		user.CreatedAt.Format(timeFormatter),
+	// 		user.UpdatedAt.Format(timeFormatter),
+	// 		user.ExpiresAt.Format(timeFormatter),
+	// 		user.DeletedAt.Format(timeFormatter),
+	// 	}
+	// }())
+	tw.Render()
+}

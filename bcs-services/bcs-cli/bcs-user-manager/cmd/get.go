@@ -30,6 +30,7 @@ func newListCmd() *cobra.Command {
 		Long:  "",
 	}
 	listCmd.AddCommand(getAdminUserCmd())
+	listCmd.AddCommand(getSaasUserCmd())
 	return listCmd
 }
 
@@ -52,11 +53,39 @@ func getAdminUserCmd() *cobra.Command {
 			if resp != nil && resp.Code != 0 {
 				klog.Fatalf("get admin user response code not 0 but %d: %s", resp.Code, resp.Message)
 			}
-			printer.PrintProjectsListInTable(flagOutput, resp)
+			printer.PrintAdminUserListInTable(flagOutput, resp)
 		},
 	}
 
 	subCmd.PersistentFlags().StringVarP(&userName, "user_name", "n", "",
 		"the user name that query admin user")
+	return subCmd
+}
+
+func getSaasUserCmd() *cobra.Command {
+	var userName string
+	subCmd := &cobra.Command{
+		Use:     "saas-user",
+		Aliases: []string{"au"},
+		Short:   "get saas user from user manager",
+		Long:    "",
+		Run: func(cmd *cobra.Command, args []string) {
+			cobra.OnInitialize(ensureConfig)
+			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
+			client := pkg.NewClientWithConfiguration(ctx)
+			resp, err := client.GetSaasUser(userName)
+			if err != nil {
+				klog.Fatalf("get saas user failed: %v", err)
+			}
+			if resp != nil && resp.Code != 0 {
+				klog.Fatalf("get saas user response code not 0 but %d: %s", resp.Code, resp.Message)
+			}
+			printer.PrintSaasUserListInTable(flagOutput, resp)
+		},
+	}
+
+	subCmd.PersistentFlags().StringVarP(&userName, "user_name", "n", "",
+		"the user name that query user user")
 	return subCmd
 }
