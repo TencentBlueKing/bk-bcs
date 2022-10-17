@@ -1,0 +1,4 @@
+config:
+  apiserver:
+  bcs_token:
+  operator:

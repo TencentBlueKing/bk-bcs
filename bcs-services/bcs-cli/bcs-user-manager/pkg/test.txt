@@ -1,0 +1,40 @@
+apply tkecidrs --tkecidr_form '{"vpc":"","cluster":"", "ip_number":8}'
+
+ get permission -f '{"user_name":"yxw","resource_type":"a"}'
+
+
+ reqForm :=new(ApplyTkeCidrForm)
+ 	if err := json.Unmarshal([]byte(reqBody), reqForm); err != nil {
+ 		return nil, errors.Wrapf(err, "form json unmarshal failed with '%s'", reqBody)
+ 	}
+
+
+
+
+BcsPermission json result
+{
+  "apiVersion": "",
+  "kind": "",
+  "metadata": {
+    "name": "",
+    "namespace": "",
+    "creationTimestamp": "0001-01-01T00:00:00Z",
+    "labels": {
+      "a": "a"
+    },
+    "annotations": {
+      "a": "a"
+    },
+    "clusterName": ""
+  },
+  "spec": {
+    "permissions": [
+      {
+        "user_name": "",
+        "resource_type": "",
+        "resource": "",
+        "role": ""
+      }
+    ]
+  }
+}
