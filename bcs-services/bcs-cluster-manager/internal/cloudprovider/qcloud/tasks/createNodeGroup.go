@@ -279,7 +279,7 @@ func CheckCloudNodeGroupStatusTask(taskID string, stepName string) error {
 	}
 
 	err = cloudprovider.GetStorageModel().UpdateNodeGroup(context.Background(), generateNodeGroupFromAsgAndAsc(group,
-		cloudNodeGroup, asgArr, ascArr[0]))
+		cloudNodeGroup, asgArr, ascArr[0], cluster.BusinessID))
 	if err != nil {
 		blog.Errorf("CreateCloudNodeGroupTask[%s]: updateNodeGroupCloudArgsID[%s] in task %s step %s failed, %s",
 			taskID, nodeGroupID, taskID, stepName, err.Error())
@@ -303,8 +303,15 @@ func CheckCloudNodeGroupStatusTask(taskID string, stepName string) error {
 }
 
 func generateNodeGroupFromAsgAndAsc(group *proto.NodeGroup, cloudNodeGroup *tke.NodePool, asg *as.AutoScalingGroup,
-	asc *as.LaunchConfiguration) *proto.NodeGroup {
+	asc *as.LaunchConfiguration, bkBizIDString string) *proto.NodeGroup {
 	group = generateNodeGroupFromAsg(group, cloudNodeGroup, asg)
+	group.BkCloudName = cloudprovider.GetBKCloudName(int(group.BkCloudID))
+	if group.NodeTemplate != nil && group.NodeTemplate.Module != nil &&
+		len(group.NodeTemplate.Module.ScaleOutModuleID) != 0 {
+		bkBizID, _ := strconv.Atoi(bkBizIDString)
+		bkModuleID, _ := strconv.Atoi(group.NodeTemplate.Module.ScaleOutModuleID)
+		group.NodeTemplate.Module.ScaleOutModuleName = cloudprovider.GetModuleName(bkBizID, bkModuleID)
+	}
 	return generateNodeGroupFromAsc(group, cloudNodeGroup, asc)
 }
 

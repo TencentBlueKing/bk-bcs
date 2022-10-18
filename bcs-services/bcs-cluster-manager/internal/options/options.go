@@ -105,6 +105,16 @@ type CmdbConfig struct {
 	Debug      bool   `json:"debug"`
 }
 
+// NodemanConfig for nodeman
+type NodeManConfig struct {
+	Enable     bool   `json:"enable"`
+	AppCode    string `json:"appCode"`
+	AppSecret  string `json:"appSecret"`
+	BkUserName string `json:"bkUserName"`
+	Server     string `json:"server"`
+	Debug      bool   `json:"debug"`
+}
+
 // ResourceManagerConfig init resource_module
 type ResourceManagerConfig struct {
 	Enable bool   `json:"enable"`
@@ -204,6 +214,7 @@ type ClusterManagerOptions struct {
 	Broker             BrokerConfig          `json:"broker"`
 	BKOps              BKOpsConfig           `json:"bkOps"`
 	Cmdb               CmdbConfig            `json:"cmdb"`
+	NodeMan            NodeManConfig         `json:"nodeman"`
 	ResourceManager    ResourceManagerConfig `json:"resource"`
 	CloudTemplatePath  string                `json:"cloudTemplatePath"`
 	Ssm                SsmConfig             `json:"ssm"`

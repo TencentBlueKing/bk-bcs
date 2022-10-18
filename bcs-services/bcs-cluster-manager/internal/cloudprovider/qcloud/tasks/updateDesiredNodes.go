@@ -74,7 +74,7 @@ func ApplyInstanceMachinesTask(taskID string, stepName string) error {
 	activity, err := applyInstanceMachines(ctx, dependInfo, uint64(nodeNum))
 	if err != nil {
 		blog.Errorf("ApplyInstanceMachinesTask[%s]: applyInstanceMachines failed: %s", taskID, err.Error())
-		retErr := fmt.Errorf("ApplyInstanceMachinesTask applyInstanceMachines failed")
+		retErr := fmt.Errorf("ApplyInstanceMachinesTask applyInstanceMachines failed: %s", err.Error())
 		_ = cloudprovider.UpdateNodeGroupDesiredSize(nodeGroupID, nodeNum, true)
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
@@ -144,7 +144,8 @@ func applyInstanceMachines(ctx context.Context, info *cloudprovider.CloudDependB
 				taskID, activityID, *activity.StatusCode)
 			return cloudprovider.EndLoop
 		case api.FailedActivity.String():
-			return fmt.Errorf("taskID[%s] DescribeAutoScalingActivities[%s] failed: %v", taskID, activityID, *activity.Cause)
+			return fmt.Errorf("taskID[%s] DescribeAutoScalingActivities[%s] failed, cause: %v, message: %v",
+				taskID, activityID, *activity.Cause, *activity.StatusMessage)
 		case api.CancelledActivity.String():
 			return fmt.Errorf("taskID[%s] DescribeAutoScalingActivities[%s] failed: %v", taskID, activityID,
 				api.CancelledActivity.String())

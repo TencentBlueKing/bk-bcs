@@ -145,10 +145,115 @@ type Business struct {
 	BsiProductName string `json:"BsiProductName"`
 	BsipID         int    `json:"BsipId"`
 	BsiName        string `json:"BsiName"`
-	BsiProductId   int    `json:"BsiProductId"`
+	BsiProductID   int    `json:"BsiProductId"`
 }
 
 // BizInfo business id info
 type BizInfo struct {
 	BizID int64 `json:"bizID"`
+}
+
+// BaseResponse baseResp
+type BaseResponse struct {
+	Code      int    `json:"code"`
+	Result    bool   `json:"result"`
+	Message   string `json:"message"`
+	RequestID string `json:"request_id"`
+}
+
+// TransferHostToIdleModuleRequest transfer host to idle module request
+type TransferHostToIdleModuleRequest struct {
+	BkBizID  int   `json:"bk_biz_id"`
+	BkHostID []int `json:"bk_host_id"`
+}
+
+// TransferHostToIdleModuleResponse transfer host to idle module response
+type TransferHostToIdleModuleResponse struct {
+	BaseResponse
+}
+
+// TransferHostToResourceModuleRequest transfer host to resource module request
+type TransferHostToResourceModuleRequest struct {
+	BkBizID  int   `json:"bk_biz_id"`
+	BkHostID []int `json:"bk_host_id"`
+}
+
+// TransferHostToResourceModuleResponse transfer host to resource module response
+type TransferHostToResourceModuleResponse struct {
+	BaseResponse
+}
+
+// DeleteHostRequest delete host request
+type DeleteHostRequest struct {
+	BkHostID string `json:"bk_host_id"`
+}
+
+// DeleteHostResponse delete host response
+type DeleteHostResponse struct {
+	BaseResponse
+}
+
+// GetBizInternalModuleResponse get biz internal module response
+type GetBizInternalModuleResponse struct {
+	BaseResponse
+	Data GetBizInternalModuleData `json:"data"`
+}
+
+// GetBizInternalModuleData get biz internal module data
+type GetBizInternalModuleData struct {
+	BKSetID   int                        `json:"bk_set_id"`
+	BKSetName string                     `json:"bk_set_name"`
+	Modules   []GetBizInternalModuleInfo `json:"module"`
+}
+
+// GetBizInternalModuleInfo get biz internal module info
+type GetBizInternalModuleInfo struct {
+	BKModuleID       int    `json:"bk_module_id"`
+	BKModuleName     string `json:"bk_module_name"`
+	Default          int    `json:"default"`
+	HostApplyEnabled bool   `json:"host_apply_enabled"`
+}
+
+// moduleNameMaps map module name
+var moduleNameMaps = map[string]string{
+	"idle pool":    "空闲机池",
+	"idle host":    "空闲机",
+	"fault host":   "故障机",
+	"recycle host": "待回收",
+}
+
+// ReplaceName replace module name
+func (g *GetBizInternalModuleData) ReplaceName() {
+	if v, ok := moduleNameMaps[g.BKSetName]; ok {
+		g.BKSetName = v
+	}
+	for i := range g.Modules {
+		if v, ok := moduleNameMaps[g.Modules[i].BKModuleName]; ok {
+			g.Modules[i].BKModuleName = v
+		}
+	}
+}
+
+// SearchBizInstTopoResponse search biz inst topo response
+type SearchBizInstTopoResponse struct {
+	BaseResponse
+	Data []SearchBizInstTopoData `json:"data"`
+}
+
+// SearchBizInstTopoData search biz inst topo data
+type SearchBizInstTopoData struct {
+	BKInstID   int                     `json:"bk_inst_id"`
+	BKInstName string                  `json:"bk_inst_name"`
+	BKObjID    string                  `json:"bk_obj_id"`
+	BKObjName  string                  `json:"bk_obj_name"`
+	Default    int                     `json:"default"`
+	Child      []SearchBizInstTopoData `json:"child"`
+}
+
+// TransferHostModuleRequest transfer host module
+type TransferHostModuleRequest struct {
+	BKBizID     int   `json:"bk_biz_id"`
+	BKHostID    []int `json:"bk_host_id"`
+	BKModuleID  []int `json:"bk_module_id"`
+	IsIncrement bool  `json:"is_increment"`
 }

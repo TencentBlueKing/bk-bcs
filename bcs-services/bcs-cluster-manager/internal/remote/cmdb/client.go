@@ -17,22 +17,16 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strconv"
+	"strings"
 	"sync"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
-
 	"github.com/parnurzeal/gorequest"
-)
 
-// CmdbInterface for cloud Tags
-type CmdbInterface interface {
-	// GetBusinessMaintainer get biz maintainer
-	GetBusinessMaintainer(bizID int) (*BusinessData, error)
-	// FetchAllHostsByBizID fetch all hosts by bizID
-	FetchAllHostsByBizID(bizID int) ([]HostData, error)
-}
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
+)
 
 // CmdbClient global cmdb client
 var CmdbClient *Client
@@ -308,4 +302,246 @@ func (c *Client) GetBS2IDByBizID(bizID int64) (int, error) {
 	}
 
 	return 0, fmt.Errorf("call api GetBS2IDByBizID failed")
+}
+
+// TransferHostToIdleModule transfer host to idle module
+func (c *Client) TransferHostToIdleModule(bizID int, hostID []int) error {
+	var (
+		reqURL  = fmt.Sprintf("%s/api/c/compapi/v2/cc/transfer_host_to_idlemodule/", c.server)
+		request = &TransferHostToIdleModuleRequest{
+			BkBizID:  bizID,
+			BkHostID: hostID,
+		}
+		respData = &TransferHostToIdleModuleResponse{}
+	)
+
+	_, _, errs := gorequest.New().
+		Timeout(defaultTimeOut).
+		Post(reqURL).
+		Set("Content-Type", "application/json").
+		Set("Accept", "application/json").
+		Set("X-Bkapi-Authorization", c.userAuth).
+		SetDebug(c.serverDebug).
+		Send(request).
+		EndStruct(&respData)
+	if len(errs) > 0 {
+		blog.Errorf("call api TransferHostToIdleModule failed: %v", errs[0])
+		return errs[0]
+	}
+
+	if !respData.Result || respData.Code != 0 {
+		blog.Errorf("call api TransferHostToIdleModule failed: %v", respData)
+		return fmt.Errorf("call api TransferHostToIdleModule failed: %v", respData)
+	}
+	blog.Infof("call api TransferHostToIdleModule with url(%s) successfully", reqURL)
+
+	return nil
+}
+
+// TransferHostToResourceModule transfer host to resource module
+func (c *Client) TransferHostToResourceModule(bizID int, hostID []int) error {
+	var (
+		reqURL  = fmt.Sprintf("%s/api/c/compapi/v2/cc/transfer_host_to_resourcemodule/", c.server)
+		request = &TransferHostToResourceModuleRequest{
+			BkBizID:  bizID,
+			BkHostID: hostID,
+		}
+		respData = &TransferHostToResourceModuleResponse{}
+	)
+
+	_, _, errs := gorequest.New().
+		Timeout(defaultTimeOut).
+		Post(reqURL).
+		Set("Content-Type", "application/json").
+		Set("Accept", "application/json").
+		Set("X-Bkapi-Authorization", c.userAuth).
+		SetDebug(c.serverDebug).
+		Send(request).
+		EndStruct(&respData)
+	if len(errs) > 0 {
+		blog.Errorf("call api TransferHostToResourceModule failed: %v", errs[0])
+		return errs[0]
+	}
+
+	if !respData.Result || respData.Code != 0 {
+		blog.Errorf("call api TransferHostToResourceModule failed: %v", respData)
+		return fmt.Errorf("call api TransferHostToResourceModule failed: %v", respData)
+	}
+	blog.Infof("call api TransferHostToResourceModule with url(%s) successfully", reqURL)
+
+	return nil
+}
+
+// DeleteHost delete host
+func (c *Client) DeleteHost(hostID []int) error {
+	hostIDs := []string{}
+	for _, v := range hostID {
+		hostIDs = append(hostIDs, strconv.Itoa(v))
+	}
+	var (
+		reqURL  = fmt.Sprintf("%s/api/c/compapi/v2/cc/delete_host/", c.server)
+		request = &DeleteHostRequest{
+			BkHostID: strings.Join(hostIDs, ","),
+		}
+		respData = &DeleteHostResponse{}
+	)
+
+	_, _, errs := gorequest.New().
+		Timeout(defaultTimeOut).
+		Post(reqURL).
+		Set("Content-Type", "application/json").
+		Set("Accept", "application/json").
+		Set("X-Bkapi-Authorization", c.userAuth).
+		SetDebug(c.serverDebug).
+		Send(request).
+		EndStruct(&respData)
+	if len(errs) > 0 {
+		blog.Errorf("call api DeleteHost failed: %v", errs[0])
+		return errs[0]
+	}
+
+	if !respData.Result || respData.Code != 0 {
+		blog.Errorf("call api DeleteHost failed: %v", respData)
+		return fmt.Errorf("call api DeleteHost failed: %v", respData)
+	}
+	blog.Infof("call api DeleteHost with url(%s) successfully", reqURL)
+
+	return nil
+}
+
+// GetBizInternalModule get biz internal module
+func (c *Client) GetBizInternalModule(bizID int) (*GetBizInternalModuleData, error) {
+	var (
+		reqURL   = fmt.Sprintf("%s/api/c/compapi/v2/cc/get_biz_internal_module?bk_biz_id=%d", c.server, bizID)
+		respData = &GetBizInternalModuleResponse{}
+	)
+
+	_, _, errs := gorequest.New().
+		Timeout(defaultTimeOut).
+		Get(reqURL).
+		Set("Content-Type", "application/json").
+		Set("Accept", "application/json").
+		Set("X-Bkapi-Authorization", c.userAuth).
+		SetDebug(c.serverDebug).
+		EndStruct(&respData)
+	if len(errs) > 0 {
+		blog.Errorf("call api GetBizInternalModule failed: %v", errs[0])
+		return nil, errs[0]
+	}
+
+	if !respData.Result || respData.Code != 0 {
+		blog.Errorf("call api GetBizInternalModule failed: %v", respData)
+		return nil, fmt.Errorf("call api GetBizInternalModule failed: %v", respData)
+	}
+	blog.Infof("call api GetBizInternalModule with url(%s) successfully", reqURL)
+
+	return &respData.Data, nil
+}
+
+// SearchBizInstTopo search biz inst topo
+func (c *Client) SearchBizInstTopo(bizID int) ([]SearchBizInstTopoData, error) {
+	var (
+		reqURL   = fmt.Sprintf("%s/api/c/compapi/v2/cc/search_biz_inst_topo?bk_biz_id=%d", c.server, bizID)
+		respData = &SearchBizInstTopoResponse{}
+	)
+
+	_, _, errs := gorequest.New().
+		Timeout(defaultTimeOut).
+		Get(reqURL).
+		Set("Content-Type", "application/json").
+		Set("Accept", "application/json").
+		Set("X-Bkapi-Authorization", c.userAuth).
+		SetDebug(c.serverDebug).
+		EndStruct(&respData)
+	if len(errs) > 0 {
+		blog.Errorf("call api SearchBizInstTopo failed: %v", errs[0])
+		return nil, errs[0]
+	}
+
+	if !respData.Result || respData.Code != 0 {
+		blog.Errorf("call api SearchBizInstTopo failed: %v", respData)
+		return nil, fmt.Errorf("call api SearchBizInstTopo failed: %v", respData)
+	}
+	blog.Infof("call api SearchBizInstTopo with url(%s) successfully", reqURL)
+
+	return respData.Data, nil
+}
+
+// ListTopology list topology
+func (c *Client) ListTopology(bizID int) (*SearchBizInstTopoData, error) {
+	internalModules, err := c.GetBizInternalModule(bizID)
+	internalModules.ReplaceName()
+	if err != nil {
+		return nil, err
+	}
+	topos, err := c.SearchBizInstTopo(bizID)
+	if err != nil {
+		return nil, err
+	}
+	var topo *SearchBizInstTopoData
+	for i := range topos {
+		if topos[i].BKInstID == bizID {
+			topo = &topos[i]
+		}
+	}
+	if topo == nil {
+		return nil, fmt.Errorf("topology is empty")
+	}
+	childs := make([]SearchBizInstTopoData, 0)
+	child := SearchBizInstTopoData{
+		BKInstID:   internalModules.BKSetID,
+		BKInstName: internalModules.BKSetName,
+		BKObjID:    "set",
+		BKObjName:  "set",
+		Child:      make([]SearchBizInstTopoData, 0),
+	}
+	for _, v := range internalModules.Modules {
+		child.Child = append(child.Child, SearchBizInstTopoData{
+			BKInstID:   v.BKModuleID,
+			BKInstName: v.BKModuleName,
+			BKObjID:    "module",
+			BKObjName:  "module",
+			Child:      make([]SearchBizInstTopoData, 0),
+		})
+	}
+	childs = append(childs, child)
+	childs = append(childs, topo.Child...)
+	topo.Child = childs
+	return topo, nil
+}
+
+// TransferHostModule transfer host to module
+func (c *Client) TransferHostModule(bizID int, hostID []int, moduleID []int, isIncrement bool) error {
+	var (
+		reqURL  = fmt.Sprintf("%s/api/c/compapi/v2/cc/transfer_host_module/", c.server)
+		request = &TransferHostModuleRequest{
+			BKBizID:     bizID,
+			BKHostID:    hostID,
+			BKModuleID:  moduleID,
+			IsIncrement: isIncrement,
+		}
+		respData = &BaseResponse{}
+	)
+
+	_, _, errs := gorequest.New().
+		Timeout(defaultTimeOut).
+		Post(reqURL).
+		Set("Content-Type", "application/json").
+		Set("Accept", "application/json").
+		Set("X-Bkapi-Authorization", c.userAuth).
+		SetDebug(c.serverDebug).
+		Send(request).
+		EndStruct(&respData)
+	if len(errs) > 0 {
+		blog.Errorf("call api TransferHostModule failed: %v", errs[0])
+		return errs[0]
+	}
+
+	if !respData.Result || respData.Code != 0 {
+		blog.Errorf("call api TransferHostModule failed: %v", respData)
+		return fmt.Errorf("call api TransferHostModule failed: %v", respData)
+	}
+	blog.Infof("call api TransferHostModule with url(%s) successfully", reqURL)
+
+	return nil
 }

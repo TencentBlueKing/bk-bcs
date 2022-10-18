@@ -29,7 +29,7 @@ type ListAction struct {
 
 	schemaPath string
 	req        *cmproto.ListResourceSchemaRequest
-	resp       *cmproto.ListResourceSchemaResponse
+	resp       *cmproto.CommonListResp
 }
 
 // NewListAction create list action for resource schema
@@ -44,7 +44,7 @@ func (ga *ListAction) setResp(code uint32, msg string) {
 }
 
 func (ga *ListAction) getSchema() error {
-	schemaList := []*cmproto.ResourceSchema{}
+	schemaList := []*common.ResourceSchema{}
 	schemaBytes, err := ioutil.ReadFile(ga.schemaPath)
 	if err != nil {
 		blog.Errorf("load resource schema from file %s err: %v", ga.schemaPath, err)
@@ -56,18 +56,26 @@ func (ga *ListAction) getSchema() error {
 		blog.Errorf("load resource schema from file %s Unmarshal err: %v", ga.schemaPath, err)
 		return fmt.Errorf("load resource schema from file %s Unmarshal err: %v", ga.schemaPath, err)
 	}
+
+	var result []common.ResourceSchema
 	for _, v := range schemaList {
 		if v.CloudID == ga.req.CloudID {
-			ga.resp.Data = append(ga.resp.Data, v)
-			return nil
+			result = append(result, *v)
 		}
 	}
+
+	s, err := common.MarshalInterfaceToListValue(result)
+	if err != nil {
+		return fmt.Errorf("marshal schema failed, err %s", err.Error())
+	}
+
+	ga.resp.Data = s
 	return nil
 }
 
 // Handle handle list resource schema
 func (ga *ListAction) Handle(
-	ctx context.Context, req *cmproto.ListResourceSchemaRequest, resp *cmproto.ListResourceSchemaResponse) {
+	ctx context.Context, req *cmproto.ListResourceSchemaRequest, resp *cmproto.CommonListResp) {
 	if req == nil || resp == nil {
 		blog.Errorf("list resource schema failed, req or resp is empty")
 		return

@@ -7,7 +7,6 @@ import "google/protobuf/struct.proto";
 import "protoc-gen-swagger/options/annotations.proto";
 import "validate/validate.proto";
 import "google/protobuf/wrappers.proto";
-import "apiextensions/generated.proto";
 
 option (grpc.gateway.protoc_gen_swagger.options.openapiv2_swagger) = {
   info : {
@@ -947,7 +946,7 @@ service ClusterManager {
 
   // ** ResourceSchema **
   // ListResourceSchema
-  rpc ListResourceSchema(ListResourceSchemaRequest) returns (ListResourceSchemaResponse) {
+  rpc ListResourceSchema(ListResourceSchemaRequest) returns (CommonListResp) {
     option (google.api.http) = {
       get : "/clustermanager/v1/resourceschema/{cloudID}"
     };
@@ -957,7 +956,7 @@ service ClusterManager {
     };
   }
   // GetResourceSchema
-  rpc GetResourceSchema(GetResourceSchemaRequest) returns (GetResourceSchemaResponse) {
+  rpc GetResourceSchema(GetResourceSchemaRequest) returns (CommonResp) {
     option (google.api.http) = {
       get : "/clustermanager/v1/resourceschema/{cloudID}/{name}"
     };
@@ -976,6 +975,27 @@ service ClusterManager {
     option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
       description : "校验用户权限,当无权限时返回无权限URL"
       summary : "校验用户权限,当无权限时返回无权限URL"
+    };
+  }
+
+  // third party
+  // list bk cloud
+  rpc ListBKCloud(ListBKCloudRequest) returns (CommonListResp) {
+    option (google.api.http) = {
+      get : "/clustermanager/v1/nodeman/cloud"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "查询云区域列表"
+      summary : "查询云区域列表"
+    };
+  }
+  rpc ListCCTopology(ListCCTopologyRequest) returns (CommonResp) {
+    option (google.api.http) = {
+      get : "/clustermanager/v1/cluster/{clusterID}/cc/topology"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "查询业务主机模块拓扑"
+      summary : "查询业务主机模块拓扑"
     };
   }
 }
@@ -2522,6 +2542,14 @@ message NodeGroup {
     title: "tags", 
     description: "新实例初始化的资源标签信息"
   }];
+  uint32 bkCloudID = 22[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "bkCloudID",
+    description: "云区域 ID"
+  }];
+  string bkCloudName = 23[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "bkCloudName",
+    description: "云区域名称"
+  }];
 }
 
 // AutoScalingGroup define auto scaling information
@@ -3070,13 +3098,21 @@ message NodeTemplate {
 
 // ModuleInfo 业务模块信息,主要涉及到节点模块转移
 message ModuleInfo {
-  string ScaleOutModuleID = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  string scaleOutModuleID = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "scaleOutModuleID",
     description: "CC模块ID,CA扩容节点转移模块"
   }];
-  string ScaleInModuleID = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  string scaleInModuleID = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "scaleInModuleID",
     description: "CC模块ID,CA缩容节点转移模块"
+  }];
+  string scaleOutModuleName = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "scaleOutModuleName",
+    description: "CC模块名称,CA扩容节点转移模块"
+  }];
+  string scaleInModuleName = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "scaleInModuleName",
+    description: "CC模块名称,CA缩容节点转移模块"
   }];
 }
 
@@ -3341,6 +3377,10 @@ message Step {
   string taskName = 13[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "taskName",
     description: "task对应的中文名称"
+  }];
+  bool skipOnFailed = 14[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "skipOnFailed",
+    description: "失败时跳过"
   }];
 }
 
@@ -6695,6 +6735,10 @@ message CreateNodeGroupRequest {
     title: "tags", 
     description: "新实例初始化的资源标签信息"
   }];
+  uint32 bkCloudID = 21[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "bkCloudID",
+    description: "云区域 ID"
+  }];
 }
 
 message CreateNodeGroupResponse {
@@ -6793,6 +6837,10 @@ message UpdateNodeGroupRequest {
     description: "信息创建者"
   }, (validate.rules).string = {min_len : 2, max_len : 20, pattern : "^[0-9a-zA-Z-]+$"}
   ];
+  google.protobuf.UInt32Value bkCloudID = 14[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "bkCloudID",
+    description: "云区域 ID"
+  }];
 }
 
 message UpdateNodeGroupResponse {
@@ -9185,29 +9233,6 @@ message DrainNodeResponse {
   }];
 }
 
-message ResourceSchema {
-  string name = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title : "name",
-    description : "资源名称"
-  },(validate.rules).string = {min_len : 2, max_len : 64}];
-  string displayName = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title : "displayName",
-    description : "资源展示名称"
-  }];
-  string description = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title : "description",
-    description : "资源描述"
-  }];
-  apiextensions.JSONSchemaProps schema = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title : "schema",
-    description : "资源模型"
-  }];
-  string cloudID = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title : "cloudID",
-    description : "云 ID"
-  },(validate.rules).string = {min_len : 2}];
-}
-
 message ListResourceSchemaRequest {
   option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
     json_schema : {
@@ -9219,32 +9244,6 @@ message ListResourceSchemaRequest {
   string cloudID = 1[ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title : "cloudID",
     description : "云 ID" 
-  }];
-}
-
-message ListResourceSchemaResponse {
-  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
-    json_schema : {
-      title : "ListResourceSchemaResponse"
-      description : "查询资源模型列表返回"
-    }
-  };
-
-  uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title : "code",
-    description : "返回错误码"
-  }];
-  string message = 2[ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title : "message",
-    description : "返回错误信息"
-  }];
-  bool result = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title: "result",
-    description : "返回结果"
-  }];
-  repeated ResourceSchema data = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title: "data",
-    description : "返回数据"
   }];
 }
 
@@ -9262,32 +9261,6 @@ message GetResourceSchemaRequest {
   string name = 2[ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title : "name",
     description : "资源名称"
-  }];
-}
-
-message GetResourceSchemaResponse {
-  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
-    json_schema : {
-      title : "GetResourceSchemaResponse"
-      description : "查询资源模型详情返回"
-    }
-  };
-
-  uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title : "code",
-    description : "返回错误码"
-  }];
-  string message = 2[ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title : "message",
-    description : "返回错误信息"
-  }];
-  bool result = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title: "result",
-    description : "返回结果"
-  }];
-  ResourceSchema data = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title: "data",
-    description : "返回数据"
   }];
 }
 
@@ -9360,4 +9333,80 @@ message QueryPermByActionIDResponse {
     title: "data",
     description : "返回结果"
   }];
+}
+
+message CommonResp {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+      json_schema : {
+          title : "CommonResp"
+          description : "通用返回"
+      }
+  };
+
+  uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title: "code",
+      description: "返回错误码"
+  }];
+  string message = 2[ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title: "message",
+      description: "返回错误信息"
+  }];
+  bool result = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title: "result",
+      description: "返回结果"
+  }];
+  google.protobuf.Struct data = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title: "data",
+      description: "返回数据"
+  }];
+}
+
+message CommonListResp {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+      json_schema : {
+          title : "CommonListResp"
+          description : "通用列表返回"
+      }
+  };
+
+  uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title: "code",
+      description: "返回错误码"
+  }];
+  string message = 2[ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title: "message",
+      description: "返回错误信息"
+  }];
+  bool result = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title: "result",
+      description: "返回结果"
+  }];
+  google.protobuf.ListValue data = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title: "data",
+      description: "返回数据"
+  }];
+}
+
+message ListBKCloudRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "ListBKCloudRequest"
+      description : "获取云区域列表请求"
+    }
+  };
+}
+
+message ListCCTopologyRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "ListCCTopologyRequest"
+      description : "获取业务主机模块拓扑请求"
+    }
+  };
+
+  string clusterID = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "clusterID", 
+    description : "集群ID"
+  }, (validate.rules).string = {min_len : 5, max_len : 100, pattern : "^[0-9a-zA-Z-]+$", prefix: "BCS-"}
+  ];
 }

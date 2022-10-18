@@ -24,9 +24,12 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/modules"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
+
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/cmdb"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/nodeman"
 	storeopt "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/types"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
@@ -433,4 +436,50 @@ func UpdateClusterSystemID(clusterID string, systemID string) error {
 	}
 
 	return nil
+}
+
+// GetBKCloudName get bk cloud name by id
+func GetBKCloudName(bkCloudID int) string {
+	cli := nodeman.GetNodeManClient()
+	if cli == nil {
+		return ""
+	}
+	list, err := cli.CloudList()
+	if err != nil {
+		blog.Errorf("get cloud list failed, err %s", err.Error())
+		return ""
+	}
+	for _, v := range list {
+		if v.BKCloudID == bkCloudID {
+			return v.BKCloudName
+		}
+	}
+	return ""
+}
+
+// GetModuleName get module name
+func GetModuleName(bkBizID, bkModuleID int) string {
+	cli := cmdb.GetCmdbClient()
+	if cli == nil {
+		return ""
+	}
+	list, err := cli.ListTopology(bkBizID)
+	if err != nil {
+		blog.Errorf("list topology failed, err %s", err.Error())
+		return ""
+	}
+	if list == nil {
+		return ""
+	}
+	name := ""
+	for _, v := range list.Child {
+		name = list.BKInstName + " / " + v.BKInstName
+		for _, c := range v.Child {
+			if c.BKInstID == bkModuleID {
+				name += " / " + c.BKInstName
+				return name
+			}
+		}
+	}
+	return name
 }

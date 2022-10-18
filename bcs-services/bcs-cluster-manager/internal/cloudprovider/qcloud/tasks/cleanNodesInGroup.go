@@ -16,16 +16,16 @@ package tasks
 import (
 	"context"
 	"fmt"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 	"strings"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/avast/retry-go"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/api"
-
-	"github.com/avast/retry-go"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
 // CleanNodeGroupNodesTask clean node group nodes task

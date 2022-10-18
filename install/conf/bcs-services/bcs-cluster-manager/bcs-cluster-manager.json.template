@@ -46,6 +46,14 @@
         "server": "${bcsCmdbServer}",
         "debug": ${bcsCmdbDebug}
     },
+    "nodeman": {
+        "enable": ${bcsNodeManEnable},
+        "appCode": "${bcsAppCode}",
+        "appSecret": "${bcsAppSecret}",
+        "bkUserName": "${bcsBkUserName}",
+        "server": "${bcsNodeManServer}",
+        "debug": ${bcsNodeManDebug}
+    },
     "ssm": {
         "server": "${bcsSsmServer}",
         "appCode": "${bcsAppCode}",

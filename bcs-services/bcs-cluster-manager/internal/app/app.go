@@ -44,7 +44,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/common"
 	clusterops "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/clusterops"
 	cmcommon "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common/marshal"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/discovery"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/handler"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/lock"
@@ -52,6 +51,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/cmdb"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/nodeman"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/passcc"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/user"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
@@ -302,6 +302,19 @@ func (cm *ClusterManager) initRemoteClient() error {
 		EtcdRegistry:    cm.microRegistry,
 		ClientTLSConfig: cm.clientTLSConfig,
 	})
+
+	// init nodeman client
+	err = nodeman.SetNodeManClient(nodeman.Options{
+		Enable:     cm.opt.NodeMan.Enable,
+		AppCode:    cm.opt.NodeMan.AppCode,
+		BKUserName: cm.opt.NodeMan.BkUserName,
+		AppSecret:  cm.opt.NodeMan.AppSecret,
+		Server:     cm.opt.NodeMan.Server,
+		Debug:      cm.opt.NodeMan.Debug,
+	})
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -572,11 +585,9 @@ func CustomMatcher(key string) (string, bool) {
 func (cm *ClusterManager) initHTTPGateway(router *mux.Router) error {
 	gwmux := runtime.NewServeMux(
 		runtime.WithIncomingHeaderMatcher(CustomMatcher),
-		runtime.WithMarshalerOption(runtime.MIMEWildcard, &marshal.JSONBcs{
-			JSONPb: &runtime.JSONPb{
-				OrigName:     true,
-				EmitDefaults: true,
-			},
+		runtime.WithMarshalerOption(runtime.MIMEWildcard, &runtime.JSONPb{
+			OrigName:     true,
+			EmitDefaults: true,
 		}),
 	)
 	grpcDialOpts := []grpc.DialOption{}

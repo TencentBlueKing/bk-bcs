@@ -29,7 +29,6 @@ $(SWAGGEROBJ):$(PROTO)
 		--go_out=plugins=grpc:/proto \
 		--validate_out=lang=go:/proto $<
 	sed -i 's/json:"-"/json:"-" bson:"-"/g' clustermanager.pb.go
-	ls *.pb.go | xargs -n1 -IX bash -c 'sed s/,omitempty// X > X.tmp && mv X{.tmp,}'
 
 %.pb.gw.go: %.proto
 	docker run --rm \

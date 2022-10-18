@@ -122,6 +122,15 @@ func (ng *NodeGroup) UpdateNodeGroup(group *proto.NodeGroup, opt *cloudprovider.
 		return err
 	}
 
+	// update bkCloudName
+	group.BkCloudName = cloudprovider.GetBKCloudName(int(group.BkCloudID))
+	if group.NodeTemplate != nil && group.NodeTemplate.Module != nil &&
+		len(group.NodeTemplate.Module.ScaleOutModuleID) != 0 {
+		bkBizID, _ := strconv.Atoi(cluster.BusinessID)
+		bkModuleID, _ := strconv.Atoi(group.NodeTemplate.Module.ScaleOutModuleID)
+		group.NodeTemplate.Module.ScaleOutModuleName = cloudprovider.GetModuleName(bkBizID, bkModuleID)
+	}
+
 	// update imageName
 	if err := ng.updateImageInfo(group); err != nil {
 		return err

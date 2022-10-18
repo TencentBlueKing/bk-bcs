@@ -19,38 +19,38 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions/resourceschema"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions/thirdparty"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/metrics"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
-// ListResourceSchema implements interface cmproto.ClusterManagerServer
-func (cm *ClusterManager) ListResourceSchema(ctx context.Context,
-	req *cmproto.ListResourceSchemaRequest, resp *cmproto.CommonListResp) error {
+// ListBKCloud implements interface cmproto.ClusterManagerServer
+func (cm *ClusterManager) ListBKCloud(ctx context.Context,
+	req *cmproto.ListBKCloudRequest, resp *cmproto.CommonListResp) error {
 	reqID, err := requestIDFromContext(ctx)
 	if err != nil {
 		return err
 	}
 	start := time.Now()
-	la := resourceschema.NewListAction(cm.cmOptions.ResourceSchemaPath)
+	la := thirdparty.NewListBKCloudAction()
 	la.Handle(ctx, req, resp)
-	metrics.ReportAPIRequestMetric("ListResourceSchema", "grpc", strconv.Itoa(int(resp.Code)), start)
-	blog.V(3).Infof("reqID: %s, action: ListResourceSchema, req %v, resp %v", reqID, req, resp)
+	metrics.ReportAPIRequestMetric("ListBKCloud", "grpc", strconv.Itoa(int(resp.Code)), start)
+	blog.V(3).Infof("reqID: %s, action: ListBKCloud, req %v", reqID, req)
 	return nil
 }
 
-// GetResourceSchema implements interface cmproto.ClusterManagerServer
-func (cm *ClusterManager) GetResourceSchema(ctx context.Context,
-	req *cmproto.GetResourceSchemaRequest, resp *cmproto.CommonResp) error {
+// ListCCTopology implements interface cmproto.ClusterManagerServer
+func (cm *ClusterManager) ListCCTopology(ctx context.Context,
+	req *cmproto.ListCCTopologyRequest, resp *cmproto.CommonResp) error {
 	reqID, err := requestIDFromContext(ctx)
 	if err != nil {
 		return err
 	}
 	start := time.Now()
-	ga := resourceschema.NewGetAction(cm.cmOptions.ResourceSchemaPath)
-	ga.Handle(ctx, req, resp)
-	metrics.ReportAPIRequestMetric("GetResourceSchema", "grpc", strconv.Itoa(int(resp.Code)), start)
-	blog.V(3).Infof("reqID: %s, action: GetResourceSchema, req %v, resp %s", reqID, req, utils.ToJSONString(resp))
+	la := thirdparty.NewListCCTopologyAction(cm.model)
+	la.Handle(ctx, req, resp)
+	metrics.ReportAPIRequestMetric("ListCCTopology", "grpc", strconv.Itoa(int(resp.Code)), start)
+	blog.V(3).Infof("reqID: %s, action: ListCCTopology, req %v", reqID, req)
 	return nil
 }

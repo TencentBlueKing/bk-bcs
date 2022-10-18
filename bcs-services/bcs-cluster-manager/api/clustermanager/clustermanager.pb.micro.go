@@ -11,7 +11,6 @@ import (
 	_ "github.com/golang/protobuf/ptypes/wrappers"
 	_ "github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger/options"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
-	_ "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	math "math"
 )
 
@@ -657,6 +656,18 @@ func NewClusterManagerEndpoints() []*api.Endpoint {
 			Body:    "*",
 			Handler: "rpc",
 		},
+		&api.Endpoint{
+			Name:    "ClusterManager.ListBKCloud",
+			Path:    []string{"/clustermanager/v1/nodeman/cloud"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "ClusterManager.ListCCTopology",
+			Path:    []string{"/clustermanager/v1/cluster/{clusterID}/cc/topology"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
 	}
 }
 
@@ -770,11 +781,15 @@ type ClusterManagerService interface {
 	ListOperationLogs(ctx context.Context, in *ListOperationLogsRequest, opts ...client.CallOption) (*ListOperationLogsResponse, error)
 	// ** ResourceSchema **
 	// ListResourceSchema
-	ListResourceSchema(ctx context.Context, in *ListResourceSchemaRequest, opts ...client.CallOption) (*ListResourceSchemaResponse, error)
+	ListResourceSchema(ctx context.Context, in *ListResourceSchemaRequest, opts ...client.CallOption) (*CommonListResp, error)
 	// GetResourceSchema
-	GetResourceSchema(ctx context.Context, in *GetResourceSchemaRequest, opts ...client.CallOption) (*GetResourceSchemaResponse, error)
+	GetResourceSchema(ctx context.Context, in *GetResourceSchemaRequest, opts ...client.CallOption) (*CommonResp, error)
 	// Perm interface
 	QueryPermByActionID(ctx context.Context, in *QueryPermByActionIDRequest, opts ...client.CallOption) (*QueryPermByActionIDResponse, error)
+	// third party
+	// list bk cloud
+	ListBKCloud(ctx context.Context, in *ListBKCloudRequest, opts ...client.CallOption) (*CommonListResp, error)
+	ListCCTopology(ctx context.Context, in *ListCCTopologyRequest, opts ...client.CallOption) (*CommonResp, error)
 }
 
 type clusterManagerService struct {
@@ -1689,9 +1704,9 @@ func (c *clusterManagerService) ListOperationLogs(ctx context.Context, in *ListO
 	return out, nil
 }
 
-func (c *clusterManagerService) ListResourceSchema(ctx context.Context, in *ListResourceSchemaRequest, opts ...client.CallOption) (*ListResourceSchemaResponse, error) {
+func (c *clusterManagerService) ListResourceSchema(ctx context.Context, in *ListResourceSchemaRequest, opts ...client.CallOption) (*CommonListResp, error) {
 	req := c.c.NewRequest(c.name, "ClusterManager.ListResourceSchema", in)
-	out := new(ListResourceSchemaResponse)
+	out := new(CommonListResp)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -1699,9 +1714,9 @@ func (c *clusterManagerService) ListResourceSchema(ctx context.Context, in *List
 	return out, nil
 }
 
-func (c *clusterManagerService) GetResourceSchema(ctx context.Context, in *GetResourceSchemaRequest, opts ...client.CallOption) (*GetResourceSchemaResponse, error) {
+func (c *clusterManagerService) GetResourceSchema(ctx context.Context, in *GetResourceSchemaRequest, opts ...client.CallOption) (*CommonResp, error) {
 	req := c.c.NewRequest(c.name, "ClusterManager.GetResourceSchema", in)
-	out := new(GetResourceSchemaResponse)
+	out := new(CommonResp)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -1712,6 +1727,26 @@ func (c *clusterManagerService) GetResourceSchema(ctx context.Context, in *GetRe
 func (c *clusterManagerService) QueryPermByActionID(ctx context.Context, in *QueryPermByActionIDRequest, opts ...client.CallOption) (*QueryPermByActionIDResponse, error) {
 	req := c.c.NewRequest(c.name, "ClusterManager.QueryPermByActionID", in)
 	out := new(QueryPermByActionIDResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerService) ListBKCloud(ctx context.Context, in *ListBKCloudRequest, opts ...client.CallOption) (*CommonListResp, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.ListBKCloud", in)
+	out := new(CommonListResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerService) ListCCTopology(ctx context.Context, in *ListCCTopologyRequest, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.ListCCTopology", in)
+	out := new(CommonResp)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -1829,11 +1864,15 @@ type ClusterManagerHandler interface {
 	ListOperationLogs(context.Context, *ListOperationLogsRequest, *ListOperationLogsResponse) error
 	// ** ResourceSchema **
 	// ListResourceSchema
-	ListResourceSchema(context.Context, *ListResourceSchemaRequest, *ListResourceSchemaResponse) error
+	ListResourceSchema(context.Context, *ListResourceSchemaRequest, *CommonListResp) error
 	// GetResourceSchema
-	GetResourceSchema(context.Context, *GetResourceSchemaRequest, *GetResourceSchemaResponse) error
+	GetResourceSchema(context.Context, *GetResourceSchemaRequest, *CommonResp) error
 	// Perm interface
 	QueryPermByActionID(context.Context, *QueryPermByActionIDRequest, *QueryPermByActionIDResponse) error
+	// third party
+	// list bk cloud
+	ListBKCloud(context.Context, *ListBKCloudRequest, *CommonListResp) error
+	ListCCTopology(context.Context, *ListCCTopologyRequest, *CommonResp) error
 }
 
 func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, opts ...server.HandlerOption) error {
@@ -1928,9 +1967,11 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		ListCloudInstanceTypes(ctx context.Context, in *ListCloudInstanceTypeRequest, out *ListCloudInstanceTypeResponse) error
 		ListCloudOsImage(ctx context.Context, in *ListCloudOsImageRequest, out *ListCloudOsImageResponse) error
 		ListOperationLogs(ctx context.Context, in *ListOperationLogsRequest, out *ListOperationLogsResponse) error
-		ListResourceSchema(ctx context.Context, in *ListResourceSchemaRequest, out *ListResourceSchemaResponse) error
-		GetResourceSchema(ctx context.Context, in *GetResourceSchemaRequest, out *GetResourceSchemaResponse) error
+		ListResourceSchema(ctx context.Context, in *ListResourceSchemaRequest, out *CommonListResp) error
+		GetResourceSchema(ctx context.Context, in *GetResourceSchemaRequest, out *CommonResp) error
 		QueryPermByActionID(ctx context.Context, in *QueryPermByActionIDRequest, out *QueryPermByActionIDResponse) error
+		ListBKCloud(ctx context.Context, in *ListBKCloudRequest, out *CommonListResp) error
+		ListCCTopology(ctx context.Context, in *ListCCTopologyRequest, out *CommonResp) error
 	}
 	type ClusterManager struct {
 		clusterManager
@@ -2550,6 +2591,18 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		Body:    "*",
 		Handler: "rpc",
 	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.ListBKCloud",
+		Path:    []string{"/clustermanager/v1/nodeman/cloud"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.ListCCTopology",
+		Path:    []string{"/clustermanager/v1/cluster/{clusterID}/cc/topology"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
 	return s.Handle(s.NewHandler(&ClusterManager{h}, opts...))
 }
 
@@ -2917,14 +2970,22 @@ func (h *clusterManagerHandler) ListOperationLogs(ctx context.Context, in *ListO
 	return h.ClusterManagerHandler.ListOperationLogs(ctx, in, out)
 }
 
-func (h *clusterManagerHandler) ListResourceSchema(ctx context.Context, in *ListResourceSchemaRequest, out *ListResourceSchemaResponse) error {
+func (h *clusterManagerHandler) ListResourceSchema(ctx context.Context, in *ListResourceSchemaRequest, out *CommonListResp) error {
 	return h.ClusterManagerHandler.ListResourceSchema(ctx, in, out)
 }
 
-func (h *clusterManagerHandler) GetResourceSchema(ctx context.Context, in *GetResourceSchemaRequest, out *GetResourceSchemaResponse) error {
+func (h *clusterManagerHandler) GetResourceSchema(ctx context.Context, in *GetResourceSchemaRequest, out *CommonResp) error {
 	return h.ClusterManagerHandler.GetResourceSchema(ctx, in, out)
 }
 
 func (h *clusterManagerHandler) QueryPermByActionID(ctx context.Context, in *QueryPermByActionIDRequest, out *QueryPermByActionIDResponse) error {
 	return h.ClusterManagerHandler.QueryPermByActionID(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) ListBKCloud(ctx context.Context, in *ListBKCloudRequest, out *CommonListResp) error {
+	return h.ClusterManagerHandler.ListBKCloud(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) ListCCTopology(ctx context.Context, in *ListCCTopologyRequest, out *CommonResp) error {
+	return h.ClusterManagerHandler.ListCCTopology(ctx, in, out)
 }
