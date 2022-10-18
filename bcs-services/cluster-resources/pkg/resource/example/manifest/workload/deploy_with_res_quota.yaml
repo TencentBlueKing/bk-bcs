@@ -21,9 +21,10 @@ spec:
           image: nginx:latest
           ports:
             - containerPort: 80
-      initContainers:
-        - name: wait-migrate-job
-          image: "groundnuty/k8s-wait-for:latest"
-          args:
-            - job
-            - migrate-job-name
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 100m
+              memory: 256Mi
