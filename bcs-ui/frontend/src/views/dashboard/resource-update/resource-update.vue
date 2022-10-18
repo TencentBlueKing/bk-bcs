@@ -47,7 +47,7 @@
             :max="300"
             :min="100"
             :disabled="!editorErr.message"
-            :ext-cls="['custom-layout-cls', { 'hide-help': !editorErr.message }]"
+            :class="['custom-layout-cls', { 'hide-help': !editorErr.message }]"
             :style="{ 'height': fullScreen ? clientHeight + 'px' : height + 'px' }">
             <div slot="aside">
               <EditorStatus
@@ -99,7 +99,7 @@
           </div>
           <div class="example-desc" v-if="showDesc" ref="descWrapperRef">{{ activeExample.description }}</div>
           <bcs-resize-layout
-            :ext-cls="['custom-layout-cls', { 'hide-help': !showHelp }]"
+            :class="['custom-layout-cls', { 'hide-help': !showHelp }]"
             :initial-divide="initialDivide"
             :disabled="!showHelp"
             :min="100"
@@ -318,8 +318,8 @@ export default defineComponent({
         apiVersion: data.apiVersion,
         kind: data.kind,
         metadata: data.metadata,
-        ...data
-      }
+        ...data,
+      };
       detail.value = newManifest;
       editorRef.value?.setValue(Object.keys(detail.value).length ? detail.value : '');
     };
@@ -455,14 +455,14 @@ export default defineComponent({
       });
 
       // 特殊处理-> apiVersion、kind、metadata强制排序在前三位
-      examples.value.items.forEach(example => {
+      examples.value.items.forEach((example) => {
         const newManifestMap = {
           apiVersion: example.manifest.apiVersion,
           kind: example.manifest.kind,
           metadata: example.manifest.metadata,
-          ...example.manifest
-        }
-        example.manifest = newManifestMap
+          ...example.manifest,
+        };
+        example.manifest = newManifestMap;
       });
 
       activeExample.value = examples.value?.items?.[0] || {};

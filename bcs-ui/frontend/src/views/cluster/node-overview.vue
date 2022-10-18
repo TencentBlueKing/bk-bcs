@@ -229,7 +229,7 @@
             </div>
           </div>
         </div>
-        <bcs-tab class="mt20" :active.sync="activePanel" type="card" :label-height="40">
+        <bcs-tab class="mt20" type="card" :label-height="42">
           <bcs-tab-panel name="pod" label="Pod">
             <div class="layout-header">
               <div></div>

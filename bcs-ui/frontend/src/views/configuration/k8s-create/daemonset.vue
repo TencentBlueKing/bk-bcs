@@ -1610,7 +1610,6 @@ export default {
       isPartCShow: false, // 第三个更多设置
       imageIndex: -1,
       versionIndex: -1,
-      appJsonValidator: null,
       isEditName: false,
       isEditDesc: false,
       appParamKeys: [],
@@ -2227,10 +2226,6 @@ export default {
     this.initVolumeConfigmaps();
     this.initVloumeSelectets();
     // this.initMetricList()
-
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { Validator } = require('jsonschema');
-    this.appJsonValidator = new Validator();
   },
   methods: {
     updateEnvItem(index, data, env) {

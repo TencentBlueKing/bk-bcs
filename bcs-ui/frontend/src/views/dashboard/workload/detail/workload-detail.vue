@@ -127,7 +127,7 @@
           :suffix="[$t('入流量'), $t('出流量')]">
         </Metric>
       </div>
-      <bcs-tab class="workload-tab" :active.sync="activePanel" type="card" :label-height="40">
+      <bcs-tab class="workload-tab" :active.sync="activePanel" type="card" :label-height="42">
         <bcs-tab-panel name="pod" label="Pod" v-bkloading="{ isLoading: podLoading }">
           <div class="pod-info-header">
             <bk-button

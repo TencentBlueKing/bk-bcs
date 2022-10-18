@@ -7,7 +7,7 @@ export function usePage(pageOrLimitChange?: Function) {
     limit: 20,
   });
 
-  watch([pagination.value.current, pagination.value.limit], () => {
+  watch(() => [pagination.value.current, pagination.value.limit], () => {
     pageOrLimitChange?.();
   });
 

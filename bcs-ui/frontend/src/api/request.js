@@ -36,7 +36,7 @@ export const resolveUrlPrefix = (url, { domain = window.DEVOPS_BCS_API_URL, pref
   if (/(http|https):\/\/([\w.]+\/?)\S*/.test(url) || url.indexOf(domain) === 0) {
     return url;
   }
-  return `${NODE_ENV === 'development' ? '' : domain}${prefix}${url}`;
+  return `${process.env.NODE_ENV === 'development' ? '' : domain}${prefix}${url}`;
 };
 
 export const parseUrl = (reqMethod, url, body = {}) => {

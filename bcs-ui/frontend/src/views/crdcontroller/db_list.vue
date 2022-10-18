@@ -87,7 +87,7 @@
         :quick-close="false"
         :is-show.sync="crdInstanceSlider.isShow"
         :title="crdInstanceSlider.title"
-        :width="'660'">
+        :width="660">
         <div class="p30" slot="content">
           <div class="bk-form bk-form-vertical">
             <div class="bk-form-item">
@@ -114,7 +114,7 @@
                       :placeholder="$t('请选择')"
                       :selected.sync="curCrdInstance.namespace_id"
                       :list="nameSpaceList"
-                      :disabled="curCrdInstance.crd_id"
+                      :disabled="!!curCrdInstance.crd_id"
                       @item-selected="handleNamespaceSelect">
                     </bk-selector>
                   </div>
@@ -130,7 +130,7 @@
                     <bkbcs-input
                       :placeholder="$t('请输入')"
                       :value.sync="curCrdInstance.name"
-                      :disabled="curCrdInstance.crd_id">
+                      :disabled="!!curCrdInstance.crd_id">
                     </bkbcs-input>
                   </div>
                 </div>
@@ -224,7 +224,7 @@
         :quick-close="true"
         :is-show.sync="detailSliderConf.isShow"
         :title="detailSliderConf.title"
-        :width="'800'">
+        :width="800">
         <div class="p30" slot="content">
           <p class="data-title">
             {{$t('基础信息')}}

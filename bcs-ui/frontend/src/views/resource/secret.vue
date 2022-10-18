@@ -149,7 +149,7 @@
         :quick-close="true"
         :is-show.sync="secretSlider.isShow"
         :title="secretSlider.title"
-        :width="'640'">
+        :width="640">
         <div class="p30" slot="content">
           <table class="bk-table biz-data-table has-table-bordered">
             <thead>
@@ -207,7 +207,7 @@
         :quick-close="false"
         :is-show.sync="addSlider.isShow"
         :title="addSlider.title"
-        :width="'800'">
+        :width="800">
         <div class="p30 bk-resource-secret" slot="content" v-bkloading="{ isLoading: isSecretLoading }">
           <div>
             <div class="bk-form-item">

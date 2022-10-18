@@ -48,7 +48,7 @@
                 </template>
             </bcs-table-column> -->
     </bcs-table>
-    <bk-sideslider :is-show.sync="showDetail" quick-close :title="detailTitle" width="600">
+    <bk-sideslider :is-show.sync="showDetail" quick-close :title="detailTitle" :width="600">
       <template #content>
         <ace
           v-full-screen="{ tools: ['fullscreen', 'copy'], content: yaml }"

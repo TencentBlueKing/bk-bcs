@@ -1,7 +1,7 @@
 <!-- eslint-disable vue/multi-word-component-names -->
 <!-- eslint-disable vue/no-mutating-props -->
 <template>
-  <div class="biz-actions" v-clickoutside="hide">
+  <div class="biz-actions">
     <a
       :href="PROJECT_CONFIG.doc.contact"
       class="bk-text-button"
@@ -13,13 +13,8 @@
 </template>
 
 <script>
-import clickoutside from '@/directives/clickoutside';
 
-export default {
-  directives: {
-    clickoutside,
-  },
-};
+export default {};
 </script>
 
 <style>

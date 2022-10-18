@@ -4,8 +4,7 @@
 </template>
 
 <script>
-const wlistMetric = () => import(
-  /* webpackChunkName: 'metric' */'./main');
+const wlistMetric = () => import(/* webpackChunkName: 'metric' */'./main');
 
 export default {
   components: {

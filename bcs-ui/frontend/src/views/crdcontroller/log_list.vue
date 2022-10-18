@@ -631,7 +631,7 @@
         :quick-close="true"
         :is-show.sync="detailSliderConf.isShow"
         :title="detailSliderConf.title"
-        :width="'700'">
+        :width="700">
         <div class="p30" slot="content">
           <p class="data-title">
             {{$t('基础信息')}}

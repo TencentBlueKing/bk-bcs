@@ -65,7 +65,7 @@
           :suffix="[$t('读'), $t('写')]">
         </Metric>
       </div>
-      <bcs-tab class="workload-tab" :active.sync="activePanel" type="card" :label-height="40">
+      <bcs-tab class="workload-tab" :active.sync="activePanel" type="card" :label-height="42">
         <bcs-tab-panel name="ports" :label="$t('端口映射')">
           <bk-table :data="ports">
             <bk-table-column label="Name" prop="name">
@@ -249,6 +249,7 @@ export default defineComponent({
     });
 
     return {
+      envsTableLoading,
       params,
       isLoading,
       detail,

@@ -8,7 +8,7 @@
     :title="title"
     width="500"
     @value-change="handleDialogValueChange">
-    <bk-form v-model="formData">
+    <bk-form>
       <bk-form-item :label="$t('英文缩写')" required>
         <span>{{ curProject.english_name }}</span>
       </bk-form-item>

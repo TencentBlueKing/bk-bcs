@@ -16,7 +16,7 @@
 import Navigation from '@/views/navigation.vue';
 import ProjectCreate from '@/views/project/project-create.vue';
 import SharedClusterTips from '@/components/shared-cluster-tips';
-import BkPaaSLogin from '@blueking/paas-login';
+import BkPaaSLogin from '@/components/login.vue';
 import { bus } from '@/common/bus';
 import { userPermsByAction } from '@/api/base';
 

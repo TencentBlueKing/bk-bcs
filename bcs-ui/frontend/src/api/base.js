@@ -29,7 +29,7 @@ import { request } from './request';
 export const projectFeatureFlag = request('get', '/api/projects/$projectId/clusters/$clusterId/feature_flags/');
 
 // log
-export const LOG_API_URL = `${NODE_ENV === 'development' ? '' : window.BCS_API_HOST}/bcsapi/v4/monitor/api/projects/$projectId/clusters/$clusterId`;
+export const LOG_API_URL = `${process.env.NODE_ENV === 'development' ? '' : window.BCS_API_HOST}/bcsapi/v4/monitor/api/projects/$projectId/clusters/$clusterId`;
 export const podContainersList = request('get', `${LOG_API_URL}/namespaces/$namespaceId/pods/$podId/containers`);
 export const podLogs = request('get', `${LOG_API_URL}/namespaces/$namespaceId/pods/$podId/logs`);
 export const podLogsDownloadURL = `${LOG_API_URL}/namespaces/$namespaceId/pods/$podId/logs/download?container_name=$containerName`;
@@ -42,7 +42,7 @@ export const containerMetric = request('post', '/api/metrics/projects/$projectId
 // cluster resource
 // todo
 export const crPrefix = '/bcsapi/v4/clusterresources/v1';
-export const CR_API_URL = `${NODE_ENV === 'development' ? '' : window.BCS_API_HOST}${crPrefix}`;
+export const CR_API_URL = `${process.env.NODE_ENV === 'development' ? '' : window.BCS_API_HOST}${crPrefix}`;
 export const namespaceList = request('get', `${CR_API_URL}/projects/$projectId/clusters/$clusterId/namespaces`);
 export const dashbordList = request('get', `${CR_API_URL}/projects/$projectId/clusters/$clusterId/namespaces/$namespaceId/$type/$category`);// 注意：HPA类型没有子分类$category
 export const formSchema = request('get', `${CR_API_URL}/projects/$projectId/clusters/$clusterId/form_schema`);
@@ -70,7 +70,7 @@ export const fetchNodePodsData = request('get', `${CR_API_URL}/projects/$project
 export const enlargeCapacityChange = request('put', `${CR_API_URL}/projects/$projectId/clusters/$clusterId/namespaces/$namespace/workloads/$category/$name/scale`); // 扩缩容
 export const batchReschedulePod = request('put', `${CR_API_URL}/projects/$projectId/clusters/$clusterId/namespaces/$namespace/workloads/$category/$name/reschedule`); // pod批量重新调度
 export const crdEnlargeCapacityChange = request('put', `${CR_API_URL}/projects/$projectId/clusters/$clusterId/crds/$crdName/custom_objects/$cobjName/scale`); // crd扩缩容
-export const batchRescheduleCrdPod = request('put', `${CR_API_URL}/projects/$projectId/clusters/$clusterId/crds/$crdName/custom_objects/$cobjName/reschedule`) // crd-pod批量重新调度
+export const batchRescheduleCrdPod = request('put', `${CR_API_URL}/projects/$projectId/clusters/$clusterId/crds/$crdName/custom_objects/$cobjName/reschedule`); // crd-pod批量重新调度
 
 // apply hosts
 export const getBizMaintainers = request('get', '/api/projects/$projectId/biz_maintainers/');
@@ -148,11 +148,11 @@ export const bkSopsTemplatevalues = request('get', `${prefix}/clustermanager/v1/
 export const getNodeTemplateInfo = request('get', `${prefix}/clustermanager/v1/node/$innerIP/info`);
 
 // helm
-const helmPrefix = `${NODE_ENV === 'development' ? '' : window.BCS_API_HOST}/bcsapi/v4/helmmanager/v1/projects/$projectCode/clusters/$clusterId`;
+const helmPrefix = `${process.env.NODE_ENV === 'development' ? '' : window.BCS_API_HOST}/bcsapi/v4/helmmanager/v1/projects/$projectCode/clusters/$clusterId`;
 export const helmReleaseHistory = request('get', `${helmPrefix}/namespaces/$namespaceId/releases/$name/history`);
 
 // metric
-const metricPrefix = `${NODE_ENV === 'development' ? '' : window.BCS_API_HOST}/bcsapi/v4/monitor/api/metrics/projects/$projectCode/clusters/$clusterId`;
+const metricPrefix = `${process.env.NODE_ENV === 'development' ? '' : window.BCS_API_HOST}/bcsapi/v4/monitor/api/metrics/projects/$projectCode/clusters/$clusterId`;
 export const clusterCpuUsage = request('get', `${metricPrefix}/cpu_usage`);
 export const clusterDiskUsage = request('get', `${metricPrefix}/disk_usage`);
 export const clusterMemoryUsage = request('get', `${metricPrefix}/memory_usage`);
@@ -168,7 +168,7 @@ export const clusterPodMetric = request('post', `${metricPrefix}/namespaces/$nam
 export const clusterContainersMetric = request('get', `${metricPrefix}/namespaces/$namespaceId/pods/$podId/containers/$containerId/$metric`);
 
 // variable
-const variablePrefix = `${NODE_ENV === 'development' ? '' : window.BCS_API_HOST}/bcsapi/v4/bcsproject/v1/projects/$projectCode`;
+const variablePrefix = `${process.env.NODE_ENV === 'development' ? '' : window.BCS_API_HOST}/bcsapi/v4/bcsproject/v1/projects/$projectCode`;
 export const createVariable = request('post', `${variablePrefix}/variables`);
 export const variableDefinitions = request('get', `${variablePrefix}/variables`);
 export const deleteDefinitions = request('delete', `${variablePrefix}/variables`);

@@ -446,7 +446,6 @@
           <bcs-table-setting-content
             :fields="tableSetting.fields"
             :selected="tableSetting.selectedFields"
-            :max="tableSetting.max"
             :size="tableSetting.size"
             @setting-change="handleSettingChange"
           >
@@ -529,7 +528,8 @@
       :confirming-btn-text="$t('删除中...')"
       :canceling-btn-text="$t('取消')"
       :confirm-callback="confirmDelNode"
-      :cancel-callback="cancelDelNode">
+      :cancel-callback="cancelDelNode"
+      :title="removeNodeDialogTitle">
     </tip-dialog>
     <!-- IP选择器 -->
     <IpSelector v-model="showIpSelector" @confirm="chooseServer"></IpSelector>
@@ -578,7 +578,7 @@ export default defineComponent({
   props: {
     selectedFields: {
       type: Array as PropType<Array<string>>,
-      default: ['source_type', 'taint'],
+      default: () => ['source_type', 'taint'],
     },
     clusterId: {
       type: String,
@@ -597,45 +597,7 @@ export default defineComponent({
     const { $i18n, $router, $bkMessage, $store, $bkInfo } = ctx.root;
     const webAnnotations = computed(() => $store.state.cluster.clusterWebAnnotations);
     const curProject = computed(() => $store.state.curProject);
-    // 表格设置字段配置
-    const fields = [
-      {
-        id: 'cluster_name',
-        label: $i18n.t('所属集群'),
-      },
-      {
-        id: 'container_count',
-        label: $i18n.t('容器数量'),
-      },
-      {
-        id: 'pod_count',
-        label: $i18n.t('Pod数量'),
-      },
-      {
-        id: 'source_type',
-        label: $i18n.t('标签'),
-      },
-      {
-        id: 'taint',
-        label: $i18n.t('污点'),
-      },
-      {
-        id: 'cpu_usage',
-        label: 'CPU',
-      },
-      {
-        id: 'memory_usage',
-        label: $i18n.t('内存'),
-      },
-      {
-        id: 'disk_usage',
-        label: $i18n.t('磁盘'),
-      },
-      {
-        id: 'diskio_usage',
-        label: $i18n.t('磁盘IO'),
-      },
-    ];
+
     // 表格表头搜索项配置
     const filtersDataSource = ref({
       status: Object.keys(nodeStatusMap).map(key => ({
@@ -695,6 +657,45 @@ export default defineComponent({
       handleResetPage();
     });
 
+    // 表格设置字段配置
+    const fields = [
+      {
+        id: 'cluster_name',
+        label: $i18n.t('所属集群'),
+      },
+      {
+        id: 'container_count',
+        label: $i18n.t('容器数量'),
+      },
+      {
+        id: 'pod_count',
+        label: $i18n.t('Pod数量'),
+      },
+      {
+        id: 'source_type',
+        label: $i18n.t('标签'),
+      },
+      {
+        id: 'taint',
+        label: $i18n.t('污点'),
+      },
+      {
+        id: 'cpu_usage',
+        label: 'CPU',
+      },
+      {
+        id: 'memory_usage',
+        label: $i18n.t('内存'),
+      },
+      {
+        id: 'disk_usage',
+        label: $i18n.t('磁盘'),
+      },
+      {
+        id: 'diskio_usage',
+        label: $i18n.t('磁盘IO'),
+      },
+    ];
     const {
       tableSetting,
       handleSettingChange,
@@ -1060,10 +1061,11 @@ export default defineComponent({
       },
     ]);
     const curDeleteRows = ref<any[]>([]);
+    const removeNodeDialogTitle = ref<TranslateResult>('');
     const handleDeleteNode = async (row) => {
       if (isImportCluster.value) return;
       curDeleteRows.value = [row];
-      removeNodeDialog.value.title = $i18n.t('确认要删除节点【{innerIp}】？', {
+      removeNodeDialogTitle.value = $i18n.t('确认要删除节点【{innerIp}】？', {
         innerIp: row.inner_ip,
       });
       removeNodeDialog.value.show();
@@ -1383,6 +1385,7 @@ export default defineComponent({
       }
     });
     return {
+      removeNodeDialogTitle,
       nodesCount,
       realRemainNodesCount,
       maxRemainNodesCount,

@@ -467,7 +467,7 @@
             :quick-close="true"
             :is-show.sync="versionSidePanel.isShow"
             :title="versionSidePanel.title"
-            :width="'840'">
+            :width="840">
             <div class="p30" slot="content" v-bkloading="{ isLoading: isVersionListLoading }">
                 <table class="bk-table biz-data-table has-table-bordered">
                     <thead>
@@ -579,7 +579,7 @@
     import resizer from '@/components/resize'
 
     Archive.init({
-        workerUrl: `${window.STATIC_URL}${window.VERSION_STATIC_URL}/archive-worker/worker-bundle.js`
+        workerUrl: `${window.BK_STATIC_URL}/static/archive-worker/worker-bundle.js`
     })
     export default {
         components: {

@@ -70,7 +70,7 @@ export function unifyObjectStyle(type, payload, options) {
     type = type.type;
   }
 
-  if (NODE_ENV !== 'production') {
+  if (process.env.NODE_ENV !== 'production') {
     if (typeof type !== 'string') {
       console.warn(`expects string as the type, but found ${typeof type}.`);
     }

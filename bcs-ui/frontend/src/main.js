@@ -47,14 +47,16 @@ import bkGuide from '@/components/guide';
 import k8sIngress from '@/views/ingress/k8s-ingress.vue';
 import { chainable } from '@/common/util';
 
-Vue.config.devtools = NODE_ENV === 'development';
+Vue.config.devtools = process.env.NODE_ENV === 'development';
 Vue.prototype.$chainable = chainable;
 
 Vue.use(VueCompositionAPI);
 Vue.use(Authority);
 Vue.use(focus);
 Vue.use(bkmagic2);
-Vue.use(VeeValidate);
+Vue.use(VeeValidate, {
+  fieldsBagName: '_veeFields',
+});
 Vue.mixin(config);
 Vue.component('AppException', Exception);
 Vue.component('AppApplyPerm', ApplyPerm);

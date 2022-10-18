@@ -2,7 +2,7 @@
 import { defineComponent, reactive, toRefs, ref, watch, onBeforeUnmount } from '@vue/composition-api';
 import LogHeader from './layout/log-header';
 import LogContent, { ILogData } from './layout/log-content';
-import './style/log.scss';
+import './style/log.css';
 
 interface IState {
   log: ILogData[]; // 日志内容

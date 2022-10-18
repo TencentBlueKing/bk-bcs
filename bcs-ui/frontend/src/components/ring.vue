@@ -32,7 +32,7 @@ export default {
   props: {
     // 圆环百分比数字
     percent: {
-      type: Number,
+      type: [Number, String],
       default: 0,
     },
     // 圆环大小

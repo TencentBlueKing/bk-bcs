@@ -85,7 +85,7 @@
           :suffix="[$t('入流量'), $t('出流量')]">
         </Metric>
       </div>
-      <bcs-tab class="workload-tab" :active.sync="activePanel" type="card" :label-height="40">
+      <bcs-tab class="workload-tab" :active.sync="activePanel" type="card" :label-height="42">
         <bcs-tab-panel name="container" :label="$t('容器')" v-bkloading="{ isLoading: containerLoading }">
           <bk-table :data="container">
             <bk-table-column :label="$t('容器名称')" prop="name">

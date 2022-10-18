@@ -60,7 +60,7 @@ VueRouter.prototype.replace = function push(location, onResolve, onReject) {
 };
 Vue.use(VueRouter);
 
-const Entry = () => import(/* webpackChunkName: entry */'@/views/index');
+const Entry = () => import(/* webpackChunkName: 'entry' */'@/views/index');
 const NotFound = () => import(/* webpackChunkName: 'none' */'@/components/exception');
 const ProjectManage = () => import(/* webpackChunkName: 'projectmanage' */'@/views/project/project.vue');
 const userToken = () => import(/* webpackChunkName: 'token' */'@/views/token/token.vue');

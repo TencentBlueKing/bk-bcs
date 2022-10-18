@@ -39,7 +39,7 @@
       </div>
     </div>
     <!-- 配置、标签、注解 -->
-    <bcs-tab class="mt20" :label-height="40">
+    <bcs-tab class="mt20" :label-height="42">
       <bcs-tab-panel name="config" :label="$t('配置')">
         <p class="detail-title">{{ $t('端口映射') }}（spec.ports）</p>
         <bk-table :data="data.spec.ports">

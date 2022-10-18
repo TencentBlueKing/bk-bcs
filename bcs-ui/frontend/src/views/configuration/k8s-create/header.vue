@@ -157,6 +157,7 @@
                 template_id: Number(curTemplateId)
               }
             }"
+            class="ml5"
             @click.stop.prevent="createInstance">
             {{$t('实例化')}}
           </bk-button>
@@ -297,7 +298,7 @@
       :quick-close="true"
       :is-show.sync="versionSidePanel.isShow"
       :title="versionSidePanel.title"
-      :width="'900'">
+      :width="900">
       <div class="p30" slot="content" v-bkloading="{ isLoading: isVersionListLoading }">
         <bk-table
           :data="versionList"

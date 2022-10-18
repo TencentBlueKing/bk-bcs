@@ -1098,11 +1098,15 @@
 
             renderSelectionHeader () {
                 if (this.curPageData.filter(node => node.canDel).length === 0) {
-                    return <bcs-popover v-if={this.curPageData.length} content={this.$t('当前页全是系统命名空间')} placement="left" transfer={true} delay={300}>
+                    return this.curPageData.length ?  
+                            <bcs-popover content={this.$t('当前页全是系统命名空间')} placement="left" transfer={true} delay={300}>
                                 <bk-checkbox name="check-strategy" disabled={true} />
                             </bcs-popover>
+                            : null
                 }
-                return <bk-checkbox v-if={this.curPageData.length} name="check-all-strategy" v-model={this.isCheckAll} onChange={this.checkAllMetric} />
+                return this.curPageData.length ?
+                    <bk-checkbox name="check-all-strategy" v-model={this.isCheckAll} onChange={this.checkAllMetric} />
+                    : null;
             }
         }
     }

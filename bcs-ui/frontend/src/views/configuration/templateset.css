@@ -50,6 +50,7 @@
 
         .operate-wrapper {
             width: 230px;
+            display: flex;
         }
     }
 

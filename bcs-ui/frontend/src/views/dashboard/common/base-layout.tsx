@@ -37,7 +37,6 @@ export default defineComponent({
     category: {
       type: String,
       default: '',
-      required: true,
     },
     // 轮询时类型（type为crd时，kind仅作为资源详情展示的title用），eg: Deployment、Ingress（注意首字母大写）
     kind: {
@@ -315,7 +314,7 @@ export default defineComponent({
     };
     // 确定扩缩容
     const handleConfirmChangeCapacity = async () => {
-      let result = false
+      let result = false;
       const { name, namespace } = curDetailRow.value.data?.metadata || {};
       if (type.value === 'crd') {
         result = await $store.dispatch('dashboard/crdEnlargeCapacityChange', {
@@ -338,7 +337,7 @@ export default defineComponent({
       });
       handleGetTableData();
     };
-    
+
     // 切换详情类型
     const handleChangeDetailType = (type) => {
       detailType.value.active = type;
@@ -354,9 +353,9 @@ export default defineComponent({
         apiVersion: curDetailRow.value.data.apiVersion,
         kind: curDetailRow.value.data.kind,
         metadata: curDetailRow.value.data.metadata,
-        ...curDetailRow.value.data
-      }
-      return yamljs.dump(newDetailRow || {})
+        ...curDetailRow.value.data,
+      };
+      return yamljs.dump(newDetailRow || {});
     });
     // 创建资源
     const handleCreateResource = () => {
@@ -734,7 +733,7 @@ export default defineComponent({
         >
           <span class="capacity-dialog-content">
             { this.$t('实例数量') }
-            <bk-input v-model={this.replicas} type="number" class="ml10" style="flex: 1;" min="0"></bk-input>
+            <bk-input v-model={this.replicas} type="number" class="ml10" style="flex: 1;" min={0}></bk-input>
           </span>
         </bcs-dialog>
       </div>

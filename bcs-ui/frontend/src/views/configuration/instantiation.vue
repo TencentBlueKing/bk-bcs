@@ -86,7 +86,7 @@
                               <span class="biz-env-label mr5 prod">{{$t('正式')}}</span>
                             </template>
                             <span class="biz-text-wrapper">{{cluster.cluster_name}}</span>
-                            <span class="choose-num">{{cluster.namespaceList.length}} {{ isEn ? '' : 个}}</span>
+                            <span class="choose-num">{{cluster.namespaceList.length}} {{ isEn ? '' : $t('个')}}</span>
                           </div>
                         </div>
                       </div>
@@ -472,7 +472,6 @@ export default {
       isSelectAllTpl: false,
       previewErrorMessage: '',
       namespaceName: '',
-      PROJECT_MESOS: window.PROJECT_MESOS,
     };
   },
   computed: {

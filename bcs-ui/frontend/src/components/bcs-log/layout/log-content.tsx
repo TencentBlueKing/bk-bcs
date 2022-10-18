@@ -4,7 +4,7 @@ import AnsiParser from '../common/ansi-parser';
 import TransformStringPixel from '../common/transform-string-pixel';
 import { debounce } from 'throttle-debounce';
 import { formatTime } from '@/common/util';
-import '../style/log.scss';
+import '../style/log.css';
 
 export interface ILogData {
   log: string;

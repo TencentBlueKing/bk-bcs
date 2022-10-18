@@ -1714,7 +1714,6 @@ export default {
       isPartCShow: false,
       imageIndex: -1,
       versionIndex: -1,
-      appJsonValidator: null,
       isEditName: false,
       isEditDesc: false,
       appParamKeys: [],
@@ -2333,10 +2332,6 @@ export default {
     this.initVolumeConfigmaps();
     this.initVloumeSelectets();
     // this.initMetricList()
-
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { Validator } = require('jsonschema');
-    this.appJsonValidator = new Validator();
   },
   beforeDestroy() {
     this.toJsonDialogConf.isShow = false;

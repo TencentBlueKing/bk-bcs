@@ -35,7 +35,7 @@
         </div>
       </div>
     </template>
-    <bcs-tab class="mt20" type="card" :label-height="40">
+    <bcs-tab class="mt20" type="card" :label-height="42">
       <bcs-tab-panel name="label" :label="$t('标签')">
         <bk-table :data="handleTransformObjToArr(data.labels)">
           <bk-table-column label="Key" prop="key"></bk-table-column>
@@ -51,7 +51,7 @@
       </bcs-tab-panel>
     </bcs-tab>
 
-    <bcs-tab class="mt20" type="card" :label-height="40">
+    <bcs-tab class="mt20" type="card" :label-height="42">
       <bcs-tab-panel name="label" :label="$t('前置初始化')">
         <pre class="bash-script" v-if="data.preStartUserScript">{{data.preStartUserScript}}</pre>
         <bcs-exception type="empty" scene="part" v-else></bcs-exception>
@@ -181,6 +181,7 @@ export default defineComponent({
     });
 
     return {
+      loading,
       handleTransformObjToArr,
       kubeletData,
       paramsList,
@@ -198,8 +199,8 @@ export default defineComponent({
     /deep/ .bk-tab-label-item {
         background-color: #FAFBFD;
         border-bottom: 1px solid #dcdee5;
-        line-height: 39px !important;
-        height: 39px;
+        line-height: 41px !important;
+        height: 41px;
         &.active {
             border-bottom: none;
         }
