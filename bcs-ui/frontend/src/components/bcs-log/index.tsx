@@ -120,9 +120,12 @@ export default defineComponent({
     };
 
     const handleDownload = () => {
+      const { $clusterId, $namespaceId, $podId, container_name } = getParams();
       $store.dispatch('log/downloadLogs', {
-        ...getParams(),
-        $containerName: state.container,
+        $clusterId,
+        $namespaceId,
+        $podId,
+        $containerName: container_name,
       });
     };
 

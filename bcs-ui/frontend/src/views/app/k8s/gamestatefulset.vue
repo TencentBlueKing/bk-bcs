@@ -577,7 +577,8 @@ export default {
           kind: 'GameStatefulSet',
           crd: 'gamestatefulsets.tkex.tencent.com',
           name,
-          namespace
+          namespace,
+          cluster_id: this.selectedClusterId,
         },
       });
     },

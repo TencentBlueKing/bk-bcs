@@ -59,12 +59,11 @@ export const parseUrl = (reqMethod, url, body = {}) => {
   let newUrl = url;
   Object.keys(variableData).forEach((key) => {
     if (!variableData[key]) {
-      // console.warn(`路由变量未配置${key}`)
+      console.warn(`路由变量未配置${key}`);
       // 去除后面的路径符号
       newUrl = newUrl.replace(`/${key}`, '');
-    } else {
-      newUrl = newUrl.replace(new RegExp(`\\${key}`, 'g'), variableData[key]);
     }
+    newUrl = newUrl.replace(new RegExp(`\\${key}`, 'g'), variableData[key]);
     // 删除URL上的参数
     delete params[key];
   });

@@ -548,12 +548,9 @@ export default {
       });
     },
 
-    /**
-             * 显示 sideslider
-             */
     async showDetail(name, namespace) {
       this.$router.push({
-        name: 'gamedeploymentsInstanceDetail', 
+        name: 'gamedeploymentsInstanceDetail',
         params: {
           category: 'custom_objects',
           name,
@@ -563,7 +560,8 @@ export default {
           kind: 'GameDeployment',
           crd: 'gamedeployments.tkex.tencent.com',
           name,
-          namespace
+          namespace,
+          cluster_id: this.selectedClusterId,
         },
       });
     },

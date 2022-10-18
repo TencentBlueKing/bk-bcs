@@ -40,11 +40,13 @@ export default {
     },
     // 下载日志
     async downloadLogs(context, params) {
-      window.open(`${parseUrl(podLogsDownloadURL, params)}`);
+      const { url } = parseUrl('get', podLogsDownloadURL, params);
+      window.open(url);
     },
     // 实时日志
     async realTimeLogStream(context, params) {
-      const source = new EventSource(parseUrl(podLogsStreamURL, params), { withCredentials: true });
+      const { url } = parseUrl('get', podLogsStreamURL, params);
+      const source = new EventSource(url, { withCredentials: true });
       return source;
     },
     async previousLogList(context, url) {

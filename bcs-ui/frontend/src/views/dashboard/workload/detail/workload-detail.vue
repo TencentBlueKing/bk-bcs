@@ -539,7 +539,7 @@ export default defineComponent({
         pre += `${index > 0 ? ',' : ''}${key}=${matchLabels[key]}`;
         return pre;
       }, '');
-      let result = false
+      let result = false;
       if (['Deployment', 'Statefulset'].includes(props.kind)) {
         result = await $store.dispatch('dashboard/batchReschedulePod', {
           $namespace: props.namespace,
@@ -601,7 +601,7 @@ export default defineComponent({
       const { data } = await $store.dispatch('app/getEventList', params)
         .catch(() => ({ data: { data: [], total: 0 } }));
       pagination.value.count = data.total;
-      events.value = data.data;
+      events.value = data.data || [];
       eventLoading.value = false;
     };
     const handlePageChange = (page) => {
