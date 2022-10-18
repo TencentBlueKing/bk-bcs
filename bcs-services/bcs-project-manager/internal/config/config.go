@@ -20,6 +20,7 @@ import (
 
 	"gopkg.in/yaml.v2"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/util"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/envs"
 )
 
@@ -47,6 +48,7 @@ type MongoConfig struct {
 type ServerConfig struct {
 	UseLocalIP      bool   `yaml:"useLocalIP" usage:"是否使用 Local IP"`
 	Address         string `yaml:"address" usage:"server address"`
+	Ipv6Address     string `yaml:"ipv6Address" usage:"server ipv6 address"`
 	InsecureAddress string `yaml:"insecureAddress" usage:"insecurue server address"`
 	Port            int    `yaml:"port" usage:"grpc port"`
 	HTTPPort        int    `yaml:"httpPort" usage:"http port"`
@@ -158,8 +160,9 @@ type ProjectConfig struct {
 
 func (conf *ProjectConfig) initServerAddress() error {
 	// 若指定使用 LOCAL_IP 且环境变量中 LOCAL_IP 有值，则替换掉 Server.Address
-	if conf.Server.UseLocalIP && envs.LocalIP != "" {
+	if conf.Server.UseLocalIP {
 		conf.Server.Address = envs.LocalIP
+		conf.Server.Ipv6Address = util.InitIPv6Address(envs.LocalIPV6)
 		conf.Server.InsecureAddress = envs.LocalIP
 	}
 	return nil
