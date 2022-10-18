@@ -57,7 +57,7 @@ func (c *UserManagerClient) GetAdminUser(userName string) (*GetAdminUserResponse
 	return resp, nil
 }
 
-// GetAdminUserResponse defines the response of get admin user
+// CreateAdminUserResponse defines the response of get admin user
 type CreateAdminUserResponse struct {
 	Result  bool                       `json:"result"`
 	Code    int                        `json:"code"`

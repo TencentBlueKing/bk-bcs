@@ -15,12 +15,10 @@ package pkg
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 
 	"github.com/pkg/errors"
-
-	userManagerModels "github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/models"
+	//permisssionModels "github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/v1http/permission"
 )
 
 const (
@@ -31,128 +29,107 @@ const (
 	verifyPermissionV2Url = "/v2/permissions/verify"
 )
 
-// GrantPermissionResponse defines the response of create cluster
+// GrantPermissionResponse defines the response of grant permission
 type GrantPermissionResponse struct {
-	Result  bool                          `json:"result"`
-	Code    int                           `json:"code"`
-	Message string                        `json:"message"`
-	Data    *userManagerModels.BcsCluster `json:"data"`
+	Result  bool   `json:"result"`
+	Code    int    `json:"code"`
+	Message string `json:"message"`
+	//Data    *permisssionModels.PermissionsResp `json:"data"`
 }
 
-// CreateCluster request create cluster from bcs-user-manager
+// GrantPermission request grant permission from bcs-user-manager
 func (c *UserManagerClient) GrantPermission(reqBody string) (*GrantPermissionResponse, error) {
-	bs, err := c.do(createClusterUrl, http.MethodPost, nil, []byte(reqBody))
+	bs, err := c.do(grantPermissionUrl, http.MethodPost, nil, []byte(reqBody))
 	if err != nil {
-		return nil, errors.Wrapf(err, "create cluster with '%s' failed", reqBody)
+		return nil, errors.Wrapf(err, "grant permission with '%s' failed", reqBody)
 	}
 	resp := new(GrantPermissionResponse)
 	if err := json.Unmarshal(bs, resp); err != nil {
-		return nil, errors.Wrapf(err, "create cluster unmarshal failed with response '%s'", string(bs))
+		return nil, errors.Wrapf(err, "grant permission unmarshal failed with response '%s'", string(bs))
 	}
 	return resp, nil
 }
 
-// CreateRegisterTokenResponse defines the response of create register token
-type CreateRegisterTokenResponse struct {
-	Result  bool                                `json:"result"`
-	Code    int                                 `json:"code"`
-	Message string                              `json:"message"`
-	Data    *userManagerModels.BcsRegisterToken `json:"data"`
+//GetPermissionResponse defines the response of get permission
+type GetPermissionResponse struct {
+	Result  bool   `json:"result"`
+	Code    int    `json:"code"`
+	Message string `json:"message"`
+	//Data    *permisssionModels.PermissionsResp `json:"data"`
 }
 
-// CreateRegisterToken request create register token  from bcs-user-manager
-func (c *UserManagerClient) CreateRegisterToken(clusterId string) (*CreateRegisterTokenResponse, error) {
-	bs, err := c.do(fmt.Sprintf(createRegisterTokenUrl, clusterId), http.MethodPost, nil, nil)
+// GetPermission request get permission from bcs-user-manager
+func (c *UserManagerClient) GetPermission(reqBody string) (*GetPermissionResponse, error) {
+	bs, err := c.do(getPermissionUrl, http.MethodGet, nil, []byte(reqBody))
 	if err != nil {
-		return nil, errors.Wrapf(err, "create register token with '%s' failed", clusterId)
+		return nil, errors.Wrapf(err, "get permission with '%s' failed", reqBody)
 	}
-	resp := new(CreateRegisterTokenResponse)
+	resp := new(GetPermissionResponse)
 	if err := json.Unmarshal(bs, resp); err != nil {
-		return nil, errors.Wrapf(err, "create register token unmarshal failed with response '%s'", string(bs))
+		return nil, errors.Wrapf(err, "get permission unmarshal failed with response '%s'", string(bs))
 	}
 	return resp, nil
 }
 
-// GetRegisterTokenResponse defines the response of get register token
-type GetRegisterTokenResponse struct {
-	Result  bool                                `json:"result"`
-	Code    int                                 `json:"code"`
-	Message string                              `json:"message"`
-	Data    *userManagerModels.BcsRegisterToken `json:"data"`
+// RevokePermissionResponse defines the response of revoke permission
+type RevokePermissionResponse struct {
+	Result  bool   `json:"result"`
+	Code    int    `json:"code"`
+	Message string `json:"message"`
+	//Data    *permisssionModels.PermissionsResp `json:"data"`
 }
 
-// GetRegisterToken request get register token  from bcs-user-manager
-func (c *UserManagerClient) GetRegisterToken(clusterId string) (*GetRegisterTokenResponse, error) {
-	bs, err := c.do(fmt.Sprintf(getRegisterTokenUrl, clusterId), http.MethodGet, nil, nil)
+// RevokePermission request revoke permission from bcs-user-manager
+func (c *UserManagerClient) RevokePermission(reqBody string) (*RevokePermissionResponse, error) {
+	bs, err := c.do(revokePermissionUrl, http.MethodDelete, nil, []byte(reqBody))
 	if err != nil {
-		return nil, errors.Wrapf(err, "get register token with '%s' failed", clusterId)
+		return nil, errors.Wrapf(err, "revoke permission with '%s' failed", reqBody)
 	}
-	resp := new(GetRegisterTokenResponse)
+	resp := new(RevokePermissionResponse)
 	if err := json.Unmarshal(bs, resp); err != nil {
-		return nil, errors.Wrapf(err, "get register token unmarshal failed with response '%s'", string(bs))
+		return nil, errors.Wrapf(err, "revoke permission unmarshal failed with response '%s'", string(bs))
 	}
 	return resp, nil
 }
 
-// UpdateCredentialsResponse defines the response of update cluster credentials
-type UpdateCredentialsResponse struct {
-	Result  bool                                    `json:"result"`
-	Code    int                                     `json:"code"`
-	Message string                                  `json:"message"`
-	Data    *userManagerModels.BcsClusterCredential `json:"data"`
+// VerifyPermissionResponse defines the response of verify permission
+type VerifyPermissionResponse struct {
+	Result  bool   `json:"result"`
+	Code    int    `json:"code"`
+	Message string `json:"message"`
+	//Data    *permisssionModels.PermissionsResp `json:"data"`
 }
 
-// UpdateCredentials request update cluster credentials  from bcs-user-manager
-func (c *UserManagerClient) UpdateCredentials(clusterId, credential string) (*UpdateCredentialsResponse, error) {
-	bs, err := c.do(fmt.Sprintf(getRegisterTokenUrl, clusterId), http.MethodPut, nil, []byte(credential))
+// VerifyPermission request verify permission from bcs-user-manager
+func (c *UserManagerClient) VerifyPermission(reqBody string) (*VerifyPermissionResponse, error) {
+	bs, err := c.do(verifyPermissionUrl, http.MethodGet, nil, []byte(reqBody))
 	if err != nil {
-		return nil, errors.Wrapf(err, "update cluster credentials with '%s' failed", clusterId)
+		return nil, errors.Wrapf(err, "verify permission with '%s' failed", reqBody)
 	}
-	resp := new(UpdateCredentialsResponse)
+	resp := new(VerifyPermissionResponse)
 	if err := json.Unmarshal(bs, resp); err != nil {
-		return nil, errors.Wrapf(err, "update cluster credentials unmarshal failed with response '%s'", string(bs))
+		return nil, errors.Wrapf(err, "verify permission unmarshal failed with response '%s'", string(bs))
 	}
 	return resp, nil
 }
 
-// GetCredentialsResponse defines the response of get cluster credentials
-type GetCredentialsResponse struct {
-	Result  bool                                    `json:"result"`
-	Code    int                                     `json:"code"`
-	Message string                                  `json:"message"`
-	Data    *userManagerModels.BcsClusterCredential `json:"data"`
+// VerifyPermissionV2Response defines the response of verify permission v2
+type VerifyPermissionV2Response struct {
+	Result  bool   `json:"result"`
+	Code    int    `json:"code"`
+	Message string `json:"message"`
+	//Data    *permisssionModels.PermissionsResp `json:"data"`
 }
 
-// UpdateCredentials request get cluster credentials  from bcs-user-manager
-func (c *UserManagerClient) GetCredentials(clusterId string) (*GetCredentialsResponse, error) {
-	bs, err := c.do(fmt.Sprintf(getRegisterTokenUrl, clusterId), http.MethodGet, nil, nil)
+// VerifyPermissionV2 request verify permission from bcs-user-manager v2
+func (c *UserManagerClient) VerifyPermissionV2(reqBody string) (*VerifyPermissionV2Response, error) {
+	bs, err := c.do(verifyPermissionV2Url, http.MethodGet, nil, []byte(reqBody))
 	if err != nil {
-		return nil, errors.Wrapf(err, "get cluster credentials with '%s' failed", clusterId)
+		return nil, errors.Wrapf(err, "verify permission v2 with '%s' failed", reqBody)
 	}
-	resp := new(GetCredentialsResponse)
+	resp := new(VerifyPermissionV2Response)
 	if err := json.Unmarshal(bs, resp); err != nil {
-		return nil, errors.Wrapf(err, "get cluster credentials unmarshal failed with response '%s'", string(bs))
-	}
-	return resp, nil
-}
-
-// ListCredentialsResponse defines the response of list cluster credentials
-type ListCredentialsResponse struct {
-	Result  bool                                      `json:"result"`
-	Code    int                                       `json:"code"`
-	Message string                                    `json:"message"`
-	Data    []*userManagerModels.BcsClusterCredential `json:"data"`
-}
-
-// UpdateCredentials request list cluster credentials  from bcs-user-manager
-func (c *UserManagerClient) ListCredentials(clusterId string) (*ListCredentialsResponse, error) {
-	bs, err := c.do(fmt.Sprintf(getRegisterTokenUrl), http.MethodGet, nil, nil)
-	if err != nil {
-		return nil, errors.Wrapf(err, "list cluster credentials with '%s' failed", clusterId)
-	}
-	resp := new(ListCredentialsResponse)
-	if err := json.Unmarshal(bs, resp); err != nil {
-		return nil, errors.Wrapf(err, "list cluster credentials unmarshal failed with response '%s'", string(bs))
+		return nil, errors.Wrapf(err, "verify permission v2 unmarshal failed with response '%s'", string(bs))
 	}
 	return resp, nil
 }

@@ -23,15 +23,15 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-user-manager/pkg"
 )
 
-func newListCmd() *cobra.Command {
-	listCmd := &cobra.Command{
+func newGetCmd() *cobra.Command {
+	getCmd := &cobra.Command{
 		Use:   "get",
 		Short: "get infos from bcs-user-manager",
 		Long:  "",
 	}
-	listCmd.AddCommand(getAdminUserCmd())
-	listCmd.AddCommand(getSaasUserCmd())
-	return listCmd
+	getCmd.AddCommand(getAdminUserCmd())
+	getCmd.AddCommand(getSaasUserCmd())
+	return getCmd
 }
 
 func getAdminUserCmd() *cobra.Command {

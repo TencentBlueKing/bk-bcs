@@ -41,10 +41,10 @@ type CreateClusterResponse struct {
 }
 
 // CreateCluster request create cluster from bcs-user-manager
-func (c *UserManagerClient) CreateCluster(reqBody string) (*CreateClusterResponse, error) {
-	bs, err := c.do(createClusterUrl, http.MethodPost, nil, []byte(reqBody))
+func (c *UserManagerClient) CreateCluster(clusterBody string) (*CreateClusterResponse, error) {
+	bs, err := c.do(createClusterUrl, http.MethodPost, nil, []byte(clusterBody))
 	if err != nil {
-		return nil, errors.Wrapf(err, "create cluster with '%s' failed", reqBody)
+		return nil, errors.Wrapf(err, "create cluster with '%s' failed", clusterBody)
 	}
 	resp := new(CreateClusterResponse)
 	if err := json.Unmarshal(bs, resp); err != nil {
@@ -105,7 +105,7 @@ type UpdateCredentialsResponse struct {
 
 // UpdateCredentials request update cluster credentials  from bcs-user-manager
 func (c *UserManagerClient) UpdateCredentials(clusterId, credential string) (*UpdateCredentialsResponse, error) {
-	bs, err := c.do(fmt.Sprintf(getRegisterTokenUrl, clusterId), http.MethodPut, nil, []byte(credential))
+	bs, err := c.do(fmt.Sprintf(updateCredentialsUrl, clusterId), http.MethodPut, nil, []byte(credential))
 	if err != nil {
 		return nil, errors.Wrapf(err, "update cluster credentials with '%s' failed", clusterId)
 	}
@@ -124,9 +124,9 @@ type GetCredentialsResponse struct {
 	Data    *userManagerModels.BcsClusterCredential `json:"data"`
 }
 
-// UpdateCredentials request get cluster credentials  from bcs-user-manager
+// GetCredentials request get cluster credentials  from bcs-user-manager
 func (c *UserManagerClient) GetCredentials(clusterId string) (*GetCredentialsResponse, error) {
-	bs, err := c.do(fmt.Sprintf(getRegisterTokenUrl, clusterId), http.MethodGet, nil, nil)
+	bs, err := c.do(fmt.Sprintf(getCredentialsUrl, clusterId), http.MethodGet, nil, nil)
 	if err != nil {
 		return nil, errors.Wrapf(err, "get cluster credentials with '%s' failed", clusterId)
 	}
@@ -145,9 +145,9 @@ type ListCredentialsResponse struct {
 	Data    []*userManagerModels.BcsClusterCredential `json:"data"`
 }
 
-// UpdateCredentials request list cluster credentials  from bcs-user-manager
+// ListCredentials request list cluster credentials  from bcs-user-manager
 func (c *UserManagerClient) ListCredentials(clusterId string) (*ListCredentialsResponse, error) {
-	bs, err := c.do(fmt.Sprintf(getRegisterTokenUrl), http.MethodGet, nil, nil)
+	bs, err := c.do(listCredentialsUrl, http.MethodGet, nil, nil)
 	if err != nil {
 		return nil, errors.Wrapf(err, "list cluster credentials with '%s' failed", clusterId)
 	}
