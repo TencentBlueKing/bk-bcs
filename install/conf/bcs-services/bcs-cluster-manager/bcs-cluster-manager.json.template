@@ -84,6 +84,21 @@
         "debug": ${bcsIAMDebug},
         "iamApplyServer": "${bcsIAMApplyPermAddress}"
     },
+    "auth": {
+        "enable": ${bcsAuthEnable},
+        "publicKeyFile": "${bcsAuthPublicKeyFile}",
+        "privateKeyFile": "${bcsAuthPrivateKeyFile}",
+        "clientPermissions": "${bcsAuthClientPermissions}",
+        "noAuthMethod": "${bcsAuthNoAuthMethod}"
+    },
+    "gse": {
+        "enable": ${bcsGseEnable},
+        "appCode": "${bcsGseAppCode}",
+        "appSecret": "${bcsGseAppSecret}",
+        "bkUserName": "${bcsGseBkUserName}",
+        "server": "${bcsGseServer}",
+        "debug": ${bcsGseDebug}
+    },
     "bcsapp": {
         "server": "${bcsAppServer}",
         "appCode": "${bcsAppAppCode}",

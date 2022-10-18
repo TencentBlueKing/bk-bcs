@@ -98,6 +98,12 @@ func NewClusterManagerEndpoints() []*api.Endpoint {
 			Handler: "rpc",
 		},
 		&api.Endpoint{
+			Name:    "ClusterManager.ListMastersInCluster",
+			Path:    []string{"/clustermanager/v1/cluster/{clusterID}/master"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		&api.Endpoint{
 			Name:    "ClusterManager.DeleteCluster",
 			Path:    []string{"/clustermanager/v1/cluster/{clusterID}"},
 			Method:  []string{"DELETE"},
@@ -160,6 +166,20 @@ func NewClusterManagerEndpoints() []*api.Endpoint {
 			Name:    "ClusterManager.DrainNode",
 			Path:    []string{"/clustermanager/v1/node/drain"},
 			Method:  []string{"POST"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "ClusterManager.UpdateNodeLabels",
+			Path:    []string{"/clustermanager/v1/node/labels"},
+			Method:  []string{"PUT"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "ClusterManager.UpdateNodeTaints",
+			Path:    []string{"/clustermanager/v1/node/taints"},
+			Method:  []string{"PUT"},
 			Body:    "*",
 			Handler: "rpc",
 		},
@@ -683,6 +703,7 @@ type ClusterManagerService interface {
 	AddNodesToCluster(ctx context.Context, in *AddNodesRequest, opts ...client.CallOption) (*AddNodesResponse, error)
 	DeleteNodesFromCluster(ctx context.Context, in *DeleteNodesRequest, opts ...client.CallOption) (*DeleteNodesResponse, error)
 	ListNodesInCluster(ctx context.Context, in *ListNodesInClusterRequest, opts ...client.CallOption) (*ListNodesInClusterResponse, error)
+	ListMastersInCluster(ctx context.Context, in *ListMastersInClusterRequest, opts ...client.CallOption) (*ListMastersInClusterResponse, error)
 	DeleteCluster(ctx context.Context, in *DeleteClusterReq, opts ...client.CallOption) (*DeleteClusterResp, error)
 	GetCluster(ctx context.Context, in *GetClusterReq, opts ...client.CallOption) (*GetClusterResp, error)
 	ListCluster(ctx context.Context, in *ListClusterReq, opts ...client.CallOption) (*ListClusterResp, error)
@@ -694,6 +715,8 @@ type ClusterManagerService interface {
 	CordonNode(ctx context.Context, in *CordonNodeRequest, opts ...client.CallOption) (*CordonNodeResponse, error)
 	UnCordonNode(ctx context.Context, in *UnCordonNodeRequest, opts ...client.CallOption) (*UnCordonNodeResponse, error)
 	DrainNode(ctx context.Context, in *DrainNodeRequest, opts ...client.CallOption) (*DrainNodeResponse, error)
+	UpdateNodeLabels(ctx context.Context, in *UpdateNodeLabelsRequest, opts ...client.CallOption) (*UpdateNodeLabelsResponse, error)
+	UpdateNodeTaints(ctx context.Context, in *UpdateNodeTaintsRequest, opts ...client.CallOption) (*UpdateNodeTaintsResponse, error)
 	//* cluster credential management
 	GetClusterCredential(ctx context.Context, in *GetClusterCredentialReq, opts ...client.CallOption) (*GetClusterCredentialResp, error)
 	UpdateClusterCredential(ctx context.Context, in *UpdateClusterCredentialReq, opts ...client.CallOption) (*UpdateClusterCredentialResp, error)
@@ -884,6 +907,16 @@ func (c *clusterManagerService) ListNodesInCluster(ctx context.Context, in *List
 	return out, nil
 }
 
+func (c *clusterManagerService) ListMastersInCluster(ctx context.Context, in *ListMastersInClusterRequest, opts ...client.CallOption) (*ListMastersInClusterResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.ListMastersInCluster", in)
+	out := new(ListMastersInClusterResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *clusterManagerService) DeleteCluster(ctx context.Context, in *DeleteClusterReq, opts ...client.CallOption) (*DeleteClusterResp, error) {
 	req := c.c.NewRequest(c.name, "ClusterManager.DeleteCluster", in)
 	out := new(DeleteClusterResp)
@@ -977,6 +1010,26 @@ func (c *clusterManagerService) UnCordonNode(ctx context.Context, in *UnCordonNo
 func (c *clusterManagerService) DrainNode(ctx context.Context, in *DrainNodeRequest, opts ...client.CallOption) (*DrainNodeResponse, error) {
 	req := c.c.NewRequest(c.name, "ClusterManager.DrainNode", in)
 	out := new(DrainNodeResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerService) UpdateNodeLabels(ctx context.Context, in *UpdateNodeLabelsRequest, opts ...client.CallOption) (*UpdateNodeLabelsResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.UpdateNodeLabels", in)
+	out := new(UpdateNodeLabelsResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerService) UpdateNodeTaints(ctx context.Context, in *UpdateNodeTaintsRequest, opts ...client.CallOption) (*UpdateNodeTaintsResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.UpdateNodeTaints", in)
+	out := new(UpdateNodeTaintsResponse)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -1766,6 +1819,7 @@ type ClusterManagerHandler interface {
 	AddNodesToCluster(context.Context, *AddNodesRequest, *AddNodesResponse) error
 	DeleteNodesFromCluster(context.Context, *DeleteNodesRequest, *DeleteNodesResponse) error
 	ListNodesInCluster(context.Context, *ListNodesInClusterRequest, *ListNodesInClusterResponse) error
+	ListMastersInCluster(context.Context, *ListMastersInClusterRequest, *ListMastersInClusterResponse) error
 	DeleteCluster(context.Context, *DeleteClusterReq, *DeleteClusterResp) error
 	GetCluster(context.Context, *GetClusterReq, *GetClusterResp) error
 	ListCluster(context.Context, *ListClusterReq, *ListClusterResp) error
@@ -1777,6 +1831,8 @@ type ClusterManagerHandler interface {
 	CordonNode(context.Context, *CordonNodeRequest, *CordonNodeResponse) error
 	UnCordonNode(context.Context, *UnCordonNodeRequest, *UnCordonNodeResponse) error
 	DrainNode(context.Context, *DrainNodeRequest, *DrainNodeResponse) error
+	UpdateNodeLabels(context.Context, *UpdateNodeLabelsRequest, *UpdateNodeLabelsResponse) error
+	UpdateNodeTaints(context.Context, *UpdateNodeTaintsRequest, *UpdateNodeTaintsResponse) error
 	//* cluster credential management
 	GetClusterCredential(context.Context, *GetClusterCredentialReq, *GetClusterCredentialResp) error
 	UpdateClusterCredential(context.Context, *UpdateClusterCredentialReq, *UpdateClusterCredentialResp) error
@@ -1885,6 +1941,7 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		AddNodesToCluster(ctx context.Context, in *AddNodesRequest, out *AddNodesResponse) error
 		DeleteNodesFromCluster(ctx context.Context, in *DeleteNodesRequest, out *DeleteNodesResponse) error
 		ListNodesInCluster(ctx context.Context, in *ListNodesInClusterRequest, out *ListNodesInClusterResponse) error
+		ListMastersInCluster(ctx context.Context, in *ListMastersInClusterRequest, out *ListMastersInClusterResponse) error
 		DeleteCluster(ctx context.Context, in *DeleteClusterReq, out *DeleteClusterResp) error
 		GetCluster(ctx context.Context, in *GetClusterReq, out *GetClusterResp) error
 		ListCluster(ctx context.Context, in *ListClusterReq, out *ListClusterResp) error
@@ -1895,6 +1952,8 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		CordonNode(ctx context.Context, in *CordonNodeRequest, out *CordonNodeResponse) error
 		UnCordonNode(ctx context.Context, in *UnCordonNodeRequest, out *UnCordonNodeResponse) error
 		DrainNode(ctx context.Context, in *DrainNodeRequest, out *DrainNodeResponse) error
+		UpdateNodeLabels(ctx context.Context, in *UpdateNodeLabelsRequest, out *UpdateNodeLabelsResponse) error
+		UpdateNodeTaints(ctx context.Context, in *UpdateNodeTaintsRequest, out *UpdateNodeTaintsResponse) error
 		GetClusterCredential(ctx context.Context, in *GetClusterCredentialReq, out *GetClusterCredentialResp) error
 		UpdateClusterCredential(ctx context.Context, in *UpdateClusterCredentialReq, out *UpdateClusterCredentialResp) error
 		DeleteClusterCredential(ctx context.Context, in *DeleteClusterCredentialReq, out *DeleteClusterCredentialResp) error
@@ -2033,6 +2092,12 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.ListMastersInCluster",
+		Path:    []string{"/clustermanager/v1/cluster/{clusterID}/master"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.DeleteCluster",
 		Path:    []string{"/clustermanager/v1/cluster/{clusterID}"},
 		Method:  []string{"DELETE"},
@@ -2095,6 +2160,20 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		Name:    "ClusterManager.DrainNode",
 		Path:    []string{"/clustermanager/v1/node/drain"},
 		Method:  []string{"POST"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.UpdateNodeLabels",
+		Path:    []string{"/clustermanager/v1/node/labels"},
+		Method:  []string{"PUT"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.UpdateNodeTaints",
+		Path:    []string{"/clustermanager/v1/node/taints"},
+		Method:  []string{"PUT"},
 		Body:    "*",
 		Handler: "rpc",
 	}))
@@ -2642,6 +2721,10 @@ func (h *clusterManagerHandler) ListNodesInCluster(ctx context.Context, in *List
 	return h.ClusterManagerHandler.ListNodesInCluster(ctx, in, out)
 }
 
+func (h *clusterManagerHandler) ListMastersInCluster(ctx context.Context, in *ListMastersInClusterRequest, out *ListMastersInClusterResponse) error {
+	return h.ClusterManagerHandler.ListMastersInCluster(ctx, in, out)
+}
+
 func (h *clusterManagerHandler) DeleteCluster(ctx context.Context, in *DeleteClusterReq, out *DeleteClusterResp) error {
 	return h.ClusterManagerHandler.DeleteCluster(ctx, in, out)
 }
@@ -2680,6 +2763,14 @@ func (h *clusterManagerHandler) UnCordonNode(ctx context.Context, in *UnCordonNo
 
 func (h *clusterManagerHandler) DrainNode(ctx context.Context, in *DrainNodeRequest, out *DrainNodeResponse) error {
 	return h.ClusterManagerHandler.DrainNode(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) UpdateNodeLabels(ctx context.Context, in *UpdateNodeLabelsRequest, out *UpdateNodeLabelsResponse) error {
+	return h.ClusterManagerHandler.UpdateNodeLabels(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) UpdateNodeTaints(ctx context.Context, in *UpdateNodeTaintsRequest, out *UpdateNodeTaintsResponse) error {
+	return h.ClusterManagerHandler.UpdateNodeTaints(ctx, in, out)
 }
 
 func (h *clusterManagerHandler) GetClusterCredential(ctx context.Context, in *GetClusterCredentialReq, out *GetClusterCredentialResp) error {

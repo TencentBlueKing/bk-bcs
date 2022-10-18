@@ -1765,6 +1765,39 @@
         ]
       }
     },
+    "/clustermanager/v1/cluster/{clusterID}/master": {
+      "get": {
+        "summary": "查询Cluster下所有master节点列表",
+        "description": "查询集群下所有master节点列表，如果某条件为空，则忽略该值",
+        "operationId": "ClusterManager_ListMastersInCluster",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerListMastersInClusterResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "clusterID",
+            "description": "集群ID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      }
+    },
     "/clustermanager/v1/cluster/{clusterID}/node": {
       "get": {
         "summary": "查询Cluster下所有节点列表",
@@ -2863,6 +2896,74 @@
             "required": true,
             "schema": {
               "$ref": "#/definitions/clustermanagerDrainNodeRequest"
+            }
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      }
+    },
+    "/clustermanager/v1/node/labels": {
+      "put": {
+        "summary": "更新节点标签",
+        "description": "更新节点标签",
+        "operationId": "ClusterManager_UpdateNodeLabels",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerUpdateNodeLabelsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clustermanagerUpdateNodeLabelsRequest"
+            }
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      }
+    },
+    "/clustermanager/v1/node/taints": {
+      "put": {
+        "summary": "更新节点污点",
+        "description": "更新节点污点",
+        "operationId": "ClusterManager_UpdateNodeTaints",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerUpdateNodeTaintsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clustermanagerUpdateNodeTaintsRequest"
             }
           }
         ],
@@ -5741,6 +5842,138 @@
       "description": "用于记录集群层面固定、模板信息，帮助集群创建与维护.目前仅支持action(创建集群/删除集群/集群添加节点/集群删除节点)",
       "title": "ClusterMgr"
     },
+    "clustermanagerClusterNode": {
+      "type": "object",
+      "properties": {
+        "nodeID": {
+          "type": "string",
+          "description": "节点云instanceID",
+          "title": "nodeID"
+        },
+        "innerIP": {
+          "type": "string",
+          "description": "节点内网主IP",
+          "title": "innerIP"
+        },
+        "instanceType": {
+          "type": "string",
+          "description": "机型信息字符串，可能为空",
+          "title": "instanceType"
+        },
+        "CPU": {
+          "type": "integer",
+          "format": "int64",
+          "description": "节点CPU信息",
+          "title": "CPU"
+        },
+        "mem": {
+          "type": "integer",
+          "format": "int64",
+          "description": "节点内存信息",
+          "title": "mem"
+        },
+        "GPU": {
+          "type": "integer",
+          "format": "int64",
+          "description": "节点GPU信息，可能为0",
+          "title": "GPU"
+        },
+        "status": {
+          "type": "string",
+          "description": "节点状态信息（根据弹性伸缩定义的），RUNNING, DELETEING, CREATING, FAILED, INITIALIZATION",
+          "title": "status"
+        },
+        "zoneID": {
+          "type": "string",
+          "description": "节点可用区，可能为空",
+          "title": "zone"
+        },
+        "nodeGroupID": {
+          "type": "string",
+          "description": "节点所属的NodeGroup ID, 可能为空(仅CA节点归属于nodeGroup)",
+          "title": "nodeGroupID"
+        },
+        "clusterID": {
+          "type": "string",
+          "description": "节点所属的ClusterID",
+          "title": "clusterID"
+        },
+        "VPC": {
+          "type": "string",
+          "description": "节点所属的VPC ID",
+          "title": "VPC"
+        },
+        "region": {
+          "type": "string",
+          "description": "节点所属区域，例如广州，深圳，加州等",
+          "title": "region"
+        },
+        "passwd": {
+          "type": "string",
+          "description": "实例初始化密码, 需要进行解密",
+          "title": "passwd"
+        },
+        "zone": {
+          "type": "integer",
+          "format": "int64",
+          "description": "节点可用区ID，可能为空; 该信息主要使用于CA",
+          "title": "zoneID"
+        },
+        "deviceID": {
+          "type": "string",
+          "description": "CA instance设备ID号",
+          "title": "deviceID"
+        },
+        "labels": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "taints": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clustermanagerTaint"
+          },
+          "description": "节点信息",
+          "title": "taints"
+        },
+        "unSchedulable": {
+          "type": "integer",
+          "format": "int64",
+          "description": "调度状态，默认值0表示参与调度，1表示不参与调度",
+          "title": "unSchedulable"
+        },
+        "nodeName": {
+          "type": "string",
+          "description": "节点名称,k8s nodename",
+          "title": "nodeName"
+        },
+        "agent": {
+          "type": "integer",
+          "format": "int64",
+          "description": "节点Agent 状态，1在线，0不在线",
+          "title": "agent"
+        },
+        "idc": {
+          "type": "string",
+          "description": "机房",
+          "title": "idc"
+        },
+        "rack": {
+          "type": "string",
+          "description": "机架",
+          "title": "rack"
+        },
+        "deviceClass": {
+          "type": "string",
+          "description": "机型",
+          "title": "deviceClass"
+        }
+      },
+      "description": "记录节点信息，用于节点列表展示",
+      "title": "ClusterNode"
+    },
     "clustermanagerCommonListResp": {
       "type": "object",
       "properties": {
@@ -5818,17 +6051,17 @@
           "description": "更新节点所属的clusterID",
           "title": "clusterID"
         },
-        "updater": {
-          "type": "string",
-          "description": "更新者",
-          "title": "updater"
+        "nodes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "节点名称列表，和节点内网IP列表二选一，优先节点名称列表",
+          "title": "nodes"
         }
       },
       "description": "设置节点不可调度状态",
-      "title": "CordonNodeRequest",
-      "required": [
-        "innerIPs"
-      ]
+      "title": "CordonNodeRequest"
     },
     "clustermanagerCordonNodeResponse": {
       "type": "object",
@@ -5850,13 +6083,10 @@
           "description": "返回结果",
           "title": "result"
         },
-        "fail": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "description": "返回操作失败的节点列表",
-          "title": "fail"
+        "data": {
+          "$ref": "#/definitions/clustermanagerNodeOperationStatus",
+          "description": "返回数据",
+          "title": "data"
         }
       },
       "description": "更新节点不可调度状态",
@@ -7691,7 +7921,7 @@
           "items": {
             "type": "string"
           },
-          "description": "节点内网IP列表",
+          "description": "节点内网IP列表，和节点名称列表二选一，优先节点名称列表",
           "title": "innerIPs"
         },
         "clusterID": {
@@ -7699,10 +7929,13 @@
           "description": "pod迁移节点所属的clusterID",
           "title": "clusterID"
         },
-        "updater": {
-          "type": "string",
-          "description": "更新者",
-          "title": "updater"
+        "nodes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "节点名称列表，和节点内网IP列表二选一，优先节点名称列表",
+          "title": "nodes"
         },
         "force": {
           "type": "boolean",
@@ -7764,13 +7997,10 @@
           "description": "返回结果",
           "title": "result"
         },
-        "fail": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "description": "返回操作失败的节点列表",
-          "title": "fail"
+        "data": {
+          "$ref": "#/definitions/clustermanagerNodeOperationStatus",
+          "description": "返回数据",
+          "title": "data"
         }
       }
     },
@@ -9358,6 +9588,43 @@
         "data"
       ]
     },
+    "clustermanagerListMastersInClusterResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clustermanagerClusterNode"
+          },
+          "description": "集群节点列表",
+          "title": "data"
+        }
+      },
+      "description": "查询集群master节点列表返回",
+      "title": "ListMastersInClusterResponse",
+      "required": [
+        "code",
+        "message",
+        "data"
+      ]
+    },
     "clustermanagerListNamespaceQuotaResp": {
       "type": "object",
       "properties": {
@@ -9491,7 +9758,7 @@
         "data": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/clustermanagerNode"
+            "$ref": "#/definitions/clustermanagerClusterNode"
           },
           "description": "集群节点列表",
           "title": "data"
@@ -9961,6 +10228,21 @@
           "type": "string",
           "description": "CA instance设备ID号",
           "title": "deviceID"
+        },
+        "nodeTemplateID": {
+          "type": "string",
+          "description": "节点关联的节点模板ID, 可为空",
+          "title": "nodeTemplateID"
+        },
+        "nodeType": {
+          "type": "string",
+          "description": "节点类型, 主要包含CVM/IDC, 可为空默认是CVM",
+          "title": "nodeType"
+        },
+        "nodeName": {
+          "type": "string",
+          "description": "节点名称, 存储各个云节点名称",
+          "title": "nodeName"
         }
       },
       "description": "记录节点信息，用于维护节点状态，被cluster与nodegroup使用",
@@ -10217,6 +10499,50 @@
         }
       }
     },
+    "clustermanagerNodeLabel": {
+      "type": "object",
+      "properties": {
+        "nodeName": {
+          "type": "string",
+          "description": "节点名称",
+          "title": "nodeName"
+        },
+        "labels": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "clustermanagerNodeOperationStatus": {
+      "type": "object",
+      "properties": {
+        "fail": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clustermanagerNodeOperationStatusInfo"
+          }
+        },
+        "success": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clustermanagerNodeOperationStatusInfo"
+          }
+        }
+      }
+    },
+    "clustermanagerNodeOperationStatusInfo": {
+      "type": "object",
+      "properties": {
+        "nodeName": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        }
+      }
+    },
     "clustermanagerNodeResult": {
       "type": "object",
       "properties": {
@@ -10285,6 +10611,24 @@
           "items": {
             "type": "string"
           }
+        }
+      }
+    },
+    "clustermanagerNodeTaint": {
+      "type": "object",
+      "properties": {
+        "nodeName": {
+          "type": "string",
+          "description": "节点名称",
+          "title": "nodeName"
+        },
+        "taints": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clustermanagerTaint"
+          },
+          "description": "节点污点信息",
+          "title": "taints"
         }
       }
     },
@@ -11333,18 +11677,17 @@
           "description": "更新节点所属的clusterID",
           "title": "clusterID"
         },
-        "updater": {
-          "type": "string",
-          "description": "更新者",
-          "title": "updater"
+        "nodes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "节点名称列表，和节点内网IP列表二选一，优先节点名称列表",
+          "title": "nodes"
         }
       },
       "description": "设置节点可调度状态",
-      "title": "UnCordonNodeRequest",
-      "required": [
-        "innerIPs",
-        "clusterID"
-      ]
+      "title": "UnCordonNodeRequest"
     },
     "clustermanagerUnCordonNodeResponse": {
       "type": "object",
@@ -11366,13 +11709,10 @@
           "description": "返回结果",
           "title": "result"
         },
-        "fail": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "description": "返回操作失败的节点列表",
-          "title": "fail"
+        "data": {
+          "$ref": "#/definitions/clustermanagerNodeOperationStatus",
+          "description": "返回数据",
+          "title": "data"
         }
       },
       "description": "更新节点可调度状态",
@@ -12547,6 +12887,57 @@
         }
       }
     },
+    "clustermanagerUpdateNodeLabelsRequest": {
+      "type": "object",
+      "properties": {
+        "nodes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clustermanagerNodeLabel"
+          },
+          "description": "节点列表",
+          "title": "nodes"
+        },
+        "clusterID": {
+          "type": "string",
+          "description": "更新节点所属的clusterID",
+          "title": "clusterID"
+        }
+      }
+    },
+    "clustermanagerUpdateNodeLabelsResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "$ref": "#/definitions/clustermanagerNodeOperationStatus",
+          "description": "返回数据",
+          "title": "data"
+        }
+      },
+      "description": "更新节点label",
+      "title": "UpdateNodeLabelsResponse",
+      "required": [
+        "code",
+        "message"
+      ]
+    },
     "clustermanagerUpdateNodeRequest": {
       "type": "object",
       "properties": {
@@ -12613,6 +13004,57 @@
       },
       "description": "更新集群节点返回，如果存在",
       "title": "UpdateNodeResponse",
+      "required": [
+        "code",
+        "message"
+      ]
+    },
+    "clustermanagerUpdateNodeTaintsRequest": {
+      "type": "object",
+      "properties": {
+        "nodes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clustermanagerNodeTaint"
+          },
+          "description": "节点列表",
+          "title": "nodes"
+        },
+        "clusterID": {
+          "type": "string",
+          "description": "更新节点所属的clusterID",
+          "title": "clusterID"
+        }
+      }
+    },
+    "clustermanagerUpdateNodeTaintsResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "$ref": "#/definitions/clustermanagerNodeOperationStatus",
+          "description": "返回数据",
+          "title": "data"
+        }
+      },
+      "description": "更新节点taints",
+      "title": "UpdateNodeTaintsResponse",
       "required": [
         "code",
         "message"

@@ -19,8 +19,24 @@ const (
 )
 
 const (
+	// host field info
+	fieldCloudID     = "bk_cloud_id"
 	fieldHostIP      = "bk_host_innerip"
+	fieldHostIPv6    = "bk_host_innerip_v6"
+	fieldHostOutIP   = "bk_host_outerip"
+	fieldHostOutIPV6 = "bk_host_outerip_v6"
 	fieldHostID      = "bk_host_id"
+	fieldDeviceType  = "bk_svr_device_cls_name"
+	fieldIDCCityName = "idc_city_name"
+	fieldIDCCityID   = "idc_city_id"
+	fieldDeviceClass = "svr_device_class"
+	fieldRack        = "rack"
+	fieldIDCName     = "idc_name"
+
+	fieldHostCPU  = "bk_cpu"
+	fieldHostMem  = "bk_mem"
+	fieldHostDisk = "bk_disk"
+
 	fieldOperator    = "operator"
 	fieldBakOperator = "bk_bak_operator"
 
@@ -30,9 +46,28 @@ const (
 	MaxLimits = 500
 )
 
+var (
+	fieldHostDetailInfo = []string{fieldHostIP, fieldHostIPv6, fieldHostOutIP, fieldHostOutIPV6, fieldHostID,
+		fieldDeviceType, fieldIDCCityName, fieldIDCCityID, fieldDeviceClass, fieldHostCPU,
+		fieldHostMem, fieldHostDisk, fieldOperator, fieldBakOperator, fieldRack, fieldIDCName}
+)
+
 // condition result
 const (
 	conditionBkBizID = "bk_biz_id"
+)
+
+// Condition xxx
+type Condition string
+
+// String to string
+func (c Condition) String() string {
+	return string(c)
+}
+
+var (
+	and Condition = "AND"
+	or  Condition = "OR"
 )
 
 // Page page
@@ -105,6 +140,71 @@ type HostData struct {
 	BKHostInnerIP string `json:"bk_host_innerip"`
 	Operator      string `json:"operator"`
 	BKBakOperator string `json:"bk_bak_operator"`
+}
+
+// ListHostsWithoutBizRequest list hosts request
+type ListHostsWithoutBizRequest struct {
+	Page               Page                `json:"page"`
+	BKBizID            int                 `json:"bk_biz_id,omitempty"`
+	HostPropertyFilter *HostPropertyFilter `json:"host_property_filter"`
+	Fields             []string            `json:"fields"`
+}
+
+func buildFilterConditionByInnerIP(ips []string) *HostPropertyFilter {
+	return &HostPropertyFilter{
+		Condition: and.String(),
+		Rules: []Rule{
+			{
+				Field:    fieldHostIP,
+				Operator: "in",
+				Value:    ips,
+			},
+		},
+	}
+}
+
+// HostPropertyFilter filter confition
+type HostPropertyFilter struct {
+	// Condition AND OR
+	Condition string `json:"condition"`
+	// Rules
+	Rules []Rule `json:"rules"`
+}
+
+// Rule filter rule
+type Rule struct {
+	Field string `json:"field"`
+	// Operator equal,not_equal,in,not_in,less,less_or_equal,greater,greater_or_equal,between,not_between
+	Operator string      `json:"operator"`
+	Value    interface{} `json:"value"`
+}
+
+type ListHostsWithoutBizResponse struct {
+	Code      int    `json:"code"`
+	Result    bool   `json:"result"`
+	Message   string `json:"message"`
+	RequestID string `json:"request_id"`
+	Data      struct {
+		Count int              `json:"count"`
+		Info  []HostDetailData `json:"info"`
+	} `json:"data"`
+}
+
+// HostDetailData host detailed info
+type HostDetailData struct {
+	HostData
+	BkHostInnerIPV6  string `json:"bk_host_innerip_v6"`
+	BkHostOutIP      string `json:"bk_host_outerip"`
+	BkHostOutIPV6    string `json:"bk_host_outerip_v6"`
+	IDCName          string `json:"idc_name"`
+	IDCCityName      string `json:"idc_city_name"`
+	IDCCityID        string `json:"idc_city_id"`
+	NormalDeviceType string `json:"bk_svr_device_cls_name"`
+	SCMDeviceType    string `json:"svr_device_class"`
+	HostCpu          int64  `json:"bk_cpu"`
+	HostMem          int64  `json:"bk_mem"`
+	HostDisk         int64  `json:"bk_disk"`
+	Rack             string `json:"rack"`
 }
 
 const (

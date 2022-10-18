@@ -204,6 +204,29 @@ type ComponentDeploy struct {
 	Token         string     `json:"token"`
 }
 
+// AuthConfig config for auth
+type AuthConfig struct {
+	Enable bool `json:"enable"`
+	// jwt key
+	PublicKeyFile  string `json:"publicKeyFile"`
+	PrivateKeyFile string `json:"privateKeyFile"`
+	// client 类型用户权限，使用 json 格式，key 为 client 名称，values 为拥有的权限，'*' 表示所有
+	// 如：`{"admin": ["*"], "client_a": ["ClusterManager.CreateCluster"]}`
+	ClientPermissions string `json:"clientPermissions"`
+	// 不鉴权接口，使用逗号分隔，格式 `ClusterManager.Health,ClusterManager.Health`
+	NoAuthMethod string `json:"noAuthMethod"`
+}
+
+// GseConfig for gse
+type GseConfig struct {
+	Enable     bool   `json:"enable"`
+	AppCode    string `json:"appCode"`
+	AppSecret  string `json:"appSecret"`
+	BkUserName string `json:"bkUserName"`
+	Server     string `json:"server"`
+	Debug      bool   `json:"debug"`
+}
+
 // ClusterManagerOptions options of cluster manager
 type ClusterManagerOptions struct {
 	Etcd               EtcdOption            `json:"etcd"`
@@ -222,6 +245,8 @@ type ClusterManagerOptions struct {
 	UserManager        UserConfig            `json:"user"`
 	Alarm              AlarmConfig           `json:"alarm"`
 	IAM                IAMConfig             `json:"iam_config"`
+	Auth               AuthConfig            `json:"auth"`
+	Gse                GseConfig             `json:"gse"`
 	BCSAppConfig       BCSAppConfig          `json:"bcsapp"`
 	ComponentDeploy    ComponentDeploy       `json:"componentDeploy"`
 	ResourceSchemaPath string                `json:"resourceSchemaPath"`

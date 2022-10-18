@@ -277,11 +277,28 @@ func (cm *ClusterManager) ListNodesInCluster(ctx context.Context,
 		return err
 	}
 	start := time.Now()
-	fa := clusterac.NewListNodesInClusterAction(cm.model)
+	fa := clusterac.NewListNodesInClusterAction(cm.model, cm.kubeOp)
 	fa.Handle(ctx, req, resp)
 	metrics.ReportAPIRequestMetric("ListNodesInCluster", "grpc", strconv.Itoa(int(resp.Code)), start)
 	blog.Infof("reqID: %s, action: ListNodesInCluster, req %v, resp.Code %d, resp.Message %s, resp.Data.Length",
 		reqID, req, resp.Code, resp.Message, len(resp.Data))
 	blog.V(5).Infof("reqID: %s, action: ListNodesInCluster, req %v, resp %v", reqID, req, resp)
+	return nil
+}
+
+// ListMastersInCluster implements interface cmproto.ClusterManagerServer
+func (cm *ClusterManager) ListMastersInCluster(ctx context.Context,
+	req *cmproto.ListMastersInClusterRequest, resp *cmproto.ListMastersInClusterResponse) error {
+	reqID, err := requestIDFromContext(ctx)
+	if err != nil {
+		return err
+	}
+	start := time.Now()
+	fa := clusterac.NewListMastersInClusterAction(cm.model, cm.kubeOp)
+	fa.Handle(ctx, req, resp)
+	metrics.ReportAPIRequestMetric("ListMastersInCluster", "grpc", strconv.Itoa(int(resp.Code)), start)
+	blog.Infof("reqID: %s, action: ListMastersInCluster, req %v, resp.Code %d, resp.Message %s, resp.Data.Length",
+		reqID, req, resp.Code, resp.Message, len(resp.Data))
+	blog.V(5).Infof("reqID: %s, action: ListMastersInCluster, req %v, resp %v", reqID, req, resp)
 	return nil
 }

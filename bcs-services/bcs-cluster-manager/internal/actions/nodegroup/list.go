@@ -198,8 +198,8 @@ func (la *ListNodesAction) appendNodeInfo() {
 	if err != nil {
 		blog.Warnf("ListClusterNodes %s failed, %s", la.group.ClusterID, err.Error())
 	}
-	nodeMap := make(map[string]v1.Node)
-	for _, v := range k8sNodes.Items {
+	nodeMap := make(map[string]*v1.Node)
+	for _, v := range k8sNodes {
 		for _, addr := range v.Status.Addresses {
 			if addr.Type == v1.NodeInternalIP {
 				nodeMap[addr.Address] = v

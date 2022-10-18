@@ -38,8 +38,20 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers/mongo"
+	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/middleware"
+	restful "github.com/emicklei/go-restful"
+	"github.com/gorilla/mux"
+	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"github.com/micro/go-micro/v2/registry"
+	"github.com/micro/go-micro/v2/registry/etcd"
+	microsvc "github.com/micro/go-micro/v2/service"
+	microgrpcsvc "github.com/micro/go-micro/v2/service/grpc"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"google.golang.org/grpc"
+	grpccred "google.golang.org/grpc/credentials"
 
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/common"
 	clusterops "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/clusterops"
@@ -49,8 +61,9 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/lock"
 	etcdlock "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/lock/etcd"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/options"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/auth"
+	ssmAuth "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/cmdb"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/gse"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/nodeman"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/passcc"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/user"
@@ -62,17 +75,6 @@ import (
 	mesostunnel "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/tunnelhandler/mesos"
 	mesoswebconsole "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/tunnelhandler/mesoswebconsole"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
-
-	restful "github.com/emicklei/go-restful"
-	"github.com/gorilla/mux"
-	"github.com/grpc-ecosystem/grpc-gateway/runtime"
-	"github.com/micro/go-micro/v2/registry"
-	"github.com/micro/go-micro/v2/registry/etcd"
-	microsvc "github.com/micro/go-micro/v2/service"
-	microgrpcsvc "github.com/micro/go-micro/v2/service/grpc"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"google.golang.org/grpc"
-	grpccred "google.golang.org/grpc/credentials"
 )
 
 // ClusterManager cluster manager
@@ -270,7 +272,7 @@ func (cm *ClusterManager) initRemoteClient() error {
 		return err
 	}
 	// init ssm client
-	err = auth.SetSSMClient(auth.Options{
+	err = ssmAuth.SetSSMClient(ssmAuth.Options{
 		Server:    cm.opt.Ssm.Server,
 		AppCode:   cm.opt.Ssm.AppCode,
 		AppSecret: cm.opt.Ssm.AppSecret,
@@ -313,6 +315,18 @@ func (cm *ClusterManager) initRemoteClient() error {
 		Debug:      cm.opt.NodeMan.Debug,
 	})
 	if err != nil {
+		return err
+	}
+
+	// init gse client
+	if err := gse.SetGseClient(gse.Options{
+		Enable:     cm.opt.Gse.Enable,
+		AppCode:    cm.opt.Gse.AppCode,
+		AppSecret:  cm.opt.Gse.AppSecret,
+		BKUserName: cm.opt.Gse.BkUserName,
+		Server:     cm.opt.Gse.Server,
+		Debug:      cm.opt.Gse.Debug,
+	}); err != nil {
 		return err
 	}
 
@@ -359,6 +373,38 @@ func (cm *ClusterManager) initIAMClient() error {
 		return err
 	}
 
+	auth.InitPermClient(cm.iamClient)
+
+	return nil
+}
+
+// init jwt client for perm
+func (cm *ClusterManager) initJWTClient() error {
+	return auth.InitJWTClient(cm.opt)
+}
+
+// init client permissions
+func (cm *ClusterManager) initClientPermissions() error {
+	auth.ClientPermissions = make(map[string][]string, 0)
+	if len(cm.opt.Auth.ClientPermissions) == 0 {
+		return nil
+	}
+
+	err := json.Unmarshal([]byte(cm.opt.Auth.ClientPermissions), &auth.ClientPermissions)
+	if err != nil {
+		return fmt.Errorf("parse ClientPermissions error: %s", err.Error())
+	}
+	return nil
+}
+
+// init no auth method
+func (cm *ClusterManager) initNoAuthMethod() error {
+	if len(cm.opt.Auth.NoAuthMethod) == 0 {
+		return nil
+	}
+
+	methods := strings.Split(cm.opt.Auth.NoAuthMethod, ",")
+	auth.NoAuthMethod = append(auth.NoAuthMethod, methods...)
 	return nil
 }
 
@@ -575,6 +621,10 @@ func CustomMatcher(key string) (string, bool) {
 	switch key {
 	case "X-Request-Id":
 		return "X-Request-Id", true
+	case middleware.CustomUsernameHeaderKey:
+		return middleware.CustomUsernameHeaderKey, true
+	case middleware.InnerClientHeaderKey:
+		return middleware.InnerClientHeaderKey, true
 	default:
 		return runtime.DefaultHeaderMatcher(key)
 	}
@@ -701,6 +751,10 @@ func (cm *ClusterManager) initExtraModules() {
 }
 
 func (cm *ClusterManager) initMicro() error {
+	authWrapper := middleware.NewGoMicroAuth(auth.GetJWTClient()).
+		EnableSkipHandler(auth.SkipHandler).
+		EnableSkipClient(auth.SkipClient).
+		SetCheckUserPerm(auth.CheckUserPerm)
 	// New Service
 	microService := microgrpcsvc.NewService(
 		microsvc.Name(cmcommon.ClusterManagerServiceDomain),
@@ -724,6 +778,11 @@ func (cm *ClusterManager) initMicro() error {
 			cm.disc.Stop()
 			return nil
 		}),
+		microsvc.WrapHandler(
+			cmcommon.RequestLogWarpper,
+			authWrapper.AuthenticationFunc,
+			authWrapper.AuthorizationFunc,
+		),
 	)
 	microService.Init()
 
@@ -788,6 +847,21 @@ func (cm *ClusterManager) Init() error {
 	}
 	// init IAM client
 	if err := cm.initIAMClient(); err != nil {
+		return err
+	}
+
+	// init jwt client
+	if err := cm.initJWTClient(); err != nil {
+		return err
+	}
+
+	// init client permissions
+	if err := cm.initClientPermissions(); err != nil {
+		return err
+	}
+
+	// init no auth methods
+	if err := cm.initNoAuthMethod(); err != nil {
 		return err
 	}
 

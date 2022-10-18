@@ -15,12 +15,15 @@ package node
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/clusterops"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
 // UnCordonNodeAction action for uncordon node
@@ -30,16 +33,13 @@ type UnCordonNodeAction struct {
 	req   *cmproto.UnCordonNodeRequest
 	resp  *cmproto.UnCordonNodeResponse
 	k8sOp *clusterops.K8SOperator
-
-	failed []string
 }
 
 // NewUnCordonNodeAction create update action
 func NewUnCordonNodeAction(model store.ClusterManagerModel, k8sOp *clusterops.K8SOperator) *UnCordonNodeAction {
 	return &UnCordonNodeAction{
-		model:  model,
-		k8sOp:  k8sOp,
-		failed: make([]string, 0),
+		model: model,
+		k8sOp: k8sOp,
 	}
 }
 
@@ -52,16 +52,55 @@ func (ua *UnCordonNodeAction) validate() error {
 }
 
 func (ua *UnCordonNodeAction) unCordonClusterNodes() error {
-	for _, ip := range ua.req.InnerIPs {
-		err := ua.k8sOp.ClusterUpdateScheduleNode(ua.ctx, clusterops.NodeInfo{
-			ClusterID: ua.req.ClusterID,
-			NodeIP:    ip,
-			Desired:   false,
-		})
+	// get node names
+	if len(ua.req.Nodes) == 0 && len(ua.req.InnerIPs) > 0 {
+		option := clusterops.ListNodeOption{ClusterID: ua.req.ClusterID, NodeIPs: ua.req.InnerIPs}
+		nodes, err := ua.k8sOp.ListClusterNodesByIPsOrNames(ua.ctx, option)
 		if err != nil {
-			blog.Errorf("unCordonClusterNodes[%s] failed: %+v", ip, err)
-			ua.failed = append(ua.failed, ip)
+			blog.Errorf("get nodename by ips failed in cluster %s, err %s", ua.req.ClusterID, err.Error())
+			return fmt.Errorf("get nodename by ips failed in cluster %s, err %s", ua.req.ClusterID, err.Error())
 		}
+		for _, v := range nodes {
+			ua.req.Nodes = append(ua.req.Nodes, v.Name)
+		}
+	}
+
+	successCh := make(chan *cmproto.NodeOperationStatusInfo, len(ua.req.Nodes))
+	failCh := make(chan *cmproto.NodeOperationStatusInfo, len(ua.req.Nodes))
+
+	barrier := utils.NewRoutinePool(50)
+	defer barrier.Close()
+	barrier.Add(len(ua.req.Nodes))
+	for i := range ua.req.Nodes {
+		go func(node string) {
+			defer barrier.Done()
+			ctx, cancel := context.WithTimeout(context.Background(), clusterops.DefaultTimeout)
+			defer cancel()
+			if err := ua.k8sOp.ClusterUpdateScheduleNode(ctx, clusterops.NodeInfo{
+				ClusterID: ua.req.ClusterID,
+				NodeName:  node,
+				Desired:   false,
+			}); err != nil {
+				failCh <- &cmproto.NodeOperationStatusInfo{NodeName: node, Message: err.Error()}
+				blog.Errorf("unCordonClusterNodes[%s] failed in cluster %s, err %s", node, ua.req.ClusterID, err.Error())
+				return
+			}
+			successCh <- &cmproto.NodeOperationStatusInfo{NodeName: node}
+		}(ua.req.Nodes[i])
+	}
+	barrier.Wait()
+	close(successCh)
+	close(failCh)
+
+	ua.resp.Data = &cmproto.NodeOperationStatus{
+		Success: make([]*cmproto.NodeOperationStatusInfo, 0),
+		Fail:    make([]*cmproto.NodeOperationStatusInfo, 0),
+	}
+	for v := range successCh {
+		ua.resp.Data.Success = append(ua.resp.Data.Success, v)
+	}
+	for v := range failCh {
+		ua.resp.Data.Fail = append(ua.resp.Data.Fail, v)
 	}
 
 	return nil
@@ -71,7 +110,6 @@ func (ua *UnCordonNodeAction) setResp(code uint32, msg string) {
 	ua.resp.Code = code
 	ua.resp.Message = msg
 	ua.resp.Result = (code == common.BcsErrClusterManagerSuccess)
-	ua.resp.Fail = ua.failed
 }
 
 // Handle handles node uncordon
@@ -106,16 +144,13 @@ type CordonNodeAction struct {
 	req   *cmproto.CordonNodeRequest
 	resp  *cmproto.CordonNodeResponse
 	k8sOp *clusterops.K8SOperator
-
-	failed []string
 }
 
 // NewCordonNodeAction create update action
 func NewCordonNodeAction(model store.ClusterManagerModel, k8sOp *clusterops.K8SOperator) *CordonNodeAction {
 	return &CordonNodeAction{
-		model:  model,
-		k8sOp:  k8sOp,
-		failed: make([]string, 0),
+		model: model,
+		k8sOp: k8sOp,
 	}
 }
 
@@ -128,16 +163,55 @@ func (ua *CordonNodeAction) validate() error {
 }
 
 func (ua *CordonNodeAction) cordonClusterNodes() error {
-	for _, ip := range ua.req.InnerIPs {
-		err := ua.k8sOp.ClusterUpdateScheduleNode(ua.ctx, clusterops.NodeInfo{
-			ClusterID: ua.req.ClusterID,
-			NodeIP:    ip,
-			Desired:   true,
-		})
+	// get node names
+	if len(ua.req.Nodes) == 0 && len(ua.req.InnerIPs) > 0 {
+		option := clusterops.ListNodeOption{ClusterID: ua.req.ClusterID, NodeIPs: ua.req.InnerIPs}
+		nodes, err := ua.k8sOp.ListClusterNodesByIPsOrNames(ua.ctx, option)
 		if err != nil {
-			blog.Errorf("cordonClusterNodes[%s] failed: %+v", ip, err)
-			ua.failed = append(ua.failed, ip)
+			blog.Errorf("get nodename by ips failed in cluster %s, err %s", ua.req.ClusterID, err.Error())
+			return fmt.Errorf("get nodename by ips failed in cluster %s, err %s", ua.req.ClusterID, err.Error())
 		}
+		for _, v := range nodes {
+			ua.req.Nodes = append(ua.req.Nodes, v.Name)
+		}
+	}
+
+	successCh := make(chan *cmproto.NodeOperationStatusInfo, len(ua.req.Nodes))
+	failCh := make(chan *cmproto.NodeOperationStatusInfo, len(ua.req.Nodes))
+
+	barrier := utils.NewRoutinePool(50)
+	defer barrier.Close()
+	barrier.Add(len(ua.req.Nodes))
+	for i := range ua.req.Nodes {
+		go func(node string) {
+			defer barrier.Done()
+			ctx, cancel := context.WithTimeout(context.Background(), clusterops.DefaultTimeout)
+			defer cancel()
+			if err := ua.k8sOp.ClusterUpdateScheduleNode(ctx, clusterops.NodeInfo{
+				ClusterID: ua.req.ClusterID,
+				NodeName:  node,
+				Desired:   true,
+			}); err != nil {
+				failCh <- &cmproto.NodeOperationStatusInfo{NodeName: node, Message: err.Error()}
+				blog.Errorf("cordonClusterNodes[%s] failed in cluster %s, err %s", node, ua.req.ClusterID, err.Error())
+				return
+			}
+			successCh <- &cmproto.NodeOperationStatusInfo{NodeName: node}
+		}(ua.req.Nodes[i])
+	}
+	barrier.Wait()
+	close(successCh)
+	close(failCh)
+
+	ua.resp.Data = &cmproto.NodeOperationStatus{
+		Success: make([]*cmproto.NodeOperationStatusInfo, 0),
+		Fail:    make([]*cmproto.NodeOperationStatusInfo, 0),
+	}
+	for v := range successCh {
+		ua.resp.Data.Success = append(ua.resp.Data.Success, v)
+	}
+	for v := range failCh {
+		ua.resp.Data.Fail = append(ua.resp.Data.Fail, v)
 	}
 
 	return nil
@@ -147,7 +221,6 @@ func (ua *CordonNodeAction) setResp(code uint32, msg string) {
 	ua.resp.Code = code
 	ua.resp.Message = msg
 	ua.resp.Result = (code == common.BcsErrClusterManagerSuccess)
-	ua.resp.Fail = ua.failed
 }
 
 // Handle handles node cordon

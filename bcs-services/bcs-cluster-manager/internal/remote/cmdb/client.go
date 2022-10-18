@@ -170,6 +170,60 @@ func (c *Client) FetchAllHostsByBizID(bizID int) ([]HostData, error) {
 	return hostList, nil
 }
 
+// QueryHostInfoWithoutBiz max support 100 ips
+func (c *Client) QueryHostInfoWithoutBiz(ips []string, page Page) ([]HostDetailData, error) {
+	if c == nil {
+		return nil, ErrServerNotInit
+	}
+
+	var (
+		reqURL  = fmt.Sprintf("%s/api/c/compapi/v2/cc/list_hosts_without_biz/", c.server)
+		request = &ListHostsWithoutBizRequest{
+			Page:               page,
+			HostPropertyFilter: buildFilterConditionByInnerIP(ips),
+			Fields:             fieldHostDetailInfo,
+		}
+		respData = &ListHostsWithoutBizResponse{}
+	)
+
+	_, _, errs := gorequest.New().
+		Timeout(defaultTimeOut).
+		Post(reqURL).
+		Set("Content-Type", "application/json").
+		Set("Accept", "application/json").
+		Set("X-Bkapi-Authorization", c.userAuth).
+		SetDebug(c.serverDebug).
+		Send(request).
+		EndStruct(&respData)
+	if len(errs) > 0 {
+		blog.Errorf("call api QueryHostInfoWithoutBiz failed: %v", errs[0])
+		return nil, errs[0]
+	}
+
+	if !respData.Result {
+		blog.Errorf("call api QueryHostInfoWithoutBiz failed: %v", respData.Message)
+		return nil, fmt.Errorf(respData.Message)
+	}
+	//successfully request
+	blog.Infof("call api QueryHostInfoWithoutBiz with url(%s) successfully", reqURL)
+
+	return respData.Data.Info, nil
+}
+
+// QueryAllHostInfoWithoutBiz get all host info by ips
+func (c *Client) QueryAllHostInfoWithoutBiz(ips []string) ([]HostDetailData, error) {
+	chunk := chunkSlice(ips, MaxLimits)
+	list := make([]HostDetailData, 0)
+	for _, v := range chunk {
+		data, err := c.QueryHostInfoWithoutBiz(v, Page{Start: 0, Limit: MaxLimits})
+		if err != nil {
+			return nil, err
+		}
+		list = append(list, data...)
+	}
+	return list, nil
+}
+
 // QueryHostByBizID query host by bizID
 func (c *Client) QueryHostByBizID(bizID int, page Page) (int, []HostData, error) {
 	if c == nil {
