@@ -14,55 +14,115 @@
 package project
 
 import (
-	"encoding/json"
-	"errors"
+	"context"
+	"crypto/tls"
 	"fmt"
+	"math/rand"
 	"sync"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/parnurzeal/gorequest"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/bcsproject"
+	microRgt "github.com/micro/go-micro/v2/registry"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/metadata"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/component"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/discovery"
+)
+
+const (
+	// ProjectManagerServiceName project manager service name
+	ProjectManagerServiceName = "project.bkbcs.tencent.com"
 )
 
 // ProjectClient xxx
 type ProjectClient struct {
-	Host  string
-	Token string
+	Discovery       *discovery.ModuleDiscovery
+	ClientTLSConfig *tls.Config
 }
 
 // Client xxx
 var Client *ProjectClient
 
 // NewClient create project service client
-func NewClient(c ProjectClient) *ProjectClient {
-	client := &ProjectClient{Host: c.Host, Token: c.Token}
-	Client = client
-	return client
+func NewClient(tlsConfig *tls.Config, microRgt microRgt.Registry) error {
+	dis := discovery.NewModuleDiscovery(ProjectManagerServiceName, microRgt)
+	err := dis.Start()
+	if err != nil {
+		return err
+	}
+	Client = &ProjectClient{Discovery: dis, ClientTLSConfig: tlsConfig}
+	return nil
 }
 
-// ProjectData project service detail
-type ProjectData struct {
-	ProjectID   string `json:"projectID"`
-	Kind        string `json:"kind"`
-	BusinessID  string `json:"businessID"`
-	ProjectCode string `json:"projectCode"`
-	Name        string `json:"name"`
+func (p *ProjectClient) getProjectClient() (bcsproject.BCSProjectClient, error) {
+	node, err := p.Discovery.GetRandServiceInst()
+	if err != nil {
+		return nil, err
+	}
+	blog.V(4).Infof("get random project-manager instance [%s] from etcd registry successful", node.Address)
+
+	cfg := bcsapi.Config{}
+	// discovery hosts
+	cfg.Hosts = []string{node.Address}
+	cfg.TLSConfig = p.ClientTLSConfig
+	cfg.InnerClientName = "bcs-helm-manager"
+	return NewProjectManager(&cfg), nil
 }
 
-// ProjectResp project service response
-type ProjectResp struct {
-	Code    int         `json:"code"`
-	Data    ProjectData `json:"data"`
-	Message string      `json:"message"`
+// NewProjectManager create ProjectManager SDK implementation
+func NewProjectManager(config *bcsapi.Config) bcsproject.BCSProjectClient {
+	rand.Seed(time.Now().UnixNano())
+	if len(config.Hosts) == 0 {
+		// ! pay more attention for nil return
+		return nil
+	}
+	// create grpc connection
+	header := map[string]string{
+		"x-content-type": "application/grpc+proto",
+		"Content-Type":   "application/grpc",
+	}
+	if len(config.AuthToken) != 0 {
+		header["Authorization"] = fmt.Sprintf("Bearer %s", config.AuthToken)
+	}
+	for k, v := range config.Header {
+		header[k] = v
+	}
+	md := metadata.New(header)
+	auth := &bcsapi.Authentication{InnerClientName: config.InnerClientName}
+	var opts []grpc.DialOption
+	opts = append(opts, grpc.WithDefaultCallOptions(grpc.Header(&md)))
+	if config.TLSConfig != nil {
+		opts = append(opts, grpc.WithTransportCredentials(credentials.NewTLS(config.TLSConfig)))
+	} else {
+		opts = append(opts, grpc.WithInsecure())
+		auth.Insecure = true
+	}
+	opts = append(opts, grpc.WithPerRPCCredentials(auth))
+	var conn *grpc.ClientConn
+	var err error
+	maxTries := 3
+	for i := 0; i < maxTries; i++ {
+		selected := rand.Intn(1024) % len(config.Hosts)
+		addr := config.Hosts[selected]
+		conn, err = grpc.Dial(addr, opts...)
+		if err != nil {
+			blog.Errorf("Create project manager grpc client with %s error: %s", addr, err.Error())
+			continue
+		}
+		if conn != nil {
+			break
+		}
+	}
+	if conn == nil {
+		blog.Errorf("create no project manager client after all instance tries")
+		return nil
+	}
+	// init project manager client
+	return bcsproject.NewBCSProjectClient(conn)
 }
-
-var (
-	getProjectPath = "/bcsapi/v4/bcsproject/v1/projects/%s"
-	// 默认超时时间设置为20s
-	defaultTimeout = 20
-)
 
 var projectCache *sync.Map = &sync.Map{}
 
@@ -71,48 +131,19 @@ func GetProjectIDByCode(username string, projectCode string) (string, error) {
 	// load project data from cache
 	v, ok := projectCache.Load(projectCode)
 	if ok {
-		if project, ok := v.(*ProjectData); ok {
+		if project, ok := v.(*bcsproject.Project); ok {
 			return project.ProjectID, nil
 		}
 	}
-	p, err := Client.GetProjectDetail(username, projectCode)
+	client, err := Client.getProjectClient()
+	p, err := client.GetProject(context.Background(), &bcsproject.GetProjectRequest{ProjectIDOrCode: projectCode})
 	if err != nil {
-		return "", fmt.Errorf("GetProjectDetail error: %s", err)
+		return "", fmt.Errorf("GetProject error: %s", err)
+	}
+	if p.Code != 0 || p.Data == nil {
+		return "", fmt.Errorf("GetProject error, code: %d, data: %v", p.Code, p.GetData())
 	}
 	// save project data to cache
-	projectCache.Store(projectCode, p)
-	return p.ProjectID, nil
-}
-
-// GetProjectDetail get project detail from project service
-func (p *ProjectClient) GetProjectDetail(username string, projectCode string) (*ProjectData, error) {
-	path := fmt.Sprintf(getProjectPath, projectCode)
-	url := fmt.Sprintf("%s%s", p.Host, path)
-	authorization := fmt.Sprintf("Bearer %s", p.Token)
-	headers := map[string]string{
-		"Content-Type":       "application/json",
-		"Authorization":      authorization,
-		"X-Project-Username": username,
-	}
-	// 组装请求参数
-	req := gorequest.SuperAgent{
-		Url:    url,
-		Method: "GET",
-	}
-	// 请求接口
-	body, err := component.Request(req, defaultTimeout, "", headers)
-	if err != nil {
-		blog.Errorf("request project service error, project code: %s, err %s", projectCode, err.Error())
-		return nil, common.ErrHelmManagerRequestComponentFailed.GenError()
-	}
-	var resp ProjectResp
-	if err := json.Unmarshal([]byte(body), &resp); err != nil {
-		blog.Errorf("parse project detail error, body: %v", body)
-		return nil, err
-	}
-	if resp.Code != component.SuccessCode {
-		blog.Errorf("parse project detail error, body: %v", body)
-		return nil, errors.New(resp.Message)
-	}
-	return &resp.Data, nil
+	projectCache.Store(projectCode, p.Data)
+	return p.Data.ProjectID, nil
 }

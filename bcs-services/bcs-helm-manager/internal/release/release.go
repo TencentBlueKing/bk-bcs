@@ -16,6 +16,7 @@ package release
 import (
 	"context"
 
+	"helm.sh/helm/v3/pkg/release"
 	"k8s.io/apimachinery/pkg/runtime"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
@@ -52,6 +53,7 @@ type Release struct {
 	Values       string
 	Manifest     string
 	Objects      []runtime.Object
+	Notes        string
 }
 
 // Transfer2Proto transfer the data into protobuf struct
@@ -79,6 +81,9 @@ func (r *Release) Transfer2DetailProto() *helmmanager.ReleaseDetail {
 		ChartVersion: common.GetStringP(r.ChartVersion),
 		AppVersion:   common.GetStringP(r.AppVersion),
 		UpdateTime:   common.GetStringP(r.UpdateTime),
+		Values:       []string{r.Values},
+		Description:  common.GetStringP(r.Description),
+		Notes:        common.GetStringP(r.Notes),
 	}
 }
 
@@ -164,6 +169,7 @@ type HelmInstallConfig struct {
 
 // HelmInstallResult 定义了helm执行install的返回结果
 type HelmInstallResult struct {
+	Release    *release.Release
 	Revision   int
 	Status     string
 	AppVersion string
@@ -201,6 +207,7 @@ type HelmUpgradeConfig struct {
 
 // HelmUpgradeResult 定义了helm执行upgrade时的返回结果
 type HelmUpgradeResult struct {
+	Release    *release.Release
 	Revision   int
 	Status     string
 	AppVersion string

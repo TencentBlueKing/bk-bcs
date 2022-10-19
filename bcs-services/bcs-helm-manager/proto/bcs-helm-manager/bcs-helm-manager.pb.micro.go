@@ -171,6 +171,53 @@ func NewHelmManagerEndpoints() []*api.Endpoint {
 			Handler: "rpc",
 		},
 		&api.Endpoint{
+			Name:    "HelmManager.ListReleaseV1",
+			Path:    []string{"/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/releases"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "HelmManager.GetReleaseDetailV1",
+			Path:    []string{"/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/releases/{name}"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "HelmManager.InstallReleaseV1",
+			Path:    []string{"/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/releases/{name}"},
+			Method:  []string{"POST"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "HelmManager.UninstallReleaseV1",
+			Path:    []string{"/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/releases/{name}"},
+			Method:  []string{"DELETE"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "HelmManager.UpgradeReleaseV1",
+			Path:    []string{"/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/releases/{name}"},
+			Method:  []string{"PUT"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "HelmManager.RollbackReleaseV1",
+			Path:    []string{"/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/releases/{name}/rollback"},
+			Method:  []string{"PUT"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "HelmManager.ReleasePreview",
+			Path:    []string{"/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/releases/{name}/preview"},
+			Method:  []string{"POST"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		&api.Endpoint{
 			Name:    "HelmManager.GetReleaseHistory",
 			Path:    []string{"/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/releases/{name}/history"},
 			Method:  []string{"GET"},
@@ -212,6 +259,13 @@ type HelmManagerService interface {
 	UninstallRelease(ctx context.Context, in *UninstallReleaseReq, opts ...client.CallOption) (*UninstallReleaseResp, error)
 	UpgradeRelease(ctx context.Context, in *UpgradeReleaseReq, opts ...client.CallOption) (*UpgradeReleaseResp, error)
 	RollbackRelease(ctx context.Context, in *RollbackReleaseReq, opts ...client.CallOption) (*RollbackReleaseResp, error)
+	ListReleaseV1(ctx context.Context, in *ListReleaseV1Req, opts ...client.CallOption) (*ListReleaseV1Resp, error)
+	GetReleaseDetailV1(ctx context.Context, in *GetReleaseDetailV1Req, opts ...client.CallOption) (*GetReleaseDetailV1Resp, error)
+	InstallReleaseV1(ctx context.Context, in *InstallReleaseV1Req, opts ...client.CallOption) (*InstallReleaseV1Resp, error)
+	UninstallReleaseV1(ctx context.Context, in *UninstallReleaseV1Req, opts ...client.CallOption) (*UninstallReleaseV1Resp, error)
+	UpgradeReleaseV1(ctx context.Context, in *UpgradeReleaseV1Req, opts ...client.CallOption) (*UpgradeReleaseV1Resp, error)
+	RollbackReleaseV1(ctx context.Context, in *RollbackReleaseV1Req, opts ...client.CallOption) (*RollbackReleaseV1Resp, error)
+	ReleasePreview(ctx context.Context, in *ReleasePreviewReq, opts ...client.CallOption) (*ReleasePreviewResp, error)
 	GetReleaseHistory(ctx context.Context, in *GetReleaseHistoryReq, opts ...client.CallOption) (*GetReleaseHistoryResp, error)
 	GetReleaseStatus(ctx context.Context, in *GetReleaseStatusReq, opts ...client.CallOption) (*CommonListResp, error)
 }
@@ -428,6 +482,76 @@ func (c *helmManagerService) RollbackRelease(ctx context.Context, in *RollbackRe
 	return out, nil
 }
 
+func (c *helmManagerService) ListReleaseV1(ctx context.Context, in *ListReleaseV1Req, opts ...client.CallOption) (*ListReleaseV1Resp, error) {
+	req := c.c.NewRequest(c.name, "HelmManager.ListReleaseV1", in)
+	out := new(ListReleaseV1Resp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *helmManagerService) GetReleaseDetailV1(ctx context.Context, in *GetReleaseDetailV1Req, opts ...client.CallOption) (*GetReleaseDetailV1Resp, error) {
+	req := c.c.NewRequest(c.name, "HelmManager.GetReleaseDetailV1", in)
+	out := new(GetReleaseDetailV1Resp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *helmManagerService) InstallReleaseV1(ctx context.Context, in *InstallReleaseV1Req, opts ...client.CallOption) (*InstallReleaseV1Resp, error) {
+	req := c.c.NewRequest(c.name, "HelmManager.InstallReleaseV1", in)
+	out := new(InstallReleaseV1Resp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *helmManagerService) UninstallReleaseV1(ctx context.Context, in *UninstallReleaseV1Req, opts ...client.CallOption) (*UninstallReleaseV1Resp, error) {
+	req := c.c.NewRequest(c.name, "HelmManager.UninstallReleaseV1", in)
+	out := new(UninstallReleaseV1Resp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *helmManagerService) UpgradeReleaseV1(ctx context.Context, in *UpgradeReleaseV1Req, opts ...client.CallOption) (*UpgradeReleaseV1Resp, error) {
+	req := c.c.NewRequest(c.name, "HelmManager.UpgradeReleaseV1", in)
+	out := new(UpgradeReleaseV1Resp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *helmManagerService) RollbackReleaseV1(ctx context.Context, in *RollbackReleaseV1Req, opts ...client.CallOption) (*RollbackReleaseV1Resp, error) {
+	req := c.c.NewRequest(c.name, "HelmManager.RollbackReleaseV1", in)
+	out := new(RollbackReleaseV1Resp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *helmManagerService) ReleasePreview(ctx context.Context, in *ReleasePreviewReq, opts ...client.CallOption) (*ReleasePreviewResp, error) {
+	req := c.c.NewRequest(c.name, "HelmManager.ReleasePreview", in)
+	out := new(ReleasePreviewResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *helmManagerService) GetReleaseHistory(ctx context.Context, in *GetReleaseHistoryReq, opts ...client.CallOption) (*GetReleaseHistoryResp, error) {
 	req := c.c.NewRequest(c.name, "HelmManager.GetReleaseHistory", in)
 	out := new(GetReleaseHistoryResp)
@@ -475,6 +599,13 @@ type HelmManagerHandler interface {
 	UninstallRelease(context.Context, *UninstallReleaseReq, *UninstallReleaseResp) error
 	UpgradeRelease(context.Context, *UpgradeReleaseReq, *UpgradeReleaseResp) error
 	RollbackRelease(context.Context, *RollbackReleaseReq, *RollbackReleaseResp) error
+	ListReleaseV1(context.Context, *ListReleaseV1Req, *ListReleaseV1Resp) error
+	GetReleaseDetailV1(context.Context, *GetReleaseDetailV1Req, *GetReleaseDetailV1Resp) error
+	InstallReleaseV1(context.Context, *InstallReleaseV1Req, *InstallReleaseV1Resp) error
+	UninstallReleaseV1(context.Context, *UninstallReleaseV1Req, *UninstallReleaseV1Resp) error
+	UpgradeReleaseV1(context.Context, *UpgradeReleaseV1Req, *UpgradeReleaseV1Resp) error
+	RollbackReleaseV1(context.Context, *RollbackReleaseV1Req, *RollbackReleaseV1Resp) error
+	ReleasePreview(context.Context, *ReleasePreviewReq, *ReleasePreviewResp) error
 	GetReleaseHistory(context.Context, *GetReleaseHistoryReq, *GetReleaseHistoryResp) error
 	GetReleaseStatus(context.Context, *GetReleaseStatusReq, *CommonListResp) error
 }
@@ -501,6 +632,13 @@ func RegisterHelmManagerHandler(s server.Server, hdlr HelmManagerHandler, opts .
 		UninstallRelease(ctx context.Context, in *UninstallReleaseReq, out *UninstallReleaseResp) error
 		UpgradeRelease(ctx context.Context, in *UpgradeReleaseReq, out *UpgradeReleaseResp) error
 		RollbackRelease(ctx context.Context, in *RollbackReleaseReq, out *RollbackReleaseResp) error
+		ListReleaseV1(ctx context.Context, in *ListReleaseV1Req, out *ListReleaseV1Resp) error
+		GetReleaseDetailV1(ctx context.Context, in *GetReleaseDetailV1Req, out *GetReleaseDetailV1Resp) error
+		InstallReleaseV1(ctx context.Context, in *InstallReleaseV1Req, out *InstallReleaseV1Resp) error
+		UninstallReleaseV1(ctx context.Context, in *UninstallReleaseV1Req, out *UninstallReleaseV1Resp) error
+		UpgradeReleaseV1(ctx context.Context, in *UpgradeReleaseV1Req, out *UpgradeReleaseV1Resp) error
+		RollbackReleaseV1(ctx context.Context, in *RollbackReleaseV1Req, out *RollbackReleaseV1Resp) error
+		ReleasePreview(ctx context.Context, in *ReleasePreviewReq, out *ReleasePreviewResp) error
 		GetReleaseHistory(ctx context.Context, in *GetReleaseHistoryReq, out *GetReleaseHistoryResp) error
 		GetReleaseStatus(ctx context.Context, in *GetReleaseStatusReq, out *CommonListResp) error
 	}
@@ -638,6 +776,53 @@ func RegisterHelmManagerHandler(s server.Server, hdlr HelmManagerHandler, opts .
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "HelmManager.ListReleaseV1",
+		Path:    []string{"/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/releases"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "HelmManager.GetReleaseDetailV1",
+		Path:    []string{"/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/releases/{name}"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "HelmManager.InstallReleaseV1",
+		Path:    []string{"/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/releases/{name}"},
+		Method:  []string{"POST"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "HelmManager.UninstallReleaseV1",
+		Path:    []string{"/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/releases/{name}"},
+		Method:  []string{"DELETE"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "HelmManager.UpgradeReleaseV1",
+		Path:    []string{"/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/releases/{name}"},
+		Method:  []string{"PUT"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "HelmManager.RollbackReleaseV1",
+		Path:    []string{"/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/releases/{name}/rollback"},
+		Method:  []string{"PUT"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "HelmManager.ReleasePreview",
+		Path:    []string{"/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/releases/{name}/preview"},
+		Method:  []string{"POST"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "HelmManager.GetReleaseHistory",
 		Path:    []string{"/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/releases/{name}/history"},
 		Method:  []string{"GET"},
@@ -734,6 +919,34 @@ func (h *helmManagerHandler) UpgradeRelease(ctx context.Context, in *UpgradeRele
 
 func (h *helmManagerHandler) RollbackRelease(ctx context.Context, in *RollbackReleaseReq, out *RollbackReleaseResp) error {
 	return h.HelmManagerHandler.RollbackRelease(ctx, in, out)
+}
+
+func (h *helmManagerHandler) ListReleaseV1(ctx context.Context, in *ListReleaseV1Req, out *ListReleaseV1Resp) error {
+	return h.HelmManagerHandler.ListReleaseV1(ctx, in, out)
+}
+
+func (h *helmManagerHandler) GetReleaseDetailV1(ctx context.Context, in *GetReleaseDetailV1Req, out *GetReleaseDetailV1Resp) error {
+	return h.HelmManagerHandler.GetReleaseDetailV1(ctx, in, out)
+}
+
+func (h *helmManagerHandler) InstallReleaseV1(ctx context.Context, in *InstallReleaseV1Req, out *InstallReleaseV1Resp) error {
+	return h.HelmManagerHandler.InstallReleaseV1(ctx, in, out)
+}
+
+func (h *helmManagerHandler) UninstallReleaseV1(ctx context.Context, in *UninstallReleaseV1Req, out *UninstallReleaseV1Resp) error {
+	return h.HelmManagerHandler.UninstallReleaseV1(ctx, in, out)
+}
+
+func (h *helmManagerHandler) UpgradeReleaseV1(ctx context.Context, in *UpgradeReleaseV1Req, out *UpgradeReleaseV1Resp) error {
+	return h.HelmManagerHandler.UpgradeReleaseV1(ctx, in, out)
+}
+
+func (h *helmManagerHandler) RollbackReleaseV1(ctx context.Context, in *RollbackReleaseV1Req, out *RollbackReleaseV1Resp) error {
+	return h.HelmManagerHandler.RollbackReleaseV1(ctx, in, out)
+}
+
+func (h *helmManagerHandler) ReleasePreview(ctx context.Context, in *ReleasePreviewReq, out *ReleasePreviewResp) error {
+	return h.HelmManagerHandler.ReleasePreview(ctx, in, out)
 }
 
 func (h *helmManagerHandler) GetReleaseHistory(ctx context.Context, in *GetReleaseHistoryReq, out *GetReleaseHistoryResp) error {

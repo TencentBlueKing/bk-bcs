@@ -16,9 +16,11 @@ import (
 	"context"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/release"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/store"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/store/entity"
 	helmmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/proto/bcs-helm-manager"
 )
 
@@ -67,10 +69,9 @@ func (g *GetReleaseDetailAction) getDetail() error {
 	namespace := g.req.GetNamespace()
 	name := g.req.GetName()
 
-	_, origin, err := g.releaseHandler.Cluster(clusterID).List(g.ctx, release.ListOption{
+	rl, err := g.releaseHandler.Cluster(clusterID).Get(g.ctx, release.GetOption{
 		Namespace: namespace,
 		Name:      name,
-		Size:      1,
 	})
 	if err != nil {
 		blog.Errorf("get release detail failed, %s, clusterID: %s namespace: %s, name: %s",
@@ -79,29 +80,28 @@ func (g *GetReleaseDetailAction) getDetail() error {
 		return nil
 	}
 
-	if len(origin) == 0 {
-		blog.Errorf("get release detail failed, target not found, clusterID: %s namespace: %s, name: %s",
-			clusterID, namespace, name)
-		g.setResp(common.ErrHelmManagerGetActionFailed, "release not found", nil)
-		return nil
-	}
-
-	rls := origin[0].Transfer2DetailProto()
-	storedRelease, err := g.model.GetRelease(g.ctx, clusterID, namespace, name, int(rls.GetRevision()))
+	detail := rl.Transfer2DetailProto()
+	storedRelease, err := g.model.GetRelease(g.ctx, clusterID, namespace, name, int(detail.GetRevision()))
 	if err != nil {
-		blog.Errorf("get release detail from store failed, %s, "+
+		blog.Warnf("get release detail from store failed, %s, "+
 			"clusterID: %s namespace: %s, name: %s, revision: %d",
-			err.Error(), clusterID, namespace, name, rls.GetRevision())
-		g.setResp(common.ErrHelmManagerGetActionFailed, err.Error(), nil)
-		return nil
+			err.Error(), clusterID, namespace, name, detail.GetRevision())
+		// db 获取不到则返回源数据
 	}
+	g.appendStoreRelease(detail, storedRelease)
 
-	rls.Values = storedRelease.Values
-	g.setResp(common.ErrHelmManagerSuccess, "ok", rls)
-	blog.Infof("get release detail successfully, "+
-		"clusterID: %s namespace: %s, name: %s, revision: %d",
-		clusterID, namespace, name, rls.GetRevision())
+	g.setResp(common.ErrHelmManagerSuccess, "ok", detail)
+	blog.Infof("get release detail successfully, clusterID: %s namespace: %s, name: %s, revision: %d",
+		clusterID, namespace, name, rl.Revision)
 	return nil
+}
+
+func (g *GetReleaseDetailAction) appendStoreRelease(detail *helmmanager.ReleaseDetail, rl *entity.Release) {
+	if rl == nil {
+		return
+	}
+	detail.Args = rl.Args
+	detail.Values = rl.Values
 }
 
 func (g *GetReleaseDetailAction) setResp(err common.HelmManagerError, message string, r *helmmanager.ReleaseDetail) {

@@ -14,9 +14,9 @@ package release
 
 import (
 	"context"
-	"strconv"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/release"
@@ -75,72 +75,23 @@ func (u *UpgradeReleaseAction) upgrade() error {
 	releaseNamespace := u.req.GetNamespace()
 	clusterID := u.req.GetClusterID()
 	projectID := u.req.GetProjectID()
-	repoName := u.req.GetRepository()
 	chartName := u.req.GetChart()
 	chartVersion := u.req.GetVersion()
 	username := auth.GetUserFromCtx(u.ctx)
 	values := u.req.GetValues()
 
-	// 获取对应的仓库信息
-	repository, err := u.model.GetRepository(u.ctx, projectID, repoName)
+	contents, err := u.getContent()
 	if err != nil {
-		blog.Errorf("upgrade release get repository failed, %s, "+
+		blog.Errorf("upgrade release, get contents failed, %s, "+
 			"projectID: %s, clusterID: %s, chartName: %s, chartVersion: %s, namespace: %s, name: %s, operator: %s",
 			err.Error(), projectID, clusterID, chartName, chartVersion, releaseNamespace, releaseName, username)
 		u.setResp(common.ErrHelmManagerUpgradeActionFailed, err.Error(), nil)
 		return nil
 	}
 
-	// 下载到具体的chart version信息
-	contents, err := u.platform.
-		User(repo.User{
-			Name:     repository.Username,
-			Password: repository.Password,
-		}).
-		Project(repository.ProjectID).
-		Repository(
-			repo.GetRepositoryType(repository.Type),
-			repository.Name,
-		).
-		Chart(chartName).
-		Download(u.ctx, chartVersion)
-	if err != nil {
-		blog.Errorf("upgrade release get chart detail failed, %s, "+
-			"projectID: %s, clusterID: %s, chartName: %s, chartVersion: %s, namespace: %s, name: %s, operator: %s",
-			err.Error(), projectID, clusterID, chartName, chartVersion, releaseNamespace, releaseName, username)
-		u.setResp(common.ErrHelmManagerUpgradeActionFailed, err.Error(), nil)
-		return nil
-	}
-
-	vls := make([]*release.File, 0, len(values))
-	for index, v := range values {
-		vls = append(vls, &release.File{
-			Name:    "values-" + strconv.Itoa(index) + ".yaml",
-			Content: []byte(v),
-		})
-	}
-	// 执行upgrade操作
-	result, err := u.releaseHandler.Cluster(clusterID).Upgrade(
-		u.ctx,
-		release.HelmUpgradeConfig{
-			Name:      releaseName,
-			Namespace: releaseNamespace,
-			Chart: &release.File{
-				Name:    chartName + "-" + chartVersion + ".tgz",
-				Content: contents,
-			},
-			Args:   u.req.GetArgs(),
-			Values: vls,
-			PatchTemplateValues: map[string]string{
-				common.PTKProjectID: contextx.GetProjectIDFromCtx(u.ctx),
-				common.PTKClusterID: clusterID,
-				common.PTKNamespace: releaseNamespace,
-				common.PTKUpdator:   username,
-				common.PTKVersion:   chartVersion,
-				common.PTKName:      "",
-			},
-			VarTemplateValues: u.req.GetBcsSysVar(),
-		})
+	result, err := upgradeRelease(u.releaseHandler, contextx.GetProjectIDFromCtx(u.ctx), clusterID,
+		releaseName, releaseNamespace, chartName, chartVersion, username, u.req.GetArgs(),
+		u.req.GetBcsSysVar(), contents, values, false)
 	if err != nil {
 		blog.Errorf("upgrade release failed, %s, "+
 			"projectID: %s, clusterID: %s, chartName: %s, chartVersion: %s, namespace: %s, name: %s, operator: %s",
@@ -149,28 +100,12 @@ func (u *UpgradeReleaseAction) upgrade() error {
 		return nil
 	}
 
-	// 存储release信息到store中, 首先先删掉原来的同revision的数据
-	if err = u.model.DeleteRelease(u.ctx, clusterID, releaseNamespace, releaseNamespace, result.Revision); err != nil {
-		blog.Errorf("upgrade release, delete release in store failed, %s, "+
+	// 存储release信息到store中
+	if err = u.saveDB(result.Revision); err != nil {
+		blog.Warnf("upgrade release, save release in store failed, %s, "+
 			"projectID: %s, clusterID: %s, chartName: %s, chartVersion: %s, namespace: %s, name: %s, operator: %s",
 			err.Error(), projectID, clusterID, chartName, chartVersion, releaseNamespace, releaseName, username)
-		u.setResp(common.ErrHelmManagerUpgradeActionFailed, err.Error(), nil)
-		return nil
-	}
-	if err = u.model.CreateRelease(u.ctx, &entity.Release{
-		Name:         releaseName,
-		Namespace:    releaseNamespace,
-		ClusterID:    clusterID,
-		ChartName:    chartName,
-		ChartVersion: chartVersion,
-		Revision:     result.Revision,
-		Values:       values,
-	}); err != nil {
-		blog.Errorf("upgrade release, create release in store failed, %s, "+
-			"projectID: %s, clusterID: %s, chartName: %s, chartVersion: %s, namespace: %s, name: %s, operator: %s",
-			err.Error(), projectID, clusterID, chartName, chartVersion, releaseNamespace, releaseName, username)
-		u.setResp(common.ErrHelmManagerUpgradeActionFailed, err.Error(), nil)
-		return nil
+		// 更新 release 不依赖 db，db 报错也视为 release 更新成功
 	}
 
 	blog.Infof("upgrade release successfully, with revision %d, "+
@@ -186,6 +121,53 @@ func (u *UpgradeReleaseAction) upgrade() error {
 		AppVersion:   result.AppVersion,
 		UpdateTime:   result.UpdateTime,
 	}).Transfer2DetailProto())
+	return nil
+}
+
+func (u *UpgradeReleaseAction) getContent() ([]byte, error) {
+	// 获取对应的仓库信息
+	repository, err := u.model.GetRepository(u.ctx, u.req.GetProjectID(), u.req.GetRepository())
+	if err != nil {
+		return nil, err
+	}
+
+	// 下载到具体的chart version信息
+	contents, err := u.platform.
+		User(repo.User{
+			Name:     repository.Username,
+			Password: repository.Password,
+		}).
+		Project(repository.ProjectID).
+		Repository(
+			repo.GetRepositoryType(repository.Type),
+			repository.Name,
+		).
+		Chart(u.req.GetChart()).
+		Download(u.ctx, u.req.GetVersion())
+	if err != nil {
+		return nil, err
+	}
+	return contents, nil
+}
+
+func (u *UpgradeReleaseAction) saveDB(revision int) error {
+	if err := u.model.DeleteRelease(u.ctx, u.req.GetClusterID(), u.req.GetNamespace(), u.req.GetName(),
+		revision); err != nil {
+		return err
+	}
+	if err := u.model.CreateRelease(u.ctx, &entity.Release{
+		Name:         u.req.GetName(),
+		Namespace:    u.req.GetNamespace(),
+		ClusterID:    u.req.GetClusterID(),
+		ChartName:    u.req.GetChart(),
+		ChartVersion: u.req.GetVersion(),
+		Revision:     revision,
+		Values:       u.req.GetValues(),
+		Args:         u.req.GetArgs(),
+		CreateBy:     auth.GetUserFromCtx(u.ctx),
+	}); err != nil {
+		return err
+	}
 	return nil
 }
 

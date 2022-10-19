@@ -45,6 +45,8 @@ const (
 	ErrHelmManagerUpgradeActionFailed
 	// ErrHelmManagerRollbackActionFailed TODO
 	ErrHelmManagerRollbackActionFailed
+	// ErrHelmManagerPreviewActionFailed TODO
+	ErrHelmManagerPreviewActionFailed
 	// ErrHelmManagerAuthFailed TODO
 	ErrHelmManagerAuthFailed
 	// ErrHelmManagerRequestComponentFailed TODO
@@ -98,6 +100,7 @@ var errorCodeMapping = map[HelmManagerError]string{
 	ErrHelmManagerUninstallActionFailed:  "uninstall action failed",
 	ErrHelmManagerUpgradeActionFailed:    "upgrade action failed",
 	ErrHelmManagerRollbackActionFailed:   "rollback action failed",
+	ErrHelmManagerPreviewActionFailed:    "get preview action failed",
 	ErrHelmManagerAuthFailed:             "user auth failed",
 	ErrHelmManagerRequestComponentFailed: "request third party failed",
 }

@@ -48,6 +48,7 @@ func (c *cluster) get(ctx context.Context, op release.GetOption) (*release.Relea
 		Description:  rl.Info.Description,
 		Values:       valuesYaml,
 		Manifest:     rl.Manifest,
+		Notes:        rl.Info.Notes,
 	}
 	if op.GetObject {
 		re.Objects, err = ManifestToK8sResources(op.Namespace, re.Manifest, c.sdkClientGroup.Config(c.clusterID))
