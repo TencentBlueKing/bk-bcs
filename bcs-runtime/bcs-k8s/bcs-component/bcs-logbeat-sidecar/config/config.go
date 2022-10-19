@@ -30,6 +30,7 @@ type Config struct {
 	NeedReload          bool
 	FileExtension       string
 	LogbeatOutputFormat string
+	NodeName            string
 }
 
 // NewConfig create a config object
