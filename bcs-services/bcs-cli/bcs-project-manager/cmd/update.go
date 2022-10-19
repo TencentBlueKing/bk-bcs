@@ -12,6 +12,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-project-manager/cmd/printer"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-project-manager/pkg"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/proto/bcsproject"
@@ -21,6 +22,7 @@ import (
 	cmdutil "k8s.io/kubectl/pkg/cmd/util"
 	"k8s.io/kubectl/pkg/cmd/util/editor"
 	"os"
+	"path/filepath"
 	"sigs.k8s.io/yaml"
 )
 
@@ -41,6 +43,31 @@ func updateProject() *cobra.Command {
 		Short:                 "",
 		Long:                  "edit infos from bcs-project-manager",
 		Run: func(cmd *cobra.Command, args []string) {
+			//定义不能编辑的参数
+			type readOnlyParam struct {
+				CreateTime  string `json:"createTime"`
+				UpdateTime  string `json:"updateTime"`
+				Creator     string `json:"creator"`
+				Updater     string `json:"updater"`
+				Managers    string `json:"managers"`
+				ProjectID   string `json:"projectID"`
+				Name        string `json:"name"`
+				ProjectCode string `json:"projectCode"`
+				UseBKRes    bool   `json:"useBKRes"`
+				IsOffline   bool   `json:"isOffline"`
+				Kind        string `json:"kind"`
+				IsSecret    bool   `json:"isSecret"`
+				ProjectType uint32 `json:"projectType"`
+				DeployType  uint32 `json:"deployType"`
+				BGID        string `json:"BGID"`
+				BGName      string `json:"BGName"`
+				DeptID      string `json:"deptID"`
+				DeptName    string `json:"deptName"`
+				CenterID    string `json:"centerID"`
+				CenterName  string `json:"centerName"`
+				BusinessID  string `json:"businessID"`
+				Description string `json:"description"`
+			}
 			if len(args) == 0 {
 				klog.Fatalf("edit project requires project ID or code")
 			}
@@ -64,6 +91,7 @@ func updateProject() *cobra.Command {
 			if err != nil {
 				klog.Fatal("json marshal failed: %v", err)
 			}
+
 			// 把json转成yaml
 			original, err := yaml.JSONToYAML(marshal)
 			if err != nil {
@@ -71,7 +99,7 @@ func updateProject() *cobra.Command {
 			}
 			edit := editor.NewDefaultEditor([]string{})
 			// 编辑后的
-			edited, path, err := edit.LaunchTempFile("", "someprefix", bytes.NewBufferString(string(original)))
+			edited, path, err := edit.LaunchTempFile(fmt.Sprintf("%s-edit-", filepath.Base(os.Args[0])), ".yaml", bytes.NewBufferString(string(original)))
 			if err != nil {
 				klog.Fatalf("unexpected error: %v", err)
 			}
@@ -83,39 +111,73 @@ func updateProject() *cobra.Command {
 				klog.Fatalf("Edit cancelled, no valid changes were saved.")
 			}
 			// 把编辑后的内容yaml转成json
-			param, err := yaml.YAMLToJSON(edited)
+			editedJson, err := yaml.YAMLToJSON(edited)
 			if err != nil {
 				klog.Fatal("json to yaml failed: %v", err)
 			}
-			var request bcsproject.UpdateProjectRequest
-			json.Unmarshal(param, &request)
+
+			var request readOnlyParam
+			{
+				err = json.Unmarshal(editedJson, &request)
+				if err != nil {
+					klog.Fatal("json unmarshal failed: %v", err)
+				}
+				diff := readOnlyParam{
+					CreateTime:  projectInfo.GetCreateTime(),
+					UpdateTime:  projectInfo.GetUpdateTime(),
+					Creator:     projectInfo.GetCreator(),
+					Updater:     projectInfo.GetUpdater(),
+					Managers:    projectInfo.GetManagers(),
+					ProjectID:   projectInfo.GetProjectID(),
+					Name:        projectInfo.GetName(),
+					ProjectCode: projectInfo.GetProjectCode(),
+					UseBKRes:    projectInfo.GetUseBKRes(),
+					IsOffline:   projectInfo.GetIsOffline(),
+					Kind:        projectInfo.GetKind(),
+					IsSecret:    projectInfo.GetIsSecret(),
+					ProjectType: projectInfo.GetProjectType(),
+					DeployType:  projectInfo.GetDeployType(),
+					BGID:        projectInfo.GetBGID(),
+					BGName:      projectInfo.GetBGName(),
+					DeptID:      projectInfo.GetDeptID(),
+					DeptName:    projectInfo.GetDeptName(),
+					CenterID:    projectInfo.GetCenterID(),
+					CenterName:  projectInfo.GetCenterName(),
+					BusinessID:  request.BusinessID,
+					Description: request.Description,
+				}
+				if request != diff {
+					klog.Fatal("only edit description and project ID")
+				}
+			}
+
 			useBKRes := new(wrappers.BoolValue)
-			useBKRes.Value = getProjectResp.Data.UseBKRes
+			useBKRes.Value = projectInfo.GetUseBKRes()
 
 			isOffline := new(wrappers.BoolValue)
-			isOffline.Value = projectInfo.IsOffline
+			isOffline.Value = projectInfo.GetIsOffline()
 
 			isSecret := new(wrappers.BoolValue)
-			isSecret.Value = projectInfo.IsSecret
+			isSecret.Value = projectInfo.GetIsSecret()
 
 			// 保证只修改描述和业务ID
 			updateData := &bcsproject.UpdateProjectRequest{
-				ProjectID:   projectInfo.ProjectID,
-				Name:        projectInfo.Name,
+				ProjectID:   projectInfo.GetProjectID(),
+				Name:        projectInfo.GetName(),
 				UseBKRes:    useBKRes,
 				Description: request.Description,
 				IsOffline:   isOffline,
-				Kind:        projectInfo.Kind,
+				Kind:        projectInfo.GetKind(),
 				BusinessID:  request.BusinessID,
 				IsSecret:    isSecret,
-				DeployType:  projectInfo.DeployType,
-				ProjectType: projectInfo.ProjectType,
-				BGID:        projectInfo.BGID,
-				BGName:      projectInfo.BGName,
-				DeptID:      projectInfo.DeptID,
-				DeptName:    projectInfo.DeptName,
-				CenterID:    projectInfo.CenterID,
-				CenterName:  projectInfo.CenterName,
+				DeployType:  projectInfo.GetDeployType(),
+				ProjectType: projectInfo.GetProjectType(),
+				BGID:        projectInfo.GetBGID(),
+				BGName:      projectInfo.GetBGName(),
+				DeptID:      projectInfo.GetDeptID(),
+				DeptName:    projectInfo.GetDeptName(),
+				CenterID:    projectInfo.GetCenterID(),
+				CenterName:  projectInfo.GetCenterName(),
 			}
 			updateProjectResp, err := client.UpdateProject(cliCtx, updateData)
 			if err != nil {
