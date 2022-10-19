@@ -793,7 +793,7 @@
 
 
 .bk-dropdown-menu .bk-dropdown-content.is-show {
-    overflow: visible;
+    overflow: auto;
 }
 
 .biz-templateset-wrapper {
