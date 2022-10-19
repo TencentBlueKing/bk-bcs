@@ -76,11 +76,6 @@ export const batchRescheduleCrdPod = request('put', `${CR_API_URL}/projects/$pro
 export const getBizMaintainers = request('get', '/api/projects/$projectId/biz_maintainers/');
 
 // node
-export const getK8sNodes = request('get', '/api/cluster_mgr/projects/$projectId/clusters/$clusterId/nodes/');
-export const fetchK8sNodeLabels = request('post', '/api/cluster_mgr/projects/$projectId/clusters/$clusterId/nodes/labels/');
-export const setK8sNodeLabels = request('put', '/api/cluster_mgr/projects/$projectId/clusters/$clusterId/nodes/labels/');
-export const getNodeTaints = request('post', '/api/cluster_mgr/projects/$projectId/clusters/$clusterId/nodes/taints/');
-export const setNodeTaints = request('put', '/api/cluster_mgr/projects/$projectId/clusters/$clusterId/nodes/taints/');
 export const fetchBizTopo = request('get', '/api/projects/$projectId/cc/topology/');
 export const fetchBizHosts = request('post', '/api/projects/$projectId/cc/hosts/');
 
@@ -90,11 +85,8 @@ export const editProject = request('put', '/api/nav/projects/$projectId/');
 export const logLinks = request('post', '/api/datalog/projects/$projectId/log_links/');
 export const getProjectList = request('get', '/api/nav/projects/');
 
-// cluster
-export const schedulerNode = request('put', '/api/projects/$projectId/clusters/$clusterId/pods/reschedule/');
-
 // Cluster Manager
-const prefix = '/api/cluster_manager/proxy/bcsapi/v4';
+const prefix = `${process.env.NODE_ENV === 'development' ? '' : window.BCS_API_HOST}/bcsapi/v4`;
 export const cloudList = request('get', `${prefix}/clustermanager/v1/cloud`);
 export const createCluster = request('post', `${prefix}/clustermanager/v1/cluster`);
 export const cloudVpc = request('get', `${prefix}/clustermanager/v1/cloudvpc`);
@@ -191,15 +183,10 @@ export default {
   listContainers,
   retrieveContainerDetail,
   fetchContainerEnvInfo,
-  getK8sNodes,
-  fetchK8sNodeLabels,
-  setK8sNodeLabels,
   resourceCreate,
   resourceUpdate,
   resourceDelete,
   exampleManifests,
-  getNodeTaints,
-  setNodeTaints,
   namespaceList,
   createProject,
   crdList,

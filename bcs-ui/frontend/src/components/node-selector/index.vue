@@ -106,6 +106,7 @@
 </template>
 
 <script>
+import useNode from '@/views/node/use-node';
 export default {
   props: {
     selected: {
@@ -280,9 +281,8 @@ export default {
     async fetchCCData() {
       this.ccHostLoading = true;
       try {
-        const res = await this.$store.dispatch('cluster/getK8sNodes', {
-          $clusterId: this.curClusterId,
-        });
+        const { getNodeList } = useNode();
+        const res = await getNodeList(this.curClusterId);
 
         const count = res.length;
 
@@ -295,6 +295,7 @@ export default {
 
         const list = res || [];
         list.forEach((item) => {
+          item.inner_ip = item.innerIP; // 兼容以前字段逻辑
           if (this.hostListCache[item.inner_ip]) {
             item.isChecked = true;
           }

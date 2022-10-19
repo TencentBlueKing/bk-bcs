@@ -473,7 +473,7 @@
     >
       <template #header>
         <span>{{setLabelConf.title}}</span>
-        <span class="sideslider-tips">{{$t('标签有助于整理你的资源（如 env:prod）')}}</span>
+        <span class="sideslider-tips">{{$t('标签有助于整理你的资源')}}</span>
       </template>
       <template #content>
         <KeyValue
@@ -481,7 +481,13 @@
           :model-value="setLabelConf.data"
           :loading="setLabelConf.btnLoading"
           :key-desc="setLabelConf.keyDesc"
-          v-bkloading="{ isLoading: setLabelConf.loading }"
+          :key-rules="[
+            {
+              message: $i18n.t('有效的标签键有两个段：可选的前缀和名称，用斜杠（/）分隔。 名称段是必需的，必须小于等于 63 个字符，以字母数字字符（[a-z0-9A-Z]）开头和结尾， 带有破折号（-），下划线（_），点（ .）和之间的字母数字。 前缀是可选的。如果指定，前缀必须是 DNS 子域：由点（.）分隔的一系列 DNS 标签，总共不超过 253 个字符， 后跟斜杠（/）。'),
+              validator: LABEL_KEY_REGEXP
+            }
+          ]"
+          :min-items="0"
           @cancel="handleLabelEditCancel"
           @confirm="handleLabelEditConfirm"
         ></KeyValue>
@@ -540,7 +546,7 @@ import { defineComponent, ref, PropType, onMounted, watch, set, computed } from 
 import StatusIcon from '@/views/dashboard/common/status-icon';
 import ClusterSelect from '@/components/cluster-selector/cluster-select.vue';
 import LoadingIcon from '@/components/loading-icon.vue';
-import { nodeStatusColorMap, nodeStatusMap } from '@/common/constant';
+import { nodeStatusColorMap, nodeStatusMap, LABEL_KEY_REGEXP } from '@/common/constant';
 import useNode from './use-node';
 import useTableSetting from './use-table-setting';
 import usePage from '@/views/dashboard/common/use-page';
@@ -643,7 +649,6 @@ export default defineComponent({
       handleFilterChange,
       handleSearchSelectChange,
       handleClearSearchSelect,
-      // handleResetSearchSelect
     } = useTableSearchSelect({
       searchSelectDataSource,
       filteredValue,
@@ -716,13 +721,14 @@ export default defineComponent({
     const {
       getNodeList,
       getTaskData,
-      toggleNodeDispatch,
+      handleCordonNodes,
+      handleUncordonNodes,
       schedulerNode,
       deleteNode,
       addNode,
       getNodeOverview,
-      batchToggleNodeDispatch,
       retryTask,
+      setNodeLabels,
     } = useNode();
 
     const tableLoading = ref(false);
@@ -877,7 +883,6 @@ export default defineComponent({
     // 设置标签（批量设置标签的交互有点奇怪，后续优化）
     const setLabelConf = ref<{
       isShow: boolean;
-      loading: boolean;
       btnLoading: boolean;
       keyDesc: any;
       rows: any[];
@@ -885,25 +890,18 @@ export default defineComponent({
       title: string;
     }>({
       isShow: false,
-      loading: false,
       btnLoading: false,
       keyDesc: '',
       rows: [],
       data: [],
       title: '',
     });
-    const handleSetLabel = async (row) => {
+    const handleSetLabel = async (selections: Record<string, any>[] | Record<string, any>) => {
       setLabelConf.value.isShow = true;
-      const rows = Array.isArray(row) ? row : [row];
-      setLabelConf.value.loading = true;
-      const data = await $store.dispatch('cluster/fetchK8sNodeLabels', {
-        $clusterId: localClusterId.value,
-        node_name_list: rows.map(item => item.name),
-      });
-      setLabelConf.value.loading = false;
+      const rows = Array.isArray(selections) ? selections : [selections];
       // 批量设置时暂时只展示相同Key的项
       const labelArr = rows.reduce<any[]>((pre, row) => {
-        const label = data[row.inner_ip];
+        const label = row.labels;
         Object.keys(label).forEach((key) => {
           const index = pre.findIndex(item => item.key === key);
           if (index > -1) {
@@ -959,16 +957,13 @@ export default defineComponent({
     };
     const handleLabelEditConfirm = async (labels) => {
       setLabelConf.value.btnLoading = true;
-
-      const result = await $store.dispatch('cluster/setK8sNodeLabels', {
-        // eslint-disable-next-line camelcase
-        $clusterId: localClusterId.value,
-        node_label_list: setLabelConf.value.rows.map(item => ({
-          node_name: item.name,
+      const result = await setNodeLabels({
+        clusterID: localClusterId.value,
+        nodes: setLabelConf.value.rows.map(item => ({
+          nodeName: item.nodeName,
           labels: mergeLaels(item.labels, labels),
         })),
-      }).then(() => true)
-        .catch(() => false);
+      });
       setLabelConf.value.btnLoading = false;
       if (result) {
         handleLabelEditCancel();
@@ -1003,10 +998,9 @@ export default defineComponent({
         title: $i18n.t('确认对节点 {ip} 停止调度', { ip: row.inner_ip }),
         subTitle: $i18n.t('如果有使用Ingress及LoadBalancer类型的Service，节点停止调度后，Service Controller会剔除LB到nodePort的映射'),
         callback: async () => {
-          const result = await toggleNodeDispatch({
-            clusterId: row.cluster_id,
-            nodeName: [row.name],
-            status: 'REMOVABLE',
+          const result = await handleCordonNodes({
+            clusterID: row.cluster_id,
+            nodes: [row.nodeName],
           });
           result && handleGetNodeData();
         },
@@ -1018,10 +1012,9 @@ export default defineComponent({
         title: $i18n.t('确认允许调度'),
         subTitle: $i18n.t('确认对节点 {ip} 允许调度', { ip: row.inner_ip }),
         callback: async () => {
-          const result = await toggleNodeDispatch({
-            clusterId: row.cluster_id,
-            nodeName: [row.name],
-            status: 'RUNNING',
+          const result = await handleUncordonNodes({
+            clusterID: row.cluster_id,
+            nodes: [row.nodeName],
           });
           result && handleGetNodeData();
         },
@@ -1035,7 +1028,7 @@ export default defineComponent({
         callback: async () => {
           await schedulerNode({
             clusterId: row.cluster_id,
-            nodeIps: [row.inner_ip],
+            nodes: [row.nodeName],
           });
           // result && handleGetNodeData()
         },
@@ -1118,10 +1111,9 @@ export default defineComponent({
           num: selections.value.length,
         }),
         callback: async () => {
-          const result = await batchToggleNodeDispatch({
-            clusterId: localClusterId.value,
-            nodeNameList: selections.value.map(item => item.name),
-            status: 'RUNNING',
+          const result = await handleUncordonNodes({
+            clusterID: localClusterId.value,
+            nodes: selections.value.map(item => item.nodeName),
           });
           result && handleGetNodeData();
         },
@@ -1138,10 +1130,9 @@ export default defineComponent({
           num: selections.value.length,
         }),
         callback: async () => {
-          const result = await batchToggleNodeDispatch({
-            clusterId: localClusterId.value,
-            nodeNameList: selections.value.map(item => item.name),
-            status: 'REMOVABLE',
+          const result = await handleCordonNodes({
+            clusterID: localClusterId.value,
+            nodes: selections.value.map(item => item.nodeName),
           });
           result && handleGetNodeData();
         },
@@ -1201,7 +1192,7 @@ export default defineComponent({
         callback: async () => {
           await schedulerNode({
             clusterId: localClusterId.value,
-            nodeIps: selections.value.map(item => item.inner_ip),
+            nodes: selections.value.map(item => item.nodeName),
           });
           // result && handleGetNodeData()
         },
@@ -1458,6 +1449,7 @@ export default defineComponent({
       webAnnotations,
       curProject,
       isImportCluster,
+      LABEL_KEY_REGEXP,
     };
   },
 });
