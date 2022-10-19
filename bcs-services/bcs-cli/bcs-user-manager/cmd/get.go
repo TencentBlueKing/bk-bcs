@@ -31,6 +31,10 @@ func newGetCmd() *cobra.Command {
 	}
 	getCmd.AddCommand(getAdminUserCmd())
 	getCmd.AddCommand(getSaasUserCmd())
+	getCmd.AddCommand(getPlainUserCmd())
+	getCmd.AddCommand(getRegisterTokenCmd())
+	getCmd.AddCommand(getCredentialsCmd())
+	getCmd.AddCommand(getPermissionCmd())
 	return getCmd
 }
 
@@ -66,7 +70,7 @@ func getSaasUserCmd() *cobra.Command {
 	var userName string
 	subCmd := &cobra.Command{
 		Use:     "saas-user",
-		Aliases: []string{"au"},
+		Aliases: []string{"su"},
 		Short:   "get saas user from user manager",
 		Long:    "",
 		Run: func(cmd *cobra.Command, args []string) {
@@ -86,6 +90,119 @@ func getSaasUserCmd() *cobra.Command {
 	}
 
 	subCmd.PersistentFlags().StringVarP(&userName, "user_name", "n", "",
-		"the user name that query user user")
+		"the user name that query sass user")
+	return subCmd
+}
+
+func getPlainUserCmd() *cobra.Command {
+	var userName string
+	subCmd := &cobra.Command{
+		Use:     "plain-user",
+		Aliases: []string{"pu"},
+		Short:   "get plain user from user manager",
+		Long:    "",
+		Run: func(cmd *cobra.Command, args []string) {
+			cobra.OnInitialize(ensureConfig)
+			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
+			client := pkg.NewClientWithConfiguration(ctx)
+			resp, err := client.GetPlainUser(userName)
+			if err != nil {
+				klog.Fatalf("get plain user failed: %v", err)
+			}
+			if resp != nil && resp.Code != 0 {
+				klog.Fatalf("get plain user response code not 0 but %d: %s", resp.Code, resp.Message)
+			}
+			//printer.PrintSaasUserListInTable(flagOutput, resp)
+		},
+	}
+
+	subCmd.PersistentFlags().StringVarP(&userName, "user_name", "n", "",
+		"the user name that query plain user")
+	return subCmd
+}
+
+func getRegisterTokenCmd() *cobra.Command {
+	var clusterId string
+	subCmd := &cobra.Command{
+		Use:     "register-token",
+		Aliases: []string{"rk"},
+		Short:   "register-token",
+		Long:    "register specified cluster token from user manager",
+		Run: func(cmd *cobra.Command, args []string) {
+			cobra.OnInitialize(ensureConfig)
+			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
+			client := pkg.NewClientWithConfiguration(ctx)
+			resp, err := client.GetRegisterToken(clusterId)
+			if err != nil {
+				klog.Fatalf("search specified cluster token failed: %v", err)
+			}
+			if resp != nil && resp.Code != 0 {
+				klog.Fatalf("search specified cluster token response code not 0 but %d: %s", resp.Code, resp.Message)
+			}
+			//printer.PrintAdminUserListInTable(flagOutput, resp)
+		},
+	}
+
+	subCmd.PersistentFlags().StringVarP(&clusterId, "cluster_id", "c", "",
+		"the cluster_id for search specified cluster token")
+	return subCmd
+}
+
+func getCredentialsCmd() *cobra.Command {
+	var clusterId string
+	subCmd := &cobra.Command{
+		Use:     "credentials",
+		Aliases: []string{"c"},
+		Short:   "get credentials",
+		Long:    "get credential according cluster ID",
+		Run: func(cmd *cobra.Command, args []string) {
+			cobra.OnInitialize(ensureConfig)
+			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
+			client := pkg.NewClientWithConfiguration(ctx)
+			resp, err := client.GetRegisterToken(clusterId)
+			if err != nil {
+				klog.Fatalf("get credential according cluster ID failed: %v", err)
+			}
+			if resp != nil && resp.Code != 0 {
+				klog.Fatalf("get credential according cluster ID response code not 0 but %d: %s", resp.Code, resp.Message)
+			}
+			//printer.PrintAdminUserListInTable(flagOutput, resp)
+		},
+	}
+
+	subCmd.PersistentFlags().StringVarP(&clusterId, "cluster_id", "c", "",
+		"the cluster_id for get credential")
+	return subCmd
+}
+
+func getPermissionCmd() *cobra.Command {
+	var permissionForm string
+	subCmd := &cobra.Command{
+		Use:     "permission",
+		Aliases: []string{"p"},
+		Short:   "get permission from user manager",
+		Example: "kubectl-bcs-user-manager get permission -f {\"user_name\":\"yxw\",\"resource_type\":\"a\"}",
+		Long:    "",
+		Run: func(cmd *cobra.Command, args []string) {
+			cobra.OnInitialize(ensureConfig)
+			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
+			client := pkg.NewClientWithConfiguration(ctx)
+			resp, err := client.GetPermission(permissionForm)
+			if err != nil {
+				klog.Fatalf("get admin user failed: %v", err)
+			}
+			if resp != nil && resp.Code != 0 {
+				klog.Fatalf("get admin user response code not 0 but %d: %s", resp.Code, resp.Message)
+			}
+			//printer.PrintAdminUserListInTable(flagOutput, resp)
+		},
+	}
+
+	subCmd.PersistentFlags().StringVarP(&permissionForm, "permission_form", "f", "",
+		"the user name that query admin user")
 	return subCmd
 }

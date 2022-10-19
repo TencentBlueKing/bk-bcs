@@ -146,10 +146,10 @@ type ListCredentialsResponse struct {
 }
 
 // ListCredentials request list cluster credentials  from bcs-user-manager
-func (c *UserManagerClient) ListCredentials(clusterId string) (*ListCredentialsResponse, error) {
+func (c *UserManagerClient) ListCredentials() (*ListCredentialsResponse, error) {
 	bs, err := c.do(listCredentialsUrl, http.MethodGet, nil, nil)
 	if err != nil {
-		return nil, errors.Wrapf(err, "list cluster credentials with '%s' failed", clusterId)
+		return nil, errors.Wrapf(err, "list cluster credentials failed")
 	}
 	resp := new(ListCredentialsResponse)
 	if err := json.Unmarshal(bs, resp); err != nil {

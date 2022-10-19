@@ -14,15 +14,79 @@
 package cmd
 
 import (
+	"context"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-user-manager/cmd/printer"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-user-manager/pkg"
 	"github.com/spf13/cobra"
+	"k8s.io/klog"
 )
 
 func newDeleteCmd() *cobra.Command {
 	deleteCmd := &cobra.Command{
 		Use:   "delete",
-		Short: "delete resource from bcs-user-manager",
-		Long:  "",
+		Short: "delete",
+		Long:  "delete resource from bcs-user-manager",
 	}
-	//deleteCmd.AddCommand(createClusterCmd())
+	deleteCmd.AddCommand(revokePermissionCmd())
+	deleteCmd.AddCommand(deleteTokenCmd())
 	return deleteCmd
+}
+
+func revokePermissionCmd() *cobra.Command {
+	var reqBody string
+	subCmd := &cobra.Command{
+		Use:     "permissions",
+		Example: "kubectl-bcs-manager delete ps -p '{name=yxw}'",
+		Aliases: []string{"permissions", "ps"},
+		//Short:   "revoke permissions from user manager",
+		Short: "revoke permission",
+		Long:  "revoke permissions from user manager",
+		Run: func(cmd *cobra.Command, args []string) {
+			cobra.OnInitialize(ensureConfig)
+			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
+			client := pkg.NewClientWithConfiguration(ctx)
+			resp, err := client.RevokePermission(reqBody)
+			if err != nil {
+				klog.Fatalf("revoke permissions failed: %v", err)
+			}
+			if resp != nil && resp.Code != 0 {
+				klog.Fatalf("revoke permissions response code not 0 but %d: %s", resp.Code, resp.Message)
+			}
+			printer.PrintPermissionListInTable(flagOutput, resp)
+		},
+	}
+	subCmd.PersistentFlags().StringVarP(&reqBody, "permissions", "p", "",
+		"the permissions which will be revoked")
+
+	return subCmd
+}
+
+func deleteTokenCmd() *cobra.Command {
+	var token string
+	subCmd := &cobra.Command{
+		Use:     "token",
+		Example: "kubectl-bcs-manager delete token -t  [token to be deleted]",
+		Aliases: []string{},
+		Short:   "delete token",
+		Long:    "delete token from user manager",
+		Run: func(cmd *cobra.Command, args []string) {
+			//	cobra.OnInitialize(ensureConfig)
+			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
+			client := pkg.NewClientWithConfiguration(ctx)
+			resp, err := client.DeleteToken(token)
+			if err != nil {
+				klog.Fatalf("delete token failed: %v", err)
+			}
+			if resp != nil && resp.Code != 0 {
+				klog.Fatalf("delete token response code not 0 but %d: %s", resp.Code, resp.Message)
+			}
+			//printer.PrintPermissionListInTable(flagOutput, resp)
+		},
+	}
+	subCmd.PersistentFlags().StringVarP(&token, "token", "t", "",
+		"the token which will be deleted")
+
+	return subCmd
 }

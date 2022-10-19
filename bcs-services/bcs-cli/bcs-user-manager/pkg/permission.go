@@ -15,10 +15,11 @@ package pkg
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/types"
 	"github.com/pkg/errors"
-	//permisssionModels "github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/v1http/permission"
 )
 
 const (
@@ -58,8 +59,17 @@ type GetPermissionResponse struct {
 	//Data    *permisssionModels.PermissionsResp `json:"data"`
 }
 
+// GetPermissionForm request form
+type GetPermissionForm struct {
+	UserName     string `json:"user_name" validate:"required"`
+	ResourceType string `json:"resource_type" validate:"required"`
+}
+
 // GetPermission request get permission from bcs-user-manager
 func (c *UserManagerClient) GetPermission(reqBody string) (*GetPermissionResponse, error) {
+	var bp GetPermissionForm
+	err := json.Unmarshal([]byte(reqBody), &bp)
+	fmt.Printf("username = %s,resourceType = %s\n", bp.UserName, bp.ResourceType)
 	bs, err := c.do(getPermissionUrl, http.MethodGet, nil, []byte(reqBody))
 	if err != nil {
 		return nil, errors.Wrapf(err, "get permission with '%s' failed", reqBody)
@@ -81,7 +91,16 @@ type RevokePermissionResponse struct {
 
 // RevokePermission request revoke permission from bcs-user-manager
 func (c *UserManagerClient) RevokePermission(reqBody string) (*RevokePermissionResponse, error) {
-	bs, err := c.do(revokePermissionUrl, http.MethodDelete, nil, []byte(reqBody))
+	fmt.Println("enter func RevokePermission ")
+	var bp types.BcsPermission
+	err := json.Unmarshal([]byte(reqBody), &bp)
+
+	marshal, err := json.Marshal(bp)
+	fmt.Println(string(marshal))
+	if err != nil {
+		return nil, errors.Wrapf(err, "err flag permissions, revoke permission with '%s' failed", reqBody)
+	}
+	bs, err := c.do(revokePermissionUrl, http.MethodDelete, nil, bp)
 	if err != nil {
 		return nil, errors.Wrapf(err, "revoke permission with '%s' failed", reqBody)
 	}

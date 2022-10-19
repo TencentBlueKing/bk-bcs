@@ -1,0 +1,4 @@
+config:
+  apiserver: http://localhost:8000
+  bcs_token: wwww
+  operator: ttt

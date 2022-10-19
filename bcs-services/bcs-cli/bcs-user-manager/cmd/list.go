@@ -14,15 +14,43 @@
 package cmd
 
 import (
+	"context"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-user-manager/pkg"
 	"github.com/spf13/cobra"
+	"k8s.io/klog"
 )
 
 func newListCmd() *cobra.Command {
 	listCmd := &cobra.Command{
-		Use:   "delete",
-		Short: "delete resource from bcs-user-manager",
+		Use:   "list",
+		Short: "list resource from bcs-user-manager",
 		Long:  "",
 	}
-	//listCmd.AddCommand(createClusterCmd())
+	listCmd.AddCommand(listCredentialsCmd())
 	return listCmd
+}
+
+func listCredentialsCmd() *cobra.Command {
+	subCmd := &cobra.Command{
+		Use:     "credentials",
+		Aliases: []string{"c"},
+		Short:   "list credentials",
+		Long:    "list all cluster credentials",
+		Run: func(cmd *cobra.Command, args []string) {
+			cobra.OnInitialize(ensureConfig)
+			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
+			client := pkg.NewClientWithConfiguration(ctx)
+			resp, err := client.ListCredentials()
+			if err != nil {
+				klog.Fatalf("get credential according cluster ID failed: %v", err)
+			}
+			if resp != nil && resp.Code != 0 {
+				klog.Fatalf("get credential according cluster ID response code not 0 but %d: %s", resp.Code, resp.Message)
+			}
+			//printer.PrintAdminUserListInTable(flagOutput, resp)
+		},
+	}
+
+	return subCmd
 }

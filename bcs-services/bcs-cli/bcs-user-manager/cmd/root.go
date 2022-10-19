@@ -25,7 +25,7 @@ import (
 )
 
 const (
-	defaultCfgFile = "/etc/bcs/bcs-user-manager.yaml"
+	defaultCfgFile = "./etc/bcs/bcs-user-manager.yaml"
 )
 
 var (
@@ -34,6 +34,7 @@ var (
 )
 
 func ensureConfig() {
+	fmt.Println("test")
 	if cfgFile == "" {
 		cfgFile = defaultCfgFile
 	}
@@ -47,6 +48,7 @@ func ensureConfig() {
 
 func init() {
 	log.SetFlags(0)
+	cobra.OnInitialize(ensureConfig)
 }
 
 // NewRootCommand returns the rootCmd instance
