@@ -14,6 +14,8 @@
 package cmd
 
 import (
+	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-common/common/version"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"k8s.io/klog"
@@ -58,6 +60,13 @@ func ensureConfig() {
 func init() {
 	log.SetFlags(0)
 	cobra.OnInitialize(ensureConfig)
+	rootCmd.AddCommand(&cobra.Command{
+		Use:   "version",
+		Short: "print the version detail info",
+		Run: func(cmd *cobra.Command, args []string) {
+			fmt.Println(version.GetVersion())
+		},
+	})
 	rootCmd.AddCommand(newListCmd())
 	rootCmd.AddCommand(newUpdateCmd())
 	rootCmd.PersistentFlags().StringVarP(

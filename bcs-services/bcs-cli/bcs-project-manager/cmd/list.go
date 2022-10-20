@@ -26,7 +26,7 @@ import (
 func newListCmd() *cobra.Command {
 	listCmd := &cobra.Command{
 		Use:   "list",
-		Short: "",
+		Short: "list infos from bcs-project-manager",
 		Long:  "list infos from bcs-project-manager",
 	}
 	listCmd.AddCommand(listProject())

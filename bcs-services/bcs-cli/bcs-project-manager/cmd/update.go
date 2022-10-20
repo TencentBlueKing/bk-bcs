@@ -29,8 +29,8 @@ import (
 func newUpdateCmd() *cobra.Command {
 	editCmd := &cobra.Command{
 		Use:   "edit",
-		Short: "",
-		Long:  "edit project",
+		Short: "edit project from bcs-project-manager",
+		Long:  "edit project from bcs-project-manager",
 	}
 	editCmd.AddCommand(updateProject())
 	return editCmd
