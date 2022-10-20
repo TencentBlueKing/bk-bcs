@@ -112,19 +112,25 @@ func (c *WebConsoleManager) Init() error {
 		logger.Infof("dualStackListener with ipv6: %s", ipv6Addr)
 	}
 
+	microService.Init(
+		micro.Server(mhttp.NewServer(mhttp.Listener(dualStackListener))),
+		micro.AfterStop(func() error {
+			// 会让 websocket 发送 EndOfTransmission, 不能保证一定发送成功
+			logger.Info("receive interput, gracefully shutdown")
+			<-c.ctx.Done()
+			return nil
+		}),
+	)
+
+	// 服务注册需要单独处理
 	if etcdRegistry != nil {
 		microService.Init(
+			micro.Name(service),
+			micro.Version(versionTag),
 			micro.RegisterTTL(time.Second*30),
 			micro.RegisterInterval(time.Second*15),
 			micro.Registry(etcdRegistry),
 			micro.Metadata(metadata),
-			micro.Server(mhttp.NewServer(mhttp.Listener(dualStackListener))),
-			micro.AfterStop(func() error {
-				// 会让 websocket 发送 EndOfTransmission, 不能保证一定发送成功
-				logger.Info("receive interput, gracefully shutdown")
-				<-c.ctx.Done()
-				return nil
-			}),
 		)
 	}
 
