@@ -44,27 +44,15 @@ type GetTokenByUserAndClusterIDResponse struct {
 	Data    *ExtraTokenResponse `json:"data"`
 }
 
-// ExtraTokenRequest is the request of extra token
-type ExtraTokenRequest struct {
-	UserName   string `json:"username"`
-	ClusterId  string `json:"cluster_id"`
-	BusinessId string `json:"business_id"`
-}
-
 // GetTokenByUserAndClusterID request get token by user and cluster id from bcs-user-manager
-func (c *UserManagerClient) GetTokenByUserAndClusterID(reqBody string) (*GetAdminUserResponse, error) {
-	request := ExtraTokenRequest{}
-	err := json.Unmarshal([]byte(reqBody), &request)
-	if err != nil {
-		return nil, errors.Wrapf(err, "err request json,get token by user and clusterID with '%s' failed", reqBody)
-	}
+func (c *UserManagerClient) GetTokenByUserAndClusterID(userName, clusterId, businessId string) (*GetAdminUserResponse, error) {
 	queryURL := make(map[string]string)
-	queryURL["username"] = request.UserName
-	queryURL["cluster_id"] = request.ClusterId
-	queryURL["business_id"] = request.BusinessId
+	queryURL["username"] = userName
+	queryURL["cluster_id"] = clusterId
+	queryURL["business_id"] = businessId
 	bs, err := c.do(getTokenByUserAndClusterIDUrl, http.MethodGet, queryURL, nil)
 	if err != nil {
-		return nil, errors.Wrapf(err, "get token by user and clusterID  with '%s' failed", reqBody)
+		return nil, errors.Wrapf(err, "get token by userName = %s and clusterID = %s and businessId=%s, failed", userName, clusterId, businessId)
 	}
 	resp := new(GetAdminUserResponse)
 	if err := json.Unmarshal(bs, resp); err != nil {

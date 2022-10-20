@@ -24,7 +24,7 @@ import (
 func newDeleteCmd() *cobra.Command {
 	deleteCmd := &cobra.Command{
 		Use:   "delete",
-		Short: "delete",
+		Short: "delete resource",
 		Long:  "delete resource from bcs-user-manager",
 	}
 	deleteCmd.AddCommand(revokePermissionCmd())
@@ -35,12 +35,11 @@ func newDeleteCmd() *cobra.Command {
 func revokePermissionCmd() *cobra.Command {
 	var reqBody string
 	subCmd := &cobra.Command{
-		Use:     "permissions",
-		Example: "kubectl-bcs-manager delete ps -p '{name=yxw}'",
-		Aliases: []string{"permissions", "ps"},
-		//Short:   "revoke permissions from user manager",
-		Short: "revoke permission",
-		Long:  "revoke permissions from user manager",
+		Use:     "permission",
+		Aliases: []string{"permission", "ps"},
+		Short:   "revoke permission",
+		Long:    "revoke permissions from user manager",
+		Example: "kubectl-bcs-user-manager delete permission --permission_form '{\n  \"apiVersion\": \"\",\n  \"kind\": \"\",\n  \"metadata\": {\n    \"name\": \"\",\n    \"namespace\": \"\",\n    \"creationTimestamp\": \"0001-01-01T00:00:00Z\",\n    \"labels\": {\n      \"a\": \"a\"\n    },\n    \"annotations\": {\n      \"a\": \"a\"\n    },\n    \"clusterName\": \"\"\n  },\n  \"spec\": {\n    \"permissions\": [\n      {\n        \"user_name\": \"\",\n        \"resource_type\": \"\",\n        \"resource\": \"\",\n        \"role\": \"\"\n      }\n    ]\n  }\n}' ",
 		Run: func(cmd *cobra.Command, args []string) {
 			cobra.OnInitialize(ensureConfig)
 			ctx, cancel := context.WithCancel(context.Background())
@@ -56,7 +55,7 @@ func revokePermissionCmd() *cobra.Command {
 			printer.PrintPermissionListInTable(flagOutput, resp)
 		},
 	}
-	subCmd.PersistentFlags().StringVarP(&reqBody, "permissions", "p", "",
+	subCmd.PersistentFlags().StringVarP(&reqBody, "permission_form", "f", "",
 		"the permissions which will be revoked")
 
 	return subCmd
@@ -66,12 +65,12 @@ func deleteTokenCmd() *cobra.Command {
 	var token string
 	subCmd := &cobra.Command{
 		Use:     "token",
-		Example: "kubectl-bcs-manager delete token -t  [token to be deleted]",
+		Example: "kubectl-bcs-manager delete token -t  [token]",
 		Aliases: []string{},
 		Short:   "delete token",
 		Long:    "delete token from user manager",
 		Run: func(cmd *cobra.Command, args []string) {
-			//	cobra.OnInitialize(ensureConfig)
+			cobra.OnInitialize(ensureConfig)
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
 			client := pkg.NewClientWithConfiguration(ctx)

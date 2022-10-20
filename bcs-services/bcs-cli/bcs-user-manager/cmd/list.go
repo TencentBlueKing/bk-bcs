@@ -23,10 +23,11 @@ import (
 func newListCmd() *cobra.Command {
 	listCmd := &cobra.Command{
 		Use:   "list",
-		Short: "list resource from bcs-user-manager",
-		Long:  "",
+		Short: "list resource",
+		Long:  "list resource from bcs-user-manager",
 	}
 	listCmd.AddCommand(listCredentialsCmd())
+	listCmd.AddCommand(listTkeCidrCmd())
 	return listCmd
 }
 
@@ -47,6 +48,31 @@ func listCredentialsCmd() *cobra.Command {
 			}
 			if resp != nil && resp.Code != 0 {
 				klog.Fatalf("get credential according cluster ID response code not 0 but %d: %s", resp.Code, resp.Message)
+			}
+			//printer.PrintAdminUserListInTable(flagOutput, resp)
+		},
+	}
+
+	return subCmd
+}
+
+func listTkeCidrCmd() *cobra.Command {
+	subCmd := &cobra.Command{
+		Use:     "tkecidrs",
+		Aliases: []string{"tkecidrs"},
+		Short:   "list tke cidrs",
+		Long:    "list tke cidrs from user manager",
+		Run: func(cmd *cobra.Command, args []string) {
+			cobra.OnInitialize(ensureConfig)
+			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
+			client := pkg.NewClientWithConfiguration(ctx)
+			resp, err := client.ListTkeCidr()
+			if err != nil {
+				klog.Fatalf("list tke cidrs  failed: %v", err)
+			}
+			if resp != nil && resp.Code != 0 {
+				klog.Fatalf("list tke cidrs  response code not 0 but %d: %s", resp.Code, resp.Message)
 			}
 			//printer.PrintAdminUserListInTable(flagOutput, resp)
 		},

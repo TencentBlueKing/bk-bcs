@@ -26,8 +26,8 @@ import (
 func newGetCmd() *cobra.Command {
 	getCmd := &cobra.Command{
 		Use:   "get",
-		Short: "get infos from bcs-user-manager",
-		Long:  "",
+		Short: "get resource info",
+		Long:  "get infos from bcs-user-manager",
 	}
 	getCmd.AddCommand(getAdminUserCmd())
 	getCmd.AddCommand(getSaasUserCmd())
@@ -35,6 +35,8 @@ func newGetCmd() *cobra.Command {
 	getCmd.AddCommand(getRegisterTokenCmd())
 	getCmd.AddCommand(getCredentialsCmd())
 	getCmd.AddCommand(getPermissionCmd())
+	getCmd.AddCommand(getTokenCmd())
+	getCmd.AddCommand(getTokenByUserAndClusterIDCmd())
 	return getCmd
 }
 
@@ -45,6 +47,7 @@ func getAdminUserCmd() *cobra.Command {
 		Aliases: []string{"au"},
 		Short:   "get admin user from user manager",
 		Long:    "",
+		Example: "kubectl-bcs-user-manager get admin-user -n [username]",
 		Run: func(cmd *cobra.Command, args []string) {
 			cobra.OnInitialize(ensureConfig)
 			ctx, cancel := context.WithCancel(context.Background())
@@ -73,6 +76,7 @@ func getSaasUserCmd() *cobra.Command {
 		Aliases: []string{"su"},
 		Short:   "get saas user from user manager",
 		Long:    "",
+		Example: "kubectl-bcs-user-manager get saas-user -n [username]",
 		Run: func(cmd *cobra.Command, args []string) {
 			cobra.OnInitialize(ensureConfig)
 			ctx, cancel := context.WithCancel(context.Background())
@@ -101,6 +105,7 @@ func getPlainUserCmd() *cobra.Command {
 		Aliases: []string{"pu"},
 		Short:   "get plain user from user manager",
 		Long:    "",
+		Example: "kubectl-bcs-user-manager get plain-user -n [username]",
 		Run: func(cmd *cobra.Command, args []string) {
 			cobra.OnInitialize(ensureConfig)
 			ctx, cancel := context.WithCancel(context.Background())
@@ -129,6 +134,7 @@ func getRegisterTokenCmd() *cobra.Command {
 		Aliases: []string{"rk"},
 		Short:   "register-token",
 		Long:    "register specified cluster token from user manager",
+		Example: "kubectl-bcs-user-manager get register-token --cluster_id [cluster_id]",
 		Run: func(cmd *cobra.Command, args []string) {
 			cobra.OnInitialize(ensureConfig)
 			ctx, cancel := context.WithCancel(context.Background())
@@ -157,6 +163,7 @@ func getCredentialsCmd() *cobra.Command {
 		Aliases: []string{"c"},
 		Short:   "get credentials",
 		Long:    "get credential according cluster ID",
+		Example: "kubectl-bcs-user-manager get credentials --cluster_id [cluster_id]",
 		Run: func(cmd *cobra.Command, args []string) {
 			cobra.OnInitialize(ensureConfig)
 			ctx, cancel := context.WithCancel(context.Background())
@@ -183,8 +190,8 @@ func getPermissionCmd() *cobra.Command {
 	subCmd := &cobra.Command{
 		Use:     "permission",
 		Aliases: []string{"p"},
-		Short:   "get permission from user manager",
-		Example: "kubectl-bcs-user-manager get permission -f {\"user_name\":\"yxw\",\"resource_type\":\"a\"}",
+		Short:   "get permissions from user manager",
+		Example: "kubectl-bcs-user-manager get permission -f {\"user_name\":\"\",\"resource_type\":\"\"}",
 		Long:    "",
 		Run: func(cmd *cobra.Command, args []string) {
 			cobra.OnInitialize(ensureConfig)
@@ -193,16 +200,80 @@ func getPermissionCmd() *cobra.Command {
 			client := pkg.NewClientWithConfiguration(ctx)
 			resp, err := client.GetPermission(permissionForm)
 			if err != nil {
-				klog.Fatalf("get admin user failed: %v", err)
+				klog.Fatalf("get permissions  failed: %v", err)
 			}
 			if resp != nil && resp.Code != 0 {
-				klog.Fatalf("get admin user response code not 0 but %d: %s", resp.Code, resp.Message)
+				klog.Fatalf("get permissions  response code not 0 but %d: %s", resp.Code, resp.Message)
 			}
 			//printer.PrintAdminUserListInTable(flagOutput, resp)
 		},
 	}
 
 	subCmd.PersistentFlags().StringVarP(&permissionForm, "permission_form", "f", "",
-		"the user name that query admin user")
+		"the permission_form that query permissions")
+	return subCmd
+}
+
+func getTokenCmd() *cobra.Command {
+	var userName string
+	subCmd := &cobra.Command{
+		Use:     "token",
+		Aliases: []string{"t"},
+		Short:   "get token from user manager",
+		Example: "kubectl-bcs-user-manager get token -n [username]",
+		Long:    "",
+		Run: func(cmd *cobra.Command, args []string) {
+			cobra.OnInitialize(ensureConfig)
+			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
+			client := pkg.NewClientWithConfiguration(ctx)
+			resp, err := client.GetToken(userName)
+			if err != nil {
+				klog.Fatalf("get token  failed: %v", err)
+			}
+			if resp != nil && resp.Code != 0 {
+				klog.Fatalf("get token  response code not 0 but %d: %s", resp.Code, resp.Message)
+			}
+			//printer.PrintAdminUserListInTable(flagOutput, resp)
+		},
+	}
+
+	subCmd.PersistentFlags().StringVarP(&userName, "user_name", "n", "",
+		"the user name that query token")
+	return subCmd
+}
+
+func getTokenByUserAndClusterIDCmd() *cobra.Command {
+	var userName, clusterId, businessId string
+	subCmd := &cobra.Command{
+		Use:     "token",
+		Aliases: []string{"t"},
+		Args:    cobra.ExactArgs(3),
+		Short:   "get token from user manager",
+		Example: "kubectl-bcs-user-manager get token -n [user_name] -c [cluster_id] -b [business_id]",
+		Long:    "",
+		Run: func(cmd *cobra.Command, args []string) {
+			cobra.OnInitialize(ensureConfig)
+			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
+			client := pkg.NewClientWithConfiguration(ctx)
+			resp, err := client.GetTokenByUserAndClusterID(userName, clusterId, businessId)
+			if err != nil {
+				klog.Fatalf("get token  failed: %v", err)
+			}
+			if resp != nil && resp.Code != 0 {
+				klog.Fatalf("get token  response code not 0 but %d: %s", resp.Code, resp.Message)
+			}
+			//printer.PrintAdminUserListInTable(flagOutput, resp)
+		},
+	}
+
+	subCmd.PersistentFlags().StringVarP(&userName, "user_name", "n", "",
+		"the user name that query token")
+	subCmd.PersistentFlags().StringVarP(&clusterId, "cluster_id", "c", "",
+		"the cluster_id that query token")
+	subCmd.PersistentFlags().StringVarP(&businessId, "business_id", "b", "",
+		"the business_id that query token")
+	subCmd.MarkFlagsRequiredTogether("user_name", "cluster_id", "business_id")
 	return subCmd
 }

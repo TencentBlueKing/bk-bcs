@@ -15,7 +15,6 @@ package pkg
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/types"
@@ -40,9 +39,13 @@ type GrantPermissionResponse struct {
 
 // GrantPermission request grant permission from bcs-user-manager
 func (c *UserManagerClient) GrantPermission(reqBody string) (*GrantPermissionResponse, error) {
-	bs, err := c.do(grantPermissionUrl, http.MethodPost, nil, []byte(reqBody))
+	reqForm := new(types.BcsPermission)
+	if err := json.Unmarshal([]byte(reqBody), reqForm); err != nil {
+		return nil, errors.Wrapf(err, "form json unmarshal failed with '%s'", reqBody)
+	}
+	bs, err := c.do(grantPermissionUrl, http.MethodPost, nil, reqForm)
 	if err != nil {
-		return nil, errors.Wrapf(err, "grant permission with '%s' failed", reqBody)
+		return nil, errors.Wrapf(err, "grant permission with '%s' failed", reqForm)
 	}
 	resp := new(GrantPermissionResponse)
 	if err := json.Unmarshal(bs, resp); err != nil {
@@ -53,10 +56,17 @@ func (c *UserManagerClient) GrantPermission(reqBody string) (*GrantPermissionRes
 
 //GetPermissionResponse defines the response of get permission
 type GetPermissionResponse struct {
-	Result  bool   `json:"result"`
-	Code    int    `json:"code"`
-	Message string `json:"message"`
-	//Data    *permisssionModels.PermissionsResp `json:"data"`
+	Result  bool             `json:"result"`
+	Code    int              `json:"code"`
+	Message string           `json:"message"`
+	Data    *PermissionsResp `json:"data"`
+}
+
+// PermissionsResp query response for
+type PermissionsResp struct {
+	ResourceType string `json:"resource_type"`
+	Resource     string `json:"resource"`
+	Role         string `json:"role"`
 }
 
 // GetPermissionForm request form
@@ -67,12 +77,13 @@ type GetPermissionForm struct {
 
 // GetPermission request get permission from bcs-user-manager
 func (c *UserManagerClient) GetPermission(reqBody string) (*GetPermissionResponse, error) {
-	var bp GetPermissionForm
-	err := json.Unmarshal([]byte(reqBody), &bp)
-	fmt.Printf("username = %s,resourceType = %s\n", bp.UserName, bp.ResourceType)
-	bs, err := c.do(getPermissionUrl, http.MethodGet, nil, []byte(reqBody))
+	reqForm := new(GetPermissionForm)
+	if err := json.Unmarshal([]byte(reqBody), reqForm); err != nil {
+		return nil, errors.Wrapf(err, "get permission form json unmarshal failed with '%s'", reqBody)
+	}
+	bs, err := c.do(getPermissionUrl, http.MethodGet, nil, reqForm)
 	if err != nil {
-		return nil, errors.Wrapf(err, "get permission with '%s' failed", reqBody)
+		return nil, errors.Wrapf(err, "get permission with '%s' failed", reqForm)
 	}
 	resp := new(GetPermissionResponse)
 	if err := json.Unmarshal(bs, resp); err != nil {
@@ -83,26 +94,21 @@ func (c *UserManagerClient) GetPermission(reqBody string) (*GetPermissionRespons
 
 // RevokePermissionResponse defines the response of revoke permission
 type RevokePermissionResponse struct {
-	Result  bool   `json:"result"`
-	Code    int    `json:"code"`
-	Message string `json:"message"`
-	//Data    *permisssionModels.PermissionsResp `json:"data"`
+	Result  bool             `json:"result"`
+	Code    int              `json:"code"`
+	Message string           `json:"message"`
+	Data    *PermissionsResp `json:"data"`
 }
 
 // RevokePermission request revoke permission from bcs-user-manager
 func (c *UserManagerClient) RevokePermission(reqBody string) (*RevokePermissionResponse, error) {
-	fmt.Println("enter func RevokePermission ")
-	var bp types.BcsPermission
-	err := json.Unmarshal([]byte(reqBody), &bp)
-
-	marshal, err := json.Marshal(bp)
-	fmt.Println(string(marshal))
-	if err != nil {
-		return nil, errors.Wrapf(err, "err flag permissions, revoke permission with '%s' failed", reqBody)
+	reqForm := new(types.BcsPermission)
+	if err := json.Unmarshal([]byte(reqBody), reqForm); err != nil {
+		return nil, errors.Wrapf(err, "revoke permission form json unmarshal failed with '%s'", reqBody)
 	}
-	bs, err := c.do(revokePermissionUrl, http.MethodDelete, nil, bp)
+	bs, err := c.do(revokePermissionUrl, http.MethodDelete, nil, reqForm)
 	if err != nil {
-		return nil, errors.Wrapf(err, "revoke permission with '%s' failed", reqBody)
+		return nil, errors.Wrapf(err, "revoke permission with '%s' failed", reqForm)
 	}
 	resp := new(RevokePermissionResponse)
 	if err := json.Unmarshal(bs, resp); err != nil {
@@ -111,19 +117,31 @@ func (c *UserManagerClient) RevokePermission(reqBody string) (*RevokePermissionR
 	return resp, nil
 }
 
+// VerifyPermissionForm request form for permission
+type VerifyPermissionForm struct {
+	UserToken    string `json:"user_token" validate:"required"`
+	ResourceType string `json:"resource_type" validate:"required"`
+	Resource     string `json:"resource"`
+	Action       string `json:"action" validate:"required"`
+}
+
 // VerifyPermissionResponse defines the response of verify permission
 type VerifyPermissionResponse struct {
-	Result  bool   `json:"result"`
-	Code    int    `json:"code"`
-	Message string `json:"message"`
-	//Data    *permisssionModels.PermissionsResp `json:"data"`
+	Result  bool             `json:"result"`
+	Code    int              `json:"code"`
+	Message string           `json:"message"`
+	Data    *PermissionsResp `json:"data"`
 }
 
 // VerifyPermission request verify permission from bcs-user-manager
 func (c *UserManagerClient) VerifyPermission(reqBody string) (*VerifyPermissionResponse, error) {
-	bs, err := c.do(verifyPermissionUrl, http.MethodGet, nil, []byte(reqBody))
+	reqForm := new(VerifyPermissionForm)
+	if err := json.Unmarshal([]byte(reqBody), reqForm); err != nil {
+		return nil, errors.Wrapf(err, "release tke cidrs form json unmarshal failed with '%s'", reqBody)
+	}
+	bs, err := c.do(verifyPermissionUrl, http.MethodGet, nil, reqForm)
 	if err != nil {
-		return nil, errors.Wrapf(err, "verify permission with '%s' failed", reqBody)
+		return nil, errors.Wrapf(err, "verify permission with '%s' failed", reqForm)
 	}
 	resp := new(VerifyPermissionResponse)
 	if err := json.Unmarshal(bs, resp); err != nil {
@@ -132,19 +150,37 @@ func (c *UserManagerClient) VerifyPermission(reqBody string) (*VerifyPermissionR
 	return resp, nil
 }
 
+// VerifyPermissionReq for permission v2 request
+type VerifyPermissionReq struct {
+	UserToken    string `json:"user_token" validate:"required"`
+	ResourceType string `json:"resource_type" validate:"required"`
+	// clusterType mesos/k8s when ResourceType="cluster"
+	ClusterType string `json:"cluster_type"`
+	ProjectID   string `json:"project_id"`
+	ClusterID   string `json:"cluster_id"`
+	RequestURL  string `json:"request_url"`
+
+	Resource string `json:"resource"`
+	Action   string `json:"action" validate:"required"`
+}
+
 // VerifyPermissionV2Response defines the response of verify permission v2
 type VerifyPermissionV2Response struct {
-	Result  bool   `json:"result"`
-	Code    int    `json:"code"`
-	Message string `json:"message"`
-	//Data    *permisssionModels.PermissionsResp `json:"data"`
+	Result  bool             `json:"result"`
+	Code    int              `json:"code"`
+	Message string           `json:"message"`
+	Data    *PermissionsResp `json:"data"`
 }
 
 // VerifyPermissionV2 request verify permission from bcs-user-manager v2
 func (c *UserManagerClient) VerifyPermissionV2(reqBody string) (*VerifyPermissionV2Response, error) {
-	bs, err := c.do(verifyPermissionV2Url, http.MethodGet, nil, []byte(reqBody))
+	reqForm := new(VerifyPermissionReq)
+	if err := json.Unmarshal([]byte(reqBody), reqForm); err != nil {
+		return nil, errors.Wrapf(err, "release tke cidrs form json unmarshal failed with '%s'", reqBody)
+	}
+	bs, err := c.do(verifyPermissionV2Url, http.MethodGet, nil, reqForm)
 	if err != nil {
-		return nil, errors.Wrapf(err, "verify permission v2 with '%s' failed", reqBody)
+		return nil, errors.Wrapf(err, "verify permission v2 with '%s' failed", reqForm)
 	}
 	resp := new(VerifyPermissionV2Response)
 	if err := json.Unmarshal(bs, resp); err != nil {

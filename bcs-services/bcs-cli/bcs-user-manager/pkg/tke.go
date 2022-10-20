@@ -15,6 +15,7 @@ package pkg
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/pkg/errors"
 	"net/http"
 )
@@ -34,6 +35,12 @@ type TkeCidr struct {
 	Status   string `json:"status"`
 }
 
+// AddTkeCidrForm xxx
+type AddTkeCidrForm struct {
+	Vpc      string    `json:"vpc" validate:"required"`
+	TkeCidrs []TkeCidr `json:"tke_cidrs" validate:"required"`
+}
+
 // AddTkeCidrResponse is the response of AddTkeCidr
 type AddTkeCidrResponse struct {
 	Result  bool     `json:"result"`
@@ -44,9 +51,13 @@ type AddTkeCidrResponse struct {
 
 // AddTkeCidr init tke cidrs from bcs-user-manager
 func (c *UserManagerClient) AddTkeCidr(reqBody string) (*AddTkeCidrResponse, error) {
-	bs, err := c.do(addTkeCidrUrl, http.MethodPost, nil, reqBody)
+	reqForm := new(AddTkeCidrForm)
+	if err := json.Unmarshal([]byte(reqBody), reqForm); err != nil {
+		return nil, errors.Wrapf(err, "tke cidrs from json unmarshal failed with '%s'", reqBody)
+	}
+	bs, err := c.do(addTkeCidrUrl, http.MethodPost, nil, reqForm)
 	if err != nil {
-		return nil, errors.Wrapf(err, "add tke cidr with '%s' failed", reqBody)
+		return nil, errors.Wrapf(err, "add tke cidr with '%s' failed", reqForm)
 	}
 	resp := new(AddTkeCidrResponse)
 	if err := json.Unmarshal(bs, resp); err != nil {
@@ -55,16 +66,35 @@ func (c *UserManagerClient) AddTkeCidr(reqBody string) (*AddTkeCidrResponse, err
 	return resp, nil
 }
 
+// ApplyTkeCidrForm xxx
+type ApplyTkeCidrForm struct {
+	Vpc      string `json:"vpc" validate:"required"`
+	Cluster  string `json:"cluster" validate:"required"`
+	IpNumber uint   `json:"ip_number" validate:"required"`
+}
+
+// ApplyTkeCidrResult xxx
+type ApplyTkeCidrResult struct {
+	Vpc      string `json:"vpc" validate:"required"`
+	Cidr     string `json:"cidr" validate:"required"`
+	IpNumber uint   `json:"ip_number" validate:"required"`
+	Status   string `json:"status"`
+}
+
 // ApplyTkeCidrResponse is the response of ApplyTkeCidr
 type ApplyTkeCidrResponse struct {
-	Result  bool     `json:"result"`
-	Code    int      `json:"code"`
-	Message string   `json:"message"`
-	Data    *TkeCidr `json:"data"`
+	Result  bool                `json:"result"`
+	Code    int                 `json:"code"`
+	Message string              `json:"message"`
+	Data    *ApplyTkeCidrResult `json:"data"`
 }
 
 // ApplyTkeCidr  assign a cidr to client from bcs-user-manager
 func (c *UserManagerClient) ApplyTkeCidr(reqBody string) (*ApplyTkeCidrResponse, error) {
+	reqForm := new(ApplyTkeCidrForm)
+	if err := json.Unmarshal([]byte(reqBody), reqForm); err != nil {
+		return nil, errors.Wrapf(err, "form json unmarshal failed with '%s'", reqBody)
+	}
 	bs, err := c.do(applyTkeCidrUrl, http.MethodPost, nil, reqBody)
 	if err != nil {
 		return nil, errors.Wrapf(err, "apply tke cidr with '%s' failed", reqBody)
@@ -74,6 +104,13 @@ func (c *UserManagerClient) ApplyTkeCidr(reqBody string) (*ApplyTkeCidrResponse,
 		return nil, errors.Wrapf(err, "apply tke cidr unmarshal failed with response '%s'", string(bs))
 	}
 	return resp, nil
+}
+
+// ReleaseTkeCidrForm xxx
+type ReleaseTkeCidrForm struct {
+	Vpc     string `json:"vpc" validate:"required"`
+	Cidr    string `json:"cidr" validate:"required"`
+	Cluster string `json:"cluster" validate:"required"`
 }
 
 // ReleaseTkeCidrResponse is the response of ReleaseTkeCidr
@@ -86,9 +123,13 @@ type ReleaseTkeCidrResponse struct {
 
 // ReleaseTkeCidr  release a cidr to client from bcs-user-manager
 func (c *UserManagerClient) ReleaseTkeCidr(reqBody string) (*ReleaseTkeCidrResponse, error) {
-	bs, err := c.do(releaseTkeCidrUrl, http.MethodPost, nil, reqBody)
+	reqForm := new(ReleaseTkeCidrForm)
+	if err := json.Unmarshal([]byte(reqBody), reqForm); err != nil {
+		return nil, errors.Wrapf(err, "release tke cidrs form json unmarshal failed with '%s'", reqBody)
+	}
+	bs, err := c.do(releaseTkeCidrUrl, http.MethodPost, nil, reqForm)
 	if err != nil {
-		return nil, errors.Wrapf(err, "release tke cidr with '%s' failed", reqBody)
+		return nil, errors.Wrapf(err, "release tke cidr with '%s' failed", reqForm)
 	}
 	resp := new(ReleaseTkeCidrResponse)
 	if err := json.Unmarshal(bs, resp); err != nil {
@@ -114,10 +155,10 @@ type ListTkeCidrResponse struct {
 }
 
 // ListTkeCidr  list cidr count group by vpc from bcs-user-manager
-func (c *UserManagerClient) ListTkeCidr(reqBody string) (*ListTkeCidrResponse, error) {
+func (c *UserManagerClient) ListTkeCidr() (*ListTkeCidrResponse, error) {
 	bs, err := c.do(listTkeCidrUrl, http.MethodPost, nil, nil)
 	if err != nil {
-		return nil, errors.Wrapf(err, "list cidr count group by vpc with '%s' failed", reqBody)
+		return nil, errors.Wrapf(err, "list cidr count group by vpc failed")
 	}
 	resp := new(ListTkeCidrResponse)
 	if err := json.Unmarshal(bs, resp); err != nil {
@@ -136,9 +177,7 @@ type SyncTkeClusterCredentialsResponse struct {
 
 // SyncTkeClusterCredentials  sync the tke cluster credentials from tke from bcs-user-manager
 func (c *UserManagerClient) SyncTkeClusterCredentials(clusterId string) (*SyncTkeClusterCredentialsResponse, error) {
-	queryURL := make(map[string]string)
-	queryURL["cluster_id"] = clusterId
-	bs, err := c.do(syncTkeClusterCredentialsUrl, http.MethodPost, queryURL, nil)
+	bs, err := c.do(fmt.Sprintf(syncTkeClusterCredentialsUrl, clusterId), http.MethodPost, nil, nil)
 	if err != nil {
 		return nil, errors.Wrapf(err, "sync the tke cluster credentials from tke with cluster_id = '%s' failed", clusterId)
 	}

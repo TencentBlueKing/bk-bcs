@@ -20,25 +20,27 @@ import (
 	"k8s.io/klog"
 )
 
-func newPutCmd() *cobra.Command {
-	putCmd := &cobra.Command{
-		Use:   "put",
-		Short: "put resource from bcs-user-manager",
-		Long:  "",
+func newUpdateCmd() *cobra.Command {
+	updateCmd := &cobra.Command{
+		Use:   "update",
+		Short: "update resource,such as token..",
+		Long:  "update resource from bcs-user-manager",
 	}
-	putCmd.AddCommand(refreshSaasTokenCmd())
-	putCmd.AddCommand(refreshPlainTokenCmd())
-	putCmd.AddCommand(UpdateCredentialsCmd())
-	return putCmd
+	updateCmd.AddCommand(refreshSaasTokenCmd())
+	updateCmd.AddCommand(refreshPlainTokenCmd())
+	updateCmd.AddCommand(UpdateCredentialsCmd())
+	updateCmd.AddCommand(updateTokenCmd())
+	return updateCmd
 }
 
 func refreshSaasTokenCmd() *cobra.Command {
 	var userName string
 	subCmd := &cobra.Command{
-		Use:     "saas-user",
-		Aliases: []string{"au"},
-		Short:   "get saas user from user manager",
-		Long:    "",
+		Use:     "saas-token",
+		Aliases: []string{"st"},
+		Short:   "refresh saas token",
+		Long:    "refresh saas token from user manager",
+		Example: "kubectl-bcs-user-manager update saas-token -n [username]",
 		Run: func(cmd *cobra.Command, args []string) {
 			cobra.OnInitialize(ensureConfig)
 			ctx, cancel := context.WithCancel(context.Background())
@@ -46,27 +48,28 @@ func refreshSaasTokenCmd() *cobra.Command {
 			client := pkg.NewClientWithConfiguration(ctx)
 			resp, err := client.RefreshSaasToken(userName)
 			if err != nil {
-				klog.Fatalf("get saas user failed: %v", err)
+				klog.Fatalf("refresh saas token failed: %v", err)
 			}
 			if resp != nil && resp.Code != 0 {
-				klog.Fatalf("get saas user response code not 0 but %d: %s", resp.Code, resp.Message)
+				klog.Fatalf("refresh saas token response code not 0 but %d: %s", resp.Code, resp.Message)
 			}
 			//printer.PrintSaasUserListInTable(flagOutput, resp)
 		},
 	}
 
 	subCmd.PersistentFlags().StringVarP(&userName, "user_name", "n", "",
-		"the user name that refresh user token for a plain user")
+		"the user name that refresh saas user token for a plain user")
 	return subCmd
 }
 
 func refreshPlainTokenCmd() *cobra.Command {
 	var userName, expireTime string
 	subCmd := &cobra.Command{
-		Use:     "saas-user",
-		Aliases: []string{"au"},
-		Short:   "get saas user from user manager",
-		Long:    "",
+		Use:     "plain-token",
+		Aliases: []string{"pt"},
+		Short:   "refresh plain-token",
+		Long:    "refresh plain user token from user manager",
+		Example: "kubectl-bcs-user-manager update saas-token -n [user_name] -e [expire_time]",
 		Run: func(cmd *cobra.Command, args []string) {
 			cobra.OnInitialize(ensureConfig)
 			ctx, cancel := context.WithCancel(context.Background())
@@ -74,10 +77,10 @@ func refreshPlainTokenCmd() *cobra.Command {
 			client := pkg.NewClientWithConfiguration(ctx)
 			resp, err := client.RefreshPlainToken(userName, expireTime)
 			if err != nil {
-				klog.Fatalf("get saas user failed: %v", err)
+				klog.Fatalf("refresh plain user token failed: %v", err)
 			}
 			if resp != nil && resp.Code != 0 {
-				klog.Fatalf("get saas user response code not 0 but %d: %s", resp.Code, resp.Message)
+				klog.Fatalf("refresh plain user token response code not 0 but %d: %s", resp.Code, resp.Message)
 			}
 			//printer.PrintSaasUserListInTable(flagOutput, resp)
 		},
@@ -92,18 +95,19 @@ func refreshPlainTokenCmd() *cobra.Command {
 }
 
 func UpdateCredentialsCmd() *cobra.Command {
-	var clusterId string
+	var clusterId, credentialsForm string
 	subCmd := &cobra.Command{
 		Use:     "credentials",
 		Aliases: []string{"c"},
 		Short:   "update credentials",
 		Long:    "update cluster credentials according cluster ID",
+		Example: "kubectl-bcs-user-manager update credentials --cluster_id [cluster_id] --credentials_form ' {\"register_token\":\"\",\"server_addresses\":\"\",\"cacert_data\":\"\",\"user_token\":\"\"}' ",
 		Run: func(cmd *cobra.Command, args []string) {
 			cobra.OnInitialize(ensureConfig)
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
 			client := pkg.NewClientWithConfiguration(ctx)
-			resp, err := client.GetRegisterToken(clusterId)
+			resp, err := client.UpdateCredentials(clusterId, credentialsForm)
 			if err != nil {
 				klog.Fatalf("update credential according cluster ID failed: %v", err)
 			}
@@ -116,5 +120,39 @@ func UpdateCredentialsCmd() *cobra.Command {
 
 	subCmd.PersistentFlags().StringVarP(&clusterId, "cluster_id", "c", "",
 		"the cluster_id for update cluster credential")
+	subCmd.PersistentFlags().StringVarP(&credentialsForm, "credentials_form", "f", "",
+		"the credentials form for update cluster credential")
+	return subCmd
+}
+
+func updateTokenCmd() *cobra.Command {
+	var token, tokenForm string
+	subCmd := &cobra.Command{
+		Use:     "token",
+		Example: "kubectl-bcs-manager update token --token [token] --form '{\"expiration\":}' ",
+		Aliases: []string{},
+		Args:    cobra.ExactArgs(2),
+		Short:   "update token",
+		Long:    "update token from user manager",
+		Run: func(cmd *cobra.Command, args []string) {
+			//	cobra.OnInitialize(ensureConfig)
+			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
+			client := pkg.NewClientWithConfiguration(ctx)
+			resp, err := client.UpdateToken(token, tokenForm)
+			if err != nil {
+				klog.Fatalf("update token failed: %v", err)
+			}
+			if resp != nil && resp.Code != 0 {
+				klog.Fatalf("update token response code not 0 but %d: %s", resp.Code, resp.Message)
+			}
+			//printer.PrintPermissionListInTable(flagOutput, resp)
+		},
+	}
+	subCmd.PersistentFlags().StringVarP(&token, "token", "t", "",
+		"the cluster_id to update token")
+	subCmd.PersistentFlags().StringVarP(&tokenForm, "form", "f", "",
+		"the form used to update token")
+	subCmd.MarkFlagsRequiredTogether("token", "form")
 	return subCmd
 }

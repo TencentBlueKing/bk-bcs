@@ -32,6 +32,14 @@ const (
 	listCredentialsUrl     = "/v1/clusters/credentials"
 )
 
+// CreateClusterForm request form for create cluster
+type CreateClusterForm struct {
+	ClusterID        string `json:"cluster_id" validate:"required"`
+	ClusterType      string `json:"cluster_type" validate:"required"`
+	TkeClusterID     string `json:"tke_cluster_id"`
+	TkeClusterRegion string `json:"tke_cluster_region"`
+}
+
 // CreateClusterResponse defines the response of create cluster
 type CreateClusterResponse struct {
 	Result  bool                          `json:"result"`
@@ -42,6 +50,10 @@ type CreateClusterResponse struct {
 
 // CreateCluster request create cluster from bcs-user-manager
 func (c *UserManagerClient) CreateCluster(clusterBody string) (*CreateClusterResponse, error) {
+	reqForm := new(CreateClusterForm)
+	if err := json.Unmarshal([]byte(clusterBody), reqForm); err != nil {
+		return nil, errors.Wrapf(err, "form json unmarshal failed with '%s'", reqForm)
+	}
 	bs, err := c.do(createClusterUrl, http.MethodPost, nil, []byte(clusterBody))
 	if err != nil {
 		return nil, errors.Wrapf(err, "create cluster with '%s' failed", clusterBody)
@@ -95,6 +107,14 @@ func (c *UserManagerClient) GetRegisterToken(clusterId string) (*GetRegisterToke
 	return resp, nil
 }
 
+// UpdateCredentialsForm update form for credential
+type UpdateCredentialsForm struct {
+	RegisterToken   string `json:"register_token" validate:"required"`
+	ServerAddresses string `json:"server_addresses" validate:"required,apiserver_addresses"`
+	CaCertData      string `json:"cacert_data" validate:"required"`
+	UserToken       string `json:"user_token" validate:"required"`
+}
+
 // UpdateCredentialsResponse defines the response of update cluster credentials
 type UpdateCredentialsResponse struct {
 	Result  bool                                    `json:"result"`
@@ -104,10 +124,14 @@ type UpdateCredentialsResponse struct {
 }
 
 // UpdateCredentials request update cluster credentials  from bcs-user-manager
-func (c *UserManagerClient) UpdateCredentials(clusterId, credential string) (*UpdateCredentialsResponse, error) {
-	bs, err := c.do(fmt.Sprintf(updateCredentialsUrl, clusterId), http.MethodPut, nil, []byte(credential))
+func (c *UserManagerClient) UpdateCredentials(clusterId, credentialsForm string) (*UpdateCredentialsResponse, error) {
+	reqForm := new(UpdateCredentialsForm)
+	if err := json.Unmarshal([]byte(credentialsForm), reqForm); err != nil {
+		return nil, errors.Wrapf(err, "credentials form json unmarshal failed with '%s'", reqForm)
+	}
+	bs, err := c.do(fmt.Sprintf(updateCredentialsUrl, clusterId), http.MethodPut, nil, reqForm)
 	if err != nil {
-		return nil, errors.Wrapf(err, "update cluster credentials with '%s' failed", clusterId)
+		return nil, errors.Wrapf(err, "update cluster credentials with '%s' failed", reqForm)
 	}
 	resp := new(UpdateCredentialsResponse)
 	if err := json.Unmarshal(bs, resp); err != nil {

@@ -24,18 +24,22 @@ import (
 )
 
 func newCreateCmd() *cobra.Command {
-	listCmd := &cobra.Command{
+	createCmd := &cobra.Command{
 		Use:   "create",
-		Short: "create",
+		Short: "create resource",
 		Long:  "create resource from bcs-user-manager",
 	}
-	listCmd.AddCommand(createClusterCmd())
-	listCmd.AddCommand(createSaasUserCmd())
-	listCmd.AddCommand(createAdminUserCmd())
-	listCmd.AddCommand(createPlainUserCmd())
-	listCmd.AddCommand(createRegisterTokenCmd())
-	listCmd.AddCommand(grantPermissionCmd())
-	return listCmd
+	createCmd.AddCommand(createClusterCmd())
+	createCmd.AddCommand(createSaasUserCmd())
+	createCmd.AddCommand(createAdminUserCmd())
+	createCmd.AddCommand(createPlainUserCmd())
+	createCmd.AddCommand(createRegisterTokenCmd())
+	createCmd.AddCommand(grantPermissionCmd())
+	createCmd.AddCommand(createTokenCmd())
+	createCmd.AddCommand(createTempTokenCmd())
+	createCmd.AddCommand(createClientTokenCmd())
+	createCmd.AddCommand(addTkeCidrCmd())
+	return createCmd
 }
 
 func createAdminUserCmd() *cobra.Command {
@@ -43,8 +47,8 @@ func createAdminUserCmd() *cobra.Command {
 	subCmd := &cobra.Command{
 		Use:     "admin-user",
 		Aliases: []string{"au"},
-		Short:   "create admin user from user manager",
-		Long:    "",
+		Short:   "create admin user ",
+		Long:    "create admin user from user manager",
 		Run: func(cmd *cobra.Command, args []string) {
 			cobra.OnInitialize(ensureConfig)
 			ctx, cancel := context.WithCancel(context.Background())
@@ -57,7 +61,7 @@ func createAdminUserCmd() *cobra.Command {
 			if resp != nil && resp.Code != 0 {
 				klog.Fatalf("create admin user response code not 0 but %d: %s", resp.Code, resp.Message)
 			}
-			//printer.PrintAdminUserListInTable(flagOutput, resp)
+			printer.PrintCreateAdminUserCmdResult(flagOutput, resp)
 		},
 	}
 
@@ -129,6 +133,7 @@ func createClusterCmd() *cobra.Command {
 		Aliases: []string{"c"},
 		Short:   "create cluster from user manager",
 		Long:    "",
+		Example: "kubectl-bcs-user-manager create cluster --cluster-body '{\"cluster_id\":\"\",\"cluster_type\":\"\", \"tke_cluster_id\":\"\",\"tke_cluster_region\":\"\"}' ",
 		Run: func(cmd *cobra.Command, args []string) {
 			cobra.OnInitialize(ensureConfig)
 			ctx, cancel := context.WithCancel(context.Background())
@@ -157,6 +162,7 @@ func createRegisterTokenCmd() *cobra.Command {
 		Aliases: []string{"rk"},
 		Short:   "register-token",
 		Long:    "register specified cluster token from user manager",
+		Example: "kubectl-bcs-user-manager create register-token --cluster_id [string]",
 		Run: func(cmd *cobra.Command, args []string) {
 			cobra.OnInitialize(ensureConfig)
 			ctx, cancel := context.WithCancel(context.Background())
@@ -174,36 +180,150 @@ func createRegisterTokenCmd() *cobra.Command {
 	}
 
 	subCmd.PersistentFlags().StringVarP(&clusterId, "cluster_id", "c", "",
-		"the id which cluser will register token ")
+		"the id which cluster will register token ")
 	return subCmd
 }
 
 func grantPermissionCmd() *cobra.Command {
 	var reqBody string
 	subCmd := &cobra.Command{
-		Use:     "permissions",
-		Example: "kubectl-bcs-manager create ps -p '{name=yxw}'",
-		Aliases: []string{"permissions", "ps"},
-		//Short:   "revoke permissions from user manager",
-		Short: "revoke permission",
-		Long:  "revoke permissions from user manager",
+		Use:     "permission",
+		Aliases: []string{"permission", "ps"},
+		Short:   "grant permission",
+		Long:    "grant permissions from user manager",
+		Example: "kubectl-bcs-user-manager create permission --permission_form '{\n  \"apiVersion\": \"\",\n  \"kind\": \"\",\n  \"metadata\": {\n    \"name\": \"\",\n    \"namespace\": \"\",\n    \"creationTimestamp\": \"0001-01-01T00:00:00Z\",\n    \"labels\": {\n      \"a\": \"a\"\n    },\n    \"annotations\": {\n      \"a\": \"a\"\n    },\n    \"clusterName\": \"\"\n  },\n  \"spec\": {\n    \"permissions\": [\n      {\n        \"user_name\": \"\",\n        \"resource_type\": \"\",\n        \"resource\": \"\",\n        \"role\": \"\"\n      }\n    ]\n  }\n}' ",
 		Run: func(cmd *cobra.Command, args []string) {
 			cobra.OnInitialize(ensureConfig)
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
 			client := pkg.NewClientWithConfiguration(ctx)
-			resp, err := client.RevokePermission(reqBody)
+			resp, err := client.GrantPermission(reqBody)
 			if err != nil {
-				klog.Fatalf("revoke permissions failed: %v", err)
+				klog.Fatalf("grant permissions failed: %v", err)
 			}
 			if resp != nil && resp.Code != 0 {
-				klog.Fatalf("revoke permissions response code not 0 but %d: %s", resp.Code, resp.Message)
+				klog.Fatalf("grant permissions response code not 0 but %d: %s", resp.Code, resp.Message)
 			}
-			printer.PrintPermissionListInTable(flagOutput, resp)
+			//printer.PrintPermissionListInTable(flagOutput, resp)
 		},
 	}
-	subCmd.PersistentFlags().StringVarP(&reqBody, "permissions", "p", "",
-		"the permissions which will be revoked")
+	subCmd.PersistentFlags().StringVarP(&reqBody, "permission_form", "f", "",
+		"the permissions which will be granted")
+	return subCmd
+}
 
+func createTokenCmd() *cobra.Command {
+	var tokenForm string
+	subCmd := &cobra.Command{
+		Use:     "token",
+		Aliases: []string{"token", "t"},
+		Short:   "create token",
+		Long:    "create token from user manager",
+		Example: "kubectl-bcs-user-manager create token --token_form '{\"usertype\":,\"username\":\"\", \"expiration\":}' ",
+		Run: func(cmd *cobra.Command, args []string) {
+			cobra.OnInitialize(ensureConfig)
+			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
+			client := pkg.NewClientWithConfiguration(ctx)
+			resp, err := client.CreateToken(tokenForm)
+			if err != nil {
+				klog.Fatalf("create token  failed: %v", err)
+			}
+			if resp != nil && resp.Code != 0 {
+				klog.Fatalf("create token  response code not 0 but %d: %s", resp.Code, resp.Message)
+			}
+			//printer.PrintAdminUserListInTable(flagOutput, resp)
+		},
+	}
+
+	subCmd.PersistentFlags().StringVarP(&tokenForm, "token_form", "f", "",
+		"the form used to create token ")
+	return subCmd
+}
+
+func createTempTokenCmd() *cobra.Command {
+	var tokenForm string
+	subCmd := &cobra.Command{
+		Use:     "temp-token",
+		Aliases: []string{"temp-token"},
+		Short:   "create temp token",
+		Long:    "create temp token from user manager",
+		Example: "kubectl-bcs-user-manager create temp-token --token_form '{\"usertype\":,\"username\":\"\", \"expiration\":}' ",
+		Run: func(cmd *cobra.Command, args []string) {
+			cobra.OnInitialize(ensureConfig)
+			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
+			client := pkg.NewClientWithConfiguration(ctx)
+			resp, err := client.CreateTempToken(tokenForm)
+			if err != nil {
+				klog.Fatalf("create temp token  failed: %v", err)
+			}
+			if resp != nil && resp.Code != 0 {
+				klog.Fatalf("create temp token  response code not 0 but %d: %s", resp.Code, resp.Message)
+			}
+			//printer.PrintAdminUserListInTable(flagOutput, resp)
+		},
+	}
+
+	subCmd.PersistentFlags().StringVarP(&tokenForm, "token_form", "f", "",
+		"the form used to create temp token ")
+	return subCmd
+}
+
+func createClientTokenCmd() *cobra.Command {
+	var tokenForm string
+	subCmd := &cobra.Command{
+		Use:     "client-token",
+		Aliases: []string{"client-token"},
+		Short:   "create client token",
+		Long:    "create client token from user manager",
+		Example: "kubectl-bcs-user-manager create client-token --token_form '{\"clientName\":\"\",\"clientSecret\":\"\", \"expiration\":}' ",
+		Run: func(cmd *cobra.Command, args []string) {
+			cobra.OnInitialize(ensureConfig)
+			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
+			client := pkg.NewClientWithConfiguration(ctx)
+			resp, err := client.CreateClientToken(tokenForm)
+			if err != nil {
+				klog.Fatalf("create client token  failed: %v", err)
+			}
+			if resp != nil && resp.Code != 0 {
+				klog.Fatalf("create client token  response code not 0 but %d: %s", resp.Code, resp.Message)
+			}
+			//printer.PrintAdminUserListInTable(flagOutput, resp)
+		},
+	}
+
+	subCmd.PersistentFlags().StringVarP(&tokenForm, "token_form", "f", "",
+		"the form used to create token ")
+	return subCmd
+}
+
+func addTkeCidrCmd() *cobra.Command {
+	var tkeCidrForm string
+	subCmd := &cobra.Command{
+		Use:     "tkecidrs",
+		Aliases: []string{"tkecidrs"},
+		Short:   "init tke cidrs",
+		Long:    "init tke cidrs from user manager",
+		Example: "kubectl-bcs-user-manager create tkecidrs --tkecidr_form '{\n  \"vpc\": \"\",\n  \"tke_cidrs\": [\n    {\n      \"cidr\": \"\",\n      \"ip_number\": \"\",\n      \"status\": \"\"\n    }\n  ]\n}' ",
+		Run: func(cmd *cobra.Command, args []string) {
+			cobra.OnInitialize(ensureConfig)
+			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
+			client := pkg.NewClientWithConfiguration(ctx)
+			resp, err := client.AddTkeCidr(tkeCidrForm)
+			if err != nil {
+				klog.Fatalf("init tke cidrs  failed: %v", err)
+			}
+			if resp != nil && resp.Code != 0 {
+				klog.Fatalf("init tke cidrs  response code not 0 but %d: %s", resp.Code, resp.Message)
+			}
+			//printer.PrintAdminUserListInTable(flagOutput, resp)
+		},
+	}
+
+	subCmd.PersistentFlags().StringVarP(&tkeCidrForm, "tkecidr_form", "", "",
+		"the form used to init tke cidrs")
 	return subCmd
 }
