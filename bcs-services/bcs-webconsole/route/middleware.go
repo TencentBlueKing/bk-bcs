@@ -20,15 +20,14 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/components/bcs"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/sessions"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/types"
-
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/components/bcs"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/types"
 )
 
 var (
@@ -109,7 +108,6 @@ func APIAuthRequired() gin.HandlerFunc {
 		}
 
 		switch {
-		case initContextWithPortalSession(c, authCtx):
 		case initContextWithAPIGW(c, authCtx):
 		case initContextWithBCSJwt(c, authCtx):
 		case initContextWithDevEnv(c, authCtx):
@@ -276,23 +274,6 @@ func initContextWithAPIGW(c *gin.Context, authCtx *AuthContext) bool {
 	}
 
 	authCtx.BindAPIGW = token
-
-	return true
-}
-
-func initContextWithPortalSession(c *gin.Context, authCtx *AuthContext) bool {
-	// get jwt info from headers
-	sessionId := GetSessionId(c)
-	if sessionId == "" {
-		return false
-	}
-
-	podCtx, err := sessions.NewStore().OpenAPIScope().Get(c.Request.Context(), sessionId)
-	if err != nil {
-		return false
-	}
-
-	authCtx.BindSession = podCtx
 
 	return true
 }
