@@ -55,7 +55,7 @@ func (s service) RegisterRoute(router gin.IRoutes) {
 
 	// 蓝鲸API网关鉴权 & App鉴权
 	api.GET("/api/portal/sessions/:sessionId/",
-		metrics.RequestCollect("CreatePortalSession"), route.SessionRequired(), s.CreatePortalSession)
+		metrics.RequestCollect("CreatePortalSession"), s.CreatePortalSession)
 	api.POST("/api/portal/projects/:projectId/clusters/:clusterId/container/",
 		metrics.RequestCollect("CreateContainerPortalSession"), route.CredentialRequired(), s.CreateContainerPortalSession)
 	api.POST("/api/portal/projects/:projectId/clusters/:clusterId/cluster/",
