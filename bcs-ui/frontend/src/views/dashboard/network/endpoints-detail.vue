@@ -23,23 +23,52 @@
       </div>
     </div>
     <!-- 配置、标签、注解 -->
-    <bcs-tab class="mt20" :label-height="42">
+    <bcs-tab class="mt20" type="card" :label-height="42">
       <bcs-tab-panel name="config" :label="$t('配置')">
-        <p class="detail-title">Addresses</p>
-        <bk-table :data="addresses" class="mb20">
-          <bk-table-column label="IP" prop="ip" width="140"></bk-table-column>
-          <bk-table-column label="NodeName" prop="nodeName"></bk-table-column>
-          <bk-table-column label="TargetRef">
-            <template #default="{ row }">
-              <span>{{ row.targetRef ? `${row.targetRef.kind}:${row.targetRef.name}` : '--' }}</span>
+        <bcs-collapse>
+          <bcs-collapse-item
+            v-for="(item, index) in (data.subsets || [])"
+            :name="index"
+            :key="index">
+            {{ `subset ${index + 1}` }}
+            <template #content>
+              <!-- Addresses and notReadyAddresses -->
+              <p class="detail-title">Addresses</p>
+              <bk-table
+                :data="item.addresses
+                  .map(item => ({
+                    ...item,
+                    status: 'normal'
+                  }))
+                  .concat(item.notReadyAddresses)"
+                class="mb20">
+                <bk-table-column label="IP" prop="ip" width="140"></bk-table-column>
+                <bk-table-column label="NodeName" prop="nodeName"></bk-table-column>
+                <bk-table-column label="TargetRef">
+                  <template #default="{ row }">
+                    <span>{{ row.targetRef ? `${row.targetRef.kind}:${row.targetRef.name}` : '--' }}</span>
+                  </template>
+                </bk-table-column>
+                <bk-table-column label="Status">
+                  <template #default="{ row }">
+                    {{row.status === 'normal' ? $t('正常') : $t('异常')}}
+                  </template>
+                </bk-table-column>
+              </bk-table>
+              <!-- Ports -->
+              <p class="detail-title">Ports</p>
+              <bk-table :data="item.ports">
+                <bk-table-column label="Name" prop="name">
+                  <template #default="{ row }">
+                    {{row.name || '--'}}
+                  </template>
+                </bk-table-column>
+                <bk-table-column label="Protocol" prop="protocol"></bk-table-column>
+                <bk-table-column label="Port" prop="port"></bk-table-column>
+              </bk-table>
             </template>
-          </bk-table-column>
-        </bk-table>
-        <p class="detail-title">Ports</p>
-        <bk-table :data="ports">
-          <bk-table-column label="Protocol" prop="protocol"></bk-table-column>
-          <bk-table-column label="Port" prop="port"></bk-table-column>
-        </bk-table>
+          </bcs-collapse-item>
+        </bcs-collapse>
       </bcs-tab-panel>
       <bcs-tab-panel name="label" :label="$t('标签')">
         <bk-table :data="handleTransformObjToArr(data.metadata.labels)">
@@ -57,7 +86,7 @@
   </div>
 </template>
 <script lang="ts">
-import { defineComponent, watch, toRefs, ref } from '@vue/composition-api';
+import { defineComponent } from '@vue/composition-api';
 
 export default defineComponent({
   name: 'EndpointsDetail',
@@ -73,21 +102,7 @@ export default defineComponent({
       default: () => ({}),
     },
   },
-  setup(props) {
-    const { data } = toRefs(props);
-    const addresses = ref<any[]>([]);
-    const ports = ref<any[]>([]);
-
-    watch(data, () => {
-      addresses.value = [];
-      ports.value = [];
-      const subsets = data.value.subsets || [];
-      subsets.forEach((item) => {
-        addresses.value.push(...(item.addresses || []));
-        ports.value.push(...(item.ports || []));
-      });
-    }, { immediate: true, deep: true });
-
+  setup() {
     const handleTransformObjToArr = (obj) => {
       if (!obj) return [];
 
@@ -101,8 +116,6 @@ export default defineComponent({
     };
 
     return {
-      addresses,
-      ports,
       handleTransformObjToArr,
     };
   },

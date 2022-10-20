@@ -10,12 +10,7 @@
             <bk-guide></bk-guide>
         </div>
         <div class="biz-content-wrapper" style="padding: 0;" v-bkloading="{ isLoading: isInitLoading, opacity: 0.1 }">
-            <app-exception
-                v-if="exceptionCode && !isInitLoading"
-                :type="exceptionCode.code"
-                :text="exceptionCode.msg">
-            </app-exception>
-            <div v-show="!exceptionCode && !isInitLoading">
+            <div v-show="!isInitLoading">
                 <div class="biz-lock-box" v-if="updateMsg">
                     <div class="lock-wrapper warning">
                         <i class="bcs-icon bcs-icon-info-circle-shape"></i>
@@ -352,7 +347,6 @@
                 isInitLoading: true,
                 isPageLoading: false,
                 bkMessageInstance: null,
-                exceptionCode: null,
                 dataList: [],
                 dataListTmp: [],
                 curPageData: [],

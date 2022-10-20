@@ -61,10 +61,10 @@ VueRouter.prototype.replace = function push(location, onResolve, onReject) {
 Vue.use(VueRouter);
 
 const Entry = () => import(/* webpackChunkName: 'entry' */'@/views/index');
-const NotFound = () => import(/* webpackChunkName: 'none' */'@/components/exception');
+const NotFound = () => import(/* webpackChunkName: 'none' */'@/views/app/404.vue');
 const ProjectManage = () => import(/* webpackChunkName: 'projectmanage' */'@/views/project/project.vue');
 const userToken = () => import(/* webpackChunkName: 'token' */'@/views/token/token.vue');
-const Forbidden = () => import(/* webpackChunkName: 'none' */'@/components/exception/403.vue');
+const Forbidden = () => import(/* webpackChunkName: 'none' */'@/views/app/403.vue');
 
 const router = new VueRouter({
   mode: 'history',

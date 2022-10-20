@@ -84,7 +84,7 @@ export default {
     tools.forEach((tool, index) => {
       const icon = document.createElement('i');
       icon.className = el.defaultConfig[tool]?.icon;
-      icon.style.cssText = `position: absolute;right: ${(index + 1) * 20}px;top: 15px;cursor: pointer;z-index: 200;margin-right: ${index * 10}px`;
+      icon.style.cssText = `position: absolute;right: ${(index + 1) * 20}px;top: 15px;cursor: pointer;z-index: 200;margin-right: ${index * 10}px;color: #fff;`;
       el[tool] = icon;
       icon.addEventListener('click', el.defaultConfig[tool]?.handler);
       parentNode.append(icon);

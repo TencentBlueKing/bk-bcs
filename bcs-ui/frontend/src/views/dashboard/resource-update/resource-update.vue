@@ -54,14 +54,14 @@
                 class="status-wrapper" :message="editorErr.message" v-show="!!editorErr.message"></EditorStatus>
             </div>
             <div slot="main">
-              <ResourceEditor
+              <CodeEditor
                 v-model="detail"
                 :height="fullScreen ? clientHeight : height"
                 ref="editorRef"
                 key="editor"
                 v-bkloading="{ isLoading, opacity: 1, color: '#1a1a1a' }"
                 @error="handleEditorErr">
-              </ResourceEditor>
+              </CodeEditor>
             </div>
           </bcs-resize-layout>
         </div>
@@ -105,7 +105,7 @@
             :min="100"
             :max="600"
             :style="{ height: fullScreen ? '100%' : 'auto' }">
-            <ResourceEditor
+            <CodeEditor
               slot="aside"
               :value="activeExample.manifest"
               :height="fullScreen ? '100%' : exampleEditorHeight"
@@ -115,7 +115,7 @@
               key="example"
               readonly
               v-bkloading="{ isLoading: exampleLoading, opacity: 1, color: '#1a1a1a' }">
-            </ResourceEditor>
+            </CodeEditor>
             <bcs-md
               v-show="showHelp"
               slot="main"
@@ -138,7 +138,7 @@
             <span class="ml5" @click="previousDiffChange"><i class="bcs-icon bcs-icon-arrows-up"></i></span>
           </span>
         </div>
-        <ResourceEditor
+        <CodeEditor
           key="diff"
           :value="detail"
           :original="original"
@@ -150,7 +150,7 @@
           readonly
           ref="diffEditorRef"
           @diff-stat="handleDiffStatChange">
-        </ResourceEditor>
+        </CodeEditor>
         <EditorStatus
           class="status-wrapper diff"
           :message="editorErr.message" v-show="!!editorErr.message"></EditorStatus>
@@ -182,7 +182,7 @@
 <script lang="ts">
 /* eslint-disable no-unused-expressions */
 import { defineComponent, computed, toRefs, ref, onMounted, watch, onBeforeUnmount } from '@vue/composition-api';
-import ResourceEditor from './resource-editor.vue';
+import CodeEditor from '@/components/monaco-editor/new-editor.vue';
 import DashboardTopActions from '../common/dashboard-top-actions';
 import { copyText } from '@/common/util';
 import yamljs from 'js-yaml';
@@ -194,7 +194,7 @@ import SwitchButton from './switch-mode.vue';
 export default defineComponent({
   name: 'ResourceUpdate',
   components: {
-    ResourceEditor,
+    CodeEditor,
     DashboardTopActions,
     EditorStatus,
     BcsMd,

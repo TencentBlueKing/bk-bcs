@@ -41,7 +41,7 @@
 </template>
 <script lang="ts">
 import { computed, defineComponent, ref, toRefs } from '@vue/composition-api';
-import ContentHeader from '@/views/content-header.vue';
+import ContentHeader from '@/components/layout/Header.vue';
 import node from './node.vue';
 import overview from '@/views/cluster/overview.vue';
 import info from '@/views/cluster/info.vue';
@@ -84,7 +84,7 @@ export default defineComponent({
         com: 'node',
       },
       {
-        icon: 'cc-icon icon-cc-machine',
+        icon: 'bcs-icon bcs-icon-machine',
         title: $i18n.t('集群信息'),
         com: 'info',
       },

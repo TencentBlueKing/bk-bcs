@@ -26,7 +26,7 @@
 /* eslint-disable no-prototype-builtins */
 import bkKeyer from '@/components/keyer';
 import ace from '@/components/ace-editor';
-import bkFormCreater from '@/components/form-creater';
+import bkFormCreater from '@/views/helm/components/form-creater';
 
 export default {
   components: {

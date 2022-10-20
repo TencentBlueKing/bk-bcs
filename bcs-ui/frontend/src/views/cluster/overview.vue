@@ -1,12 +1,7 @@
 <template>
   <div>
     <div class="biz-cluster-overview" v-bkloading="{ isLoading: showLoading }">
-      <app-exception
-        v-if="exceptionCode && !showLoading"
-        :type="exceptionCode.code"
-        :text="exceptionCode.msg">
-      </app-exception>
-      <div v-if="!exceptionCode && !showLoading" class="biz-cluster-overview-wrapper">
+      <div v-if="!showLoading" class="biz-cluster-overview-wrapper">
         <div class="biz-cluster-tab-content">
           <div class="biz-cluster-overview-chart">
             <div class="chart-box top">
@@ -178,7 +173,6 @@ export default {
       ipTotal: '',
       bkMessageInstance: null,
       curClusterInPage: {},
-      exceptionCode: null,
       showLoading: false,
 
       cpuUsagePercent: 0,

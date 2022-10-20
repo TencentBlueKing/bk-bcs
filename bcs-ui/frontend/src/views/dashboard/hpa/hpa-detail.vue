@@ -160,6 +160,14 @@ export default defineComponent({
                 }
                 span {
                     padding: 0 15px;
+                    flex: 1;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    white-space: normal;
+                    word-break: break-all;
+                    display: -webkit-box;
+                    -webkit-line-clamp: 1;
+                    -webkit-box-orient: vertical;
                 }
             }
         }

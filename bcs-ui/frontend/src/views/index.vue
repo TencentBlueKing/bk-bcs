@@ -31,10 +31,10 @@
 <script lang="ts">
 /* eslint-disable camelcase */
 import { computed, defineComponent, onBeforeMount, ref } from '@vue/composition-api';
-import SideNav from './side-nav.vue';
-import SideTerminal from '@/components/terminal/index.vue';
-import Unregistry from '@/views/unregistry.vue';
-import ContentHeader from '@/views/content-header.vue';
+import SideNav from './app/side-nav.vue';
+import SideTerminal from '@/views/app/terminal.vue';
+import Unregistry from '@/views/app/unregistry.vue';
+import ContentHeader from '@/components/layout/Header.vue';
 import { getProjectList } from '@/api/base';
 
 export default defineComponent({

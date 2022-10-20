@@ -151,7 +151,7 @@
               :value="JSON.stringify(exampleData, null, 4)"
               width="100%"
               height="100%"
-              lang="json">
+              readonly>
             </CodeEditor>
           </div>
         </div>
@@ -190,7 +190,6 @@
           <div class="code-wrapper" v-else>
             <CodeEditor
               :value="JSON.stringify(setData, null, 4)"
-              lang="json"
               @change="handleJsonDataChange">
             </CodeEditor>
           </div>
@@ -211,9 +210,9 @@ import useVariable, { IParams, Pick } from './use-variable';
 import $i18n from '@/i18n/i18n-setup';
 import BkFormItem from 'bk-magic-vue/lib/form-item';
 import BkForm from 'bk-magic-vue/lib/form';
-import CodeEditor from '@/views/dashboard/resource-update/resource-editor.vue';
+import CodeEditor from '@/components/monaco-editor/new-editor.vue';
 import exampleData from './variable.json';
-import $store from '@/store'
+import $store from '@/store';
 
 export default defineComponent({
   name: 'VariableManager',
@@ -466,9 +465,7 @@ export default defineComponent({
         mode.value = 'form';
       }
     });
-    const isSharedCluster = computed(() => {
-      return $store.state.cluster.curCluster?.is_shared
-    })
+    const isSharedCluster = computed(() => $store.state.cluster.curCluster?.is_shared);
     async function handleSetVariable(row) {
       showSetSlider.value = true;
       currentRow.value = row;
@@ -477,12 +474,12 @@ export default defineComponent({
       if (row.scope === 'cluster') {
         data = await getClusterVariable({
           $variableID: row.id,
-          isShared: isSharedCluster.value || false
+          isShared: isSharedCluster.value || false,
         });
       } else {
         data = await getNamespaceVariable({
           $variableID: row.id,
-          isShared: isSharedCluster.value || false
+          isShared: isSharedCluster.value || false,
         });
       }
       setData.value = data.results || [];

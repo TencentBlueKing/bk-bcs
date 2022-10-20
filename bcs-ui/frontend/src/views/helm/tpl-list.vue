@@ -67,12 +67,6 @@
           </div>
         </div>
 
-        <app-exception
-          v-if="exceptionCode && !showLoading"
-          :type="exceptionCode.code"
-          :text="exceptionCode.msg">
-        </app-exception>
-
         <template>
           <svg style="display: none;">
             <title>{{$t('模板集默认图标')}}</title>
@@ -241,7 +235,7 @@
       :quick-close="false"
       :ext-cls="'biz-config-templateset-del-instance-dialog'"
       @cancel="delInstanceDialogConf.isShow = false">
-      <template slot="content" v-bkloading="{ isLoading: isDeleting }">
+      <template slot="content">
         <div class="content-inner">
           <div class="bk-form bk-form-vertical" style="margin-bottom: 20px;">
             <div class="bk-form-item">
@@ -391,7 +385,6 @@ export default {
       privateTplList: [],
       tplListCache: [],
       showLoading: false,
-      exceptionCode: null,
       searchKeyword: '',
       isSearchMode: false,
       curProjectId: '',
@@ -433,6 +426,7 @@ export default {
       },
       isTplVersionLoading: false,
       isVersionDetailLoading: false,
+      isVersionDeleting: false,
     };
   },
   computed: {

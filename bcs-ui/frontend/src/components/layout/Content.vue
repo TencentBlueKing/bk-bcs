@@ -14,7 +14,7 @@
   </div>
 </template>
 <script lang="ts">
-import BcsContentHeader from '@/views/content-header.vue';
+import BcsContentHeader from '@/components/layout/Header.vue';
 import { defineComponent } from '@vue/composition-api';
 export default defineComponent({
   name: 'LayoutContent',

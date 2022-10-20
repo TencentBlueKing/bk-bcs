@@ -4,13 +4,11 @@
 
 <script>
 import k8sLoadBalance from './loadbalance/k8s/detail';
-import globalMixin from '@/mixins/global';
 
 export default {
   components: {
     k8sLoadBalance,
   },
-  mixins: [globalMixin],
   data() {
     return {
       currentView: k8sLoadBalance,
@@ -22,7 +20,6 @@ export default {
     },
   },
   mounted() {
-    this.curProject = this.initCurProject();
     this.$store.commit('network/updateLoadBalanceList', []);
   },
 };

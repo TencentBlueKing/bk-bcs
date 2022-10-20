@@ -4,9 +4,7 @@
 @import './variable.css';
 @import './mixins/clearfix.css';
 @import './mixins/ellipsis.css';
-@import './cc-icon/style.css';
 @import './bk-patch.css';
-@import './animation.css';
 
 html,
 body {
@@ -142,12 +140,6 @@ input:-webkit-autofill, textarea:-webkit-autofill, select:-webkit-autofill {
 
 .biz-action-box {
     padding: 20px;
-}
-
-biz-actions {
-    float: right;
-    margin: 14px 20px;
-    line-height: 30px;
 }
 
 .biz-tip-box {
@@ -2561,7 +2553,7 @@ div::-webkit-scrollbar-thumb {
     left: 0;
     height: 100% !important;
     width: 100% !important;
-    z-index: 100;
+    z-index: 9999;
 }
 
 .lh20 {

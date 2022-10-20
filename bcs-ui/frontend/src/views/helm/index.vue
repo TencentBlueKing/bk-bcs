@@ -11,11 +11,6 @@
     </div>
     <div class="biz-content-wrapper biz-helm-wrapper m0 p0" v-bkloading="{ isLoading: showLoading, opacity: 0.1 }">
       <template v-if="!showLoading">
-        <app-exception
-          v-if="exceptionCode && !showLoading"
-          :type="exceptionCode.code"
-          :text="exceptionCode.msg">
-        </app-exception>
 
         <div class="biz-panel-header p20">
           <div class="left">
@@ -534,7 +529,6 @@ export default {
       appListCache: [],
       showLoading: true,
       isPageLoading: false,
-      exceptionCode: null,
       versionId: '',
       difference: '',
       versionList: [],

@@ -23,11 +23,23 @@
       </div>
       <div class="basic-info-item">
         <label>External-ip</label>
-        <span>{{ extData.externalIP.join('/') || '--' }}</span>
+        <span>{{ extData.externalIP.join(',') || '--' }}</span>
       </div>
       <div class="basic-info-item">
         <label>Port(s)</label>
         <span>{{ extData.ports.join(' ') || '--' }}</span>
+      </div>
+      <div class="basic-info-item">
+        <label>Endpoints</label>
+        <span>{{ endpoints || '--' }}</span>
+      </div>
+      <div class="basic-info-item">
+        <label>{{$t('CLB实例ID')}}</label>
+        <span>{{ extData.clbID || '--' }}</span>
+      </div>
+      <div class="basic-info-item">
+        <label>{{$t('内部子网ID')}}</label>
+        <span>{{ extData.subnetID || '--' }}</span>
       </div>
       <div class="basic-info-item">
         <label>{{ $t('创建时间') }}</label>
@@ -39,11 +51,15 @@
       </div>
     </div>
     <!-- 配置、标签、注解 -->
-    <bcs-tab class="mt20" :label-height="42">
+    <bcs-tab class="mt20" type="card" :label-height="42">
       <bcs-tab-panel name="config" :label="$t('配置')">
         <p class="detail-title">{{ $t('端口映射') }}（spec.ports）</p>
         <bk-table :data="data.spec.ports">
-          <bk-table-column label="Name" prop="name"></bk-table-column>
+          <bk-table-column label="Name" prop="name">
+            <template #default="{ row }">
+              {{row.name || '--'}}
+            </template>
+          </bk-table-column>
           <bk-table-column label="Port" prop="port"></bk-table-column>
           <bk-table-column label="Protocol" prop="protocol"></bk-table-column>
           <bk-table-column label="TargetPort" prop="targetPort"></bk-table-column>
@@ -52,6 +68,12 @@
               {{ row.nodePort || '--' }}
             </template>
           </bk-table-column>
+        </bk-table>
+      </bcs-tab-panel>
+      <bcs-tab-panel name="selector" :label="$t('选择器')">
+        <bk-table :data="handleTransformObjToArr(data.spec.selector)">
+          <bk-table-column label="Key" prop="key"></bk-table-column>
+          <bk-table-column label="Value" prop="value"></bk-table-column>
         </bk-table>
       </bcs-tab-panel>
       <bcs-tab-panel name="label" :label="$t('标签')">
@@ -70,7 +92,8 @@
   </div>
 </template>
 <script lang="ts">
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent, ref, onMounted } from '@vue/composition-api';
+import $store from '@/store';
 
 export default defineComponent({
   name: 'ServiceDetail',
@@ -86,7 +109,7 @@ export default defineComponent({
       default: () => ({}),
     },
   },
-  setup() {
+  setup(props) {
     const handleTransformObjToArr = (obj) => {
       if (!obj) return [];
 
@@ -99,7 +122,27 @@ export default defineComponent({
       }, []);
     };
 
+    const isLoading = ref(false);
+    const endpoints = ref('');
+    const handleGetEndpoints = async () => {
+      isLoading.value = true;
+      const res = await $store.dispatch('dashboard/getResourceDetail', {
+        $namespaceId: props.data.metadata.namespace,
+        $type: 'networks',
+        $category: 'endpoints',
+        $name: props.data.metadata.name,
+      });
+      endpoints.value = res.data.manifest?.metadata?.name;
+      isLoading.value = false;
+    };
+
+    onMounted(() => {
+      handleGetEndpoints();
+    });
+
     return {
+      isLoading,
+      endpoints,
       handleTransformObjToArr,
     };
   },

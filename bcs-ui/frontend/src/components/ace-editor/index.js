@@ -1,5 +1,8 @@
+/* eslint-disable @typescript-eslint/no-require-imports */
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/prefer-optional-chain */
 
-
+// 不要再引入， 不要再引入，不要再引入，统一用monaco-editor/new-editor组件
 module.exports = {
   template: '<div :style="{height: calcSize(height), width: calcSize(width)}"></div>',
   props: {

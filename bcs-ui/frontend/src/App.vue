@@ -13,16 +13,17 @@
   </div>
 </template>
 <script>
-import Navigation from '@/views/navigation.vue';
+import Navigation from '@/views/app/navigation.vue';
 import ProjectCreate from '@/views/project/project-create.vue';
-import SharedClusterTips from '@/components/shared-cluster-tips';
-import BkPaaSLogin from '@/components/login.vue';
+import SharedClusterTips from '@/views/app/shared-cluster-tips.vue';
+import BkPaaSLogin from '@/views/app/login.vue';
 import { bus } from '@/common/bus';
 import { userPermsByAction } from '@/api/base';
+import AppApplyPerm from '@/views/app/apply-perm.vue';
 
 export default {
   name: 'App',
-  components: { Navigation, ProjectCreate, BkPaaSLogin, SharedClusterTips },
+  components: { Navigation, ProjectCreate, BkPaaSLogin, SharedClusterTips, AppApplyPerm },
   data() {
     return {
       isLoading: true,
@@ -135,8 +136,8 @@ export default {
 <style lang="postcss">
     @import '@/css/reset.css';
     @import '@/css/app.css';
-    @import '@/css/animation.css';
     @import '@/fonts/style.css';
+    @import '@/css/main.css';
 
     .app-container {
         min-width: 1280px;

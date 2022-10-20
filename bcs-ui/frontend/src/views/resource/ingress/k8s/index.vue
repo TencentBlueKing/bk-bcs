@@ -370,7 +370,6 @@
                             <bk-selector
                               style="width: 180px;"
                               :placeholder="$t('Service名称')"
-                              :disabled="isLoadBalanceEdited"
                               :setting-key="'_name'"
                               :display-key="'_name'"
                               :selected.sync="pathRule.backend.serviceName"
@@ -382,7 +381,6 @@
                             <bk-selector
                               style="width: 180px;"
                               :placeholder="$t('端口')"
-                              :disabled="isLoadBalanceEdited"
                               :setting-key="'_id'"
                               :display-key="'_name'"
                               :selected.sync="pathRule.backend.servicePort"

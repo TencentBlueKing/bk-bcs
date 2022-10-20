@@ -10,13 +10,8 @@
       <bk-guide></bk-guide>
     </div>
     <div class="biz-content-wrapper p0" v-bkloading="{ isLoading: isInitLoading, opacity: 0.1 }">
-      <app-exception
-        v-if="exceptionCode && !isInitLoading"
-        :type="exceptionCode.code"
-        :text="exceptionCode.msg">
-      </app-exception>
 
-      <template v-if="!exceptionCode && !isInitLoading">
+      <template v-if="!isInitLoading">
         <div class="biz-panel-header">
           <div class="left">
             <bk-button @click.stop.prevent="removeSecrets" v-if="curPageData.length">
@@ -293,16 +288,13 @@
 
 <script>
 import { catchErrorHandler, formatDate } from '@/common/util';
-import globalMixin from '@/mixins/global';
 
 export default {
-  mixins: [globalMixin],
   data() {
     return {
       formatDate,
       isInitLoading: true,
       isPageLoading: false,
-      exceptionCode: null,
       searchKeyword: '',
       searchScope: '',
       curSecret: null,

@@ -23,9 +23,22 @@
     </div>
     <bcs-tab class="mt20" type="card" :label-height="42">
       <bcs-tab-panel name="data" label="Data">
-        <bk-table :data="handleTransformObjToArr(data.data)">
+        <bk-table
+          :data="handleTransformObjToArr(data.data)"
+          @row-mouse-enter="handleMouseEnter"
+          @row-mouse-leave="handleMouseLeave">
           <bk-table-column label="Key" prop="key"></bk-table-column>
           <bk-table-column label="Value" prop="value"></bk-table-column>
+          <bk-table-column label="" width="40">
+            <template #default="{ row, $index }">
+              <span
+                v-bk-tooltips.top="$t('复制')"
+                v-show="$index === ativeIndex"
+                @click="handleCopyContent(row.value)">
+                <i class="bcs-icon bcs-icon-copy"></i>
+              </span>
+            </template>
+          </bk-table-column>
         </bk-table>
       </bcs-tab-panel>
       <bcs-tab-panel name="lebel" :label="$t('标签')">
@@ -45,6 +58,7 @@
 </template>
 <script lang="ts">
 import { defineComponent } from '@vue/composition-api';
+import useTableHover from '../common/use-table-hover';
 
 export default defineComponent({
   name: 'SecretsDetail',
@@ -72,12 +86,23 @@ export default defineComponent({
       }, []);
     };
 
+    const {
+      ativeIndex,
+      handleMouseEnter,
+      handleMouseLeave,
+      handleCopyContent,
+    } = useTableHover();
+
     return {
+      ativeIndex,
       handleTransformObjToArr,
+      handleMouseEnter,
+      handleMouseLeave,
+      handleCopyContent,
     };
   },
 });
 </script>
 <style lang="postcss" scoped>
-@import './config-detail.css'
+@import './config-detail.css';
 </style>

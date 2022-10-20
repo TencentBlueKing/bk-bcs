@@ -77,7 +77,7 @@ import useSearch from '@/views/dashboard/common/use-search';
 import $router from '@/router/index';
 import $store from '@/store/index';
 import NodeTemplateDetail from './node-template-detail.vue';
-import ContentHeader from '@/views/content-header.vue';
+import ContentHeader from '@/components/layout/Header.vue';
 
 export default defineComponent({
   name: 'NodeTemplateConfig',

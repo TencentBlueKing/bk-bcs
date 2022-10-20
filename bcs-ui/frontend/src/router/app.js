@@ -24,7 +24,7 @@
 * IN THE SOFTWARE.
 */
 
-const App = () => import(/* webpackChunkName: 'app-entry' */'@/views/app');
+const App = () => import(/* webpackChunkName: 'app-entry' */'@/views/templateset/app');
 
 const childRoutes = [
   // domain/bcs/projectId/app 应用页面
@@ -224,7 +224,7 @@ const childRoutes = [
               menuId: 'gamestatefulset',
             },
           },
-        ]
+        ],
       },
       // k8s gamedeployments 应用
       {
@@ -238,7 +238,7 @@ const childRoutes = [
               menuId: 'gamedeployments',
             },
           },
-        ]
+        ],
       },
       // k8s gamestatefulset 应用
       {

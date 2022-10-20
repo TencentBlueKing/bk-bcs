@@ -36,7 +36,7 @@
             <!-- 异常角标 -->
             <div class="bk-mark-corner bk-warning" v-if="showCorner(cluster)"><p>!</p></div>
             <!-- 集群信息 -->
-            <div class="biz-cluster-header">
+            <div class="biz-cluster-header flex flex-col pl-6 justify-center">
               <h2
                 :class="['cluster-title', { clickable: cluster.status === 'RUNNING' }]"
                 v-bk-tooltips.top="{ content: cluster.name, delay: 500 }"
@@ -238,7 +238,6 @@ import { computed, defineComponent, ref } from '@vue/composition-api';
 import ApplyHost from './apply-host.vue';
 import ProjectConfig from '@/views/project/project-config.vue';
 import tipDialog from '@/components/tip-dialog/index.vue';
-import applyPerm from '@/mixins/apply-perm';
 import { useClusterList, useClusterOverview, useClusterOperate, useTask } from './use-cluster';
 import TaskList from '../node/task-list.vue';
 
@@ -250,7 +249,6 @@ export default defineComponent({
     tipDialog,
     TaskList,
   },
-  mixins: [applyPerm],
   setup(props, ctx) {
     const { $store, $router, $i18n, $bkMessage, $bkInfo } = ctx.root;
     const curProject = computed(() => $store.state.curProject);

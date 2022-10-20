@@ -8,13 +8,8 @@
       <bk-guide></bk-guide>
     </div>
     <div class="biz-content-wrapper p0" v-bkloading="{ isLoading: isInitLoading, opacity: 0.1 }">
-      <app-exception
-        v-if="exceptionCode && !isInitLoading"
-        :type="exceptionCode.code"
-        :text="exceptionCode.msg">
-      </app-exception>
 
-      <template v-if="!exceptionCode && !isInitLoading">
+      <template v-if="!isInitLoading">
         <div class="biz-panel-header">
           <div class="right">
             <searcher
@@ -84,7 +79,6 @@ export default {
     return {
       isInitLoading: true,
       isPageLoading: false,
-      exceptionCode: null,
       searchKeyword: '',
       searchClusterId: '',
       curPageData: [],

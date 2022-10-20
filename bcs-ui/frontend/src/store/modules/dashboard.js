@@ -56,6 +56,8 @@ import {
   batchRescheduleCrdPod,
 } from '@/api/base';
 
+import { pvcMountInfo } from '@/api/modules/cluster-resource';
+
 export default {
   namespaced: true,
   state: {
@@ -335,6 +337,10 @@ export default {
     // crd重新调度
     async batchRescheduleCrdPod(context, params) {
       const data = await batchRescheduleCrdPod(params).then(() => true);
+      return data;
+    },
+    async getPvcMountInfo(context, params) {
+      const data = await pvcMountInfo(params).catch(() => ({ podNames: [] }));
       return data;
     },
   },

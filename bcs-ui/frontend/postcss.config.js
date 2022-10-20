@@ -26,6 +26,9 @@ module.exports = {
         'postcss-mixins',
         'postcss-nested-ancestors',
         'postcss-nested',
-        'postcss-preset-env'
+        'postcss-preset-env',
+        'tailwindcss/nesting',
+        'tailwindcss',
+        'autoprefixer',
     ]
 }

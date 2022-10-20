@@ -863,3 +863,6 @@ url("@/fonts/fonts/iconcool.eot?#iefix") format("embedded-opentype");
 .bcs-icon-mobanpeizhi:before {
 	content: "\e223";
 }
+.bcs-icon-machine:before {
+	content: "\e224";
+}

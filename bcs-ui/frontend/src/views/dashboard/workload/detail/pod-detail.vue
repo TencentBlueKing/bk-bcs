@@ -254,9 +254,18 @@
     </div>
     <bcs-sideslider quick-close :title="metadata.name" :is-show.sync="showYamlPanel" :width="800">
       <template #content>
-        <Ace
+        <CodeEditor
           v-full-screen="{ tools: ['fullscreen', 'copy'], content: yaml }"
-          width="100%" height="100%" lang="yaml" read-only :value="yaml"></Ace>
+          width="100%"
+          height="100%"
+          readonly
+          :options="{
+            roundedSelection: false,
+            scrollBeyondLastLine: false,
+            renderLineHighlight: false,
+          }"
+          :value="yaml">
+        </CodeEditor>
       </template>
     </bcs-sideslider>
   </div>
@@ -269,7 +278,7 @@ import StatusIcon from '../../common/status-icon';
 import Metric from '../../common/metric.vue';
 import useDetail from './use-detail';
 import { formatTime, timeZoneTransForm } from '@/common/util';
-import Ace from '@/components/ace-editor';
+import CodeEditor from '@/components/monaco-editor/new-editor.vue';
 import fullScreen from '@/directives/full-screen';
 
 export interface IDetail {
@@ -288,7 +297,7 @@ export default defineComponent({
   components: {
     StatusIcon,
     Metric,
-    Ace,
+    CodeEditor,
   },
   directives: {
     bkOverflowTips,

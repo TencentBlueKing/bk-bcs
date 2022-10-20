@@ -14,16 +14,12 @@
         <span class="bcs-ellipsis">{{ data.metadata.uid }}</span>
       </div>
       <div class="basic-info-item">
-        <label>Class</label>
-        <span>{{ data.spec.ingressClassName || '--' }}</span>
-      </div>
-      <div class="basic-info-item">
         <label>Hosts</label>
-        <span>{{ extData.hosts.join('/') || '*' }}</span>
+        <span>{{ extData.hosts.join(',') || '*' }}</span>
       </div>
       <div class="basic-info-item">
         <label>Address</label>
-        <span>{{ extData.addresses.join('/') || '--' }}</span>
+        <span>{{ extData.addresses.join(',') || '--' }}</span>
       </div>
       <div class="basic-info-item">
         <label>Port(s)</label>
@@ -37,11 +33,35 @@
         <label>{{ $t('存在时间') }}</label>
         <span>{{ extData.age }}</span>
       </div>
+      <div class="basic-info-item">
+        <label>{{ $t('控制器') }}</label>
+        <span>{{ extData.controller || '--' }}</span>
+      </div>
+      <div class="basic-info-item">
+        <label>{{ $t('CLB使用方式') }}</label>
+        <span>{{ extData.clbUseType || '--' }}</span>
+      </div>
+      <div class="basic-info-item">
+        <label>CLB ID</label>
+        <span>{{ extData.existLBID || '--' }}</span>
+      </div>
+      <div class="basic-info-item">
+        <label>{{ $t('内外子网ID') }}</label>
+        <span>{{ extData.subNetID || '--' }}</span>
+      </div>
     </div>
     <!-- 配置、标签、注解 -->
     <bcs-tab class="mt20" type="card" :label-height="42">
-      <bcs-tab-panel name="config" :label="$t('配置')">
-        <p class="detail-title">{{ $t('主机列表') }}（spec.tls）</p>
+      <bcs-tab-panel name="rules" :label="$t('规则')">
+        <bk-table :data="extData.rules">
+          <bk-table-column label="Host" prop="host"></bk-table-column>
+          <bk-table-column label="Path" prop="path"></bk-table-column>
+          <bk-table-column label="ServiceName" prop="serviceName"></bk-table-column>
+          <bk-table-column label="ServicePort" prop="port"></bk-table-column>
+        </bk-table>
+      </bcs-tab-panel>
+      <bcs-tab-panel name="tls" :label="$t('证书')">
+        <p class="detail-title">{{ extData.autoRewrite ? $t('已开启HTTP重定向') : $t('未开启HTTP重定向') }}</p>
         <bk-table :data="data.spec.tls" class="mb20">
           <bk-table-column label="Hosts" prop="hosts">
             <template #default="{ row }">
@@ -49,13 +69,6 @@
             </template>
           </bk-table-column>
           <bk-table-column label="SecretName" prop="secretName"></bk-table-column>
-        </bk-table>
-        <p class="detail-title">{{ $t('规则') }}（spec.rules）</p>
-        <bk-table :data="extData.rules">
-          <bk-table-column label="Host" prop="host"></bk-table-column>
-          <bk-table-column label="Path" prop="path"></bk-table-column>
-          <bk-table-column label="ServiceName" prop="serviceName"></bk-table-column>
-          <bk-table-column label="Port" prop="port"></bk-table-column>
         </bk-table>
       </bcs-tab-panel>
       <bcs-tab-panel name="label" :label="$t('标签')">

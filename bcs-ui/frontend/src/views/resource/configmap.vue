@@ -10,13 +10,8 @@
       <bk-guide></bk-guide>
     </div>
     <div class="biz-content-wrapper p0" v-bkloading="{ isLoading: isInitLoading, opacity: 0.1 }">
-      <app-exception
-        v-if="exceptionCode && !isInitLoading"
-        :type="exceptionCode.code"
-        :text="exceptionCode.msg">
-      </app-exception>
 
-      <template v-if="!exceptionCode && !isInitLoading">
+      <template v-if="!isInitLoading">
         <div class="biz-panel-header">
           <div class="left">
             <bk-button @click.stop.prevent="removeConfigmaps" v-if="curPageData.length">
@@ -323,20 +318,17 @@
 
 <script>
 import { catchErrorHandler, formatDate } from '@/common/util';
-import globalMixin from '@/mixins/global';
 import fullScreen from '@/directives/full-screen';
 
 export default {
   directives: {
     'full-screen': fullScreen,
   },
-  mixins: [globalMixin],
   data() {
     return {
       formatDate,
       isInitLoading: true,
       isPageLoading: false,
-      exceptionCode: null,
       searchKeyword: '',
       searchScope: '',
       curPageData: [],
@@ -373,7 +365,6 @@ export default {
       namespace: '',
       isUpdateLoading: false,
       configmapTimer: null,
-      curProject: {},
       isBatchRemoving: false,
       curSelectedData: [],
       alreadySelectedNums: 0,
@@ -420,6 +411,9 @@ export default {
     curSelectedCluster() {
       return this.searchScopeList.find(item => item.id === this.searchScope) || {};
     },
+    curProject() {
+      return this.$store.state.curProject;
+    },
   },
   watch: {
     isClusterDataReady: {
@@ -450,9 +444,6 @@ export default {
   created() {
     this.initPageConf();
     // this.getConfigmapList()
-  },
-  mounted() {
-    this.curProject = this.initCurProject();
   },
   methods: {
     /**

@@ -48,11 +48,20 @@
                 </template>
             </bcs-table-column> -->
     </bcs-table>
-    <bk-sideslider :is-show.sync="showDetail" quick-close :title="detailTitle" :width="600">
+    <bk-sideslider :is-show.sync="showDetail" quick-close :title="detailTitle" :width="800">
       <template #content>
-        <ace
+        <CodeEditor
           v-full-screen="{ tools: ['fullscreen', 'copy'], content: yaml }"
-          width="100%" height="100%" lang="yaml" read-only :value="yaml"></ace>
+          width="100%"
+          height="100%"
+          readonly
+          :options="{
+            roundedSelection: false,
+            scrollBeyondLastLine: false,
+            renderLineHighlight: false,
+          }"
+          :value="yaml">
+        </CodeEditor>
       </template>
     </bk-sideslider>
   </section>
@@ -60,14 +69,14 @@
 <script lang="ts">
 import { computed, defineComponent, onMounted, ref } from '@vue/composition-api';
 import usePage from '@/views/dashboard/common/use-page';
-import * as ace from '@/components/ace-editor';
+import CodeEditor from '@/components/monaco-editor/new-editor.vue';
 import fullScreen from '@/directives/full-screen';
 import yamljs from 'js-yaml';
 import { useConfig } from '@/common/use-app';
 
 export default defineComponent({
   name: 'CreateCluster',
-  components: { ace },
+  components: { CodeEditor },
   directives: {
     'full-screen': fullScreen,
   },

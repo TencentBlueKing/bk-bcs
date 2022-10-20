@@ -8,16 +8,14 @@ import useSubscribe, { ISubscribeData, ISubscribeParams } from './use-subscribe'
 import useTableData from './use-table-data';
 import { sort } from '@/common/util';
 import yamljs from 'js-yaml';
-import * as ace from '@/components/ace-editor';
 import './base-layout.css';
 import fullScreen from '@/directives/full-screen';
 import { CUR_SELECT_NAMESPACE, CUR_SELECT_CRD } from '@/common/constant';
+import CodeEditor from '@/components/monaco-editor/new-editor.vue';
 
 export default defineComponent({
   name: 'BaseLayout',
-  components: {
-    ace,
-  },
+  components: { CodeEditor },
   directives: {
     'full-screen': fullScreen,
   },
@@ -719,9 +717,15 @@ export default defineComponent({
                   ? (this.$scopedSlots.detail?.({
                     ...this.curDetailRow,
                   }))
-                  : <ace v-full-screen={{ tools: ['fullscreen', 'copy'], content: this.yaml }}
-                                width="100%" height="100%" lang="yaml"
-                                readOnly={true} value={this.yaml}></ace>),
+                  : <CodeEditor
+                    v-full-screen={{ tools: ['fullscreen', 'copy'], content: this.yaml }}
+                    options={{
+                      roundedSelection: false,
+                      scrollBeyondLastLine: false,
+                      renderLineHighlight: false,
+                    }}
+                    width="100%" height="100%" lang="yaml"
+                    readonly={true} value={this.yaml} />),
               },
             }
             }></bcs-sideslider>

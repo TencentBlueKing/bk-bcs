@@ -41,7 +41,7 @@
             <span class="delete ml15">-{{ diffStat.delete }}</span>
           </span>
         </div>
-        <ResourceEditor
+        <CodeEditor
           :value="detail"
           :original="original"
           :height="height"
@@ -51,7 +51,7 @@
           diff-editor
           readonly
           @diff-stat="handleDiffStatChange">
-        </ResourceEditor>
+        </CodeEditor>
       </div>
     </div>
 
@@ -96,7 +96,7 @@
       quick-close
       :width="800">
       <template #content>
-        <Ace
+        <CodeEditor
           v-full-screen="{
             tools: ['fullscreen', 'copy'],
             content: previewData
@@ -104,10 +104,14 @@
           v-bkloading="{ isLoading: previewLoading }"
           width="100%"
           height="100%"
-          lang="yaml"
-          read-only
+          readonly
+          :options="{
+            roundedSelection: false,
+            scrollBeyondLastLine: false,
+            renderLineHighlight: false,
+          }"
           :value="previewData">
-        </Ace>
+        </CodeEditor>
       </template>
     </bcs-sideslider>
   </div>
@@ -120,9 +124,8 @@ import DashboardTopActions from '../common/dashboard-top-actions';
 import SwitchButton from './switch-mode.vue';
 import { CUR_SELECT_NAMESPACE } from '@/common/constant';
 import { CR_API_URL } from '@/api/base';
-import ResourceEditor from '@/views/dashboard/resource-update/resource-editor.vue';
+import CodeEditor from '@/components/monaco-editor/new-editor.vue';
 import fullScreen from '@/directives/full-screen';
-import Ace from '@/components/ace-editor';
 import yamljs from 'js-yaml';
 
 const BKForm = createForm({
@@ -137,8 +140,7 @@ export default {
     BKForm,
     DashboardTopActions,
     SwitchButton,
-    ResourceEditor,
-    Ace,
+    CodeEditor,
   },
   directives: {
     'full-screen': fullScreen,
@@ -239,8 +241,8 @@ export default {
           apiVersion: detail.apiVersion,
           kind: detail.kind,
           metadata: detail.metadata,
-          ...detail
-        }
+          ...detail,
+        };
         this.diffLoading = false;
       }
     },
@@ -254,8 +256,8 @@ export default {
         apiVersion: original.apiVersion,
         kind: original.kind,
         metadata: original.metadata,
-        ...original
-      }
+        ...original,
+      };
     }
     await Promise.all([
       this.handleGetFormSchemaData(),
@@ -321,8 +323,8 @@ export default {
         apiVersion: original.apiVersion,
         kind: original.kind,
         metadata: original.metadata,
-        ...original
-      }
+        ...original,
+      };
     },
     async handleGetFormSchemaData() {
       this.formSchema = await this.$store.dispatch('dashboard/getFormSchema', {
@@ -477,8 +479,8 @@ export default {
         apiVersion: detail.apiVersion,
         kind: detail.kind,
         metadata: detail.metadata,
-        ...detail
-      }
+        ...detail,
+      };
       this.previewData = yamljs.dump(this.detail);
       this.showSideslider = true;
       this.previewLoading = false;
