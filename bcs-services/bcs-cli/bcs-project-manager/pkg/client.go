@@ -40,9 +40,9 @@ type Config struct {
 // NewClientWithConfiguration new client with config
 func NewClientWithConfiguration(ctx context.Context) (bcsproject.BCSProjectClient, context.Context, error) {
 	return NewBcsProjectCli(ctx, &Config{
-		APIServer: viper.GetString("config.apiserver"),
-		AuthToken: viper.GetString("config.bcs_token"),
-		Operator:  viper.GetString("config.operator"),
+		APIServer: viper.GetString("API_SERVER"),
+		AuthToken: viper.GetString("BCS_TOKEN"),
+		Operator:  viper.GetString("OPERATOR"),
 	})
 }
 
@@ -64,7 +64,6 @@ func NewBcsProjectCli(ctx context.Context, config *Config) (bcsproject.BCSProjec
 	if err != nil {
 		return nil, nil, errors.Wrapf(err, "create grpc client with '%s' failed", config.APIServer)
 	}
-
 	if conn == nil {
 		return nil, nil, fmt.Errorf("conn is nil")
 	}

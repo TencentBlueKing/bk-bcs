@@ -11,10 +11,26 @@
  *
  */
 
-package main
+package pkg
 
-import "github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-project-manager/cmd"
+import (
+	"context"
+	"log"
+	"testing"
 
-func main() {
-	cmd.Execute()
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/proto/bcsproject"
+	"github.com/stretchr/testify/assert"
+)
+
+func Test_GeProjectList(t *testing.T) {
+	client, _, err := NewBcsProjectCli(context.Background(), &Config{
+		APIServer: "",
+		AuthToken: "",
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+	rsp, err := client.ListProjects(context.Background(), &bcsproject.ListProjectsRequest{})
+	assert.Nil(t, err)
+	assert.NotNil(t, rsp)
 }

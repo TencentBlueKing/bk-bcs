@@ -28,27 +28,28 @@ func newListCmd() *cobra.Command {
 	listCmd := &cobra.Command{
 		Use:   "list",
 		Short: "list infos from bcs-project-manager",
-		Long:  "",
+		Long:  "list infos from bcs-project-manager",
 	}
-	listCmd.AddCommand(listProjectsCmd())
+	listCmd.AddCommand(listProject())
 	return listCmd
 }
 
-func listProjectsCmd() *cobra.Command {
+func listProject() *cobra.Command {
+	var all bool
 	request := new(bcsproject.ListProjectsRequest)
 	subCmd := &cobra.Command{
 		Use:     "project",
-		Aliases: []string{"projects", "p"},
-		Short:   "list projects info with full-data or paging support",
-		Long:    "",
+		Aliases: []string{"project", "p"},
+		Short:   "",
+		Long:    "list projects info with full-data or paging support",
 		Run: func(cmd *cobra.Command, args []string) {
-			cobra.OnInitialize(ensureConfig)
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
 			client, cliCtx, err := pkg.NewClientWithConfiguration(ctx)
 			if err != nil {
 				klog.Fatalf("init client failed: %v", err.Error())
 			}
+			request.SearchName = request.Names
 			resp, err := client.ListProjects(cliCtx, request)
 			if err != nil {
 				klog.Fatalf("list projects failed: %v", err)
@@ -59,15 +60,20 @@ func listProjectsCmd() *cobra.Command {
 			printer.PrintProjectsListInTable(flagOutput, resp)
 		},
 	}
+
 	subCmd.PersistentFlags().StringVarP(&request.ProjectIDs, "project_ids", "", "",
 		"the project ids that query, multiple separated by commas")
-	subCmd.PersistentFlags().StringVarP(&request.Names, "names", "", "",
+	subCmd.PersistentFlags().StringVarP(&request.Names, "name", "", "",
 		"the project chinese name, multiple separated by commas")
 	subCmd.PersistentFlags().StringVarP(&request.ProjectCode, "project_code", "", "",
 		"project code query")
-	subCmd.PersistentFlags().StringVarP(&request.SearchName, "search_name", "", "",
-		"project name used to fuzzy query")
 	subCmd.PersistentFlags().StringVarP(&request.Kind, "kind", "", "",
 		"the cluster kind")
+	subCmd.PersistentFlags().Int64VarP(&request.Limit, "limit", "", 10,
+		"number of queries")
+	subCmd.PersistentFlags().Int64VarP(&request.Offset, "offset", "", 0,
+		"start query from offset")
+	subCmd.PersistentFlags().BoolVarP(&all, "all", "", false,
+		"get all projects, default: false")
 	return subCmd
 }
