@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 /*
  * Tencent is pleased to support the open source community by making Blueking Container Service available.
  * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
@@ -9,6 +10,14 @@
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
  *
+=======
+/**
+ * @Author: Ambition
+ * @Description:
+ * @File: client_test
+ * @Version: 1.0.0
+ * @Date: 2022/10/17 11:48
+>>>>>>> cd831f67dcced2448d87af2258a3604299f448fc
  */
 
 package pkg

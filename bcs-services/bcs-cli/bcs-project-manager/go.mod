@@ -3,6 +3,10 @@ module github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-project-manager
 go 1.17
 
 replace (
+<<<<<<< HEAD
+=======
+	github.com/Tencent/bk-bcs/bcs-common => ../../../bcs-common
+>>>>>>> cd831f67dcced2448d87af2258a3604299f448fc
 	github.com/chai2010/gettext-go v1.0.2 => github.com/chai2010/gettext-go v0.1.0
 	github.com/coreos/bbolt v1.3.4 => go.etcd.io/bbolt v1.3.4
 	go.etcd.io/bbolt v1.3.4 => github.com/coreos/bbolt v1.3.4
@@ -20,7 +24,10 @@ require (
 	github.com/stretchr/testify v1.8.0
 	github.com/tidwall/pretty v1.2.1
 	github.com/ugorji/go/codec v1.2.7
+<<<<<<< HEAD
 	google.golang.org/grpc v1.47.0
+=======
+>>>>>>> cd831f67dcced2448d87af2258a3604299f448fc
 	k8s.io/klog v1.0.0
 	k8s.io/klog/v2 v2.80.1
 	k8s.io/kubectl v0.24.7
@@ -28,11 +35,30 @@ require (
 )
 
 require (
+<<<<<<< HEAD
+=======
+	github.com/golang/protobuf v1.5.2
+	github.com/stretchr/testify v1.8.0
+	google.golang.org/grpc v1.47.0
+)
+
+require (
+	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20220913140949-31c175590547
+	github.com/chai2010/gettext-go v1.0.2 // indirect
+	k8s.io/kubectl v0.24.7
+	sigs.k8s.io/yaml v1.2.0
+)
+
+require (
+>>>>>>> cd831f67dcced2448d87af2258a3604299f448fc
 	github.com/Azure/go-ansiterm v0.0.0-20210617225240-d185dfc1b5a1 // indirect
 	github.com/MakeNowJust/heredoc v0.0.0-20170808103936-bb23615498cd // indirect
 	github.com/PuerkitoBio/purell v1.1.1 // indirect
 	github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578 // indirect
+<<<<<<< HEAD
 	github.com/chai2010/gettext-go v1.0.2 // indirect
+=======
+>>>>>>> cd831f67dcced2448d87af2258a3604299f448fc
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/emicklei/go-restful/v3 v3.8.0 // indirect
 	github.com/envoyproxy/protoc-gen-validate v0.6.2 // indirect
@@ -95,7 +121,11 @@ require (
 	golang.org/x/tools v0.1.12 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/genproto v0.0.0-20220519153652-3a47de7e79bd // indirect
+<<<<<<< HEAD
 	google.golang.org/protobuf v1.28.0 // indirect
+=======
+	google.golang.org/protobuf v1.28.1 // indirect
+>>>>>>> cd831f67dcced2448d87af2258a3604299f448fc
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect

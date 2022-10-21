@@ -40,6 +40,19 @@ kubectl-bcs-project-manager edit project (ID/CODE)
 ID/CODE 项目ID或者项目编码
 ```
 
+### 编辑项目信息 - editProject
+
+```bash
+kubectl-bcs-project-manager edit project --help
+```
+
+示例:
+
+```yaml 
+kubectl-bcs-project-manager edit project (ID/CODE)
+ID/CODE 项目ID或者项目编码
+```
+
 ## 如何编译
 
 执行下述命令编译 Client 工具

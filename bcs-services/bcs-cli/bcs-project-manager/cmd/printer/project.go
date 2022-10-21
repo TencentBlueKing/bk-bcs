@@ -59,7 +59,10 @@ func PrintProjectsListInTable(flagOutput string, resp *bcsproject.ListProjectsRe
 	tw.Render()
 }
 
+<<<<<<< HEAD
 // PrintUpdateProjectInJSON prints the response that edit project
+=======
+>>>>>>> cd831f67dcced2448d87af2258a3604299f448fc
 func PrintUpdateProjectInJSON(project *bcsproject.ProjectResponse) {
 	if project == nil {
 		return
