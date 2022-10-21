@@ -58,7 +58,7 @@ func refreshSaasTokenCmd() *cobra.Command {
 		},
 	}
 
-	subCmd.PersistentFlags().StringVarP(&userName, "user_name", "n", "",
+	subCmd.Flags().StringVarP(&userName, "user_name", "n", "",
 		"the user name that refresh saas user token for a plain user")
 	return subCmd
 }
@@ -87,9 +87,9 @@ func refreshPlainTokenCmd() *cobra.Command {
 		},
 	}
 
-	subCmd.PersistentFlags().StringVarP(&userName, "user_name", "n", "",
+	subCmd.Flags().StringVarP(&userName, "user_name", "n", "",
 		"the user name that refresh user token for a plain user")
-	subCmd.PersistentFlags().StringVarP(&expireTime, "expire_time", "e", "",
+	subCmd.Flags().StringVarP(&expireTime, "expire_time", "t", "",
 		"the expire time that refresh user token for a plain user")
 
 	return subCmd
@@ -119,9 +119,9 @@ func updateCredentialsCmd() *cobra.Command {
 		},
 	}
 
-	subCmd.PersistentFlags().StringVarP(&clusterId, "cluster_id", "c", "",
+	subCmd.Flags().StringVarP(&clusterId, "cluster_id", "i", "",
 		"the cluster_id for update cluster credential")
-	subCmd.PersistentFlags().StringVarP(&credentialsForm, "credentials_form", "f", "",
+	subCmd.Flags().StringVarP(&credentialsForm, "credentials_form", "f", "",
 		"the credentials form for update cluster credential")
 	return subCmd
 }
@@ -150,9 +150,9 @@ func updateTokenCmd() *cobra.Command {
 			printer.PrintUpdateTokenCmdResult(flagOutput, resp)
 		},
 	}
-	subCmd.PersistentFlags().StringVarP(&token, "token", "t", "",
+	subCmd.Flags().StringVarP(&token, "token", "t", "",
 		"the cluster_id to update token")
-	subCmd.PersistentFlags().StringVarP(&tokenForm, "form", "f", "",
+	subCmd.Flags().StringVarP(&tokenForm, "form", "f", "",
 		"the form used to update token")
 	subCmd.MarkFlagsRequiredTogether("token", "form")
 	return subCmd

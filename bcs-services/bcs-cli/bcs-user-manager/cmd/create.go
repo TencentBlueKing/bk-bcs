@@ -65,7 +65,7 @@ func createAdminUserCmd() *cobra.Command {
 		},
 	}
 
-	subCmd.PersistentFlags().StringVarP(&userName, "user_name", "n", "",
+	subCmd.Flags().StringVarP(&userName, "user_name", "n", "",
 		"the user name that query admin user")
 	return subCmd
 }
@@ -93,7 +93,7 @@ func createSaasUserCmd() *cobra.Command {
 		},
 	}
 
-	subCmd.PersistentFlags().StringVarP(&userName, "user_name", "n", "",
+	subCmd.Flags().StringVarP(&userName, "user_name", "n", "",
 		"the user name that query saas user")
 	return subCmd
 }
@@ -121,7 +121,7 @@ func createPlainUserCmd() *cobra.Command {
 		},
 	}
 
-	subCmd.PersistentFlags().StringVarP(&userName, "user_name", "n", "",
+	subCmd.Flags().StringVarP(&userName, "user_name", "n", "",
 		"the user name that query plain user")
 	return subCmd
 }
@@ -150,7 +150,7 @@ func createClusterCmd() *cobra.Command {
 		},
 	}
 
-	subCmd.PersistentFlags().StringVarP(&clusterCreateBody, "cluster-body", "b", "",
+	subCmd.Flags().StringVarP(&clusterCreateBody, "cluster-body", "b", "",
 		"the cluster body that create cluster")
 	return subCmd
 }
@@ -179,7 +179,7 @@ func createRegisterTokenCmd() *cobra.Command {
 		},
 	}
 
-	subCmd.PersistentFlags().StringVarP(&clusterId, "cluster_id", "c", "",
+	subCmd.Flags().StringVarP(&clusterId, "cluster_id", "i", "",
 		"the id which cluster will register token ")
 	return subCmd
 }
@@ -188,7 +188,7 @@ func grantPermissionCmd() *cobra.Command {
 	var reqBody string
 	subCmd := &cobra.Command{
 		Use:     "permission",
-		Aliases: []string{"permission", "ps"},
+		Aliases: []string{"ps"},
 		Short:   "grant permission",
 		Long:    "grant permissions from user manager",
 		Example: "kubectl-bcs-user-manager create permission --permission_form '{\n  \"apiVersion\": \"\",\n  \"kind\": \"\",\n  \"metadata\": {\n    \"name\": \"\",\n    \"namespace\": \"\",\n    \"creationTimestamp\": \"0001-01-01T00:00:00Z\",\n    \"labels\": {\n      \"a\": \"a\"\n    },\n    \"annotations\": {\n      \"a\": \"a\"\n    },\n    \"clusterName\": \"\"\n  },\n  \"spec\": {\n    \"permissions\": [\n      {\n        \"user_name\": \"\",\n        \"resource_type\": \"\",\n        \"resource\": \"\",\n        \"role\": \"\"\n      }\n    ]\n  }\n}' ",
@@ -207,7 +207,7 @@ func grantPermissionCmd() *cobra.Command {
 			printer.PrintGrantPermissionCmdResult(flagOutput, resp)
 		},
 	}
-	subCmd.PersistentFlags().StringVarP(&reqBody, "permission_form", "f", "",
+	subCmd.Flags().StringVarP(&reqBody, "permission_form", "f", "",
 		"the permissions which will be granted")
 	return subCmd
 }
@@ -216,7 +216,7 @@ func createTokenCmd() *cobra.Command {
 	var tokenForm string
 	subCmd := &cobra.Command{
 		Use:     "token",
-		Aliases: []string{"token", "t"},
+		Aliases: []string{"t"},
 		Short:   "create token",
 		Long:    "create token from user manager",
 		Example: "kubectl-bcs-user-manager create token --token_form '{\"usertype\":,\"username\":\"\", \"expiration\":}' ",
@@ -236,7 +236,7 @@ func createTokenCmd() *cobra.Command {
 		},
 	}
 
-	subCmd.PersistentFlags().StringVarP(&tokenForm, "token_form", "f", "",
+	subCmd.Flags().StringVarP(&tokenForm, "token_form", "f", "",
 		"the form used to create token ")
 	return subCmd
 }
@@ -265,7 +265,7 @@ func createTempTokenCmd() *cobra.Command {
 		},
 	}
 
-	subCmd.PersistentFlags().StringVarP(&tokenForm, "token_form", "f", "",
+	subCmd.Flags().StringVarP(&tokenForm, "token_form", "f", "",
 		"the form used to create temp token ")
 	return subCmd
 }
@@ -294,7 +294,7 @@ func createClientTokenCmd() *cobra.Command {
 		},
 	}
 
-	subCmd.PersistentFlags().StringVarP(&tokenForm, "token_form", "f", "",
+	subCmd.Flags().StringVarP(&tokenForm, "token_form", "f", "",
 		"the form used to create token ")
 	return subCmd
 }
@@ -323,7 +323,7 @@ func addTkeCidrCmd() *cobra.Command {
 		},
 	}
 
-	subCmd.PersistentFlags().StringVarP(&tkeCidrForm, "tkecidr_form", "", "",
+	subCmd.Flags().StringVarP(&tkeCidrForm, "tkecidr_form", "", "",
 		"the form used to init tke cidrs")
 	return subCmd
 }

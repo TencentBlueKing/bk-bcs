@@ -55,7 +55,7 @@ func verifyPermissionCmd() *cobra.Command {
 			printer.PrintVerifyPermissionCmdResult(flagOutput, resp)
 		},
 	}
-	subCmd.PersistentFlags().StringVarP(&verifyPermissionForm, "form", "f", "",
+	subCmd.Flags().StringVarP(&verifyPermissionForm, "form", "f", "",
 		"the form used to verfiy permissions")
 
 	return subCmd
@@ -84,7 +84,7 @@ func verifyPermissionV2Cmd() *cobra.Command {
 			printer.PrintVerifyPermissionV2CmdResult(flagOutput, resp)
 		},
 	}
-	subCmd.PersistentFlags().StringVarP(&verifyPermissionForm, "form", "f", "",
+	subCmd.Flags().StringVarP(&verifyPermissionForm, "form", "f", "",
 		"the form used to verfiy permissions with version 2")
 
 	return subCmd

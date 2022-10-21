@@ -55,7 +55,7 @@ func releaseTkeCidrCmd() *cobra.Command {
 		},
 	}
 
-	subCmd.PersistentFlags().StringVarP(&tkeCidrForm, "tkecidr_form", "f", "",
+	subCmd.Flags().StringVarP(&tkeCidrForm, "tkecidr_form", "f", "",
 		"the form used to release tke cidrs")
 	return subCmd
 }

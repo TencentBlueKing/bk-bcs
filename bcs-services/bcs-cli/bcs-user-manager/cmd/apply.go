@@ -55,7 +55,7 @@ func applyTkeCidrCmd() *cobra.Command {
 		},
 	}
 
-	subCmd.PersistentFlags().StringVarP(&tkeCidrForm, "tkecidr_form", "t", "",
+	subCmd.Flags().StringVarP(&tkeCidrForm, "tkecidr_form", "f", "",
 		"the form json used to apply tke cidrs")
 	return subCmd
 }

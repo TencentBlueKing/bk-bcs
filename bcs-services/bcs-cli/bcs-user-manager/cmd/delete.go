@@ -55,7 +55,7 @@ func revokePermissionCmd() *cobra.Command {
 			printer.PrintRevokePermissionCmdResult(flagOutput, resp)
 		},
 	}
-	subCmd.PersistentFlags().StringVarP(&reqBody, "permission_form", "f", "",
+	subCmd.Flags().StringVarP(&reqBody, "permission_form", "f", "",
 		"the permissions which will be revoked")
 
 	return subCmd
@@ -84,7 +84,7 @@ func deleteTokenCmd() *cobra.Command {
 			printer.PrintDeleteTokenCmdResult(flagOutput, resp)
 		},
 	}
-	subCmd.PersistentFlags().StringVarP(&token, "token", "t", "",
+	subCmd.Flags().StringVarP(&token, "token", "t", "",
 		"the token which will be deleted")
 
 	return subCmd

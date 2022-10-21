@@ -64,7 +64,7 @@ func getAdminUserCmd() *cobra.Command {
 		},
 	}
 
-	subCmd.PersistentFlags().StringVarP(&userName, "user_name", "n", "",
+	subCmd.Flags().StringVarP(&userName, "user_name", "n", "",
 		"the user name that query admin user")
 	return subCmd
 }
@@ -93,7 +93,7 @@ func getSaasUserCmd() *cobra.Command {
 		},
 	}
 
-	subCmd.PersistentFlags().StringVarP(&userName, "user_name", "n", "",
+	subCmd.Flags().StringVarP(&userName, "user_name", "n", "",
 		"the user name that query sass user")
 	return subCmd
 }
@@ -122,7 +122,7 @@ func getPlainUserCmd() *cobra.Command {
 		},
 	}
 
-	subCmd.PersistentFlags().StringVarP(&userName, "user_name", "n", "",
+	subCmd.Flags().StringVarP(&userName, "user_name", "n", "",
 		"the user name that query plain user")
 	return subCmd
 }
@@ -151,7 +151,7 @@ func getRegisterTokenCmd() *cobra.Command {
 		},
 	}
 
-	subCmd.PersistentFlags().StringVarP(&clusterId, "cluster_id", "c", "",
+	subCmd.Flags().StringVarP(&clusterId, "cluster_id", "i", "",
 		"the cluster_id for search specified cluster token")
 	return subCmd
 }
@@ -180,7 +180,7 @@ func getCredentialsCmd() *cobra.Command {
 		},
 	}
 
-	subCmd.PersistentFlags().StringVarP(&clusterId, "cluster_id", "c", "",
+	subCmd.Flags().StringVarP(&clusterId, "cluster_id", "i", "",
 		"the cluster_id for get credential")
 	return subCmd
 }
@@ -209,7 +209,7 @@ func getPermissionCmd() *cobra.Command {
 		},
 	}
 
-	subCmd.PersistentFlags().StringVarP(&permissionForm, "permission_form", "f", "",
+	subCmd.Flags().StringVarP(&permissionForm, "permission_form", "f", "",
 		"the permission_form that query permissions")
 	return subCmd
 }
@@ -238,7 +238,7 @@ func getTokenCmd() *cobra.Command {
 		},
 	}
 
-	subCmd.PersistentFlags().StringVarP(&userName, "user_name", "n", "",
+	subCmd.Flags().StringVarP(&userName, "user_name", "n", "",
 		"the user name that query token")
 	return subCmd
 }
@@ -270,9 +270,9 @@ func getTokenByUserAndClusterIDCmd() *cobra.Command {
 
 	subCmd.PersistentFlags().StringVarP(&userName, "user_name", "n", "",
 		"the user name that query token")
-	subCmd.PersistentFlags().StringVarP(&clusterId, "cluster_id", "c", "",
+	subCmd.PersistentFlags().StringVarP(&clusterId, "cluster_id", "", "",
 		"the cluster_id that query token")
-	subCmd.PersistentFlags().StringVarP(&businessId, "business_id", "b", "",
+	subCmd.PersistentFlags().StringVarP(&businessId, "business_id", "", "",
 		"the business_id that query token")
 	subCmd.MarkFlagsRequiredTogether("user_name", "cluster_id", "business_id")
 	return subCmd

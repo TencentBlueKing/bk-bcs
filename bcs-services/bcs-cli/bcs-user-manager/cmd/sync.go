@@ -55,7 +55,7 @@ func syncTkeClusterCredentialsCmd() *cobra.Command {
 		},
 	}
 
-	subCmd.PersistentFlags().StringVarP(&clusterId, "cluster_id", "", "",
+	subCmd.Flags().StringVarP(&clusterId, "cluster_id", "i", "",
 		"the cluster_id used to sync the tke cluster credentials from tke")
 	return subCmd
 }
