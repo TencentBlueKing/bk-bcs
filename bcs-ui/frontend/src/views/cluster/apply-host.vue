@@ -189,10 +189,10 @@
               </bk-table-column>
               <bk-table-column
                 :label="$t('机型')"
-                prop="model" :show-overflow-tooltip="{ interactive: false }"></bk-table-column>
+                prop="model" show-overflow-tooltip></bk-table-column>
               <bk-table-column
                 :label="$t('规格')"
-                prop="specifications" :show-overflow-tooltip="{ interactive: false }"></bk-table-column>
+                prop="specifications" show-overflow-tooltip></bk-table-column>
               <bk-table-column :label="$t('园区')" prop="zone" key="zone">
                 {{ zoneName }}
               </bk-table-column>
@@ -203,7 +203,7 @@
                   {{ cvmData[row.specifications] }}
                 </template>
               </bk-table-column>
-              <bk-table-column :label="$t('备注')" prop="description" :show-overflow-tooltip="{ interactive: false }">
+              <bk-table-column :label="$t('备注')" prop="description" show-overflow-tooltip>
                 <template #default="{ row }">
                   {{ row.description || '--' }}
                 </template>
@@ -739,7 +739,7 @@ export default {
     async getCvmCapacity() {
       if (!this.formdata.zone_id || !this.formdata.region || !this.$INTERNAL) return;
       this.isHostLoading = true;
-      const srePrefix = `${NODE_ENV === 'development' ? '' : window.BCS_CONFIG?.host?.BKSRE_HOST}`;
+      const srePrefix = `${process.env.NODE_ENV === 'development' ? '' : window.BCS_CONFIG?.host?.BKSRE_HOST}`;
       const cvmCapacity = request('get', `${srePrefix}/bcsadmin/cvmcapacity`);
       this.cvmData = await cvmCapacity({
         zone_id: this.formdata.zone_id,

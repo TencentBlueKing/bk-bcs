@@ -87,6 +87,9 @@ func (ua *UpdateAction) modifyNodeGroupField() {
 	if len(ua.req.NodeOS) != 0 {
 		group.NodeOS = ua.req.NodeOS
 	}
+	if ua.req.BkCloudID != nil {
+		group.BkCloudID = ua.req.BkCloudID.GetValue()
+	}
 	ua.group = group
 }
 
@@ -185,6 +188,9 @@ func (ua *UpdateAction) modifyNodeGroupNodeTemplate(group *cmproto.NodeGroup) {
 		}
 		if ua.req.NodeTemplate.ExtraArgs != nil {
 			group.NodeTemplate.ExtraArgs = ua.req.NodeTemplate.ExtraArgs
+		}
+		if ua.req.NodeTemplate.Module != nil {
+			group.NodeTemplate.Module = ua.req.NodeTemplate.Module
 		}
 		group.NodeTemplate.UnSchedulable = ua.req.NodeTemplate.UnSchedulable
 		group.NodeTemplate.Taints = ua.req.NodeTemplate.Taints

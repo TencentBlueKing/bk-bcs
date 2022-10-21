@@ -146,6 +146,10 @@ const (
 	StatusRemoveNodesFailed = "REMOVE-FAILURE"
 	// StatusNodeRemovable node is removable
 	StatusNodeRemovable = "REMOVABLE"
+	// StatusNodeUnknown node status is unknown
+	StatusNodeUnknown = "UNKNOWN"
+	// StatusNodeNotReady node not ready
+	StatusNodeNotReady = "NOTREADY"
 
 	// StatusDeleteNodeGroupFailed xxx
 	StatusDeleteNodeGroupFailed = "DELETE-FAILURE"

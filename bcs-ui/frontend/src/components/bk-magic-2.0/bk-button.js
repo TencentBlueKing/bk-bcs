@@ -29,29 +29,6 @@ export default {
     type: {
       type: String,
       default: 'default',
-      validator(value) {
-        const types = value.split(' '); // ['submit', 'success', 'reset']
-        const buttons = [
-          'button',
-          'submit',
-          'reset',
-        ];
-        const thenme = [
-          'default',
-          'info',
-          'primary',
-          'warning',
-          'success',
-          'danger',
-        ];
-        let valid = true;
-        types.forEach((type) => {
-          if (buttons.indexOf(type) === -1 && thenme.indexOf(type) === -1) {
-            valid = false;
-          }
-        });
-        return valid;
-      },
     },
   },
 
@@ -63,13 +40,12 @@ export default {
         return vnode;
       });
 
-    if (this.$props.type) {
-      this.$props.theme = this.$props.type;
-    }
-
     return h('bcs-button', {
       on: this.$listeners, // 透传事件
-      props: Object.assign({}, this.$props, this.$attrs), // 透传props
+      props: Object.assign({}, {
+        ...this.$props,
+        theme: this.$props.type === 'button' ? 'default' : this.$props.type,
+      }, this.$attrs), // 透传props
       scopedSlots: this.$scopedSlots, // 透传scopedSlots
       attrs: this.$attrs, // 透传属性，非props
     }, slots);

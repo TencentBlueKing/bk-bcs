@@ -17,10 +17,12 @@ import (
 	"context"
 	"net/url"
 
+	"github.com/google/shlex"
+	"github.com/pkg/errors"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/manager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/types"
-	"github.com/pkg/errors"
 )
 
 // queryByContainerId 通过cluster_id, containerId 直连容器
@@ -264,13 +266,35 @@ func QueryAuthPodCtx(ctx context.Context, clusterId, username string, consoleQue
 
 // OpenQuery openapi 参数
 type OpenQuery struct {
-	Operator      string `json:"operator" binding:"required"`
-	Command       string `json:"command"`
-	ContainerId   string `json:"container_id"`
-	Namespace     string `json:"namespace"`
-	PodName       string `json:"pod_name"`
-	ContainerName string `json:"container_name"`
-	WSAcquire     bool   `json:"ws_acquire"` // 是否返回 websocket_url
+	Operator        string   `json:"operator" binding:"required"`
+	Viewers         []string `json:"viewers"`           // 可共享查看
+	SessionTimeout  int64    `json:"session_timeout"`   // session 过期时间, 单位分钟
+	ConnIdleTimeout int64    `json:"conn_idle_timeout"` // 空闲时间, 单位分钟
+	Command         string   `json:"command"`
+	ContainerId     string   `json:"container_id"`
+	Namespace       string   `json:"namespace"`
+	PodName         string   `json:"pod_name"`
+	ContainerName   string   `json:"container_name"`
+	WSAcquire       bool     `json:"ws_acquire"` // 是否返回 websocket_url
+}
+
+// Validate 校验参数
+func (q *OpenQuery) Validate() error {
+	if q.ConnIdleTimeout < 0 || q.ConnIdleTimeout >= types.MaxConnIdleTimeout {
+		return errors.Errorf("conn_idle_timeout 必须大于0, 小于%d", types.MaxConnIdleTimeout)
+	}
+	if q.SessionTimeout < 0 || q.SessionTimeout >= types.MaxSessionTimeout {
+		return errors.Errorf("session_timeout 必须大于0, 小于%d", types.MaxSessionTimeout)
+	}
+	return nil
+}
+
+// SplitCommand 拆解命令行
+func (q *OpenQuery) SplitCommand() ([]string, error) {
+	if q.Command == "" {
+		return []string{}, nil
+	}
+	return shlex.Split(q.Command)
 }
 
 // QueryOpenPodCtx openapi鉴权模式

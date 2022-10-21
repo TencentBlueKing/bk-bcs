@@ -34,6 +34,13 @@ var ActionPermissions = map[string]string{
 	"HelmManager.DeleteChartVersion": project.CanEditProjectOperation,
 
 	// Release
-	"HelmManager.GetReleaseHistory": cluster.CanViewClusterOperation,
-	"HelmManager.GetReleaseStatus":  cluster.CanViewClusterOperation,
+	"HelmManager.ListReleaseV1":      cluster.CanViewClusterOperation,
+	"HelmManager.GetReleaseDetailV1": cluster.CanViewClusterOperation,
+	"HelmManager.InstallReleaseV1":   cluster.CanViewClusterOperation,
+	"HelmManager.UninstallReleaseV1": cluster.CanViewClusterOperation,
+	"HelmManager.UpgradeReleaseV1":   cluster.CanViewClusterOperation,
+	"HelmManager.RollbackReleaseV1":  cluster.CanViewClusterOperation,
+	"HelmManager.ReleasePreview":     cluster.CanViewClusterOperation,
+	"HelmManager.GetReleaseHistory":  cluster.CanViewClusterOperation,
+	"HelmManager.GetReleaseStatus":   cluster.CanViewClusterOperation,
 }

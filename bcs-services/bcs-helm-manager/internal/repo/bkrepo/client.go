@@ -111,7 +111,7 @@ func (c *client) request(
 	if r.StatusCode != http.StatusOK && r.StatusCode != http.StatusBadRequest {
 		return nil, fmt.Errorf("request to bk-repo failed, http(%d)%s: %s", r.StatusCode, r.Status, uri)
 	}
-	blog.V(5).Infof("request to bk-repo [%s] %s, get resp(%s)", method, uri, string(r.Reply))
+	blog.V(5).Infof("request to bk-repo [%s] %s, code: %d", method, uri, r.StatusCode)
 
 	return r, nil
 }

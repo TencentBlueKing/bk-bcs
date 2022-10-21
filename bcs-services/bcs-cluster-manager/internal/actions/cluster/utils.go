@@ -16,16 +16,22 @@ package cluster
 import (
 	"context"
 	"fmt"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
-	provider "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/common"
 	"math"
 	"sort"
 	"strconv"
 	"strings"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
+	provider "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/common"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
+	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/cluster"
+	spb "google.golang.org/protobuf/types/known/structpb"
+	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/util/sets"
+
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
@@ -35,10 +41,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
 	storeopt "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
-	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/cluster"
-
-	spb "google.golang.org/protobuf/types/known/structpb"
-	"k8s.io/apimachinery/pkg/util/sets"
 )
 
 type clusterInfo struct {
@@ -71,6 +73,9 @@ const (
 	ManagerCluster = "MANAGED_CLUSTER"
 	// IndependentCluster independent cluster
 	IndependentCluster = "INDEPENDENT_CLUSTER"
+
+	// NodeRoleMaster master nodes
+	NodeRoleMaster = "node-role.kubernetes.io/master"
 )
 
 // ClusterManageTypeMap cluster manage type
@@ -386,4 +391,166 @@ func asyncDeleteImportedClusterInfo(ctx context.Context, store store.ClusterMana
 
 	deleteClusterExtraOperation(cluster)
 	deleteClusterCredentialInfo(store, cluster.ClusterID)
+}
+
+func removeNodeSensitiveInfo(nodes []*proto.Node) {
+	for i := range nodes {
+		nodes[i].Passwd = ""
+	}
+}
+
+func transNodeToClusterNode(node *proto.Node) *proto.ClusterNode {
+	return &proto.ClusterNode{
+		NodeID:       node.NodeID,
+		InnerIP:      node.InnerIP,
+		InstanceType: node.InstanceType,
+		CPU:          node.CPU,
+		Mem:          node.Mem,
+		GPU:          node.GPU,
+		Status:       node.Status,
+		ZoneID:       node.ZoneID,
+		NodeGroupID:  node.NodeGroupID,
+		ClusterID:    node.ClusterID,
+		VPC:          node.VPC,
+		Region:       node.Region,
+		Passwd:       node.Passwd,
+		Zone:         node.Zone,
+		DeviceID:     node.DeviceID,
+		NodeName:     node.NodeName,
+	}
+}
+
+// 转换节点状态
+func transNodeStatus(cmNodeStatus string, k8sNode *corev1.Node) string {
+	if cmNodeStatus == common.StatusInitialization || cmNodeStatus == common.StatusAddNodesFailed ||
+		cmNodeStatus == common.StatusDeleting || cmNodeStatus == common.StatusRemoveNodesFailed {
+		return cmNodeStatus
+	}
+	for _, v := range k8sNode.Status.Conditions {
+		if v.Type != corev1.NodeReady {
+			continue
+		}
+		if v.Status == corev1.ConditionTrue {
+			if k8sNode.Spec.Unschedulable {
+				return common.StatusNodeRemovable
+			}
+			return common.StatusRunning
+		}
+		return common.StatusNodeNotReady
+	}
+
+	return common.StatusNodeUnknown
+}
+
+func filterNodesRole(k8sNodes []*corev1.Node, master bool) []*corev1.Node {
+	nodes := make([]*corev1.Node, 0)
+	for _, v := range k8sNodes {
+		if _, ok := v.Labels[common.MasterRole]; ok == master {
+			nodes = append(nodes, v)
+		}
+	}
+	return nodes
+}
+
+// mergeClusterNodes merge k8s nodes and db nodes
+// 1. 集群中不存在的节点，并且在cluster manager中状态处于初始化中、初始化失败、移除中、移除失败状态时，需要展示cluster manager中数据
+// 2. 集群中存在的节点，则以集群中为准，注意状态的转换
+func mergeClusterNodes(cmNodes []*proto.ClusterNode, k8sNodes []*corev1.Node) []*proto.ClusterNode {
+	clusterID := ""
+	cmNodesMap := make(map[string]*proto.ClusterNode, 0)
+	k8sNodesMap := make(map[string]*corev1.Node, 0)
+	for i := range cmNodes {
+		clusterID = cmNodes[i].ClusterID
+		cmNodesMap[cmNodes[i].InnerIP] = cmNodes[i]
+	}
+	for i := range k8sNodes {
+		innerIP := ""
+		for _, v := range k8sNodes[i].Status.Addresses {
+			if v.Type == corev1.NodeInternalIP {
+				innerIP = v.Address
+			}
+		}
+		if len(innerIP) == 0 {
+			continue
+		}
+		k8sNodesMap[innerIP] = k8sNodes[i]
+	}
+
+	// 处理在 cluster manager 中的节点，但是状态为非正常状态数据，非正常数据放在列表前面
+	nodes := make([]*proto.ClusterNode, 0)
+	for _, v := range cmNodes {
+		if _, ok := k8sNodesMap[v.InnerIP]; ok {
+			continue
+		}
+		if v.Status == common.StatusRunning || v.Status == common.StatusNodeRemovable {
+			continue
+		}
+		nodes = append(nodes, v)
+	}
+
+	nodes2 := make([]*proto.ClusterNode, 0)
+	// 集群中存在的节点，则以集群中为准
+	for k, v := range k8sNodesMap {
+		if n, ok := cmNodesMap[k]; ok {
+			nodes2 = append(nodes2, &proto.ClusterNode{
+				NodeID:       n.NodeID,
+				InnerIP:      n.InnerIP,
+				InstanceType: n.InstanceType,
+				CPU:          n.CPU,
+				Mem:          n.Mem,
+				GPU:          n.GPU,
+				Status:       transNodeStatus(n.Status, v),
+				ZoneID:       n.ZoneID,
+				NodeGroupID:  n.NodeGroupID,
+				ClusterID:    n.ClusterID,
+				VPC:          n.VPC,
+				Region:       n.Region,
+				Passwd:       n.Passwd,
+				Zone:         n.Zone,
+				DeviceID:     n.DeviceID,
+				NodeName:     v.Name,
+				Labels:       v.Labels,
+				Taints:       actions.K8sTaintToTaint(v.Spec.Taints),
+				UnSchedulable: func(u bool) uint32 {
+					if u {
+						return 1
+					}
+					return 0
+				}(v.Spec.Unschedulable),
+			})
+		} else {
+			nodes2 = append(nodes2, &proto.ClusterNode{
+				InnerIP:   k,
+				Status:    transNodeStatus("", v),
+				ClusterID: clusterID,
+				NodeName:  v.Name,
+				Labels:    v.Labels,
+				Taints:    actions.K8sTaintToTaint(v.Spec.Taints),
+				UnSchedulable: func(u bool) uint32 {
+					if u {
+						return 1
+					}
+					return 0
+				}(v.Spec.Unschedulable),
+			})
+		}
+	}
+	sort.Sort(NodeSlice(nodes2))
+	nodes = append(nodes, nodes2...)
+	return nodes
+}
+
+// NodeSlice cluster node slice
+type NodeSlice []*proto.ClusterNode
+
+func (n NodeSlice) Len() int {
+	return len(n)
+}
+
+func (n NodeSlice) Less(i, j int) bool {
+	return n[i].NodeName < n[j].NodeName
+}
+
+func (n NodeSlice) Swap(i, j int) {
+	n[i], n[j] = n[j], n[i]
 }

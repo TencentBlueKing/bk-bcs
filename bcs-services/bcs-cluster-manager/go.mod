@@ -20,8 +20,8 @@ require (
 	github.com/Azure/go-autorest/autorest v0.11.18
 	github.com/Azure/go-autorest/autorest/adal v0.9.13
 	github.com/RichardKnop/machinery/v2 v2.0.11
-	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20220920073019-4a853c750ff6
-	github.com/Tencent/bk-bcs/bcs-services/pkg v0.0.0-20220920073019-4a853c750ff6
+	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20220927105030-5dbfb77b055c
+	github.com/Tencent/bk-bcs/bcs-services/pkg v0.0.0-20220927105030-5dbfb77b055c
 	github.com/avast/retry-go v2.7.0+incompatible
 	github.com/coreos/etcd v3.3.25+incompatible
 	github.com/emicklei/go-restful v2.15.0+incompatible
@@ -82,6 +82,7 @@ require (
 	github.com/coreos/go-systemd v0.0.0-20190719114852-fd7a80b32e1f // indirect
 	github.com/coreos/pkg v0.0.0-20180928190104-399ea9e2e55f // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
+	github.com/dgrijalva/jwt-go v3.2.0+incompatible // indirect
 	github.com/evanphx/json-patch v4.12.0+incompatible // indirect
 	github.com/exponent-io/jsonpath v0.0.0-20151013193312-d6023ce2651d // indirect
 	github.com/form3tech-oss/jwt-go v3.2.3+incompatible // indirect

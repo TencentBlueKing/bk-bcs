@@ -142,6 +142,10 @@ func (stat *TaskState) IsReadyToStep(stepName string) (*proto.Step, error) {
 				GetStorageModel().UpdateTask(context.Background(), stat.Task)
 				return step, nil
 			}
+			// skip step if failed
+			if step.SkipOnFailed {
+				continue
+			}
 			// check this step is ok
 			if step.Status != TaskStatusSuccess {
 				ok = false
@@ -193,7 +197,7 @@ func (stat *TaskState) UpdateStepSucc(start time.Time, stepName string) error {
 		stat.Task.End = end.Format(time.RFC3339)
 		stat.Task.ExecutionTime = uint32(end.Unix() - taskStart.Unix())
 		stat.Task.Status = TaskStatusSuccess
-		stat.Task.Message = fmt.Sprintf("whole task running successfully")
+		stat.Task.Message = fmt.Sprintf("whole task is done")
 
 		if stat.JobResult != nil {
 			err := stat.JobResult.UpdateJobResultStatus(true)
@@ -223,7 +227,7 @@ func (stat *TaskState) UpdateStepFailure(start time.Time, stepName string, err e
 	step.End = end.Format(time.RFC3339)
 	step.Status = TaskStatusFailure
 	step.LastUpdate = step.End
-	step.Message = fmt.Sprintf("running fialed, %s", err.Error())
+	step.Message = fmt.Sprintf("running failed, %s", err.Error())
 
 	taskStart, _ := time.Parse(time.RFC3339, stat.Task.Start)
 	stat.Task.End = end.Format(time.RFC3339)
@@ -247,5 +251,47 @@ func (stat *TaskState) UpdateStepFailure(start time.Time, stepName string, err e
 	}
 
 	blog.Infof("task %s step %s running failure", stat.Task.TaskID, stepName)
+	return nil
+}
+
+// SkipFailure skip failure
+func (stat *TaskState) SkipFailure(start time.Time, stepName string, err error) error {
+	step := stat.Task.Steps[stepName]
+	end := time.Now()
+	step.ExecutionTime = uint32(end.Unix() - start.Unix())
+	step.Start = start.Format(time.RFC3339)
+	step.End = end.Format(time.RFC3339)
+	step.Status = TaskStatusFailure
+	step.LastUpdate = step.End
+	step.Message = fmt.Sprintf("running failed, %s", err.Error())
+
+	stat.Task.Status = TaskStatusRunning
+	stat.Task.Message = fmt.Sprintf("step %s running failed", step.Name)
+	stat.Task.LastUpdate = step.End
+
+	if stepName == stat.Task.StepSequence[len(stat.Task.StepSequence)-1] {
+		// last step in task, just make whole task success
+		taskStart, _ := time.Parse(time.RFC3339, stat.Task.Start)
+		stat.Task.End = end.Format(time.RFC3339)
+		stat.Task.ExecutionTime = uint32(end.Unix() - taskStart.Unix())
+		stat.Task.Status = TaskStatusSuccess
+		stat.Task.Message = fmt.Sprintf("whole task is done")
+
+		if stat.JobResult != nil {
+			err := stat.JobResult.UpdateJobResultStatus(true)
+			if err != nil {
+				blog.Errorf("task[%s] stepName[%s] UpdateJobResultStatus failed: %v", stat.Task.TaskID, stepName, err)
+			} else {
+				blog.Infof("task[%s] stepName[%s] UpdateJobResultStatus successful", stat.Task.TaskID, stepName)
+			}
+		}
+	}
+
+	if err := GetStorageModel().UpdateTask(context.Background(), stat.Task); err != nil {
+		blog.Errorf("task %s fatal, update task success status failed, %s. required admin intervetion",
+			stat.Task.TaskID, err.Error())
+		return err
+	}
+	blog.Infof("task %s step %s running failed, but skip it", stat.Task.TaskID, stepName)
 	return nil
 }

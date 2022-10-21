@@ -29,7 +29,7 @@ type GetAction struct {
 
 	schemaPath string
 	req        *cmproto.GetResourceSchemaRequest
-	resp       *cmproto.GetResourceSchemaResponse
+	resp       *cmproto.CommonResp
 }
 
 // NewGetAction create get action for resource schema
@@ -44,7 +44,7 @@ func (ga *GetAction) setResp(code uint32, msg string) {
 }
 
 func (ga *GetAction) getSchema() error {
-	schemaList := []*cmproto.ResourceSchema{}
+	schemaList := []*common.ResourceSchema{}
 	schemaBytes, err := ioutil.ReadFile(ga.schemaPath)
 	if err != nil {
 		blog.Errorf("load resource schema from file %s err: %v", ga.schemaPath, err)
@@ -56,18 +56,31 @@ func (ga *GetAction) getSchema() error {
 		blog.Errorf("load resource schema from file %s Unmarshal err: %v", ga.schemaPath, err)
 		return fmt.Errorf("load resource schema from file %s Unmarshal err: %v", ga.schemaPath, err)
 	}
+
+	var result *common.ResourceSchema
 	for _, v := range schemaList {
 		if v.CloudID == ga.req.CloudID && v.Name == ga.req.Name {
-			ga.resp.Data = v
-			return nil
+			result = v
 		}
 	}
-	return fmt.Errorf("resource schema %s not found in cloud %s", ga.req.Name, ga.req.CloudID)
+
+	if result == nil {
+		return fmt.Errorf("not found schema %s in cloud %s", ga.req.Name, ga.req.CloudID)
+	}
+
+	s, err := common.MarshalInterfaceToValue(result)
+	if err != nil {
+		return fmt.Errorf("marshal schema %s in cloud %s failed, err %s", ga.req.Name, ga.req.CloudID, err.Error())
+	}
+
+	ga.resp.Data = s
+
+	return nil
 }
 
 // Handle handle get resource schema
 func (ga *GetAction) Handle(
-	ctx context.Context, req *cmproto.GetResourceSchemaRequest, resp *cmproto.GetResourceSchemaResponse) {
+	ctx context.Context, req *cmproto.GetResourceSchemaRequest, resp *cmproto.CommonResp) {
 	if req == nil || resp == nil {
 		blog.Errorf("get resource schema failed, req or resp is empty")
 		return

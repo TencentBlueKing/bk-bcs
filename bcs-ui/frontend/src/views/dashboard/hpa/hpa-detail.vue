@@ -42,7 +42,7 @@
       </div>
     </div>
     <!-- 状态、标签、注解 -->
-    <bcs-tab class="mt20" :label-height="40">
+    <bcs-tab class="mt20" :label-height="42">
       <bcs-tab-panel name="conditions" :label="$t('状态（Conditions）')">
         <bk-table :data="data.status.conditions || []">
           <bk-table-column :label="$t('类别')" prop="type"></bk-table-column>
@@ -128,8 +128,8 @@ export default defineComponent({
     /deep/ .bk-tab-label-item {
         background-color: #FAFBFD;
         border-bottom: 1px solid #dcdee5;
-        line-height: 39px !important;
-        height: 39px;
+        line-height: 41px !important;
+        height: 41px;
         &.active {
             border-bottom: none;
         }

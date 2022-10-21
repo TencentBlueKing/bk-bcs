@@ -59,7 +59,17 @@ func (s *SidecarController) initKubeconfig() error {
 		blog.Errorf("build kubeclient by kubeconfig %s error %s", s.conf.Kubeconfig, err.Error())
 		return err
 	}
-	factory := informers.NewSharedInformerFactory(kubeClient, 0)
+
+	nodeName := s.conf.NodeName
+	if nodeName == "" {
+		return fmt.Errorf("node_name is not set properly")
+	}
+	labelOptions := informers.WithTweakListOptions(func(opts *metav1.ListOptions) {
+		opts.FieldSelector = fmt.Sprintf("spec.nodeName=%s", nodeName)
+	})
+	factory := informers.NewSharedInformerFactoryWithOptions(kubeClient, 0, labelOptions)
+	blog.Infof("build informer for pod lister with nodeName filter, node_name: %s", nodeName)
+
 	s.podLister = factory.Core().V1().Pods().Lister()
 	factory.Start(stopCh)
 	// Wait for all caches to sync.

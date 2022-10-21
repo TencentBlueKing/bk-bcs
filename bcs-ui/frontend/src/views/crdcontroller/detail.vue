@@ -93,7 +93,6 @@
             :style="{ height: `${editorHeight}px`, width: '100%' }"
             v-model="editorOptions.content"
             :diff-editor="editorOptions.isDiff"
-            :key="renderEditorKey"
             :options="editorOptions"
             :original="editorOptions.originContent">
           </monaco-editor>
@@ -240,7 +239,7 @@ export default {
         const crdId = this.curCrdId;
         const data = await this.$store.dispatch('crdcontroller/clusterToolsInstalledDetail', { $clusterId: clusterId, $toolId: crdId });
         this.curApp = data;
-        this.editorOptions.content = data.values;
+        this.editorOptions.content = data.values || '';
         this.editorOptions.originContent = data.values;
       } catch (e) {
         catchErrorHandler(e, this);

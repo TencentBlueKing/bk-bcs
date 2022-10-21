@@ -15,7 +15,8 @@
 package options
 
 import (
-	yaml "github.com/asim/go-micro/plugins/config/encoder/yaml/v4"
+	logger "github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	yaml "github.com/go-micro/plugins/v4/config/encoder/yaml"
 	"github.com/pkg/errors"
 	microConf "go-micro.dev/v4/config"
 	"go-micro.dev/v4/config/reader"
@@ -24,7 +25,6 @@ import (
 	"go-micro.dev/v4/config/source/file"
 	"golang.org/x/sync/errgroup"
 
-	logger "github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
 )
 

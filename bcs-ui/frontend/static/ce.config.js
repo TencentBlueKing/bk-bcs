@@ -20,9 +20,5 @@ window.BCS_CONFIG = {
         mesosDeployment: '',
         mesosSecret: '',
         mesosService: ''
-    },
-    // 文案信息
-    str: {
-        taskgroupAndPodTips: ''
     }
 }

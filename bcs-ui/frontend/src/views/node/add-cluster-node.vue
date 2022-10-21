@@ -89,7 +89,7 @@
       :is-show.sync="showDetail"
       :title="currentRow.name"
       quick-close
-      width="800">
+      :width="800">
       <div slot="content">
         <NodeTemplateDetail :data="currentRow"></NodeTemplateDetail>
       </div>

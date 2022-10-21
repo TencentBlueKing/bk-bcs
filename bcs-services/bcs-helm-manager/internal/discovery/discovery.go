@@ -15,6 +15,7 @@ package discovery
 
 import (
 	"fmt"
+	"math/rand"
 	"sync"
 	"time"
 
@@ -148,6 +149,29 @@ func (md *ModuleDiscovery) watchRegistry(w registry.Watcher) error {
 		md.handler(svcs)
 	}
 	return nil
+}
+
+// GetRandServiceInst get rand service instance
+func (md *ModuleDiscovery) GetRandServiceInst() (*registry.Node, error) {
+	allNodes := []*registry.Node{}
+
+	if len(md.curServices) == 0 {
+		blog.Error("discovery %s has no local service cache!", md.module)
+		return nil, fmt.Errorf("discovery %s has no local service cache", md.module)
+	}
+
+	md.Lock()
+	defer md.Unlock()
+
+	for _, svc := range md.curServices {
+		allNodes = append(allNodes, svc.Nodes...)
+	}
+	nodeLen := len(allNodes)
+	if nodeLen == 0 {
+		blog.Error("found no available node for service: %s", md.module)
+		return nil, fmt.Errorf("found no available node for service: %s", md.module)
+	}
+	return allNodes[rand.Int()%nodeLen], nil
 }
 
 // GetService get service from remote

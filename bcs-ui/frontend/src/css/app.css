@@ -575,7 +575,7 @@ biz-actions {
         width: 7px;
         height: 12px;
         display: inline-block;
-        background: url(../images/sort.png) 0 0 no-repeat;
+        background: url(@/images/sort.png) 0 0 no-repeat;
         cursor: pointer;
         &.asc {
             background-position: -38px 0;
@@ -2569,11 +2569,11 @@ div::-webkit-scrollbar-thumb {
 }
 
 .bcs-button-ellipsis span {
-    @mixin bcs-ellipsis
+    @mixin bcs-ellipsis;
 }
 
 .bcs-ellipsis {
-    @mixin bcs-ellipsis
+    @mixin bcs-ellipsis;
 }
 .ace_search_options {
     display: none !important;
@@ -2619,7 +2619,7 @@ div::-webkit-scrollbar-thumb {
     }
 }
 .bcs-cursor-element {
-    background: url("../images/lock.svg");
+    background: url("@/images/lock.svg");
     height: 16px;
     width: 12px;
 }

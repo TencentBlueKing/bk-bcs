@@ -152,7 +152,7 @@
         :quick-close="true"
         :is-show.sync="configmapSlider.isShow"
         :title="configmapSlider.title"
-        :width="'640'">
+        :width="640">
         <div class="p30" slot="content">
           <table class="bk-table biz-data-table has-table-bordered">
             <thead>
@@ -209,7 +209,7 @@
       <bk-sideslider
         :is-show.sync="addSlider.isShow"
         :title="addSlider.title"
-        :width="'800'"
+        :width="800"
         :quick-close="false">
         <div class="p30 bk-resource-configmap" slot="content">
           <div v-bkloading="{ isLoading: isUpdateLoading }">

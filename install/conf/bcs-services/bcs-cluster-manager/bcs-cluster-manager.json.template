@@ -46,6 +46,14 @@
         "server": "${bcsCmdbServer}",
         "debug": ${bcsCmdbDebug}
     },
+    "nodeman": {
+        "enable": ${bcsNodeManEnable},
+        "appCode": "${bcsAppCode}",
+        "appSecret": "${bcsAppSecret}",
+        "bkUserName": "${bcsBkUserName}",
+        "server": "${bcsNodeManServer}",
+        "debug": ${bcsNodeManDebug}
+    },
     "ssm": {
         "server": "${bcsSsmServer}",
         "appCode": "${bcsAppCode}",
@@ -75,6 +83,21 @@
         "metric": ${bcsIAMMetric},
         "debug": ${bcsIAMDebug},
         "iamApplyServer": "${bcsIAMApplyPermAddress}"
+    },
+    "auth": {
+        "enable": ${bcsAuthEnable},
+        "publicKeyFile": "${bcsAuthPublicKeyFile}",
+        "privateKeyFile": "${bcsAuthPrivateKeyFile}",
+        "clientPermissions": "${bcsAuthClientPermissions}",
+        "noAuthMethod": "${bcsAuthNoAuthMethod}"
+    },
+    "gse": {
+        "enable": ${bcsGseEnable},
+        "appCode": "${bcsGseAppCode}",
+        "appSecret": "${bcsGseAppSecret}",
+        "bkUserName": "${bcsGseBkUserName}",
+        "server": "${bcsGseServer}",
+        "debug": ${bcsGseDebug}
     },
     "bcsapp": {
         "server": "${bcsAppServer}",

@@ -53,7 +53,7 @@ import token from '@/store/modules/token';
 import { projectFeatureFlag } from '@/api/base';
 
 Vue.use(Vuex);
-Vue.config.devtools = NODE_ENV === 'development';
+Vue.config.devtools = process.env.NODE_ENV === 'development';
 // cookie 中 zh-cn / en
 let lang = cookie.parse(document.cookie).blueking_language || 'zh-cn';
 if (['zh-CN', 'zh-cn', 'cn', 'zhCN', 'zhcn'].indexOf(lang) > -1) {
@@ -467,7 +467,7 @@ store.dispatch = function (_type, _payload, config = {}) {
   const entry = store._actions[type];
 
   if (!entry) {
-    if (NODE_ENV !== 'production') {
+    if (process.env.NODE_ENV !== 'production') {
       console.error(`[vuex] unknown action type: ${type}`);
     }
     return;

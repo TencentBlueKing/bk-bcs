@@ -96,6 +96,7 @@ func (ca *CreateAction) constructNodeGroup() *cmproto.NodeGroup {
 		Creator:         ca.req.Creator,
 		CreateTime:      timeStr,
 		UpdateTime:      timeStr,
+		BkCloudID:       ca.req.BkCloudID,
 	}
 	if group.Region == "" {
 		group.Region = ca.cluster.Region

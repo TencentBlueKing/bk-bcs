@@ -21,6 +21,7 @@ type Release struct {
 	ChartVersion string   `json:"chartVersion" bson:"chartVersion"`
 	Revision     int      `json:"revision" bson:"revision"`
 	Values       []string `json:"values" bson:"values"`
+	Args         []string `json:"args" bson:"args"`
 	RollbackTo   int      `json:"rollbackTo" bson:"rollbackTo"`
 	CreateBy     string   `json:"createBy" bson:"createBy"`
 	CreateTime   int64    `json:"createTime" bson:"createTime"`

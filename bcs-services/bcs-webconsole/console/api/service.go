@@ -20,6 +20,9 @@ import (
 	"path"
 	"time"
 
+	"github.com/gin-gonic/gin"
+	"github.com/pkg/errors"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/components/bcs"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/i18n"
@@ -29,10 +32,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/sessions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/types"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/route"
-
-	"github.com/gin-gonic/gin"
-	"github.com/google/shlex"
-	"github.com/pkg/errors"
 )
 
 type service struct {
@@ -189,15 +188,18 @@ func (s *service) CreateContainerPortalSession(c *gin.Context) {
 		return
 	}
 
+	if err := consoleQuery.Validate(); err != nil {
+		msg := i18n.GetMessage(fmt.Sprintf("请求参数错误, %s", err))
+		APIError(c, msg)
+		return
+	}
+
 	// 自定义命令行
-	var commands []string
-	if consoleQuery.Command != "" {
-		commands, err = shlex.Split(consoleQuery.Command)
-		if err != nil {
-			msg := i18n.GetMessage(fmt.Sprintf("请求参数错误, command not valid, %s", err))
-			APIError(c, msg)
-			return
-		}
+	commands, err := consoleQuery.SplitCommand()
+	if err != nil {
+		msg := i18n.GetMessage(fmt.Sprintf("请求参数错误, command not valid, %s", err))
+		APIError(c, msg)
+		return
 	}
 
 	podCtx, err := podmanager.QueryOpenPodCtx(c.Request.Context(), authCtx.ClusterId, consoleQuery)
@@ -210,6 +212,9 @@ func (s *service) CreateContainerPortalSession(c *gin.Context) {
 	podCtx.ProjectId = authCtx.ProjectId
 	// bkapigw 校验, 使用 Operator 做用户标识
 	podCtx.Username = consoleQuery.Operator
+	podCtx.ConnIdleTimeout = consoleQuery.ConnIdleTimeout
+	podCtx.SessionTimeout = consoleQuery.SessionTimeout
+	podCtx.Viewers = consoleQuery.Viewers
 
 	if len(commands) > 0 {
 		podCtx.Commands = commands

@@ -69,7 +69,7 @@ export default defineComponent({
   setup(props, ctx) {
     const { $store, $router } = ctx.root;
     const { active, clusterId } = toRefs(props);
-    const activeCom = ref(active);
+    const activeCom = ref(active.value);
     const curCluster = computed(() => $store.state.cluster.clusterList
       ?.find(item => item.clusterID === clusterId.value) || {});
     const tabItems = ref([
@@ -121,8 +121,8 @@ export default defineComponent({
         font-size: 14px;
         .item {
             display: flex;
-           align-items: center;
-           justify-content: center;
+            align-items: center;
+            justify-content: center;
             min-width: 140px;
             cursor: pointer;
             &.active {

@@ -17,14 +17,18 @@ package cmd
 import (
 	"context"
 	"crypto/tls"
+	"net"
 	"net/http"
 	"path"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/http/ipv6server"
 	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
 	"github.com/Tencent/bk-bcs/bcs-common/common/static"
+	"github.com/Tencent/bk-bcs/bcs-common/common/tcp/listener"
+	"github.com/Tencent/bk-bcs/bcs-common/common/types"
 	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	microRgt "github.com/micro/go-micro/v2/registry"
@@ -65,10 +69,10 @@ type ProjectService struct {
 	clusterDiscovery *discovery.ModuleDiscovery
 
 	// http service
-	httpServer *http.Server
+	httpServer *ipv6server.IPv6Server
 
 	// metric service
-	metricServer *http.Server
+	metricServer *ipv6server.IPv6Server
 
 	// tls config for server and client
 	tlsConfig       *tls.Config
@@ -225,18 +229,28 @@ func (p *ProjectService) initPermClient() error {
 // initMicro init micro service
 func (p *ProjectService) initMicro() error {
 
-	// max size: 50M, add grpc address to access
-	// NOTE: 针对server的调整，需要放在前面，避免覆盖service内置的server
+	// server listen ip
+	ipv4 := p.opt.Server.Address
+	ipv6 := p.opt.Server.Ipv6Address
+	port := strconv.Itoa(int(p.opt.Server.Port))
+
+	// service inject metadata to discovery center
+	metadata := make(map[string]string)
+	metadata[config.MicroMetaKeyHTTPPort] = strconv.Itoa(int(p.opt.Server.HTTPPort))
+
+	// 适配单栈环境（ipv6注册地址不能是本地回环地址）
+	if v := net.ParseIP(ipv6); v != nil && !v.IsLoopback() {
+		metadata[types.IPV6] = net.JoinHostPort(ipv6, port)
+	}
+
 	authWrapper := wrapper.NewAuthWrapper()
 	server := serverGrpc.NewServer(serverGrpc.MaxMsgSize(config.MaxMsgSize))
 	svc := microGrpc.NewService(
 		microSvc.Server(server),
 		microSvc.Name(config.ServiceDomain),
-		microSvc.Metadata(map[string]string{
-			config.MicroMetaKeyHTTPPort: strconv.Itoa(int(p.opt.Server.HTTPPort)),
-		}),
+		microSvc.Metadata(metadata),
 		microGrpc.WithTLS(p.tlsConfig),
-		microSvc.Address(p.opt.Server.Address+":"+strconv.Itoa(int(p.opt.Server.Port))),
+		microSvc.Address(net.JoinHostPort(ipv4, port)),
 		microSvc.Registry(p.microRgt),
 		microSvc.Version(version.Version),
 		microSvc.RegisterTTL(30*time.Second),      // add ttl to config
@@ -266,18 +280,32 @@ func (p *ProjectService) initMicro() error {
 	)
 	svc.Init()
 
+	dualStackListener := listener.NewDualStackListener()
+	if err := dualStackListener.AddListener(ipv4, port); err != nil {
+		return err
+	}
+	if err := dualStackListener.AddListener(ipv6, port); err != nil {
+		return err
+	}
+	// get grpc server
+	grpcServer := svc.Server()
+	// add dual stack listener to grpc server
+	if err := grpcServer.Init(serverGrpc.Listener(dualStackListener)); err != nil {
+		return err
+	}
+
 	// project handler
-	if err := proto.RegisterBCSProjectHandler(svc.Server(), handler.NewProject(p.model)); err != nil {
+	if err := proto.RegisterBCSProjectHandler(grpcServer, handler.NewProject(p.model)); err != nil {
 		logging.Error("register handler failed, err: %s", err.Error())
 		return err
 	}
 	// 添加变量相关的handler
-	if err := proto.RegisterVariableHandler(svc.Server(), handler.NewVariable(p.model)); err != nil {
+	if err := proto.RegisterVariableHandler(grpcServer, handler.NewVariable(p.model)); err != nil {
 		logging.Error("register handler failed, err: %s", err.Error())
 		return err
 	}
 	// 添加健康检查相关handler
-	if err := proto.RegisterHealthzHandler(svc.Server(), handler.NewHealthz()); err != nil {
+	if err := proto.RegisterHealthzHandler(grpcServer, handler.NewHealthz()); err != nil {
 		logging.Error("register healthz handler failed, err: %s", err.Error())
 		return err
 	}
@@ -371,14 +399,14 @@ func (p *ProjectService) initHttpService() error {
 	p.initSwagger(mux)
 	mux.Handle("/", router)
 
-	httpAddr := p.opt.Server.Address + ":" + strconv.Itoa(int(p.opt.Server.HTTPPort))
-	p.httpServer = &http.Server{
-		Addr:    httpAddr,
-		Handler: mux,
+	addresses := []string{p.opt.Server.Address}
+	if len(p.opt.Server.Ipv6Address) > 0 {
+		addresses = append(addresses, p.opt.Server.Ipv6Address)
 	}
+	p.httpServer = ipv6server.NewIPv6Server(addresses, strconv.Itoa(int(p.opt.Server.HTTPPort)), "", mux)
 	go func() {
 		var err error
-		logging.Info("start http server on address %s", httpAddr)
+		logging.Info("start http server on address %+s", addresses)
 		if p.tlsConfig != nil {
 			p.httpServer.TLSConfig = p.tlsConfig
 			err = p.httpServer.ListenAndServeTLS("", "")
@@ -395,17 +423,17 @@ func (p *ProjectService) initHttpService() error {
 
 func (p *ProjectService) initMetric() error {
 	logging.Info("init metric handler")
-	metricAddr := p.opt.Server.Address + ":" + strconv.Itoa(int(p.opt.Server.MetricPort))
 	metricMux := http.NewServeMux()
 	metricMux.Handle("/metrics", promhttp.Handler())
-	p.metricServer = &http.Server{
-		Addr:    metricAddr,
-		Handler: metricMux,
+	addresses := []string{p.opt.Server.Address}
+	if len(p.opt.Server.Ipv6Address) > 0 {
+		addresses = append(addresses, p.opt.Server.Ipv6Address)
 	}
+	p.metricServer = ipv6server.NewIPv6Server(addresses, strconv.Itoa(p.opt.Server.MetricPort), "", metricMux)
 
 	go func() {
 		var err error
-		logging.Info("start metric server on address %s", metricAddr)
+		logging.Info("start metric server on address %+v", addresses)
 		if err = p.metricServer.ListenAndServe(); err != nil {
 			logging.Error("start metric server failed, %s", err.Error())
 			p.stopCh <- struct{}{}

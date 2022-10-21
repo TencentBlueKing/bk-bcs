@@ -16,6 +16,7 @@ package app
 import (
 	"context"
 	"fmt"
+	"net"
 	"net/http"
 	"os"
 	"strings"
@@ -23,20 +24,23 @@ import (
 
 	logger "github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
+	"github.com/Tencent/bk-bcs/bcs-common/common/tcp/listener"
+	"github.com/Tencent/bk-bcs/bcs-common/common/types"
+	"github.com/Tencent/bk-bcs/bcs-common/common/util"
 	"github.com/Tencent/bk-bcs/bcs-common/common/version"
-	yaml "github.com/asim/go-micro/plugins/config/encoder/yaml/v4"
-	etcd "github.com/asim/go-micro/plugins/registry/etcd/v4"
-	mhttp "github.com/asim/go-micro/plugins/server/http/v4"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	yaml "github.com/go-micro/plugins/v4/config/encoder/yaml"
+	etcd "github.com/go-micro/plugins/v4/registry/etcd"
+	mhttp "github.com/go-micro/plugins/v4/server/http"
 	"github.com/urfave/cli/v2"
 	"go-micro.dev/v4"
-	"go-micro.dev/v4/cmd"
 	microConf "go-micro.dev/v4/config"
 	"go-micro.dev/v4/config/reader"
 	"go-micro.dev/v4/config/reader/json"
 	"go-micro.dev/v4/config/source/file"
 	"go-micro.dev/v4/registry"
+	"go-micro.dev/v4/util/cmd"
 	"golang.org/x/sync/errgroup"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/app/options"
@@ -54,6 +58,9 @@ var (
 	appName              = "bcs-webconsole"
 	versionTag           = "latest"
 	credentialConfigPath = cli.StringSlice{}
+	serverAddressFlag    = "server_address" // 默认启动ip:port
+	podIPsEnv            = "POD_IPs"        // 双栈监听环境变量
+	ipv6Interface        = "IPV6_INTERFACE" // ipv6本地网关地址
 )
 
 // WebConsoleManager is an console struct
@@ -63,6 +70,8 @@ type WebConsoleManager struct {
 	microService  micro.Service
 	microConfig   microConf.Config
 	multiCredConf *options.MultiCredConf
+	serverAddress string
+	listenPort    string
 }
 
 // NewWebConsoleManager xxx
@@ -87,12 +96,29 @@ func (c *WebConsoleManager) Init() error {
 		return err
 	}
 
+	metadata := map[string]string{}
+	dualStackListener := listener.NewDualStackListener()
+
+	if err := dualStackListener.AddListenerWithAddr(c.serverAddress); err != nil {
+		return err
+	}
+
+	ipv6Addr := getIPv6AddrFromEnv(c.listenPort)
+	if ipv6Addr != "" {
+		metadata[types.IPV6] = ipv6Addr
+		if err := dualStackListener.AddListenerWithAddr(ipv6Addr); err != nil {
+			return err
+		}
+		logger.Infof("dualStackListener with ipv6: %s", ipv6Addr)
+	}
+
 	if etcdRegistry != nil {
 		microService.Init(
 			micro.RegisterTTL(time.Second*30),
 			micro.RegisterInterval(time.Second*15),
 			micro.Registry(etcdRegistry),
-
+			micro.Metadata(metadata),
+			micro.Server(mhttp.NewServer(mhttp.Listener(dualStackListener))),
 			micro.AfterStop(func() error {
 				// 会让 websocket 发送 EndOfTransmission, 不能保证一定发送成功
 				logger.Info("receive interput, gracefully shutdown")
@@ -115,7 +141,7 @@ func (c *WebConsoleManager) Init() error {
 	return nil
 }
 
-func (c *WebConsoleManager) initMicroService() (micro.Service, microConf.Config, *options.MultiCredConf) {
+func (m *WebConsoleManager) initMicroService() (micro.Service, microConf.Config, *options.MultiCredConf) {
 	var (
 		configPath string
 	)
@@ -138,7 +164,7 @@ func (c *WebConsoleManager) initMicroService() (micro.Service, microConf.Config,
 	microCmd := cmd.NewCmd(cmdOptions...)
 	microCmd.App().Flags = []cli.Flag{
 		&cli.StringFlag{
-			Name:    "server_address",
+			Name:    serverAddressFlag,
 			EnvVars: []string{"MICRO_SERVER_ADDRESS"},
 			Usage:   "Bind address for the server. 127.0.0.1:8080",
 		},
@@ -161,6 +187,10 @@ func (c *WebConsoleManager) initMicroService() (micro.Service, microConf.Config,
 			return err
 		}
 
+		// 解析端口地址
+		m.listenPort = parseListenPort(c)
+		m.serverAddress = c.Value(serverAddressFlag).(string)
+
 		// 初始化配置文件
 		if err := config.G.ReadFrom(conf.Bytes()); err != nil {
 			logger.Errorf("config not valid, err: %s, exited", err)
@@ -182,7 +212,7 @@ func (c *WebConsoleManager) initMicroService() (micro.Service, microConf.Config,
 		return nil
 	}
 
-	srv := micro.NewService(micro.Server(mhttp.NewServer()))
+	srv := micro.NewService()
 	opts := []micro.Option{
 		micro.Name(service),
 		micro.Version(versionTag),
@@ -268,6 +298,48 @@ func checkVersion() bool {
 		}
 	}
 	return false
+}
+
+// parseListenPort 解析端口
+func parseListenPort(c *cli.Context) string {
+	// 解析端口地址
+	ipv4, ok := c.Value(serverAddressFlag).(string)
+	if !ok || ipv4 == "" {
+		return ""
+	}
+
+	_, port, _ := net.SplitHostPort(ipv4)
+	return port
+}
+
+// getIPv6AddrFromEnv 解析ipv6
+func getIPv6AddrFromEnv(listenPort string) string {
+	if listenPort == "" {
+		return ""
+	}
+
+	podIPs := os.Getenv(podIPsEnv)
+	if podIPs == "" {
+		return ""
+	}
+
+	ipv6 := util.GetIPv6Address(podIPs)
+	if ipv6 == "" {
+		return ""
+	}
+
+	// 在实际中，ipv6不能是回环地址
+	if v := net.ParseIP(ipv6); v == nil || v.IsLoopback() {
+		return ""
+	}
+
+	// local link ipv6 需要带上 interface， 格式如::%eth0
+	ipv6Interface := os.Getenv(ipv6Interface)
+	if ipv6Interface != "" {
+		ipv6 = ipv6 + "%" + ipv6Interface
+	}
+
+	return net.JoinHostPort(ipv6, listenPort)
 }
 
 // Run create a pid

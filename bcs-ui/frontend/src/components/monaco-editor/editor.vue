@@ -10,25 +10,7 @@
 <script>
 import assign from 'nano-assign';
 import monokaiTheme from './theme.json';
-import * as monaco from 'monaco-editor/esm/vs/editor/editor.main';
-
-self.MonacoEnvironment = {
-  getWorkerUrl(moduleId, label) {
-    if (label === 'json') {
-      return `${window.DEVOPS_BCS_HOST}${window.STATIC_URL}${window.VERSION_STATIC_URL}/json.worker.js`;
-    }
-    if (label === 'css') {
-      return `${window.DEVOPS_BCS_HOST}${window.STATIC_URL}${window.VERSION_STATIC_URL}/css.worker.js`;
-    }
-    if (label === 'html') {
-      return `${window.DEVOPS_BCS_HOST}${window.STATIC_URL}${window.VERSION_STATIC_URL}/html.worker.js`;
-    }
-    if (label === 'typescript' || label === 'javascript') {
-      return `${window.DEVOPS_BCS_HOST}${window.STATIC_URL}${window.VERSION_STATIC_URL}/ts.worker.js`;
-    }
-    return `${window.DEVOPS_BCS_HOST}${window.STATIC_URL}${window.VERSION_STATIC_URL}/editor.worker.js`;
-  },
-};
+import * as monaco from 'monaco-editor';
 
 export default {
   name: 'MonacoEditor',
@@ -52,7 +34,7 @@ export default {
     },
     language: {
       type: String,
-      default: 'javascript',
+      default: 'yaml',
     },
     options: {
       type: Object,

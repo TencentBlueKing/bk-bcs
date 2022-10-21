@@ -14,8 +14,6 @@
         <div class="biz-panel-header" style="padding: 20px;">
           <div class="left">
             <bk-dropdown-menu
-              @show="dropdownShow"
-              @hide="dropdownHide"
               :key="projectKind"
               ref="dropdown"
               v-authority="{
@@ -149,7 +147,7 @@
                                 </template>
                               </template>
 
-                              <bk-dropdown-menu class="dropdown-menu" :align="'right'" ref="dropdown">
+                              <bk-dropdown-menu class="dropdown-menu ml5" :align="'right'" ref="dropdown">
                                 <bk-button slot="dropdown-trigger" style="width: 82px; position: relative;">
                                   <span class="f14">{{$t('更多')}}</span>
                                   <i class="bcs-icon bcs-icon-angle-down dropdown-menu-angle-down ml0" style="font-size: 10px;"></i>
@@ -429,17 +427,11 @@
 <script>
 import applyPerm from '@/mixins/apply-perm';
 import { catchErrorHandler } from '@/common/util';
-import { Archive } from 'libarchive.js/main.js';
-
-Archive.init({
-  workerUrl: `${window.STATIC_URL}${window.VERSION_STATIC_URL}/archive-worker/worker-bundle.js`,
-});
 
 export default {
   mixins: [applyPerm],
   data() {
     return {
-      PROJECT_MESOS: window.PROJECT_MESOS,
       fileImportIndex: 0,
       zipTooltipText: this.$t('只允许导入从已有模板集导出的zip包'),
       webAnnotationsPerms: {},

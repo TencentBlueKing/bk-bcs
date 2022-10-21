@@ -23,9 +23,6 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/release"
-
 	"github.com/spf13/pflag"
 	"helm.sh/helm/v3/pkg/action"
 	"helm.sh/helm/v3/pkg/chart"
@@ -33,10 +30,14 @@ import (
 	rspb "helm.sh/helm/v3/pkg/release"
 	"k8s.io/apimachinery/pkg/util/yaml"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/release"
 )
 
 const (
 	bcsAPIGWK8SBaseURI = "%s/clusters/%s/"
+	defaultMaxHistory  = 100
 )
 
 // Config 定义了使用sdk的基本参数
@@ -113,7 +114,7 @@ func (g *group) getClient(clusterID string) Client {
 // Client 定义了支持的helm operation接口
 type Client interface {
 	Get(ctx context.Context, namespace, name string, revision int) (*rspb.Release, error)
-	List(ctx context.Context, namespace string) ([]*rspb.Release, error)
+	List(ctx context.Context, option release.ListOption) ([]*rspb.Release, error)
 	Install(ctx context.Context, config release.HelmInstallConfig) (*release.HelmInstallResult, error)
 	Upgrade(ctx context.Context, config release.HelmUpgradeConfig) (*release.HelmUpgradeResult, error)
 	Uninstall(ctx context.Context, config release.HelmUninstallConfig) (*release.HelmUninstallResult, error)
@@ -146,13 +147,20 @@ func (c *client) Get(_ context.Context, namespace, name string, revision int) (*
 }
 
 // List helm release
-func (c *client) List(_ context.Context, namespace string) ([]*rspb.Release, error) {
+func (c *client) List(_ context.Context, option release.ListOption) ([]*rspb.Release, error) {
 	conf := new(action.Configuration)
-	if err := conf.Init(c.getConfigFlag(namespace), namespace, "", blog.Infof); err != nil {
+	if err := conf.Init(c.getConfigFlag(option.Namespace), option.Namespace, "", blog.Infof); err != nil {
 		return nil, err
 	}
 
-	releases, err := action.NewList(conf).Run()
+	lister := action.NewList(conf)
+	if len(option.Namespace) == 0 {
+		lister.AllNamespaces = true
+	}
+	if len(option.Name) != 0 {
+		lister.Filter = option.Name
+	}
+	releases, err := lister.Run()
 	if err != nil {
 		return nil, err
 	}
@@ -213,9 +221,10 @@ func (c *client) Install(_ context.Context, config release.HelmInstallConfig) (*
 	if r.Chart != nil && r.Chart.Metadata != nil {
 		appVersion = r.Chart.Metadata.AppVersion
 	}
-	blog.Infof("sdk client install release successfully name %s, namespace %s, revision: %d",
-		config.Name, config.Namespace, r.Version)
+	blog.Infof("sdk client install release successfully name %s, namespace %s, revision: %d, dryrun: %t",
+		config.Name, config.Namespace, r.Version, config.DryRun)
 	return &release.HelmInstallResult{
+		Release:    r,
 		Revision:   r.Version,
 		Status:     status,
 		AppVersion: appVersion,
@@ -276,6 +285,7 @@ func (c *client) Upgrade(_ context.Context, config release.HelmUpgradeConfig) (*
 	blog.Infof("sdk client upgrade release successfully name %s, namespace %s, revision: %d",
 		config.Name, config.Namespace, r.Version)
 	return &release.HelmUpgradeResult{
+		Release:    r,
 		Revision:   r.Version,
 		Status:     status,
 		AppVersion: appVersion,
@@ -480,6 +490,8 @@ func parseArgs4Install(install *action.Install, args []string) error {
 		"if set, no CRDs will be installed. By default, CRDs are installed if not already present")
 	f.BoolVar(&install.SubNotes, "render-subchart-notes", false,
 		"if set, render subchart notes along with the parent")
+	f.BoolVar(&install.ChartPathOptions.InsecureSkipTLSverify, "insecure-skip-tls-verify", false,
+		"skip tls certificate checks for the chart download")
 
 	return f.Parse(args)
 }
@@ -522,11 +534,16 @@ func parseArgs4Upgrade(upgrade *action.Upgrade, args []string) error {
 	f.BoolVar(&upgrade.Atomic, "atomic", false,
 		"if set, upgrade process rolls back changes made in case of failed upgrade. "+
 			"The --wait flag will be set automatically if --atomic is used")
+	f.IntVar(&upgrade.MaxHistory, "history-max", defaultMaxHistory, "limit the maximum number of revisions saved "+
+		"per release. Use 0 for no limit")
 	f.BoolVar(&upgrade.CleanupOnFail, "cleanup-on-fail", false,
 		"allow deletion of new resources created in this upgrade when upgrade fails")
 	f.BoolVar(&upgrade.SubNotes, "render-subchart-notes", false,
 		"if set, render subchart notes along with the parent")
 	f.StringVar(&upgrade.Description, "description", "", "add a custom description")
+	f.BoolVar(&upgrade.ChartPathOptions.InsecureSkipTLSverify, "insecure-skip-tls-verify", false,
+		"skip tls certificate checks for the chart download")
+	f.BoolVar(&upgrade.Verify, "verify", false, "verify the package before using it")
 
 	return f.Parse(args)
 }

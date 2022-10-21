@@ -269,12 +269,12 @@
               :outer-border="false"
               :header-border="false"
               :header-cell-style="{ background: '#fff' }">
-              <bk-table-column :label="$t('主机名称')" prop="host_name">
+              <bk-table-column :label="$t('主机名称')" prop="nodeName">
                 <template #default="{ row }">
-                  {{ row.host_name || '--' }}
+                  {{ row.nodeName || '--' }}
                 </template>
               </bk-table-column>
-              <bk-table-column :label="$t('内网IP')" prop="inner_ip"></bk-table-column>
+              <bk-table-column :label="$t('内网IP')" prop="innerIP"></bk-table-column>
               <bk-table-column :label="$t('Agent状态')" prop="agent">
                 <template #default="{ row }">
                   <StatusIcon :status="String(row.agent)" :status-color-map="statusColorMap">
@@ -285,7 +285,7 @@
               <template v-if="$INTERNAL">
                 <bk-table-column :label="$t('机房')" prop="idc"></bk-table-column>
                 <bk-table-column :label="$t('机架')" prop="rack"></bk-table-column>
-                <bk-table-column :label="$t('机型')" prop="device_class"></bk-table-column>
+                <bk-table-column :label="$t('机型')" prop="deviceClass"></bk-table-column>
               </template>
             </bk-table>
           </div>
@@ -342,6 +342,7 @@
 // import moment from 'moment'
 import StatusIcon from '@/views/dashboard/common/status-icon.tsx';
 import useVariable from '@/views/variable/use-variable';
+import { masterList } from '@/api/modules/cluster-manager';
 export default {
   name: 'NodeInfo',
   components: {
@@ -537,11 +538,10 @@ export default {
     async handleShowMasterInfo() {
       this.showMasterInfoDialog = true;
       this.masterInfoLoading = true;
-      const res = await this.$store.dispatch('cluster/getClusterMasterInfo', {
-        projectId: this.projectId,
-        clusterId: this.curCluster.cluster_id,
+      const data = await masterList({
+        $clusterId: this.curCluster.cluster_id,
       }).catch(() => []);
-      this.masterData = res.data;
+      this.masterData = data;
       this.masterInfoLoading = false;
     },
 

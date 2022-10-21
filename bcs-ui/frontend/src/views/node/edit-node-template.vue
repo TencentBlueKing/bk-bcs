@@ -6,7 +6,7 @@
       collapsible
       :initial-divide="400"
       :border="false"
-      :min="0"
+      :min="3"
       disabled>
       <template #aside>
         <div class="node-template-aside">

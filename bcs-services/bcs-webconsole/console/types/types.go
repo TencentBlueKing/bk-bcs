@@ -14,6 +14,10 @@
 // Package types xxx
 package types
 
+import (
+	"time"
+)
+
 // WebConsoleMode webconsole 类型
 type WebConsoleMode string
 
@@ -24,6 +28,13 @@ const (
 	ClusterExternalMode WebConsoleMode = "cluster_external" // 平台集群, 外部模式, 需要设置 AdminClusterId
 	// ContainerDirectMode xxx
 	ContainerDirectMode WebConsoleMode = "container_direct" // 直连容器
+)
+
+const (
+	defaultSessionTimeout  = time.Minute * 30 // session 过期时间
+	defaultConnIdleTimeout = time.Minute * 30 // 链接自动断开时间, 30分钟
+	MaxSessionTimeout      = 24 * 60
+	MaxConnIdleTimeout     = 24 * 60
 )
 
 // APIResponse xxx
@@ -55,20 +66,59 @@ type Container struct {
 
 // PodContext xxx
 type PodContext struct {
-	ProjectId      string         `json:"project_id"`
-	Username       string         `json:"username"`
-	AdminClusterId string         `json:"admin_cluster_id"` // kubectld pod 所在集群Id, kubectl api 连接的集群
-	Namespace      string         `json:"namespace"`
-	PodName        string         `json:"pod_name"`
-	ClusterId      string         `json:"cluster_id"` // 目标集群Id
-	ContainerName  string         `json:"container_name"`
-	Commands       []string       `json:"commands"`
-	Mode           WebConsoleMode `json:"mode"`
-	Source         string         `json:"source"`
+	ProjectId       string         `json:"project_id"`
+	Username        string         `json:"username"`
+	Viewers         []string       `json:"viewers"`
+	AdminClusterId  string         `json:"admin_cluster_id"` // kubectld pod 所在集群Id, kubectl api 连接的集群
+	Namespace       string         `json:"namespace"`
+	PodName         string         `json:"pod_name"`
+	ClusterId       string         `json:"cluster_id"` // 目标集群Id
+	ContainerName   string         `json:"container_name"`
+	Commands        []string       `json:"commands"`
+	Mode            WebConsoleMode `json:"mode"`
+	Source          string         `json:"source"`
+	SessionTimeout  int64          `json:"session_timeout"`   // session 过期时间, 单位分钟
+	ConnIdleTimeout int64          `json:"conn_idle_timeout"` // 空闲时间, 单位分钟
+}
+
+// GetConnIdleTimeout 获取空闲过期时间
+func (c *PodContext) GetConnIdleTimeout() time.Duration {
+	if c.ConnIdleTimeout == 0 {
+		return defaultConnIdleTimeout
+	}
+	return time.Minute * time.Duration(c.ConnIdleTimeout)
+}
+
+// GetSessionTimeout 获取 session 过期时间
+func (c *PodContext) GetSessionTimeout() time.Duration {
+	if c.SessionTimeout == 0 {
+		return defaultSessionTimeout
+	}
+	return time.Minute * time.Duration(c.SessionTimeout)
+}
+
+// HasPerm 是否有权限
+func (c *PodContext) HasPerm(username string) bool {
+	if c.Username == username {
+		return true
+	}
+
+	for _, viewer := range c.Viewers {
+		if viewer == username {
+			return true
+		}
+	}
+
+	return false
 }
 
 // TimestampPodContext 带时间戳的 PodContext
 type TimestampPodContext struct {
 	PodContext
 	Timestamp int64 `json:"timestamp"`
+}
+
+func (c *TimestampPodContext) IsExpired() bool {
+	expireTimestamp := time.Now().Add(-c.GetSessionTimeout()).Unix()
+	return c.Timestamp <= expireTimestamp
 }

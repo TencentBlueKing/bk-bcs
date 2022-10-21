@@ -3,8 +3,8 @@
     /deep/ .bk-tab-label-item {
         background-color: #FAFBFD;
         border-bottom: 1px solid #dcdee5;
-        line-height: 39px !important;
-        height: 39px;
+        line-height: 41px !important;
+        height: 41px;
         &.active {
             border-bottom: none;
         }

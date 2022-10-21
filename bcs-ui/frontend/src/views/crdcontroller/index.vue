@@ -193,7 +193,7 @@
                   </td>
                 </tr>
               </template>
-              <template v-if="!crdControllerList.length && !showLoading">
+              <template v-if="!crdControllerList.length">
                 <tr>
                   <td colspan="5">
                     <bcs-exception type="empty" scene="part"></bcs-exception>
@@ -274,7 +274,7 @@
                   </td>
                 </tr>
               </template>
-              <template v-if="!crdControllerList.length && !showLoading">
+              <template v-if="!crdControllerList.length">
                 <tr>
                   <td colspan="6">
                     <bcs-exception type="empty" scene="part"></bcs-exception>
@@ -292,7 +292,7 @@
       :quick-close="false"
       :is-show.sync="valueSlider.isShow"
       :title="valueSlider.title"
-      :width="'900'">
+      :width="900">
       <div class="p0" slot="content">
         <bk-button class="bk-button bk-primary save-crd-btn" @click.stop.prevent="enableCrdController">{{$t('启用')}}</bk-button>
         <bk-button class="bk-button bk-default hide-crd-btn" @click.stop.prevent="hideApplicationJson">{{$t('取消')}}</bk-button>

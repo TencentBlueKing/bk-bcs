@@ -517,8 +517,11 @@ func (hm *HelmManager) getServerAddress() error {
 
 // InitComponentConfig init component config
 func (hm *HelmManager) InitComponentConfig() error {
-	c := project.ProjectClient{Host: hm.opt.ProjectService.Host, Token: hm.opt.App.Token}
-	project.NewClient(c)
+	err := project.NewClient(hm.clientTLSConfig, hm.microRgt)
+	if err != nil {
+		blog.Error("init project client error, %s", err.Error())
+		return err
+	}
 	blog.Info("init project client successfully")
 	return nil
 }

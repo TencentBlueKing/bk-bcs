@@ -23,4 +23,5 @@ import (
 var (
 	// LocalIP 服务运行 Pod IP，用于向etcd注册服务
 	LocalIP = stringx.GetEnv("localIp", "")
+	LocalIPV6 = stringx.GetEnv("localIpv6", "")
 )

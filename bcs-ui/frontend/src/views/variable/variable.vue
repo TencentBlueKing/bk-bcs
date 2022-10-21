@@ -134,7 +134,7 @@
     <bcs-sideslider
       :is-show.sync="showSideslider"
       quick-close
-      width="800"
+      :width="800"
       :title="$t('如何从文件导入变量？')">
       <template #content>
         <div class="p20">

@@ -35,7 +35,7 @@ const DashboardWorkloadPods = () => import(/* webpackChunkName: 'dashboard-workl
 const DashboardWorkloadDetail = () => import(/* webpackChunkName: 'dashboard-workload-detail' */'@/views/dashboard/workload/detail/index.vue');
 
 // 资源表单化创建
-const DashboardFormResourceUpdate = () => import(/* webpackChunkName: resource-create */'@/views/dashboard/resource-update/form-resource.vue');
+const DashboardFormResourceUpdate = () => import(/* webpackChunkName: 'resource-create' */'@/views/dashboard/resource-update/form-resource.vue');
 
 // 自定义资源
 const DashboardCRD = () => import(/* webpackChunkName: 'dashboard-custom' */'@/views/dashboard/custom/crd.vue');

@@ -1,5 +1,5 @@
 <template>
-  <div :style="style" class="bk-spin-loading" :class="extCls">
+  <div class="bk-spin-loading" :class="extCls">
     <div class="rotate rotate1"></div>
     <div class="rotate rotate2"></div>
     <div class="rotate rotate3"></div>
@@ -17,13 +17,6 @@ export default {
     extCls: {
       type: String,
       default: 'bk-spin-loading-primary',
-    },
-    // eslint-disable-next-line vue/no-reserved-props
-    style: {
-      type: Object,
-      default: () => ({
-        left: '5px',
-      }),
     },
   },
 };

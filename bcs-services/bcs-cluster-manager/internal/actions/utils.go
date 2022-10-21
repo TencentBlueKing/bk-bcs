@@ -17,6 +17,8 @@ import (
 	"context"
 	"fmt"
 
+	corev1 "k8s.io/api/core/v1"
+
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
 )
@@ -89,4 +91,30 @@ func GetDefaultClusterAutoScalingOption(clusterID string) *proto.ClusterAutoScal
 		BufferResourceRatio: 100,
 		ClusterID:           clusterID,
 	}
+}
+
+// TaintToK8sTaint convert taint to k8s taint
+func TaintToK8sTaint(taint []*proto.Taint) []corev1.Taint {
+	taints := make([]corev1.Taint, 0)
+	for _, v := range taint {
+		taints = append(taints, corev1.Taint{
+			Key:    v.Key,
+			Value:  v.Value,
+			Effect: corev1.TaintEffect(v.Effect),
+		})
+	}
+	return taints
+}
+
+// K8sTaintToTaint convert k8s taint to taint
+func K8sTaintToTaint(taint []corev1.Taint) []*proto.Taint {
+	taints := make([]*proto.Taint, 0)
+	for _, v := range taint {
+		taints = append(taints, &proto.Taint{
+			Key:    v.Key,
+			Value:  v.Value,
+			Effect: string(v.Effect),
+		})
+	}
+	return taints
 }

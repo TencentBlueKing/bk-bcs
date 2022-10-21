@@ -109,12 +109,10 @@ func (rs *redisStore) Cleanup(ctx context.Context) error {
 	}
 	var expireSessions []string
 
-	expireTimestamp := time.Now().Add(-expireDuration).Unix()
-
 	for key, value := range values {
 		var podCtx types.TimestampPodContext
 		err := json.Unmarshal([]byte(value), &podCtx)
-		if err == nil && podCtx.Timestamp >= expireTimestamp {
+		if err == nil && !podCtx.IsExpired() {
 			continue
 		}
 

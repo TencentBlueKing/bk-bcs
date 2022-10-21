@@ -22,15 +22,19 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/clusterops"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/cluster"
+	spb "google.golang.org/protobuf/types/known/structpb"
+	corev1 "k8s.io/api/core/v1"
 
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/auth"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/cmdb"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/gse"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
 	storeopt "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/options"
-
-	spb "google.golang.org/protobuf/types/known/structpb"
 )
 
 // ListAction list action for cluster
@@ -405,13 +409,16 @@ type ListNodesInClusterAction struct {
 	model store.ClusterManagerModel
 	req   *cmproto.ListNodesInClusterRequest
 	resp  *cmproto.ListNodesInClusterResponse
-	nodes []*cmproto.Node
+	k8sOp *clusterops.K8SOperator
+	nodes []*cmproto.ClusterNode
 }
 
 // NewListNodesInClusterAction create list action for cluster
-func NewListNodesInClusterAction(model store.ClusterManagerModel) *ListNodesInClusterAction {
+func NewListNodesInClusterAction(model store.ClusterManagerModel,
+	k8sOp *clusterops.K8SOperator) *ListNodesInClusterAction {
 	return &ListNodesInClusterAction{
 		model: model,
+		k8sOp: k8sOp,
 	}
 }
 
@@ -448,14 +455,28 @@ func (la *ListNodesInClusterAction) listNodes() error {
 		blog.Errorf("list nodes in cluster %s failed, %s", la.req.ClusterID, err.Error())
 		return err
 	}
+
+	if !la.req.ShowPwd {
+		removeNodeSensitiveInfo(nodes)
+	}
+	cmNodes := make([]*cmproto.ClusterNode, 0)
 	for i := range nodes {
-		if !la.req.ShowPwd {
-			nodes[i].Passwd = ""
-		}
-		la.nodes = append(la.nodes, nodes[i])
+		cmNodes = append(cmNodes, transNodeToClusterNode(nodes[i]))
 	}
 
+	k8sNodes := filterNodesRole(la.getK8sNodes(), false)
+	la.nodes = mergeClusterNodes(cmNodes, k8sNodes)
+
 	return nil
+}
+
+func (la *ListNodesInClusterAction) getK8sNodes() []*corev1.Node {
+	k8sNodes, err := la.k8sOp.ListClusterNodes(la.ctx, la.req.ClusterID)
+	if err != nil {
+		blog.Warnf("ListClusterNodes %s failed, %s", la.req.ClusterID, err.Error())
+		return nil
+	}
+	return k8sNodes
 }
 
 func (la *ListNodesInClusterAction) setResp(code uint32, msg string) {
@@ -470,6 +491,136 @@ func (la *ListNodesInClusterAction) Handle(ctx context.Context,
 	req *cmproto.ListNodesInClusterRequest, resp *cmproto.ListNodesInClusterResponse) {
 	if req == nil || resp == nil {
 		blog.Errorf("list cluster nodes failed, req or resp is empty")
+		return
+	}
+	la.ctx = ctx
+	la.req = req
+	la.resp = resp
+
+	if err := la.validate(); err != nil {
+		la.setResp(common.BcsErrClusterManagerInvalidParameter, err.Error())
+		return
+	}
+	if err := la.listNodes(); err != nil {
+		la.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
+		return
+	}
+	la.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
+	return
+}
+
+// ListMastersInClusterAction list action for cluster
+type ListMastersInClusterAction struct {
+	ctx   context.Context
+	model store.ClusterManagerModel
+	req   *cmproto.ListMastersInClusterRequest
+	resp  *cmproto.ListMastersInClusterResponse
+	k8sOp *clusterops.K8SOperator
+	nodes []*cmproto.ClusterNode
+}
+
+// NewListMastersInClusterAction create list action for cluster
+func NewListMastersInClusterAction(model store.ClusterManagerModel,
+	k8sOp *clusterops.K8SOperator) *ListMastersInClusterAction {
+	return &ListMastersInClusterAction{
+		model: model,
+		k8sOp: k8sOp,
+	}
+}
+
+func (la *ListMastersInClusterAction) validate() error {
+	if err := la.req.Validate(); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (la *ListMastersInClusterAction) listNodes() error {
+	cluster, err := la.model.GetCluster(la.ctx, la.req.ClusterID)
+	if err != nil {
+		blog.Errorf("get cluster %s failed, %s", la.req.ClusterID, err.Error())
+		return err
+	}
+	for _, v := range cluster.Master {
+		la.nodes = append(la.nodes, transNodeToClusterNode(v))
+	}
+
+	masters, err := la.k8sOp.ListClusterNodes(la.ctx, la.req.ClusterID)
+	if err != nil {
+		blog.Warnf("ListClusterNodes %s failed, %s", la.req.ClusterID, err.Error())
+	}
+
+	masters = filterNodesRole(masters, true)
+	la.nodes = mergeClusterNodes(la.nodes, masters)
+
+	la.appendNodeAgent()
+	la.appendHostInfo()
+	return nil
+}
+
+func (la *ListMastersInClusterAction) appendNodeAgent() {
+	gseClient := gse.GetGseClient()
+	hosts := make([]gse.Host, 0)
+	for _, v := range la.nodes {
+		hosts = append(hosts, gse.Host{IP: v.InnerIP, BKCloudID: gse.DefaultBKCloudID})
+	}
+	if len(hosts) == 0 {
+		return
+	}
+	resp, err := gseClient.GetAgentStatus(&gse.GetAgentStatusReq{
+		BKSupplierAccount: gse.DefaultBKSupplierAccount,
+		Hosts:             hosts,
+	})
+	if err != nil {
+		blog.Warnf("GetAgentStatus for %s failed, %s", utils.ToJSONString(hosts), err.Error())
+		return
+	}
+
+	for i := range la.nodes {
+		la.nodes[i].Agent = uint32(resp.Data[gse.BKAgentKey(gse.DefaultBKCloudID,
+			la.nodes[i].InnerIP)].BKAgentAlive)
+	}
+}
+
+func (la *ListMastersInClusterAction) appendHostInfo() {
+	ips := make([]string, 0)
+	for _, v := range la.nodes {
+		ips = append(ips, v.InnerIP)
+	}
+	if len(ips) == 0 {
+		return
+	}
+
+	cmdbClient := cmdb.GetCmdbClient()
+	hosts, err := cmdbClient.QueryAllHostInfoWithoutBiz(ips)
+	if err != nil {
+		blog.Warnf("GetHostInfo for %s failed, %s", la.req.ClusterID, err.Error())
+		return
+	}
+
+	for i := range la.nodes {
+		for _, v := range hosts {
+			if v.BKHostInnerIP == la.nodes[i].InnerIP {
+				la.nodes[i].Idc = v.IDCName
+				la.nodes[i].Rack = v.Rack
+				la.nodes[i].DeviceClass = v.SCMDeviceType
+			}
+		}
+	}
+}
+
+func (la *ListMastersInClusterAction) setResp(code uint32, msg string) {
+	la.resp.Code = code
+	la.resp.Message = msg
+	la.resp.Result = (code == common.BcsErrClusterManagerSuccess)
+	la.resp.Data = la.nodes
+}
+
+// Handle handle list cluster request
+func (la *ListMastersInClusterAction) Handle(ctx context.Context,
+	req *cmproto.ListMastersInClusterRequest, resp *cmproto.ListMastersInClusterResponse) {
+	if req == nil || resp == nil {
+		blog.Errorf("list cluster masters failed, req or resp is empty")
 		return
 	}
 	la.ctx = ctx

@@ -22,7 +22,7 @@
               <span>{{$t('新建')}}</span>
             </bk-button>
             <bcs-popover v-if="!isSharedCluster" :content="$t('同步非本页面创建的命名空间数据')" placement="top">
-              <bk-button class="bk-button" @click.stop.prevent="syncNamespace">
+              <bk-button class="bk-button ml5" @click.stop.prevent="syncNamespace">
                 <span>{{$t('同步命名空间')}}</span>
               </bk-button>
             </bcs-popover>
@@ -100,7 +100,7 @@
                 <template slot-scope="{ row }">
                   <a
                     href="javascript:void(0)" class="bk-text-button"
-                    @click="showEditNamespace(row, index)"
+                    @click="showEditNamespace(row)"
                     v-authority="{
                       clickable: web_annotations.perms[row.iam_ns_id]
                         && web_annotations.perms[row.iam_ns_id].namespace_update,
@@ -118,7 +118,7 @@
                   </a>
                   <a
                     class="bk-text-button ml10"
-                    @click="showEditQuota(row, index)"
+                    @click="showEditQuota(row)"
                     v-authority="{
                       clickable: web_annotations.perms[row.iam_ns_id]
                         && web_annotations.perms[row.iam_ns_id].namespace_update,
@@ -136,7 +136,7 @@
                   </a>
                   <a
                     href="javascript:void(0)" class="bk-text-button ml10"
-                    @click="showDelNamespace(row, index)"
+                    @click="showDelNamespace(row)"
                     v-authority="{
                       clickable: web_annotations.perms[row.iam_ns_id]
                         && web_annotations.perms[row.iam_ns_id].namespace_delete,
@@ -337,7 +337,7 @@
                 <bk-button type="primary" :loading="editNamespaceConf.loading" @click="confirmEditNamespace">
                   {{$t('保存')}}
                 </bk-button>
-                <bk-button @click="hideEditNamespace" :disabled="editNamespaceConf.loading">
+                <bk-button class="ml5" @click="hideEditNamespace" :disabled="editNamespaceConf.loading">
                   {{$t('取消')}}
                 </bk-button>
               </div>
@@ -441,7 +441,7 @@
               <bk-button type="primary" :loading="editQuotaConf.loading" @click="handleSaveQuota">
                 {{$t('保存')}}
               </bk-button>
-              <bk-button @click="hideEditQuota" :disabled="editQuotaConf.loading">
+              <bk-button class="ml5" @click="hideEditQuota" :disabled="editQuotaConf.loading">
                 {{$t('取消')}}
               </bk-button>
             </div>
@@ -700,7 +700,6 @@ export default {
     this.bkMessageInstance && this.bkMessageInstance.close();
   },
   methods: {
-    ...useVariable(),
     /**
              * 同步命名空间
              */
@@ -1083,7 +1082,8 @@ export default {
       this.editNamespaceConf.canEdit = false;
 
       try {
-        const { results } = await this.handleGetClusterNamespaceVariable({
+        const { handleGetClusterNamespaceVariable } = useVariable();
+        const { results } = await handleGetClusterNamespaceVariable({
           $clusterId: this.clusterId,
           $namespace: ns.name,
         });
@@ -1180,7 +1180,8 @@ export default {
 
       try {
         this.editNamespaceConf.loading = true;
-        await this.handleUpdateClusterNamespaceVariable({
+        const { handleUpdateClusterNamespaceVariable } = useVariable();
+        await handleUpdateClusterNamespaceVariable({
           $clusterId: this.clusterId,
           $namespace: this.editNamespaceConf.ns.name,
           data: variableList,

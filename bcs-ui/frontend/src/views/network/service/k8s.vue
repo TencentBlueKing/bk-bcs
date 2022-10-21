@@ -68,7 +68,7 @@
                         name: props.row.namespace
                       }
                     }"
-                    @click.stop.prevent="showServiceDetail(props.row, index)"
+                    @click.stop.prevent="showServiceDetail(props.row)"
                   >{{props.row.resourceName ? props.row.resourceName : '--'}}</a>
                 </template>
               </bk-table-column>
@@ -210,7 +210,7 @@
         :quick-close="false"
         :is-show.sync="updateServiceSliderConf.isShow"
         :title="updateServiceSliderConf.title"
-        :width="'700'">
+        :width="700">
         <div class="p30" slot="content" v-bkloading="{ isLoading: isDetailLoading }" style="overflow: hidden;">
           <div class="bk-form bk-form-vertical">
             <div class="bk-form-item">
@@ -388,7 +388,7 @@
         :quick-close="true"
         :is-show.sync="serviceSlider.isShow"
         :title="serviceSlider.title"
-        :width="'800'">
+        :width="800">
         <div class="p30" slot="content" v-bkloading="{ isLoading: isEndpointLoading }">
           <p class="data-title">
             {{$t('基础信息')}}
@@ -729,6 +729,7 @@ export default {
       isCreatingCL5: false,
       serviceSelectedList: [],
       webAnnotations: { perms: {} },
+      labelWidth: 150,
     };
   },
   computed: {
