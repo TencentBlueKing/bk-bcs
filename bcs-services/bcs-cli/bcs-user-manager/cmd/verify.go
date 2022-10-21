@@ -15,6 +15,7 @@ package cmd
 
 import (
 	"context"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-user-manager/cmd/printer"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-user-manager/pkg"
 	"github.com/spf13/cobra"
 	"k8s.io/klog"
@@ -51,7 +52,7 @@ func verifyPermissionCmd() *cobra.Command {
 			if resp != nil && resp.Code != 0 {
 				klog.Fatalf("verify permissions response code not 0 but %d: %s", resp.Code, resp.Message)
 			}
-			//printer.PrintPermissionListInTable(flagOutput, resp)
+			printer.PrintVerifyPermissionCmdResult(flagOutput, resp)
 		},
 	}
 	subCmd.PersistentFlags().StringVarP(&verifyPermissionForm, "form", "f", "",
@@ -80,7 +81,7 @@ func verifyPermissionV2Cmd() *cobra.Command {
 			if resp != nil && resp.Code != 0 {
 				klog.Fatalf("verify permissions response code not 0 but %d: %s", resp.Code, resp.Message)
 			}
-			//printer.PrintPermissionListInTable(flagOutput, resp)
+			printer.PrintVerifyPermissionV2CmdResult(flagOutput, resp)
 		},
 	}
 	subCmd.PersistentFlags().StringVarP(&verifyPermissionForm, "form", "f", "",

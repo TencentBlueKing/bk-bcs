@@ -52,7 +52,7 @@ func revokePermissionCmd() *cobra.Command {
 			if resp != nil && resp.Code != 0 {
 				klog.Fatalf("revoke permissions response code not 0 but %d: %s", resp.Code, resp.Message)
 			}
-			printer.PrintPermissionListInTable(flagOutput, resp)
+			printer.PrintRevokePermissionCmdResult(flagOutput, resp)
 		},
 	}
 	subCmd.PersistentFlags().StringVarP(&reqBody, "permission_form", "f", "",
@@ -81,7 +81,7 @@ func deleteTokenCmd() *cobra.Command {
 			if resp != nil && resp.Code != 0 {
 				klog.Fatalf("delete token response code not 0 but %d: %s", resp.Code, resp.Message)
 			}
-			//printer.PrintPermissionListInTable(flagOutput, resp)
+			printer.PrintDeleteTokenCmdResult(flagOutput, resp)
 		},
 	}
 	subCmd.PersistentFlags().StringVarP(&token, "token", "t", "",

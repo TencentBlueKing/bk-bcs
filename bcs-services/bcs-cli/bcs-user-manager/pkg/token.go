@@ -16,6 +16,7 @@ package pkg
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/models"
 	"net/http"
 	"time"
 
@@ -38,6 +39,10 @@ type CreateTokenForm struct {
 	Username string `json:"username" validate:"required"`
 	// token expiration second, -1: never expire
 	Expiration int `json:"expiration" validate:"required"`
+}
+
+func (c *TokenStatus) Val() string {
+	return fmt.Sprintf("%d", *c)
 }
 
 // TokenResp is a response for creating token and other token handler's response data.
@@ -75,10 +80,10 @@ func (c *UserManagerClient) CreateToken(reqBody string) (*CreateTokenResponse, e
 
 // GetTokenResponse defines the response of grant permission
 type GetTokenResponse struct {
-	Result  bool   `json:"result"`
-	Code    int    `json:"code"`
-	Message string `json:"message"`
-	//Data    *tokenModels.TokenResp `json:"data"`
+	Result  bool        `json:"result"`
+	Code    int         `json:"code"`
+	Message string      `json:"message"`
+	Data    []TokenResp `json:"data"`
 }
 
 // GetToken request get token from bcs-user-manager
@@ -148,10 +153,10 @@ func (c *UserManagerClient) UpdateToken(token, tokenBody string) (*UpdateTokenRe
 
 // CreateTempTokenResponse defines the response of create temp token
 type CreateTempTokenResponse struct {
-	Result  bool       `json:"result"`
-	Code    int        `json:"code"`
-	Message string     `json:"message"`
-	Data    *TokenResp `json:"data"`
+	Result  bool                 `json:"result"`
+	Code    int                  `json:"code"`
+	Message string               `json:"message"`
+	Data    *models.BcsTempToken `json:"data"`
 }
 
 // CreateTempToken request create temp token from bcs-user-manager

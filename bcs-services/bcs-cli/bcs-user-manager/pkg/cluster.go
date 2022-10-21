@@ -161,12 +161,20 @@ func (c *UserManagerClient) GetCredentials(clusterId string) (*GetCredentialsRes
 	return resp, nil
 }
 
+// CredentialResp response
+type CredentialResp struct {
+	ServerAddresses string `json:"server_addresses"`
+	CaCertData      string `json:"ca_cert_data"`
+	UserToken       string `json:"user_token"`
+	ClusterDomain   string `json:"cluster_domain"`
+}
+
 // ListCredentialsResponse defines the response of list cluster credentials
 type ListCredentialsResponse struct {
-	Result  bool                                      `json:"result"`
-	Code    int                                       `json:"code"`
-	Message string                                    `json:"message"`
-	Data    []*userManagerModels.BcsClusterCredential `json:"data"`
+	Result  bool                      `json:"result"`
+	Code    int                       `json:"code"`
+	Message string                    `json:"message"`
+	Data    map[string]CredentialResp `json:"data"`
 }
 
 // ListCredentials request list cluster credentials  from bcs-user-manager

@@ -15,6 +15,7 @@ package cmd
 
 import (
 	"context"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-user-manager/cmd/printer"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-user-manager/pkg"
 	"github.com/spf13/cobra"
 	"k8s.io/klog"
@@ -28,7 +29,7 @@ func newUpdateCmd() *cobra.Command {
 	}
 	updateCmd.AddCommand(refreshSaasTokenCmd())
 	updateCmd.AddCommand(refreshPlainTokenCmd())
-	updateCmd.AddCommand(UpdateCredentialsCmd())
+	updateCmd.AddCommand(updateCredentialsCmd())
 	updateCmd.AddCommand(updateTokenCmd())
 	return updateCmd
 }
@@ -53,7 +54,7 @@ func refreshSaasTokenCmd() *cobra.Command {
 			if resp != nil && resp.Code != 0 {
 				klog.Fatalf("refresh saas token response code not 0 but %d: %s", resp.Code, resp.Message)
 			}
-			//printer.PrintSaasUserListInTable(flagOutput, resp)
+			printer.PrintRefreshSaasTokenCmdResult(flagOutput, resp)
 		},
 	}
 
@@ -82,7 +83,7 @@ func refreshPlainTokenCmd() *cobra.Command {
 			if resp != nil && resp.Code != 0 {
 				klog.Fatalf("refresh plain user token response code not 0 but %d: %s", resp.Code, resp.Message)
 			}
-			//printer.PrintSaasUserListInTable(flagOutput, resp)
+			printer.PrintRefreshPlainTokenCmdResult(flagOutput, resp)
 		},
 	}
 
@@ -94,7 +95,7 @@ func refreshPlainTokenCmd() *cobra.Command {
 	return subCmd
 }
 
-func UpdateCredentialsCmd() *cobra.Command {
+func updateCredentialsCmd() *cobra.Command {
 	var clusterId, credentialsForm string
 	subCmd := &cobra.Command{
 		Use:     "credentials",
@@ -114,7 +115,7 @@ func UpdateCredentialsCmd() *cobra.Command {
 			if resp != nil && resp.Code != 0 {
 				klog.Fatalf("update credential according cluster ID response code not 0 but %d: %s", resp.Code, resp.Message)
 			}
-			//printer.PrintAdminUserListInTable(flagOutput, resp)
+			printer.PrintUpdateCredentialsCmdResult(flagOutput, resp)
 		},
 	}
 
@@ -146,7 +147,7 @@ func updateTokenCmd() *cobra.Command {
 			if resp != nil && resp.Code != 0 {
 				klog.Fatalf("update token response code not 0 but %d: %s", resp.Code, resp.Message)
 			}
-			//printer.PrintPermissionListInTable(flagOutput, resp)
+			printer.PrintUpdateTokenCmdResult(flagOutput, resp)
 		},
 	}
 	subCmd.PersistentFlags().StringVarP(&token, "token", "t", "",

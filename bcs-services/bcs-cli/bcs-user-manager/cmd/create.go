@@ -89,7 +89,7 @@ func createSaasUserCmd() *cobra.Command {
 			if resp != nil && resp.Code != 0 {
 				klog.Fatalf("create saas user response code not 0 but %d: %s", resp.Code, resp.Message)
 			}
-			//printer.PrintAdminUserListInTable(flagOutput, resp)
+			printer.PrintCreateSaasUserCmdResult(flagOutput, resp)
 		},
 	}
 
@@ -117,7 +117,7 @@ func createPlainUserCmd() *cobra.Command {
 			if resp != nil && resp.Code != 0 {
 				klog.Fatalf("create plain user response code not 0 but %d: %s", resp.Code, resp.Message)
 			}
-			//printer.PrintAdminUserListInTable(flagOutput, resp)
+			printer.PrintCreatePlainUserCmdResult(flagOutput, resp)
 		},
 	}
 
@@ -146,7 +146,7 @@ func createClusterCmd() *cobra.Command {
 			if resp != nil && resp.Code != 0 {
 				klog.Fatalf("create cluster response code not 0 but %d: %s", resp.Code, resp.Message)
 			}
-			printer.PrintClusterListInTable(flagOutput, resp)
+			printer.PrintCreateClusterCmdResult(flagOutput, resp)
 		},
 	}
 
@@ -175,7 +175,7 @@ func createRegisterTokenCmd() *cobra.Command {
 			if resp != nil && resp.Code != 0 {
 				klog.Fatalf("register specified cluster token response code not 0 but %d: %s", resp.Code, resp.Message)
 			}
-			//printer.PrintAdminUserListInTable(flagOutput, resp)
+			printer.PrintCreateRegisterTokenCmdResult(flagOutput, resp)
 		},
 	}
 
@@ -204,7 +204,7 @@ func grantPermissionCmd() *cobra.Command {
 			if resp != nil && resp.Code != 0 {
 				klog.Fatalf("grant permissions response code not 0 but %d: %s", resp.Code, resp.Message)
 			}
-			//printer.PrintPermissionListInTable(flagOutput, resp)
+			printer.PrintGrantPermissionCmdResult(flagOutput, resp)
 		},
 	}
 	subCmd.PersistentFlags().StringVarP(&reqBody, "permission_form", "f", "",
@@ -232,7 +232,7 @@ func createTokenCmd() *cobra.Command {
 			if resp != nil && resp.Code != 0 {
 				klog.Fatalf("create token  response code not 0 but %d: %s", resp.Code, resp.Message)
 			}
-			//printer.PrintAdminUserListInTable(flagOutput, resp)
+			printer.PrintCreateTokenCmdResult(flagOutput, resp)
 		},
 	}
 
@@ -261,7 +261,7 @@ func createTempTokenCmd() *cobra.Command {
 			if resp != nil && resp.Code != 0 {
 				klog.Fatalf("create temp token  response code not 0 but %d: %s", resp.Code, resp.Message)
 			}
-			//printer.PrintAdminUserListInTable(flagOutput, resp)
+			printer.PrintCreateTempTokenCmdResult(flagOutput, resp)
 		},
 	}
 
@@ -290,7 +290,7 @@ func createClientTokenCmd() *cobra.Command {
 			if resp != nil && resp.Code != 0 {
 				klog.Fatalf("create client token  response code not 0 but %d: %s", resp.Code, resp.Message)
 			}
-			//printer.PrintAdminUserListInTable(flagOutput, resp)
+			printer.PrintCreateClientTokenCmdResult(flagOutput, resp)
 		},
 	}
 
@@ -319,7 +319,7 @@ func addTkeCidrCmd() *cobra.Command {
 			if resp != nil && resp.Code != 0 {
 				klog.Fatalf("init tke cidrs  response code not 0 but %d: %s", resp.Code, resp.Message)
 			}
-			//printer.PrintAdminUserListInTable(flagOutput, resp)
+			printer.PrintAddTkeCidrCmdResult(flagOutput, resp)
 		},
 	}
 

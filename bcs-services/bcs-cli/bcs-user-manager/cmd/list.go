@@ -15,6 +15,7 @@ package cmd
 
 import (
 	"context"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-user-manager/cmd/printer"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-user-manager/pkg"
 	"github.com/spf13/cobra"
 	"k8s.io/klog"
@@ -49,7 +50,7 @@ func listCredentialsCmd() *cobra.Command {
 			if resp != nil && resp.Code != 0 {
 				klog.Fatalf("get credential according cluster ID response code not 0 but %d: %s", resp.Code, resp.Message)
 			}
-			//printer.PrintAdminUserListInTable(flagOutput, resp)
+			printer.PrintListCredentialsCmdResult(flagOutput, resp)
 		},
 	}
 
@@ -74,7 +75,7 @@ func listTkeCidrCmd() *cobra.Command {
 			if resp != nil && resp.Code != 0 {
 				klog.Fatalf("list tke cidrs  response code not 0 but %d: %s", resp.Code, resp.Message)
 			}
-			//printer.PrintAdminUserListInTable(flagOutput, resp)
+			printer.PrintListTkeCidrCmdResult(flagOutput, resp)
 		},
 	}
 

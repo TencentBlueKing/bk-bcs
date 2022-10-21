@@ -60,7 +60,7 @@ func getAdminUserCmd() *cobra.Command {
 			if resp != nil && resp.Code != 0 {
 				klog.Fatalf("get admin user response code not 0 but %d: %s", resp.Code, resp.Message)
 			}
-			printer.PrintAdminUserListInTable(flagOutput, resp)
+			printer.PrintGetAdminUserCmdResult(flagOutput, resp)
 		},
 	}
 
@@ -89,7 +89,7 @@ func getSaasUserCmd() *cobra.Command {
 			if resp != nil && resp.Code != 0 {
 				klog.Fatalf("get saas user response code not 0 but %d: %s", resp.Code, resp.Message)
 			}
-			printer.PrintSaasUserListInTable(flagOutput, resp)
+			printer.PrintGetSaasUserCmdResult(flagOutput, resp)
 		},
 	}
 
@@ -118,7 +118,7 @@ func getPlainUserCmd() *cobra.Command {
 			if resp != nil && resp.Code != 0 {
 				klog.Fatalf("get plain user response code not 0 but %d: %s", resp.Code, resp.Message)
 			}
-			//printer.PrintSaasUserListInTable(flagOutput, resp)
+			printer.PrintGetPlainUserCmdResult(flagOutput, resp)
 		},
 	}
 
@@ -147,7 +147,7 @@ func getRegisterTokenCmd() *cobra.Command {
 			if resp != nil && resp.Code != 0 {
 				klog.Fatalf("search specified cluster token response code not 0 but %d: %s", resp.Code, resp.Message)
 			}
-			//printer.PrintAdminUserListInTable(flagOutput, resp)
+			printer.PrintGetRegisterTokenCmdResult(flagOutput, resp)
 		},
 	}
 
@@ -169,14 +169,14 @@ func getCredentialsCmd() *cobra.Command {
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
 			client := pkg.NewClientWithConfiguration(ctx)
-			resp, err := client.GetRegisterToken(clusterId)
+			resp, err := client.GetCredentials(clusterId)
 			if err != nil {
 				klog.Fatalf("get credential according cluster ID failed: %v", err)
 			}
 			if resp != nil && resp.Code != 0 {
 				klog.Fatalf("get credential according cluster ID response code not 0 but %d: %s", resp.Code, resp.Message)
 			}
-			//printer.PrintAdminUserListInTable(flagOutput, resp)
+			printer.PrintGetCredentialsCmdResult(flagOutput, resp)
 		},
 	}
 
@@ -205,7 +205,7 @@ func getPermissionCmd() *cobra.Command {
 			if resp != nil && resp.Code != 0 {
 				klog.Fatalf("get permissions  response code not 0 but %d: %s", resp.Code, resp.Message)
 			}
-			//printer.PrintAdminUserListInTable(flagOutput, resp)
+			printer.PrintGetPermissionCmdResult(flagOutput, resp)
 		},
 	}
 
@@ -234,7 +234,7 @@ func getTokenCmd() *cobra.Command {
 			if resp != nil && resp.Code != 0 {
 				klog.Fatalf("get token  response code not 0 but %d: %s", resp.Code, resp.Message)
 			}
-			//printer.PrintAdminUserListInTable(flagOutput, resp)
+			printer.PrintGetTokenCmdResult(flagOutput, resp)
 		},
 	}
 
@@ -264,7 +264,7 @@ func getTokenByUserAndClusterIDCmd() *cobra.Command {
 			if resp != nil && resp.Code != 0 {
 				klog.Fatalf("get token  response code not 0 but %d: %s", resp.Code, resp.Message)
 			}
-			//printer.PrintAdminUserListInTable(flagOutput, resp)
+			printer.PrintGetTokenByUserAndClusterIDCmdResult(flagOutput, resp)
 		},
 	}
 

@@ -31,10 +31,10 @@ const (
 
 // GrantPermissionResponse defines the response of grant permission
 type GrantPermissionResponse struct {
-	Result  bool   `json:"result"`
-	Code    int    `json:"code"`
-	Message string `json:"message"`
-	//Data    *permisssionModels.PermissionsResp `json:"data"`
+	Result  bool             `json:"result"`
+	Code    int              `json:"code"`
+	Message string           `json:"message"`
+	Data    *PermissionsResp `json:"data"`
 }
 
 // GrantPermission request grant permission from bcs-user-manager
@@ -56,10 +56,10 @@ func (c *UserManagerClient) GrantPermission(reqBody string) (*GrantPermissionRes
 
 //GetPermissionResponse defines the response of get permission
 type GetPermissionResponse struct {
-	Result  bool             `json:"result"`
-	Code    int              `json:"code"`
-	Message string           `json:"message"`
-	Data    *PermissionsResp `json:"data"`
+	Result  bool               `json:"result"`
+	Code    int                `json:"code"`
+	Message string             `json:"message"`
+	Data    []*PermissionsResp `json:"data"`
 }
 
 // PermissionsResp query response for
@@ -125,12 +125,18 @@ type VerifyPermissionForm struct {
 	Action       string `json:"action" validate:"required"`
 }
 
+// VerifyPermissionResponseBody http verify response
+type VerifyPermissionResponseBody struct {
+	Allowed bool   `json:"allowed"`
+	Message string `json:"message"`
+}
+
 // VerifyPermissionResponse defines the response of verify permission
 type VerifyPermissionResponse struct {
-	Result  bool             `json:"result"`
-	Code    int              `json:"code"`
-	Message string           `json:"message"`
-	Data    *PermissionsResp `json:"data"`
+	Result  bool                          `json:"result"`
+	Code    int                           `json:"code"`
+	Message string                        `json:"message"`
+	Data    *VerifyPermissionResponseBody `json:"data"`
 }
 
 // VerifyPermission request verify permission from bcs-user-manager
@@ -166,10 +172,10 @@ type VerifyPermissionReq struct {
 
 // VerifyPermissionV2Response defines the response of verify permission v2
 type VerifyPermissionV2Response struct {
-	Result  bool             `json:"result"`
-	Code    int              `json:"code"`
-	Message string           `json:"message"`
-	Data    *PermissionsResp `json:"data"`
+	Result  bool                          `json:"result"`
+	Code    int                           `json:"code"`
+	Message string                        `json:"message"`
+	Data    *VerifyPermissionResponseBody `json:"data"`
 }
 
 // VerifyPermissionV2 request verify permission from bcs-user-manager v2

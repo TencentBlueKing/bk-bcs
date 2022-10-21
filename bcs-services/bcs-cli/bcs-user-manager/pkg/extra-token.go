@@ -45,7 +45,7 @@ type GetTokenByUserAndClusterIDResponse struct {
 }
 
 // GetTokenByUserAndClusterID request get token by user and cluster id from bcs-user-manager
-func (c *UserManagerClient) GetTokenByUserAndClusterID(userName, clusterId, businessId string) (*GetAdminUserResponse, error) {
+func (c *UserManagerClient) GetTokenByUserAndClusterID(userName, clusterId, businessId string) (*GetTokenByUserAndClusterIDResponse, error) {
 	queryURL := make(map[string]string)
 	queryURL["username"] = userName
 	queryURL["cluster_id"] = clusterId
@@ -54,7 +54,7 @@ func (c *UserManagerClient) GetTokenByUserAndClusterID(userName, clusterId, busi
 	if err != nil {
 		return nil, errors.Wrapf(err, "get token by userName = %s and clusterID = %s and businessId=%s, failed", userName, clusterId, businessId)
 	}
-	resp := new(GetAdminUserResponse)
+	resp := new(GetTokenByUserAndClusterIDResponse)
 	if err := json.Unmarshal(bs, resp); err != nil {
 		return nil, errors.Wrapf(err, "get token by user and clusterID unmarshal failed with response '%s'", string(bs))
 	}
