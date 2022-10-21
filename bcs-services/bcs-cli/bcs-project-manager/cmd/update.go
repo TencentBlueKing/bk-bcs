@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 /*
  * Tencent is pleased to support the open source community by making Blueking Container Service available.
  * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
@@ -10,14 +9,6 @@
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
  *
-=======
-/**
- * @Author: Ambition
- * @Description:
- * @File: update
- * @Version: 1.0.0
- * @Date: 2022/10/17 16:08
->>>>>>> cd831f67dcced2448d87af2258a3604299f448fc
  */
 
 package cmd
@@ -27,31 +18,19 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-<<<<<<< HEAD
 	"os"
 	"path/filepath"
 
-=======
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-project-manager/cmd/printer"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-project-manager/pkg"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/proto/bcsproject"
->>>>>>> cd831f67dcced2448d87af2258a3604299f448fc
 	"github.com/golang/protobuf/ptypes/wrappers"
 	"github.com/spf13/cobra"
 	"k8s.io/klog"
 	cmdutil "k8s.io/kubectl/pkg/cmd/util"
 	"k8s.io/kubectl/pkg/cmd/util/editor"
-<<<<<<< HEAD
 	"sigs.k8s.io/yaml"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-project-manager/cmd/printer"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-project-manager/pkg"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/proto/bcsproject"
-=======
-	"os"
-	"path/filepath"
-	"sigs.k8s.io/yaml"
->>>>>>> cd831f67dcced2448d87af2258a3604299f448fc
 )
 
 func newUpdateCmd() *cobra.Command {
@@ -64,7 +43,6 @@ func newUpdateCmd() *cobra.Command {
 	return editCmd
 }
 
-<<<<<<< HEAD
 //定义不能编辑的参数
 type readOnlyParam struct {
 	CreateTime  string `json:"createTime"`
@@ -91,8 +69,6 @@ type readOnlyParam struct {
 	Description string `json:"description"`
 }
 
-=======
->>>>>>> cd831f67dcced2448d87af2258a3604299f448fc
 func updateProject() *cobra.Command {
 	subCmd := &cobra.Command{
 		Use:                   "project (ID/CODE)",
@@ -100,34 +76,6 @@ func updateProject() *cobra.Command {
 		Short:                 "",
 		Long:                  "edit infos from bcs-project-manager",
 		Run: func(cmd *cobra.Command, args []string) {
-<<<<<<< HEAD
-=======
-			//定义不能编辑的参数
-			type readOnlyParam struct {
-				CreateTime  string `json:"createTime"`
-				UpdateTime  string `json:"updateTime"`
-				Creator     string `json:"creator"`
-				Updater     string `json:"updater"`
-				Managers    string `json:"managers"`
-				ProjectID   string `json:"projectID"`
-				Name        string `json:"name"`
-				ProjectCode string `json:"projectCode"`
-				UseBKRes    bool   `json:"useBKRes"`
-				IsOffline   bool   `json:"isOffline"`
-				Kind        string `json:"kind"`
-				IsSecret    bool   `json:"isSecret"`
-				ProjectType uint32 `json:"projectType"`
-				DeployType  uint32 `json:"deployType"`
-				BGID        string `json:"BGID"`
-				BGName      string `json:"BGName"`
-				DeptID      string `json:"deptID"`
-				DeptName    string `json:"deptName"`
-				CenterID    string `json:"centerID"`
-				CenterName  string `json:"centerName"`
-				BusinessID  string `json:"businessID"`
-				Description string `json:"description"`
-			}
->>>>>>> cd831f67dcced2448d87af2258a3604299f448fc
 			if len(args) == 0 {
 				klog.Fatalf("edit project requires project ID or code")
 			}
@@ -176,7 +124,6 @@ func updateProject() *cobra.Command {
 				klog.Fatal("json to yaml failed: %v", err)
 			}
 
-<<<<<<< HEAD
 			var (
 				editBefore readOnlyParam
 				editAfter  readOnlyParam
@@ -197,41 +144,6 @@ func updateProject() *cobra.Command {
 
 			if editBefore != editAfter {
 				klog.Fatal("only edit description and project ID")
-=======
-			var request readOnlyParam
-			{
-				err = json.Unmarshal(editedJson, &request)
-				if err != nil {
-					klog.Fatal("json unmarshal failed: %v", err)
-				}
-				diff := readOnlyParam{
-					CreateTime:  projectInfo.GetCreateTime(),
-					UpdateTime:  projectInfo.GetUpdateTime(),
-					Creator:     projectInfo.GetCreator(),
-					Updater:     projectInfo.GetUpdater(),
-					Managers:    projectInfo.GetManagers(),
-					ProjectID:   projectInfo.GetProjectID(),
-					Name:        projectInfo.GetName(),
-					ProjectCode: projectInfo.GetProjectCode(),
-					UseBKRes:    projectInfo.GetUseBKRes(),
-					IsOffline:   projectInfo.GetIsOffline(),
-					Kind:        projectInfo.GetKind(),
-					IsSecret:    projectInfo.GetIsSecret(),
-					ProjectType: projectInfo.GetProjectType(),
-					DeployType:  projectInfo.GetDeployType(),
-					BGID:        projectInfo.GetBGID(),
-					BGName:      projectInfo.GetBGName(),
-					DeptID:      projectInfo.GetDeptID(),
-					DeptName:    projectInfo.GetDeptName(),
-					CenterID:    projectInfo.GetCenterID(),
-					CenterName:  projectInfo.GetCenterName(),
-					BusinessID:  request.BusinessID,
-					Description: request.Description,
-				}
-				if request != diff {
-					klog.Fatal("only edit description and project ID")
-				}
->>>>>>> cd831f67dcced2448d87af2258a3604299f448fc
 			}
 
 			useBKRes := new(wrappers.BoolValue)
@@ -248,17 +160,10 @@ func updateProject() *cobra.Command {
 				ProjectID:   projectInfo.GetProjectID(),
 				Name:        projectInfo.GetName(),
 				UseBKRes:    useBKRes,
-<<<<<<< HEAD
 				Description: editBefore.Description,
 				IsOffline:   isOffline,
 				Kind:        projectInfo.GetKind(),
 				BusinessID:  editBefore.BusinessID,
-=======
-				Description: request.Description,
-				IsOffline:   isOffline,
-				Kind:        projectInfo.GetKind(),
-				BusinessID:  request.BusinessID,
->>>>>>> cd831f67dcced2448d87af2258a3604299f448fc
 				IsSecret:    isSecret,
 				DeployType:  projectInfo.GetDeployType(),
 				ProjectType: projectInfo.GetProjectType(),
@@ -282,10 +187,7 @@ func updateProject() *cobra.Command {
 
 	return subCmd
 }
-<<<<<<< HEAD
 
 func getProjectInfo() {
 
 }
-=======
->>>>>>> cd831f67dcced2448d87af2258a3604299f448fc

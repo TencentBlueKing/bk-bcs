@@ -15,11 +15,13 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/Tencent/bk-bcs/bcs-common/common/version"
+	"log"
+
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"k8s.io/klog"
-	"log"
+
+	"github.com/Tencent/bk-bcs/bcs-common/common/version"
 )
 
 const (
