@@ -22,10 +22,22 @@ kubectl-bcs-project-manager list project --help
 
 ```yaml 
 --kind           "项目中集群类型, 允许k8s/mesos"  
---names          "项目中文名称, 长度不能超过64字符, 多个以半角逗号分隔"
+--name           "项目中文名称, 通过此字段模糊查询项目信息"
 --project_code   "项目编码(英文缩写), 全局唯一, 长度不能超过64字符"
 --project_ids    "项目ID, 多个以半角逗号分隔"
---search_name    "项目中文名称, 通过此字段模糊查询项目信息"
+```
+
+### 编辑项目信息 - editProject
+
+```bash
+kubectl-bcs-project-manager edit project --help
+```
+
+示例:
+
+```yaml 
+kubectl-bcs-project-manager edit project (ID/CODE)
+ID/CODE 项目ID或者项目编码
 ```
 
 ## 如何编译
