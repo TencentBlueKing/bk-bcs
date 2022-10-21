@@ -64,7 +64,6 @@ func NewBcsProjectCli(ctx context.Context, config *Config) (bcsproject.BCSProjec
 	if err != nil {
 		return nil, nil, errors.Wrapf(err, "create grpc client with '%s' failed", config.APIServer)
 	}
-
 	if conn == nil {
 		return nil, nil, fmt.Errorf("conn is nil")
 	}
