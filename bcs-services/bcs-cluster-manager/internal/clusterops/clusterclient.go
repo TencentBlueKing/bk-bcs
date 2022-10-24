@@ -114,7 +114,7 @@ func (ko *K8SOperator) GetClusterClient(clusterID string) (k8scorecliset.Interfa
 		rand.Seed(time.Now().Unix())
 		cfg.Host = addressList[rand.Intn(len(addressList))]
 		cfg.TLSClientConfig = rest.TLSClientConfig{
-			Insecure: true,
+			Insecure: false,
 			CAData:   []byte(cred.CaCertData),
 			CertData: []byte(cred.ClientCert),
 			KeyData:  []byte(cred.ClientKey),

@@ -21,19 +21,18 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
-	provider "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/common"
-
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
-	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/cluster"
 	spb "google.golang.org/protobuf/types/known/structpb"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/sets"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/util"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
+	provider "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/cmdb"
@@ -41,6 +40,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
 	storeopt "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
+	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/cluster"
 )
 
 type clusterInfo struct {
@@ -455,31 +455,27 @@ func filterNodesRole(k8sNodes []*corev1.Node, master bool) []*corev1.Node {
 // mergeClusterNodes merge k8s nodes and db nodes
 // 1. 集群中不存在的节点，并且在cluster manager中状态处于初始化中、初始化失败、移除中、移除失败状态时，需要展示cluster manager中数据
 // 2. 集群中存在的节点，则以集群中为准，注意状态的转换
+// 3. 适配双栈, 通过nodeName 作为唯一值, 当前数据库nodeName 可能为空, 因此需要适配转换
 func mergeClusterNodes(cmNodes []*proto.ClusterNode, k8sNodes []*corev1.Node) []*proto.ClusterNode {
 	clusterID := ""
+	// cnNodes exist in k8s cluster and get nodeName
+	GetCmNodeNames(cmNodes, k8sNodes)
+
 	cmNodesMap := make(map[string]*proto.ClusterNode, 0)
 	k8sNodesMap := make(map[string]*corev1.Node, 0)
+
 	for i := range cmNodes {
 		clusterID = cmNodes[i].ClusterID
-		cmNodesMap[cmNodes[i].InnerIP] = cmNodes[i]
+		cmNodesMap[cmNodes[i].NodeName] = cmNodes[i]
 	}
 	for i := range k8sNodes {
-		innerIP := ""
-		for _, v := range k8sNodes[i].Status.Addresses {
-			if v.Type == corev1.NodeInternalIP {
-				innerIP = v.Address
-			}
-		}
-		if len(innerIP) == 0 {
-			continue
-		}
-		k8sNodesMap[innerIP] = k8sNodes[i]
+		k8sNodesMap[k8sNodes[i].Name] = k8sNodes[i]
 	}
 
 	// 处理在 cluster manager 中的节点，但是状态为非正常状态数据，非正常数据放在列表前面
 	nodes := make([]*proto.ClusterNode, 0)
 	for _, v := range cmNodes {
-		if _, ok := k8sNodesMap[v.InnerIP]; ok {
+		if _, ok := k8sNodesMap[v.NodeName]; ok {
 			continue
 		}
 		if v.Status == common.StatusRunning || v.Status == common.StatusNodeRemovable {
@@ -490,16 +486,18 @@ func mergeClusterNodes(cmNodes []*proto.ClusterNode, k8sNodes []*corev1.Node) []
 
 	nodes2 := make([]*proto.ClusterNode, 0)
 	// 集群中存在的节点，则以集群中为准
-	for k, v := range k8sNodesMap {
-		if n, ok := cmNodesMap[k]; ok {
+	for name, node := range k8sNodesMap {
+		ipv4, ipv6 := getNodeDualAddress(node)
+		// 集群中存在节点且存在cm数据库, 提取其他信息
+		if n, ok := cmNodesMap[name]; ok {
 			nodes2 = append(nodes2, &proto.ClusterNode{
 				NodeID:       n.NodeID,
-				InnerIP:      n.InnerIP,
+				InnerIP:      ipv4,
 				InstanceType: n.InstanceType,
 				CPU:          n.CPU,
 				Mem:          n.Mem,
 				GPU:          n.GPU,
-				Status:       transNodeStatus(n.Status, v),
+				Status:       transNodeStatus(n.Status, node),
 				ZoneID:       n.ZoneID,
 				NodeGroupID:  n.NodeGroupID,
 				ClusterID:    n.ClusterID,
@@ -508,30 +506,32 @@ func mergeClusterNodes(cmNodes []*proto.ClusterNode, k8sNodes []*corev1.Node) []
 				Passwd:       n.Passwd,
 				Zone:         n.Zone,
 				DeviceID:     n.DeviceID,
-				NodeName:     v.Name,
-				Labels:       v.Labels,
-				Taints:       actions.K8sTaintToTaint(v.Spec.Taints),
+				NodeName:     node.Name,
+				Labels:       node.Labels,
+				Taints:       actions.K8sTaintToTaint(node.Spec.Taints),
 				UnSchedulable: func(u bool) uint32 {
 					if u {
 						return 1
 					}
 					return 0
-				}(v.Spec.Unschedulable),
+				}(node.Spec.Unschedulable),
+				InnerIPv6: ipv6,
 			})
 		} else {
 			nodes2 = append(nodes2, &proto.ClusterNode{
-				InnerIP:   k,
-				Status:    transNodeStatus("", v),
+				InnerIP:   ipv4,
+				Status:    transNodeStatus("", node),
 				ClusterID: clusterID,
-				NodeName:  v.Name,
-				Labels:    v.Labels,
-				Taints:    actions.K8sTaintToTaint(v.Spec.Taints),
+				NodeName:  node.Name,
+				Labels:    node.Labels,
+				Taints:    actions.K8sTaintToTaint(node.Spec.Taints),
 				UnSchedulable: func(u bool) uint32 {
 					if u {
 						return 1
 					}
 					return 0
-				}(v.Spec.Unschedulable),
+				}(node.Spec.Unschedulable),
+				InnerIPv6: ipv6,
 			})
 		}
 	}
@@ -553,4 +553,47 @@ func (n NodeSlice) Less(i, j int) bool {
 
 func (n NodeSlice) Swap(i, j int) {
 	n[i], n[j] = n[j], n[i]
+}
+
+func GetCmNodeNames(cmNodes []*proto.ClusterNode, k8sNodes []*corev1.Node) {
+	for i := range cmNodes {
+		ipv4 := cmNodes[i].InnerIP
+		ipv6 := cmNodes[i].InnerIPv6
+
+		if ipv4 == "" && ipv6 == "" {
+			continue
+		}
+
+		for _, node := range k8sNodes {
+			ipv4s, ipv6s := getNodeIPAddress(node)
+			if utils.StringInSlice(ipv4, ipv4s) || utils.StringInSlice(ipv6, ipv6s) {
+				cmNodes[i].NodeName = node.Name
+			}
+		}
+	}
+}
+
+func getNodeIPAddress(node *corev1.Node) ([]string, []string) {
+	ipv4Address := make([]string, 0)
+	ipv6Address := make([]string, 0)
+
+	for _, address := range node.Status.Addresses {
+		if address.Type == corev1.NodeInternalIP {
+			switch {
+			case util.IsIPv6(address.Address):
+				ipv6Address = append(ipv6Address, address.Address)
+			case util.IsIPv4(address.Address):
+				ipv4Address = append(ipv4Address, address.Address)
+			default:
+				blog.Errorf("unsupported ip type")
+			}
+		}
+	}
+
+	return ipv4Address, ipv6Address
+}
+
+func getNodeDualAddress(node *corev1.Node) (string, string) {
+	ipv4s, ipv6s := getNodeIPAddress(node)
+	return utils.SliceToString(ipv4s), utils.SliceToString(ipv6s)
 }

@@ -115,3 +115,10 @@ type TkeCidrCount struct {
 	IPNumber uint64 `bson:"ipNumber"`
 	Status   string `bson:"status"`
 }
+
+// NodeAddress node address
+type NodeAddress struct {
+	NodeName    string
+	IPv4Address string
+	IPv6Address string
+}

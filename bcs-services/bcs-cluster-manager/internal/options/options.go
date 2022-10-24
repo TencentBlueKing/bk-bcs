@@ -46,6 +46,7 @@ type SwaggerConfig struct {
 // ServerConfig option for server
 type ServerConfig struct {
 	Address         string `json:"address"`
+	Ipv6Address     string `json:"ipv6Address"`
 	InsecureAddress string `json:"insecureaddress"`
 	Port            uint   `json:"port"`
 	HTTPPort        uint   `json:"httpport"`

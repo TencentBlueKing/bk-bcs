@@ -1277,6 +1277,10 @@ message Node {
     title: "nodeName",
     description: "节点名称, 存储各个云节点名称"
   }];
+  string innerIPv6 = 19 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "innerIPv6",
+    description: "节点ipv6地址"
+  }];
 }
 
 message NetworkSetting {
@@ -5026,6 +5030,10 @@ message ClusterNode {
   string deviceClass = 23[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "deviceClass",
     description: "机型"
+  }];
+  string innerIPv6 = 24 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "innerIPv6",
+    description: "节点ipv6地址"
   }];
 }
 

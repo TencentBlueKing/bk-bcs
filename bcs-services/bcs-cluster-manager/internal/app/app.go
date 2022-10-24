@@ -20,6 +20,7 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"net"
 	"net/http"
 	"net/http/pprof"
 	"os"
@@ -38,18 +39,10 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers/mongo"
-	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/middleware"
-	restful "github.com/emicklei/go-restful"
-	"github.com/gorilla/mux"
-	"github.com/grpc-ecosystem/grpc-gateway/runtime"
-	"github.com/micro/go-micro/v2/registry"
-	"github.com/micro/go-micro/v2/registry/etcd"
-	microsvc "github.com/micro/go-micro/v2/service"
-	microgrpcsvc "github.com/micro/go-micro/v2/service/grpc"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"google.golang.org/grpc"
-	grpccred "google.golang.org/grpc/credentials"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/http/ipv6server"
+	"github.com/Tencent/bk-bcs/bcs-common/common/tcp/listener"
+	"github.com/Tencent/bk-bcs/bcs-common/common/types"
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
@@ -75,6 +68,19 @@ import (
 	mesostunnel "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/tunnelhandler/mesos"
 	mesoswebconsole "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/tunnelhandler/mesoswebconsole"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
+	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/middleware"
+
+	restful "github.com/emicklei/go-restful"
+	"github.com/gorilla/mux"
+	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"github.com/micro/go-micro/v2/registry"
+	"github.com/micro/go-micro/v2/registry/etcd"
+	microgrpcserver "github.com/micro/go-micro/v2/server/grpc"
+	microsvc "github.com/micro/go-micro/v2/service"
+	microgrpcsvc "github.com/micro/go-micro/v2/service/grpc"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"google.golang.org/grpc"
+	grpccred "google.golang.org/grpc/credentials"
 )
 
 // ClusterManager cluster manager
@@ -98,10 +104,10 @@ type ClusterManager struct {
 	mux *http.ServeMux
 
 	// http server
-	httpServer *http.Server
+	httpServer *ipv6server.IPv6Server
 
 	// extra module server, [pprof, metrics, swagger]
-	extraServer *http.Server
+	extraServer *ipv6server.IPv6Server
 
 	// discovery
 	disc *discovery.ModuleDiscovery
@@ -675,18 +681,20 @@ func (cm *ClusterManager) initHTTPService() error {
 		return err
 	}
 
-	mux := http.NewServeMux()
-	mux.Handle("/", router)
-	cm.initSwagger(mux)
+	muxServe := http.NewServeMux()
+	muxServe.Handle("/", router)
+	cm.initSwagger(muxServe)
 
-	httpAddr := cm.opt.Address + ":" + strconv.Itoa(int(cm.opt.HTTPPort))
-	cm.httpServer = &http.Server{
-		Addr:    httpAddr,
-		Handler: mux,
+	// server address
+	addresses := []string{cm.opt.Address}
+	if len(cm.opt.Ipv6Address) > 0 {
+		addresses = append(addresses, cm.opt.Ipv6Address)
 	}
+	cm.httpServer = ipv6server.NewIPv6Server(addresses, strconv.Itoa(int(cm.opt.HTTPPort)), "", muxServe)
+
 	go func() {
 		var err error
-		blog.Infof("start http gateway server on address %s", httpAddr)
+		blog.Infof("start http gateway server on address %+v", addresses)
 		if cm.tlsConfig != nil {
 			cm.httpServer.TLSConfig = cm.tlsConfig
 			err = cm.httpServer.ListenAndServeTLS("", "")
@@ -733,15 +741,16 @@ func (cm *ClusterManager) initExtraModules() {
 	extraMux := http.NewServeMux()
 	cm.initPProf(extraMux)
 	cm.initMetric(extraMux)
-	extraServerEndpoint := cm.opt.Address + ":" + strconv.Itoa(int(cm.opt.MetricPort))
-	cm.extraServer = &http.Server{
-		Addr:    extraServerEndpoint,
-		Handler: extraMux,
+
+	ips := []string{cm.opt.Address}
+	if len(cm.opt.Ipv6Address) > 0 {
+		ips = append(ips, cm.opt.Ipv6Address)
 	}
+	cm.extraServer = ipv6server.NewIPv6Server(ips, strconv.Itoa(int(cm.opt.MetricPort)), "", extraMux)
 
 	go func() {
 		var err error
-		blog.Infof("start extra modules [pprof, metric] server %s", extraServerEndpoint)
+		blog.Infof("start extra modules [pprof, metric] server %+v", ips)
 		err = cm.extraServer.ListenAndServe()
 		if err != nil {
 			blog.Errorf("extra modules server listen failed, err %s", err.Error())
@@ -751,6 +760,20 @@ func (cm *ClusterManager) initExtraModules() {
 }
 
 func (cm *ClusterManager) initMicro() error {
+	// server listen ip
+	ipv4 := cm.opt.Address
+	ipv6 := cm.opt.Ipv6Address
+	port := strconv.Itoa(int(cm.opt.Port))
+
+	// service inject metadata to discovery center
+	metadata := make(map[string]string)
+	metadata[cmcommon.MicroMetaKeyHTTPPort] = strconv.Itoa(int(cm.opt.HTTPPort))
+
+	// 适配单栈环境（ipv6注册地址不能是本地回环地址）
+	if v := net.ParseIP(ipv6); v != nil && !v.IsLoopback() {
+		metadata[types.IPV6] = net.JoinHostPort(ipv6, port)
+	}
+
 	authWrapper := middleware.NewGoMicroAuth(auth.GetJWTClient()).
 		EnableSkipHandler(auth.SkipHandler).
 		EnableSkipClient(auth.SkipClient).
@@ -758,11 +781,9 @@ func (cm *ClusterManager) initMicro() error {
 	// New Service
 	microService := microgrpcsvc.NewService(
 		microsvc.Name(cmcommon.ClusterManagerServiceDomain),
-		microsvc.Metadata(map[string]string{
-			cmcommon.MicroMetaKeyHTTPPort: strconv.Itoa(int(cm.opt.HTTPPort)),
-		}),
+		microsvc.Metadata(metadata),
 		microgrpcsvc.WithTLS(cm.tlsConfig),
-		microsvc.Address(cm.opt.Address+":"+strconv.Itoa(int(cm.opt.Port))),
+		microsvc.Address(net.JoinHostPort(ipv4, port)),
 		microsvc.Registry(cm.microRegistry),
 		microsvc.Version(version.BcsVersion),
 		microsvc.RegisterTTL(30*time.Second),
@@ -794,8 +815,22 @@ func (cm *ClusterManager) initMicro() error {
 		IAMClient:  cm.iamClient,
 		CmOptions:  cm.opt,
 	})
+	// 创建双栈监听
+	dualStackListener := listener.NewDualStackListener()
+	if err := dualStackListener.AddListener(ipv4, port); err != nil { // 添加IPv4地址监听
+		return err
+	}
+	if err := dualStackListener.AddListener(ipv6, port); err != nil { // 添加IPv6地址监听
+		return err
+	}
+
+	// grpc server
+	grpcServer := microService.Server()
+	if err := grpcServer.Init(microgrpcserver.Listener(dualStackListener)); err != nil {
+		return err
+	}
 	// Register handler
-	cmproto.RegisterClusterManagerHandler(microService.Server(), cm.serverHandler)
+	cmproto.RegisterClusterManagerHandler(grpcServer, cm.serverHandler)
 	cm.microService = microService
 	return nil
 }

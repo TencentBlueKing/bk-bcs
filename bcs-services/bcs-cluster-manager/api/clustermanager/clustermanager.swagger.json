@@ -5969,6 +5969,11 @@
           "type": "string",
           "description": "机型",
           "title": "deviceClass"
+        },
+        "innerIPv6": {
+          "type": "string",
+          "description": "节点ipv6地址",
+          "title": "innerIPv6"
         }
       },
       "description": "记录节点信息，用于节点列表展示",
@@ -10243,6 +10248,11 @@
           "type": "string",
           "description": "节点名称, 存储各个云节点名称",
           "title": "nodeName"
+        },
+        "innerIPv6": {
+          "type": "string",
+          "description": "节点ipv6地址",
+          "title": "innerIPv6"
         }
       },
       "description": "记录节点信息，用于维护节点状态，被cluster与nodegroup使用",

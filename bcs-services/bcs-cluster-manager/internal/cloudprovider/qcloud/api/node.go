@@ -486,6 +486,7 @@ func InstanceToNode(inst *cvm.Instance, zoneInfo map[string]uint32) *proto.Node 
 		VPC:          *inst.VirtualPrivateCloud.VpcId,
 		ZoneID:       *inst.Placement.Zone,
 		Zone:         zoneID,
+		InnerIPv6:    utils.SlicePtrToString(inst.IPv6Addresses),
 	}
 	return node
 }

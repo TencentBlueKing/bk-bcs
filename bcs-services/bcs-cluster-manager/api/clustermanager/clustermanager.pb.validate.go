@@ -574,6 +574,8 @@ func (m *Node) validate(all bool) error {
 
 	// no validation rules for NodeName
 
+	// no validation rules for InnerIPv6
+
 	if len(errors) > 0 {
 		return NodeMultiError(errors)
 	}
@@ -16441,6 +16443,8 @@ func (m *ClusterNode) validate(all bool) error {
 	// no validation rules for Rack
 
 	// no validation rules for DeviceClass
+
+	// no validation rules for InnerIPv6
 
 	if len(errors) > 0 {
 		return ClusterNodeMultiError(errors)

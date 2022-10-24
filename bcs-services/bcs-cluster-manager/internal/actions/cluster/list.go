@@ -536,12 +536,12 @@ func (la *ListMastersInClusterAction) validate() error {
 }
 
 func (la *ListMastersInClusterAction) listNodes() error {
-	cluster, err := la.model.GetCluster(la.ctx, la.req.ClusterID)
+	cls, err := la.model.GetCluster(la.ctx, la.req.ClusterID)
 	if err != nil {
 		blog.Errorf("get cluster %s failed, %s", la.req.ClusterID, err.Error())
 		return err
 	}
-	for _, v := range cluster.Master {
+	for _, v := range cls.Master {
 		la.nodes = append(la.nodes, transNodeToClusterNode(v))
 	}
 
