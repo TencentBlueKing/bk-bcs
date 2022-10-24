@@ -17,8 +17,9 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/types"
 	"github.com/pkg/errors"
+
+	"github.com/Tencent/bk-bcs/bcs-common/common/types"
 )
 
 const (

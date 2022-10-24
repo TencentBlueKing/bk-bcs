@@ -16,12 +16,12 @@ package pkg
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/models"
 	"net/http"
 	"time"
 
 	"github.com/pkg/errors"
-	//tokenModels "github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/v1http/token"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/models"
 )
 
 const (

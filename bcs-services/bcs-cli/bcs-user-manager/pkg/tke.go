@@ -16,8 +16,9 @@ package pkg
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/pkg/errors"
 	"net/http"
+
+	"github.com/pkg/errors"
 )
 
 const (

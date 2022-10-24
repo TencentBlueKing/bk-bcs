@@ -3,7 +3,7 @@ module github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-user-manager
 go 1.17
 
 replace (
-	github.com/Tencent/bk-bcs/bcs-common => ../../../bcs-common
+	github.com/Tencent/bk-bcs/bcs-common => github.com/Tencent/bk-bcs/bcs-common v0.0.0-20210818040851-76fdc539dc33
 	github.com/coreos/bbolt v1.3.4 => go.etcd.io/bbolt v1.3.4
 	go.etcd.io/bbolt v1.3.4 => github.com/coreos/bbolt v1.3.4
 	google.golang.org/grpc => google.golang.org/grpc v1.26.0
