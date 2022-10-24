@@ -63,4 +63,7 @@ type ControllerOption struct {
 	KubernetesQPS int
 	// KubernetesBurst the burst of k8s client request
 	KubernetesBurst int
+
+	// ConflictCheckOpen if false, skip all conflict checking about ingress and port pool
+	ConflictCheckOpen bool
 }

@@ -208,14 +208,16 @@ func (e *Elb) DeleteListener(region string, listener *networkextensionv1.Listene
 }
 
 // EnsureMultiListeners ensure multiple listeners to cloud
-func (e *Elb) EnsureMultiListeners(region, lbID string, listeners []*networkextensionv1.Listener) (map[string]string, error) {
-	retMap := make(map[string]string)
+func (e *Elb) EnsureMultiListeners(region, lbID string, listeners []*networkextensionv1.Listener) (map[string]cloud.
+	Result, error) {
+	retMap := make(map[string]cloud.Result)
 	for _, listener := range listeners {
 		liID, err := e.EnsureListener(region, listener)
 		if err != nil {
-			return nil, err
+			retMap[listener.Name] = cloud.Result{IsError: true, Err: err}
+		} else {
+			retMap[listener.Name] = cloud.Result{IsError: false, Res: liID}
 		}
-		retMap[listener.Name] = liID
 	}
 	return retMap, nil
 }
@@ -264,14 +266,16 @@ func (e *Elb) EnsureSegmentListener(region string, listener *networkextensionv1.
 }
 
 // EnsureMultiSegmentListeners ensure multi segment listeners
-func (e *Elb) EnsureMultiSegmentListeners(region, lbID string, listeners []*networkextensionv1.Listener) (map[string]string, error) {
-	retMap := make(map[string]string)
+func (e *Elb) EnsureMultiSegmentListeners(region, lbID string, listeners []*networkextensionv1.Listener) (
+	map[string]cloud.Result, error) {
+	retMap := make(map[string]cloud.Result)
 	for _, listener := range listeners {
 		liID, err := e.EnsureSegmentListener(region, listener)
 		if err != nil {
-			return nil, err
+			retMap[listener.Name] = cloud.Result{IsError: true, Err: err}
+		} else {
+			retMap[listener.Name] = cloud.Result{IsError: false, Res: liID}
 		}
-		retMap[listener.Name] = liID
 	}
 	return retMap, nil
 }

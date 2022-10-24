@@ -400,6 +400,7 @@ func splitListenersToDiffProtocol(listenerList []*networkextensionv1.Listener) [
 	return retList
 }
 
+// splitListenersToDiffBatch split listeners by its 'listenerAttribute' and 'certificate'
 func splitListenersToDiffBatch(listenerList []*networkextensionv1.Listener) [][]*networkextensionv1.Listener {
 	attrList := make([]struct {
 		attr *networkextensionv1.IngressListenerAttribute

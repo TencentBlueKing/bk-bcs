@@ -22,6 +22,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	k8scorev1 "k8s.io/api/core/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/client-go/tools/record"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/event"
@@ -41,17 +42,19 @@ type PortBindingReconciler struct {
 	ctx           context.Context
 	k8sClient     client.Client
 	poolCache     *portpoolcache.Cache
+	eventer       record.EventRecorder
 }
 
 // NewPortBindingReconciler create PortBindingReconciler
 func NewPortBindingReconciler(
 	ctx context.Context, cleanInterval time.Duration,
-	k8sClient client.Client, poolCache *portpoolcache.Cache) *PortBindingReconciler {
+	k8sClient client.Client, poolCache *portpoolcache.Cache, eventer record.EventRecorder) *PortBindingReconciler {
 	return &PortBindingReconciler{
 		ctx:           ctx,
 		cleanInterval: cleanInterval,
 		k8sClient:     k8sClient,
 		poolCache:     poolCache,
+		eventer:       eventer,
 	}
 }
 
@@ -123,11 +126,13 @@ func (pbr *PortBindingReconciler) Reconcile(req ctrl.Request) (ctrl.Result, erro
 		}, nil
 	}
 
-	pbhandler := newPortBindingHandler(pbr.ctx, pbr.k8sClient)
+	pbhandler := newPortBindingHandler(pbr.ctx, pbr.k8sClient, pbr.eventer)
 	retry, err := pbhandler.ensurePortBinding(pod, portBinding)
 	if err != nil {
 		blog.Warnf("ensure port binding %s/%s failed, err %s",
 			portBinding.GetName(), portBinding.GetNamespace(), err.Error())
+		pbr.recordEvent(portBinding, k8scorev1.EventTypeWarning, ReasonPortBindingEnsureFailed,
+			fmt.Sprintf(MsgPortBindingEnsureFailed, err.Error()))
 		return ctrl.Result{
 			Requeue:      true,
 			RequeueAfter: 3 * time.Second,
@@ -183,6 +188,7 @@ func (pbr *PortBindingReconciler) createPortBinding(pod *k8scorev1.Pod) (ctrl.Re
 			RequeueAfter: 3 * time.Second,
 		}, nil
 	}
+	pbr.recordEvent(podPortBinding, k8scorev1.EventTypeNormal, ReasonPortBindingCreatSuccess, MsgPortBindingCreateSuccess)
 	return ctrl.Result{}, nil
 }
 
@@ -239,9 +245,11 @@ func (pbr *PortBindingReconciler) cleanPortBinding(portBinding *networkextension
 		return ctrl.Result{}, nil
 	}
 	// change port binding status to PortBindingStatusCleaned
-	pbhandler := newPortBindingHandler(pbr.ctx, pbr.k8sClient)
+	pbhandler := newPortBindingHandler(pbr.ctx, pbr.k8sClient, pbr.eventer)
 	retry, err := pbhandler.cleanPortBinding(portBinding)
 	if err != nil {
+		pbr.recordEvent(portBinding, k8scorev1.EventTypeWarning, ReasonPortBindingCleanFailed,
+			fmt.Sprintf(MsgPortBindingCleanFailed, err.Error()))
 		blog.Warnf("delete port binding %s/%s failed, err %s",
 			portBinding.GetName(), portBinding.GetNamespace(), err.Error())
 		return ctrl.Result{

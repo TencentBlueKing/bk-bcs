@@ -16,7 +16,11 @@ spec:
     singular: portpool
   scope: Namespaced
   versions:
-  - name: v1
+  - additionalPrinterColumns:
+    - jsonPath: .status.status
+      name: status
+      type: string
+    name: v1
     schema:
       openAPIV3Schema:
         description: PortPool is the Schema for the portpools API
@@ -194,6 +198,8 @@ spec:
                   - status
                   type: object
                 type: array
+              status:
+                type: string
             type: object
         type: object
     served: true

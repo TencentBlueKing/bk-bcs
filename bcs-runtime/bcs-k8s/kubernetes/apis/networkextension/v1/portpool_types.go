@@ -101,12 +101,14 @@ type PortPoolStatus struct {
 	// Important: Run "make" to regenerate code after modifying this file
 
 	PoolItemStatuses []*PortPoolItemStatus `json:"poolItems,omitempty"`
+	Status           string                `json:"status,omitempty"`
 }
 
 // +kubebuilder:object:root=true
 // +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 // +kubebuilder:subresource:status
+// +kubebuilder:printcolumn:name="status",type=string,JSONPath=`.status.status`
 
 // PortPool is the Schema for the portpools API
 type PortPool struct {

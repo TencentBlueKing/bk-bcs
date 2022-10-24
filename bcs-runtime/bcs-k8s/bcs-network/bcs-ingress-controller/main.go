@@ -22,6 +22,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	clbv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubedeprecated/apis/clb/v1"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/conflicthandler"
 	"github.com/pkg/errors"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
@@ -97,6 +98,9 @@ func main() {
 
 	flag.IntVar(&opts.KubernetesQPS, "kubernetes_qps", 100, "the qps of k8s client request")
 	flag.IntVar(&opts.KubernetesBurst, "kubernetes_burst", 200, "the burst of k8s client request")
+
+	flag.BoolVar(&opts.ConflictCheckOpen, "conflict_check_open", true, "if false, "+
+		"skip all conflict checking about ingress and port pool")
 
 	flag.Parse()
 
@@ -277,7 +281,7 @@ func main() {
 	}
 
 	portBindingReconciler := portbindingctrl.NewPortBindingReconciler(
-		context.Background(), opts.PortBindingCheckInterval, mgr.GetClient(), portPoolCache)
+		context.Background(), opts.PortBindingCheckInterval, mgr.GetClient(), portPoolCache, mgr.GetEventRecorderFor("bcs-ingress-controller"))
 	if err = portBindingReconciler.SetupWithManager(mgr); err != nil {
 		blog.Errorf("unable to create port binding reconciler, err %s", err.Error())
 		os.Exit(1)
@@ -294,6 +298,8 @@ func main() {
 	}
 	go eventClient.Start(context.Background())
 
+	conflictHandler := conflicthandler.NewConflictHandler(opts.ConflictCheckOpen, opts.Region, mgr.GetClient(),
+		ingressConverter)
 	// init webhook server
 	webhookServerOpts := &webhookserver.ServerOption{
 		Addr:           opts.Address,
@@ -301,7 +307,8 @@ func main() {
 		ServerCertFile: opts.ServerCertFile,
 		ServerKeyFile:  opts.ServerKeyFile,
 	}
-	webhookServer, err := webhookserver.NewHookServer(webhookServerOpts, mgr.GetClient(), portPoolCache, eventClient)
+	webhookServer, err := webhookserver.NewHookServer(webhookServerOpts, mgr.GetClient(), lbClient, portPoolCache,
+		eventClient, validater, ingressConverter, conflictHandler)
 	if err != nil {
 		blog.Errorf("create hook server failed, err %s", err.Error())
 		os.Exit(1)

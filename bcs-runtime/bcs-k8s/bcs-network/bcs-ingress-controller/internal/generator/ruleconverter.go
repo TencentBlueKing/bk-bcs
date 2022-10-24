@@ -118,7 +118,10 @@ func (rc *RuleConverter) generate7LayerListener(region, lbID string) (*networkex
 		networkextensionv1.LabelKeyForIsSegmentListener: networkextensionv1.LabelValueFalse,
 		networkextensionv1.LabelKeyForLoadbalanceID:     GetLabelLBId(lbID),
 		networkextensionv1.LabelKeyForLoadbalanceRegion: region,
+		networkextensionv1.LabelKeyForOwnerKind:         constant.KindIngress,
+		networkextensionv1.LabelKeyForOwnerName:         rc.ingressName,
 	})
+	li.Status.Ingress = rc.ingressName
 	li.Finalizers = append(li.Finalizers, constant.FinalizerNameBcsIngressController)
 	li.Spec.Port = rc.rule.Port
 	li.Spec.Protocol = rc.rule.Protocol
@@ -173,7 +176,10 @@ func (rc *RuleConverter) generate4LayerListener(region, lbID string) (*networkex
 		networkextensionv1.LabelKeyForIsSegmentListener: networkextensionv1.LabelValueFalse,
 		networkextensionv1.LabelKeyForLoadbalanceID:     GetLabelLBId(lbID),
 		networkextensionv1.LabelKeyForLoadbalanceRegion: region,
+		networkextensionv1.LabelKeyForOwnerKind:         constant.KindIngress,
+		networkextensionv1.LabelKeyForOwnerName:         rc.ingressName,
 	})
+	li.Status.Ingress = rc.ingressName
 	li.Finalizers = append(li.Finalizers, constant.FinalizerNameBcsIngressController)
 	li.Spec.Port = rc.rule.Port
 	li.Spec.Protocol = rc.rule.Protocol

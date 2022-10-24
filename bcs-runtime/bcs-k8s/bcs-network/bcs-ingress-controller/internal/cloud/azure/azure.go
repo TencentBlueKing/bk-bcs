@@ -146,15 +146,18 @@ func (a *Alb) DeleteListener(region string, listener *networkextensionv1.Listene
 }
 
 // EnsureMultiListeners ensure multiple listeners to cloud
-func (a *Alb) EnsureMultiListeners(region, lbID string, listeners []*networkextensionv1.Listener) (map[string]string,
+func (a *Alb) EnsureMultiListeners(region, lbID string, listeners []*networkextensionv1.Listener) (map[string]cloud.Result,
 	error) {
-	retMap := make(map[string]string)
+	retMap := make(map[string]cloud.Result)
 	for _, listener := range listeners {
 		liName, err := a.EnsureListener(region, listener)
 		if err != nil {
-			return nil, errors.Wrapf(err, "ensure multi listener failed in listener: %s", liName)
+			err = errors.Wrapf(err, "ensure multi listener failed in listener'%s/%s'", listener.GetNamespace(),
+				listener.GetName())
+			retMap[listener.Name] = cloud.Result{IsError: true, Err: err}
+		} else {
+			retMap[listener.Name] = cloud.Result{IsError: false, Res: liName}
 		}
-		retMap[listener.Name] = liName
 	}
 	return retMap, nil
 }
@@ -164,7 +167,8 @@ func (a *Alb) DeleteMultiListeners(region, lbID string, listeners []*networkexte
 	for _, listener := range listeners {
 		err := a.DeleteListener(region, listener)
 		if err != nil {
-			return errors.Wrapf(err, "delete multi listener failed in listener: %s", listener.Name)
+			return errors.Wrapf(err, "delete multi listener failed in listener: '%s/%s'",
+				listener.GetNamespace(), listener.Name)
 		}
 	}
 	return nil
@@ -200,14 +204,16 @@ func (a *Alb) EnsureSegmentListener(region string, listener *networkextensionv1.
 
 // EnsureMultiSegmentListeners ensure multi segment listeners
 func (a *Alb) EnsureMultiSegmentListeners(region, lbID string, listeners []*networkextensionv1.Listener) (
-	map[string]string, error) {
-	retMap := make(map[string]string)
+	map[string]cloud.Result, error) {
+	retMap := make(map[string]cloud.Result)
 	for _, listener := range listeners {
 		liID, err := a.EnsureSegmentListener(region, listener)
 		if err != nil {
-			return nil, errors.Errorf("ensure multi segment listener failed in %s", listener.Name)
+			err = errors.Wrapf(err, "ensure multi segment listener failed in %s", listener.Name)
+			retMap[listener.Name] = cloud.Result{IsError: true, Err: err}
+		} else {
+			retMap[listener.Name] = cloud.Result{IsError: false, Res: liID}
 		}
-		retMap[listener.Name] = liID
 	}
 	return retMap, nil
 }

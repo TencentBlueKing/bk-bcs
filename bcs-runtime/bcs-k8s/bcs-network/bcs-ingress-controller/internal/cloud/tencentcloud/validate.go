@@ -226,7 +226,7 @@ func (cv *ClbValidater) CheckNoConflictsInIngress(ingress *networkextensionv1.In
 		return false, fmt.Sprintf("%+v conflicts with %+v", rule, existedRule)
 	}
 
-	for i := 0; i < len(ingress.Spec.PortMappings)-1; i++ {
+	for i := 0; i < len(ingress.Spec.PortMappings); i++ {
 		mapping := ingress.Spec.PortMappings[i]
 		for port, rule := range ruleMap {
 			if port >= mapping.StartPort+mapping.StartIndex && port < mapping.StartPort+mapping.EndIndex {

@@ -21,10 +21,16 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/common"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/constant"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	gocache "github.com/patrickmn/go-cache"
+	k8sappsv1 "k8s.io/api/apps/v1"
+	k8scorev1 "k8s.io/api/core/v1"
+	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	k8smetav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	k8sunstruct "k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	k8slabels "k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	k8stypes "k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -188,8 +194,8 @@ func (g *IngressConverter) getLoadbalanceByName(ns, regionNamePair, protocolLaye
 	return lbObj, nil
 }
 
-// get ingress loadbalance objects by annotations
-func (g *IngressConverter) getIngressLoadbalances(ingress *networkextensionv1.Ingress) (
+// GetIngressLoadbalances get ingress loadbalance objects by annotations
+func (g *IngressConverter) GetIngressLoadbalances(ingress *networkextensionv1.Ingress) (
 	[]*cloud.LoadBalanceObject, error) {
 	protocolLayer := common.GetIngressProtocolLayer(ingress)
 	var lbs []*cloud.LoadBalanceObject
@@ -239,56 +245,36 @@ func (g *IngressConverter) getIngressLoadbalances(ingress *networkextensionv1.In
 	return lbs, nil
 }
 
-// ProcessUpdateIngress process newly added or updated ingress
-func (g *IngressConverter) ProcessUpdateIngress(ingress *networkextensionv1.Ingress) error {
-	isValid, errMsg := g.ingressValidater.IsIngressValid(ingress)
-	if !isValid {
-		blog.Errorf("ingress %+v ingress is invalid, err %s", ingress, errMsg)
-		return fmt.Errorf("ingress %+v ingress is invalid, err %s", ingress, errMsg)
-	}
+// ProcessUpdateIngress process newly added or updated ingress, return warnings([]string) and error
+func (g *IngressConverter) ProcessUpdateIngress(ingress *networkextensionv1.Ingress) ([]string, error) {
+	var warnings []string
+	warnings = append(warnings, g.CheckIngressServiceAvailable(ingress)...)
 
-	isValid, errMsg = g.ingressValidater.CheckNoConflictsInIngress(ingress)
-	if !isValid {
-		blog.Errorf("ingress %+v ingress has conflicts, err %s", ingress, errMsg)
-		return fmt.Errorf("ingress %+v ingress has conflicts, err %s", ingress, errMsg)
-	}
-
-	lbObjs, err := g.getIngressLoadbalances(ingress)
+	lbObjs, err := g.GetIngressLoadbalances(ingress)
 	if err != nil {
-		return err
-	}
-
-	for _, lbObj := range lbObjs {
-		isConflict, inErr := g.checkConflicts(lbObj.LbID, ingress)
-		if inErr != nil {
-			return inErr
-		}
-		if isConflict {
-			blog.Errorf("ingress %+v is conflict with existed listeners", ingress)
-			return fmt.Errorf("ingress %+v is conflict with existed listeners", ingress)
-		}
+		return warnings, err
 	}
 
 	var generatedListeners []networkextensionv1.Listener
 	var generatedSegListeners []networkextensionv1.Listener
-	for _, rule := range ingress.Spec.Rules {
+	for i, rule := range ingress.Spec.Rules {
 		ruleConverter := NewRuleConverter(g.cli, lbObjs, ingress.GetName(), ingress.GetNamespace(), &rule)
 		ruleConverter.SetNamespaced(g.lbClient.IsNamespaced())
 		ruleConverter.SetTCPUDPPortReuse(g.isTCPUDPPortReuse)
 		listeners, inErr := ruleConverter.DoConvert()
 		if inErr != nil {
-			blog.Errorf("convert rule %+v failed, err %s", rule, inErr.Error())
-			return fmt.Errorf("convert rule %+v failed, err %s", rule, inErr.Error())
+			blog.Errorf("convert rule[%d] failed, err %s", i, inErr.Error())
+			return warnings, fmt.Errorf("convert rule %d failed, err %s", i, inErr.Error())
 		}
 		generatedListeners = append(generatedListeners, listeners...)
 	}
-	for _, mapping := range ingress.Spec.PortMappings {
+	for i, mapping := range ingress.Spec.PortMappings {
 		mappingConverter := NewMappingConverter(g.cli, lbObjs, ingress.GetName(), ingress.GetNamespace(), &mapping)
 		mappingConverter.SetNamespaced(g.lbClient.IsNamespaced())
 		listeners, inErr := mappingConverter.DoConvert()
 		if inErr != nil {
-			blog.Errorf("convert mapping %+v failed, err %s", mapping, inErr.Error())
-			return fmt.Errorf("convert mapping %+v failed, err %s", mapping, inErr.Error())
+			blog.Errorf("convert mapping %d failed, err %s", i, inErr.Error())
+			return warnings, fmt.Errorf("convert mapping %d failed, err %s", i, inErr.Error())
 		}
 		// if ignore segment, disable segment feature;
 		// if segment length is not set or equals to 1, disable segment feature;
@@ -303,31 +289,30 @@ func (g *IngressConverter) ProcessUpdateIngress(ingress *networkextensionv1.Ingr
 
 	existedListeners, err := g.getListeners(ingress.GetName(), ingress.GetNamespace())
 	if err != nil {
-		return err
+		return warnings, err
 	}
 	existedSegListeners, err := g.getSegmentListeners(ingress.GetName(), ingress.GetNamespace())
 	if err != nil {
-		return err
+		return warnings, err
 	}
 	err = g.syncListeners(ingress.GetName(), ingress.GetNamespace(),
 		existedListeners, generatedListeners, existedSegListeners, generatedSegListeners)
 	if err != nil {
 		blog.Errorf("syncListeners listener of ingress %s/%s failed, err %s",
 			ingress.GetName(), ingress.GetNamespace(), err.Error())
-		return fmt.Errorf("syncListeners listener ingress %s/%s failed, err %s",
+		return warnings, fmt.Errorf("syncListeners listener ingress %s/%s failed, err %s",
 			ingress.GetName(), ingress.GetNamespace(), err.Error())
 	}
 	if err = g.patchIngressStatus(ingress, lbObjs); err != nil {
 		blog.Errorf("update ingress vips failed, err %s", err.Error())
-		return fmt.Errorf("update ingress vips failed, err %s", err.Error())
+		return warnings, fmt.Errorf("update ingress vips failed, err %s", err.Error())
 	}
-	return nil
+	return warnings, nil
 }
 
 // update ingress loadbalancers fields
 func (g *IngressConverter) patchIngressStatus(ingress *networkextensionv1.Ingress,
 	lbs []*cloud.LoadBalanceObject) error {
-
 	newStatus := networkextensionv1.IngressStatus{}
 	for _, lb := range lbs {
 		newStatus.Loadbalancers = append(newStatus.Loadbalancers, networkextensionv1.IngressLoadBalancer{
@@ -489,4 +474,83 @@ func (g *IngressConverter) syncListeners(ingressName, ingressNamespace string,
 		}
 	}
 	return nil
+}
+
+// CheckIngressServiceAvailable ingress service is unavailable if len([]string) != 0
+func (g *IngressConverter) CheckIngressServiceAvailable(ingress *networkextensionv1.Ingress) []string {
+	// use set to avoid repeat message
+	msgSet := make(map[string]struct{})
+	for i, rule := range ingress.Spec.Rules {
+		if len(rule.Services) == 0 {
+			msgSet[fmt.Sprintf(constant.ValidateMsgEmptySvc, i+1)] = struct{}{}
+			continue
+		}
+		for _, service := range rule.Services {
+			svc := &k8scorev1.Service{}
+			err := g.cli.Get(context.TODO(), k8stypes.NamespacedName{Namespace: service.ServiceNamespace,
+				Name: service.ServiceName}, svc)
+			if err != nil {
+				if k8serrors.IsNotFound(err) {
+					msgSet[fmt.Sprintf(constant.ValidateMsgNotFoundSvc, i+1, service.ServiceNamespace,
+						service.ServiceName)] = struct{}{}
+				} else {
+					blog.Errorf("k8s get resource failed, err: %+v", err)
+					msgSet[fmt.Sprintf(constant.ValidateMsgUnknownErr, err)] = struct{}{}
+				}
+			}
+		}
+	}
+
+	for i, portMapping := range ingress.Spec.PortMappings {
+		if portMapping.WorkloadKind == "" || portMapping.WorkloadName == "" || portMapping.WorkloadNamespace == "" {
+			msgSet[fmt.Sprintf(constant.ValidateMsgInvalidWorkload, i+1)] = struct{}{}
+			continue
+		}
+
+		switch portMapping.WorkloadKind {
+		case networkextensionv1.WorkloadKindGameStatefulset:
+			gsts := &k8sunstruct.Unstructured{}
+			gsts.SetGroupVersionKind(schema.GroupVersionKind{
+				Group:   "tkex.tencent.com",
+				Version: "v1alpha1",
+				Kind:    "GameStatefulSet",
+			})
+			err := g.cli.Get(context.TODO(), k8stypes.NamespacedName{
+				Namespace: portMapping.WorkloadNamespace,
+				Name:      portMapping.WorkloadName,
+			}, gsts)
+
+			if err != nil {
+				if k8serrors.IsNotFound(err) {
+					msgSet[fmt.Sprintf(constant.ValidateMsgEmptyWorkload, i+1)] = struct{}{}
+				} else {
+					blog.Errorf("k8s get resource failed, err: %+v", err)
+					msgSet[fmt.Sprintf(constant.ValidateMsgUnknownErr, err)] = struct{}{}
+				}
+			}
+		case networkextensionv1.WorkloadKindStatefulset:
+			sts := &k8sappsv1.StatefulSet{}
+			err := g.cli.Get(context.TODO(), k8stypes.NamespacedName{
+				Namespace: portMapping.WorkloadNamespace,
+				Name:      portMapping.WorkloadName,
+			}, sts)
+			if err != nil {
+				if k8serrors.IsNotFound(err) {
+					msgSet[fmt.Sprintf(constant.ValidateMsgEmptyWorkload, i+1)] = struct{}{}
+				} else {
+					blog.Errorf("k8s get resource failed, err: %+v", err)
+					msgSet[fmt.Sprintf(constant.ValidateMsgUnknownErr, err)] = struct{}{}
+				}
+			}
+		default:
+			msgSet[fmt.Sprintf("port mapping[%d] has invalid workload kind", i+1)] = struct{}{}
+		}
+	}
+
+	var msgList []string
+	for msg, _ := range msgSet {
+		msgList = append(msgList, msg)
+	}
+
+	return msgList
 }

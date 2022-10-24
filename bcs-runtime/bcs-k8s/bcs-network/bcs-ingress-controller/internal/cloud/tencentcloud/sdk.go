@@ -19,6 +19,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/pkg/errors"
 	tclb "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/clb/v20180317"
 	tcommon "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
 	terrors "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common/errors"
@@ -1166,11 +1167,11 @@ func (sw *SdkWrapper) ModifyTargetWeight(region string, req *tclb.ModifyTargetWe
 }
 
 // BatchRegisterTargets batch register clb targets
-func (sw *SdkWrapper) BatchRegisterTargets(region string, req *tclb.BatchRegisterTargetsRequest) []string {
+func (sw *SdkWrapper) BatchRegisterTargets(region string, req *tclb.BatchRegisterTargetsRequest) map[string]error {
 	rounds := len(req.Targets) / MaxTargetForBatchRegisterEachTime
 	remains := len(req.Targets) % MaxTargetForBatchRegisterEachTime
 
-	failedListenerIDMap := make(map[string]struct{})
+	failedListenerIDMap := make(map[string]error)
 	index := 0
 	for ; index <= rounds; index++ {
 		start := index * MaxTargetForBatchRegisterEachTime
@@ -1187,21 +1188,18 @@ func (sw *SdkWrapper) BatchRegisterTargets(region string, req *tclb.BatchRegiste
 		newReq.Targets = req.Targets[start:end]
 		tmpFailedIDs, err := sw.doBatchRegisterTargets(region, newReq)
 		if err != nil {
-			blog.Warnf("do batch register targets failed, err %s", err.Error())
+			err = errors.Wrapf(err, "do batch register targets failed, return err")
+			blog.Warnf(err.Error())
 			for _, tg := range newReq.Targets {
-				failedListenerIDMap[*tg.ListenerId] = struct{}{}
+				failedListenerIDMap[*tg.ListenerId] = err
 			}
 			continue
 		}
 		for _, id := range tmpFailedIDs {
-			failedListenerIDMap[id] = struct{}{}
+			failedListenerIDMap[id] = errors.New("do batch register targets failed, return failedID")
 		}
 	}
-	var retList []string
-	for id := range failedListenerIDMap {
-		retList = append(retList, id)
-	}
-	return retList
+	return failedListenerIDMap
 }
 
 // doBatchRegisterTargets batch register clb targets

@@ -276,6 +276,7 @@ func (ppih *PortPoolItemHandler) ensureListeners(region, lbID, itemName string, 
 						blog.Warnf("update listener %s failed, err %s", tmpName, err.Error())
 					}
 				}
+				// TODO use listener.status.status to predict listener status
 				if len(listener.Status.ListenerID) == 0 {
 					notReady = true
 					blog.Warnf("listener %s is not ready", tmpName)
@@ -306,7 +307,10 @@ func (ppih *PortPoolItemHandler) generateListener(
 		netextv1.LabelKeyForLoadbalanceID:                               generator.GetLabelLBId(lbID),
 		netextv1.LabelKeyForLoadbalanceRegion:                           region,
 		common.GetPortPoolListenerLabelKey(ppih.PortPoolName, itemName): netextv1.LabelValueForPortPoolItemName,
+		netextv1.LabelKeyForOwnerKind:                                   constant.KindPortPool,
+		netextv1.LabelKeyForOwnerName:                                   ppih.PortPoolName,
 	})
+	li.Status.PortPool = ppih.PortPoolName
 	li.Finalizers = append(li.Finalizers, constant.FinalizerNameBcsIngressController)
 	li.Spec.Port = int(startPort)
 	li.Spec.EndPort = int(endPort)

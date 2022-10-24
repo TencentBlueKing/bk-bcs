@@ -129,13 +129,15 @@ func (e *GCLB) DeleteListener(region string, listener *networkextensionv1.Listen
 }
 
 // EnsureMultiListeners ensure multiple listeners to cloud
-func (e *GCLB) EnsureMultiListeners(region, lbID string, listeners []*networkextensionv1.Listener) (map[string]string, error) {
+func (e *GCLB) EnsureMultiListeners(region, lbID string, listeners []*networkextensionv1.Listener) (map[string]cloud.
+	Result, error) {
 	type listenerMap struct {
-		name string
-		id   string
+		name    string
+		id      string
+		isError bool
+		err     error
 	}
-	retMap := make(map[string]string)
-	errCh := make(chan error, len(listeners))
+	retMap := make(map[string]cloud.Result)
 	retCh := make(chan listenerMap, len(listeners))
 	wg := sync.WaitGroup{}
 	wg.Add(len(listeners))
@@ -146,22 +148,24 @@ func (e *GCLB) EnsureMultiListeners(region, lbID string, listeners []*networkext
 			liID, err := e.EnsureListener(region, listener)
 			defer wg.Done()
 			if err != nil {
-				errCh <- err
+				retCh <- listenerMap{name: listener.Name, isError: true, err: err}
 				return
 			}
-			retCh <- listenerMap{name: listener.Name, id: liID}
+			retCh <- listenerMap{name: listener.Name, id: liID, isError: false}
 		}(listener)
 	}
 
 	// wait for listener ensured
 	wg.Wait()
-	close(errCh)
 	close(retCh)
-	for e := range errCh {
-		blog.Errorf("ensure listener failed, err %s", e.Error())
-	}
-	for li := range retCh {
-		retMap[li.name] = li.id
+
+	for ret := range retCh {
+		if ret.isError {
+			blog.Errorf("ensure listener failed, err: %+v", ret.err)
+			retMap[ret.name] = cloud.Result{IsError: true, Err: ret.err}
+		} else {
+			retMap[ret.name] = cloud.Result{IsError: false, Res: ret.id}
+		}
 	}
 	return retMap, nil
 }
@@ -198,13 +202,15 @@ func (e *GCLB) EnsureSegmentListener(region string, listener *networkextensionv1
 }
 
 // EnsureMultiSegmentListeners ensure multi segment listeners
-func (e *GCLB) EnsureMultiSegmentListeners(region, lbID string, listeners []*networkextensionv1.Listener) (map[string]string, error) {
+func (e *GCLB) EnsureMultiSegmentListeners(region, lbID string, listeners []*networkextensionv1.Listener) (
+	map[string]cloud.Result, error) {
 	type listenerMap struct {
-		name string
-		id   string
+		name    string
+		id      string
+		isError bool
+		err     error
 	}
-	retMap := make(map[string]string)
-	errCh := make(chan error, len(listeners))
+	retMap := make(map[string]cloud.Result)
 	retCh := make(chan listenerMap, len(listeners))
 	wg := sync.WaitGroup{}
 	wg.Add(len(listeners))
@@ -215,22 +221,24 @@ func (e *GCLB) EnsureMultiSegmentListeners(region, lbID string, listeners []*net
 			liID, err := e.EnsureSegmentListener(region, listener)
 			defer wg.Done()
 			if err != nil {
-				errCh <- err
+				retCh <- listenerMap{name: listener.Name, isError: true, err: err}
 				return
 			}
-			retCh <- listenerMap{name: listener.Name, id: liID}
+			retCh <- listenerMap{name: listener.Name, id: liID, isError: false}
 		}(listener)
 	}
 
 	// wait for listener ensured
 	wg.Wait()
-	close(errCh)
 	close(retCh)
-	for e := range errCh {
-		blog.Errorf("ensure listener failed, err %s", e.Error())
-	}
-	for li := range retCh {
-		retMap[li.name] = li.id
+
+	for ret := range retCh {
+		if ret.isError {
+			blog.Errorf("ensure listener failed, err: %+v", ret.err)
+			retMap[ret.name] = cloud.Result{IsError: true, Err: ret.err}
+		} else {
+			retMap[ret.name] = cloud.Result{IsError: false, Res: ret.id}
+		}
 	}
 	return retMap, nil
 }

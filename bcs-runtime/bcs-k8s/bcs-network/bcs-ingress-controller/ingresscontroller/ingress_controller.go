@@ -14,8 +14,10 @@ package ingresscontroller
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"reflect"
+	"strings"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -25,6 +27,9 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/option"
 	netcommon "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/pkg/common"
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
+	"github.com/pkg/errors"
+	k8smetav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	k8stypes "k8s.io/apimachinery/pkg/types"
 
 	"github.com/go-logr/logr"
 	k8sappsv1 "k8s.io/api/apps/v1"
@@ -126,7 +131,15 @@ func (ir *IngressReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		return ctrl.Result{}, nil
 	}
 
-	if err := ir.IngressConverter.ProcessUpdateIngress(ingress); err != nil {
+	warnings, err := ir.IngressConverter.ProcessUpdateIngress(ingress)
+	if err != nil {
+		warnings = append(warnings, err.Error())
+	}
+	if derr := ir.patchWarningAnnotationForIngress(ingress, warnings); derr != nil {
+		blog.Warnf(derr.Error())
+	}
+
+	if err != nil {
 		metrics.IncreaseFailMetric(metrics.ObjectIngress, metrics.EventTypeUnknown)
 		// create event for ingress
 		ir.IngressEventer.Eventf(ingress, k8scorev1.EventTypeWarning,
@@ -160,6 +173,41 @@ func (ir *IngressReconciler) addFinalizerForIngress(ingress *networkextensionv1.
 			ingress.GetName(), ingress.GetNamespace(), err.Error())
 	}
 	blog.V(3).Infof("add finalizer for ingress %s/%s successfully", ingress.GetName(), ingress.GetNamespace())
+	return nil
+}
+
+func (ir IngressReconciler) patchWarningAnnotationForIngress(ingress *networkextensionv1.Ingress,
+	warnings []string) error {
+	attachWarning := strings.Join(warnings, ";")
+
+	// if warning annotation not changed, not patch
+	if existedWarning, ok := ingress.Annotations[networkextensionv1.
+		AnnotationKeyForWarnings]; ok && existedWarning == attachWarning {
+		return nil
+	}
+	patchStruct := map[string]interface{}{
+		"metadata": map[string]interface{}{
+			"annotations": map[string]interface{}{
+				networkextensionv1.AnnotationKeyForWarnings: attachWarning,
+			},
+		},
+	}
+	patchBytes, err := json.Marshal(patchStruct)
+	if err != nil {
+		return errors.Wrapf(err, "marshal patchStruct for ingress '%s/%s' failed", ingress.GetNamespace(),
+			ingress.GetName())
+	}
+	rawPatch := client.RawPatch(k8stypes.MergePatchType, patchBytes)
+	updatePod := &k8scorev1.Pod{
+		ObjectMeta: k8smetav1.ObjectMeta{
+			Name:      ingress.GetName(),
+			Namespace: ingress.GetNamespace(),
+		},
+	}
+	if err := ir.Client.Patch(context.Background(), updatePod, rawPatch, &client.PatchOptions{}); err != nil {
+		return errors.Wrapf(err, "patch ingress %s/%s annotation failed, patcheStruct: %s", ingress.GetName(),
+			ingress.GetNamespace(), string(patchBytes))
+	}
 	return nil
 }
 

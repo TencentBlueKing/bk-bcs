@@ -14,6 +14,7 @@ package worker
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"sync"
 	"time"
@@ -25,7 +26,6 @@ import (
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
 
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
-	k8smetav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	k8stypes "k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/tools/record"
 	"k8s.io/client-go/util/workqueue"
@@ -231,7 +231,7 @@ func (h *EventHandler) ensureMultiListeners(listeners []*networkextensionv1.List
 	if len(listeners) == 0 {
 		return fmt.Errorf("ensureMultiListeners listener list cannot be empty")
 	}
-	var listenerIDMap map[string]string
+	var listenerIDMap map[string]cloud.Result
 	var err error
 	if listeners[0].Spec.EndPort > 0 {
 		listenerIDMap, err = h.lbClient.EnsureMultiSegmentListeners(h.region, h.lbID, listeners)
@@ -245,6 +245,11 @@ func (h *EventHandler) ensureMultiListeners(listeners []*networkextensionv1.List
 				Namespace: li.GetNamespace(),
 				Name:      li.GetName(),
 			}
+			h.recordListenerFailedEvent(li, err)
+			if err := h.patchListenerStatus(li, "", networkextensionv1.ListenerStatusNotSynced,
+				err.Error()); err != nil {
+				blog.Warnf("patch listener id of %s/%s failed, err %s", li.GetName(), li.GetNamespace(), err.Error())
+			}
 			h.eventQueue.AddRateLimited(obj)
 			h.eventQueue.Done(obj)
 		}
@@ -255,15 +260,24 @@ func (h *EventHandler) ensureMultiListeners(listeners []*networkextensionv1.List
 			Namespace: li.GetNamespace(),
 			Name:      li.GetName(),
 		}
-		listenerID, ok := listenerIDMap[li.GetName()]
-		if !ok {
+		listenerResult, ok := listenerIDMap[li.GetName()]
+		if !ok || listenerResult.IsError {
 			blog.Warnf("ensure listener %s/%s failed, requeue", li.GetName(), li.GetNamespace())
+			msg := "ensure multi listener failed"
+			if ok {
+				msg = listenerResult.Err.Error()
+			}
+			h.recordListenerFailedEvent(li, errors.New(msg))
+			if err := h.patchListenerStatus(li, "", networkextensionv1.ListenerStatusNotSynced, msg); err != nil {
+				blog.Warnf("patch listener id of %s/%s failed, err %s", li.GetName(), li.GetNamespace(), err.Error())
+			}
 			h.eventQueue.AddRateLimited(obj)
 			h.eventQueue.Done(obj)
 			continue
 		}
-		h.recordListenerSuccessEvent(li, listenerID)
-		if err := h.patchListenerID(li, listenerID); err != nil {
+		h.recordListenerSuccessEvent(li, listenerResult.Res)
+		if err := h.patchListenerStatus(li, listenerResult.Res, networkextensionv1.ListenerStatusSynced,
+			"multi ensure success"); err != nil {
 			blog.Warnf("patch listener id of %s/%s failed, err %s", li.GetName(), li.GetNamespace(), err.Error())
 			h.eventQueue.AddRateLimited(obj)
 			h.eventQueue.Done(obj)
@@ -285,6 +299,7 @@ func (h *EventHandler) deleteMultiListeners(listeners []*networkextensionv1.List
 				Namespace: li.GetNamespace(),
 				Name:      li.GetName(),
 			}
+			h.recordListenerDeleteFailedEvent(li, err)
 			h.eventQueue.AddRateLimited(obj)
 			h.eventQueue.Done(obj)
 		}
@@ -346,6 +361,10 @@ func (h *EventHandler) ensureListener(li *networkextensionv1.Listener) error {
 		if err != nil {
 			h.recordListenerFailedEvent(li, err)
 			blog.Errorf("cloud lb client EnsureSegmentListener failed, err %s", err.Error())
+			if err := h.patchListenerStatus(li, "", networkextensionv1.ListenerStatusNotSynced,
+				err.Error()); err != nil {
+				blog.Warnf("patch listener id of %s/%s failed, err %s", li.GetName(), li.GetNamespace(), err.Error())
+			}
 			return fmt.Errorf("cloud lb client EnsureSegmentListener failed, err %s", err.Error())
 		}
 	} else {
@@ -353,20 +372,17 @@ func (h *EventHandler) ensureListener(li *networkextensionv1.Listener) error {
 		if err != nil {
 			h.recordListenerFailedEvent(li, err)
 			blog.Errorf("cloud lb client EnsureListener failed, err %s", err.Error())
+			if err := h.patchListenerStatus(li, "", networkextensionv1.ListenerStatusNotSynced,
+				err.Error()); err != nil {
+				blog.Warnf("patch listener id of %s/%s failed, err %s", li.GetName(), li.GetNamespace(), err.Error())
+			}
 			return fmt.Errorf("cloud lb client EnsureListener failed, err %s", err.Error())
 		}
 	}
 	h.recordListenerSuccessEvent(li, listenerID)
 
-	rawPatch := client.RawPatch(k8stypes.MergePatchType, []byte("{\"status\":{\"listenerID\":\""+listenerID+"\"}}"))
-	updateListener := &networkextensionv1.Listener{
-		ObjectMeta: k8smetav1.ObjectMeta{
-			Name:      li.GetName(),
-			Namespace: li.GetNamespace(),
-		},
-	}
-	err = h.k8sCli.Patch(context.TODO(), updateListener, rawPatch, &client.PatchOptions{})
-	if err != nil {
+	if err := h.patchListenerStatus(li, listenerID, networkextensionv1.ListenerStatusSynced,
+		"ensure success"); err != nil {
 		blog.Errorf("patch listener id %s to k8s apiserver failed, err %s", listenerID, err.Error())
 		return fmt.Errorf("update listener id %s to k8s apiserver failed, err %s", listenerID, err.Error())
 	}
@@ -378,12 +394,14 @@ func (h *EventHandler) deleteListener(li *networkextensionv1.Listener) error {
 	if li.Spec.EndPort > 0 {
 		err = h.lbClient.DeleteSegmentListener(h.region, li)
 		if err != nil {
+			h.recordListenerDeleteFailedEvent(li, err)
 			blog.Errorf("cloud lb client DeleteSegmentListener failed, err %s", err.Error())
 			return fmt.Errorf("cloud lb client DeleteSegmentListener failed, err %s", err.Error())
 		}
 	} else {
 		err = h.lbClient.DeleteListener(h.region, li)
 		if err != nil {
+			h.recordListenerDeleteFailedEvent(li, err)
 			blog.Errorf("cloud lb client DeleteListener failed, err %s", err.Error())
 			return fmt.Errorf("cloud lb client DeleteListener failed, err %s", err.Error())
 		}

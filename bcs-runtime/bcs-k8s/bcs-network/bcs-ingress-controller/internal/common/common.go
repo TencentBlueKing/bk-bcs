@@ -39,6 +39,11 @@ func GetLbRegionAndName(lbName string) (string, string, error) {
 	return idStrs[0], idStrs[1], nil
 }
 
+// BuildRegionName return {region}:{name}
+func BuildRegionName(region string, name string) string {
+	return fmt.Sprintf("%s:%s", region, name)
+}
+
 // example: arn:aws:elasticloadbalancing:us-west-1:1234567:loadbalancer/net/name/xxx
 // return: region-lb-name
 func tryParseARNFromLbID(lbID string) string {
@@ -99,6 +104,11 @@ func GetPortPoolListenerLabelKey(portPoolName, itemName string) string {
 	return portPoolName + "/" + fmt.Sprintf("%x", (md5.Sum([]byte(itemName))))
 }
 
+// GetIngressProtocolLayer get ingress protocol layer,
+// if all ingress' rules / portMappings in layer4, return transportLayer
+// if all ingress' rules / portMappings in layer7, return applicationLayer
+// else return default layer
+// Now it only used for azure sdk
 func GetIngressProtocolLayer(ingress *networkextensionv1.Ingress) string {
 	transportCnt := 0
 	applicationCnt := 0

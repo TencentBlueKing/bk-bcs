@@ -44,6 +44,9 @@ const (
 	// Pod CLB weight annotation key
 	AnnotationKeyForLoadbalanceWeight      = "networkextension.bkbcs.tencent.com/clb-weight"
 	AnnotationKeyForLoadbalanceWeightReady = "networkextension.bkbcs.tencent.com/clb-weight-ready"
+
+	// AnnotationKeyForWarnings annotation key for ingress warnings
+	AnnotationKeyForWarnings = "warnings"
 )
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!

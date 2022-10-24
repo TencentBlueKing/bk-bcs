@@ -45,6 +45,11 @@ const (
 	// DelimiterForLbID delimiter for lb id
 	DelimiterForLbID = ":"
 
+	// PortPoolStatusReady ready status for port pool
+	PortPoolStatusReady = "Ready"
+	// PortPoolStatusNotReady not ready status for port pool
+	PortPoolStatusNotReady = "NotReady"
+
 	// PortPoolItemStatusError error status of port pool item
 	PortPoolItemStatusError = "Error"
 	// PortPoolItemStatusInitialize initial status of port pool item
@@ -101,6 +106,10 @@ const (
 	ConditionReasonReadyBcsIngressPortBinding = "Ready"
 	// ConditionMessageReadyBcsIngressPortBinding ready message for port binding condition
 	ConditionMessageReadyBcsIngressPortBinding = "ports ares binded for the pod"
+	// ConditionReasonNotReadyBcsIngressPortBinding unready reason for port binding condition
+	ConditionReasonNotReadyBcsIngressPortBinding = "NotReady"
+	// ConditionMessageNotReadyBcsIngressPortBinding unready message for port binding condition
+	ConditionMessageNotReadyBcsIngressPortBinding = "port are not bound to the pod"
 
 	// PatchOperationAdd patch add operation
 	PatchOperationAdd = "add"
