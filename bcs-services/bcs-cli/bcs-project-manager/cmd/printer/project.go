@@ -14,6 +14,12 @@
 package printer
 
 import (
+	"fmt"
+	"os"
+	"strconv"
+
+	"github.com/olekukonko/tablewriter"
+	"github.com/tidwall/pretty"
 	"k8s.io/klog/v2"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/proto/bcsproject"
@@ -26,20 +32,40 @@ func PrintProjectsListInTable(flagOutput string, resp *bcsproject.ListProjectsRe
 			klog.Fatalf("list projects output json to stdout failed: %s", err.Error())
 		}
 	}
-	tw := defaultTableWriter()
+	tw := tablewriter.NewWriter(os.Stdout)
 	tw.SetHeader(func() []string {
 		return []string{
-			"PROJECT_ID", "PROJECT_CODE", "NAME", "BUSINESS_ID", "CREATOR", "CREATE",
+			"PROJECT_ID", "PROJECT_CODE", "NAME", "BUSINESS_ID", "CREATOR", "UPDATER", "CREATE", "UPDATE",
 		}
 	}())
-	tw.SetAutoMergeCells(true)
+	// 添加页脚
+	tw.SetFooter([]string{"", "", "", "", "", "", "Total", strconv.Itoa(int(resp.Data.Total))})
+	// 合并相同值的列
+	//tw.SetAutoMergeCells(true)
 	for _, item := range resp.Data.Results {
 		tw.Append(func() []string {
 			return []string{
-				item.GetProjectID(), item.GetProjectCode(), item.GetName(), item.GetBusinessID(),
-				item.GetCreator(), item.CreateTime,
+				item.GetProjectID(),
+				item.GetProjectCode(),
+				item.GetName(),
+				item.GetBusinessID(),
+				item.GetCreator(),
+				item.GetUpdater(),
+				item.GetCreateTime(),
+				item.GetUpdateTime(),
 			}
 		}())
 	}
 	tw.Render()
+}
+
+// PrintUpdateProjectInJSON prints the response that edit project
+func PrintUpdateProjectInJSON(project *bcsproject.ProjectResponse) {
+	if project == nil {
+		return
+	}
+
+	var data []byte
+	_ = encodeJSONWithIndent(4, project, &data)
+	fmt.Println(string(pretty.Color(pretty.Pretty(data), nil)))
 }

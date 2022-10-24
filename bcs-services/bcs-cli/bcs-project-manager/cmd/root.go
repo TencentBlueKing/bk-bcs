@@ -31,13 +31,26 @@ const (
 var (
 	cfgFile    string
 	flagOutput string
+	rootCmd    = &cobra.Command{
+		Use:   "kubectl-bcs-project-manager",
+		Short: "kubectl-bcs-project-manager used to operate bcs-project-manager service",
+		Long: `
+kubectl-bcs-project-manager allows operators to get project info from bcs-project-manager.
+`,
+	}
 )
+
+// Execute is the entrance for cmd tools
+func Execute() {
+	if err := rootCmd.Execute(); err != nil {
+		klog.Fatalf(err.Error())
+	}
+}
 
 func ensureConfig() {
 	if cfgFile == "" {
 		cfgFile = defaultCfgFile
 	}
-
 	viper.SetConfigFile(cfgFile)
 	viper.AutomaticEnv()
 	if err := viper.ReadInConfig(); err != nil {
@@ -47,30 +60,18 @@ func ensureConfig() {
 
 func init() {
 	log.SetFlags(0)
-}
-
-// NewRootCommand returns the rootCmd instance
-func NewRootCommand() *cobra.Command {
-	rootCmd := &cobra.Command{
-		Use:   "kubectl-bcs-project-manager",
-		Short: "kubectl-bcs-project-manager used to operate bcs-project-manager service",
-		Long: `
-kubectl-bcs-project-manager allows operators to get project info from bcs-project-manager.
-`,
-	}
-	versionCmd := &cobra.Command{
+	cobra.OnInitialize(ensureConfig)
+	rootCmd.AddCommand(&cobra.Command{
 		Use:   "version",
 		Short: "print the version detail info",
 		Run: func(cmd *cobra.Command, args []string) {
 			fmt.Println(version.GetVersion())
 		},
-	}
-	rootCmd.AddCommand(versionCmd)
+	})
 	rootCmd.AddCommand(newListCmd())
+	rootCmd.AddCommand(newUpdateCmd())
 	rootCmd.PersistentFlags().StringVarP(
 		&cfgFile, "config", "c", defaultCfgFile, "config file")
-	rootCmd.CompletionOptions.DisableDefaultCmd = true
 	rootCmd.PersistentFlags().StringVarP(&flagOutput, "output", "o", "wide",
 		"optional parameter: json/wide, json will print the json string to stdout")
-	return rootCmd
 }
