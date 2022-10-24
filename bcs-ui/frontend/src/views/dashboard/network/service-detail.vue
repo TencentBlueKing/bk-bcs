@@ -31,7 +31,19 @@
       </div>
       <div class="basic-info-item">
         <label>Endpoints</label>
-        <span>{{ endpoints || '--' }}</span>
+        <template v-if="endpoints">
+          <bcs-popover placement="top" width="140">
+              <span>{{ endpoints.join(',') }}</span>
+              <div slot="content" style="white-space: normal;">
+                  <div v-for="(item, index) in endpoints" :key="index">
+                    {{ item }}
+                  </div>
+              </div>
+          </bcs-popover>
+        </template>
+        <template v-else>
+          <span>--</span>
+        </template>
       </div>
       <div class="basic-info-item">
         <label>{{$t('CLB实例ID')}}</label>
@@ -137,7 +149,7 @@ export default defineComponent({
           $category: 'endpoints',
           $name: props.data.metadata.name,
         });
-        endpoints.value = res.data.manifest?.metadata?.name;
+        endpoints.value = res.data.manifestExt?.endpoints;
         isLoading.value = false;
       }
     };

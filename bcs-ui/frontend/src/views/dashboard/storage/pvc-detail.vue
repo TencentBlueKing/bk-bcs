@@ -23,7 +23,19 @@
       </div>
       <div class="basic-info-item">
         <label>finalizers</label>
-        <span>{{ data.metadata.finalizers ? data.metadata.finalizers.join(',') : '--' }}</span>
+        <template v-if="data.metadata.finalizers">
+          <bcs-popover placement="top" width="220">
+              <span>{{ data.metadata.finalizers.join(',') }}</span>
+              <div slot="content" style="white-space: normal;">
+                  <div v-for="(item, index) in data.metadata.finalizers" :key="index">
+                    {{ item }}
+                  </div>
+              </div>
+          </bcs-popover>
+        </template>
+        <template v-else>
+          <span>--</span>
+        </template>
       </div>
       <div class="basic-info-item">
         <label>{{ $t('被挂载') }}</label>
