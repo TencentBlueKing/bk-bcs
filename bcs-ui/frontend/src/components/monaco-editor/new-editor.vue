@@ -64,7 +64,8 @@ export default defineComponent({
       let resolveValue = '';
       switch (lang.value) {
         case 'yaml':
-          resolveValue = isObject(value.value) ? yamljs.load(emitValue) : emitValue;
+          // 保留原始数据格式
+          resolveValue = isObject(value.value) ? (yamljs.load(emitValue) || {}) : emitValue;
           break;
         default:
           resolveValue = '';
