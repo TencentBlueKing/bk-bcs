@@ -19,13 +19,14 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	commtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
 	"github.com/pkg/errors"
 	"k8s.io/api/admission/v1beta1"
 	corev1 "k8s.io/api/core/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/client-go/kubernetes"
+
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	commtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
 
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-webhook-server/internal/metrics"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-webhook-server/internal/plugin/imageacceleration/cachemanager"
@@ -131,13 +132,13 @@ func (h *Handler) injectRequired(pod *corev1.Pod) bool {
 func (h *Handler) injectToPod(pod *corev1.Pod) ([]types.PatchOperation, error) {
 	cm, err := h.cacheManager.GetConfigMap(pod.Namespace, configMapName)
 	if err != nil {
-		return nil, errors.Wrapf(err, "image acceleration get configmap '%s/%s' failed",
-			pod.Namespace, configMapName)
+		return nil, errors.Wrapf(err, "image acceleration get configmap failed")
 	}
 	configmapMapping := h.parseConfigMapping(cm)
 	if len(configmapMapping) == 0 {
 		return nil, nil
 	}
+	h.handleImagePullSecret(configmapMapping, pod)
 
 	results := make([]types.PatchOperation, 0)
 	for i := range pod.Spec.Containers {

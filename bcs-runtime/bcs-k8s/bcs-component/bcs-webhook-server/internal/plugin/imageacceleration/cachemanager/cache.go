@@ -14,16 +14,19 @@
 package cachemanager
 
 import (
+	"context"
 	"sync"
 	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/informers"
 	corev1informers "k8s.io/client-go/informers/core/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/cache"
+
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 )
 
 var (
@@ -37,6 +40,8 @@ type CacheInterface interface {
 	Close()
 
 	GetConfigMap(namespace, name string) (*corev1.ConfigMap, error)
+	GetSecret(namespace, name string) (*corev1.Secret, error)
+	UpdateSecret(ctx context.Context, secret *corev1.Secret) error
 }
 
 // CacheManager will make cache for some k8s resource
@@ -46,6 +51,7 @@ type CacheManager struct {
 
 	informerFactory   informers.SharedInformerFactory
 	configMapInformer corev1informers.ConfigMapInformer
+	secretInformer    corev1informers.SecretInformer
 }
 
 // NewCacheManager create the instance of cache manager
@@ -69,6 +75,12 @@ func (m *CacheManager) Init() error {
 	m.informerFactory = informers.NewSharedInformerFactory(m.client, informerReSyncPeriod)
 	m.configMapInformer = m.informerFactory.Core().V1().ConfigMaps()
 	m.configMapInformer.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
+		AddFunc:    func(obj interface{}) {},
+		UpdateFunc: func(oldObj, newObj interface{}) {},
+		DeleteFunc: func(obj interface{}) {},
+	})
+	m.secretInformer = m.informerFactory.Core().V1().Secrets()
+	m.secretInformer.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc:    func(obj interface{}) {},
 		UpdateFunc: func(oldObj, newObj interface{}) {},
 		DeleteFunc: func(obj interface{}) {},
@@ -112,7 +124,24 @@ func (m *CacheManager) Close() {
 func (m *CacheManager) GetConfigMap(namespace, name string) (*corev1.ConfigMap, error) {
 	configMap, err := m.configMapInformer.Lister().ConfigMaps(namespace).Get(name)
 	if err != nil {
-		return nil, errors.Wrapf(err, "get configmap '%s' from informer failed", name)
+		return nil, errors.Wrapf(err, "get configmap '%s/%s' from informer failed", namespace, name)
 	}
 	return configMap, nil
+}
+
+// GetSecret get secret from informer cache
+func (m *CacheManager) GetSecret(namespace, name string) (*corev1.Secret, error) {
+	secret, err := m.secretInformer.Lister().Secrets(namespace).Get(name)
+	if err != nil {
+		return nil, errors.Wrapf(err, "get secret '%s/%s' from informer failed", namespace, name)
+	}
+	return secret, nil
+}
+
+// UpdateSecret update secret
+func (m *CacheManager) UpdateSecret(ctx context.Context, secret *corev1.Secret) error {
+	if _, err := m.client.CoreV1().Secrets(secret.Namespace).Update(ctx, secret, metav1.UpdateOptions{}); err != nil {
+		return errors.Wrapf(err, "update secret '%s/%s' failed", secret.Namespace, secret.Name)
+	}
+	return nil
 }
