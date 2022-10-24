@@ -150,7 +150,7 @@ func PrintGetTokenCmdResult(flagOutput string, resp *pkg.GetTokenResponse) {
 func PrintGetTokenByUserAndClusterIDCmdResult(flagOutput string, resp *pkg.GetTokenByUserAndClusterIDResponse) {
 	if flagOutput == outputTypeJSON {
 		if err := encodeJSON(resp); err != nil {
-			klog.Fatalf("get token by user and clusterID  output json to stdout failed: %s", err.Error())
+			klog.Fatalf("get token by user and clusterID output json to stdout failed: %s", err.Error())
 		}
 	}
 	tw := defaultTableWriter()

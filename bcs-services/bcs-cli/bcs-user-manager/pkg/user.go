@@ -197,7 +197,7 @@ type RefreshPlainTokenResponse struct {
 func (c *UserManagerClient) RefreshPlainToken(userName, expireTime string) (*RefreshPlainTokenResponse, error) {
 	bs, err := c.do(fmt.Sprintf(refreshPlainTokenUrl, userName, expireTime), http.MethodPut, nil, nil)
 	if err != nil {
-		return nil, errors.Wrapf(err, "refresh Plain user token with  userName = '%s' ,expireTime = '%s' failed", userName, expireTime)
+		return nil, errors.Wrapf(err, "refresh Plain user token with  userName '%s' ,expireTime '%s' failed", userName, expireTime)
 	}
 	resp := new(RefreshPlainTokenResponse)
 	if err := json.Unmarshal(bs, resp); err != nil {

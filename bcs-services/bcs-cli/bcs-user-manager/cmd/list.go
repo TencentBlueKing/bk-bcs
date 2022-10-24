@@ -73,10 +73,10 @@ func listTkeCidrCmd() *cobra.Command {
 			client := pkg.NewClientWithConfiguration(ctx)
 			resp, err := client.ListTkeCidr()
 			if err != nil {
-				klog.Fatalf("list tke cidrs  failed: %v", err)
+				klog.Fatalf("list tke cidrs failed: %v", err)
 			}
 			if resp != nil && resp.Code != 0 {
-				klog.Fatalf("list tke cidrs  response code not 0 but %d: %s", resp.Code, resp.Message)
+				klog.Fatalf("list tke cidrs response code not 0 but %d: %s", resp.Code, resp.Message)
 			}
 			printer.PrintListTkeCidrCmdResult(flagOutput, resp)
 		},

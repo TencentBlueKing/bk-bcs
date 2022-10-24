@@ -170,21 +170,21 @@ func (c *UserManagerClient) ListTkeCidr() (*ListTkeCidrResponse, error) {
 
 // SyncTkeClusterCredentialsResponse is the response of ReleaseTkeCidr
 type SyncTkeClusterCredentialsResponse struct {
-	Result  bool   `json:"result"`
-	Code    int    `json:"code"`
-	Message string `json:"message"`
-	//Data    *tkeModels.TkeCidr `json:"data"`
+	Result  bool     `json:"result"`
+	Code    int      `json:"code"`
+	Message string   `json:"message"`
+	Data    *TkeCidr `json:"data"`
 }
 
-// SyncTkeClusterCredentials  sync the tke cluster credentials from tke from bcs-user-manager
-func (c *UserManagerClient) SyncTkeClusterCredentials(clusterId string) (*SyncTkeClusterCredentialsResponse, error) {
-	bs, err := c.do(fmt.Sprintf(syncTkeClusterCredentialsUrl, clusterId), http.MethodPost, nil, nil)
+// SyncTkeClusterCredentials  sync the tke cluster credentials from bcs-user-manager
+func (c *UserManagerClient) SyncTkeClusterCredentials(clusterID string) (*SyncTkeClusterCredentialsResponse, error) {
+	bs, err := c.do(fmt.Sprintf(syncTkeClusterCredentialsUrl, clusterID), http.MethodPost, nil, nil)
 	if err != nil {
-		return nil, errors.Wrapf(err, "sync the tke cluster credentials from tke with cluster_id = '%s' failed", clusterId)
+		return nil, errors.Wrapf(err, "sync the tke cluster credentials with clusterID '%s' failed", clusterID)
 	}
 	resp := new(SyncTkeClusterCredentialsResponse)
 	if err := json.Unmarshal(bs, resp); err != nil {
-		return nil, errors.Wrapf(err, "sync the tke cluster credentials from tke unmarshal failed with response '%s'", string(bs))
+		return nil, errors.Wrapf(err, "sync the tke cluster credentials unmarshal failed with response '%s'", string(bs))
 	}
 	return resp, nil
 }

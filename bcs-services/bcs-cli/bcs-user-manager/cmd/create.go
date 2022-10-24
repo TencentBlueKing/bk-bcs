@@ -49,6 +49,7 @@ func createAdminUserCmd() *cobra.Command {
 		Aliases: []string{"au"},
 		Short:   "create admin user ",
 		Long:    "create admin user from user manager",
+		Example: "kubectl-bcs-user-manager create au -u [user_name to create]",
 		Run: func(cmd *cobra.Command, args []string) {
 			cobra.OnInitialize(ensureConfig)
 			ctx, cancel := context.WithCancel(context.Background())
@@ -65,7 +66,7 @@ func createAdminUserCmd() *cobra.Command {
 		},
 	}
 
-	subCmd.Flags().StringVarP(&userName, "user_name", "n", "",
+	subCmd.Flags().StringVarP(&userName, "user_name", "u", "",
 		"the user name that query admin user")
 	return subCmd
 }
@@ -75,8 +76,9 @@ func createSaasUserCmd() *cobra.Command {
 	subCmd := &cobra.Command{
 		Use:     "saas-user",
 		Aliases: []string{"su"},
-		Short:   "create saas user from user manager",
-		Long:    "",
+		Short:   "create saas user",
+		Long:    "create saas user from user manager",
+		Example: "kubectl-bcs-user-manager create su -u [user_name to create]",
 		Run: func(cmd *cobra.Command, args []string) {
 			cobra.OnInitialize(ensureConfig)
 			ctx, cancel := context.WithCancel(context.Background())
@@ -93,7 +95,7 @@ func createSaasUserCmd() *cobra.Command {
 		},
 	}
 
-	subCmd.Flags().StringVarP(&userName, "user_name", "n", "",
+	subCmd.Flags().StringVarP(&userName, "user_name", "u", "",
 		"the user name that query saas user")
 	return subCmd
 }
@@ -121,7 +123,7 @@ func createPlainUserCmd() *cobra.Command {
 		},
 	}
 
-	subCmd.Flags().StringVarP(&userName, "user_name", "n", "",
+	subCmd.Flags().StringVarP(&userName, "user_name", "u", "",
 		"the user name that query plain user")
 	return subCmd
 }
@@ -227,10 +229,10 @@ func createTokenCmd() *cobra.Command {
 			client := pkg.NewClientWithConfiguration(ctx)
 			resp, err := client.CreateToken(tokenForm)
 			if err != nil {
-				klog.Fatalf("create token  failed: %v", err)
+				klog.Fatalf("create token failed: %v", err)
 			}
 			if resp != nil && resp.Code != 0 {
-				klog.Fatalf("create token  response code not 0 but %d: %s", resp.Code, resp.Message)
+				klog.Fatalf("create token response code not 0 but %d: %s", resp.Code, resp.Message)
 			}
 			printer.PrintCreateTokenCmdResult(flagOutput, resp)
 		},
@@ -256,17 +258,17 @@ func createTempTokenCmd() *cobra.Command {
 			client := pkg.NewClientWithConfiguration(ctx)
 			resp, err := client.CreateTempToken(tokenForm)
 			if err != nil {
-				klog.Fatalf("create temp token  failed: %v", err)
+				klog.Fatalf("create temp token failed: %v", err)
 			}
 			if resp != nil && resp.Code != 0 {
-				klog.Fatalf("create temp token  response code not 0 but %d: %s", resp.Code, resp.Message)
+				klog.Fatalf("create temp token response code not 0 but %d: %s", resp.Code, resp.Message)
 			}
 			printer.PrintCreateTempTokenCmdResult(flagOutput, resp)
 		},
 	}
 
 	subCmd.Flags().StringVarP(&tokenForm, "token_form", "f", "",
-		"the form used to create temp token ")
+		"the form used to create temp token")
 	return subCmd
 }
 
@@ -277,7 +279,7 @@ func createClientTokenCmd() *cobra.Command {
 		Aliases: []string{"client-token"},
 		Short:   "create client token",
 		Long:    "create client token from user manager",
-		Example: "kubectl-bcs-user-manager create client-token --token_form '{\"clientName\":\"\",\"clientSecret\":\"\", \"expiration\":}' ",
+		Example: "kubectl-bcs-user-manager create client-token --token_form '{\"clientName\":\"\",\"clientSecret\":\"\", \"expiration\":}'",
 		Run: func(cmd *cobra.Command, args []string) {
 			cobra.OnInitialize(ensureConfig)
 			ctx, cancel := context.WithCancel(context.Background())
@@ -285,10 +287,10 @@ func createClientTokenCmd() *cobra.Command {
 			client := pkg.NewClientWithConfiguration(ctx)
 			resp, err := client.CreateClientToken(tokenForm)
 			if err != nil {
-				klog.Fatalf("create client token  failed: %v", err)
+				klog.Fatalf("create client token failed: %v", err)
 			}
 			if resp != nil && resp.Code != 0 {
-				klog.Fatalf("create client token  response code not 0 but %d: %s", resp.Code, resp.Message)
+				klog.Fatalf("create client token response code not 0 but %d: %s", resp.Code, resp.Message)
 			}
 			printer.PrintCreateClientTokenCmdResult(flagOutput, resp)
 		},
@@ -314,10 +316,10 @@ func addTkeCidrCmd() *cobra.Command {
 			client := pkg.NewClientWithConfiguration(ctx)
 			resp, err := client.AddTkeCidr(tkeCidrForm)
 			if err != nil {
-				klog.Fatalf("init tke cidrs  failed: %v", err)
+				klog.Fatalf("init tke cidrs failed: %v", err)
 			}
 			if resp != nil && resp.Code != 0 {
-				klog.Fatalf("init tke cidrs  response code not 0 but %d: %s", resp.Code, resp.Message)
+				klog.Fatalf("init tke cidrs response code not 0 but %d: %s", resp.Code, resp.Message)
 			}
 			printer.PrintAddTkeCidrCmdResult(flagOutput, resp)
 		},

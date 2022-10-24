@@ -58,7 +58,7 @@ func verifyPermissionCmd() *cobra.Command {
 		},
 	}
 	subCmd.Flags().StringVarP(&verifyPermissionForm, "form", "f", "",
-		"the form used to verfiy permissions")
+		"the form used to verify permissions")
 
 	return subCmd
 }
@@ -87,7 +87,7 @@ func verifyPermissionV2Cmd() *cobra.Command {
 		},
 	}
 	subCmd.Flags().StringVarP(&verifyPermissionForm, "form", "f", "",
-		"the form used to verfiy permissions with version 2")
+		"the form used to verify permissions with version 2")
 
 	return subCmd
 }

@@ -48,10 +48,10 @@ func applyTkeCidrCmd() *cobra.Command {
 			client := pkg.NewClientWithConfiguration(ctx)
 			resp, err := client.ApplyTkeCidr(tkeCidrForm)
 			if err != nil {
-				klog.Fatalf("apply tke cidrs  failed: %v", err)
+				klog.Fatalf("apply tke cidrs failed: %v", err)
 			}
 			if resp != nil && resp.Code != 0 {
-				klog.Fatalf("apply tke cidrs  response code not 0 but %d: %s", resp.Code, resp.Message)
+				klog.Fatalf("apply tke cidrs response code not 0 but %d: %s", resp.Code, resp.Message)
 			}
 			printer.PrintApplyTkeCidrCmdResult(flagOutput, resp)
 		},

@@ -26,8 +26,8 @@ kubectl-bcs-user-manager create admin-user --help
 示例:
 
 ```
-kubectl-bcs-user-manager create admin-user -n [user_name to create]
-kubectl-bcs-user-manager create au -n [user_name to create]
+kubectl-bcs-user-manager create admin-user -u [user_name to create]
+kubectl-bcs-user-manager create au -u [user_name to create]
 ```
 
 
@@ -45,8 +45,8 @@ kubectl-bcs-user-manager get admin-user --help
 示例:
 
 ```
-kubectl-bcs-user-manager get admin-user -n [user_name to query]
-kubectl-bcs-user-manager get au -n [user_name to query]
+kubectl-bcs-user-manager get admin-user -u [user_name to query]
+kubectl-bcs-user-manager get au -u [user_name to query]
 ```
 
 
@@ -66,8 +66,8 @@ kubectl-bcs-user-manager create saas-user --help
 示例:
 
 ```
-kubectl-bcs-user-manager create saas-user -n [user_name to create]
-kubectl-bcs-user-manager create su -n [user_name to create]
+kubectl-bcs-user-manager create saas-user -u [user_name to create]
+kubectl-bcs-user-manager create su -u [user_name to create]
 ```
 
 
@@ -87,8 +87,8 @@ kubectl-bcs-user-manager get saas-user --help
 示例:
 
 ```
-kubectl-bcs-user-manager get saas-user -n [user_name to query]
-kubectl-bcs-user-manager get su -n [user_name to query]
+kubectl-bcs-user-manager get saas-user -u [user_name to query]
+kubectl-bcs-user-manager get su -u [user_name to query]
 ```
 
 
@@ -110,8 +110,8 @@ kubectl-bcs-user-manager update saas-token --help
 示例:
 
 ```
-kubectl-bcs-user-manager update saas-token -n [user_name]
-kubectl-bcs-user-manager update st -n [user_name]
+kubectl-bcs-user-manager update saas-token -u [user_name]
+kubectl-bcs-user-manager update st -u [user_name]
 ```
 
 
@@ -135,8 +135,8 @@ kubectl-bcs-user-manager create plain-user --help
 示例:
 
 ```
-kubectl-bcs-user-manager create plain-user -n [user_name to create]
-kubectl-bcs-user-manager create pu -n [user_name to create]
+kubectl-bcs-user-manager create plain-user -u [user_name to create]
+kubectl-bcs-user-manager create pu -u [user_name to create]
 ```
 
 
@@ -156,8 +156,8 @@ kubectl-bcs-user-manager get plain-user --help
 示例:
 
 ```
-kubectl-bcs-user-manager get plain-user -n [user_name to query]
-kubectl-bcs-user-manager get pu -n [user_name to query]
+kubectl-bcs-user-manager get plain-user -u [user_name to query]
+kubectl-bcs-user-manager get pu -u [user_name to query]
 ```
 
 
@@ -182,8 +182,8 @@ kubectl-bcs-user-manager update plain-token --help
 示例:
 
 ```
-kubectl-bcs-user-manager update saas-token -n [user_name] -t [expire_time]
-kubectl-bcs-user-manager update st -n [user_name] -t [expire_time]
+kubectl-bcs-user-manager update saas-token -u [user_name] -t [expire_time]
+kubectl-bcs-user-manager update st -u [user_name] -t [expire_time]
 ```
 
 
@@ -644,8 +644,8 @@ kubectl-bcs-user-manager get token --help
 示例:
 
 ```
-kubectl-bcs-user-manager get token -n [user_name to create]
-kubectl-bcs-user-manager get t -n [user_name to create]
+kubectl-bcs-user-manager get token -u [user_name to create]
+kubectl-bcs-user-manager get t -u [user_name to create]
 ```
 
 
@@ -788,7 +788,7 @@ kubectl-bcs-user-manager get extra-token --help
 示例:
 
 ```
-kubectl-bcs-user-manager get extra-token -n [user_name] --cluster_id [cluster_id] --business_id [business_id]
+kubectl-bcs-user-manager get extra-token -u [user_name] --cluster_id [cluster_id] --business_id [business_id]
 ```
 
 

@@ -43,7 +43,7 @@ func refreshSaasTokenCmd() *cobra.Command {
 		Aliases: []string{"st"},
 		Short:   "refresh saas token",
 		Long:    "refresh saas token from user manager",
-		Example: "kubectl-bcs-user-manager update saas-token -n [username]",
+		Example: "kubectl-bcs-user-manager update saas-token -u [username]",
 		Run: func(cmd *cobra.Command, args []string) {
 			cobra.OnInitialize(ensureConfig)
 			ctx, cancel := context.WithCancel(context.Background())
@@ -60,7 +60,7 @@ func refreshSaasTokenCmd() *cobra.Command {
 		},
 	}
 
-	subCmd.Flags().StringVarP(&userName, "user_name", "n", "",
+	subCmd.Flags().StringVarP(&userName, "user_name", "u", "",
 		"the user name that refresh saas user token for a saas user")
 	return subCmd
 }
@@ -72,7 +72,7 @@ func refreshPlainTokenCmd() *cobra.Command {
 		Aliases: []string{"pt"},
 		Short:   "refresh plain-token",
 		Long:    "refresh plain user token from user manager",
-		Example: "kubectl-bcs-user-manager update saas-token -n [user_name] -t [expire_time]",
+		Example: "kubectl-bcs-user-manager update saas-token -u [user_name] -t [expire_time]",
 		Run: func(cmd *cobra.Command, args []string) {
 			cobra.OnInitialize(ensureConfig)
 			ctx, cancel := context.WithCancel(context.Background())
@@ -89,7 +89,7 @@ func refreshPlainTokenCmd() *cobra.Command {
 		},
 	}
 
-	subCmd.Flags().StringVarP(&userName, "user_name", "n", "",
+	subCmd.Flags().StringVarP(&userName, "user_name", "u", "",
 		"the user name that refresh user token for a plain user")
 	subCmd.Flags().StringVarP(&expireTime, "expire_time", "t", "",
 		"the expire time that refresh user token for a plain user")
@@ -104,7 +104,7 @@ func updateCredentialsCmd() *cobra.Command {
 		Aliases: []string{"c"},
 		Short:   "update credentials",
 		Long:    "update cluster credentials according cluster ID",
-		Example: "kubectl-bcs-user-manager update credentials --cluster_id [cluster_id] --credentials_form ' {\"register_token\":\"\",\"server_addresses\":\"\",\"cacert_data\":\"\",\"user_token\":\"\"}' ",
+		Example: "kubectl-bcs-user-manager update credentials --cluster_id [cluster_id] --credentials_form '{\"register_token\":\"\",\"server_addresses\":\"\",\"cacert_data\":\"\",\"user_token\":\"\"}'",
 		Run: func(cmd *cobra.Command, args []string) {
 			cobra.OnInitialize(ensureConfig)
 			ctx, cancel := context.WithCancel(context.Background())
@@ -132,7 +132,7 @@ func updateTokenCmd() *cobra.Command {
 	var token, tokenForm string
 	subCmd := &cobra.Command{
 		Use:     "token",
-		Example: "kubectl-bcs-manager update token --token [token] --form '{\"expiration\":-1}' ",
+		Example: "kubectl-bcs-manager update token --token [token] --form '{\"expiration\":-1}'",
 		Aliases: []string{},
 		Args:    cobra.ExactArgs(2),
 		Short:   "update token",

@@ -45,14 +45,15 @@ type GetTokenByUserAndClusterIDResponse struct {
 }
 
 // GetTokenByUserAndClusterID request get token by user and cluster id from bcs-user-manager
-func (c *UserManagerClient) GetTokenByUserAndClusterID(userName, clusterId, businessId string) (*GetTokenByUserAndClusterIDResponse, error) {
-	queryURL := make(map[string]string)
-	queryURL["username"] = userName
-	queryURL["cluster_id"] = clusterId
-	queryURL["business_id"] = businessId
-	bs, err := c.do(getTokenByUserAndClusterIDUrl, http.MethodGet, queryURL, nil)
+func (c *UserManagerClient) GetTokenByUserAndClusterID(userName, clusterID, businessID string) (*GetTokenByUserAndClusterIDResponse, error) {
+	queryParams := map[string]string{
+		"username":    userName,
+		"cluster_id":  clusterID,
+		"business_id": businessID,
+	}
+	bs, err := c.do(getTokenByUserAndClusterIDUrl, http.MethodGet, queryParams, nil)
 	if err != nil {
-		return nil, errors.Wrapf(err, "get token by userName = %s and clusterID = %s and businessId=%s, failed", userName, clusterId, businessId)
+		return nil, errors.Wrapf(err, "get token by '%v' failed", queryParams)
 	}
 	resp := new(GetTokenByUserAndClusterIDResponse)
 	if err := json.Unmarshal(bs, resp); err != nil {

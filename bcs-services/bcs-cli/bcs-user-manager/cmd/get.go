@@ -47,7 +47,7 @@ func getAdminUserCmd() *cobra.Command {
 		Aliases: []string{"au"},
 		Short:   "get admin user from user manager",
 		Long:    "",
-		Example: "kubectl-bcs-user-manager get admin-user -n [username]",
+		Example: "kubectl-bcs-user-manager get admin-user -u [username]",
 		Run: func(cmd *cobra.Command, args []string) {
 			cobra.OnInitialize(ensureConfig)
 			ctx, cancel := context.WithCancel(context.Background())
@@ -64,7 +64,7 @@ func getAdminUserCmd() *cobra.Command {
 		},
 	}
 
-	subCmd.Flags().StringVarP(&userName, "user_name", "n", "",
+	subCmd.Flags().StringVarP(&userName, "user_name", "u", "",
 		"the user name that query admin user")
 	return subCmd
 }
@@ -76,7 +76,7 @@ func getSaasUserCmd() *cobra.Command {
 		Aliases: []string{"su"},
 		Short:   "get saas user from user manager",
 		Long:    "",
-		Example: "kubectl-bcs-user-manager get saas-user -n [username]",
+		Example: "kubectl-bcs-user-manager get saas-user -u [username]",
 		Run: func(cmd *cobra.Command, args []string) {
 			cobra.OnInitialize(ensureConfig)
 			ctx, cancel := context.WithCancel(context.Background())
@@ -93,7 +93,7 @@ func getSaasUserCmd() *cobra.Command {
 		},
 	}
 
-	subCmd.Flags().StringVarP(&userName, "user_name", "n", "",
+	subCmd.Flags().StringVarP(&userName, "user_name", "u", "",
 		"the user name that query sass user")
 	return subCmd
 }
@@ -105,7 +105,7 @@ func getPlainUserCmd() *cobra.Command {
 		Aliases: []string{"pu"},
 		Short:   "get plain user from user manager",
 		Long:    "",
-		Example: "kubectl-bcs-user-manager get plain-user -n [username]",
+		Example: "kubectl-bcs-user-manager get plain-user -u [username]",
 		Run: func(cmd *cobra.Command, args []string) {
 			cobra.OnInitialize(ensureConfig)
 			ctx, cancel := context.WithCancel(context.Background())
@@ -122,7 +122,7 @@ func getPlainUserCmd() *cobra.Command {
 		},
 	}
 
-	subCmd.Flags().StringVarP(&userName, "user_name", "n", "",
+	subCmd.Flags().StringVarP(&userName, "user_name", "u", "",
 		"the user name that query plain user")
 	return subCmd
 }
@@ -200,10 +200,10 @@ func getPermissionCmd() *cobra.Command {
 			client := pkg.NewClientWithConfiguration(ctx)
 			resp, err := client.GetPermission(permissionForm)
 			if err != nil {
-				klog.Fatalf("get permissions  failed: %v", err)
+				klog.Fatalf("get permissions failed: %v", err)
 			}
 			if resp != nil && resp.Code != 0 {
-				klog.Fatalf("get permissions  response code not 0 but %d: %s", resp.Code, resp.Message)
+				klog.Fatalf("get permissions response code not 0 but %d: %s", resp.Code, resp.Message)
 			}
 			printer.PrintGetPermissionCmdResult(flagOutput, resp)
 		},
@@ -220,7 +220,7 @@ func getTokenCmd() *cobra.Command {
 		Use:     "token",
 		Aliases: []string{"t"},
 		Short:   "get token from user manager",
-		Example: "kubectl-bcs-user-manager get token -n [username]",
+		Example: "kubectl-bcs-user-manager get token -u [username]",
 		Long:    "",
 		Run: func(cmd *cobra.Command, args []string) {
 			cobra.OnInitialize(ensureConfig)
@@ -229,50 +229,50 @@ func getTokenCmd() *cobra.Command {
 			client := pkg.NewClientWithConfiguration(ctx)
 			resp, err := client.GetToken(userName)
 			if err != nil {
-				klog.Fatalf("get token  failed: %v", err)
+				klog.Fatalf("get token failed: %v", err)
 			}
 			if resp != nil && resp.Code != 0 {
-				klog.Fatalf("get token  response code not 0 but %d: %s", resp.Code, resp.Message)
+				klog.Fatalf("get token response code not 0 but %d: %s", resp.Code, resp.Message)
 			}
 			printer.PrintGetTokenCmdResult(flagOutput, resp)
 		},
 	}
 
-	subCmd.Flags().StringVarP(&userName, "user_name", "n", "",
+	subCmd.Flags().StringVarP(&userName, "user_name", "u", "",
 		"the user name that query token")
 	return subCmd
 }
 
 func getTokenByUserAndClusterIDCmd() *cobra.Command {
-	var userName, clusterId, businessId string
+	var userName, clusterID, businessID string
 	subCmd := &cobra.Command{
 		Use:     "extra-token",
 		Aliases: []string{"et"},
 		Args:    cobra.ExactArgs(3),
 		Short:   "get token from user manager",
-		Example: "kubectl-bcs-user-manager get extra-token -n [user_name] --cluster_id [cluster_id] --business_id [business_id]",
+		Example: "kubectl-bcs-user-manager get extra-token -u [user_name] --cluster_id [cluster_id] --business_id [business_id]",
 		Long:    "",
 		Run: func(cmd *cobra.Command, args []string) {
 			cobra.OnInitialize(ensureConfig)
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
 			client := pkg.NewClientWithConfiguration(ctx)
-			resp, err := client.GetTokenByUserAndClusterID(userName, clusterId, businessId)
+			resp, err := client.GetTokenByUserAndClusterID(userName, clusterID, businessID)
 			if err != nil {
-				klog.Fatalf("get token  failed: %v", err)
+				klog.Fatalf("get token failed: %v", err)
 			}
 			if resp != nil && resp.Code != 0 {
-				klog.Fatalf("get token  response code not 0 but %d: %s", resp.Code, resp.Message)
+				klog.Fatalf("get token response code not 0 but %d: %s", resp.Code, resp.Message)
 			}
 			printer.PrintGetTokenByUserAndClusterIDCmdResult(flagOutput, resp)
 		},
 	}
 
-	subCmd.PersistentFlags().StringVarP(&userName, "user_name", "n", "",
+	subCmd.PersistentFlags().StringVarP(&userName, "user_name", "u", "",
 		"the user name that query token")
-	subCmd.PersistentFlags().StringVarP(&clusterId, "cluster_id", "", "",
+	subCmd.PersistentFlags().StringVarP(&clusterID, "cluster_id", "", "",
 		"the cluster_id that query token")
-	subCmd.PersistentFlags().StringVarP(&businessId, "business_id", "", "",
+	subCmd.PersistentFlags().StringVarP(&businessID, "business_id", "", "",
 		"the business_id that query token")
 	subCmd.MarkFlagsRequiredTogether("user_name", "cluster_id", "business_id")
 	return subCmd

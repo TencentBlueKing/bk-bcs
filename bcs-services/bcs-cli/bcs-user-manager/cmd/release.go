@@ -48,10 +48,10 @@ func releaseTkeCidrCmd() *cobra.Command {
 			client := pkg.NewClientWithConfiguration(ctx)
 			resp, err := client.ReleaseTkeCidr(tkeCidrForm)
 			if err != nil {
-				klog.Fatalf("release tke cidrs  failed: %v", err)
+				klog.Fatalf("release tke cidrs failed: %v", err)
 			}
 			if resp != nil && resp.Code != 0 {
-				klog.Fatalf("release tke cidrs  response code not 0 but %d: %s", resp.Code, resp.Message)
+				klog.Fatalf("release tke cidrs response code not 0 but %d: %s", resp.Code, resp.Message)
 			}
 			printer.PrintReleaseTkeCidrCmdResult(flagOutput, resp)
 		},
