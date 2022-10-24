@@ -125,15 +125,21 @@ export default defineComponent({
     const isLoading = ref(false);
     const endpoints = ref('');
     const handleGetEndpoints = async () => {
-      isLoading.value = true;
-      const res = await $store.dispatch('dashboard/getResourceDetail', {
-        $namespaceId: props.data.metadata.namespace,
-        $type: 'networks',
-        $category: 'endpoints',
+      const flag = await $store.dispatch('dashboard/getNetworksEndpointsFlag', {
+        $namespaces: props.data.metadata.namespace,
         $name: props.data.metadata.name,
-      });
-      endpoints.value = res.data.manifest?.metadata?.name;
-      isLoading.value = false;
+      })
+      if (flag) {
+        isLoading.value = true;
+        const res = await $store.dispatch('dashboard/getResourceDetail', {
+          $namespaceId: props.data.metadata.namespace,
+          $type: 'networks',
+          $category: 'endpoints',
+          $name: props.data.metadata.name,
+        });
+        endpoints.value = res.data.manifest?.metadata?.name;
+        isLoading.value = false;
+      }
     };
 
     onMounted(() => {

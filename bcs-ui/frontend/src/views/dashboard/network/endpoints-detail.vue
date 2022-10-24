@@ -25,10 +25,10 @@
     <!-- 配置、标签、注解 -->
     <bcs-tab class="mt20" type="card" :label-height="42">
       <bcs-tab-panel name="config" :label="$t('配置')">
-        <bcs-collapse>
+        <bcs-collapse v-model="activeCollapseName">
           <bcs-collapse-item
             v-for="(item, index) in (data.subsets || [])"
-            :name="index"
+            :name="String(index)"
             :key="index">
             {{ `subset ${index + 1}` }}
             <template #content>
@@ -40,7 +40,7 @@
                     ...item,
                     status: 'normal'
                   }))
-                  .concat(item.notReadyAddresses)"
+                  .concat(item.notReadyAddresses || [])"
                 class="mb20">
                 <bk-table-column label="IP" prop="ip" width="140"></bk-table-column>
                 <bk-table-column label="NodeName" prop="nodeName"></bk-table-column>
@@ -86,7 +86,7 @@
   </div>
 </template>
 <script lang="ts">
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent, ref } from '@vue/composition-api';
 
 export default defineComponent({
   name: 'EndpointsDetail',
@@ -103,6 +103,7 @@ export default defineComponent({
     },
   },
   setup() {
+    const activeCollapseName = ref(['0'])
     const handleTransformObjToArr = (obj) => {
       if (!obj) return [];
 
@@ -116,6 +117,7 @@ export default defineComponent({
     };
 
     return {
+      activeCollapseName,
       handleTransformObjToArr,
     };
   },

@@ -38,7 +38,7 @@
         <span>{{ extData.controller || '--' }}</span>
       </div>
       <div class="basic-info-item">
-        <label>{{ $t('CLB使用方式') }}</label>
+        <label>{{ $t('CLB 使用方式') }}</label>
         <span>{{ extData.clbUseType || '--' }}</span>
       </div>
       <div class="basic-info-item">
@@ -46,7 +46,7 @@
         <span>{{ extData.existLBID || '--' }}</span>
       </div>
       <div class="basic-info-item">
-        <label>{{ $t('内外子网ID') }}</label>
+        <label>{{ $t('内网子网 ID') }}</label>
         <span>{{ extData.subNetID || '--' }}</span>
       </div>
     </div>

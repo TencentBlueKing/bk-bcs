@@ -31,3 +31,4 @@ export const fetchNodePodsData = request('get', '/nodes/$nodename/workloads/pods
 export const enlargeCapacityChange = request('put', '/namespaces/$namespace/workloads/$category/$name/scale'); // 扩缩容
 export const batchReschedulePod = request('put', '/namespaces/$namespace/workloads/$category/$name/reschedule'); // 批量重新调度
 export const pvcMountInfo = request('get', '/namespaces/$namespace/storages/persistent_volume_claims/$pvcID/mount_info');
+export const getNetworksEndpointsFlag = request('get', '/namespaces/$namespaces/networks/endpoints/$name/status');

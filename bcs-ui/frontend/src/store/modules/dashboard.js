@@ -56,7 +56,7 @@ import {
   batchRescheduleCrdPod,
 } from '@/api/base';
 
-import { pvcMountInfo } from '@/api/modules/cluster-resource';
+import { pvcMountInfo, getNetworksEndpointsFlag } from '@/api/modules/cluster-resource';
 
 export default {
   namespaced: true,
@@ -342,6 +342,10 @@ export default {
     async getPvcMountInfo(context, params) {
       const data = await pvcMountInfo(params).catch(() => ({ podNames: [] }));
       return data;
+    },
+    async getNetworksEndpointsFlag(context, params) {
+      const data = await getNetworksEndpointsFlag(params).catch(() => false);
+      return data.epReady;
     },
   },
 };
