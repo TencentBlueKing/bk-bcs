@@ -105,8 +105,9 @@ func createPlainUserCmd() *cobra.Command {
 	subCmd := &cobra.Command{
 		Use:     "plain-user",
 		Aliases: []string{"pu"},
-		Short:   "create plain user from user manager",
-		Long:    "",
+		Short:   "create plain",
+		Long:    "create plain user from user manager",
+		Example: "kubectl-bcs-user-manager create pu -u [user_name to create]",
 		Run: func(cmd *cobra.Command, args []string) {
 			cobra.OnInitialize(ensureConfig)
 			ctx, cancel := context.WithCancel(context.Background())
@@ -133,8 +134,8 @@ func createClusterCmd() *cobra.Command {
 	subCmd := &cobra.Command{
 		Use:     "cluster",
 		Aliases: []string{"c"},
-		Short:   "create cluster from user manager",
-		Long:    "",
+		Short:   "create cluster",
+		Long:    "create cluster from user manager",
 		Example: "kubectl-bcs-user-manager create cluster --cluster-body '{\"cluster_id\":\"\",\"cluster_type\":\"\", \"tke_cluster_id\":\"\",\"tke_cluster_region\":\"\"}' ",
 		Run: func(cmd *cobra.Command, args []string) {
 			cobra.OnInitialize(ensureConfig)
@@ -183,34 +184,6 @@ func createRegisterTokenCmd() *cobra.Command {
 
 	subCmd.Flags().StringVarP(&clusterId, "cluster_id", "i", "",
 		"the id which cluster will register token ")
-	return subCmd
-}
-
-func grantPermissionCmd() *cobra.Command {
-	var reqBody string
-	subCmd := &cobra.Command{
-		Use:     "permission",
-		Aliases: []string{"ps"},
-		Short:   "grant permission",
-		Long:    "grant permissions from user manager",
-		Example: "kubectl-bcs-user-manager create permission --permission_form '{\n  \"apiVersion\": \"\",\n  \"kind\": \"\",\n  \"metadata\": {\n    \"name\": \"\",\n    \"namespace\": \"\",\n    \"creationTimestamp\": \"0001-01-01T00:00:00Z\",\n    \"labels\": {\n      \"a\": \"a\"\n    },\n    \"annotations\": {\n      \"a\": \"a\"\n    },\n    \"clusterName\": \"\"\n  },\n  \"spec\": {\n    \"permissions\": [\n      {\n        \"user_name\": \"\",\n        \"resource_type\": \"\",\n        \"resource\": \"\",\n        \"role\": \"\"\n      }\n    ]\n  }\n}' ",
-		Run: func(cmd *cobra.Command, args []string) {
-			cobra.OnInitialize(ensureConfig)
-			ctx, cancel := context.WithCancel(context.Background())
-			defer cancel()
-			client := pkg.NewClientWithConfiguration(ctx)
-			resp, err := client.GrantPermission(reqBody)
-			if err != nil {
-				klog.Fatalf("grant permissions failed: %v", err)
-			}
-			if resp != nil && resp.Code != 0 {
-				klog.Fatalf("grant permissions response code not 0 but %d: %s", resp.Code, resp.Message)
-			}
-			printer.PrintGrantPermissionCmdResult(flagOutput, resp)
-		},
-	}
-	subCmd.Flags().StringVarP(&reqBody, "permission_form", "f", "",
-		"the permissions which will be granted")
 	return subCmd
 }
 

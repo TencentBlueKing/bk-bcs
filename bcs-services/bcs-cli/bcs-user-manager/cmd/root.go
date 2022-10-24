@@ -77,6 +77,7 @@ kubectl-bcs-user-manager allows operators to get project info from bcs-user-mana
 	rootCmd.AddCommand(newReleaseCmd())
 	rootCmd.AddCommand(newApplyCmd())
 	rootCmd.AddCommand(newSyncCmd())
+	rootCmd.AddCommand(newGrantCmd())
 	rootCmd.PersistentFlags().StringVarP(
 		&cfgFile, "config", "c", defaultCfgFile, "config file")
 	rootCmd.CompletionOptions.DisableDefaultCmd = true
