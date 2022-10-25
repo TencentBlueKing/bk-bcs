@@ -63,7 +63,7 @@ const (
 	// RequestCMDBErr 请求 cmdb api 异常
 	RequestCMDBErr = commErr.AdditionErrorCode + 509
 	// RequestCMDBErrMsg TODO
-	RequestCMDBErrMsg = "request iam api error"
+	RequestCMDBErrMsg = "request cmdb api error"
 	// NoMaintainerRoleErr 用户不为运维角色
 	NoMaintainerRoleErr = commErr.AdditionErrorCode + 407
 	// NoMaintainerRoleErrMsg TODO
@@ -72,4 +72,8 @@ const (
 	RequestBCSCCErr = commErr.AdditionErrorCode + 510
 	// RequestBCSCCErrMsg TODO
 	RequestBCSCCErrMsg = "request bcs cc api error"
+	// RequestITSMErr TODO
+	RequestITSMErr = commErr.AdditionErrorCode + 510
+	// RequestITSMErrMsg TODO
+	RequestITSMErrMsg = "request itsm api error"
 )

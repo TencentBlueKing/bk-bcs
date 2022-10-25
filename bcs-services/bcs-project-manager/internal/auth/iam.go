@@ -16,8 +16,8 @@ package auth
 
 import (
 	bcsIAM "github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
+	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/namespace"
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/project"
-	iamPerm "github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/project"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/config"
 )
@@ -33,8 +33,12 @@ const (
 	ProjectDelete string = "project_delete"
 )
 
-// ProjectIamClient iam client for project
-var ProjectIamClient *project.BCSProjectPerm
+var (
+	// ProjectIamClient iam client for project
+	ProjectIamClient *project.BCSProjectPerm
+	// NamespaceIamClient iam client for project
+	NamespaceIamClient *namespace.BCSNamespacePerm
+)
 
 // InitPermClient init perm client
 func InitPermClient() error {
@@ -53,7 +57,8 @@ func InitPermClient() error {
 	if err != nil {
 		return err
 	}
-	ProjectIamClient = iamPerm.NewBCSProjectPermClient(cli)
+	ProjectIamClient = project.NewBCSProjectPermClient(cli)
+	NamespaceIamClient = namespace.NewBCSNamespacePermClient(cli)
 	return nil
 }
 

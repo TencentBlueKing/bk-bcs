@@ -51,7 +51,6 @@ const (
 )
 
 var (
-	// TODO: 确认索引使用方式
 	variableDefinitionIndexes = []drivers.Index{
 		{
 			Name: tableName + "_idx",

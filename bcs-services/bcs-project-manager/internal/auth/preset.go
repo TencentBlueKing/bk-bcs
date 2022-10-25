@@ -14,13 +14,21 @@
 
 package auth
 
-import "github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/project"
+import (
+	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/namespace"
+	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/project"
+)
+
+// TODO: 替代 bcs-services/pkg/bcs-auth 中有问题的常量，修复后可以去掉
+
+// CanUpdateNamespaceOperation ...
+var CanUpdateNamespaceOperation = "CanUpdateNamespace"
 
 // ActionPermissions action 对应权限中心的权限
 var ActionPermissions = map[string]string{
 	// project
 	"BCSProject.GetProject":             project.CanViewProjectOperation,
-	"BCSProject.ListAuthorizedProjects": project.CanEditProjectOperation,
+	"BCSProject.ListAuthorizedProjects": project.CanViewProjectOperation,
 	"BCSProject.ListProjects":           project.CanViewProjectOperation,
 	"BCSProject.CreateProject":          project.CanCreateProjectOperation,
 	"BCSProject.UpdateProject":          project.CanEditProjectOperation,
@@ -40,4 +48,9 @@ var ActionPermissions = map[string]string{
 	"Variable.UpdateNamespaceVariables":  project.CanViewProjectOperation,
 	"Variable.ImportVariables":           project.CanViewProjectOperation,
 	"Variable.RenderVariables":           project.CanViewProjectOperation,
+	// Namespace
+	"Namespace.CreateNamespace": namespace.CanCreateNamespaceOperation,
+	"Namespace.UpdateNamespace": CanUpdateNamespaceOperation,
+	"Namespace.ListNamespaces":  namespace.CanListNamespaceOperation,
+	"Namespace.DeleteNamespace": namespace.CanDeleteNamespaceOperation,
 }

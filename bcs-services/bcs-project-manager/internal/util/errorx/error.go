@@ -97,6 +97,11 @@ func NewRequestBCSCCErr(msg ...interface{}) *ProjectError {
 	return NewProjectError(RequestCMDBErr, RequestBCSCCErrMsg, msg...)
 }
 
+// NewRequestITSMErr xxx
+func NewRequestITSMErr(msg ...interface{}) *ProjectError {
+	return NewProjectError(RequestITSMErr, RequestITSMErrMsg, msg...)
+}
+
 func NewReadableErr(code uint32, msg string) *ProjectError {
 	return NewProjectError(code, msg)
 }

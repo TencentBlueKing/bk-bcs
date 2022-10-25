@@ -15,12 +15,14 @@
 package clustermanager
 
 import (
+	"context"
 	"crypto/tls"
 	"errors"
 	"fmt"
 	"math/rand"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/config"
 	common "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/discovery"
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/middleware"
@@ -38,6 +40,17 @@ var (
 	// ClusterStatusRunning cluster status running
 	ClusterStatusRunning = "RUNNING"
 )
+
+type authentication struct {
+}
+
+func (a *authentication) GetRequestMetadata(context.Context, ...string) (map[string]string, error) {
+	return map[string]string{middleware.InnerClientHeaderKey: config.ServiceName}, nil
+}
+
+func (a *authentication) RequireTransportSecurity() bool {
+	return true
+}
 
 // ClsManClient xxx
 type ClsManClient struct {
@@ -107,6 +120,7 @@ func NewClusterManager(config *Config) (ClusterManagerClient, func()) {
 	md := metadata.New(header)
 	var opts []grpc.DialOption
 	opts = append(opts, grpc.WithDefaultCallOptions(grpc.Header(&md)))
+	opts = append(opts, grpc.WithPerRPCCredentials(&authentication{}))
 	if config.TLSConfig != nil {
 		opts = append(opts, grpc.WithTransportCredentials(credentials.NewTLS(config.TLSConfig)))
 	} else {

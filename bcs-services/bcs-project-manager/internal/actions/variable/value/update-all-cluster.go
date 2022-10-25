@@ -61,7 +61,6 @@ func (la *UpdateClustersVariablesAction) updateClusterVariables() error {
 		logging.Info("get project from db failed, err: %s", err.Error())
 		return err
 	}
-	// TODO: 鉴权
 	variableDefinition, err := la.model.GetVariableDefinition(la.ctx, la.req.GetVariableID())
 	if err != nil {
 		logging.Info("get variable definition from db failed, err: %s", err.Error())

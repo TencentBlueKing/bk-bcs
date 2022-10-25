@@ -29,14 +29,11 @@ import (
 
 const (
 	// table name
-	tableName           = "variable_value"
-	FieldKeyID          = "_id"
-	FieldKeyProjectCode = "projectCode"
-	FieldKeyClusterID   = "clusterID"
-	FieldKeyNamespace   = "namespace"
-	FieldKeyKey         = "key"
-	FieldKeyVariableID  = "variableID"
-	FieldKeyScope       = "scope"
+	tableName          = "variable_value"
+	FieldKeyClusterID  = "clusterID"
+	FieldKeyNamespace  = "namespace"
+	FieldKeyVariableID = "variableID"
+	FieldKeyScope      = "scope"
 )
 
 var (
@@ -247,4 +244,17 @@ func (m *ModelVariableValue) UpsertVariableValue(ctx context.Context,
 	}
 	cond := operator.NewLeafCondition(operator.Eq, condM)
 	return m.db.Table(m.tableName).Upsert(ctx, cond, operator.M{"$set": value})
+}
+
+// DeleteVariableValuesByNamespace batch delete variable value records
+func (m *ModelVariableValue) DeleteVariableValuesByNamespace(ctx context.Context,
+	clusterID, namespace string) (int64, error) {
+	if err := m.ensureTable(ctx); err != nil {
+		return 0, err
+	}
+	cond := operator.NewLeafCondition(operator.Eq, operator.M{
+		FieldKeyClusterID: clusterID,
+		FieldKeyNamespace: namespace,
+	})
+	return m.db.Table(m.tableName).Delete(ctx, cond)
 }

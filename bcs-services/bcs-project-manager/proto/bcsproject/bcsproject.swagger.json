@@ -202,6 +202,92 @@
         ]
       }
     },
+    "/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces": {
+      "get": {
+        "summary": "获取集群下所有命名空间",
+        "description": "获取集群下所有命名空间",
+        "operationId": "Namespace_ListNamespaces",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/bcsprojectListNamespacesResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectCode",
+            "description": "项目编码(英文缩写), 全局唯一, 长度不能超过64字符",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "clusterID",
+            "description": "集群ID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "Namespace"
+        ]
+      },
+      "post": {
+        "summary": "创建命名空间",
+        "description": "创建命名空间",
+        "operationId": "Namespace_CreateNamespace",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/bcsprojectCreateNamespaceResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectCode",
+            "description": "项目编码(英文缩写), 全局唯一, 长度不能超过64字符",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "clusterID",
+            "description": "集群ID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/bcsprojectCreateNamespaceRequest"
+            }
+          }
+        ],
+        "tags": [
+          "Namespace"
+        ]
+      }
+    },
     "/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/variables": {
       "get": {
         "summary": "获取命名空间的所有变量值",
@@ -353,6 +439,271 @@
         ],
         "tags": [
           "Variable"
+        ]
+      }
+    },
+    "/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{name}": {
+      "delete": {
+        "summary": "删除命名空间",
+        "description": "删除命名空间",
+        "operationId": "Namespace_DeleteNamespace",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/bcsprojectDeleteNamespaceResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectCode",
+            "description": "项目编码(英文缩写), 全局唯一, 长度不能超过64字符",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "clusterID",
+            "description": "集群ID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "description": "命名空间名称",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "Namespace"
+        ]
+      },
+      "put": {
+        "summary": "更新命名空间",
+        "description": "更新命名空间",
+        "operationId": "Namespace_UpdateNamespace",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/bcsprojectUpdateNamespaceResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectCode",
+            "description": "项目编码(英文缩写), 全局唯一, 长度不能超过64字符",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "clusterID",
+            "description": "集群ID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "description": "命名空间名称, 长度不能超过63字符,只能包含小写字母、数字，以及 '-',必须以字母开头，不能以 '-' 结尾",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/bcsprojectUpdateNamespaceRequest"
+            }
+          }
+        ],
+        "tags": [
+          "Namespace"
+        ]
+      }
+    },
+    "/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{name}/callback/create": {
+      "post": {
+        "summary": "创建命名空间itsm回调",
+        "description": "创建命名空间itsm回调",
+        "operationId": "Namespace_CreateNamespaceCallback",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/bcsprojectNamespaceCallbackResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectCode",
+            "description": "项目编码(英文缩写), 全局唯一, 长度不能超过64字符",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "clusterID",
+            "description": "集群ID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "description": "命名空间名称, 长度不能超过63字符,只能包含小写字母、数字，以及 '-',必须以字母开头，不能以 '-' 结尾",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/bcsprojectNamespaceCallbackRequest"
+            }
+          }
+        ],
+        "tags": [
+          "Namespace"
+        ]
+      }
+    },
+    "/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{name}/callback/delete": {
+      "post": {
+        "summary": "删除命名空间 ITSM 回调",
+        "description": "删除命名空间 ITSM 回调",
+        "operationId": "Namespace_DeleteNamespaceCallback",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/bcsprojectNamespaceCallbackResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectCode",
+            "description": "项目编码(英文缩写), 全局唯一, 长度不能超过64字符",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "clusterID",
+            "description": "集群ID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "description": "命名空间名称, 长度不能超过63字符,只能包含小写字母、数字，以及 '-',必须以字母开头，不能以 '-' 结尾",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/bcsprojectNamespaceCallbackRequest"
+            }
+          }
+        ],
+        "tags": [
+          "Namespace"
+        ]
+      }
+    },
+    "/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{name}/callback/update": {
+      "post": {
+        "summary": "更新命名空间 ITSM 回调",
+        "description": "更新命名空间 ITSM 回调",
+        "operationId": "Namespace_UpdateNamespaceCallback",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/bcsprojectNamespaceCallbackResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectCode",
+            "description": "项目编码(英文缩写), 全局唯一, 长度不能超过64字符",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "clusterID",
+            "description": "集群ID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "description": "命名空间名称, 长度不能超过63字符,只能包含小写字母、数字，以及 '-',必须以字母开头，不能以 '-' 结尾",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/bcsprojectNamespaceCallbackRequest"
+            }
+          }
+        ],
+        "tags": [
+          "Namespace"
         ]
       }
     },
@@ -973,6 +1324,108 @@
     }
   },
   "definitions": {
+    "bcsprojectAnnotation": {
+      "type": "object",
+      "properties": {
+        "key": {
+          "type": "string",
+          "description": "key",
+          "title": "key"
+        },
+        "value": {
+          "type": "string",
+          "description": "value",
+          "title": "value"
+        }
+      }
+    },
+    "bcsprojectCreateNamespaceRequest": {
+      "type": "object",
+      "properties": {
+        "projectCode": {
+          "type": "string",
+          "description": "项目编码(英文缩写), 全局唯一, 长度不能超过64字符",
+          "title": "projectCode"
+        },
+        "clusterID": {
+          "type": "string",
+          "description": "集群ID",
+          "title": "projectCode"
+        },
+        "name": {
+          "type": "string",
+          "description": "命名空间名称, 长度不能超过63字符,只能包含小写字母、数字，以及 '-',必须以字母开头，不能以 '-' 结尾",
+          "title": "name"
+        },
+        "quota": {
+          "$ref": "#/definitions/bcsprojectResourceQuota",
+          "description": "命名空间配额",
+          "title": "name"
+        },
+        "labels": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/bcsprojectLabel"
+          },
+          "description": "命名空间标签",
+          "title": "labels"
+        },
+        "annotations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/bcsprojectAnnotation"
+          },
+          "description": "命名空间注解",
+          "title": "annotations"
+        },
+        "variables": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/bcsprojectVariableValue"
+          },
+          "description": "命名空间变量列表",
+          "title": "variables"
+        }
+      },
+      "description": "创建命名空间请求",
+      "title": "CreateNamespaceRequest",
+      "required": [
+        "projectCode",
+        "clusterID",
+        "name"
+      ]
+    },
+    "bcsprojectCreateNamespaceResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "data": {
+          "$ref": "#/definitions/bcsprojectNamespaceData",
+          "description": "返回详细信息, 可以为空",
+          "title": "data"
+        },
+        "requestID": {
+          "type": "string",
+          "description": "请求 ID",
+          "title": "request id"
+        },
+        "webAnnotations": {
+          "$ref": "#/definitions/bcsprojectPerms",
+          "description": "项目更多信息，主要是权限相关",
+          "title": "webAnnotations"
+        }
+      }
+    },
     "bcsprojectCreateProjectRequest": {
       "type": "object",
       "properties": {
@@ -1197,6 +1650,32 @@
         }
       }
     },
+    "bcsprojectDeleteNamespaceResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "data": {
+          "type": "string",
+          "description": "data",
+          "title": "data"
+        },
+        "requestID": {
+          "type": "string",
+          "description": "请求 ID",
+          "title": "request id"
+        }
+      }
+    },
     "bcsprojectDeleteVariableDefinitionsData": {
       "type": "object",
       "properties": {
@@ -1379,6 +1858,21 @@
         }
       }
     },
+    "bcsprojectLabel": {
+      "type": "object",
+      "properties": {
+        "key": {
+          "type": "string",
+          "description": "key",
+          "title": "key"
+        },
+        "value": {
+          "type": "string",
+          "description": "value",
+          "title": "value"
+        }
+      }
+    },
     "bcsprojectListAuthorizedProjResp": {
       "type": "object",
       "properties": {
@@ -1447,7 +1941,7 @@
         },
         "data": {
           "$ref": "#/definitions/bcsprojectListVariableValuesData",
-          "description": "返回集群列表信息",
+          "description": "返回变量信息",
           "title": "data"
         },
         "requestID": {
@@ -1480,6 +1974,40 @@
           "type": "string",
           "description": "请求 ID",
           "title": "request id"
+        }
+      }
+    },
+    "bcsprojectListNamespacesResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/bcsprojectNamespaceData"
+          },
+          "description": "返回详细信息, 可以为空",
+          "title": "data"
+        },
+        "requestID": {
+          "type": "string",
+          "description": "请求 ID",
+          "title": "request id"
+        },
+        "webAnnotations": {
+          "$ref": "#/definitions/bcsprojectPerms",
+          "description": "项目更多信息，主要是权限相关",
+          "title": "webAnnotations"
         }
       }
     },
@@ -1628,6 +2156,171 @@
       },
       "description": "集群变量列表数据",
       "title": "ListVariableValuesData"
+    },
+    "bcsprojectNamespaceCallbackRequest": {
+      "type": "object",
+      "properties": {
+        "projectCode": {
+          "type": "string",
+          "description": "项目编码(英文缩写), 全局唯一, 长度不能超过64字符",
+          "title": "projectCode"
+        },
+        "clusterID": {
+          "type": "string",
+          "description": "集群ID",
+          "title": "projectCode"
+        },
+        "name": {
+          "type": "string",
+          "description": "命名空间名称, 长度不能超过63字符,只能包含小写字母、数字，以及 '-',必须以字母开头，不能以 '-' 结尾",
+          "title": "name"
+        },
+        "title": {
+          "type": "string",
+          "description": "ITSM 单据标题",
+          "title": "title"
+        },
+        "currentStatus": {
+          "type": "string",
+          "description": "ITSM 单据状态",
+          "title": "currentStatus"
+        },
+        "sn": {
+          "type": "string",
+          "description": "ITSM 单号",
+          "title": "sn"
+        },
+        "ticketUrl": {
+          "type": "string",
+          "description": "ITSM 单据链接",
+          "title": "ticket_url"
+        },
+        "approveResult": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "单据审批结果",
+          "title": "approve_result"
+        },
+        "applyInCluster": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "是否下发到集群",
+          "title": "applyInCluster"
+        }
+      },
+      "description": "命名空间itsm回调",
+      "title": "NamespaceCallbackRequest",
+      "required": [
+        "projectCode",
+        "clusterID",
+        "name"
+      ]
+    },
+    "bcsprojectNamespaceCallbackResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "data": {
+          "type": "string",
+          "description": "返回详细信息, 可以为空",
+          "title": "data"
+        },
+        "requestID": {
+          "type": "string",
+          "description": "请求 ID",
+          "title": "request id"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "回调结果",
+          "title": "result"
+        }
+      }
+    },
+    "bcsprojectNamespaceData": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "命名空间名称",
+          "title": "name"
+        },
+        "status": {
+          "type": "string",
+          "description": "命名空间状态",
+          "title": "status"
+        },
+        "createTime": {
+          "type": "string",
+          "description": "创建时间",
+          "title": "createTime"
+        },
+        "quota": {
+          "$ref": "#/definitions/bcsprojectResourceQuota",
+          "description": "命名空间可用配额",
+          "title": "quota"
+        },
+        "used": {
+          "$ref": "#/definitions/bcsprojectResourceQuota",
+          "description": "命名空间已用配额",
+          "title": "used"
+        },
+        "labels": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/bcsprojectLabel"
+          },
+          "description": "命名空间标签",
+          "title": "labels"
+        },
+        "annotations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/bcsprojectAnnotation"
+          },
+          "description": "命名空间注解",
+          "title": "annotations"
+        },
+        "variables": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/bcsprojectVariableValue"
+          },
+          "description": "命名空间变量",
+          "title": "variables"
+        },
+        "itsmTicketSN": {
+          "type": "string",
+          "description": "itsm 单号",
+          "title": "itsmTicketSN"
+        },
+        "itsmTicketStatus": {
+          "type": "string",
+          "description": "itsm 单据状态",
+          "title": "itsmTicketStatus"
+        },
+        "itsmTicketURL": {
+          "type": "string",
+          "description": "itsm 单据 URL",
+          "title": "itsmTicketURL"
+        },
+        "itsmTicketType": {
+          "type": "string",
+          "description": "itsm 单据类型: create, update, delete",
+          "title": "itsmTicketType"
+        }
+      }
     },
     "bcsprojectPerms": {
       "type": "object",
@@ -1849,6 +2542,31 @@
         }
       }
     },
+    "bcsprojectResourceQuota": {
+      "type": "object",
+      "properties": {
+        "cpuRequests": {
+          "type": "string",
+          "description": "requests.cpu",
+          "title": "requests.cpu"
+        },
+        "memoryRequests": {
+          "type": "string",
+          "description": "requests.memory",
+          "title": "requests.memory"
+        },
+        "cpuLimits": {
+          "type": "string",
+          "description": "limits.cpu",
+          "title": "limits.cpu"
+        },
+        "memoryLimits": {
+          "type": "string",
+          "description": "limits.cpu",
+          "title": "limits.memory"
+        }
+      }
+    },
     "bcsprojectUpdateClusterVariablesRequest": {
       "type": "object",
       "properties": {
@@ -1929,6 +2647,75 @@
       ]
     },
     "bcsprojectUpdateClustersVariablesResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "requestID": {
+          "type": "string",
+          "description": "请求 ID",
+          "title": "request id"
+        }
+      }
+    },
+    "bcsprojectUpdateNamespaceRequest": {
+      "type": "object",
+      "properties": {
+        "projectCode": {
+          "type": "string",
+          "description": "项目编码(英文缩写), 全局唯一, 长度不能超过64字符",
+          "title": "projectCode"
+        },
+        "clusterID": {
+          "type": "string",
+          "description": "集群ID",
+          "title": "projectCode"
+        },
+        "name": {
+          "type": "string",
+          "description": "命名空间名称, 长度不能超过63字符,只能包含小写字母、数字，以及 '-',必须以字母开头，不能以 '-' 结尾",
+          "title": "name"
+        },
+        "labels": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/bcsprojectLabel"
+          },
+          "description": "命名空间标签",
+          "title": "labels"
+        },
+        "annotations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/bcsprojectAnnotation"
+          },
+          "description": "命名空间注解",
+          "title": "annotations"
+        },
+        "quota": {
+          "$ref": "#/definitions/bcsprojectResourceQuota",
+          "description": "命名空间配额",
+          "title": "name"
+        }
+      },
+      "description": "更新命名空间配额请求",
+      "title": "UpdateNamespaceRequest",
+      "required": [
+        "projectCode",
+        "clusterID",
+        "name"
+      ]
+    },
+    "bcsprojectUpdateNamespaceResponse": {
       "type": "object",
       "properties": {
         "code": {
@@ -2207,7 +2994,7 @@
         "variableID": {
           "type": "string",
           "description": "项目编码(英文缩写), 全局唯一, 长度不能超过64字符",
-          "title": "projectCode"
+          "title": "variableID"
         },
         "name": {
           "type": "string",
@@ -2222,7 +3009,7 @@
         "scope": {
           "type": "string",
           "description": "变量作用域, 取值范围: global, cluster, namespace",
-          "title": "name"
+          "title": "scope"
         },
         "default": {
           "type": "string",
@@ -2378,7 +3165,7 @@
         },
         "value": {
           "type": "string",
-          "description": "变量在该集群的值",
+          "description": "变量的值",
           "title": "value"
         },
         "scope": {

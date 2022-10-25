@@ -122,7 +122,7 @@ require (
 )
 
 require (
-	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20221014021951-2ed220c4baa6
-	github.com/Tencent/bk-bcs/bcs-services/pkg v0.0.0-20220926153300-4e631deaebe4
+	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20221018081229-065aeef813e6
+	github.com/Tencent/bk-bcs/bcs-services/pkg v0.0.0-20221018081229-065aeef813e6
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

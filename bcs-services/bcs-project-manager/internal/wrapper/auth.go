@@ -27,6 +27,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/errorx"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/stringx"
 	middleauth "github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/middleware"
+	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/namespace"
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/project"
 	"github.com/micro/go-micro/v2/metadata"
 	"github.com/micro/go-micro/v2/server"
@@ -98,6 +99,7 @@ type resourceID struct {
 	ProjectCode     string `json:"projectCode,omitempty"`
 	ProjectIDOrCode string `json:"projectIDOrCode,omitempty"`
 	ClusterID       string `json:"clusterID,omitempty"`
+	Namespace       string `json:"namespace,omitempty"`
 }
 
 func (r *resourceID) check() error {
@@ -159,6 +161,20 @@ func callIAM(username, action string, resourceID resourceID) (bool, string, erro
 		return auth.ProjectIamClient.CanEditProject(username, resourceID.ProjectID)
 	case project.CanDeleteProjectOperation:
 		return auth.ProjectIamClient.CanDeleteProject(username, resourceID.ProjectID)
+	case namespace.CanViewNamespaceOperation:
+		return auth.NamespaceIamClient.CanViewNamespace(username,
+			resourceID.ProjectID, resourceID.ClusterID, resourceID.Namespace)
+	case namespace.CanListNamespaceOperation:
+		return auth.NamespaceIamClient.CanListNamespace(username,
+			resourceID.ProjectID, resourceID.ClusterID)
+	case namespace.CanCreateNamespaceOperation:
+		return auth.NamespaceIamClient.CanCreateNamespace(username, resourceID.ProjectID, resourceID.ClusterID)
+	case auth.CanUpdateNamespaceOperation:
+		return auth.NamespaceIamClient.CanUpdateNamespace(username,
+			resourceID.ProjectID, resourceID.ClusterID, resourceID.Namespace)
+	case namespace.CanDeleteNamespaceOperation:
+		return auth.NamespaceIamClient.CanDeleteNamespace(username,
+			resourceID.ProjectID, resourceID.ClusterID, resourceID.Namespace)
 	default:
 		return false, "", errorx.NewReadableErr(errorx.PermDeniedErr, "校验用户权限失败")
 	}

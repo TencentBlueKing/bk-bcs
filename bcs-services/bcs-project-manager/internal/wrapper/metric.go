@@ -12,22 +12,23 @@
  * limitations under the License.
  */
 
-package namespace
+package wrapper
 
 import (
-	corev1 "k8s.io/api/core/v1"
+	"context"
+	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/config"
+	"github.com/micro/go-micro/v2/server"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/metrics"
 )
 
-// FilterNamespaces filter shared namespace
-func FilterNamespaces(namespaceList *corev1.NamespaceList, shared bool, projectCode string) []corev1.Namespace {
-	nsList := []corev1.Namespace{}
-	for _, ns := range namespaceList.Items {
-		if shared && ns.Annotations[config.AnnotationKeyProjectCode] != projectCode {
-			continue
-		}
-		nsList = append(nsList, ns)
+// NewAPILatencyWrapper 用于记录请求时延
+func NewAPILatencyWrapper(fn server.HandlerFunc) server.HandlerFunc {
+	return func(ctx context.Context, req server.Request, rsp interface{}) error {
+		startTime := time.Now()
+		err := fn(ctx, req, rsp)
+		metrics.ReportAPIRequestMetric(req.Method(), startTime)
+		return err
 	}
-	return nsList
 }

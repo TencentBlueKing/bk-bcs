@@ -66,6 +66,11 @@ iam:
   iamHost: ""
   bkPaaSHost: ""
   debug: false
+itsm:
+  gatewayHost: ""
+  createNsSvcID: 0
+  updateNsSvcID: 0
+  deleteNsSvcID: 0
 clientActionExemptPerm:
   clientActions:
   - clientID: test
@@ -77,7 +82,8 @@ cmdb:
   proxy: ""
   debug: false
 bcscc:
+  enable: false
   host: ""
 bcsGateway:
-    host: ""
-    token: ""
+  host: ""
+  token: ""

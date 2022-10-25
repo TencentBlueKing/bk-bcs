@@ -18,7 +18,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/logging"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store"
@@ -27,8 +26,6 @@ import (
 	clusterutils "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/cluster"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/errorx"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/proto/bcsproject"
-	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/middleware"
-	"google.golang.org/grpc/metadata"
 )
 
 // ListClustersVariablesAction ...
@@ -79,19 +76,13 @@ func (la *ListClustersVariablesAction) listClusterVariables() ([]*proto.Variable
 		logging.Error("get cluster manager client failed, err: %s", err.Error())
 		return nil, err
 	}
-	defer func() {
-		if closeCon != nil {
-			closeCon()
-		}
-	}()
+	defer closeCon()
 	req := &clustermanager.ListClusterReq{
 		ProjectID: project.ProjectID,
-		Status: clustermanager.ClusterStatusRunning,
+		Status:    clustermanager.ClusterStatusRunning,
 	}
 
-	// TODO: need to optimize
-	listCtx := metadata.AppendToOutgoingContext(la.ctx, middleware.InnerClientHeaderKey, config.ServiceDomain)
-	resp, err := cli.ListCluster(listCtx, req)
+	resp, err := cli.ListCluster(la.ctx, req)
 	if err != nil {
 		logging.Error("list cluster from cluster manager failed, err: %s", err.Error())
 		return nil, err

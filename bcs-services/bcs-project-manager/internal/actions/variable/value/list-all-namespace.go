@@ -20,10 +20,8 @@ import (
 	"sync"
 
 	"golang.org/x/sync/errgroup"
-	"google.golang.org/grpc/metadata"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/clientset"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/logging"
@@ -34,7 +32,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/errorx"
 	nsutils "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/namespace"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/proto/bcsproject"
-	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/middleware"
 )
 
 // ListNamespacesVariablesAction ...
@@ -84,19 +81,13 @@ func (la *ListNamespacesVariablesAction) listNamespaceVariables() ([]*proto.Vari
 		logging.Info("get cluster manager client failed, err: %s", err.Error())
 		return nil, errorx.NewClusterErr(err.Error())
 	}
-	defer func() {
-		if closeCon != nil {
-			closeCon()
-		}
-	}()
+	defer closeCon()
 	req := &clustermanager.ListClusterReq{
 		ProjectID: project.ProjectID,
-		Status: clustermanager.ClusterStatusRunning,
+		Status:    clustermanager.ClusterStatusRunning,
 	}
 
-	// TODO: need to optimize
-	listCtx := metadata.AppendToOutgoingContext(la.ctx, middleware.InnerClientHeaderKey, config.ServiceDomain)
-	resp, err := cli.ListCluster(listCtx, req)
+	resp, err := cli.ListCluster(la.ctx, req)
 	if err != nil {
 		logging.Info("list cluster from cluster manager failed, err: %s", err.Error())
 		return nil, err
@@ -130,7 +121,6 @@ func (la *ListNamespacesVariablesAction) listNamespaceVariables() ([]*proto.Vari
 
 func (la *ListNamespacesVariablesAction) concurrencyList(cluster clustermanager.Cluster,
 	variableDefinition *vdm.VariableDefinition) ([]*proto.VariableValue, error) {
-	logging.Info("concurrencyList func ClusterID: %s", cluster.GetClusterID())
 	client, err := clientset.GetClientGroup().Client(cluster.GetClusterID())
 	if err != nil {
 		logging.Error("get client for cluster %s failed, err: ", cluster.GetClusterID())

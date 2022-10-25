@@ -268,6 +268,7 @@ func (p *ProjectService) initMicro() error {
 			return nil
 		}),
 		microSvc.WrapHandler(
+			wrapper.NewAPILatencyWrapper,
 			wrapper.NewInjectContextWrapper,
 			wrapper.NewResponseWrapper,
 			wrapper.NewLogWrapper,
@@ -296,12 +297,17 @@ func (p *ProjectService) initMicro() error {
 
 	// project handler
 	if err := proto.RegisterBCSProjectHandler(grpcServer, handler.NewProject(p.model)); err != nil {
-		logging.Error("register handler failed, err: %s", err.Error())
+		logging.Error("register project handler failed, err: %s", err.Error())
+		return err
+	}
+	// 添加命名空间相关handler
+	if err := proto.RegisterNamespaceHandler(grpcServer, handler.NewNamespace(p.model)); err != nil {
+		logging.Error("register namespace handler failed, err: %s", err.Error())
 		return err
 	}
 	// 添加变量相关的handler
 	if err := proto.RegisterVariableHandler(grpcServer, handler.NewVariable(p.model)); err != nil {
-		logging.Error("register handler failed, err: %s", err.Error())
+		logging.Error("register variable handler failed, err: %s", err.Error())
 		return err
 	}
 	// 添加健康检查相关handler
@@ -349,17 +355,17 @@ func (p *ProjectService) registerGatewayFromEndPoint(gwMux *runtime.ServeMux, gr
 		p.opt.Server.Address+":"+strconv.Itoa(int(p.opt.Server.Port)),
 		grpcDialOpts,
 	); err != nil {
-		logging.Error("register http gateway failed, err %s", err.Error())
+		logging.Error("register project endpoints to http gateway failed, err %s", err.Error())
 		return err
 	}
-	// 注册健康检查相关 endpoint
-	if err := proto.RegisterHealthzGwFromEndpoint(
+	// 注册命名空间相关 endpoint
+	if err := proto.RegisterNamespaceGwFromEndpoint(
 		context.TODO(),
 		gwMux,
 		p.opt.Server.Address+":"+strconv.Itoa(int(p.opt.Server.Port)),
 		grpcDialOpts,
 	); err != nil {
-		logging.Error("register healthz gateway failed, err %s", err.Error())
+		logging.Error("register namespace endpoints to gateway failed, err %s", err.Error())
 		return err
 	}
 	// 注册变量相关 endpoint
@@ -369,7 +375,17 @@ func (p *ProjectService) registerGatewayFromEndPoint(gwMux *runtime.ServeMux, gr
 		p.opt.Server.Address+":"+strconv.Itoa(int(p.opt.Server.Port)),
 		grpcDialOpts,
 	); err != nil {
-		logging.Error("register variable gateway failed, err %s", err.Error())
+		logging.Error("register variable endpoints to gateway failed, err %s", err.Error())
+		return err
+	}
+	// 注册健康检查相关 endpoint
+	if err := proto.RegisterHealthzGwFromEndpoint(
+		context.TODO(),
+		gwMux,
+		p.opt.Server.Address+":"+strconv.Itoa(int(p.opt.Server.Port)),
+		grpcDialOpts,
+	); err != nil {
+		logging.Error("register healthz endpoints to gateway failed, err %s", err.Error())
 		return err
 	}
 	return nil

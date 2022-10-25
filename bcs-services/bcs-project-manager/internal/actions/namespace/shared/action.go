@@ -12,22 +12,21 @@
  * limitations under the License.
  */
 
-package namespace
+package shared
 
 import (
-	corev1 "k8s.io/api/core/v1"
-
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/config"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/actions/namespace/action"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store"
 )
 
-// FilterNamespaces filter shared namespace
-func FilterNamespaces(namespaceList *corev1.NamespaceList, shared bool, projectCode string) []corev1.Namespace {
-	nsList := []corev1.Namespace{}
-	for _, ns := range namespaceList.Items {
-		if shared && ns.Annotations[config.AnnotationKeyProjectCode] != projectCode {
-			continue
-		}
-		nsList = append(nsList, ns)
+// SharedNamespaceAction namespace action for shared cluster
+type SharedNamespaceAction struct {
+	model store.ProjectModel
+}
+
+// NewSharedNamespaceAction new namespace action for shared cluster
+func NewSharedNamespaceAction(model store.ProjectModel) action.NamespaceAction {
+	return &SharedNamespaceAction{
+		model: model,
 	}
-	return nsList
 }
