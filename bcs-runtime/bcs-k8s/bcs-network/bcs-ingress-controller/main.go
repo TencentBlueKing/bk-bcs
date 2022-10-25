@@ -16,14 +16,19 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"net"
+	"net/http"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/http/ipv6server"
 	clbv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubedeprecated/apis/clb/v1"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/conflicthandler"
 	"github.com/pkg/errors"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/cache"
@@ -145,13 +150,21 @@ func main() {
 		}
 	}
 
+	podIPs := os.Getenv(constant.EnvNamePodIPs)
+	if len(podIPs) == 0 {
+		blog.Errorf("empty pod ip")
+		podIPs = opts.Address
+	}
+	blog.Infof("pod ips: %s", podIPs)
+	opts.PodIPs = strings.Split(podIPs, ",")
+
 	// init port pool cache
 	portPoolCache := portpoolcache.NewCache()
 	go portPoolCache.Start()
 
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		Scheme:                  scheme,
-		MetricsBindAddress:      opts.Address + ":" + strconv.Itoa(opts.MetricPort),
+		MetricsBindAddress:      net.JoinHostPort("127.0.0.1", strconv.Itoa(opts.MetricPort)),
 		LeaderElection:          true,
 		LeaderElectionID:        "33fb49e.cloudlbconroller.bkbcs.tencent.com",
 		LeaderElectionNamespace: opts.ElectionNamespace,
@@ -178,6 +191,7 @@ func main() {
 		blog.Errorf("unable to start manager, err %s", err.Error())
 		os.Exit(1)
 	}
+	runPrometheusMetrics(opts)
 
 	var validater cloud.Validater
 	var lbClient cloud.LoadBalance
@@ -302,7 +316,7 @@ func main() {
 		ingressConverter)
 	// init webhook server
 	webhookServerOpts := &webhookserver.ServerOption{
-		Addr:           opts.Address,
+		Addrs:          opts.PodIPs,
 		Port:           opts.Port,
 		ServerCertFile: opts.ServerCertFile,
 		ServerKeyFile:  opts.ServerKeyFile,
@@ -337,4 +351,13 @@ func initInClusterClient() (*kubernetes.Clientset, error) {
 		return nil, errors.Wrapf(err, "create in-cluster client failed")
 	}
 	return client, nil
+}
+
+// runPrometheusMetrics starting prometheus metrics handler
+func runPrometheusMetrics(op *option.ControllerOption) {
+	http.Handle("/metrics", promhttp.HandlerFor(metrics.Registry, promhttp.HandlerOpts{}))
+	// ipv4 ipv6
+	ipv6Server := ipv6server.NewIPv6Server(op.PodIPs, strconv.Itoa(op.MetricPort), "", nil)
+	// 启动server，同时监听v4、v6地址
+	go ipv6Server.ListenAndServe()
 }

@@ -23,6 +23,9 @@ type ControllerOption struct {
 	// Address address for server
 	Address string
 
+	// PodIPs contains ipv4 and ipv6 address get from status.podIPs
+	PodIPs []string
+
 	// Port port for server
 	Port int
 

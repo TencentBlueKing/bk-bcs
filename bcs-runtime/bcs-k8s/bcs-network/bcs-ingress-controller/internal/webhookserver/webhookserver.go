@@ -24,6 +24,7 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/http/ipv6server"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/cloud"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/conflicthandler"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/generator"
@@ -51,7 +52,7 @@ var (
 
 // ServerOption option of server
 type ServerOption struct {
-	Addr           string
+	Addrs          []string
 	Port           int
 	ServerCertFile string
 	ServerKeyFile  string
@@ -59,7 +60,7 @@ type ServerOption struct {
 
 // Server webhook server
 type Server struct {
-	server *http.Server
+	ipv6Server *ipv6server.IPv6Server
 	// k8s client
 	k8sClient        client.Client
 	lbClient         cloud.LoadBalance
@@ -84,10 +85,8 @@ func NewHookServer(opt *ServerOption, k8sClient client.Client, lbClient cloud.Lo
 	}
 
 	return &Server{
-		server: &http.Server{
-			Addr:      fmt.Sprintf("%s:%v", opt.Addr, opt.Port),
-			TLSConfig: &tls.Config{Certificates: []tls.Certificate{pair}},
-		},
+		ipv6Server: ipv6server.NewTlsIPv6Server(opt.Addrs, strconv.Itoa(opt.Port), "",
+			&tls.Config{Certificates: []tls.Certificate{pair}}, nil),
 		k8sClient:        k8sClient,
 		lbClient:         lbClient,
 		eventWatcher:     eventWatcher,
@@ -109,10 +108,10 @@ func (s *Server) Start(stop <-chan struct{}) error {
 	mux.HandleFunc("/portpool/v1/mutate", s.HandleMutatingWebhook)
 	mux.HandleFunc("/crd/v1/validate", s.HandleValidatingCRD)
 	mux.HandleFunc("/ingress/v1/mutate", s.HandlerValidatingIngress)
-	s.server.Handler = mux
+	s.ipv6Server.Server.Handler = mux
 
 	go func() {
-		if err := s.server.ListenAndServeTLS("", ""); err != nil {
+		if err := s.ipv6Server.ListenAndServeTLS("", ""); err != nil {
 			blog.Fatalf("failed to listen and serve webhook server, err %s", err.Error())
 		}
 	}()
@@ -126,7 +125,7 @@ func (s *Server) Start(stop <-chan struct{}) error {
 	}
 	<-stop
 	blog.Infof("Got controller stop signal, shutting down webhook server gracefully...")
-	s.server.Shutdown(context.Background())
+	s.ipv6Server.Shutdown(context.Background())
 	// patch pod label to remove leader
 	if err := s.patchPod(s.podName, s.podNamespace, constant.LeaderLabelValueFalse); err != nil {
 		blog.Errorf("failed to patch pod %s/%s, err %s", s.podNamespace, s.podName, err.Error())

@@ -7,7 +7,7 @@ replace (
 	github.com/Tencent/bk-bcs/bcs-common => github.com/Tencent/bk-bcs/bcs-common v0.0.0-20210818040851-76fdc539dc33
 	github.com/Tencent/bk-bcs/bcs-k8s/kubedeprecated => github.com/Tencent/bk-bcs/bcs-k8s/kubedeprecated v0.0.0-20210117140338-aeaed29b1997
 	github.com/Tencent/bk-bcs/bcs-k8s/kubernetes => github.com/Tencent/bk-bcs/bcs-k8s/kubernetes v0.0.0-20210608083141-16270a254fb4
-	github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network => ../../bcs-network
+	github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network => github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network  v0.0.0-20221020082029-9cd508df34e0
 	github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes => ../../kubernetes
 	github.com/containernetworking/cni => github.com/containernetworking/cni v0.6.0
 	github.com/containernetworking/plugins => github.com/containernetworking/plugins v0.6.0

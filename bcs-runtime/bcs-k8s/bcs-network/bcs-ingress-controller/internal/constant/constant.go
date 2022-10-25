@@ -41,6 +41,8 @@ const (
 	EnvNameIsTCPUDPPortReuse = "TCP_UDP_PORT_REUSE"
 	// EnvNameIsBulkMode env name for option if use bulk interface for cloud lb
 	EnvNameIsBulkMode = "IS_BULK_MODE"
+	// EnvNamePodIPs env name for pod ips
+	EnvNamePodIPs = "POD_IPS"
 
 	// DelimiterForLbID delimiter for lb id
 	DelimiterForLbID = ":"
