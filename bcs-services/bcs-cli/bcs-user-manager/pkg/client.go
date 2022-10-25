@@ -54,15 +54,18 @@ func NewClientWithConfiguration(ctx context.Context) *UserManagerClient {
 
 func (c *UserManagerClient) do(url string, httpType string, query map[string]string, body interface{}) ([]byte, error) {
 	url = c.cfg.APIServer + url
-	var bodyReader *bytes.Reader
+	var req *http.Request
+	var err error
 	if body != nil {
-		bs, err := json.Marshal(body)
+		var bs []byte
+		bs, err = json.Marshal(body)
 		if err != nil {
 			return nil, errors.Wrapf(err, "marshal body failed")
 		}
-		bodyReader = bytes.NewReader(bs)
+		req, err = http.NewRequestWithContext(c.ctx, httpType, url, bytes.NewReader(bs))
+	} else {
+		req, err = http.NewRequestWithContext(c.ctx, httpType, url, nil)
 	}
-	req, err := http.NewRequestWithContext(c.ctx, httpType, url, bodyReader)
 	if err != nil {
 		return nil, errors.Wrapf(err, "create request failed")
 	}
