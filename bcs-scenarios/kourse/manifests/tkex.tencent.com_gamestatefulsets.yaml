@@ -120,8 +120,6 @@ spec:
                     type: object
                   retry:
                     type: boolean
-                required:
-                - hook
                 type: object
               preDeleteUpdateStrategy:
                 description: PreDeleteUpdateStrategy indicates the PreDeleteUpdateStrategy
@@ -150,8 +148,6 @@ spec:
                     type: object
                   retry:
                     type: boolean
-                required:
-                - hook
                 type: object
               preInplaceUpdateStrategy:
                 description: PreInplaceUpdateStrategy indicates the PreInplaceUpdateStrategy
@@ -180,8 +176,6 @@ spec:
                     type: object
                   retry:
                     type: boolean
-                required:
-                - hook
                 type: object
               replicas:
                 default: 1

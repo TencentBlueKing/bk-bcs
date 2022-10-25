@@ -34,6 +34,7 @@ var (
 )
 
 func ensureConfig() {
+	fmt.Println("test")
 	if cfgFile == "" {
 		cfgFile = defaultCfgFile
 	}
@@ -47,6 +48,7 @@ func ensureConfig() {
 
 func init() {
 	log.SetFlags(0)
+	cobra.OnInitialize(ensureConfig)
 }
 
 // NewRootCommand returns the rootCmd instance
@@ -67,6 +69,15 @@ kubectl-bcs-user-manager allows operators to get project info from bcs-user-mana
 	}
 	rootCmd.AddCommand(versionCmd)
 	rootCmd.AddCommand(newListCmd())
+	rootCmd.AddCommand(newCreateCmd())
+	rootCmd.AddCommand(newUpdateCmd())
+	rootCmd.AddCommand(newGetCmd())
+	rootCmd.AddCommand(newDeleteCmd())
+	rootCmd.AddCommand(newVerifyCmd())
+	rootCmd.AddCommand(newReleaseCmd())
+	rootCmd.AddCommand(newApplyCmd())
+	rootCmd.AddCommand(newSyncCmd())
+	rootCmd.AddCommand(newGrantCmd())
 	rootCmd.PersistentFlags().StringVarP(
 		&cfgFile, "config", "c", defaultCfgFile, "config file")
 	rootCmd.CompletionOptions.DisableDefaultCmd = true
