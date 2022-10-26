@@ -55,7 +55,7 @@ def parse_columns(crd_dict: Dict) -> List[Dict]:
     # 未取到 additionalPrinterColumns 有效值时, 再按照 apiextensions.k8s.io/v1 版本读取
     if not additional_printer_columns:
         versions = getitems(crd_dict, "spec.versions", [{'additionalPrinterColumns': []}])
-        additional_printer_columns = versions[0]['additionalPrinterColumns']
+        additional_printer_columns = versions[0].get('additionalPrinterColumns', [])
 
     for add_col in additional_printer_columns:
         json_path = add_col.get('JSONPath') or add_col.get('jsonPath')
