@@ -33,12 +33,12 @@
         <label>Endpoints</label>
         <template v-if="endpoints">
           <bcs-popover placement="top" width="140">
-              <span>{{ endpoints.join(',') }}</span>
-              <div slot="content" style="white-space: normal;">
-                  <div v-for="(item, index) in endpoints" :key="index">
-                    {{ item }}
-                  </div>
+            <span>{{ endpoints.join(',') }}</span>
+            <div slot="content" style="white-space: normal;">
+              <div v-for="(item, index) in endpoints" :key="index">
+                {{ item }}
               </div>
+            </div>
           </bcs-popover>
         </template>
         <template v-else>
@@ -60,6 +60,10 @@
       <div class="basic-info-item">
         <label>{{ $t('存在时间') }}</label>
         <span>{{ extData.age }}</span>
+      </div>
+      <div class="basic-info-item">
+        <label>{{ $t('最大会话时间') }}</label>
+        <span>{{ extData.stickyTime ? `${extData.stickyTime} s` : '--' }}</span>
       </div>
     </div>
     <!-- 配置、标签、注解 -->
@@ -140,7 +144,7 @@ export default defineComponent({
       const flag = await $store.dispatch('dashboard/getNetworksEndpointsFlag', {
         $namespaces: props.data.metadata.namespace,
         $name: props.data.metadata.name,
-      })
+      });
       if (flag) {
         isLoading.value = true;
         const res = await $store.dispatch('dashboard/getResourceDetail', {

@@ -29,43 +29,60 @@
           <bcs-collapse-item
             v-for="(item, index) in (data.subsets || [])"
             :name="String(index)"
-            :key="index">
-            {{ `subset ${index + 1}` }}
+            :key="index"
+            hide-arrow
+            class="mb-[16px]">
+            <div class="flex items-center rounded-sm bg-[#f5f7fa] px-3.5 text-[#313238]">
+              <i
+                class="bk-icon icon-down-shape !text-base mr-[5px] transition-all"
+                :style="{
+                  transform: activeCollapseName.includes(String(index)) ? 'rotate(0deg)' : 'rotate(-90deg)',
+                }"></i>
+              {{ `subset ${index + 1}` }}
+            </div>
             <template #content>
-              <!-- Addresses and notReadyAddresses -->
-              <p class="detail-title">Addresses</p>
-              <bk-table
-                :data="item.addresses
-                  .map(item => ({
-                    ...item,
-                    status: 'normal'
-                  }))
-                  .concat(item.notReadyAddresses || [])"
-                class="mb20">
-                <bk-table-column label="IP" prop="ip" width="140"></bk-table-column>
-                <bk-table-column label="NodeName" prop="nodeName"></bk-table-column>
-                <bk-table-column label="TargetRef">
-                  <template #default="{ row }">
-                    <span>{{ row.targetRef ? `${row.targetRef.kind}:${row.targetRef.name}` : '--' }}</span>
-                  </template>
-                </bk-table-column>
-                <bk-table-column label="Status">
-                  <template #default="{ row }">
-                    {{row.status === 'normal' ? $t('正常') : $t('异常')}}
-                  </template>
-                </bk-table-column>
-              </bk-table>
-              <!-- Ports -->
-              <p class="detail-title">Ports</p>
-              <bk-table :data="item.ports">
-                <bk-table-column label="Name" prop="name">
-                  <template #default="{ row }">
-                    {{row.name || '--'}}
-                  </template>
-                </bk-table-column>
-                <bk-table-column label="Protocol" prop="protocol"></bk-table-column>
-                <bk-table-column label="Port" prop="port"></bk-table-column>
-              </bk-table>
+              <div class="px-[16px] pt-[16px]">
+                <!-- Addresses and notReadyAddresses -->
+                <p class="detail-title">Addresses</p>
+                <bk-table
+                  :data="item.addresses
+                    .map(item => ({
+                      ...item,
+                      status: 'normal'
+                    }))
+                    .concat(item.notReadyAddresses || [])"
+                  class="mb20">
+                  <bk-table-column label="IP" prop="ip" width="140"></bk-table-column>
+                  <bk-table-column label="NodeName" prop="nodeName">
+                    <template #default="{ row }">
+                      {{ row.nodeName || '--' }}
+                    </template>
+                  </bk-table-column>
+                  <bk-table-column label="TargetRef">
+                    <template #default="{ row }">
+                      <span>{{ row.targetRef ? `${row.targetRef.kind}:${row.targetRef.name}` : '--' }}</span>
+                    </template>
+                  </bk-table-column>
+                  <bk-table-column label="Status">
+                    <template #default="{ row }">
+                      <StatusIcon :status="String(row.status === 'normal')">
+                        {{row.status === 'normal' ? $t('正常') : $t('异常')}}
+                      </StatusIcon>
+                    </template>
+                  </bk-table-column>
+                </bk-table>
+                <!-- Ports -->
+                <p class="detail-title">Ports</p>
+                <bk-table :data="item.ports">
+                  <bk-table-column label="Name" prop="name">
+                    <template #default="{ row }">
+                      {{row.name || '--'}}
+                    </template>
+                  </bk-table-column>
+                  <bk-table-column label="Protocol" prop="protocol"></bk-table-column>
+                  <bk-table-column label="Port" prop="port"></bk-table-column>
+                </bk-table>
+              </div>
             </template>
           </bcs-collapse-item>
         </bcs-collapse>
@@ -87,9 +104,11 @@
 </template>
 <script lang="ts">
 import { defineComponent, ref } from '@vue/composition-api';
+import StatusIcon from '@/views/dashboard/common/status-icon';
 
 export default defineComponent({
   name: 'EndpointsDetail',
+  components: { StatusIcon },
   props: {
     // 当前行数据
     data: {
@@ -103,7 +122,7 @@ export default defineComponent({
     },
   },
   setup() {
-    const activeCollapseName = ref(['0'])
+    const activeCollapseName = ref(['0']);
     const handleTransformObjToArr = (obj) => {
       if (!obj) return [];
 

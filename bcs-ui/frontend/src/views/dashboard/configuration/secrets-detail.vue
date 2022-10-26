@@ -20,6 +20,10 @@
         <label>{{ $t('存在时间') }}</label>
         <span>{{ extData.age }}</span>
       </div>
+      <div class="basic-info-item">
+        <label>{{ $t('不可变更') }}</label>
+        <span>{{ extData.immutable ? $t('是') : $t('否') }}</span>
+      </div>
     </div>
     <bcs-tab class="mt20" type="card" :label-height="42">
       <bcs-tab-panel name="data" label="Data">
