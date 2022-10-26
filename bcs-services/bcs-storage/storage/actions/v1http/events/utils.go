@@ -16,24 +16,25 @@ package events
 import (
 	"context"
 	"fmt"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/v1http/dynamic"
 	"net/http"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/emicklei/go-restful"
+	"github.com/micro/go-micro/v2/broker"
+	"go.mongodb.org/mongo-driver/bson"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/codec"
 	"github.com/Tencent/bk-bcs/bcs-common/common/types"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/msgqueue"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/lib"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/utils/metrics"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/v1http/dynamic"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/apiserver"
-	"github.com/emicklei/go-restful"
-	"github.com/micro/go-micro/v2/broker"
-	"go.mongodb.org/mongo-driver/bson"
 )
 
 func getExtra(req *restful.Request) operator.M {
@@ -173,6 +174,35 @@ func listEvent(req *restful.Request) ([]operator.M, int64, error) {
 	var count int64
 
 	for _, clusterID := range clusterIDs {
+		for _, idxName := range eventQueryIndexKeys {
+			hasTable, err := store.GetDB().HasTable(req.Request.Context(), tablePrefix+clusterID)
+			if err != nil {
+				return nil, 0, err
+			}
+			if !hasTable {
+				return nil, 0, fmt.Errorf("failed to get table for clusterID %s", clusterID)
+			}
+
+			hasIndex, err := store.GetDB().Table(tablePrefix+clusterID).HasIndex(req.Request.Context(), idxName+"_idx")
+			if err != nil {
+				blog.Errorf("failed to get index for clusterID(%s) with  %s, err %s", clusterID, idxName, err.Error())
+				return nil, 0, fmt.Errorf("failed to get index for  clusterID(%s) with  %s, err %s", clusterID, idxName, err.Error())
+			}
+			if !hasIndex {
+				blog.Infof("create index for clusterID(%s) with key(%s)", clusterID, idxName)
+				index := drivers.Index{
+					Name: idxName + "_idx",
+					Key:  bson.D{},
+				}
+				index.Key = append(index.Key, bson.E{Key: idxName, Value: 1})
+				err = store.GetDB().Table(tablePrefix+clusterID).CreateIndex(req.Request.Context(), index)
+				if err != nil {
+					blog.Errorf("failed to create index for clusterID(%s) with %s, err %s", clusterID, idxName, err.Error())
+					return nil, 0, fmt.Errorf("failed to create index for clusterID(%s) with %s, err %s", clusterID, idxName, err.Error())
+				}
+			}
+		}
+
 		eList, err := store.Get(req.Request.Context(), tablePrefix+clusterID, getOption)
 		if err != nil {
 			blog.Errorf("get event list failed, err %s", err.Error())

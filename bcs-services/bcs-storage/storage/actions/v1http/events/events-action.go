@@ -76,6 +76,8 @@ var nsFeatTags = []string{clusterIDTag, namespaceTag, resourceTypeTag, resourceN
 
 var eventIndexKeys = []string{"data.metadata.name", "data.metadata.resourceVersion"}
 
+var eventQueryIndexKeys = []string{"extraInfo.name", "extraInfo.namespace", "extraInfo.kind", "kind"}
+
 // Use Mongodb for storage.
 const dbConfig = "mongodb/event"
 
