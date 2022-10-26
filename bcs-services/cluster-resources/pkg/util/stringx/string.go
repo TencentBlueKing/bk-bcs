@@ -16,6 +16,7 @@ package stringx
 
 import (
 	"math/rand"
+	"net"
 	"strings"
 )
 
@@ -53,4 +54,16 @@ func Rand(n int, charset string) string {
 		b[i] = charset[rand.Intn(len(charset))]
 	}
 	return string(b)
+}
+
+// IsIPv4 是否合法的ipv4地址
+func IsIPv4(s string) bool {
+	ip := net.ParseIP(s)
+	return ip != nil && !ip.IsUnspecified() && strings.Contains(s, ".")
+}
+
+// IsIPv6 是否合法的ipv6地址
+func IsIPv6(s string) bool {
+	ip := net.ParseIP(s)
+	return ip != nil && !ip.IsUnspecified() && strings.Contains(s, ":")
 }

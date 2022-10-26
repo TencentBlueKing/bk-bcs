@@ -79,3 +79,17 @@ func TestRand(t *testing.T) {
 	assert.Equal(t, 15, len(stringx.Rand(15, "abcd1234")))
 	assert.Equal(t, "aaa", stringx.Rand(3, "a"))
 }
+
+func TestIsIPv4(t *testing.T) {
+	assert.Equal(t, false, stringx.IsIPv4("127.0.0.256"))
+	assert.Equal(t, false, stringx.IsIPv4("0.0.0.0"))
+	assert.Equal(t, false, stringx.IsIPv4("fe80::4ae:1ff:fe2e:94f8"))
+	assert.Equal(t, true, stringx.IsIPv4("127.0.0.1"))
+}
+
+func TestIsIPv6(t *testing.T) {
+	assert.Equal(t, false, stringx.IsIPv6(":::"))
+	assert.Equal(t, false, stringx.IsIPv6("::"))
+	assert.Equal(t, false, stringx.IsIPv6("127.0.0.1"))
+	assert.Equal(t, true, stringx.IsIPv6("fe80::4ae:1ff:fe2e:94f8"))
+}

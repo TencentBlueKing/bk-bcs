@@ -17,7 +17,10 @@ package formatter
 import (
 	"fmt"
 
+	"github.com/TencentBlueKing/gopkg/collection/set"
+
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/stringx"
 )
 
 // FormatNetworkRes xxx
@@ -47,6 +50,29 @@ func FormatSVC(manifest map[string]interface{}) map[string]interface{} {
 	ret := FormatNetworkRes(manifest)
 	ret["externalIP"] = parseSVCExternalIPs(manifest)
 	ret["ports"] = parseSVCPorts(manifest)
+
+	clusterIPSet := set.NewStringSet()
+	clusterIP := mapx.GetStr(manifest, "spec.clusterIP")
+	clusterIPSet.Add(clusterIP)
+
+	// 双栈集群特有字段
+	for _, item := range mapx.GetList(manifest, "spec.clusterIPs") {
+		ip := item.(string)
+		clusterIPSet.Add(ip)
+	}
+
+	// 同时兼容 ipv4 / ipv6 集群
+	ret["clusterIPv4"] = ""
+	ret["clusterIPv6"] = ""
+	for _, clusterIP := range clusterIPSet.ToSlice() {
+		switch {
+		case stringx.IsIPv4(clusterIP):
+			ret["clusterIPv4"] = clusterIP
+		case stringx.IsIPv6(clusterIP):
+			ret["clusterIPv6"] = clusterIP
+		}
+	}
+
 	return ret
 }
 

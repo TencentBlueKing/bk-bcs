@@ -23,6 +23,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/slice"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/stringx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/timex"
 )
 
@@ -93,6 +94,30 @@ func FormatPo(manifest map[string]interface{}) map[string]interface{} {
 		restartCnt += s.(map[string]interface{})["restartCount"].(int64)
 	}
 	ret["readyCnt"], ret["totalCnt"], ret["restartCnt"] = readyCnt, totalCnt, restartCnt
+
+	podIPSet := set.NewStringSet()
+	podIP := mapx.GetStr(manifest, "status.podIP")
+	podIPSet.Add(podIP)
+
+	// 双栈集群特有字段
+	for _, item := range mapx.GetList(manifest, "status.podIPs") {
+		ip := item.(map[string]interface{})["ip"].(string)
+		podIPSet.Add(ip)
+
+	}
+
+	// 同时兼容 ipv4 / ipv6 集群
+	ret["podIPv4"] = ""
+	ret["podIPv6"] = ""
+	for _, podIP := range podIPSet.ToSlice() {
+		switch {
+		case stringx.IsIPv4(podIP):
+			ret["podIPv4"] = podIP
+		case stringx.IsIPv6(podIP):
+			ret["podIPv6"] = podIP
+		}
+	}
+
 	return ret
 }
 
