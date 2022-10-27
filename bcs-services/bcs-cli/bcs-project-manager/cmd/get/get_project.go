@@ -11,44 +11,49 @@
  *
  */
 
-package cmd
+package get
 
 import (
 	"context"
 
 	"github.com/spf13/cobra"
 	"k8s.io/klog"
+	"k8s.io/kubectl/pkg/util/i18n"
+	"k8s.io/kubectl/pkg/util/templates"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-project-manager/cmd/printer"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-project-manager/pkg"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/proto/bcsproject"
 )
 
-func newListCmd() *cobra.Command {
-	listCmd := &cobra.Command{
-		Use:   "list",
-		Short: "list infos from bcs-project-manager",
-		Long:  "",
-	}
-	listCmd.AddCommand(listProjectsCmd())
-	return listCmd
-}
+var (
+	getProjectLong = templates.LongDesc(i18n.T(`
+		Display one or many project.
+		Prints a table of the most important information about the specified resources.`))
 
-func listProjectsCmd() *cobra.Command {
+	getProjectExample = templates.Examples(i18n.T(`
+		# List all project in ps output format
+		kubectl-bcs-project-manager list project`))
+)
+
+func listProject() *cobra.Command {
+	var all bool
 	request := new(bcsproject.ListProjectsRequest)
-	subCmd := &cobra.Command{
+	cmd := &cobra.Command{
 		Use:     "project",
-		Aliases: []string{"projects", "p"},
-		Short:   "list projects info with full-data or paging support",
-		Long:    "",
+		Aliases: []string{"project", "p"},
+		Short:   i18n.T("Display one or many project"),
+		Long:    getProjectLong,
+		Example: getProjectExample,
 		Run: func(cmd *cobra.Command, args []string) {
-			cobra.OnInitialize(ensureConfig)
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
-			client, cliCtx, err := pkg.NewClientWithConfiguration(ctx)
+			conn, cliCtx, err := pkg.NewGrpcClientConn(ctx)
 			if err != nil {
-				klog.Fatalf("init client failed: %v", err.Error())
+				klog.Fatalf("init conn failed: %v", err.Error())
 			}
+			client := bcsproject.NewBCSProjectClient(conn)
+			request.SearchName = request.Names
 			resp, err := client.ListProjects(cliCtx, request)
 			if err != nil {
 				klog.Fatalf("list projects failed: %v", err)
@@ -59,15 +64,20 @@ func listProjectsCmd() *cobra.Command {
 			printer.PrintProjectsListInTable(flagOutput, resp)
 		},
 	}
-	subCmd.PersistentFlags().StringVarP(&request.ProjectIDs, "project_ids", "", "",
-		"the project ids that query, multiple separated by commas")
-	subCmd.PersistentFlags().StringVarP(&request.Names, "names", "", "",
-		"the project chinese name, multiple separated by commas")
-	subCmd.PersistentFlags().StringVarP(&request.ProjectCode, "project_code", "", "",
-		"project code query")
-	subCmd.PersistentFlags().StringVarP(&request.SearchName, "search_name", "", "",
-		"project name used to fuzzy query")
-	subCmd.PersistentFlags().StringVarP(&request.Kind, "kind", "", "",
-		"the cluster kind")
-	return subCmd
+
+	cmd.PersistentFlags().StringVarP(&request.ProjectIDs, "project_ids", "", "",
+		"The project ids that query, multiple separated by commas")
+	cmd.PersistentFlags().StringVarP(&request.Names, "name", "", "",
+		"The project chinese name, multiple separated by commas")
+	cmd.PersistentFlags().StringVarP(&request.ProjectCode, "project_code", "", "",
+		"Project code query")
+	cmd.PersistentFlags().StringVarP(&request.Kind, "kind", "", "",
+		"The cluster kind")
+	cmd.PersistentFlags().Int64VarP(&request.Limit, "limit", "", 10,
+		"Number of queries")
+	cmd.PersistentFlags().Int64VarP(&request.Offset, "offset", "", 0,
+		"Start query from offset")
+	cmd.PersistentFlags().BoolVarP(&all, "all", "", false,
+		"Get all projects, default: false")
+	return cmd
 }

@@ -23,8 +23,6 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/metadata"
-
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/proto/bcsproject"
 )
 
 // Config describe the options Client need
@@ -37,17 +35,12 @@ type Config struct {
 	Operator string
 }
 
-// NewClientWithConfiguration new client with config
-func NewClientWithConfiguration(ctx context.Context) (bcsproject.BCSProjectClient, context.Context, error) {
-	return NewBcsProjectCli(ctx, &Config{
-		APIServer: viper.GetString("config.apiserver"),
-		AuthToken: viper.GetString("config.bcs_token"),
-		Operator:  viper.GetString("config.operator"),
-	})
-}
-
-// NewBcsProjectCli create client for bcs-project
-func NewBcsProjectCli(ctx context.Context, config *Config) (bcsproject.BCSProjectClient, context.Context, error) {
+func NewGrpcClientConn(ctx context.Context) (*grpc.ClientConn, context.Context, error) {
+	config := &Config{
+		APIServer: viper.GetString("bcs.apiserver"),
+		AuthToken: viper.GetString("bcs.token"),
+		Operator:  viper.GetString("bcs.operator"),
+	}
 	header := map[string]string{
 		"x-content-type": "application/grpc+proto",
 		"Content-Type":   "application/grpc",
@@ -64,9 +57,8 @@ func NewBcsProjectCli(ctx context.Context, config *Config) (bcsproject.BCSProjec
 	if err != nil {
 		return nil, nil, errors.Wrapf(err, "create grpc client with '%s' failed", config.APIServer)
 	}
-
 	if conn == nil {
 		return nil, nil, fmt.Errorf("conn is nil")
 	}
-	return bcsproject.NewBCSProjectClient(conn), metadata.NewOutgoingContext(ctx, md), nil
+	return conn, metadata.NewOutgoingContext(ctx, md), nil
 }
