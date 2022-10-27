@@ -39,7 +39,7 @@
       </div>
       <div class="basic-info-item">
         <label>{{ $t('CLB 使用方式') }}</label>
-        <span>{{ extData.clbUseType || '--' }}</span>
+        <span>{{ extData.clbUseType === 'useExists' ? $t('使用已有') : $t('自动创建') || '--' }}</span>
       </div>
       <div class="basic-info-item">
         <label>CLB ID</label>
