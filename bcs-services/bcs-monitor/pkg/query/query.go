@@ -19,6 +19,7 @@ import (
 	"path"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/tcp/listener"
 	"github.com/TencentBlueKing/bkmonitor-kits/logger"
 	"github.com/TencentBlueKing/bkmonitor-kits/logger/gokit"
 	"github.com/oklog/run"
@@ -44,6 +45,8 @@ type QueryAPI struct {
 	StoresList   []string
 	endpoints    *query.EndpointSet
 	srv          *httpserver.Server
+	httpAddr     string
+	addrIPv6     string
 	statusProber prober.Probe
 	ctx          context.Context
 }
@@ -58,6 +61,7 @@ func NewQueryAPI(
 	tracer opentracing.Tracer,
 	kitLogger gokit.Logger,
 	httpAddr string,
+	addrIPv6 string,
 	storeList []string,
 	httpSDURLs []string,
 	g *run.Group,
@@ -73,6 +77,8 @@ func NewQueryAPI(
 	apiServer := &QueryAPI{
 		ctx:       ctx,
 		endpoints: discoveryClient.Endpoints(),
+		httpAddr:  httpAddr,
+		addrIPv6:  addrIPv6,
 	}
 	logger.Infof("store list: [%v]", storeList)
 
@@ -150,7 +156,20 @@ func NewQueryAPI(
 func (a *QueryAPI) Run() error {
 	a.statusProber.Healthy()
 	a.statusProber.Ready()
-	return a.srv.ListenAndServe()
+
+	dualStackListener := listener.NewDualStackListener()
+	if err := dualStackListener.AddListenerWithAddr(a.httpAddr); err != nil {
+		return err
+	}
+
+	if a.addrIPv6 != "" {
+		if err := dualStackListener.AddListenerWithAddr(a.addrIPv6); err != nil {
+			return err
+		}
+		logger.Infof("query serve dualStackListener with ipv6: %s", a.addrIPv6)
+	}
+
+	return a.srv.Serve(dualStackListener)
 }
 
 // Close 停止服务

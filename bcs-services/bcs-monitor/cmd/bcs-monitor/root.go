@@ -16,9 +16,11 @@ package main
 import (
 	"context"
 	"fmt"
+	"net"
 	"os"
 	"path/filepath"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/util"
 	"github.com/Tencent/bk-bcs/bcs-common/common/version"
 	"github.com/TencentBlueKing/bkmonitor-kits/logger"
 	homedir "github.com/mitchellh/go-homedir"
@@ -37,6 +39,8 @@ var (
 	httpAddress      string
 	advertiseAddress string
 	appName          = "bcs-monitor"
+	podIPsEnv        = "POD_IPs"        // 双栈监听环境变量
+	ipv6Interface    = "IPV6_INTERFACE" // ipv6本地网关地址
 
 	rootCmd = &cobra.Command{
 		Use:   appName,
@@ -150,4 +154,40 @@ func VersionCmd() *cobra.Command {
 func printVersion() string {
 	v := appName + ", " + version.GetVersion()
 	return v
+}
+
+// getIPv6AddrFromEnv 解析ipv6
+func getIPv6AddrFromEnv(ipv4 string) string {
+	host, listenPort, _ := net.SplitHostPort(ipv4)
+	// ipv4 已经绑定了0.0.0.0 ipv6也不启动
+	if ip := net.ParseIP(host); ip != nil && ip.IsUnspecified() {
+		return ""
+	}
+
+	if listenPort == "" {
+		return ""
+	}
+
+	podIPs := os.Getenv(podIPsEnv)
+	if podIPs == "" {
+		return ""
+	}
+
+	ipv6 := util.GetIPv6Address(podIPs)
+	if ipv6 == "" {
+		return ""
+	}
+
+	// 在实际中，ipv6不能是回环地址
+	if v := net.ParseIP(ipv6); v == nil || v.IsLoopback() {
+		return ""
+	}
+
+	// local link ipv6 需要带上 interface， 格式如::%eth0
+	ipv6Interface := os.Getenv(ipv6Interface)
+	if ipv6Interface != "" {
+		ipv6 = ipv6 + "%" + ipv6Interface
+	}
+
+	return net.JoinHostPort(ipv6, listenPort)
 }

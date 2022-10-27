@@ -58,13 +58,14 @@ func runQuery(ctx context.Context, g *run.Group, opt *option) error {
 	kitLogger := gokit.NewLogger(logger.StandardLogger())
 
 	logger.Infow("listening for requests and metrics", "service", "query", "address", httpAddress)
-	queryServer, err := query.NewQueryAPI(ctx, opt.reg, opt.tracer, kitLogger, httpAddress, storeList, httpSDURLs, g)
+	addrIPv6 := getIPv6AddrFromEnv(httpAddress)
+	queryServer, err := query.NewQueryAPI(ctx, opt.reg, opt.tracer, kitLogger, httpAddress, addrIPv6, storeList, httpSDURLs, g)
 	if err != nil {
 		return errors.Wrap(err, "query")
 	}
 
 	sdName := fmt.Sprintf("%s-%s", appName, "query")
-	sd, err := discovery.NewServiceDiscovery(ctx, sdName, version.BcsVersion, httpAddress, advertiseAddress)
+	sd, err := discovery.NewServiceDiscovery(ctx, sdName, version.BcsVersion, httpAddress, advertiseAddress, addrIPv6)
 	if err != nil {
 		return err
 	}

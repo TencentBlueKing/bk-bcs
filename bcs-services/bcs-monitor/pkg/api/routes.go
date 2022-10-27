@@ -19,6 +19,8 @@ import (
 	"net/http"
 	"path"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/tcp/listener"
+	"github.com/TencentBlueKing/bkmonitor-kits/logger"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-contrib/requestid"
 	"github.com/gin-gonic/gin"
@@ -39,22 +41,24 @@ import (
 
 // APIServer :
 type APIServer struct {
-	ctx    context.Context
-	engine *gin.Engine
-	srv    *http.Server
+	ctx      context.Context
+	engine   *gin.Engine
+	srv      *http.Server
+	addrIPv6 string
 }
 
 // NewAPIServer :
-func NewAPIServer(ctx context.Context, addr string) (*APIServer, error) {
+func NewAPIServer(ctx context.Context, addr string, addrIPv6 string) (*APIServer, error) {
 	gin.SetMode(gin.ReleaseMode)
 	engine := gin.Default()
 
 	srv := &http.Server{Addr: addr, Handler: engine}
 
 	s := &APIServer{
-		ctx:    ctx,
-		engine: engine,
-		srv:    srv,
+		ctx:      ctx,
+		engine:   engine,
+		srv:      srv,
+		addrIPv6: addrIPv6,
 	}
 	s.newRoutes(engine)
 
@@ -63,7 +67,19 @@ func NewAPIServer(ctx context.Context, addr string) (*APIServer, error) {
 
 // Run :
 func (a *APIServer) Run() error {
-	return a.srv.ListenAndServe()
+	dualStackListener := listener.NewDualStackListener()
+	if err := dualStackListener.AddListenerWithAddr(a.srv.Addr); err != nil {
+		return err
+	}
+
+	if a.addrIPv6 != "" {
+		if err := dualStackListener.AddListenerWithAddr(a.addrIPv6); err != nil {
+			return err
+		}
+		logger.Infof("api serve dualStackListener with ipv6: %s", a.addrIPv6)
+	}
+
+	return a.srv.Serve(dualStackListener)
 }
 
 // Close :

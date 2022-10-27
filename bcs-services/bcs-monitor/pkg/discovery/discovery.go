@@ -19,7 +19,8 @@ import (
 	"strings"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
-	etcd "github.com/asim/go-micro/plugins/registry/etcd/v4"
+	"github.com/Tencent/bk-bcs/bcs-common/common/types"
+	etcd "github.com/go-micro/plugins/v4/registry/etcd"
 	"go-micro.dev/v4"
 	"go-micro.dev/v4/registry"
 	"go-micro.dev/v4/server"
@@ -36,8 +37,12 @@ type serviceDiscovery struct {
 }
 
 // NewServiceDiscovery :
-func NewServiceDiscovery(ctx context.Context, name, version, bindaddr, advertiseAddr string) (*serviceDiscovery,
-	error) {
+func NewServiceDiscovery(ctx context.Context, name, version, bindaddr, advertiseAddr, addrIPv6 string) (*serviceDiscovery, error) {
+	metadata := map[string]string{}
+	if addrIPv6 != "" {
+		metadata[types.IPV6] = addrIPv6
+	}
+
 	svr := server.NewServer(
 		server.Name(name+serverNameSuffix),
 		server.Version(version),
@@ -50,7 +55,7 @@ func NewServiceDiscovery(ctx context.Context, name, version, bindaddr, advertise
 		svr.Init(server.Advertise(bindaddr))
 	}
 
-	service := micro.NewService(micro.Server(svr))
+	service := micro.NewService(micro.Server(svr), micro.Metadata(metadata))
 
 	sd := &serviceDiscovery{srv: service, ctx: ctx}
 	if err := sd.init(); err != nil {
