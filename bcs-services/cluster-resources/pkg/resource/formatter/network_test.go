@@ -253,7 +253,7 @@ func TestFormatSVC(t *testing.T) {
 	assert.Equal(t, []string{"8080:30600/TCP", "8090/TCP"}, ret["ports"])
 	assert.Equal(t, "lb-c5xxxxd7", ret["clbID"])
 	assert.Equal(t, "subnet-a3xxxxb4", ret["subnetID"])
-	assert.Equal(t, resCsts.DefaultSessionAffinityStickyTime, ret["stickyTime"])
+	assert.Equal(t, int64(0), ret["stickyTime"])
 	assert.Equal(t, "127.0.0.2", ret["clusterIPv4"])
 	assert.Equal(t, "::7f00:0001", ret["clusterIPv6"])
 }

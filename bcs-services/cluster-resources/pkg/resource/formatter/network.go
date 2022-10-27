@@ -76,10 +76,7 @@ func FormatSVC(manifest map[string]interface{}) map[string]interface{} {
 	ret["ports"] = parseSVCPorts(manifest)
 	ret["clbID"] = mapx.GetStr(manifest, []string{"metadata", "annotations", resCsts.SVCCurLBIDAnnoKey})
 	ret["subnetID"] = mapx.GetStr(manifest, []string{"metadata", "annotations", resCsts.SVCSubNetIDAnnoKey})
-	ret["stickyTime"] = mapx.Get(
-		manifest, "spec.sessionAffinityConfig.clientIP.timeoutSeconds",
-		resCsts.DefaultSessionAffinityStickyTime,
-	).(int64)
+	ret["stickyTime"] = mapx.GetInt64(manifest, "spec.sessionAffinityConfig.clientIP.timeoutSeconds")
 
 	clusterIPSet := set.NewStringSet()
 	clusterIP := mapx.GetStr(manifest, "spec.clusterIP")
