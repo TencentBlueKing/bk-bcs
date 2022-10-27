@@ -14,7 +14,7 @@
 package bcsstorage
 
 import (
-	"fmt"
+	"net"
 	"net/http"
 	"net/http/pprof"
 	"strconv"
@@ -22,6 +22,8 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/http/httpserver"
+	"github.com/Tencent/bk-bcs/bcs-common/common/http/ipv6server"
+	"github.com/Tencent/bk-bcs/bcs-common/common/types"
 	"github.com/Tencent/bk-bcs/bcs-common/common/version"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/registry"
 	trestful "github.com/Tencent/bk-bcs/bcs-common/pkg/tracing/restful"
@@ -30,9 +32,9 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/utils/metrics"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/utils/middle"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/apiserver"
+	"github.com/opentracing/opentracing-go"
 
 	restful "github.com/emicklei/go-restful"
-	"github.com/opentracing/opentracing-go"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
@@ -67,13 +69,25 @@ func NewStorageServer(op *options.StorageOptions) (*StorageServer, error) {
 			blog.Errorf("storage loading etcd registry tls config failed, %s", err.Error())
 			return nil, err
 		}
+		// 创建Meta
+		meta := make(map[string]string)
+		// 端口号
+		port := strconv.FormatUint(uint64(s.conf.Port), 10)
+		// ipv4地址
+		ipv4 := net.JoinHostPort(s.conf.Address, port)
+		// ipv6注册地址不能是本地回环地址
+		if ipv6 := net.ParseIP(s.conf.IPv6Address); ipv6 != nil && !ipv6.IsLoopback() {
+			// 把ipv6地址写入到mata中
+			meta[types.IPV6] = net.JoinHostPort(ipv6.String(), port)
+		}
 		// init go-micro registry
 		eoption := &registry.Options{
 			Name:         "storage.bkbcs.tencent.com",
 			Version:      version.BcsVersion,
 			RegistryAddr: strings.Split(s.conf.Etcd.Address, ","),
-			RegAddr:      fmt.Sprintf("%s:%d", s.conf.Address, s.conf.Port),
+			RegAddr:      ipv4,
 			Config:       tlsCfg,
+			Meta:         meta,
 		}
 		blog.Infof("#############storage turn on etcd registry feature, options %+v ###############", eoption)
 		s.etcdRegistry = registry.NewEtcdRegistry(eoption)
@@ -138,6 +152,7 @@ func (s *StorageServer) Start() error {
 	s.initHTTPServer()
 
 	go func() {
+		s.httpServer.SetAddressIPv6(s.conf.IPv6Address) // 把ipv6地址，加入到httpServer中
 		err := s.httpServer.ListenAndServe()
 		blog.Errorf("http listen and service failed! err:%s", err.Error())
 		chErr <- err
@@ -169,8 +184,11 @@ func (s *StorageServer) Start() error {
 // runPrometheusMetrics starting prometheus metrics handler
 func runPrometheusMetrics(op *options.StorageOptions) {
 	http.Handle("/metrics", promhttp.Handler())
-	addr := op.Address + ":" + strconv.Itoa(int(op.MetricPort))
-	go http.ListenAndServe(addr, nil)
+	// ipv4 ipv6
+	ips := []string{op.Address, op.IPv6Address}
+	ipv6Server := ipv6server.NewIPv6Server(ips, strconv.Itoa(int(op.MetricPort)), "", nil)
+	// 启动server，同时监听v4、v6地址
+	go ipv6Server.ListenAndServe()
 }
 
 func getRouteFunc(f http.HandlerFunc) restful.RouteFunction {

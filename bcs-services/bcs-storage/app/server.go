@@ -115,4 +115,7 @@ func setConfig(op *options.StorageOptions) {
 	if op.ServerCert.CertFile != "" && op.ServerCert.KeyFile != "" {
 		op.ServerCert.IsSSL = true
 	}
+
+	// 初始化IPv6Address字段
+	op.ServiceConfig.InitIPv6AddressFiled()
 }
