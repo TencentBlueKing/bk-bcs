@@ -5281,6 +5281,12 @@ func (m *Release) validate(all bool) error {
 
 	// no validation rules for ChartVersion
 
+	// no validation rules for CreateBy
+
+	// no validation rules for UpdateBy
+
+	// no validation rules for Message
+
 	if len(errors) > 0 {
 		return ReleaseMultiError(errors)
 	}
@@ -5399,6 +5405,12 @@ func (m *ReleaseDetail) validate(all bool) error {
 	// no validation rules for Description
 
 	// no validation rules for Notes
+
+	// no validation rules for CreateBy
+
+	// no validation rules for UpdateBy
+
+	// no validation rules for Message
 
 	if len(errors) > 0 {
 		return ReleaseDetailMultiError(errors)

@@ -29,8 +29,16 @@ const (
 	FieldKeyUsername       = "username"
 	FieldKeyPassword       = "password"
 
+	FieldKeyChartName    = "chartName"
+	FieldKeyChartVersion = "chartVersion"
+	FieldKeyValues       = "values"
+	FieldKeyArgs         = "args"
+
 	FieldKeyCreateBy   = "createBy"
 	FieldKeyUpdateBy   = "updateBy"
 	FieldKeyCreateTime = "createTime"
 	FieldKeyUpdateTime = "updateTime"
+
+	FieldKeyStatus  = "status"
+	FieldKeyMessage = "message"
 )

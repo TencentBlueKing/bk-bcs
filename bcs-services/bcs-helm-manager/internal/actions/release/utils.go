@@ -15,11 +15,17 @@ package release
 import (
 	"context"
 	"strconv"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/release"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/repo"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/store"
+	helmmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/proto/bcs-helm-manager"
+)
+
+const (
+	releaseDefaultTimeout = 10 * time.Minute
 )
 
 func getChartContent(model store.HelmManagerModel, platform repo.Platform,
@@ -109,9 +115,35 @@ func upgradeRelease(releaseHandler release.Handler, projectID, clusterID, releas
 				common.PTKProjectID: projectID,
 				common.PTKClusterID: clusterID,
 				common.PTKNamespace: releaseNamespace,
+				common.PTKCreator:   username,
 				common.PTKUpdator:   username,
 				common.PTKVersion:   version,
 			},
 			VarTemplateValues: bcsSysVar,
 		})
+}
+
+// ReleasesSortByUpdateTime sort releases by update time
+type ReleasesSortByUpdateTime []*helmmanager.Release
+
+func (r ReleasesSortByUpdateTime) Len() int { return len(r) }
+func (r ReleasesSortByUpdateTime) Less(i, j int) bool {
+	return r[i].GetUpdateTime() > r[j].GetUpdateTime()
+}
+func (r ReleasesSortByUpdateTime) Swap(i, j int) { r[i], r[j] = r[j], r[i] }
+
+func filterIndex(offset, limit int, release []*helmmanager.Release) []*helmmanager.Release {
+	if offset >= len(release) {
+		return nil
+	}
+
+	if limit < 0 {
+		limit = 0
+	}
+
+	if offset+limit > len(release) {
+		return release[offset:]
+	}
+
+	return release[offset : offset+limit]
 }

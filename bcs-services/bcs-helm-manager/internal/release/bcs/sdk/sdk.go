@@ -245,6 +245,7 @@ func (c *client) Upgrade(_ context.Context, config release.HelmUpgradeConfig) (*
 	upgrader := action.NewUpgrade(conf)
 	upgrader.DryRun = config.DryRun
 	upgrader.Namespace = config.Namespace
+	upgrader.Install = true
 	upgrader.PostRenderer = newPatcher(c.group.config.PatchTemplates, config.PatchTemplateValues)
 	if err := parseArgs4Upgrade(upgrader, config.Args); err != nil {
 		blog.Errorf("sdk client upgrade and parse from args failed, %s, args: %v", err.Error(), config.Args)

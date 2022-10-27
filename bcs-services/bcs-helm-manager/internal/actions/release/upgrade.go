@@ -151,8 +151,7 @@ func (u *UpgradeReleaseAction) getContent() ([]byte, error) {
 }
 
 func (u *UpgradeReleaseAction) saveDB(revision int) error {
-	if err := u.model.DeleteRelease(u.ctx, u.req.GetClusterID(), u.req.GetNamespace(), u.req.GetName(),
-		revision); err != nil {
+	if err := u.model.DeleteRelease(u.ctx, u.req.GetClusterID(), u.req.GetNamespace(), u.req.GetName()); err != nil {
 		return err
 	}
 	if err := u.model.CreateRelease(u.ctx, &entity.Release{

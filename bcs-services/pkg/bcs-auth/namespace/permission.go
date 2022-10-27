@@ -277,7 +277,7 @@ func (bnp *BCSNamespacePerm) CanUpdateNamespace(user, projectID, clusterID, name
 	// check namespace resource perms
 	allow, err := utils.CheckResourcePerms(utils.CheckResourceRequest{
 		Module:    BCSNamespaceModule,
-		Operation: CanManageNamespaceOperation,
+		Operation: CanUpdateNamespaceOperation,
 		User:      user,
 	}, resources, perms)
 	if err != nil {
@@ -500,7 +500,7 @@ func (bnp *BCSNamespacePerm) CanViewNamespaceScopedResource(user, projectID, clu
 	// check namespace resource perms
 	allow, err := utils.CheckResourcePerms(utils.CheckResourceRequest{
 		Module:    BCSNamespaceModule,
-		Operation: CanCreateNamespaceScopedResourceOperation,
+		Operation: CanViewNamespaceScopedResourceOperation,
 		User:      user,
 	}, resources, perms)
 	if err != nil {
@@ -582,7 +582,7 @@ func (bnp *BCSNamespacePerm) CanUpdateNamespaceScopedResource(user, projectID, c
 	// check namespace resource perms
 	allow, err := utils.CheckResourcePerms(utils.CheckResourceRequest{
 		Module:    BCSNamespaceModule,
-		Operation: CanCreateNamespaceScopedResourceOperation,
+		Operation: CanUpdateNamespaceScopedResourceOperation,
 		User:      user,
 	}, resources, perms)
 	if err != nil {
@@ -664,7 +664,7 @@ func (bnp *BCSNamespacePerm) CanDeleteNamespaceScopedResource(user, projectID, c
 	// check namespace resource perms
 	allow, err := utils.CheckResourcePerms(utils.CheckResourceRequest{
 		Module:    BCSNamespaceModule,
-		Operation: CanCreateNamespaceScopedResourceOperation,
+		Operation: CanDeleteNamespaceScopedResourceOperation,
 		User:      user,
 	}, resources, perms)
 	if err != nil {

@@ -89,7 +89,7 @@ func (u *UninstallReleaseAction) uninstall() error {
 	}
 
 	// 删掉所有revision的数据
-	_ = u.model.DeleteReleases(u.ctx, clusterID, releaseNamespace, releaseName)
+	_ = u.model.DeleteRelease(u.ctx, clusterID, releaseNamespace, releaseName)
 
 	blog.Infof("uninstall release successfully, clusterID: %s, namespace: %s, name: %s, operator: %s",
 		clusterID, releaseNamespace, releaseName, username)

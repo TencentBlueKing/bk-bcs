@@ -139,14 +139,14 @@ func (md *ModuleDiscovery) watchRegistry(w registry.Watcher) error {
 		}
 		blog.V(5).Infof("get services %v", svcs)
 
-		if md.handler == nil {
-			blog.Warnf("event handler for discovery service module %s is empty", md.module)
-			continue
-		}
 		md.Lock()
 		md.curServices = svcs
 		md.Unlock()
-		md.handler(svcs)
+
+		if md.handler != nil {
+			blog.Infof("event handler update discovery service module %s", md.module)
+			md.handler(svcs)
+		}
 	}
 	return nil
 }

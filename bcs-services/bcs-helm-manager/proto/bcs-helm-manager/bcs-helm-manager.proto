@@ -1431,6 +1431,18 @@ message Release {
         title: "chartVersion",
         description: "chart的版本"
     }];
+    optional string createBy = 9[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "createBy",
+        description: "创建者"
+    }];
+    optional string updateBy = 10[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "updateBy",
+        description: "更新者"
+    }];
+    optional string message = 11[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "message",
+        description: "报错消息"
+    }];
 }
 
 message ReleaseDetail {
@@ -1481,6 +1493,18 @@ message ReleaseDetail {
     repeated string args = 12[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "args",
         description: "当前revision部署时的 helm 参数"
+    }];
+    optional string createBy = 13[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "createBy",
+        description: "创建者"
+    }];
+    optional string updateBy = 14[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "updateBy",
+        description: "更新者"
+    }];
+    optional string message = 15[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "message",
+        description: "报错消息"
     }];
 }
 

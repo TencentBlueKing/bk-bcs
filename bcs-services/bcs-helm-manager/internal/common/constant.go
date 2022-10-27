@@ -12,6 +12,8 @@
 
 package common
 
+import "helm.sh/helm/v3/pkg/release"
+
 const (
 	// ServiceDomain domain name for service
 	ServiceDomain = "helmmanager.bkbcs.tencent.com"
@@ -21,4 +23,16 @@ const (
 
 	// TimeFormat time format YYYY-mm-dd HH:MM:SS
 	TimeFormat = "2006-01-02 15:04:05"
+)
+
+// ReleaseStatus
+const (
+	// ReleaseStatusInstallFailed xxx
+	ReleaseStatusInstallFailed release.Status = "failed-install"
+	// ReleaseStatusUpgradeFailed xxx
+	ReleaseStatusUpgradeFailed release.Status = "failed-upgrade"
+	// ReleaseStatusRollbackFailed xxx
+	ReleaseStatusRollbackFailed release.Status = "failed-rollback"
+	// ReleaseStatusUninstallFailed xxx
+	ReleaseStatusUninstallFailed release.Status = "failed-uninstall"
 )

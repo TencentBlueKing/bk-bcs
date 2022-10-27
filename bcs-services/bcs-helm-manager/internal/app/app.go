@@ -20,10 +20,12 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"os/signal"
 	"path"
 	"path/filepath"
 	"strconv"
 	"strings"
+	"syscall"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -49,6 +51,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/component/project"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/discovery"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/handler"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/operation"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/release"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/release/bcs"
@@ -134,6 +137,19 @@ func (hm *HelmManager) Run() error {
 	}
 	blog.CloseLogs()
 	return nil
+}
+
+// RegistryStop registry stop signal
+func (hm *HelmManager) RegistryStop() {
+	go func() {
+		// listening OS shutdown singal
+		signalChan := make(chan os.Signal, 1)
+		signal.Notify(signalChan, syscall.SIGINT, syscall.SIGTERM)
+		<-signalChan
+		blog.Infof("Got OS shutdown signal, shutting down bcs-helm-manager server gracefully...")
+
+		hm.ctxCancelFunc()
+	}()
 }
 
 // initModel decode the connection info from the config and init a new store.HelmManagerModel
@@ -313,6 +329,14 @@ func (hm *HelmManager) initMicro() error {
 			hm.discovery.Stop()
 			return nil
 		}),
+		microSvc.AfterStop(func() error {
+			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+			defer cancel()
+			hm.httpServer.Shutdown(ctx)
+			operation.GlobalOperator.TerminateOperation()
+			operation.GlobalOperator.WaitTerminate(ctx, time.Second)
+			return nil
+		}),
 		microSvc.WrapHandler(
 			wrapper.RequestIDWrapper,
 			authWrapper.AuthenticationFunc,
@@ -410,6 +434,8 @@ func (hm *HelmManager) initMetric() error {
 			hm.stopCh <- struct{}{}
 		}
 	}()
+
+	operation.GlobalOperator.ReportOperatorCount()
 	return nil
 }
 

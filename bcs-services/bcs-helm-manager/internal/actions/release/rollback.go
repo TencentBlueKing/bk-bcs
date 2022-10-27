@@ -121,20 +121,17 @@ func (r *RollbackReleaseAction) rollback() error {
 }
 
 func (r *RollbackReleaseAction) saveDB(targetRevision, currentRevision int) error {
-	rl, err := r.model.GetRelease(r.ctx, r.req.GetClusterID(), r.req.GetNamespace(), r.req.GetName(),
-		targetRevision)
+	rl, err := r.model.GetRelease(r.ctx, r.req.GetClusterID(), r.req.GetNamespace(), r.req.GetName())
 	if err != nil {
 		return err
 	}
 
-	if err = r.model.DeleteRelease(r.ctx, r.req.GetClusterID(), r.req.GetNamespace(), r.req.GetName(),
-		currentRevision); err != nil {
+	if err = r.model.DeleteRelease(r.ctx, r.req.GetClusterID(), r.req.GetNamespace(), r.req.GetName()); err != nil {
 		return err
 	}
 
 	rl.CreateBy = auth.GetUserFromCtx(r.ctx)
 	rl.Revision = currentRevision
-	rl.RollbackTo = targetRevision
 	return r.model.CreateRelease(r.ctx, rl)
 }
 

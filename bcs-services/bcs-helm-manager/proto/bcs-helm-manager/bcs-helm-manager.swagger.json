@@ -2661,6 +2661,21 @@
           "type": "string",
           "description": "chart的版本",
           "title": "chartVersion"
+        },
+        "createBy": {
+          "type": "string",
+          "description": "创建者",
+          "title": "createBy"
+        },
+        "updateBy": {
+          "type": "string",
+          "description": "更新者",
+          "title": "updateBy"
+        },
+        "message": {
+          "type": "string",
+          "description": "报错消息",
+          "title": "message"
         }
       }
     },
@@ -2733,6 +2748,21 @@
           },
           "description": "当前revision部署时的 helm 参数",
           "title": "args"
+        },
+        "createBy": {
+          "type": "string",
+          "description": "创建者",
+          "title": "createBy"
+        },
+        "updateBy": {
+          "type": "string",
+          "description": "更新者",
+          "title": "updateBy"
+        },
+        "message": {
+          "type": "string",
+          "description": "报错消息",
+          "title": "message"
         }
       }
     },

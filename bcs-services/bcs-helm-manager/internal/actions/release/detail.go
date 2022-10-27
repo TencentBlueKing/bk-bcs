@@ -81,7 +81,7 @@ func (g *GetReleaseDetailAction) getDetail() error {
 	}
 
 	detail := rl.Transfer2DetailProto()
-	storedRelease, err := g.model.GetRelease(g.ctx, clusterID, namespace, name, int(detail.GetRevision()))
+	storedRelease, err := g.model.GetRelease(g.ctx, clusterID, namespace, name)
 	if err != nil {
 		blog.Warnf("get release detail from store failed, %s, "+
 			"clusterID: %s namespace: %s, name: %s, revision: %d",

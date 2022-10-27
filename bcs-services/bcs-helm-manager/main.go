@@ -153,6 +153,7 @@ func main() {
 	if err := helmManager.Init(); err != nil {
 		blog.Fatalf("init helm manager failed, %s", err.Error())
 	}
+	helmManager.RegistryStop()
 
 	if err := helmManager.Run(); err != nil {
 		blog.Fatalf("run helm manager failed, %s", err.Error())

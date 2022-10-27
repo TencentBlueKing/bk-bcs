@@ -49,18 +49,18 @@ type HelmManagerModel interface {
 	// CreateRelease 创建一个release
 	CreateRelease(ctx context.Context, release *entity.Release) error
 
-	// GetRelease 精确到revision, 获取一个release
-	GetRelease(ctx context.Context, clusterID, namespace, name string, revision int) (*entity.Release, error)
+	// UpdateRelease 更新一个release
+	UpdateRelease(ctx context.Context, clusterID, namespace, name string, release entity.M) error
+
+	// GetRelease 获取一个release
+	GetRelease(ctx context.Context, clusterID, namespace, name string) (*entity.Release, error)
 
 	// ListRelease 根据条件查询仓库列表
 	// 其中分页配置详见 utils.ListOption, 采用 page + size 的模式
 	ListRelease(ctx context.Context, cond *operator.Condition, opt *utils.ListOption) (int64, []*entity.Release, error)
 
 	// DeleteRelease 删除对应revision的release
-	DeleteRelease(ctx context.Context, clusterID, namespace, name string, revision int) error
-
-	// DeleteReleases 删除指定clusterID-namespace-name下的所有revision
-	DeleteReleases(ctx context.Context, clusterID, namespace, name string) error
+	DeleteRelease(ctx context.Context, clusterID, namespace, name string) error
 }
 
 type modelSet struct {

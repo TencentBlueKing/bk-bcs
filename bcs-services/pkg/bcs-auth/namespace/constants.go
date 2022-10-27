@@ -19,21 +19,19 @@ const (
 
 	// CanCreateNamespaceOperation createNamespace perm
 	CanCreateNamespaceOperation = "CanCreateNamespace"
-	// CanManageNamespaceOperation manageNamespace perm
-	CanManageNamespaceOperation = "CanManageNamespace"
 	// CanViewNamespaceOperation viewNamespace perm
 	CanViewNamespaceOperation = "CanViewNamespace"
 	// CanDeleteNamespaceOperation deleteNamespace perm
 	CanDeleteNamespaceOperation = "CanDeleteNamespace"
 	// CanListNamespaceOperation ListNamespace perm
 	CanListNamespaceOperation = "CanListNamespace"
-	// CanUseNamespaceOperation useNamespace perm
-	CanUseNamespaceOperation = "CanUseNamespace"
+	// CanUpdateNamespaceOperation updateNamespace perm
+	CanUpdateNamespaceOperation = "CanUpdateNamespace"
 
 	// CanCreateNamespaceScopedResourceOperation createNamespaceScopedResource perm
 	CanCreateNamespaceScopedResourceOperation = "CanCreateNamespaceScopedResource"
-	// CanManageNamespaceScopedResourceOperation manageNamespaceScopedResource perm
-	CanManageNamespaceScopedResourceOperation = "CanManageNamespaceScopedResource"
+	// CanUpdateNamespaceScopedResourceOperation updateNamespaceScopedResource perm
+	CanUpdateNamespaceScopedResourceOperation = "CanUpdateNamespaceScopedResource"
 	// CanViewNamespaceScopedResourceOperation viewNamespaceScopedResource perm
 	CanViewNamespaceScopedResourceOperation = "CanViewNamespaceScopedResource"
 	// CanDeleteNamespaceScopedResourceOperation deleteNamespaceScopedResource perm

@@ -173,7 +173,7 @@ func (c *Cluster) buildNamespaceListScope() iam.AuthorizationScope {
 
 func (c *Cluster) buildNamespaceOtherScope() iam.AuthorizationScope {
 	return iam.BuildAuthorizationScope(namespace.SysNamespace, []iam.ActionID{
-		namespace.NameSpaceDelete, namespace.NameSpaceUpdate, namespace.NameSpaceUse, namespace.NameSpaceView,
+		namespace.NameSpaceDelete, namespace.NameSpaceUpdate, namespace.NameSpaceView,
 	}, []iam.LevelResource{
 		iam.LevelResource{
 			Type: string(project.SysProject),

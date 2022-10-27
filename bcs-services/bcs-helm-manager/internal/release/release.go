@@ -58,6 +58,9 @@ type Release struct {
 
 // Transfer2Proto transfer the data into protobuf struct
 func (r *Release) Transfer2Proto() *helmmanager.Release {
+	if r == nil {
+		return nil
+	}
 	return &helmmanager.Release{
 		Name:         common.GetStringP(r.Name),
 		Namespace:    common.GetStringP(r.Namespace),
@@ -72,6 +75,9 @@ func (r *Release) Transfer2Proto() *helmmanager.Release {
 
 // Transfer2DetailProto transfer the data into detail protobuf struct
 func (r *Release) Transfer2DetailProto() *helmmanager.ReleaseDetail {
+	if r == nil {
+		return nil
+	}
 	return &helmmanager.ReleaseDetail{
 		Name:         common.GetStringP(r.Name),
 		Namespace:    common.GetStringP(r.Namespace),
@@ -89,6 +95,9 @@ func (r *Release) Transfer2DetailProto() *helmmanager.ReleaseDetail {
 
 // Transfer2HistoryProto transfer the data into history protobuf struct
 func (r *Release) Transfer2HistoryProto() *helmmanager.ReleaseHistory {
+	if r == nil {
+		return nil
+	}
 	return &helmmanager.ReleaseHistory{
 		Revision:     common.GetUint32P(uint32(r.Revision)),
 		Name:         common.GetStringP(r.Name),

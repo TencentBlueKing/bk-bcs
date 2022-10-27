@@ -153,7 +153,7 @@ func (i *InstallReleaseAction) getContent() ([]byte, error) {
 
 func (i *InstallReleaseAction) saveDB(revision int) error {
 	// 首先先删掉所有revision的数据，因为是安装操作，所以以前的数据都不需要了
-	if err := i.model.DeleteReleases(i.ctx, i.req.GetClusterID(), i.req.GetNamespace(), i.req.GetName()); err != nil {
+	if err := i.model.DeleteRelease(i.ctx, i.req.GetClusterID(), i.req.GetNamespace(), i.req.GetName()); err != nil {
 		return err
 	}
 	if err := i.model.CreateRelease(i.ctx, &entity.Release{
