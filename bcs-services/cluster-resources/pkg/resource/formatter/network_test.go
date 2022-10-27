@@ -187,7 +187,8 @@ func TestFormatIng(t *testing.T) {
 	assert.Equal(t, excepted, ret["rules"])
 	assert.Equal(t, resCsts.IngClsQCloud, ret["controller"])
 	assert.Equal(t, resCsts.CLBUseTypeUseExists, ret["clbUseType"])
-	assert.Equal(t, "lb-c5xxxxd7", ret["existLBID"])
+	assert.Equal(t, "lb-c5xxxxd6", ret["existLBID"])
+	assert.Equal(t, "lb-c5xxxxd7", ret["clbID"])
 	assert.Equal(t, "subnet-a3xxxxb4", ret["subNetID"])
 	assert.Equal(t, true, ret["autoRewrite"])
 }
@@ -202,7 +203,7 @@ var lightSVCManifest = map[string]interface{}{
 		},
 	},
 	"spec": map[string]interface{}{
-		"clusterIP": "127.0.0.1",
+		"clusterIP": "127.0.0.2",
 		"clusterIPs": []interface{}{
 			"127.0.0.2",
 			"::7f00:0001",
@@ -252,6 +253,7 @@ func TestFormatSVC(t *testing.T) {
 	assert.Equal(t, []string{"127.0.0.1", "localhost", "127.0.0.2", "127.0.0.3"}, ret["externalIP"])
 	assert.Equal(t, []string{"8080:30600/TCP", "8090/TCP"}, ret["ports"])
 	assert.Equal(t, "lb-c5xxxxd7", ret["clbID"])
+	assert.Equal(t, "lb-c5xxxxd6", ret["existLBID"])
 	assert.Equal(t, "subnet-a3xxxxb4", ret["subnetID"])
 	assert.Equal(t, int64(0), ret["stickyTime"])
 	assert.Equal(t, "127.0.0.2", ret["clusterIPv4"])

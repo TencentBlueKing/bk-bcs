@@ -97,7 +97,7 @@ var runningPodManifest1 = map[string]interface{}{
 	},
 	"status": map[string]interface{}{
 		"phase": "Running",
-		"podIP": "127.0.0.1",
+		"podIP": "127.0.0.2",
 		"podIPs": []interface{}{
 			map[string]interface{}{
 				"ip": "127.0.0.2",

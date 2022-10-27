@@ -226,7 +226,8 @@ cert:
   properties:
     autoRewriteHttp:
       type: boolean
-      title: {{ i18n "重定向 HTTP 端口到 HTTPS" .lang }}
+      title: {{ i18n "开启自动重定向" .lang }}
+      description: {{ i18n "自动重定向：用户需要先创建出一个 HTTPS:443 监听器，并在其下创建转发规则。通过调用该接口，系统会自动创建出一个 HTTP:80 监听器（如果之前不存在），并在其下创建转发规则，与 HTTPS:443 监听器下的域名等各种配置对应。" .lang | quote }}
       ui:props:
         labelWidth: 350
     tls:

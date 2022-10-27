@@ -592,8 +592,10 @@
   en: DefaultBackend
 - msgID: "控制器类型 qcloud 暂时不支持配置默认后端"
   en: "controller type qcloud does not currently support configuring the default backend"
-- msgID: "重定向 HTTP 端口到 HTTPS"
-  en: "Auto rewrite http ports to https"
+- msgID: 开启自动重定向
+  en: "Enable automatic redirection"
+- msgID: "自动重定向：用户需要先创建出一个 HTTPS:443 监听器，并在其下创建转发规则。通过调用该接口，系统会自动创建出一个 HTTP:80 监听器（如果之前不存在），并在其下创建转发规则，与 HTTPS:443 监听器下的域名等各种配置对应。"
+  en: "Automatic redirection: The user needs to create an HTTPS:443 listener first, and create a forwarding rule under it. By calling this interface, the system will automatically create an HTTP:80 listener (if it does not exist before), and create a forwarding rule under it, corresponding to various configurations such as the domain name under the HTTPS:443 listener."
 - msgID: 端口配置
   en: PortConfig
 - msgID: 负载均衡器

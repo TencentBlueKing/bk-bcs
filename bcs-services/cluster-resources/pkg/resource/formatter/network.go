@@ -48,13 +48,13 @@ func FormatIng(manifest map[string]interface{}) map[string]interface{} {
 	// 控制器
 	ret["controller"] = mapx.Get(annotations, []string{resCsts.IngClsAnnoKey}, resCsts.IngClsNginx).(string)
 
-	// 绑定的 CLB ID，qcloud 类型的 ingress 会取实际使用的，其他类型的取默认指定的
-	existLBIDPaths := []string{resCsts.IngExistLBIDAnnoKey}
+	lbIDPaths := []string{resCsts.IngExistLBIDAnnoKey}
+	ret["existLBID"] = mapx.GetStr(annotations, lbIDPaths)
+	// 实际绑定的 CLB ID，qcloud 类型的 ingress 会取实际使用的，其他类型的取默认指定的
 	if ret["controller"] == resCsts.IngClsQCloud {
-		existLBIDPaths = []string{resCsts.IngQcloudCurLBIDAnnoKey}
+		lbIDPaths = []string{resCsts.IngQcloudCurLBIDAnnoKey}
 	}
-	ret["existLBID"] = mapx.GetStr(annotations, existLBIDPaths)
-
+	ret["clbID"] = mapx.GetStr(annotations, lbIDPaths)
 	// 内网子网 ID
 	ret["subNetID"] = mapx.GetStr(annotations, []string{resCsts.IngSubNetIDAnnoKey})
 
@@ -74,8 +74,22 @@ func FormatSVC(manifest map[string]interface{}) map[string]interface{} {
 	ret := FormatNetworkRes(manifest)
 	ret["externalIP"] = parseSVCExternalIPs(manifest)
 	ret["ports"] = parseSVCPorts(manifest)
-	ret["clbID"] = mapx.GetStr(manifest, []string{"metadata", "annotations", resCsts.SVCCurLBIDAnnoKey})
-	ret["subnetID"] = mapx.GetStr(manifest, []string{"metadata", "annotations", resCsts.SVCSubNetIDAnnoKey})
+
+	annotations := mapx.GetMap(manifest, "metadata.annotations")
+	// 实际绑定的 clb id
+	ret["clbID"] = mapx.GetStr(annotations, []string{resCsts.SVCCurLBIDAnnoKey})
+	// 创建时候指定的已存在的 clb id
+	ret["existLBID"] = mapx.GetStr(annotations, []string{resCsts.SVCExistLBIDAnnoKey})
+	// 创建时候指定的内网子网 id
+	ret["subnetID"] = mapx.GetStr(annotations, []string{resCsts.SVCSubNetIDAnnoKey})
+
+	// CLB 使用方式，如果已指定 clb，则使用模式为使用已存在的 clb，否则为自动创建新 clb
+	if ret["existLBID"] != "" {
+		ret["clbUseType"] = resCsts.CLBUseTypeUseExists
+	} else {
+		ret["clbUseType"] = resCsts.CLBUseTypeAutoCreate
+	}
+
 	ret["stickyTime"] = mapx.GetInt64(manifest, "spec.sessionAffinityConfig.clientIP.timeoutSeconds")
 
 	clusterIPSet := set.NewStringSet()
