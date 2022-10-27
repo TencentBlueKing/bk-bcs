@@ -45,7 +45,7 @@
                 <!-- Addresses and notReadyAddresses -->
                 <p class="detail-title">Addresses</p>
                 <bk-table
-                  :data="item.addresses
+                  :data="(item.addresses || [])
                     .map(item => ({
                       ...item,
                       status: 'normal'
@@ -123,9 +123,9 @@ export default defineComponent({
   },
   setup(props) {
     const { data } = toRefs(props);
-    const activeCollapseName = ref(data.value.subsets.map((_, index) => String(index)));
+    const activeCollapseName = ref(data.value.subsets?.map((_, index) => String(index)));
     watch(data, () => {
-      activeCollapseName.value = data.value.subsets.map((_, index) => String(index));
+      activeCollapseName.value = data.value.subsets?.map((_, index) => String(index) || []);
     });
     const handleTransformObjToArr = (obj) => {
       if (!obj) return [];

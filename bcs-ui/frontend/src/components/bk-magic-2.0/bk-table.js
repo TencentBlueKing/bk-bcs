@@ -38,7 +38,10 @@ export default {
       });
 
     // 兼容旧分页参数
-    let pagination;
+    let pagination = {
+      ...(this.$props.pagination || {}),
+      showTotalCount: true,
+    };
     if (!this.$props.pagination && this.$props.pageParams) {
       pagination = Object.assign({}, this.$props.pageParams, {
         count: this.$props.pageParams.allCount || this.$props.pageParams.total,
