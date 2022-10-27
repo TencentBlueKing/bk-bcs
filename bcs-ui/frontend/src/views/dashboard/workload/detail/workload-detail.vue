@@ -244,7 +244,7 @@
             <bk-table-column label="Value" prop="value"></bk-table-column>
           </bk-table>
         </bcs-tab-panel>
-        <bcs-tab-panel name="selector" label="Selector" v-if="['deployments', 'statefulsets'].includes(category)">
+        <bcs-tab-panel name="selector" :label="$t('选择器')" v-if="['deployments', 'statefulsets'].includes(category)">
           <bk-table :data="selectors">
             <bk-table-column label="Key" prop="key"></bk-table-column>
             <bk-table-column label="Value" prop="value"></bk-table-column>

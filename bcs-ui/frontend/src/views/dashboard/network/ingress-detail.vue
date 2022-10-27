@@ -39,15 +39,19 @@
       </div>
       <div class="basic-info-item">
         <label>{{ $t('CLB 使用方式') }}</label>
-        <span>{{ extData.clbUseType === 'useExists' ? $t('使用已有') : $t('自动创建') || '--' }}</span>
+        <span>{{ extData.clbUseType === 'useExists' ? $t('使用已有') : $t('自动创建') }}</span>
       </div>
       <div class="basic-info-item">
         <label>CLB ID</label>
-        <span>{{ extData.existLBID || '--' }}</span>
+        <span>{{ extData.clbID || '--' }}</span>
       </div>
       <div class="basic-info-item">
         <label>{{ $t('内网子网 ID') }}</label>
         <span>{{ extData.subNetID || '--' }}</span>
+      </div>
+      <div class="basic-info-item">
+        <label>{{ $t('是否开启自动重定向') }}</label>
+        <span>{{ extData.autoRewrite ? $t('是') : $t('否') }}</span>
       </div>
     </div>
     <!-- 配置、标签、注解 -->
@@ -61,11 +65,10 @@
         </bk-table>
       </bcs-tab-panel>
       <bcs-tab-panel name="tls" :label="$t('证书')">
-        <p class="detail-title">{{ extData.autoRewrite ? $t('已开启HTTP重定向') : $t('未开启HTTP重定向') }}</p>
         <bk-table :data="data.spec.tls" class="mb20">
           <bk-table-column label="Hosts" prop="hosts">
             <template #default="{ row }">
-              {{ (row.hosts || []).join(', ') }}
+              {{ (row.hosts || []).join(', ') || '--' }}
             </template>
           </bk-table-column>
           <bk-table-column label="SecretName" prop="secretName"></bk-table-column>

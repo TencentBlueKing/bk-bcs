@@ -46,11 +46,15 @@
         </template>
       </div>
       <div class="basic-info-item">
-        <label>{{$t('CLB实例ID')}}</label>
+        <label>{{ $t('CLB 使用方式') }}</label>
+        <span>{{ extData.clbUseType === 'useExists' ? $t('使用已有') : $t('自动创建') }}</span>
+      </div>
+      <div class="basic-info-item">
+        <label>CLB ID</label>
         <span>{{ extData.clbID || '--' }}</span>
       </div>
       <div class="basic-info-item">
-        <label>{{$t('内部子网ID')}}</label>
+        <label>{{$t('内网子网 ID')}}</label>
         <span>{{ extData.subnetID || '--' }}</span>
       </div>
       <div class="basic-info-item">

@@ -32,13 +32,13 @@
             :key="index"
             hide-arrow
             class="mb-[16px]">
-            <div class="flex items-center rounded-sm bg-[#f5f7fa] px-3.5 text-[#313238]">
+            <div class="flex items-center rounded-sm bg-[#f5f7fa] px-3.5 text-[#313238] font-bold">
               <i
                 class="bk-icon icon-down-shape !text-base mr-[5px] transition-all"
                 :style="{
                   transform: activeCollapseName.includes(String(index)) ? 'rotate(0deg)' : 'rotate(-90deg)',
                 }"></i>
-              {{ `subset ${index + 1}` }}
+              {{ `SubSet ${index + 1}` }}
             </div>
             <template #content>
               <div class="px-[16px] pt-[16px]">
@@ -103,7 +103,7 @@
   </div>
 </template>
 <script lang="ts">
-import { defineComponent, ref } from '@vue/composition-api';
+import { defineComponent, ref, toRefs, watch } from '@vue/composition-api';
 import StatusIcon from '@/views/dashboard/common/status-icon';
 
 export default defineComponent({
@@ -121,8 +121,12 @@ export default defineComponent({
       default: () => ({}),
     },
   },
-  setup() {
-    const activeCollapseName = ref(['0']);
+  setup(props) {
+    const { data } = toRefs(props);
+    const activeCollapseName = ref(data.value.subsets.map((_, index) => String(index)));
+    watch(data, () => {
+      activeCollapseName.value = data.value.subsets.map((_, index) => String(index));
+    });
     const handleTransformObjToArr = (obj) => {
       if (!obj) return [];
 
