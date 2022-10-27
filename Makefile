@@ -291,7 +291,7 @@ webconsole:pre
 monitor:pre
 	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-monitor
 	cp -R ${BCS_CONF_SERVICES_PATH}/bcs-monitor ${PACKAGEPATH}/bcs-services
-	cd bcs-services/bcs-monitor/ && go mod tidy && CGO_ENABLED=0 go build -trimpath ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-monitor/bcs-monitor ./cmd/bcs-monitor
+	cd bcs-services/bcs-monitor/ && go mod tidy -compat=1.17 && CGO_ENABLED=0 go build -trimpath ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-monitor/bcs-monitor ./cmd/bcs-monitor
 
 k8s-watch:pre
 	mkdir -p ${PACKAGEPATH}/bcs-services
