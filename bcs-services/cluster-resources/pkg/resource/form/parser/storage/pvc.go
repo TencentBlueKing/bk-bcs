@@ -17,6 +17,7 @@ package storage
 import (
 	"github.com/fatih/structs"
 
+	resCsts "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/constants"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/model"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/parser/common"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/parser/util"
@@ -33,11 +34,11 @@ func ParsePVC(manifest map[string]interface{}) map[string]interface{} {
 
 // ParsePVCSpec ...
 func ParsePVCSpec(manifest map[string]interface{}, spec *model.PVCSpec) {
-	spec.ClaimType = PVCTypeUseExistPV
+	spec.ClaimType = resCsts.PVCTypeUseExistPV
 	spec.PVName = mapx.GetStr(manifest, "spec.volumeName")
 	// 如果没有指定 PVName，则认为是要根据 StorageClass 创建
 	if spec.PVName == "" {
-		spec.ClaimType = PVCTypeCreateBySC
+		spec.ClaimType = resCsts.PVCTypeCreateBySC
 	}
 
 	spec.SCName = mapx.GetStr(manifest, "spec.storageClassName")

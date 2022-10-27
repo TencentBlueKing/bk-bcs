@@ -966,6 +966,17 @@ func (m *ResListReq) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
+	if utf8.RuneCountInString(m.GetScene()) > 32 {
+		err := ResListReqValidationError{
+			field:  "Scene",
+			reason: "value length must be at most 32 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
 	if len(errors) > 0 {
 		return ResListReqMultiError(errors)
 	}
@@ -2334,6 +2345,17 @@ func (m *PodResListReq) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
+	if utf8.RuneCountInString(m.GetScene()) > 32 {
+		err := PodResListReqValidationError{
+			field:  "Scene",
+			reason: "value length must be at most 32 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
 	if len(errors) > 0 {
 		return PodResListReqMultiError(errors)
 	}
@@ -3162,6 +3184,17 @@ func (m *CObjListReq) validate(all bool) error {
 		err := CObjListReqValidationError{
 			field:  "Format",
 			reason: "value must be in list [ manifest selectItems]",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetScene()) > 32 {
+		err := CObjListReqValidationError{
+			field:  "Scene",
+			reason: "value length must be at most 32 runes",
 		}
 		if !all {
 			return err
@@ -5742,6 +5775,17 @@ func (m *GetResSelectItemsReq) validate(all bool) error {
 		err := GetResSelectItemsReqValidationError{
 			field:  "Namespace",
 			reason: "value length must be between 1 and 128 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetScene()) > 32 {
+		err := GetResSelectItemsReqValidationError{
+			field:  "Scene",
+			reason: "value length must be at most 32 runes",
 		}
 		if !all {
 			return err

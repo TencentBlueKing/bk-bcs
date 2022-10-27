@@ -18,9 +18,8 @@ import (
 	"strings"
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/envs"
-	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
+	resCsts "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/constants"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/model"
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/parser/network"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/stringx"
 )
 
@@ -28,7 +27,7 @@ import (
 var IngV1 = model.Ing{
 	Metadata: model.Metadata{
 		APIVersion: "networking.k8s.io/v1",
-		Kind:       res.Ing,
+		Kind:       resCsts.Ing,
 		Name:       "ing-v1-" + strings.ToLower(stringx.Rand(10, "")),
 		Namespace:  envs.TestNamespace,
 		Labels: []model.Label{
@@ -39,7 +38,7 @@ var IngV1 = model.Ing{
 		},
 	},
 	Controller: model.IngController{
-		Type: network.IngClsQCloud,
+		Type: resCsts.IngClsQCloud,
 	},
 	Spec: model.IngSpec{
 		RuleConf: model.IngRuleConf{
@@ -69,17 +68,13 @@ var IngV1 = model.Ing{
 				},
 			},
 		},
-		DefaultBackend: model.IngDefaultBackend{
-			TargetSVC: "svc-4",
-			Port:      443,
-		},
 		Network: model.IngNetwork{
-			CLBUseType: network.CLBUseTypeUseExists,
+			CLBUseType: resCsts.CLBUseTypeUseExists,
 			ExistLBID:  "lb-abcd",
-			CLBType:    network.CLBTypeInternal,
 			SubNetID:   "subnet-12345",
 		},
 		Cert: model.IngCert{
+			AutoRewriteHTTP: true,
 			TLS: []model.IngTLS{
 				{
 					SecretName: "secret-test-12345",
@@ -97,7 +92,7 @@ var IngV1 = model.Ing{
 var IngV1beta1 = model.Ing{
 	Metadata: model.Metadata{
 		APIVersion: "extensions/v1beta1",
-		Kind:       res.Ing,
+		Kind:       resCsts.Ing,
 		Name:       "ing-v1beta1-" + strings.ToLower(stringx.Rand(10, "")),
 		Namespace:  envs.TestNamespace,
 		Labels: []model.Label{
@@ -124,9 +119,8 @@ var IngV1beta1 = model.Ing{
 			},
 		},
 		Network: model.IngNetwork{
-			CLBUseType: network.CLBUseTypeAutoCreate,
+			CLBUseType: resCsts.CLBUseTypeAutoCreate,
 			ExistLBID:  "",
-			CLBType:    network.CLBTypeExternal,
 			SubNetID:   "",
 		},
 		DefaultBackend: model.IngDefaultBackend{
@@ -151,7 +145,7 @@ var IngV1beta1 = model.Ing{
 var SVCComplex = model.SVC{
 	Metadata: model.Metadata{
 		APIVersion: "v1",
-		Kind:       res.SVC,
+		Kind:       resCsts.SVC,
 		Name:       "svc-complex-" + strings.ToLower(stringx.Rand(10, "")),
 		Namespace:  envs.TestNamespace,
 		Labels: []model.Label{
@@ -163,26 +157,31 @@ var SVCComplex = model.SVC{
 	},
 	Spec: model.SVCSpec{
 		PortConf: model.SVCPortConf{
-			Type: "ClusterIP",
+			Type: resCsts.SVCTypeLoadBalancer,
+			LB: model.SVCLB{
+				UseType:   resCsts.CLBUseTypeAutoCreate,
+				ExistLBID: "lb-12345",
+				SubNetID:  "subnet-id-1234",
+			},
 			Ports: []model.SVCPort{
 				{
 					Name:       "aaa",
 					Port:       80,
 					Protocol:   "TCP",
-					TargetPort: 8080,
+					TargetPort: "http",
 				},
 				{
 					Name:       "bbb",
 					Port:       81,
 					Protocol:   "TCP",
-					TargetPort: 8081,
+					TargetPort: "8081",
 					NodePort:   30000,
 				},
 				{
 					Name:       "ccc",
 					Port:       82,
-					Protocol:   "UDP",
-					TargetPort: 8082,
+					Protocol:   "TCP",
+					TargetPort: "8082",
 				},
 			},
 		},
@@ -195,7 +194,7 @@ var SVCComplex = model.SVC{
 			},
 		},
 		SessionAffinity: model.SessionAffinity{
-			Type:       network.SessionAffinityTypeClientIP,
+			Type:       resCsts.SessionAffinityTypeClientIP,
 			StickyTime: 10800,
 		},
 		IP: model.IPConf{
@@ -211,7 +210,7 @@ var SVCComplex = model.SVC{
 var EPComplex = model.EP{
 	Metadata: model.Metadata{
 		APIVersion: "v1",
-		Kind:       res.EP,
+		Kind:       resCsts.EP,
 		Name:       "ep-complex-" + strings.ToLower(stringx.Rand(10, "")),
 		Namespace:  envs.TestNamespace,
 		Labels: []model.Label{

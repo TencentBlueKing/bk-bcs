@@ -18,7 +18,7 @@ import (
 	"context"
 	"fmt"
 
-	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
+	resCsts "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/constants"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/example"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/pbstruct"
@@ -32,7 +32,7 @@ func (h *Handler) GetK8SResTemplate(
 ) (err error) {
 	// 不在列表里面的，则认为是自定义资源
 	if !slice.StringInSlice(req.Kind, example.HasDemoManifestResKinds) {
-		req.Kind = res.CObj
+		req.Kind = resCsts.CObj
 	}
 	conf, err := example.LoadResConf(ctx, req.Kind)
 	if err != nil {

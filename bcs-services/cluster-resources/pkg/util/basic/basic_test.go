@@ -12,26 +12,28 @@
  * limitations under the License.
  */
 
-package hpa
+package basic_test
 
-const (
-	// HPAMetricTypeRes TODO
-	HPAMetricTypeRes = "Resource"
-	// HPAMetricTypeContainerRes TODO
-	HPAMetricTypeContainerRes = "ContainerResource"
-	// HPAMetricTypeExternal TODO
-	HPAMetricTypeExternal = "External"
-	// HPAMetricTypeObject TODO
-	HPAMetricTypeObject = "Object"
-	// HPAMetricTypePod TODO
-	HPAMetricTypePod = "Pods"
+import (
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/basic"
 )
 
-const (
-	// HPATargetTypeUtilization TODO
-	HPATargetTypeUtilization = "Utilization"
-	// HPATargetTypeValue TODO
-	HPATargetTypeValue = "Value"
-	// HPATargetTypeAverageValue TODO
-	HPATargetTypeAverageValue = "AverageValue"
-)
+func TestMaxInt(t *testing.T) {
+	assert.Equal(t, 1, basic.MaxInt(1, 1))
+	assert.Equal(t, 2, basic.MaxInt(1, 2))
+	assert.Equal(t, 3, basic.MaxInt(3, 2))
+	assert.Equal(t, 0, basic.MaxInt(0, 0))
+	assert.Equal(t, 3, basic.MaxInt(-1, 3))
+}
+
+func TestMinInt(t *testing.T) {
+	assert.Equal(t, 1, basic.MinInt(1, 1))
+	assert.Equal(t, 1, basic.MinInt(1, 2))
+	assert.Equal(t, 2, basic.MinInt(3, 2))
+	assert.Equal(t, 0, basic.MinInt(0, 0))
+	assert.Equal(t, -1, basic.MinInt(-1, 3))
+}

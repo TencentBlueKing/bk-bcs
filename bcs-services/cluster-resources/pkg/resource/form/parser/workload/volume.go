@@ -17,7 +17,7 @@ package workload
 import (
 	"strconv"
 
-	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
+	resCsts "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/constants"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/model"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
 )
@@ -26,9 +26,9 @@ import (
 func ParseWorkloadVolume(manifest map[string]interface{}, volume *model.WorkloadVolume) {
 	prefix := "spec.template.spec."
 	switch mapx.GetStr(manifest, "kind") {
-	case res.CJ:
+	case resCsts.CJ:
 		prefix = "spec.jobTemplate.spec.template.spec."
-	case res.Po:
+	case resCsts.Po:
 		prefix = "spec."
 	}
 

@@ -20,10 +20,12 @@ import (
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action/perm"
 	resAction "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action/resource"
+	respUtil "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action/resp"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action/web"
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/featureflag"
-	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
+	resCsts "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/constants"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/pbstruct"
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
 )
 
@@ -39,15 +41,21 @@ func New() *Handler {
 func (h *Handler) ListCM(
 	ctx context.Context, req *clusterRes.ResListReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = resAction.NewResMgr(req.ClusterID, req.ApiVersion, res.CM).List(
-		ctx, req.Namespace, req.Format, metav1.ListOptions{LabelSelector: req.LabelSelector},
+	if err = perm.CheckNSAccess(ctx, req.ClusterID, req.Namespace); err != nil {
+		return err
+	}
+	respData, err := respUtil.BuildListAPIRespData(
+		ctx, respUtil.ListParams{
+			req.ClusterID, resCsts.CM, req.ApiVersion, req.Namespace, req.Format, req.Scene,
+		}, metav1.ListOptions{LabelSelector: req.LabelSelector},
 	)
 	if err != nil {
 		return err
 	}
-	resp.WebAnnotations, err = web.NewAnnos(
-		web.NewFeatureFlag(featureflag.FormCreate, false),
-	).ToPbStruct()
+	if resp.Data, err = pbstruct.Map2pbStruct(respData); err != nil {
+		return err
+	}
+	resp.WebAnnotations, err = web.GenListConfigWebAnnos(ctx, respData)
 	return err
 }
 
@@ -55,15 +63,21 @@ func (h *Handler) ListCM(
 func (h *Handler) GetCM(
 	ctx context.Context, req *clusterRes.ResGetReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = resAction.NewResMgr(req.ClusterID, req.ApiVersion, res.CM).Get(
-		ctx, req.Namespace, req.Name, req.Format, metav1.GetOptions{},
+	if err = perm.CheckNSAccess(ctx, req.ClusterID, req.Namespace); err != nil {
+		return err
+	}
+	respData, err := respUtil.BuildRetrieveAPIRespData(
+		ctx, respUtil.GetParams{
+			req.ClusterID, resCsts.CM, req.ApiVersion, req.Namespace, req.Name, req.Format,
+		}, metav1.GetOptions{},
 	)
 	if err != nil {
 		return err
 	}
-	resp.WebAnnotations, err = web.NewAnnos(
-		web.NewFeatureFlag(featureflag.FormUpdate, false),
-	).ToPbStruct()
+	if resp.Data, err = pbstruct.Map2pbStruct(respData); err != nil {
+		return err
+	}
+	resp.WebAnnotations, err = web.GenRetrieveConfigWebAnnos(ctx, respData)
 	return err
 }
 
@@ -71,7 +85,7 @@ func (h *Handler) GetCM(
 func (h *Handler) CreateCM(
 	ctx context.Context, req *clusterRes.ResCreateReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = resAction.NewResMgr(req.ClusterID, "", res.CM).Create(
+	resp.Data, err = resAction.NewResMgr(req.ClusterID, "", resCsts.CM).Create(
 		ctx, req.RawData, req.Format, true, metav1.CreateOptions{},
 	)
 	return err
@@ -81,7 +95,7 @@ func (h *Handler) CreateCM(
 func (h *Handler) UpdateCM(
 	ctx context.Context, req *clusterRes.ResUpdateReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = resAction.NewResMgr(req.ClusterID, "", res.CM).Update(
+	resp.Data, err = resAction.NewResMgr(req.ClusterID, "", resCsts.CM).Update(
 		ctx, req.Namespace, req.Name, req.RawData, req.Format, metav1.UpdateOptions{},
 	)
 	return err
@@ -91,7 +105,7 @@ func (h *Handler) UpdateCM(
 func (h *Handler) DeleteCM(
 	ctx context.Context, req *clusterRes.ResDeleteReq, _ *clusterRes.CommonResp,
 ) error {
-	return resAction.NewResMgr(req.ClusterID, "", res.CM).Delete(
+	return resAction.NewResMgr(req.ClusterID, "", resCsts.CM).Delete(
 		ctx, req.Namespace, req.Name, metav1.DeleteOptions{},
 	)
 }

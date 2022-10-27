@@ -12,7 +12,14 @@
  * limitations under the License.
  */
 
-package workload
+package constants
+
+// Volume2ResNameKeyMap Pod Volume 字段中，关联的资源类型与 NameKey 映射表
+var Volume2ResNameKeyMap = map[string]string{
+	PVC:    "claimName",
+	Secret: "secretName",
+	CM:     "name",
+}
 
 const (
 	// DefaultUpdateStrategy 默认更新策略

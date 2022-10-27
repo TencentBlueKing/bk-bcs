@@ -79,7 +79,7 @@ func FormatJob(manifest map[string]interface{}) map[string]interface{} {
 	return ret
 }
 
-// FormatPo xxx
+// FormatPo ...
 func FormatPo(manifest map[string]interface{}) map[string]interface{} {
 	ret := CommonFormatRes(manifest)
 	ret["images"] = parseContainerImages(manifest, "spec.containers")
@@ -103,21 +103,18 @@ func FormatPo(manifest map[string]interface{}) map[string]interface{} {
 	for _, item := range mapx.GetList(manifest, "status.podIPs") {
 		ip := item.(map[string]interface{})["ip"].(string)
 		podIPSet.Add(ip)
-
 	}
 
 	// 同时兼容 ipv4 / ipv6 集群
-	ret["podIPv4"] = ""
-	ret["podIPv6"] = ""
-	for _, podIP := range podIPSet.ToSlice() {
+	ret["podIPv4"], ret["podIPv6"] = "", ""
+	for _, ip := range podIPSet.ToSlice() {
 		switch {
-		case stringx.IsIPv4(podIP):
-			ret["podIPv4"] = podIP
-		case stringx.IsIPv6(podIP):
-			ret["podIPv6"] = podIP
+		case stringx.IsIPv4(ip):
+			ret["podIPv4"] = ip
+		case stringx.IsIPv6(ip):
+			ret["podIPv6"] = ip
 		}
 	}
-
 	return ret
 }
 
@@ -205,7 +202,7 @@ type PodStatusParser struct {
 	totalStatus string
 }
 
-// Parse 状态解析逻辑，参考来源：https://github.com/kubernetes/dashboard/blob/master/src/app/backend/resource/pod/common.go#L40
+// Parse 状态解析逻辑，参考来源：https://github.com/kubernetes/dashboard/blob/92a8491b99afa2cfb94dbe6f3410cadc42b0dc31/modules/api/pkg/resource/pod/common.go#L40
 func (p *PodStatusParser) Parse() string {
 	// 构造轻量化的 PodStatus 用于解析 Pod Status（total）字段
 	podStatus := LightPodStatus{}

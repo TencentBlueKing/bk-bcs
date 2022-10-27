@@ -3,6 +3,9 @@
       - - group:
             - [ "type", ".", "." ]
             - - group:
+                  - [ "useType", ".", "." ]
+                prop: lb
+            - - group:
                   - [ "name", "port", "protocol", "targetPort", "nodePort", "." ]
                 container:
                   grid-template-columns: "1fr 1fr 1fr 1fr 1fr auto"

@@ -28,6 +28,7 @@ var lightCMManifest = map[string]interface{}{
 		"namespace":         "default",
 		"creationTimestamp": "2022-01-01T10:00:00Z",
 	},
+	"immutable": true,
 	"data": map[string]interface{}{
 		"special.how":  "very",
 		"special.type": "charm",
@@ -37,4 +38,5 @@ var lightCMManifest = map[string]interface{}{
 func TestFormatConfigRes(t *testing.T) {
 	ret := FormatConfigRes(lightCMManifest)
 	assert.Equal(t, 2, len(ret["data"].([]string)))
+	assert.Equal(t, true, ret["immutable"])
 }

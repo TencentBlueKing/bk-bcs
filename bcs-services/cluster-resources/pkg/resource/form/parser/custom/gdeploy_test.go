@@ -20,7 +20,7 @@ import (
 	"github.com/fatih/structs"
 	"github.com/stretchr/testify/assert"
 
-	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
+	resCsts "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/constants"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/model"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/parser/util"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
@@ -230,9 +230,9 @@ func TestParseGWorkloadGracefulManage(t *testing.T) {
 func TestParseGWorkloadDeletionProtect(t *testing.T) {
 	deletionProtect := model.GWorkloadDeletionProtect{}
 	ParseGWorkloadDeletionProtect(lightGDeployManifest, &deletionProtect)
-	assert.Equal(t, res.DeletionProtectPolicyCascading, deletionProtect.Policy)
+	assert.Equal(t, resCsts.DeletionProtectPolicyCascading, deletionProtect.Policy)
 
 	_ = mapx.SetItems(lightGDeployManifest, "metadata.labels", map[string]interface{}{})
 	ParseGWorkloadDeletionProtect(lightGDeployManifest, &deletionProtect)
-	assert.Equal(t, res.DeletionProtectPolicyNotAllow, deletionProtect.Policy)
+	assert.Equal(t, resCsts.DeletionProtectPolicyNotAllow, deletionProtect.Policy)
 }

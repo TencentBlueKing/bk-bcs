@@ -26,8 +26,8 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/featureflag"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/i18n"
-	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
 	cli "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/client"
+	resCsts "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/constants"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/pbstruct"
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
@@ -52,7 +52,9 @@ func (h *Handler) ListCRD(
 		return err
 	}
 
-	respDataBuilder, err := respUtil.NewRespDataBuilder(ctx, ret, res.CRD, req.Format)
+	respDataBuilder, err := respUtil.NewRespDataBuilder(
+		ctx, respUtil.DataBuilderParams{ret, resCsts.CRD, req.Format, req.Scene},
+	)
 	if err != nil {
 		return err
 	}
@@ -83,7 +85,7 @@ func (h *Handler) GetCRD(
 		return errorx.New(errcode.NoPerm, i18n.GetMsg(ctx, "共享集群中不支持查看 CRD %s 信息"), req.Name)
 	}
 	resp.Data, err = respUtil.BuildRetrieveAPIResp(
-		ctx, req.ClusterID, res.CRD, "", "", req.Name, req.Format, metav1.GetOptions{},
+		ctx, respUtil.GetParams{req.ClusterID, resCsts.CRD, "", "", req.Name, req.Format}, metav1.GetOptions{},
 	)
 	if err != nil {
 		return err

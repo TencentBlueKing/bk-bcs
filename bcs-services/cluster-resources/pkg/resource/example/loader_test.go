@@ -22,13 +22,13 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/ctxkey"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/i18n"
-	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
+	resCsts "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/constants"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
 )
 
 func TestLoadResConf(t *testing.T) {
 	ctx := context.TODO()
-	conf, _ := LoadResConf(ctx, res.Deploy)
+	conf, _ := LoadResConf(ctx, resCsts.Deploy)
 	assert.Equal(t, "Deployment", conf["kind"])
 	assert.Equal(t, "workload", conf["class"])
 
@@ -43,23 +43,23 @@ func TestLoadResConf(t *testing.T) {
 		assert.Equal(t, kind, conf["kind"])
 	}
 
-	_, err := LoadResConf(ctx, res.CRD)
+	_, err := LoadResConf(ctx, resCsts.CRD)
 	assert.NotNil(t, err)
 }
 
 func TestLoadResRefs(t *testing.T) {
 	ctx := context.TODO()
-	refs, _ := LoadResRefs(ctx, res.Deploy)
+	refs, _ := LoadResRefs(ctx, resCsts.Deploy)
 	assert.True(t, len(refs) > 0)
 
-	refs, _ = LoadResRefs(ctx, res.Secret)
+	refs, _ = LoadResRefs(ctx, resCsts.Secret)
 	assert.True(t, len(refs) > 0)
 
 	ctx = context.WithValue(ctx, ctxkey.LangKey, i18n.EN)
-	refs, _ = LoadResRefs(ctx, res.Secret)
+	refs, _ = LoadResRefs(ctx, resCsts.Secret)
 	assert.True(t, len(refs) > 0)
 
-	_, err := LoadResRefs(ctx, res.CRD)
+	_, err := LoadResRefs(ctx, resCsts.CRD)
 	assert.NotNil(t, err)
 }
 

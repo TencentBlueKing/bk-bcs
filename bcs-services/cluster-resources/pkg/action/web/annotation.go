@@ -46,7 +46,7 @@ type PermDetail struct {
 	ApplyURL  string `structs:"applyURL"`
 }
 
-// AnnoFunc xxx
+// AnnoFunc ...
 type AnnoFunc func(*Annotations)
 
 // Annotations Web 注解，参考结构：

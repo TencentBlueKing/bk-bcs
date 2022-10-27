@@ -25,7 +25,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/envs"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/i18n"
-	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
+	resCsts "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/constants"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/stringx"
 )
@@ -42,8 +42,9 @@ var (
 
 	// HasDemoManifestResKinds 支持获取示例的资源类型
 	HasDemoManifestResKinds = []string{
-		res.Deploy, res.STS, res.DS, res.CJ, res.Job, res.Po, res.Ing, res.SVC, res.EP, res.CM,
-		res.Secret, res.PV, res.PVC, res.SC, res.HPA, res.SA, res.GDeploy, res.GSTS, res.CObj,
+		resCsts.Deploy, resCsts.STS, resCsts.DS, resCsts.CJ, resCsts.Job, resCsts.Po, resCsts.Ing, resCsts.SVC,
+		resCsts.EP, resCsts.CM, resCsts.Secret, resCsts.PV, resCsts.PVC, resCsts.SC, resCsts.HPA, resCsts.SA,
+		resCsts.GDeploy, resCsts.GSTS, resCsts.CObj,
 	}
 )
 

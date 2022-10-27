@@ -299,15 +299,15 @@ volumeClaimTmpl:
           claimType:
             title: {{ i18n "卷声明类型" .lang }}
             type: string
-            default: useExistPV
+            default: createBySC
             ui:component:
               name: radio
               props:
                 datasource:
-                  - label: {{ i18n "使用已存在的持久卷" .lang }}
-                    value: useExistPV
                   - label: {{ i18n "指定存储类以创建持久卷" .lang }}
                     value: createBySC
+                  - label: {{ i18n "使用已存在的持久卷" .lang }}
+                    value: useExistPV
             ui:reactions:
               - target: "{{`{{`}} $widgetNode?.getSibling('pvName')?.id {{`}}`}}"
                 if: "{{`{{`}} $self.value === 'useExistPV' {{`}}`}}"
@@ -917,6 +917,7 @@ other:
           remoteConfig:
             params:
               format: selectItems
+              scene: workload-image-pull-secrets
             url: "{{`{{`}} `${$context.baseUrl}/projects/${$context.projectID}/clusters/${$context.clusterID}/namespaces/${$self.getValue('metadata.namespace')}/configs/secrets` {{`}}`}}"
       ui:reactions:
         - lifetime: init

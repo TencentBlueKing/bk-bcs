@@ -22,7 +22,8 @@ type CM struct {
 
 // CMData ...
 type CMData struct {
-	Items []OpaqueData `structs:"items"`
+	Immutable bool         `structs:"immutable"`
+	Items     []OpaqueData `structs:"items"`
 }
 
 // Secret 表单化建模
@@ -34,6 +35,7 @@ type Secret struct {
 // SecretData ...
 type SecretData struct {
 	Type      string             `structs:"type"`
+	Immutable bool               `structs:"immutable"`
 	Opaque    []OpaqueData       `structs:"opaque"`
 	Docker    DockerRegistryData `structs:"docker"`
 	BasicAuth BasicAuthData      `structs:"basicAuth"`

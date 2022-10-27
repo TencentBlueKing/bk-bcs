@@ -5,6 +5,7 @@ ruleConf:
   properties:
     rules:
       type: array
+      minItems: 1
       items:
         type: object
         properties:
@@ -74,6 +75,7 @@ ruleConf:
                       remoteConfig:
                         params:
                           format: selectItems
+                          scene: ing-target-svc
                         url: "{{`{{`}} `${$context.baseUrl}/projects/${$context.projectID}/clusters/${$context.clusterID}/namespaces/${$self.getValue('metadata.namespace')}/networks/services` {{`}}`}}"
                   ui:reactions:
                     - lifetime: init
@@ -120,8 +122,8 @@ network:
     clbUseType:
       title: {{ i18n "CLB 使用方式" .lang }}
       type: string
-      default: "useExists"
-      description: {{ i18n "已存在的 CLB 实例：需先手工创建 CLB 实例，Ingress 实例删除时 CLB 实例不会被删除，重建 Ingress 实例后 VIP 不会发生变化<br>自动新建 CLB 实例：无需先手工创建 CLB 实例，Ingress 实例删除时 CLB 实例会随之删除，重建 Ingress 实例后 VIP 会发生变化" .lang | quote }}
+      default: useExists
+      description: {{ i18n "已存在的 CLB 实例：需先手工创建 CLB 实例，Ingress 实例删除时 CLB 实例不会被删除，重建 Ingress 实例后 VIP 不会发生变化<br>自动新建 CLB 实例：无需先手工创建 CLB 实例，Ingress 实例删除时 CLB 实例会随之删除，重建 Ingress 实例后 VIP 会发生变化；出于安全原因，自动新建 CLB 实例只支持内网，外网 CLB 请使用 “已存在的 CLB 实例”方案，内网子网 ID 请找资源管理员确认" .lang | quote }}
       ui:component:
         name: select
         props:
@@ -140,16 +142,8 @@ network:
           else:
             state:
               visible: false
-        - target: spec.network.clbType
-          if: "{{`{{`}} $self.value === 'autoCreate' {{`}}`}}"
-          then:
-            state:
-              visible: true
-          else:
-            state:
-              visible: false
         - target: spec.network.subNetID
-          if: "{{`{{`}} $self.value === 'autoCreate' && $self.getValue('spec.network.clbType') === 'internal' {{`}}`}}"
+          if: "{{`{{`}} $self.value === 'autoCreate' {{`}}`}}"
           then:
             state:
               visible: true
@@ -159,37 +153,22 @@ network:
     existLBID:
       title: "CLB ID"
       type: string
+      ui:component:
+        props:
+          placeholder: {{ i18n "例如：lb-c5xxxxd6" .lang | quote }}
       ui:rules:
-        # 不是使用"已存在 CLB 实例"时 或 非 qcloud 类型 ingress，可以不填该值
+        # 不是使用 "已存在 CLB 实例"时 或 非 qcloud 类型 ingress，可以不填该值
         - validator: "{{`{{`}} $self.getValue('controller.type') !== 'qcloud' || $self.getValue('spec.network.clbUseType') !== 'useExists' || $self.value {{`}}`}}"
           message: {{ i18n "值不能为空" .lang }}
-    clbType:
-      title: {{ i18n "CLB 类型" .lang }}
-      type: string
-      default: external
-      ui:component:
-        name: radio
-        props:
-          datasource:
-            - label: {{ i18n "外网 CLB" .lang }}
-              value: external
-            - label: {{ i18n "内网 CLB" .lang }}
-              value: internal
-      ui:reactions:
-        - target: spec.network.subNetID
-          if: "{{`{{`}} $self.value === 'internal' && $self.getValue('spec.network.clbUseType') === 'autoCreate' {{`}}`}}"
-          then:
-            state:
-              visible: true
-          else:
-            state:
-              visible: false
     subNetID:
       title: {{ i18n "子网 ID" .lang }}
       type: string
+      ui:component:
+        props:
+          placeholder: {{ i18n "例如：subnet-a3xxxxb4" .lang | quote }}
       ui:rules:
-        # ingress 为 qcloud 类型 且 "自动创建 CLB 实例" 且 "为内网 CLB" 时，必须填值
-        - validator: "{{`{{`}} $self.getValue('controller.type') !== 'qcloud' || $self.getValue('spec.network.clbUseType') !== 'autoCreate' || $self.getValue('spec.network.clbType') !== 'internal' || $self.value {{`}}`}}"
+        # ingress 为 qcloud 类型 且 "自动创建 CLB 实例"，必须填值
+        - validator: "{{`{{`}} $self.getValue('controller.type') !== 'qcloud' || $self.getValue('spec.network.clbUseType') !== 'autoCreate' || $self.value {{`}}`}}"
           message: {{ i18n "值不能为空" .lang }}
 {{- end }}
 
@@ -201,6 +180,7 @@ defaultBackend:
     targetSVC:
       title: {{ i18n "目标 Service" .lang }}
       type: string
+      description: {{ i18n "控制器类型 qcloud 暂时不支持配置默认后端" .lang }}
       default: ""
       ui:component:
         name: select
@@ -210,6 +190,7 @@ defaultBackend:
           remoteConfig:
             params:
               format: selectItems
+              scene: ing-target-svc
             url: "{{`{{`}} `${$context.baseUrl}/projects/${$context.projectID}/clusters/${$context.clusterID}/namespaces/${$self.getValue('metadata.namespace')}/networks/services` {{`}}`}}"
       ui:reactions:
         - lifetime: init
@@ -227,6 +208,7 @@ defaultBackend:
     port:
       title: {{ i18n "端口" .lang }}
       type: integer
+      description: {{ i18n "控制器类型 qcloud 暂时不支持配置默认后端" .lang }}
       ui:component:
         props:
           min: 1
@@ -242,6 +224,11 @@ cert:
   title: {{ i18n "证书" .lang }}
   type: object
   properties:
+    autoRewriteHttp:
+      type: boolean
+      title: {{ i18n "重定向 HTTP 端口到 HTTPS" .lang }}
+      ui:props:
+        labelWidth: 350
     tls:
       type: array
       items:
@@ -258,6 +245,7 @@ cert:
                 remoteConfig:
                   params:
                     format: selectItems
+                    scene: ing-tls-cert
                   url: "{{`{{`}} `${$context.baseUrl}/projects/${$context.projectID}/clusters/${$context.clusterID}/namespaces/${$self.getValue('metadata.namespace')}/configs/secrets` {{`}}`}}"
             ui:reactions:
               - lifetime: init
@@ -305,6 +293,88 @@ portConf:
               value: NodePort
             - label: LoadBalancer
               value: LoadBalancer
+      ui:reactions:
+        - target: "spec.portConf.lb.useType"
+          if: "{{`{{`}} $self.value === 'LoadBalancer' {{`}}`}}"
+          then:
+            state:
+              visible: true
+          else:
+            state:
+              visible: false
+        - target: "spec.portConf.lb.existLBID"
+          if: "{{`{{`}} $self.value === 'LoadBalancer' && $self.getValue('spec.portConf.lb.useType') === 'useExists' {{`}}`}}"
+          then:
+            state:
+              visible: true
+          else:
+            state:
+              visible: false
+        - target: "spec.portConf.lb.subNetID"
+          if: "{{`{{`}} $self.value === 'LoadBalancer' && $self.getValue('spec.portConf.lb.useType') === 'autoCreate' {{`}}`}}"
+          then:
+            state:
+              visible: true
+          else:
+            state:
+              visible: false
+    lb:
+      title: {{ i18n "负载均衡器" .lang }}
+      type: object
+      required:
+        - existLBID
+        - subNetID
+      properties:
+        useType:
+          title: {{ i18n "CLB 使用方式" .lang }}
+          type: string
+          default: useExists
+          description: {{ i18n "使用已有：仅支持使用当前未被 TKE 使用的应用型 CLB 以用于公网/内网访问 Service，请勿手动修改由 TKE 创建的 CLB 监听器<br>自动创建：自动创建内网 CLB 以提供内网访问入口，将提供一个可以被集群所有 VPC 下的其他资源访问的入口，支持 TCP/UDP 协议。需要被同一 VPC 下其他集群、云服务器等访问的服务可以选择 VPC 内网访问的形式，因安全原因，暂不支持公网 CLB 自动创建，内网子网 ID 请找资源管理员确认" .lang | quote }}
+          ui:component:
+            name: radio
+            props:
+              datasource:
+                - label: {{ i18n "使用已有" .lang }}
+                  value: useExists
+                - label: {{ i18n "自动创建" .lang }}
+                  value: autoCreate
+          ui:reactions:
+            - target: "spec.portConf.lb.existLBID"
+              if: "{{`{{`}} $self.value === 'useExists' && $self.getValue('spec.portConf.type') == 'LoadBalancer' {{`}}`}}"
+              then:
+                state:
+                  visible: true
+              else:
+                state:
+                  visible: false
+            - target: "spec.portConf.lb.subNetID"
+              if: "{{`{{`}} $self.value === 'autoCreate' && $self.getValue('spec.portConf.type') == 'LoadBalancer' {{`}}`}}"
+              then:
+                state:
+                  visible: true
+              else:
+                state:
+                  visible: false
+        existLBID:
+          title: "CLB ID"
+          type: string
+          ui:component:
+            props:
+              placeholder: {{ i18n "例如：lb-c5xxxxd6" .lang | quote }}
+          ui:rules:
+            # 不是使用 "已有的 CLB 实例" 时 或 非 LoadBalancer 类型 Service，可以不填该值
+            - validator: "{{`{{`}} $self.getValue('spec.portConf.type') !== 'LoadBalancer' || $self.getValue('spec.portConf.lb.useType') !== 'useExists' || $self.value {{`}}`}}"
+              message: {{ i18n "值不能为空" .lang }}
+        subNetID:
+          title: {{ i18n "子网 ID" .lang }}
+          type: string
+          ui:component:
+            props:
+              placeholder: {{ i18n "例如：subnet-a3xxxxb4" .lang | quote }}
+          ui:rules:
+            # service 为 LoadBalancer 类型 且 "自动创建 CLB 实例" 时，必须填值
+            - validator: "{{`{{`}} $self.getValue('spec.portConf.type') !== 'LoadBalancer' || $self.getValue('spec.portConf.lb.useType') !== 'autoCreate' || $self.value {{`}}`}}"
+              message: {{ i18n "值不能为空" .lang }}
     ports:
       type: array
       minItems: 1
@@ -315,7 +385,6 @@ portConf:
             title: {{ i18n "名称" .lang }}
             type: string
             ui:rules:
-              - required
               - maxLength64
           port:
             title: {{ i18n "监听端口" .lang }}
@@ -342,11 +411,7 @@ portConf:
                     value: UDP
           targetPort:
             title: {{ i18n "目标端口" .lang }}
-            type: integer
-            ui:component:
-              props:
-                min: 1
-                max: 65535
+            type: string
             ui:rules:
               - validator: "{{`{{`}} $self.value {{`}}`}}"
                 message: {{ i18n "值不能为空" .lang }}
@@ -386,7 +451,9 @@ selector:
   type: object
   properties:
     labels:
+      title: {{ i18n "标签选择器" .lang }}
       type: array
+      description: {{ i18n "若没有设置选择器，则不会自动创建 Endpoints，需要手动创建" .lang }}
       items:
         type: object
         properties:
@@ -404,8 +471,6 @@ selector:
               - maxLength128
       ui:component:
         name: bfArray
-      ui:props:
-        showTitle: false
 {{- end }}
 
 {{- define "network.sessionAffinity" }}
@@ -435,9 +500,9 @@ sessionAffinity:
             state:
               visible: false
     stickyTime:
-      title: "SessionStickyTime"
+      title: {{ i18n "最大会话停留时间" .lang }}
       type: integer
-      default: 120
+      default: 10800
       ui:component:
         name: bfInput
         props:

@@ -97,6 +97,15 @@ var runningPodManifest1 = map[string]interface{}{
 	},
 	"status": map[string]interface{}{
 		"phase": "Running",
+		"podIP": "127.0.0.1",
+		"podIPs": []interface{}{
+			map[string]interface{}{
+				"ip": "127.0.0.2",
+			},
+			map[string]interface{}{
+				"ip": "::7f00:0001",
+			},
+		},
 		"conditions": []map[string]interface{}{
 			{
 				"type":   "Initialized",
@@ -468,6 +477,8 @@ func TestFormatPo(t *testing.T) {
 	assert.Equal(t, 1, ret["totalCnt"])
 	assert.Equal(t, int64(2), ret["restartCnt"])
 	assert.Equal(t, "Running", ret["status"])
+	assert.Equal(t, "127.0.0.2", ret["podIPv4"])
+	assert.Equal(t, "::7f00:0001", ret["podIPv6"])
 }
 
 func TestDeployStatusParser(t *testing.T) {

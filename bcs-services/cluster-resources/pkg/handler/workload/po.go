@@ -27,8 +27,8 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/featureflag"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/i18n"
-	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
 	cli "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/client"
+	resCsts "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/constants"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/formatter"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
@@ -48,7 +48,9 @@ func (h *Handler) ListPo(
 		return err
 	}
 
-	respDataBuilder, err := respUtil.NewRespDataBuilder(ctx, ret, res.Po, req.Format)
+	respDataBuilder, err := respUtil.NewRespDataBuilder(
+		ctx, respUtil.DataBuilderParams{ret, resCsts.Po, req.Format, req.Scene},
+	)
 	if err != nil {
 		return err
 	}
@@ -71,7 +73,7 @@ func (h *Handler) ListPo(
 func (h *Handler) GetPo(
 	ctx context.Context, req *clusterRes.ResGetReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = resAction.NewResMgr(req.ClusterID, req.ApiVersion, res.Po).Get(
+	resp.Data, err = resAction.NewResMgr(req.ClusterID, req.ApiVersion, resCsts.Po).Get(
 		ctx, req.Namespace, req.Name, req.Format, metav1.GetOptions{},
 	)
 	if err != nil {
@@ -87,7 +89,7 @@ func (h *Handler) GetPo(
 func (h *Handler) CreatePo(
 	ctx context.Context, req *clusterRes.ResCreateReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = resAction.NewResMgr(req.ClusterID, "", res.Po).Create(
+	resp.Data, err = resAction.NewResMgr(req.ClusterID, "", resCsts.Po).Create(
 		ctx, req.RawData, req.Format, true, metav1.CreateOptions{},
 	)
 	return err
@@ -97,7 +99,7 @@ func (h *Handler) CreatePo(
 func (h *Handler) UpdatePo(
 	ctx context.Context, req *clusterRes.ResUpdateReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = resAction.NewResMgr(req.ClusterID, "", res.Po).Update(
+	resp.Data, err = resAction.NewResMgr(req.ClusterID, "", resCsts.Po).Update(
 		ctx, req.Namespace, req.Name, req.RawData, req.Format, metav1.UpdateOptions{},
 	)
 	return err
@@ -107,7 +109,7 @@ func (h *Handler) UpdatePo(
 func (h *Handler) DeletePo(
 	ctx context.Context, req *clusterRes.ResDeleteReq, _ *clusterRes.CommonResp,
 ) error {
-	return resAction.NewResMgr(req.ClusterID, "", res.Po).Delete(
+	return resAction.NewResMgr(req.ClusterID, "", resCsts.Po).Delete(
 		ctx, req.Namespace, req.Name, metav1.DeleteOptions{},
 	)
 }
@@ -120,7 +122,7 @@ func (h *Handler) ListPoPVC(
 		return err
 	}
 	resp.Data, err = respUtil.BuildListPodRelatedResResp(
-		ctx, req.ClusterID, req.Namespace, req.Name, req.Format, res.PVC,
+		ctx, req.ClusterID, req.Namespace, req.Name, req.Format, resCsts.PVC,
 	)
 	return err
 }
@@ -133,7 +135,7 @@ func (h *Handler) ListPoCM(
 		return err
 	}
 	resp.Data, err = respUtil.BuildListPodRelatedResResp(
-		ctx, req.ClusterID, req.Namespace, req.Name, req.Format, res.CM,
+		ctx, req.ClusterID, req.Namespace, req.Name, req.Format, resCsts.CM,
 	)
 	return err
 }
@@ -146,7 +148,7 @@ func (h *Handler) ListPoSecret(
 		return err
 	}
 	resp.Data, err = respUtil.BuildListPodRelatedResResp(
-		ctx, req.ClusterID, req.Namespace, req.Name, req.Format, res.Secret,
+		ctx, req.ClusterID, req.Namespace, req.Name, req.Format, resCsts.Secret,
 	)
 	return err
 }
@@ -175,7 +177,7 @@ func (h *Handler) ReschedulePo(
 	}
 	// 检查确保父级资源不为 Job
 	for _, ref := range ownerReferences.([]interface{}) {
-		if ref.(map[string]interface{})["kind"].(string) == res.Job {
+		if ref.(map[string]interface{})["kind"].(string) == resCsts.Job {
 			return errorx.New(
 				errcode.Unsupported,
 				i18n.GetMsg(ctx, "Pod %s/%s 父级资源存在 Job，不允许重新调度"),
@@ -186,7 +188,7 @@ func (h *Handler) ReschedulePo(
 
 	// 重新调度的原理是直接删除 Pod，利用父级资源重新拉起服务
 	return respUtil.BuildDeleteAPIResp(
-		ctx, req.ClusterID, res.Po, "", req.Namespace, req.Name, metav1.DeleteOptions{},
+		ctx, req.ClusterID, resCsts.Po, "", req.Namespace, req.Name, metav1.DeleteOptions{},
 	)
 }
 

@@ -18,11 +18,9 @@ import (
 	"strings"
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/envs"
-	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
+	resCsts "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/constants"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/model"
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/parser/custom"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/parser/util"
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/parser/workload"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/stringx"
 )
 
@@ -30,7 +28,7 @@ import (
 var GDeployComplex = model.GDeploy{
 	Metadata: model.Metadata{
 		APIVersion: "tkex.tencent.com/v1alpha1",
-		Kind:       res.GDeploy,
+		Kind:       resCsts.GDeploy,
 		Name:       "gdeploy-complex-" + strings.ToLower(stringx.Rand(10, "")),
 		Namespace:  envs.TestNamespace,
 		Labels: []model.Label{
@@ -45,7 +43,7 @@ var GDeployComplex = model.GDeploy{
 	Spec: model.GDeploySpec{
 		Replicas: model.GDeployReplicas{
 			Cnt:             2,
-			UpdateStrategy:  workload.DefaultUpdateStrategy,
+			UpdateStrategy:  resCsts.DefaultUpdateStrategy,
 			MaxSurge:        0,
 			MSUnit:          util.UnitCnt,
 			MaxUnavailable:  20,
@@ -67,7 +65,7 @@ var GDeployComplex = model.GDeploy{
 			},
 		},
 		DeletionProtect: model.GWorkloadDeletionProtect{
-			Policy: res.DeletionProtectPolicyNotAllow,
+			Policy: resCsts.DeletionProtectPolicyNotAllow,
 		},
 		NodeSelect: nodeSelect,
 		Affinity:   affinity,
@@ -87,7 +85,7 @@ var GDeployComplex = model.GDeploy{
 var GDeploySimple = model.GDeploy{
 	Metadata: model.Metadata{
 		APIVersion: "tkex.tencent.com/v1alpha1",
-		Kind:       res.GDeploy,
+		Kind:       resCsts.GDeploy,
 		Name:       "gdeploy-simple-" + strings.ToLower(stringx.Rand(10, "")),
 		Namespace:  envs.TestNamespace,
 		Labels: []model.Label{
@@ -97,12 +95,12 @@ var GDeploySimple = model.GDeploy{
 	Spec: model.GDeploySpec{
 		Replicas: model.GDeployReplicas{
 			Cnt:            2,
-			UpdateStrategy: workload.DefaultUpdateStrategy,
+			UpdateStrategy: resCsts.DefaultUpdateStrategy,
 			MaxSurge:       1,
 			MSUnit:         util.UnitCnt,
 		},
 		DeletionProtect: model.GWorkloadDeletionProtect{
-			Policy: res.DeletionProtectPolicyAlways,
+			Policy: resCsts.DeletionProtectPolicyAlways,
 		},
 	},
 	ContainerGroup: model.ContainerGroup{
@@ -122,7 +120,7 @@ var GDeploySimple = model.GDeploy{
 var GSTSComplex = model.GSTS{
 	Metadata: model.Metadata{
 		APIVersion: "tkex.tencent.com/v1alpha1",
-		Kind:       res.GSTS,
+		Kind:       resCsts.GSTS,
 		Name:       "gsts-complex-" + strings.ToLower(stringx.Rand(10, "")),
 		Namespace:  envs.TestNamespace,
 		Labels: []model.Label{
@@ -138,7 +136,7 @@ var GSTSComplex = model.GSTS{
 		Replicas: model.GSTSReplicas{
 			Cnt:             2,
 			SVCName:         "svc-complex-y3xk1r9vg9",
-			UpdateStrategy:  workload.DefaultUpdateStrategy,
+			UpdateStrategy:  resCsts.DefaultUpdateStrategy,
 			PodManPolicy:    "OrderedReady",
 			Partition:       3,
 			MaxSurge:        2,
@@ -160,7 +158,7 @@ var GSTSComplex = model.GSTS{
 			},
 		},
 		DeletionProtect: model.GWorkloadDeletionProtect{
-			Policy: res.DeletionProtectPolicyCascading,
+			Policy: resCsts.DeletionProtectPolicyCascading,
 		},
 		NodeSelect: nodeSelect,
 		Affinity:   affinity,
@@ -180,7 +178,7 @@ var GSTSComplex = model.GSTS{
 var HookTmplComplex = model.HookTmpl{
 	Metadata: model.Metadata{
 		APIVersion: "tkex.tencent.com/v1alpha1",
-		Kind:       res.HookTmpl,
+		Kind:       resCsts.HookTmpl,
 		Name:       "hook-tmpl-complex-" + strings.ToLower(stringx.Rand(10, "")),
 		Namespace:  envs.TestNamespace,
 	},
@@ -196,34 +194,34 @@ var HookTmplComplex = model.HookTmpl{
 			},
 		},
 		ExecPolicy:            "Ordered",
-		DeletionProtectPolicy: res.DeletionProtectPolicyAlways,
+		DeletionProtectPolicy: resCsts.DeletionProtectPolicyAlways,
 		Metrics: []model.HookTmplMetric{
 			{
 				Name:             "web",
-				HookType:         custom.HookTmplMetricTypeWeb,
+				HookType:         resCsts.HookTmplMetricTypeWeb,
 				URL:              "http://1.1.1.1:80",
 				JSONPath:         "{$.result}",
 				TimeoutSecs:      10,
 				Count:            2,
 				Interval:         1,
 				SuccessCondition: "asInt(result) == 1",
-				SuccessPolicy:    custom.HookTmplConsecutiveSuccessfulLimit,
+				SuccessPolicy:    resCsts.HookTmplConsecutiveSuccessfulLimit,
 				SuccessCnt:       1,
 			},
 			{
 				Name:             "prom",
-				HookType:         custom.HookTmplMetricTypeProm,
+				HookType:         resCsts.HookTmplMetricTypeProm,
 				Address:          "http://prometheus.com",
 				Query:            "query_test",
 				Count:            0,
 				Interval:         1,
 				SuccessCondition: "asInt(result) == 2",
-				SuccessPolicy:    custom.HookTmplSuccessfulLimit,
+				SuccessPolicy:    resCsts.HookTmplSuccessfulLimit,
 				SuccessCnt:       1,
 			},
 			{
 				Name:     "k8s",
-				HookType: custom.HookTmplMetricTypeK8S,
+				HookType: resCsts.HookTmplMetricTypeK8S,
 				Function: "patch",
 				Fields: []model.HookTmplField{
 					{
@@ -233,7 +231,7 @@ var HookTmplComplex = model.HookTmpl{
 				},
 				Count:         0,
 				Interval:      2,
-				SuccessPolicy: custom.HookTmplConsecutiveSuccessfulLimit,
+				SuccessPolicy: resCsts.HookTmplConsecutiveSuccessfulLimit,
 				SuccessCnt:    3,
 			},
 		},

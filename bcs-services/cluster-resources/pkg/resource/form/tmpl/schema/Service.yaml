@@ -6,8 +6,8 @@ properties:
     title: {{ i18n "配置信息" .lang }}
     type: object
     properties:
-      {{- include "network.svcPort" . | indent 6 }}
       {{- include "network.svcSelector" . | indent 6 }}
+      {{- include "network.svcPort" . | indent 6 }}
       {{- include "network.sessionAffinity" . | indent 6 }}
       {{- include "network.svcIPConf" . | indent 6 }}
     ui:group:
@@ -18,7 +18,7 @@ properties:
         type: card
         verifiable: true
     ui:order:
-      - portConf
       - selector
+      - portConf
       - sessionAffinity
       - ip

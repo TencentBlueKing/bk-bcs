@@ -20,7 +20,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
+	resCsts "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/constants"
 )
 
 func TestFormDataValidator(t *testing.T) {
@@ -50,15 +50,15 @@ func TestFormDataValidator(t *testing.T) {
 			},
 		},
 	}
-	assert.Nil(t, New(ctx, formData, "apps/v1", res.Deploy).Validate())
+	assert.Nil(t, New(ctx, formData, "apps/v1", resCsts.Deploy).Validate())
 
 	// 资源类型不支持表单化
-	err := New(ctx, formData, "v1", res.SA).Validate()
+	err := New(ctx, formData, "v1", resCsts.SA).Validate()
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "不支持表单化")
 
 	// 指定 APIVersion 不支持表单化
-	err = New(ctx, formData, "apps/v2", res.Deploy).Validate()
+	err = New(ctx, formData, "apps/v2", resCsts.Deploy).Validate()
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "请改用 Yaml 模式而非表单化")
 
@@ -77,7 +77,7 @@ func TestFormDataValidator(t *testing.T) {
 			},
 		},
 	}
-	err = New(ctx, formData, "apps/v1", res.Deploy).Validate()
+	err = New(ctx, formData, "apps/v1", resCsts.Deploy).Validate()
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "标签有重复的键")
 
@@ -96,7 +96,7 @@ func TestFormDataValidator(t *testing.T) {
 			},
 		},
 	}
-	err = New(ctx, formData, "apps/v1", res.Deploy).Validate()
+	err = New(ctx, formData, "apps/v1", resCsts.Deploy).Validate()
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "注解有重复的键")
 }

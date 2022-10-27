@@ -22,7 +22,7 @@ import (
 	resAction "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action/resource"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action/web"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/featureflag"
-	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
+	resCsts "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/constants"
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
 )
 
@@ -30,8 +30,8 @@ import (
 func (h *Handler) ListSTS(
 	ctx context.Context, req *clusterRes.ResListReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = resAction.NewResMgr(req.ClusterID, req.ApiVersion, res.STS).List(
-		ctx, req.Namespace, req.Format, metav1.ListOptions{LabelSelector: req.LabelSelector},
+	resp.Data, err = resAction.NewResMgr(req.ClusterID, req.ApiVersion, resCsts.STS).List(
+		ctx, req.Namespace, req.Format, req.Scene, metav1.ListOptions{LabelSelector: req.LabelSelector},
 	)
 	if err != nil {
 		return err
@@ -46,7 +46,7 @@ func (h *Handler) ListSTS(
 func (h *Handler) GetSTS(
 	ctx context.Context, req *clusterRes.ResGetReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = resAction.NewResMgr(req.ClusterID, req.ApiVersion, res.STS).Get(
+	resp.Data, err = resAction.NewResMgr(req.ClusterID, req.ApiVersion, resCsts.STS).Get(
 		ctx, req.Namespace, req.Name, req.Format, metav1.GetOptions{},
 	)
 	if err != nil {
@@ -62,7 +62,7 @@ func (h *Handler) GetSTS(
 func (h *Handler) CreateSTS(
 	ctx context.Context, req *clusterRes.ResCreateReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = resAction.NewResMgr(req.ClusterID, "", res.STS).Create(
+	resp.Data, err = resAction.NewResMgr(req.ClusterID, "", resCsts.STS).Create(
 		ctx, req.RawData, req.Format, true, metav1.CreateOptions{},
 	)
 	return err
@@ -72,7 +72,7 @@ func (h *Handler) CreateSTS(
 func (h *Handler) UpdateSTS(
 	ctx context.Context, req *clusterRes.ResUpdateReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = resAction.NewResMgr(req.ClusterID, "", res.STS).Update(
+	resp.Data, err = resAction.NewResMgr(req.ClusterID, "", resCsts.STS).Update(
 		ctx, req.Namespace, req.Name, req.RawData, req.Format, metav1.UpdateOptions{},
 	)
 	return err
@@ -82,7 +82,7 @@ func (h *Handler) UpdateSTS(
 func (h *Handler) ScaleSTS(
 	ctx context.Context, req *clusterRes.ResScaleReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = resAction.NewResMgr(req.ClusterID, "", res.STS).Scale(
+	resp.Data, err = resAction.NewResMgr(req.ClusterID, "", resCsts.STS).Scale(
 		ctx, req.Namespace, req.Name, req.Replicas, metav1.PatchOptions{},
 	)
 	return err
@@ -92,7 +92,7 @@ func (h *Handler) ScaleSTS(
 func (h *Handler) RescheduleSTSPo(
 	ctx context.Context, req *clusterRes.ResBatchRescheduleReq, _ *clusterRes.CommonResp,
 ) (err error) {
-	return resAction.NewResMgr(req.ClusterID, "", res.STS).Reschedule(
+	return resAction.NewResMgr(req.ClusterID, "", resCsts.STS).Reschedule(
 		ctx, req.Namespace, req.Name, req.LabelSelector, req.PodNames,
 	)
 }
@@ -101,7 +101,7 @@ func (h *Handler) RescheduleSTSPo(
 func (h *Handler) DeleteSTS(
 	ctx context.Context, req *clusterRes.ResDeleteReq, _ *clusterRes.CommonResp,
 ) error {
-	return resAction.NewResMgr(req.ClusterID, "", res.STS).Delete(
+	return resAction.NewResMgr(req.ClusterID, "", resCsts.STS).Delete(
 		ctx, req.Namespace, req.Name, metav1.DeleteOptions{},
 	)
 }

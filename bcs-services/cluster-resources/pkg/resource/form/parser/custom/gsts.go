@@ -17,6 +17,7 @@ package custom
 import (
 	"github.com/fatih/structs"
 
+	resCsts "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/constants"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/model"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/parser/common"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/parser/util"
@@ -53,18 +54,24 @@ func ParseGSTSSpec(manifest map[string]interface{}, spec *model.GSTSSpec) {
 func ParseGSTSReplicas(manifest map[string]interface{}, replicas *model.GSTSReplicas) {
 	replicas.Cnt = mapx.GetInt64(manifest, "spec.replicas")
 	replicas.SVCName = mapx.GetStr(manifest, "spec.serviceName")
-	replicas.UpdateStrategy = mapx.Get(manifest, "spec.updateStrategy.type", workload.DefaultUpdateStrategy).(string)
+	replicas.UpdateStrategy = mapx.Get(
+		manifest, "spec.updateStrategy.type", resCsts.DefaultUpdateStrategy,
+	).(string)
 	replicas.PodManPolicy = mapx.Get(manifest, "spec.podManagementPolicy", "OrderedReady").(string)
-	replicas.MaxSurge, replicas.MSUnit = DefaultGWorkloadMaxSurge, util.UnitCnt
+	replicas.MaxSurge, replicas.MSUnit = resCsts.DefaultGWorkloadMaxSurge, util.UnitCnt
 	if maxSurge, err := mapx.GetItems(manifest, "spec.updateStrategy.rollingUpdate.maxSurge"); err == nil {
 		replicas.MaxSurge, replicas.MSUnit = util.AnalyzeIntStr(maxSurge)
 	}
-	replicas.MaxUnavailable, replicas.MUAUnit = DefaultGWorkloadMaxUnavailable, util.UnitPercent
-	if maxUnavailable, err := mapx.GetItems(manifest, "spec.updateStrategy.rollingUpdate.maxUnavailable"); err == nil {
+	replicas.MaxUnavailable, replicas.MUAUnit = resCsts.DefaultGWorkloadMaxUnavailable, util.UnitPercent
+	if maxUnavailable, err := mapx.GetItems(
+		manifest, "spec.updateStrategy.rollingUpdate.maxUnavailable",
+	); err == nil {
 		replicas.MaxUnavailable, replicas.MUAUnit = util.AnalyzeIntStr(maxUnavailable)
 	}
 	replicas.Partition = mapx.GetInt64(manifest, "spec.updateStrategy.rollingUpdate.partition")
 	replicas.GracePeriodSecs = mapx.Get(
-		manifest, "spec.updateStrategy.inPlaceUpdateStrategy.gracePeriodSeconds", int64(DefaultGWorkloadMaxSurge),
+		manifest,
+		"spec.updateStrategy.inPlaceUpdateStrategy.gracePeriodSeconds",
+		int64(resCsts.DefaultGWorkloadMaxSurge),
 	).(int64)
 }

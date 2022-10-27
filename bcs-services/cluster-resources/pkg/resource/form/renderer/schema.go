@@ -26,6 +26,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/i18n"
 	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/feature"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/validator"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/slice"
@@ -69,7 +70,7 @@ func NewSchemaRenderer(ctx context.Context, clusterID, kind, namespace, action s
 	}
 }
 
-// Render xxx
+// Render 将模板渲染成 Schema
 func (r *SchemaRenderer) Render() (ret map[string]interface{}, err error) {
 	// 1. 检查指定资源类型是否支持表单化
 	supportedAPIVersions, ok := validator.FormSupportedResAPIVersion[r.kind]
@@ -87,6 +88,13 @@ func (r *SchemaRenderer) Render() (ret map[string]interface{}, err error) {
 		apiVersion = supportedAPIVersions[0]
 	}
 	r.values["apiVersion"] = apiVersion
+
+	// 3. 填充特性门控信息
+	serverVerInfo, err := res.GetServerVersion(r.ctx, r.clusterID)
+	if err != nil {
+		return nil, err
+	}
+	r.values["featureGates"] = feature.GenFeatureGates(serverVerInfo)
 
 	// 表单模板 Schema 包含原始 Schema + Layout 信息，两者格式不同，因此分别加载
 	schema := map[string]interface{}{}

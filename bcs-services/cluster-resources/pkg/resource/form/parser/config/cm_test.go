@@ -32,12 +32,14 @@ var lightCMManifest = map[string]interface{}{
 		"name":      "configmap-test",
 		"namespace": "default",
 	},
+	"immutable": true,
 	"data": map[string]interface{}{
 		"key1": "value1",
 	},
 }
 
 var exceptedCMData = model.CMData{
+	Immutable: true,
 	Items: []model.OpaqueData{
 		{
 			Key:   "key1",

@@ -24,14 +24,14 @@ import (
 	respUtil "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action/resp"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/i18n"
-	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
+	resCsts "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/constants"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/slice"
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
 )
 
 // EnabledSelectItemsAPIResKind 允许使用 SelectItems API 的资源类型，若有需要可扩展
-var EnabledSelectItemsAPIResKind = []string{res.Deploy, res.GDeploy, res.STS, res.GSTS}
+var EnabledSelectItemsAPIResKind = []string{resCsts.Deploy, resCsts.GDeploy, resCsts.STS, resCsts.GSTS}
 
 // GetResSelectItems 为前端下拉框提供数据的 API，目前主要是 HPA 的 Schema 使用
 // TODO 可以考虑其他的资源类型也走这个 API 而不是指定资源的 List API + Format（selectItems）
@@ -45,7 +45,14 @@ func (h *Handler) GetResSelectItems(
 		return errorx.New(errcode.ValidateErr, i18n.GetMsg(ctx, "当前资源类型 %s 不受支持"), req.Kind)
 	}
 	resp.Data, err = respUtil.BuildListAPIResp(
-		ctx, req.ClusterID, req.Kind, "", req.Namespace, action.SelectItemsFormat, metav1.ListOptions{},
+		ctx, respUtil.ListParams{
+			ClusterID:    req.ClusterID,
+			ResKind:      req.Kind,
+			GroupVersion: "",
+			Namespace:    req.Namespace,
+			Format:       action.SelectItemsFormat,
+			Scene:        req.Scene,
+		}, metav1.ListOptions{},
 	)
 	return err
 }

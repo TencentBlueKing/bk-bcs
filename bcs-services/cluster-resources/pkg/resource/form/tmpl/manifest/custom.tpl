@@ -11,6 +11,9 @@ metadata:
   annotations:
     {{- include "common.kvSlice2Map" .metadata.annotations | indent 4 }}
   {{- end }}
+  {{- if .metadata.resVersion }}
+  resourceVersion: {{ .metadata.resVersion | quote }}
+  {{- end }}
 {{- end }}
 
 {{- define "custom.hookTmplArgs" -}}
@@ -90,6 +93,9 @@ metadata:
   {{- if .metadata.annotations }}
   annotations:
     {{- include "common.kvSlice2Map" .metadata.annotations | indent 4 }}
+  {{- end }}
+  {{- if .metadata.resVersion }}
+  resourceVersion: {{ .metadata.resVersion | quote }}
   {{- end }}
 {{- end }}
 

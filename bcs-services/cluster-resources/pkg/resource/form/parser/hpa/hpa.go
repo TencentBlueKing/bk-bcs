@@ -21,6 +21,7 @@ import (
 
 	"github.com/fatih/structs"
 
+	resCsts "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/constants"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/model"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/parser/common"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
@@ -44,15 +45,15 @@ func ParseHPASpec(manifest map[string]interface{}, spec *model.HPASpec) {
 	for _, metric := range mapx.GetList(manifest, "spec.metrics") {
 		m := metric.(map[string]interface{})
 		switch m["type"].(string) {
-		case HPAMetricTypeRes:
+		case resCsts.HPAMetricTypeRes:
 			spec.Resource.Items = append(spec.Resource.Items, genResMetricItem(m))
-		case HPAMetricTypeContainerRes:
+		case resCsts.HPAMetricTypeContainerRes:
 			spec.ContainerRes.Items = append(spec.ContainerRes.Items, genContainerResMetricItem(m))
-		case HPAMetricTypeExternal:
+		case resCsts.HPAMetricTypeExternal:
 			spec.External.Items = append(spec.External.Items, genExternalMetricItem(m))
-		case HPAMetricTypeObject:
+		case resCsts.HPAMetricTypeObject:
 			spec.Object.Items = append(spec.Object.Items, genObjectMetricItem(m))
-		case HPAMetricTypePod:
+		case resCsts.HPAMetricTypePod:
 			spec.Pod.Items = append(spec.Pod.Items, genPodMetricItem(m))
 		}
 	}
@@ -113,11 +114,11 @@ func genPodMetricItem(m map[string]interface{}) model.PodMetricItem {
 // getMetricValue 通过 metricSource 获取 metric value
 func getMetricValue(ms map[string]interface{}) string {
 	switch mapx.GetStr(ms, "target.type") {
-	case HPATargetTypeAverageValue:
+	case resCsts.HPATargetTypeAverageValue:
 		return mapx.GetStr(ms, "target.averageValue")
-	case HPATargetTypeUtilization:
+	case resCsts.HPATargetTypeUtilization:
 		return strconv.FormatInt(mapx.GetInt64(ms, "target.averageUtilization"), 10)
-	case HPATargetTypeValue:
+	case resCsts.HPATargetTypeValue:
 		return mapx.GetStr(ms, "target.value")
 	default:
 		return ""

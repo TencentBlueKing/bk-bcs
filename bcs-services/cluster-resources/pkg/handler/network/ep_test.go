@@ -63,6 +63,13 @@ func TestEP(t *testing.T) {
 	assert.Equal(t, "Endpoints", mapx.GetStr(respData, "manifest.kind"))
 	assert.Equal(t, "tVal", mapx.GetStr(respData, "manifest.metadata.annotations.tKey"))
 
+	// GetStatus
+	err = h.GetEPStatus(ctx, &getReq, &getResp)
+	assert.Nil(t, err)
+
+	respData = getResp.Data.AsMap()
+	assert.Equal(t, true, mapx.GetBool(respData, "epReady"))
+
 	// Delete
 	deleteReq := handler.GenResDeleteReq(resName)
 	err = h.DeleteEP(ctx, &deleteReq, &clusterRes.CommonResp{})

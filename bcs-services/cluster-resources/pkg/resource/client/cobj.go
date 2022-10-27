@@ -27,6 +27,7 @@ import (
 	conf "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/config"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/i18n"
 	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
+	resCsts "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/constants"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/formatter"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
@@ -40,13 +41,13 @@ type CRDClient struct {
 
 // NewCRDClient xxx
 func NewCRDClient(ctx context.Context, conf *res.ClusterConf) *CRDClient {
-	CRDRes, _ := res.GetGroupVersionResource(ctx, conf, res.CRD, "")
+	CRDRes, _ := res.GetGroupVersionResource(ctx, conf, resCsts.CRD, "")
 	return &CRDClient{ResClient{NewDynamicClient(conf), conf, CRDRes}}
 }
 
 // NewCRDCliByClusterID xxx
 func NewCRDCliByClusterID(ctx context.Context, clusterID string) *CRDClient {
-	return NewCRDClient(ctx, res.NewClusterConfig(clusterID))
+	return NewCRDClient(ctx, res.NewClusterConf(clusterID))
 }
 
 // List xxx

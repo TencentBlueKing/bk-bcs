@@ -26,21 +26,23 @@ import (
 
 // BuildListAPIRespData xxx
 func BuildListAPIRespData(
-	ctx context.Context, clusterID, resKind, groupVersion, namespace, format string, opts metav1.ListOptions,
+	ctx context.Context, params ListParams, opts metav1.ListOptions,
 ) (map[string]interface{}, error) {
-	clusterConf := res.NewClusterConfig(clusterID)
-	k8sRes, err := res.GetGroupVersionResource(ctx, clusterConf, resKind, groupVersion)
+	clusterConf := res.NewClusterConf(params.ClusterID)
+	k8sRes, err := res.GetGroupVersionResource(ctx, clusterConf, params.ResKind, params.GroupVersion)
 	if err != nil {
 		return nil, err
 	}
 
 	var ret *unstructured.UnstructuredList
-	ret, err = cli.NewResClient(clusterConf, k8sRes).List(ctx, namespace, opts)
+	ret, err = cli.NewResClient(clusterConf, k8sRes).List(ctx, params.Namespace, opts)
 	if err != nil {
 		return nil, err
 	}
 
-	respDataBuilder, err := NewRespDataBuilder(ctx, ret.UnstructuredContent(), resKind, format)
+	respDataBuilder, err := NewRespDataBuilder(
+		ctx, DataBuilderParams{ret.UnstructuredContent(), params.ResKind, params.Format, params.Scene},
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -49,21 +51,23 @@ func BuildListAPIRespData(
 
 // BuildRetrieveAPIRespData xxx
 func BuildRetrieveAPIRespData(
-	ctx context.Context, clusterID, resKind, groupVersion, namespace, name, format string, opts metav1.GetOptions,
+	ctx context.Context, params GetParams, opts metav1.GetOptions,
 ) (map[string]interface{}, error) {
-	clusterConf := res.NewClusterConfig(clusterID)
-	k8sRes, err := res.GetGroupVersionResource(ctx, clusterConf, resKind, groupVersion)
+	clusterConf := res.NewClusterConf(params.ClusterID)
+	k8sRes, err := res.GetGroupVersionResource(ctx, clusterConf, params.ResKind, params.GroupVersion)
 	if err != nil {
 		return nil, err
 	}
 
 	var ret *unstructured.Unstructured
-	ret, err = cli.NewResClient(clusterConf, k8sRes).Get(ctx, namespace, name, opts)
+	ret, err = cli.NewResClient(clusterConf, k8sRes).Get(ctx, params.Namespace, params.Name, opts)
 	if err != nil {
 		return nil, err
 	}
 
-	respDataBuilder, err := NewRespDataBuilder(ctx, ret.UnstructuredContent(), resKind, format)
+	respDataBuilder, err := NewRespDataBuilder(ctx, DataBuilderParams{
+		Manifest: ret.UnstructuredContent(), Kind: params.ResKind, Format: params.Format,
+	})
 	if err != nil {
 		return nil, err
 	}

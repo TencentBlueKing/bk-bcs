@@ -30,6 +30,7 @@ import (
 	clusterAuth "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/iam/perm/resource/cluster"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/project"
 	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
+	resCsts "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/constants"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
 )
@@ -46,13 +47,13 @@ type NSClient struct {
 
 // NewNSClient xxx
 func NewNSClient(ctx context.Context, conf *res.ClusterConf) *NSClient {
-	NSRes, _ := res.GetGroupVersionResource(ctx, conf, res.NS, "")
+	NSRes, _ := res.GetGroupVersionResource(ctx, conf, resCsts.NS, "")
 	return &NSClient{ResClient{NewDynamicClient(conf), conf, NSRes}}
 }
 
 // NewNSCliByClusterID xxx
 func NewNSCliByClusterID(ctx context.Context, clusterID string) *NSClient {
-	return NewNSClient(ctx, res.NewClusterConfig(clusterID))
+	return NewNSClient(ctx, res.NewClusterConf(clusterID))
 }
 
 // List xxx

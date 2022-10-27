@@ -300,6 +300,13 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "scene",
+            "description": "使用场景. 仅 selectItems 格式下有效",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -355,6 +362,13 @@
           {
             "name": "format",
             "description": "资源配置格式（manifest/selectItems）.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "scene",
+            "description": "使用场景. 仅 selectItems 格式下有效",
             "in": "query",
             "required": false,
             "type": "string"
@@ -1032,6 +1046,13 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "scene",
+            "description": "使用场景. 仅 selectItems 格式下有效",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -1094,6 +1115,13 @@
           {
             "name": "format",
             "description": "资源配置格式（manifest/selectItems）.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "scene",
+            "description": "使用场景. 仅 selectItems 格式下有效",
             "in": "query",
             "required": false,
             "type": "string"
@@ -1330,6 +1358,13 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "scene",
+            "description": "使用场景. 仅 selectItems 格式下有效",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -1560,6 +1595,13 @@
           {
             "name": "format",
             "description": "资源配置格式（manifest/selectItems）.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "scene",
+            "description": "使用场景. 仅 selectItems 格式下有效",
             "in": "query",
             "required": false,
             "type": "string"
@@ -1796,6 +1838,13 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "scene",
+            "description": "使用场景. 仅 selectItems 格式下有效",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -1971,6 +2020,70 @@
         ]
       }
     },
+    "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/networks/endpoints/{name}/status": {
+      "get": {
+        "summary": "GetEPStatus API",
+        "description": "获取 Endpoints 状态",
+        "operationId": "Network_GetEPStatus",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCommonResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "clusterID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "namespace",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "apiVersion",
+            "description": "apiVersion.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "format",
+            "description": "资源配置格式（manifest/formData）.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "Network"
+        ]
+      }
+    },
     "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/networks/ingresses": {
       "get": {
         "summary": "ListIng API",
@@ -2026,6 +2139,13 @@
           {
             "name": "format",
             "description": "资源配置格式（manifest/selectItems）.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "scene",
+            "description": "使用场景. 仅 selectItems 格式下有效",
             "in": "query",
             "required": false,
             "type": "string"
@@ -2262,6 +2382,13 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "scene",
+            "description": "使用场景. 仅 selectItems 格式下有效",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -2492,6 +2619,13 @@
           {
             "name": "format",
             "description": "资源配置格式（manifest/selectItems）.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "scene",
+            "description": "使用场景. 仅 selectItems 格式下有效",
             "in": "query",
             "required": false,
             "type": "string"
@@ -2728,6 +2862,13 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "scene",
+            "description": "使用场景. 仅 selectItems 格式下有效",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -2903,6 +3044,70 @@
         ]
       }
     },
+    "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/storages/persistent_volume_claims/{name}/mount_info": {
+      "get": {
+        "summary": "GetPVCBoundInfo API",
+        "description": "获取 PersistentVolumeClaim 被 Pod 挂载的信息",
+        "operationId": "Storage_GetPVCMountInfo",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCommonResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "clusterID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "namespace",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "apiVersion",
+            "description": "apiVersion.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "format",
+            "description": "资源配置格式（manifest/formData）.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "Storage"
+        ]
+      }
+    },
     "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/cronjobs": {
       "get": {
         "summary": "ListCJ API",
@@ -2958,6 +3163,13 @@
           {
             "name": "format",
             "description": "资源配置格式（manifest/selectItems）.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "scene",
+            "description": "使用场景. 仅 selectItems 格式下有效",
             "in": "query",
             "required": false,
             "type": "string"
@@ -3194,6 +3406,13 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "scene",
+            "description": "使用场景. 仅 selectItems 格式下有效",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -3424,6 +3643,13 @@
           {
             "name": "format",
             "description": "资源配置格式（manifest/selectItems）.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "scene",
+            "description": "使用场景. 仅 selectItems 格式下有效",
             "in": "query",
             "required": false,
             "type": "string"
@@ -3776,6 +4002,13 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "scene",
+            "description": "使用场景. 仅 selectItems 格式下有效",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -4013,6 +4246,13 @@
           {
             "name": "format",
             "description": "资源配置格式（manifest/selectItems）.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "scene",
+            "description": "使用场景. 仅 selectItems 格式下有效",
             "in": "query",
             "required": false,
             "type": "string"
@@ -4661,6 +4901,13 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "scene",
+            "description": "使用场景. 仅 selectItems 格式下有效",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -5149,6 +5396,13 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "scene",
+            "description": "使用场景. 仅 selectItems 格式下有效",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -5337,6 +5591,13 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "scene",
+            "description": "使用场景.",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -5446,6 +5707,13 @@
           {
             "name": "format",
             "description": "资源配置格式（manifest/selectItems）.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "scene",
+            "description": "使用场景. 仅 selectItems 格式下有效",
             "in": "query",
             "required": false,
             "type": "string"
@@ -5720,6 +5988,13 @@
           {
             "name": "format",
             "description": "资源配置格式（manifest/selectItems）.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "scene",
+            "description": "使用场景. 仅 selectItems 格式下有效",
             "in": "query",
             "required": false,
             "type": "string"

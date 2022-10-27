@@ -19,6 +19,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	resCsts "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/constants"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/model"
 )
 
@@ -89,7 +90,7 @@ var lightPVManifestNFS = map[string]interface{}{
 }
 
 var exceptedPVSpecLocal = model.PVSpec{
-	Type:        PVTypeLocalVolume,
+	Type:        resCsts.PVTypeLocalVolume,
 	SCName:      "local-path",
 	StorageSize: 3,
 	AccessModes: []string{"ReadOnlyMany", "ReadWriteOnce"},
@@ -97,7 +98,7 @@ var exceptedPVSpecLocal = model.PVSpec{
 }
 
 var exceptedPVSpecHostPath = model.PVSpec{
-	Type:         PVTypeHostPath,
+	Type:         resCsts.PVTypeHostPath,
 	SCName:       "local-path",
 	StorageSize:  1,
 	AccessModes:  []string{"ReadOnlyMany", "ReadWriteMany"},
@@ -106,7 +107,7 @@ var exceptedPVSpecHostPath = model.PVSpec{
 }
 
 var exceptedPVSpecNFS = model.PVSpec{
-	Type:        PVTypeNFS,
+	Type:        resCsts.PVTypeNFS,
 	SCName:      "local-path",
 	StorageSize: 4,
 	AccessModes: []string{"ReadOnlyMany", "ReadWriteMany"},

@@ -30,6 +30,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/handler"
 	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
 	cli "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/client"
+	resCsts "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/constants"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/example"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/parser/util"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/parser/workload"
@@ -88,7 +89,7 @@ var deployManifest4RenderTest = map[string]interface{}{
 
 func TestManifestRenderer(t *testing.T) {
 	formData := workload.ParseDeploy(deployManifest4RenderTest)
-	manifest, err := NewManifestRenderer(context.TODO(), formData, envs.TestClusterID, res.Deploy).Render()
+	manifest, err := NewManifestRenderer(context.TODO(), formData, envs.TestClusterID, resCsts.Deploy).Render()
 	assert.Nil(t, err)
 
 	assert.Equal(t, "busybox", mapx.GetStr(manifest, "metadata.labels.app"))
@@ -98,7 +99,9 @@ func TestManifestRenderer(t *testing.T) {
 	// 注入信息检查
 	assert.Equal(t, "apps/v1", mapx.GetStr(manifest, "apiVersion"))
 
-	assert.Equal(t, res.EditModeForm, mapx.GetStr(manifest, []string{"metadata", "annotations", res.EditModeAnnoKey}))
+	assert.Equal(t, resCsts.EditModeForm, mapx.GetStr(
+		manifest, []string{"metadata", "annotations", resCsts.EditModeAnnoKey},
+	))
 }
 
 type manifestRenderTestData struct {
@@ -146,7 +149,7 @@ var testCaseData = []manifestRenderTestData{
 func TestManifestRenderByPipe(t *testing.T) {
 	ctx := handler.NewInjectedContext("", "", "")
 	pathPrefix := path.GetCurPKGPath() + "/testdata/manifest/"
-	clusterConf := res.NewClusterConfig(envs.TestClusterID)
+	clusterConf := res.NewClusterConf(envs.TestClusterID)
 
 	// TODO 考虑下拆分函数，逻辑太多了可读性差
 	for _, data := range testCaseData {

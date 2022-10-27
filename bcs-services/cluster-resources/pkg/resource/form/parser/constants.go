@@ -15,7 +15,7 @@
 package parser
 
 import (
-	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
+	resCsts "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/constants"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/parser/config"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/parser/custom"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/parser/hpa"
@@ -26,22 +26,22 @@ import (
 
 // Kind2ParseFuncMap 各资源类型对应 ParseFunc
 var Kind2ParseFuncMap = map[string]func(manifest map[string]interface{}) map[string]interface{}{
-	res.Deploy:   workload.ParseDeploy,
-	res.DS:       workload.ParseDS,
-	res.STS:      workload.ParseSTS,
-	res.CJ:       workload.ParseCJ,
-	res.Job:      workload.ParseJob,
-	res.Po:       workload.ParsePo,
-	res.Ing:      network.ParseIng,
-	res.SVC:      network.ParseSVC,
-	res.EP:       network.ParseEP,
-	res.PV:       storage.ParsePV,
-	res.PVC:      storage.ParsePVC,
-	res.SC:       storage.ParseSC,
-	res.HPA:      hpa.ParseHPA,
-	res.CM:       config.ParseCM,
-	res.Secret:   config.ParseSecret,
-	res.HookTmpl: custom.ParseHookTmpl,
-	res.GDeploy:  custom.ParseGDeploy,
-	res.GSTS:     custom.ParseGSTS,
+	resCsts.Deploy:   workload.ParseDeploy,
+	resCsts.DS:       workload.ParseDS,
+	resCsts.STS:      workload.ParseSTS,
+	resCsts.CJ:       workload.ParseCJ,
+	resCsts.Job:      workload.ParseJob,
+	resCsts.Po:       workload.ParsePo,
+	resCsts.Ing:      network.ParseIng,
+	resCsts.SVC:      network.ParseSVC,
+	resCsts.EP:       network.ParseEP,
+	resCsts.PV:       storage.ParsePV,
+	resCsts.PVC:      storage.ParsePVC,
+	resCsts.SC:       storage.ParseSC,
+	resCsts.HPA:      hpa.ParseHPA,
+	resCsts.CM:       config.ParseCM,
+	resCsts.Secret:   config.ParseSecret,
+	resCsts.HookTmpl: custom.ParseHookTmpl,
+	resCsts.GDeploy:  custom.ParseGDeploy,
+	resCsts.GSTS:     custom.ParseGSTS,
 }

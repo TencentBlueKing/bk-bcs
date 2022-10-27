@@ -10,12 +10,9 @@ metadata:
     "io.tencent.bcs.editFormat": "form"
     kubernetes.io/ingress.class: "qcloud"
     kubernetes.io/ingress.existLbId: "lb-abcd"
+    ingress.cloud.tencent.com/auto-rewrite: "true"
+    ingress.cloud.tencent.com/pass-to-target: "true"
 spec:
-  defaultBackend:
-    service:
-      name: svc-4
-      port:
-        number: 443
   tls:
     - secretName: secret-test-12345
       hosts:

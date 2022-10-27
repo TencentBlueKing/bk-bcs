@@ -14,7 +14,9 @@
 
 package formatter
 
-// FormatConfigRes xxx
+import "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
+
+// FormatConfigRes ...
 func FormatConfigRes(manifest map[string]interface{}) map[string]interface{} {
 	ret := CommonFormatRes(manifest)
 	data := []string{}
@@ -24,5 +26,6 @@ func FormatConfigRes(manifest map[string]interface{}) map[string]interface{} {
 		}
 	}
 	ret["data"] = data
+	ret["immutable"] = mapx.GetBool(manifest, "immutable")
 	return ret
 }

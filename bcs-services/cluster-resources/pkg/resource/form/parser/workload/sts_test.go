@@ -20,8 +20,8 @@ import (
 	"github.com/fatih/structs"
 	"github.com/stretchr/testify/assert"
 
+	resCsts "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/constants"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/model"
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/parser/storage"
 )
 
 var lightSTSManifest = map[string]interface{}{
@@ -96,7 +96,7 @@ var exceptedSTSVolumeClaimTmpl = model.STSVolumeClaimTmpl{
 	Claims: []model.VolumeClaim{
 		{
 			PVCName:     "pvc-123",
-			ClaimType:   storage.PVCTypeUseExistPV,
+			ClaimType:   resCsts.PVCTypeUseExistPV,
 			PVName:      "pv-123",
 			SCName:      "",
 			StorageSize: 0,
@@ -104,7 +104,7 @@ var exceptedSTSVolumeClaimTmpl = model.STSVolumeClaimTmpl{
 		},
 		{
 			PVCName:     "pvc-456",
-			ClaimType:   storage.PVCTypeCreateBySC,
+			ClaimType:   resCsts.PVCTypeCreateBySC,
 			PVName:      "",
 			SCName:      "sc-123",
 			StorageSize: 10,

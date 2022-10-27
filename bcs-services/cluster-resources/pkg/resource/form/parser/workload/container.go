@@ -17,7 +17,7 @@ package workload
 import (
 	"github.com/mitchellh/mapstructure"
 
-	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
+	resCsts "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/constants"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/model"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/parser/util"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
@@ -27,9 +27,9 @@ import (
 func ParseContainerGroup(manifest map[string]interface{}, cGroup *model.ContainerGroup) {
 	prefix := "spec.template.spec."
 	switch mapx.GetStr(manifest, "kind") {
-	case res.CJ:
+	case resCsts.CJ:
 		prefix = "spec.jobTemplate.spec.template.spec."
-	case res.Po:
+	case resCsts.Po:
 		prefix = "spec."
 	}
 	// 初始容器
@@ -74,7 +74,7 @@ func parseContainerEnvs(raw map[string]interface{}, cEnvs *model.ContainerEnvs) 
 	for _, env := range mapx.GetList(raw, "env") {
 		e, _ := env.(map[string]interface{})
 		if value, ok := e["value"]; ok {
-			envVar := model.EnvVar{Name: e["name"].(string), Type: EnvVarTypeKeyVal, Value: value.(string)}
+			envVar := model.EnvVar{Name: e["name"].(string), Type: resCsts.EnvVarTypeKeyVal, Value: value.(string)}
 			cEnvs.Vars = append(cEnvs.Vars, envVar)
 		} else if valFrom, ok := e["valueFrom"]; ok {
 			envVar := genValueFormEnvVar(valFrom.(map[string]interface{}), e["name"].(string))
@@ -93,21 +93,21 @@ func genValueFormEnvVar(valFrom map[string]interface{}, name string) model.EnvVa
 	var varType, value, source string
 	if fieldRef, ok := valFrom["fieldRef"]; ok {
 		// 来源于 Pod 本身字段信息
-		varType = EnvVarTypePodField
+		varType = resCsts.EnvVarTypePodField
 		value = fieldRef.(map[string]interface{})["fieldPath"].(string)
 	} else if resFieldRef, ok := valFrom["resourceFieldRef"]; ok {
 		// 来源于资源配额信息
-		varType = EnvVarTypeResource
+		varType = resCsts.EnvVarTypeResource
 		source = resFieldRef.(map[string]interface{})["containerName"].(string)
 		value = resFieldRef.(map[string]interface{})["resource"].(string)
 	} else if cmKeyRef, ok := valFrom["configMapKeyRef"]; ok {
 		// 来源于 ConfigMap 键
-		varType = EnvVarTypeCMKey
+		varType = resCsts.EnvVarTypeCMKey
 		source = cmKeyRef.(map[string]interface{})["name"].(string)
 		value = cmKeyRef.(map[string]interface{})["key"].(string)
 	} else if secRef, ok := valFrom["secretKeyRef"]; ok {
 		// 来源于 Secret 键
-		varType = EnvVarTypeSecretKey
+		varType = resCsts.EnvVarTypeSecretKey
 		source = secRef.(map[string]interface{})["name"].(string)
 		value = secRef.(map[string]interface{})["key"].(string)
 	}
@@ -118,11 +118,11 @@ func genEnvFromEnvVar(envFrom map[string]interface{}) model.EnvVar {
 	envVar := model.EnvVar{Name: envFrom["prefix"].(string)}
 	if cmRef, ok := envFrom["configMapRef"]; ok {
 		// 来源于 ConfigMap
-		envVar.Type = EnvVarTypeCM
+		envVar.Type = resCsts.EnvVarTypeCM
 		envVar.Source = cmRef.(map[string]interface{})["name"].(string)
 	} else if secRef, ok := envFrom["secretRef"]; ok {
 		// 来源于 Secret
-		envVar.Type = EnvVarTypeSecret
+		envVar.Type = resCsts.EnvVarTypeSecret
 		envVar.Source = secRef.(map[string]interface{})["name"].(string)
 	}
 	return envVar
@@ -150,16 +150,16 @@ func parseProbe(raw map[string]interface{}, probe *model.Probe) {
 	probe.FailureThreshold = mapx.GetInt64(raw, "failureThreshold")
 	if httpGet, ok := raw["httpGet"]; ok {
 		probe.Enabled = true
-		probe.Type = ProbeTypeHTTPGet
+		probe.Type = resCsts.ProbeTypeHTTPGet
 		probe.Path = httpGet.(map[string]interface{})["path"].(string)
 		probe.Port = httpGet.(map[string]interface{})["port"].(int64)
 	} else if tcpSocket, ok := raw["tcpSocket"]; ok {
 		probe.Enabled = true
-		probe.Type = ProbeTypeTCPSocket
+		probe.Type = resCsts.ProbeTypeTCPSocket
 		probe.Port = tcpSocket.(map[string]interface{})["port"].(int64)
 	} else if exec, ok := raw["exec"]; ok {
 		probe.Enabled = true
-		probe.Type = ProbeTypeExec
+		probe.Type = resCsts.ProbeTypeExec
 		for _, command := range mapx.GetList(exec.(map[string]interface{}), "command") {
 			probe.Command = append(probe.Command, command.(string))
 		}
@@ -169,7 +169,7 @@ func parseProbe(raw map[string]interface{}, probe *model.Probe) {
 // setDefaultProbe 预设探针默认值，但是不会启用
 func setDefaultProbe(probe *model.Probe) {
 	probe.Enabled = false
-	probe.Type = ProbeTypeHTTPGet
+	probe.Type = resCsts.ProbeTypeHTTPGet
 	probe.PeriodSecs = 10
 	probe.InitialDelaySecs = 0
 	probe.TimeoutSecs = 1

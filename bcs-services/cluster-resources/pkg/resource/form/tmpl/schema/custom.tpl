@@ -57,6 +57,7 @@ spec:
     metrics:
       title: {{ i18n "Metric 定义" .lang }}
       type: array
+      minItems: 1
       items:
         type: object
         required:

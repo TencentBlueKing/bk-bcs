@@ -15,7 +15,7 @@
 package formatter
 
 import (
-	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
+	resCsts "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/constants"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/timex"
 )
@@ -27,7 +27,9 @@ func CommonFormatRes(manifest map[string]interface{}) map[string]interface{} {
 	ret := map[string]interface{}{
 		"age":        timex.CalcAge(rawCreateTime.(string)),
 		"createTime": createTime,
-		"editMode":   mapx.Get(manifest, []string{"metadata", "annotations", res.EditModeAnnoKey}, res.EditModeYaml),
+		"editMode": mapx.Get(
+			manifest, []string{"metadata", "annotations", resCsts.EditModeAnnoKey}, resCsts.EditModeYaml,
+		),
 	}
 	return ret
 }

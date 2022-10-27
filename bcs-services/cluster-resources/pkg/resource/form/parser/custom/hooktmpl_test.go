@@ -19,7 +19,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
+	resCsts "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/constants"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/model"
 )
 
@@ -109,34 +109,34 @@ var exceptedHookTmplSpec = model.HookTmplSpec{
 		},
 	},
 	ExecPolicy:            "Ordered",
-	DeletionProtectPolicy: res.DeletionProtectPolicyAlways,
+	DeletionProtectPolicy: resCsts.DeletionProtectPolicyAlways,
 	Metrics: []model.HookTmplMetric{
 		{
 			Name:             "web",
-			HookType:         HookTmplMetricTypeWeb,
+			HookType:         resCsts.HookTmplMetricTypeWeb,
 			URL:              "http://1.1.1.1:80",
 			JSONPath:         "{$.result}",
 			TimeoutSecs:      10,
 			Count:            2,
 			Interval:         1,
 			SuccessCondition: "asInt(result) == 1",
-			SuccessPolicy:    HookTmplConsecutiveSuccessfulLimit,
+			SuccessPolicy:    resCsts.HookTmplConsecutiveSuccessfulLimit,
 			SuccessCnt:       1,
 		},
 		{
 			Name:             "prom",
-			HookType:         HookTmplMetricTypeProm,
+			HookType:         resCsts.HookTmplMetricTypeProm,
 			Address:          "http://prometheus.com",
 			Query:            "query_test",
 			Count:            0,
 			Interval:         1,
 			SuccessCondition: "asInt(result) == 2",
-			SuccessPolicy:    HookTmplSuccessfulLimit,
+			SuccessPolicy:    resCsts.HookTmplSuccessfulLimit,
 			SuccessCnt:       1,
 		},
 		{
 			Name:     "k8s",
-			HookType: HookTmplMetricTypeK8S,
+			HookType: resCsts.HookTmplMetricTypeK8S,
 			Function: "patch",
 			Fields: []model.HookTmplField{
 				{
@@ -146,7 +146,7 @@ var exceptedHookTmplSpec = model.HookTmplSpec{
 			},
 			Count:         0,
 			Interval:      2,
-			SuccessPolicy: HookTmplConsecutiveSuccessfulLimit,
+			SuccessPolicy: resCsts.HookTmplConsecutiveSuccessfulLimit,
 			SuccessCnt:    3,
 		},
 	},

@@ -12,14 +12,20 @@
  * limitations under the License.
  */
 
-package network
+package constants
 
 const (
 	// IngClsAnnoKey ...
 	IngClsAnnoKey = "kubernetes.io/ingress.class"
 
+	// IngAutoRewriteHTTPAnnoKey http 端口重定向到 https 端口
+	IngAutoRewriteHTTPAnnoKey = "ingress.cloud.tencent.com/auto-rewrite"
+
 	// IngExistLBIDAnnoKey ...
 	IngExistLBIDAnnoKey = "kubernetes.io/ingress.existLbId"
+
+	// IngQcloudCurLBIDAnnoKey 控制器为 qcloud 的 ingress 当前使用的 lb id
+	IngQcloudCurLBIDAnnoKey = "kubernetes.io/ingress.qcloud-loadbalance-id"
 
 	// IngSubNetIDAnnoKey ...
 	IngSubNetIDAnnoKey = "kubernetes.io/ingress.subnetId"
@@ -43,12 +49,29 @@ const (
 )
 
 const (
-	// CLBTypeExternal 外网 CLB
-	CLBTypeExternal = "external"
+	// SVCCurLBIDAnnoKey service 目前使用的 lb-id，可能来源于 existed-lbid，也可能来源于自动创建的
+	SVCCurLBIDAnnoKey = "service.kubernetes.io/loadbalance-id"
 
-	// CLBTypeInternal 内网 CLB
-	CLBTypeInternal = "internal"
+	// SVCExistLBIDAnnoKey ...
+	SVCExistLBIDAnnoKey = "service.kubernetes.io/tke-existed-lbid"
+
+	// SVCSubNetIDAnnoKey ...
+	SVCSubNetIDAnnoKey = "service.kubernetes.io/qcloud-loadbalancer-internal-subnetid"
 )
+
+const (
+	// SVCTypeClusterIP ClusterIP 类型的 Service
+	SVCTypeClusterIP = "ClusterIP"
+
+	// SVCTypeNodePort ...
+	SVCTypeNodePort = "NodePort"
+
+	// SVCTypeLoadBalancer ...
+	SVCTypeLoadBalancer = "LoadBalancer"
+)
+
+// IngTargetSVCEnabledServiceTypes 可以作为 ingress target service 的 service 类型
+var IngTargetSVCEnabledServiceTypes = []string{SVCTypeNodePort, SVCTypeLoadBalancer}
 
 const (
 	// SessionAffinityTypeNone Session 亲和性 None 类型
@@ -56,4 +79,7 @@ const (
 
 	// SessionAffinityTypeClientIP Session 亲和性 ClusterIP 类型
 	SessionAffinityTypeClientIP = "ClientIP"
+
+	// DefaultSessionAffinityStickyTime 默认的会话保留时间：10800 秒
+	DefaultSessionAffinityStickyTime = int64(10800)
 )

@@ -31,6 +31,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/iam"
 	clusterAuth "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/iam/perm/resource/cluster"
 	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
+	resCsts "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/constants"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/slice"
@@ -44,13 +45,13 @@ type PodClient struct {
 
 // NewPodClient xxx
 func NewPodClient(ctx context.Context, conf *res.ClusterConf) *PodClient {
-	podRes, _ := res.GetGroupVersionResource(ctx, conf, res.Po, "")
+	podRes, _ := res.GetGroupVersionResource(ctx, conf, resCsts.Po, "")
 	return &PodClient{ResClient{NewDynamicClient(conf), conf, podRes}}
 }
 
 // NewPodCliByClusterID xxx
 func NewPodCliByClusterID(ctx context.Context, clusterID string) *PodClient {
-	return NewPodClient(ctx, res.NewClusterConfig(clusterID))
+	return NewPodClient(ctx, res.NewClusterConf(clusterID))
 }
 
 // List xxx
@@ -102,12 +103,12 @@ func (c *PodClient) getPodOwnerRefs(
 	ctx context.Context, clusterConf *res.ClusterConf, namespace, ownerKind, ownerName string, opts metav1.ListOptions,
 ) ([]map[string]string, error) {
 	subOwnerRefs := []map[string]string{{"kind": ownerKind, "name": ownerName}}
-	if !slice.StringInSlice(ownerKind, []string{res.Deploy, res.CJ}) {
+	if !slice.StringInSlice(ownerKind, []string{resCsts.Deploy, resCsts.CJ}) {
 		return subOwnerRefs, nil
 	}
 
 	// Deployment/CronJob 不直接关联 Pod，而是通过 ReplicaSet/Job 间接关联，需要向下钻取 Pod 的 OwnerReferences 信息
-	subResKind := map[string]string{res.Deploy: res.RS, res.CJ: res.Job}[ownerKind]
+	subResKind := map[string]string{resCsts.Deploy: resCsts.RS, resCsts.CJ: resCsts.Job}[ownerKind]
 	subRes, err := res.GetGroupVersionResource(ctx, clusterConf, subResKind, "")
 	if err != nil {
 		return nil, err
@@ -195,7 +196,7 @@ func (c *PodClient) getPodRelatedResNameList(
 		return nil, err
 	}
 	// Pod 配置中资源类型为驼峰式，需要将 Resource Kind 首字母小写
-	kind, resNameKey := stringx.Decapitalize(resKind), res.Volume2ResNameKeyMap[resKind]
+	kind, resNameKey := stringx.Decapitalize(resKind), resCsts.Volume2ResNameKeyMap[resKind]
 	// 获取与指定 Pod 相关联的 某种资源 的资源名称列表
 	resNameList := []string{}
 	for _, vol := range mapx.GetList(podManifest, "spec.volumes") {
@@ -204,6 +205,35 @@ func (c *PodClient) getPodRelatedResNameList(
 		}
 	}
 	return resNameList, nil
+}
+
+// GetPVCMountInfo 获取指定命名空间下 Pod 挂载的 PVC 信息
+func (c *PodClient) GetPVCMountInfo(
+	ctx context.Context, namespace string, opts metav1.ListOptions,
+) map[string][]string {
+	pvcMountInfo := map[string][]string{}
+
+	ret, err := c.ResClient.List(ctx, namespace, opts)
+	if err != nil {
+		return pvcMountInfo
+	}
+
+	// 参考 https://github.com/kubernetes/kubectl/blob/92206a7303970ac055539a8ba6f93775d5f7643f/pkg/describe/describe.go#L1605
+	for _, pod := range mapx.GetList(ret.UnstructuredContent(), "items") {
+		p := pod.(map[string]interface{})
+		for _, volume := range mapx.GetList(p, "spec.volumes") {
+			claimName := mapx.GetStr(volume.(map[string]interface{}), "persistentVolumeClaim.claimName")
+			if claimName != "" {
+				podName := mapx.GetStr(p, "metadata.name")
+				if _, ok := pvcMountInfo[claimName]; ok {
+					pvcMountInfo[claimName] = append(pvcMountInfo[claimName], podName)
+				} else {
+					pvcMountInfo[claimName] = []string{podName}
+				}
+			}
+		}
+	}
+	return pvcMountInfo
 }
 
 // ExecCommand 在指定容器中执行命令，获取 stdout, stderr

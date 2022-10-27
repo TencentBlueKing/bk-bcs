@@ -106,8 +106,8 @@ ports:
 env:
   {{- range .vars }}
   {{- if eq .type "keyValue" }}
-  - name: {{ .name }}
-    value: {{ .value }}
+  - name: {{ .name | quote }}
+    value: {{ .value | quote }}
   {{- else if eq .type "podField" }}
   - name: {{ .name }}
     valueFrom:

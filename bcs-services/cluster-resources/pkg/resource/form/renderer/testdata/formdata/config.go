@@ -18,9 +18,8 @@ import (
 	"strings"
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/envs"
-	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
+	resCsts "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/constants"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/model"
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/parser/config"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/stringx"
 )
 
@@ -28,11 +27,12 @@ import (
 var CMComplex = model.CM{
 	Metadata: model.Metadata{
 		APIVersion: "v1",
-		Kind:       res.CM,
+		Kind:       resCsts.CM,
 		Name:       "cm-complex-" + strings.ToLower(stringx.Rand(10, "")),
 		Namespace:  envs.TestNamespace,
 	},
 	Data: model.CMData{
+		Immutable: true,
 		Items: []model.OpaqueData{
 			{
 				Key:   "key1",
@@ -50,12 +50,13 @@ var CMComplex = model.CM{
 var SecretOpaque = model.Secret{
 	Metadata: model.Metadata{
 		APIVersion: "v1",
-		Kind:       res.Secret,
+		Kind:       resCsts.Secret,
 		Name:       "secret-opaque-" + strings.ToLower(stringx.Rand(10, "")),
 		Namespace:  envs.TestNamespace,
 	},
 	Data: model.SecretData{
-		Type: config.SecretTypeOpaque,
+		Type:      resCsts.SecretTypeOpaque,
+		Immutable: true,
 		Opaque: []model.OpaqueData{
 			{"username", "admin_user"},
 		},
@@ -66,12 +67,12 @@ var SecretOpaque = model.Secret{
 var SecretSocker = model.Secret{
 	Metadata: model.Metadata{
 		APIVersion: "v1",
-		Kind:       res.Secret,
+		Kind:       resCsts.Secret,
 		Name:       "secret-docker-" + strings.ToLower(stringx.Rand(10, "")),
 		Namespace:  envs.TestNamespace,
 	},
 	Data: model.SecretData{
-		Type: config.SecretTypeDocker,
+		Type: resCsts.SecretTypeDocker,
 		Docker: model.DockerRegistryData{
 			Registry: "docker.io",
 			Username: "admin_user",
@@ -84,12 +85,12 @@ var SecretSocker = model.Secret{
 var SecretBasicAuth = model.Secret{
 	Metadata: model.Metadata{
 		APIVersion: "v1",
-		Kind:       res.Secret,
+		Kind:       resCsts.Secret,
 		Name:       "secret-basic-auth-" + strings.ToLower(stringx.Rand(10, "")),
 		Namespace:  envs.TestNamespace,
 	},
 	Data: model.SecretData{
-		Type: config.SecretTypeBasicAuth,
+		Type: resCsts.SecretTypeBasicAuth,
 		BasicAuth: model.BasicAuthData{
 			Username: "admin_user1",
 		},
@@ -100,12 +101,12 @@ var SecretBasicAuth = model.Secret{
 var SecretSSHAuth = model.Secret{
 	Metadata: model.Metadata{
 		APIVersion: "v1",
-		Kind:       res.Secret,
+		Kind:       resCsts.Secret,
 		Name:       "secret-ssh-auth-" + strings.ToLower(stringx.Rand(10, "")),
 		Namespace:  envs.TestNamespace,
 	},
 	Data: model.SecretData{
-		Type: config.SecretTypeSSHAuth,
+		Type: resCsts.SecretTypeSSHAuth,
 		SSHAuth: model.SSHAuthData{
 			PublicKey:  "-----BEGIN RSA PUBLIC KEY-----\nB\n-----END RSA PUBLIC KEY-----\n",
 			PrivateKey: "-----BEGIN RSA PRIVATE KEY-----\nA\n-----END RSA PRIVATE KEY-----\n",
@@ -117,12 +118,12 @@ var SecretSSHAuth = model.Secret{
 var SecretTLS = model.Secret{
 	Metadata: model.Metadata{
 		APIVersion: "v1",
-		Kind:       res.Secret,
+		Kind:       resCsts.Secret,
 		Name:       "secret-tls-" + strings.ToLower(stringx.Rand(10, "")),
 		Namespace:  envs.TestNamespace,
 	},
 	Data: model.SecretData{
-		Type: config.SecretTypeTLS,
+		Type: resCsts.SecretTypeTLS,
 		TLS: model.TLSData{
 			PrivateKey: "-----BEGIN RSA PRIVATE KEY-----\nA\n-----END RSA PRIVATE KEY-----\n",
 			Cert:       "-----BEGIN CERTIFICATE-----\nC\n-----END CERTIFICATE-----\n",
@@ -134,12 +135,12 @@ var SecretTLS = model.Secret{
 var SecretSAToken = model.Secret{
 	Metadata: model.Metadata{
 		APIVersion: "v1",
-		Kind:       res.Secret,
+		Kind:       resCsts.Secret,
 		Name:       "secret-sa-token-" + strings.ToLower(stringx.Rand(10, "")),
 		Namespace:  envs.TestNamespace,
 	},
 	Data: model.SecretData{
-		Type: config.SecretTypeSAToken,
+		Type: resCsts.SecretTypeSAToken,
 		SAToken: model.SATokenData{
 			Namespace: "default",
 			SAName:    "default-x",

@@ -26,6 +26,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/i18n"
 	log "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/logging"
 	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
+	resCsts "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/constants"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/validator"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
@@ -103,13 +104,15 @@ func (r *ManifestRenderer) setEditMode() error {
 	// 若 annotations 中有 editMode key，则刷新为 FormMode
 	annotations := mapx.GetList(r.formData, "metadata.annotations")
 	for _, anno := range annotations {
-		if anno.(map[string]interface{})["key"] == res.EditModeAnnoKey {
-			anno.(map[string]interface{})["value"] = res.EditModeForm
+		if anno.(map[string]interface{})["key"] == resCsts.EditModeAnnoKey {
+			anno.(map[string]interface{})["value"] = resCsts.EditModeForm
 			return nil
 		}
 	}
 	// 如果没有对应的 key，则新增
-	annotations = append(annotations, map[string]interface{}{"key": res.EditModeAnnoKey, "value": res.EditModeForm})
+	annotations = append(annotations, map[string]interface{}{
+		"key": resCsts.EditModeAnnoKey, "value": resCsts.EditModeForm,
+	})
 	return mapx.SetItems(r.formData, "metadata.annotations", annotations)
 }
 

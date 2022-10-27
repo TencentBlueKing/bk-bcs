@@ -5,6 +5,7 @@ metadata:
   namespace: default
   annotations:
     "io.tencent.bcs.editFormat": "form"
+immutable: true
 data:
   "key1": "value1"
   "key2": "value2\nvalue3\nvalue4"

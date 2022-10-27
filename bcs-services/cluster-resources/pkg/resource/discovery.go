@@ -41,6 +41,14 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/stringx"
 )
 
+const (
+	// ResCacheTTL 资源信息默认过期时间 14 天
+	ResCacheTTL = 14 * 24 * 60 * 60
+
+	// ResCacheKeyPrefix 集群资源信息 Redis 缓存键前缀
+	ResCacheKeyPrefix = "osrcp"
+)
+
 // RedisCacheClient 基于 Redis 缓存的，单个集群资源信息 Client
 type RedisCacheClient struct {
 	ctx      context.Context
@@ -250,6 +258,15 @@ func (d *RedisCacheClient) writeCache(groupVersion string, obj runtime.Object) e
 	return nil
 }
 
+// GetServerVersion 获取集群版本信息
+func GetServerVersion(ctx context.Context, clusterID string) (*version.Info, error) {
+	cli, err := NewRedisCacheClient4Conf(ctx, NewClusterConf(clusterID))
+	if err != nil {
+		return nil, err
+	}
+	return cli.ServerVersion()
+}
+
 // GetGroupVersionResource 根据配置，名称等信息，获取指定资源对应的 GroupVersionResource
 // 若指定 GroupVersion，则在对应的 Group 中寻找资源信息，否则获取 preferred version
 // 包含刷新缓存逻辑，若首次从缓存中找不到对应资源，会刷新缓存再次查询，若还是找不到，则返回错误
@@ -280,7 +297,7 @@ func GetGroupVersionResource(
 
 // GetResPreferredVersion 获取某类资源在集群中的 Preferred 版本
 func GetResPreferredVersion(ctx context.Context, clusterID, kind string) (string, error) {
-	resInfo, err := GetGroupVersionResource(ctx, NewClusterConfig(clusterID), kind, "")
+	resInfo, err := GetGroupVersionResource(ctx, NewClusterConf(clusterID), kind, "")
 	if err != nil {
 		return "", errorx.New(errcode.General, i18n.GetMsg(ctx, "获取资源 APIVersion 信息失败：%v"), err)
 	}

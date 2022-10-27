@@ -157,6 +157,36 @@ spec:
                   operator: Exists
               matchLabels:
                 "labelKey": "labelVal"
+    podAntiAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        - topologyKey: "topoKeyTest3"
+          namespaces:
+            - default
+          labelSelector:
+            matchExpressions:
+              - key: "testKey3"
+                operator: In
+                values:
+                  - "testVal3"
+                  - "testVal4"
+            matchLabels:
+              "testKey4": "testVal4"
+      preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 50
+          podAffinityTerm:
+            topologyKey: "topoKeyTest2"
+            namespaces:
+              - default
+              - kube-system
+            labelSelector:
+              matchExpressions:
+                - key: "testKey2"
+                  operator: In
+                  values:
+                    - "testVal2"
+                    - "testVal2"
+              matchLabels:
+                "testKey3": "testVal3"
     nodeAffinity:
       requiredDuringSchedulingIgnoredDuringExecution:
         nodeSelectorTerms:

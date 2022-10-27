@@ -14,10 +14,38 @@
 
 package resp
 
+// ListParams 资源 List 请求通用参数
+type ListParams struct {
+	ClusterID    string
+	ResKind      string
+	GroupVersion string
+	Namespace    string
+	Format       string
+	Scene        string
+}
+
+// GetParams 资源 Get 请求通用参数
+type GetParams struct {
+	ClusterID    string
+	ResKind      string
+	GroupVersion string
+	Namespace    string
+	Name         string
+	Format       string
+}
+
 // DataBuilder 接收不同类型的参数，转换成 List/Retrieve 请求的响应数据
 type DataBuilder interface {
 	// BuildList 构建 List API RespData
 	BuildList() (map[string]interface{}, error)
 	// Build 构建 Retrieve API RespData
 	Build() (map[string]interface{}, error)
+}
+
+// DataBuilderParams 初始化 DataBuilder 参数
+type DataBuilderParams struct {
+	Manifest map[string]interface{}
+	Kind     string
+	Format   string
+	Scene    string
 }

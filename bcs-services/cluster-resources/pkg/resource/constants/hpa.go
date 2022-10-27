@@ -12,22 +12,31 @@
  * limitations under the License.
  */
 
-package storage
+package constants
 
 const (
-	// PVTypeLocalVolume ...
-	PVTypeLocalVolume = "local"
-
-	// PVTypeHostPath ...
-	PVTypeHostPath = "hostPath"
-
-	// PVTypeNFS ...
-	PVTypeNFS = "nfs"
+	// DefaultHPAGroupVersion 特殊指定的 HPA 版本
+	DefaultHPAGroupVersion = "autoscaling/v2beta2"
 )
 
 const (
-	// PVCTypeUseExistPV PVC 使用现有的 PV
-	PVCTypeUseExistPV = "useExistPV"
-	// PVCTypeCreateBySC 不指定 PV 而是使用 SC 创建
-	PVCTypeCreateBySC = "createBySC"
+	// HPAMetricTypeRes ...
+	HPAMetricTypeRes = "Resource"
+	// HPAMetricTypeContainerRes ...
+	HPAMetricTypeContainerRes = "ContainerResource"
+	// HPAMetricTypeExternal ...
+	HPAMetricTypeExternal = "External"
+	// HPAMetricTypeObject ...
+	HPAMetricTypeObject = "Object"
+	// HPAMetricTypePod ...
+	HPAMetricTypePod = "Pods"
+)
+
+const (
+	// HPATargetTypeUtilization ...
+	HPATargetTypeUtilization = "Utilization"
+	// HPATargetTypeValue ...
+	HPATargetTypeValue = "Value"
+	// HPATargetTypeAverageValue ...
+	HPATargetTypeAverageValue = "AverageValue"
 )

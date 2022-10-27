@@ -20,7 +20,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/i18n"
-	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
+	resCsts "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/constants"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/renderer"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
@@ -47,9 +47,9 @@ type DummyTransformer struct {
 func (t *DummyTransformer) ToManifest() (map[string]interface{}, error) {
 	// 使用原生 Manifest 作为创建 / 更新配置时，检查 editMode，如果值不为空，则设置为 yaml，
 	// 避免出现使用 yaml 模式后依然使用表单进行编辑导致的表单未支持字段配置丢失的情况
-	paths := []string{"metadata", "annotations", res.EditModeAnnoKey}
+	paths := []string{"metadata", "annotations", resCsts.EditModeAnnoKey}
 	if editMode := mapx.GetStr(t.manifest, paths); editMode != "" {
-		if err := mapx.SetItems(t.manifest, paths, res.EditModeYaml); err != nil {
+		if err := mapx.SetItems(t.manifest, paths, resCsts.EditModeYaml); err != nil {
 			return nil, err
 		}
 	}

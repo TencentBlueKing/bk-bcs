@@ -12,7 +12,21 @@
  * limitations under the License.
  */
 
-package custom
+package constants
+
+const (
+	// DeletionProtectLabelKey 删除保护标记使用的 Label 键名
+	DeletionProtectLabelKey = "io.tencent.bcs.dev/deletion-allow"
+)
+
+const (
+	// DeletionProtectPolicyCascading 实例数量为 0 才可以删除
+	DeletionProtectPolicyCascading = "Cascading"
+	// DeletionProtectPolicyAlways 不限制，任意时候可删除
+	DeletionProtectPolicyAlways = "Always"
+	// DeletionProtectPolicyNotAllow 任意时候都无法删除
+	DeletionProtectPolicyNotAllow = "NotAllow"
+)
 
 const (
 	// HookTmplPolicyParallel metrics 并行执行
@@ -29,18 +43,18 @@ const (
 )
 
 const (
-	// HookTmplMetricTypeWeb TODO
+	// HookTmplMetricTypeWeb ...
 	HookTmplMetricTypeWeb = "web"
-	// HookTmplMetricTypeProm TODO
+	// HookTmplMetricTypeProm ...
 	HookTmplMetricTypeProm = "prometheus"
-	// HookTmplMetricTypeK8S TODO
+	// HookTmplMetricTypeK8S ...
 	HookTmplMetricTypeK8S = "kubernetes"
 )
 
 const (
-	// DefaultGWorkloadMaxSurge TODO
+	// DefaultGWorkloadMaxSurge ...
 	DefaultGWorkloadMaxSurge = 0
-	// DefaultGWorkloadMaxUnavailable TODO
+	// DefaultGWorkloadMaxUnavailable ...
 	DefaultGWorkloadMaxUnavailable = 20
 	// DefaultGWorkloadGracePeriodSecs 默认优雅更新时间
 	DefaultGWorkloadGracePeriodSecs = 30

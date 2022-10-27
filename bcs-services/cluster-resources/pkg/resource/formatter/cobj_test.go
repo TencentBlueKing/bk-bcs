@@ -112,7 +112,7 @@ var lightCObjManifest = map[string]interface{}{
 }
 
 func TestFormatCObj(t *testing.T) {
-	assert.Equal(t, "2022-01-01 10:00:00", FormatCRD(lightCObjManifest)["createTime"])
+	assert.Equal(t, "2022-01-01 10:00:00", FormatCObj(lightCObjManifest)["createTime"])
 }
 
 func TestFormatGDeploy(t *testing.T) {

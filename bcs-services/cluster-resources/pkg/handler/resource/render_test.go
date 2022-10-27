@@ -21,6 +21,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
+	resCsts "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/constants"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/example"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/parser/workload"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/pbstruct"
@@ -35,7 +36,7 @@ func TestFormDataRenderPreview(t *testing.T) {
 	// 类型强制转换，确保解析器正确解析
 	res.ConvertInt2Int64(manifest)
 	formData, _ := pbstruct.Map2pbStruct(workload.ParseDeploy(manifest))
-	req, resp := clusterRes.FormRenderPreviewReq{Kind: res.Deploy, FormData: formData}, clusterRes.CommonResp{}
+	req, resp := clusterRes.FormRenderPreviewReq{Kind: resCsts.Deploy, FormData: formData}, clusterRes.CommonResp{}
 	err := hdlr.FormDataRenderPreview(ctx, &req, &resp)
 	assert.Nil(t, err)
 }

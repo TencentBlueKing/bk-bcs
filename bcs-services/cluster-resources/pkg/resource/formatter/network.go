@@ -19,6 +19,7 @@ import (
 
 	"github.com/TencentBlueKing/gopkg/collection/set"
 
+	resCsts "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/constants"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/stringx"
 )
@@ -42,6 +43,29 @@ func FormatIng(manifest map[string]interface{}) map[string]interface{} {
 	ret["addresses"] = parseIngAddrs(manifest)
 	ret["defaultPorts"] = getIngDefaultPort(manifest)
 	ret["rules"] = parseRulesFunc(manifest)
+
+	annotations := mapx.GetMap(manifest, "metadata.annotations")
+	// 控制器
+	ret["controller"] = mapx.Get(annotations, []string{resCsts.IngClsAnnoKey}, resCsts.IngClsNginx).(string)
+
+	// 绑定的 CLB ID，qcloud 类型的 ingress 会取实际使用的，其他类型的取默认指定的
+	existLBIDPaths := []string{resCsts.IngExistLBIDAnnoKey}
+	if ret["controller"] == resCsts.IngClsQCloud {
+		existLBIDPaths = []string{resCsts.IngQcloudCurLBIDAnnoKey}
+	}
+	ret["existLBID"] = mapx.GetStr(annotations, existLBIDPaths)
+
+	// 内网子网 ID
+	ret["subNetID"] = mapx.GetStr(annotations, []string{resCsts.IngSubNetIDAnnoKey})
+
+	// CLB 使用方式，如果已指定 clb，则使用模式为使用已存在的 clb，否则为自动创建新 clb
+	if ret["existLBID"] != "" {
+		ret["clbUseType"] = resCsts.CLBUseTypeUseExists
+	} else {
+		ret["clbUseType"] = resCsts.CLBUseTypeAutoCreate
+	}
+	// 重定向 HTTP 端口到 HTTPS
+	ret["autoRewrite"] = mapx.GetStr(annotations, []string{resCsts.IngAutoRewriteHTTPAnnoKey}) == "true"
 	return ret
 }
 
@@ -50,29 +74,32 @@ func FormatSVC(manifest map[string]interface{}) map[string]interface{} {
 	ret := FormatNetworkRes(manifest)
 	ret["externalIP"] = parseSVCExternalIPs(manifest)
 	ret["ports"] = parseSVCPorts(manifest)
+	ret["clbID"] = mapx.GetStr(manifest, []string{"metadata", "annotations", resCsts.SVCCurLBIDAnnoKey})
+	ret["subnetID"] = mapx.GetStr(manifest, []string{"metadata", "annotations", resCsts.SVCSubNetIDAnnoKey})
+	ret["stickyTime"] = mapx.Get(
+		manifest, "spec.sessionAffinityConfig.clientIP.timeoutSeconds",
+		resCsts.DefaultSessionAffinityStickyTime,
+	).(int64)
 
 	clusterIPSet := set.NewStringSet()
 	clusterIP := mapx.GetStr(manifest, "spec.clusterIP")
 	clusterIPSet.Add(clusterIP)
 
 	// 双栈集群特有字段
-	for _, item := range mapx.GetList(manifest, "spec.clusterIPs") {
-		ip := item.(string)
-		clusterIPSet.Add(ip)
+	for _, ip := range mapx.GetList(manifest, "spec.clusterIPs") {
+		clusterIPSet.Add(ip.(string))
 	}
 
 	// 同时兼容 ipv4 / ipv6 集群
-	ret["clusterIPv4"] = ""
-	ret["clusterIPv6"] = ""
-	for _, clusterIP := range clusterIPSet.ToSlice() {
+	ret["clusterIPv4"], ret["clusterIPv6"] = "", ""
+	for _, ip := range clusterIPSet.ToSlice() {
 		switch {
-		case stringx.IsIPv4(clusterIP):
-			ret["clusterIPv4"] = clusterIP
-		case stringx.IsIPv6(clusterIP):
-			ret["clusterIPv6"] = clusterIP
+		case stringx.IsIPv4(ip):
+			ret["clusterIPv4"] = ip
+		case stringx.IsIPv6(ip):
+			ret["clusterIPv6"] = ip
 		}
 	}
-
 	return ret
 }
 
@@ -162,7 +189,11 @@ func parseV1beta1IngRules(manifest map[string]interface{}) (rules []map[string]i
 
 // parseSVCExternalIPs 解析 SVC ExternalIP
 func parseSVCExternalIPs(manifest map[string]interface{}) []string {
-	return parseIngAddrs(manifest)
+	externalIPs := parseIngAddrs(manifest)
+	for _, ip := range mapx.GetList(manifest, "spec.externalIPs") {
+		externalIPs = append(externalIPs, ip.(string))
+	}
+	return externalIPs
 }
 
 // parseSVCPorts 解析 SVC Ports

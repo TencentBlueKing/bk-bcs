@@ -17,7 +17,7 @@ package custom
 import (
 	"github.com/fatih/structs"
 
-	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
+	resCsts "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/constants"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/model"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/parser/common"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/parser/util"
@@ -53,19 +53,23 @@ func ParseGDeploySpec(manifest map[string]interface{}, spec *model.GDeploySpec) 
 // ParseGDeployReplicas xxx
 func ParseGDeployReplicas(manifest map[string]interface{}, replicas *model.GDeployReplicas) {
 	replicas.Cnt = mapx.GetInt64(manifest, "spec.replicas")
-	replicas.UpdateStrategy = mapx.Get(manifest, "spec.updateStrategy.type", workload.DefaultUpdateStrategy).(string)
-	replicas.MaxSurge, replicas.MSUnit = DefaultGWorkloadMaxSurge, util.UnitCnt
+	replicas.UpdateStrategy = mapx.Get(
+		manifest, "spec.updateStrategy.type", resCsts.DefaultUpdateStrategy,
+	).(string)
+	replicas.MaxSurge, replicas.MSUnit = resCsts.DefaultGWorkloadMaxSurge, util.UnitCnt
 	if maxSurge, err := mapx.GetItems(manifest, "spec.updateStrategy.maxSurge"); err == nil {
 		replicas.MaxSurge, replicas.MSUnit = util.AnalyzeIntStr(maxSurge)
 	}
-	replicas.MaxUnavailable, replicas.MUAUnit = DefaultGWorkloadMaxUnavailable, util.UnitPercent
+	replicas.MaxUnavailable, replicas.MUAUnit = resCsts.DefaultGWorkloadMaxUnavailable, util.UnitPercent
 	if maxUnavailable, err := mapx.GetItems(manifest, "spec.updateStrategy.maxUnavailable"); err == nil {
 		replicas.MaxUnavailable, replicas.MUAUnit = util.AnalyzeIntStr(maxUnavailable)
 	}
 	replicas.MinReadySecs = mapx.GetInt64(manifest, "spec.minReadySeconds")
 	replicas.Partition = mapx.GetInt64(manifest, "spec.updateStrategy.partition")
 	replicas.GracePeriodSecs = mapx.Get(
-		manifest, "spec.updateStrategy.inPlaceUpdateStrategy.gracePeriodSeconds", int64(DefaultGWorkloadGracePeriodSecs),
+		manifest,
+		"spec.updateStrategy.inPlaceUpdateStrategy.gracePeriodSeconds",
+		int64(resCsts.DefaultGWorkloadGracePeriodSecs),
 	).(int64)
 }
 
@@ -99,6 +103,8 @@ func genGWorkloadHookSpec(hook map[string]interface{}) model.GWorkloadHookSpec {
 // label io.tencent.bcs.dev/deletion-allow key 不存在：无法删除
 func ParseGWorkloadDeletionProtect(manifest map[string]interface{}, protect *model.GWorkloadDeletionProtect) {
 	protect.Policy = mapx.Get(
-		manifest, []string{"metadata", "labels", res.DeletionProtectLabelKey}, res.DeletionProtectPolicyNotAllow,
+		manifest,
+		[]string{"metadata", "labels", resCsts.DeletionProtectLabelKey},
+		resCsts.DeletionProtectPolicyNotAllow,
 	).(string)
 }

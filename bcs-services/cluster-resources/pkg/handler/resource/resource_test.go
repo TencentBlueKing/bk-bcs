@@ -21,7 +21,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/envs"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/handler"
-	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
+	resCsts "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/constants"
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
 )
 
@@ -29,7 +29,7 @@ func TestGetResSelectItems(t *testing.T) {
 	hdlr := New()
 	ctx := handler.NewInjectedContext("", "", "")
 
-	req, resp := clusterRes.GetResSelectItemsReq{Kind: res.Deploy}, clusterRes.CommonResp{}
+	req, resp := clusterRes.GetResSelectItemsReq{Kind: resCsts.Deploy}, clusterRes.CommonResp{}
 	err := hdlr.GetResSelectItems(ctx, &req, &resp)
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "需要指定命名空间")
@@ -38,7 +38,7 @@ func TestGetResSelectItems(t *testing.T) {
 	err = hdlr.GetResSelectItems(ctx, &req, &resp)
 	assert.Nil(t, err)
 
-	req.Kind = res.Po
+	req.Kind = resCsts.Po
 	err = hdlr.GetResSelectItems(ctx, &req, &resp)
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "当前资源类型 Pod 不受支持")

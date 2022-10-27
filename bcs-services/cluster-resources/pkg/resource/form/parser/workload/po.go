@@ -20,6 +20,7 @@ import (
 	"github.com/fatih/structs"
 	"github.com/mitchellh/mapstructure"
 
+	resCsts "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/constants"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/model"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/parser/common"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
@@ -50,17 +51,17 @@ func ParsePoSpec(manifest map[string]interface{}, spec *model.PoSpec) {
 // ParseNodeSelect xxx
 // 类型优先级：指定节点 > 调度规则 > 任意节点
 func ParseNodeSelect(podSpec map[string]interface{}, nodeSelect *model.NodeSelect) {
-	nodeSelect.Type = NodeSelectTypeAnyAvailable
+	nodeSelect.Type = resCsts.NodeSelectTypeAnyAvailable
 	nodeSelector, _ := mapx.GetItems(podSpec, "nodeSelector")
 	if nodeSelector != nil {
-		nodeSelect.Type = NodeSelectTypeSchedulingRule
+		nodeSelect.Type = resCsts.NodeSelectTypeSchedulingRule
 		for k, v := range nodeSelector.(map[string]interface{}) {
 			nodeSelect.Selector = append(nodeSelect.Selector, model.NodeSelector{Key: k, Value: v.(string)})
 		}
 	}
 	nodeName, _ := mapx.GetItems(podSpec, "nodeName")
 	if nodeName != nil {
-		nodeSelect.Type = NodeSelectTypeSpecificNode
+		nodeSelect.Type = resCsts.NodeSelectTypeSpecificNode
 		nodeSelect.NodeName = nodeName.(string)
 	}
 }
@@ -78,7 +79,7 @@ func ParseNodeAffinity(manifest map[string]interface{}, nodeAffinity *[]model.No
 		affinity, "requiredDuringSchedulingIgnoredDuringExecution.nodeSelectorTerms",
 	) {
 		t, _ := term.(map[string]interface{})
-		aff := model.NodeAffinity{Priority: AffinityPriorityRequired}
+		aff := model.NodeAffinity{Priority: resCsts.AffinityPriorityRequired}
 		aff.Selector.Expressions = parseAffinityExpSelector(mapx.GetList(t, "matchExpressions"))
 		aff.Selector.Fields = parseAffinityFieldSelector(mapx.GetList(t, "matchFields"))
 		*nodeAffinity = append(*nodeAffinity, aff)
@@ -87,7 +88,7 @@ func ParseNodeAffinity(manifest map[string]interface{}, nodeAffinity *[]model.No
 		affinity, "preferredDuringSchedulingIgnoredDuringExecution",
 	) {
 		e, _ := exec.(map[string]interface{})
-		aff := model.NodeAffinity{Priority: AffinityPriorityPreferred}
+		aff := model.NodeAffinity{Priority: resCsts.AffinityPriorityPreferred}
 		if weight, ok := e["weight"]; ok {
 			aff.Weight = weight.(int64)
 		}
@@ -130,12 +131,12 @@ func parseAffinityFieldSelector(matchFields []interface{}) []model.FieldSelector
 // ParsePodAffinity xxx
 func ParsePodAffinity(podSpec map[string]interface{}, podAffinity *[]model.PodAffinity) {
 	typeArgsList := []affinityTypeArgs{
-		{AffinityTypeAffinity, "affinity.podAffinity"},
-		{AffinityTypeAntiAffinity, "affinity.podAntiAffinity"},
+		{resCsts.AffinityTypeAffinity, "affinity.podAffinity"},
+		{resCsts.AffinityTypeAntiAffinity, "affinity.podAntiAffinity"},
 	}
 	priorityArgsList := []affinityPriorityArgs{
 		{
-			AffinityPriorityPreferred,
+			resCsts.AffinityPriorityPreferred,
 			"preferredDuringSchedulingIgnoredDuringExecution",
 			"podAffinityTerm.labelSelector.matchExpressions",
 			"podAffinityTerm.labelSelector.matchLabels",
@@ -143,7 +144,7 @@ func ParsePodAffinity(podSpec map[string]interface{}, podAffinity *[]model.PodAf
 			"podAffinityTerm.topologyKey",
 		},
 		{
-			AffinityPriorityRequired,
+			resCsts.AffinityPriorityRequired,
 			"requiredDuringSchedulingIgnoredDuringExecution",
 			"labelSelector.matchExpressions",
 			"labelSelector.matchLabels",

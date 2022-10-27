@@ -19,6 +19,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	resCsts "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/constants"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/model"
 )
 
@@ -28,7 +29,7 @@ var lightV1IngManifest = map[string]interface{}{
 	"metadata": map[string]interface{}{
 		"name": "ing-test-123456",
 		"annotations": map[string]interface{}{
-			"kubernetes.io/ingress.class":     IngClsQCloud,
+			"kubernetes.io/ingress.class":     resCsts.IngClsQCloud,
 			"kubernetes.io/ingress.existLbId": "lb-abcd",
 			"kubernetes.io/ingress.subnetId":  "subnet-12345",
 		},
@@ -132,9 +133,8 @@ var exceptedV1IngSpec = model.IngSpec{
 		Port:      443,
 	},
 	Network: model.IngNetwork{
-		CLBUseType: CLBUseTypeUseExists,
+		CLBUseType: resCsts.CLBUseTypeAutoCreate,
 		ExistLBID:  "lb-abcd",
-		CLBType:    CLBTypeInternal,
 		SubNetID:   "subnet-12345",
 	},
 	Cert: model.IngCert{
@@ -213,9 +213,8 @@ var exceptedV1Beta1IngSpec = model.IngSpec{
 		},
 	},
 	Network: model.IngNetwork{
-		CLBUseType: CLBUseTypeAutoCreate,
+		CLBUseType: resCsts.CLBUseTypeUseExists,
 		ExistLBID:  "",
-		CLBType:    CLBTypeExternal,
 		SubNetID:   "",
 	},
 	DefaultBackend: model.IngDefaultBackend{

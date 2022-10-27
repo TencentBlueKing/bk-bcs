@@ -28,8 +28,8 @@ type ClusterConf struct {
 	ClusterID string
 }
 
-// NewClusterConfig 生成 ClusterConf 对象
-func NewClusterConfig(clusterID string) *ClusterConf {
+// NewClusterConf 生成 ClusterConf 对象
+func NewClusterConf(clusterID string) *ClusterConf {
 	if runtime.RunMode == runmode.Dev || runtime.RunMode == runmode.UnitTest {
 		return NewMockClusterConfig(clusterID)
 	}

@@ -1726,6 +1726,12 @@ func NewNetworkEndpoints() []*api.Endpoint {
 			Handler: "rpc",
 		},
 		{
+			Name:    "Network.GetEPStatus",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/networks/endpoints/{name}/status"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		{
 			Name:    "Network.CreateEP",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/networks/endpoints"},
 			Method:  []string{"POST"},
@@ -1764,6 +1770,7 @@ type NetworkService interface {
 	DeleteSVC(ctx context.Context, in *ResDeleteReq, opts ...client.CallOption) (*CommonResp, error)
 	ListEP(ctx context.Context, in *ResListReq, opts ...client.CallOption) (*CommonResp, error)
 	GetEP(ctx context.Context, in *ResGetReq, opts ...client.CallOption) (*CommonResp, error)
+	GetEPStatus(ctx context.Context, in *ResGetReq, opts ...client.CallOption) (*CommonResp, error)
 	CreateEP(ctx context.Context, in *ResCreateReq, opts ...client.CallOption) (*CommonResp, error)
 	UpdateEP(ctx context.Context, in *ResUpdateReq, opts ...client.CallOption) (*CommonResp, error)
 	DeleteEP(ctx context.Context, in *ResDeleteReq, opts ...client.CallOption) (*CommonResp, error)
@@ -1901,6 +1908,16 @@ func (c *networkService) GetEP(ctx context.Context, in *ResGetReq, opts ...clien
 	return out, nil
 }
 
+func (c *networkService) GetEPStatus(ctx context.Context, in *ResGetReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "Network.GetEPStatus", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *networkService) CreateEP(ctx context.Context, in *ResCreateReq, opts ...client.CallOption) (*CommonResp, error) {
 	req := c.c.NewRequest(c.name, "Network.CreateEP", in)
 	out := new(CommonResp)
@@ -1946,6 +1963,7 @@ type NetworkHandler interface {
 	DeleteSVC(context.Context, *ResDeleteReq, *CommonResp) error
 	ListEP(context.Context, *ResListReq, *CommonResp) error
 	GetEP(context.Context, *ResGetReq, *CommonResp) error
+	GetEPStatus(context.Context, *ResGetReq, *CommonResp) error
 	CreateEP(context.Context, *ResCreateReq, *CommonResp) error
 	UpdateEP(context.Context, *ResUpdateReq, *CommonResp) error
 	DeleteEP(context.Context, *ResDeleteReq, *CommonResp) error
@@ -1965,6 +1983,7 @@ func RegisterNetworkHandler(s server.Server, hdlr NetworkHandler, opts ...server
 		DeleteSVC(ctx context.Context, in *ResDeleteReq, out *CommonResp) error
 		ListEP(ctx context.Context, in *ResListReq, out *CommonResp) error
 		GetEP(ctx context.Context, in *ResGetReq, out *CommonResp) error
+		GetEPStatus(ctx context.Context, in *ResGetReq, out *CommonResp) error
 		CreateEP(ctx context.Context, in *ResCreateReq, out *CommonResp) error
 		UpdateEP(ctx context.Context, in *ResUpdateReq, out *CommonResp) error
 		DeleteEP(ctx context.Context, in *ResDeleteReq, out *CommonResp) error
@@ -2052,6 +2071,12 @@ func RegisterNetworkHandler(s server.Server, hdlr NetworkHandler, opts ...server
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Network.GetEPStatus",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/networks/endpoints/{name}/status"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "Network.CreateEP",
 		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/networks/endpoints"},
 		Method:  []string{"POST"},
@@ -2125,6 +2150,10 @@ func (h *networkHandler) ListEP(ctx context.Context, in *ResListReq, out *Common
 
 func (h *networkHandler) GetEP(ctx context.Context, in *ResGetReq, out *CommonResp) error {
 	return h.NetworkHandler.GetEP(ctx, in, out)
+}
+
+func (h *networkHandler) GetEPStatus(ctx context.Context, in *ResGetReq, out *CommonResp) error {
+	return h.NetworkHandler.GetEPStatus(ctx, in, out)
 }
 
 func (h *networkHandler) CreateEP(ctx context.Context, in *ResCreateReq, out *CommonResp) error {
@@ -2534,6 +2563,12 @@ func NewStorageEndpoints() []*api.Endpoint {
 			Handler: "rpc",
 		},
 		{
+			Name:    "Storage.GetPVCMountInfo",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/storages/persistent_volume_claims/{name}/mount_info"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		{
 			Name:    "Storage.CreatePVC",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/storages/persistent_volume_claims"},
 			Method:  []string{"POST"},
@@ -2600,6 +2635,7 @@ type StorageService interface {
 	DeletePV(ctx context.Context, in *ResDeleteReq, opts ...client.CallOption) (*CommonResp, error)
 	ListPVC(ctx context.Context, in *ResListReq, opts ...client.CallOption) (*CommonResp, error)
 	GetPVC(ctx context.Context, in *ResGetReq, opts ...client.CallOption) (*CommonResp, error)
+	GetPVCMountInfo(ctx context.Context, in *ResGetReq, opts ...client.CallOption) (*CommonResp, error)
 	CreatePVC(ctx context.Context, in *ResCreateReq, opts ...client.CallOption) (*CommonResp, error)
 	UpdatePVC(ctx context.Context, in *ResUpdateReq, opts ...client.CallOption) (*CommonResp, error)
 	DeletePVC(ctx context.Context, in *ResDeleteReq, opts ...client.CallOption) (*CommonResp, error)
@@ -2684,6 +2720,16 @@ func (c *storageService) ListPVC(ctx context.Context, in *ResListReq, opts ...cl
 
 func (c *storageService) GetPVC(ctx context.Context, in *ResGetReq, opts ...client.CallOption) (*CommonResp, error) {
 	req := c.c.NewRequest(c.name, "Storage.GetPVC", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *storageService) GetPVCMountInfo(ctx context.Context, in *ResGetReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "Storage.GetPVCMountInfo", in)
 	out := new(CommonResp)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
@@ -2782,6 +2828,7 @@ type StorageHandler interface {
 	DeletePV(context.Context, *ResDeleteReq, *CommonResp) error
 	ListPVC(context.Context, *ResListReq, *CommonResp) error
 	GetPVC(context.Context, *ResGetReq, *CommonResp) error
+	GetPVCMountInfo(context.Context, *ResGetReq, *CommonResp) error
 	CreatePVC(context.Context, *ResCreateReq, *CommonResp) error
 	UpdatePVC(context.Context, *ResUpdateReq, *CommonResp) error
 	DeletePVC(context.Context, *ResDeleteReq, *CommonResp) error
@@ -2801,6 +2848,7 @@ func RegisterStorageHandler(s server.Server, hdlr StorageHandler, opts ...server
 		DeletePV(ctx context.Context, in *ResDeleteReq, out *CommonResp) error
 		ListPVC(ctx context.Context, in *ResListReq, out *CommonResp) error
 		GetPVC(ctx context.Context, in *ResGetReq, out *CommonResp) error
+		GetPVCMountInfo(ctx context.Context, in *ResGetReq, out *CommonResp) error
 		CreatePVC(ctx context.Context, in *ResCreateReq, out *CommonResp) error
 		UpdatePVC(ctx context.Context, in *ResUpdateReq, out *CommonResp) error
 		DeletePVC(ctx context.Context, in *ResDeleteReq, out *CommonResp) error
@@ -2856,6 +2904,12 @@ func RegisterStorageHandler(s server.Server, hdlr StorageHandler, opts ...server
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "Storage.GetPVC",
 		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/storages/persistent_volume_claims/{name}"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Storage.GetPVCMountInfo",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/storages/persistent_volume_claims/{name}/mount_info"},
 		Method:  []string{"GET"},
 		Handler: "rpc",
 	}))
@@ -2946,6 +3000,10 @@ func (h *storageHandler) ListPVC(ctx context.Context, in *ResListReq, out *Commo
 
 func (h *storageHandler) GetPVC(ctx context.Context, in *ResGetReq, out *CommonResp) error {
 	return h.StorageHandler.GetPVC(ctx, in, out)
+}
+
+func (h *storageHandler) GetPVCMountInfo(ctx context.Context, in *ResGetReq, out *CommonResp) error {
+	return h.StorageHandler.GetPVCMountInfo(ctx, in, out)
 }
 
 func (h *storageHandler) CreatePVC(ctx context.Context, in *ResCreateReq, out *CommonResp) error {

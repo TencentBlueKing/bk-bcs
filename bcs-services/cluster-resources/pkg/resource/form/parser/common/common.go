@@ -28,6 +28,7 @@ func ParseMetadata(manifest map[string]interface{}, metadata *model.Metadata) {
 	metadata.Namespace = mapx.GetStr(manifest, "metadata.namespace")
 	ParseLabels(manifest, &metadata.Labels)
 	ParseAnnotations(manifest, &metadata.Annotations)
+	metadata.ResVersion = mapx.GetStr(manifest, "metadata.resourceVersion")
 }
 
 // ParseLabels xxx

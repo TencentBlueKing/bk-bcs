@@ -12,24 +12,25 @@
  * limitations under the License.
  */
 
-package config
+package feature
 
-const (
-	// SecretTypeOpaque 普通类型
-	SecretTypeOpaque = "Opaque"
+import (
+	"testing"
 
-	// SecretTypeDocker 镜像配置信息
-	SecretTypeDocker = "kubernetes.io/dockerconfigjson"
-
-	// SecretTypeBasicAuth 基础认证信息
-	SecretTypeBasicAuth = "kubernetes.io/basic-auth"
-
-	// SecretTypeSSHAuth SSH 身份认证
-	SecretTypeSSHAuth = "kubernetes.io/ssh-auth"
-
-	// SecretTypeTLS TLS 认证
-	SecretTypeTLS = "kubernetes.io/tls"
-
-	// SecretTypeSAToken ServiceAccount Token
-	SecretTypeSAToken = "kubernetes.io/service-account-token"
+	"github.com/stretchr/testify/assert"
+	"k8s.io/apimachinery/pkg/version"
 )
+
+func TestGenFeatureGates(t *testing.T) {
+	ver := version.Info{Major: "1", Minor: "20"}
+	gates := GenFeatureGates(&ver)
+	assert.True(t, gates[ImmutableEphemeralVolumes])
+
+	ver = version.Info{Major: "1", Minor: "19"}
+	gates = GenFeatureGates(&ver)
+	assert.True(t, gates[ImmutableEphemeralVolumes])
+
+	ver = version.Info{Major: "1", Minor: "18"}
+	gates = GenFeatureGates(&ver)
+	assert.False(t, gates[ImmutableEphemeralVolumes])
+}
