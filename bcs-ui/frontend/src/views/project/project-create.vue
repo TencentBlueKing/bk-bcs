@@ -16,7 +16,7 @@
       </bk-form-item>
       <bk-form-item :label="$t('项目英文名')" property="english_name" error-display-type="normal" required>
         <bk-input
-          class="create-input" :placeholder="$t('请输入2-32字符的小写字母+数字，以小写字母开头')" :disabled="isEdit"
+          class="create-input" :placeholder="$t('请输入3-32字符,以小写字母开头的项目英文名')" :disabled="isEdit"
           v-model="formData.english_name"></bk-input>
       </bk-form-item>
       <bk-form-item :label="$t('项目说明')" property="description" error-display-type="normal" required>
@@ -70,12 +70,26 @@ export default defineComponent({
           message: $i18n.t('必填项'),
           trigger: 'blur',
         },
+        {
+          message: $i18n.t('请输入4-12字符的项目名称'),
+          trigger: 'blur',
+          validator(value) {
+            return /^[\w\W]{4,12}$/g.test(value);
+          },
+        },
       ],
       english_name: [
         {
           required: true,
           message: $i18n.t('必填项'),
           trigger: 'blur',
+        },
+        {
+          message: $i18n.t('请输入3-32字符,以小写字母开头的项目英文名'),
+          trigger: 'blur',
+          validator(value) {
+            return /^[a-z][a-z0-9]{2,31}$/g.test(value);
+          },
         },
       ],
       description: [

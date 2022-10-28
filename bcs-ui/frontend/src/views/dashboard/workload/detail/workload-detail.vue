@@ -22,7 +22,7 @@
           </div>
         </div>
         <div class="btns">
-          <bk-button theme="primary" @click="handleShowYamlPanel">To YAML</bk-button>
+          <bk-button theme="primary" @click="handleShowYamlPanel">{{ $t('查看YAML配置') }}</bk-button>
           <template v-if="!hiddenOperate">
             <bk-button
               theme="primary"
@@ -173,33 +173,36 @@
               </template>
             </bcs-table-column>
             <bcs-table-column :label="$t('镜像')" min-width="200" :resizable="false" :show-overflow-tooltip="false">
-              <template slot-scope="{ row }">
+              <template #default="{ row }">
                 <span v-bk-tooltips.top="(handleGetExtData(row.metadata.uid, 'images') || []).join('<br />')">
                   {{ (handleGetExtData(row.metadata.uid, 'images') || []).join(', ') }}
                 </span>
               </template>
             </bcs-table-column>
             <bcs-table-column label="Status" width="120" :resizable="false" show-overflow-tooltip>
-              <template slot-scope="{ row }">
+              <template #default="{ row }">
                 <StatusIcon :status="handleGetExtData(row.metadata.uid, 'status')"></StatusIcon>
               </template>
             </bcs-table-column>
             <bcs-table-column label="Ready" width="100" :resizable="false">
-              <template slot-scope="{ row }">
+              <template #default="{ row }">
                 {{handleGetExtData(row.metadata.uid, 'readyCnt')}}/{{handleGetExtData(row.metadata.uid, 'totalCnt')}}
               </template>
             </bcs-table-column>
             <bcs-table-column label="Restarts" width="100" :resizable="false">
-              <template slot-scope="{ row }">{{handleGetExtData(row.metadata.uid, 'restartCnt')}}</template>
+              <template #default="{ row }">{{handleGetExtData(row.metadata.uid, 'restartCnt')}}</template>
             </bcs-table-column>
             <bcs-table-column label="Host IP" width="140" :resizable="false">
-              <template slot-scope="{ row }">{{row.status.hostIP || '--'}}</template>
+              <template #default="{ row }">{{row.status.hostIP || '--'}}</template>
             </bcs-table-column>
-            <bcs-table-column label="Pod IP" width="140" :resizable="false">
-              <template slot-scope="{ row }">{{row.status.podIP || '--'}}</template>
+            <bcs-table-column label="Pod IPv4" width="140" :resizable="false">
+              <template #default="{ row }">{{row.status.podIP || '--'}}</template>
+            </bcs-table-column>
+            <bcs-table-column label="Pod IPv6" width="140" :resizable="false" show-overflow-tooltip>
+              <template #default="{ row }">{{handleGetExtData(row.metadata.uid, 'podIPv6') || '--'}}</template>
             </bcs-table-column>
             <bcs-table-column label="Node" :resizable="false" show-overflow-tooltip>
-              <template slot-scope="{ row }">{{row.spec.nodeName || '--'}}</template>
+              <template #default="{ row }">{{row.spec.nodeName || '--'}}</template>
             </bcs-table-column>
             <bcs-table-column label="Age" :resizable="false">
               <template #default="{ row }">
@@ -309,14 +312,11 @@ import useLog from './use-log';
 import usePage from '@/views/dashboard/common/use-page';
 import { timeZoneTransForm } from '@/common/util';
 import useSearch from '../../common/use-search';
+import { storageEvents } from '@/api/modules/storage';
 
 export interface IDetail {
   manifest: any;
   manifestExt: any;
-}
-
-export interface IParams {
-  pod_name_list: string[];
 }
 
 export default defineComponent({
@@ -437,11 +437,11 @@ export default defineComponent({
     // 获取pod manifestExt数据
     const handleGetExtData = (uid, prop) => workloadPods.value?.manifestExt?.[uid]?.[prop];
     // 指标参数
-    const params = computed<IParams | null>(() => {
+    const params = computed<Record<string, any>|undefined>(() => {
       const list = pods.value.map(item => item.metadata.name);
       return list.length
         ? { pod_name_list: list, $namespaceId: props.namespace }
-        : null;
+        : undefined;
     });
 
     // 跳转pod详情
@@ -580,37 +580,29 @@ export default defineComponent({
     // 事件列表
     const events = ref([]);
     const eventLoading = ref(false);
-    const categoryMap = {
-      deployments: 'deployment',
-      daemonsets: 'daemonset',
-      statefulsets: 'statefulset',
-      jobs: 'job',
-      custom_objects: 'custom_objects',
-    }; // 兼容老接口 category 类型
     const pagination = ref({
       current: 1,
       count: 0,
       limit: 10,
     });
     const handleGetEventList = async () => {
-      // cronjobs 不支持事件查询
-      if (props.category === 'cronjobs') return;
-
       eventLoading.value = true;
+      const list = pods.value.map(item => item.metadata.name);
       const params = {
-        projectId: projectId.value,
-        instanceId: 0,
-        cluster_id: clusterId.value,
         offset: (pagination.value.current - 1) * pagination.value.limit,
-        limit: pagination.value.limit,
-        name: props.name,
-        namespace: props.namespace,
-        category: categoryMap[props.category],
+        length: pagination.value.limit,
+        clusterId: clusterId.value,
+        env: 'k8s',
+        kind: 'Pod',
+        extraInfo: {
+          name: list.join(','),
+          namespace: props.namespace,
+        },
       };
-      const { data } = await $store.dispatch('app/getEventList', params)
-        .catch(() => ({ data: { data: [], total: 0 } }));
-      pagination.value.count = data.total;
-      events.value = data.data || [];
+      const { data = [], total = 0 } = await storageEvents(params, { needRes: true })
+        .catch(() => ({ data: [], total: 0 }));
+      pagination.value.count = total;
+      events.value = data || [];
       eventLoading.value = false;
     };
     const handlePageChange = (page) => {

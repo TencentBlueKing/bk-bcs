@@ -2,7 +2,7 @@
   <div class="choose-node-template bcs-content-wrapper">
     <bk-form>
       <FormGroup :allow-toggle="false" class="choose-node">
-        <bk-form-item :label="$t('选择节点模板')">
+        <bk-form-item :label="$t('选择节点模板')" v-if="$INTERNAL">
           <div
             class="item-node-template" v-bk-tooltips="{
               disabled: isTkeCluster,
@@ -117,7 +117,7 @@ export default defineComponent({
     },
   },
   setup(props, ctx) {
-    const { $bkInfo } = ctx.root;
+    const { $bkInfo, $INTERNAL } = ctx.root;
     const isTkeCluster = computed(() => ($store.state as any).cluster.clusterList
       ?.find(item => item.clusterID === props.clusterId)?.provider === 'tencentCloud');
     const loading = ref(false);
@@ -205,7 +205,7 @@ export default defineComponent({
     };
 
     onMounted(() => {
-      handleNodeTemplateList();
+      $INTERNAL && handleNodeTemplateList();
     });
     return {
       loading,

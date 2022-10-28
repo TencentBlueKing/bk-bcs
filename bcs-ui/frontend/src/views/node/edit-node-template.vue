@@ -485,7 +485,7 @@ export default defineComponent({
       (formData.value.taints as any[]).push({
         key: '',
         value: '',
-        effect: '',
+        effect: 'PreferNoSchedule',
       });
     };
 

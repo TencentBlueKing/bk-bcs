@@ -1,4 +1,3 @@
-<!-- eslint-disable max-len -->
 <template>
   <bcs-dialog
     :value="value"
@@ -25,7 +24,8 @@
             v-model="ccKey"
             :loading="loading"
             :clearable="false"
-            style="flex:1;">
+            style="flex:1;"
+            searchable>
             <bcs-option
               v-for="item in ccList"
               :key="item.id"
@@ -33,7 +33,6 @@
               :name="item.name">
             </bcs-option>
           </bcs-select>
-          <!-- TODO: 用bk-input会导致 object is not extensible 报错 -->
           <bcs-input :value="curProject.cc_app_name" disabled v-else></bcs-input>
           <span class="ml5" v-bk-tooltips="$t('关联业务后，您可以从对应的业务下选择机器，搭建容器集群')">
             <i class="bcs-icon bcs-icon-info-circle"></i>
@@ -73,7 +72,7 @@ export default defineComponent({
     const isHasCluster = computed(() => $store.state.cluster.clusterList.length > 0);
 
     const loading = ref(false);
-    const ccList = ref([]);
+    const ccList = ref<any[]>([]);
     const fetchCCList = async () => {
       loading.value = true;
       const res = await $store.dispatch('getCCList', {

@@ -35,12 +35,6 @@
             </bcs-popover>
           </div>
           <div class="header-item">
-            <div class="key-label">{{$t('IP来源：')}}</div>
-            <bcs-popover :content="nodeInfo.provider" placement="bottom">
-              <div class="value-label">{{nodeInfo.provider || '--'}}</div>
-            </bcs-popover>
-          </div>
-          <div class="header-item">
             <div class="key-label">{{$t('内核：')}}</div>
             <bcs-popover :content="nodeInfo.release" placement="bottom">
               <div class="value-label">{{nodeInfo.release || '--'}}</div>

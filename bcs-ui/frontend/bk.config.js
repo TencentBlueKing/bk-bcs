@@ -82,6 +82,9 @@ module.exports = {
       .plugin('braceTheme')
       .use(webpack.ContextReplacementPlugin, [/brace\/theme$/, /^\.\/(monokai)$/]);
 
+    config.devServer
+      .set('allowedHosts', 'all')
+
     // config
     //   .plugin('monaco')
     //   .use(MonacoWebpackPlugin, [{

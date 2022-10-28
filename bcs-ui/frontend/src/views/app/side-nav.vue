@@ -40,14 +40,22 @@
     <!-- 菜单 -->
     <div class="side-nav">
       <SideMenu :list="menuList" :selected="selected" @change="handleMenuChange"></SideMenu>
-      <div class="bcs-footer">
-        <div class="mb5">
+      <div class="bcs-footer" v-if="$INTERNAL">
+        <div class="mb5 link">
           <a href="wxwork://message?uin=8444252571319680">{{ $t('联系BK助手') }}</a> |
           <a :href="paasHost" target="_blank">{{ $t('蓝鲸桌面') }}</a>
         </div>
         <p class="biz-copyright">
           Copyright © 2012-{{(new Date()).getFullYear()}} Tencent BlueKing. All Rights Reserved
         </p>
+      </div>
+      <div class="bcs-footer" v-else>
+        <div class="mb5 link">
+          <a href="https://wpa1.qq.com/KziXGWJs?_type=wpa&qidian=true" target="_blank">{{ $t('技术支持') }}</a> |
+          <a href="https://bk.tencent.com/s-mart/community/" target="_blank">{{ $t('社区论坛') }}</a> |
+          <a href="https://bk.tencent.com/index/" target="_blank">{{ $t('产品官网') }}</a>
+        </div>
+        <p>Copyright © 2012-{{(new Date()).getFullYear()}} Tencent BlueKing. All Rights Reserved. V1.28.0</p>
       </div>
     </div>
   </div>
@@ -293,5 +301,18 @@ export default defineComponent({
         display: flex;
         flex-direction: column;
         justify-content: space-between;
+    }
+    .bcs-footer {
+      font-size: 12px;
+      color: #b7c0ca;
+      width: 100%;
+      position: absolute;
+      bottom: 0;
+      text-align: center;
+      line-height: 20px;
+      padding: 0 15px;
+      .link a {
+        color: #3a84ff;
+      }
     }
 </style>

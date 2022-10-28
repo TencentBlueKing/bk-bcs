@@ -46,7 +46,6 @@
     "@blueking/babel-preset-bk": "2.1.0-beta6",
     "@blueking/cli-service-webpack": "0.0.0-beta.51",
     "@blueking/eslint-config-bk": "2.1.0-beta.12",
-    "@blueking/stylelint-config-bk": "^2.1.0-beta.7",
     "cross-env": "^7.0.3",
     "enhanced-resolve": "^5.10.0",
     "figlet": "^1.5.2",

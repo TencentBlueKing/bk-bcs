@@ -25,13 +25,18 @@
   </div>
 </template>
 <script lang="ts">
-import { defineComponent, reactive, toRefs, onMounted, ref, watch, computed } from '@vue/composition-api';
+import { defineComponent, reactive, toRefs, onMounted, ref, watch, computed, PropType } from '@vue/composition-api';
 import moment from 'moment';
 import defaultChartOption from './default-echarts-option';
 import ECharts from 'vue-echarts/components/ECharts.vue';
 import 'echarts/lib/chart/line';
 import 'echarts/lib/component/tooltip';
 import 'echarts/lib/component/legend';
+
+interface ITimeRange {
+  name: string
+  range: number
+}
 
 export default defineComponent({
   name: 'ResourceMetric',
@@ -44,7 +49,7 @@ export default defineComponent({
       default: '',
     },
     timeRange: {
-      type: Array,
+      type: Array as PropType<ITimeRange[]>,
       default: () => [
         {
           name: window.i18n.t('1小时'),

@@ -28,6 +28,10 @@ const Node = () => import(/* webpackChunkName: 'node' */'@/views/node/node.vue')
 const NodeTemplate = () => import(/* webpackChunkName: 'node'  */'@/views/node/node-template.vue');
 const EditNodeTemplate = () => import(/* webpackChunkName: 'node' */'@/views/node/edit-node-template.vue');
 const AddClusterNode = () => import(/* webpackChunkName: 'node' */'@/views/node/add-cluster-node.vue');
+const AutoScalerConfig = () => import(/* webpackChunkName: 'node' */'@/views/node/autoscaler-config.vue');
+const NodePool = () => import(/* webpackChunkName: 'node' */'@/views/node/node-pool.vue');
+const NodePoolDetail = () => import(/* webpackChunkName: 'node' */'@/views/node/node-pool-detail.vue');
+const EditNodePool = () => import(/* webpackChunkName: 'node' */'@/views/node/edit-node-pool.vue');
 
 const childRoutes = [
   // domain/bcs/projectCode/node 节点页面
@@ -76,6 +80,30 @@ const childRoutes = [
       title: window.i18n.t('添加节点'),
       menuId: 'CLUSTER',
     },
+  },
+  {
+    path: ':projectCode/cluster/:clusterId/autoscaler',
+    name: 'autoScalerConfig',
+    props: true,
+    component: AutoScalerConfig,
+  },
+  {
+    path: ':projectCode/cluster/:clusterId/nodepool',
+    name: 'nodePool',
+    props: true,
+    component: NodePool,
+  },
+  {
+    path: ':projectCode/cluster/:clusterId/nodepool/:nodeGroupID',
+    name: 'editNodePool',
+    props: true,
+    component: EditNodePool,
+  },
+  {
+    path: ':projectCode/cluster/:clusterId/nodepool/detail/:nodeGroupID',
+    name: 'nodePoolDetail',
+    props: true,
+    component: NodePoolDetail,
   },
 ];
 

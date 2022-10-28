@@ -143,7 +143,7 @@ export default defineComponent({
     };
 
     const isLoading = ref(false);
-    const endpoints = ref('');
+    const endpoints = ref([]);
     const handleGetEndpoints = async () => {
       const flag = await $store.dispatch('dashboard/getNetworksEndpointsFlag', {
         $namespaces: props.data.metadata.namespace,
@@ -157,7 +157,7 @@ export default defineComponent({
           $category: 'endpoints',
           $name: props.data.metadata.name,
         });
-        endpoints.value = res.data.manifestExt?.endpoints;
+        endpoints.value = res.data.manifestExt?.endpoints || [];
         isLoading.value = false;
       }
     };

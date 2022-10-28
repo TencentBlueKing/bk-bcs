@@ -6,6 +6,10 @@
     <div class="operate mb15">
       <bk-button
         class="create-btn" theme="primary" icon="plus"
+        v-authority="{
+          actionId: 'project_create',
+          permCtx: {}
+        }"
         @click="handleCreateProject">{{$t('创建项目')}}</bk-button>
       <bk-input
         class="search-input"

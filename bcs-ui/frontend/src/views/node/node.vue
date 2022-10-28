@@ -6,9 +6,9 @@
       class="cluster-node-tip"
     >
       <div slot="title">
-        {{$t('集群就绪后，您可以创建命名空间、推送项目镜像到仓库，然后通过服务配置模板集部署服务 ')}}
+        {{$t('集群就绪后，您可以创建命名空间、推送项目镜像到仓库，然后通过服务配置模板集部署服务。')}}
         <i18n
-          path="当前集群已添加节点数（含Master） {nodes}，还可添加节点数 {realRemainNodesCount}，当容器网络资源超额使用时，会触发容器网络自动扩容，扩容后最多可以添加 {maxRemainNodesCount} 个节点"
+          path="当前集群已添加节点数（含Master） {nodes}，还可添加节点数 {realRemainNodesCount}，当容器网络资源超额使用时，会触发容器网络自动扩容，扩容后最多可以添加 {maxRemainNodesCount} 个节点。"
           v-if="maxRemainNodesCount > 0"
         >
           <span place="nodes" class="num">{{nodesCount}}</span>
@@ -24,7 +24,7 @@
           <span
             v-bk-tooltips="{
               disabled: !isImportCluster,
-              content: $t('kubeconfig导入集群，节点管理功能不可用')
+              content: $t('导入集群，节点管理功能不可用')
             }">
             <bcs-button
               theme="primary"
@@ -71,7 +71,7 @@
               :disabled="isImportCluster"
               v-bk-tooltips="{
                 disabled: !isImportCluster,
-                content: $t('kubeconfig导入集群，节点管理功能不可用')
+                content: $t('导入集群，节点管理功能不可用')
               }"
               @click="handleBatchReAddNodes">{{$t('失败重试')}}</li>
             <div
@@ -84,7 +84,7 @@
               :disabled="isImportCluster"
               v-bk-tooltips="{
                 disabled: !isImportCluster,
-                content: $t('kubeconfig导入集群，节点管理功能不可用')
+                content: $t('导入集群，节点管理功能不可用')
               }"
               @click="handleBatchDeleteNodes">{{$t('删除')}}</li>
             <!-- <li>{{$t('导出')}}</li> -->
@@ -203,6 +203,11 @@
             </bcs-button>
           </template>
         </bcs-table-column>
+        <bcs-table-column label="IPv6" props="innerIPv6" sortable>
+          <template #default="{ row }">
+            {{ row.innerIPv6 || '--' }}
+          </template>
+        </bcs-table-column>
         <bcs-table-column
           :label="$t('状态')"
           :filters="filtersDataSource.status"
@@ -229,6 +234,7 @@
           :label="$t('所属集群')"
           prop="cluster_name"
           key="cluster_name"
+          show-overflow-tooltip
           v-if="isColumnRender('cluster_name')"
         ></bcs-table-column>
         <bcs-table-column
@@ -429,7 +435,7 @@
                       :class="['bcs-dropdown-item', { disabled: isImportCluster }]"
                       v-bk-tooltips="{
                         disabled: !isImportCluster,
-                        content: $t('kubeconfig导入集群，节点管理功能不可用')
+                        content: $t('导入集群，节点管理功能不可用')
                       }"
                       v-if="['REMOVE-FAILURE', 'ADD-FAILURE', 'REMOVABLE', 'NOTREADY'].includes(row.status)"
                       @click="handleDeleteNode(row)"
@@ -1279,7 +1285,7 @@ export default defineComponent({
         (function (item) {
           promiseList.push(getNodeOverview({
             nodeIP: item.inner_ip,
-            clusterId: item.cluster_id,
+            clusterId: localClusterId.value,
           }).then((data) => {
             set(nodeMetric.value, item.inner_ip, data);
           }));
@@ -1456,7 +1462,7 @@ export default defineComponent({
 </script>
 <style lang="postcss" scoped>
 >>> .bk-table-header-wrapper {
-  border-top: 1px solid #dfe0e5;
+    border-top: 1px solid #dfe0e5;
 }
 >>> .more-operate {
   font-size: 18px;

@@ -58,7 +58,7 @@
                   </bcs-popover>
                 </template>
               </bk-table-column>
-              <bk-table-column :label="$t('变量')" prop="ns_vars" :min-width="150" :show-overflow-tooltip="false">
+              <bk-table-column :label="$t('变量')" prop="ns_vars" :min-width="150" :show-overflow-tooltip="false" v-if="$INTERNAL">
                 <template slot-scope="{ row, $index }">
                   <div style="position: relative;" v-if="row.ns_vars.length">
                     <bcs-popover :delay="300" placement="left">
@@ -93,8 +93,10 @@
               </bk-table-column>
               <bk-table-column :label="$t('操作')" prop="permissions" width="310" class-name="biz-table-action-column">
                 <template slot-scope="{ row }">
-                  <a
-                    href="javascript:void(0)" class="bk-text-button"
+                  <bk-button
+                    text
+                    href="javascript:void(0)"
+                    class="bk-text-button mr10"
                     @click="showEditNamespace(row)"
                     v-authority="{
                       clickable: web_annotations.perms[row.iam_ns_id]
@@ -108,12 +110,11 @@
                         name: row.name
                       }
                     }"
+                    v-if="$INTERNAL"
                   >
                     {{$t('设置变量值')}}
-                  </a>
-                  <a
-                    class="bk-text-button ml10"
-                    @click="showEditQuota(row)"
+                  </bk-button>
+                  <bk-button
                     v-authority="{
                       clickable: web_annotations.perms[row.iam_ns_id]
                         && web_annotations.perms[row.iam_ns_id].namespace_update,
@@ -126,11 +127,14 @@
                         name: row.name
                       }
                     }"
-                  >
+                    text
+                    @click="showEditQuota(row)">
                     {{$t('配额管理')}}
-                  </a>
-                  <a
-                    href="javascript:void(0)" class="bk-text-button ml10"
+                  </bk-button>
+                  <bk-button
+                    text
+                    href="javascript:void(0)"
+                    class="bk-text-button ml10"
                     @click="showDelNamespace(row)"
                     v-authority="{
                       clickable: web_annotations.perms[row.iam_ns_id]
@@ -146,7 +150,7 @@
                     }"
                   >
                     {{$t('删除')}}
-                  </a>
+                  </bk-button>
                 </template>
               </bk-table-column>
             </bk-table>
@@ -167,7 +171,6 @@
           <bcs-form form-type="vertical">
             <bcs-form-item :label="$t('所属集群')" :required="true">
               <bk-selector
-                :field-type="'cluster'"
                 :placeholder="$t('请选择集群')"
                 :setting-key="'cluster_id'"
                 :display-key="'name'"

@@ -20,6 +20,7 @@ export default defineComponent({
         terminating: 'blue',
         true: 'green',
         false: 'red',
+        unknown: 'gray',
       }),
     },
   },

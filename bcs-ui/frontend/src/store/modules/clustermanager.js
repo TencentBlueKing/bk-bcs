@@ -58,13 +58,40 @@ import {
   bkSopsTemplatevalues,
   bkSopsDebug,
   taskRetry,
+  nodeGroup,
+  resourceSchema,
+  cloudOsImage,
+  cloudInstanceTypes,
+  cloudSecurityGroups,
+  cloudSubnets,
+  nodeGroupDetail,
+  createNodeGroup,
+  updateNodeGroup,
+  clusterAutoScaling,
+  toggleClusterAutoScalingStatus,
+  updateClusterAutoScaling,
+  deleteNodeGroup,
+  disableNodeGroupAutoScale,
+  enableNodeGroupAutoScale,
+  clusterAutoScalingLogs,
+  nodeGroupNodeList,
+  clusterNodeDrain,
+  deleteNodeGroupNode,
+  nodeCordon,
+  nodeUnCordon,
 } from '@/api/base';
+
+import { cloudDetail } from '@/api/modules/cluster-manager';
 
 export default {
   namespaced: true,
   actions: {
     async fetchCloudList(ctx, params) {
       const data = await cloudList(params).catch(() => []);
+      return data;
+    },
+    async cloudDetail(ctx, params) {
+      const data = await cloudDetail(params).catch(() => ({}));
       return data;
     },
     async createCluster(ctx, params) {
@@ -155,7 +182,7 @@ export default {
     },
     // 云账户信息
     async cloudAccounts(ctx, params) {
-      const data = await cloudAccounts(params).catch(() => []);
+      const data = await cloudAccounts(params, { needRes: true }).catch(() => []);
       return data;
     },
     async createCloudAccounts(ctx, params) {
@@ -221,6 +248,129 @@ export default {
     },
     async taskRetry(ctx, params) {
       const result = await taskRetry(params).catch(() => false);
+      return result;
+    },
+    // 节点池列表
+    async nodeGroup(ctx, params) {
+      const data = await nodeGroup(params).catch(() => []);
+      return data;
+    },
+    // 获取云默认配置信息
+    async resourceSchema(ctx, params) {
+      const data = await resourceSchema(params).catch(() => ({}));
+      return data;
+    },
+    // 云镜像列表
+    async cloudOsImage(ctx, params) {
+      const data = await cloudOsImage(params).catch(() => []);
+      return data;
+    },
+    // Node机型列表
+    async cloudInstanceTypes(ctx, params) {
+      const data = await cloudInstanceTypes(params).catch(() => []);
+      return data;
+    },
+    // 安全组列表
+    async cloudSecurityGroups(ctx, params) {
+      const data = await cloudSecurityGroups(params).catch(() => []);
+      return data;
+    },
+    // VPC子网
+    async cloudSubnets(ctx, params) {
+      const data = await cloudSubnets(params).catch(() => []);
+      return data;
+    },
+    // 获取节点池详情
+    async nodeGroupDetail(ctx, params) {
+      const data = await nodeGroupDetail(params).catch(() => ({}));
+      return data;
+    },
+    // 创建节点池
+    async createNodeGroup(ctx, params) {
+      const result = await createNodeGroup(params).then(() => true)
+        .catch(() => false);
+      return result;
+    },
+    // 更新节点池
+    async updateNodeGroup(ctx, params) {
+      const result = await updateNodeGroup(params).then(() => true)
+        .catch(() => false);
+      return result;
+    },
+    // 集群扩缩容配置
+    async clusterAutoScaling(ctx, params) {
+      const data = await clusterAutoScaling(params).catch(() => ({}));
+      return data;
+    },
+    // 开启或关闭扩缩容配置
+    async toggleClusterAutoScalingStatus(ctx, params) {
+      const result = await toggleClusterAutoScalingStatus(params)
+        .then(() => true)
+        .catch(() => false);
+      return result;
+    },
+    // 更新扩缩容配置
+    async updateClusterAutoScaling(ctx, params) {
+      const result = await updateClusterAutoScaling(params)
+        .then(() => true)
+        .catch(() => false);
+      return result;
+    },
+    // 删除节点组
+    async deleteNodeGroup(ctx, params) {
+      const result = await deleteNodeGroup(params)
+        .then(() => true)
+        .catch(() => false);
+      return result;
+    },
+    // 禁用弹性伸缩
+    async disableNodeGroupAutoScale(ctx, params) {
+      const result = await disableNodeGroupAutoScale(params)
+        .then(() => true)
+        .catch(() => false);
+      return result;
+    },
+    // 启用弹性伸缩
+    async enableNodeGroupAutoScale(ctx, params) {
+      const result = await enableNodeGroupAutoScale(params)
+        .then(() => true)
+        .catch(() => false);
+      return result;
+    },
+    // 扩缩容记录
+    async clusterAutoScalingLogs(ctx, params) {
+      const data = await clusterAutoScalingLogs(params).catch(() => []);
+      return data;
+    },
+    // 节点池节点列表
+    async nodeGroupNodeList(ctx, params) {
+      const data = await nodeGroupNodeList(params).catch(() => []);
+      return data;
+    },
+    // POD迁移
+    async clusterNodeDrain(ctx, params) {
+      const result = await clusterNodeDrain(params)
+        .then(() => true)
+        .catch(() => false);
+      return result;
+    },
+    // 删除节点组节点
+    async deleteNodeGroupNode(ctx, params) {
+      const result = await deleteNodeGroupNode(params)
+        .then(() => true)
+        .catch(() => false);
+      return result;
+    },
+    async nodeCordon(ctx, params) {
+      const result = await nodeCordon(params)
+        .then(() => true)
+        .catch(() => false);
+      return result;
+    },
+    async nodeUnCordon(ctx, params) {
+      const result = await nodeUnCordon(params)
+        .then(() => true)
+        .catch(() => false);
       return result;
     },
   },

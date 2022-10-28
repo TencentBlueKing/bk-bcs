@@ -17,7 +17,7 @@
               v-model="scaleNum"
               type="number"
               :min="0"
-              :max="1000"
+              :max="5000"
               :style="{ 'width': '260px' }"
               :placeholder="$t('请输入')">
             </bk-input>

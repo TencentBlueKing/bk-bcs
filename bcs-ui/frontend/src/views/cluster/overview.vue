@@ -85,7 +85,7 @@
               </Ring>
             </div>
 
-            <div class="chart-box bottom">
+            <div class="chart-box bottom" v-if="$INTERNAL">
               <div class="info">
                 <div class="left">{{$t('命名空间')}}</div>
                 <div class="right">
@@ -112,7 +112,7 @@
               </Ring>
             </div>
 
-            <div class="chart-box bottom">
+            <div class="chart-box bottom" v-if="$INTERNAL">
               <div class="info">
                 <div class="left">{{$t('集群IP')}}</div>
                 <div class="right">

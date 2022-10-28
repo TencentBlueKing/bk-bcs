@@ -253,12 +253,7 @@ export default {
     },
 
     goBack() {
-      this.$router.push({
-        name: 'dbCrdcontroller',
-        params: {
-          projectId: this.projectId,
-        },
-      });
+      this.$router.back();
     },
 
     handleUpdate() {

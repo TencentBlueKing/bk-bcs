@@ -48,6 +48,7 @@
           <bk-table
             :data="curPageData"
             size="small"
+            :key="renderKey"
             :pagination="pagination"
             @page-change="handlePageChange"
             @page-limit-change="handlePageLimitChange">
@@ -515,6 +516,7 @@ export default {
   },
   data() {
     return {
+      renderKey: null,
       curApp: {},
       curAppResources: [],
       curAppResourcesCache: [],
@@ -1285,7 +1287,7 @@ export default {
             });
           });
           this.curPageData = this.getDataByPage(this.pagination.current, loading);
-
+          this.renderKey = new Date().getTime();
           this.appCheckTime = SLOW_TIME;
           this.appList.forEach((app) => {
             if (app.transitioning_on) {

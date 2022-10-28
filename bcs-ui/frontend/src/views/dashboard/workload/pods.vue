@@ -48,8 +48,11 @@
           <bk-table-column label="Host IP" width="140" :resizable="false">
             <template slot-scope="{ row }">{{row.status.hostIP || '--'}}</template>
           </bk-table-column>
-          <bk-table-column label="Pod IP" width="140" :resizable="false">
+          <bk-table-column label="Pod IPv4" width="140" :resizable="false">
             <template slot-scope="{ row }">{{row.status.podIP || '--'}}</template>
+          </bk-table-column>
+          <bk-table-column label="Pod IPv6" width="140" :resizable="false">
+            <template slot-scope="{ row }">{{handleGetExtData(row.metadata.uid, 'podIPv6') || '--'}}</template>
           </bk-table-column>
           <bk-table-column label="Node" :resizable="false">
             <template slot-scope="{ row }">{{row.spec.nodeName || '--'}}</template>

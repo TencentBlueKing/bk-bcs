@@ -47,6 +47,7 @@ import overview from '@/views/cluster/overview.vue';
 import info from '@/views/cluster/info.vue';
 import useDefaultClusterId from './use-default-clusterId';
 import $i18n from '@/i18n/i18n-setup';
+import AutoScaler from './autoscaler.vue';
 
 export default defineComponent({
   components: {
@@ -54,6 +55,7 @@ export default defineComponent({
     node,
     overview,
     ContentHeader,
+    AutoScaler,
   },
   props: {
     active: {
@@ -67,28 +69,38 @@ export default defineComponent({
     },
   },
   setup(props, ctx) {
-    const { $store, $router } = ctx.root;
+    const { $store, $router, $INTERNAL } = ctx.root;
     const { active, clusterId } = toRefs(props);
     const activeCom = ref(active.value);
     const curCluster = computed(() => $store.state.cluster.clusterList
       ?.find(item => item.clusterID === clusterId.value) || {});
-    const tabItems = ref([
-      {
-        icon: 'bcs-icon bcs-icon-bar-chart',
-        title: $i18n.t('总览'),
-        com: 'overview',
-      },
-      {
-        icon: 'bcs-icon bcs-icon-list',
-        title: $i18n.t('节点管理'),
-        com: 'node',
-      },
-      {
-        icon: 'bcs-icon bcs-icon-machine',
-        title: $i18n.t('集群信息'),
-        com: 'info',
-      },
-    ]);
+    const tabItems = computed(() => {
+      const items = [
+        {
+          icon: 'bcs-icon bcs-icon-bar-chart',
+          title: $i18n.t('总览'),
+          com: 'overview',
+        },
+        {
+          icon: 'bcs-icon bcs-icon-list',
+          title: $i18n.t('节点管理'),
+          com: 'node',
+        },
+        {
+          icon: 'bcs-icon bcs-icon-machine',
+          title: $i18n.t('集群信息'),
+          com: 'info',
+        },
+      ];
+      if (cloudDetail.value.confInfo && !cloudDetail.value?.confInfo?.disableNodeGroup && !$INTERNAL) {
+        items.push({
+          icon: 'bcs-icon bcs-icon-kuosuorong',
+          title: $i18n.t('弹性扩缩容'),
+          com: 'AutoScaler',
+        });
+      }
+      return items;
+    });
     const handleChangeActive = (item) => {
       if (activeCom.value === item.com) return;
       activeCom.value = item.com;
@@ -100,7 +112,18 @@ export default defineComponent({
       });
     };
     const { isSingleCluster } = useDefaultClusterId();
+    const cloudDetail = ref<any>({});
+    const isLoading = ref(false);
+    const handleGetCloudDetail = async () => {
+      isLoading.value = true;
+      cloudDetail.value = await $store.dispatch('clustermanager/cloudDetail', {
+        $cloudId: curCluster.value.provider,
+      });
+      isLoading.value = false;
+    };
+    handleGetCloudDetail();
     return {
+      isLoading,
       isSingleCluster,
       curCluster,
       tabItems,

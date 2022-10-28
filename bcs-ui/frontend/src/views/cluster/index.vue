@@ -63,6 +63,24 @@
                 <ul class="bk-dropdown-list" slot="dropdown-content">
                   <li @click="goOverview(cluster)"><a href="javascript:;">{{$t('总览')}}</a></li>
                   <li @click="goClusterInfo(cluster)"><a href="javascript:;">{{$t('集群信息')}}</a></li>
+                  <li v-if="cluster.clusterCategory !== 'importer'" @click="goNodeInfo(cluster)">
+                    <a
+                      href="javascript:;"
+                      v-authority="{
+                        clickable: webAnnotations.perms[cluster.clusterID]
+                          && webAnnotations.perms[cluster.clusterID].cluster_manage,
+                        actionId: 'cluster_manage',
+                        resourceName: cluster.clusterName,
+                        disablePerms: true,
+                        permCtx: {
+                          project_id: curProject.project_id,
+                          cluster_id: cluster.clusterID
+                        }
+                      }"
+                      :disabled="cluster.clusterCategory === 'importer'">
+                      <span>{{$t('节点管理')}}</span>
+                    </a>
+                  </li>
                   <li
                     v-authority="{
                       clickable: webAnnotations.perms[cluster.clusterID]
@@ -130,24 +148,6 @@
                         ? '0%' : `${getMetricPercent(cluster, item)}%` }"></div>
                   </div>
                 </div>
-                <span>
-                  <bk-button
-                    class="add-node-btn"
-                    v-authority="{
-                      clickable: webAnnotations.perms[cluster.clusterID]
-                        && webAnnotations.perms[cluster.clusterID].cluster_manage,
-                      actionId: 'cluster_manage',
-                      resourceName: cluster.clusterName,
-                      disablePerms: true,
-                      permCtx: {
-                        project_id: curProject.project_id,
-                        cluster_id: cluster.clusterID
-                      }
-                    }"
-                    @click="goNodeInfo(cluster)">
-                    <span>{{$t('节点管理')}}</span>
-                  </bk-button>
-                </span>
               </template>
             </div>
           </div>
@@ -172,15 +172,6 @@
       <div class="biz-guide-box" v-else-if="!isLoading">
         <p class="title">{{$t('欢迎使用容器服务')}}</p>
         <p class="desc">{{$t('使用容器服务，蓝鲸将为您快速搭建、运维和管理容器集群，您可以轻松对容器进行启动、停止等操作，也可以查看集群、容器及服务的状态，以及使用各种组件服务。')}}</p>
-        <p class="desc">
-          <a
-            :href="PROJECT_CONFIG.doc.quickStart"
-            class="guide-link"
-            target="_blank">
-            {{$t('请点击了解更多')}}
-            <i class="bcs-icon bcs-icon-angle-double-right ml5"></i>
-          </a>
-        </p>
         <div class="guide-btn-group">
           <a
             href="javascript:void(0);"
@@ -362,28 +353,51 @@ export default defineComponent({
     const curOperateCluster = ref<any>(null);
     // 集群删除
     const clusterNoticeDialog = ref<any>(null);
-    const clusterNoticeList = computed(() => [
-      {
-        id: 1,
-        text: $i18n.t('您正在尝试删除集群 {clusterName}，此操作不可逆，请谨慎操作', { clusterName: curOperateCluster.value?.clusterID }),
-        isChecked: false,
-      },
-      {
-        id: 2,
-        text: $i18n.t('请确认已清理该集群下的所有应用与节点'),
-        isChecked: false,
-      },
-      {
-        id: 3,
-        text: $i18n.t('集群删除时会清理集群上的工作负载、服务、路由等集群上的所有资源'),
-        isChecked: false,
-      },
-      {
-        id: 4,
-        text: $i18n.t('集群删除后服务器如不再使用请尽快回收，避免产生不必要的成本'),
-        isChecked: false,
-      },
-    ]);
+    const clusterNoticeList = computed(() => (curOperateCluster.value?.clusterCategory === 'importer'
+      ? [
+        {
+          id: 1,
+          text: $i18n.t('您正在尝试删除集群 {clusterName}，此操作不可逆，请谨慎操作', { clusterName: curOperateCluster.value?.clusterID }),
+          isChecked: false,
+        },
+        {
+          id: 2,
+          text: $i18n.t('删除导入集群不会对集群有任何操作'),
+          isChecked: false,
+        },
+        {
+          id: 3,
+          text: $i18n.t('删除导入集群后蓝鲸容器管理平台会丧失对该集群的管理能力'),
+          isChecked: false,
+        },
+        {
+          id: 4,
+          text: $i18n.t('删除导入集群不会清理集群上的任何资源，删除集群后请视情况手工清理'),
+          isChecked: false,
+        },
+      ]
+      : [
+        {
+          id: 1,
+          text: $i18n.t('您正在尝试删除集群 {clusterName}，此操作不可逆，请谨慎操作', { clusterName: curOperateCluster.value?.clusterID }),
+          isChecked: false,
+        },
+        {
+          id: 2,
+          text: $i18n.t('请确认已清理该集群下的所有应用与节点'),
+          isChecked: false,
+        },
+        {
+          id: 3,
+          text: $i18n.t('集群删除时会清理集群上的工作负载、服务、路由等集群上的所有资源'),
+          isChecked: false,
+        },
+        {
+          id: 4,
+          text: $i18n.t('集群删除后服务器如不再使用请尽快回收，避免产生不必要的成本'),
+          isChecked: false,
+        },
+      ]));
     const confirmDeleteCluster = async () => {
       isLoading.value = true;
       const result = await deleteCluster(curOperateCluster.value);
@@ -569,6 +583,7 @@ export default defineComponent({
         }
     }
     .guide-btn-group {
+        margin-top: 40px;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -582,7 +597,7 @@ export default defineComponent({
             font-size: 16px;
         }
     }
-    .bk-dropdown-list {
+    /deep/.bk-dropdown-list {
         li.disabled a {
             width: 100%;
             cursor: not-allowed;

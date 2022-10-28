@@ -65,15 +65,6 @@ input:-webkit-autofill, textarea:-webkit-autofill, select:-webkit-autofill {
     margin: 17px 20px;
 }
 
-.bcs-footer {
-    font-size: 12px;
-    text-align: center;
-    margin-top: 25px;
-    a {
-        color: #3c96ff;
-    }
-}
-
 .biz-copyright {
     font-size: 12px;
     color: #b7c0ca;

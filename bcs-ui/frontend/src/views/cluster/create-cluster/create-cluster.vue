@@ -17,71 +17,21 @@
         <span class="mode-panel-desc">{{ $t('支持快速导入已存在的集群') }}</span>
       </div>
     </div>
-    <div class="cluster-template-title">
-      <span class="title">{{ $t('云服务商') }}</span>
-      <!-- <bcs-button size="small" @click="handleCreateTemplate">{{ $t('新建集群模板') }}</bcs-button> -->
-    </div>
-    <bcs-table
-      class="mt15"
-      :data="curPageData"
-      :pagination="pagination"
-      v-bkloading="{ isLoading }"
-      @page-change="pageChange"
-      @page-limit-change="pageSizeChange">
-      <bcs-table-column :label="$t('名称')">
-        <template #default="{ row }">
-          <bcs-button text @click="handleShowDetail(row)">{{ row.name }}</bcs-button>
-        </template>
-      </bcs-table-column>
-      <bcs-table-column :label="$t('描述')" prop="description" min-width="300" show-overflow-tooltip>
-        <template #default="{ row }">
-          {{ row.description || '--' }}
-        </template>
-      </bcs-table-column>
-      <bcs-table-column :label="$t('创建者')" prop="creator"></bcs-table-column>
-      <bcs-table-column :label="$t('更新者')" prop="updater"></bcs-table-column>
-      <bcs-table-column :label="$t('更新时间')" prop="updateTime" min-width="200"></bcs-table-column>
-      <!-- <bcs-table-column :label="$t('操作')">
-                <template #default="{ row }">
-                    <bcs-button text @click="handleEditTemplate(row)">{{ $t('编辑') }}</bcs-button>
-                    <bcs-button class="ml15" text @click="handleDeleteTemplate(row)">{{ $t('删除') }}</bcs-button>
-                </template>
-            </bcs-table-column> -->
-    </bcs-table>
-    <bk-sideslider :is-show.sync="showDetail" quick-close :title="detailTitle" :width="800">
-      <template #content>
-        <CodeEditor
-          v-full-screen="{ tools: ['fullscreen', 'copy'], content: yaml }"
-          width="100%"
-          height="100%"
-          readonly
-          :options="{
-            roundedSelection: false,
-            scrollBeyondLastLine: false,
-            renderLineHighlight: false,
-          }"
-          :value="yaml">
-        </CodeEditor>
-      </template>
-    </bk-sideslider>
   </section>
 </template>
 <script lang="ts">
-import { computed, defineComponent, onMounted, ref } from '@vue/composition-api';
-import usePage from '@/views/dashboard/common/use-page';
-import CodeEditor from '@/components/monaco-editor/new-editor.vue';
+import { computed, defineComponent, ref } from '@vue/composition-api';
 import fullScreen from '@/directives/full-screen';
 import yamljs from 'js-yaml';
 import { useConfig } from '@/common/use-app';
 
 export default defineComponent({
   name: 'CreateCluster',
-  components: { CodeEditor },
   directives: {
     'full-screen': fullScreen,
   },
   setup(props, ctx) {
-    const { $router, $store } = ctx.root;
+    const { $router } = ctx.root;
     const { $INTERNAL } = useConfig();
 
     // 自建集群
@@ -98,26 +48,6 @@ export default defineComponent({
       $router.push({ name: 'createImportCluster' });
     };
 
-    // 获取表格数据
-    const isLoading = ref(false);
-    const tableData = ref([]);
-    const handleGetTableData = async () => {
-      isLoading.value = true;
-      const data = await $store.dispatch('clustermanager/fetchCloudList');
-      tableData.value = data;
-      pagination.value.count = data.length;
-      isLoading.value = false;
-    };
-    // 前端分页
-    const { pagination, curPageData, pageChange, pageSizeChange } = usePage(tableData);
-    // 创建集群模板
-    const handleCreateTemplate = () => {
-      $router.push({ name: 'createClusterTemplate' });
-    };
-    // 编辑集群模板
-    const handleEditTemplate = () => {};
-    // 删除集群模板
-    const handleDeleteTemplate = () => {};
     // 展示模板详情
     const showDetail = ref(false);
     const curCloud = ref<any>({});
@@ -127,24 +57,12 @@ export default defineComponent({
       showDetail.value = true;
       curCloud.value = row;
     };
-    onMounted(() => {
-      handleGetTableData();
-    });
     return {
-      isLoading,
-      curPageData,
-      pagination,
       showDetail,
       curCloud,
       detailTitle,
       yaml,
       handleCreateCluster,
-      handleGetTableData,
-      handleCreateTemplate,
-      handleEditTemplate,
-      handleDeleteTemplate,
-      pageChange,
-      pageSizeChange,
       handleShowDetail,
       handleImportCluster,
       $INTERNAL,

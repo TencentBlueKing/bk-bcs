@@ -12,7 +12,7 @@
         <img src="@/images/terminal.svg">
         <span class="text-sm ml-2">WebConsole</span>
         <a
-          href="https://bk.tencent.com/docs/document/6.0/144/6541"
+          href="https://bk.tencent.com/docs/document/7.0/173/14130"
           target="_blank"
           class="text-sm ml-2">
           <i class="bcs-icon bcs-icon-helper"></i>

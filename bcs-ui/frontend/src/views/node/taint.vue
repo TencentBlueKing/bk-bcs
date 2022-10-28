@@ -1,5 +1,5 @@
 <template>
-  <div class="taint-wrapper">
+  <div class="taint-wrapper" v-bkloading="{ isLoading, opacity: 1 }">
     <template v-if="values.length">
       <div class="labels">
         <span>{{$t('键')}}：</span>
@@ -68,6 +68,7 @@ export default defineComponent({
   },
   setup(props, ctx) {
     const { nodes, clusterId } = toRefs(props);
+    const isLoading = ref<boolean>(false);
     const isSubmitting = ref<boolean>(false);
     const effectList = ref(['PreferNoSchedule', 'NoExecute', 'NoSchedule']);
     const values = ref<IValueItem[]>([]);
@@ -76,6 +77,9 @@ export default defineComponent({
     const { setNodeTaints } = useNode();
     // 提交数据
     const handleSubmit = async () => {
+      const validate = taintRef.value?.validate();
+      if (!validate && values.value.length) return;
+
       isSubmitting.value = true;
       // data是单个节点设置污点的结果，多个节点需要另外处理
       const data: IValueItem[] = [];
@@ -110,6 +114,7 @@ export default defineComponent({
     });
     return {
       taintRef,
+      isLoading,
       isSubmitting,
       values,
       effectList,

@@ -328,6 +328,7 @@ export function formatDate(date, formatStr = 'YYYY-MM-DD hh:mm:ss') {
  * @return {string} 转换后的值
  */
 export function formatBytes(bytes, decimals) {
+  if (isNaN(bytes)) return bytes;
   if (parseFloat(bytes) === 0) {
     return '0 B';
   }
@@ -502,4 +503,30 @@ export const renderTemplate = (template: string, params: Record<string, string> 
     );
   });
   return str;
+};
+
+export const isRealObject = item => (item && typeof item === 'object' && !Array.isArray(item));
+
+export const mergeDeep = (target, ...sources) => {
+  if (!sources.length) return target;
+  const source = sources.shift();
+
+  if (isRealObject(target) && isRealObject(source)) {
+    for (const key in source) {
+      if (isRealObject(source[key])) {
+        if (!target[key]) {
+          Object.assign(target, {
+            [key]: {},
+          });
+        }
+        mergeDeep(target[key], source[key]);
+      } else {
+        Object.assign(target, {
+          [key]: source[key],
+        });
+      }
+    }
+  }
+
+  return mergeDeep(target, ...sources);
 };

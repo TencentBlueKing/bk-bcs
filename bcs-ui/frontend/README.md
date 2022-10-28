@@ -136,6 +136,7 @@ CSS文件目前禁止添加新样式，准备通过[tailwindui](https://tailwind
 - 代码编辑器逐步替换为 `monaco-editor/new-editor`，以前`monaco-editor/editor.vue`、`ace-editor`和`k8s-create/yaml-mode`不要再使用
 - 删除模块Vuex，只保留全局vuex
 - 删除images下无用文件、把SVG转换成icon库维护
+- 一个API模块最好对应一个 use 操作
 
 ### FAQ
 

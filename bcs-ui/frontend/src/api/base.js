@@ -111,6 +111,8 @@ export const deleteCloudAccounts = request('delete', `${prefix}/clustermanager/v
 export const cloudRegionByAccount = request('get', `${prefix}/clustermanager/v1/clouds/$cloudId/regions`);
 export const cloudClusterList = request('get', `${prefix}/clustermanager/v1/clouds/$cloudId/clusters`);
 export const taskRetry = request('put', `${prefix}/clustermanager/v1/task/$taskId/retry`);
+export const nodemanCloudList = request('get', `${prefix}/clustermanager/v1/nodeman/cloud`);
+export const ccTopology = request('get', `${prefix}/clustermanager/v1/cluster/$clusterId/cc/topology`);
 // token
 export const createToken = request('post', `${prefix}/usermanager/v1/tokens`);
 export const updateToken = request('put', `${prefix}/usermanager/v1/tokens/$token`);
@@ -119,6 +121,7 @@ export const getTokens = request('get', `${prefix}/usermanager/v1/users/$usernam
 // auth
 export const userPerms = request('post', '/api/iam/user_perms/');
 export const userPermsByAction = request('post', '/api/iam/user_perms/actions/$actionId/');
+export const projectViewPerms = request('get', '/api/iam/user_perms/actions/project_view/apply_url/');
 // cluster tools
 export const clusterTools = request('get', '/api/cluster_tools/projects/$projectId/clusters/$clusterId/tools/');
 export const clusterToolsInstall = request('post', '/api/cluster_tools/projects/$projectId/clusters/$clusterId/tools/$toolId/');
@@ -170,6 +173,38 @@ export const clusterVariable = request('get', `${variablePrefix}/variables/$vari
 export const updateClusterVariable = request('put', `${variablePrefix}/variables/$variableID/cluster`);
 export const namespaceVariable = request('get', `${variablePrefix}/variables/$variableID/namespace`);
 export const updateNamespaceVariable = request('put', `${variablePrefix}/variables/$variableID/namespace`);
+
+// log
+export const createLogCollect = request('post', '/api/log_collect/projects/$projectId/clusters/$clusterId/configs/');
+export const logCollectList = request('get', '/api/log_collect/projects/$projectId/clusters/$clusterId/configs/');
+export const updateLogCollect = request('put', '/api/log_collect/projects/$projectId/clusters/$clusterId/configs/$configId/');
+export const deleteLogCollect = request('delete', '/api/log_collect/projects/$projectId/clusters/$clusterId/configs/$configId/');
+export const retrieveLogCollect = request('get', '/api/log_collect/projects/$projectId/clusters/$clusterId/configs/$configId/');
+export const getLogLinks = request('get', '/api/log_collect/projects/$projectId/log_links/');
+
+// node group(pool)
+export const nodeGroup = request('get', `${prefix}/clustermanager/v1/nodegroup`);
+export const createNodeGroup = request('post', `${prefix}/clustermanager/v1/nodegroup`);
+export const nodeGroupDetail = request('get', `${prefix}/clustermanager/v1/nodegroup/$nodeGroupID`);
+export const updateNodeGroup = request('put', `${prefix}/clustermanager/v1/nodegroup/$nodeGroupID`);
+export const deleteNodeGroup = request('delete', `${prefix}/clustermanager/v1/nodegroup/$nodeGroupID`);
+export const disableNodeGroupAutoScale = request('post', `${prefix}/clustermanager/v1/nodegroup/$nodeGroupID/autoscale/disable`);
+export const enableNodeGroupAutoScale = request('post', `${prefix}/clustermanager/v1/nodegroup/$nodeGroupID/autoscale/enable`);
+export const nodeGroupNodeList = request('get', `${prefix}/clustermanager/v1/nodegroup/$nodeGroupID/node`);
+export const deleteNodeGroupNode = request('delete', `${prefix}/clustermanager/v2/nodegroup/$nodeGroupID/groupnode`);
+export const addNodeGroupNode = request('post', `${prefix}/clustermanager/v1/nodegroup/$nodeGroupID/node`);
+export const resourceSchema = request('get', `${prefix}/clustermanager/v1/resourceschema/$cloudID/$name`);
+export const cloudOsImage = request('get', `${prefix}/clustermanager/v1/clouds/$cloudID/osimage`);
+export const cloudInstanceTypes = request('get', `${prefix}/clustermanager/v1/clouds/$cloudID/instancetypes`);
+export const cloudSecurityGroups = request('get', `${prefix}/clustermanager/v1/clouds/$cloudID/securitygroups`);
+export const cloudSubnets = request('get', `${prefix}/clustermanager/v1/clouds/$cloudID/subnets`);
+export const clusterAutoScaling = request('get', `${prefix}/clustermanager/v1/autoscalingoption/$clusterId`);
+export const updateClusterAutoScaling = request('put', `${prefix}/clustermanager/v1/autoscalingoption/$clusterId`);
+export const toggleClusterAutoScalingStatus = request('put', `${prefix}/clustermanager/v1/autoscalingoption/$clusterId/status `);
+export const clusterAutoScalingLogs = request('get', `${prefix}/clustermanager/v1/operationlogs`);
+export const clusterNodeDrain = request('post', `${prefix}/clustermanager/v1/node/drain`);
+export const nodeCordon = request('put', `${prefix}/clustermanager/v1/node/cordon`);
+export const nodeUnCordon = request('put', `${prefix}/clustermanager/v1/node/uncordon`);
 
 export default {
   dashbordList,

@@ -44,7 +44,8 @@
               theme="navigation-cluster-manage"
               :arrow="false"
               placement="bottom-start"
-              :tippy-options="{ 'hideOnClick': false }">
+              :tippy-options="{ 'hideOnClick': false }"
+              v-if="$INTERNAL">
               <div class="cluster-manage-angle">
                 <a>{{ $t('集群管理') }}</a>
                 <i class="bk-select-angle bk-icon icon-angle-down angle-down"></i>
@@ -61,7 +62,6 @@
                         active: isSharedCluster,
                         disable: !firstShareCluster
                       }]"
-                    v-if="$INTERNAL"
                     @click="handleGotoShareCluster"
                   >{{$t('共享集群')}}<span class="beta">beta</span>
                   </li>

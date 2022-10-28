@@ -44,6 +44,7 @@ export const deleteCloudAccounts = request('delete', '/clouds/$cloudId/accounts/
 export const cloudRegionByAccount = request('get', '/clouds/$cloudId/regions');
 export const cloudClusterList = request('get', '/clouds/$cloudId/clusters');
 export const taskRetry = request('put', '/task/$taskId/retry');
+export const cloudDetail = request('get', '/cloud/$cloudId');
 
 // node 操作
 export const getK8sNodes = request('get', '/cluster/$clusterId/node');
@@ -55,3 +56,6 @@ export const setNodeTaints = request('put', '/node/taints');
 
 // 集群管理
 export const masterList = request('get', '/cluster/$clusterId/master');
+
+// auth
+export const newUserPermsByAction = request('post', '/perms/actions/$actionId');

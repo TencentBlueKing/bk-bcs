@@ -19,6 +19,7 @@ import SharedClusterTips from '@/views/app/shared-cluster-tips.vue';
 import BkPaaSLogin from '@/views/app/login.vue';
 import { bus } from '@/common/bus';
 import { userPermsByAction } from '@/api/base';
+import { newUserPermsByAction } from '@/api/modules/cluster-manager';
 import AppApplyPerm from '@/views/app/apply-perm.vue';
 
 export default {
@@ -56,17 +57,25 @@ export default {
     if (!item && allowDomains[0]) {
       window.location.href = `//${allowDomains[0]}${location.pathname}`;
     }
+    if (!this.$INTERNAL) {
+      localStorage.setItem('appViewMode', 'namespace');
+    }
   },
   created() {
     // 异步权限弹窗
-    bus.$on('show-apply-perm-modal-async', async ({ $actionId, permCtx, resourceName }) => {
+    bus.$on('show-apply-perm-modal-async', async ({ $actionId, permCtx, resourceName, newPerms }) => {
       if (!this.$refs.bkApplyPerm) return;
       this.$refs.bkApplyPerm.dialogConf.isShow = true;
       this.$refs.bkApplyPerm.isLoading = true;
-      const data = await userPermsByAction({
-        $actionId,
-        perm_ctx: permCtx,
-      }).catch(() => ({}));
+      const data = newPerms
+        ? await newUserPermsByAction({
+          $actionId,
+          perm_ctx: permCtx,
+        }).catch(() => ({}))
+        : await userPermsByAction({
+          $actionId,
+          perm_ctx: permCtx,
+        }).catch(() => ({}));
       if (data?.perms?.[$actionId]) {
         this.$bkMessage({
           theme: 'warning',

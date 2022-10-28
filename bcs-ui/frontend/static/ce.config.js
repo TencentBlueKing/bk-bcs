@@ -19,6 +19,12 @@ window.BCS_CONFIG = {
         mesosConfigmap: '',
         mesosDeployment: '',
         mesosSecret: '',
-        mesosService: ''
+        mesosService: '',
+        token: 'https://bk.tencent.com/docs/document/7.0/173/30227',
+        questionsYaml: 'https://bk.tencent.com/docs/document/7.0/173/14125'
+    },
+    // 文案信息
+    str: {
+        taskgroupAndPodTips: ''
     }
 }

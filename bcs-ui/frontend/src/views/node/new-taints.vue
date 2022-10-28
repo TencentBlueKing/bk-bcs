@@ -1,10 +1,9 @@
 <template>
   <div>
     <div class="key-value" v-for="(item, index) in taints" :key="index">
-      <Validate :rules="rules" :value="item.key" :meta="index">
+      <Validate :rules="rules" :value="item.key" :meta="index" class="flex-1">
         <bcs-input
           v-model="item.key"
-          class="key"
           :placeholder="$t('键')"
           @change="handleLabelKeyChange">
         </bcs-input>
@@ -13,12 +12,12 @@
       <bcs-input
         v-model="item.value"
         :placeholder="$t('值')"
-        class="value"
+        class="flex-1"
         @change="handleLabelValueChange"
       ></bcs-input>
       <bcs-select
         v-model="item.effect"
-        class="effect ml15 flex"
+        class="effect ml15 flex-1"
         :placeholder="$t('影响')"
         :clearable="false">
         <bcs-option
@@ -141,12 +140,6 @@ export default defineComponent({
 });
 </script>
 <style lang="postcss" scoped>
-.mr8 {
-  margin-right: 8px;
-}
-.ml8 {
-  margin-left: 8px;
-}
 .key-value {
   display: flex;
   align-items: center;
@@ -161,8 +154,11 @@ export default defineComponent({
           cursor: not-allowed;
       }
   }
-  .flex {
-      flex: 1;
+  .ml8 {
+      margin-left: 8px;
+  }
+  .mr8 {
+      margin-right: 8px;
   }
 }
 </style>

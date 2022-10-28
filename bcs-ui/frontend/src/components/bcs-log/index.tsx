@@ -202,7 +202,7 @@ export default defineComponent({
   },
   render() {
     return (
-            <article class="container" v-bkloading={{ isLoading: this.globalLoading, opacity: 0.1 }}>
+            <article class="log-container" v-bkloading={{ isLoading: this.globalLoading, opacity: 0.1 }}>
                 <log-header
                     title={this.podId}
                     containerList={this.containerList}

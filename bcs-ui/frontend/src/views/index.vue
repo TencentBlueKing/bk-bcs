@@ -18,14 +18,7 @@
     <template v-else-if="curProject && curProject.kind === 0">
       <Unregistry :cur-project="curProject"></Unregistry>
     </template>
-    <bk-exception type="403" v-else-if="!projectList.length">
-      <span>{{$t('无项目权限')}}</span>
-      <div class="text-subtitle">{{$t('你没有相应项目的访问权限，请前往申请相关项目权限')}}</div>
-      <div style="display: flex;align-items: center; justify-content: center;">
-        <a class="bk-text-button text-wrap" @click="handleGotoIAM">{{$t('去申请')}}</a>
-        <a class="bk-text-button text-wrap" @click="handleGotoProjectManage">{{$t('创建项目')}}</a>
-      </div>
-    </bk-exception>
+    <EmptyProjectGUide v-else-if="!projectList.length"></EmptyProjectGUide>
   </div>
 </template>
 <script lang="ts">
@@ -36,6 +29,7 @@ import SideTerminal from '@/views/app/terminal.vue';
 import Unregistry from '@/views/app/unregistry.vue';
 import ContentHeader from '@/components/layout/Header.vue';
 import { getProjectList } from '@/api/base';
+import EmptyProjectGUide from '@/views/app/empty-project-guide.vue';
 
 export default defineComponent({
   name: 'BcsHome',
@@ -44,13 +38,12 @@ export default defineComponent({
     SideTerminal,
     Unregistry,
     ContentHeader,
+    EmptyProjectGUide,
   },
   setup(props, ctx) {
     // 项目和集群的清空已经赋值操作有时序关系，请勿随意调整顺序
     const { $store, $route, $router, $bkMessage } = ctx.root;
-    const handleGotoIAM = () => {
-      window.open(window.BK_IAM_APP_URL);
-    };
+
     const handleSetClusterStorageInfo = (curCluster?) => {
       if (curCluster) {
         localStorage.setItem('bcs-cluster', curCluster.cluster_id);
@@ -222,22 +215,10 @@ export default defineComponent({
       isLoading.value = false;
     });
 
-    function handleGotoProjectManage() {
-      if (window.REGION === 'ieod') {
-        window.open(`${window.DEVOPS_HOST}/console/pm`);
-      } else {
-        if ($route.name === 'projectManage') return;
-        $router.push({
-          name: 'projectManage',
-        });
-      }
-    }
     return {
       isLoading,
       curProject,
-      handleGotoIAM,
       projectList,
-      handleGotoProjectManage,
     };
   },
 });

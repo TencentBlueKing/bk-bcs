@@ -30,6 +30,10 @@ export default {
       type: [String, Number],
       default: '',
     },
+    parseNumber: {
+      type: Boolean,
+      default: true,
+    },
   },
   render(h) {
     const slots = Object.keys(this.$slots)

@@ -20,8 +20,5 @@ export default {
       return this.$store.state.sideMenu.onlineProjectList;
     },
   },
-  mounted() {
-    this.$store.commit('network/updateIngressList', []);
-  },
 };
 </script>
