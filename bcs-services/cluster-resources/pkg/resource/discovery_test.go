@@ -124,6 +124,9 @@ func TestRedisCacheClient(t *testing.T) {
 	// 清理缓存内容
 	assert.Nil(t, rcc.ClearCache())
 
+	// 触发缓存锁
+	assert.NotNil(t, rcc.ClearCache())
+
 	// rcc 其他方法测试
 	_ = rcc.RESTClient()
 

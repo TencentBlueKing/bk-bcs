@@ -115,7 +115,7 @@ func TestFormatCObj(t *testing.T) {
 	assert.Equal(t, "2022-01-01 10:00:00", FormatCObj(lightCObjManifest)["createTime"])
 }
 
-func TestFormatGDeploy(t *testing.T) {
-	images := FormatGDeploy(lightDeployManifest)["images"]
+func TestFormatGWorkload(t *testing.T) {
+	images := FormatGWorkload(lightDeployManifest)["images"]
 	assert.Equal(t, 2, len(images.([]string)))
 }

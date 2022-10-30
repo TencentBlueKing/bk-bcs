@@ -21,7 +21,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
 )
 
-// FormatCRD xxx
+// FormatCRD ...
 func FormatCRD(manifest map[string]interface{}) map[string]interface{} {
 	ret := CommonFormatRes(manifest)
 	ret["name"] = mapx.GetStr(manifest, "metadata.name")
@@ -32,13 +32,13 @@ func FormatCRD(manifest map[string]interface{}) map[string]interface{} {
 	return ret
 }
 
-// FormatCObj xxx
+// FormatCObj ...
 func FormatCObj(manifest map[string]interface{}) map[string]interface{} {
 	return CommonFormatRes(manifest)
 }
 
-// FormatGDeploy xxx
-func FormatGDeploy(manifest map[string]interface{}) map[string]interface{} {
+// FormatGWorkload ...
+func FormatGWorkload(manifest map[string]interface{}) map[string]interface{} {
 	ret := CommonFormatRes(manifest)
 	ret["images"] = parseContainerImages(manifest, "spec.template.spec.containers")
 	return ret

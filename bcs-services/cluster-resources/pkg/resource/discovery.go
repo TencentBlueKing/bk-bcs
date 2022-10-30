@@ -47,6 +47,9 @@ const (
 
 	// ResCacheKeyPrefix 集群资源信息 Redis 缓存键前缀
 	ResCacheKeyPrefix = "osrcp"
+
+	// CacheLockTTL 自动重置 ServerGroup 缓存时间间隔 10 分钟
+	CacheLockTTL = 10 * 60
 )
 
 // RedisCacheClient 基于 Redis 缓存的，单个集群资源信息 Client
@@ -128,6 +131,10 @@ func (d *RedisCacheClient) Fresh() bool {
 func (d *RedisCacheClient) ClearCache() error {
 	log.Warn(d.ctx, "invalidate cluster %s discovery cache", d.clusterID)
 
+	if err := d.checkCacheLock(); err != nil {
+		return err
+	}
+
 	var ret []byte
 	allGroupCacheKey := genCacheKey(d.clusterID, "")
 	if err := d.rdsCache.Get(allGroupCacheKey, &ret); err != nil {
@@ -150,7 +157,11 @@ func (d *RedisCacheClient) ClearCache() error {
 		}
 	}
 	// 最后再删除 AllGroup 的缓存
-	return d.rdsCache.Delete(allGroupCacheKey)
+	if err := d.rdsCache.Delete(allGroupCacheKey); err != nil {
+		return err
+	}
+
+	return d.setCacheLock()
 }
 
 // ServerGroups 获取集群中的 Group，包含 versions, preferred 信息（支持 redis 缓存）
@@ -258,6 +269,22 @@ func (d *RedisCacheClient) writeCache(groupVersion string, obj runtime.Object) e
 	return nil
 }
 
+// checkCacheLock 检查缓存锁
+func (d *RedisCacheClient) checkCacheLock() error {
+	lockCacheKey := genLockKey(d.clusterID)
+	if d.rdsCache.Exists(lockCacheKey) {
+		log.Warn(d.ctx, "the interval is too short for reset cluster %s cache, please try again later", d.clusterID)
+		return errorx.New(errcode.General, i18n.GetMsg(d.ctx, "清理集群资源缓存时间间隔过短，请稍后再试"))
+	}
+	return nil
+}
+
+// setCacheLock 设置缓存锁
+func (d *RedisCacheClient) setCacheLock() error {
+	lockCacheKey := genLockKey(d.clusterID)
+	return d.rdsCache.Set(lockCacheKey, "locked", CacheLockTTL*time.Second)
+}
+
 // GetServerVersion 获取集群版本信息
 func GetServerVersion(ctx context.Context, clusterID string) (*version.Info, error) {
 	cli, err := NewRedisCacheClient4Conf(ctx, NewClusterConf(clusterID))
@@ -347,6 +374,11 @@ func genCacheKey(clusterID, groupVersion string) cache.StringKey {
 	}
 	// 否则则为指定 group version 拥有的资源
 	return cache.NewStringKey(fmt.Sprintf("%s:%s:serverresources", clusterID, groupVersion))
+}
+
+// 生成缓存重置锁 Redis 键
+func genLockKey(clusterID string) cache.StringKey {
+	return cache.NewStringKey(fmt.Sprintf("%s:cache-lock", clusterID))
 }
 
 func newRedisCacheClient(

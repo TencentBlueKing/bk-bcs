@@ -16,6 +16,7 @@ package client
 
 import (
 	"context"
+	"strings"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -60,7 +61,8 @@ func (c *ResClient) List(
 	if err := c.permValidate(ctx, action.List, namespace); err != nil {
 		return nil, err
 	}
-	return c.cli.Resource(c.res).Namespace(namespace).List(ctx, opts)
+	ret, err := c.cli.Resource(c.res).Namespace(namespace).List(ctx, opts)
+	return ret, c.handleErr(ctx, err)
 }
 
 // Get 获取单个资源
@@ -70,7 +72,8 @@ func (c *ResClient) Get(
 	if err := c.permValidate(ctx, action.View, namespace); err != nil {
 		return nil, err
 	}
-	return c.cli.Resource(c.res).Namespace(namespace).Get(ctx, name, opts)
+	ret, err := c.cli.Resource(c.res).Namespace(namespace).Get(ctx, name, opts)
+	return ret, c.handleErr(ctx, err)
 }
 
 // Create 创建资源
@@ -91,7 +94,9 @@ func (c *ResClient) Create(
 	if err := c.permValidate(ctx, action.Create, namespace); err != nil {
 		return nil, err
 	}
-	return c.cli.Resource(c.res).Namespace(namespace).Create(ctx, &unstructured.Unstructured{Object: manifest}, opts)
+	ret, err := c.cli.Resource(c.res).Namespace(namespace).Create(
+		ctx, &unstructured.Unstructured{Object: manifest}, opts)
+	return ret, c.handleErr(ctx, err)
 }
 
 // Update 更新单个资源
@@ -109,7 +114,9 @@ func (c *ResClient) Update(
 	if err = c.permValidate(ctx, action.Update, namespace); err != nil {
 		return nil, err
 	}
-	return c.cli.Resource(c.res).Namespace(namespace).Update(ctx, &unstructured.Unstructured{Object: manifest}, opts)
+	ret, err := c.cli.Resource(c.res).Namespace(namespace).Update(
+		ctx, &unstructured.Unstructured{Object: manifest}, opts)
+	return ret, c.handleErr(ctx, err)
 }
 
 // Patch 以 Patch 的方式更新资源
@@ -119,7 +126,8 @@ func (c *ResClient) Patch(
 	if err := c.permValidate(ctx, action.Update, namespace); err != nil {
 		return nil, err
 	}
-	return c.cli.Resource(c.res).Namespace(namespace).Patch(ctx, name, pt, data, opts)
+	ret, err := c.cli.Resource(c.res).Namespace(namespace).Patch(ctx, name, pt, data, opts)
+	return ret, c.handleErr(ctx, err)
 }
 
 // Delete 删除单个资源
@@ -127,7 +135,7 @@ func (c *ResClient) Delete(ctx context.Context, namespace, name string, opts met
 	if err := c.permValidate(ctx, action.Delete, namespace); err != nil {
 		return err
 	}
-	return c.cli.Resource(c.res).Namespace(namespace).Delete(ctx, name, opts)
+	return c.handleErr(ctx, c.cli.Resource(c.res).Namespace(namespace).Delete(ctx, name, opts))
 }
 
 // Watch 获取某类资源 watcher
@@ -135,7 +143,8 @@ func (c *ResClient) Watch(ctx context.Context, namespace string, opts metav1.Lis
 	if err := c.permValidate(ctx, action.List, namespace); err != nil {
 		return nil, err
 	}
-	return c.cli.Resource(c.res).Namespace(namespace).Watch(ctx, opts)
+	watcher, err := c.cli.Resource(c.res).Namespace(namespace).Watch(ctx, opts)
+	return watcher, c.handleErr(ctx, err)
 }
 
 // permValidate IAM 权限校验
@@ -149,4 +158,24 @@ func (c *ResClient) permValidate(ctx context.Context, action, namespace string) 
 		return errorx.New(errcode.General, i18n.GetMsg(ctx, "由 Context 获取集群信息失败"))
 	}
 	return perm.Validate(ctx, c.res.Resource, action, projInfo.ID, clusterInfo.ID, namespace)
+}
+
+// 对一些特殊错误做处理，主要是集群升级导致资源缓存过期，做一次主动清理
+func (c *ResClient) handleErr(ctx context.Context, originErr error) error {
+	if originErr == nil {
+		return nil
+	}
+	if !strings.Contains(originErr.Error(), "the server could not find the requested resource") {
+		return originErr
+	}
+	cli, err := res.NewRedisCacheClient4Conf(ctx, c.conf)
+	if err != nil {
+		return originErr
+	}
+	// 检查缓存锁，如果近期已清理过缓存，可直接忽略
+	_ = cli.ClearCache()
+	return errorx.New(
+		errcode.General,
+		i18n.GetMsg(ctx, "检测到集群资源变动，尝试同步资源信息中。若近期有升级集群行为，请稍后重试，若依旧失败，请联系容器助手"),
+	)
 }

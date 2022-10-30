@@ -105,7 +105,7 @@ func (b *SelectItemsRespBuilder) BuildList() (map[string]interface{}, error) {
 	for _, item := range mapx.GetList(b.manifest, "items") {
 		selectItems = append(selectItems, genSelectItem(b.ctx, item.(map[string]interface{}), b.kind, b.scene))
 	}
-	for _, ext := range genExtSelectItems(b.kind, b.scene) {
+	for _, ext := range genExtSelectItems(selectItems, b.kind, b.scene) {
 		selectItems = append(selectItems, ext)
 	}
 	return map[string]interface{}{"selectItems": selectItems}, nil

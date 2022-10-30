@@ -65,11 +65,18 @@ func genSelectItem(ctx context.Context, manifest map[string]interface{}, kind, s
 }
 
 // 部分资源在某些场景下，允许扩展 SelectItems
-func genExtSelectItems(kind, scene string) (exts []map[string]interface{}) {
+func genExtSelectItems(source []interface{}, kind, scene string) (exts []map[string]interface{}) {
 	switch kind {
 	case resCsts.SC:
+		for _, item := range source {
+			if mapx.GetStr(item.(map[string]interface{}), "label") == "local-storage" {
+				return exts
+			}
+		}
 		// StorageClass 允许使用 local-storage，即使集群中不存在
-		exts = append(exts, map[string]interface{}{"label": "local-storage", "value": "local-storage"})
+		exts = append(exts, map[string]interface{}{
+			"label": "local-storage", "value": "local-storage", "disabled": false, "tips": "",
+		})
 	}
 	return exts
 }
