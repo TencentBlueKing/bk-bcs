@@ -59,7 +59,6 @@ type GetClusterReq struct {
 
 type RetryClusterReq struct {
 	ClusterID string `json:"clusterID"`
-	Operator  string `json:"operator"`
 }
 
 type AddNodesClusterReq struct {
@@ -72,40 +71,24 @@ type DeleteNodesClusterReq struct {
 	Nodes     []string `json:"nodes"`
 }
 
-type CheckCloudKubeConfigReq struct {
-	KubeConfig string `json:"kubeConfig"`
+type CheckCloudKubeconfigReq struct {
+	Kubeconfig string `json:"kubeconfig"`
 }
 
 type ImportClusterReq struct {
-	ClusterID   string           `json:"clusterID"`
-	ProjectID   string           `json:"projectID"`
-	BusinessID  string           `json:"businessID"`
-	EngineType  string           `json:"engineType"`
-	IsExclusive bool             `json:"isExclusive"`
-	ClusterType string           `json:"clusterType"`
-	Updater     string           `json:"updater"`
-	ManageType  string           `json:"manageType"`
-	ClusterName string           `json:"clusterName"`
-	Environment string           `json:"environment"`
-	Provider    string           `json:"provider"`
-	Description string           `json:"description"`
-	NetworkType string           `json:"networkType"`
-	Region      string           `json:"region"`
-	CloudMode   *ImportCloudMode `json:"cloudMode"`
-	Version     string           `json:"version"`
-	AccountID   string           `json:"accountID"`
+	ClusterID   string `json:"clusterID"`
+	ClusterName string `json:"clusterName"`
+	Provider    string `json:"provider"`
+	ProjectID   string `json:"projectID"`
+	BusinessID  string `json:"businessID"`
+	Environment string `json:"environment"`
+	EngineType  string `json:"engineType"`
+	IsExclusive bool   `json:"isExclusive"`
+	ClusterType string `json:"clusterType"`
 }
 
 type ListClusterNodesReq struct {
-	ClusterID    string `json:"clusterID"`
-	Region       string `json:"region"`
-	VpcID        string `json:"vpcID"`
-	NodeGroupID  string `json:"nodeGroupID"`
-	InstanceType string `json:"instanceType"`
-	Status       string `json:"status"`
-	Offset       uint32 `json:"offset"`
-	Limit        uint32 `json:"limit"`
-	ShowPwd      bool   `json:"showPwd"`
+	Limit uint32 `json:"limit"`
 }
 
 type ListCommonClusterReq struct {
@@ -133,6 +116,7 @@ type DeleteNodesClusterResp struct {
 }
 
 type ListClusterNodesResp struct {
+	Data []*ClusterNode `json:"data"`
 }
 
 type ListCommonClusterResp struct {
@@ -177,36 +161,8 @@ type ImportCloudMode struct {
 }
 
 type ClusterNode struct {
-	NodeID        string            `json:"nodeID"`
-	InnerIP       string            `json:"innerIP"`
-	InstanceType  string            `json:"instanceType"`
-	CPU           uint32            `json:"CPU"`
-	Mem           uint32            `json:"mem"`
-	GPU           uint32            `json:"GPU"`
-	Status        string            `json:"status"`
-	ZoneID        string            `json:"zoneID"`
-	NodeGroupID   string            `json:"nodeGroupID"`
-	ClusterID     string            `json:"clusterID"`
-	VPC           string            `json:"VPC"`
-	Region        string            `json:"region"`
-	Passwd        string            `json:"passwd"`
-	Zone          uint32            `json:"zone"`
-	DeviceID      string            `json:"deviceID"`
-	Labels        map[string]string `json:"labels"`
-	Taints        []*Taint          `json:"taints"`
-	UnSchedulable uint32            `json:"unSchedulable"`
-	NodeName      string            `json:"nodeName"`
-	Agent         uint32            `json:"agent"`
-	Idc           string            `json:"idc"`
-	Rack          string            `json:"rack"`
-	DeviceClass   string            `json:"deviceClass"`
-	InnerIPv6     string            `json:"innerIPv6"`
-}
-
-type Taint struct {
-	Key    string `json:"key"`
-	Value  string `json:"value"`
-	Effect string `json:"effect"`
+	NodeID  string `json:"nodeID"`
+	InnerIP string `json:"innerIP"`
 }
 
 type ClusterMgr interface {
@@ -227,7 +183,7 @@ type ClusterMgr interface {
 	// DeleteNodes 从集群中删除节点
 	DeleteNodes(DeleteNodesClusterReq) (DeleteNodesClusterResp, error)
 	// CheckCloudKubeConfig kubeConfig连接集群可用性检测
-	CheckCloudKubeConfig(CheckCloudKubeConfigReq) error
+	CheckCloudKubeconfig(CheckCloudKubeconfigReq) error
 	// Import 导入用户集群(支持多云集群导入功能: 集群ID/kubeConfig)
 	Import(ImportClusterReq) error
 	// ListNodes 查询集群下所有节点列表
