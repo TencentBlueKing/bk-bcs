@@ -21,6 +21,8 @@ LDFLAGS="-X github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/version
 
 LGFLAGS4TEST="-X github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/runtime.RunMode=UnitTest"
 
+LGFLAGS4DEV="-X github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/runtime.RunMode=Dev"
+
 proto:
 	# --micro_out => pb.micro.go，--go_out => pb.go，--grpc-gateway_out => pb.gw.go --validate_out => pb.validate.go，--swagger_out => swagger.json
 	protoc -I ./third_party/ --proto_path=. --micro_out=. --go_out=plugins=grpc:. \
@@ -39,6 +41,10 @@ build: tidy
 # compile third_party/swagger-ui to swagger/datafile.go，execute only once!
 swagger: proto
 	go-bindata --nocompress -pkg swagger -o swagger/datafile.go third_party/swagger-ui/...
+
+# build dev
+dev: tidy
+	go build -ldflags ${LGFLAGS4DEV} -o bcs-cluster-resources *.go
 
 # run unittest in ./pkg recursively
 test: tidy

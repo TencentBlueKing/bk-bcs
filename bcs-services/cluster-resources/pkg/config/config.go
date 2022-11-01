@@ -18,8 +18,10 @@ package config
 import (
 	"crypto/rsa"
 	"io/ioutil"
+	"net"
 	"os"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/util"
 	bkiam "github.com/TencentBlueKing/iam-go-sdk"
 	"github.com/TencentBlueKing/iam-go-sdk/logger"
 	"github.com/TencentBlueKing/iam-go-sdk/metric"
@@ -64,6 +66,26 @@ func LoadConf(filePath string) (*ClusterResourcesConf, error) {
 	return conf, nil
 }
 
+// getIPv6AddrFromEnv 解析ipv6
+func getIPv6AddrFromEnv() string {
+	ipv6 := util.GetIPv6Address(envs.PodIPs)
+	if ipv6 == "" {
+		return ""
+	}
+
+	// 在实际中，ipv6不能是回环地址
+	if v := net.ParseIP(ipv6); v == nil || v.IsLoopback() || v.IsUnspecified() {
+		return ""
+	}
+
+	// local link ipv6 需要带上 interface， 格式如::%eth0
+	if envs.IPv6Interface != "" {
+		ipv6 = ipv6 + "%" + envs.IPv6Interface
+	}
+
+	return ipv6
+}
+
 // ClusterResourcesConf ClusterResources 服务启动配置
 type ClusterResourcesConf struct {
 	Debug   bool        `yaml:"debug"`
@@ -82,6 +104,7 @@ func (c *ClusterResourcesConf) initServerAddress() error {
 		c.Server.Address = envs.LocalIP
 		c.Server.InsecureAddress = envs.LocalIP
 	}
+	c.Server.AddressIPv6 = getIPv6AddrFromEnv()
 	return nil
 }
 
@@ -160,6 +183,7 @@ type EtcdConf struct {
 type ServerConf struct {
 	UseLocalIP       bool   `yaml:"useLocalIP" usage:"是否使用 Local IP"`
 	Address          string `yaml:"address" usage:"服务启动地址"`
+	AddressIPv6      string `yaml:"addressIPv6" usage:"服务启动ipv6地址"`
 	InsecureAddress  string `yaml:"insecureAddress" usage:"服务启动地址（非安全）"`
 	Port             int    `yaml:"port" usage:"GRPC 服务端口"`
 	HTTPPort         int    `yaml:"httpPort" usage:"HTTP 服务端口"`

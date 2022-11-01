@@ -22,7 +22,7 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
-	microEtcd "github.com/asim/go-micro/plugins/registry/etcd/v4"
+	microEtcd "github.com/go-micro/plugins/v4/registry/etcd"
 	"go-micro.dev/v4/registry"
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/cache/redis"

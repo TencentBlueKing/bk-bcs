@@ -41,6 +41,10 @@ var (
 	BCSApiGWAuthToken = envx.Get("BCS_API_GW_AUTH_TOKEN", "")
 	// LocalIP 服务运行 Pod IP，容器化部署时候指定
 	LocalIP = envx.Get("LOCAL_IP", "")
+	// ipv6本地网关地址
+	IPv6Interface = envx.Get("IPV6_INTERFACE", "")
+	// 双栈集群, 多个ip地址
+	PodIPs = envx.Get("POD_IPs", "")
 )
 
 // 以下变量值可通过环境变量指定（仅用于单元测试）
