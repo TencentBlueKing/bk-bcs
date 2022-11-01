@@ -151,17 +151,17 @@ export default defineComponent({
         });
         logSSR?.addEventListener('message', (event: MessageEvent) => {
           try {
-            const data: ILogData = JSON.parse(event.data);
-            state.log.push(data);
+            const data: ILogData[] = JSON.parse(event.data);
             setTimeout(() => {
-              contentRef.value?.scrollIntoIndex();
-              const ids = [data.time];
-              contentRef.value?.setHoverIds(ids);
-              // 关闭hover效果
-              setTimeout(() => {
-                contentRef.value?.removeHoverIds(ids);
-              }, 1000);
+              state.log.push(...data);
             }, 0);
+            contentRef.value?.scrollIntoIndex();
+            const ids = data.map(item => item.time) ;
+            contentRef.value?.setHoverIds(ids);
+            // 关闭hover效果
+            setTimeout(() => {
+              contentRef.value?.removeHoverIds(ids);
+            }, 1000);
           } catch (err) {
             console.log(err);
           }
