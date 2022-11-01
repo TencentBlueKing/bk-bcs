@@ -10,20 +10,23 @@
  * limitations under the License.
  */
 
-package store
+package mongo
 
 import (
 	"context"
 	"fmt"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/types"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/utils"
 	"testing"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/store"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/types"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/utils"
+
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers/mongo"
-	bcsdatamanager "github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/proto/bcs-data-manager"
 	"github.com/stretchr/testify/assert"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+
+	bcsdatamanager "github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/proto/bcs-data-manager"
 )
 
 func TestModelCluster_GetClusterInfo(t *testing.T) {
@@ -339,13 +342,13 @@ func TestModelCluster_InsertClusterInfo(t *testing.T) {
 //
 // }
 
-func newTestMongo() Server {
+func newTestMongo() store.Server {
 	mongoOptions := &mongo.Options{
 		Hosts:                 []string{"127.0.0.1:27017"},
 		ConnectTimeoutSeconds: 3,
 		Database:              "datamanager_test",
 		Username:              "data",
-		Password:              "test1234",
+		Password:              "",
 	}
 	mongoDB, err := mongo.NewDB(mongoOptions)
 	if err != nil {

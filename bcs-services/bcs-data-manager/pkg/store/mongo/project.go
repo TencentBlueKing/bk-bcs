@@ -10,22 +10,24 @@
  * limitations under the License.
  */
 
-package store
+package mongo
 
 import (
 	"context"
 	"errors"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/types"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/utils"
 	"strconv"
 	"time"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/types"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/utils"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
-	bcsdatamanager "github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/proto/bcs-data-manager"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+
+	bcsdatamanager "github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/proto/bcs-data-manager"
 )
 
 var (

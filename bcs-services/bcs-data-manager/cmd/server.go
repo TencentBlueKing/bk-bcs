@@ -16,8 +16,6 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/bcsproject"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/types"
 	"net/http"
 	"net/http/pprof"
 	"os"
@@ -26,6 +24,10 @@ import (
 	"strings"
 	"syscall"
 	"time"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/bcsproject"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/store"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/types"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/encrypt"
@@ -37,12 +39,6 @@ import (
 	restclient "github.com/Tencent/bk-bcs/bcs-common/pkg/esb/client"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/msgqueue"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers/mongo"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/bcsmonitor"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/cmanager"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/common"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/store"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/worker"
-	datamanager "github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/proto/bcs-data-manager"
 	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/micro/go-micro/v2/registry"
@@ -51,10 +47,18 @@ import (
 	"github.com/robfig/cron/v3"
 	"google.golang.org/grpc"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/handler"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/bcsmonitor"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/cmanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/common"
+	dmmongo "github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/store/mongo"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/worker"
+	datamanager "github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/proto/bcs-data-manager"
+
 	microsvc "github.com/micro/go-micro/v2/service"
 	microgrpcsvc "github.com/micro/go-micro/v2/service/grpc"
 	grpccred "google.golang.org/grpc/credentials"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/handler"
 )
 
 // Server data manager server
@@ -216,7 +220,7 @@ func (s *Server) initModel() error {
 		return err
 	}
 	blog.Infof("init mongo db successfully")
-	modelSet := store.NewServer(mongoDB)
+	modelSet := dmmongo.NewServer(mongoDB)
 	s.store = modelSet
 	blog.Infof("init store successfully")
 	return nil

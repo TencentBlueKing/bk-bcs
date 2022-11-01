@@ -10,17 +10,19 @@
  * limitations under the License.
  */
 
-package store
+package mongo
 
 import (
 	"context"
+	"testing"
+	"time"
+
+	"github.com/stretchr/testify/assert"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/types"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/utils"
 	bcsdatamanager "github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/proto/bcs-data-manager"
-	"github.com/stretchr/testify/assert"
-	"go.mongodb.org/mongo-driver/bson/primitive"
-	"testing"
-	"time"
 )
 
 func TestModelPodAutoscaler_InsertPodAutoscalerInfo(t *testing.T) {

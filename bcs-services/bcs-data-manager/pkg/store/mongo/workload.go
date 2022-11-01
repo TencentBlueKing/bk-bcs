@@ -10,7 +10,7 @@
  * limitations under the License.
  */
 
-package store
+package mongo
 
 import (
 	"context"
@@ -140,6 +140,57 @@ var (
 			Name: MetricTimeKey + "_1",
 		},
 	}
+	newModelWorkloadIndexes = []drivers.Index{
+		{
+			Name: types.WorkloadTableName + "_idx",
+			Key: bson.D{
+				bson.E{Key: NamespaceKey, Value: 1},
+				bson.E{Key: DimensionKey, Value: 1},
+				bson.E{Key: WorkloadTypeKey, Value: 1},
+				bson.E{Key: WorkloadNameKey, Value: 1},
+				bson.E{Key: BucketTimeKey, Value: 1},
+			},
+			Unique:     true,
+			Background: true,
+		},
+		{
+			Name: types.WorkloadTableName + "_get_idx",
+			Key: bson.D{
+				bson.E{Key: NamespaceKey, Value: 1},
+				bson.E{Key: DimensionKey, Value: 1},
+				bson.E{Key: WorkloadTypeKey, Value: 1},
+				bson.E{Key: WorkloadNameKey, Value: 1},
+				bson.E{Key: MetricTimeKey, Value: 1},
+			},
+			Background: true,
+		}, {
+			Name: types.WorkloadTableName + "_list_idx",
+			Key: bson.D{
+				bson.E{Key: NamespaceKey, Value: 1},
+				bson.E{Key: DimensionKey, Value: 1},
+				bson.E{Key: WorkloadTypeKey, Value: 1},
+				bson.E{Key: MetricTimeKey, Value: 1},
+			},
+			Background: true,
+		},
+		{
+			Name: types.WorkloadTableName + "_list_idx2",
+			Key: bson.D{
+				bson.E{Key: DimensionKey, Value: 1},
+				bson.E{Key: MetricTimeKey, Value: 1},
+			},
+			Background: true,
+		},
+		{
+			Name: types.WorkloadTableName + "_list_idx3",
+			Key: bson.D{
+				bson.E{Key: NamespaceKey, Value: 1},
+				bson.E{Key: DimensionKey, Value: 1},
+				bson.E{Key: MetricTimeKey, Value: 1},
+			},
+			Background: true,
+		},
+	}
 )
 
 // ModelWorkload workload model
@@ -159,7 +210,16 @@ func NewModelWorkload(db drivers.DB) *ModelWorkload {
 // InsertWorkloadInfo insert workload info
 func (m *ModelWorkload) InsertWorkloadInfo(ctx context.Context, metrics *types.WorkloadMetrics,
 	opts *types.JobCommonOpts) error {
-	err := ensureTable(ctx, &m.Public)
+	newTableInfo := &Public{
+		TableName: types.WorkloadTableName + "_" + opts.ClusterID,
+		Indexes:   newModelWorkloadIndexes,
+		DB:        m.DB,
+	}
+	err := ensureTable(ctx, newTableInfo)
+	if err != nil {
+		return err
+	}
+	err = ensureTable(ctx, &m.Public)
 	if err != nil {
 		return err
 	}
@@ -176,36 +236,53 @@ func (m *ModelWorkload) InsertWorkloadInfo(ctx context.Context, metrics *types.W
 		WorkloadNameKey: opts.WorkloadName,
 		BucketTimeKey:   bucketTime,
 	})
+	newCond := operator.NewLeafCondition(operator.Eq, operator.M{
+		NamespaceKey:    opts.Namespace,
+		DimensionKey:    opts.Dimension,
+		WorkloadTypeKey: opts.WorkloadType,
+		WorkloadNameKey: opts.WorkloadName,
+		BucketTimeKey:   bucketTime,
+	})
 	retWorkload := &types.WorkloadData{}
-	err = m.DB.Table(m.TableName).Find(cond).One(ctx, retWorkload)
+	var isGetFromOldCollection bool
+	err = m.DB.Table(newTableInfo.TableName).Find(newCond).One(ctx, retWorkload)
 	if err != nil {
 		if errors.Is(err, drivers.ErrTableRecordNotFound) {
-			blog.Infof(" workload info not found, create a new bucket")
-			newMetrics := make([]*types.WorkloadMetrics, 0)
-			newMetrics = append(newMetrics, metrics)
-			newWorkloadBucket := &types.WorkloadData{
-				CreateTime:   primitive.NewDateTimeFromTime(time.Now()),
-				UpdateTime:   primitive.NewDateTimeFromTime(time.Now()),
-				BucketTime:   bucketTime,
-				Dimension:    opts.Dimension,
-				ProjectID:    opts.ProjectID,
-				BusinessID:   opts.BusinessID,
-				ClusterID:    opts.ClusterID,
-				ClusterType:  opts.ClusterType,
-				Namespace:    opts.Namespace,
-				WorkloadType: opts.WorkloadType,
-				Name:         opts.WorkloadName,
-				Metrics:      newMetrics,
-			}
-			m.preAggregateMax(newWorkloadBucket, metrics)
-			m.preAggregateMin(newWorkloadBucket, metrics)
-			_, err = m.DB.Table(m.TableName).Insert(ctx, []interface{}{newWorkloadBucket})
+			blog.Infof("find workload info from new collection failed:%s", err.Error())
+			err = m.DB.Table(m.TableName).Find(cond).One(ctx, retWorkload)
 			if err != nil {
+				if errors.Is(err, drivers.ErrTableRecordNotFound) {
+					blog.Infof(" workload info not found, create a new bucket")
+					newMetrics := make([]*types.WorkloadMetrics, 0)
+					newMetrics = append(newMetrics, metrics)
+					newWorkloadBucket := &types.WorkloadData{
+						CreateTime:   primitive.NewDateTimeFromTime(time.Now()),
+						UpdateTime:   primitive.NewDateTimeFromTime(time.Now()),
+						BucketTime:   bucketTime,
+						Dimension:    opts.Dimension,
+						ProjectID:    opts.ProjectID,
+						BusinessID:   opts.BusinessID,
+						ClusterID:    opts.ClusterID,
+						ClusterType:  opts.ClusterType,
+						Namespace:    opts.Namespace,
+						WorkloadType: opts.WorkloadType,
+						Name:         opts.WorkloadName,
+						Metrics:      newMetrics,
+					}
+					m.preAggregateMax(newWorkloadBucket, metrics)
+					m.preAggregateMin(newWorkloadBucket, metrics)
+					_, err = m.DB.Table(newTableInfo.TableName).Insert(ctx, []interface{}{newWorkloadBucket})
+					if err != nil {
+						return err
+					}
+					return nil
+				}
 				return err
 			}
-			return nil
+			isGetFromOldCollection = true
+		} else {
+			return err
 		}
-		return err
 	}
 	m.preAggregateMax(retWorkload, metrics)
 	m.preAggregateMin(retWorkload, metrics)
@@ -216,15 +293,33 @@ func (m *ModelWorkload) InsertWorkloadInfo(ctx context.Context, metrics *types.W
 	retWorkload.ProjectCode = opts.ProjectCode
 	retWorkload.UpdateTime = primitive.NewDateTimeFromTime(time.Now())
 	retWorkload.Metrics = append(retWorkload.Metrics, metrics)
-	return m.DB.Table(m.TableName).
-		Update(ctx, cond, operator.M{"$set": retWorkload})
+	if !isGetFromOldCollection {
+		return m.DB.Table(newTableInfo.TableName).
+			Update(ctx, newCond, operator.M{"$set": retWorkload})
+	}
+	_, err = m.DB.Table(newTableInfo.TableName).
+		Insert(ctx, []interface{}{retWorkload})
+	if err == nil {
+		_, err = m.DB.Table(m.TableName).Delete(ctx, cond)
+		return err
+	}
+	return err
 }
 
 // GetWorkloadInfoList get workload list data by cluster id, namespace and workload type
 func (m *ModelWorkload) GetWorkloadInfoList(ctx context.Context,
 	request *bcsdatamanager.GetWorkloadInfoListRequest) ([]*bcsdatamanager.Workload, int64, error) {
 	var total int64
-	err := ensureTable(ctx, &m.Public)
+	newTableInfo := &Public{
+		TableName: types.WorkloadTableName + "_" + request.ClusterID,
+		Indexes:   newModelWorkloadIndexes,
+		DB:        m.DB,
+	}
+	err := ensureTable(ctx, newTableInfo)
+	if err != nil {
+		return nil, total, err
+	}
+	err = ensureTable(ctx, &m.Public)
 	if err != nil {
 		return nil, total, err
 	}
@@ -236,7 +331,6 @@ func (m *ModelWorkload) GetWorkloadInfoList(ctx context.Context,
 
 	cond = append(cond,
 		operator.NewLeafCondition(operator.Eq, operator.M{
-			ClusterIDKey: request.ClusterID,
 			DimensionKey: dimension,
 		}))
 	if request.Namespace != "" {
@@ -254,7 +348,7 @@ func (m *ModelWorkload) GetWorkloadInfoList(ctx context.Context,
 	}))
 	conds := operator.NewBranchCondition(operator.And, cond...)
 	tempWorkloadList := make([]map[string]string, 0)
-	err = m.DB.Table(m.TableName).Find(conds).WithProjection(map[string]int{ProjectIDKey: 1, ClusterIDKey: 1,
+	err = m.DB.Table(newTableInfo.TableName).Find(conds).WithProjection(map[string]int{ProjectIDKey: 1, ClusterIDKey: 1,
 		NamespaceKey: 1, WorkloadTypeKey: 1, WorkloadNameKey: 1}).
 		All(ctx, &tempWorkloadList)
 	if err != nil {
@@ -303,7 +397,16 @@ func (m *ModelWorkload) GetWorkloadInfoList(ctx context.Context,
 // GetWorkloadInfo get workload data with default time range by cluster id, namespace, workload type and name
 func (m *ModelWorkload) GetWorkloadInfo(ctx context.Context,
 	request *bcsdatamanager.GetWorkloadInfoRequest) (*bcsdatamanager.Workload, error) {
-	err := ensureTable(ctx, &m.Public)
+	newTableInfo := &Public{
+		TableName: types.WorkloadTableName + "_" + request.ClusterID,
+		Indexes:   newModelWorkloadIndexes,
+		DB:        m.DB,
+	}
+	err := ensureTable(ctx, newTableInfo)
+	if err != nil {
+		return nil, err
+	}
+	err = ensureTable(ctx, &m.Public)
 	if err != nil {
 		return nil, err
 	}
@@ -379,39 +482,75 @@ func (m *ModelWorkload) GetWorkloadInfo(ctx context.Context,
 		blog.Errorf("find workload data fail, err:%v", err)
 		return nil, err
 	}
-	if len(workloadMetricsMap) == 0 {
-		return &bcsdatamanager.Workload{}, nil
+	newWorkloadMetricsMap := make([]*types.WorkloadData, 0)
+	err = m.DB.Table(newTableInfo.TableName).Aggregation(ctx, pipeline, &newWorkloadMetricsMap)
+	if err != nil {
+		blog.Errorf("find workload data fail, err:%v", err)
+		return nil, err
 	}
 	workloadMetrics := make([]*types.WorkloadMetrics, 0)
+	workloadInfo := &types.WorkloadData{}
 	for _, metrics := range workloadMetricsMap {
 		workloadMetrics = append(workloadMetrics, metrics.Metrics...)
+		workloadInfo = metrics
+	}
+	for _, metrics := range newWorkloadMetricsMap {
+		workloadMetrics = append(workloadMetrics, metrics.Metrics...)
+		workloadInfo = metrics
+	}
+	if len(workloadMetrics) == 0 {
+		return &bcsdatamanager.Workload{}, nil
 	}
 	startTime := workloadMetrics[0].Time.Time().String()
 	endTime := workloadMetrics[len(workloadMetrics)-1].Time.Time().String()
-	return m.generateWorkloadResponse(workloadPublic, workloadMetrics, workloadMetricsMap[0], startTime, endTime), nil
+	return m.generateWorkloadResponse(workloadPublic, workloadMetrics, workloadInfo, startTime, endTime), nil
 }
 
 // GetRawWorkloadInfo get raw workload data
 func (m *ModelWorkload) GetRawWorkloadInfo(ctx context.Context, opts *types.JobCommonOpts,
 	bucket string) ([]*types.WorkloadData, error) {
-	err := ensureTable(ctx, &m.Public)
+	newTableInfo := &Public{
+		TableName: types.WorkloadTableName + "_" + opts.ClusterID,
+		Indexes:   newModelWorkloadIndexes,
+		DB:        m.DB,
+	}
+	err := ensureTable(ctx, newTableInfo)
+	if err != nil {
+		return nil, err
+	}
+	err = ensureTable(ctx, &m.Public)
 	if err != nil {
 		return nil, err
 	}
 	cond := m.generateCond(opts, bucket)
 	conds := operator.NewBranchCondition(operator.And, cond...)
 	retWorkload := make([]*types.WorkloadData, 0)
-	err = m.DB.Table(m.TableName).Find(conds).All(ctx, &retWorkload)
+	err = m.DB.Table(newTableInfo.TableName).Find(conds).All(ctx, &retWorkload)
 	if err != nil {
 		return nil, err
 	}
+	oldRetWorkload := make([]*types.WorkloadData, 0)
+	err = m.DB.Table(m.TableName).Find(conds).All(ctx, &oldRetWorkload)
+	if err != nil {
+		return nil, err
+	}
+	retWorkload = append(retWorkload, oldRetWorkload...)
 	return retWorkload, nil
 }
 
 // GetWorkloadCount get workload count
 func (m *ModelWorkload) GetWorkloadCount(ctx context.Context, opts *types.JobCommonOpts,
 	bucket string, after time.Time) (int64, error) {
-	err := ensureTable(ctx, &m.Public)
+	newTableInfo := &Public{
+		TableName: types.WorkloadTableName + "_" + opts.ClusterID,
+		Indexes:   newModelWorkloadIndexes,
+		DB:        m.DB,
+	}
+	err := ensureTable(ctx, newTableInfo)
+	if err != nil {
+		return 0, err
+	}
+	err = ensureTable(ctx, &m.Public)
 	if err != nil {
 		return 0, err
 	}
@@ -423,7 +562,7 @@ func (m *ModelWorkload) GetWorkloadCount(ctx context.Context, opts *types.JobCom
 	}
 	conds := operator.NewBranchCondition(operator.And, cond...)
 	retWorkload := make([]*types.WorkloadData, 0)
-	err = m.DB.Table(m.TableName).Find(conds).All(ctx, &retWorkload)
+	err = m.DB.Table(newTableInfo.TableName).Find(conds).All(ctx, &retWorkload)
 	if err != nil {
 		return 0, err
 	}
@@ -560,19 +699,14 @@ func getMin(old *bcsdatamanager.ExtremumRecord, new *bcsdatamanager.ExtremumReco
 // generateCond cond according to job options
 func (m *ModelWorkload) generateCond(opts *types.JobCommonOpts, bucket string) []*operator.Condition {
 	cond := make([]*operator.Condition, 0)
-	if opts.ProjectID != "" {
+	if opts.ClusterID != "" {
 		cond = append(cond, operator.NewLeafCondition(operator.Eq, operator.M{
-			ProjectIDKey: opts.ProjectID,
+			ClusterIDKey: opts.ClusterID,
 		}))
 	}
 	if opts.Dimension != "" {
 		cond = append(cond, operator.NewLeafCondition(operator.Eq, operator.M{
 			DimensionKey: opts.Dimension,
-		}))
-	}
-	if opts.ClusterID != "" {
-		cond = append(cond, operator.NewLeafCondition(operator.Eq, operator.M{
-			ClusterIDKey: opts.ClusterID,
 		}))
 	}
 	if opts.Namespace != "" {

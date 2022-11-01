@@ -10,14 +10,15 @@
  * limitations under the License.
  */
 
-package store
+package mongo
 
 import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/types"
 	"time"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/types"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"

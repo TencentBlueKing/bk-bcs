@@ -10,89 +10,23 @@
  * limitations under the License.
  */
 
-package store
+package mongo
 
 import (
 	"context"
-	"fmt"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/types"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/utils"
 	"testing"
 	"time"
 
-	bcsdatamanager "github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/proto/bcs-data-manager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/types"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/utils"
+
 	"github.com/stretchr/testify/assert"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+
+	bcsdatamanager "github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/proto/bcs-data-manager"
 )
 
-func TestGetNamespaceInfo(t *testing.T) {
-	store := newTestMongo()
-	ctx := context.Background()
-	tests := []struct {
-		name    string
-		req     *bcsdatamanager.GetNamespaceInfoRequest
-		want    *bcsdatamanager.Namespace
-		wantErr bool
-	}{
-		{
-			name: "test1",
-			req: &bcsdatamanager.GetNamespaceInfoRequest{
-				ClusterID: "testcluster1",
-				Dimension: types.DimensionMinute,
-				Namespace: "testnamespace1",
-			},
-		},
-		{
-			name: "test2",
-			req: &bcsdatamanager.GetNamespaceInfoRequest{
-				ClusterID: "testcluster3",
-				Dimension: types.DimensionMinute,
-				Namespace: "testnamespace1",
-			},
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			result, err := store.GetNamespaceInfo(ctx, tt.req)
-			assert.Nil(t, err)
-			fmt.Println(result)
-		})
-	}
-}
-
-func TestGetNamespaceInfoList(t *testing.T) {
-	store := newTestMongo()
-	ctx := context.Background()
-	tests := []struct {
-		name    string
-		req     *bcsdatamanager.GetNamespaceInfoListRequest
-		want    []*bcsdatamanager.Namespace
-		wantErr bool
-	}{
-		{
-			name: "test1",
-			req: &bcsdatamanager.GetNamespaceInfoListRequest{
-				ClusterID: "testcluster1",
-				Dimension: types.DimensionMinute,
-			},
-		},
-		{
-			name: "test2",
-			req: &bcsdatamanager.GetNamespaceInfoListRequest{
-				ClusterID: "testcluster3",
-				Dimension: types.DimensionMinute,
-			},
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			_, _, err := store.GetNamespaceInfoList(ctx, tt.req)
-			assert.Nil(t, err)
-		})
-	}
-}
-
-func TestGetRawNamespaceInfo(t *testing.T) {
+func Test_GetRawWorkloadInfo(t *testing.T) {
 	store := newTestMongo()
 	ctx := context.Background()
 	tests := []struct {
@@ -105,66 +39,148 @@ func TestGetRawNamespaceInfo(t *testing.T) {
 		{
 			name: "test1",
 			opts: &types.JobCommonOpts{
-				ObjectType:  types.ClusterType,
-				ProjectID:   "testproject1",
-				ClusterID:   "testcluster1",
-				ClusterType: types.Kubernetes,
-				Dimension:   types.DimensionMinute,
-				Namespace:   "testnamespace1",
+				ObjectType:   types.ClusterType,
+				ProjectID:    "testproject1",
+				ClusterID:    "testcluster1",
+				ClusterType:  types.Kubernetes,
+				Dimension:    types.DimensionMinute,
+				Namespace:    "testnamespace1",
+				WorkloadType: types.DeploymentType,
+				WorkloadName: "testdeploy1",
 			},
-			bucket: "2022-03-16 13:00:00",
+			bucket: "2022-03-16 14:00:00",
 		},
 		{
 			name: "test2",
 			opts: &types.JobCommonOpts{
-				ObjectType:  types.ClusterType,
-				ProjectID:   "testproject1",
-				ClusterID:   "testcluster1",
-				ClusterType: types.Kubernetes,
-				Dimension:   types.DimensionMinute,
-				Namespace:   "testnamespace1",
+				ObjectType:   types.ClusterType,
+				ProjectID:    "testproject1",
+				ClusterID:    "testcluster1",
+				ClusterType:  types.Kubernetes,
+				Dimension:    types.DimensionMinute,
+				Namespace:    "testnamespace1",
+				WorkloadType: types.DeploymentType,
+				WorkloadName: "testdeploy1",
 			},
 		},
 		{
 			name: "test2",
 			opts: &types.JobCommonOpts{
-				ObjectType:  types.ClusterType,
-				ProjectID:   "testproject2",
-				ClusterID:   "testcluster3",
-				ClusterType: types.Kubernetes,
-				Dimension:   types.DimensionMinute,
-				Namespace:   "testnamespace1",
+				ObjectType:   types.ClusterType,
+				ProjectID:    "testproject2",
+				ClusterID:    "testcluster3",
+				ClusterType:  types.Kubernetes,
+				Dimension:    types.DimensionMinute,
+				Namespace:    "testnamespace1",
+				WorkloadType: types.DeploymentType,
+				WorkloadName: "testdeploy1",
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			_, err := store.GetRawNamespaceInfo(ctx, tt.opts, tt.bucket)
+			_, err := store.GetRawWorkloadInfo(ctx, tt.opts, tt.bucket)
 			assert.Nil(t, err)
 		})
 	}
 }
 
-func TestInsertNamespaceInfo(t *testing.T) {
+func Test_GetWorkloadInfo(t *testing.T) {
+	store := newTestMongo()
+	ctx := context.Background()
+	tests := []struct {
+		name    string
+		req     *bcsdatamanager.GetWorkloadInfoRequest
+		want    *bcsdatamanager.Workload
+		wantErr bool
+	}{
+		{
+			name: "test1",
+			req: &bcsdatamanager.GetWorkloadInfoRequest{
+				ClusterID:    "testcluster1",
+				Dimension:    types.DimensionMinute,
+				Namespace:    "testnamespace1",
+				WorkloadType: types.DeploymentType,
+				WorkloadName: "testdeploy1",
+			},
+		},
+		{
+			name: "test2",
+			req: &bcsdatamanager.GetWorkloadInfoRequest{
+				ClusterID:    "testcluster3",
+				Dimension:    types.DimensionMinute,
+				Namespace:    "testnamespace1",
+				WorkloadType: types.DeploymentType,
+				WorkloadName: "testdeploy1",
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			_, err := store.GetWorkloadInfo(ctx, tt.req)
+			assert.Nil(t, err)
+		})
+	}
+}
+
+func Test_GetWorkloadInfoList(t *testing.T) {
+	store := newTestMongo()
+	ctx := context.Background()
+	tests := []struct {
+		name    string
+		req     *bcsdatamanager.GetWorkloadInfoListRequest
+		want    *bcsdatamanager.Workload
+		wantErr bool
+	}{
+		{
+			name: "test1",
+			req: &bcsdatamanager.GetWorkloadInfoListRequest{
+				ClusterID:    "testcluster1",
+				Dimension:    types.DimensionMinute,
+				Namespace:    "testnamespace1",
+				WorkloadType: types.DeploymentType,
+			},
+		},
+		{
+			name: "test2",
+			req: &bcsdatamanager.GetWorkloadInfoListRequest{
+				ClusterID:    "testcluster3",
+				Dimension:    types.DimensionMinute,
+				Namespace:    "testnamespace1",
+				WorkloadType: types.DeploymentType,
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			_, _, err := store.GetWorkloadInfoList(ctx, tt.req)
+			assert.Nil(t, err)
+		})
+	}
+}
+
+func Test_InsertWorkloadInfo(t *testing.T) {
 	store := newTestMongo()
 	ctx := context.Background()
 	tests := []struct {
 		name    string
 		opts    *types.JobCommonOpts
-		metric  *types.NamespaceMetrics
+		metric  *types.WorkloadMetrics
 		wantErr bool
 	}{
 		{name: "test1",
 			opts: &types.JobCommonOpts{
-				ObjectType:  types.ClusterType,
-				ProjectID:   "testproject1",
-				ClusterID:   "testcluster1",
-				Namespace:   "testnamespace1",
-				ClusterType: types.Kubernetes,
-				Dimension:   types.DimensionMinute,
-				CurrentTime: utils.FormatTime(time.Now().Add((-10)*time.Minute), types.DimensionMinute),
+				ObjectType:   types.WorkloadType,
+				ProjectID:    "testproject1",
+				ClusterID:    "testcluster1",
+				Namespace:    "testnamespace1",
+				WorkloadType: types.DeploymentType,
+				WorkloadName: "testdeploy1",
+				ClusterType:  types.Kubernetes,
+				Dimension:    types.DimensionMinute,
+				CurrentTime:  utils.FormatTime(time.Now().Add((-10)*time.Minute), types.DimensionMinute),
 			},
-			metric: &types.NamespaceMetrics{
+			metric: &types.WorkloadMetrics{
 				Time: primitive.NewDateTimeFromTime(utils.FormatTime(time.Now().Add((-10)*time.Minute),
 					types.DimensionMinute)),
 				CPUUsage:          0.2,
@@ -172,7 +188,6 @@ func TestInsertNamespaceInfo(t *testing.T) {
 				MemoryUsage:       0.2,
 				InstanceCount:     20,
 				CPURequest:        10,
-				WorkloadCount:     10,
 				CPUUsageAmount:    5,
 				MemoryUsageAmount: 10,
 				MaxCPUUsageTime: &bcsdatamanager.ExtremumRecord{
@@ -199,8 +214,6 @@ func TestInsertNamespaceInfo(t *testing.T) {
 					Value:      0.2,
 					Period:     time.Now().Add((-10) * time.Minute).String(),
 				},
-				MinWorkloadUsage: nil,
-				MaxWorkloadUsage: nil,
 				MinInstanceTime: &bcsdatamanager.ExtremumRecord{
 					Name:       "MinInstance",
 					MetricName: "MinInstance",
@@ -213,25 +226,50 @@ func TestInsertNamespaceInfo(t *testing.T) {
 					Value:      float64(20),
 					Period:     time.Now().Add((-10) * time.Minute).String(),
 				},
+				MaxCPUTime: &bcsdatamanager.ExtremumRecord{
+					Name:       "MaxCPU",
+					MetricName: "MaxCPU",
+					Value:      float64(5),
+					Period:     time.Now().Add((-10) * time.Minute).String(),
+				},
+				MinCPUTime: &bcsdatamanager.ExtremumRecord{
+					Name:       "MinCPU",
+					MetricName: "MinCPU",
+					Value:      float64(5),
+					Period:     time.Now().Add((-10) * time.Minute).String(),
+				},
+				MaxMemoryTime: &bcsdatamanager.ExtremumRecord{
+					Name:       "MaxMemory",
+					MetricName: "MaxMemory",
+					Value:      float64(10),
+					Period:     time.Now().Add((-10) * time.Minute).String(),
+				},
+				MinMemoryTime: &bcsdatamanager.ExtremumRecord{
+					Name:       "MinMemory",
+					MetricName: "MinMemory",
+					Value:      float64(10),
+					Period:     time.Now().Add((-10) * time.Minute).String(),
+				},
 			}},
 		{name: "test2",
 			opts: &types.JobCommonOpts{
-				ObjectType:  types.ClusterType,
-				ProjectID:   "testproject1",
-				ClusterID:   "testcluster1",
-				Namespace:   "testnamespace1",
-				ClusterType: types.Kubernetes,
-				Dimension:   types.DimensionMinute,
-				CurrentTime: utils.FormatTime(time.Now(), types.DimensionMinute),
+				ObjectType:   types.ClusterType,
+				ProjectID:    "testproject1",
+				ClusterID:    "testcluster1",
+				Namespace:    "testnamespace1",
+				WorkloadType: types.DeploymentType,
+				WorkloadName: "testdeploy1",
+				ClusterType:  types.Kubernetes,
+				Dimension:    types.DimensionMinute,
+				CurrentTime:  utils.FormatTime(time.Now(), types.DimensionMinute),
 			},
-			metric: &types.NamespaceMetrics{
+			metric: &types.WorkloadMetrics{
 				Time:              primitive.NewDateTimeFromTime(utils.FormatTime(time.Now(), types.DimensionMinute)),
 				CPUUsage:          0.3,
 				MemoryRequest:     20,
 				MemoryUsage:       0.3,
 				InstanceCount:     20,
 				CPURequest:        10,
-				WorkloadCount:     10,
 				CPUUsageAmount:    5,
 				MemoryUsageAmount: 10,
 				MaxCPUUsageTime: &bcsdatamanager.ExtremumRecord{
@@ -258,8 +296,6 @@ func TestInsertNamespaceInfo(t *testing.T) {
 					Value:      0.3,
 					Period:     time.Now().String(),
 				},
-				MinWorkloadUsage: nil,
-				MaxWorkloadUsage: nil,
 				MinInstanceTime: &bcsdatamanager.ExtremumRecord{
 					Name:       "MinInstance",
 					MetricName: "MinInstance",
@@ -272,18 +308,44 @@ func TestInsertNamespaceInfo(t *testing.T) {
 					Value:      float64(22),
 					Period:     time.Now().String(),
 				},
+				MaxCPUTime: &bcsdatamanager.ExtremumRecord{
+					Name:       "MaxCPU",
+					MetricName: "MaxCPU",
+					Value:      float64(22),
+					Period:     time.Now().String(),
+				},
+				MinCPUTime: &bcsdatamanager.ExtremumRecord{
+					Name:       "MinCPU",
+					MetricName: "MinCPU",
+					Value:      float64(10),
+					Period:     time.Now().String(),
+				},
+				MaxMemoryTime: &bcsdatamanager.ExtremumRecord{
+					Name:       "MaxMemory",
+					MetricName: "MaxMemory",
+					Value:      float64(12),
+					Period:     time.Now().String(),
+				},
+				MinMemoryTime: &bcsdatamanager.ExtremumRecord{
+					Name:       "MinMemory",
+					MetricName: "MinMemory",
+					Value:      float64(12),
+					Period:     time.Now().String(),
+				},
 			}},
 		{name: "test3",
 			opts: &types.JobCommonOpts{
-				ObjectType:  types.ClusterType,
-				ProjectID:   "testproject2",
-				ClusterID:   "testcluster2",
-				Namespace:   "testnamespace1",
-				ClusterType: types.Kubernetes,
-				Dimension:   types.DimensionMinute,
-				CurrentTime: utils.FormatTime(time.Now().Add((-10)*time.Minute), types.DimensionMinute),
+				ObjectType:   types.ClusterType,
+				ProjectID:    "testproject2",
+				ClusterID:    "testcluster2",
+				Namespace:    "testnamespace1",
+				WorkloadName: "testdeploy2",
+				WorkloadType: types.DeploymentType,
+				ClusterType:  types.Kubernetes,
+				Dimension:    types.DimensionMinute,
+				CurrentTime:  utils.FormatTime(time.Now().Add((-10)*time.Minute), types.DimensionMinute),
 			},
-			metric: &types.NamespaceMetrics{
+			metric: &types.WorkloadMetrics{
 				Time: primitive.NewDateTimeFromTime(utils.FormatTime(time.Now().Add((-10)*time.Minute),
 					types.DimensionMinute)),
 				CPUUsage:          0.2,
@@ -291,7 +353,6 @@ func TestInsertNamespaceInfo(t *testing.T) {
 				MemoryUsage:       0.2,
 				InstanceCount:     20,
 				CPURequest:        10,
-				WorkloadCount:     10,
 				CPUUsageAmount:    5,
 				MemoryUsageAmount: 10,
 				MaxCPUUsageTime: &bcsdatamanager.ExtremumRecord{
@@ -318,8 +379,6 @@ func TestInsertNamespaceInfo(t *testing.T) {
 					Value:      0.2,
 					Period:     time.Now().Add((-10) * time.Minute).String(),
 				},
-				MinWorkloadUsage: nil,
-				MaxWorkloadUsage: nil,
 				MinInstanceTime: &bcsdatamanager.ExtremumRecord{
 					Name:       "MinInstance",
 					MetricName: "MinInstance",
@@ -332,12 +391,53 @@ func TestInsertNamespaceInfo(t *testing.T) {
 					Value:      float64(20),
 					Period:     time.Now().Add((-10) * time.Minute).String(),
 				},
+				MaxCPUTime: &bcsdatamanager.ExtremumRecord{
+					Name:       "MaxCPU",
+					MetricName: "MaxCPU",
+					Value:      float64(10),
+					Period:     time.Now().Add((-10) * time.Minute).String(),
+				},
+				MinCPUTime: &bcsdatamanager.ExtremumRecord{
+					Name:       "MinCPU",
+					MetricName: "MinCPU",
+					Value:      float64(10),
+					Period:     time.Now().Add((-10) * time.Minute).String(),
+				},
+				MaxMemoryTime: &bcsdatamanager.ExtremumRecord{
+					Name:       "MaxMemory",
+					MetricName: "MaxMemory",
+					Value:      float64(12),
+					Period:     time.Now().Add((-10) * time.Minute).String(),
+				},
+				MinMemoryTime: &bcsdatamanager.ExtremumRecord{
+					Name:       "MinMemory",
+					MetricName: "MinMemory",
+					Value:      float64(12),
+					Period:     time.Now().Add((-10) * time.Minute).String(),
+				},
 			}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := store.InsertNamespaceInfo(ctx, tt.metric, tt.opts)
+			err := store.InsertWorkloadInfo(ctx, tt.metric, tt.opts)
 			assert.Nil(t, err)
 		})
 	}
 }
+
+//
+// func TestModelWorkload_generateCond(t *testing.T) {
+//
+// }
+//
+// func TestModelWorkload_generateWorkloadResponse(t *testing.T) {
+//
+// }
+//
+// func TestModelWorkload_preAggregate(t *testing.T) {
+//
+// }
+//
+// func TestNewModelWorkload(t *testing.T) {
+//
+// }
