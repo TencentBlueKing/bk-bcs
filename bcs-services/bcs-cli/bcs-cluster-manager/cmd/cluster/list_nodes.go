@@ -16,6 +16,7 @@ func newListNodesCmd() *cobra.Command {
 		Run:   listNodes,
 	}
 
+	cmd.Flags().Uint32VarP(&offset, "offset", "o", 0, "offset number of queries")
 	cmd.Flags().Uint32VarP(&limit, "limit", "l", 10, "limit number of queries")
 
 	return cmd
@@ -23,7 +24,8 @@ func newListNodesCmd() *cobra.Command {
 
 func listNodes(cmd *cobra.Command, args []string) {
 	resp, err := clusterMgr.New(context.Background()).ListNodes(manager.ListClusterNodesReq{
-		Limit: limit,
+		Offset: offset,
+		Limit:  limit,
 	})
 	if err != nil {
 		klog.Fatalf("list cluster nodes failed: %v", err)

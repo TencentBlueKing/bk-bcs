@@ -8,6 +8,7 @@ var (
 	file      string
 	clusterID string
 	nodes     []string
+	offset    uint32
 	limit     uint32
 )
 

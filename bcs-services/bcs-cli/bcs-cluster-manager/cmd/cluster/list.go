@@ -16,11 +16,17 @@ func newListCmd() *cobra.Command {
 		Run:   list,
 	}
 
+	cmd.Flags().Uint32VarP(&offset, "offset", "o", 0, "offset number of queries")
+	cmd.Flags().Uint32VarP(&limit, "limit", "l", 10, "limit number of queries")
+
 	return cmd
 }
 
 func list(cmd *cobra.Command, args []string) {
-	resp, err := clusterMgr.New(context.Background()).List(manager.ListClusterReq{})
+	resp, err := clusterMgr.New(context.Background()).List(manager.ListClusterReq{
+		Offset: offset,
+		Limit:  limit,
+	})
 	if err != nil {
 		klog.Fatalf("list cluster failed: %v", err)
 	}

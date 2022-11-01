@@ -8,8 +8,11 @@ import (
 )
 
 // List 获取集群列表
-func (c *ClusterMgr) List(manager.ListClusterReq) (resp manager.ListClusterResp, err error) {
-	servResp, err := c.client.ListCluster(c.ctx, &clustermanager.ListClusterReq{})
+func (c *ClusterMgr) List(req manager.ListClusterReq) (resp manager.ListClusterResp, err error) {
+	servResp, err := c.client.ListCluster(c.ctx, &clustermanager.ListClusterReq{
+		Offset: req.Offset,
+		Limit:  req.Limit,
+	})
 	if err != nil {
 		return
 	}

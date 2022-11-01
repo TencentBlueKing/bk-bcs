@@ -10,7 +10,8 @@ import (
 // ListNodes 查询集群下所有节点列表
 func (c *ClusterMgr) ListNodes(req manager.ListClusterNodesReq) (resp manager.ListClusterNodesResp, err error) {
 	servResp, err := c.client.ListNodesInCluster(c.ctx, &clustermanager.ListNodesInClusterRequest{
-		Limit: req.Limit,
+		Offset: req.Offset,
+		Limit:  req.Limit,
 	})
 	if err != nil {
 		return

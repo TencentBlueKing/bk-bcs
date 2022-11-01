@@ -51,6 +51,8 @@ type UpdateClusterReq struct {
 }
 
 type ListClusterReq struct {
+	Offset uint32 `json:"offset"`
+	Limit  uint32 `json:"limit"`
 }
 
 type GetClusterReq struct {
@@ -88,7 +90,8 @@ type ImportClusterReq struct {
 }
 
 type ListClusterNodesReq struct {
-	Limit uint32 `json:"limit"`
+	Offset uint32 `json:"offset"`
+	Limit  uint32 `json:"limit"`
 }
 
 type ListCommonClusterReq struct {
