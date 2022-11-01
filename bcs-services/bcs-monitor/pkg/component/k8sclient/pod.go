@@ -33,7 +33,8 @@ import (
 // 需要取指针, 不能用常量
 var (
 	// 最多返回 10W 条日志
-	MAX_TAIL_LINES = 100000
+	MAX_TAIL_LINES  = 100 * 1000
+	MAX_LIMIT_BYTES = 30 * 1024 * 1024 // 最多 30M 数据
 
 	// 默认返回 100 条日志
 	DEFAULT_TAIL_LINES = int64(100)
@@ -45,6 +46,8 @@ type LogQuery struct {
 	Previous      bool              `form:"previous"`
 	StartedAt     string            `form:"started_at"`
 	FinishedAt    string            `form:"finished_at"`
+	TailLines     int64             `form:"-"`
+	LimitBytes    int64             `form:"-"`
 	podLogOptions *v1.PodLogOptions `form:"-"`
 }
 
@@ -66,6 +69,14 @@ func (q *LogQuery) makeOptions() (*v1.PodLogOptions, error) {
 		opt.SinceTime = &metav1.Time{Time: t}
 	} else {
 		opt.TailLines = &DEFAULT_TAIL_LINES
+	}
+
+	// 日志下载参数
+	if q.TailLines > 0 {
+		opt.TailLines = &q.TailLines
+	}
+	if q.LimitBytes > 0 {
+		opt.LimitBytes = &q.LimitBytes
 	}
 
 	// 结束时间, 只做校验
@@ -252,6 +263,8 @@ func GetPodLogStream(ctx context.Context, clusterId, namespace, podname string, 
 	}
 
 	logChan := make(chan *Log)
+
+	// 会通过上面的 stream ctx 控制关闭 goroutine
 	go func() {
 		defer close(logChan)
 		defer reader.Close()

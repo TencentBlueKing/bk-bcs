@@ -88,6 +88,10 @@ func DownloadPodLog(c *rest.Context) {
 		return
 	}
 
+	// 下载参数
+	logQuery.TailLines = int64(k8sclient.MAX_TAIL_LINES)
+	logQuery.LimitBytes = int64(k8sclient.MAX_LIMIT_BYTES)
+
 	logs, err := k8sclient.GetPodLogByte(c.Request.Context(), clusterId, namespace, pod, logQuery)
 	if err != nil {
 		rest.AbortWithBadRequestError(c, err)
