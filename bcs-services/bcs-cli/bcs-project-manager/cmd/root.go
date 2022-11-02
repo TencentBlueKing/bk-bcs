@@ -16,22 +16,20 @@ package cmd
 import (
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"k8s.io/klog"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/version"
-)
-
-const (
-	defaultCfgFile = "/etc/bcs/bcs-project-manager.yaml"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-project-manager/cmd/edit"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-project-manager/cmd/get"
 )
 
 var (
-	cfgFile    string
-	flagOutput string
-	rootCmd    = &cobra.Command{
+	cfgFile string
+	rootCmd = &cobra.Command{
 		Use:   "kubectl-bcs-project-manager",
 		Short: "kubectl-bcs-project-manager used to operate bcs-project-manager service",
 		Long: `
@@ -48,12 +46,11 @@ func Execute() {
 }
 
 func ensureConfig() {
-	if cfgFile == "" {
-		cfgFile = defaultCfgFile
-	}
 	viper.SetConfigFile(cfgFile)
 	viper.AutomaticEnv()
-	if err := viper.ReadInConfig(); err != nil {
+	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_", "-", "_"))
+	err := viper.ReadInConfig()
+	if cfgFile != "" && err != nil {
 		klog.Fatalf("read config from '%s' failed,err: %s", cfgFile, err.Error())
 	}
 }
@@ -68,10 +65,8 @@ func init() {
 			fmt.Println(version.GetVersion())
 		},
 	})
-	rootCmd.AddCommand(newListCmd())
-	rootCmd.AddCommand(newUpdateCmd())
+	rootCmd.AddCommand(get.NewCmdGet())
+	rootCmd.AddCommand(edit.NewCmdEdit())
 	rootCmd.PersistentFlags().StringVarP(
-		&cfgFile, "config", "c", defaultCfgFile, "config file")
-	rootCmd.PersistentFlags().StringVarP(&flagOutput, "output", "o", "wide",
-		"optional parameter: json/wide, json will print the json string to stdout")
+		&cfgFile, "config", "c", "", "config file, optional")
 }
