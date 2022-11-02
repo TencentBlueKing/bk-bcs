@@ -18,19 +18,15 @@ import (
 	"log"
 	"testing"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/proto/bcsproject"
 	"github.com/stretchr/testify/assert"
 )
 
 func Test_GeProjectList(t *testing.T) {
-	client, _, err := NewBcsProjectCli(context.Background(), &Config{
-		APIServer: "",
-		AuthToken: "",
-	})
+
+	resp, err := NewClientWithConfiguration(context.Background()).GetProject("7da12ea6af35464a8be39961a21e95d9")
 	if err != nil {
 		log.Fatal(err)
 	}
-	rsp, err := client.ListProjects(context.Background(), &bcsproject.ListProjectsRequest{})
-	assert.Nil(t, err)
-	assert.NotNil(t, rsp)
+
+	assert.NotNil(t, resp)
 }

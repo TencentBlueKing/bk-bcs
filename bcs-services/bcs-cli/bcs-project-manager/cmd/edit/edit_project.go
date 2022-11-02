@@ -11,7 +11,7 @@
  *
  */
 
-package cmd
+package edit
 
 import (
 	"bytes"
@@ -26,74 +26,41 @@ import (
 	"k8s.io/klog"
 	cmdutil "k8s.io/kubectl/pkg/cmd/util"
 	"k8s.io/kubectl/pkg/cmd/util/editor"
+	"k8s.io/kubectl/pkg/util/i18n"
+	"k8s.io/kubectl/pkg/util/templates"
 	"sigs.k8s.io/yaml"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-project-manager/cmd/printer"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-project-manager/pkg"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/proto/bcsproject"
 )
 
-func newUpdateCmd() *cobra.Command {
-	editCmd := &cobra.Command{
-		Use:   "edit",
-		Short: "edit project from bcs-project-manager",
-		Long:  "edit project from bcs-project-manager",
-	}
-	editCmd.AddCommand(updateProject())
-	return editCmd
-}
+var (
+	editProjectLong = templates.LongDesc(i18n.T(`
+		Edit a project from the default editor.`))
 
-//定义不能编辑的参数
-type readOnlyParam struct {
-	CreateTime  string `json:"createTime"`
-	UpdateTime  string `json:"updateTime"`
-	Creator     string `json:"creator"`
-	Updater     string `json:"updater"`
-	Managers    string `json:"managers"`
-	ProjectID   string `json:"projectID"`
-	Name        string `json:"name"`
-	ProjectCode string `json:"projectCode"`
-	UseBKRes    bool   `json:"useBKRes"`
-	IsOffline   bool   `json:"isOffline"`
-	Kind        string `json:"kind"`
-	IsSecret    bool   `json:"isSecret"`
-	ProjectType uint32 `json:"projectType"`
-	DeployType  uint32 `json:"deployType"`
-	BGID        string `json:"BGID"`
-	BGName      string `json:"BGName"`
-	DeptID      string `json:"deptID"`
-	DeptName    string `json:"deptName"`
-	CenterID    string `json:"centerID"`
-	CenterName  string `json:"centerName"`
-	BusinessID  string `json:"businessID"`
-	Description string `json:"description"`
-}
+	editProjectExample = templates.Examples(i18n.T(`
+		# Edit project by PROJECT_ID or PROJECT_CODE
+		kubectl-bcs-project-manager edit project PROJECT_ID/PROJECT_CODE`))
+)
 
-func updateProject() *cobra.Command {
-	subCmd := &cobra.Command{
+func editProject() *cobra.Command {
+	cmd := &cobra.Command{
 		Use:                   "project (ID/CODE)",
 		DisableFlagsInUseLine: true,
-		Short:                 "",
-		Long:                  "edit infos from bcs-project-manager",
+		Short:                 i18n.T("Edit project by ID or CODE"),
+		Long:                  editProjectLong,
+		Example:               editProjectExample,
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) == 0 {
 				klog.Fatalf("edit project requires project ID or code")
 			}
-			ctx, cancel := context.WithCancel(context.Background())
-			client, cliCtx, err := pkg.NewClientWithConfiguration(ctx)
-			if err != nil {
-				klog.Fatalf("init client failed: %v", err.Error())
-			}
-			defer cancel()
-			// 先获取当前项目
-			getProjectResp, err := client.GetProject(cliCtx, &bcsproject.GetProjectRequest{ProjectIDOrCode: args[0]})
+			client := pkg.NewClientWithConfiguration(context.Background())
+			resp, err := client.GetProject(args[0])
 			if err != nil {
 				klog.Fatalf("get project failed: %v", err)
 			}
-			if getProjectResp != nil && getProjectResp.Code != 0 {
-				klog.Fatal("get project response code not 0 but %d: %s", getProjectResp.Code, getProjectResp.Message)
-			}
-			projectInfo := getProjectResp.Data
+
+			projectInfo := resp.Data
 			// 原内容
 			marshal, err := json.Marshal(projectInfo)
 			if err != nil {
@@ -125,8 +92,8 @@ func updateProject() *cobra.Command {
 			}
 
 			var (
-				editBefore readOnlyParam
-				editAfter  readOnlyParam
+				editBefore pkg.UpdateProjectRequest
+				editAfter  pkg.UpdateProjectRequest
 			)
 
 			{
@@ -156,38 +123,32 @@ func updateProject() *cobra.Command {
 			isSecret.Value = projectInfo.GetIsSecret()
 
 			// 保证只修改描述和业务ID
-			updateData := &bcsproject.UpdateProjectRequest{
-				ProjectID:   projectInfo.GetProjectID(),
-				Name:        projectInfo.GetName(),
-				UseBKRes:    useBKRes,
-				Description: editBefore.Description,
-				IsOffline:   isOffline,
-				Kind:        projectInfo.GetKind(),
-				BusinessID:  editBefore.BusinessID,
-				IsSecret:    isSecret,
-				DeployType:  projectInfo.GetDeployType(),
-				ProjectType: projectInfo.GetProjectType(),
+			updateData := &pkg.UpdateProjectRequest{
 				BGID:        projectInfo.GetBGID(),
 				BGName:      projectInfo.GetBGName(),
-				DeptID:      projectInfo.GetDeptID(),
-				DeptName:    projectInfo.GetDeptName(),
+				BusinessID:  editBefore.BusinessID,
 				CenterID:    projectInfo.GetCenterID(),
 				CenterName:  projectInfo.GetCenterName(),
+				CreateTime:  projectInfo.GetCreateTime(),
+				Creator:     projectInfo.GetCreator(),
+				DeptID:      projectInfo.GetDeptID(),
+				DeptName:    projectInfo.GetDeptName(),
+				Description: editBefore.Description,
+				IsSecret:    projectInfo.GetIsSecret(),
+				Kind:        projectInfo.GetKind(),
+				Managers:    projectInfo.GetManagers(),
+				Name:        projectInfo.GetName(),
+				ProjectCode: projectInfo.GetProjectCode(),
+				ProjectID:   projectInfo.GetProjectID(),
+				UpdateTime:  projectInfo.GetUpdateTime(),
 			}
-			updateProjectResp, err := client.UpdateProject(cliCtx, updateData)
+			updateProjectResp, err := client.UpdateProject(updateData)
 			if err != nil {
 				klog.Fatalf("update project failed: %v", err)
 			}
-			if updateProjectResp != nil && updateProjectResp.Code != 0 {
-				klog.Fatal("update project response code not 0 but %d: %s", updateProjectResp.Code, updateProjectResp.Message)
-			}
-			printer.PrintUpdateProjectInJSON(updateProjectResp)
+			printer.PrintInJSON(updateProjectResp)
 		},
 	}
 
-	return subCmd
-}
-
-func getProjectInfo() {
-
+	return cmd
 }

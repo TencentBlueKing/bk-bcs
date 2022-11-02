@@ -14,17 +14,16 @@
 package pkg
 
 import (
+	"bytes"
 	"context"
-	"crypto/tls"
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"net/http"
+	"net/url"
 
 	"github.com/pkg/errors"
 	"github.com/spf13/viper"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials"
-	"google.golang.org/grpc/metadata"
-
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/proto/bcsproject"
 )
 
 // Config describe the options Client need
@@ -37,35 +36,64 @@ type Config struct {
 	Operator string
 }
 
-// NewClientWithConfiguration new client with config
-func NewClientWithConfiguration(ctx context.Context) (bcsproject.BCSProjectClient, context.Context, error) {
-	return NewBcsProjectCli(ctx, &Config{
-		APIServer: viper.GetString("API_SERVER"),
-		AuthToken: viper.GetString("BCS_TOKEN"),
-		Operator:  viper.GetString("OPERATOR"),
-	})
+type ProjectManagerClient struct {
+	cfg *Config
+	ctx context.Context
 }
 
-// NewBcsProjectCli create client for bcs-project
-func NewBcsProjectCli(ctx context.Context, config *Config) (bcsproject.BCSProjectClient, context.Context, error) {
-	header := map[string]string{
-		"x-content-type": "application/grpc+proto",
-		"Content-Type":   "application/grpc",
+// NewClientWithConfiguration new client with config
+func NewClientWithConfiguration(ctx context.Context) *ProjectManagerClient {
+	return &ProjectManagerClient{
+		ctx: ctx,
+		cfg: &Config{
+			APIServer: viper.GetString("bcs.apiserver"),
+			AuthToken: viper.GetString("bcs.token"),
+			Operator:  viper.GetString("bcs.operator"),
+		},
 	}
-	if len(config.AuthToken) != 0 {
-		header["Authorization"] = fmt.Sprintf("Bearer %s", config.AuthToken)
-	}
-	md := metadata.New(header)
-	var opts []grpc.DialOption
-	opts = append(opts, grpc.WithDefaultCallOptions(grpc.Header(&md)))
-	opts = append(opts, grpc.WithTransportCredentials(credentials.NewTLS(&tls.Config{InsecureSkipVerify: true})))
-	var conn *grpc.ClientConn
-	conn, err := grpc.Dial(config.APIServer, opts...)
+}
+
+func (p *ProjectManagerClient) do(urls string, httpType string, query url.Values, body interface{}) ([]byte, error) {
+	urls = p.cfg.APIServer + urls
+	var req *http.Request
+	var err error
+	_, err = url.Parse(p.cfg.APIServer)
 	if err != nil {
-		return nil, nil, errors.Wrapf(err, "create grpc client with '%s' failed", config.APIServer)
+		return nil, fmt.Errorf("url failed %v", err)
 	}
-	if conn == nil {
-		return nil, nil, fmt.Errorf("conn is nil")
+	if body != nil {
+		var bs []byte
+		bs, err = json.Marshal(body)
+		if err != nil {
+			return nil, errors.Wrapf(err, "marshal body failed")
+		}
+		req, err = http.NewRequestWithContext(p.ctx, httpType, urls, bytes.NewReader(bs))
+	} else {
+		req, err = http.NewRequestWithContext(p.ctx, httpType, urls, nil)
 	}
-	return bcsproject.NewBCSProjectClient(conn), metadata.NewOutgoingContext(ctx, md), nil
+	// 添加鉴权
+	if len(p.cfg.AuthToken) != 0 {
+		req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", p.cfg.AuthToken))
+	}
+	if err != nil {
+		return nil, errors.Wrapf(err, "create request failed")
+	}
+	if query != nil {
+		req.URL.RawQuery = query.Encode()
+	}
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, errors.Wrapf(err, "http do request failed")
+	}
+	defer resp.Body.Close()
+	bs, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, errors.Wrapf(err, "read response body failed")
+	}
+	if resp.StatusCode != http.StatusOK {
+		return nil, errors.Wrapf(errors.Errorf(string(bs)), "http response status not 200 but %d",
+			resp.StatusCode)
+	}
+	return bs, nil
 }

@@ -59,13 +59,52 @@ func PrintProjectsListInTable(flagOutput string, resp *bcsproject.ListProjectsRe
 	tw.Render()
 }
 
-// PrintUpdateProjectInJSON prints the response that edit project
-func PrintUpdateProjectInJSON(project *bcsproject.ProjectResponse) {
-	if project == nil {
+// PrintProjectVariablesListInTable prints the response that list projects variables definitions
+func PrintProjectVariablesListInTable(flagOutput string, resp *bcsproject.ListVariableDefinitionsResponse) {
+	if flagOutput == outputTypeJSON {
+		if err := encodeJSON(resp); err != nil {
+			klog.Fatalf("list projects output json to stdout failed: %s", err.Error())
+		}
+	}
+	tw := tablewriter.NewWriter(os.Stdout)
+	tw.SetHeader(func() []string {
+		return []string{
+			"ID", "KEY", "NAME", "DEFAULT", "DEFAULT_VALUE", "SCOPE", "SCOPE_NAME", "CATEGORY", "CATEGORY_NAME", "CREATOR", "UPDATER", "CREATE", "UPDATE",
+		}
+	}())
+	// 添加页脚
+	tw.SetFooter([]string{"", "", "", "", "", "", "", "", "", "", "", "Total", strconv.Itoa(int(resp.Data.Total))})
+	// 合并相同值的列
+	//tw.SetAutoMergeCells(true)
+	for _, item := range resp.Data.Results {
+		tw.Append(func() []string {
+			return []string{
+				item.GetId(),
+				item.GetKey(),
+				item.GetName(),
+				item.GetDefault(),
+				item.GetDefaultValue(),
+				item.GetScope(),
+				item.GetScopeName(),
+				item.GetCategory(),
+				item.GetCategoryName(),
+				item.GetCreator(),
+				item.GetUpdater(),
+				item.GetCreated(),
+				item.GetUpdated(),
+			}
+		}())
+	}
+	tw.Render()
+}
+
+// PrintInJSON prints the response
+func PrintInJSON(response interface{}) {
+	if response == nil {
 		return
 	}
 
 	var data []byte
-	_ = encodeJSONWithIndent(4, project, &data)
+	_ = encodeJSONWithIndent(4, response, &data)
 	fmt.Println(string(pretty.Color(pretty.Pretty(data), nil)))
 }

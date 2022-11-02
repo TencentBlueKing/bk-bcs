@@ -10,9 +10,11 @@ replace (
 )
 
 require (
-	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20220913140949-31c175590547
-	github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager v0.0.0-20221011125034-2ada1f2db5ed
+	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20221018081229-065aeef813e6
+	github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager v0.0.0-20221025135217-b2f1313129c4
+	github.com/ghodss/yaml v1.0.0
 	github.com/golang/protobuf v1.5.2
+	github.com/google/go-querystring v1.0.0
 	github.com/olekukonko/tablewriter v0.0.5
 	github.com/pkg/errors v0.9.1
 	github.com/spf13/cobra v1.6.0
@@ -20,7 +22,6 @@ require (
 	github.com/stretchr/testify v1.8.0
 	github.com/tidwall/pretty v1.2.1
 	github.com/ugorji/go/codec v1.2.7
-	google.golang.org/grpc v1.47.0
 	k8s.io/klog v1.0.0
 	k8s.io/klog/v2 v2.80.1
 	k8s.io/kubectl v0.24.7
@@ -95,7 +96,8 @@ require (
 	golang.org/x/tools v0.1.12 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/genproto v0.0.0-20220519153652-3a47de7e79bd // indirect
-	google.golang.org/protobuf v1.28.0 // indirect
+	google.golang.org/grpc v1.47.0 // indirect
+	google.golang.org/protobuf v1.28.1 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
