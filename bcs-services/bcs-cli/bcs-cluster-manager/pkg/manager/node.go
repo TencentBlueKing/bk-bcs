@@ -54,6 +54,18 @@ type Node struct {
 	NodeID       string `json:"nodeID"`
 	InnerIP      string `json:"innerIP"`
 	InstanceType string `json:"instanceType"`
+}
+
+type UpdateNodeResp struct {
+	Code    uint32 `json:"code"`
+	Message string `json:"message"`
+	Result  bool   `json:"result"`
+}
+
+type NodeInfo struct {
+	NodeID       string `json:"nodeID"`
+	InnerIP      string `json:"innerIP"`
+	InstanceType string `json:"InstanceType"`
 	CPU          uint32 `json:"cpu"`
 	Mem          uint32 `json:"mem"`
 	GPU          uint32 `json:"gpu"`
