@@ -18,6 +18,7 @@ import (
 	"crypto/tls"
 	"fmt"
 	"io/ioutil"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
@@ -30,8 +31,11 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/encrypt"
+	"github.com/Tencent/bk-bcs/bcs-common/common/http/ipv6server"
 	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
 	"github.com/Tencent/bk-bcs/bcs-common/common/static"
+	"github.com/Tencent/bk-bcs/bcs-common/common/types"
+	"github.com/Tencent/bk-bcs/bcs-common/common/util"
 	"github.com/Tencent/bk-bcs/bcs-common/common/version"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers/mongo"
@@ -73,10 +77,10 @@ type HelmManager struct {
 	discovery *discovery.ModuleDiscovery
 
 	// http service
-	httpServer *http.Server
+	httpServer *ipv6server.IPv6Server
 
 	// metric service
-	metricServer *http.Server
+	metricServer *ipv6server.IPv6Server
 
 	// tls config for helm manager service and client side
 	tlsConfig       *tls.Config
@@ -303,17 +307,29 @@ func (hm *HelmManager) initDiscovery() error {
 }
 
 func (hm *HelmManager) initMicro() error {
+	// server listen ip
+	ipv4 := hm.opt.Address
+	ipv6 := hm.opt.IPv6Address
+	port := strconv.Itoa(int(hm.opt.Port))
+
+	// service inject metadata to discovery center
+	metadata := make(map[string]string)
+	metadata[common.MicroMetaKeyHTTPPort] = strconv.Itoa(int(hm.opt.HTTPPort))
+
+	// 适配单栈环境（ipv6注册地址不能是本地回环地址）
+	if v := net.ParseIP(ipv6); v != nil && !v.IsLoopback() {
+		metadata[types.IPV6] = net.JoinHostPort(ipv6, port)
+	}
+
 	authWrapper := middleauth.NewGoMicroAuth(auth.GetJWTClient()).
 		EnableSkipHandler(auth.SkipHandler).
 		EnableSkipClient(auth.SkipClient).
 		SetCheckUserPerm(auth.CheckUserPerm)
 	svc := microGrpc.NewService(
 		microSvc.Name(common.ServiceDomain),
-		microSvc.Metadata(map[string]string{
-			common.MicroMetaKeyHTTPPort: strconv.Itoa(int(hm.opt.HTTPPort)),
-		}),
+		microSvc.Metadata(metadata),
 		microGrpc.WithTLS(hm.tlsConfig),
-		microSvc.Address(hm.opt.Address+":"+strconv.Itoa(int(hm.opt.Port))),
+		microSvc.Address(net.JoinHostPort(ipv4, port)),
 		microSvc.Registry(hm.microRgt),
 		microSvc.Version(version.BcsVersion),
 		microSvc.RegisterTTL(30*time.Second),
@@ -393,14 +409,16 @@ func (hm *HelmManager) initHTTPService() error {
 	mux.Handle("/", router)
 	blog.Info("register grpc service handler to path /")
 
-	httpAddr := hm.opt.Address + ":" + strconv.Itoa(int(hm.opt.HTTPPort))
-	hm.httpServer = &http.Server{
-		Addr:    httpAddr,
-		Handler: mux,
+	// server address
+	addresses := []string{hm.opt.Address}
+	if len(hm.opt.IPv6Address) > 0 {
+		addresses = append(addresses, hm.opt.IPv6Address)
 	}
+	hm.httpServer = ipv6server.NewIPv6Server(addresses, strconv.Itoa(int(hm.opt.HTTPPort)), "", mux)
+
 	go func() {
 		var err error
-		blog.Infof("start http gateway server on address %s", httpAddr)
+		blog.Infof("start http gateway server on address %+v", addresses)
 		if hm.tlsConfig != nil {
 			hm.httpServer.TLSConfig = hm.tlsConfig
 			err = hm.httpServer.ListenAndServeTLS("", "")
@@ -417,18 +435,19 @@ func (hm *HelmManager) initHTTPService() error {
 
 // initMetric brings up a service and listen on a metric port, for providing metric data
 func (hm *HelmManager) initMetric() error {
-	metricAddr := hm.opt.Address + ":" + strconv.Itoa(int(hm.opt.MetricPort))
 	metricMux := http.NewServeMux()
 	blog.Info("init metric handler")
 	metricMux.Handle("/metrics", promhttp.Handler())
-	hm.metricServer = &http.Server{
-		Addr:    metricAddr,
-		Handler: metricMux,
+	// server address
+	addresses := []string{hm.opt.Address}
+	if len(hm.opt.IPv6Address) > 0 {
+		addresses = append(addresses, hm.opt.IPv6Address)
 	}
+	hm.metricServer = ipv6server.NewIPv6Server(addresses, strconv.Itoa(int(hm.opt.MetricPort)), "", metricMux)
 
 	go func() {
 		var err error
-		blog.Infof("start metric server on address %s", metricAddr)
+		blog.Infof("start metric server on address %+v", addresses)
 		if err = hm.metricServer.ListenAndServe(); err != nil {
 			blog.Errorf("start metric server failed, %s", err.Error())
 			hm.stopCh <- struct{}{}
@@ -538,6 +557,7 @@ func (hm *HelmManager) getServerAddress() error {
 		hm.opt.Address = envx.LocalIP
 		hm.opt.InsecureAddress = envx.LocalIP
 	}
+	hm.opt.IPv6Address = util.InitIPv6Address(hm.opt.IPv6Address)
 	return nil
 }
 

@@ -43,6 +43,7 @@ type SwaggerConfig struct {
 type ServerConfig struct {
 	UseLocalIP      bool   `json:"uselocalip"`
 	Address         string `json:"address"`
+	IPv6Address     string `json:"ipv6Address"`
 	InsecureAddress string `json:"insecureaddress"`
 	Port            uint   `json:"port"`
 	HTTPPort        uint   `json:"httpport"`

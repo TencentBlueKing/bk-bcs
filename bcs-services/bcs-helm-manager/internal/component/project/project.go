@@ -66,7 +66,7 @@ func (p *ProjectClient) getProjectClient() (bcsproject.BCSProjectClient, error) 
 
 	cfg := bcsapi.Config{}
 	// discovery hosts
-	cfg.Hosts = []string{node.Address}
+	cfg.Hosts = discovery.GetServerEndpointsFromRegistryNode(node)
 	cfg.TLSConfig = p.ClientTLSConfig
 	cfg.InnerClientName = "bcs-helm-manager"
 	return NewProjectManager(&cfg), nil
