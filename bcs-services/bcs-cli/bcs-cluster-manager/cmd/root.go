@@ -22,6 +22,9 @@ import (
 	"k8s.io/klog"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/version"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-cluster-manager/cmd/cluster"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-cluster-manager/cmd/namespace"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-cluster-manager/cmd/node"
 )
 
 const (
@@ -67,6 +70,9 @@ kubectl-bcs-cluster-manager allows operators to get project info from bcs-cluste
 	}
 	rootCmd.AddCommand(versionCmd)
 	rootCmd.AddCommand(newListCmd())
+	rootCmd.AddCommand(cluster.NewClusterCmd())
+	rootCmd.AddCommand(node.NewNodeCmd())
+	rootCmd.AddCommand(namespace.NewNamespaceCmd())
 	rootCmd.PersistentFlags().StringVarP(
 		&cfgFile, "config", "c", defaultCfgFile, "config file")
 	rootCmd.CompletionOptions.DisableDefaultCmd = true
