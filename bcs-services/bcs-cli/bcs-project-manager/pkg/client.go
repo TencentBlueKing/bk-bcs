@@ -59,7 +59,7 @@ func (p *ProjectManagerClient) do(urls string, httpType string, query url.Values
 	var err error
 	_, err = url.Parse(p.cfg.APIServer)
 	if err != nil {
-		return nil, fmt.Errorf("url failed %v", err)
+		return nil, err
 	}
 	if body != nil {
 		var bs []byte

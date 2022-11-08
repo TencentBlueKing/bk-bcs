@@ -36,7 +36,6 @@ var (
 )
 
 func listProject() *cobra.Command {
-	var all bool
 	request := new(pkg.ListProjectsRequest)
 	cmd := &cobra.Command{
 		Use:     "project",
@@ -65,7 +64,7 @@ func listProject() *cobra.Command {
 		"Number of queries")
 	cmd.PersistentFlags().Int64VarP(&request.Offset, "offset", "", 0,
 		"Start query from offset")
-	cmd.PersistentFlags().BoolVarP(&all, "all", "", false,
+	cmd.PersistentFlags().BoolVarP(&request.All, "all", "", false,
 		"Get all projects, default: false")
 	return cmd
 }
