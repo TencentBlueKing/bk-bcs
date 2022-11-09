@@ -60,6 +60,8 @@ const (
 	DefaultSize = 10
 )
 
+var EnsuredTables = map[string]bool{}
+
 // Public public model set
 type Public struct {
 	TableName           string
@@ -70,6 +72,9 @@ type Public struct {
 }
 
 func ensureTable(ctx context.Context, public *Public) error {
+	if EnsuredTables[public.TableName] == true {
+		return nil
+	}
 	public.IsTableEnsuredMutex.RLock()
 	if public.IsTableEnsured {
 		public.IsTableEnsuredMutex.RUnlock()
@@ -84,6 +89,7 @@ func ensureTable(ctx context.Context, public *Public) error {
 	public.IsTableEnsuredMutex.Lock()
 	public.IsTableEnsured = true
 	public.IsTableEnsuredMutex.Unlock()
+	EnsuredTables[public.TableName] = true
 	return nil
 }
 
