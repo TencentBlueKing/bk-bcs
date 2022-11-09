@@ -203,7 +203,7 @@
             </bcs-button>
           </template>
         </bcs-table-column>
-        <bcs-table-column label="IPv6" props="innerIPv6" sortable>
+        <bcs-table-column label="IPv6" props="innerIPv6" min-width="200" sortable>
           <template #default="{ row }">
             {{ row.innerIPv6 || '--' }}
           </template>
@@ -625,8 +625,8 @@ export default defineComponent({
     const searchSelectDataSource = computed<ISearchSelectData[]>(() => [
       {
         name: $i18n.t('IP地址'),
-        id: 'inner_ip',
-        placeholder: $i18n.t('多IP用换行符分割'),
+        id: 'ip',
+        placeholder: $i18n.t('多IP用空格符分割'),
       },
       {
         name: $i18n.t('状态'),
@@ -753,31 +753,39 @@ export default defineComponent({
       searchSelectValue.value.forEach((item) => {
         let tmp: string[] = [];
         if (Array.isArray(item.values)) {
-          if (item.id === 'inner_ip') {
+          // 下拉选择搜索
+          if (item.id === 'ip') {
+            // 处理IP字段多值情况
             item.values.forEach((v) => {
-              tmp.push(...v.id.replace(/\s+/g, '').split('|'));
+              const splitCode = String(v).indexOf('|') > -1 ? '|' : ' ';
+              tmp.push(...v.id.trim().split(splitCode));
             });
           } else {
             tmp = item.values.map(v => v.id);
           }
-          searchValues.push({
-            id: item.id,
-            value: new Set(tmp),
-          });
+        } else {
+          // 自定义IP模糊搜索
+          tmp = String(item.id).split(' ');
         }
+        searchValues.push({
+          id: item.id,
+          value: new Set(tmp),
+        });
       });
       return searchValues;
     });
     // 过滤后的表格数据
     const filterTableData = computed(() => {
-      if (!searchSelectValue.value.length) return tableData.value;
+      if (!parseSearchSelectValue.value.length) return tableData.value;
 
-      return tableData.value.filter(row => parseSearchSelectValue.value.some((item) => {
-        if (!row[item.id]) return false;
+      return tableData.value.filter(row => parseSearchSelectValue.value.every((item) => {
         if (item.id === 'labels') {
           return Object.keys(row[item.id]).some(key => item.value.has(`${key}=${row[item.id][key]}`));
         }
-        return item.value.has(row[item.id].toLowerCase());
+        if (item.id in row) {
+          return item.value.has(String(row[item.id]).toLowerCase());
+        }
+        return item.value.has(row.innerIP) || item.value.has(row.innerIPv6);
       }));
     });
     // 分页后的表格数据
@@ -818,7 +826,7 @@ export default defineComponent({
         params: {
           nodeId: row.inner_ip,
           nodeName: row.name,
-          clusterId: row.cluster_id,
+          clusterId: row.cluster_id || localClusterId.value,
         },
       });
     };

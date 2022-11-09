@@ -18,8 +18,12 @@
         <span>{{ data.spec.type }}</span>
       </div>
       <div class="basic-info-item">
-        <label>Cluster-ip</label>
-        <span>{{ data.spec.clusterIP }}</span>
+        <label>ClusterIPv4</label>
+        <span>{{ extData.clusterIPv4 || '--' }}</span>
+      </div>
+      <div class="basic-info-item">
+        <label>ClusterIPv6</label>
+        <span>{{ extData.clusterIPv6 || '--' }}</span>
       </div>
       <div class="basic-info-item">
         <label>External-ip</label>

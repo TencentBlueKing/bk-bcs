@@ -27,9 +27,14 @@
             <span>{{ row.spec.type || '--' }}</span>
           </template>
         </bk-table-column>
-        <bk-table-column label="Cluster-ip" :resizable="false">
+        <bk-table-column label="ClusterIPv4" :resizable="false">
           <template #default="{ row }">
-            <span>{{ row.spec.clusterIP || '--' }}</span>
+            <span>{{ handleGetExtData(row.metadata.uid, 'clusterIPv4') || '--' }}</span>
+          </template>
+        </bk-table-column>
+        <bk-table-column label="ClusterIPv6" :resizable="false">
+          <template #default="{ row }">
+            <span>{{ handleGetExtData(row.metadata.uid, 'clusterIPv6') || '--' }}</span>
           </template>
         </bk-table-column>
         <bk-table-column label="External-ip" :resizable="false">

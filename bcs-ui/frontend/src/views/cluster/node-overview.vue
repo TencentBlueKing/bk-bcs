@@ -310,8 +310,11 @@
               <bk-table-column label="Host IP" width="140" :resizable="false">
                 <template slot-scope="{ row }">{{row.hostIP || '--'}}</template>
               </bk-table-column>
-              <bk-table-column label="Pod IP" width="140" :resizable="false">
+              <bk-table-column label="Pod IPv4" width="140" :resizable="false">
                 <template slot-scope="{ row }">{{row.podIP || '--'}}</template>
+              </bk-table-column>
+              <bk-table-column label="Pod IPv6" min-width="140" :resizable="false">
+                <template slot-scope="{ row }">{{row.podIPv6 || '--'}}</template>
               </bk-table-column>
               <bk-table-column label="Node" :resizable="false">
                 <template slot-scope="{ row }">{{row.node || '--'}}</template>

@@ -45,7 +45,7 @@
           <a href="wxwork://message?uin=8444252571319680">{{ $t('联系BK助手') }}</a> |
           <a :href="paasHost" target="_blank">{{ $t('蓝鲸桌面') }}</a>
         </div>
-        <p class="biz-copyright">
+        <p>
           Copyright © 2012-{{(new Date()).getFullYear()}} Tencent BlueKing. All Rights Reserved
         </p>
       </div>
@@ -306,11 +306,9 @@ export default defineComponent({
       font-size: 12px;
       color: #b7c0ca;
       width: 100%;
-      position: absolute;
-      bottom: 0;
       text-align: center;
       line-height: 20px;
-      padding: 0 15px;
+      padding: 25px 15px;
       .link a {
         color: #3a84ff;
       }

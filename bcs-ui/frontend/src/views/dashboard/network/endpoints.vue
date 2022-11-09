@@ -22,9 +22,13 @@
           </template>
         </bk-table-column>
         <bk-table-column :label="$t('命名空间')" prop="metadata.namespace" sortable></bk-table-column>
-        <bk-table-column label="Endpoints" :resizable="false">
+        <bk-table-column label="Endpoints" :resizable="false" :show-overflow-tooltip="false">
           <template #default="{ row }">
-            <span>{{ handleGetExtData(row.metadata.uid, 'endpoints').join(', ') || '--' }}</span>
+            <div v-bk-tooltips="{ content: handleGetExtData(row.metadata.uid, 'endpoints').join('<br/>') }">
+              <span>
+                {{ handleGetExtData(row.metadata.uid, 'endpoints').join(', ') || '--' }}
+              </span>
+            </div>
           </template>
         </bk-table-column>
         <bk-table-column label="Age" :resizable="false" :show-overflow-tooltip="false">
