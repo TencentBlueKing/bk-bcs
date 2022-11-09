@@ -15,7 +15,6 @@ package cmd
 
 import (
 	"context"
-
 	"github.com/spf13/cobra"
 	"k8s.io/klog"
 
@@ -244,11 +243,10 @@ func getTokenCmd() *cobra.Command {
 }
 
 func getTokenByUserAndClusterIDCmd() *cobra.Command {
-	var userName, clusterID, businessID string
+	var request pkg.GetTokenByUserAndClusterIDRequest
 	subCmd := &cobra.Command{
 		Use:     "extra-token",
 		Aliases: []string{"et"},
-		Args:    cobra.ExactArgs(3),
 		Short:   "get token from user manager",
 		Example: "kubectl-bcs-user-manager get extra-token -u [user_name] --cluster_id [cluster_id] --business_id [business_id]",
 		Long:    "",
@@ -257,7 +255,7 @@ func getTokenByUserAndClusterIDCmd() *cobra.Command {
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
 			client := pkg.NewClientWithConfiguration(ctx)
-			resp, err := client.GetTokenByUserAndClusterID(userName, clusterID, businessID)
+			resp, err := client.GetTokenByUserAndClusterID(request)
 			if err != nil {
 				klog.Fatalf("get token failed: %v", err)
 			}
@@ -268,11 +266,11 @@ func getTokenByUserAndClusterIDCmd() *cobra.Command {
 		},
 	}
 
-	subCmd.PersistentFlags().StringVarP(&userName, "user_name", "u", "",
+	subCmd.Flags().StringVarP(&request.UserName, "user_name", "u", "",
 		"the user name that query token")
-	subCmd.PersistentFlags().StringVarP(&clusterID, "cluster_id", "", "",
+	subCmd.Flags().StringVarP(&request.ClusterID, "cluster_id", "", "",
 		"the cluster_id that query token")
-	subCmd.PersistentFlags().StringVarP(&businessID, "business_id", "", "",
+	subCmd.Flags().StringVarP(&request.BusinessID, "business_id", "", "",
 		"the business_id that query token")
 	subCmd.MarkFlagsRequiredTogether("user_name", "cluster_id", "business_id")
 	return subCmd

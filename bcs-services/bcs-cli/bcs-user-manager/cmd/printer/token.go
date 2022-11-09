@@ -30,7 +30,7 @@ func PrintCreateTokenCmdResult(flagOutput string, resp *pkg.CreateTokenResponse)
 			klog.Fatalf("create token output json to stdout failed: %s", err.Error())
 		}
 	}
-	tw := defaultTableWriter()
+	tw := tablewriter.NewWriter(os.Stdout)
 	tw.SetHeader(func() []string {
 		return []string{
 			"TOKEN", "JWT", "STATUS", "EXPIRED_AT",
@@ -56,7 +56,7 @@ func PrintCreateTempTokenCmdResult(flagOutput string, resp *pkg.CreateTempTokenR
 			klog.Fatalf("create temp token output json to stdout failed: %s", err.Error())
 		}
 	}
-	tw := defaultTableWriter()
+	tw := tablewriter.NewWriter(os.Stdout)
 	tw.SetHeader(func() []string {
 		return []string{
 			"ID", "USERNAME", "TOKEN", "USER_TYPE", "CREATED_BY", "CREATED_AT", "DELETED_AT", "UPDATED_AT", "EXPIRES_AT",
@@ -87,7 +87,7 @@ func PrintCreateClientTokenCmdResult(flagOutput string, resp *pkg.CreateClientTo
 			klog.Fatalf("create client token output json to stdout failed: %s", err.Error())
 		}
 	}
-	tw := defaultTableWriter()
+	tw := tablewriter.NewWriter(os.Stdout)
 	tw.SetHeader(func() []string {
 		return []string{
 			"TOKEN", "JWT", "STATUS", "EXPIRED_AT",
@@ -113,7 +113,12 @@ func PrintDeleteTokenCmdResult(flagOutput string, resp *pkg.DeleteTokenResponse)
 			klog.Fatalf("delete token output json to stdout failed: %s", err.Error())
 		}
 	}
-	tw := defaultTableWriter()
+	tw := tablewriter.NewWriter(os.Stdout)
+	tw.SetHeader(func() []string {
+		return []string{
+			"TOKEN", "JWT", "STATUS", "EXPIRED_AT",
+		}
+	}())
 	tw.Render()
 }
 
@@ -155,7 +160,7 @@ func PrintGetTokenByUserAndClusterIDCmdResult(flagOutput string, resp *pkg.GetTo
 			klog.Fatalf("get token by user and clusterID output json to stdout failed: %s", err.Error())
 		}
 	}
-	tw := defaultTableWriter()
+	tw := tablewriter.NewWriter(os.Stdout)
 	tw.SetHeader(func() []string {
 		return []string{
 			"USERNAME", "TOKEN", "STATUS", "EXPIRED_AT",
@@ -181,7 +186,7 @@ func PrintUpdateTokenCmdResult(flagOutput string, resp *pkg.UpdateTokenResponse)
 			klog.Fatalf("update token output json to stdout failed: %s", err.Error())
 		}
 	}
-	tw := defaultTableWriter()
+	tw := tablewriter.NewWriter(os.Stdout)
 	tw.SetHeader(func() []string {
 		return []string{
 			"TOKEN", "JWT", "STATUS", "EXPIRED_AT",

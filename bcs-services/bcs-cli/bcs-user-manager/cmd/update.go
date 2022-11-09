@@ -72,7 +72,7 @@ func refreshPlainTokenCmd() *cobra.Command {
 		Aliases: []string{"pt"},
 		Short:   "refresh plain-token",
 		Long:    "refresh plain user token from user manager",
-		Example: "kubectl-bcs-user-manager update saas-token -u [user_name] -t [expire_time]",
+		Example: "kubectl-bcs-user-manager update plain-token -u [user_name] -t [expire_time]",
 		Run: func(cmd *cobra.Command, args []string) {
 			cobra.OnInitialize(ensureConfig)
 			ctx, cancel := context.WithCancel(context.Background())

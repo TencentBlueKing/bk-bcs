@@ -30,7 +30,7 @@ func PrintApplyTkeCidrCmdResult(flagOutput string, resp *pkg.ApplyTkeCidrRespons
 			klog.Fatalf("apply tke cidrs output json to stdout failed: %s", err.Error())
 		}
 	}
-	tw := defaultTableWriter()
+	tw := tablewriter.NewWriter(os.Stdout)
 	tw.SetHeader(func() []string {
 		return []string{
 			"VPC", "CIDR", "IP_NUMBER", "STATUS",
@@ -56,7 +56,12 @@ func PrintAddTkeCidrCmdResult(flagOutput string, resp *pkg.AddTkeCidrResponse) {
 			klog.Fatalf("add tkecidrs output json to stdout failed: %s", err.Error())
 		}
 	}
-	tw := defaultTableWriter()
+	tw := tablewriter.NewWriter(os.Stdout)
+	tw.SetHeader(func() []string {
+		return []string{
+			"COUNT", "VPC", "IP_NUMBER", "STATUS",
+		}
+	}())
 	tw.Render()
 }
 
@@ -98,7 +103,12 @@ func PrintReleaseTkeCidrCmdResult(flagOutput string, resp *pkg.ReleaseTkeCidrRes
 			klog.Fatalf("release tkecidrs output json to stdout failed: %s", err.Error())
 		}
 	}
-	tw := defaultTableWriter()
+	tw := tablewriter.NewWriter(os.Stdout)
+	tw.SetHeader(func() []string {
+		return []string{
+			"VPC", "CIDR", "IP_NUMBER", "STATUS",
+		}
+	}())
 	tw.Render()
 }
 
@@ -109,6 +119,11 @@ func PrintSyncTkeClusterCredentialsCmdResult(flagOutput string, resp *pkg.SyncTk
 			klog.Fatalf("sync cluster tkecidrs output json to stdout failed: %s", err.Error())
 		}
 	}
-	tw := defaultTableWriter()
+	tw := tablewriter.NewWriter(os.Stdout)
+	tw.SetHeader(func() []string {
+		return []string{
+			"VPC", "CIDR", "IP_NUMBER", "STATUS",
+		}
+	}())
 	tw.Render()
 }

@@ -30,7 +30,8 @@ func PrintCreateClusterCmdResult(flagOutput string, resp *pkg.CreateClusterRespo
 			klog.Fatalf("create cluster output json to stdout failed: %s", err.Error())
 		}
 	}
-	tw := defaultTableWriter()
+	tw := tablewriter.NewWriter(os.Stdout)
+
 	tw.SetHeader(func() []string {
 		return []string{
 			"ID", "CLUSTER_TYPE", "TKE_CLUSTER_ID", "TKE_CLUSTER_REGION", "CREATOR_ID", "CREATED_AT",
@@ -58,7 +59,7 @@ func PrintCreateRegisterTokenCmdResult(flagOutput string, resp *pkg.CreateRegist
 			klog.Fatalf("create register token output json to stdout failed: %s", err.Error())
 		}
 	}
-	tw := defaultTableWriter()
+	tw := tablewriter.NewWriter(os.Stdout)
 	tw.SetHeader(func() []string {
 		return []string{
 			"ID", "CLUSTER_ID", "TOKEN", "CREATED_AT",
@@ -84,7 +85,7 @@ func PrintGetRegisterTokenCmdResult(flagOutput string, resp *pkg.GetRegisterToke
 			klog.Fatalf("get register token output json to stdout failed: %s", err.Error())
 		}
 	}
-	tw := defaultTableWriter()
+	tw := tablewriter.NewWriter(os.Stdout)
 	tw.SetHeader(func() []string {
 		return []string{
 			"ID", "CLUSTER_ID", "TOKEN", "CREATED_AT",
@@ -110,7 +111,7 @@ func PrintGetCredentialsCmdResult(flagOutput string, resp *pkg.GetCredentialsRes
 			klog.Fatalf("get register token output json to stdout failed: %s", err.Error())
 		}
 	}
-	tw := defaultTableWriter()
+	tw := tablewriter.NewWriter(os.Stdout)
 	tw.SetHeader(func() []string {
 		return []string{
 			"ID", "CLUSTER_ID", "SERVER_ADDRESSES", "CA_CERT_DATA", "USER_TOKEN", "CLUSTER_DOMAIN", "CREATED_AT", "UPDATED_AT",
@@ -148,7 +149,7 @@ func PrintListCredentialsCmdResult(flagOutput string, resp *pkg.ListCredentialsR
 		}
 	}())
 	// 添加页脚
-	tw.SetFooter([]string{"", "Total", strconv.Itoa(len(resp.Data))})
+	tw.SetFooter([]string{"", "", "", "Total", strconv.Itoa(len(resp.Data))})
 	// 合并相同值的列
 	//tw.SetAutoMergeCells(true)
 	for key, item := range resp.Data {
@@ -172,6 +173,11 @@ func PrintUpdateCredentialsCmdResult(flagOutput string, resp *pkg.UpdateCredenti
 			klog.Fatalf("update credentials output json to stdout failed: %s", err.Error())
 		}
 	}
-	tw := defaultTableWriter()
+	tw := tablewriter.NewWriter(os.Stdout)
+	tw.SetHeader(func() []string {
+		return []string{
+			"CLUSTER_ID", "SERVER_ADDRESSES", "CA_CERT_DATA", "USER_TOKEN", "CLUSTER_DOMAIN",
+		}
+	}())
 	tw.Render()
 }

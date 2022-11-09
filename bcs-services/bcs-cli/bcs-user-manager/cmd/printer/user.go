@@ -14,6 +14,8 @@
 package printer
 
 import (
+	"github.com/olekukonko/tablewriter"
+	"os"
 	"strconv"
 
 	"k8s.io/klog"
@@ -28,7 +30,7 @@ func PrintCreateAdminUserCmdResult(flagOutput string, resp *pkg.CreateAdminUserR
 			klog.Fatalf("create admin user output json to stdout failed: %s", err.Error())
 		}
 	}
-	tw := defaultTableWriter()
+	tw := tablewriter.NewWriter(os.Stdout)
 	tw.SetHeader(func() []string {
 		return []string{
 			"ID", "NAME", "USER_TYPE", "USER_TOKEN", "CREATED_BY", "CREATED_AT", "UPDATED_AT", "EXPIRES_AT", "DELETED_AT",
@@ -46,7 +48,7 @@ func PrintCreateAdminUserCmdResult(flagOutput string, resp *pkg.CreateAdminUserR
 			data.CreatedAt.Format(timeFormatter),
 			data.UpdatedAt.Format(timeFormatter),
 			data.ExpiresAt.Format(timeFormatter),
-			data.DeletedAt.Format(timeFormatter),
+			data.GetDeletedAtStr(),
 		}
 	}())
 	tw.Render()
@@ -59,7 +61,7 @@ func PrintCreateSaasUserCmdResult(flagOutput string, resp *pkg.CreateSaasUserRes
 			klog.Fatalf("create saas user output json to stdout failed: %s", err.Error())
 		}
 	}
-	tw := defaultTableWriter()
+	tw := tablewriter.NewWriter(os.Stdout)
 	tw.SetHeader(func() []string {
 		return []string{
 			"ID", "NAME", "USER_TYPE", "USER_TOKEN", "CREATED_BY", "CREATED_AT", "UPDATED_AT", "EXPIRES_AT", "DELETED_AT",
@@ -77,7 +79,7 @@ func PrintCreateSaasUserCmdResult(flagOutput string, resp *pkg.CreateSaasUserRes
 			data.CreatedAt.Format(timeFormatter),
 			data.UpdatedAt.Format(timeFormatter),
 			data.ExpiresAt.Format(timeFormatter),
-			data.DeletedAt.Format(timeFormatter),
+			data.GetDeletedAtStr(),
 		}
 	}())
 	tw.Render()
@@ -90,7 +92,7 @@ func PrintCreatePlainUserCmdResult(flagOutput string, resp *pkg.CreatePlainUserR
 			klog.Fatalf("create plain user output json to stdout failed: %s", err.Error())
 		}
 	}
-	tw := defaultTableWriter()
+	tw := tablewriter.NewWriter(os.Stdout)
 	tw.SetHeader(func() []string {
 		return []string{
 			"ID", "NAME", "USER_TYPE", "USER_TOKEN", "CREATED_BY", "CREATED_AT", "UPDATED_AT", "EXPIRES_AT", "DELETED_AT",
@@ -108,7 +110,7 @@ func PrintCreatePlainUserCmdResult(flagOutput string, resp *pkg.CreatePlainUserR
 			data.CreatedAt.Format(timeFormatter),
 			data.UpdatedAt.Format(timeFormatter),
 			data.ExpiresAt.Format(timeFormatter),
-			data.DeletedAt.Format(timeFormatter),
+			data.GetDeletedAtStr(),
 		}
 	}())
 	tw.Render()
@@ -121,7 +123,7 @@ func PrintGetAdminUserCmdResult(flagOutput string, resp *pkg.GetAdminUserRespons
 			klog.Fatalf("get admin user output json to stdout failed: %s", err.Error())
 		}
 	}
-	tw := defaultTableWriter()
+	tw := tablewriter.NewWriter(os.Stdout)
 	tw.SetHeader(func() []string {
 		return []string{
 			"ID", "NAME", "USER_TYPE", "USER_TOKEN", "CREATED_BY", "CREATED_AT", "UPDATED_AT", "EXPIRES_AT", "DELETED_AT",
@@ -139,7 +141,7 @@ func PrintGetAdminUserCmdResult(flagOutput string, resp *pkg.GetAdminUserRespons
 			data.CreatedAt.Format(timeFormatter),
 			data.UpdatedAt.Format(timeFormatter),
 			data.ExpiresAt.Format(timeFormatter),
-			data.DeletedAt.Format(timeFormatter),
+			data.GetDeletedAtStr(),
 		}
 	}())
 	tw.Render()
@@ -152,7 +154,7 @@ func PrintGetSaasUserCmdResult(flagOutput string, resp *pkg.GetSaasUserResponse)
 			klog.Fatalf("get saas user output json to stdout failed: %s", err.Error())
 		}
 	}
-	tw := defaultTableWriter()
+	tw := tablewriter.NewWriter(os.Stdout)
 	tw.SetHeader(func() []string {
 		return []string{
 			"ID", "NAME", "USER_TYPE", "USER_TOKEN", "CREATED_BY", "CREATED_AT", "UPDATED_AT", "EXPIRES_AT", "DELETED_AT",
@@ -170,7 +172,7 @@ func PrintGetSaasUserCmdResult(flagOutput string, resp *pkg.GetSaasUserResponse)
 			data.CreatedAt.Format(timeFormatter),
 			data.UpdatedAt.Format(timeFormatter),
 			data.ExpiresAt.Format(timeFormatter),
-			data.DeletedAt.Format(timeFormatter),
+			data.GetDeletedAtStr(),
 		}
 	}())
 	tw.Render()
@@ -183,7 +185,7 @@ func PrintGetPlainUserCmdResult(flagOutput string, resp *pkg.GetPlainUserRespons
 			klog.Fatalf("get plain user output json to stdout failed: %s", err.Error())
 		}
 	}
-	tw := defaultTableWriter()
+	tw := tablewriter.NewWriter(os.Stdout)
 	tw.SetHeader(func() []string {
 		return []string{
 			"ID", "NAME", "USER_TYPE", "USER_TOKEN", "CREATED_BY", "CREATED_AT", "UPDATED_AT", "EXPIRES_AT", "DELETED_AT",
@@ -201,7 +203,7 @@ func PrintGetPlainUserCmdResult(flagOutput string, resp *pkg.GetPlainUserRespons
 			data.CreatedAt.Format(timeFormatter),
 			data.UpdatedAt.Format(timeFormatter),
 			data.ExpiresAt.Format(timeFormatter),
-			data.DeletedAt.Format(timeFormatter),
+			data.GetDeletedAtStr(),
 		}
 	}())
 	tw.Render()
@@ -214,7 +216,7 @@ func PrintRefreshSaasTokenCmdResult(flagOutput string, resp *pkg.RefreshSaasToke
 			klog.Fatalf("refresh saas user token output json to stdout failed: %s", err.Error())
 		}
 	}
-	tw := defaultTableWriter()
+	tw := tablewriter.NewWriter(os.Stdout)
 	tw.SetHeader(func() []string {
 		return []string{
 			"ID", "NAME", "USER_TYPE", "USER_TOKEN", "CREATED_BY", "CREATED_AT", "UPDATED_AT", "EXPIRES_AT", "DELETED_AT",
@@ -232,7 +234,7 @@ func PrintRefreshSaasTokenCmdResult(flagOutput string, resp *pkg.RefreshSaasToke
 			data.CreatedAt.Format(timeFormatter),
 			data.UpdatedAt.Format(timeFormatter),
 			data.ExpiresAt.Format(timeFormatter),
-			data.DeletedAt.Format(timeFormatter),
+			data.GetDeletedAtStr(),
 		}
 	}())
 	tw.Render()
@@ -245,7 +247,7 @@ func PrintRefreshPlainTokenCmdResult(flagOutput string, resp *pkg.RefreshPlainTo
 			klog.Fatalf("refresh saas user token output json to stdout failed: %s", err.Error())
 		}
 	}
-	tw := defaultTableWriter()
+	tw := tablewriter.NewWriter(os.Stdout)
 	tw.SetHeader(func() []string {
 		return []string{
 			"ID", "NAME", "USER_TYPE", "USER_TOKEN", "CREATED_BY", "CREATED_AT", "UPDATED_AT", "EXPIRES_AT", "DELETED_AT",
@@ -263,7 +265,7 @@ func PrintRefreshPlainTokenCmdResult(flagOutput string, resp *pkg.RefreshPlainTo
 			data.CreatedAt.Format(timeFormatter),
 			data.UpdatedAt.Format(timeFormatter),
 			data.ExpiresAt.Format(timeFormatter),
-			data.DeletedAt.Format(timeFormatter),
+			data.GetDeletedAtStr(),
 		}
 	}())
 	tw.Render()
