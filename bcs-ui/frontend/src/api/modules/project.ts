@@ -21,6 +21,12 @@ export const updateSpecifyClusterVariables = request('put', '/clusters/$clusterI
 export const getClusterNamespaceVariable = request('get', '/clusters/$clusterId/namespaces/$namespace/variables');
 export const updateClusterNamespaceVariable = request('put', '/clusters/$clusterId/namespaces/$namespace/variables');
 
+// 命名空间
+export const getNamespaceList = request('get', '/clusters/$clusterId/namespaces')
+export const deleteNamespace = request('delete', '/clusters/$clusterId/namespaces/$namespace')
+export const updateNamespace = request('put', '/clusters/$clusterId/namespaces/$namespace')
+export const createdNamespace = request('post', '/clusters/$clusterId/namespaces')
+
 const request2 = createRequest({
   domain: window.DEVOPS_BCS_API_URL,
   prefix: '',

@@ -36,9 +36,11 @@ export function useProject() {
  */
 export function useCluster() {
   const curClusterId = computed(() => $store.state.curClusterId);
+  const isSharedCluster = computed(() => $store.state.cluster.curCluster?.is_shared); 
 
   return {
     curClusterId,
+    isSharedCluster,
   };
 }
 

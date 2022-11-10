@@ -1,7 +1,7 @@
 /* eslint-disable camelcase */
 import { defineComponent, computed, ref, watch, onMounted, toRefs } from '@vue/composition-api';
 import DashboardTopActions from './dashboard-top-actions';
-import { useSelectItemsNamespace } from './use-namespace';
+import { useSelectItemsNamespace } from '../namespace/use-namespace';
 import usePage from './use-page';
 import useSearch from './use-search';
 import useSubscribe, { ISubscribeData, ISubscribeParams } from './use-subscribe';
@@ -634,9 +634,9 @@ export default defineComponent({
                                           {
                                               this.namespaceList.map(option => (
                                                   <bcs-option
-                                                      key={option.value}
-                                                      id={option.value}
-                                                      name={option.label}>
+                                                      key={option.name}
+                                                      id={option.name}
+                                                      name={option.name}>
                                                   </bcs-option>
                                               ))
                                           }

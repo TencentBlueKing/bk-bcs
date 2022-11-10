@@ -31,7 +31,8 @@ const Variable = () => import(/* webpackChunkName: 'variable' */'@/views/variabl
 const Configuration = () => import(/* webpackChunkName: 'configuration' */'@/views/templateset/configuration');
 
 // 命名空间
-const Namespace = () => import(/* webpackChunkName: 'namespace' */'@/views/templateset/configuration/namespace');
+const Namespace = () => import(/* webpackChunkName: 'namespace' */'@/views/dashboard/namespace/namespace');
+const NamespaceCreate = () => import(/* webpackChunkName: 'namespace' */'@/views/dashboard/namespace/create');
 
 // 模板集
 const Templateset = () => import(/* webpackChunkName: 'templateset' */'@/views/templateset/configuration/templateset');
@@ -83,6 +84,14 @@ const childRoutes = [
         component: Namespace,
         name: 'namespace',
         alias: '',
+      },
+      {
+        path: 'namespace/create/:clusterId',
+        name: 'namespaceCreate',
+        component: NamespaceCreate,
+        meta: {
+          menuId: 'NAMESPACE',
+        },
       },
       {
         path: 'templateset',

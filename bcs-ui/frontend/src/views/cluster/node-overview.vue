@@ -414,7 +414,7 @@ import { BCS_CLUSTER } from '@/common/constant';
 import StatusIcon from '@/views/dashboard/common/status-icon';
 import BcsLog from '@/components/bcs-log/index';
 import useLog from '@/views/dashboard/workload/detail/use-log';
-import { useSelectItemsNamespace } from '@/views/dashboard/common/use-namespace';
+import { useSelectItemsNamespace } from '@/views/dashboard/namespace/use-namespace';
 
 import { nodeOverview } from '@/common/chart-option';
 import { catchErrorHandler, formatBytes } from '@/common/util';

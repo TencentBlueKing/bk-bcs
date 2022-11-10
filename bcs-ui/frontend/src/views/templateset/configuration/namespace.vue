@@ -51,14 +51,36 @@
                   <span class="text">{{row.name}}</span>
                 </template>
               </bk-table-column>
-              <bk-table-column :label="$t('所属集群')" :show-overflow-tooltip="false" prop="cluster_name" :width="200">
+              <bk-table-column :label="$t('CPU使用率')" prop="cpuUseRate" :min-width="100">
                 <template slot-scope="{ row }">
-                  <bcs-popover :content="row.cluster_id || '--'" placement="top">
-                    <p class="biz-text-wrapper">{{row.cluster_name ? row.cluster_name : '--'}}</p>
-                  </bcs-popover>
+                  <Ring
+                    :percent="row.cpuUseRate" :size="50" :text="'none'"
+                    :stroke-width="2" :fill-width="2" :fill-color="'#3ede78'"
+                    ext-cls="biz-cluster-ring">
+                    <div slot="text" class="ring-text-inner">
+                      <div class="number">{{ row.cpuUseRate ? row.cpuUseRate.toFixed(2) + '%' : '0%' }}</div>
+                    </div>
+                  </Ring>
                 </template>
               </bk-table-column>
-              <bk-table-column :label="$t('变量')" prop="ns_vars" :min-width="150" :show-overflow-tooltip="false" v-if="$INTERNAL">
+              <bk-table-column :label="$t('内存使用率')" prop="memoryUseRate" :min-width="100">
+                <template slot-scope="{ row }">
+                  <Ring
+                    :percent="row.memoryUseRate" :size="50" :text="'none'"
+                    :stroke-width="2" :fill-width="2" :fill-color="'#3ede78'"
+                    ext-cls="biz-cluster-ring">
+                    <div slot="text" class="ring-text-inner">
+                      <div class="number">{{ row.memoryUseRate ? row.memoryUseRate.toFixed(2) + '%' : '0%' }}</div>
+                    </div>
+                  </Ring>
+                </template>
+              </bk-table-column>
+              <bk-table-column :label="$t('状态')" prop="name" :show-overflow-tooltip="true" :min-width="100">
+                <template slot-scope="{ row }">
+                  {{ row.status || '--' }}
+                </template>
+              </bk-table-column>
+              <!-- <bk-table-column :label="$t('变量')" prop="ns_vars" :min-width="150" :show-overflow-tooltip="false">
                 <template slot-scope="{ row, $index }">
                   <div style="position: relative;" v-if="row.ns_vars.length">
                     <bcs-popover :delay="300" placement="left">
@@ -90,65 +112,22 @@
                   </div>
                   <span v-else>--</span>
                 </template>
-              </bk-table-column>
+              </bk-table-column> -->
               <bk-table-column :label="$t('操作')" prop="permissions" width="310" class-name="biz-table-action-column">
                 <template slot-scope="{ row }">
-                  <bk-button
-                    text
-                    href="javascript:void(0)"
-                    class="bk-text-button mr10"
-                    @click="showEditNamespace(row)"
-                    v-authority="{
-                      clickable: web_annotations.perms[row.iam_ns_id]
-                        && web_annotations.perms[row.iam_ns_id].namespace_update,
-                      actionId: 'namespace_update',
-                      resourceName: row.name,
-                      disablePerms: true,
-                      permCtx: {
-                        project_id: projectId,
-                        cluster_id: row.cluster_id,
-                        name: row.name
-                      }
-                    }"
-                    v-if="$INTERNAL"
-                  >
+                  <a
+                    href="javascript:void(0)" class="bk-text-button"
+                    @click="showEditNamespace(row)">
                     {{$t('设置变量值')}}
-                  </bk-button>
-                  <bk-button
-                    v-authority="{
-                      clickable: web_annotations.perms[row.iam_ns_id]
-                        && web_annotations.perms[row.iam_ns_id].namespace_update,
-                      actionId: 'namespace_update',
-                      resourceName: row.name,
-                      disablePerms: true,
-                      permCtx: {
-                        project_id: projectId,
-                        cluster_id: row.cluster_id,
-                        name: row.name
-                      }
-                    }"
-                    text
+                  </a>
+                  <a
+                    class="bk-text-button ml10"
                     @click="showEditQuota(row)">
                     {{$t('配额管理')}}
-                  </bk-button>
-                  <bk-button
-                    text
-                    href="javascript:void(0)"
-                    class="bk-text-button ml10"
-                    @click="showDelNamespace(row)"
-                    v-authority="{
-                      clickable: web_annotations.perms[row.iam_ns_id]
-                        && web_annotations.perms[row.iam_ns_id].namespace_delete,
-                      actionId: 'namespace_delete',
-                      resourceName: row.name,
-                      disablePerms: true,
-                      permCtx: {
-                        project_id: projectId,
-                        cluster_id: row.cluster_id,
-                        name: row.name
-                      }
-                    }"
-                  >
+                  </a>
+                  <a
+                    href="javascript:void(0)" class="bk-text-button ml10"
+                    @click="showDelNamespace(row)">
                     {{$t('删除')}}
                   </bk-button>
                 </template>
@@ -205,10 +184,9 @@
               <!-- 内存 -->
               <bcs-form-item class="mr10" label="MEM" :required="true">
                 <bcs-input
-                  v-model="quotaData.requestsMem"
+                  v-model="addNamespaceConf.quota.memoryRequests"
                   type="number"
-                  :min="1"
-                  @blur="handleBlurRequestsMem">
+                  :min="1">
                   <template slot="append">
                     <div class="group-text">G</div>
                   </template>
@@ -218,10 +196,9 @@
               <!-- CPU -->
               <bcs-form-item label="CPU" :required="true">
                 <bcs-input
-                  v-model="quotaData.requestsCpu"
+                  v-model="addNamespaceConf.quota.cpuRequests"
                   type="number"
-                  :min="1"
-                  @blur="handleBlurRequestsCpu">
+                  :min="1">
                   <template slot="append">
                     <div class="group-text">{{$t('核')}}</div>
                   </template>
@@ -283,29 +260,10 @@
               <div class="left">
                 <label class="bk-label label">{{$t('名称：')}}</label>
               </div>
-              <div class="right" style="margin-left: 20px;">
-                <label class="bk-label label">{{$t('所属集群：')}}</label>
-              </div>
             </div>
             <div class="bk-form-item flex-item">
               <div class="left">
                 <bk-input v-model="editNamespaceConf.namespaceName" :disabled="!editNamespaceConf.canEdit"></bk-input>
-              </div>
-              <div class="right" style="margin-left: 20px;">
-                <div class="cluster-wrapper">
-                  <bk-selector
-                    :field-type="'cluster'"
-                    :placeholder="$t('请选择')"
-                    :setting-key="'cluster_id'"
-                    :display-key="'name'"
-                    :searchable="true"
-                    :search-key="'name'"
-                    :selected.sync="clusterId"
-                    :list="clusterList"
-                    :disabled="!editNamespaceConf.canEdit"
-                    @item-selected="chooseCluster">
-                  </bk-selector>
-                </div>
               </div>
             </div>
             <template v-if="editNamespaceConf.variableList && editNamespaceConf.variableList.length">
@@ -364,28 +322,10 @@
               <div class="left">
                 <label class="bk-label label">{{$t('名称')}}</label>
               </div>
-              <div class="right" style="margin-left: 20px;">
-                <label class="bk-label label">{{$t('所属集群')}}</label>
-              </div>
             </div>
             <div class="bk-form-item flex-item">
               <div class="left">
                 <bk-input :disabled="true" v-model="editQuotaConf.namespaceName"></bk-input>
-              </div>
-              <div class="right" style="margin-left: 20px;">
-                <div class="cluster-wrapper">
-                  <bk-selector
-                    :field-type="'cluster'"
-                    :placeholder="$t('请选择')"
-                    :setting-key="'cluster_id'"
-                    :display-key="'name'"
-                    :searchable="true"
-                    :search-key="'name'"
-                    :selected.sync="clusterId"
-                    :list="clusterList"
-                    :disabled="true">
-                  </bk-selector>
-                </div>
               </div>
             </div>
             <div class="bk-form-item flex-item" style="margin-top: 30px;">
@@ -411,10 +351,9 @@
                   MEM
                 </div>
                 <bcs-input
-                  v-model="quotaData.requestsMem"
+                  v-model="editQuotaConf.quota.cpuRequests"
                   type="number"
-                  :min="0"
-                  @blur="handleBlurRequestsMem">
+                  :min="0">
                   <template slot="append">
                     <div class="group-text">G</div>
                   </template>
@@ -425,10 +364,9 @@
                   CPU
                 </div>
                 <bcs-input
-                  v-model="quotaData.requestsCpu"
+                  v-model="editQuotaConf.quota.memoryRequests"
                   type="number"
-                  :min="0"
-                  @blur="handleBlurRequestsCpu">
+                  :min="0">
                   <template slot="append">
                     <div class="group-text">{{$t('核')}}</div>
                   </template>
@@ -479,35 +417,6 @@
         </div>
       </div>
     </bk-dialog>
-
-    <bk-dialog
-      :title="$t('删除配额')"
-      :is-show.sync="delQuotaDialogConf.isShow"
-      :width="delQuotaDialogConf.width"
-      :ext-cls="'biz-namespace-del-dialog'"
-      :header-position="'left'"
-      :has-header="false"
-      :quick-close="false"
-      @cancel="delQuotaDialogConf.isShow = false">
-      <!-- eslint-disable-next-line vue/no-useless-template-attributes -->
-      <template slot="content" style="padding: 0 20px;">
-        <div class="info">
-          {{$t('确定删除Namespace: {name}的配额？', { name: delQuotaDialogConf.ns.name })}}
-        </div>
-      </template>
-      <div slot="footer">
-        <div class="bk-dialog-outer">
-          <bk-button
-            type="primary" class="bk-dialog-btn bk-dialog-btn-confirm bk-btn-primary"
-            @click="delQuotaConfirm">
-            {{$t('删除')}}
-          </bk-button>
-          <bk-button class="bk-dialog-btn bk-dialog-btn-cancel" @click="delQuotaCancel">
-            {{$t('取消')}}
-          </bk-button>
-        </div>
-      </div>
-    </bk-dialog>
   </div>
 </template>
 
@@ -515,8 +424,14 @@
 /* eslint-disable @typescript-eslint/prefer-optional-chain */
 import { catchErrorHandler } from '@/common/util';
 import { mapGetters } from 'vuex';
+import Ring from '@/components/ring';
 import useVariable from '@/views/variable/use-variable';
+import { useNamespace } from '@/views/dashboard/namespace/use-namespace';
+
 export default {
+  components: {
+    Ring,
+  },
   data() {
     // 环境类型 list
     const envList = [
@@ -561,8 +476,16 @@ export default {
         title: this.$t('新建命名空间'),
         width: 680,
         variableList: [],
-        namespaceName: '',
         loading: false,
+        namespaceName: '',
+        labels: [],
+        annotations: [],
+        quota: {
+          cpuLimits: '',
+          cpuRequests: '',
+          memoryLimits: '',
+          memoryRequests: '',
+        },
       },
       editNamespaceConf: {
         isShow: false,
@@ -586,17 +509,12 @@ export default {
       editQuotaConf: {
         isShow: false,
         title: '',
-        width: 680,
         namespaceName: '',
-        ns: {},
+        width: 680,
+        quota: {},
+        labels: [],
+        annotations: [],
         loading: false,
-        initLoading: false,
-      },
-      quotaData: {
-        limitsCpu: '400',
-        requestsCpu: '',
-        limitsMem: '400',
-        requestsMem: '',
       },
       // 数字输入框中允许输入的键盘按钮的 keyCode 集合
       validKeyCodeList4QuotaInput: [
@@ -616,7 +534,6 @@ export default {
         ns: {},
       },
       areaIndex: -1,
-      web_annotations: { perms: {} },
       enableQuota: true,
     };
   },
@@ -687,7 +604,7 @@ export default {
     curClusterId() {
       this.searchScope = this.curClusterId;
       this.clusterId = this.curClusterId;
-      this.fetchNamespaceList();
+      this.curClusterId && this.fetchNamespaceList();
     },
   },
   async created() {
@@ -737,12 +654,6 @@ export default {
       });
     },
 
-    handleBlurRequestsMem(val) {
-      this.quotaData.requestsMem = val;
-    },
-    handleBlurRequestsCpu(val) {
-      this.quotaData.requestsCpu = val;
-    },
     /**
              * 刷新列表
              */
@@ -777,24 +688,22 @@ export default {
              */
     async fetchNamespaceList() {
       try {
-        const res = await this.$store.dispatch('configuration/getNamespaceListByClusterId', {
-          projectId: this.projectId,
-          clusterId: this.searchScope,
-        });
-        this.web_annotations = res.web_annotations || { perms: {} };
+        this.isPageLoading = true;
+        const { getNamespaceData } = useNamespace()
+        const res = await getNamespaceData({
+          $clusterId: this.searchScope,
+        })
 
         const list = [];
-        res.data.forEach((item) => {
+        res.forEach((item) => {
           item.isExpandLabels = false;
           // 是否显示标签的展开按钮
           item.showExpand = false;
           list.push(item);
         });
 
-        this.namespaceList.splice(0, this.namespaceList.length, ...list);
-        this.namespaceListTmp.splice(0, this.namespaceListTmp.length, ...list);
-        // this.initPageConf()
-        // this.curPageData = this.getDataByPage(this.pageConf.curPage)
+        this.namespaceList = res
+        this.namespaceListTmp = res
         this.handleSearch();
 
         setTimeout(() => {
@@ -928,27 +837,28 @@ export default {
     },
 
     /**
-             * 添加命名空间 sideslder 取消按钮
-             */
+     * 添加命名空间 sideslder 取消按钮
+     */
     hideAddNamespace() {
+      this.addNamespaceConf.loading = false;
       this.addNamespaceConf.isShow = false;
       this.addNamespaceConf.variableList.splice(0, this.addNamespaceConf.variableList.length, ...[]);
       this.addNamespaceConf.namespaceName = '';
       this.clusterId = '';
 
-      this.quotaData = Object.assign({}, {
-        limitsCpu: '400',
-        requestsCpu: '',
-        limitsMem: '400',
-        requestsMem: '',
+      this.addNamespaceConf.quota = Object.assign({}, {
+        cpuLimits: '',
+        cpuRequests: '',
+        memoryLimits: '',
+        memoryRequests: '',
       });
-    },
+    }, 
 
     /**
-             * 添加命名空间确认按钮
-             */
+     * 添加命名空间确认按钮
+     */
     async confirmAddNamespace() {
-      const { namespaceName } = this.addNamespaceConf;
+      const { namespaceName, quota, labels, annotations } = this.addNamespaceConf;
       if (!namespaceName.trim()) {
         this.bkMessageInstance && this.bkMessageInstance.close();
         this.bkMessageInstance = this.$bkMessage({
@@ -985,50 +895,36 @@ export default {
         return;
       }
 
-      const variableList = [];
-      const len = this.addNamespaceConf.variableList.length;
-      for (let i = 0; i < len; i++) {
-        const variable = this.addNamespaceConf.variableList[i];
-        variableList.push({
-          id: variable.id,
-          key: variable.key,
-          name: variable.name,
-          value: variable.value,
-        });
+      const { handleCreatedNamespace } = useNamespace();
+      if (this.isSharedCluster) {
+        name = 'ieg-' + projectCode.value + '-' + name
       }
+      this.addNamespaceConf.loading = true;
 
-      try {
-        this.addNamespaceConf.loading = true;
-        const params = {
-          projectId: this.projectId,
-          name: namespaceName,
-          cluster_id: this.clusterId,
-          ns_vars: variableList,
-        };
-        if (this.showQuota) {
-          params.quota = {
-            'requests.cpu': this.quotaData.requestsCpu,
-            'requests.memory': `${this.quotaData.requestsMem}Gi`,
-            'limits.cpu': this.quotaData.limitsCpu,
-            'limits.memory': `${this.quotaData.limitsMem}Gi`,
-          };
-        }
-        await this.$store.dispatch('configuration/addNamespace', params);
-
-        this.hideAddNamespace();
-        setTimeout(() => {
-          this.fetchNamespaceList();
-        }, 300);
-      } catch (e) {
-      } finally {
-        this.addNamespaceConf.loading = false;
-      }
+      const result = await handleCreatedNamespace({
+        $clusterId: this.searchScope,
+        labels,
+        annotations,
+        name: namespaceName,
+        quota: Object.assign({}, {
+          cpuLimits: String(quota.cpuRequests),
+          cpuRequests: String(quota.cpuRequests),
+          memoryLimits: quota.memoryRequests + 'Gi',
+          memoryRequests: quota.memoryRequests + 'Gi',
+        }),
+      })
+      result && this.$bkMessage({
+        theme: 'success',
+        message: this.$t('创建成功'),
+      });
+      result && this.hideAddNamespace();
+      result && this.fetchNamespaceList();
     },
 
     toggleShowQuota(v) {
       this.showQuota = v;
-      this.quotaData.requestsCpu = 1;
-      this.quotaData.requestsMem = 1;
+      this.addNamespaceConf.quota.cpuRequests = 1;
+      this.addNamespaceConf.quota.memoryRequests = 1;
     },
 
     /**
@@ -1079,10 +975,10 @@ export default {
       this.editNamespaceConf.canEdit = false;
 
       try {
-        const { handleGetClusterNamespaceVariable } = useVariable();
-        const { results } = await handleGetClusterNamespaceVariable({
-          $clusterId: this.clusterId,
+        const { handleGetVariablesList } = useNamespace();
+        const { results } = await handleGetVariablesList({
           $namespace: ns.name,
+          $clusterId: this.searchScope,
         });
         const variableList = [];
         results.forEach((item) => {
@@ -1116,17 +1012,17 @@ export default {
       this.editNamespaceConf.ns = Object.assign({}, {});
       this.clusterId = '';
 
-      this.quotaData = Object.assign({}, {
-        limitsCpu: '400',
-        requestsCpu: '',
-        limitsMem: '400',
-        requestsMem: '',
+      this.addNamespaceConf.quota = Object.assign({}, {
+        cpuLimits: '',
+        cpuRequests: '',
+        memoryLimits: '',
+        memoryRequests: '',
       });
     },
 
     /**
-             * 修改命名空间确认按钮
-             */
+     * 修改命名空间确认按钮
+     */
     async confirmEditNamespace() {
       const { namespaceName } = this.editNamespaceConf;
       if (!namespaceName.trim()) {
@@ -1154,15 +1050,6 @@ export default {
         return;
       }
 
-      if (!this.clusterId) {
-        this.bkMessageInstance && this.bkMessageInstance.close();
-        this.bkMessageInstance = this.$bkMessage({
-          theme: 'error',
-          message: this.$t('请选择所属集群'),
-        });
-        return;
-      }
-
       const variableList = [];
       const len = this.editNamespaceConf.variableList.length;
       for (let i = 0; i < len; i++) {
@@ -1178,15 +1065,19 @@ export default {
       try {
         this.editNamespaceConf.loading = true;
         const { handleUpdateClusterNamespaceVariable } = useVariable();
-        await handleUpdateClusterNamespaceVariable({
-          $clusterId: this.clusterId,
+        const result = await handleUpdateClusterNamespaceVariable({
+          $clusterId: this.searchScope,
           $namespace: this.editNamespaceConf.ns.name,
           data: variableList,
         });
+        result && this.$bkMessage({
+          theme: 'success',
+          message: this.$t('保存成功'),
+        });
 
-        this.hideEditNamespace();
+        result && this.hideEditNamespace();
         setTimeout(() => {
-          this.fetchNamespaceList();
+          result && this.fetchNamespaceList();
         }, 300);
       } catch (e) {
       } finally {
@@ -1195,108 +1086,41 @@ export default {
     },
 
     /**
-             * 显示修改配额的 sideslider
-             *
-             * @param {Object} ns 当前 namespace 对象
-             * @param {number} index 当前 namespace 对象的索引
-             */
+     * 显示修改配额的 sideslider
+     *
+     * @param {Object} ns 当前 namespace 对象
+     * @param {number} index 当前 namespace 对象的索引
+     */
     async showEditQuota(ns) {
-      this.showQuotaData = ns;
       this.editQuotaConf.isShow = true;
-      this.editQuotaConf.loading = true;
-      this.editQuotaConf.initLoading = true;
       this.editQuotaConf.namespaceName = ns.name;
       this.editQuotaConf.title = this.$t('配额管理：{nsName}', {
         nsName: ns.name,
       });
-      this.editQuotaConf.ns = Object.assign({}, ns);
-      this.clusterId = ns.cluster_id;
-
-      try {
-        const res = await this.$store.dispatch('configuration/getQuota', {
-          projectId: this.projectId,
-          namespaceName: ns.name,
-          clusterId: ns.cluster_id,
+      this.editQuotaConf.labels = ns.labels;
+      this.editQuotaConf.annotations = ns.annotations;
+      this.enableQuota = ns.quota !== null;
+      if (ns.quota) {
+        this.editQuotaConf.quota = Object.assign({}, {
+          cpuLimits: ns.quota.cpuLimits,
+          cpuRequests: ns.quota.cpuRequests,
+          memoryLimits: ns.quota.memoryLimits,
+          memoryRequests: this.UintConversion(ns.quota.memoryRequests),
         });
-        const hard = res.data.quota.hard || {};
-        this.quotaData = Object.assign({}, {
-          limitsCpu: '400',
-          requestsCpu: hard['requests.cpu'] ? Number(hard['requests.cpu']) : 0,
-          limitsMem: '400',
-          requestsMem: hard['requests.memory'] ? Number(hard['requests.memory'].split('Gi')[0]) : 0,
-        });
-        this.enableQuota = !!Object.keys(res.data.quota).length;
-      } catch (e) {
-        console.error(e);
-      } finally {
-        this.editQuotaConf.initLoading = false;
-        this.editQuotaConf.loading = false;
-      }
+      };
     },
 
     /**
-             * 修改配额 sideslder 取消按钮
-             */
+     * 修改配额 sideslder 取消按钮
+     */
     hideEditQuota() {
+      this.editQuotaConf.quota = {};
+      this.editQuotaConf.labels = [];
+      this.editQuotaConf.annotations = [];
       this.editQuotaConf.isShow = false;
       this.editQuotaConf.namespaceName = '';
       this.editQuotaConf.title = '';
-      this.editQuotaConf.ns = Object.assign({}, {});
-      this.clusterId = '';
-
-      this.quotaData = Object.assign({}, {
-        limitsCpu: '400',
-        requestsCpu: '',
-        limitsMem: '400',
-        requestsMem: '',
-      });
-    },
-
-    /**
-             * 修改配额确认按钮
-             */
-    async confirmEditQuota() {
-      // if (!this.validQuota()) {
-      //     return
-      // }
-
-      const { namespaceName } = this.editQuotaConf;
-      try {
-        this.editQuotaConf.loading = true;
-        await this.$store.dispatch('configuration/editQuota', {
-          projectId: this.projectId,
-          clusterId: this.clusterId,
-          namespaceName,
-          data: {
-            quota: {
-              'requests.cpu': this.quotaData.requestsCpu,
-              'requests.memory': `${this.quotaData.requestsMem}Gi`,
-              'limits.cpu': this.quotaData.limitsCpu,
-              'limits.memory': `${this.quotaData.limitsMem}Gi`,
-            },
-          },
-        });
-
-        this.hideEditQuota();
-        setTimeout(() => {
-          this.fetchNamespaceList();
-        }, 300);
-      } catch (e) {
-        console.log(e);
-      } finally {
-        this.editQuotaConf.loading = false;
-      }
-    },
-
-    /**
-             * 显示删除配额确认框
-             *
-             * @param {Object} ns 当前 namespace 对象
-             * @param {number} index 当前 namespace 对象的索引
-             */
-    async showDelQuota() {
-      this.delQuotaDialogConf.isShow = true;
-      this.delQuotaDialogConf.ns = Object.assign({}, this.showQuotaData);
+      this.editQuotaConf.loading = false;
     },
 
     /**
@@ -1352,29 +1176,29 @@ export default {
     },
 
     /**
-             * 删除当前 namespace
-             *
-             * @param {Object} ns 当前 namespace 对象
-             * @param {number} index 当前 namespace 对象的索引
-             */
+     * 删除当前 namespace
+     *
+     * @param {Object} ns 当前 namespace 对象
+     * @param {number} index 当前 namespace 对象的索引
+     */
     async delNamespaceConfirm() {
-      try {
-        this.isPageLoading = true;
-        this.delNamespaceCancel();
-        await this.$store.dispatch('configuration/delNamespace', {
-          projectId: this.projectId,
-          namespaceId: this.delNamespaceDialogConf.ns.id,
+      const { handleDeleteNameSpace } = useNamespace();
+      this.isPageLoading = true;
+      const result =  await handleDeleteNameSpace({
+        $clusterId: this.searchScope,
+        $namespace: this.delNamespaceDialogConf.ns.name,
+      })
+
+      if (result) {
+        this.fetchNamespaceList();
+        this.$bkMessage({
+          theme: 'success',
+          message: this.$t('删除成功'),
         });
         this.search = '';
         this.refresh();
-        this.bkMessageInstance && this.bkMessageInstance.close();
-        this.bkMessageInstance = this.$bkMessage({
-          theme: 'success',
-          message: this.$t('删除Namespace成功'),
-        });
-      } catch (e) {
-        catchErrorHandler(e, this);
       }
+      this.delNamespaceCancel();
     },
 
     /**
@@ -1397,24 +1221,15 @@ export default {
       const search = String(this.search || '').trim()
         .toLowerCase();
       let list = JSON.parse(JSON.stringify(this.namespaceListTmp));
-
-      if (this.searchScope) {
-        list = list.filter(item => item.cluster_id === this.searchScope);
-      }
-
+      
       const results = list.filter((ns) => {
-        // const envType = String(ns.env_type || '').toLowerCase()
-        // || envType.indexOf(search) > -1
         const name = String(ns.name || '').toLowerCase();
         const clusterName = String(ns.cluster_name || '').toLowerCase();
 
         return name.indexOf(search) > -1
                         || clusterName.indexOf(search) > -1;
       });
-      // const beforeLen = this.namespaceListTmp.length
-      // const afterLen = results.length
       this.namespaceList.splice(0, this.namespaceList.length, ...results);
-      // this.pageConf.curPage = beforeLen !== afterLen ? 1 : this.pageConf.curPage
       this.initPageConf();
       this.curPageData = this.getDataByPage(this.pageConf.curPage);
     },
@@ -1423,14 +1238,27 @@ export default {
       return name.split(filterRule)[1];
     },
     async handleSaveQuota() {
-      if (this.enableQuota) {
-        this.confirmEditQuota();
-      } else {
-        this.editQuotaConf.loading = true;
-        this.delQuotaDialogConf.ns = Object.assign({}, this.showQuotaData);
-        await this.delQuotaConfirm();
-        this.editQuotaConf.loading = false;
-      }
+      const { namespaceName, labels, annotations, quota } = this.editQuotaConf;
+      const { handleUpdateNameSpace } = useNamespace();
+      this.editQuotaConf.loading = true
+      const result = await handleUpdateNameSpace({
+        $clusterId: this.searchScope,
+        $namespace: namespaceName,
+        labels,
+        annotations,
+        quota: {
+          cpuLimits: String(quota.cpuRequests),
+          cpuRequests: String(quota.cpuRequests),
+          memoryLimits: quota.memoryRequests + 'Gi',
+          memoryRequests: quota.memoryRequests + 'Gi',
+        },
+      });
+      result && this.$bkMessage({
+        theme: 'success',
+        message: this.$t('保存成功'),
+      });
+      result && this.fetchNamespaceList();
+      result && this.hideEditQuota();
     },
   },
 };
@@ -1443,5 +1271,16 @@ export default {
         align-items: center;
         width: 100%;
         font-size: 14px;
+    }
+    .biz-cluster-ring {
+        margin: 5px 0;
+    }
+    .ring-text-inner {
+      position: absolute;
+      right: 0;
+      top: 32%;
+      width: 50px;
+      text-align: center;
+      font-size: 10px;
     }
 </style>

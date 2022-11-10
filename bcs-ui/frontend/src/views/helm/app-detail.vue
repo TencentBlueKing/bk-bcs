@@ -566,6 +566,7 @@ import Clipboard from 'clipboard';
 import MonacoEditor from '@/components/monaco-editor/editor.vue';
 import resizer from '@/components/resize';
 import { SpecialCharRegx } from '@/common/constant';
+import { useNamespace } from '@/views/dashboard/namespace/use-namespace';
 
 export default {
   components: {
@@ -1374,21 +1375,19 @@ export default {
              * 获取命名空间列表
              */
     async getNamespaceList() {
-      const { projectId } = this;
       this.isNamespaceLoading = true;
 
       try {
-        const res = await this.$store.dispatch('helm/getNamespaceList', {
-          projectId,
-          params: {
-            cluster_id: this.curApp.cluster_id,
-          },
+        const { getNamespaceData } = useNamespace();
+        
+        const res = await getNamespaceData({
+          $clusterId: this.curApp.cluster_id,
         });
         const curNamespaceId = this.curApp.namespace_id;
-        this.isNamespaceMatch = (res.data || []).some(item => item.id === curNamespaceId);
+        this.isNamespaceMatch = (res || []).some(item => item.id === curNamespaceId);
 
         // this.clusterList = []
-        res.data.forEach((item) => {
+        res.forEach((item) => {
           const obj = {};
           const match = item.name.match(/^([\s\S]*)\(([\w-]*)\)/);
           if (match && match.length > 2) {
@@ -1409,7 +1408,7 @@ export default {
             });
           }
         });
-        this.namespaceList = res.data;
+        this.namespaceList = res;
       } catch (e) {
         catchErrorHandler(e, this);
       } finally {

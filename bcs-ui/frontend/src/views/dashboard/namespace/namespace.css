@@ -36,3 +36,15 @@
     width: 320px;
     float: right;
 }
+
+.biz-cluster-ring {
+    margin: 5px 0;
+}
+.ring-text-inner {
+  position: absolute;
+  right: 0;
+  top: 32%;
+  width: 50px;
+  text-align: center;
+  font-size: 10px;
+}

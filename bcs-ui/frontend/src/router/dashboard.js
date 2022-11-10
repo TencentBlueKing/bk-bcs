@@ -25,7 +25,8 @@
 */
 
 // const DashboardIndex = () => import(/* webpackChunkName: 'dashboard' */'@/views/dashboard')
-const DashboardNamespace = () => import(/* webpackChunkName: 'dashboard-namespace' */'@/views/dashboard/namespace.tsx');
+const DashboardNamespace = () => import(/* webpackChunkName: 'dashboard-namespace' */'@/views/dashboard/namespace/namespace.vue');
+const DashboardNamespaceCreate = () => import(/* webpackChunkName: 'dashboard-namespace' */'@/views/dashboard/namespace/create.vue');
 const DashboardWorkloadDeployments = () => import(/* webpackChunkName: 'dashboard-workload' */'@/views/dashboard/workload/deployments.vue');
 const DashboardWorkloadDaemonSets = () => import(/* webpackChunkName: 'dashboard-workload' */'@/views/dashboard/workload/daemonsets.vue');
 const DashboardWorkloadStatefulSets = () => import(/* webpackChunkName: 'dashboard-workload' */'@/views/dashboard/workload/statefulsets.vue');
@@ -87,6 +88,19 @@ const childRoutes = [
     name: 'dashboardNamespace',
     component: DashboardNamespace,
     meta: { isDashboard: true },
+  },
+  {
+    path: ':projectCode/:clusterId/dashboard/namespace/create',
+    name: 'dashboardNamespaceCreate',
+    component: DashboardNamespaceCreate,
+    meta: { isDashboard: true },
+    beforeEnter: (to, from, next) => {
+      const menuIdMap = {
+        Namespace: 'NAMESPACE',
+      };
+      to.meta.menuId = menuIdMap[to.query.kind];
+      next();
+    },
   },
   // dashboard workload
   {

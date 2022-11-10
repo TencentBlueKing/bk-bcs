@@ -38,7 +38,6 @@ import {
   resourceCreate,
   resourceUpdate,
   exampleManifests,
-  namespaceList,
   customResourceList,
   retrieveCustomResourceDetail,
   customResourceCreate,
@@ -100,14 +99,6 @@ export default {
     //     })
     //     return res.data
     // },
-    // 获取命名空间
-    async getNamespaceList(context, params) {
-      const data = await namespaceList(params).catch(() => ({
-        manifest: {},
-        manifestExt: {},
-      }));
-      return data;
-    },
 
     /**
          * 获取工作负载详情

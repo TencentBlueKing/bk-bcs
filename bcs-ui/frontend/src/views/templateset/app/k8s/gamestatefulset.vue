@@ -162,6 +162,7 @@ import { catchErrorHandler } from '@/common/util';
 import GamestatefulsetSideslider from './gamestatefulset-sideslider';
 import GamestatefulsetUpdate from './gamestatefulset-update';
 import GamestatefulsetScale from './gamestatefulset-scale';
+import { useNamespace } from '@/views/dashboard/namespace/use-namespace';
 
 export default {
   name: 'GamestatefulSet',
@@ -285,12 +286,13 @@ export default {
              */
     async getNameSpaceList() {
       try {
+        const { getNamespaceData } = useNamespace();
+
         this.namespaceLoading = true;
-        const res = await this.$store.dispatch('crdcontroller/getNameSpaceListByCluster', {
-          projectId: this.projectId,
-          clusterId: this.selectedClusterId,
+        const res = await getNamespaceData({
+          $clusterId: this.selectedClusterId,
         });
-        const list = res.data || [];
+        const list = res || [];
         this.namespaceList.splice(0, this.namespaceList.length, ...list);
       } catch (e) {
         catchErrorHandler(e, this);

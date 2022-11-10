@@ -291,6 +291,7 @@
 <script>
 import { catchErrorHandler } from '@/common/util';
 import bkKeyer from '@/components/keyer';
+import { useNamespace } from '@/views/dashboard/namespace/use-namespace';
 
 export default {
   components: {
@@ -719,10 +720,13 @@ export default {
              */
     async getNameSpaceList() {
       try {
-        const { projectId } = this;
         const { clusterId } = this;
-        const res = await this.$store.dispatch('crdcontroller/getNameSpaceListByCluster', { projectId, clusterId });
-        const list = res.data;
+        const { getNamespaceData } = useNamespace();
+        
+        const res = await getNamespaceData({
+          $clusterId: clusterId,
+        });
+        const list = res;
         list.forEach((item) => {
           item.isSelected = false;
         });
