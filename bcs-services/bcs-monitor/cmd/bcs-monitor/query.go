@@ -29,8 +29,9 @@ import (
 )
 
 var (
-	storeList  []string
-	httpSDURLs []string
+	strictStoreList []string
+	storeList       []string
+	httpSDURLs      []string
 )
 
 // QueryCmd xxx
@@ -48,6 +49,7 @@ func QueryCmd() *cobra.Command {
 	cmd.Flags().StringVar(&httpAddress, "http-address", "0.0.0.0:10902", "API listen http ip")
 	cmd.Flags().StringVar(&advertiseAddress, "advertise-address", "", "The IP address on which to advertise the server")
 	cmd.Flags().StringArrayVar(&storeList, "store", []string{}, "Addresses of statically configured store endpoints")
+	cmd.Flags().StringArrayVar(&strictStoreList, "store-strict", []string{}, "Addresses of statically configured store endpoints always used, even if the health check fails")
 	cmd.Flags().StringArrayVar(&httpSDURLs, "store.http-sd-url", []string{},
 		"HTTP-based service discovery provides store endpoints")
 
@@ -59,7 +61,7 @@ func runQuery(ctx context.Context, g *run.Group, opt *option) error {
 
 	logger.Infow("listening for requests and metrics", "service", "query", "address", httpAddress)
 	addrIPv6 := getIPv6AddrFromEnv(httpAddress)
-	queryServer, err := query.NewQueryAPI(ctx, opt.reg, opt.tracer, kitLogger, httpAddress, addrIPv6, storeList, httpSDURLs, g)
+	queryServer, err := query.NewQueryAPI(ctx, opt.reg, opt.tracer, kitLogger, httpAddress, addrIPv6, strictStoreList, storeList, httpSDURLs, g)
 	if err != nil {
 		return errors.Wrap(err, "query")
 	}

@@ -24,6 +24,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/config"
 	"github.com/TencentBlueKing/bkmonitor-kits/logger"
 	"github.com/TencentBlueKing/bkmonitor-kits/logger/gokit"
+	grpc_retry "github.com/grpc-ecosystem/go-grpc-middleware/retry"
 	"github.com/oklog/run"
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
@@ -38,6 +39,8 @@ import (
 	"github.com/thanos-io/thanos/pkg/extprom"
 	"github.com/thanos-io/thanos/pkg/query"
 	"github.com/thanos-io/thanos/pkg/runutil"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
 	"k8s.io/klog/v2"
 )
 
@@ -53,7 +56,15 @@ type DiscoveryClient struct {
 
 // NewDiscoveryClient xxx
 func NewDiscoveryClient(ctx context.Context, reg *prometheus.Registry, tracer opentracing.Tracer,
-	kitLogger gokit.Logger, storeList []string, httpSDURLs []string, g *run.Group) (*DiscoveryClient, error) {
+	kitLogger gokit.Logger, strictStoreList []string, storeList []string, httpSDURLs []string, g *run.Group) (*DiscoveryClient, error) {
+
+	// 检查静态 store 配置
+	for _, endpoint := range strictStoreList {
+		if dns.IsDynamicNode(endpoint) {
+			return nil, errors.Errorf("%s is a dynamically specified endpoint i.e. it uses SD and that is not permitted under strict mode. Use --store for this", endpoint)
+		}
+	}
+
 	dnsStoreProvider := dns.NewProvider(
 		kitLogger,
 		extprom.WrapRegistererWithPrefix("bcs_monitor_query_store_apis_", reg),
@@ -61,6 +72,17 @@ func NewDiscoveryClient(ctx context.Context, reg *prometheus.Registry, tracer op
 	)
 
 	dialOpts, err := extgrpc.StoreClientGRPCOpts(kitLogger, reg, tracer, false, false, "", "", "", "")
+	// 高可用 添加重试逻辑
+	opts := []grpc_retry.CallOption{
+		grpc_retry.WithCodes(codes.Unavailable),
+		grpc_retry.WithMax(3),
+		grpc_retry.WithBackoff(grpc_retry.BackoffLinear(100 * time.Millisecond)),
+	}
+	dialOpts = append(dialOpts,
+		grpc.WithStreamInterceptor(grpc_retry.StreamClientInterceptor(opts...)),
+		grpc.WithUnaryInterceptor(grpc_retry.UnaryClientInterceptor(opts...)),
+	)
+
 	if err != nil {
 		return nil, errors.Wrap(err, "building gRPC client")
 	}
@@ -69,6 +91,11 @@ func NewDiscoveryClient(ctx context.Context, reg *prometheus.Registry, tracer op
 		kitLogger,
 		reg,
 		func() (specs []*query.GRPCEndpointSpec) {
+			// Add strict & static nodes.
+			for _, addr := range strictStoreList {
+				specs = append(specs, query.NewGRPCEndpointSpec(addr, true))
+			}
+
 			// Add DNS resolved addresses from static flags and file SD.
 			for _, addr := range dnsStoreProvider.Addresses() {
 				specs = append(specs, query.NewGRPCEndpointSpec(addr, false))

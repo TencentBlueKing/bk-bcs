@@ -62,11 +62,12 @@ func NewQueryAPI(
 	kitLogger gokit.Logger,
 	httpAddr string,
 	addrIPv6 string,
+	strictStoreList []string,
 	storeList []string,
 	httpSDURLs []string,
 	g *run.Group,
 ) (*QueryAPI, error) {
-	discoveryClient, err := NewDiscoveryClient(ctx, reg, tracer, kitLogger, storeList, httpSDURLs, g)
+	discoveryClient, err := NewDiscoveryClient(ctx, reg, tracer, kitLogger, strictStoreList, storeList, httpSDURLs, g)
 	if err != nil {
 		return nil, err
 	}
