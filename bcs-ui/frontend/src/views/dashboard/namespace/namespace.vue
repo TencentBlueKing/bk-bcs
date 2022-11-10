@@ -1,27 +1,35 @@
 <template>
-  <LayoutContent hide-back :title="$tc('命名空间')"
+  <LayoutContent
+    hide-back :title="$tc('命名空间')"
     v-bkloading="{ isLoading: namespaceLoading }">
     <LayoutRow class="mb15">
       <template #left>
-        <bcs-button class="w-[100px]" theme="primary" icon="plus" @click="handleToCreatedPage">{{ $t('创建') }}</bcs-button>
+        <bcs-button
+          class="w-[100px]"
+          theme="primary"
+          icon="plus"
+          @click="handleToCreatedPage">
+          {{ $t('创建') }}
+        </bcs-button>
       </template>
       <template #right>
         <ClusterSelect
           v-if="!curCluesterId"
-          v-model="searchScope"
+          v-model="clusterID"
           class="mr-[10px]"
           searchable
-          :disabled="!!curCluesterId"
-          @change="handleChangeCluester"
-        ></ClusterSelect>
-        <bcs-input class="search-input"
+          :disabled="!!curCluesterId">
+        </ClusterSelect>
+        <bcs-input
+          class="search-input"
           right-icon="bk-icon icon-search"
           :placeholder="$t('搜索名称')"
           v-model="searchValue">
         </bcs-input>
       </template>
     </LayoutRow>
-    <bcs-table :data="curPageData"
+    <bcs-table
+      :data="curPageData"
       :pagination="pagination"
       @page-change="pageChange"
       @page-limit-change="pageSizeChange"
@@ -78,6 +86,7 @@
         </template>
       </bcs-table-column>
     </bcs-table>
+    <!-- 设置变量 -->
     <bcs-sideslider
       :is-show.sync="setVariableConf.isShow"
       :title="setVariableConf.title"
@@ -111,6 +120,7 @@
         </template>
       </div>
     </bcs-sideslider>
+    <!-- 配额管理 -->
     <bcs-dialog
       v-model="setQuotaConf.isShow"
       :width="650"
@@ -123,13 +133,13 @@
             <div class="flex mr-[20px]">
               <span class="mr-[10px]">MEN</span>
               <bcs-input v-model="setQuotaConf.quota.memoryRequests" class="w-[200px]" type="number" :min="0">
-                  <div class="group-text" slot="append">G</div>
+                <div class="group-text" slot="append">Gi</div>
               </bcs-input>
             </div>
             <div class="flex">
               <span class="mr-[10px]">CPU</span>
               <bcs-input v-model="setQuotaConf.quota.cpuRequests" class="w-[200px]" type="number" :min="0">
-                  <div class="group-text" slot="append">{{ $t('核') }}</div>
+                <div class="group-text" slot="append">{{ $t('核') }}</div>
               </bcs-input>
             </div>
           </div>
@@ -137,11 +147,10 @@
       </bcs-form>
     </bcs-dialog>
   </LayoutContent>
-  
 </template>
 
 <script lang="ts">
-import { defineComponent, computed, watch, ref, onMounted } from '@vue/composition-api';
+import { defineComponent, computed, watch, ref } from '@vue/composition-api';
 import ClusterSelect from '@/components/cluster-selector/cluster-select.vue';
 import LayoutContent from '@/components/layout/Content.vue';
 import LayoutRow from '@/components/layout/Row.vue';
@@ -155,43 +164,30 @@ export default defineComponent({
   components: {
     ClusterSelect,
     LayoutContent,
-    LayoutRow
+    LayoutRow,
   },
   setup(props, ctx) {
     const { $store, $bkInfo, $i18n, $bkMessage, $router } = ctx.root;
 
-    const clusterList = computed(() => {
-      return $store.state.cluster.clusterList;
-    });
+    const viewMode = computed(() => $store.state.viewMode);
 
-    const viewMode = computed(() => {
-      return $store.state.viewMode
-    })
+    const curCluesterId = computed(() => $store.state.curClusterId);
 
-    const curCluesterId = computed(() => {
-      return $store.state.curClusterId;
-    });
-
-    const searchScope = ref('');
-    watch(curCluesterId, () => {
-      if (clusterList.value.length) {
-        const clusterIds = clusterList.value.map(item => item.cluster_id);
-        if (sessionStorage['bcs-cluster'] && clusterIds.includes(sessionStorage['bcs-cluster'])) {
-          searchScope.value = sessionStorage['bcs-cluster'];
-        } else {
-          searchScope.value = curCluesterId.value || clusterList.value[0].cluster_id;
-        };
-      };
-    }, { immediate: true });
+    const clusterID = ref(curCluesterId.value);
 
     const keys = ref(['name']);
 
-    // 初始化集群列表信息
-    // useCluster(ctx)
-    // 获取命名空间
-    const { variablesList, variableLoading, namespaceLoading, namespaceData,
-      handleGetVariablesList, handleDeleteNameSpace, handleUpdateNameSpace,
-      handleUpdateVariablesList, getNamespaceData, } = useNamespace()
+    const {
+      variablesList,
+      variableLoading,
+      namespaceLoading,
+      namespaceData,
+      handleGetVariablesList,
+      handleDeleteNameSpace,
+      handleUpdateNameSpace,
+      handleUpdateVariablesList,
+      getNamespaceData,
+    } = useNamespace();
 
     // 排序
     const sortData = ref({
@@ -223,7 +219,6 @@ export default defineComponent({
 
     // 删除命名空间
     const handleDeleteNamespace = (row) => {
-      const namespace = row?.name;
       $bkInfo({
         type: 'warning',
         clsName: 'custom-info-confirm',
@@ -232,36 +227,37 @@ export default defineComponent({
         defaultInfo: true,
         confirmFn: async () => {
           const result = await handleDeleteNameSpace({
-            $clusterId: searchScope.value,
-            $namespace: namespace,
-          })
-          result && getNamespaceData({
-            $clusterId: searchScope.value,
-          })
-          result && $bkMessage({
-            theme: 'success',
-            message: $i18n.t('删除成功'),
+            $clusterId: clusterID.value,
+            $namespace: row?.name,
           });
+          if (result) {
+            getNamespaceData({
+              $clusterId: clusterID.value,
+            });
+            $bkMessage({
+              theme: 'success',
+              message: $i18n.t('删除成功'),
+            });
+          }
         },
       });
     };
 
+    // 设置变量值
     const setVariableConf = ref({
       isShow: false,
       title: '',
       namespace: '',
-    })
-
-    // 设置变量值
+    });
     const showSetVariable = async (row) => {
       const namespace = row?.name;
       setVariableConf.value.isShow = true;
       setVariableConf.value.namespace = namespace;
       setVariableConf.value.title = $i18n.t('设置变量值：') + namespace;
       await handleGetVariablesList({
-        $clusterId: searchScope.value,
+        $clusterId: clusterID.value,
         $namespace: namespace,
-      })
+      });
     };
 
     const hideSetVariable = () => {
@@ -273,17 +269,20 @@ export default defineComponent({
     // 更新变量值
     const updateVariable = async () => {
       const result = await handleUpdateVariablesList({
-        $clusterId: searchScope.value,
+        $clusterId: clusterID.value,
         $namespace: setVariableConf.value.namespace,
         data: variablesList.value,
       });
-      result && $bkMessage({
-        theme: 'success',
-        message: $i18n.t('保存成功'),
-      });
-      result && hideSetVariable()
+      if (result) {
+        $bkMessage({
+          theme: 'success',
+          message: $i18n.t('保存成功'),
+        });
+        hideSetVariable();
+      }
     };
 
+    // 设置配额
     const setQuotaConf = ref({
       isShow: false,
       namespace: '',
@@ -297,47 +296,47 @@ export default defineComponent({
         memoryRequests: '',
       },
     });
-
-
-    // 设置配额
     const showSetQuota = (row) => {
-      setQuotaConf.value.title = $i18n.t('配额管理：') + row.name;
+      const { name, labels, annotations, quota = {} } = row;
+      setQuotaConf.value.title = $i18n.t('配额管理：') + name;
       setQuotaConf.value.isShow = true;
-      setQuotaConf.value.namespace = row.name;
-      setQuotaConf.value.labels = row.labels;
-      setQuotaConf.value.annotations = row.annotations;
-      if (row.quota) {
-        setQuotaConf.value.quota = Object.assign({}, {
-          cpuLimits: row.quota.cpuLimits,
-          cpuRequests: uintConversion(row.quota.cpuRequests),
-          memoryLimits: row.quota.memoryLimits,
-          memoryRequests: uintConversion(row.quota.memoryRequests),
-        });
-      };
+      setQuotaConf.value.namespace = name;
+      setQuotaConf.value.labels = labels;
+      setQuotaConf.value.annotations = annotations;
+      if (quota) {
+        setQuotaConf.value.quota = {
+          cpuLimits: quota.cpuLimits || '',
+          cpuRequests: unitConvert(quota.cpuRequests, '', 'cpu'),
+          memoryLimits: quota.memoryLimits || '',
+          memoryRequests: unitConvert(quota.memoryRequests, 'Gi', 'mem'),
+        };
+      }
     };
 
     const updateNamespace = async () => {
-      const { namespace, labels, annotations, quota } = setQuotaConf.value
+      const { namespace, labels, annotations, quota } = setQuotaConf.value;
       const result = await handleUpdateNameSpace({
-        $clusterId: searchScope.value,
+        $clusterId: clusterID.value,
         $namespace: namespace,
         labels,
         annotations,
         quota: {
           cpuLimits: String(quota.cpuRequests),
           cpuRequests: String(quota.cpuRequests),
-          memoryLimits: quota.memoryRequests + 'Gi',
-          memoryRequests: quota.memoryRequests + 'Gi',
+          memoryLimits: `${quota.memoryRequests}Gi`,
+          memoryRequests: `${quota.memoryRequests}Gi`,
         },
       });
-      result && $bkMessage({
-        theme: 'success',
-        message: $i18n.t('更新成功'),
-      });
-      result && getNamespaceData({
-        $clusterId: searchScope.value,
-      });
-      result && cancelUpdateNamespace();
+      if (result) {
+        $bkMessage({
+          theme: 'success',
+          message: $i18n.t('更新成功'),
+        });
+        getNamespaceData({
+          $clusterId: clusterID.value,
+        });
+        cancelUpdateNamespace();
+      }
     };
 
     const cancelUpdateNamespace = () => {
@@ -363,61 +362,54 @@ export default defineComponent({
         $router.push({
           name: 'namespaceCreate',
           params: {
-            clusterId: searchScope.value,
+            clusterId: clusterID.value,
           },
-        })
+        });
       }
     };
 
-    const handleChangeCluester = (id) => {
-      searchScope.value = id;
-      getNamespaceData({
-        $clusterId: searchScope.value,
-      });
+    const unitMap = {
+      cpu: {
+        list: ['k', 'M', 'G', 'T', 'P', 'E'],
+        digit: 3,
+      },
+      mem: {
+        list: ['Ki', 'Mi', 'Gi', 'Ti', 'Pi', 'Ei'],
+        digit: 10,
+      },
+    };
+    const unitConvert = (val, toUnit = '', type: 'cpu' | 'mem') => {
+      const { list, digit } = unitMap[type];
+      const num = val.match(/\d+/gi)?.[0];
+      const uint = val.match(/[a-z|A-Z]+/gi)?.[0] || '';
+
+      const index = list.indexOf(uint);
+      // 没有单位直接返回
+      if (index === -1) return val;
+
+      // 要转换成的单位
+      const toUnitIndex = list.indexOf(toUnit) || -1;
+      const factorial = index - toUnitIndex;
+      if (factorial >= 0) {
+        return num * (10 ** (digit * factorial));
+      }
+      return num / (10 ** (Math.abs(digit) * factorial));
     };
 
-    const uintConversion = (val) => {
-      const total = val.match(/\d+/gi)[0];
-      const uint = val.match(/[a-z|A-Z]+/gi)[0] || '';
-      let result = 0;
-      switch (uint) {
-        case 'm':
-          result = total / Math.pow(10, 10);
-          break;
-
-        case 'k':
-          result = total / Math.pow(10, 6);
-          break;
-
-        case 'M':
-          result = total / Math.pow(10, 3);
-          break;
-
-        case 'Gi':
-          result = total
-          break;
-
-        case 'T':
-          result = total * Math.pow(10, 3);
-          break;
-
-        case 'P':
-          result = total * Math.pow(10, 6);
-          break;
-      };
-      return result + '';
-    };
-
-    onMounted(() => {
+    watch(clusterID, () => {
       getNamespaceData({
-        $clusterId: searchScope.value,
+        $clusterId: clusterID.value,
       });
+    });
+
+    getNamespaceData({
+      $clusterId: clusterID.value,
     });
 
     return {
       namespaceLoading,
       curCluesterId,
-      searchScope,
+      clusterID,
       pagination,
       searchValue,
       curPageData,
@@ -425,7 +417,7 @@ export default defineComponent({
       setQuotaConf,
       variablesList,
       variableLoading,
-      uintConversion,
+      unitConvert,
       pageChange,
       pageSizeChange,
       handleSortChange,
@@ -437,7 +429,6 @@ export default defineComponent({
       updateNamespace,
       cancelUpdateNamespace,
       handleToCreatedPage,
-      handleChangeCluester,
     };
   },
 });

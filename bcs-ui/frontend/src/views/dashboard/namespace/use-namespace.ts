@@ -10,13 +10,14 @@ import {
   createdNamespace,
 } from '@/api/modules/project';
 
-export function useNamespace () {
+export function useNamespace() {
   const namespaceData = ref<any>([]);
   const variablesList = ref<any>([]);
   const variableLoading = ref(false);
   const namespaceLoading = ref(false);
 
-  async function getNamespaceData(params?) {
+  async function getNamespaceData(params) {
+    if (!params || !params.$clusterId) return;
     namespaceLoading.value = true;
     const result = await getNamespaceList(params).catch(() => []);
     namespaceData.value = result;
@@ -47,7 +48,7 @@ export function useNamespace () {
 
   async function handleUpdateVariablesList(params) {
     const result = await updateClusterNamespaceVariable(params).then(() => true)
-    .catch(() => false);
+      .catch(() => false);
     return result;
   }
 
@@ -68,7 +69,7 @@ export function useNamespace () {
     handleDeleteNameSpace,
     handleUpdateVariablesList,
     handleCreatedNamespace,
-  }
+  };
 }
 
 export function useSelectItemsNamespace() {
@@ -84,7 +85,7 @@ export function useSelectItemsNamespace() {
     namespaceList.value = data || [];
     // 初始化默认选中命名空间
     const defaultSelectNamespace = namespaceList.value
-    .find(data => data.name === localStorage.getItem(`${clusterId}-${CUR_SELECT_NAMESPACE}`));
+      .find(data => data.name === localStorage.getItem(`${clusterId}-${CUR_SELECT_NAMESPACE}`));
     namespaceValue.value = defaultSelectNamespace?.value || namespaceList.value[0]?.name;
     localStorage.setItem(`${clusterId}-${CUR_SELECT_NAMESPACE}`, namespaceValue.value);
     namespaceLoading.value = false;
