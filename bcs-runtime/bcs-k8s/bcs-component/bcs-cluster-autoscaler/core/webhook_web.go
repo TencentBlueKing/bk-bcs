@@ -21,14 +21,13 @@ import (
 	"strings"
 	"time"
 
+	contextinternal "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/context"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/autoscaler/cluster-autoscaler/clusterstate"
 	"k8s.io/autoscaler/cluster-autoscaler/utils/errors"
 	scheduler_util "k8s.io/autoscaler/cluster-autoscaler/utils/scheduler"
 	"k8s.io/klog"
 	schedulernodeinfo "k8s.io/kubernetes/pkg/scheduler/nodeinfo"
-
-	contextinternal "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/context"
 )
 
 var _ Webhook = &WebScaler{}
@@ -61,7 +60,7 @@ func (w *WebScaler) DoWebhook(context *contextinternal.Context,
 	options, candidates, err := w.GetResponses(context, clusterStateRegistry,
 		nodeNameToNodeInfo, nodes, sd)
 	if err != nil {
-		return errors.NewAutoscalerError(errors.ApiCallError,
+		return errors.NewAutoscalerError(errors.TransientError,
 			"failed to get response from web server: %v", err)
 	}
 	err = w.ExecuteScale(context, clusterStateRegistry, sd, nodes, options, candidates, nodeNameToNodeInfo)

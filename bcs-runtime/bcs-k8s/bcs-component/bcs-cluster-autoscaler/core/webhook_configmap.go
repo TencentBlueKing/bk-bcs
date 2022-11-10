@@ -17,6 +17,7 @@ import (
 	"fmt"
 	"strings"
 
+	contextinternal "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/context"
 	corev1 "k8s.io/api/core/v1"
 	apierr "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -26,8 +27,6 @@ import (
 	kubeclient "k8s.io/client-go/kubernetes"
 	"k8s.io/klog"
 	schedulernodeinfo "k8s.io/kubernetes/pkg/scheduler/nodeinfo"
-
-	contextinternal "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/context"
 )
 
 var _ Webhook = &ConfigMapScaler{}
@@ -54,7 +53,7 @@ func (c *ConfigMapScaler) DoWebhook(context *contextinternal.Context,
 	options, candidates, err := c.GetResponses(context, clusterStateRegistry,
 		nodeNameToNodeInfo, nodes, sd)
 	if err != nil {
-		return errors.NewAutoscalerError(errors.ApiCallError,
+		return errors.NewAutoscalerError(errors.TransientError,
 			"failed to get response from configmap: %v", err)
 	}
 	err = c.ExecuteScale(context, clusterStateRegistry, sd, nodes, options, candidates, nodeNameToNodeInfo)

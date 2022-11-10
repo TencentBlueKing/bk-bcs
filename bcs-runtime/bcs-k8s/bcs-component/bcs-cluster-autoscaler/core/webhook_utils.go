@@ -18,6 +18,7 @@ import (
 	"sort"
 	"time"
 
+	contextinternal "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/context"
 	"github.com/google/uuid"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -33,8 +34,6 @@ import (
 	"k8s.io/klog"
 	"k8s.io/kubernetes/pkg/kubelet/types"
 	schedulernodeinfo "k8s.io/kubernetes/pkg/scheduler/nodeinfo"
-
-	contextinternal "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/context"
 )
 
 // GenerateAutoscalerRequest generates requests based on current states of node groups
@@ -305,7 +304,7 @@ func ExecuteScaleDown(context *contextinternal.Context, sd *ScaleDown,
 	for i := range nodes {
 		node := nodes[i]
 		// whether is under deleting
-		if hasToBeDeletedTaint(node.Spec.Taints) {
+		if isNodeBeingDeleted(node, time.Now()) {
 			klog.V(4).Infof("node %s is under deleting...", node.Name)
 		}
 		_, found, err := checkCandidates(node, candidates)

@@ -21,6 +21,8 @@ import (
 	contextinternal "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/context"
 	estimatorinternal "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/estimator"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/scalingconfig"
+
+	apiv1 "k8s.io/api/core/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/autoscaler/cluster-autoscaler/cloudprovider"
@@ -542,8 +544,21 @@ func (b *BufferedAutoscaler) doScaleUp(autoscalingContext *contextinternal.Conte
 	// we tread pods with nominated node-name as scheduled for sake of scale-up considerations
 	scheduledPods = append(scheduledPods, unschedulableWaitingForLowerPriorityPreemption...)
 
+	// 过滤特殊资源
+	prunedUnschedulablePods := make([]*apiv1.Pod, 0)
+	for i := range unschedulablePods {
+		pod := unschedulablePods[i].DeepCopy()
+		for j := range pod.Spec.Containers {
+			delete(pod.Spec.Containers[j].Resources.Requests, "cloud.bkbcs.tencent.com/eip")
+			delete(pod.Spec.Containers[j].Resources.Requests, "tke.cloud.tencent.com/eni-ip")
+			delete(pod.Spec.Containers[j].Resources.Requests, "tke.cloud.tencent.com/direct-eni")
+			delete(pod.Spec.Containers[j].Resources.Requests, "ephemeral-storage")
+		}
+		prunedUnschedulablePods = append(prunedUnschedulablePods, pod)
+	}
+
 	unschedulablePodsToHelp, scheduledPods, err := b.processors.PodListProcessor.Process(
-		b.AutoscalingContext, unschedulablePods, scheduledPods, allNodes, readyNodes,
+		b.AutoscalingContext, prunedUnschedulablePods, scheduledPods, allNodes, readyNodes,
 		getUpcomingNodeInfos(b.clusterStateRegistry, nodeInfosForGroups))
 	if err != nil {
 		klog.Error(err)

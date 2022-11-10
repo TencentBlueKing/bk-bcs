@@ -752,6 +752,9 @@ func checkResourceNotEnough(nodes map[string]*schedulernodeinfo.NodeInfo, ratio 
 		if node.Spec.Unschedulable {
 			continue
 		}
+		if node.Labels["node.kubernetes.io/instance-type"] == "eklet" {
+			continue
+		}
 		klog.V(6).Infof("resource: %+v", node.Status.Allocatable)
 		allocatable := nodeInfo.AllocatableResource()
 		sumResourcesList.Add(allocatable.ResourceList())
