@@ -86,7 +86,7 @@ export function useSelectItemsNamespace() {
     // 初始化默认选中命名空间
     const defaultSelectNamespace = namespaceList.value
       .find(data => data.name === localStorage.getItem(`${clusterId}-${CUR_SELECT_NAMESPACE}`));
-    namespaceValue.value = defaultSelectNamespace?.value || namespaceList.value[0]?.name;
+    namespaceValue.value = defaultSelectNamespace?.name || namespaceList.value[0]?.name;
     localStorage.setItem(`${clusterId}-${CUR_SELECT_NAMESPACE}`, namespaceValue.value);
     namespaceLoading.value = false;
     return data;

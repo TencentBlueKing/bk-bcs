@@ -91,9 +91,26 @@
       </bcs-table-column>
       <bcs-table-column :label="$t('操作')" width="220">
         <template #default="{ row }">
-          <bk-button text class="mr-[10px]" :disabled="applyMap(row.itsmTicketType).setVar" @click="showSetVariable(row)">{{ $t('设置变量值') }}</bk-button>
-          <bk-button text class="mr-[10px]" :disabled="applyMap(row.itsmTicketType).setQuota" @click="showSetQuota(row)">{{ $t('配额管理') }}</bk-button>
-          <bk-button text :disabled="applyMap(row.itsmTicketType).delete" @click="handleDeleteNamespace(row)">{{ $t('删除') }}</bk-button>
+          <bk-button
+            text
+            class="mr-[10px]"
+            :disabled="applyMap(row.itsmTicketType).setVar"
+            @click="showSetVariable(row)">
+            {{ $t('设置变量值') }}
+          </bk-button>
+          <bk-button
+            text
+            class="mr-[10px]"
+            :disabled="applyMap(row.itsmTicketType).setQuota"
+            @click="showSetQuota(row)">
+            {{ $t('配额管理') }}
+          </bk-button>
+          <bk-button
+            text
+            :disabled="applyMap(row.itsmTicketType).delete"
+            @click="handleDeleteNamespace(row)">
+            {{ $t('删除') }}
+          </bk-button>
         </template>
       </bcs-table-column>
     </bcs-table>
@@ -184,9 +201,11 @@ export default defineComponent({
     const { isSharedCluster } = useCluster();
 
     const viewMode = computed(() => $store.state.viewMode);
+
     const curClusterId = computed(() => $store.state.curClusterId);
+
     const clusterID = ref(curClusterId.value);
-   
+
     const keys = ref(['name']);
 
     const {
@@ -409,9 +428,9 @@ export default defineComponent({
     };
 
     const itsmTicketTypeMap = {
-      'CREATE': $i18n.t('创建命名空间'),
-      'UPDATE': $i18n.t('配额调整'),
-      'DELETE': $i18n.t('删除命名空间'),
+      CREATE: $i18n.t('创建命名空间'),
+      UPDATE: $i18n.t('配额调整'),
+      DELETE: $i18n.t('删除命名空间'),
     };
 
     const handleToITSM = (link) => {
@@ -472,6 +491,7 @@ export default defineComponent({
       setQuotaConf,
       variablesList,
       variableLoading,
+      itsmTicketTypeMap,
       unitConvert,
       applyMap,
       pageChange,
@@ -486,7 +506,6 @@ export default defineComponent({
       cancelUpdateNamespace,
       handleToCreatedPage,
       handleToITSM,
-      itsmTicketTypeMap,
     };
   },
 });

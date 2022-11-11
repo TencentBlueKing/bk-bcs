@@ -456,7 +456,7 @@ export default defineComponent({
     const searchValue = ref('');
     // 获取命名空间
     const namespaceValue = ref('all');
-    const { namespaceLoading, namespaceList, getNamespaceData } = useSelectItemsNamespace(ctx);
+    const { namespaceLoading, namespaceList, getNamespaceData } = useSelectItemsNamespace();
 
     const projectId = computed(() => $route.params.projectId);
     const clusterId = computed(() => $route.params.clusterId);
