@@ -12,6 +12,7 @@ replace (
 require (
 	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20220919094211-a1b246e54e5a
 	github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager v0.0.0-20221011125034-2ada1f2db5ed
+	github.com/google/go-querystring v1.0.0
 	github.com/olekukonko/tablewriter v0.0.5
 	github.com/pkg/errors v0.9.1
 	github.com/spf13/cobra v1.6.0

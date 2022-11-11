@@ -23,8 +23,11 @@ import (
 	"k8s.io/klog"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/version"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-project-manager/cmd/create"
+	delete2 "github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-project-manager/cmd/delete"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-project-manager/cmd/edit"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-project-manager/cmd/get"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-project-manager/cmd/render"
 )
 
 var (
@@ -67,6 +70,9 @@ func init() {
 	})
 	rootCmd.AddCommand(get.NewCmdGet())
 	rootCmd.AddCommand(edit.NewCmdEdit())
+	rootCmd.AddCommand(create.NewCmdCreate())
+	rootCmd.AddCommand(render.NewCmdRender())
+	rootCmd.AddCommand(delete2.NewCmdDelete())
 	rootCmd.PersistentFlags().StringVarP(
 		&cfgFile, "config", "c", "", "config file, optional")
 }

@@ -17,10 +17,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/pkg/errors"
-
-	userManagerModels "github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/models"
 )
 
 const (
@@ -34,14 +33,16 @@ const (
 	getPlainUserUrl      = "/v1/users/plain/%s"
 	createPlainUserUrl   = "/v1/users/plain/%s"
 	refreshPlainTokenUrl = "/v1/users/plain/%s/refresh/%s"
+
+	timeFormatter = "2006-01-02 15:04:05"
 )
 
 // GetAdminUserResponse defines the response of get admin user
 type GetAdminUserResponse struct {
-	Result  bool                       `json:"result"`
-	Code    int                        `json:"code"`
-	Message string                     `json:"message"`
-	Data    *userManagerModels.BcsUser `json:"data"`
+	Result  bool     `json:"result"`
+	Code    int      `json:"code"`
+	Message string   `json:"message"`
+	Data    *BcsUser `json:"data"`
 }
 
 // GetAdminUser request admin user from bcs-user-manager
@@ -59,10 +60,30 @@ func (c *UserManagerClient) GetAdminUser(userName string) (*GetAdminUserResponse
 
 // CreateAdminUserResponse defines the response of get admin user
 type CreateAdminUserResponse struct {
-	Result  bool                       `json:"result"`
-	Code    int                        `json:"code"`
-	Message string                     `json:"message"`
-	Data    *userManagerModels.BcsUser `json:"data"`
+	Result  bool     `json:"result"`
+	Code    int      `json:"code"`
+	Message string   `json:"message"`
+	Data    *BcsUser `json:"data"`
+}
+
+// BcsUser user table
+type BcsUser struct {
+	ID        uint       `json:"id" gorm:"primary_key"`
+	Name      string     `json:"name" gorm:"not null"`
+	UserType  uint       `json:"user_type"`
+	UserToken string     `json:"user_token" gorm:"unique;size:64"`
+	CreatedBy string     `json:"created_by"`
+	CreatedAt time.Time  `json:"created_at" gorm:"type:timestamp null;default:null"` // 用户创建时间
+	UpdatedAt time.Time  `json:"updated_at" gorm:"type:timestamp null;default:null"` // user-token刷新时间
+	ExpiresAt time.Time  `json:"expires_at" gorm:"type:timestamp null;default:null"` // user-token过期时间
+	DeletedAt *time.Time `json:"deleted_at" gorm:"type:timestamp null;default:null"` // user-token删除时间
+}
+
+func (u *BcsUser) GetDeletedAtStr() string {
+	if u != nil && u.DeletedAt != nil {
+		return u.DeletedAt.Format(timeFormatter)
+	}
+	return ""
 }
 
 // CreateAdminUser request admin user from bcs-user-manager
@@ -82,10 +103,10 @@ func (c *UserManagerClient) CreateAdminUser(userName string) (*CreateAdminUserRe
 
 // GetSaasUserResponse defines the response of get saas user
 type GetSaasUserResponse struct {
-	Result  bool                       `json:"result"`
-	Code    int                        `json:"code"`
-	Message string                     `json:"message"`
-	Data    *userManagerModels.BcsUser `json:"data"`
+	Result  bool     `json:"result"`
+	Code    int      `json:"code"`
+	Message string   `json:"message"`
+	Data    *BcsUser `json:"data"`
 }
 
 // GetSaasUser request saas user from bcs-user-manager
@@ -103,10 +124,10 @@ func (c *UserManagerClient) GetSaasUser(userName string) (*GetSaasUserResponse, 
 
 // CreateSaasUserResponse defines the response of create saas user
 type CreateSaasUserResponse struct {
-	Result  bool                       `json:"result"`
-	Code    int                        `json:"code"`
-	Message string                     `json:"message"`
-	Data    *userManagerModels.BcsUser `json:"data"`
+	Result  bool     `json:"result"`
+	Code    int      `json:"code"`
+	Message string   `json:"message"`
+	Data    *BcsUser `json:"data"`
 }
 
 // CreateSaasUser request saas user from bcs-user-manager
@@ -124,10 +145,10 @@ func (c *UserManagerClient) CreateSaasUser(userName string) (*CreateSaasUserResp
 
 // RefreshSaasTokenResponse defines the response of refresh saas user token
 type RefreshSaasTokenResponse struct {
-	Result  bool                       `json:"result"`
-	Code    int                        `json:"code"`
-	Message string                     `json:"message"`
-	Data    *userManagerModels.BcsUser `json:"data"`
+	Result  bool     `json:"result"`
+	Code    int      `json:"code"`
+	Message string   `json:"message"`
+	Data    *BcsUser `json:"data"`
 }
 
 // RefreshSaasToken request refresh saas user token  from bcs-user-manager
@@ -145,10 +166,10 @@ func (c *UserManagerClient) RefreshSaasToken(userName string) (*RefreshSaasToken
 
 // GetPlainUserResponse defines the response of get plain user
 type GetPlainUserResponse struct {
-	Result  bool                       `json:"result"`
-	Code    int                        `json:"code"`
-	Message string                     `json:"message"`
-	Data    *userManagerModels.BcsUser `json:"data"`
+	Result  bool     `json:"result"`
+	Code    int      `json:"code"`
+	Message string   `json:"message"`
+	Data    *BcsUser `json:"data"`
 }
 
 // GetPlainUser request Plain user from bcs-user-manager
@@ -166,10 +187,10 @@ func (c *UserManagerClient) GetPlainUser(userName string) (*GetPlainUserResponse
 
 // CreatePlainUserResponse defines the response of create Plain user
 type CreatePlainUserResponse struct {
-	Result  bool                       `json:"result"`
-	Code    int                        `json:"code"`
-	Message string                     `json:"message"`
-	Data    *userManagerModels.BcsUser `json:"data"`
+	Result  bool     `json:"result"`
+	Code    int      `json:"code"`
+	Message string   `json:"message"`
+	Data    *BcsUser `json:"data"`
 }
 
 // CreatePlainUser request Plain user from bcs-user-manager
@@ -187,10 +208,10 @@ func (c *UserManagerClient) CreatePlainUser(userName string) (*CreatePlainUserRe
 
 // RefreshPlainTokenResponse defines the response of refresh Plain user token
 type RefreshPlainTokenResponse struct {
-	Result  bool                       `json:"result"`
-	Code    int                        `json:"code"`
-	Message string                     `json:"message"`
-	Data    *userManagerModels.BcsUser `json:"data"`
+	Result  bool     `json:"result"`
+	Code    int      `json:"code"`
+	Message string   `json:"message"`
+	Data    *BcsUser `json:"data"`
 }
 
 // RefreshPlainToken request refresh Plain user token  from bcs-user-manager

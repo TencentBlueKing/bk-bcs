@@ -11,7 +11,7 @@
  *
  */
 
-package get
+package delete
 
 import (
 	"github.com/spf13/cobra"
@@ -20,32 +20,24 @@ import (
 )
 
 var (
-	flagOutput string
-	getLong    = templates.LongDesc(i18n.T(`
-		Display one or many from bcs-project-manager.
-		Prints a table of the most important information about the specified resources.`))
+	deleteLong = templates.LongDesc(i18n.T(`
+		Delete resources by stdin, resources and names, or by resources and label selector.`))
 
-	getExample = templates.Examples(i18n.T(`
-		# List all project in ps output format
-		kubectl-bcs-project-manager list project
-		# List all project variable in ps output format
-		kubectl-bcs-project-manager list variable`))
+	deleteExample = templates.Examples(i18n.T(`
+		# Delete one or many resources
+		kubectl-bcs-project-manager delete`))
 )
 
-func NewCmdGet() *cobra.Command {
+func NewCmdDelete() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "list",
-		Short:   i18n.T("List infos from bcs-project-manager"),
-		Long:    getLong,
-		Example: getExample,
+		Use:     "delete ( variable )",
+		Short:   i18n.T("Delete resources by stdin, resources and names, or by resources and label selector"),
+		Long:    deleteLong,
+		Example: deleteExample,
 	}
 
-	cmd.PersistentFlags().StringVarP(&flagOutput, "output", "o", "wide",
-		"optional parameter: json/wide, json will print the json string to stdout")
-
-	// get subcommands
-	cmd.AddCommand(listProject())
-	cmd.AddCommand(listVariable())
+	// delete subcommands
+	cmd.AddCommand(deleteVariable())
 
 	return cmd
 }
