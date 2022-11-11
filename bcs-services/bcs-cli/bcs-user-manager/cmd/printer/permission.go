@@ -30,7 +30,12 @@ func PrintGrantPermissionCmdResult(flagOutput string, resp *pkg.GrantPermissionR
 			klog.Fatalf("grant permissions output json to stdout failed: %s", err.Error())
 		}
 	}
-	tw := defaultTableWriter()
+	tw := tablewriter.NewWriter(os.Stdout)
+	tw.SetHeader(func() []string {
+		return []string{
+			"RESOURCE_TYPE", "RESOURCE", "ROLE",
+		}
+	}())
 	tw.Render()
 }
 
@@ -41,7 +46,12 @@ func PrintRevokePermissionCmdResult(flagOutput string, resp *pkg.RevokePermissio
 			klog.Fatalf("revoke permissions output json to stdout failed: %s", err.Error())
 		}
 	}
-	tw := defaultTableWriter()
+	tw := tablewriter.NewWriter(os.Stdout)
+	tw.SetHeader(func() []string {
+		return []string{
+			"RESOURCE_TYPE", "RESOURCE", "ROLE",
+		}
+	}())
 	tw.Render()
 }
 
@@ -82,7 +92,7 @@ func PrintVerifyPermissionCmdResult(flagOutput string, resp *pkg.VerifyPermissio
 			klog.Fatalf("verify permissions output json to stdout failed: %s", err.Error())
 		}
 	}
-	tw := defaultTableWriter()
+	tw := tablewriter.NewWriter(os.Stdout)
 	tw.SetHeader(func() []string {
 		return []string{
 			"ALLOWED", "MESSAGE",
@@ -106,7 +116,7 @@ func PrintVerifyPermissionV2CmdResult(flagOutput string, resp *pkg.VerifyPermiss
 			klog.Fatalf("verify permissions v2 output json to stdout failed: %s", err.Error())
 		}
 	}
-	tw := defaultTableWriter()
+	tw := tablewriter.NewWriter(os.Stdout)
 	tw.SetHeader(func() []string {
 		return []string{
 			"ALLOWED", "MESSAGE",

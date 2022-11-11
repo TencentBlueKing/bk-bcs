@@ -15,9 +15,11 @@ package pkg
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"time"
 
+	"github.com/google/go-querystring/query"
 	"github.com/pkg/errors"
 )
 
@@ -36,6 +38,13 @@ type ExtraTokenResponse struct {
 	ExpiredAt *time.Time   `json:"expired_at"` // nil means never expired
 }
 
+// GetTokenByUserAndClusterIDRequest defines the request of GetTokenByUserAndClusterID
+type GetTokenByUserAndClusterIDRequest struct {
+	UserName   string `json:"username"`
+	ClusterID  string `json:"cluster_id"`
+	BusinessID string `json:"business_id"`
+}
+
 // GetTokenByUserAndClusterIDResponse defines the response of GetTokenByUserAndClusterID
 type GetTokenByUserAndClusterIDResponse struct {
 	Result  bool                `json:"result"`
@@ -45,11 +54,11 @@ type GetTokenByUserAndClusterIDResponse struct {
 }
 
 // GetTokenByUserAndClusterID request get token by user and cluster id from bcs-user-manager
-func (c *UserManagerClient) GetTokenByUserAndClusterID(userName, clusterID, businessID string) (*GetTokenByUserAndClusterIDResponse, error) {
-	queryParams := map[string]string{
-		"username":    userName,
-		"cluster_id":  clusterID,
-		"business_id": businessID,
+func (c *UserManagerClient) GetTokenByUserAndClusterID(request GetTokenByUserAndClusterIDRequest) (*GetTokenByUserAndClusterIDResponse, error) {
+
+	queryParams, err := query.Values(request)
+	if err != nil {
+		return nil, fmt.Errorf("slice and Array values default to encoding as multiple URL values failed: %v", err)
 	}
 	bs, err := c.do(getTokenByUserAndClusterIDUrl, http.MethodGet, queryParams, nil)
 	if err != nil {

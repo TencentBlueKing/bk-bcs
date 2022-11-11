@@ -37,11 +37,11 @@ func newVerifyCmd() *cobra.Command {
 func verifyPermissionCmd() *cobra.Command {
 	var verifyPermissionForm string
 	subCmd := &cobra.Command{
-		Use:     "permissions",
-		Aliases: []string{"permissions", "ps"},
+		Use:     "permission",
+		Aliases: []string{"permission", "ps"},
 		Short:   "verify permission",
-		Long:    "verify permissions from user manager",
-		Example: "kubectl-bcs-user-manager verify permissions --form '{\"user_token\":\"\",\"resource_type\":\"\",\"resource\":\"\",\"action\":\"\"}' ",
+		Long:    "verify permission from user manager",
+		Example: "kubectl-bcs-user-manager verify permission --form '{\"user_token\":\"\",\"resource_type\":\"\",\"resource\":\"\",\"action\":\"\"}' ",
 		Run: func(cmd *cobra.Command, args []string) {
 			cobra.OnInitialize(ensureConfig)
 			ctx, cancel := context.WithCancel(context.Background())
@@ -49,16 +49,16 @@ func verifyPermissionCmd() *cobra.Command {
 			client := pkg.NewClientWithConfiguration(ctx)
 			resp, err := client.VerifyPermission(verifyPermissionForm)
 			if err != nil {
-				klog.Fatalf("verify permissions failed: %v", err)
+				klog.Fatalf("verify permission failed: %v", err)
 			}
 			if resp != nil && resp.Code != 0 {
-				klog.Fatalf("verify permissions response code not 0 but %d: %s", resp.Code, resp.Message)
+				klog.Fatalf("verify permission response code not 0 but %d: %s", resp.Code, resp.Message)
 			}
 			printer.PrintVerifyPermissionCmdResult(flagOutput, resp)
 		},
 	}
 	subCmd.Flags().StringVarP(&verifyPermissionForm, "form", "f", "",
-		"the form used to verify permissions")
+		"the form used to verify permission")
 
 	return subCmd
 }
@@ -66,11 +66,11 @@ func verifyPermissionCmd() *cobra.Command {
 func verifyPermissionV2Cmd() *cobra.Command {
 	var verifyPermissionForm string
 	subCmd := &cobra.Command{
-		Use:     "permissionsv2",
-		Aliases: []string{"permissionsv2", "psv2"},
+		Use:     "permissionv2",
+		Aliases: []string{"permissionv2", "psv2"},
 		Short:   "verify permission v2",
-		Long:    "verify permissions v2 from user manager",
-		Example: "kubectl-bcs-user-manager verify permissionsv2 --form {\"user_token\":\"\",\"resource_type\":\"\",\"cluster_type\":\"\",\"cluster_type\":\"\",\"project_id\":\"\",\"cluster_id\":\"\",\"request_url\":\"\",\"resource\":\"\",\"action\":\"\"}",
+		Long:    "verify permission v2 from user manager",
+		Example: "kubectl-bcs-user-manager verify permissionv2 --form {\"user_token\":\"\",\"resource_type\":\"\",\"cluster_type\":\"\",\"cluster_type\":\"\",\"project_id\":\"\",\"cluster_id\":\"\",\"request_url\":\"\",\"resource\":\"\",\"action\":\"\"}",
 		Run: func(cmd *cobra.Command, args []string) {
 			cobra.OnInitialize(ensureConfig)
 			ctx, cancel := context.WithCancel(context.Background())
@@ -78,16 +78,16 @@ func verifyPermissionV2Cmd() *cobra.Command {
 			client := pkg.NewClientWithConfiguration(ctx)
 			resp, err := client.VerifyPermissionV2(verifyPermissionForm)
 			if err != nil {
-				klog.Fatalf("verify permissions failed: %v", err)
+				klog.Fatalf("verify permission failed: %v", err)
 			}
 			if resp != nil && resp.Code != 0 {
-				klog.Fatalf("verify permissions response code not 0 but %d: %s", resp.Code, resp.Message)
+				klog.Fatalf("verify permission response code not 0 but %d: %s", resp.Code, resp.Message)
 			}
 			printer.PrintVerifyPermissionV2CmdResult(flagOutput, resp)
 		},
 	}
 	subCmd.Flags().StringVarP(&verifyPermissionForm, "form", "f", "",
-		"the form used to verify permissions with version 2")
+		"the form used to verify permission with version 2")
 
 	return subCmd
 }

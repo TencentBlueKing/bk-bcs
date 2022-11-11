@@ -54,9 +54,9 @@ func (c *UserManagerClient) CreateCluster(clusterBody string) (*CreateClusterRes
 	if err := json.Unmarshal([]byte(clusterBody), reqForm); err != nil {
 		return nil, errors.Wrapf(err, "form json unmarshal failed with '%s'", reqForm)
 	}
-	bs, err := c.do(createClusterUrl, http.MethodPost, nil, []byte(clusterBody))
+	bs, err := c.do(createClusterUrl, http.MethodPost, nil, reqForm)
 	if err != nil {
-		return nil, errors.Wrapf(err, "create cluster with '%s' failed", clusterBody)
+		return nil, errors.Wrapf(err, "create cluster with '%s' failed", reqForm)
 	}
 	resp := new(CreateClusterResponse)
 	if err := json.Unmarshal(bs, resp); err != nil {

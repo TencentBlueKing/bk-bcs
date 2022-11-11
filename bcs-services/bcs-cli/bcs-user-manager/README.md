@@ -20,7 +20,7 @@ kubectl-bcs-user-manager create admin-user --help
 参数详情:
 
 ```yaml 
--n, --user_name string   "用户名称，通过该字段创建admin用户信息"
+-u, --user_name string   "用户名称，通过该字段创建admin用户信息"
 ```
 
 示例:
@@ -39,7 +39,7 @@ kubectl-bcs-user-manager get admin-user --help
 ```
 参数详情:
 ```yaml 
--n, --user_name string   "用户名称，通过该字段查询admin用户信息"
+-u, --user_name string   "用户名称，通过该字段查询admin用户信息"
 ```
 
 示例:
@@ -60,7 +60,7 @@ kubectl-bcs-user-manager create saas-user --help
 参数详情:
 
 ```yaml 
--n, --user_name string   "用户名称，通过该字段创建saas用户信息"
+-u, --user_name string   "用户名称，通过该字段创建saas用户信息"
 ```
 
 示例:
@@ -81,7 +81,7 @@ kubectl-bcs-user-manager get saas-user --help
 参数详情:
 
 ```yaml 
--n, --user_name string   "用户名称，通过该字段查询saas用户信息"
+-u, --user_name string   "用户名称，通过该字段查询saas用户信息"
 ```
 
 示例:
@@ -104,7 +104,7 @@ kubectl-bcs-user-manager update saas-token --help
 参数详情:
 
 ```yaml 
--n, --user_name string   "用户名称，通过该字段刷新saas用户token信息"
+-u, --user_name string   "用户名称，通过该字段刷新saas用户token信息"
 ```
 
 示例:
@@ -129,7 +129,7 @@ kubectl-bcs-user-manager create plain-user --help
 参数详情:
 
 ```yaml 
--n, --user_name string   "用户名称，通过该字段创建plain用户信息"
+-u, --user_name string   "用户名称，通过该字段创建plain用户信息"
 ```
 
 示例:
@@ -150,7 +150,7 @@ kubectl-bcs-user-manager get plain-user --help
 参数详情:
 
 ```yaml 
--n, --user_name string   "用户名称，通过该字段查询plain用户信息"
+-u, --user_name string   "用户名称，通过该字段查询plain用户信息"
 ```
 
 示例:
@@ -175,15 +175,15 @@ kubectl-bcs-user-manager update plain-token --help
 参数详情:
 
 ```yaml 
--n, --user_name string   "用户名称，通过该字段创建admin用户信息"
--t, --expire_time string   "过期时间，过期天数，整数"
+-u, --user_name string   "用户名称，通过该字段创建admin用户信息"
+-t, --expire_time string   "过期时间，过期天数，整数 >=0,0为立即过期"
 ```
 
 示例:
 
 ```
-kubectl-bcs-user-manager update saas-token -u [user_name] -t [expire_time]
-kubectl-bcs-user-manager update st -u [user_name] -t [expire_time]
+kubectl-bcs-user-manager update plain-token -u [user_name] -t [expire_time]
+kubectl-bcs-user-manager update pt -u [user_name] -t [expire_time]
 ```
 
 
@@ -366,7 +366,7 @@ kubectl-bcs-user-manager grant permission --help
 ```yaml 
 -f, --permission_form string   "json类型"
 
-credentials_form  json说明
+permission_form  json说明
 {
   "apiVersion": "",
   "kind": "",
@@ -441,7 +441,7 @@ kubectl-bcs-user-manager get permission --help
 ```yaml 
 -f, --permission_form string   "json类型"
 
-credentials_form  json说明
+permission_form  json说明
 {
   "user_name": "",
   "resource_type": ""
@@ -469,7 +469,7 @@ kubectl-bcs-user-manager delete permission --help
 ```yaml 
 -f, --permission_form string   "json类型"
 
-credentials_form  json说明
+permission_form  json说明
 {
   "apiVersion": "",
   "kind": "",
