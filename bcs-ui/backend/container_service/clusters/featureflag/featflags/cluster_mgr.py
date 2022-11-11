@@ -54,3 +54,5 @@ class SingleClusterFeatureFlag(BaseFeatureFlag):
 
 class SharedClusterFeatureFlag(BaseFeatureFlag):
     """集群管理 - 单个共享集群"""
+
+    LOG_COLLECTOR = FeatureFlagField(name='LOG_COLLECTOR', label='日志采集', default=True)
