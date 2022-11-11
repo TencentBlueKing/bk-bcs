@@ -11,7 +11,7 @@
  *
  */
 
-package get
+package create
 
 import (
 	"github.com/spf13/cobra"
@@ -20,32 +20,24 @@ import (
 )
 
 var (
-	flagOutput string
-	getLong    = templates.LongDesc(i18n.T(`
-		Display one or many from bcs-project-manager.
-		Prints a table of the most important information about the specified resources.`))
+	createLong = templates.LongDesc(i18n.T(`
+		Create a resource from a file or from stdin.`))
 
-	getExample = templates.Examples(i18n.T(`
-		# List all project in ps output format
-		kubectl-bcs-project-manager list project
-		# List all project variable in ps output format
-		kubectl-bcs-project-manager list variable`))
+	createExample = templates.Examples(i18n.T(`
+		# Create a project variable
+		kubectl-bcs-project-manager create`))
 )
 
-func NewCmdGet() *cobra.Command {
+func NewCmdCreate() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "list",
-		Short:   i18n.T("List infos from bcs-project-manager"),
-		Long:    getLong,
-		Example: getExample,
+		Use:     "create ( variable )",
+		Short:   i18n.T("Create a resource from a file or from stdin"),
+		Long:    createLong,
+		Example: createExample,
 	}
 
-	cmd.PersistentFlags().StringVarP(&flagOutput, "output", "o", "wide",
-		"optional parameter: json/wide, json will print the json string to stdout")
-
-	// get subcommands
-	cmd.AddCommand(listProject())
-	cmd.AddCommand(listVariable())
+	// create subcommands
+	cmd.AddCommand(createVariable())
 
 	return cmd
 }

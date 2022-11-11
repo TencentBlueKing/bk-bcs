@@ -18,9 +18,10 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/proto/bcsproject"
 	"github.com/google/go-querystring/query"
 	"github.com/pkg/errors"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/proto/bcsproject"
 )
 
 const (
@@ -97,6 +98,7 @@ func (p *ProjectManagerClient) GetProject(projectIDOrCode string) (*bcsproject.P
 	return resp, nil
 }
 
+// UpdateProject edit project
 func (p *ProjectManagerClient) UpdateProject(in *UpdateProjectRequest) (*bcsproject.ProjectResponse, error) {
 	bs, err := p.do(fmt.Sprintf(updateProjectUrl, in.ProjectID), http.MethodPut, nil, in)
 	if err != nil {

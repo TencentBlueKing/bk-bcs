@@ -40,6 +40,7 @@ func NewCmdEdit() *cobra.Command {
 
 	// edit subcommands
 	cmd.AddCommand(editProject())
+	cmd.AddCommand(editVariable())
 
 	return cmd
 }

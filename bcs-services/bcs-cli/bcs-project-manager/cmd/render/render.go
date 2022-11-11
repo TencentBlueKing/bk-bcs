@@ -11,7 +11,7 @@
  *
  */
 
-package get
+package render
 
 import (
 	"github.com/spf13/cobra"
@@ -20,32 +20,24 @@ import (
 )
 
 var (
-	flagOutput string
-	getLong    = templates.LongDesc(i18n.T(`
-		Display one or many from bcs-project-manager.
-		Prints a table of the most important information about the specified resources.`))
+	renderLong = templates.LongDesc(i18n.T(`
+		render resource a specific cluster, namespace.`))
 
-	getExample = templates.Examples(i18n.T(`
-		# List all project in ps output format
-		kubectl-bcs-project-manager list project
-		# List all project variable in ps output format
-		kubectl-bcs-project-manager list variable`))
+	renderExample = templates.Examples(i18n.T(`
+		# render a resource
+		kubectl-bcs-project-manager render`))
 )
 
-func NewCmdGet() *cobra.Command {
+func NewCmdRender() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "list",
-		Short:   i18n.T("List infos from bcs-project-manager"),
-		Long:    getLong,
-		Example: getExample,
+		Use:     "render",
+		Short:   i18n.T("render resource a specific cluster, namespace."),
+		Long:    renderLong,
+		Example: renderExample,
 	}
 
-	cmd.PersistentFlags().StringVarP(&flagOutput, "output", "o", "wide",
-		"optional parameter: json/wide, json will print the json string to stdout")
-
-	// get subcommands
-	cmd.AddCommand(listProject())
-	cmd.AddCommand(listVariable())
+	// render subcommands
+	cmd.AddCommand(renderVariable())
 
 	return cmd
 }
