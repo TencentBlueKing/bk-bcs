@@ -218,6 +218,11 @@ export default defineComponent({
           }),
           isChecked: false,
         },
+        {
+          id: 2,
+          text: $i18n.t('为了保证集群环境标准化，创建集群会格式化数据盘/dev/vdb，盘内数据将被清除，请确认该数据盘内没有放置业务数据'),
+          isChecked: false,
+        },
       ];
     });
     const confirmDialog = ref<any>(null);
