@@ -14,11 +14,11 @@
       </template>
       <template #right>
         <ClusterSelect
-          v-if="!curCluesterId"
+          v-if="!curClusterId"
           v-model="clusterID"
           class="mr-[10px]"
           searchable
-          :disabled="!!curCluesterId">
+          :disabled="!!curClusterId">
         </ClusterSelect>
         <bcs-input
           class="search-input"
@@ -41,7 +41,18 @@
       </bcs-table-column>
       <bcs-table-column :label="$t('状态')">
         <template #default="{ row }">
-          {{ row.status || '--' }}
+          <div v-if="!isSharedCluster">
+            {{ row.status || '--' }}
+          </div>
+          <div v-else>
+            <span
+              v-if="row.itsmTicketURL"
+              class="text-[#3a84ff] cursor-pointer"
+              @click="handleToITSM(row.itsmTicketURL)">
+              {{ $t('待审批') }}（{{ itsmTicketTypeMap[row.itsmTicketType] }})
+            </span>
+            <span v-else>{{ $t('正常') }}</span>
+          </div>
         </template>
       </bcs-table-column>
       <bcs-table-column :label="$t('CPU使用率')" prop="cpuUseRate" :min-width="100">
@@ -80,9 +91,9 @@
       </bcs-table-column>
       <bcs-table-column :label="$t('操作')" width="220">
         <template #default="{ row }">
-          <bk-button text class="mr-[10px]" @click="showSetVariable(row)">{{ $t('设置变量值') }}</bk-button>
-          <bk-button text class="mr-[10px]" @click="showSetQuota(row)">{{ $t('配额管理') }}</bk-button>
-          <bk-button text @click="handleDeleteNamespace(row)">{{ $t('删除') }}</bk-button>
+          <bk-button text class="mr-[10px]" :disabled="applyMap(row.itsmTicketType).setVar" @click="showSetVariable(row)">{{ $t('设置变量值') }}</bk-button>
+          <bk-button text class="mr-[10px]" :disabled="applyMap(row.itsmTicketType).setQuota" @click="showSetQuota(row)">{{ $t('配额管理') }}</bk-button>
+          <bk-button text :disabled="applyMap(row.itsmTicketType).delete" @click="handleDeleteNamespace(row)">{{ $t('删除') }}</bk-button>
         </template>
       </bcs-table-column>
     </bcs-table>
@@ -156,6 +167,7 @@ import LayoutContent from '@/components/layout/Content.vue';
 import LayoutRow from '@/components/layout/Row.vue';
 import usePage from '../common/use-page';
 import useSearch from '../common/use-search';
+import { useCluster } from '@/common/use-app';
 import { useNamespace } from './use-namespace';
 import { sort } from '@/common/util';
 
@@ -169,12 +181,12 @@ export default defineComponent({
   setup(props, ctx) {
     const { $store, $bkInfo, $i18n, $bkMessage, $router } = ctx.root;
 
+    const { isSharedCluster } = useCluster();
+
     const viewMode = computed(() => $store.state.viewMode);
-
-    const curCluesterId = computed(() => $store.state.curClusterId);
-
-    const clusterID = ref(curCluesterId.value);
-
+    const curClusterId = computed(() => $store.state.curClusterId);
+    const clusterID = ref(curClusterId.value);
+   
     const keys = ref(['name']);
 
     const {
@@ -396,6 +408,48 @@ export default defineComponent({
       return num / (10 ** (Math.abs(digit) * factorial));
     };
 
+    const itsmTicketTypeMap = {
+      'CREATE': $i18n.t('创建命名空间'),
+      'UPDATE': $i18n.t('配额调整'),
+      'DELETE': $i18n.t('删除命名空间'),
+    };
+
+    const handleToITSM = (link) => {
+      window.open(link, '_blank');
+    };
+
+    // namespace itsmTicketType -> 操作按钮禁用状态控制
+    const applyMap = (type: ('CREATE' | 'UPDATE' | 'DELETE' | '')) => {
+      const typeMap = {
+        CREATE: {
+          setVar: true,
+          setQuota: true,
+          delete: true,
+        },
+        UPDATE: {
+          setVar: false,
+          setQuota: true,
+          delete: true,
+        },
+        DELETE: {
+          setVar: true,
+          setQuota: true,
+          delete: true,
+        },
+        '': {
+          setVar: false,
+          setQuota: false,
+          delete: false,
+        },
+      };
+      return typeMap[type];
+    };
+
+    watch(curClusterId, () => {
+      getNamespaceData({
+        $clusterId: curClusterId.value,
+      });
+    });
     watch(clusterID, () => {
       getNamespaceData({
         $clusterId: clusterID.value,
@@ -408,7 +462,8 @@ export default defineComponent({
 
     return {
       namespaceLoading,
-      curCluesterId,
+      curClusterId,
+      isSharedCluster,
       clusterID,
       pagination,
       searchValue,
@@ -418,6 +473,7 @@ export default defineComponent({
       variablesList,
       variableLoading,
       unitConvert,
+      applyMap,
       pageChange,
       pageSizeChange,
       handleSortChange,
@@ -429,6 +485,8 @@ export default defineComponent({
       updateNamespace,
       cancelUpdateNamespace,
       handleToCreatedPage,
+      handleToITSM,
+      itsmTicketTypeMap,
     };
   },
 });
@@ -437,4 +495,3 @@ export default defineComponent({
 <style lang="postcss" scoped>
   @import './namespace.css';
 </style>
-

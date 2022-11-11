@@ -216,13 +216,15 @@ export default defineComponent({
           }),
         });
         isLoading.value = false;
-        result && $bkMessage({
-          theme: 'success',
-          message: $i18n.t('创建成功'),
-        });
-        result && $router.push({
-          name: $store.getters.curNavName,
-        });
+        if (result) {
+          $bkMessage({
+            theme: 'success',
+            message: $i18n.t('创建成功'),
+          });
+          $router.push({
+            name: $store.getters.curNavName,
+          });
+        };
       });
     };
 

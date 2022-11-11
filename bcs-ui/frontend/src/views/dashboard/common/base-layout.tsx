@@ -157,7 +157,7 @@ export default defineComponent({
       return type.value === 'crd' && scope && scope !== 'Namespaced';
     });
     // 获取命名空间
-    const { namespaceLoading, namespaceValue, namespaceList, getNamespaceData } = useSelectItemsNamespace(ctx);
+    const { namespaceLoading, namespaceValue, namespaceList, getNamespaceData } = useSelectItemsNamespace();
 
     // 排序
     const sortData = ref({
@@ -450,7 +450,7 @@ export default defineComponent({
               $category: category.value,
               $name: name,
             });
-          }
+          };
           result && $bkMessage({
             theme: 'success',
             message: $i18n.t('删除成功'),
