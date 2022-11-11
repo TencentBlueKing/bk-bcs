@@ -22,6 +22,9 @@ import (
 	"k8s.io/klog"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/version"
+	cloudvpc "github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-cluster-manager/cmd/cloud_vpc"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-cluster-manager/cmd/cluster"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-cluster-manager/cmd/node"
 )
 
 const (
@@ -67,10 +70,15 @@ kubectl-bcs-cluster-manager allows operators to get project info from bcs-cluste
 	}
 	rootCmd.AddCommand(versionCmd)
 	rootCmd.AddCommand(newListCmd())
-	rootCmd.PersistentFlags().StringVarP(
-		&cfgFile, "config", "c", defaultCfgFile, "config file")
+	//rootCmd.PersistentFlags().StringVarP(
+	//&cfgFile, "config", "c", defaultCfgFile, "config file")
 	rootCmd.CompletionOptions.DisableDefaultCmd = true
-	rootCmd.PersistentFlags().StringVarP(&flagOutput, "output", "o", "wide",
-		"optional parameter: json/wide, json will print the json string to stdout")
+	//rootCmd.PersistentFlags().StringVarP(&flagOutput, "output", "o", "wide",
+	//"optional parameter: json/wide, json will print the json string to stdout")
+
+	rootCmd.AddCommand(cluster.NewClusterCmd())
+	rootCmd.AddCommand(node.NewNodeCmd())
+	rootCmd.AddCommand(cloudvpc.NewCloudVPCCmd())
+
 	return rootCmd
 }
