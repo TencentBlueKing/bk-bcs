@@ -18,8 +18,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/emicklei/go-restful"
-
 	"github.com/Tencent/bk-bcs/bcs-common/common"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/tracing/utils"
@@ -28,10 +26,11 @@ import (
 	v1http "github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/v1http/utils"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/apiserver"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/clean"
+	"github.com/emicklei/go-restful"
 )
 
 const (
-	tablePrefix   = "event_"
+	TablePrefix   = "event_"
 	tableName     = "event"
 	dataTag       = "data"
 	extraTag      = "extra"
@@ -61,8 +60,7 @@ const (
 
 	namespaceTag = "namespace"
 
-	// EventResource TODO
-	EventResource = "Event"
+	eventResource = "Event"
 )
 
 var needTimeFormatList = [...]string{createTimeTag, eventTimeTag}
@@ -74,7 +72,7 @@ var eventFeatTags = []string{idTag, envTag, kindTag, levelTag, componentTag, typ
 
 var nsFeatTags = []string{clusterIDTag, namespaceTag, resourceTypeTag, resourceNameTag}
 
-var eventIndexKeys = []string{"data.metadata.name", "data.metadata.resourceVersion"}
+var EventIndexKeys = []string{"data.metadata.name", "data.metadata.resourceVersion"}
 
 var eventQueryIndexKeys = []string{"extraInfo.name", "extraInfo.namespace", "extraInfo.kind", "kind"}
 
@@ -140,7 +138,7 @@ func CleanEvents() {
 	}
 	for _, table := range tables {
 		cleaner := clean.NewDBCleaner(eventDBClient, table, time.Hour)
-		if table == EventResource {
+		if table == eventResource {
 			cleaner.WithMaxDuration(time.Duration(1)*time.Hour, eventTimeTag)
 		} else if strings.HasPrefix(table, tableName) {
 			cleaner.WithMaxEntryNum(maxCap)

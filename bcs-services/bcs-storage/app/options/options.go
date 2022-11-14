@@ -17,7 +17,7 @@ package options
 import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
 	"github.com/Tencent/bk-bcs/bcs-common/common/static"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/registry"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/registryv4"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/tracing"
 )
 
@@ -36,14 +36,18 @@ type StorageOptions struct {
 	conf.ServiceConfig
 	conf.MetricConfig
 	conf.ZkConfig
-	conf.ServerOnlyCertConfig
+	conf.CertConfig
 	conf.LicenseServerConfig
 	conf.LogConfig
 	conf.ProcessConfig
 
+	HttpPort uint64 `json:"http_port" value:"8080" usage:"v2 server port"`
+	GRPCPort uint64 `json:"grpc_port" value:"8081" usage:"grpc server port"`
+
 	ServerCert *CertConfig
-	Etcd       registry.CMDOptions `json:"etcdRegistry"`
-	Tracing    tracing.Options     `json:"tracing"`
+	ClientCert *CertConfig
+	Etcd       registryv4.CMDOptions `json:"etcdRegistry"`
+	Tracing    tracing.Options       `json:"tracing"`
 
 	DBConfig     string `json:"database_config_file" value:"storage-database.conf" usage:"Config file for database."`
 	QueueConfig  string `json:"queue_config_file" value:"queue.conf" usage:"Config file for database."`
@@ -65,6 +69,10 @@ func NewStorageOptions() *StorageOptions {
 			CertPwd: static.ServerCertPwd,
 			IsSSL:   false,
 		},
-		Etcd: registry.CMDOptions{},
+		ClientCert: &CertConfig{
+			CertPwd: static.ClientCertPwd,
+			IsSSL:   false,
+		},
+		Etcd: registryv4.CMDOptions{},
 	}
 }

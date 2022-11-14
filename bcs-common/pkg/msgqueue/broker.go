@@ -14,12 +14,12 @@
 package msgqueue
 
 import (
-	"errors"
-	"fmt"
+	"time"
+
 	"github.com/micro/go-micro/v2/broker"
 	"github.com/micro/go-plugins/broker/rabbitmq/v2"
 	"github.com/micro/go-plugins/broker/stan/v2"
-	"time"
+	"github.com/pkg/errors"
 )
 
 // rabbitmqBroker xxx
@@ -42,14 +42,12 @@ func rabbitmqBroker(q *QueueOptions) (broker.Broker, error) {
 	// init rabbitmq broker
 	err := brokerRabbit.Init()
 	if err != nil {
-		errMsg := fmt.Sprintf("brokerRabbitmq init failed: %v", err)
-		return nil, errors.New(errMsg)
+		return nil, errors.Wrapf(err, "brokerRabbitmq init failed.")
 	}
 
 	// create connect
 	if err = brokerRabbit.Connect(); err != nil {
-		errMsg := fmt.Sprintf("can't connect to rabbit broker: %v", err)
-		return nil, errors.New(errMsg)
+		return nil, errors.Wrapf(err, "can't connect to rabbit broker.")
 	}
 
 	return brokerRabbit, nil
@@ -69,14 +67,12 @@ func natstreamingBroker(q *QueueOptions) (broker.Broker, error) {
 	// init natstreaming broker
 	err := brokerNatstreaming.Init()
 	if err != nil {
-		errMsg := fmt.Sprintf("brokerNatstreaming init failed: %v", err)
-		return nil, errors.New(errMsg)
+		return nil, errors.Wrapf(err, "brokerNatstreaming init failed.")
 	}
 
 	// create connect
 	if err = brokerNatstreaming.Connect(); err != nil {
-		errMsg := fmt.Sprintf("can't connect to natstreaming broker: %v", err)
-		return nil, errors.New(errMsg)
+		return nil, errors.Wrapf(err, "can't connect to natstreaming broker.")
 	}
 
 	return brokerNatstreaming, nil

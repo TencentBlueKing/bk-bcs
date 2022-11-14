@@ -26,8 +26,8 @@ type ConfigMapK8sFilter struct {
 	CreateTimeEnd   string `json:"createTimeEnd,omitempty" filter:"data.metadata.creationTimestamp,timeR"`
 }
 
-const configMapK8sNestedTimeLayout = nestedTimeLayout
+const configMapK8sNestedTimeLayout = NestedTimeLayout
 
-func (t ConfigMapK8sFilter) getCondition() *operator.Condition {
+func (t ConfigMapK8sFilter) GetCondition() *operator.Condition {
 	return qGenerate(t, configMapK8sNestedTimeLayout)
 }

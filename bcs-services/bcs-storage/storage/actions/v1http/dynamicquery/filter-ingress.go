@@ -26,8 +26,8 @@ type IngressFilter struct {
 	CreateTimeEnd   string `json:"createTimeEnd,omitempty" filter:"data.metadata.creationTimestamp,timeR"`
 }
 
-const ingressNestedTimeLayout = nestedTimeLayout
+const ingressNestedTimeLayout = NestedTimeLayout
 
-func (t IngressFilter) getCondition() *operator.Condition {
+func (t IngressFilter) GetCondition() *operator.Condition {
 	return qGenerate(t, ingressNestedTimeLayout)
 }

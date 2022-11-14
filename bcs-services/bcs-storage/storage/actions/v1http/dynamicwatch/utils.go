@@ -16,11 +16,10 @@ package dynamicwatch
 import (
 	"context"
 
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/lib"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/apiserver"
-
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/pkg/constants"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/lib"
 	"github.com/emicklei/go-restful"
 )
 
@@ -34,14 +33,10 @@ type reqDynamic struct {
 }
 
 func newReqDynamic(req *restful.Request, resp *restful.Response) *reqDynamic {
-	store := lib.NewStore(
-		apiserver.GetAPIResource().GetDBClient(dbConfig),
-		apiserver.GetAPIResource().GetEventBus(dbConfig))
-	store.SetSoftDeletion(true)
 	return &reqDynamic{
 		req:   req,
 		resp:  resp,
-		store: store,
+		store: GetStore(),
 	}
 }
 
@@ -50,15 +45,15 @@ func (rd *reqDynamic) getTable() string {
 }
 
 func (rd *reqDynamic) watch() {
-
-	newWatchOption := &lib.WatchServerOption{
+	watchOption := &lib.WatchServerOption{
 		Store:     rd.store,
 		TableName: rd.getTable(),
-		Cond:      operator.M{clusterIDTag: rd.req.PathParameter(clusterIDTag)},
+		Cond:      operator.M{constants.ClusterIDTag: rd.req.PathParameter(constants.ClusterIDTag)},
 		Req:       rd.req,
 		Resp:      rd.resp,
 	}
-	ws, err := lib.NewWatchServer(newWatchOption)
+
+	ws, err := lib.NewWatchServer(watchOption)
 	if err != nil {
 		blog.Error("dynamic get watch server failed, err %s", err.Error())
 		rd.resp.Write(lib.EventWatchBreakBytes)
@@ -69,7 +64,22 @@ func (rd *reqDynamic) watch() {
 }
 
 func (rd *reqDynamic) watchContainer() {
-	// TODO: cannot implement watch container when put different cluster data into one collection
+	watchOption := &lib.WatchServerOption{
+		Store:     rd.store,
+		TableName: constants.ContainerInfo,
+		Cond:      operator.M{constants.ClusterIDTag: rd.req.PathParameter(constants.ClusterIDTag)},
+		Req:       rd.req,
+		Resp:      rd.resp,
+	}
+
+	ws, err := lib.NewWatchServer(watchOption)
+	if err != nil {
+		blog.Error("dynamic get watch server failed, err %s", err.Error())
+		rd.resp.Write(lib.EventWatchBreakBytes)
+		return
+	}
+
+	ws.Go(context.Background())
 }
 
 func inList(s string, l []interface{}) bool {

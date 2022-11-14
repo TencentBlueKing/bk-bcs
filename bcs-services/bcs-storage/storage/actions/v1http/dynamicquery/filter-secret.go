@@ -25,8 +25,8 @@ type SecretFilter struct {
 	APIVersion string `json:"apiVersion,omitempty" filter:"data.apiVersion"`
 }
 
-const secretNestedTimeLayout = nestedTimeLayout
+const secretNestedTimeLayout = NestedTimeLayout
 
-func (t SecretFilter) getCondition() *operator.Condition {
+func (t SecretFilter) GetCondition() *operator.Condition {
 	return qGenerate(t, secretNestedTimeLayout)
 }

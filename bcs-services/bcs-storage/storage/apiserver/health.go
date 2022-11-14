@@ -15,10 +15,10 @@ package apiserver
 
 import (
 	"fmt"
+	"sync"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common"
 	"github.com/Tencent/bk-bcs/bcs-common/common/metric"
-	"sync"
 )
 
 // BcsHealthIf interface

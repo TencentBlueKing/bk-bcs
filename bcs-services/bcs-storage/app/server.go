@@ -27,12 +27,25 @@ const (
 	serviceName = "bcs-storage"
 )
 
+// App app
+type App struct {
+	op *options.StorageOptions
+}
+
+// NewApp create app
+func NewApp(op *options.StorageOptions) *App {
+	return &App{
+		op: op,
+	}
+}
+
 // Run the bcs-storage
-func Run(op *options.StorageOptions) error {
-	setConfig(op)
+func (app *App) Run() error {
+	//init cert
+	initCert(app.op)
 
 	// init tracing
-	closer, err := initTracingInstance(op)
+	closer, err := initTracingInstance(app.op)
 	if err != nil {
 		blog.Errorf("initTracingInstance failed: %v", err)
 		return err
@@ -42,14 +55,20 @@ func Run(op *options.StorageOptions) error {
 		defer closer.Close()
 	}
 
-	storage, err := bcsstorage.NewStorageServer(op)
+	// 创建 StorageServer
+	storage, err := bcsstorage.NewStorageServer(app.op)
 	if err != nil {
 		blog.Error("fail to create storage server. err:%s", err.Error())
 		return err
 	}
 
-	if err := common.SavePid(op.ProcessConfig); err != nil {
+	if err = common.SavePid(app.op.ProcessConfig); err != nil {
 		blog.Warn("fail to save pid. err:%s", err.Error())
+	}
+
+	// 初始化
+	if err = storage.Init(); err != nil {
+		return err
 	}
 
 	return storage.Start()
@@ -107,13 +126,23 @@ func initTracingInstance(op *options.StorageOptions) (io.Closer, error) {
 	return closer, nil
 }
 
-func setConfig(op *options.StorageOptions) {
-	op.ServerCert.CertFile = op.ServerCertFile
-	op.ServerCert.KeyFile = op.ServerKeyFile
-	op.ServerCert.CAFile = op.CAFile
+func initCert(op *options.StorageOptions) {
+	// server
+	op.ServerCert.CertFile = op.CertConfig.ServerCertFile
+	op.ServerCert.KeyFile = op.CertConfig.ServerKeyFile
+	op.ServerCert.CAFile = op.CertConfig.CAFile
 
 	if op.ServerCert.CertFile != "" && op.ServerCert.KeyFile != "" {
 		op.ServerCert.IsSSL = true
+	}
+
+	// client
+	op.ClientCert.CertFile = op.CertConfig.ClientCertFile
+	op.ClientCert.KeyFile = op.CertConfig.ClientKeyFile
+	op.ClientCert.CAFile = op.CertConfig.CAFile
+
+	if op.ClientCert.CertFile != "" && op.ClientCert.KeyFile != "" {
+		op.ClientCert.IsSSL = true
 	}
 
 	// 初始化IPv6Address字段

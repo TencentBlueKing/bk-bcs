@@ -35,8 +35,8 @@ type ProcessFilter struct {
 	LastUpdateTimeEnd   string `json:"lastUpdateTimeEnd,omitempty" filter:"data.lastUpdateTime,timeR"`
 }
 
-const processNestedTimeLayout = nestedTimeLayout
+const processNestedTimeLayout = NestedTimeLayout
 
-func (t ProcessFilter) getCondition() *operator.Condition {
+func (t ProcessFilter) GetCondition() *operator.Condition {
 	return qGenerate(t, processNestedTimeLayout)
 }

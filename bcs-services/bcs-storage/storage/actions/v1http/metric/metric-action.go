@@ -15,7 +15,6 @@ package metric
 
 import (
 	"fmt"
-	"github.com/emicklei/go-restful"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -24,6 +23,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/lib"
 	v1http "github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/v1http/utils"
 	storageErr "github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/errors"
+	"github.com/emicklei/go-restful"
 )
 
 const (

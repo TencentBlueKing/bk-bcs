@@ -36,8 +36,8 @@ type TaskGroupFilter struct {
 	LastUpdateTimeEnd   string `json:"lastUpdateTimeEnd,omitempty" filter:"data.lastUpdateTime,timeR"`
 }
 
-const taskGroupNestedTimeLayout = nestedTimeLayout
+const taskGroupNestedTimeLayout = NestedTimeLayout
 
-func (t TaskGroupFilter) getCondition() *operator.Condition {
+func (t TaskGroupFilter) GetCondition() *operator.Condition {
 	return qGenerate(t, taskGroupNestedTimeLayout)
 }

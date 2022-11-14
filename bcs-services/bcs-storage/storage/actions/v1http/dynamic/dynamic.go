@@ -27,7 +27,6 @@ import (
 	v1http "github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/v1http/utils"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/apiserver"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/clean"
-
 	"github.com/emicklei/go-restful"
 )
 
@@ -329,11 +328,11 @@ func CreateCustomResourcesIndex(req *restful.Request, resp *restful.Response) {
 
 	if err := createCustomResourcesIndex(req); err != nil {
 		utils.SetSpanLogTagError(span, err)
-		blog.Errorf("%s | err: %v", common.BcsErrStorageDeleteResourceFailStr, err)
+		blog.Errorf("%s | err: %v", common.BcsErrStoragePutResourceFailStr, err)
 		lib.ReturnRest(&lib.RestResponse{
 			Resp:    resp,
-			ErrCode: common.BcsErrStorageDeleteResourceFail,
-			Message: common.BcsErrStorageDeleteResourceFailStr})
+			ErrCode: common.BcsErrStoragePutResourceFail,
+			Message: common.BcsErrStoragePutResourceFailStr})
 		return
 	}
 	lib.ReturnRest(&lib.RestResponse{Resp: resp})

@@ -21,20 +21,16 @@ import (
 	"strings"
 	"time"
 
-	"github.com/emicklei/go-restful"
-	"github.com/micro/go-micro/v2/broker"
-	"go.mongodb.org/mongo-driver/bson"
-
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/codec"
 	"github.com/Tencent/bk-bcs/bcs-common/common/types"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/msgqueue"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
+	msgqueue "github.com/Tencent/bk-bcs/bcs-common/pkg/msgqueuev4"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/lib"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/utils/metrics"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/v1http/dynamic"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/apiserver"
+	"github.com/emicklei/go-restful"
+	"go-micro.dev/v4/broker"
 )
 
 func getExtra(req *restful.Request) operator.M {
@@ -145,17 +141,21 @@ func listEvent(req *restful.Request) ([]operator.M, int64, error) {
 
 	blog.Infof("clusterIDs: %s", clusterIDs)
 	fields := lib.GetQueryParamStringArray(req, fieldTag, ",")
+
 	limit, err := lib.GetQueryParamInt64(req, limitTag, 0)
 	if err != nil {
 		return nil, 0, err
 	}
+
 	offset, err := lib.GetQueryParamInt64(req, offsetTag, 0)
 	if err != nil {
 		return nil, 0, err
 	}
+
 	condition := getCondition(req)
 
-	getOption := &lib.StoreGetOption{
+	// option
+	opt := &lib.StoreGetOption{
 		Fields: fields,
 		Sort: map[string]int{
 			eventTimeTag: -1,
@@ -165,78 +165,7 @@ func listEvent(req *restful.Request) ([]operator.M, int64, error) {
 		Limit:  limit,
 	}
 
-	eventDBClient := apiserver.GetAPIResource().GetDBClient(dbConfig)
-
-	store := lib.NewStore(
-		eventDBClient,
-		apiserver.GetAPIResource().GetEventBus(dbConfig))
-	var mList []operator.M
-	var count int64
-
-	for _, clusterID := range clusterIDs {
-		for _, idxName := range eventQueryIndexKeys {
-			hasTable, err := store.GetDB().HasTable(req.Request.Context(), tablePrefix+clusterID)
-			if err != nil {
-				return nil, 0, err
-			}
-			if !hasTable {
-				return nil, 0, fmt.Errorf("failed to get table for clusterID %s", clusterID)
-			}
-
-			hasIndex, err := store.GetDB().Table(tablePrefix+clusterID).HasIndex(req.Request.Context(), idxName+"_idx")
-			if err != nil {
-				blog.Errorf("failed to get index for clusterID(%s) with  %s, err %s", clusterID, idxName, err.Error())
-				return nil, 0, fmt.Errorf("failed to get index for  clusterID(%s) with  %s, err %s", clusterID, idxName, err.Error())
-			}
-			if !hasIndex {
-				blog.Infof("create index for clusterID(%s) with key(%s)", clusterID, idxName)
-				index := drivers.Index{
-					Name: idxName + "_idx",
-					Key:  bson.D{},
-				}
-				index.Key = append(index.Key, bson.E{Key: idxName, Value: 1})
-				err = store.GetDB().Table(tablePrefix+clusterID).CreateIndex(req.Request.Context(), index)
-				if err != nil {
-					blog.Errorf("failed to create index for clusterID(%s) with %s, err %s", clusterID, idxName, err.Error())
-					return nil, 0, fmt.Errorf("failed to create index for clusterID(%s) with %s, err %s", clusterID, idxName, err.Error())
-				}
-			}
-		}
-
-		eList, err := store.Get(req.Request.Context(), tablePrefix+clusterID, getOption)
-		if err != nil {
-			blog.Errorf("get event list failed, err %s", err.Error())
-			return nil, 0, err
-		}
-		c, err := store.Count(req.Request.Context(), tablePrefix+clusterID, getOption)
-		if err != nil {
-			blog.Errorf("count event list failed, err %s", err.Error())
-			return nil, 0, err
-		}
-
-		mList = append(mList, eList...)
-		count += c
-	}
-
-	countTmp, err := store.Count(req.Request.Context(), tableName, getOption)
-	if err != nil {
-		return nil, 0, err
-	}
-	count += countTmp
-
-	if int64(len(mList)) < limit {
-		getOption.Limit = limit - int64(len(mList))
-		tmpList, err := store.Get(req.Request.Context(), tableName, getOption)
-		if err != nil {
-			return nil, 0, err
-		}
-		mList = append(mList, tmpList...)
-	} else if int64(len(mList)) > limit {
-		mList = mList[:limit]
-	}
-
-	lib.FormatTime(mList, []string{eventTimeTag})
-	return mList, count, nil
+	return GetEventList(req.Request.Context(), clusterIDs, opt)
 }
 
 func getReqData(req *restful.Request) (operator.M, error) {
@@ -261,96 +190,19 @@ func getReqData(req *restful.Request) (operator.M, error) {
 }
 
 func insert(req *restful.Request) error {
+	// 参数
 	data, err := getReqData(req)
 	if err != nil {
 		return err
 	}
-	dynamicData := lib.CopyMap(data)
-
-	putOption := &lib.StorePutOption{
-		UniqueKey: eventIndexKeys,
-	}
-	store := lib.NewStore(
-		apiserver.GetAPIResource().GetDBClient(dbConfig),
-		apiserver.GetAPIResource().GetEventBus(dbConfig))
-	data[createTimeTag] = time.Now()
-	err = store.Put(req.Request.Context(), tablePrefix+data[clusterIDTag].(string), data, putOption)
-	if err != nil {
-		if strings.Contains(err.Error(), "duplicate key") {
-			return nil
-		}
-		return fmt.Errorf("failed to insert, err %s", err.Error())
+	// 表名
+	resourceType := TablePrefix + data[clusterIDTag].(string)
+	// option
+	opt := &lib.StorePutOption{
+		UniqueKey: EventIndexKeys,
 	}
 
-	if dynamicData[dataTag] != nil {
-		if _, ok := dynamicData[dataTag].(map[string]interface{}); ok {
-			dynamicData[namespaceTag] = dynamicData[dataTag].(map[string]interface{})["metadata"].(map[string]interface{})["namespace"].(string)
-			dynamicData[resourceNameTag] = dynamicData[dataTag].(map[string]interface{})["metadata"].(map[string]interface{})["name"].(string)
-			dynamicData[resourceTypeTag] = EventResource
-
-			features := make(operator.M)
-			for _, key := range nsFeatTags {
-				features[key] = dynamicData[key]
-			}
-			// dynamic event
-			err = dynamic.PutData(req.Request.Context(), dynamicData, features, nsFeatTags, EventResource)
-			if err != nil {
-				blog.Errorf("dymanic event put data failed, err %s", err.Error())
-			}
-		}
-	}
-
-	hasIndex, err := store.GetDB().Table(tablePrefix+data[clusterIDTag].(string)).HasIndex(req.Request.Context(),
-		eventTimeTag)
-
-	if err != nil {
-		return fmt.Errorf("failed to get index, err %s", err.Error())
-	}
-
-	if !hasIndex {
-		index := drivers.Index{
-			Name: eventTimeTag,
-			Key: bson.D{
-				bson.E{Key: eventTimeTag, Value: -1},
-			},
-		}
-		err = store.GetDB().Table(tablePrefix+data[clusterIDTag].(string)).CreateIndex(req.Request.Context(), index)
-		if err != nil {
-			return fmt.Errorf("failed to create index, err %s", err.Error())
-		}
-	}
-
-	queueData := lib.CopyMap(data)
-	queueData[resourceTypeTag] = EventResource
-	env := typeofToString(queueData[envTag])
-
-	if extra, ok := queueData[extraInfoTag]; ok {
-		if d, ok := extra.(types.EventExtraInfo); ok {
-			queueData[nameSpaceTag] = d.Namespace
-			queueData[resourceNameTag] = d.Name
-			queueData[resourceKindTag] =
-				func(env string) interface{} {
-					switch env {
-					case string(types.Event_Env_K8s):
-						return data[kindTag]
-					case string(types.Event_Env_Mesos):
-						return d.Kind
-					}
-
-					return ""
-				}(env)
-		}
-	}
-
-	// queueFlag true
-	if apiserver.GetAPIResource().GetMsgQueue().QueueFlag {
-		err = publishEventResourceToQueue(queueData, eventFeatTags, msgqueue.EventTypeUpdate)
-		if err != nil {
-			blog.Errorf("publishEventResourceToQueue failed, err %s", err.Error())
-		}
-	}
-
-	return nil
+	return AddEvent(req.Request.Context(), resourceType, data, opt)
 }
 
 func watch(req *restful.Request, resp *restful.Response) {
@@ -361,10 +213,8 @@ func watch(req *restful.Request, resp *restful.Response) {
 		return
 	}
 	newWatchOption := &lib.WatchServerOption{
-		Store: lib.NewStore(
-			apiserver.GetAPIResource().GetDBClient(dbConfig),
-			apiserver.GetAPIResource().GetEventBus(dbConfig)),
-		TableName: tablePrefix + clusterID,
+		Store:     GetStore(),
+		TableName: TablePrefix + clusterID,
 		Req:       req,
 		Resp:      resp,
 	}

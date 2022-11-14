@@ -20,8 +20,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/types"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/lib"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/apiserver"
-
 	"github.com/emicklei/go-restful"
 )
 
@@ -101,62 +99,63 @@ func queryMetric(req *restful.Request) ([]operator.M, error) {
 	return get(req, getQueryFeat(req))
 }
 
-func get(req *restful.Request, condition *operator.Condition) ([]operator.M, error) {
-	offset, err := lib.GetQueryParamInt64(req, offsetTag, 0)
-	if err != nil {
+func get(req *restful.Request, condition *operator.Condition) (result []operator.M, err error) {
+	// 表名
+	resourceType := getTable(req)
+	// 参数
+	var offset, limit int64
+
+	if offset, err = lib.GetQueryParamInt64(req, offsetTag, 0); err != nil {
 		return nil, err
 	}
-	limit, err := lib.GetQueryParamInt64(req, limitTag, 0)
-	if err != nil {
+
+	if limit, err = lib.GetQueryParamInt64(req, limitTag, 0); err != nil {
 		return nil, err
 	}
-	getOption := &lib.StoreGetOption{
+
+	// option
+	opt := &lib.StoreGetOption{
 		Cond:   condition,
 		Offset: offset,
 		Limit:  limit,
 	}
-	store := lib.NewStore(
-		apiserver.GetAPIResource().GetDBClient(dbConfig),
-		apiserver.GetAPIResource().GetEventBus(dbConfig))
-	store.SetSoftDeletion(true)
-	mList, err := store.Get(req.Request.Context(), getTable(req), getOption)
-	lib.FormatTime(mList, []string{createTimeTag, updateTimeTag})
-	return mList, err
+
+	return GetData(req.Request.Context(), resourceType, opt)
 }
 
 func put(req *restful.Request) error {
+	// 表名
+	resourceType := getTable(req)
+	// 参数
 	features := getBaseFeatures(req, metricFeatTags)
 	data, err := getReqData(req, features)
 	if err != nil {
 		return err
 	}
-	store := lib.NewStore(
-		apiserver.GetAPIResource().GetDBClient(dbConfig),
-		apiserver.GetAPIResource().GetEventBus(dbConfig))
-	store.SetSoftDeletion(true)
-	return store.Put(req.Request.Context(), getTable(req), data, &lib.StorePutOption{
+
+	// option
+	opt := &lib.StorePutOption{
 		Cond:          operator.NewLeafCondition(operator.Eq, features),
 		UpdateTimeKey: updateTimeTag,
 		CreateTimeKey: createTimeTag,
-	})
+	}
+
+	return PutData(req.Request.Context(), resourceType, data, opt)
 }
 
 func remove(req *restful.Request) error {
+	// 表名
+	resourceType := getTable(req)
+	// 参数
 	condition := getMetricFeat(req)
-	store := lib.NewStore(
-		apiserver.GetAPIResource().GetDBClient(dbConfig),
-		apiserver.GetAPIResource().GetEventBus(dbConfig))
-	store.SetSoftDeletion(true)
-	return store.Remove(req.Request.Context(), getTable(req), &lib.StoreRemoveOption{
+
+	// option
+	opt := &lib.StoreRemoveOption{
 		Cond: condition,
-	})
+	}
+	return RemoveData(req.Request.Context(), resourceType, opt)
 }
 
 func tables(req *restful.Request) ([]string, error) {
-	store := lib.NewStore(
-		apiserver.GetAPIResource().GetDBClient(dbConfig),
-		apiserver.GetAPIResource().GetEventBus(dbConfig))
-	store.SetSoftDeletion(true)
-	tableNames, err := store.GetDB().ListTableNames(req.Request.Context())
-	return tableNames, err
+	return GetList(req.Request.Context())
 }

@@ -16,10 +16,10 @@ package msgqueue
 import (
 	"context"
 	"encoding/json"
-	"errors"
+	"time"
+
 	glog "github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/micro/go-micro/v2/broker"
-	"time"
 )
 
 // consumer subscribe resource type
@@ -47,31 +47,25 @@ type Handler interface {
 	Handle(ctx context.Context, data []byte) error
 }
 
-// HandlerWrap function for Handler interface
-func HandlerWrap(name string, f func(ctx context.Context, data []byte) error) *HandlerWrapper {
+// NewHandlerWrapper function for Handler interface
+func NewHandlerWrapper(name string, f func(ctx context.Context, data []byte) error) *HandlerWrapper {
 	return &HandlerWrapper{name, f}
 }
 
 // HandlerWrapper for Handler
 type HandlerWrapper struct {
-	NameValue string
-	Impl      func(ctx context.Context, data []byte) error
+	nameValue string
+	impl      func(ctx context.Context, data []byte) error
 }
 
 // Handle of hw
 func (hw *HandlerWrapper) Handle(ctx context.Context, data []byte) error {
-	if hw == nil {
-		return errors.New("nil handler")
-	}
-	return hw.Impl(ctx, data)
+	return hw.impl(ctx, data)
 }
 
 // Name of the handler
 func (hw *HandlerWrapper) Name() string {
-	if hw == nil {
-		return "nil"
-	}
-	return hw.NameValue
+	return hw.nameValue
 }
 
 // objectHandler inject data to subscriber by filter and handler
@@ -89,17 +83,9 @@ type HandlerData struct {
 }
 
 func (object *objectHandler) selfHandler(b broker.Event) error {
-	if object == nil || object.handler == nil {
-		return nil
-	}
-
 	// headers: metaData; data: originData
 	headers := b.Message().Header
 	data := b.Message().Body
-
-	if len(headers) == 0 {
-		return nil
-	}
 
 	_, okID := headers[string(ClusterID)]
 	if !okID {

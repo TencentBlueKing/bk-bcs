@@ -128,25 +128,20 @@ func (e *etcdRegister) Register() error {
 	return nil
 }
 
-func (e *etcdRegister) innerRegister() error {
-	var rerr error
+func (e *etcdRegister) innerRegister() (err error) {
 	for i := 0; i < 3; i++ {
-		if err := e.etcdregistry.Register(
-			e.localService,
-			registry.RegisterTTL(e.option.TTL),
-		); err != nil {
-			// try again until max failed
-			rerr = err
+		if err = e.etcdregistry.Register(e.localService, registry.RegisterTTL(e.option.TTL)); err != nil {
+			//try again until max failed
 			roption := e.etcdregistry.Options()
 			blog.Errorf("etcd registry register err, %s, options: %+v\n", err.Error(), roption)
 			time.Sleep(backoff.Do(i + 1))
 			continue
 		}
-		// register success, clean error
-		rerr = nil
+		//register success, clean error
+		err = nil
 		break
 	}
-	return rerr
+	return err
 }
 
 // Deregister clean service information from registry

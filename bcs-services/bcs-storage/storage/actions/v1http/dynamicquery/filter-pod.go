@@ -29,8 +29,8 @@ type PodFilter struct {
 	StartTimeEnd   string `json:"startTimeEnd,omitempty" filter:"data.status.startTime,timeR"`
 }
 
-const podNestedTimeLayout = nestedTimeLayout
+const podNestedTimeLayout = NestedTimeLayout
 
-func (t PodFilter) getCondition() *operator.Condition {
+func (t PodFilter) GetCondition() *operator.Condition {
 	return qGenerate(t, podNestedTimeLayout)
 }

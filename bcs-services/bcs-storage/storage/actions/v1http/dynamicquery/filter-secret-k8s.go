@@ -26,8 +26,8 @@ type SecretK8sFilter struct {
 	CreateTimeEnd   string `json:"createTimeEnd,omitempty" filter:"data.metadata.creationTimestamp,timeR"`
 }
 
-const secretK8sNestedTimeLayout = nestedTimeLayout
+const secretK8sNestedTimeLayout = NestedTimeLayout
 
-func (t SecretK8sFilter) getCondition() *operator.Condition {
+func (t SecretK8sFilter) GetCondition() *operator.Condition {
 	return qGenerate(t, secretK8sNestedTimeLayout)
 }

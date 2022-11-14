@@ -24,7 +24,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
 	"github.com/Tencent/bk-bcs/bcs-common/common/encrypt"
 	"github.com/Tencent/bk-bcs/bcs-common/common/http/httpserver"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/msgqueue"
+	msgqueue "github.com/Tencent/bk-bcs/bcs-common/pkg/msgqueuev4"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers/mongo"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
@@ -72,6 +72,7 @@ func (a *APIResource) SetConfig(op *options.StorageOptions) {
 	a.Conf = op
 	// parse config-map from file
 	dbConfig := a.ParseDBConfig()
+
 	blog.Infof("Begin to parse databases.")
 
 	a.storeMap = make(map[string]store.Store)
@@ -116,6 +117,7 @@ func (a *APIResource) SetConfig(op *options.StorageOptions) {
 
 	// parse config-map from queue file
 	queueConfig := a.ParseQueueConfig()
+
 	blog.Infof("Begin to parse queueConfig.")
 
 	for _, key := range queueConfig.KeyList {
@@ -306,6 +308,7 @@ func (a *APIResource) parseMongodb(key string, dbConf *conf.Config) error {
 		blog.Errorf("create mongo db with %s failed, err %s", key, err.Error())
 		return fmt.Errorf("create mongo db with %s failed, err %s", key, err.Error())
 	}
+
 	err = mongoDB.Ping()
 	if err != nil {
 		blog.Errorf("ping mongo db failed, err %s", err.Error())

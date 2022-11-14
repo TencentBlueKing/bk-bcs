@@ -14,6 +14,7 @@
 package dynamicquery
 
 import (
+	"encoding/json"
 	"net/url"
 	"reflect"
 	"testing"
@@ -40,4 +41,29 @@ func TestGetQueryJson(t *testing.T) {
 	if !reflect.DeepEqual(p, expect) {
 		t.Errorf("getQueryJson() failed! \nresult:\n%v\nexpect:\n%v\n", p, expect)
 	}
+}
+
+func jsonToObj(hm map[string]interface{}, a qFilter, t *testing.T) {
+
+	bytes, err := json.Marshal(hm)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if err = json.Unmarshal(bytes, a); err != nil {
+		t.Fatal(err)
+	}
+	t.Logf("%#v", a)
+}
+
+func TestJson(t *testing.T) {
+
+	hm := make(map[string]interface{})
+	hm["ClusterId"] = "32324"
+
+	jsonToObj(hm, &ApplicationFilter{}, t)
+
+	hm["aaaaa"] = "333"
+	jsonToObj(hm, &DaemonSetFilter{}, t)
+
 }

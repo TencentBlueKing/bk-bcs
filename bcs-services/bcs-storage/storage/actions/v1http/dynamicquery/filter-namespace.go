@@ -27,8 +27,8 @@ type NameSpaceFilter struct {
 	CreateTimeEnd   string `json:"createTimeEnd,omitempty" filter:"data.metadata.creationTimestamp,timeR"`
 }
 
-const nameSpaceNestedTimeLayout = nestedTimeLayout
+const nameSpaceNestedTimeLayout = NestedTimeLayout
 
-func (t NameSpaceFilter) getCondition() *operator.Condition {
+func (t NameSpaceFilter) GetCondition() *operator.Condition {
 	return qGenerate(t, nameSpaceNestedTimeLayout)
 }
