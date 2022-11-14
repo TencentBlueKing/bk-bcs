@@ -160,7 +160,7 @@ var (
 		"Maximum time CA waits for node to be provisioned")
 	maxNodeStartupTime = flag.Duration("max-node-startup-time", 15*time.Minute,
 		"Maximum time CA waits for node to be ready")
-	maxNodeStartScheduleTime = flag.Duration("max-node-startup-time", 15*time.Minute,
+	maxNodeStartScheduleTime = flag.Duration("max-node-start-schedule-time", 15*time.Minute,
 		"Maximum time CA waits for node to be schedulable")
 	nodeGroupsFlag = multiStringFlag("nodes",
 		"sets min,max size and other configuration data for a node group in a format accepted by cloud provider."+
@@ -218,6 +218,8 @@ var (
 		"Specifies a taint to ignore in node templates when considering to scale a node group")
 	awsUseStaticInstanceList = flag.Bool("aws-use-static-instance-list", false,
 		"Should CA fetch instance types in runtime or use a static list. AWS only")
+	bufferedCPURatio      = flag.Float64("buffer-cpu-ratio", 0, "ratio of buffered cpu")
+	bufferedMemRatio      = flag.Float64("buffer-mem-ratio", 0, "ratio of buffered memory")
 	bufferedResourceRatio = flag.Float64("buffer-resource-ratio", 0, "ratio of buffered resources")
 	enableProfiling       = flag.Bool("profiling", false, "Is debug/pprof endpoint enabled")
 
@@ -302,6 +304,8 @@ func createAutoscalingOptions() scalingconfig.Options {
 			NodeDeletionDelayTimeout:            *nodeDeletionDelayTimeout,
 			AWSUseStaticInstanceList:            *awsUseStaticInstanceList,
 		},
+		BufferedCPURatio:      *bufferedCPURatio,
+		BufferedMemRatio:      *bufferedMemRatio,
 		BufferedResourceRatio: *bufferedResourceRatio,
 		WebhookMode:           *webhookMode,
 		WebhookModeConfig:     *webhookModeConfig,

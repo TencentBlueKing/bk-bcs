@@ -62,6 +62,8 @@ type BufferedAutoscaler struct {
 	// Caches nodeInfo computed for previously seen nodes
 	nodeInfoCache map[string]*schedulernodeinfo.NodeInfo
 	ignoredTaints taintKeySet
+	CPURatio      float64
+	MemRatio      float64
 	ratio         float64
 	webhook       Webhook
 }
@@ -107,7 +109,7 @@ func NewBufferedAutoscaler(
 	cloudProvider cloudprovider.CloudProvider,
 	expanderStrategy expander.Strategy,
 	estimatorBuilder estimatorinternal.ExtendedEstimatorBuilder,
-	backoff backoff.Backoff, ratio float64,
+	backoff backoff.Backoff, cpuRatio, memRatio, ratio float64,
 	client kubeclient.Interface) core.Autoscaler {
 
 	processorCallbacks := newBufferedAutoscalerProcessorCallbacks()
@@ -131,7 +133,7 @@ func NewBufferedAutoscaler(
 	clusterStateRegistry := clusterstate.NewClusterStateRegistry(autoscalingContext.CloudProvider, clusterStateConfig,
 		autoscalingContext.LogRecorder, backoff)
 
-	scaleDown := NewScaleDown(autoscalingContext, clusterStateRegistry, ratio)
+	scaleDown := NewScaleDown(autoscalingContext, clusterStateRegistry, cpuRatio, memRatio, ratio)
 
 	var webhook Webhook
 	switch opts.WebhookMode {
@@ -155,6 +157,8 @@ func NewBufferedAutoscaler(
 		clusterStateRegistry:    clusterStateRegistry,
 		nodeInfoCache:           make(map[string]*schedulernodeinfo.NodeInfo),
 		ignoredTaints:           ignoredTaints,
+		CPURatio:                cpuRatio,
+		MemRatio:                memRatio,
 		ratio:                   ratio,
 		webhook:                 webhook,
 	}
@@ -573,7 +577,7 @@ func (b *BufferedAutoscaler) doScaleUp(autoscalingContext *contextinternal.Conte
 		klog.Error(typedErr)
 		return scaleUpStatus, scaleUpStatusProcessorAlreadyCalled, scheduledPods, typedErr
 	}
-	bufferNotEnough := checkResourceNotEnough(nodeInfos, b.ratio)
+	bufferNotEnough := checkResourceNotEnough(nodeInfos, b.CPURatio, b.MemRatio, b.ratio)
 	shouldScaleUp := false
 
 	if len(unschedulablePodsToHelp) == 0 {

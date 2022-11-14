@@ -742,7 +742,8 @@ func getUpcomingNodeInfos(registry *clusterstate.ClusterStateRegistry,
 	return upcomingNodes
 }
 
-func checkResourceNotEnough(nodes map[string]*schedulernodeinfo.NodeInfo, ratio float64) bool {
+func checkResourceNotEnough(nodes map[string]*schedulernodeinfo.NodeInfo,
+	cpuRatio, memRatio, ratio float64) bool {
 	var leftResourcesList, sumResourcesList schedulernodeinfo.Resource
 	for _, nodeInfo := range nodes {
 		node := nodeInfo.Node()
@@ -772,9 +773,22 @@ func checkResourceNotEnough(nodes map[string]*schedulernodeinfo.NodeInfo, ratio 
 		}
 		r := float64(left.MilliValue()) / float64(sum.MilliValue())
 		klog.V(6).Infof("Resource :%v, left: %v", name, r)
-		klog.V(4).Infof("%v ratio %v, desired ratio %v", name, r, ratio)
-		if r < ratio {
-			return true
+		switch name {
+		case apiv1.ResourceCPU:
+			klog.V(4).Infof("%v ratio %v, desired CPU ratio %v", name, r, cpuRatio)
+			if r < cpuRatio {
+				return true
+			}
+		case apiv1.ResourceMemory:
+			klog.V(4).Infof("%v ratio %v, desired Memory ratio %v", name, r, memRatio)
+			if r < memRatio {
+				return true
+			}
+		default:
+			klog.V(4).Infof("%v ratio %v, desired ratio %v", name, r, ratio)
+			if r < ratio {
+				return true
+			}
 		}
 	}
 	return false
