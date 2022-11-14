@@ -129,8 +129,10 @@ func (cc *ClientConfig) GetProjectSharedNamespaces(projectID, clusterID string) 
 		resp = &GetProjectsNamespacesResp{}
 	)
 
+	// desire_all_data=1 get all namespaces
 	result, body, errs := gorequest.New().Timeout(defaultTimeOut).Get(url).
 		Query(fmt.Sprintf("access_token=%s", token)).
+		Query(fmt.Sprintf("desire_all_data=%s", "1")).
 		Set("Content-Type", "application/json").
 		Set("Connection", "close").
 		SetDebug(true).
@@ -159,7 +161,8 @@ func (cc *ClientConfig) GetProjectSharedNamespaces(projectID, clusterID string) 
 			cacheName(projectID, clusterID), err)
 	}
 
-	blog.Infof("GetProjectSharedNamespaces[%s:%s] successful: %+v", projectID, clusterID, namespaceList)
+	blog.Infof("GetProjectSharedNamespaces[%s:%s] count[%v] successful: %+v", projectID, clusterID,
+		len(namespaceList), namespaceList)
 	return namespaceList, nil
 }
 

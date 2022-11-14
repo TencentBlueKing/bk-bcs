@@ -176,7 +176,7 @@ func (ts *TaskServer) initServer() error {
 			Exchange:      ts.brokerOption.Exchange,
 			ExchangeType:  "direct",
 			BindingKey:    ts.brokerOption.Exchange,
-			PrefetchCount: 3,
+			PrefetchCount: 50,
 		},
 	}
 	broker := amqp.New(config)
@@ -213,7 +213,7 @@ func (ts *TaskServer) initServer() error {
 // initWorker xxx
 // init worker
 func (ts *TaskServer) initWorker() error {
-	ts.worker = ts.server.NewWorker("", 10)
+	ts.worker = ts.server.NewWorker("", 100)
 	// int all kinds handler, here we inject some custom code for error handling,
 	// start and end of task hooks, useful for metrics
 	errorHandler := func(err error) {
