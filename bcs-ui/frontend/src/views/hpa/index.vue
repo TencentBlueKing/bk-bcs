@@ -554,6 +554,8 @@ export default {
         },
         query: {
           cluster_id: row.cluster_id,
+          name: row.ref_name,
+          namespace: row.namespace,
         },
       });
       window.open(location.href);
