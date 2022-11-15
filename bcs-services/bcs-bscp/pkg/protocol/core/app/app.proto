@@ -1,0 +1,35 @@
+syntax = "proto3";
+
+import "bscp.io/pkg/protocol/core/base/base.proto";
+
+package pbapp;
+
+option go_package = "bscp.io/pkg/protocol/core/app;pbapp";
+
+// App source resource reference: pkg/dal/table/app.go
+message App {
+    uint32 id                = 1;
+    uint32 biz_id            = 2;
+    AppSpec spec             = 3;
+    pbbase.Revision revision = 4;
+}
+
+// AppSpec source resource reference: pkg/dal/table/app.go
+message AppSpec {
+    string name        = 1;
+    string config_type = 2;  // config_type is enum type
+    string mode        = 4;  // mode is enum type.
+    string memo        = 5;
+    Reload reload      = 6;
+}
+
+// ReloadSpec source resource reference: pkg/dal/table/app.go
+message Reload {
+    string reload_type              = 1;  // reload_type is enum type
+    FileReloadSpec file_reload_spec = 2;
+}
+
+// FileReloadSpec source resource reference: pkg/dal/table/app.go
+message FileReloadSpec {
+    string reload_file_path = 1;
+}

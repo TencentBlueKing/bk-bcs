@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+import "bscp.io/pkg/protocol/core/base/base.proto";
+
+package pbrelease;
+
+option go_package = "bscp.io/pkg/protocol/core/release;pbrelease";
+
+// Release source resource reference: pkg/dal/table/release.go
+message Release {
+    uint32 id                       = 1;
+    ReleaseSpec spec                = 2;
+    ReleaseAttachment attachment    = 3;
+    pbbase.CreatedRevision revision = 4;
+}
+
+// ReleaseSpec source resource reference: pkg/dal/table/release.go
+message ReleaseSpec {
+    string name = 1;
+    string memo = 2;
+}
+
+// ReleaseAttachment source resource reference: pkg/dal/table/release.go
+message ReleaseAttachment {
+    uint32 biz_id = 1;
+    uint32 app_id = 2;
+}

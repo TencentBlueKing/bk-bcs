@@ -1,0 +1,140 @@
+syntax = "proto3";
+
+import "google/api/annotations.proto";
+import "google/protobuf/struct.proto";
+
+package pbas;
+
+option go_package = "bscp.io/pkg/protocol/auth-server;pbas";
+
+service Auth {
+    // init auth center's auth model.
+    rpc InitAuthCenter(InitAuthCenterReq) returns (InitAuthCenterResp) {
+        option (google.api.http) = {
+            post: "/api/v1/auth/init/authcenter"
+            body: "*"
+        };
+    }
+
+    // iam pull resource callback.
+    rpc PullResource(PullResourceReq) returns (PullResourceResp) {
+        option (google.api.http) = {
+            post: "/api/v1/auth/iam/find/resource"
+            body: "*"
+        };
+    }
+
+    // authorize resource batch.
+    rpc AuthorizeBatch(AuthorizeBatchReq) returns (AuthorizeBatchResp) {}
+
+    // get iam permission to apply.
+    rpc GetPermissionToApply(GetPermissionToApplyReq) returns (GetPermissionToApplyResp) {}
+}
+
+message InitAuthCenterReq {
+    string host = 1;
+}
+
+message InitAuthCenterResp {
+    int32 code     = 1;
+    string message = 2;
+}
+
+message PullResourceReq {
+    string type                   = 1;
+    string method                 = 2;
+    google.protobuf.Struct filter = 3;
+    Page page                     = 4;
+}
+
+message PullResourceResp {
+    int32 code                  = 1;
+    string message              = 2;
+    google.protobuf.Struct data = 3;
+}
+
+message Page {
+    uint32 limit  = 1;
+    uint32 offset = 2;
+}
+
+message AuthorizeBatchReq {
+    UserInfo user                        = 1;
+    repeated ResourceAttribute resources = 2;
+}
+
+message UserInfo {
+    string user_name = 1;
+}
+
+message ResourceAttribute {
+    Basic basic   = 1;
+    uint32 biz_id = 2;
+}
+
+message Basic {
+    string type        = 1;
+    string action      = 2;
+    uint32 resource_id = 3;
+}
+
+message AuthorizeBatchResp {
+    int32 code                  = 1;
+    string message              = 2;
+    repeated Decision decisions = 3;
+}
+
+message Decision {
+    bool authorized = 1;
+}
+
+message GetPermissionToApplyReq {
+    repeated ResourceAttribute resources = 1;
+}
+
+message GetPermissionToApplyResp {
+    int32 code               = 1;
+    string message           = 2;
+    IamPermission permission = 3;
+}
+
+message IamPermission {
+    string system_id           = 1;
+    string system_name         = 2;
+    repeated IamAction actions = 3;
+}
+
+message IamAction {
+    string id                                       = 1;
+    string name                                     = 2;
+    repeated IamResourceType related_resource_types = 3;
+}
+
+message IamResourceType {
+    string system_id                         = 1;
+    string system_name                       = 2;
+    string type                              = 3;
+    string type_name                         = 4;
+    repeated IamResourceInstances instances  = 5;
+    repeated IamResourceAttribute attributes = 6;
+}
+
+message IamResourceInstances {
+    repeated IamResourceInstance instances = 1;
+}
+
+message IamResourceInstance {
+    string type      = 1;
+    string type_name = 2;
+    string id        = 3;
+    string name      = 4;
+}
+
+message IamResourceAttribute {
+    string id                                 = 1;
+    repeated IamResourceAttributeValue values = 2;
+}
+
+message IamResourceAttributeValue {
+    string id = 1;
+}

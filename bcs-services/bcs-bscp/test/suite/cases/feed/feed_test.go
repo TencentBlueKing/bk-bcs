@@ -1,0 +1,750 @@
+/*
+Tencent is pleased to support the open source community by making Basic Service Configuration Platform available.
+Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
+Licensed under the MIT License (the "License"); you may not use this file except
+in compliance with the License. You may obtain a copy of the License at
+http://opensource.org/licenses/MIT
+Unless required by applicable law or agreed to in writing, software distributed under
+the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+either express or implied. See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
+package feed
+
+import (
+	"testing"
+	"time"
+
+	. "github.com/smartystreets/goconvey/convey" // import convey.
+
+	"bscp.io/cmd/feed-server/bll/types"
+	"bscp.io/pkg/criteria/errf"
+	"bscp.io/pkg/criteria/uuid"
+	"bscp.io/pkg/dal/table"
+	"bscp.io/pkg/kit"
+	pbcs "bscp.io/pkg/protocol/config-server"
+	pbapp "bscp.io/pkg/protocol/core/app"
+	pbci "bscp.io/pkg/protocol/core/config-item"
+	pbcontent "bscp.io/pkg/protocol/core/content"
+	"bscp.io/pkg/tools"
+	"bscp.io/test/suite"
+	"bscp.io/test/suite/cases"
+)
+
+func TestFeed(t *testing.T) {
+	SetDefaultFailureMode(FailureHalts)
+
+	var (
+		// resource value, they
+		nmApp      pbapp.App
+		nsApp      pbapp.App
+		ConfigItem pbci.ConfigItem
+		Content    pbcontent.Content
+
+		// normal mode instance uid
+		nmContentId   uint32
+		nmReleaseId   uint32
+		nmInstanceUid string
+
+		// namespace mode
+		nsContentId    uint32
+		nsReleaseId    uint32
+		nsStgNamespace string
+	)
+
+	cli := suite.GetClient()
+
+	Convey("Feed Server Suite Test", t, func() {
+		Convey("Generate Resource For Feed Test", func() {
+			// if the values need to be verified, they need to be defined below
+			content := "this is a file content"
+			nmInstanceUid = uuid.UUID()
+			nsStgNamespace = "This_Is_NameSpace_Strategy"
+
+			// normal mode app. Its ID needs to be assigned after creation.
+			nmApp = pbapp.App{
+				Spec: &pbapp.AppSpec{
+					ConfigType: string(table.File),
+					Mode:       string(table.Normal),
+				},
+			}
+
+			// namespace mode app. Its ID needs to be assigned after creation.
+			nsApp = pbapp.App{
+				Spec: &pbapp.AppSpec{
+					ConfigType: string(table.File),
+					Mode:       string(table.Namespace),
+				},
+			}
+
+			// normal mode config item.
+			ConfigItem = pbci.ConfigItem{
+				Spec: &pbci.ConfigItemSpec{
+					Name:     "feed_test_config_item",
+					Path:     "/etc",
+					FileType: string(table.Xml),
+					FileMode: string(table.Unix),
+					Permission: &pbci.FilePermission{
+						User:      "root",
+						UserGroup: "root",
+						Privilege: "777",
+					},
+				},
+			}
+
+			// normal mode content.
+			Content = pbcontent.Content{
+				Spec: &pbcontent.ContentSpec{
+					Signature: tools.SHA256(content),
+					ByteSize:  uint64(len(content)),
+				},
+			}
+
+			var err error
+			nmName := "normal_mode_feed"
+
+			// create app
+			nmAppReq := &pbcs.CreateAppReq{ // the application has release instance
+				BizId:          cases.TBizID,
+				Name:           cases.RandName(nmName),
+				ConfigType:     nmApp.Spec.ConfigType,
+				Mode:           nmApp.Spec.Mode,
+				ReloadType:     string(table.ReloadWithFile),
+				ReloadFilePath: "/tmp/reload.json",
+			}
+			ctx, header := cases.GenApiCtxHeader()
+			nmAppResp, err := cli.ApiClient.App.Create(ctx, header, nmAppReq)
+			So(err, ShouldBeNil)
+			So(nmAppResp, ShouldNotBeNil)
+			So(nmAppResp.Data, ShouldNotBeNil)
+			So(nmAppResp.Data.Id, ShouldNotEqual, uint32(0))
+			nmApp.Id = nmAppResp.Data.Id
+
+			// create config item
+			nmCIReq := &pbcs.CreateConfigItemReq{
+				BizId:     cases.TBizID,
+				AppId:     nmAppResp.Data.Id,
+				Name:      ConfigItem.Spec.Name,
+				Path:      ConfigItem.Spec.Path,
+				FileType:  ConfigItem.Spec.FileType,
+				FileMode:  ConfigItem.Spec.FileMode,
+				User:      ConfigItem.Spec.Permission.User,
+				UserGroup: ConfigItem.Spec.Permission.UserGroup,
+				Privilege: ConfigItem.Spec.Permission.Privilege,
+			}
+			ctx, header = cases.GenApiCtxHeader()
+			nmCiResp, err := cli.ApiClient.ConfigItem.Create(ctx, header, nmCIReq)
+			So(err, ShouldBeNil)
+			So(nmCiResp, ShouldNotBeNil)
+			So(nmCiResp.Data, ShouldNotBeNil)
+			So(nmCiResp.Data.Id, ShouldNotEqual, uint32(0))
+
+			// create content
+			nmCtReq := &pbcs.CreateContentReq{
+				BizId:        cases.TBizID,
+				AppId:        nmAppResp.Data.Id,
+				ConfigItemId: nmCiResp.Data.Id,
+				Sign:         Content.Spec.Signature,
+				ByteSize:     Content.Spec.ByteSize,
+			}
+			ctx, header = cases.GenApiCtxHeader()
+			nmCtResp, err := cli.ApiClient.Content.Create(ctx, header, nmCtReq)
+			So(err, ShouldBeNil)
+			So(nmCtResp, ShouldNotBeNil)
+			So(nmCtResp.Data, ShouldNotBeNil)
+			So(nmCtResp.Data.Id, ShouldNotEqual, uint32(0))
+			nmContentId = nmCtResp.Data.Id
+
+			// create commit
+			nmCmReq := &pbcs.CreateCommitReq{
+				BizId:        cases.TBizID,
+				AppId:        nmAppResp.Data.Id,
+				ConfigItemId: nmCiResp.Data.Id,
+				ContentId:    nmCtResp.Data.Id,
+			}
+			ctx, header = cases.GenApiCtxHeader()
+			nmCmResp, err := cli.ApiClient.Commit.Create(ctx, header, nmCmReq)
+			So(err, ShouldBeNil)
+			So(nmCmResp, ShouldNotBeNil)
+			So(nmCmResp.Data, ShouldNotBeNil)
+			So(nmCmResp.Data.Id, ShouldNotEqual, uint32(0))
+
+			// create release
+			nmRelReq := &pbcs.CreateReleaseReq{
+				BizId: cases.TBizID,
+				AppId: nmAppResp.Data.Id,
+				Name:  nmName + "_release",
+			}
+			ctx, header = cases.GenApiCtxHeader()
+			nmRelResp, err := cli.ApiClient.Release.Create(ctx, header, nmRelReq)
+			So(err, ShouldBeNil)
+			So(nmRelResp, ShouldNotBeNil)
+			So(nmRelResp.Data, ShouldNotBeNil)
+			So(nmRelResp.Data.Id, ShouldNotEqual, uint32(0))
+			nmReleaseId = nmRelResp.Data.Id
+
+			// publish instance
+			nmInsReq := &pbcs.PublishInstanceReq{
+				BizId:     cases.TBizID,
+				AppId:     nmAppResp.Data.Id,
+				Uid:       nmInstanceUid,
+				ReleaseId: nmRelResp.Data.Id,
+			}
+			ctx, header = cases.GenApiCtxHeader()
+			nmInsResp, err := cli.ApiClient.Instance.Publish(ctx, header, nmInsReq)
+			So(err, ShouldBeNil)
+			So(nmInsResp, ShouldNotBeNil)
+			So(nmInsResp.Data, ShouldNotBeNil)
+			So(nmInsResp.Data.Id, ShouldNotEqual, uint32(0))
+
+			// create strategy set
+			nmStgSetReq := &pbcs.CreateStrategySetReq{
+				BizId: cases.TBizID,
+				AppId: nmAppResp.Data.Id,
+				Name:  nmName + "_strategy_set",
+			}
+			ctx, header = cases.GenApiCtxHeader()
+			nmStgSetResp, err := cli.ApiClient.StrategySet.Create(ctx, header, nmStgSetReq)
+			So(err, ShouldBeNil)
+			So(nmStgSetResp, ShouldNotBeNil)
+			So(nmStgSetResp.Data, ShouldNotBeNil)
+			So(nmStgSetResp.Data.Id, ShouldNotEqual, uint32(0))
+
+			// create strategy
+			scope, err := cases.GenNormalStrategyScope(nmName, nmRelResp.Data.Id)
+			So(err, ShouldBeNil)
+			nmStgReq := &pbcs.CreateStrategyReq{
+				BizId:         cases.TBizID,
+				AppId:         nmAppResp.Data.Id,
+				StrategySetId: nmStgSetResp.Data.Id,
+				ReleaseId:     nmRelResp.Data.Id,
+				AsDefault:     false,
+				Name:          nmName + "_strategy",
+				Scope:         scope,
+				Namespace:     "",
+			}
+			ctx, header = cases.GenApiCtxHeader()
+			nmStgResp, err := cli.ApiClient.Strategy.Create(ctx, header, nmStgReq)
+			So(err, ShouldBeNil)
+			So(nmStgResp, ShouldNotBeNil)
+			So(nmStgResp.Data, ShouldNotBeNil)
+			So(nmStgResp.Data.Id, ShouldNotEqual, uint32(0))
+
+			// publish with strategy
+			nmPubStgReq := &pbcs.PublishStrategyReq{
+				BizId: cases.TBizID,
+				AppId: nmAppResp.Data.Id,
+				Id:    nmStgResp.Data.Id,
+			}
+			ctx, header = cases.GenApiCtxHeader()
+			nmPubStgResp, err := cli.ApiClient.Publish.PublishWithStrategy(ctx, header, nmPubStgReq)
+			So(err, ShouldBeNil)
+			So(nmPubStgResp, ShouldNotBeNil)
+			So(nmPubStgResp.Data, ShouldNotBeNil)
+			So(nmPubStgResp.Data.Id, ShouldNotEqual, uint32(0))
+
+			// finish publish with strategy
+			nmFinishPubStgReq := &pbcs.FinishPublishStrategyReq{
+				BizId: cases.TBizID,
+				AppId: nmAppResp.Data.Id,
+				Id:    nmStgResp.Data.Id,
+			}
+			ctx, header = cases.GenApiCtxHeader()
+			nmFinishPubStgResp, err := cli.ApiClient.Publish.FinishPublishWithStrategy(ctx, header, nmFinishPubStgReq)
+			So(err, ShouldBeNil)
+			So(nmFinishPubStgResp, ShouldNotBeNil)
+			So(nmFinishPubStgResp.Code, ShouldEqual, errf.OK)
+
+			// namespace mode
+			nsName := "namespace_mode_feed"
+			// create namespace mode app
+			nsAppNsReq := &pbcs.CreateAppReq{
+				BizId:          cases.TBizID,
+				Name:           cases.RandName(nsName),
+				ConfigType:     nsApp.Spec.ConfigType,
+				Mode:           nsApp.Spec.Mode,
+				ReloadType:     string(table.ReloadWithFile),
+				ReloadFilePath: "/tmp/reload.json",
+			}
+			ctx, header = cases.GenApiCtxHeader()
+			nsAppResp, err := cli.ApiClient.App.Create(ctx, header, nsAppNsReq)
+			So(err, ShouldBeNil)
+			So(nsAppResp, ShouldNotBeNil)
+			So(nsAppResp.Data, ShouldNotBeNil)
+			So(nsAppResp.Data.Id, ShouldNotEqual, uint32(0))
+			nsApp.Id = nsAppResp.Data.Id
+
+			// create config item
+			nsCiReq := &pbcs.CreateConfigItemReq{
+				BizId:     cases.TBizID,
+				AppId:     nsAppResp.Data.Id,
+				Name:      ConfigItem.Spec.Name,
+				Path:      ConfigItem.Spec.Path,
+				FileType:  ConfigItem.Spec.FileType,
+				FileMode:  ConfigItem.Spec.FileMode,
+				User:      ConfigItem.Spec.Permission.User,
+				UserGroup: ConfigItem.Spec.Permission.UserGroup,
+				Privilege: ConfigItem.Spec.Permission.Privilege,
+			}
+			ctx, header = cases.GenApiCtxHeader()
+			nsCiResp, err := cli.ApiClient.ConfigItem.Create(ctx, header, nsCiReq)
+			So(err, ShouldBeNil)
+			So(nsCiResp, ShouldNotBeNil)
+			So(nsCiResp.Data, ShouldNotBeNil)
+			So(nsCiResp.Data.Id, ShouldNotEqual, uint32(0))
+			nsContentId = nsCiResp.Data.Id
+
+			// create content
+			nsCtReq := &pbcs.CreateContentReq{
+				BizId:        cases.TBizID,
+				AppId:        nsAppResp.Data.Id,
+				ConfigItemId: nsCiResp.Data.Id,
+				Sign:         Content.Spec.Signature,
+				ByteSize:     Content.Spec.ByteSize,
+			}
+			ctx, header = cases.GenApiCtxHeader()
+			nsCtResp, err := cli.ApiClient.Content.Create(ctx, header, nsCtReq)
+			So(err, ShouldBeNil)
+			So(nsCtResp, ShouldNotBeNil)
+			So(nsCtResp.Data, ShouldNotBeNil)
+			So(nsCtResp.Data.Id, ShouldNotEqual, uint32(0))
+			nsContentId = nsCtResp.Data.Id
+
+			// create commit
+			nsCmReq := &pbcs.CreateCommitReq{
+				BizId:        cases.TBizID,
+				AppId:        nsAppResp.Data.Id,
+				ConfigItemId: nsCiResp.Data.Id,
+				ContentId:    nsCtResp.Data.Id,
+			}
+			ctx, header = cases.GenApiCtxHeader()
+			nsCmResp, err := cli.ApiClient.Commit.Create(ctx, header, nsCmReq)
+			So(err, ShouldBeNil)
+			So(nsCmResp, ShouldNotBeNil)
+			So(nsCmResp.Data, ShouldNotBeNil)
+			So(nsCmResp.Data.Id, ShouldNotEqual, uint32(0))
+
+			// create release
+			nsRelReq := &pbcs.CreateReleaseReq{
+				BizId: cases.TBizID,
+				AppId: nsAppResp.Data.Id,
+				Name:  nsName + "_release",
+			}
+			ctx, header = cases.GenApiCtxHeader()
+			nsRelResp, err := cli.ApiClient.Release.Create(ctx, header, nsRelReq)
+			So(err, ShouldBeNil)
+			So(nsRelResp, ShouldNotBeNil)
+			So(nsRelResp.Data, ShouldNotBeNil)
+			So(nsRelResp.Data.Id, ShouldNotEqual, uint32(0))
+			nsReleaseId = nsRelResp.Data.Id
+
+			// create strategy set
+			nsStgSetReq := &pbcs.CreateStrategySetReq{
+				BizId: cases.TBizID,
+				AppId: nsAppResp.Data.Id,
+				Name:  nsName + "_strategy_set",
+			}
+			ctx, header = cases.GenApiCtxHeader()
+			nsStgSetResp, err := cli.ApiClient.StrategySet.Create(ctx, header, nsStgSetReq)
+			So(err, ShouldBeNil)
+			So(nsStgSetResp, ShouldNotBeNil)
+			So(nsStgSetResp.Data, ShouldNotBeNil)
+			So(nsStgSetResp.Data.Id, ShouldNotEqual, uint32(0))
+
+			// create namespace mode strategy scope
+			nsScope, err := cases.GenNamespaceStrategyScope(nmName, nsRelResp.Data.Id)
+			So(err, ShouldBeNil)
+			nsStgReq := &pbcs.CreateStrategyReq{
+				BizId:         cases.TBizID,
+				AppId:         nsAppResp.Data.Id,
+				StrategySetId: nsStgSetResp.Data.Id,
+				ReleaseId:     nsRelResp.Data.Id,
+				AsDefault:     false,
+				Name:          nsName + "_strategy",
+				Scope:         nsScope,
+				Namespace:     nsStgNamespace,
+			}
+			ctx, header = cases.GenApiCtxHeader()
+			nsStgResp, err := cli.ApiClient.Strategy.Create(ctx, header, nsStgReq)
+			So(err, ShouldBeNil)
+			So(nsStgResp, ShouldNotBeNil)
+			So(nsStgResp.Data, ShouldNotBeNil)
+			So(nsStgResp.Data.Id, ShouldNotEqual, uint32(0))
+
+			// publish with strategy
+			nsPubStgReq := &pbcs.PublishStrategyReq{
+				BizId: cases.TBizID,
+				AppId: nsAppResp.Data.Id,
+				Id:    nsStgResp.Data.Id,
+			}
+			ctx, header = cases.GenApiCtxHeader()
+			nsPubStgResp, err := cli.ApiClient.Publish.PublishWithStrategy(ctx, header, nsPubStgReq)
+			So(err, ShouldBeNil)
+			So(nsPubStgResp, ShouldNotBeNil)
+			So(nsPubStgResp.Data, ShouldNotBeNil)
+			So(nsPubStgResp.Data.Id, ShouldNotEqual, uint32(0))
+
+			// finish publish with strategy
+			nsFinishPubStgReq := &pbcs.FinishPublishStrategyReq{
+				BizId: cases.TBizID,
+				AppId: nsAppResp.Data.Id,
+				Id:    nsStgResp.Data.Id,
+			}
+			ctx, header = cases.GenApiCtxHeader()
+			nsFinishPubStgResp, err := cli.ApiClient.Publish.FinishPublishWithStrategy(ctx, header, nsFinishPubStgReq)
+			So(err, ShouldBeNil)
+			So(nsFinishPubStgResp, ShouldNotBeNil)
+			So(nsFinishPubStgResp.Code, ShouldEqual, errf.OK)
+
+			gen := Generator{
+				Cli: cli.ApiClient,
+			}
+
+			err = gen.GenData(kit.New())
+			So(err, ShouldBeNil)
+
+			// wait for cache to flush
+			time.Sleep(time.Second * 2)
+		})
+
+		// 1. Normal Mode App Base Request Test: in normal mode app under, feed server handle test right and not
+		// right request params, return response data is expected.
+		Convey("1. Normal Mode App Base Request Test", func() {
+			// normal test
+			{
+				reqs := []*types.ListFileAppLatestReleaseMetaReq{
+					{ // Publish with strategy, and hit main strategy
+						BizId: cases.TBizID,
+						AppId: nmApp.Id,
+						Uid:   uuid.UUID(),
+						Labels: map[string]string{
+							"os": "windows",
+						},
+					},
+					{ // Publish with strategy, and hit sub strategy
+						BizId: cases.TBizID,
+						AppId: nmApp.Id,
+						Uid:   uuid.UUID(),
+						Labels: map[string]string{
+							"area": "south of china",
+							"city": "shenzhen",
+						},
+					},
+					{ // publish with instance
+						BizId:  cases.TBizID,
+						AppId:  nmApp.Id,
+						Uid:    nmInstanceUid,
+						Labels: nil,
+					},
+				}
+
+				for _, req := range reqs {
+					ctx, header := cases.GenApiCtxHeader()
+					resp, err := cli.FeedClient.ListAppFileLatestRelease(ctx, header, req)
+					So(err, ShouldBeNil)
+					So(resp, ShouldNotBeNil)
+					So(resp.Code, ShouldEqual, errf.OK)
+
+					So(resp.Data, ShouldNotBeNil)
+					So(resp.Data.Repository, ShouldNotBeNil)
+					So(resp.Data.Repository.Root, ShouldNotBeBlank)
+					So(resp.Data.ReleaseId, ShouldEqual, nmReleaseId)
+
+					So(len(resp.Data.ConfigItems), ShouldEqual, 1)
+					ci := resp.Data.ConfigItems[0]
+					So(ci, ShouldNotBeNil)
+					So(ci.RciId, ShouldNotEqual, uint32(0))
+					So(ci.RepositorySpec, ShouldNotBeNil)
+					So(ci.RepositorySpec.Path, ShouldNotBeBlank)
+
+					ciSpec := ci.ConfigItemSpec
+					So(ciSpec, ShouldNotBeNil)
+					So(ciSpec.Path, ShouldEqual, ConfigItem.Spec.Path)
+					So(ciSpec.Name, ShouldEqual, ConfigItem.Spec.Name)
+					So(ciSpec.FileMode, ShouldEqual, ConfigItem.Spec.FileMode)
+					So(ciSpec.FileType, ShouldEqual, ConfigItem.Spec.FileType)
+					So(ciSpec.Permission, ShouldNotBeNil)
+					So(ciSpec.Permission.User, ShouldEqual, ConfigItem.Spec.Permission.User)
+					So(ciSpec.Permission.UserGroup, ShouldEqual, ConfigItem.Spec.Permission.UserGroup)
+					So(ciSpec.Permission.Privilege, ShouldEqual, ConfigItem.Spec.Permission.Privilege)
+
+					cmSpec := ci.CommitSpec
+					So(cmSpec, ShouldNotBeNil)
+					So(cmSpec.ContentId, ShouldEqual, nmContentId)
+					So(cmSpec.Content, ShouldNotBeNil)
+					So(cmSpec.Content.ByteSize, ShouldEqual, Content.Spec.ByteSize)
+					So(cmSpec.Content.Signature, ShouldEqual, Content.Spec.Signature)
+				}
+			}
+
+			// abnormal test
+			{
+				reqs := []*types.ListFileAppLatestReleaseMetaReq{
+					{ // wrong biz id
+						BizId: cases.WID,
+						AppId: nmApp.Id,
+						Uid:   uuid.UUID(),
+						Labels: map[string]string{
+							"os": "windows",
+						},
+					},
+					{ // wrong app id
+						BizId: cases.TBizID,
+						AppId: cases.WID,
+						Uid:   uuid.UUID(),
+						Labels: map[string]string{
+							"area": "south of china",
+						},
+					},
+					{ // uid is null
+						BizId: cases.TBizID,
+						AppId: nmApp.Id,
+						Uid:   "",
+						Labels: map[string]string{
+							"area": "south of china",
+						},
+					},
+					{ // uid is out of limited length
+						BizId: cases.TBizID,
+						AppId: nmApp.Id,
+						Uid:   cases.RandString(65),
+						Labels: map[string]string{
+							"area": "south of china",
+						},
+					},
+					{ // don't hit main strategy
+						BizId: cases.TBizID,
+						AppId: nmApp.Id,
+						Uid:   uuid.UUID(),
+						Labels: map[string]string{
+							"os": "unix",
+						},
+					},
+					{ // non-exist instance uid
+						BizId: cases.TBizID,
+						AppId: nmApp.Id,
+						Uid:   uuid.UUID(),
+						Labels: map[string]string{
+							"test": "test",
+						},
+					},
+					{ // label is null
+						BizId:  cases.TBizID,
+						AppId:  nmApp.Id,
+						Uid:    uuid.UUID(),
+						Labels: nil,
+					},
+				}
+
+				for _, req := range reqs {
+					ctx, header := cases.GenApiCtxHeader()
+					resp, err := cli.FeedClient.ListAppFileLatestRelease(ctx, header, req)
+					So(err, ShouldBeNil)
+					So(resp, ShouldNotBeNil)
+					So(resp.Code, ShouldNotEqual, errf.OK)
+				}
+			}
+
+		})
+
+		// 2. Namespace Mode App Base Request Test: in namespace mode app under, feed server handle test right and not
+		// right request params, return response data is expected.
+		Convey("2. Namespace Mode App Base Request Test", func() {
+			// normal test
+			{
+				req := &types.ListFileAppLatestReleaseMetaReq{
+					BizId: cases.TBizID,
+					AppId: nsApp.Id,
+					Uid:   uuid.UUID(),
+					Labels: map[string]string{
+						"city": "shanghai",
+					},
+					Namespace: nsStgNamespace,
+				}
+
+				ctx, header := cases.GenApiCtxHeader()
+				resp, err := cli.FeedClient.ListAppFileLatestRelease(ctx, header, req)
+				So(err, ShouldBeNil)
+				So(resp, ShouldNotBeNil)
+				So(resp.Code, ShouldEqual, errf.OK)
+
+				So(resp.Data, ShouldNotBeNil)
+				So(resp.Data.Repository, ShouldNotBeNil)
+				So(resp.Data.Repository.Root, ShouldNotBeBlank)
+				So(resp.Data.ReleaseId, ShouldEqual, nsReleaseId)
+
+				So(len(resp.Data.ConfigItems), ShouldEqual, 1)
+				ci := resp.Data.ConfigItems[0]
+				So(ci, ShouldNotBeNil)
+				So(ci.RciId, ShouldNotEqual, uint32(0))
+				So(ci.RepositorySpec, ShouldNotBeNil)
+				So(ci.RepositorySpec.Path, ShouldNotBeBlank)
+
+				ciSpec := ci.ConfigItemSpec
+				So(ciSpec, ShouldNotBeNil)
+				So(ciSpec.Path, ShouldEqual, ConfigItem.Spec.Path)
+				So(ciSpec.Name, ShouldEqual, ConfigItem.Spec.Name)
+				So(ciSpec.FileMode, ShouldEqual, ConfigItem.Spec.FileMode)
+				So(ciSpec.FileType, ShouldEqual, ConfigItem.Spec.FileType)
+				So(ciSpec.Permission, ShouldNotBeNil)
+				So(ciSpec.Permission.User, ShouldEqual, ConfigItem.Spec.Permission.User)
+				So(ciSpec.Permission.UserGroup, ShouldEqual, ConfigItem.Spec.Permission.UserGroup)
+				So(ciSpec.Permission.Privilege, ShouldEqual, ConfigItem.Spec.Permission.Privilege)
+
+				cmSpec := ci.CommitSpec
+				So(cmSpec, ShouldNotBeNil)
+				So(cmSpec.ContentId, ShouldEqual, nsContentId)
+				So(cmSpec.Content, ShouldNotBeNil)
+				So(cmSpec.Content.ByteSize, ShouldEqual, Content.Spec.ByteSize)
+				So(cmSpec.Content.Signature, ShouldEqual, Content.Spec.Signature)
+			}
+
+			// abnormal test
+			{
+				req := &types.ListFileAppLatestReleaseMetaReq{
+					BizId: cases.TBizID,
+					AppId: nsApp.Id,
+					Uid:   uuid.UUID(),
+					Labels: map[string]string{
+						"city": "shanghai",
+					},
+					Namespace: "this_is_a_wrong_namespace",
+				}
+				ctx, header := cases.GenApiCtxHeader()
+				resp, err := cli.FeedClient.ListAppFileLatestRelease(ctx, header, req)
+				So(err, ShouldBeNil)
+				So(resp, ShouldNotBeNil)
+				So(resp.Code, ShouldEqual, errf.RecordNotFound)
+			}
+		})
+
+		// Because the previous test case has already verified the return parameters, the ce s in the
+		// following scenario only verifies that the version number returned is correct
+
+		Convey("3. Normal Mode App Match Default Strategy", func() {
+			req := &types.ListFileAppLatestReleaseMetaReq{
+				BizId: cases.TBizID,
+				AppId: BaseNormalTestAppID,
+				Uid:   "6512bd43d9caa6e02c990b0a82652dca",
+			}
+			ctx, header := cases.GenApiCtxHeader()
+			resp, err := cli.FeedClient.ListAppFileLatestRelease(ctx, header, req)
+			So(err, ShouldBeNil)
+			So(resp.Code, ShouldEqual, errf.OK)
+			So(resp.Data.ReleaseId, ShouldEqual, BNMDefaultStrategyReleaseID)
+		})
+
+		Convey("4. Normal Mode App Match Main Strategy", func() {
+			req := &types.ListFileAppLatestReleaseMetaReq{
+				BizId: cases.TBizID,
+				AppId: BaseNormalTestAppID,
+				Uid:   "6512bd43d9caa6e02c990b0a82652dca",
+				Labels: map[string]string{
+					"os": "windows",
+				},
+			}
+			ctx, header := cases.GenApiCtxHeader()
+			resp, err := cli.FeedClient.ListAppFileLatestRelease(ctx, header, req)
+			So(err, ShouldBeNil)
+			So(resp.Code, ShouldEqual, errf.OK)
+			So(resp.Data.ReleaseId, ShouldEqual, BNMMainStrategyReleaseID)
+		})
+
+		Convey("5. Normal Mode App Match Sub Strategy", func() {
+			req := &types.ListFileAppLatestReleaseMetaReq{
+				BizId: cases.TBizID,
+				AppId: BaseNormalTestAppID,
+				Uid:   "6512bd43d9caa6e02c990b0a82652dca",
+				Labels: map[string]string{
+					"os":   "windows",
+					"city": "shenzhen",
+				},
+			}
+			ctx, header := cases.GenApiCtxHeader()
+			resp, err := cli.FeedClient.ListAppFileLatestRelease(ctx, header, req)
+			So(err, ShouldBeNil)
+			So(resp.Code, ShouldEqual, errf.OK)
+			So(resp.Data.ReleaseId, ShouldEqual, BNMSubStrategyReleaseID)
+		})
+
+		Convey("6. Normal Mode App Match Instance Publish", func() {
+			req := &types.ListFileAppLatestReleaseMetaReq{
+				BizId: cases.TBizID,
+				AppId: BaseNormalTestAppID,
+				Uid:   InstanceUID,
+				Labels: map[string]string{
+					"os":   "windows",
+					"city": "shenzhen",
+				},
+			}
+			ctx, header := cases.GenApiCtxHeader()
+			resp, err := cli.FeedClient.ListAppFileLatestRelease(ctx, header, req)
+			So(err, ShouldBeNil)
+			So(resp.Code, ShouldEqual, errf.OK)
+			So(resp.Data.ReleaseId, ShouldEqual, BNMInstancePublishReleaseID)
+		})
+
+		Convey("7. Namespace Mode App Match Default Strategy", func() {
+			req := &types.ListFileAppLatestReleaseMetaReq{
+				BizId:     cases.TBizID,
+				AppId:     BaseNamespaceTestAppID,
+				Uid:       "6512bd43d9caa6e02c990b0a82652dca",
+				Namespace: "xxxxxxxxx",
+			}
+			ctx, header := cases.GenApiCtxHeader()
+			resp, err := cli.FeedClient.ListAppFileLatestRelease(ctx, header, req)
+			So(err, ShouldBeNil)
+			So(resp.Code, ShouldEqual, errf.OK)
+			So(resp.Data.ReleaseId, ShouldEqual, BNSDefaultStrategyReleaseID)
+		})
+
+		Convey("8. Namespace Mode App Match Namespace", func() {
+			req := &types.ListFileAppLatestReleaseMetaReq{
+				BizId:     cases.TBizID,
+				AppId:     BaseNamespaceTestAppID,
+				Uid:       "6512bd43d9caa6e02c990b0a82652dca",
+				Namespace: BNSNamespace,
+			}
+			ctx, header := cases.GenApiCtxHeader()
+			resp, err := cli.FeedClient.ListAppFileLatestRelease(ctx, header, req)
+			So(err, ShouldBeNil)
+			So(resp.Code, ShouldEqual, errf.OK)
+			So(resp.Data.ReleaseId, ShouldEqual, BNSNamespaceReleaseID)
+		})
+
+		Convey("9. Namespace Mode App Match Sub Strategy", func() {
+			req := &types.ListFileAppLatestReleaseMetaReq{
+				BizId:     cases.TBizID,
+				AppId:     BaseNamespaceTestAppID,
+				Uid:       "6512bd43d9caa6e02c990b0a82652dca",
+				Namespace: BNSNamespace,
+				Labels: map[string]string{
+					"city": "beijing",
+				},
+			}
+			ctx, header := cases.GenApiCtxHeader()
+			resp, err := cli.FeedClient.ListAppFileLatestRelease(ctx, header, req)
+			So(err, ShouldBeNil)
+			So(resp.Code, ShouldEqual, errf.OK)
+			So(resp.Data.ReleaseId, ShouldEqual, BNSSubStrategyReleaseID)
+		})
+
+		Convey("10. Namespace Mode App Match Instance Publish", func() {
+			req := &types.ListFileAppLatestReleaseMetaReq{
+				BizId:     cases.TBizID,
+				AppId:     BaseNamespaceTestAppID,
+				Uid:       InstanceUID,
+				Namespace: BNSNamespace,
+				Labels: map[string]string{
+					"city": "shenzhen",
+				},
+			}
+			ctx, header := cases.GenApiCtxHeader()
+			resp, err := cli.FeedClient.ListAppFileLatestRelease(ctx, header, req)
+			So(err, ShouldBeNil)
+			So(resp.Code, ShouldEqual, errf.OK)
+			So(resp.Data.ReleaseId, ShouldEqual, BNSInstancePublishReleaseID)
+		})
+	})
+}
