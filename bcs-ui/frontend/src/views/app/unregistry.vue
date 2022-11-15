@@ -40,7 +40,7 @@
           {{ $t('请联系需要关联的CMDB业务的运维') }}
           <bk-link
             theme="primary"
-            :href="PROJECT_CONFIG.doc.iam"
+            :href="iamDocLink"
             target="_blank">
             {{ $t('申请权限') }}
           </bk-link>
@@ -86,6 +86,12 @@ export default {
     enableBtn() {
       return !isEmpty(this.ccKey);
     },
+    iamDocLink() {
+      return `${window.BK_IAM_APP_URL}apply-custom-perm?system_id=bk_cmdb`;
+    },
+    ccDocLink() {
+      return `${window.BK_CC_HOST}/#/resource/business`;
+    },
   },
   created() {
     this.kindList = [
@@ -100,14 +106,14 @@ export default {
         id: 'binding',
         iconColor: '#4540DC',
         desc: this.$t('开启容器服务时，请首先在”蓝鲸配置平台“查看业务'),
-        link: this.PROJECT_CONFIG.doc.cc,
+        link: this.ccDocLink,
         linkText: this.$t('前往绑定业务'),
       },
       {
         id: 'auth',
         iconColor: '#FFB200',
         desc: this.$t('开启容器服务时，若没有查看业务权限，去“权限中心”申请权限'),
-        link: this.PROJECT_CONFIG.doc.iam,
+        link: this.iamDocLink,
         linkText: this.$t('申请权限'),
       },
       {
