@@ -48,6 +48,14 @@ const (
 
 	gkeNodeTerminationHandlerTaint = "cloud.google.com/impending-node-termination"
 
+	// filterNodeResourceAnnoKey filters nodes when calculating buffer and total resource
+	filterNodeResourceAnnoKey = "io.tencent.bcs.dev/filter-node-resource"
+
+	// nodeInstanceTypeLabelKey is the instance type of node
+	nodeInstanceTypeLabelKey = "node.kubernetes.io/instance-type"
+	// nodeInstanceTypeEklet indicates the instance type of node is eklet
+	nodeInstanceTypeEklet = "eklet"
+
 	// How old the oldest unschedulable pod should be before starting scale up.
 	unschedulablePodTimeBuffer = 2 * time.Second
 	// How old the oldest unschedulable pod with GPU should be before starting scale up.
@@ -143,7 +151,7 @@ func filterOutExpendableAndSplit(unschedulableCandidates []*apiv1.Pod,
 				" Ignoring in scale up.", pod.Name, expendablePodsPriorityCutoff, *pod.Spec.Priority)
 		} else if nominatedNodeName := pod.Status.NominatedNodeName; nominatedNodeName != "" {
 			waitingForLowerPriorityPreemption = append(waitingForLowerPriorityPreemption, pod)
-			klog.V(4).Infof("Pod %s will be scheduled after low prioity pods are preempted on %s. Ignoring in scale up.",
+			klog.V(4).Infof("Pod %s will be scheduled after low priority pods are preempted on %s. Ignoring in scale up.",
 				pod.Name, nominatedNodeName)
 		} else {
 			unschedulableNonExpendable = append(unschedulableNonExpendable, pod)
@@ -537,8 +545,7 @@ func sanitizeTemplateNode(node *apiv1.Node, nodeGroup string,
 	return newNode, nil
 }
 
-// removeOldUnregisteredNodes xxx
-// Removes unregistered nodes if needed. Returns true if anything was removed and error if such occurred.
+// removeOldUnregisteredNodes removes unregistered nodes if needed. Returns true if anything was removed and error if such occurred.
 func removeOldUnregisteredNodes(unregisteredNodes []clusterstate.UnregisteredNode, context *context.AutoscalingContext,
 	currentTime time.Time, logRecorder *utils.LogEventRecorder) (bool, error) {
 	removedAny := false
@@ -581,8 +588,7 @@ func removeOldUnregisteredNodes(unregisteredNodes []clusterstate.UnregisteredNod
 	return removedAny, nil
 }
 
-// fixNodeGroupSize xxx
-// Sets the target size of node groups to the current number of nodes in them
+// fixNodeGroupSize sets the target size of node groups to the current number of nodes in them
 // if the difference was constant for a prolonged time. Returns true if managed
 // to fix something.
 func fixNodeGroupSize(context *context.AutoscalingContext, clusterStateRegistry *clusterstate.ClusterStateRegistry,
@@ -649,6 +655,13 @@ func ConfigurePredicateCheckerForLoop(unschedulablePods []*apiv1.Pod, schedulabl
 }
 
 func getNodeCoresAndMemory(node *apiv1.Node) (int64, int64) {
+	// filter eklet node
+	if node.Labels[nodeInstanceTypeLabelKey] == nodeInstanceTypeEklet {
+		return 0, 0
+	}
+	if node.Annotations[filterNodeResourceAnnoKey] == "true" {
+		return 0, 0
+	}
 	cores := getNodeResource(node, apiv1.ResourceCPU)
 	memory := getNodeResource(node, apiv1.ResourceMemory)
 	return cores, memory
@@ -754,6 +767,9 @@ func checkResourceNotEnough(nodes map[string]*schedulernodeinfo.NodeInfo,
 			continue
 		}
 		if node.Labels["node.kubernetes.io/instance-type"] == "eklet" {
+			continue
+		}
+		if node.Annotations[filterNodeResourceAnnoKey] == "true" {
 			continue
 		}
 		klog.V(6).Infof("resource: %+v", node.Status.Allocatable)

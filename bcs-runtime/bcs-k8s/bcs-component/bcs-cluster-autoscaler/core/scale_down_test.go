@@ -20,7 +20,7 @@ import (
 	"testing"
 	"time"
 
-	// internal_context "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/context"
+	simulatorinternal "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/simulator"
 	"github.com/stretchr/testify/assert"
 	batchv1 "k8s.io/api/batch/v1"
 	apiv1 "k8s.io/api/core/v1"
@@ -33,7 +33,7 @@ import (
 	"k8s.io/autoscaler/cluster-autoscaler/config"
 	"k8s.io/autoscaler/cluster-autoscaler/context"
 	"k8s.io/autoscaler/cluster-autoscaler/processors/status"
-	"k8s.io/autoscaler/cluster-autoscaler/simulator"
+	// "k8s.io/autoscaler/cluster-autoscaler/simulator"
 	"k8s.io/autoscaler/cluster-autoscaler/utils/deletetaint"
 	// ca_errors "k8s.io/autoscaler/cluster-autoscaler/utils/errors"
 	"k8s.io/autoscaler/cluster-autoscaler/utils/gpu"
@@ -2067,7 +2067,7 @@ func TestWaitForDelayDeletion(t *testing.T) {
 }
 
 func Test_sortNodesByDeletionCost(t *testing.T) {
-	node1 := simulator.NodeToBeRemoved{
+	node1 := simulatorinternal.NodeToBeRemoved{
 		Node: &apiv1.Node{
 			ObjectMeta: metav1.ObjectMeta{
 				Annotations: map[string]string{
@@ -2076,7 +2076,7 @@ func Test_sortNodesByDeletionCost(t *testing.T) {
 			},
 		},
 	}
-	node2 := simulator.NodeToBeRemoved{
+	node2 := simulatorinternal.NodeToBeRemoved{
 		Node: &apiv1.Node{
 			ObjectMeta: metav1.ObjectMeta{
 				Annotations: map[string]string{
@@ -2085,7 +2085,7 @@ func Test_sortNodesByDeletionCost(t *testing.T) {
 			},
 		},
 	}
-	node3 := simulator.NodeToBeRemoved{
+	node3 := simulatorinternal.NodeToBeRemoved{
 		Node: &apiv1.Node{
 			ObjectMeta: metav1.ObjectMeta{
 				Annotations: map[string]string{
@@ -2094,7 +2094,7 @@ func Test_sortNodesByDeletionCost(t *testing.T) {
 			},
 		},
 	}
-	node4 := simulator.NodeToBeRemoved{
+	node4 := simulatorinternal.NodeToBeRemoved{
 		Node: &apiv1.Node{
 			ObjectMeta: metav1.ObjectMeta{
 				Annotations: map[string]string{
@@ -2104,20 +2104,20 @@ func Test_sortNodesByDeletionCost(t *testing.T) {
 		},
 	}
 	type args struct {
-		nodes []simulator.NodeToBeRemoved
+		nodes []simulatorinternal.NodeToBeRemoved
 	}
 	tests := []struct {
 		name string
 		args args
-		want []simulator.NodeToBeRemoved
+		want []simulatorinternal.NodeToBeRemoved
 	}{
 		// TODO: Add test cases.
 		{
 			name: "sort nodes with cost",
 			args: args{
-				nodes: []simulator.NodeToBeRemoved{node1, node2, node3, node4},
+				nodes: []simulatorinternal.NodeToBeRemoved{node1, node2, node3, node4},
 			},
-			want: []simulator.NodeToBeRemoved{node3, node1, node4, node2},
+			want: []simulatorinternal.NodeToBeRemoved{node3, node1, node4, node2},
 		},
 	}
 	for _, tt := range tests {
