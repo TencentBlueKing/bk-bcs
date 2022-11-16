@@ -16,9 +16,11 @@ import (
 	"fmt"
 	"reflect"
 	"sort"
+	"strings"
 	"time"
 
 	contextinternal "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/context"
+	metricsinternal "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/metrics"
 	"github.com/google/uuid"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -122,6 +124,10 @@ func handleScaleUpResponse(req *AutoscalerRequest, policies []*ScaleUpPolicy) (S
 		return options, nil
 	}
 	for _, policy := range policies {
+		if policy == nil {
+			continue
+		}
+		metricsinternal.UpdateWebhookScaleUpResponse(policy.NodeGroupID, policy.DesiredSize)
 		originNodeGroup, ok := req.NodeGroups[policy.NodeGroupID]
 		if !ok {
 			return nil, fmt.Errorf("Cannot find node group info in requests for %s", policy.NodeGroupID)
@@ -155,12 +161,16 @@ func handleScaleDownResponse(req *AutoscalerRequest, policies []*ScaleDownPolicy
 		return candidates, nil
 	}
 	for _, policy := range policies {
+		if policy == nil {
+			continue
+		}
 		originNodeGroup, ok := req.NodeGroups[policy.NodeGroupID]
 		if !ok {
 			return nil, fmt.Errorf("Cannot find node group info in requests for %s", policy.NodeGroupID)
 		}
 		switch policy.Type {
 		case NodeNumScaleDownType:
+			metricsinternal.UpdateWebhookScaleDownNumResponse(policy.NodeGroupID, policy.NodeNum)
 			if policy.NodeNum == originNodeGroup.DesiredSize {
 				continue
 			}
@@ -191,6 +201,7 @@ func handleScaleDownResponse(req *AutoscalerRequest, policies []*ScaleDownPolicy
 			}
 			candidates = append(candidates, ips[:scaleDownNum]...)
 		case NodeIPsScaleDownType:
+			metricsinternal.UpdateWebhookScaleDownIPResponse(policy.NodeGroupID, strings.Join(policy.NodeIPs, ","))
 			ips := intersect(originNodeGroup.NodeIPs, policy.NodeIPs)
 			if originNodeGroup.DesiredSize-len(ips) < originNodeGroup.MinSize {
 				return nil, fmt.Errorf("Cannot scale down node group %v to %d after scaling down %d nodes, the min size is %d",
@@ -334,6 +345,7 @@ func ExecuteScaleDown(context *contextinternal.Context, sd *ScaleDown,
 			continue
 		}
 
+		// force delete pod when scaling down node in webhook mode
 		podsToRemove := simpleGetPodsToMove(nodeNameToNodeInfo[node.Name])
 		klog.V(0).Infof("Scale-down: removing node %s based on webhook response", node.Name)
 		scaleDownNodes = append(scaleDownNodes, node.Name)
@@ -347,6 +359,14 @@ func ExecuteScaleDown(context *contextinternal.Context, sd *ScaleDown,
 			result = sd.deleteNode(node, podsToRemove, ng)
 			if result.ResultType != status.NodeDeleteOk {
 				klog.Errorf("Failed to delete %s: %v", node.Name, result.Err)
+				metricsinternal.RecordWebhookScaleDownFailed(node.Name)
+				if len(result.PodEvictionResults) > 0 {
+					for k, v := range result.PodEvictionResults {
+						if !v.WasEvictionSuccessful() {
+							klog.Warningf("Failed to evict pod %s: %v", k, v.Err)
+						}
+					}
+				}
 				return
 			}
 			metrics.RegisterScaleDown(1, gpu.GetGpuTypeForMetrics(sd.context.CloudProvider.GPULabel(),

@@ -29,6 +29,7 @@ import (
 
 	cloudBuilder "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/cloudprovider/builder"
 	coreinternal "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/core"
+	metricsinternal "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/metrics"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/scalingconfig"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/simulator"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -387,6 +388,7 @@ func buildAutoscaler() (core.Autoscaler, error) {
 
 func run(healthCheck *metrics.HealthCheck) {
 	metrics.RegisterAll(*emitPerNodeGroupMetrics)
+	metricsinternal.RegisterLocal()
 
 	autoscaler, err := buildAutoscaler()
 	if err != nil {

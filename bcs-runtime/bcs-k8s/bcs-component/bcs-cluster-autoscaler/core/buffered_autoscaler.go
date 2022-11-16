@@ -20,6 +20,7 @@ import (
 
 	contextinternal "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/context"
 	estimatorinternal "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/estimator"
+	metricsinternal "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/metrics"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/scalingconfig"
 
 	apiv1 "k8s.io/api/core/v1"
@@ -139,8 +140,10 @@ func NewBufferedAutoscaler(
 	switch opts.WebhookMode {
 	case WebMode:
 		webhook = NewWebScaler(opts.WebhookModeConfig, opts.WebhookModeToken)
+		metricsinternal.RegisterWebhookParams("Web", opts.WebhookModeConfig)
 	case ConfigMapMode:
 		webhook = NewConfigMapScaler(client, opts.WebhookModeConfig)
+		metricsinternal.RegisterWebhookParams("ConfigMap", opts.WebhookModeConfig)
 	default:
 		webhook = nil
 	}

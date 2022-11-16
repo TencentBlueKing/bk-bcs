@@ -16,8 +16,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+	"time"
 
 	contextinternal "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/context"
+	metricsinternal "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/metrics"
+
 	corev1 "k8s.io/api/core/v1"
 	apierr "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -53,12 +56,12 @@ func (c *ConfigMapScaler) DoWebhook(context *contextinternal.Context,
 	options, candidates, err := c.GetResponses(context, clusterStateRegistry,
 		nodeNameToNodeInfo, nodes, sd)
 	if err != nil {
-		return errors.NewAutoscalerError(errors.TransientError,
+		return errors.NewAutoscalerError(errors.InternalError,
 			"failed to get response from configmap: %v", err)
 	}
 	err = c.ExecuteScale(context, clusterStateRegistry, sd, nodes, options, candidates, nodeNameToNodeInfo)
 	if err != nil {
-		return errors.NewAutoscalerError(errors.ApiCallError,
+		return errors.NewAutoscalerError(errors.CloudProviderError,
 			"failed to execute scale from configmap: %v", err)
 	}
 	return nil
@@ -76,6 +79,7 @@ func (c *ConfigMapScaler) GetResponses(context *contextinternal.Context,
 		return nil, nil, fmt.Errorf("Cannot generate autoscaler requests, err: %s", err.Error())
 	}
 
+	start := time.Now()
 	// get configmap
 	b, err := json.Marshal(req)
 	if err != nil {
@@ -109,6 +113,7 @@ func (c *ConfigMapScaler) GetResponses(context *contextinternal.Context,
 	// update configmap
 	cm.Data["request"] = reqData
 	_, err = c.client.CoreV1().ConfigMaps(c.namespace).Update(cm)
+	metricsinternal.UpdateWebhookExecDuration(start)
 	if err != nil {
 		return nil, nil, fmt.Errorf("Cannot update configmap %s/%s, err: %s",
 			c.namespace, c.name, err.Error())

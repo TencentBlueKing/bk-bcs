@@ -22,6 +22,8 @@ import (
 	"time"
 
 	contextinternal "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/context"
+	metricsinternal "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/metrics"
+
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/autoscaler/cluster-autoscaler/clusterstate"
 	"k8s.io/autoscaler/cluster-autoscaler/utils/errors"
@@ -60,12 +62,12 @@ func (w *WebScaler) DoWebhook(context *contextinternal.Context,
 	options, candidates, err := w.GetResponses(context, clusterStateRegistry,
 		nodeNameToNodeInfo, nodes, sd)
 	if err != nil {
-		return errors.NewAutoscalerError(errors.TransientError,
+		return errors.NewAutoscalerError(errors.InternalError,
 			"failed to get response from web server: %v", err)
 	}
 	err = w.ExecuteScale(context, clusterStateRegistry, sd, nodes, options, candidates, nodeNameToNodeInfo)
 	if err != nil {
-		return errors.NewAutoscalerError(errors.ApiCallError,
+		return errors.NewAutoscalerError(errors.CloudProviderError,
 			"failed to execute scale from web server: %v", err)
 	}
 	return nil
@@ -93,7 +95,9 @@ func (w *WebScaler) GetResponses(context *contextinternal.Context,
 		return nil, nil, fmt.Errorf(
 			"Cannot marshal review to bytes, err: %s", err.Error())
 	}
+	start := time.Now()
 	result, err := postRequest(w.url, w.token, w.client, b)
+	metricsinternal.UpdateWebhookExecDuration(start)
 	if err != nil {
 		return nil, nil, fmt.Errorf(
 			"Failed to post review to url: %s err: %s", w.url, err.Error())
