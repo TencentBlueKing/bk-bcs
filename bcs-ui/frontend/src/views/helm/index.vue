@@ -504,7 +504,6 @@ import Clipboard from 'clipboard';
 import search from './search.vue';
 import { mapGetters } from 'vuex';
 import { helmReleaseHistory } from '@/api/base';
-import { useNamespace } from '@/views/dashboard/namespace/use-namespace';
 
 const FAST_TIME = 3000;
 const SLOW_TIME = 10000;
@@ -1171,13 +1170,15 @@ export default {
     async getNamespaces() {
       try {
         clearTimeout(this.statusTimer);
-        const { getNamespaceData } = useNamespace();
-        
-        const res = await getNamespaceData({
-          $clusterId: this.searchScope,
+        const res = await this.$store.dispatch('helm/getNamespaceList', {
+          projectId: this.projectId,
+          params: {
+            cluster_id: this.searchScope,
+          },
         });
-        this.namespaceList = (res || []).map(item => ({
+        this.namespaceList = (res.data || []).map(item => ({
           ...item,
+          namespace_id: `${item.cluster_id}:${item.name}`,
         }));
       } catch (e) {
         catchErrorHandler(e, this);
