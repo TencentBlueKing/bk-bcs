@@ -1,0 +1,162 @@
+/*
+Tencent is pleased to support the open source community by making Basic Service Configuration Platform available.
+Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
+Licensed under the MIT License (the "License"); you may not use this file except
+in compliance with the License. You may obtain a copy of the License at
+http://opensource.org/licenses/MIT
+Unless required by applicable law or agreed to in writing, software distributed under
+the License is distributed on an "as IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+either express or implied. See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
+package service
+
+import (
+	"context"
+	"fmt"
+	"time"
+
+	"bscp.io/pkg/criteria/errf"
+	"bscp.io/pkg/dal/table"
+	"bscp.io/pkg/kit"
+	"bscp.io/pkg/logs"
+	pbapp "bscp.io/pkg/protocol/core/app"
+	pbbase "bscp.io/pkg/protocol/core/base"
+	pbds "bscp.io/pkg/protocol/data-service"
+	"bscp.io/pkg/thirdparty/esb/cmdb"
+	"bscp.io/pkg/types"
+	"bscp.io/pkg/version"
+)
+
+// CreateApp create application.
+func (s *Service) CreateApp(ctx context.Context, req *pbds.CreateAppReq) (*pbds.CreateResp, error) {
+	kt := kit.FromGrpcContext(ctx)
+
+	if err := s.validateBizExist(kt, req.BizId); err != nil {
+		logs.Errorf("validate biz exist failed, err: %v, rid: %s", err, kt.Rid)
+		return nil, err
+	}
+
+	now := time.Now()
+	app := &table.App{
+		BizID: req.BizId,
+		Spec:  req.Spec.AppSpec(),
+		Revision: &table.Revision{
+			Creator:   kt.User,
+			Reviser:   kt.User,
+			CreatedAt: now,
+			UpdatedAt: now,
+		},
+	}
+
+	id, err := s.dao.App().Create(kt, app)
+	if err != nil {
+		logs.Errorf("create app failed, err: %v, rid: %s", err, kt.Rid)
+		return nil, err
+	}
+
+	resp := &pbds.CreateResp{Id: id}
+	return resp, nil
+}
+
+// UpdateApp update application.
+func (s *Service) UpdateApp(ctx context.Context, req *pbds.UpdateAppReq) (*pbbase.EmptyResp, error) {
+	kit := kit.FromGrpcContext(ctx)
+
+	app := &table.App{
+		ID:    req.Id,
+		BizID: req.BizId,
+		Spec:  req.Spec.AppSpec(),
+		Revision: &table.Revision{
+			Reviser:   kit.User,
+			UpdatedAt: time.Now(),
+		},
+	}
+	if err := s.dao.App().Update(kit, app); err != nil {
+		logs.Errorf("update app failed, err: %v, rid: %s", err, kit.Rid)
+		return nil, err
+	}
+
+	return new(pbbase.EmptyResp), nil
+}
+
+// DeleteApp delete application.
+func (s *Service) DeleteApp(ctx context.Context, req *pbds.DeleteAppReq) (*pbbase.EmptyResp, error) {
+	kit := kit.FromGrpcContext(ctx)
+
+	app := &table.App{
+		ID:    req.Id,
+		BizID: req.BizId,
+	}
+	if err := s.dao.App().Delete(kit, app); err != nil {
+		logs.Errorf("delete app failed, err: %v, rid: %s", err, kit.Rid)
+		return nil, err
+	}
+
+	return new(pbbase.EmptyResp), nil
+}
+
+// ListApps list apps by query condition.
+func (s *Service) ListApps(ctx context.Context, req *pbds.ListAppsReq) (*pbds.ListAppsResp, error) {
+	kit := kit.FromGrpcContext(ctx)
+
+	// parse pb struct filter to filter.Expression.
+	filter, err := pbbase.UnmarshalFromPbStructToExpr(req.Filter)
+	if err != nil {
+		logs.Errorf("unmarshal pb struct to expression failed, err: %v, rid: %s", err, kit.Rid)
+		return nil, err
+	}
+
+	query := &types.ListAppsOption{
+		BizID:  req.BizId,
+		Filter: filter,
+		Page:   req.Page.BasePage(),
+	}
+
+	details, err := s.dao.App().List(kit, query)
+	if err != nil {
+		logs.Errorf("list apps failed, err: %v, rid: %s", err, kit.Rid)
+		return nil, err
+	}
+
+	resp := &pbds.ListAppsResp{
+		Count:   details.Count,
+		Details: pbapp.PbApps(details.Details),
+	}
+	return resp, nil
+}
+
+// validateBizExist validate if biz exists in cmdb before create app.
+func (s *Service) validateBizExist(kt *kit.Kit, bizID uint32) error {
+	// if build version is debug mode, not need to validate biz exist in cmdb.
+	if version.Debug() {
+		return nil
+	}
+
+	searchBizParams := &cmdb.SearchBizParams{
+		Fields: []string{"bk_biz_id"},
+		Page:   cmdb.BasePage{Limit: 1},
+		BizPropertyFilter: &cmdb.QueryFilter{
+			Rule: cmdb.CombinedRule{
+				Condition: cmdb.ConditionAnd,
+				Rules: []cmdb.Rule{
+					cmdb.AtomRule{
+						Field:    cmdb.BizIDField,
+						Operator: cmdb.OperatorEqual,
+						Value:    bizID,
+					}},
+			}},
+	}
+
+	bizResp, err := s.esb.Cmdb().SearchBusiness(kt.Ctx, searchBizParams)
+	if err != nil {
+		return err
+	}
+
+	if bizResp.Count == 0 {
+		return errf.New(errf.RelatedResNotExist, fmt.Sprintf("app related biz %d is not exist", bizID))
+	}
+
+	return nil
+}

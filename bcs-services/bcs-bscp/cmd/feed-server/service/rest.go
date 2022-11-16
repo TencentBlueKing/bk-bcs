@@ -1,0 +1,76 @@
+/*
+Tencent is pleased to support the open source community by making Basic Service Configuration Platform available.
+Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
+Licensed under the MIT License (the "License"); you may not use this file except
+in compliance with the License. You may obtain a copy of the License at
+http://opensource.org/licenses/MIT
+Unless required by applicable law or agreed to in writing, software distributed under
+the License is distributed on an "as IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+either express or implied. See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
+package service
+
+import (
+	"bscp.io/cmd/feed-server/bll/types"
+	"bscp.io/pkg/criteria/errf"
+	"bscp.io/pkg/iam/meta"
+	"bscp.io/pkg/rest"
+)
+
+// ListFileAppLatestReleaseMetaRest list an app's latest release metadata only when the app's configures is file type.
+func (s *Service) ListFileAppLatestReleaseMetaRest(cts *rest.Contexts) (interface{}, error) {
+
+	opt := new(types.ListFileAppLatestReleaseMetaReq)
+	if err := cts.DecodeInto(opt); err != nil {
+		return nil, err
+	}
+	cts.WithMeta(opt.BizId, opt.AppId)
+
+	if err := opt.Validate(); err != nil {
+		return nil, err
+	}
+
+	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.Release, Action: meta.Find}, BizID: opt.BizId}
+	authorized, err := s.bll.Auth().Authorize(cts.Kit, res)
+	if err != nil {
+		return nil, err
+	}
+
+	if !authorized {
+		return nil, errf.New(errf.PermissionDenied, "no permission")
+	}
+
+	meta := &types.AppInstanceMeta{
+		BizID:     opt.BizId,
+		AppID:     opt.AppId,
+		Namespace: opt.Namespace,
+		Uid:       opt.Uid,
+		Labels:    opt.Labels,
+	}
+
+	cancel := cts.Kit.CtxWithTimeoutMS(1500)
+	defer cancel()
+
+	metas, err := s.bll.Release().ListAppLatestReleaseMeta(cts.Kit, meta)
+	if err != nil {
+		return nil, err
+	}
+
+	return metas, nil
+}
+
+// AuthRepoRest repo authorize callback.
+func (s *Service) AuthRepoRest(cts *rest.Contexts) (interface{}, error) {
+	opt := new(AuthRepoReq)
+	if err := cts.DecodeInto(opt); err != nil {
+		return nil, err
+	}
+
+	if err := s.authRepo(cts.Kit, opt); err != nil {
+		return nil, err
+	}
+
+	return nil, nil
+}

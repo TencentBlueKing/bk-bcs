@@ -1,0 +1,122 @@
+version: 1.0.0
+# defines all the network related options.
+network:
+  # bindIP is ip where server working on.
+  bindIP:
+  # httpPort is port where server listen to http port.
+  httpPort: 9630
+  # shutdownTimeoutSec is the max time in second for the sidecar to shutdown gracefully when it receive
+  # a shutdown signal. if the shutdown timeout time reaches after the shutdown process starts, sidecar
+  # will be forced to exit no matter the shutdown jobs has been finished or not. its min value is 5s and
+  # the default value is 20s.
+  shutdownTimeoutSec: 20
+  # defines tls related options.
+  tls:
+    # server should be accessed without verifying the TLS certificate.
+    insecureSkipVerify:
+    # cert file path.
+    certFile:
+    # key file path.
+    keyFile:
+    # ca file path.
+    caFile:
+    # the password to decrypt the certificate.
+    password:
+
+# upstream defines connect options to connect the upstream feed servers.
+upstream:
+  # endpoints are a list of addresses of the feed server's endpoints with ip:port.
+  # Usually, it's recommended to use DNS.
+  endpoints: 
+    - 127.0.0.1:9510
+  # dialTimeoutMS is the timeout milliseconds for failing to establish the upstream
+  # grpc connection.
+  # if = 0, it means dial with no timeout, if > 0, then it should range between [50,15000]
+  dialTimeoutMS: 2000
+  # authentication including the authentication information for this sidecar
+  authentication:
+    # user is the user's name for authentication.
+    user:
+    # token is the user's authorize token.
+    token:
+  # tls defines tls related security options.
+  tls:
+    # server should be accessed without verifying the TLS certificate.
+    insecureSkipVerify:
+    # cert file path.
+    certFile:
+    # key file path.
+    keyFile:
+    # ca file path.
+    caFile:
+    # the password to decrypt the certificate.
+    password:
+
+# appSpec defines what jobs this sidecar need to do.
+appSpec:
+  # bizID is the business id that these jobs works at.
+  # all the jobs should be in the same business.
+  bizID: 0
+  # applications define all the applications this sidecar works for.
+  # Note: at most 3 applications is allowed for one sidecar. if one of the bound
+  # app is deleted while sidecar is running, sidecar will not work properly.
+  applications:
+    # appID is the application id, it's required.
+    - appID:
+      # namespace is the namespace that this application works at.
+      # if this app works at namespace mode, then this namespace is required
+      # and can not be empty, otherwise it should be empty.
+      namespace:
+      # uid is this app instance's unique identity, which should be an uuid string,
+      # it's length should be ranges at [16, 32].
+      # Note: uid is required, can not be empty.
+      uid:
+      # labels define this application instance's label information, which is used
+      # to match its release configurations.
+      # Note:
+      # 1. labels is a key-value based string map.
+      # 2. it can be empty, and at most 5 labels can be set.
+      labels:
+
+# workspace defines the sidecar's workspace options.
+workspace:
+  # sidecar's absolute workspace root directory. it stores the sidecar's runtime related
+  # logs, files and metadata information.
+  # ATTENTION: 
+  # 1. THIS DIRECTORY CAN ONLY BE USED BY SIDECAR, USER MUST NOT USE THIS DIRECTORY!.
+  # 2. DON'T CHANGE ANYTHING UNDER THIS DIRECTORY EXCEPT 'logs' Directory.
+  rootDirectory:
+  # purgePolicy defines the sidecar's workspace purge policy related options.
+  purgePolicy:
+    # sidecar will do auto clean user's temporary config files if enabled the auto clean
+    # policy if it is possible. Only unused config item files will be removed when the 
+    # workspace size is over than maxSizeMB.
+    enableAutoClean: true
+    # maxSizeMB is the max size of sidecar's workspace size. used when enableAutoClean
+    # is true. Please be assure this size is larger than at least one release of all your
+    # configuration items size.
+    maxSizeMB: 1024
+    # the minute interval to auto clean unused files when enableAutoClean
+    # is true. it should be larger than 60.
+    autoCleanIntervalMin: 60
+
+# defines log's related configuration
+log:
+  # log storage directory.
+  # Note: normally it should be within the workspace.rootDirectory.
+  # logDir: 
+  # per file max size, uint: MB.
+  maxPerFileSizeMB: 1024
+  # per line max size, uint: KB.
+  maxPerLineSizeKB: 10
+  # log file max storage number.
+  maxFileNum: 5
+  # whether the restart service log is appended to the latest log file, or whether a new 
+  # log file is created.
+  logAppend: true
+  # log the log to std err only, it can not be used with alsoToStdErr at the same time.
+  toStdErr: false
+  # log the log to file and also to std err. it can not be used with toStdErr at the same time.
+  alsoToStdErr: false
+  # log level.
+  verbosity: 0
