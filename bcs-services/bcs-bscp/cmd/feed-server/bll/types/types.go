@@ -1,0 +1,109 @@
+/*
+Tencent is pleased to support the open source community by making Basic Service Configuration Platform available.
+Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
+Licensed under the MIT License (the "License"); you may not use this file except
+in compliance with the License. You may obtain a copy of the License at
+http://opensource.org/licenses/MIT
+Unless required by applicable law or agreed to in writing, software distributed under
+the License is distributed on an "as IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+either express or implied. See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
+// Package types NOTES
+package types
+
+import (
+	"bscp.io/pkg/criteria/errf"
+	"bscp.io/pkg/criteria/validator"
+	pbci "bscp.io/pkg/protocol/core/config-item"
+	content "bscp.io/pkg/protocol/core/content"
+)
+
+// AppInstanceMeta defines an app instance's metadata information.
+type AppInstanceMeta struct {
+	BizID     uint32            `json:"bizID"`
+	AppID     uint32            `json:"appID"`
+	Namespace string            `json:"namespace"`
+	Uid       string            `json:"uid"`
+	Labels    map[string]string `json:"labels"`
+}
+
+// ListFileAppLatestReleaseMetaReq defines options to list a file type app's latest release metadata.
+type ListFileAppLatestReleaseMetaReq struct {
+	BizId     uint32            `json:"biz_id,omitempty"`
+	AppId     uint32            `json:"app_id,omitempty"`
+	Uid       string            `json:"uid,omitempty"`
+	Namespace string            `json:"namespace,omitempty"`
+	Labels    map[string]string `json:"labels,omitempty"`
+}
+
+// Validate options is valid or not.
+func (op ListFileAppLatestReleaseMetaReq) Validate() error {
+	if op.BizId <= 0 {
+		return errf.New(errf.InvalidParameter, "invalid biz id, should be > 0")
+	}
+
+	if op.AppId <= 0 {
+		return errf.New(errf.InvalidParameter, "invalid app id, should be > 0")
+	}
+
+	if err := validator.ValidateUidLength(op.Uid); err != nil {
+		return errf.New(errf.InvalidParameter, err.Error())
+	}
+
+	if err := validator.ValidateLabel(op.Labels); err != nil {
+		return errf.New(errf.InvalidParameter, err.Error())
+	}
+
+	return nil
+}
+
+// ReleasedCIMeta defines a release's released config item metadata
+type ReleasedCIMeta struct {
+	RciId          uint32          `json:"rci_id,omitempty"`
+	CommitSpec     *CommitSpec     `json:"commit_spec,omitempty"`
+	ConfigItemSpec *ConfigItemSpec `json:"config_item_spec,omitempty"`
+	RepositorySpec *RepositorySpec `json:"repository_spec,omitempty"`
+}
+
+// ConfigItemSpec config item spec.
+type ConfigItemSpec struct {
+	Name       string               `json:"name,omitempty"`
+	Path       string               `json:"path,omitempty"`
+	FileType   string               `json:"file_type,omitempty"`
+	FileMode   string               `json:"file_mode,omitempty"`
+	Permission *pbci.FilePermission `json:"permission,omitempty"`
+}
+
+// CommitSpec commit spec.
+type CommitSpec struct {
+	ContentId uint32               `json:"content_id,omitempty"`
+	Content   *content.ContentSpec `json:"content,omitempty"`
+}
+
+// RepositorySpec repository spec.
+type RepositorySpec struct {
+	// Path to pull the config file's sub uri.
+	Path string `json:"path,omitempty"`
+}
+
+// AppLatestReleaseMeta an app's latest release metadata.
+type AppLatestReleaseMeta struct {
+	// ReleaseId the app's latest release's id.
+	ReleaseId   uint32            `json:"release_id,omitempty"`
+	Repository  *Repository       `json:"repository,omitempty"`
+	ConfigItems []*ReleasedCIMeta `json:"config_items,omitempty"`
+}
+
+// Repository data.
+type Repository struct {
+	Root string `json:"root,omitempty"`
+}
+
+// ListFileAppLatestReleaseMetaResp list a file type app's latest release metadata response.
+type ListFileAppLatestReleaseMetaResp struct {
+	Code    int32                 `json:"code,omitempty"`
+	Message string                `json:"message,omitempty"`
+	Data    *AppLatestReleaseMeta `json:"data,omitempty"`
+}
