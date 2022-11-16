@@ -75,6 +75,7 @@ require (
 	github.com/go-micro/plugins/v4/broker/rabbitmq v1.1.0
 	github.com/go-micro/plugins/v4/broker/stan v1.1.0
 	github.com/go-micro/plugins/v4/registry/etcd v1.1.0
+	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b
 )
 
 require (

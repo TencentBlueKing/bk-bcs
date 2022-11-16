@@ -243,6 +243,11 @@ func (f *DBTableFinder) WithLimit(start int64) drivers.Find {
 	return f
 }
 
+// WithDatabaseOptions set database options
+func (f *DBTableFinder) WithDatabaseOptions(opt interface{}) drivers.Find {
+	return f
+}
+
 // One find one
 func (f *DBTableFinder) One(ctx context.Context, result interface{}) error {
 	return nil

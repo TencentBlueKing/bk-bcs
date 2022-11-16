@@ -21,6 +21,11 @@ import (
 	"strings"
 	"time"
 
+	"github.com/emicklei/go-restful"
+	"go-micro.dev/v4/broker"
+	mopt "go.mongodb.org/mongo-driver/mongo/options"
+	"go.mongodb.org/mongo-driver/mongo/readpref"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/codec"
 	"github.com/Tencent/bk-bcs/bcs-common/common/types"
@@ -29,8 +34,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/lib"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/utils/metrics"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/apiserver"
-	"github.com/emicklei/go-restful"
-	"go-micro.dev/v4/broker"
 )
 
 func getExtra(req *restful.Request) operator.M {
@@ -154,15 +157,20 @@ func listEvent(req *restful.Request) ([]operator.M, int64, error) {
 
 	condition := getCondition(req)
 
+	// set read preference, read from secondary node
+	secondary := readpref.Secondary()
+	dbOpts := mopt.Database().SetReadPreference(secondary)
+
 	// option
 	opt := &lib.StoreGetOption{
 		Fields: fields,
 		Sort: map[string]int{
 			eventTimeTag: -1,
 		},
-		Cond:   condition,
-		Offset: offset,
-		Limit:  limit,
+		Cond:            condition,
+		Offset:          offset,
+		Limit:           limit,
+		DatabaseOptions: dbOpts,
 	}
 
 	return GetEventList(req.Request.Context(), clusterIDs, opt)

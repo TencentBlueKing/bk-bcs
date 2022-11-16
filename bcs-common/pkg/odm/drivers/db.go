@@ -69,6 +69,9 @@ type Find interface {
 	// WithLimit set limit of result
 	WithLimit(limit int64) Find
 
+	// WithWithDatabaseOptions set options
+	WithDatabaseOptions(opt interface{}) Find
+
 	// One find one data by find option
 	One(ctx context.Context, result interface{}) error
 

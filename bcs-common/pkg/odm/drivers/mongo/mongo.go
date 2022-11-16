@@ -116,21 +116,17 @@ func (db *DB) Ping() error {
 // HasTable if table exists
 func (db *DB) HasTable(ctx context.Context, tableName string) (bool, error) {
 	var err error
-	var cursor *mongo.Cursor
 	startTime := time.Now()
 	defer func() {
 		reportMongdbMetrics("hasTable", err, startTime)
 	}()
-	cursor, err = db.mCli.Database(db.dbName).ListCollections(ctx, bson.M{
+	colsNames, err := db.mCli.Database(db.dbName).ListCollectionNames(ctx, bson.M{
 		"name": tableName,
-		"type": "collection",
 	})
 	if err != nil {
 		return false, err
 	}
-	defer cursor.Close(ctx)
-
-	for cursor.Next(ctx) {
+	if len(colsNames) > 0 {
 		return true, nil
 	}
 	return false, nil
@@ -397,6 +393,7 @@ type Finder struct {
 	limit      int64
 	condition  *operator.Condition
 	*Collection
+	databaseOptions *mopt.DatabaseOptions
 }
 
 // WithProjection set returned fields
@@ -423,6 +420,14 @@ func (f *Finder) WithLimit(limit int64) drivers.Find {
 	return f
 }
 
+// WithReadPreference set readPreference of find
+func (f *Finder) WithDatabaseOptions(opt interface{}) drivers.Find {
+	if dbOpt, ok := opt.(*mopt.DatabaseOptions); ok {
+		f.databaseOptions = dbOpt
+	}
+	return f
+}
+
 // One find one data by find option
 func (f *Finder) One(ctx context.Context, result interface{}) error {
 	findOpts := &mopt.FindOptions{}
@@ -443,10 +448,15 @@ func (f *Finder) One(ctx context.Context, result interface{}) error {
 	defer func() {
 		reportMongdbMetrics("findOne", err, startTime)
 	}()
+	// set read prefer secondary replica
+	var dbOpts *mopt.DatabaseOptions
+	if f.databaseOptions != nil {
+		dbOpts = f.databaseOptions
+	}
 
 	// convert condition to filter
 	filter := f.condition.Combine(leafNodeProcessor, branchNodeProcessor)
-	cursor, err = f.mCli.Database(f.dbName).Collection(f.collectionName).Find(ctx, filter, findOpts)
+	cursor, err = f.mCli.Database(f.dbName, dbOpts).Collection(f.collectionName).Find(ctx, filter, findOpts)
 	if err != nil {
 		return err
 	}
@@ -481,9 +491,15 @@ func (f *Finder) All(ctx context.Context, result interface{}) error {
 	defer func() {
 		reportMongdbMetrics("findAll", err, startTime)
 	}()
+	// set read prefer secondary replica
+	var dbOpts *mopt.DatabaseOptions
+	if f.databaseOptions != nil {
+		dbOpts = f.databaseOptions
+	}
+
 	// convert condition to filter
 	filter := f.condition.Combine(leafNodeProcessor, branchNodeProcessor)
-	cursor, err = f.mCli.Database(f.dbName).Collection(f.collectionName).Find(ctx, filter, findOpts)
+	cursor, err = f.mCli.Database(f.dbName, dbOpts).Collection(f.collectionName).Find(ctx, filter, findOpts)
 	if err != nil {
 		return err
 	}

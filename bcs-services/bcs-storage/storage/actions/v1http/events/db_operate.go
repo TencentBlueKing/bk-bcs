@@ -19,6 +19,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/apiserver"
+	"github.com/pkg/errors"
+	"go.mongodb.org/mongo-driver/bson"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/types"
 	msgqueue "github.com/Tencent/bk-bcs/bcs-common/pkg/msgqueuev4"
@@ -27,9 +31,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/lib"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/v1http/dynamic"
 	dbutils "github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/v1http/utils"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/apiserver"
-	"github.com/pkg/errors"
-	"go.mongodb.org/mongo-driver/bson"
 )
 
 // 业务方法
@@ -210,15 +211,6 @@ func GetStore() *lib.Store {
 // queryOrCreateIndex 查询或创建索引
 func queryOrCreateIndex(ctx context.Context, clusterID string) error {
 	for _, idxName := range eventQueryIndexKeys {
-		hasTable, err := dbutils.HasTable(ctx, dbConfig, TablePrefix+clusterID)
-		if err != nil {
-			return errors.Wrapf(err, "Unable to get current table, db:[%s],table:[%s].", dbConfig,
-				TablePrefix+clusterID)
-		}
-		if !hasTable {
-			return fmt.Errorf("failed to get table for clusterID %s", clusterID)
-		}
-
 		hasIndex, err := dbutils.HasIndex(ctx, dbConfig, TablePrefix+clusterID, idxName+"_idx")
 		if err != nil {
 			return errors.Wrapf(err, "failed to get index for  clusterID(%s) with  %s.", clusterID, idxName)
