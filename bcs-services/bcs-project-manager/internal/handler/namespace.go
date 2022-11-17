@@ -38,7 +38,7 @@ func NewNamespace(model store.ProjectModel) *NamespaceHandler {
 // CreateNamespace implement for CreateNamespace interface
 func (p *NamespaceHandler) CreateNamespace(ctx context.Context,
 	req *proto.CreateNamespaceRequest, resp *proto.CreateNamespaceResponse) error {
-	action, err := na.NewNamespaceFactory(p.model).Action(req.GetClusterID())
+	action, err := na.NewNamespaceFactory(p.model).Action(req.GetClusterID(), req.GetProjectCode())
 	if err != nil {
 		logging.Error("get namespace client for cluster %s from client factory failed, err: %s",
 			req.GetClusterID(), err.Error())
@@ -50,7 +50,7 @@ func (p *NamespaceHandler) CreateNamespace(ctx context.Context,
 // CreateNamespaceCallback implement for CreateNamespaceCallback interface
 func (p *NamespaceHandler) CreateNamespaceCallback(ctx context.Context,
 	req *proto.NamespaceCallbackRequest, resp *proto.NamespaceCallbackResponse) error {
-	action, err := na.NewNamespaceFactory(p.model).Action(req.GetClusterID())
+	action, err := na.NewNamespaceFactory(p.model).Action(req.GetClusterID(), req.GetProjectCode())
 	if err != nil {
 		logging.Error("get namespace client for cluster %s from client factory failed, err: %s",
 			req.GetClusterID(), err.Error())
@@ -62,7 +62,7 @@ func (p *NamespaceHandler) CreateNamespaceCallback(ctx context.Context,
 // UpdateNamespace implement for UpdateNamespace interface
 func (p *NamespaceHandler) UpdateNamespace(ctx context.Context,
 	req *proto.UpdateNamespaceRequest, resp *proto.UpdateNamespaceResponse) error {
-	action, err := na.NewNamespaceFactory(p.model).Action(req.GetClusterID())
+	action, err := na.NewNamespaceFactory(p.model).Action(req.GetClusterID(), req.GetProjectCode())
 	if err != nil {
 		logging.Error("get namespace client for cluster %s from client factory failed, err: %s",
 			req.GetClusterID(), err.Error())
@@ -74,7 +74,7 @@ func (p *NamespaceHandler) UpdateNamespace(ctx context.Context,
 // UpdateNamespaceCallback implement for UpdateNamespaceCallback interface
 func (p *NamespaceHandler) UpdateNamespaceCallback(ctx context.Context,
 	req *proto.NamespaceCallbackRequest, resp *proto.NamespaceCallbackResponse) error {
-	action, err := na.NewNamespaceFactory(p.model).Action(req.GetClusterID())
+	action, err := na.NewNamespaceFactory(p.model).Action(req.GetClusterID(), req.GetProjectCode())
 	if err != nil {
 		logging.Error("get namespace client for cluster %s from client factory failed, err: %s",
 			req.GetClusterID(), err.Error())
@@ -83,10 +83,22 @@ func (p *NamespaceHandler) UpdateNamespaceCallback(ctx context.Context,
 	return action.UpdateNamespaceCallback(ctx, req, resp)
 }
 
+// GetNamespace implement for GetNamespace interface
+func (p *NamespaceHandler) GetNamespace(ctx context.Context,
+	req *proto.GetNamespaceRequest, resp *proto.GetNamespaceResponse) error {
+	action, err := na.NewNamespaceFactory(p.model).Action(req.GetClusterID(), req.GetProjectCode())
+	if err != nil {
+		logging.Error("get namespace client for cluster %s from client factory failed, err: %s",
+			req.GetClusterID(), err.Error())
+		return err
+	}
+	return action.GetNamespace(ctx, req, resp)
+}
+
 // ListNamespaces implement for ListNamespaces interface
 func (p *NamespaceHandler) ListNamespaces(ctx context.Context,
 	req *proto.ListNamespacesRequest, resp *proto.ListNamespacesResponse) error {
-	action, err := na.NewNamespaceFactory(p.model).Action(req.GetClusterID())
+	action, err := na.NewNamespaceFactory(p.model).Action(req.GetClusterID(), req.GetProjectCode())
 	if err != nil {
 		logging.Error("get namespace client for cluster %s from client factory failed, err: %s",
 			req.GetClusterID(), err.Error())
@@ -98,7 +110,7 @@ func (p *NamespaceHandler) ListNamespaces(ctx context.Context,
 // DeleteNamespace implement for DeleteNamespace interface
 func (p *NamespaceHandler) DeleteNamespace(ctx context.Context,
 	req *proto.DeleteNamespaceRequest, resp *proto.DeleteNamespaceResponse) error {
-	action, err := na.NewNamespaceFactory(p.model).Action(req.GetClusterID())
+	action, err := na.NewNamespaceFactory(p.model).Action(req.GetClusterID(), req.GetProjectCode())
 	if err != nil {
 		logging.Error("get namespace client for cluster %s from client factory failed, err: %s",
 			req.GetClusterID(), err.Error())
@@ -110,7 +122,7 @@ func (p *NamespaceHandler) DeleteNamespace(ctx context.Context,
 // DeleteNamespaceCallback implement for DeleteNamespaceCallback interface
 func (p *NamespaceHandler) DeleteNamespaceCallback(ctx context.Context,
 	req *proto.NamespaceCallbackRequest, resp *proto.NamespaceCallbackResponse) error {
-	action, err := na.NewNamespaceFactory(p.model).Action(req.GetClusterID())
+	action, err := na.NewNamespaceFactory(p.model).Action(req.GetClusterID(), req.GetProjectCode())
 	if err != nil {
 		logging.Error("get namespace client for cluster %s from client factory failed, err: %s",
 			req.GetClusterID(), err.Error())

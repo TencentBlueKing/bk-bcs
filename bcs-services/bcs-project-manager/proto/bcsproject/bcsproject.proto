@@ -595,6 +595,15 @@ service Namespace {
       summary : "更新命名空间 ITSM 回调"
     };
   }
+  rpc GetNamespace(GetNamespaceRequest) returns (GetNamespaceResponse) {
+    option (google.api.http) = {
+      get : "/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{name}"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "获取单个命名空间"
+      summary : "获取单个命名空间"
+    };
+  }
   rpc ListNamespaces(ListNamespacesRequest) returns (ListNamespacesResponse) {
     option (google.api.http) = {
       get : "/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces"
@@ -649,7 +658,8 @@ message CreateNamespaceRequest {
   string name = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "name", 
     description: "命名空间名称, 长度不能超过63字符,只能包含小写字母、数字，以及 '-',必须以字母开头，不能以 '-' 结尾"
-  }, (validate.rules).string = {max_len: 63, pattern: "^[a-z][a-z0-9-]*[a-z0-9]$"}];
+    // https://github.com/kubernetes/kubernetes/blob/434bfd82814af038ad94d62ebe59b133fcb50506/staging/src/k8s.io/apimachinery/pkg/util/validation/validation.go#L188
+  }, (validate.rules).string = {max_len: 63, pattern: "^[a-z0-9]([-a-z0-9]*[a-z0-9])?$"}];
   ResourceQuota quota = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "name", 
     description: "命名空间配额"
@@ -715,7 +725,8 @@ message NamespaceCallbackRequest {
   string name = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "name", 
     description: "命名空间名称, 长度不能超过63字符,只能包含小写字母、数字，以及 '-',必须以字母开头，不能以 '-' 结尾"
-  }, (validate.rules).string = {max_len: 63, pattern: "^[a-z][a-z0-9-]*[a-z0-9]$"}];
+    // https://github.com/kubernetes/kubernetes/blob/434bfd82814af038ad94d62ebe59b133fcb50506/staging/src/k8s.io/apimachinery/pkg/util/validation/validation.go#L188
+  }, (validate.rules).string = {max_len: 63, pattern: "^[a-z0-9]([-a-z0-9]*[a-z0-9])?$"}];
   string title = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "title", 
     description: "ITSM 单据标题"
@@ -789,7 +800,8 @@ message UpdateNamespaceRequest {
   string name = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "name", 
     description: "命名空间名称, 长度不能超过63字符,只能包含小写字母、数字，以及 '-',必须以字母开头，不能以 '-' 结尾"
-  }, (validate.rules).string = {max_len: 63, pattern: "^[a-z][a-z0-9-]*[a-z0-9]$"}];
+    // https://github.com/kubernetes/kubernetes/blob/434bfd82814af038ad94d62ebe59b133fcb50506/staging/src/k8s.io/apimachinery/pkg/util/validation/validation.go#L188
+  }, (validate.rules).string = {max_len: 63, pattern: "^[a-z0-9]([-a-z0-9]*[a-z0-9])?$"}];
   repeated Label labels = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "labels", 
     description: "命名空间标签"
@@ -819,6 +831,51 @@ message UpdateNamespaceResponse {
   }];
 }
 
+message GetNamespaceRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "GetNamespaceRequest"
+      description : "获取单个命名空间请求"
+      required : [
+        "projectCode",
+        "clusterID"
+      ]
+    }
+  };
+
+  string projectCode = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "projectCode", 
+    description: "项目编码(英文缩写), 全局唯一, 长度不能超过64字符"
+  }];
+  string clusterID = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "clusterID", 
+    description: "集群ID"
+  }];
+  string name = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "name", 
+    description: "命名空间名称"
+  }];
+}
+
+message GetNamespaceResponse {
+  uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code", 
+    description: "返回错误码"
+  }];
+  string message = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "message",
+    description: "返回错误信息"
+  }];
+  NamespaceData data = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "data", 
+    description: "返回详细信息, 可以为空"
+  }];
+  string requestID = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "request id",
+    description: "请求 ID"
+  }];
+}
+
 message ListNamespacesRequest {
   option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
     json_schema : {
@@ -836,7 +893,7 @@ message ListNamespacesRequest {
     description: "项目编码(英文缩写), 全局唯一, 长度不能超过64字符"
   }];
   string clusterID = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title: "projectCode", 
+    title: "clusterID", 
     description: "集群ID"
   }];
 }
@@ -888,7 +945,8 @@ message DeleteNamespaceRequest {
   string name = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "name", 
     description: "命名空间名称"
-  }];
+    // https://github.com/kubernetes/kubernetes/blob/434bfd82814af038ad94d62ebe59b133fcb50506/staging/src/k8s.io/apimachinery/pkg/util/validation/validation.go#L188
+  }, (validate.rules).string = {max_len: 63, pattern: "^[a-z0-9]([-a-z0-9]*[a-z0-9])?$"}];
 }
 
 message DeleteNamespaceResponse {
@@ -931,31 +989,39 @@ message NamespaceData {
     title: "used", 
     description: "命名空间已用配额"
   }];
-  repeated Label labels = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  float cpuUseRate = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "cpuUseRate", 
+    description: "CPU使用率"
+  }];
+  float memoryUseRate = 7[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "memoryUseRate", 
+    description: "命名空使用率"
+  }];
+  repeated Label labels = 8[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "labels", 
     description: "命名空间标签"
   }];
-  repeated Annotation annotations = 7[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  repeated Annotation annotations = 9[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "annotations", 
     description: "命名空间注解"
   }];
-  repeated VariableValue variables = 8[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  repeated VariableValue variables = 10[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "variables", 
     description: "命名空间变量"
   }];
-  string itsmTicketSN = 9[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  string itsmTicketSN = 11[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "itsmTicketSN", 
     description: "itsm 单号"
   }];
-  string itsmTicketStatus = 10[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  string itsmTicketStatus = 12[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "itsmTicketStatus", 
     description: "itsm 单据状态"
   }];
-  string itsmTicketURL = 11[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  string itsmTicketURL = 13[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "itsmTicketURL", 
     description: "itsm 单据 URL"
   }];
-  string itsmTicketType = 12[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  string itsmTicketType = 14[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "itsmTicketType", 
     description: "itsm 单据类型: create, update, delete"
   }];

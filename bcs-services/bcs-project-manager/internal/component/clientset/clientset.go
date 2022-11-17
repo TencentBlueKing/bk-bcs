@@ -53,6 +53,8 @@ func (cg *ClientGroup) Client(clusterID string) (*kubernetes.Clientset, error) {
 		TLSClientConfig: rest.TLSClientConfig{
 			Insecure: true,
 		},
+		QPS:   100,
+		Burst: 100,
 	}
 	clientset, err := kubernetes.NewForConfig(restConfig)
 	if err != nil {

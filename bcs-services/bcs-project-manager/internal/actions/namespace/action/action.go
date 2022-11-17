@@ -29,6 +29,7 @@ type NamespaceAction interface {
 		req *proto.UpdateNamespaceRequest, resp *proto.UpdateNamespaceResponse) error
 	UpdateNamespaceCallback(ctx context.Context,
 		req *proto.NamespaceCallbackRequest, resp *proto.NamespaceCallbackResponse) error
+	GetNamespace(ctx context.Context, req *proto.GetNamespaceRequest, resp *proto.GetNamespaceResponse) error
 	ListNamespaces(ctx context.Context, req *proto.ListNamespacesRequest, resp *proto.ListNamespacesResponse) error
 	DeleteNamespace(ctx context.Context, req *proto.DeleteNamespaceRequest, resp *proto.DeleteNamespaceResponse) error
 	DeleteNamespaceCallback(ctx context.Context,

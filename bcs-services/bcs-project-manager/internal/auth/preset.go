@@ -51,6 +51,7 @@ var ActionPermissions = map[string]string{
 	// Namespace
 	"Namespace.CreateNamespace": namespace.CanCreateNamespaceOperation,
 	"Namespace.UpdateNamespace": CanUpdateNamespaceOperation,
+	"Namespace.GetNamespace":    namespace.CanViewNamespaceOperation,
 	"Namespace.ListNamespaces":  namespace.CanListNamespaceOperation,
 	"Namespace.DeleteNamespace": namespace.CanDeleteNamespaceOperation,
 }

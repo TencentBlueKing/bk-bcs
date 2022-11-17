@@ -294,6 +294,12 @@ func NewNamespaceEndpoints() []*api.Endpoint {
 			Handler: "rpc",
 		},
 		&api.Endpoint{
+			Name:    "Namespace.GetNamespace",
+			Path:    []string{"/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{name}"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		&api.Endpoint{
 			Name:    "Namespace.ListNamespaces",
 			Path:    []string{"/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces"},
 			Method:  []string{"GET"},
@@ -323,6 +329,7 @@ type NamespaceService interface {
 	CreateNamespaceCallback(ctx context.Context, in *NamespaceCallbackRequest, opts ...client.CallOption) (*NamespaceCallbackResponse, error)
 	UpdateNamespace(ctx context.Context, in *UpdateNamespaceRequest, opts ...client.CallOption) (*UpdateNamespaceResponse, error)
 	UpdateNamespaceCallback(ctx context.Context, in *NamespaceCallbackRequest, opts ...client.CallOption) (*NamespaceCallbackResponse, error)
+	GetNamespace(ctx context.Context, in *GetNamespaceRequest, opts ...client.CallOption) (*GetNamespaceResponse, error)
 	ListNamespaces(ctx context.Context, in *ListNamespacesRequest, opts ...client.CallOption) (*ListNamespacesResponse, error)
 	DeleteNamespace(ctx context.Context, in *DeleteNamespaceRequest, opts ...client.CallOption) (*DeleteNamespaceResponse, error)
 	DeleteNamespaceCallback(ctx context.Context, in *NamespaceCallbackRequest, opts ...client.CallOption) (*NamespaceCallbackResponse, error)
@@ -380,6 +387,16 @@ func (c *namespaceService) UpdateNamespaceCallback(ctx context.Context, in *Name
 	return out, nil
 }
 
+func (c *namespaceService) GetNamespace(ctx context.Context, in *GetNamespaceRequest, opts ...client.CallOption) (*GetNamespaceResponse, error) {
+	req := c.c.NewRequest(c.name, "Namespace.GetNamespace", in)
+	out := new(GetNamespaceResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *namespaceService) ListNamespaces(ctx context.Context, in *ListNamespacesRequest, opts ...client.CallOption) (*ListNamespacesResponse, error) {
 	req := c.c.NewRequest(c.name, "Namespace.ListNamespaces", in)
 	out := new(ListNamespacesResponse)
@@ -417,6 +434,7 @@ type NamespaceHandler interface {
 	CreateNamespaceCallback(context.Context, *NamespaceCallbackRequest, *NamespaceCallbackResponse) error
 	UpdateNamespace(context.Context, *UpdateNamespaceRequest, *UpdateNamespaceResponse) error
 	UpdateNamespaceCallback(context.Context, *NamespaceCallbackRequest, *NamespaceCallbackResponse) error
+	GetNamespace(context.Context, *GetNamespaceRequest, *GetNamespaceResponse) error
 	ListNamespaces(context.Context, *ListNamespacesRequest, *ListNamespacesResponse) error
 	DeleteNamespace(context.Context, *DeleteNamespaceRequest, *DeleteNamespaceResponse) error
 	DeleteNamespaceCallback(context.Context, *NamespaceCallbackRequest, *NamespaceCallbackResponse) error
@@ -428,6 +446,7 @@ func RegisterNamespaceHandler(s server.Server, hdlr NamespaceHandler, opts ...se
 		CreateNamespaceCallback(ctx context.Context, in *NamespaceCallbackRequest, out *NamespaceCallbackResponse) error
 		UpdateNamespace(ctx context.Context, in *UpdateNamespaceRequest, out *UpdateNamespaceResponse) error
 		UpdateNamespaceCallback(ctx context.Context, in *NamespaceCallbackRequest, out *NamespaceCallbackResponse) error
+		GetNamespace(ctx context.Context, in *GetNamespaceRequest, out *GetNamespaceResponse) error
 		ListNamespaces(ctx context.Context, in *ListNamespacesRequest, out *ListNamespacesResponse) error
 		DeleteNamespace(ctx context.Context, in *DeleteNamespaceRequest, out *DeleteNamespaceResponse) error
 		DeleteNamespaceCallback(ctx context.Context, in *NamespaceCallbackRequest, out *NamespaceCallbackResponse) error
@@ -462,6 +481,12 @@ func RegisterNamespaceHandler(s server.Server, hdlr NamespaceHandler, opts ...se
 		Path:    []string{"/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{name}/callback/update"},
 		Method:  []string{"POST"},
 		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Namespace.GetNamespace",
+		Path:    []string{"/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{name}"},
+		Method:  []string{"GET"},
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
@@ -505,6 +530,10 @@ func (h *namespaceHandler) UpdateNamespace(ctx context.Context, in *UpdateNamesp
 
 func (h *namespaceHandler) UpdateNamespaceCallback(ctx context.Context, in *NamespaceCallbackRequest, out *NamespaceCallbackResponse) error {
 	return h.NamespaceHandler.UpdateNamespaceCallback(ctx, in, out)
+}
+
+func (h *namespaceHandler) GetNamespace(ctx context.Context, in *GetNamespaceRequest, out *GetNamespaceResponse) error {
+	return h.NamespaceHandler.GetNamespace(ctx, in, out)
 }
 
 func (h *namespaceHandler) ListNamespaces(ctx context.Context, in *ListNamespacesRequest, out *ListNamespacesResponse) error {

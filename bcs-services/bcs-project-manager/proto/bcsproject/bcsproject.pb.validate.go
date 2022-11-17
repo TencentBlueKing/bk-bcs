@@ -1835,7 +1835,7 @@ func (m *CreateNamespaceRequest) validate(all bool) error {
 	if !_CreateNamespaceRequest_Name_Pattern.MatchString(m.GetName()) {
 		err := CreateNamespaceRequestValidationError{
 			field:  "Name",
-			reason: "value does not match regex pattern \"^[a-z][a-z0-9-]*[a-z0-9]$\"",
+			reason: "value does not match regex pattern \"^[a-z0-9]([-a-z0-9]*[a-z0-9])?$\"",
 		}
 		if !all {
 			return err
@@ -2054,7 +2054,7 @@ var _ interface {
 	ErrorName() string
 } = CreateNamespaceRequestValidationError{}
 
-var _CreateNamespaceRequest_Name_Pattern = regexp.MustCompile("^[a-z][a-z0-9-]*[a-z0-9]$")
+var _CreateNamespaceRequest_Name_Pattern = regexp.MustCompile("^[a-z0-9]([-a-z0-9]*[a-z0-9])?$")
 
 // Validate checks the field values on CreateNamespaceResponse with the rules
 // defined in the proto definition for this message. If any rules are
@@ -2262,7 +2262,7 @@ func (m *NamespaceCallbackRequest) validate(all bool) error {
 	if !_NamespaceCallbackRequest_Name_Pattern.MatchString(m.GetName()) {
 		err := NamespaceCallbackRequestValidationError{
 			field:  "Name",
-			reason: "value does not match regex pattern \"^[a-z][a-z0-9-]*[a-z0-9]$\"",
+			reason: "value does not match regex pattern \"^[a-z0-9]([-a-z0-9]*[a-z0-9])?$\"",
 		}
 		if !all {
 			return err
@@ -2362,7 +2362,7 @@ var _ interface {
 	ErrorName() string
 } = NamespaceCallbackRequestValidationError{}
 
-var _NamespaceCallbackRequest_Name_Pattern = regexp.MustCompile("^[a-z][a-z0-9-]*[a-z0-9]$")
+var _NamespaceCallbackRequest_Name_Pattern = regexp.MustCompile("^[a-z0-9]([-a-z0-9]*[a-z0-9])?$")
 
 // Validate checks the field values on NamespaceCallbackResponse with the rules
 // defined in the proto definition for this message. If any rules are
@@ -2516,7 +2516,7 @@ func (m *UpdateNamespaceRequest) validate(all bool) error {
 	if !_UpdateNamespaceRequest_Name_Pattern.MatchString(m.GetName()) {
 		err := UpdateNamespaceRequestValidationError{
 			field:  "Name",
-			reason: "value does not match regex pattern \"^[a-z][a-z0-9-]*[a-z0-9]$\"",
+			reason: "value does not match regex pattern \"^[a-z0-9]([-a-z0-9]*[a-z0-9])?$\"",
 		}
 		if !all {
 			return err
@@ -2701,7 +2701,7 @@ var _ interface {
 	ErrorName() string
 } = UpdateNamespaceRequestValidationError{}
 
-var _UpdateNamespaceRequest_Name_Pattern = regexp.MustCompile("^[a-z][a-z0-9-]*[a-z0-9]$")
+var _UpdateNamespaceRequest_Name_Pattern = regexp.MustCompile("^[a-z0-9]([-a-z0-9]*[a-z0-9])?$")
 
 // Validate checks the field values on UpdateNamespaceResponse with the rules
 // defined in the proto definition for this message. If any rules are
@@ -2810,6 +2810,251 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = UpdateNamespaceResponseValidationError{}
+
+// Validate checks the field values on GetNamespaceRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *GetNamespaceRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on GetNamespaceRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// GetNamespaceRequestMultiError, or nil if none found.
+func (m *GetNamespaceRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *GetNamespaceRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for ProjectCode
+
+	// no validation rules for ClusterID
+
+	// no validation rules for Name
+
+	if len(errors) > 0 {
+		return GetNamespaceRequestMultiError(errors)
+	}
+
+	return nil
+}
+
+// GetNamespaceRequestMultiError is an error wrapping multiple validation
+// errors returned by GetNamespaceRequest.ValidateAll() if the designated
+// constraints aren't met.
+type GetNamespaceRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m GetNamespaceRequestMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m GetNamespaceRequestMultiError) AllErrors() []error { return m }
+
+// GetNamespaceRequestValidationError is the validation error returned by
+// GetNamespaceRequest.Validate if the designated constraints aren't met.
+type GetNamespaceRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetNamespaceRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetNamespaceRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetNamespaceRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetNamespaceRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetNamespaceRequestValidationError) ErrorName() string {
+	return "GetNamespaceRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetNamespaceRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetNamespaceRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetNamespaceRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetNamespaceRequestValidationError{}
+
+// Validate checks the field values on GetNamespaceResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *GetNamespaceResponse) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on GetNamespaceResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// GetNamespaceResponseMultiError, or nil if none found.
+func (m *GetNamespaceResponse) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *GetNamespaceResponse) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	if all {
+		switch v := interface{}(m.GetData()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, GetNamespaceResponseValidationError{
+					field:  "Data",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, GetNamespaceResponseValidationError{
+					field:  "Data",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return GetNamespaceResponseValidationError{
+				field:  "Data",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	// no validation rules for RequestID
+
+	if len(errors) > 0 {
+		return GetNamespaceResponseMultiError(errors)
+	}
+
+	return nil
+}
+
+// GetNamespaceResponseMultiError is an error wrapping multiple validation
+// errors returned by GetNamespaceResponse.ValidateAll() if the designated
+// constraints aren't met.
+type GetNamespaceResponseMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m GetNamespaceResponseMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m GetNamespaceResponseMultiError) AllErrors() []error { return m }
+
+// GetNamespaceResponseValidationError is the validation error returned by
+// GetNamespaceResponse.Validate if the designated constraints aren't met.
+type GetNamespaceResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetNamespaceResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetNamespaceResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetNamespaceResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetNamespaceResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetNamespaceResponseValidationError) ErrorName() string {
+	return "GetNamespaceResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetNamespaceResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetNamespaceResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetNamespaceResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetNamespaceResponseValidationError{}
 
 // Validate checks the field values on ListNamespacesRequest with the rules
 // defined in the proto definition for this message. If any rules are
@@ -3114,7 +3359,27 @@ func (m *DeleteNamespaceRequest) validate(all bool) error {
 
 	// no validation rules for ClusterID
 
-	// no validation rules for Name
+	if utf8.RuneCountInString(m.GetName()) > 63 {
+		err := DeleteNamespaceRequestValidationError{
+			field:  "Name",
+			reason: "value length must be at most 63 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if !_DeleteNamespaceRequest_Name_Pattern.MatchString(m.GetName()) {
+		err := DeleteNamespaceRequestValidationError{
+			field:  "Name",
+			reason: "value does not match regex pattern \"^[a-z0-9]([-a-z0-9]*[a-z0-9])?$\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
 
 	if len(errors) > 0 {
 		return DeleteNamespaceRequestMultiError(errors)
@@ -3195,6 +3460,8 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = DeleteNamespaceRequestValidationError{}
+
+var _DeleteNamespaceRequest_Name_Pattern = regexp.MustCompile("^[a-z0-9]([-a-z0-9]*[a-z0-9])?$")
 
 // Validate checks the field values on DeleteNamespaceResponse with the rules
 // defined in the proto definition for this message. If any rules are
@@ -3391,6 +3658,10 @@ func (m *NamespaceData) validate(all bool) error {
 			}
 		}
 	}
+
+	// no validation rules for CpuUseRate
+
+	// no validation rules for MemoryUseRate
 
 	for idx, item := range m.GetLabels() {
 		_, _ = idx, item

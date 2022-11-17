@@ -16,8 +16,11 @@ package independent
 
 import (
 	"context"
+	"sync"
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
+	"golang.org/x/sync/errgroup"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -46,56 +49,68 @@ func (a *IndependentNamespaceAction) ListNamespaces(ctx context.Context,
 	if err != nil {
 		return errorx.NewClusterErr(err)
 	}
+	lock := &sync.Mutex{}
+	g, ctx := errgroup.WithContext(ctx)
 	retDatas := []*proto.NamespaceData{}
-	for _, ns := range nsList.Items {
-		// TODO: make it concurrency!
-		retData := &proto.NamespaceData{
-			Name:        ns.GetName(),
-			Status:      string(ns.Status.Phase),
-			CreateTime:  ns.GetCreationTimestamp().Format(config.TimeLayout),
-			Labels:      []*proto.Label{},
-			Annotations: []*proto.Annotation{},
-		}
-		for k, v := range ns.Labels {
-			retData.Labels = append(retData.Labels, &proto.Label{Key: k, Value: v})
-		}
-		for k, v := range ns.Annotations {
-			retData.Annotations = append(retData.Annotations, &proto.Annotation{Key: k, Value: v})
-		}
-		// get quota
-		quota, used, err := getNamespaceQuota(ctx, req.GetProjectCode(), req.GetClusterID(), ns.GetName(), client)
-		if err != nil {
-			return err
-		}
-		retData.Quota = quota
-		retData.Used = used
-		// get variables
-		variables, err := listNamespaceVariables(ctx, req.GetProjectCode(), req.GetClusterID(), ns.GetName())
-		if err != nil {
-			logging.Error("get namespace %s/%s variables failed, err: %s", req.GetClusterID(), ns.GetName(), err.Error())
-			return errorx.NewDBErr(err.Error())
-		}
-		retData.Variables = variables
-		retDatas = append(retDatas, retData)
+	for _, item := range nsList.Items {
+		ns := item
+		g.Go(func() error {
+			retData := &proto.NamespaceData{
+				Name:        ns.GetName(),
+				Status:      string(ns.Status.Phase),
+				CreateTime:  ns.GetCreationTimestamp().Format(config.TimeLayout),
+				Labels:      []*proto.Label{},
+				Annotations: []*proto.Annotation{},
+			}
+			for k, v := range ns.Labels {
+				retData.Labels = append(retData.Labels, &proto.Label{Key: k, Value: v})
+			}
+			for k, v := range ns.Annotations {
+				retData.Annotations = append(retData.Annotations, &proto.Annotation{Key: k, Value: v})
+			}
+			// get quota
+			quota, err := getNamespaceQuota(ctx, req.GetProjectCode(), req.GetClusterID(), ns.GetName(), client)
+			if err != nil {
+				return err
+			}
+			if quota != nil {
+				retData.Quota, retData.Used, retData.CpuUseRate, retData.MemoryUseRate = quotautils.TransferToProto(quota)
+			}
+
+			// get variables
+			variables, err := listNamespaceVariables(ctx, req.GetProjectCode(), req.GetClusterID(), ns.GetName())
+			if err != nil {
+				logging.Error("get namespace %s/%s variables failed, err: %s", req.GetClusterID(), ns.GetName(), err.Error())
+				return errorx.NewDBErr(err.Error())
+			}
+			retData.Variables = variables
+			lock.Lock()
+			defer lock.Unlock()
+			retDatas = append(retDatas, retData)
+			return nil
+		})
+	}
+	if err := g.Wait(); err != nil {
+		logging.Error("list namespaces in %s failed, err:%s", req.GetClusterID(), err.Error())
+		return err
 	}
 	resp.Data = retDatas
 	return nil
 }
 
 func getNamespaceQuota(ctx context.Context, projectCode, clusterID, namespace string, clientset *kubernetes.Clientset) (
-	*proto.ResourceQuota, *proto.ResourceQuota, error) {
-	q, err := clientset.CoreV1().ResourceQuotas(namespace).Get(ctx, namespace, metav1.GetOptions{})
+	*corev1.ResourceQuota, error) {
+	quota, err := clientset.CoreV1().ResourceQuotas(namespace).Get(ctx, namespace, metav1.GetOptions{})
 	if err != nil && !errors.IsNotFound(err) {
 		logging.Error("get resourceQuota %s/%s failed, err: %s", clusterID, namespace, err.Error())
-		return nil, nil, errorx.NewClusterErr(err.Error())
+		return nil, errorx.NewClusterErr(err.Error())
 	}
 
 	// get quota
-	if !errors.IsNotFound(err) {
-		quota, used := quotautils.TransferToProto(q)
-		return quota, used, nil
+	if errors.IsNotFound(err) {
+		return nil, nil
 	}
-	return nil, nil, nil
+	return quota, nil
 }
 
 func listNamespaceVariables(ctx context.Context,

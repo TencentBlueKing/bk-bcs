@@ -443,6 +443,51 @@
       }
     },
     "/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{name}": {
+      "get": {
+        "summary": "获取单个命名空间",
+        "description": "获取单个命名空间",
+        "operationId": "Namespace_GetNamespace",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/bcsprojectGetNamespaceResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectCode",
+            "description": "项目编码(英文缩写), 全局唯一, 长度不能超过64字符",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "clusterID",
+            "description": "集群ID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "description": "命名空间名称",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "Namespace"
+        ]
+      },
       "delete": {
         "summary": "删除命名空间",
         "description": "删除命名空间",
@@ -1715,6 +1760,32 @@
         }
       }
     },
+    "bcsprojectGetNamespaceResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "data": {
+          "$ref": "#/definitions/bcsprojectNamespaceData",
+          "description": "返回详细信息, 可以为空",
+          "title": "data"
+        },
+        "requestID": {
+          "type": "string",
+          "description": "请求 ID",
+          "title": "request id"
+        }
+      }
+    },
     "bcsprojectHealthzData": {
       "type": "object",
       "properties": {
@@ -2275,6 +2346,18 @@
           "$ref": "#/definitions/bcsprojectResourceQuota",
           "description": "命名空间已用配额",
           "title": "used"
+        },
+        "cpuUseRate": {
+          "type": "number",
+          "format": "float",
+          "description": "CPU使用率",
+          "title": "cpuUseRate"
+        },
+        "memoryUseRate": {
+          "type": "number",
+          "format": "float",
+          "description": "命名空使用率",
+          "title": "memoryUseRate"
         },
         "labels": {
           "type": "array",

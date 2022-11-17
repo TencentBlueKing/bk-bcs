@@ -38,7 +38,7 @@ func NewNamespaceFactory(model store.ProjectModel) *NamespaceFactory {
 }
 
 // Action get action by clusterID
-func (f *NamespaceFactory) Action(clusterID string) (action.NamespaceAction, error) {
+func (f *NamespaceFactory) Action(clusterID, projectCode string) (action.NamespaceAction, error) {
 	cli, closeCon, err := clustermanager.GetClusterManagerClient()
 	if err != nil {
 		logging.Error("get cluster manager client failed, err: %s", err.Error())
@@ -53,7 +53,12 @@ func (f *NamespaceFactory) Action(clusterID string) (action.NamespaceAction, err
 		logging.Error("list cluster from cluster manager failed, err: %s", err.Error())
 		return nil, err
 	}
-	if resp.GetData().GetIsShared() {
+	project, err := f.model.GetProject(context.TODO(), projectCode)
+	if err != nil {
+		logging.Error("get project from db failed, err: %s", err.Error())
+		return nil, err
+	}
+	if resp.GetData().GetIsShared() && resp.GetData().GetProjectID() != project.ProjectID {
 		return shared.NewSharedNamespaceAction(f.model), nil
 	}
 	return independent.NewIndependentNamespaceAction(f.model), nil

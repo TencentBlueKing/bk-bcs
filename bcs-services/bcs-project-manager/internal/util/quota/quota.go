@@ -23,34 +23,33 @@ import (
 )
 
 // TransferToProto transfer k8s ResourceQuota to proto ResourceQuota
-func TransferToProto(q *corev1.ResourceQuota) (*proto.ResourceQuota, *proto.ResourceQuota) {
-	quota := &proto.ResourceQuota{}
-	if quantity, ok := q.Status.Hard[corev1.ResourceLimitsCPU]; ok {
-		quota.CpuLimits = quantity.String()
+func TransferToProto(q *corev1.ResourceQuota) (
+	quota *proto.ResourceQuota, used *proto.ResourceQuota, cpuUseRate float32, memoryUseRate float32) {
+	quota = &proto.ResourceQuota{}
+	cpuLimitsQuota := q.Status.Hard[corev1.ResourceLimitsCPU]
+	quota.CpuLimits = cpuLimitsQuota.String()
+	cpuRequestQuota := q.Status.Hard[corev1.ResourceRequestsCPU]
+	quota.CpuRequests = cpuRequestQuota.String()
+	memoryLimitsQuota := q.Status.Hard[corev1.ResourceLimitsMemory]
+	quota.MemoryLimits = memoryLimitsQuota.String()
+	memoryRequestsQuota := q.Status.Hard[corev1.ResourceRequestsMemory]
+	quota.MemoryRequests = memoryRequestsQuota.String()
+	used = &proto.ResourceQuota{}
+	cpuLimitsUsed := q.Status.Used[corev1.ResourceLimitsCPU]
+	used.CpuLimits = cpuLimitsUsed.String()
+	cpuRequestsUsed := q.Status.Used[corev1.ResourceRequestsCPU]
+	used.CpuRequests = cpuRequestsUsed.String()
+	memoryLimitsUsed := q.Status.Used[corev1.ResourceLimitsMemory]
+	used.MemoryLimits = memoryLimitsUsed.String()
+	memoryRequestsUsed := q.Status.Used[corev1.ResourceRequestsMemory]
+	used.MemoryRequests = memoryRequestsUsed.String()
+	if cpuLimitsQuota.AsApproximateFloat64() != 0 {
+		cpuUseRate = float32(cpuRequestsUsed.AsApproximateFloat64() / cpuLimitsQuota.AsApproximateFloat64())
 	}
-	if quantity, ok := q.Status.Hard[corev1.ResourceRequestsCPU]; ok {
-		quota.CpuRequests = quantity.String()
+	if memoryLimitsQuota.AsApproximateFloat64() != 0 {
+		memoryUseRate = float32(memoryRequestsUsed.AsApproximateFloat64() / memoryLimitsQuota.AsApproximateFloat64())
 	}
-	if quantity, ok := q.Status.Hard[corev1.ResourceLimitsMemory]; ok {
-		quota.MemoryLimits = quantity.String()
-	}
-	if quantity, ok := q.Status.Hard[corev1.ResourceRequestsMemory]; ok {
-		quota.MemoryRequests = quantity.String()
-	}
-	used := &proto.ResourceQuota{}
-	if quantity, ok := q.Status.Used[corev1.ResourceLimitsCPU]; ok {
-		used.CpuLimits = quantity.String()
-	}
-	if quantity, ok := q.Status.Used[corev1.ResourceRequestsCPU]; ok {
-		used.CpuRequests = quantity.String()
-	}
-	if quantity, ok := q.Status.Used[corev1.ResourceLimitsMemory]; ok {
-		used.MemoryLimits = quantity.String()
-	}
-	if quantity, ok := q.Status.Used[corev1.ResourceRequestsMemory]; ok {
-		used.MemoryRequests = quantity.String()
-	}
-	return quota, used
+	return quota, used, cpuUseRate, memoryUseRate
 }
 
 // LoadFromProto load k8s ResourceQuota from proto ResourceQuota

@@ -16,8 +16,11 @@ package shared
 
 import (
 	"context"
+	"sync"
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
+	"golang.org/x/sync/errgroup"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -93,53 +96,66 @@ func (a *SharedNamespaceAction) ListNamespaces(ctx context.Context,
 	for _, modifyStagging := range modifyStaggings {
 		existns[modifyStagging.Name] = &modifyStagging
 	}
-	for _, namespace := range namespaces {
-		retData := &proto.NamespaceData{
-			Name:       namespace.GetName(),
-			CreateTime: namespace.GetCreationTimestamp().Format(config.TimeLayout),
-			Status:     string(namespace.Status.Phase),
-		}
-		// get quota
-		quota, used, err := getNamespaceQuota(ctx,
-			req.GetProjectCode(), req.GetClusterID(), namespace.GetName(), client)
-		if err != nil {
-			return err
-		}
-		retData.Quota = quota
-		retData.Used = used
-		// get variables
-		variables, err := listNamespaceVariables(ctx, req.GetProjectCode(), req.GetClusterID(), namespace.GetName())
-		if err != nil {
-			logging.Error("get namespace %s/%s variables failed, err: %s",
-				req.GetClusterID(), namespace.GetName(), err.Error())
-			return errorx.NewDBErr(err.Error())
-		}
-		retData.Variables = variables
-		if ns, ok := existns[retData.Name]; ok {
-			retData.ItsmTicketType = ns.ItsmTicketType
-			retData.ItsmTicketSN = ns.ItsmTicketSN
-			retData.ItsmTicketStatus = ns.ItsmTicketStatus
-			retData.ItsmTicketURL = ns.ItsmTicketURL
-		}
-		retDatas = append(retDatas, retData)
+	lock := &sync.Mutex{}
+	g, ctx := errgroup.WithContext(ctx)
+	for _, item := range namespaces {
+		namespace := item
+		logging.Info("[debug]namespace out: %s", namespace.GetName())
+		g.Go(func() error {
+			logging.Info("[debug]namespace in: %s", namespace.GetName())
+			retData := &proto.NamespaceData{
+				Name:       namespace.GetName(),
+				CreateTime: namespace.GetCreationTimestamp().Format(config.TimeLayout),
+				Status:     string(namespace.Status.Phase),
+			}
+			// get quota
+			quota, err := getNamespaceQuota(ctx, req.GetProjectCode(), req.GetClusterID(), namespace.GetName(), client)
+			if err != nil {
+				return err
+			}
+			if quota != nil {
+				retData.Quota, retData.Used, retData.CpuUseRate, retData.MemoryUseRate = quotautils.TransferToProto(quota)
+			}
+			// get variables
+			variables, err := listNamespaceVariables(ctx, req.GetProjectCode(), req.GetClusterID(), namespace.GetName())
+			if err != nil {
+				logging.Error("get namespace %s/%s variables failed, err: %s",
+					req.GetClusterID(), namespace.GetName(), err.Error())
+				return errorx.NewDBErr(err.Error())
+			}
+			retData.Variables = variables
+			if ns, ok := existns[retData.Name]; ok {
+				retData.ItsmTicketType = ns.ItsmTicketType
+				retData.ItsmTicketSN = ns.ItsmTicketSN
+				retData.ItsmTicketStatus = ns.ItsmTicketStatus
+				retData.ItsmTicketURL = ns.ItsmTicketURL
+			}
+			lock.Lock()
+			defer lock.Unlock()
+			retDatas = append(retDatas, retData)
+			return nil
+		})
+	}
+	if err := g.Wait(); err != nil {
+		logging.Error("list namespaces in %s failed, err:%s", req.GetClusterID(), err.Error())
+		return err
 	}
 	resp.Data = retDatas
 	return nil
 }
 
 func getNamespaceQuota(ctx context.Context, projectCode, clusterID, namespace string, clientset *kubernetes.Clientset) (
-	*proto.ResourceQuota, *proto.ResourceQuota, error) {
-	q, err := clientset.CoreV1().ResourceQuotas(namespace).Get(ctx, namespace, metav1.GetOptions{})
+	*corev1.ResourceQuota, error) {
+	quota, err := clientset.CoreV1().ResourceQuotas(namespace).Get(ctx, namespace, metav1.GetOptions{})
 	if err != nil && !errors.IsNotFound(err) {
 		logging.Error("get resourceQuota %s/%s failed, err: %s", clusterID, namespace, err.Error())
-		return nil, nil, errorx.NewClusterErr(err.Error())
+		return nil, errorx.NewClusterErr(err.Error())
 	}
 
-	if !errors.IsNotFound(err) {
-		quota, used := quotautils.TransferToProto(q)
-		return quota, used, nil
+	if errors.IsNotFound(err) {
+		return nil, nil
 	}
-	return nil, nil, nil
+	return quota, nil
 }
 
 func listNamespaceVariables(ctx context.Context,
