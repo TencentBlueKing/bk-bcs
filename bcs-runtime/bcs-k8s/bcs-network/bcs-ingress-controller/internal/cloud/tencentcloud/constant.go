@@ -71,6 +71,9 @@ const (
 	// MaxLoadBalancersForDescribeHealthStatus max loadbalancers to describe health status
 	MaxLoadBalancersForDescribeHealthStatus = 5
 
+	// MaxSegmentListenerCurrentCreateEachTime max segment listener number to create each time,
+	MaxSegmentListenerCurrentCreateEachTime = 5
+
 	// ClbBackendAlive alive status of clb backend
 	ClbBackendAlive = "Alive"
 	// ClbBackendDead dead status of clb backend
