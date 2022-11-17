@@ -91,6 +91,9 @@ func (g *GoMicroAuth) AuthenticationFunc(fn server.HandlerFunc) server.HandlerFu
 			if u.SubType == jwt.Client.String() {
 				authUser.ClientName = u.ClientID
 			}
+			if len(u.BKAppCode) != 0 {
+				authUser.ClientName = u.BKAppCode
+			}
 		}
 
 		// set auth user to context
