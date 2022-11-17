@@ -99,7 +99,7 @@ var (
 		prometheus.GaugeOpts{
 			Namespace: "keda_metrics_adapter",
 			Subsystem: "gpa",
-			Name:      "update_duration",
+			Name:      "replicas_update_duration",
 			Help:      "Duration(seconds) of updating replicas in Gauge",
 		},
 		[]string{"namespace", "name", "scaledObject", "status"},
@@ -298,12 +298,9 @@ func (metricsServer PrometheusMetricServer) ResetScalerMetrics(namespace, name s
 	labels := prometheus.Labels{"namespace": namespace, "name": name}
 
 	scalerTargetMetricsValue.DeletePartialMatch(labels)
-	scalerTargetMetricsValue.DeletePartialMatch(labels)
 	scalerCurrentMetricsValue.DeletePartialMatch(labels)
 	scalerDesiredReplicasValue.DeletePartialMatch(labels)
 	scalerMetricExecDuration.DeletePartialMatch(labels)
-	scalerMetricExecDuration.DeletePartialMatch(labels)
-	scalerReplicasUpdateDuration.DeletePartialMatch(labels)
 	scalerReplicasUpdateDuration.DeletePartialMatch(labels)
 	gpaDesiredReplicasValue.DeletePartialMatch(labels)
 	gpaCurrentReplicasValue.DeletePartialMatch(labels)
