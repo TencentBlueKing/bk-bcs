@@ -81,6 +81,7 @@ func NewDiscoveryClient(ctx context.Context, reg *prometheus.Registry, tracer op
 	dialOpts = append(dialOpts,
 		grpc.WithStreamInterceptor(grpc_retry.StreamClientInterceptor(opts...)),
 		grpc.WithUnaryInterceptor(grpc_retry.UnaryClientInterceptor(opts...)),
+		grpc.WithDefaultServiceConfig(`{"loadBalancingPolicy":"round_robin"}`), // 负载均衡
 	)
 
 	if err != nil {

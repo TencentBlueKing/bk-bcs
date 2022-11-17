@@ -16,6 +16,8 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component/promclient"
@@ -35,13 +37,23 @@ func main() {
 		errCount int64
 	)
 
-	for {
-		count += 1
-		result, err := promclient.QueryInstant(ctx, rawURL, header, promql, time.Now())
-		if err != nil || len(result.Warnings) > 0 {
-			errCount += 1
-		}
-		fmt.Println("count", count, "errCount", errCount)
-		time.Sleep(time.Millisecond * 100)
+	wg := &sync.WaitGroup{}
+
+	c := 10
+	for i := 0; i < c; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			for {
+				atomic.AddInt64(&count, 1)
+				result, err := promclient.QueryInstant(ctx, rawURL, header, promql, time.Now())
+				if err != nil || len(result.Warnings) > 0 {
+					atomic.AddInt64(&errCount, 1)
+				}
+				fmt.Println("count", atomic.LoadInt64(&count), "errCount", atomic.LoadInt64(&errCount))
+				time.Sleep(time.Millisecond * 100)
+			}
+		}()
 	}
+	wg.Wait()
 }
