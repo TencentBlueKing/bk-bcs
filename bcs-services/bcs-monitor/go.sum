@@ -1005,8 +1005,8 @@ github.com/iancoleman/strcase v0.2.0/go.mod h1:iwCmte+B7n89clKwxIoIXy/HfoL7AsD47
 github.com/ianlancetaylor/demangle v0.0.0-20181102032728-5e5cf60278f6/go.mod h1:aSSvb/t6k1mPoxDqO4vJh6VOCGPwU4O0C2/Eqndh1Sc=
 github.com/ianlancetaylor/demangle v0.0.0-20200824232613-28f6c0f3b639/go.mod h1:aSSvb/t6k1mPoxDqO4vJh6VOCGPwU4O0C2/Eqndh1Sc=
 github.com/ianlancetaylor/demangle v0.0.0-20210905161508-09a460cdf81d/go.mod h1:aYm2/VgdVmcIU8iMfdMvDMsRAQjcfZSKFby6HOFvi/w=
-github.com/ifooth/thanos v0.26.1-0.20221027023320-022adb0b704c h1:eaWXMtFYBATqtJFws4XYC8SqlGQGMkUnam+wOcNDLEk=
-github.com/ifooth/thanos v0.26.1-0.20221027023320-022adb0b704c/go.mod h1:yE4GgQ4dRxDScBTSQGwSFJ/yzPR1q2Szu9iGCLmcFXA=
+github.com/ifooth/thanos v0.26.1-0.20221117075138-a986a4c5a32f h1:DWFJUSN/WSM+Yv6Yj+2kVgPGvq3EYrcwbSI4YRCL23U=
+github.com/ifooth/thanos v0.26.1-0.20221117075138-a986a4c5a32f/go.mod h1:yE4GgQ4dRxDScBTSQGwSFJ/yzPR1q2Szu9iGCLmcFXA=
 github.com/imdario/mergo v0.3.4/go.mod h1:2EnlNZ0deacrJVfApfmtdGgDfMuh/nq6Ok1EcJh5FfA=
 github.com/imdario/mergo v0.3.5/go.mod h1:2EnlNZ0deacrJVfApfmtdGgDfMuh/nq6Ok1EcJh5FfA=
 github.com/imdario/mergo v0.3.8/go.mod h1:2EnlNZ0deacrJVfApfmtdGgDfMuh/nq6Ok1EcJh5FfA=

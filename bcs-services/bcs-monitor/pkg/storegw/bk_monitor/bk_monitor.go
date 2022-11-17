@@ -143,18 +143,24 @@ func (s *BKMonitorStore) Series(r *storepb.SeriesRequest, srv storepb.Store_Seri
 	ctx := srv.Context()
 	klog.InfoS(clientutil.DumpPromQL(r), "request_id", store.RequestIDValue(ctx), "minTime", r.MinTime, "maxTime", r.MaxTime, "step", r.QueryHints.StepMillis)
 
-	if r.Step < 60 {
-		r.Step = 60
+	var step int64
+	if r.QueryHints.StepMillis > 0 {
+		step = r.QueryHints.StepMillis / 1000
+	}
+
+	// 最小步长
+	if step < clientutil.MinStepSeconds {
+		step = clientutil.MinStepSeconds
 	}
 
 	// 毫秒转换为秒
 	start := time.UnixMilli(r.MinTime).Unix()
 	end := time.UnixMilli(r.MaxTime).Unix()
 
-	// series 数据, 这里只查询最近1分钟
+	// series 数据, 这里只查询最近 SeriesStepDeltaSeconds
 	if r.SkipChunks {
 		end = time.Now().Unix()
-		start = end - 60
+		start = end - clientutil.SeriesStepDeltaSeconds
 	}
 
 	metricName, err := clientutil.GetLabelMatchValue("__name__", r.Matchers)
@@ -176,9 +182,14 @@ func (s *BKMonitorStore) Series(r *storepb.SeriesRequest, srv storepb.Store_Seri
 		return err
 	}
 
-	if clusterId == "" {
+	scopeClusterID := store.ClusterIDValue(ctx)
+	if clusterId == "" && scopeClusterID == "" {
 		return nil
-		// return errors.New("cluster_id is required")
+	}
+
+	// 优先使用 clusterID
+	if scopeClusterID != "" {
+		clusterId = scopeClusterID
 	}
 
 	newMatchers := make([]storepb.LabelMatcher, 0, len(r.Matchers))
@@ -206,7 +217,7 @@ func (s *BKMonitorStore) Series(r *storepb.SeriesRequest, srv storepb.Store_Seri
 		return err
 	}
 
-	promSeriesSet, err := bkmonitor_client.QueryByPromQL(srv.Context(), s.config.URL, cluster.BKBizID, start, end, r.Step,
+	promSeriesSet, err := bkmonitor_client.QueryByPromQL(srv.Context(), s.config.URL, cluster.BKBizID, start, end, step,
 		newMatchers)
 	if err != nil {
 		return err

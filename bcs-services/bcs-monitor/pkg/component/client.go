@@ -21,6 +21,7 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+	"sync"
 	"time"
 
 	"github.com/dustin/go-humanize"
@@ -40,6 +41,8 @@ var (
 	maskKeys = map[string]struct{}{
 		"bk_app_secret": {},
 	}
+	clientOnce   sync.Once
+	globalClient *resty.Client
 )
 
 // restyReqToCurl curl 格式的请求日志
@@ -119,14 +122,18 @@ func restyBeforeRequestHook(c *resty.Client, r *http.Request) error {
 
 // GetClient : 新建Client, 设置公共参数，每次新建，cookies不复用
 func GetClient() *resty.Client {
-	client := resty.New().SetTimeout(timeout)
-	client = client.SetDebug(false) // 更多详情, 可以开启为 true
-	client.SetDebugBodyLimit(1024)
-	client.OnAfterResponse(restyAfterResponseHook)
-	client.SetPreRequestHook(restyBeforeRequestHook)
-	client.OnError(restyErrHook)
-	client.SetTLSClientConfig(&tls.Config{InsecureSkipVerify: true})
-	return client
+	if globalClient == nil {
+		clientOnce.Do(func() {
+			globalClient = resty.New().SetTimeout(timeout)
+			globalClient = globalClient.SetDebug(false) // 更多详情, 可以开启为 true
+			globalClient.SetDebugBodyLimit(1024)
+			globalClient.OnAfterResponse(restyAfterResponseHook)
+			globalClient.SetPreRequestHook(restyBeforeRequestHook)
+			globalClient.OnError(restyErrHook)
+			globalClient.SetTLSClientConfig(&tls.Config{InsecureSkipVerify: true})
+		})
+	}
+	return globalClient
 }
 
 // BKResult 蓝鲸返回规范的结构体
