@@ -377,13 +377,14 @@ export default defineComponent({
         $podId: name.value,
         $namespaceId: namespace.value,
       });
-      if (container.value.length) {
+      const containerIDs = container.value.map(item => item.containerID).filter(id => !!id);
+      if (containerIDs.length) {
         logLinks.value = $INTERNAL
           ? await $store.dispatch('dashboard/logLinks', {
-            container_ids: container.value.map(item => item.container_id).join(','),
+            container_ids: containerIDs.join(','),
           })
           : await $store.dispatch('crdcontroller/getLogLinks', {
-            container_ids: container.value.map(item => item.container_id).join(','),
+            container_ids: containerIDs.join(','),
             bk_biz_id: curProject.value?.cc_app_id,
           });
       }
