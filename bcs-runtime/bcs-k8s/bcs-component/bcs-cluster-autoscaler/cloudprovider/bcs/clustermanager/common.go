@@ -23,6 +23,7 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"sync"
 	"time"
 
 	"k8s.io/klog"
@@ -34,6 +35,7 @@ type Client struct {
 	baseURL    string
 	header     http.Header
 	HttpClient *http.Client
+	lock       *sync.Mutex
 }
 
 // WithoutTLSClient init a non-tls client
@@ -49,6 +51,7 @@ func WithoutTLSClient(header http.Header, url string) *Client {
 			Timeout:   time.Second * 5,
 		},
 	}
+	c.lock = &sync.Mutex{}
 	return c
 }
 
@@ -94,6 +97,8 @@ func (c *Client) DELETE() *Client {
 
 // AddHeader adds header to http header
 func (c *Client) AddHeader(header http.Header) *Client {
+	c.lock.Lock()
+	defer c.lock.Unlock()
 	if c.Request != nil {
 		for k, values := range header {
 			for _, v := range values {

@@ -27,7 +27,10 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/autoscaler/cluster-autoscaler/clusterstate"
 	"k8s.io/autoscaler/cluster-autoscaler/utils/errors"
+	"k8s.io/autoscaler/cluster-autoscaler/utils/kubernetes"
 	scheduler_util "k8s.io/autoscaler/cluster-autoscaler/utils/scheduler"
+	kubeclient "k8s.io/client-go/kubernetes"
+	v1lister "k8s.io/client-go/listers/core/v1"
 	"k8s.io/klog"
 	schedulernodeinfo "k8s.io/kubernetes/pkg/scheduler/nodeinfo"
 )
@@ -36,13 +39,14 @@ var _ Webhook = &WebScaler{}
 
 // WebScaler implements Webhook via web
 type WebScaler struct {
-	url    string
-	token  string
-	client *http.Client
+	url             string
+	token           string
+	client          *http.Client
+	configmapLister v1lister.ConfigMapNamespaceLister
 }
 
 // NewWebScaler initializes a WebScaler
-func NewWebScaler(url, token string) Webhook {
+func NewWebScaler(kubeClient kubeclient.Interface, configNamespace, url, token string) Webhook {
 	tr := &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 	}
@@ -50,7 +54,9 @@ func NewWebScaler(url, token string) Webhook {
 		Transport: tr,
 		Timeout:   5 * time.Second,
 	}
-	return &WebScaler{url: url, token: token, client: client}
+	stopChannel := make(chan struct{})
+	lister := kubernetes.NewConfigMapListerForNamespace(kubeClient, stopChannel, configNamespace)
+	return &WebScaler{url: url, token: token, client: client, configmapLister: lister.ConfigMaps(configNamespace)}
 }
 
 // DoWebhook get responses from webhook, then execute scale based on responses
@@ -78,9 +84,16 @@ func (w *WebScaler) GetResponses(context *contextinternal.Context,
 	clusterStateRegistry *clusterstate.ClusterStateRegistry,
 	nodeNameToNodeInfo map[string]*schedulernodeinfo.NodeInfo,
 	nodes []*corev1.Node, sd *ScaleDown) (ScaleUpOptions, ScaleDownCandidates, error) {
+	// get node group's priority
+	newPriorities, err := getPriority(w.configmapLister)
+	if err != nil {
+		context.LogRecorder.Eventf(corev1.EventTypeWarning, "PriorityConfigMapInvalid", err.Error())
+		klog.Warning(err.Error())
+		return nil, nil, err
+	}
 
 	// construct requests
-	req, err := GenerateAutoscalerRequest(context.CloudProvider.NodeGroups(), clusterStateRegistry.GetUpcomingNodes())
+	req, err := GenerateAutoscalerRequest(context.CloudProvider.NodeGroups(), clusterStateRegistry.GetUpcomingNodes(), newPriorities)
 	if err != nil {
 		return nil, nil, fmt.Errorf("Cannot generate autoscaler requests, err: %s", err.Error())
 	}
@@ -112,7 +125,7 @@ func (w *WebScaler) GetResponses(context *contextinternal.Context,
 	// get response
 	faResp.Request = req
 	klog.Infof("Get webhook response from web: %+v", faResp.Response)
-	options, candidates, err := HandleResponse(faResp, nodes, nodeNameToNodeInfo, sd)
+	options, candidates, err := HandleResponse(faResp, nodes, nodeNameToNodeInfo, sd, newPriorities)
 	if err != nil {
 		return nil, nil, err
 	}

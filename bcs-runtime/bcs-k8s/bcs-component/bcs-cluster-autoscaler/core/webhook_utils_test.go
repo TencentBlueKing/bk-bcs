@@ -76,6 +76,7 @@ func TestGenerateAutoscalerRequest(t *testing.T) {
 	type args struct {
 		nodeGroups    []cloudprovider.NodeGroup
 		upcomingNodes map[string]int
+		newPriorities priorities
 	}
 	tests := []struct {
 		name    string
@@ -90,6 +91,10 @@ func TestGenerateAutoscalerRequest(t *testing.T) {
 				nodeGroups: provider.NodeGroups(),
 				upcomingNodes: map[string]int{
 					"ng2": 1,
+				},
+				newPriorities: priorities{
+					"ng2": 1,
+					"ng1": 2,
 				},
 			},
 			want: &AutoscalerRequest{
@@ -107,7 +112,8 @@ func TestGenerateAutoscalerRequest(t *testing.T) {
 							GPU:    0,
 							Labels: map[string]string{},
 						},
-						NodeIPs: []string{"n1"},
+						NodeIPs:  []string{"n1"},
+						Priority: 2,
 					},
 					"ng2": {
 						NodeGroupID:  "ng2",
@@ -121,28 +127,62 @@ func TestGenerateAutoscalerRequest(t *testing.T) {
 							GPU:    0,
 							Labels: map[string]string{},
 						},
-						NodeIPs: []string{"n2"},
+						NodeIPs:  []string{"n2"},
+						Priority: 1,
 					},
 				},
 			},
 			wantErr: false,
 		},
 		{
-			name: "normal case with empty ngs",
+			name: "normal case without priority",
 			args: args{
-				nodeGroups:    []cloudprovider.NodeGroup{},
-				upcomingNodes: map[string]int{},
+				nodeGroups: provider.NodeGroups(),
+				upcomingNodes: map[string]int{
+					"ng2": 1,
+				},
 			},
 			want: &AutoscalerRequest{
-				UID:        apitypes.UID("31312d31-3131-412d-b131-313131313131"),
-				NodeGroups: map[string]*NodeGroup{},
+				UID: apitypes.UID("31312d31-3131-412d-b131-313131313131"),
+				NodeGroups: map[string]*NodeGroup{
+					"ng1": {
+						NodeGroupID:  "ng1",
+						MaxSize:      10,
+						MinSize:      1,
+						DesiredSize:  1,
+						UpcomingSize: 0,
+						NodeTemplate: Template{
+							CPU:    1,
+							Mem:    1000,
+							GPU:    0,
+							Labels: map[string]string{},
+						},
+						NodeIPs:  []string{"n1"},
+						Priority: 0,
+					},
+					"ng2": {
+						NodeGroupID:  "ng2",
+						MaxSize:      10,
+						MinSize:      0,
+						DesiredSize:  2,
+						UpcomingSize: 1,
+						NodeTemplate: Template{
+							CPU:    1,
+							Mem:    1000,
+							GPU:    0,
+							Labels: map[string]string{},
+						},
+						NodeIPs:  []string{"n2"},
+						Priority: 0,
+					},
+				},
 			},
 			wantErr: false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := GenerateAutoscalerRequest(tt.args.nodeGroups, tt.args.upcomingNodes)
+			got, err := GenerateAutoscalerRequest(tt.args.nodeGroups, tt.args.upcomingNodes, tt.args.newPriorities)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("GenerateAutoscalerRequest() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -255,7 +295,8 @@ func TestHandleResponse(t *testing.T) {
 					GPU:    0,
 					Labels: map[string]string{},
 				},
-				NodeIPs: []string{"n1"},
+				NodeIPs:  []string{"n1"},
+				Priority: 2,
 			},
 			"ng2": {
 				NodeGroupID:  "ng2",
@@ -269,7 +310,8 @@ func TestHandleResponse(t *testing.T) {
 					GPU:    0,
 					Labels: map[string]string{},
 				},
-				NodeIPs: []string{"n2", "n3", "n4"},
+				NodeIPs:  []string{"n2", "n3", "n4"},
+				Priority: 1,
 			},
 		},
 	}
@@ -279,6 +321,7 @@ func TestHandleResponse(t *testing.T) {
 		nodes              []*corev1.Node
 		nodeNameToNodeInfo map[string]*schedulernodeinfo.NodeInfo
 		sd                 *ScaleDown
+		newPriorities      priorities
 	}
 	tests := []struct {
 		name    string
@@ -303,10 +346,116 @@ func TestHandleResponse(t *testing.T) {
 				nodes:              []*corev1.Node{n1, n2},
 				nodeNameToNodeInfo: map[string]*schedulernodeinfo.NodeInfo{},
 				sd:                 sd,
+				newPriorities:      nil,
 			},
 			want:    ScaleUpOptions{"ng1": 5},
 			want1:   nil,
 			wantErr: false,
+		},
+		{
+			name: "scale up with multi ng, only scale ng1",
+			args: args{
+				review: ClusterAutoscalerReview{
+					Request: request,
+					Response: &AutoscalerResponse{
+						UID: apitypes.UID("31313131-3131-4131-ad31-3131312d3131"),
+						ScaleUps: []*ScaleUpPolicy{
+							{NodeGroupID: "ng1,ng2", DesiredSize: 9},
+						},
+					},
+				},
+				nodes:              []*corev1.Node{n1, n2},
+				nodeNameToNodeInfo: map[string]*schedulernodeinfo.NodeInfo{},
+				sd:                 sd,
+				newPriorities:      nil,
+			},
+			want:    ScaleUpOptions{"ng1": 5},
+			want1:   nil,
+			wantErr: false,
+		},
+		{
+			name: "scale up with multi ng, scale ng1 and ng2",
+			args: args{
+				review: ClusterAutoscalerReview{
+					Request: request,
+					Response: &AutoscalerResponse{
+						UID: apitypes.UID("31313131-3131-4131-ad31-3131312d3131"),
+						ScaleUps: []*ScaleUpPolicy{
+							{NodeGroupID: "ng1,ng2", DesiredSize: 15},
+						},
+					},
+				},
+				nodes:              []*corev1.Node{n1, n2},
+				nodeNameToNodeInfo: map[string]*schedulernodeinfo.NodeInfo{},
+				sd:                 sd,
+				newPriorities:      nil,
+			},
+			want:    ScaleUpOptions{"ng1": 10, "ng2": 5},
+			want1:   nil,
+			wantErr: false,
+		},
+		{
+			name: "scale up with multi ng, less than total min size",
+			args: args{
+				review: ClusterAutoscalerReview{
+					Request: request,
+					Response: &AutoscalerResponse{
+						UID: apitypes.UID("31313131-3131-4131-ad31-3131312d3131"),
+						ScaleUps: []*ScaleUpPolicy{
+							{NodeGroupID: "ng1,ng2", DesiredSize: 0},
+						},
+					},
+				},
+				nodes:              []*corev1.Node{n1, n2},
+				nodeNameToNodeInfo: map[string]*schedulernodeinfo.NodeInfo{},
+				sd:                 sd,
+				newPriorities:      nil,
+			},
+			want:    nil,
+			want1:   nil,
+			wantErr: true,
+		},
+		{
+			name: "scale up with multi ng, should scale up to max size",
+			args: args{
+				review: ClusterAutoscalerReview{
+					Request: request,
+					Response: &AutoscalerResponse{
+						UID: apitypes.UID("31313131-3131-4131-ad31-3131312d3131"),
+						ScaleUps: []*ScaleUpPolicy{
+							{NodeGroupID: "ng1,ng2", DesiredSize: 20},
+						},
+					},
+				},
+				nodes:              []*corev1.Node{n1, n2},
+				nodeNameToNodeInfo: map[string]*schedulernodeinfo.NodeInfo{},
+				sd:                 sd,
+				newPriorities:      nil,
+			},
+			want:    ScaleUpOptions{"ng1": 10, "ng2": 10},
+			want1:   nil,
+			wantErr: false,
+		},
+		{
+			name: "scale up with multi ng, larger than max size",
+			args: args{
+				review: ClusterAutoscalerReview{
+					Request: request,
+					Response: &AutoscalerResponse{
+						UID: apitypes.UID("31313131-3131-4131-ad31-3131312d3131"),
+						ScaleUps: []*ScaleUpPolicy{
+							{NodeGroupID: "ng1,ng2", DesiredSize: 21},
+						},
+					},
+				},
+				nodes:              []*corev1.Node{n1, n2},
+				nodeNameToNodeInfo: map[string]*schedulernodeinfo.NodeInfo{},
+				sd:                 sd,
+				newPriorities:      nil,
+			},
+			want:    nil,
+			want1:   nil,
+			wantErr: true,
 		},
 		{
 			name: "normal case with scale down ips",
@@ -443,7 +592,7 @@ func TestHandleResponse(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, got1, err := HandleResponse(tt.args.review, tt.args.nodes, tt.args.nodeNameToNodeInfo, tt.args.sd)
+			got, got1, err := HandleResponse(tt.args.review, tt.args.nodes, tt.args.nodeNameToNodeInfo, tt.args.sd, tt.args.newPriorities)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("HandleResponse() error = %v, wantErr %v", err, tt.wantErr)
 				return

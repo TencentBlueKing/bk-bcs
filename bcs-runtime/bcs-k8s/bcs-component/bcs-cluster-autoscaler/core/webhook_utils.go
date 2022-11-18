@@ -22,28 +22,34 @@ import (
 	contextinternal "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/context"
 	metricsinternal "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/metrics"
 	"github.com/google/uuid"
+	"gopkg.in/yaml.v2"
 	corev1 "k8s.io/api/core/v1"
+	kube_errors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	apitypes "k8s.io/apimachinery/pkg/types"
 	"k8s.io/autoscaler/cluster-autoscaler/cloudprovider"
 	"k8s.io/autoscaler/cluster-autoscaler/clusterstate"
+	priority_util "k8s.io/autoscaler/cluster-autoscaler/expander/priority"
 	"k8s.io/autoscaler/cluster-autoscaler/metrics"
 	"k8s.io/autoscaler/cluster-autoscaler/processors/nodegroupset"
 	"k8s.io/autoscaler/cluster-autoscaler/processors/status"
 	simulator "k8s.io/autoscaler/cluster-autoscaler/simulator"
 	"k8s.io/autoscaler/cluster-autoscaler/utils/deletetaint"
 	"k8s.io/autoscaler/cluster-autoscaler/utils/gpu"
+	v1lister "k8s.io/client-go/listers/core/v1"
 	"k8s.io/klog"
 	"k8s.io/kubernetes/pkg/kubelet/types"
 	schedulernodeinfo "k8s.io/kubernetes/pkg/scheduler/nodeinfo"
 )
 
+type priorities map[string]int
+
 // GenerateAutoscalerRequest generates requests based on current states of node groups
 func GenerateAutoscalerRequest(nodeGroups []cloudprovider.NodeGroup,
-	upcomingNodes map[string]int) (*AutoscalerRequest, error) {
+	upcomingNodes map[string]int, newPriorities priorities) (*AutoscalerRequest, error) {
 	localNgs := make(map[string]*NodeGroup)
 	for _, ng := range nodeGroups {
-		localNg, err := generateNodeGroup(ng, upcomingNodes)
+		localNg, err := generateNodeGroup(ng, upcomingNodes, newPriorities)
 		if err != nil {
 			return nil, err
 		}
@@ -57,7 +63,7 @@ func GenerateAutoscalerRequest(nodeGroups []cloudprovider.NodeGroup,
 }
 
 func generateNodeGroup(nodeGroup cloudprovider.NodeGroup,
-	upcomingNodes map[string]int) (*NodeGroup, error) {
+	upcomingNodes map[string]int, newPriorities priorities) (*NodeGroup, error) {
 	targetSize, err := nodeGroup.TargetSize()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get target size of nodegroup %v: %v", nodeGroup.Id(), err)
@@ -74,6 +80,13 @@ func generateNodeGroup(nodeGroup cloudprovider.NodeGroup,
 	for _, n := range nodes {
 		ips = append(ips, n.Id)
 	}
+	priority := 0
+	if newPriorities != nil {
+		p, ok := newPriorities[nodeGroup.Id()]
+		if ok {
+			priority = p
+		}
+	}
 
 	return &NodeGroup{
 		NodeGroupID:  nodeGroup.Id(),
@@ -88,14 +101,15 @@ func generateNodeGroup(nodeGroup cloudprovider.NodeGroup,
 			Labels: template.Node().Labels,
 			Taints: template.Node().Spec.Taints,
 		},
-		NodeIPs: ips,
+		NodeIPs:  ips,
+		Priority: priority,
 	}, nil
 }
 
 // HandleResponse abstracts options of scale up and candidates of scale down from response
 func HandleResponse(review ClusterAutoscalerReview, nodes []*corev1.Node,
 	nodeNameToNodeInfo map[string]*schedulernodeinfo.NodeInfo,
-	sd *ScaleDown) (ScaleUpOptions, ScaleDownCandidates, error) {
+	sd *ScaleDown, newPriorities priorities) (ScaleUpOptions, ScaleDownCandidates, error) {
 	var options ScaleUpOptions
 	var candidates ScaleDownCandidates
 	var err error
@@ -128,29 +142,18 @@ func handleScaleUpResponse(req *AutoscalerRequest, policies []*ScaleUpPolicy) (S
 			continue
 		}
 		metricsinternal.UpdateWebhookScaleUpResponse(policy.NodeGroupID, policy.DesiredSize)
-		originNodeGroup, ok := req.NodeGroups[policy.NodeGroupID]
-		if !ok {
-			return nil, fmt.Errorf("Cannot find node group info in requests for %s", policy.NodeGroupID)
+		multiOptions, err := processMultiNodeGroupWithPriority(req, policy)
+		if err != nil {
+			return nil, err
 		}
-		switch {
-		case policy.DesiredSize < 0:
-			return nil, fmt.Errorf("Desired size %d cannot be negative for node group %s",
-				policy.DesiredSize, policy.NodeGroupID)
-		case policy.DesiredSize > originNodeGroup.MaxSize:
-			return nil, fmt.Errorf("Desired size %d should less than node group %s 's max size %d",
-				policy.DesiredSize, policy.NodeGroupID, originNodeGroup.MaxSize)
-		case policy.DesiredSize < originNodeGroup.MinSize:
-			return nil, fmt.Errorf("Desired size %d should greater than node group %s 's min size %d",
-				policy.DesiredSize, policy.NodeGroupID, originNodeGroup.MinSize)
-		case policy.DesiredSize < originNodeGroup.DesiredSize:
-			return nil, fmt.Errorf("Desired size %d should greater than node group %s 's desired size %d when scale up",
-				policy.DesiredSize, policy.NodeGroupID, originNodeGroup.DesiredSize)
-		case policy.DesiredSize == originNodeGroup.DesiredSize:
+		if multiOptions == nil {
 			continue
-		default:
-			options[policy.NodeGroupID] = policy.DesiredSize
+		}
+		for k, v := range multiOptions {
+			options[k] = v
 		}
 	}
+	klog.Infof("Scale-up options: %v", options)
 	return options, nil
 }
 
@@ -214,6 +217,7 @@ func handleScaleDownResponse(req *AutoscalerRequest, policies []*ScaleDownPolicy
 		}
 
 	}
+	klog.Infof("Scale-down candidates: %v", candidates)
 	return candidates, nil
 
 }
@@ -432,4 +436,105 @@ func hasToBeDeletedTaint(taints []corev1.Taint) bool {
 		}
 	}
 	return false
+}
+
+func getPriority(lister v1lister.ConfigMapNamespaceLister) (priorities, error) {
+	cm, err := lister.Get(priority_util.PriorityConfigMapName)
+	if err != nil && kube_errors.IsNotFound(err) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	prioString, found := cm.Data[priority_util.ConfigMapKey]
+	if !found {
+		return nil, fmt.Errorf("Wrong configmap for priority expander, doesn't contain %s key. Ignoring update",
+			priority_util.ConfigMapKey)
+	}
+
+	newPriorities, err := parsePrioritiesYAMLString(prioString)
+	if err != nil {
+		return nil, fmt.Errorf("Wrong configuration for priority expander: %v. Ignoring update", err)
+	}
+
+	return newPriorities, nil
+}
+
+func parsePrioritiesYAMLString(prioritiesYAML string) (priorities, error) {
+	if prioritiesYAML == "" {
+		return nil, fmt.Errorf("priority configuration in %s configmap is empty; please provide valid configuration",
+			priority_util.PriorityConfigMapName)
+	}
+	var config map[int][]string
+	if err := yaml.Unmarshal([]byte(prioritiesYAML), &config); err != nil {
+		return nil, fmt.Errorf("Can't parse YAML with priorities in the configmap: %v", err)
+	}
+
+	newPriorities := make(map[string]int)
+	for prio, ngList := range config {
+		for _, ng := range ngList {
+			newPriorities[ng] = prio
+		}
+	}
+	klog.V(4).Infof("Successfully loaded priority configuration from configmap: %v", newPriorities)
+
+	return newPriorities, nil
+}
+
+func processMultiNodeGroupWithPriority(req *AutoscalerRequest, policy *ScaleUpPolicy) (ScaleUpOptions, error) {
+	policyNodeGroupIDs := strings.Split(policy.NodeGroupID, ",")
+	nodeGroups := make([]*NodeGroup, 0)
+	totalDesired, totalMax, totalMin := 0, 0, 0
+	for _, id := range policyNodeGroupIDs {
+		if _, ok := req.NodeGroups[id]; ok {
+			nodeGroups = append(nodeGroups, req.NodeGroups[id])
+			totalDesired += req.NodeGroups[id].DesiredSize
+			totalMax += req.NodeGroups[id].MaxSize
+			totalMin += req.NodeGroups[id].MinSize
+		}
+	}
+	if len(nodeGroups) == 0 {
+		return nil, fmt.Errorf("Cannot find node group info in requests for %s", policy.NodeGroupID)
+	}
+
+	sort.Slice(nodeGroups, func(i, j int) bool {
+		return nodeGroups[i].Priority > nodeGroups[j].Priority
+	})
+
+	switch {
+	case policy.DesiredSize < 0:
+		return nil, fmt.Errorf("Desired size %d cannot be negative for node group %s",
+			policy.DesiredSize, policy.NodeGroupID)
+	case policy.DesiredSize > totalMax:
+		return nil, fmt.Errorf("Desired size %d should less than node group %s 's max size %d",
+			policy.DesiredSize, policy.NodeGroupID, totalMax)
+	case policy.DesiredSize < totalMin:
+		return nil, fmt.Errorf("Desired size %d should greater than node group %s 's min size %d",
+			policy.DesiredSize, policy.NodeGroupID, totalMin)
+	case policy.DesiredSize < totalDesired:
+		return nil, fmt.Errorf("Desired size %d should greater than node group %s 's desired size %d when scale up",
+			policy.DesiredSize, policy.NodeGroupID, totalDesired)
+	case policy.DesiredSize == totalDesired:
+		return nil, nil
+	}
+
+	options := make(ScaleUpOptions, 0)
+	diff := policy.DesiredSize - totalDesired
+	for i := range nodeGroups {
+		if diff == 0 {
+			break
+		}
+		if nodeGroups[i].DesiredSize == nodeGroups[i].MaxSize {
+			continue
+		}
+		if nodeGroups[i].DesiredSize+diff <= nodeGroups[i].MaxSize {
+			options[nodeGroups[i].NodeGroupID] = nodeGroups[i].DesiredSize + diff
+			break
+		} else {
+			options[nodeGroups[i].NodeGroupID] = nodeGroups[i].MaxSize
+			diff = diff - (nodeGroups[i].MaxSize - nodeGroups[i].DesiredSize)
+		}
+	}
+	return options, nil
 }

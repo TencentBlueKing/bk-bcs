@@ -110,9 +110,10 @@ func UpdateWebhookScaleDownIPResponse(nodeGroup, ips string) {
 
 // UpdateWebhookScaleDownNumResponse updates scale down response(type of NodeNum) of webhook mode
 func UpdateWebhookScaleDownNumResponse(nodeGroup string, num int) {
-	webhookScaleDownIPResponse.WithLabelValues(nodeGroup).Set(float64(num))
+	webhookScaleDownNumResponse.WithLabelValues(nodeGroup).Set(float64(num))
 }
 
+// RecordWebhookScaleDownFailed records scale down failed of webhook mode
 func RecordWebhookScaleDownFailed(node string) {
 	webhookScaleDownFailed.WithLabelValues(node).Set(1)
 }

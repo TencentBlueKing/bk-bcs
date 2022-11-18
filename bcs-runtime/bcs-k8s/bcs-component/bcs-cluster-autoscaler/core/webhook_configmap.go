@@ -15,7 +15,6 @@ package core
 import (
 	"encoding/json"
 	"fmt"
-	"strings"
 	"time"
 
 	contextinternal "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/context"
@@ -26,8 +25,10 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/autoscaler/cluster-autoscaler/clusterstate"
 	"k8s.io/autoscaler/cluster-autoscaler/utils/errors"
+	"k8s.io/autoscaler/cluster-autoscaler/utils/kubernetes"
 	scheduler_util "k8s.io/autoscaler/cluster-autoscaler/utils/scheduler"
 	kubeclient "k8s.io/client-go/kubernetes"
+	v1lister "k8s.io/client-go/listers/core/v1"
 	"k8s.io/klog"
 	schedulernodeinfo "k8s.io/kubernetes/pkg/scheduler/nodeinfo"
 )
@@ -36,15 +37,18 @@ var _ Webhook = &ConfigMapScaler{}
 
 // ConfigMapScaler impletements Webhook via configmap
 type ConfigMapScaler struct {
-	client    kubeclient.Interface
-	namespace string
-	name      string
+	client          kubeclient.Interface
+	namespace       string
+	name            string
+	configmapLister v1lister.ConfigMapNamespaceLister
 }
 
 // NewConfigMapScaler initilizes a ConfigMapScaler
-func NewConfigMapScaler(client kubeclient.Interface, configmap string) Webhook {
-	slice := strings.Split(configmap, "/")
-	return &ConfigMapScaler{client: client, namespace: slice[0], name: slice[1]}
+func NewConfigMapScaler(kubeClient kubeclient.Interface, configNamespace, configmapName string) Webhook {
+	stopChannel := make(chan struct{})
+	lister := kubernetes.NewConfigMapListerForNamespace(kubeClient, stopChannel, configNamespace)
+	return &ConfigMapScaler{client: kubeClient, namespace: configNamespace, name: configmapName,
+		configmapLister: lister.ConfigMaps(configNamespace)}
 }
 
 // DoWebhook get responses from webhook, then execute scale based on responses
@@ -73,8 +77,17 @@ func (c *ConfigMapScaler) GetResponses(context *contextinternal.Context,
 	nodeNameToNodeInfo map[string]*schedulernodeinfo.NodeInfo,
 	nodes []*corev1.Node, sd *ScaleDown) (ScaleUpOptions, ScaleDownCandidates, error) {
 
+	// get node group's priority
+	newPriorities, err := getPriority(c.configmapLister)
+	if err != nil {
+		context.LogRecorder.Eventf(corev1.EventTypeWarning, "PriorityConfigMapInvalid", err.Error())
+		klog.Warning(err.Error())
+		return nil, nil, err
+	}
+
 	// construct requests
-	req, err := GenerateAutoscalerRequest(context.CloudProvider.NodeGroups(), clusterStateRegistry.GetUpcomingNodes())
+	req, err := GenerateAutoscalerRequest(context.CloudProvider.NodeGroups(), clusterStateRegistry.GetUpcomingNodes(),
+		newPriorities)
 	if err != nil {
 		return nil, nil, fmt.Errorf("Cannot generate autoscaler requests, err: %s", err.Error())
 	}
@@ -87,7 +100,7 @@ func (c *ConfigMapScaler) GetResponses(context *contextinternal.Context,
 			"Cannot marshal review to bytes, err: %s", err.Error())
 	}
 	reqData := string(b)
-	cm, err := c.client.CoreV1().ConfigMaps(c.namespace).Get(c.name, metav1.GetOptions{})
+	cm, err := c.configmapLister.Get(c.name)
 	if err != nil && apierr.IsNotFound(err) {
 		newcm := &corev1.ConfigMap{
 			ObjectMeta: metav1.ObjectMeta{
@@ -135,7 +148,7 @@ func (c *ConfigMapScaler) GetResponses(context *contextinternal.Context,
 		Response: &res,
 	}
 	klog.Infof("Get webhook response from configmap: %+v", res)
-	options, candidates, err := HandleResponse(faResp, nodes, nodeNameToNodeInfo, sd)
+	options, candidates, err := HandleResponse(faResp, nodes, nodeNameToNodeInfo, sd, newPriorities)
 	if err != nil {
 		return nil, nil, err
 	}
