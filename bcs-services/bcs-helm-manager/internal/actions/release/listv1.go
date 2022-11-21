@@ -19,13 +19,16 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
-	helmrelease "helm.sh/helm/v3/pkg/release"
+	authUtils "github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/utils"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/component/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/release"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/store"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/store/entity"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/store/utils"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/utils/contextx"
 	helmmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/proto/bcs-helm-manager"
 )
 
@@ -66,8 +69,11 @@ func (l *ListReleaseV1Action) Handle(ctx context.Context,
 		l.setResp(common.ErrHelmManagerListActionFailed, err.Error(), nil)
 		return nil
 	}
-
 	l.setResp(common.ErrHelmManagerSuccess, "ok", result)
+
+	// append web_annotations
+	l.resp.WebAnnotations = l.getWebAnnotations()
+
 	blog.Infof("get release list successfully, clusterID: %s namespace: %s",
 		l.req.GetClusterID(), l.req.GetNamespace())
 	return nil
@@ -77,6 +83,26 @@ func (l *ListReleaseV1Action) list() (*helmmanager.ReleaseListData, error) {
 	clusterID := l.req.GetClusterID()
 	option := l.getOption()
 
+	// if cluster is shared, return release form database only
+	cluster, err := clustermanager.GetCluster(clusterID)
+	if err != nil {
+		return nil, fmt.Errorf("get cluster info error, %s", err.Error())
+	}
+
+	// get release from store
+	_, rls, err := l.model.ListRelease(l.ctx, l.getCondition(cluster.IsShared), &utils.ListOption{})
+	if err != nil {
+		return nil, fmt.Errorf("list release from db error, %s", err.Error())
+	}
+	dbReleases := make([]*helmmanager.Release, 0, len(rls))
+	for _, item := range rls {
+		dbReleases = append(dbReleases, item.Transfer2Proto())
+	}
+
+	if cluster.IsShared && len(option.Namespace) == 0 {
+		return l.mergeReleases(nil, dbReleases), nil
+	}
+
 	// get release from cluster
 	_, origin, err := l.releaseHandler.Cluster(clusterID).List(l.ctx, option)
 	if err != nil {
@@ -84,17 +110,7 @@ func (l *ListReleaseV1Action) list() (*helmmanager.ReleaseListData, error) {
 	}
 	clusterReleases := make([]*helmmanager.Release, 0, len(origin))
 	for _, item := range origin {
-		clusterReleases = append(clusterReleases, item.Transfer2Proto())
-	}
-
-	// get release from store
-	_, rls, err := l.model.ListRelease(l.ctx, l.getCondition(), &utils.ListOption{})
-	if err != nil {
-		return nil, fmt.Errorf("list release from db error, %s", err.Error())
-	}
-	dbReleases := make([]*helmmanager.Release, 0, len(rls))
-	for _, item := range rls {
-		dbReleases = append(dbReleases, item.Transfer2Proto())
+		clusterReleases = append(clusterReleases, item.Transfer2Proto(l.req.GetProjectCode(), clusterID))
 	}
 
 	// merge release
@@ -108,20 +124,28 @@ func (l *ListReleaseV1Action) mergeReleases(clusterReleases,
 	for i, v := range clusterReleases {
 		newReleaseMap[l.getReleaseKey(v.GetNamespace(), v.GetName())] = clusterReleases[i]
 	}
+
 	for i, v := range dbReleases {
-		if n, ok := newReleaseMap[l.getReleaseKey(v.GetNamespace(), v.GetName())]; ok {
-			if n.GetStatus() != helmrelease.StatusDeployed.String() && v.GetStatus() != "" {
+		// 如果 release 在集群中存在，则只更新 release 字段，否则直接使用数据库的数据
+		if _, ok := newReleaseMap[l.getReleaseKey(v.GetNamespace(), v.GetName())]; ok {
+			// 使用数据库中的状态，因为创建或者更新失败状态，原生中没有该状态
+			if v.GetStatus() != "" {
 				newReleaseMap[l.getReleaseKey(v.GetNamespace(), v.GetName())].Status = v.Status
 			}
+			newReleaseMap[l.getReleaseKey(v.GetNamespace(), v.GetName())].ChartVersion = v.ChartVersion
 			newReleaseMap[l.getReleaseKey(v.GetNamespace(), v.GetName())].CreateBy = v.CreateBy
 			newReleaseMap[l.getReleaseKey(v.GetNamespace(), v.GetName())].UpdateBy = v.UpdateBy
 			newReleaseMap[l.getReleaseKey(v.GetNamespace(), v.GetName())].Message = v.Message
+			newReleaseMap[l.getReleaseKey(v.GetNamespace(), v.GetName())].UpdateTime = v.UpdateTime
+			newReleaseMap[l.getReleaseKey(v.GetNamespace(), v.GetName())].Repo = v.Repo
 			continue
 		}
 		newReleaseMap[l.getReleaseKey(v.GetNamespace(), v.GetName())] = dbReleases[i]
 	}
 
 	for k := range newReleaseMap {
+		nsID := authUtils.CalcIAMNsID(l.req.GetClusterID(), *newReleaseMap[k].Namespace)
+		newReleaseMap[k].IamNamespaceID = &nsID
 		release = append(release, newReleaseMap[k])
 	}
 
@@ -139,6 +163,34 @@ func (l *ListReleaseV1Action) mergeReleases(clusterReleases,
 	}
 }
 
+func (l *ListReleaseV1Action) getWebAnnotations() *helmmanager.WebAnnotations {
+	namespaces := make([]string, 0)
+	for _, v := range l.resp.Data.Data {
+		namespaces = append(namespaces, v.GetNamespace())
+	}
+	if len(namespaces) == 0 {
+		return nil
+	}
+
+	username := auth.GetUserFromCtx(l.ctx)
+	projectID := contextx.GetProjectIDFromCtx(l.ctx)
+	perms, err := auth.GetUserNamespacePermList(username, projectID, l.req.GetClusterID(), namespaces)
+	if err != nil {
+		blog.Errorf("get user %s namespace perms failed, err: %s", username, err.Error())
+		return nil
+	}
+
+	s, err := common.MarshalInterfaceToValue(perms)
+	if err != nil {
+		blog.Errorf("MarshalInterfaceToValue failed, perms %v, err: %s", perms, err.Error())
+		return nil
+	}
+	webAnnotations := &helmmanager.WebAnnotations{
+		Perms: s,
+	}
+	return webAnnotations
+}
+
 func (l *ListReleaseV1Action) getOption() release.ListOption {
 	return release.ListOption{
 		Namespace: l.req.GetNamespace(),
@@ -150,13 +202,16 @@ func (l *ListReleaseV1Action) getReleaseKey(namespace, name string) string {
 	return fmt.Sprintf("%s/%s", namespace, name)
 }
 
-func (l *ListReleaseV1Action) getCondition() *operator.Condition {
+func (l *ListReleaseV1Action) getCondition(shared bool) *operator.Condition {
 	cond := make(operator.M)
+	if shared {
+		cond.Update(entity.FieldKeyProjectCode, l.req.GetProjectCode())
+	}
 	cond.Update(entity.FieldKeyClusterID, l.req.GetClusterID())
-	if l.req.Namespace != nil {
+	if len(l.req.GetNamespace()) != 0 {
 		cond.Update(entity.FieldKeyNamespace, l.req.GetNamespace())
 	}
-	if l.req.Name != nil {
+	if len(l.req.GetName()) != 0 {
 		cond.Update(entity.FieldKeyName, l.req.GetName())
 	}
 	return operator.NewLeafCondition(operator.Eq, cond)

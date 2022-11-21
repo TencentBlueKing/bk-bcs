@@ -13,6 +13,7 @@
 package handler
 
 import (
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/release"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/repo"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/store"
@@ -20,14 +21,17 @@ import (
 
 // HelmManager provides a manager server for resources
 type HelmManager struct {
+	opt            *options.HelmManagerOptions
 	model          store.HelmManagerModel
 	platform       repo.Platform
 	releaseHandler release.Handler
 }
 
 // NewHelmManager return a new HelmManager instance
-func NewHelmManager(model store.HelmManagerModel, platform repo.Platform, releaseHandler release.Handler) *HelmManager {
+func NewHelmManager(model store.HelmManagerModel, platform repo.Platform, opt *options.HelmManagerOptions,
+	releaseHandler release.Handler) *HelmManager {
 	return &HelmManager{
+		opt:            opt,
 		model:          model,
 		platform:       platform,
 		releaseHandler: releaseHandler,

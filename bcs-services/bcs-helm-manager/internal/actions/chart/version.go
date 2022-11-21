@@ -84,10 +84,10 @@ func (l *ListChartVersionAction) list() error {
 			Name:     repository.Username,
 			Password: repository.Password,
 		}).
-		Project(repository.ProjectID).
+		Project(repository.GetRepoProjectID()).
 		Repository(
 			repo.GetRepositoryType(repository.Type),
-			repository.Name,
+			repository.GetRepoName(),
 		).
 		Chart(chartName).
 		ListVersion(l.ctx, l.getOption())
@@ -190,10 +190,10 @@ func (l *ListChartVersionV1Action) list() error {
 			Name:     repository.Username,
 			Password: repository.Password,
 		}).
-		Project(repository.ProjectID).
+		Project(repository.GetRepoProjectID()).
 		Repository(
 			repo.GetRepositoryType(repository.Type),
-			repository.Name,
+			repository.GetRepoName(),
 		).
 		Chart(chartName).
 		ListVersion(l.ctx, l.getOption())

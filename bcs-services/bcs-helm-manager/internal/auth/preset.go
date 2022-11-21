@@ -14,6 +14,7 @@ package auth
 
 import (
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/cluster"
+	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/namespace"
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/project"
 )
 
@@ -28,19 +29,22 @@ var ActionPermissions = map[string]string{
 
 	// Chart
 	"HelmManager.ListChartV1":        project.CanViewProjectOperation,
-	"HelmManager.ListChartVersionV1": project.CanViewProjectOperation,
 	"HelmManager.GetChartDetailV1":   project.CanViewProjectOperation,
+	"HelmManager.ListChartVersionV1": project.CanViewProjectOperation,
+	"HelmManager.GetVersionDetailV1": project.CanViewProjectOperation,
 	"HelmManager.DeleteChart":        project.CanEditProjectOperation,
 	"HelmManager.DeleteChartVersion": project.CanEditProjectOperation,
+	"HelmManager.DownloadChart":      project.CanViewProjectOperation,
+	"HelmManager.GetChartRelease":    project.CanViewProjectOperation,
 
 	// Release
 	"HelmManager.ListReleaseV1":      cluster.CanViewClusterOperation,
-	"HelmManager.GetReleaseDetailV1": cluster.CanViewClusterOperation,
-	"HelmManager.InstallReleaseV1":   cluster.CanViewClusterOperation,
-	"HelmManager.UninstallReleaseV1": cluster.CanViewClusterOperation,
-	"HelmManager.UpgradeReleaseV1":   cluster.CanViewClusterOperation,
-	"HelmManager.RollbackReleaseV1":  cluster.CanViewClusterOperation,
-	"HelmManager.ReleasePreview":     cluster.CanViewClusterOperation,
-	"HelmManager.GetReleaseHistory":  cluster.CanViewClusterOperation,
-	"HelmManager.GetReleaseStatus":   cluster.CanViewClusterOperation,
+	"HelmManager.GetReleaseDetailV1": namespace.CanViewNamespaceScopedResourceOperation,
+	"HelmManager.InstallReleaseV1":   namespace.CanCreateNamespaceScopedResourceOperation,
+	"HelmManager.UninstallReleaseV1": namespace.CanDeleteNamespaceScopedResourceOperation,
+	"HelmManager.UpgradeReleaseV1":   namespace.CanUpdateNamespaceScopedResourceOperation,
+	"HelmManager.RollbackReleaseV1":  namespace.CanUpdateNamespaceScopedResourceOperation,
+	"HelmManager.ReleasePreview":     namespace.CanUpdateNamespaceScopedResourceOperation,
+	"HelmManager.GetReleaseHistory":  namespace.CanViewNamespaceScopedResourceOperation,
+	"HelmManager.GetReleaseStatus":   namespace.CanViewNamespaceScopedResourceOperation,
 }

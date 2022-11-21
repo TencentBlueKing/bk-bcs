@@ -88,10 +88,10 @@ func (l *ListChartAction) list() error {
 			Name:     repository.Username,
 			Password: repository.Password,
 		}).
-		Project(repository.ProjectID).
+		Project(repository.GetRepoProjectID()).
 		Repository(
 			repo.GetRepositoryType(repository.Type),
-			repository.Name,
+			repository.GetRepoName(),
 		).
 		ListChart(l.ctx, l.getOption())
 	if err != nil {
@@ -105,6 +105,7 @@ func (l *ListChartAction) list() error {
 	for _, item := range origin.Charts {
 		chart := item.Transfer2Proto()
 		chart.ProjectID = common.GetStringP(projectID)
+		chart.ProjectCode = common.GetStringP(projectID)
 		chart.Repository = common.GetStringP(repoName)
 		r = append(r, chart)
 	}
@@ -205,12 +206,12 @@ func (l *ListChartActionV1) list() error {
 			Name:     repository.Username,
 			Password: repository.Password,
 		}).
-		Project(repository.ProjectID).
+		Project(repository.GetRepoProjectID()).
 		Repository(
 			repo.GetRepositoryType(repository.Type),
-			repository.Name,
+			repository.GetRepoName(),
 		).
-		ListChart(l.ctx, l.getOption())
+		SearchChart(l.ctx, l.getOption())
 	if err != nil {
 		blog.Errorf("list chart failed, %s, projectCode: %s, repository: %s, operator: %s",
 			err.Error(), projectCode, repoName, username)
@@ -222,6 +223,7 @@ func (l *ListChartActionV1) list() error {
 	for _, item := range origin.Charts {
 		chart := item.Transfer2Proto()
 		chart.ProjectID = common.GetStringP(projectCode)
+		chart.ProjectCode = common.GetStringP(projectCode)
 		chart.Repository = common.GetStringP(repoName)
 		r = append(r, chart)
 	}
@@ -255,8 +257,9 @@ func (l *ListChartActionV1) getOption() repo.ListOption {
 	}
 
 	return repo.ListOption{
-		Page: int64(l.req.GetPage()),
-		Size: int64(size),
+		PackageName: l.req.GetName(),
+		Page:        int64(l.req.GetPage()),
+		Size:        int64(size),
 	}
 }
 

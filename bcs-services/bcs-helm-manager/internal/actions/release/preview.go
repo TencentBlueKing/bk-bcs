@@ -14,12 +14,14 @@ package release
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"gopkg.in/yaml.v2"
 	helmrelease "helm.sh/helm/v3/pkg/release"
 	"helm.sh/helm/v3/pkg/releaseutil"
+	"helm.sh/helm/v3/pkg/storage/driver"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
@@ -31,7 +33,8 @@ import (
 )
 
 // NewReleasePreviewAction return a new ReleasePreviewAction instance
-func NewReleasePreviewAction(model store.HelmManagerModel, platform repo.Platform, releaseHandler release.Handler) *ReleasePreviewAction {
+func NewReleasePreviewAction(model store.HelmManagerModel, platform repo.Platform,
+	releaseHandler release.Handler) *ReleasePreviewAction {
 	return &ReleasePreviewAction{
 		model:          model,
 		platform:       platform,
@@ -76,14 +79,20 @@ func (r *ReleasePreviewAction) Handle(ctx context.Context,
 
 func (r *ReleasePreviewAction) getReleasePreview() (*helmmanager.ReleasePreview, error) {
 	// get manifest from helm
-	var oldRelease *release.Release
-	_, rls, err := r.releaseHandler.Cluster(r.req.GetClusterID()).List(r.ctx, release.ListOption{
+	currentRelease, err := r.releaseHandler.Cluster(r.req.GetClusterID()).Get(r.ctx, release.GetOption{
 		Namespace: r.req.GetNamespace(), Name: r.req.GetName()})
-	if err != nil {
-		return nil, fmt.Errorf("get current release failed, err %s", err.Error())
+	if err != nil && !errors.Is(err, driver.ErrReleaseNotFound) {
+		return nil, fmt.Errorf("get current releasefailed, err %s", err.Error())
 	}
-	if len(rls) > 0 {
-		oldRelease = rls[0]
+
+	// revision 之间对比，用于回滚
+	if r.req.GetRevision() != 0 {
+		newRelease, err := r.releaseHandler.Cluster(r.req.GetClusterID()).Get(r.ctx, release.GetOption{
+			Namespace: r.req.GetNamespace(), Name: r.req.GetName(), Revision: int(r.req.GetRevision())})
+		if err != nil {
+			return nil, fmt.Errorf("get release revision %d failed, err %s", r.req.GetRevision(), err.Error())
+		}
+		return r.generateReleasePreview(currentRelease.Transfer2Release(), newRelease.Transfer2Release()), nil
 	}
 
 	// helm template, get new manifest
@@ -94,41 +103,56 @@ func (r *ReleasePreviewAction) getReleasePreview() (*helmmanager.ReleasePreview,
 		return nil, fmt.Errorf("get release preview, get contents failed, %s", err.Error())
 	}
 	var newRelease *helmrelease.Release
-	if oldRelease != nil {
-		result, err := upgradeRelease(r.releaseHandler, contextx.GetProjectIDFromCtx(r.ctx), r.req.GetClusterID(),
-			r.req.GetName(), r.req.GetNamespace(), r.req.GetChart(), r.req.GetVersion(), username, r.req.GetArgs(),
-			nil, contents, r.req.GetValues(), true)
+	if currentRelease != nil {
+		result, err := upgradeRelease(r.releaseHandler, contextx.GetProjectIDFromCtx(r.ctx), r.req.GetProjectCode(),
+			r.req.GetClusterID(), r.req.GetName(), r.req.GetNamespace(), r.req.GetChart(), r.req.GetVersion(),
+			username, r.req.GetArgs(), nil, contents, r.req.GetValues(), true)
 		if err != nil {
 			return nil, fmt.Errorf("get release preview, get helm template failed, %s", err.Error())
 		}
 		newRelease = result.Release
 	} else {
-		result, err := installRelease(r.releaseHandler, contextx.GetProjectIDFromCtx(r.ctx), r.req.GetClusterID(),
-			r.req.GetName(), r.req.GetNamespace(), r.req.GetChart(), r.req.GetVersion(), username, r.req.GetArgs(),
-			nil, contents, r.req.GetValues(), true)
+		result, err := installRelease(r.releaseHandler, contextx.GetProjectIDFromCtx(r.ctx), r.req.GetProjectCode(),
+			r.req.GetClusterID(), r.req.GetName(), r.req.GetNamespace(), r.req.GetChart(), r.req.GetVersion(),
+			username, r.req.GetArgs(), nil, contents, r.req.GetValues(), true)
 		if err != nil {
 			return nil, fmt.Errorf("get release preview, get helm template failed, %s", err.Error())
 		}
 		newRelease = result.Release
 	}
 
-	return r.generateReleasePreview(oldRelease, newRelease), nil
+	return r.generateReleasePreview(currentRelease.Transfer2Release(), newRelease), nil
 }
 
-func (r *ReleasePreviewAction) generateReleasePreview(oldRelease *release.Release,
+func (r *ReleasePreviewAction) generateReleasePreview(oldRelease,
 	newRelease *helmrelease.Release) *helmmanager.ReleasePreview {
+	preview := &helmmanager.ReleasePreview{}
+	if newRelease == nil {
+		return preview
+	}
+
 	manifest := newRelease.Manifest
 	for _, v := range newRelease.Hooks {
 		manifest += "---\n" + v.Manifest
 	}
-	preview := &helmmanager.ReleasePreview{NewContent: &manifest}
+	preview.NewContent = &manifest
 	if oldRelease != nil {
-		preview.OldContent = &oldRelease.Manifest
+		oldManifest := oldRelease.Manifest
+		for _, v := range oldRelease.Hooks {
+			oldManifest += "---\n" + v.Manifest
+		}
+		preview.OldContent = &oldManifest
 	}
 
 	// get contents
+	preview.NewContents = r.generateFileContents(manifest)
+	preview.OldContents = r.generateFileContents(preview.GetOldContent())
+	return preview
+}
+
+func (r *ReleasePreviewAction) generateFileContents(manifest string) map[string]*helmmanager.FileContent {
+	files := make(map[string]*helmmanager.FileContent, 0)
 	manifests := releaseutil.SplitManifests(manifest)
-	preview.Contents = make(map[string]*helmmanager.FileContent)
 	for i := range manifests {
 		content := manifests[i]
 		var entry releaseutil.SimpleHead
@@ -138,13 +162,13 @@ func (r *ReleasePreviewAction) generateReleasePreview(oldRelease *release.Releas
 			continue
 		}
 		path := fmt.Sprintf("%s/%s", entry.Kind, entry.Metadata.Name)
-		preview.Contents[path] = &helmmanager.FileContent{
+		files[path] = &helmmanager.FileContent{
 			Name:    &entry.Metadata.Name,
 			Path:    &path,
 			Content: &content,
 		}
 	}
-	return preview
+	return files
 }
 
 func (r *ReleasePreviewAction) setResp(err common.HelmManagerError, message string, rp *helmmanager.ReleasePreview) {

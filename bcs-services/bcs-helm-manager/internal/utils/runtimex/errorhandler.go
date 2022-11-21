@@ -17,15 +17,18 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/utils/contextx"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
 )
 
 // ErrResp error response
 type ErrResp struct {
-	Code    uint32      `json:"code"`
-	Message string      `json:"message"`
-	Data    interface{} `json:"data"`
+	Code      uint32      `json:"code"`
+	Message   string      `json:"message"`
+	Data      interface{} `json:"data"`
+	RequestID string      `json:"requestID"`
 }
 
 const (
@@ -37,10 +40,11 @@ const (
 func CustomHTTPError(ctx context.Context, mux *runtime.ServeMux, marshaler runtime.Marshaler,
 	w http.ResponseWriter, r *http.Request, err error) {
 	w.Header().Set("Content-type", marshaler.ContentType())
-	w.WriteHeader(runtime.HTTPStatusFromCode(http.StatusOK))
+	w.WriteHeader(runtime.HTTPStatusFromCode(codes.OK))
 	jErr := json.NewEncoder(w).Encode(ErrResp{
-		Code:    defaultCode,
-		Message: grpc.ErrorDesc(err),
+		Code:      defaultCode,
+		Message:   grpc.ErrorDesc(err),
+		RequestID: contextx.GetRequestIDFromCtx(ctx),
 	})
 
 	if jErr != nil {

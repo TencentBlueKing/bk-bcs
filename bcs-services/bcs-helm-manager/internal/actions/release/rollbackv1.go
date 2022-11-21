@@ -125,11 +125,12 @@ func (r *RollbackReleaseV1Action) saveDB() error {
 	username := auth.GetUserFromCtx(r.ctx)
 	if create {
 		if err := r.model.CreateRelease(r.ctx, &entity.Release{
-			Name:      r.req.GetName(),
-			Namespace: r.req.GetNamespace(),
-			ClusterID: r.req.GetClusterID(),
-			CreateBy:  username,
-			Status:    helmrelease.StatusPendingRollback.String(),
+			Name:        r.req.GetName(),
+			ProjectCode: r.req.GetProjectCode(),
+			Namespace:   r.req.GetNamespace(),
+			ClusterID:   r.req.GetClusterID(),
+			CreateBy:    username,
+			Status:      helmrelease.StatusPendingRollback.String(),
 		}); err != nil {
 			return err
 		}

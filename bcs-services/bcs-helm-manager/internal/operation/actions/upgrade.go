@@ -119,10 +119,10 @@ func (r *ReleaseUpgradeAction) Prepare(ctx context.Context) error {
 			Name:     repository.Username,
 			Password: repository.Password,
 		}).
-		Project(repository.ProjectID).
+		Project(repository.GetRepoProjectID()).
 		Repository(
 			repo.GetRepositoryType(repository.Type),
-			repository.Name,
+			repository.GetRepoName(),
 		).
 		Chart(r.chartName).
 		Download(ctx, r.version)
@@ -146,8 +146,9 @@ func (r *ReleaseUpgradeAction) Execute(ctx context.Context) error {
 	}
 	result, err := r.releaseHandler.Cluster(r.clusterID).Upgrade(
 		ctx, release.HelmUpgradeConfig{
-			Name:      r.name,
-			Namespace: r.namespace,
+			ProjectCode: r.projectCode,
+			Name:        r.name,
+			Namespace:   r.namespace,
 			Chart: &release.File{
 				Name:    r.chartName + "-" + r.version + ".tgz",
 				Content: r.contents,
@@ -162,7 +163,6 @@ func (r *ReleaseUpgradeAction) Execute(ctx context.Context) error {
 				common.PTKUpdator:   r.username,
 				common.PTKVersion:   r.version,
 			},
-			VarTemplateValues: nil,
 		})
 	if err != nil {
 		return fmt.Errorf("upgrade %s/%s in cluster %s error, %s",

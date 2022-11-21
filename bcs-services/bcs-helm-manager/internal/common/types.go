@@ -14,6 +14,7 @@ package common
 
 import (
 	"encoding/json"
+	"fmt"
 
 	_struct "github.com/golang/protobuf/ptypes/struct"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -31,4 +32,23 @@ func MarshalObjectsToListValue(objs []runtime.Object) (*_struct.ListValue, error
 		return nil, err
 	}
 	return l, nil
+}
+
+// MarshalInterfaceToValue trans interface to Struct
+func MarshalInterfaceToValue(data interface{}) (*_struct.Struct, error) {
+	b, err := json.Marshal(data)
+	if err != nil {
+		return nil, err
+	}
+	l := &_struct.Struct{}
+	err = l.UnmarshalJSON(b)
+	if err != nil {
+		return nil, err
+	}
+	return l, nil
+}
+
+// GetPublicRepoURL get public repo url
+func GetPublicRepoURL(url, project, name string) string {
+	return fmt.Sprintf("%s/helm/%s/%s", url, project, name)
 }

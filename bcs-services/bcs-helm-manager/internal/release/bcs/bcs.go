@@ -29,7 +29,6 @@ func New(c release.Config) release.Handler {
 			BcsAPI:         c.APIServer,
 			Token:          c.Token,
 			PatchTemplates: c.PatchTemplates,
-			VarTemplates:   c.VarTemplates,
 		}),
 	}
 }

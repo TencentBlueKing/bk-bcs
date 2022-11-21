@@ -15,20 +15,59 @@ package auth
 import (
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/cluster"
+	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/namespace"
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/project"
+	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/utils"
 )
 
-// IAMClient iam client
-var IAMClient iam.PermClient
-
-// ProjectIamClient project iam client
-var ProjectIamClient *project.BCSProjectPerm
-
-// ClusterIamClient cluster iam client
-var ClusterIamClient *cluster.BCSClusterPerm
+var (
+	// IAMClient iam client
+	IAMClient iam.PermClient
+	// ProjectIamClient project iam client
+	ProjectIamClient *project.BCSProjectPerm
+	// ClusterIamClient cluster iam client
+	ClusterIamClient *cluster.BCSClusterPerm
+	// NamespaceIamClient namespace iam client
+	NamespaceIamClient *namespace.BCSNamespacePerm
+)
 
 // InitPermClient new a perm client
 func InitPermClient(iamClient iam.PermClient) {
 	ProjectIamClient = project.NewBCSProjectPermClient(iamClient)
 	ClusterIamClient = cluster.NewBCSClusterPermClient(iamClient)
+	NamespaceIamClient = namespace.NewBCSNamespacePermClient(iamClient)
+}
+
+// GetUserNamespacePermList get user namespace perm
+func GetUserNamespacePermList(username, projectID, clusterID string, namespaces []string) (
+	map[string]map[string]interface{}, error) {
+	permissions := make(map[string]map[string]interface{})
+
+	actionIDs := []string{namespace.NameSpaceScopedCreate.String(), namespace.NameSpaceScopedView.String(),
+		namespace.NameSpaceScopedUpdate.String(), namespace.NameSpaceScopedDelete.String()}
+	resourceNodes := make([][]iam.ResourceNode, 0)
+	for _, n := range namespaces {
+		nsNode := namespace.NamespaceScopedResourceNode{
+			SystemID:  iam.SystemIDBKBCS,
+			ProjectID: projectID, ClusterID: clusterID, Namespace: utils.CalcIAMNsID(clusterID, n)}.
+			BuildResourceNodes()
+		resourceNodes = append(resourceNodes, nsNode)
+	}
+
+	perms, err := IAMClient.BatchResourceMultiActionsAllowed(actionIDs, iam.PermissionRequest{
+		SystemID: iam.SystemIDBKBCS,
+		UserName: username}, resourceNodes)
+	if err != nil {
+		return nil, err
+	}
+
+	for nsID, perm := range perms {
+		if permissions[nsID] == nil {
+			permissions[nsID] = make(map[string]interface{})
+		}
+		for action, res := range perm {
+			permissions[nsID][action] = res
+		}
+	}
+	return permissions, nil
 }

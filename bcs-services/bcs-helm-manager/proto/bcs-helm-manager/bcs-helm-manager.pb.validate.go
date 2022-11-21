@@ -302,6 +302,8 @@ func (m *CreateRepositoryReq) validate(all bool) error {
 
 	// no validation rules for RemotePassword
 
+	// no validation rules for DisplayName
+
 	if len(errors) > 0 {
 		return CreateRepositoryReqMultiError(errors)
 	}
@@ -438,6 +440,8 @@ func (m *CreateRepositoryResp) validate(all bool) error {
 			}
 		}
 	}
+
+	// no validation rules for RequestID
 
 	if len(errors) > 0 {
 		return CreateRepositoryRespMultiError(errors)
@@ -710,6 +714,8 @@ func (m *UpdateRepositoryResp) validate(all bool) error {
 		}
 	}
 
+	// no validation rules for RequestID
+
 	if len(errors) > 0 {
 		return UpdateRepositoryRespMultiError(errors)
 	}
@@ -969,6 +975,8 @@ func (m *GetRepositoryResp) validate(all bool) error {
 		}
 	}
 
+	// no validation rules for RequestID
+
 	if len(errors) > 0 {
 		return GetRepositoryRespMultiError(errors)
 	}
@@ -1224,6 +1232,8 @@ func (m *ListRepositoryResp) validate(all bool) error {
 
 	}
 
+	// no validation rules for RequestID
+
 	if len(errors) > 0 {
 		return ListRepositoryRespMultiError(errors)
 	}
@@ -1456,6 +1466,8 @@ func (m *DeleteRepositoryResp) validate(all bool) error {
 
 	// no validation rules for Result
 
+	// no validation rules for RequestID
+
 	if len(errors) > 0 {
 		return DeleteRepositoryRespMultiError(errors)
 	}
@@ -1585,6 +1597,10 @@ func (m *Repository) validate(all bool) error {
 	// no validation rules for CreateTime
 
 	// no validation rules for UpdateTime
+
+	// no validation rules for DisplayName
+
+	// no validation rules for Public
 
 	if len(errors) > 0 {
 		return RepositoryMultiError(errors)
@@ -1846,6 +1862,8 @@ func (m *ListChartResp) validate(all bool) error {
 			}
 		}
 	}
+
+	// no validation rules for RequestID
 
 	if len(errors) > 0 {
 		return ListChartRespMultiError(errors)
@@ -2111,6 +2129,8 @@ func (m *Chart) validate(all bool) error {
 	// no validation rules for UpdateTime
 
 	// no validation rules for ProjectCode
+
+	// no validation rules for Icon
 
 	if len(errors) > 0 {
 		return ChartMultiError(errors)
@@ -2386,6 +2406,8 @@ func (m *ListChartVersionResp) validate(all bool) error {
 			}
 		}
 	}
+
+	// no validation rules for RequestID
 
 	if len(errors) > 0 {
 		return ListChartVersionRespMultiError(errors)
@@ -2724,22 +2746,22 @@ var _ interface {
 	ErrorName() string
 } = ChartVersionValidationError{}
 
-// Validate checks the field values on GetChartDetailReq with the rules defined
-// in the proto definition for this message. If any rules are violated, the
-// first error encountered is returned, or nil if there are no violations.
-func (m *GetChartDetailReq) Validate() error {
+// Validate checks the field values on GetVersionDetailReq with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *GetVersionDetailReq) Validate() error {
 	return m.validate(false)
 }
 
-// ValidateAll checks the field values on GetChartDetailReq with the rules
+// ValidateAll checks the field values on GetVersionDetailReq with the rules
 // defined in the proto definition for this message. If any rules are
 // violated, the result is a list of violation errors wrapped in
-// GetChartDetailReqMultiError, or nil if none found.
-func (m *GetChartDetailReq) ValidateAll() error {
+// GetVersionDetailReqMultiError, or nil if none found.
+func (m *GetVersionDetailReq) ValidateAll() error {
 	return m.validate(true)
 }
 
-func (m *GetChartDetailReq) validate(all bool) error {
+func (m *GetVersionDetailReq) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
@@ -2747,7 +2769,7 @@ func (m *GetChartDetailReq) validate(all bool) error {
 	var errors []error
 
 	if l := utf8.RuneCountInString(m.GetProjectID()); l < 1 || l > 64 {
-		err := GetChartDetailReqValidationError{
+		err := GetVersionDetailReqValidationError{
 			field:  "ProjectID",
 			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
@@ -2758,7 +2780,7 @@ func (m *GetChartDetailReq) validate(all bool) error {
 	}
 
 	if l := utf8.RuneCountInString(m.GetRepository()); l < 1 || l > 64 {
-		err := GetChartDetailReqValidationError{
+		err := GetVersionDetailReqValidationError{
 			field:  "Repository",
 			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
@@ -2769,7 +2791,7 @@ func (m *GetChartDetailReq) validate(all bool) error {
 	}
 
 	if l := utf8.RuneCountInString(m.GetName()); l < 1 || l > 64 {
-		err := GetChartDetailReqValidationError{
+		err := GetVersionDetailReqValidationError{
 			field:  "Name",
 			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
@@ -2780,7 +2802,7 @@ func (m *GetChartDetailReq) validate(all bool) error {
 	}
 
 	if l := utf8.RuneCountInString(m.GetVersion()); l < 1 || l > 64 {
-		err := GetChartDetailReqValidationError{
+		err := GetVersionDetailReqValidationError{
 			field:  "Version",
 			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
@@ -2793,19 +2815,19 @@ func (m *GetChartDetailReq) validate(all bool) error {
 	// no validation rules for Operator
 
 	if len(errors) > 0 {
-		return GetChartDetailReqMultiError(errors)
+		return GetVersionDetailReqMultiError(errors)
 	}
 
 	return nil
 }
 
-// GetChartDetailReqMultiError is an error wrapping multiple validation errors
-// returned by GetChartDetailReq.ValidateAll() if the designated constraints
-// aren't met.
-type GetChartDetailReqMultiError []error
+// GetVersionDetailReqMultiError is an error wrapping multiple validation
+// errors returned by GetVersionDetailReq.ValidateAll() if the designated
+// constraints aren't met.
+type GetVersionDetailReqMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
-func (m GetChartDetailReqMultiError) Error() string {
+func (m GetVersionDetailReqMultiError) Error() string {
 	var msgs []string
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
@@ -2814,11 +2836,11 @@ func (m GetChartDetailReqMultiError) Error() string {
 }
 
 // AllErrors returns a list of validation violation errors.
-func (m GetChartDetailReqMultiError) AllErrors() []error { return m }
+func (m GetVersionDetailReqMultiError) AllErrors() []error { return m }
 
-// GetChartDetailReqValidationError is the validation error returned by
-// GetChartDetailReq.Validate if the designated constraints aren't met.
-type GetChartDetailReqValidationError struct {
+// GetVersionDetailReqValidationError is the validation error returned by
+// GetVersionDetailReq.Validate if the designated constraints aren't met.
+type GetVersionDetailReqValidationError struct {
 	field  string
 	reason string
 	cause  error
@@ -2826,24 +2848,24 @@ type GetChartDetailReqValidationError struct {
 }
 
 // Field function returns field value.
-func (e GetChartDetailReqValidationError) Field() string { return e.field }
+func (e GetVersionDetailReqValidationError) Field() string { return e.field }
 
 // Reason function returns reason value.
-func (e GetChartDetailReqValidationError) Reason() string { return e.reason }
+func (e GetVersionDetailReqValidationError) Reason() string { return e.reason }
 
 // Cause function returns cause value.
-func (e GetChartDetailReqValidationError) Cause() error { return e.cause }
+func (e GetVersionDetailReqValidationError) Cause() error { return e.cause }
 
 // Key function returns key value.
-func (e GetChartDetailReqValidationError) Key() bool { return e.key }
+func (e GetVersionDetailReqValidationError) Key() bool { return e.key }
 
 // ErrorName returns error name.
-func (e GetChartDetailReqValidationError) ErrorName() string {
-	return "GetChartDetailReqValidationError"
+func (e GetVersionDetailReqValidationError) ErrorName() string {
+	return "GetVersionDetailReqValidationError"
 }
 
 // Error satisfies the builtin error interface
-func (e GetChartDetailReqValidationError) Error() string {
+func (e GetVersionDetailReqValidationError) Error() string {
 	cause := ""
 	if e.cause != nil {
 		cause = fmt.Sprintf(" | caused by: %v", e.cause)
@@ -2855,14 +2877,14 @@ func (e GetChartDetailReqValidationError) Error() string {
 	}
 
 	return fmt.Sprintf(
-		"invalid %sGetChartDetailReq.%s: %s%s",
+		"invalid %sGetVersionDetailReq.%s: %s%s",
 		key,
 		e.field,
 		e.reason,
 		cause)
 }
 
-var _ error = GetChartDetailReqValidationError{}
+var _ error = GetVersionDetailReqValidationError{}
 
 var _ interface {
 	Field() string
@@ -2870,24 +2892,24 @@ var _ interface {
 	Key() bool
 	Cause() error
 	ErrorName() string
-} = GetChartDetailReqValidationError{}
+} = GetVersionDetailReqValidationError{}
 
-// Validate checks the field values on GetChartDetailResp with the rules
+// Validate checks the field values on GetVersionDetailResp with the rules
 // defined in the proto definition for this message. If any rules are
 // violated, the first error encountered is returned, or nil if there are no violations.
-func (m *GetChartDetailResp) Validate() error {
+func (m *GetVersionDetailResp) Validate() error {
 	return m.validate(false)
 }
 
-// ValidateAll checks the field values on GetChartDetailResp with the rules
+// ValidateAll checks the field values on GetVersionDetailResp with the rules
 // defined in the proto definition for this message. If any rules are
 // violated, the result is a list of violation errors wrapped in
-// GetChartDetailRespMultiError, or nil if none found.
-func (m *GetChartDetailResp) ValidateAll() error {
+// GetVersionDetailRespMultiError, or nil if none found.
+func (m *GetVersionDetailResp) ValidateAll() error {
 	return m.validate(true)
 }
 
-func (m *GetChartDetailResp) validate(all bool) error {
+func (m *GetVersionDetailResp) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
@@ -2904,7 +2926,7 @@ func (m *GetChartDetailResp) validate(all bool) error {
 		switch v := interface{}(m.GetData()).(type) {
 		case interface{ ValidateAll() error }:
 			if err := v.ValidateAll(); err != nil {
-				errors = append(errors, GetChartDetailRespValidationError{
+				errors = append(errors, GetVersionDetailRespValidationError{
 					field:  "Data",
 					reason: "embedded message failed validation",
 					cause:  err,
@@ -2912,7 +2934,7 @@ func (m *GetChartDetailResp) validate(all bool) error {
 			}
 		case interface{ Validate() error }:
 			if err := v.Validate(); err != nil {
-				errors = append(errors, GetChartDetailRespValidationError{
+				errors = append(errors, GetVersionDetailRespValidationError{
 					field:  "Data",
 					reason: "embedded message failed validation",
 					cause:  err,
@@ -2921,7 +2943,7 @@ func (m *GetChartDetailResp) validate(all bool) error {
 		}
 	} else if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
 		if err := v.Validate(); err != nil {
-			return GetChartDetailRespValidationError{
+			return GetVersionDetailRespValidationError{
 				field:  "Data",
 				reason: "embedded message failed validation",
 				cause:  err,
@@ -2929,20 +2951,22 @@ func (m *GetChartDetailResp) validate(all bool) error {
 		}
 	}
 
+	// no validation rules for RequestID
+
 	if len(errors) > 0 {
-		return GetChartDetailRespMultiError(errors)
+		return GetVersionDetailRespMultiError(errors)
 	}
 
 	return nil
 }
 
-// GetChartDetailRespMultiError is an error wrapping multiple validation errors
-// returned by GetChartDetailResp.ValidateAll() if the designated constraints
-// aren't met.
-type GetChartDetailRespMultiError []error
+// GetVersionDetailRespMultiError is an error wrapping multiple validation
+// errors returned by GetVersionDetailResp.ValidateAll() if the designated
+// constraints aren't met.
+type GetVersionDetailRespMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
-func (m GetChartDetailRespMultiError) Error() string {
+func (m GetVersionDetailRespMultiError) Error() string {
 	var msgs []string
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
@@ -2951,11 +2975,11 @@ func (m GetChartDetailRespMultiError) Error() string {
 }
 
 // AllErrors returns a list of validation violation errors.
-func (m GetChartDetailRespMultiError) AllErrors() []error { return m }
+func (m GetVersionDetailRespMultiError) AllErrors() []error { return m }
 
-// GetChartDetailRespValidationError is the validation error returned by
-// GetChartDetailResp.Validate if the designated constraints aren't met.
-type GetChartDetailRespValidationError struct {
+// GetVersionDetailRespValidationError is the validation error returned by
+// GetVersionDetailResp.Validate if the designated constraints aren't met.
+type GetVersionDetailRespValidationError struct {
 	field  string
 	reason string
 	cause  error
@@ -2963,24 +2987,24 @@ type GetChartDetailRespValidationError struct {
 }
 
 // Field function returns field value.
-func (e GetChartDetailRespValidationError) Field() string { return e.field }
+func (e GetVersionDetailRespValidationError) Field() string { return e.field }
 
 // Reason function returns reason value.
-func (e GetChartDetailRespValidationError) Reason() string { return e.reason }
+func (e GetVersionDetailRespValidationError) Reason() string { return e.reason }
 
 // Cause function returns cause value.
-func (e GetChartDetailRespValidationError) Cause() error { return e.cause }
+func (e GetVersionDetailRespValidationError) Cause() error { return e.cause }
 
 // Key function returns key value.
-func (e GetChartDetailRespValidationError) Key() bool { return e.key }
+func (e GetVersionDetailRespValidationError) Key() bool { return e.key }
 
 // ErrorName returns error name.
-func (e GetChartDetailRespValidationError) ErrorName() string {
-	return "GetChartDetailRespValidationError"
+func (e GetVersionDetailRespValidationError) ErrorName() string {
+	return "GetVersionDetailRespValidationError"
 }
 
 // Error satisfies the builtin error interface
-func (e GetChartDetailRespValidationError) Error() string {
+func (e GetVersionDetailRespValidationError) Error() string {
 	cause := ""
 	if e.cause != nil {
 		cause = fmt.Sprintf(" | caused by: %v", e.cause)
@@ -2992,14 +3016,14 @@ func (e GetChartDetailRespValidationError) Error() string {
 	}
 
 	return fmt.Sprintf(
-		"invalid %sGetChartDetailResp.%s: %s%s",
+		"invalid %sGetVersionDetailResp.%s: %s%s",
 		key,
 		e.field,
 		e.reason,
 		cause)
 }
 
-var _ error = GetChartDetailRespValidationError{}
+var _ error = GetVersionDetailRespValidationError{}
 
 var _ interface {
 	Field() string
@@ -3007,7 +3031,7 @@ var _ interface {
 	Key() bool
 	Cause() error
 	ErrorName() string
-} = GetChartDetailRespValidationError{}
+} = GetVersionDetailRespValidationError{}
 
 // Validate checks the field values on ChartDetail with the rules defined in
 // the proto definition for this message. If any rules are violated, the first
@@ -3313,6 +3337,8 @@ func (m *ListChartV1Req) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
+	// no validation rules for Name
+
 	if len(errors) > 0 {
 		return ListChartV1ReqMultiError(errors)
 	}
@@ -3448,6 +3474,8 @@ func (m *ListChartV1Resp) validate(all bool) error {
 		}
 	}
 
+	// no validation rules for RequestID
+
 	if len(errors) > 0 {
 		return ListChartV1RespMultiError(errors)
 	}
@@ -3525,6 +3553,280 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = ListChartV1RespValidationError{}
+
+// Validate checks the field values on GetChartDetailV1Req with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *GetChartDetailV1Req) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on GetChartDetailV1Req with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// GetChartDetailV1ReqMultiError, or nil if none found.
+func (m *GetChartDetailV1Req) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *GetChartDetailV1Req) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 32 {
+		err := GetChartDetailV1ReqValidationError{
+			field:  "ProjectCode",
+			reason: "value length must be between 1 and 32 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if l := utf8.RuneCountInString(m.GetRepoName()); l < 1 || l > 64 {
+		err := GetChartDetailV1ReqValidationError{
+			field:  "RepoName",
+			reason: "value length must be between 1 and 64 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if l := utf8.RuneCountInString(m.GetName()); l < 1 || l > 64 {
+		err := GetChartDetailV1ReqValidationError{
+			field:  "Name",
+			reason: "value length must be between 1 and 64 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if len(errors) > 0 {
+		return GetChartDetailV1ReqMultiError(errors)
+	}
+
+	return nil
+}
+
+// GetChartDetailV1ReqMultiError is an error wrapping multiple validation
+// errors returned by GetChartDetailV1Req.ValidateAll() if the designated
+// constraints aren't met.
+type GetChartDetailV1ReqMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m GetChartDetailV1ReqMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m GetChartDetailV1ReqMultiError) AllErrors() []error { return m }
+
+// GetChartDetailV1ReqValidationError is the validation error returned by
+// GetChartDetailV1Req.Validate if the designated constraints aren't met.
+type GetChartDetailV1ReqValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetChartDetailV1ReqValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetChartDetailV1ReqValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetChartDetailV1ReqValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetChartDetailV1ReqValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetChartDetailV1ReqValidationError) ErrorName() string {
+	return "GetChartDetailV1ReqValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetChartDetailV1ReqValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetChartDetailV1Req.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetChartDetailV1ReqValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetChartDetailV1ReqValidationError{}
+
+// Validate checks the field values on GetChartDetailV1Resp with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *GetChartDetailV1Resp) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on GetChartDetailV1Resp with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// GetChartDetailV1RespMultiError, or nil if none found.
+func (m *GetChartDetailV1Resp) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *GetChartDetailV1Resp) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	// no validation rules for Result
+
+	if all {
+		switch v := interface{}(m.GetData()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, GetChartDetailV1RespValidationError{
+					field:  "Data",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, GetChartDetailV1RespValidationError{
+					field:  "Data",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return GetChartDetailV1RespValidationError{
+				field:  "Data",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	// no validation rules for RequestID
+
+	if len(errors) > 0 {
+		return GetChartDetailV1RespMultiError(errors)
+	}
+
+	return nil
+}
+
+// GetChartDetailV1RespMultiError is an error wrapping multiple validation
+// errors returned by GetChartDetailV1Resp.ValidateAll() if the designated
+// constraints aren't met.
+type GetChartDetailV1RespMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m GetChartDetailV1RespMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m GetChartDetailV1RespMultiError) AllErrors() []error { return m }
+
+// GetChartDetailV1RespValidationError is the validation error returned by
+// GetChartDetailV1Resp.Validate if the designated constraints aren't met.
+type GetChartDetailV1RespValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetChartDetailV1RespValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetChartDetailV1RespValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetChartDetailV1RespValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetChartDetailV1RespValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetChartDetailV1RespValidationError) ErrorName() string {
+	return "GetChartDetailV1RespValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetChartDetailV1RespValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetChartDetailV1Resp.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetChartDetailV1RespValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetChartDetailV1RespValidationError{}
 
 // Validate checks the field values on ListChartVersionV1Req with the rules
 // defined in the proto definition for this message. If any rules are
@@ -3722,6 +4024,8 @@ func (m *ListChartVersionV1Resp) validate(all bool) error {
 		}
 	}
 
+	// no validation rules for RequestID
+
 	if len(errors) > 0 {
 		return ListChartVersionV1RespMultiError(errors)
 	}
@@ -3802,22 +4106,22 @@ var _ interface {
 	ErrorName() string
 } = ListChartVersionV1RespValidationError{}
 
-// Validate checks the field values on GetChartDetailV1Req with the rules
+// Validate checks the field values on GetVersionDetailV1Req with the rules
 // defined in the proto definition for this message. If any rules are
 // violated, the first error encountered is returned, or nil if there are no violations.
-func (m *GetChartDetailV1Req) Validate() error {
+func (m *GetVersionDetailV1Req) Validate() error {
 	return m.validate(false)
 }
 
-// ValidateAll checks the field values on GetChartDetailV1Req with the rules
+// ValidateAll checks the field values on GetVersionDetailV1Req with the rules
 // defined in the proto definition for this message. If any rules are
 // violated, the result is a list of violation errors wrapped in
-// GetChartDetailV1ReqMultiError, or nil if none found.
-func (m *GetChartDetailV1Req) ValidateAll() error {
+// GetVersionDetailV1ReqMultiError, or nil if none found.
+func (m *GetVersionDetailV1Req) ValidateAll() error {
 	return m.validate(true)
 }
 
-func (m *GetChartDetailV1Req) validate(all bool) error {
+func (m *GetVersionDetailV1Req) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
@@ -3825,7 +4129,7 @@ func (m *GetChartDetailV1Req) validate(all bool) error {
 	var errors []error
 
 	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 32 {
-		err := GetChartDetailV1ReqValidationError{
+		err := GetVersionDetailV1ReqValidationError{
 			field:  "ProjectCode",
 			reason: "value length must be between 1 and 32 runes, inclusive",
 		}
@@ -3836,7 +4140,7 @@ func (m *GetChartDetailV1Req) validate(all bool) error {
 	}
 
 	if l := utf8.RuneCountInString(m.GetRepoName()); l < 1 || l > 64 {
-		err := GetChartDetailV1ReqValidationError{
+		err := GetVersionDetailV1ReqValidationError{
 			field:  "RepoName",
 			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
@@ -3847,7 +4151,7 @@ func (m *GetChartDetailV1Req) validate(all bool) error {
 	}
 
 	if l := utf8.RuneCountInString(m.GetName()); l < 1 || l > 64 {
-		err := GetChartDetailV1ReqValidationError{
+		err := GetVersionDetailV1ReqValidationError{
 			field:  "Name",
 			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
@@ -3858,7 +4162,7 @@ func (m *GetChartDetailV1Req) validate(all bool) error {
 	}
 
 	if l := utf8.RuneCountInString(m.GetVersion()); l < 1 || l > 64 {
-		err := GetChartDetailV1ReqValidationError{
+		err := GetVersionDetailV1ReqValidationError{
 			field:  "Version",
 			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
@@ -3869,19 +4173,19 @@ func (m *GetChartDetailV1Req) validate(all bool) error {
 	}
 
 	if len(errors) > 0 {
-		return GetChartDetailV1ReqMultiError(errors)
+		return GetVersionDetailV1ReqMultiError(errors)
 	}
 
 	return nil
 }
 
-// GetChartDetailV1ReqMultiError is an error wrapping multiple validation
-// errors returned by GetChartDetailV1Req.ValidateAll() if the designated
+// GetVersionDetailV1ReqMultiError is an error wrapping multiple validation
+// errors returned by GetVersionDetailV1Req.ValidateAll() if the designated
 // constraints aren't met.
-type GetChartDetailV1ReqMultiError []error
+type GetVersionDetailV1ReqMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
-func (m GetChartDetailV1ReqMultiError) Error() string {
+func (m GetVersionDetailV1ReqMultiError) Error() string {
 	var msgs []string
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
@@ -3890,11 +4194,11 @@ func (m GetChartDetailV1ReqMultiError) Error() string {
 }
 
 // AllErrors returns a list of validation violation errors.
-func (m GetChartDetailV1ReqMultiError) AllErrors() []error { return m }
+func (m GetVersionDetailV1ReqMultiError) AllErrors() []error { return m }
 
-// GetChartDetailV1ReqValidationError is the validation error returned by
-// GetChartDetailV1Req.Validate if the designated constraints aren't met.
-type GetChartDetailV1ReqValidationError struct {
+// GetVersionDetailV1ReqValidationError is the validation error returned by
+// GetVersionDetailV1Req.Validate if the designated constraints aren't met.
+type GetVersionDetailV1ReqValidationError struct {
 	field  string
 	reason string
 	cause  error
@@ -3902,24 +4206,24 @@ type GetChartDetailV1ReqValidationError struct {
 }
 
 // Field function returns field value.
-func (e GetChartDetailV1ReqValidationError) Field() string { return e.field }
+func (e GetVersionDetailV1ReqValidationError) Field() string { return e.field }
 
 // Reason function returns reason value.
-func (e GetChartDetailV1ReqValidationError) Reason() string { return e.reason }
+func (e GetVersionDetailV1ReqValidationError) Reason() string { return e.reason }
 
 // Cause function returns cause value.
-func (e GetChartDetailV1ReqValidationError) Cause() error { return e.cause }
+func (e GetVersionDetailV1ReqValidationError) Cause() error { return e.cause }
 
 // Key function returns key value.
-func (e GetChartDetailV1ReqValidationError) Key() bool { return e.key }
+func (e GetVersionDetailV1ReqValidationError) Key() bool { return e.key }
 
 // ErrorName returns error name.
-func (e GetChartDetailV1ReqValidationError) ErrorName() string {
-	return "GetChartDetailV1ReqValidationError"
+func (e GetVersionDetailV1ReqValidationError) ErrorName() string {
+	return "GetVersionDetailV1ReqValidationError"
 }
 
 // Error satisfies the builtin error interface
-func (e GetChartDetailV1ReqValidationError) Error() string {
+func (e GetVersionDetailV1ReqValidationError) Error() string {
 	cause := ""
 	if e.cause != nil {
 		cause = fmt.Sprintf(" | caused by: %v", e.cause)
@@ -3931,14 +4235,14 @@ func (e GetChartDetailV1ReqValidationError) Error() string {
 	}
 
 	return fmt.Sprintf(
-		"invalid %sGetChartDetailV1Req.%s: %s%s",
+		"invalid %sGetVersionDetailV1Req.%s: %s%s",
 		key,
 		e.field,
 		e.reason,
 		cause)
 }
 
-var _ error = GetChartDetailV1ReqValidationError{}
+var _ error = GetVersionDetailV1ReqValidationError{}
 
 var _ interface {
 	Field() string
@@ -3946,24 +4250,24 @@ var _ interface {
 	Key() bool
 	Cause() error
 	ErrorName() string
-} = GetChartDetailV1ReqValidationError{}
+} = GetVersionDetailV1ReqValidationError{}
 
-// Validate checks the field values on GetChartDetailV1Resp with the rules
+// Validate checks the field values on GetVersionDetailV1Resp with the rules
 // defined in the proto definition for this message. If any rules are
 // violated, the first error encountered is returned, or nil if there are no violations.
-func (m *GetChartDetailV1Resp) Validate() error {
+func (m *GetVersionDetailV1Resp) Validate() error {
 	return m.validate(false)
 }
 
-// ValidateAll checks the field values on GetChartDetailV1Resp with the rules
+// ValidateAll checks the field values on GetVersionDetailV1Resp with the rules
 // defined in the proto definition for this message. If any rules are
 // violated, the result is a list of violation errors wrapped in
-// GetChartDetailV1RespMultiError, or nil if none found.
-func (m *GetChartDetailV1Resp) ValidateAll() error {
+// GetVersionDetailV1RespMultiError, or nil if none found.
+func (m *GetVersionDetailV1Resp) ValidateAll() error {
 	return m.validate(true)
 }
 
-func (m *GetChartDetailV1Resp) validate(all bool) error {
+func (m *GetVersionDetailV1Resp) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
@@ -3980,7 +4284,7 @@ func (m *GetChartDetailV1Resp) validate(all bool) error {
 		switch v := interface{}(m.GetData()).(type) {
 		case interface{ ValidateAll() error }:
 			if err := v.ValidateAll(); err != nil {
-				errors = append(errors, GetChartDetailV1RespValidationError{
+				errors = append(errors, GetVersionDetailV1RespValidationError{
 					field:  "Data",
 					reason: "embedded message failed validation",
 					cause:  err,
@@ -3988,7 +4292,7 @@ func (m *GetChartDetailV1Resp) validate(all bool) error {
 			}
 		case interface{ Validate() error }:
 			if err := v.Validate(); err != nil {
-				errors = append(errors, GetChartDetailV1RespValidationError{
+				errors = append(errors, GetVersionDetailV1RespValidationError{
 					field:  "Data",
 					reason: "embedded message failed validation",
 					cause:  err,
@@ -3997,7 +4301,7 @@ func (m *GetChartDetailV1Resp) validate(all bool) error {
 		}
 	} else if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
 		if err := v.Validate(); err != nil {
-			return GetChartDetailV1RespValidationError{
+			return GetVersionDetailV1RespValidationError{
 				field:  "Data",
 				reason: "embedded message failed validation",
 				cause:  err,
@@ -4005,20 +4309,22 @@ func (m *GetChartDetailV1Resp) validate(all bool) error {
 		}
 	}
 
+	// no validation rules for RequestID
+
 	if len(errors) > 0 {
-		return GetChartDetailV1RespMultiError(errors)
+		return GetVersionDetailV1RespMultiError(errors)
 	}
 
 	return nil
 }
 
-// GetChartDetailV1RespMultiError is an error wrapping multiple validation
-// errors returned by GetChartDetailV1Resp.ValidateAll() if the designated
+// GetVersionDetailV1RespMultiError is an error wrapping multiple validation
+// errors returned by GetVersionDetailV1Resp.ValidateAll() if the designated
 // constraints aren't met.
-type GetChartDetailV1RespMultiError []error
+type GetVersionDetailV1RespMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
-func (m GetChartDetailV1RespMultiError) Error() string {
+func (m GetVersionDetailV1RespMultiError) Error() string {
 	var msgs []string
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
@@ -4027,11 +4333,11 @@ func (m GetChartDetailV1RespMultiError) Error() string {
 }
 
 // AllErrors returns a list of validation violation errors.
-func (m GetChartDetailV1RespMultiError) AllErrors() []error { return m }
+func (m GetVersionDetailV1RespMultiError) AllErrors() []error { return m }
 
-// GetChartDetailV1RespValidationError is the validation error returned by
-// GetChartDetailV1Resp.Validate if the designated constraints aren't met.
-type GetChartDetailV1RespValidationError struct {
+// GetVersionDetailV1RespValidationError is the validation error returned by
+// GetVersionDetailV1Resp.Validate if the designated constraints aren't met.
+type GetVersionDetailV1RespValidationError struct {
 	field  string
 	reason string
 	cause  error
@@ -4039,24 +4345,24 @@ type GetChartDetailV1RespValidationError struct {
 }
 
 // Field function returns field value.
-func (e GetChartDetailV1RespValidationError) Field() string { return e.field }
+func (e GetVersionDetailV1RespValidationError) Field() string { return e.field }
 
 // Reason function returns reason value.
-func (e GetChartDetailV1RespValidationError) Reason() string { return e.reason }
+func (e GetVersionDetailV1RespValidationError) Reason() string { return e.reason }
 
 // Cause function returns cause value.
-func (e GetChartDetailV1RespValidationError) Cause() error { return e.cause }
+func (e GetVersionDetailV1RespValidationError) Cause() error { return e.cause }
 
 // Key function returns key value.
-func (e GetChartDetailV1RespValidationError) Key() bool { return e.key }
+func (e GetVersionDetailV1RespValidationError) Key() bool { return e.key }
 
 // ErrorName returns error name.
-func (e GetChartDetailV1RespValidationError) ErrorName() string {
-	return "GetChartDetailV1RespValidationError"
+func (e GetVersionDetailV1RespValidationError) ErrorName() string {
+	return "GetVersionDetailV1RespValidationError"
 }
 
 // Error satisfies the builtin error interface
-func (e GetChartDetailV1RespValidationError) Error() string {
+func (e GetVersionDetailV1RespValidationError) Error() string {
 	cause := ""
 	if e.cause != nil {
 		cause = fmt.Sprintf(" | caused by: %v", e.cause)
@@ -4068,14 +4374,14 @@ func (e GetChartDetailV1RespValidationError) Error() string {
 	}
 
 	return fmt.Sprintf(
-		"invalid %sGetChartDetailV1Resp.%s: %s%s",
+		"invalid %sGetVersionDetailV1Resp.%s: %s%s",
 		key,
 		e.field,
 		e.reason,
 		cause)
 }
 
-var _ error = GetChartDetailV1RespValidationError{}
+var _ error = GetVersionDetailV1RespValidationError{}
 
 var _ interface {
 	Field() string
@@ -4083,7 +4389,7 @@ var _ interface {
 	Key() bool
 	Cause() error
 	ErrorName() string
-} = GetChartDetailV1RespValidationError{}
+} = GetVersionDetailV1RespValidationError{}
 
 // Validate checks the field values on DeleteChartReq with the rules defined in
 // the proto definition for this message. If any rules are violated, the first
@@ -4245,6 +4551,8 @@ func (m *DeleteChartResp) validate(all bool) error {
 	// no validation rules for Message
 
 	// no validation rules for Result
+
+	// no validation rules for RequestID
 
 	if len(errors) > 0 {
 		return DeleteChartRespMultiError(errors)
@@ -4498,6 +4806,8 @@ func (m *DeleteChartVersionResp) validate(all bool) error {
 
 	// no validation rules for Result
 
+	// no validation rules for RequestID
+
 	if len(errors) > 0 {
 		return DeleteChartVersionRespMultiError(errors)
 	}
@@ -4577,6 +4887,429 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = DeleteChartVersionRespValidationError{}
+
+// Validate checks the field values on DownloadChartReq with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// first error encountered is returned, or nil if there are no violations.
+func (m *DownloadChartReq) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on DownloadChartReq with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// DownloadChartReqMultiError, or nil if none found.
+func (m *DownloadChartReq) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *DownloadChartReq) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 32 {
+		err := DownloadChartReqValidationError{
+			field:  "ProjectCode",
+			reason: "value length must be between 1 and 32 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if l := utf8.RuneCountInString(m.GetRepoName()); l < 1 || l > 64 {
+		err := DownloadChartReqValidationError{
+			field:  "RepoName",
+			reason: "value length must be between 1 and 64 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if l := utf8.RuneCountInString(m.GetName()); l < 1 || l > 64 {
+		err := DownloadChartReqValidationError{
+			field:  "Name",
+			reason: "value length must be between 1 and 64 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if l := utf8.RuneCountInString(m.GetVersion()); l < 1 || l > 64 {
+		err := DownloadChartReqValidationError{
+			field:  "Version",
+			reason: "value length must be between 1 and 64 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if len(errors) > 0 {
+		return DownloadChartReqMultiError(errors)
+	}
+
+	return nil
+}
+
+// DownloadChartReqMultiError is an error wrapping multiple validation errors
+// returned by DownloadChartReq.ValidateAll() if the designated constraints
+// aren't met.
+type DownloadChartReqMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m DownloadChartReqMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m DownloadChartReqMultiError) AllErrors() []error { return m }
+
+// DownloadChartReqValidationError is the validation error returned by
+// DownloadChartReq.Validate if the designated constraints aren't met.
+type DownloadChartReqValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e DownloadChartReqValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e DownloadChartReqValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e DownloadChartReqValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e DownloadChartReqValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e DownloadChartReqValidationError) ErrorName() string { return "DownloadChartReqValidationError" }
+
+// Error satisfies the builtin error interface
+func (e DownloadChartReqValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sDownloadChartReq.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = DownloadChartReqValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = DownloadChartReqValidationError{}
+
+// Validate checks the field values on GetChartReleaseReq with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *GetChartReleaseReq) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on GetChartReleaseReq with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// GetChartReleaseReqMultiError, or nil if none found.
+func (m *GetChartReleaseReq) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *GetChartReleaseReq) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 32 {
+		err := GetChartReleaseReqValidationError{
+			field:  "ProjectCode",
+			reason: "value length must be between 1 and 32 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if l := utf8.RuneCountInString(m.GetRepoName()); l < 1 || l > 64 {
+		err := GetChartReleaseReqValidationError{
+			field:  "RepoName",
+			reason: "value length must be between 1 and 64 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if l := utf8.RuneCountInString(m.GetName()); l < 1 || l > 64 {
+		err := GetChartReleaseReqValidationError{
+			field:  "Name",
+			reason: "value length must be between 1 and 64 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if len(errors) > 0 {
+		return GetChartReleaseReqMultiError(errors)
+	}
+
+	return nil
+}
+
+// GetChartReleaseReqMultiError is an error wrapping multiple validation errors
+// returned by GetChartReleaseReq.ValidateAll() if the designated constraints
+// aren't met.
+type GetChartReleaseReqMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m GetChartReleaseReqMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m GetChartReleaseReqMultiError) AllErrors() []error { return m }
+
+// GetChartReleaseReqValidationError is the validation error returned by
+// GetChartReleaseReq.Validate if the designated constraints aren't met.
+type GetChartReleaseReqValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetChartReleaseReqValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetChartReleaseReqValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetChartReleaseReqValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetChartReleaseReqValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetChartReleaseReqValidationError) ErrorName() string {
+	return "GetChartReleaseReqValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetChartReleaseReqValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetChartReleaseReq.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetChartReleaseReqValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetChartReleaseReqValidationError{}
+
+// Validate checks the field values on GetChartReleaseResp with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *GetChartReleaseResp) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on GetChartReleaseResp with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// GetChartReleaseRespMultiError, or nil if none found.
+func (m *GetChartReleaseResp) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *GetChartReleaseResp) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	// no validation rules for Result
+
+	for idx, item := range m.GetData() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, GetChartReleaseRespValidationError{
+						field:  fmt.Sprintf("Data[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, GetChartReleaseRespValidationError{
+						field:  fmt.Sprintf("Data[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return GetChartReleaseRespValidationError{
+					field:  fmt.Sprintf("Data[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	// no validation rules for RequestID
+
+	if len(errors) > 0 {
+		return GetChartReleaseRespMultiError(errors)
+	}
+
+	return nil
+}
+
+// GetChartReleaseRespMultiError is an error wrapping multiple validation
+// errors returned by GetChartReleaseResp.ValidateAll() if the designated
+// constraints aren't met.
+type GetChartReleaseRespMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m GetChartReleaseRespMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m GetChartReleaseRespMultiError) AllErrors() []error { return m }
+
+// GetChartReleaseRespValidationError is the validation error returned by
+// GetChartReleaseResp.Validate if the designated constraints aren't met.
+type GetChartReleaseRespValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetChartReleaseRespValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetChartReleaseRespValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetChartReleaseRespValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetChartReleaseRespValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetChartReleaseRespValidationError) ErrorName() string {
+	return "GetChartReleaseRespValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetChartReleaseRespValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetChartReleaseResp.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetChartReleaseRespValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetChartReleaseRespValidationError{}
 
 // Validate checks the field values on ListReleaseReq with the rules defined in
 // the proto definition for this message. If any rules are violated, the first
@@ -4753,6 +5486,8 @@ func (m *ListReleaseResp) validate(all bool) error {
 			}
 		}
 	}
+
+	// no validation rules for RequestID
 
 	if len(errors) > 0 {
 		return ListReleaseRespMultiError(errors)
@@ -5024,6 +5759,8 @@ func (m *GetReleaseDetailResp) validate(all bool) error {
 		}
 	}
 
+	// no validation rules for RequestID
+
 	if len(errors) > 0 {
 		return GetReleaseDetailRespMultiError(errors)
 	}
@@ -5287,6 +6024,14 @@ func (m *Release) validate(all bool) error {
 
 	// no validation rules for Message
 
+	// no validation rules for Repo
+
+	// no validation rules for IamNamespaceID
+
+	// no validation rules for ProjectCode
+
+	// no validation rules for ClusterID
+
 	if len(errors) > 0 {
 		return ReleaseMultiError(errors)
 	}
@@ -5411,6 +6156,10 @@ func (m *ReleaseDetail) validate(all bool) error {
 	// no validation rules for UpdateBy
 
 	// no validation rules for Message
+
+	// no validation rules for Repo
+
+	// no validation rules for ValueFile
 
 	if len(errors) > 0 {
 		return ReleaseDetailMultiError(errors)
@@ -5730,6 +6479,8 @@ func (m *InstallReleaseResp) validate(all bool) error {
 		}
 	}
 
+	// no validation rules for RequestID
+
 	if len(errors) > 0 {
 		return InstallReleaseRespMultiError(errors)
 	}
@@ -5974,6 +6725,8 @@ func (m *UninstallReleaseResp) validate(all bool) error {
 	// no validation rules for Message
 
 	// no validation rules for Result
+
+	// no validation rules for RequestID
 
 	if len(errors) > 0 {
 		return UninstallReleaseRespMultiError(errors)
@@ -6295,6 +7048,8 @@ func (m *UpgradeReleaseResp) validate(all bool) error {
 		}
 	}
 
+	// no validation rules for RequestID
+
 	if len(errors) > 0 {
 		return UpgradeReleaseRespMultiError(errors)
 	}
@@ -6541,6 +7296,8 @@ func (m *RollbackReleaseResp) validate(all bool) error {
 	// no validation rules for Message
 
 	// no validation rules for Result
+
+	// no validation rules for RequestID
 
 	if len(errors) > 0 {
 		return RollbackReleaseRespMultiError(errors)
@@ -6808,6 +7565,37 @@ func (m *ListReleaseV1Resp) validate(all bool) error {
 			}
 		}
 	}
+
+	if all {
+		switch v := interface{}(m.GetWebAnnotations()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, ListReleaseV1RespValidationError{
+					field:  "WebAnnotations",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, ListReleaseV1RespValidationError{
+					field:  "WebAnnotations",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetWebAnnotations()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return ListReleaseV1RespValidationError{
+				field:  "WebAnnotations",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	// no validation rules for RequestID
 
 	if len(errors) > 0 {
 		return ListReleaseV1RespMultiError(errors)
@@ -7092,6 +7880,8 @@ func (m *GetReleaseDetailV1Resp) validate(all bool) error {
 		}
 	}
 
+	// no validation rules for RequestID
+
 	if len(errors) > 0 {
 		return GetReleaseDetailV1RespMultiError(errors)
 	}
@@ -7271,6 +8061,8 @@ func (m *InstallReleaseV1Req) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
+	// no validation rules for ValueFile
+
 	if len(errors) > 0 {
 		return InstallReleaseV1ReqMultiError(errors)
 	}
@@ -7378,6 +8170,8 @@ func (m *InstallReleaseV1Resp) validate(all bool) error {
 	// no validation rules for Message
 
 	// no validation rules for Result
+
+	// no validation rules for RequestID
 
 	if len(errors) > 0 {
 		return InstallReleaseV1RespMultiError(errors)
@@ -7633,6 +8427,8 @@ func (m *UninstallReleaseV1Resp) validate(all bool) error {
 
 	// no validation rules for Result
 
+	// no validation rules for RequestID
+
 	if len(errors) > 0 {
 		return UninstallReleaseV1RespMultiError(errors)
 	}
@@ -7812,6 +8608,8 @@ func (m *UpgradeReleaseV1Req) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
+	// no validation rules for ValueFile
+
 	if len(errors) > 0 {
 		return UpgradeReleaseV1ReqMultiError(errors)
 	}
@@ -7919,6 +8717,8 @@ func (m *UpgradeReleaseV1Resp) validate(all bool) error {
 	// no validation rules for Message
 
 	// no validation rules for Result
+
+	// no validation rules for RequestID
 
 	if len(errors) > 0 {
 		return UpgradeReleaseV1RespMultiError(errors)
@@ -8176,6 +8976,8 @@ func (m *RollbackReleaseV1Resp) validate(all bool) error {
 
 	// no validation rules for Result
 
+	// no validation rules for RequestID
+
 	if len(errors) > 0 {
 		return RollbackReleaseV1RespMultiError(errors)
 	}
@@ -8322,38 +9124,13 @@ func (m *ReleasePreviewReq) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if l := utf8.RuneCountInString(m.GetRepository()); l < 1 || l > 64 {
-		err := ReleasePreviewReqValidationError{
-			field:  "Repository",
-			reason: "value length must be between 1 and 64 runes, inclusive",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
+	// no validation rules for Repository
 
-	if l := utf8.RuneCountInString(m.GetChart()); l < 1 || l > 64 {
-		err := ReleasePreviewReqValidationError{
-			field:  "Chart",
-			reason: "value length must be between 1 and 64 runes, inclusive",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
+	// no validation rules for Chart
 
-	if l := utf8.RuneCountInString(m.GetVersion()); l < 1 || l > 64 {
-		err := ReleasePreviewReqValidationError{
-			field:  "Version",
-			reason: "value length must be between 1 and 64 runes, inclusive",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
+	// no validation rules for Version
+
+	// no validation rules for Revision
 
 	if len(errors) > 0 {
 		return ReleasePreviewReqMultiError(errors)
@@ -8492,6 +9269,8 @@ func (m *ReleasePreviewResp) validate(all bool) error {
 		}
 	}
 
+	// no validation rules for RequestID
+
 	if len(errors) > 0 {
 		return ReleasePreviewRespMultiError(errors)
 	}
@@ -8595,25 +9374,25 @@ func (m *ReleasePreview) validate(all bool) error {
 	var errors []error
 
 	{
-		sorted_keys := make([]string, len(m.GetContents()))
+		sorted_keys := make([]string, len(m.GetNewContents()))
 		i := 0
-		for key := range m.GetContents() {
+		for key := range m.GetNewContents() {
 			sorted_keys[i] = key
 			i++
 		}
 		sort.Slice(sorted_keys, func(i, j int) bool { return sorted_keys[i] < sorted_keys[j] })
 		for _, key := range sorted_keys {
-			val := m.GetContents()[key]
+			val := m.GetNewContents()[key]
 			_ = val
 
-			// no validation rules for Contents[key]
+			// no validation rules for NewContents[key]
 
 			if all {
 				switch v := interface{}(val).(type) {
 				case interface{ ValidateAll() error }:
 					if err := v.ValidateAll(); err != nil {
 						errors = append(errors, ReleasePreviewValidationError{
-							field:  fmt.Sprintf("Contents[%v]", key),
+							field:  fmt.Sprintf("NewContents[%v]", key),
 							reason: "embedded message failed validation",
 							cause:  err,
 						})
@@ -8621,7 +9400,7 @@ func (m *ReleasePreview) validate(all bool) error {
 				case interface{ Validate() error }:
 					if err := v.Validate(); err != nil {
 						errors = append(errors, ReleasePreviewValidationError{
-							field:  fmt.Sprintf("Contents[%v]", key),
+							field:  fmt.Sprintf("NewContents[%v]", key),
 							reason: "embedded message failed validation",
 							cause:  err,
 						})
@@ -8630,7 +9409,53 @@ func (m *ReleasePreview) validate(all bool) error {
 			} else if v, ok := interface{}(val).(interface{ Validate() error }); ok {
 				if err := v.Validate(); err != nil {
 					return ReleasePreviewValidationError{
-						field:  fmt.Sprintf("Contents[%v]", key),
+						field:  fmt.Sprintf("NewContents[%v]", key),
+						reason: "embedded message failed validation",
+						cause:  err,
+					}
+				}
+			}
+
+		}
+	}
+
+	{
+		sorted_keys := make([]string, len(m.GetOldContents()))
+		i := 0
+		for key := range m.GetOldContents() {
+			sorted_keys[i] = key
+			i++
+		}
+		sort.Slice(sorted_keys, func(i, j int) bool { return sorted_keys[i] < sorted_keys[j] })
+		for _, key := range sorted_keys {
+			val := m.GetOldContents()[key]
+			_ = val
+
+			// no validation rules for OldContents[key]
+
+			if all {
+				switch v := interface{}(val).(type) {
+				case interface{ ValidateAll() error }:
+					if err := v.ValidateAll(); err != nil {
+						errors = append(errors, ReleasePreviewValidationError{
+							field:  fmt.Sprintf("OldContents[%v]", key),
+							reason: "embedded message failed validation",
+							cause:  err,
+						})
+					}
+				case interface{ Validate() error }:
+					if err := v.Validate(); err != nil {
+						errors = append(errors, ReleasePreviewValidationError{
+							field:  fmt.Sprintf("OldContents[%v]", key),
+							reason: "embedded message failed validation",
+							cause:  err,
+						})
+					}
+				}
+			} else if v, ok := interface{}(val).(interface{ Validate() error }); ok {
+				if err := v.Validate(); err != nil {
+					return ReleasePreviewValidationError{
+						field:  fmt.Sprintf("OldContents[%v]", key),
 						reason: "embedded message failed validation",
 						cause:  err,
 					}
@@ -8929,6 +9754,8 @@ func (m *GetReleaseHistoryResp) validate(all bool) error {
 		}
 
 	}
+
+	// no validation rules for RequestID
 
 	if len(errors) > 0 {
 		return GetReleaseHistoryRespMultiError(errors)
@@ -9333,6 +10160,8 @@ func (m *CommonResp) validate(all bool) error {
 		}
 	}
 
+	// no validation rules for RequestID
+
 	if len(errors) > 0 {
 		return CommonRespMultiError(errors)
 	}
@@ -9467,6 +10296,8 @@ func (m *CommonListResp) validate(all bool) error {
 		}
 	}
 
+	// no validation rules for RequestID
+
 	if len(errors) > 0 {
 		return CommonListRespMultiError(errors)
 	}
@@ -9544,3 +10375,132 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = CommonListRespValidationError{}
+
+// Validate checks the field values on WebAnnotations with the rules defined in
+// the proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *WebAnnotations) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on WebAnnotations with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in WebAnnotationsMultiError,
+// or nil if none found.
+func (m *WebAnnotations) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *WebAnnotations) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if all {
+		switch v := interface{}(m.GetPerms()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, WebAnnotationsValidationError{
+					field:  "Perms",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, WebAnnotationsValidationError{
+					field:  "Perms",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetPerms()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return WebAnnotationsValidationError{
+				field:  "Perms",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if len(errors) > 0 {
+		return WebAnnotationsMultiError(errors)
+	}
+
+	return nil
+}
+
+// WebAnnotationsMultiError is an error wrapping multiple validation errors
+// returned by WebAnnotations.ValidateAll() if the designated constraints
+// aren't met.
+type WebAnnotationsMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m WebAnnotationsMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m WebAnnotationsMultiError) AllErrors() []error { return m }
+
+// WebAnnotationsValidationError is the validation error returned by
+// WebAnnotations.Validate if the designated constraints aren't met.
+type WebAnnotationsValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e WebAnnotationsValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e WebAnnotationsValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e WebAnnotationsValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e WebAnnotationsValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e WebAnnotationsValidationError) ErrorName() string { return "WebAnnotationsValidationError" }
+
+// Error satisfies the builtin error interface
+func (e WebAnnotationsValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sWebAnnotations.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = WebAnnotationsValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = WebAnnotationsValidationError{}

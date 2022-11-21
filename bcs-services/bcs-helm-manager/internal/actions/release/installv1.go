@@ -128,10 +128,13 @@ func (i *InstallReleaseV1Action) saveDB() error {
 	}
 	if err := i.model.CreateRelease(i.ctx, &entity.Release{
 		Name:         i.req.GetName(),
+		ProjectCode:  i.req.GetProjectCode(),
 		Namespace:    i.req.GetNamespace(),
 		ClusterID:    i.req.GetClusterID(),
+		Repo:         i.req.GetRepository(),
 		ChartName:    i.req.GetChart(),
 		ChartVersion: i.req.GetVersion(),
+		ValueFile:    i.req.GetValueFile(),
 		Values:       i.req.GetValues(),
 		Args:         i.req.GetArgs(),
 		CreateBy:     auth.GetUserFromCtx(i.ctx),

@@ -89,7 +89,7 @@ func (u *UpgradeReleaseAction) upgrade() error {
 		return nil
 	}
 
-	result, err := upgradeRelease(u.releaseHandler, contextx.GetProjectIDFromCtx(u.ctx), clusterID,
+	result, err := upgradeRelease(u.releaseHandler, contextx.GetProjectIDFromCtx(u.ctx), projectID, clusterID,
 		releaseName, releaseNamespace, chartName, chartVersion, username, u.req.GetArgs(),
 		u.req.GetBcsSysVar(), contents, values, false)
 	if err != nil {
@@ -137,10 +137,10 @@ func (u *UpgradeReleaseAction) getContent() ([]byte, error) {
 			Name:     repository.Username,
 			Password: repository.Password,
 		}).
-		Project(repository.ProjectID).
+		Project(repository.GetRepoProjectID()).
 		Repository(
 			repo.GetRepositoryType(repository.Type),
-			repository.Name,
+			repository.GetRepoName(),
 		).
 		Chart(u.req.GetChart()).
 		Download(u.ctx, u.req.GetVersion())
@@ -156,8 +156,10 @@ func (u *UpgradeReleaseAction) saveDB(revision int) error {
 	}
 	if err := u.model.CreateRelease(u.ctx, &entity.Release{
 		Name:         u.req.GetName(),
+		ProjectCode:  u.req.GetProjectID(),
 		Namespace:    u.req.GetNamespace(),
 		ClusterID:    u.req.GetClusterID(),
+		Repo:         u.req.GetRepository(),
 		ChartName:    u.req.GetChart(),
 		ChartVersion: u.req.GetVersion(),
 		Revision:     revision,

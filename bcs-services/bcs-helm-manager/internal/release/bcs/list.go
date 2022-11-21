@@ -19,6 +19,7 @@ import (
 	rspb "helm.sh/helm/v3/pkg/release"
 	"helm.sh/helm/v3/pkg/releaseutil"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/release"
 )
 
@@ -58,8 +59,10 @@ func (c *cluster) list(ctx context.Context, option release.ListOption) (int, []*
 			Chart:        item.Chart.Name(),
 			ChartVersion: chartVersion,
 			AppVersion:   item.Chart.AppVersion(),
-			UpdateTime:   item.Info.LastDeployed.Local().String(),
+			UpdateTime:   item.Info.LastDeployed.Local().Format(common.TimeFormat),
+			Hooks:        item.Hooks,
 			Manifest:     item.Manifest,
+			Description:  item.Info.Description,
 		})
 	}
 

@@ -17,6 +17,7 @@ import (
 
 	actionChart "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/actions/chart"
 	helmmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/proto/bcs-helm-manager"
+	"google.golang.org/genproto/googleapis/api/httpbody"
 )
 
 // ListChartV1 provide the actions to list charts
@@ -25,6 +26,15 @@ func (hm *HelmManager) ListChartV1(ctx context.Context,
 
 	defer recorder(ctx, "ListChartV1", req, resp)()
 	action := actionChart.NewListChartV1Action(hm.model, hm.platform)
+	return action.Handle(ctx, req, resp)
+}
+
+// GetChartDetailV1 provide the actions to get chart detail
+func (hm *HelmManager) GetChartDetailV1(ctx context.Context,
+	req *helmmanager.GetChartDetailV1Req, resp *helmmanager.GetChartDetailV1Resp) error {
+
+	defer recorder(ctx, "GetChartDetailV1", req, resp)()
+	action := actionChart.NewGetChartDetailV1Action(hm.model, hm.platform)
 	return action.Handle(ctx, req, resp)
 }
 
@@ -37,12 +47,12 @@ func (hm *HelmManager) ListChartVersionV1(ctx context.Context,
 	return action.Handle(ctx, req, resp)
 }
 
-// GetChartDetailV1 provide the actions the get chart detail
-func (hm *HelmManager) GetChartDetailV1(ctx context.Context,
-	req *helmmanager.GetChartDetailV1Req, resp *helmmanager.GetChartDetailV1Resp) error {
+// GetVersionDetailV1 provide the actions the get chart version detail
+func (hm *HelmManager) GetVersionDetailV1(ctx context.Context,
+	req *helmmanager.GetVersionDetailV1Req, resp *helmmanager.GetVersionDetailV1Resp) error {
 
-	defer recorder(ctx, "GetChartDetailV1", req, resp)()
-	action := actionChart.NewGetChartDetailV1Action(hm.model, hm.platform)
+	defer recorder(ctx, "GetVersionDetailV1", req, resp)()
+	action := actionChart.NewGetVersionDetailV1Action(hm.model, hm.platform)
 	return action.Handle(ctx, req, resp)
 }
 
@@ -64,12 +74,12 @@ func (hm *HelmManager) ListChartVersion(ctx context.Context,
 	return action.Handle(ctx, req, resp)
 }
 
-// GetChartDetail provide the actions the get chart detail
-func (hm *HelmManager) GetChartDetail(ctx context.Context,
-	req *helmmanager.GetChartDetailReq, resp *helmmanager.GetChartDetailResp) error {
+// GetVersionDetail provide the actions the get chart version detail
+func (hm *HelmManager) GetVersionDetail(ctx context.Context,
+	req *helmmanager.GetVersionDetailReq, resp *helmmanager.GetVersionDetailResp) error {
 
-	defer recorder(ctx, "GetChartDetail", req, resp)()
-	action := actionChart.NewGetChartDetailAction(hm.model, hm.platform)
+	defer recorder(ctx, "GetVersionDetail", req, resp)()
+	action := actionChart.NewGetVersionDetailAction(hm.model, hm.platform)
 	return action.Handle(ctx, req, resp)
 }
 
@@ -88,5 +98,23 @@ func (hm *HelmManager) DeleteChartVersion(ctx context.Context,
 
 	defer recorder(ctx, "DeleteChartVersion", req, resp)()
 	action := actionChart.NewDeleteChartVersionAction(hm.model, hm.platform)
+	return action.Handle(ctx, req, resp)
+}
+
+// DownloadChart provide the actions to download chart
+func (hm *HelmManager) DownloadChart(ctx context.Context,
+	req *helmmanager.DownloadChartReq, resp *httpbody.HttpBody) error {
+
+	defer recorder(ctx, "DownloadChart", req, nil)()
+	action := actionChart.NewDownloadChartAction(hm.model, hm.platform)
+	return action.Handle(ctx, req, resp)
+}
+
+// GetChartRelease provide the actions to get chart releases
+func (hm *HelmManager) GetChartRelease(ctx context.Context,
+	req *helmmanager.GetChartReleaseReq, resp *helmmanager.GetChartReleaseResp) error {
+
+	defer recorder(ctx, "GetChartRelease", req, nil)()
+	action := actionChart.NewGetChartReleaseAction(hm.model)
 	return action.Handle(ctx, req, resp)
 }

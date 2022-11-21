@@ -52,6 +52,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/component/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/component/project"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/discovery"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/handler"
@@ -238,13 +239,6 @@ func (hm *HelmManager) initReleaseHandler() error {
 		token = string(realToken)
 	}
 
-	template, err := os.ReadFile(hm.opt.Release.KubeConfigTemplate)
-	if err != nil {
-		blog.Errorf("init release handler load template file %s failed: %s",
-			hm.opt.Release.KubeConfigTemplate, err.Error())
-		return err
-	}
-
 	// load patch template files from config
 	patches, err := loadYamlFilesFromDir(hm.opt.Release.PatchDir)
 	if err != nil {
@@ -253,21 +247,10 @@ func (hm *HelmManager) initReleaseHandler() error {
 		return err
 	}
 
-	// load var template files from config
-	vars, err := loadYamlFilesFromDir(hm.opt.Release.VarDir)
-	if err != nil {
-		blog.Errorf("init release handler load var dir %s failed: %s",
-			hm.opt.Release.VarDir, err.Error())
-		return err
-	}
-
 	hm.releaseHandler = bcs.New(release.Config{
-		APIServer:          hm.opt.Release.APIServer,
-		Token:              string(token),
-		KubeConfigTemplate: string(template),
-		HelmBinary:         hm.opt.Release.Binary,
-		PatchTemplates:     patches,
-		VarTemplates:       vars,
+		APIServer:      hm.opt.Release.APIServer,
+		Token:          string(token),
+		PatchTemplates: patches,
 	})
 	blog.Infof("init release handler successfully to %s", hm.opt.Release.APIServer)
 	return nil
@@ -354,6 +337,7 @@ func (hm *HelmManager) initMicro() error {
 			return nil
 		}),
 		microSvc.WrapHandler(
+			wrapper.RequestLogWarpper,
 			wrapper.RequestIDWrapper,
 			authWrapper.AuthenticationFunc,
 			wrapper.ParseProjectIDWrapper,
@@ -363,7 +347,7 @@ func (hm *HelmManager) initMicro() error {
 	svc.Init()
 
 	if err := helmmanager.RegisterHelmManagerHandler(
-		svc.Server(), handler.NewHelmManager(hm.model, hm.platform, hm.releaseHandler)); err != nil {
+		svc.Server(), handler.NewHelmManager(hm.model, hm.platform, hm.opt, hm.releaseHandler)); err != nil {
 		blog.Errorf("register helm manager handler to micro failed: %s", err.Error())
 		return nil
 	}
@@ -377,7 +361,9 @@ func (hm *HelmManager) initHTTPService() error {
 	router := mux.NewRouter()
 	rmMux := ggRuntime.NewServeMux(
 		ggRuntime.WithIncomingHeaderMatcher(runtimex.CustomHeaderMatcher),
-		ggRuntime.WithMarshalerOption(ggRuntime.MIMEWildcard, &ggRuntime.JSONPb{OrigName: true, EmitDefaults: true}),
+		ggRuntime.WithOutgoingHeaderMatcher(runtimex.CustomHeaderMatcher),
+		ggRuntime.WithMarshalerOption(ggRuntime.MIMEWildcard, &ggRuntime.HTTPBodyMarshaler{
+			Marshaler: &ggRuntime.JSONPb{OrigName: true, EmitDefaults: true}}),
 		ggRuntime.WithDisablePathLengthFallback(),
 		ggRuntime.WithProtoErrorHandler(runtimex.CustomHTTPError),
 	)
@@ -461,9 +447,9 @@ func (hm *HelmManager) initMetric() error {
 // initTLSConfig xxx
 // init server and client tls config
 func (hm *HelmManager) initTLSConfig() error {
-	if len(hm.opt.ServerCert) != 0 && len(hm.opt.ServerKey) != 0 && len(hm.opt.ServerCa) != 0 {
-		tlsConfig, err := ssl.ServerTslConfVerityClient(hm.opt.ServerCa, hm.opt.ServerCert,
-			hm.opt.ServerKey, static.ServerCertPwd)
+	if len(hm.opt.TLS.ServerCert) != 0 && len(hm.opt.TLS.ServerKey) != 0 && len(hm.opt.TLS.ServerCa) != 0 {
+		tlsConfig, err := ssl.ServerTslConfVerityClient(hm.opt.TLS.ServerCa, hm.opt.TLS.ServerCert,
+			hm.opt.TLS.ServerKey, static.ServerCertPwd)
 		if err != nil {
 			blog.Errorf("load helm manager server tls config failed, err %s", err.Error())
 			return err
@@ -472,9 +458,9 @@ func (hm *HelmManager) initTLSConfig() error {
 		blog.Info("load helm manager server tls config successfully")
 	}
 
-	if len(hm.opt.ClientCert) != 0 && len(hm.opt.ClientKey) != 0 && len(hm.opt.ClientCa) != 0 {
-		tlsConfig, err := ssl.ClientTslConfVerity(hm.opt.ClientCa, hm.opt.ClientCert,
-			hm.opt.ClientKey, static.ClientCertPwd)
+	if len(hm.opt.TLS.ClientCert) != 0 && len(hm.opt.TLS.ClientKey) != 0 && len(hm.opt.TLS.ClientCa) != 0 {
+		tlsConfig, err := ssl.ClientTslConfVerity(hm.opt.TLS.ClientCa, hm.opt.TLS.ClientCert,
+			hm.opt.TLS.ClientKey, static.ClientCertPwd)
 		if err != nil {
 			blog.Errorf("load helm manager client tls config failed, err %s", err.Error())
 			return err
@@ -492,7 +478,6 @@ func (hm *HelmManager) initJWTClient() error {
 		PublicKeyFile:  hm.opt.JWT.PublicKeyFile,
 		PrivateKey:     hm.opt.JWT.PrivateKey,
 		PrivateKeyFile: hm.opt.JWT.PrivateKeyFile,
-		ExemptClients:  hm.opt.ExemptClients.ClientIDs,
 	}
 	if _, err := auth.NewJWTClient(conf); err != nil {
 		blog.Error("init jwt client error, %s", err.Error())
@@ -568,6 +553,11 @@ func (hm *HelmManager) InitComponentConfig() error {
 		blog.Error("init project client error, %s", err.Error())
 		return err
 	}
-	blog.Info("init project client successfully")
+	err = clustermanager.NewClient(hm.clientTLSConfig, hm.microRgt)
+	if err != nil {
+		blog.Error("init clustermanager client error, %s", err.Error())
+		return err
+	}
+	blog.Info("init all client successfully")
 	return nil
 }

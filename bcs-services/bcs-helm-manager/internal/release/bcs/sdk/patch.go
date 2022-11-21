@@ -61,8 +61,12 @@ type patcher struct {
 
 // Run implements the post-render Run method, do the render
 func (p *patcher) Run(renderedManifests *bytes.Buffer) (*bytes.Buffer, error) {
+	manifest, err := p.do(renderedManifests)
+	if err != nil {
+		return nil, err
+	}
 	// 处理 yaml 转换 json，添加指定的 key 和 value
-	splitedStrArr := stringx.SplitYaml2Array(renderedManifests.String(), "")
+	splitedStrArr := stringx.SplitYaml2Array(manifest.String(), "")
 	var yList []string
 	for _, s := range splitedStrArr {
 		j, err := stringx.Yaml2Json(s)
@@ -81,8 +85,11 @@ func (p *patcher) Run(renderedManifests *bytes.Buffer) (*bytes.Buffer, error) {
 	yl := stringx.JoinStringBySeparator(yList, "", true)
 	// 写回数据
 	buf := new(bytes.Buffer)
-	buf.WriteString(yl)
-	return p.do(buf)
+	_, err = buf.WriteString(yl)
+	if err != nil {
+		return nil, err
+	}
+	return buf, nil
 }
 
 func (p *patcher) do(data *bytes.Buffer) (*bytes.Buffer, error) {

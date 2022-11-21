@@ -48,6 +48,7 @@ func (c *cluster) get(ctx context.Context, op release.GetOption) (*release.Relea
 		Description:  rl.Info.Description,
 		Values:       valuesYaml,
 		Manifest:     rl.Manifest,
+		Hooks:        rl.Hooks,
 		Notes:        rl.Info.Notes,
 	}
 	if op.GetObject {

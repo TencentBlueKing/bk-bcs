@@ -10,8 +10,7 @@
  * limitations under the License.
  */
 
-// Package project xxx
-package project
+package clustermanager
 
 import (
 	"context"
@@ -21,7 +20,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/bcsproject"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/clustermanager"
 	microRgt "github.com/micro/go-micro/v2/registry"
 	"github.com/patrickmn/go-cache"
 
@@ -29,14 +28,14 @@ import (
 )
 
 const (
-	// ProjectManagerServiceName project manager service name
-	ProjectManagerServiceName = "project.bkbcs.tencent.com"
+	// ClusterManagerServiceName cluster manager service name
+	ClusterManagerServiceName = "clustermanager.bkbcs.tencent.com"
 
 	// cache key
-	cacheProjectKeyPrefix = "project_%s"
+	cacheClusterIDKeyPrefix = "cluster_%s"
 
 	// defaultExpiration
-	defaultExpiration = 24 * time.Hour
+	defaultExpiration = time.Hour
 )
 
 // Client xxx
@@ -48,9 +47,9 @@ type Client struct {
 
 var client *Client
 
-// NewClient create project service client
+// NewClient create cluster manager service client
 func NewClient(tlsConfig *tls.Config, microRgt microRgt.Registry) error {
-	dis := discovery.NewModuleDiscovery(ProjectManagerServiceName, microRgt)
+	dis := discovery.NewModuleDiscovery(ClusterManagerServiceName, microRgt)
 	err := dis.Start()
 	if err != nil {
 		return err
@@ -63,63 +62,42 @@ func NewClient(tlsConfig *tls.Config, microRgt microRgt.Registry) error {
 	return nil
 }
 
-func (p *Client) getProjectClient() (*bcsproject.ProjectClient, error) {
+func (p *Client) getClusterClient() (clustermanager.ClusterManagerClient, error) {
 	node, err := p.Discovery.GetRandServiceInst()
 	if err != nil {
 		return nil, err
 	}
-	blog.V(4).Infof("get random project-manager instance [%s] from etcd registry successful", node.Address)
+	blog.V(4).Infof("get random cluster-manager instance [%s] from etcd registry successful", node.Address)
 
 	cfg := bcsapi.Config{}
 	// discovery hosts
 	cfg.Hosts = discovery.GetServerEndpointsFromRegistryNode(node)
 	cfg.TLSConfig = p.ClientTLSConfig
 	cfg.InnerClientName = "bcs-helm-manager"
-	return bcsproject.NewProjectManagerClient(&cfg), nil
+	return bcsapi.NewClusterManager(&cfg), nil
 }
 
-// GetProjectByCode get project from project code
-func GetProjectByCode(projectCode string) (*bcsproject.Project, error) {
-	// load project data from cache
-	key := fmt.Sprintf(cacheProjectKeyPrefix, projectCode)
+// GetCluster get cluster from cluster manager
+func GetCluster(clusterID string) (*clustermanager.Cluster, error) {
+	key := fmt.Sprintf(cacheClusterIDKeyPrefix, clusterID)
 	v, ok := client.Cache.Get(key)
 	if ok {
-		if project, ok := v.(*bcsproject.Project); ok {
-			return project, nil
+		if cluster, ok := v.(*clustermanager.Cluster); ok {
+			return cluster, nil
 		}
 	}
-	cli, err := client.getProjectClient()
+	cli, err := client.getClusterClient()
 	if err != nil {
 		return nil, err
 	}
-	p, err := cli.Project.GetProject(context.Background(),
-		&bcsproject.GetProjectRequest{ProjectIDOrCode: projectCode})
+	p, err := cli.GetCluster(context.Background(),
+		&clustermanager.GetClusterReq{ClusterID: clusterID})
 	if err != nil {
-		return nil, fmt.Errorf("GetProject error: %s", err)
+		return nil, fmt.Errorf("GetCluster error: %s", err)
 	}
 	if p.Code != 0 || p.Data == nil {
-		return nil, fmt.Errorf("GetProject error, code: %d, message: %s, requestID: %s",
-			p.Code, p.GetMessage(), p.GetRequestID())
+		return nil, fmt.Errorf("GetCluster error, code: %d, message: %s", p.Code, p.GetMessage())
 	}
-	// save project data to cache
 	client.Cache.Set(key, p.Data, defaultExpiration)
 	return p.Data, nil
-}
-
-// GetVariable get project from project code
-func GetVariable(projectCode, clusterID, namespace string) ([]*bcsproject.VariableValue, error) {
-	client, err := client.getProjectClient()
-	if err != nil {
-		return nil, err
-	}
-	resp, err := client.Variable.RenderVariables(context.Background(),
-		&bcsproject.RenderVariablesRequest{ProjectCode: projectCode, ClusterID: clusterID, Namespace: namespace})
-	if err != nil {
-		return nil, fmt.Errorf("ListNamespaceVariables error: %s", err)
-	}
-	if resp.Code != 0 {
-		return nil, fmt.Errorf("ListNamespaceVariables error, code: %d, message: %s, requestID: %s",
-			resp.Code, resp.GetMessage(), resp.GetRequestID())
-	}
-	return resp.GetData(), nil
 }

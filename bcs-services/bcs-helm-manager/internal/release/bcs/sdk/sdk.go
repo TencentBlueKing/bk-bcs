@@ -16,22 +16,24 @@ package sdk
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"strconv"
-	"strings"
 	"sync"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/spf13/pflag"
+	"gopkg.in/yaml.v3"
 	"helm.sh/helm/v3/pkg/action"
 	"helm.sh/helm/v3/pkg/chart"
 	"helm.sh/helm/v3/pkg/chart/loader"
 	rspb "helm.sh/helm/v3/pkg/release"
-	"k8s.io/apimachinery/pkg/util/yaml"
+	"helm.sh/helm/v3/pkg/storage/driver"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
+	projectClient "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/component/project"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/release"
 )
 
@@ -46,7 +48,6 @@ type Config struct {
 	Token  string
 
 	PatchTemplates []*release.File
-	VarTemplates   []*release.File
 }
 
 // NewGroup return a new Group instance
@@ -199,7 +200,13 @@ func (c *client) Install(_ context.Context, config release.HelmInstallConfig) (*
 	}
 
 	// values数据, 增加Var values在最后
-	values, err := getValues(append(config.Values, c.getVarValue(config.VarTemplateValues)...))
+	vars, err := c.getVarValue(config.ProjectCode, config.Namespace)
+	if err != nil {
+		blog.Errorf("sdk client get vars failed, %s, "+
+			"namespace %s, name %s", err.Error(), config.Namespace, config.Name)
+		return nil, err
+	}
+	values, err := getValues(append(config.Values, vars))
 	if err != nil {
 		blog.Errorf("sdk client install and get values failed, %s, "+
 			"namespace %s, name %s", err.Error(), config.Namespace, config.Name)
@@ -245,7 +252,6 @@ func (c *client) Upgrade(_ context.Context, config release.HelmUpgradeConfig) (*
 	upgrader := action.NewUpgrade(conf)
 	upgrader.DryRun = config.DryRun
 	upgrader.Namespace = config.Namespace
-	upgrader.Install = true
 	upgrader.PostRenderer = newPatcher(c.group.config.PatchTemplates, config.PatchTemplateValues)
 	if err := parseArgs4Upgrade(upgrader, config.Args); err != nil {
 		blog.Errorf("sdk client upgrade and parse from args failed, %s, args: %v", err.Error(), config.Args)
@@ -261,7 +267,13 @@ func (c *client) Upgrade(_ context.Context, config release.HelmUpgradeConfig) (*
 	}
 
 	// values数据, 增加Var values在最后
-	values, err := getValues(append(config.Values, c.getVarValue(config.VarTemplateValues)...))
+	vars, err := c.getVarValue(config.ProjectCode, config.Namespace)
+	if err != nil {
+		blog.Errorf("sdk client get vars failed, %s, "+
+			"namespace %s, name %s", err.Error(), config.Namespace, config.Name)
+		return nil, err
+	}
+	values, err := getValues(append(config.Values, vars))
 	if err != nil {
 		blog.Errorf("sdk client upgrade and get values failed, %s, "+
 			"namespace %s, name %s", err.Error(), config.Namespace, config.Name)
@@ -270,6 +282,18 @@ func (c *client) Upgrade(_ context.Context, config release.HelmUpgradeConfig) (*
 
 	r, err := upgrader.Run(config.Name, chartF, values)
 	if err != nil {
+		// install when upgrade has --install args and release is not exist
+		if e, ok := err.(*driver.StorageDriverError); ok && upgrader.Install &&
+			errors.Is(e.Unwrap(), driver.ErrNoDeployedReleases) {
+			blog.Infof("%s of namespace %s, installing it now.", e.Error(), config.Namespace)
+			result, err := c.Install(context.Background(), config.ToInstallConfig())
+			if err != nil {
+				return nil, err
+			}
+			blog.Infof("sdk client upgrade release successfully name %s, namespace %s, revision: %d",
+				config.Name, config.Namespace, result.Release.Version)
+			return result.ToUpgradeResult(), nil
+		}
 		blog.Errorf("sdk client upgrade failed, %s, "+
 			"namespace %s, name %s", err.Error(), config.Namespace, config.Name)
 		return nil, err
@@ -367,17 +391,54 @@ func (c *client) getConfigFlag(namespace string) *genericclioptions.ConfigFlags 
 	return flags
 }
 
-// getVarValue 将给定的var数据渲染到模版中, 并转化为values文件
-func (c *client) getVarValue(vars map[string]string) []*release.File {
-	r := make([]*release.File, 0, 5)
-	for index, f := range c.group.config.VarTemplates {
-		r = append(r, &release.File{
-			Name:    "vars-" + strconv.Itoa(index) + ".yaml",
-			Content: replaceVarTplKey(vars, f.Content),
-		})
+// getVarValue 将命名空间变量转化到 values文件
+// 兼容旧版本，注入 bcs 变量
+func (c *client) getVarValue(projectCode, namespace string) (*release.File, error) {
+	// get project info
+	project, err := projectClient.GetProjectByCode(projectCode)
+	if err != nil {
+		return nil, err
+	}
+	variables, err := projectClient.GetVariable(projectCode, c.clusterID, namespace)
+	if err != nil {
+		blog.Infof("get vars failed: %s", err.Error())
 	}
 
-	return r
+	// generate vars
+	vars := make(map[string]interface{}, 0)
+	kind := 0
+	if project.Kind == "k8s" {
+		kind = 1
+	}
+	bzID, _ := strconv.Atoi(project.BusinessID)
+	bcsVars := map[string]interface{}{
+		"SYS_STANDARD_DATA_ID":     0,
+		"SYS_NON_STANDARD_DATA_ID": 0,
+		"SYS_JFROG_DOMAIN":         "",
+		"SYS_CLUSTER_ID":           c.clusterID,
+		"SYS_NAMESPACE":            namespace,
+		"SYS_CC_APP_ID":            bzID,
+		"SYS_PROJECT_CODE":         project.ProjectCode,
+		"SYS_PROJECT_ID":           project.ProjectID,
+		"SYS_PROJECT_KIND":         kind,
+	}
+	for _, v := range variables {
+		if v == nil {
+			continue
+		}
+		bcsVars[v.Key] = v.Value
+	}
+	vars["__BCS__"] = bcsVars
+	vars["default"] = map[string]interface{}{
+		"__BCS__": bcsVars,
+	}
+
+	// marshal vars to yaml
+	out, err := yaml.Marshal(vars)
+	if err != nil {
+		return nil, err
+	}
+	return &release.File{Name: "vars.yaml", Content: out}, nil
 }
 
 // getChartFile 从下载的tar包中获取chart数据
@@ -444,16 +505,6 @@ func removeValuesTemplate(values map[string]interface{}) map[string]interface{} 
 	return values
 }
 
-// replaceVarTplKey 替换掉varTemplate中的模版变量, 用于作为最后的values文件, 让用户能够在chart中直接引用.Values.__BCS__相关配置
-// 默认清除所有未渲染的模版变量, 置为空
-func replaceVarTplKey(keys map[string]string, data []byte) []byte {
-	for k, v := range keys {
-		data = []byte(strings.ReplaceAll(string(data), common.Vtk(k), v))
-	}
-
-	return common.EmptyAllVarTemplateKey(data)
-}
-
 // parseArgs4Install 从用户给出的原生参数里, 直接parse到helm的install设置中
 // 当前使用的flags设置版本来源helm.sh/helm/v3 v3.6.3
 func parseArgs4Install(install *action.Install, args []string) error {
@@ -502,7 +553,7 @@ func parseArgs4Install(install *action.Install, args []string) error {
 func parseArgs4Upgrade(upgrade *action.Upgrade, args []string) error {
 	f := pflag.NewFlagSet("upgrade", pflag.ContinueOnError)
 
-	f.BoolVarP(&upgrade.Install, "install", "i", false,
+	f.BoolVarP(&upgrade.Install, "install", "i", true,
 		"if a release by this name doesn't already exist, run an install")
 	f.BoolVar(&upgrade.Devel, "devel", false,
 		"use development versions, too. Equivalent to version '>0.0.0-0'. If --version is set, this is ignored")

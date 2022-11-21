@@ -42,10 +42,10 @@ func getChartContent(model store.HelmManagerModel, platform repo.Platform,
 			Name:     repository.Username,
 			Password: repository.Password,
 		}).
-		Project(repository.ProjectID).
+		Project(repository.GetRepoProjectID()).
 		Repository(
 			repo.GetRepositoryType(repository.Type),
-			repository.Name,
+			repository.GetRepoName(),
 		).
 		Chart(chart).
 		Download(context.Background(), version)
@@ -55,7 +55,7 @@ func getChartContent(model store.HelmManagerModel, platform repo.Platform,
 	return contents, nil
 }
 
-func installRelease(releaseHandler release.Handler, projectID, clusterID, releaseName,
+func installRelease(releaseHandler release.Handler, projectID, projectCode, clusterID, releaseName,
 	releaseNamespace, chartName, version, username string, args []string, bcsSysVar map[string]string,
 	contents []byte, values []string, dryRun bool) (*release.HelmInstallResult, error) {
 	vls := make([]*release.File, 0, len(values))
@@ -68,9 +68,10 @@ func installRelease(releaseHandler release.Handler, projectID, clusterID, releas
 	return releaseHandler.Cluster(clusterID).Install(
 		context.Background(),
 		release.HelmInstallConfig{
-			DryRun:    dryRun,
-			Name:      releaseName,
-			Namespace: releaseNamespace,
+			DryRun:      dryRun,
+			ProjectCode: projectCode,
+			Name:        releaseName,
+			Namespace:   releaseNamespace,
 			Chart: &release.File{
 				Name:    chartName + "-" + version + ".tgz",
 				Content: contents,
@@ -85,11 +86,10 @@ func installRelease(releaseHandler release.Handler, projectID, clusterID, releas
 				common.PTKUpdator:   username,
 				common.PTKVersion:   version,
 			},
-			VarTemplateValues: bcsSysVar,
 		})
 }
 
-func upgradeRelease(releaseHandler release.Handler, projectID, clusterID, releaseName,
+func upgradeRelease(releaseHandler release.Handler, projectID, projectCode, clusterID, releaseName,
 	releaseNamespace, chartName, version, username string, args []string, bcsSysVar map[string]string,
 	contents []byte, values []string, dryRun bool) (*release.HelmUpgradeResult, error) {
 	vls := make([]*release.File, 0, len(values))
@@ -102,9 +102,10 @@ func upgradeRelease(releaseHandler release.Handler, projectID, clusterID, releas
 	return releaseHandler.Cluster(clusterID).Upgrade(
 		context.Background(),
 		release.HelmUpgradeConfig{
-			DryRun:    dryRun,
-			Name:      releaseName,
-			Namespace: releaseNamespace,
+			DryRun:      dryRun,
+			ProjectCode: projectCode,
+			Name:        releaseName,
+			Namespace:   releaseNamespace,
 			Chart: &release.File{
 				Name:    chartName + "-" + version + ".tgz",
 				Content: contents,
@@ -119,17 +120,21 @@ func upgradeRelease(releaseHandler release.Handler, projectID, clusterID, releas
 				common.PTKUpdator:   username,
 				common.PTKVersion:   version,
 			},
-			VarTemplateValues: bcsSysVar,
 		})
 }
 
 // ReleasesSortByUpdateTime sort releases by update time
 type ReleasesSortByUpdateTime []*helmmanager.Release
 
+// Len xxx
 func (r ReleasesSortByUpdateTime) Len() int { return len(r) }
+
+// Less xxx
 func (r ReleasesSortByUpdateTime) Less(i, j int) bool {
 	return r[i].GetUpdateTime() > r[j].GetUpdateTime()
 }
+
+// Swap xxx
 func (r ReleasesSortByUpdateTime) Swap(i, j int) { r[i], r[j] = r[j], r[i] }
 
 func filterIndex(offset, limit int, release []*helmmanager.Release) []*helmmanager.Release {

@@ -141,6 +141,7 @@ func (o *operator) dispatch(op Operation, timeout time.Duration, done chan struc
 	go func() {
 		defer func() {
 			o.dec()
+			cancel()
 			done <- struct{}{}
 		}()
 		if err := op.Validate(); err != nil {

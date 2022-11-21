@@ -25,31 +25,31 @@ import (
 	helmmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/proto/bcs-helm-manager"
 )
 
-// NewGetChartDetailAction return a new GetChartDetailAction instance
-func NewGetChartDetailAction(model store.HelmManagerModel, platform repo.Platform) *GetChartDetailAction {
-	return &GetChartDetailAction{
+// NewGetVersionDetailAction return a new GetVersionDetailAction instance
+func NewGetVersionDetailAction(model store.HelmManagerModel, platform repo.Platform) *GetVersionDetailAction {
+	return &GetVersionDetailAction{
 		model:    model,
 		platform: platform,
 	}
 }
 
-// GetChartDetailAction provides the action to do get chart detail info
-type GetChartDetailAction struct {
+// GetVersionDetailAction provides the action to do get chart version detail info
+type GetVersionDetailAction struct {
 	ctx context.Context
 
 	model    store.HelmManagerModel
 	platform repo.Platform
 
-	req  *helmmanager.GetChartDetailReq
-	resp *helmmanager.GetChartDetailResp
+	req  *helmmanager.GetVersionDetailReq
+	resp *helmmanager.GetVersionDetailResp
 }
 
 // Handle the chart detail getting process
-func (g *GetChartDetailAction) Handle(ctx context.Context,
-	req *helmmanager.GetChartDetailReq, resp *helmmanager.GetChartDetailResp) error {
+func (g *GetVersionDetailAction) Handle(ctx context.Context,
+	req *helmmanager.GetVersionDetailReq, resp *helmmanager.GetVersionDetailResp) error {
 
 	if req == nil || resp == nil {
-		blog.Errorf("get chart detail failed, req or resp is empty")
+		blog.Errorf("get chart version detail failed, req or resp is empty")
 		return common.ErrHelmManagerReqOrRespEmpty.GenError()
 	}
 	g.ctx = ctx
@@ -57,7 +57,7 @@ func (g *GetChartDetailAction) Handle(ctx context.Context,
 	g.resp = resp
 
 	if err := g.req.Validate(); err != nil {
-		blog.Errorf("get chart detail failed, invalid request, %s, param: %v", err.Error(), g.req)
+		blog.Errorf("get chart version detail failed, invalid request, %s, param: %v", err.Error(), g.req)
 		g.setResp(common.ErrHelmManagerRequestParamInvalid, err.Error(), nil)
 		return nil
 	}
@@ -65,7 +65,7 @@ func (g *GetChartDetailAction) Handle(ctx context.Context,
 	return g.getDetail()
 }
 
-func (g *GetChartDetailAction) getDetail() error {
+func (g *GetVersionDetailAction) getDetail() error {
 	projectID := g.req.GetProjectID()
 	repoName := g.req.GetRepository()
 	chartName := g.req.GetName()
@@ -74,7 +74,7 @@ func (g *GetChartDetailAction) getDetail() error {
 
 	repository, err := g.model.GetRepository(g.ctx, projectID, repoName)
 	if err != nil {
-		blog.Errorf("get chart detail failed, %s, "+
+		blog.Errorf("get chart version detail failed, %s, "+
 			"projectID: %s, repository: %s, chartName: %s, version: %s, operator: %s",
 			err.Error(), projectID, repoName, chartName, version, username)
 		g.setResp(common.ErrHelmManagerListActionFailed, err.Error(), nil)
@@ -86,15 +86,15 @@ func (g *GetChartDetailAction) getDetail() error {
 			Name:     repository.Username,
 			Password: repository.Password,
 		}).
-		Project(repository.ProjectID).
+		Project(repository.GetRepoProjectID()).
 		Repository(
 			repo.GetRepositoryType(repository.Type),
-			repository.Name,
+			repository.GetRepoName(),
 		).
 		Chart(chartName).
 		Detail(g.ctx, version)
 	if err != nil {
-		blog.Errorf("get chart detail failed, %s, "+
+		blog.Errorf("get chart version detail failed, %s, "+
 			"projectID: %s, repository: %s, chartName: %s, version: %s, operator: %s",
 			err.Error(), projectID, repoName, chartName, version, username)
 		g.setResp(common.ErrHelmManagerGetActionFailed, err.Error(), nil)
@@ -116,13 +116,13 @@ func (g *GetChartDetailAction) getDetail() error {
 	r.Readme = common.GetStringP(readmeFile)
 	r.ValuesFile = valuesFile
 	g.setResp(common.ErrHelmManagerSuccess, "ok", r)
-	blog.Infof("get chart detail successfully, "+
+	blog.Infof("get chart version detail successfully, "+
 		"projectID: %s, repository: %s, chartName: %s, version: %s, operator: %s",
 		projectID, repoName, chartName, version, username)
 	return nil
 }
 
-func (g *GetChartDetailAction) setResp(err common.HelmManagerError, message string, r *helmmanager.ChartDetail) {
+func (g *GetVersionDetailAction) setResp(err common.HelmManagerError, message string, r *helmmanager.ChartDetail) {
 	code := err.Int32()
 	msg := err.ErrorMessage(message)
 	g.resp.Code = &code
@@ -159,6 +159,110 @@ func isReadMeFile(f *repo.FileContent) bool {
 	return false
 }
 
+// NewGetVersionDetailV1Action return a new GetChartDetailV1Action instance
+func NewGetVersionDetailV1Action(model store.HelmManagerModel, platform repo.Platform) *GetVersionDetailV1Action {
+	return &GetVersionDetailV1Action{
+		model:    model,
+		platform: platform,
+	}
+}
+
+// GetVersionDetailV1Action provides the action to do get chart version detail info
+type GetVersionDetailV1Action struct {
+	ctx context.Context
+
+	model    store.HelmManagerModel
+	platform repo.Platform
+
+	req  *helmmanager.GetVersionDetailV1Req
+	resp *helmmanager.GetVersionDetailV1Resp
+}
+
+// Handle the chart detail getting process
+func (g *GetVersionDetailV1Action) Handle(ctx context.Context,
+	req *helmmanager.GetVersionDetailV1Req, resp *helmmanager.GetVersionDetailV1Resp) error {
+	g.ctx = ctx
+	g.req = req
+	g.resp = resp
+
+	if err := g.req.Validate(); err != nil {
+		blog.Errorf("get chart version detail failed, invalid request, %s, param: %v", err.Error(), g.req)
+		g.setResp(common.ErrHelmManagerRequestParamInvalid, err.Error(), nil)
+		return nil
+	}
+
+	r, err := g.getDetail()
+	if err != nil {
+		g.setResp(common.ErrHelmManagerListActionFailed, err.Error(), nil)
+		return nil
+	}
+	g.setResp(common.ErrHelmManagerSuccess, "ok", r)
+	return nil
+}
+
+func (g *GetVersionDetailV1Action) getDetail() (*helmmanager.ChartDetail, error) {
+	projectCode := g.req.GetProjectCode()
+	repoName := g.req.GetRepoName()
+	chartName := g.req.GetName()
+	version := g.req.GetVersion()
+	username := auth.GetUserFromCtx(g.ctx)
+
+	repository, err := g.model.GetRepository(g.ctx, projectCode, repoName)
+	if err != nil {
+		blog.Errorf("get chart version detail failed, %s, "+
+			"projectCode: %s, repository: %s, chartName: %s, version: %s, operator: %s",
+			err.Error(), projectCode, repoName, chartName, version, username)
+		return nil, err
+	}
+
+	origin, err := g.platform.
+		User(repo.User{
+			Name:     repository.Username,
+			Password: repository.Password,
+		}).
+		Project(repository.GetRepoProjectID()).
+		Repository(
+			repo.GetRepositoryType(repository.Type),
+			repository.GetRepoName(),
+		).
+		Chart(chartName).
+		Detail(g.ctx, version)
+	if err != nil {
+		blog.Errorf("get chart version detail failed, %s, "+
+			"projectCode: %s, repository: %s, chartName: %s, version: %s, operator: %s",
+			err.Error(), projectCode, repoName, chartName, version, username)
+		return nil, err
+	}
+
+	valuesFile := make([]string, 0, 0)
+	readmeFile := ""
+	for _, item := range origin.Contents {
+		if isValuesFile(item) {
+			valuesFile = append(valuesFile, item.Path)
+		}
+		if isReadMeFile(item) {
+			readmeFile = item.Path
+		}
+	}
+
+	r := origin.Transfer2Proto()
+	r.Readme = common.GetStringP(readmeFile)
+	r.ValuesFile = valuesFile
+	blog.Infof("get chart version detail successfully, "+
+		"projectCode: %s, repository: %s, chartName: %s, version: %s, operator: %s",
+		projectCode, repoName, chartName, version, username)
+	return r, nil
+}
+
+func (g *GetVersionDetailV1Action) setResp(err common.HelmManagerError, message string, r *helmmanager.ChartDetail) {
+	code := err.Int32()
+	msg := err.ErrorMessage(message)
+	g.resp.Code = &code
+	g.resp.Message = &msg
+	g.resp.Result = err.OK()
+	g.resp.Data = r
+}
+
 // NewGetChartDetailV1Action return a new GetChartDetailV1Action instance
 func NewGetChartDetailV1Action(model store.HelmManagerModel, platform repo.Platform) *GetChartDetailV1Action {
 	return &GetChartDetailV1Action{
@@ -191,67 +295,55 @@ func (g *GetChartDetailV1Action) Handle(ctx context.Context,
 		return nil
 	}
 
-	return g.getDetail()
+	chart, err := g.getDetail()
+	if err != nil {
+		g.setResp(common.ErrHelmManagerListActionFailed, err.Error(), nil)
+		return nil
+	}
+	g.setResp(common.ErrHelmManagerSuccess, "ok", chart)
+	return nil
 }
 
-func (g *GetChartDetailV1Action) getDetail() error {
+func (g *GetChartDetailV1Action) getDetail() (*helmmanager.Chart, error) {
 	projectCode := g.req.GetProjectCode()
 	repoName := g.req.GetRepoName()
 	chartName := g.req.GetName()
-	version := g.req.GetVersion()
 	username := auth.GetUserFromCtx(g.ctx)
 
 	repository, err := g.model.GetRepository(g.ctx, projectCode, repoName)
 	if err != nil {
-		blog.Errorf("get chart detail failed, %s, "+
-			"projectCode: %s, repository: %s, chartName: %s, version: %s, operator: %s",
-			err.Error(), projectCode, repoName, chartName, version, username)
-		g.setResp(common.ErrHelmManagerListActionFailed, err.Error(), nil)
-		return nil
+		blog.Errorf("get chart detail failed, %s, projectCode: %s, repository: %s, chartName: %s, operator: %s",
+			err.Error(), projectCode, repoName, chartName, username)
+		return nil, err
 	}
 
-	origin, err := g.platform.
+	detail, err := g.platform.
 		User(repo.User{
 			Name:     repository.Username,
 			Password: repository.Password,
 		}).
-		Project(repository.ProjectID).
+		Project(repository.GetRepoProjectID()).
 		Repository(
 			repo.GetRepositoryType(repository.Type),
-			repository.Name,
+			repository.GetRepoName(),
 		).
-		Chart(chartName).
-		Detail(g.ctx, version)
+		GetChartDetail(g.ctx, chartName)
 	if err != nil {
-		blog.Errorf("get chart detail failed, %s, "+
-			"projectCode: %s, repository: %s, chartName: %s, version: %s, operator: %s",
-			err.Error(), projectCode, repoName, chartName, version, username)
-		g.setResp(common.ErrHelmManagerGetActionFailed, err.Error(), nil)
-		return nil
+		blog.Errorf("get chart detail failed, %s, projectCode: %s, repository: %s, chartName: %s, operator: %s",
+			err.Error(), projectCode, repoName, chartName, username)
+		return nil, err
 	}
+	chart := detail.Transfer2Proto()
+	chart.ProjectID = common.GetStringP(projectCode)
+	chart.ProjectCode = common.GetStringP(projectCode)
+	chart.Repository = common.GetStringP(repoName)
 
-	valuesFile := make([]string, 0, 0)
-	readmeFile := ""
-	for _, item := range origin.Contents {
-		if isValuesFile(item) {
-			valuesFile = append(valuesFile, item.Path)
-		}
-		if isReadMeFile(item) {
-			readmeFile = item.Path
-		}
-	}
-
-	r := origin.Transfer2Proto()
-	r.Readme = common.GetStringP(readmeFile)
-	r.ValuesFile = valuesFile
-	g.setResp(common.ErrHelmManagerSuccess, "ok", r)
-	blog.Infof("get chart detail successfully, "+
-		"projectCode: %s, repository: %s, chartName: %s, version: %s, operator: %s",
-		projectCode, repoName, chartName, version, username)
-	return nil
+	blog.Infof("get chart detail successfully, projectCode: %s, repository: %s, chartName: %s, operator: %s",
+		projectCode, repoName, chartName, username)
+	return chart, nil
 }
 
-func (g *GetChartDetailV1Action) setResp(err common.HelmManagerError, message string, r *helmmanager.ChartDetail) {
+func (g *GetChartDetailV1Action) setResp(err common.HelmManagerError, message string, r *helmmanager.Chart) {
 	code := err.Int32()
 	msg := err.ErrorMessage(message)
 	g.resp.Code = &code

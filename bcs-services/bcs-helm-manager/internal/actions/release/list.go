@@ -75,7 +75,7 @@ func (l *ListReleaseAction) list() error {
 
 	r := make([]*helmmanager.Release, 0, len(origin))
 	for _, item := range origin {
-		r = append(r, item.Transfer2Proto())
+		r = append(r, item.Transfer2Proto("", clusterID))
 	}
 	l.setResp(common.ErrHelmManagerSuccess, "ok", &helmmanager.ReleaseListData{
 		Page:  common.GetUint32P(uint32(option.Page)),

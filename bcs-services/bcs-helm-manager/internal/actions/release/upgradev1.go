@@ -126,10 +126,13 @@ func (u *UpgradeReleaseV1Action) saveDB() error {
 	if create {
 		if err := u.model.CreateRelease(u.ctx, &entity.Release{
 			Name:         u.req.GetName(),
+			ProjectCode:  u.req.GetProjectCode(),
 			Namespace:    u.req.GetNamespace(),
 			ClusterID:    u.req.GetClusterID(),
+			Repo:         u.req.GetRepository(),
 			ChartName:    u.req.GetChart(),
 			ChartVersion: u.req.GetVersion(),
+			ValueFile:    u.req.GetValueFile(),
 			Values:       u.req.GetValues(),
 			Args:         u.req.GetArgs(),
 			CreateBy:     username,
@@ -139,8 +142,14 @@ func (u *UpgradeReleaseV1Action) saveDB() error {
 		}
 	} else {
 		rl := entity.M{
-			entity.FieldKeyUpdateBy: username,
-			entity.FieldKeyStatus:   helmrelease.StatusPendingUpgrade.String(),
+			entity.FieldKeyRepoName:     u.req.GetRepository(),
+			entity.FieldKeyChartName:    u.req.GetChart(),
+			entity.FieldKeyChartVersion: u.req.GetVersion(),
+			entity.FieldKeyValues:       u.req.GetValues(),
+			entity.FieldKeyValueFile:    u.req.GetValueFile(),
+			entity.FieldKeyArgs:         u.req.Args,
+			entity.FieldKeyUpdateBy:     username,
+			entity.FieldKeyStatus:       helmrelease.StatusPendingUpgrade.String(),
 		}
 		if err := u.model.UpdateRelease(u.ctx, u.req.GetClusterID(), u.req.GetNamespace(),
 			u.req.GetName(), rl); err != nil {

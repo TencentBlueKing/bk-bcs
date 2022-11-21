@@ -155,7 +155,10 @@ require (
 	github.com/Azure/go-autorest/autorest/to v0.2.0
 )
 
-require github.com/hashicorp/go-multierror v1.1.0
+require (
+	github.com/deckarep/golang-set v1.8.0
+	github.com/hashicorp/go-multierror v1.1.0
+)
 
 require (
 	github.com/Azure/azure-sdk-for-go/sdk/internal v1.0.0 // indirect
@@ -169,7 +172,6 @@ require (
 	github.com/go-openapi/jsonreference v0.19.3 // indirect
 	github.com/go-openapi/spec v0.19.3 // indirect
 	github.com/go-openapi/swag v0.19.5 // indirect
-	github.com/deckarep/golang-set v1.8.0 // indirect
 	github.com/golang-jwt/jwt v3.2.1+incompatible // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/kylelemons/godebug v1.1.0 // indirect

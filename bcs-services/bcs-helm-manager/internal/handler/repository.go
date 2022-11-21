@@ -24,7 +24,7 @@ func (hm *HelmManager) CreateRepository(ctx context.Context,
 	req *helmmanager.CreateRepositoryReq, resp *helmmanager.CreateRepositoryResp) error {
 
 	defer recorder(ctx, "CreateRepository", req, resp)()
-	action := actionRepository.NewCreateRepositoryAction(hm.model, hm.platform)
+	action := actionRepository.NewCreateRepositoryAction(hm.model, hm.platform, hm.opt.Repo)
 	return action.Handle(ctx, req, resp)
 }
 

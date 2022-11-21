@@ -115,6 +115,16 @@ func (rh *repositoryHandler) ListChart(ctx context.Context, option repo.ListOpti
 	return rh.listChart(ctx, option)
 }
 
+// ListChart 针对给定的分页信息, 返回chart维度的list数据, 同一个chart的多个版本会被合并, 只展示最新的版本信息
+func (rh *repositoryHandler) SearchChart(ctx context.Context, option repo.ListOption) (*repo.ListChartData, error) {
+	return rh.searchChart(ctx, option)
+}
+
+// GetChartDetail get chart detail
+func (rh *repositoryHandler) GetChartDetail(ctx context.Context, name string) (*repo.Chart, error) {
+	return rh.getChartDetail(ctx, name)
+}
+
 // Chart 针对给定的chart名称, 返回一个 repo.ChartHandler 实例, 用于chart层级的所有操作
 func (rh *repositoryHandler) Chart(chartName string) repo.ChartHandler {
 	return &chartHandler{

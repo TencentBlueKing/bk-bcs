@@ -54,7 +54,8 @@ type RepositoryHandler interface {
 	Create(ctx context.Context, repository *Repository) (string, error)
 
 	ListChart(ctx context.Context, option ListOption) (*ListChartData, error)
-
+	SearchChart(ctx context.Context, option ListOption) (*ListChartData, error)
+	GetChartDetail(ctx context.Context, name string) (*Chart, error)
 	Chart(chartName string) ChartHandler
 
 	CreateUser(ctx context.Context) (string, string, error)
@@ -194,6 +195,7 @@ func (c *Chart) Transfer2Proto() *helmmanager.Chart {
 		UpdateBy:          common.GetStringP(c.UpdateBy),
 		CreateTime:        common.GetStringP(c.CreateTime),
 		UpdateTime:        common.GetStringP(c.UpdateTime),
+		Icon:              common.GetStringP(""),
 	}
 }
 
@@ -308,6 +310,7 @@ func (fc *FileContent) Transfer2Proto() *helmmanager.FileContent {
 
 // ListOption 定义了批量查询的参数
 type ListOption struct {
-	Page int64
-	Size int64
+	PackageName string
+	Page        int64
+	Size        int64
 }

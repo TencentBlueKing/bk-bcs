@@ -23,6 +23,13 @@ const (
 
 	// TimeFormat time format YYYY-mm-dd HH:MM:SS
 	TimeFormat = "2006-01-02 15:04:05"
+
+	// PublicRepoName public repo name
+	PublicRepoName = "public-repo"
+	// PublicRepoDisplayName public repo display name
+	PublicRepoDisplayName = "公共仓库"
+	// ProjectRepoDefaultDisplayName default display name
+	ProjectRepoDefaultDisplayName = "项目仓库"
 )
 
 // ReleaseStatus

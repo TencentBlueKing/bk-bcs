@@ -167,7 +167,7 @@ func GetChartDetail(cmd *cobra.Command, args []string) {
 		os.Exit(1)
 	}
 
-	req := &helmmanager.GetChartDetailReq{}
+	req := &helmmanager.GetVersionDetailReq{}
 	req.ProjectID = &flagProject
 	req.Repository = &flagRepository
 	req.Name = common.GetStringP(args[0])

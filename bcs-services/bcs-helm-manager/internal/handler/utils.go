@@ -42,8 +42,14 @@ func recorder(ctx context.Context, name string, req interface{}, resp Response) 
 	blog.Infof("record: receive %s, requestID: %s, username: %s", name, reqID, auth.GetUserFromCtx(ctx))
 
 	return func() {
-		metrics.ReportAPIRequestMetric(name, strconv.Itoa(int(resp.GetCode())), enterTime)
+		var code int
+		var message string
+		if resp != nil {
+			code = int(resp.GetCode())
+			message = resp.GetMessage()
+		}
+		metrics.ReportAPIRequestMetric(name, strconv.Itoa(code), enterTime)
 		blog.Infof("record: leave %s, requestID: %s, latency: %s, req: %v, resp: %v", name, reqID,
-			time.Since(enterTime), req, fmt.Sprintf("code: %d message: %s", resp.GetCode(), resp.GetMessage()))
+			time.Since(enterTime), req, fmt.Sprintf("code: %d message: %s", code, message))
 	}
 }

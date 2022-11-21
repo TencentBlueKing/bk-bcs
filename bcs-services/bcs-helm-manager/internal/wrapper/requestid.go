@@ -16,6 +16,7 @@ package wrapper
 
 import (
 	"context"
+	"reflect"
 
 	"github.com/micro/go-micro/v2/metadata"
 	"github.com/micro/go-micro/v2/server"
@@ -27,8 +28,14 @@ import (
 // RequestIDWrapper get or generate request id
 func RequestIDWrapper(fn server.HandlerFunc) server.HandlerFunc {
 	return func(ctx context.Context, req server.Request, rsp interface{}) (err error) {
-		ctx = context.WithValue(ctx, contextx.RequestIDContextKey, getRequestID(ctx))
-		return fn(ctx, req, rsp)
+		requestID := getRequestID(ctx)
+		ctx = context.WithValue(ctx, contextx.RequestIDContextKey, requestID)
+		err = fn(ctx, req, rsp)
+		v := reflect.ValueOf(rsp)
+		if v.Elem().FieldByName("RequestID") != (reflect.Value{}) {
+			v.Elem().FieldByName("RequestID").Set(reflect.ValueOf(&requestID))
+		}
+		return err
 	}
 }
 

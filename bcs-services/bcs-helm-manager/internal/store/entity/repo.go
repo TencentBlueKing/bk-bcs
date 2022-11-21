@@ -16,16 +16,19 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/options"
 	helmmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/proto/bcs-helm-manager"
 )
 
 // Repository 定义了仓库基础信息, 存储在helm-manager的数据库中, 是chart相关操作的基础
 type Repository struct {
 	// basic info
-	ProjectID string `json:"projectID" bson:"projectID"`
-	Name      string `json:"name" bson:"name"`
-	Type      string `json:"type" bson:"type"`
-	RepoURL   string `json:"repoURL" bson:"repoURL"`
+	ProjectID   string `json:"projectID" bson:"projectID"`
+	Name        string `json:"name" bson:"name"`
+	DisplayName string `json:"displayName" bson:"displayName"`
+	Public      bool   `json:"public" bson:"public"`
+	Type        string `json:"type" bson:"type"`
+	RepoURL     string `json:"repoURL" bson:"repoURL"`
 
 	// remote repo settings
 	Remote         bool   `json:"remote" bson:"remote"`
@@ -43,11 +46,33 @@ type Repository struct {
 	UpdateTime int64  `json:"updateTime" bson:"updateTime"`
 }
 
+// GetRepoProjectID get repo project id
+func (r *Repository) GetRepoProjectID() string {
+	if r.Public {
+		return options.GlobalOptions.Repo.PublicRepoProject
+	}
+	return r.ProjectID
+}
+
+// GetRepoName get repo name
+func (r *Repository) GetRepoName() string {
+	if r.Public {
+		return options.GlobalOptions.Repo.PublicRepoName
+	}
+	return r.Name
+}
+
 // Transfer2Proto transfer the data into protobuf struct
 func (r *Repository) Transfer2Proto() *helmmanager.Repository {
+	displayName := r.DisplayName
+	if len(displayName) == 0 {
+		displayName = common.ProjectRepoDefaultDisplayName
+	}
 	return &helmmanager.Repository{
 		ProjectCode: common.GetStringP(r.ProjectID),
 		Name:        common.GetStringP(r.Name),
+		DisplayName: common.GetStringP(displayName),
+		Public:      common.GetBoolP(r.Public),
 		Type:        common.GetStringP(r.Type),
 		RepoURL:     common.GetStringP(r.RepoURL),
 		Remote:      common.GetBoolP(r.Remote),
@@ -75,6 +100,14 @@ func (r *Repository) LoadFromProto(repository *helmmanager.Repository) M {
 	if repository.Name != nil {
 		r.Name = repository.GetName()
 		m[FieldKeyName] = r.Name
+	}
+	if repository.DisplayName != nil {
+		r.DisplayName = repository.GetDisplayName()
+		m[FieldKeyDisplayName] = r.Name
+	}
+	if repository.Public != nil {
+		r.Public = repository.GetPublic()
+		m[FieldKeyPublic] = r.Name
 	}
 	if repository.Type != nil {
 		r.Type = repository.GetType()

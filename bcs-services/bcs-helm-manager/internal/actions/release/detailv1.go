@@ -113,14 +113,15 @@ func (g *GetReleaseDetailV1Action) mergeRelease(detail *helmmanager.ReleaseDetai
 		return rl.Transfer2DetailProto()
 	}
 
-	if detail.GetStatus() != helmrelease.StatusDeployed.String() && rl.Status != "" {
-		detail.Status = &rl.Status
-		detail.Message = &rl.Message
-	}
 	detail.Args = rl.Args
-	detail.Values = rl.Values
+	detail.ValueFile = &rl.ValueFile
 	detail.CreateBy = &rl.CreateBy
 	detail.UpdateBy = &rl.UpdateBy
+	detail.Message = &rl.Message
+	if detail.GetStatus() != helmrelease.StatusDeployed.String() && rl.Status != "" {
+		detail.Status = &rl.Status
+	}
+	detail.Repo = &rl.Repo
 	return detail
 }
 

@@ -92,7 +92,9 @@ func (l *ListRepositoryAction) getCondition() *operator.Condition {
 }
 
 func (l *ListRepositoryAction) getOption() *utils.ListOption {
-	var sortOpt map[string]int
+	sortOpt := map[string]int{
+		"public": 1,
+	}
 
 	return &utils.ListOption{
 		Sort: sortOpt,

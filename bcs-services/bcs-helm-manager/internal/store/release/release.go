@@ -93,9 +93,15 @@ func (m *ModelRelease) CreateRelease(ctx context.Context, release *entity.Releas
 	}
 
 	timestamp := time.Now().UTC().Unix()
-	release.CreateTime = timestamp
-	release.UpdateTime = timestamp
-	release.UpdateBy = release.CreateBy
+	if release.CreateTime == 0 {
+		release.CreateTime = timestamp
+	}
+	if release.UpdateTime == 0 {
+		release.UpdateTime = timestamp
+	}
+	if len(release.UpdateBy) == 0 {
+		release.UpdateBy = release.CreateBy
+	}
 	if _, err := m.db.Table(m.tableName).Insert(ctx, []interface{}{release}); err != nil {
 		return err
 	}
@@ -126,7 +132,7 @@ func (m *ModelRelease) UpdateRelease(ctx context.Context, clusterID, namespace, 
 		return err
 	}
 
-	release[entity.FieldKeyUpdateTime] = time.Now().UTC().Unix()
+	release.Update(entity.FieldKeyUpdateTime, time.Now().UTC().Unix())
 	if err := m.db.Table(m.tableName).Update(ctx, cond, operator.M{"$set": release}); err != nil {
 		return err
 	}

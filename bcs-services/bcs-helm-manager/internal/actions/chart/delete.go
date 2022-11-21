@@ -78,10 +78,10 @@ func (d *DeleteChartAction) deleteChart() error {
 			Name:     repository.Username,
 			Password: repository.Password,
 		}).
-		Project(repository.ProjectID).
+		Project(repository.GetRepoProjectID()).
 		Repository(
 			repo.GetRepositoryType(repository.Type),
-			repository.Name,
+			repository.GetRepoName(),
 		).
 		Chart(chartName).
 		Delete(d.ctx)
@@ -163,10 +163,10 @@ func (d *DeleteChartVersionAction) deleteChartVersion() error {
 			Name:     repository.Username,
 			Password: repository.Password,
 		}).
-		Project(repository.ProjectID).
+		Project(repository.GetRepoProjectID()).
 		Repository(
 			repo.GetRepositoryType(repository.Type),
-			repository.Name,
+			repository.GetRepoName(),
 		).
 		Chart(chartName).
 		DeleteVersion(d.ctx, version)

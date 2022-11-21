@@ -90,7 +90,7 @@ func (i *InstallReleaseAction) install() error {
 	}
 
 	// 执行install操作
-	result, err := installRelease(i.releaseHandler, contextx.GetProjectIDFromCtx(i.ctx), clusterID,
+	result, err := installRelease(i.releaseHandler, contextx.GetProjectIDFromCtx(i.ctx), projectID, clusterID,
 		releaseName, releaseNamespace, chartName, chartVersion, username, i.req.GetArgs(),
 		i.req.GetBcsSysVar(), contents, values, false)
 	if err != nil {
@@ -138,10 +138,10 @@ func (i *InstallReleaseAction) getContent() ([]byte, error) {
 			Name:     repository.Username,
 			Password: repository.Password,
 		}).
-		Project(repository.ProjectID).
+		Project(repository.GetRepoProjectID()).
 		Repository(
 			repo.GetRepositoryType(repository.Type),
-			repository.Name,
+			repository.GetRepoName(),
 		).
 		Chart(i.req.GetChart()).
 		Download(i.ctx, i.req.GetVersion())
@@ -159,7 +159,9 @@ func (i *InstallReleaseAction) saveDB(revision int) error {
 	if err := i.model.CreateRelease(i.ctx, &entity.Release{
 		Name:         i.req.GetName(),
 		Namespace:    i.req.GetNamespace(),
+		ProjectCode:  i.req.GetProjectID(),
 		ClusterID:    i.req.GetClusterID(),
+		Repo:         i.req.GetRepository(),
 		ChartName:    i.req.GetChart(),
 		ChartVersion: i.req.GetVersion(),
 		Revision:     revision,
