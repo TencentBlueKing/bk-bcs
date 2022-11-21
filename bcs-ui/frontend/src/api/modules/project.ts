@@ -22,10 +22,11 @@ export const getClusterNamespaceVariable = request('get', '/clusters/$clusterId/
 export const updateClusterNamespaceVariable = request('put', '/clusters/$clusterId/namespaces/$namespace/variables');
 
 // 命名空间
-export const getNamespaceList = request('get', '/clusters/$clusterId/namespaces')
-export const deleteNamespace = request('delete', '/clusters/$clusterId/namespaces/$namespace')
-export const updateNamespace = request('put', '/clusters/$clusterId/namespaces/$namespace')
-export const createdNamespace = request('post', '/clusters/$clusterId/namespaces')
+export const getNamespaceList = request('get', '/clusters/$clusterId/namespaces');
+export const deleteNamespace = request('delete', '/clusters/$clusterId/namespaces/$namespace');
+export const updateNamespace = request('put', '/clusters/$clusterId/namespaces/$namespace');
+export const createdNamespace = request('post', '/clusters/$clusterId/namespaces');
+export const fetchNamespaceInfo = request('get', '/clusters/$clusterId/namespaces/$name');
 
 const request2 = createRequest({
   domain: window.DEVOPS_BCS_API_URL,

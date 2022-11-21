@@ -1,6 +1,6 @@
 <template>
   <LayoutContent
-    hide-back :title="$tc('命名空间')"
+    hide-back :title="$t('命名空间')"
     v-bkloading="{ isLoading: namespaceLoading }">
     <LayoutRow class="mb15">
       <template #left>
@@ -29,14 +29,14 @@
       </template>
     </LayoutRow>
     <bcs-table
-      :data="curPageData"
+      :data="pageData"
       :pagination="pagination"
       @page-change="pageChange"
       @page-limit-change="pageSizeChange"
       @sort-change="handleSortChange">
       <bcs-table-column :label="$t('名称')" sortable prop="name">
         <template #default="{ row }">
-          {{ row.name || '--' }}
+          <bk-button class="bcs-button-ellipsis" text @click="showDetail(row)">{{ row.name }}</bk-button>
         </template>
       </bcs-table-column>
       <bcs-table-column :label="$t('状态')">
@@ -55,9 +55,10 @@
           </div>
         </template>
       </bcs-table-column>
-      <bcs-table-column :label="$t('CPU使用率')" prop="cpuUseRate" :min-width="100">
+      <bcs-table-column :label="$t('CPU使用率')" prop="cpuUseRate">
         <template #default="{ row }">
           <bcs-round-progress
+            v-if="row.quota"
             ext-cls="biz-cluster-ring"
             width="50px"
             :percent="row.cpuUseRate"
@@ -67,14 +68,23 @@
               activeColor: '#3a84ff'
             }"
             :num-style="{
-              fontSize: '12px'
+              fontSize: '12px',
+              width: '100%'
+            }"
+            v-bk-tooltips="{
+              content: `${$t('{used}核 / {total}核 (已使用/总量)', {
+                used: row.used.cpuLimits,
+                total: row.quota.cpuLimits,
+              })}`
             }"
           ></bcs-round-progress>
+          <span v-else v-bk-tooltips="{ content: $t('未开启命名空间配额') }">--</span>
         </template>
       </bcs-table-column>
-      <bcs-table-column :label="$t('内存使用率')" prop="memoryUseRate" :min-width="100">
+      <bcs-table-column :label="$t('内存使用率')" prop="memoryUseRate">
         <template #default="{ row }">
           <bcs-round-progress
+            v-if="row.quota"
             ext-cls="biz-cluster-ring"
             width="50px"
             :percent="row.memoryUseRate"
@@ -84,9 +94,22 @@
               activeColor: '#3a84ff'
             }"
             :num-style="{
-              fontSize: '12px'
+              fontSize: '12px',
+              width: '100%'
+            }"
+            v-bk-tooltips="{
+              content: `${$t('{used} / {total} (已使用/总量)', {
+                used: `${unitConvert(row.used.memoryLimits, 'Gi', 'mem')}Gi`,
+                total: row.quota.memoryLimits,
+              })}`
             }"
           ></bcs-round-progress>
+          <span v-else v-bk-tooltips="{ content: $t('未开启命名空间') }">--</span>
+        </template>
+      </bcs-table-column>
+      <bcs-table-column :label="$t('创建时间')">
+        <template #default="{ row }">
+          {{ timeZoneTransForm(row.createTime, false) || '--' }}
         </template>
       </bcs-table-column>
       <bcs-table-column :label="$t('操作')" width="220">
@@ -127,12 +150,19 @@
             <div class="bk-form-item text-[14px]">
               {{$t('变量：')}}
             </div>
+            <div class="bk-form-item text-[12px]">
+              <i18n path="可通过 {action} 创建更多作用在命名空间的变量">
+                <button place="action" class="bk-text-button" @click="handleGoVar">{{$t('变量管理')}}</button>
+              </i18n>
+            </div>
             <div class="bk-form-item">
               <div class="bk-form-content">
                 <div class="flex items-center mb-[10px]" v-for="(variable, index) in variablesList" :key="index">
-                  <bk-input :disabled="true" v-model="variable.key"></bk-input>
+                  <div class="flex-1" v-bk-tooltips="{ content: `${$t('变量名')}: ${variable.name}` }">
+                    <bk-input disabled v-model="variable.key"></bk-input>
+                  </div>
                   <span class="px-[5px]">=</span>
-                  <bk-input :placeholder="$t('值')" v-model="variable.value"></bk-input>
+                  <bk-input class="flex-1" :placeholder="$t('值')" v-model="variable.value"></bk-input>
                 </div>
               </div>
             </div>
@@ -156,24 +186,58 @@
       @confirm="updateNamespace"
       @cancel="cancelUpdateNamespace">
       <bcs-form :label-width="200" form-type="vertical">
-        <bcs-form-item :label="$t('配额设置')" :required="true">
-          <div class="flex">
+        <div class="mb-[20px]">
+          {{$t('配额设置')}}
+          <bk-switcher
+            v-model="showQuota"
+            class="ml-[10px]"
+            :disabled="isSharedCluster"
+            size="small"
+            :selected="showQuota"
+            @change="toggleShowQuota"
+            :key="showQuota">
+          </bk-switcher>
+        </div>
+        <bcs-form-item>
+          <div class="flex" v-if="showQuota">
             <div class="flex mr-[20px]">
-              <span class="mr-[10px]">MEN</span>
-              <bcs-input v-model="setQuotaConf.quota.memoryRequests" class="w-[200px]" type="number" :min="0">
-                <div class="group-text" slot="append">Gi</div>
+              <span class="mr-[10px]">CPU</span>
+              <bcs-input
+                v-model="setQuotaConf.quota.cpuRequests"
+                class="w-[200px]"
+                type="number"
+                :min="1"
+                :precision="0">
+                <div class="group-text" slot="append">{{ $t('核') }}</div>
               </bcs-input>
             </div>
             <div class="flex">
-              <span class="mr-[10px]">CPU</span>
-              <bcs-input v-model="setQuotaConf.quota.cpuRequests" class="w-[200px]" type="number" :min="0">
-                <div class="group-text" slot="append">{{ $t('核') }}</div>
+              <span class="mr-[10px]">MEN</span>
+              <bcs-input
+                v-model="setQuotaConf.quota.memoryRequests"
+                class="w-[200px]"
+                type="number"
+                :min="1"
+                :precision="0">
+                <div class="group-text" slot="append">Gi</div>
               </bcs-input>
             </div>
           </div>
         </bcs-form-item>
       </bcs-form>
     </bcs-dialog>
+    <!-- 命名空间Detail -->
+    <bk-sideslider
+      :is-show.sync="showNamespaceDetail"
+      :title="namespaceInfo.name"
+      :width="800"
+      quick-close>
+      <div slot="content">
+        <Detail
+          :data="namespaceInfo">
+        </Detail>
+      </div>
+    </bk-sideslider>
   </LayoutContent>
 </template>
 
@@ -182,11 +246,13 @@ import { defineComponent, computed, watch, ref } from '@vue/composition-api';
 import ClusterSelect from '@/components/cluster-selector/cluster-select.vue';
 import LayoutContent from '@/components/layout/Content.vue';
 import LayoutRow from '@/components/layout/Row.vue';
+import Detail from './detail.vue';
 import usePage from '../common/use-page';
 import useSearch from '../common/use-search';
 import { useCluster } from '@/common/use-app';
 import { useNamespace } from './use-namespace';
-import { sort } from '@/common/util';
+import { sort, timeZoneTransForm } from '@/common/util';
+import { BCS_CLUSTER } from '@/common/constant';
 
 export default defineComponent({
   name: 'NamespaceList',
@@ -194,9 +260,10 @@ export default defineComponent({
     ClusterSelect,
     LayoutContent,
     LayoutRow,
+    Detail,
   },
   setup(props, ctx) {
-    const { $store, $bkInfo, $i18n, $bkMessage, $router } = ctx.root;
+    const { $store, $bkInfo, $i18n, $bkMessage, $router, $route } = ctx.root;
 
     const { isSharedCluster } = useCluster();
 
@@ -208,6 +275,12 @@ export default defineComponent({
 
     const keys = ref(['name']);
 
+    const showQuota = ref(true);
+
+    const toggleShowQuota = () => {
+      showQuota.value = !showQuota.value;
+    };
+
     const {
       variablesList,
       variableLoading,
@@ -218,6 +291,7 @@ export default defineComponent({
       handleUpdateNameSpace,
       handleUpdateVariablesList,
       getNamespaceData,
+      getNamespaceInfo,
     } = useNamespace();
 
     // 排序
@@ -232,6 +306,10 @@ export default defineComponent({
       };
     };
 
+    const clusterList = computed(() => $store.state.cluster.clusterList || []);
+    const projectCode = computed(() => $route.params.projectCode);
+    const curCluster = computed(() => clusterList.value.find(item => item.clusterID === clusterID.value));
+
     // 表格数据
     const tableData = computed(() => {
       const items = JSON.parse(JSON.stringify(namespaceData.value || []));
@@ -243,6 +321,11 @@ export default defineComponent({
 
     // 分页
     const { pagination, curPageData, pageConf, pageChange, pageSizeChange } = usePage(tableDataMatchSearch);
+    const pageData = ref<any>([]);
+    watch(curPageData, (val) => {
+      pageData.value = sort(val, 'name', 'ascending');
+    });
+
     // 搜索时重置分页
     watch(searchValue, () => {
       pageConf.current = 1;
@@ -327,8 +410,21 @@ export default defineComponent({
         memoryRequests: '',
       },
     });
-    const showSetQuota = (row) => {
-      const { name, labels, annotations, quota = {} } = row;
+
+    const curNamespace = ref<any>({});
+    const showSetQuota = async (row) => {
+      curNamespace.value = await getNamespaceInfo({
+        $clusterId: clusterID.value,
+        $name: row.name,
+      });
+
+      if (curNamespace.value?.quota) {
+        showQuota.value = true;
+      } else {
+        showQuota.value = false;
+      }
+
+      const { name, labels, annotations, quota = {} } = curNamespace.value;
       setQuotaConf.value.title = $i18n.t('配额管理：') + name;
       setQuotaConf.value.isShow = true;
       setQuotaConf.value.namespace = name;
@@ -351,12 +447,12 @@ export default defineComponent({
         $namespace: namespace,
         labels,
         annotations,
-        quota: {
+        quota: showQuota.value ? {
           cpuLimits: String(quota.cpuRequests),
           cpuRequests: String(quota.cpuRequests),
           memoryLimits: `${quota.memoryRequests}Gi`,
           memoryRequests: `${quota.memoryRequests}Gi`,
-        },
+        } : null,
       });
       if (result) {
         $bkMessage({
@@ -367,7 +463,7 @@ export default defineComponent({
           $clusterId: clusterID.value,
         });
         cancelUpdateNamespace();
-      }
+      };
     };
 
     const cancelUpdateNamespace = () => {
@@ -403,14 +499,16 @@ export default defineComponent({
       cpu: {
         list: ['k', 'M', 'G', 'T', 'P', 'E'],
         digit: 3,
+        base: 10,
       },
       mem: {
         list: ['Ki', 'Mi', 'Gi', 'Ti', 'Pi', 'Ei'],
         digit: 10,
+        base: 2,
       },
     };
     const unitConvert = (val, toUnit = '', type: 'cpu' | 'mem') => {
-      const { list, digit } = unitMap[type];
+      const { list, digit, base } = unitMap[type];
       const num = val.match(/\d+/gi)?.[0];
       const uint = val.match(/[a-z|A-Z]+/gi)?.[0] || '';
 
@@ -422,9 +520,9 @@ export default defineComponent({
       const toUnitIndex = list.indexOf(toUnit) || -1;
       const factorial = index - toUnitIndex;
       if (factorial >= 0) {
-        return num * (10 ** (digit * factorial));
+        return num * (base ** (digit * factorial));
       }
-      return num / (10 ** (Math.abs(digit) * factorial));
+      return num / (base ** (Math.abs(digit) * Math.abs(factorial)));
     };
 
     const itsmTicketTypeMap = {
@@ -464,12 +562,40 @@ export default defineComponent({
       return typeMap[type];
     };
 
-    watch(curClusterId, () => {
-      getNamespaceData({
-        $clusterId: curClusterId.value,
+    const updateViewMode = () => {
+      localStorage.setItem('FEATURE_CLUSTER', 'done');
+      localStorage.setItem(BCS_CLUSTER, curCluster.value.cluster_id);
+      sessionStorage.setItem(BCS_CLUSTER, curCluster.value.cluster_id);
+      $store.commit('cluster/forceUpdateCurCluster', curCluster.value.cluster_id ? curCluster.value : {});
+      $store.commit('updateCurClusterId', curCluster.value.cluster_id);
+      $store.commit('updateViewMode', 'cluster');
+      $store.dispatch('getFeatureFlag');
+    };
+
+    const handleGoVar = () => {
+      if (viewMode.value === 'dashboard') {
+        updateViewMode();
+      };
+      setVariableConf.value.isShow = false;
+      $router.push({
+        name: 'var',
+        params: {
+          projectCode: projectCode.value,
+        },
       });
+    };
+    const showNamespaceDetail = ref(false);
+    const namespaceInfo = ref<any>({});
+    const showDetail = (row) => {
+      showNamespaceDetail.value = true;
+      namespaceInfo.value = row;
+    };
+
+    watch(curClusterId, () => {
+      clusterID.value = curClusterId.value;
     });
     watch(clusterID, () => {
+      pageConf.current = 1;
       getNamespaceData({
         $clusterId: clusterID.value,
       });
@@ -485,13 +611,17 @@ export default defineComponent({
       isSharedCluster,
       clusterID,
       pagination,
+      showQuota,
       searchValue,
-      curPageData,
+      pageData,
       setVariableConf,
       setQuotaConf,
       variablesList,
       variableLoading,
       itsmTicketTypeMap,
+      namespaceInfo,
+      showNamespaceDetail,
+      toggleShowQuota,
       unitConvert,
       applyMap,
       pageChange,
@@ -506,6 +636,9 @@ export default defineComponent({
       cancelUpdateNamespace,
       handleToCreatedPage,
       handleToITSM,
+      timeZoneTransForm,
+      handleGoVar,
+      showDetail,
     };
   },
 });

@@ -8,6 +8,7 @@ import {
   getClusterNamespaceVariable,
   updateClusterNamespaceVariable,
   createdNamespace,
+  fetchNamespaceInfo,
 } from '@/api/modules/project';
 
 export function useNamespace() {
@@ -58,6 +59,11 @@ export function useNamespace() {
     return result;
   }
 
+  async function getNamespaceInfo(params) {
+    const result = await fetchNamespaceInfo(params).catch(() => {});
+    return result;
+  }
+
   return {
     namespaceLoading,
     namespaceData,
@@ -69,6 +75,7 @@ export function useNamespace() {
     handleDeleteNameSpace,
     handleUpdateVariablesList,
     handleCreatedNamespace,
+    getNamespaceInfo,
   };
 }
 

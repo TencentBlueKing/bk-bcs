@@ -71,23 +71,33 @@
             :required="isSharedCluster"
             error-display-type="normal"
             property="quota"
-            :desc="quotaTipsCof">
+            v-bind="quotaFormItemConfig">
             <div class="flex">
               <div class="flex mr-[20px]">
-                <span class="mr-[15px] text-[14px]">MEN</span>
-                <bk-input v-model="formData.quota.memoryRequests" class="w-[250px]" type="number" :min="1">
-                  <div class="group-text" slot="append">G</div>
+                <span class="mr-[15px] text-[14px]">CPU</span>
+                <bk-input
+                  v-model="formData.quota.cpuRequests"
+                  class="w-[250px]"
+                  type="number"
+                  :min="1"
+                  :precision="0">
+                  <div class="group-text" slot="append">{{ $t('核') }}</div>
                 </bk-input>
               </div>
               <div class="flex">
-                <span class="mr-[15px] text-[14px]">CPU</span>
-                <bk-input v-model="formData.quota.cpuRequests" class="w-[250px]" type="number" :min="1">
-                  <div class="group-text" slot="append">{{ $t('核') }}</div>
+                <span class="mr-[15px] text-[14px]">MEN</span>
+                <bk-input
+                  v-model="formData.quota.memoryRequests"
+                  class="w-[250px]"
+                  type="number"
+                  :min="1"
+                  :precision="0">
+                  <div class="group-text" slot="append">G</div>
                 </bk-input>
               </div>
             </div>
           </bk-form-item>
-          <div id="quota-tip">
+          <div id="quota-tip" v-if="isSharedCluster">
             <p>{{ $t('1.申请资源总额CPU ≥ 100核，内存 ≥ 200GB将进入审批流程') }}</p>
             <p>{{ $t('2.为了避免产生过多资源碎片，CPU/内存资源比不应大于1/4') }}</p>
           </div>
@@ -136,6 +146,17 @@ export default defineComponent({
       annotations: [],
     });
 
+    const quotaFormItemConfig = computed(() => {
+      const config = {
+        required: isSharedCluster.value,
+
+      };
+      if (isSharedCluster.value) {
+        config.desc = quotaTipsCof.value;
+      };
+      return config;
+    });
+
     const clusterId = computed(() => $route.params.clusterId);
 
     const { isSharedCluster } = useCluster();
@@ -145,9 +166,9 @@ export default defineComponent({
       name: [
         {
           validator() {
-            return /^[a-z0-9]([-a-z0-9]*[a-z0-9]){2,64}?$/g.test(formData.value.name);
+            return /^[a-z0-9]([-a-z0-9]*[a-z0-9]){0,64}?$/g.test(formData.value.name);
           },
-          message: $i18n.t('命名空间名称只能包含小写字母、数字以及连字符(-)，连字符（-）后面必须接英文或者数字，且不能小于2个字符'),
+          message: $i18n.t('命名空间名称只能包含小写字母、数字以及连字符(-)，连字符（-）后面必须接英文或者数字'),
           trigger: 'blur',
         },
       ],
@@ -204,16 +225,20 @@ export default defineComponent({
           name = `ieg-${projectCode.value}-${name}`;
         }
         isLoading.value = true;
-        const result = await handleCreatedNamespace({
-          $clusterId: clusterId.value,
-          ...formData.value,
-          name,
-          quota: Object.assign({}, {
+        let quota = null;
+        if (formData.value.quota.cpuRequests || formData.value.quota.memoryRequests) {
+          quota = Object.assign({}, {
             cpuLimits: String(formData.value.quota.cpuRequests),
             cpuRequests: String(formData.value.quota.cpuRequests),
             memoryLimits: `${formData.value.quota.memoryRequests}Gi`,
             memoryRequests: `${formData.value.quota.memoryRequests}Gi`,
-          }),
+          });
+        }
+        const result = await handleCreatedNamespace({
+          $clusterId: clusterId.value,
+          ...formData.value,
+          name,
+          quota,
         });
         isLoading.value = false;
         if (result) {
@@ -230,7 +255,7 @@ export default defineComponent({
 
     return {
       rules,
-      quotaTipsCof,
+      quotaFormItemConfig,
       formData,
       isLoading,
       isSharedCluster,

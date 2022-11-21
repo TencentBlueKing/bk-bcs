@@ -464,12 +464,17 @@ export const deepEqual = (x, y) => {
   return false;
 };
 
-export const timeZoneTransForm = (time) => {
+export const timeZoneTransForm = (time, showTimeZone = true) => {
   time += ' GMT+0000';
   const timeZoneOffset = moment().utcOffset() / 60;
+  if (showTimeZone) {
+    return moment(time).utcOffset(timeZoneOffset)
+      .format('YYYY-MM-DD HH:mm:ss ZZ');
+  }
   return moment(time).utcOffset(timeZoneOffset)
-    .format('YYYY-MM-DD HH:mm:ss ZZ');
+    .format('YYYY-MM-DD HH:mm:ss');
 };
+
 
 export const chainable = (obj, path, defaultValue = undefined) => {
   const travel = regexp => String.prototype.split

@@ -1884,7 +1884,7 @@ export default {
   '1、在集群下，添加节点': ['1. Under cluster, add nodes'],
   '2、或者联系【{user}】': ['2. Or Contact【{user}】'],
   '确定要对{len}个节点进行{operate}操作？': ['Confirm to {operate} on {len} nodes?'],
-  '（可通过 {action} 创建更多作用在命名空间的变量）': ['(You can create more variables in the namespace through {action})'],
+  '可通过 {action} 创建更多作用在命名空间的变量': ['You can create more variables in the namespace through {action}'],
   '该项目未设置作用在命名空间范围的环境变量，无法设置变量值，可前往 {action} 设置': ['The project does not set an environment variable that acts on the namespace. You cannot set the variable value. You can go to the {action} to set.'],
   '您确定要删除Namespace: {name}吗？': ['Confirm want to delete the namespace: {name}?'],
   '确定删除Namespace: {name}的配额？': ['Confirm want to delete the namespace\'s quota: {name}?'],
@@ -3284,5 +3284,7 @@ export default {
   "点击复制变量名 {name}": [""],
   "确认删除变量 {name}": [""],
   "确认删除 {name} 等 {count} 个变量": [""],
-  "确认要对节点 {ip} 上的Pod进行驱逐": [""]
+  "确认要对节点 {ip} 上的Pod进行驱逐": [""],
+  "{used}核 / {total}核 (已使用/总量)": [""],
+  "{used} / {total} (已使用/总量)": [""],
 }
