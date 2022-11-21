@@ -23,5 +23,11 @@ import (
 
 // GetData 查询数据
 func GetData(ctx context.Context, resourceType string, opt *lib.StoreGetOption) ([]operator.M, error) {
-	return dbutils.GetData(ctx, dbConfig, resourceType, opt)
+	return dbutils.GetData(&dbutils.DBOperate{
+		Context:      ctx,
+		GetOpt:       opt,
+		SoftDeletion: true,
+		DBConfig:     dbConfig,
+		ResourceType: resourceType,
+	})
 }

@@ -26,6 +26,21 @@ import (
 	"github.com/opentracing/opentracing-go"
 )
 
+type DBOperate struct {
+	Data               operator.M
+	Context            context.Context
+	DBConfig           string
+	IndexName          string
+	ResourceType       string
+	SoftDeletion       bool
+	NeedTimeFormatList []string
+
+	Index     drivers.Index
+	GetOpt    *lib.StoreGetOption
+	PutOpt    *lib.StorePutOption
+	RemoveOpt *lib.StoreRemoveOption
+}
+
 // SetHTTPSpanContextInfo set restful.Request context
 func SetHTTPSpanContextInfo(req *restful.Request, handler string) opentracing.Span {
 	span, ctx := utils.StartSpanFromContext(req.Request.Context(), handler)
@@ -36,102 +51,106 @@ func SetHTTPSpanContextInfo(req *restful.Request, handler string) opentracing.Sp
 }
 
 // CreateIndex 创建索引
-func CreateIndex(ctx context.Context, dbConfig, resourceType string, index drivers.Index) error {
+func CreateIndex(o *DBOperate) error {
 	// 创建连接
 	db := lib.NewStore(
-		apiserver.GetAPIResource().GetDBClient(dbConfig),
-		apiserver.GetAPIResource().GetEventBus(dbConfig),
+		apiserver.GetAPIResource().GetDBClient(o.DBConfig),
+		apiserver.GetAPIResource().GetEventBus(o.DBConfig),
 	)
+	db.SetSoftDeletion(o.SoftDeletion)
 
-	return db.CreateIndex(ctx, resourceType, index)
+	return db.CreateIndex(o.Context, o.ResourceType, o.Index)
 }
 
 // DeleteData 移除
-func DeleteData(ctx context.Context, dbConfig, resourceType string, opt *lib.StoreRemoveOption) error {
+//func DeleteData(ctx context.Context, dbConfig, resourceType string, opt *lib.StoreRemoveOption) error {
+func DeleteData(o *DBOperate) error {
 	// 创建连接
 	db := lib.NewStore(
-		apiserver.GetAPIResource().GetDBClient(dbConfig),
-		apiserver.GetAPIResource().GetEventBus(dbConfig),
+		apiserver.GetAPIResource().GetDBClient(o.DBConfig),
+		apiserver.GetAPIResource().GetEventBus(o.DBConfig),
 	)
-	db.SetSoftDeletion(true)
+	db.SetSoftDeletion(o.SoftDeletion)
 
-	return db.Remove(ctx, resourceType, opt)
+	return db.Remove(o.Context, o.ResourceType, o.RemoveOpt)
 }
 
 // DeleteBatchData 批量删除
-func DeleteBatchData(ctx context.Context, dbConfig, resourceType string, getOption *lib.StoreGetOption,
-	rmOption *lib.StoreRemoveOption, needTimeFormatList []string) ([]operator.M, error) {
-	mList, err := GetData(ctx, dbConfig, resourceType, getOption)
+//func DeleteBatchData(ctx context.Context, dbConfig, resourceType string, getOption *lib.StoreGetOption,
+//	rmOption *lib.StoreRemoveOption, needTimeFormatList []string
+func DeleteBatchData(o *DBOperate) ([]operator.M, error) {
+	mList, err := GetData(o)
 	if err != nil {
 		return nil, err
 	}
-
-	if len(needTimeFormatList) > 0 {
-		lib.FormatTime(mList, needTimeFormatList)
+	if len(o.NeedTimeFormatList) > 0 {
+		lib.FormatTime(mList, o.NeedTimeFormatList)
 	}
 
-	err = DeleteData(ctx, dbConfig, resourceType, rmOption)
-	if err != nil {
+	if err = DeleteData(o); err != nil {
 		return nil, err
 	}
-
 	return mList, nil
 }
 
 // DeleteIndex 删除索引
-func DeleteIndex(ctx context.Context, dbConfig, resourceType string, indexName string) error {
+func DeleteIndex(o *DBOperate) error {
 	// 创建连接
 	db := lib.NewStore(
-		apiserver.GetAPIResource().GetDBClient(dbConfig),
-		apiserver.GetAPIResource().GetEventBus(dbConfig),
+		apiserver.GetAPIResource().GetDBClient(o.DBConfig),
+		apiserver.GetAPIResource().GetEventBus(o.DBConfig),
 	)
+	db.SetSoftDeletion(o.SoftDeletion)
 
-	return db.DeleteIndex(ctx, resourceType, indexName)
+	return db.DeleteIndex(o.Context, o.ResourceType, o.IndexName)
 }
 
 // PutData 新增
-func PutData(ctx context.Context, dbConfig, resourceType string, data operator.M, opt *lib.StorePutOption) error {
+func PutData(o *DBOperate) error {
 	// 创建连接
 	db := lib.NewStore(
-		apiserver.GetAPIResource().GetDBClient(dbConfig),
-		apiserver.GetAPIResource().GetEventBus(dbConfig),
+		apiserver.GetAPIResource().GetDBClient(o.DBConfig),
+		apiserver.GetAPIResource().GetEventBus(o.DBConfig),
 	)
+	db.SetSoftDeletion(o.SoftDeletion)
 
-	return db.Put(ctx, resourceType, data, opt)
+	return db.Put(o.Context, o.ResourceType, o.Data, o.PutOpt)
 }
 
 // GetData 查询数据
-func GetData(ctx context.Context, dbConfig, resourceType string, opt *lib.StoreGetOption) ([]operator.M, error) {
+func GetData(o *DBOperate) ([]operator.M, error) {
 	// 创建连接
 	db := lib.NewStore(
-		apiserver.GetAPIResource().GetDBClient(dbConfig),
-		apiserver.GetAPIResource().GetEventBus(dbConfig),
+		apiserver.GetAPIResource().GetDBClient(o.DBConfig),
+		apiserver.GetAPIResource().GetEventBus(o.DBConfig),
 	)
+	db.SetSoftDeletion(o.SoftDeletion)
 
-	return db.Get(ctx, resourceType, opt)
+	return db.Get(o.Context, o.ResourceType, o.GetOpt)
 }
 
 // Count 统计
-func Count(ctx context.Context, dbConfig, resourceType string, opt *lib.StoreGetOption) (int64, error) {
+func Count(o *DBOperate) (int64, error) {
 	// 创建连接
 	db := lib.NewStore(
-		apiserver.GetAPIResource().GetDBClient(dbConfig),
-		apiserver.GetAPIResource().GetEventBus(dbConfig),
+		apiserver.GetAPIResource().GetDBClient(o.DBConfig),
+		apiserver.GetAPIResource().GetEventBus(o.DBConfig),
 	)
-	db.SetSoftDeletion(true)
+	db.SetSoftDeletion(o.SoftDeletion)
 
-	return db.Count(ctx, resourceType, opt)
+	return db.Count(o.Context, o.ResourceType, o.GetOpt)
 }
 
 // HasIndex 是否有index
-func HasIndex(ctx context.Context, dbConfig, resourceType, indexName string) (bool, error) {
+func HasIndex(o *DBOperate) (bool, error) {
 	// 创建连接
 	store := lib.NewStore(
-		apiserver.GetAPIResource().GetDBClient(dbConfig),
-		apiserver.GetAPIResource().GetEventBus(dbConfig),
+		apiserver.GetAPIResource().GetDBClient(o.DBConfig),
+		apiserver.GetAPIResource().GetEventBus(o.DBConfig),
 	)
+	store.SetSoftDeletion(o.SoftDeletion)
 
-	return store.GetDB().Table(resourceType).HasIndex(ctx, indexName)
+	return store.GetDB().Table(o.ResourceType).HasIndex(o.Context, o.IndexName)
 }
 
 // HasTable 是否有table
@@ -146,15 +165,15 @@ func HasTable(ctx context.Context, dbConfig, resourceType string) (bool, error) 
 }
 
 // GetIndex index
-func GetIndex(ctx context.Context, dbConfig, resourceType string) (*drivers.Index, error) {
+func GetIndex(o *DBOperate) (*drivers.Index, error) {
 	// Obtain table index
 	db := lib.NewStore(
-		apiserver.GetAPIResource().GetDBClient(dbConfig),
-		apiserver.GetAPIResource().GetEventBus(dbConfig),
+		apiserver.GetAPIResource().GetDBClient(o.DBConfig),
+		apiserver.GetAPIResource().GetEventBus(o.DBConfig),
 	)
-	db.SetSoftDeletion(true)
+	db.SetSoftDeletion(o.SoftDeletion)
 
-	return db.GetIndex(ctx, resourceType)
+	return db.GetIndex(o.Context, o.ResourceType)
 }
 
 // GetList 获取list
@@ -165,6 +184,5 @@ func GetList(ctx context.Context, dbConfig string) ([]string, error) {
 		apiserver.GetAPIResource().GetEventBus(dbConfig),
 	)
 	store.SetSoftDeletion(true)
-
 	return store.GetDB().ListTableNames(ctx)
 }

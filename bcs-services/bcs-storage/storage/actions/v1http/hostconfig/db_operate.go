@@ -27,17 +27,33 @@ import (
 
 // PutData 更新/新增
 func PutData(ctx context.Context, resourceType string, data operator.M, opt *lib.StorePutOption) error {
-	return dbutils.PutData(ctx, dbConfig, resourceType, data, opt)
+	return dbutils.PutData(&dbutils.DBOperate{
+		PutOpt:       opt,
+		Context:      ctx,
+		Data:         data,
+		DBConfig:     dbConfig,
+		ResourceType: resourceType,
+	})
 }
 
 // RemoveDta 删除数据
 func RemoveDta(ctx context.Context, resourceType string, opt *lib.StoreRemoveOption) error {
-	return dbutils.DeleteData(ctx, dbConfig, resourceType, opt)
+	return dbutils.DeleteData(&dbutils.DBOperate{
+		Context:      ctx,
+		RemoveOpt:    opt,
+		DBConfig:     dbConfig,
+		ResourceType: resourceType,
+	})
 }
 
 // GetData 查询数据
 func GetData(ctx context.Context, resourceType string, opt *lib.StoreGetOption) ([]operator.M, error) {
-	return dbutils.GetData(ctx, dbConfig, resourceType, opt)
+	return dbutils.GetData(&dbutils.DBOperate{
+		GetOpt:       opt,
+		Context:      ctx,
+		DBConfig:     dbConfig,
+		ResourceType: resourceType,
+	})
 }
 
 func UpdateMany(ctx context.Context, resourceType string, condition *operator.Condition, data interface{}) error {

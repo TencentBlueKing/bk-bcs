@@ -23,18 +23,36 @@ import (
 
 // PutData 更新/新增
 func PutData(ctx context.Context, resourceType string, data operator.M, opt *lib.StorePutOption) error {
-	return dbutils.PutData(ctx, dbConfig, resourceType, data, opt)
+	return dbutils.PutData(&dbutils.DBOperate{
+		Context:      ctx,
+		PutOpt:       opt,
+		Data:         data,
+		SoftDeletion: true,
+		DBConfig:     dbConfig,
+		ResourceType: resourceType,
+	})
 }
 
 // RemoveData 删除数据
 func RemoveData(ctx context.Context, resourceType string, opt *lib.StoreRemoveOption) error {
-	return dbutils.DeleteData(ctx, dbConfig, resourceType, opt)
+	return dbutils.DeleteData(&dbutils.DBOperate{
+		RemoveOpt:    opt,
+		Context:      ctx,
+		SoftDeletion: true,
+		DBConfig:     dbConfig,
+		ResourceType: resourceType,
+	})
 }
 
 // GetData 查询数据
 func GetData(ctx context.Context, resourceType string, opt *lib.StoreGetOption) ([]operator.M, error) {
-	// 获取数据
-	mList, err := dbutils.GetData(ctx, dbConfig, resourceType, opt)
+	mList, err := dbutils.GetData(&dbutils.DBOperate{
+		Context:      ctx,
+		GetOpt:       opt,
+		SoftDeletion: true,
+		DBConfig:     dbConfig,
+		ResourceType: resourceType,
+	})
 	lib.FormatTime(mList, []string{createTimeTag, updateTimeTag})
 	return mList, err
 }

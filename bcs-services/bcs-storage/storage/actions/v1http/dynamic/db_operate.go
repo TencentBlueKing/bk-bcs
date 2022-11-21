@@ -29,7 +29,13 @@ func GetData(ctx context.Context, resourceType string, opt *lib.StoreGetOption) 
 		resourceType = eventDBConfig
 	}
 
-	return dbutils.GetData(ctx, dbConfig, resourceType, opt)
+	return dbutils.GetData(&dbutils.DBOperate{
+		Context:      ctx,
+		GetOpt:       opt,
+		SoftDeletion: true,
+		DBConfig:     dbConfig,
+		ResourceType: resourceType,
+	})
 }
 
 // PutData put data to db
@@ -43,34 +49,71 @@ func PutData(ctx context.Context, data, features operator.M, resourceFeatList []
 		CreateTimeKey: createTimeTag,
 		UpdateTimeKey: updateTimeTag,
 	}
-	return dbutils.PutData(ctx, dbConfig, table, data, opt)
+	return dbutils.PutData(&dbutils.DBOperate{
+		PutOpt:       opt,
+		Context:      ctx,
+		Data:         data,
+		SoftDeletion: true,
+		ResourceType: table,
+		DBConfig:     dbConfig,
+	})
 }
 
 // DeleteBatchData 批量删除
 func DeleteBatchData(ctx context.Context, resourceType string, getOption *lib.StoreGetOption,
-	rmOption *lib.StoreRemoveOption) ([]operator.M, error) {
-	return dbutils.DeleteBatchData(ctx, dbConfig, resourceType, getOption, rmOption, needTimeFormatList)
+	rmOpt *lib.StoreRemoveOption) ([]operator.M, error) {
+	return dbutils.DeleteBatchData(&dbutils.DBOperate{
+		Context:            ctx,
+		SoftDeletion:       true,
+		RemoveOpt:          rmOpt,
+		DBConfig:           dbConfig,
+		GetOpt:             getOption,
+		ResourceType:       resourceType,
+		NeedTimeFormatList: needTimeFormatList,
+	})
 }
 
 // Count 统计
 func Count(ctx context.Context, resourceType string, opt *lib.StoreGetOption) (int64, error) {
-	return dbutils.Count(ctx, dbConfig, resourceType, opt)
+	return dbutils.Count(&dbutils.DBOperate{
+		GetOpt:       opt,
+		Context:      ctx,
+		SoftDeletion: true,
+		DBConfig:     dbConfig,
+		ResourceType: resourceType,
+	})
 }
 
 // GetIndex index
 func GetIndex(ctx context.Context, resourceType string) (*drivers.Index, error) {
-	return dbutils.GetIndex(ctx, dbConfig, resourceType)
+	return dbutils.GetIndex(&dbutils.DBOperate{
+		Context:      ctx,
+		SoftDeletion: true,
+		DBConfig:     dbConfig,
+		ResourceType: resourceType,
+	})
 }
 
 // CreateIndex 创建索引
 func CreateIndex(ctx context.Context, resourceType string, index drivers.Index) error {
-	// 创建连接
-	return dbutils.CreateIndex(ctx, dbConfig, resourceType, index)
+	// 创建索引
+	return dbutils.CreateIndex(&dbutils.DBOperate{
+		Context:      ctx,
+		Index:        index,
+		DBConfig:     dbConfig,
+		ResourceType: resourceType,
+	})
 }
 
 // DeleteIndex 删除索引
 func DeleteIndex(ctx context.Context, resourceType string, indexName string) error {
-	return dbutils.DeleteIndex(ctx, dbConfig, resourceType, indexName)
+	return dbutils.DeleteIndex(&dbutils.DBOperate{
+		Context:      ctx,
+		SoftDeletion: true,
+		DBConfig:     dbConfig,
+		IndexName:    indexName,
+		ResourceType: resourceType,
+	})
 }
 
 // 业务方法
@@ -123,7 +166,14 @@ func PutCustomResourceToDB(ctx context.Context, resourceType string, data operat
 		opt.Cond = operator.NewBranchCondition(operator.And, condition...)
 	}
 
-	return dbutils.PutData(ctx, dbConfig, resourceType, data, opt)
+	return dbutils.PutData(&dbutils.DBOperate{
+		PutOpt:       opt,
+		Context:      ctx,
+		Data:         data,
+		SoftDeletion: true,
+		DBConfig:     dbConfig,
+		ResourceType: resourceType,
+	})
 }
 
 // CreateCustomResourceIndex 创建 Custom Resources 索引

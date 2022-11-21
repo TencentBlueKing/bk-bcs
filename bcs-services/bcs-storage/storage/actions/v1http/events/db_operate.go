@@ -37,7 +37,13 @@ import (
 
 //CreateHashIndex 创建hash index
 func CreateHashIndex(ctx context.Context, resourceType, indexName string) error {
-	hasIndex, err := dbutils.HasIndex(ctx, dbConfig, resourceType, indexName)
+	//hasIndex, err := dbutils.HasIndex(ctx, dbConfig, resourceType, indexName)
+	hasIndex, err := dbutils.HasIndex(&dbutils.DBOperate{
+		Context:      ctx,
+		DBConfig:     dbConfig,
+		IndexName:    indexName,
+		ResourceType: resourceType,
+	})
 	if err != nil {
 		return fmt.Errorf("failed to get index, err %s", err.Error())
 	}
@@ -56,7 +62,13 @@ func CreateHashIndex(ctx context.Context, resourceType, indexName string) error 
 	}
 
 	// 创建index
-	if err = dbutils.CreateIndex(ctx, dbConfig, resourceType, index); err != nil {
+	o := &dbutils.DBOperate{
+		Context:      ctx,
+		Index:        index,
+		DBConfig:     dbConfig,
+		ResourceType: resourceType,
+	}
+	if err = dbutils.CreateIndex(o); err != nil {
 		return fmt.Errorf("failed to create index, err %s", err.Error())
 	}
 
@@ -127,8 +139,16 @@ func AddEvent(ctx context.Context, resourceType string, data operator.M, opt *li
 	// 参数
 	dynamicData := lib.CopyMap(data)
 	data[createTimeTag] = time.Now()
+	// opt
+	o := &dbutils.DBOperate{
+		Context:      ctx,
+		PutOpt:       opt,
+		Data:         data,
+		DBConfig:     dbConfig,
+		ResourceType: resourceType,
+	}
 	// 添加数据
-	if err = dbutils.PutData(ctx, dbConfig, resourceType, data, opt); err != nil {
+	if err = dbutils.PutData(o); err != nil {
 		if strings.Contains(err.Error(), "duplicate key") {
 			return nil
 		}
@@ -155,6 +175,7 @@ func AddEvent(ctx context.Context, resourceType string, data operator.M, opt *li
 
 // GetEventList 获取 event list
 func GetEventList(ctx context.Context, clusterIDs []string, opt *lib.StoreGetOption) (mList []operator.M, count int64, err error) {
+	var o *dbutils.DBOperate
 	for _, clusterID := range clusterIDs {
 		// 查询或创建index
 		if err = queryOrCreateIndex(ctx, clusterID); err != nil {
@@ -162,13 +183,20 @@ func GetEventList(ctx context.Context, clusterIDs []string, opt *lib.StoreGetOpt
 		}
 
 		// 获取数据
-		eList, err := dbutils.GetData(ctx, dbConfig, TablePrefix+clusterID, opt)
+		o = &dbutils.DBOperate{
+			Context:      ctx,
+			GetOpt:       opt,
+			DBConfig:     dbConfig,
+			ResourceType: TablePrefix + clusterID,
+		}
+		eList, err := dbutils.GetData(o)
 		if err != nil {
 			return nil, 0, errors.Wrapf(err, "get event list failed.")
 		}
 
 		// 统计resourceType表
-		c, err := dbutils.Count(ctx, dbConfig, TablePrefix+clusterID, opt)
+		o.SoftDeletion = true
+		c, err := dbutils.Count(o)
 		if err != nil {
 			return nil, 0, errors.Wrapf(err, "count event list failed.")
 		}
@@ -178,7 +206,13 @@ func GetEventList(ctx context.Context, clusterIDs []string, opt *lib.StoreGetOpt
 	}
 
 	// 统计event表
-	countEvent, err := dbutils.Count(ctx, dbConfig, tableName, opt)
+	countEvent, err := dbutils.Count(&dbutils.DBOperate{
+		Context:      ctx,
+		GetOpt:       opt,
+		SoftDeletion: true,
+		DBConfig:     dbConfig,
+		ResourceType: tableName,
+	})
 	if err != nil {
 		return nil, 0, err
 	}
@@ -187,7 +221,13 @@ func GetEventList(ctx context.Context, clusterIDs []string, opt *lib.StoreGetOpt
 	mListLength := int64(len(mList))
 	if mListLength < opt.Limit {
 		opt.Limit -= mListLength
-		eventList, err := dbutils.GetData(ctx, dbConfig, tableName, opt)
+		o := &dbutils.DBOperate{
+			GetOpt:       opt,
+			Context:      ctx,
+			DBConfig:     dbConfig,
+			ResourceType: tableName,
+		}
+		eventList, err := dbutils.GetData(o)
 		if err != nil {
 			return nil, 0, err
 		}
@@ -211,7 +251,12 @@ func GetStore() *lib.Store {
 // queryOrCreateIndex 查询或创建索引
 func queryOrCreateIndex(ctx context.Context, clusterID string) error {
 	for _, idxName := range eventQueryIndexKeys {
-		hasIndex, err := dbutils.HasIndex(ctx, dbConfig, TablePrefix+clusterID, idxName+"_idx")
+		hasIndex, err := dbutils.HasIndex(&dbutils.DBOperate{
+			Context:      ctx,
+			DBConfig:     dbConfig,
+			ResourceType: resourceTypeTag,
+			IndexName:    idxName + "_idx",
+		})
 		if err != nil {
 			return errors.Wrapf(err, "failed to get index for  clusterID(%s) with  %s.", clusterID, idxName)
 		}
@@ -226,7 +271,13 @@ func queryOrCreateIndex(ctx context.Context, clusterID string) error {
 		index.Key = append(index.Key, bson.E{Key: idxName, Value: 1})
 		blog.Infof("create index for clusterID(%s) with key(%s)", clusterID, idxName)
 
-		if err = dbutils.CreateIndex(ctx, dbConfig, TablePrefix+clusterID, index); err != nil {
+		o := &dbutils.DBOperate{
+			Context:      ctx,
+			Index:        index,
+			DBConfig:     dbConfig,
+			ResourceType: TablePrefix + clusterID,
+		}
+		if err = dbutils.CreateIndex(o); err != nil {
 			return errors.Wrapf(err, "failed to create index for clusterID(%s) with %s.", clusterID, idxName)
 		}
 	}

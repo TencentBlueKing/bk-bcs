@@ -25,10 +25,21 @@ import (
 
 // PutData 新增
 func PutData(ctx context.Context, data operator.M, opt *lib.StorePutOption) error {
-	return dbutils.PutData(ctx, dbConfig, tableName, data, opt)
+	return dbutils.PutData(&dbutils.DBOperate{
+		PutOpt:       opt,
+		Context:      ctx,
+		Data:         data,
+		DBConfig:     dbConfig,
+		ResourceType: tableName,
+	})
 }
 
 // GetData 获取数据
 func GetData(ctx context.Context, opt *lib.StoreGetOption) ([]operator.M, error) {
-	return dbutils.GetData(ctx, dbConfig, tableName, opt)
+	return dbutils.GetData(&dbutils.DBOperate{
+		Context:      ctx,
+		GetOpt:       opt,
+		DBConfig:     dbConfig,
+		ResourceType: tableName,
+	})
 }

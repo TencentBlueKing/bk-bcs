@@ -30,11 +30,23 @@ import (
 
 // GetData 查询数据
 func GetData(ctx context.Context, resourceType string, opt *lib.StoreGetOption) ([]operator.M, error) {
-	return dbutils.GetData(ctx, dbConfig, resourceType, opt)
+	return dbutils.GetData(&dbutils.DBOperate{
+		GetOpt:       opt,
+		Context:      ctx,
+		DBConfig:     dbConfig,
+		ResourceType: resourceType,
+	})
 }
 
 func PutData(ctx context.Context, resourceType string, data operator.M, opt *lib.StorePutOption) error {
-	return dbutils.PutData(ctx, dbConfig, resourceType, data, opt)
+	//return dbutils.PutData(ctx, dbConfig, resourceType, data, opt)
+	return dbutils.PutData(&dbutils.DBOperate{
+		PutOpt:       opt,
+		Context:      ctx,
+		Data:         data,
+		DBConfig:     dbConfig,
+		ResourceType: resourceType,
+	})
 }
 
 // 业务方法
