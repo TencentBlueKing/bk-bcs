@@ -64,6 +64,8 @@
 </template>
 <script>
 import { isEmpty } from '@/common/util';
+import useProject from '@/views/app/use-project';
+
 export default {
   name: 'BcsUnregistry',
   props: {
@@ -139,16 +141,19 @@ export default {
              */
     async updateProject() {
       try {
+        const { updateProject } = useProject();
+
         this.isLoading = true;
-        await this.$store.dispatch('editProject', Object.assign({}, this.curProject, {
-          // deploy_type 值固定，就是原来页面上的：部署类型：容器部署
-          deploy_type: [2],
+        await updateProject(Object.assign({}, this.curProject, {
+          // deployType 值固定，就是原来页面上的：部署类型：容器部署
+          deployType: [2],
           // kind 业务编排类型
           kind: parseInt(this.kind, 10),
-          // use_bk 值固定，就是原来页面上的：使用蓝鲸部署服务
-          use_bk: true,
-          cc_app_id: this.ccKey,
+          // useBKRes 值固定，就是原来页面上的：使用蓝鲸部署服务
+          useBKRes: true,
+          businessID: this.ccKey,
         }));
+
         this.isLoading = false;
 
         this.$nextTick(() => {

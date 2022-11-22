@@ -22,12 +22,12 @@
                 :name="option.project_name">
                 <div
                   class="project-item" v-bk-tooltips="{
-                    content: `${$t('项目名称')}: ${option.project_name}<br/>${$t('业务ID')}: ${option.cc_app_id}`,
+                    content: `${$t('项目名称')}: ${option.project_name}<br/>${$t('业务ID')}: ${option.businessID}`,
                     placement: 'right',
                     boundary: 'window'
                   }">
                   {{option.project_name}}
-                  <span class="biz-id">{{`(${option.cc_app_id})`}}</span>
+                  <span class="biz-id">{{`(${option.businessID})`}}</span>
                 </div>
               </bcs-option>
               <template #extension>

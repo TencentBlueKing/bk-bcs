@@ -28,7 +28,7 @@ import SideNav from './app/side-nav.vue';
 import SideTerminal from '@/views/app/terminal.vue';
 import Unregistry from '@/views/app/unregistry.vue';
 import ContentHeader from '@/components/layout/Header.vue';
-import { getProjectList } from '@/api/base';
+import useProject from '@/views/app/use-project';
 import EmptyProjectGUide from '@/views/app/empty-project-guide.vue';
 
 export default defineComponent({
@@ -83,9 +83,10 @@ export default defineComponent({
       const _projectCode = projectCode || localProjectCode;
       if (!_projectCode || !projectList.value.length) return false;
 
-      const projectData = await getProjectList({
-        project_code: _projectCode,
-        with_perms: false,
+      const { getAllProjectList } = useProject();
+      const { data: projectData } = await getAllProjectList({
+        projectCode: _projectCode,
+        all: true,
       });
       if (projectData?.length) {
         // 项目存在，但是无权限

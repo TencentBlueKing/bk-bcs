@@ -385,7 +385,7 @@ export default defineComponent({
           })
           : await $store.dispatch('crdcontroller/getLogLinks', {
             container_ids: containerIDs.join(','),
-            bk_biz_id: curProject.value?.cc_app_id,
+            bk_biz_id: curProject.value?.businessID,
           });
       }
       containerLoading.value = false;

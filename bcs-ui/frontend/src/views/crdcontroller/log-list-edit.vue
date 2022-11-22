@@ -431,7 +431,7 @@ export default defineComponent({
       const result = await $store.dispatch('crdcontroller/updateLogCollect', {
         $clusterId: props.clusterId,
         $configId: data.config_id,
-        bk_biz_id: curProject.value.cc_app_id,
+        bk_biz_id: curProject.value.businessID,
         ...data,
       });
       if (result) {
@@ -445,7 +445,7 @@ export default defineComponent({
     const handleCreate = async (data) => {
       const result = await $store.dispatch('crdcontroller/createLogCollect', {
         $clusterId: props.clusterId,
-        bk_biz_id: curProject.value.cc_app_id,
+        bk_biz_id: curProject.value.businessID,
         ...data,
       });
       if (result) {

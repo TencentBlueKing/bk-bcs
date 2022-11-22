@@ -1111,7 +1111,7 @@ export default {
         namespace: '',
         config_type: 'custom',
         log_source_type: 'selected_containers',
-        app_id: this.curProject.cc_app_id,
+        app_id: this.curProject.businessID,
 
         labels: {},
         auto_add_pod_labels: 'false',
@@ -1455,7 +1455,7 @@ export default {
       try {
         const { clusterId } = this;
         const { getNamespaceData } = useNamespace();
-        
+
         const res = await getNamespaceData({
           $clusterId: clusterId,
         });

@@ -299,23 +299,6 @@ const store = new Vuex.Store({
     },
 
     /**
-         * 获取项目列表
-         *
-         * @param {Object} context store 上下文对象
-         * @param {Object} params 请求参数
-         * @param {Object} config 请求的配置
-         *
-         * @return {Promise} promise 对象
-         */
-    getProjectList(context, params, config = {}) {
-      return http.get(`${DEVOPS_BCS_API_URL}/api/authorized_projects/`, params, config).then((response) => {
-        const data = response.data || [];
-        context.commit('forceUpdateOnlineProjectList', data);
-        return data;
-      });
-    },
-
-    /**
          * 根据项目 id 查询项目的权限
          *
          * @param {Object} context store 上下文对象

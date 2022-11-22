@@ -503,7 +503,7 @@ export default defineComponent({
     const handleGetbkSopsList = async () => {
       bkSopsLoading.value = true;
       bkSopsList.value = await $store.dispatch('clustermanager/bkSopsList', {
-        $businessID: curProject.value.cc_app_id,
+        $businessID: curProject.value.businessID,
         operator: user.value.username,
         templateSource: 'business',
         scope: 'cmdb_biz',
@@ -526,7 +526,7 @@ export default defineComponent({
       sopsParamsLoading.value = true;
       const data = await $store.dispatch('clustermanager/bkSopsParamsList', {
         $templateID: bkSopsTemplateID.value,
-        $businessID: curProject.value.cc_app_id,
+        $businessID: curProject.value.businessID,
         operator: user.value.username,
         templateSource: 'business',
         scope: 'cmdb_biz',
@@ -574,7 +574,7 @@ export default defineComponent({
     const { start, stop } = useInterval(handlePollTask, 5000, true);
     const handleDebug = async () => {
       const { task } = await $store.dispatch('clustermanager/bkSopsDebug', {
-        businessID: String(curProject.value.cc_app_id),
+        businessID: String(curProject.value.businessID),
         templateID: String(bkSopsTemplateID.value),
         operator: user.value.username,
         templateSource: 'business',
@@ -630,7 +630,7 @@ export default defineComponent({
           plugins: {
             [bkSopsTemplateID.value]: {
               params: {
-                template_biz_id: String(curProject.value.cc_app_id),
+                template_biz_id: String(curProject.value.businessID),
                 template_id: bkSopsTemplateID.value,
                 template_user: user.value.username,
                 ...sopsParams.value,

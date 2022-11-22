@@ -377,7 +377,7 @@ export default defineComponent({
         clusterName: importClusterInfo.value.clusterName,
         description: importClusterInfo.value.description,
         projectID: curProject.value.project_id,
-        businessID: String(curProject.value.cc_app_id),
+        businessID: String(curProject.value.businessID),
         provider: importClusterInfo.value.importType === 'kubeconfig'
           ? 'bluekingCloud' : importClusterInfo.value.provider, // importClusterInfo.value.provider,
         region: importClusterInfo.value.importType === 'kubeconfig'

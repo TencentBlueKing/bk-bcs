@@ -31,15 +31,10 @@ export const syncNamespaceList = request('post', '/clusters/$clusterId/namespace
 export const withdrawNamespace = request('post', '/clusters/$clusterId/namespaces/$namespace/withdraw');
 
 const request2 = createRequest({
-  domain: window.DEVOPS_BCS_API_URL,
-  prefix: '',
+  domain: window.BCS_API_HOST,
+  prefix: '/bcsapi/v4/bcsproject/v1',
 });
 // project
-export const createProject = request2('post', '/api/nav/projects/');
-export const editProject = request2('put', '/api/nav/projects/$projectId/');
-export const logLinks = request2('post', '/api/datalog/projects/$projectId/log_links/');
-export const getProjectList = request2('get', '/api/nav/projects/');
-export const fetchBizTopo = request2('get', '/api/projects/$projectId/cc/topology/');
-export const fetchBizHosts = request2('post', '/api/projects/$projectId/cc/hosts/');
-export const getBizMaintainers = request2('get', '/api/projects/$projectId/biz_maintainers/');
-export const projectFeatureFlag = request2('get', '/api/projects/$projectId/clusters/$clusterId/feature_flags/');
+export const editProject = request2('put', '/projects/$projectId');
+export const fetchProjectList = request2('get', '/authorized_projects');
+export const fetchAllProjectList = request2('get', '/projects');

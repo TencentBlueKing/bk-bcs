@@ -21,7 +21,7 @@ import { bus } from '@/common/bus';
 import { userPermsByAction } from '@/api/base';
 import { newUserPermsByAction } from '@/api/modules/cluster-manager';
 import AppApplyPerm from '@/views/app/apply-perm.vue';
-
+import useProject from '@/views/app/use-project';
 export default {
   name: 'App',
   components: { Navigation, ProjectCreate, BkPaaSLogin, SharedClusterTips, AppApplyPerm },
@@ -126,10 +126,11 @@ export default {
   methods: {
     // 初始化BCS基本数据
     async initBcsBaseData() {
+      const { getProjectList } = useProject();
       this.isLoading = true;
       await Promise.all([
         this.$store.dispatch('userInfo'),
-        this.$store.dispatch('getProjectList'),
+        getProjectList(),
       ]).catch((err) => {
         console.error(err);
       });
