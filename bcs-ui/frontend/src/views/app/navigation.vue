@@ -1,7 +1,7 @@
 <template>
   <div>
     <bcs-navigation navigation-type="top-bottom" :need-menu="false">
-      <template slot="side-header">
+      <template #side-header>
         <span class="title-icon"><img src="@/images/bcs.svg" class="all-icon"></span>
         <span
           class="title-desc bcs-title-desc"

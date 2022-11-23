@@ -1,6 +1,7 @@
 <template>
   <LayoutContent
-    hide-back :title="$t('命名空间')"
+    hide-back
+    :title="$t('命名空间')"
     v-bkloading="{ isLoading: namespaceLoading }">
     <LayoutRow class="mb15">
       <template #left>
@@ -73,12 +74,12 @@
             }"
             v-bk-tooltips="{
               content: `${$t('{used}核 / {total}核 (已使用/总量)', {
-                used: row.used.cpuLimits,
+                used: row.used ? row.used.cpuLimits : 0,
                 total: row.quota.cpuLimits,
               })}`
             }"
           ></bcs-round-progress>
-          <span v-else v-bk-tooltips="{ content: $t('未开启命名空间配额') }">--</span>
+          <span class="ml-[16px]" v-else v-bk-tooltips="{ content: $t('未开启命名空间配额') }">--</span>
         </template>
       </bcs-table-column>
       <bcs-table-column :label="$t('内存使用率')" prop="memoryUseRate">
@@ -99,12 +100,12 @@
             }"
             v-bk-tooltips="{
               content: `${$t('{used} / {total} (已使用/总量)', {
-                used: `${unitConvert(row.used.memoryLimits, 'Gi', 'mem')}Gi`,
+                used: row.used ? `${unitConvert(row.used.memoryLimits, 'Gi', 'mem')}Gi` : 0,
                 total: row.quota.memoryLimits,
               })}`
             }"
           ></bcs-round-progress>
-          <span v-else v-bk-tooltips="{ content: $t('未开启命名空间') }">--</span>
+          <span class="ml-[16px]" v-else v-bk-tooltips="{ content: $t('未开启命名空间') }">--</span>
         </template>
       </bcs-table-column>
       <bcs-table-column :label="$t('创建时间')">
@@ -182,10 +183,10 @@
     <bcs-dialog
       v-model="setQuotaConf.isShow"
       :width="650"
-      :title="setQuotaConf.title"
+      :title="$t('配额管理：{nsName}', { nsName: setQuotaConf.namespace })"
       @confirm="updateNamespace"
       @cancel="cancelUpdateNamespace">
-      <bcs-form :label-width="200" form-type="vertical">
+      <bcs-form :label-width="200" form-type="vertical" v-bkloading="{ isLoading: setQuotaConf.loading }">
         <div class="mb-[20px]">
           {{$t('配额设置')}}
           <bk-switcher
@@ -194,34 +195,30 @@
             :disabled="isSharedCluster"
             size="small"
             :selected="showQuota"
-            @change="toggleShowQuota"
-            :key="showQuota">
+            :key="showQuota"
+            @change="toggleShowQuota">
           </bk-switcher>
         </div>
-        <bcs-form-item>
-          <div class="flex" v-if="showQuota">
-            <div class="flex mr-[20px]">
-              <span class="mr-[10px]">CPU</span>
-              <bcs-input
-                v-model="setQuotaConf.quota.cpuRequests"
-                class="w-[200px]"
-                type="number"
-                :min="1"
-                :precision="0">
-                <div class="group-text" slot="append">{{ $t('核') }}</div>
-              </bcs-input>
-            </div>
-            <div class="flex">
-              <span class="mr-[10px]">MEN</span>
-              <bcs-input
-                v-model="setQuotaConf.quota.memoryRequests"
-                class="w-[200px]"
-                type="number"
-                :min="1"
-                :precision="0">
-                <div class="group-text" slot="append">Gi</div>
-              </bcs-input>
-            </div>
+        <bcs-form-item v-if="showQuota">
+          <div class="flex mr-[20px]">
+            <span class="mr-[10px]">CPU</span>
+            <bcs-input
+              v-model="setQuotaConf.quota.cpuRequests"
+              class="w-[200px]"
+              type="number"
+              :min="1"
+              :precision="0">
+              <div class="group-text" slot="append">{{ $t('核') }}</div>
+            </bcs-input>
+            <span class="mx-[10px]">MEN</span>
+            <bcs-input
+              v-model="setQuotaConf.quota.memoryRequests"
+              class="w-[200px]"
+              type="number"
+              :min="1"
+              :precision="0">
+              <div class="group-text" slot="append">Gi</div>
+            </bcs-input>
           </div>
         </bcs-form-item>
       </bcs-form>
@@ -382,11 +379,13 @@ export default defineComponent({
 
     // 更新变量值
     const updateVariable = async () => {
+      variableLoading.value = true;
       const result = await handleUpdateVariablesList({
         $clusterId: clusterID.value,
         $namespace: setVariableConf.value.namespace,
         data: variablesList.value,
       });
+      variableLoading.value = false;
       if (result) {
         $bkMessage({
           theme: 'success',
@@ -397,10 +396,10 @@ export default defineComponent({
     };
 
     // 设置配额
-    const setQuotaConf = ref({
+    const initQuotaConf = {
+      loading: false,
       isShow: false,
       namespace: '',
-      title: '',
       labels: [],
       annotations: [],
       quota: {
@@ -409,25 +408,22 @@ export default defineComponent({
         memoryLimits: '',
         memoryRequests: '',
       },
-    });
+    };
+    const setQuotaConf = ref({ ...initQuotaConf });
 
     const curNamespace = ref<any>({});
     const showSetQuota = async (row) => {
+      setQuotaConf.value.isShow = true;
+      setQuotaConf.value.namespace = row.name;
+      setQuotaConf.value.loading = true;
       curNamespace.value = await getNamespaceInfo({
         $clusterId: clusterID.value,
         $name: row.name,
       });
+      setQuotaConf.value.loading = false;
 
-      if (curNamespace.value?.quota) {
-        showQuota.value = true;
-      } else {
-        showQuota.value = false;
-      }
-
-      const { name, labels, annotations, quota = {} } = curNamespace.value;
-      setQuotaConf.value.title = $i18n.t('配额管理：') + name;
-      setQuotaConf.value.isShow = true;
-      setQuotaConf.value.namespace = name;
+      showQuota.value = !!curNamespace.value.quota;
+      const { labels, annotations, quota = {} } = curNamespace.value;
       setQuotaConf.value.labels = labels;
       setQuotaConf.value.annotations = annotations;
       if (quota) {
@@ -467,14 +463,7 @@ export default defineComponent({
     };
 
     const cancelUpdateNamespace = () => {
-      setQuotaConf.value.quota = {
-        cpuLimits: '',
-        cpuRequests: '',
-        memoryLimits: '',
-        memoryRequests: '',
-      };
-      setQuotaConf.value.labels = [];
-      setQuotaConf.value.annotations = [];
+      setQuotaConf.value = { ...initQuotaConf };
     };
 
     const handleToCreatedPage = () => {
@@ -497,12 +486,12 @@ export default defineComponent({
 
     const unitMap = {
       cpu: {
-        list: ['k', 'M', 'G', 'T', 'P', 'E'],
+        list: ['m', '', 'k', 'M', 'G', 'T', 'P', 'E'],
         digit: 3,
         base: 10,
       },
       mem: {
-        list: ['Ki', 'Mi', 'Gi', 'Ti', 'Pi', 'Ei'],
+        list: ['', 'Ki', 'Mi', 'Gi', 'Ti', 'Pi', 'Ei'],
         digit: 10,
         base: 2,
       },
@@ -592,6 +581,7 @@ export default defineComponent({
     };
 
     watch(curClusterId, () => {
+      if (!curClusterId.value) return;
       clusterID.value = curClusterId.value;
     });
     watch(clusterID, () => {

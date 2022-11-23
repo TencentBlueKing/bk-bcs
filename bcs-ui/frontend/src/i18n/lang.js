@@ -3358,4 +3358,49 @@ export default {
     '查看Notes': [''],
   "{used}核 / {total}核 (已使用/总量)": [""],
   "{used} / {total} (已使用/总量)": [""],
+  "新建节点模板": [
+      "New node template"
+  ],
+  "编辑节点模板": [
+      "Edit node template"
+  ],
+  "节点模板": [
+      "Node template"
+  ],
+  "命名空间列举": [
+      "List of naming space"
+  ],
+  "云凭证创建": [
+      "Cloud voucher creation"
+  ],
+  "业务ID": [
+      "Business ID"
+  ],
+  "联系BK助手": [
+      "Contact BK Assistant"
+  ],
+  "蓝鲸桌面": [
+      "Blue whale desktop"
+  ],
+  "创建命名空间": [
+      "Create naming space"
+  ],
+  "配额调整": [
+      "Quota adjustment"
+  ],
+  "未开启命名空间配额": [
+      "Not opening the name space quota"
+  ],
+  "未开启命名空间": [
+      "No name space"
+  ],
+  "待审批": [
+      "Pending"
+  ],
+  "可生产实例数": [
+      "Number of producing instances"
+  ],
+  "设置变量值：": [
+      "Set variable value:"
+  ]
 }
