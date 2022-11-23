@@ -1,0 +1,49 @@
+{
+  "log_dir": "${log_dir}",
+  "v": ${bcsGitOpsManagerVerbosity},
+  "alsologtostderr": true,
+  "log_max_size": 500,
+  "log_max_num": 10,
+  "logtostderr": false,
+  "stderrthreshold": "2",
+  "registry": {
+    "endpoints": "${bcsEtcdHost}",
+    "cert": "${bcsEtcdCertFile}",
+    "key": "${bcsEtcdKeyFile}",
+    "ca": "${bcsEtcdCAFile}"
+  },
+  "address": "${localIp}",
+  "port": ${bcsGitOpsManagerPort},
+  "httpport": ${bcsGitOpsManagerHTTPPort},
+  "metricport": ${bcsGitOpsManagerMetricPort},
+  "serverca": "${caFile}",
+  "servercert": "${serverCertFile}",
+  "serverkey": "${serverKeyFile}",
+  "clientca": "${caFile}",
+  "clientcert": "${clientCertFile}",
+  "clientkey": "${clientKeyFile}",
+  "debug": ${bcsGitOpsManagerDebug},
+  "mode": "${bcsGitOpsManagerMode}",
+  "apigateway": "${bcsGitOpsManagerAPIGateway}",
+  "apigatewaytoken": "${bcsGitOpsManagerAPIGatewayToken}",
+  "apiconnecttoken": "${bcsGitOpsManagerAPIConnectToken}",
+  "apiconnecturl": "${bcsGitOpsManagerAPIConnectURL}",
+  "clustersyncinterval": ${bcsGitOpsManagerClusterSyncInterval},
+  "gitops": {
+    "service": "${bcsGitOpsManagerService}",
+    "user": "${bcsGitOpsManagerServiceUser}",
+    "pass": "${bcsGitOpsManagerServicePass}",
+    "adminnamespace": "${bcsGitOpsManagerServiceNamespace}"
+  },
+  "auth": {
+    "verifykeyfile": "${bcsJWTPublicKeyFile}",
+    "signkeyfile": "${bcsJWTPrivateKeyFile}",
+    "external": ${bcsIAMExternal},
+    "systemid": "${bcsIAMSystemID}",
+    "appcode": "${bcsIAMAppCode}",
+    "appsecret": "${bcsIAMAppSecret}",
+    "gateway": "${bcsIAMGateWayHost}",
+    "iamhost": "${bcsIAMHost}",
+    "bkiam": "${bcsIAMbkiHost}"
+  }
+}

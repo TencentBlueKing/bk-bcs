@@ -3,7 +3,6 @@ module github.com/Tencent/bk-bcs/bcs-common
 go 1.17
 
 replace (
-	github.com/Tencent/bk-bcs/bcs-common => ../bcs-common
 	github.com/coreos/bbolt v1.3.4 => go.etcd.io/bbolt v1.3.4
 	github.com/micro/go-micro/v2 => github.com/OvertimeDog/go-micro/v2 v2.9.3
 	go.etcd.io/bbolt v1.3.4 => github.com/coreos/bbolt v1.3.4

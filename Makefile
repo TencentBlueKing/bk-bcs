@@ -24,7 +24,7 @@ BCS_CONF_NETWORK_PATH=${WORKSPACE}/install/conf/bcs-runtime/bcs-k8s/bcs-network
 BCS_CONF_MESOS_PATH=${WORKSPACE}/install/conf/bcs-runtime/bcs-mesos
 BCS_CONF_SERVICES_PATH=${WORKSPACE}/install/conf/bcs-services
 
-LDFLAG=-ldflags "-X github.com/Tencent/bk-bcs/bcs-common/common/static.ZookeeperClientUser=${bcs_zk_client_user} \
+export LDFLAG=-ldflags "-X github.com/Tencent/bk-bcs/bcs-common/common/static.ZookeeperClientUser=${bcs_zk_client_user} \
  -X github.com/Tencent/bk-bcs/bcs-common/common/static.ZookeeperClientPwd=${bcs_zk_client_pwd} \
  -X github.com/Tencent/bk-bcs/bcs-common/common/static.EncryptionKey=${bcs_encryption_key} \
  -X github.com/Tencent/bk-bcs/bcs-common/common/static.ServerCertPwd=${bcs_server_cert_pwd} \
@@ -39,8 +39,8 @@ LDFLAG=-ldflags "-X github.com/Tencent/bk-bcs/bcs-common/common/static.Zookeeper
  -X github.com/Tencent/bk-bcs/bcs-common/common/version.BcsEdition=${bcs_edition}"
 
 # build path config
-PACKAGEPATH=./build/bcs.${VERSION}
-EXPORTPATH=./build/api_export
+export PACKAGEPATH=./build/bcs.${VERSION}
+export SCENARIOSPACKAGE=${WORKSPACE}/${PACKAGEPATH}/bcs-scenarios
 
 # options
 default:bcs-runtime bcs-scenarios bcs-services #TODO: bcs-resources
@@ -64,9 +64,11 @@ bcs-services:api client bkcmdb-synchronizer cpuset gateway log-manager \
 	user-manager cluster-manager tools alert-manager k8s-watch kube-agent data-manager \
     helm-manager project-manager nodegroup-manager
 
-bcs-scenarios: kourse
+bcs-scenarios: kourse gitops
 
 kourse: gamedeployment gamestatefulset hook-operator
+
+gitops: gitops-proxy gitops-manager
 
 allpack: svcpack k8spack mmpack mnpack netpack
 	cd build && tar -czf bcs.${VERSION}.tgz bcs.${VERSION}
@@ -100,7 +102,6 @@ netpack:
 pre:
 	@echo "git tag: ${GITTAG}"
 	mkdir -p ${PACKAGEPATH}
-	mkdir -p ${EXPORTPATH}
 	go mod tidy
 	go fmt ./...
 	cd ./scripts && chmod +x vet.sh && ./vet.sh
@@ -458,6 +459,14 @@ nodegroup-manager:pre
 	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-nodegroup-manager
 	cp -R ${BCS_CONF_SERVICES_PATH}/bcs-nodegroup-manager ${PACKAGEPATH}/bcs-services
 	cd bcs-services/bcs-nodegroup-manager/ && go mod tidy -go=1.16 && go mod tidy -go=1.17 && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-nodegroup-manager/bcs-nodegroup-manager ./main.go
+
+gitops-proxy:
+	mkdir -p ${SCENARIOSPACKAGE}/bcs-gitops-proxy
+	cd bcs-scenarios/bcs-gitops-manager && make proxy && cd -
+
+gitops-manager:
+	mkdir -p ${SCENARIOSPACKAGE}/bcs-gitops-manager
+	cd bcs-scenarios/bcs-gitops-manager && make manager && cd -
 
 test: test-bcs-runtime
 

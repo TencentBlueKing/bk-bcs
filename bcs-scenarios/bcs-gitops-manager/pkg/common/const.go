@@ -1,0 +1,43 @@
+/*
+ * Tencent is pleased to support the open source community by making Blueking Container Service available.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
+ * Licensed under the MIT License (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ * http://opensource.org/licenses/MIT
+ * Unless required by applicable law or agreed to in writing, software distributed under
+ * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package common
+
+const (
+	// ModeTunnel tunnel
+	ModeTunnel = "tunnel"
+	// ModeService service
+	ModeService = "service"
+	// ProxyName for proxy
+	ProxyName = "gitopsproxy.bkbcs.tencent.com"
+	// ServiceName for manager
+	ServiceName = "gitopsmanager.bkbcs.tencent.com"
+	// MetaHTTPKey key for http port
+	MetaHTTPKey = "httpport"
+	// ConnectURL for peer interconnection
+	ConnectURI = "/gitopsmanager/websocket/connect"
+	// GatewayURL for gitops manager connect through bcs gateway
+	GatewayURL = "/bcsapi/v4" + ConnectURI
+
+	// GitOpsProxyURL proxy path for gitops
+	GitOpsProxyURL = "/gitopsmanager/proxy"
+
+	// HeaderServerAddressKey header key for cluster info in websocket tunnel
+	HeaderServerAddressKey = "BCS-GITOPS-ServerAddress"
+	// HeaderBCSClient header for bcs client
+	HeaderBCSClient = "X-BCS-Client"
+
+	// ProjectIDKey ID key indexer
+	ProjectIDKey = "bkbcs.tencent.com/projectID"
+	// ProjectBusinessIDKey for bcs business indexer
+	ProjectBusinessIDKey = "bkbcs.tencent.com/businessID"
+)
