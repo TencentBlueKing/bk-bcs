@@ -143,15 +143,9 @@ func (s *BKMonitorStore) Series(r *storepb.SeriesRequest, srv storepb.Store_Seri
 	ctx := srv.Context()
 	klog.InfoS(clientutil.DumpPromQL(r), "request_id", store.RequestIDValue(ctx), "minTime", r.MinTime, "maxTime", r.MaxTime, "step", r.QueryHints.StepMillis)
 
-	var step int64
-	if r.QueryHints.StepMillis > 0 {
-		step = r.QueryHints.StepMillis / 1000
-	}
-
-	// 最小步长
-	if step < clientutil.MinStepSeconds {
-		step = clientutil.MinStepSeconds
-	}
+	// step 固定1分钟
+	// 注意: 目前实现的 aggrChunk 为 Raw 格式, 不支持降采样, 支持参考 https://thanos.io/tip/components/compact.md/
+	step := int64(clientutil.MinStepSeconds)
 
 	// 毫秒转换为秒
 	start := time.UnixMilli(r.MinTime).Unix()

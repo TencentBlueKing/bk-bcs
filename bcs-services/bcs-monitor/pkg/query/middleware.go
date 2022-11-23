@@ -81,6 +81,10 @@ func (t *tenantAuthMiddleware) NewHandler(handlerName string, handler http.Handl
 			"label_matchers", fmt.Sprintf("%s", labelMatchers),
 			"X-Scope-ClusterId", scopeClusteID,
 			"req", fmt.Sprintf("%s %s", r.Method, r.URL),
+			"query", r.Form.Get("query"),
+			"start", r.Form.Get("start"),
+			"end", r.Form.Get("end"),
+			"step", r.Form.Get("step"),
 		)
 
 		// 返回的 header 写入 request_id

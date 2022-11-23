@@ -15,7 +15,7 @@ package clientutil
 
 const (
 	// MinStepSeconds 最小步长, 单位秒
-	MinStepSeconds = 30
+	MinStepSeconds = 60
 	// SeriesStepDelta 查询 Series 的回溯步长, 单位秒
 	SeriesStepDeltaSeconds = 60 * 5
 )
