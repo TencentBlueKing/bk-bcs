@@ -27,6 +27,8 @@ local bcs_token_user_map_cache = core.lrucache.new(
     {
         ttl = 300,
         count = 1000,
+        serial_creating = true,
+        invalid_stale = true,
     }
 )
 
@@ -118,7 +120,7 @@ function TokenAuthentication:fetch_credential(conf, ctx)
     end
 
     local m, err = ngx.re.match(auth_header, "Bearer\\s(.+)", "jo")
-    if err then
+    if err or not m then
         -- error authorization
         return {
             user_token = nil,
@@ -170,9 +172,15 @@ local APIGWAuthentication = {}
 
 -- 获取 cookie 中的用户凭证信息
 function APIGWAuthentication:fetch_credential(conf, ctx)
+    local credential = {
+        token_type = TOKEN_TYPE_APIGW,
+        user_token = {},
+    }
+    local bcs_credential = TokenAuthentication:fetch_credential(conf, ctx)
+    credential.bcs_token = bcs_credential.user_token
     local jwt_str = core.request.header(ctx, "X-Bkapi-JWT")
     if not jwt_str then
-        return TokenAuthentication:fetch_credential(conf, ctx)
+        return bcs_credential
     end
 
     local jwt_obj = resty_jwt:load_jwt(jwt_str)
@@ -206,18 +214,30 @@ function APIGWAuthentication:fetch_credential(conf, ctx)
     if jwt_obj.payload.app and not jwt_obj.payload.app.verified and jwt_obj.payload.user and
         not jwt_obj.payload.user.verified then
         core.log.warn("Neither app nor user has been verified, jwt obj: " .. core.json.encode(jwt_obj))
-        return TokenAuthentication:fetch_credential(conf, ctx)
+        return bcs_credential
     end
     local redis_key = jwt_obj.payload.app.app_code
-    local credential = {
-        token_type = TOKEN_TYPE_APIGW,
-    }
-    credential["user_token"] = {
-        bk_app_code = jwt_obj.payload.app.app_code,
-    }
+    credential["user_token"]["bk_app_code"] = jwt_obj.payload.app.app_code
     if jwt_obj.payload.user and jwt_obj.payload.user.verified then
         credential["user_token"]["username"] = jwt_obj.payload.user.username
         redis_key = redis_key .. "," .. jwt_obj.payload.user.username
+    end
+    if credential.bcs_token then
+        local bcs_payload = bcs_token_user_map_cache(credential.bcs_token, nil, function ()
+            return nil, nil
+        end)
+        if not bcs_payload then
+            local bcs_jwt_token = TokenAuthentication:get_jwt({user_token=credential.bcs_token}, conf)
+            bcs_payload = get_username_by_TokenAuthentication_jwt(bcs_jwt_token)
+        end
+
+        if bcs_payload then
+            credential.user_token.sub_type = bcs_payload.sub_type
+            credential.user_token.client_id = bcs_payload.client_id
+            credential.user_token.client_secret = bcs_payload.client_secret
+
+            redis_key = redis_key .. "," .. credential.bcs_token
+        end
     end
     credential["redis_key"] = redis_key
     core.request.set_header(ctx, "X-Bkapi-JWT", nil)
@@ -232,16 +252,15 @@ function APIGWAuthentication:injected_user_info(credential, jwt_str, conf, ctx)
     if credential.token_type == TOKEN_TYPE_BCS then
         return TokenAuthentication:injected_user_info(credential, jwt_str, conf, ctx)
     end
-    if credential.user_token.username then
-        return {
-            username = credential.user_token.username,
-            usertype = "user",
-        }
+    local retV = credential.user_token
+    if retV.sub_type then
+        retV.usertype = retV.sub_type
+    elseif retV.username then
+        retV.usertype = "user"
+    else 
+        retV.usertype = "bk_app"
     end
-    return {
-        username = credential.user_token.bk_app_code,
-        usertype = "bk_app",
-    }
+    return retV
 end
 
 function APIGWAuthentication:get_jwt(credential, conf)
@@ -264,14 +283,14 @@ function _M:new(use_login, run_env)
     self.__index = self
 
     if not use_login then
-        self.backend = APIGWAuthentication
+        o.backend = APIGWAuthentication
         return o
     end
 
     if run_env == RUN_ON_CE then
-        self.backend = LoginTokenAuthentication
+        o.backend = LoginTokenAuthentication
     else
-        self.backend = LoginTicketAuthentication
+        o.backend = LoginTicketAuthentication
     end
 
     return o
@@ -295,6 +314,8 @@ function _M:authenticate(conf, ctx)
         end
         ctx.var["bcs_usertype"] = userinfo.usertype
         ctx.var["bcs_username"] = userinfo.username
+        ctx.var["bk_app_code"] = userinfo.bk_app_code
+        ctx.var["bcs_client_id"] = userinfo.client_id
     end
     return jwt_str
 end

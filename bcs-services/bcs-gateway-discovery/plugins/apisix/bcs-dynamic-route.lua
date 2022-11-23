@@ -257,6 +257,12 @@ local function periodly_sync_cluster_credentials_in_master()
         return nil
     end
 
+    local exists_clusters_ids = credential_global_cache:get_keys(0)
+    local delete_clusters_map = {}
+    for _, cluster_id in ipairs(exists_clusters_ids) do
+        delete_clusters_map[cluster_id] = true
+    end
+
     for _, cluster_credential in ipairs(data["data"]) do
         local cluster_info_cache = credential_global_cache:get(cluster_credential["clusterID"])
         local cluster_info = {}
@@ -326,6 +332,10 @@ local function periodly_sync_cluster_credentials_in_master()
             core.log.info("Cluster (" .. cluster_credential["clusterID"] .. ") credential does not change")
         end
         ::continue::
+        delete_clusters_map[cluster_credential["clusterID"]] = nil
+    end
+    for cluster_id, _ in pairs(delete_clusters_map) do
+        credential_global_cache:delete(cluster_id)
     end
     last_sync_status = true
 end
