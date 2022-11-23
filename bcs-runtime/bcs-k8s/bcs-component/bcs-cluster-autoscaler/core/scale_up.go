@@ -265,7 +265,7 @@ func ScaleUp(context *contextinternal.Context, processors *ca_processors.Autosca
 	clusterStateRegistry *clusterstate.ClusterStateRegistry, unschedulablePods []*apiv1.Pod, nodes []*apiv1.Node,
 	daemonSets []*appsv1.DaemonSet, nodeInfos map[string]*schedulernodeinfo.NodeInfo,
 	ignoredTaints taintKeySet, existingNodeInfos map[string]*schedulernodeinfo.NodeInfo,
-	bufferNotEnough bool) (*status.ScaleUpStatus, errors.AutoscalerError) {
+	bufferNotEnough bool, maxBulkScaleUpCount int) (*status.ScaleUpStatus, errors.AutoscalerError) {
 	// From now on we only care about unschedulable pods that were marked after the newest
 	// node became available for the scheduler.
 	if len(unschedulablePods) == 0 && !bufferNotEnough {
@@ -539,6 +539,12 @@ func ScaleUp(context *contextinternal.Context, processors *ca_processors.Autosca
 			bestOption.NodeGroup, resourceLimiter)
 		if err != nil {
 			return &status.ScaleUpStatus{Result: status.ScaleUpError, CreateNodeGroupResults: createNodeGroupResults}, err
+		}
+		// apply scale up limits for node
+		if maxBulkScaleUpCount > 0 && newNodes > maxBulkScaleUpCount {
+			klog.Infof("newNodes(%d) is larger than maxBulkScaleUpCount(%d), set to maxBulkScaleUpCount",
+				newNodes, maxBulkScaleUpCount)
+			newNodes = maxBulkScaleUpCount
 		}
 
 		targetNodeGroups := []cloudprovider.NodeGroup{bestOption.NodeGroup}

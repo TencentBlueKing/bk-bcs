@@ -145,6 +145,8 @@ var (
 	maxBulkSoftTaintCount = flag.Int("max-bulk-soft-taint-count", 10,
 		"Maximum number of nodes that can be tainted/untainted PreferNoSchedule at the same time."+
 			"Set to 0 to turn off such tainting.")
+	maxBulkScaleUpCount = flag.Int("max-bulk-scale-up-count", 100,
+		"Maximum number of nodes that can be scale up at the same time. Set to 0 to turn off such scaling up")
 	maxBulkSoftTaintTime = flag.Duration("max-bulk-soft-taint-time", 3*time.Second,
 		"Maximum duration of tainting/untainting nodes as PreferNoSchedule at the same time.")
 	maxEmptyBulkDeleteFlag = flag.Int("max-empty-bulk-delete", 10,
@@ -311,6 +313,7 @@ func createAutoscalingOptions() scalingconfig.Options {
 		WebhookMode:           *webhookMode,
 		WebhookModeConfig:     *webhookModeConfig,
 		WebhookModeToken:      *webhookModeToken,
+		MaxBulkScaleUpCount:   *maxBulkScaleUpCount,
 	}
 }
 

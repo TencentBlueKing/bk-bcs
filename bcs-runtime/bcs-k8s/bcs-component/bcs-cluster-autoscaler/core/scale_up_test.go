@@ -23,7 +23,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	appsv1 "k8s.io/api/apps/v1"
 	apiv1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/resource"
+	// "k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/autoscaler/cluster-autoscaler/cloudprovider"
 	testprovider "k8s.io/autoscaler/cluster-autoscaler/cloudprovider/test"
@@ -469,7 +469,7 @@ func runSimpleScaleUpTest(t *testing.T, config *scaleTestConfig) *scaleTestResul
 	processors := NewTestProcessors()
 
 	scaleUpStatus, err := ScaleUp(&context, processors, clusterState, extraPods, nodes, []*appsv1.DaemonSet{},
-		nodeInfos, nil, nil, false)
+		nodeInfos, nil, nil, false, 0)
 	processors.ScaleUpStatusProcessor.Process(context.AutoscalingContext, scaleUpStatus)
 
 	assert.NoError(t, err)
@@ -615,7 +615,7 @@ func TestScaleUpUnhealthy(t *testing.T) {
 
 	processors := NewTestProcessors()
 	scaleUpStatus, err := ScaleUp(&context, processors, clusterState, []*apiv1.Pod{p3}, nodes, []*appsv1.DaemonSet{},
-		nodeInfos, nil, nil, false)
+		nodeInfos, nil, nil, false, 0)
 
 	assert.NoError(t, err)
 	// Node group is unhealthy.
@@ -660,7 +660,7 @@ func TestScaleUpNoHelp(t *testing.T) {
 
 	processors := NewTestProcessors()
 	scaleUpStatus, err := ScaleUp(&context, processors, clusterState, []*apiv1.Pod{p3}, nodes, []*appsv1.DaemonSet{},
-		nodeInfos, nil, nil, false)
+		nodeInfos, nil, nil, false, 0)
 	processors.ScaleUpStatusProcessor.Process(context.AutoscalingContext, scaleUpStatus)
 
 	assert.NoError(t, err)
@@ -730,13 +730,13 @@ func TestScaleUpBalanceGroups(t *testing.T) {
 	pods := make([]*apiv1.Pod, 0)
 	for i := 0; i < 2; i++ {
 		tmp := BuildTestPod(fmt.Sprintf("test-pod-%v", i), 80, 0)
-		tmp.Spec.Containers[0].Resources.Requests["cloud.bkbcs.tencent.com/eip"] = *resource.NewQuantity(1, resource.DecimalSI)
+		// tmp.Spec.Containers[0].Resources.Requests["cloud.bkbcs.tencent.com/eip"] = *resource.NewQuantity(1, resource.DecimalSI)
 		pods = append(pods, tmp)
 	}
 
 	processors := NewTestProcessors()
 	scaleUpStatus, typedErr := ScaleUp(&context, processors, clusterState, pods, nodes, []*appsv1.DaemonSet{},
-		nodeInfos, nil, nil, false)
+		nodeInfos, nil, nil, false, 0)
 
 	assert.NoError(t, typedErr)
 	assert.True(t, scaleUpStatus.WasSuccessful())
@@ -745,6 +745,9 @@ func TestScaleUpBalanceGroups(t *testing.T) {
 		groupMap[group.Id()] = group
 	}
 
+	ng1size, _ := groupMap["ng1"].TargetSize()
+	ng4size, _ := groupMap["ng4"].TargetSize()
+	t.Logf("ng1:%d  ng4:%d", ng1size, ng4size)
 	ng2size, err := groupMap["ng2"].TargetSize()
 	assert.NoError(t, err)
 	ng3size, err := groupMap["ng3"].TargetSize()
@@ -801,7 +804,7 @@ func TestScaleUpAutoprovisionedNodeGroup(t *testing.T) {
 		context.PredicateChecker, nil)
 
 	scaleUpStatus, err := ScaleUp(&context, processors, clusterState, []*apiv1.Pod{p1}, nodes, []*appsv1.DaemonSet{},
-		nodeInfos, nil, nil, false)
+		nodeInfos, nil, nil, false, 0)
 	assert.NoError(t, err)
 	assert.True(t, scaleUpStatus.WasSuccessful())
 	assert.Equal(t, "autoprovisioned-T1", getStringFromChan(createdGroups))
@@ -902,7 +905,9 @@ func TestGetUpcomingNodes(t *testing.T) {
 	// nodes = append(nodes, t1)
 	nodeInfos, _ := getNodeInfosForGroups(nodes, nil, provider, listers,
 		[]*appsv1.DaemonSet{}, context.PredicateChecker, nil)
-	clusterState := clusterstate.NewClusterStateRegistry(provider, clusterstate.ClusterStateRegistryConfig{},
+	clusterState := clusterstate.NewClusterStateRegistry(provider, clusterstate.ClusterStateRegistryConfig{
+		MaxNodeStartupTime: 20 * time.Minute, MaxNodeStartScheduleTime: 20 * time.Minute,
+	},
 		context.LogRecorder, newBackoff())
 
 	err := clusterState.UpdateNodes(nodes, nodeInfos, time.Now())

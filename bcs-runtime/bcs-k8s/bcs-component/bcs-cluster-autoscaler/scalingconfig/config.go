@@ -24,4 +24,5 @@ type Options struct {
 	WebhookMode           string
 	WebhookModeConfig     string
 	WebhookModeToken      string
+	MaxBulkScaleUpCount   int
 }

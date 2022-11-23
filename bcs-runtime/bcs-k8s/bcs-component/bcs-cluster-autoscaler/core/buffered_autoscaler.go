@@ -61,12 +61,13 @@ type BufferedAutoscaler struct {
 	processorCallbacks      *bufferedAutoscalerProcessorCallbacks
 	initialized             bool
 	// Caches nodeInfo computed for previously seen nodes
-	nodeInfoCache map[string]*schedulernodeinfo.NodeInfo
-	ignoredTaints taintKeySet
-	CPURatio      float64
-	MemRatio      float64
-	ratio         float64
-	webhook       Webhook
+	nodeInfoCache       map[string]*schedulernodeinfo.NodeInfo
+	ignoredTaints       taintKeySet
+	CPURatio            float64
+	MemRatio            float64
+	ratio               float64
+	webhook             Webhook
+	maxBulkScaleUpCount int
 }
 
 type bufferedAutoscalerProcessorCallbacks struct {
@@ -165,6 +166,7 @@ func NewBufferedAutoscaler(
 		MemRatio:                memRatio,
 		ratio:                   ratio,
 		webhook:                 webhook,
+		maxBulkScaleUpCount:     opts.MaxBulkScaleUpCount,
 	}
 }
 
@@ -608,7 +610,7 @@ func (b *BufferedAutoscaler) doScaleUp(autoscalingContext *contextinternal.Conte
 
 		scaleUpStatus, typedErr = ScaleUp(autoscalingContext, b.processors, b.clusterStateRegistry, unschedulablePodsToHelp,
 			readyNodes, daemonsets,
-			nodeInfosForGroups, b.ignoredTaints, nodeInfos, bufferNotEnough)
+			nodeInfosForGroups, b.ignoredTaints, nodeInfos, bufferNotEnough, b.maxBulkScaleUpCount)
 
 		metrics.UpdateDurationFromStart(metrics.ScaleUp, scaleUpStart)
 
