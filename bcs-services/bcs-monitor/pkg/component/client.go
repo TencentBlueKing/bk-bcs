@@ -124,13 +124,15 @@ func restyBeforeRequestHook(c *resty.Client, r *http.Request) error {
 func GetClient() *resty.Client {
 	if globalClient == nil {
 		clientOnce.Do(func() {
-			globalClient = resty.New().SetTimeout(timeout)
-			globalClient = globalClient.SetDebug(false) // 更多详情, 可以开启为 true
-			globalClient.SetDebugBodyLimit(1024)
-			globalClient.OnAfterResponse(restyAfterResponseHook)
-			globalClient.SetPreRequestHook(restyBeforeRequestHook)
-			globalClient.OnError(restyErrHook)
-			globalClient.SetTLSClientConfig(&tls.Config{InsecureSkipVerify: true})
+			globalClient = resty.New().
+				SetTimeout(timeout).
+				SetDebug(false).   // 更多详情, 可以开启为 true
+				SetCookieJar(nil). // 后台API去掉 cookie 记录
+				SetDebugBodyLimit(1024).
+				OnAfterResponse(restyAfterResponseHook).
+				SetPreRequestHook(restyBeforeRequestHook).
+				OnError(restyErrHook).
+				SetTLSClientConfig(&tls.Config{InsecureSkipVerify: true})
 		})
 	}
 	return globalClient

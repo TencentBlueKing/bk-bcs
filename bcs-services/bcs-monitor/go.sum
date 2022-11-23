@@ -160,8 +160,8 @@ github.com/SAP/go-hdb v0.14.1/go.mod h1:7fdQLVC2lER3urZLjZCm0AuMQfApof92n3aylBPE
 github.com/Shopify/logrus-bugsnag v0.0.0-20171204204709-577dee27f20d/go.mod h1:HI8ITrYtUY+O+ZhtlqUnD8+KwNPOyugEhfP9fdUIaEQ=
 github.com/Shopify/sarama v1.19.0/go.mod h1:FVkBWblsNy7DGZRfXLU0O9RCGt5g3g3yEuWXgklEdEo=
 github.com/Shopify/toxiproxy v2.1.4+incompatible/go.mod h1:OXgGpZ6Cli1/URJOF1DMxUHB2q5Ap20/P/eIdh4G0pI=
-github.com/Tencent/bk-bcs/bcs-common v0.0.0-20220915083455-f4c72dc09513 h1:7Wq9L1mF3HkpR2qWi3iqMUYrco3o6/hFvxGz18eKrig=
-github.com/Tencent/bk-bcs/bcs-common v0.0.0-20220915083455-f4c72dc09513/go.mod h1:xYIUEifDZ8EALwhfvL9VuBQPDD1LmOYd2f6XjZRdPYg=
+github.com/Tencent/bk-bcs/bcs-common v0.0.0-20221122095608-e579fa4ff337 h1:8L7jTQOLtrPRCHWttuoeNpRwSW/Dvi8OL9SVSYc54ZM=
+github.com/Tencent/bk-bcs/bcs-common v0.0.0-20221122095608-e579fa4ff337/go.mod h1:OVPjKBZ2X/rgTYwcrE69GxscKr2rqgWMyrBxAxWrxu0=
 github.com/TencentBlueKing/bkmonitor-kits v0.2.0 h1:qC+XUIbMhql0WPlZBUL3y+vsyy/In1uRkHEUOoV+P8M=
 github.com/TencentBlueKing/bkmonitor-kits v0.2.0/go.mod h1:8FbJVwbjQ4Z3oUIysJp8j+zfPNlDmEjyGn8kqED7ExQ=
 github.com/VividCortex/gohistogram v1.0.0/go.mod h1:Pf5mBqqDxYaXu3hDrrU+w6nw50o/4+TcAqDqk/vUH7g=
@@ -2206,7 +2206,7 @@ golang.org/x/xerrors v0.0.0-20190717185122-a985d3407aa7/go.mod h1:I/5z698sn9Ka8T
 golang.org/x/xerrors v0.0.0-20191011141410-1b5146add898/go.mod h1:I/5z698sn9Ka8TeJc9MKroUUfqBBauWjQqLJ2OPfmY0=
 golang.org/x/xerrors v0.0.0-20191204190536-9bdfabe68543/go.mod h1:I/5z698sn9Ka8TeJc9MKroUUfqBBauWjQqLJ2OPfmY0=
 golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1/go.mod h1:I/5z698sn9Ka8TeJc9MKroUUfqBBauWjQqLJ2OPfmY0=
-golang.org/x/xerrors v0.0.0-20220907171357-04be3eba64a2 h1:H2TDz8ibqkAF6YGhCdN3jS9O0/s90v0rJh3X/OLHEUk=
+golang.org/x/xerrors v0.0.0-20220411194840-2f41105eb62f h1:GGU+dLjvlC3qDwqYgL6UgRmHXhOOgns0bZu2Ty5mm6U=
 gonum.org/v1/gonum v0.0.0-20180816165407-929014505bf4/go.mod h1:Y+Yx5eoAFn32cQvJDxZx5Dpnq+c3wtXuadVZAcxbbBo=
 gonum.org/v1/gonum v0.0.0-20181121035319-3f7ecaa7e8ca/go.mod h1:Y+Yx5eoAFn32cQvJDxZx5Dpnq+c3wtXuadVZAcxbbBo=
 gonum.org/v1/gonum v0.8.2/go.mod h1:oe/vMfY3deqTw+1EZJhuvEW2iwGF1bW9wwu7XCu0+v0=

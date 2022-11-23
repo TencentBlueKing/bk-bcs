@@ -3,7 +3,7 @@ module github.com/Tencent/bk-bcs/bcs-services/bcs-monitor
 go 1.17
 
 require (
-	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20220915083455-f4c72dc09513
+	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20221122095608-e579fa4ff337
 	github.com/TencentBlueKing/bkmonitor-kits v0.2.0
 	github.com/chonla/format v0.0.0-20220105105701-1119f4a3f36f
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
