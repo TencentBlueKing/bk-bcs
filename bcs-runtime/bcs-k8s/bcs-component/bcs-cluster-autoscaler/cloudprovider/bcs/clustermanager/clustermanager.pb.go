@@ -150,23 +150,26 @@ type Node struct {
 
 // Task 任务定义
 type Task struct {
-	TaskID               string            `protobuf:"bytes,1,opt,name=taskID,proto3" json:"taskID,omitempty"`
-	TaskType             string            `protobuf:"bytes,2,opt,name=taskType,proto3" json:"taskType,omitempty"`
-	Status               string            `protobuf:"bytes,3,opt,name=status,proto3" json:"status,omitempty"`
-	Message              string            `protobuf:"bytes,4,opt,name=message,proto3" json:"message,omitempty"`
-	Start                string            `protobuf:"bytes,5,opt,name=start,proto3" json:"start,omitempty"`
-	End                  string            `protobuf:"bytes,6,opt,name=end,proto3" json:"end,omitempty"`
-	ExecutionTime        uint32            `protobuf:"varint,7,opt,name=executionTime,proto3" json:"executionTime,omitempty"`
-	CurrentStep          string            `protobuf:"bytes,8,opt,name=currentStep,proto3" json:"currentStep,omitempty"`
-	StepSequence         []string          `protobuf:"bytes,9,rep,name=stepSequence,proto3" json:"stepSequence,omitempty"`
-	Steps                map[string]*Step  `protobuf:"bytes,10,rep,name=steps,proto3" json:"steps,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
-	ClusterID            string            `protobuf:"bytes,11,opt,name=clusterID,proto3" json:"clusterID,omitempty"`
-	ProjectID            string            `protobuf:"bytes,12,opt,name=projectID,proto3" json:"projectID,omitempty"`
-	Creator              string            `protobuf:"bytes,13,opt,name=creator,proto3" json:"creator,omitempty"`
-	LastUpdate           string            `protobuf:"bytes,14,opt,name=lastUpdate,proto3" json:"lastUpdate,omitempty"`
-	Updater              string            `protobuf:"bytes,15,opt,name=updater,proto3" json:"updater,omitempty"`
-	ForceTerminate       bool              `protobuf:"varint,16,opt,name=forceTerminate,proto3" json:"forceTerminate,omitempty"`
-	CommonParams         map[string]string `protobuf:"bytes,17,rep,name=commonParams,proto3" json:"commonParams,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
+	TaskID               string            `protobuf:"bytes,1,opt,name=taskID,proto3" json:"taskID"`
+	TaskType             string            `protobuf:"bytes,2,opt,name=taskType,proto3" json:"taskType"`
+	Status               string            `protobuf:"bytes,3,opt,name=status,proto3" json:"status"`
+	Message              string            `protobuf:"bytes,4,opt,name=message,proto3" json:"message"`
+	Start                string            `protobuf:"bytes,5,opt,name=start,proto3" json:"start"`
+	End                  string            `protobuf:"bytes,6,opt,name=end,proto3" json:"end"`
+	ExecutionTime        uint32            `protobuf:"varint,7,opt,name=executionTime,proto3" json:"executionTime"`
+	CurrentStep          string            `protobuf:"bytes,8,opt,name=currentStep,proto3" json:"currentStep"`
+	StepSequence         []string          `protobuf:"bytes,9,rep,name=stepSequence,proto3" json:"stepSequence"`
+	Steps                map[string]*Step  `protobuf:"bytes,10,rep,name=steps,proto3" json:"steps" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
+	ClusterID            string            `protobuf:"bytes,11,opt,name=clusterID,proto3" json:"clusterID"`
+	ProjectID            string            `protobuf:"bytes,12,opt,name=projectID,proto3" json:"projectID"`
+	Creator              string            `protobuf:"bytes,13,opt,name=creator,proto3" json:"creator"`
+	LastUpdate           string            `protobuf:"bytes,14,opt,name=lastUpdate,proto3" json:"lastUpdate"`
+	Updater              string            `protobuf:"bytes,15,opt,name=updater,proto3" json:"updater"`
+	ForceTerminate       bool              `protobuf:"varint,16,opt,name=forceTerminate,proto3" json:"forceTerminate"`
+	CommonParams         map[string]string `protobuf:"bytes,17,rep,name=commonParams,proto3" json:"commonParams" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
+	TaskName             string            `protobuf:"bytes,18,opt,name=taskName,proto3" json:"taskName"`
+	NodeIPList           []string          `protobuf:"bytes,19,rep,name=nodeIPList,proto3" json:"nodeIPList"`
+	NodeGroupID          string            `protobuf:"bytes,20,opt,name=nodeGroupID,proto3" json:"nodeGroupID"`
 	XXX_NoUnkeyedLiteral struct{}          `json:"-" bson:"-"`
 	XXX_unrecognized     []byte            `json:"-" bson:"-"`
 	XXX_sizecache        int32             `json:"-" bson:"-"`
@@ -239,6 +242,7 @@ type UpdateGroupDesiredNodeResponse struct {
 	Code                 uint32   `protobuf:"varint,1,opt,name=code,proto3" json:"code,omitempty"`
 	Message              string   `protobuf:"bytes,2,opt,name=message,proto3" json:"message,omitempty"`
 	Result               bool     `protobuf:"varint,3,opt,name=result,proto3" json:"result,omitempty"`
+	Data                 *Task    `protobuf:"bytes,4,opt,name=data,proto3" json:"data"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-" bson:"-"`
 	XXX_unrecognized     []byte   `json:"-" bson:"-"`
 	XXX_sizecache        int32    `json:"-" bson:"-"`
@@ -296,3 +300,39 @@ type TimeRange struct {
 	XXX_unrecognized     []byte   `json:"-" bson:"-"`
 	XXX_sizecache        int32    `json:"-" bson:"-"`
 }
+
+// GetTaskRequest 获取任务状态请求
+type GetTaskRequest struct {
+	TaskID               string   `protobuf:"bytes,1,opt,name=taskID,proto3" json:"taskID"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-" bson:"-"`
+	XXX_unrecognized     []byte   `json:"-" bson:"-"`
+	XXX_sizecache        int32    `json:"-" bson:"-"`
+}
+
+// GetTaskResponse 获取任务状态响应
+type GetTaskResponse struct {
+	Code                 uint32   `protobuf:"varint,1,opt,name=code,proto3" json:"code"`
+	Message              string   `protobuf:"bytes,2,opt,name=message,proto3" json:"message"`
+	Result               bool     `protobuf:"varint,3,opt,name=result,proto3" json:"result"`
+	Data                 *Task    `protobuf:"bytes,4,opt,name=data,proto3" json:"data"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-" bson:"-"`
+	XXX_unrecognized     []byte   `json:"-" bson:"-"`
+	XXX_sizecache        int32    `json:"-" bson:"-"`
+}
+
+const (
+	// TaskStatusInit INIT task status
+	TaskStatusInit = "INITIALIZING"
+	// TaskStatusRunning running task status
+	TaskStatusRunning = "RUNNING"
+	// TaskStatusSuccess task success
+	TaskStatusSuccess = "SUCCESS"
+	// TaskStatusFailure task failed
+	TaskStatusFailure = "FAILURE"
+	// TaskStatusTimeout task run timeout
+	TaskStatusTimeout = "TIMEOUT"
+	// TaskStatusForceTerminate force task terminate
+	TaskStatusForceTerminate = "FORCETERMINATE"
+	// TaskStatusNotStarted task not started
+	TaskStatusNotStarted = "NOTSTARTED"
+)

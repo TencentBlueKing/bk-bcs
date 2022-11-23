@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package metrics TODO
 package metrics
 
 import (
@@ -75,6 +76,15 @@ var (
 		},
 		[]string{"node"},
 	)
+
+	scaleTask = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Namespace: caNamespace,
+			Name:      "scale_task",
+			Help:      "Scale task status of CA",
+		},
+		[]string{"task_id", "node_group", "scale_type", "status"},
+	)
 )
 
 // RegisterLocal registers local metrics
@@ -116,4 +126,14 @@ func UpdateWebhookScaleDownNumResponse(nodeGroup string, num int) {
 // RecordWebhookScaleDownFailed records scale down failed of webhook mode
 func RecordWebhookScaleDownFailed(node string) {
 	webhookScaleDownFailed.WithLabelValues(node).Set(1)
+}
+
+// RegisterScaleTask registers scale task metrics
+func RegisterScaleTask() {
+	prometheus.MustRegister(scaleTask)
+}
+
+// UpdateScaleTask updates scale task status of CA
+func UpdateScaleTask(id, nodeGroup, scaleType, status string) {
+	scaleTask.WithLabelValues(id, nodeGroup, scaleType, status).Set(1)
 }

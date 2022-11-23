@@ -17,6 +17,8 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/cloudprovider/bcs/clustermanager"
+	metricsinternal "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/metrics"
 	apiv1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/autoscaler/cluster-autoscaler/cloudprovider"
@@ -24,8 +26,6 @@ import (
 	"k8s.io/autoscaler/cluster-autoscaler/utils/errors"
 	"k8s.io/autoscaler/cluster-autoscaler/utils/gpu"
 	"k8s.io/klog"
-
-	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/cloudprovider/bcs/clustermanager"
 )
 
 const (
@@ -78,6 +78,7 @@ func BuildCloudProvider(opts autoscalerconfig.AutoscalingOptions, do cloudprovid
 		}
 	}
 
+	metricsinternal.RegisterScaleTask()
 	cloudProvider, err := BuildBcsCloudProvider(cache, client, do, rl)
 	if err != nil {
 		klog.Fatalf("Failed to create bcs cloud Provider: %v", err)
@@ -89,6 +90,7 @@ func BuildCloudProvider(opts autoscalerconfig.AutoscalingOptions, do cloudprovid
 func BuildBcsCloudProvider(cache *NodeGroupCache, client clustermanager.NodePoolClientInterface,
 	discoveryOpts cloudprovider.NodeGroupDiscoveryOptions, resourceLimiter *cloudprovider.ResourceLimiter) (
 	cloudprovider.CloudProvider, error) {
+	taskChecker = NewTaskChecker(client)
 	if discoveryOpts.StaticDiscoverySpecified() {
 		cloud := &Provider{
 			NodeGroupCache:  cache,
@@ -133,6 +135,7 @@ func (cloud *Provider) NodeGroups() []cloudprovider.NodeGroup {
 	for _, group := range groups {
 		result = append(result, group)
 	}
+	taskChecker.checkScaleTaskStatus()
 	return result
 }
 

@@ -29,9 +29,10 @@ type NodePoolClientInterface interface {
 	GetNodes(np string) ([]*Node, error)
 	GetAutoScalingNodes(np string) ([]*Node, error)
 	GetNode(ip string) (*Node, error)
-	UpdateDesiredNode(np string, desiredNode int) error
-	RemoveNodes(np string, ips []string) error
+	UpdateDesiredNode(np string, desiredNode int) (string, error)
+	RemoveNodes(np string, ips []string) (string, error)
 	UpdateDesiredSize(np string, desiredSize int) error
+	GetTask(id string) (*Task, error)
 }
 
 // NodePoolClient is client for nodegroup resource
@@ -155,7 +156,7 @@ func (npc *NodePoolClient) GetNode(ip string) (*Node, error) {
 }
 
 // UpdateDesiredNode sets the desiredNode number of node group
-func (npc *NodePoolClient) UpdateDesiredNode(np string, desiredNode int) error {
+func (npc *NodePoolClient) UpdateDesiredNode(np string, desiredNode int) (string, error) {
 	ctx, cancelFunc := context.WithCancel(context.Background())
 	defer cancelFunc()
 	req := &UpdateGroupDesiredNodeRequest{
@@ -165,34 +166,37 @@ func (npc *NodePoolClient) UpdateDesiredNode(np string, desiredNode int) error {
 	}
 	byteReq, err := json.Marshal(&req)
 	if err != nil {
-		return err
+		return "", err
 	}
 	body := bytes.NewReader(byteReq)
 	contents, err := npc.client.POST().WithContext(ctx).
 		Resource("nodegroup").Name(np).Resource("desirednode").Body(body).Do()
 	if err != nil {
-		return fmt.Errorf("failed to finish http request, err: %v, body: %v", err, string(contents))
+		return "", fmt.Errorf("failed to finish http request, err: %v, body: %v", err, string(contents))
 	}
 	res := UpdateGroupDesiredNodeResponse{}
 	err = json.Unmarshal(contents, &res)
 	if err != nil {
-		return fmt.Errorf("can not finish the request UpdateDesiredNode, response: %v, err: %v",
+		return "", fmt.Errorf("can not finish the request UpdateDesiredNode, response: %v, err: %v",
 			string(contents), res.Message)
 	}
 	if res.Code != 0 {
-		return fmt.Errorf("can not finish the request, message: %v, response: %v", res.Message, string(contents))
+		return "", fmt.Errorf("can not finish the request, message: %v, response: %v", res.Message, string(contents))
 	}
 
-	return nil
+	if res.Data != nil {
+		return res.Data.TaskID, nil
+	}
+	return "", nil
 }
 
 // RemoveNodes removes the ips from the node group
-func (npc *NodePoolClient) RemoveNodes(np string, ips []string) error {
+func (npc *NodePoolClient) RemoveNodes(np string, ips []string) (string, error) {
 	ctx, cancelFunc := context.WithCancel(context.Background())
 	defer cancelFunc()
 	nodePool, err := npc.GetPool(np)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	req := &CleanNodesInGroupRequest{
@@ -203,26 +207,29 @@ func (npc *NodePoolClient) RemoveNodes(np string, ips []string) error {
 	}
 	byteReq, err := json.Marshal(&req)
 	if err != nil {
-		return err
+		return "", err
 	}
 	body := bytes.NewReader(byteReq)
 	contents, err := npc.client.DELETE().WithContext(ctx).
 		Resource("nodegroup").Name(np).Body(body).Name("groupnode").Do()
 
 	if err != nil {
-		return fmt.Errorf("failed to finish http request, err: %v, body: %v", err, string(contents))
+		return "", fmt.Errorf("failed to finish http request, err: %v, body: %v", err, string(contents))
 	}
 	res := CleanNodesInGroupResponse{}
 	err = json.Unmarshal(contents, &res)
 	if err != nil {
-		return fmt.Errorf("can not finish the request UpdateDesiredNode, response: %v, err: %v", string(contents),
+		return "", fmt.Errorf("can not finish the request UpdateDesiredNode, response: %v, err: %v", string(contents),
 			res.Message)
 	}
 	if res.Code != 0 {
-		return fmt.Errorf("can not finish the request, message: %v, response: %v", res.Message, string(contents))
+		return "", fmt.Errorf("can not finish the request, message: %v, response: %v", res.Message, string(contents))
 	}
 
-	return nil
+	if res.Data != nil {
+		return res.Data.TaskID, nil
+	}
+	return "", nil
 }
 
 // UpdateDesiredSize sets the desiredSize of node group
@@ -254,4 +261,24 @@ func (npc *NodePoolClient) UpdateDesiredSize(np string, desiredSize int) error {
 	}
 
 	return nil
+}
+
+// GetTask returns the task
+func (npc *NodePoolClient) GetTask(id string) (*Task, error) {
+	ctx, cancelFunc := context.WithCancel(context.Background())
+	defer cancelFunc()
+	contents, err := npc.client.Get().WithContext(ctx).Resource("task").Name(id).Do()
+	if err != nil {
+		return nil, fmt.Errorf("failed to finish http request: %v", err)
+	}
+	res := GetTaskResponse{}
+	err = json.Unmarshal(contents, &res)
+	if err != nil {
+		return nil, err
+	}
+	if res.Code != 0 {
+		return nil, fmt.Errorf("can not finish the request, err: %v, response message: %v", res.Message, string(contents))
+	}
+
+	return res.Data, nil
 }

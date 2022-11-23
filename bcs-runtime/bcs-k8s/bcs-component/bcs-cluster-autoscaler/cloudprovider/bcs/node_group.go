@@ -111,11 +111,14 @@ func (group *NodeGroup) IncreaseSize(delta int) error {
 		}
 		if group.scalingType == ScalingTypeWakeUpStopped {
 			if group.closedSize < delta {
-				err := group.client.UpdateDesiredNode(group.nodeGroupID, size)
+				taskID, err := group.client.UpdateDesiredNode(group.nodeGroupID, size)
 				if err != nil {
 					return fmt.Errorf("available instance type in selected-zone are sold out,"+
 						" starting up %v closed instances meet error %v - group: %v",
 						group.closedSize, err.Error(), group.nodeGroupID)
+				}
+				if taskID != "" {
+					taskChecker.RecordScaleUpTask(taskID)
 				}
 				return fmt.Errorf("available instance type in selected-zone are sold out,"+
 					" starting up %v closed instances - group: %v",
@@ -123,7 +126,11 @@ func (group *NodeGroup) IncreaseSize(delta int) error {
 			}
 		}
 	}
-	return group.client.UpdateDesiredNode(group.nodeGroupID, size+delta)
+	taskID, err := group.client.UpdateDesiredNode(group.nodeGroupID, size+delta)
+	if taskID != "" {
+		taskChecker.RecordScaleUpTask(taskID)
+	}
+	return err
 }
 
 // IsSoldOut returns whether the instances of the node group are sold out
@@ -346,7 +353,11 @@ func (group *NodeGroup) getGroupNodes() ([]string, error) {
 func (group *NodeGroup) deleteInstances(ips []string) error {
 	groupID := group.nodeGroupID
 	klog.V(4).Infof("Start remove nodes %v", ips)
-	return group.client.RemoveNodes(groupID, ips)
+	taskID, err := group.client.RemoveNodes(groupID, ips)
+	if taskID != "" {
+		taskChecker.RecordScaleDownTask(taskID)
+	}
+	return err
 }
 
 func (group *NodeGroup) getNodeTemplate() (*nodeTemplate, error) {

@@ -15,6 +15,7 @@ package clustermanager
 
 import (
 	"bytes"
+	"crypto/tls"
 	"encoding/json"
 	"io"
 	"io/ioutil"
@@ -23,9 +24,13 @@ import (
 	"reflect"
 	"strings"
 	"testing"
+	"time"
 )
 
 func TestWithoutTLSClient(t *testing.T) {
+	tr := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	}
 	type args struct {
 		header http.Header
 		url    string
@@ -42,9 +47,12 @@ func TestWithoutTLSClient(t *testing.T) {
 				url:    "127.0.0.1",
 			},
 			want: &Client{
-				baseURL:    "127.0.0.1",
-				header:     make(http.Header),
-				HttpClient: &http.Client{},
+				baseURL: "127.0.0.1",
+				header:  make(http.Header),
+				HttpClient: &http.Client{
+					Transport: tr,
+					Timeout:   time.Second * 5,
+				},
 			},
 		},
 	}

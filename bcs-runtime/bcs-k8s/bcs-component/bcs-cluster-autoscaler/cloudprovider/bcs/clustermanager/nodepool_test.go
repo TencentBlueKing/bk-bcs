@@ -173,7 +173,7 @@ func TestNodePoolClient_GetPool(t *testing.T) {
 	type fields struct {
 		operator string
 		url      string
-		header   http.Header
+		token    string
 	}
 	type args struct {
 		np string
@@ -190,11 +190,7 @@ func TestNodePoolClient_GetPool(t *testing.T) {
 			fields: fields{
 				operator: "bcs",
 				url:      ts.URL,
-				header: func() http.Header {
-					tmp := make(http.Header)
-					tmp.Add("Accept", "application/json")
-					return tmp
-				}(),
+				token:    "",
 			},
 			args: args{
 				np: "test1",
@@ -209,11 +205,7 @@ func TestNodePoolClient_GetPool(t *testing.T) {
 			fields: fields{
 				operator: "bcs",
 				url:      ts.URL,
-				header: func() http.Header {
-					tmp := make(http.Header)
-					tmp.Add("Accept", "application/json")
-					return tmp
-				}(),
+				token:    "",
 			},
 			args: args{
 				np: "test2",
@@ -226,11 +218,7 @@ func TestNodePoolClient_GetPool(t *testing.T) {
 			fields: fields{
 				operator: "bcs",
 				url:      ts.URL,
-				header: func() http.Header {
-					tmp := make(http.Header)
-					tmp.Add("Accept", "application/json")
-					return tmp
-				}(),
+				token:    "",
 			},
 			args: args{
 				np: "test3",
@@ -241,11 +229,7 @@ func TestNodePoolClient_GetPool(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			npc := &NodePoolClient{
-				operator: tt.fields.operator,
-				url:      tt.fields.url,
-				header:   tt.fields.header,
-			}
+			npc, _ := NewNodePoolClient(tt.fields.operator, tt.fields.url, tt.fields.token)
 			got, err := npc.GetPool(tt.args.np)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("NodePoolClient.GetPool() error = %v, wantErr %v", err, tt.wantErr)
@@ -294,7 +278,7 @@ func TestNodePoolClient_GetPoolConfig(t *testing.T) {
 	type fields struct {
 		operator string
 		url      string
-		header   http.Header
+		token    string
 	}
 	type args struct {
 		np string
@@ -311,11 +295,7 @@ func TestNodePoolClient_GetPoolConfig(t *testing.T) {
 			fields: fields{
 				operator: "bcs",
 				url:      ts.URL,
-				header: func() http.Header {
-					tmp := make(http.Header)
-					tmp.Add("Accept", "application/json")
-					return tmp
-				}(),
+				token:    "",
 			},
 			args: args{
 				np: "test1",
@@ -331,11 +311,7 @@ func TestNodePoolClient_GetPoolConfig(t *testing.T) {
 			fields: fields{
 				operator: "bcs",
 				url:      ts.URL,
-				header: func() http.Header {
-					tmp := make(http.Header)
-					tmp.Add("Accept", "application/json")
-					return tmp
-				}(),
+				token:    "",
 			},
 			args: args{
 				np: "test2",
@@ -348,11 +324,7 @@ func TestNodePoolClient_GetPoolConfig(t *testing.T) {
 			fields: fields{
 				operator: "bcs",
 				url:      ts.URL,
-				header: func() http.Header {
-					tmp := make(http.Header)
-					tmp.Add("Accept", "application/json")
-					return tmp
-				}(),
+				token:    "",
 			},
 			args: args{
 				np: "test3",
@@ -363,11 +335,7 @@ func TestNodePoolClient_GetPoolConfig(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			npc := &NodePoolClient{
-				operator: tt.fields.operator,
-				url:      tt.fields.url,
-				header:   tt.fields.header,
-			}
+			npc, _ := NewNodePoolClient(tt.fields.operator, tt.fields.url, tt.fields.token)
 			got, err := npc.GetPoolConfig(tt.args.np)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("NodePoolClient.GetPoolConfig() error = %v, wantErr %v", err, tt.wantErr)
@@ -416,7 +384,7 @@ func TestNodePoolClient_GetPoolNodeTemplate(t *testing.T) {
 	type fields struct {
 		operator string
 		url      string
-		header   http.Header
+		token    string
 	}
 	type args struct {
 		np string
@@ -433,11 +401,7 @@ func TestNodePoolClient_GetPoolNodeTemplate(t *testing.T) {
 			fields: fields{
 				operator: "bcs",
 				url:      ts.URL,
-				header: func() http.Header {
-					tmp := make(http.Header)
-					tmp.Add("Accept", "application/json")
-					return tmp
-				}(),
+				token:    "",
 			},
 			args: args{
 				np: "test1",
@@ -453,11 +417,7 @@ func TestNodePoolClient_GetPoolNodeTemplate(t *testing.T) {
 			fields: fields{
 				operator: "bcs",
 				url:      ts.URL,
-				header: func() http.Header {
-					tmp := make(http.Header)
-					tmp.Add("Accept", "application/json")
-					return tmp
-				}(),
+				token:    "",
 			},
 			args: args{
 				np: "test2",
@@ -470,11 +430,7 @@ func TestNodePoolClient_GetPoolNodeTemplate(t *testing.T) {
 			fields: fields{
 				operator: "bcs",
 				url:      ts.URL,
-				header: func() http.Header {
-					tmp := make(http.Header)
-					tmp.Add("Accept", "application/json")
-					return tmp
-				}(),
+				token:    "",
 			},
 			args: args{
 				np: "test3",
@@ -485,11 +441,7 @@ func TestNodePoolClient_GetPoolNodeTemplate(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			npc := &NodePoolClient{
-				operator: tt.fields.operator,
-				url:      tt.fields.url,
-				header:   tt.fields.header,
-			}
+			npc, _ := NewNodePoolClient(tt.fields.operator, tt.fields.url, tt.fields.token)
 			got, err := npc.GetPoolNodeTemplate(tt.args.np)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("NodePoolClient.GetPoolNodeTemplate() error = %v, wantErr %v", err, tt.wantErr)
@@ -541,7 +493,7 @@ func TestNodePoolClient_GetNodes(t *testing.T) {
 	type fields struct {
 		operator string
 		url      string
-		header   http.Header
+		token    string
 	}
 	type args struct {
 		np string
@@ -558,11 +510,7 @@ func TestNodePoolClient_GetNodes(t *testing.T) {
 			fields: fields{
 				operator: "bcs",
 				url:      ts.URL,
-				header: func() http.Header {
-					tmp := make(http.Header)
-					tmp.Add("Accept", "application/json")
-					return tmp
-				}(),
+				token:    "",
 			},
 			args: args{
 				np: "test1",
@@ -584,11 +532,7 @@ func TestNodePoolClient_GetNodes(t *testing.T) {
 			fields: fields{
 				operator: "bcs",
 				url:      ts.URL,
-				header: func() http.Header {
-					tmp := make(http.Header)
-					tmp.Add("Accept", "application/json")
-					return tmp
-				}(),
+				token:    "",
 			},
 			args: args{
 				np: "test2",
@@ -601,11 +545,7 @@ func TestNodePoolClient_GetNodes(t *testing.T) {
 			fields: fields{
 				operator: "bcs",
 				url:      ts.URL,
-				header: func() http.Header {
-					tmp := make(http.Header)
-					tmp.Add("Accept", "application/json")
-					return tmp
-				}(),
+				token:    "",
 			},
 			args: args{
 				np: "test3",
@@ -616,11 +556,7 @@ func TestNodePoolClient_GetNodes(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			npc := &NodePoolClient{
-				operator: tt.fields.operator,
-				url:      tt.fields.url,
-				header:   tt.fields.header,
-			}
+			npc, _ := NewNodePoolClient(tt.fields.operator, tt.fields.url, tt.fields.token)
 			got, err := npc.GetNodes(tt.args.np)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("NodePoolClient.GetNodes() error = %v, wantErr %v", err, tt.wantErr)
@@ -704,7 +640,7 @@ func TestNodePoolClient_GetAutoScalingNodes(t *testing.T) {
 	type fields struct {
 		operator string
 		url      string
-		header   http.Header
+		token    string
 	}
 	type args struct {
 		np string
@@ -721,11 +657,7 @@ func TestNodePoolClient_GetAutoScalingNodes(t *testing.T) {
 			fields: fields{
 				operator: "bcs",
 				url:      ts.URL,
-				header: func() http.Header {
-					tmp := make(http.Header)
-					tmp.Add("Accept", "application/json")
-					return tmp
-				}(),
+				token:    "",
 			},
 			args: args{
 				np: "test1",
@@ -747,11 +679,7 @@ func TestNodePoolClient_GetAutoScalingNodes(t *testing.T) {
 			fields: fields{
 				operator: "bcs",
 				url:      ts.URL,
-				header: func() http.Header {
-					tmp := make(http.Header)
-					tmp.Add("Accept", "application/json")
-					return tmp
-				}(),
+				token:    "",
 			},
 			args: args{
 				np: "test2",
@@ -764,11 +692,7 @@ func TestNodePoolClient_GetAutoScalingNodes(t *testing.T) {
 			fields: fields{
 				operator: "bcs",
 				url:      ts.URL,
-				header: func() http.Header {
-					tmp := make(http.Header)
-					tmp.Add("Accept", "application/json")
-					return tmp
-				}(),
+				token:    "",
 			},
 			args: args{
 				np: "test3",
@@ -779,11 +703,7 @@ func TestNodePoolClient_GetAutoScalingNodes(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			npc := &NodePoolClient{
-				operator: tt.fields.operator,
-				url:      tt.fields.url,
-				header:   tt.fields.header,
-			}
+			npc, _ := NewNodePoolClient(tt.fields.operator, tt.fields.url, tt.fields.token)
 			got, err := npc.GetAutoScalingNodes(tt.args.np)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("NodePoolClient.GetAutoScalingNodes() error = %v, wantErr %v", err, tt.wantErr)
@@ -832,7 +752,7 @@ func TestNodePoolClient_GetNode(t *testing.T) {
 	type fields struct {
 		operator string
 		url      string
-		header   http.Header
+		token    string
 	}
 	type args struct {
 		ip string
@@ -849,11 +769,7 @@ func TestNodePoolClient_GetNode(t *testing.T) {
 			fields: fields{
 				operator: "bcs",
 				url:      ts.URL,
-				header: func() http.Header {
-					tmp := make(http.Header)
-					tmp.Add("Accept", "application/json")
-					return tmp
-				}(),
+				token:    "",
 			},
 			args: args{
 				ip: "127.0.0.1",
@@ -869,11 +785,7 @@ func TestNodePoolClient_GetNode(t *testing.T) {
 			fields: fields{
 				operator: "bcs",
 				url:      ts.URL,
-				header: func() http.Header {
-					tmp := make(http.Header)
-					tmp.Add("Accept", "application/json")
-					return tmp
-				}(),
+				token:    "",
 			},
 			args: args{
 				ip: "127.0.0.2",
@@ -886,11 +798,7 @@ func TestNodePoolClient_GetNode(t *testing.T) {
 			fields: fields{
 				operator: "bcs",
 				url:      ts.URL,
-				header: func() http.Header {
-					tmp := make(http.Header)
-					tmp.Add("Accept", "application/json")
-					return tmp
-				}(),
+				token:    "",
 			},
 			args: args{
 				ip: "127.0.0.3",
@@ -901,11 +809,7 @@ func TestNodePoolClient_GetNode(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			npc := &NodePoolClient{
-				operator: tt.fields.operator,
-				url:      tt.fields.url,
-				header:   tt.fields.header,
-			}
+			npc, _ := NewNodePoolClient(tt.fields.operator, tt.fields.url, tt.fields.token)
 			got, err := npc.GetNode(tt.args.ip)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("NodePoolClient.GetNode() error = %v, wantErr %v", err, tt.wantErr)
@@ -955,7 +859,7 @@ func TestNodePoolClient_UpdateDesiredNode(t *testing.T) {
 	type fields struct {
 		operator string
 		url      string
-		header   http.Header
+		token    string
 	}
 	type args struct {
 		np          string
@@ -972,11 +876,7 @@ func TestNodePoolClient_UpdateDesiredNode(t *testing.T) {
 			fields: fields{
 				operator: "bcs",
 				url:      ts.URL,
-				header: func() http.Header {
-					tmp := make(http.Header)
-					tmp.Add("Accept", "application/json")
-					return tmp
-				}(),
+				token:    "",
 			},
 			args: args{
 				np:          "test1",
@@ -989,11 +889,7 @@ func TestNodePoolClient_UpdateDesiredNode(t *testing.T) {
 			fields: fields{
 				operator: "bcs",
 				url:      ts.URL,
-				header: func() http.Header {
-					tmp := make(http.Header)
-					tmp.Add("Accept", "application/json")
-					return tmp
-				}(),
+				token:    "",
 			},
 			args: args{
 				np:          "test2",
@@ -1006,11 +902,7 @@ func TestNodePoolClient_UpdateDesiredNode(t *testing.T) {
 			fields: fields{
 				operator: "bcs",
 				url:      ts.URL,
-				header: func() http.Header {
-					tmp := make(http.Header)
-					tmp.Add("Accept", "application/json")
-					return tmp
-				}(),
+				token:    "",
 			},
 			args: args{
 				np:          "test3",
@@ -1021,12 +913,8 @@ func TestNodePoolClient_UpdateDesiredNode(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			npc := &NodePoolClient{
-				operator: tt.fields.operator,
-				url:      tt.fields.url,
-				header:   tt.fields.header,
-			}
-			if err := npc.UpdateDesiredNode(tt.args.np, tt.args.desiredNode); (err != nil) != tt.wantErr {
+			npc, _ := NewNodePoolClient(tt.fields.operator, tt.fields.url, tt.fields.token)
+			if _, err := npc.UpdateDesiredNode(tt.args.np, tt.args.desiredNode); (err != nil) != tt.wantErr {
 				t.Errorf("NodePoolClient.UpdateDesiredNode() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -1067,7 +955,7 @@ func TestNodePoolClient_RemoveNodes(t *testing.T) {
 	type fields struct {
 		operator string
 		url      string
-		header   http.Header
+		token    string
 	}
 	type args struct {
 		np  string
@@ -1084,11 +972,7 @@ func TestNodePoolClient_RemoveNodes(t *testing.T) {
 			fields: fields{
 				operator: "bcs",
 				url:      ts.URL,
-				header: func() http.Header {
-					tmp := make(http.Header)
-					tmp.Add("Accept", "application/json")
-					return tmp
-				}(),
+				token:    "",
 			},
 			args: args{
 				np:  "test1",
@@ -1101,11 +985,7 @@ func TestNodePoolClient_RemoveNodes(t *testing.T) {
 			fields: fields{
 				operator: "bcs",
 				url:      ts.URL,
-				header: func() http.Header {
-					tmp := make(http.Header)
-					tmp.Add("Accept", "application/json")
-					return tmp
-				}(),
+				token:    "",
 			},
 			args: args{
 				np:  "test1",
@@ -1118,11 +998,7 @@ func TestNodePoolClient_RemoveNodes(t *testing.T) {
 			fields: fields{
 				operator: "bcs",
 				url:      ts.URL,
-				header: func() http.Header {
-					tmp := make(http.Header)
-					tmp.Add("Accept", "application/json")
-					return tmp
-				}(),
+				token:    "",
 			},
 			args: args{
 				np:  "test1",
@@ -1133,12 +1009,8 @@ func TestNodePoolClient_RemoveNodes(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			npc := &NodePoolClient{
-				operator: tt.fields.operator,
-				url:      tt.fields.url,
-				header:   tt.fields.header,
-			}
-			if err := npc.RemoveNodes(tt.args.np, tt.args.ips); (err != nil) != tt.wantErr {
+			npc, _ := NewNodePoolClient(tt.fields.operator, tt.fields.url, tt.fields.token)
+			if _, err := npc.RemoveNodes(tt.args.np, tt.args.ips); (err != nil) != tt.wantErr {
 				t.Errorf("NodePoolClient.RemoveNodes() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -1180,7 +1052,7 @@ func TestNodePoolClient_UpdateDesiredSize(t *testing.T) {
 	type fields struct {
 		operator string
 		url      string
-		header   http.Header
+		token    string
 	}
 	type args struct {
 		np          string
@@ -1197,11 +1069,7 @@ func TestNodePoolClient_UpdateDesiredSize(t *testing.T) {
 			fields: fields{
 				operator: "bcs",
 				url:      ts.URL,
-				header: func() http.Header {
-					tmp := make(http.Header)
-					tmp.Add("Accept", "application/json")
-					return tmp
-				}(),
+				token:    "",
 			},
 			args: args{
 				np:          "test1",
@@ -1214,11 +1082,7 @@ func TestNodePoolClient_UpdateDesiredSize(t *testing.T) {
 			fields: fields{
 				operator: "bcs",
 				url:      ts.URL,
-				header: func() http.Header {
-					tmp := make(http.Header)
-					tmp.Add("Accept", "application/json")
-					return tmp
-				}(),
+				token:    "",
 			},
 			args: args{
 				np:          "test2",
@@ -1231,11 +1095,7 @@ func TestNodePoolClient_UpdateDesiredSize(t *testing.T) {
 			fields: fields{
 				operator: "bcs",
 				url:      ts.URL,
-				header: func() http.Header {
-					tmp := make(http.Header)
-					tmp.Add("Accept", "application/json")
-					return tmp
-				}(),
+				token:    "",
 			},
 			args: args{
 				np:          "test3",
@@ -1246,13 +1106,114 @@ func TestNodePoolClient_UpdateDesiredSize(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			npc := &NodePoolClient{
-				operator: tt.fields.operator,
-				url:      tt.fields.url,
-				header:   tt.fields.header,
-			}
+			npc, _ := NewNodePoolClient(tt.fields.operator, tt.fields.url, tt.fields.token)
 			if err := npc.UpdateDesiredSize(tt.args.np, tt.args.desiredSize); (err != nil) != tt.wantErr {
 				t.Errorf("NodePoolClient.UpdateDesiredSize() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func TestNodePoolClient_GetTask(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == "GET" && r.URL.EscapedPath() == "/task/xxx" {
+			res := GetTaskResponse{
+				Code: 0,
+				Data: &Task{
+					TaskID:      "xxx",
+					Status:      "RUNNING",
+					NodeGroupID: "test1",
+				},
+			}
+			resBytes, _ := json.Marshal(res)
+			w.Write(resBytes)
+		} else if r.Method == "GET" && r.URL.EscapedPath() == "/task/yyy" {
+			w.WriteHeader(404)
+			res := GetNodeGroupResponse{
+				Code: 0,
+			}
+			resBytes, _ := json.Marshal(res)
+			w.Write(resBytes)
+		} else if r.Method == "GET" && r.URL.EscapedPath() == "/task/zzz" {
+			res := GetNodeGroupResponse{
+				Code: 1,
+			}
+			resBytes, _ := json.Marshal(res)
+			w.Write(resBytes)
+		} else {
+			t.Errorf("Got unexpected acton '%v' and path '%v'", r.Method, r.URL.EscapedPath())
+		}
+	}))
+	defer ts.Close()
+	type fields struct {
+		operator string
+		url      string
+		token    string
+	}
+	type args struct {
+		taskID string
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		want    *Task
+		wantErr bool
+	}{
+		{
+			name: "get task normal",
+			fields: fields{
+				operator: "bcs",
+				url:      ts.URL,
+				token:    "",
+			},
+			args: args{
+				taskID: "xxx",
+			},
+			want: &Task{
+				TaskID:      "xxx",
+				Status:      "RUNNING",
+				NodeGroupID: "test1",
+			},
+			wantErr: false,
+		},
+		{
+			name: "get task, return 404",
+			fields: fields{
+				operator: "bcs",
+				url:      ts.URL,
+				token:    "",
+			},
+			args: args{
+				taskID: "yyy",
+			},
+			want:    nil,
+			wantErr: true,
+		},
+		{
+			name: "get task, return code 1",
+			fields: fields{
+				operator: "bcs",
+				url:      ts.URL,
+				token:    "",
+			},
+			args: args{
+				taskID: "zzz",
+			},
+			want:    nil,
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			npc, _ := NewNodePoolClient(tt.fields.operator, tt.fields.url, tt.fields.token)
+			got, err := npc.GetTask(tt.args.taskID)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("NodePoolClient.GetTask() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("NodePoolClient.GetTask() = %v, want %v", got, tt.want)
 			}
 		})
 	}
