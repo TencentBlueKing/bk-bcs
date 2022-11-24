@@ -18,9 +18,10 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/constant"
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 )
 
 // GetLbRegionAndName from {region}:{lbID}
@@ -137,4 +138,16 @@ func GetIngressProtocolLayer(ingress *networkextensionv1.Ingress) string {
 		return constant.ProtocolLayerTransport
 	}
 	return constant.ProtocolLayerDefault
+}
+
+// GetPortPoolItemProtocols return protocol list of portpool item.protocol
+func GetPortPoolItemProtocols(itemProtocol string) []string {
+	var protocolList []string
+	if len(itemProtocol) == 0 {
+		protocolList = []string{constant.PortPoolPortProtocolTCP, constant.PortPoolPortProtocolUDP}
+	} else {
+		protocolList = strings.Split(itemProtocol, constant.PortPoolItemProtocolDelimiter)
+	}
+
+	return protocolList
 }

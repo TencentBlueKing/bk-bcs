@@ -17,29 +17,32 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/pkg/errors"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/constant"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/generator"
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
-	"github.com/pkg/errors"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // ConflictHandler handle ingress/portPool conflict
 type ConflictHandler struct {
 	conflictCheckOpen bool // if false, skip all conflict checking
 	defaultRegion     string
+	IsTCPUDPPortReuse bool
 
 	k8sClient        client.Client
 	ingressConverter *generator.IngressConverter
 }
 
 // NewConflictHandler return new conflictHandler
-func NewConflictHandler(conflictCheckOpen bool, defaultRegion string, k8sCli client.Client,
+func NewConflictHandler(conflictCheckOpen bool, IsTCPUDPPortReuse bool, defaultRegion string, k8sCli client.Client,
 	igc *generator.IngressConverter) *ConflictHandler {
 	return &ConflictHandler{
 		conflictCheckOpen: conflictCheckOpen,
 		defaultRegion:     defaultRegion,
+		IsTCPUDPPortReuse: IsTCPUDPPortReuse,
 		k8sClient:         k8sCli,
 		ingressConverter:  igc,
 	}
@@ -79,7 +82,10 @@ func (h *ConflictHandler) getIngressResourceMap(ingress *networkextensionv1.Ingr
 
 	res := newResource()
 	for _, rule := range ingress.Spec.Rules {
-		res.usedPort.Add(rule.Port)
+		res.usedPort[rule.Port] = portStruct{
+			val:       rule.Port,
+			Protocols: []string{rule.Protocol},
+		}
 	}
 	for _, mapping := range ingress.Spec.PortMappings {
 		segmentLen := mapping.SegmentLength
@@ -89,8 +95,9 @@ func (h *ConflictHandler) getIngressResourceMap(ingress *networkextensionv1.Ingr
 		istart := mapping.StartPort + mapping.StartIndex*segmentLen
 		iend := mapping.StartPort + mapping.EndIndex*segmentLen
 		res.usedPortSegment = append(res.usedPortSegment, portSegment{
-			Start: istart,
-			End:   iend,
+			Start:     istart,
+			End:       iend,
+			Protocols: []string{mapping.Protocol},
 		})
 	}
 	for _, lbObj := range lbObjs {
@@ -105,8 +112,9 @@ func (h *ConflictHandler) getPortPoolResourceMap(pool *networkextensionv1.PortPo
 
 	for _, item := range pool.Spec.PoolItems {
 		seg := portSegment{
-			Start: int(item.StartPort),
-			End:   int(item.EndPort),
+			Start:     int(item.StartPort),
+			End:       int(item.EndPort),
+			Protocols: common.GetPortPoolItemProtocols(item.Protocol),
 		}
 		for _, lbID := range item.LoadBalancerIDs {
 			regionID, err := getRegionLBID(lbID, h.defaultRegion)
@@ -182,7 +190,7 @@ func (h *ConflictHandler) checkConflictWithIngress(requiredResMap map[string]*re
 				}
 			}
 			ingressRes := ingressResMap[regionID]
-			if requiredRes.IsConflict(ingressRes) {
+			if requiredRes.IsConflict(h.IsTCPUDPPortReuse, ingressRes) {
 				return true, fmt.Sprintf(constant.PortConflictMsg, constant.KindIngress,
 					ingress.GetNamespace(), ingress.GetName(), regionID), nil
 			}
@@ -213,7 +221,7 @@ func (h *ConflictHandler) checkConflictWithPortPool(requireResourceMap map[strin
 
 		for regionID, res := range poolResourceMap {
 			if requireRes, ok := requireResourceMap[regionID]; ok {
-				if requireRes.IsConflict(res) {
+				if requireRes.IsConflict(h.IsTCPUDPPortReuse, res) {
 					return true, fmt.Sprintf(constant.PortConflictMsg, constant.KindPortPool,
 						portPool.GetNamespace(), portPool.GetName(), regionID), nil
 				}

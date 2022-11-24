@@ -246,12 +246,7 @@ func (ppih *PortPoolItemHandler) ensureListeners(region, lbID, itemName string, 
 
 	notReady := false
 	for p := startPort; p < endPort; p += segment {
-		protocolList := make([]string, 0)
-		if len(protocol) == 0 {
-			protocolList = []string{constant.PortPoolPortProtocolTCP, constant.PortPoolPortProtocolUDP}
-		} else {
-			protocolList = strings.Split(protocol, ",")
-		}
+		protocolList := common.GetPortPoolItemProtocols(protocol)
 		for _, protocol := range protocolList {
 			tmpStartPort := p
 			tmpEndPort := 0

@@ -13,6 +13,15 @@
 package constant
 
 const (
+	// ProtocolTCP protocol of TCP
+	ProtocolTCP = "TCP"
+	// ProtocolUDP protocol of UDP
+	ProtocolUDP = "UDP"
+	// ProtocolHTTPS protocol of HTTPS
+	ProtocolHTTPS = "HTTPS"
+	// ProtocolHTTP protocol of HTTP
+	ProtocolHTTP = "HTTP"
+
 	// LoadBalancerTypeLoadBalancer default type load balancer
 	LoadBalancerTypeLoadBalancer = "loadbalancer"
 	// LoadBalancerTypeApplicationGateway type for azure application gateway
@@ -140,6 +149,9 @@ const (
 	PortPoolPortProtocolUDP = "UDP"
 	// PortPoolPortProtocolTCPUDP protocol of port in pool is tcp&udp
 	PortPoolPortProtocolTCPUDP = "TCP_UDP"
+
+	// PortPoolItemProtocolDelimiter separate protocol in portpool item, like "TCP,UDP"
+	PortPoolItemProtocolDelimiter = ","
 
 	// LoadBalanceCheckFormatWithAp regular expression for check lb format "ap-xxxxx:lb-xxxxx"
 	LoadBalanceCheckFormatWithApLbID = "^(ap|na|eu|sa)-[A-Za-z0-9-]+:lb-[A-Za-z0-9]+"
