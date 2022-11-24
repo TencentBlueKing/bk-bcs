@@ -51,6 +51,9 @@ type UpgradeReleaseV1Action struct {
 	platform       repo.Platform
 	releaseHandler release.Handler
 
+	createBy string
+	updateBy string
+
 	req  *helmmanager.UpgradeReleaseV1Req
 	resp *helmmanager.UpgradeReleaseV1Resp
 }
@@ -91,7 +94,7 @@ func (u *UpgradeReleaseV1Action) upgrade() error {
 		Model:          u.model,
 		Platform:       u.platform,
 		ReleaseHandler: u.releaseHandler,
-		ProjectCode:    u.req.GetProjectCode(),
+		ProjectCode:    contextx.GetProjectCodeFromCtx(u.ctx),
 		ProjectID:      contextx.GetProjectIDFromCtx(u.ctx),
 		ClusterID:      u.req.GetClusterID(),
 		Name:           u.req.GetName(),
@@ -101,7 +104,8 @@ func (u *UpgradeReleaseV1Action) upgrade() error {
 		Version:        u.req.GetVersion(),
 		Values:         u.req.GetValues(),
 		Args:           u.req.GetArgs(),
-		Username:       auth.GetUserFromCtx(u.ctx),
+		CreateBy:       u.createBy,
+		UpdateBy:       u.updateBy,
 	}
 	action := actions.NewReleaseUpgradeAction(options)
 	_, err := operation.GlobalOperator.Dispatch(action, releaseDefaultTimeout)
@@ -113,7 +117,7 @@ func (u *UpgradeReleaseV1Action) upgrade() error {
 
 func (u *UpgradeReleaseV1Action) saveDB() error {
 	create := false
-	_, err := u.model.GetRelease(u.ctx, u.req.GetClusterID(), u.req.GetNamespace(), u.req.GetName())
+	old, err := u.model.GetRelease(u.ctx, u.req.GetClusterID(), u.req.GetNamespace(), u.req.GetName())
 	if err != nil {
 		if errors.Is(err, drivers.ErrTableRecordNotFound) {
 			create = true
@@ -124,9 +128,11 @@ func (u *UpgradeReleaseV1Action) saveDB() error {
 
 	username := auth.GetUserFromCtx(u.ctx)
 	if create {
+		u.createBy = username
+		u.updateBy = username
 		if err := u.model.CreateRelease(u.ctx, &entity.Release{
 			Name:         u.req.GetName(),
-			ProjectCode:  u.req.GetProjectCode(),
+			ProjectCode:  contextx.GetProjectCodeFromCtx(u.ctx),
 			Namespace:    u.req.GetNamespace(),
 			ClusterID:    u.req.GetClusterID(),
 			Repo:         u.req.GetRepository(),
@@ -141,6 +147,8 @@ func (u *UpgradeReleaseV1Action) saveDB() error {
 			return err
 		}
 	} else {
+		u.createBy = old.CreateBy
+		u.updateBy = username
 		rl := entity.M{
 			entity.FieldKeyRepoName:     u.req.GetRepository(),
 			entity.FieldKeyChartName:    u.req.GetChart(),
@@ -150,6 +158,7 @@ func (u *UpgradeReleaseV1Action) saveDB() error {
 			entity.FieldKeyArgs:         u.req.Args,
 			entity.FieldKeyUpdateBy:     username,
 			entity.FieldKeyStatus:       helmrelease.StatusPendingUpgrade.String(),
+			entity.FieldKeyMessage:      "",
 		}
 		if err := u.model.UpdateRelease(u.ctx, u.req.GetClusterID(), u.req.GetNamespace(),
 			u.req.GetName(), rl); err != nil {

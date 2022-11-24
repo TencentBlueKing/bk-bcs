@@ -517,6 +517,13 @@
             "in": "path",
             "required": true,
             "type": "string"
+          },
+          {
+            "name": "filter",
+            "description": "filter. 状态过滤",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [

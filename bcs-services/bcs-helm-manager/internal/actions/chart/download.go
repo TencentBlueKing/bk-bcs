@@ -24,6 +24,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/repo"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/store"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/utils/contextx"
 	helmmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/proto/bcs-helm-manager"
 )
 
@@ -62,7 +63,7 @@ func (d *DownloadChartAction) Handle(ctx context.Context,
 }
 
 func (d *DownloadChartAction) downloadChart() error {
-	projectCode := d.req.GetProjectCode()
+	projectCode := contextx.GetProjectCodeFromCtx(d.ctx)
 	repoName := d.req.GetRepoName()
 	chartName := d.req.GetName()
 	version := d.req.GetVersion()

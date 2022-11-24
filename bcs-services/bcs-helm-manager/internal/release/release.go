@@ -194,7 +194,9 @@ type ListOption struct {
 // HelmInstallConfig 定义了helm执行install时的控制参数
 type HelmInstallConfig struct {
 	// simulate a install action
-	DryRun bool
+	DryRun     bool
+	Replace    bool
+	ClientOnly bool
 
 	ProjectCode string
 	Name        string

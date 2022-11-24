@@ -14,6 +14,8 @@ package chart
 
 import (
 	"context"
+	"fmt"
+	"sort"
 	"strings"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -22,6 +24,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/repo"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/store"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/utils/contextx"
 	helmmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/proto/bcs-helm-manager"
 )
 
@@ -131,19 +134,42 @@ func (g *GetVersionDetailAction) setResp(err common.HelmManagerError, message st
 	g.resp.Data = r
 }
 
+func getValuesFiles(files map[string]*repo.FileContent, chartName string) []string {
+	valuesFile := make([]string, 0, 0)
+	defaultValuesFile := fmt.Sprintf("%s/%s", chartName, "values.yaml")
+	hasDefaultValuesFile := false
+	for _, item := range files {
+		if item.Path == defaultValuesFile {
+			hasDefaultValuesFile = true
+			continue
+		}
+		if isValuesFile(item) {
+			valuesFile = append(valuesFile, item.Path)
+		}
+	}
+
+	sort.Sort(sort.StringSlice(valuesFile))
+	if hasDefaultValuesFile {
+		valuesFile = append([]string{defaultValuesFile}, valuesFile...)
+	}
+	return valuesFile
+}
+
 func isValuesFile(f *repo.FileContent) bool {
-	// 允许所有以values.yaml结尾的文件, 如
+	// 允许根目录所有以values.yaml结尾的文件, 如
 	// values.yaml
 	// game-values.yaml
 	// my-values.yaml
-	if strings.HasSuffix(f.Name, "values.yaml") {
+	if (strings.HasSuffix(f.Name, "values.yaml") || strings.HasSuffix(f.Name, "values.yml")) &&
+		strings.Count(f.Path, "/") <= 1 {
 		return true
 	}
 
-	// 允许所有在bcs-values文件夹下的文件, 如
+	// 允许所有在bcs-values文件夹下的.yml或.yaml文件, 如
 	// bcs-values/values.yaml
 	// templates/bcs-values/my.yaml
-	if strings.HasSuffix(strings.TrimSuffix(f.Path, f.Name), "bcs-values/") {
+	if strings.HasSuffix(strings.TrimSuffix(f.Path, f.Name), "bcs-values/") &&
+		(strings.HasSuffix(f.Path, ".yaml") || strings.HasSuffix(f.Path, ".yml")) {
 		return true
 	}
 
@@ -201,7 +227,7 @@ func (g *GetVersionDetailV1Action) Handle(ctx context.Context,
 }
 
 func (g *GetVersionDetailV1Action) getDetail() (*helmmanager.ChartDetail, error) {
-	projectCode := g.req.GetProjectCode()
+	projectCode := contextx.GetProjectCodeFromCtx(g.ctx)
 	repoName := g.req.GetRepoName()
 	chartName := g.req.GetName()
 	version := g.req.GetVersion()
@@ -234,12 +260,9 @@ func (g *GetVersionDetailV1Action) getDetail() (*helmmanager.ChartDetail, error)
 		return nil, err
 	}
 
-	valuesFile := make([]string, 0, 0)
+	valuesFile := getValuesFiles(origin.Contents, chartName)
 	readmeFile := ""
 	for _, item := range origin.Contents {
-		if isValuesFile(item) {
-			valuesFile = append(valuesFile, item.Path)
-		}
 		if isReadMeFile(item) {
 			readmeFile = item.Path
 		}
@@ -305,7 +328,7 @@ func (g *GetChartDetailV1Action) Handle(ctx context.Context,
 }
 
 func (g *GetChartDetailV1Action) getDetail() (*helmmanager.Chart, error) {
-	projectCode := g.req.GetProjectCode()
+	projectCode := contextx.GetProjectCodeFromCtx(g.ctx)
 	repoName := g.req.GetRepoName()
 	chartName := g.req.GetName()
 	username := auth.GetUserFromCtx(g.ctx)

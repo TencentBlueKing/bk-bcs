@@ -90,7 +90,7 @@ func (u *UpgradeReleaseAction) upgrade() error {
 	}
 
 	result, err := upgradeRelease(u.releaseHandler, contextx.GetProjectIDFromCtx(u.ctx), projectID, clusterID,
-		releaseName, releaseNamespace, chartName, chartVersion, username, u.req.GetArgs(),
+		releaseName, releaseNamespace, chartName, chartVersion, username, username, u.req.GetArgs(),
 		u.req.GetBcsSysVar(), contents, values, false)
 	if err != nil {
 		blog.Errorf("upgrade release failed, %s, "+

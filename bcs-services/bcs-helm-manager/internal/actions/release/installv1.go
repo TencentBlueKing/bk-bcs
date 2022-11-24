@@ -102,7 +102,7 @@ func (i *InstallReleaseV1Action) install() error {
 		Model:          i.model,
 		Platform:       i.platform,
 		ReleaseHandler: i.releaseHandler,
-		ProjectCode:    i.req.GetProjectCode(),
+		ProjectCode:    contextx.GetProjectCodeFromCtx(i.ctx),
 		ProjectID:      contextx.GetProjectIDFromCtx(i.ctx),
 		ClusterID:      i.req.GetClusterID(),
 		Name:           i.req.GetName(),
@@ -128,7 +128,7 @@ func (i *InstallReleaseV1Action) saveDB() error {
 	}
 	if err := i.model.CreateRelease(i.ctx, &entity.Release{
 		Name:         i.req.GetName(),
-		ProjectCode:  i.req.GetProjectCode(),
+		ProjectCode:  contextx.GetProjectCodeFromCtx(i.ctx),
 		Namespace:    i.req.GetNamespace(),
 		ClusterID:    i.req.GetClusterID(),
 		Repo:         i.req.GetRepository(),

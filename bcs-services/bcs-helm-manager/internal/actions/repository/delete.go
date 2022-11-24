@@ -18,6 +18,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/store"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/utils/contextx"
 	helmmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/proto/bcs-helm-manager"
 )
 
@@ -56,7 +57,7 @@ func (d *DeleteRepositoryAction) Handle(ctx context.Context,
 		return nil
 	}
 
-	return d.delete(d.req.GetProjectCode(), d.req.GetName())
+	return d.delete(contextx.GetProjectCodeFromCtx(ctx), d.req.GetName())
 }
 
 func (d *DeleteRepositoryAction) delete(projectCode, name string) error {

@@ -21,6 +21,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/repo"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/store"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/utils/contextx"
 	helmmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/proto/bcs-helm-manager"
 )
 
@@ -60,7 +61,7 @@ func (d *DeleteChartAction) Handle(ctx context.Context,
 }
 
 func (d *DeleteChartAction) deleteChart() error {
-	projectCode := d.req.GetProjectCode()
+	projectCode := contextx.GetProjectCodeFromCtx(d.ctx)
 	repoName := d.req.GetRepoName()
 	chartName := d.req.GetName()
 	username := auth.GetUserFromCtx(d.ctx)
@@ -143,7 +144,7 @@ func (d *DeleteChartVersionAction) Handle(ctx context.Context,
 }
 
 func (d *DeleteChartVersionAction) deleteChartVersion() error {
-	projectCode := d.req.GetProjectCode()
+	projectCode := contextx.GetProjectCodeFromCtx(d.ctx)
 	repoName := d.req.GetRepoName()
 	chartName := d.req.GetName()
 	version := d.req.GetVersion()

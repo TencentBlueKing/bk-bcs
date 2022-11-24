@@ -15,9 +15,9 @@ package release
 import (
 	"context"
 	"errors"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	helmrelease "helm.sh/helm/v3/pkg/release"
 	"helm.sh/helm/v3/pkg/storage/driver"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
@@ -115,10 +115,13 @@ func (g *GetReleaseDetailV1Action) mergeRelease(detail *helmmanager.ReleaseDetai
 
 	detail.Args = rl.Args
 	detail.ValueFile = &rl.ValueFile
+	detail.Values = rl.Values
 	detail.CreateBy = &rl.CreateBy
 	detail.UpdateBy = &rl.UpdateBy
+	detail.UpdateTime = common.GetStringP(time.Unix(rl.UpdateTime, 0).Format(common.TimeFormat))
+	detail.ChartVersion = &rl.ChartVersion
 	detail.Message = &rl.Message
-	if detail.GetStatus() != helmrelease.StatusDeployed.String() && rl.Status != "" {
+	if rl.Status != "" {
 		detail.Status = &rl.Status
 	}
 	detail.Repo = &rl.Repo

@@ -14,12 +14,15 @@ package release
 
 import (
 	"context"
+	"errors"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	_struct "github.com/golang/protobuf/ptypes/struct"
+	"helm.sh/helm/v3/pkg/storage/driver"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/release"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/utils/contextx"
 	helmmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/proto/bcs-helm-manager"
 )
 
@@ -57,7 +60,7 @@ func (g *GetReleaseStatusAction) Handle(ctx context.Context,
 }
 
 func (g *GetReleaseStatusAction) getResourceMainfest() error {
-	projectCode := g.req.GetProjectCode()
+	projectCode := contextx.GetProjectCodeFromCtx(g.ctx)
 	clusterID := g.req.GetClusterID()
 	namespace := g.req.GetNamespace()
 	name := g.req.GetName()
@@ -67,7 +70,7 @@ func (g *GetReleaseStatusAction) getResourceMainfest() error {
 		Name:      name,
 		GetObject: true,
 	})
-	if err != nil {
+	if err != nil && !errors.Is(err, driver.ErrReleaseNotFound) {
 		blog.Errorf("get release failed, %s, clusterID: %s namespace: %s, name: %s", err.Error(), clusterID,
 			namespace, name)
 		g.setResp(common.ErrHelmManagerGetActionFailed, err.Error(), nil)

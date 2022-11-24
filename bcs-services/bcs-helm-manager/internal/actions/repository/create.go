@@ -26,6 +26,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/repo"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/store"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/store/entity"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/utils/contextx"
 	helmmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/proto/bcs-helm-manager"
 )
 
@@ -72,7 +73,7 @@ func (c *CreateRepositoryAction) Handle(ctx context.Context,
 	// 获取username
 	username := auth.GetUserFromCtx(ctx)
 	return c.create(c.req.GetTakeover(), &helmmanager.Repository{
-		ProjectCode:    c.req.ProjectCode,
+		ProjectCode:    common.GetStringP(contextx.GetProjectCodeFromCtx(ctx)),
 		Name:           c.req.Name,
 		DisplayName:    c.req.DisplayName,
 		Type:           c.req.Type,
@@ -166,7 +167,7 @@ func (c *CreateRepositoryAction) createPublicRepoIfNotExist(data *helmmanager.Re
 	if len(publicRepo) == 0 {
 		return nil
 	}
-	_, err := c.model.GetRepository(context.TODO(), c.req.GetProjectCode(), common.PublicRepoName)
+	_, err := c.model.GetRepository(context.TODO(), contextx.GetProjectCodeFromCtx(c.ctx), common.PublicRepoName)
 	if err != nil && !errors.Is(err, drivers.ErrTableRecordNotFound) {
 		blog.Errorf("create project %s public repo failed, err %s", c.req.GetProjectCode(), err.Error())
 		return err
@@ -176,7 +177,7 @@ func (c *CreateRepositoryAction) createPublicRepoIfNotExist(data *helmmanager.Re
 	}
 	now := time.Now().Unix()
 	err = c.model.CreateRepository(context.TODO(), &entity.Repository{
-		ProjectID:   c.req.GetProjectCode(),
+		ProjectID:   contextx.GetProjectCodeFromCtx(c.ctx),
 		Name:        common.PublicRepoName,
 		DisplayName: common.PublicRepoDisplayName,
 		Public:      true,

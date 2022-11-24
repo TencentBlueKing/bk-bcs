@@ -2558,6 +2558,10 @@ message GetReleaseHistoryReq {
         title: "projectCode",
         description: "项目代码"
     }, (validate.rules).string = {min_len : 1 , max_len : 32}];
+    optional string filter = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "filter",
+        description: "状态过滤"
+    }];
 }
 
 message GetReleaseHistoryResp {

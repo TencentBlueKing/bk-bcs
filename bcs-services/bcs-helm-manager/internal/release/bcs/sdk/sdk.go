@@ -28,8 +28,10 @@ import (
 	"helm.sh/helm/v3/pkg/action"
 	"helm.sh/helm/v3/pkg/chart"
 	"helm.sh/helm/v3/pkg/chart/loader"
+	"helm.sh/helm/v3/pkg/cli/values"
 	rspb "helm.sh/helm/v3/pkg/release"
 	"helm.sh/helm/v3/pkg/storage/driver"
+	"helm.sh/helm/v3/pkg/strvals"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
@@ -183,10 +185,13 @@ func (c *client) Install(_ context.Context, config release.HelmInstallConfig) (*
 
 	installer := action.NewInstall(conf)
 	installer.DryRun = config.DryRun
+	installer.Replace = config.Replace
+	installer.ClientOnly = config.ClientOnly
 	installer.ReleaseName = config.Name
 	installer.Namespace = config.Namespace
 	installer.PostRenderer = newPatcher(c.group.config.PatchTemplates, config.PatchTemplateValues)
-	if err := parseArgs4Install(installer, config.Args); err != nil {
+	valueOpts := &values.Options{}
+	if err := parseArgs4Install(installer, config.Args, valueOpts); err != nil {
 		blog.Errorf("sdk client install and parse from args failed, %s, args: %v", err.Error(), config.Args)
 		return nil, err
 	}
@@ -207,6 +212,12 @@ func (c *client) Install(_ context.Context, config release.HelmInstallConfig) (*
 		return nil, err
 	}
 	values, err := getValues(append(config.Values, vars))
+	if err != nil {
+		blog.Errorf("sdk client install and get values failed, %s, "+
+			"namespace %s, name %s", err.Error(), config.Namespace, config.Name)
+		return nil, err
+	}
+	values, err = mergeValues(valueOpts, values)
 	if err != nil {
 		blog.Errorf("sdk client install and get values failed, %s, "+
 			"namespace %s, name %s", err.Error(), config.Namespace, config.Name)
@@ -253,7 +264,8 @@ func (c *client) Upgrade(_ context.Context, config release.HelmUpgradeConfig) (*
 	upgrader.DryRun = config.DryRun
 	upgrader.Namespace = config.Namespace
 	upgrader.PostRenderer = newPatcher(c.group.config.PatchTemplates, config.PatchTemplateValues)
-	if err := parseArgs4Upgrade(upgrader, config.Args); err != nil {
+	valueOpts := &values.Options{}
+	if err := parseArgs4Upgrade(upgrader, config.Args, valueOpts); err != nil {
 		blog.Errorf("sdk client upgrade and parse from args failed, %s, args: %v", err.Error(), config.Args)
 		return nil, err
 	}
@@ -274,6 +286,12 @@ func (c *client) Upgrade(_ context.Context, config release.HelmUpgradeConfig) (*
 		return nil, err
 	}
 	values, err := getValues(append(config.Values, vars))
+	if err != nil {
+		blog.Errorf("sdk client upgrade and get values failed, %s, "+
+			"namespace %s, name %s", err.Error(), config.Namespace, config.Name)
+		return nil, err
+	}
+	values, err = mergeValues(valueOpts, values)
 	if err != nil {
 		blog.Errorf("sdk client upgrade and get values failed, %s, "+
 			"namespace %s, name %s", err.Error(), config.Namespace, config.Name)
@@ -487,6 +505,23 @@ func mergeMaps(a, b map[string]interface{}) map[string]interface{} {
 	return out
 }
 
+func mergeValues(valuesOpts *values.Options, base map[string]interface{}) (map[string]interface{}, error) {
+	// User specified a value via --set
+	for _, value := range valuesOpts.Values {
+		if err := strvals.ParseInto(value, base); err != nil {
+			return nil, fmt.Errorf("failed parsing --set data, %s", err.Error())
+		}
+	}
+
+	// User specified a value via --set-string
+	for _, value := range valuesOpts.StringValues {
+		if err := strvals.ParseIntoString(value, base); err != nil {
+			return nil, fmt.Errorf("failed parsing --set-string data, %s", err.Error())
+		}
+	}
+	return base, nil
+}
+
 // removeValuesTemplate 移除 values 中的 bcs 模版变量
 func removeValuesTemplate(values map[string]interface{}) map[string]interface{} {
 	delete(values, common.BCSPrefix)
@@ -507,7 +542,7 @@ func removeValuesTemplate(values map[string]interface{}) map[string]interface{} 
 
 // parseArgs4Install 从用户给出的原生参数里, 直接parse到helm的install设置中
 // 当前使用的flags设置版本来源helm.sh/helm/v3 v3.6.3
-func parseArgs4Install(install *action.Install, args []string) error {
+func parseArgs4Install(install *action.Install, args []string, valueOpts *values.Options) error {
 	f := pflag.NewFlagSet("install", pflag.ContinueOnError)
 
 	f.BoolVar(&install.DisableHooks, "no-hooks", false,
@@ -545,12 +580,13 @@ func parseArgs4Install(install *action.Install, args []string) error {
 	f.BoolVar(&install.ChartPathOptions.InsecureSkipTLSverify, "insecure-skip-tls-verify", false,
 		"skip tls certificate checks for the chart download")
 
+	addValueOptionsFlags(f, valueOpts)
 	return f.Parse(args)
 }
 
 // parseArgs4Upgrade 从用户给出的原生参数里, 直接parse到helm的upgrade设置中
 // 当前使用的flags设置版本来源helm.sh/helm/v3 v3.6.3
-func parseArgs4Upgrade(upgrade *action.Upgrade, args []string) error {
+func parseArgs4Upgrade(upgrade *action.Upgrade, args []string, valueOpts *values.Options) error {
 	f := pflag.NewFlagSet("upgrade", pflag.ContinueOnError)
 
 	f.BoolVarP(&upgrade.Install, "install", "i", true,
@@ -597,5 +633,19 @@ func parseArgs4Upgrade(upgrade *action.Upgrade, args []string) error {
 		"skip tls certificate checks for the chart download")
 	f.BoolVar(&upgrade.Verify, "verify", false, "verify the package before using it")
 
+	addValueOptionsFlags(f, valueOpts)
 	return f.Parse(args)
+}
+
+func addValueOptionsFlags(f *pflag.FlagSet, v *values.Options) {
+	f.StringSliceVarP(&v.ValueFiles, "values", "f", []string{},
+		"specify values in a YAML file or a URL (can specify multiple)")
+	f.StringArrayVar(&v.Values, "set", []string{},
+		"set values on the command line (can specify multiple or separate values with commas: key1=val1,key2=val2)")
+	f.StringArrayVar(&v.StringValues, "set-string", []string{},
+		"set STRING values on the command line (can specify multiple or separate values with commas: "+
+			"key1=val1,key2=val2)")
+	f.StringArrayVar(&v.FileValues, "set-file", []string{},
+		"set values from respective files specified via the command line (can specify multiple or separate "+
+			"values with commas: key1=path1,key2=path2)")
 }

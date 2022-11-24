@@ -118,6 +118,7 @@ func (r *ReleaseRollbackAction) Done(err error) {
 		Name:      r.name,
 	})
 	if detail != nil {
+		rl.Update(entity.FieldKeyChartVersion, detail.ChartVersion)
 		rl.Update(entity.FieldKeyRevision, detail.Revision)
 	}
 	_ = r.model.UpdateRelease(context.Background(), r.clusterID, r.namespace, r.name, rl)

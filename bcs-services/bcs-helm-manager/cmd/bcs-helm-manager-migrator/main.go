@@ -202,7 +202,7 @@ func getHelmRepo(model store.HelmManagerModel) []*entity.Repository {
 func getSaasHelmRepo(db *gorm.DB) []repo {
 	var repos []repo
 	err := db.Raw("SELECT r.id, r.url, r.name, r.project_id, ra.credentials FROM helm_repository AS r "+
-		"LEFT JOIN helm_repo_auth AS ra ON ra.repo_id = r.id WHERE r.provider = ?", "bkrepo").
+		"LEFT JOIN helm_repo_auth AS ra ON ra.repo_id = r.id WHERE r.name != ?", common.PublicRepoName).
 		Scan(&repos).Error
 	if err != nil {
 		blog.Fatalf("get saas helm repo failed, err %s", err.Error())
@@ -248,7 +248,13 @@ func migrateReleases(model store.HelmManagerModel, mysqlDB *gorm.DB) {
 		if len(v.Name) == 0 || len(v.ClusterID) == 0 || len(v.Namespace) == 0 {
 			continue
 		}
-		_, err := model.GetRelease(context.TODO(), v.ClusterID, v.Namespace, v.Name)
+		rl, err := v.toEntity()
+		if err != nil {
+			blog.Errorf("create releases %s in cluster %s namespace %s, err %s",
+				v.Name, v.ClusterID, v.Namespace, err.Error())
+			continue
+		}
+		_, err = model.GetRelease(context.TODO(), v.ClusterID, v.Namespace, v.Name)
 		if err != nil && !errors.Is(err, drivers.ErrTableRecordNotFound) {
 			blog.Errorf("create releases %s in cluster %s namespace %s, err %s",
 				v.Name, v.ClusterID, v.Namespace, err.Error())
@@ -256,12 +262,22 @@ func migrateReleases(model store.HelmManagerModel, mysqlDB *gorm.DB) {
 		}
 		if err == nil {
 			existReleases++
-			continue
-		}
-		rl, err := v.toEntity()
-		if err != nil {
-			blog.Errorf("create releases %s in cluster %s namespace %s, err %s",
-				v.Name, v.ClusterID, v.Namespace, err.Error())
+			up := entity.M{
+				entity.FieldKeyChartVersion: rl.ChartVersion,
+				entity.FieldKeyRevision:     rl.Revision,
+				entity.FieldKeyValueFile:    rl.ValueFile,
+				entity.FieldKeyValues:       rl.Values,
+				entity.FieldKeyArgs:         rl.Args,
+				entity.FieldKeyUpdateBy:     rl.UpdateBy,
+				entity.FieldKeyUpdateTime:   rl.UpdateTime,
+				entity.FieldKeyStatus:       rl.Status,
+				entity.FieldKeyMessage:      rl.Message,
+			}
+			err = model.UpdateRelease(context.TODO(), v.ClusterID, v.Namespace, v.Name, up)
+			if err != nil {
+				blog.Errorf("update releases %s in cluster %s namespace %s, err %s",
+					v.Name, v.ClusterID, v.Namespace, err.Error())
+			}
 			continue
 		}
 		err = model.CreateRelease(context.TODO(), rl)

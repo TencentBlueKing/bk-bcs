@@ -43,7 +43,8 @@ type ReleaseUpgradeAction struct {
 	version     string
 	values      []string
 	args        []string
-	username    string
+	createBy    string
+	updateBy    string
 
 	contents []byte
 	result   *release.HelmUpgradeResult
@@ -65,7 +66,8 @@ type ReleaseUpgradeActionOption struct {
 	Version     string
 	Values      []string
 	Args        []string
-	Username    string
+	CreateBy    string
+	UpdateBy    string
 }
 
 // NewReleaseUpgradeAction new release upgrade action
@@ -84,7 +86,8 @@ func NewReleaseUpgradeAction(o *ReleaseUpgradeActionOption) *ReleaseUpgradeActio
 		version:        o.Version,
 		values:         o.Values,
 		args:           o.Args,
-		username:       o.Username,
+		createBy:       o.CreateBy,
+		updateBy:       o.UpdateBy,
 	}
 }
 
@@ -159,8 +162,8 @@ func (r *ReleaseUpgradeAction) Execute(ctx context.Context) error {
 				common.PTKProjectID: r.projectID,
 				common.PTKClusterID: r.clusterID,
 				common.PTKNamespace: r.namespace,
-				common.PTKCreator:   r.username,
-				common.PTKUpdator:   r.username,
+				common.PTKCreator:   r.createBy,
+				common.PTKUpdator:   r.updateBy,
 				common.PTKVersion:   r.version,
 			},
 		})
@@ -186,7 +189,7 @@ func (r *ReleaseUpgradeAction) Done(err error) {
 		entity.FieldKeyChartVersion: r.version,
 		entity.FieldKeyValues:       r.values,
 		entity.FieldKeyArgs:         r.args,
-		entity.FieldKeyUpdateBy:     r.username,
+		entity.FieldKeyUpdateBy:     r.updateBy,
 		entity.FieldKeyStatus:       status.String(),
 		entity.FieldKeyMessage:      message,
 	}

@@ -59,6 +59,7 @@ func ParseProjectIDWrapper(fn server.HandlerFunc) server.HandlerFunc {
 		}
 
 		ctx = context.WithValue(ctx, contextx.ProjectIDContextKey, pj.ProjectID)
+		ctx = context.WithValue(ctx, contextx.ProjectCodeContextKey, pj.ProjectCode)
 		return fn(ctx, req, rsp)
 	}
 }

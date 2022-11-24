@@ -20,6 +20,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 	authUtils "github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/utils"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
@@ -110,7 +111,7 @@ func (l *ListReleaseV1Action) list() (*helmmanager.ReleaseListData, error) {
 	}
 	clusterReleases := make([]*helmmanager.Release, 0, len(origin))
 	for _, item := range origin {
-		clusterReleases = append(clusterReleases, item.Transfer2Proto(l.req.GetProjectCode(), clusterID))
+		clusterReleases = append(clusterReleases, item.Transfer2Proto(contextx.GetProjectCodeFromCtx(l.ctx), clusterID))
 	}
 
 	// merge release
@@ -205,14 +206,14 @@ func (l *ListReleaseV1Action) getReleaseKey(namespace, name string) string {
 func (l *ListReleaseV1Action) getCondition(shared bool) *operator.Condition {
 	cond := make(operator.M)
 	if shared {
-		cond.Update(entity.FieldKeyProjectCode, l.req.GetProjectCode())
+		cond.Update(entity.FieldKeyProjectCode, contextx.GetProjectCodeFromCtx(l.ctx))
 	}
 	cond.Update(entity.FieldKeyClusterID, l.req.GetClusterID())
 	if len(l.req.GetNamespace()) != 0 {
 		cond.Update(entity.FieldKeyNamespace, l.req.GetNamespace())
 	}
 	if len(l.req.GetName()) != 0 {
-		cond.Update(entity.FieldKeyName, l.req.GetName())
+		cond.Update(entity.FieldKeyName, primitive.Regex{Pattern: l.req.GetName(), Options: "i"})
 	}
 	return operator.NewLeafCondition(operator.Eq, cond)
 }

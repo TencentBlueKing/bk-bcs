@@ -21,6 +21,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/store"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/store/entity"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/store/utils"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/utils/contextx"
 	helmmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/proto/bcs-helm-manager"
 )
 
@@ -87,7 +88,7 @@ func (l *ListRepositoryAction) list() error {
 
 func (l *ListRepositoryAction) getCondition() *operator.Condition {
 	cond := make(operator.M)
-	cond.Update(entity.FieldKeyProjectID, l.req.GetProjectCode())
+	cond.Update(entity.FieldKeyProjectID, contextx.GetProjectCodeFromCtx(l.ctx))
 	return operator.NewLeafCondition(operator.Eq, cond)
 }
 

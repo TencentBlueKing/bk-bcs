@@ -13,9 +13,11 @@
 package stringx
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"gopkg.in/yaml.v2"
 )
 
 func TestYaml2Json(t *testing.T) {
@@ -38,4 +40,54 @@ func TestJson2Yaml(t *testing.T) {
 `
 	assert.Nil(t, err)
 	assert.Equal(t, expectedYaml, string(y))
+}
+
+func TestYamlNode(t *testing.T) {
+	y := `
+apiVersion: v1
+kind: Service
+metadata:
+# comment 1
+  name: test-service
+  namespace: default
+  labels:
+    k1: v1
+    c: d
+---
+apiVersion: v1
+kind: Service
+metadata:
+# comment 1
+  name: test-service2
+  namespace: default
+  labels:
+    k1: v1
+    c: d
+`
+	var n yaml.MapSlice
+	err := yaml.Unmarshal([]byte(y), &n)
+	fmt.Println(n, err)
+	fmt.Println(n[2])
+	out, err := yaml.Marshal(&n)
+	fmt.Println(string(out), err)
+}
+
+func TestYamlMap(t *testing.T) {
+	y := `
+apiVersion: v1
+kind: Service
+metadata:
+# comment 1
+  name: test-service
+  namespace: default
+  labels:
+    k1: v1
+    c: d
+`
+	n := make(map[interface{}]interface{}, 0)
+	err := yaml.Unmarshal([]byte(y), &n)
+	fmt.Println(n, err)
+
+	out, err := yaml.Marshal(&n)
+	fmt.Println(string(out), err)
 }

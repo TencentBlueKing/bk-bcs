@@ -18,7 +18,7 @@ import (
 	"fmt"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 	helmrelease "helm.sh/helm/v3/pkg/release"
 	"helm.sh/helm/v3/pkg/releaseutil"
 	"helm.sh/helm/v3/pkg/storage/driver"
@@ -50,6 +50,8 @@ type ReleasePreviewAction struct {
 	platform       repo.Platform
 	releaseHandler release.Handler
 
+	createBy string
+
 	req  *helmmanager.ReleasePreviewReq
 	resp *helmmanager.ReleasePreviewResp
 }
@@ -65,6 +67,13 @@ func (r *ReleasePreviewAction) Handle(ctx context.Context,
 		blog.Errorf("get release preview failed, invalid request, %s, param: %v", err.Error(), r.req)
 		r.setResp(common.ErrHelmManagerRequestParamInvalid, err.Error(), nil)
 		return nil
+	}
+
+	old, err := r.model.GetRelease(r.ctx, r.req.GetClusterID(), r.req.GetNamespace(), r.req.GetName())
+	if err == nil {
+		r.createBy = old.CreateBy
+	} else {
+		r.createBy = auth.GetUserFromCtx(r.ctx)
 	}
 
 	preview, err := r.getReleasePreview()
@@ -97,29 +106,19 @@ func (r *ReleasePreviewAction) getReleasePreview() (*helmmanager.ReleasePreview,
 
 	// helm template, get new manifest
 	username := auth.GetUserFromCtx(r.ctx)
-	contents, err := getChartContent(r.model, r.platform, r.req.GetProjectCode(), r.req.GetRepository(),
+	projectCode := contextx.GetProjectCodeFromCtx(r.ctx)
+	contents, err := getChartContent(r.model, r.platform, projectCode, r.req.GetRepository(),
 		r.req.GetChart(), r.req.GetVersion())
 	if err != nil {
 		return nil, fmt.Errorf("get release preview, get contents failed, %s", err.Error())
 	}
-	var newRelease *helmrelease.Release
-	if currentRelease != nil {
-		result, err := upgradeRelease(r.releaseHandler, contextx.GetProjectIDFromCtx(r.ctx), r.req.GetProjectCode(),
-			r.req.GetClusterID(), r.req.GetName(), r.req.GetNamespace(), r.req.GetChart(), r.req.GetVersion(),
-			username, r.req.GetArgs(), nil, contents, r.req.GetValues(), true)
-		if err != nil {
-			return nil, fmt.Errorf("get release preview, get helm template failed, %s", err.Error())
-		}
-		newRelease = result.Release
-	} else {
-		result, err := installRelease(r.releaseHandler, contextx.GetProjectIDFromCtx(r.ctx), r.req.GetProjectCode(),
-			r.req.GetClusterID(), r.req.GetName(), r.req.GetNamespace(), r.req.GetChart(), r.req.GetVersion(),
-			username, r.req.GetArgs(), nil, contents, r.req.GetValues(), true)
-		if err != nil {
-			return nil, fmt.Errorf("get release preview, get helm template failed, %s", err.Error())
-		}
-		newRelease = result.Release
+	result, err := installRelease(r.releaseHandler, contextx.GetProjectIDFromCtx(r.ctx), projectCode,
+		r.req.GetClusterID(), r.req.GetName(), r.req.GetNamespace(), r.req.GetChart(), r.req.GetVersion(),
+		r.createBy, username, r.req.GetArgs(), nil, contents, r.req.GetValues(), true, true, true)
+	if err != nil {
+		return nil, fmt.Errorf("get release preview, get helm template failed, %s", err.Error())
 	}
+	newRelease := result.Release
 
 	return r.generateReleasePreview(currentRelease.Transfer2Release(), newRelease), nil
 }

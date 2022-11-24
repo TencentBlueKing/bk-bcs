@@ -23,6 +23,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/repo"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/store"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/store/entity"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/utils/contextx"
 	helmmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/proto/bcs-helm-manager"
 )
 
@@ -189,7 +190,7 @@ func (l *ListChartActionV1) Handle(ctx context.Context,
 }
 
 func (l *ListChartActionV1) list() error {
-	projectCode := l.req.GetProjectCode()
+	projectCode := contextx.GetProjectCodeFromCtx(l.ctx)
 	repoName := l.req.GetRepoName()
 	username := auth.GetUserFromCtx(l.ctx)
 
@@ -241,7 +242,7 @@ func (l *ListChartActionV1) list() error {
 func (l *ListChartActionV1) getCondition() *operator.Condition {
 	cond := make(operator.M)
 	if l.req.ProjectCode != nil {
-		cond.Update(entity.FieldKeyProjectID, l.req.GetProjectCode())
+		cond.Update(entity.FieldKeyProjectID, contextx.GetProjectCodeFromCtx(l.ctx))
 	}
 	if l.req.RepoName != nil {
 		cond.Update(entity.FieldKeyName, l.req.GetRepoName())

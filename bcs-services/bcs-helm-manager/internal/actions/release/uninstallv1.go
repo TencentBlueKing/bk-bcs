@@ -29,6 +29,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/repo"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/store"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/store/entity"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/utils/contextx"
 	helmmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/proto/bcs-helm-manager"
 )
 
@@ -116,11 +117,12 @@ func (u *UninstallReleaseV1Action) saveDB() error {
 	username := auth.GetUserFromCtx(u.ctx)
 	if create {
 		if err := u.model.CreateRelease(u.ctx, &entity.Release{
-			Name:      u.req.GetName(),
-			Namespace: u.req.GetNamespace(),
-			ClusterID: u.req.GetClusterID(),
-			CreateBy:  username,
-			Status:    helmrelease.StatusUninstalling.String(),
+			ProjectCode: contextx.GetProjectCodeFromCtx(u.ctx),
+			Name:        u.req.GetName(),
+			Namespace:   u.req.GetNamespace(),
+			ClusterID:   u.req.GetClusterID(),
+			CreateBy:    username,
+			Status:      helmrelease.StatusUninstalling.String(),
 		}); err != nil {
 			return err
 		}
@@ -128,6 +130,7 @@ func (u *UninstallReleaseV1Action) saveDB() error {
 		rl := entity.M{
 			entity.FieldKeyUpdateBy: username,
 			entity.FieldKeyStatus:   helmrelease.StatusUninstalling.String(),
+			entity.FieldKeyMessage:  "",
 		}
 		if err := u.model.UpdateRelease(u.ctx, u.req.GetClusterID(), u.req.GetNamespace(),
 			u.req.GetName(), rl); err != nil {

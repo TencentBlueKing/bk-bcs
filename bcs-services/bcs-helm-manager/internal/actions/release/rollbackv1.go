@@ -29,6 +29,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/repo"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/store"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/store/entity"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/utils/contextx"
 	helmmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/proto/bcs-helm-manager"
 )
 
@@ -126,7 +127,7 @@ func (r *RollbackReleaseV1Action) saveDB() error {
 	if create {
 		if err := r.model.CreateRelease(r.ctx, &entity.Release{
 			Name:        r.req.GetName(),
-			ProjectCode: r.req.GetProjectCode(),
+			ProjectCode: contextx.GetProjectCodeFromCtx(r.ctx),
 			Namespace:   r.req.GetNamespace(),
 			ClusterID:   r.req.GetClusterID(),
 			CreateBy:    username,
@@ -138,6 +139,7 @@ func (r *RollbackReleaseV1Action) saveDB() error {
 		rl := entity.M{
 			entity.FieldKeyUpdateBy: username,
 			entity.FieldKeyStatus:   helmrelease.StatusPendingRollback.String(),
+			entity.FieldKeyMessage:  "",
 		}
 		if err := r.model.UpdateRelease(r.ctx, r.req.GetClusterID(), r.req.GetNamespace(),
 			r.req.GetName(), rl); err != nil {

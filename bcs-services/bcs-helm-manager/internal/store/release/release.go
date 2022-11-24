@@ -132,7 +132,9 @@ func (m *ModelRelease) UpdateRelease(ctx context.Context, clusterID, namespace, 
 		return err
 	}
 
-	release.Update(entity.FieldKeyUpdateTime, time.Now().UTC().Unix())
+	if release[entity.FieldKeyUpdateTime] == nil {
+		release.Update(entity.FieldKeyUpdateTime, time.Now().UTC().Unix())
+	}
 	if err := m.db.Table(m.tableName).Update(ctx, cond, operator.M{"$set": release}); err != nil {
 		return err
 	}

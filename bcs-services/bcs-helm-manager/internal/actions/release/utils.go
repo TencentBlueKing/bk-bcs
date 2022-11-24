@@ -56,8 +56,8 @@ func getChartContent(model store.HelmManagerModel, platform repo.Platform,
 }
 
 func installRelease(releaseHandler release.Handler, projectID, projectCode, clusterID, releaseName,
-	releaseNamespace, chartName, version, username string, args []string, bcsSysVar map[string]string,
-	contents []byte, values []string, dryRun bool) (*release.HelmInstallResult, error) {
+	releaseNamespace, chartName, version, creator, updator string, args []string, bcsSysVar map[string]string,
+	contents []byte, values []string, dryRun, replace, clientOnly bool) (*release.HelmInstallResult, error) {
 	vls := make([]*release.File, 0, len(values))
 	for index, v := range values {
 		vls = append(vls, &release.File{
@@ -69,6 +69,8 @@ func installRelease(releaseHandler release.Handler, projectID, projectCode, clus
 		context.Background(),
 		release.HelmInstallConfig{
 			DryRun:      dryRun,
+			Replace:     replace,
+			ClientOnly:  clientOnly,
 			ProjectCode: projectCode,
 			Name:        releaseName,
 			Namespace:   releaseNamespace,
@@ -82,15 +84,15 @@ func installRelease(releaseHandler release.Handler, projectID, projectCode, clus
 				common.PTKProjectID: projectID,
 				common.PTKClusterID: clusterID,
 				common.PTKNamespace: releaseNamespace,
-				common.PTKCreator:   username,
-				common.PTKUpdator:   username,
+				common.PTKCreator:   creator,
+				common.PTKUpdator:   updator,
 				common.PTKVersion:   version,
 			},
 		})
 }
 
 func upgradeRelease(releaseHandler release.Handler, projectID, projectCode, clusterID, releaseName,
-	releaseNamespace, chartName, version, username string, args []string, bcsSysVar map[string]string,
+	releaseNamespace, chartName, version, creator, updator string, args []string, bcsSysVar map[string]string,
 	contents []byte, values []string, dryRun bool) (*release.HelmUpgradeResult, error) {
 	vls := make([]*release.File, 0, len(values))
 	for index, v := range values {
@@ -116,8 +118,8 @@ func upgradeRelease(releaseHandler release.Handler, projectID, projectCode, clus
 				common.PTKProjectID: projectID,
 				common.PTKClusterID: clusterID,
 				common.PTKNamespace: releaseNamespace,
-				common.PTKCreator:   username,
-				common.PTKUpdator:   username,
+				common.PTKCreator:   creator,
+				common.PTKUpdator:   updator,
 				common.PTKVersion:   version,
 			},
 		})

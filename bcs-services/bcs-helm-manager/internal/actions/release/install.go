@@ -91,8 +91,8 @@ func (i *InstallReleaseAction) install() error {
 
 	// 执行install操作
 	result, err := installRelease(i.releaseHandler, contextx.GetProjectIDFromCtx(i.ctx), projectID, clusterID,
-		releaseName, releaseNamespace, chartName, chartVersion, username, i.req.GetArgs(),
-		i.req.GetBcsSysVar(), contents, values, false)
+		releaseName, releaseNamespace, chartName, chartVersion, username, username, i.req.GetArgs(),
+		i.req.GetBcsSysVar(), contents, values, false, false, false)
 	if err != nil {
 		blog.Errorf("install release failed, %s, "+
 			"projectID: %s, clusterID: %s, chartName: %s, chartVersion: %s, namespace: %s, name: %s, operator: %s",

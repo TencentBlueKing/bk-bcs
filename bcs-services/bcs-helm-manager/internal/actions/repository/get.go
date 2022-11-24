@@ -18,6 +18,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/store"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/utils/contextx"
 	helmmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/proto/bcs-helm-manager"
 )
 
@@ -56,7 +57,7 @@ func (g *GetRepositoryAction) Handle(ctx context.Context,
 		return nil
 	}
 
-	return g.get(g.req.GetProjectCode(), g.req.GetName())
+	return g.get(contextx.GetProjectCodeFromCtx(ctx), g.req.GetName())
 }
 
 func (g *GetRepositoryAction) get(projectCode, name string) error {

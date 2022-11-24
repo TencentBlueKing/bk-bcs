@@ -25,3 +25,9 @@ func GetProjectIDFromCtx(ctx context.Context) string {
 	id, _ := ctx.Value(ProjectIDContextKey).(string)
 	return id
 }
+
+// GetProjectCodeFromCtx 通过 ctx 获取 projectCode
+func GetProjectCodeFromCtx(ctx context.Context) string {
+	id, _ := ctx.Value(ProjectCodeContextKey).(string)
+	return id
+}

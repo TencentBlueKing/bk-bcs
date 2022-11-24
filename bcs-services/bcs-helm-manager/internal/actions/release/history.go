@@ -14,11 +14,14 @@ package release
 
 import (
 	"context"
+	"errors"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"helm.sh/helm/v3/pkg/storage/driver"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/release"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/utils/contextx"
 	helmmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/proto/bcs-helm-manager"
 )
 
@@ -56,7 +59,7 @@ func (g *GetReleaseHistoryAction) Handle(ctx context.Context,
 }
 
 func (g *GetReleaseHistoryAction) getHistory() error {
-	projectCode := g.req.GetProjectCode()
+	projectCode := contextx.GetProjectCodeFromCtx(g.ctx)
 	clusterID := g.req.GetClusterID()
 	namespace := g.req.GetNamespace()
 	name := g.req.GetName()
@@ -65,7 +68,7 @@ func (g *GetReleaseHistoryAction) getHistory() error {
 		Namespace: namespace,
 		Name:      name,
 	})
-	if err != nil {
+	if err != nil && !errors.Is(err, driver.ErrReleaseNotFound) {
 		blog.Errorf("get release history failed, %s, clusterID: %s namespace: %s, name: %s",
 			err.Error(), clusterID, namespace, name)
 		g.setResp(common.ErrHelmManagerGetActionFailed, err.Error(), nil)
@@ -74,6 +77,9 @@ func (g *GetReleaseHistoryAction) getHistory() error {
 
 	rh := make([]*helmmanager.ReleaseHistory, 0)
 	for _, v := range history {
+		if g.req.GetFilter() != "" && v.Status != g.req.GetFilter() {
+			continue
+		}
 		rh = append(rh, v.Transfer2HistoryProto())
 	}
 	g.setResp(common.ErrHelmManagerSuccess, "ok", rh)

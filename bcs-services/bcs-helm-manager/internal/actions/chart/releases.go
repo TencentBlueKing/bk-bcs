@@ -22,6 +22,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/store"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/store/entity"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/store/utils"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/utils/contextx"
 	helmmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/proto/bcs-helm-manager"
 )
 
@@ -84,7 +85,7 @@ func (l *GetChartReleaseAction) list() ([]*helmmanager.Release, error) {
 func (l *GetChartReleaseAction) getCondition() *operator.Condition {
 	cond := make(operator.M)
 	if l.req.ProjectCode != nil {
-		cond.Update(entity.FieldKeyProjectCode, l.req.GetProjectCode())
+		cond.Update(entity.FieldKeyProjectCode, contextx.GetProjectCodeFromCtx(l.ctx))
 	}
 	if l.req.RepoName != nil {
 		cond.Update(entity.FieldKeyRepoName, l.req.GetRepoName())
