@@ -35,6 +35,8 @@ import (
 
 const (
 	timeout = time.Second * 30
+	// BKAPIRequestIDHeader 蓝鲸网关的请求ID
+	BKAPIRequestIDHeader = "X-Bkapi-Request-Id"
 )
 
 var (
@@ -101,6 +103,13 @@ func restyResponseToCurl(resp *resty.Response) string {
 	}
 
 	respMsg := fmt.Sprintf("[%s] %s %s", resp.Status(), resp.Time(), body)
+
+	// 请求蓝鲸网关记录RequestID
+	bkAPIRequestID := resp.RawResponse.Header.Get(BKAPIRequestIDHeader)
+	if bkAPIRequestID != "" {
+		respMsg = fmt.Sprintf("[%s] %s bkapi_request_id=%s %s", resp.Status(), resp.Time(), bkAPIRequestID, body)
+	}
+
 	return respMsg
 }
 
