@@ -8,14 +8,14 @@
         <slot name="header-right"></slot>
       </template>
     </BcsContentHeader>
-    <div class="biz-content-wrapper content">
+    <div class="biz-content-wrapper content" ref="contentRef">
       <slot></slot>
     </div>
   </div>
 </template>
 <script lang="ts">
 import BcsContentHeader from '@/components/layout/Header.vue';
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent, ref } from '@vue/composition-api';
 export default defineComponent({
   name: 'LayoutContent',
   components: {
@@ -36,7 +36,14 @@ export default defineComponent({
     },
   },
   setup() {
-    return {};
+    const contentRef = ref<any>(null);
+    const handleScollTop = () => {
+      contentRef.value.scrollTop = 0;
+    };
+    return {
+      contentRef,
+      handleScollTop,
+    };
   },
 });
 </script>

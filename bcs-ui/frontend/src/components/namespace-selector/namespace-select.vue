@@ -1,8 +1,8 @@
 <template>
   <bcs-select
-    class="w-[250px]"
-    v-model="localValue"
-    :clearable="false"
+    class="bg-[#fff]"
+    :value="value"
+    :clearable="clearable"
     :searchable="searchable"
     :disabled="disabled"
     :loading="namespaceLoading"
@@ -16,16 +16,25 @@
     ></bcs-option>
   </bcs-select>
 </template>
-<script>
-import { defineComponent, ref, onMounted } from '@vue/composition-api';
-import { CUR_SELECT_NAMESPACE } from '@/common/constant';
+<script lang="ts">
+import { defineComponent, onMounted, watch, toRefs } from '@vue/composition-api';
 import useDefaultClusterId from '@/views/node/use-default-clusterId';
 import { useSelectItemsNamespace } from '@/views/dashboard/namespace/use-namespace';
+import { CUR_SELECT_NAMESPACE } from '@/common/constant';
 
 
 export default defineComponent({
   name: 'NamespaceSelect',
+  model: {
+    prop: 'value',
+    event: 'change',
+  },
   props: {
+    clusterId: {
+      type: String,
+      default: '',
+      required: true,
+    },
     value: {
       type: String,
       default: '',
@@ -38,27 +47,34 @@ export default defineComponent({
       type: Boolean,
       default: false,
     },
+    clearable: {
+      type: Boolean,
+      default: false,
+    },
   },
   setup(props, ctx) {
-    const localValue = ref(props.value);
-
+    const { clusterId } = toRefs(props);
     const { defaultClusterId } = useDefaultClusterId();
     const { namespaceLoading, namespaceList, getNamespaceData } = useSelectItemsNamespace();
 
+    watch(clusterId,  () => {
+      getNamespaceData({
+        clusterId: clusterId.value || defaultClusterId.value,
+      });
+    });
+
     const handleNamespaceChange = (name) => {
-      localValue.value = name;
       ctx.emit('change', name);
-      localStorage.setItem(`${defaultClusterId.value}-${CUR_SELECT_NAMESPACE}`, name);
+      sessionStorage.setItem(CUR_SELECT_NAMESPACE, name);
     };
 
     onMounted(() => {
       getNamespaceData({
-        clusterId: defaultClusterId.value,
+        clusterId: clusterId.value || defaultClusterId.value,
       });
     });
 
     return {
-      localValue,
       namespaceLoading,
       namespaceList,
       handleNamespaceChange,

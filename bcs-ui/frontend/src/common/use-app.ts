@@ -21,8 +21,9 @@ export function useConfig() {
  */
 export function useProject() {
   const curProject = computed(() => $store.state.curProject);
-  const projectID = computed(() => curProject.value?.project_id);
-  const projectCode = computed(() => curProject.value?.project_code);
+  const projectID = computed<string>(() => curProject.value?.project_id);
+  // todo 详情接口会丢失project_code
+  const projectCode = computed(() => curProject.value?.project_code || $store.state.curProjectCode);
 
   return {
     curProject,
@@ -36,11 +37,15 @@ export function useProject() {
  */
 export function useCluster() {
   const curClusterId = computed(() => $store.state.curClusterId);
-  const isSharedCluster = computed(() => $store.state.cluster.curCluster?.is_shared); 
+  const isSharedCluster = computed(() => $store.state.cluster.curCluster?.is_shared);
+  const clusterList = computed(() => $store.state.cluster.clusterList || []);
+  const isSingleCluster = computed(() => !!curClusterId.value);
 
   return {
     curClusterId,
     isSharedCluster,
+    clusterList,
+    isSingleCluster,
   };
 }
 

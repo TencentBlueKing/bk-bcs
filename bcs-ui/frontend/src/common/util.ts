@@ -535,3 +535,32 @@ export const mergeDeep = (target, ...sources) => {
 
   return mergeDeep(target, ...sources);
 };
+
+interface INode {
+  id: string | number
+  name: string
+  isFolder?: boolean
+  children: INode[]
+}
+export const path2Tree = (paths: string[]) => {
+  if (!paths) return;
+  const nodes: INode[] = [];
+  paths.forEach((path) => {
+    const tmpPaths = path.split('/');
+    tmpPaths.reduce((pre, currentPath, index) => {
+      const curID = tmpPaths.slice(0, index + 1).join('/');
+      let node = pre.find(item => item.id === curID);
+      if (!node) {
+        node = {
+          id: curID,
+          name: currentPath,
+          children: [],
+          isFolder: index < (tmpPaths.length - 1),
+        };
+        pre.push(node);
+      }
+      return node.children;
+    }, nodes);
+  });
+  return nodes;
+};

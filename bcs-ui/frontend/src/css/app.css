@@ -2662,25 +2662,3 @@ div::-webkit-scrollbar-thumb {
 .mw88 {
     min-width: 88px;
 }
-.bcs-dropdown-item {
-    display: block;
-    height: 32px;
-    line-height: 33px;
-    padding: 0 16px;
-    color: #63656e;
-    font-size: 12px;
-    text-decoration: none;
-    white-space: nowrap;
-    cursor: pointer;
-    &:hover {
-        background-color: #eaf3ff;
-        color: #3a84ff;
-    }
-    &.disabled {
-        color: #dcdee5;
-        cursor: not-allowed;
-    }
-    .bk-button-text {
-        font-size: 12px;
-    }
-}

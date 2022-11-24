@@ -1466,11 +1466,6 @@
     }
 }
 
-.bk-tag {
-    margin-left: 0;
-    transform: scale(0.85);
-}
-
 .bk-dialog-wrapper .bk-info-box .bk-dialog-sub-header .bk-dialog-header-inner {
     text-align: left;
 }

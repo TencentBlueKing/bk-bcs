@@ -1567,7 +1567,7 @@ export default {
   '- bcs-values目录下的文件': ['- Files in the directory of bcs-values'],
   'Values文件命名规范是以values.yaml结尾，例如xxx-values.yaml': ['The values file naming convention is based on values.yaml End, e.g. XXX- values.yaml'],
   '选择要删除的版本': ['Select version to delete'],
-  '您需要先删除所有Release，再进行Chart删除操作': ['You need to delete all releases before deleting chart'],
+  '您需要先删除以下所有Release, 再进行删除操作': ['You need to delete all releases before deleting chart'],
   '删除Chart': ['Delete Chart'],
   '例如/bin/bash': ['例如/bin/bash'],
   '多个参数用空格分隔，例如"-c"  "while true; do echo hello; sleep 10;done"': ['Multiple parameters are separated by spaces, eg: "- C" "while true; do echo hello; sleep 10; done"'],
@@ -3285,6 +3285,77 @@ export default {
   "确认删除变量 {name}": [""],
   "确认删除 {name} 等 {count} 个变量": [""],
   "确认要对节点 {ip} 上的Pod进行驱逐": [""],
+   "新建节点模板": [
+        "New node template"
+    ],
+    "编辑节点模板": [
+        "Edit node template"
+    ],
+    "节点模板": [
+        "Node template"
+    ],
+    "命名空间列举": [
+        "List of naming space"
+    ],
+    "云凭证创建": [
+        "Cloud voucher creation"
+    ],
+    "业务ID": [
+        "Business ID"
+    ],
+    "联系BK助手": [
+        "Contact BK Assistant"
+    ],
+    "蓝鲸桌面": [
+        "Blue whale desktop"
+    ],
+    "可生产实例数": [
+        "Number of producing instances"
+    ],
+    "失败重试": [
+        "Failure to retry"
+    ],
+    "IP状态为停止调度才能做POD驱逐操作": [
+        "IP status is to stop scheduling to do POD expelction operation"
+    ],
+    "pod驱逐": [
+        "pod deportation"
+    ],
+    "Chart部署选项": [
+        "Chart deployment option"
+    ],
+    "Values文件": [
+        "Values file"
+    ],
+    "Helm部署参数": [
+        "Helm deployment parameter"
+    ],
+    "确认要对 {ip} 等 {num} 个节点上的Pod进行驱逐": [],
+    '确认删除 {name}': [],
+    '更新记录 ({name})': [],
+    '更新记录': [],
+    '回滚 ({name})': [],
+    '版本: {version} (部署时间: {time}, chart版本: {chartVersion})': [],
+    '删除 {name} Chart的版本': [],
+    "新增集群":[],
+    "描述不能包含特殊字符":[],
+    "刷新列表":[],
+    "自定义参数":[],
+    "重复键":[],
+    "创建仓库":[],
+    "仓库地址":[],
+    "废弃":[],
+    "安装中":[],
+    "升级中":[],
+    "回滚中":[],
+    "安装失败":[],
+    "升级失败":[],
+    '(默认锁定values内容为当前release(版本: {version} )的内容, 解除锁定后, 加载为对应Chart中的values内容)': [],
+    '下载 {name} Chart的版本': [],
+    "查看仓库信息":[""],
+    "密码":[""],
+    '确定删除 {name}': [''],
+    '查看Notes': [''],
   "{used}核 / {total}核 (已使用/总量)": [""],
   "{used} / {total} (已使用/总量)": [""],
 }

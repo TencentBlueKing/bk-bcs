@@ -29,6 +29,13 @@ module.exports = {
         extensions: ['.md'],
       },
       devServer: {
+        hot: true,
+        host: process.env.BK_LOCAL_HOST,
+        client: {
+          webSocketURL: {
+            port: process.env.BK_PORT || 8004
+          }
+        },
         proxy: {
           '/api': {
               target: process.env.BK_PROXY_DEVOPS_BCS_API_URL,

@@ -420,7 +420,7 @@
                 placement="bottom"
                 theme="light dropdown"
                 :arrow="false">
-                <span class="more-operate"><i class="bcs-icon bcs-icon-more"></i></span>
+                <span class="bcs-icon-more-btn"><i class="bcs-icon bcs-icon-more"></i></span>
                 <template #content>
                   <ul class="bcs-dropdown-list">
                     <template v-if="row.status === 'RUNNING'">
@@ -1471,24 +1471,6 @@ export default defineComponent({
 <style lang="postcss" scoped>
 >>> .bk-table-header-wrapper {
     border-top: 1px solid #dfe0e5;
-}
->>> .more-operate {
-  font-size: 18px;
-  font-weight: bold;
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  color: #979ba5;
-  position: relative;
-  top: 1px;
-  &:hover {
-    background: #ddd;
-    color: #3a84ff
-  }
 }
 .cluster-node-wrapper {
     margin: 0 20px;

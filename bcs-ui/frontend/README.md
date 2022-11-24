@@ -5,6 +5,7 @@
 - vscode
 - node > 14
 - volar、tailwindcss、eslint插件
+- 浏览器插件 Gimli Tailwind
 
 ### 运行
 

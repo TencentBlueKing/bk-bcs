@@ -866,3 +866,6 @@ url("@/fonts/fonts/iconcool.eot?#iefix") format("embedded-opentype");
 .bcs-icon-machine:before {
 	content: "\e224";
 }
+.bcs-icon-helm-app:before {
+	content: "\e225";
+}

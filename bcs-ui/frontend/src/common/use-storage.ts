@@ -2,53 +2,59 @@ import {  computed, Ref, unref, watch } from '@vue/composition-api';
 import useApp from './use-app';
 
 export interface IStorageConfig {
-  autoInitValue: true
-  engine: Storage
-  scope: 'project' | 'cluster' | undefined
+  autoInitValue?: boolean
+  engine?: Storage
+  scope?: 'project' | 'cluster' | undefined
 }
 
 /**
  * 浏览器缓存
+ * @param ref
  * @param key
- * @param namespace
  * @param config
  */
 export function useStorage(
-  key: Ref<any>,
-  namespace: string,
-  config: IStorageConfig | Ref<IStorageConfig>,
+  ref: Ref<any>,
+  key: string,
+  config: IStorageConfig | Ref<IStorageConfig> = {
+    autoInitValue: true,
+    engine: localStorage,
+    scope: undefined,
+  },
 ) {
-  const { autoInitValue, engine = localStorage, scope } = unref(config);
+  const { autoInitValue = true, engine = localStorage, scope } = unref(config);
   const { projectID, curClusterId } = useApp;
 
   const storageKey = computed(() => {
-    let itemKey = namespace;
+    let itemKey: string | undefined = key;
     if (scope === 'project') {
-      itemKey = `${projectID.value}-${namespace}`;
+      itemKey = `${projectID.value}-${key}`;
     } else if (scope === 'cluster') {
-      itemKey = `${curClusterId.value}-${namespace}`;
+      itemKey = curClusterId.value ? `${curClusterId.value}-${key}` : undefined;
     }
 
     return itemKey;
   });
 
-  function setKeys() {
+  function setRefValue() {
+    if (storageKey.value === undefined) return;
     try {
-      key.value = engine.getItem(storageKey.value);
+      ref.value = engine.getItem(storageKey.value);
     } catch (e) {
       console.error(e);
     }
   }
 
-  watch(key, () => {
+  watch(ref, () => {
+    if (storageKey.value === undefined) return;
     try {
-      engine.setItem(storageKey.value, key.value);
+      engine.setItem(storageKey.value, ref.value);
     } catch (e) {
       console.error(e);
     }
   });
 
-  if (autoInitValue) {
-    setKeys();
+  if (autoInitValue && !ref.value) {
+    setRefValue();
   }
 }

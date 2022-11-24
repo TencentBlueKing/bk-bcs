@@ -102,7 +102,7 @@
   </div>
 </template>
 <script lang="ts">
-import { defineComponent, toRefs, watch, ref, computed } from '@vue/composition-api';
+import { defineComponent, toRefs, watch, ref, computed, PropType } from '@vue/composition-api';
 import Validate from './validate.vue';
 import $i18n from '@/i18n/i18n-setup';
 
@@ -112,6 +112,14 @@ export interface IData {
   placeholder?: any;
   disabled?: boolean;
 }
+export interface IAdvice {
+  desc: string
+  name: string
+}
+export interface IRule {
+  message: any
+  validator: any
+}
 export default defineComponent({
   components: { Validate },
   model: {
@@ -120,8 +128,8 @@ export default defineComponent({
   },
   props: {
     modelValue: {
-      type: [Object, Array],
-      default: [],
+      type: [Object, Array] as PropType<Object|Array<IData>>,
+      default: () => [],
     },
     valueDesc: {
       type: String,
@@ -144,11 +152,11 @@ export default defineComponent({
       default: true,
     },
     keyAdvice: {
-      type: Array,
+      type: Array as PropType<Array<IAdvice>>,
       default: () => [],
     },
     keyRules: {
-      type: Array,
+      type: Array as PropType<Array<IRule>>,
       default: () => [],
     },
     minItems: {
@@ -159,7 +167,7 @@ export default defineComponent({
   setup(props, ctx) {
     const { modelValue, keyRules, minItems } = toRefs(props);
     const keyValueData = ref<IData[]>([]);
-    const disabledDelete = computed(() => keyValueData.value.length < minItems.value);
+    const disabledDelete = computed(() => keyValueData.value.length <= minItems.value);
     watch(modelValue, () => {
       if (Array.isArray(modelValue.value)) {
         keyValueData.value = modelValue.value.map((item: any) => ({
@@ -208,7 +216,7 @@ export default defineComponent({
       item.key = advice.name;
       item.value = advice.default;
     };
-    const rules = ref([
+    const rules = ref<IRule[]>([
       ...keyRules.value,
       {
         message: $i18n.t('重复键'),
