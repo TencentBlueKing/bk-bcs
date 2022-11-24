@@ -114,7 +114,7 @@
             </bcs-select>
             <span
               class="ml-[5px] mr-[10px]"
-              v-bk-tooltips="$t('Values文件包含两类: <br/>- 以values.yaml结尾, 例如xxx-values.yaml文件 <br/>- 以values.yaml或以values.yml结尾, 例如xxx-values.yaml文件')">
+              v-bk-tooltips="$t('Values文件包含两类: <br/>- 以values.yaml结尾, 例如xxx-values.yaml文件 <br/>- bcs-values目录下的以.yml或.yaml结尾的文件')">
               <i class="bk-icon icon-question-circle"></i>
             </span>
           </template>
@@ -185,6 +185,7 @@
               }]"
               :model-value="customArgs"
               :min-items="0"
+              :unique-key="false"
               ref="keyValueRef">
             </KeyValue>
           </div>
@@ -269,7 +270,7 @@ import ClusterSelect from '@/components/cluster-selector/cluster-select.vue';
 import CodeEditor from '@/components/monaco-editor/new-editor.vue';
 import ChartFileTree from './chart-file-tree.vue';
 import NamespaceSelect from '@/components/namespace-selector/namespace-select.vue';
-import KeyValue from '@/components/key-value.vue';
+import KeyValue, { IData } from '@/components/key-value.vue';
 import { SPECIAL_REGEXP } from '@/common/constant';
 import useHelm from './use-helm';
 import { useCluster } from '@/common/use-app';
@@ -339,7 +340,7 @@ export default defineComponent({
       '--timeout': 600,
     });
     // 自定义参数
-    const customArgs = ref({});
+    const customArgs = ref<IData[]>([]);
     const valuesData = ref({
       valueFile: '',
       valueFileContent: '',
@@ -466,20 +467,22 @@ export default defineComponent({
       };
       return true;
     };
-    // 提交参数
+    // 获取提交参数
     const handleGetReleaseParams = () => {
       const { namespace, name, chartVersion } = releaseData.value;
       const { valueFileContent } = valuesData.value;
       // 处理command参数信息
-      const argsData = Object.assign({}, args.value, (keyValueRef.value?.labels || {}));
-      const commands = Object.keys(argsData).reduce<string[]>((pre, key) => {
-        if (key === '--timeout') {
-          pre.push(`${key}=${argsData[key]}s`);
-        } else {
-          pre.push(`${key}=${argsData[key]}`);
+      const data = Object.keys(args.value).map(key => ({
+        key,
+        value: args.value[key],
+      }))
+        .concat(keyValueRef.value?.keyValueData || []);
+      const commands = data.map((item) => {
+        if (item.key === '--timeout') {
+          return `${item.key}=${item.value}s`;
         }
-        return pre;
-      }, []);
+        return `${item.key}=${item.value}`;
+      });
       return {
         $clusterId: clusterID.value,
         $namespaceId: namespace,
@@ -585,9 +588,15 @@ export default defineComponent({
             args.value[key] = value;
           }
         } else {
-          customArgs.value[key] = value;
+          customArgs.value.push({
+            key,
+            value,
+          });
         }
       });
+      if (customArgs.value.length) {
+        showCustomArgs.value = true;
+      }
       // values内容
       setValuesContent();
     };

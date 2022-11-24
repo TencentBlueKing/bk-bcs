@@ -27,10 +27,16 @@
       @page-limit-change="pageSizeChange">
       <bcs-table-column :label="$t('名称')" min-width="100">
         <template #default="{ row }">
-          <bcs-button text v-if="row.repo" @click="handleUpdate(row)">
-            <span class="bcs-ellipsis">{{row.name}}</span>
+          <bcs-button text :disabled="!row.repo" @click="handleUpdate(row)">
+            <span
+              class="bcs-ellipsis"
+              v-bk-tooltips="{
+                content: $t('非本平台部署release, 无法获取chart仓库信息, 暂不支持release更新'),
+                disabled: row.repo
+              }">
+              {{row.name}}
+            </span>
           </bcs-button>
-          <span v-bk-tooltips="$t('非本平台部署release, 无法获取chart仓库信息, 暂不支持release更新')" v-else>{{row.name}}</span>
         </template>
       </bcs-table-column>
       <bcs-table-column :label="$t('状态')" prop="status" width="150">
@@ -108,8 +114,18 @@
               }
             }"
             @click="handleViewHistory(row)">{{ $t('更新记录') }}</bcs-button>
-          <bk-popover placement="bottom" theme="light dropdown" :arrow="false" class="ml-[5px]">
-            <span class="bcs-icon-more-btn">
+          <bk-popover
+            placement="bottom"
+            theme="light dropdown"
+            :arrow="false"
+            class="ml-[5px]"
+            :disabled="!row.repo">
+            <span
+              :class="['bcs-icon-more-btn', { disabled: !row.repo }]"
+              v-bk-tooltips="{
+                content: $t('非本平台部署release, 无法获取chart仓库信息, 暂不支持release操作'),
+                disabled: row.repo
+              }">
               <i class="bcs-icon bcs-icon-more"></i>
             </span>
             <template #content>
@@ -127,10 +143,6 @@
                       cluster_id: clusterID,
                       name: row.namespace
                     }
-                  }"
-                  v-bk-tooltips="{
-                    content: $t('非本平台部署release, 无法获取chart仓库信息, 暂不支持release更新'),
-                    disabled: row.repo
                   }"
                   @click="handleUpdate(row)">
                   {{$t('更新')}}
@@ -408,11 +420,11 @@ export default defineComponent({
       superseded: $i18n.t('废弃'),
       failed: $i18n.t('失败'),
       uninstalling: $i18n.t('删除中'),
-      'pending-install': $i18n.t('安装中'),
-      'pending-upgrade': $i18n.t('升级中'),
+      'pending-install': $i18n.t('部署中'),
+      'pending-upgrade': $i18n.t('更新中'),
       'pending-rollback': $i18n.t('回滚中'),
-      'failed-install': $i18n.t('安装失败'),
-      'failed-upgrade': $i18n.t('升级失败'),
+      'failed-install': $i18n.t('部署失败'),
+      'failed-upgrade': $i18n.t('更新失败'),
       'failed-rollback': $i18n.t('回滚失败'),
       'failed-uninstall': $i18n.t('删除失败'),
     });
@@ -592,6 +604,7 @@ export default defineComponent({
       diffLoading.value = false;
     });
     const handleShowRollback = (row) => {
+      if (!row.repo) return;
       revision.value = '';
       diffData.value = {};
       curRow.value = row;
@@ -615,6 +628,7 @@ export default defineComponent({
 
     // 删除
     const handleDelete = (row) => {
+      if (!row.repo) return;
       $bkInfo({
         type: 'warning',
         clsName: 'custom-info-confirm',

@@ -50,7 +50,7 @@
                 <template #content>
                   <div class="py-[10px]">
                     <div class="flex leading-[20px]">
-                      <span class="flex w-[60px]">{{$t('仓库地址')}}:</span>
+                      <span class="flex w-[80px]">{{$t('仓库地址')}}:</span>
                       {{item.repoURL}}
                       <span class="bcs-icon-btn ml-[8px]" @click="handleCopyData(item.repoURL)">
                         <i class="bcs-icon bcs-icon-copy"></i>
@@ -58,23 +58,14 @@
                     </div>
                     <template v-if="item.username && item.password">
                       <div class="flex leading-[20px]">
-                        <span class="flex w-[60px]">{{$t('命令案例')}}:</span>
-                        {{`helm repo add {repoName} {url} --username={username} --password={password}`}}
-                        <span
-                          class="bcs-icon-btn ml-[8px]"
-                          @click="handleCopyData('helm repo add {repoName} {url} --username={username} --password={password}')">
-                          <i class="bcs-icon bcs-icon-copy"></i>
-                        </span>
-                      </div>
-                      <div class="flex leading-[20px]">
-                        <span class="flex w-[60px]">{{$t('用户名')}}:</span>
+                        <span class="flex w-[80px]">{{$t('用户名')}}:</span>
                         {{item.username}}
                         <span class="bcs-icon-btn ml-[8px]" @click="handleCopyData(item.username)">
                           <i class="bcs-icon bcs-icon-copy"></i>
                         </span>
                       </div>
                       <div class="flex leading-[20px]">
-                        <span class="flex w-[60px]">{{$t('密码')}}:</span>
+                        <span class="flex w-[80px]">{{$t('密码')}}:</span>
                         {{showPassword ? item.password : new Array(10).fill('*').join('')}}
                         <span class="bcs-icon-btn ml-[8px]" @click="showPassword = !showPassword">
                           <i :class="['bcs-icon', showPassword ? 'bcs-icon-eye' : 'bcs-icon-eye-slash']"></i>
@@ -82,6 +73,15 @@
                         <span class="bcs-icon-btn ml-[8px]" @click="handleCopyData(item.password)">
                           <i class="bcs-icon bcs-icon-copy"></i>
                         </span>
+                      </div>
+                      <div class="flex items-center leading-[20px]">
+                        <span class="flex w-[80px]">{{$t('添加repo仓库')}}:</span>
+                        <bcs-button
+                          text
+                          size="small"
+                          @click="handleCopyData(`helm repo add ${projectCode} ${item.repoURL} --username=${item.username} --password=${item.password}`)">
+                          {{$t('点击复制')}}
+                        </bcs-button>
                       </div>
                     </template>
                   </div>
@@ -449,6 +449,7 @@ export default defineComponent({
 
     return {
       curProject,
+      projectCode,
       showPassword,
       searchName,
       loading,

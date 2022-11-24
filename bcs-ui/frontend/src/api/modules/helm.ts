@@ -24,7 +24,7 @@ export const rollbackRelease = request('put', '/clusters/$clusterId/namespaces/$
 export const releaseStatus = request('get', '/clusters/$clusterId/namespaces/$namespaceId/releases/$releaseName/status');
 export const releasesList = request('get', '/clusters/$clusterId/releases');
 export const chartDetail = request('get', '/repos/$repoName/charts/$chartName');
-export const downloadChartUrl = '/bcsapi/v4/helmmanager/v1/projects/$projectCode/repos/$repoName/charts/$chartName/versions/$version/download';
+export const downloadChartUrl = `${window.BCS_API_HOST}/bcsapi/v4/helmmanager/v1/projects/$projectCode/repos/$repoName/charts/$chartName/versions/$version/download`;
 export const chartReleases = request('post', '/repos/$repoName/charts/$chartName/releases');
 
 // cluster tools

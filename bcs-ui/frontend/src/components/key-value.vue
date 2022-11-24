@@ -102,7 +102,7 @@
   </div>
 </template>
 <script lang="ts">
-import { defineComponent, toRefs, watch, ref, computed, PropType } from '@vue/composition-api';
+import { defineComponent, toRefs, watch, ref, computed, PropType, onMounted } from '@vue/composition-api';
 import Validate from './validate.vue';
 import $i18n from '@/i18n/i18n-setup';
 
@@ -163,9 +163,13 @@ export default defineComponent({
       type: Number,
       default: 1,
     },
+    uniqueKey: {
+      type: Boolean,
+      default: true,
+    },
   },
   setup(props, ctx) {
-    const { modelValue, keyRules, minItems } = toRefs(props);
+    const { modelValue, keyRules, minItems, uniqueKey } = toRefs(props);
     const keyValueData = ref<IData[]>([]);
     const disabledDelete = computed(() => keyValueData.value.length <= minItems.value);
     watch(modelValue, () => {
@@ -218,10 +222,6 @@ export default defineComponent({
     };
     const rules = ref<IRule[]>([
       ...keyRules.value,
-      {
-        message: $i18n.t('重复键'),
-        validator: (value, index) => keyValueData.value.filter((_, i) => i !== index).every(d => d.key !== value),
-      },
     ]);
     const validate = () => {
       const data = keyValueData.value.reduce<string[]>((pre, item) => {
@@ -230,13 +230,23 @@ export default defineComponent({
         }
         return pre;
       }, []);
-      const removeDuplicateData = new Set(data);
-      if (data.length !== removeDuplicateData.size) {
-        return false;
+      if (uniqueKey.value) {
+        const removeDuplicateData = new Set(data);
+        if (data.length !== removeDuplicateData.size) {
+          return false;
+        }
       }
-
       return data.every(key => keyRules.value.every(rule => new RegExp(rule.validator).test(key)));
     };
+
+    onMounted(() => {
+      if (uniqueKey.value) {
+        rules.value.push({
+          message: $i18n.t('重复键'),
+          validator: (value, index) => keyValueData.value.filter((_, i) => i !== index).every(d => d.key !== value),
+        });
+      }
+    });
 
     return {
       disabledDelete,

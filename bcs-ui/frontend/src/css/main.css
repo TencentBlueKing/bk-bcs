@@ -19,9 +19,13 @@
     color: #979ba5;
     position: relative;
     top: 1px;
-    &:hover {
+    &:hover:not(.disabled) {
       background: #ddd;
       color: #3a84ff
+    }
+    &.disabled {
+      color: #dcdee5;
+      cursor: not-allowed;
     }
   }
 

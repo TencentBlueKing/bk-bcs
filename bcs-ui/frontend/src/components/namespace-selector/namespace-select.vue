@@ -53,7 +53,7 @@ export default defineComponent({
     },
   },
   setup(props, ctx) {
-    const { clusterId } = toRefs(props);
+    const { clusterId, value } = toRefs(props);
     const { defaultClusterId } = useDefaultClusterId();
     const { namespaceLoading, namespaceList, getNamespaceData } = useSelectItemsNamespace();
 
@@ -61,6 +61,13 @@ export default defineComponent({
       getNamespaceData({
         clusterId: clusterId.value || defaultClusterId.value,
       });
+    });
+
+    watch(namespaceList, () => {
+      const exit = namespaceList.value.find(item => item.name === value.value);
+      if (!exit) {
+        ctx.emit('change', '');
+      }
     });
 
     const handleNamespaceChange = (name) => {

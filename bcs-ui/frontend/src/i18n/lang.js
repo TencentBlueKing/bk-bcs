@@ -3402,5 +3402,20 @@ export default {
   ],
   "设置变量值：": [
       "Set variable value:"
+  ],
+  "添加repo仓库": [
+    "Add REPO warehouse"
+  ],
+  "点击复制": [
+    "Click to copy"
+  ],
+  "回滚版本": [
+    "Rollback version"
+  ],
+  "更新说明": [
+    "Release Notes"
+  ],
+  "非本平台部署release, 无法获取chart仓库信息, 暂不支持release更新": [
+    "Non -this platform deploys Release, cannot obtain chart warehouse information, and does not support the release update"
   ]
 }
