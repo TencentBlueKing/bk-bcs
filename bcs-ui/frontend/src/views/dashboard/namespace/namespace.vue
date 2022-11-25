@@ -30,12 +30,11 @@
       </template>
     </LayoutRow>
     <bcs-table
-      :data="pageData"
+      :data="curPageData"
       :pagination="pagination"
       @page-change="pageChange"
-      @page-limit-change="pageSizeChange"
-      @sort-change="handleSortChange">
-      <bcs-table-column :label="$t('名称')" sortable prop="name" min-width="200" show-overflow-tooltip>
+      @page-limit-change="pageSizeChange">
+      <bcs-table-column :label="$t('名称')" prop="name" min-width="200" show-overflow-tooltip>
         <template #default="{ row }">
           <bk-button class="bcs-button-ellipsis" text @click="showDetail(row)">{{ row.name }}</bk-button>
         </template>
@@ -248,7 +247,7 @@ import usePage from '../common/use-page';
 import useSearch from '../common/use-search';
 import { useCluster } from '@/common/use-app';
 import { useNamespace } from './use-namespace';
-import { sort, timeZoneTransForm } from '@/common/util';
+import { timeZoneTransForm } from '@/common/util';
 import { BCS_CLUSTER } from '@/common/constant';
 import { CreateElement } from 'vue';
 import useInterval from '@/views/dashboard/common/use-interval';
@@ -313,37 +312,16 @@ export default defineComponent({
         },
       ],
     }, [data.column.label]);
-    // 排序
-    const sortData = ref({
-      prop: '',
-      order: '',
-    });
-    const handleSortChange = (data) => {
-      sortData.value = {
-        prop: data.prop,
-        order: data.order,
-      };
-    };
 
     const clusterList = computed(() => $store.state.cluster.clusterList || []);
     const projectCode = computed(() => $route.params.projectCode);
     const curCluster = computed(() => clusterList.value.find(item => item.clusterID === clusterID.value));
 
-    // 表格数据
-    const tableData = computed(() => {
-      const items = JSON.parse(JSON.stringify(namespaceData.value || []));
-      const { prop, order } = sortData.value;
-      return prop ? sort(items, prop, order) : items;
-    });
     // 搜索功能
-    const { tableDataMatchSearch, searchValue } = useSearch(tableData, keys);
+    const { tableDataMatchSearch, searchValue } = useSearch(namespaceData, keys);
 
     // 分页
     const { pagination, curPageData, pageConf, pageChange, pageSizeChange } = usePage(tableDataMatchSearch);
-    const pageData = ref<any>([]);
-    watch(curPageData, (val) => {
-      pageData.value = sort(val, 'name', 'ascending');
-    });
 
     // 搜索时重置分页
     watch(searchValue, () => {
@@ -628,7 +606,7 @@ export default defineComponent({
       pagination,
       showQuota,
       searchValue,
-      pageData,
+      curPageData,
       setVariableConf,
       setQuotaConf,
       variablesList,
@@ -641,7 +619,6 @@ export default defineComponent({
       applyMap,
       pageChange,
       pageSizeChange,
-      handleSortChange,
       handleDeleteNamespace,
       showSetVariable,
       hideSetVariable,
