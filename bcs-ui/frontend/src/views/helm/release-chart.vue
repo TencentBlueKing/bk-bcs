@@ -114,17 +114,21 @@
             </bcs-select>
             <span
               class="ml-[5px] mr-[10px]"
-              v-bk-tooltips="$t('Values文件包含两类: <br/>- 以values.yaml结尾, 例如xxx-values.yaml文件 <br/>- bcs-values目录下的以.yml或.yaml结尾的文件')">
+              v-bk-tooltips="$t('Values文件包含两类: <br/>- 以values.yaml或以values.yml结尾, 例如xxx-values.yaml文件 <br/>- bcs-values目录下的以.yml或.yaml结尾的文件')">
               <i class="bk-icon icon-question-circle"></i>
             </span>
           </template>
-          <bcs-checkbox v-model="lockValues" v-if="isEdit">
-            {{lockValues ? $t('已锁定') : $t('已解锁')}}
-            <i18n
-              path="(默认锁定values内容为当前release(版本: {version} )的内容, 解除锁定后, 加载为对应Chart中的values内容)"
-              class="text-[#979ba5] text-[12px]">
-              <span place="version">{{releaseDetail.chartVersion}}</span>
-            </i18n>
+          <bcs-checkbox v-model="lockValues" class="flex flex-1 release-chart-lock-checkbox" v-if="isEdit">
+            <div
+              class="flex"
+              :title="$t('(默认锁定values内容为当前release(版本: {version} )的内容, 解除锁定后, 加载为对应Chart中的values内容)', { version: releaseDetail.chartVersion })">
+              {{lockValues ? $t('已锁定') : $t('已解锁')}}
+              <i18n
+                path="(默认锁定values内容为当前release(版本: {version} )的内容, 解除锁定后, 加载为对应Chart中的values内容)"
+                class="flex-1 text-[#979ba5] text-[12px] bcs-ellipsis">
+                <span place="version">{{releaseDetail.chartVersion}}</span>
+              </i18n>
+            </div>
           </bcs-checkbox>
         </div>
         <CodeEditor
@@ -667,5 +671,8 @@ export default defineComponent({
 }
 >>> .bk-form.bk-form-vertical .bk-form-item+.bk-form-item {
   margin-top: 0px;
+}
+>>> .release-chart-lock-checkbox .bk-checkbox-text {
+  flex: 1;
 }
 </style>

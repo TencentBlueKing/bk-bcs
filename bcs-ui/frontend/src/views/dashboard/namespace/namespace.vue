@@ -35,7 +35,7 @@
       @page-change="pageChange"
       @page-limit-change="pageSizeChange"
       @sort-change="handleSortChange">
-      <bcs-table-column :label="$t('名称')" sortable prop="name">
+      <bcs-table-column :label="$t('名称')" sortable prop="name" min-width="200" show-overflow-tooltip>
         <template #default="{ row }">
           <bk-button class="bcs-button-ellipsis" text @click="showDetail(row)">{{ row.name }}</bk-button>
         </template>
@@ -56,7 +56,7 @@
           </div>
         </template>
       </bcs-table-column>
-      <bcs-table-column :label="$t('CPU使用率')" prop="cpuUseRate">
+      <bcs-table-column :label="$t('CPU使用率')" prop="cpuUseRate" :render-header="renderHeader">
         <template #default="{ row }">
           <bcs-round-progress
             v-if="row.quota"
@@ -82,7 +82,7 @@
           <span class="ml-[16px]" v-else v-bk-tooltips="{ content: $t('未开启命名空间配额') }">--</span>
         </template>
       </bcs-table-column>
-      <bcs-table-column :label="$t('内存使用率')" prop="memoryUseRate">
+      <bcs-table-column :label="$t('内存使用率')" prop="memoryUseRate" :render-header="renderHeader">
         <template #default="{ row }">
           <bcs-round-progress
             v-if="row.quota"
@@ -110,7 +110,7 @@
       </bcs-table-column>
       <bcs-table-column :label="$t('创建时间')">
         <template #default="{ row }">
-          {{ timeZoneTransForm(row.createTime, false) || '--' }}
+          {{ row.createTime ? timeZoneTransForm(row.createTime, false) : '--' }}
         </template>
       </bcs-table-column>
       <bcs-table-column :label="$t('操作')" width="220">
@@ -250,6 +250,8 @@ import { useCluster } from '@/common/use-app';
 import { useNamespace } from './use-namespace';
 import { sort, timeZoneTransForm } from '@/common/util';
 import { BCS_CLUSTER } from '@/common/constant';
+import { CreateElement } from 'vue';
+import useInterval from '@/views/dashboard/common/use-interval';
 
 export default defineComponent({
   name: 'NamespaceList',
@@ -291,6 +293,26 @@ export default defineComponent({
       getNamespaceInfo,
     } = useNamespace();
 
+    const { start, stop } = useInterval(() => getNamespaceData({ $clusterId: clusterID.value }, false));
+    watch(namespaceData, () => {
+      if (namespaceData.value.some(item => ['Terminating'].includes(item.status))) {
+        start();
+      } else {
+        stop();
+      }
+    });
+    // 渲染表头
+    const renderHeader = (h: CreateElement, data) => h('span', {
+      class: 'custom-header-cell',
+      directives: [
+        {
+          name: 'bkTooltips',
+          value: {
+            content: data.column.prop === 'cpuUseRate' ? $i18n.t('所有容器CPU limits总和 / CPU配额') : $i18n.t('所有容器内存 limits总和 / 内存配额'),
+          },
+        },
+      ],
+    }, [data.column.label]);
     // 排序
     const sortData = ref({
       prop: '',
@@ -392,6 +414,9 @@ export default defineComponent({
           message: $i18n.t('保存成功'),
         });
         hideSetVariable();
+        getNamespaceData({
+          $clusterId: clusterID.value,
+        });
       }
     };
 
@@ -629,6 +654,7 @@ export default defineComponent({
       timeZoneTransForm,
       handleGoVar,
       showDetail,
+      renderHeader,
     };
   },
 });
@@ -636,4 +662,9 @@ export default defineComponent({
 
 <style lang="postcss" scoped>
   @import './namespace.css';
+  >>> .custom-header-cell {
+    text-decoration: underline;
+    text-decoration-style: dashed;
+    text-underline-position: under;
+}
 </style>

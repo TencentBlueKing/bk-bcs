@@ -75,10 +75,11 @@
                         </span>
                       </div>
                       <div class="flex items-center leading-[20px]">
-                        <span class="flex w-[80px]">{{$t('添加repo仓库')}}:</span>
+                        <span class="flex w-[100px]">{{$t('添加repo仓库')}}:</span>
                         <bcs-button
                           text
                           size="small"
+                          class="!px-0"
                           @click="handleCopyData(`helm repo add ${projectCode} ${item.repoURL} --username=${item.username} --password=${item.password}`)">
                           {{$t('点击复制')}}
                         </bcs-button>

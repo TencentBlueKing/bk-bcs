@@ -12,14 +12,14 @@ import {
 } from '@/api/modules/project';
 
 export function useNamespace() {
-  const namespaceData = ref<any>([]);
-  const variablesList = ref<any>([]);
+  const namespaceData = ref<any[]>([]);
+  const variablesList = ref<any[]>([]);
   const variableLoading = ref(false);
   const namespaceLoading = ref(false);
 
-  async function getNamespaceData(params) {
+  async function getNamespaceData(params, loading = true) {
     if (!params || !params.$clusterId) return;
-    namespaceLoading.value = true;
+    namespaceLoading.value = loading;
     const result = await getNamespaceList(params).catch(() => []);
     namespaceData.value = result;
     namespaceLoading.value = false;

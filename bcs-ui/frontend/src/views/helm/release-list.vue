@@ -123,7 +123,7 @@
             <span
               :class="['bcs-icon-more-btn', { disabled: !row.repo }]"
               v-bk-tooltips="{
-                content: $t('非本平台部署release, 无法获取chart仓库信息, 暂不支持release操作'),
+                content: $t('非本平台部署release无法操作'),
                 disabled: row.repo
               }">
               <i class="bcs-icon bcs-icon-more"></i>
