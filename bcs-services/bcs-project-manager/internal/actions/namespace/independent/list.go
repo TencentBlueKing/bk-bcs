@@ -57,6 +57,7 @@ func (a *IndependentNamespaceAction) ListNamespaces(ctx context.Context,
 		g.Go(func() error {
 			retData := &proto.NamespaceData{
 				Name:        ns.GetName(),
+				Uid:         string(ns.GetUID()),
 				Status:      string(ns.Status.Phase),
 				CreateTime:  ns.GetCreationTimestamp().Format(config.TimeLayout),
 				Labels:      []*proto.Label{},

@@ -969,59 +969,63 @@ message DeleteNamespaceResponse {
 }
 
 message NamespaceData {
-  string name = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  string uid = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "uid", 
+    description: "uid"
+  }];
+  string name = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "name", 
     description: "命名空间名称"
   }];
-  string status = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  string status = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "status", 
     description: "命名空间状态"
   }];
-  string createTime = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  string createTime = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "createTime", 
     description: "创建时间"
   }];
-  ResourceQuota quota = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  ResourceQuota quota = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "quota", 
     description: "命名空间可用配额"
   }];
-  ResourceQuota used = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  ResourceQuota used = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "used", 
     description: "命名空间已用配额"
   }];
-  float cpuUseRate = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  float cpuUseRate = 7[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "cpuUseRate", 
     description: "CPU使用率"
   }];
-  float memoryUseRate = 7[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  float memoryUseRate = 8[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "memoryUseRate", 
     description: "命名空使用率"
   }];
-  repeated Label labels = 8[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  repeated Label labels = 9[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "labels", 
     description: "命名空间标签"
   }];
-  repeated Annotation annotations = 9[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  repeated Annotation annotations = 10[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "annotations", 
     description: "命名空间注解"
   }];
-  repeated VariableValue variables = 10[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  repeated VariableValue variables = 11[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "variables", 
     description: "命名空间变量"
   }];
-  string itsmTicketSN = 11[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  string itsmTicketSN = 12[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "itsmTicketSN", 
     description: "itsm 单号"
   }];
-  string itsmTicketStatus = 12[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  string itsmTicketStatus = 13[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "itsmTicketStatus", 
     description: "itsm 单据状态"
   }];
-  string itsmTicketURL = 13[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  string itsmTicketURL = 14[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "itsmTicketURL", 
     description: "itsm 单据 URL"
   }];
-  string itsmTicketType = 14[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  string itsmTicketType = 15[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "itsmTicketType", 
     description: "itsm 单据类型: create, update, delete"
   }];

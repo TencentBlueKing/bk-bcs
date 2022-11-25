@@ -44,10 +44,10 @@ func TransferToProto(q *corev1.ResourceQuota) (
 	memoryRequestsUsed := q.Status.Used[corev1.ResourceRequestsMemory]
 	used.MemoryRequests = memoryRequestsUsed.String()
 	if cpuLimitsQuota.AsApproximateFloat64() != 0 {
-		cpuUseRate = float32(cpuRequestsUsed.AsApproximateFloat64() / cpuLimitsQuota.AsApproximateFloat64())
+		cpuUseRate = float32(cpuLimitsUsed.AsApproximateFloat64() / cpuLimitsQuota.AsApproximateFloat64())
 	}
 	if memoryLimitsQuota.AsApproximateFloat64() != 0 {
-		memoryUseRate = float32(memoryRequestsUsed.AsApproximateFloat64() / memoryLimitsQuota.AsApproximateFloat64())
+		memoryUseRate = float32(memoryLimitsUsed.AsApproximateFloat64() / memoryLimitsQuota.AsApproximateFloat64())
 	}
 	return quota, used, cpuUseRate, memoryUseRate
 }

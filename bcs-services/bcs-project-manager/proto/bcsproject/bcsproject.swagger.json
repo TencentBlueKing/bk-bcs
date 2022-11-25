@@ -2322,6 +2322,11 @@
     "bcsprojectNamespaceData": {
       "type": "object",
       "properties": {
+        "uid": {
+          "type": "string",
+          "description": "uid",
+          "title": "uid"
+        },
         "name": {
           "type": "string",
           "description": "命名空间名称",

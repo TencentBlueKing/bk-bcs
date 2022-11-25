@@ -17,17 +17,18 @@ package independent
 import (
 	"context"
 
+	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/middleware"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/bcscc"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/clientset"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/iam"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/logging"
 	vvm "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/variablevalue"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/errorx"
 	quotautils "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/quota"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/proto/bcsproject"
-	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/middleware"
 )
 
 // CreateNamespace implement for CreateNamespace interface
@@ -36,6 +37,13 @@ func (c *IndependentNamespaceAction) CreateNamespace(ctx context.Context,
 	_, err := c.createNamespace(ctx, req)
 	if err != nil {
 		return errorx.NewClusterErr(err)
+	}
+	var creator string
+	authUser, err := middleware.GetUserFromContext(ctx)
+	if err != nil && authUser.Username != "" {
+		// 授权创建者命名空间编辑和查看权限
+		creator = authUser.Username
+		iam.GrantNamespaceCreatorActions(creator, req.GetClusterID(), req.GetName())
 	}
 	if req.GetQuota() != nil {
 		if _, err := c.createResourceQuota(ctx, req); err != nil {
@@ -51,14 +59,9 @@ func (c *IndependentNamespaceAction) CreateNamespace(ctx context.Context,
 			return err
 		}
 	}
-	var creator string
-	if authUser, err := middleware.GetUserFromContext(ctx); err == nil {
-		creator = authUser.GetUsername()
-	}
 	go func() {
 		if err := bcscc.CreateNamespace(req.GetProjectCode(), req.GetClusterID(), req.GetName(), creator); err != nil {
-			// TODO: 添加日志告警
-			logging.Error("create namespace %s/%s/%s in paas-cc failed, err: %s",
+			logging.Error("[ALARM-CC-NAMESPACE] create namespace %s/%s/%s in paas-cc failed, err: %s",
 				req.GetProjectCode(), req.GetClusterID(), req.GetName(), err.Error())
 		}
 	}()

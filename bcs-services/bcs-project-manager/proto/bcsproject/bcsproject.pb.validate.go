@@ -3595,6 +3595,8 @@ func (m *NamespaceData) validate(all bool) error {
 
 	var errors []error
 
+	// no validation rules for Uid
+
 	// no validation rules for Name
 
 	// no validation rules for Status

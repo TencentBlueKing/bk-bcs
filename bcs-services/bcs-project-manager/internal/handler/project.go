@@ -17,13 +17,14 @@ package handler
 import (
 	"context"
 
+	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/middleware"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/actions/project"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/iam"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store"
 	pm "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/project"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/proto/bcsproject"
-	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/middleware"
 )
 
 // ProjectHandler xxx
@@ -47,10 +48,10 @@ func (p *ProjectHandler) CreateProject(ctx context.Context,
 	if e != nil {
 		return e
 	}
-	authUser, ok := ctx.Value(middleware.AuthUserKey).(middleware.AuthUser)
-	if ok && authUser.Username != "" {
+	authUser, err := middleware.GetUserFromContext(ctx)
+	if err != nil && authUser.Username != "" {
 		// 授权创建者项目编辑和查看权限
-		iam.GrantResourceCreatorActions(authUser.Username, projectInfo.ProjectID, projectInfo.Name)
+		iam.GrantProjectCreatorActions(authUser.Username, projectInfo.ProjectID, projectInfo.Name)
 	}
 	// 处理返回数据及权限
 	setResp(resp, projectInfo)

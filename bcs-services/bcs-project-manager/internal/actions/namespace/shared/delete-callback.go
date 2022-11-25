@@ -66,8 +66,7 @@ func (a *SharedNamespaceAction) DeleteNamespaceCallback(ctx context.Context,
 	}
 	go func() {
 		if err := bcscc.DeleteNamespace(namespace.ProjectCode, namespace.ClusterID, namespace.Name); err != nil {
-			// TODO: 添加日志告警
-			logging.Error("delete namespace %s/%s/%s in paas-cc failed, err: %s",
+			logging.Error("[ALARM-CC-NAMESPACE] delete namespace %s/%s/%s in paas-cc failed, err: %s",
 				namespace.ProjectCode, namespace.ClusterID, namespace.Name, err.Error())
 		}
 	}()

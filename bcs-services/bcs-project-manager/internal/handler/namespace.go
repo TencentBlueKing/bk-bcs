@@ -16,10 +16,12 @@ package handler
 
 import (
 	"context"
+	"sort"
 
 	na "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/actions/namespace"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/logging"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store"
+	nsm "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/namespace"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/proto/bcsproject"
 )
 
@@ -104,7 +106,58 @@ func (p *NamespaceHandler) ListNamespaces(ctx context.Context,
 			req.GetClusterID(), err.Error())
 		return err
 	}
-	return action.ListNamespaces(ctx, req, resp)
+	err = action.ListNamespaces(ctx, req, resp)
+	if err != nil {
+		return err
+	}
+	retData := sortNamespaces(resp.GetData())
+	resp.Data = retData
+	return nil
+}
+
+func sortNamespaces(list []*proto.NamespaceData) []*proto.NamespaceData {
+	creating := []*proto.NamespaceData{}
+	for _, ns := range list {
+		if ns.GetItsmTicketType() == nsm.ItsmTicketTypeCreate {
+			creating = append(creating, ns)
+		}
+	}
+	updating := []*proto.NamespaceData{}
+	for _, ns := range list {
+		if ns.GetItsmTicketType() == nsm.ItsmTicketTypeUpdate {
+			updating = append(updating, ns)
+		}
+	}
+	deleting := []*proto.NamespaceData{}
+	for _, ns := range list {
+		if ns.GetItsmTicketType() == nsm.ItsmTicketTypeDelete {
+			deleting = append(deleting, ns)
+		}
+	}
+	exists := []*proto.NamespaceData{}
+	for _, ns := range list {
+		if ns.GetItsmTicketType() == "" {
+			exists = append(exists, ns)
+		}
+	}
+	sort.SliceStable(creating, func(i, j int) bool {
+		return creating[i].GetName() < creating[j].GetName()
+	})
+	sort.SliceStable(updating, func(i, j int) bool {
+		return updating[i].GetName() < updating[j].GetName()
+	})
+	sort.SliceStable(deleting, func(i, j int) bool {
+		return deleting[i].GetName() < deleting[j].GetName()
+	})
+	sort.SliceStable(exists, func(i, j int) bool {
+		return exists[i].GetName() < exists[j].GetName()
+	})
+	retData := []*proto.NamespaceData{}
+	retData = append(retData, creating...)
+	retData = append(retData, updating...)
+	retData = append(retData, deleting...)
+	retData = append(retData, exists...)
+	return retData
 }
 
 // DeleteNamespace implement for DeleteNamespace interface

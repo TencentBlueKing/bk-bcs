@@ -65,6 +65,7 @@ func (a *SharedNamespaceAction) GetNamespace(ctx context.Context,
 		retData.ItsmTicketStatus = staging.ItsmTicketStatus
 		retData.ItsmTicketURL = staging.ItsmTicketURL
 		retData.ItsmTicketType = staging.ItsmTicketType
+		resp.Data = retData
 		return nil
 	}
 	// get exist namespaces from cluster
@@ -83,6 +84,7 @@ func (a *SharedNamespaceAction) GetNamespace(ctx context.Context,
 	}
 	retData := &proto.NamespaceData{
 		Name:       namespace.GetName(),
+		Uid:        string(namespace.GetUID()),
 		CreateTime: namespace.GetCreationTimestamp().Format(config.TimeLayout),
 		Status:     string(namespace.Status.Phase),
 	}
@@ -120,5 +122,6 @@ func (a *SharedNamespaceAction) GetNamespace(ctx context.Context,
 		retData.ItsmTicketStatus = deleteStagging.ItsmTicketStatus
 		retData.ItsmTicketURL = deleteStagging.ItsmTicketURL
 	}
+	resp.Data = retData
 	return nil
 }

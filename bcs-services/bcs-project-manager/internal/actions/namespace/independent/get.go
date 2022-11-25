@@ -45,6 +45,7 @@ func (a *IndependentNamespaceAction) GetNamespace(ctx context.Context,
 	}
 	retData := &proto.NamespaceData{
 		Name:        ns.GetName(),
+		Uid:         string(ns.GetUID()),
 		Status:      string(ns.Status.Phase),
 		CreateTime:  ns.GetCreationTimestamp().Format(config.TimeLayout),
 		Labels:      []*proto.Label{},

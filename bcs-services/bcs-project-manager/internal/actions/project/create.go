@@ -22,6 +22,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/middleware"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/bcscc"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/logging"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store"
 	pm "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/project"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/errorx"
@@ -66,7 +67,11 @@ func (ca *CreateAction) Do(ctx context.Context, req *proto.CreateProjectRequest)
 		return nil, errorx.NewDBErr(err)
 	}
 	// 向 bcs cc 写入数据
-	go bcscc.CreateProject(p)
+	go func(){
+		if err := bcscc.CreateProject(p); err != nil {
+			logging.Error("c")
+		}
+	}()
 	// 返回项目信息
 	return p, nil
 }

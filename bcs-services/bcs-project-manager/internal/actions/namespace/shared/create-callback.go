@@ -23,6 +23,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/bcscc"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/clientset"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/iam"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/logging"
 	nsm "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/namespace"
 	vdm "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/variabledefinition"
@@ -72,6 +73,8 @@ func (a *SharedNamespaceAction) CreateNamespaceCallback(ctx context.Context,
 			logging.Error("create namespace in cluster %s failed, err: %s", req.GetClusterID(), err.Error())
 			return errorx.NewClusterErr(err.Error())
 		}
+		// 授权创建者命名空间编辑和查看权限
+		iam.GrantNamespaceCreatorActions(ns.Creator, req.GetClusterID(), req.GetName())
 		// create quota in cluster
 		if ns.ResourceQuota != nil {
 			quota := &corev1.ResourceQuota{
@@ -101,8 +104,7 @@ func (a *SharedNamespaceAction) CreateNamespaceCallback(ctx context.Context,
 	}
 	go func() {
 		if err := bcscc.CreateNamespace(ns.ProjectCode, ns.ClusterID, ns.Name, ns.Creator); err == nil {
-			// TODO: 添加日志告警
-			logging.Error("create namespace %s/%s/%s in paas-cc failed, err: %s",
+			logging.Error("[ALARM-CC-NAMESPACE] create namespace %s/%s/%s in paas-cc failed, err: %s",
 				ns.ProjectCode, ns.ClusterID, ns.Name, err.Error())
 		}
 	}()

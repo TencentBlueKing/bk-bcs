@@ -24,6 +24,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/errorx"
 
 	bcsIAM "github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
+	authutils "github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/utils"
 	"github.com/parnurzeal/gorequest"
 )
 
@@ -32,8 +33,8 @@ var (
 	timeout         = 10
 )
 
-// GrantResourceCreatorActions grant create action perm for resource
-func GrantResourceCreatorActions(username string, projectID string, projectName string) error {
+// GrantProjectCreatorActions grant create action perm for project
+func GrantProjectCreatorActions(username string, projectID string, projectName string) error {
 	iamConf := config.GlobalConf.IAM
 	// 使用网关访问
 	reqUrl := fmt.Sprintf("%s%s", iamConf.GatewayHost, grantActionPath)
@@ -56,6 +57,36 @@ func GrantResourceCreatorActions(username string, projectID string, projectName 
 	_, err := component.Request(req, timeout, proxy, headers)
 	if err != nil {
 		logging.Error("grant creator actions for project failed, %v", err)
+		return errorx.NewRequestIAMErr(err)
+	}
+	return nil
+}
+
+// GrantNamespaceCreatorActions grant create action perm for namespace
+func GrantNamespaceCreatorActions(username, clusterID, namespace string) error {
+	iamConf := config.GlobalConf.IAM
+	// 使用网关访问
+	reqUrl := fmt.Sprintf("%s%s", iamConf.GatewayHost, grantActionPath)
+	headers := map[string]string{"Content-Type": "application/json"}
+	id := authutils.CalcIAMNsID(clusterID, namespace)
+	req := gorequest.SuperAgent{
+		Url:    reqUrl,
+		Method: "POST",
+		Data: map[string]interface{}{
+			"bk_app_code":   config.GlobalConf.App.Code,
+			"bk_app_secret": config.GlobalConf.App.Secret,
+			"creator":       username,
+			"system":        bcsIAM.SystemIDBKBCS,
+			"type":          "namespace",
+			"id":            id,
+			"name":          namespace,
+		},
+	}
+	// 请求API
+	proxy := ""
+	_, err := component.Request(req, timeout, proxy, headers)
+	if err != nil {
+		logging.Error("grant creator actions for namespace failed, %v", err)
 		return errorx.NewRequestIAMErr(err)
 	}
 	return nil

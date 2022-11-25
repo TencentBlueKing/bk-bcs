@@ -105,6 +105,7 @@ func (a *SharedNamespaceAction) ListNamespaces(ctx context.Context,
 			logging.Info("[debug]namespace in: %s", namespace.GetName())
 			retData := &proto.NamespaceData{
 				Name:       namespace.GetName(),
+				Uid:        string(namespace.GetUID()),
 				CreateTime: namespace.GetCreationTimestamp().Format(config.TimeLayout),
 				Status:     string(namespace.Status.Phase),
 			}
