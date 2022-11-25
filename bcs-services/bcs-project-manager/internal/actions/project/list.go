@@ -116,8 +116,8 @@ func (lap *ListAuthorizedProject) Do(ctx context.Context,
 	req *proto.ListAuthorizedProjReq) (*map[string]interface{}, error) {
 	var projects []pm.Project
 	var total int64
-	authUser, ok := ctx.Value(middleware.AuthUserKey).(middleware.AuthUser)
-	if ok && authUser.Username != "" {
+	authUser, err := middleware.GetUserFromContext(ctx)
+	if err == nil && authUser.Username != "" {
 		// with username
 		ids, any, err := auth.ListAuthorizedProjectIDs(authUser.Username)
 		// 没有权限的项目时，返回为空，并记录信息

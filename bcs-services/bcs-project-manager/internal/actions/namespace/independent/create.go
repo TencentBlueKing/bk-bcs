@@ -40,7 +40,7 @@ func (c *IndependentNamespaceAction) CreateNamespace(ctx context.Context,
 	}
 	var creator string
 	authUser, err := middleware.GetUserFromContext(ctx)
-	if err != nil && authUser.Username != "" {
+	if err == nil && authUser.Username != "" {
 		// 授权创建者命名空间编辑和查看权限
 		creator = authUser.Username
 		iam.GrantNamespaceCreatorActions(creator, req.GetClusterID(), req.GetName())

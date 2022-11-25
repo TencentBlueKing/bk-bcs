@@ -49,7 +49,7 @@ func (p *ProjectHandler) CreateProject(ctx context.Context,
 		return e
 	}
 	authUser, err := middleware.GetUserFromContext(ctx)
-	if err != nil && authUser.Username != "" {
+	if err == nil && authUser.Username != "" {
 		// 授权创建者项目编辑和查看权限
 		iam.GrantProjectCreatorActions(authUser.Username, projectInfo.ProjectID, projectInfo.Name)
 	}
@@ -106,8 +106,8 @@ func (p *ProjectHandler) ListProjects(ctx context.Context,
 	if e != nil {
 		return e
 	}
-	authUser, ok := ctx.Value(middleware.AuthUserKey).(middleware.AuthUser)
-	if ok && authUser.Username != "" {
+	authUser, err := middleware.GetUserFromContext(ctx)
+	if err == nil && authUser.Username != "" {
 		// with username
 		// 获取 project id, 用以获取对应的权限
 		ids := getProjectIDs(projects)
