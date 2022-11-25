@@ -308,7 +308,7 @@ export default defineComponent({
         {
           name: 'bkTooltips',
           value: {
-            content: data.column.prop === 'cpuUseRate' ? $i18n.t('所有容器CPU limits总和 / CPU配额') : $i18n.t('所有容器内存 limits总和 / 内存配额'),
+            content: data.column.property === 'cpuUseRate' ? $i18n.t('所有容器CPU limits总和 / CPU配额') : $i18n.t('所有容器内存 limits总和 / 内存配额'),
           },
         },
       ],
