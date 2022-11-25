@@ -419,8 +419,8 @@ export default defineComponent({
     const setValuesContent = () => {
       let content = '';
       if (isEdit.value && lockValues.value) {
-        // 锁定模式时始终读取当前values内容
-        content = releaseDetail.value?.values?.[0] || '';
+        // 锁定模式时始终读取当前values最后一个
+        content = releaseDetail.value?.values?.[releaseDetail.value?.values.length - 1] || '';
       } else {
         // 非锁定模式时读取当前版本下values文件对应的内容
         content = versionDetail.value?.contents?.[valuesData.value.valueFile]?.content || '';
