@@ -162,6 +162,7 @@ func (r *ReleaseInstallAction) Execute(ctx context.Context) error {
 				common.PTKCreator:   r.username,
 				common.PTKUpdator:   r.username,
 				common.PTKVersion:   r.version,
+				common.PTKName:      r.name,
 			},
 		})
 	if err != nil {

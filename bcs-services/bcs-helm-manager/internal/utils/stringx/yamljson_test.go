@@ -14,8 +14,11 @@ package stringx
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
+	goyaml "github.com/goccy/go-yaml"
+	"github.com/goccy/go-yaml/parser"
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/yaml.v2"
 )
@@ -90,4 +93,29 @@ metadata:
 
 	out, err := yaml.Marshal(&n)
 	fmt.Println(string(out), err)
+}
+
+func TestYamlPath(t *testing.T) {
+	y := `
+apiVersion: v1
+kind: Service
+metadata:
+# comment 1
+  name: test-service
+  namespace: default
+  labels:
+    k1: v1
+    c.a: d
+`
+	path, _ := goyaml.PathString("$.metadata.name")
+	path2, _ := goyaml.PathString("$.metadata.namespace")
+	labelpath, _ := goyaml.PathString(fmt.Sprintf("$.metadata.labels.'%s'", "c.a"))
+	var name string
+	path.Read(strings.NewReader(y), &name)
+	f, _ := parser.ParseBytes([]byte(y), 0)
+	path.ReplaceWithReader(f, strings.NewReader("test"))
+	path2.ReplaceWithReader(f, strings.NewReader("test-ns"))
+	labelpath.ReplaceWithReader(f, strings.NewReader(name))
+	fmt.Println(name)
+	fmt.Println(f.String())
 }

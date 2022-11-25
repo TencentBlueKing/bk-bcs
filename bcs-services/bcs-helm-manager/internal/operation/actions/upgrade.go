@@ -165,6 +165,7 @@ func (r *ReleaseUpgradeAction) Execute(ctx context.Context) error {
 				common.PTKCreator:   r.createBy,
 				common.PTKUpdator:   r.updateBy,
 				common.PTKVersion:   r.version,
+				common.PTKName:      r.name,
 			},
 		})
 	if err != nil {

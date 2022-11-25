@@ -87,6 +87,7 @@ func installRelease(releaseHandler release.Handler, projectID, projectCode, clus
 				common.PTKCreator:   creator,
 				common.PTKUpdator:   updator,
 				common.PTKVersion:   version,
+				common.PTKName:      releaseName,
 			},
 		})
 }
@@ -121,6 +122,7 @@ func upgradeRelease(releaseHandler release.Handler, projectID, projectCode, clus
 				common.PTKCreator:   creator,
 				common.PTKUpdator:   updator,
 				common.PTKVersion:   version,
+				common.PTKName:      releaseName,
 			},
 		})
 }
