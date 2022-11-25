@@ -39,6 +39,7 @@ var NoAuthEndpoints = []string{
 	"Healthz.Healthz",
 	"BCSProject.ListAuthorizedProjects",
 	"BCSProject.ListProjects",
+	"Namespace.ListNamespaces",
 }
 
 // NewAuthHeaderAdapter 转换旧的请求头，适配新的鉴权中间件
