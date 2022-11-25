@@ -117,26 +117,18 @@ func (p *NamespaceHandler) ListNamespaces(ctx context.Context,
 
 func sortNamespaces(list []*proto.NamespaceData) []*proto.NamespaceData {
 	creating := []*proto.NamespaceData{}
-	for _, ns := range list {
-		if ns.GetItsmTicketType() == nsm.ItsmTicketTypeCreate {
-			creating = append(creating, ns)
-		}
-	}
 	updating := []*proto.NamespaceData{}
-	for _, ns := range list {
-		if ns.GetItsmTicketType() == nsm.ItsmTicketTypeUpdate {
-			updating = append(updating, ns)
-		}
-	}
 	deleting := []*proto.NamespaceData{}
-	for _, ns := range list {
-		if ns.GetItsmTicketType() == nsm.ItsmTicketTypeDelete {
-			deleting = append(deleting, ns)
-		}
-	}
 	exists := []*proto.NamespaceData{}
 	for _, ns := range list {
-		if ns.GetItsmTicketType() == "" {
+		switch ns.GetItsmTicketType() {
+		case nsm.ItsmTicketTypeCreate:
+			creating = append(creating, ns)
+		case nsm.ItsmTicketTypeUpdate:
+			updating = append(updating, ns)
+		case nsm.ItsmTicketTypeDelete:
+			deleting = append(deleting, ns)
+		default:
 			exists = append(exists, ns)
 		}
 	}

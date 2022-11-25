@@ -92,17 +92,15 @@ func (a *SharedNamespaceAction) ListNamespaces(ctx context.Context,
 	// inject staging updating info to exist namespace
 	modifyStaggings, err := a.model.ListNamespacesByItsmTicketType(ctx, req.GetProjectCode(), req.GetClusterID(),
 		[]string{nsm.ItsmTicketTypeUpdate, nsm.ItsmTicketTypeDelete})
-	existns := map[string]*nsm.Namespace{}
+	existns := map[string]nsm.Namespace{}
 	for _, modifyStagging := range modifyStaggings {
-		existns[modifyStagging.Name] = &modifyStagging
+		existns[modifyStagging.Name] = modifyStagging
 	}
 	lock := &sync.Mutex{}
 	g, ctx := errgroup.WithContext(ctx)
 	for _, item := range namespaces {
 		namespace := item
-		logging.Info("[debug]namespace out: %s", namespace.GetName())
 		g.Go(func() error {
-			logging.Info("[debug]namespace in: %s", namespace.GetName())
 			retData := &proto.NamespaceData{
 				Name:       namespace.GetName(),
 				Uid:        string(namespace.GetUID()),
@@ -125,7 +123,7 @@ func (a *SharedNamespaceAction) ListNamespaces(ctx context.Context,
 				return errorx.NewDBErr(err.Error())
 			}
 			retData.Variables = variables
-			if ns, ok := existns[retData.Name]; ok {
+			if ns, ok := existns[retData.GetName()]; ok {
 				retData.ItsmTicketType = ns.ItsmTicketType
 				retData.ItsmTicketSN = ns.ItsmTicketSN
 				retData.ItsmTicketStatus = ns.ItsmTicketStatus

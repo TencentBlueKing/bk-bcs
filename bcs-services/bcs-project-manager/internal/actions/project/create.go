@@ -67,10 +67,12 @@ func (ca *CreateAction) Do(ctx context.Context, req *proto.CreateProjectRequest)
 		return nil, errorx.NewDBErr(err)
 	}
 	// 向 bcs cc 写入数据
-	go func(){
+	go func() {
 		if err := bcscc.CreateProject(p); err != nil {
-			logging.Error("c")
+			logging.Error("[ALARM-CC-PROJECT] create project %s/%s in paas-cc failed, err: %s",
+				p.ProjectID, p.ProjectCode, err.Error())
 		}
+
 	}()
 	// 返回项目信息
 	return p, nil

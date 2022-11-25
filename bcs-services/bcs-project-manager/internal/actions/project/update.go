@@ -65,7 +65,12 @@ func (ua *UpdateAction) Do(ctx context.Context, req *proto.UpdateProjectRequest)
 	}
 
 	// 更新 bcs cc 中的数据
-	go bcscc.UpdateProject(p)
+	go func() {
+		if err := bcscc.UpdateProject(p); err != nil {
+			logging.Error("[ALARM-CC-PROJECT] update project %s/%s in paas-cc failed, err: %s",
+				p.ProjectID, p.ProjectCode, err.Error())
+		}
+	}()
 
 	return p, nil
 }

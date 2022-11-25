@@ -103,7 +103,7 @@ func (a *SharedNamespaceAction) CreateNamespaceCallback(ctx context.Context,
 		return errorx.NewDBErr(err.Error())
 	}
 	go func() {
-		if err := bcscc.CreateNamespace(ns.ProjectCode, ns.ClusterID, ns.Name, ns.Creator); err == nil {
+		if err := bcscc.CreateNamespace(ns.ProjectCode, ns.ClusterID, ns.Name, ns.Creator); err != nil {
 			logging.Error("[ALARM-CC-NAMESPACE] create namespace %s/%s/%s in paas-cc failed, err: %s",
 				ns.ProjectCode, ns.ClusterID, ns.Name, err.Error())
 		}
