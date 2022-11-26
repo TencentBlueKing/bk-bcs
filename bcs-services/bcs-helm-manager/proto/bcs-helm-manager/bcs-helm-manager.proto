@@ -911,7 +911,7 @@ message ListChartVersionReq {
     optional string name = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "name",
         description: "chart名称"
-    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
+    }, (validate.rules).string = {min_len : 1}];
     optional string operator = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "operator",
         description: "查询者"
@@ -1021,11 +1021,11 @@ message GetVersionDetailReq {
     optional string name = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "name",
         description: "chart名称"
-    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
+    }, (validate.rules).string = {min_len : 1}];
     optional string version = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "version",
         description: "chart版本"
-    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
+    }, (validate.rules).string = {min_len : 1}];
     optional string operator = 7[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "operator",
         description: "查询者"
@@ -1179,7 +1179,7 @@ message GetChartDetailV1Req {
     required string name = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "name",
         description: "chart名称"
-    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
+    }, (validate.rules).string = {min_len : 1}];
 }
 
 message GetChartDetailV1Resp {
@@ -1239,7 +1239,7 @@ message ListChartVersionV1Req {
     required string name = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "name",
         description: "chart名称"
-    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
+    }, (validate.rules).string = {min_len : 1}];
 }
 
 message ListChartVersionV1Resp {
@@ -1291,11 +1291,11 @@ message GetVersionDetailV1Req {
     required string name = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "name",
         description: "chart名称"
-    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
+    }, (validate.rules).string = {min_len : 1}];
     required string version = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "version",
         description: "chart版本"
-    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
+    }, (validate.rules).string = {min_len : 1}];
 }
 
 message GetVersionDetailV1Resp {
@@ -1347,7 +1347,7 @@ message DeleteChartReq {
     required string name = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "name",
         description: "chart名称"
-    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
+    }, (validate.rules).string = {min_len : 1}];
 }
 
 message DeleteChartResp {
@@ -1395,11 +1395,11 @@ message DeleteChartVersionReq {
     required string name = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "name",
         description: "chart名称"
-    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
+    }, (validate.rules).string = {min_len : 1}];
     required string version = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "version",
         description: "chart版本"
-    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
+    }, (validate.rules).string = {min_len : 1}];
 }
 
 message DeleteChartVersionResp {
@@ -1447,11 +1447,11 @@ message DownloadChartReq {
     required string name = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "name",
         description: "chart名称"
-    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
+    }, (validate.rules).string = {min_len : 1}];
     required string version = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "version",
         description: "chart版本"
-    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
+    }, (validate.rules).string = {min_len : 1}];
 }
 
 message GetChartReleaseReq {
@@ -1473,7 +1473,7 @@ message GetChartReleaseReq {
     optional string name = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "name",
         description: "chart名称"
-    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
+    }, (validate.rules).string = {min_len : 1}];
     repeated string versions = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "versions",
         description: "chart版本, 不传版本则获取所有版本的 release"
@@ -1589,7 +1589,7 @@ message GetReleaseDetailReq {
     optional string name = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "name",
         description: "查询目标name, 默认是全部"
-    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
+    }, (validate.rules).string = {min_len : 1}];
 }
 
 message GetReleaseDetailResp {
@@ -1786,7 +1786,7 @@ message InstallReleaseReq {
     optional string name = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "name",
         description: "chart release名称"
-    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
+    }, (validate.rules).string = {min_len : 1}];
     optional string namespace = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "namespace",
         description: "所在的namespace"
@@ -1806,11 +1806,11 @@ message InstallReleaseReq {
     optional string chart = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "chart",
         description: "chart名称"
-    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
+    }, (validate.rules).string = {min_len : 1}];
     optional string version = 7[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "version",
         description: "chart版本"
-    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
+    }, (validate.rules).string = {min_len : 1}];
     optional string operator = 8[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "operator",
         description: "操作人"
@@ -1870,7 +1870,7 @@ message UninstallReleaseReq {
     optional string name = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "name",
         description: "chart release名称"
-    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
+    }, (validate.rules).string = {min_len : 1}];
     optional string namespace = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "namespace",
         description: "所在的namespace"
@@ -1922,7 +1922,7 @@ message UpgradeReleaseReq {
     optional string name = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "name",
         description: "chart release名称"
-    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
+    }, (validate.rules).string = {min_len : 1}];
     optional string namespace = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "namespace",
         description: "所在的namespace"
@@ -1942,11 +1942,11 @@ message UpgradeReleaseReq {
     optional string chart = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "chart",
         description: "chart名称"
-    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
+    }, (validate.rules).string = {min_len : 1}];
     optional string version = 7[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "version",
         description: "chart版本"
-    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
+    }, (validate.rules).string = {min_len : 1}];
     optional string operator = 8[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "operator",
         description: "操作人"
@@ -2006,7 +2006,7 @@ message RollbackReleaseReq {
     optional string name = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "name",
         description: "chart release名称"
-    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
+    }, (validate.rules).string = {min_len : 1}];
     optional string namespace = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "namespace",
         description: "所在的namespace"
@@ -2142,7 +2142,7 @@ message GetReleaseDetailV1Req {
     required string name = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "name",
         description: "查询目标name"
-    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
+    }, (validate.rules).string = {min_len : 1}];
 }
 
 message GetReleaseDetailV1Resp {
@@ -2198,7 +2198,7 @@ message InstallReleaseV1Req {
     optional string name = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "name",
         description: "chart release名称"
-    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
+    }, (validate.rules).string = {min_len : 1}];
     optional string repository = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "repository",
         description: "chart所属的仓库"
@@ -2206,11 +2206,11 @@ message InstallReleaseV1Req {
     optional string chart = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "chart",
         description: "chart名称"
-    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
+    }, (validate.rules).string = {min_len : 1}];
     optional string version = 7[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "version",
         description: "chart版本"
-    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
+    }, (validate.rules).string = {min_len : 1}];
     repeated string values = 8[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "values",
         description: "values文件内容, 越靠后优先级越高"
@@ -2274,7 +2274,7 @@ message UninstallReleaseV1Req {
     optional string name = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "name",
         description: "chart release名称"
-    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
+    }, (validate.rules).string = {min_len : 1}];
 }
 
 message UninstallReleaseV1Resp {
@@ -2326,7 +2326,7 @@ message UpgradeReleaseV1Req {
     optional string name = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "name",
         description: "chart release名称"
-    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
+    }, (validate.rules).string = {min_len : 1}];
     optional string repository = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "repository",
         description: "chart所属的仓库"
@@ -2334,11 +2334,11 @@ message UpgradeReleaseV1Req {
     optional string chart = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "chart",
         description: "chart名称"
-    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
+    }, (validate.rules).string = {min_len : 1}];
     optional string version = 7[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "version",
         description: "chart版本"
-    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
+    }, (validate.rules).string = {min_len : 1}];
     repeated string values = 8[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "values",
         description: "values文件, 越靠后优先级越高"
@@ -2402,7 +2402,7 @@ message RollbackReleaseV1Req {
     optional string name = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "name",
         description: "chart release名称"
-    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
+    }, (validate.rules).string = {min_len : 1}];
     optional uint32 revision = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "revision",
         description: "要回滚到的revision"
@@ -2458,7 +2458,7 @@ message ReleasePreviewReq {
     optional string name = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "name",
         description: "chart release名称"
-    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
+    }, (validate.rules).string = {min_len : 1}];
     optional string repository = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "repository",
         description: "chart所属的仓库"
@@ -2545,7 +2545,7 @@ message GetReleaseHistoryReq {
     required string name = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "name",
         description: "chart release名称"
-    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
+    }, (validate.rules).string = {min_len : 1}];
     required string namespace = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "namespace",
         description: "所在的namespace"
@@ -2655,7 +2655,7 @@ message GetReleaseStatusReq {
     required string name = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "name",
         description: "chart release名称"
-    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
+    }, (validate.rules).string = {min_len : 1}];
     required string namespace = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "namespace",
         description: "所在的namespace"

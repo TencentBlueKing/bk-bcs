@@ -17,11 +17,12 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/goccy/go-yaml"
+	goyaml "github.com/goccy/go-yaml"
 	"github.com/goccy/go-yaml/parser"
 	cmdtpl "github.com/vmware-tanzu/carvel-ytt/pkg/cmd/template"
 	"github.com/vmware-tanzu/carvel-ytt/pkg/cmd/ui"
 	"github.com/vmware-tanzu/carvel-ytt/pkg/files"
+	"gopkg.in/yaml.v2"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
@@ -67,10 +68,13 @@ func (p *patcher) Run(renderedManifests *bytes.Buffer) (*bytes.Buffer, error) {
 	if err != nil {
 		return nil, err
 	}
-	// 处理 yaml 转换 json，添加指定的 key 和 value
-	splitedStrArr := stringx.SplitYaml2Array(manifest.String(), "")
+	// 注入指定的值
+	splitManifests := stringx.SplitManifests(manifest.String())
+	if err != nil {
+		return nil, fmt.Errorf("SplitYAML error, %s", err.Error())
+	}
 	var yList []string
-	for _, s := range splitedStrArr {
+	for _, s := range splitManifests {
 		// 向 metadata.labels 中注入 `io.tencent.bcs.controller.name`
 		// 向 spec.template.metadata.labels 中注入 `io.tencent.bcs.controller.name`
 		j, err := inject4MetadataLabels(s)
@@ -79,7 +83,7 @@ func (p *patcher) Run(renderedManifests *bytes.Buffer) (*bytes.Buffer, error) {
 			yList = append(yList, s)
 			continue
 		}
-		yList = append(yList, j)
+		yList = append(yList, strings.TrimRight(j, "\n"))
 	}
 	yl := stringx.JoinStringBySeparator(yList, "", false)
 	// 添加换行
@@ -115,12 +119,23 @@ func (p *patcher) do(data *bytes.Buffer) (*bytes.Buffer, error) {
 }
 
 // inject4MetadataLabels 兼容逻辑，目的是向metadata注入label
-func inject4MetadataLabels(s string) (string, error) {
+func inject4MetadataLabels(manifest string) (string, error) {
+	// 转换为常用格式, goyaml 库不能识别 |2- 之类的描述符
+	var n yaml.MapSlice
+	if err := yaml.Unmarshal([]byte(manifest), &n); err != nil {
+		return manifest, err
+	}
+	out, err := yaml.Marshal(&n)
+	if err != nil {
+		return manifest, err
+	}
+	s := string(out)
+
 	// 限制下面几个注入指定的 key:val
-	kinds := []string{"Deployment", "DaemonSet", "Job", "DaemonSet"}
+	kinds := []string{"Deployment", "StatefulSet", "Job", "DaemonSet"}
 
 	// parse name
-	namePath, err := yaml.PathString("$.metadata.name")
+	namePath, err := goyaml.PathString("$.metadata.name")
 	if err != nil {
 		return s, err
 	}
@@ -130,7 +145,7 @@ func inject4MetadataLabels(s string) (string, error) {
 	}
 
 	// parse kind
-	kindPath, err := yaml.PathString("$.kind")
+	kindPath, err := goyaml.PathString("$.kind")
 	if err != nil {
 		return s, err
 	}
@@ -140,12 +155,12 @@ func inject4MetadataLabels(s string) (string, error) {
 	}
 
 	// parse label
-	labelPath, err := yaml.PathString(fmt.Sprintf("$.metadata.labels.'%s'", labelKey))
+	labelPath, err := goyaml.PathString(fmt.Sprintf("$.metadata.labels.'%s'", labelKey))
 	if err != nil {
 		return s, err
 	}
 	// parse spec label
-	specLabelPath, err := yaml.PathString(fmt.Sprintf("$.spec.template.metadata.labels.'%s'", labelKey))
+	specLabelPath, err := goyaml.PathString(fmt.Sprintf("$.spec.template.metadata.labels.'%s'", labelKey))
 	if err != nil {
 		return s, err
 	}
@@ -162,17 +177,15 @@ func inject4MetadataLabels(s string) (string, error) {
 			return s, err
 		}
 	}
-
-	for _, v := range kinds {
-		if kind != v {
-			continue
-		}
+	if stringx.StringInSlice(kind, kinds) {
 		if err := labelPath.ReplaceWithReader(f, strings.NewReader(name)); err != nil {
 			return s, err
 		}
 		if err := specLabelPath.ReplaceWithReader(f, strings.NewReader(name)); err != nil {
 			return s, err
 		}
+		return f.String(), nil
 	}
-	return f.String(), nil
+
+	return manifest, nil
 }

@@ -13,7 +13,7 @@
 package stringx
 
 import (
-	"gopkg.in/yaml.v3"
+	"gopkg.in/yaml.v2"
 )
 
 // Yaml2Json convert yaml to json

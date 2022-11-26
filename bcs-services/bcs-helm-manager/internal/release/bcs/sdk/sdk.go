@@ -19,12 +19,13 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/spf13/pflag"
-	"gopkg.in/yaml.v3"
+	yaml3 "gopkg.in/yaml.v3"
 	"helm.sh/helm/v3/pkg/action"
 	"helm.sh/helm/v3/pkg/chart"
 	"helm.sh/helm/v3/pkg/chart/loader"
@@ -32,6 +33,7 @@ import (
 	rspb "helm.sh/helm/v3/pkg/release"
 	"helm.sh/helm/v3/pkg/storage/driver"
 	"helm.sh/helm/v3/pkg/strvals"
+	"k8s.io/apimachinery/pkg/util/yaml"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
@@ -452,7 +454,7 @@ func (c *client) getVarValue(projectCode, namespace string) (*release.File, erro
 	}
 
 	// marshal vars to yaml
-	out, err := yaml.Marshal(vars)
+	out, err := yaml3.Marshal(vars)
 	if err != nil {
 		return nil, err
 	}
@@ -474,7 +476,6 @@ func getChartFile(f *release.File) (*chart.Chart, error) {
 func getValues(fs []*release.File) (map[string]interface{}, error) {
 	base := map[string]interface{}{}
 	for _, value := range fs {
-		blog.Infof("get values from %s: \n%s", value.Name, string(value.Content))
 		currentMap := map[string]interface{}{}
 		if err := yaml.Unmarshal(value.Content, &currentMap); err != nil {
 			return nil, err
@@ -543,6 +544,9 @@ func removeValuesTemplate(values map[string]interface{}) map[string]interface{} 
 // parseArgs4Install 从用户给出的原生参数里, 直接parse到helm的install设置中
 // 当前使用的flags设置版本来源helm.sh/helm/v3 v3.6.3
 func parseArgs4Install(install *action.Install, args []string, valueOpts *values.Options) error {
+	for i := range args {
+		args[i] = strings.TrimRight(args[i], "=")
+	}
 	f := pflag.NewFlagSet("install", pflag.ContinueOnError)
 
 	f.BoolVar(&install.DisableHooks, "no-hooks", false,
@@ -587,6 +591,9 @@ func parseArgs4Install(install *action.Install, args []string, valueOpts *values
 // parseArgs4Upgrade 从用户给出的原生参数里, 直接parse到helm的upgrade设置中
 // 当前使用的flags设置版本来源helm.sh/helm/v3 v3.6.3
 func parseArgs4Upgrade(upgrade *action.Upgrade, args []string, valueOpts *values.Options) error {
+	for i := range args {
+		args[i] = strings.TrimRight(args[i], "=")
+	}
 	f := pflag.NewFlagSet("upgrade", pflag.ContinueOnError)
 
 	f.BoolVarP(&upgrade.Install, "install", "i", true,

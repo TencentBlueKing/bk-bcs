@@ -28,7 +28,7 @@ import (
 )
 
 const (
-	defaultSize = 1000
+	defaultSize = 5000
 )
 
 // NewListChartAction return a new ListChartAction instance

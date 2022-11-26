@@ -13,7 +13,6 @@
 package auth
 
 import (
-	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/cluster"
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/namespace"
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/project"
 )
@@ -21,7 +20,7 @@ import (
 // ActionPermissions action 对应权限中心的权限
 var ActionPermissions = map[string]string{
 	// Repo
-	"HelmManager.CreateRepository": project.CanEditProjectOperation,
+	"HelmManager.CreateRepository": project.CanViewProjectOperation,
 	"HelmManager.UpdateRepository": project.CanEditProjectOperation,
 	"HelmManager.GetRepository":    project.CanViewProjectOperation,
 	"HelmManager.DeleteRepository": project.CanEditProjectOperation,
@@ -38,7 +37,7 @@ var ActionPermissions = map[string]string{
 	"HelmManager.GetChartRelease":    project.CanViewProjectOperation,
 
 	// Release
-	"HelmManager.ListReleaseV1":      cluster.CanViewClusterOperation,
+	"HelmManager.ListReleaseV1":      project.CanViewProjectOperation,
 	"HelmManager.GetReleaseDetailV1": namespace.CanViewNamespaceScopedResourceOperation,
 	"HelmManager.InstallReleaseV1":   namespace.CanCreateNamespaceScopedResourceOperation,
 	"HelmManager.UninstallReleaseV1": namespace.CanDeleteNamespaceScopedResourceOperation,

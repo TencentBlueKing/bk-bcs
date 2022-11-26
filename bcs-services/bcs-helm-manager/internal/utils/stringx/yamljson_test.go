@@ -13,7 +13,9 @@
 package stringx
 
 import (
+	"bytes"
 	"fmt"
+	"log"
 	"strings"
 	"testing"
 
@@ -48,6 +50,15 @@ func TestJson2Yaml(t *testing.T) {
 func TestYamlNode(t *testing.T) {
 	y := `
 apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: configmap-test
+data:
+  group.yaml: |2-
+    a: b
+    c: a
+---
+apiVersion: v1
 kind: Service
 metadata:
 # comment 1
@@ -69,14 +80,24 @@ metadata:
 `
 	var n yaml.MapSlice
 	err := yaml.Unmarshal([]byte(y), &n)
-	fmt.Println(n, err)
-	fmt.Println(n[2])
+	// fmt.Println(n, err)
+	// fmt.Println(n[2])
 	out, err := yaml.Marshal(&n)
 	fmt.Println(string(out), err)
 }
 
+// 乱序
 func TestYamlMap(t *testing.T) {
 	y := `
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: configmap-test
+data:
+  group.yaml: |2-
+    a: b
+    c: a
+---
 apiVersion: v1
 kind: Service
 metadata:
@@ -116,6 +137,38 @@ metadata:
 	path.ReplaceWithReader(f, strings.NewReader("test"))
 	path2.ReplaceWithReader(f, strings.NewReader("test-ns"))
 	labelpath.ReplaceWithReader(f, strings.NewReader(name))
+	fmt.Println(name)
+	fmt.Println(f.String())
+}
+
+func TestYamlYaml(t *testing.T) {
+	y := `
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: configmap-test
+  labels:
+    k1: v1
+data:
+  group.yaml: |2-
+    a: b
+    c: 1
+`
+	var n yaml.MapSlice
+	_ = yaml.Unmarshal([]byte(y), &n)
+	out, _ := yaml.Marshal(&n)
+	path, _ := goyaml.PathString("$.metadata.name")
+	kindpath, _ := goyaml.PathString("$.kind")
+	var name string
+	var kind string
+	path.Read(bytes.NewReader(out), &name)
+	kindpath.Read(bytes.NewReader(out), &kind)
+	fmt.Println(kind)
+	f, err := parser.ParseBytes(out, 0)
+	if err != nil {
+		log.Fatal(err)
+	}
+	path.ReplaceWithReader(f, strings.NewReader("test"))
 	fmt.Println(name)
 	fmt.Println(f.String())
 }

@@ -2257,10 +2257,10 @@ func (m *ListChartVersionReq) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if l := utf8.RuneCountInString(m.GetName()); l < 1 || l > 64 {
+	if utf8.RuneCountInString(m.GetName()) < 1 {
 		err := ListChartVersionReqValidationError{
 			field:  "Name",
-			reason: "value length must be between 1 and 64 runes, inclusive",
+			reason: "value length must be at least 1 runes",
 		}
 		if !all {
 			return err
@@ -2790,10 +2790,10 @@ func (m *GetVersionDetailReq) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if l := utf8.RuneCountInString(m.GetName()); l < 1 || l > 64 {
+	if utf8.RuneCountInString(m.GetName()) < 1 {
 		err := GetVersionDetailReqValidationError{
 			field:  "Name",
-			reason: "value length must be between 1 and 64 runes, inclusive",
+			reason: "value length must be at least 1 runes",
 		}
 		if !all {
 			return err
@@ -2801,10 +2801,10 @@ func (m *GetVersionDetailReq) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if l := utf8.RuneCountInString(m.GetVersion()); l < 1 || l > 64 {
+	if utf8.RuneCountInString(m.GetVersion()) < 1 {
 		err := GetVersionDetailReqValidationError{
 			field:  "Version",
-			reason: "value length must be between 1 and 64 runes, inclusive",
+			reason: "value length must be at least 1 runes",
 		}
 		if !all {
 			return err
@@ -3598,10 +3598,10 @@ func (m *GetChartDetailV1Req) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if l := utf8.RuneCountInString(m.GetName()); l < 1 || l > 64 {
+	if utf8.RuneCountInString(m.GetName()) < 1 {
 		err := GetChartDetailV1ReqValidationError{
 			field:  "Name",
-			reason: "value length must be between 1 and 64 runes, inclusive",
+			reason: "value length must be at least 1 runes",
 		}
 		if !all {
 			return err
@@ -3876,10 +3876,10 @@ func (m *ListChartVersionV1Req) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if l := utf8.RuneCountInString(m.GetName()); l < 1 || l > 64 {
+	if utf8.RuneCountInString(m.GetName()) < 1 {
 		err := ListChartVersionV1ReqValidationError{
 			field:  "Name",
-			reason: "value length must be between 1 and 64 runes, inclusive",
+			reason: "value length must be at least 1 runes",
 		}
 		if !all {
 			return err
@@ -4150,10 +4150,10 @@ func (m *GetVersionDetailV1Req) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if l := utf8.RuneCountInString(m.GetName()); l < 1 || l > 64 {
+	if utf8.RuneCountInString(m.GetName()) < 1 {
 		err := GetVersionDetailV1ReqValidationError{
 			field:  "Name",
-			reason: "value length must be between 1 and 64 runes, inclusive",
+			reason: "value length must be at least 1 runes",
 		}
 		if !all {
 			return err
@@ -4161,10 +4161,10 @@ func (m *GetVersionDetailV1Req) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if l := utf8.RuneCountInString(m.GetVersion()); l < 1 || l > 64 {
+	if utf8.RuneCountInString(m.GetVersion()) < 1 {
 		err := GetVersionDetailV1ReqValidationError{
 			field:  "Version",
-			reason: "value length must be between 1 and 64 runes, inclusive",
+			reason: "value length must be at least 1 runes",
 		}
 		if !all {
 			return err
@@ -4435,10 +4435,10 @@ func (m *DeleteChartReq) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if l := utf8.RuneCountInString(m.GetName()); l < 1 || l > 64 {
+	if utf8.RuneCountInString(m.GetName()) < 1 {
 		err := DeleteChartReqValidationError{
 			field:  "Name",
-			reason: "value length must be between 1 and 64 runes, inclusive",
+			reason: "value length must be at least 1 runes",
 		}
 		if !all {
 			return err
@@ -4676,10 +4676,10 @@ func (m *DeleteChartVersionReq) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if l := utf8.RuneCountInString(m.GetName()); l < 1 || l > 64 {
+	if utf8.RuneCountInString(m.GetName()) < 1 {
 		err := DeleteChartVersionReqValidationError{
 			field:  "Name",
-			reason: "value length must be between 1 and 64 runes, inclusive",
+			reason: "value length must be at least 1 runes",
 		}
 		if !all {
 			return err
@@ -4687,10 +4687,10 @@ func (m *DeleteChartVersionReq) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if l := utf8.RuneCountInString(m.GetVersion()); l < 1 || l > 64 {
+	if utf8.RuneCountInString(m.GetVersion()) < 1 {
 		err := DeleteChartVersionReqValidationError{
 			field:  "Version",
-			reason: "value length must be between 1 and 64 runes, inclusive",
+			reason: "value length must be at least 1 runes",
 		}
 		if !all {
 			return err
@@ -4932,10 +4932,10 @@ func (m *DownloadChartReq) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if l := utf8.RuneCountInString(m.GetName()); l < 1 || l > 64 {
+	if utf8.RuneCountInString(m.GetName()) < 1 {
 		err := DownloadChartReqValidationError{
 			field:  "Name",
-			reason: "value length must be between 1 and 64 runes, inclusive",
+			reason: "value length must be at least 1 runes",
 		}
 		if !all {
 			return err
@@ -4943,10 +4943,10 @@ func (m *DownloadChartReq) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if l := utf8.RuneCountInString(m.GetVersion()); l < 1 || l > 64 {
+	if utf8.RuneCountInString(m.GetVersion()) < 1 {
 		err := DownloadChartReqValidationError{
 			field:  "Version",
-			reason: "value length must be between 1 and 64 runes, inclusive",
+			reason: "value length must be at least 1 runes",
 		}
 		if !all {
 			return err
@@ -5076,10 +5076,10 @@ func (m *GetChartReleaseReq) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if l := utf8.RuneCountInString(m.GetName()); l < 1 || l > 64 {
+	if utf8.RuneCountInString(m.GetName()) < 1 {
 		err := GetChartReleaseReqValidationError{
 			field:  "Name",
-			reason: "value length must be between 1 and 64 runes, inclusive",
+			reason: "value length must be at least 1 runes",
 		}
 		if !all {
 			return err
@@ -5611,10 +5611,10 @@ func (m *GetReleaseDetailReq) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if l := utf8.RuneCountInString(m.GetName()); l < 1 || l > 64 {
+	if utf8.RuneCountInString(m.GetName()) < 1 {
 		err := GetReleaseDetailReqValidationError{
 			field:  "Name",
-			reason: "value length must be between 1 and 64 runes, inclusive",
+			reason: "value length must be at least 1 runes",
 		}
 		if !all {
 			return err
@@ -6261,10 +6261,10 @@ func (m *InstallReleaseReq) validate(all bool) error {
 
 	var errors []error
 
-	if l := utf8.RuneCountInString(m.GetName()); l < 1 || l > 64 {
+	if utf8.RuneCountInString(m.GetName()) < 1 {
 		err := InstallReleaseReqValidationError{
 			field:  "Name",
-			reason: "value length must be between 1 and 64 runes, inclusive",
+			reason: "value length must be at least 1 runes",
 		}
 		if !all {
 			return err
@@ -6316,10 +6316,10 @@ func (m *InstallReleaseReq) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if l := utf8.RuneCountInString(m.GetChart()); l < 1 || l > 64 {
+	if utf8.RuneCountInString(m.GetChart()) < 1 {
 		err := InstallReleaseReqValidationError{
 			field:  "Chart",
-			reason: "value length must be between 1 and 64 runes, inclusive",
+			reason: "value length must be at least 1 runes",
 		}
 		if !all {
 			return err
@@ -6327,10 +6327,10 @@ func (m *InstallReleaseReq) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if l := utf8.RuneCountInString(m.GetVersion()); l < 1 || l > 64 {
+	if utf8.RuneCountInString(m.GetVersion()) < 1 {
 		err := InstallReleaseReqValidationError{
 			field:  "Version",
-			reason: "value length must be between 1 and 64 runes, inclusive",
+			reason: "value length must be at least 1 runes",
 		}
 		if !all {
 			return err
@@ -6583,10 +6583,10 @@ func (m *UninstallReleaseReq) validate(all bool) error {
 
 	var errors []error
 
-	if l := utf8.RuneCountInString(m.GetName()); l < 1 || l > 64 {
+	if utf8.RuneCountInString(m.GetName()) < 1 {
 		err := UninstallReleaseReqValidationError{
 			field:  "Name",
-			reason: "value length must be between 1 and 64 runes, inclusive",
+			reason: "value length must be at least 1 runes",
 		}
 		if !all {
 			return err
@@ -6830,10 +6830,10 @@ func (m *UpgradeReleaseReq) validate(all bool) error {
 
 	var errors []error
 
-	if l := utf8.RuneCountInString(m.GetName()); l < 1 || l > 64 {
+	if utf8.RuneCountInString(m.GetName()) < 1 {
 		err := UpgradeReleaseReqValidationError{
 			field:  "Name",
-			reason: "value length must be between 1 and 64 runes, inclusive",
+			reason: "value length must be at least 1 runes",
 		}
 		if !all {
 			return err
@@ -6885,10 +6885,10 @@ func (m *UpgradeReleaseReq) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if l := utf8.RuneCountInString(m.GetChart()); l < 1 || l > 64 {
+	if utf8.RuneCountInString(m.GetChart()) < 1 {
 		err := UpgradeReleaseReqValidationError{
 			field:  "Chart",
-			reason: "value length must be between 1 and 64 runes, inclusive",
+			reason: "value length must be at least 1 runes",
 		}
 		if !all {
 			return err
@@ -6896,10 +6896,10 @@ func (m *UpgradeReleaseReq) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if l := utf8.RuneCountInString(m.GetVersion()); l < 1 || l > 64 {
+	if utf8.RuneCountInString(m.GetVersion()) < 1 {
 		err := UpgradeReleaseReqValidationError{
 			field:  "Version",
-			reason: "value length must be between 1 and 64 runes, inclusive",
+			reason: "value length must be at least 1 runes",
 		}
 		if !all {
 			return err
@@ -7152,10 +7152,10 @@ func (m *RollbackReleaseReq) validate(all bool) error {
 
 	var errors []error
 
-	if l := utf8.RuneCountInString(m.GetName()); l < 1 || l > 64 {
+	if utf8.RuneCountInString(m.GetName()) < 1 {
 		err := RollbackReleaseReqValidationError{
 			field:  "Name",
-			reason: "value length must be between 1 and 64 runes, inclusive",
+			reason: "value length must be at least 1 runes",
 		}
 		if !all {
 			return err
@@ -7732,10 +7732,10 @@ func (m *GetReleaseDetailV1Req) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if l := utf8.RuneCountInString(m.GetName()); l < 1 || l > 64 {
+	if utf8.RuneCountInString(m.GetName()) < 1 {
 		err := GetReleaseDetailV1ReqValidationError{
 			field:  "Name",
-			reason: "value length must be between 1 and 64 runes, inclusive",
+			reason: "value length must be at least 1 runes",
 		}
 		if !all {
 			return err
@@ -8017,10 +8017,10 @@ func (m *InstallReleaseV1Req) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if l := utf8.RuneCountInString(m.GetName()); l < 1 || l > 64 {
+	if utf8.RuneCountInString(m.GetName()) < 1 {
 		err := InstallReleaseV1ReqValidationError{
 			field:  "Name",
-			reason: "value length must be between 1 and 64 runes, inclusive",
+			reason: "value length must be at least 1 runes",
 		}
 		if !all {
 			return err
@@ -8039,10 +8039,10 @@ func (m *InstallReleaseV1Req) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if l := utf8.RuneCountInString(m.GetChart()); l < 1 || l > 64 {
+	if utf8.RuneCountInString(m.GetChart()) < 1 {
 		err := InstallReleaseV1ReqValidationError{
 			field:  "Chart",
-			reason: "value length must be between 1 and 64 runes, inclusive",
+			reason: "value length must be at least 1 runes",
 		}
 		if !all {
 			return err
@@ -8050,10 +8050,10 @@ func (m *InstallReleaseV1Req) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if l := utf8.RuneCountInString(m.GetVersion()); l < 1 || l > 64 {
+	if utf8.RuneCountInString(m.GetVersion()) < 1 {
 		err := InstallReleaseV1ReqValidationError{
 			field:  "Version",
-			reason: "value length must be between 1 and 64 runes, inclusive",
+			reason: "value length must be at least 1 runes",
 		}
 		if !all {
 			return err
@@ -8308,10 +8308,10 @@ func (m *UninstallReleaseV1Req) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if l := utf8.RuneCountInString(m.GetName()); l < 1 || l > 64 {
+	if utf8.RuneCountInString(m.GetName()) < 1 {
 		err := UninstallReleaseV1ReqValidationError{
 			field:  "Name",
-			reason: "value length must be between 1 and 64 runes, inclusive",
+			reason: "value length must be at least 1 runes",
 		}
 		if !all {
 			return err
@@ -8564,10 +8564,10 @@ func (m *UpgradeReleaseV1Req) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if l := utf8.RuneCountInString(m.GetName()); l < 1 || l > 64 {
+	if utf8.RuneCountInString(m.GetName()) < 1 {
 		err := UpgradeReleaseV1ReqValidationError{
 			field:  "Name",
-			reason: "value length must be between 1 and 64 runes, inclusive",
+			reason: "value length must be at least 1 runes",
 		}
 		if !all {
 			return err
@@ -8586,10 +8586,10 @@ func (m *UpgradeReleaseV1Req) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if l := utf8.RuneCountInString(m.GetChart()); l < 1 || l > 64 {
+	if utf8.RuneCountInString(m.GetChart()) < 1 {
 		err := UpgradeReleaseV1ReqValidationError{
 			field:  "Chart",
-			reason: "value length must be between 1 and 64 runes, inclusive",
+			reason: "value length must be at least 1 runes",
 		}
 		if !all {
 			return err
@@ -8597,10 +8597,10 @@ func (m *UpgradeReleaseV1Req) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if l := utf8.RuneCountInString(m.GetVersion()); l < 1 || l > 64 {
+	if utf8.RuneCountInString(m.GetVersion()) < 1 {
 		err := UpgradeReleaseV1ReqValidationError{
 			field:  "Version",
-			reason: "value length must be between 1 and 64 runes, inclusive",
+			reason: "value length must be at least 1 runes",
 		}
 		if !all {
 			return err
@@ -8855,10 +8855,10 @@ func (m *RollbackReleaseV1Req) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if l := utf8.RuneCountInString(m.GetName()); l < 1 || l > 64 {
+	if utf8.RuneCountInString(m.GetName()) < 1 {
 		err := RollbackReleaseV1ReqValidationError{
 			field:  "Name",
-			reason: "value length must be between 1 and 64 runes, inclusive",
+			reason: "value length must be at least 1 runes",
 		}
 		if !all {
 			return err
@@ -9113,10 +9113,10 @@ func (m *ReleasePreviewReq) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if l := utf8.RuneCountInString(m.GetName()); l < 1 || l > 64 {
+	if utf8.RuneCountInString(m.GetName()) < 1 {
 		err := ReleasePreviewReqValidationError{
 			field:  "Name",
-			reason: "value length must be between 1 and 64 runes, inclusive",
+			reason: "value length must be at least 1 runes",
 		}
 		if !all {
 			return err
@@ -9569,10 +9569,10 @@ func (m *GetReleaseHistoryReq) validate(all bool) error {
 
 	var errors []error
 
-	if l := utf8.RuneCountInString(m.GetName()); l < 1 || l > 64 {
+	if utf8.RuneCountInString(m.GetName()) < 1 {
 		err := GetReleaseHistoryReqValidationError{
 			field:  "Name",
-			reason: "value length must be between 1 and 64 runes, inclusive",
+			reason: "value length must be at least 1 runes",
 		}
 		if !all {
 			return err
@@ -9981,10 +9981,10 @@ func (m *GetReleaseStatusReq) validate(all bool) error {
 
 	var errors []error
 
-	if l := utf8.RuneCountInString(m.GetName()); l < 1 || l > 64 {
+	if utf8.RuneCountInString(m.GetName()) < 1 {
 		err := GetReleaseStatusReqValidationError{
 			field:  "Name",
-			reason: "value length must be between 1 and 64 runes, inclusive",
+			reason: "value length must be at least 1 runes",
 		}
 		if !all {
 			return err

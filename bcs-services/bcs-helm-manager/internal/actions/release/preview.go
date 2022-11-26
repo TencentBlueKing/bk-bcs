@@ -18,7 +18,7 @@ import (
 	"fmt"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"gopkg.in/yaml.v3"
+	"gopkg.in/yaml.v2"
 	helmrelease "helm.sh/helm/v3/pkg/release"
 	"helm.sh/helm/v3/pkg/releaseutil"
 	"helm.sh/helm/v3/pkg/storage/driver"
@@ -101,7 +101,7 @@ func (r *ReleasePreviewAction) getReleasePreview() (*helmmanager.ReleasePreview,
 		if err != nil {
 			return nil, fmt.Errorf("get release revision %d failed, err %s", r.req.GetRevision(), err.Error())
 		}
-		return r.generateReleasePreview(currentRelease.Transfer2Release(), newRelease.Transfer2Release()), nil
+		return r.generateReleasePreview(currentRelease.Transfer2Release(), newRelease.Transfer2Release())
 	}
 
 	// helm template, get new manifest
@@ -120,14 +120,17 @@ func (r *ReleasePreviewAction) getReleasePreview() (*helmmanager.ReleasePreview,
 	}
 	newRelease := result.Release
 
-	return r.generateReleasePreview(currentRelease.Transfer2Release(), newRelease), nil
+	return r.generateReleasePreview(currentRelease.Transfer2Release(), newRelease)
 }
 
 func (r *ReleasePreviewAction) generateReleasePreview(oldRelease,
-	newRelease *helmrelease.Release) *helmmanager.ReleasePreview {
-	preview := &helmmanager.ReleasePreview{}
+	newRelease *helmrelease.Release) (*helmmanager.ReleasePreview, error) {
+	preview := &helmmanager.ReleasePreview{
+		NewContent: common.GetStringP(""),
+		OldContent: common.GetStringP(""),
+	}
 	if newRelease == nil {
-		return preview
+		return preview, nil
 	}
 
 	manifest := newRelease.Manifest
@@ -144,21 +147,27 @@ func (r *ReleasePreviewAction) generateReleasePreview(oldRelease,
 	}
 
 	// get contents
-	preview.NewContents = r.generateFileContents(manifest)
-	preview.OldContents = r.generateFileContents(preview.GetOldContent())
-	return preview
+	var err error
+	preview.NewContents, err = r.generateFileContents(manifest)
+	if err != nil {
+		return nil, err
+	}
+	preview.OldContents, err = r.generateFileContents(preview.GetOldContent())
+	if err != nil {
+		return nil, err
+	}
+	return preview, nil
 }
 
-func (r *ReleasePreviewAction) generateFileContents(manifest string) map[string]*helmmanager.FileContent {
+func (r *ReleasePreviewAction) generateFileContents(manifest string) (map[string]*helmmanager.FileContent, error) {
 	files := make(map[string]*helmmanager.FileContent, 0)
 	manifests := releaseutil.SplitManifests(manifest)
 	for i := range manifests {
 		content := manifests[i]
 		var entry releaseutil.SimpleHead
 		if err := yaml.Unmarshal([]byte(content), &entry); err != nil {
-			blog.Errorf("YAML parse error on cluster: %s namespace: %s name: %s, contenct %s", r.req.GetClusterID(),
-				r.req.GetNamespace(), r.req.GetName(), content)
-			continue
+			blog.Errorf("YAML parse error, %s", err)
+			return nil, err
 		}
 		path := fmt.Sprintf("%s/%s", entry.Kind, entry.Metadata.Name)
 		files[path] = &helmmanager.FileContent{
@@ -167,7 +176,7 @@ func (r *ReleasePreviewAction) generateFileContents(manifest string) map[string]
 			Content: &content,
 		}
 	}
-	return files
+	return files, nil
 }
 
 func (r *ReleasePreviewAction) setResp(err common.HelmManagerError, message string, rp *helmmanager.ReleasePreview) {
