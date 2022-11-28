@@ -21,21 +21,24 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 	"time"
+
+	"github.com/pkg/errors"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/http/ipv6server"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/cloud"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/conflicthandler"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/generator"
-	"github.com/pkg/errors"
+
+	v1 "k8s.io/api/admission/v1"
 
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/constant"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/eventer"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/metrics"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/portpoolcache"
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
-	v1 "k8s.io/api/admission/v1"
 
 	"k8s.io/api/admission/v1beta1"
 	k8scorev1 "k8s.io/api/core/v1"
@@ -379,17 +382,14 @@ func (s *Server) mutatingWebhook(ar v1.AdmissionReview) (response *v1.AdmissionR
 
 func (s *Server) validatingCRDDelete(ar v1.AdmissionReview) *v1.AdmissionResponse {
 	allowResp := &v1.AdmissionResponse{Allowed: true}
-
 	req := ar.Request
-	if req.Operation != v1.Delete {
-		blog.Warnf("operation is not delete, ignore")
+	if req.Operation != v1.Delete && req.Kind.Kind != constant.KindCRD {
 		return allowResp
 	}
-	// only hook delete operation of CRD
-	if req.Kind.Kind != constant.KindCRD {
-		blog.Warnf("kind %s is not CRD", req.Kind.Kind)
-		return errResponse(fmt.Errorf("kind %s is not CRD", req.Kind.Kind))
+	if !strings.Contains(req.Name, networkextensionv1.GroupVersion.Group) {
+		return allowResp
 	}
+
 	labels, err := s.getCRDLabelFromAR(ar)
 	if err != nil {
 		blog.Warnf("get CRD from admissionReview failed, err: %s", err.Error())
