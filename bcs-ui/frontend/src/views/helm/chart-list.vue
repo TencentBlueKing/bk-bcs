@@ -396,7 +396,10 @@ export default defineComponent({
     const handleConfirmDelete = async () => {
       dialogLoading.value = true;
       const result = await handleDeleteRepoChart(activeRepo.value, curRow.value.name);
-      result && handleGetData();
+      if (result) {
+        handleGetData();
+        showDeleteChartDialog.value = false;
+      }
       dialogLoading.value = false;
     };
     // 删除或者下载指定chart的版本
