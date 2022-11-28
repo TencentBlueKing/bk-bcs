@@ -21,6 +21,8 @@ const (
 	ClbProtocolTCP = "TCP"
 	// ClbProtocolUDP clb udp protocol
 	ClbProtocolUDP = "UDP"
+	// ClbProtocolGRPC clb grpc protocol
+	ClbProtocolGRPC = "GRPC"
 
 	// just for v2 api
 

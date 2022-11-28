@@ -86,6 +86,9 @@ func (cv *ClbValidater) validateListenerRoute(r *networkextensionv1.Layer7Route)
 	if len(r.Domain) == 0 {
 		return false, "domain cannot be empty for 7 layer listener"
 	}
+	if len(r.ForwardType) != 0 && r.ForwardType != ClbProtocolGRPC {
+		return false, "ForwardType only support grpc"
+	}
 	if r.ListenerAttribute != nil {
 		if ok, msg := cv.validateListenerAttribute(r.ListenerAttribute); !ok {
 			return false, msg

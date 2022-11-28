@@ -534,6 +534,11 @@ func (c *Clb) addListenerRule(region, lbID, listenerID string, rule networkexten
 		Domain: tcommon.StringPtr(rule.Domain),
 		Url:    tcommon.StringPtr(rule.Path),
 	}
+	if rule.TargetGroup.TargetGroupProtocol == ClbProtocolGRPC {
+		ruleInput.ForwardType = tcommon.StringPtr(ClbProtocolGRPC)
+		ruleInput.Http2 = tcommon.BoolPtr(true)
+		ruleInput.Quic = tcommon.BoolPtr(false)
+	}
 	if rule.ListenerAttribute != nil {
 		if rule.ListenerAttribute.SessionTime != 0 {
 			ruleInput.SessionExpireTime = tcommon.Int64Ptr(int64(rule.ListenerAttribute.SessionTime))

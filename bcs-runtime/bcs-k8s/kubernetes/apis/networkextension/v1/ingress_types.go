@@ -98,6 +98,8 @@ type Layer7Route struct {
 	Path              string                    `json:"path,omitempty"`
 	ListenerAttribute *IngressListenerAttribute `json:"listenerAttribute,omitempty"`
 	Services          []ServiceRoute            `json:"services,omitempty"`
+	// ForwardType Forwarding protocol between load balancing and backend services
+	ForwardType string `json:"forwardType,omitempty"`
 }
 
 // ListenerHealthCheck health check setting for listener
