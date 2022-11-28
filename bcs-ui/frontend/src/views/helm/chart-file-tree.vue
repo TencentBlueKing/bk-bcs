@@ -35,6 +35,7 @@
           scrollBeyondLastLine: false,
           renderLineHighlight: false,
         }"
+        full-screen
         readonly>
       </CodeEditor>
     </template>
