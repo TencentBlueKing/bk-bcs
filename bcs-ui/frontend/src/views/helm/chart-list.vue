@@ -162,7 +162,7 @@
       <bcs-sideslider
         :is-show.sync="showDetail"
         quick-close
-        :width="1000"
+        :width="1200"
         :title="curRow.name">
         <template #header>
           <div class="flex justify-between items-center pr-[30px]">

@@ -91,8 +91,12 @@
       </div>
     </div>
     <!-- Values信息 -->
-    <bcs-tab class="mt-[20px]" v-bkloading="{ isLoading: versionDetailLoading }" v-if="showTab">
-      <bcs-tab-panel name="1" :label="$t('Chart部署选项')">
+    <bcs-tab
+      class="mt-[20px]"
+      :active.sync="activeTab"
+      v-bkloading="{ isLoading: versionDetailLoading }"
+      v-if="showTab">
+      <bcs-tab-panel name="values" :label="$t('Chart部署选项')">
         <bcs-alert
           class="mb-[10px]"
           type="info"
@@ -138,7 +142,7 @@
           v-model="valuesData.valueFileContent">
         </CodeEditor>
       </bcs-tab-panel>
-      <bcs-tab-panel name="2" :label="$t('Helm部署参数')">
+      <bcs-tab-panel name="params" :label="$t('Helm部署参数')">
         <div class="flex flex-col">
           <bcs-checkbox false-value="false" true-value="true" v-model="args['--skip-crds']">
             {{$t('忽略CRD')}}
@@ -201,7 +205,8 @@
       :is-show.sync="showPreview"
       quick-close
       :width="1000"
-      :title="$t('预览')">
+      :title="$t('预览')"
+      @hidden="isPreview = false">
       <template #content>
         <ChartFileTree
           :contents="previewData.newContents"
@@ -275,7 +280,6 @@ import CodeEditor from '@/components/monaco-editor/new-editor.vue';
 import ChartFileTree from './chart-file-tree.vue';
 import NamespaceSelect from '@/components/namespace-selector/namespace-select.vue';
 import KeyValue, { IData } from '@/components/key-value.vue';
-import { SPECIAL_REGEXP } from '@/common/constant';
 import useHelm from './use-helm';
 import { useCluster } from '@/common/use-app';
 import $router from '@/router';
@@ -339,6 +343,8 @@ export default defineComponent({
       chartVersion: '',
       namespace: namespace.value,
     });
+    const isPreview = ref(false);
+    const activeTab = ref('values');
     // 表单化参数
     const args = ref({
       '--timeout': 600,
@@ -388,14 +394,7 @@ export default defineComponent({
       description: [
         {
           validator() {
-            return !SPECIAL_REGEXP.test(args.value['--description']);
-          },
-          trigger: 'blur',
-          message: $i18n.t('描述不能包含特殊字符'),
-        },
-        {
-          validator() {
-            return args.value['--description'];
+            return isPreview.value || args.value['--description'];
           },
           trigger: 'blur',
           message: $i18n.t('必填项'),
@@ -464,9 +463,15 @@ export default defineComponent({
     const contentRef = ref<any>(null);
     const validateData = async () => {
       const validate = await formRef.value?.validate().catch(() => false);
-      const isArgsValidate = keyValueRef.value?.validate();
-      if (!validate || !isArgsValidate) {
+      if (!validate) {
+        // 聚集到顶部
         contentRef.value.handleScollTop();
+        return false;
+      }
+      const isArgsValidate = keyValueRef.value?.validate();
+      if (!isArgsValidate) {
+        // 聚焦到helm部署参数
+        activeTab.value = 'params';
         return false;
       };
       return true;
@@ -540,6 +545,7 @@ export default defineComponent({
     const previewData = ref<any>({});
     const previewLoading = ref(false);
     const handleShowPreview = async () => {
+      isPreview.value = true;
       const result = await validateData();
       if (!result) return;
 
@@ -581,8 +587,8 @@ export default defineComponent({
       // 参数信息
       commands.forEach((item: string) => {
         const index = item.indexOf('=');
-        const key = item.slice(0, index);
-        const value = item.slice(index + 1, item.length);
+        const key = index > -1 ? item.slice(0, index) : item;
+        const value = index > -1 ? item.slice(index + 1, item.length) : '';
         if (formArgsKey.includes(key)) {
           if (key === '--timeout') {
             // 去除单位
@@ -622,6 +628,8 @@ export default defineComponent({
 
     return {
       contentRef,
+      isPreview,
+      activeTab,
       isLoading,
       chartData,
       curClusterId,

@@ -35,6 +35,7 @@
           scrollBeyondLastLine: false,
           renderLineHighlight: false,
         }"
+        full-screen
         readonly>
       </CodeEditor>
     </template>
@@ -61,7 +62,7 @@ export default defineComponent({
     const treeRef = ref<any>(null);
     const curSelectedFilePath = ref('');
     const pathTreeData = computed(() => path2Tree(Object.keys(contents.value || {})));
-    const fileContent = computed(() => contents.value?.[curSelectedFilePath.value]);
+    const fileContent = computed(() => contents.value?.[curSelectedFilePath.value]?.content);
     watch(contents, () => {
       curSelectedFilePath.value = Object.keys(contents.value || {})[0] || '';
       setTimeout(() => {
