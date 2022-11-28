@@ -19,7 +19,6 @@ import (
 	"context"
 	"encoding/json"
 
-	"github.com/TencentBlueKing/gopkg/collection/set"
 	"google.golang.org/protobuf/types/known/structpb"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -27,6 +26,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action/resp"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action/trans"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/cluster"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/ctxkey"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
 	conf "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/config"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/i18n"
@@ -34,6 +34,12 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/slice"
+	"github.com/TencentBlueKing/gopkg/collection/set"
+)
+
+const (
+	labelCreatorKey = "io.tencent.paas.creator"
+	labelUpdatorKey = "io.tencent.paas.updator"
 )
 
 // ResMgr k8s 资源管理器，包含命名空间校验，集群操作下发，构建响应内容等功能
@@ -98,6 +104,29 @@ func (m *ResMgr) Create(
 	if err != nil {
 		return nil, err
 	}
+
+	// 标签加上创建人和编辑人
+	{
+		username := ctx.Value(ctxkey.UsernameKey).(string)
+		items, _ := mapx.GetItems(manifest, "metadata.annotations")
+		// 判断yaml模板某个key是否存在 存在向labels追加 不存在则创建
+		if items != nil {
+			creator := []string{"metadata", "annotations", labelCreatorKey}
+			if err = mapx.SetItems(manifest, creator, username); err != nil {
+				return nil, err
+			}
+			updator := []string{"metadata", "annotations", labelUpdatorKey}
+			if err = mapx.SetItems(manifest, updator, username); err != nil {
+				return nil, err
+			}
+		} else {
+			// 添加labels
+			if err = mapx.SetItems(manifest, "metadata.annotations", map[string]string{labelCreatorKey: username, labelUpdatorKey: username}); err != nil {
+				return nil, err
+			}
+		}
+	}
+
 	if err = m.checkAccess(ctx, "", manifest); err != nil {
 		return nil, err
 	}
@@ -118,6 +147,19 @@ func (m *ResMgr) Update(
 	if err != nil {
 		return nil, err
 	}
+
+	// 更新创建人标签，如果某个资源没有标签则不处理
+	{
+		username := ctx.Value(ctxkey.UsernameKey).(string)
+		// 处理yaml模板某个key不匹配问题
+		paths := []string{"metadata", "annotations", labelUpdatorKey}
+		if editMode := mapx.GetStr(manifest, paths); editMode != "" {
+			if err := mapx.SetItems(manifest, paths, username); err != nil {
+				return nil, err
+			}
+		}
+	}
+
 	if err = m.checkAccess(ctx, namespace, manifest); err != nil {
 		return nil, err
 	}
