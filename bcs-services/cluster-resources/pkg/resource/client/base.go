@@ -135,6 +135,12 @@ func (c *ResClient) Delete(ctx context.Context, namespace, name string, opts met
 	if err := c.permValidate(ctx, action.Delete, namespace); err != nil {
 		return err
 	}
+	// 若没有设置 PropagationPolicy，则设置为 Background
+	// https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/#deleting-a-replicaset-and-its-pods
+	if opts.PropagationPolicy == nil {
+		policy := metav1.DeletePropagationBackground
+		opts.PropagationPolicy = &policy
+	}
 	return c.handleErr(ctx, c.cli.Resource(c.res).Namespace(namespace).Delete(ctx, name, opts))
 }
 
