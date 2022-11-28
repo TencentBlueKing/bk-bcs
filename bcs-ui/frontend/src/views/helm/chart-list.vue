@@ -102,9 +102,15 @@
             @page-limit-change="(size) => pageSizeChange(size, item.name)">
             <bcs-table-column :label="$t('名称')" prop="name" show-overflow-tooltip>
               <template #default="{ row }">
-                <bcs-button text @click="handleShowDetail(row)">
-                  <span class="bcs-ellipsis">{{row.name}}</span>
-                </bcs-button>
+                <div class="flex items-center">
+                  <span class="flex items-center justify-center w-[24px] h-[24px] text-[24px] text-[#C4C6CC] mr-[8px]">
+                    <img :src="row.icon" v-if="row.icon" />
+                    <i v-else class="bcs-icon bcs-icon-helm-app"></i>
+                  </span>
+                  <bcs-button text @click="handleShowDetail(row)">
+                    <span class="bcs-ellipsis">{{row.name}}</span>
+                  </bcs-button>
+                </div>
               </template>
             </bcs-table-column>
             <bcs-table-column :label="$t('版本')" prop="latestVersion" width="100"></bcs-table-column>

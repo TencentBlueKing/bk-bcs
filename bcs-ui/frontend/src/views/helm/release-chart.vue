@@ -108,6 +108,7 @@
             <bcs-select
               class="w-[360px] bg-[#fff] ml-[10px]"
               :clearable="false"
+              searchable
               v-model="valuesData.valueFile">
               <bcs-option
                 v-for="item in valuesFileList"
