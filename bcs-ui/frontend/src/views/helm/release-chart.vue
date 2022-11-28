@@ -201,7 +201,8 @@
       :is-show.sync="showPreview"
       quick-close
       :width="1000"
-      :title="$t('预览')">
+      :title="$t('预览')"
+      @hidden="isPreview = false">
       <template #content>
         <ChartFileTree
           :contents="previewData.newContents"
@@ -339,6 +340,7 @@ export default defineComponent({
       chartVersion: '',
       namespace: namespace.value,
     });
+    const isPreview = ref(false);
     // 表单化参数
     const args = ref({
       '--timeout': 600,
@@ -391,11 +393,11 @@ export default defineComponent({
             return !SPECIAL_REGEXP.test(args.value['--description']);
           },
           trigger: 'blur',
-          message: $i18n.t('描述不能包含特殊字符'),
+          message: $i18n.t('描述不能包含[\\`~!@#$%^&*()_+<>?:"{},./;\'[\\]]特殊字符'),
         },
         {
           validator() {
-            return args.value['--description'];
+            return isPreview.value || args.value['--description'];
           },
           trigger: 'blur',
           message: $i18n.t('必填项'),
@@ -540,6 +542,7 @@ export default defineComponent({
     const previewData = ref<any>({});
     const previewLoading = ref(false);
     const handleShowPreview = async () => {
+      isPreview.value = true;
       const result = await validateData();
       if (!result) return;
 
@@ -622,6 +625,7 @@ export default defineComponent({
 
     return {
       contentRef,
+      isPreview,
       isLoading,
       chartData,
       curClusterId,
