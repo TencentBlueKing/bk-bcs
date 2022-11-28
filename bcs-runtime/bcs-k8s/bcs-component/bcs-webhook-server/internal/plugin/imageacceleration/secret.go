@@ -31,6 +31,7 @@ type imagePullSecret struct {
 type imagePullAuth struct {
 	Password string `json:"password"`
 	Username string `json:"username"`
+	Auth     string `json:"auth"`
 }
 
 // handleImagePullSecret will get the imagePullSecrets from pod. And then for-loop them, get the
@@ -63,7 +64,8 @@ func (h *Handler) compareAndUpdateSecret(secret *corev1.Secret, configmapMapping
 			continue
 		}
 		resultAuth, ok := pullSecret.Auths[resultPrefix]
-		if ok && (registryAuth.Username == resultAuth.Username && registryAuth.Password == resultAuth.Password) {
+		if ok && (registryAuth.Username == resultAuth.Username && registryAuth.Password == resultAuth.Password &&
+			registryAuth.Auth == resultAuth.Auth) {
 			continue
 		}
 		pullSecret.Auths[resultPrefix] = registryAuth
