@@ -43,7 +43,7 @@ var ActionPermissions = map[string]string{
 	"HelmManager.UninstallReleaseV1": namespace.CanDeleteNamespaceScopedResourceOperation,
 	"HelmManager.UpgradeReleaseV1":   namespace.CanUpdateNamespaceScopedResourceOperation,
 	"HelmManager.RollbackReleaseV1":  namespace.CanUpdateNamespaceScopedResourceOperation,
-	"HelmManager.ReleasePreview":     namespace.CanUpdateNamespaceScopedResourceOperation,
+	"HelmManager.ReleasePreview":     project.CanViewProjectOperation,
 	"HelmManager.GetReleaseHistory":  namespace.CanViewNamespaceScopedResourceOperation,
 	"HelmManager.GetReleaseStatus":   namespace.CanViewNamespaceScopedResourceOperation,
 }

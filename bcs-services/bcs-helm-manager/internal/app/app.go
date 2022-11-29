@@ -318,6 +318,7 @@ func (hm *HelmManager) initMicro() error {
 		microSvc.RegisterTTL(30*time.Second),
 		microSvc.RegisterInterval(25*time.Second),
 		microSvc.Context(hm.ctx),
+		runtimex.MaxMsgSize(10*1024*1024),
 		microSvc.BeforeStart(func() error {
 			return nil
 		}),
