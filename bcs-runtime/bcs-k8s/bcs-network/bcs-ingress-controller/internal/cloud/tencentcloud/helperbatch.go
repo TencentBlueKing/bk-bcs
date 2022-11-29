@@ -16,14 +16,16 @@ import (
 	"fmt"
 	"reflect"
 	"strings"
+	"sync"
 	"time"
+
+	"github.com/hashicorp/go-multierror"
+	"github.com/pkg/errors"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/cloud"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/common"
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
-	"github.com/hashicorp/go-multierror"
-	"github.com/pkg/errors"
 
 	tclb "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/clb/v20180317"
 	tcommon "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
@@ -244,30 +246,40 @@ func (c *Clb) batchCreateSegment4LayerListener(
 	}
 
 	// on tencent cloud, api cannot create multiple listener segment in one time
-	failedListenerNameMap := make(map[string]error)
-	successListenerNameMap := make(map[string]string)
+	failedListenerNameMap := sync.Map{}
+	successListenerNameMap := sync.Map{}
+	ch := make(chan struct{}, MaxSegmentListenerCurrentCreateEachTime)
+	wg := sync.WaitGroup{}
+	wg.Add(len(listeners))
 	for _, li := range listeners {
-		listenerID, err := c.create4LayerListenerWithoutTargetGroup(region, li)
-		if err != nil {
-			err = errors.Wrapf(err, "create 4 layer listener %s/%s failed", li.GetName(), li.GetNamespace())
-			blog.Warnf(err.Error())
-			failedListenerNameMap[li.GetName()] = err
-			continue
-		}
-		successListenerNameMap[li.GetName()] = listenerID
+		ch <- struct{}{}
+		go func(li *networkextensionv1.Listener) {
+			defer wg.Done()
+			listenerID, err := c.create4LayerListenerWithoutTargetGroup(region, li)
+			if err != nil {
+				err = errors.Wrapf(err, "create 4 layer listener %s/%s failed", li.GetNamespace(), li.GetName())
+				blog.Warnf("%v", err)
+				failedListenerNameMap.Store(li.GetName(), err)
+				return
+			}
+			successListenerNameMap.Store(li.GetName(), listenerID)
+			<-ch
+		}(li)
 	}
+	wg.Wait()
 
 	// collect all targets and register them in one time
 	tgReq := tclb.NewBatchRegisterTargetsRequest()
 	tgReq.LoadBalancerId = tcommon.StringPtr(listeners[0].Spec.LoadbalancerID)
 	for _, li := range listeners {
-		if _, ok := failedListenerNameMap[li.GetName()]; ok {
+		if _, ok := failedListenerNameMap.Load(li.GetName()); ok {
 			continue
 		}
 		if li.Spec.TargetGroup != nil && len(li.Spec.TargetGroup.Backends) != 0 {
 			for _, backend := range li.Spec.TargetGroup.Backends {
+				liName, _ := successListenerNameMap.Load(li.GetName())
 				tgReq.Targets = append(tgReq.Targets, &tclb.BatchTarget{
-					ListenerId: tcommon.StringPtr(successListenerNameMap[li.GetName()]),
+					ListenerId: tcommon.StringPtr(liName.(string)),
 					EniIp:      tcommon.StringPtr(backend.IP),
 					Port:       tcommon.Int64Ptr(int64(backend.Port)),
 					Weight:     tcommon.Int64Ptr(int64(backend.Weight)),
@@ -291,14 +303,16 @@ func (c *Clb) batchCreateSegment4LayerListener(
 	// collect all listener
 	retMap := make(map[string]cloud.Result)
 	for _, li := range listeners {
-		if liID, ok := successListenerNameMap[li.GetName()]; ok {
-			if err, ok := failedListenerIDMap[liID]; ok {
+		if liID, ok := successListenerNameMap.Load(li.GetName()); ok {
+			liIDStr := liID.(string)
+			if err, ok := failedListenerIDMap[liID.(string)]; ok {
 				retMap[li.GetName()] = cloud.Result{IsError: true, Err: err}
 			} else {
-				retMap[li.GetName()] = cloud.Result{IsError: false, Res: liID}
+				retMap[li.GetName()] = cloud.Result{IsError: false, Res: liIDStr}
 			}
 		} else {
-			retMap[li.GetName()] = cloud.Result{IsError: true, Err: failedListenerNameMap[li.GetName()]}
+			err, _ := failedListenerNameMap.Load(li.GetName())
+			retMap[li.GetName()] = cloud.Result{IsError: true, Err: err.(error)}
 		}
 	}
 	return retMap, nil

@@ -27,7 +27,22 @@
       @page-limit-change="pageSizeChange">
       <bcs-table-column :label="$t('名称')" min-width="100">
         <template #default="{ row }">
-          <bcs-button text :disabled="!row.repo" @click="handleUpdate(row)">
+          <bcs-button
+            text
+            :disabled="!row.repo"
+            v-authority="{
+              clickable: webAnnotationsPerms[row.iamNamespaceID]
+                && webAnnotationsPerms[row.iamNamespaceID].namespace_scoped_update,
+              actionId: 'namespace_scoped_update',
+              resourceName: row.namespace,
+              disablePerms: true,
+              permCtx: {
+                project_id: projectID,
+                cluster_id: clusterID,
+                name: row.namespace
+              }
+            }"
+            @click="handleUpdate(row)">
             <span
               class="bcs-ellipsis"
               v-bk-tooltips="{

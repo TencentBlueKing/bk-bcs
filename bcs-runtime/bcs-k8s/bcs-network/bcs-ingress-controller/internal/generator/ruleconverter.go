@@ -148,7 +148,11 @@ func (rc *RuleConverter) generateListenerRule(l7Routes []networkextensionv1.Laye
 		liRule.Domain = l7Route.Domain
 		liRule.Path = l7Route.Path
 		liRule.ListenerAttribute = l7Route.ListenerAttribute
-		targetGroup, err := rc.generateTargetGroup(rc.rule.Protocol, l7Route.Services)
+		protocol := rc.rule.Protocol
+		if len(l7Route.ForwardType) != 0 {
+			protocol = l7Route.ForwardType
+		}
+		targetGroup, err := rc.generateTargetGroup(protocol, l7Route.Services)
 		if err != nil {
 			return nil, err
 		}

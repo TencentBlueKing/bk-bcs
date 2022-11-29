@@ -238,6 +238,10 @@ spec:
                         properties:
                           domain:
                             type: string
+                          forwardType:
+                            description: ForwardType Forwarding protocol between load
+                              balancing and backend services
+                            type: string
                           listenerAttribute:
                             description: IngressListenerAttribute attribute for listener
                             properties:
