@@ -72,7 +72,7 @@ var lightGDeployManifest = map[string]interface{}{
 	"kind":       "GameDeployment",
 	"metadata": map[string]interface{}{
 		"annotations": map[string]interface{}{
-			"io.tencent.bcs.editFormat": "form",
+			resCsts.EditModeAnnoKey: "form",
 		},
 		"labels": map[string]interface{}{
 			"io.tencent.bcs.dev/deletion-allow": "Cascading",

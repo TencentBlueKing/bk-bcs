@@ -106,7 +106,7 @@ func (h *Handler) CreateCObj(
 	}
 	kind, apiVersion := crdInfo["kind"].(string), crdInfo["apiVersion"].(string)
 
-	transformer, err := trans.New(ctx, req.RawData.AsMap(), req.ClusterID, kind, req.Format)
+	transformer, err := trans.New(ctx, req.RawData.AsMap(), req.ClusterID, kind, resCsts.CreateAction, req.Format)
 	if err != nil {
 		return err
 	}
@@ -139,7 +139,7 @@ func (h *Handler) UpdateCObj(
 	}
 	kind, apiVersion := crdInfo["kind"].(string), crdInfo["apiVersion"].(string)
 
-	transformer, err := trans.New(ctx, req.RawData.AsMap(), req.ClusterID, kind, req.Format)
+	transformer, err := trans.New(ctx, req.RawData.AsMap(), req.ClusterID, kind, resCsts.UpdateAction, req.Format)
 	if err != nil {
 		return err
 	}

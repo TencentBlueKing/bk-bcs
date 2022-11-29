@@ -4,11 +4,13 @@ metadata:
   name: svc-complex-w3uvctq3v3
   namespace: default
   labels:
-    "label-key-1": "label-val-1"
+    label-key-1: label-val-1
   annotations:
-    "anno-key-1": "anno-val-1"
-    "service.kubernetes.io/qcloud-loadbalancer-internal-subnetid": "subnet-id-1234"
-    "io.tencent.bcs.editFormat": "form"
+    anno-key-1: anno-val-1
+    service.kubernetes.io/qcloud-loadbalancer-internal-subnetid: subnet-id-1234
+    io.tencent.bcs.editFormat: form
+    io.tencent.paas.creator: anonymous
+    io.tencent.paas.updator: anonymous
 spec:
   type: LoadBalancer
   ports:

@@ -108,7 +108,7 @@ metadata:
               - required
               - maxLength128
             ui:reactions:
-              - if: "{{`{{`}} $self.value === 'io.tencent.bcs.editFormat' {{`}}`}}"
+              - if: "{{`{{`}} $self.value === 'io.tencent.bcs.editFormat' || $self.value === 'io.tencent.paas.creator' || $self.value === 'io.tencent.paas.updator' {{`}}`}}"
                 then:
                   state:
                     disabled: true
@@ -116,7 +116,7 @@ metadata:
                   state:
                     disabled: false
               - target: "{{`{{`}} $widgetNode?.getSibling('value')?.id {{`}}`}}"
-                if: "{{`{{`}} $self.value === 'io.tencent.bcs.editFormat' {{`}}`}}"
+                if: "{{`{{`}} $self.value === 'io.tencent.bcs.editFormat' || $self.value === 'io.tencent.paas.creator' || $self.value === 'io.tencent.paas.updator' {{`}}`}}"
                 then:
                   state:
                     disabled: true

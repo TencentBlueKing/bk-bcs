@@ -19,8 +19,10 @@ import (
 	"context"
 	"text/template"
 
+	"github.com/TencentBlueKing/gopkg/collection/set"
 	"gopkg.in/yaml.v3"
 
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/ctxkey"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/envs"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/i18n"
@@ -38,6 +40,7 @@ type ManifestRenderer struct {
 	formData   map[string]interface{}
 	clusterID  string
 	kind       string
+	action     string
 	apiVersion string
 	tmpl       *template.Template
 	manifest   map[string]interface{}
@@ -45,10 +48,15 @@ type ManifestRenderer struct {
 
 // NewManifestRenderer xxx
 func NewManifestRenderer(
-	ctx context.Context, formData map[string]interface{}, clusterID, kind string,
+	ctx context.Context, formData map[string]interface{}, clusterID, kind, action string,
 ) *ManifestRenderer {
 	return &ManifestRenderer{
-		ctx: ctx, formData: formData, clusterID: clusterID, kind: kind, manifest: map[string]interface{}{},
+		ctx:       ctx,
+		formData:  formData,
+		clusterID: clusterID,
+		kind:      kind,
+		action:    action,
+		manifest:  map[string]interface{}{},
 	}
 }
 
@@ -61,11 +69,13 @@ func (r *ManifestRenderer) Render() (map[string]interface{}, error) {
 		r.validate,
 		// 3. 添加 EditMode 注解标识
 		r.setEditMode,
-		// 4. 数据清洗，去除表单默认值等
+		// 4. 在注解中添加用户信息
+		r.setUserInfo,
+		// 5. 数据清洗，去除表单默认值等
 		r.cleanFormData,
-		// 5. 加载模板并初始化
+		// 6. 加载模板并初始化
 		r.initTemplate,
-		// 6. 渲染模板并转换格式
+		// 7. 渲染模板并转换格式
 		r.render2Map,
 	} {
 		if err := f(); err != nil {
@@ -113,6 +123,32 @@ func (r *ManifestRenderer) setEditMode() error {
 	annotations = append(annotations, map[string]interface{}{
 		"key": resCsts.EditModeAnnoKey, "value": resCsts.EditModeForm,
 	})
+	return mapx.SetItems(r.formData, "metadata.annotations", annotations)
+}
+
+// setUserInfo 在注解中添加用户信息
+func (r *ManifestRenderer) setUserInfo() error {
+	username := r.ctx.Value(ctxkey.UsernameKey).(string)
+
+	// 若 annotations 中有 用户信息相关的 key，则按条件刷新值
+	annotations := mapx.GetList(r.formData, "metadata.annotations")
+	existsAnnoKeys := set.NewStringSet()
+	for _, anno := range annotations {
+		annoKey := mapx.GetStr(anno.(map[string]interface{}), "key")
+		if annoKey == resCsts.UpdaterAnnoKey ||
+			(annoKey == resCsts.CreatorAnnoKey && r.action == resCsts.CreateAction) {
+			anno.(map[string]interface{})["value"] = username
+		}
+		existsAnnoKeys.Add(annoKey)
+	}
+
+	// 如果没有对应的 key，则新增
+	if !existsAnnoKeys.Has(resCsts.CreatorAnnoKey) {
+		annotations = append(annotations, map[string]interface{}{"key": resCsts.CreatorAnnoKey, "value": username})
+	}
+	if !existsAnnoKeys.Has(resCsts.UpdaterAnnoKey) {
+		annotations = append(annotations, map[string]interface{}{"key": resCsts.UpdaterAnnoKey, "value": username})
+	}
 	return mapx.SetItems(r.formData, "metadata.annotations", annotations)
 }
 

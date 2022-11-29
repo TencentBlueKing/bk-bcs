@@ -107,6 +107,14 @@ const (
 )
 
 const (
+	// CreatorAnnoKey 创建者
+	CreatorAnnoKey = "io.tencent.paas.creator"
+
+	// UpdaterAnnoKey 更新者，为保持与 bcs-ui 中的一致，还是使用 updator（typo）
+	UpdaterAnnoKey = "io.tencent.paas.updator"
+)
+
+const (
 	// EditModeForm 资源编辑模式 - 表单
 	EditModeForm = "form"
 	// EditModeYaml 资源编辑模式 - Yaml

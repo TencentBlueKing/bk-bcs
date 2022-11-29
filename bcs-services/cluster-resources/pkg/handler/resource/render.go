@@ -19,6 +19,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/i18n"
+	resCsts "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/constants"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/renderer"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/pbstruct"
@@ -29,7 +30,10 @@ import (
 func (h *Handler) FormDataRenderPreview(
 	ctx context.Context, req *clusterRes.FormRenderPreviewReq, resp *clusterRes.CommonResp,
 ) error {
-	manifest, err := renderer.NewManifestRenderer(ctx, req.FormData.AsMap(), req.ClusterID, req.Kind).Render()
+	// 在 ManifestRenderer 中，对于不存在的创建者/更新者都会新建，因此这里直接指定 UpdateAction 即可
+	manifest, err := renderer.NewManifestRenderer(
+		ctx, req.FormData.AsMap(), req.ClusterID, req.Kind, resCsts.UpdateAction,
+	).Render()
 	if err != nil {
 		return errorx.New(errcode.General, i18n.GetMsg(ctx, "预览表单渲染结果失败，请检查您填写的表单配置；错误信息：%w"), err)
 	}

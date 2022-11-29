@@ -3,7 +3,9 @@ kind: PersistentVolume
 metadata:
   name: pv-complex-noi2dhkbrh
   annotations:
-    "io.tencent.bcs.editFormat": "form"
+    io.tencent.bcs.editFormat: form
+    io.tencent.paas.creator: anonymous
+    io.tencent.paas.updator: anonymous
 spec:
   storageClassName: local-path
   capacity:

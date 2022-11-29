@@ -4,18 +4,20 @@ metadata:
   name: gdeploy-complex-6byc8q0oyc
   namespace: default
   labels:
-    "label-key-1": "label-val-1"
-    "label-key-2": "label-val-2"
+    label-key-1: label-val-1
+    label-key-2: label-val-2
   annotations:
-    "anno-key-1": "anno-val-1"
-    "anno-key-2": "anno-val-2"
-    "io.tencent.bcs.editFormat": "form"
+    anno-key-1: anno-val-1
+    anno-key-2: anno-val-2
+    io.tencent.bcs.editFormat: form
+    io.tencent.paas.creator: anonymous
+    io.tencent.paas.updator: anonymous
 spec:
   minReadySeconds: 0
   selector:
     matchLabels:
-      "label-key-1": "label-val-1"
-      "label-key-2": "label-val-2"
+      label-key-1: label-val-1
+      label-key-2: label-val-2
   replicas: 2
   updateStrategy:
     type: RollingUpdate
@@ -37,8 +39,8 @@ spec:
   template:
     metadata:
       labels:
-        "label-key-1": "label-val-1"
-        "label-key-2": "label-val-2"
+        label-key-1: label-val-1
+        label-key-2: label-val-2
     spec:
       containers:
         - name: nginx

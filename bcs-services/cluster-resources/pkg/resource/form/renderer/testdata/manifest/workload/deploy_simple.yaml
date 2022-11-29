@@ -4,9 +4,11 @@ metadata:
   name: deploy-simple-ioe1uufguy
   namespace: default
   labels:
-    "label-key-1": "label-val-1"
+    label-key-1: label-val-1
   annotations:
-    "io.tencent.bcs.editFormat": "form"
+    io.tencent.bcs.editFormat: form
+    io.tencent.paas.creator: anonymous
+    io.tencent.paas.updator: anonymous
 spec:
   selector:
     matchLabels:

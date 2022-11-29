@@ -6,7 +6,9 @@ metadata:
   labels:
     io.tencent.bcs.dev/deletion-allow: Always
   annotations:
-    "io.tencent.bcs.editFormat": "form"
+    io.tencent.bcs.editFormat: form
+    io.tencent.paas.creator: anonymous
+    io.tencent.paas.updator: anonymous
 spec:
   policy: Ordered
   args:

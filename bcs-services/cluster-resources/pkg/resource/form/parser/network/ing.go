@@ -85,7 +85,6 @@ func ParseIngNetwork(manifest map[string]interface{}, network *model.IngNetwork)
 	} else {
 		network.CLBUseType = resCsts.CLBUseTypeUseExists
 	}
-
 }
 
 // ParseIngDefaultBackend ...

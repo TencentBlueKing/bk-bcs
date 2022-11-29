@@ -26,6 +26,7 @@ import (
 	"gopkg.in/yaml.v3"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/ctxkey"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/envs"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/handler"
 	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
@@ -89,7 +90,10 @@ var deployManifest4RenderTest = map[string]interface{}{
 
 func TestManifestRenderer(t *testing.T) {
 	formData := workload.ParseDeploy(deployManifest4RenderTest)
-	manifest, err := NewManifestRenderer(context.TODO(), formData, envs.TestClusterID, resCsts.Deploy).Render()
+	ctx := context.WithValue(context.TODO(), ctxkey.UsernameKey, envs.AnonymousUsername)
+	manifest, err := NewManifestRenderer(
+		ctx, formData, envs.TestClusterID, resCsts.Deploy, resCsts.UpdateAction,
+	).Render()
 	assert.Nil(t, err)
 
 	assert.Equal(t, "busybox", mapx.GetStr(manifest, "metadata.labels.app"))
@@ -164,7 +168,7 @@ func TestManifestRenderByPipe(t *testing.T) {
 		// 根据表单数据渲染的结果
 		formDataMap := structs.Map(data.formData)
 		resKind := mapx.GetStr(formDataMap, "metadata.kind")
-		result, err := NewManifestRenderer(ctx, formDataMap, envs.TestClusterID, resKind).Render()
+		result, err := NewManifestRenderer(ctx, formDataMap, envs.TestClusterID, resKind, resCsts.UpdateAction).Render()
 		assert.Nil(t, err, "kind [%s] manifest render failed: %v", resKind, err)
 
 		// 做对比确保一致（在同步随机名称后）

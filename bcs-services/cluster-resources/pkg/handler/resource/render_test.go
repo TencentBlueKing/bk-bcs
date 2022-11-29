@@ -20,6 +20,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/ctxkey"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/envs"
 	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
 	resCsts "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/constants"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/example"
@@ -30,7 +32,7 @@ import (
 
 func TestFormDataRenderPreview(t *testing.T) {
 	hdlr := New()
-	ctx := context.TODO()
+	ctx := context.WithValue(context.TODO(), ctxkey.UsernameKey, envs.AnonymousUsername)
 
 	manifest, _ := example.LoadDemoManifest("workload/simple_deployment", "")
 	// 类型强制转换，确保解析器正确解析

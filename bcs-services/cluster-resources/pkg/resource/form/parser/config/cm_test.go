@@ -19,6 +19,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	resCsts "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/constants"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/model"
 )
 
@@ -27,7 +28,7 @@ var lightCMManifest = map[string]interface{}{
 	"kind":       "ConfigMap",
 	"metadata": map[string]interface{}{
 		"annotations": map[string]interface{}{
-			"io.tencent.bcs.editFormat": "form",
+			resCsts.EditModeAnnoKey: "form",
 		},
 		"name":      "configmap-test",
 		"namespace": "default",

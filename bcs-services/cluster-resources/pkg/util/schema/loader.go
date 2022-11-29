@@ -61,15 +61,11 @@ const (
 	jsonFileNameExt = ".json"
 )
 
-var (
-	// 受支持的文件扩展名
-	supportedFileNameExts = []string{ymlFileNameExt, yamlFileNameExt, jsonFileNameExt}
-)
+// 受支持的文件扩展名
+var supportedFileNameExts = []string{ymlFileNameExt, yamlFileNameExt, jsonFileNameExt}
 
-var (
-	// 不受支持的文件格式
-	errFormatUnsupported = errors.New("file format is unsupported")
-)
+// 不受支持的文件格式
+var errFormatUnsupported = errors.New("file format is unsupported")
 
 type jsonFileLoader struct {
 	source string

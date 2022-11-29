@@ -29,7 +29,7 @@ func TestParseSecretDataOpaque(t *testing.T) {
 		"kind":       "Secret",
 		"metadata": map[string]interface{}{
 			"annotations": map[string]interface{}{
-				"io.tencent.bcs.editFormat": "form",
+				resCsts.EditModeAnnoKey: "form",
 			},
 			"name":      "secret-test",
 			"namespace": "default",

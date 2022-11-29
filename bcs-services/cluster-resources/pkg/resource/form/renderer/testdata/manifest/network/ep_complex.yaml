@@ -4,10 +4,12 @@ metadata:
   name: ep-complex-w3uvctq3v3
   namespace: default
   labels:
-    "label-key-1": "label-val-1"
+    label-key-1: label-val-1
   annotations:
-    "anno-key-1": "anno-val-1"
-    "io.tencent.bcs.editFormat": "form"
+    anno-key-1: anno-val-1
+    io.tencent.bcs.editFormat: form
+    io.tencent.paas.creator: anonymous
+    io.tencent.paas.updator: anonymous
 subsets:
   - addresses:
       - ip: 1.0.0.1

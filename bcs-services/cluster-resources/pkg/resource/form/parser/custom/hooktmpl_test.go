@@ -28,7 +28,7 @@ var lightHookTmplManifest = map[string]interface{}{
 	"kind":       "HookTemplate",
 	"metadata": map[string]interface{}{
 		"annotations": map[string]interface{}{
-			"io.tencent.bcs.editFormat": "form",
+			resCsts.EditModeAnnoKey: "form",
 		},
 		"labels": map[string]interface{}{
 			"io.tencent.bcs.dev/deletion-allow": "Always",

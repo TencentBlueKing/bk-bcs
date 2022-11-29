@@ -4,17 +4,19 @@ metadata:
   name: sts-complex-upa94chrxk
   namespace: default
   labels:
-    "label-key-1": "label-val-1"
-    "label-key-2": "label-val-2"
+    label-key-1: label-val-1
+    label-key-2: label-val-2
   annotations:
-    "anno-key-1": "anno-val-1"
-    "anno-key-2": "anno-val-2"
-    "io.tencent.bcs.editFormat": "form"
+    anno-key-1: anno-val-1
+    anno-key-2: anno-val-2
+    io.tencent.bcs.editFormat: form
+    io.tencent.paas.creator: anonymous
+    io.tencent.paas.updator: anonymous
 spec:
   selector:
     matchLabels:
-      "label-key-1": "label-val-1"
-      "label-key-2": "label-val-2"
+      label-key-1: label-val-1
+      label-key-2: label-val-2
   replicas: 2
   serviceName: svc-complex-y3xk1r9vg9
   updateStrategy:
@@ -36,8 +38,8 @@ spec:
   template:
     metadata:
       labels:
-        "label-key-1": "label-val-1"
-        "label-key-2": "label-val-2"
+        label-key-1: label-val-1
+        label-key-2: label-val-2
     spec:
       containers:
         - name: nginx
