@@ -69,4 +69,23 @@ type ControllerOption struct {
 
 	// ConflictCheckOpen if false, skip all conflict checking about ingress and port pool
 	ConflictCheckOpen bool
+
+	HttpServerPort uint
+
+	Conf Conf
+
+	ServCert ServCert
+}
+type Conf struct {
+	ServCert        ServCert
+	InsecureAddress string
+	InsecurePort    uint
+	VerifyClientTLS bool
+}
+type ServCert struct {
+	CAFile     string
+	CertFile   string
+	KeyFile    string
+	CertPasswd string
+	IsSSL      bool
 }

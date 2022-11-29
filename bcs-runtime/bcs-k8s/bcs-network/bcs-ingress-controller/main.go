@@ -28,8 +28,10 @@ import (
 	"k8s.io/client-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/cache"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/manager"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/http/httpserver"
 	"github.com/Tencent/bk-bcs/bcs-common/common/http/ipv6server"
 	clbv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubedeprecated/apis/clb/v1"
 	ingressctrl "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/ingresscontroller"
@@ -44,6 +46,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/constant"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/eventer"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/generator"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/httpsvr"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/option"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/portpoolcache"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/webhookserver"
@@ -105,6 +108,8 @@ func main() {
 
 	flag.BoolVar(&opts.ConflictCheckOpen, "conflict_check_open", true, "if false, "+
 		"skip all conflict checking about ingress and port pool")
+
+	flag.UintVar(&opts.HttpServerPort, "port", 8082, "port for ingress controller http server")
 
 	flag.Parse()
 
@@ -334,7 +339,15 @@ func main() {
 	metrics.Registry.MustRegister(collector)
 
 	blog.Infof("starting manager")
-	if err := mgr.Start(ctrl.SetupSignalHandler()); err != nil {
+
+	err = initHttpServer(opts, mgr)
+	if err != nil {
+		blog.Errorf("init http server failed: %v", err.Error())
+		os.Exit(1)
+	}
+
+	blog.Infof("starting http server")
+	if err = mgr.Start(ctrl.SetupSignalHandler()); err != nil {
 		blog.Errorf("problem running manager, err %s", err.Error())
 		os.Exit(1)
 	}
@@ -363,4 +376,29 @@ func runPrometheusMetrics(op *option.ControllerOption) {
 			blog.Errorf("metric server listen err: %v", err)
 		}
 	}()
+}
+
+//initHttpServer init ingress controller http server
+func initHttpServer(op *option.ControllerOption, mgr manager.Manager) error {
+	server := httpserver.NewHttpServer(op.HttpServerPort, op.Address, "")
+	if op.Conf.ServCert.IsSSL {
+		server.SetSsl(op.Conf.ServCert.CAFile, op.Conf.ServCert.CertFile, op.Conf.ServCert.KeyFile,
+			op.Conf.ServCert.CertPasswd)
+	}
+
+	server.SetInsecureServer(op.Conf.InsecureAddress, op.Conf.InsecurePort)
+	ws := server.NewWebService("/ingresscontroller", nil)
+	httpServerClient := &httpsvr.HttpServerClient{
+		mgr,
+	}
+	httpsvr.InitRouters(ws, httpServerClient)
+
+	router := server.GetRouter()
+	webContainer := server.GetWebContainer()
+	router.Handle("/ingresscontroller/{sub_path:.*}", webContainer)
+	if err := server.ListenAndServeMux(op.Conf.VerifyClientTLS); err != nil {
+		return fmt.Errorf("http ListenAndServe error %s", err.Error())
+	}
+	return nil
+
 }
