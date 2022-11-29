@@ -219,7 +219,6 @@
     </bcs-sideslider>
     <!-- diff -->
     <bcs-dialog
-      :title="$t('确认更新')"
       v-model="showDiffDialog"
       :mask-close="false"
       :width="1200">
@@ -237,7 +236,7 @@
         diff-editor
         :value="previewData.newContent"
         :original="previewData.oldContent"
-        class="!h-[500px]"
+        class="!min-h-[460px] !h-[480px]"
         readonly>
       </CodeEditor>
       <template #footer>
