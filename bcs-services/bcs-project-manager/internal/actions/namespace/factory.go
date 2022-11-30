@@ -23,6 +23,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/logging"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/errorx"
 )
 
 //NamespaceFactory namespace faction factory
@@ -52,6 +53,10 @@ func (f *NamespaceFactory) Action(clusterID, projectCode string) (action.Namespa
 	if err != nil {
 		logging.Error("list cluster from cluster manager failed, err: %s", err.Error())
 		return nil, err
+	}
+	if resp.GetCode() != 0 {
+		logging.Error("list cluster from cluster manager failed, msg: %s", resp.GetMessage())
+		return nil, errorx.NewClusterErr("list cluster err")
 	}
 	project, err := f.model.GetProject(context.TODO(), projectCode)
 	if err != nil {

@@ -87,6 +87,10 @@ func (la *ListClustersVariablesAction) listClusterVariables() ([]*proto.Variable
 		logging.Error("list cluster from cluster manager failed, err: %s", err.Error())
 		return nil, err
 	}
+	if resp.GetCode() != 0 {
+		logging.Error("list cluster from cluster manager failed, msg: %s", resp.GetMessage())
+		return nil, errorx.NewClusterErr("list cluster err")
+	}
 	clusters := clusterutils.FilterClusters(resp.GetData(), la.req.GetIsShared())
 	var variables []*proto.VariableValue
 	clusterIDs := []string{}

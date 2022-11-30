@@ -21,6 +21,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/headerkey"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/logging"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store"
@@ -152,7 +153,26 @@ func CheckUserPerm(ctx context.Context, req server.Request, username string) (bo
 }
 
 func callIAM(username, action string, resourceID resourceID) (bool, string, error) {
-	// related actions
+	var isSharedCluster bool
+	cli, closeCon, err := clustermanager.GetClusterManagerClient()
+	if err != nil {
+		logging.Error("get cluster manager client failed, err: %s", err.Error())
+		return false, "", errorx.NewReadableErr(errorx.PermDeniedErr, "校验用户权限失败")
+	}
+	defer closeCon()
+	req := &clustermanager.GetClusterReq{
+		ClusterID: resourceID.ClusterID,
+	}
+	resp, err := cli.GetCluster(context.Background(), req)
+	if err != nil {
+		logging.Error("get cluster from cluster manager failed, err: %s", err.Error())
+		return false, "", errorx.NewReadableErr(errorx.PermDeniedErr, "校验用户权限失败")
+	}
+	if resp.GetCode() != 0 {
+		logging.Error("get cluster from cluster manager failed, msg: %s", resp.GetMessage())
+		return false, "", errorx.NewReadableErr(errorx.PermDeniedErr, "校验用户权限失败")
+	}
+	isSharedCluster = resp.GetData().GetIsShared() && resp.GetData().GetProjectID() != resourceID.ProjectID
 	switch action {
 	case project.CanViewProjectOperation:
 		return auth.ProjectIamClient.CanViewProject(username, resourceID.ProjectID)
@@ -164,18 +184,19 @@ func callIAM(username, action string, resourceID resourceID) (bool, string, erro
 		return auth.ProjectIamClient.CanDeleteProject(username, resourceID.ProjectID)
 	case namespace.CanViewNamespaceOperation:
 		return auth.NamespaceIamClient.CanViewNamespace(username,
-			resourceID.ProjectID, resourceID.ClusterID, resourceID.Namespace)
+			resourceID.ProjectID, resourceID.ClusterID, resourceID.Namespace, isSharedCluster)
 	case namespace.CanListNamespaceOperation:
 		return auth.NamespaceIamClient.CanListNamespace(username,
-			resourceID.ProjectID, resourceID.ClusterID)
+			resourceID.ProjectID, resourceID.ClusterID, isSharedCluster)
 	case namespace.CanCreateNamespaceOperation:
-		return auth.NamespaceIamClient.CanCreateNamespace(username, resourceID.ProjectID, resourceID.ClusterID)
+		return auth.NamespaceIamClient.CanCreateNamespace(username,
+			resourceID.ProjectID, resourceID.ClusterID, isSharedCluster)
 	case auth.CanUpdateNamespaceOperation:
 		return auth.NamespaceIamClient.CanUpdateNamespace(username,
-			resourceID.ProjectID, resourceID.ClusterID, resourceID.Namespace)
+			resourceID.ProjectID, resourceID.ClusterID, resourceID.Namespace, isSharedCluster)
 	case namespace.CanDeleteNamespaceOperation:
 		return auth.NamespaceIamClient.CanDeleteNamespace(username,
-			resourceID.ProjectID, resourceID.ClusterID, resourceID.Namespace)
+			resourceID.ProjectID, resourceID.ClusterID, resourceID.Namespace, isSharedCluster)
 	default:
 		return false, "", errorx.NewReadableErr(errorx.PermDeniedErr, "校验用户权限失败")
 	}

@@ -37,7 +37,7 @@ func (a *SharedNamespaceAction) UpdateNamespace(ctx context.Context,
 	namespace := &nsm.Namespace{
 		ProjectCode: req.GetProjectCode(),
 		ClusterID:   req.GetClusterID(),
-		Name:        req.GetName(),
+		Name:        req.GetNamespace(),
 		Updater:     username,
 		ResourceQuota: &nsm.Quota{
 			CPURequests:    req.GetQuota().GetCpuRequests(),
@@ -57,7 +57,7 @@ func (a *SharedNamespaceAction) UpdateNamespace(ctx context.Context,
 		return err
 	}
 	// memoryLimits.Value() return unit is byte， needs to be converted to Gi (divide 2^30)
-	itsmResp, err := itsm.SubmitUpdateNamespaceTicket(username, req.GetProjectCode(), req.GetClusterID(), req.GetName(),
+	itsmResp, err := itsm.SubmitUpdateNamespaceTicket(username, req.GetProjectCode(), req.GetClusterID(), req.GetNamespace(),
 		int(cpuLimits.Value()), int(memoryLimits.Value()/int64(math.Pow(2, 30))))
 	if err != nil {
 		logging.Error("itsm create ticket failed, err: %s", err.Error())
@@ -68,7 +68,7 @@ func (a *SharedNamespaceAction) UpdateNamespace(ctx context.Context,
 	namespace.ItsmTicketStatus = nsm.ItsmTicketStatusCreated
 	namespace.ItsmTicketSN = itsmResp.SN
 	if err := a.model.CreateNamespace(ctx, namespace); err != nil {
-		logging.Error("create namespace %s/%s in db failed, err: %s", req.GetClusterID(), req.GetName(), err.Error())
+		logging.Error("create namespace %s/%s in db failed, err: %s", req.GetClusterID(), req.GetNamespace(), err.Error())
 		return err
 	}
 	return nil

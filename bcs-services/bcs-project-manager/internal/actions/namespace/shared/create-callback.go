@@ -37,12 +37,12 @@ import (
 func (a *SharedNamespaceAction) CreateNamespaceCallback(ctx context.Context,
 	req *proto.NamespaceCallbackRequest, resp *proto.NamespaceCallbackResponse) error {
 	if !req.GetApproveResult() {
-		return a.model.DeleteNamespace(ctx, req.GetProjectCode(), req.GetClusterID(), req.GetName())
+		return a.model.DeleteNamespace(ctx, req.GetProjectCode(), req.GetClusterID(), req.GetNamespace())
 	}
 	ns, err := a.model.GetNamespace(ctx, req.GetProjectCode(), req.GetClusterID(),
-		req.GetName(), nsm.ItsmTicketTypeCreate)
+		req.GetNamespace(), nsm.ItsmTicketTypeCreate)
 	if err != nil {
-		logging.Error("get namespace %s/%s from db failed, err: %s", req.GetClusterID(), req.GetName(), err.Error())
+		logging.Error("get namespace %s/%s from db failed, err: %s", req.GetClusterID(), req.GetNamespace(), err.Error())
 		return errorx.NewDBErr(err.Error())
 	}
 	// create variables
@@ -53,7 +53,7 @@ func (a *SharedNamespaceAction) CreateNamespaceCallback(ctx context.Context,
 		entity.Namespace = variable.Namespace
 		entity.Scope = vdm.VariableScopeNamespace
 		if uErr := a.model.UpsertVariableValue(ctx, entity); uErr != nil {
-			logging.Error("create variable in %s/%s failed, err: %s", req.GetClusterID(), req.GetName(), uErr.Error())
+			logging.Error("create variable in %s/%s failed, err: %s", req.GetClusterID(), req.GetNamespace(), uErr.Error())
 			return errorx.NewDBErr(uErr.Error())
 		}
 	}
@@ -74,7 +74,7 @@ func (a *SharedNamespaceAction) CreateNamespaceCallback(ctx context.Context,
 			return errorx.NewClusterErr(err.Error())
 		}
 		// 授权创建者命名空间编辑和查看权限
-		iam.GrantNamespaceCreatorActions(ns.Creator, req.GetClusterID(), req.GetName())
+		iam.GrantNamespaceCreatorActions(ns.Creator, req.GetClusterID(), req.GetNamespace())
 		// create quota in cluster
 		if ns.ResourceQuota != nil {
 			quota := &corev1.ResourceQuota{
@@ -82,14 +82,14 @@ func (a *SharedNamespaceAction) CreateNamespaceCallback(ctx context.Context,
 					Hard: corev1.ResourceList{},
 				},
 			}
-			quota.SetName(req.GetName())
-			quota.SetNamespace(req.GetName())
+			quota.SetName(req.GetNamespace())
+			quota.SetNamespace(req.GetNamespace())
 
 			if lErr := quotautils.LoadFromModel(quota, ns.ResourceQuota); lErr != nil {
 				return err
 			}
 
-			_, err = client.CoreV1().ResourceQuotas(req.GetName()).Create(ctx, quota, metav1.CreateOptions{})
+			_, err = client.CoreV1().ResourceQuotas(req.GetNamespace()).Create(ctx, quota, metav1.CreateOptions{})
 			if err != nil {
 				logging.Error("create quota in cluster %s failed, err: %s", req.GetClusterID(), err.Error())
 				return errorx.NewClusterErr(err.Error())
@@ -98,8 +98,8 @@ func (a *SharedNamespaceAction) CreateNamespaceCallback(ctx context.Context,
 	}
 
 	// delete namespace in db
-	if err := a.model.DeleteNamespace(ctx, req.GetProjectCode(), req.GetClusterID(), req.GetName()); err != nil {
-		logging.Error("delete namespace %s/%s from db failed, err: %s", req.GetClusterID(), req.GetName(), err.Error())
+	if err := a.model.DeleteNamespace(ctx, req.GetProjectCode(), req.GetClusterID(), req.GetNamespace()); err != nil {
+		logging.Error("delete namespace %s/%s from db failed, err: %s", req.GetClusterID(), req.GetNamespace(), err.Error())
 		return errorx.NewDBErr(err.Error())
 	}
 	go func() {

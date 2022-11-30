@@ -34,7 +34,7 @@ import (
 func (a *SharedNamespaceAction) GetNamespace(ctx context.Context,
 	req *proto.GetNamespaceRequest, resp *proto.GetNamespaceResponse) error {
 	staging, err := a.model.GetNamespace(ctx,
-		req.GetProjectCode(), req.GetClusterID(), req.GetName(), nsm.ItsmTicketTypeCreate)
+		req.GetProjectCode(), req.GetClusterID(), req.GetNamespace(), nsm.ItsmTicketTypeCreate)
 	if err != nil && err != drivers.ErrTableRecordNotFound {
 		logging.Error("get staging namespace failed, err: %s", err.Error())
 		return errorx.NewDBErr(err)
@@ -74,9 +74,9 @@ func (a *SharedNamespaceAction) GetNamespace(ctx context.Context,
 		logging.Error("get clientset for cluster %s failed, err: %s", req.GetClusterID(), err.Error())
 		return err
 	}
-	namespace, err := client.CoreV1().Namespaces().Get(ctx, req.GetName(), metav1.GetOptions{})
+	namespace, err := client.CoreV1().Namespaces().Get(ctx, req.GetNamespace(), metav1.GetOptions{})
 	if err != nil && !errors.IsNotFound(err) {
-		logging.Error("get namespace %s in cluster %s failed, err: %s", req.GetName(), req.GetClusterID(), err.Error())
+		logging.Error("get namespace %s in cluster %s failed, err: %s", req.GetNamespace(), req.GetClusterID(), err.Error())
 		return err
 	}
 	if errors.IsNotFound(err) {
@@ -104,7 +104,7 @@ func (a *SharedNamespaceAction) GetNamespace(ctx context.Context,
 		return errorx.NewDBErr(err.Error())
 	}
 	retData.Variables = variables
-	modifyStagging, err := a.model.GetNamespace(ctx, req.GetProjectCode(), req.GetClusterID(), req.GetName(),
+	modifyStagging, err := a.model.GetNamespace(ctx, req.GetProjectCode(), req.GetClusterID(), req.GetNamespace(),
 		nsm.ItsmTicketTypeUpdate)
 	if modifyStagging != nil {
 
@@ -113,7 +113,7 @@ func (a *SharedNamespaceAction) GetNamespace(ctx context.Context,
 		retData.ItsmTicketStatus = modifyStagging.ItsmTicketStatus
 		retData.ItsmTicketURL = modifyStagging.ItsmTicketURL
 	}
-	deleteStagging, err := a.model.GetNamespace(ctx, req.GetProjectCode(), req.GetClusterID(), req.GetName(),
+	deleteStagging, err := a.model.GetNamespace(ctx, req.GetProjectCode(), req.GetClusterID(), req.GetNamespace(),
 		nsm.ItsmTicketTypeDelete)
 	if deleteStagging != nil {
 

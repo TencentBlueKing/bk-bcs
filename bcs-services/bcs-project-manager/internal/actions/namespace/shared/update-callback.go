@@ -33,12 +33,12 @@ import (
 func (a *SharedNamespaceAction) UpdateNamespaceCallback(ctx context.Context,
 	req *proto.NamespaceCallbackRequest, resp *proto.NamespaceCallbackResponse) error {
 	if !req.GetApproveResult() {
-		return a.model.DeleteNamespace(ctx, req.GetProjectCode(), req.GetClusterID(), req.GetName())
+		return a.model.DeleteNamespace(ctx, req.GetProjectCode(), req.GetClusterID(), req.GetNamespace())
 	}
 	namespace, err := a.model.GetNamespace(ctx, req.GetProjectCode(), req.GetClusterID(),
-		req.GetName(), nsm.ItsmTicketTypeUpdate)
+		req.GetNamespace(), nsm.ItsmTicketTypeUpdate)
 	if err != nil {
-		logging.Error("get namespace %s/%s from db failed, err: %s", req.GetClusterID(), req.GetName(), err.Error())
+		logging.Error("get namespace %s/%s from db failed, err: %s", req.GetClusterID(), req.GetNamespace(), err.Error())
 		return errorx.NewDBErr(err.Error())
 	}
 	if req.GetApplyInCluster() {
@@ -48,8 +48,8 @@ func (a *SharedNamespaceAction) UpdateNamespaceCallback(ctx context.Context,
 	}
 
 	// delete namespace in db
-	if err := a.model.DeleteNamespace(ctx, req.GetProjectCode(), req.GetClusterID(), req.GetName()); err != nil {
-		logging.Error("delete namespace %s/%s from db failed, err: %s", req.GetClusterID(), req.GetName(), err.Error())
+	if err := a.model.DeleteNamespace(ctx, req.GetProjectCode(), req.GetClusterID(), req.GetNamespace()); err != nil {
+		logging.Error("delete namespace %s/%s from db failed, err: %s", req.GetClusterID(), req.GetNamespace(), err.Error())
 		return errorx.NewDBErr(err.Error())
 	}
 	resp.Code = 0

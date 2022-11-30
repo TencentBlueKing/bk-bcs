@@ -37,9 +37,9 @@ func (a *IndependentNamespaceAction) UpdateNamespace(ctx context.Context,
 		return err
 	}
 	// get namespace and update
-	namespace, err := client.CoreV1().Namespaces().Get(ctx, req.GetName(), metav1.GetOptions{})
+	namespace, err := client.CoreV1().Namespaces().Get(ctx, req.GetNamespace(), metav1.GetOptions{})
 	if err != nil {
-		logging.Error("get namespace %s/%s failed, err: %s", req.GetClusterID(), req.GetName(), err.Error())
+		logging.Error("get namespace %s/%s failed, err: %s", req.GetClusterID(), req.GetNamespace(), err.Error())
 		return errorx.NewClusterErr(err.Error())
 	}
 	labels := map[string]string{}
@@ -54,14 +54,14 @@ func (a *IndependentNamespaceAction) UpdateNamespace(ctx context.Context,
 	namespace.SetAnnotations(annotations)
 	_, err = client.CoreV1().Namespaces().Update(ctx, namespace, metav1.UpdateOptions{})
 	if err != nil {
-		logging.Error("update namespace %s/%s failed, err: %s", req.GetClusterID(), req.GetName(), err.Error())
+		logging.Error("update namespace %s/%s failed, err: %s", req.GetClusterID(), req.GetNamespace(), err.Error())
 		return errorx.NewClusterErr(err.Error())
 	}
 
 	// get old quota
-	oldQuota, err := client.CoreV1().ResourceQuotas(req.GetName()).Get(ctx, req.GetName(), metav1.GetOptions{})
+	oldQuota, err := client.CoreV1().ResourceQuotas(req.GetNamespace()).Get(ctx, req.GetNamespace(), metav1.GetOptions{})
 	if err != nil && !errors.IsNotFound(err) {
-		logging.Error("get resourceQuota %s/%s failed, err: %s", req.GetClusterID(), req.GetName(), err.Error())
+		logging.Error("get resourceQuota %s/%s failed, err: %s", req.GetClusterID(), req.GetNamespace(), err.Error())
 		return errorx.NewClusterErr(err.Error())
 	}
 
@@ -75,23 +75,23 @@ func (a *IndependentNamespaceAction) UpdateNamespace(ctx context.Context,
 				Hard: corev1.ResourceList{},
 			},
 		}
-		quota.SetName(req.GetName())
-		quota.SetNamespace(req.GetName())
+		quota.SetName(req.GetNamespace())
+		quota.SetNamespace(req.GetNamespace())
 
 		if lErr := quotautils.LoadFromProto(quota, req.GetQuota()); lErr != nil {
 			return err
 		}
 
-		_, err = client.CoreV1().ResourceQuotas(req.GetName()).Create(ctx, quota, metav1.CreateOptions{})
+		_, err = client.CoreV1().ResourceQuotas(req.GetNamespace()).Create(ctx, quota, metav1.CreateOptions{})
 		if err != nil {
-			logging.Error("create resourceQuota %s/%s failed, err: %s", req.GetClusterID(), req.GetName(), err.Error())
+			logging.Error("create resourceQuota %s/%s failed, err: %s", req.GetClusterID(), req.GetNamespace(), err.Error())
 			return errorx.NewClusterErr(err.Error())
 		}
 		return nil
 	}
 	// update for delete
 	if req.GetQuota() == nil {
-		return client.CoreV1().ResourceQuotas(req.GetName()).Delete(ctx, req.GetName(), metav1.DeleteOptions{})
+		return client.CoreV1().ResourceQuotas(req.GetNamespace()).Delete(ctx, req.GetNamespace(), metav1.DeleteOptions{})
 	}
 
 	// update for update
@@ -99,9 +99,9 @@ func (a *IndependentNamespaceAction) UpdateNamespace(ctx context.Context,
 		return err
 	}
 
-	_, err = client.CoreV1().ResourceQuotas(req.GetName()).Update(ctx, oldQuota, metav1.UpdateOptions{})
+	_, err = client.CoreV1().ResourceQuotas(req.GetNamespace()).Update(ctx, oldQuota, metav1.UpdateOptions{})
 	if err != nil {
-		logging.Error("update resourceQuota %s/%s failed, err: %s", req.GetClusterID(), req.GetName(), err.Error())
+		logging.Error("update resourceQuota %s/%s failed, err: %s", req.GetClusterID(), req.GetNamespace(), err.Error())
 		return errorx.NewClusterErr(err.Error())
 	}
 	return nil

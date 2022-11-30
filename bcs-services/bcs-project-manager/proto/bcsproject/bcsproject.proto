@@ -567,7 +567,7 @@ service Namespace {
   }
   rpc CreateNamespaceCallback(NamespaceCallbackRequest) returns (NamespaceCallbackResponse) {
     option (google.api.http) = {
-      post : "/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{name}/callback/create"
+      post : "/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/callback/create"
       body : "*"
     };
     option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
@@ -577,7 +577,7 @@ service Namespace {
   }
   rpc UpdateNamespace(UpdateNamespaceRequest) returns (UpdateNamespaceResponse) {
     option (google.api.http) = {
-      put : "/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{name}"
+      put : "/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}"
       body : "*"
     };
     option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
@@ -587,7 +587,7 @@ service Namespace {
   }
   rpc UpdateNamespaceCallback(NamespaceCallbackRequest) returns (NamespaceCallbackResponse) {
     option (google.api.http) = {
-      post : "/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{name}/callback/update"
+      post : "/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/callback/update"
       body : "*"
     };
     option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
@@ -597,7 +597,7 @@ service Namespace {
   }
   rpc GetNamespace(GetNamespaceRequest) returns (GetNamespaceResponse) {
     option (google.api.http) = {
-      get : "/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{name}"
+      get : "/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}"
     };
     option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
       description : "获取单个命名空间"
@@ -615,7 +615,7 @@ service Namespace {
   }
   rpc DeleteNamespace(DeleteNamespaceRequest) returns (DeleteNamespaceResponse) {
     option (google.api.http) = {
-      delete : "/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{name}"
+      delete : "/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}"
     };
     option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
       description : "删除命名空间"
@@ -624,7 +624,7 @@ service Namespace {
   }
   rpc DeleteNamespaceCallback(NamespaceCallbackRequest) returns (NamespaceCallbackResponse) {
     option (google.api.http) = {
-      post : "/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{name}/callback/delete"
+      post : "/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/callback/delete"
       body : "*"
     };
     option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
@@ -661,7 +661,7 @@ message CreateNamespaceRequest {
     // https://github.com/kubernetes/kubernetes/blob/434bfd82814af038ad94d62ebe59b133fcb50506/staging/src/k8s.io/apimachinery/pkg/util/validation/validation.go#L188
   }, (validate.rules).string = {max_len: 63, pattern: "^[a-z0-9]([-a-z0-9]*[a-z0-9])?$"}];
   ResourceQuota quota = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title: "name", 
+    title: "quota", 
     description: "命名空间配额"
   }];
   repeated Label labels = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
@@ -709,7 +709,7 @@ message NamespaceCallbackRequest {
       required : [
         "projectCode",
         "clusterID",
-        "name"
+        "namespace"
       ]
     }
   };
@@ -722,8 +722,8 @@ message NamespaceCallbackRequest {
     title: "projectCode", 
     description: "集群ID"
   }];
-  string name = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title: "name", 
+  string namespace = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "namespace", 
     description: "命名空间名称, 长度不能超过63字符,只能包含小写字母、数字，以及 '-',必须以字母开头，不能以 '-' 结尾"
     // https://github.com/kubernetes/kubernetes/blob/434bfd82814af038ad94d62ebe59b133fcb50506/staging/src/k8s.io/apimachinery/pkg/util/validation/validation.go#L188
   }, (validate.rules).string = {max_len: 63, pattern: "^[a-z0-9]([-a-z0-9]*[a-z0-9])?$"}];
@@ -784,7 +784,7 @@ message UpdateNamespaceRequest {
       required : [
         "projectCode",
         "clusterID",
-        "name"
+        "namespace"
       ]
     }
   };
@@ -797,8 +797,8 @@ message UpdateNamespaceRequest {
     title: "projectCode", 
     description: "集群ID"
   }];
-  string name = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title: "name", 
+  string namespace = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "namespace", 
     description: "命名空间名称, 长度不能超过63字符,只能包含小写字母、数字，以及 '-',必须以字母开头，不能以 '-' 结尾"
     // https://github.com/kubernetes/kubernetes/blob/434bfd82814af038ad94d62ebe59b133fcb50506/staging/src/k8s.io/apimachinery/pkg/util/validation/validation.go#L188
   }, (validate.rules).string = {max_len: 63, pattern: "^[a-z0-9]([-a-z0-9]*[a-z0-9])?$"}];
@@ -811,7 +811,7 @@ message UpdateNamespaceRequest {
     description: "命名空间注解"
   }];
   ResourceQuota quota = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title: "name", 
+    title: "quota", 
     description: "命名空间配额"
   }];
 }
@@ -838,7 +838,8 @@ message GetNamespaceRequest {
       description : "获取单个命名空间请求"
       required : [
         "projectCode",
-        "clusterID"
+        "clusterID",
+        "namespace"
       ]
     }
   };
@@ -851,8 +852,8 @@ message GetNamespaceRequest {
     title: "clusterID", 
     description: "集群ID"
   }];
-  string name = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title: "name", 
+  string namespace = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "namespace", 
     description: "命名空间名称"
   }];
 }
@@ -929,7 +930,7 @@ message DeleteNamespaceRequest {
       required : [
         "projectCode",
         "clusterID",
-        "name"
+        "namespace"
       ]
     }
   };
@@ -942,8 +943,8 @@ message DeleteNamespaceRequest {
     title: "projectCode", 
     description: "集群ID"
   }];
-  string name = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title: "name", 
+  string namespace = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "namespace", 
     description: "命名空间名称"
     // https://github.com/kubernetes/kubernetes/blob/434bfd82814af038ad94d62ebe59b133fcb50506/staging/src/k8s.io/apimachinery/pkg/util/validation/validation.go#L188
   }, (validate.rules).string = {max_len: 63, pattern: "^[a-z0-9]([-a-z0-9]*[a-z0-9])?$"}];

@@ -46,11 +46,10 @@ func (bnp *BCSNamespacePerm) GenerateIAMApplicationURL(systemID string, applicat
 }
 
 // CanCreateNamespace check user createNamespace perm
-func (bnp *BCSNamespacePerm) CanCreateNamespace(user, projectID, clusterID string) (bool, string, error) {
+func (bnp *BCSNamespacePerm) CanCreateNamespace(user, projectID, clusterID string, isSharedCluster bool) (bool, string, error) {
 	// related actions
 	resources := []utils.ResourceAction{
 		{Resource: projectID, Action: project.ProjectView.String()},
-		{Resource: clusterID, Action: cluster.ClusterView.String()},
 		{Resource: clusterID, Action: NameSpaceCreate.String()},
 	}
 
@@ -59,7 +58,7 @@ func (bnp *BCSNamespacePerm) CanCreateNamespace(user, projectID, clusterID strin
 		SystemID: iam.SystemIDBKBCS,
 		UserName: user,
 	}
-	relatedActionIDs := []string{project.ProjectView.String(), cluster.ClusterView.String(), NameSpaceCreate.String()}
+	relatedActionIDs := []string{project.ProjectView.String(), NameSpaceCreate.String()}
 	projectNode := project.ProjectResourceNode{SystemID: iam.SystemIDBKBCS, ProjectID: projectID}.
 		BuildResourceNodes()
 	clusterNode := cluster.ClusterResourceNode{SystemID: iam.SystemIDBKBCS, ProjectID: projectID, ClusterID: clusterID}.
@@ -67,9 +66,16 @@ func (bnp *BCSNamespacePerm) CanCreateNamespace(user, projectID, clusterID strin
 	namespaceNode := NamespaceResourceNode{IsClusterPerm: true, ProjectID: projectID, ClusterID: clusterID}.
 		BuildResourceNodes()
 
+	resourceNodes := [][]iam.ResourceNode{projectNode, namespaceNode}
+	if !isSharedCluster {
+		// ignore cluster_view permission for namepsace action in shared cluster
+		resources = append(resources, utils.ResourceAction{Resource: clusterID, Action: cluster.ClusterView.String()})
+		relatedActionIDs = append(relatedActionIDs, cluster.ClusterView.String())
+		resourceNodes = append(resourceNodes, clusterNode)
+	}
+
 	// get namespace permission by iam
-	perms, err := bnp.iamClient.BatchResourceMultiActionsAllowed(relatedActionIDs, req, [][]iam.ResourceNode{
-		projectNode, clusterNode, namespaceNode})
+	perms, err := bnp.iamClient.BatchResourceMultiActionsAllowed(relatedActionIDs, req, resourceNodes)
 	if err != nil {
 		return false, "", err
 	}
@@ -107,18 +113,21 @@ func (bnp *BCSNamespacePerm) CanCreateNamespace(user, projectID, clusterID strin
 		IsClusterPerm: true,
 		ActionID:      NameSpaceCreate.String(),
 	})
+	apps := []iam.ApplicationAction{projectApp, nsApp}
+	if !isSharedCluster {
+		apps = append(apps, clusterApp)
+	}
 
-	url, _ := bnp.GenerateIAMApplicationURL(iam.SystemIDBKBCS, []iam.ApplicationAction{clusterApp, projectApp, nsApp})
+	url, _ := bnp.GenerateIAMApplicationURL(iam.SystemIDBKBCS, apps)
 	return allow, url, nil
 }
 
 // CanViewNamespace check user viewNamespace perm
-func (bnp *BCSNamespacePerm) CanViewNamespace(user, projectID, clusterID, namespace string) (bool, string, error) {
+func (bnp *BCSNamespacePerm) CanViewNamespace(user, projectID, clusterID, namespace string, isSharedCluster bool) (bool, string, error) {
 	namespaceID := utils.CalcIAMNsID(clusterID, namespace)
 	// related actions
 	resources := []utils.ResourceAction{
 		{Resource: projectID, Action: project.ProjectView.String()},
-		{Resource: clusterID, Action: cluster.ClusterView.String()},
 		{Resource: namespaceID, Action: NameSpaceView.String()},
 	}
 
@@ -127,17 +136,23 @@ func (bnp *BCSNamespacePerm) CanViewNamespace(user, projectID, clusterID, namesp
 		SystemID: iam.SystemIDBKBCS,
 		UserName: user,
 	}
-	relatedActionIDs := []string{project.ProjectView.String(), cluster.ClusterView.String(), NameSpaceView.String()}
+	relatedActionIDs := []string{project.ProjectView.String(), NameSpaceView.String()}
 	projectNode := project.ProjectResourceNode{SystemID: iam.SystemIDBKBCS, ProjectID: projectID}.
 		BuildResourceNodes()
 	clusterNode := cluster.ClusterResourceNode{SystemID: iam.SystemIDBKBCS, ProjectID: projectID, ClusterID: clusterID}.
 		BuildResourceNodes()
 	namespaceNode := NamespaceResourceNode{ProjectID: projectID, ClusterID: clusterID, Namespace: namespaceID}.
 		BuildResourceNodes()
+	resourceNodes := [][]iam.ResourceNode{projectNode, namespaceNode}
+	if !isSharedCluster {
+		// ignore cluster_view permission for namepsace action in shared cluster
+		resources = append(resources, utils.ResourceAction{Resource: clusterID, Action: cluster.ClusterView.String()})
+		relatedActionIDs = append(relatedActionIDs, cluster.ClusterView.String())
+		resourceNodes = append(resourceNodes, clusterNode)
+	}
 
 	// get namespace permission by iam
-	perms, err := bnp.iamClient.BatchResourceMultiActionsAllowed(relatedActionIDs, req, [][]iam.ResourceNode{
-		projectNode, clusterNode, namespaceNode})
+	perms, err := bnp.iamClient.BatchResourceMultiActionsAllowed(relatedActionIDs, req, resourceNodes)
 	if err != nil {
 		return false, "", err
 	}
@@ -174,17 +189,20 @@ func (bnp *BCSNamespacePerm) CanViewNamespace(user, projectID, clusterID, namesp
 			{Project: projectID, Cluster: clusterID, Namespace: namespaceID},
 		},
 	})
+	apps := []iam.ApplicationAction{projectApp, nsApp}
+	if !isSharedCluster {
+		apps = append(apps, clusterApp)
+	}
 
-	url, _ := bnp.GenerateIAMApplicationURL(iam.SystemIDBKBCS, []iam.ApplicationAction{clusterApp, projectApp, nsApp})
+	url, _ := bnp.GenerateIAMApplicationURL(iam.SystemIDBKBCS, apps)
 	return allow, url, nil
 }
 
 // CanListNamespace check user listNamespace perm
-func (bnp *BCSNamespacePerm) CanListNamespace(user, projectID, clusterID string) (bool, string, error) {
+func (bnp *BCSNamespacePerm) CanListNamespace(user, projectID, clusterID string, isSharedCluster bool) (bool, string, error) {
 	// related actions
 	resources := []utils.ResourceAction{
 		{Resource: projectID, Action: project.ProjectView.String()},
-		{Resource: clusterID, Action: cluster.ClusterView.String()},
 		{Resource: clusterID, Action: NameSpaceList.String()},
 	}
 
@@ -193,7 +211,7 @@ func (bnp *BCSNamespacePerm) CanListNamespace(user, projectID, clusterID string)
 		SystemID: iam.SystemIDBKBCS,
 		UserName: user,
 	}
-	relatedActionIDs := []string{project.ProjectView.String(), cluster.ClusterView.String(), NameSpaceList.String()}
+	relatedActionIDs := []string{project.ProjectView.String(), NameSpaceList.String()}
 	projectNode := project.ProjectResourceNode{SystemID: iam.SystemIDBKBCS, ProjectID: projectID}.
 		BuildResourceNodes()
 	clusterNode := cluster.ClusterResourceNode{SystemID: iam.SystemIDBKBCS, ProjectID: projectID, ClusterID: clusterID}.
@@ -201,9 +219,16 @@ func (bnp *BCSNamespacePerm) CanListNamespace(user, projectID, clusterID string)
 	namespaceNode := NamespaceResourceNode{IsClusterPerm: true, ProjectID: projectID, ClusterID: clusterID}.
 		BuildResourceNodes()
 
+	resourceNodes := [][]iam.ResourceNode{projectNode, namespaceNode}
+	if !isSharedCluster {
+		// ignore cluster_view permission for namepsace action in shared cluster
+		resources = append(resources, utils.ResourceAction{Resource: clusterID, Action: cluster.ClusterView.String()})
+		relatedActionIDs = append(relatedActionIDs, cluster.ClusterView.String())
+		resourceNodes = append(resourceNodes, clusterNode)
+	}
+
 	// get namespace permission by iam
-	perms, err := bnp.iamClient.BatchResourceMultiActionsAllowed(relatedActionIDs, req, [][]iam.ResourceNode{
-		projectNode, clusterNode, namespaceNode})
+	perms, err := bnp.iamClient.BatchResourceMultiActionsAllowed(relatedActionIDs, req, resourceNodes)
 	if err != nil {
 		return false, "", err
 	}
@@ -238,18 +263,21 @@ func (bnp *BCSNamespacePerm) CanListNamespace(user, projectID, clusterID string)
 		ActionID:      NameSpaceList.String(),
 		IsClusterPerm: true,
 	})
+	apps := []iam.ApplicationAction{projectApp, nsApp}
+	if !isSharedCluster {
+		apps = append(apps, clusterApp)
+	}
 
-	url, _ := bnp.GenerateIAMApplicationURL(iam.SystemIDBKBCS, []iam.ApplicationAction{clusterApp, projectApp, nsApp})
+	url, _ := bnp.GenerateIAMApplicationURL(iam.SystemIDBKBCS, apps)
 	return allow, url, nil
 }
 
 // CanUpdateNamespace check user updateNamespace perm
-func (bnp *BCSNamespacePerm) CanUpdateNamespace(user, projectID, clusterID, namespace string) (bool, string, error) {
+func (bnp *BCSNamespacePerm) CanUpdateNamespace(user, projectID, clusterID, namespace string, isSharedCluster bool) (bool, string, error) {
 	namespaceID := utils.CalcIAMNsID(clusterID, namespace)
 	// related actions
 	resources := []utils.ResourceAction{
 		{Resource: projectID, Action: project.ProjectView.String()},
-		{Resource: clusterID, Action: cluster.ClusterView.String()},
 		{Resource: namespaceID, Action: NameSpaceUpdate.String()},
 	}
 
@@ -258,17 +286,23 @@ func (bnp *BCSNamespacePerm) CanUpdateNamespace(user, projectID, clusterID, name
 		SystemID: iam.SystemIDBKBCS,
 		UserName: user,
 	}
-	relatedActionIDs := []string{project.ProjectView.String(), cluster.ClusterView.String(), NameSpaceUpdate.String()}
+	relatedActionIDs := []string{project.ProjectView.String(), NameSpaceUpdate.String()}
 	projectNode := project.ProjectResourceNode{SystemID: iam.SystemIDBKBCS, ProjectID: projectID}.
 		BuildResourceNodes()
 	clusterNode := cluster.ClusterResourceNode{SystemID: iam.SystemIDBKBCS, ProjectID: projectID, ClusterID: clusterID}.
 		BuildResourceNodes()
 	namespaceNode := NamespaceResourceNode{ProjectID: projectID, ClusterID: clusterID, Namespace: namespaceID}.
 		BuildResourceNodes()
+	resourceNodes := [][]iam.ResourceNode{projectNode, namespaceNode}
+	if !isSharedCluster {
+		// ignore cluster_view permission for namepsace action in shared cluster
+		resources = append(resources, utils.ResourceAction{Resource: clusterID, Action: cluster.ClusterView.String()})
+		relatedActionIDs = append(relatedActionIDs, cluster.ClusterView.String())
+		resourceNodes = append(resourceNodes, clusterNode)
+	}
 
 	// get namespace permission by iam
-	perms, err := bnp.iamClient.BatchResourceMultiActionsAllowed(relatedActionIDs, req, [][]iam.ResourceNode{
-		projectNode, clusterNode, namespaceNode})
+	perms, err := bnp.iamClient.BatchResourceMultiActionsAllowed(relatedActionIDs, req, resourceNodes)
 	if err != nil {
 		return false, "", err
 	}
@@ -305,18 +339,21 @@ func (bnp *BCSNamespacePerm) CanUpdateNamespace(user, projectID, clusterID, name
 			{Project: projectID, Cluster: clusterID, Namespace: namespaceID},
 		},
 	})
+	apps := []iam.ApplicationAction{projectApp, nsApp}
+	if !isSharedCluster {
+		apps = append(apps, clusterApp)
+	}
 
-	url, _ := bnp.GenerateIAMApplicationURL(iam.SystemIDBKBCS, []iam.ApplicationAction{clusterApp, projectApp, nsApp})
+	url, _ := bnp.GenerateIAMApplicationURL(iam.SystemIDBKBCS, apps)
 	return allow, url, nil
 }
 
 // CanDeleteNamespace check user deleteNamespace perm
-func (bnp *BCSNamespacePerm) CanDeleteNamespace(user, projectID, clusterID, namespace string) (bool, string, error) {
+func (bnp *BCSNamespacePerm) CanDeleteNamespace(user, projectID, clusterID, namespace string, isSharedCluster bool) (bool, string, error) {
 	namespaceID := utils.CalcIAMNsID(clusterID, namespace)
 	// related actions
 	resources := []utils.ResourceAction{
 		{Resource: projectID, Action: project.ProjectView.String()},
-		{Resource: clusterID, Action: cluster.ClusterView.String()},
 		{Resource: namespaceID, Action: NameSpaceDelete.String()},
 	}
 
@@ -325,17 +362,23 @@ func (bnp *BCSNamespacePerm) CanDeleteNamespace(user, projectID, clusterID, name
 		SystemID: iam.SystemIDBKBCS,
 		UserName: user,
 	}
-	relatedActionIDs := []string{project.ProjectView.String(), cluster.ClusterView.String(), NameSpaceDelete.String()}
+	relatedActionIDs := []string{project.ProjectView.String(), NameSpaceDelete.String()}
 	projectNode := project.ProjectResourceNode{SystemID: iam.SystemIDBKBCS, ProjectID: projectID}.
 		BuildResourceNodes()
 	clusterNode := cluster.ClusterResourceNode{SystemID: iam.SystemIDBKBCS, ProjectID: projectID, ClusterID: clusterID}.
 		BuildResourceNodes()
 	namespaceNode := NamespaceResourceNode{ProjectID: projectID, ClusterID: clusterID, Namespace: namespaceID}.
 		BuildResourceNodes()
+	resourceNodes := [][]iam.ResourceNode{projectNode, namespaceNode}
+	if !isSharedCluster {
+		// ignore cluster_view permission for namepsace action in shared cluster
+		resources = append(resources, utils.ResourceAction{Resource: clusterID, Action: cluster.ClusterView.String()})
+		relatedActionIDs = append(relatedActionIDs, cluster.ClusterView.String())
+		resourceNodes = append(resourceNodes, clusterNode)
+	}
 
 	// get namespace permission by iam
-	perms, err := bnp.iamClient.BatchResourceMultiActionsAllowed(relatedActionIDs, req, [][]iam.ResourceNode{
-		projectNode, clusterNode, namespaceNode})
+	perms, err := bnp.iamClient.BatchResourceMultiActionsAllowed(relatedActionIDs, req, resourceNodes)
 	if err != nil {
 		return false, "", err
 	}
@@ -372,8 +415,12 @@ func (bnp *BCSNamespacePerm) CanDeleteNamespace(user, projectID, clusterID, name
 			{Project: projectID, Cluster: clusterID, Namespace: namespaceID},
 		},
 	})
+	apps := []iam.ApplicationAction{projectApp, nsApp}
+	if !isSharedCluster {
+		apps = append(apps, clusterApp)
+	}
 
-	url, _ := bnp.GenerateIAMApplicationURL(iam.SystemIDBKBCS, []iam.ApplicationAction{clusterApp, projectApp, nsApp})
+	url, _ := bnp.GenerateIAMApplicationURL(iam.SystemIDBKBCS, apps)
 	return allow, url, nil
 }
 

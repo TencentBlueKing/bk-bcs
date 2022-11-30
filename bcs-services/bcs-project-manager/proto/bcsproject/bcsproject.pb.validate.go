@@ -2248,9 +2248,9 @@ func (m *NamespaceCallbackRequest) validate(all bool) error {
 
 	// no validation rules for ClusterID
 
-	if utf8.RuneCountInString(m.GetName()) > 63 {
+	if utf8.RuneCountInString(m.GetNamespace()) > 63 {
 		err := NamespaceCallbackRequestValidationError{
-			field:  "Name",
+			field:  "Namespace",
 			reason: "value length must be at most 63 runes",
 		}
 		if !all {
@@ -2259,9 +2259,9 @@ func (m *NamespaceCallbackRequest) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if !_NamespaceCallbackRequest_Name_Pattern.MatchString(m.GetName()) {
+	if !_NamespaceCallbackRequest_Namespace_Pattern.MatchString(m.GetNamespace()) {
 		err := NamespaceCallbackRequestValidationError{
-			field:  "Name",
+			field:  "Namespace",
 			reason: "value does not match regex pattern \"^[a-z0-9]([-a-z0-9]*[a-z0-9])?$\"",
 		}
 		if !all {
@@ -2362,7 +2362,7 @@ var _ interface {
 	ErrorName() string
 } = NamespaceCallbackRequestValidationError{}
 
-var _NamespaceCallbackRequest_Name_Pattern = regexp.MustCompile("^[a-z0-9]([-a-z0-9]*[a-z0-9])?$")
+var _NamespaceCallbackRequest_Namespace_Pattern = regexp.MustCompile("^[a-z0-9]([-a-z0-9]*[a-z0-9])?$")
 
 // Validate checks the field values on NamespaceCallbackResponse with the rules
 // defined in the proto definition for this message. If any rules are
@@ -2502,9 +2502,9 @@ func (m *UpdateNamespaceRequest) validate(all bool) error {
 
 	// no validation rules for ClusterID
 
-	if utf8.RuneCountInString(m.GetName()) > 63 {
+	if utf8.RuneCountInString(m.GetNamespace()) > 63 {
 		err := UpdateNamespaceRequestValidationError{
-			field:  "Name",
+			field:  "Namespace",
 			reason: "value length must be at most 63 runes",
 		}
 		if !all {
@@ -2513,9 +2513,9 @@ func (m *UpdateNamespaceRequest) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if !_UpdateNamespaceRequest_Name_Pattern.MatchString(m.GetName()) {
+	if !_UpdateNamespaceRequest_Namespace_Pattern.MatchString(m.GetNamespace()) {
 		err := UpdateNamespaceRequestValidationError{
-			field:  "Name",
+			field:  "Namespace",
 			reason: "value does not match regex pattern \"^[a-z0-9]([-a-z0-9]*[a-z0-9])?$\"",
 		}
 		if !all {
@@ -2701,7 +2701,7 @@ var _ interface {
 	ErrorName() string
 } = UpdateNamespaceRequestValidationError{}
 
-var _UpdateNamespaceRequest_Name_Pattern = regexp.MustCompile("^[a-z0-9]([-a-z0-9]*[a-z0-9])?$")
+var _UpdateNamespaceRequest_Namespace_Pattern = regexp.MustCompile("^[a-z0-9]([-a-z0-9]*[a-z0-9])?$")
 
 // Validate checks the field values on UpdateNamespaceResponse with the rules
 // defined in the proto definition for this message. If any rules are
@@ -2837,7 +2837,7 @@ func (m *GetNamespaceRequest) validate(all bool) error {
 
 	// no validation rules for ClusterID
 
-	// no validation rules for Name
+	// no validation rules for Namespace
 
 	if len(errors) > 0 {
 		return GetNamespaceRequestMultiError(errors)
@@ -3359,9 +3359,9 @@ func (m *DeleteNamespaceRequest) validate(all bool) error {
 
 	// no validation rules for ClusterID
 
-	if utf8.RuneCountInString(m.GetName()) > 63 {
+	if utf8.RuneCountInString(m.GetNamespace()) > 63 {
 		err := DeleteNamespaceRequestValidationError{
-			field:  "Name",
+			field:  "Namespace",
 			reason: "value length must be at most 63 runes",
 		}
 		if !all {
@@ -3370,9 +3370,9 @@ func (m *DeleteNamespaceRequest) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if !_DeleteNamespaceRequest_Name_Pattern.MatchString(m.GetName()) {
+	if !_DeleteNamespaceRequest_Namespace_Pattern.MatchString(m.GetNamespace()) {
 		err := DeleteNamespaceRequestValidationError{
-			field:  "Name",
+			field:  "Namespace",
 			reason: "value does not match regex pattern \"^[a-z0-9]([-a-z0-9]*[a-z0-9])?$\"",
 		}
 		if !all {
@@ -3461,7 +3461,7 @@ var _ interface {
 	ErrorName() string
 } = DeleteNamespaceRequestValidationError{}
 
-var _DeleteNamespaceRequest_Name_Pattern = regexp.MustCompile("^[a-z0-9]([-a-z0-9]*[a-z0-9])?$")
+var _DeleteNamespaceRequest_Namespace_Pattern = regexp.MustCompile("^[a-z0-9]([-a-z0-9]*[a-z0-9])?$")
 
 // Validate checks the field values on DeleteNamespaceResponse with the rules
 // defined in the proto definition for this message. If any rules are

@@ -34,19 +34,19 @@ func (c *IndependentNamespaceAction) DeleteNamespace(ctx context.Context,
 		logging.Error("get clientset for cluster %s failed, err: %s", req.GetClusterID(), err.Error())
 		return err
 	}
-	if err := client.CoreV1().Namespaces().Delete(ctx, req.GetName(), metav1.DeleteOptions{}); err != nil {
-		logging.Error("delete namespace %s/%s failed, errr: %s", req.GetClusterID(), req.GetName(), err.Error())
+	if err := client.CoreV1().Namespaces().Delete(ctx, req.GetNamespace(), metav1.DeleteOptions{}); err != nil {
+		logging.Error("delete namespace %s/%s failed, errr: %s", req.GetClusterID(), req.GetNamespace(), err.Error())
 		return err
 	}
 	// delete variables
-	if _, err := c.model.DeleteVariableValuesByNamespace(ctx, req.GetClusterID(), req.GetName()); err != nil {
-		logging.Error("delete variables in %s/%s failed, err: %s", req.GetClusterID(), req.GetName(), err.Error())
+	if _, err := c.model.DeleteVariableValuesByNamespace(ctx, req.GetClusterID(), req.GetNamespace()); err != nil {
+		logging.Error("delete variables in %s/%s failed, err: %s", req.GetClusterID(), req.GetNamespace(), err.Error())
 		return errorx.NewDBErr(err.Error())
 	}
 	go func() {
-		if err := bcscc.DeleteNamespace(req.GetProjectCode(), req.GetClusterID(), req.GetName()); err != nil {
+		if err := bcscc.DeleteNamespace(req.GetProjectCode(), req.GetClusterID(), req.GetNamespace()); err != nil {
 			logging.Error("[ALARM-CC-NAMESPACE] delete namespace %s/%s/%s in paas-cc failed, err: %s",
-				req.GetProjectCode(), req.GetClusterID(), req.GetName(), err.Error())
+				req.GetProjectCode(), req.GetClusterID(), req.GetNamespace(), err.Error())
 		}
 	}()
 	return nil

@@ -274,28 +274,28 @@ func NewNamespaceEndpoints() []*api.Endpoint {
 		},
 		&api.Endpoint{
 			Name:    "Namespace.CreateNamespaceCallback",
-			Path:    []string{"/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{name}/callback/create"},
+			Path:    []string{"/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/callback/create"},
 			Method:  []string{"POST"},
 			Body:    "*",
 			Handler: "rpc",
 		},
 		&api.Endpoint{
 			Name:    "Namespace.UpdateNamespace",
-			Path:    []string{"/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{name}"},
+			Path:    []string{"/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}"},
 			Method:  []string{"PUT"},
 			Body:    "*",
 			Handler: "rpc",
 		},
 		&api.Endpoint{
 			Name:    "Namespace.UpdateNamespaceCallback",
-			Path:    []string{"/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{name}/callback/update"},
+			Path:    []string{"/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/callback/update"},
 			Method:  []string{"POST"},
 			Body:    "*",
 			Handler: "rpc",
 		},
 		&api.Endpoint{
 			Name:    "Namespace.GetNamespace",
-			Path:    []string{"/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{name}"},
+			Path:    []string{"/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
@@ -307,14 +307,14 @@ func NewNamespaceEndpoints() []*api.Endpoint {
 		},
 		&api.Endpoint{
 			Name:    "Namespace.DeleteNamespace",
-			Path:    []string{"/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{name}"},
+			Path:    []string{"/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}"},
 			Method:  []string{"DELETE"},
 			Body:    "",
 			Handler: "rpc",
 		},
 		&api.Endpoint{
 			Name:    "Namespace.DeleteNamespaceCallback",
-			Path:    []string{"/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{name}/callback/delete"},
+			Path:    []string{"/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/callback/delete"},
 			Method:  []string{"POST"},
 			Body:    "*",
 			Handler: "rpc",
@@ -464,28 +464,28 @@ func RegisterNamespaceHandler(s server.Server, hdlr NamespaceHandler, opts ...se
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "Namespace.CreateNamespaceCallback",
-		Path:    []string{"/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{name}/callback/create"},
+		Path:    []string{"/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/callback/create"},
 		Method:  []string{"POST"},
 		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "Namespace.UpdateNamespace",
-		Path:    []string{"/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{name}"},
+		Path:    []string{"/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}"},
 		Method:  []string{"PUT"},
 		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "Namespace.UpdateNamespaceCallback",
-		Path:    []string{"/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{name}/callback/update"},
+		Path:    []string{"/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/callback/update"},
 		Method:  []string{"POST"},
 		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "Namespace.GetNamespace",
-		Path:    []string{"/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{name}"},
+		Path:    []string{"/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}"},
 		Method:  []string{"GET"},
 		Handler: "rpc",
 	}))
@@ -497,14 +497,14 @@ func RegisterNamespaceHandler(s server.Server, hdlr NamespaceHandler, opts ...se
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "Namespace.DeleteNamespace",
-		Path:    []string{"/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{name}"},
+		Path:    []string{"/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}"},
 		Method:  []string{"DELETE"},
 		Body:    "",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "Namespace.DeleteNamespaceCallback",
-		Path:    []string{"/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{name}/callback/delete"},
+		Path:    []string{"/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/callback/delete"},
 		Method:  []string{"POST"},
 		Body:    "*",
 		Handler: "rpc",

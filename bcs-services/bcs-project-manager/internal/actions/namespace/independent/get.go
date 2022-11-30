@@ -36,7 +36,7 @@ func (a *IndependentNamespaceAction) GetNamespace(ctx context.Context,
 		logging.Error("get clientset for cluster %s failed, err: %s", req.GetClusterID(), err.Error())
 		return err
 	}
-	ns, err := client.CoreV1().Namespaces().Get(ctx, req.GetName(), metav1.GetOptions{})
+	ns, err := client.CoreV1().Namespaces().Get(ctx, req.GetNamespace(), metav1.GetOptions{})
 	if err != nil && !errors.IsNotFound(err) {
 		return errorx.NewClusterErr(err)
 	}

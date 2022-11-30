@@ -35,10 +35,10 @@ func (a *SharedNamespaceAction) DeleteNamespace(ctx context.Context,
 	namespace := &nsm.Namespace{
 		ProjectCode: req.GetProjectCode(),
 		ClusterID:   req.GetClusterID(),
-		Name:        req.GetName(),
+		Name:        req.GetNamespace(),
 		Updater:     username,
 	}
-	itsmResp, err := itsm.SubmitDeleteNamespaceTicket(username, req.GetProjectCode(), req.GetClusterID(), req.GetName())
+	itsmResp, err := itsm.SubmitDeleteNamespaceTicket(username, req.GetProjectCode(), req.GetClusterID(), req.GetNamespace())
 	if err != nil {
 		logging.Error("itsm create ticket failed, err: %s", err.Error())
 		return err
@@ -48,7 +48,7 @@ func (a *SharedNamespaceAction) DeleteNamespace(ctx context.Context,
 	namespace.ItsmTicketStatus = nsm.ItsmTicketStatusCreated
 	namespace.ItsmTicketSN = itsmResp.SN
 	if err := a.model.CreateNamespace(ctx, namespace); err != nil {
-		logging.Error("create namespace %s/%s in db failed, err: %s", req.GetClusterID(), req.GetName(), err.Error())
+		logging.Error("create namespace %s/%s in db failed, err: %s", req.GetClusterID(), req.GetNamespace(), err.Error())
 		return err
 	}
 	return nil
