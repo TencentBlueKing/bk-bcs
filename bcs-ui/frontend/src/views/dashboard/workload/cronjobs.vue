@@ -50,6 +50,11 @@
             <span>{{handleGetExtData(row.metadata.uid, 'age')}}</span>
           </template>
         </bk-table-column>
+        <bk-table-column :label="$t('创建人')">
+          <template slot-scope="{ row }">
+            <span>{{handleGetExtData(row.metadata.uid, 'creator') || '--'}}</span>
+          </template>
+        </bk-table-column>
         <bk-table-column :label="$t('编辑模式')" width="100">
           <template slot-scope="{ row }">
             <span>

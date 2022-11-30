@@ -150,6 +150,11 @@ export default defineComponent({
       updating: $i18n.t('更新中'),
       deleting: $i18n.t('删除中'),
     };
+    const statusFilters = computed(() => Object.keys(statusMap).map(key => ({
+      text: statusMap[key],
+      value: key,
+    })));
+    const statusFilterMethod = (value, row) => handleGetExtData(row.metadata.uid, 'status') === value;
 
     // 命名空间
     const namespaceDisabled = computed(() => {
@@ -210,8 +215,15 @@ export default defineComponent({
     const resourceVersion = computed(() => data.value.manifest?.metadata?.resourceVersion || '');
 
     // 模糊搜索功能
-    const keys = ref(['metadata.name']); // 模糊搜索字段
-    const { tableDataMatchSearch, searchValue } = useSearch(tableData, keys);
+    const mergeExtTableData = computed(() => tableData.value.map((item) => {
+      const extData = data.value.manifestExt?.[item.metadata?.uid] || {};
+      return {
+        ...extData,
+        ...item,
+      };
+    }));
+    const keys = ref(['metadata.name', 'creator']); // 模糊搜索字段
+    const { tableDataMatchSearch, searchValue } = useSearch(mergeExtTableData, keys);
 
     const handleNamespaceSelected = (value) => {
       localStorage.setItem(`${clusterId.value}-${CUR_SELECT_NAMESPACE}`, value);
@@ -526,6 +538,8 @@ export default defineComponent({
       handleNamespaceSelected,
       handleEnlargeCapacity,
       handleConfirmChangeCapacity,
+      statusFilters,
+      statusFilterMethod,
     };
   },
   render() {
@@ -651,7 +665,7 @@ export default defineComponent({
                       clearable
                       v-model={this.nameValue}
                       right-icon="bk-icon icon-search"
-                      placeholder={this.$t('输入名称搜索')}>
+                      placeholder={this.$t('输入名称、创建人搜索')}>
                   </bk-input>
               </div>
           </div>
@@ -677,6 +691,8 @@ export default defineComponent({
                 namespaceDisabled: this.namespaceDisabled,
                 webAnnotations: this.webAnnotations,
                 updateStrategyMap: this.updateStrategyMap,
+                statusFilters: this.statusFilters,
+                statusFilterMethod: this.statusFilterMethod,
               })
           }
         </div>
