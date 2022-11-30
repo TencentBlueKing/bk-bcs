@@ -109,7 +109,7 @@ func main() {
 	flag.BoolVar(&opts.ConflictCheckOpen, "conflict_check_open", true, "if false, "+
 		"skip all conflict checking about ingress and port pool")
 
-	flag.UintVar(&opts.HttpServerPort, "port", 8082, "port for ingress controller http server")
+	flag.UintVar(&opts.HttpServerPort, "http_svr_port", 8082, "port for ingress controller http server")
 
 	flag.Parse()
 
@@ -378,7 +378,7 @@ func runPrometheusMetrics(op *option.ControllerOption) {
 	}()
 }
 
-//initHttpServer init ingress controller http server
+// initHttpServer init ingress controller http server
 func initHttpServer(op *option.ControllerOption, mgr manager.Manager) error {
 	server := httpserver.NewHttpServer(op.HttpServerPort, op.Address, "")
 	if op.Conf.ServCert.IsSSL {
@@ -389,7 +389,7 @@ func initHttpServer(op *option.ControllerOption, mgr manager.Manager) error {
 	server.SetInsecureServer(op.Conf.InsecureAddress, op.Conf.InsecurePort)
 	ws := server.NewWebService("/ingresscontroller", nil)
 	httpServerClient := &httpsvr.HttpServerClient{
-		mgr,
+		Mgr: mgr,
 	}
 	httpsvr.InitRouters(ws, httpServerClient)
 
