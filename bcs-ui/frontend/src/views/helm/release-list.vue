@@ -32,8 +32,8 @@
             :disabled="!row.repo"
             v-authority="{
               clickable: webAnnotationsPerms[row.iamNamespaceID]
-                && webAnnotationsPerms[row.iamNamespaceID].namespace_scoped_update,
-              actionId: 'namespace_scoped_update',
+                && webAnnotationsPerms[row.iamNamespaceID].namespace_scoped_view,
+              actionId: 'namespace_scoped_view',
               resourceName: row.namespace,
               disablePerms: true,
               permCtx: {
