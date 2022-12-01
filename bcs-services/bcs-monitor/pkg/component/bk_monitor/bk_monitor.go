@@ -172,6 +172,7 @@ func QueryByPromQL(ctx context.Context, rawURL string, bkBizId string, start, en
 	resp, err := component.GetClient().R().
 		SetContext(ctx).
 		SetBody(body).
+		SetHeader("X-Bk-Scope-Space-Uid", fmt.Sprintf("bkcc__%s", bkBizId)). // 支持空间参数
 		SetQueryParam("bk_app_code", config.G.Base.AppCode).
 		SetQueryParam("bk_app_secret", config.G.Base.AppSecret).
 		Post(url)
