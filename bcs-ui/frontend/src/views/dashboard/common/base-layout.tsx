@@ -208,7 +208,7 @@ export default defineComponent({
     const additionalColumns = computed(() =>  // 动态表格字段
       webAnnotations.value.additionalColumns || []);
     const tableData = computed(() => {
-      const items = JSON.parse(JSON.stringify(data.value.manifest.items || []));
+      const items = data.value.manifest.items || [];
       const { prop, order } = sortData.value;
       return prop ? sort(items, prop, order) : items;
     });
