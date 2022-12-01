@@ -534,4 +534,12 @@ func TestSTSStatusParser(t *testing.T) {
 	// 正常
 	_ = mapx.SetItems(manifest, "status.readyReplicas", int64(2))
 	assert.Equal(t, WorkloadStatusNormal, newSTSStatusParser(manifest).Parse())
+
+	// sts 没有 currentReplicas 也可以是正常的
+	delete(manifest["status"].(map[string]interface{}), "currentReplicas")
+	assert.Equal(t, WorkloadStatusNormal, newSTSStatusParser(manifest).Parse())
+
+	// 更新中
+	_ = mapx.SetItems(manifest, "status.currentReplicas", int64(1))
+	assert.Equal(t, WorkloadStatusUpdating, newSTSStatusParser(manifest).Parse())
 }

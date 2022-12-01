@@ -32,8 +32,6 @@
   en: "no operate permission!"
 - msgID: "资源类型 `%s` 不支持表单化"
   en: "form edit mode is unsupported for resource kind %s"
-- msgID: "命名空间 %s 在该共享集群中不属于指定项目"
-  en: "namespace %s not belong to project in this shared cluster"
 - msgID: 在共享集群中，只有指定的数类资源可以执行订阅功能
   en: "only several resources allow subscribe events in shared cluster"
 - msgID: 共享集群暂时只支持查询部分自定义资源
@@ -644,3 +642,7 @@
   en: "cluster resource changes are detected, and try to synchronize resource information. If you have recently upgraded the cluster, please try again later. If it still fails, please contact the container assistant."
 - msgID: 无集群查看权限
   en: "no cluster view permission"
+- msgID: 检查共享集群命名空间权限失败
+  en: "checking shared cluster namespace permissions failed"
+- msgID: "命名空间 %s 在该共享集群中不属于指定项目"
+  en: "namespace %s not belong to project in this shared cluster"

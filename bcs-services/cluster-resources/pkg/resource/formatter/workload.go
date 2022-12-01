@@ -129,7 +129,7 @@ type StatusChecker interface {
 // DeployStatusChecker xxx
 type DeployStatusChecker struct{}
 
-// IsNormal xxx
+// IsNormal 检查逻辑：检查以下四个字段值是否相等
 func (c *DeployStatusChecker) IsNormal(manifest map[string]interface{}) bool {
 	return slice.AllInt64Equal([]int64{
 		mapx.GetInt64(manifest, "status.availableReplicas"),
@@ -142,13 +142,18 @@ func (c *DeployStatusChecker) IsNormal(manifest map[string]interface{}) bool {
 // STSStatusChecker xxx
 type STSStatusChecker struct{}
 
-// IsNormal xxx
+// IsNormal 检查逻辑：若 status.currentReplicas 存在，则检查与其他几项是否相等，若不存在，则检查剩余几项是否相等
 func (c *STSStatusChecker) IsNormal(manifest map[string]interface{}) bool {
+	replicas := mapx.GetInt64(manifest, "spec.replicas")
+	if curReplicas, err := mapx.GetItems(manifest, "status.currentReplicas"); err == nil {
+		if curReplicas.(int64) != replicas {
+			return false
+		}
+	}
 	return slice.AllInt64Equal([]int64{
-		mapx.GetInt64(manifest, "status.currentReplicas"),
 		mapx.GetInt64(manifest, "status.readyReplicas"),
 		mapx.GetInt64(manifest, "status.updatedReplicas"),
-		mapx.GetInt64(manifest, "spec.replicas"),
+		replicas,
 	})
 }
 

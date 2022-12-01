@@ -39,8 +39,8 @@ func CheckNSAccess(ctx context.Context, clusterID, namespace string) error {
 		return nil
 	}
 
-	if !cli.IsProjNSinSharedCluster(ctx, clusterID, namespace) {
-		return errorx.New(errcode.NoPerm, i18n.GetMsg(ctx, "命名空间 %s 在该共享集群中不属于指定项目"), namespace)
+	if err = cli.CheckIsProjNSinSharedCluster(ctx, clusterID, namespace); err != nil {
+		return err
 	}
 	return nil
 }
@@ -65,8 +65,8 @@ func CheckSubscribable(ctx context.Context, req *clusterRes.SubscribeReq) error 
 		return nil
 	}
 
-	if !cli.IsProjNSinSharedCluster(ctx, req.ClusterID, req.Namespace) {
-		return errorx.New(errcode.NoPerm, i18n.GetMsg(ctx, "命名空间 %s 在该共享集群中不属于指定项目"), req.Namespace)
+	if err = cli.CheckIsProjNSinSharedCluster(ctx, req.ClusterID, req.Namespace); err != nil {
+		return err
 	}
 	return nil
 }
@@ -85,8 +85,8 @@ func CheckCObjAccess(ctx context.Context, clusterID, crdName, namespace string) 
 		return errorx.New(errcode.NoPerm, i18n.GetMsg(ctx, "共享集群暂时只支持查询部分自定义资源"))
 	}
 
-	if !cli.IsProjNSinSharedCluster(ctx, clusterID, namespace) {
-		return errorx.New(errcode.NoPerm, i18n.GetMsg(ctx, "命名空间 %s 在该共享集群中不属于指定项目"), namespace)
+	if err = cli.CheckIsProjNSinSharedCluster(ctx, clusterID, namespace); err != nil {
+		return err
 	}
 	return nil
 }

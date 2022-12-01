@@ -209,8 +209,8 @@ func (m *ResMgr) checkAccess(ctx context.Context, namespace string, manifest map
 	if manifest != nil {
 		namespace = mapx.GetStr(manifest, "metadata.namespace")
 	}
-	if !cli.IsProjNSinSharedCluster(ctx, m.ClusterID, namespace) {
-		return errorx.New(errcode.NoPerm, i18n.GetMsg(ctx, "命名空间 %s 在该共享集群中不属于指定项目"), namespace)
+	if err = cli.CheckIsProjNSinSharedCluster(ctx, m.ClusterID, namespace); err != nil {
+		return err
 	}
 	return nil
 }

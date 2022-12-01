@@ -125,20 +125,23 @@ func (c *NSClient) Watch(
 	return &NSWatcher{rawWatch, projectCode, clusterType}, err
 }
 
-// IsProjNSinSharedCluster 判断某命名空间，是否属于指定项目（仅共享集群有效）
-func IsProjNSinSharedCluster(ctx context.Context, clusterID, namespace string) bool {
+// CheckIsProjNSinSharedCluster 判断某命名空间，是否属于指定项目（仅共享集群有效）
+func CheckIsProjNSinSharedCluster(ctx context.Context, clusterID, namespace string) error {
 	if namespace == "" {
-		return false
+		return errorx.New(errcode.NoPerm, i18n.GetMsg(ctx, "检查共享集群命名空间权限失败"))
 	}
 	manifest, err := NewNSCliByClusterID(ctx, clusterID).Get(ctx, namespace, metav1.GetOptions{})
 	if err != nil {
-		return false
+		return err
 	}
 	projInfo, err := project.FromContext(ctx)
 	if err != nil {
-		return false
+		return err
 	}
-	return isProjNSinSharedCluster(manifest, projInfo.Code)
+	if !isProjNSinSharedCluster(manifest, projInfo.Code) {
+		return errorx.New(errcode.NoPerm, i18n.GetMsg(ctx, "命名空间 %s 在该共享集群中不属于指定项目"), namespace)
+	}
+	return nil
 }
 
 // filterProjNSList 从命名空间列表中，过滤出属于指定项目的（注：项目信息通过 context 获取）
