@@ -254,7 +254,7 @@ func migrateReleases(model store.HelmManagerModel, mysqlDB *gorm.DB) {
 				v.Name, v.ClusterID, v.Namespace, err.Error())
 			continue
 		}
-		_, err = model.GetRelease(context.TODO(), v.ClusterID, v.Namespace, v.Name)
+		exist, err := model.GetRelease(context.TODO(), v.ClusterID, v.Namespace, v.Name)
 		if err != nil && !errors.Is(err, drivers.ErrTableRecordNotFound) {
 			blog.Errorf("create releases %s in cluster %s namespace %s, err %s",
 				v.Name, v.ClusterID, v.Namespace, err.Error())
@@ -262,6 +262,9 @@ func migrateReleases(model store.HelmManagerModel, mysqlDB *gorm.DB) {
 		}
 		if err == nil {
 			existReleases++
+			if rl.UpdateTime < exist.UpdateTime {
+				continue
+			}
 			up := entity.M{
 				entity.FieldKeyChartVersion: rl.ChartVersion,
 				entity.FieldKeyRevision:     rl.Revision,

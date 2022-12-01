@@ -30,8 +30,8 @@ const (
 	repositoryListHelmURI      = "/repository/api/package/page"
 	repositorySearchHelmURI    = "/repository/api/package/search"
 	repositoryGetHelmURI       = "/repository/api/package/info"
-	repositoryDeletePackageURI = "/repository/api/package/delete"
-	repositoryDeleteVersionURI = "/repository/api/version/delete"
+	repositoryDeletePackageURI = "/helm/ext/package/delete"
+	repositoryDeleteVersionURI = "/helm/ext/version/delete"
 )
 
 func (rh *repositoryHandler) listChart(ctx context.Context, option repo.ListOption) (*repo.ListChartData, error) {
