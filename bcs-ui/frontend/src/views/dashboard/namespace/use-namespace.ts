@@ -16,14 +16,17 @@ export function useNamespace() {
   const variablesList = ref<any[]>([]);
   const variableLoading = ref(false);
   const namespaceLoading = ref(false);
+  const webAnnotations = ref({ perms: {} });
 
   async function getNamespaceData(params, loading = true) {
     if (!params || !params.$clusterId) return;
     namespaceLoading.value = loading;
-    const result = await getNamespaceList(params).catch(() => []);
-    namespaceData.value = result;
+    const { data, webAnnotations: _webAnnotations } = await getNamespaceList(params, { needRes: true })
+      .catch(() => ({ data: [], webAnnotations: [] }));
+    namespaceData.value = data;
+    webAnnotations.value = _webAnnotations;
     namespaceLoading.value = false;
-    return result;
+    return data;
   }
 
   async function handleGetVariablesList(params) {
@@ -67,6 +70,7 @@ export function useNamespace() {
   return {
     namespaceLoading,
     namespaceData,
+    webAnnotations,
     variablesList,
     variableLoading,
     getNamespaceData,

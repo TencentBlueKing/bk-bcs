@@ -36,7 +36,24 @@
       @page-limit-change="pageSizeChange">
       <bcs-table-column :label="$t('名称')" prop="name" min-width="200" show-overflow-tooltip>
         <template #default="{ row }">
-          <bk-button class="bcs-button-ellipsis" text @click="showDetail(row)">{{ row.name }}</bk-button>
+          <bk-button
+            class="bcs-button-ellipsis"
+            text
+            v-authority="{
+              clickable: webAnnotations.perms[row.name]
+                && webAnnotations.perms[row.name].namespace_view,
+              actionId: 'namespace_view',
+              resourceName: row.name,
+              disablePerms: true,
+              permCtx: {
+                project_id: projectID,
+                cluster_id: clusterID,
+                name: row.name
+              }
+            }"
+            @click="showDetail(row)">
+            {{ row.name }}
+          </bk-button>
         </template>
       </bcs-table-column>
       <bcs-table-column :label="$t('状态')">
@@ -125,12 +142,36 @@
             text
             class="mr-[10px]"
             :disabled="applyMap(row.itsmTicketType).setQuota"
+            v-authority="{
+              clickable: webAnnotations.perms[row.name]
+                && webAnnotations.perms[row.name].namespace_update,
+              actionId: 'namespace_update',
+              resourceName: row.name,
+              disablePerms: true,
+              permCtx: {
+                project_id: projectID,
+                cluster_id: clusterID,
+                name: row.name
+              }
+            }"
             @click="showSetQuota(row)">
             {{ $t('配额管理') }}
           </bk-button>
           <bk-button
             text
             :disabled="applyMap(row.itsmTicketType).delete"
+            v-authority="{
+              clickable: webAnnotations.perms[row.name]
+                && webAnnotations.perms[row.name].namespace_delete,
+              actionId: 'namespace_delete',
+              resourceName: row.name,
+              disablePerms: true,
+              permCtx: {
+                project_id: projectID,
+                cluster_id: clusterID,
+                name: row.name
+              }
+            }"
             @click="handleDeleteNamespace(row)">
             {{ $t('删除') }}
           </bk-button>
@@ -245,7 +286,7 @@ import LayoutRow from '@/components/layout/Row.vue';
 import Detail from './detail.vue';
 import usePage from '../common/use-page';
 import useSearch from '../common/use-search';
-import { useCluster } from '@/common/use-app';
+import { useCluster, useProject } from '@/common/use-app';
 import { useNamespace } from './use-namespace';
 import { timeZoneTransForm } from '@/common/util';
 import { BCS_CLUSTER } from '@/common/constant';
@@ -263,6 +304,7 @@ export default defineComponent({
   setup(props, ctx) {
     const { $store, $bkInfo, $i18n, $bkMessage, $router, $route } = ctx.root;
 
+    const { projectID } = useProject();
     const { isSharedCluster } = useCluster();
 
     const viewMode = computed(() => $store.state.viewMode);
@@ -284,6 +326,7 @@ export default defineComponent({
       variableLoading,
       namespaceLoading,
       namespaceData,
+      webAnnotations,
       handleGetVariablesList,
       handleDeleteNameSpace,
       handleUpdateNameSpace,
@@ -600,9 +643,11 @@ export default defineComponent({
 
     return {
       namespaceLoading,
+      webAnnotations,
       curClusterId,
       isSharedCluster,
       clusterID,
+      projectID,
       pagination,
       showQuota,
       searchValue,

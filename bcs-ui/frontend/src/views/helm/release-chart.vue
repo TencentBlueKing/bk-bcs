@@ -254,6 +254,18 @@
         theme="primary"
         :loading="releaseLoading"
         :disabled="releaseLoading"
+        v-authority="{
+          clickable: !isEdit,
+          actionId: 'namespace_scoped_update',
+          resourceName: releaseData.namespace,
+          disablePerms: !isEdit,
+          permCtx: {
+            resource_type: 'namespace',
+            project_id: projectID,
+            cluster_id: clusterID,
+            name: releaseData.namespace
+          }
+        }"
         @click="handleReleaseOrUpdateChart">
         {{isEdit ? $t('更新') : $t('部署')}}
       </bcs-button>
@@ -281,7 +293,7 @@ import ChartFileTree from './chart-file-tree.vue';
 import NamespaceSelect from '@/components/namespace-selector/namespace-select.vue';
 import KeyValue, { IData } from '@/components/key-value.vue';
 import useHelm from './use-helm';
-import { useCluster } from '@/common/use-app';
+import { useCluster, useProject } from '@/common/use-app';
 import $router from '@/router';
 import $i18n from '@/i18n/i18n-setup';
 import { copyText } from '@/common/util';
@@ -323,6 +335,7 @@ export default defineComponent({
   setup(props) {
     const { releaseName, repoName, chartName, namespace, cluster } = toRefs(props);
 
+    const { projectID } = useProject();
     const { curClusterId } = useCluster();
     const {
       handleGetRepoChartVersions,
@@ -634,6 +647,7 @@ export default defineComponent({
       chartData,
       curClusterId,
       clusterID,
+      projectID,
       isEdit,
       lockValues,
       args,
