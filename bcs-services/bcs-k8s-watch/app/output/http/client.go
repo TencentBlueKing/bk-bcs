@@ -23,6 +23,8 @@ import (
 	jsoniter "github.com/json-iterator/go"
 	"github.com/parnurzeal/gorequest"
 	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime"
 
 	glog "github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
@@ -166,10 +168,19 @@ func (client *StorageClient) GetBody(data interface{}) (interface{}, error) {
 	}
 
 	// not event
-	event, ok := data.(*v1.Event)
+	// convert to unstructured object
+	dataUnstructured, ok := data.(*unstructured.Unstructured)
 	if !ok {
-		glog.Errorf("Event Convert object to v1.Event fail! object is %v", data)
-		return nil, errors.New("event report fail. covnvert fail")
+		glog.Errorf("Event Convert object to unstructured event fail! object is %v", data)
+		return nil, fmt.Errorf("event report fail. covnvert fail")
+	}
+
+	// convert to corev1 object
+	event := &v1.Event{}
+	err := runtime.DefaultUnstructuredConverter.FromUnstructured(dataUnstructured.UnstructuredContent(), event)
+	if err != nil {
+		glog.Errorf("Event Convert object to v1.Event fail! object is %v", dataUnstructured)
+		return nil, fmt.Errorf("event report fail. covnvert fail")
 	}
 
 	eventTime := time.Time{}
@@ -197,6 +208,7 @@ func (client *StorageClient) GetBody(data interface{}) (interface{}, error) {
 		ExtraInfo: types.EventExtraInfo{
 			Namespace: event.InvolvedObject.Namespace,
 			Name:      event.InvolvedObject.Name,
+			Kind:      types.ExtraKind(event.InvolvedObject.Kind),
 		},
 		Data: data,
 	}, nil

@@ -13,8 +13,6 @@
 package resources
 
 import (
-	k8smetav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
 	glog "github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-k8s-watch/app/options"
 )
@@ -53,7 +51,7 @@ func NewResourceFilter(filterConfig *options.FilterConfig) *ResourceFilter {
 
 // IsBanned return true resource is banned
 func (rf *ResourceFilter) IsBanned(
-	groupVersion string, apiResource k8smetav1.APIResource) bool {
+	groupVersion string, apiResource options.APIResource) bool {
 	if apiResource.Kind != "Namespace" {
 		resourceFiltered, resourceFilterOK := rf.blackListFilter[groupVersion]
 		if resourceFilterOK && len(resourceFiltered) == 0 {

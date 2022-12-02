@@ -108,10 +108,19 @@ func NewWatchOptions() *WatchConfig {
 	return &WatchConfig{}
 }
 
+var IsWatchManagedFields bool
+
 // FilterConfig the file config
 type FilterConfig struct {
 	APIResourceSpecification []APIResourceFilter `json:"apiResourceSpecification"`
 	APIResourceException     []APIResourceFilter `json:"apiResourceException"`
+	K8sGroupVersionWhiteList []string            `json:"k8sResourceWhiteList"`
+	CrdGroupVersionWhiteList []string            `json:"crdResourceWhiteList"`
+	CrdVersionSupport        string              `json:"crdVersionSupport"`
+	NamespaceFilters         []string            `json:"resourceNamespaceFilters"`
+	NameFilters              []string            `json:"resourceNameFilters"`
+	APIResourceLists         []ApiResourceList   `json:"apiResourceLists"`
+	IsWatchManagedFields     bool                `json:"isFilterManagedFields"`
 }
 
 // APIResourceFilter api resource exception
@@ -132,5 +141,6 @@ func (wc *WatchConfig) ParseFilter() *FilterConfig {
 		glog.Warnf("unmarshal config file (%s) failed: %s, will not use resource filter", wc.FilterConfigPath, err.Error())
 		return nil
 	}
+	IsWatchManagedFields = filter.IsWatchManagedFields
 	return filter
 }

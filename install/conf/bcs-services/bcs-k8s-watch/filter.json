@@ -2,13 +2,118 @@
     "apiResourceException": [
         {
             "groupVersion": "v1",
-            "resourceKinds": ["ConfigMap", "Secret"]
+            "resourceKinds": [
+                "ConfigMap",
+                "Secret",
+                "Endpoints",
+                "ServiceAccount"
+            ]
+        },
+        {
+            "groupVersion": "autoscaling/v1",
+            "resourceKinds": [
+                "HorizontalPodAutoscaler"
+            ]
+        },
+        {
+            "groupVersion": "autoscaling/v2beta1",
+            "resourceKinds": [
+                "HorizontalPodAutoscaler"
+            ]
+        },
+        {
+            "groupVersion": "autoscaling/v2beta2",
+            "resourceKinds": [
+                "HorizontalPodAutoscaler"
+            ]
+        },
+        {
+            "groupVersion": "rbac.authorization.k8s.io/v1",
+            "resourceKinds": [
+                "ClusterRoleBinding",
+                "ClusterRole",
+                "RoleBinding",
+                "Role"
+            ]
+        },
+        {
+            "groupVersion": "rbac.authorization.k8s.io/v1beta1",
+            "resourceKinds": [
+                "ClusterRoleBinding",
+                "ClusterRole",
+                "RoleBinding",
+                "Role"
+            ]
+        },
+        {
+            "groupVersion": "admissionregistration.k8s.io/v1beta1",
+            "resourceKinds": [
+                "MutatingWebhookConfiguration",
+                "ValidatingWebhookConfiguration"
+            ]
         }
     ],
-    "apiResourceSpecification": [
+    "k8sResourceWhiteList": [
+        "v1",
+        "apps/v1",
+        "apps/v1beta1",
+        "apps/v1beta2",
+        "extensions/v1",
+        "extensions/v1beta1",
+        "autoscaling/v1",
+        "autoscaling/v2beta1",
+        "autoscaling/v2beta2",
+        "storage.k8s.io/v1",
+        "batch/v1",
+        "batch/v1beta1",
+        "rbac.authorization.k8s.io/v1",
+        "admissionregistration.k8s.io/v1beta1",
+        "apiextensions.k8s.io/v1beta1"
+    ],
+    "crdResourceWhiteList": [
+        "types.kubefed.io/v1beta1",
+        "core.kubefed.io/v1alpha1",
+        "core.kubefed.io/v1beta1",
+        "multiclusterdns.kubefed.io/v1alpha1",
+        "scheduling.kubefed.io/v1alpha1",
+        "bkbcs.tencent.com/v2",
+        "bkbcs.tencent.com/v1",
+        "gamedeployments.tkex.tencent.com",
+        "gamestatefulsets.tkex.tencent.com",
+        "generalpodautoscalers.autoscaling.tkex.tencent.com"
+    ],
+    "crdVersionSupport": "v1",
+    "resourceNamespaceFilters": [
+        "kube-system"
+    ],
+    "resourceNameFilters": [
+        "kubernetes"
+    ],
+    "apiResourceLists": [
+        {
+            "groupVersion": "apps/v1",
+            "apiResources": [
+                {
+                    "Kind": "Deployment",
+                    "Namespaced": true,
+                    "Name": "deployments"
+                },
+                {
+                    "Kind": "StatefulSet",
+                    "Namespaces": true,
+                    "Name": "statefulsets"
+                }
+            ]
+        },
         {
             "groupVersion": "v1",
-            "resourceKinds": ["Pod"]
+            "apiResources": [
+                {
+                    "Kind": "Pod",
+                    "Namespaced": true,
+                    "Name": "pods"
+                }
+            ]
         }
     ]
 }

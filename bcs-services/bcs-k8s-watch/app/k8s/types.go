@@ -13,6 +13,10 @@
 
 package k8s
 
+import (
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+)
+
 const (
 	// ResourceTypeEvent is event resource type.,
 	ResourceTypeEvent = "Event"
@@ -37,4 +41,29 @@ type WatcherInterface interface {
 
 	// ListKeys returns all keys in local store.
 	ListKeys() []string
+}
+
+// CustomResourceDefinitionCore save core info for different version CRDs
+type CustomResourceDefinitionCore struct {
+	metav1.TypeMeta   `json:",inline"`
+	metav1.ObjectMeta `json:"metadata,omitempty" protobuf:"bytes,1,opt,name=metadata"`
+
+	Spec CustomResourceDefinitionCoreSpec
+}
+
+// ResourceScope is an enum defining the different scopes available to a custom resource
+type ResourceScope string
+
+const (
+	ClusterScoped   ResourceScope = "Cluster"
+	NamespaceScoped ResourceScope = "Namespaced"
+)
+
+// CustomResourceDefinitionCoreSpec save Spec info for CustomResourceDefinitionCore
+type CustomResourceDefinitionCoreSpec struct {
+	Group       string
+	Version     string
+	NamesPlural string
+	NamesKind   string
+	Scope       ResourceScope
 }

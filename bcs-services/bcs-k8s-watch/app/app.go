@@ -181,8 +181,9 @@ func RunAsLeader(stopChan <-chan struct{}, config *options.WatchConfig, clusterI
 	bcs.RunPrometheusMetricsServer(config)
 	glog.Info("start http server successful")
 
+	filterConfig := config.ParseFilter()
 	// init resourceList to watch
-	err = resources.InitResourceList(&config.K8s, config.ParseFilter(), &config.WatchResource)
+	err = resources.InitResourceList(&config.K8s, filterConfig, &config.WatchResource)
 	if err != nil {
 		panic(err)
 	}
@@ -203,7 +204,7 @@ func RunAsLeader(stopChan <-chan struct{}, config *options.WatchConfig, clusterI
 
 	// create watcher manager.
 	glog.Info("creating watcher manager now...")
-	watcherMgr, err := k8s.NewWatcherManager(clusterID, &config.WatchResource, writer, &config.K8s, storageService,
+	watcherMgr, err := k8s.NewWatcherManager(clusterID, &config.WatchResource, filterConfig, writer, &config.K8s, storageService,
 		netservice, stopChan)
 	if err != nil {
 		panic(err)
