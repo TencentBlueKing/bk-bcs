@@ -15,10 +15,12 @@ GITHASH=$(shell git rev-parse HEAD)
 VERSION=${GITTAG}-$(shell date +%y.%m.%d)
 WORKSPACE=$(shell pwd)
 
+BCS_UI_PATH=${WORKSPACE}/bcs-ui
 BCS_SERVICES_PATH=${WORKSPACE}/bcs-services
 BCS_NETWORK_PATH=${WORKSPACE}/bcs-runtime/bcs-k8s/bcs-network
 BCS_COMPONENT_PATH=${WORKSPACE}/bcs-runtime/bcs-k8s/bcs-component
 BCS_MESOS_PATH=${WORKSPACE}/bcs-runtime/bcs-mesos
+BCS_CONF_UI_PATH=${WORKSPACE}/install/conf/bcs-ui
 BCS_CONF_COMPONENT_PATH=${WORKSPACE}/install/conf/bcs-runtime/bcs-k8s/bcs-component
 BCS_CONF_NETWORK_PATH=${WORKSPACE}/install/conf/bcs-runtime/bcs-k8s/bcs-network
 BCS_CONF_MESOS_PATH=${WORKSPACE}/install/conf/bcs-runtime/bcs-mesos
@@ -278,6 +280,11 @@ detection:pre
 
 tools:
 	go mod tidy && go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-services/cryptools ./install/cryptool/main.go
+
+ui:pre
+	mkdir -p ${PACKAGEPATH}/bcs-ui
+	cp -R ${BCS_CONF_UI_PATH} ${PACKAGEPATH}
+	cd ${BCS_UI_PATH} && ls -la && cd frontend && npm install && npm run build:ce && cd ../ && go mod tidy -compat=1.17 && CGO_ENABLED=0 go build -trimpath ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-ui/bcs-ui ./cmd/bcs-ui
 
 user-manager:pre
 	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-user-manager

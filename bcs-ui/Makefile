@@ -1,3 +1,28 @@
+PREFIX                  ?= $(shell pwd)/bin/
+GO                      ?= go
+FIRST_GOPATH            := $(firstword $(subst :, ,$(shell $(GO) env GOPATH)))
+GOHOSTOS                ?= $(shell $(GO) env GOHOSTOS)
+GOHOSTARCH              ?= $(shell $(GO) env GOHOSTARCH)
+GOBUILD=CGO_ENABLED=0 go build -trimpath
+
+# init the build information
+ifdef HASTAG
+	GITTAG=${HASTAG}
+else
+	GITTAG=$(shell git describe --always)
+endif
+
+BUILDTIME=$(shell date +%Y-%m-%dT%T%z)
+GITHASH=$(shell git rev-parse HEAD)
+VERSION=${GITTAG}-$(shell date +%y.%m.%d)
+bcs_edition?=inner_edition
+
+LDFLAG=-ldflags "-X github.com/Tencent/bk-bcs/bcs-common/common/version.BcsVersion=${VERSION} \
+ -X github.com/Tencent/bk-bcs/bcs-common/common/version.BcsBuildTime=${BUILDTIME} \
+ -X github.com/Tencent/bk-bcs/bcs-common/common/version.BcsGitHash=${GITHASH} \
+ -X github.com/Tencent/bk-bcs/bcs-common/common/version.BcsTag=${GITTAG} \
+ -X github.com/Tencent/bk-bcs/bcs-common/common/version.BcsEdition=${bcs_edition}"
+
 .PHONY: compilemessages
 compilemessages:
 	python manage.py compilemessages --settings=backend.settings.ce.dev
@@ -12,3 +37,15 @@ requirements.txt:
 	poetry export -f requirements.txt --without-hashes|cut -f1 -d";" > requirements.txt && \
 	sed -i '' '/colorama/d' requirements.txt && \
 	sed -i '' '/twisted-iocpsupport/d' requirements.txt
+
+.PHONY: build_frontend
+build_frontend:
+	cd frontend; npm install; npm run build:ce
+
+.PHONY: build_ui
+build_ui:
+	${GOBUILD} ${LDFLAG} -o bcs-ui ./cmd/bcs-ui
+
+.PHONY: docker
+docker:
+	docker build -f Dockerfile-ui . -t bcs-ui

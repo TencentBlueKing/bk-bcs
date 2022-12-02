@@ -1,0 +1,32 @@
+base_conf:
+  time_zone: "Asia/Shanghai"
+  language_code: en
+  run_env: dev
+
+bcs_conf:
+
+bcs_env_conf:
+
+web:
+  route_prefix: "/bcsapi/v4/ui"
+  host:
+  preferred_domains: ""
+
+etcd:
+  endpoints: "127.0.0.1:2379"
+  ca: ""
+  cert: ""
+  key: ""
+
+frontend_conf:
+  hosts:
+    BKSRE_HOST: ""
+    SRC_IED_HOST: ""
+    DEVOPS_HOST: ""
+    devops_bcs_api_url: ""
+    DEVOPS_ARTIFACTORY_HOST: ""
+    BK_IAM_APP_URL: ""
+    PAAS_HOST: ""
+    BK_CC_HOST: ""
+    BKMONITOR_HOST: ""
+  docs: {}
