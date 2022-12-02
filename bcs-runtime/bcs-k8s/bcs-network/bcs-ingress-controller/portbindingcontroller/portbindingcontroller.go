@@ -19,7 +19,6 @@ import (
 	"reflect"
 	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	k8scorev1 "k8s.io/api/core/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/client-go/tools/record"
@@ -29,6 +28,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	ingresscommon "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/constant"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/portpoolcache"
@@ -93,7 +93,7 @@ func (pbr *PortBindingReconciler) Reconcile(req ctrl.Request) (ctrl.Result, erro
 		}, nil
 	}
 	// 如果 PortBinding 不存在:
-	//   - Pod 中无相关 annotation，则认为 Pod 不需要端口池功能，直接返回
+	//   - Pod 中无相关 annotation / Pod 状态为Failed，则认为 Pod 不需要端口池功能，直接返回
 	//   - Pod 中存在相关 annotation，则为其创建 PortBinding
 	if !isPortBindingFound {
 		if !checkPortPoolAnnotationForPod(pod) {
@@ -101,6 +101,13 @@ func (pbr *PortBindingReconciler) Reconcile(req ctrl.Request) (ctrl.Result, erro
 				constant.AnnotationForPortPool)
 			return ctrl.Result{}, nil
 		}
+
+		if pod.Status.Phase == k8scorev1.PodFailed {
+			blog.Infof("pod '%s/%s' is failed, reason: %s, msg: %s, no need to handle it", pod.GetNamespace(),
+				pod.GetName(), pod.Status.Reason, pod.Status.Message)
+			return ctrl.Result{}, nil
+		}
+
 		blog.Infof("create portbinding for pod '%s/%s'", pod.GetNamespace(), pod.GetName())
 		return pbr.createPortBinding(pod)
 	}
@@ -113,6 +120,14 @@ func (pbr *PortBindingReconciler) Reconcile(req ctrl.Request) (ctrl.Result, erro
 			pod.GetNamespace(), pod.GetName())
 		return pbr.cleanPortBinding(portBinding)
 	}
+
+	// pod状态成为Failed后，需要删除对应PortBinding， 避免端口持续被占用无法释放
+	if pod.Status.Phase == k8scorev1.PodFailed {
+		blog.Infof("pod '%s/%s' is failed, reason: %s, msg: %s, so clean portbinding", pod.GetNamespace(),
+			pod.GetName(), pod.Status.Reason, pod.Status.Message)
+		return pbr.cleanPortBinding(portBinding)
+	}
+
 	// when statefulset pod is recreated, the old portbinding may be deleting
 	if portBinding.DeletionTimestamp != nil {
 		blog.V(3).Infof("found deleting portbinding, continue clean portbinding %v", req.NamespacedName)
