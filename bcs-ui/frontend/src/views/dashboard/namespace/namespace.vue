@@ -9,6 +9,16 @@
           class="w-[100px]"
           theme="primary"
           icon="plus"
+          v-authority="{
+            clickable: true,
+            actionId: 'namespace_create',
+            autoUpdatePerms: true,
+            permCtx: {
+              resource_type: 'cluster',
+              project_id: projectID,
+              cluster_id: clusterID
+            }
+          }"
           @click="handleToCreatedPage">
           {{ $t('创建') }}
         </bcs-button>
@@ -129,7 +139,7 @@
           {{ row.createTime ? timeZoneTransForm(row.createTime, false) : '--' }}
         </template>
       </bcs-table-column>
-      <bcs-table-column :label="$t('操作')" width="220">
+      <bcs-table-column :label="$t('操作')" width="320">
         <template #default="{ row }">
           <bk-button
             text
@@ -139,9 +149,45 @@
             {{ $t('设置变量值') }}
           </bk-button>
           <bk-button
+            v-if="isSharedCluster"
             text
             class="mr-[10px]"
-            :disabled="applyMap(row.itsmTicketType).setQuota"
+            v-authority="{
+              clickable: webAnnotations.perms[row.name]
+                && webAnnotations.perms[row.name].namespace_update,
+              actionId: 'namespace_update',
+              resourceName: row.name,
+              disablePerms: true,
+              permCtx: {
+                project_id: projectID,
+                cluster_id: clusterID,
+                name: row.name
+              }
+            }"
+            @click="handleSetLabel(row)">
+            {{ $t('设置标签') }}
+          </bk-button>
+          <bk-button
+            text
+            class="mr-[10px]"
+            v-authority="{
+              clickable: webAnnotations.perms[row.name]
+                && webAnnotations.perms[row.name].namespace_update,
+              actionId: 'namespace_update',
+              resourceName: row.name,
+              disablePerms: true,
+              permCtx: {
+                project_id: projectID,
+                cluster_id: clusterID,
+                name: row.name
+              }
+            }"
+            @click="handleSetAnnotations(row)">
+            {{ $t('设置注解') }}
+          </bk-button>
+          <bk-button
+            text
+            class="mr-[10px]"
             v-authority="{
               clickable: webAnnotations.perms[row.name]
                 && webAnnotations.perms[row.name].namespace_update,
@@ -159,7 +205,6 @@
           </bk-button>
           <bk-button
             text
-            :disabled="applyMap(row.itsmTicketType).delete"
             v-authority="{
               clickable: webAnnotations.perms[row.name]
                 && webAnnotations.perms[row.name].namespace_delete,
@@ -275,6 +320,54 @@
         </Detail>
       </div>
     </bk-sideslider>
+    <!-- 设置标签 -->
+    <bk-sideslider
+      :is-show.sync="showSetLabel"
+      :title="$t('设置标签')"
+      :width="800"
+      quick-close>
+      <div slot="content">
+        <KeyValue
+          class="key-value-content"
+          :model-value="curNamespaceData.labels"
+          :loading="updateBtnLoading"
+          :min-items="0"
+          :key-rules="[
+            {
+              // eslint-disable-next-line max-len
+              message: $i18n.t('有效的标签键有两个段：可选的前缀和名称，用斜杠（/）分隔。 名称段是必需的，必须小于等于 63 个字符，以字母数字字符（[a-z0-9A-Z]）开头和结尾， 带有破折号（-），下划线（_），点（ .）和之间的字母数字。 前缀是可选的。如果指定，前缀必须是 DNS 子域：由点（.）分隔的一系列 DNS 标签，总共不超过 253 个字符， 后跟斜杠（/）。'),
+              validator: LABEL_KEY_REGEXP
+            }
+          ]"
+          @cancel="handleLabelEditCancel"
+          @confirm="handleLabelEditConfirm"
+        ></KeyValue>
+      </div>
+    </bk-sideslider>
+    <!-- 设置注解 -->
+    <bk-sideslider
+      :is-show.sync="showSetAnnotations"
+      :title="$t('设置注解')"
+      :width="800"
+      quick-close>
+      <div slot="content">
+        <KeyValue
+          class="key-value-content"
+          :model-value="curNamespaceData.annotations"
+          :loading="updateBtnLoading"
+          :min-items="0"
+          :key-rules="[
+            {
+              // eslint-disable-next-line max-len
+              message: $i18n.t('有效的标签键有两个段：可选的前缀和名称，用斜杠（/）分隔。 名称段是必需的，必须小于等于 63 个字符，以字母数字字符（[a-z0-9A-Z]）开头和结尾， 带有破折号（-），下划线（_），点（ .）和之间的字母数字。 前缀是可选的。如果指定，前缀必须是 DNS 子域：由点（.）分隔的一系列 DNS 标签，总共不超过 253 个字符， 后跟斜杠（/）。'),
+              validator: LABEL_KEY_REGEXP
+            }
+          ]"
+          @cancel="handleAnnotationsEditCancel"
+          @confirm="handleAnnotationsEditConfirm"
+        ></KeyValue>
+      </div>
+    </bk-sideslider>
   </LayoutContent>
 </template>
 
@@ -289,8 +382,9 @@ import useSearch from '../common/use-search';
 import { useCluster, useProject } from '@/common/use-app';
 import { useNamespace } from './use-namespace';
 import { timeZoneTransForm } from '@/common/util';
-import { BCS_CLUSTER } from '@/common/constant';
+import { BCS_CLUSTER, LABEL_KEY_REGEXP } from '@/common/constant';
 import { CreateElement } from 'vue';
+import KeyValue from '@/components/key-value.vue';
 import useInterval from '@/views/dashboard/common/use-interval';
 
 export default defineComponent({
@@ -300,6 +394,7 @@ export default defineComponent({
     LayoutContent,
     LayoutRow,
     Detail,
+    KeyValue,
   },
   setup(props, ctx) {
     const { $store, $bkInfo, $i18n, $bkMessage, $router, $route } = ctx.root;
@@ -575,23 +670,15 @@ export default defineComponent({
       const typeMap = {
         CREATE: {
           setVar: true,
-          setQuota: true,
-          delete: true,
         },
         UPDATE: {
           setVar: false,
-          setQuota: true,
-          delete: true,
         },
         DELETE: {
           setVar: true,
-          setQuota: true,
-          delete: true,
         },
         '': {
           setVar: false,
-          setQuota: false,
-          delete: false,
         },
       };
       return typeMap[type];
@@ -624,6 +711,83 @@ export default defineComponent({
     const showDetail = (row) => {
       showNamespaceDetail.value = true;
       namespaceInfo.value = row;
+    };
+
+    // 设置标签
+    const updateBtnLoading = ref(false);
+    const showSetLabel = ref(false);
+    const curNamespaceData = ref<any>({});
+    const handleSetLabel = (row) => {
+      showSetLabel.value = true;
+      curNamespaceData.value = row;
+    };
+    const handleLabelEditCancel = () => {
+      showSetLabel.value = false;
+    };
+    const handleLabelEditConfirm = async (val) => {
+      const labels = Object.keys(val).reduce((prev: any, cur) => {
+        prev.push({
+          key: cur,
+          value: val[cur],
+        });
+        return prev;
+      }, []);
+      updateBtnLoading.value = true;
+      const result = await handleUpdateNameSpace({
+        $clusterId: clusterID.value,
+        $namespace: curNamespaceData.value.name,
+        ...curNamespaceData.value,
+        labels,
+      });
+      updateBtnLoading.value = false;
+      if (result) {
+        handleLabelEditCancel();
+        $bkMessage({
+          theme: 'success',
+          message: $i18n.t('保存成功'),
+        });
+        getNamespaceData({
+          $clusterId: clusterID.value,
+        });
+      }
+    };
+
+    // 设置注解
+    const showSetAnnotations = ref(false);
+    const handleSetAnnotations = (row) => {
+      showSetAnnotations.value = true;
+      curNamespaceData.value = row;
+    };
+
+    const handleAnnotationsEditConfirm = async (val) => {
+      const annotations = Object.keys(val).reduce((prev: any, cur) => {
+        prev.push({
+          key: cur,
+          value: val[cur],
+        });
+        return prev;
+      }, []);
+      updateBtnLoading.value = true;
+      const result = await handleUpdateNameSpace({
+        $clusterId: clusterID.value,
+        $namespace: curNamespaceData.value.name,
+        ...curNamespaceData.value,
+        annotations,
+      });
+      updateBtnLoading.value = false;
+      if (result) {
+        handleAnnotationsEditCancel();
+        $bkMessage({
+          theme: 'success',
+          message: $i18n.t('保存成功'),
+        });
+        getNamespaceData({
+          $clusterId: clusterID.value,
+        });
+      }
+    };
+    const handleAnnotationsEditCancel = () => {
+      showSetAnnotations.value = false;
     };
 
     watch(curClusterId, () => {
@@ -659,6 +823,11 @@ export default defineComponent({
       itsmTicketTypeMap,
       namespaceInfo,
       showNamespaceDetail,
+      showSetLabel,
+      showSetAnnotations,
+      curNamespaceData,
+      updateBtnLoading,
+      LABEL_KEY_REGEXP,
       toggleShowQuota,
       unitConvert,
       applyMap,
@@ -677,6 +846,12 @@ export default defineComponent({
       handleGoVar,
       showDetail,
       renderHeader,
+      handleSetLabel,
+      handleSetAnnotations,
+      handleLabelEditCancel,
+      handleLabelEditConfirm,
+      handleAnnotationsEditConfirm,
+      handleAnnotationsEditCancel,
     };
   },
 });
@@ -688,5 +863,8 @@ export default defineComponent({
     text-decoration: underline;
     text-decoration-style: dashed;
     text-underline-position: under;
-}
+  }
+  .key-value-content {
+    padding: 20px 30px;
+  }
 </style>
