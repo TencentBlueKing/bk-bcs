@@ -151,11 +151,11 @@ func (ta *TokenAuthenticater) GetJWTUser() *models.BcsUser {
 	// we need to create a new plain user.
 	if user == nil {
 		user = &models.BcsUser{
-			Name:      username,
-			UserType:  models.PlainUser,
-			ExpiresAt: time.Unix(jwtUser.ExpiresAt, 0),
+			Name:     username,
+			UserType: models.PlainUser,
 		}
 	}
+	user.ExpiresAt = time.Unix(jwtUser.ExpiresAt, 0)
 	return user
 }
 
