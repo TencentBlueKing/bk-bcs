@@ -40,6 +40,7 @@
               <bcs-input
                 right-icon="bk-icon icon-search"
                 class="min-w-[360px]"
+                clearable
                 :placeholder="$t('输入名称搜索')"
                 v-model="searchName">
               </bcs-input>
@@ -324,7 +325,7 @@ export default defineComponent({
       const config = chartTableConfig.value?.find(item => item.name === repoName);
       if (config) {
         chartsLoading.value = true;
-        const data = await handleGetRepoCharts(config.name, page, config.pagination.limit || 10);
+        const data = await handleGetRepoCharts(config.name, page, config.pagination.limit || 10, searchName.value);
         config.data = data.data;
         config.pagination.count = data.total;
         config.pagination.current = page;
@@ -335,7 +336,7 @@ export default defineComponent({
       const config = chartTableConfig.value?.find(item => item.name === repoName);
       if (config) {
         chartsLoading.value = true;
-        const data = await handleGetRepoCharts(config.name, 1, size);
+        const data = await handleGetRepoCharts(config.name, 1, size, searchName.value);
         config.data = data.data;
         config.pagination.count = data.total;
         config.pagination.current = 1;
