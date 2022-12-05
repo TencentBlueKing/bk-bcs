@@ -11,7 +11,7 @@
           icon="plus"
           v-authority="{
             clickable: true,
-            actionId: 'namespace_create',
+            actionId: ['cluster_view', 'namespace_create'],
             autoUpdatePerms: true,
             permCtx: {
               resource_type: 'cluster',
@@ -144,51 +144,7 @@
           <bk-button
             text
             class="mr-[10px]"
-            :disabled="applyMap(row.itsmTicketType).setVar"
-            @click="showSetVariable(row)">
-            {{ $t('设置变量值') }}
-          </bk-button>
-          <bk-button
-            v-if="!isSharedCluster"
-            text
-            class="mr-[10px]"
-            v-authority="{
-              clickable: webAnnotations.perms[row.name]
-                && webAnnotations.perms[row.name].namespace_update,
-              actionId: 'namespace_update',
-              resourceName: row.name,
-              disablePerms: true,
-              permCtx: {
-                project_id: projectID,
-                cluster_id: clusterID,
-                name: row.name
-              }
-            }"
-            @click="handleSetLabel(row)">
-            {{ $t('设置标签') }}
-          </bk-button>
-          <bk-button
-            v-if="!isSharedCluster"
-            text
-            class="mr-[10px]"
-            v-authority="{
-              clickable: webAnnotations.perms[row.name]
-                && webAnnotations.perms[row.name].namespace_update,
-              actionId: 'namespace_update',
-              resourceName: row.name,
-              disablePerms: true,
-              permCtx: {
-                project_id: projectID,
-                cluster_id: clusterID,
-                name: row.name
-              }
-            }"
-            @click="handleSetAnnotations(row)">
-            {{ $t('设置注解') }}
-          </bk-button>
-          <bk-button
-            text
-            class="mr-[10px]"
+            :disabled="applyMap(row.itsmTicketType).setQuota"
             v-authority="{
               clickable: webAnnotations.perms[row.name]
                 && webAnnotations.perms[row.name].namespace_update,
@@ -206,21 +162,80 @@
           </bk-button>
           <bk-button
             text
-            v-authority="{
-              clickable: webAnnotations.perms[row.name]
-                && webAnnotations.perms[row.name].namespace_delete,
-              actionId: 'namespace_delete',
-              resourceName: row.name,
-              disablePerms: true,
-              permCtx: {
-                project_id: projectID,
-                cluster_id: clusterID,
-                name: row.name
-              }
-            }"
-            @click="handleDeleteNamespace(row)">
-            {{ $t('删除') }}
+            class="mr-[10px]"
+            :disabled="applyMap(row.itsmTicketType).setVar"
+            @click="showSetVariable(row)">
+            {{ $t('设置变量值') }}
           </bk-button>
+          <bk-popover
+            placement="bottom"
+            theme="light dropdown"
+            :arrow="false">
+            <span class="bcs-icon-more-btn"><i class="bcs-icon bcs-icon-more"></i></span>
+            <template #content>
+              <ul class="bcs-dropdown-list">
+                <template v-if="!isSharedCluster">
+                  <bk-button
+                    v-if="!isSharedCluster"
+                    text
+                    class="bcs-dropdown-item"
+                    v-authority="{
+                      clickable: webAnnotations.perms[row.name]
+                        && webAnnotations.perms[row.name].namespace_update,
+                      actionId: 'namespace_update',
+                      resourceName: row.name,
+                      disablePerms: true,
+                      permCtx: {
+                        project_id: projectID,
+                        cluster_id: clusterID,
+                        name: row.name
+                      }
+                    }"
+                    @click="handleSetLabel(row)">
+                    {{ $t('设置标签') }}
+                  </bk-button>
+                  <bk-button
+                    v-if="!isSharedCluster"
+                    text
+                    class="bcs-dropdown-item"
+                    v-authority="{
+                      clickable: webAnnotations.perms[row.name]
+                        && webAnnotations.perms[row.name].namespace_update,
+                      actionId: 'namespace_update',
+                      resourceName: row.name,
+                      disablePerms: true,
+                      permCtx: {
+                        project_id: projectID,
+                        cluster_id: clusterID,
+                        name: row.name
+                      }
+                    }"
+                    @click="handleSetAnnotations(row)">
+                    {{ $t('设置注解') }}
+                  </bk-button>
+                </template>
+                <bk-button
+                  class="bcs-dropdown-item w-[80px]"
+                  text
+                  :disabled="applyMap(row.itsmTicketType).delete"
+                  v-authority="{
+                    clickable: webAnnotations.perms[row.name]
+                      && webAnnotations.perms[row.name].namespace_delete,
+                    actionId: 'namespace_delete',
+                    resourceName: row.name,
+                    disablePerms: true,
+                    permCtx: {
+                      project_id: projectID,
+                      cluster_id: clusterID,
+                      name: row.name
+                    }
+                  }"
+                  @click="handleDeleteNamespace(row)">
+                  {{ $t('删除') }}
+                </bk-button>
+              </ul>
+            </template>
+          </bk-popover>
         </template>
       </bcs-table-column>
     </bcs-table>
@@ -232,16 +247,16 @@
       :quick-close="false"
       @hidden="hideSetVariable">
       <div slot="content" class="py-5 px-5" v-bkloading="{ isLoading: variableLoading }">
-        <template v-if="variablesList.length">
-          <div>
-            <div class="bk-form-item text-[14px]">
-              {{$t('变量：')}}
-            </div>
-            <div class="bk-form-item text-[12px]">
-              <i18n path="可通过 {action} 创建更多作用在命名空间的变量">
-                <button place="action" class="bk-text-button" @click="handleGoVar">{{$t('变量管理')}}</button>
-              </i18n>
-            </div>
+        <div>
+          <div class="bk-form-item text-[14px]">
+            {{$t('变量：')}}
+          </div>
+          <div class="bk-form-item text-[12px]">
+            <i18n path="可通过 {action} 创建更多作用在命名空间的变量">
+              <button place="action" class="bk-text-button" @click="handleGoVar">{{$t('变量管理')}}</button>
+            </i18n>
+          </div>
+          <template v-if="variablesList.length">
             <div class="bk-form-item">
               <div class="bk-form-content">
                 <div class="flex items-center mb-[10px]" v-for="(variable, index) in variablesList" :key="index">
@@ -261,20 +276,23 @@
                 {{$t('取消')}}
               </bk-button>
             </div>
-          </div>
-        </template>
+          </template>
+          <template v-else>
+            <div class="h-[100px] text-center leading-[100px]">{{ $t('暂无命名空间变量') }}</div>
+          </template>
+        </div>
       </div>
     </bcs-sideslider>
     <!-- 配额管理 -->
     <bcs-dialog
       v-model="setQuotaConf.isShow"
       :width="650"
-      :title="$t('配额管理：{nsName}', { nsName: setQuotaConf.namespace })"
-      @confirm="updateNamespace"
-      @cancel="cancelUpdateNamespace">
-      <bcs-form :label-width="200" form-type="vertical" v-bkloading="{ isLoading: setQuotaConf.loading }">
-        <div class="mb-[20px]">
-          {{$t('配额设置')}}
+      :title="$t('配额管理：{nsName}', { nsName: setQuotaConf.namespace })">
+      <bk-form
+        ref="setQuotaForm"
+        :label-width="80"
+        v-bkloading="{ isLoading: setQuotaConf.loading }">
+        <bk-form-item :label="$t('配额设置')">
           <bk-switcher
             v-model="showQuota"
             class="ml-[10px]"
@@ -284,10 +302,14 @@
             :key="showQuota"
             @change="toggleShowQuota">
           </bk-switcher>
-        </div>
-        <bcs-form-item v-if="showQuota">
+        </bk-form-item>
+        <bk-form-item
+          v-if="showQuota"
+          :rules="quotaRules"
+          label="CPU"
+          property="quota"
+          error-display-type="normal">
           <div class="flex mr-[20px]">
-            <span class="mr-[10px]">CPU</span>
             <bcs-input
               v-model="setQuotaConf.quota.cpuRequests"
               class="w-[200px]"
@@ -306,8 +328,20 @@
               <div class="group-text" slot="append">Gi</div>
             </bcs-input>
           </div>
-        </bcs-form-item>
-      </bcs-form>
+        </bk-form-item>
+      </bk-form>
+      <div slot="footer">
+        <bcs-button
+          theme="primary"
+          :loading="setQuotaConf.loading"
+          class="mr5"
+          @click="updateNamespace"
+        >{{ $t('确定') }}</bcs-button>
+        <bcs-button
+          :loading="setQuotaConf.loading"
+          @click="cancelUpdateNamespace"
+        >{{ $t('取消') }}</bcs-button>
+      </div>
     </bcs-dialog>
     <!-- 命名空间Detail -->
     <bk-sideslider
@@ -414,8 +448,25 @@ export default defineComponent({
     const showQuota = ref(true);
 
     const toggleShowQuota = () => {
+      if (!setQuotaConf.value.quota.cpuRequests) {
+        setQuotaConf.value.quota.cpuRequests = '1';
+      }
+      if (!setQuotaConf.value.quota.memoryRequests) {
+        setQuotaConf.value.quota.memoryRequests = '1';
+      }
       showQuota.value = !showQuota.value;
     };
+
+    const quotaRules = [
+      {
+        validator() {
+          return setQuotaConf.value.quota.cpuRequests && setQuotaConf.value.quota.memoryRequests
+              && setQuotaConf.value.quota.cpuRequests !== 'NaN' && setQuotaConf.value.quota.memoryRequests !== 'NaN';
+        },
+        message: $i18n.t('请设置MEN、CPU配额，且两者最小值不小于0'),
+        trigger: 'blur',
+      },
+    ], ;
 
     const {
       variablesList,
@@ -578,30 +629,35 @@ export default defineComponent({
       }
     };
 
+    const setQuotaForm = ref();
     const updateNamespace = async () => {
-      const { namespace, labels, annotations, quota } = setQuotaConf.value;
-      const result = await handleUpdateNameSpace({
-        $clusterId: clusterID.value,
-        $namespace: namespace,
-        labels,
-        annotations,
-        quota: showQuota.value ? {
-          cpuLimits: String(quota.cpuRequests),
-          cpuRequests: String(quota.cpuRequests),
-          memoryLimits: `${quota.memoryRequests}Gi`,
-          memoryRequests: `${quota.memoryRequests}Gi`,
-        } : null,
-      });
-      if (result) {
-        $bkMessage({
-          theme: 'success',
-          message: $i18n.t('更新成功'),
-        });
-        getNamespaceData({
+      setQuotaForm.value.validate().then(async () => {
+        const { namespace, labels, annotations, quota } = setQuotaConf.value;
+        setQuotaConf.value.loading = true;
+        const result = await handleUpdateNameSpace({
           $clusterId: clusterID.value,
+          $namespace: namespace,
+          labels,
+          annotations,
+          quota: showQuota.value ? {
+            cpuLimits: String(quota.cpuRequests),
+            cpuRequests: String(quota.cpuRequests),
+            memoryLimits: `${quota.memoryRequests}Gi`,
+            memoryRequests: `${quota.memoryRequests}Gi`,
+          } : null,
         });
-        cancelUpdateNamespace();
-      };
+        if (result) {
+          $bkMessage({
+            theme: 'success',
+            message: $i18n.t('更新成功'),
+          });
+          getNamespaceData({
+            $clusterId: clusterID.value,
+          });
+          cancelUpdateNamespace();
+        };
+        setQuotaConf.value.loading = false;
+      });
     };
 
     const cancelUpdateNamespace = () => {
@@ -671,15 +727,31 @@ export default defineComponent({
       const typeMap = {
         CREATE: {
           setVar: true,
+          setLabel: true,
+          setAnnotations: true,
+          setQuota: true,
+          delete: true,
         },
         UPDATE: {
           setVar: false,
+          setLabel: false,
+          setAnnotations: false,
+          setQuota: true,
+          delete: true,
         },
         DELETE: {
           setVar: true,
+          setLabel: true,
+          setAnnotations: true,
+          setQuota: true,
+          delete: true,
         },
         '': {
           setVar: false,
+          setLabel: false,
+          setAnnotations: false,
+          setQuota: false,
+          delete: false,
         },
       };
       return typeMap[type];
@@ -829,6 +901,8 @@ export default defineComponent({
       curNamespaceData,
       updateBtnLoading,
       LABEL_KEY_REGEXP,
+      quotaRules,
+      setQuotaForm,
       toggleShowQuota,
       unitConvert,
       applyMap,
@@ -868,4 +942,11 @@ export default defineComponent({
   .key-value-content {
     padding: 20px 30px;
   }
+  ::v-deep .form-error-tip {
+    text-align: left;
+  }
 </style>
+
+function Boolean(cpuRequests: any) {
+  throw new Error('Function not implemented.');
+}

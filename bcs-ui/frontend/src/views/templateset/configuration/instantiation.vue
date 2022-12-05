@@ -268,8 +268,24 @@
                   <a href="javascript:;" class="bk-text-button" @click.stop="selectAll(item, index)">{{$t('全选')}}</a>
                   <a href="javascript:;" class="bk-text-button" @click.stop="selectInvert(item, index)">{{$t('反选')}}</a>
                 </div>
-                <div class="checker-inner" v-if="!isYamlMode">
-                  <bcs-button text class="mr10" @click.stop="handleSyncNamespace(item.cluster_id)">{{ $t('同步命名空间') }}</bcs-button>
+                <div class="checker-inner">
+                  <span v-bk-tooltips="$t('没有找到命名空间请点击`同步命名空间`按钮')">
+                    <bcs-button
+                      text
+                      class="mr10"
+                      @click.stop="handleSyncNamespace(item.cluster_id)"
+                      v-authority="{
+                        clickable: true,
+                        actionId: ['cluster_view', 'namespace_create'],
+                        autoUpdatePerms: true,
+                        permCtx: {
+                          resource_type: 'cluster',
+                          project_id: projectId,
+                          cluster_id: item.cluster_id
+                        }
+                      }"
+                    >{{ $t('同步命名空间') }}</bcs-button>
+                  </span>
                 </div>
               </div>
               <i v-if="item.isOpen" class="bcs-icon bcs-icon-angle-up trigger active" style="border-left: 1px solid #eee;"></i>
