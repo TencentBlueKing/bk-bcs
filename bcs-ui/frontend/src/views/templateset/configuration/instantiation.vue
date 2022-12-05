@@ -251,7 +251,7 @@
       @confirm="confirmSelect"
       @cancel="dialogConf.isShow = false">
       <template slot="content">
-        <div class="content-inner" :style="{ 'max-height': '420px', 'overflow': 'auto' }">
+        <div class="content-inner" :style="{ 'max-height': '420px', 'overflow': 'auto' }" v-bkloading="{ isLoading: dialogConf.pageLoading }">
           <div class="namespace-types">
             <span class="bk-outline"><i class="bcs-icon bcs-icon-circle-shape"></i>{{$t('未实例化过')}}</span>
             <span class="bk-default"><i class="bcs-icon bcs-icon-circle-shape"></i>{{$t('已实例化过')}}</span>
@@ -422,6 +422,7 @@ export default {
         title: this.$t('选择运行的集群及命名空间'),
         closeIcon: false,
         loading: false,
+        pageLoading: false,
       },
       existList: [],
       curTemplateTmp: {},
@@ -638,11 +639,10 @@ export default {
           with_perms: false,
         });
 
-        const list = res.data;
-
-        list.forEach((item) => {
-          this.candidateNamespaceList.push({ ...item, isOpen: true });
-        });
+        this.candidateNamespaceList = res.data.map(item => ({
+          ...item,
+          isOpen: true,
+        }));
       } catch (e) {
         catchErrorHandler(e, this);
       }
@@ -1173,12 +1173,15 @@ export default {
      */
     async handleSyncNamespace(clusterId) {
       const { handleSyncNamespaceList } = useNamespace();
+      this.dialogConf.pageLoading = true;
       const result = await handleSyncNamespaceList({
         $clusterId: clusterId,
       });
 
       if (result) {
-        this.fetchNamespaceList().then(() => {
+        this.fetchNamespaceList().then(async () => {
+          await this.fetchExistNamespace();
+          this.dialogConf.pageLoading = false;
           this.$bkMessage({
             theme: 'success',
             message: this.$t('同步成功'),
