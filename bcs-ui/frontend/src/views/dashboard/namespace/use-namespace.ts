@@ -9,6 +9,7 @@ import {
   updateClusterNamespaceVariable,
   createdNamespace,
   fetchNamespaceInfo,
+  syncNamespaceList,
 } from '@/api/modules/project';
 
 export function useNamespace() {
@@ -67,6 +68,12 @@ export function useNamespace() {
     return result;
   }
 
+  async function handleSyncNamespaceList(params) {
+    const result = await syncNamespaceList(params).then(() => true)
+      .catch(() => false);
+    return result;
+  }
+
   return {
     namespaceLoading,
     namespaceData,
@@ -80,6 +87,7 @@ export function useNamespace() {
     handleUpdateVariablesList,
     handleCreatedNamespace,
     getNamespaceInfo,
+    handleSyncNamespaceList,
   };
 }
 

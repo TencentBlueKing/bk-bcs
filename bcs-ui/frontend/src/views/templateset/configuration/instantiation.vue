@@ -268,6 +268,9 @@
                   <a href="javascript:;" class="bk-text-button" @click.stop="selectAll(item, index)">{{$t('全选')}}</a>
                   <a href="javascript:;" class="bk-text-button" @click.stop="selectInvert(item, index)">{{$t('反选')}}</a>
                 </div>
+                <div class="checker-inner" v-if="!isYamlMode">
+                  <bcs-button text class="mr10" @click.stop="handleSyncNamespace(item.cluster_id)">{{ $t('同步命名空间') }}</bcs-button>
+                </div>
               </div>
               <i v-if="item.isOpen" class="bcs-icon bcs-icon-angle-up trigger active" style="border-left: 1px solid #eee;"></i>
               <i v-else class="bcs-icon bcs-icon-angle-down trigger" style="border-left: 1px solid #eee;"></i>
@@ -368,6 +371,7 @@ import yamljs from 'js-yaml';
 import ace from '@/components/ace-editor';
 import { catchErrorHandler } from '@/common/util';
 import { mapGetters } from 'vuex';
+import { useNamespace } from '@/views/dashboard/namespace/use-namespace';
 
 const ARR = [
   'Application',
@@ -1162,6 +1166,25 @@ export default {
       });
       item.isOpen = true;
       this.$set(this.candidateNamespaceList, index, item);
+    },
+
+    /**
+     * 同步命名空间
+     */
+    async handleSyncNamespace(clusterId) {
+      const { handleSyncNamespaceList } = useNamespace();
+      const result = await handleSyncNamespaceList({
+        $clusterId: clusterId,
+      });
+
+      if (result) {
+        this.fetchNamespaceList().then(() => {
+          this.$bkMessage({
+            theme: 'success',
+            message: this.$t('同步成功'),
+          });
+        });
+      };
     },
 
     /**

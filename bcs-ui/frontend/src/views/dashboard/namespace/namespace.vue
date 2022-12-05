@@ -149,7 +149,7 @@
             {{ $t('设置变量值') }}
           </bk-button>
           <bk-button
-            v-if="isSharedCluster"
+            v-if="!isSharedCluster"
             text
             class="mr-[10px]"
             v-authority="{
@@ -168,6 +168,7 @@
             {{ $t('设置标签') }}
           </bk-button>
           <bk-button
+            v-if="!isSharedCluster"
             text
             class="mr-[10px]"
             v-authority="{
