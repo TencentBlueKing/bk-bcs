@@ -21,6 +21,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 	authUtils "github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/utils"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	helmrelease "helm.sh/helm/v3/pkg/release"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
@@ -133,12 +134,19 @@ func (l *ListReleaseV1Action) mergeReleases(clusterReleases,
 			if v.GetStatus() != "" {
 				newReleaseMap[l.getReleaseKey(v.GetNamespace(), v.GetName())].Status = v.Status
 			}
-			newReleaseMap[l.getReleaseKey(v.GetNamespace(), v.GetName())].ChartVersion = v.ChartVersion
+			// 集群中版本比数据库中的版本新，则使用集群中的数据
+			if *v.Revision >= *newReleaseMap[l.getReleaseKey(v.GetNamespace(), v.GetName())].Revision {
+				newReleaseMap[l.getReleaseKey(v.GetNamespace(), v.GetName())].ChartVersion = v.ChartVersion
+				newReleaseMap[l.getReleaseKey(v.GetNamespace(), v.GetName())].UpdateTime = v.UpdateTime
+				newReleaseMap[l.getReleaseKey(v.GetNamespace(), v.GetName())].Message = v.Message
+			}
 			newReleaseMap[l.getReleaseKey(v.GetNamespace(), v.GetName())].CreateBy = v.CreateBy
 			newReleaseMap[l.getReleaseKey(v.GetNamespace(), v.GetName())].UpdateBy = v.UpdateBy
-			newReleaseMap[l.getReleaseKey(v.GetNamespace(), v.GetName())].Message = v.Message
-			newReleaseMap[l.getReleaseKey(v.GetNamespace(), v.GetName())].UpdateTime = v.UpdateTime
 			newReleaseMap[l.getReleaseKey(v.GetNamespace(), v.GetName())].Repo = v.Repo
+			continue
+		}
+		// 数据库中状态正常的数据，但在集群中不存在，则不展示
+		if v.GetStatus() == helmrelease.StatusDeployed.String() {
 			continue
 		}
 		newReleaseMap[l.getReleaseKey(v.GetNamespace(), v.GetName())] = dbReleases[i]

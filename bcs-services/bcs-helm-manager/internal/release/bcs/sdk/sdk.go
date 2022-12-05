@@ -159,6 +159,7 @@ func (c *client) List(_ context.Context, option release.ListOption) ([]*rspb.Rel
 	}
 
 	lister := action.NewList(conf)
+	lister.All = true
 	if len(option.Namespace) == 0 {
 		lister.AllNamespaces = true
 	}

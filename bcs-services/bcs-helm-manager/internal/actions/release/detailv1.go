@@ -113,17 +113,17 @@ func (g *GetReleaseDetailV1Action) mergeRelease(detail *helmmanager.ReleaseDetai
 		return rl.Transfer2DetailProto()
 	}
 
-	detail.Args = rl.Args
-	detail.ValueFile = &rl.ValueFile
-	detail.Values = rl.Values
-	detail.CreateBy = &rl.CreateBy
-	detail.UpdateBy = &rl.UpdateBy
-	detail.UpdateTime = common.GetStringP(time.Unix(rl.UpdateTime, 0).Format(common.TimeFormat))
-	detail.ChartVersion = &rl.ChartVersion
-	detail.Message = &rl.Message
-	if rl.Status != "" {
+	if rl.Revision >= int(*detail.Revision) {
+		detail.Values = rl.Values
+		detail.ChartVersion = &rl.ChartVersion
+		detail.UpdateTime = common.GetStringP(time.Unix(rl.UpdateTime, 0).Format(common.TimeFormat))
 		detail.Status = &rl.Status
 	}
+	detail.Args = rl.Args
+	detail.ValueFile = &rl.ValueFile
+	detail.CreateBy = &rl.CreateBy
+	detail.UpdateBy = &rl.UpdateBy
+	detail.Message = &rl.Message
 	detail.Repo = &rl.Repo
 	return detail
 }
