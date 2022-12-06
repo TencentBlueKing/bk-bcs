@@ -53,3 +53,8 @@ func (t *BcsUser) IsClient() bool {
 	}
 	return true
 }
+
+// IsAdmin check if this user is admin
+func (t *BcsUser) IsAdmin() bool {
+	return t.UserType == AdminUser
+}

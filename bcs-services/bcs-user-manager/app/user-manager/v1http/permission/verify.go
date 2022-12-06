@@ -24,7 +24,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/cluster"
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/namespace"
-	"github.com/avast/retry-go"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/cmanager"
 	blog "github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/log"
@@ -80,7 +79,7 @@ func returnClusterType(resource ClusterResource) ClusterType {
 }
 
 // VerifyClusterPermission verify cluster permission: single and shared cluster
-func (cli *PermVerifyClient) VerifyClusterPermission(ctx context.Context, user UserInfo, action string,
+func (cli *PermVerifyClient) VerifyClusterPermission(ctx context.Context, user *models.BcsUser, action string,
 	resource ClusterResource) (bool, string) {
 	if cli == nil {
 		return false, ErrServerNotInited.Error()
@@ -104,40 +103,23 @@ func (cli *PermVerifyClient) VerifyClusterPermission(ctx context.Context, user U
 
 		allowed := false
 		message := ""
-		err = retry.Do(
-			func() error {
-				blog.Log(ctx).Infof("try to verify %s permission", user.UserName)
-				var err error
-				done := make(chan struct{}, 1)
-
-				go func() {
-					allowed, err = cli.verifyUserK8sClusterPermission(ctx, user.UserName, action, resource, requestInfo)
-					done <- struct{}{}
-				}()
-
-				select {
-				case <-done:
-					return err
-				case <-time.After(defaultTimeout):
-					return ErrContextTimeout
-				}
-			},
-			retry.Attempts(3),
-			retry.RetryIf(func(err error) bool {
-				return errors.Is(err, ErrContextTimeout)
-			}),
-		)
+		err = utils.RetryWithTimeout(func() error {
+			blog.Log(ctx).Infof("try to verify %s permission", user.Name)
+			var innerError error
+			allowed, innerError = cli.verifyUserK8sClusterPermission(ctx, user, action, resource, requestInfo)
+			return innerError
+		}, utils.RetryAttempts(3), utils.RetryTimeout(defaultTimeout))
 		if err != nil {
 			message = err.Error()
 		}
 		blog.Log(ctx).Infof("user %s access to type: %s, resource: %v, action: %s, permission: %t",
-			user.UserName, resource.ClusterType, resource, action, allowed)
+			user.Name, resource.ClusterType, resource, action, allowed)
 
 		return allowed, message
 	case Mesos:
-		allowed, message := verifyResourceReplica(user.UserID, "cluster", resource.ClusterID, action)
+		allowed, message := verifyResourceReplica(user.ID, "cluster", resource.ClusterID, action)
 		blog.Log(ctx).Infof("user %s access to type: %s, action: %s, permission: %t",
-			user.UserName, "cluster", action, allowed)
+			user.Name, "cluster", action, allowed)
 
 		return allowed, message
 	default:
@@ -145,7 +127,7 @@ func (cli *PermVerifyClient) VerifyClusterPermission(ctx context.Context, user U
 	}
 }
 
-func (cli *PermVerifyClient) verifyUserK8sClusterPermission(ctx context.Context, user, action string,
+func (cli *PermVerifyClient) verifyUserK8sClusterPermission(ctx context.Context, user *models.BcsUser, action string,
 	resource ClusterResource, requestInfo *parser.RequestInfo) (bool, error) {
 	if cli == nil {
 		return false, ErrServerNotInited
@@ -165,7 +147,7 @@ func (cli *PermVerifyClient) verifyUserK8sClusterPermission(ctx context.Context,
 			blog.Log(ctx).Infof("verifyUserClusterScopedPermission skip nonResourceRequest[%s]", requestInfo.Path)
 			return true, nil
 		}
-		clusterScopedAllow, err := cli.verifyUserClusterScopedPermission(ctx, user, action, resource)
+		clusterScopedAllow, err := cli.verifyUserClusterScopedPermission(ctx, user.Name, action, resource)
 		if err != nil {
 			blog.Log(ctx).Errorf("verifyUserClusterScopedPermission failed: %v", err)
 			return false, err
@@ -178,7 +160,7 @@ func (cli *PermVerifyClient) verifyUserK8sClusterPermission(ctx context.Context,
 
 		return clusterScopedAllow, nil
 	case namespaceType:
-		namespaceAllow, err := cli.verifyUserNamespacePermission(ctx, user, action, resource)
+		namespaceAllow, err := cli.verifyUserNamespacePermission(ctx, user.Name, action, resource)
 		if err != nil {
 			blog.Log(ctx).Errorf("verifyUserNamespacePermission failed: %v", err)
 			return false, err
@@ -191,9 +173,17 @@ func (cli *PermVerifyClient) verifyUserK8sClusterPermission(ctx context.Context,
 
 		return namespaceAllow, nil
 	case namespaceScopedType:
-		namespaceScopedAllow, err := cli.verifyUserNamespaceScopedPermission(ctx, user, action, resource)
+		var (
+			namespaceScopedAllow bool
+			err                  error
+		)
+		if user.IsClient() {
+			namespaceScopedAllow, err = cli.verifyClientNamespaceScopedPermission(ctx, user, action, resource)
+		} else {
+			namespaceScopedAllow, err = cli.verifyUserNamespaceScopedPermission(ctx, user.Name, action, resource)
+		}
 		if err != nil {
-			blog.Log(ctx).Errorf("verifyUserNamespaceScopedPermission failed: %v", err)
+			blog.Log(ctx).Errorf("verifyUserNamespaceScopedPermission failed: %s", err.Error())
 			return false, err
 		}
 		if !namespaceScopedAllow {
@@ -447,6 +437,17 @@ func (cli *PermVerifyClient) verifyUserNamespacePermission(ctx context.Context, 
 	return allow, nil
 }
 
+func (cli *PermVerifyClient) verifyClientNamespaceScopedPermission(ctx context.Context, user *models.BcsUser, action string,
+	resource ClusterResource) (bool, error) {
+	blog.Log(ctx).Infof("verifyClientNamespaceScopedPermission for user %s, type %s, resource %s, action %s",
+		user.Name, NamespaceScoped, resource.Namespace, action)
+	nsAllow, message := verifyResourceReplica(user.ID, NamespaceScoped, resource.Namespace, action)
+	if !nsAllow {
+		return nsAllow, errors.New(message)
+	}
+	return nsAllow, nil
+}
+
 func (cli *PermVerifyClient) getProjectIDFromResource(ctx context.Context, resource ClusterResource) (string, error) {
 	if resource.ClusterID == "" {
 		return "", fmt.Errorf("resource clusterID is null")
@@ -598,7 +599,7 @@ func buildAdminOperationLog(user string, req VerifyPermissionReq) error {
 	)
 
 	log := &models.BcsOperationLog{
-		ClusterType: req.ResourceType,
+		ClusterType: req.ResourceType.String(),
 		ClusterID:   req.Resource,
 		Path:        req.RequestURL,
 		Message:     fmt.Sprintf(MessageTemplate, user, req.Action, req.ResourceType, req.Resource, true),
