@@ -5,11 +5,14 @@
     <title>BCS Console / {{ .title }}</title>
 
     <link rel="stylesheet" href="{{ .settings.SITE_STATIC_URL }}/web/static/assets/xterm/css/xterm.css" />
+    <link rel="stylesheet" href="{{ .settings.SITE_STATIC_URL }}/web/static/assets/vue/bk-magic-vue.min.css">
     <script src="{{ .settings.SITE_STATIC_URL }}/web/static/assets/xterm/lib/xterm.js"></script>
     <script src="{{ .settings.SITE_STATIC_URL }}/web/static/assets/xterm-addon-fit/lib/xterm-addon-fit.js"></script>
-    <script src="{{ .settings.SITE_STATIC_URL }}/web/static/assets/xterm-addon-web-links/lib/xterm-addon-web-links.js"></script>
+    <script
+        src="{{ .settings.SITE_STATIC_URL }}/web/static/assets/xterm-addon-web-links/lib/xterm-addon-web-links.js"></script>
     <script src="{{ .settings.SITE_STATIC_URL }}/web/static/assets/throttle-debounce.js"></script>
     <script src="{{ .settings.SITE_STATIC_URL }}/web/static/assets/base64.min.js"></script>
+    <script src="{{ .settings.SITE_STATIC_URL }}/web/static/assets/axios.min.js"></script>
     <script src="{{ .settings.SITE_STATIC_URL }}/web/static/assets/jquery.min.js"></script>
 
     <style>
@@ -27,285 +30,436 @@
             overflow-y: hidden !important;
         }
 
+        .bk-tooltip,
+        .bk-tooltip-ref {
+            display: block;
+        }
+
         #terminal-container {
             margin: 0 auto;
             color: #fff;
             width: 100%;
-            height: 100%;
+            height: calc(100vh - 42px);
         }
 
-        #disconnected {
-            display: none;
-            width: 100%;
-            height: 100%;
-            top: 0px;
-            left: 0px;
-            position: absolute;
-            z-index: 1000;
-        }
-
-        #disconnected.modal-open {
-            display: block;
-        }
-
-        #disconnected>* {
-            z-Index: 2;
-            top: 0px;
-            left: 0px;
-        }
-
-        #exit_message {
-            margin-left: 10px;
-            margin-right: 10px;
-        }
-
-        #disconnected>.blur {
-            height: 100%;
-            z-Index: 1;
-            -webkit-filter: blur(1px);
-            -moz-filter: blur(1px);
-            -o-filter: blur(1px);
-            -ms-filter: blur(1px);
-            filter: blur(1px);
-        }
-
-        #reconnect {
-            transition: all 0.3s ease 0s;
-            background: #333;
-            border: thin solid #ccc;
-            position: absolute;
-            left: 33%;
-            top: 33%;
-            height: 235px;
-            font-size: .8rem;
-            text-align: center;
-            border-radius: 2px;
-            background: #383838;
-            color: #f0f0f0;
-            border-color: gray;
-            opacity: 1;
-            min-width: 350px;
-        }
-
-        #reconnect h2 {
-            font-size: 2rem;
-        }
-
-        #reconnect button {
-            width: 66%;
-            line-height: 60px;
-            margin: .2rem;
-            font-size: 1.5rem;
-            color: #f0f0f0;
-            background: #3071A9;
-            border: none !important;
-            border-radius: 2px;
-            cursor: pointer;
-            outline: none;
-        }
-
-        #reconnect button:hover {
-            border: .1rem outset #529bca;
-            background: #428bca;
-        }
-
-        #reconnect button:active {
-            border-style: inset;
-            background: #226b8a;
-        }
-
-        .exit-wrapper {
+        .footer-container {
             display: flex;
             align-items: center;
-            justify-content: center;
+            justify-content: flex-end;
+            height: 36px;
+            background-color: #fafbfd;
+            border: 1px solid #dcdee5;
+            text-align: center;
+            position: fixed;
+            left: 0;
+            bottom: 0;
+            width: 100%;
         }
 
-        #exit_helper {
-            color: #3a84ff;
-            text-decoration: none;
+        .upload-panel {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .upload-panel .upload-panel-input {
+            margin-bottom: 30px;
+        }
+
+        .download-panel {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .download-panel .download-panel-input {
+            margin-bottom: 30px;
         }
     </style>
 </head>
 
 <body>
-    <div id="terminal-container"></div>
-
-    <div id="disconnected" style="display:none">
-        <div class="blur"></div>
-        <div id="reconnect">
-            <h2>连接已经断开</h2>
-            <div class="exit-wrapper">
-                <p id="exit_message">BCS Console 网络断开，请检查网络{{ .settings.COMMON_EXCEPTION_MSG }}</p>
-                <a id="exit_helper" href="{{ .settings.SITE_STATIC_URL }}/user/login/" style="display:none" target="_blank">前往登入</a>
+    <div id="app">
+        <div id="terminal-container"></div>
+        <div class="footer-container">
+            <div class="shell-selector" style="margin-right: 30px;">
+                <bk-select size="small" :disabled="false" v-model="shell" style="width: 100px;" ext-cls="select-custom"
+                    ext-popover-cls="select-popover-custom">
+                    <bk-popconfirm width="288" trigger="click" title="是否切换shell类型？" content="操作将会刷新页面！"
+                        @confirm="handleConfirmChangeShell" @cancel="handleCancelChangeShell">
+                        <bk-option v-for="option in shellList" :key="option.key" :id="option.id" :name="option.name">
+                        </bk-option>
+                    </bk-popconfirm>
+                </bk-select>
             </div>
-            <button id="reload_btn" onclick="location.reload()">重新加载 &#x27f3;</button>
+            <div class="footer-icon-item" style="margin-right: 30px; cursor: pointer">
+                <bk-icon type="download" @click="openDownloadDialog" />
+            </div>
+            <div class="footer-icon-item" style="margin-right: 30px; cursor: pointer">
+                <bk-icon type="question-circle" @click="openDocumentDialog" />
+            </div>
         </div>
+        <bk-dialog v-model="downloadDialogVisiable" width="720" :show-footer="false">
+            <bk-tab :active.sync="updownloadPanel" type="unborder-card">
+                <bk-tab-panel name="upload" label="上传">
+                    <div class="upload-panel">
+                        <div class="upload-panel-input">
+                            <bk-input :clearable="true" v-model="uploadPath" placeholder="请先输入上传路径"></bk-input>
+                        </div>
+                        <bk-upload :tip="'文件限制小于30Mb, 暂不支持文件夹上传'" name="file" :size="30"
+                            :form-data-attributes="uploadData" @on-success="uploadSuccess" @on-progress="uploadProgress"
+                            @on-done="uploadDone" @on-error="uploadError"
+                            :url="'{{ .settings.SITE_STATIC_URL }}/api/sessions/' + sessionID + '/upload/'">
+                        </bk-upload>
+                    </div>
+                </bk-tab-panel>
+                <bk-tab-panel name="download" label="下载">
+                    <div class="download-panel">
+                        <div class="download-panel-input">
+                            <bk-input :clearable="true" v-model="downloadPath" placeholder="请先输入下载路径,暂不支持文件夹下载">
+                            </bk-input>
+                        </div>
+                        <bk-button theme="primary" title="下载" icon="download" :disabled="downloadDisabled"
+                            :loading="downloadBtnLoading" @click="handleClickDownload">下载
+                        </bk-button>
+                    </div>
+                </bk-tab-panel>
+            </bk-tab>
+        </bk-dialog>
+        <bk-dialog v-model="documentDialogVisiable" width="720" title="帮助">
+            {{range $val := .guide_doc_links }}
+            {{$val}}
+            <br />
+            {{end}}
+        </bk-dialog>
+
     </div>
-
-    <script>
-        var session_url = "{{ .session_url }}"
-        var login_url = "{{ .login_url }}"
-        var perm_request_url = "{{ .perm_request_url }}"
-
-        const term = new Terminal({
-            fontFamily: "Courier New, courier-new, courier, monospace",
-            useStyle: true,
-            cols: 180,
-        });
-
-        const fitAddon = new FitAddon.FitAddon();
-        term.loadAddon(fitAddon);
-        term.loadAddon(new WebLinksAddon.WebLinksAddon());
-
-        term.open(document.getElementById('terminal-container'));
-        fitAddon.fit();
-
-        // debounce 200 毫秒, 减少 resize 事件多次触发问题
-        const debounceFit = throttleDebounce.debounce(200, false, function () {
-            fitAddon.fit();
-        })
-
-        term.onResize(function (size) {
-            data = JSON.stringify({ cols: term.cols, rows: term.rows })
-            // set_pty_size()
-            if (typeof ws != "undefined" && ws.readyState == 1) {
-                // RESIZE_CHANNEL = 4
-                ws.send('4' + Base64.encode(data));
-                console.log('set_pty_size: ' + data)
-            }
-        });
-
-        window.onresize = function (event) {
-            debounceFit();
-        };
-
-        term.attachCustomKeyEventHandler(function (e) {
-            if (e.altKey && (e.code == 'KeyW')) {
-                event.preventDefault();
-                // send ctrl-w
-                term.__socket.send('\x17');
-                return false;
-            } else if (e.altKey && (e.code == 'KeyN')) {
-                event.preventDefault();
-                if (window.parent) {
-                    window.parent.postMessage({
-                        type: 'shortcut',
-                        key: 'showDropdown'
-                    }, window.location.origin)
+    <script src="{{ .settings.SITE_STATIC_URL }}/web/static/assets/vue/vue.js"></script>
+    <script src="{{ .settings.SITE_STATIC_URL }}/web/static/assets/vue/bk-magic-vue.min.js"></script>
+    <script type="text/javascript" defer>
+        var app = new Vue({
+            delimiters: ['$[', ']'],
+            el: '#app',
+            data() {
+                return {
+                    sessionID: "",
+                    sessionUrl: "{{ .session_url }}",
+                    loginUrl: "{{ .login_url }}",
+                    permRequestUrl: "{{ .perm_request_url }}",
+                    term: {},
+                    ws: {},
+                    fitAddon: {},
+                    webLinksAddon: {},
+                    shell: null,
+                    shellList: [
+                        { id: 1, key: 'sh', name: 'sh' },
+                        { id: 2, key: 'bash', name: 'bash' },
+                    ],
+                    downloadDialogVisiable: false,
+                    documentDialogVisiable: false,
+                    updownloadPanel: "upload",
+                    uploadPath: "/tmp",
+                    downloadPath: "",
+                    downloadBtnLoading: false
                 }
-                return false;
-            } else if (event.altKey && (event.keyCode >= 49 && event.keyCode <= 57)) {
-                event.preventDefault();
-                if (window.parent) {
-                    window.parent.postMessage({
-                        type: 'shortcut',
-                        key: 'activeTab',
-                        value: event.keyCode
-                    }, window.location.origin)
-                }
-                return false;
-            }
-        })
-        // var isWindows = ['Windows', 'Win16', 'Win32', 'WinCE'].indexOf(navigator.platform) >= 0;
-        // if (isWindows) {
-        //    $(window).keydown(function (event) {
-        //        console.log(event.keyCode); event.preventDefault();
-        //    });
-        // }
-
-        function get_session_id() {
-            term.write('\x1b[32mLaunching BCS Console...\x1b[m');
-            $.getJSON(session_url, function (result) {
-                if (result.code != 0) {
-                    term.reset();
-                    term.write("\x1b[31mLaunch Error: " + result.message + "\x1b[m\r\n");
-                } else {
-                    ws_url = auto_selected_protocol_ws_url(result.data.ws_url)
-                    ws_connect(ws_url);
-                }
-            }).fail(function (result) {
-                term.reset();
-                term.write("\x1b[31mLaunch Error: " + result.responseJSON.message + "\x1b[m\r\n");
-                // 未登入
-                if (result.status == 401) {
-                    $('#exit_message').text(result.responseJSON.message)
-                    $('#exit_helper').text("前往登入")
-                    $("#exit_helper").attr("href", login_url)
-                    $('#exit_helper').show()
-                    $("#disconnected").show();
-                } else if (result.status == 403) {
-                    $('#exit_message').text(result.responseJSON.message)
-                    $('#exit_helper').text("前往申请")
-                    $("#exit_helper").attr("href", perm_request_url)
-                    $('#exit_helper').show()
-                    $("#disconnected").show();
-                }
-            })
-        }
-
-        function auto_selected_protocol_ws_url(ws_url) {
-            // 已经包含了 schema, 直接返回
-            if (ws_url.startsWith("ws://") || ws_url.startsWith("wss://")) {
-                return ws_url
-            }
-            protocol = "ws"
-            if (window.location.protocol == "https:") {
-                protocol = "wss"
-            }
-            return protocol + "://" + window.location.host + ws_url
-        }
-
-        function ws_connect(raw_ws_url) {
-            // 初始化就指定rows & cols
-            ws_url = new URL(raw_ws_url);
-            ws_url.searchParams.set("rows", term.rows)
-            ws_url.searchParams.set("cols", term.cols)
-            ws = new WebSocket(ws_url.toString());
-
-            // term handler
-            term.onData(function (data) {
-                // STDIN_CHANNEL = 0
-                ws.send('0' + Base64.encode(data));
-            });
-
-            // 使用 BCS API 首个字节流判断是否连接
-            notConnected = true
-
-            ws.onmessage = function (e) {
-                if (notConnected) {
-                    term.reset();
-                    term.focus();
-                    notConnected = false
+            },
+            computed: {
+                uploadData() {
+                    return [{ name: 'upload_path', value: this.uploadPath }];
+                },
+                downloadDisabled() {
+                    return this.downloadPath === '';
                 }
 
-                // obj = JSON.parse(e.data);
-                term.write(Base64.decode(e.data));
-            };
+            },
+            methods: {
+                handleClickDownload() {
+                    this.downloadBtnLoading = true;
+                    axios.get("{{ .settings.SITE_STATIC_URL }}/api/sessions/" + this.sessionID + "/download/check/?download_path=" + this.downloadPath)
+                        .then((res) => {
+                            if (res.data.code === 0) {
+                                window.location.href = "{{ .settings.SITE_STATIC_URL }}/api/sessions/" + this.sessionID + "/download/?download_path=" + this.downloadPath
+                            } else {
+                                this.$bkMessage({ theme: 'error', message: res.data.message })
+                            }
+                        })
+                        .catch(() => {
+                            this.$bkMessage({ theme: 'error', message: "下载请求失败" })
+                        })
+                        .finally(() => {
+                            this.downloadBtnLoading = false;
+                        });
+                },
+                uploadSuccess() {
+                    this.$bkMessage({ theme: 'success', message: "上传成功" })
+                },
+                uploadProgress() {
+                    // this.$bkMessage({ theme: 'info', message: "上传中"})
+                },
+                uploadDone() {
+                    // this.$bkMessage({ theme: 'success', message: "上传完成"})
+                },
+                uploadError() {
+                    this.$bkMessage({ theme: 'error', message: "上传失败" })
+                },
+                resetShell() {
+                    url = new URL(window.location.href);
+                    shell = url.searchParams.get("shell")
+                    if (shell === 'bash') {
+                        this.shell = 2
+                    } else if (shell === 'sh') {
+                        this.shell = 1
+                    }
+                },
+                handleConfirmChangeShell() {
+                    url = new URL(window.location.href);
+                    origionShell = url.searchParams.get("shell")
+                    switch (this.shell) {
+                        case 1:
+                            url.searchParams.set("shell", "sh")
+                            break
+                        case 2:
+                            url.searchParams.set("shell", "bash")
+                            break
+                        default:
+                            url.searchParams.set("shell", origionShell)
+                    }
+                    window.location.href = url.toString()
+                },
+                handleCancelChangeShell() {
+                    this.resetShell()
+                },
+                openDownloadDialog() {
+                    this.downloadDialogVisiable = true;
+                },
+                openDocumentDialog() {
+                    this.documentDialogVisiable = true;
+                },
+                debounceFit() {
+                    const self = this
+                    throttleDebounce.debounce(200, false, function () {
+                        self.fitAddon.fit();
+                    })
+                },
+                get_session_id() {
+                    const self = this
+                    self.term.write('\x1b[32mLaunching BCS Console...\x1b[m');
+                    $.getJSON(self.sessionUrl, function (result) {
+                        if (result.code != 0) {
+                            self.term.reset();
+                            self.term.write("\x1b[31mLaunch Error: " + result.message + "\x1b[m\r\n");
+                        } else {
+                            self.sessionID = result.data.session_id
+                            ws_url = self.auto_selected_protocol_ws_url(result.data.ws_url)
+                            self.ws_connect(ws_url);
+                        }
+                    }).fail(function (result) {
+                        self.term.reset();
+                        self.term.write("\x1b[31mLaunch Error: " + result.responseJSON.message + "\x1b[m\r\n");
+                        // 未登入
+                        const h = self.$createElement
+                        if (result.status == 401) {
+                            self.$bkInfo({
+                                type: 'warning',
+                                title: result.responseJSON.message,
+                                showFooter: false,
+                                closeIcon: false,
+                                escClose: false,
+                                maskClose: false,
+                                subHeader: h('div', {}, [
+                                    h('bk-button', {
+                                        attrs: {
+                                            theme: "primary",
+                                        },
+                                        on: {
+                                            click: () => {
+                                                window.open(self.loginUrl);
+                                            }
+                                        }
+                                    }, '前往登录'),
+                                ]),
+                                delay: 0
+                            })
+                        } else if (result.status == 403) {
+                            self.$bkInfo({
+                                type: 'warning',
+                                title: result.responseJSON.message,
+                                showFooter: false,
+                                closeIcon: false,
+                                escClose: false,
+                                maskClose: false,
+                                subHeader: h('div', {}, [
+                                    h('bk-button', {
+                                        attrs: {
+                                            theme: "primary",
+                                        },
+                                        on: {
+                                            click: () => {
+                                                window.open(self.permRequestUrl);
+                                            }
+                                        }
+                                    }, '前往申请'),
+                                ]),
+                                delay: 0
+                            })
+                        } else {
+                            self.$bkInfo({
+                                type: 'error',
+                                title: '发生未知错误',
+                                subTitle: result.responseJSON.message,
+                                showFooter: false,
+                                maskClose: false,
+                                closeIcon: false,
+                                delay: 0
+                            })
+                        }
+                    })
+                },
+                auto_selected_protocol_ws_url(ws_url) {
+                    // 已经包含了 schema, 直接返回
+                    if (ws_url.startsWith("ws://") || ws_url.startsWith("wss://")) {
+                        return ws_url
+                    }
+                    protocol = "ws"
+                    if (window.location.protocol == "https:") {
+                        protocol = "wss"
+                    }
+                    return protocol + "://" + window.location.host + ws_url
+                },
+                ws_connect(raw_ws_url) {
+                    // 初始化就指定rows & cols
+                    const self = this;
+                    ws_url = new URL(raw_ws_url);
+                    ws_url.searchParams.set("rows", self.term.rows)
+                    ws_url.searchParams.set("cols", self.term.cols)
+                    self.ws = new WebSocket(ws_url.toString());
 
-            // websocket handler
-            ws.onopen = function () {
-                term.reset();
+                    // term handler
+                    self.term.onData(function (data) {
+                        // STDIN_CHANNEL = 0
+                        self.ws.send('0' + Base64.encode(data));
+                    });
 
-                // 后台连接中, 等待 BCS API 首个字节流
-                term.write('\x1b[32mConnecting BCS API...\x1b[m');
-            };
+                    // 使用 BCS API 首个字节流判断是否连接
+                    notConnected = true
 
-            ws.onclose = function (e) {
-                console.log("web_console on close: ", e)
-                if (e.reason != "") {
-                    $('#exit_message').text(e.reason)
-                }
-                $('#exit_helper').hide()
-                $("#disconnected").show();
-            }
-        }
+                    self.ws.onmessage = function (e) {
+                        if (notConnected) {
+                            self.term.reset();
+                            self.term.focus();
+                            notConnected = false
+                        }
 
-        function focusTerminal() {
-            term.focus();
-        }
+                        // obj = JSON.parse(e.data);
+                        self.term.write(Base64.decode(e.data));
+                    };
 
-        $(document).ready(function () {
-            get_session_id();
+                    // websocket handler
+                    self.ws.onopen = function () {
+                        self.term.reset();
+
+                        // 后台连接中, 等待 BCS API 首个字节流
+                        self.term.write('\x1b[32mConnecting BCS API...\x1b[m');
+                    };
+
+                    const h = self.$createElement
+                    self.ws.onclose = function (e) {
+                        result = "连接已断开"
+                        if (e.reason != "") {
+                            result = e.reason
+                        }
+                        self.$bkInfo({
+                            type: 'warning',
+                            title: '连接已断开',
+                            showFooter: false,
+                            maskClose: false,
+                            subHeader: h('div', {}, [
+                                h('div', {
+                                    style: {
+                                        marginBottom: '20px'
+                                    },
+                                }, result),
+                                h('bk-button', {
+                                    attrs: {
+                                        theme: "primary",
+                                        title: "重新连接",
+                                    },
+                                    on: {
+                                        click: () => {
+                                            location.reload();
+                                        }
+                                    }
+                                }, '重新连接'),
+                            ]),
+                            delay: 0
+                        })
+                    }
+                },
+                focusTerminal() {
+                    this.term.focus();
+                },
+                init() {
+                    const self = this
+                    self.fitAddon = new FitAddon.FitAddon();
+                    self.webLinksAddon = new WebLinksAddon.WebLinksAddon();
+
+                    self.term = new Terminal({
+                        fontFamily: "Courier New, courier-new, courier, monospace",
+                        useStyle: true,
+                        cols: 180,
+                        allowProposedApi: true,
+                    });
+
+                    self.term.options.cursorBlink = true;
+
+                    self.term.loadAddon(self.fitAddon);
+                    self.term.loadAddon(self.webLinksAddon);
+
+                    self.term.open(document.getElementById('terminal-container'));
+                    self.fitAddon.fit();
+
+                    window.onresize = throttleDebounce.debounce(200, false, function () {
+                        self.fitAddon.fit();
+                        data = JSON.stringify({ cols: self.term.cols, rows: self.term.rows })
+                        // set_pty_size()
+                        if (typeof self.ws != "undefined" && self.ws.readyState == 1) {
+                            // RESIZE_CHANNEL = 4
+                            self.ws.send('4' + Base64.encode(data));
+                        }
+                    })
+
+                    self.term.attachCustomKeyEventHandler(function (e) {
+                        if (e.altKey && (e.code == 'KeyW')) {
+                            event.preventDefault();
+                            // send ctrl-w
+                            self.term.__socket.send('\x17');
+                            return false;
+                        } else if (e.altKey && (e.code == 'KeyN')) {
+                            event.preventDefault();
+                            if (window.parent) {
+                                window.parent.postMessage({
+                                    type: 'shortcut',
+                                    key: 'showDropdown'
+                                }, window.location.origin)
+                            }
+                            return false;
+                        } else if (event.altKey && (event.keyCode >= 49 && event.keyCode <= 57)) {
+                            event.preventDefault();
+                            if (window.parent) {
+                                window.parent.postMessage({
+                                    type: 'shortcut',
+                                    key: 'activeTab',
+                                    value: event.keyCode
+                                }, window.location.origin)
+                            }
+                            return false;
+                        }
+                    })
+                },
+            },
+            mounted() {
+                this.resetShell()
+                this.init()
+                this.get_session_id()
+            },
         })
     </script>
 </body>

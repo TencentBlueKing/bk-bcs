@@ -235,7 +235,10 @@ func (m *WebConsoleManager) initMicroService() (micro.Service, microConf.Config,
 func (c *WebConsoleManager) initHTTPService() (*gin.Engine, error) {
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.New()
-	router.Use(gin.Recovery(), gin.Logger(), cors.Default())
+	router.Use(gin.Recovery(), gin.Logger())
+	router.Use(cors.New(cors.Config{
+		AllowAllOrigins: true,
+	}))
 	router.Use(i18n.Localize())
 
 	// 注册模板和静态资源

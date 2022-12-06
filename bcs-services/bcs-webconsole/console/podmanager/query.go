@@ -26,7 +26,8 @@ import (
 )
 
 // queryByContainerId 通过cluster_id, containerId 直连容器
-func queryByContainerId(ctx context.Context, clusterId, username, containerId string) (*types.PodContext, error) {
+func queryByContainerId(ctx context.Context,
+	clusterId, username, containerId, shell string) (*types.PodContext, error) {
 	startupMgr, err := NewStartupManager(ctx, clusterId)
 	if err != nil {
 		return nil, err
@@ -44,14 +45,20 @@ func queryByContainerId(ctx context.Context, clusterId, username, containerId st
 		Namespace:      container.Namespace,
 		PodName:        container.PodName,
 		ContainerName:  container.ContainerName,
-		Commands:       manager.DefaultCommand,
+		Commands:       manager.ShCommand, // 直连容器默认使用 sh
+	}
+	switch shell {
+	case manager.ShellSH:
+		podCtx.Commands = manager.ShCommand
+	case manager.ShellBash:
+		podCtx.Commands = manager.BashCommand
 	}
 	return podCtx, nil
 }
 
 // queryByContainerName 通过cluster_id, namespace, podName, containerName 直连容器
-func queryByContainerName(ctx context.Context, clusterId, username, namespace, podName,
-	containerName string) (*types.PodContext, error) {
+func queryByContainerName(ctx context.Context,
+	clusterId, username, namespace, podName, containerName, shell string) (*types.PodContext, error) {
 	startupMgr, err := NewStartupManager(ctx, clusterId)
 	if err != nil {
 		return nil, err
@@ -69,13 +76,20 @@ func queryByContainerName(ctx context.Context, clusterId, username, namespace, p
 		Namespace:      container.Namespace,
 		PodName:        container.PodName,
 		ContainerName:  container.ContainerName,
-		Commands:       manager.DefaultCommand,
+		Commands:       manager.ShCommand, // 直连容器默认使用 sh
+	}
+	switch shell {
+	case manager.ShellSH:
+		podCtx.Commands = manager.ShCommand
+	case manager.ShellBash:
+		podCtx.Commands = manager.BashCommand
 	}
 	return podCtx, nil
 }
 
 // queryByClusterIdExternal 通过clusterId, 使用外部集群的方式访问 kubectl 容器
-func queryByClusterIdExternal(ctx context.Context, clusterId, username, targetClusterId string) (*types.PodContext,
+func queryByClusterIdExternal(ctx context.Context,
+	clusterId, username, targetClusterId, shell string) (*types.PodContext,
 	error) {
 	startupMgr, err := NewStartupManager(ctx, clusterId)
 	if err != nil {
@@ -119,13 +133,19 @@ func queryByClusterIdExternal(ctx context.Context, clusterId, username, targetCl
 		PodName:        podName,
 		Namespace:      namespace,
 		ContainerName:  KubectlContainerName,
-		Commands:       []string{"/bin/bash"}, // 进入 kubectld pod， 固定使用bash
+		Commands:       manager.BashCommand, // 进入 kubectld pod， 默认使用 bash
+	}
+	switch shell {
+	case manager.ShellSH:
+		podCtx.Commands = manager.ShCommand
+	case manager.ShellBash:
+		podCtx.Commands = manager.BashCommand
 	}
 	return podCtx, nil
 }
 
 // queryByClusterIdInternal 通过clusterId, 使用inCluster的方式访问 kubectl 容器
-func queryByClusterIdInternal(ctx context.Context, clusterId, username string) (*types.PodContext, error) {
+func queryByClusterIdInternal(ctx context.Context, clusterId, username, shell string) (*types.PodContext, error) {
 	startupMgr, err := NewStartupManager(ctx, clusterId)
 	if err != nil {
 		return nil, err
@@ -169,7 +189,13 @@ func queryByClusterIdInternal(ctx context.Context, clusterId, username string) (
 		PodName:        podName,
 		Namespace:      namespace,
 		ContainerName:  KubectlContainerName,
-		Commands:       []string{"/bin/bash"}, // 进入 kubectld pod， 固定使用bash
+		Commands:       manager.BashCommand, // 进入 kubectld pod， 默认使用 bash
+	}
+	switch shell {
+	case manager.ShellSH:
+		podCtx.Commands = manager.ShCommand
+	case manager.ShellBash:
+		podCtx.Commands = manager.BashCommand
 	}
 	return podCtx, nil
 }
@@ -182,6 +208,7 @@ type ConsoleQuery struct {
 	ContainerName string `form:"container_name,omitempty"`
 	Source        string `form:"source,omitempty"`
 	Lang          string `form:"lang,omitempty"`
+	Shell         string `form:"shell,omitempty"`
 }
 
 // MakeEncodedQuery 去掉空值后组装url
@@ -194,6 +221,7 @@ func (q *ConsoleQuery) MakeEncodedQuery() string {
 	values.Set("container_name", q.ContainerName)
 	values.Set("source", q.Source)
 	values.Set("lang", q.Lang)
+	values.Set("shell", q.Shell)
 
 	// 去掉空值
 	for k := range values {
@@ -225,6 +253,7 @@ func QueryAuthPodCtx(ctx context.Context, clusterId, username string, consoleQue
 			consoleQuery.Namespace,
 			consoleQuery.PodName,
 			consoleQuery.ContainerName,
+			consoleQuery.Shell,
 		)
 		return podCtx, err
 	}
@@ -236,6 +265,7 @@ func QueryAuthPodCtx(ctx context.Context, clusterId, username string, consoleQue
 			clusterId,
 			username,
 			consoleQuery.ContainerId,
+			consoleQuery.Shell,
 		)
 		return podCtx, err
 	}
@@ -251,7 +281,8 @@ func QueryAuthPodCtx(ctx context.Context, clusterId, username string, consoleQue
 			ctx,
 			config.G.WebConsole.AdminClusterId,
 			username,
-			clusterId)
+			clusterId,
+			consoleQuery.Shell)
 		return podCtx, err
 	}
 
@@ -260,6 +291,7 @@ func QueryAuthPodCtx(ctx context.Context, clusterId, username string, consoleQue
 		ctx,
 		clusterId,
 		username,
+		consoleQuery.Shell,
 	)
 	return podCtx, err
 }
@@ -308,6 +340,7 @@ func QueryOpenPodCtx(ctx context.Context, clusterId string, consoleQuery *OpenQu
 			consoleQuery.Namespace,
 			consoleQuery.PodName,
 			consoleQuery.ContainerName,
+			"",
 		)
 		return podCtx, err
 	}
@@ -319,6 +352,7 @@ func QueryOpenPodCtx(ctx context.Context, clusterId string, consoleQuery *OpenQu
 			clusterId,
 			consoleQuery.Operator,
 			consoleQuery.ContainerId,
+			"",
 		)
 		return podCtx, err
 	}

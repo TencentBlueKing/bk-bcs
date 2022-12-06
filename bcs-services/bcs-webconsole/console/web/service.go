@@ -19,6 +19,7 @@ import (
 	"net/url"
 	"path"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/metrics"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/podmanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/route"
@@ -92,6 +93,9 @@ func (s *service) IndexPageHandler(c *gin.Context) {
 		"session_url":      sessionUrl,
 		"login_url":        loginUrl,
 		"perm_request_url": promRequestUrl,
+		"guide_doc_links":  config.G.WebConsole.GuideDocLinks,
+		"project_id":       projectId,
+		"cluster_id":       clusterId,
 		"settings":         settings,
 	}
 

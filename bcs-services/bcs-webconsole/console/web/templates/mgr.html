@@ -5,8 +5,10 @@
     <link rel="stylesheet" href="{{ .settings.SITE_URL }}/web/static/assets/vue/bk-magic-vue.min.css">
     <title>BCS Console Mgr</title>
     <style type="text/css">
-        .bk-notify {
-            padding: 9px 15px;
+        html,
+        body {
+            overflow: hidden;
+            margin: 0px;
         }
 
         .console-iframe {
@@ -14,6 +16,32 @@
             height: 100%;
             border: none;
             background: #000;
+        }
+        .bk-tab-header {
+            height: 42px !important;
+        }
+
+        .bk-tab-header-setting {
+            height: 42px !important;
+            line-height: 42px !important;
+        }
+
+        .bk-tab-label-list {
+            height: 42px !important;
+        }
+
+        .bk-tab-label-item {
+            height: 42px !important;
+            line-height: 42px !important;
+        }
+
+        .bk-tab-label {
+            height: 42px !important;
+        }
+        
+        .bk-tab-add-controller {
+            height: 42px !important;
+            line-height: 42px !important;
         }
 
         .bk-tab-section {
@@ -29,23 +57,6 @@
             padding: 0;
         }
 
-        .close {
-            width: 24px;
-            height: 24px;
-            text-align: center;
-            line-height: 24px;
-            display: inline-block;
-            font-style: normal;
-            font-size: 12px;
-            background: #eee;
-            border-radius: 50%;
-            overflow: hidden;
-            vertical-align: middle;
-            margin-left: 10px;
-            color: #999;
-            cursor: pointer;
-            transform: scale(0.9);
-        }
 
         #app .bk-dropdown-menu {
             display: inline-block;
@@ -54,19 +65,6 @@
             left: 0;
             top: 42px;
             z-index: 1000;
-            background: #fff;
-            width: 200px;
-        }
-
-        .bk-tab-label-wrapper .bk-tab-label-list .bk-tab-label-item {
-            min-width: 200px;
-            padding: 0 18px 0 35px;
-            text-align: left;
-        }
-
-        .bk-tab-label-wrapper .bk-tab-label-list .bk-tab-label-item.has-close:hover {
-            padding-left: 35px !important;
-            padding-right: 10px !important;
         }
 
         [v-cloak] {
@@ -85,43 +83,9 @@
             opacity: 0;
         }
 
-        .bk-tab-label-wrapper .bk-tab-label-list .bk-tab-label-item .bk-tab-close-controller {
-            position: absolute;
-            right: 10px;
-            top: 13px;
-        }
-
-        .bk-tab-label-wrapper .bk-tab-label-list .bk-tab-label-item.active .bk-tab-label {
-            font-weight: bold;
-            color: #3a84ff;
-        }
-
-        .bk-tab-label-wrapper .bk-tab-label-list .bk-tab-label-item.active .panel-count {
-            background-color: #3a84ff;
-        }
-
         .bk-dropdown-menu .bk-dropdown-list>li>a.selected {
             background: #ebf4ff;
             color: #3c96ff
-        }
-
-        .panel-count {
-            position: absolute;
-            left: 10px;
-            top: 13px;
-            width: 16px;
-            height: 16px;
-            padding: 0 4px;
-            line-height: 16px;
-            border-radius: 2px;
-            text-align: center;
-            font-style: normal;
-            font-weight: normal;
-            font-size: 12px;
-            color: #fff;
-            background-color: #C4C6CC;
-            display: inline-block;
-            margin-left: 3px;
         }
 
         .bk-dropdown-menu {
@@ -134,21 +98,22 @@
 <body style="background-color: #000;">
     <div id="app">
         <input type="text" id="short-focus" style="opacity: 0; position: absolute; z-index: 0;" @keyup="handleInput" />
-        <bk-tab addable :active.sync="active" :closable="closable" @add-panel="showDropdown" @close-panel="closePanel" @tab-change="handleTabChange" v-bk-clickoutside="handleClick">
+        <bk-tab addable :active.sync="active" type="border-card" :closable="closable" @add-panel="showDropdown"
+            @close-panel="closePanel" @tab-change="handleTabChange" v-bk-clickoutside="handleClick">
             <bk-tab-panel v-for="(panel, index) in panels" v-bind="panel" :key="panel.name">
-                <template slot="label">
-                    <i class="panel-count">$[index + 1]</i>
-                    <span class="panel-name">$[panel.label]</span>
-                </template>
-                <iframe @click="handleClick" :src="panel.url" :id="panel.name" :name="panel.name" class="console-iframe" :style="{width: `${winWidth - 40}px`, height: `${winHeight - 100}px`}"></iframe>
+                <iframe @click="handleClick" :src="panel.url" :id="panel.name" :name="panel.name" class="console-iframe"
+                    :style="{width: `${winWidth}px`, height: `${winHeight - 42}px`}"></iframe>
             </bk-tab-panel>
         </bk-tab>
         <div class="mask" v-show="isDropdownShow"></div>
-        <div class="bk-dropdown-menu" :style="{left: `${dropdownLeft}px`, opacity: (isDropdownShow ? 1 : 0)}" v-cloak v-show="isDropdownShow">
+        <div class="bk-dropdown-menu" :style="{left: `${dropdownLeft}px`, opacity: (isDropdownShow ? 1 : 0)}" v-cloak
+            v-show="isDropdownShow">
             <div class="bk-dropdown-content right-align is-show" v-cloak>
                 <ul class="bk-dropdown-list">
                     <li>
-                        <a href="javascript:;" v-cloak :class="{selected: index === selectIndex}" @click.stop.prevent="addTerminal(cluster)" v-for="(cluster, index) of clusterList">$[cluster.clusterName]</a>
+                        <a href="javascript:;" v-cloak :class="{selected: index === selectIndex}"
+                            @click.stop.prevent="addTerminal(cluster)"
+                            v-for="(cluster, index) of clusterList">$[cluster.clusterName]</a>
                     </li>
                 </ul>
             </div>
@@ -161,20 +126,24 @@
         var app = new Vue({
             delimiters: ['$[', ']'],
             el: '#app',
-            data: {
-                tabIndex: 0,
-                panels: [],
-                active: '',
-                winWidth: 1270,
-                winHeight: 500,
-                projectId: "{{ .project_id }}",
-                siteUrl: "{{ .settings.SITE_URL }}",
-                loginUrl: "{{ .login_url }}",
-                permRequestUrl: "{{ .perm_request_url }}",
-                dropdownLeft: 0,
-                isDropdownShow: false,
-                clusterList: [],
-                selectIndex: -1
+            data() {
+                return {
+                    dialogVisiable: false,
+                    tabIndex: 0,
+                    panels: [],
+                    active: '',
+                    winWidth: 1270,
+                    winHeight: 500,
+                    projectId: "{{ .project_id }}",
+                    siteUrl: "{{ .settings.SITE_URL }}",
+                    loginUrl: "{{ .login_url }}",
+                    permRequestUrl: "{{ .perm_request_url }}",
+                    dropdownLeft: 0,
+                    isDropdownShow: false,
+                    clusterList: [],
+                    selectIndex: -1,
+                    position: 'middle',
+                }
             },
             computed: {
                 closable() {
@@ -185,10 +154,13 @@
                 this.init()
             },
             methods: {
+                clickButton() {
+                    this.dialogVisiable = true;
+                },
                 init() {
                     this.winWidth = $(window).width()
                     this.winHeight = $(window).height()
-                    $(window).resize(function () {
+                    $(window).resize(() => {
                         this.winWidth = $(window).width()
                         this.winHeight = $(window).height()
                     })
@@ -199,10 +171,9 @@
                     this.watchMessage()
                     this.watchShortcut()
                     self = this
-                    const h = this.$createElement
+                    const h = self.$createElement
                     $.getJSON(cluster_url, function (result) {
                         if (result.code != 0) {
-                            console.log(result.message)
                             self.$bkMessage({ theme: 'error', message: result.message, delay: 0 })
                         } else if (result.data.length == 0) {
                             self.$bkMessage({
@@ -216,41 +187,54 @@
                         }
                     }).fail(function (result) {
                         if (result.status == 401) {
-                            self.$bkMessage({
-                                theme: 'error', message: h('span', {}, [
-                                    result.responseJSON.message,
-                                    h('a', {
-                                        style: {
-                                            'text-decoration': 'none',
-                                            'color': '#3a84ff',
-                                            'margin-left': '20px'
-                                        },
+                            self.$bkInfo({
+                                type: 'warning',
+                                title: result.responseJSON.message,
+                                showFooter: false,
+                                maskClose: false,
+                                subHeader: h('div', {}, [
+                                    h('bk-button', {
                                         attrs: {
-                                            href: `${self.loginUrl}`,
-                                            target: "_blank"
+                                            theme: "primary",
+                                        },
+                                        on: {
+                                            click: () => {
+                                                window.open(self.loginUrl);
+                                            }
                                         }
-                                    }, ['前往登录'])
-                                ]), delay: 0
+                                    }, '前往登录'),
+                                ]),
+                                delay: 0
                             })
                         } else if (result.status == 403) {
-                            self.$bkMessage({
-                                theme: 'error', message: h('span', {}, [
-                                    result.responseJSON.message,
-                                    h('a', {
-                                        style: {
-                                            'text-decoration': 'none',
-                                            'color': '#3a84ff',
-                                            'margin-left': '20px'
-                                        },
+                            self.$bkInfo({
+                                type: 'warning',
+                                title: result.responseJSON.message,
+                                showFooter: false,
+                                maskClose: false,
+                                subHeader: h('div', {}, [
+                                    h('bk-button', {
                                         attrs: {
-                                            href: `${self.permRequestUrl}`,
-                                            target: "_blank"
+                                            theme: "primary",
+                                        },
+                                        on: {
+                                            click: () => {
+                                                window.open(self.permRequestUrl);
+                                            }
                                         }
-                                    }, ['前往申请'])
-                                ]), delay: 0
+                                    }, '前往申请'),
+                                ]),
+                                delay: 0
                             })
                         } else {
-                            self.$bkMessage({ theme: 'error', message: result.responseJSON.message, delay: 0 })
+                            self.$bkInfo({
+                                type: 'error',
+                                title: '发生未知错误',
+                                subTitle: result.responseJSON.message,
+                                showFooter: false,
+                                maskClose: false,
+                                delay: 0
+                            })
                         }
                     })
 
@@ -267,7 +251,6 @@
                     return clusterMatcher[1]
                 },
                 handleTabChange(name) {
-                    console.log(name)
                     const panel = this.panels.find(item => {
                         return item.name === name
                     })
@@ -320,7 +303,7 @@
                     const self = this
                     const clusterId = data.clusterId
                     let clusterName = 'default'
-                    const url = `${this.siteUrl}/projects/${this.projectId}/clusters/${clusterId}/?source=mgr`
+                    const url = `${this.siteUrl}/projects/${this.projectId}/clusters/${clusterId}/?source=mgr&shell=bash`
                     const tabKeys = self.panels.map(item => {
                         return item.clusterName
                     })
@@ -387,9 +370,9 @@
                     }
                     this.$bkNotify({
                         theme: 'primary',
-                        offsetY: 1,
-                        delay: 3000,
-                        message: `【${index + 1}】${panel.label} 连接已经断开`
+                        offsetY: 80,
+                        position: 'top-right',
+                        message: `${panel.label} 连接已经断开`
                     })
                     this.isDropdownShow = false
                     this.selectIndex = -1
@@ -413,7 +396,7 @@
                     })
                     this.isDropdownShow = false
                     this.isSelectIndex = -1
-                }
+                },
             }
         })
     </script>
