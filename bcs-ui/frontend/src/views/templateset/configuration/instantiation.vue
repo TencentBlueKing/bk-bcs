@@ -270,13 +270,14 @@
                 </div>
                 <div class="checker-inner">
                   <span v-bk-tooltips="$t('没有找到命名空间请点击`同步命名空间`按钮')">
+                    <!-- 权限详情接口目前暂不支持多个actionID -->
                     <bcs-button
                       text
                       class="mr10"
                       @click.stop="handleSyncNamespace(item.cluster_id)"
                       v-authority="{
                         clickable: true,
-                        actionId: ['cluster_view', 'namespace_create'],
+                        actionId: 'namespace_create',
                         autoUpdatePerms: true,
                         permCtx: {
                           resource_type: 'cluster',

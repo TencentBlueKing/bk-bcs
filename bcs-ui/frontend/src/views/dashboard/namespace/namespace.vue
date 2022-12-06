@@ -5,13 +5,14 @@
     v-bkloading="{ isLoading: namespaceLoading }">
     <LayoutRow class="mb15">
       <template #left>
+        <!-- 权限详情接口目前暂不支持多个actionID -->
         <bcs-button
           class="w-[100px]"
           theme="primary"
           icon="plus"
           v-authority="{
             clickable: true,
-            actionId: ['cluster_view', 'namespace_create'],
+            actionId: 'namespace_create',
             autoUpdatePerms: true,
             permCtx: {
               resource_type: 'cluster',
@@ -139,7 +140,7 @@
           {{ row.createTime ? timeZoneTransForm(row.createTime, false) : '--' }}
         </template>
       </bcs-table-column>
-      <bcs-table-column :label="$t('操作')" width="320">
+      <bcs-table-column :label="$t('操作')" width="200">
         <template #default="{ row }">
           <bk-button
             text
@@ -175,9 +176,8 @@
             <template #content>
               <ul class="bcs-dropdown-list">
                 <template v-if="!isSharedCluster">
-                  <bk-button
+                  <li
                     v-if="!isSharedCluster"
-                    text
                     class="bcs-dropdown-item"
                     v-authority="{
                       clickable: webAnnotations.perms[row.name]
@@ -193,10 +193,9 @@
                     }"
                     @click="handleSetLabel(row)">
                     {{ $t('设置标签') }}
-                  </bk-button>
-                  <bk-button
+                  </li>
+                  <li
                     v-if="!isSharedCluster"
-                    text
                     class="bcs-dropdown-item"
                     v-authority="{
                       clickable: webAnnotations.perms[row.name]
@@ -212,11 +211,10 @@
                     }"
                     @click="handleSetAnnotations(row)">
                     {{ $t('设置注解') }}
-                  </bk-button>
+                  </li>
                 </template>
-                <bk-button
+                <li
                   class="bcs-dropdown-item w-[80px]"
-                  text
                   :disabled="applyMap(row.itsmTicketType).delete"
                   v-authority="{
                     clickable: webAnnotations.perms[row.name]
@@ -232,7 +230,7 @@
                   }"
                   @click="handleDeleteNamespace(row)">
                   {{ $t('删除') }}
-                </bk-button>
+                </li>
               </ul>
             </template>
           </bk-popover>
@@ -466,7 +464,7 @@ export default defineComponent({
         message: $i18n.t('请设置MEN、CPU配额，且两者最小值不小于0'),
         trigger: 'blur',
       },
-    ], ;
+    ];
 
     const {
       variablesList,
