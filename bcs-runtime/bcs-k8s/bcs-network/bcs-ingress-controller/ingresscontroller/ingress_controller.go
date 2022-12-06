@@ -20,19 +20,20 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/constant"
-	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/generator"
-	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/metrics"
-	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/option"
-	netcommon "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/pkg/common"
-	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
 	"github.com/pkg/errors"
 	k8smetav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	k8stypes "k8s.io/apimachinery/pkg/types"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/constant"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/generator"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/ingresscache"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/metrics"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/option"
+	netcommon "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/pkg/common"
+	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
+
 	"github.com/go-logr/logr"
-	k8sappsv1 "k8s.io/api/apps/v1"
 	k8scorev1 "k8s.io/api/core/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/client-go/tools/record"
@@ -53,17 +54,25 @@ type IngressReconciler struct {
 
 	IngressEventer record.EventRecorder
 
-	SvcFilter *ServiceFilter
-	EpsFilter *EndpointsFilter
+	EpsFIlter *EndpointsFilter
 	PodFilter *PodFilter
-	StsFilter *StatefulSetFilter
 
 	IngressConverter *generator.IngressConverter
+
+	Cache ingresscache.IngressCache
 }
 
 // getIngressPredicate filter ingress events
-func getIngressPredicate() predicate.Predicate {
+func (ir *IngressReconciler) getIngressPredicate() predicate.Predicate {
 	return predicate.Funcs{
+		CreateFunc: func(createEvent event.CreateEvent) bool {
+			ingress, ok := createEvent.Object.(*networkextensionv1.Ingress)
+			if ok {
+				blog.V(5).Infof("add ingress'%s/%s' cache", ingress.GetNamespace(), ingress.GetName())
+				ir.Cache.Add(ingress)
+			}
+			return true
+		},
 		UpdateFunc: func(e event.UpdateEvent) bool {
 			newIngress, okNew := e.ObjectNew.(*networkextensionv1.Ingress)
 			oldIngress, okOld := e.ObjectOld.(*networkextensionv1.Ingress)
@@ -76,6 +85,17 @@ func getIngressPredicate() predicate.Predicate {
 				reflect.DeepEqual(newIngress.DeletionTimestamp, oldIngress.DeletionTimestamp) {
 				blog.V(5).Infof("ingress %+v updated, but spec and annotation and finalizer not change", newIngress)
 				return false
+			}
+			blog.V(5).Infof("update ingress'%s/%s' cache", newIngress.GetNamespace(), newIngress.GetName())
+			ir.Cache.Remove(oldIngress)
+			ir.Cache.Add(newIngress)
+			return true
+		},
+		DeleteFunc: func(deleteEvent event.DeleteEvent) bool {
+			ingress, ok := deleteEvent.Object.(*networkextensionv1.Ingress)
+			if ok {
+				blog.V(5).Infof("delete ingress'%s/%s' cache", ingress.GetNamespace(), ingress.GetName())
+				ir.Cache.Remove(ingress)
 			}
 			return true
 		},
@@ -217,9 +237,7 @@ func (ir *IngressReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&networkextensionv1.Ingress{}).
 		Watches(&source.Kind{Type: &k8scorev1.Pod{}}, ir.PodFilter).
-		Watches(&source.Kind{Type: &k8scorev1.Service{}}, ir.SvcFilter).
-		Watches(&source.Kind{Type: &k8scorev1.Endpoints{}}, ir.EpsFilter).
-		Watches(&source.Kind{Type: &k8sappsv1.StatefulSet{}}, ir.StsFilter).
-		WithEventFilter(getIngressPredicate()).
+		Watches(&source.Kind{Type: &k8scorev1.Endpoints{}}, ir.EpsFIlter).
+		WithEventFilter(ir.getIngressPredicate()).
 		Complete(ir)
 }

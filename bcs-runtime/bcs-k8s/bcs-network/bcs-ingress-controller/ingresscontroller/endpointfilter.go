@@ -13,8 +13,6 @@
 package ingresscontroller
 
 import (
-	"context"
-
 	k8scorev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/util/workqueue"
@@ -23,39 +21,35 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/ingresscache"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/metrics"
-	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
 )
 
 // EndpointsFilter filter for endpoints event
 type EndpointsFilter struct {
-	filterName string
-	cli        client.Client
+	filterName   string
+	cli          client.Client
+	ingressCache ingresscache.IngressCache
 }
 
 // NewEndpointsFilter create endpoints filter
-func NewEndpointsFilter(cli client.Client) *EndpointsFilter {
+func NewEndpointsFilter(cli client.Client, endpointsCache *ingresscache.Cache) *EndpointsFilter {
 	return &EndpointsFilter{
-		filterName: "endpoints",
-		cli:        cli,
+		filterName:   "endpoints",
+		cli:          cli,
+		ingressCache: endpointsCache,
 	}
 }
 
 func (ef *EndpointsFilter) enqueueEndpointsRelatedIngress(eps *k8scorev1.Endpoints, q workqueue.RateLimitingInterface) {
-	ingressList := &networkextensionv1.IngressList{}
-	err := ef.cli.List(context.TODO(), ingressList, &client.ListOptions{})
-	if err != nil {
-		blog.Warnf("list bcs ingresses failed, err %s", err.Error())
+	ingressMetas := ef.ingressCache.GetRelatedIngressOfService(eps.GetNamespace(), eps.GetName())
+	if len(ingressMetas) == 0 {
 		return
 	}
-	ingresses := findIngressesByService(eps.GetName(), eps.GetNamespace(), ingressList)
-	if len(ingresses) == 0 {
-		return
-	}
-	for _, ingress := range ingresses {
+	for _, meta := range ingressMetas {
 		q.Add(reconcile.Request{NamespacedName: types.NamespacedName{
-			Name:      ingress.GetName(),
-			Namespace: ingress.GetNamespace(),
+			Name:      meta.Name,
+			Namespace: meta.Namespace,
 		}})
 	}
 }

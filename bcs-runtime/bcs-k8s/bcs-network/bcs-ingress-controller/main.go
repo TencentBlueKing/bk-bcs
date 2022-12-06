@@ -47,6 +47,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/eventer"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/generator"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/httpsvr"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/ingresscache"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/option"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/portpoolcache"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/webhookserver"
@@ -264,17 +265,17 @@ func main() {
 		blog.Errorf("create ingress converter failed, err %s", err.Error())
 		os.Exit(1)
 	}
+	ingressCache := ingresscache.NewDefaultCache()
 	if err = (&ingressctrl.IngressReconciler{
 		Ctx:              context.Background(),
 		Client:           mgr.GetClient(),
 		Log:              ctrl.Log.WithName("controllers").WithName("Ingress"),
 		Option:           opts,
 		IngressEventer:   mgr.GetEventRecorderFor("bcs-ingress-controller"),
-		SvcFilter:        ingressctrl.NewServiceFilter(mgr.GetClient()),
-		EpsFilter:        ingressctrl.NewEndpointsFilter(mgr.GetClient()),
-		PodFilter:        ingressctrl.NewPodFilter(mgr.GetClient()),
-		StsFilter:        ingressctrl.NewStatefulSetFilter(mgr.GetClient()),
+		EpsFIlter:        ingressctrl.NewEndpointsFilter(mgr.GetClient(), ingressCache),
+		PodFilter:        ingressctrl.NewPodFilter(mgr.GetClient(), ingressCache),
 		IngressConverter: ingressConverter,
+		Cache:            ingressCache,
 	}).SetupWithManager(mgr); err != nil {
 		blog.Errorf("unable to create ingress reconciler, err %s", err.Error())
 		os.Exit(1)
