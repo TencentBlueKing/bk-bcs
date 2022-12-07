@@ -48,14 +48,16 @@ func FormatGWorkload(manifest map[string]interface{}) map[string]interface{} {
 // FormatGDeploy ...
 func FormatGDeploy(manifest map[string]interface{}) map[string]interface{} {
 	ret := FormatGWorkload(manifest)
-	ret["status"] = newGDeployStatusParser(manifest).Parse()
+	// 注：前端针对自定义资源，会根据 AdditionalColumns 自动获取字段数据并展示，
+	// 如果使用 status 字段，则会冲突导致数据覆盖（普通资源不会存在该问题）
+	ret["resStatus"] = newGDeployStatusParser(manifest).Parse()
 	return ret
 }
 
 // FormatGSTS ...
 func FormatGSTS(manifest map[string]interface{}) map[string]interface{} {
 	ret := FormatGWorkload(manifest)
-	ret["status"] = newGSTSStatusParser(manifest).Parse()
+	ret["resStatus"] = newGSTSStatusParser(manifest).Parse()
 	return ret
 }
 

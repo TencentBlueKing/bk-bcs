@@ -152,7 +152,7 @@ var lightGDeployManifest = map[string]interface{}{
 func TestFormatGDeploy(t *testing.T) {
 	ret := FormatGDeploy(lightGDeployManifest)
 	assert.Equal(t, []string{"nginx:latest"}, ret["images"])
-	assert.Equal(t, WorkloadStatusNormal, ret["status"])
+	assert.Equal(t, WorkloadStatusNormal, ret["resStatus"])
 }
 
 var lightGSTSManifest = map[string]interface{}{
@@ -186,7 +186,7 @@ var lightGSTSManifest = map[string]interface{}{
 func TestFormatGSTS(t *testing.T) {
 	ret := FormatGSTS(lightGSTSManifest)
 	assert.Equal(t, []string{"nginx:1.0.0"}, ret["images"])
-	assert.Equal(t, WorkloadStatusUpdating, ret["status"])
+	assert.Equal(t, WorkloadStatusUpdating, ret["resStatus"])
 }
 
 func TestGDeployStatusParser(t *testing.T) {
