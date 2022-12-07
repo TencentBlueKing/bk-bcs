@@ -549,6 +549,7 @@ func parseArgs4Install(install *action.Install, args []string, valueOpts *values
 		args[i] = strings.TrimRight(args[i], "=")
 	}
 	f := pflag.NewFlagSet("install", pflag.ContinueOnError)
+	var maxHistory int
 
 	f.BoolVar(&install.DisableHooks, "no-hooks", false,
 		"prevent hooks from running during install")
@@ -578,6 +579,8 @@ func parseArgs4Install(install *action.Install, args []string, valueOpts *values
 	f.BoolVar(&install.Atomic, "atomic", false,
 		"if set, the installation process deletes the installation on failure. "+
 			"The --wait flag will be set automatically if --atomic is used")
+	f.IntVar(&maxHistory, "history-max", defaultMaxHistory, "limit the maximum number of revisions saved "+
+		"per release. Use 0 for no limit")
 	f.BoolVar(&install.SkipCRDs, "skip-crds", false,
 		"if set, no CRDs will be installed. By default, CRDs are installed if not already present")
 	f.BoolVar(&install.SubNotes, "render-subchart-notes", false,

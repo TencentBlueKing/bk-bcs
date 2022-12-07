@@ -113,7 +113,7 @@ func (p *patcher) do(data *bytes.Buffer) (*bytes.Buffer, error) {
 		return nil, out.Err
 	}
 	if len(out.Files) == 0 {
-		return nil, fmt.Errorf("no data output from patcher")
+		return data, nil
 	}
 	return bytes.NewBuffer(out.Files[0].Bytes()), nil
 }

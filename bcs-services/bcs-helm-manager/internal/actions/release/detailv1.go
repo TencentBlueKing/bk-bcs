@@ -118,12 +118,12 @@ func (g *GetReleaseDetailV1Action) mergeRelease(detail *helmmanager.ReleaseDetai
 		detail.ChartVersion = &rl.ChartVersion
 		detail.UpdateTime = common.GetStringP(time.Unix(rl.UpdateTime, 0).Format(common.TimeFormat))
 		detail.Status = &rl.Status
+		detail.Message = &rl.Message
 	}
 	detail.Args = rl.Args
 	detail.ValueFile = &rl.ValueFile
 	detail.CreateBy = &rl.CreateBy
 	detail.UpdateBy = &rl.UpdateBy
-	detail.Message = &rl.Message
 	detail.Repo = &rl.Repo
 	return detail
 }
