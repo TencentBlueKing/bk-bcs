@@ -121,6 +121,28 @@ func ListEvent(req *restful.Request, resp *restful.Response) {
 	lib.ReturnRest(&lib.RestResponse{Resp: resp, Data: r, Extra: extra})
 }
 
+// PostEvent pods
+func PostEvent(req *restful.Request, resp *restful.Response) {
+	const (
+		handler = "PostEvent"
+	)
+	span := v1http.SetHTTPSpanContextInfo(req, handler)
+	defer span.Finish()
+
+	r, total, err := postEvent(req)
+	extra := map[string]interface{}{"total": total}
+	if err != nil {
+		utils.SetSpanLogTagError(span, err)
+		blog.Errorf("%s | err: %v", common.BcsErrStorageListResourceFailStr, err)
+		lib.ReturnRest(&lib.RestResponse{
+			Resp: resp, Data: []string{},
+			ErrCode: common.BcsErrStorageListResourceFail,
+			Message: common.BcsErrStorageListResourceFailStr, Extra: extra})
+		return
+	}
+	lib.ReturnRest(&lib.RestResponse{Resp: resp, Data: r, Extra: extra})
+}
+
 // WatchEvent watch event
 func WatchEvent(req *restful.Request, resp *restful.Response) {
 	watch(req, resp)
@@ -155,7 +177,7 @@ func init() {
 	actions.RegisterV1Action(actions.Action{
 		Verb: "GET", Path: eventPath, Params: nil, Handler: lib.MarkProcess(ListEvent)})
 	actions.RegisterV1Action(actions.Action{
-		Verb: "POST", Path: eventPath, Params: nil, Handler: lib.MarkProcess(ListEvent)})
+		Verb: "POST", Path: eventPath, Params: nil, Handler: lib.MarkProcess(PostEvent)})
 
 	eventWatchPath := urlPath("/events/watch")
 	actions.RegisterV1Action(actions.Action{

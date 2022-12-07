@@ -254,7 +254,7 @@ func queryOrCreateIndex(ctx context.Context, clusterID string) error {
 		hasIndex, err := dbutils.HasIndex(&dbutils.DBOperate{
 			Context:      ctx,
 			DBConfig:     dbConfig,
-			ResourceType: resourceTypeTag,
+			ResourceType: TablePrefix + clusterID,
 			IndexName:    idxName + "_idx",
 		})
 		if err != nil {

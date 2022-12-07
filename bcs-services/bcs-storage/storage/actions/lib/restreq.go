@@ -68,6 +68,34 @@ func GetQueryParamInt64(req *restful.Request, key string, defaultValue int64) (i
 	return strconv.ParseInt(s, 10, 64)
 }
 
+// GetJsonParamStringArray get string array from json map parameter
+func GetJsonParamStringArray(params map[string]string, key, sep string) []string {
+	s := params[key]
+	if len(s) == 0 {
+		return nil
+	}
+	fields := strings.Split(s, sep)
+	return fields
+}
+
+// GetJsonParamInt get int from json map parameter
+func GetJsonParamInt(params map[string]string, key string, defaultValue int) (int, error) {
+	s := params[key]
+	if len(s) == 0 {
+		return defaultValue, nil
+	}
+	return strconv.Atoi(s)
+}
+
+// GetJsonParamInt64 get int64 from json map parameter
+func GetJsonParamInt64(params map[string]string, key string, defaultValue int64) (int64, error) {
+	s := params[key]
+	if len(s) == 0 {
+		return defaultValue, nil
+	}
+	return strconv.ParseInt(s, 10, 64)
+}
+
 func buildLeafCondition(key, value, sep string, op operator.Operator) *operator.Condition {
 	valueList := strings.Split(value, sep)
 	if len(valueList) == 1 && strings.TrimSpace(valueList[0]) == "" {

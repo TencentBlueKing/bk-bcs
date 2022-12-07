@@ -3,10 +3,7 @@ module github.com/Tencent/bk-bcs/bcs-services/bcs-storage
 go 1.17
 
 replace (
-	github.com/Tencent/bk-bcs/bcs-common => ../../bcs-common
-	// google.golang.org/grpc => google.golang.org/grpc v1.26.0
-	// github.com/micro/go-micro/v2 => github.com/OvertimeDog/go-micro/v2 v2.9.3
-	// github.com/Tencent/bk-bcs/bcs-common => github.com/Tencent/bk-bcs/bcs-common v0.0.0-20210818040851-76fdc539dc33
+	github.com/Tencent/bk-bcs/bcs-common => github.com/Tencent/bk-bcs/bcs-common v0.0.0-20221205083018-bf769e1603a5
 	github.com/Tencent/bk-bcs/bcs-mesos/kubebkbcsv2 => github.com/Tencent/bk-bcs/bcs-mesos/kubebkbcsv2 v0.0.0-20210517125505-0f40c4b365cb
 	github.com/coreos/bbolt v1.3.4 => go.etcd.io/bbolt v1.3.4
 	github.com/haproxytech/client-native => github.com/abstractmj/client-native v1.2.8
@@ -16,7 +13,7 @@ replace (
 )
 
 require (
-	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20221111075437-260093154b99
+	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20221205083018-bf769e1603a5
 	github.com/deckarep/golang-set v1.8.0
 	github.com/emicklei/go-restful v2.15.0+incompatible
 	github.com/google/uuid v1.3.0
