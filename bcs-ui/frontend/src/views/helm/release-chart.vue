@@ -174,6 +174,22 @@
               <i class="bcs-icon bcs-icon-info-circle"></i>
             </span>
           </div>
+          <div v-if="isEdit" class="flex items-center text-[14px] mt-[10px]">
+            {{$t('保留最大历史版本')}}
+            <bcs-input
+              type="number"
+              :min="1"
+              :max="100"
+              class="w-[150px] ml-[5px]"
+              v-model="args['--history-max']">
+              <template #append>
+                <div class="group-text">{{$t('个')}}</div>
+              </template>
+            </bcs-input>
+            <span class="bcs-icon-btn ml-[5px]" v-bk-tooltips="$t('--history-max，可用于回滚的历史版本个数')">
+              <i class="bcs-icon bcs-icon-info-circle"></i>
+            </span>
+          </div>
           <!-- 自定义参数 -->
           <div class="mt-[10px]">
             <bcs-button text size="small" class="!pl-[0px]" @click="showCustomArgs = !showCustomArgs">
@@ -426,6 +442,9 @@ export default defineComponent({
       return name && chartVersion && clusterID.value && namespace;
     });
     const isEdit = computed(() => !!releaseName.value && !!namespace.value);
+    if (isEdit.value) {
+      args.value['--history-max'] = 10;
+    }
 
     // 设置当前编辑器内容
     const setValuesContent = () => {
@@ -574,7 +593,7 @@ export default defineComponent({
     };
 
     // 表单化key
-    const formArgsKey = ['--skip-crds', '--wait-for-jobs', '--wait', '--timeout', '--description'];
+    const formArgsKey = ['--skip-crds', '--wait-for-jobs', '--wait', '--timeout', '--history-max', '--description'];
     // 详情数据
     const isLoading = ref(false);
     const handleGetDetailData = async () => {

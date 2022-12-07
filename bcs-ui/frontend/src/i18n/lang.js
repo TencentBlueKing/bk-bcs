@@ -3417,5 +3417,7 @@ export default {
   ],
   "非本平台部署release, 无法获取chart仓库信息, 暂不支持release更新": [
     "Non -this platform deploys Release, cannot obtain chart warehouse information, and does not support the release update"
-  ]
+  ],
+  "--history-max，可用于回滚的历史版本个数": ['--history-max, the number of historical versions available for rollback'],
+  "保留最大历史版本": ['Keep the maximum historical version'],
 }

@@ -286,7 +286,8 @@ export default {
     },
     // 自定义资源删除
     async customResourceDelete(context, params) {
-      const data = await customResourceDelete(params).catch(() => false);
+      const data = await customResourceDelete(params).then(() => true)
+        .catch(() => false);
       return data;
     },
     // 重新调度
