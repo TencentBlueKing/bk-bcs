@@ -15,18 +15,21 @@ package main
 
 import (
 	"crypto/tls"
-	"fmt"
+	"net"
 	"os"
 	"os/signal"
 	"runtime"
+	"strconv"
 	"strings"
 	"syscall"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
+	"github.com/Tencent/bk-bcs/bcs-common/common/types"
 	"github.com/Tencent/bk-bcs/bcs-common/common/version"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/registry"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/job/notify"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/options"
@@ -99,13 +102,27 @@ func turnOnEtcdRegistry(opt *options.UserManagerOptions) (registry.Registry, err
 		}
 	}
 
+	ipv4 := opt.Address
+	ipv6 := opt.IPv6Address
+	port := strconv.Itoa(int(opt.Port))
+
+	// service inject metadata to discovery center
+	metadata := make(map[string]string)
+	metadata["httpport"] = strconv.Itoa(int(opt.Port))
+
+	// 适配单栈环境（ipv6注册地址不能是本地回环地址）
+	if v := net.ParseIP(ipv6); v != nil && !v.IsLoopback() {
+		metadata[types.IPV6] = net.JoinHostPort(ipv6, port)
+	}
+
 	// init go-micro registry
 	eOption := &registry.Options{
 		Name:         userManager,
 		Version:      version.BcsVersion,
 		RegistryAddr: strings.Split(opt.Etcd.Address, ","),
-		RegAddr:      fmt.Sprintf("%s:%d", opt.Address, opt.Port),
+		RegAddr:      net.JoinHostPort(ipv4, port),
 		Config:       tlsCfg,
+		Meta:         metadata,
 	}
 	etcdRegistry := registry.NewEtcdRegistry(eOption)
 	if err := etcdRegistry.Register(); err != nil {

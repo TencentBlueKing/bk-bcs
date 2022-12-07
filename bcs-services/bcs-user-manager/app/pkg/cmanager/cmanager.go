@@ -201,7 +201,7 @@ func (cm *ClusterManagerClient) getClusterManagerClient() (bcsapicm.ClusterManag
 
 	cfg := bcsapi.Config{}
 	// discovery hosts
-	cfg.Hosts = []string{node.Address}
+	cfg.Hosts = discovery.GetServerEndpointsFromRegistryNode(node)
 	cfg.TLSConfig = cm.opts.ClientTLSConfig
 	cfg.InnerClientName = "bcs-user-manager"
 	clusterCli := bcsapi.NewClusterManager(&cfg)

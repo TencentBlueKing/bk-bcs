@@ -63,7 +63,7 @@ type UserManager struct {
 func NewUserManager(conf *config.UserMgrConfig) *UserManager {
 	userManager := &UserManager{
 		config:   conf,
-		httpServ: httpserver.NewHttpServer(conf.Port, conf.Address, conf.Sock),
+		httpServ: httpserver.NewIPv6HttpServer(conf.Port, conf.Address, conf.IPv6Address, conf.Sock),
 	}
 
 	if conf.ServCert.IsSSL {

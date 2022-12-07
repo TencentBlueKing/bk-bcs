@@ -20,10 +20,11 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/config"
-
+	"github.com/Tencent/bk-bcs/bcs-common/common/http/ipv6server"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/config"
 )
 
 const (
@@ -66,9 +67,16 @@ func RunMetric(conf *config.UserMgrConfig) {
 	prometheus.MustRegister(requestLatency)
 
 	// prometheus metrics server
-	http.Handle("/metrics", promhttp.Handler())
-	addr := conf.Address + ":" + strconv.Itoa(int(conf.MetricPort))
-	go http.ListenAndServe(addr, nil)
+	metricMux := http.NewServeMux()
+	metricMux.Handle("/metrics", promhttp.Handler())
+
+	// server address
+	addresses := []string{conf.Address}
+	if len(conf.IPv6Address) > 0 {
+		addresses = append(addresses, conf.IPv6Address)
+	}
+	metricServer := ipv6server.NewIPv6Server(addresses, strconv.Itoa(int(conf.MetricPort)), "", metricMux)
+	go metricServer.ListenAndServe()
 
 	blog.Infof("run metric ok")
 }
