@@ -3,8 +3,8 @@ module github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole
 go 1.17
 
 require (
-	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20220915083455-f4c72dc09513
-	github.com/Tencent/bk-bcs/bcs-services/pkg v0.0.0-20220126063353-25e53b7ae285
+	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20221205083018-bf769e1603a5
+	github.com/Tencent/bk-bcs/bcs-services/pkg v0.0.0-20220926153300-4e631deaebe4
 	github.com/TencentBlueKing/iam-go-sdk v0.0.8
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/gin-contrib/cors v1.3.1
@@ -95,7 +95,6 @@ require (
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/sergi/go-diff v1.2.0 // indirect
 	github.com/sirupsen/logrus v1.8.1 // indirect
-	github.com/smartystreets/assertions v1.0.1 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/ugorji/go/codec v1.2.3 // indirect
 	github.com/xanzy/ssh-agent v0.3.2 // indirect
