@@ -3,6 +3,7 @@ PRO_DIR   = $(shell pwd)
 BUILDTIME = $(shell date +%Y-%m-%dT%T%z)
 VERSION   = $(shell echo ${ENV_BK_BSCP_VERSION})
 DEBUG     = $(shell echo ${ENV_BK_BSCP_ENABLE_DEBUG})
+GOBUILD=CGO_ENABLED=0 go build -trimpath
 
 # output directory for release package and version for command line
 ifeq ("$(VERSION)", "")
@@ -18,9 +19,13 @@ else
     	-X bscp.io/pkg/version.DEBUG=${DEBUG}"
 endif
 
-export GO111MODULE=on
-
 include ./scripts/makefile/uname.mk
+
+LDFLAG=-ldflags "-X github.com/Tencent/bk-bcs/bcs-common/common/version.BcsVersion=${VERSION} \
+ -X github.com/Tencent/bk-bcs/bcs-common/common/version.BcsBuildTime=${BUILDTIME} \
+ -X github.com/Tencent/bk-bcs/bcs-common/common/version.BcsGitHash=${GITHASH} \
+ -X github.com/Tencent/bk-bcs/bcs-common/common/version.BcsTag=${GITTAG} \
+ -X github.com/Tencent/bk-bcs/bcs-common/common/version.BcsEdition=${bcs_edition}"
 
 default: all
 
@@ -98,3 +103,12 @@ validate:
 clean:
 	@cd ${PRO_DIR}/cmd && make clean
 	@rm -rf ${PRO_DIR}/build
+
+
+.PHONY: build_frontend
+build_frontend:
+	cd ui; npm install; npm run build
+
+.PHONY: build_ui
+build_ui:
+	${GOBUILD} ${LDFLAG} -o bscp-ui ./cmd/ui
