@@ -687,13 +687,11 @@ toleration:
               props:
                 clearable: true
                 datasource:
-                  - label: {{ i18n "所有" .lang }}
-                    value: All
-                  - label: {{ i18n "不调度" .lang }}
+                  - label: {{ i18n "不调度（NoSchedule）" .lang }}
                     value: NoSchedule
-                  - label: {{ i18n "倾向不调度" .lang }}
+                  - label: {{ i18n "倾向不调度（PreferNoSchedule）" .lang }}
                     value: PreferNoSchedule
-                  - label: {{ i18n "不执行" .lang }}
+                  - label: {{ i18n "不执行（NoExecute）" .lang }}
                     value: NoExecute
             ui:reactions:
               - target: "{{`{{`}} $widgetNode?.getSibling('tolerationSecs')?.id {{`}}`}}"

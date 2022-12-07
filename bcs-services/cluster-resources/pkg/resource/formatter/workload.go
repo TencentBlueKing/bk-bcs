@@ -120,12 +120,6 @@ func FormatPo(manifest map[string]interface{}) map[string]interface{} {
 
 // 工具方法/解析器
 
-// StatusChecker xxx
-type StatusChecker interface {
-	// IsNormal 判断当前资源是否为正常状态
-	IsNormal(map[string]interface{}) bool
-}
-
 // DeployStatusChecker xxx
 type DeployStatusChecker struct{}
 

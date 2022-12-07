@@ -386,6 +386,12 @@ replicas:
           else:
             state:
               visible: false
+        # 若更新时切换到 原地升级 模式，如果此时优雅更新时间为空，这设置为默认值 30s
+        - target: "{{`{{`}} $widgetNode?.getSibling('gracePeriodSecs')?.id {{`}}`}}"
+          if: "{{`{{`}} $self.value === 'InplaceUpdate' && $widgetNode?.getSibling('gracePeriodSecs')?.instance?.value === 0 {{`}}`}}"
+          then:
+            state:
+              value: 30
     maxSurge:
       title: {{ i18n "最大调度 Pod 数量" .lang }}
       type: integer

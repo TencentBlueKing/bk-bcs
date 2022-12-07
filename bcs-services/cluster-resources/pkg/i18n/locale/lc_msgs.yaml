@@ -320,13 +320,11 @@
   en: Operator
 - msgID: 影响
   en: Effect
-- msgID: 所有
-  en: All
-- msgID: 不调度
+- msgID: 不调度（NoSchedule）
   en: NoSchedule
-- msgID: 倾向不调度
+- msgID: 倾向不调度（PreferNoSchedule）
   en: PreferNoSchedule
-- msgID: 不执行
+- msgID: 不执行（NoExecute）
   en: NoExecute
 - msgID: 容忍时间
   en: TolerationSecs

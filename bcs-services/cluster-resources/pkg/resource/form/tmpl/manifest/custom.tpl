@@ -120,7 +120,8 @@ updateStrategy:
   type: {{ .spec.replicas.updateStrategy }}
   {{- if eq .metadata.kind "GameDeployment" }}
   {{- include "custom.gworkloadUpdateArgs" . | nindent 2 }}
-  {{- else if eq .metadata.kind "GameStatefulSet" }}
+  # 1.27.4+ gameStatefulSet 新增校验规则：如果更新类型为 OnDelete，则不能包含 rollingUpdate 配置
+  {{- else if and (eq .metadata.kind "GameStatefulSet") (ne .spec.replicas.updateStrategy "OnDelete") }}
   rollingUpdate:
     {{- include "custom.gworkloadUpdateArgs" . | nindent 4 }}
   {{- end }}

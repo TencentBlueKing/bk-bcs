@@ -19,6 +19,7 @@ import (
 	"strings"
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/slice"
 )
 
 // FormatCRD ...
@@ -42,6 +43,55 @@ func FormatGWorkload(manifest map[string]interface{}) map[string]interface{} {
 	ret := CommonFormatRes(manifest)
 	ret["images"] = parseContainerImages(manifest, "spec.template.spec.containers")
 	return ret
+}
+
+// FormatGDeploy ...
+func FormatGDeploy(manifest map[string]interface{}) map[string]interface{} {
+	ret := FormatGWorkload(manifest)
+	ret["status"] = newGDeployStatusParser(manifest).Parse()
+	return ret
+}
+
+// FormatGSTS ...
+func FormatGSTS(manifest map[string]interface{}) map[string]interface{} {
+	ret := FormatGWorkload(manifest)
+	ret["status"] = newGSTSStatusParser(manifest).Parse()
+	return ret
+}
+
+// GDeployStatusChecker GameDeployment 状态检查器
+type GDeployStatusChecker struct{}
+
+// IsNormal ...
+func (c *GDeployStatusChecker) IsNormal(manifest map[string]interface{}) bool {
+	return slice.AllInt64Equal([]int64{
+		mapx.GetInt64(manifest, "spec.replicas"),
+		mapx.GetInt64(manifest, "status.readyReplicas"),
+		mapx.GetInt64(manifest, "status.updatedReplicas"),
+		mapx.GetInt64(manifest, "status.updatedReadyReplicas"),
+	})
+}
+
+// GSTSStatusChecker GameStatefulSet 状态检查器
+type GSTSStatusChecker struct{}
+
+// IsNormal ...
+func (c *GSTSStatusChecker) IsNormal(manifest map[string]interface{}) bool {
+	return slice.AllInt64Equal([]int64{
+		mapx.GetInt64(manifest, "spec.replicas"),
+		mapx.GetInt64(manifest, "status.readyReplicas"),
+		mapx.GetInt64(manifest, "status.currentReplicas"),
+		mapx.GetInt64(manifest, "status.updatedReplicas"),
+		mapx.GetInt64(manifest, "status.updatedReadyReplicas"),
+	})
+}
+
+func newGDeployStatusParser(manifest map[string]interface{}) *WorkloadStatusParser {
+	return &WorkloadStatusParser{&GDeployStatusChecker{}, manifest}
+}
+
+func newGSTSStatusParser(manifest map[string]interface{}) *WorkloadStatusParser {
+	return &WorkloadStatusParser{&GSTSStatusChecker{}, manifest}
 }
 
 // parseCObjAPIVersion 根据 CRD 配置解析 cobj ApiVersion

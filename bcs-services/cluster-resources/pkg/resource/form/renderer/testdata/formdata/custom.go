@@ -174,6 +174,47 @@ var GSTSComplex = model.GSTS{
 	Volume: volume,
 }
 
+// GSTSSimple ...
+var GSTSSimple = model.GSTS{
+	Metadata: model.Metadata{
+		APIVersion: "tkex.tencent.com/v1alpha1",
+		Kind:       resCsts.GSTS,
+		Name:       "gsts-complex-" + strings.ToLower(stringx.Rand(10, "")),
+		Namespace:  envs.TestNamespace,
+		Labels: []model.Label{
+			{"label-key-1", "label-val-1"},
+		},
+	},
+	Spec: model.GSTSSpec{
+		Replicas: model.GSTSReplicas{
+			Cnt:             2,
+			SVCName:         "svc-complex-y3xk1r9vg9",
+			UpdateStrategy:  resCsts.DefaultUpdateStrategy,
+			PodManPolicy:    "OnDelete",
+			Partition:       3,
+			MaxSurge:        2,
+			MSUnit:          util.UnitCnt,
+			MaxUnavailable:  10,
+			MUAUnit:         util.UnitPercent,
+			GracePeriodSecs: 30,
+		},
+		DeletionProtect: model.GWorkloadDeletionProtect{
+			Policy: resCsts.DeletionProtectPolicyCascading,
+		},
+	},
+	ContainerGroup: model.ContainerGroup{
+		Containers: []model.Container{
+			{
+				Basic: model.ContainerBasic{
+					Name:       "busybox",
+					Image:      "busybox:latest",
+					PullPolicy: "IfNotPresent",
+				},
+			},
+		},
+	},
+}
+
 // HookTmplComplex ...
 var HookTmplComplex = model.HookTmpl{
 	Metadata: model.Metadata{

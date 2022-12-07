@@ -147,6 +147,7 @@ var testCaseData = []manifestRenderTestData{
 	{"custom/gdeploy_complex.yaml", formdata.GDeployComplex, false},
 	{"custom/gdeploy_simple.yaml", formdata.GDeploySimple, false},
 	{"custom/gsts_complex.yaml", formdata.GSTSComplex, false},
+	{"custom/gsts_simple.yaml", formdata.GSTSSimple, false},
 	{"custom/hook_tmpl_complex.yaml", formdata.HookTmplComplex, false},
 }
 

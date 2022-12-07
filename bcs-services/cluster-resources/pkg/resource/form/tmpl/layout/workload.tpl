@@ -17,6 +17,17 @@
     prop: affinity
 {{- end }}
 
+# 为 workload 污点/容忍添加 layout，限制运算符，影响，容忍时间的宽度
+{{- define "workload.toleration" }}
+- - group:
+      - - group:
+            - [ "key", "op", "value", "effect", "tolerationSecs", "." ]
+          prop: rules
+          container:
+            grid-template-columns: "1fr 100px 1fr 245px 130px auto"
+    prop: toleration
+{{- end }}
+
 {{- define "workload.networking" }}
 - - group:
       - [ "dnsPolicy" ]

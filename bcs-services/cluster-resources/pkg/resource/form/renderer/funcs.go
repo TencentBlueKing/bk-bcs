@@ -118,8 +118,8 @@ func isNSRequired(kind string) bool {
 // 指定资源类型是否必须填写 labels
 func isLabelRequired(kind string) bool {
 	return !slice.StringInSlice(kind, []string{
-		resCsts.HookTmpl, resCsts.Ing, resCsts.SVC, resCsts.EP,
-		resCsts.CM, resCsts.Secret, resCsts.PV, resCsts.PVC, resCsts.SC,
+		resCsts.HookTmpl, resCsts.Ing, resCsts.SVC, resCsts.EP, resCsts.HPA,
+		resCsts.Po, resCsts.CM, resCsts.Secret, resCsts.PV, resCsts.PVC, resCsts.SC,
 	})
 }
 
