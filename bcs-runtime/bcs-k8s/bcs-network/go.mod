@@ -4,7 +4,7 @@ go 1.17
 
 replace (
 	bitbucket.org/ww/goautoneg => github.com/adjust/goautoneg v0.0.0-20150426214442-d788f35a0315
-	github.com/Tencent/bk-bcs/bcs-common => github.com/Tencent/bk-bcs/bcs-common v0.0.0-20220927105030-5dbfb77b055c
+	github.com/Tencent/bk-bcs/bcs-common => github.com/Tencent/bk-bcs/bcs-common v0.0.0-20221205083018-bf769e1603a5
 	github.com/Tencent/bk-bcs/bcs-k8s/kubedeprecated => github.com/Tencent/bk-bcs/bcs-k8s/kubedeprecated v0.0.0-20210117140338-aeaed29b1997
 	github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes => ../kubernetes
 	github.com/containernetworking/cni => github.com/containernetworking/cni v0.6.0
