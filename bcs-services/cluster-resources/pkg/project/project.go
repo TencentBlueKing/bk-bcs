@@ -27,22 +27,17 @@ import (
 
 // Project BCS 项目
 type Project struct {
-	ID   string
-	Name string
-	Code string
+	ID   string `json:"projectID"`
+	Name string `json:"name"`
+	Code string `json:"projectCode"`
 }
 
-// GetProjectInfo xxx
+// GetProjectInfo 获取项目信息（bcsProject）
 func GetProjectInfo(ctx context.Context, projectID string) (*Project, error) {
-	projInfo, err := fetchProjectInfo(ctx, projectID)
-	if err != nil {
-		return &Project{}, err
+	if runtime.RunMode == runmode.Dev || runtime.RunMode == runmode.UnitTest {
+		return fetchMockProjectInfo(projectID)
 	}
-	return &Project{
-		ID:   projInfo["id"].(string),
-		Name: projInfo["name"].(string),
-		Code: projInfo["code"].(string),
-	}, nil
+	return projMgrCli.fetchProjInfoWithCache(ctx, projectID)
 }
 
 // FromContext 通过 Context 获取项目信息
@@ -52,12 +47,4 @@ func FromContext(ctx context.Context) (*Project, error) {
 		return nil, errorx.New(errcode.General, "project info not exists in context")
 	}
 	return p.(*Project), nil
-}
-
-// fetchProjectInfo 获取项目信息（bcsProject）
-func fetchProjectInfo(ctx context.Context, projectID string) (map[string]interface{}, error) {
-	if runtime.RunMode == runmode.Dev || runtime.RunMode == runmode.UnitTest {
-		return fetchMockProjectInfo(projectID)
-	}
-	return projMgrCli.fetchProjInfoWithCache(ctx, projectID)
 }

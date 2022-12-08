@@ -125,12 +125,12 @@ func (c *DependencyServiceChecker) doOnce() error {
 	}
 
 	// 检查 ClusterManager 服务，若服务未注册，则返回错误
-	if _, err := cluster.NewCMClient(c.microRtr, c.cliTLSConf); err != nil {
+	if _, err := cluster.NewCMClient(); err != nil {
 		return err
 	}
 
 	// 检查 BcsProject 服务，若服务未注册，则返回错误
-	if _, err := project.NewProjClient(c.microRtr, c.cliTLSConf); err != nil {
+	if _, err := project.NewProjClient(); err != nil {
 		return err
 	}
 	return nil

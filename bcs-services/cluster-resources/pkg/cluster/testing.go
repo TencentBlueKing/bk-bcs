@@ -17,15 +17,15 @@ package cluster
 import "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/envs"
 
 // fetchMockClusterInfo 获取单测用集群信息
-func fetchMockClusterInfo(clusterID string) (map[string]interface{}, error) {
-	ret := map[string]interface{}{
-		"id":     clusterID,
-		"type":   ClusterTypeSingle,
-		"name":   "TestCluster-" + clusterID,
-		"projID": envs.TestProjectID,
+func fetchMockClusterInfo(clusterID string) (*Cluster, error) {
+	ret := &Cluster{
+		ID:     clusterID,
+		Type:   ClusterTypeSingle,
+		Name:   "TestCluster-" + clusterID,
+		ProjID: envs.TestProjectID,
 	}
 	if clusterID == envs.TestSharedClusterID {
-		ret["type"] = ClusterTypeShared
+		ret.Type = ClusterTypeShared
 	}
 	return ret, nil
 }

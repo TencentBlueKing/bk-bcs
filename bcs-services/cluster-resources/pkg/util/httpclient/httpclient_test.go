@@ -12,15 +12,27 @@
  * limitations under the License.
  */
 
-package project
+package httpclient
 
-import "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/envs"
+import (
+	"fmt"
+	"net/http"
+	"net/http/httptest"
+	"testing"
 
-// fetchMockProjectInfo 获取单测用项目信息
-func fetchMockProjectInfo(projectID string) (*Project, error) {
-	return &Project{
-		ID:   projectID,
-		Name: "blueking-proj",
-		Code: envs.TestProjectCode,
-	}, nil
+	"github.com/stretchr/testify/assert"
+)
+
+func TestHttpClient(t *testing.T) {
+	expected := `{"data": {}, "code": 0}`
+	svr := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprint(w, expected)
+	}))
+	defer svr.Close()
+
+	// 自定义头字段
+	ret, err := GetClient().R().Get(svr.URL)
+	assert.NoError(t, err)
+	body := string(ret.Body())
+	assert.Equal(t, expected, body)
 }

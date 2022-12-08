@@ -16,23 +16,17 @@ package cluster
 
 import (
 	"context"
-	"crypto/tls"
+	"fmt"
 	"sync"
 	"time"
 
 	"github.com/patrickmn/go-cache"
-	"go-micro.dev/v4/registry"
-	"google.golang.org/grpc"
 
-	bcsapicm "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/clustermanager"
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/conf"
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/runmode"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/runtime"
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/discovery"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/config"
 	log "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/logging"
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
-	grpcUtil "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/grpc"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/httpclient"
 )
 
 var clusterMgrCli *CMClient
@@ -55,23 +49,17 @@ func genClusterInfoCacheKey(clusterID string) string {
 
 // CMClient ClusterManagerClient
 type CMClient struct {
-	ServiceName  string
-	EtcdRtr      registry.Registry
-	CliTLSConfig *tls.Config
-	discovery    *discovery.ServiceDiscovery
-	cache        *cache.Cache
-	ctx          context.Context
-	cancel       context.CancelFunc
+	cache *cache.Cache
 }
 
 // InitCMClient 初始化集群管理客户端
-func InitCMClient(microRtr registry.Registry, cliTLSConf *tls.Config) {
+func InitCMClient() {
 	if clusterMgrCli != nil || runtime.RunMode == runmode.Dev {
 		return
 	}
 	initOnce.Do(func() {
 		var err error
-		if clusterMgrCli, err = NewCMClient(microRtr, cliTLSConf); err != nil {
+		if clusterMgrCli, err = NewCMClient(); err != nil {
 			clusterMgrCli = nil
 			panic(err)
 		}
@@ -79,28 +67,17 @@ func InitCMClient(microRtr registry.Registry, cliTLSConf *tls.Config) {
 }
 
 // NewCMClient xxx
-func NewCMClient(microRtr registry.Registry, cliTLSConf *tls.Config) (*CMClient, error) {
-	ctx, cancel := context.WithCancel(context.Background())
-	cli := CMClient{
-		ServiceName:  conf.ClusterMgrServiceName,
-		EtcdRtr:      microRtr,
-		CliTLSConfig: cliTLSConf,
-		discovery:    discovery.NewServiceDiscovery(conf.ClusterMgrServiceName, microRtr),
-		cache:        cache.New(time.Minute*CacheExpireTime, time.Minute*PurgeExpiredCacheTime),
-		ctx:          ctx,
-		cancel:       cancel,
-	}
-	if err := cli.discovery.Start(); err != nil {
-		return nil, err
-	}
+func NewCMClient() (*CMClient, error) {
+	cli := CMClient{cache: cache.New(time.Minute*CacheExpireTime, time.Minute*PurgeExpiredCacheTime)}
+
 	return &cli, nil
 }
 
 // fetchClusterInfoWithCache 获取集群信息（支持缓存）
-func (c *CMClient) fetchClusterInfoWithCache(ctx context.Context, clusterID string) (map[string]interface{}, error) {
+func (c *CMClient) fetchClusterInfoWithCache(ctx context.Context, clusterID string) (*Cluster, error) {
 	cacheKey := genClusterInfoCacheKey(clusterID)
 	if info, ok := c.cache.Get(cacheKey); info != nil && ok {
-		return info.(map[string]interface{}), nil
+		return info.(*Cluster), nil
 	}
 	log.Info(ctx, "cluster %s info not in cache, start call cluster manager", clusterID)
 
@@ -116,50 +93,29 @@ func (c *CMClient) fetchClusterInfoWithCache(ctx context.Context, clusterID stri
 }
 
 // fetchClusterInfo 获取集群信息
-func (c *CMClient) fetchClusterInfo(ctx context.Context, clusterID string) (map[string]interface{}, error) {
-	cli, grpcConn, err := c.genAvailableCli(ctx)
+func (c *CMClient) fetchClusterInfo(ctx context.Context, clusterID string) (*Cluster, error) {
+	url := fmt.Sprintf("%s/bcsapi/v4/clustermanager/v1/cluster/%s", config.G.BCSAPIGW.Host, clusterID)
+
+	resp, err := httpclient.GetClient().R().
+		SetContext(ctx).
+		SetAuthToken(config.G.BCSAPIGW.AuthToken).
+		Get(url)
+
 	if err != nil {
 		return nil, err
 	}
-	defer grpcConn.Close()
 
-	resp, err := cli.GetCluster(grpcUtil.SetMD4CTX(ctx), &bcsapicm.GetClusterReq{ClusterID: clusterID})
-	if err != nil {
-		return nil, errorx.New(errcode.ComponentErr, "call for cluster %s info failed: %v", clusterID, err)
-	}
-	if !resp.Result {
-		return nil, errorx.New(errcode.ComponentErr, "cluster: %s, errMsg: %s", clusterID, resp.Message)
+	var cluster *Cluster
+	if err := httpclient.UnmarshalBKResult(resp, &cluster); err != nil {
+		return nil, err
 	}
 
-	clusterInfo := map[string]interface{}{
-		"id":     resp.Data.ClusterID,
-		"name":   resp.Data.ClusterName,
-		"type":   ClusterTypeSingle,
-		"projID": resp.Data.ProjectID,
-	}
-	if resp.Data.IsShared {
-		clusterInfo["type"] = ClusterTypeShared
-	}
-	log.Info(ctx, "fetch cluster info: %v", clusterInfo)
-	return clusterInfo, nil
-}
-
-// genAvailableCli 获取可用的 ClusterManager 服务
-func (c *CMClient) genAvailableCli(ctx context.Context) (bcsapicm.ClusterManagerClient, *grpc.ClientConn, error) {
-	node, err := c.discovery.GetRandServiceInst(ctx)
-	if err != nil {
-		return nil, nil, err
-	}
-	log.Info(ctx, "get remote cluster manager instance [%s] from etcd registry successfully", node.Address)
-
-	conn, err := grpcUtil.NewGrpcConn(node.Address, c.CliTLSConfig)
-	if conn == nil || err != nil {
-		log.Error(ctx, "create cluster manager grpc client with %s failed: %v", node.Address, err)
+	// 设置集群类型
+	if cluster.IsShared {
+		cluster.Type = ClusterTypeShared
+	} else {
+		cluster.Type = ClusterTypeSingle
 	}
 
-	cli := bcsapicm.NewClusterManagerClient(conn)
-	if cli == nil {
-		return nil, nil, errorx.New(errcode.ComponentErr, "no available cluster manager client")
-	}
-	return cli, conn, nil
+	return cluster, nil
 }
