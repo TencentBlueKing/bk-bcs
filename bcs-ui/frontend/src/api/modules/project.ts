@@ -28,6 +28,7 @@ export const updateNamespace = request('put', '/clusters/$clusterId/namespaces/$
 export const createdNamespace = request('post', '/clusters/$clusterId/namespaces');
 export const fetchNamespaceInfo = request('get', '/clusters/$clusterId/namespaces/$name');
 export const syncNamespaceList = request('post', '/clusters/$clusterId/namespaces/sync');
+export const withdrawNamespace = request('post', '/clusters/$clusterId/namespaces/$namespace/withdraw');
 
 const request2 = createRequest({
   domain: window.DEVOPS_BCS_API_URL,

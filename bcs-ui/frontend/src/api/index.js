@@ -205,7 +205,7 @@ function handleReject(error, config) {
     } else if ([4005, 40300].includes(data?.code)) {
       bus.$emit('show-apply-perm-modal', data?.data);
     } else if (data?.code === 40403) {
-      bus.$emit('show-apply-perm-modal', data?.webAnnotations);
+      bus.$emit('show-apply-perm-modal', data?.web_annotations);
     }
 
     // eslint-disable-next-line camelcase

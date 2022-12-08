@@ -214,6 +214,13 @@
                   </li>
                 </template>
                 <li
+                  v-if="row.itsmTicketURL"
+                  class="bcs-dropdown-item w-[80px]"
+                  @click="withdrawNamespace(row)">
+                  {{ $t('撤回') }}
+                </li>
+                <li
+                  v-else
                   class="bcs-dropdown-item w-[80px]"
                   :disabled="applyMap(row.itsmTicketType).delete"
                   v-authority="{
@@ -473,6 +480,7 @@ export default defineComponent({
       namespaceData,
       webAnnotations,
       handleGetVariablesList,
+      handleWithdrawNamespace,
       handleDeleteNameSpace,
       handleUpdateNameSpace,
       handleUpdateVariablesList,
@@ -861,6 +869,21 @@ export default defineComponent({
       showSetAnnotations.value = false;
     };
 
+    const withdrawNamespace = async (row) => {
+      const result = await handleWithdrawNamespace({
+        $namespace: row.name,
+      });
+      if (result) {
+        $bkMessage({
+          theme: 'success',
+          message: $i18n.t('撤回成功'),
+        });
+        getNamespaceData({
+          $clusterId: clusterID.value,
+        });
+      }
+    };
+
     watch(curClusterId, () => {
       if (!curClusterId.value) return;
       clusterID.value = curClusterId.value;
@@ -925,6 +948,7 @@ export default defineComponent({
       handleLabelEditConfirm,
       handleAnnotationsEditConfirm,
       handleAnnotationsEditCancel,
+      withdrawNamespace,
     };
   },
 });

@@ -10,6 +10,7 @@ import {
   createdNamespace,
   fetchNamespaceInfo,
   syncNamespaceList,
+  withdrawNamespace,
 } from '@/api/modules/project';
 
 export function useNamespace() {
@@ -22,8 +23,8 @@ export function useNamespace() {
   async function getNamespaceData(params, loading = true) {
     if (!params || !params.$clusterId) return;
     namespaceLoading.value = loading;
-    const { data, webAnnotations: _webAnnotations } = await getNamespaceList(params, { needRes: true })
-      .catch(() => ({ data: [], webAnnotations: [] }));
+    const { data, web_annotations: _webAnnotations } = await getNamespaceList(params, { needRes: true })
+      .catch(() => ({ data: [], web_annotations: [] }));
     namespaceData.value = data;
     webAnnotations.value = _webAnnotations;
     namespaceLoading.value = false;
@@ -74,6 +75,12 @@ export function useNamespace() {
     return result;
   }
 
+  async function handleWithdrawNamespace(params) {
+    const result = await withdrawNamespace(params).then(() => true)
+      .catch(() => false);
+    return result;
+  }
+
   return {
     namespaceLoading,
     namespaceData,
@@ -88,6 +95,7 @@ export function useNamespace() {
     handleCreatedNamespace,
     getNamespaceInfo,
     handleSyncNamespaceList,
+    handleWithdrawNamespace,
   };
 }
 

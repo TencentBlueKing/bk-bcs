@@ -3420,4 +3420,5 @@ export default {
   ],
   "--history-max，可用于回滚的历史版本个数": ['--history-max, the number of historical versions available for rollback'],
   "保留最大历史版本": ['Keep the maximum historical version'],
+  "撤回成功": ["Withdraw success"],
 }
