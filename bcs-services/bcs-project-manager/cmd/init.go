@@ -48,6 +48,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/discovery"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/handler"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/logging"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/manager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/runtimex"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/stringx"
@@ -67,6 +68,7 @@ type ProjectService struct {
 	microRgt         microRgt.Registry
 	discovery        *discovery.ModuleDiscovery
 	clusterDiscovery *discovery.ModuleDiscovery
+	namespaceManager *manager.NamespaceManager
 
 	// http service
 	httpServer *ipv6server.IPv6Server
@@ -106,6 +108,7 @@ func (p *ProjectService) Init() error {
 		p.initPermClient,
 		p.initMicro,
 		p.initHttpService,
+		p.initNamespaceManager,
 		p.initMetric,
 	} {
 		if err := f(); err != nil {
@@ -117,6 +120,8 @@ func (p *ProjectService) Init() error {
 
 // Run helm manager server
 func (p *ProjectService) Run() error {
+	// manage namespace scheduled task
+	go p.namespaceManager.Run()
 	// run the service
 	if err := p.microSvc.Run(); err != nil {
 		logging.Error("run micro service failed, err: %s", err.Error())
@@ -434,6 +439,12 @@ func (p *ProjectService) initHttpService() error {
 			p.stopCh <- struct{}{}
 		}
 	}()
+	return nil
+}
+
+func (p *ProjectService) initNamespaceManager() error {
+	logging.Info("init namespace manager")
+	p.namespaceManager = manager.NewNamespaceManager(p.ctx, p.model)
 	return nil
 }
 

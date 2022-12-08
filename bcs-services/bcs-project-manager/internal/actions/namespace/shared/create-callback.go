@@ -39,7 +39,7 @@ func (a *SharedNamespaceAction) CreateNamespaceCallback(ctx context.Context,
 	if !req.GetApproveResult() {
 		return a.model.DeleteNamespace(ctx, req.GetProjectCode(), req.GetClusterID(), req.GetNamespace())
 	}
-	ns, err := a.model.GetNamespace(ctx, req.GetProjectCode(), req.GetClusterID(),
+	ns, err := a.model.GetNamespaceByItsmTicketType(ctx, req.GetProjectCode(), req.GetClusterID(),
 		req.GetNamespace(), nsm.ItsmTicketTypeCreate)
 	if err != nil {
 		logging.Error("get namespace %s/%s from db failed, err: %s", req.GetClusterID(), req.GetNamespace(), err.Error())
@@ -67,7 +67,10 @@ func (a *SharedNamespaceAction) CreateNamespaceCallback(ctx context.Context,
 		// create namespace in cluster
 		namespace := &corev1.Namespace{}
 		namespace.SetName(ns.Name)
-		namespace.SetAnnotations(map[string]string{config.AnnotationKeyProjectCode: req.GetProjectCode()})
+		namespace.SetAnnotations(map[string]string{
+			config.AnnotationKeyProjectCode: req.GetProjectCode(),
+			config.AnnotationKeyCreator:     ns.Creator,
+		})
 		_, err = client.CoreV1().Namespaces().Create(ctx, namespace, metav1.CreateOptions{})
 		if err != nil {
 			logging.Error("create namespace in cluster %s failed, err: %s", req.GetClusterID(), err.Error())

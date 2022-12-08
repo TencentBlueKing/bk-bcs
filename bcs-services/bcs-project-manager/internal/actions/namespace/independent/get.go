@@ -17,12 +17,19 @@ package independent
 import (
 	"context"
 
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
 
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/config"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/page"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/clientset"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/logging"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store"
+	vdm "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/variabledefinition"
+	vvm "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/variablevalue"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/errorx"
 	quotautils "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/quota"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/proto/bcsproject"
@@ -75,4 +82,57 @@ func (a *IndependentNamespaceAction) GetNamespace(ctx context.Context,
 	retData.Variables = variables
 	resp.Data = retData
 	return nil
+}
+
+func getNamespaceQuota(ctx context.Context, projectCode, clusterID, namespace string, clientset *kubernetes.Clientset) (
+	*corev1.ResourceQuota, error) {
+	quota, err := clientset.CoreV1().ResourceQuotas(namespace).Get(ctx, namespace, metav1.GetOptions{})
+	if err != nil && !errors.IsNotFound(err) {
+		logging.Error("get resourceQuota %s/%s failed, err: %s", clusterID, namespace, err.Error())
+		return nil, errorx.NewClusterErr(err.Error())
+	}
+
+	// get quota
+	if errors.IsNotFound(err) {
+		return nil, nil
+	}
+	return quota, nil
+}
+
+func listNamespaceVariables(ctx context.Context,
+	projectCode, clusterID, namespace string) ([]*proto.VariableValue, error) {
+	model := store.GetModel()
+	listCond := make(operator.M)
+	listCond[vdm.FieldKeyProjectCode] = projectCode
+	listCond[vdm.FieldKeyScope] = vdm.VariableScopeNamespace
+	definitions, _, err := model.ListVariableDefinitions(ctx, operator.NewLeafCondition(operator.Eq, listCond),
+		&page.Pagination{Sort: map[string]int{vdm.FieldKeyCreateTime: -1}, All: true})
+	if err != nil {
+		logging.Error("get variable definitions from db failed, err: %s", err.Error())
+		return nil, errorx.NewDBErr(err.Error())
+	}
+	var variables []*proto.VariableValue
+	variableValues, err := model.ListVariableValuesInNamespace(ctx, clusterID, namespace)
+	if err != nil {
+		logging.Error("list variable values from db failed, err: %s", err.Error())
+		return variables, errorx.NewDBErr(err.Error())
+	}
+	exists := make(map[string]vvm.VariableValue, len(variableValues))
+	for _, value := range variableValues {
+		exists[value.VariableID] = value
+	}
+	for _, definition := range definitions {
+		variable := &proto.VariableValue{
+			Id:   definition.ID,
+			Name: definition.Name,
+			Key:  definition.Key,
+		}
+		if value, ok := exists[variable.Id]; ok {
+			variable.Value = value.Value
+		} else {
+			variable.Value = definition.Default
+		}
+		variables = append(variables, variable)
+	}
+	return variables, nil
 }

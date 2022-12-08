@@ -56,7 +56,7 @@ func GrantProjectCreatorActions(username string, projectID string, projectName s
 	proxy := ""
 	_, err := component.Request(req, timeout, proxy, headers)
 	if err != nil {
-		logging.Error("grant creator actions for project failed, %v", err)
+		logging.Error("grant creator actions for project failed, %s", err.Error())
 		return errorx.NewRequestIAMErr(err)
 	}
 	return nil
@@ -86,7 +86,7 @@ func GrantNamespaceCreatorActions(username, clusterID, namespace string) error {
 	proxy := ""
 	_, err := component.Request(req, timeout, proxy, headers)
 	if err != nil {
-		logging.Error("grant creator actions for namespace failed, %v", err)
+		logging.Error("grant creator actions for namespace failed, %s", err.Error())
 		return errorx.NewRequestIAMErr(err)
 	}
 	return nil

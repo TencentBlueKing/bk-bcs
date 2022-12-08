@@ -227,6 +227,26 @@ func (m *ModelVariableValue) ListVariableValuesInNamespace(ctx context.Context,
 	return values, nil
 }
 
+// ListVariableValuesInAllNamespace implement for ListVariableValuesInAllNamespace interface
+func (m *ModelVariableValue) ListVariableValuesInAllNamespace(ctx context.Context,
+	clusterID string) ([]VariableValue, error) {
+	condM := make(operator.M)
+	if err := m.ensureTable(ctx); err != nil {
+		return nil, err
+	}
+	if clusterID == "" {
+		return nil, fmt.Errorf("clusterID cannot be empty")
+	}
+	condM[FieldKeyClusterID] = clusterID
+	condM[FieldKeyScope] = vdm.VariableScopeNamespace
+	cond := operator.NewLeafCondition(operator.Eq, condM)
+	values := make([]VariableValue, 0)
+	if err := m.db.Table(m.tableName).Find(cond).All(ctx, &values); err != nil {
+		return nil, err
+	}
+	return values, nil
+}
+
 // UpsertVariableValue upsert variable value
 func (m *ModelVariableValue) UpsertVariableValue(ctx context.Context,
 	value *VariableValue) error {

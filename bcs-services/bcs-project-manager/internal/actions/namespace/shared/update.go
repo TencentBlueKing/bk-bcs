@@ -38,7 +38,7 @@ func (a *SharedNamespaceAction) UpdateNamespace(ctx context.Context,
 		ProjectCode: req.GetProjectCode(),
 		ClusterID:   req.GetClusterID(),
 		Name:        req.GetNamespace(),
-		Updater:     username,
+		Creator:     username,
 		ResourceQuota: &nsm.Quota{
 			CPURequests:    req.GetQuota().GetCpuRequests(),
 			CPULimits:      req.GetQuota().GetCpuLimits(),

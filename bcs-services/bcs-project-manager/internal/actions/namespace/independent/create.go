@@ -21,6 +21,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/bcscc"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/clientset"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/iam"
@@ -34,17 +35,17 @@ import (
 // CreateNamespace implement for CreateNamespace interface
 func (c *IndependentNamespaceAction) CreateNamespace(ctx context.Context,
 	req *proto.CreateNamespaceRequest, resp *proto.CreateNamespaceResponse) error {
-	_, err := c.createNamespace(ctx, req)
-	if err != nil {
-		return errorx.NewClusterErr(err)
-	}
 	var creator string
 	authUser, err := middleware.GetUserFromContext(ctx)
 	if err == nil && authUser.Username != "" {
 		// 授权创建者命名空间编辑和查看权限
 		creator = authUser.Username
-		iam.GrantNamespaceCreatorActions(creator, req.GetClusterID(), req.GetName())
 	}
+	_, err = c.createNamespace(ctx, req, creator)
+	if err != nil {
+		return errorx.NewClusterErr(err)
+	}
+	iam.GrantNamespaceCreatorActions(creator, req.GetClusterID(), req.GetName())
 	if req.GetQuota() != nil {
 		if _, err := c.createResourceQuota(ctx, req); err != nil {
 			return errorx.NewClusterErr(err)
@@ -69,7 +70,7 @@ func (c *IndependentNamespaceAction) CreateNamespace(ctx context.Context,
 }
 
 func (c *IndependentNamespaceAction) createNamespace(ctx context.Context,
-	req *proto.CreateNamespaceRequest) (*corev1.Namespace, error) {
+	req *proto.CreateNamespaceRequest, creator string) (*corev1.Namespace, error) {
 	client, err := clientset.GetClientGroup().Client(req.GetClusterID())
 	if err != nil {
 		logging.Error("get clientset for cluster %s failed, err: %s", req.GetClusterID(), err.Error())
@@ -85,6 +86,9 @@ func (c *IndependentNamespaceAction) createNamespace(ctx context.Context,
 	annotations := map[string]string{}
 	for _, annotation := range req.GetAnnotations() {
 		annotations[annotation.GetKey()] = annotation.GetValue()
+	}
+	if creator != "" {
+		annotations[config.AnnotationKeyCreator] = creator
 	}
 	ns.SetAnnotations(annotations)
 	return client.CoreV1().Namespaces().Create(ctx, ns, metav1.CreateOptions{})

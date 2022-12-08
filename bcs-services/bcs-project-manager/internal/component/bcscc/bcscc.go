@@ -57,10 +57,10 @@ type listNamespacesResp struct {
 
 type listNamespaceData struct {
 	Count   int64           `json:"count"`
-	Results []namespaceData `json:"results"`
+	Results []NamespaceData `json:"results"`
 }
 
-type namespaceData struct {
+type NamespaceData struct {
 	ID          int    `json:"id"`
 	Name        string `json:"name"`
 	ClusterID   string `json:"cluster_id"`
@@ -139,8 +139,8 @@ func CreateNamespace(projectCode, clusterID, name, creator string) error {
 	return requestCommonAndParse(req)
 }
 
-// listNamespaces request bcs cc api, list namespace records by projectID and clusterID
-func listNamespaces(projectCode, clusterID string) (*listNamespaceData, error) {
+// ListNamespaces request bcs cc api, list namespace records by projectID and clusterID
+func ListNamespaces(projectCode, clusterID string) (*listNamespaceData, error) {
 	bcsCCConf := config.GlobalConf.BCSCC
 	model := store.GetModel()
 	p, err := model.GetProject(context.Background(), projectCode)
@@ -173,7 +173,7 @@ func DeleteNamespace(projectCode, clusterID, name string) error {
 		return err
 	}
 	// get id from paascc
-	nsList, err := listNamespaces(projectCode, clusterID)
+	nsList, err := ListNamespaces(projectCode, clusterID)
 	if err != nil {
 		return err
 	}

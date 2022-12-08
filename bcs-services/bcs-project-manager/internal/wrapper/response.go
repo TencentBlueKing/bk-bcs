@@ -26,6 +26,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/convert"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/errorx"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/proto/bcsproject"
+	authutils "github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/utils"
 )
 
 // NewResponseWrapper 添加request id, 统一处理返回
@@ -55,25 +56,47 @@ func RenderResponse(rsp interface{}, requestID string, err error) error {
 		// support for data type string,slice and empty,haven't test for map and so on
 		msg, code := getMsgCode(err)
 		v := reflect.ValueOf(rsp)
-		v.Elem().FieldByName("RequestID").SetString(requestID)
+		if v.Elem().FieldByName("RequestID").IsValid() {
+			v.Elem().FieldByName("RequestID").SetString(requestID)
+		}
 		v.Elem().FieldByName("Message").SetString(msg)
 		v.Elem().FieldByName("Code").SetUint(uint64(code))
 		if err != nil {
-			dataField := v.Elem().FieldByName("Data")
-			if !dataField.IsValid() {
+			switch e := err.(type) {
+			case *authutils.PermDeniedError:
+				if v.Elem().FieldByName("WebAnnotations").IsValid() {
+					perms := &proto.Perms{}
+					permsMap := map[string]interface{}{}
+					permsMap["apply_url"] = e.Perms.ApplyURL
+					actionList := []map[string]string{}
+					for _, actions := range e.Perms.ActionList {
+						actionList = append(actionList, map[string]string{
+							"action_id":     actions.Action,
+							"resource_type": actions.Type,
+						})
+					}
+					permsMap["action_list"] = actionList
+					perms.Perms = convert.Map2pbStruct(permsMap)
+					v.Elem().FieldByName("WebAnnotations").Set(reflect.ValueOf(perms))
+				}
+				return nil
+			default:
+				dataField := v.Elem().FieldByName("Data")
+				if !dataField.IsValid() {
+					return nil
+				}
+				switch dataField.Kind() {
+				case reflect.Interface, reflect.Ptr:
+					if dataField.Elem().CanSet() {
+						tp := reflect.TypeOf(dataField.Elem().Interface())
+						dataField.Elem().Set(reflect.Zero(tp))
+					}
+				default:
+					tp := reflect.TypeOf(dataField.Interface())
+					dataField.Set(reflect.Zero(tp))
+				}
 				return nil
 			}
-			switch dataField.Kind() {
-			case reflect.Interface, reflect.Ptr:
-				if dataField.Elem().CanSet() {
-					tp := reflect.TypeOf(dataField.Elem().Interface())
-					dataField.Elem().Set(reflect.Zero(tp))
-				}
-			default:
-				tp := reflect.TypeOf(dataField.Interface())
-				dataField.Set(reflect.Zero(tp))
-			}
-			return nil
 		}
 	}
 	return err
@@ -89,6 +112,8 @@ func getMsgCode(err interface{}) (string, uint32) {
 		return e.Error(), e.Code()
 	case *errors.Error:
 		return e.Detail, errorx.InnerErr
+	case *authutils.PermDeniedError:
+		return err.(*authutils.PermDeniedError).Error(), errorx.NoPermissionErr
 	default:
 		return fmt.Sprintf("%s", e), errorx.InnerErr
 	}

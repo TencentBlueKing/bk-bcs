@@ -204,6 +204,29 @@ func (m *ModelNamespace) DeleteNamespace(ctx context.Context, projectCode, clust
 
 // GetNamespace get namespace
 func (m *ModelNamespace) GetNamespace(ctx context.Context,
+	projectCode, clusterID, name string) (*Namespace, error) {
+	if projectCode == "" || clusterID == "" || name == "" {
+		return nil, fmt.Errorf("can not get namespace, no enough arguments")
+	}
+	if err := m.ensureTable(ctx); err != nil {
+		return nil, err
+	}
+	cond := operator.NewLeafCondition(operator.Eq, operator.M{
+		FieldKeyProjectCode: projectCode,
+		FieldKeyClusterID:   clusterID,
+		FieldKeyName:        name,
+		FieldKeyIsDeleted:   false,
+	})
+
+	namespace := &Namespace{}
+	if err := m.db.Table(m.tableName).Find(cond).One(ctx, namespace); err != nil {
+		return nil, err
+	}
+	return namespace, nil
+}
+
+// GetNamespaceByItsmTicketType get namespace by ITSM ticket type
+func (m *ModelNamespace) GetNamespaceByItsmTicketType(ctx context.Context,
 	projectCode, clusterID, name, itsmTicketType string) (*Namespace, error) {
 	if projectCode == "" || clusterID == "" || name == "" || itsmTicketType == "" {
 		return nil, fmt.Errorf("can not get namespace, no enough arguments")
@@ -224,6 +247,17 @@ func (m *ModelNamespace) GetNamespace(ctx context.Context,
 		return nil, err
 	}
 	return namespace, nil
+}
+
+// ListNamespaces list all staging namespaces
+func (m *ModelNamespace) ListNamespaces(ctx context.Context) ([]Namespace, error) {
+	if err := m.ensureTable(ctx); err != nil {
+		return nil, err
+	}
+	nsList := []Namespace{}
+	cond := operator.NewLeafCondition(operator.Eq, operator.M{FieldKeyIsDeleted: false})
+	err := m.db.Table(m.tableName).Find(cond).All(ctx, &nsList)
+	return nsList, err
 }
 
 // ListNamespacesByItsmTicketType list namespaces by staging type

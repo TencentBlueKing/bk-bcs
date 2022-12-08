@@ -19,10 +19,15 @@ import (
 	"sort"
 
 	na "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/actions/namespace"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/logging"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store"
 	nsm "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/namespace"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/convert"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/proto/bcsproject"
+	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/middleware"
+	authnamespace "github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/namespace"
+	authutils "github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/utils"
 )
 
 // NamespaceHandler ...
@@ -35,6 +40,30 @@ func NewNamespace(model store.ProjectModel) *NamespaceHandler {
 	return &NamespaceHandler{
 		model: model,
 	}
+}
+
+// SyncNamespace implement for SyncNamespace interface
+func (p *NamespaceHandler) SyncNamespace(ctx context.Context,
+	req *proto.SyncNamespaceRequest, resp *proto.SyncNamespaceResponse) error {
+	action, err := na.NewNamespaceFactory(p.model).Action(req.GetClusterID(), req.GetProjectCode())
+	if err != nil {
+		logging.Error("get namespace client for cluster %s from client factory failed, err: %s",
+			req.GetClusterID(), err.Error())
+		return err
+	}
+	return action.SyncNamespace(ctx, req, resp)
+}
+
+// WithdrawNamespace implement for WithdrawNamespace interface
+func (p *NamespaceHandler) WithdrawNamespace(ctx context.Context,
+	req *proto.WithdrawNamespaceRequest, resp *proto.WithdrawNamespaceResponse) error {
+	action, err := na.NewNamespaceFactory(p.model).Action(req.GetClusterID(), req.GetProjectCode())
+	if err != nil {
+		logging.Error("get namespace client for cluster %s from client factory failed, err: %s",
+			req.GetClusterID(), err.Error())
+		return err
+	}
+	return action.WithdrawNamespace(ctx, req, resp)
 }
 
 // CreateNamespace implement for CreateNamespace interface
@@ -111,6 +140,40 @@ func (p *NamespaceHandler) ListNamespaces(ctx context.Context,
 		return err
 	}
 	retData := sortNamespaces(resp.GetData())
+	authUser, err := middleware.GetUserFromContext(ctx)
+	if err == nil && authUser.Username != "" {
+		p, err := p.model.GetProject(ctx, req.GetProjectCode())
+		if err != nil {
+			logging.Error("get project %s failed, err: %s", req.GetProjectCode(), err.Error())
+			resp.Data = retData
+			return nil
+		}
+		namespaces := []authnamespace.ProjectNamespaceData{}
+		for _, ns := range retData {
+			namespaces = append(namespaces, authnamespace.ProjectNamespaceData{
+				Project:   p.ProjectID,
+				Cluster:   req.GetClusterID(),
+				Namespace: ns.GetName(),
+			})
+		}
+		perms, err := auth.NamespaceIamClient.GetMultiNamespaceMultiActionPermission(
+			authUser.Username, namespaces,
+			[]string{auth.NamespaceCreate, auth.NamespaceView,
+				auth.NamespaceUpdate, auth.NamespaceDelete,
+				auth.NamespaceScopedCreate, auth.NamespaceScopedView,
+				auth.NamespaceScopedUpdate, auth.NamespaceScopedDelete},
+		)
+		newPerms := map[string]map[string]bool{}
+		for _, ns := range retData {
+			newPerms[ns.GetName()] = perms[authutils.CalcIAMNsID(req.GetClusterID(), ns.GetName())]
+		}
+		if err != nil {
+			logging.Error("get multi namespaces multi action permission failed, err: %s", err.Error())
+			resp.Data = retData
+			return nil
+		}
+		resp.WebAnnotations = &proto.Perms{Perms: convert.MapBool2pbStruct(newPerms)}
+	}
 	resp.Data = retData
 	return nil
 }

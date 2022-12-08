@@ -17,10 +17,12 @@ package shared
 import (
 	"context"
 
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
 
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/clientset"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/logging"
@@ -33,7 +35,7 @@ import (
 // GetNamespace implement for GetNamespace interface
 func (a *SharedNamespaceAction) GetNamespace(ctx context.Context,
 	req *proto.GetNamespaceRequest, resp *proto.GetNamespaceResponse) error {
-	staging, err := a.model.GetNamespace(ctx,
+	staging, err := a.model.GetNamespaceByItsmTicketType(ctx,
 		req.GetProjectCode(), req.GetClusterID(), req.GetNamespace(), nsm.ItsmTicketTypeCreate)
 	if err != nil && err != drivers.ErrTableRecordNotFound {
 		logging.Error("get staging namespace failed, err: %s", err.Error())
@@ -76,7 +78,8 @@ func (a *SharedNamespaceAction) GetNamespace(ctx context.Context,
 	}
 	namespace, err := client.CoreV1().Namespaces().Get(ctx, req.GetNamespace(), metav1.GetOptions{})
 	if err != nil && !errors.IsNotFound(err) {
-		logging.Error("get namespace %s in cluster %s failed, err: %s", req.GetNamespace(), req.GetClusterID(), err.Error())
+		logging.Error("get namespace %s in cluster %s failed, err: %s",
+			req.GetNamespace(), req.GetClusterID(), err.Error())
 		return err
 	}
 	if errors.IsNotFound(err) {
@@ -104,7 +107,7 @@ func (a *SharedNamespaceAction) GetNamespace(ctx context.Context,
 		return errorx.NewDBErr(err.Error())
 	}
 	retData.Variables = variables
-	modifyStagging, err := a.model.GetNamespace(ctx, req.GetProjectCode(), req.GetClusterID(), req.GetNamespace(),
+	modifyStagging, err := a.model.GetNamespaceByItsmTicketType(ctx, req.GetProjectCode(), req.GetClusterID(), req.GetNamespace(),
 		nsm.ItsmTicketTypeUpdate)
 	if modifyStagging != nil {
 
@@ -113,7 +116,7 @@ func (a *SharedNamespaceAction) GetNamespace(ctx context.Context,
 		retData.ItsmTicketStatus = modifyStagging.ItsmTicketStatus
 		retData.ItsmTicketURL = modifyStagging.ItsmTicketURL
 	}
-	deleteStagging, err := a.model.GetNamespace(ctx, req.GetProjectCode(), req.GetClusterID(), req.GetNamespace(),
+	deleteStagging, err := a.model.GetNamespaceByItsmTicketType(ctx, req.GetProjectCode(), req.GetClusterID(), req.GetNamespace(),
 		nsm.ItsmTicketTypeDelete)
 	if deleteStagging != nil {
 
@@ -124,4 +127,18 @@ func (a *SharedNamespaceAction) GetNamespace(ctx context.Context,
 	}
 	resp.Data = retData
 	return nil
+}
+
+func getNamespaceQuota(ctx context.Context, projectCode, clusterID, namespace string, clientset *kubernetes.Clientset) (
+	*corev1.ResourceQuota, error) {
+	quota, err := clientset.CoreV1().ResourceQuotas(namespace).Get(ctx, namespace, metav1.GetOptions{})
+	if err != nil && !errors.IsNotFound(err) {
+		logging.Error("get resourceQuota %s/%s failed, err: %s", clusterID, namespace, err.Error())
+		return nil, errorx.NewClusterErr(err.Error())
+	}
+
+	if errors.IsNotFound(err) {
+		return nil, nil
+	}
+	return quota, nil
 }

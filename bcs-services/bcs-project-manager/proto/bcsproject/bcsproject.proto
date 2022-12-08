@@ -430,10 +430,10 @@ message ProjectResponse{
     title: "request id",
     description: "请求 ID"
   }];
-  Perms webAnnotations = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title : "webAnnotations",
+  Perms web_annotations = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "web_annotations",
     description : "项目更多信息，主要是权限相关"
-  }];
+  }, json_name = "web_annotations"];
 }
 
 message ListProjectsRequest{
@@ -513,10 +513,10 @@ message ListProjectsResponse{
     title: "request id",
     description: "请求 ID"
   }];
-  Perms webAnnotations = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title : "webAnnotations",
+  Perms web_annotations = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "web_annotations",
     description : "项目更多信息，主要是权限相关"
-  }];
+  }, json_name = "web_annotations"];
 }
 
 message Perms {
@@ -632,6 +632,113 @@ service Namespace {
       summary : "删除命名空间 ITSM 回调"
     };
   }
+  rpc SyncNamespace(SyncNamespaceRequest) returns (SyncNamespaceResponse) {
+    option (google.api.http) = {
+      post : "/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/sync"
+      body : "*"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "同步命名空间"
+      summary : "同步命名空间"
+    };
+  }
+  rpc WithdrawNamespace(WithdrawNamespaceRequest) returns (WithdrawNamespaceResponse) {
+    option (google.api.http) = {
+      post : "/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/withdraw"
+      body : "*"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "撤回命名空间审批"
+      summary : "撤回命名空间审批"
+    };
+  }
+}
+
+message SyncNamespaceRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "CreateNamespaceRequest"
+      description : "创建命名空间请求"
+      required : [
+        "projectCode",
+        "clusterID"
+      ]
+    }
+  };
+
+  string projectCode = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "projectCode", 
+    description: "项目编码(英文缩写), 全局唯一, 长度不能超过64字符"
+  }];
+  string clusterID = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "projectCode", 
+    description: "集群ID"
+  }];
+}
+
+message SyncNamespaceResponse {
+  uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code", 
+    description: "返回错误码"
+  }];
+  string message = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "message",
+    description: "返回错误信息"
+  }];
+  string data = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "data", 
+    description: "返回详细信息, 可以为空"
+  }];
+  string requestID = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "request id",
+    description: "请求 ID"
+  }];
+}
+
+message WithdrawNamespaceRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "CreateNamespaceRequest"
+      description : "创建命名空间请求"
+      required : [
+        "projectCode",
+        "clusterID",
+        "namespace"
+      ]
+    }
+  };
+
+  string projectCode = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "projectCode", 
+    description: "项目编码(英文缩写), 全局唯一, 长度不能超过64字符"
+  }];
+  string clusterID = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "projectCode", 
+    description: "集群ID"
+  }];
+  string namespace = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "namespace", 
+    description: "命名空间名称"
+  }];
+}
+
+message WithdrawNamespaceResponse {
+  uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code", 
+    description: "返回错误码"
+  }];
+  string message = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "message",
+    description: "返回错误信息"
+  }];
+  string data = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "data", 
+    description: "返回详细信息, 可以为空"
+  }];
+  string requestID = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "request id",
+    description: "请求 ID"
+  }];
 }
 
 message CreateNamespaceRequest {
@@ -695,10 +802,10 @@ message CreateNamespaceResponse {
     title: "request id",
     description: "请求 ID"
   }];
-  Perms webAnnotations = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title : "webAnnotations",
-    description : "项目更多信息，主要是权限相关"
-  }];
+  Perms web_annotations = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "web_annotations",
+    description : "更多信息，主要是权限相关"
+  }, json_name = "web_annotations"];
 }
 
 message NamespaceCallbackRequest {
@@ -829,6 +936,10 @@ message UpdateNamespaceResponse {
     title: "request id",
     description: "请求 ID"
   }];
+  Perms web_annotations = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "web_annotations",
+    description : "更多信息，主要是权限相关"
+  }, json_name = "web_annotations"];
 }
 
 message GetNamespaceRequest {
@@ -875,6 +986,10 @@ message GetNamespaceResponse {
     title: "request id",
     description: "请求 ID"
   }];
+  Perms web_annotations = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "web_annotations",
+    description : "更多信息，主要是权限相关"
+  }, json_name = "web_annotations"];
 }
 
 message ListNamespacesRequest {
@@ -916,10 +1031,10 @@ message ListNamespacesResponse {
     title: "request id",
     description: "请求 ID"
   }];
-  Perms webAnnotations = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title : "webAnnotations",
+  Perms web_annotations = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "web_annotations",
     description : "项目更多信息，主要是权限相关"
-  }];
+  }, json_name = "web_annotations"];
 }
 
 message DeleteNamespaceRequest {
@@ -966,6 +1081,10 @@ message DeleteNamespaceResponse {
   string requestID = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "request id",
     description: "请求 ID"
+  }];
+  Perms perms = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "perms",
+    description : "无权限相关信息"
   }];
 }
 

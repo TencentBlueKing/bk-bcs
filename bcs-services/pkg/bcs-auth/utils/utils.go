@@ -31,10 +31,41 @@ var (
 	ErrServerNotInited = errors.New("server not init")
 )
 
+const (
+	PermDeniedCode = 40300
+)
+
+// PermDeniedError permission denied,user need to apply
+type PermDeniedError struct {
+	Perms PermData `json:"perms"`
+}
+
+type PermData struct {
+	ApplyURL   string           `json:"apply_url"`
+	ActionList []ResourceAction `json:"action_list"`
+}
+
+func (e *PermDeniedError) Error() string {
+	var actions string
+	for _, action := range e.Perms.ActionList {
+		actions = actions + " " + action.Action
+	}
+	return fmt.Sprintf("permission denied, need%s permition", actions)
+}
+
+func (e *PermDeniedError) Data() string {
+	var actions string
+	for _, action := range e.Perms.ActionList {
+		actions = actions + " " + action.Action
+	}
+	return fmt.Sprintf("permission denied, need%s permition", actions)
+}
+
 // ResourceAction for multi action multi resources
 type ResourceAction struct {
-	Resource string
-	Action   string
+	Resource string `json:"-"`
+	Type     string `json:"resource_type"`
+	Action   string `json:"action_id"`
 }
 
 // CheckResourceRequest xxx

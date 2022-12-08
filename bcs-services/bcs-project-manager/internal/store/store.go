@@ -39,8 +39,11 @@ type ProjectModel interface {
 	ListProjects(ctx context.Context, cond *operator.Condition, opt *page.Pagination) ([]project.Project, int64, error)
 	ListProjectByIDs(ctx context.Context, ids []string, opt *page.Pagination) ([]project.Project, int64, error)
 
-	GetNamespace(ctx context.Context, projectCode, clusterID, namespace, stagingType string) (*nsm.Namespace, error)
+	GetNamespace(ctx context.Context, projectCode, clusterID, name string) (*nsm.Namespace, error)
+	GetNamespaceByItsmTicketType(ctx context.Context,
+		projectCode, clusterID, namespace, stagingType string) (*nsm.Namespace, error)
 	CreateNamespace(ctx context.Context, ns *nsm.Namespace) error
+	ListNamespaces(ctx context.Context) ([]nsm.Namespace, error)
 	ListNamespacesByItsmTicketType(ctx context.Context,
 		projectCode, clusterID string, types []string) ([]nsm.Namespace, error)
 	UpdateNamespace(ctx context.Context, ns entity.M) (*nsm.Namespace, error)
@@ -62,6 +65,7 @@ type ProjectModel interface {
 	ListNamespaceVariableValues(ctx context.Context, variableID, clusterID string) ([]vvm.VariableValue, error)
 	ListVariableValuesInCluster(ctx context.Context, clusterID string) ([]vvm.VariableValue, error)
 	ListVariableValuesInNamespace(ctx context.Context, clusterID, namespace string) ([]vvm.VariableValue, error)
+	ListVariableValuesInAllNamespace(ctx context.Context, clusterID string) ([]vvm.VariableValue, error)
 	DeleteVariableValuesByNamespace(ctx context.Context, clusterID, namespace string) (int64, error)
 }
 

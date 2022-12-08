@@ -8,6 +8,7 @@ ADD swagger/bcsproject.swagger.json /data/bcs/swagger/bcsproject.swagger.json
 
 WORKDIR /data/bcs/
 
+ADD bcs-project-migration /usr/bin/bcs-project-migration
 ADD bcs-project-manager /usr/bin/bcs-project-manager
 
 RUN chmod +x /usr/bin/bcs-project-manager

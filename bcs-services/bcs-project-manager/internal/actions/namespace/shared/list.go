@@ -21,9 +21,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 	"golang.org/x/sync/errgroup"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/kubernetes"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/page"
@@ -88,7 +86,19 @@ func (a *SharedNamespaceAction) ListNamespaces(ctx context.Context,
 		logging.Error("list namespaces in cluster %s failed, err: %s", req.GetClusterID(), err.Error())
 		return errorx.NewClusterErr(err)
 	}
+	quotaList, err := client.CoreV1().ResourceQuotas("").List(ctx, metav1.ListOptions{})
+	quotaMap := map[string]corev1.ResourceQuota{}
+	for _, quota := range quotaList.Items {
+		if quota.GetName() == quota.GetNamespace() {
+			quotaMap[quota.GetName()] = quota
+		}
+	}
 	namespaces := nsutils.FilterNamespaces(nsList, true, req.GetProjectCode())
+	variablesMap, err := batchListNamespaceVariables(ctx, req.GetProjectCode(), req.GetClusterID(), namespaces)
+	if err != nil {
+		logging.Error("batch list variables failed, err: %s", err.Error())
+		return errorx.NewClusterErr(err)
+	}
 	// inject staging updating info to exist namespace
 	modifyStaggings, err := a.model.ListNamespacesByItsmTicketType(ctx, req.GetProjectCode(), req.GetClusterID(),
 		[]string{nsm.ItsmTicketTypeUpdate, nsm.ItsmTicketTypeDelete})
@@ -108,21 +118,12 @@ func (a *SharedNamespaceAction) ListNamespaces(ctx context.Context,
 				Status:     string(namespace.Status.Phase),
 			}
 			// get quota
-			quota, err := getNamespaceQuota(ctx, req.GetProjectCode(), req.GetClusterID(), namespace.GetName(), client)
-			if err != nil {
-				return err
-			}
-			if quota != nil {
-				retData.Quota, retData.Used, retData.CpuUseRate, retData.MemoryUseRate = quotautils.TransferToProto(quota)
+			if quota, ok := quotaMap[namespace.GetName()]; ok {
+				retData.Quota, retData.Used, retData.CpuUseRate, retData.MemoryUseRate =
+					quotautils.TransferToProto(&quota)
 			}
 			// get variables
-			variables, err := listNamespaceVariables(ctx, req.GetProjectCode(), req.GetClusterID(), namespace.GetName())
-			if err != nil {
-				logging.Error("get namespace %s/%s variables failed, err: %s",
-					req.GetClusterID(), namespace.GetName(), err.Error())
-				return errorx.NewDBErr(err.Error())
-			}
-			retData.Variables = variables
+			retData.Variables = variablesMap[namespace.GetName()]
 			if ns, ok := existns[retData.GetName()]; ok {
 				retData.ItsmTicketType = ns.ItsmTicketType
 				retData.ItsmTicketSN = ns.ItsmTicketSN
@@ -135,26 +136,9 @@ func (a *SharedNamespaceAction) ListNamespaces(ctx context.Context,
 			return nil
 		})
 	}
-	if err := g.Wait(); err != nil {
-		logging.Error("list namespaces in %s failed, err:%s", req.GetClusterID(), err.Error())
-		return err
-	}
+	g.Wait()
 	resp.Data = retDatas
 	return nil
-}
-
-func getNamespaceQuota(ctx context.Context, projectCode, clusterID, namespace string, clientset *kubernetes.Clientset) (
-	*corev1.ResourceQuota, error) {
-	quota, err := clientset.CoreV1().ResourceQuotas(namespace).Get(ctx, namespace, metav1.GetOptions{})
-	if err != nil && !errors.IsNotFound(err) {
-		logging.Error("get resourceQuota %s/%s failed, err: %s", clusterID, namespace, err.Error())
-		return nil, errorx.NewClusterErr(err.Error())
-	}
-
-	if errors.IsNotFound(err) {
-		return nil, nil
-	}
-	return quota, nil
 }
 
 func listNamespaceVariables(ctx context.Context,
@@ -193,4 +177,48 @@ func listNamespaceVariables(ctx context.Context,
 		variables = append(variables, variable)
 	}
 	return variables, nil
+}
+
+func batchListNamespaceVariables(ctx context.Context,
+	projectCode, clusterID string, namespaces []corev1.Namespace) (map[string][]*proto.VariableValue, error) {
+	model := store.GetModel()
+	listCond := make(operator.M)
+	listCond[vdm.FieldKeyProjectCode] = projectCode
+	listCond[vdm.FieldKeyScope] = vdm.VariableScopeNamespace
+	definitions, _, err := model.ListVariableDefinitions(ctx, operator.NewLeafCondition(operator.Eq, listCond),
+		&page.Pagination{Sort: map[string]int{vdm.FieldKeyCreateTime: -1}, All: true})
+	if err != nil {
+		logging.Error("get variable definitions from db failed, err: %s", err.Error())
+		return nil, errorx.NewDBErr(err.Error())
+	}
+	variablesMap := make(map[string][]*proto.VariableValue)
+	variableValues, err := model.ListVariableValuesInAllNamespace(ctx, clusterID)
+	if err != nil {
+		logging.Error("list variable values from db failed, err: %s", err.Error())
+		return variablesMap, errorx.NewDBErr(err.Error())
+	}
+	exists := make(map[string]vvm.VariableValue)
+	for _, value := range variableValues {
+		exists[value.VariableID+"&"+value.Namespace] = value
+	}
+	for _, namespace := range namespaces {
+		for _, definition := range definitions {
+			variable := &proto.VariableValue{
+				Id:   definition.ID,
+				Name: definition.Name,
+				Key:  definition.Key,
+			}
+			if value, ok := exists[definition.ID+"&"+namespace.GetName()]; ok {
+				variable.Value = value.Value
+			} else {
+				variable.Value = definition.Default
+			}
+			if _, ok := variablesMap[namespace.GetName()]; ok {
+				variablesMap[namespace.GetName()] = append(variablesMap[namespace.GetName()], variable)
+			} else {
+				variablesMap[namespace.GetName()] = []*proto.VariableValue{variable}
+			}
+		}
+	}
+	return variablesMap, nil
 }

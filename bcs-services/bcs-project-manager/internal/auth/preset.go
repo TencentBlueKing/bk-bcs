@@ -19,11 +19,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/project"
 )
 
-// TODO: 替代 bcs-services/pkg/bcs-auth 中有问题的常量，修复后可以去掉
-
-// CanUpdateNamespaceOperation ...
-var CanUpdateNamespaceOperation = "CanUpdateNamespace"
-
 // ActionPermissions action 对应权限中心的权限
 var ActionPermissions = map[string]string{
 	// project
@@ -49,8 +44,9 @@ var ActionPermissions = map[string]string{
 	"Variable.ImportVariables":           project.CanViewProjectOperation,
 	"Variable.RenderVariables":           project.CanViewProjectOperation,
 	// Namespace
+	"Namespace.SyncNamespace":   namespace.CanCreateNamespaceOperation,
 	"Namespace.CreateNamespace": namespace.CanCreateNamespaceOperation,
-	"Namespace.UpdateNamespace": CanUpdateNamespaceOperation,
+	"Namespace.UpdateNamespace": namespace.CanUpdateNamespaceOperation,
 	"Namespace.GetNamespace":    namespace.CanViewNamespaceOperation,
 	"Namespace.ListNamespaces":  namespace.CanListNamespaceOperation,
 	"Namespace.DeleteNamespace": namespace.CanDeleteNamespaceOperation,

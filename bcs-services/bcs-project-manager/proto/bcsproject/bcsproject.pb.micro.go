@@ -319,6 +319,20 @@ func NewNamespaceEndpoints() []*api.Endpoint {
 			Body:    "*",
 			Handler: "rpc",
 		},
+		&api.Endpoint{
+			Name:    "Namespace.SyncNamespace",
+			Path:    []string{"/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/sync"},
+			Method:  []string{"POST"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "Namespace.WithdrawNamespace",
+			Path:    []string{"/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/withdraw"},
+			Method:  []string{"POST"},
+			Body:    "*",
+			Handler: "rpc",
+		},
 	}
 }
 
@@ -333,6 +347,8 @@ type NamespaceService interface {
 	ListNamespaces(ctx context.Context, in *ListNamespacesRequest, opts ...client.CallOption) (*ListNamespacesResponse, error)
 	DeleteNamespace(ctx context.Context, in *DeleteNamespaceRequest, opts ...client.CallOption) (*DeleteNamespaceResponse, error)
 	DeleteNamespaceCallback(ctx context.Context, in *NamespaceCallbackRequest, opts ...client.CallOption) (*NamespaceCallbackResponse, error)
+	SyncNamespace(ctx context.Context, in *SyncNamespaceRequest, opts ...client.CallOption) (*SyncNamespaceResponse, error)
+	WithdrawNamespace(ctx context.Context, in *WithdrawNamespaceRequest, opts ...client.CallOption) (*WithdrawNamespaceResponse, error)
 }
 
 type namespaceService struct {
@@ -427,6 +443,26 @@ func (c *namespaceService) DeleteNamespaceCallback(ctx context.Context, in *Name
 	return out, nil
 }
 
+func (c *namespaceService) SyncNamespace(ctx context.Context, in *SyncNamespaceRequest, opts ...client.CallOption) (*SyncNamespaceResponse, error) {
+	req := c.c.NewRequest(c.name, "Namespace.SyncNamespace", in)
+	out := new(SyncNamespaceResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *namespaceService) WithdrawNamespace(ctx context.Context, in *WithdrawNamespaceRequest, opts ...client.CallOption) (*WithdrawNamespaceResponse, error) {
+	req := c.c.NewRequest(c.name, "Namespace.WithdrawNamespace", in)
+	out := new(WithdrawNamespaceResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // Server API for Namespace service
 
 type NamespaceHandler interface {
@@ -438,6 +474,8 @@ type NamespaceHandler interface {
 	ListNamespaces(context.Context, *ListNamespacesRequest, *ListNamespacesResponse) error
 	DeleteNamespace(context.Context, *DeleteNamespaceRequest, *DeleteNamespaceResponse) error
 	DeleteNamespaceCallback(context.Context, *NamespaceCallbackRequest, *NamespaceCallbackResponse) error
+	SyncNamespace(context.Context, *SyncNamespaceRequest, *SyncNamespaceResponse) error
+	WithdrawNamespace(context.Context, *WithdrawNamespaceRequest, *WithdrawNamespaceResponse) error
 }
 
 func RegisterNamespaceHandler(s server.Server, hdlr NamespaceHandler, opts ...server.HandlerOption) error {
@@ -450,6 +488,8 @@ func RegisterNamespaceHandler(s server.Server, hdlr NamespaceHandler, opts ...se
 		ListNamespaces(ctx context.Context, in *ListNamespacesRequest, out *ListNamespacesResponse) error
 		DeleteNamespace(ctx context.Context, in *DeleteNamespaceRequest, out *DeleteNamespaceResponse) error
 		DeleteNamespaceCallback(ctx context.Context, in *NamespaceCallbackRequest, out *NamespaceCallbackResponse) error
+		SyncNamespace(ctx context.Context, in *SyncNamespaceRequest, out *SyncNamespaceResponse) error
+		WithdrawNamespace(ctx context.Context, in *WithdrawNamespaceRequest, out *WithdrawNamespaceResponse) error
 	}
 	type Namespace struct {
 		namespace
@@ -509,6 +549,20 @@ func RegisterNamespaceHandler(s server.Server, hdlr NamespaceHandler, opts ...se
 		Body:    "*",
 		Handler: "rpc",
 	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Namespace.SyncNamespace",
+		Path:    []string{"/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/sync"},
+		Method:  []string{"POST"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Namespace.WithdrawNamespace",
+		Path:    []string{"/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/withdraw"},
+		Method:  []string{"POST"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
 	return s.Handle(s.NewHandler(&Namespace{h}, opts...))
 }
 
@@ -546,6 +600,14 @@ func (h *namespaceHandler) DeleteNamespace(ctx context.Context, in *DeleteNamesp
 
 func (h *namespaceHandler) DeleteNamespaceCallback(ctx context.Context, in *NamespaceCallbackRequest, out *NamespaceCallbackResponse) error {
 	return h.NamespaceHandler.DeleteNamespaceCallback(ctx, in, out)
+}
+
+func (h *namespaceHandler) SyncNamespace(ctx context.Context, in *SyncNamespaceRequest, out *SyncNamespaceResponse) error {
+	return h.NamespaceHandler.SyncNamespace(ctx, in, out)
+}
+
+func (h *namespaceHandler) WithdrawNamespace(ctx context.Context, in *WithdrawNamespaceRequest, out *WithdrawNamespaceResponse) error {
+	return h.NamespaceHandler.WithdrawNamespace(ctx, in, out)
 }
 
 // Api Endpoints for Variable service

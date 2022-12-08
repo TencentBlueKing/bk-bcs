@@ -20,18 +20,17 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/parnurzeal/gorequest"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/logging"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/errorx"
-
-	"github.com/parnurzeal/gorequest"
 )
 
 var (
-	createTicketPath   = "/v2/itsm/create_ticket/"
-	createCallbackPath = "%s/bcsapi/v4/bcsproject/v1/project/%s/cluster/%s/namespaces/%s/callback"
-	timeout            = 10
+	createTicketPath = "/v2/itsm/create_ticket/"
+	timeout          = 10
 )
 
 // CreateTicketResp itsm create ticket resp
@@ -71,7 +70,7 @@ func CreateTicket(username string, serviceID int, fields []map[string]interface{
 	proxy := ""
 	body, err := component.Request(req, timeout, proxy, headers)
 	if err != nil {
-		logging.Error("request itsm create ticket failed, %v", err)
+		logging.Error("request itsm create ticket failed, %s", err.Error())
 		return nil, errorx.NewRequestITSMErr(err)
 	}
 	// 解析返回的body

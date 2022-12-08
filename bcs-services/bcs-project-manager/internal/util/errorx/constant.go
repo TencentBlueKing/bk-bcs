@@ -76,4 +76,6 @@ const (
 	RequestITSMErr = commErr.AdditionErrorCode + 510
 	// RequestITSMErrMsg TODO
 	RequestITSMErrMsg = "request itsm api error"
+	// NoPermissionErr 无权限
+	NoPermissionErr = 40403
 )

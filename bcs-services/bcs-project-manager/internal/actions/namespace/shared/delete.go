@@ -36,7 +36,7 @@ func (a *SharedNamespaceAction) DeleteNamespace(ctx context.Context,
 		ProjectCode: req.GetProjectCode(),
 		ClusterID:   req.GetClusterID(),
 		Name:        req.GetNamespace(),
-		Updater:     username,
+		Creator:     username,
 	}
 	itsmResp, err := itsm.SubmitDeleteNamespaceTicket(username, req.GetProjectCode(), req.GetClusterID(), req.GetNamespace())
 	if err != nil {

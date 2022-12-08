@@ -22,6 +22,9 @@ import (
 
 //NamespaceAction action for namespace
 type NamespaceAction interface {
+	SyncNamespace(ctx context.Context, req *proto.SyncNamespaceRequest, resp *proto.SyncNamespaceResponse) error
+	WithdrawNamespace(ctx context.Context,
+		req *proto.WithdrawNamespaceRequest, resp *proto.WithdrawNamespaceResponse) error
 	CreateNamespace(ctx context.Context, req *proto.CreateNamespaceRequest, resp *proto.CreateNamespaceResponse) error
 	CreateNamespaceCallback(ctx context.Context,
 		req *proto.NamespaceCallbackRequest, resp *proto.NamespaceCallbackResponse) error

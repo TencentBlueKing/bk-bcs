@@ -1795,6 +1795,440 @@ var _ interface {
 	ErrorName() string
 } = ListAuthorizedProjRespValidationError{}
 
+// Validate checks the field values on SyncNamespaceRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *SyncNamespaceRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on SyncNamespaceRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// SyncNamespaceRequestMultiError, or nil if none found.
+func (m *SyncNamespaceRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *SyncNamespaceRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for ProjectCode
+
+	// no validation rules for ClusterID
+
+	if len(errors) > 0 {
+		return SyncNamespaceRequestMultiError(errors)
+	}
+
+	return nil
+}
+
+// SyncNamespaceRequestMultiError is an error wrapping multiple validation
+// errors returned by SyncNamespaceRequest.ValidateAll() if the designated
+// constraints aren't met.
+type SyncNamespaceRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m SyncNamespaceRequestMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m SyncNamespaceRequestMultiError) AllErrors() []error { return m }
+
+// SyncNamespaceRequestValidationError is the validation error returned by
+// SyncNamespaceRequest.Validate if the designated constraints aren't met.
+type SyncNamespaceRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e SyncNamespaceRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e SyncNamespaceRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e SyncNamespaceRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e SyncNamespaceRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e SyncNamespaceRequestValidationError) ErrorName() string {
+	return "SyncNamespaceRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e SyncNamespaceRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sSyncNamespaceRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = SyncNamespaceRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = SyncNamespaceRequestValidationError{}
+
+// Validate checks the field values on SyncNamespaceResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *SyncNamespaceResponse) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on SyncNamespaceResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// SyncNamespaceResponseMultiError, or nil if none found.
+func (m *SyncNamespaceResponse) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *SyncNamespaceResponse) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	// no validation rules for Data
+
+	// no validation rules for RequestID
+
+	if len(errors) > 0 {
+		return SyncNamespaceResponseMultiError(errors)
+	}
+
+	return nil
+}
+
+// SyncNamespaceResponseMultiError is an error wrapping multiple validation
+// errors returned by SyncNamespaceResponse.ValidateAll() if the designated
+// constraints aren't met.
+type SyncNamespaceResponseMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m SyncNamespaceResponseMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m SyncNamespaceResponseMultiError) AllErrors() []error { return m }
+
+// SyncNamespaceResponseValidationError is the validation error returned by
+// SyncNamespaceResponse.Validate if the designated constraints aren't met.
+type SyncNamespaceResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e SyncNamespaceResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e SyncNamespaceResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e SyncNamespaceResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e SyncNamespaceResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e SyncNamespaceResponseValidationError) ErrorName() string {
+	return "SyncNamespaceResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e SyncNamespaceResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sSyncNamespaceResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = SyncNamespaceResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = SyncNamespaceResponseValidationError{}
+
+// Validate checks the field values on WithdrawNamespaceRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *WithdrawNamespaceRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on WithdrawNamespaceRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// WithdrawNamespaceRequestMultiError, or nil if none found.
+func (m *WithdrawNamespaceRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *WithdrawNamespaceRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for ProjectCode
+
+	// no validation rules for ClusterID
+
+	// no validation rules for Namespace
+
+	if len(errors) > 0 {
+		return WithdrawNamespaceRequestMultiError(errors)
+	}
+
+	return nil
+}
+
+// WithdrawNamespaceRequestMultiError is an error wrapping multiple validation
+// errors returned by WithdrawNamespaceRequest.ValidateAll() if the designated
+// constraints aren't met.
+type WithdrawNamespaceRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m WithdrawNamespaceRequestMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m WithdrawNamespaceRequestMultiError) AllErrors() []error { return m }
+
+// WithdrawNamespaceRequestValidationError is the validation error returned by
+// WithdrawNamespaceRequest.Validate if the designated constraints aren't met.
+type WithdrawNamespaceRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e WithdrawNamespaceRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e WithdrawNamespaceRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e WithdrawNamespaceRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e WithdrawNamespaceRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e WithdrawNamespaceRequestValidationError) ErrorName() string {
+	return "WithdrawNamespaceRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e WithdrawNamespaceRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sWithdrawNamespaceRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = WithdrawNamespaceRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = WithdrawNamespaceRequestValidationError{}
+
+// Validate checks the field values on WithdrawNamespaceResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *WithdrawNamespaceResponse) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on WithdrawNamespaceResponse with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// WithdrawNamespaceResponseMultiError, or nil if none found.
+func (m *WithdrawNamespaceResponse) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *WithdrawNamespaceResponse) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	// no validation rules for Data
+
+	// no validation rules for RequestID
+
+	if len(errors) > 0 {
+		return WithdrawNamespaceResponseMultiError(errors)
+	}
+
+	return nil
+}
+
+// WithdrawNamespaceResponseMultiError is an error wrapping multiple validation
+// errors returned by WithdrawNamespaceResponse.ValidateAll() if the
+// designated constraints aren't met.
+type WithdrawNamespaceResponseMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m WithdrawNamespaceResponseMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m WithdrawNamespaceResponseMultiError) AllErrors() []error { return m }
+
+// WithdrawNamespaceResponseValidationError is the validation error returned by
+// WithdrawNamespaceResponse.Validate if the designated constraints aren't met.
+type WithdrawNamespaceResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e WithdrawNamespaceResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e WithdrawNamespaceResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e WithdrawNamespaceResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e WithdrawNamespaceResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e WithdrawNamespaceResponseValidationError) ErrorName() string {
+	return "WithdrawNamespaceResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e WithdrawNamespaceResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sWithdrawNamespaceResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = WithdrawNamespaceResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = WithdrawNamespaceResponseValidationError{}
+
 // Validate checks the field values on CreateNamespaceRequest with the rules
 // defined in the proto definition for this message. If any rules are
 // violated, the first error encountered is returned, or nil if there are no violations.
@@ -2731,6 +3165,35 @@ func (m *UpdateNamespaceResponse) validate(all bool) error {
 
 	// no validation rules for RequestID
 
+	if all {
+		switch v := interface{}(m.GetWebAnnotations()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, UpdateNamespaceResponseValidationError{
+					field:  "WebAnnotations",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, UpdateNamespaceResponseValidationError{
+					field:  "WebAnnotations",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetWebAnnotations()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return UpdateNamespaceResponseValidationError{
+				field:  "WebAnnotations",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
 	if len(errors) > 0 {
 		return UpdateNamespaceResponseMultiError(errors)
 	}
@@ -2975,6 +3438,35 @@ func (m *GetNamespaceResponse) validate(all bool) error {
 	}
 
 	// no validation rules for RequestID
+
+	if all {
+		switch v := interface{}(m.GetWebAnnotations()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, GetNamespaceResponseValidationError{
+					field:  "WebAnnotations",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, GetNamespaceResponseValidationError{
+					field:  "WebAnnotations",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetWebAnnotations()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return GetNamespaceResponseValidationError{
+				field:  "WebAnnotations",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
 
 	if len(errors) > 0 {
 		return GetNamespaceResponseMultiError(errors)
@@ -3492,6 +3984,35 @@ func (m *DeleteNamespaceResponse) validate(all bool) error {
 	// no validation rules for Data
 
 	// no validation rules for RequestID
+
+	if all {
+		switch v := interface{}(m.GetPerms()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, DeleteNamespaceResponseValidationError{
+					field:  "Perms",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, DeleteNamespaceResponseValidationError{
+					field:  "Perms",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetPerms()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return DeleteNamespaceResponseValidationError{
+				field:  "Perms",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
 
 	if len(errors) > 0 {
 		return DeleteNamespaceResponseMultiError(errors)

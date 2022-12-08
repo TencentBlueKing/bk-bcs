@@ -21,9 +21,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 	"golang.org/x/sync/errgroup"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/kubernetes"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/page"
@@ -49,6 +47,17 @@ func (a *IndependentNamespaceAction) ListNamespaces(ctx context.Context,
 	if err != nil {
 		return errorx.NewClusterErr(err)
 	}
+	quotaList, err := client.CoreV1().ResourceQuotas("").List(ctx, metav1.ListOptions{})
+	quotaMap := map[string]corev1.ResourceQuota{}
+	for _, quota := range quotaList.Items {
+		if quota.GetName() == quota.GetNamespace() {
+			quotaMap[quota.GetName()] = quota
+		}
+	}
+	variablesMap, err := batchListNamespaceVariables(ctx, req.GetProjectCode(), req.GetClusterID(), nsList.Items)
+	if err != nil {
+		return errorx.NewDBErr(err)
+	}
 	lock := &sync.Mutex{}
 	g, ctx := errgroup.WithContext(ctx)
 	retDatas := []*proto.NamespaceData{}
@@ -70,52 +79,24 @@ func (a *IndependentNamespaceAction) ListNamespaces(ctx context.Context,
 				retData.Annotations = append(retData.Annotations, &proto.Annotation{Key: k, Value: v})
 			}
 			// get quota
-			quota, err := getNamespaceQuota(ctx, req.GetProjectCode(), req.GetClusterID(), ns.GetName(), client)
-			if err != nil {
-				return err
+			if quota, ok := quotaMap[ns.GetName()]; ok {
+				retData.Quota, retData.Used, retData.CpuUseRate, retData.MemoryUseRate = quotautils.TransferToProto(&quota)
 			}
-			if quota != nil {
-				retData.Quota, retData.Used, retData.CpuUseRate, retData.MemoryUseRate = quotautils.TransferToProto(quota)
-			}
-
 			// get variables
-			variables, err := listNamespaceVariables(ctx, req.GetProjectCode(), req.GetClusterID(), ns.GetName())
-			if err != nil {
-				logging.Error("get namespace %s/%s variables failed, err: %s", req.GetClusterID(), ns.GetName(), err.Error())
-				return errorx.NewDBErr(err.Error())
-			}
-			retData.Variables = variables
+			retData.Variables = variablesMap[ns.GetName()]
 			lock.Lock()
 			defer lock.Unlock()
 			retDatas = append(retDatas, retData)
 			return nil
 		})
 	}
-	if err := g.Wait(); err != nil {
-		logging.Error("list namespaces in %s failed, err:%s", req.GetClusterID(), err.Error())
-		return err
-	}
+	g.Wait()
 	resp.Data = retDatas
 	return nil
 }
 
-func getNamespaceQuota(ctx context.Context, projectCode, clusterID, namespace string, clientset *kubernetes.Clientset) (
-	*corev1.ResourceQuota, error) {
-	quota, err := clientset.CoreV1().ResourceQuotas(namespace).Get(ctx, namespace, metav1.GetOptions{})
-	if err != nil && !errors.IsNotFound(err) {
-		logging.Error("get resourceQuota %s/%s failed, err: %s", clusterID, namespace, err.Error())
-		return nil, errorx.NewClusterErr(err.Error())
-	}
-
-	// get quota
-	if errors.IsNotFound(err) {
-		return nil, nil
-	}
-	return quota, nil
-}
-
-func listNamespaceVariables(ctx context.Context,
-	projectCode, clusterID, namespace string) ([]*proto.VariableValue, error) {
+func batchListNamespaceVariables(ctx context.Context,
+	projectCode, clusterID string, namespaces []corev1.Namespace) (map[string][]*proto.VariableValue, error) {
 	model := store.GetModel()
 	listCond := make(operator.M)
 	listCond[vdm.FieldKeyProjectCode] = projectCode
@@ -126,28 +107,34 @@ func listNamespaceVariables(ctx context.Context,
 		logging.Error("get variable definitions from db failed, err: %s", err.Error())
 		return nil, errorx.NewDBErr(err.Error())
 	}
-	var variables []*proto.VariableValue
-	variableValues, err := model.ListVariableValuesInNamespace(ctx, clusterID, namespace)
+	variablesMap := make(map[string][]*proto.VariableValue)
+	variableValues, err := model.ListVariableValuesInAllNamespace(ctx, clusterID)
 	if err != nil {
 		logging.Error("list variable values from db failed, err: %s", err.Error())
-		return variables, errorx.NewDBErr(err.Error())
+		return variablesMap, errorx.NewDBErr(err.Error())
 	}
-	exists := make(map[string]vvm.VariableValue, len(variableValues))
+	exists := make(map[string]vvm.VariableValue)
 	for _, value := range variableValues {
-		exists[value.VariableID] = value
+		exists[value.VariableID+"&"+value.Namespace] = value
 	}
-	for _, definition := range definitions {
-		variable := &proto.VariableValue{
-			Id:   definition.ID,
-			Name: definition.Name,
-			Key:  definition.Key,
+	for _, namespace := range namespaces {
+		for _, definition := range definitions {
+			variable := &proto.VariableValue{
+				Id:        definition.ID,
+				Name:      definition.Name,
+				Key:       definition.Key,
+			}
+			if value, ok := exists[definition.ID+"&"+namespace.GetName()]; ok {
+				variable.Value = value.Value
+			} else {
+				variable.Value = definition.Default
+			}
+			if _, ok := variablesMap[namespace.GetName()]; ok {
+				variablesMap[namespace.GetName()] = append(variablesMap[namespace.GetName()], variable)
+			} else {
+				variablesMap[namespace.GetName()] = []*proto.VariableValue{variable}
+			}
 		}
-		if value, ok := exists[variable.Id]; ok {
-			variable.Value = value.Value
-		} else {
-			variable.Value = definition.Default
-		}
-		variables = append(variables, variable)
 	}
-	return variables, nil
+	return variablesMap, nil
 }

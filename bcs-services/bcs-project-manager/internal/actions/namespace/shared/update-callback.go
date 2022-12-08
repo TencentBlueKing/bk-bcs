@@ -35,7 +35,7 @@ func (a *SharedNamespaceAction) UpdateNamespaceCallback(ctx context.Context,
 	if !req.GetApproveResult() {
 		return a.model.DeleteNamespace(ctx, req.GetProjectCode(), req.GetClusterID(), req.GetNamespace())
 	}
-	namespace, err := a.model.GetNamespace(ctx, req.GetProjectCode(), req.GetClusterID(),
+	namespace, err := a.model.GetNamespaceByItsmTicketType(ctx, req.GetProjectCode(), req.GetClusterID(),
 		req.GetNamespace(), nsm.ItsmTicketTypeUpdate)
 	if err != nil {
 		logging.Error("get namespace %s/%s from db failed, err: %s", req.GetClusterID(), req.GetNamespace(), err.Error())

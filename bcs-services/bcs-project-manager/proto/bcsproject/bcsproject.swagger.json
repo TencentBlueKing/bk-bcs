@@ -288,6 +288,54 @@
         ]
       }
     },
+    "/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/sync": {
+      "post": {
+        "summary": "同步命名空间",
+        "description": "同步命名空间",
+        "operationId": "Namespace_SyncNamespace",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/bcsprojectSyncNamespaceResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectCode",
+            "description": "项目编码(英文缩写), 全局唯一, 长度不能超过64字符",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "clusterID",
+            "description": "集群ID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/bcsprojectSyncNamespaceRequest"
+            }
+          }
+        ],
+        "tags": [
+          "Namespace"
+        ]
+      }
+    },
     "/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}": {
       "get": {
         "summary": "获取单个命名空间",
@@ -749,6 +797,61 @@
         ],
         "tags": [
           "Variable"
+        ]
+      }
+    },
+    "/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/withdraw": {
+      "post": {
+        "summary": "撤回命名空间审批",
+        "description": "撤回命名空间审批",
+        "operationId": "Namespace_WithdrawNamespace",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/bcsprojectWithdrawNamespaceResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectCode",
+            "description": "项目编码(英文缩写), 全局唯一, 长度不能超过64字符",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "clusterID",
+            "description": "集群ID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "namespace",
+            "description": "命名空间名称",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/bcsprojectWithdrawNamespaceRequest"
+            }
+          }
+        ],
+        "tags": [
+          "Namespace"
         ]
       }
     },
@@ -1464,10 +1567,10 @@
           "description": "请求 ID",
           "title": "request id"
         },
-        "webAnnotations": {
+        "web_annotations": {
           "$ref": "#/definitions/bcsprojectPerms",
-          "description": "项目更多信息，主要是权限相关",
-          "title": "webAnnotations"
+          "description": "更多信息，主要是权限相关",
+          "title": "web_annotations"
         }
       }
     },
@@ -1718,6 +1821,11 @@
           "type": "string",
           "description": "请求 ID",
           "title": "request id"
+        },
+        "perms": {
+          "$ref": "#/definitions/bcsprojectPerms",
+          "description": "无权限相关信息",
+          "title": "perms"
         }
       }
     },
@@ -1783,6 +1891,11 @@
           "type": "string",
           "description": "请求 ID",
           "title": "request id"
+        },
+        "web_annotations": {
+          "$ref": "#/definitions/bcsprojectPerms",
+          "description": "更多信息，主要是权限相关",
+          "title": "web_annotations"
         }
       }
     },
@@ -2075,10 +2188,10 @@
           "description": "请求 ID",
           "title": "request id"
         },
-        "webAnnotations": {
+        "web_annotations": {
           "$ref": "#/definitions/bcsprojectPerms",
           "description": "项目更多信息，主要是权限相关",
-          "title": "webAnnotations"
+          "title": "web_annotations"
         }
       }
     },
@@ -2153,10 +2266,10 @@
           "description": "请求 ID",
           "title": "request id"
         },
-        "webAnnotations": {
+        "web_annotations": {
           "$ref": "#/definitions/bcsprojectPerms",
           "description": "项目更多信息，主要是权限相关",
-          "title": "webAnnotations"
+          "title": "web_annotations"
         }
       }
     },
@@ -2594,10 +2707,10 @@
           "description": "请求 ID",
           "title": "request id"
         },
-        "webAnnotations": {
+        "web_annotations": {
           "$ref": "#/definitions/bcsprojectPerms",
           "description": "项目更多信息，主要是权限相关",
-          "title": "webAnnotations"
+          "title": "web_annotations"
         }
       }
     },
@@ -2652,6 +2765,53 @@
           "type": "string",
           "description": "limits.cpu",
           "title": "limits.memory"
+        }
+      }
+    },
+    "bcsprojectSyncNamespaceRequest": {
+      "type": "object",
+      "properties": {
+        "projectCode": {
+          "type": "string",
+          "description": "项目编码(英文缩写), 全局唯一, 长度不能超过64字符",
+          "title": "projectCode"
+        },
+        "clusterID": {
+          "type": "string",
+          "description": "集群ID",
+          "title": "projectCode"
+        }
+      },
+      "description": "创建命名空间请求",
+      "title": "CreateNamespaceRequest",
+      "required": [
+        "projectCode",
+        "clusterID"
+      ]
+    },
+    "bcsprojectSyncNamespaceResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "data": {
+          "type": "string",
+          "description": "返回详细信息, 可以为空",
+          "title": "data"
+        },
+        "requestID": {
+          "type": "string",
+          "description": "请求 ID",
+          "title": "request id"
         }
       }
     },
@@ -2821,6 +2981,11 @@
           "type": "string",
           "description": "请求 ID",
           "title": "request id"
+        },
+        "web_annotations": {
+          "$ref": "#/definitions/bcsprojectPerms",
+          "description": "更多信息，主要是权限相关",
+          "title": "web_annotations"
         }
       }
     },
@@ -3260,6 +3425,59 @@
           "type": "string",
           "description": "变量作用域",
           "title": "scope"
+        }
+      }
+    },
+    "bcsprojectWithdrawNamespaceRequest": {
+      "type": "object",
+      "properties": {
+        "projectCode": {
+          "type": "string",
+          "description": "项目编码(英文缩写), 全局唯一, 长度不能超过64字符",
+          "title": "projectCode"
+        },
+        "clusterID": {
+          "type": "string",
+          "description": "集群ID",
+          "title": "projectCode"
+        },
+        "namespace": {
+          "type": "string",
+          "description": "命名空间名称",
+          "title": "namespace"
+        }
+      },
+      "description": "创建命名空间请求",
+      "title": "CreateNamespaceRequest",
+      "required": [
+        "projectCode",
+        "clusterID",
+        "namespace"
+      ]
+    },
+    "bcsprojectWithdrawNamespaceResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "data": {
+          "type": "string",
+          "description": "返回详细信息, 可以为空",
+          "title": "data"
+        },
+        "requestID": {
+          "type": "string",
+          "description": "请求 ID",
+          "title": "request id"
         }
       }
     },
