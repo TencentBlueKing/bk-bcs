@@ -130,7 +130,6 @@ spec:
                   - endPort
                   - itemName
                   - loadBalancerIDs
-                  - protocol
                   - startPort
                   type: object
                 type: array
@@ -181,6 +180,10 @@ spec:
                             type: string
                         type: object
                       type: array
+                    protocol:
+                      items:
+                        type: string
+                      type: array
                     segmentLength:
                       format: int32
                       type: integer
@@ -193,6 +196,7 @@ spec:
                   - endPort
                   - itemName
                   - message
+                  - protocol
                   - segmentLength
                   - startPort
                   - status

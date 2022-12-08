@@ -57,6 +57,7 @@ func (ppih *PortPoolItemHandler) ensurePortPoolItem(
 			StartPort:       item.StartPort,
 			EndPort:         item.EndPort,
 			SegmentLength:   item.SegmentLength,
+			Protocol:        common.GetPortPoolItemProtocols(item.Protocol),
 			External:        item.External,
 		}
 	} else {

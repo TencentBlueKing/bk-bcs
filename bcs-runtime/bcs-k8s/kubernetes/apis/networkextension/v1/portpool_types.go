@@ -30,7 +30,7 @@ type PortPoolItem struct {
 	// +kubebuilder:validation:MinLength=1
 	ItemName        string   `json:"itemName"`
 	LoadBalancerIDs []string `json:"loadBalancerIDs"`
-	Protocol        string   `json:"protocol"`
+	Protocol        string   `json:"protocol,omitempty"`
 	// +kubebuilder:validation:Maximum=65535
 	// +kubebuilder:validation:Minimum=1
 	StartPort uint32 `json:"startPort"`
@@ -79,6 +79,7 @@ type PortPoolItemStatus struct {
 	PoolItemLoadBalancers []*IngressLoadBalancer `json:"poolItemLoadBalancers,omitempty"`
 	Status                string                 `json:"status"`
 	Message               string                 `json:"message"`
+	Protocol              []string               `json:"protocol"`
 	External              string                 `json:"external,omitempty"`
 }
 
