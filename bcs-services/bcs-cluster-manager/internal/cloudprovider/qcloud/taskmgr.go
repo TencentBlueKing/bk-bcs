@@ -1208,7 +1208,7 @@ func (t *Task) BuildUpdateDesiredNodesTask(desired uint32, group *proto.NodeGrou
 		TaskName:   cloudprovider.InstallGSEAgentStep.String(),
 	}
 	installGSEAgentStep.Params[cloudprovider.BKBizIDKey.String()] = cluster.BusinessID
-	installGSEAgentStep.Params[cloudprovider.BKCloudIDKey.String()] = strconv.Itoa(int(group.BkCloudID))
+	installGSEAgentStep.Params[cloudprovider.BKCloudIDKey.String()] = strconv.Itoa(int(group.Area.BkCloudID))
 	installGSEAgentStep.Params[cloudprovider.PasswordKey.String()] = passwd
 	task.Steps[installGSEAgentTask] = installGSEAgentStep
 	task.StepSequence = append(task.StepSequence, installGSEAgentTask)

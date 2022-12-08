@@ -7615,9 +7615,36 @@ func (m *NodeGroup) validate(all bool) error {
 
 	// no validation rules for Tags
 
-	// no validation rules for BkCloudID
+	// no validation rules for NodeGroupType
 
-	// no validation rules for BkCloudName
+	if all {
+		switch v := interface{}(m.GetArea()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, NodeGroupValidationError{
+					field:  "Area",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, NodeGroupValidationError{
+					field:  "Area",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetArea()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return NodeGroupValidationError{
+				field:  "Area",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
 
 	if len(errors) > 0 {
 		return NodeGroupMultiError(errors)
@@ -7706,6 +7733,109 @@ var _NodeGroup_Status_InLookup = map[string]struct{}{
 	"DELETED":  {},
 }
 
+// Validate checks the field values on CloudArea with the rules defined in the
+// proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *CloudArea) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on CloudArea with the rules defined in
+// the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in CloudAreaMultiError, or nil
+// if none found.
+func (m *CloudArea) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *CloudArea) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for BkCloudID
+
+	// no validation rules for BkCloudName
+
+	if len(errors) > 0 {
+		return CloudAreaMultiError(errors)
+	}
+
+	return nil
+}
+
+// CloudAreaMultiError is an error wrapping multiple validation errors returned
+// by CloudArea.ValidateAll() if the designated constraints aren't met.
+type CloudAreaMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m CloudAreaMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m CloudAreaMultiError) AllErrors() []error { return m }
+
+// CloudAreaValidationError is the validation error returned by
+// CloudArea.Validate if the designated constraints aren't met.
+type CloudAreaValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e CloudAreaValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e CloudAreaValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e CloudAreaValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e CloudAreaValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e CloudAreaValidationError) ErrorName() string { return "CloudAreaValidationError" }
+
+// Error satisfies the builtin error interface
+func (e CloudAreaValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sCloudArea.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = CloudAreaValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = CloudAreaValidationError{}
+
 // Validate checks the field values on AutoScalingGroup with the rules defined
 // in the proto definition for this message. If any rules are violated, the
 // first error encountered is returned, or nil if there are no violations.
@@ -7732,9 +7862,27 @@ func (m *AutoScalingGroup) validate(all bool) error {
 
 	// no validation rules for AutoScalingName
 
-	// no validation rules for MinSize
+	if val := m.GetMinSize(); val < 0 || val >= 320000 {
+		err := AutoScalingGroupValidationError{
+			field:  "MinSize",
+			reason: "value must be inside range [0, 320000)",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
 
-	// no validation rules for MaxSize
+	if val := m.GetMaxSize(); val < 0 || val >= 320000 {
+		err := AutoScalingGroupValidationError{
+			field:  "MaxSize",
+			reason: "value must be inside range [0, 320000)",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
 
 	// no validation rules for DesiredSize
 
@@ -9123,7 +9271,16 @@ func (m *NodeTemplate) validate(all bool) error {
 
 	}
 
-	// no validation rules for DockerGraphPath
+	if !strings.HasPrefix(m.GetDockerGraphPath(), "/") {
+		err := NodeTemplateValidationError{
+			field:  "DockerGraphPath",
+			reason: "value does not have prefix \"/\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
 
 	// no validation rules for MountTarget
 
@@ -9459,6 +9616,10 @@ func (m *ModuleInfo) validate(all bool) error {
 	// no validation rules for ScaleOutModuleID
 
 	// no validation rules for ScaleInModuleID
+
+	// no validation rules for ScaleOutBizID
+
+	// no validation rules for ScaleInBizID
 
 	// no validation rules for ScaleOutModuleName
 
@@ -24588,10 +24749,10 @@ func (m *CreateNodeGroupRequest) validate(all bool) error {
 
 	var errors []error
 
-	if l := utf8.RuneCountInString(m.GetName()); l < 2 || l > 64 {
+	if l := utf8.RuneCountInString(m.GetName()); l < 1 || l > 255 {
 		err := CreateNodeGroupRequestValidationError{
 			field:  "Name",
-			reason: "value length must be between 2 and 64 runes, inclusive",
+			reason: "value length must be between 1 and 255 runes, inclusive",
 		}
 		if !all {
 			return err
@@ -24810,7 +24971,40 @@ func (m *CreateNodeGroupRequest) validate(all bool) error {
 
 	// no validation rules for Tags
 
+	// no validation rules for NodeGroupType
+
 	// no validation rules for BkCloudID
+
+	// no validation rules for CloudAreaName
+
+	if all {
+		switch v := interface{}(m.GetExtra()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, CreateNodeGroupRequestValidationError{
+					field:  "Extra",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, CreateNodeGroupRequestValidationError{
+					field:  "Extra",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetExtra()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return CreateNodeGroupRequestValidationError{
+				field:  "Extra",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
 
 	if len(errors) > 0 {
 		return CreateNodeGroupRequestMultiError(errors)
@@ -24897,6 +25091,110 @@ var _CreateNodeGroupRequest_ClusterID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-
 var _CreateNodeGroupRequest_Region_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
 
 var _CreateNodeGroupRequest_Creator_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
+
+// Validate checks the field values on GroupExtraInfo with the rules defined in
+// the proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *GroupExtraInfo) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on GroupExtraInfo with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in GroupExtraInfoMultiError,
+// or nil if none found.
+func (m *GroupExtraInfo) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *GroupExtraInfo) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Provider
+
+	// no validation rules for PoolID
+
+	if len(errors) > 0 {
+		return GroupExtraInfoMultiError(errors)
+	}
+
+	return nil
+}
+
+// GroupExtraInfoMultiError is an error wrapping multiple validation errors
+// returned by GroupExtraInfo.ValidateAll() if the designated constraints
+// aren't met.
+type GroupExtraInfoMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m GroupExtraInfoMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m GroupExtraInfoMultiError) AllErrors() []error { return m }
+
+// GroupExtraInfoValidationError is the validation error returned by
+// GroupExtraInfo.Validate if the designated constraints aren't met.
+type GroupExtraInfoValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GroupExtraInfoValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GroupExtraInfoValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GroupExtraInfoValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GroupExtraInfoValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GroupExtraInfoValidationError) ErrorName() string { return "GroupExtraInfoValidationError" }
+
+// Error satisfies the builtin error interface
+func (e GroupExtraInfoValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGroupExtraInfo.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GroupExtraInfoValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GroupExtraInfoValidationError{}
 
 // Validate checks the field values on CreateNodeGroupResponse with the rules
 // defined in the proto definition for this message. If any rules are
@@ -25275,7 +25573,34 @@ func (m *UpdateNodeGroupRequest) validate(all bool) error {
 
 	// no validation rules for Region
 
-	// no validation rules for EnableAutoscale
+	if all {
+		switch v := interface{}(m.GetEnableAutoscale()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, UpdateNodeGroupRequestValidationError{
+					field:  "EnableAutoscale",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, UpdateNodeGroupRequestValidationError{
+					field:  "EnableAutoscale",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetEnableAutoscale()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return UpdateNodeGroupRequestValidationError{
+				field:  "EnableAutoscale",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
 
 	if m.GetAutoScaling() == nil {
 		err := UpdateNodeGroupRequestValidationError{
@@ -25427,6 +25752,12 @@ func (m *UpdateNodeGroupRequest) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
+	// no validation rules for Provider
+
+	// no validation rules for ConsumerID
+
+	// no validation rules for Desc
+
 	if all {
 		switch v := interface{}(m.GetBkCloudID()).(type) {
 		case interface{ ValidateAll() error }:
@@ -25450,6 +25781,35 @@ func (m *UpdateNodeGroupRequest) validate(all bool) error {
 		if err := v.Validate(); err != nil {
 			return UpdateNodeGroupRequestValidationError{
 				field:  "BkCloudID",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if all {
+		switch v := interface{}(m.GetCloudAreaName()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, UpdateNodeGroupRequestValidationError{
+					field:  "CloudAreaName",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, UpdateNodeGroupRequestValidationError{
+					field:  "CloudAreaName",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetCloudAreaName()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return UpdateNodeGroupRequestValidationError{
+				field:  "CloudAreaName",
 				reason: "embedded message failed validation",
 				cause:  err,
 			}
@@ -32281,15 +32641,60 @@ func (m *UpdateAutoScalingOptionRequest) validate(all bool) error {
 
 	// no validation rules for IsScaleDownEnable
 
-	// no validation rules for Expander
+	if _, ok := _UpdateAutoScalingOptionRequest_Expander_InLookup[m.GetExpander()]; !ok {
+		err := UpdateAutoScalingOptionRequestValidationError{
+			field:  "Expander",
+			reason: "value must be in list [random least-waste most-pod priority]",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
 
-	// no validation rules for MaxEmptyBulkDelete
+	if val := m.GetMaxEmptyBulkDelete(); val < 1 || val > 320000 {
+		err := UpdateAutoScalingOptionRequestValidationError{
+			field:  "MaxEmptyBulkDelete",
+			reason: "value must be inside range [1, 320000]",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
 
-	// no validation rules for ScaleDownDelay
+	if val := m.GetScaleDownDelay(); val < 60 || val > 86400 {
+		err := UpdateAutoScalingOptionRequestValidationError{
+			field:  "ScaleDownDelay",
+			reason: "value must be inside range [60, 86400]",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
 
-	// no validation rules for ScaleDownUnneededTime
+	if val := m.GetScaleDownUnneededTime(); val < 60 || val > 86400 {
+		err := UpdateAutoScalingOptionRequestValidationError{
+			field:  "ScaleDownUnneededTime",
+			reason: "value must be inside range [60, 86400]",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
 
-	// no validation rules for ScaleDownUtilizationThreahold
+	if val := m.GetScaleDownUtilizationThreahold(); val < 1 || val > 100 {
+		err := UpdateAutoScalingOptionRequestValidationError{
+			field:  "ScaleDownUtilizationThreahold",
+			reason: "value must be inside range [1, 100]",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
 
 	// no validation rules for SkipNodesWithLocalStorage
 
@@ -32297,13 +32702,51 @@ func (m *UpdateAutoScalingOptionRequest) validate(all bool) error {
 
 	// no validation rules for IgnoreDaemonSetsUtilization
 
-	// no validation rules for OkTotalUnreadyCount
+	if val := m.GetOkTotalUnreadyCount(); val < 0 || val > 320000 {
+		err := UpdateAutoScalingOptionRequestValidationError{
+			field:  "OkTotalUnreadyCount",
+			reason: "value must be inside range [0, 320000]",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
 
-	// no validation rules for MaxTotalUnreadyPercentage
+	if val := m.GetMaxTotalUnreadyPercentage(); val < 0 || val > 100 {
+		err := UpdateAutoScalingOptionRequestValidationError{
+			field:  "MaxTotalUnreadyPercentage",
+			reason: "value must be inside range [0, 100]",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
 
-	// no validation rules for ScaleDownUnreadyTime
+	if val := m.GetScaleDownUnreadyTime(); val < 60 || val > 86400 {
+		err := UpdateAutoScalingOptionRequestValidationError{
+			field:  "ScaleDownUnreadyTime",
+			reason: "value must be inside range [60, 86400]",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
 
 	// no validation rules for UnregisteredNodeRemovalTime
+
+	if utf8.RuneCountInString(m.GetProjectID()) > 32 {
+		err := UpdateAutoScalingOptionRequestValidationError{
+			field:  "ProjectID",
+			reason: "value length must be at most 32 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
 
 	if utf8.RuneCountInString(m.GetClusterID()) > 100 {
 		err := UpdateAutoScalingOptionRequestValidationError{
@@ -32327,23 +32770,97 @@ func (m *UpdateAutoScalingOptionRequest) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	// no validation rules for ScaleDownGpuUtilizationThreshold
+	// no validation rules for Provider
 
-	// no validation rules for BufferResourceRatio
+	if val := m.GetScaleDownGpuUtilizationThreshold(); val < 1 || val > 100 {
+		err := UpdateAutoScalingOptionRequestValidationError{
+			field:  "ScaleDownGpuUtilizationThreshold",
+			reason: "value must be inside range [1, 100]",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
 
-	// no validation rules for MaxGracefulTerminationSec
+	if val := m.GetBufferResourceRatio(); val < 1 || val > 100 {
+		err := UpdateAutoScalingOptionRequestValidationError{
+			field:  "BufferResourceRatio",
+			reason: "value must be inside range [1, 100]",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
 
-	// no validation rules for ScanInterval
+	if val := m.GetMaxGracefulTerminationSec(); val < 60 || val > 86400 {
+		err := UpdateAutoScalingOptionRequestValidationError{
+			field:  "MaxGracefulTerminationSec",
+			reason: "value must be inside range [60, 86400]",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
 
-	// no validation rules for MaxNodeProvisionTime
+	if val := m.GetScanInterval(); val < 5 || val > 86400 {
+		err := UpdateAutoScalingOptionRequestValidationError{
+			field:  "ScanInterval",
+			reason: "value must be inside range [5, 86400]",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if val := m.GetMaxNodeProvisionTime(); val < 60 || val > 86400 {
+		err := UpdateAutoScalingOptionRequestValidationError{
+			field:  "MaxNodeProvisionTime",
+			reason: "value must be inside range [60, 86400]",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
 
 	// no validation rules for ScaleUpFromZero
 
-	// no validation rules for ScaleDownDelayAfterAdd
+	if val := m.GetScaleDownDelayAfterAdd(); val < 60 || val > 86400 {
+		err := UpdateAutoScalingOptionRequestValidationError{
+			field:  "ScaleDownDelayAfterAdd",
+			reason: "value must be inside range [60, 86400]",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
 
-	// no validation rules for ScaleDownDelayAfterDelete
+	if val := m.GetScaleDownDelayAfterDelete(); val < 60 || val > 86400 {
+		err := UpdateAutoScalingOptionRequestValidationError{
+			field:  "ScaleDownDelayAfterDelete",
+			reason: "value must be inside range [60, 86400]",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
 
-	// no validation rules for ScaleDownDelayAfterFailure
+	if val := m.GetScaleDownDelayAfterFailure(); val < 60 || val > 86400 {
+		err := UpdateAutoScalingOptionRequestValidationError{
+			field:  "ScaleDownDelayAfterFailure",
+			reason: "value must be inside range [60, 86400]",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
 
 	if len(errors) > 0 {
 		return UpdateAutoScalingOptionRequestMultiError(errors)
@@ -32425,6 +32942,13 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = UpdateAutoScalingOptionRequestValidationError{}
+
+var _UpdateAutoScalingOptionRequest_Expander_InLookup = map[string]struct{}{
+	"random":      {},
+	"least-waste": {},
+	"most-pod":    {},
+	"priority":    {},
+}
 
 // Validate checks the field values on UpdateAutoScalingOptionResponse with the
 // rules defined in the proto definition for this message. If any rules are
@@ -32896,6 +33420,8 @@ func (m *GetAutoScalingOptionRequest) validate(all bool) error {
 		}
 		errors = append(errors, err)
 	}
+
+	// no validation rules for Provider
 
 	if len(errors) > 0 {
 		return GetAutoScalingOptionRequestMultiError(errors)
@@ -33453,6 +33979,8 @@ func (m *UpdateAutoScalingStatusRequest) validate(all bool) error {
 		}
 		errors = append(errors, err)
 	}
+
+	// no validation rules for Provider
 
 	if len(errors) > 0 {
 		return UpdateAutoScalingStatusRequestMultiError(errors)
@@ -34939,16 +35467,7 @@ func (m *ListCloudInstanceTypeRequest) validate(all bool) error {
 
 	// no validation rules for Region
 
-	if utf8.RuneCountInString(m.GetAccountID()) < 2 {
-		err := ListCloudInstanceTypeRequestValidationError{
-			field:  "AccountID",
-			reason: "value length must be at least 2 runes",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
+	// no validation rules for AccountID
 
 	if utf8.RuneCountInString(m.GetZone()) > 32 {
 		err := ListCloudInstanceTypeRequestValidationError{
@@ -36120,16 +36639,7 @@ func (m *ListCloudSecurityGroupsRequest) validate(all bool) error {
 
 	// no validation rules for Region
 
-	if utf8.RuneCountInString(m.GetAccountID()) < 2 {
-		err := ListCloudSecurityGroupsRequestValidationError{
-			field:  "AccountID",
-			reason: "value length must be at least 2 runes",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
+	// no validation rules for AccountID
 
 	if len(errors) > 0 {
 		return ListCloudSecurityGroupsRequestMultiError(errors)

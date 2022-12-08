@@ -16,6 +16,7 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -96,7 +97,10 @@ func (ca *CreateAction) constructNodeGroup() *cmproto.NodeGroup {
 		Creator:         ca.req.Creator,
 		CreateTime:      timeStr,
 		UpdateTime:      timeStr,
-		BkCloudID:       ca.req.BkCloudID,
+		Area: &cmproto.CloudArea{
+			BkCloudID:   ca.req.BkCloudID,
+			BkCloudName: ca.req.CloudAreaName,
+		},
 	}
 	if group.Region == "" {
 		group.Region = ca.cluster.Region
@@ -142,6 +146,18 @@ func (ca *CreateAction) validate() error {
 	}
 	if ca.req.NodeTemplate == nil {
 		return fmt.Errorf("nodeTemplate is empty")
+	}
+	if err := validateDiskSize(ca.req.NodeTemplate.DataDisks...); err != nil {
+		return err
+	}
+	if err := validateDiskSize(ca.req.LaunchTemplate.DataDisks...); err != nil {
+		return err
+	}
+	if err := validateDiskSize(ca.req.LaunchTemplate.SystemDisk); err != nil {
+		return err
+	}
+	if err := validateInternet(ca.req.LaunchTemplate.InternetAccess); err != nil {
+		return err
 	}
 
 	// cloud validate
@@ -279,4 +295,25 @@ func (ca *CreateAction) Handle(ctx context.Context,
 	}
 	ca.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
 	return
+}
+
+func validateDiskSize(disks ...*cmproto.DataDisk) error {
+	for _, v := range disks {
+		size, _ := strconv.Atoi(v.DiskSize)
+		if size < 50 || size > 32000 {
+			return fmt.Errorf("disk size is invalid, it should >=50 and <=32000")
+		}
+	}
+	return nil
+}
+
+func validateInternet(internet *cmproto.InternetAccessible) error {
+	if internet == nil {
+		return nil
+	}
+	bw, _ := strconv.Atoi(internet.InternetMaxBandwidth)
+	if internet.PublicIPAssigned && bw <= 0 {
+		return fmt.Errorf("InternetMaxBandwidth must be greater than 0 when PublicIPAssigned is enable")
+	}
+	return nil
 }

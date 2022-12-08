@@ -64,6 +64,18 @@ func (ua *UpdateAction) validate() error {
 	if ua.req.ClusterID == "" {
 		return fmt.Errorf("clusterID is empty")
 	}
+	if err := validateDiskSize(ua.req.NodeTemplate.DataDisks...); err != nil {
+		return err
+	}
+	if err := validateDiskSize(ua.req.LaunchTemplate.DataDisks...); err != nil {
+		return err
+	}
+	if err := validateDiskSize(ua.req.LaunchTemplate.SystemDisk); err != nil {
+		return err
+	}
+	if err := validateInternet(ua.req.LaunchTemplate.InternetAccess); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -88,7 +100,10 @@ func (ua *UpdateAction) modifyNodeGroupField() {
 		group.NodeOS = ua.req.NodeOS
 	}
 	if ua.req.BkCloudID != nil {
-		group.BkCloudID = ua.req.BkCloudID.GetValue()
+		group.Area = &cmproto.CloudArea{
+			BkCloudID:   ua.req.BkCloudID.GetValue(),
+			BkCloudName: ua.req.CloudAreaName.GetValue(),
+		}
 	}
 	ua.group = group
 }

@@ -305,7 +305,6 @@ func CheckCloudNodeGroupStatusTask(taskID string, stepName string) error {
 func generateNodeGroupFromAsgAndAsc(group *proto.NodeGroup, cloudNodeGroup *tke.NodePool, asg *as.AutoScalingGroup,
 	asc *as.LaunchConfiguration, bkBizIDString string) *proto.NodeGroup {
 	group = generateNodeGroupFromAsg(group, cloudNodeGroup, asg)
-	group.BkCloudName = cloudprovider.GetBKCloudName(int(group.BkCloudID))
 	if group.NodeTemplate != nil && group.NodeTemplate.Module != nil &&
 		len(group.NodeTemplate.Module.ScaleOutModuleID) != 0 {
 		bkBizID, _ := strconv.Atoi(bkBizIDString)

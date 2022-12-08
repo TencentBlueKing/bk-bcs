@@ -211,6 +211,13 @@
             "in": "path",
             "required": true,
             "type": "string"
+          },
+          {
+            "name": "provider",
+            "description": "provider. CA所属云provider, 可以为空; 为空时, 复用集群所属云provider",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -5128,6 +5135,22 @@
       },
       "title": "CloudAccountInfo return account relative info"
     },
+    "clustermanagerCloudArea": {
+      "type": "object",
+      "properties": {
+        "bkCloudID": {
+          "type": "integer",
+          "format": "int64",
+          "description": "云区域 ID",
+          "title": "bkCloudID"
+        },
+        "bkCloudName": {
+          "type": "string",
+          "description": "云区域名称",
+          "title": "bkCloudName"
+        }
+      }
+    },
     "clustermanagerCloudClusterInfo": {
       "type": "object",
       "properties": {
@@ -7152,11 +7175,26 @@
             "type": "string"
           }
         },
+        "nodeGroupType": {
+          "type": "string",
+          "description": "节点池类型(normal/external)。普通弹性伸缩节点池和第三方弹性伸缩节点池, 即CVM节点或IDC节点",
+          "title": "nodeGroupType"
+        },
         "bkCloudID": {
           "type": "integer",
           "format": "int64",
-          "description": "云区域 ID",
+          "description": "云区域ID",
           "title": "bkCloudID"
+        },
+        "cloudAreaName": {
+          "type": "string",
+          "description": "云区域名称",
+          "title": "cloudAreaName"
+        },
+        "extra": {
+          "$ref": "#/definitions/clustermanagerGroupExtraInfo",
+          "description": "节点池创建extra信息, 主要是针对云的个性化参数",
+          "title": "extra"
         }
       },
       "description": "创建节点组请求",
@@ -8533,6 +8571,17 @@
         "code",
         "message"
       ]
+    },
+    "clustermanagerGroupExtraInfo": {
+      "type": "object",
+      "properties": {
+        "provider": {
+          "type": "string"
+        },
+        "poolID": {
+          "type": "string"
+        }
+      }
     },
     "clustermanagerImageInfo": {
       "type": "object",
@@ -9949,6 +9998,16 @@
           "description": "CC模块ID,CA缩容节点转移模块",
           "title": "scaleInModuleID"
         },
+        "scaleOutBizID": {
+          "type": "string",
+          "description": "扩容节点CC业务ID, 默认是集群所属业务ID",
+          "title": "scaleOutBizID"
+        },
+        "scaleInBizID": {
+          "type": "string",
+          "description": "缩容节点CC业务ID, 默认是集群所属业务ID",
+          "title": "scaleInBizID"
+        },
         "scaleOutModuleName": {
           "type": "string",
           "description": "CC模块名称,CA扩容节点转移模块",
@@ -10362,16 +10421,15 @@
             "type": "string"
           }
         },
-        "bkCloudID": {
-          "type": "integer",
-          "format": "int64",
-          "description": "云区域 ID",
-          "title": "bkCloudID"
-        },
-        "bkCloudName": {
+        "nodeGroupType": {
           "type": "string",
-          "description": "云区域名称",
-          "title": "bkCloudName"
+          "description": "节点池类型(normal/external)。普通弹性伸缩节点池和第三方弹性伸缩节点池, 即CVM节点或IDC节点",
+          "title": "nodeGroupType"
+        },
+        "area": {
+          "$ref": "#/definitions/clustermanagerCloudArea",
+          "description": "节点所在云区域信息(用户不指定, 则使用默认云区域)",
+          "title": "area"
         }
       },
       "description": "节点组，对蓝鲸、腾讯云、AWS弹性伸缩能力封装",
@@ -11812,6 +11870,11 @@
           "description": "cluster-autoscaler等待多长时间将删除未在kubernetes中注册的节点，默认30分钟",
           "title": "unregisteredNodeRemovalTime"
         },
+        "projectID": {
+          "type": "string",
+          "description": "项目ID，关联的项目信息",
+          "title": "projectID"
+        },
         "clusterID": {
           "type": "string",
           "description": "BCS集群ID，关联的集群ID",
@@ -11821,6 +11884,11 @@
           "type": "string",
           "description": "更新人",
           "title": "updater"
+        },
+        "provider": {
+          "type": "string",
+          "description": "特性实现模式",
+          "title": "provider"
         },
         "scaleDownGpuUtilizationThreshold": {
           "type": "integer",
@@ -11930,6 +11998,11 @@
           "type": "string",
           "description": "更新人",
           "title": "updater"
+        },
+        "provider": {
+          "type": "string",
+          "description": "所属云provider",
+          "title": "provider"
         }
       }
     },
@@ -12857,14 +12930,34 @@
         },
         "updater": {
           "type": "string",
-          "description": "信息创建者",
-          "title": "creator"
+          "description": "信息更新者",
+          "title": "updater"
+        },
+        "provider": {
+          "type": "string",
+          "description": "NodeGroup具体依赖的云实现方案，用于方案组合与扩展。默认为空，如果要设置，必须是CloudID",
+          "title": "provider"
+        },
+        "consumerID": {
+          "type": "string",
+          "description": "consumerID对接resourceManager模块申请资源使用",
+          "title": "consumerID"
+        },
+        "desc": {
+          "type": "string",
+          "description": "更新节点组描述信息",
+          "title": "desc"
         },
         "bkCloudID": {
           "type": "integer",
           "format": "int64",
           "description": "云区域 ID",
           "title": "bkCloudID"
+        },
+        "cloudAreaName": {
+          "type": "string",
+          "description": "云区域名称",
+          "title": "cloudAreaName"
         }
       },
       "description": "更新NodeGroup请求",

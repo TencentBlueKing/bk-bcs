@@ -4453,6 +4453,10 @@ func local_request_ClusterManager_DeleteAutoScalingOption_0(ctx context.Context,
 
 }
 
+var (
+	filter_ClusterManager_GetAutoScalingOption_0 = &utilities.DoubleArray{Encoding: map[string]int{"clusterID": 0}, Base: []int{1, 1, 0}, Check: []int{0, 1, 2}}
+)
+
 func request_ClusterManager_GetAutoScalingOption_0(ctx context.Context, marshaler runtime.Marshaler, client ClusterManagerClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq GetAutoScalingOptionRequest
 	var metadata runtime.ServerMetadata
@@ -4473,6 +4477,13 @@ func request_ClusterManager_GetAutoScalingOption_0(ctx context.Context, marshale
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "clusterID", err)
+	}
+
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_ClusterManager_GetAutoScalingOption_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
 	msg, err := client.GetAutoScalingOption(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
@@ -4500,6 +4511,13 @@ func local_request_ClusterManager_GetAutoScalingOption_0(ctx context.Context, ma
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "clusterID", err)
+	}
+
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_ClusterManager_GetAutoScalingOption_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
 	msg, err := server.GetAutoScalingOption(ctx, &protoReq)
