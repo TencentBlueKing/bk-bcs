@@ -17,7 +17,7 @@ botocore==1.10.84
 cached-property==1.5.2
 cachetools==3.1.1
 celery==5.0.5
-certifi==2021.5.30
+certifi==2022.12.7
 cffi==1.14.5
 channels==3.0.3
 chardet==3.0.4
