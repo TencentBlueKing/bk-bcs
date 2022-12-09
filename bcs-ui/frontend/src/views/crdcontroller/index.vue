@@ -623,7 +623,7 @@ export default {
           this.dataSource = res.data;
         } else {
           this.dataSource = await this.$store.dispatch('crdcontroller/getLogLinks', {
-            bk_biz_id: this.curProject.businessID,
+            bk_biz_id: this.curProject.cc_app_id,
           });
         }
       } catch (e) {

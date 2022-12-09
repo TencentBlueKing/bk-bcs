@@ -102,7 +102,7 @@ export default defineComponent({
     const handleGetbkSopsList = async () => {
       loading.value = true;
       bkSopsList.value = await $store.dispatch('clustermanager/bkSopsList', {
-        $businessID: curProject.value.businessID,
+        $businessID: curProject.value.cc_app_id,
         operator: user.value.username,
         templateSource: 'business',
         scope: 'cmdb_biz',

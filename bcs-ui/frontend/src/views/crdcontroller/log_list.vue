@@ -1111,7 +1111,7 @@ export default {
         namespace: '',
         config_type: 'custom',
         log_source_type: 'selected_containers',
-        app_id: this.curProject.businessID,
+        app_id: this.curProject.cc_app_id,
 
         labels: {},
         auto_add_pod_labels: 'false',

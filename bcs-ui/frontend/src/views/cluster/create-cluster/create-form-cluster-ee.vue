@@ -227,7 +227,7 @@ export default defineComponent({
       const params = {
         environment: 'prod',
         projectID: curProject.value.project_id,
-        businessID: String(curProject.value.businessID),
+        businessID: String(curProject.value.cc_app_id),
         engineType: 'k8s',
         isExclusive: true,
         clusterType: 'single',

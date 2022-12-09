@@ -10,6 +10,7 @@ export default function useProjects() {
     const result = await fetchProjectList().catch(() => []);
     const projectList = result.results.map(project => ({
       ...project,
+      cc_app_id: project.businessID,
       project_id: project.projectID,
       project_name: project.name,
       project_code: project.projectCode,
@@ -33,7 +34,14 @@ export default function useProjects() {
   };
 
   async function updateProject(params: any) {
-    const result = editProject(params).then(() => true)
+    const payload = params;
+    const { kind } = payload;
+    const kindMap = {
+      1: 'k8s',
+      2: 'mesos',
+    };
+    payload.kind = kindMap[kind];
+    const result = editProject(payload).then(() => true)
       .catch(() => false);
     return result;
   }

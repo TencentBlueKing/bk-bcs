@@ -53,6 +53,7 @@
 <script lang="ts">
 /* eslint-disable camelcase */
 import { computed, defineComponent, ref, toRefs, watch } from '@vue/composition-api';
+import useProject from '@/views/app/use-project';
 export default defineComponent({
   name: 'ProjectConfig',
   model: {
@@ -99,16 +100,18 @@ export default defineComponent({
     const kind = ref(curProject.value.kind);
 
     const saveLoading = ref(false);
+
+    const { updateProject } = useProject();
     const handleConfirm = async () => {
       saveLoading.value = true;
-      await $store.dispatch('editProject', Object.assign({}, curProject.value, {
+      await await updateProject(Object.assign({}, curProject.value, {
         // deploy_type 值固定，就是原来页面上的：部署类型：容器部署
-        deploy_type: [2],
+        deployType: [2],
         // kind 业务编排类型
         kind: parseInt(kind.value, 10),
         // use_bk 值固定，就是原来页面上的：使用蓝鲸部署服务
-        use_bk: true,
-        cc_app_id: ccKey.value,
+        useBKRes: true,
+        businessID: ccKey.value,
       }));
       saveLoading.value = false;
       handleCancel();

@@ -191,7 +191,7 @@ export default defineComponent({
         if ($INTERNAL.value) {
           window.open(`${window.DEVOPS_HOST}/console/monitor/${projectCode.value}/?project_id=${projectId.value}`);
         } else {
-          window.open(`${window.BKMONITOR_HOST}/?bizId=${curProject.value.businessID}#/k8s`);
+          window.open(`${window.BKMONITOR_HOST}/?bizId=${curProject.value.cc_app_id}#/k8s`);
         }
       } else {
         $router.push({
