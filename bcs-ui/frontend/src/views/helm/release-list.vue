@@ -452,6 +452,7 @@ export default defineComponent({
       ns.value = '';
     });
     watch([clusterID, ns, searchName], async () => {
+      pagination.value.current = 1;
       handleGetList();
     });
     const { start, stop } = useInterval(() => handleGetList(false));
