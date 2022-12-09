@@ -111,7 +111,7 @@ export default defineComponent({
         kind: parseInt(kind.value, 10),
         // use_bk 值固定，就是原来页面上的：使用蓝鲸部署服务
         useBKRes: true,
-        businessID: ccKey.value,
+        businessID: String(ccKey.value),
       }));
       saveLoading.value = false;
       handleCancel();

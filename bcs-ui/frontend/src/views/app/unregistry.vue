@@ -151,7 +151,7 @@ export default {
           kind: parseInt(this.kind, 10),
           // useBKRes 值固定，就是原来页面上的：使用蓝鲸部署服务
           useBKRes: true,
-          businessID: this.ccKey,
+          businessID: String(this.ccKey),
         }));
 
         this.isLoading = false;
