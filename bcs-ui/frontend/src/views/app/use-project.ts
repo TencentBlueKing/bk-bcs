@@ -28,7 +28,13 @@ export default function useProjects() {
         },
       }));
     return {
-      data: result.data.results,
+      data: result.data.results.map(project => ({
+        ...project,
+        cc_app_id: project.businessID,
+        project_id: project.projectID,
+        project_name: project.name,
+        project_code: project.projectCode,
+      })),
       web_annotations: result.webAnnotations,
     };
   };

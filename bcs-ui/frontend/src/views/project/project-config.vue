@@ -106,7 +106,7 @@ export default defineComponent({
       saveLoading.value = true;
       await await updateProject(Object.assign({}, curProject.value, {
         // deploy_type 值固定，就是原来页面上的：部署类型：容器部署
-        deployType: [2],
+        deployType: 2,
         // kind 业务编排类型
         kind: parseInt(kind.value, 10),
         // use_bk 值固定，就是原来页面上的：使用蓝鲸部署服务

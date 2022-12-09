@@ -146,7 +146,7 @@ export default {
         this.isLoading = true;
         await updateProject(Object.assign({}, this.curProject, {
           // deployType 值固定，就是原来页面上的：部署类型：容器部署
-          deployType: [2],
+          deployType: 2,
           // kind 业务编排类型
           kind: parseInt(this.kind, 10),
           // useBKRes 值固定，就是原来页面上的：使用蓝鲸部署服务

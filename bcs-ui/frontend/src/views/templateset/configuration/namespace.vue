@@ -129,8 +129,8 @@
                     href="javascript:void(0)" class="bk-text-button ml10"
                     @click="showDelNamespace(row)">
                     {{$t('删除')}}
-                  </bk-button>
-                </template>
+                    </bk-button>
+                  </a></template>
               </bk-table-column>
             </bk-table>
           </div>
@@ -173,12 +173,10 @@
             </bcs-form-item>
 
             <!-- 配额 start -->
-            <template v-if="curProject.kind !== 2">
-              <div class="quota-option">
-                {{$t('配额设置')}}
-                <bk-switcher v-if="!isSharedCluster" size="small" :selected="showQuota" @change="toggleShowQuota" :key="showQuota"></bk-switcher>
-              </div>
-            </template>
+            <div class="quota-option">
+              {{$t('配额设置')}}
+              <bk-switcher v-if="!isSharedCluster" size="small" :selected="showQuota" @change="toggleShowQuota" :key="showQuota"></bk-switcher>
+            </div>
 
             <div class="quota-config" v-if="showQuota">
               <!-- 内存 -->
@@ -689,10 +687,10 @@ export default {
     async fetchNamespaceList() {
       try {
         this.isPageLoading = true;
-        const { getNamespaceData } = useNamespace()
+        const { getNamespaceData } = useNamespace();
         const res = await getNamespaceData({
           $clusterId: this.searchScope,
-        })
+        });
 
         const list = [];
         res.forEach((item) => {
@@ -702,8 +700,8 @@ export default {
           list.push(item);
         });
 
-        this.namespaceList = res
-        this.namespaceListTmp = res
+        this.namespaceList = res;
+        this.namespaceListTmp = res;
         this.handleSearch();
 
         setTimeout(() => {
@@ -852,7 +850,7 @@ export default {
         memoryLimits: '',
         memoryRequests: '',
       });
-    }, 
+    },
 
     /**
      * 添加命名空间确认按钮
@@ -897,7 +895,7 @@ export default {
 
       const { handleCreatedNamespace } = useNamespace();
       if (this.isSharedCluster) {
-        name = 'ieg-' + projectCode.value + '-' + name
+        name = `ieg-${projectCode.value}-${name}`;
       }
       this.addNamespaceConf.loading = true;
 
@@ -909,10 +907,10 @@ export default {
         quota: Object.assign({}, {
           cpuLimits: String(quota.cpuRequests),
           cpuRequests: String(quota.cpuRequests),
-          memoryLimits: quota.memoryRequests + 'Gi',
-          memoryRequests: quota.memoryRequests + 'Gi',
+          memoryLimits: `${quota.memoryRequests}Gi`,
+          memoryRequests: `${quota.memoryRequests}Gi`,
         }),
-      })
+      });
       result && this.$bkMessage({
         theme: 'success',
         message: this.$t('创建成功'),
@@ -1187,7 +1185,7 @@ export default {
       const result =  await handleDeleteNameSpace({
         $clusterId: this.searchScope,
         $namespace: this.delNamespaceDialogConf.ns.name,
-      })
+      });
 
       if (result) {
         this.fetchNamespaceList();
@@ -1220,8 +1218,8 @@ export default {
     handleSearch() {
       const search = String(this.search || '').trim()
         .toLowerCase();
-      let list = JSON.parse(JSON.stringify(this.namespaceListTmp));
-      
+      const list = JSON.parse(JSON.stringify(this.namespaceListTmp));
+
       const results = list.filter((ns) => {
         const name = String(ns.name || '').toLowerCase();
         const clusterName = String(ns.cluster_name || '').toLowerCase();
@@ -1240,7 +1238,7 @@ export default {
     async handleSaveQuota() {
       const { namespaceName, labels, annotations, quota } = this.editQuotaConf;
       const { handleUpdateNameSpace } = useNamespace();
-      this.editQuotaConf.loading = true
+      this.editQuotaConf.loading = true;
       const result = await handleUpdateNameSpace({
         $clusterId: this.searchScope,
         $namespace: namespaceName,
@@ -1249,8 +1247,8 @@ export default {
         quota: {
           cpuLimits: String(quota.cpuRequests),
           cpuRequests: String(quota.cpuRequests),
-          memoryLimits: quota.memoryRequests + 'Gi',
-          memoryRequests: quota.memoryRequests + 'Gi',
+          memoryLimits: `${quota.memoryRequests}Gi`,
+          memoryRequests: `${quota.memoryRequests}Gi`,
         },
       });
       result && this.$bkMessage({
