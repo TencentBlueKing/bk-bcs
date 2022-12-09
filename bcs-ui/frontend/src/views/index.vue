@@ -1,7 +1,7 @@
 <template>
   <div class="biz-container app-container" v-bkloading="{ isLoading, zIndex: 10 }">
     <!-- isLoading为解决当前集群和项目信息未设置时界面依赖时序问题 -->
-    <template v-if="curProject && curProject.kind !== 0 && !isLoading">
+    <template v-if="curProject && curProject.kind !== '' && !isLoading">
       <SideNav class="biz-side-bar" :key="$i18n.locale"></SideNav>
       <div class="bcs-content">
         <ContentHeader
@@ -15,7 +15,7 @@
       <!-- 终端 -->
       <SideTerminal></SideTerminal>
     </template>
-    <template v-else-if="curProject && curProject.kind === 0">
+    <template v-else-if="curProject && curProject.kind === ''">
       <Unregistry :cur-project="curProject"></Unregistry>
     </template>
     <EmptyProjectGUide v-else-if="!projectList.length"></EmptyProjectGUide>
@@ -76,7 +76,7 @@ export default defineComponent({
     const validateProject = async () => {
       // 1. 开启容器服务，且项目存在
       if (curProject.value) {
-        return curProject.value.kind !== 0;
+        return curProject.value.kind !== '';
       }
 
       // 2. 校验项目不存在，但是ProjectCode存在的情况
@@ -182,7 +182,7 @@ export default defineComponent({
 
       // 初始路由处理
       if ($route.name === 'entry') {
-        if (curProject.value?.kind === 2) {
+        if (curProject.value?.kind === 'mesos') {
           // mesos需要二次刷新界面重新获取资源
           const route = $router.resolve({
             name: 'clusterMain',
