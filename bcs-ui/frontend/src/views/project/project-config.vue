@@ -104,7 +104,7 @@ export default defineComponent({
     const { updateProject } = useProject();
     const handleConfirm = async () => {
       saveLoading.value = true;
-      await await updateProject(Object.assign({}, curProject.value, {
+      const result = await updateProject(Object.assign({}, curProject.value, {
         // deploy_type 值固定，就是原来页面上的：部署类型：容器部署
         deployType: 2,
         // kind 业务编排类型
@@ -115,7 +115,7 @@ export default defineComponent({
       }));
       saveLoading.value = false;
       handleCancel();
-      window.location.reload();
+      result && window.location.reload();
     };
     const handleCancel = () => {
       handleDialogValueChange(false);

@@ -7,7 +7,7 @@ import store from '@/store';
 
 export default function useProjects() {
   async function getProjectList() {
-    const result = await fetchProjectList().catch(() => []);
+    const result = await fetchProjectList().catch(() => ({ results: [], total: 0 }));
     const projectList = result.results.map(project => ({
       ...project,
       cc_app_id: project.businessID,

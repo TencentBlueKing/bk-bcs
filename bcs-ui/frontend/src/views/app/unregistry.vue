@@ -144,7 +144,7 @@ export default {
         const { updateProject } = useProject();
 
         this.isLoading = true;
-        await updateProject(Object.assign({}, this.curProject, {
+        const result =  await updateProject(Object.assign({}, this.curProject, {
           // deployType 值固定，就是原来页面上的：部署类型：容器部署
           deployType: 2,
           // kind 业务编排类型
@@ -157,7 +157,7 @@ export default {
         this.isLoading = false;
 
         this.$nextTick(() => {
-          window.location.reload();
+          result && window.location.reload();
         });
       } catch (e) {
         console.error(e);
