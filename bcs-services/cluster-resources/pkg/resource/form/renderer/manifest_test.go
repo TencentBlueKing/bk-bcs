@@ -135,7 +135,7 @@ var testCaseData = []manifestRenderTestData{
 	{"config/secret_basic_auth.yaml", formdata.SecretBasicAuth, true},
 	{"config/secret_ssh_auth.yaml", formdata.SecretSSHAuth, true},
 	{"config/secret_tls.yaml", formdata.SecretTLS, true},
-	{"config/secret_sa_token.yaml", formdata.SecretSAToken, true},
+	{"config/secret_sa_token.yaml", formdata.SecretSAToken, false},
 	// 存储类
 	{"storage/pv_complex.yaml", formdata.PVComplex, false},
 	{"storage/pvc_complex.yaml", formdata.PVCComplex, true},
@@ -190,7 +190,7 @@ func TestManifestRenderByPipe(t *testing.T) {
 		namespace := mapx.GetStr(result, "metadata.namespace")
 		resCli := cli.NewResClient(clusterConf, k8sRes)
 
-		_, err = resCli.Create(ctx, result, (namespace != ""), metav1.CreateOptions{})
+		_, err = resCli.Create(ctx, result, namespace != "", metav1.CreateOptions{})
 		assert.Nil(
 			t, err, "create k8s res [apiVersion: %s, kind: %s, name: %s] failed: %v", apiVersion, resKind, resName, err,
 		)

@@ -45,7 +45,9 @@ func (h *Handler) GetK8SResTemplate(
 	for _, tmpl := range mapx.GetList(conf, "items") {
 		t, _ := tmpl.(map[string]interface{})
 		path := fmt.Sprintf("%s/%s", conf["class"], t["name"])
-		if t["manifest"], err = example.LoadDemoManifest(path, req.Namespace); err != nil {
+		if t["manifest"], err = example.LoadDemoManifest(
+			ctx, path, req.ClusterID, req.Namespace, req.Kind,
+		); err != nil {
 			return err
 		}
 	}

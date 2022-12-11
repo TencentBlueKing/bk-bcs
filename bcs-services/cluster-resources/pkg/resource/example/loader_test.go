@@ -64,22 +64,24 @@ func TestLoadResRefs(t *testing.T) {
 }
 
 func TestLoadDemoManifest(t *testing.T) {
-	manifest, _ := LoadDemoManifest("workload/simple_deployment", "")
+	ctx := context.TODO()
+
+	manifest, _ := LoadDemoManifest(ctx, "workload/simple_deployment", "", "", resCsts.Deploy)
 	assert.Equal(t, "Deployment", manifest["kind"])
 
-	manifest, _ = LoadDemoManifest("storage/simple_persistent_volume", "")
+	manifest, _ = LoadDemoManifest(ctx, "storage/simple_persistent_volume", "", "", resCsts.PV)
 	assert.Equal(t, "PersistentVolume", manifest["kind"])
 
 	// 指定命名空间不生效的
-	manifest, _ = LoadDemoManifest("storage/simple_storage_class", "custom-namespace")
+	manifest, _ = LoadDemoManifest(ctx, "storage/simple_storage_class", "", "custom-namespace", resCsts.SC)
 	_, err := mapx.GetItems(manifest, "metadata.namespace")
 	assert.NotNil(t, err)
 
 	// 指定命名空间生效的
-	manifest, _ = LoadDemoManifest("config/simple_secret", "custom-namespace")
+	manifest, _ = LoadDemoManifest(ctx, "config/simple_secret", "", "custom-namespace", resCsts.Secret)
 	namespace, _ := mapx.GetItems(manifest, "metadata.namespace")
 	assert.Equal(t, "custom-namespace", namespace)
 
-	_, err = LoadDemoManifest("custom_resource/custom_object", "")
+	_, err = LoadDemoManifest(ctx, "custom_resource/custom_object", "", "", resCsts.CObj)
 	assert.NotNil(t, err)
 }

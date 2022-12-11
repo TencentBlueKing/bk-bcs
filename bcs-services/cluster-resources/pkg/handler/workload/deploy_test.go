@@ -22,6 +22,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/envs"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/handler"
+	resCsts "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/constants"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/example"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/parser/workload"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
@@ -34,7 +35,7 @@ func TestDeploy(t *testing.T) {
 	h := New()
 	ctx := handler.NewInjectedContext("", "", "")
 
-	manifest, _ := example.LoadDemoManifest("workload/simple_deployment", "")
+	manifest, _ := example.LoadDemoManifest(ctx, "workload/simple_deployment", "", "", resCsts.Deploy)
 	resName := mapx.GetStr(manifest, "metadata.name")
 
 	// Create
@@ -225,7 +226,7 @@ func TestDeployInSharedCluster(t *testing.T) {
 	h := New()
 	ctx := handler.NewInjectedContext("", "", envs.TestSharedClusterID)
 
-	manifest, _ := example.LoadDemoManifest("workload/simple_deployment", "")
+	manifest, _ := example.LoadDemoManifest(ctx, "workload/simple_deployment", "", "", resCsts.Deploy)
 	resName := mapx.GetStr(manifest, "metadata.name")
 	// 设置为共享集群项目属命名空间
 	err = mapx.SetItems(manifest, "metadata.namespace", envs.TestSharedClusterNS)
@@ -290,7 +291,7 @@ func TestDeployInSharedClusterNoPerm(t *testing.T) {
 	h := New()
 	ctx := handler.NewInjectedContext("", "", envs.TestSharedClusterID)
 
-	manifest, _ := example.LoadDemoManifest("workload/simple_deployment", "")
+	manifest, _ := example.LoadDemoManifest(ctx, "workload/simple_deployment", "", "", resCsts.Deploy)
 	resName := mapx.GetStr(manifest, "metadata.name")
 
 	// Create

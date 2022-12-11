@@ -25,6 +25,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/envs"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/i18n"
+	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
 	resCsts "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/constants"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/stringx"
@@ -87,7 +88,9 @@ func LoadResRefs(ctx context.Context, kind string) (string, error) {
 }
 
 // LoadDemoManifest 加载指定资源类型的 Demo 配置信息
-func LoadDemoManifest(path, namespace string) (map[string]interface{}, error) {
+func LoadDemoManifest(
+	ctx context.Context, path, clusterID, namespace, kind string,
+) (map[string]interface{}, error) {
 	filepath := fmt.Sprintf("%s/%s.yaml", ResDemoManifestDIR, path)
 	manifest := map[string]interface{}{}
 	if strings.Contains(filepath, "..") {
@@ -101,6 +104,12 @@ func LoadDemoManifest(path, namespace string) (map[string]interface{}, error) {
 	err = yaml.Unmarshal(content, manifest)
 	if err != nil {
 		return manifest, err
+	}
+
+	// 尝试使用 preferred 的 ApiVersion，若获取失败则保留默认的
+	preferredApiVersion, err := res.GetResPreferredVersion(ctx, clusterID, kind)
+	if err == nil {
+		_ = mapx.SetItems(manifest, "apiVersion", preferredApiVersion)
 	}
 
 	// 避免名称重复，每次默认添加随机后缀
