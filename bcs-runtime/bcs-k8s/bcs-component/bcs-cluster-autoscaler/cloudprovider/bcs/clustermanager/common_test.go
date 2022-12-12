@@ -15,7 +15,6 @@ package clustermanager
 
 import (
 	"bytes"
-	"crypto/tls"
 	"encoding/json"
 	"io"
 	"io/ioutil"
@@ -24,53 +23,14 @@ import (
 	"reflect"
 	"strings"
 	"testing"
-	"time"
 )
-
-func TestWithoutTLSClient(t *testing.T) {
-	tr := &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-	}
-	type args struct {
-		header http.Header
-		url    string
-	}
-	tests := []struct {
-		name string
-		args args
-		want *Client
-	}{
-		{
-			name: "without tls client normal",
-			args: args{
-				header: make(http.Header),
-				url:    "127.0.0.1",
-			},
-			want: &Client{
-				baseURL: "127.0.0.1",
-				header:  make(http.Header),
-				HttpClient: &http.Client{
-					Transport: tr,
-					Timeout:   time.Second * 5,
-				},
-			},
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := WithoutTLSClient(tt.args.header, tt.args.url); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("WithoutTLSClient() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
 
 func TestClient_Get(t *testing.T) {
 	type fields struct {
 		Request    *http.Request
 		baseURL    string
 		header     http.Header
-		HttpClient *http.Client
+		httpClient *http.Client
 	}
 	tests := []struct {
 		name   string
@@ -97,7 +57,7 @@ func TestClient_Get(t *testing.T) {
 				Request:    tt.fields.Request,
 				baseURL:    tt.fields.baseURL,
 				header:     tt.fields.header,
-				HttpClient: tt.fields.HttpClient,
+				httpClient: tt.fields.httpClient,
 			}
 			if got := c.Get(); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("Client.Get() = %v, want %v", got, tt.want)
@@ -111,7 +71,7 @@ func TestClient_PUT(t *testing.T) {
 		Request    *http.Request
 		baseURL    string
 		header     http.Header
-		HttpClient *http.Client
+		httpClient *http.Client
 	}
 	tests := []struct {
 		name   string
@@ -138,7 +98,7 @@ func TestClient_PUT(t *testing.T) {
 				Request:    tt.fields.Request,
 				baseURL:    tt.fields.baseURL,
 				header:     tt.fields.header,
-				HttpClient: tt.fields.HttpClient,
+				httpClient: tt.fields.httpClient,
 			}
 			if got := c.PUT(); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("Client.PUT() = %v, want %v", got, tt.want)
@@ -152,7 +112,7 @@ func TestClient_POST(t *testing.T) {
 		Request    *http.Request
 		baseURL    string
 		header     http.Header
-		HttpClient *http.Client
+		httpClient *http.Client
 	}
 	tests := []struct {
 		name   string
@@ -179,7 +139,7 @@ func TestClient_POST(t *testing.T) {
 				Request:    tt.fields.Request,
 				baseURL:    tt.fields.baseURL,
 				header:     tt.fields.header,
-				HttpClient: tt.fields.HttpClient,
+				httpClient: tt.fields.httpClient,
 			}
 			if got := c.POST(); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("Client.POST() = %v, want %v", got, tt.want)
@@ -193,7 +153,7 @@ func TestClient_DELETE(t *testing.T) {
 		Request    *http.Request
 		baseURL    string
 		header     http.Header
-		HttpClient *http.Client
+		httpClient *http.Client
 	}
 	tests := []struct {
 		name   string
@@ -220,7 +180,7 @@ func TestClient_DELETE(t *testing.T) {
 				Request:    tt.fields.Request,
 				baseURL:    tt.fields.baseURL,
 				header:     tt.fields.header,
-				HttpClient: tt.fields.HttpClient,
+				httpClient: tt.fields.httpClient,
 			}
 			if got := c.DELETE(); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("Client.DELETE() = %v, want %v", got, tt.want)
@@ -234,7 +194,7 @@ func TestClient_AddHeader(t *testing.T) {
 		Request    *http.Request
 		baseURL    string
 		header     http.Header
-		HttpClient *http.Client
+		httpClient *http.Client
 	}
 	type args struct {
 		header http.Header
@@ -275,7 +235,7 @@ func TestClient_AddHeader(t *testing.T) {
 				Request:    tt.fields.Request,
 				baseURL:    tt.fields.baseURL,
 				header:     tt.fields.header,
-				HttpClient: tt.fields.HttpClient,
+				httpClient: tt.fields.httpClient,
 			}
 			if got := c.AddHeader(tt.args.header); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("Client.AddHeader() = %v, want %v", got, tt.want)
@@ -289,7 +249,7 @@ func TestClient_Resource(t *testing.T) {
 		Request    *http.Request
 		baseURL    string
 		header     http.Header
-		HttpClient *http.Client
+		httpClient *http.Client
 	}
 	type args struct {
 		resource string
@@ -327,7 +287,7 @@ func TestClient_Resource(t *testing.T) {
 				Request:    tt.fields.Request,
 				baseURL:    tt.fields.baseURL,
 				header:     tt.fields.header,
-				HttpClient: tt.fields.HttpClient,
+				httpClient: tt.fields.httpClient,
 			}
 			if got := c.Resource(tt.args.resource); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("Client.Resource() = %v, want %v", got, tt.want)
@@ -341,7 +301,7 @@ func TestClient_Name(t *testing.T) {
 		Request    *http.Request
 		baseURL    string
 		header     http.Header
-		HttpClient *http.Client
+		httpClient *http.Client
 	}
 	type args struct {
 		name string
@@ -379,7 +339,7 @@ func TestClient_Name(t *testing.T) {
 				Request:    tt.fields.Request,
 				baseURL:    tt.fields.baseURL,
 				header:     tt.fields.header,
-				HttpClient: tt.fields.HttpClient,
+				httpClient: tt.fields.httpClient,
 			}
 			if got := c.Name(tt.args.name); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("Client.Name() = %v, want %v", got, tt.want)
@@ -393,7 +353,7 @@ func TestClient_Filter(t *testing.T) {
 		Request    *http.Request
 		baseURL    string
 		header     http.Header
-		HttpClient *http.Client
+		httpClient *http.Client
 	}
 	type args struct {
 		parameters map[string]string
@@ -434,7 +394,7 @@ func TestClient_Filter(t *testing.T) {
 				Request:    tt.fields.Request,
 				baseURL:    tt.fields.baseURL,
 				header:     tt.fields.header,
-				HttpClient: tt.fields.HttpClient,
+				httpClient: tt.fields.httpClient,
 			}
 			if got := c.Filter(tt.args.parameters); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("Client.Filter() = %v, want %v", got, tt.want)
@@ -448,7 +408,7 @@ func TestClient_Base(t *testing.T) {
 		Request    *http.Request
 		baseURL    string
 		header     http.Header
-		HttpClient *http.Client
+		httpClient *http.Client
 	}
 	type args struct {
 		basePath string
@@ -485,7 +445,7 @@ func TestClient_Base(t *testing.T) {
 				Request:    tt.fields.Request,
 				baseURL:    tt.fields.baseURL,
 				header:     tt.fields.header,
-				HttpClient: tt.fields.HttpClient,
+				httpClient: tt.fields.httpClient,
 			}
 			if got := c.Base(tt.args.basePath); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("Client.Base() = %v, want %v", got, tt.want)
@@ -507,7 +467,7 @@ func TestClient_Body(t *testing.T) {
 		Request    *http.Request
 		baseURL    string
 		header     http.Header
-		HttpClient *http.Client
+		httpClient *http.Client
 	}
 	type args struct {
 		body io.Reader
@@ -601,7 +561,7 @@ func TestClient_Body(t *testing.T) {
 				Request:    tt.fields.Request,
 				baseURL:    tt.fields.baseURL,
 				header:     tt.fields.header,
-				HttpClient: tt.fields.HttpClient,
+				httpClient: tt.fields.httpClient,
 			}
 			if got := c.Body(tt.args.body); !reflect.DeepEqual(got, tt.want) {
 				got.Request.GetBody = nil

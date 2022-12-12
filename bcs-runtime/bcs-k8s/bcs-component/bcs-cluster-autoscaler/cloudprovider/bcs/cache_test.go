@@ -70,10 +70,23 @@ func TestNodeGroupCache_GetRegisteredNodeGroups(t *testing.T) {
 	}
 }
 func TestNodeGroupCache_FindForInstance(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	m := mocks.NewMockNodePoolClientInterface(ctrl)
+	m.EXPECT().GetNodes(gomock.Eq("test")).Return(
+		[]*clustermanager.Node{}, fmt.Errorf("get nodes failed"),
+	)
+	m.EXPECT().GetPool(gomock.Eq("test")).Return(
+		&clustermanager.NodeGroup{
+			NodeGroupID:     "test",
+			EnableAutoscale: true,
+		}, nil,
+	)
+
 	ng1 := NodeGroup{
 		nodeGroupID: "test",
 		maxSize:     5,
 		minSize:     0,
+		client:      m,
 	}
 	ins1 := InstanceRef{
 		Name: "ins1",
@@ -133,6 +146,7 @@ func TestNodeGroupCache_FindForInstance(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			m := &NodeGroupCache{
+				allGroups:              tt.fields.registeredGroups,
 				registeredGroups:       tt.fields.registeredGroups,
 				instanceToGroup:        tt.fields.instanceToGroup,
 				instanceToCreationType: tt.fields.instanceToCreationType,
@@ -220,22 +234,21 @@ func TestNodeGroupCache_CheckInstancesTerminateByAs(t *testing.T) {
 func TestNodeGroupCache_regenerateCache(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	m := mocks.NewMockNodePoolClientInterface(ctrl)
+	m.EXPECT().GetPool(gomock.Eq("test")).Return(
+		&clustermanager.NodeGroup{
+			NodeGroupID:     "test",
+			EnableAutoscale: true,
+		}, nil,
+	)
 	m.EXPECT().GetNodes(gomock.Eq("test")).Return(
 		[]*clustermanager.Node{}, fmt.Errorf("get nodes failed"),
 	)
-	m.EXPECT().GetNodes(gomock.Eq("test2")).Return(
-		[]*clustermanager.Node{
-			{
-				NodeGroupID: "test2",
-				NodeID:      "n2",
-			},
-		}, nil,
-	)
 	m.EXPECT().GetPool(gomock.Eq("test2")).Return(
 		&clustermanager.NodeGroup{
-			NodeGroupID: "test2",
-		}, nil,
-	)
+			NodeGroupID:     "test2",
+			EnableAutoscale: true,
+		}, fmt.Errorf("get nodegroup failed"),
+	).Times(2)
 	m.EXPECT().GetNodes(gomock.Eq("test3")).Return(
 		[]*clustermanager.Node{
 			{
@@ -250,8 +263,9 @@ func TestNodeGroupCache_regenerateCache(t *testing.T) {
 			AutoScaling: &clustermanager.AutoScalingGroup{
 				MaxSize: 0,
 			},
+			EnableAutoscale: true,
 		}, nil,
-	)
+	).Times(2)
 	m.EXPECT().GetNodes(gomock.Eq("test4")).Return(
 		[]*clustermanager.Node{
 			{
@@ -267,8 +281,9 @@ func TestNodeGroupCache_regenerateCache(t *testing.T) {
 				MaxSize: 5,
 				MinSize: 0,
 			},
+			EnableAutoscale: true,
 		}, nil,
-	)
+	).Times(2)
 	type fields struct {
 		registeredGroups       []*NodeGroup
 		instanceToGroup        map[InstanceRef]*NodeGroup
@@ -348,6 +363,7 @@ func TestNodeGroupCache_regenerateCache(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			m := &NodeGroupCache{
+				allGroups:              tt.fields.registeredGroups,
 				registeredGroups:       tt.fields.registeredGroups,
 				instanceToGroup:        tt.fields.instanceToGroup,
 				instanceToCreationType: tt.fields.instanceToCreationType,

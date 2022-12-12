@@ -19,7 +19,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"time"
 )
+
+const httpTimeOut = 3 * time.Second
 
 // NodePoolClientInterface defines the interface of node pool client
 type NodePoolClientInterface interface {
@@ -38,7 +41,8 @@ type NodePoolClientInterface interface {
 // NodePoolClient is client for nodegroup resource
 type NodePoolClient struct {
 	operator string
-	client   *Client
+	url      string
+	header   http.Header
 }
 
 // NewNodePoolClient init a new client
@@ -48,15 +52,16 @@ func NewNodePoolClient(operator, url, token string) (NodePoolClientInterface, er
 	header.Add("Authorization", fmt.Sprintf("Bearer %v", token))
 	return &NodePoolClient{
 		operator: operator,
-		client:   WithoutTLSClient(header, url),
+		url:      url,
+		header:   header,
 	}, nil
 }
 
 // GetPool returns the nodegroup full config
 func (npc *NodePoolClient) GetPool(np string) (*NodeGroup, error) {
-	ctx, cancelFunc := context.WithCancel(context.Background())
+	ctx, cancelFunc := context.WithTimeout(context.Background(), httpTimeOut)
 	defer cancelFunc()
-	contents, err := npc.client.Get().WithContext(ctx).Resource("nodegroup").Name(np).Do()
+	contents, err := WithoutTLSClient(npc.header, npc.url).Get().WithContext(ctx).Resource("nodegroup").Name(np).Do()
 	if err != nil {
 		return nil, fmt.Errorf("failed to finish http request: %v", err)
 	}
@@ -99,9 +104,10 @@ func (npc *NodePoolClient) GetPoolNodeTemplate(np string) (*LaunchConfiguration,
 
 // GetNodes returns the nodes of a specified node group
 func (npc *NodePoolClient) GetNodes(np string) ([]*Node, error) {
-	ctx, cancelFunc := context.WithCancel(context.Background())
+	ctx, cancelFunc := context.WithTimeout(context.Background(), httpTimeOut)
 	defer cancelFunc()
-	contents, err := npc.client.Get().WithContext(ctx).Resource("nodegroup").Name(np).Resource("node").Do()
+	contents, err := WithoutTLSClient(npc.header, npc.url).Get().WithContext(ctx).
+		Resource("nodegroup").Name(np).Resource("node").Do()
 	if err != nil {
 		return nil, fmt.Errorf("failed to finish http request: %v", err)
 	}
@@ -138,9 +144,9 @@ func (npc *NodePoolClient) GetAutoScalingNodes(np string) ([]*Node, error) {
 
 // GetNode returns the node of the given ip
 func (npc *NodePoolClient) GetNode(ip string) (*Node, error) {
-	ctx, cancelFunc := context.WithCancel(context.Background())
+	ctx, cancelFunc := context.WithTimeout(context.Background(), httpTimeOut)
 	defer cancelFunc()
-	contents, err := npc.client.Get().WithContext(ctx).Resource("node").Name(ip).Do()
+	contents, err := WithoutTLSClient(npc.header, npc.url).Get().WithContext(ctx).Resource("node").Name(ip).Do()
 	if err != nil {
 		return nil, fmt.Errorf("failed to finish http request: %v", err)
 	}
@@ -157,7 +163,7 @@ func (npc *NodePoolClient) GetNode(ip string) (*Node, error) {
 
 // UpdateDesiredNode sets the desiredNode number of node group
 func (npc *NodePoolClient) UpdateDesiredNode(np string, desiredNode int) (string, error) {
-	ctx, cancelFunc := context.WithCancel(context.Background())
+	ctx, cancelFunc := context.WithTimeout(context.Background(), httpTimeOut)
 	defer cancelFunc()
 	req := &UpdateGroupDesiredNodeRequest{
 		NodeGroupID: np,
@@ -169,7 +175,7 @@ func (npc *NodePoolClient) UpdateDesiredNode(np string, desiredNode int) (string
 		return "", err
 	}
 	body := bytes.NewReader(byteReq)
-	contents, err := npc.client.POST().WithContext(ctx).
+	contents, err := WithoutTLSClient(npc.header, npc.url).POST().WithContext(ctx).
 		Resource("nodegroup").Name(np).Resource("desirednode").Body(body).Do()
 	if err != nil {
 		return "", fmt.Errorf("failed to finish http request, err: %v, body: %v", err, string(contents))
@@ -192,7 +198,7 @@ func (npc *NodePoolClient) UpdateDesiredNode(np string, desiredNode int) (string
 
 // RemoveNodes removes the ips from the node group
 func (npc *NodePoolClient) RemoveNodes(np string, ips []string) (string, error) {
-	ctx, cancelFunc := context.WithCancel(context.Background())
+	ctx, cancelFunc := context.WithTimeout(context.Background(), httpTimeOut)
 	defer cancelFunc()
 	nodePool, err := npc.GetPool(np)
 	if err != nil {
@@ -210,7 +216,7 @@ func (npc *NodePoolClient) RemoveNodes(np string, ips []string) (string, error) 
 		return "", err
 	}
 	body := bytes.NewReader(byteReq)
-	contents, err := npc.client.DELETE().WithContext(ctx).
+	contents, err := WithoutTLSClient(npc.header, npc.url).DELETE().WithContext(ctx).
 		Resource("nodegroup").Name(np).Body(body).Name("groupnode").Do()
 
 	if err != nil {
@@ -234,7 +240,7 @@ func (npc *NodePoolClient) RemoveNodes(np string, ips []string) (string, error) 
 
 // UpdateDesiredSize sets the desiredSize of node group
 func (npc *NodePoolClient) UpdateDesiredSize(np string, desiredSize int) error {
-	ctx, cancelFunc := context.WithCancel(context.Background())
+	ctx, cancelFunc := context.WithTimeout(context.Background(), httpTimeOut)
 	defer cancelFunc()
 	req := &UpdateGroupDesiredSizeRequest{
 		DesiredSize: uint32(desiredSize),
@@ -245,7 +251,7 @@ func (npc *NodePoolClient) UpdateDesiredSize(np string, desiredSize int) error {
 		return err
 	}
 	body := bytes.NewReader(byteReq)
-	contents, err := npc.client.POST().WithContext(ctx).
+	contents, err := WithoutTLSClient(npc.header, npc.url).POST().WithContext(ctx).
 		Resource("nodegroup").Name(np).Resource("desiredsize").Body(body).Do()
 	if err != nil {
 		return fmt.Errorf("failed to finish http request, err: %v, body: %v", err, string(contents))
@@ -265,9 +271,9 @@ func (npc *NodePoolClient) UpdateDesiredSize(np string, desiredSize int) error {
 
 // GetTask returns the task
 func (npc *NodePoolClient) GetTask(id string) (*Task, error) {
-	ctx, cancelFunc := context.WithCancel(context.Background())
+	ctx, cancelFunc := context.WithTimeout(context.Background(), httpTimeOut)
 	defer cancelFunc()
-	contents, err := npc.client.Get().WithContext(ctx).Resource("task").Name(id).Do()
+	contents, err := WithoutTLSClient(npc.header, npc.url).Get().WithContext(ctx).Resource("task").Name(id).Do()
 	if err != nil {
 		return nil, fmt.Errorf("failed to finish http request: %v", err)
 	}

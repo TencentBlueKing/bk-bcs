@@ -90,6 +90,9 @@ func (t *TaskChecker) checkScaleTaskStatus() {
 func (t *TaskChecker) performCheck(taskList []string, scaleType string) []string {
 	newTaskList := []string{}
 	for _, taskID := range taskList {
+		if taskID == "" {
+			continue
+		}
 		task, err := t.client.GetTask(taskID)
 		if err != nil {
 			klog.Warningf("failed to get task %s: %v", taskID, err)
@@ -98,6 +101,11 @@ func (t *TaskChecker) performCheck(taskList []string, scaleType string) []string
 		}
 		if task == nil {
 			klog.Warningf("failed to get task %s: task is nil", taskID)
+			newTaskList = append(newTaskList, taskID)
+			continue
+		}
+		if task.TaskID == "" {
+			klog.V(4).Infof("empty task return, origin: %s", taskID)
 			newTaskList = append(newTaskList, taskID)
 			continue
 		}

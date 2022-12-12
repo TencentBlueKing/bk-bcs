@@ -228,7 +228,7 @@ func TestNodeGroup_IncreaseSize(t *testing.T) {
 			}
 		}(), nil,
 	).Times(4)
-	m.EXPECT().UpdateDesiredNode(gomock.Eq("test1"), gomock.Eq(4)).Return(nil).Times(2)
+	m.EXPECT().UpdateDesiredNode(gomock.Eq("test1"), gomock.Eq(4)).Return("", nil).Times(2)
 
 	m.EXPECT().GetPoolConfig(gomock.Eq("test2")).Return(
 		func() *clustermanager.AutoScalingGroup {
@@ -237,7 +237,7 @@ func TestNodeGroup_IncreaseSize(t *testing.T) {
 			}
 		}(), nil,
 	)
-	m.EXPECT().UpdateDesiredNode(gomock.Eq("test2"), gomock.Eq(1)).Return(nil)
+	m.EXPECT().UpdateDesiredNode(gomock.Eq("test2"), gomock.Eq(1)).Return("", nil)
 
 	m.EXPECT().GetPoolConfig(gomock.Eq("test3")).Return(
 		func() *clustermanager.AutoScalingGroup {
@@ -246,7 +246,7 @@ func TestNodeGroup_IncreaseSize(t *testing.T) {
 			}
 		}(), nil,
 	)
-	m.EXPECT().UpdateDesiredNode(gomock.Eq("test3"), gomock.Eq(1)).Return(fmt.Errorf("Internal Error"))
+	m.EXPECT().UpdateDesiredNode(gomock.Eq("test3"), gomock.Eq(1)).Return("", fmt.Errorf("Internal Error"))
 
 	type fields struct {
 		InstanceRef  InstanceRef
@@ -430,6 +430,9 @@ func TestNodeGroup_buildNodeFromTemplate(t *testing.T) {
 						"failure-domain.beta.kubernetes.io/region": "SZ",
 						"kubernetes.io/hostname":                   fmt.Sprintf("%s-%d", "test", rand.Int63()),
 					},
+				},
+				Spec: apiv1.NodeSpec{
+					Taints: make([]apiv1.Taint, 0),
 				},
 				Status: apiv1.NodeStatus{
 					Capacity: apiv1.ResourceList{
@@ -817,8 +820,9 @@ func TestNodeGroup_DeleteNodes(t *testing.T) {
 			InnerIP:     "127.0.0.3",
 		}, nil,
 	)
-	m.EXPECT().RemoveNodes(gomock.Eq("test"), gomock.Eq([]string{"127.0.0.1"})).Return(nil)
+	m.EXPECT().RemoveNodes(gomock.Eq("test"), gomock.Eq([]string{"127.0.0.1"})).Return("", nil)
 	m.EXPECT().RemoveNodes(gomock.Eq("test"), gomock.Eq([]string{"127.0.0.3"})).Return(
+		"",
 		fmt.Errorf("remove node failed"),
 	)
 	type fields struct {
@@ -954,19 +958,19 @@ func TestNodeGroup_Nodes(t *testing.T) {
 		Status:      "DELETING",
 	}
 	i1 := cloudprovider.Instance{
-		Id: "qcloud:///123/n1",
+		Id: "127.0.0.1",
 		Status: &cloudprovider.InstanceStatus{
 			State: cloudprovider.InstanceRunning,
 		},
 	}
 	i2 := cloudprovider.Instance{
-		Id: "qcloud:///123/n2",
+		Id: "127.0.0.2",
 		Status: &cloudprovider.InstanceStatus{
 			State: cloudprovider.InstanceCreating,
 		},
 	}
 	i3 := cloudprovider.Instance{
-		Id: "qcloud:///123/n3",
+		Id: "127.0.0.3",
 		Status: &cloudprovider.InstanceStatus{
 			State: cloudprovider.InstanceDeleting,
 		},
