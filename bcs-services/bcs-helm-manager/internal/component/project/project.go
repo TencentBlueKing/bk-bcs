@@ -36,7 +36,7 @@ const (
 	cacheProjectKeyPrefix = "project_%s"
 
 	// defaultExpiration
-	defaultExpiration = 24 * time.Hour
+	defaultExpiration = time.Hour
 )
 
 // Client xxx

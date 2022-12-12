@@ -135,13 +135,13 @@ func (r *ReleasePreviewAction) generateReleasePreview(oldRelease,
 
 	manifest := newRelease.Manifest
 	for _, v := range newRelease.Hooks {
-		manifest += "---\n" + v.Manifest
+		manifest += "\n---\n" + v.Manifest
 	}
 	preview.NewContent = &manifest
 	if oldRelease != nil {
 		oldManifest := oldRelease.Manifest
 		for _, v := range oldRelease.Hooks {
-			oldManifest += "---\n" + v.Manifest
+			oldManifest += "\n---\n" + v.Manifest
 		}
 		preview.OldContent = &oldManifest
 	}
