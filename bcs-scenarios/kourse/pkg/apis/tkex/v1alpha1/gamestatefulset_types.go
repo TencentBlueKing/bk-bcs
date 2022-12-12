@@ -237,6 +237,14 @@ type GameStatefulSetSpec struct {
 	// Defaults to false (readinessgate will be injected to pods)
 	// +kubebuilder:default=false
 	DisableReadinessGate bool `json:"disableReadinessGate,omitempty"`
+
+	// ReserveOrders indicates the pods with specific order will be deleted or not be created.
+	// For example, a gameset with replicas=3 and its Pods in [0, 1, 2]:
+	// - If set reserveOrders to [1].
+	//   Then controller will delete Pod-1 and create Pod-3 (existing Pods will be [0, 2, 3])
+	// - If set reserveOrders to [1] and spec.replicas to 2.
+	//   Then controller will delete Pod-1 (existing Pods will be [0, 2])
+	ReserveOrders []int `json:"reserveOrders,omitempty"`
 }
 
 // GameStatefulSetPreDeleteUpdateStrategy defines the predelete strategy of GameStatefulSet

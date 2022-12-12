@@ -136,10 +136,6 @@ spec:
                               description: Container is the name of container where
                                 commands to execute inside.
                               type: string
-                            timeout:
-                              description: Timeout is the overall timeout in seconds
-                                for executing commands.
-                              type: integer
                           required:
                           - command
                           - container
