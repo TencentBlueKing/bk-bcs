@@ -25,6 +25,7 @@ type HttpServerClient struct {
 func InitRouters(ws *restful.WebService, httpServerClient *HttpServerClient) {
 	ws.Route(ws.GET("/api/v1/ingresss").To(httpServerClient.listIngress))
 	ws.Route(ws.GET("/api/v1/portpools").To(httpServerClient.listPortPool))
+	ws.Route(ws.GET("/api/v1/portbindings/{namespace}/{name}").To(httpServerClient.listPortbinding))
 	ws.Route(ws.GET("/api/v1/listeners/{condition}/{namespace}/{name}").To(httpServerClient.listListener))
 
 }

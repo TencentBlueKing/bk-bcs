@@ -14,14 +14,16 @@ package httpsvr
 
 import (
 	"context"
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
+
 	"github.com/emicklei/go-restful"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	k8smetav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	k8slabels "k8s.io/apimachinery/pkg/labels"
 	k8sapitypes "k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
 )
 
 func (h *HttpServerClient) listListener(request *restful.Request, response *restful.Response) {
@@ -35,7 +37,7 @@ func (h *HttpServerClient) listListener(request *restful.Request, response *rest
 			Namespace: request.PathParameter("namespace"),
 		}, ingress); err != nil {
 			if k8serrors.IsNotFound(err) {
-				blog.Infof("ingress %s/%s not found", request.PathParameter("namespace"), request.PathParameter("name"))
+				blog.Errorf("ingress %s/%s not found", request.PathParameter("namespace"), request.PathParameter("name"))
 				data = CreateResponseData(err, "failed", nil)
 				break
 			}
@@ -62,7 +64,7 @@ func (h *HttpServerClient) listListener(request *restful.Request, response *rest
 			Namespace: request.PathParameter("namespace"),
 		}, portPool); err != nil {
 			if k8serrors.IsNotFound(err) {
-				blog.Infof("portpool %s/%s not found", request.PathParameter("namespace"), request.PathParameter("name"))
+				blog.Errorf("portpool %s/%s not found", request.PathParameter("namespace"), request.PathParameter("name"))
 				data = CreateResponseData(err, "failed", nil)
 				break
 			}
