@@ -36,7 +36,7 @@ export function useProject() {
  * 获取集群相关信息
  */
 export function useCluster() {
-  const curClusterId = computed(() => $store.state.curClusterId);
+  const curClusterId = computed<any>(() => $store.state.curClusterId);
   const isSharedCluster = computed(() => $store.state.cluster.curCluster?.is_shared);
   const clusterList = computed(() => $store.state.cluster.clusterList || []);
   const isSingleCluster = computed(() => !!curClusterId.value);

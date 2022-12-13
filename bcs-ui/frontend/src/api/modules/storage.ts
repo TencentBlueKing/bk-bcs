@@ -6,4 +6,4 @@ const request = createRequest({
   prefix: '/bcsapi/v4/storage',
 });
 
-export const storageEvents = request('get', '/events');
+export const storageEvents = request('post', '/events');

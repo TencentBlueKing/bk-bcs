@@ -221,19 +221,15 @@
             </bcs-table-column>
           </bcs-table>
         </bcs-tab-panel>
-        <bcs-tab-panel name="event" :label="$t('事件')" v-if="category !== 'cronjobs'">
-          <bk-table
-            :data="events"
-            v-bkloading="{ isLoading: eventLoading }"
-            :pagination="pagination"
-            @page-change="handlePageChange"
-            @page-limit-change="handlePageLimitChange">
-            <bk-table-column :label="$t('时间')" prop="eventTime" width="200"></bk-table-column>
-            <bk-table-column :label="$t('组件')" prop="component" width="100"></bk-table-column>
-            <bk-table-column :label="$t('对象')" prop="extraInfo.name" width="200"></bk-table-column>
-            <bk-table-column :label="$t('级别')" prop="level" width="100"></bk-table-column>
-            <bk-table-column :label="$t('事件内容')" prop="describe" min-width="300"></bk-table-column>
-          </bk-table>
+        <bcs-tab-panel name="event" :label="$t('事件')">
+          <EventQueryTableVue
+            class="min-h-[360px]"
+            is-specify-kinds
+            :kinds="[kind, 'Pod']"
+            :cluster-id="clusterId"
+            :namespace="namespace"
+            :name="kindsNames">
+          </EventQueryTableVue>
         </bcs-tab-panel>
         <bcs-tab-panel name="label" :label="$t('标签')">
           <bk-table :data="labels">
@@ -312,7 +308,7 @@ import useLog from './use-log';
 import usePage from '@/views/dashboard/common/use-page';
 import { timeZoneTransForm } from '@/common/util';
 import useSearch from '../../common/use-search';
-import { storageEvents } from '@/api/modules/storage';
+import EventQueryTableVue from '@/views/mc/event-query-table.vue';
 
 export interface IDetail {
   manifest: any;
@@ -326,6 +322,7 @@ export default defineComponent({
     Metric,
     CodeEditor,
     BcsLog,
+    EventQueryTableVue,
   },
   directives: {
     bkOverflowTips,
@@ -437,11 +434,11 @@ export default defineComponent({
     // 获取pod manifestExt数据
     const handleGetExtData = (uid, prop) => workloadPods.value?.manifestExt?.[uid]?.[prop];
     // 指标参数
-    const params = computed<Record<string, any>|undefined>(() => {
+    const params = computed<Record<string, any>|null>(() => {
       const list = pods.value.map(item => item.metadata.name);
       return list.length
         ? { pod_name_list: list, $namespaceId: props.namespace }
-        : undefined;
+        : null;
     });
 
     // 跳转pod详情
@@ -578,42 +575,10 @@ export default defineComponent({
     };
 
     // 事件列表
-    const events = ref([]);
-    const eventLoading = ref(false);
-    const pagination = ref({
-      current: 1,
-      count: 0,
-      limit: 10,
-    });
-    const handleGetEventList = async () => {
-      eventLoading.value = true;
-      const list = pods.value.map(item => item.metadata.name);
-      const params = {
-        offset: (pagination.value.current - 1) * pagination.value.limit,
-        length: pagination.value.limit,
-        clusterId: clusterId.value,
-        env: 'k8s',
-        kind: 'Pod',
-        extraInfo: {
-          name: list.join(','),
-          namespace: props.namespace,
-        },
-      };
-      const { data = [], total = 0 } = await storageEvents(params, { needRes: true })
-        .catch(() => ({ data: [], total: 0 }));
-      pagination.value.count = total;
-      events.value = data || [];
-      eventLoading.value = false;
-    };
-    const handlePageChange = (page) => {
-      pagination.value.current = page;
-      handleGetEventList();
-    };
-    const handlePageLimitChange = (limit) => {
-      pagination.value.current = 1;
-      pagination.value.limit = limit;
-      handleGetEventList();
-    };
+    const kindsNames = computed(() => [
+      props.name,
+      ...pods.value.map(item => item.metadata.name),
+    ]);
 
     // 刷新Pod状态
     const handleRefreshPodsStatus = async () => {
@@ -628,7 +593,6 @@ export default defineComponent({
         await handleGetDetail();
       }
       await handleGetWorkloadPods();
-      handleGetEventList();
       // 开启轮询
       start();
     });
@@ -664,12 +628,8 @@ export default defineComponent({
       showYamlPanel,
       projectId,
       clusterId,
-      events,
-      eventLoading,
-      pagination,
+      kindsNames,
       timeZoneTransForm,
-      handlePageChange,
-      handlePageLimitChange,
       handleShowYamlPanel,
       gotoPodDetail,
       handleGetExtData,
@@ -698,36 +658,5 @@ export default defineComponent({
 });
 </script>
 <style lang="postcss" scoped>
-@import './detail-info.css';
-@import './pod-log.css';
-.workload-detail {
-    width: 100%;
-    /deep/ .bk-sideslider .bk-sideslider-content {
-        height: 100%;
-    }
-    &-info {
-        @mixin detail-info 3;
-    }
-    &-body {
-        background: #FAFBFD;
-        padding: 0 24px;
-        .workload-metric {
-            display: flex;
-            background: #fff;
-            margin-top: 16px;
-            height: 230px;
-        }
-        .workload-tab {
-            margin-top: 16px;
-        }
-        .pod-info-header {
-          display: flex;
-          justify-content: space-between;
-          margin-bottom: 20px;
-          .search-input {
-            width: 350px;
-          }
-        }
-    }
-}
+@import './workload-detail.css';
 </style>

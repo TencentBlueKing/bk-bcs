@@ -25,12 +25,12 @@
         <label>finalizers</label>
         <template v-if="data.metadata.finalizers">
           <bcs-popover placement="top" width="220">
-              <span>{{ data.metadata.finalizers.join(',') }}</span>
-              <div slot="content" style="white-space: normal;">
-                  <div v-for="(item, index) in data.metadata.finalizers" :key="index">
-                    {{ item }}
-                  </div>
+            <span>{{ data.metadata.finalizers.join(',') }}</span>
+            <div slot="content" style="white-space: normal;">
+              <div v-for="(item, index) in data.metadata.finalizers" :key="index">
+                {{ item }}
               </div>
+            </div>
           </bcs-popover>
         </template>
         <template v-else>
@@ -56,15 +56,24 @@
           <bk-table-column label="Value" prop="value"></bk-table-column>
         </bk-table>
       </bcs-tab-panel>
+      <bcs-tab-panel name="event" :label="$t('事件')">
+        <EventQueryTableVue
+          is-specify-kinds
+          :kinds="data.kind"
+          :namespace="data.metadata.namespace"
+          :name="data.metadata.name" />
+      </bcs-tab-panel>
     </bcs-tab>
   </div>
 </template>
 <script lang="ts">
 import { defineComponent, onMounted, ref } from '@vue/composition-api';
 import $store from '@/store';
+import EventQueryTableVue from '@/views/mc/event-query-table.vue';
 
 export default defineComponent({
   name: 'PvcDetail',
+  components: { EventQueryTableVue },
   props: {
     // 当前行数据
     data: {

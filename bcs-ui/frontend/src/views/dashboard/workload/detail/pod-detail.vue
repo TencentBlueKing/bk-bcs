@@ -144,6 +144,16 @@
             </bk-table-column>
           </bk-table>
         </bcs-tab-panel>
+        <bcs-tab-panel name="event" :label="$t('事件')">
+          <EventQueryTableVue
+            class="min-h-[360px]"
+            is-specify-kinds
+            :kinds="['Pod']"
+            :cluster-id="clusterId"
+            :namespace="namespace"
+            :name="name">
+          </EventQueryTableVue>
+        </bcs-tab-panel>
         <bcs-tab-panel name="conditions" :label="$t('状态（Conditions）')">
           <bk-table :data="conditions">
             <bk-table-column :label="$t('类别')" prop="type"></bk-table-column>
@@ -297,6 +307,7 @@ import useDetail from './use-detail';
 import { formatTime, timeZoneTransForm } from '@/common/util';
 import CodeEditor from '@/components/monaco-editor/new-editor.vue';
 import fullScreen from '@/directives/full-screen';
+import EventQueryTableVue from '@/views/mc/event-query-table.vue';
 
 export interface IDetail {
   manifest: any;
@@ -315,6 +326,7 @@ export default defineComponent({
     StatusIcon,
     Metric,
     CodeEditor,
+    EventQueryTableVue,
   },
   directives: {
     bkOverflowTips,
@@ -480,6 +492,7 @@ export default defineComponent({
     });
 
     return {
+      clusterId,
       params,
       container,
       conditions,

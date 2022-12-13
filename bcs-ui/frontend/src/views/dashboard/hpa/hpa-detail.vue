@@ -80,6 +80,13 @@
           <bk-table-column label="Value" prop="value"></bk-table-column>
         </bk-table>
       </bcs-tab-panel>
+      <bcs-tab-panel name="event" :label="$t('事件')">
+        <EventQueryTableVue
+          is-specify-kinds
+          :kinds="data.kind"
+          :namespace="data.metadata.namespace"
+          :name="data.metadata.name" />
+      </bcs-tab-panel>
     </bcs-tab>
   </div>
 </template>
@@ -87,10 +94,11 @@
 import { defineComponent } from '@vue/composition-api';
 import StatusIcon from '../common/status-icon';
 import { formatTime } from '@/common/util';
+import EventQueryTableVue from '@/views/mc/event-query-table.vue';
 
 export default defineComponent({
   name: 'HPADetail',
-  components: { StatusIcon },
+  components: { StatusIcon, EventQueryTableVue },
   props: {
     // 当前行数据
     data: {

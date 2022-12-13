@@ -99,16 +99,24 @@
           <bk-table-column label="Value" prop="value"></bk-table-column>
         </bk-table>
       </bcs-tab-panel>
+      <bcs-tab-panel name="event" :label="$t('事件')">
+        <EventQueryTableVue
+          is-specify-kinds
+          :kinds="data.kind"
+          :namespace="data.metadata.namespace"
+          :name="data.metadata.name" />
+      </bcs-tab-panel>
     </bcs-tab>
   </div>
 </template>
 <script lang="ts">
 import { defineComponent, ref, toRefs, watch } from '@vue/composition-api';
 import StatusIcon from '@/views/dashboard/common/status-icon';
+import EventQueryTableVue from '@/views/mc/event-query-table.vue';
 
 export default defineComponent({
   name: 'EndpointsDetail',
-  components: { StatusIcon },
+  components: { StatusIcon, EventQueryTableVue },
   props: {
     // 当前行数据
     data: {

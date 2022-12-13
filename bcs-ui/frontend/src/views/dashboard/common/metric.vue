@@ -80,7 +80,7 @@ export default defineComponent({
       required: true,
     },
     params: {
-      type: Object,
+      type: Object as PropType<Object|null>,
       default: () => ({}),
     },
     colors: {

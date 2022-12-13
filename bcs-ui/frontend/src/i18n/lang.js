@@ -3421,4 +3421,31 @@ export default {
   "--history-max，可用于回滚的历史版本个数": ['--history-max, the number of historical versions available for rollback'],
   "保留最大历史版本": ['Keep the maximum historical version'],
   "撤回成功": ["Withdraw success"],
+  "手动删除": [
+    "Manually delete"
+  ],
+  "最大调度Pod数量": [
+    "The maximum scheduling POD number"
+  ],
+  "最大不可用数量": [
+    "Maximum unavailable quantity"
+  ],
+  "最小就绪时间": [
+    "Minimum ready time"
+  ],
+  "进程截止时间": [
+    "Deadline for the process"
+  ],
+  "批量重新调度": [
+    "Batch re -scheduling"
+  ],
+  "请入名称、镜像、Host IP、Pod IP、Node搜索": [
+    "Please enter the name, mirror image, host ip, pod ip, node search"
+  ],
+  "确认重新调度以下Pod": [
+    "Confirm the re -scheduling POD below"
+  ],
+  "搜索事件级别、组件": [
+    "Search event level, component"
+  ]
 }
