@@ -96,6 +96,7 @@ type ClusterResourcesConf struct {
 	Log     LogConf     `yaml:"log"`
 	Redis   RedisConf   `yaml:"redis"`
 	Global  GlobalConf  `yaml:"crGlobal"`
+	Tracing TracingConf `yaml:"tracing"`
 }
 
 func (c *ClusterResourcesConf) initServerAddress() error {
@@ -282,4 +283,19 @@ type IAMConf struct {
 type SharedClusterConf struct {
 	EnabledCObjKinds []string `yaml:"enabledCObjKinds" usage:"共享集群中支持的自定义对象 Kind"`
 	EnabledCRDs      []string `yaml:"enabledCRDs" usage:"共享集群中支持的 CRD"` // nolint:tagliatelle
+}
+
+type TracingConf struct {
+	TracingSwitch     string  `yaml:"tracingSwitch" usage:"tracing switch"`
+	TracingType       string  `yaml:"tracingType" usage:"tracing type(default jaeger)"`
+	ServiceName       string  `yaml:"serviceName" usage:"tracing serviceName"`
+	RPCMetrics        bool    `yaml:"rPCMetrics"`
+	ReportMetrics     bool    `json:"reportMetrics"`
+	ReportLog         bool    `json:"reportLog"`
+	AgentFromEnv      bool    `json:"agentFromEnv"`
+	AgentHostPort     string  `json:"agentHostPort"`
+	SampleType        string  `json:"sampleType"`
+	SampleParameter   float64 `json:"sampleParameter"`
+	SampleFromEnv     bool    `json:"sampleFromEnv"`
+	SamplingServerURL string  `json:"samplingServerURL"`
 }

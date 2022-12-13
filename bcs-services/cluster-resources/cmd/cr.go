@@ -27,6 +27,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/config"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/i18n"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/logging"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/tracing/jaeger"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/version"
 )
@@ -71,6 +72,15 @@ func Start() {
 	// 初始化 I18N 相关配置
 	if err = i18n.InitMsgMap(); err != nil {
 		panic(errorx.New(errcode.General, "init i18n message map failed: %v", err))
+	}
+
+	//初始化 Tracer
+	closer, err := jaeger.InitTracingInstance(&crConf.Tracing)
+	if err != nil {
+		panic(errorx.New(errcode.General, "initTracingInstance failed: %v", err))
+	}
+	if closer != nil {
+		defer closer.Close()
 	}
 
 	crSvc := newClusterResourcesService(crConf)

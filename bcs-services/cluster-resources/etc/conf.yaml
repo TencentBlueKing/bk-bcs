@@ -114,3 +114,17 @@ crGlobal:
   sharedCluster:
     enabledCObjKinds: []
     enabledCRDs: []
+
+# Tracing 相关配置
+tracing:
+  tracingSwitch: "on"
+  tracingType: "jaeger"
+  serviceName: "bcs-cluster-resources"
+  rPCMetrics: true
+  reportMetrics: true
+  reportLog: true
+  agentFromEnv: false
+  AgentHostPort: "127.0.0.1:6831"
+  sampleType: "const"
+  sampleParameter: 1
+  sampleFromEnv: false

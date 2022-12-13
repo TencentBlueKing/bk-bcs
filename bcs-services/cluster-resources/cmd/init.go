@@ -32,6 +32,7 @@ import (
 	microGrpc "github.com/go-micro/plugins/v4/server/grpc"
 	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"github.com/opentracing/opentracing-go"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/tmc/grpc-websocket-proxy/wsproxy"
 	"go-micro.dev/v4"
@@ -154,6 +155,10 @@ func (crSvc *clusterResourcesService) initMicro() error {
 		server.WrapHandler(
 			// 格式化返回结果
 			wrapper.NewResponseFormatWrapper(),
+		),
+		server.WrapHandler(
+			//	链路追踪
+			wrapper.NewHandlerWrapper(opentracing.GlobalTracer()),
 		),
 		server.WrapHandler(
 			// 记录 API 访问流水日志
