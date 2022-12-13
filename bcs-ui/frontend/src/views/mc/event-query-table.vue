@@ -334,8 +334,8 @@ export default defineComponent({
         kind: parseSearchSelectValue.value.kinds.join(',') || (Array.isArray(kinds.value) ? kinds.value : [kinds.value]).join(','), // 对象
         'extraInfo.namespace': params.value.namespace, // 命名空间
         'extraInfo.name': parseSearchSelectValue.value.names.join(',') || (Array.isArray(name.value) ? name.value : [name.value]).join(','),
-        timeBegin: start ? new Date(start).getTime() / 1000 : '', // 开始时间
-        timeEnd: end ? new Date(end).getTime() / 1000 : '', // 结束时间
+        timeBegin: start ? parseInt(`${new Date(start).getTime() / 1000}`) : '', // 开始时间
+        timeEnd: end ? parseInt(`${new Date(end).getTime() / 1000}`) : '', // 结束时间
         level: parseSearchSelectValue.value.level, // 事件级别
         component: parseSearchSelectValue.value.component, // 组件
       }, { needRes: true })
