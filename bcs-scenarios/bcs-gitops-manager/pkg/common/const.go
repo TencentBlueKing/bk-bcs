@@ -36,8 +36,13 @@ const (
 	// HeaderBCSClient header for bcs client
 	HeaderBCSClient = "X-BCS-Client"
 
+	// ProjectAliaName the alia name for project
+	ProjectAliaName = "bkbcs.tencent.com/projectAliaName"
 	// ProjectIDKey ID key indexer
 	ProjectIDKey = "bkbcs.tencent.com/projectID"
 	// ProjectBusinessIDKey for bcs business indexer
 	ProjectBusinessIDKey = "bkbcs.tencent.com/businessID"
+
+	// ClusterAliaName defines the alia's name for project
+	ClusterAliaName = "bkbcs.tencent.com/clusterAliaName"
 )

@@ -65,7 +65,7 @@ func (control *project) Start() error {
 	return nil
 }
 
-// Start controller
+// Stop controller
 func (control *project) Stop() {
 	control.conn.Close() // nolint
 }

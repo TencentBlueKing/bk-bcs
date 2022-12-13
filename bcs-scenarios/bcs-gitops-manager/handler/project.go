@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	v1alpha1 "github.com/argoproj/argo-cd/v2/pkg/apis/application/v1alpha1"
+	"github.com/argoproj/argo-cd/v2/pkg/apis/application/v1alpha1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -26,7 +26,7 @@ func (e *BcsGitopsHandler) StartupProject(ctx context.Context,
 	blog.Infof("prepared to sync project info: %s", req.GetProjectCode())
 	project, err := e.option.ProjectControl.GetProject(ctx, req.GetProjectCode())
 	if err != nil {
-		blog.Errorf("bcs-project-manager get project %s faileure", req.GetProjectCode())
+		blog.Errorf("bcs-project-manager get project %s failure", req.GetProjectCode())
 		rsp.Code = -1
 		rsp.Error = err.Error()
 		rsp.Message = "bcs-project request failure"
@@ -74,6 +74,7 @@ func defaultAppProject(ns string, project *bcsproject.Project) *v1alpha1.AppProj
 			Name:      project.ProjectCode,
 			Namespace: ns,
 			Annotations: map[string]string{
+				common.ProjectAliaName:      project.Name,
 				common.ProjectIDKey:         project.ProjectID,
 				common.ProjectBusinessIDKey: project.BusinessID,
 			},

@@ -113,6 +113,15 @@ func (ops *ArgocdProxy) initArgoPathHandler() error {
 	}
 	initializer = append(initializer, streamPlugin.Init)
 
+	// webhook path
+	webhookRouter := ops.PathPrefix(common.GitOpsProxyURL + "/api/webhook").Subrouter()
+	webhookPlugin := &WebhookPlugin{
+		Router:  webhookRouter,
+		Session: ops.session,
+		option:  ops.option,
+	}
+	initializer = append(initializer, webhookPlugin.Init)
+
 	// access deny URL, keep in mind that there are paths need to proxy
 	ops.PathPrefix(common.GitOpsProxyURL + "/api/v1/account").HandlerFunc(http.NotFound)
 	ops.PathPrefix(common.GitOpsProxyURL + "/api/v1/gpgkeys").HandlerFunc(http.NotFound)

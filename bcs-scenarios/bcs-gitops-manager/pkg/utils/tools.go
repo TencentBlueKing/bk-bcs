@@ -40,3 +40,15 @@ func StartSignalHandler(stop context.CancelFunc, gracefulExit int) {
 		return
 	}
 }
+
+// DeepCopyMap will deepcopy the map
+func DeepCopyMap(m map[string]string) map[string]string {
+	r := make(map[string]string)
+	if len(m) == 0 {
+		return r
+	}
+	for k, v := range m {
+		r[k] = v
+	}
+	return r
+}

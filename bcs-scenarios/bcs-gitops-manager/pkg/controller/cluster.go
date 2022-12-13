@@ -21,10 +21,12 @@ import (
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/metadata"
 
+	"github.com/argoproj/argo-cd/v2/pkg/apis/application/v1alpha1"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	cm "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/common"
-	"github.com/argoproj/argo-cd/v2/pkg/apis/application/v1alpha1"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/utils"
 )
 
 // ClusterControl interface definition
@@ -174,12 +176,12 @@ func (control *cluster) innerLoop(ctx context.Context) {
 		return
 	}
 	controlledProjects := make(map[string]*v1alpha1.AppProject)
-	for _, pro := range appProjects.Items {
+	for i, pro := range appProjects.Items {
 		proID := common.GetBCSProjectID(pro.Annotations)
 		if proID == "" {
 			continue
 		}
-		controlledProjects[proID] = &pro
+		controlledProjects[proID] = &appProjects.Items[i]
 	}
 	blog.Infof("cluster controller list raw projects %d, controlled projects %d",
 		len(appProjects.Items), len(controlledProjects))
@@ -247,6 +249,8 @@ func (control *cluster) saveToStorage(ctx context.Context, cls *cm.Cluster, proj
 	if cls.IsShared {
 		return fmt.Errorf("shared cluster is not supported")
 	}
+	clusterAnnotation := utils.DeepCopyMap(project.Annotations)
+	clusterAnnotation[common.ClusterAliaName] = cls.ClusterName
 	appCluster := &v1alpha1.Cluster{
 		Name:    cls.ClusterID,
 		Server:  fmt.Sprintf("https://%s/clusters/%s/", control.option.APIGateway, cls.ClusterID),
@@ -254,7 +258,7 @@ func (control *cluster) saveToStorage(ctx context.Context, cls *cm.Cluster, proj
 		Config: v1alpha1.ClusterConfig{
 			BearerToken: control.option.APIToken,
 		},
-		Annotations: project.Annotations,
+		Annotations: clusterAnnotation,
 	}
 	return control.option.Storage.CreateCluster(ctx, appCluster)
 }
