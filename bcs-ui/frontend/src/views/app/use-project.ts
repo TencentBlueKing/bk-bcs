@@ -2,6 +2,7 @@ import {
   fetchProjectList,
   fetchAllProjectList,
   editProject,
+  getProject,
 } from '@/api/modules/project';
 import store from '@/store';
 
@@ -47,12 +48,24 @@ export default function useProjects() {
       2: 'mesos',
     };
     payload.kind = kindMap[kind];
-    const result = editProject(payload).then(() => true)
+    const result = await editProject(payload).then(() => true)
       .catch(() => false);
     return result;
   }
 
+  async function fetchProjectInfo(params: any) {
+    const result = await getProject(params).catch(() => {});
+    return {
+      ...result,
+      cc_app_id: result.businessID,
+      project_id: result.projectID,
+      project_name: result.name,
+      project_code: result.projectCode,
+    }
+  }
+
   return {
+    fetchProjectInfo,
     getProjectList,
     getAllProjectList,
     updateProject,
