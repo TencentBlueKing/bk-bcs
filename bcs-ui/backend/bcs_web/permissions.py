@@ -86,8 +86,9 @@ class ProjectEnableBCS(BasePermission):
         return False
 
     def _get_enabled_project(self, access_token, project_id_or_code: str) -> Optional[FancyDict]:
+        """开启后如果没有集群，也可以修改业务信息, 默认缓存30秒, bcs 1.29 版本后不强依赖这个接口"""
         cache_key = bcs_project_cache_key.format(project_id_or_code=project_id_or_code)
-        project = region.get(cache_key, expiration_time=EXPIRATION_TIME)
+        project = region.get(cache_key, expiration_time=30)
         if project and isinstance(project, FancyDict):
             return project
 

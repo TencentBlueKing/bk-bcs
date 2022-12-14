@@ -108,10 +108,10 @@ class ProjectHasBCS(BasePermission):
 
     def has_bcs_service(self, access_token, project_id, request_namespace):
         """判断是否开启容器服务
-        开启后就不能关闭，所以缓存很久，默认30天
+        开启后如果没有集群，也可以修改业务信息, 默认缓存30秒, bcs 1.29 版本后不强依赖这个接口
         """
         cache_key = f"BK_DEVOPS_BCS:HAS_BCS_SERVICE:{project_id}"
-        project = region.get(cache_key, expiration_time=3600 * 24 * 30)
+        project = region.get(cache_key, expiration_time=30)
 
         if not project or not isinstance(project, FancyDict):
             result = paas_cc.get_project(access_token, project_id)

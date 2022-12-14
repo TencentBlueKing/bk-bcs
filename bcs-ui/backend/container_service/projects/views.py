@@ -56,7 +56,7 @@ class Projects(viewsets.ViewSet):
         """单个项目信息"""
         project = Project.get_project(request.user.token.access_token, project_id)
         # 添加业务名称
-        project["cc_app_name"] = cc.get_application_name(request.project.cc_app_id)
+        project["cc_app_name"] = cc.get_application_name(project["cc_app_id"])
         return Response(project)
 
     def update_bound_biz(self, request, project_id):
@@ -244,5 +244,6 @@ class ProjectBizInfoViewSet(SystemViewSet):
     def list_biz_maintainers(self, request, project_id):
         """查询业务下的运维人员"""
         # 以admin身份查询业务下的运维
-        maintainers = list_biz_maintainers(int(request.project.cc_app_id))
+        project = Project.get_project(request.user.token.access_token, project_id)
+        maintainers = list_biz_maintainers(int(project.get("cc_app_id", -1)))
         return Response({"maintainers": maintainers})
