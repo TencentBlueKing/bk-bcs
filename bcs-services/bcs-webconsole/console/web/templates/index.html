@@ -8,8 +8,7 @@
     <link rel="stylesheet" href="{{ .settings.SITE_STATIC_URL }}/web/static/assets/vue/bk-magic-vue.min.css">
     <script src="{{ .settings.SITE_STATIC_URL }}/web/static/assets/xterm/lib/xterm.js"></script>
     <script src="{{ .settings.SITE_STATIC_URL }}/web/static/assets/xterm-addon-fit/lib/xterm-addon-fit.js"></script>
-    <script
-        src="{{ .settings.SITE_STATIC_URL }}/web/static/assets/xterm-addon-web-links/lib/xterm-addon-web-links.js"></script>
+    <script src="{{ .settings.SITE_STATIC_URL }}/web/static/assets/xterm-addon-web-links/lib/xterm-addon-web-links.js"></script>
     <script src="{{ .settings.SITE_STATIC_URL }}/web/static/assets/throttle-debounce.js"></script>
     <script src="{{ .settings.SITE_STATIC_URL }}/web/static/assets/base64.min.js"></script>
     <script src="{{ .settings.SITE_STATIC_URL }}/web/static/assets/axios.min.js"></script>
@@ -81,21 +80,18 @@
         <div id="terminal-container"></div>
         <div class="footer-container">
             <div class="shell-selector" style="margin-right: 30px;">
-                <bk-select size="small" :disabled="false" v-model="shell" style="width: 100px;" ext-cls="select-custom"
-                    ext-popover-cls="select-popover-custom">
-                    <bk-popconfirm width="288" trigger="click" title="是否切换shell类型？" content="操作将会刷新页面！"
-                        @confirm="handleConfirmChangeShell" @cancel="handleCancelChangeShell">
-                        <bk-option v-for="option in shellList" :key="option.key" :id="option.id" :name="option.name">
-                        </bk-option>
+                <bk-select size="small" :disabled="false" v-model="shell" style="width: 100px;" ext-cls="select-custom" ext-popover-cls="select-popover-custom">
+                    <bk-popconfirm width="288" trigger="click" title="是否切换shell类型?" content="操作将会刷新页面！" @confirm="handleConfirmChangeShell" @cancel="handleCancelChangeShell">
+                        <bk-option v-for="option in shellList" :key="option.key" :id="option.id" :name="option.name"> </bk-option>
                     </bk-popconfirm>
                 </bk-select>
             </div>
             <div class="footer-icon-item" style="margin-right: 30px; cursor: pointer">
                 <bk-icon type="download" @click="openDownloadDialog" />
             </div>
-            <div class="footer-icon-item" style="margin-right: 30px; cursor: pointer">
+            <!-- <div class="footer-icon-item" style="margin-right: 30px; cursor: pointer">
                 <bk-icon type="question-circle" @click="openDocumentDialog" />
-            </div>
+            </div> -->
         </div>
         <bk-dialog v-model="downloadDialogVisiable" width="720" :show-footer="false">
             <bk-tab :active.sync="updownloadPanel" type="unborder-card">
@@ -104,9 +100,7 @@
                         <div class="upload-panel-input">
                             <bk-input :clearable="true" v-model="uploadPath" placeholder="请先输入上传路径"></bk-input>
                         </div>
-                        <bk-upload :tip="'文件限制小于30Mb, 暂不支持文件夹上传'" name="file" :size="30"
-                            :form-data-attributes="uploadData" @on-success="uploadSuccess" @on-progress="uploadProgress"
-                            @on-done="uploadDone" @on-error="uploadError"
+                        <bk-upload :tip="'文件限制小于30Mb, 暂不支持文件夹上传'" name="file" :size="30" :form-data-attributes="uploadData" @on-success="uploadSuccess" @on-progress="uploadProgress" @on-done="uploadDone" @on-error="uploadError"
                             :url="'{{ .settings.SITE_STATIC_URL }}/api/sessions/' + sessionID + '/upload/'">
                         </bk-upload>
                     </div>
@@ -114,23 +108,19 @@
                 <bk-tab-panel name="download" label="下载">
                     <div class="download-panel">
                         <div class="download-panel-input">
-                            <bk-input :clearable="true" v-model="downloadPath" placeholder="请先输入下载路径,暂不支持文件夹下载">
-                            </bk-input>
+                            <bk-input :clearable="true" v-model="downloadPath" placeholder="请先输入下载路径,暂不支持文件夹下载"></bk-input>
                         </div>
-                        <bk-button theme="primary" title="下载" icon="download" :disabled="downloadDisabled"
-                            :loading="downloadBtnLoading" @click="handleClickDownload">下载
-                        </bk-button>
+                        <bk-button theme="primary" title="下载" icon="download" :disabled="downloadDisabled" :loading="downloadBtnLoading" @click="handleClickDownload">下载</bk-button>
                     </div>
                 </bk-tab-panel>
             </bk-tab>
         </bk-dialog>
-        <bk-dialog v-model="documentDialogVisiable" width="720" title="帮助">
+        <!-- <bk-dialog v-model="documentDialogVisiable" width="720" title="帮助">
             {{range $val := .guide_doc_links }}
             {{$val}}
             <br />
             {{end}}
-        </bk-dialog>
-
+        </bk-dialog> -->
     </div>
     <script src="{{ .settings.SITE_STATIC_URL }}/web/static/assets/vue/vue.js"></script>
     <script src="{{ .settings.SITE_STATIC_URL }}/web/static/assets/vue/bk-magic-vue.min.js"></script>
@@ -148,7 +138,7 @@
                     ws: {},
                     fitAddon: {},
                     webLinksAddon: {},
-                    shell: null,
+                    shell: 1,
                     shellList: [
                         { id: 1, key: 'sh', name: 'sh' },
                         { id: 2, key: 'bash', name: 'bash' },

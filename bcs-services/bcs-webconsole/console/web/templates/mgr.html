@@ -17,6 +17,7 @@
             border: none;
             background: #000;
         }
+
         .bk-tab-header {
             height: 42px !important;
         }
@@ -38,7 +39,7 @@
         .bk-tab-label {
             height: 42px !important;
         }
-        
+
         .bk-tab-add-controller {
             height: 42px !important;
             line-height: 42px !important;
@@ -98,22 +99,17 @@
 <body style="background-color: #000;">
     <div id="app">
         <input type="text" id="short-focus" style="opacity: 0; position: absolute; z-index: 0;" @keyup="handleInput" />
-        <bk-tab addable :active.sync="active" type="border-card" :closable="closable" @add-panel="showDropdown"
-            @close-panel="closePanel" @tab-change="handleTabChange" v-bk-clickoutside="handleClick">
+        <bk-tab addable :active.sync="active" type="border-card" :closable="closable" @add-panel="showDropdown" @close-panel="closePanel" @tab-change="handleTabChange" v-bk-clickoutside="handleClick">
             <bk-tab-panel v-for="(panel, index) in panels" v-bind="panel" :key="panel.name">
-                <iframe @click="handleClick" :src="panel.url" :id="panel.name" :name="panel.name" class="console-iframe"
-                    :style="{width: `${winWidth}px`, height: `${winHeight - 42}px`}"></iframe>
+                <iframe @click="handleClick" :src="panel.url" :id="panel.name" :name="panel.name" class="console-iframe" :style="{width: `${winWidth}px`, height: `${winHeight - 42}px`}"></iframe>
             </bk-tab-panel>
         </bk-tab>
         <div class="mask" v-show="isDropdownShow"></div>
-        <div class="bk-dropdown-menu" :style="{left: `${dropdownLeft}px`, opacity: (isDropdownShow ? 1 : 0)}" v-cloak
-            v-show="isDropdownShow">
+        <div class="bk-dropdown-menu" :style="{left: `${dropdownLeft}px`, opacity: (isDropdownShow ? 1 : 0)}" v-cloak v-show="isDropdownShow">
             <div class="bk-dropdown-content right-align is-show" v-cloak>
                 <ul class="bk-dropdown-list">
                     <li>
-                        <a href="javascript:;" v-cloak :class="{selected: index === selectIndex}"
-                            @click.stop.prevent="addTerminal(cluster)"
-                            v-for="(cluster, index) of clusterList">$[cluster.clusterName]</a>
+                        <a href="javascript:;" v-cloak :class="{selected: index === selectIndex}" @click.stop.prevent="addTerminal(cluster)" v-for="(cluster, index) of clusterList">$[cluster.clusterName]</a>
                     </li>
                 </ul>
             </div>

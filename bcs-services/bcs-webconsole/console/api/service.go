@@ -22,6 +22,7 @@ import (
 	"net/http"
 	"net/url"
 	"path"
+	"strconv"
 	"strings"
 	"time"
 
@@ -333,41 +334,36 @@ func (s *service) DownloadHandler(c *gin.Context) {
 	c.Header("Content-Transfer-Encoding", "binary")
 	c.Header("Cache-Control", "no-cache")
 	io.Copy(c.Writer, tarReader)
-	return
 }
 
 // CheckDownloadHandler 下载文件预检查
 func (s *service) CheckDownloadHandler(c *gin.Context) {
 	authCtx := route.MustGetAuthContext(c)
-	data := types.APIResponse{RequestID: authCtx.RequestId}
+	data := types.APIResponse{RequestID: authCtx.RequestId, Code: types.ApiErrorCode}
 	downloadPath := c.Query("download_path")
 	sessionId := c.Param("sessionId")
 
-	err := checkFileExists(downloadPath, sessionId)
-	if err != nil {
-		data.Code = types.ApiErrorCode
+	if err := checkFileExists(downloadPath, sessionId); err != nil {
 		data.Message = "目标文件不存在"
 		c.JSON(http.StatusOK, data)
 		return
 	}
 
-	err = checkPathIsDir(downloadPath, sessionId)
-	if err == nil {
-		data.Code = types.ApiErrorCode
+	if err := checkPathIsDir(downloadPath, sessionId); err == nil {
 		data.Message = "暂不支持文件夹下载"
 		c.JSON(http.StatusOK, data)
 		return
 	}
 
-	// err = checkFileSize(downloadPath, sessionId)
-	// if err != nil {
-	// 	c.JSON(http.StatusOK, gin.H{"code": 400, "message": fmt.Sprintf("文件不能超过 %d MB", FileSizeLimits)})
-	// 	return
-	// }
+	if err := checkFileSize(downloadPath, sessionId, FileSizeLimits*FileSizeUnitMb); err != nil {
+		data.Message = fmt.Sprintf("文件不能超过 %d MB", FileSizeLimits)
+		c.JSON(http.StatusOK, data)
+		return
+	}
+
 	data.Code = types.NoError
 	data.Message = "文件可以下载"
 	c.JSON(http.StatusOK, data)
-	return
 }
 
 func checkPathIsDir(path, sessionID string) error {
@@ -412,7 +408,7 @@ func checkFileExists(path, sessionID string) error {
 	return nil
 }
 
-func checkFileSize(path, sessionID string) error {
+func checkFileSize(path, sessionID string, sizeLimit int) error {
 	podCtx, err := sessions.NewStore().WebSocketScope().Get(context.Background(), sessionID)
 	if err != nil {
 		return err
@@ -422,14 +418,25 @@ func checkFileSize(path, sessionID string) error {
 	if err != nil {
 		return err
 	}
-	command := fmt.Sprintf("test $(wc -c %s | awk '{print $1}') -le %d", path, FileSizeLimits*FileSizeUnitMb)
-	pe.Command = append([]string{command})
-	pe.Stdout = bytes.NewBuffer([]byte{})
-	pe.Stderr = &bytes.Buffer{}
+	pe.Command = []string{"stat", "-c", "%s", path}
+	stdout := &bytes.Buffer{}
+	stderr := &bytes.Buffer{}
+	pe.Stdout = stdout
+	pe.Stderr = stderr
 	pe.Tty = false
 	err = pe.Exec()
 	if err != nil {
 		return err
+	}
+	// 解析文件大小, stdout 会返回 \r\n 或者 \n
+	sizeText := strings.TrimSuffix(stdout.String(), "\n")
+	sizeText = strings.TrimSuffix(sizeText, "\r")
+	size, err := strconv.Atoi(sizeText)
+	if err != nil {
+		return err
+	}
+	if size > sizeLimit {
+		return errors.Errorf("file size %s > %s", size, sizeLimit)
 	}
 	return nil
 }

@@ -131,7 +131,7 @@ func ValidateProjectCluster(c *gin.Context, authCtx *AuthContext) error {
 		return errors.New("clusterId required")
 	}
 
-	project, err := bcs.GetProject(c.Request.Context(), projectId)
+	project, err := bcs.GetProject(c.Request.Context(), config.G.BCS, projectId)
 	if err != nil {
 		return errors.Wrap(err, "项目不正确")
 	}

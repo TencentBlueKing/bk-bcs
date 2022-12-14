@@ -18,13 +18,15 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
 )
 
 func TestGetProject(t *testing.T) {
 	initConf()
 	ctx := context.Background()
 
-	project, err := GetProject(ctx, getTestProjectId())
+	project, err := GetProject(ctx, config.G.BCS, getTestProjectId())
 	assert.NoError(t, err)
 	assert.Equal(t, project.ProjectId, getTestProjectId())
 }

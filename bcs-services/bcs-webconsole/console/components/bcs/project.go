@@ -16,24 +16,25 @@ package bcs
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/components"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/components/iam"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/storage"
 )
 
 // Project 项目信息
 type Project struct {
-	Name      string `json:"project_name"`
-	ProjectId string `json:"project_id"`
-	Code      string `json:"english_name"`
-	CcBizID   uint   `json:"cc_app_id"`
-	Creator   string `json:"creator"`
-	Kind      uint   `json:"kind"`
+	Name          string `json:"name"`
+	ProjectId     string `json:"projectID"`
+	Code          string `json:"projectCode"`
+	CcBizID       string `json:"businessID"`
+	Creator       string `json:"creator"`
+	Kind          string `json:"kind"`
+	RawCreateTime string `json:"createTime"`
 }
 
-// String 用于打印
+// String :
 func (p *Project) String() string {
 	var displayCode string
 	if p.Code == "" {
@@ -41,27 +42,25 @@ func (p *Project) String() string {
 	} else {
 		displayCode = p.Code
 	}
-	return fmt.Sprintf("project<%s, %s|%s|%d>", p.Name, displayCode, p.ProjectId, p.CcBizID)
+	return fmt.Sprintf("project<%s, %s|%s|%s>", p.Name, displayCode, p.ProjectId, p.CcBizID)
 }
 
-// GetProject 通过project_id获取项目信息
-func GetProject(ctx context.Context, projectIDOrCode string) (*Project, error) {
-	cacheKey := fmt.Sprintf("bcs.GetProject:%s.%s", config.G.BCSCC.Stage, projectIDOrCode)
+// CreateTime xxx
+func (p *Project) CreateTime() (time.Time, error) {
+	return time.ParseInLocation("2006-01-02T15:04:05Z", p.RawCreateTime, config.G.Base.Location)
+}
+
+// GetProject 通过 project_id/code 获取项目信息
+func GetProject(ctx context.Context, bcsConf *config.BCSConf, projectIDOrCode string) (*Project, error) {
+	cacheKey := fmt.Sprintf("bcs.GetProject:%s", projectIDOrCode)
 	if cacheResult, ok := storage.LocalCache.Slot.Get(cacheKey); ok {
 		return cacheResult.(*Project), nil
 	}
 
-	accessToken, err := iam.GetAccessToken(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	url := fmt.Sprintf("%s/%s/projects/%s/", config.G.BCSCC.Host, config.G.BCSCC.Stage, projectIDOrCode)
+	url := fmt.Sprintf("%s/bcsapi/v4/bcsproject/v1/projects/%s", bcsConf.Host, projectIDOrCode)
 	resp, err := components.GetClient().R().
 		SetContext(ctx).
-		SetQueryParam("app_code", config.G.Base.AppCode).
-		SetQueryParam("app_secret", config.G.Base.AppSecret).
-		SetQueryParam("access_token", accessToken).
+		SetBearerAuthToken(bcsConf.Token).
 		Get(url)
 
 	if err != nil {
