@@ -53,16 +53,17 @@ func NewResourceFilter(filterConfig *options.FilterConfig) *ResourceFilter {
 func (rf *ResourceFilter) IsBanned(
 	groupVersion string, apiResource options.APIResource) bool {
 	if apiResource.Kind != "Namespace" {
+		// check black list.
 		resourceFiltered, resourceFilterOK := rf.blackListFilter[groupVersion]
 		if resourceFilterOK && len(resourceFiltered) == 0 {
 			glog.Warnf("filter has banned all resource in groupversion %s", groupVersion)
 			return true
 		}
-		if _, filtered := rf.whiteListFilter[apiResource.Kind]; filtered && resourceFilterOK {
+		if _, filtered := resourceFiltered[apiResource.Kind]; filtered && resourceFilterOK {
 			glog.Warnf("filter has banned resource kind %s in groupversion %s", apiResource.Kind, groupVersion)
 			return true
 		}
-		// if white list is not empty, than do filter
+		// check white list. if white list is not empty, then do filter
 		if len(rf.whiteListFilter) != 0 {
 			resourceSpecified, resourceSpecifyOk := rf.whiteListFilter[groupVersion]
 			if !resourceSpecifyOk {
