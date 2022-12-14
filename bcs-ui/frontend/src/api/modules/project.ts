@@ -35,7 +35,7 @@ const request2 = createRequest({
   prefix: '/bcsapi/v4/bcsproject/v1',
 });
 // project
-export const getProject = request2('get', '/projects/$projectId')
+export const getProject = request2('get', '/projects/$projectId');
 export const editProject = request2('put', '/projects​/$projectId');
 export const fetchProjectList = request2('get', '/authorized_projects');
 export const fetchAllProjectList = request2('get', '/projects');
