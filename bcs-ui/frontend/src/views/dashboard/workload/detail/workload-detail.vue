@@ -225,7 +225,7 @@
           <EventQueryTableVue
             class="min-h-[360px]"
             is-specify-kinds
-            :kinds="[kind, 'Pod']"
+            :kinds="kind === 'Deployment' ? [kind,'ReplicaSet', 'Pod'] : [kind, 'Pod']"
             :cluster-id="clusterId"
             :namespace="namespace"
             :name="kindsNames">

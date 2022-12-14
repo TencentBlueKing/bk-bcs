@@ -216,6 +216,7 @@ export default defineComponent({
     ];
     const kindList = [
       'Deployment',
+      'ReplicaSet',
       'DaemonSet',
       'StatefulSet',
       'CronJob',
