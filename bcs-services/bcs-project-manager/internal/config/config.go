@@ -119,9 +119,11 @@ type ITSMConfig struct {
 
 // ClientActionsConfig Client级别的访问
 type ClientActionsConfig struct {
-	ClientID string   `yaml:"clientID" usage:"client id"`
-	Actions  []string `yaml:"actions" usage:"action name"`
-	All      bool     `yaml:"all" usage:"exempt all permissions"`
+	ClientID         string   `yaml:"clientID" usage:"client id"`
+	Actions          []string `yaml:"actions" usage:"action name"`
+	All              bool     `yaml:"all" usage:"exempt all permissions"`
+	NamespaceActions []string `yaml:"namespaceActions" usage:"actions name for namespace"`
+	NamespaceNames   []string `yaml:"namespaceNames" usage:"name for namespace actions"`
 }
 
 // ClientActionExemptPermConfig 非用户态跳过指定动作的权限

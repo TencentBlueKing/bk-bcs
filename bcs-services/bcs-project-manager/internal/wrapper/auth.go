@@ -18,6 +18,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"strings"
 
 	middleauth "github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/middleware"
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/namespace"
@@ -84,6 +85,21 @@ func SkipClient(ctx context.Context, req server.Request, client string) bool {
 	if len(client) == 0 {
 		return false
 	}
+	body := req.Body()
+	b, err := json.Marshal(body)
+	if err != nil {
+		return false
+	}
+
+	resourceID := &resourceID{}
+	if uErr := json.Unmarshal(b, resourceID); uErr != nil {
+		return false
+	}
+	if strings.HasPrefix(req.Method(), "Namespace.") {
+		if resourceID.Namespace == "" && resourceID.Name != "" {
+			resourceID.Namespace = resourceID.Name
+		}
+	}
 	for _, p := range config.GlobalConf.ClientActionExemptPerm.ClientActions {
 		if client != p.ClientID {
 			continue
@@ -96,6 +112,15 @@ func SkipClient(ctx context.Context, req server.Request, client string) bool {
 				return true
 			}
 		}
+		for _, method := range p.NamespaceActions {
+			if method == req.Method() {
+				for _, namespace := range p.NamespaceNames {
+					if namespace == resourceID.Namespace {
+						return true
+					}
+				}
+			}
+		}
 	}
 	return false
 }
@@ -106,6 +131,7 @@ type resourceID struct {
 	ProjectIDOrCode string `json:"projectIDOrCode,omitempty"`
 	ClusterID       string `json:"clusterID,omitempty"`
 	Namespace       string `json:"namespace,omitempty"`
+	Name            string `json:"name,omitempty"`
 }
 
 func (r *resourceID) check() error {
