@@ -11,11 +11,11 @@
       </div>
       <div class="basic-info-item">
         <label>{{ $t('状态') }}</label>
-        <span class="bcs-ellipsis">{{ data.status }}</span>
+        <span class="bcs-ellipsis">{{ data.status || '--' }}</span>
       </div>
       <div class="basic-info-item">
         <label>{{ $t('创建时间') }}</label>
-        <span>{{ timeZoneTransForm(data.createTime, false) }}</span>
+        <span>{{ data.createTime ? timeZoneTransForm(data.createTime, false) : '--' }}</span>
       </div>
     </div>
     <div class="detail-title mt-[20px]">
