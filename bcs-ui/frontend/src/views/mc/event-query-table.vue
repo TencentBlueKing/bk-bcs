@@ -61,7 +61,7 @@
 import { computed, defineComponent, onMounted, ref, toRefs, watch } from '@vue/composition-api';
 import ClusterSelect from '@/components/cluster-selector/cluster-select.vue';
 import NamespaceSelect from '@/components/namespace-selector/namespace-select.vue';
-import { storageEvents } from '@/api/modules/storage';
+import { storageEvents, uatStorageEvents } from '@/api/modules/storage';
 import { formatDate } from '@/common/util';
 import $i18n from '@/i18n/i18n-setup';
 import { useCluster } from '@/common/use-app';
@@ -117,8 +117,9 @@ export default defineComponent({
       isSpecifyKinds,
     } = toRefs(props);
 
-    const { isSingleCluster, curClusterId } = useCluster();
+    const { isSingleCluster, curClusterId, clusterList } = useCluster();
 
+    const isDebugCluster = computed(() => clusterList.value.find(item => item.clusterID === clusterId.value || item.clusterID === curClusterId.value)?.environment !== 'prod');
     const shortcuts = ref([
       {
         text: $i18n.t('近1小时'),
@@ -327,7 +328,9 @@ export default defineComponent({
     const handleGetEventList = async () => {
       eventLoading.value = true;
       const [start, end] = params.value.date;
-      const { data = [], total = 0 } = await storageEvents({
+      // todo 临时处理
+      const eventAction = isDebugCluster.value ? uatStorageEvents : storageEvents;
+      const { data = [], total = 0 } = await eventAction({
         offset: (pagination.value.current - 1) * pagination.value.limit,
         length: pagination.value.limit,
         clusterId: params.value.clusterId || curClusterId.value,
@@ -387,6 +390,7 @@ export default defineComponent({
     });
 
     return {
+      isDebugCluster,
       kindList,
       filterData,
       params,
