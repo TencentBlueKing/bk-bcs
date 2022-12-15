@@ -5,7 +5,7 @@ const viteHtml = (options?: any) => {
   return {
     name: 'vite-plugin-html-transform',
     transformIndexHtml(html: string) {
-      const reg = /(src|href)="\/static\//gm;
+      const reg = /(src|href)="\.\/static\//gm;
       html = html.replace(reg, '$1="{{ .BK_STATIC_URL }}/static/');
       return html;
     }
@@ -20,6 +20,7 @@ export default defineConfig(({ command, mode }) => {
   }
 
   return {
+    base: "./",
     build: {
       outDir: "dist",
       assetsDir: 'static',
