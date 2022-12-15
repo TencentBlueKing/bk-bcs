@@ -57,6 +57,16 @@ class Projects(viewsets.ViewSet):
         project = Project.get_project(request.user.token.access_token, project_id)
         # 添加业务名称
         project["cc_app_name"] = cc.get_application_name(project["cc_app_id"])
+
+        # hotfix, 和 project-manger 一致
+        if project["kind"] == 1:
+            project["kind"] = "k8s"
+        elif project["kind"] == 2:
+            project["kind"] = "mesos"
+        else:
+            project["kind"] = ""
+
+        project["kind"]
         return Response(project)
 
     def update_bound_biz(self, request, project_id):
