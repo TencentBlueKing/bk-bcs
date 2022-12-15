@@ -40,15 +40,15 @@ type Config struct {
 
 // NewClientWithConfiguration new client with config
 func NewClientWithConfiguration(ctx context.Context) (clustermanager.ClusterManagerClient, context.Context, error) {
-	return NewBcsProjectCli(ctx, &Config{
+	return NewBcsClusterCli(ctx, &Config{
 		APIServer: viper.GetString("config.apiserver"),
 		AuthToken: viper.GetString("config.bcs_token"),
 		Operator:  viper.GetString("config.operator"),
 	})
 }
 
-// NewBcsProjectCli create client for bcs-project
-func NewBcsProjectCli(ctx context.Context, config *Config) (clustermanager.ClusterManagerClient, context.Context, error) {
+// NewBcsClusterCli create client for bcs-Cluster
+func NewBcsClusterCli(ctx context.Context, config *Config) (clustermanager.ClusterManagerClient, context.Context, error) {
 	header := map[string]string{
 		"x-content-type": "application/grpc+proto",
 		"Content-Type":   "application/grpc",

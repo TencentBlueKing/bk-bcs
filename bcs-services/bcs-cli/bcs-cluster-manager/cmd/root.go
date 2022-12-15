@@ -14,14 +14,18 @@
 package cmd
 
 import (
-	"fmt"
 	"log"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"k8s.io/klog"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/version"
+	cloudaccount "github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-cluster-manager/cmd/cloud_account"
+	cloudvpc "github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-cluster-manager/cmd/cloud_vpc"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-cluster-manager/cmd/cluster"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-cluster-manager/cmd/node"
+	nodegroup "github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-cluster-manager/cmd/node_group"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-cluster-manager/cmd/task"
 )
 
 const (
@@ -54,23 +58,18 @@ func NewRootCommand() *cobra.Command {
 	rootCmd := &cobra.Command{
 		Use:   "kubectl-bcs-cluster-manager",
 		Short: "kubectl-bcs-cluster-manager used to operate bcs-cluster-manager service",
-		Long: `
-kubectl-bcs-cluster-manager allows operators to get project info from bcs-cluster-manager.
-`,
+		Long:  `kubectl-bcs-cluster-manager allows operators to get project info from bcs-cluster-manager`,
 	}
-	versionCmd := &cobra.Command{
-		Use:   "version",
-		Short: "print the version detail info",
-		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Println(version.GetVersion())
-		},
-	}
-	rootCmd.AddCommand(versionCmd)
-	rootCmd.AddCommand(newListCmd())
-	rootCmd.PersistentFlags().StringVarP(
-		&cfgFile, "config", "c", defaultCfgFile, "config file")
-	rootCmd.CompletionOptions.DisableDefaultCmd = true
-	rootCmd.PersistentFlags().StringVarP(&flagOutput, "output", "o", "wide",
-		"optional parameter: json/wide, json will print the json string to stdout")
+	cobra.OnInitialize(ensureConfig)
+
+	rootCmd.PersistentFlags().StringVar(&cfgFile, "cfg", defaultCfgFile, "config file")
+
+	rootCmd.AddCommand(cluster.NewClusterCmd())
+	rootCmd.AddCommand(node.NewNodeCmd())
+	rootCmd.AddCommand(cloudvpc.NewCloudVPCCmd())
+	rootCmd.AddCommand(cloudaccount.NewCloudAccountCmd())
+	rootCmd.AddCommand(task.NewTaskCmd())
+	rootCmd.AddCommand(nodegroup.NewNodeGroupCmd())
+
 	return rootCmd
 }
