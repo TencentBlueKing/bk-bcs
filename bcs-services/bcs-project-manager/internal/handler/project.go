@@ -22,6 +22,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/actions/project"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/iam"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/logging"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store"
 	pm "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/project"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/proto/bcsproject"
@@ -51,7 +52,10 @@ func (p *ProjectHandler) CreateProject(ctx context.Context,
 	authUser, err := middleware.GetUserFromContext(ctx)
 	if err == nil && authUser.Username != "" {
 		// 授权创建者项目编辑和查看权限
-		iam.GrantProjectCreatorActions(authUser.Username, projectInfo.ProjectID, projectInfo.Name)
+		if err := iam.GrantProjectCreatorActions(authUser.Username, projectInfo.ProjectID, projectInfo.Name); err != nil {
+			logging.Error("grant project %s for creator %s permission failed, err: %s",
+				projectInfo.ProjectID, authUser.Username, err.Error())
+		}
 	}
 	// 处理返回数据及权限
 	setResp(resp, projectInfo)

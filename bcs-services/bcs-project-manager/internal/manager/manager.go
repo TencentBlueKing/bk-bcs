@@ -41,7 +41,7 @@ func NewNamespaceManager(ctx context.Context, model store.ProjectModel) *Namespa
 
 func (n *NamespaceManager) Run() {
 	logging.Info("start sync namespace records with itsm")
-	interval := time.NewTicker(5 * time.Minute)
+	interval := time.NewTicker(30 * time.Second)
 	defer interval.Stop()
 
 	for {

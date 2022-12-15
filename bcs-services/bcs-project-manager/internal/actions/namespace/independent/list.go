@@ -23,6 +23,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/actions/namespace/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/page"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/clientset"
@@ -92,6 +93,12 @@ func (a *IndependentNamespaceAction) ListNamespaces(ctx context.Context,
 	}
 	g.Wait()
 	resp.Data = retDatas
+	go func() {
+		if err := common.SyncNamespace(req.GetProjectCode(), req.GetClusterID(), nsList.Items); err != nil {
+			logging.Error("sync namespaces %s/%s failed, err:%s",
+				req.GetProjectCode(), req.GetClusterID(), err.Error())
+		}
+	}()
 	return nil
 }
 
@@ -120,9 +127,9 @@ func batchListNamespaceVariables(ctx context.Context,
 	for _, namespace := range namespaces {
 		for _, definition := range definitions {
 			variable := &proto.VariableValue{
-				Id:        definition.ID,
-				Name:      definition.Name,
-				Key:       definition.Key,
+				Id:   definition.ID,
+				Name: definition.Name,
+				Key:  definition.Key,
 			}
 			if value, ok := exists[definition.ID+"&"+namespace.GetName()]; ok {
 				variable.Value = value.Value

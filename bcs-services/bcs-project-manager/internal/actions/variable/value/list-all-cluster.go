@@ -71,27 +71,11 @@ func (la *ListClustersVariablesAction) listClusterVariables() ([]*proto.Variable
 		return nil, fmt.Errorf("variable %s scope is %s rather than cluster",
 			la.req.GetVariableID(), variableDefinition.Scope)
 	}
-	cli, closeCon, err := clustermanager.GetClusterManagerClient()
+	clusterList, err := clustermanager.ListClusters(project.ProjectID)
 	if err != nil {
-		logging.Error("get cluster manager client failed, err: %s", err.Error())
 		return nil, err
 	}
-	defer closeCon()
-	req := &clustermanager.ListClusterReq{
-		ProjectID: project.ProjectID,
-		Status:    clustermanager.ClusterStatusRunning,
-	}
-
-	resp, err := cli.ListCluster(la.ctx, req)
-	if err != nil {
-		logging.Error("list cluster from cluster manager failed, err: %s", err.Error())
-		return nil, err
-	}
-	if resp.GetCode() != 0 {
-		logging.Error("list cluster from cluster manager failed, msg: %s", resp.GetMessage())
-		return nil, errorx.NewClusterErr("list cluster err")
-	}
-	clusters := clusterutils.FilterClusters(resp.GetData(), la.req.GetIsShared())
+	clusters := clusterutils.FilterClusters(clusterList, la.req.GetIsShared())
 	var variables []*proto.VariableValue
 	clusterIDs := []string{}
 	for _, cluster := range clusters {

@@ -27,10 +27,11 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/mysql"
 
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/page"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store"
 	pm "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/project"
@@ -87,7 +88,7 @@ type BCSCCProjectData struct {
 func main() {
 	parseFlags()
 	// 获取数据
-	fmt.Println("migrate start ...")
+	fmt.Printf("[%s] migrate start ...\n", time.Now().Format(time.RFC3339))
 
 	if err := initDB(); err != nil {
 		fmt.Printf("init db failed, err: %s\n", err.Error())
@@ -99,15 +100,21 @@ func main() {
 		fmt.Println(err.Error())
 		return
 	}
-	var insertCount, updateCount int
+	var totalCount, insertCount, updateCount int
 	fmt.Printf("total projects length in cc: %d\n", len(ccProjects))
+	projects, _, err := model.ListProjects(context.Background(), operator.EmptyCondition, &page.Pagination{All: true})
+	if err != nil {
+		fmt.Printf("list projects in bcs db failed, err: %s\n", err.Error())
+		return
+	}
+	projectsMap := map[string]pm.Project{}
+	fmt.Printf("total projects length in bcs: %d\n", len(projects))
+	for _, project := range projects {
+		projectsMap[project.ProjectID] = project
+	}
 	for _, ccProject := range ccProjects {
-		project, err := model.GetProject(context.Background(), ccProject.ProjectID)
-		if err != nil && err != drivers.ErrTableRecordNotFound {
-			fmt.Printf("get project %s failed, err: %s\n", ccProject.ProjectID, err.Error())
-			return
-		}
-		if err == drivers.ErrTableRecordNotFound {
+		project, exists := projectsMap[ccProject.ProjectID]
+		if !exists {
 			if err := insertProject(ccProject); err != nil {
 				fmt.Printf("insert project %s failed, err: %s\n", ccProject.ProjectID, err.Error())
 				return
@@ -116,16 +123,21 @@ func main() {
 			fmt.Printf("insert project %s success, count %d\n", ccProject.ProjectID, insertCount)
 			continue
 		}
-		if checkUpdate(&ccProject, project) {
+		if checkUpdate(ccProject, project) {
 			if err := updateProject(ccProject, project); err != nil {
 				fmt.Printf("update project %s failed, err: %s\n", ccProject.ProjectID, err.Error())
+				return
 			}
 			updateCount++
 			fmt.Printf("update project %s success, count %d\n", ccProject.ProjectID, updateCount)
 		}
+		totalCount++
+		if totalCount%1000 == 0 {
+			fmt.Printf("[%s] checked projects num: %d\n", time.Now().Format(time.RFC3339), totalCount)
+		}
 	}
-	fmt.Println("migrate success!")
-	fmt.Printf("inserted %d projects, updated %d projects\n", insertCount, updateCount)
+	fmt.Printf("[%s] migrate success! inserted %d projects, updated %d projects\n",
+		time.Now().Format(time.RFC3339), insertCount, updateCount)
 }
 
 func parseFlags() {
@@ -210,31 +222,17 @@ func insertProject(p BCSCCProjectData) error {
 	return model.CreateProject(context.Background(), project)
 }
 
-func updateProject(c BCSCCProjectData, p *pm.Project) error {
-	p.Name = c.Name
-	p.Creator = c.Creator
+func updateProject(c BCSCCProjectData, p pm.Project) error {
 	p.Updater = c.Updator
 	p.Managers = constructManagers(c.Creator, c.Updator)
-	p.ProjectType = uint32(c.ProjectType)
-	p.UseBKRes = c.UseBK
-	p.Description = c.Description
-	p.IsOffline = c.IsOfflined
 	p.Kind = getStrKind(c.Kind)
 	p.BusinessID = strconv.Itoa(int(c.CCAppID))
 	p.DeployType = getDeployType(c.DeployType)
-	p.BGID = strconv.Itoa(int(c.BGID))
-	p.BGName = c.BGName
-	p.DeptID = strconv.Itoa(int(c.DeptID))
-	p.DeptName = c.DeptName
-	p.CenterID = strconv.Itoa(int(c.CenterID))
-	p.CenterName = c.CenterName
-	p.IsSecret = c.IsSecrecy
-	p.CreateTime = c.CreatedAt.Format(timeLayout)
-	p.UpdateTime = c.CreatedAt.Format(timeLayout)
-	return model.UpdateProject(context.Background(), p)
+	p.UpdateTime = c.UpdatedAt.Format(timeLayout)
+	return model.UpdateProject(context.Background(), &p)
 }
 
-func checkUpdate(c *BCSCCProjectData, p *pm.Project) bool {
+func checkUpdate(c BCSCCProjectData, p pm.Project) bool {
 	return getStrKind(c.Kind) != p.Kind || strconv.Itoa(int(c.CCAppID)) != p.BusinessID
 }
 

@@ -17,15 +17,12 @@ package independent
 import (
 	"context"
 
-	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/bcscc"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/actions/namespace/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/clientset"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/logging"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/errorx"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/proto/bcsproject"
-	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/middleware"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // SyncNamespace implement for SyncNamespace interface
@@ -36,43 +33,9 @@ func (a *IndependentNamespaceAction) SyncNamespace(ctx context.Context,
 		logging.Error("get clientset for cluster %s failed, err: %s", req.GetClusterID(), err.Error())
 		return err
 	}
-	var creator string
-	authUser, err := middleware.GetUserFromContext(ctx)
-	if err == nil && authUser.Username != "" {
-		// 授权创建者命名空间编辑和查看权限
-		creator = authUser.Username
-	}
 	nsList, err := client.CoreV1().Namespaces().List(ctx, metav1.ListOptions{})
 	if err != nil {
 		return errorx.NewClusterErr(err.Error())
 	}
-	ccNsList, err := bcscc.ListNamespaces(req.GetProjectCode(), req.GetClusterID())
-	if err != nil {
-		return errorx.NewRequestBCSCCErr(err.Error())
-	}
-	// insert new namespace to bcscc
-	ccnsMap := map[string]bcscc.NamespaceData{}
-	for _, ccns := range ccNsList.Results {
-		ccnsMap[ccns.Name] = ccns
-	}
-	for _, item := range nsList.Items {
-		if _, ok := ccnsMap[item.GetName()]; !ok {
-			if err := bcscc.CreateNamespace(req.GetProjectCode(), req.GetClusterID(), item.GetName(), creator); err != nil {
-				return errorx.NewRequestBCSCCErr(err.Error())
-			}
-		}
-	}
-	// delete old namespace in bcscc
-	bcsnsMap := map[string]corev1.Namespace{}
-	for _, item := range nsList.Items {
-		bcsnsMap[item.GetName()] = item
-	}
-	for _, ns := range ccNsList.Results {
-		if _, ok := bcsnsMap[ns.Name]; !ok {
-			if err := bcscc.DeleteNamespace(req.GetProjectCode(), req.GetClusterID(), ns.Name); err != nil {
-				return errorx.NewRequestBCSCCErr(err.Error())
-			}
-		}
-	}
-	return nil
+	return common.SyncNamespace(req.GetProjectCode(), req.GetClusterID(), nsList.Items)
 }

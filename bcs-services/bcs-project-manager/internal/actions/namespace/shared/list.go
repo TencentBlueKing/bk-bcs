@@ -23,6 +23,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/actions/namespace/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/page"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/clientset"
@@ -138,6 +139,12 @@ func (a *SharedNamespaceAction) ListNamespaces(ctx context.Context,
 	}
 	g.Wait()
 	resp.Data = retDatas
+	go func() {
+		if err := common.SyncNamespace(req.GetProjectCode(), req.GetClusterID(), namespaces); err != nil {
+			logging.Error("sync shared namespaces %s/%s failed, err:%s",
+				req.GetProjectCode(), req.GetClusterID(), err.Error())
+		}
+	}()
 	return nil
 }
 

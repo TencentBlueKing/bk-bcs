@@ -25,6 +25,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/config"
 	common "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/discovery"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/logging"
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/middleware"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -148,4 +149,49 @@ func NewClusterManager(config *Config) (ClusterManagerClient, func()) {
 
 	// init cluster manager client
 	return NewClusterManagerClient(conn), func() { conn.Close() }
+}
+
+func GetCluster(clusterID string) (*Cluster, error) {
+	cli, closeCon, err := GetClusterManagerClient()
+	if err != nil {
+		logging.Error("get cluster manager client failed, err: %s", err.Error())
+		return nil, err
+	}
+	defer closeCon()
+	req := &GetClusterReq{
+		ClusterID: clusterID,
+	}
+	resp, err := cli.GetCluster(context.Background(), req)
+	if err != nil {
+		logging.Error("get cluster from cluster manager failed, err: %s", err.Error())
+		return nil, err
+	}
+	if resp.GetCode() != 0 {
+		logging.Error("get cluster from cluster manager failed, msg: %s", resp.GetMessage())
+		return nil, errors.New(resp.GetMessage())
+	}
+	return resp.GetData(), nil
+}
+
+func ListClusters(projectID string) ([]*Cluster, error) {
+	cli, closeCon, err := GetClusterManagerClient()
+	if err != nil {
+		logging.Error("get cluster manager client failed, err: %s", err.Error())
+		return nil, err
+	}
+	defer closeCon()
+	req := &ListClusterReq{
+		ProjectID: projectID,
+		Status:    ClusterStatusRunning,
+	}
+	resp, err := cli.ListCluster(context.Background(), req)
+	if err != nil {
+		logging.Error("list clusters from cluster manager failed, err: %s", err.Error())
+		return nil, err
+	}
+	if resp.GetCode() != 0 {
+		logging.Error("list clusters from cluster manager failed, msg: %s", resp.GetMessage())
+		return nil, errors.New(resp.GetMessage())
+	}
+	return resp.GetData(), nil
 }

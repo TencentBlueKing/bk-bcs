@@ -25,7 +25,7 @@ require (
 	github.com/micro/go-micro/v2 v2.9.1
 	github.com/mitchellh/mapstructure v1.4.3
 	github.com/parnurzeal/gorequest v0.2.16
-	github.com/prometheus/client_golang v1.11.0
+	github.com/prometheus/client_golang v1.11.1
 	github.com/spf13/cobra v1.3.0
 	github.com/stretchr/testify v1.7.0
 	go.mongodb.org/mongo-driver v1.5.3
@@ -53,7 +53,6 @@ require (
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
 	github.com/cloudflare/circl v1.2.0 // indirect
 	github.com/coreos/bbolt v1.3.4 // indirect
-	github.com/coreos/etcd v3.3.25+incompatible // indirect
 	github.com/coreos/go-semver v0.3.0 // indirect
 	github.com/coreos/go-systemd v0.0.0-20190719114852-fd7a80b32e1f // indirect
 	github.com/coreos/pkg v0.0.0-20180928190104-399ea9e2e55f // indirect
@@ -138,4 +137,5 @@ require (
 require (
 	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20221202065239-dbcdd8bb376e
 	github.com/Tencent/bk-bcs/bcs-services/pkg v0.0.0-20221018081229-065aeef813e6
+	github.com/coreos/etcd v3.3.25+incompatible
 )

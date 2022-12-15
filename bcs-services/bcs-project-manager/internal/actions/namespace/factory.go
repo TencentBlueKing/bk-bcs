@@ -23,7 +23,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/logging"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/errorx"
 )
 
 //NamespaceFactory namespace faction factory
@@ -40,30 +39,17 @@ func NewNamespaceFactory(model store.ProjectModel) *NamespaceFactory {
 
 // Action get action by clusterID
 func (f *NamespaceFactory) Action(clusterID, projectCode string) (action.NamespaceAction, error) {
-	cli, closeCon, err := clustermanager.GetClusterManagerClient()
+	cluster, err := clustermanager.GetCluster(clusterID)
 	if err != nil {
-		logging.Error("get cluster manager client failed, err: %s", err.Error())
+		logging.Error("get cluster %s from cluster-manager failed, err: %s", cluster, err.Error())
 		return nil, err
-	}
-	defer closeCon()
-	req := &clustermanager.GetClusterReq{
-		ClusterID: clusterID,
-	}
-	resp, err := cli.GetCluster(context.Background(), req)
-	if err != nil {
-		logging.Error("list cluster from cluster manager failed, err: %s", err.Error())
-		return nil, err
-	}
-	if resp.GetCode() != 0 {
-		logging.Error("list cluster from cluster manager failed, msg: %s", resp.GetMessage())
-		return nil, errorx.NewClusterErr("list cluster err")
 	}
 	project, err := f.model.GetProject(context.TODO(), projectCode)
 	if err != nil {
 		logging.Error("get project from db failed, err: %s", err.Error())
 		return nil, err
 	}
-	if resp.GetData().GetIsShared() && resp.GetData().GetProjectID() != project.ProjectID {
+	if cluster.GetIsShared() && cluster.GetProjectID() != project.ProjectID {
 		return shared.NewSharedNamespaceAction(f.model), nil
 	}
 	return independent.NewIndependentNamespaceAction(f.model), nil

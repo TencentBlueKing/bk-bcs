@@ -166,6 +166,9 @@ func (p *NamespaceHandler) ListNamespaces(ctx context.Context,
 		newPerms := map[string]map[string]bool{}
 		for _, ns := range retData {
 			newPerms[ns.GetName()] = perms[authutils.CalcIAMNsID(req.GetClusterID(), ns.GetName())]
+			if ns.GetItsmTicketType() == nsm.ItsmTicketTypeCreate {
+				newPerms[ns.GetName()]["namespace_view"] = true
+			}
 		}
 		if err != nil {
 			logging.Error("get multi namespaces multi action permission failed, err: %s", err.Error())

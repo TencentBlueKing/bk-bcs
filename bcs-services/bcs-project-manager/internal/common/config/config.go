@@ -41,4 +41,7 @@ const (
 
 	// AnonymousUsername 匿名用户
 	AnonymousUsername = "anonymous"
+
+	// NamespaceSyncLockPrefix etcd distributed lock prefix for sync namespace
+	NamespaceSyncLockPrefix = "namespace-sync"
 )

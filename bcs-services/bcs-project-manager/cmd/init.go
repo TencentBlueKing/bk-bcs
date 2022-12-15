@@ -29,6 +29,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/static"
 	"github.com/Tencent/bk-bcs/bcs-common/common/tcp/listener"
 	"github.com/Tencent/bk-bcs/bcs-common/common/types"
+	"github.com/coreos/etcd/clientv3"
 	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	microRgt "github.com/micro/go-micro/v2/registry"
@@ -46,6 +47,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/clustermanager"
 	conf "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/discovery"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/etcd"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/handler"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/logging"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/manager"
@@ -63,6 +65,8 @@ type ProjectService struct {
 
 	// mongo DB options
 	model store.ProjectModel
+	// etcd options
+	etcd *clientv3.Client
 
 	microSvc         microSvc.Service
 	microRgt         microRgt.Registry
@@ -101,6 +105,7 @@ func (p *ProjectService) Init() error {
 	for _, f := range []func() error{
 		p.initTLSConfig,
 		p.initMongo,
+		p.initEtcd,
 		p.initRegistry,
 		p.initDiscovery,
 		p.initClientGroup,
@@ -167,13 +172,29 @@ func (p *ProjectService) initTLSConfig() error {
 	return nil
 }
 
-// initMongo xxx
-// init mongo client
+// initMongo init mongo client
 func (p *ProjectService) initMongo() error {
 	store.InitMongo(&p.opt.Mongo)
 	store.InitModel(store.GetMongo())
 	p.model = store.GetModel()
 	logging.Info("init mongo successfully")
+	return nil
+}
+
+// initEtcd init etcd client
+func (p *ProjectService) initEtcd() error {
+
+	err := etcd.Init(&p.opt.Etcd)
+	if err != nil {
+		logging.Info("init etcd client failed, err: %s", err.Error())
+		return err
+	}
+	p.etcd, err = etcd.GetClient()
+	if err != nil {
+		logging.Info("init etcd client failed, err: %s", err.Error())
+		return err
+	}
+	logging.Info("init etcd successfully")
 	return nil
 }
 
@@ -270,6 +291,7 @@ func (p *ProjectService) initMicro() error {
 		microSvc.BeforeStop(func() error {
 			p.clusterDiscovery.Stop()
 			p.discovery.Stop()
+			etcd.Close()
 			return nil
 		}),
 		microSvc.WrapHandler(

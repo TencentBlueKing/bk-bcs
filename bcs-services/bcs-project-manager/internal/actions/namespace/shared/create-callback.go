@@ -77,7 +77,10 @@ func (a *SharedNamespaceAction) CreateNamespaceCallback(ctx context.Context,
 			return errorx.NewClusterErr(err.Error())
 		}
 		// 授权创建者命名空间编辑和查看权限
-		iam.GrantNamespaceCreatorActions(ns.Creator, req.GetClusterID(), req.GetNamespace())
+		if err := iam.GrantNamespaceCreatorActions(ns.Creator, req.GetClusterID(), req.GetNamespace()); err != nil {
+			logging.Error("grant namespace %s/%s for creator %s permission failed, err: %s",
+				req.GetClusterID(), req.GetNamespace(), ns.Creator, err.Error())
+		}
 		// create quota in cluster
 		if ns.ResourceQuota != nil {
 			quota := &corev1.ResourceQuota{

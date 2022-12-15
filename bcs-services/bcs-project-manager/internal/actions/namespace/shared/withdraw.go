@@ -34,7 +34,7 @@ func (a *SharedNamespaceAction) WithdrawNamespace(ctx context.Context,
 		return errorx.NewDBErr(err.Error())
 	}
 	authUser, err := middleware.GetUserFromContext(ctx)
-	if err != nil || authUser.Username != namespace.Creator {
+	if err != nil || authUser.GetUsername() != namespace.Creator {
 		return errorx.NewReadableErr(errorx.PermDeniedErr, "仅提单人能撤回")
 	}
 	if err := itsm.WithdrawTicket(authUser.Username, namespace.ItsmTicketSN); err != nil {

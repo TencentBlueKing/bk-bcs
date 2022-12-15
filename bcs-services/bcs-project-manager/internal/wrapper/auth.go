@@ -44,6 +44,7 @@ var NoAuthEndpoints = []string{
 	"BCSProject.ListProjects",
 	"Namespace.ListNamespaces",
 	"Namespace.WithdrawNamespace",
+	"Namespace.SyncNamespace",
 }
 
 // NewAuthHeaderAdapter 转换旧的请求头，适配新的鉴权中间件
@@ -166,25 +167,12 @@ func CheckUserPerm(ctx context.Context, req server.Request, username string) (bo
 func callIAM(username, action string, resourceID resourceID) (bool, string, []authutils.ResourceAction, error) {
 	var isSharedCluster bool
 	if resourceID.ClusterID != "" {
-		cli, closeCon, err := clustermanager.GetClusterManagerClient()
+		cluster, err := clustermanager.GetCluster(resourceID.ClusterID)
 		if err != nil {
-			logging.Error("get cluster manager client failed, err: %s", err.Error())
+			logging.Error("get cluster %s from cluster-manager failed, err: %s", cluster, err.Error())
 			return false, "", nil, errorx.NewReadableErr(errorx.PermDeniedErr, "校验用户权限失败")
 		}
-		defer closeCon()
-		req := &clustermanager.GetClusterReq{
-			ClusterID: resourceID.ClusterID,
-		}
-		resp, err := cli.GetCluster(context.Background(), req)
-		if err != nil {
-			logging.Error("get cluster from cluster manager failed, err: %s", err.Error())
-			return false, "", nil, errorx.NewReadableErr(errorx.PermDeniedErr, "校验用户权限失败")
-		}
-		if resp.GetCode() != 0 {
-			logging.Error("get cluster from cluster manager failed, msg: %s", resp.GetMessage())
-			return false, "", nil, errorx.NewReadableErr(errorx.PermDeniedErr, "校验用户权限失败")
-		}
-		isSharedCluster = resp.GetData().GetIsShared() && resp.GetData().GetProjectID() != resourceID.ProjectID
+		isSharedCluster = cluster.GetIsShared() && cluster.GetProjectID() != resourceID.ProjectID
 	}
 	switch action {
 	case project.CanViewProjectOperation:
