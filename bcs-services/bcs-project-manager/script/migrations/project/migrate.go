@@ -207,7 +207,7 @@ func insertProject(p BCSCCProjectData) error {
 		Description: p.Description,
 		IsOffline:   p.IsOfflined,
 		Kind:        getStrKind(p.Kind),
-		BusinessID:  strconv.Itoa(int(p.CCAppID)),
+		BusinessID:  getBusinessID(p.CCAppID),
 		DeployType:  getDeployType(p.DeployType),
 		BGID:        strconv.Itoa(int(p.BGID)),
 		BGName:      p.BGName,
@@ -226,14 +226,14 @@ func updateProject(c BCSCCProjectData, p pm.Project) error {
 	p.Updater = c.Updator
 	p.Managers = constructManagers(c.Creator, c.Updator)
 	p.Kind = getStrKind(c.Kind)
-	p.BusinessID = strconv.Itoa(int(c.CCAppID))
+	p.BusinessID = getBusinessID(c.CCAppID)
 	p.DeployType = getDeployType(c.DeployType)
 	p.UpdateTime = c.UpdatedAt.Format(timeLayout)
 	return model.UpdateProject(context.Background(), &p)
 }
 
 func checkUpdate(c BCSCCProjectData, p pm.Project) bool {
-	return getStrKind(c.Kind) != p.Kind || strconv.Itoa(int(c.CCAppID)) != p.BusinessID
+	return getBusinessID(c.CCAppID) != p.BusinessID
 }
 
 // getStrKind 获取字符串类型 kind，1 => k8s 2 => mesos
@@ -244,6 +244,15 @@ func getStrKind(kind uint) string {
 		return "mesos"
 	}
 	return ""
+}
+
+// getBusinessID 获取字符串类型 0 => ""
+func getBusinessID(ccAppID uint) string {
+	if ccAppID == 0 {
+		return ""
+	} else {
+		return strconv.Itoa(int(ccAppID))
+	}
 }
 
 func stringInSlice(str string, list []string) bool {
