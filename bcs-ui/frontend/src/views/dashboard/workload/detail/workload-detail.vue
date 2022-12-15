@@ -228,7 +228,8 @@
             :kinds="kind === 'Deployment' ? [kind,'ReplicaSet', 'Pod'] : [kind, 'Pod']"
             :cluster-id="clusterId"
             :namespace="namespace"
-            :name="kindsNames">
+            :name="kindsNames"
+            v-if="!loading">
           </EventQueryTableVue>
         </bcs-tab-panel>
         <bcs-tab-panel name="label" :label="$t('标签')">
@@ -578,6 +579,7 @@ export default defineComponent({
     const kindsNames = computed(() => [
       props.name,
       ...pods.value.map(item => item.metadata.name),
+      ...rsNames.value,
     ]);
 
     // 刷新Pod状态
@@ -585,14 +587,32 @@ export default defineComponent({
       workloadPods.value = await handleGetPodsData();
     };
     const { start, stop } = useInterval(handleRefreshPodsStatus, 8000);
+
+    // 获取RS资源
+    const rsData = ref<any>({});
+    const rsNames = computed(() => rsData.value?.manifest?.items?.map(item => item.metadata.name) || []);
+    const handleGetRSData = async () => {
+      if (props.kind !== 'Deployment') return;
+      rsData.value = await $store.dispatch('dashboard/getReplicasets', {
+        $namespaceId: props.namespace,
+        ownerName: props.name,
+      });
+    };
+
+    const loading = ref(true);
     onMounted(async () => {
+      loading.value = true;
       // 详情接口前置
       if (props.category === 'custom_objects') {
         await handleGetCustomObjectDetail();
       } else {
         await handleGetDetail();
       }
-      await handleGetWorkloadPods();
+      await Promise.all([
+        handleGetWorkloadPods(),
+        handleGetRSData(),
+      ]);
+      loading.value = false;
       // 开启轮询
       start();
     });
@@ -601,6 +621,7 @@ export default defineComponent({
     });
 
     return {
+      loading,
       batchBtnLoading,
       updateStrategyMap,
       isLoading,
