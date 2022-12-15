@@ -233,7 +233,27 @@ func updateProject(c BCSCCProjectData, p pm.Project) error {
 }
 
 func checkUpdate(c BCSCCProjectData, p pm.Project) bool {
-	return getBusinessID(c.CCAppID) != p.BusinessID
+	// kind == 0， 未开启， 不需要迁移
+	if c.Kind != 1 && c.Kind != 2 {
+		return false
+	}
+
+	// 类型不一致， 需要修改
+	if getStrKind(c.Kind) != p.Kind {
+		return true
+	}
+
+	// cc == 0， 未开启， 不需要迁移
+	if c.CCAppID == 0 {
+		return false
+	}
+
+	// 其他不相等，需要迁移
+	if getBusinessID(c.CCAppID) != p.BusinessID {
+		return true
+	}
+
+	return false
 }
 
 // getStrKind 获取字符串类型 kind，1 => k8s 2 => mesos
