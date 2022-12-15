@@ -15,8 +15,8 @@
 package formatter
 
 import (
-	v2beta2 "k8s.io/api/autoscaling/v2beta2"
-	v1 "k8s.io/api/core/v1"
+	"k8s.io/api/autoscaling/v2beta2"
+	"k8s.io/api/core/v1"
 )
 
 // LightPodCondition xxx

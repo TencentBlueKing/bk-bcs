@@ -41,6 +41,11 @@ func FormatDeploy(manifest map[string]interface{}) map[string]interface{} {
 	return ret
 }
 
+// FormatRS xxx
+func FormatRS(manifest map[string]interface{}) map[string]interface{} {
+	return FormatWorkloadRes(manifest)
+}
+
 // FormatSTS xxx
 func FormatSTS(manifest map[string]interface{}) map[string]interface{} {
 	ret := FormatWorkloadRes(manifest)

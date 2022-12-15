@@ -73,7 +73,7 @@ func (c *PodClient) List(
 	if err != nil {
 		return nil, err
 	}
-	manifest["items"] = c.filterByOwnerRefs(mapx.GetList(manifest, "items"), podOwnerRefs)
+	manifest["items"] = filterByOwnerRefs(mapx.GetList(manifest, "items"), podOwnerRefs)
 	return manifest, nil
 }
 
@@ -118,32 +118,11 @@ func (c *PodClient) getPodOwnerRefs(
 		return nil, err
 	}
 	ownerRefs := []map[string]string{}
-	for _, r := range c.filterByOwnerRefs(mapx.GetList(ret.UnstructuredContent(), "items"), subOwnerRefs) {
+	for _, r := range filterByOwnerRefs(mapx.GetList(ret.UnstructuredContent(), "items"), subOwnerRefs) {
 		resName, _ := mapx.GetItems(r.(map[string]interface{}), "metadata.name")
 		ownerRefs = append(ownerRefs, map[string]string{"kind": subResKind, "name": resName.(string)})
 	}
 	return ownerRefs, nil
-}
-
-// filterByOwnerRefs 根据 OwnerReferences 过滤关联的子资源
-func (c *PodClient) filterByOwnerRefs(subResItems []interface{}, ownerRefs []map[string]string) []interface{} {
-	rets := []interface{}{}
-	for _, subRes := range subResItems {
-		sr, _ := subRes.(map[string]interface{})
-		for _, resOwnerRef := range mapx.GetList(sr, "metadata.ownerReferences") {
-			for _, ref := range ownerRefs {
-				kind, name := "", ""
-				if r, ok := resOwnerRef.(map[string]interface{}); ok {
-					kind, name = r["kind"].(string), r["name"].(string)
-				}
-				if kind == ref["kind"] && name == ref["name"] {
-					rets = append(rets, subRes)
-					break
-				}
-			}
-		}
-	}
-	return rets
 }
 
 // GetManifest 获取指定 Pod Manifest

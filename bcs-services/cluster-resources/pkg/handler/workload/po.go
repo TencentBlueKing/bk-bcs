@@ -38,7 +38,7 @@ import (
 
 // ListPo 获取 Pod 列表
 func (h *Handler) ListPo(
-	ctx context.Context, req *clusterRes.PodResListReq, resp *clusterRes.CommonResp,
+	ctx context.Context, req *clusterRes.ResListReq, resp *clusterRes.CommonResp,
 ) error {
 	// 获取指定命名空间下的所有符合条件的 Pod
 	ret, err := cli.NewPodCliByClusterID(ctx, req.ClusterID).List(

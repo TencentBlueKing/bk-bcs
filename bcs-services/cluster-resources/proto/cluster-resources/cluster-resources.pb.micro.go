@@ -381,6 +381,12 @@ func NewWorkloadEndpoints() []*api.Endpoint {
 			Handler: "rpc",
 		},
 		{
+			Name:    "Workload.ListRS",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/replicasets"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		{
 			Name:    "Workload.ListDS",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/daemonsets"},
 			Method:  []string{"GET"},
@@ -603,6 +609,7 @@ type WorkloadService interface {
 	ScaleDeploy(ctx context.Context, in *ResScaleReq, opts ...client.CallOption) (*CommonResp, error)
 	RescheduleDeployPo(ctx context.Context, in *ResBatchRescheduleReq, opts ...client.CallOption) (*CommonResp, error)
 	DeleteDeploy(ctx context.Context, in *ResDeleteReq, opts ...client.CallOption) (*CommonResp, error)
+	ListRS(ctx context.Context, in *ResListReq, opts ...client.CallOption) (*CommonResp, error)
 	ListDS(ctx context.Context, in *ResListReq, opts ...client.CallOption) (*CommonResp, error)
 	GetDS(ctx context.Context, in *ResGetReq, opts ...client.CallOption) (*CommonResp, error)
 	CreateDS(ctx context.Context, in *ResCreateReq, opts ...client.CallOption) (*CommonResp, error)
@@ -625,7 +632,7 @@ type WorkloadService interface {
 	CreateJob(ctx context.Context, in *ResCreateReq, opts ...client.CallOption) (*CommonResp, error)
 	UpdateJob(ctx context.Context, in *ResUpdateReq, opts ...client.CallOption) (*CommonResp, error)
 	DeleteJob(ctx context.Context, in *ResDeleteReq, opts ...client.CallOption) (*CommonResp, error)
-	ListPo(ctx context.Context, in *PodResListReq, opts ...client.CallOption) (*CommonResp, error)
+	ListPo(ctx context.Context, in *ResListReq, opts ...client.CallOption) (*CommonResp, error)
 	ListPoByNode(ctx context.Context, in *ListPoByNodeReq, opts ...client.CallOption) (*CommonListResp, error)
 	GetPo(ctx context.Context, in *ResGetReq, opts ...client.CallOption) (*CommonResp, error)
 	CreatePo(ctx context.Context, in *ResCreateReq, opts ...client.CallOption) (*CommonResp, error)
@@ -714,6 +721,16 @@ func (c *workloadService) RescheduleDeployPo(ctx context.Context, in *ResBatchRe
 
 func (c *workloadService) DeleteDeploy(ctx context.Context, in *ResDeleteReq, opts ...client.CallOption) (*CommonResp, error) {
 	req := c.c.NewRequest(c.name, "Workload.DeleteDeploy", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *workloadService) ListRS(ctx context.Context, in *ResListReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "Workload.ListRS", in)
 	out := new(CommonResp)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
@@ -942,7 +959,7 @@ func (c *workloadService) DeleteJob(ctx context.Context, in *ResDeleteReq, opts 
 	return out, nil
 }
 
-func (c *workloadService) ListPo(ctx context.Context, in *PodResListReq, opts ...client.CallOption) (*CommonResp, error) {
+func (c *workloadService) ListPo(ctx context.Context, in *ResListReq, opts ...client.CallOption) (*CommonResp, error) {
 	req := c.c.NewRequest(c.name, "Workload.ListPo", in)
 	out := new(CommonResp)
 	err := c.c.Call(ctx, req, out, opts...)
@@ -1082,6 +1099,7 @@ type WorkloadHandler interface {
 	ScaleDeploy(context.Context, *ResScaleReq, *CommonResp) error
 	RescheduleDeployPo(context.Context, *ResBatchRescheduleReq, *CommonResp) error
 	DeleteDeploy(context.Context, *ResDeleteReq, *CommonResp) error
+	ListRS(context.Context, *ResListReq, *CommonResp) error
 	ListDS(context.Context, *ResListReq, *CommonResp) error
 	GetDS(context.Context, *ResGetReq, *CommonResp) error
 	CreateDS(context.Context, *ResCreateReq, *CommonResp) error
@@ -1104,7 +1122,7 @@ type WorkloadHandler interface {
 	CreateJob(context.Context, *ResCreateReq, *CommonResp) error
 	UpdateJob(context.Context, *ResUpdateReq, *CommonResp) error
 	DeleteJob(context.Context, *ResDeleteReq, *CommonResp) error
-	ListPo(context.Context, *PodResListReq, *CommonResp) error
+	ListPo(context.Context, *ResListReq, *CommonResp) error
 	ListPoByNode(context.Context, *ListPoByNodeReq, *CommonListResp) error
 	GetPo(context.Context, *ResGetReq, *CommonResp) error
 	CreatePo(context.Context, *ResCreateReq, *CommonResp) error
@@ -1128,6 +1146,7 @@ func RegisterWorkloadHandler(s server.Server, hdlr WorkloadHandler, opts ...serv
 		ScaleDeploy(ctx context.Context, in *ResScaleReq, out *CommonResp) error
 		RescheduleDeployPo(ctx context.Context, in *ResBatchRescheduleReq, out *CommonResp) error
 		DeleteDeploy(ctx context.Context, in *ResDeleteReq, out *CommonResp) error
+		ListRS(ctx context.Context, in *ResListReq, out *CommonResp) error
 		ListDS(ctx context.Context, in *ResListReq, out *CommonResp) error
 		GetDS(ctx context.Context, in *ResGetReq, out *CommonResp) error
 		CreateDS(ctx context.Context, in *ResCreateReq, out *CommonResp) error
@@ -1150,7 +1169,7 @@ func RegisterWorkloadHandler(s server.Server, hdlr WorkloadHandler, opts ...serv
 		CreateJob(ctx context.Context, in *ResCreateReq, out *CommonResp) error
 		UpdateJob(ctx context.Context, in *ResUpdateReq, out *CommonResp) error
 		DeleteJob(ctx context.Context, in *ResDeleteReq, out *CommonResp) error
-		ListPo(ctx context.Context, in *PodResListReq, out *CommonResp) error
+		ListPo(ctx context.Context, in *ResListReq, out *CommonResp) error
 		ListPoByNode(ctx context.Context, in *ListPoByNodeReq, out *CommonListResp) error
 		GetPo(ctx context.Context, in *ResGetReq, out *CommonResp) error
 		CreatePo(ctx context.Context, in *ResCreateReq, out *CommonResp) error
@@ -1208,6 +1227,12 @@ func RegisterWorkloadHandler(s server.Server, hdlr WorkloadHandler, opts ...serv
 		Name:    "Workload.DeleteDeploy",
 		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/deployments/{name}"},
 		Method:  []string{"DELETE"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Workload.ListRS",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/replicasets"},
+		Method:  []string{"GET"},
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
@@ -1455,6 +1480,10 @@ func (h *workloadHandler) DeleteDeploy(ctx context.Context, in *ResDeleteReq, ou
 	return h.WorkloadHandler.DeleteDeploy(ctx, in, out)
 }
 
+func (h *workloadHandler) ListRS(ctx context.Context, in *ResListReq, out *CommonResp) error {
+	return h.WorkloadHandler.ListRS(ctx, in, out)
+}
+
 func (h *workloadHandler) ListDS(ctx context.Context, in *ResListReq, out *CommonResp) error {
 	return h.WorkloadHandler.ListDS(ctx, in, out)
 }
@@ -1543,7 +1572,7 @@ func (h *workloadHandler) DeleteJob(ctx context.Context, in *ResDeleteReq, out *
 	return h.WorkloadHandler.DeleteJob(ctx, in, out)
 }
 
-func (h *workloadHandler) ListPo(ctx context.Context, in *PodResListReq, out *CommonResp) error {
+func (h *workloadHandler) ListPo(ctx context.Context, in *ResListReq, out *CommonResp) error {
 	return h.WorkloadHandler.ListPo(ctx, in, out)
 }
 

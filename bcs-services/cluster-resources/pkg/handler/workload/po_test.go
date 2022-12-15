@@ -43,7 +43,7 @@ func TestPod(t *testing.T) {
 	assert.Nil(t, err)
 
 	// List
-	podListReq := clusterRes.PodResListReq{
+	podListReq := clusterRes.ResListReq{
 		ProjectID: envs.TestProjectID,
 		ClusterID: envs.TestClusterID,
 		Namespace: envs.TestNamespace,
