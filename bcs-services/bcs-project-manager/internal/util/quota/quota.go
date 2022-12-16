@@ -65,6 +65,9 @@ func LoadFromModel(k8sQuota *corev1.ResourceQuota, modelQuota *nsm.Quota) error 
 }
 
 func load(quota *corev1.ResourceQuota, cpuLimits, cpuRequests, memoryLimits, memoryRequests string) error {
+	if quota.Spec.Hard == nil {
+		quota.Spec.Hard = corev1.ResourceList{}
+	}
 	if cpuLimits != "" {
 		cpuLimits, err := resource.ParseQuantity(cpuLimits)
 		if err != nil {
