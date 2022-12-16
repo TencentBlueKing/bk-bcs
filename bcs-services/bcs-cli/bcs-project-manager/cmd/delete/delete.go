@@ -38,6 +38,7 @@ func NewCmdDelete() *cobra.Command {
 
 	// delete subcommands
 	cmd.AddCommand(deleteVariable())
+	cmd.AddCommand(deleteClustersNamespace())
 
 	return cmd
 }

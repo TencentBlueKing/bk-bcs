@@ -41,6 +41,7 @@ func NewCmdEdit() *cobra.Command {
 	// edit subcommands
 	cmd.AddCommand(editProject())
 	cmd.AddCommand(editVariable())
+	cmd.AddCommand(editClustersNamespace())
 
 	return cmd
 }

@@ -46,6 +46,7 @@ func NewCmdGet() *cobra.Command {
 	// get subcommands
 	cmd.AddCommand(listProject())
 	cmd.AddCommand(listVariable())
+	cmd.AddCommand(listClustersNamespace())
 
 	return cmd
 }
