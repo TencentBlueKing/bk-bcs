@@ -430,6 +430,11 @@ class VueTemplateView(APIView):
             context["STATIC_URL"] = os.path.join(context["STATIC_URL"], "mesos")
             context["CONTAINER_ORCHESTRATION"] = kind
 
+        # 临时变量, 支持 storage 存储
+        context["BCS_DEBUG_API_HOST"] = settings.BCS_API_HOST
+        if 'prod-bcs-api' in settings.BCS_API_HOST:
+            context["BCS_DEBUG_API_HOST"] = settings.BCS_API_HOST.replace("prod-bcs-api", "debug-bcs-api")
+
         # 特定版本多域名的支持
         try:
             from .views_ext import replace_host
