@@ -244,8 +244,8 @@ export default defineComponent({
     const { $store, $router, $i18n, $bkMessage, $bkInfo } = ctx.root;
     const curProject = computed(() => $store.state.curProject);
     const kindMap = ref({
-      1: 'K8S',
-      2: 'Mesos',
+      'k8s': 'K8S',
+      'mesos': 'Mesos',
     });
     // 获取集群状态的中文
     const statusTextMap = {
