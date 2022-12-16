@@ -41,14 +41,7 @@ export default function useProjects() {
   };
 
   async function updateProject(params: any) {
-    const payload = params;
-    const { kind } = payload;
-    const kindMap = {
-      1: 'k8s',
-      2: 'mesos',
-    };
-    payload.kind = kindMap[kind];
-    const result = await editProject(payload).then(() => true)
+    const result = await editProject(params).then(() => true)
       .catch(() => false);
     return result;
   }

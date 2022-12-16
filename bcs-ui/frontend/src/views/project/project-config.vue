@@ -108,7 +108,7 @@ export default defineComponent({
         // deploy_type 值固定，就是原来页面上的：部署类型：容器部署
         deployType: 2,
         // kind 业务编排类型
-        kind: parseInt(kind.value, 10),
+        kind: kind.value,
         // use_bk 值固定，就是原来页面上的：使用蓝鲸部署服务
         useBKRes: true,
         businessID: String(ccKey.value),

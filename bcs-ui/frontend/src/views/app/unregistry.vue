@@ -79,7 +79,7 @@ export default {
     return {
       kindList: [],
       guideList: [],
-      kind: 1,
+      kind: 'k8s',
       ccList: [],
       ccKey: '',
     };
@@ -98,7 +98,7 @@ export default {
   created() {
     this.kindList = [
       {
-        id: 1,
+        id: 'k8s',
         name: 'K8S',
         desc: this.$t('k8s容器编排引擎'),
       },
@@ -148,7 +148,7 @@ export default {
           // deployType 值固定，就是原来页面上的：部署类型：容器部署
           deployType: 2,
           // kind 业务编排类型
-          kind: parseInt(this.kind, 10),
+          kind: this.kind,
           // useBKRes 值固定，就是原来页面上的：使用蓝鲸部署服务
           useBKRes: true,
           businessID: String(this.ccKey),

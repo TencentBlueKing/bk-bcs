@@ -129,7 +129,7 @@ export default defineComponent({
         description: formData.value.description,
         english_name: formData.value.english_name,
         is_secrecy: false,
-        kind: '0',
+        kind: '',
         project_name: formData.value.project_name,
         project_type: '',
       }).catch(() => false);
