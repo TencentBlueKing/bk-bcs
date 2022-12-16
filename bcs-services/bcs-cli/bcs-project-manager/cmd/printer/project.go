@@ -31,6 +31,7 @@ func PrintProjectsListInTable(flagOutput string, resp *bcsproject.ListProjectsRe
 		if err := encodeJSON(resp); err != nil {
 			klog.Fatalf("list projects output json to stdout failed: %s", err.Error())
 		}
+		return
 	}
 	tw := tablewriter.NewWriter(os.Stdout)
 	tw.SetHeader(func() []string {
@@ -65,6 +66,7 @@ func PrintProjectVariablesListInTable(flagOutput string, resp *bcsproject.ListVa
 		if err := encodeJSON(resp); err != nil {
 			klog.Fatalf("list projects output json to stdout failed: %s", err.Error())
 		}
+		return
 	}
 	tw := tablewriter.NewWriter(os.Stdout)
 	tw.SetHeader(func() []string {
@@ -92,6 +94,36 @@ func PrintProjectVariablesListInTable(flagOutput string, resp *bcsproject.ListVa
 				item.GetUpdater(),
 				item.GetCreated(),
 				item.GetUpdated(),
+			}
+		}())
+	}
+	tw.Render()
+}
+
+// PrintProjectClustersNamespaceInTable prints the response that list projects clusters namespace
+func PrintProjectClustersNamespaceInTable(flagOutput string, resp *bcsproject.ListNamespacesResponse) {
+	if flagOutput == outputTypeJSON {
+		if err := encodeJSON(resp); err != nil {
+			klog.Fatalf("list projects output json to stdout failed: %s", err.Error())
+		}
+		return
+	}
+	tw := tablewriter.NewWriter(os.Stdout)
+	tw.SetHeader(func() []string {
+		return []string{
+			"NAME", "ITSM_TICKET_URL", "ITSM_TICKET_TYPE", "CREATE",
+		}
+	}())
+
+	// 合并相同值的列
+	tw.SetAutoMergeCells(true)
+	for _, item := range resp.Data {
+		tw.Append(func() []string {
+			return []string{
+				item.GetName(),
+				item.GetItsmTicketURL(),
+				item.GetItsmTicketType(),
+				item.GetCreateTime(),
 			}
 		}())
 	}
