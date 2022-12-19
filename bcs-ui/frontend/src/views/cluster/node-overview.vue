@@ -234,15 +234,17 @@
                   v-model="namespaceValue"
                   :loading="namespaceLoading"
                   searchable
-                  :clearable="false"
-                  :placeholder="$t('请选择命名空间')"
-                  @selected="handleNamespaceSelected"
+                  clearable
+                  :placeholder="' '"
+                  @change="handleNamespaceSelected"
                 >
+                  <bcs-option key="all" id="" :name="$t('全部命名空间')"></bcs-option>
                   <bcs-option
-                    v-for="option in curNamespceList"
-                    :key="option.value"
-                    :id="option.value"
-                    :name="option.label"></bcs-option>
+                    v-for="option in namespaceList"
+                    :key="option.name"
+                    :id="option.name"
+                    :name="option.name">
+                  </bcs-option>
                 </bcs-select>
                 <bk-input
                   class="search-input ml5"
@@ -388,6 +390,14 @@
               </bk-table-column>
             </bk-table>
           </bcs-tab-panel>
+          <bcs-tab-panel name="event" :label="$t('事件')">
+            <EventQueryTable
+              class="min-h-[360px]"
+              is-specify-kinds
+              kinds="Node"
+              :cluster-id="clusterId"
+              :name="nodeId" />
+          </bcs-tab-panel>
         </bcs-tab>
       </div>
     </div>
@@ -423,9 +433,10 @@ import { nodeOverview } from '@/common/chart-option';
 import { catchErrorHandler, formatBytes } from '@/common/util';
 import { createChartOption } from './node-overview-chart-opts';
 // import { getNodeTemplateInfo } from '@/api/base';
+import EventQueryTable from '../mc/event-query-table.vue';
 
 export default defineComponent({
-  components: {  StatusIcon, BcsLog, ECharts },
+  components: {  StatusIcon, BcsLog, ECharts, EventQueryTable },
   setup(props, ctx) {
     const { $route, $router, $bkInfo, $bkMessage, $store, $i18n } = ctx.root;
     const cpuLine = ref(nodeOverview.cpu);
@@ -455,7 +466,7 @@ export default defineComponent({
     const networkLine1 = ref<any>(null);
     const searchValue = ref('');
     // 获取命名空间
-    const namespaceValue = ref('all');
+    const namespaceValue = ref('');
     const { namespaceLoading, namespaceList, getNamespaceData } = useSelectItemsNamespace();
 
     const projectId = computed(() => $route.params.projectId);
@@ -468,25 +479,17 @@ export default defineComponent({
     const curPodsData = computed(() => {
       const { limit, current } = podsDataPagination.value;
       let curData: any[] = [];
-      if (namespaceValue.value === 'all') {
+      if (namespaceValue.value === '') {
         curData = podsData.value.filter(i => i.name.includes(searchValue.value));
       } else {
         curData = podsData.value
-          .filter(i => i.namespace.includes(namespaceValue.value) && i.name.includes(searchValue.value));
+          .filter(i => i.namespace.includes(namespaceValue.value) && i.name.includes(searchValue.value.toLowerCase()));
       }
       podsDataPagination.value.count = curData.length;
       return curData.slice(limit * (current - 1), limit * current);
     });
     const clusterList = computed(() => $store.state.cluster.clusterList || []);
     const curCluster = computed(() => clusterList.value.find(item => item.clusterID === clusterId.value));
-    const curNamespceList = computed(() => {
-      const list = namespaceList.value;
-      list.unshift({
-        label: `${$i18n.t('全部命名空间')}`,
-        value: 'all',
-      });
-      return list;
-    });
     /**
              * 获取上方的信息
              */
@@ -1113,7 +1116,6 @@ export default defineComponent({
       namespaceLoading,
       namespaceValue,
       namespaceList,
-      curNamespceList,
       searchValue,
       ...useLog(),
       handlePageLimitChange,
