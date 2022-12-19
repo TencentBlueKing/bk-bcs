@@ -38,19 +38,17 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
 	projectClient "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/component/project"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/release"
 )
 
 const (
 	bcsAPIGWK8SBaseURI = "%s/clusters/%s/"
-	defaultMaxHistory  = 100
+	defaultMaxHistory  = 10
 )
 
 // Config 定义了使用sdk的基本参数
 type Config struct {
-	BcsAPI string
-	Token  string
-
 	PatchTemplates []*release.File
 }
 
@@ -101,8 +99,9 @@ func (g *group) getClient(clusterID string) Client {
 	c, ok = g.groups[clusterID]
 	if !ok {
 		flags := genericclioptions.NewConfigFlags(false)
-		flags.APIServer = common.GetStringP(fmt.Sprintf(bcsAPIGWK8SBaseURI, g.config.BcsAPI, clusterID))
-		flags.BearerToken = common.GetStringP(g.config.Token)
+		bcsConfig := options.GetBCSAPIConfigByClusterID(clusterID)
+		flags.APIServer = common.GetStringP(fmt.Sprintf(bcsAPIGWK8SBaseURI, bcsConfig.URL, clusterID))
+		flags.BearerToken = common.GetStringP(bcsConfig.Token)
 		flags.Insecure = common.GetBoolP(true)
 
 		c = &client{
@@ -549,7 +548,8 @@ func parseArgs4Install(install *action.Install, args []string, valueOpts *values
 		args[i] = strings.TrimRight(args[i], "=")
 	}
 	f := pflag.NewFlagSet("install", pflag.ContinueOnError)
-	var maxHistory int
+	// 兼容更新时传入 history-max 参数，不作使用
+	var _maxHistory int
 
 	f.BoolVar(&install.DisableHooks, "no-hooks", false,
 		"prevent hooks from running during install")
@@ -579,7 +579,7 @@ func parseArgs4Install(install *action.Install, args []string, valueOpts *values
 	f.BoolVar(&install.Atomic, "atomic", false,
 		"if set, the installation process deletes the installation on failure. "+
 			"The --wait flag will be set automatically if --atomic is used")
-	f.IntVar(&maxHistory, "history-max", defaultMaxHistory, "limit the maximum number of revisions saved "+
+	f.IntVar(&_maxHistory, "history-max", defaultMaxHistory, "limit the maximum number of revisions saved "+
 		"per release. Use 0 for no limit")
 	f.BoolVar(&install.SkipCRDs, "skip-crds", false,
 		"if set, no CRDs will be installed. By default, CRDs are installed if not already present")

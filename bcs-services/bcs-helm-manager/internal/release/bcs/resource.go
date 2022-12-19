@@ -18,13 +18,12 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/cli-runtime/pkg/resource"
 )
 
 // ManifestToK8sResources get k8s resources from manifest string
 func ManifestToK8sResources(namespace, manifest string, restClientGetter resource.RESTClientGetter) (
-	[]runtime.Object, error) {
+	[]*resource.Info, error) {
 	start := time.Now()
 	builder := resource.NewBuilder(restClientGetter)
 	infos, err := builder.
@@ -39,25 +38,20 @@ func ManifestToK8sResources(namespace, manifest string, restClientGetter resourc
 	}
 	blog.Debug("parse manifest took %s", time.Since(start).String())
 
-	objects := make([]runtime.Object, 0)
 	wg := &sync.WaitGroup{}
-	objLock := &sync.Mutex{}
 	wg.Add(len(infos))
-	for _, v := range infos {
+	for i, v := range infos {
 		if len(v.Namespace) == 0 {
 			v.Namespace = namespace
 		}
-		go func(v *resource.Info) {
+		go func(i int) {
 			defer wg.Done()
-			if err := v.Get(); err != nil {
-				blog.Errorf("get k8s resource for %s in %s err: %s", v.Name, v.Namespace, err.Error())
+			if err := infos[i].Get(); err != nil {
+				blog.Errorf("get k8s resource for %s in %s err: %s", infos[i].Name, infos[i].Namespace, err.Error())
 			}
-			objLock.Lock()
-			objects = append(objects, v.Object)
-			objLock.Unlock()
-		}(v)
+		}(i)
 	}
 	wg.Wait()
 	blog.Debug("get k8s resource took %s", time.Since(start).String())
-	return objects, nil
+	return infos, nil
 }

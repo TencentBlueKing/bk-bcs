@@ -126,6 +126,10 @@ func (i *InstallReleaseV1Action) saveDB() error {
 	if err := i.model.DeleteRelease(i.ctx, i.req.GetClusterID(), i.req.GetNamespace(), i.req.GetName()); err != nil {
 		return err
 	}
+	createBy := auth.GetUserFromCtx(i.ctx)
+	if i.req.GetOperator() != "" {
+		createBy = i.req.GetOperator()
+	}
 	if err := i.model.CreateRelease(i.ctx, &entity.Release{
 		Name:         i.req.GetName(),
 		ProjectCode:  contextx.GetProjectCodeFromCtx(i.ctx),
@@ -137,7 +141,7 @@ func (i *InstallReleaseV1Action) saveDB() error {
 		ValueFile:    i.req.GetValueFile(),
 		Values:       i.req.GetValues(),
 		Args:         i.req.GetArgs(),
-		CreateBy:     auth.GetUserFromCtx(i.ctx),
+		CreateBy:     createBy,
 		Status:       helmrelease.StatusPendingInstall.String(),
 	}); err != nil {
 		return err

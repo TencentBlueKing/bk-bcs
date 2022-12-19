@@ -179,7 +179,7 @@ func (o *operator) dispatch(op Operation, timeout time.Duration, done chan struc
 			op.Done(err)
 			return
 		}
-		blog.Errorf("operation dispatch %s exit", op.Name())
+		blog.Infof("operation dispatch %s exit", op.Name())
 		return
 	}
 }

@@ -54,6 +54,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/component/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/component/project"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/component/storage"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/discovery"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/handler"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/operation"
@@ -228,17 +229,6 @@ func (hm *HelmManager) initPlatform() error {
 
 // initReleaseHandler init a new release.Handler, for handling operations to helm-client
 func (hm *HelmManager) initReleaseHandler() error {
-	token := hm.opt.Release.Token
-	if token != "" && hm.opt.Release.Encrypted {
-		realToken, err := encrypt.DesDecryptFromBase([]byte(token))
-		if err != nil {
-			blog.Errorf("init release handler decode token failed: %s", err.Error())
-			return err
-		}
-
-		token = string(realToken)
-	}
-
 	// load patch template files from config
 	patches, err := loadYamlFilesFromDir(hm.opt.Release.PatchDir)
 	if err != nil {
@@ -248,11 +238,9 @@ func (hm *HelmManager) initReleaseHandler() error {
 	}
 
 	hm.releaseHandler = bcs.New(release.Config{
-		APIServer:      hm.opt.Release.APIServer,
-		Token:          string(token),
 		PatchTemplates: patches,
 	})
-	blog.Infof("init release handler successfully to %s", hm.opt.Release.APIServer)
+	blog.Info("init release handler successfully")
 	return nil
 }
 
@@ -557,6 +545,11 @@ func (hm *HelmManager) InitComponentConfig() error {
 	err = clustermanager.NewClient(hm.clientTLSConfig, hm.microRgt)
 	if err != nil {
 		blog.Error("init clustermanager client error, %s", err.Error())
+		return err
+	}
+	err = storage.NewClient(hm.clientTLSConfig)
+	if err != nil {
+		blog.Error("init storage client error, %s", err.Error())
 		return err
 	}
 	blog.Info("init all client successfully")

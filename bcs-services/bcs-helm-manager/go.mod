@@ -56,6 +56,7 @@ require (
 	gorm.io/driver/mysql v1.3.6
 	gorm.io/gorm v1.23.8
 	helm.sh/helm/v3 v3.8.2
+	k8s.io/api v0.23.5
 	k8s.io/apimachinery v0.23.5
 	k8s.io/cli-runtime v0.23.5
 )
@@ -209,7 +210,6 @@ require (
 	gopkg.in/gorp.v1 v1.7.2 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/ini.v1 v1.66.2 // indirect
-	k8s.io/api v0.23.5 // indirect
 	k8s.io/apiextensions-apiserver v0.23.5 // indirect
 	k8s.io/apiserver v0.23.5 // indirect
 	k8s.io/client-go v11.0.0+incompatible // indirect

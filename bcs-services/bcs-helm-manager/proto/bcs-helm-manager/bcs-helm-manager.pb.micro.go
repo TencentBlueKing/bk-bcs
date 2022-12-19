@@ -249,6 +249,12 @@ func NewHelmManagerEndpoints() []*api.Endpoint {
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
+		&api.Endpoint{
+			Name:    "HelmManager.GetReleasePods",
+			Path:    []string{"/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/releases/{name}/pods"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
 	}
 }
 
@@ -291,6 +297,7 @@ type HelmManagerService interface {
 	ReleasePreview(ctx context.Context, in *ReleasePreviewReq, opts ...client.CallOption) (*ReleasePreviewResp, error)
 	GetReleaseHistory(ctx context.Context, in *GetReleaseHistoryReq, opts ...client.CallOption) (*GetReleaseHistoryResp, error)
 	GetReleaseStatus(ctx context.Context, in *GetReleaseStatusReq, opts ...client.CallOption) (*CommonListResp, error)
+	GetReleasePods(ctx context.Context, in *GetReleasePodsReq, opts ...client.CallOption) (*CommonListResp, error)
 }
 
 type helmManagerService struct {
@@ -625,6 +632,16 @@ func (c *helmManagerService) GetReleaseStatus(ctx context.Context, in *GetReleas
 	return out, nil
 }
 
+func (c *helmManagerService) GetReleasePods(ctx context.Context, in *GetReleasePodsReq, opts ...client.CallOption) (*CommonListResp, error) {
+	req := c.c.NewRequest(c.name, "HelmManager.GetReleasePods", in)
+	out := new(CommonListResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // Server API for HelmManager service
 
 type HelmManagerHandler interface {
@@ -664,6 +681,7 @@ type HelmManagerHandler interface {
 	ReleasePreview(context.Context, *ReleasePreviewReq, *ReleasePreviewResp) error
 	GetReleaseHistory(context.Context, *GetReleaseHistoryReq, *GetReleaseHistoryResp) error
 	GetReleaseStatus(context.Context, *GetReleaseStatusReq, *CommonListResp) error
+	GetReleasePods(context.Context, *GetReleasePodsReq, *CommonListResp) error
 }
 
 func RegisterHelmManagerHandler(s server.Server, hdlr HelmManagerHandler, opts ...server.HandlerOption) error {
@@ -700,6 +718,7 @@ func RegisterHelmManagerHandler(s server.Server, hdlr HelmManagerHandler, opts .
 		ReleasePreview(ctx context.Context, in *ReleasePreviewReq, out *ReleasePreviewResp) error
 		GetReleaseHistory(ctx context.Context, in *GetReleaseHistoryReq, out *GetReleaseHistoryResp) error
 		GetReleaseStatus(ctx context.Context, in *GetReleaseStatusReq, out *CommonListResp) error
+		GetReleasePods(ctx context.Context, in *GetReleasePodsReq, out *CommonListResp) error
 	}
 	type HelmManager struct {
 		helmManager
@@ -912,6 +931,12 @@ func RegisterHelmManagerHandler(s server.Server, hdlr HelmManagerHandler, opts .
 		Method:  []string{"GET"},
 		Handler: "rpc",
 	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "HelmManager.GetReleasePods",
+		Path:    []string{"/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/releases/{name}/pods"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
 	return s.Handle(s.NewHandler(&HelmManager{h}, opts...))
 }
 
@@ -1045,4 +1070,8 @@ func (h *helmManagerHandler) GetReleaseHistory(ctx context.Context, in *GetRelea
 
 func (h *helmManagerHandler) GetReleaseStatus(ctx context.Context, in *GetReleaseStatusReq, out *CommonListResp) error {
 	return h.HelmManagerHandler.GetReleaseStatus(ctx, in, out)
+}
+
+func (h *helmManagerHandler) GetReleasePods(ctx context.Context, in *GetReleasePodsReq, out *CommonListResp) error {
+	return h.HelmManagerHandler.GetReleasePods(ctx, in, out)
 }

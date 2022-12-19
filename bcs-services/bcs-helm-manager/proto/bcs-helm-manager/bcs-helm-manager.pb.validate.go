@@ -8063,6 +8063,8 @@ func (m *InstallReleaseV1Req) validate(all bool) error {
 
 	// no validation rules for ValueFile
 
+	// no validation rules for Operator
+
 	if len(errors) > 0 {
 		return InstallReleaseV1ReqMultiError(errors)
 	}
@@ -8609,6 +8611,8 @@ func (m *UpgradeReleaseV1Req) validate(all bool) error {
 	}
 
 	// no validation rules for ValueFile
+
+	// no validation rules for Operator
 
 	if len(errors) > 0 {
 		return UpgradeReleaseV1ReqMultiError(errors)
@@ -10104,6 +10108,154 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = GetReleaseStatusReqValidationError{}
+
+// Validate checks the field values on GetReleasePodsReq with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// first error encountered is returned, or nil if there are no violations.
+func (m *GetReleasePodsReq) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on GetReleasePodsReq with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// GetReleasePodsReqMultiError, or nil if none found.
+func (m *GetReleasePodsReq) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *GetReleasePodsReq) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if utf8.RuneCountInString(m.GetName()) < 1 {
+		err := GetReleasePodsReqValidationError{
+			field:  "Name",
+			reason: "value length must be at least 1 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if l := utf8.RuneCountInString(m.GetNamespace()); l < 1 || l > 64 {
+		err := GetReleasePodsReqValidationError{
+			field:  "Namespace",
+			reason: "value length must be between 1 and 64 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if l := utf8.RuneCountInString(m.GetClusterID()); l < 1 || l > 64 {
+		err := GetReleasePodsReqValidationError{
+			field:  "ClusterID",
+			reason: "value length must be between 1 and 64 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 32 {
+		err := GetReleasePodsReqValidationError{
+			field:  "ProjectCode",
+			reason: "value length must be between 1 and 32 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	// no validation rules for After
+
+	if len(errors) > 0 {
+		return GetReleasePodsReqMultiError(errors)
+	}
+
+	return nil
+}
+
+// GetReleasePodsReqMultiError is an error wrapping multiple validation errors
+// returned by GetReleasePodsReq.ValidateAll() if the designated constraints
+// aren't met.
+type GetReleasePodsReqMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m GetReleasePodsReqMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m GetReleasePodsReqMultiError) AllErrors() []error { return m }
+
+// GetReleasePodsReqValidationError is the validation error returned by
+// GetReleasePodsReq.Validate if the designated constraints aren't met.
+type GetReleasePodsReqValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetReleasePodsReqValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetReleasePodsReqValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetReleasePodsReqValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetReleasePodsReqValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetReleasePodsReqValidationError) ErrorName() string {
+	return "GetReleasePodsReqValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetReleasePodsReqValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetReleasePodsReq.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetReleasePodsReqValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetReleasePodsReqValidationError{}
 
 // Validate checks the field values on CommonResp with the rules defined in the
 // proto definition for this message. If any rules are violated, the first

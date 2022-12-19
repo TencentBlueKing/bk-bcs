@@ -126,10 +126,13 @@ func (u *UpgradeReleaseV1Action) saveDB() error {
 		}
 	}
 
-	username := auth.GetUserFromCtx(u.ctx)
+	createBy := auth.GetUserFromCtx(u.ctx)
+	if u.req.GetOperator() != "" {
+		createBy = u.req.GetOperator()
+	}
 	if create {
-		u.createBy = username
-		u.updateBy = username
+		u.createBy = createBy
+		u.updateBy = createBy
 		if err := u.model.CreateRelease(u.ctx, &entity.Release{
 			Name:         u.req.GetName(),
 			ProjectCode:  contextx.GetProjectCodeFromCtx(u.ctx),
@@ -141,14 +144,14 @@ func (u *UpgradeReleaseV1Action) saveDB() error {
 			ValueFile:    u.req.GetValueFile(),
 			Values:       u.req.GetValues(),
 			Args:         u.req.GetArgs(),
-			CreateBy:     username,
+			CreateBy:     createBy,
 			Status:       helmrelease.StatusPendingUpgrade.String(),
 		}); err != nil {
 			return err
 		}
 	} else {
 		u.createBy = old.CreateBy
-		u.updateBy = username
+		u.updateBy = createBy
 		rl := entity.M{
 			entity.FieldKeyRepoName:     u.req.GetRepository(),
 			entity.FieldKeyChartName:    u.req.GetChart(),
@@ -156,7 +159,7 @@ func (u *UpgradeReleaseV1Action) saveDB() error {
 			entity.FieldKeyValues:       u.req.GetValues(),
 			entity.FieldKeyValueFile:    u.req.GetValueFile(),
 			entity.FieldKeyArgs:         u.req.Args,
-			entity.FieldKeyUpdateBy:     username,
+			entity.FieldKeyUpdateBy:     createBy,
 			entity.FieldKeyStatus:       helmrelease.StatusPendingUpgrade.String(),
 			entity.FieldKeyMessage:      "",
 		}

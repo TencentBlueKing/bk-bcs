@@ -17,11 +17,10 @@ import (
 	"fmt"
 
 	_struct "github.com/golang/protobuf/ptypes/struct"
-	"k8s.io/apimachinery/pkg/runtime"
 )
 
-// MarshalObjectsToListValue trans object to ListValue
-func MarshalObjectsToListValue(objs []runtime.Object) (*_struct.ListValue, error) {
+// MarshalInterfacesToListValue trans interface slice to ListValue
+func MarshalInterfacesToListValue(objs interface{}) (*_struct.ListValue, error) {
 	b, err := json.Marshal(objs)
 	if err != nil {
 		return nil, err

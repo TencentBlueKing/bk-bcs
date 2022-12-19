@@ -84,7 +84,7 @@ func (g *GetReleaseStatusAction) getResourceMainfest() error {
 		return nil
 	}
 
-	result, err := common.MarshalObjectsToListValue(rl.Objects)
+	result, err := common.MarshalInterfacesToListValue(rl.Objects)
 	if err != nil {
 		blog.Errorf("marshal objects err, %s", err.Error())
 		g.setResp(common.ErrHelmManagerGetActionFailed, err.Error(), nil)

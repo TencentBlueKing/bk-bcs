@@ -354,6 +354,15 @@ service HelmManager {
             summary: "获取 release 资源的状态"
         };
     }
+    rpc GetReleasePods(GetReleasePodsReq) returns (CommonListResp) {
+        option (google.api.http) = {
+            get: "/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/releases/{name}/pods"
+        };
+        option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+            description: "获取 release 下所有pod, 支持根据时间筛选"
+            summary: "获取 release pods"
+        };
+    }
 }
 
 message AvailableReq {
@@ -2223,6 +2232,10 @@ message InstallReleaseV1Req {
         title: "valueFile",
         description: "value 文件，上一次更新使用的文件"
     }];
+    optional string operator = 11[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "operator",
+        description: "操作者"
+    }];
 }
 
 message InstallReleaseV1Resp {
@@ -2350,6 +2363,10 @@ message UpgradeReleaseV1Req {
     optional string valueFile = 10[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "valueFile",
         description: "value 文件，上一次更新使用的文件"
+    }];
+    optional string operator = 11[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "operator",
+        description: "操作者"
     }];
 }
 
@@ -2668,6 +2685,36 @@ message GetReleaseStatusReq {
         title: "projectCode",
         description: "项目代码"
     }, (validate.rules).string = {min_len : 1 , max_len : 32}];
+}
+
+message GetReleasePodsReq {
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+        json_schema : {
+            title : "GetReleasePodsReq"
+            description : "获取 release pods 的参数"
+        }
+    };
+
+    required string name = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "name",
+        description: "chart release名称"
+    }, (validate.rules).string = {min_len : 1}];
+    required string namespace = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "namespace",
+        description: "所在的namespace"
+    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
+    required string clusterID = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "clusterID",
+        description: "所在的集群ID"
+    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
+    required string projectCode = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "projectCode",
+        description: "项目代码"
+    }, (validate.rules).string = {min_len : 1 , max_len : 32}];
+    optional uint32 after = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "after",
+        description: "查询指定时间之后的 pods"
+    }];
 }
 
 message CommonResp {

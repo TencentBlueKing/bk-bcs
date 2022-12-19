@@ -176,6 +176,7 @@ func inject4MetadataLabels(manifest string) (string, error) {
 		if err := labelPath.ReplaceWithReader(f, strings.NewReader(name)); err != nil {
 			return s, err
 		}
+		return f.String(), nil
 	}
 	if stringx.StringInSlice(kind, kinds) {
 		if err := labelPath.ReplaceWithReader(f, strings.NewReader(name)); err != nil {

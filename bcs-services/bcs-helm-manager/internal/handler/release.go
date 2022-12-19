@@ -153,3 +153,12 @@ func (hm *HelmManager) GetReleaseStatus(ctx context.Context,
 	action := actionRelease.NewGetReleaseStatusAction(hm.releaseHandler)
 	return action.Handle(ctx, req, resp)
 }
+
+// GetReleasePods provide the actions to do get release pods
+func (hm *HelmManager) GetReleasePods(ctx context.Context,
+	req *helmmanager.GetReleasePodsReq, resp *helmmanager.CommonListResp) error {
+
+	defer recorder(ctx, "GetReleasePods", req, resp)()
+	action := actionRelease.NewGetReleasePodsAction(hm.releaseHandler)
+	return action.Handle(ctx, req, resp)
+}

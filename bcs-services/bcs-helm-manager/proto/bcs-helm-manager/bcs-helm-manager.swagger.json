@@ -531,6 +531,68 @@
         ]
       }
     },
+    "/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/releases/{name}/pods": {
+      "get": {
+        "summary": "获取 release pods",
+        "description": "获取 release 下所有pod, 支持根据时间筛选",
+        "operationId": "HelmManager_GetReleasePods",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/helmmanagerCommonListResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectCode",
+            "description": "项目代码",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "clusterID",
+            "description": "所在的集群ID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "namespace",
+            "description": "所在的namespace",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "description": "chart release名称",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "after",
+            "description": "after. 查询指定时间之后的 pods",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          }
+        ],
+        "tags": [
+          "HelmManager"
+        ]
+      }
+    },
     "/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/releases/{name}/preview": {
       "post": {
         "summary": "预览 Release 资源",
@@ -2749,6 +2811,11 @@
           "type": "string",
           "description": "value 文件，上一次更新使用的文件",
           "title": "valueFile"
+        },
+        "operator": {
+          "type": "string",
+          "description": "操作者",
+          "title": "operator"
         }
       },
       "description": "安装 release 的参数",
@@ -3982,6 +4049,11 @@
           "type": "string",
           "description": "value 文件，上一次更新使用的文件",
           "title": "valueFile"
+        },
+        "operator": {
+          "type": "string",
+          "description": "操作者",
+          "title": "operator"
         }
       },
       "description": "升级 release 的参数",

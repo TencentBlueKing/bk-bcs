@@ -20,6 +20,7 @@ import (
 	"helm.sh/helm/v3/pkg/release"
 	helmrelease "helm.sh/helm/v3/pkg/release"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/cli-runtime/pkg/resource"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
 	helmmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/proto/bcs-helm-manager"
@@ -59,6 +60,7 @@ type Release struct {
 	Values       string
 	Manifest     string
 	Hooks        []*helmrelease.Hook
+	Infos        []*resource.Info
 	Objects      []runtime.Object
 	Notes        string
 }
@@ -168,8 +170,6 @@ func (r ReleasesSlice) Swap(i, j int) {
 
 // Config 定义了 Handler 的配置参数
 type Config struct {
-	APIServer      string
-	Token          string
 	PatchTemplates []*File
 }
 

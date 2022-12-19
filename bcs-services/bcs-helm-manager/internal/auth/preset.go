@@ -46,4 +46,5 @@ var ActionPermissions = map[string]string{
 	"HelmManager.ReleasePreview":     project.CanViewProjectOperation,
 	"HelmManager.GetReleaseHistory":  namespace.CanViewNamespaceScopedResourceOperation,
 	"HelmManager.GetReleaseStatus":   namespace.CanViewNamespaceScopedResourceOperation,
+	"HelmManager.GetReleasePods":     project.CanViewProjectOperation,
 }
