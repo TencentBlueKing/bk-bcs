@@ -47,12 +47,14 @@ func deleteClustersNamespace() *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			projectCode := viper.GetString("bcs.project_code")
 			if len(projectCode) == 0 {
-				klog.Fatalf("Project code (English abbreviation), global unique, the length cannot exceed 64 characters")
+				klog.Infoln("Project code (English abbreviation), global unique, the length cannot exceed 64 characters")
+				return
 			}
 			request.ProjectCode = projectCode
 			resp, err := pkg.NewClientWithConfiguration(context.Background()).DeleteNamespace(request)
 			if err != nil {
-				klog.Fatalf("delete project namespace failed: %v", err)
+				klog.Infoln("delete project namespace failed: %v", err)
+				return
 			}
 			printer.PrintInJSON(resp)
 		},

@@ -47,11 +47,13 @@ func listVariable() *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			projectCode := viper.GetString("bcs.project_code")
 			if len(projectCode) == 0 {
-				klog.Fatalf("Project code (English abbreviation), global unique, the length cannot exceed 64 characters")
+				klog.Infoln("Project code (English abbreviation), global unique, the length cannot exceed 64 characters")
+				return
 			}
 			resp, err := pkg.NewClientWithConfiguration(context.Background()).ListVariableDefinitions(request, projectCode)
 			if err != nil {
-				klog.Fatalf("list variable definitions failed: %v", err)
+				klog.Infoln("list variable definitions failed: %v", err)
+				return
 			}
 			printer.PrintProjectVariablesListInTable(flagOutput, resp)
 		},

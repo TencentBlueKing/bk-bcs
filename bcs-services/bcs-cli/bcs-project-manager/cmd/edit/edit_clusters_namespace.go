@@ -71,6 +71,7 @@ func editClustersNamespace() *cobra.Command {
 				klog.Infoln("list variable definitions failed: %v", err)
 				return
 			}
+
 			// 从列表通过名称查找需要编辑的命名空间
 			namespaceList := make(map[string]*bcsproject.NamespaceData, 0)
 			for _, item := range namespaceResp.Data {
@@ -79,7 +80,6 @@ func editClustersNamespace() *cobra.Command {
 					Status:           item.GetStatus(),
 					CreateTime:       item.GetCreateTime(),
 					Quota:            item.GetQuota(),
-					Used:             item.GetUsed(),
 					Labels:           item.GetLabels(),
 					Annotations:      item.GetAnnotations(),
 					Variables:        item.GetVariables(),
@@ -96,11 +96,11 @@ func editClustersNamespace() *cobra.Command {
 			}
 
 			// 处理变量variable和Quota值为空时显示 [] {}
-			variableValue := make([]pkg.VariableValue, 0)
+			variableValue := make([]pkg.Data, 0)
 			if len(namespace.Variables) != 0 {
 				for _, item := range namespace.Variables {
-					variableValue = append(variableValue, pkg.VariableValue{
-						Id:          item.Id,
+					variableValue = append(variableValue, pkg.Data{
+						ID:          item.Id,
 						Key:         item.Key,
 						Name:        item.Name,
 						ClusterID:   item.ClusterID,
@@ -121,13 +121,14 @@ func editClustersNamespace() *cobra.Command {
 				}
 			}
 
-			// 需要用编辑器打开的数据
-			updateNamespace := pkg.UpdateNamespaceRequest{
-				ProjectCode: projectCode,
-				ClusterID:   clusterID,
-				Name:        namespace.Name,
-				Quota:       quotaVal,
-				Variables:   variableValue,
+			updateNamespace := pkg.UpdateNamespaceTemplate{
+				UpdateNamespaceRequest: pkg.UpdateNamespaceRequest{
+					ProjectCode: projectCode,
+					ClusterID:   clusterID,
+					Name:        namespace.Name,
+					Quota:       quotaVal,
+				},
+				Variable: variableValue,
 			}
 
 			// 原内容
@@ -166,8 +167,8 @@ func editClustersNamespace() *cobra.Command {
 			}
 
 			var (
-				editBefore pkg.UpdateNamespaceRequest
-				editAfter  pkg.UpdateNamespaceRequest
+				editBefore pkg.UpdateNamespaceTemplate
+				editAfter  pkg.UpdateNamespaceTemplate
 			)
 
 			// 生成编辑前数据和编辑后数据做对比
@@ -187,10 +188,10 @@ func editClustersNamespace() *cobra.Command {
 				// 一定要放在在赋值前
 				// 获取编辑前Variables值 除去能编辑的字段
 				variablesBefore := make([]pkg.Variable, 0)
-				if len(editBefore.Variables) != 0 {
-					for _, item := range editBefore.Variables {
+				if len(editBefore.Variable) != 0 {
+					for _, item := range editBefore.Variable {
 						variablesBefore = append(variablesBefore, pkg.Variable{
-							Id:          item.Id,
+							ID:          item.ID,
 							Key:         item.Key,
 							Name:        item.Name,
 							ClusterID:   item.ClusterID,
@@ -203,10 +204,10 @@ func editClustersNamespace() *cobra.Command {
 
 				// 获取编辑后Variables值 除去能编辑的字段
 				variablesAfter := make([]pkg.Variable, 0)
-				if len(editAfter.Variables) != 0 {
-					for _, item := range editAfter.Variables {
+				if len(editAfter.Variable) != 0 {
+					for _, item := range editAfter.Variable {
 						variablesAfter = append(variablesAfter, pkg.Variable{
-							Id:          item.Id,
+							ID:          item.ID,
 							Key:         item.Key,
 							Name:        item.Name,
 							ClusterID:   item.ClusterID,
@@ -225,7 +226,7 @@ func editClustersNamespace() *cobra.Command {
 
 				// 把能更改的值赋值到编辑前数据
 				editBefore.Quota = editAfter.Quota
-				editBefore.Variables = editAfter.Variables
+				editBefore.Variable = editAfter.Variable
 			}
 
 			// 对比整个前后数据是否一直
@@ -234,21 +235,37 @@ func editClustersNamespace() *cobra.Command {
 				return
 			}
 
-			// 需要提交编辑的数据
-			updateData := &pkg.UpdateNamespaceRequest{
+			// 编辑命名空间操作
+			updateNamespaceData := &pkg.UpdateNamespaceRequest{
 				ProjectCode: projectCode,
 				ClusterID:   clusterID,
 				Name:        name,
 				Quota:       editAfter.Quota,
-				Variables:   editAfter.Variables,
 			}
 
-			resp, err := client.UpdateNamespace(updateData, projectCode, clusterID, name)
+			resp, err := client.UpdateNamespace(updateNamespaceData, projectCode, clusterID, name)
 			if err != nil {
-				klog.Infoln("update project failed: %v", err)
+				klog.Infoln("update namespace failed: %v", err)
 				return
 			}
-			printer.PrintInJSON(resp)
+
+			// 编辑命名空间变量操作
+			updateNamespaceVariableData := &pkg.UpdateNamespaceVariablesReq{
+				ProjectCode: projectCode,
+				ClusterID:   clusterID,
+				Namespace:   name,
+				Data:        editAfter.Variable,
+			}
+			res, err := client.UpdateNamespaceVariables(updateNamespaceVariableData)
+			if err != nil {
+				klog.Infoln("update namespace variables failed: %v", err)
+				return
+			}
+			if res.Code != 0 && resp.Code != 0 {
+				klog.Infoln("Failed to update the namespace and variables: %v", err)
+				return
+			}
+			printer.PrintInJSON(nil)
 		},
 	}
 

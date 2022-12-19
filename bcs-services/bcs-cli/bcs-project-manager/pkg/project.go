@@ -25,9 +25,10 @@ import (
 )
 
 const (
-	listProjectsUrl  = "/bcsproject/v1/projects"
-	getProjectUrl    = "/bcsproject/v1/projects/%s"
-	updateProjectUrl = "/bcsproject/v1/projects/%s"
+	listProjectsUrl       = "/bcsproject/v1/projects"
+	getProjectUrl         = "/bcsproject/v1/projects/%s"
+	updateProjectUrl      = "/bcsproject/v1/projects/%s"
+	authorizedProjectsUrl = "/bcsproject/v1/authorized_projects"
 )
 
 type (
@@ -110,6 +111,23 @@ func (p *ProjectManagerClient) UpdateProject(in *UpdateProjectRequest) (*bcsproj
 	}
 	if resp != nil && resp.Code != 0 {
 		return nil, fmt.Errorf("update project response code not 0 but %d: %s", resp.Code, resp.Message)
+	}
+	return resp, nil
+}
+
+// ListAuthorizedProjects Query the list of items to which the user has permission
+func (p *ProjectManagerClient) ListAuthorizedProjects() (*bcsproject.ListAuthorizedProjResp, error) {
+
+	bs, err := p.do(authorizedProjectsUrl, http.MethodGet, nil, nil)
+	if err != nil {
+		return nil, fmt.Errorf("list authorized projects failed: %v", err)
+	}
+	resp := new(bcsproject.ListAuthorizedProjResp)
+	if err := json.Unmarshal(bs, resp); err != nil {
+		return nil, errors.Wrapf(err, "list authorized projects unmarshal failed with response '%s'", string(bs))
+	}
+	if resp != nil && resp.Code != 0 {
+		return nil, fmt.Errorf("llist authorized projects response code not 0 but %d: %s", resp.Code, resp.Message)
 	}
 	return resp, nil
 }

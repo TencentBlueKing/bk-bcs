@@ -39,12 +39,14 @@ var (
 kubectl-bcs-project-manager allows operators to get project info from bcs-project-manager.
 `,
 	}
+	debug bool
 )
 
 // Execute is the entrance for cmd tools
 func Execute() {
 	if err := rootCmd.Execute(); err != nil {
-		klog.Fatalf(err.Error())
+		klog.Infoln(err.Error())
+		return
 	}
 }
 
@@ -75,4 +77,6 @@ func init() {
 	rootCmd.AddCommand(delete2.NewCmdDelete())
 	rootCmd.PersistentFlags().StringVarP(
 		&cfgFile, "config", "c", "", "config file, optional")
+	rootCmd.PersistentFlags().BoolVarP(&debug, "debug", "v", false, "Debug mode")
+	viper.BindPFlag("debug", rootCmd.PersistentFlags().Lookup("debug"))
 }

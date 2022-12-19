@@ -49,11 +49,13 @@ func deleteVariable() *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			projectCode := viper.GetString("bcs.project_code")
 			if len(projectCode) == 0 {
-				klog.Fatalf("Project code (English abbreviation), global unique, the length cannot exceed 64 characters")
+				klog.Infoln("Project code (English abbreviation), global unique, the length cannot exceed 64 characters")
+				return
 			}
 			resp, err := pkg.NewClientWithConfiguration(context.Background()).DeleteVariableDefinitions(request, projectCode)
 			if err != nil {
-				klog.Fatalf("delete project variable failed: %v", err)
+				klog.Infoln("delete project variable failed: %v", err)
+				return
 			}
 			printer.PrintInJSON(resp)
 		},

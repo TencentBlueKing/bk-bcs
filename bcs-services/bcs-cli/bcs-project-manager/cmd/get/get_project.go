@@ -32,7 +32,16 @@ var (
 
 	getProjectExample = templates.Examples(i18n.T(`
 		# List all project in ps output format
-		kubectl-bcs-project-manager list project`))
+		kubectl-bcs-project-manager list project
+		# List my project in ps output format
+		kubectl-bcs-project-manager list project my-project`))
+
+	myProjectLong = templates.LongDesc(i18n.T(`
+	Display one or many my project.`))
+
+	myProjectExample = templates.Examples(i18n.T(`
+	# Display one or many my project
+	kubectl-bcs-project-manager list project my-project`))
 )
 
 func listProject() *cobra.Command {
@@ -46,11 +55,14 @@ func listProject() *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			resp, err := pkg.NewClientWithConfiguration(context.Background()).ListProjects(request)
 			if err != nil {
-				klog.Fatalf("list variable definitions failed: %v", err)
+				klog.Infoln("list variable definitions failed: %v", err)
+				return
 			}
 			printer.PrintProjectsListInTable(flagOutput, resp)
 		},
 	}
+
+	cmd.AddCommand(MyProject())
 
 	cmd.PersistentFlags().StringVarP(&request.ProjectIDs, "project_ids", "", "",
 		"The project ids that query, multiple separated by commas")
@@ -66,5 +78,24 @@ func listProject() *cobra.Command {
 		"Start query from offset")
 	cmd.PersistentFlags().BoolVarP(&request.All, "all", "", false,
 		"Get all projects, default: false")
+	return cmd
+}
+
+func MyProject() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "my-project",
+		Aliases: []string{"mp"},
+		Short:   i18n.T("Present your project list"),
+		Long:    myProjectLong,
+		Example: myProjectExample,
+		Run: func(cmd *cobra.Command, args []string) {
+			resp, err := pkg.NewClientWithConfiguration(context.Background()).ListAuthorizedProjects()
+			if err != nil {
+				klog.Infoln("list authorized projects failed: %v", err)
+				return
+			}
+			printer.PrinListAuthorizedProjectsInTable(flagOutput, resp)
+		},
+	}
 	return cmd
 }

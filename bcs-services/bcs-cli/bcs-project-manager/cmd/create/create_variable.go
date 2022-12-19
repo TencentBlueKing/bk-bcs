@@ -46,12 +46,14 @@ func createVariable() *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			projectCode := viper.GetString("bcs.project_code")
 			if len(projectCode) == 0 {
-				klog.Fatalf("Project code (English abbreviation), global unique, the length cannot exceed 64 characters")
+				klog.Infoln("Project code (English abbreviation), global unique, the length cannot exceed 64 characters")
+				return
 			}
 			request.ProjectCode = projectCode
 			resp, err := pkg.NewClientWithConfiguration(context.Background()).CreateVariable(request)
 			if err != nil {
-				klog.Fatalf("create variable definitions failed: %v", err)
+				klog.Infoln(err)
+				return
 			}
 			printer.PrintInJSON(resp)
 		},
@@ -66,6 +68,8 @@ func createVariable() *cobra.Command {
 		"Variable description and description, limited to 100 characters")
 	cmd.Flags().StringVarP(&request.Default, "default", "", "",
 		"Variable default value")
+	cmd.MarkFlagRequired("name")
+	cmd.MarkFlagRequired("key")
 
 	return cmd
 }

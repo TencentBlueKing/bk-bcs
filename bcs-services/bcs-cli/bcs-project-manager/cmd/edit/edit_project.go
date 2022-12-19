@@ -52,43 +52,48 @@ func editProject() *cobra.Command {
 		Example:               editProjectExample,
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) == 0 {
-				klog.Fatalf("edit project requires project ID or code")
+				klog.Infoln("edit project requires project ID or code")
+				return
 			}
 			client := pkg.NewClientWithConfiguration(context.Background())
 			resp, err := client.GetProject(args[0])
 			if err != nil {
-				klog.Fatalf("get project failed: %v", err)
+				klog.Infoln("get project failed: %v", err)
+				return
 			}
 
 			projectInfo := resp.Data
 			// 原内容
 			marshal, err := json.Marshal(projectInfo)
 			if err != nil {
-				klog.Fatal("json marshal failed: %v", err)
+				klog.Infoln("json marshal failed: %v", err)
+				return
 			}
 
 			// 把json转成yaml
 			original, err := yaml.JSONToYAML(marshal)
 			if err != nil {
-				klog.Fatal("json to yaml failed: %v", err)
+				klog.Infoln("json to yaml failed: %v", err)
+				return
 			}
 			edit := editor.NewDefaultEditor([]string{})
 			// 编辑后的
 			edited, path, err := edit.LaunchTempFile(fmt.Sprintf("%s-edit-", filepath.Base(os.Args[0])), ".yaml", bytes.NewBufferString(string(original)))
 			if err != nil {
-				klog.Fatalf("unexpected error: %v", err)
+				klog.Infoln("unexpected error: %v", err)
 			}
 			if _, err := os.Stat(path); err != nil {
-				klog.Fatalf("no temp file: %s", path)
+				klog.Infoln("no temp file: %s", path)
 			}
 			// 对比原内容是否更改
 			if bytes.Equal(cmdutil.StripComments(original), cmdutil.StripComments(edited)) {
-				klog.Fatalf("Edit cancelled, no valid changes were saved.")
+				klog.Infoln("Edit cancelled, no valid changes were saved.")
 			}
 			// 把编辑后的内容yaml转成json
 			editedJson, err := yaml.YAMLToJSON(edited)
 			if err != nil {
-				klog.Fatal("json to yaml failed: %v", err)
+				klog.Infoln("json to yaml failed: %v", err)
+				return
 			}
 
 			var (
@@ -99,18 +104,21 @@ func editProject() *cobra.Command {
 			{
 				err = json.Unmarshal(editedJson, &editBefore)
 				if err != nil {
-					klog.Fatal("[edited] deserialize failed: %v", err)
+					klog.Infoln("[edited] deserialize failed: %v", err)
+					return
 				}
 				err = json.Unmarshal(marshal, &editAfter)
 				if err != nil {
-					klog.Fatal("[project info] deserialize failed: %v", err)
+					klog.Infoln("[project info] deserialize failed: %v", err)
+					return
 				}
 				editAfter.BusinessID = editBefore.BusinessID
 				editAfter.Description = editBefore.Description
 			}
 
 			if editBefore != editAfter {
-				klog.Fatal("only edit description and project ID")
+				klog.Infoln("only edit description and project ID")
+				return
 			}
 
 			useBKRes := new(wrappers.BoolValue)
@@ -144,7 +152,8 @@ func editProject() *cobra.Command {
 			}
 			updateProjectResp, err := client.UpdateProject(updateData)
 			if err != nil {
-				klog.Fatalf("update project failed: %v", err)
+				klog.Infoln("update project failed: %v", err)
+				return
 			}
 			printer.PrintInJSON(updateProjectResp)
 		},
