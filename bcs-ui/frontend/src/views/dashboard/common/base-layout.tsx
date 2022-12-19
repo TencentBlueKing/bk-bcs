@@ -3,7 +3,6 @@ import { defineComponent, computed, ref, watch, onMounted, toRefs } from '@vue/c
 import DashboardTopActions from './dashboard-top-actions';
 import { useSelectItemsNamespace } from '../namespace/use-namespace';
 import usePage from './use-page';
-import useSearch from './use-search';
 import useSubscribe, { ISubscribeData, ISubscribeParams } from './use-subscribe';
 import useTableData from './use-table-data';
 import { sort } from '@/common/util';
@@ -215,15 +214,28 @@ export default defineComponent({
     const resourceVersion = computed(() => data.value.manifest?.metadata?.resourceVersion || '');
 
     // 模糊搜索功能
-    const mergeExtTableData = computed(() => tableData.value.map((item) => {
-      const extData = data.value.manifestExt?.[item.metadata?.uid] || {};
-      return {
-        ...extData,
-        ...item,
-      };
-    }));
     const keys = ref(['metadata.name', 'creator']); // 模糊搜索字段
-    const { tableDataMatchSearch, searchValue } = useSearch(mergeExtTableData, keys);
+    const searchValue = ref('');
+    const tableDataMatchSearch = computed(() => {
+      if (!searchValue.value) return tableData.value;
+
+      return tableData.value.filter(item => keys.value.some((key) => {
+        const extData = data.value.manifestExt?.[item.metadata?.uid] || {};
+        const newItem = {
+          ...extData,
+          ...item,
+        };
+        const tmpKey = String(key).split('.');
+        const str = tmpKey.reduce((pre, key) => {
+          if (typeof pre === 'object') {
+            return pre[key];
+          }
+          return pre;
+        }, newItem);
+        return String(str).toLowerCase()
+          .includes(searchValue.value.toLowerCase());
+      }));
+    });
 
     const handleNamespaceSelected = (value) => {
       localStorage.setItem(`${clusterId.value}-${CUR_SELECT_NAMESPACE}`, value);
