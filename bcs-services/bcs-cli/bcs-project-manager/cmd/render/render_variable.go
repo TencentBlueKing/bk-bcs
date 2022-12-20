@@ -48,11 +48,13 @@ func renderVariable() *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			projectCode := viper.GetString("bcs.project_code")
 			if len(projectCode) == 0 {
-				klog.Fatalf("Project code (English abbreviation), global unique, the length cannot exceed 64 characters")
+				klog.Infoln("Project code (English abbreviation), global unique, the length cannot exceed 64 characters")
+				return
 			}
 			resp, err := pkg.NewClientWithConfiguration(context.Background()).RenderVariables(request, projectCode, clusterID, namespace)
 			if err != nil {
-				klog.Fatalf("render variable's value failed: %v", err)
+				klog.Infoln("render variable's value failed: %v", err)
+				return
 			}
 			printer.PrintInJSON(resp)
 		},

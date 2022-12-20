@@ -72,7 +72,8 @@ func editVariable() *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			projectCode := viper.GetString("bcs.project_code")
 			if len(projectCode) == 0 {
-				klog.Fatalf("Project code (English abbreviation), global unique, the length cannot exceed 64 characters")
+				klog.Infoln("Project code (English abbreviation), global unique, the length cannot exceed 64 characters")
+				return
 			}
 
 			client := pkg.NewClientWithConfiguration(context.Background())
@@ -82,7 +83,8 @@ func editVariable() *cobra.Command {
 				All:       true,
 			}, projectCode)
 			if err != nil {
-				klog.Fatalf("list variable definitions failed: %v", err)
+				klog.Infoln("list variable definitions failed: %v", err)
+				return
 			}
 
 			variableList := make(map[string]readOnlyVariableParam, 0)
@@ -105,35 +107,42 @@ func editVariable() *cobra.Command {
 			}
 			variable, ok := variableList[searchKey]
 			if !ok {
-				klog.Fatalf("No variable found for key: %v", searchKey)
+				klog.Infoln("No variable found for key: %v", searchKey)
+				return
 			}
 			// 原内容
 			marshal, err := json.Marshal(variable)
 			if err != nil {
-				klog.Fatal("[variable] deserialize failed: %v", err)
+				klog.Infoln("[variable] deserialize failed: %v", err)
+				return
 			}
 			// 把json转成yaml
 			original, err := yaml.JSONToYAML(marshal)
 			if err != nil {
-				klog.Fatal("json to yaml failed: %v", err)
+				klog.Infoln("json to yaml failed: %v", err)
+				return
 			}
 			edit := editor.NewDefaultEditor([]string{})
 			// 编辑后的
 			edited, path, err := edit.LaunchTempFile(fmt.Sprintf("%s-edit-", filepath.Base(os.Args[0])), ".yaml", bytes.NewBufferString(string(original)))
 			if err != nil {
-				klog.Fatalf("unexpected error: %v", err)
+				klog.Infoln("unexpected error: %v", err)
+				return
 			}
 			if _, err := os.Stat(path); err != nil {
-				klog.Fatalf("no temp file: %s", path)
+				klog.Infoln("no temp file: %s", path)
+				return
 			}
 			// 对比原内容是否更改
 			if bytes.Equal(cmdutil.StripComments(original), cmdutil.StripComments(edited)) {
-				klog.Fatalf("Edit cancelled, no valid changes were saved.")
+				klog.Infoln("Edit cancelled, no valid changes were saved.")
+				return
 			}
 			// 把编辑后的内容yaml转成json
 			editedJson, err := yaml.YAMLToJSON(edited)
 			if err != nil {
-				klog.Fatal("json to yaml failed: %v", err)
+				klog.Infoln("json to yaml failed: %v", err)
+				return
 			}
 
 			var (
@@ -144,17 +153,20 @@ func editVariable() *cobra.Command {
 			{
 				err = json.Unmarshal(editedJson, &editBefore)
 				if err != nil {
-					klog.Fatal("[edit before] deserialize failed: %v", err)
+					klog.Infoln("[edit before] deserialize failed: %v", err)
+					return
 				}
 				err = json.Unmarshal(marshal, &editAfter)
 				if err != nil {
-					klog.Fatal("[edit after] deserialize failed: %v", err)
+					klog.Infoln("[edit after] deserialize failed: %v", err)
+					return
 				}
 				editAfter.DefaultValue = editBefore.DefaultValue
 				editAfter.Desc = editBefore.Desc
 			}
 			if editBefore != editAfter {
-				klog.Fatal("only edit desc and default value")
+				klog.Infoln("only edit desc and default value")
+				return
 			}
 			// 保证只修改描述和默认值
 			updateData := &pkg.UpdateVariableRequest{
@@ -169,7 +181,8 @@ func editVariable() *cobra.Command {
 
 			resp, err := client.UpdateVariable(updateData)
 			if err != nil {
-				klog.Fatalf("update project variable failed: %v", err)
+				klog.Infoln("update project variable failed: %v", err)
+				return
 			}
 			printer.PrintInJSON(resp)
 		},

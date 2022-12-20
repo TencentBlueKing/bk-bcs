@@ -38,6 +38,7 @@ func defaultTableWriter() *tablewriter.Table {
 
 const (
 	outputTypeJSON = "json"
+	outputTypeYaml = "yaml"
 	outputTypeWide = "wide"
 )
 

@@ -23,11 +23,12 @@ import (
 )
 
 const (
-	listNamespacesUrl          = "/bcsproject/v1/projects/%s/clusters/%s/namespaces"
-	namespaceUrl               = "/bcsproject/v1/projects/%s/clusters/%s/namespaces/%s"
-	createNamespaceCallbackUrl = "/bcsproject/v1/projects/%s/clusters/%s/namespaces/%s/callback/create"
-	deleteNamespaceCallbackUrl = "/bcsproject/v1/projects/%s/clusters/%s/namespaces/%s/callback/delete"
-	updateNamespaceCallbackUrl = "/bcsproject/v1/projects/%s/clusters/%s/namespaces/%s/callback/update"
+	listNamespacesUrl           = "/bcsproject/v1/projects/%s/clusters/%s/namespaces"
+	namespaceUrl                = "/bcsproject/v1/projects/%s/clusters/%s/namespaces/%s"
+	createNamespaceCallbackUrl  = "/bcsproject/v1/projects/%s/clusters/%s/namespaces/%s/callback/create"
+	deleteNamespaceCallbackUrl  = "/bcsproject/v1/projects/%s/clusters/%s/namespaces/%s/callback/delete"
+	updateNamespaceCallbackUrl  = "/bcsproject/v1/projects/%s/clusters/%s/namespaces/%s/callback/update"
+	updateNamespaceVariablesUrl = "/bcsproject/v1/projects/%s/clusters/%s/namespaces/%s/variables"
 )
 
 type (
@@ -65,28 +66,21 @@ type (
 		} `json:"variables,omitempty"`
 	}
 
+	// UpdateNamespaceTemplate 更新命名空间时编辑器输出的内容
+	UpdateNamespaceTemplate struct {
+		UpdateNamespaceRequest
+		Variable []Data `json:"variable"`
+	}
+
 	UpdateNamespaceRequest struct {
-		Name        string          `json:"name,omitempty"`
-		Status      string          `json:"status,omitempty"`
-		CreateTime  string          `json:"createTime,omitempty"`
-		Used        Quota           `json:"-"`
-		Quota       Quota           `json:"quota"`
-		Labels      []Labels        `json:"labels,omitempty"`
-		Annotations []Annotations   `json:"annotations,omitempty"`
-		Variables   []VariableValue `json:"variables"`
-		ProjectCode string          `json:"projectCode,omitempty"`
-		ClusterID   string          `json:"clusterID,omitempty"`
+		ProjectCode string        `json:"projectCode"`
+		ClusterID   string        `json:"clusterID"`
+		Name        string        `json:"name"`
+		Quota       Quota         `json:"quota"`
+		Labels      []Labels      `json:"labels,omitempty"`
+		Annotations []Annotations `json:"annotations,omitempty"`
 	}
-	VariableValue struct {
-		Id          string `json:"id,omitempty"`
-		Key         string `json:"key,omitempty"`
-		Name        string `json:"name,omitempty"`
-		ClusterID   string `json:"clusterID,omitempty"`
-		ClusterName string `json:"clusterName,omitempty"`
-		Namespace   string `json:"namespace,omitempty"`
-		Value       string `json:"value,omitempty"`
-		Scope       string `json:"scope,omitempty"`
-	}
+
 	Labels struct {
 		Key   string `json:"key,omitempty"`
 		Value string `json:"value,omitempty"`
@@ -119,8 +113,26 @@ type (
 		ApplyInCluster bool   `json:"applyInCluster"`
 	}
 
+	UpdateNamespaceVariablesReq struct {
+		ProjectCode string `json:"projectCode"`
+		ClusterID   string `json:"clusterID"`
+		Namespace   string `json:"namespace"`
+		Data        []Data `json:"data"`
+	}
+	Data struct {
+		ID          string `json:"id"`
+		Key         string `json:"key"`
+		Name        string `json:"name"`
+		ClusterID   string `json:"clusterID"`
+		ClusterName string `json:"clusterName"`
+		Namespace   string `json:"namespace"`
+		Value       string `json:"value"`
+		Scope       string `json:"scope"`
+	}
+
+	// Variable 更新时做对比用
 	Variable struct {
-		Id          string `json:"id"`
+		ID          string `json:"id"`
 		Key         string `json:"key"`
 		Name        string `json:"name"`
 		ClusterID   string `json:"clusterID"`
@@ -238,6 +250,21 @@ func (p *ProjectManagerClient) UpdateNamespaceCallback(in *NamespaceCallbackRequ
 	}
 	if resp != nil && resp.Code != 0 {
 		return nil, fmt.Errorf("update namespaces itsm callback response code not 0 but %d: %s", resp.Code, resp.Message)
+	}
+	return resp, nil
+}
+
+func (p *ProjectManagerClient) UpdateNamespaceVariables(in *UpdateNamespaceVariablesReq) (*bcsproject.UpdateNamespacesVariablesResponse, error) {
+	bs, err := p.do(fmt.Sprintf(updateNamespaceVariablesUrl, in.ProjectCode, in.ClusterID, in.Namespace), http.MethodPut, nil, in)
+	if err != nil {
+		return nil, fmt.Errorf("update namespaces variables failed: %v", err)
+	}
+	resp := new(bcsproject.UpdateNamespacesVariablesResponse)
+	if err := json.Unmarshal(bs, resp); err != nil {
+		return nil, errors.Wrapf(err, "update namespaces variables unmarshal failed with response '%s'", string(bs))
+	}
+	if resp != nil && resp.Code != 0 {
+		return nil, fmt.Errorf("update namespaces variables response code not 0 but %d: %s", resp.Code, resp.Message)
 	}
 	return resp, nil
 }
