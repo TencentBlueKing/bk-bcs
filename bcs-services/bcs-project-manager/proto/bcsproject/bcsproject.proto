@@ -476,6 +476,10 @@ message ListProjectsRequest{
     title: "all", 
     description: "表示查询全量数据"
   }];
+  string businessID = 9[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "businessID", 
+    description: "业务ID"
+  }];
 }
 
 message ListProjectData{

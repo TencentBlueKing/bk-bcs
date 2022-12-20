@@ -82,6 +82,9 @@ func (la *ListAction) listProjects() ([]*pm.Project, int64, error) {
 		if la.req.Kind != "" {
 			condM["kind"] = []string{la.req.Kind}
 		}
+		if la.req.BusinessID != "" {
+			condM["businessID"] = []string{la.req.GetBusinessID()}
+		}
 		cond = operator.NewLeafCondition(operator.In, condM)
 	}
 

@@ -163,6 +163,13 @@
             "required": false,
             "type": "boolean",
             "format": "boolean"
+          },
+          {
+            "name": "businessID",
+            "description": "businessID. 业务ID",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [

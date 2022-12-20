@@ -1047,6 +1047,8 @@ func (m *ListProjectsRequest) validate(all bool) error {
 
 	// no validation rules for All
 
+	// no validation rules for BusinessID
+
 	if len(errors) > 0 {
 		return ListProjectsRequestMultiError(errors)
 	}
