@@ -119,7 +119,7 @@ export default defineComponent({
 
     const { isSingleCluster, curClusterId, clusterList } = useCluster();
 
-    const isDebugCluster = computed(() => clusterList.value.find(item => item.clusterID === clusterId.value || item.clusterID === curClusterId.value)?.environment !== 'prod');
+    const isDebugCluster = computed(() => clusterList.value.find(item => item.clusterID === params.value.clusterId || item.clusterID === curClusterId.value)?.environment !== 'prod');
     const shortcuts = ref([
       {
         text: $i18n.t('近1小时'),
@@ -329,6 +329,7 @@ export default defineComponent({
       eventLoading.value = true;
       const [start, end] = params.value.date;
       // todo 临时处理
+      console.log(isDebugCluster.value);
       const eventAction = isDebugCluster.value ? uatStorageEvents : storageEvents;
       const { data = [], total = 0 } = await eventAction({
         offset: (pagination.value.current - 1) * pagination.value.limit,
