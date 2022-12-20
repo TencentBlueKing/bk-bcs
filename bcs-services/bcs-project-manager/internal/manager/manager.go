@@ -39,6 +39,7 @@ func NewNamespaceManager(ctx context.Context, model store.ProjectModel) *Namespa
 	return mgr
 }
 
+// Run run namespace manager
 func (n *NamespaceManager) Run() {
 	logging.Info("start sync namespace records with itsm")
 	interval := time.NewTicker(30 * time.Second)
@@ -55,6 +56,7 @@ func (n *NamespaceManager) Run() {
 	}
 }
 
+// SyncNamespaceItsmStatus task to sync namespace status with itsm tickets
 func (n *NamespaceManager) SyncNamespaceItsmStatus() {
 	namespaces, err := n.model.ListNamespaces(n.ctx)
 	if err != nil {

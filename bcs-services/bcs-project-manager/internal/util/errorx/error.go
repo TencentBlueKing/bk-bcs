@@ -102,6 +102,7 @@ func NewRequestITSMErr(msg ...interface{}) *ProjectError {
 	return NewProjectError(RequestITSMErr, RequestITSMErrMsg, msg...)
 }
 
+// NewReadableErr return user-friendly error
 func NewReadableErr(code uint32, msg string) *ProjectError {
 	return NewProjectError(code, msg)
 }

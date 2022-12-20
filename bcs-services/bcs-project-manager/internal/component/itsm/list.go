@@ -41,6 +41,7 @@ type ListTicketsResp struct {
 	Data    ListTicketsData `json:"data"`
 }
 
+// ListTicketsData list tickets data
 type ListTicketsData struct {
 	Page      int           `json:"page"`
 	TotalPage int           `json:"total_page"`
@@ -50,6 +51,7 @@ type ListTicketsData struct {
 	Items     []TicketsItem `json:"items"`
 }
 
+// TicketsItem ITSM list tickets item
 type TicketsItem struct {
 	ID            int    `json:"id"`
 	SN            string `json:"sn"`

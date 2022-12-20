@@ -16,10 +16,8 @@ package shared
 
 import (
 	"context"
-	"sync"
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
-	"golang.org/x/sync/errgroup"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -43,38 +41,26 @@ func (a *SharedNamespaceAction) ListNamespaces(ctx context.Context,
 	req *proto.ListNamespacesRequest, resp *proto.ListNamespacesResponse) error {
 	retDatas := []*proto.NamespaceData{}
 	// list staging creating namespaces from db
-	stagings, err := a.model.ListNamespacesByItsmTicketType(ctx,
-		req.GetProjectCode(), req.GetClusterID(), []string{nsm.ItsmTicketTypeCreate})
+	stagings, err := a.model.ListNamespacesByItsmTicketType(ctx, req.GetProjectCode(), req.GetClusterID(),
+		[]string{nsm.ItsmTicketTypeCreate, nsm.ItsmTicketTypeUpdate, nsm.ItsmTicketTypeDelete})
 	if err != nil {
 		logging.Error("list staging namespaces failed, err: %s", err.Error())
 		return errorx.NewDBErr(err)
 	}
+	existns := map[string]nsm.Namespace{}
+	creatings := []nsm.Namespace{}
 	for _, staging := range stagings {
-		retData := &proto.NamespaceData{
-			Name: staging.Name,
+		switch staging.ItsmTicketType {
+		case nsm.ItsmTicketTypeCreate:
+			creatings = append(creatings, staging)
+		case nsm.ItsmTicketTypeUpdate:
+			existns[staging.Name] = staging
+		case nsm.ItsmTicketTypeDelete:
+			existns[staging.Name] = staging
 		}
-		if staging.ResourceQuota != nil {
-			retData.Quota = &proto.ResourceQuota{
-				CpuRequests:    staging.ResourceQuota.CPURequests,
-				CpuLimits:      staging.ResourceQuota.CPULimits,
-				MemoryRequests: staging.ResourceQuota.MemoryRequests,
-				MemoryLimits:   staging.ResourceQuota.MemoryLimits,
-			}
-		}
-		variables := []*proto.VariableValue{}
-		for _, variable := range staging.Variables {
-			variables = append(variables, &proto.VariableValue{
-				Id:    variable.VariableID,
-				Key:   variable.Key,
-				Value: variable.Value,
-			})
-		}
-		retData.Variables = variables
-		retData.ItsmTicketSN = staging.ItsmTicketSN
-		retData.ItsmTicketStatus = staging.ItsmTicketStatus
-		retData.ItsmTicketURL = staging.ItsmTicketURL
-		retData.ItsmTicketType = staging.ItsmTicketType
-		retDatas = append(retDatas, retData)
+	}
+	for _, namespace := range creatings {
+		retDatas = append(retDatas, loadListRetDataFromDB(namespace))
 	}
 	// list exists namespaces from cluster
 	client, err := clientset.GetClientGroup().Client(req.GetClusterID())
@@ -88,6 +74,10 @@ func (a *SharedNamespaceAction) ListNamespaces(ctx context.Context,
 		return errorx.NewClusterErr(err)
 	}
 	quotaList, err := client.CoreV1().ResourceQuotas("").List(ctx, metav1.ListOptions{})
+	if err != nil {
+		logging.Error("list ResourceQuota in cluster %s failed, err: %s", req.GetClusterID(), err.Error())
+		return errorx.NewClusterErr(err)
+	}
 	quotaMap := map[string]corev1.ResourceQuota{}
 	for _, quota := range quotaList.Items {
 		if quota.GetName() == quota.GetNamespace() {
@@ -100,45 +90,9 @@ func (a *SharedNamespaceAction) ListNamespaces(ctx context.Context,
 		logging.Error("batch list variables failed, err: %s", err.Error())
 		return errorx.NewClusterErr(err)
 	}
-	// inject staging updating info to exist namespace
-	modifyStaggings, err := a.model.ListNamespacesByItsmTicketType(ctx, req.GetProjectCode(), req.GetClusterID(),
-		[]string{nsm.ItsmTicketTypeUpdate, nsm.ItsmTicketTypeDelete})
-	existns := map[string]nsm.Namespace{}
-	for _, modifyStagging := range modifyStaggings {
-		existns[modifyStagging.Name] = modifyStagging
-	}
-	lock := &sync.Mutex{}
-	g, ctx := errgroup.WithContext(ctx)
-	for _, item := range namespaces {
-		namespace := item
-		g.Go(func() error {
-			retData := &proto.NamespaceData{
-				Name:       namespace.GetName(),
-				Uid:        string(namespace.GetUID()),
-				CreateTime: namespace.GetCreationTimestamp().Format(config.TimeLayout),
-				Status:     string(namespace.Status.Phase),
-			}
-			// get quota
-			if quota, ok := quotaMap[namespace.GetName()]; ok {
-				retData.Quota, retData.Used, retData.CpuUseRate, retData.MemoryUseRate =
-					quotautils.TransferToProto(&quota)
-			}
-			// get variables
-			retData.Variables = variablesMap[namespace.GetName()]
-			if ns, ok := existns[retData.GetName()]; ok {
-				retData.ItsmTicketType = ns.ItsmTicketType
-				retData.ItsmTicketSN = ns.ItsmTicketSN
-				retData.ItsmTicketStatus = ns.ItsmTicketStatus
-				retData.ItsmTicketURL = ns.ItsmTicketURL
-			}
-			lock.Lock()
-			defer lock.Unlock()
-			retDatas = append(retDatas, retData)
-			return nil
-		})
-	}
-	g.Wait()
+	retDatas = append(retDatas, loadRetDatasFromCluster(namespaces, variablesMap, quotaMap, existns)...)
 	resp.Data = retDatas
+
 	go func() {
 		if err := common.SyncNamespace(req.GetProjectCode(), req.GetClusterID(), namespaces); err != nil {
 			logging.Error("sync shared namespaces %s/%s failed, err:%s",
@@ -228,4 +182,60 @@ func batchListNamespaceVariables(ctx context.Context,
 		}
 	}
 	return variablesMap, nil
+}
+
+func loadListRetDataFromDB(namespace nsm.Namespace) *proto.NamespaceData {
+	retData := &proto.NamespaceData{
+		Name: namespace.Name,
+	}
+	if namespace.ResourceQuota != nil {
+		retData.Quota = &proto.ResourceQuota{
+			CpuRequests:    namespace.ResourceQuota.CPURequests,
+			CpuLimits:      namespace.ResourceQuota.CPULimits,
+			MemoryRequests: namespace.ResourceQuota.MemoryRequests,
+			MemoryLimits:   namespace.ResourceQuota.MemoryLimits,
+		}
+	}
+	variables := []*proto.VariableValue{}
+	for _, variable := range namespace.Variables {
+		variables = append(variables, &proto.VariableValue{
+			Id:    variable.VariableID,
+			Key:   variable.Key,
+			Value: variable.Value,
+		})
+	}
+	retData.Variables = variables
+	retData.ItsmTicketSN = namespace.ItsmTicketSN
+	retData.ItsmTicketStatus = namespace.ItsmTicketStatus
+	retData.ItsmTicketURL = namespace.ItsmTicketURL
+	retData.ItsmTicketType = namespace.ItsmTicketType
+	return retData
+}
+
+func loadRetDatasFromCluster(namespaces []corev1.Namespace, variablesMap map[string][]*proto.VariableValue,
+	quotaMap map[string]corev1.ResourceQuota, existns map[string]nsm.Namespace) []*proto.NamespaceData {
+	retDatas := []*proto.NamespaceData{}
+	for _, namespace := range namespaces {
+		retData := &proto.NamespaceData{
+			Name:       namespace.GetName(),
+			Uid:        string(namespace.GetUID()),
+			CreateTime: namespace.GetCreationTimestamp().Format(config.TimeLayout),
+			Status:     string(namespace.Status.Phase),
+		}
+		// get quota
+		if quota, ok := quotaMap[namespace.GetName()]; ok {
+			retData.Quota, retData.Used, retData.CpuUseRate, retData.MemoryUseRate =
+				quotautils.TransferToProto(&quota)
+		}
+		// get variables
+		retData.Variables = variablesMap[namespace.GetName()]
+		if ns, ok := existns[retData.GetName()]; ok {
+			retData.ItsmTicketType = ns.ItsmTicketType
+			retData.ItsmTicketSN = ns.ItsmTicketSN
+			retData.ItsmTicketStatus = ns.ItsmTicketStatus
+			retData.ItsmTicketURL = ns.ItsmTicketURL
+		}
+		retDatas = append(retDatas, retData)
+	}
+	return retDatas
 }

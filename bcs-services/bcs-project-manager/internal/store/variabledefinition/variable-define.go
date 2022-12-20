@@ -99,6 +99,7 @@ func GetCategoryName(category string) string {
 	}
 }
 
+// SystemVariables system buildin variables
 var SystemVariables = map[string]*VariableDefinition{
 	"SYS_NON_STANDARD_DATA_ID": {
 		ID:       "variable-sys-non-standard-data-id",
@@ -151,6 +152,7 @@ var SystemVariables = map[string]*VariableDefinition{
 	},
 }
 
+// FilterSystemVariablesByScope filter system variables by scope
 func FilterSystemVariablesByScope(scope []string) []*VariableDefinition {
 	variables := []*VariableDefinition{}
 	for _, v := range SystemVariables {

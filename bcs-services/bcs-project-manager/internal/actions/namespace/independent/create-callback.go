@@ -20,6 +20,8 @@ import (
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/proto/bcsproject"
 )
 
-func (c *IndependentNamespaceAction) CreateNamespaceCallback(ctx context.Context, req *proto.NamespaceCallbackRequest, resp *proto.NamespaceCallbackResponse) error {
+// CreateNamespaceCallback implements CreateNamespaceCallback interface for independent namespace
+func (c *IndependentNamespaceAction) CreateNamespaceCallback(ctx context.Context,
+	req *proto.NamespaceCallbackRequest, resp *proto.NamespaceCallbackResponse) error {
 	return nil
 }

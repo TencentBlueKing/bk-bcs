@@ -20,6 +20,7 @@ import (
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/proto/bcsproject"
 )
 
+// WithdrawNamespace implements WithdrawNamespace interface for independent namespace
 func (c *IndependentNamespaceAction) WithdrawNamespace(ctx context.Context,
 	req *proto.WithdrawNamespaceRequest, resp *proto.WithdrawNamespaceResponse) error {
 	return nil

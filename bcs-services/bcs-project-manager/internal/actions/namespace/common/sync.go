@@ -31,6 +31,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/errorx"
 )
 
+// SyncNamespace sync namespaces in paas-cc with apiserver
 func SyncNamespace(projectCode, clusterID string, namespaces []corev1.Namespace) error {
 	etcdCli, err := etcd.GetClient()
 	if err != nil {

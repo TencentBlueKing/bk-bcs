@@ -29,6 +29,7 @@ import (
 
 var etcdClient *clientv3.Client
 
+// Init init etcd client singleton
 func Init(conf *conf.EtcdConfig) error {
 	etcdEndpoints := stringx.SplitString(conf.EtcdEndpoints)
 	etcdSecure := false
@@ -57,6 +58,7 @@ func Init(conf *conf.EtcdConfig) error {
 	return nil
 }
 
+// GetClient return etcd client singleton
 func GetClient() (*clientv3.Client, error) {
 	if etcdClient == nil {
 		return nil, errors.New("etcd client not inited")
@@ -64,6 +66,7 @@ func GetClient() (*clientv3.Client, error) {
 	return etcdClient, nil
 }
 
+// Close close etcd connection
 func Close() {
 	if etcdClient != nil {
 		etcdClient.Close()

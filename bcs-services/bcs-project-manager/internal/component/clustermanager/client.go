@@ -151,6 +151,7 @@ func NewClusterManager(config *Config) (ClusterManagerClient, func()) {
 	return NewClusterManagerClient(conn), func() { conn.Close() }
 }
 
+// GetCluster get cluster by clusterID
 func GetCluster(clusterID string) (*Cluster, error) {
 	cli, closeCon, err := GetClusterManagerClient()
 	if err != nil {
@@ -173,6 +174,7 @@ func GetCluster(clusterID string) (*Cluster, error) {
 	return resp.GetData(), nil
 }
 
+// ListClusters list clusters by projectID
 func ListClusters(projectID string) ([]*Cluster, error) {
 	cli, closeCon, err := GetClusterManagerClient()
 	if err != nil {

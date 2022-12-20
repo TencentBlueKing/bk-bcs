@@ -120,7 +120,6 @@ func New(db drivers.DB) *ModelNamespace {
 }
 
 // ensureTable xxx
-// ensure table
 func (m *ModelNamespace) ensureTable(ctx context.Context) error {
 	m.isTableEnsuredMutex.RLock()
 	if m.isTableEnsured {

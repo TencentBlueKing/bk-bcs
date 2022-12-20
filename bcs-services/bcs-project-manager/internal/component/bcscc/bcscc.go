@@ -60,6 +60,7 @@ type listNamespaceData struct {
 	Results []NamespaceData `json:"results"`
 }
 
+// NamespaceData paas-cc namespace entity
 type NamespaceData struct {
 	ID          int    `json:"id"`
 	Name        string `json:"name"`

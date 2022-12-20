@@ -40,30 +40,8 @@ var NamespacePrefix = "ieg-%s-"
 // CreateNamespace implement for CreateNamespace interface
 func (a *SharedNamespaceAction) CreateNamespace(ctx context.Context,
 	req *proto.CreateNamespaceRequest, resp *proto.CreateNamespaceResponse) error {
-	// check is namespace name valid
-	if !strings.HasPrefix(req.GetName(), fmt.Sprintf(NamespacePrefix, req.GetProjectCode())) {
-		return errorx.NewReadableErr(errorx.ParamErr, fmt.Sprintf("共享集群命名空间必须以 ieg-[projectCode] 开头"))
-	}
-	// check is namespace name exists
-	stagings, err := a.model.ListNamespacesByItsmTicketType(ctx,
-		req.GetProjectCode(), req.GetClusterID(), []string{nsm.ItsmTicketTypeCreate})
-	for _, staging := range stagings {
-		if staging.Name == req.GetName() {
-			return errorx.NewReadableErr(errorx.ParamErr, fmt.Sprintf("命名空间 [%s] 已存在", req.GetName()))
-		}
-	}
-	client, err := clientset.GetClientGroup().Client(req.GetClusterID())
-	if err != nil {
-		logging.Error("get clientset for cluster %s failed, err: %s", req.GetClusterID(), err.Error())
+	if err := a.validateCreate(ctx, req.GetProjectCode(), req.GetClusterID(), req.GetName()); err != nil {
 		return err
-	}
-	_, err = client.CoreV1().Namespaces().Get(ctx, req.GetName(), metav1.GetOptions{})
-	if err == nil {
-		return errorx.NewReadableErr(errorx.ParamErr, fmt.Sprintf("命名空间 [%s] 已存在", req.GetName()))
-	}
-	if !errors.IsNotFound(err) {
-		logging.Error("get namespace in cluster %s failed, err: %s", req.GetClusterID(), err.Error())
-		return errorx.NewClusterErr(err.Error())
 	}
 	var username string
 	if authUser, gErr := middleware.GetUserFromContext(ctx); gErr == nil {
@@ -118,6 +96,35 @@ func (a *SharedNamespaceAction) CreateNamespace(ctx context.Context,
 	if err := a.model.CreateNamespace(ctx, namespace); err != nil {
 		logging.Error("create namespace %s/%s in db failed, err: %s", req.GetClusterID(), req.GetName(), err.Error())
 		return err
+	}
+	return nil
+}
+
+func (a *SharedNamespaceAction) validateCreate(ctx context.Context, projectCode, clusterID, namespace string) error {
+	// check is namespace name valid
+	if !strings.HasPrefix(namespace, fmt.Sprintf(NamespacePrefix, projectCode)) {
+		return errorx.NewReadableErr(errorx.ParamErr, fmt.Sprintf("共享集群命名空间必须以 ieg-[projectCode] 开头"))
+	}
+	// check is namespace name exists
+	stagings, err := a.model.ListNamespacesByItsmTicketType(ctx,
+		projectCode, clusterID, []string{nsm.ItsmTicketTypeCreate})
+	for _, staging := range stagings {
+		if staging.Name == namespace {
+			return errorx.NewReadableErr(errorx.ParamErr, fmt.Sprintf("命名空间 [%s] 已存在", namespace))
+		}
+	}
+	client, err := clientset.GetClientGroup().Client(clusterID)
+	if err != nil {
+		logging.Error("get clientset for cluster %s failed, err: %s", clusterID, err.Error())
+		return err
+	}
+	_, err = client.CoreV1().Namespaces().Get(ctx, namespace, metav1.GetOptions{})
+	if err == nil {
+		return errorx.NewReadableErr(errorx.ParamErr, fmt.Sprintf("命名空间 [%s] 已存在", namespace))
+	}
+	if !errors.IsNotFound(err) {
+		logging.Error("get namespace in cluster %s failed, err: %s", clusterID, err.Error())
+		return errorx.NewClusterErr(err.Error())
 	}
 	return nil
 }

@@ -35,51 +35,29 @@ import (
 // GetNamespace implement for GetNamespace interface
 func (a *SharedNamespaceAction) GetNamespace(ctx context.Context,
 	req *proto.GetNamespaceRequest, resp *proto.GetNamespaceResponse) error {
-	staging, err := a.model.GetNamespaceByItsmTicketType(ctx,
-		req.GetProjectCode(), req.GetClusterID(), req.GetNamespace(), nsm.ItsmTicketTypeCreate)
+	projectCode := req.GetProjectCode()
+	clusterID := req.GetClusterID()
+	name := req.GetNamespace()
+	// get approving namespace from db
+	staging, err := a.model.GetNamespace(ctx, projectCode, clusterID, name)
 	if err != nil && err != drivers.ErrTableRecordNotFound {
-		logging.Error("get staging namespace failed, err: %s", err.Error())
-		return errorx.NewDBErr(err)
+		logging.Error("get namespace %s/%s/%s failed, err: %s", projectCode, clusterID, name, err.Error())
+		return err
 	}
-	if err == nil {
-		// get staging namespace from db
-		retData := &proto.NamespaceData{
-			Name: staging.Name,
-		}
-		if staging.ResourceQuota != nil {
-			retData.Quota = &proto.ResourceQuota{
-				CpuRequests:    staging.ResourceQuota.CPURequests,
-				CpuLimits:      staging.ResourceQuota.CPULimits,
-				MemoryRequests: staging.ResourceQuota.MemoryRequests,
-				MemoryLimits:   staging.ResourceQuota.MemoryLimits,
-			}
-		}
-		variables := []*proto.VariableValue{}
-		for _, variable := range staging.Variables {
-			variables = append(variables, &proto.VariableValue{
-				Id:    variable.VariableID,
-				Key:   variable.Key,
-				Value: variable.Value,
-			})
-		}
-		retData.Variables = variables
-		retData.ItsmTicketSN = staging.ItsmTicketSN
-		retData.ItsmTicketStatus = staging.ItsmTicketStatus
-		retData.ItsmTicketURL = staging.ItsmTicketURL
-		retData.ItsmTicketType = staging.ItsmTicketType
-		resp.Data = retData
+	if staging != nil && staging.ItsmTicketType == nsm.ItsmTicketTypeCreate {
+		resp.Data = constructCreatingNamespace(staging)
 		return nil
 	}
 	// get exist namespaces from cluster
-	client, err := clientset.GetClientGroup().Client(req.GetClusterID())
+	client, err := clientset.GetClientGroup().Client(clusterID)
 	if err != nil {
-		logging.Error("get clientset for cluster %s failed, err: %s", req.GetClusterID(), err.Error())
+		logging.Error("get clientset for cluster %s failed, err: %s", clusterID, err.Error())
 		return err
 	}
-	namespace, err := client.CoreV1().Namespaces().Get(ctx, req.GetNamespace(), metav1.GetOptions{})
+	namespace, err := client.CoreV1().Namespaces().Get(ctx, name, metav1.GetOptions{})
 	if err != nil && !errors.IsNotFound(err) {
 		logging.Error("get namespace %s in cluster %s failed, err: %s",
-			req.GetNamespace(), req.GetClusterID(), err.Error())
+			name, clusterID, err.Error())
 		return err
 	}
 	if errors.IsNotFound(err) {
@@ -92,38 +70,24 @@ func (a *SharedNamespaceAction) GetNamespace(ctx context.Context,
 		Status:     string(namespace.Status.Phase),
 	}
 	// get quota
-	quota, err := getNamespaceQuota(ctx, req.GetProjectCode(), req.GetClusterID(), namespace.GetName(), client)
-	if err != nil {
+	if quota, err := getNamespaceQuota(ctx, projectCode, clusterID, namespace.GetName(), client); err != nil {
 		return err
-	}
-	if quota != nil {
+	} else if quota != nil {
 		retData.Quota, retData.Used, retData.CpuUseRate, retData.MemoryUseRate = quotautils.TransferToProto(quota)
 	}
 	// get variables
-	variables, err := listNamespaceVariables(ctx, req.GetProjectCode(), req.GetClusterID(), namespace.GetName())
-	if err != nil {
+	if variables, lErr := listNamespaceVariables(ctx, projectCode, clusterID, namespace.GetName()); lErr != nil {
 		logging.Error("get namespace %s/%s variables failed, err: %s",
-			req.GetClusterID(), namespace.GetName(), err.Error())
-		return errorx.NewDBErr(err.Error())
+			clusterID, namespace.GetName(), lErr.Error())
+		return errorx.NewDBErr(lErr.Error())
+	} else {
+		retData.Variables = variables
 	}
-	retData.Variables = variables
-	modifyStagging, err := a.model.GetNamespaceByItsmTicketType(ctx, req.GetProjectCode(), req.GetClusterID(), req.GetNamespace(),
-		nsm.ItsmTicketTypeUpdate)
-	if modifyStagging != nil {
-
-		retData.ItsmTicketType = modifyStagging.ItsmTicketType
-		retData.ItsmTicketSN = modifyStagging.ItsmTicketSN
-		retData.ItsmTicketStatus = modifyStagging.ItsmTicketStatus
-		retData.ItsmTicketURL = modifyStagging.ItsmTicketURL
-	}
-	deleteStagging, err := a.model.GetNamespaceByItsmTicketType(ctx, req.GetProjectCode(), req.GetClusterID(), req.GetNamespace(),
-		nsm.ItsmTicketTypeDelete)
-	if deleteStagging != nil {
-
-		retData.ItsmTicketType = deleteStagging.ItsmTicketType
-		retData.ItsmTicketSN = deleteStagging.ItsmTicketSN
-		retData.ItsmTicketStatus = deleteStagging.ItsmTicketStatus
-		retData.ItsmTicketURL = deleteStagging.ItsmTicketURL
+	if staging != nil {
+		retData.ItsmTicketType = staging.ItsmTicketType
+		retData.ItsmTicketSN = staging.ItsmTicketSN
+		retData.ItsmTicketStatus = staging.ItsmTicketStatus
+		retData.ItsmTicketURL = staging.ItsmTicketURL
 	}
 	resp.Data = retData
 	return nil
@@ -141,4 +105,32 @@ func getNamespaceQuota(ctx context.Context, projectCode, clusterID, namespace st
 		return nil, nil
 	}
 	return quota, nil
+}
+
+func constructCreatingNamespace(staging *nsm.Namespace) *proto.NamespaceData {
+	retData := &proto.NamespaceData{
+		Name: staging.Name,
+	}
+	if staging.ResourceQuota != nil {
+		retData.Quota = &proto.ResourceQuota{
+			CpuRequests:    staging.ResourceQuota.CPURequests,
+			CpuLimits:      staging.ResourceQuota.CPULimits,
+			MemoryRequests: staging.ResourceQuota.MemoryRequests,
+			MemoryLimits:   staging.ResourceQuota.MemoryLimits,
+		}
+	}
+	variables := []*proto.VariableValue{}
+	for _, variable := range staging.Variables {
+		variables = append(variables, &proto.VariableValue{
+			Id:    variable.VariableID,
+			Key:   variable.Key,
+			Value: variable.Value,
+		})
+	}
+	retData.Variables = variables
+	retData.ItsmTicketSN = staging.ItsmTicketSN
+	retData.ItsmTicketStatus = staging.ItsmTicketStatus
+	retData.ItsmTicketURL = staging.ItsmTicketURL
+	retData.ItsmTicketType = staging.ItsmTicketType
+	return retData
 }
