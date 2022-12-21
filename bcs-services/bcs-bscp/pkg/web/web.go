@@ -19,6 +19,7 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"net/url"
+	"path"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/tcp/listener"
 	"github.com/gin-contrib/cors"
@@ -28,6 +29,7 @@ import (
 	"k8s.io/klog/v2"
 
 	bscp "bscp.io"
+	"bscp.io/pkg/config"
 )
 
 // WebServer :
@@ -95,34 +97,29 @@ func (w *WebServer) newRoutes(engine *gin.Engine) {
 	// 注册模板和静态资源
 	engine.SetHTMLTemplate(bscp.WebTemplate())
 
-	// router.Group(routePrefix).StaticFS("/web/static", http.FS(web.WebStatic()))
-	engine.Group("").StaticFS("/static", http.FS(bscp.WebStatic()))
-
-	// 正确路由
+	engine.Group("").StaticFS("/web", http.FS(bscp.WebStatic()))
 	engine.GET("", w.IndexHandler)
 
-	// engine.Any("/backend/*path", ReverseAPIHandler("bcs_saas_api_url", config.G.FrontendConf.Host.DevOpsBCSAPIURL))
-	// engine.Any("/bcsapi/*path", ReverseAPIHandler("bcs_host", config.G.BCS.Host))
+	if config.G.Web.RoutePrefix != "" {
+		engine.Group(config.G.Web.RoutePrefix).StaticFS("/web", http.FS(bscp.WebStatic()))
+		engine.Group(config.G.Web.RoutePrefix).GET("", w.IndexHandler)
+	}
 
 	// vue 自定义路由, 前端返回404
-	// engine.NoRoute(w.IndexHandler)
+	engine.NoRoute(w.IndexHandler)
 }
 
 // IndexHandler Vue 模板渲染
 func (w *WebServer) IndexHandler(c *gin.Context) {
 	data := gin.H{
-		"STATIC_URL":         "",
-		"SITE_URL":           "",
-		"RUN_ENV":            "",
-		"DEVOPS_BCS_API_URL": "",
-		"BCS_API_HOST":       "",
-		"BK_CC_HOST":         "",
+		"BK_STATIC_URL": path.Join(config.G.Web.RoutePrefix, "/web"),
+		"RUN_ENV":       config.G.Base.RunEnv,
+		"BK_APP_CODE":   config.G.Base.AppCode,
+		"BK_APP_SECRET": config.G.Base.AppSecret,
+		"BK_BCS_API":    config.G.BCS.Host,
+		"BK_CC_HOST":    "",
 	}
 
-	// if config.G.IsDevMode() {
-	// 	data["DEVOPS_BCS_API_URL"] = fmt.Sprintf("%s/backend", "")
-	// 	data["BCS_API_HOST"] = ""
-	// }
 	c.HTML(http.StatusOK, "index.html", data)
 }
 

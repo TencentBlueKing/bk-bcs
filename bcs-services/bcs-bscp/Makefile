@@ -112,3 +112,7 @@ build_frontend:
 .PHONY: build_ui
 build_ui:
 	${GOBUILD} ${LDFLAG} -o bscp-ui ./cmd/ui
+
+.PHONY: docker
+docker:
+	@docker build -t bcs-bscp:latest .

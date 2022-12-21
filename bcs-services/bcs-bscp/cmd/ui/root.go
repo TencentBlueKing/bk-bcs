@@ -30,6 +30,7 @@ import (
 	"go.uber.org/automaxprocs/maxprocs"
 	"k8s.io/klog/v2"
 
+	"bscp.io/pkg/config"
 	"bscp.io/pkg/web"
 )
 
@@ -37,13 +38,13 @@ var (
 	// Used for flags.
 	cfgFile       string
 	httpAddress   string
-	appName       = "bcs-ui"
+	appName       = "bcs-bscp-ui"
 	podIPsEnv     = "POD_IPs"        // 双栈监听环境变量
 	ipv6Interface = "IPV6_INTERFACE" // ipv6本地网关地址
 
 	rootCmd = &cobra.Command{
 		Use:   appName,
-		Short: "bcs ui server",
+		Short: "bcs bscp ui server",
 	}
 )
 
@@ -95,7 +96,7 @@ func Execute() {
 }
 
 func init() {
-	// cobra.OnInitialize(initConfig)
+	cobra.OnInitialize(initConfig)
 
 	// 不开启 自动排序
 	cobra.EnableCommandSorting = false
@@ -131,11 +132,15 @@ func initConfig() {
 		viper.AddConfigPath(home)
 		viper.AddConfigPath(filepath.Join(cwd, "etc"))
 
-		viper.SetConfigName("bcs-ui")
+		viper.SetConfigName("bcs-bscp")
 		viper.SetConfigType("yml")
 	}
 
 	if err := viper.ReadInConfig(); err != nil {
+		cobra.CheckErr(err)
+	}
+
+	if err := config.G.ReadFromViper(viper.GetViper()); err != nil {
 		cobra.CheckErr(err)
 	}
 
