@@ -11,7 +11,7 @@
  *
  */
 
-package render
+package get
 
 import (
 	"context"
@@ -27,44 +27,41 @@ import (
 )
 
 var (
-	clusterID          string
-	namespace          string
-	renderVariableLong = templates.LongDesc(i18n.T(`
-		render variable's value under a specific cluster, namespace.`))
+	getClustersNamespaceLong = templates.LongDesc(i18n.T(`
+		Display one or many project clusters namespaces.
+		Prints a table of the most important information about the specified resources.`))
 
-	renderVariableExample = templates.Examples(i18n.T(`
-		# render variable's value
-		kubectl-bcs-project-manager render variable`))
+	getClustersNamespaceExample = templates.Examples(i18n.T(`
+		# List project all clusters namespaces in ps output format
+		kubectl-bcs-project-manager list namespace --cluster-id=clusterID`))
 )
 
-func renderVariable() *cobra.Command {
-	request := new(pkg.RenderVariablesRequest)
+func listClustersNamespace() *cobra.Command {
+	request := new(pkg.ListNamespacesRequest)
 	cmd := &cobra.Command{
-		Use:                   "variable --cluster-id=clusterID -- [COMMAND] [args...]",
-		DisableFlagsInUseLine: true,
-		Short:                 i18n.T("Render variable's value under a specific cluster, namespace."),
-		Long:                  renderVariableLong,
-		Example:               renderVariableExample,
+		Use:     "namespace --cluster-id=clusterID",
+		Aliases: []string{"n"},
+		Short:   i18n.T("Display one or many project clusters namespaces."),
+		Long:    getClustersNamespaceLong,
+		Example: getClustersNamespaceExample,
 		Run: func(cmd *cobra.Command, args []string) {
 			projectCode := viper.GetString("bcs.project_code")
 			if len(projectCode) == 0 {
 				klog.Infoln("Project code (English abbreviation), global unique, the length cannot exceed 64 characters")
 				return
 			}
-			resp, err := pkg.NewClientWithConfiguration(context.Background()).RenderVariables(request, projectCode, clusterID, namespace)
+			request.ProjectCode = projectCode
+			resp, err := pkg.NewClientWithConfiguration(context.Background()).ListNamespaces(request)
 			if err != nil {
-				klog.Infoln("render variable's value failed: %v", err)
+				klog.Infoln("list clusters namespaces failed: %v", err)
 				return
 			}
-			printer.PrintInJSON(resp)
+			printer.PrintProjectClustersNamespaceInTable(flagOutput, resp)
 		},
 	}
-	cmd.Flags().StringVarP(&clusterID, "cluster-id", "", "",
-		"ClusterID, required")
-	cmd.Flags().StringVarP(&namespace, "namespace", "", "",
-		"Namespace name, required")
-	cmd.Flags().StringVarP(&request.KeyList, "key", "", "",
-		"key. A list of variable key, separated by commas, semicolons or spaces")
+
+	cmd.Flags().StringVarP(&request.ClusterID, "cluster-id", "", "",
+		"cluster ID, required")
 
 	return cmd
 }

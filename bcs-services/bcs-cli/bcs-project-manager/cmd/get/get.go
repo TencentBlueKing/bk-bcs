@@ -29,7 +29,9 @@ var (
 		# List all project in ps output format
 		kubectl-bcs-project-manager list project
 		# List all project variable in ps output format
-		kubectl-bcs-project-manager list variable`))
+		kubectl-bcs-project-manager list variable
+		# List all project clusters namespaces. in ps output format
+		kubectl-bcs-project-manager list namespaces`))
 )
 
 func NewCmdGet() *cobra.Command {
@@ -41,11 +43,12 @@ func NewCmdGet() *cobra.Command {
 	}
 
 	cmd.PersistentFlags().StringVarP(&flagOutput, "output", "o", "wide",
-		"optional parameter: json/wide, json will print the json string to stdout")
+		"optional parameter: json/wide/yaml, output json or yaml to stdout")
 
 	// get subcommands
 	cmd.AddCommand(listProject())
 	cmd.AddCommand(listVariable())
+	cmd.AddCommand(listClustersNamespace())
 
 	return cmd
 }

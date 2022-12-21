@@ -11,7 +11,7 @@
  *
  */
 
-package render
+package delete
 
 import (
 	"context"
@@ -27,44 +27,43 @@ import (
 )
 
 var (
-	clusterID          string
-	namespace          string
-	renderVariableLong = templates.LongDesc(i18n.T(`
-		render variable's value under a specific cluster, namespace.`))
+	deleteClustersNamespaceLong = templates.LongDesc(i18n.T(`
+		Delete project namespace by project id cluster id and name.`))
 
-	renderVariableExample = templates.Examples(i18n.T(`
-		# render variable's value
-		kubectl-bcs-project-manager render variable`))
+	deleteClustersNamespaceExample = templates.Examples(i18n.T(`
+		# Delete a variable with project code cluster id and name
+		kubectl-bcs-project-manager delete namespace --cluster-id=clusterID --name=name`))
 )
 
-func renderVariable() *cobra.Command {
-	request := new(pkg.RenderVariablesRequest)
+func deleteClustersNamespace() *cobra.Command {
+	request := new(pkg.DeleteNamespaceRequest)
 	cmd := &cobra.Command{
-		Use:                   "variable --cluster-id=clusterID -- [COMMAND] [args...]",
+		Use:                   "namespace --cluster-id=clusterID --name=name",
 		DisableFlagsInUseLine: true,
-		Short:                 i18n.T("Render variable's value under a specific cluster, namespace."),
-		Long:                  renderVariableLong,
-		Example:               renderVariableExample,
+		Aliases:               []string{"n"},
+		Short:                 i18n.T("Delete project namespace by project id cluster id and name."),
+		Long:                  deleteClustersNamespaceLong,
+		Example:               deleteClustersNamespaceExample,
 		Run: func(cmd *cobra.Command, args []string) {
 			projectCode := viper.GetString("bcs.project_code")
 			if len(projectCode) == 0 {
 				klog.Infoln("Project code (English abbreviation), global unique, the length cannot exceed 64 characters")
 				return
 			}
-			resp, err := pkg.NewClientWithConfiguration(context.Background()).RenderVariables(request, projectCode, clusterID, namespace)
+			request.ProjectCode = projectCode
+			resp, err := pkg.NewClientWithConfiguration(context.Background()).DeleteNamespace(request)
 			if err != nil {
-				klog.Infoln("render variable's value failed: %v", err)
+				klog.Infoln("delete project namespace failed: %v", err)
 				return
 			}
 			printer.PrintInJSON(resp)
 		},
 	}
-	cmd.Flags().StringVarP(&clusterID, "cluster-id", "", "",
-		"ClusterID, required")
-	cmd.Flags().StringVarP(&namespace, "namespace", "", "",
-		"Namespace name, required")
-	cmd.Flags().StringVarP(&request.KeyList, "key", "", "",
-		"key. A list of variable key, separated by commas, semicolons or spaces")
+
+	cmd.Flags().StringVarP(&request.ClusterID, "cluster-id", "", "",
+		"Cluster ID, required")
+	cmd.Flags().StringVarP(&request.Name, "name", "", "",
+		"namespace name, required")
 
 	return cmd
 }
