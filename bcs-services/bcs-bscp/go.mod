@@ -5,7 +5,7 @@ go 1.17
 require (
 	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20221205083018-bf769e1603a5
 	github.com/bluele/gcache v0.0.2
-	github.com/emicklei/go-restful/v3 v3.7.4
+	github.com/emicklei/go-restful/v3 v3.8.0
 	github.com/gin-contrib/cors v1.4.0
 	github.com/gin-gonic/gin v1.8.1
 	github.com/go-redis/redis/v8 v8.11.4
