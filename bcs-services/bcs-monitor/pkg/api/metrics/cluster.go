@@ -60,10 +60,10 @@ func handleClusterMetric(c *rest.Context, promql string) (interface{}, error) {
 }
 
 // GetClusterOverview 集群概览数据
-// @Summary  集群概览数据
-// @Tags     Metrics
-// @Success  200  {string}  string
-// @Router   /overview [get]
+// @Summary 集群概览数据
+// @Tags    Metrics
+// @Success 200 {string} string
+// @Router  /overview [get]
 func GetClusterOverview(c *rest.Context) (interface{}, error) {
 	params := map[string]interface{}{
 		"clusterId": c.ClusterId,
@@ -103,10 +103,10 @@ func GetClusterOverview(c *rest.Context) (interface{}, error) {
 }
 
 // ClusterCPUUsage 集群 CPU 使用率
-// @Summary  集群 CPU 使用率
-// @Tags     Metrics
-// @Success  200  {string}  string
-// @Router   /cpu_usage [get]
+// @Summary 集群 CPU 使用率
+// @Tags    Metrics
+// @Success 200 {string} string
+// @Router  /cpu_usage [get]
 func ClusterCPUUsage(c *rest.Context) (interface{}, error) {
 	promql := `bcs:cluster:cpu:usage{cluster_id="%<clusterId>s", %<provider>s}`
 
@@ -114,24 +114,58 @@ func ClusterCPUUsage(c *rest.Context) (interface{}, error) {
 
 }
 
+// ClusterCPURequestUsage 集群 CPU 装箱率
+// @Summary 集群 CPU 装箱率
+// @Tags    Metrics
+// @Success 200 {string} string
+// @Router  /cpu_request_usage [get]
+func ClusterCPURequestUsage(c *rest.Context) (interface{}, error) {
+	promql := `bcs:cluster:cpu_request:usage{cluster_id="%<clusterId>s", %<provider>s}`
+
+	return handleClusterMetric(c, promql)
+
+}
+
 // ClusterMemoryUsage 集群内存使用率
-// @Summary  集群内存使用率
-// @Tags     Metrics
-// @Success  200  {string}  string
-// @Router   /memory_usage [get]
+// @Summary 集群内存使用率
+// @Tags    Metrics
+// @Success 200 {string} string
+// @Router  /memory_usage [get]
 func ClusterMemoryUsage(c *rest.Context) (interface{}, error) {
 	promql := `bcs:cluster:memory:usage{cluster_id="%<clusterId>s", %<provider>s}`
 
 	return handleClusterMetric(c, promql)
 }
 
+// ClusterMemoryRequestUsage 集群内存装箱率
+// @Summary 集群内存装箱率
+// @Tags    Metrics
+// @Success 200 {string} string
+// @Router  /memory_request_usage [get]
+func ClusterMemoryRequestUsage(c *rest.Context) (interface{}, error) {
+	promql := `bcs:cluster:memory_request:usage{cluster_id="%<clusterId>s", %<provider>s}`
+
+	return handleClusterMetric(c, promql)
+}
+
 // ClusterDiskUsage 集群磁盘使用率
-// @Summary  集群磁盘使用率
-// @Tags     Metrics
-// @Success  200  {string}  string
-// @Router   /disk_usage [get]
+// @Summary 集群磁盘使用率
+// @Tags    Metrics
+// @Success 200 {string} string
+// @Router  /disk_usage [get]
 func ClusterDiskUsage(c *rest.Context) (interface{}, error) {
 	promql := `bcs:cluster:disk:usage{cluster_id="%<clusterId>s", %<provider>s}`
+
+	return handleClusterMetric(c, promql)
+}
+
+// ClusterDiskioUsage 集群磁盘IO使用率
+// @Summary 集群磁盘IO使用率
+// @Tags    Metrics
+// @Success 200 {string} string
+// @Router  /diskio_usage [get]
+func ClusterDiskioUsage(c *rest.Context) (interface{}, error) {
+	promql := `bcs:cluster:diskio:usage{cluster_id="%<clusterId>s", %<provider>s}`
 
 	return handleClusterMetric(c, promql)
 }

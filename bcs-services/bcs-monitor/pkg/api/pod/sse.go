@@ -32,13 +32,13 @@ const (
 )
 
 // PodLogStream Server Sent Events Handler 连接处理函数
-// @Summary  SSE 实时日志流
-// @Tags     Logs
-// @Param    container_name  query  string  true   "容器名称"
-// @Param    started_at      query  string  false  "开始时间"
-// @Produce  text/event-stream
-// @Success  200  {string}  string
-// @Router   /namespaces/:namespace/pods/:pod/logs/stream [get]
+// @Summary SSE 实时日志流
+// @Tags    Logs
+// @Param   container_name query string true  "容器名称"
+// @Param   started_at     query string false "开始时间"
+// @Produce text/event-stream
+// @Success 200 {string} string
+// @Router  /namespaces/:namespace/pods/:pod/logs/stream [get]
 func PodLogStream(c *rest.Context) {
 	clusterId := c.Param("clusterId")
 	namespace := c.Param("namespace")

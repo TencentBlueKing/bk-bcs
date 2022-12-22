@@ -55,10 +55,10 @@ func handleContainerMetric(c *rest.Context, promql string) (interface{}, error) 
 }
 
 // ContainerCPUUsage 容器 CPU 使用率
-// @Summary  容器 CPU 使用率
-// @Tags     Metrics
-// @Success  200  {string}  string
-// @Router   /namespaces/namespace/pods/:pod/containers/:container/cpu_usage [GET]
+// @Summary 容器 CPU 使用率
+// @Tags    Metrics
+// @Success 200 {string} string
+// @Router  /namespaces/namespace/pods/:pod/containers/:container/cpu_usage [GET]
 func ContainerCPUUsage(c *rest.Context) (interface{}, error) {
 	promql :=
 		`bcs:container:cpu_usage{cluster_id="%<clusterId>s", namespace="%<namespace>s", pod_name=~"%<podName>s", container_name=~"%<containerName>s", %<provider>s}`
@@ -68,10 +68,10 @@ func ContainerCPUUsage(c *rest.Context) (interface{}, error) {
 }
 
 // ContainerMemoryUsed 容器内存使用量
-// @Summary  容器内存使用量
-// @Tags     Metrics
-// @Success  200  {string}  string
-// @Router   /namespaces/namespace/pods/:pod/containers/:container/memory_used [GET]
+// @Summary 容器内存使用量
+// @Tags    Metrics
+// @Success 200 {string} string
+// @Router  /namespaces/namespace/pods/:pod/containers/:container/memory_used [GET]
 func ContainerMemoryUsed(c *rest.Context) (interface{}, error) {
 	promql :=
 		`bcs:container:memory_used{cluster_id="%<clusterId>s", namespace="%<namespace>s", pod_name=~"%<podName>s", container_name=~"%<containerName>s", %<provider>s}`
@@ -80,10 +80,10 @@ func ContainerMemoryUsed(c *rest.Context) (interface{}, error) {
 }
 
 // ContainerCPULimit 容器 CPU 限制
-// @Summary  容器 CPU 限制
-// @Tags     Metrics
-// @Success  200  {string}  string
-// @Router   /namespaces/namespace/pods/:pod/containers/:container/cpu_limit [GET]
+// @Summary 容器 CPU 限制
+// @Tags    Metrics
+// @Success 200 {string} string
+// @Router  /namespaces/namespace/pods/:pod/containers/:container/cpu_limit [GET]
 func ContainerCPULimit(c *rest.Context) (interface{}, error) {
 	promql :=
 		`bcs:container:cpu_limit{cluster_id="%<clusterId>s", namespace="%<namespace>s", pod_name=~"%<podName>s", container_name=~"%<containerName>s", %<provider>s}`
@@ -92,10 +92,10 @@ func ContainerCPULimit(c *rest.Context) (interface{}, error) {
 }
 
 // ContainerMemoryLimit 容器内存限制
-// @Summary  容器内存限制
-// @Tags     Metrics
-// @Success  200  {string}  string
-// @Router   /namespaces/namespace/pods/:pod/containers/:container/memory_limit [GET]
+// @Summary 容器内存限制
+// @Tags    Metrics
+// @Success 200 {string} string
+// @Router  /namespaces/namespace/pods/:pod/containers/:container/memory_limit [GET]
 func ContainerMemoryLimit(c *rest.Context) (interface{}, error) {
 	promql :=
 		`bcs:container:memory_limit{cluster_id="%<clusterId>s", namespace="%<namespace>s", pod_name=~"%<podName>s", container_name=~"%<containerName>s", %<provider>s}`
@@ -105,10 +105,10 @@ func ContainerMemoryLimit(c *rest.Context) (interface{}, error) {
 }
 
 // ContainerDiskReadTotal 容器磁盘读总量
-// @Summary  容器磁盘读总量
-// @Tags     Metrics
-// @Success  200  {string}  string
-// @Router   /namespaces/namespace/pods/:pod/containers/:container/disk_read_total [GET]
+// @Summary 容器磁盘读总量
+// @Tags    Metrics
+// @Success 200 {string} string
+// @Router  /namespaces/namespace/pods/:pod/containers/:container/disk_read_total [GET]
 func ContainerDiskReadTotal(c *rest.Context) (interface{}, error) {
 	promql :=
 		`bcs:container:disk_read_total{cluster_id="%<clusterId>s", namespace="%<namespace>s", pod_name=~"%<podName>s", container_name=~"%<containerName>s", %<provider>s}`
@@ -118,10 +118,10 @@ func ContainerDiskReadTotal(c *rest.Context) (interface{}, error) {
 }
 
 // ContainerDiskWriteTotal 容器磁盘写总量
-// @Summary  容器磁盘写总量
-// @Tags     Metrics
-// @Success  200  {string}  string
-// @Router   /namespaces/namespace/pods/:pod/containers/:container/disk_write_total [GET]
+// @Summary 容器磁盘写总量
+// @Tags    Metrics
+// @Success 200 {string} string
+// @Router  /namespaces/namespace/pods/:pod/containers/:container/disk_write_total [GET]
 func ContainerDiskWriteTotal(c *rest.Context) (interface{}, error) {
 	promql :=
 		`bcs:container:disk_write_total{cluster_id="%<clusterId>s", namespace="%<namespace>s", pod_name=~"%<podName>s", container_name=~"%<containerName>s", %<provider>s}`

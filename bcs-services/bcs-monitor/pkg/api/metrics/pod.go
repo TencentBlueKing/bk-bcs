@@ -54,10 +54,10 @@ func handlePodMetric(c *rest.Context, promql string) (interface{}, error) {
 }
 
 // PodCPUUsage Pod CPU使用率
-// @Summary  Pod CPU使用率
-// @Tags     Metrics
-// @Success  200  {string}  string
-// @Router   /namespaces/:namespace/pods/cpu_usage [POST]
+// @Summary Pod CPU使用率
+// @Tags    Metrics
+// @Success 200 {string} string
+// @Router  /namespaces/:namespace/pods/cpu_usage [POST]
 func PodCPUUsage(c *rest.Context) (interface{}, error) {
 	promql :=
 		`bcs:pod:cpu_usage{cluster_id="%<clusterId>s", namespace="%<namespace>s", pod_name=~"%<podNameList>s", %<provider>s}`
@@ -66,10 +66,10 @@ func PodCPUUsage(c *rest.Context) (interface{}, error) {
 }
 
 // PodMemoryUsed Pod 内存使用量
-// @Summary  Pod 内存使用量
-// @Tags     Metrics
-// @Success  200  {string}  string
-// @Router   /namespaces/:namespace/pods/memory_used [POST]
+// @Summary Pod 内存使用量
+// @Tags    Metrics
+// @Success 200 {string} string
+// @Router  /namespaces/:namespace/pods/memory_used [POST]
 func PodMemoryUsed(c *rest.Context) (interface{}, error) {
 	promql :=
 		`bcs:pod:memory_used{cluster_id="%<clusterId>s", namespace="%<namespace>s", pod_name=~"%<podNameList>s", %<provider>s}`
@@ -78,10 +78,10 @@ func PodMemoryUsed(c *rest.Context) (interface{}, error) {
 }
 
 // PodNetworkReceive 网络接收量
-// @Summary  网络接收量
-// @Tags     Metrics
-// @Success  200  {string}  string
-// @Router   /namespaces/:namespace/pods/network_receive [POST]
+// @Summary 网络接收量
+// @Tags    Metrics
+// @Success 200 {string} string
+// @Router  /namespaces/:namespace/pods/network_receive [POST]
 func PodNetworkReceive(c *rest.Context) (interface{}, error) {
 	promql :=
 		`bcs:pod:network_receive{cluster_id="%<clusterId>s", namespace="%<namespace>s", pod_name=~"%<podNameList>s", %<provider>s}`
@@ -90,10 +90,10 @@ func PodNetworkReceive(c *rest.Context) (interface{}, error) {
 }
 
 // PodNetworkTransmit Pod 网络发送量
-// @Summary  Pod 网络发送量
-// @Tags     Metrics
-// @Success  200  {string}  string
-// @Router   /namespaces/:namespace/pods/network_transmit [POST]
+// @Summary Pod 网络发送量
+// @Tags    Metrics
+// @Success 200 {string} string
+// @Router  /namespaces/:namespace/pods/network_transmit [POST]
 func PodNetworkTransmit(c *rest.Context) (interface{}, error) {
 	promql :=
 		`bcs:pod:network_transmit{cluster_id="%<clusterId>s", namespace="%<namespace>s", pod_name=~"%<podNameList>s", %<provider>s}`

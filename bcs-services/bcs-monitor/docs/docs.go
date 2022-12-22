@@ -16,6 +16,22 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/cpu_request_usage": {
+            "get": {
+                "tags": [
+                    "Metrics"
+                ],
+                "summary": "集群 CPU 装箱率",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/cpu_usage": {
             "get": {
                 "tags": [
@@ -38,6 +54,38 @@ const docTemplate = `{
                     "Metrics"
                 ],
                 "summary": "集群磁盘使用率",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/diskio_usage": {
+            "get": {
+                "tags": [
+                    "Metrics"
+                ],
+                "summary": "集群磁盘IO使用率",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/memory_request_usage": {
+            "get": {
+                "tags": [
+                    "Metrics"
+                ],
+                "summary": "集群内存装箱率",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -353,12 +401,44 @@ const docTemplate = `{
                 }
             }
         },
+        "/nodes/:ip/cpu_request_usage": {
+            "get": {
+                "tags": [
+                    "Metrics"
+                ],
+                "summary": "查询 CPU 装箱率",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/nodes/:ip/cpu_usage": {
             "get": {
                 "tags": [
                     "Metrics"
                 ],
                 "summary": "查询 CPU 使用率",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/nodes/:ip/disk_usage": {
+            "get": {
+                "tags": [
+                    "Metrics"
+                ],
+                "summary": "节点磁盘使用率",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -391,6 +471,22 @@ const docTemplate = `{
                     "Metrics"
                 ],
                 "summary": "节点信息",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/nodes/:ip/memory_request_usage": {
+            "get": {
+                "tags": [
+                    "Metrics"
+                ],
+                "summary": "节点内存装箱率",
                 "responses": {
                     "200": {
                         "description": "OK",

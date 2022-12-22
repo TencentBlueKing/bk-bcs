@@ -175,6 +175,9 @@ func (s *BCSSystemStore) Series(r *storepb.SeriesRequest, srv storepb.Store_Seri
 	case "bcs:cluster:cpu:usage":
 		promSeriesSet, promErr = client.GetClusterCPUUsage(ctx, cluster.ProjectId, cluster.ClusterId,
 			startTime, endTime, stepDuration)
+	case "bcs:cluster:cpu_request:usage":
+		promSeriesSet, promErr = client.GetClusterCPURequestUsage(ctx, cluster.ProjectId, cluster.ClusterId,
+			startTime, endTime, stepDuration)
 	case "bcs:cluster:memory:total":
 		promSeriesSet, promErr = client.GetClusterMemoryTotal(ctx, cluster.ProjectId, cluster.ClusterId,
 			startTime, endTime, stepDuration)
@@ -183,6 +186,9 @@ func (s *BCSSystemStore) Series(r *storepb.SeriesRequest, srv storepb.Store_Seri
 			startTime, endTime, stepDuration)
 	case "bcs:cluster:memory:usage":
 		promSeriesSet, promErr = client.GetClusterMemoryUsage(ctx, cluster.ProjectId, cluster.ClusterId,
+			startTime, endTime, stepDuration)
+	case "bcs:cluster:memory_request:usage":
+		promSeriesSet, promErr = client.GetClusterMemoryRequestUsage(ctx, cluster.ProjectId, cluster.ClusterId,
 			startTime, endTime, stepDuration)
 	case "bcs:cluster:disk:total":
 		promSeriesSet, promErr = client.GetClusterDiskTotal(ctx, cluster.ProjectId, cluster.ClusterId,
@@ -193,6 +199,9 @@ func (s *BCSSystemStore) Series(r *storepb.SeriesRequest, srv storepb.Store_Seri
 	case "bcs:cluster:disk:usage":
 		promSeriesSet, promErr = client.GetClusterDiskUsage(ctx, cluster.ProjectId, cluster.ClusterId,
 			startTime, endTime, stepDuration)
+	case "bcs:cluster:diskio:usage":
+		promSeriesSet, promErr = client.GetClusterDiskioUsage(ctx, cluster.ProjectId, cluster.ClusterId,
+			startTime, endTime, stepDuration)
 	case "bcs:node:info":
 		nodeInfo, err := client.GetNodeInfo(ctx, cluster.ProjectId, cluster.ClusterId, ip, endTime)
 		promErr = err
@@ -200,8 +209,14 @@ func (s *BCSSystemStore) Series(r *storepb.SeriesRequest, srv storepb.Store_Seri
 	case "bcs:node:cpu:usage":
 		promSeriesSet, promErr = client.GetNodeCPUUsage(ctx, cluster.ProjectId, cluster.ClusterId, ip,
 			startTime, endTime, stepDuration)
+	case "bcs:node:cpu_request:usage":
+		promSeriesSet, promErr = client.GetNodeCPURequestUsage(ctx, cluster.ProjectId, cluster.ClusterId, ip,
+			startTime, endTime, stepDuration)
 	case "bcs:node:memory:usage":
 		promSeriesSet, promErr = client.GetNodeMemoryUsage(ctx, cluster.ProjectId, cluster.ClusterId, ip,
+			startTime, endTime, stepDuration)
+	case "bcs:node:memory_request:usage":
+		promSeriesSet, promErr = client.GetNodeMemoryRequestUsage(ctx, cluster.ProjectId, cluster.ClusterId, ip,
 			startTime, endTime, stepDuration)
 	case "bcs:node:disk:usage":
 		promSeriesSet, promErr = client.GetNodeDiskUsage(ctx, cluster.ProjectId, cluster.ClusterId, ip,

@@ -88,8 +88,8 @@ func (a *APIServer) Close() error {
 }
 
 // newRoutes xxx
-// @Title     BCS-Monitor OpenAPI
-// @BasePath  /bcsapi/v4/monitor/api/projects/:projectId/clusters/:clusterId
+// @Title    BCS-Monitor OpenAPI
+// @BasePath /bcsapi/v4/monitor/api/projects/:projectId/clusters/:clusterId
 func (a *APIServer) newRoutes(engine *gin.Engine) {
 	// 添加 X-Request-Id 头部
 	requestIdMiddleware := requestid.New(
@@ -150,14 +150,20 @@ func registerMetricsRoutes(engine *gin.RouterGroup) {
 	{
 		route.GET("/overview", rest.RestHandlerFunc(metrics.GetClusterOverview))
 		route.GET("/cpu_usage", rest.RestHandlerFunc(metrics.ClusterCPUUsage))
+		route.GET("/cpu_request_usage", rest.RestHandlerFunc(metrics.ClusterCPURequestUsage))
 		route.GET("/memory_usage", rest.RestHandlerFunc(metrics.ClusterMemoryUsage))
+		route.GET("/memory_request_usage", rest.RestHandlerFunc(metrics.ClusterMemoryRequestUsage))
 		route.GET("/disk_usage", rest.RestHandlerFunc(metrics.ClusterDiskUsage))
+		route.GET("/diskio_usage", rest.RestHandlerFunc(metrics.ClusterDiskioUsage))
 		route.GET("/nodes/:ip/info", rest.RestHandlerFunc(metrics.GetNodeInfo))
 		route.GET("/nodes/:ip/overview", rest.RestHandlerFunc(metrics.GetNodeOverview))
 		route.GET("/nodes/:ip/cpu_usage", rest.RestHandlerFunc(metrics.GetNodeCPUUsage))
+		route.GET("/nodes/:ip/cpu_request_usage", rest.RestHandlerFunc(metrics.GetNodeCPURequestUsage))
 		route.GET("/nodes/:ip/memory_usage", rest.RestHandlerFunc(metrics.GetNodeMemoryUsage))
+		route.GET("/nodes/:ip/memory_request_usage", rest.RestHandlerFunc(metrics.GetNodeMemoryRequestUsage))
 		route.GET("/nodes/:ip/network_receive", rest.RestHandlerFunc(metrics.GetNodeNetworkReceiveUsage))
 		route.GET("/nodes/:ip/network_transmit", rest.RestHandlerFunc(metrics.GetNodeNetworkTransmitUsage))
+		route.GET("/nodes/:ip/disk_usage", rest.RestHandlerFunc(metrics.GetNodeDiskUsage))
 		route.GET("/nodes/:ip/diskio_usage", rest.RestHandlerFunc(metrics.GetNodeDiskioUsage))
 		route.POST("/namespaces/:namespace/pods/cpu_usage", rest.RestHandlerFunc(
 			metrics.PodCPUUsage)) // 多个Pod场景, 可能有几十，上百Pod场景, 需要使用 Post 传递参数
