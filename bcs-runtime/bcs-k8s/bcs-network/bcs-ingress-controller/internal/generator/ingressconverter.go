@@ -20,8 +20,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/common"
-	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/constant"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	gocache "github.com/patrickmn/go-cache"
 	k8sappsv1 "k8s.io/api/apps/v1"
@@ -34,6 +32,9 @@ import (
 	k8stypes "k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/common"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/constant"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/cloud"
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
@@ -45,6 +46,8 @@ type IngressConverterOpt struct {
 	DefaultRegion string
 	// IsTCPUDPPortReuse if true, allow tcp listener and udp listener use same port
 	IsTCPUDPPortReuse bool
+	// Cloud cloud mod, e.g. tencentcloud aws gcp
+	Cloud string
 }
 
 // IngressConverter listener generator
@@ -63,6 +66,10 @@ type IngressConverter struct {
 	lbNameCache *gocache.Cache
 	// if true, allow tcp listener and udp listener use same port
 	isTCPUDPPortReuse bool
+	// cloud e.g. tencentcloud aws gcp
+	cloud string
+
+	listenerHelper *listenerHelper
 }
 
 // NewIngressConverter create ingress generator
@@ -74,12 +81,14 @@ func NewIngressConverter(opt *IngressConverterOpt,
 	return &IngressConverter{
 		defaultRegion:     opt.DefaultRegion,
 		isTCPUDPPortReuse: opt.IsTCPUDPPortReuse,
+		cloud:             opt.Cloud,
 		cli:               cli,
 		ingressValidater:  ingressValidater,
 		lbClient:          lbClient,
 		// set cache expire time
-		lbIDCache:   gocache.New(60*time.Minute, 120*time.Minute),
-		lbNameCache: gocache.New(60*time.Minute, 120*time.Minute),
+		lbIDCache:      gocache.New(60*time.Minute, 120*time.Minute),
+		lbNameCache:    gocache.New(60*time.Minute, 120*time.Minute),
+		listenerHelper: newListenerHelper(cli),
 	}, nil
 }
 
@@ -211,7 +220,7 @@ func (g *IngressConverter) GetIngressLoadbalances(ingress *networkextensionv1.In
 		lbIDs := strings.Split(lbIDStrs, ",")
 		// check lb id format before request cloud
 		for _, regionIDPair := range lbIDs {
-			if !MatchLbStrWithID(regionIDPair) {
+			if !MatchLbStrWithID(g.cloud, regionIDPair) {
 				// invalid format
 				blog.Warnf("lbid %s invalid", regionIDPair)
 				return nil, fmt.Errorf("lbid %s invalid", regionIDPair)
@@ -350,29 +359,28 @@ func (g *IngressConverter) patchIngressStatus(ingress *networkextensionv1.Ingres
 }
 
 // ProcessDeleteIngress  process deleted ingress
-func (g *IngressConverter) ProcessDeleteIngress(ingressName, ingressNamespace string) error {
+func (g *IngressConverter) ProcessDeleteIngress(ingressName, ingressNamespace string) (bool, error) {
 	var listenerList, segListenerList []networkextensionv1.Listener
 	var err error
 	// get existed listeners
 	listenerList, err = g.getListeners(ingressName, ingressNamespace)
 	if err != nil {
-		return fmt.Errorf("get listeners of ingress %s/%s failed, err %s", ingressName, ingressNamespace, err.Error())
+		return true, fmt.Errorf("get listeners of ingress %s/%s failed, err %s", ingressName, ingressNamespace,
+			err.Error())
 	}
 	segListenerList, err = g.getSegmentListeners(ingressName, ingressNamespace)
 	if err != nil {
-		return fmt.Errorf("get segment listeners of ingress %s/%s failed, err %s",
+		return true, fmt.Errorf("get segment listeners of ingress %s/%s failed, err %s",
 			ingressName, ingressNamespace, err.Error())
 	}
 	if len(listenerList) == 0 && len(segListenerList) == 0 {
 		blog.Infof("listeners of ingress %s/%s, ingress can be deleted", ingressName, ingressNamespace)
-		return nil
+		return false, nil
 	}
-	// delete listeners
-	if err = g.deleteListeners(ingressName, ingressNamespace); err != nil {
-		return fmt.Errorf("delete listeners of ingress %s/%s failed, err %s",
-			ingressName, ingressNamespace, err.Error())
-	}
-	return fmt.Errorf("wait listeners of ingress %s/%s to be deleted", ingressName, ingressNamespace)
+
+	g.listenerHelper.setDeleteListeners(append(listenerList, segListenerList...))
+
+	return true, nil
 }
 
 func (g *IngressConverter) deleteListeners(ingressName, ingressNamespace string) error {

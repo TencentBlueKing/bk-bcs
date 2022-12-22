@@ -23,10 +23,11 @@ import (
 	k8scorev1 "k8s.io/api/core/v1"
 	k8smetav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/constant"
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 )
 
 // SplitRegionLBID get region and lbid from regionLBID
@@ -185,33 +186,44 @@ func isPodOwner(kind, name string, pod *k8scorev1.Pod) bool {
 }
 
 // MatchLbStrWithID check region info format
-func MatchLbStrWithID(lbID string) bool {
+func MatchLbStrWithID(cloud string, lbID string) bool {
 	// should not include space and newline
-	if strings.Contains(lbID, "\n") || strings.Contains(lbID, " ") {
+	if strings.Contains(lbID, "\n") || strings.Contains(lbID, " ") || len(lbID) == 0 {
 		return false
 	}
+	switch cloud {
+	case constant.CloudTencent:
+		// match ap-xxxxx:lb-xxxxx or lb-xxxxx
+		splits := strings.Split(lbID, ":")
+		if len(splits) > 2 {
+			return false
+		}
+		if strings.HasPrefix(splits[len(splits)-1], "lb-") {
+			return true
+		}
 
-	// match ap-xxxxx:lb-xxxxx
-	match, _ := regexp.MatchString(constant.LoadBalanceCheckFormatWithApLbID, lbID)
-	if match {
+		// // match ap-xxxxx:lb-xxxxx
+		// match, _ := regexp.MatchString(constant.LoadBalanceCheckFormatWithApLbID, lbID)
+		// if match {
+		// 	return true
+		// }
+		//
+		// // match lb-xxxxx
+		// match, _ = regexp.MatchString(constant.LoadBalanceCheckFormat, lbID)
+		// if match {
+		// 	return true
+		// }
+	case constant.CloudAWS:
+		return arn.IsARN(lbID)
+	case constant.CloudGCP:
+		// match gcp region:addressName
+		if len(strings.Split(lbID, ":")) == 2 {
+			return true
+		}
+	case constant.CloudAzure:
 		return true
 	}
-
-	// match lb-xxxxx
-	match, _ = regexp.MatchString(constant.LoadBalanceCheckFormat, lbID)
-	if match {
-		return true
-	}
-
-	// match gcp region:addressName
-	if len(strings.Split(lbID, ":")) == 2 {
-		return true
-	}
-
-	// match aws arn
-	return arn.IsARN(lbID)
-
-	// todo 根据配置中云厂商选择ID校验方式
+	return false
 }
 
 // MatchLbStrWithName check region info format

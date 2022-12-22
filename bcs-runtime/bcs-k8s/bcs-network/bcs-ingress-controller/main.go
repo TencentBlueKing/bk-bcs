@@ -260,6 +260,7 @@ func main() {
 	ingressConverter, err := generator.NewIngressConverter(&generator.IngressConverterOpt{
 		DefaultRegion:     opts.Region,
 		IsTCPUDPPortReuse: opts.IsTCPUDPPortReuse,
+		Cloud:             opts.Cloud,
 	}, mgr.GetClient(), validater, lbClient)
 	if err != nil {
 		blog.Errorf("create ingress converter failed, err %s", err.Error())
