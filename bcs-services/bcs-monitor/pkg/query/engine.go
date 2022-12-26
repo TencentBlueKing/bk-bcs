@@ -31,8 +31,26 @@ import (
 // NewQueryableCreator xxx
 func NewQueryableCreator(reg *prometheus.Registry, kitLogger gokit.Logger,
 	discoveryClient *DiscoveryClient) query.QueryableCreator {
+	/**
+	 api NewProxyStore新增参数 retrievalStrategy RetrievalStrategy,
+
+
+	// RetrievalStrategy stores what kind of retrieval strategy
+	// shall be used for the async response set.
+	type RetrievalStrategy string
+
+	const (
+		LazyRetrieval RetrievalStrategy = "lazy"
+
+		// TODO(GiedriusS): remove eager retrieval once
+		// https://github.com/prometheus/prometheus/blob/ce6a643ee88fba7c02fbd0459c4d0ac498f512dd/promql/engine.go#L877-L902
+		// is removed.
+		EagerRetrieval RetrievalStrategy = "eager"
+	)
+	*/
+
 	proxy := store.NewProxyStore(kitLogger, reg, discoveryClient.Endpoints().GetStoreClients, component.Query, nil,
-		storeResponseTimeout)
+		storeResponseTimeout, store.LazyRetrieval)
 
 	queryableCreator := query.NewQueryableCreator(
 		kitLogger,

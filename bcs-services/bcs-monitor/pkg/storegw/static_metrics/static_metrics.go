@@ -60,7 +60,7 @@ func (s *StaticMetricsStore) GetMatcherSeries(rawSeries []*prompb.TimeSeries, ma
 		for _, l := range raw.Labels {
 			builder.Set(l.Name, l.Value)
 		}
-		lb := builder.Labels()
+		lb := builder.Labels(nil)
 
 		// bcs 租户匹配
 		// if tenantsMatcher != nil && !tenantsMatcher.MatchLabels(lb) {

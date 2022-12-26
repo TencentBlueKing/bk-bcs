@@ -87,8 +87,9 @@ func NewDiscoveryClient(ctx context.Context, reg *prometheus.Registry, tracer op
 	if err != nil {
 		return nil, errors.Wrap(err, "building gRPC client")
 	}
-
+	queryConnMetricLabels := make([]string, 0)
 	endpoints := query.NewEndpointSet(
+		time.Now,
 		kitLogger,
 		reg,
 		func() (specs []*query.GRPCEndpointSpec) {
@@ -105,6 +106,8 @@ func NewDiscoveryClient(ctx context.Context, reg *prometheus.Registry, tracer op
 		},
 		dialOpts,
 		unhealthyStoreTimeout,
+		endpointInfoTimeout,
+		queryConnMetricLabels...,
 	)
 
 	client := &DiscoveryClient{
@@ -364,7 +367,7 @@ func NewHttpSDClient(ctx context.Context, kitLogger gokit.Logger, conf httpdisco
 	// Run File Service Discovery and update the store set when the files are modified.
 	u.Host = addr
 	conf.URL = u.String()
-	sdClient, err := httpdiscovery.NewDiscovery(&conf, kitLogger)
+	sdClient, err := httpdiscovery.NewDiscovery(&conf, kitLogger, nil)
 	if err != nil {
 		return nil, err
 	}

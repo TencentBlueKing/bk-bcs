@@ -114,7 +114,7 @@ func runStoreGW(ctx context.Context, g *run.Group, opt *option) error {
 		if err != nil {
 			return errors.Wrap(err, "building gRPC client")
 		}
-		endpoints = query.NewEndpointSet(kitLogger, opt.reg,
+		endpoints = query.NewEndpointSet(time.Now, kitLogger, opt.reg,
 			func() (specs []*query.GRPCEndpointSpec) {
 				for _, addr := range gw.GetStoreAddrs() {
 					specs = append(specs, query.NewGRPCEndpointSpec(addr, true))
@@ -123,6 +123,10 @@ func runStoreGW(ctx context.Context, g *run.Group, opt *option) error {
 			},
 			dialOpts,
 			time.Second*30,
+			//endpointInfoTimeout,暂写time.Second*30,
+			time.Second*30,
+			//queryConnMetricLabels...  暂写"",
+			"test",
 		)
 
 		ctx, cancel := context.WithCancel(ctx)
@@ -140,7 +144,7 @@ func runStoreGW(ctx context.Context, g *run.Group, opt *option) error {
 	// proxyStore grpc 服务
 	{
 
-		proxyStore := store.NewProxyStore(kitLogger, opt.reg, endpoints.GetStoreClients, component.Query, nil, time.Minute*2)
+		proxyStore := store.NewProxyStore(kitLogger, opt.reg, endpoints.GetStoreClients, component.Query, nil, time.Minute*2, store.LazyRetrieval)
 		grpcProbe := prober.NewGRPC()
 		grpcSrv := grpcserver.New(kitLogger, opt.reg, nil, nil, nil, component.Store, grpcProbe,
 			grpcserver.WithServer(store.RegisterStoreServer(proxyStore)),
