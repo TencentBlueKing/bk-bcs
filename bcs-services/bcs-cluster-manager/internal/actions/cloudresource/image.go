@@ -77,9 +77,9 @@ func (la *ListCloudOsImageAction) setResp(code uint32, msg string) {
 }
 
 func (la *ListCloudOsImageAction) listCloudImageOs() error {
-	nodeMgr, err := cloudprovider.GetNodeMgr(la.cloud.CloudProvider)
+	clsMgr, err := cloudprovider.GetClusterMgr(la.cloud.CloudProvider)
 	if err != nil {
-		blog.Errorf("get cloudprovider %s VPCManager for list imageos failed, %s", la.cloud.CloudProvider, err.Error())
+		blog.Errorf("get cloudprovider %s clusterManager for list imageos failed, %s", la.cloud.CloudProvider, err.Error())
 		return err
 	}
 	cmOption, err := cloudprovider.GetCredential(&cloudprovider.CredentialData{
@@ -94,7 +94,7 @@ func (la *ListCloudOsImageAction) listCloudImageOs() error {
 	cmOption.Region = la.req.Region
 
 	// get image os list
-	imageOsList, err := nodeMgr.ListOsImage(la.req.Provider, cmOption)
+	imageOsList, err := clsMgr.ListOsImage(la.req.Provider, cmOption)
 	if err != nil {
 		return err
 	}

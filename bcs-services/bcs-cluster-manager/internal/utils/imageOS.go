@@ -11,15 +11,15 @@
  *
  */
 
-package api
+package utils
 
 import (
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 )
 
-// ImageOsList image os list
-// 没有特定接口，按照 tke 节点池页面数据硬编码
+// market images
+// ImageOsList image list
 var ImageOsList = []*proto.OsImage{
 	{
 		Alias:           "TencentOS Server 3.1 (TK4)",
@@ -145,3 +145,4 @@ var ImageOsList = []*proto.OsImage{
 		Provider:        common.MarketImageProvider,
 	},
 }
+

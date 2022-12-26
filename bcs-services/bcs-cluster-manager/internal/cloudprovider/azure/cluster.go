@@ -127,3 +127,8 @@ func (c *Cluster) CheckClusterCidrAvailable(cls *proto.Cluster, opt *cloudprovid
 	error) {
 	return false, cloudprovider.ErrCloudNotImplemented
 }
+
+// ListOsImage list image os
+func (c *Cluster) ListOsImage(provider string, opt *cloudprovider.CommonOption) ([]*proto.OsImage, error) {
+	return nil, cloudprovider.ErrCloudNotImplemented
+}

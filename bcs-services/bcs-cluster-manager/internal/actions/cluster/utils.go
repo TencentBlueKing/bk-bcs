@@ -555,6 +555,7 @@ func (n NodeSlice) Swap(i, j int) {
 	n[i], n[j] = n[j], n[i]
 }
 
+// GetCmNodeNames get node name
 func GetCmNodeNames(cmNodes []*proto.ClusterNode, k8sNodes []*corev1.Node) {
 	for i := range cmNodes {
 		ipv4 := cmNodes[i].InnerIP

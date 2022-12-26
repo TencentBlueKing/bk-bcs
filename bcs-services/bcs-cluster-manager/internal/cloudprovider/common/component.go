@@ -54,6 +54,7 @@ func EnsureWatchComponentTask(taskID string, stepName string) error {
 	return nil
 }
 
+// InstallWatchComponentByHelm deploy watch service by helm
 func InstallWatchComponentByHelm(ctx context.Context, projectID, clusterID string) error {
 	taskID := cloudprovider.GetTaskIDFromContext(ctx)
 
@@ -74,7 +75,7 @@ func InstallWatchComponentByHelm(ctx context.Context, projectID, clusterID strin
 	}
 	err = installer.Install(clusterID, values)
 	if err != nil {
-		blog.Errorf("InstallWatchComponentByHelm[%s] Install failed: %v", err)
+		blog.Errorf("InstallWatchComponentByHelm[%s] Install failed: %v", taskID, err)
 		return err
 	}
 
@@ -93,11 +94,11 @@ func DeleteWatchComponentByHelm(ctx context.Context, projectID, clusterID string
 	}
 	err = install.Uninstall(clusterID)
 	if err != nil {
-		blog.Errorf("DeleteWatchComponentByHelm[%s] Uninstall failed: %v", err)
+		blog.Errorf("DeleteWatchComponentByHelm[%s] Uninstall failed: %v", traceID, err)
 		return err
 	}
 	// wait check delete component status
-	timeContext, cancel := context.WithTimeout(ctx, time.Minute * 2)
+	timeContext, cancel := context.WithTimeout(ctx, time.Minute*2)
 	defer cancel()
 
 	err = cloudprovider.LoopDoFunc(timeContext, func() error {
