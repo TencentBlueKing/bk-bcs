@@ -127,3 +127,9 @@ type ResourceQuota struct {
 	CommonDataHeader
 	Data *corev1.ResourceQuota
 }
+
+// ReplicaSet is k8s replicaset
+type ReplicaSet struct {
+	CommonDataHeader
+	Data *appv1.ReplicaSet
+}
