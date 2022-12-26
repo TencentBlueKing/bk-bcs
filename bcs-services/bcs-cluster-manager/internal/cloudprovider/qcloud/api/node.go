@@ -821,7 +821,7 @@ func (nm *NodeManager) DescribeImages(imageType string, opt *cloudprovider.Commo
 // ListOsImage list image os
 func (nm *NodeManager) ListOsImage(provider string, opt *cloudprovider.CommonOption) ([]*proto.OsImage, error) {
 	os := make([]*proto.OsImage, 0)
-	for _, v := range ImageOsList {
+	for _, v := range utils.ImageOsList {
 		if provider == v.Provider {
 			os = append(os, v)
 		}

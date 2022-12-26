@@ -239,7 +239,7 @@ func (ng *NodeGroup) updateImageInfo(group *proto.NodeGroup) error {
 		return nil
 	}
 	imageName := group.LaunchTemplate.ImageInfo.ImageName
-	for _, v := range api.ImageOsList {
+	for _, v := range utils.ImageOsList {
 		if v.ImageID == group.LaunchTemplate.ImageInfo.ImageID {
 			imageName = v.Alias
 			break
