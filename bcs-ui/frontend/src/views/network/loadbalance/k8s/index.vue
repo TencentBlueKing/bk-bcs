@@ -21,7 +21,7 @@
           </div>
           <div class="right">
             <bk-data-searcher
-              :placeholder="$t('输入名称，按Enter搜索')"
+              :placeholder="$t('输入集群名称，按Enter搜索')"
               :scope-list="searchScopeList"
               :search-key.sync="searchKeyword"
               :search-scope.sync="searchScope"
@@ -599,7 +599,7 @@ export default {
              * 搜索LB
              */
     searchLoadBalance() {
-      const keyword = this.searchKeyword.trim();
+      const keyword = this.searchKeyword.trim().toLowerCase();
       const keyList = ['cluster_name', 'name'];
       let list = this.$store.state.network.loadBalanceList;
       let results = [];
@@ -610,7 +610,7 @@ export default {
 
       results = list.filter((item) => {
         for (const key of keyList) {
-          if (item[key].indexOf(keyword) > -1) {
+          if ((item[key].toLowerCase()).indexOf(keyword) > -1) {
             return true;
           }
         }

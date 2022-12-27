@@ -3,7 +3,7 @@
   <div class="apply-host-wrapper" v-if="$INTERNAL">
     <div class="apply-host-btn">
       <bk-popover placement="bottom" v-if="!hasAuth" transfer>
-        <span class="bk-default bk-button-normal bk-button is-disabled">{{$t('申请服务器')}}</span>
+        <span class="bk-default bk-button-normal bk-button is-disabled">{{title}}</span>
         <div slot="content" style="width: 220px;">
           {{ authTips.content }}
         </div>
@@ -18,7 +18,7 @@
         v-else
         :theme="theme"
         @click="handleOpenApplyHost">
-        {{$t('申请服务器')}}
+        {{title}}
       </bk-button>
     </div>
     <bcs-dialog
@@ -26,7 +26,7 @@
       v-model="applyDialogShow"
       :close-icon="false"
       :width="1000"
-      :title="$t('申请服务器')"
+      :title="title"
       render-directive="if"
       header-position="left"
       ext-cls="apply-host-dialog">
@@ -243,6 +243,10 @@ export default {
       default: false,
     },
     clusterId: {
+      type: String,
+      default: '',
+    },
+    title: {
       type: String,
       default: '',
     },

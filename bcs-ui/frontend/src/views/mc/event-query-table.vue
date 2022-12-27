@@ -48,7 +48,7 @@
       <bcs-table-column
         :label="$t('资源名称')"
         prop="extraInfo.name"
-        min-width="100"
+        width="200"
         show-overflow-tooltip>
       </bcs-table-column>
       <bcs-table-column :label="$t('事件级别')" prop="level" width="100"></bcs-table-column>
@@ -216,6 +216,7 @@ export default defineComponent({
       'sspilot/headlessservice-controller.routing.red.tencent.com',
     ];
     const kindList = [
+      'Node',
       'Deployment',
       'ReplicaSet',
       'DaemonSet',

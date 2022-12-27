@@ -12,9 +12,11 @@
         <bcs-input
           right-icon="bk-icon icon-search"
           class="min-w-[360px] ml-[5px]"
-          :placeholder="$t('输入名称搜索')"
+          :placeholder="$t('输入名称, 按Enter键搜索')"
           clearable
-          v-model="searchName">
+          :value="searchName"
+          @blur="handleSearch"
+          @enter="handleSearch">
         </bcs-input>
       </template>
     </Row>
@@ -413,6 +415,9 @@ export default defineComponent({
     const ns = ref<string>(props.namespace || sessionStorage.getItem(CUR_SELECT_NAMESPACE) || '');
     const searchName = useDebouncedRef<string>(props.name, 300);
 
+    const handleSearch = (v: string) => {
+      searchName.value = v;
+    };
     // release 列表
     const loading = ref(false);
     const releaseList = ref<any[]>([]);
@@ -713,6 +718,7 @@ export default defineComponent({
       handleConfirmRollback,
       handleDelete,
       handleGotoResourceDetail,
+      handleSearch,
     };
   },
 });
