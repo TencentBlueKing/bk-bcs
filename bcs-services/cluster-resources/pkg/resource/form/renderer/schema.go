@@ -22,6 +22,7 @@ import (
 
 	"gopkg.in/yaml.v3"
 
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/cluster"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/envs"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/i18n"
@@ -56,6 +57,12 @@ func NewSchemaRenderer(ctx context.Context, clusterID, kind, namespace, action s
 	}
 	// 避免名称重复，每次默认添加随机后缀
 	randSuffix := stringx.Rand(RandomSuffixLength, SuffixCharset)
+	// 尝试从 context 中获取集群类型，若获取失败，则默认独立集群
+	clusterType := cluster.ClusterTypeSingle
+	if clusterInfo, err := cluster.FromContext(ctx); err == nil {
+		clusterType = clusterInfo.Type
+	}
+
 	return &SchemaRenderer{
 		ctx:       ctx,
 		clusterID: clusterID,
@@ -66,6 +73,8 @@ func NewSchemaRenderer(ctx context.Context, clusterID, kind, namespace, action s
 			"resName":   fmt.Sprintf("%s-%s", strings.ToLower(kind), randSuffix),
 			"lang":      i18n.GetLangFromContext(ctx),
 			"action":    action,
+			// 集群类型：目前可选值有 Single 独立集群，Shared 共享集群
+			"clusterType": clusterType,
 		},
 	}
 }

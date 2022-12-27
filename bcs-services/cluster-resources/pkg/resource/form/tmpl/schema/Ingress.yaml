@@ -28,12 +28,6 @@ properties:
                 disabled: true
                 tips: {{ i18n "暂时不支持该控制器" .lang }}
         ui:reactions:
-          # 当选择类型为 qcloud 时候，指定 apiVersion 为 extensions/v1beta1
-          - target: metadata.apiVersion
-            if: "{{`{{`}} $self.value === 'qcloud' {{`}}`}}"
-            then:
-              state:
-                value: "extensions/v1beta1"
           # qcloud 暂时不支持 defaultBackend
           - target: spec.defaultBackend.targetSVC
             if: "{{`{{`}} $self.value === 'qcloud' {{`}}`}}"

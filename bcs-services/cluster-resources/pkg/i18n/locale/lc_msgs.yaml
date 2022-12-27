@@ -578,8 +578,10 @@
   en: "Use existing CLB: You need to manually create a CLB instance first, the CLB instance will not be deleted when the Ingress instance is deleted, and the VIP will not change after the Ingress instance is rebuilt<br>Auto create new CLB: No need to manually create a CLB instance first, Ingress When the instance is deleted, the CLB instance will be deleted, and the VIP will change after the Ingress instance is rebuilt; for security reasons, the automatic new CLB instance only supports the intranet, and the extranet CLB should use the 'use existing CLB' scheme, please ask the administrator to confirm the intranet subnet ID"
 - msgID: "已存在的 CLB 实例"
   en: "Use existing CLB"
-- msgID: "自动新建 CLB 实例"
+- msgID: "自动创建 CLB 实例"
   en: "Auto create new CLB"
+- msgID: "共享集群暂不支持自动创建 CLB 实例"
+  en: "auto create new clb is unsupported in shared cluster"
 - msgID: 例如：lb-c5xxxxd6
   en: "example: lb-c5xxxxd6"
 - msgID: "子网 ID"
@@ -626,6 +628,12 @@
   en: "labels has a duplicate Key"
 - msgID: 注解有重复的键，请检查
   en: "annotations has a duplicate key"
+- msgID: 无集群查看权限
+  en: "no cluster view permission"
+- msgID: 检查共享集群命名空间权限失败
+  en: "checking shared cluster namespace permissions failed"
+- msgID: "命名空间 %s 在该共享集群中不属于指定项目"
+  en: "namespace %s not belong to project in this shared cluster"
 - msgID: "无查看指定节点上运行的 Pod 的权限"
   en: "no permission to view Pods running on the specified node"
 - msgID: "创建 %s 需要指定 metadata.namespace"
@@ -638,9 +646,3 @@
   en: "failed to get cluster info from context"
 - msgID: 检测到集群资源变动，尝试同步资源信息中。若近期有升级集群行为，请稍后重试，若依旧失败，请联系容器助手
   en: "cluster resource changes are detected, and try to synchronize resource information. If you have recently upgraded the cluster, please try again later. If it still fails, please contact the container assistant."
-- msgID: 无集群查看权限
-  en: "no cluster view permission"
-- msgID: 检查共享集群命名空间权限失败
-  en: "checking shared cluster namespace permissions failed"
-- msgID: "命名空间 %s 在该共享集群中不属于指定项目"
-  en: "namespace %s not belong to project in this shared cluster"

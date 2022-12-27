@@ -131,8 +131,12 @@ network:
           datasource:
             - label: {{ i18n "已存在的 CLB 实例" .lang }}
               value: useExists
-            - label: {{ i18n "自动新建 CLB 实例" .lang }}
+            - label: {{ i18n "自动创建 CLB 实例" .lang }}
               value: autoCreate
+              {{- if eq .clusterType "Shared" }}
+              disabled: true
+              tips: {{ i18n "共享集群暂不支持自动创建 CLB 实例" .lang }}
+              {{- end }}
       ui:reactions:
         - target: spec.network.existLBID
           if: "{{`{{`}} $self.value === 'useExists' {{`}}`}}"
@@ -332,13 +336,17 @@ portConf:
           default: useExists
           description: {{ i18n "使用已有：仅支持使用当前未被 TKE 使用的应用型 CLB 以用于公网/内网访问 Service，请勿手动修改由 TKE 创建的 CLB 监听器<br>自动创建：自动创建内网 CLB 以提供内网访问入口，将提供一个可以被集群所有 VPC 下的其他资源访问的入口，支持 TCP/UDP 协议。需要被同一 VPC 下其他集群、云服务器等访问的服务可以选择 VPC 内网访问的形式，因安全原因，暂不支持公网 CLB 自动创建，内网子网 ID 请找资源管理员确认" .lang | quote }}
           ui:component:
-            name: radio
+            name: select
             props:
               datasource:
                 - label: {{ i18n "使用已有" .lang }}
                   value: useExists
                 - label: {{ i18n "自动创建" .lang }}
                   value: autoCreate
+                  {{- if eq .clusterType "Shared" }}
+                  disabled: true
+                  tips: {{ i18n "共享集群暂不支持自动创建 CLB 实例" .lang }}
+                  {{- end }}
           ui:reactions:
             - target: "spec.portConf.lb.existLBID"
               if: "{{`{{`}} $self.value === 'useExists' && $self.getValue('spec.portConf.type') == 'LoadBalancer' {{`}}`}}"
