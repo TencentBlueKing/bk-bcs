@@ -45,6 +45,7 @@ import (
 const (
 	bcsAPIGWK8SBaseURI = "%s/clusters/%s/"
 	defaultMaxHistory  = 10
+	defaultTimeout     = "10s"
 )
 
 // Config 定义了使用sdk的基本参数
@@ -408,6 +409,7 @@ func (c *client) getConfigFlag(namespace string) *genericclioptions.ConfigFlags 
 	flags.BearerToken = c.cf.BearerToken
 	flags.Insecure = c.cf.Insecure
 	flags.Namespace = common.GetStringP(namespace)
+	flags.Timeout = common.GetStringP(defaultTimeout)
 	return flags
 }
 

@@ -16,6 +16,7 @@ import (
 	"context"
 	"fmt"
 	"sort"
+	"strings"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
@@ -203,7 +204,7 @@ func (l *ListReleaseV1Action) getWebAnnotations() *helmmanager.WebAnnotations {
 func (l *ListReleaseV1Action) getOption() release.ListOption {
 	return release.ListOption{
 		Namespace: l.req.GetNamespace(),
-		Name:      l.req.GetName(),
+		Name:      strings.ToLower(l.req.GetName()),
 	}
 }
 
@@ -221,7 +222,7 @@ func (l *ListReleaseV1Action) getCondition(shared bool) *operator.Condition {
 		cond.Update(entity.FieldKeyNamespace, l.req.GetNamespace())
 	}
 	if len(l.req.GetName()) != 0 {
-		cond.Update(entity.FieldKeyName, primitive.Regex{Pattern: l.req.GetName(), Options: "i"})
+		cond.Update(entity.FieldKeyName, primitive.Regex{Pattern: strings.ToLower(l.req.GetName()), Options: "i"})
 	}
 	return operator.NewLeafCondition(operator.Eq, cond)
 }

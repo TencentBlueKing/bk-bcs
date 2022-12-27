@@ -14,6 +14,7 @@ package chart
 
 import (
 	"context"
+	"strings"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
@@ -258,7 +259,7 @@ func (l *ListChartActionV1) getOption() repo.ListOption {
 	}
 
 	return repo.ListOption{
-		PackageName: l.req.GetName(),
+		PackageName: strings.ToLower(l.req.GetName()),
 		Page:        int64(l.req.GetPage()),
 		Size:        int64(size),
 	}
