@@ -17,7 +17,10 @@ import (
 	"fmt"
 	"net/http"
 	"path"
+	"reflect"
+	osruntime "runtime"
 	"strings"
+	ossync "sync"
 	"time"
 
 	grpccli "github.com/asim/go-micro/plugins/client/grpc/v4"
@@ -67,9 +70,10 @@ type Server struct {
 	option *Options
 	// etcdSync for leader election,
 	// only leader can create tunnel in tunnel mode
-	etcdSync     sync.Sync
-	microService micro.Service
-	httpService  *http.Server
+	etcdSync         sync.Sync
+	waitLeaderResign chan struct{}
+	microService     micro.Service
+	httpService      *http.Server
 	// controller for data sync
 	clusterCtl controller.ClusterControl
 	projectCtl controller.ProjectControl
@@ -110,9 +114,17 @@ func (s *Server) Run() error {
 }
 
 func (s *Server) stop() {
+	wg := &ossync.WaitGroup{}
+	wg.Add(len(s.stops))
 	for _, stop := range s.stops {
-		go stop()
+		go func(f func()) {
+			f()
+			blog.Infof("manager stop func '%s' is finished",
+				osruntime.FuncForPC(reflect.ValueOf(f).Pointer()).Name())
+			wg.Done()
+		}(stop)
 	}
+	wg.Wait()
 }
 
 func (s *Server) initStorage() error {
@@ -317,7 +329,8 @@ func (s *Server) initAPIDocs(router *mux.Router) error {
 	router.HandleFunc("/gitopsmanager/swagger/", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(
 			w, r,
-			path.Join("/data/bcs/bcs-gitops-manager/swagger", strings.TrimPrefix(r.URL.Path, "/gitopsmanager/swagger/")),
+			path.Join("/data/bcs/bcs-gitops-manager/swagger", strings.TrimPrefix(r.URL.Path,
+				"/gitopsmanager/swagger/")),
 		)
 	})
 	return nil
@@ -378,6 +391,10 @@ func (s *Server) startLeaderElection() {
 		blog.Infof("manager is not in tunnel mode, start leader election is unnecessary")
 		return
 	}
+	s.waitLeaderResign = make(chan struct{})
+	s.stops = append(s.stops, func() {
+		<-s.waitLeaderResign
+	})
 	blog.Infof("manager runs in tunnel mode, creating websocket tunnel")
 	cxt, cancel := context.WithCancel(s.cxt)
 	// if lost leader role, stop tunnel client by CancelFunc
@@ -413,13 +430,15 @@ func (s *Server) startLeaderElection() {
 		// nothing to stop, recycle resource by defer CancelFunc()
 		return
 	case <-cxt.Done():
+		blog.Infof("manager leaderelection received context done, and will resign leader.")
 		// server exit
 		if err := leader.Resign(); err != nil {
 			blog.Errorf("manager %s resign leader failure, %s, other servers wait until timeout",
 				leaderID, err.Error())
-			return
+		} else {
+			blog.Infof("manager %s resign leader successfully, prepare exit", leaderID)
 		}
-		blog.Infof("manager %s resign leader successfully, prepare exit", leaderID)
+		close(s.waitLeaderResign)
 	}
 }
 

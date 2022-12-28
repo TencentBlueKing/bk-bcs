@@ -18,6 +18,8 @@ import (
 	"os/signal"
 	"syscall"
 	"time"
+
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 )
 
 // StopFunc define subsystem graceful stop interface
@@ -28,6 +30,7 @@ func StartSignalHandler(stop context.CancelFunc, gracefulExit int) {
 	ch := make(chan os.Signal, 1)
 	signal.Notify(ch, syscall.SIGTERM, syscall.SIGINT, syscall.SIGQUIT)
 	<-ch
+	blog.Infof("server received stop signal.")
 	// trap system signal, stop
 	stop()
 	tick := time.NewTicker(time.Second * time.Duration(gracefulExit))
