@@ -10,7 +10,7 @@
  * limitations under the License.
  */
 
-package prometheus
+package compute
 
 import (
 	"context"
@@ -23,8 +23,13 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/storegw/bcs_system/source/base"
 )
 
+const (
+	// PROVIDER xxx
+	PROVIDER = `provider="PROMETHEUS"`
+)
+
 // handleContainerMetric 处理公共函数
-func (m *Prometheus) handleContainerMetric(ctx context.Context, projectId, clusterId, namespace, podname string,
+func (m *Compute) handleContainerMetric(ctx context.Context, projectId, clusterId, namespace, podname string,
 	containerNameList []string, promql string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {
 
 	params := map[string]interface{}{
@@ -44,33 +49,33 @@ func (m *Prometheus) handleContainerMetric(ctx context.Context, projectId, clust
 }
 
 // GetContainerCPUUsage 容器CPU使用率
-func (m *Prometheus) GetContainerCPUUsage(ctx context.Context, projectId, clusterId, namespace, podname string,
+func (m *Compute) GetContainerCPUUsage(ctx context.Context, projectId, clusterId, namespace, podname string,
 	containerNameList []string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {
 	promql :=
-		`sum by(container_name) (rate(container_cpu_usage_seconds_total{cluster_id="%<clusterId>s", namespace="%<namespace>s", pod_name=~"%<podname>s", container_name=~"%<containerName>s", %<provider>s}[2m])) * 100`
+		`sum by(container_name) (rate(container_cpu_usage_seconds_total_value{bcs_cluster_id="%<clusterId>s", namespace="%<namespace>s", pod_name=~"%<podname>s", container_name=~"%<containerName>s", %<provider>s}[2m])) * 100`
 
 	return m.handleContainerMetric(ctx, projectId, clusterId, namespace, podname, containerNameList, promql, start, end,
 		step)
 }
 
 // GetContainerMemoryUsed 容器内存使用率
-func (m *Prometheus) GetContainerMemoryUsed(ctx context.Context, projectId, clusterId, namespace, podname string,
+func (m *Compute) GetContainerMemoryUsed(ctx context.Context, projectId, clusterId, namespace, podname string,
 	containerNameList []string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {
 	promql :=
-		`max by(container_name) (container_memory_working_set_bytes{cluster_id="%<clusterId>s", namespace="%<namespace>s", pod_name=~"%<podname>s", container_name=~"%<containerName>s", %<provider>s})`
+		`max by(container_name) (container_memory_working_set_bytes_value{bcs_cluster_id="%<clusterId>s", namespace="%<namespace>s", pod_name=~"%<podname>s", container_name=~"%<containerName>s", %<provider>s})`
 
 	return m.handleContainerMetric(ctx, projectId, clusterId, namespace, podname, containerNameList, promql, start, end,
 		step)
 }
 
 // GetContainerCPULimit 容器CPU限制
-func (m *Prometheus) GetContainerCPULimit(ctx context.Context, projectId, clusterId, namespace, podname string,
+func (m *Compute) GetContainerCPULimit(ctx context.Context, projectId, clusterId, namespace, podname string,
 	containerNameList []string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {
 	// 过滤掉0
 	// 名字替换
 	// "container_name", "$0 cpu_limit", "container_name", ".*" 带名称
 	promql := `
-		label_replace(max by(container_name) (container_spec_cpu_quota{cluster_id="%<clusterId>s", namespace="%<namespace>s", pod_name=~"%<podname>s", container_name=~"%<containerName>s", %<provider>s}) / 1000 > 0,
+		label_replace(max by(container_name) (container_spec_cpu_quota_value{bcs_cluster_id="%<clusterId>s", namespace="%<namespace>s", pod_name=~"%<podname>s", container_name=~"%<containerName>s", %<provider>s}) / 1000 > 0,
 		"container_name", "cpu_limit", "container_name", ".*")`
 
 	return m.handleContainerMetric(ctx, projectId, clusterId, namespace, podname, containerNameList, promql, start, end,
@@ -78,12 +83,12 @@ func (m *Prometheus) GetContainerCPULimit(ctx context.Context, projectId, cluste
 }
 
 // GetContainerMemoryLimit 容器内存限制
-func (m *Prometheus) GetContainerMemoryLimit(ctx context.Context, projectId, clusterId, namespace, podname string,
+func (m *Compute) GetContainerMemoryLimit(ctx context.Context, projectId, clusterId, namespace, podname string,
 	containerNameList []string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {
 	// 过滤掉0
 	// 名字替换
 	promql := `
-		label_replace(max by(container_name) (container_spec_memory_limit_bytes{cluster_id="%<clusterId>s", namespace="%<namespace>s", pod_name=~"%<podname>s", container_name=~"%<containerName>s", %<provider>s}) > 0,
+		label_replace(max by(container_name) (container_spec_memory_limit_bytes_value{bcs_cluster_id="%<clusterId>s", namespace="%<namespace>s", pod_name=~"%<podname>s", container_name=~"%<containerName>s", %<provider>s}) > 0,
 		"container_name", "memory_limit", "container_name", ".*")`
 
 	return m.handleContainerMetric(ctx, projectId, clusterId, namespace, podname, containerNameList, promql, start, end,
@@ -91,38 +96,50 @@ func (m *Prometheus) GetContainerMemoryLimit(ctx context.Context, projectId, clu
 }
 
 // GetContainerGPUMemoryUsage 容器GPU显卡使用率
-func (m *Prometheus) GetContainerGPUMemoryUsage(ctx context.Context, projectId, clusterId, namespace, podname string,
+func (m *Compute) GetContainerGPUMemoryUsage(ctx context.Context, projectId, clusterId, namespace, podname string,
 	containerNameList []string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {
-	return nil, nil
+	promql :=
+		`max by(container_name) (k8s_container_gpu_mem_copy_util_value{bcs_cluster_id="%<clusterId>s", namespace="%<namespace>s", pod_name=~"%<podname>s", container_name=~"%<containerName>s", %<provider>s})`
+
+	return m.handleContainerMetric(ctx, projectId, clusterId, namespace, podname, containerNameList, promql, start, end,
+		step)
 }
 
 // GetContainerGPUUsed 容器GPU使用量
-func (m *Prometheus) GetContainerGPUUsed(ctx context.Context, projectId, clusterId, namespace, podname string,
+func (m *Compute) GetContainerGPUUsed(ctx context.Context, projectId, clusterId, namespace, podname string,
 	containerNameList []string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {
-	return nil, nil
+	promql :=
+		`max by(container_name) (k8s_container_gpu_used_value{bcs_cluster_id="%<clusterId>s", namespace="%<namespace>s", pod_name=~"%<podname>s", container_name=~"%<containerName>s", %<provider>s})`
+
+	return m.handleContainerMetric(ctx, projectId, clusterId, namespace, podname, containerNameList, promql, start, end,
+		step)
 }
 
 // GetContainerGPUUsage 容器GPU使用率
-func (m *Prometheus) GetContainerGPUUsage(ctx context.Context, projectId, clusterId, namespace, podname string,
+func (m *Compute) GetContainerGPUUsage(ctx context.Context, projectId, clusterId, namespace, podname string,
 	containerNameList []string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {
-	return nil, nil
+	promql :=
+		`max by(container_name) (k8s_container_gpu_util_value{bcs_cluster_id="%<clusterId>s", namespace="%<namespace>s", pod_name=~"%<podname>s", container_name=~"%<containerName>s", %<provider>s})`
+
+	return m.handleContainerMetric(ctx, projectId, clusterId, namespace, podname, containerNameList, promql, start, end,
+		step)
 }
 
 // GetContainerDiskReadTotal 容器磁盘读
-func (m *Prometheus) GetContainerDiskReadTotal(ctx context.Context, projectId, clusterId, namespace, podname string,
+func (m *Compute) GetContainerDiskReadTotal(ctx context.Context, projectId, clusterId, namespace, podname string,
 	containerNameList []string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {
 	promql :=
-		`sum by(container_name) (container_fs_reads_bytes_total{cluster_id="%<clusterId>s", namespace="%<namespace>s", pod_name=~"%<podname>s", container_name=~"%<containerName>s", %<provider>s})`
+		`sum by(container_name) (container_fs_reads_bytes_total_value{bcs_cluster_id="%<clusterId>s", namespace="%<namespace>s", pod_name=~"%<podname>s", container_name=~"%<containerName>s", %<provider>s})`
 
 	return m.handleContainerMetric(ctx, projectId, clusterId, namespace, podname, containerNameList, promql, start, end,
 		step)
 }
 
 // GetContainerDiskWriteTotal 容器磁盘写
-func (m *Prometheus) GetContainerDiskWriteTotal(ctx context.Context, projectId, clusterId, namespace, podname string,
+func (m *Compute) GetContainerDiskWriteTotal(ctx context.Context, projectId, clusterId, namespace, podname string,
 	containerNameList []string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {
 	promql :=
-		`sum by(container_name) (container_fs_writes_bytes_total{cluster_id="%<clusterId>s", namespace="%<namespace>s", pod_name=~"%<podname>s", container_name=~"%<containerName>s", %<provider>s})`
+		`sum by(container_name) (container_fs_writes_bytes_total_value{bcs_cluster_id="%<clusterId>s", namespace="%<namespace>s", pod_name=~"%<podname>s", container_name=~"%<containerName>s", %<provider>s})`
 
 	return m.handleContainerMetric(ctx, projectId, clusterId, namespace, podname, containerNameList, promql, start, end,
 		step)

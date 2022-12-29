@@ -45,6 +45,9 @@ var AvailableNodeMetrics = []string{
 	"bcs:container:memory_used",
 	"bcs:container:cpu_limit",
 	"bcs:container:memory_limit",
+	"bcs:container:gpu_memory_usage",
+	"bcs:container:gpu_used",
+	"bcs:container:gpu_usage",
 	"bcs:container:disk_read_total",
 	"bcs:container:disk_write_total",
 }

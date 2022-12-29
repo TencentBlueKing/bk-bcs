@@ -118,6 +118,12 @@ type MetricHandler interface {
 		start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error)
 	GetContainerMemoryLimit(ctx context.Context, projectId, clusterId, namespace, podname string,
 		containerNameList []string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error)
+	GetContainerGPUMemoryUsage(ctx context.Context, projectId, clusterId, namespace, podname string,
+		containerNameList []string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error)
+	GetContainerGPUUsed(ctx context.Context, projectId, clusterId, namespace, podname string,
+		containerNameList []string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error)
+	GetContainerGPUUsage(ctx context.Context, projectId, clusterId, namespace, podname string,
+		containerNameList []string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error)
 	GetContainerDiskReadTotal(ctx context.Context, projectId, clusterId, namespace, podname string,
 		containerNameList []string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error)
 	GetContainerDiskWriteTotal(ctx context.Context, projectId, clusterId, namespace, podname string,

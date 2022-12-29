@@ -19,3 +19,11 @@ const (
 	// SeriesStepDelta 查询 Series 的回溯步长, 单位秒
 	SeriesStepDeltaSeconds = 60 * 5
 )
+
+// MonitorSourceType monitor source type
+type MonitorSourceType string
+
+const (
+	// MonitorSourceCompute 算力 metrics
+	MonitorSourceCompute MonitorSourceType = "compute"
+)
