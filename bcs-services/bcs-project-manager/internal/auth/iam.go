@@ -18,6 +18,7 @@ import (
 	bcsIAM "github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/namespace"
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/project"
+	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/manager"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/config"
 )
@@ -56,6 +57,8 @@ var (
 	ProjectIamClient *project.BCSProjectPerm
 	// NamespaceIamClient iam client for project
 	NamespaceIamClient *namespace.BCSNamespacePerm
+	// PermManagerClient iam client for manager
+	PermManagerClient *manager.PermManager
 )
 
 // InitPermClient init perm client
@@ -77,6 +80,7 @@ func InitPermClient() error {
 	}
 	ProjectIamClient = project.NewBCSProjectPermClient(cli)
 	NamespaceIamClient = namespace.NewBCSNamespacePermClient(cli)
+	PermManagerClient = manager.NewBCSPermManagerClient(cli)
 	return nil
 }
 

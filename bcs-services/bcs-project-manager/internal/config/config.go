@@ -128,7 +128,7 @@ type ClientActionsConfig struct {
 
 // ClientActionExemptPermConfig 非用户态跳过指定动作的权限
 type ClientActionExemptPermConfig struct {
-	ClientActions []ClientActionsConfig `yaml:"clientActions" usage:"exempt perm for client id action, example: [{clientID: bcs-inner, actions: [create, view]}]"`
+	ClientActions []ClientActionsConfig `yaml:"clientActions" usage:"exempt perm for client id action"`
 }
 
 // CMDBConfig 请求的 CMDB 服务配置
@@ -137,6 +137,7 @@ type CMDBConfig struct {
 	Host              string `yaml:"host" usage:"access cmdb api host"`
 	Timeout           int    `yaml:"timeout" usage:"request cmdb api timeout"`
 	Proxy             string `yaml:"proxy" usage:"proxy"`
+	BKUsername        string `yaml:"bkUsername" usage:"username to operate"`
 	Debug             bool   `yaml:"debug" usage:"debug"`
 }
 

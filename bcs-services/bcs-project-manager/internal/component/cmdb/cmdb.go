@@ -24,6 +24,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/logging"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/errorx"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/stringx"
 
 	"github.com/parnurzeal/gorequest"
 )
@@ -34,86 +35,105 @@ var (
 	searchBizPath          = "/api/c/compapi/v2/cc/search_business/"
 )
 
-type cmdbResp struct {
-	Code      int                    `json:"code"`
-	Result    bool                   `json:"result"`
-	Message   string                 `json:"message"`
-	RequestID string                 `json:"request_id"`
-	Data      map[string]interface{} `json:"data"`
+// SearchBusinessResp cmdb search business resp
+type SearchBusinessResp struct {
+	Code      int                `json:"code"`
+	Result    bool               `json:"result"`
+	Message   string             `json:"message"`
+	RequestID string             `json:"request_id"`
+	Data      SearchBusinessData `json:"data"`
+}
+
+// SearchBusinessData cmdb search business resp data
+type SearchBusinessData struct {
+	Count int            `json:"count"`
+	Info  []BusinessData `json:"info"`
+}
+
+// BusinessData cmdb business data
+type BusinessData struct {
+	BS2NameID       int    `json:"bs2_name_id"`
+	Default         int    `json:"default"`
+	BKBizID         int64  `json:"bk_biz_id"`
+	BKBizName       string `json:"bk_biz_name"`
+	BKBizMaintainer string `json:"bk_biz_maintainer"`
 }
 
 // IsMaintainer 校验用户是否为指定业务的运维
 func IsMaintainer(username string, bizID string) (bool, error) {
-	resp, err := SearchBizByUserAndID(username, bizID)
+	searchData, err := SearchBusiness(username, bizID)
 	if err != nil {
 		return false, err
 	}
-	if resp.Code != errorx.Success {
-		return false, errorx.NewRequestCMDBErr(resp.Message)
-	}
 	// 判断是否存在当前用户为业务运维角色的业务
-	// NOTE: count 为float64类型
-	if resp.Data["count"].(float64) > 0 {
+	if searchData.Count > 0 {
 		return true, nil
 	}
 	return false, errorx.NewNoMaintainerRoleErr()
 }
 
-// SearchBizByUserAndID 通过用户和业务ID，查询业务
-func SearchBizByUserAndID(username string, bizID string) (*cmdbResp, error) {
-	cmdbConf := config.GlobalConf.CMDB
-	reqUrl := fmt.Sprintf("%s%s", cmdbConf.Host, searchBizPath)
+// SearchBusiness 通过用户和业务ID，查询业务
+func SearchBusiness(username string, bizID string) (*SearchBusinessData, error) {
 	// 获取超时时间
-	timeout := getTimeout()
+	timeout := defaultTimeout
+	if config.GlobalConf.CMDB.Timeout != 0 {
+		timeout = config.GlobalConf.CMDB.Timeout
+	}
+	// 获取开发商账户
+	supplierAccount := defaultSupplierAccount
+	if config.GlobalConf.CMDB.BKSupplierAccount != "" {
+		supplierAccount = config.GlobalConf.CMDB.BKSupplierAccount
+	}
 	headers := map[string]string{"Content-Type": "application/json"}
-	bizIDInt, _ := strconv.Atoi(bizID)
 	// 组装请求参数
-	req := getReq(cmdbConf, reqUrl, username, bizIDInt)
+	condition := map[string]interface{}{}
+	if username != "" {
+		condition["bk_biz_maintainer"] = username
+	}
+	if bizID != "" {
+		bizIDInt, _ := strconv.Atoi(bizID)
+		condition["bk_biz_id"] = bizIDInt
+	}
+	req := gorequest.SuperAgent{
+		Url:    fmt.Sprintf("%s%s", config.GlobalConf.CMDB.Host, searchBizPath),
+		Method: "POST",
+		Data: map[string]interface{}{
+			"condition":           condition,
+			"bk_supplier_account": supplierAccount,
+			"bk_app_code":         config.GlobalConf.App.Code,
+			"bk_app_secret":       config.GlobalConf.App.Secret,
+			"bk_username":         config.GlobalConf.CMDB.BKUsername,
+		},
+		Debug: config.GlobalConf.CMDB.Debug,
+	}
 	// 获取返回数据
-	body, err := component.Request(req, timeout, cmdbConf.Proxy, headers)
+	body, err := component.Request(req, timeout, config.GlobalConf.CMDB.Proxy, headers)
 	if err != nil {
 		return nil, errorx.NewRequestCMDBErr(err)
 	}
 	// 解析返回的body
-	var resp cmdbResp
+	var resp SearchBusinessResp
 	if err := json.Unmarshal([]byte(body), &resp); err != nil {
 		logging.Error("parse search biz body error, body: %v", body)
 		return nil, err
 	}
-	return &resp, nil
+	if resp.Code != errorx.Success {
+		return nil, errorx.NewRequestCMDBErr(resp.Message)
+	}
+	return &resp.Data, nil
 }
 
-func getReq(c config.CMDBConfig, reqUrl string, username string, bizIDInt int) gorequest.SuperAgent {
-	return gorequest.SuperAgent{
-		Url:    reqUrl,
-		Method: "POST",
-		Data: map[string]interface{}{
-			"condition": map[string]interface{}{
-				"bk_biz_id":         bizIDInt,
-				"bk_biz_maintainer": username,
-			},
-			"bk_supplier_account": getSupplierAccount(),
-			"bk_app_code":         config.GlobalConf.App.Code,
-			"bk_app_secret":       config.GlobalConf.App.Secret,
-			"bk_username":         username,
-		},
-		Debug: c.Debug,
+// GetBusinessMaintainers get maintainers by bizID
+func GetBusinessMaintainers(bizID string) ([]string, error) {
+	searchData, err := SearchBusiness("", bizID)
+	if err != nil {
+		return nil, err
 	}
-}
-
-func getTimeout() int {
-	timeout := config.GlobalConf.CMDB.Timeout
-	if timeout == 0 {
-		return defaultTimeout
+	// 判断是否存在当前用户为业务运维角色的业务
+	if searchData.Count == 0 {
+		return nil, fmt.Errorf("get business by id %s failed", bizID)
 	}
-	return timeout
-}
-
-// getSupplierAccount 获取开发商账号
-func getSupplierAccount() string {
-	supplierAccount := config.GlobalConf.CMDB.BKSupplierAccount
-	if supplierAccount == "" {
-		return defaultSupplierAccount
-	}
-	return supplierAccount
+	business := searchData.Info[0]
+	maintainers := stringx.SplitString(business.BKBizMaintainer)
+	return maintainers, nil
 }
