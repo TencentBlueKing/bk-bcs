@@ -39,6 +39,30 @@
         ]
       }
     },
+    "/bcsproject/v1/business": {
+      "get": {
+        "summary": "查询业务列表",
+        "description": "查询业务列表",
+        "operationId": "Business_ListBusiness",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/bcsprojectListBusinessResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "tags": [
+          "Business"
+        ]
+      }
+    },
     "/bcsproject/v1/healthz": {
       "get": {
         "description": "探针API, 用于readiness探测",
@@ -206,6 +230,72 @@
         ],
         "tags": [
           "BCSProject"
+        ]
+      }
+    },
+    "/bcsproject/v1/projects/{projectCode}/business": {
+      "get": {
+        "summary": "查询项目业务信息",
+        "description": "查询项目业务信息",
+        "operationId": "Business_GetBusiness",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/bcsprojectGetBusinessResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectCode",
+            "description": "项目英文名",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "Business"
+        ]
+      }
+    },
+    "/bcsproject/v1/projects/{projectCode}/business/topology": {
+      "get": {
+        "summary": "查询业务拓扑列表",
+        "description": "查询业务拓扑列表",
+        "operationId": "Business_GetBusinessTopology",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/bcsprojectGetBusinessTopologyResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectCode",
+            "description": "项目英文名",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "Business"
         ]
       }
     },
@@ -1494,6 +1584,30 @@
         }
       }
     },
+    "bcsprojectBusinessData": {
+      "type": "object",
+      "properties": {
+        "businessID": {
+          "type": "integer",
+          "format": "int64",
+          "description": "业务ID",
+          "title": "businessID"
+        },
+        "name": {
+          "type": "string",
+          "description": "业务名称",
+          "title": "name"
+        },
+        "maintainer": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "业务运维人员",
+          "title": "maintainer"
+        }
+      }
+    },
     "bcsprojectCreateNamespaceRequest": {
       "type": "object",
       "properties": {
@@ -1875,6 +1989,71 @@
         }
       }
     },
+    "bcsprojectGetBusinessResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "data": {
+          "$ref": "#/definitions/bcsprojectBusinessData",
+          "description": "返回业务信息",
+          "title": "data"
+        },
+        "requestID": {
+          "type": "string",
+          "description": "请求 ID",
+          "title": "request id"
+        },
+        "web_annotations": {
+          "$ref": "#/definitions/bcsprojectPerms",
+          "description": "更多信息，主要是权限相关",
+          "title": "web_annotations"
+        }
+      }
+    },
+    "bcsprojectGetBusinessTopologyResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/bcsprojectTopologyData"
+          },
+          "description": "返回可用业务列表",
+          "title": "data"
+        },
+        "requestID": {
+          "type": "string",
+          "description": "请求 ID",
+          "title": "request id"
+        },
+        "web_annotations": {
+          "$ref": "#/definitions/bcsprojectPerms",
+          "description": "更多信息，主要是权限相关",
+          "title": "web_annotations"
+        }
+      }
+    },
     "bcsprojectGetNamespaceResponse": {
       "type": "object",
       "properties": {
@@ -2087,6 +2266,40 @@
           "type": "string",
           "description": "请求 ID",
           "title": "request id"
+        }
+      }
+    },
+    "bcsprojectListBusinessResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/bcsprojectBusinessData"
+          },
+          "description": "返回可用业务列表",
+          "title": "data"
+        },
+        "requestID": {
+          "type": "string",
+          "description": "请求 ID",
+          "title": "request id"
+        },
+        "web_annotations": {
+          "$ref": "#/definitions/bcsprojectPerms",
+          "description": "更多信息，主要是权限相关",
+          "title": "web_annotations"
         }
       }
     },
@@ -2819,6 +3032,46 @@
           "type": "string",
           "description": "请求 ID",
           "title": "request id"
+        }
+      }
+    },
+    "bcsprojectTopologyData": {
+      "type": "object",
+      "properties": {
+        "bk_inst_id": {
+          "type": "integer",
+          "format": "int64",
+          "description": "业务ID",
+          "title": "bk_inst_id"
+        },
+        "bk_inst_name": {
+          "type": "string",
+          "description": "业务名称",
+          "title": "bk_inst_name"
+        },
+        "bk_obj_id": {
+          "type": "string",
+          "description": "bk_obj_id",
+          "title": "bk_obj_id"
+        },
+        "bk_obj_name": {
+          "type": "string",
+          "description": "bk_obj_name",
+          "title": "bk_obj_name"
+        },
+        "default": {
+          "type": "integer",
+          "format": "int64",
+          "description": "default",
+          "title": "default"
+        },
+        "child": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/bcsprojectTopologyData"
+          },
+          "description": "child",
+          "title": "child"
         }
       }
     },

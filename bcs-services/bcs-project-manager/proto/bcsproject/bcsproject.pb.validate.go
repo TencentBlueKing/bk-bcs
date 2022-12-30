@@ -1797,6 +1797,1071 @@ var _ interface {
 	ErrorName() string
 } = ListAuthorizedProjRespValidationError{}
 
+// Validate checks the field values on GetBusinessRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *GetBusinessRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on GetBusinessRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// GetBusinessRequestMultiError, or nil if none found.
+func (m *GetBusinessRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *GetBusinessRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for ProjectCode
+
+	if len(errors) > 0 {
+		return GetBusinessRequestMultiError(errors)
+	}
+
+	return nil
+}
+
+// GetBusinessRequestMultiError is an error wrapping multiple validation errors
+// returned by GetBusinessRequest.ValidateAll() if the designated constraints
+// aren't met.
+type GetBusinessRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m GetBusinessRequestMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m GetBusinessRequestMultiError) AllErrors() []error { return m }
+
+// GetBusinessRequestValidationError is the validation error returned by
+// GetBusinessRequest.Validate if the designated constraints aren't met.
+type GetBusinessRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetBusinessRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetBusinessRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetBusinessRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetBusinessRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetBusinessRequestValidationError) ErrorName() string {
+	return "GetBusinessRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetBusinessRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetBusinessRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetBusinessRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetBusinessRequestValidationError{}
+
+// Validate checks the field values on GetBusinessResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *GetBusinessResponse) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on GetBusinessResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// GetBusinessResponseMultiError, or nil if none found.
+func (m *GetBusinessResponse) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *GetBusinessResponse) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	if all {
+		switch v := interface{}(m.GetData()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, GetBusinessResponseValidationError{
+					field:  "Data",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, GetBusinessResponseValidationError{
+					field:  "Data",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return GetBusinessResponseValidationError{
+				field:  "Data",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	// no validation rules for RequestID
+
+	if all {
+		switch v := interface{}(m.GetWebAnnotations()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, GetBusinessResponseValidationError{
+					field:  "WebAnnotations",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, GetBusinessResponseValidationError{
+					field:  "WebAnnotations",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetWebAnnotations()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return GetBusinessResponseValidationError{
+				field:  "WebAnnotations",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if len(errors) > 0 {
+		return GetBusinessResponseMultiError(errors)
+	}
+
+	return nil
+}
+
+// GetBusinessResponseMultiError is an error wrapping multiple validation
+// errors returned by GetBusinessResponse.ValidateAll() if the designated
+// constraints aren't met.
+type GetBusinessResponseMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m GetBusinessResponseMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m GetBusinessResponseMultiError) AllErrors() []error { return m }
+
+// GetBusinessResponseValidationError is the validation error returned by
+// GetBusinessResponse.Validate if the designated constraints aren't met.
+type GetBusinessResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetBusinessResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetBusinessResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetBusinessResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetBusinessResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetBusinessResponseValidationError) ErrorName() string {
+	return "GetBusinessResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetBusinessResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetBusinessResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetBusinessResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetBusinessResponseValidationError{}
+
+// Validate checks the field values on ListBusinessRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *ListBusinessRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ListBusinessRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// ListBusinessRequestMultiError, or nil if none found.
+func (m *ListBusinessRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ListBusinessRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if len(errors) > 0 {
+		return ListBusinessRequestMultiError(errors)
+	}
+
+	return nil
+}
+
+// ListBusinessRequestMultiError is an error wrapping multiple validation
+// errors returned by ListBusinessRequest.ValidateAll() if the designated
+// constraints aren't met.
+type ListBusinessRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ListBusinessRequestMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ListBusinessRequestMultiError) AllErrors() []error { return m }
+
+// ListBusinessRequestValidationError is the validation error returned by
+// ListBusinessRequest.Validate if the designated constraints aren't met.
+type ListBusinessRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ListBusinessRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ListBusinessRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ListBusinessRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ListBusinessRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ListBusinessRequestValidationError) ErrorName() string {
+	return "ListBusinessRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ListBusinessRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sListBusinessRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ListBusinessRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ListBusinessRequestValidationError{}
+
+// Validate checks the field values on ListBusinessResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *ListBusinessResponse) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ListBusinessResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// ListBusinessResponseMultiError, or nil if none found.
+func (m *ListBusinessResponse) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ListBusinessResponse) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	for idx, item := range m.GetData() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, ListBusinessResponseValidationError{
+						field:  fmt.Sprintf("Data[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, ListBusinessResponseValidationError{
+						field:  fmt.Sprintf("Data[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return ListBusinessResponseValidationError{
+					field:  fmt.Sprintf("Data[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	// no validation rules for RequestID
+
+	if all {
+		switch v := interface{}(m.GetWebAnnotations()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, ListBusinessResponseValidationError{
+					field:  "WebAnnotations",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, ListBusinessResponseValidationError{
+					field:  "WebAnnotations",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetWebAnnotations()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return ListBusinessResponseValidationError{
+				field:  "WebAnnotations",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if len(errors) > 0 {
+		return ListBusinessResponseMultiError(errors)
+	}
+
+	return nil
+}
+
+// ListBusinessResponseMultiError is an error wrapping multiple validation
+// errors returned by ListBusinessResponse.ValidateAll() if the designated
+// constraints aren't met.
+type ListBusinessResponseMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ListBusinessResponseMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ListBusinessResponseMultiError) AllErrors() []error { return m }
+
+// ListBusinessResponseValidationError is the validation error returned by
+// ListBusinessResponse.Validate if the designated constraints aren't met.
+type ListBusinessResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ListBusinessResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ListBusinessResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ListBusinessResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ListBusinessResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ListBusinessResponseValidationError) ErrorName() string {
+	return "ListBusinessResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ListBusinessResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sListBusinessResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ListBusinessResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ListBusinessResponseValidationError{}
+
+// Validate checks the field values on GetBusinessTopologyRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *GetBusinessTopologyRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on GetBusinessTopologyRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// GetBusinessTopologyRequestMultiError, or nil if none found.
+func (m *GetBusinessTopologyRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *GetBusinessTopologyRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for ProjectCode
+
+	if len(errors) > 0 {
+		return GetBusinessTopologyRequestMultiError(errors)
+	}
+
+	return nil
+}
+
+// GetBusinessTopologyRequestMultiError is an error wrapping multiple
+// validation errors returned by GetBusinessTopologyRequest.ValidateAll() if
+// the designated constraints aren't met.
+type GetBusinessTopologyRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m GetBusinessTopologyRequestMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m GetBusinessTopologyRequestMultiError) AllErrors() []error { return m }
+
+// GetBusinessTopologyRequestValidationError is the validation error returned
+// by GetBusinessTopologyRequest.Validate if the designated constraints aren't met.
+type GetBusinessTopologyRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetBusinessTopologyRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetBusinessTopologyRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetBusinessTopologyRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetBusinessTopologyRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetBusinessTopologyRequestValidationError) ErrorName() string {
+	return "GetBusinessTopologyRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetBusinessTopologyRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetBusinessTopologyRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetBusinessTopologyRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetBusinessTopologyRequestValidationError{}
+
+// Validate checks the field values on GetBusinessTopologyResponse with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *GetBusinessTopologyResponse) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on GetBusinessTopologyResponse with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// GetBusinessTopologyResponseMultiError, or nil if none found.
+func (m *GetBusinessTopologyResponse) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *GetBusinessTopologyResponse) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	for idx, item := range m.GetData() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, GetBusinessTopologyResponseValidationError{
+						field:  fmt.Sprintf("Data[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, GetBusinessTopologyResponseValidationError{
+						field:  fmt.Sprintf("Data[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return GetBusinessTopologyResponseValidationError{
+					field:  fmt.Sprintf("Data[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	// no validation rules for RequestID
+
+	if all {
+		switch v := interface{}(m.GetWebAnnotations()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, GetBusinessTopologyResponseValidationError{
+					field:  "WebAnnotations",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, GetBusinessTopologyResponseValidationError{
+					field:  "WebAnnotations",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetWebAnnotations()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return GetBusinessTopologyResponseValidationError{
+				field:  "WebAnnotations",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if len(errors) > 0 {
+		return GetBusinessTopologyResponseMultiError(errors)
+	}
+
+	return nil
+}
+
+// GetBusinessTopologyResponseMultiError is an error wrapping multiple
+// validation errors returned by GetBusinessTopologyResponse.ValidateAll() if
+// the designated constraints aren't met.
+type GetBusinessTopologyResponseMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m GetBusinessTopologyResponseMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m GetBusinessTopologyResponseMultiError) AllErrors() []error { return m }
+
+// GetBusinessTopologyResponseValidationError is the validation error returned
+// by GetBusinessTopologyResponse.Validate if the designated constraints
+// aren't met.
+type GetBusinessTopologyResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetBusinessTopologyResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetBusinessTopologyResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetBusinessTopologyResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetBusinessTopologyResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetBusinessTopologyResponseValidationError) ErrorName() string {
+	return "GetBusinessTopologyResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetBusinessTopologyResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetBusinessTopologyResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetBusinessTopologyResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetBusinessTopologyResponseValidationError{}
+
+// Validate checks the field values on BusinessData with the rules defined in
+// the proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *BusinessData) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on BusinessData with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in BusinessDataMultiError, or
+// nil if none found.
+func (m *BusinessData) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *BusinessData) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for BusinessID
+
+	// no validation rules for Name
+
+	if len(errors) > 0 {
+		return BusinessDataMultiError(errors)
+	}
+
+	return nil
+}
+
+// BusinessDataMultiError is an error wrapping multiple validation errors
+// returned by BusinessData.ValidateAll() if the designated constraints aren't met.
+type BusinessDataMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m BusinessDataMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m BusinessDataMultiError) AllErrors() []error { return m }
+
+// BusinessDataValidationError is the validation error returned by
+// BusinessData.Validate if the designated constraints aren't met.
+type BusinessDataValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e BusinessDataValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e BusinessDataValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e BusinessDataValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e BusinessDataValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e BusinessDataValidationError) ErrorName() string { return "BusinessDataValidationError" }
+
+// Error satisfies the builtin error interface
+func (e BusinessDataValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sBusinessData.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = BusinessDataValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = BusinessDataValidationError{}
+
+// Validate checks the field values on TopologyData with the rules defined in
+// the proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *TopologyData) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on TopologyData with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in TopologyDataMultiError, or
+// nil if none found.
+func (m *TopologyData) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *TopologyData) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for BkInstId
+
+	// no validation rules for BkInstName
+
+	// no validation rules for BkObjId
+
+	// no validation rules for BkObjName
+
+	// no validation rules for Default
+
+	for idx, item := range m.GetChild() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, TopologyDataValidationError{
+						field:  fmt.Sprintf("Child[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, TopologyDataValidationError{
+						field:  fmt.Sprintf("Child[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return TopologyDataValidationError{
+					field:  fmt.Sprintf("Child[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	if len(errors) > 0 {
+		return TopologyDataMultiError(errors)
+	}
+
+	return nil
+}
+
+// TopologyDataMultiError is an error wrapping multiple validation errors
+// returned by TopologyData.ValidateAll() if the designated constraints aren't met.
+type TopologyDataMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m TopologyDataMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m TopologyDataMultiError) AllErrors() []error { return m }
+
+// TopologyDataValidationError is the validation error returned by
+// TopologyData.Validate if the designated constraints aren't met.
+type TopologyDataValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e TopologyDataValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e TopologyDataValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e TopologyDataValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e TopologyDataValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e TopologyDataValidationError) ErrorName() string { return "TopologyDataValidationError" }
+
+// Error satisfies the builtin error interface
+func (e TopologyDataValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sTopologyData.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = TopologyDataValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = TopologyDataValidationError{}
+
 // Validate checks the field values on SyncNamespaceRequest with the rules
 // defined in the proto definition for this message. If any rules are
 // violated, the first error encountered is returned, or nil if there are no violations.

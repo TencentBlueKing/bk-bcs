@@ -261,6 +261,136 @@ func (h *bCSProjectHandler) ListAuthorizedProjects(ctx context.Context, in *List
 	return h.BCSProjectHandler.ListAuthorizedProjects(ctx, in, out)
 }
 
+// Api Endpoints for Business service
+
+func NewBusinessEndpoints() []*api.Endpoint {
+	return []*api.Endpoint{
+		&api.Endpoint{
+			Name:    "Business.GetBusiness",
+			Path:    []string{"/bcsproject/v1/projects/{projectCode}/business"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "Business.ListBusiness",
+			Path:    []string{"/bcsproject/v1/business"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "Business.GetBusinessTopology",
+			Path:    []string{"/bcsproject/v1/projects/{projectCode}/business/topology"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+	}
+}
+
+// Client API for Business service
+
+type BusinessService interface {
+	GetBusiness(ctx context.Context, in *GetBusinessRequest, opts ...client.CallOption) (*GetBusinessResponse, error)
+	ListBusiness(ctx context.Context, in *ListBusinessRequest, opts ...client.CallOption) (*ListBusinessResponse, error)
+	GetBusinessTopology(ctx context.Context, in *GetBusinessTopologyRequest, opts ...client.CallOption) (*GetBusinessTopologyResponse, error)
+}
+
+type businessService struct {
+	c    client.Client
+	name string
+}
+
+func NewBusinessService(name string, c client.Client) BusinessService {
+	return &businessService{
+		c:    c,
+		name: name,
+	}
+}
+
+func (c *businessService) GetBusiness(ctx context.Context, in *GetBusinessRequest, opts ...client.CallOption) (*GetBusinessResponse, error) {
+	req := c.c.NewRequest(c.name, "Business.GetBusiness", in)
+	out := new(GetBusinessResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *businessService) ListBusiness(ctx context.Context, in *ListBusinessRequest, opts ...client.CallOption) (*ListBusinessResponse, error) {
+	req := c.c.NewRequest(c.name, "Business.ListBusiness", in)
+	out := new(ListBusinessResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *businessService) GetBusinessTopology(ctx context.Context, in *GetBusinessTopologyRequest, opts ...client.CallOption) (*GetBusinessTopologyResponse, error) {
+	req := c.c.NewRequest(c.name, "Business.GetBusinessTopology", in)
+	out := new(GetBusinessTopologyResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// Server API for Business service
+
+type BusinessHandler interface {
+	GetBusiness(context.Context, *GetBusinessRequest, *GetBusinessResponse) error
+	ListBusiness(context.Context, *ListBusinessRequest, *ListBusinessResponse) error
+	GetBusinessTopology(context.Context, *GetBusinessTopologyRequest, *GetBusinessTopologyResponse) error
+}
+
+func RegisterBusinessHandler(s server.Server, hdlr BusinessHandler, opts ...server.HandlerOption) error {
+	type business interface {
+		GetBusiness(ctx context.Context, in *GetBusinessRequest, out *GetBusinessResponse) error
+		ListBusiness(ctx context.Context, in *ListBusinessRequest, out *ListBusinessResponse) error
+		GetBusinessTopology(ctx context.Context, in *GetBusinessTopologyRequest, out *GetBusinessTopologyResponse) error
+	}
+	type Business struct {
+		business
+	}
+	h := &businessHandler{hdlr}
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Business.GetBusiness",
+		Path:    []string{"/bcsproject/v1/projects/{projectCode}/business"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Business.ListBusiness",
+		Path:    []string{"/bcsproject/v1/business"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Business.GetBusinessTopology",
+		Path:    []string{"/bcsproject/v1/projects/{projectCode}/business/topology"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	return s.Handle(s.NewHandler(&Business{h}, opts...))
+}
+
+type businessHandler struct {
+	BusinessHandler
+}
+
+func (h *businessHandler) GetBusiness(ctx context.Context, in *GetBusinessRequest, out *GetBusinessResponse) error {
+	return h.BusinessHandler.GetBusiness(ctx, in, out)
+}
+
+func (h *businessHandler) ListBusiness(ctx context.Context, in *ListBusinessRequest, out *ListBusinessResponse) error {
+	return h.BusinessHandler.ListBusiness(ctx, in, out)
+}
+
+func (h *businessHandler) GetBusinessTopology(ctx context.Context, in *GetBusinessTopologyRequest, out *GetBusinessTopologyResponse) error {
+	return h.BusinessHandler.GetBusinessTopology(ctx, in, out)
+}
+
 // Api Endpoints for Namespace service
 
 func NewNamespaceEndpoints() []*api.Endpoint {

@@ -322,9 +322,14 @@ func (p *ProjectService) initMicro() error {
 		return err
 	}
 
-	// project handler
+	// 添加项目相关handler
 	if err := proto.RegisterBCSProjectHandler(grpcServer, handler.NewProject(p.model)); err != nil {
 		logging.Error("register project handler failed, err: %s", err.Error())
+		return err
+	}
+	// 添加业务相关handler
+	if err := proto.RegisterBusinessHandler(grpcServer, handler.NewBusiness(p.model)); err != nil {
+		logging.Error("register business handler failed, err: %s", err.Error())
 		return err
 	}
 	// 添加命名空间相关handler
@@ -383,6 +388,16 @@ func (p *ProjectService) registerGatewayFromEndPoint(gwMux *runtime.ServeMux, gr
 		grpcDialOpts,
 	); err != nil {
 		logging.Error("register project endpoints to http gateway failed, err %s", err.Error())
+		return err
+	}
+	// 注册业务功能 endpoint
+	if err := proto.RegisterBusinessGwFromEndpoint(
+		context.TODO(),
+		gwMux,
+		p.opt.Server.Address+":"+strconv.Itoa(int(p.opt.Server.Port)),
+		grpcDialOpts,
+	); err != nil {
+		logging.Error("register business endpoints to http gateway failed, err %s", err.Error())
 		return err
 	}
 	// 注册命名空间相关 endpoint

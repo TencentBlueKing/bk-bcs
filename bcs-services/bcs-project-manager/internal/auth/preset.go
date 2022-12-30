@@ -28,6 +28,9 @@ var ActionPermissions = map[string]string{
 	"BCSProject.CreateProject":          project.CanCreateProjectOperation,
 	"BCSProject.UpdateProject":          project.CanEditProjectOperation,
 	"BCSProject.DeleteProject":          project.CanDeleteProjectOperation,
+	// business
+	"Business.GetBusiness":         project.CanViewProjectOperation,
+	"Business.GetBusinessTopology": project.CanViewProjectOperation,
 	// variable
 	"Variable.CreateVariable":            project.CanViewProjectOperation,
 	"Variable.UpdateVariable":            project.CanViewProjectOperation,

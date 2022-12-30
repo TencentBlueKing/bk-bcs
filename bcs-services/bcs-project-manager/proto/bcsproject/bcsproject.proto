@@ -558,6 +558,185 @@ message ListAuthorizedProjResp{
   }];
 }
 
+service Business {
+  rpc GetBusiness(GetBusinessRequest) returns (GetBusinessResponse) {
+    option (google.api.http) = {
+      get : "/bcsproject/v1/projects/{projectCode}/business"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "查询项目业务信息"
+      summary : "查询项目业务信息"
+    };
+  }
+
+  rpc ListBusiness(ListBusinessRequest) returns (ListBusinessResponse) {
+    option (google.api.http) = {
+      get : "/bcsproject/v1/business"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "查询业务列表"
+      summary : "查询业务列表"
+    };
+  }
+
+  rpc GetBusinessTopology(GetBusinessTopologyRequest) returns (GetBusinessTopologyResponse) {
+    option (google.api.http) = {
+      get : "/bcsproject/v1/projects/{projectCode}/business/topology"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "查询业务拓扑列表"
+      summary : "查询业务拓扑列表"
+    };
+  }
+}
+
+
+message GetBusinessRequest{
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "GetBusinessRequest"
+      description : "查询项目业务信息"
+    }
+  };
+  string projectCode = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "projectCode",
+    description: "项目英文名"
+  }];
+}
+
+message GetBusinessResponse{
+  uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code", 
+    description: "返回错误码"
+  }];
+  string message = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "message",
+    description: "返回错误信息"
+  }];
+  BusinessData data = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "data", 
+    description: "返回业务信息"
+  }];
+  string requestID = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "request id",
+    description: "请求 ID"
+  }];
+  Perms web_annotations = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "web_annotations",
+    description : "更多信息，主要是权限相关"
+  }, json_name = "web_annotations"];
+}
+
+message ListBusinessRequest{
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "ListBusinessRequest"
+      description : "查询业务列表"
+    }
+  };
+}
+
+message ListBusinessResponse{
+  uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code", 
+    description: "返回错误码"
+  }];
+  string message = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "message",
+    description: "返回错误信息"
+  }];
+  repeated BusinessData data = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "data", 
+    description: "返回可用业务列表"
+  }];
+  string requestID = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "request id",
+    description: "请求 ID"
+  }];
+  Perms web_annotations = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "web_annotations",
+    description : "更多信息，主要是权限相关"
+  }, json_name = "web_annotations"];
+}
+
+message GetBusinessTopologyRequest{
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "ListBusinessRequest"
+      description : "查询业务列表"
+    }
+  };
+  string projectCode = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "projectCode",
+    description: "项目英文名"
+  }];
+}
+
+message GetBusinessTopologyResponse{
+  uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code", 
+    description: "返回错误码"
+  }];
+  string message = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "message",
+    description: "返回错误信息"
+  }];
+  repeated TopologyData data = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "data", 
+    description: "返回可用业务列表"
+  }];
+  string requestID = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "request id",
+    description: "请求 ID"
+  }];
+  Perms web_annotations = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "web_annotations",
+    description : "更多信息，主要是权限相关"
+  }, json_name = "web_annotations"];
+}
+
+message BusinessData {
+  uint32 businessID = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "businessID",
+    description: "业务ID"
+  }];
+  string name = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "name",
+    description: "业务名称"
+  }];
+  repeated string maintainer = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "maintainer",
+    description: "业务运维人员"
+  }];
+}
+
+message TopologyData {
+  uint32 bk_inst_id = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "bk_inst_id",
+    description: "业务ID"
+  }];
+  string bk_inst_name = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "bk_inst_name",
+    description: "业务名称"
+  }];
+  string bk_obj_id = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "bk_obj_id",
+    description: "bk_obj_id"
+  }];
+  string bk_obj_name = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "bk_obj_name",
+    description: "bk_obj_name"
+  }];
+  uint32 default = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "default",
+    description: "default"
+  }];
+  repeated TopologyData child =6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "child",
+    description: "child"
+  }];
+}
+
 service Namespace {
   rpc CreateNamespace(CreateNamespaceRequest) returns (CreateNamespaceResponse) {
     option (google.api.http) = {
