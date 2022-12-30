@@ -297,10 +297,10 @@ func (s *Server) handleForPodCreateFailed(pod *k8scorev1.Pod, portItemListArr []
 			return
 		}
 		// NOTE: 目前通过判断 event.Message 中是否存在 Pod 的名字来判断是否创建失败了
-		if !strings.Contains(event.Message, pod.Name+" ") {
+		if !strings.Contains(event.Message, pod.Name) {
 			return
 		}
-		// NOTE: 如果因为 portinding 已存在导致的 Pod FailedCreate，则不需要回收
+		// NOTE: 如果因为 portBinding 已存在导致的 Pod FailedCreate，则不需要回收
 		if strings.Contains(event.Message, checkPortBindingExistedFailed) {
 			close(triggered)
 			return
