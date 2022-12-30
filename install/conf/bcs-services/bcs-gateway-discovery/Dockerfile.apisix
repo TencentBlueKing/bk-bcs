@@ -1,9 +1,8 @@
-ARG APISIX_VERSION="2.13.1"
+ARG APISIX_VERSION="2.15.0"
 FROM apache/apisix:$APISIX_VERSION-centos
 
 #for command envsubst
-RUN yum install -y yum-utils which less iproute jq gettext sudo make wget unzip &&
-    rm -rf /usr/local/apisix/logs/*
+RUN yum install -y yum-utils which less iproute jq gettext sudo make wget unzip && rm -rf /usr/local/apisix/logs/*
 
 #install apisix plugin
 COPY ./apisix/ /usr/local/apisix/apisix/plugins/
