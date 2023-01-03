@@ -78,10 +78,11 @@ export default {
     };
     el.style.position = 'relative';
 
+    const css = bind.value?.css || '';
     tools.forEach((tool, index) => {
       const icon = document.createElement('i');
       icon.className = el.defaultConfig[tool]?.icon;
-      icon.style.cssText = `position: absolute;right: ${(index + 1) * 20}px;top: 15px;cursor: pointer;z-index: 200;margin-right: ${index * 10}px;color: #fff;`;
+      icon.style.cssText = `position: absolute;right: ${(index + 1) * 20}px;top: 15px;cursor: pointer;z-index: 200;margin-right: ${index * 10}px;color: #fff;${css}`;
       el[tool] = icon;
       icon.addEventListener('click', el.defaultConfig[tool]?.handler);
       el.append(icon);
