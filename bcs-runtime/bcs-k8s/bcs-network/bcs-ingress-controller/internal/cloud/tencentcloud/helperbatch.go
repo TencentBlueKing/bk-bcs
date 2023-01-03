@@ -254,7 +254,10 @@ func (c *Clb) batchCreateSegment4LayerListener(
 	for _, li := range listeners {
 		ch <- struct{}{}
 		go func(li *networkextensionv1.Listener) {
-			defer wg.Done()
+			defer func() {
+				wg.Done()
+				<-ch
+			}()
 			listenerID, err := c.create4LayerListenerWithoutTargetGroup(region, li)
 			if err != nil {
 				err = errors.Wrapf(err, "create 4 layer listener %s/%s failed", li.GetNamespace(), li.GetName())
@@ -263,7 +266,6 @@ func (c *Clb) batchCreateSegment4LayerListener(
 				return
 			}
 			successListenerNameMap.Store(li.GetName(), listenerID)
-			<-ch
 		}(li)
 	}
 	wg.Wait()
