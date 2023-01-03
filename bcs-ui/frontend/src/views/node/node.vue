@@ -46,6 +46,13 @@
             >{{$t('添加节点')}}</bcs-button>
           </span>
         </template>
+        <template v-if="$INTERNAL && curSelectedCluster.providerType === 'tke' && !nodeMenu">
+          <apply-host
+            class="mr10"
+            :title="$t('申请Node服务器')"
+            :cluster-id="localClusterId"
+            :is-backfill="true" />
+        </template>
         <bcs-dropdown-menu
           :disabled="!selections.length"
           class="mr10"
@@ -105,12 +112,6 @@
             </li>
           </ul>
         </bcs-dropdown-menu>
-        <template v-if="$INTERNAL && curSelectedCluster.providerType === 'tke' && !nodeMenu">
-          <bcs-divider style="margin: 0 15px" direction="vertical"></bcs-divider>
-          <apply-host
-            :cluster-id="localClusterId"
-            :is-backfill="true" />
-        </template>
       </div>
       <div class="right">
         <ClusterSelect

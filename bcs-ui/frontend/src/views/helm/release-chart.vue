@@ -250,9 +250,10 @@
       <CodeEditor
         v-bkloading="{ isLoading: confirmLoading }"
         diff-editor
+        full-screen
         :value="previewData.newContent"
         :original="previewData.oldContent"
-        class="!min-h-[460px] !h-[480px]"
+        class="grid !min-h-[460px]"
         readonly>
       </CodeEditor>
       <template #footer>

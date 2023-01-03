@@ -28,7 +28,7 @@
             }"
             @click="goCreateCluster"
           >{{$t('新建集群')}}</bk-button>
-          <apply-host class="ml10" v-if="$INTERNAL" />
+          <apply-host :title="$t('申请Master服务器')" class="ml10" v-if="$INTERNAL" />
         </div>
         <!-- 集群面板 -->
         <div class="biz-cluster-list">
@@ -190,7 +190,7 @@
           <a class="bk-button bk-default bk-button-large" :href="PROJECT_CONFIG.doc.quickStart" target="_blank">
             <span style="margin-left: 0;">{{$t('快速入门指引')}}</span>
           </a>
-          <apply-host class="apply-host ml5" v-if="$INTERNAL" />
+          <apply-host :title="$t('申请Master服务器')" class="apply-host ml5" v-if="$INTERNAL" />
         </div>
       </div>
     </div>
@@ -244,8 +244,8 @@ export default defineComponent({
     const { $store, $router, $i18n, $bkMessage, $bkInfo } = ctx.root;
     const curProject = computed(() => $store.state.curProject);
     const kindMap = ref({
-      'k8s': 'K8S',
-      'mesos': 'Mesos',
+      k8s: 'K8S',
+      mesos: 'Mesos',
     });
     // 获取集群状态的中文
     const statusTextMap = {
