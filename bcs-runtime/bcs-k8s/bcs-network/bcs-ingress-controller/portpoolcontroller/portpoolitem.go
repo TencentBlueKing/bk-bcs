@@ -65,6 +65,7 @@ func (ppih *PortPoolItemHandler) ensurePortPoolItem(
 		retItemStatus = itemStatus.DeepCopy()
 		retItemStatus.EndPort = item.EndPort
 		retItemStatus.External = item.External
+		retItemStatus.Protocol = common.GetPortPoolItemProtocols(item.Protocol)
 	}
 	// check loadbalanceIDs
 	lbIDs := make([]string, len(item.LoadBalancerIDs))
