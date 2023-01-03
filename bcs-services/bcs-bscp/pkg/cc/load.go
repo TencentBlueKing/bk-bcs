@@ -22,12 +22,16 @@ import (
 
 // LoadSettings load service's configuration
 func LoadSettings(sys *SysOption) error {
-	if len(sys.ConfigFile) == 0 {
+	if len(sys.ConfigFiles) == 0 {
 		return errors.New("service's configuration file path is not configured")
 	}
 
+	conf, err := mergeConfigFile(sys.ConfigFiles)
+	if err != nil {
+		return err
+	}
 	// configure file is configured, then load configuration from file.
-	s, err := loadFromFile(sys.ConfigFile)
+	s, err := loadFromFile(conf)
 	if err != nil {
 		return err
 	}
@@ -48,9 +52,34 @@ func LoadSettings(sys *SysOption) error {
 	return nil
 }
 
+// mergeConfigFile 合并多个配置文件
+func mergeConfigFile(filenames []string) ([]byte, error) {
+	masterConf := map[string]interface{}{}
+
+	for _, filename := range filenames {
+		file, err := ioutil.ReadFile(filename)
+		if err != nil {
+			return nil, fmt.Errorf("load Setting from file: %s failed, err: %v", filename, err)
+		}
+
+		var tmpConf map[string]interface{}
+		if err := yaml.Unmarshal(file, &tmpConf); err != nil {
+			return nil, fmt.Errorf("unmarshal Setting yaml from file: %s failed, err: %v", filename, err)
+		}
+
+		// 后面的配置文件按Key直接覆盖前面的配置
+		for k, v := range tmpConf {
+			masterConf[k] = v
+		}
+	}
+
+	// 合并后的配置
+	return yaml.Marshal(masterConf)
+}
+
 // loadFromFile load service's configuration from local config file.
-func loadFromFile(filename string) (Setting, error) {
-	if len(filename) == 0 {
+func loadFromFile(conf []byte) (Setting, error) {
+	if len(conf) == 0 {
 		return nil, errors.New("file name is not set")
 	}
 
@@ -74,13 +103,8 @@ func loadFromFile(filename string) (Setting, error) {
 		return nil, fmt.Errorf("unknown %s service name", ServiceName())
 	}
 
-	file, err := ioutil.ReadFile(filename)
-	if err != nil {
-		return nil, fmt.Errorf("load Setting from file: %s failed, err: %v", filename, err)
-	}
-
-	if err := yaml.Unmarshal(file, s); err != nil {
-		return nil, fmt.Errorf("unmarshal Setting yaml from file: %s failed, err: %v", filename, err)
+	if err := yaml.Unmarshal(conf, s); err != nil {
+		return nil, fmt.Errorf("unmarshal Setting yaml from conf:\n%s failed, err: %v", conf, err)
 	}
 
 	return s, nil

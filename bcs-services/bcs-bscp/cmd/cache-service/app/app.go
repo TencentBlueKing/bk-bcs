@@ -116,7 +116,7 @@ func (cs *cacheService) prepare(opt *options.Option) error {
 	cs.sd = sd
 
 	// init redis client
-	bds, err := bedis.NewCluster(cc.CacheService().RedisCluster)
+	bds, err := bedis.NewRedisCache(cc.CacheService().RedisCluster)
 	if err != nil {
 		return fmt.Errorf("new redis cluster failed, err: %v", err)
 	}

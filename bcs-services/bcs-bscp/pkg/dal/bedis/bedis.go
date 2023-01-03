@@ -44,6 +44,22 @@ const (
 	LT ExpireMode = "LT"
 )
 
+// RedisClient redis cluster/standalone 方法
+type RedisClient interface {
+	Set(ctx context.Context, key string, value interface{}, expiration time.Duration) *redis.StatusCmd
+	TxPipeline() redis.Pipeliner
+	SetNX(ctx context.Context, key string, value interface{}, expiration time.Duration) *redis.BoolCmd
+	Get(ctx context.Context, key string) *redis.StringCmd
+	MGet(ctx context.Context, keys ...string) *redis.SliceCmd
+	HDel(ctx context.Context, key string, fields ...string) *redis.IntCmd
+	HGet(ctx context.Context, key, field string) *redis.StringCmd
+	HMGet(ctx context.Context, key string, fields ...string) *redis.SliceCmd
+	HGetAll(ctx context.Context, key string) *redis.StringStringMapCmd
+	Del(ctx context.Context, keys ...string) *redis.IntCmd
+	Do(ctx context.Context, args ...interface{}) *redis.Cmd
+	Ping(ctx context.Context) *redis.StatusCmd
+}
+
 // Client defines all the bscp used redis command
 type Client interface {
 	Set(ctx context.Context, key string, value interface{}, ttlSeconds int) error
@@ -65,37 +81,22 @@ type Client interface {
 }
 
 // NewCluster create a redis cluster client.
-func NewCluster(opt cc.RedisCluster) (Client, error) {
+func NewRedisCache(opt cc.RedisCluster) (Client, error) {
+	var (
+		client RedisClient
+		err    error
+	)
 
-	var tlsC *tls.Config
-	if opt.TLS.Enable() {
-		var err error
-		tlsC, err = tools.ClientTLSConfVerify(opt.TLS.InsecureSkipVerify, opt.TLS.CAFile, opt.TLS.CertFile,
-			opt.TLS.KeyFile, opt.TLS.Password)
-		if err != nil {
-			return nil, fmt.Errorf("init redis tls config failed, err: %v", err)
-		}
+	// 支持多种 redis 模式
+	switch opt.Mode {
+	case cc.RedisClusterMode:
+		client, err = newClusterClient(opt)
+	default:
+		client, err = newStandaloneClient(opt)
 	}
 
-	clusterOpt := &redis.ClusterOptions{
-		Addrs:              opt.Endpoints,
-		Username:           opt.Username,
-		Password:           opt.Password,
-		DialTimeout:        time.Duration(opt.DialTimeoutMS) * time.Millisecond,
-		ReadTimeout:        time.Duration(opt.ReadTimeoutMS) * time.Millisecond,
-		WriteTimeout:       time.Duration(opt.WriteTimeoutMS) * time.Millisecond,
-		PoolSize:           int(opt.PoolSize),
-		MinIdleConns:       int(opt.MinIdleConn),
-		MaxConnAge:         0,
-		PoolTimeout:        0,
-		IdleTimeout:        0,
-		IdleCheckFrequency: 0,
-		TLSConfig:          tlsC,
-	}
-
-	client := redis.NewClusterClient(clusterOpt)
-	if err := client.Ping(context.TODO()).Err(); err != nil {
-		return nil, fmt.Errorf("init redis cluster client, but ping failed, err: %v", err)
+	if err != nil {
+		return nil, err
 	}
 
 	bs := &bedis{
@@ -112,7 +113,7 @@ var _ Client = (*bedis)(nil)
 
 // bedis is an implement of the bscp redis client.
 type bedis struct {
-	client              *redis.ClusterClient
+	client              RedisClient
 	mc                  *metric
 	maxSlowLogLatencyMS time.Duration
 	logLimiter          *rate.Limiter
@@ -158,4 +159,72 @@ func IsWrongTypeError(err error) bool {
 	}
 
 	return false
+}
+
+// newClusterClient create a redis cluster client.
+func newClusterClient(opt cc.RedisCluster) (RedisClient, error) {
+	var tlsC *tls.Config
+	if opt.TLS.Enable() {
+		var err error
+		tlsC, err = tools.ClientTLSConfVerify(opt.TLS.InsecureSkipVerify, opt.TLS.CAFile, opt.TLS.CertFile,
+			opt.TLS.KeyFile, opt.TLS.Password)
+		if err != nil {
+			return nil, fmt.Errorf("init redis tls config failed, err: %v", err)
+		}
+	}
+
+	clusterOpt := &redis.ClusterOptions{
+		Addrs:              opt.Endpoints,
+		Username:           opt.Username,
+		Password:           opt.Password,
+		DialTimeout:        time.Duration(opt.DialTimeoutMS) * time.Millisecond,
+		ReadTimeout:        time.Duration(opt.ReadTimeoutMS) * time.Millisecond,
+		WriteTimeout:       time.Duration(opt.WriteTimeoutMS) * time.Millisecond,
+		PoolSize:           int(opt.PoolSize),
+		MinIdleConns:       int(opt.MinIdleConn),
+		MaxConnAge:         0,
+		PoolTimeout:        0,
+		IdleTimeout:        0,
+		IdleCheckFrequency: 0,
+		TLSConfig:          tlsC,
+	}
+
+	client := redis.NewClusterClient(clusterOpt)
+	if err := client.Ping(context.TODO()).Err(); err != nil {
+		return nil, fmt.Errorf("init redis cluster client, but ping failed, err: %v", err)
+	}
+
+	return client, nil
+}
+
+// newStandaloneClient create a redis standalone client.
+func newStandaloneClient(opt cc.RedisCluster) (RedisClient, error) {
+	var tlsC *tls.Config
+	if opt.TLS.Enable() {
+		var err error
+		tlsC, err = tools.ClientTLSConfVerify(opt.TLS.InsecureSkipVerify, opt.TLS.CAFile, opt.TLS.CertFile,
+			opt.TLS.KeyFile, opt.TLS.Password)
+		if err != nil {
+			return nil, fmt.Errorf("init redis tls config failed, err: %v", err)
+		}
+	}
+
+	clusterOpt := &redis.Options{
+		Addr:         opt.Endpoints[0],
+		Password:     opt.Password,
+		DB:           opt.DB,
+		DialTimeout:  time.Duration(opt.DialTimeoutMS) * time.Millisecond,
+		ReadTimeout:  time.Duration(opt.ReadTimeoutMS) * time.Millisecond,
+		WriteTimeout: time.Duration(opt.WriteTimeoutMS) * time.Millisecond,
+		PoolSize:     int(opt.PoolSize),
+		MinIdleConns: int(opt.MinIdleConn),
+		TLSConfig:    tlsC,
+	}
+
+	client := redis.NewClient(clusterOpt)
+	if err := client.Ping(context.TODO()).Err(); err != nil {
+		return nil, fmt.Errorf("init redis cluster client, but ping failed, err: %v", err)
+	}
+
+	return client, nil
 }

@@ -104,6 +104,9 @@ clean:
 	@cd ${PRO_DIR}/cmd && make clean
 	@rm -rf ${PRO_DIR}/build
 
+.PHONY: build_bscp
+build_bscp:
+	@cd ${PRO_DIR}/cmd && make all
 
 .PHONY: build_frontend
 build_frontend:

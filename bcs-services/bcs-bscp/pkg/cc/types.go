@@ -27,6 +27,12 @@ import (
 	etcd3 "go.etcd.io/etcd/client/v3"
 )
 
+const (
+	RedisStandaloneMode = "standalone" // 单节点redis
+	RedisSentinelMode   = "sentinel"   // 哨兵模式redis，哨兵实例
+	RedisClusterMode    = "cluster"    // 集群模式redis
+)
+
 // Service defines Setting related runtime.
 type Service struct {
 	Etcd Etcd `yaml:"etcd"`
@@ -129,6 +135,8 @@ type RedisCluster struct {
 	ReadTimeoutMS  uint   `yaml:"readTimeoutMS"`
 	WriteTimeoutMS uint   `yaml:"writeTimeoutMS"`
 	MinIdleConn    uint   `yaml:"minIdleConn"`
+	DB             int    `yaml:"db"`
+	Mode           string `yaml:"mode"` // 支持集群或者单例模式 可选项 standalone,cluster
 	// PoolSize defines the connection pool size for
 	// each node of the redis cluster.
 	PoolSize uint      `yaml:"poolSize"`
@@ -595,7 +603,7 @@ func (tls TLSConfig) validate() error {
 // SysOption is the system's normal option, which is parsed from
 // flag commandline.
 type SysOption struct {
-	ConfigFile string
+	ConfigFiles []string
 	// BindIP Setting startup bind ip.
 	BindIP net.IP
 	// Versioned Setting if show current version info.

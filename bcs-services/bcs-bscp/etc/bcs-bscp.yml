@@ -1,0 +1,26 @@
+service:
+  etcd:
+    endpoints:
+      - 127.0.0.1:2379
+    tls:
+      certFile: ""
+      keyFile: ""
+      caFile: ""
+
+sharding:
+  adminDatabase:
+    endpoints:
+      - 127.0.0.1:3306
+    database: bk_bscp_admin
+    user: root
+    password:
+  maxSlowLogLatencyMS: 200
+  limiter:
+    qps: 500
+    burst: 500
+
+redisCluster:
+  endpoints:
+    - 127.0.0.1:6379
+  password:
+  db: 1

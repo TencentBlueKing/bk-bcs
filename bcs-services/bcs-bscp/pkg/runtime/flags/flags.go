@@ -34,7 +34,7 @@ func SysFlags(fs *pflag.FlagSet) *cc.SysOption {
 	opt := new(cc.SysOption)
 	fs.SetNormalizeFunc(wordSepNormalizeFunc)
 
-	fs.StringVarP(&opt.ConfigFile, "config-file", "c", "", "the absolute path of the configuration file")
+	fs.StringArrayVarP(&opt.ConfigFiles, "config-file", "c", []string{}, "the absolute path of the configuration file (repeatable)")
 	fs.IPVarP(&opt.BindIP, "bind-ip", "h", []byte{}, "which IP the server is listen to")
 	fs.BoolVarP(&opt.Versioned, "version", "v", false, "show version")
 
