@@ -11,7 +11,7 @@
  *
  */
 
-package bcsapi
+package clustermanager
 
 import (
 	"context"
@@ -25,7 +25,7 @@ import (
 	"google.golang.org/grpc/metadata"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	cm "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/clustermanager"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi"
 )
 
 // XRequestID insert X-Request-ID
@@ -38,11 +38,11 @@ func XRequestID() context.Context {
 }
 
 // NewClusterManager create ClusterManager SDK implementation
-func NewClusterManager(config *Config) cm.ClusterManagerClient {
+func NewClusterManager(config *bcsapi.Config) (ClusterManagerClient, func()) {
 	rand.Seed(time.Now().UnixNano())
 	if len(config.Hosts) == 0 {
 		// ! pay more attention for nil return
-		return nil
+		return nil, nil
 	}
 	// create grpc connection
 	header := map[string]string{
@@ -56,7 +56,7 @@ func NewClusterManager(config *Config) cm.ClusterManagerClient {
 		header[k] = v
 	}
 	md := metadata.New(header)
-	auth := &Authentication{InnerClientName: config.InnerClientName}
+	auth := &bcsapi.Authentication{InnerClientName: config.InnerClientName}
 	var opts []grpc.DialOption
 	opts = append(opts, grpc.WithDefaultCallOptions(grpc.Header(&md)))
 	if config.TLSConfig != nil {
@@ -66,6 +66,10 @@ func NewClusterManager(config *Config) cm.ClusterManagerClient {
 		auth.Insecure = true
 	}
 	opts = append(opts, grpc.WithPerRPCCredentials(auth))
+	if config.AuthToken != "" {
+		opts = append(opts, grpc.WithPerRPCCredentials(bcsapi.NewTokenAuth(config.AuthToken)))
+	}
+
 	var conn *grpc.ClientConn
 	var err error
 	maxTries := 3
@@ -83,8 +87,8 @@ func NewClusterManager(config *Config) cm.ClusterManagerClient {
 	}
 	if conn == nil {
 		blog.Errorf("create no cluster manager client after all instance tries")
-		return nil
+		return nil, nil
 	}
 	// init cluster manager client
-	return cm.NewClusterManagerClient(conn)
+	return NewClusterManagerClient(conn), func() { conn.Close() }
 }

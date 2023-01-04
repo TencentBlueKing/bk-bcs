@@ -35,11 +35,11 @@ type ProjectClient struct {
 }
 
 // NewProjectManagerClient create ProjectManager SDK implementation
-func NewProjectManagerClient(config *bcsapi.Config) *ProjectClient {
+func NewProjectManagerClient(config *bcsapi.Config) (*ProjectClient, func()) {
 	rand.Seed(time.Now().UnixNano())
 	if len(config.Hosts) == 0 {
 		// ! pay more attention for nil return
-		return nil
+		return nil, nil
 	}
 	// create grpc connection
 	header := map[string]string{
@@ -63,6 +63,10 @@ func NewProjectManagerClient(config *bcsapi.Config) *ProjectClient {
 		auth.Insecure = true
 	}
 	opts = append(opts, grpc.WithPerRPCCredentials(auth))
+	if config.AuthToken != "" {
+		opts = append(opts, grpc.WithPerRPCCredentials(bcsapi.NewTokenAuth(config.AuthToken)))
+	}
+
 	var conn *grpc.ClientConn
 	var err error
 	maxTries := 3
@@ -80,7 +84,7 @@ func NewProjectManagerClient(config *bcsapi.Config) *ProjectClient {
 	}
 	if conn == nil {
 		blog.Errorf("create no project manager client after all instance tries")
-		return nil
+		return nil, nil
 	}
 	// init project manager client
 	c := &ProjectClient{
@@ -89,5 +93,5 @@ func NewProjectManagerClient(config *bcsapi.Config) *ProjectClient {
 		Namespace: NewNamespaceClient(conn),
 		Variable:  NewVariableClient(conn),
 	}
-	return c
+	return c, func() { conn.Close() }
 }
