@@ -15,12 +15,16 @@ package account
 
 import (
 	"context"
+	"encoding/base64"
+	"encoding/json"
 	"fmt"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/google/api"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
 	storeopt "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/options"
@@ -78,7 +82,10 @@ func (la *ListAction) listCloudAccount() error {
 		if err != nil {
 			blog.Errorf("getRelativeClustersByAccountID[%s] failed: %v", cloudAccounts[i].AccountID, err)
 		}
-		cloudAccounts[i].Account = shieldCloudSecret(cloudAccounts[i].Account)
+		cloudAccounts[i].Account, err = shieldCloudSecret(cloudAccounts[i].Account)
+		if err != nil {
+			blog.Errorf("shieldCloudSecret failed: %v", err)
+		}
 
 		cloudAccountInfo := &cmproto.CloudAccountInfo{
 			Account:  &cloudAccounts[i],
@@ -146,7 +153,7 @@ func (la *ListAction) Handle(
 }
 
 // shieldCloudSecret return secret by '***'
-func shieldCloudSecret(account *cmproto.Account) *cmproto.Account {
+func shieldCloudSecret(account *cmproto.Account) (*cmproto.Account, error) {
 	shield := func(key string) string {
 		keyBytes := []byte(key)
 		if len(keyBytes) <= 4 {
@@ -169,7 +176,20 @@ func shieldCloudSecret(account *cmproto.Account) *cmproto.Account {
 
 	account.SecretKey = shield(account.SecretKey)
 	account.ClientSecret = shield(account.ClientSecret)
-	return account
+	if account.ServiceAccountSecret != "" {
+		sa := &api.GkeServiceAccount{}
+		if err := json.Unmarshal([]byte(account.ServiceAccountSecret), sa); err != nil {
+			return nil, err
+		}
+		shieldPrivateKey := shield(base64.StdEncoding.EncodeToString([]byte(sa.PrivateKey)))
+		sa.PrivateKey = shieldPrivateKey
+		shieldServiceAccountByte, err := json.Marshal(sa)
+		if err != nil {
+			return nil, err
+		}
+		account.ServiceAccountSecret = string(shieldServiceAccountByte)
+	}
+	return account, nil
 }
 
 // ListPermDataAction action for list permData account

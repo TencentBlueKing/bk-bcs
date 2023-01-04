@@ -11,14 +11,27 @@
  *
  */
 
-// Package manager xxx
-package manager
+package google
 
-import (
-	// init aws implementation registry
-	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/aws"
-	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/azure"    // azure xxx
-	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/blueking" // blueking xxx
-	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/google"   // google xxx
-	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud"   // qcloud xxx
+import "fmt"
+
+var (
+	cloudName = "google"
+)
+
+// task template name
+const (
+	// deleteClusterTaskTemplate bk-sops add task template
+	deleteClusterTaskTemplate = "gke-delete cluster: %s"
+)
+
+// tasks
+var (
+	// import cluster task
+	importClusterNodesTask        = fmt.Sprintf("%s-ImportClusterNodesTask", cloudName)
+	registerClusterKubeConfigTask = fmt.Sprintf("%s-RegisterClusterKubeConfigTask", cloudName)
+
+	// delete cluster task
+	deleteGKEClusterTask   = fmt.Sprintf("%s-deleteGKEClusterTask", cloudName)
+	cleanClusterDBInfoTask = fmt.Sprintf("%s-CleanClusterDBInfoTask", cloudName)
 )
