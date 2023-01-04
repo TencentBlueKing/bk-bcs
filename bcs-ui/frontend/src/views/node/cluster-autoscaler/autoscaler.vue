@@ -33,7 +33,7 @@
             :autoscaler-data="autoscalerData">
           </AutoScalerFormItem>
         </LayoutGroup>
-        <LayoutGroup collapsible class="mb15" :expanded="autoscalerData.isScaleDownEnable">
+        <LayoutGroup collapsible class="mb15" :expanded="!!autoscalerData.isScaleDownEnable">
           <template #title>
             <span>{{$t('自动缩容配置')}}</span>
             <span class="switch-autoscaler">
@@ -95,9 +95,7 @@
           </template>
         </bcs-table-column>
         <bcs-table-column :label="$t('操作系统')" show-overflow-tooltip>
-          <template #default="{ row }">
-            {{ row.launchTemplate.imageInfo.imageName || '--' }}
-          </template>
+          <template #default>{{clusterOS}}</template>
         </bcs-table-column>
         <bcs-table-column :label="$t('节点池状态')">
           <template #default="{ row }">
@@ -115,12 +113,6 @@
             </StatusIcon>
           </template>
         </bcs-table-column>
-        <!-- <bcs-table-column :label="$t('自动扩缩容')" :render-header="renderHeader">
-                    <template #default="{ row }">
-                        <span v-if="row.enableAutoscale">{{$t('已启用')}}</span>
-                        <span v-else class="disabled">{{$t('已关闭')}}</span>
-                    </template>
-                </bcs-table-column> -->
         <bcs-table-column :label="$t('操作')" width="170">
           <template #default="{ row }">
             <div class="operate">
@@ -264,6 +256,7 @@
           type="datetimerange"
           shortcut-close
           :use-shortcut-text="false"
+          :clearable="false"
           v-model="timeRange"
           @change="handleTimeRangeChange">
         </bcs-date-picker>
@@ -272,8 +265,11 @@
         v-bkloading="{ isLoading: recordLoading }"
         :data="recordList"
         :pagination="recordPagination"
+        row-key="taskID"
+        :expand-row-keys="expandRowKeys"
         @page-change="recordPageChange"
-        @page-limit-change="recordPageSizeChange">
+        @page-limit-change="recordPageSizeChange"
+        @expand-change="handleExpandChange">
         <bcs-table-column type="expand" width="30">
           <template #default="{ row }">
             <bcs-table
@@ -282,7 +278,11 @@
               :header-cell-style="{ background: '#fff', borderRight: 'none' }">
               <bcs-table-column :label="$t('步骤名称')" show-overflow-tooltip>
                 <template #default="{ row: key }">
-                  {{ row.task.steps[key].name }}
+                  {{ row.task.steps[key].taskName }}
+                  <i
+                    class="bcs-icon bcs-icon-fenxiang bcs-icon-btn"
+                    v-if="row.task.steps[key].params && row.task.steps[key].params.taskUrl"
+                    @click="handleGotoSops(row.task.steps[key].params.taskUrl)"></i>
                 </template>
               </bcs-table-column>
               <bcs-table-column :label="$t('步骤信息')" show-overflow-tooltip>
@@ -335,6 +335,15 @@
             <span v-else>--</span>
           </template>
         </bcs-table-column>
+        <bcs-table-column :label="$t('操作')" width="80">
+          <template #default="{ row }">
+            <bcs-button
+              text
+              v-if="taskStatusColorMap[row.task.status] === 'red'"
+              @click="handleRetryTask(row)">{{$t('重试')}}</bcs-button>
+            <span v-else>--</span>
+          </template>
+        </bcs-table-column>
       </bcs-table>
     </bcs-dialog>
   </div>
@@ -349,8 +358,9 @@ import LoadingIcon from '@/components/loading-icon.vue';
 import usePage from '@/views/dashboard/common/use-page';
 import useInterval from '@/views/dashboard/common/use-interval';
 import { CreateElement } from 'vue';
-import LayoutGroup from './LayoutGroup.vue';
-import AutoScalerFormItem from './AutoScalerFormItem.vue';
+import LayoutGroup from '../LayoutGroup.vue';
+import AutoScalerFormItem from '../cluster-autoscaler-tencent/AutoScalerFormItem.vue';
+import { useClusterInfo } from '@/views/cluster/use-cluster';
 
 export default defineComponent({
   name: 'AutoScaler',
@@ -386,6 +396,7 @@ export default defineComponent({
         prop: 'maxTotalUnreadyPercentage',
         name: $i18n.t('unready节点超过集群总节点'),
         unit: '%',
+        desc: $i18n.t('节点Ready是根据节点的最新属性conditions.type == Ready并且conditions.status == "True"来判断的，也可以通过kubectl get node命令获取的STATUS字段是否为 Ready 来判定节点是否ready'),
         suffix: $i18n.t('时停止自动扩缩容'),
       },
     ]);
@@ -397,10 +408,18 @@ export default defineComponent({
         desc: $i18n.t('random：在有多个节点池时，随机选择节点池<br/>least-waste：在有多个节点池时，以最小浪费原则选择，选择有最少可用资源的节点池<br/>most-pods：在有多个节点池时，选择容量最大（可以创建最多Pod）的节点池'),
       },
       {
-        prop: 'bufferResourceRatio',
-        name: $i18n.t('触发扩容资源阈值'),
+        prop: 'bufferResourceCpuRatio',
+        name: $i18n.t('触发扩容资源阈值 (CPU)'),
         isBasicProp: true,
         unit: '%',
+        desc: $i18n.t('CPU资源使用率超过该阈值触发扩容, 无论内存资源使用率是否达到阈值'),
+      },
+      {
+        prop: 'bufferResourceMemRatio',
+        name: $i18n.t('触发扩容资源阈值 (内存)'),
+        isBasicProp: true,
+        unit: '%',
+        desc: $i18n.t('内存资源使用率超过该阈值触发扩容, 无论CPU资源使用率是否达到阈值'),
       },
       {
         prop: 'maxNodeProvisionTime',
@@ -419,6 +438,7 @@ export default defineComponent({
         name: $i18n.t('触发缩容资源阈值 (CPU/内存)'),
         isBasicProp: true,
         unit: '%',
+        desc: $i18n.t('CPU和内存资源必须同时低于设定阈值才会触发缩容'),
       },
       {
         prop: 'scaleDownUnneededTime',
@@ -466,6 +486,7 @@ export default defineComponent({
       if (!props.clusterId) return;
       autoscalerData.value = await $store.dispatch('clustermanager/clusterAutoScaling', {
         $clusterId: props.clusterId,
+        provider: 'selfProvisionCloud',
       });
       if (autoscalerData.value.status !== 'UPDATING') {
         stop();
@@ -507,6 +528,7 @@ export default defineComponent({
         // 开启或关闭扩缩容
         const result = await $store.dispatch('clustermanager/toggleClusterAutoScalingStatus', {
           enable: value,
+          provider: 'selfProvisionCloud',
           $clusterId: props.clusterId,
           updater: user.value.username,
         });
@@ -583,26 +605,38 @@ export default defineComponent({
       nodepoolList.value = await $store.dispatch('clustermanager/nodeGroup', {
         clusterID: props.clusterId,
       });
-      if (!nodepoolList.value.some(pool => [
-        'CREATING',
-        'DELETING',
-        'UPDATING',
-      ].includes(pool.status))) {
-        stopPoolInterval();
-      } else {
-        startPoolInterval();
-      }
+      const promiseList = nodepoolList.value?.map(item => $store.dispatch('clustermanager/nodeGroupNodeList', {
+        $nodeGroupID: item.nodeGroupID,
+        output: 'wide',
+      }));
+      const data = await Promise.all(promiseList);
+      nodepoolList.value.forEach((item, index) => {
+        // 节点数量动态从节点列表获取
+        item.autoScaling.desiredSize = data[index]?.length;
+      });
+      // if (!nodepoolList.value.some(pool => [
+      //   'CREATING',
+      //   'DELETING',
+      //   'UPDATING',
+      // ].includes(pool.status))) {
+      //   stopPoolInterval();
+      // } else {
+      //   startPoolInterval();
+      // }
     };
     const handleGetNodePoolList = async () => {
       nodepoolLoading.value = true;
       await getNodePoolList();
-      if (nodepoolList.value.some(pool => [
-        'CREATING',
-        'DELETING',
-        'UPDATING',
-      ].includes(pool.status))) {
+      if (!!nodepoolList.value.length) {
         startPoolInterval();
       }
+      // if (nodepoolList.value.some(pool => [
+      //   'CREATING',
+      //   'DELETING',
+      //   'UPDATING',
+      // ].includes(pool.status))) {
+      //   startPoolInterval();
+      // }
       nodepoolLoading.value = false;
     };
     const { start: startPoolInterval, stop: stopPoolInterval } = useInterval(getNodePoolList, 5000); // 轮询
@@ -711,6 +745,8 @@ export default defineComponent({
       currentOperateRow.value = {};
       nodeList.value = [];
       stopNodeInterval();
+      // 刷新节点池
+      handleGetNodePoolList();
     };
     const handleShowNodeManage = (row) => {
       currentOperateRow.value = row;
@@ -718,22 +754,23 @@ export default defineComponent({
       handleGetNodeList();
     };
     const getNodeList = async () => {
+      if (!currentOperateRow.value?.nodeGroupID) {
+        stopNodeInterval();
+        return;
+      }
       nodeList.value = await $store.dispatch('clustermanager/nodeGroupNodeList', {
         $nodeGroupID: currentOperateRow.value.nodeGroupID,
         output: 'wide',
       });
-      if (!nodeList.value.some(node => ['DELETING', 'INITIALIZATION'].includes(node.status))) {
-        stopNodeInterval();
-      } else {
+      if (nodeList.value.some(node => ['DELETING', 'INITIALIZATION'].includes(node.status))) {
         startNodeInterval();
+      } else {
+        stopNodeInterval();
       }
     };
     const handleGetNodeList = async () => {
       nodeListLoading.value = true;
       await getNodeList();
-      if (nodeList.value.some(node => ['DELETING', 'INITIALIZATION'].includes(node.status))) {
-        startNodeInterval();
-      }
       nodeListLoading.value = false;
     };
     const { start: startNodeInterval, stop: stopNodeInterval } = useInterval(getNodeList, 5000); // 轮询
@@ -862,6 +899,7 @@ export default defineComponent({
         },
       },
     ]);
+    const expandRowKeys = ref<any[]>([]);
     const timeRange = ref<Date[]>([]);
     const showRecord = ref(false);
     const recordLoading = ref(false);
@@ -885,7 +923,8 @@ export default defineComponent({
     };
     const handleShowRecord = (row) => {
       const end = new Date();
-      const start = new Date(end.getFullYear(), end.getMonth(), end.getDate());
+      const start = new Date();
+      start.setTime(start.getTime() - 3600 * 1000 * 24 * 7);
       timeRange.value = [
         start,
         end,
@@ -901,20 +940,38 @@ export default defineComponent({
         limit: 10,
         count: 0,
       };
+      expandRowKeys.value = [];
     };
-    const handleGetRecordList = async () => {
-      recordLoading.value = true;
+    const { start: startTaskPool, stop: stopTaskPool } = useInterval(getRecordList, 5000); // 轮询
+    async function getRecordList() {
       const { results = [], count = 0 } = await $store.dispatch('clustermanager/clusterAutoScalingLogs', {
         resourceType: 'nodegroup',
         resourceID: currentOperateRow.value.nodeGroupID,
-        startTime: Math.floor(new Date(timeRange.value[0]).getTime() / 1000),
-        endTime: Math.floor(new Date(timeRange.value[1]).getTime() / 1000),
+        startTime: Math.floor(new Date(timeRange.value[0]).getTime() / 1000) || '',
+        endTime: Math.floor(new Date(timeRange.value[1]).getTime() / 1000) || '',
         limit: recordPagination.value.limit,
         page: recordPagination.value.current,
       });
       recordList.value = results;
+      if (recordList.value.some(row => row.task.status === 'RUNNING')) {
+        startTaskPool();
+      } else {
+        stopTaskPool();
+      }
       recordPagination.value.count = count;
+    };
+    const handleGetRecordList = async () => {
+      recordLoading.value = true;
+      await getRecordList();
       recordLoading.value = false;
+    };
+    const handleExpandChange = (row) => {
+      const index = expandRowKeys.value.findIndex(key => key === row.taskID);
+      if (index > -1) {
+        expandRowKeys.value.splice(index, 1);
+      } else {
+        expandRowKeys.value.push(row.taskID);
+      }
     };
 
     // 编辑自动扩缩容
@@ -945,16 +1002,37 @@ export default defineComponent({
         },
       });
     };
+    // 集群详情
+    const { clusterOS, getClusterDetail } = useClusterInfo();
+
+    // 重试任务
+    const handleRetryTask = async (row) => {
+      const result = await $store.dispatch('clustermanager/taskRetry', {
+        $taskId: row.taskID,
+        updater: user.value.username,
+      });
+      result && handleGetRecordList();
+    };
+
+    // 跳转标准运维
+    const handleGotoSops = (url: string) => {
+      window.open(url);
+    };
+
     onMounted(() => {
       handleGetAutoScalerConfig();
       handleGetNodePoolList();
+      getClusterDetail(props.clusterId, true);
     });
     onBeforeUnmount(() => {
       stop();
       stopPoolInterval();
       stopNodeInterval();
+      stopTaskPool();
     });
     return {
+      expandRowKeys,
+      clusterOS,
       disabledAutoscaler,
       disabledDelete,
       currentOperateRow,
@@ -1006,6 +1084,9 @@ export default defineComponent({
       handleEditPool,
       taskStatusMap,
       taskStatusColorMap,
+      handleRetryTask,
+      handleExpandChange,
+      handleGotoSops,
     };
   },
 });

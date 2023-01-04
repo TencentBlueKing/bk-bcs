@@ -87,6 +87,7 @@ export default class Schema {
     return type;
   }
   static getSchemaByProp(schema, props: string) {
+    if (!schema || !Object.keys(schema).length) return {};
     const data = props.split('.');
     return data.reduce((data, prop) => {
       if (data.type === 'array') {

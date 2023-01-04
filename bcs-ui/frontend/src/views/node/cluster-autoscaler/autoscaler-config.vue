@@ -1,3 +1,4 @@
+<!-- eslint-disable max-len -->
 <template>
   <BcsContent>
     <template #header>
@@ -22,7 +23,7 @@
       </div>
       <LayoutGroup :title="$t('基本配置')" class="mb10">
         <bk-form-item :label="$t('扩缩容检测时间间隔')">
-          <bk-input type="number" v-model="autoscalerData.scanInterval">
+          <bk-input type="number" :min="5" :max="86400" v-model="autoscalerData.scanInterval">
             <template slot="append">
               <div class="group-text">{{$t('秒')}}</div>
             </template>
@@ -33,15 +34,19 @@
           desc-type="icon"
           desc-icon="bk-icon icon-info-circle"
           :desc="$t('自动扩缩容保护机制，集群中unready节点大于允许unready节点数量，且unready节点的比例大于设置的比例，会停止Cluster Autoscaler功能，否则Cluster Autoscaler功能正常运行')">
-          <bk-input type="number" v-model="autoscalerData.okTotalUnreadyCount">
+          <bk-input type="number" :min="0" :max="320000" v-model="autoscalerData.okTotalUnreadyCount">
             <template slot="append">
               <div class="group-text">{{$t('个')}}</div>
             </template>
           </bk-input>
         </bk-form-item>
-        <bk-form-item :label="$t('unready节点超过集群总节点')">
+        <bk-form-item
+          :label="$t('unready节点超过集群总节点')"
+          desc-type="icon"
+          desc-icon="bk-icon icon-info-circle"
+          :desc="$t('节点Ready是根据节点的最新属性conditions.type == Ready并且conditions.status == True来判断的，也可以通过kubectl get node命令获取的s-t-a-t-u-s字段是否为 ready 来判定节点是否ready')">
           <div style="display: flex;">
-            <bcs-input type="number" v-model="autoscalerData.maxTotalUnreadyPercentage">
+            <bcs-input type="number" :min="0" :max="100" v-model="autoscalerData.maxTotalUnreadyPercentage">
               <template slot="append">
                 <div class="group-text">{{$t('%')}}</div>
               </template>
@@ -62,8 +67,23 @@
             <bk-radio value="most-pod">Most Pods</bk-radio>
           </bk-radio-group>
         </bk-form-item>
-        <bk-form-item :label="$t('触发扩容资源阈值')">
-          <bk-input type="number" v-model="autoscalerData.bufferResourceRatio">
+        <bk-form-item
+          desc-type="icon"
+          desc-icon="bk-icon icon-info-circle"
+          :label="$t('触发扩容资源阈值 (CPU)')"
+          :desc="$t('CPU资源使用率超过该阈值触发扩容, 无论内存资源使用率是否达到阈值')">
+          <bk-input type="number" :min="0" :max="100" v-model="autoscalerData.bufferResourceCpuRatio">
+            <template slot="append">
+              <div class="group-text">%</div>
+            </template>
+          </bk-input>
+        </bk-form-item>
+        <bk-form-item
+          desc-type="icon"
+          desc-icon="bk-icon icon-info-circle"
+          :label="$t('触发扩容资源阈值 (内存)')"
+          :desc="$t('内存资源使用率超过该阈值触发扩容, 无论CPU资源使用率是否达到阈值')">
+          <bk-input type="number" :min="0" :max="100" v-model="autoscalerData.bufferResourceMemRatio">
             <template slot="append">
               <div class="group-text">%</div>
             </template>
@@ -74,7 +94,7 @@
           desc-type="icon"
           desc-icon="bk-icon icon-info-circle"
           :desc="$t('如果节点池在设置的时间范围内没有提供可用资源，会导致此次自动扩容失败')">
-          <bk-input type="number" v-model="autoscalerData.maxNodeProvisionTime">
+          <bk-input type="number" :min="60" :max="86400" v-model="autoscalerData.maxNodeProvisionTime">
             <template slot="append">
               <div class="group-text">{{$t('秒')}}</div>
             </template>
@@ -84,7 +104,7 @@
           <bk-checkbox v-model="autoscalerData.scaleUpFromZero"></bk-checkbox>
         </bk-form-item>
       </LayoutGroup>
-      <LayoutGroup collapsible :expanded="autoscalerData.isScaleDownEnable">
+      <LayoutGroup collapsible :expanded="!!autoscalerData.isScaleDownEnable">
         <template #title>
           <span>{{$t('自动缩容配置')}}</span>
           <span class="switch-autoscaler">
@@ -96,8 +116,12 @@
             </bcs-switcher>
           </span>
         </template>
-        <bk-form-item :label="$t('触发缩容资源阈值 (CPU/内存)')">
-          <bk-input type="number" v-model="autoscalerData.scaleDownUtilizationThreahold">
+        <bk-form-item
+          desc-type="icon"
+          desc-icon="bk-icon icon-info-circle"
+          :label="$t('触发缩容资源阈值 (CPU/内存)')"
+          :desc="$t('CPU和内存资源必须同时低于设定阈值才会触发缩容')">
+          <bk-input type="number" :min="0" :max="100" v-model="autoscalerData.scaleDownUtilizationThreahold">
             <template slot="append">
               <div class="group-text">%</div>
             </template>
@@ -108,7 +132,7 @@
           desc-type="icon"
           desc-icon="bk-icon icon-info-circle"
           :desc="$t('Cluster Autocaler组件评估集群可以缩容多久后开始执行缩容，防止集群容量在短时间内或高或低于设置的缩容阈值造成频繁扩缩容操作')">
-          <bk-input type="number" v-model="autoscalerData.scaleDownUnneededTime">
+          <bk-input type="number" :min="60" :max="86400" v-model="autoscalerData.scaleDownUnneededTime">
             <template slot="append">
               <div class="group-text">{{$t('秒')}}</div>
             </template>
@@ -119,7 +143,7 @@
           desc-type="icon"
           desc-icon="bk-icon icon-info-circle"
           :desc="$t('缩容节点时，等待 pod 停止的最长时间（不会遵守 terminationGracefulPeriodSecond，超时强杀）')">
-          <bk-input type="number" v-model="autoscalerData.maxGracefulTerminationSec">
+          <bk-input type="number" :min="60" :max="86400" v-model="autoscalerData.maxGracefulTerminationSec">
             <template slot="append">
               <div class="group-text">{{$t('秒')}}</div>
             </template>
@@ -130,7 +154,7 @@
           desc-type="icon"
           desc-icon="bk-icon icon-info-circle"
           :desc="$t('扩容节点后多久才继续缩容判断，如果业务自定义初始化任务所需时间比较长，需要适当上调此值')">
-          <bk-input type="number" v-model="autoscalerData.scaleDownDelayAfterAdd">
+          <bk-input type="number" :min="60" :max="86400" v-model="autoscalerData.scaleDownDelayAfterAdd">
             <template slot="append">
               <div class="group-text">{{$t('秒')}}</div>
             </template>
@@ -141,29 +165,28 @@
           desc-type="icon"
           desc-icon="bk-icon icon-info-circle"
           :desc="$t('缩容节点后多久再继续缩容节点，默认设置为0，代表与扩缩容检测时间间隔设置的值相同')">
-          <bk-input type="number" v-model="autoscalerData.scaleDownDelayAfterDelete">
+          <bk-input type="number" :min="60" :max="86400" v-model="autoscalerData.scaleDownDelayAfterDelete">
             <template slot="append">
               <div class="group-text">{{$t('秒')}}</div>
             </template>
           </bk-input>
         </bk-form-item>
         <bk-form-item :label="$t('缩容失败后重试时间间隔')">
-          <bk-input type="number" v-model="autoscalerData.scaleDownDelayAfterFailure">
+          <bk-input type="number" :min="60" :max="86400" v-model="autoscalerData.scaleDownDelayAfterFailure">
             <template slot="append">
               <div class="group-text">{{$t('秒')}}</div>
             </template>
           </bk-input>
         </bk-form-item>
         <bk-form-item :label="$t('unready节点缩容等待时间')">
-          <bk-input type="number" v-model="autoscalerData.scaleDownUnreadyTime">
+          <bk-input type="number" :min="60" :max="86400" v-model="autoscalerData.scaleDownUnreadyTime">
             <template slot="append">
               <div class="group-text">{{$t('秒')}}</div>
             </template>
           </bk-input>
         </bk-form-item>
-
         <bk-form-item :label="$t('单次缩容最大节点数')">
-          <bk-input type="number" v-model="autoscalerData.maxEmptyBulkDelete">
+          <bk-input type="number" :min="1" :max="320000" v-model="autoscalerData.maxEmptyBulkDelete">
             <template slot="append">
               <div class="group-text">{{$t('个')}}</div>
             </template>
@@ -175,13 +198,13 @@
 </template>
 <script lang="ts">
 import { computed, defineComponent, onMounted, ref } from '@vue/composition-api';
-import BcsContent from './bcs-content.vue';
-import HeaderNav from './header-nav.vue';
+import BcsContent from '../bcs-content.vue';
+import HeaderNav from '../header-nav.vue';
 import { useClusterList } from '@/views/cluster/use-cluster';
 import $i18n from '@/i18n/i18n-setup';
 import $router from '@/router/index';
 import $store from '@/store/index';
-import LayoutGroup from './LayoutGroup.vue';
+import LayoutGroup from '../LayoutGroup.vue';
 
 export default defineComponent({
   components: {
@@ -235,6 +258,7 @@ export default defineComponent({
       loading.value = true;
       const result = await $store.dispatch('clustermanager/updateClusterAutoScaling', {
         ...autoscalerData.value,
+        provider: 'selfProvisionCloud',
         updater: user.value.username,
         $clusterId: props.clusterId,
       });

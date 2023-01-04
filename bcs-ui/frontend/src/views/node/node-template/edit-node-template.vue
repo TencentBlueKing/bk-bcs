@@ -9,37 +9,7 @@
       :min="3"
       disabled>
       <template #aside>
-        <div class="node-template-aside">
-          <div class="title">
-            {{$t('Worker节点初始化配置说明')}}
-          </div>
-          <div class="content-wrapper">
-            <div class="content">
-              <div class="content-item">
-                <div class="label">{{$t('内置变量')}}</div>
-                <bcs-table class="mt15" :data="configList">
-                  <bcs-table-column :label="$t('变量名')">
-                    <template #default="{ row }">
-                      <span
-                        v-bk-tooltips.top="{
-                          content: $t('点击复制变量名 {name}', { name: row.refer })
-                        }"
-                        @click="handleCopyVar(row)">
-                        {{row.refer}}
-                      </span>
-                    </template>
-                  </bcs-table-column>
-                  <bcs-table-column
-                    :label="$t('含义')"
-                    prop="desc"
-                    show-overflow-tooltip
-                  ></bcs-table-column>
-                </bcs-table>
-              </div>
-              <BcsMd class="mt15" :code="postActionDescMd"></BcsMd>
-            </div>
-          </div>
-        </div>
+        <ActionDoc class="node-template-aside" :title="$t('Worker节点初始化配置说明')" />
       </template>
       <template #main>
         <bk-form :model="formData" :rules="rules" ref="formRef">
@@ -350,21 +320,19 @@
 <script lang="ts">
 import { defineComponent, ref, computed, onMounted, watch } from '@vue/composition-api';
 import FormGroup from '@/views/cluster/create-cluster/form-group.vue';
-import KeyValue from './key-value.vue';
-import Taints from './new-taints.vue';
+import KeyValue from '../key-value.vue';
+import Taints from '../new-taints.vue';
 import $store from '@/store/index';
 import usePage from '@/views/dashboard/common/use-page';
 import useSearch from '@/views/dashboard/common/use-search';
 import $router from '@/router';
 import $i18n from '@/i18n/i18n-setup';
-import { copyText } from '@/common/util';
 import useInterval from '@/views/dashboard/common/use-interval';
-import BcsMd from '@/components/bcs-md/index.vue';
-import postActionDescMd from './postaction-desc.md';
-import InputType from './input-type.vue';
+import InputType from '../input-type.vue';
+import ActionDoc from './action-doc.vue';
 
 export default defineComponent({
-  components: { FormGroup, KeyValue, Taints, BcsMd, InputType },
+  components: { FormGroup, KeyValue, Taints, InputType, ActionDoc },
   props: {
     nodeTemplateID: {
       type: [String, Number],
@@ -520,7 +488,7 @@ export default defineComponent({
     const sopsParamsLoading = ref(false);
     const sopsParams = ref({});
     const isSopsParamsExitVar = computed(() => Object.values(sopsParams.value).some(value => /{{.*}}/.test(value as string)));
-    const sopsParamsList = ref([]);
+    const sopsParamsList = ref<any[]>([]);
     const templateUrl = ref('');
     const handleGetSopsParams = async () => {
       sopsParamsLoading.value = true;
@@ -593,21 +561,6 @@ export default defineComponent({
       window.open(taskUrl.value);
     };
 
-    // 配置说明
-    const configLoading = ref(false);
-    const configList = ref([]);
-    const handleGetConfigList = async () => {
-      configLoading.value = true;
-      configList.value = await $store.dispatch('clustermanager/bkSopsTemplatevalues');
-      configLoading.value = false;
-    };
-    const handleCopyVar = (row) => {
-      copyText(row.refer);
-      $bkMessage({
-        theme: 'success',
-        message: $i18n.t('复制成功'),
-      });
-    };
 
     // 创建和更新节点模板
     const btnLoading = ref(false);
@@ -711,7 +664,6 @@ export default defineComponent({
     };
     onMounted(() => {
       handleGetkubeletData();
-      handleGetConfigList();
       handleGetDetail();
     });
     return {
@@ -746,8 +698,6 @@ export default defineComponent({
       handlePreview,
       handleReset,
       handleEditBlur,
-      configList,
-      handleCopyVar,
       handlekubeletMouseEnter,
       activeKubeletFlagName,
       kubeletDiffData,
@@ -757,7 +707,6 @@ export default defineComponent({
       taskUrl,
       handleDebugDialogClose,
       handleGotoTaskDetail,
-      postActionDescMd,
       handleGetbkSopsList,
       handleRefreshList,
       isSopsParamsExitVar,
@@ -801,34 +750,6 @@ export default defineComponent({
         height: 100%;
         overflow: auto;
         background: #fff;
-        .title {
-            height: 52px;
-            padding: 0 16px;
-            font-size: 16px;
-            color: #313238;
-            display: flex;
-            align-items: center;
-            box-shadow: inset 0 -1px 0 0 #DCDEE5;
-        }
-        .content-wrapper {
-            max-height: calc(100vh - 275px);
-            overflow: auto;
-        }
-        .content {
-            padding: 16px 0;
-            .content-item {
-                padding: 0 24px;
-                .label {
-                    font-weight: 600;
-                    line-height: 1.25;
-                    font-size: 1em;
-                    color: #24292e;
-                }
-            }
-            >>> .bcs-md-preview {
-                overflow: hidden;
-            }
-        }
     }
     .mw88 {
         min-width: 88px;

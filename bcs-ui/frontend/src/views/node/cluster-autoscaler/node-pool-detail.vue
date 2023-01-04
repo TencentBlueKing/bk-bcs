@@ -1,0 +1,429 @@
+<!-- eslint-disable max-len -->
+<template>
+  <BcsContent>
+    <template #header>
+      <HeaderNav :list="navList"></HeaderNav>
+    </template>
+    <div class="node-pool-detail" v-bkloading="{ isLoading: loading }">
+      <div class="mb15 panel-header">
+        <span class="title">{{$t('基础信息')}}</span>
+        <bk-button theme="primary" @click="handleEditPool">{{ $t('编辑') }}</bk-button>
+      </div>
+      <template v-if="nodePoolData">
+        <bk-form class="content-wrapper">
+          <bk-form-item :label="$t('节点池名称')">
+            {{`${nodePoolData.nodeGroupID} (${nodePoolData.name}) `}}
+          </bk-form-item>
+          <bk-form-item :label="$t('节点池状态')">
+            <LoadingIcon v-if="['CREATING', 'DELETING', 'UPDATING'].includes(nodePoolData.status)">
+              {{ statusTextMap[nodePoolData.status] }}
+            </LoadingIcon>
+            <StatusIcon status="unknown" v-else-if="!nodePoolData.enableAutoscale && nodePoolData.status === 'RUNNING'">
+              {{$t('已关闭')}}
+            </StatusIcon>
+            <StatusIcon
+              :status="nodePoolData.status"
+              :status-color-map="statusColorMap"
+              v-else>
+              {{ statusTextMap[nodePoolData.status] }}
+            </StatusIcon>
+          </bk-form-item>
+          <bk-form-item :label="$t('节点数量范围')">
+            {{`${nodePoolData.autoScaling.minSize} ~ ${nodePoolData.autoScaling.maxSize}`}}
+          </bk-form-item>
+          <bk-form-item :label="$t('是否开启调度')">
+            {{nodePoolData.nodeTemplate.unSchedulable ? $t('否') : $t('是')}}
+          </bk-form-item>
+          <bk-form-item label="Labels">
+            <bk-button
+              text
+              size="small"
+              style="padding: 0;"
+              @click="showLabels = true">{{$t('查看')}}</bk-button>
+          </bk-form-item>
+          <bk-form-item label="Taints">
+            <bk-button
+              text
+              size="small"
+              style="padding: 0;"
+              @click="showTaints = true">{{$t('查看')}}</bk-button>
+          </bk-form-item>
+          <bk-form-item :label="$t('扩缩容模式')">
+            {{scalingModeMap[nodePoolData.autoScaling.scalingMode]}}
+          </bk-form-item>
+          <bk-form-item :label="$t('实例创建策略')">
+            {{multiZoneSubnetPolicyMap[nodePoolData.autoScaling.multiZoneSubnetPolicy]}}
+          </bk-form-item>
+          <bk-form-item :label="$t('重试策略')">
+            {{retryPolicyMap[nodePoolData.autoScaling.retryPolicy]}}
+          </bk-form-item>
+          <bk-form-item :label="$t('镜像提供方')">
+            {{ imageProvider || '--'}}
+          </bk-form-item>
+          <bk-form-item :label="$t('操作系统')">
+            {{clusterOS || '--'}}
+          </bk-form-item>
+          <bk-form-item :label="$t('运行时组件')">
+            {{`${clusterData.clusterAdvanceSettings
+              ? `${clusterData.clusterAdvanceSettings.containerRuntime} ${clusterData.clusterAdvanceSettings.runtimeVersion}`
+              : '--'}`
+            }}
+          </bk-form-item>
+          <bk-form-item :label="$t('容器目录')">
+            {{nodePoolData.nodeTemplate.dockerGraphPath || '--'}}
+          </bk-form-item>
+          <bk-form-item :label="$t('机型')">
+            {{nodePoolData.launchTemplate.instanceType}}
+          </bk-form-item>
+          <bk-form-item label="CPU">
+            {{`${nodePoolData.launchTemplate.CPU}${$t('核')}`}}
+          </bk-form-item>
+          <bk-form-item label="内存">
+            {{nodePoolData.launchTemplate.Mem}}G
+          </bk-form-item>
+          <bk-form-item label="系统盘">
+            {{`${diskTypeMap[nodePoolData.launchTemplate.systemDisk.diskType]} ${nodePoolData.launchTemplate.systemDisk.diskSize}G`}}
+          </bk-form-item>
+          <bk-form-item label="数据盘">
+            <bk-button
+              text
+              size="small"
+              style="padding: 0;"
+              @click="showDataDisks = true">{{$t('查看')}}</bk-button>
+          </bk-form-item>
+          <bk-form-item :label="$t('支持子网')">
+            {{nodePoolData.autoScaling.subnetIDs.join(', ') || '--'}}
+          </bk-form-item>
+          <bk-form-item :label="$t('安全组')">
+            <LoadingIcon v-if="securityGroupLoading">{{ $t('加载中') }}...</LoadingIcon>
+            <span v-else>{{ securityGroupNames.join(',') || '--'}}</span>
+          </bk-form-item>
+          <bk-form-item :label="$t('扩容后转移模块')">
+            {{nodePoolData.nodeTemplate.module.scaleOutModuleName || '--'}}
+          </bk-form-item>
+          <bk-form-item :label="$t('缩容后转移模块')">
+            {{nodePoolData.nodeTemplate.module.scaleInModuleName || '--'}}
+          </bk-form-item>
+        </bk-form>
+        <div class="mt20 mb10 panel-header">
+          <span class="title">{{$t('Kubelet组件参数')}}</span>
+        </div>
+        <kubeletParams readonly v-model="nodePoolData.nodeTemplate.extraArgs.kubelet" />
+        <bcs-tab class="mt20">
+          <bcs-tab-panel :label="$t('扩容前置初始化')" name="scaleOutPreAction">
+            <UserAction
+              :script="nodePoolData.nodeTemplate.preStartUserScript"
+              key="scaleOutPreAction" />
+          </bcs-tab-panel>
+          <bcs-tab-panel :label="$t('扩容后置初始化')" name="scaleOutPostAction">
+            <UserAction
+              :script="nodePoolData.nodeTemplate.userScript"
+              :addons="nodePoolData.nodeTemplate.scaleOutExtraAddons"
+              actions-key="postActions"
+              key="scaleOutPostAction" />
+          </bcs-tab-panel>
+          <bcs-tab-panel :label="$t('缩容节点清理')" name="scaleInPreAction">
+            <UserAction
+              :script="nodePoolData.nodeTemplate.scaleInPreScript"
+              :addons="nodePoolData.nodeTemplate.scaleInExtraAddons"
+              actions-key="preActions"
+              key="scaleInPreAction" />
+          </bcs-tab-panel>
+        </bcs-tab>
+      </template>
+    </div>
+    <!-- 标签 -->
+    <bcs-dialog
+      theme="primary"
+      v-model="showLabels"
+      :show-footer="false"
+      title="Labels"
+      header-position="left"
+      width="600">
+      <bcs-table
+        :data="labels"
+        :outer-border="false"
+        :header-border="false"
+        :header-cell-style="{ background: '#fff' }"
+      >
+        <bcs-table-column :label="$t('键')" prop="key"></bcs-table-column>
+        <bcs-table-column :label="$t('值')" prop="value"></bcs-table-column>
+      </bcs-table>
+    </bcs-dialog>
+    <!-- 污点 -->
+    <bcs-dialog
+      theme="primary"
+      v-model="showTaints"
+      :show-footer="false"
+      title="Taints"
+      header-position="left"
+      width="600">
+      <bcs-table
+        :data="taints"
+        :outer-border="false"
+        :header-border="false"
+        :header-cell-style="{ background: '#fff' }"
+      >
+        <bcs-table-column :label="$t('键')" prop="key"></bcs-table-column>
+        <bcs-table-column :label="$t('值')" prop="value"></bcs-table-column>
+        <bcs-table-column label="Effect" prop="effect"></bcs-table-column>
+      </bcs-table>
+    </bcs-dialog>
+    <!-- 数据盘 -->
+    <bcs-dialog
+      theme="primary"
+      v-model="showDataDisks"
+      :show-footer="false"
+      :title="$t('数据盘')"
+      header-position="left"
+      width="600">
+      <bcs-table
+        :data="dataDisks"
+        :outer-border="false"
+        :header-border="false"
+        :header-cell-style="{ background: '#fff' }"
+      >
+        <bcs-table-column :label="$t('类型')" prop="diskType">
+          <template #default="{ row }">
+            {{ diskTypeMap[row.diskType] }}
+          </template>
+        </bcs-table-column>
+        <bcs-table-column :label="$t('大小')" prop="diskSize">
+          <template #default="{ row }">
+            {{ `${row.diskSize} GB` }}
+          </template>
+        </bcs-table-column>
+        <bcs-table-column :label="$t('文件系统')" prop="fileSystem"></bcs-table-column>
+        <bcs-table-column :label="$t('挂载点')" prop="mountTarget"></bcs-table-column>
+      </bcs-table>
+    </bcs-dialog>
+  </BcsContent>
+</template>
+<script lang="ts">
+import { defineComponent, computed, ref, onMounted } from '@vue/composition-api';
+import BcsContent from '../bcs-content.vue';
+import HeaderNav from '../header-nav.vue';
+import { useClusterList, useClusterInfo } from '@/views/cluster/use-cluster';
+import $i18n from '@/i18n/i18n-setup';
+import $store from '@/store/index';
+import $router from '@/router/index';
+import StatusIcon from '@/views/dashboard/common/status-icon';
+import LoadingIcon from '@/components/loading-icon.vue';
+import useInterval from '@/views/dashboard/common/use-interval';
+import kubeletParams from './kubelet-params.vue';
+import UserAction from './user-action.vue';
+
+export default defineComponent({
+  components: {
+    BcsContent,
+    HeaderNav,
+    StatusIcon,
+    LoadingIcon,
+    kubeletParams,
+    UserAction,
+  },
+  props: {
+    clusterId: {
+      type: String,
+      default: '',
+    },
+    nodeGroupID: {
+      type: String,
+      default: '',
+      required: true,
+    },
+  },
+  setup(props, ctx) {
+    const { clusterList } = useClusterList(ctx);
+    const showDataDisks = ref(false);
+    const showLabels = ref(false);
+    const showTaints = ref(false);
+    const nodePoolData = ref<any>(null);
+    const loading = ref(false);
+    const statusTextMap = { // 节点池状态
+      RUNNING: $i18n.t('正常'),
+      CREATING: $i18n.t('创建中'),
+      DELETING: $i18n.t('删除中'),
+      UPDATING: $i18n.t('更新中'),
+      DELETED: $i18n.t('已删除'),
+      'CREATE-FAILURE': $i18n.t('创建失败'),
+      'UPDATE-FAILURE': $i18n.t('更新失败'),
+    };
+    const statusColorMap = {
+      RUNNING: 'green',
+      DELETED: 'gray',
+      'CREATE-FAILURE': 'red',
+      'UPDATE-FAILURE': 'red',
+    };
+    const scalingModeMap = {
+      CLASSIC_SCALING: $i18n.t('释放模式'),
+      WAKE_UP_STOPPED_SCALING: $i18n.t('关机模式'),
+    };
+    const multiZoneSubnetPolicyMap = {
+      EQUALITY: $i18n.t('多可用区（子网）打散'),
+      PRIORITY: $i18n.t('首先可用区（子网）优先'),
+    };
+    const retryPolicyMap = {
+      IMMEDIATE_RETRY: $i18n.t('快速重试'),
+      INCREMENTAL_INTERVALS: $i18n.t('间隔递增重试'),
+      NO_RETRY: $i18n.t('不重试'),
+    };
+    const diskTypeMap = {
+      CLOUD_PREMIUM: $i18n.t('高性能云硬盘'),
+      CLOUD_SSD: $i18n.t('SSD云硬盘'),
+      CLOUD_HSSD: $i18n.t('增强型SSD云硬盘'),
+    };
+    const navList = computed(() => [
+      {
+        title: clusterList.value.find(item => item.clusterID === props.clusterId)?.clusterName,
+        link: {
+          name: 'clusterDetail',
+        },
+      },
+      {
+        title: 'Cluster Autoscaler',
+        link: {
+          name: 'clusterDetail',
+          query: {
+            active: 'AutoScaler',
+          },
+        },
+      },
+      {
+        title: $i18n.t('查看节点池详情'),
+        link: null,
+      },
+    ]);
+
+    // 获取详情
+    const getNodeGroupDetail = async () => {
+      nodePoolData.value = await $store.dispatch('clustermanager/nodeGroupDetail', {
+        $nodeGroupID: props.nodeGroupID,
+      });
+      if (!['CREATING', 'DELETING', 'UPDATING'].includes(nodePoolData.value.status)) {
+        stop();
+      }
+    };
+    const handleGetNodeGroupDetail = async () => {
+      await getNodeGroupDetail();
+      if (['CREATING', 'DELETING', 'UPDATING'].includes(nodePoolData.value.status)) {
+        start();
+      }
+    };
+    const { start, stop } = useInterval(getNodeGroupDetail);
+
+    // 编辑节点池详情
+    const handleEditPool = () => {
+      $router.push({
+        name: 'editNodePool',
+        params: {
+          clusterId: props.clusterId,
+          nodeGroupID: props.nodeGroupID,
+        },
+      });
+    };
+
+    const labels = computed(() => Object.keys(nodePoolData.value?.nodeTemplate?.labels || {}).map(key => ({
+      key,
+      value: nodePoolData.value.nodeTemplate.labels[key],
+    })));
+    const taints = computed(() => nodePoolData.value?.nodeTemplate?.taints || []);
+    const dataDisks = computed(() => nodePoolData.value?.nodeTemplate?.dataDisks || []);
+
+    // 集群详情
+    const { clusterOS, clusterData, getClusterDetail } = useClusterInfo();
+    const imageProvider = computed(() => {
+      const imageProviderMap = {
+        PUBLIC_IMAGE: $i18n.t('公共镜像'),
+        PRIVATE_IMAGE: $i18n.t('自定义镜像'),
+      };
+      return imageProviderMap[clusterData.value.extraInfo?.IMAGE_PROVIDER];
+    });
+
+    // 安全组信息
+    const securityGroupsList = ref<any[]>([]);
+    const securityGroupNames = computed(() => securityGroupsList.value
+      .filter(item => nodePoolData.value.launchTemplate.securityGroupIDs.includes(item.securityGroupID))
+      .map(item => item.securityGroupName));
+
+    const securityGroupLoading = ref(false);
+    const handleGetCloudSecurityGroups = async () => {
+      securityGroupLoading.value = true;
+      securityGroupsList.value = await $store.dispatch('clustermanager/cloudSecurityGroups', {
+        $cloudID: clusterData.value.provider,
+        region: clusterData.value.region,
+        accountID: clusterData.value.cloudAccountID,
+      });
+      securityGroupLoading.value = false;
+    };
+
+    onMounted(async () => {
+      loading.value = true;
+      await handleGetNodeGroupDetail();
+      await getClusterDetail(props.clusterId, true);
+      loading.value = false;
+      handleGetCloudSecurityGroups();
+    });
+    return {
+      securityGroupLoading,
+      dataDisks,
+      showDataDisks,
+      diskTypeMap,
+      securityGroupNames,
+      imageProvider,
+      clusterData,
+      clusterOS,
+      loading,
+      showLabels,
+      showTaints,
+      labels,
+      taints,
+      navList,
+      statusTextMap,
+      statusColorMap,
+      nodePoolData,
+      handleEditPool,
+      scalingModeMap,
+      multiZoneSubnetPolicyMap,
+      retryPolicyMap,
+    };
+  },
+});
+</script>
+<style lang="postcss" scoped>
+.node-pool-detail {
+    background: #fff;
+    border: 1px solid #DDE4EB;
+    border-radius: 2px;
+    padding: 16px 32px 58px 32px;
+    .panel-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        .title {
+            font-size: 14px;
+            font-weight: Bold;
+            line-height: 22px;
+        }
+    }
+    >>> .content-wrapper {
+        display: flex;
+        flex-wrap: wrap;
+        .bk-form-item {
+            width: 50%;
+            margin-top: 0px;
+        }
+        .bk-label {
+            font-size: 12px;
+            color: #979BA5;
+            text-align: left;
+        }
+        .bk-form-content {
+            font-size: 12px;
+            color: #313238;
+            display: flex;
+            align-items: center;
+        }
+    }
+}
+</style>

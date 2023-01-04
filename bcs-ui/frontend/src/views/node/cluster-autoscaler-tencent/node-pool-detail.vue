@@ -152,8 +152,8 @@
 </template>
 <script lang="ts">
 import { defineComponent, computed, ref, onMounted } from '@vue/composition-api';
-import BcsContent from './bcs-content.vue';
-import HeaderNav from './header-nav.vue';
+import BcsContent from '../bcs-content.vue';
+import HeaderNav from '../header-nav.vue';
 import { useClusterList } from '@/views/cluster/use-cluster';
 import $i18n from '@/i18n/i18n-setup';
 import $store from '@/store/index';

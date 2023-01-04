@@ -15,14 +15,14 @@
   </div>
 </template>
 <script lang="ts">
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent, PropType } from '@vue/composition-api';
 import $router from '@/router/index';
 
 export default defineComponent({
   name: 'HeaderNav',
   props: {
     list: {
-      type: Array,
+      type: Array as PropType<any[]>,
       default: () => [],
     },
   },

@@ -12,7 +12,7 @@
       </span>
     </div>
     <div class="content" v-show="active">
-      <slot>test</slot>
+      <slot></slot>
     </div>
   </div>
 </template>
