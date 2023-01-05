@@ -120,3 +120,10 @@ const (
 	// EditModeYaml 资源编辑模式 - Yaml
 	EditModeYaml = "yaml"
 )
+
+// RemoveResVersionKinds 更新时强制移除 resourceVersion 的资源类型
+// 添加 HPA 原因是，HPA 每次做扩缩容操作，集群均会更新资源（rv），过于频繁导致用户编辑态的 rv 过期 & 冲突导致无法更新
+// 理论上所有资源都可能会有这样的问题，不止其他用户操作，集群也可能操作导致 rv 过期，但是因 HPA 过于频繁，因此这里配置需要移除 rv
+// 注意：该行为相当于强制更新，会覆盖集群中的该资源，另外需要注意的是 service 这类资源必须指定 resourceVersion，否则报错如下：
+// Service "service-xxx" is invalid: metadata.resourceVersion: Invalid value: "": must be specified for an update
+var RemoveResVersionKinds = []string{HPA}
