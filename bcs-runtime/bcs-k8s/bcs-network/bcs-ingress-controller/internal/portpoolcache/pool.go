@@ -84,12 +84,14 @@ func (cp *CachePool) SetItemStatus(itemStatus *networkextensionv1.PortPoolItemSt
 				item.SetItemsStatus(itemStatus)
 				return nil
 			}
+			if itemStatus.EndPort > item.ItemStatus.EndPort {
+				if err := item.IncreaseEndPort(int(itemStatus.EndPort)); err != nil {
+					return err
+				}
+			}
 			if item.ItemStatus.Status != itemStatus.Status || item.ItemStatus.External != itemStatus.External {
 				item.SetItemsStatus(itemStatus)
 				return nil
-			}
-			if itemStatus.EndPort > item.ItemStatus.EndPort {
-				return item.IncreaseEndPort(int(itemStatus.EndPort))
 			}
 			return nil
 		}
