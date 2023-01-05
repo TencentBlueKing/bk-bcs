@@ -38,13 +38,20 @@ func NewNamespaceFactory(model store.ProjectModel) *NamespaceFactory {
 }
 
 // Action get action by clusterID
-func (f *NamespaceFactory) Action(clusterID, projectCode string) (action.NamespaceAction, error) {
+func (f *NamespaceFactory) Action(clusterID, projectIDOrCode string) (action.NamespaceAction, error) {
 	cluster, err := clustermanager.GetCluster(clusterID)
 	if err != nil {
 		logging.Error("get cluster %s from cluster-manager failed, err: %s", cluster, err.Error())
 		return nil, err
 	}
-	project, err := f.model.GetProject(context.TODO(), projectCode)
+	// projectIDOrCode 为 '-' 则不校验项目信息
+	if projectIDOrCode == "-" {
+		if cluster.GetIsShared() {
+			return shared.NewSharedNamespaceAction(f.model), nil
+		}
+		return independent.NewIndependentNamespaceAction(f.model), nil
+	}
+	project, err := f.model.GetProject(context.TODO(), projectIDOrCode)
 	if err != nil {
 		logging.Error("get project from db failed, err: %s", err.Error())
 		return nil, err

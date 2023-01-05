@@ -4892,6 +4892,285 @@ var _ interface {
 	ErrorName() string
 } = ListNamespacesResponseValidationError{}
 
+// Validate checks the field values on ListNativeNamespacesRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *ListNativeNamespacesRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ListNativeNamespacesRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// ListNativeNamespacesRequestMultiError, or nil if none found.
+func (m *ListNativeNamespacesRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ListNativeNamespacesRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for ProjectIDOrCode
+
+	// no validation rules for ClusterID
+
+	if len(errors) > 0 {
+		return ListNativeNamespacesRequestMultiError(errors)
+	}
+
+	return nil
+}
+
+// ListNativeNamespacesRequestMultiError is an error wrapping multiple
+// validation errors returned by ListNativeNamespacesRequest.ValidateAll() if
+// the designated constraints aren't met.
+type ListNativeNamespacesRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ListNativeNamespacesRequestMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ListNativeNamespacesRequestMultiError) AllErrors() []error { return m }
+
+// ListNativeNamespacesRequestValidationError is the validation error returned
+// by ListNativeNamespacesRequest.Validate if the designated constraints
+// aren't met.
+type ListNativeNamespacesRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ListNativeNamespacesRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ListNativeNamespacesRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ListNativeNamespacesRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ListNativeNamespacesRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ListNativeNamespacesRequestValidationError) ErrorName() string {
+	return "ListNativeNamespacesRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ListNativeNamespacesRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sListNativeNamespacesRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ListNativeNamespacesRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ListNativeNamespacesRequestValidationError{}
+
+// Validate checks the field values on ListNativeNamespacesResponse with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *ListNativeNamespacesResponse) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ListNativeNamespacesResponse with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// ListNativeNamespacesResponseMultiError, or nil if none found.
+func (m *ListNativeNamespacesResponse) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ListNativeNamespacesResponse) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	for idx, item := range m.GetData() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, ListNativeNamespacesResponseValidationError{
+						field:  fmt.Sprintf("Data[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, ListNativeNamespacesResponseValidationError{
+						field:  fmt.Sprintf("Data[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return ListNativeNamespacesResponseValidationError{
+					field:  fmt.Sprintf("Data[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	// no validation rules for RequestID
+
+	if all {
+		switch v := interface{}(m.GetWebAnnotations()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, ListNativeNamespacesResponseValidationError{
+					field:  "WebAnnotations",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, ListNativeNamespacesResponseValidationError{
+					field:  "WebAnnotations",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetWebAnnotations()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return ListNativeNamespacesResponseValidationError{
+				field:  "WebAnnotations",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if len(errors) > 0 {
+		return ListNativeNamespacesResponseMultiError(errors)
+	}
+
+	return nil
+}
+
+// ListNativeNamespacesResponseMultiError is an error wrapping multiple
+// validation errors returned by ListNativeNamespacesResponse.ValidateAll() if
+// the designated constraints aren't met.
+type ListNativeNamespacesResponseMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ListNativeNamespacesResponseMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ListNativeNamespacesResponseMultiError) AllErrors() []error { return m }
+
+// ListNativeNamespacesResponseValidationError is the validation error returned
+// by ListNativeNamespacesResponse.Validate if the designated constraints
+// aren't met.
+type ListNativeNamespacesResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ListNativeNamespacesResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ListNativeNamespacesResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ListNativeNamespacesResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ListNativeNamespacesResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ListNativeNamespacesResponseValidationError) ErrorName() string {
+	return "ListNativeNamespacesResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ListNativeNamespacesResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sListNativeNamespacesResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ListNativeNamespacesResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ListNativeNamespacesResponseValidationError{}
+
 // Validate checks the field values on DeleteNamespaceRequest with the rules
 // defined in the proto definition for this message. If any rules are
 // violated, the first error encountered is returned, or nil if there are no violations.
@@ -5440,6 +5719,120 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = NamespaceDataValidationError{}
+
+// Validate checks the field values on NativeNamespaceData with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *NativeNamespaceData) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on NativeNamespaceData with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// NativeNamespaceDataMultiError, or nil if none found.
+func (m *NativeNamespaceData) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *NativeNamespaceData) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Uid
+
+	// no validation rules for Name
+
+	// no validation rules for Status
+
+	// no validation rules for CreateTime
+
+	// no validation rules for ProjectID
+
+	// no validation rules for ProjectCode
+
+	if len(errors) > 0 {
+		return NativeNamespaceDataMultiError(errors)
+	}
+
+	return nil
+}
+
+// NativeNamespaceDataMultiError is an error wrapping multiple validation
+// errors returned by NativeNamespaceData.ValidateAll() if the designated
+// constraints aren't met.
+type NativeNamespaceDataMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m NativeNamespaceDataMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m NativeNamespaceDataMultiError) AllErrors() []error { return m }
+
+// NativeNamespaceDataValidationError is the validation error returned by
+// NativeNamespaceData.Validate if the designated constraints aren't met.
+type NativeNamespaceDataValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e NativeNamespaceDataValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e NativeNamespaceDataValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e NativeNamespaceDataValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e NativeNamespaceDataValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e NativeNamespaceDataValidationError) ErrorName() string {
+	return "NativeNamespaceDataValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e NativeNamespaceDataValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sNativeNamespaceData.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = NativeNamespaceDataValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = NativeNamespaceDataValidationError{}
 
 // Validate checks the field values on Label with the rules defined in the
 // proto definition for this message. If any rules are violated, the first

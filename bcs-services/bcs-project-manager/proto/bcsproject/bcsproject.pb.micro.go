@@ -463,6 +463,12 @@ func NewNamespaceEndpoints() []*api.Endpoint {
 			Body:    "*",
 			Handler: "rpc",
 		},
+		&api.Endpoint{
+			Name:    "Namespace.ListNativeNamespaces",
+			Path:    []string{"/bcsproject/v1/projects/{projectIDOrCode}/clusters/{clusterID}/native/namespaces"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
 	}
 }
 
@@ -479,6 +485,7 @@ type NamespaceService interface {
 	DeleteNamespaceCallback(ctx context.Context, in *NamespaceCallbackRequest, opts ...client.CallOption) (*NamespaceCallbackResponse, error)
 	SyncNamespace(ctx context.Context, in *SyncNamespaceRequest, opts ...client.CallOption) (*SyncNamespaceResponse, error)
 	WithdrawNamespace(ctx context.Context, in *WithdrawNamespaceRequest, opts ...client.CallOption) (*WithdrawNamespaceResponse, error)
+	ListNativeNamespaces(ctx context.Context, in *ListNativeNamespacesRequest, opts ...client.CallOption) (*ListNativeNamespacesResponse, error)
 }
 
 type namespaceService struct {
@@ -593,6 +600,16 @@ func (c *namespaceService) WithdrawNamespace(ctx context.Context, in *WithdrawNa
 	return out, nil
 }
 
+func (c *namespaceService) ListNativeNamespaces(ctx context.Context, in *ListNativeNamespacesRequest, opts ...client.CallOption) (*ListNativeNamespacesResponse, error) {
+	req := c.c.NewRequest(c.name, "Namespace.ListNativeNamespaces", in)
+	out := new(ListNativeNamespacesResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // Server API for Namespace service
 
 type NamespaceHandler interface {
@@ -606,6 +623,7 @@ type NamespaceHandler interface {
 	DeleteNamespaceCallback(context.Context, *NamespaceCallbackRequest, *NamespaceCallbackResponse) error
 	SyncNamespace(context.Context, *SyncNamespaceRequest, *SyncNamespaceResponse) error
 	WithdrawNamespace(context.Context, *WithdrawNamespaceRequest, *WithdrawNamespaceResponse) error
+	ListNativeNamespaces(context.Context, *ListNativeNamespacesRequest, *ListNativeNamespacesResponse) error
 }
 
 func RegisterNamespaceHandler(s server.Server, hdlr NamespaceHandler, opts ...server.HandlerOption) error {
@@ -620,6 +638,7 @@ func RegisterNamespaceHandler(s server.Server, hdlr NamespaceHandler, opts ...se
 		DeleteNamespaceCallback(ctx context.Context, in *NamespaceCallbackRequest, out *NamespaceCallbackResponse) error
 		SyncNamespace(ctx context.Context, in *SyncNamespaceRequest, out *SyncNamespaceResponse) error
 		WithdrawNamespace(ctx context.Context, in *WithdrawNamespaceRequest, out *WithdrawNamespaceResponse) error
+		ListNativeNamespaces(ctx context.Context, in *ListNativeNamespacesRequest, out *ListNativeNamespacesResponse) error
 	}
 	type Namespace struct {
 		namespace
@@ -693,6 +712,12 @@ func RegisterNamespaceHandler(s server.Server, hdlr NamespaceHandler, opts ...se
 		Body:    "*",
 		Handler: "rpc",
 	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Namespace.ListNativeNamespaces",
+		Path:    []string{"/bcsproject/v1/projects/{projectIDOrCode}/clusters/{clusterID}/native/namespaces"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
 	return s.Handle(s.NewHandler(&Namespace{h}, opts...))
 }
 
@@ -738,6 +763,10 @@ func (h *namespaceHandler) SyncNamespace(ctx context.Context, in *SyncNamespaceR
 
 func (h *namespaceHandler) WithdrawNamespace(ctx context.Context, in *WithdrawNamespaceRequest, out *WithdrawNamespaceResponse) error {
 	return h.NamespaceHandler.WithdrawNamespace(ctx, in, out)
+}
+
+func (h *namespaceHandler) ListNativeNamespaces(ctx context.Context, in *ListNativeNamespacesRequest, out *ListNativeNamespacesResponse) error {
+	return h.NamespaceHandler.ListNativeNamespaces(ctx, in, out)
 }
 
 // Api Endpoints for Variable service

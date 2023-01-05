@@ -835,6 +835,15 @@ service Namespace {
       summary : "撤回命名空间审批"
     };
   }
+  rpc ListNativeNamespaces(ListNativeNamespacesRequest) returns (ListNativeNamespacesResponse) {
+    option (google.api.http) = {
+      get : "/bcsproject/v1/projects/{projectIDOrCode}/clusters/{clusterID}/native/namespaces"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "获取原生命名空间列表"
+      summary : "获取原生命名空间列表"
+    };
+  }
 }
 
 message SyncNamespaceRequest {
@@ -1220,6 +1229,51 @@ message ListNamespacesResponse {
   }, json_name = "web_annotations"];
 }
 
+message ListNativeNamespacesRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "ListNativeNamespacesRequest"
+      description : "获取原生命名空间列表请求"
+      required : [
+        "projectIDOrCode",
+        "clusterID"
+      ]
+    }
+  };
+
+  string projectIDOrCode = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "projectIDOrCode", 
+    description: "项目ID或项目英文名, 为 '-' 则不校验项目信息"
+  }];
+  string clusterID = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "clusterID", 
+    description: "集群ID"
+  }];
+}
+
+message ListNativeNamespacesResponse {
+  uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code", 
+    description: "返回错误码"
+  }];
+  string message = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "message",
+    description: "返回错误信息"
+  }];
+  repeated NativeNamespaceData data = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "data", 
+    description: "返回详细信息, 可以为空"
+  }];
+  string requestID = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "request id",
+    description: "请求 ID"
+  }];
+  Perms web_annotations = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "web_annotations",
+    description : "项目更多信息，主要是权限相关"
+  }, json_name = "web_annotations"];
+}
+
 message DeleteNamespaceRequest {
   option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
     json_schema : {
@@ -1331,6 +1385,33 @@ message NamespaceData {
   string itsmTicketType = 15[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "itsmTicketType", 
     description: "itsm 单据类型: create, update, delete"
+  }];
+}
+
+message NativeNamespaceData {
+  string uid = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "uid", 
+    description: "uid"
+  }];
+  string name = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "name", 
+    description: "命名空间名称"
+  }];
+  string status = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "status", 
+    description: "命名空间状态"
+  }];
+  string createTime = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "createTime", 
+    description: "创建时间"
+  }];
+  string projectID = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "projectID", 
+    description: "项目ID"
+  }];
+  string projectCode = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "projectCode", 
+    description: "项目英文名"
   }];
 }
 

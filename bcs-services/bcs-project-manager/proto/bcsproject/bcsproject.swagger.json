@@ -1496,6 +1496,46 @@
         ]
       }
     },
+    "/bcsproject/v1/projects/{projectIDOrCode}/clusters/{clusterID}/native/namespaces": {
+      "get": {
+        "summary": "获取原生命名空间列表",
+        "description": "获取原生命名空间列表",
+        "operationId": "Namespace_ListNativeNamespaces",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/bcsprojectListNativeNamespacesResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectIDOrCode",
+            "description": "项目ID或项目英文名, 为 '-' 则不校验项目信息",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "clusterID",
+            "description": "集群ID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "Namespace"
+        ]
+      }
+    },
     "/bcsproject/v1/projects/{projectID}": {
       "delete": {
         "description": "删除项目",
@@ -2441,6 +2481,40 @@
         }
       }
     },
+    "bcsprojectListNativeNamespacesResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/bcsprojectNativeNamespaceData"
+          },
+          "description": "返回详细信息, 可以为空",
+          "title": "data"
+        },
+        "requestID": {
+          "type": "string",
+          "description": "请求 ID",
+          "title": "request id"
+        },
+        "web_annotations": {
+          "$ref": "#/definitions/bcsprojectPerms",
+          "description": "项目更多信息，主要是权限相关",
+          "title": "web_annotations"
+        }
+      }
+    },
     "bcsprojectListProjectData": {
       "type": "object",
       "properties": {
@@ -2740,6 +2814,41 @@
           "type": "string",
           "description": "itsm 单据类型: create, update, delete",
           "title": "itsmTicketType"
+        }
+      }
+    },
+    "bcsprojectNativeNamespaceData": {
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "description": "uid",
+          "title": "uid"
+        },
+        "name": {
+          "type": "string",
+          "description": "命名空间名称",
+          "title": "name"
+        },
+        "status": {
+          "type": "string",
+          "description": "命名空间状态",
+          "title": "status"
+        },
+        "createTime": {
+          "type": "string",
+          "description": "创建时间",
+          "title": "createTime"
+        },
+        "projectID": {
+          "type": "string",
+          "description": "项目ID",
+          "title": "projectID"
+        },
+        "projectCode": {
+          "type": "string",
+          "description": "项目英文名",
+          "title": "projectCode"
         }
       }
     },

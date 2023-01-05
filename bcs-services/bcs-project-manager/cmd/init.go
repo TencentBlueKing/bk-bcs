@@ -302,8 +302,8 @@ func (p *ProjectService) initMicro() error {
 			wrapper.NewValidatorWrapper,
 			wrapper.NewAuthHeaderAdapter,
 			authWrapper.AuthenticationFunc,
-			authWrapper.AuthorizationFunc,
 			wrapper.NewAuthLogWrapper,
+			authWrapper.AuthorizationFunc,
 		),
 	)
 	svc.Init()
