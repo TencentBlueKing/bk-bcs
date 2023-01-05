@@ -24,6 +24,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/cluster"
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/namespace"
+	authUtils "github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/utils"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/cmanager"
 	blog "github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/log"
@@ -299,7 +300,7 @@ func (cli *PermVerifyClient) verifyUserNamespaceScopedPermission(ctx context.Con
 			"project[%s] cluster[%s]", resource.Namespace, projectID, resource.ClusterID)
 	}
 
-	nameSpaceID, _ := utils.CalIAMNamespaceID(resource.ClusterID, resource.Namespace)
+	nameSpaceID := authUtils.CalcIAMNsID(resource.ClusterID, resource.Namespace)
 
 	req := iam.PermissionRequest{
 		SystemID: iam.SystemIDBKBCS,
@@ -411,7 +412,7 @@ func (cli *PermVerifyClient) verifyUserNamespacePermission(ctx context.Context, 
 			blog.Log(ctx).Infof("PermVerifyClient verifyUserNamespacePermission namespace[%s] exist "+
 				"project[%s] cluster[%s]", resource.Namespace, projectID, resource.ClusterID)
 		}
-		nameSpaceID, _ := utils.CalIAMNamespaceID(resource.ClusterID, resource.Namespace)
+		nameSpaceID := authUtils.CalcIAMNsID(resource.ClusterID, resource.Namespace)
 		rn1 = iam.ResourceNode{
 			System:    iam.SystemIDBKBCS,
 			RType:     string(namespace.SysNamespace),

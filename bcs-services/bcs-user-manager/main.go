@@ -16,6 +16,8 @@ package main
 import (
 	"crypto/tls"
 	"net"
+	"net/http"
+	_ "net/http/pprof"
 	"os"
 	"os/signal"
 	"runtime"
@@ -70,6 +72,10 @@ func main() {
 		go tokenNotify.Run()
 		defer tokenNotify.Stop()
 	}
+
+	go func() {
+		blog.Info("", http.ListenAndServe(":6060", nil))
+	}()
 
 	// listening OS shutdown singal
 	signalChan := make(chan os.Signal, 1)
