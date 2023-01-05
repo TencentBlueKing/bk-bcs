@@ -32,10 +32,14 @@ const (
 )
 
 type (
+
+	// ListNamespacesRequest 命名列表参数
 	ListNamespacesRequest struct {
 		ProjectCode string `json:"projectCode"`
 		ClusterID   string `json:"clusterID"`
 	}
+
+	// CreateNamespaceRequest 创建命名参数
 	CreateNamespaceRequest struct {
 		ProjectCode string `json:"projectCode"`
 		ClusterID   string `json:"clusterID"`
@@ -72,6 +76,7 @@ type (
 		Variable []Data `json:"variable"`
 	}
 
+	// UpdateNamespaceRequest 更新命名参数
 	UpdateNamespaceRequest struct {
 		ProjectCode string        `json:"projectCode"`
 		ClusterID   string        `json:"clusterID"`
@@ -81,14 +86,18 @@ type (
 		Annotations []Annotations `json:"annotations,omitempty"`
 	}
 
+	// Labels 标签
 	Labels struct {
 		Key   string `json:"key,omitempty"`
 		Value string `json:"value,omitempty"`
 	}
+	// Annotations 注释
 	Annotations struct {
 		Key   string `json:"key,omitempty"`
 		Value string `json:"value,omitempty"`
 	}
+
+	// Quota 配额
 	Quota struct {
 		CPURequests    string `json:"cpuRequests,omitempty"`
 		MemoryRequests string `json:"memoryRequests,omitempty"`
@@ -96,11 +105,14 @@ type (
 		MemoryLimits   string `json:"memoryLimits,omitempty"`
 	}
 
+	// DeleteNamespaceRequest 删除命名参数
 	DeleteNamespaceRequest struct {
 		ProjectCode string `json:"projectCode"`
 		ClusterID   string `json:"clusterID"`
 		Name        string `json:"name"`
 	}
+
+	// NamespaceCallbackRequest 命名回调参数
 	NamespaceCallbackRequest struct {
 		ProjectCode    string `json:"projectCode"`
 		ClusterID      string `json:"clusterID"`
@@ -113,12 +125,15 @@ type (
 		ApplyInCluster bool   `json:"applyInCluster"`
 	}
 
+	// UpdateNamespaceVariablesReq 更新命名变量参数
 	UpdateNamespaceVariablesReq struct {
 		ProjectCode string `json:"projectCode"`
 		ClusterID   string `json:"clusterID"`
 		Namespace   string `json:"namespace"`
 		Data        []Data `json:"data"`
 	}
+
+	// Data 命名变量
 	Data struct {
 		ID          string `json:"id"`
 		Key         string `json:"key"`
@@ -254,6 +269,7 @@ func (p *ProjectManagerClient) UpdateNamespaceCallback(in *NamespaceCallbackRequ
 	return resp, nil
 }
 
+// UpdateNamespaceVariables 更新命名变量
 func (p *ProjectManagerClient) UpdateNamespaceVariables(in *UpdateNamespaceVariablesReq) (*bcsproject.UpdateNamespacesVariablesResponse, error) {
 	bs, err := p.do(fmt.Sprintf(updateNamespaceVariablesUrl, in.ProjectCode, in.ClusterID, in.Namespace), http.MethodPut, nil, in)
 	if err != nil {

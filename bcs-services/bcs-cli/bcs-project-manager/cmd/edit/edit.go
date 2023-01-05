@@ -30,6 +30,7 @@ var (
 		kubectl-bcs-project-manager edit project/variable`))
 )
 
+// NewCmdEdit 新建命令编辑
 func NewCmdEdit() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "edit",
