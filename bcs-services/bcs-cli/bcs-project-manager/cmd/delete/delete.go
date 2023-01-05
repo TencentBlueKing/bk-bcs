@@ -28,6 +28,7 @@ var (
 		kubectl-bcs-project-manager delete`))
 )
 
+// NewCmdDelete 新建命令删除
 func NewCmdDelete() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "delete ( variable )",
