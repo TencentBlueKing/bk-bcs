@@ -74,3 +74,7 @@ dockerdev:
 # collect，merge and re-generate pkg/i18n/locale/lc_msg.yaml
 gen-lc-msgs:
 	python3 ./scripts/gen_lc_msgs.py
+
+# auto translate pkg/i18n/locale/lc_msg.yaml
+trans-lc-msgs:
+	python3 ./scripts/translate_lc_msgs.py

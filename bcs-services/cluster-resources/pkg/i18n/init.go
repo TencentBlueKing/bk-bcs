@@ -45,7 +45,7 @@ func InitMsgMap() error {
 	i18nMsgMap = map[string]map[string]string{}
 	for _, msg := range rawMsgList {
 		i18nMsgMap[msg["msgID"]] = map[string]string{
-			ZH: msg["msgID"], EN: msg["en"],
+			ZH: msg["msgID"], EN: msg["en"], // RU: msg["ru"], JA: msg["ja"],
 		}
 	}
 	return nil

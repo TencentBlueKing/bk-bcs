@@ -15,12 +15,16 @@
 package i18n
 
 const (
+	// DefaultLang 默认语言
+	DefaultLang = ZH
 	// ZH 中文
 	ZH = "zh"
 	// EN 英文
 	EN = "en"
-	// DefaultLang 默认语言
-	DefaultLang = ZH
+	// RU 俄语
+	// RU = "ru"
+	// JA 日语
+	// JA = "ja"
 )
 
 // 语言版本简写映射表
@@ -32,6 +36,10 @@ var langMap = map[string]string{
 	"en":      EN,
 	"en-us":   EN,
 	"en-gb":   EN,
+	// "ru":      RU,
+	// "ru-RU":   RU,
+	// "ja":      JA,
+	// "ja-JP":   JA,
 }
 
 // MetadataCookiesKey 在 GoMicro Metadata 中，Cookie 的键名
