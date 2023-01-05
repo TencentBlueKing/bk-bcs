@@ -196,10 +196,20 @@ func (m *ModelNamespace) GetNamespaceInfoList(ctx context.Context,
 		operator.NewLeafCondition(operator.Eq, operator.M{
 			ClusterIDKey: request.ClusterID,
 			DimensionKey: dimension,
-		}), operator.NewLeafCondition(operator.Gte, operator.M{
-			MetricTimeKey: primitive.NewDateTimeFromTime(getStartTime(dimension)),
 		}),
 	)
+	startTime := getStartTime(dimension)
+	if request.GetStartTime() != 0 {
+		startTime = time.Unix(request.GetStartTime(), 0)
+	}
+	cond = append(cond, operator.NewLeafCondition(operator.Gte, operator.M{
+		MetricTimeKey: primitive.NewDateTimeFromTime(startTime),
+	}))
+	if request.GetEndTime() != 0 {
+		cond = append(cond, operator.NewLeafCondition(operator.Lte, operator.M{
+			MetricTimeKey: primitive.NewDateTimeFromTime(time.Unix(request.GetEndTime(), 0)),
+		}))
+	}
 	conds := operator.NewBranchCondition(operator.And, cond...)
 	tempNamespaceList := make([]map[string]string, 0)
 	err = m.DB.Table(m.TableName).Find(conds).WithProjection(map[string]int{NamespaceKey: 1, "_id": 0}).
@@ -234,6 +244,8 @@ func (m *ModelNamespace) GetNamespaceInfoList(ctx context.Context,
 			ClusterID: request.ClusterID,
 			Namespace: namespace,
 			Dimension: dimension,
+			StartTime: request.GetStartTime(),
+			EndTime:   request.GetEndTime(),
 		}
 		namespaceInfo, err := m.GetNamespaceInfo(ctx, namespaceRequest)
 		if err != nil {
@@ -278,6 +290,13 @@ func (m *ModelNamespace) GetNamespaceInfo(ctx context.Context,
 		dimension = types.DimensionMinute
 	}
 	metricStartTime := getStartTime(dimension)
+	if request.GetStartTime() != 0 {
+		metricStartTime = time.Unix(request.GetStartTime(), 0)
+	}
+	metricEndTime := time.Now()
+	if request.GetEndTime() != 0 {
+		metricEndTime = time.Unix(request.GetEndTime(), 0)
+	}
 	pipeline := make([]map[string]interface{}, 0)
 	pipeline = append(pipeline, map[string]interface{}{"$match": map[string]interface{}{
 		ClusterIDKey: request.ClusterID,
@@ -285,11 +304,13 @@ func (m *ModelNamespace) GetNamespaceInfo(ctx context.Context,
 		NamespaceKey: request.Namespace,
 		MetricTimeKey: map[string]interface{}{
 			"$gte": primitive.NewDateTimeFromTime(metricStartTime),
+			"$lte": primitive.NewDateTimeFromTime(metricEndTime),
 		},
 	}}, map[string]interface{}{"$unwind": "$metrics"},
 		map[string]interface{}{"$match": map[string]interface{}{
 			MetricTimeKey: map[string]interface{}{
 				"$gte": primitive.NewDateTimeFromTime(metricStartTime),
+				"$lte": primitive.NewDateTimeFromTime(metricEndTime),
 			},
 		}},
 		map[string]interface{}{"$project": map[string]interface{}{

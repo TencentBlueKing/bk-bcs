@@ -170,10 +170,18 @@ func (m *ModelPodAutoscaler) GetPodAutoscalerList(ctx context.Context,
 		dimension = types.DimensionMinute
 	}
 	cond := genPodAutoscalerListCond(request)
-	cond = append(cond,
-		operator.NewLeafCondition(operator.Gte, operator.M{
-			MetricTimeKey: primitive.NewDateTimeFromTime(getStartTime(dimension)),
+	startTime := getStartTime(dimension)
+	if request.GetStartTime() != 0 {
+		startTime = time.Unix(request.GetStartTime(), 0)
+	}
+	cond = append(cond, operator.NewLeafCondition(operator.Gte, operator.M{
+		MetricTimeKey: primitive.NewDateTimeFromTime(startTime),
+	}))
+	if request.GetEndTime() != 0 {
+		cond = append(cond, operator.NewLeafCondition(operator.Lte, operator.M{
+			MetricTimeKey: primitive.NewDateTimeFromTime(time.Unix(request.GetEndTime(), 0)),
 		}))
+	}
 	conds := operator.NewBranchCondition(operator.And, cond...)
 	tempList := make([]map[string]string, 0)
 	err = m.DB.Table(m.TableName).Find(conds).WithProjection(
@@ -212,6 +220,8 @@ func (m *ModelPodAutoscaler) GetPodAutoscalerList(ctx context.Context,
 			Dimension:         dimension,
 			PodAutoscalerType: autoscaler[PodAutoscalerTypeKey],
 			PodAutoscalerName: autoscaler[PodAutoscalerNameKey],
+			StartTime:         request.GetStartTime(),
+			EndTime:           request.GetEndTime(),
 		}
 		autoscalerInfo, err := m.GetPodAutoscalerInfo(ctx, podAutoscalerRequest)
 		if err != nil {
@@ -236,6 +246,13 @@ func (m *ModelPodAutoscaler) GetPodAutoscalerInfo(ctx context.Context,
 		dimension = types.DimensionMinute
 	}
 	metricStartTime := getStartTime(dimension)
+	if request.GetStartTime() != 0 {
+		metricStartTime = time.Unix(request.GetStartTime(), 0)
+	}
+	metricEndTime := time.Now()
+	if request.GetEndTime() != 0 {
+		metricEndTime = time.Unix(request.GetEndTime(), 0)
+	}
 	pipeline := make([]map[string]interface{}, 0)
 	pipeline = append(pipeline, map[string]interface{}{"$match": map[string]interface{}{
 		ClusterIDKey:         request.ClusterID,
@@ -245,11 +262,13 @@ func (m *ModelPodAutoscaler) GetPodAutoscalerInfo(ctx context.Context,
 		PodAutoscalerNameKey: request.PodAutoscalerName,
 		MetricTimeKey: map[string]interface{}{
 			"$gte": primitive.NewDateTimeFromTime(metricStartTime),
+			"$lte": primitive.NewDateTimeFromTime(metricEndTime),
 		},
 	}}, map[string]interface{}{"$unwind": "$metrics"},
 		map[string]interface{}{"$match": map[string]interface{}{
 			MetricTimeKey: map[string]interface{}{
 				"$gte": primitive.NewDateTimeFromTime(metricStartTime),
+				"$lte": primitive.NewDateTimeFromTime(metricEndTime),
 			},
 		}},
 		map[string]interface{}{"$project": map[string]interface{}{

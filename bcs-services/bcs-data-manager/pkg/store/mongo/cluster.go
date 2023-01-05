@@ -222,9 +222,19 @@ func (m *ModelCluster) GetClusterInfoList(ctx context.Context,
 	cond = append(cond, operator.NewLeafCondition(operator.Eq, operator.M{
 		DimensionKey: dimension,
 	}))
+	startTime := getStartTime(dimension)
+	if request.GetStartTime() != 0 {
+		startTime = time.Unix(request.GetStartTime(), 0)
+	}
 	cond = append(cond, operator.NewLeafCondition(operator.Gte, operator.M{
-		MetricTimeKey: primitive.NewDateTimeFromTime(getStartTime(dimension)),
+		MetricTimeKey: primitive.NewDateTimeFromTime(startTime),
 	}))
+	if request.GetEndTime() != 0 {
+		cond = append(cond, operator.NewLeafCondition(operator.Lte, operator.M{
+			MetricTimeKey: primitive.NewDateTimeFromTime(time.Unix(request.GetEndTime(), 0)),
+		}))
+	}
+	blog.Infof("get metric from %s to %s", startTime, time.Unix(request.GetEndTime(), 0))
 	conds := operator.NewBranchCondition(operator.And, cond...)
 	tempClusterList := make([]map[string]string, 0)
 	err = m.DB.Table(m.TableName).Find(conds).WithProjection(map[string]int{ClusterIDKey: 1, "_id": 0}).
@@ -258,6 +268,8 @@ func (m *ModelCluster) GetClusterInfoList(ctx context.Context,
 		clusterRequest := &bcsdatamanager.GetClusterInfoRequest{
 			ClusterID: cluster,
 			Dimension: dimension,
+			StartTime: request.GetStartTime(),
+			EndTime:   request.GetEndTime(),
 		}
 		clusterInfo, err := m.GetClusterInfo(ctx, clusterRequest)
 		if err != nil {
@@ -282,6 +294,14 @@ func (m *ModelCluster) GetClusterInfo(ctx context.Context,
 	}
 	clusterMetricsMap := make([]*types.ClusterData, 0)
 	metricStartTime := getStartTime(dimension)
+	if request.GetStartTime() != 0 {
+		metricStartTime = time.Unix(request.GetStartTime(), 0)
+	}
+	metricEndTime := time.Now()
+	if request.GetEndTime() != 0 {
+		metricEndTime = time.Unix(request.GetEndTime(), 0)
+	}
+	blog.Infof("get metric from %s to %s", metricStartTime, metricEndTime)
 	pipeline := make([]map[string]interface{}, 0)
 	pipeline = append(pipeline,
 		map[string]interface{}{"$match": map[string]interface{}{
@@ -289,12 +309,14 @@ func (m *ModelCluster) GetClusterInfo(ctx context.Context,
 			DimensionKey: dimension,
 			MetricTimeKey: map[string]interface{}{
 				"$gte": primitive.NewDateTimeFromTime(metricStartTime),
+				"$lte": primitive.NewDateTimeFromTime(metricEndTime),
 			},
 		}},
 		map[string]interface{}{"$unwind": "$metrics"},
 		map[string]interface{}{"$match": map[string]interface{}{
 			MetricTimeKey: map[string]interface{}{
 				"$gte": primitive.NewDateTimeFromTime(metricStartTime),
+				"$lte": primitive.NewDateTimeFromTime(metricEndTime),
 			},
 		}},
 		map[string]interface{}{"$project": map[string]interface{}{

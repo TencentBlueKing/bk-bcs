@@ -16,12 +16,14 @@ package common
 import (
 	"context"
 	"fmt"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/bcsproject"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/prom"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/types"
 	"strconv"
 	"sync"
 	"time"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/bcsmonitor"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/bcsproject"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/prom"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/types"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi"
@@ -63,11 +65,12 @@ type ResourceGetter struct {
 	env            string
 	cache          *cache.Cache
 	projectManager bcsproject.BcsProjectManagerClient
+	bcsMonitorCli  bcsmonitor.ClientInterface
 }
 
 // NewGetter new common resource getter
 func NewGetter(needFilter bool, clusterIds []string, env string,
-	pmClient bcsproject.BcsProjectManagerClient) GetterInterface {
+	pmClient bcsproject.BcsProjectManagerClient, bcsMonitorCli bcsmonitor.ClientInterface) GetterInterface {
 	clusterMap := make(map[string]bool, len(clusterIds))
 	for index := range clusterIds {
 		clusterMap[clusterIds[index]] = true
@@ -78,6 +81,7 @@ func NewGetter(needFilter bool, clusterIds []string, env string,
 		env:            env,
 		cache:          cache.New(time.Minute*10, time.Minute*60),
 		projectManager: pmClient,
+		bcsMonitorCli:  bcsMonitorCli,
 	}
 }
 
@@ -213,6 +217,12 @@ func (g *ResourceGetter) GetClusterIDList(ctx context.Context,
 			if project != nil {
 				projectCode = project.ProjectCode
 			}
+			var isBKMonitor bool
+			if result, err := g.bcsMonitorCli.CheckIfBKMonitor(cluster.ClusterID); err != nil {
+				blog.Errorf("check cluster[%s] if bk monitor error:%s", cluster.ClusterID, err.Error())
+			} else {
+				isBKMonitor = result
+			}
 			clusterMeta := &types.ClusterMeta{
 				ProjectID:   cluster.ProjectID,
 				ProjectCode: projectCode,
@@ -220,6 +230,7 @@ func (g *ResourceGetter) GetClusterIDList(ctx context.Context,
 				ClusterID:   cluster.ClusterID,
 				ClusterType: cluster.EngineType,
 				Label:       map[string]string{"isShared": strconv.FormatBool(cluster.IsShared)},
+				IsBKMonitor: isBKMonitor,
 			}
 			clusterMetaList = append(clusterMetaList, clusterMeta)
 		}
@@ -437,6 +448,8 @@ func (g *ResourceGetter) GetK8sNamespaceList(ctx context.Context, clusterMeta *t
 			nsAnnotation := namespace.Data.Annotations
 			if projectCode, ok := nsAnnotation["io.tencent.bcs.projectcode"]; ok {
 				namespaceProjectCode = projectCode
+			} else {
+				namespaceProjectCode = ""
 			}
 			project, err := g.GetProjectInfo(ctx, "", namespaceProjectCode, pmCli)
 			if err != nil {
@@ -455,6 +468,7 @@ func (g *ResourceGetter) GetK8sNamespaceList(ctx context.Context, clusterMeta *t
 			ClusterID:   clusterMeta.ClusterID,
 			ClusterType: types.Kubernetes,
 			Name:        namespace.ResourceName,
+			IsBKMonitor: clusterMeta.IsBKMonitor,
 		}
 		namespaceList = append(namespaceList, namespaceMeta)
 	}
@@ -481,6 +495,7 @@ func (g *ResourceGetter) GetMesosNamespaceList(clusterMeta *types.ClusterMeta,
 			ClusterID:   clusterMeta.ClusterID,
 			ClusterType: types.Mesos,
 			Name:        string(*namespace),
+			IsBKMonitor: clusterMeta.IsBKMonitor,
 		}
 		namespaceList = append(namespaceList, namespaceMeta)
 	}
@@ -559,6 +574,7 @@ func generateK8sWorkloadList(namespaceMeta *types.NamespaceMeta, workloadType st
 		Namespace:    commonHeader.Namespace,
 		ResourceType: workloadType,
 		Name:         commonHeader.ResourceName,
+		IsBKMonitor:  namespaceMeta.IsBKMonitor,
 	}
 	return workloadMeta
 }
@@ -573,6 +589,7 @@ func generateMesosWorkloadList(cluster *types.ClusterMeta, workloadType string,
 		Namespace:    commonHeader.Namespace,
 		ResourceType: workloadType,
 		Name:         commonHeader.ResourceName,
+		IsBKMonitor:  cluster.IsBKMonitor,
 	}
 	return workloadMeta
 }

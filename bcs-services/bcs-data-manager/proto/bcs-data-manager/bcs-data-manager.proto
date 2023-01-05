@@ -150,6 +150,18 @@ message GetAllProjectListRequest {
     },
     (validate.rules).uint32.lte = 10
   ];
+  int64 startTime = 4[
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "startTime",
+      description : "开始时间，时间戳，不传为默认"
+    }
+  ];
+  int64 endTime = 5[
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "endTime",
+      description : "结束时间，时间戳，不传为现在"
+    }
+  ];
 }
 
 message GetAllProjectListResponse {
@@ -216,6 +228,18 @@ message GetProjectInfoRequest {
       description : "项目code"
     },
     (validate.rules).string = {max_len : 100, pattern : "^[0-9a-zA-Z-]+$"}
+  ];
+  int64 startTime = 5[
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "startTime",
+      description : "开始时间，时间戳，不传为默认"
+    }
+  ];
+  int64 endTime = 6[
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "endTime",
+      description : "结束时间，时间戳，不传为现在"
+    }
   ];
 }
 
@@ -293,6 +317,18 @@ message GetClusterListRequest {
     },
     (validate.rules).string = {max_len : 100, pattern : "^[0-9a-zA-Z-]+$"}
   ];
+  int64 startTime = 7[
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "startTime",
+      description : "开始时间，时间戳，不传为默认"
+    }
+  ];
+  int64 endTime = 8[
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "endTime",
+      description : "结束时间，时间戳，不传为现在"
+    }
+  ];
 }
 
 message GetClusterListResponse {
@@ -346,6 +382,18 @@ message GetClusterInfoRequest {
       description : "时间维度，dimension为空时返回最新的一条数据，project粒度只支持day"
     },
     (validate.rules).string = {in: ["minute", "hour", "day", ""]}
+  ];
+  int64 startTime = 3[
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "startTime",
+      description : "开始时间，时间戳，不传为默认"
+    }
+  ];
+  int64 endTime = 4[
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "endTime",
+      description : "结束时间，时间戳，不传为现在"
+    }
   ];
 }
 
@@ -410,6 +458,18 @@ message GetNamespaceInfoListRequest {
     },
     (validate.rules) .uint32.lte = 10
   ];
+  int64 startTime = 5[
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "startTime",
+      description : "开始时间，时间戳，不传为默认"
+    }
+  ];
+  int64 endTime = 6[
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "endTime",
+      description : "结束时间，时间戳，不传为现在"
+    }
+  ];
 }
 
 message GetNamespaceInfoListResponse {
@@ -470,6 +530,18 @@ message GetNamespaceInfoRequest {
       description : "时间维度，dimension为空时返回最新的一条数据，project粒度只支持day"
     },
     (validate.rules).string = {in: ["minute", "hour", "day", ""]}
+  ];
+  int64 startTime = 4[
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "startTime",
+      description : "开始时间，时间戳，不传为默认"
+    }
+  ];
+  int64 endTime = 5[
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "endTime",
+      description : "结束时间，时间戳，不传为现在"
+    }
   ];
 }
 
@@ -548,6 +620,18 @@ message GetWorkloadInfoListRequest {
     },
     (validate.rules) .uint32.lte = 10
   ];
+  int64 startTime = 7[
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "startTime",
+      description : "开始时间，时间戳，不传为默认"
+    }
+  ];
+  int64 endTime = 8[
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "endTime",
+      description : "结束时间，时间戳，不传为现在"
+    }
+  ];
 }
 
 message GetWorkloadInfoListResponse {
@@ -622,6 +706,18 @@ message GetWorkloadInfoRequest {
       description : "时间维度，dimension为空时返回最新的一条数据，project粒度只支持day"
     },
     (validate.rules).string = {in: ["minute", "hour", "day", ""]}
+  ];
+  int64 startTime = 6[
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "startTime",
+      description : "开始时间，时间戳，不传为默认"
+    }
+  ];
+  int64 endTime = 7[
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "endTime",
+      description : "结束时间，时间戳，不传为现在"
+    }
   ];
 }
 
@@ -1402,6 +1498,18 @@ message GetPodAutoscalerListRequest {
     title: "podAutoscalerType",
     description: "podAutoscaler类型"
   }];
+  int64 startTime = 11[
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "startTime",
+      description : "开始时间，时间戳，不传为默认"
+    }
+  ];
+  int64 endTime = 12[
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "endTime",
+      description : "结束时间，时间戳，不传为现在"
+    }
+  ];
 }
 
 message GetPodAutoscalerListResponse {
@@ -1471,6 +1579,18 @@ message GetPodAutoscalerRequest {
     title: "podAutoscalerName",
     description: "podAutoscaler名称"
   }];
+  int64 startTime = 6[
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "startTime",
+      description : "开始时间，时间戳，不传为默认"
+    }
+  ];
+  int64 endTime = 7[
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "endTime",
+      description : "结束时间，时间戳，不传为现在"
+    }
+  ];
 }
 
 message GetPodAutoscalerResponse {

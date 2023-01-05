@@ -127,10 +127,19 @@ func (m *ModelProject) GetProjectList(ctx context.Context,
 	cond := make([]*operator.Condition, 0)
 	cond = append(cond, operator.NewLeafCondition(operator.Eq, operator.M{
 		DimensionKey: dimension,
-	}),
-		operator.NewLeafCondition(operator.Gte, operator.M{
-			MetricTimeKey: primitive.NewDateTimeFromTime(getStartTime(dimension)),
+	}))
+	startTime := getStartTime(dimension)
+	if req.GetStartTime() != 0 {
+		startTime = time.Unix(req.GetStartTime(), 0)
+	}
+	cond = append(cond, operator.NewLeafCondition(operator.Gte, operator.M{
+		MetricTimeKey: primitive.NewDateTimeFromTime(startTime),
+	}))
+	if req.GetEndTime() != 0 {
+		cond = append(cond, operator.NewLeafCondition(operator.Lte, operator.M{
+			MetricTimeKey: primitive.NewDateTimeFromTime(time.Unix(req.GetEndTime(), 0)),
 		}))
+	}
 	conds := operator.NewBranchCondition(operator.And, cond...)
 	tempProjectList := make([]map[string]string, 0)
 	err = m.DB.Table(m.TableName).Find(conds).WithProjection(map[string]int{ProjectIDKey: 1, "_id": 0}).
@@ -163,6 +172,8 @@ func (m *ModelProject) GetProjectList(ctx context.Context,
 		projectRequest := &bcsdatamanager.GetProjectInfoRequest{
 			Project:   project,
 			Dimension: dimension,
+			StartTime: req.GetStartTime(),
+			EndTime:   req.GetEndTime(),
 		}
 		projectInfo, err := m.GetProjectInfo(ctx, projectRequest)
 		if err != nil {
@@ -186,6 +197,13 @@ func (m *ModelProject) GetProjectInfo(ctx context.Context,
 		dimension = types.DimensionDay
 	}
 	metricStartTime := getStartTime(dimension)
+	if request.GetStartTime() != 0 {
+		metricStartTime = time.Unix(request.GetStartTime(), 0)
+	}
+	metricEndTime := time.Now()
+	if request.GetEndTime() != 0 {
+		metricEndTime = time.Unix(request.GetEndTime(), 0)
+	}
 	projectMetricsMap := make([]*types.ProjectData, 0)
 	pipeline := make([]map[string]interface{}, 0)
 	if request.Project != "" {
@@ -194,6 +212,7 @@ func (m *ModelProject) GetProjectInfo(ctx context.Context,
 			DimensionKey: dimension,
 			MetricTimeKey: map[string]interface{}{
 				"$gte": primitive.NewDateTimeFromTime(metricStartTime),
+				"$lte": primitive.NewDateTimeFromTime(metricEndTime),
 			},
 		}})
 	} else if request.Business != "" {
@@ -202,6 +221,7 @@ func (m *ModelProject) GetProjectInfo(ctx context.Context,
 			DimensionKey:  dimension,
 			MetricTimeKey: map[string]interface{}{
 				"$gte": primitive.NewDateTimeFromTime(metricStartTime),
+				"$lte": primitive.NewDateTimeFromTime(metricEndTime),
 			},
 		}})
 	}
@@ -239,8 +259,8 @@ func (m *ModelProject) GetProjectInfo(ctx context.Context,
 	for _, metrics := range projectMetricsMap {
 		projectMetrics = append(projectMetrics, metrics.Metrics...)
 	}
-	startTime := projectMetrics[len(projectMetrics)-1].Time.Time().String()
-	endTime := projectMetrics[0].Time.Time().String()
+	endTime := projectMetrics[len(projectMetrics)-1].Time.Time().String()
+	startTime := projectMetrics[0].Time.Time().String()
 	return m.generateProjectResponse(projectMetrics, projectMetricsMap[0], startTime, endTime), nil
 }
 

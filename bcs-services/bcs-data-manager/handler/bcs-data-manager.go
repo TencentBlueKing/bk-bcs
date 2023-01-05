@@ -15,12 +15,14 @@ package handler
 import (
 	"context"
 	"fmt"
+	"time"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/prom"
-	"time"
 
 	bcsCommon "github.com/Tencent/bk-bcs/bcs-common/common"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/store"
 	bcsdatamanager "github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/proto/bcs-data-manager"
 )
@@ -42,8 +44,9 @@ func NewBcsDataManager(model store.Server, resourceGetter common.GetterInterface
 // GetAllProjectList get project list
 func (e *BcsDataManager) GetAllProjectList(ctx context.Context,
 	req *bcsdatamanager.GetAllProjectListRequest, rsp *bcsdatamanager.GetAllProjectListResponse) error {
-	blog.Infof("Received GetAllProjectList.Call request. Dimension:%s, page:%d, size:%d",
-		req.GetDimension(), req.Page, req.Size)
+	blog.Infof("Received GetAllProjectList.Call request. Dimension:%s, page:%d, size:%d, startTime=%s, endTime=%s",
+		req.GetDimension(), req.Page, req.Size, time.Unix(req.GetStartTime(), 0),
+		time.Unix(req.GetEndTime(), 0))
 	start := time.Now()
 	result, total, err := e.model.GetProjectList(ctx, req)
 	if err != nil {
@@ -64,8 +67,9 @@ func (e *BcsDataManager) GetAllProjectList(ctx context.Context,
 // GetProjectInfo get project info
 func (e *BcsDataManager) GetProjectInfo(ctx context.Context,
 	req *bcsdatamanager.GetProjectInfoRequest, rsp *bcsdatamanager.GetProjectInfoResponse) error {
-	blog.Infof("Received GetProjectInfo.Call request. Project id: %s, dimension:%s",
-		req.GetProject(), req.GetDimension())
+	blog.Infof("Received GetProjectInfo.Call request. Project id: %s, dimension:%s, startTime=%s, endTime=%s",
+		req.GetProject(), req.GetDimension(), time.Unix(req.GetStartTime(), 0),
+		time.Unix(req.GetEndTime(), 0))
 	start := time.Now()
 	if req.GetProject() == "" && req.GetProjectCode() == "" && req.GetBusiness() == "" {
 		rsp.Message = fmt.Sprintf("get project info error, projectId, businessID or projectCode is required")
@@ -110,8 +114,9 @@ func (e *BcsDataManager) GetProjectInfo(ctx context.Context,
 // GetAllClusterList get all cluster list
 func (e *BcsDataManager) GetAllClusterList(ctx context.Context, req *bcsdatamanager.GetClusterListRequest,
 	rsp *bcsdatamanager.GetClusterListResponse) error {
-	blog.Infof("Received GetAllClusterList.Call request. Dimension:%s, page:%s, size:%s",
-		req.GetDimension(), req.GetPage(), req.GetSize())
+	blog.Infof("Received GetAllClusterList.Call request. Dimension:%s, page:%s, size:%s, startTime=%s, endTime=%s",
+		req.GetDimension(), req.GetPage(), req.GetSize(), time.Unix(req.GetStartTime(), 0),
+		time.Unix(req.GetEndTime(), 0))
 	start := time.Now()
 	result, total, err := e.model.GetClusterInfoList(ctx, req)
 	if err != nil {
@@ -132,8 +137,10 @@ func (e *BcsDataManager) GetAllClusterList(ctx context.Context, req *bcsdatamana
 // GetClusterListByProject get cluster list by project
 func (e *BcsDataManager) GetClusterListByProject(ctx context.Context, req *bcsdatamanager.GetClusterListRequest,
 	rsp *bcsdatamanager.GetClusterListResponse) error {
-	blog.Infof("Received GetClusterListByProject.Call request. Project id: %s, dimension:%s, page:%s, size:%s",
-		req.GetProject(), req.GetDimension(), req.GetPage(), req.GetSize())
+	blog.Infof("Received GetClusterListByProject.Call request. Project id: %s, dimension:%s, page:%s, size:%s, "+
+		"startTime=%s, endTime=%s",
+		req.GetProject(), req.GetDimension(), req.GetPage(), req.GetSize(), time.Unix(req.GetStartTime(), 0),
+		time.Unix(req.GetEndTime(), 0))
 	start := time.Now()
 	if req.GetProject() == "" && req.GetBusiness() == "" && req.GetProjectCode() == "" {
 		rsp.Message = fmt.Sprintf("get cluster list info error, projectId, projectCode or businessID is required")
@@ -179,8 +186,9 @@ func (e *BcsDataManager) GetClusterListByProject(ctx context.Context, req *bcsda
 // GetClusterInfo get cluster info
 func (e *BcsDataManager) GetClusterInfo(ctx context.Context, req *bcsdatamanager.GetClusterInfoRequest,
 	rsp *bcsdatamanager.GetClusterInfoResponse) error {
-	blog.Infof("Received GetClusterInfo.Call request. cluster id:%s, dimension: %s",
-		req.GetClusterID(), req.GetDimension())
+	blog.Infof("Received GetClusterInfo.Call request. cluster id:%s, dimension: %s, startTime=%s, endTime=%s",
+		req.GetClusterID(), req.GetDimension(), time.Unix(req.GetStartTime(), 0),
+		time.Unix(req.GetEndTime(), 0))
 	result, err := e.model.GetClusterInfo(ctx, req)
 	start := time.Now()
 	if err != nil {
@@ -200,8 +208,10 @@ func (e *BcsDataManager) GetClusterInfo(ctx context.Context, req *bcsdatamanager
 // GetNamespaceInfoList get namespace info list
 func (e *BcsDataManager) GetNamespaceInfoList(ctx context.Context, req *bcsdatamanager.GetNamespaceInfoListRequest,
 	rsp *bcsdatamanager.GetNamespaceInfoListResponse) error {
-	blog.Infof("Received GetNamespaceInfoList.Call request. cluster id:%s, dimension: %s, page:%s, size:%s",
-		req.GetClusterID(), req.GetDimension(), req.GetPage(), req.GetSize())
+	blog.Infof("Received GetNamespaceInfoList.Call request. cluster id:%s, dimension: %s, page:%s, size:%s, "+
+		"startTime=%s, endTime=%s",
+		req.GetClusterID(), req.GetDimension(), req.GetPage(), req.GetSize(), time.Unix(req.GetStartTime(), 0),
+		time.Unix(req.GetEndTime(), 0))
 	start := time.Now()
 	result, total, err := e.model.GetNamespaceInfoList(ctx, req)
 	if err != nil {
@@ -222,8 +232,10 @@ func (e *BcsDataManager) GetNamespaceInfoList(ctx context.Context, req *bcsdatam
 // GetNamespaceInfo get namespace info
 func (e *BcsDataManager) GetNamespaceInfo(ctx context.Context, req *bcsdatamanager.GetNamespaceInfoRequest,
 	rsp *bcsdatamanager.GetNamespaceInfoResponse) error {
-	blog.Infof("Received GetNamespaceInfo.Call request. cluster id:%s, namespace:%s, dimension: %s",
-		req.GetClusterID(), req.Namespace, req.Dimension)
+	blog.Infof("Received GetNamespaceInfo.Call request. cluster id:%s, namespace:%s, dimension: %s, "+
+		"startTime=%s, endTime=%s",
+		req.GetClusterID(), req.Namespace, req.Dimension, time.Unix(req.GetStartTime(), 0),
+		time.Unix(req.GetEndTime(), 0))
 	start := time.Now()
 	result, err := e.model.GetNamespaceInfo(ctx, req)
 	if err != nil {
@@ -244,8 +256,9 @@ func (e *BcsDataManager) GetNamespaceInfo(ctx context.Context, req *bcsdatamanag
 func (e *BcsDataManager) GetWorkloadInfoList(ctx context.Context, req *bcsdatamanager.GetWorkloadInfoListRequest,
 	rsp *bcsdatamanager.GetWorkloadInfoListResponse) error {
 	blog.Infof("Received GetWorkloadInfoList.Call request, cluster id: %s, namespace: %s, dimension: %s, "+
-		"type: %s, page: %s, size: %s",
-		req.GetClusterID(), req.GetNamespace(), req.GetDimension(), req.GetWorkloadType(), req.GetPage(), req.GetSize())
+		"type: %s, page: %s, size: %s, startTime=%s, endTime=%s",
+		req.GetClusterID(), req.GetNamespace(), req.GetDimension(), req.GetWorkloadType(), req.GetPage(), req.GetSize(),
+		time.Unix(req.GetStartTime(), 0), time.Unix(req.GetEndTime(), 0))
 	start := time.Now()
 	result, total, err := e.model.GetWorkloadInfoList(ctx, req)
 	if err != nil {
@@ -267,8 +280,9 @@ func (e *BcsDataManager) GetWorkloadInfoList(ctx context.Context, req *bcsdatama
 func (e *BcsDataManager) GetWorkloadInfo(ctx context.Context, req *bcsdatamanager.GetWorkloadInfoRequest,
 	rsp *bcsdatamanager.GetWorkloadInfoResponse) error {
 	blog.Infof("Received GetWorkloadInfo.Call request. cluster id: %s, namespace: %s, dimension: %s, "+
-		"type: %s, name: %s",
-		req.GetClusterID(), req.GetNamespace(), req.Dimension, req.GetWorkloadType(), req.GetWorkloadName())
+		"type: %s, name: %s, startTime=%s, endTime=%s",
+		req.GetClusterID(), req.GetNamespace(), req.Dimension, req.GetWorkloadType(), req.GetWorkloadName(),
+		time.Unix(req.GetStartTime(), 0), time.Unix(req.GetEndTime(), 0))
 	start := time.Now()
 	result, err := e.model.GetWorkloadInfo(ctx, req)
 	if err != nil {
@@ -289,9 +303,10 @@ func (e *BcsDataManager) GetWorkloadInfo(ctx context.Context, req *bcsdatamanage
 func (e *BcsDataManager) GetPodAutoscalerList(ctx context.Context, req *bcsdatamanager.GetPodAutoscalerListRequest,
 	rsp *bcsdatamanager.GetPodAutoscalerListResponse) error {
 	blog.Infof("Received GetPodAutoscalerList.Call request. cluster id: %s, namespace: %s, dimension: %s, "+
-		"workloadType: %s, workloadName: %s, podAutoscalerType:%s, page:%d, size:%d",
+		"workloadType: %s, workloadName: %s, podAutoscalerType:%s, page:%d, size:%d, startTime=%s, endTime=%s",
 		req.GetClusterID(), req.GetNamespace(), req.Dimension, req.GetWorkloadType(), req.GetWorkloadName(),
-		req.GetPodAutoscalerType(), req.GetPage(), req.GetSize())
+		req.GetPodAutoscalerType(), req.GetPage(), req.GetSize(), time.Unix(req.GetStartTime(), 0),
+		time.Unix(req.GetEndTime(), 0))
 	start := time.Now()
 	result, total, err := e.model.GetPodAutoscalerList(ctx, req)
 	if err != nil {
@@ -313,8 +328,9 @@ func (e *BcsDataManager) GetPodAutoscalerList(ctx context.Context, req *bcsdatam
 func (e *BcsDataManager) GetPodAutoscaler(ctx context.Context, req *bcsdatamanager.GetPodAutoscalerRequest,
 	rsp *bcsdatamanager.GetPodAutoscalerResponse) error {
 	blog.Infof("Received GetPodAutoscaler.Call request. cluster id: %s, namespace: %s, dimension: %s, "+
-		"type: %s, name: %s",
-		req.GetClusterID(), req.GetNamespace(), req.Dimension, req.GetPodAutoscalerType(), req.GetPodAutoscalerName())
+		"type: %s, name: %s, startTime=%s, endTime=%s",
+		req.GetClusterID(), req.GetNamespace(), req.Dimension, req.GetPodAutoscalerType(), req.GetPodAutoscalerName(),
+		time.Unix(req.GetStartTime(), 0), time.Unix(req.GetEndTime(), 0))
 	start := time.Now()
 	// TODO:
 	result, err := e.model.GetPodAutoscalerInfo(ctx, req)

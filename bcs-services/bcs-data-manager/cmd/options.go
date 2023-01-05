@@ -14,6 +14,7 @@ package cmd
 
 import (
 	"crypto/tls"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/types"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -37,10 +38,7 @@ type MongoOption struct {
 
 // BcsMonitorConfig options for bcs monitor config
 type BcsMonitorConfig struct {
-	Schema              string `json:"schema"`
 	BcsMonitorEndpoints string `json:"endpoints"`
-	Password            string `json:"password"`
-	User                string `json:"user"`
 }
 
 // EtcdOption option for etcd
@@ -101,23 +99,37 @@ type HandleConfig struct {
 	ChanQueueLen int64 `json:"chanQueueLen"`
 }
 
+// KafkaConfig kafka config
+type KafkaConfig struct {
+	Address   string `json:"address"`
+	Network   string `json:"network"`
+	Topic     string `json:"topic"`
+	Partition int    `json:"partition"`
+	Username  string `json:"username"`
+	Password  string `json:"password"`
+}
+
 // DataManagerOptions options of data manager
 type DataManagerOptions struct {
 	conf.FileConfig
 	conf.LogConfig
 	ClientConfig
 	ServerConfig
-	Mongo          MongoOption        `json:"mongoConf"`
-	BcsMonitorConf BcsMonitorConfig   `json:"bcsMonitorConf"`
-	QueueConfig    QueueConfig        `json:"queueConfig"`
-	HandleConfig   HandleConfig       `json:"handleConfig"`
-	Etcd           EtcdOption         `json:"etcd"`
-	BcsAPIConf     BcsAPIConfig       `json:"bcsApiConf"`
-	Debug          bool               `json:"debug"`
-	FilterRules    ClusterFilterRules `json:"filterRules"`
-	AppCode        string             `json:"appCode"`
-	AppSecret      string             `json:"appSecret"`
-	ProducerConfig ProducerConfig     `json:"producerConfig"`
+	Mongo                  MongoOption        `json:"mongoConf"`
+	BcsMonitorConf         BcsMonitorConfig   `json:"bcsMonitorConf"`
+	QueueConfig            QueueConfig        `json:"queueConfig"`
+	HandleConfig           HandleConfig       `json:"handleConfig"`
+	Etcd                   EtcdOption         `json:"etcd"`
+	BcsAPIConf             BcsAPIConfig       `json:"bcsApiConf"`
+	Debug                  bool               `json:"debug"`
+	FilterRules            ClusterFilterRules `json:"filterRules"`
+	AppCode                string             `json:"appCode"`
+	AppSecret              string             `json:"appSecret"`
+	ProducerConfig         ProducerConfig     `json:"producerConfig"`
+	KafkaConfig            KafkaConfig        `json:"kafkaConfig"`
+	NeedSendKafka          bool               `json:"needSendKafka"`
+	IgnoreBkMonitorCluster bool               `json:"ignoreBkMonitorCluster"`
+	QueryFromBkMonitor     bool               `json:"queryFromBkMonitor"`
 }
 
 // ClusterFilterRules rules for cluster filter

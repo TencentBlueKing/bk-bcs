@@ -19,6 +19,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/requester"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/types"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/utils"
 
@@ -29,18 +30,15 @@ import (
 
 func newMonitor() bcsmonitor.ClientInterface {
 	opt := bcsmonitor.BcsMonitorClientOpt{
-		Schema:    "",
 		Endpoint:  "",
-		UserName:  "",
-		Password:  "",
-		AppCode:   "",
+		AppCode:   "bcs-data-manager",
 		AppSecret: "",
 	}
-	requester := bcsmonitor.NewRequester()
-	monitorCli := bcsmonitor.NewBcsMonitorClient(opt, requester)
-	monitorCli.SetCompleteEndpoint()
-	header := http.Header{}
-	monitorCli.SetDefaultHeader(header)
+	request := requester.NewRequester()
+	monitorCli := bcsmonitor.NewBcsMonitorClient(opt, request)
+	defaultHeader := http.Header{}
+	defaultHeader.Add("", "")
+	monitorCli.SetDefaultHeader(defaultHeader)
 	return monitorCli
 }
 
@@ -48,10 +46,11 @@ func Test_GetClusterCPUMetrics(t *testing.T) {
 	monitorCli := newMonitor()
 	opts := &types.JobCommonOpts{
 		ObjectType:  types.ClusterType,
-		ClusterID:   "BCS-K8S-15202",
+		ClusterID:   "BCS-K8S-25975",
 		ClusterType: types.Kubernetes,
 		Dimension:   types.DimensionMinute,
 		CurrentTime: time.Time{},
+		IsBKMonitor: true,
 	}
 	getter := &MetricGetter{}
 	clients := types.NewClients(monitorCli, nil, nil, nil)
@@ -64,10 +63,11 @@ func Test_GetClusterMemoryMetrics(t *testing.T) {
 	monitorCli := newMonitor()
 	opts := &types.JobCommonOpts{
 		ObjectType:  types.ClusterType,
-		ClusterID:   "BCS-K8S-15202",
+		ClusterID:   "BCS-K8S-25975",
 		ClusterType: types.Kubernetes,
 		Dimension:   types.DimensionMinute,
 		CurrentTime: time.Time{},
+		IsBKMonitor: true,
 	}
 	getter := &MetricGetter{}
 	clients := types.NewClients(monitorCli, nil, nil, nil)
@@ -184,13 +184,14 @@ func Test_GetWorkloadCPUMetrics(t *testing.T) {
 	monitorCli := newMonitor()
 	opts := &types.JobCommonOpts{
 		ObjectType:   types.WorkloadType,
-		ClusterID:    "BCS-K8S-15202",
+		ClusterID:    "BCS-K8S-25975",
 		ClusterType:  types.Kubernetes,
 		Dimension:    types.DimensionMinute,
-		Namespace:    "default",
+		Namespace:    "bk-system",
 		WorkloadType: types.DeploymentType,
-		WorkloadName: "event-exporter",
+		WorkloadName: "bcs-k8s-watch",
 		CurrentTime:  time.Time{},
+		IsBKMonitor:  true,
 	}
 	getter := &MetricGetter{}
 	clients := types.NewClients(monitorCli, nil, nil, nil)

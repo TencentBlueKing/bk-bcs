@@ -25,7 +25,12 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/segmentio/kafka-go"
+	"github.com/segmentio/kafka-go/sasl/scram"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/bcsproject"
+	kafka2 "github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/kafka"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/requester"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/store"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/types"
 
@@ -104,8 +109,8 @@ func (s *Server) Init() error {
 	if err := s.initRegistry(); err != nil {
 		return err
 	}
-	//
-	if err := s.initResourceGetter(); err != nil {
+
+	if err := s.initWorker(); err != nil {
 		return err
 	}
 	// init core micro service
@@ -121,9 +126,6 @@ func (s *Server) Init() error {
 	s.initExtraModules()
 	// init system signal handler
 	s.initSignalHandler()
-	if err := s.initWorker(); err != nil {
-		return err
-	}
 
 	return nil
 }
@@ -392,15 +394,33 @@ func (s *Server) initWorker() error {
 		blog.Errorf("init cmCli err:%v", err)
 		return err
 	}
+
+	selectClusters := strings.Split(s.opt.FilterRules.ClusterIDs, ",")
+	blog.Infof("selected cluster: %v", selectClusters)
+	blog.Infof("cluster env: %s", s.opt.FilterRules.Env)
+
+	pmClient := s.initProjectManager()
+	if pmClient == nil {
+		blog.Errorf("init project manager cli error, client is nil")
+		return fmt.Errorf("init project manager cli error, client is nil")
+	}
+	// init resourceGetter
+	s.resourceGetter = common.NewGetter(s.opt.FilterRules.NeedFilter, selectClusters, s.opt.FilterRules.Env,
+		pmClient, bcsMonitorCli)
 	// init producer
 	producerCron := cron.New()
-
 	s.producer = worker.NewProducer(s.ctx, msgQueue, producerCron, cmCli, k8sStorageCli, mesosStorageCli,
-		s.resourceGetter, s.opt.ProducerConfig.Concurrency)
+		s.resourceGetter, s.opt.ProducerConfig.Concurrency, s.opt.NeedSendKafka)
 	if err = s.producer.InitCronList(); err != nil {
 		blog.Errorf("init producer cron list error: %v", err)
 		return err
 	}
+	if s.opt.NeedSendKafka {
+		if err = s.initKafkaConn(); err != nil {
+			return err
+		}
+	}
+	// init consumer
 	handlerOpts := worker.HandlerOptions{ChanQueueNum: s.opt.HandleConfig.ChanQueueLen}
 	handlerClients := worker.HandleClients{
 		Store:            s.store,
@@ -530,20 +550,21 @@ func (s *Server) initClusterManager() (cmanager.ClusterManagerClient, error) {
 // initBcsMonitorCli xxx
 // init bcs monitor cli
 func (s *Server) initBcsMonitorCli() bcsmonitor.ClientInterface {
-	realPassword, _ := encrypt.DesDecryptFromBase([]byte(s.opt.BcsMonitorConf.Password))
-	realAppSecret, _ := encrypt.DesDecryptFromBase([]byte(s.opt.AppSecret))
+	var realAppSecret []byte
+	if s.opt.AppSecret != "" {
+		realAppSecret, _ = encrypt.DesDecryptFromBase([]byte(s.opt.AppSecret))
+	}
+	realAuthToken, _ := encrypt.DesDecryptFromBase([]byte(s.opt.BcsAPIConf.AdminToken))
 	bcsMonitorOpts := bcsmonitor.BcsMonitorClientOpt{
-		Schema:    s.opt.BcsMonitorConf.Schema,
 		Endpoint:  s.opt.BcsMonitorConf.BcsMonitorEndpoints,
-		UserName:  s.opt.BcsMonitorConf.User,
-		Password:  string(realPassword),
 		AppCode:   s.opt.AppCode,
 		AppSecret: string(realAppSecret),
 	}
-	bcsMonitorRequester := bcsmonitor.NewRequester()
+	bcsMonitorRequester := requester.NewRequester()
 	bcsMonitorCli := bcsmonitor.NewBcsMonitorClient(bcsMonitorOpts, bcsMonitorRequester)
-	bcsMonitorCli.SetCompleteEndpoint()
-	bcsMonitorCli.SetDefaultHeader(http.Header{})
+	defaultHeader := http.Header{}
+	defaultHeader.Add("Authorization", fmt.Sprintf("Bearer %s", realAuthToken))
+	bcsMonitorCli.SetDefaultHeader(defaultHeader)
 	blog.Infof("init monitor cli success")
 	return bcsMonitorCli
 }
@@ -641,10 +662,7 @@ func (s *Server) initMetric(mux *http.ServeMux) {
 	mux.Handle("/metrics", promhttp.Handler())
 }
 
-func (s *Server) initResourceGetter() error {
-	selectClusters := strings.Split(s.opt.FilterRules.ClusterIDs, ",")
-	blog.Infof("selected cluster: %v", selectClusters)
-	blog.Infof("cluster env: %s", s.opt.FilterRules.Env)
+func (s *Server) initProjectManager() bcsproject.BcsProjectManagerClient {
 	realAuthToken, _ := encrypt.DesDecryptFromBase([]byte(s.opt.BcsAPIConf.AdminToken))
 	opts := &bcsproject.Options{
 		Module:          bcsproject.ModuleProjectManager,
@@ -654,11 +672,31 @@ func (s *Server) initResourceGetter() error {
 		AuthToken:       string(realAuthToken),
 		UserName:        s.opt.BcsAPIConf.UserName,
 	}
-	pmClient := bcsproject.NewBcsProjectManagerClient(opts)
-	if pmClient == nil {
-		blog.Errorf("init project manager cli error, client is nil")
-		return fmt.Errorf("init project manager cli error, client is nil")
+	return bcsproject.NewBcsProjectManagerClient(opts)
+}
+
+func (s *Server) initKafkaConn() error {
+	password := s.opt.KafkaConfig.Password
+	if password != "" {
+		realPwd, _ := encrypt.DesDecryptFromBase([]byte(password))
+		password = string(realPwd)
 	}
-	s.resourceGetter = common.NewGetter(s.opt.FilterRules.NeedFilter, selectClusters, s.opt.FilterRules.Env, pmClient)
+	mechanism, err := scram.Mechanism(scram.SHA512, s.opt.KafkaConfig.Username, password)
+	if err != nil {
+		blog.Errorf("init kafka mechanism error :%s", err.Error())
+		return fmt.Errorf("init kafka mechanism error :%s", err.Error())
+	}
+	sharedTransport := &kafka.Transport{
+		SASL: mechanism,
+	}
+	writer := &kafka.Writer{
+		Addr: kafka.TCP(s.opt.KafkaConfig.Address),
+		//Topic:                  "datamanager",
+		MaxAttempts:            3,
+		AllowAutoTopicCreation: true,
+		Transport:              sharedTransport,
+	}
+	kafkaConn := kafka2.NewKafkaClient(writer, nil, s.opt.KafkaConfig.Topic)
+	s.producer.ImportKafkaConn(kafkaConn)
 	return nil
 }
