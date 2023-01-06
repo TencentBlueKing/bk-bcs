@@ -28,12 +28,12 @@ import (
 func (s *Service) PublishStrategy(ctx context.Context, req *pbcs.PublishStrategyReq) (
 	*pbcs.PublishStrategyResp, error) {
 
-	kit := kit.FromGrpcContext(ctx)
+	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.PublishStrategyResp)
 
 	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.Strategy, Action: meta.Publish,
 		ResourceID: req.AppId}, BizID: req.BizId}
-	err := s.authorizer.AuthorizeWithResp(kit, resp, res)
+	err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res)
 	if err != nil {
 		return resp, nil
 	}
@@ -43,10 +43,10 @@ func (s *Service) PublishStrategy(ctx context.Context, req *pbcs.PublishStrategy
 		AppId:      req.AppId,
 		StrategyId: req.Id,
 	}
-	rp, err := s.client.DS.PublishStrategy(kit.RpcCtx(), r)
+	rp, err := s.client.DS.PublishStrategy(grpcKit.RpcCtx(), r)
 	if err != nil {
-		errf.Error(err).AssignResp(kit, resp)
-		logs.Errorf("publish strategy failed, err: %v, rid: %s", err, kit.Rid)
+		errf.Error(err).AssignResp(grpcKit, resp)
+		logs.Errorf("publish strategy failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return resp, nil
 	}
 
@@ -61,12 +61,12 @@ func (s *Service) PublishStrategy(ctx context.Context, req *pbcs.PublishStrategy
 func (s *Service) FinishPublishStrategy(ctx context.Context, req *pbcs.FinishPublishStrategyReq) (
 	*pbcs.FinishPublishStrategyResp, error) {
 
-	kit := kit.FromGrpcContext(ctx)
+	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.FinishPublishStrategyResp)
 
 	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.Strategy, Action: meta.FinishPublish,
 		ResourceID: req.AppId}, BizID: req.BizId}
-	err := s.authorizer.AuthorizeWithResp(kit, resp, res)
+	err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res)
 	if err != nil {
 		return resp, nil
 	}
@@ -76,10 +76,10 @@ func (s *Service) FinishPublishStrategy(ctx context.Context, req *pbcs.FinishPub
 		AppId:      req.AppId,
 		StrategyId: req.Id,
 	}
-	_, err = s.client.DS.FinishPublishStrategy(kit.RpcCtx(), r)
+	_, err = s.client.DS.FinishPublishStrategy(grpcKit.RpcCtx(), r)
 	if err != nil {
-		errf.Error(err).AssignResp(kit, resp)
-		logs.Errorf("finish publish strategy failed, err: %v, rid: %s", err, kit.Rid)
+		errf.Error(err).AssignResp(grpcKit, resp)
+		logs.Errorf("finish publish strategy failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return resp, nil
 	}
 
@@ -91,23 +91,23 @@ func (s *Service) FinishPublishStrategy(ctx context.Context, req *pbcs.FinishPub
 func (s *Service) ListPublishedStrategyHistories(ctx context.Context, req *pbcs.ListPubStrategyHistoriesReq) (
 	*pbcs.ListPubStrategyHistoriesResp, error) {
 
-	kit := kit.FromGrpcContext(ctx)
+	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.ListPubStrategyHistoriesResp)
 
 	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.PSH, Action: meta.Find,
 		ResourceID: req.AppId}, BizID: req.BizId}
-	err := s.authorizer.AuthorizeWithResp(kit, resp, res)
+	err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res)
 	if err != nil {
 		return resp, nil
 	}
 
 	if req.Page == nil {
-		errf.Error(errf.New(errf.InvalidParameter, "page is null")).AssignResp(kit, resp)
+		errf.Error(errf.New(errf.InvalidParameter, "page is null")).AssignResp(grpcKit, resp)
 		return resp, nil
 	}
 
-	if err := req.Page.BasePage().Validate(types.DefaultPageOption); err != nil {
-		errf.Error(err).AssignResp(kit, resp)
+	if err = req.Page.BasePage().Validate(types.DefaultPageOption); err != nil {
+		errf.Error(err).AssignResp(grpcKit, resp)
 		return resp, nil
 	}
 
@@ -117,10 +117,10 @@ func (s *Service) ListPublishedStrategyHistories(ctx context.Context, req *pbcs.
 		Filter: req.Filter,
 		Page:   req.Page,
 	}
-	rp, err := s.client.DS.ListPublishedStrategyHistories(kit.RpcCtx(), r)
+	rp, err := s.client.DS.ListPublishedStrategyHistories(grpcKit.RpcCtx(), r)
 	if err != nil {
-		errf.Error(err).AssignResp(kit, resp)
-		logs.Errorf("list published strategy histories failed, err: %v, rid: %s", err, kit.Rid)
+		errf.Error(err).AssignResp(grpcKit, resp)
+		logs.Errorf("list published strategy histories failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return resp, nil
 	}
 

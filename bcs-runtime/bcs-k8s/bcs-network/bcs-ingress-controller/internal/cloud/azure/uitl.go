@@ -20,6 +20,7 @@ import (
 
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork"
 	"github.com/Azure/go-autorest/autorest/to"
+
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
 )
 
@@ -66,7 +67,7 @@ func transProbeProtocolPtr(str string) *armnetwork.ProbeProtocol {
 
 // transAgProbeMatch translate healthCheck to azure entity
 func transAgProbeMatch(healthCheck *networkextensionv1.ListenerHealthCheck) *armnetwork.
-	ApplicationGatewayProbeHealthResponseMatch {
+ApplicationGatewayProbeHealthResponseMatch {
 	if healthCheck == nil || healthCheck.HTTPCode < 1 || healthCheck.HTTPCode > 31 {
 		return nil
 	}
@@ -149,4 +150,57 @@ func getBackendPort(targetGroup *networkextensionv1.ListenerTargetGroup) int32 {
 	}
 
 	return int32(port)
+}
+
+func splitListenersToDiffProtocol(listeners []*networkextensionv1.Listener) [][]*networkextensionv1.Listener {
+	retMap := make(map[string][]*networkextensionv1.Listener)
+	for _, li := range listeners {
+		var listenerList []*networkextensionv1.Listener
+		if _, ok := retMap[li.Spec.Protocol]; ok {
+			listenerList = retMap[li.Spec.Protocol]
+		} else {
+			listenerList = make([]*networkextensionv1.Listener, 0)
+		}
+
+		if li.Spec.EndPort != 0 {
+			listenerList = append(listenerList, splitSegListener([]*networkextensionv1.
+			Listener{li})...)
+		} else {
+			listenerList = append(listenerList, li)
+		}
+
+		retMap[li.Spec.Protocol] = listenerList
+	}
+
+	retList := make([][]*networkextensionv1.Listener, 0)
+	for _, list := range retMap {
+		retList = append(retList, list)
+	}
+	return retList
+}
+
+func splitSegListener(listenerList []*networkextensionv1.Listener) []*networkextensionv1.Listener {
+	newListenerList := make([]*networkextensionv1.Listener, 0)
+
+	for _, listener := range listenerList {
+		if listener.Spec.EndPort == 0 {
+			newListenerList = append(newListenerList, listener)
+		} else {
+			portIndex := 0
+			for i := listener.Spec.Port; i <= listener.Spec.EndPort; i++ {
+				// generate single port listener to ensure listener
+				li := listener.DeepCopy()
+				li.Spec.Port = i
+				li.Spec.EndPort = 0
+				if li.Spec.TargetGroup != nil {
+					for j := range li.Spec.TargetGroup.Backends {
+						li.Spec.TargetGroup.Backends[j].Port += portIndex
+					}
+				}
+				portIndex++
+				newListenerList = append(newListenerList, li)
+			}
+		}
+	}
+	return newListenerList
 }

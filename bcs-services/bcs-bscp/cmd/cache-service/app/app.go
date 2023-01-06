@@ -179,7 +179,7 @@ func (cs *cacheService) listenAndServe() error {
 
 	// initialize and register standard grpc server grpcMetrics.
 	grpcMetrics.InitializeMetrics(serve)
-	if err := metrics.Register().Register(grpcMetrics); err != nil {
+	if err = metrics.Register().Register(grpcMetrics); err != nil {
 		return fmt.Errorf("register metrics failed, err: %v", err)
 	}
 

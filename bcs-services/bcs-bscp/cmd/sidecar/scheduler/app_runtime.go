@@ -180,7 +180,7 @@ func (ar *AppRuntime) loopAppReleaseForOnce(vas *kit.Vas, desc *sfs.ReleaseEvent
 	}
 
 	defer func() {
-		if err := UnlockFile(lock); err != nil {
+		if err = UnlockFile(lock); err != nil {
 			logs.Errorf("unlock app release file lock failed, err: %v, rid: %s", err, vas.Rid)
 		}
 	}()

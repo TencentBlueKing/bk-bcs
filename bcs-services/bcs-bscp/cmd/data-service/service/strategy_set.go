@@ -27,7 +27,7 @@ import (
 
 // CreateStrategySet create strategy set.
 func (s *Service) CreateStrategySet(ctx context.Context, req *pbds.CreateStrategySetReq) (*pbds.CreateResp, error) {
-	kit := kit.FromGrpcContext(ctx)
+	grpcKit := kit.FromGrpcContext(ctx)
 
 	now := time.Now()
 	ss := &table.StrategySet{
@@ -37,15 +37,15 @@ func (s *Service) CreateStrategySet(ctx context.Context, req *pbds.CreateStrateg
 			Status: table.Enabled,
 		},
 		Revision: &table.Revision{
-			Creator:   kit.User,
-			Reviser:   kit.User,
+			Creator:   grpcKit.User,
+			Reviser:   grpcKit.User,
 			CreatedAt: now,
 			UpdatedAt: now,
 		},
 	}
-	id, err := s.dao.StrategySet().Create(kit, ss)
+	id, err := s.dao.StrategySet().Create(grpcKit, ss)
 	if err != nil {
-		logs.Errorf("create strategy set failed, err: %v, rid: %s", err, kit.Rid)
+		logs.Errorf("create strategy set failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
 	}
 
@@ -57,12 +57,12 @@ func (s *Service) CreateStrategySet(ctx context.Context, req *pbds.CreateStrateg
 func (s *Service) ListStrategySets(ctx context.Context, req *pbds.ListStrategySetsReq) (
 	*pbds.ListStrategySetsResp, error) {
 
-	kit := kit.FromGrpcContext(ctx)
+	grpcKit := kit.FromGrpcContext(ctx)
 
 	// parse pb struct filter to filter.Expression.
 	filter, err := pbbase.UnmarshalFromPbStructToExpr(req.Filter)
 	if err != nil {
-		logs.Errorf("unmarshal pb struct to expression failed, err: %v, rid: %s", err, kit.Rid)
+		logs.Errorf("unmarshal pb struct to expression failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
 	}
 
@@ -73,9 +73,9 @@ func (s *Service) ListStrategySets(ctx context.Context, req *pbds.ListStrategySe
 		Page:   req.Page.BasePage(),
 	}
 
-	details, err := s.dao.StrategySet().List(kit, query)
+	details, err := s.dao.StrategySet().List(grpcKit, query)
 	if err != nil {
-		logs.Errorf("list strategy set failed, err: %v, rid: %s", err, kit.Rid)
+		logs.Errorf("list strategy set failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
 	}
 
@@ -88,7 +88,7 @@ func (s *Service) ListStrategySets(ctx context.Context, req *pbds.ListStrategySe
 
 // UpdateStrategySet update strategy set.
 func (s *Service) UpdateStrategySet(ctx context.Context, req *pbds.UpdateStrategySetReq) (*pbbase.EmptyResp, error) {
-	kit := kit.FromGrpcContext(ctx)
+	grpcKit := kit.FromGrpcContext(ctx)
 
 	ss := &table.StrategySet{
 		ID:         req.Id,
@@ -96,12 +96,12 @@ func (s *Service) UpdateStrategySet(ctx context.Context, req *pbds.UpdateStrateg
 		Attachment: req.Attachment.StrategySetAttachment(),
 		State:      req.State.StrategySetState(),
 		Revision: &table.Revision{
-			Reviser:   kit.User,
+			Reviser:   grpcKit.User,
 			UpdatedAt: time.Now(),
 		},
 	}
-	if err := s.dao.StrategySet().Update(kit, ss); err != nil {
-		logs.Errorf("update strategy set failed, err: %v, rid: %s", err, kit.Rid)
+	if err := s.dao.StrategySet().Update(grpcKit, ss); err != nil {
+		logs.Errorf("update strategy set failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
 	}
 

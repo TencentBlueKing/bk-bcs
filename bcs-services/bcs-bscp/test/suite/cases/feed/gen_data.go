@@ -95,7 +95,7 @@ func (g *Generator) GenBaseNormalData(ctx context.Context, header http.Header) e
 
 	// gen five config item for every app, and create one content and commit for every config item.
 	for i := 0; i < 5; i++ {
-		if err := g.genCIRelatedData(ctx, header, cases.TBizID, BaseNormalTestAppID); err != nil {
+		if err = g.genCIRelatedData(ctx, header, cases.TBizID, BaseNormalTestAppID); err != nil {
 			return fmt.Errorf("gen ci related failed, err: %v", err)
 		}
 	}
@@ -116,7 +116,7 @@ func (g *Generator) GenBaseNormalData(ctx context.Context, header http.Header) e
 	BNMDefaultStrategyReleaseID = releaseID
 
 	// 2. exec one normal strategy with sub strategy publish.
-	if err := g.normalStrategyPublish(ctx, header, BaseNormalTestAppID, stgSetID); err != nil {
+	if err = g.normalStrategyPublish(ctx, header, BaseNormalTestAppID, stgSetID); err != nil {
 		return fmt.Errorf("exec normal strategy publish failed, err: %v", err)
 	}
 
@@ -152,7 +152,7 @@ func (g *Generator) GenBaseNamespaceData(ctx context.Context, header http.Header
 
 	// gen five config item for every app, and create one content and commit for every config item.
 	for i := 0; i < 5; i++ {
-		if err := g.genCIRelatedData(ctx, header, cases.TBizID, BaseNamespaceTestAppID); err != nil {
+		if err = g.genCIRelatedData(ctx, header, cases.TBizID, BaseNamespaceTestAppID); err != nil {
 			return fmt.Errorf("gen ci related failed, err: %v", err)
 		}
 	}
@@ -173,7 +173,7 @@ func (g *Generator) GenBaseNamespaceData(ctx context.Context, header http.Header
 	BNSDefaultStrategyReleaseID = releaseID
 
 	// 2. exec one namespace strategy with sub strategy publish.
-	if err := g.namespaceStrategyPublish(ctx, header, BaseNamespaceTestAppID, stgSetID); err != nil {
+	if err = g.namespaceStrategyPublish(ctx, header, BaseNamespaceTestAppID, stgSetID); err != nil {
 		return fmt.Errorf("exec namespace strategy publish failed, err: %v", err)
 	}
 

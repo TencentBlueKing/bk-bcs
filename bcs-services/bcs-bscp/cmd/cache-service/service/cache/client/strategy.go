@@ -207,7 +207,7 @@ func (c *client) queryAppStrategy(kt *kit.Kit, bizID uint32, appID uint32, cpsID
 	}
 
 	notFoundCps := make([]uint32, 0)
-	for cpsID, _ := range cpsMap {
+	for cpsID := range cpsMap {
 		notFoundCps = append(notFoundCps, cpsID)
 	}
 

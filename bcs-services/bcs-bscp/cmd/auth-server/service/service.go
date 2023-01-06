@@ -151,14 +151,14 @@ func newClientSet(sd serviced.Discover, tls cc.TLSConfig, iamSettings cc.IAM, di
 		return nil, err
 	}
 
-	sys, err := sys.NewSys(iamCli)
+	iamSys, err := sys.NewSys(iamCli)
 	if err != nil {
 		return nil, fmt.Errorf("new iam sys failed, err: %v", err)
 	}
 	logs.Infof("initialize iam sys success.")
 
 	// initialize iam auth sdk
-	iamLgc, err := iam.NewIAM(ds, sys, disableAuth)
+	iamLgc, err := iam.NewIAM(ds, iamSys, disableAuth)
 	if err != nil {
 		return nil, fmt.Errorf("new iam logics failed, err: %v", err)
 	}
@@ -171,7 +171,7 @@ func newClientSet(sd serviced.Discover, tls cc.TLSConfig, iamSettings cc.IAM, di
 
 	cs := &ClientSet{
 		DS:   ds,
-		sys:  sys,
+		sys:  iamSys,
 		auth: authSdk,
 	}
 	logs.Infof("initialize the client set success.")

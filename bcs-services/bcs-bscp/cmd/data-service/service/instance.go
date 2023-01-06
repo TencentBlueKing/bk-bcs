@@ -27,19 +27,19 @@ import (
 
 // CreateCRInstance create current released instance.
 func (s *Service) CreateCRInstance(ctx context.Context, req *pbds.CreateCRInstanceReq) (*pbds.CreateResp, error) {
-	kit := kit.FromGrpcContext(ctx)
+	grpcKit := kit.FromGrpcContext(ctx)
 
 	instance := &table.CurrentReleasedInstance{
 		Spec:       req.Spec.ReleasedInstanceSpec(),
 		Attachment: req.Attachment.ReleaseAttachment(),
 		Revision: &table.CreatedRevision{
-			Creator:   kit.User,
+			Creator:   grpcKit.User,
 			CreatedAt: time.Now(),
 		},
 	}
-	id, err := s.dao.CRInstance().Create(kit, instance)
+	id, err := s.dao.CRInstance().Create(grpcKit, instance)
 	if err != nil {
-		logs.Errorf("create current released instance failed, err: %v, rid: %s", err, kit.Rid)
+		logs.Errorf("create current released instance failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
 	}
 
@@ -51,12 +51,12 @@ func (s *Service) CreateCRInstance(ctx context.Context, req *pbds.CreateCRInstan
 func (s *Service) ListCRInstances(ctx context.Context, req *pbds.ListCRInstancesReq) (
 	*pbds.ListCRInstancesResp, error) {
 
-	kt := kit.FromGrpcContext(ctx)
+	grpcKit := kit.FromGrpcContext(ctx)
 
 	// parse pb struct filter to filter.Expression.
 	filter, err := pbbase.UnmarshalFromPbStructToExpr(req.Filter)
 	if err != nil {
-		logs.Errorf("unmarshal pb struct to expression failed, err: %v, rid: %s", err, kt.Rid)
+		logs.Errorf("unmarshal pb struct to expression failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
 	}
 
@@ -66,9 +66,9 @@ func (s *Service) ListCRInstances(ctx context.Context, req *pbds.ListCRInstances
 		Page:   req.Page.BasePage(),
 	}
 
-	details, err := s.dao.CRInstance().List(kt, query)
+	details, err := s.dao.CRInstance().List(grpcKit, query)
 	if err != nil {
-		logs.Errorf("list current released instance failed, err: %v, rid: %s", err, kt.Rid)
+		logs.Errorf("list current released instance failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
 	}
 
@@ -81,14 +81,14 @@ func (s *Service) ListCRInstances(ctx context.Context, req *pbds.ListCRInstances
 
 // DeleteCRInstance delete current released instance.
 func (s *Service) DeleteCRInstance(ctx context.Context, req *pbds.DeleteCRInstanceReq) (*pbbase.EmptyResp, error) {
-	kit := kit.FromGrpcContext(ctx)
+	grpcKit := kit.FromGrpcContext(ctx)
 
 	instance := &table.CurrentReleasedInstance{
 		ID:         req.Id,
 		Attachment: req.Attachment.ReleaseAttachment(),
 	}
-	if err := s.dao.CRInstance().Delete(kit, instance); err != nil {
-		logs.Errorf("delete current released instance failed, err: %v, rid: %s", err, kit.Rid)
+	if err := s.dao.CRInstance().Delete(grpcKit, instance); err != nil {
+		logs.Errorf("delete current released instance failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
 	}
 
