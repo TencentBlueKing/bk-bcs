@@ -41,7 +41,7 @@
                   ? `${Math.ceil(overview.cpu_usage.request)}${$t('核')} / ${Math.ceil(overview.cpu_usage.total)}${$t('核')}`
                   : `${formatBytes(overview.memory_usage.request_bytes, 0)} / ${formatBytes(overview.memory_usage.total_bytes, 0)}`">
                 {{
-                  $t('( 当前值 {val} % )', {
+                  $t('( 当前使用率 {val} % )', {
                     val: data.prop === 'bufferResourceCpuRatio'
                       ? conversionPercentUsed(overview.cpu_usage.request, overview.cpu_usage.total)
                       : conversionPercentUsed(overview.memory_usage.request_bytes, overview.memory_usage.total_bytes)
