@@ -30,6 +30,7 @@ var (
 	filename string
 )
 
+// NewCmdCreate 新建命令
 func NewCmdCreate() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "create -f FILENAME",

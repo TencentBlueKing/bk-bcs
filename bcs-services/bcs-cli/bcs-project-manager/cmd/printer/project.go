@@ -180,6 +180,7 @@ func PrintProjectClustersNamespaceInTable(flagOutput string, resp *bcsproject.Li
 	tw.Render()
 }
 
+// PrinListAuthorizedProjectsInTable  prints the response that list authorized projects
 func PrinListAuthorizedProjectsInTable(flagOutput string, resp *bcsproject.ListAuthorizedProjResp) {
 	if flagOutput == outputTypeJSON {
 		if err := encodeJSON(resp); err != nil {

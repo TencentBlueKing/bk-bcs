@@ -90,14 +90,19 @@ func createClustersNamespace() *cobra.Command {
 				MemoryLimits   string `json:"memoryLimits"`
 			}(quota)
 			{
+				var (
+					requestParam interface{}
+					marshal      []byte
+					original     []byte
+				)
 				// 判断是否有文件路径
 				if filename != "" {
-					requestParam, err := GenerateReq.GenerateStruct(filename)
+					requestParam, err = GenerateReq.GenerateStruct(filename)
 					if err != nil {
 						klog.Infoln(err)
 						return
 					}
-					marshal, err := json.Marshal(requestParam)
+					marshal, err = json.Marshal(requestParam)
 					if err != nil {
 						klog.Infoln("[requestParam] deserialize failed: %v", err)
 						return
@@ -115,13 +120,13 @@ func createClustersNamespace() *cobra.Command {
 					clusterID = parameters.ClusterID
 				} else {
 					// 处理模板数据
-					marshal, err := json.Marshal(parameters)
+					marshal, err = json.Marshal(parameters)
 					if err != nil {
 						klog.Infoln("[CreateNamespaceRequest] deserialize failed: %v", err)
 						return
 					}
 					// 把json转成yaml
-					original, err := yaml.JSONToYAML(marshal)
+					original, err = yaml.JSONToYAML(marshal)
 					if err != nil {
 						klog.Infoln("json to yaml failed: %v", err)
 						return
@@ -133,7 +138,7 @@ func createClustersNamespace() *cobra.Command {
 						klog.Infoln("unexpected error: %v", err)
 						return
 					}
-					if _, err := os.Stat(path); err != nil {
+					if _, err = os.Stat(path); err != nil {
 						klog.Infoln("no temp file: %s", path)
 						return
 					}
