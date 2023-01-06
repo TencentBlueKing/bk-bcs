@@ -41,6 +41,7 @@ type CreateTokenForm struct {
 	Expiration int `json:"expiration" validate:"required"`
 }
 
+// Val return str converted from TokenStatus .
 func (c *TokenStatus) Val() string {
 	return fmt.Sprintf("%d", *c)
 }
