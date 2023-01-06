@@ -1,3 +1,4 @@
+<!-- eslint-disable max-len -->
 <template>
   <div class="autoscaler-management">
     <!-- 自动扩缩容配置 -->
@@ -31,6 +32,23 @@
           <AutoScalerFormItem
             :list="autoScalerConfig"
             :autoscaler-data="autoscalerData">
+            <template #suffix="{ data }">
+              <span
+                class="text-[#699DF4] ml-[5px] h-[20px] flex items-center"
+                style="border-bottom: 1px dashed #699DF4;"
+                v-if="['bufferResourceCpuRatio', 'bufferResourceMemRatio'].includes(data.prop)"
+                v-bk-tooltips="data.prop === 'bufferResourceCpuRatio'
+                  ? `${Math.ceil(overview.cpu_usage.request)}${$t('核')} / ${Math.ceil(overview.cpu_usage.total)}${$t('核')}`
+                  : `${formatBytes(overview.memory_usage.request_bytes, 0)} / ${formatBytes(overview.memory_usage.total_bytes, 0)}`">
+                {{
+                  $t('( 当前值 {val} % )', {
+                    val: data.prop === 'bufferResourceCpuRatio'
+                      ? conversionPercentUsed(overview.cpu_usage.request, overview.cpu_usage.total)
+                      : conversionPercentUsed(overview.memory_usage.request_bytes, overview.memory_usage.total_bytes)
+                  })
+                }}
+              </span>
+            </template>
           </AutoScalerFormItem>
         </LayoutGroup>
         <LayoutGroup collapsible class="mb15" :expanded="!!autoscalerData.isScaleDownEnable">
@@ -361,6 +379,8 @@ import { CreateElement } from 'vue';
 import LayoutGroup from '../LayoutGroup.vue';
 import AutoScalerFormItem from '../cluster-autoscaler-tencent/AutoScalerFormItem.vue';
 import { useClusterInfo } from '@/views/cluster/use-cluster';
+import { clusterOverview } from '@/api/modules/monitor';
+import { formatBytes } from '@/common/util';
 
 export default defineComponent({
   name: 'AutoScaler',
@@ -725,6 +745,8 @@ export default defineComponent({
       'ADD-FAILURE': $i18n.t('扩容节点失败'),
       'REMOVE-FAILURE': $i18n.t('缩容节点失败'),
       REMOVABLE: $i18n.t('不可调度'),
+      NOTREADY: window.i18n.t('不正常'),
+      UNKNOWN: window.i18n.t('未知状态'),
     };
     const nodeColorMap = {
       RUNNING: 'green',
@@ -1019,10 +1041,31 @@ export default defineComponent({
       window.open(url);
     };
 
+    // 集群装箱率
+    const overview = ref<any>({
+      cpu_usage: {},
+      memory_usage: {},
+    });
+    const handleGetClusterOverview = async () => {
+      overview.value = await clusterOverview({ $clusterId: props.clusterId });
+    };
+    const conversionPercentUsed = (used, total) => {
+      if (!total || parseFloat(total) === 0) {
+        return 0;
+      }
+
+      let ret: any = parseFloat(used) / parseFloat(total) * 100;
+      if (ret !== 0 && ret !== 100) {
+        ret = ret.toFixed(2);
+      }
+      return ret;
+    };
+
     onMounted(() => {
       handleGetAutoScalerConfig();
       handleGetNodePoolList();
       getClusterDetail(props.clusterId, true);
+      handleGetClusterOverview();
     });
     onBeforeUnmount(() => {
       stop();
@@ -1031,6 +1074,9 @@ export default defineComponent({
       stopTaskPool();
     });
     return {
+      conversionPercentUsed,
+      formatBytes,
+      overview,
       expandRowKeys,
       clusterOS,
       disabledAutoscaler,

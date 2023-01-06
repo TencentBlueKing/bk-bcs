@@ -99,7 +99,7 @@
         :cluster-id="cluster.clusterID"
         @node-data-change="handleScaleOutDataChange" />
     </bk-form-item>
-    <bk-form-item
+    <!-- <bk-form-item
       :label="$t('缩容后转移模块')"
       :desc="$t('缩容节点后节点转移到关联业务的CMDB模块，此选项仅适用于自有资源池场景，平台提供的资源池场景无需选择')">
       <TopoSelectTree
@@ -107,7 +107,7 @@
         :placeholder="$t('请选择业务 CMDB topo 模块')"
         :cluster-id="cluster.clusterID"
         @node-data-change="handleScaleInDataChange" />
-    </bk-form-item>
+    </bk-form-item> -->
   </bk-form>
 </template>
 <script lang="ts">
