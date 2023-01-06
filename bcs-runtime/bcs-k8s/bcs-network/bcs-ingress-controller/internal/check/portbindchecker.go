@@ -24,6 +24,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/metrics"
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
 )
 
@@ -56,6 +57,8 @@ func (p *PortBindChecker) Run() {
 		return
 	}
 
+	p.recordPortBindingStatusMetric(portBindingList)
+
 	// poolNamespace/poolName/poolItemName:port -> [podName...] 记录itemKey+port下有哪些pod发生冲突
 	conflictMap := p.getPortConflictMap(portBindingList)
 
@@ -68,6 +71,9 @@ func (p *PortBindChecker) Run() {
 }
 
 func (p *PortBindChecker) getPortConflictMap(portBindingList *networkextensionv1.PortBindingList) map[string][]string {
+	if portBindingList == nil {
+		return nil
+	}
 	// itemKey -> {startPort -> podName}
 	itemMap := make(map[string]map[int]string)
 	// itemKey:port -> [podName...] 记录itemKey+port下有哪些pod发生冲突
@@ -102,6 +108,21 @@ func (p *PortBindChecker) getPortConflictMap(portBindingList *networkextensionv1
 		}
 	}
 	return conflictMap
+}
+
+func (p *PortBindChecker) recordPortBindingStatusMetric(portBindingList *networkextensionv1.PortBindingList) {
+	if portBindingList == nil {
+		return
+	}
+
+	cntMap := make(map[string]int)
+	for _, portBinding := range portBindingList.Items {
+		cntMap[portBinding.Status.Status] = cntMap[portBinding.Status.Status] + 1
+	}
+
+	for status, cnt := range cntMap {
+		metrics.PortBindingTotal.WithLabelValues(status).Set(float64(cnt))
+	}
 }
 
 func buildPortBindingItemKey(item *networkextensionv1.PortBindingItem) string {

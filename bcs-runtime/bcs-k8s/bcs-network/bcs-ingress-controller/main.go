@@ -353,6 +353,7 @@ func main() {
 	checkRunner := check.NewCheckRunner(context.Background())
 	checkRunner.
 		Register(check.NewPortBindChecker(mgr.GetClient(), mgr.GetEventRecorderFor("bcs-ingress-controller"))).
+		Register(check.NewListenerChecker(mgr.GetClient())).
 		Start()
 	blog.Infof("starting check runner")
 

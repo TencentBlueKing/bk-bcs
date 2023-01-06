@@ -273,10 +273,9 @@ func (ppih *PortPoolItemHandler) ensureListeners(region, lbID, itemName string, 
 						blog.Warnf("update listener %s failed, err %s", tmpName, err.Error())
 					}
 				}
-				// TODO use listener.status.status to predict listener status
 				if len(listener.Status.ListenerID) == 0 {
 					notReady = true
-					blog.Warnf("listener %s is not ready", tmpName)
+					blog.V(4).Infof("listener %s is not ready", tmpName)
 				}
 			}
 		}
