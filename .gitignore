@@ -133,3 +133,5 @@ bcs-ui/support-files/iam/
 .codecc
 
 **/build.yml
+# bscp 软连接
+bcs-services/bscp.io

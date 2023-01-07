@@ -23,6 +23,7 @@ service Data {
     rpc UpdateApp(UpdateAppReq) returns (pbbase.EmptyResp) {}
     rpc DeleteApp(DeleteAppReq) returns (pbbase.EmptyResp) {}
     rpc ListApps(ListAppsReq) returns (ListAppsResp) {}
+    rpc ListAppsRest(ListAppsRestReq) returns (ListAppsResp) {}
 
     // config item related interface.
     rpc CreateConfigItem(CreateConfigItemReq) returns (CreateResp) {}
@@ -103,6 +104,13 @@ message ListAppsReq {
     uint32 biz_id                 = 1;
     google.protobuf.Struct filter = 2;
     pbbase.BasePage page          = 3;
+}
+
+message ListAppsRestReq {
+    uint32 biz_id   = 1;
+    string operator = 2;
+    uint32 start    = 3;
+    uint32 limit    = 4;
 }
 
 message ListAppsResp {

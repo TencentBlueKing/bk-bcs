@@ -24,6 +24,7 @@ import (
 	pbapp "bscp.io/pkg/protocol/core/app"
 	pbbase "bscp.io/pkg/protocol/core/base"
 	pbds "bscp.io/pkg/protocol/data-service"
+	"bscp.io/pkg/runtime/filter"
 	"bscp.io/pkg/thirdparty/esb/cmdb"
 	"bscp.io/pkg/types"
 	"bscp.io/pkg/version"
@@ -112,6 +113,54 @@ func (s *Service) ListApps(ctx context.Context, req *pbds.ListAppsReq) (*pbds.Li
 		BizID:  req.BizId,
 		Filter: filter,
 		Page:   req.Page.BasePage(),
+	}
+
+	details, err := s.dao.App().List(kit, query)
+	if err != nil {
+		logs.Errorf("list apps failed, err: %v, rid: %s", err, kit.Rid)
+		return nil, err
+	}
+
+	resp := &pbds.ListAppsResp{
+		Count:   details.Count,
+		Details: pbapp.PbApps(details.Details),
+	}
+	return resp, nil
+}
+
+// ListApps list apps by query condition.
+func (s *Service) ListAppsRest(ctx context.Context, req *pbds.ListAppsRestReq) (*pbds.ListAppsResp, error) {
+	kit := kit.FromGrpcContext(ctx)
+
+	// 默认分页
+	limit := uint(req.Limit)
+	if limit == 0 {
+		limit = 50
+	}
+
+	page := &types.BasePage{
+		Start: req.Start,
+		Limit: limit,
+	}
+
+	rules := []filter.RuleFactory{}
+	if req.Operator != "" {
+		rules = append(rules, filter.AtomRule{
+			Field: "creator",
+			Op:    filter.OpFactory(filter.Equal),
+			Value: req.Operator,
+		})
+	}
+
+	filter := &filter.Expression{
+		Op:    filter.And,
+		Rules: rules,
+	}
+
+	query := &types.ListAppsOption{
+		BizID:  req.BizId,
+		Filter: filter,
+		Page:   page,
 	}
 
 	details, err := s.dao.App().List(kit, query)
