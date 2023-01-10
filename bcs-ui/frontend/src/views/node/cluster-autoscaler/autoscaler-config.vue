@@ -17,12 +17,16 @@
           <bcs-switcher
             size="small"
             v-model="autoscalerData.enableAutoscale"
-            @change="handleToggleAutoScaler"
+            :pre-check="handleToggleAutoScaler"
           ></bcs-switcher>
         </span>
       </div>
       <LayoutGroup :title="$t('基本配置')" class="mb10">
-        <bk-form-item :label="$t('扩缩容检测时间间隔')">
+        <bk-form-item
+          :label="$t('扩缩容检测时间间隔')"
+          desc-type="icon"
+          desc-icon="bk-icon icon-info-circle"
+          :desc="$t('默认为10秒，取值范围5 ~ 86400秒')">
           <bk-input type="number" :min="5" :max="86400" v-model="autoscalerData.scanInterval">
             <template slot="append">
               <div class="group-text">{{$t('秒')}}</div>
@@ -44,7 +48,7 @@
           :label="$t('unready节点超过集群总节点')"
           desc-type="icon"
           desc-icon="bk-icon icon-info-circle"
-          :desc="$t('节点Ready是根据节点的最新属性conditions.type == Ready并且conditions.status == True来判断的，也可以通过kubectl get node命令获取的s-t-a-t-u-s字段是否为 ready 来判定节点是否ready')">
+          :desc="$t('节点Ready是根据节点的最新属性conditions.type == Ready并且conditions.status == True来判断的，也可以通过kubectl get node命令获取的status字段是否为 ready 来判定节点是否ready')">
           <div style="display: flex;">
             <bcs-input type="number" :min="0" :max="100" v-model="autoscalerData.maxTotalUnreadyPercentage">
               <template slot="append">
@@ -71,7 +75,7 @@
           desc-type="icon"
           desc-icon="bk-icon icon-info-circle"
           :label="$t('触发扩容资源阈值 (CPU)')"
-          :desc="$t('CPU资源使用率超过该阈值触发扩容, 无论内存资源使用率是否达到阈值')">
+          :desc="$t('CPU资源(Request)使用率超过该阈值触发扩容, 无论内存资源使用率是否达到阈值')">
           <bk-input type="number" :min="0" :max="100" v-model="autoscalerData.bufferResourceCpuRatio">
             <template slot="append">
               <div class="group-text">%</div>
@@ -82,7 +86,7 @@
           desc-type="icon"
           desc-icon="bk-icon icon-info-circle"
           :label="$t('触发扩容资源阈值 (内存)')"
-          :desc="$t('内存资源使用率超过该阈值触发扩容, 无论CPU资源使用率是否达到阈值')">
+          :desc="$t('内存资源(Request)使用率超过该阈值触发扩容, 无论CPU资源使用率是否达到阈值')">
           <bk-input type="number" :min="0" :max="100" v-model="autoscalerData.bufferResourceMemRatio">
             <template slot="append">
               <div class="group-text">%</div>
@@ -120,7 +124,7 @@
           desc-type="icon"
           desc-icon="bk-icon icon-info-circle"
           :label="$t('触发缩容资源阈值 (CPU/内存)')"
-          :desc="$t('CPU和内存资源必须同时低于设定阈值才会触发缩容')">
+          :desc="$t('CPU和内存资源(Request)必须同时低于设定阈值才会触发缩容')">
           <bk-input type="number" :min="0" :max="100" v-model="autoscalerData.scaleDownUtilizationThreahold">
             <template slot="append">
               <div class="group-text">%</div>
@@ -131,7 +135,7 @@
           :label="$t('执行缩容等待时间')"
           desc-type="icon"
           desc-icon="bk-icon icon-info-circle"
-          :desc="$t('Cluster Autocaler组件评估集群可以缩容多久后开始执行缩容，防止集群容量在短时间内或高或低于设置的缩容阈值造成频繁扩缩容操作')">
+          :desc="$t('Cluster Autocaler组件评估集群可以缩容多久后开始执行缩容，防止集群容量在短时间内或高或低于设置的缩容阈值造成频繁扩缩容操作默认为600秒，取值范围60 ~ 86400秒')">
           <bk-input type="number" :min="60" :max="86400" v-model="autoscalerData.scaleDownUnneededTime">
             <template slot="append">
               <div class="group-text">{{$t('秒')}}</div>
@@ -142,7 +146,7 @@
           :label="$t('等待 Pod 退出最长时间')"
           desc-type="icon"
           desc-icon="bk-icon icon-info-circle"
-          :desc="$t('缩容节点时，等待 pod 停止的最长时间（不会遵守 terminationGracefulPeriodSecond，超时强杀）')">
+          :desc="$t('缩容节点时，等待 pod 停止的最长时间（不会遵守 terminationGracefulPeriodSecond，超时强杀）默认为600秒，取值范围60 ~ 86400秒')">
           <bk-input type="number" :min="60" :max="86400" v-model="autoscalerData.maxGracefulTerminationSec">
             <template slot="append">
               <div class="group-text">{{$t('秒')}}</div>
@@ -153,7 +157,7 @@
           :label="$t('扩容后判断缩容时间间隔')"
           desc-type="icon"
           desc-icon="bk-icon icon-info-circle"
-          :desc="$t('扩容节点后多久才继续缩容判断，如果业务自定义初始化任务所需时间比较长，需要适当上调此值')">
+          :desc="$t('扩容节点后多久才继续缩容判断，如果业务自定义初始化任务所需时间比较长，需要适当上调此值，取值范围60 ~ 86400秒')">
           <bk-input type="number" :min="60" :max="86400" v-model="autoscalerData.scaleDownDelayAfterAdd">
             <template slot="append">
               <div class="group-text">{{$t('秒')}}</div>
@@ -164,8 +168,8 @@
           :label="$t('连续两次缩容时间间隔')"
           desc-type="icon"
           desc-icon="bk-icon icon-info-circle"
-          :desc="$t('缩容节点后多久再继续缩容节点，默认设置为0，代表与扩缩容检测时间间隔设置的值相同')">
-          <bk-input type="number" :min="60" :max="86400" v-model="autoscalerData.scaleDownDelayAfterDelete">
+          :desc="$t('缩容节点后多久再继续缩容节点，默认设置为0，代表与扩缩容检测时间间隔设置的值相同，取值范围0 ~ 86400秒')">
+          <bk-input type="number" :min="0" :max="86400" v-model="autoscalerData.scaleDownDelayAfterDelete">
             <template slot="append">
               <div class="group-text">{{$t('秒')}}</div>
             </template>
@@ -219,7 +223,7 @@ export default defineComponent({
     },
   },
   setup(props, ctx) {
-    const { $bkMessage } = ctx.root;
+    const { $bkMessage, $bkInfo } = ctx.root;
     const { clusterList } = useClusterList(ctx);
     const navList = computed(() => [
       {
@@ -279,20 +283,56 @@ export default defineComponent({
     const handleCancel = () => {
       $router.back();
     };
-    const handleToggleAutoScaler = async (value) => {
-      const result = await $store.dispatch('clustermanager/toggleClusterAutoScalingStatus', {
-        enable: value,
-        $clusterId: props.clusterId,
-        updater: user.value.username,
+    // eslint-disable-next-line @typescript-eslint/no-misused-promises
+    const handleToggleAutoScaler = async value => new Promise(async (resolve, reject) => {
+      const nodepoolList = await $store.dispatch('clustermanager/nodeGroup', {
+        clusterID: props.clusterId,
       });
-      if (result) {
-        $bkMessage({
-          theme: 'success',
-          message: $i18n.t('操作成功'),
+      if (!autoscalerData.value.enableAutoscale
+                        && (!nodepoolList.length || nodepoolList.every(item => !item.enableAutoscale))) {
+        // 开启时前置判断是否存在节点池 或 节点池都是未开启状态时，要提示至少开启一个
+        $bkInfo({
+          type: 'warning',
+          clsName: 'custom-info-confirm',
+          title: !nodepoolList.length
+            ? $i18n.t('请创建节点池并启用节点池自动扩缩容功能')
+            : $i18n.t('请至少启用 1 个节点池的自动扩缩容功能或创建新的节点池'),
+          defaultInfo: true,
+          okText: $i18n.t('立即新建'),
+          confirmFn: () => {
+            $router.push({
+              name: 'nodePool',
+              params: {
+                clusterId: props.clusterId,
+              },
+            });
+          },
+          cancelFn: () => {
+            // eslint-disable-next-line prefer-promise-reject-errors
+            reject(false);
+          },
         });
-        handleGetAutoScalerConfig();
+      } else {
+        // 开启或关闭扩缩容
+        const result = await $store.dispatch('clustermanager/toggleClusterAutoScalingStatus', {
+          enable: value,
+          provider: 'selfProvisionCloud',
+          $clusterId: props.clusterId,
+          updater: user.value.username,
+        });
+        if (result) {
+          $bkMessage({
+            theme: 'success',
+            message: $i18n.t('操作成功'),
+          });
+          handleGetAutoScalerConfig();
+          resolve(true);
+        } else {
+          // eslint-disable-next-line prefer-promise-reject-errors
+          reject(false);
+        }
       }
-    };
+    });
 
     onMounted(() => {
       handleGetAutoScalerConfig();

@@ -78,10 +78,10 @@
         <bcs-table-column :label="$t('组件参数')" prop="flagName"></bcs-table-column>
         <bcs-table-column :label="$t('修改前值')" prop="origin">
           <template #default="{ row }">
-            {{row.origin || '--'}}
+            {{row.origin || getDefaultValue(row)}}
           </template>
         </bcs-table-column>
-        <bcs-table-column :label="$t('修改后值')" prop="value"></bcs-table-column>
+        <bcs-table-column :label="$t('当前值')" prop="value"></bcs-table-column>
       </bcs-table>
     </bcs-dialog>
   </div>
@@ -208,6 +208,7 @@ export default defineComponent({
       const regx = new RegExp(item.regex.validator);
       return regx.test(kubeletParams.value[item.flagName]);
     });
+    const getDefaultValue = row => kubeletList.value.find(item => item.flagName === row.flagName)?.defaultValue || '--';
 
     onMounted(() => {
       // kubelet原始数据（用于diff）
@@ -234,6 +235,7 @@ export default defineComponent({
       activeKubeletFlagName,
       kubeletDiffData,
       validateKubeletParams,
+      getDefaultValue,
     };
   },
 });

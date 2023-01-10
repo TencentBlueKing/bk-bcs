@@ -1,13 +1,13 @@
 <!-- eslint-disable max-len -->
 <template>
   <bk-form class="node-config" :model="nodePoolConfig" :rules="nodePoolConfigRules" ref="formRef">
-    <bk-form-item :label="$t('镜像提供方')">
+    <bk-form-item :label="$t('镜像提供方')" :desc="$t('镜像提供方与操作系统使用TKE集群设置，暂不支持修改')">
       <bk-radio-group :value="extraInfo.IMAGE_PROVIDER">
         <bk-radio value="PUBLIC_IMAGE" disabled>{{$t('公共镜像')}}</bk-radio>
         <bk-radio value="PRIVATE_IMAGE" disabled>{{$t('自定义镜像')}}</bk-radio>
       </bk-radio-group>
     </bk-form-item>
-    <bk-form-item :label="$t('操作系统')" :desc="$t('节点操作系统使用TKE集群设置的操作系统')">
+    <bk-form-item :label="$t('操作系统')">
       <bcs-input disabled :value="clusterOS"></bcs-input>
     </bk-form-item>
     <bk-form-item :label="$t('机型配置')">

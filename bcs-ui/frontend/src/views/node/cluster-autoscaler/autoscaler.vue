@@ -38,8 +38,8 @@
                 style="border-bottom: 1px dashed #699DF4;"
                 v-if="['bufferResourceCpuRatio', 'bufferResourceMemRatio'].includes(data.prop)"
                 v-bk-tooltips="data.prop === 'bufferResourceCpuRatio'
-                  ? `${Math.ceil(overview.cpu_usage.request)}${$t('核')} / ${Math.ceil(overview.cpu_usage.total)}${$t('核')}`
-                  : `${formatBytes(overview.memory_usage.request_bytes, 0)} / ${formatBytes(overview.memory_usage.total_bytes, 0)}`">
+                  ? `${Number((overview.cpu_usage.request || 0)).toFixed(2)}${$t('核')} / ${Number(Math.ceil(overview.cpu_usage.total) || 0).toFixed(2)}${$t('核')}`
+                  : `${formatBytes(overview.memory_usage.request_bytes || 0, 2)} / ${formatBytes(overview.memory_usage.total_bytes || 0, 2)}`">
                 {{
                   $t('( 当前使用率 {val} % )', {
                     val: data.prop === 'bufferResourceCpuRatio'
@@ -432,14 +432,14 @@ export default defineComponent({
         name: $i18n.t('触发扩容资源阈值 (CPU)'),
         isBasicProp: true,
         unit: '%',
-        desc: $i18n.t('CPU资源使用率超过该阈值触发扩容, 无论内存资源使用率是否达到阈值'),
+        desc: $i18n.t('CPU资源(Request)使用率超过该阈值触发扩容, 无论内存资源使用率是否达到阈值'),
       },
       {
         prop: 'bufferResourceMemRatio',
         name: $i18n.t('触发扩容资源阈值 (内存)'),
         isBasicProp: true,
         unit: '%',
-        desc: $i18n.t('内存资源使用率超过该阈值触发扩容, 无论CPU资源使用率是否达到阈值'),
+        desc: $i18n.t('内存资源(Request)使用率超过该阈值触发扩容, 无论CPU资源使用率是否达到阈值'),
       },
       {
         prop: 'maxNodeProvisionTime',
@@ -458,7 +458,7 @@ export default defineComponent({
         name: $i18n.t('触发缩容资源阈值 (CPU/内存)'),
         isBasicProp: true,
         unit: '%',
-        desc: $i18n.t('CPU和内存资源必须同时低于设定阈值才会触发缩容'),
+        desc: $i18n.t('CPU和内存资源(Request)必须同时低于设定阈值才会触发缩容'),
       },
       {
         prop: 'scaleDownUnneededTime',
@@ -1054,7 +1054,7 @@ export default defineComponent({
         return 0;
       }
 
-      let ret: any = parseFloat(used) / parseFloat(total) * 100;
+      let ret: any = parseFloat(used || '0') / parseFloat(total) * 100;
       if (ret !== 0 && ret !== 100) {
         ret = ret.toFixed(2);
       }
