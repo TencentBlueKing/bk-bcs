@@ -34,6 +34,26 @@ import (
 // setupFilters setups all api filters here. All request would cross here, and we filter request base on URL.
 func (p *proxy) setupFilters(mux *http.ServeMux) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// cors 处理
+		origin := r.Header.Get("Origin")
+		if origin != "" {
+			w.Header().Set("Access-Control-Allow-Origin", origin)
+		} else {
+			w.Header().Set("Access-Control-Allow-Origin", "*")
+		}
+
+		allowHeaders := []string{"Origin", "Content-Length", "Content-Type", "X-Requested-With"}
+		w.Header().Set("Access-Control-Allow-Headers", strings.Join(allowHeaders, ","))
+
+		allowMethods := []string{"GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"}
+		w.Header().Set("Access-Control-Allow-Methods", strings.Join(allowMethods, ","))
+
+		w.Header().Set("Access-Control-Allow-Credentials", "true")
+
+		if r.Method == http.MethodOptions {
+			return
+		}
+
 		// 设置 RequestID
 		if r.Header.Get(constant.RidKey) == "" {
 			reqID, _ := uuid.NewUUID()

@@ -112,12 +112,9 @@ func (w *WebServer) newRoutes(engine *gin.Engine) {
 // IndexHandler Vue 模板渲染
 func (w *WebServer) IndexHandler(c *gin.Context) {
 	data := gin.H{
-		"BK_STATIC_URL": path.Join(config.G.Web.RoutePrefix, "/web"),
-		"RUN_ENV":       config.G.Base.RunEnv,
-		"BK_APP_CODE":   config.G.Base.AppCode,
-		"BK_APP_SECRET": config.G.Base.AppSecret,
-		"BK_BCS_API":    config.G.BCS.Host,
-		"BK_CC_HOST":    "",
+		"BK_STATIC_URL":   path.Join(config.G.Web.RoutePrefix, "/web"),
+		"RUN_ENV":         config.G.Base.RunEnv,
+		"BK_BCS_BSCP_API": config.G.BCS.Host + "/bscp",
 	}
 
 	c.HTML(http.StatusOK, "index.html", data)
