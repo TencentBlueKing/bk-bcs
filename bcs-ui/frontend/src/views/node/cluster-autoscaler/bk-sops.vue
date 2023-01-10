@@ -143,12 +143,18 @@
           </div>
           <div class="title mt20">{{$t('调试失败')}}</div>
           <div class="operator mt20">
-            <bcs-button
-              class="mw88"
-              theme="primary"
-              :disabled="!taskUrl"
-              @click="handleGotoTaskDetail"
-            >{{$t('查看详情')}}</bcs-button>
+            <span
+              v-bk-tooltips="{
+                content: $t('标准任务执行失败，请检查是否有标准运维作业执行权限'),
+                disabled: !!taskUrl
+              }">
+              <bcs-button
+                class="mw88"
+                theme="primary"
+                :disabled="!taskUrl"
+                @click="handleGotoTaskDetail"
+              >{{$t('查看详情')}}</bcs-button>
+            </span>
             <bcs-button
               class="mw88 ml5"
               theme="primary"
