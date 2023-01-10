@@ -17,17 +17,14 @@ package bk_monitor
 import (
 	"context"
 	"math"
-	"net/url"
 	"strings"
 	"time"
 
-	"github.com/pkg/errors"
 	"github.com/prometheus/prometheus/model/labels"
 	"github.com/thanos-io/thanos/pkg/component"
 	"github.com/thanos-io/thanos/pkg/store"
 	"github.com/thanos-io/thanos/pkg/store/labelpb"
 	"github.com/thanos-io/thanos/pkg/store/storepb"
-	"gopkg.in/yaml.v2"
 	"k8s.io/klog/v2"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component/bcs"
@@ -37,41 +34,13 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/storegw/clientutil"
 )
 
-// Config 配置
-type Config struct {
-	URL         string `yaml:"url" mapstructure:"metadata_url"`          // unify-query 访问地址
-	MetadataURL string `yaml:"metadata_url" mapstructure:"metadata_url"` // 元数据地址, 目前只包含白名单
-}
-
 // BKMonitorStore implements the store node API on top of the Prometheus remote read API.
 type BKMonitorStore struct {
-	config      *Config
-	baseURL     *url.URL
-	metadataURL *url.URL
 }
 
 // NewBKMonitorStore xxx
 func NewBKMonitorStore(conf []byte) (*BKMonitorStore, error) {
-	var config Config
-	if err := yaml.UnmarshalStrict(conf, &config); err != nil {
-		return nil, errors.Wrap(err, "parsing bkmonitor stor config")
-	}
-
-	baseURL, err := url.Parse(config.URL)
-	if err != nil {
-		return nil, err
-	}
-
-	metadataURL, err := url.Parse(config.MetadataURL)
-	if err != nil {
-		return nil, err
-	}
-
-	store := &BKMonitorStore{
-		config:      &config,
-		baseURL:     baseURL,
-		metadataURL: metadataURL,
-	}
+	store := &BKMonitorStore{}
 	return store, nil
 }
 
@@ -89,18 +58,25 @@ func (s *BKMonitorStore) Info(ctx context.Context, r *storepb.InfoRequest) (*sto
 		return nil, err
 	}
 
-	grayClusterMap, err := bkmonitor_client.QueryGrayClusterMap(ctx, s.config.MetadataURL)
-	if err != nil {
-		klog.Errorf("query bk_monitor cluster list error, %s", err)
-	} else {
+	grayClusterMap := make(map[string]struct{}, 0)
+	if len(config.G.BKMonitor.MetadataURL) != 0 {
+		grayClusterMap, err = bkmonitor_client.QueryGrayClusterMap(ctx, config.G.BKMonitor.MetadataURL)
+		if err != nil {
+			klog.Errorf("query bk_monitor cluster list error, %s", err)
+		}
 		lsets = make([]labelpb.ZLabelSet, 0, len(grayClusterMap))
-		for clusterId := range grayClusterMap {
+		for clusterID := range grayClusterMap {
 			// 不存在的，或者已经删除的集群，需要过滤
-			if _, ok := clusterMap[clusterId]; !ok {
+			if _, ok := clusterMap[clusterID]; !ok {
 				continue
 			}
-
-			labelSets := labels.FromMap(map[string]string{"provider": "BK_MONITOR", "cluster_id": clusterId})
+			labelSets := labels.FromMap(map[string]string{"provider": "BK_MONITOR", "cluster_id": clusterID})
+			lsets = append(lsets, labelpb.ZLabelSet{Labels: labelpb.ZLabelsFromPromLabels(labelSets)})
+		}
+	} else {
+		lsets = make([]labelpb.ZLabelSet, 0, len(clusterMap))
+		for clusterID := range clusterMap {
+			labelSets := labels.FromMap(map[string]string{"provider": "BK_MONITOR", "cluster_id": clusterID})
 			lsets = append(lsets, labelpb.ZLabelSet{Labels: labelpb.ZLabelsFromPromLabels(labelSets)})
 		}
 	}
@@ -211,7 +187,7 @@ func (s *BKMonitorStore) Series(r *storepb.SeriesRequest, srv storepb.Store_Seri
 		return err
 	}
 
-	promSeriesSet, err := bkmonitor_client.QueryByPromQL(srv.Context(), s.config.URL, cluster.BKBizID, start, end, step,
+	promSeriesSet, err := bkmonitor_client.QueryByPromQL(srv.Context(), config.G.BKMonitor.URL, cluster.BKBizID, start, end, step,
 		newMatchers)
 	if err != nil {
 		return err
