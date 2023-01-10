@@ -108,9 +108,10 @@ message ListAppsReq {
 
 message ListAppsRestReq {
     uint32 biz_id   = 1;
-    string operator = 2;
-    uint32 start    = 3;
-    uint32 limit    = 4;
+    uint32 start    = 2;
+    uint32 limit    = 3;
+    string operator = 4;
+    string name     = 5;
 }
 
 message ListAppsResp {

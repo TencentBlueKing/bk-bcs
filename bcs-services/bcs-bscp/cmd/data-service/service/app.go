@@ -152,6 +152,15 @@ func (s *Service) ListAppsRest(ctx context.Context, req *pbds.ListAppsRestReq) (
 		})
 	}
 
+	// 按名称模糊搜索
+	if req.Name != "" {
+		rules = append(rules, filter.AtomRule{
+			Field: "name",
+			Op:    filter.OpFactory(filter.ContainsInsensitive),
+			Value: req.Name,
+		})
+	}
+
 	filter := &filter.Expression{
 		Op:    filter.And,
 		Rules: rules,

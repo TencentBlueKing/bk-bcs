@@ -183,9 +183,10 @@ func (s *Service) ListAppsRest(ctx context.Context, req *pbcs.ListAppsRestReq) (
 
 	r := &pbds.ListAppsRestReq{
 		BizId:    req.BizId,
-		Operator: req.Operator,
 		Start:    req.Start,
 		Limit:    req.Limit,
+		Operator: req.Operator,
+		Name:     req.Name,
 	}
 	rp, err := s.client.DS.ListAppsRest(kt.RpcCtx(), r)
 	if err != nil {
