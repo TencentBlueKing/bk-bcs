@@ -30,7 +30,7 @@ const (
 	instantDefaultMaxSourceResolution = 0                // metadata的默认检索时间范围。0代表从头到尾全部
 	defaultMetadataTimeRange          = 0                // 即使查询的最大分辨率
 	unhealthyStoreTimeout             = time.Minute * 5  // 健康检查的时间
-	endpointInfoTimeout               = time.Minute * 5  // 健康检查的时间
+	endpointInfoTimeout               = time.Minute * 5  // thanos端点超时时间
 	storeResponseTimeout              = 0                // 查询store的超时时间
 	defaultEvaluationInterval         = time.Minute * 1  // 自查询的默认处理间隔。这里用不到
 )

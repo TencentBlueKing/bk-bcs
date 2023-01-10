@@ -123,10 +123,7 @@ func runStoreGW(ctx context.Context, g *run.Group, opt *option) error {
 			},
 			dialOpts,
 			time.Second*30,
-			//endpointInfoTimeout,暂写time.Second*30,
-			time.Second*30,
-			//queryConnMetricLabels...  暂写"",
-			"test",
+			time.Second*30, //endpointInfoTimeout
 		)
 
 		ctx, cancel := context.WithCancel(ctx)

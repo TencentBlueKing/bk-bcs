@@ -14,11 +14,12 @@
 package rest
 
 import (
+	"net/http"
+
 	"github.com/gin-contrib/requestid"
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
 	"github.com/thanos-io/thanos/pkg/store"
-	"net/http"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/rest/tracing"
 )
@@ -109,10 +110,10 @@ func GetRestContext(c *gin.Context) (*Context, error) {
 func RestHandlerFunc(handler HandlerFunc) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		restContext, err := GetRestContext(c)
-		//if err != nil {
-		//	AbortWithUnauthorizedError(InitRestContext(c), err)
-		//	return
-		//}
+		if err != nil {
+			AbortWithUnauthorizedError(InitRestContext(c), err)
+			return
+		}
 		result, err := handler(restContext)
 		if err != nil {
 			AbortWithJSONError(restContext, err)

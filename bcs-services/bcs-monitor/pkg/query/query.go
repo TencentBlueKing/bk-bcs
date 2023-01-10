@@ -154,9 +154,6 @@ func NewQueryAPI(
 			extprom.WrapRegistererWithPrefix("bcs_monitor_query_concurrent_", reg),
 			maxConcurrentQueries,
 		),
-		/*	queryTelemetryDurationQuantiles := cmd.Flag("query.telemetry.request-duration-seconds-quantiles", "The quantiles for exporting metrics about the request duration quantiles.").Default("0.1", "0.25", "0.75", "1.25", "1.75", "2.5", "3", "5", "10").Float64List()
-			queryTelemetrySamplesQuantiles := cmd.Flag("query.telemetry.request-samples-quantiles", "The quantiles for exporting metrics about the samples count quantiles.").Default("100", "1000", "10000", "100000", "1000000").Int64List()
-			queryTelemetrySeriesQuantiles := cmd.Flag("query.telemetry.request-series-seconds-quantiles", "The quantiles for exporting metrics about the series count quantiles.").Default("10", "100", "1000", "10000", "100000").Int64List()*/
 		store.NewSeriesStatsAggregator(
 			reg,
 			queryTelemetryDurationQuantiles,
