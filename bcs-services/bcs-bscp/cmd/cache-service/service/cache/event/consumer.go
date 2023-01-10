@@ -277,12 +277,12 @@ func (c *consumer) cacheReleasedCI(kt *kit.Kit, releaseBizID map[uint32]uint32) 
 		}
 
 		kv := make(map[string]string)
+		var js []byte
 		for k, list := range ciList {
 			if len(list) == 0 {
 				continue
 			}
-
-			js, err := json.Marshal(types.ReleaseCICaches(list))
+			js, err = json.Marshal(types.ReleaseCICaches(list))
 			if err != nil {
 				logs.Errorf("marshal ci list failed, skip, list: %+v, err: %v, rid: %s", list, err, kt.Rid)
 				continue

@@ -29,12 +29,12 @@ import (
 func (s *Service) CreateConfigItem(ctx context.Context, req *pbcs.CreateConfigItemReq) (
 	*pbcs.CreateConfigItemResp, error) {
 
-	kit := kit.FromGrpcContext(ctx)
+	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.CreateConfigItemResp)
 
 	authRes := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.ConfigItem, Action: meta.Create,
 		ResourceID: req.AppId}, BizID: req.BizId}
-	err := s.authorizer.AuthorizeWithResp(kit, resp, authRes)
+	err := s.authorizer.AuthorizeWithResp(grpcKit, resp, authRes)
 	if err != nil {
 		return resp, nil
 	}
@@ -57,10 +57,10 @@ func (s *Service) CreateConfigItem(ctx context.Context, req *pbcs.CreateConfigIt
 			},
 		},
 	}
-	rp, err := s.client.DS.CreateConfigItem(kit.RpcCtx(), r)
+	rp, err := s.client.DS.CreateConfigItem(grpcKit.RpcCtx(), r)
 	if err != nil {
-		errf.Error(err).AssignResp(kit, resp)
-		logs.Errorf("create config item failed, err: %v, rid: %s", err, kit.Rid)
+		errf.Error(err).AssignResp(grpcKit, resp)
+		logs.Errorf("create config item failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return resp, nil
 	}
 
@@ -75,12 +75,12 @@ func (s *Service) CreateConfigItem(ctx context.Context, req *pbcs.CreateConfigIt
 func (s *Service) UpdateConfigItem(ctx context.Context, req *pbcs.UpdateConfigItemReq) (
 	*pbcs.UpdateConfigItemResp, error) {
 
-	kit := kit.FromGrpcContext(ctx)
+	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.UpdateConfigItemResp)
 
 	authRes := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.ConfigItem, Action: meta.Update,
 		ResourceID: req.AppId}, BizID: req.BizId}
-	err := s.authorizer.AuthorizeWithResp(kit, resp, authRes)
+	err := s.authorizer.AuthorizeWithResp(grpcKit, resp, authRes)
 	if err != nil {
 		return resp, nil
 	}
@@ -104,10 +104,10 @@ func (s *Service) UpdateConfigItem(ctx context.Context, req *pbcs.UpdateConfigIt
 			},
 		},
 	}
-	_, err = s.client.DS.UpdateConfigItem(kit.RpcCtx(), r)
+	_, err = s.client.DS.UpdateConfigItem(grpcKit.RpcCtx(), r)
 	if err != nil {
-		errf.Error(err).AssignResp(kit, resp)
-		logs.Errorf("update config item failed, err: %v, rid: %s", err, kit.Rid)
+		errf.Error(err).AssignResp(grpcKit, resp)
+		logs.Errorf("update config item failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return resp, nil
 	}
 
@@ -119,12 +119,12 @@ func (s *Service) UpdateConfigItem(ctx context.Context, req *pbcs.UpdateConfigIt
 func (s *Service) DeleteConfigItem(ctx context.Context, req *pbcs.DeleteConfigItemReq) (
 	*pbcs.DeleteConfigItemResp, error) {
 
-	kit := kit.FromGrpcContext(ctx)
+	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.DeleteConfigItemResp)
 
 	authRes := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.ConfigItem, Action: meta.Delete,
 		ResourceID: req.AppId}, BizID: req.BizId}
-	err := s.authorizer.AuthorizeWithResp(kit, resp, authRes)
+	err := s.authorizer.AuthorizeWithResp(grpcKit, resp, authRes)
 	if err != nil {
 		return resp, nil
 	}
@@ -136,10 +136,10 @@ func (s *Service) DeleteConfigItem(ctx context.Context, req *pbcs.DeleteConfigIt
 			AppId: req.AppId,
 		},
 	}
-	_, err = s.client.DS.DeleteConfigItem(kit.RpcCtx(), r)
+	_, err = s.client.DS.DeleteConfigItem(grpcKit.RpcCtx(), r)
 	if err != nil {
-		errf.Error(err).AssignResp(kit, resp)
-		logs.Errorf("delete config item failed, err: %v, rid: %s", err, kit.Rid)
+		errf.Error(err).AssignResp(grpcKit, resp)
+		logs.Errorf("delete config item failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return resp, nil
 	}
 
@@ -151,22 +151,22 @@ func (s *Service) DeleteConfigItem(ctx context.Context, req *pbcs.DeleteConfigIt
 func (s *Service) ListConfigItems(ctx context.Context, req *pbcs.ListConfigItemsReq) (
 	*pbcs.ListConfigItemsResp, error) {
 
-	kit := kit.FromGrpcContext(ctx)
+	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.ListConfigItemsResp)
 
 	authRes := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.ConfigItem, Action: meta.Find}, BizID: req.BizId}
-	err := s.authorizer.AuthorizeWithResp(kit, resp, authRes)
+	err := s.authorizer.AuthorizeWithResp(grpcKit, resp, authRes)
 	if err != nil {
 		return resp, nil
 	}
 
 	if req.Page == nil {
-		errf.Error(errf.New(errf.InvalidParameter, "page is null")).AssignResp(kit, resp)
+		errf.Error(errf.New(errf.InvalidParameter, "page is null")).AssignResp(grpcKit, resp)
 		return resp, nil
 	}
 
 	if err := req.Page.BasePage().Validate(types.DefaultPageOption); err != nil {
-		errf.Error(err).AssignResp(kit, resp)
+		errf.Error(err).AssignResp(grpcKit, resp)
 		return resp, nil
 	}
 
@@ -176,10 +176,10 @@ func (s *Service) ListConfigItems(ctx context.Context, req *pbcs.ListConfigItems
 		Filter: req.Filter,
 		Page:   req.Page,
 	}
-	rp, err := s.client.DS.ListConfigItems(kit.RpcCtx(), r)
+	rp, err := s.client.DS.ListConfigItems(grpcKit.RpcCtx(), r)
 	if err != nil {
-		errf.Error(err).AssignResp(kit, resp)
-		logs.Errorf("list config items failed, err: %v, rid: %s", err, kit.Rid)
+		errf.Error(err).AssignResp(grpcKit, resp)
+		logs.Errorf("list config items failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return resp, nil
 	}
 

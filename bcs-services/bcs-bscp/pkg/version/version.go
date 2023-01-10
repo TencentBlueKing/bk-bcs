@@ -97,7 +97,10 @@ func Version() *SysVersion {
 
 // SemanticVersion return the current process's version with semantic version format.
 func SemanticVersion() [3]uint32 {
-	ver, _ := parseVersion()
+	ver, err := parseVersion()
+	if err != nil {
+		panic(fmt.Sprintf("parse version fail, error: %v", err))
+	}
 	return ver
 }
 

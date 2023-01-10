@@ -50,7 +50,7 @@ func (a *Reporter) Archive(t string, m Metrics) {
 
 // GenReport gen bench report.
 func (a *Reporter) GenReport(path string) error {
-	outFile, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0666)
+	outFile, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
 	if err != nil {
 		return fmt.Errorf("open report file failed, err: %v", err)
 	}

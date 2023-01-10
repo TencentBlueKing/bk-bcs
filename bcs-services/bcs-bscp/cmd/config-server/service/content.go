@@ -102,22 +102,22 @@ func (s *Service) validateRepoNodeExist(kt *kit.Kit, req *pbcs.CreateContentReq)
 
 // ListContents list contents with filter.
 func (s *Service) ListContents(ctx context.Context, req *pbcs.ListContentsReq) (*pbcs.ListContentsResp, error) {
-	kit := kit.FromGrpcContext(ctx)
+	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.ListContentsResp)
 
 	authRes := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.Content, Action: meta.Find}, BizID: req.BizId}
-	err := s.authorizer.AuthorizeWithResp(kit, resp, authRes)
+	err := s.authorizer.AuthorizeWithResp(grpcKit, resp, authRes)
 	if err != nil {
 		return resp, nil
 	}
 
 	if req.Page == nil {
-		errf.Error(errf.New(errf.InvalidParameter, "page is null")).AssignResp(kit, resp)
+		errf.Error(errf.New(errf.InvalidParameter, "page is null")).AssignResp(grpcKit, resp)
 		return resp, nil
 	}
 
-	if err := req.Page.BasePage().Validate(types.DefaultPageOption); err != nil {
-		errf.Error(err).AssignResp(kit, resp)
+	if err = req.Page.BasePage().Validate(types.DefaultPageOption); err != nil {
+		errf.Error(err).AssignResp(grpcKit, resp)
 		return resp, nil
 	}
 
@@ -127,10 +127,10 @@ func (s *Service) ListContents(ctx context.Context, req *pbcs.ListContentsReq) (
 		Filter: req.Filter,
 		Page:   req.Page,
 	}
-	rp, err := s.client.DS.ListContents(kit.RpcCtx(), r)
+	rp, err := s.client.DS.ListContents(grpcKit.RpcCtx(), r)
 	if err != nil {
-		errf.Error(err).AssignResp(kit, resp)
-		logs.Errorf("list contents failed, err: %v, rid: %s", err, kit.Rid)
+		errf.Error(err).AssignResp(grpcKit, resp)
+		logs.Errorf("list contents failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return resp, nil
 	}
 

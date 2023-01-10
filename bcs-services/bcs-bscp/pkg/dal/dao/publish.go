@@ -360,7 +360,8 @@ func (pd *pubDao) ListPSHistory(kit *kit.Kit, opts *types.ListPSHistoriesOption)
 	if opts.Page.Count {
 		// this is a count request, then do count operation only.
 		sql = fmt.Sprintf(`SELECT COUNT(*) FROM %s %s`, table.PublishedStrategyHistoryTable, whereExpr)
-		count, err := pd.orm.Do(pd.sd.ShardingOne(opts.BizID).DB()).Count(kit.Ctx, sql)
+		var count uint32
+		count, err = pd.orm.Do(pd.sd.ShardingOne(opts.BizID).DB()).Count(kit.Ctx, sql)
 		if err != nil {
 			return nil, err
 		}

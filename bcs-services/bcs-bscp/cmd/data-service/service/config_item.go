@@ -30,22 +30,22 @@ import (
 func (s *Service) CreateConfigItem(ctx context.Context, req *pbds.CreateConfigItemReq) (
 	*pbds.CreateResp, error) {
 
-	kit := kit.FromGrpcContext(ctx)
+	grpcKit := kit.FromGrpcContext(ctx)
 
 	now := time.Now()
 	ci := &table.ConfigItem{
 		Spec:       req.Spec.ConfigItemSpec(),
 		Attachment: req.Attachment.ConfigItemAttachment(),
 		Revision: &table.Revision{
-			Creator:   kit.User,
-			Reviser:   kit.User,
+			Creator:   grpcKit.User,
+			Reviser:   grpcKit.User,
 			CreatedAt: now,
 			UpdatedAt: now,
 		},
 	}
-	id, err := s.dao.ConfigItem().Create(kit, ci)
+	id, err := s.dao.ConfigItem().Create(grpcKit, ci)
 	if err != nil {
-		logs.Errorf("create config item failed, err: %v, rid: %s", err, kit.Rid)
+		logs.Errorf("create config item failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
 	}
 
@@ -57,19 +57,19 @@ func (s *Service) CreateConfigItem(ctx context.Context, req *pbds.CreateConfigIt
 func (s *Service) UpdateConfigItem(ctx context.Context, req *pbds.UpdateConfigItemReq) (
 	*pbbase.EmptyResp, error) {
 
-	kit := kit.FromGrpcContext(ctx)
+	grpcKit := kit.FromGrpcContext(ctx)
 
 	ci := &table.ConfigItem{
 		ID:         req.Id,
 		Spec:       req.Spec.ConfigItemSpec(),
 		Attachment: req.Attachment.ConfigItemAttachment(),
 		Revision: &table.Revision{
-			Reviser:   kit.User,
+			Reviser:   grpcKit.User,
 			UpdatedAt: time.Now(),
 		},
 	}
-	if err := s.dao.ConfigItem().Update(kit, ci); err != nil {
-		logs.Errorf("update config item failed, err: %v, rid: %s", err, kit.Rid)
+	if err := s.dao.ConfigItem().Update(grpcKit, ci); err != nil {
+		logs.Errorf("update config item failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
 	}
 
@@ -78,14 +78,14 @@ func (s *Service) UpdateConfigItem(ctx context.Context, req *pbds.UpdateConfigIt
 
 // DeleteConfigItem delete config item.
 func (s *Service) DeleteConfigItem(ctx context.Context, req *pbds.DeleteConfigItemReq) (*pbbase.EmptyResp, error) {
-	kit := kit.FromGrpcContext(ctx)
+	grpcKit := kit.FromGrpcContext(ctx)
 
 	ci := &table.ConfigItem{
 		ID:         req.Id,
 		Attachment: req.Attachment.ConfigItemAttachment(),
 	}
-	if err := s.dao.ConfigItem().Delete(kit, ci); err != nil {
-		logs.Errorf("delete config item failed, err: %v, rid: %s", err, kit.Rid)
+	if err := s.dao.ConfigItem().Delete(grpcKit, ci); err != nil {
+		logs.Errorf("delete config item failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
 	}
 
@@ -96,12 +96,12 @@ func (s *Service) DeleteConfigItem(ctx context.Context, req *pbds.DeleteConfigIt
 func (s *Service) ListConfigItems(ctx context.Context, req *pbds.ListConfigItemsReq) (*pbds.ListConfigItemsResp,
 	error) {
 
-	kit := kit.FromGrpcContext(ctx)
+	grpcKit := kit.FromGrpcContext(ctx)
 
 	// parse pb struct filter to filter.Expression.
 	filter, err := pbbase.UnmarshalFromPbStructToExpr(req.Filter)
 	if err != nil {
-		logs.Errorf("unmarshal pn struct to expression failed, err: %v, rid: %s", err, kit.Rid)
+		logs.Errorf("unmarshal pn struct to expression failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
 	}
 
@@ -112,9 +112,9 @@ func (s *Service) ListConfigItems(ctx context.Context, req *pbds.ListConfigItems
 		Page:   req.Page.BasePage(),
 	}
 
-	details, err := s.dao.ConfigItem().List(kit, query)
+	details, err := s.dao.ConfigItem().List(grpcKit, query)
 	if err != nil {
-		logs.Errorf("list config item failed, err: %v, rid: %s", err, kit.Rid)
+		logs.Errorf("list config item failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
 	}
 

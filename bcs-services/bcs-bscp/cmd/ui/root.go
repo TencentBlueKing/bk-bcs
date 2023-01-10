@@ -181,7 +181,7 @@ func getIPv6AddrFromEnv(ipv4 string) string {
 	}
 
 	// local link ipv6 需要带上 interface， 格式如::%eth0
-	ipv6Interface := os.Getenv(ipv6Interface)
+	ipv6Interface = os.Getenv(ipv6Interface)
 	if ipv6Interface != "" {
 		ipv6 = ipv6 + "%" + ipv6Interface
 	}

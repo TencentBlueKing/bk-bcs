@@ -62,22 +62,22 @@ func (s *Service) CreateCommit(ctx context.Context, req *pbcs.CreateCommitReq) (
 
 // ListCommits list commit with filter
 func (s *Service) ListCommits(ctx context.Context, req *pbcs.ListCommitsReq) (*pbcs.ListCommitsResp, error) {
-	kit := kit.FromGrpcContext(ctx)
+	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.ListCommitsResp)
 
 	authRes := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.Commit, Action: meta.Find}, BizID: req.BizId}
-	err := s.authorizer.AuthorizeWithResp(kit, resp, authRes)
+	err := s.authorizer.AuthorizeWithResp(grpcKit, resp, authRes)
 	if err != nil {
 		return resp, nil
 	}
 
 	if req.Page == nil {
-		errf.Error(errf.New(errf.InvalidParameter, "page is null")).AssignResp(kit, resp)
+		errf.Error(errf.New(errf.InvalidParameter, "page is null")).AssignResp(grpcKit, resp)
 		return resp, nil
 	}
 
-	if err := req.Page.BasePage().Validate(types.DefaultPageOption); err != nil {
-		errf.Error(err).AssignResp(kit, resp)
+	if err = req.Page.BasePage().Validate(types.DefaultPageOption); err != nil {
+		errf.Error(err).AssignResp(grpcKit, resp)
 		return resp, nil
 	}
 
@@ -87,10 +87,10 @@ func (s *Service) ListCommits(ctx context.Context, req *pbcs.ListCommitsReq) (*p
 		Filter: req.Filter,
 		Page:   req.Page,
 	}
-	rp, err := s.client.DS.ListCommits(kit.RpcCtx(), r)
+	rp, err := s.client.DS.ListCommits(grpcKit.RpcCtx(), r)
 	if err != nil {
-		errf.Error(err).AssignResp(kit, resp)
-		logs.Errorf("list commits failed, err: %v, rid: %s", err, kit.Rid)
+		errf.Error(err).AssignResp(grpcKit, resp)
+		logs.Errorf("list commits failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return resp, nil
 	}
 

@@ -138,7 +138,9 @@ func (lk *logKeeper) remove() (ok bool) {
 		return
 	}
 	block := lk.header
-	lk.removeFile(block.name)
+	if err := lk.removeFile(block.name); err != nil {
+		panic(fmt.Sprintf("remove file is fail, error: %v", err))
+	}
 	lk.header = block.next
 	block = nil // for GC
 	lk.total--
@@ -186,7 +188,9 @@ func (lk *logKeeper) load() {
 			lk.tail = fb
 			lk.total++
 		} else {
-			lk.removeFile(block.name)
+			if err := lk.removeFile(block.name); err != nil {
+				panic(fmt.Sprintf("remove file is fail, error: %v", err))
+			}
 		}
 	}
 }
@@ -301,7 +305,8 @@ func create(t time.Time) (f *os.File, filename string, filesize uint32, err erro
 			filename = filepath.Join(lk.dir, lk.tail.name)
 
 			// judge latest log file write full.
-			fInfo, onceErr := os.Stat(filename)
+			var fInfo os.FileInfo
+			fInfo, onceErr = os.Stat(filename)
 			if onceErr != nil {
 				return
 			}
@@ -313,7 +318,7 @@ func create(t time.Time) (f *os.File, filename string, filesize uint32, err erro
 			filesize = uint32(fInfo.Size())
 
 			// if log file not write full, need to open latest log file.
-			f, onceErr = os.OpenFile(filename, os.O_WRONLY|os.O_APPEND, 0666)
+			f, onceErr = os.OpenFile(filename, os.O_WRONLY|os.O_APPEND, 0600)
 			if onceErr != nil {
 				return
 			}
@@ -329,7 +334,7 @@ func create(t time.Time) (f *os.File, filename string, filesize uint32, err erro
 		}
 
 		fname := filepath.Join(lk.dir, name)
-		f, err := os.Create(fname)
+		f, err = os.Create(fname)
 		if err == nil {
 			symlink := filepath.Join(lk.dir, link)
 			if err := os.Remove(symlink); err != nil {

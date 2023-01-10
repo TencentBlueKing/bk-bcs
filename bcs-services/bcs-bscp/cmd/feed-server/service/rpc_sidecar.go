@@ -37,7 +37,7 @@ func (s *Service) Handshake(ctx context.Context, hm *pbfs.HandshakeMessage) (*pb
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
 
-	if err := hm.Validate(); err != nil {
+	if err = hm.Validate(); err != nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid handshake message "+err.Error())
 	}
 

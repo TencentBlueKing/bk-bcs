@@ -65,11 +65,11 @@ func (dao *strategySetDao) Create(kit *kit.Kit, ss *table.StrategySet) (uint32, 
 	// set the strategy set's mode.
 	ss.Spec.Mode = mode
 
-	if err := ss.ValidateCreate(); err != nil {
+	if err = ss.ValidateCreate(); err != nil {
 		return 0, errf.New(errf.InvalidParameter, err.Error())
 	}
 
-	if err := dao.validateAttachmentResExist(kit, ss.Attachment); err != nil {
+	if err = dao.validateAttachmentResExist(kit, ss.Attachment); err != nil {
 		return 0, err
 	}
 
@@ -86,7 +86,7 @@ func (dao *strategySetDao) Create(kit *kit.Kit, ss *table.StrategySet) (uint32, 
 
 	err = dao.sd.ShardingOne(ss.Attachment.BizID).AutoTxn(kit,
 		func(txn *sqlx.Tx, opt *sharding.TxnOption) error {
-			if err := dao.validateAppStrategySetNumber(kit, ss.Attachment, &LockOption{Txn: txn}); err != nil {
+			if err = dao.validateAppStrategySetNumber(kit, ss.Attachment, &LockOption{Txn: txn}); err != nil {
 				return err
 			}
 
@@ -96,7 +96,7 @@ func (dao *strategySetDao) Create(kit *kit.Kit, ss *table.StrategySet) (uint32, 
 
 			// audit this to be created strategy set details.
 			au := &AuditOption{Txn: txn, ResShardingUid: opt.ShardingUid}
-			if err := dao.auditDao.Decorator(kit, ss.Attachment.BizID,
+			if err = dao.auditDao.Decorator(kit, ss.Attachment.BizID,
 				enumor.StrategySet).AuditCreate(ss, au); err != nil {
 				return fmt.Errorf("audit create strategy set failed, err: %v", err)
 			}
@@ -141,7 +141,8 @@ func (dao *strategySetDao) Update(kit *kit.Kit, ss *table.StrategySet) error {
 
 	err = dao.sd.ShardingOne(ss.Attachment.BizID).AutoTxn(kit,
 		func(txn *sqlx.Tx, opt *sharding.TxnOption) error {
-			effected, err := dao.orm.Txn(txn).Update(kit.Ctx, sql, toUpdate)
+			var effected int64
+			effected, err = dao.orm.Txn(txn).Update(kit.Ctx, sql, toUpdate)
 			if err != nil {
 				logs.Errorf("update strategy set: %d failed, err: %v, rid: %v", ss.ID, err, kit.Rid)
 				return err
@@ -212,7 +213,8 @@ func (dao *strategySetDao) List(kit *kit.Kit, opts *types.ListStrategySetsOption
 	if opts.Page.Count {
 		// this is a count request, then do count operation only.
 		sql = fmt.Sprintf(`SELECT COUNT(*) FROM %s %s`, table.StrategySetTable, whereExpr)
-		count, err := dao.orm.Do(dao.sd.ShardingOne(opts.BizID).DB()).Count(kit.Ctx, sql)
+		var count uint32
+		count, err = dao.orm.Do(dao.sd.ShardingOne(opts.BizID).DB()).Count(kit.Ctx, sql)
 		if err != nil {
 			return nil, err
 		}

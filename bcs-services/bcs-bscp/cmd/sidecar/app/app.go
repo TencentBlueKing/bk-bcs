@@ -65,7 +65,7 @@ func Run(opt *options.Option) error {
 		"setting":    cc.Sidecar(),
 		"runtimeOpt": runtimeOpt,
 	}
-	if err := ctl.LoadCtl(cmd.WithLog(), cmd.WithQueryRuntimeSetting(rs), cmd.WithNotifyReconnect(
+	if err = ctl.LoadCtl(cmd.WithLog(), cmd.WithQueryRuntimeSetting(rs), cmd.WithNotifyReconnect(
 		upstream.NotifyReconnect)); err != nil {
 
 		return fmt.Errorf("load control tool failed, err: %v", err)

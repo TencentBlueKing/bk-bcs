@@ -67,12 +67,12 @@ func (s *Service) CreateApp(ctx context.Context, req *pbcs.CreateAppReq) (*pbcs.
 
 // UpdateApp update app with options
 func (s *Service) UpdateApp(ctx context.Context, req *pbcs.UpdateAppReq) (*pbcs.UpdateAppResp, error) {
-	kit := kit.FromGrpcContext(ctx)
+	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.UpdateAppResp)
 
 	authRes := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.App, Action: meta.Update, ResourceID: req.Id},
 		BizID: req.BizId}
-	err := s.authorizer.AuthorizeWithResp(kit, resp, authRes)
+	err := s.authorizer.AuthorizeWithResp(grpcKit, resp, authRes)
 	if err != nil {
 		return resp, nil
 	}
@@ -91,10 +91,10 @@ func (s *Service) UpdateApp(ctx context.Context, req *pbcs.UpdateAppReq) (*pbcs.
 			},
 		},
 	}
-	_, err = s.client.DS.UpdateApp(kit.RpcCtx(), r)
+	_, err = s.client.DS.UpdateApp(grpcKit.RpcCtx(), r)
 	if err != nil {
-		errf.Error(err).AssignResp(kit, resp)
-		logs.Errorf("update app failed, err: %v, rid: %s", err, kit.Rid)
+		errf.Error(err).AssignResp(grpcKit, resp)
+		logs.Errorf("update app failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return resp, nil
 	}
 
@@ -145,7 +145,7 @@ func (s *Service) ListApps(ctx context.Context, req *pbcs.ListAppsReq) (*pbcs.Li
 		return resp, nil
 	}
 
-	if err := req.Page.BasePage().Validate(types.DefaultPageOption); err != nil {
+	if err = req.Page.BasePage().Validate(types.DefaultPageOption); err != nil {
 		errf.Error(err).AssignResp(kt, resp)
 		return resp, nil
 	}

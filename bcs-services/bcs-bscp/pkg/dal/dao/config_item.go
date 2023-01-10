@@ -78,7 +78,7 @@ func (dao *configItemDao) Create(kit *kit.Kit, ci *table.ConfigItem) (uint32, er
 
 	err = dao.sd.ShardingOne(ci.Attachment.BizID).AutoTxn(kit,
 		func(txn *sqlx.Tx, opt *sharding.TxnOption) error {
-			if err := dao.validateAppCINumber(kit, ci.Attachment, &LockOption{Txn: txn}); err != nil {
+			if err = dao.validateAppCINumber(kit, ci.Attachment, &LockOption{Txn: txn}); err != nil {
 				return err
 			}
 
@@ -88,7 +88,7 @@ func (dao *configItemDao) Create(kit *kit.Kit, ci *table.ConfigItem) (uint32, er
 
 			// audit this to be create config item details.
 			au := &AuditOption{Txn: txn, ResShardingUid: opt.ShardingUid}
-			if err := dao.auditDao.Decorator(kit, ci.Attachment.BizID,
+			if err = dao.auditDao.Decorator(kit, ci.Attachment.BizID,
 				enumor.ConfigItem).AuditCreate(ci, au); err != nil {
 				return fmt.Errorf("audit create config item failed, err: %v", err)
 			}
@@ -142,7 +142,8 @@ func (dao *configItemDao) Update(kit *kit.Kit, ci *table.ConfigItem) error {
 
 	err = dao.sd.ShardingOne(ci.Attachment.BizID).AutoTxn(kit,
 		func(txn *sqlx.Tx, opt *sharding.TxnOption) error {
-			effected, err := dao.orm.Txn(txn).Update(kit.Ctx, sql, toUpdate)
+			var effected int64
+			effected, err = dao.orm.Txn(txn).Update(kit.Ctx, sql, toUpdate)
 			if err != nil {
 				logs.Errorf("update config item: %d failed, err: %v, rid: %v", ci.ID, err, kit.Rid)
 				return err
@@ -213,7 +214,8 @@ func (dao *configItemDao) List(kit *kit.Kit, opts *types.ListConfigItemsOption) 
 	if opts.Page.Count {
 		// this is a count request, then do count operation only.
 		sql = fmt.Sprintf(`SELECT COUNT(*) FROM %s %s`, table.ConfigItemTable, whereExpr)
-		count, err := dao.orm.Do(dao.sd.ShardingOne(opts.BizID).DB()).Count(kit.Ctx, sql)
+		var count uint32
+		count, err = dao.orm.Do(dao.sd.ShardingOne(opts.BizID).DB()).Count(kit.Ctx, sql)
 		if err != nil {
 			return nil, err
 		}
