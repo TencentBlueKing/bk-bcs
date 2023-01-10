@@ -294,7 +294,7 @@ export default defineComponent({
         $bkInfo({
           type: 'warning',
           clsName: 'custom-info-confirm',
-          title: !nodepoolList.length
+          subTitle: !nodepoolList.length
             ? $i18n.t('请创建节点池并启用节点池自动扩缩容功能')
             : $i18n.t('请至少启用 1 个节点池的自动扩缩容功能或创建新的节点池'),
           defaultInfo: true,

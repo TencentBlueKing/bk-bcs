@@ -175,9 +175,9 @@ export default defineComponent({
           trigger: 'blur',
         },
         {
-          message: $i18n.t('名称不超过255个字符，仅支持中文、英文、数字、下划线，分隔符("-")及小数点'),
+          message: $i18n.t('名称2 ~ 255个字符之间，仅支持中文、英文、数字、下划线，分隔符("-")及小数点'),
           trigger: 'blur',
-          validator: (v: string) => /^[\u4E00-\u9FA5A-Za-z0-9._-]+$/.test(v),
+          validator: (v: string) => /^[\u4E00-\u9FA5A-Za-z0-9._-]+$/.test(v) && v.length <= 255 && v.length >= 2,
         },
       ],
       nodeNumRange: [
