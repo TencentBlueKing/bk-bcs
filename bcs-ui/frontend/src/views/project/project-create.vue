@@ -11,13 +11,16 @@
     @value-change="handleChange"
     @confirm="handleConfirm">
     <bk-form :label-width="labelWidth" :model="formData" :rules="rules" ref="bkFormRef">
-      <bk-form-item :label="$t('项目名称')" property="project_name" error-display-type="normal" required>
-        <bk-input class="create-input" :placeholder="$t('请输入4-12字符的项目名称')" v-model="formData.project_name"></bk-input>
+      <bk-form-item :label="$t('项目名称')" property="name" error-display-type="normal" required>
+        <bk-input class="create-input" :placeholder="$t('请输入1-32字符的项目名称')" v-model="formData.name"></bk-input>
       </bk-form-item>
-      <bk-form-item :label="$t('项目英文名')" property="english_name" error-display-type="normal" required>
+      <bk-form-item :label="$t('项目英文名')" property="projectCode" error-display-type="normal" required>
         <bk-input
-          class="create-input" :placeholder="$t('请输入3-32字符,以小写字母开头的项目英文名')" :disabled="isEdit"
-          v-model="formData.english_name"></bk-input>
+          class="create-input"
+          :placeholder="$t('请输入2-32字符的小写字母、数字、中划线，以小写字母开头')"
+          :disabled="isEdit"
+          v-model="formData.projectCode">
+        </bk-input>
       </bk-form-item>
       <bk-form-item :label="$t('项目说明')" property="description" error-display-type="normal" required>
         <bk-input
@@ -35,8 +38,9 @@
 <script lang="ts">
 /* eslint-disable camelcase */
 import { computed, defineComponent, ref, toRefs, watch } from '@vue/composition-api';
-import { createProject, editProject } from '@/api/base';
 import useFormLabel from '@/common/use-form-label';
+import useProjects from '../app/use-project';
+
 export default defineComponent({
   name: 'ProjectCreate',
   model: {
@@ -57,38 +61,39 @@ export default defineComponent({
     const { projectData, value } = toRefs(props);
     const { emit } = ctx;
     const { $bkMessage, $i18n, $store } = ctx.root;
+    const { updateProject, createProject } = useProjects();
     const bkFormRef = ref<any>(null);
     const formData = ref({
-      project_name: projectData?.value?.project_name,
-      english_name: projectData?.value?.english_name,
+      name: projectData?.value?.name,
+      projectCode: projectData?.value?.projectCode,
       description: projectData?.value?.description,
     });
     const rules = ref({
-      project_name: [
+      name: [
         {
           required: true,
           message: $i18n.t('必填项'),
           trigger: 'blur',
         },
         {
-          message: $i18n.t('请输入4-12字符的项目名称'),
+          message: $i18n.t('请输入1-32字符的项目名称'),
           trigger: 'blur',
           validator(value) {
-            return /^[\w\W]{4,12}$/g.test(value);
+            return /^[\w\W]{1,32}$/g.test(value);
           },
         },
       ],
-      english_name: [
+      projectCode: [
         {
           required: true,
           message: $i18n.t('必填项'),
           trigger: 'blur',
         },
         {
-          message: $i18n.t('请输入3-32字符,以小写字母开头的项目英文名'),
+          message: $i18n.t('请输入2-32字符的小写字母、数字、中划线，以小写字母开头'),
           trigger: 'blur',
           validator(value) {
-            return /^[a-z][a-z0-9]{2,31}$/g.test(value);
+            return /^[a-z][a-z0-9-]{1,31}$/g.test(value);
           },
         },
       ],
@@ -103,8 +108,8 @@ export default defineComponent({
     watch(value, (isShow) => {
       if (isShow) {
         formData.value = {
-          project_name: projectData?.value?.project_name,
-          english_name: projectData?.value?.english_name,
+          name: projectData?.value?.name,
+          projectCode: projectData?.value?.projectCode,
           description: projectData?.value?.description,
         };
         setTimeout(() => {
@@ -113,35 +118,29 @@ export default defineComponent({
       }
     });
     const loading = ref(false);
-    const isEdit = computed(() => projectData?.value && Object.keys(projectData.value).length);
+    const isEdit = computed(() => !!(projectData?.value && Object.keys(projectData.value).length));
     const handleChange = (value) => {
       emit('change', value);
     };
     const handleCreateProject = async () => {
       const result = await createProject({
-        bg_id: '',
-        bg_name: '',
-        center_id: '',
-        center_name: '',
-        deploy_type: [],
-        dept_id: '',
-        dept_name: '',
         description: formData.value.description,
-        english_name: formData.value.english_name,
-        is_secrecy: false,
-        kind: '',
-        project_name: formData.value.project_name,
-        project_type: '',
-      }).catch(() => false);
+        name: formData.value.name,
+        projectCode: formData.value.projectCode,
+      });
 
       return result;
     };
     const handleEditProject = async () => {
-      const result = await editProject({
-        description: formData.value.description,
-        project_name: formData.value.project_name,
-        $projectId: projectData.value.project_id,
-      }).catch(() => false);
+      const result = await updateProject(Object.assign(
+        {},
+        projectData.value,
+        {
+          description: formData.value.description,
+          name: formData.value.name,
+          $projectId: projectData.value.projectID,
+        },
+      ));
 
       return result;
     };
