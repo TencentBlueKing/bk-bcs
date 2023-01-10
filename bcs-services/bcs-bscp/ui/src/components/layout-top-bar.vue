@@ -7,7 +7,9 @@
       <slot name="head"></slot>
     </section>
     <section class="layout-content-section">
-      <slot></slot>
+      <section class="layout-content-container">
+        <slot></slot>
+      </section>
     </section>
   </div>
 </template>
@@ -24,12 +26,19 @@
   .layout-top-section {
     height: 52px;
     background: #ffffff;
+    border-bottom: 1px solid #dcdee5;
     box-shadow: 0 3px 4px 0 rgba(0, 0, 0, 0.04);
+    z-index: 1;
   }
 
   .layout-content-section {
     height: calc(100vh - 104px);
     overflow: auto;
+  }
+
+  .layout-content-container {
+    height: 100%;
+    min-width: 1366px;
   }
 }
 </style>

@@ -3,7 +3,7 @@ import ServingContent from "./serving-content.vue";
 </script>
 
 <template>
-  <ServingContent />
+  <ServingContent type="mine" />
 </template>
 
 

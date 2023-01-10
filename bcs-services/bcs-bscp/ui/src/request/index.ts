@@ -3,8 +3,8 @@ import jsCookie from 'js-cookie';
 import BkMessage from 'bkui-vue/lib/message';
 
 export const getEnvParams = () => {
-  const { BK_CC_API, BK_BCS_API, BK_APP_CODE, BK_APP_SECRET } = window as any;
-  return { BK_CC_API, BK_BCS_API, BK_APP_CODE, BK_APP_SECRET };
+  const { BK_CC_API, BK_BCS_BSCP_API, BK_APP_CODE, BK_APP_SECRET } = window as any;
+  return { BK_CC_API, BK_BCS_BSCP_API, BK_APP_CODE, BK_APP_SECRET };
 }
 
 export const EnvParams = {
@@ -14,11 +14,11 @@ export const EnvParams = {
 export const BASE_URI: any = {
   PRO: {
     CC_API: EnvParams.BK_CC_API,
-    BSCP_API: EnvParams.BK_BCS_API,
+    BK_BCS_BSCP_API: EnvParams.BK_BCS_BSCP_API,
   },
   DEV: {
     CC_API: EnvParams.BK_CC_API,
-    BSCP_API: EnvParams.BK_BCS_API,
+    BK_BCS_BSCP_API: EnvParams.BK_BCS_BSCP_API,
   },
 };
 
@@ -41,10 +41,10 @@ const getSharedParams = () => {
   const curLang = jsCookie.get('blueking_language');
 
   return {
-    bk_app_code: EnvParams.BK_APP_CODE,
-    bk_app_secret: EnvParams.BK_APP_SECRET,
-    bk_ticket: jsCookie.get('bk_ticket'),
-    bk_username: jsCookie.get('bk_uid'),
+    // bk_app_code: EnvParams.BK_APP_CODE,
+    // bk_app_secret: EnvParams.BK_APP_SECRET,
+    // bk_ticket: jsCookie.get('bk_ticket'),
+    // bk_username: jsCookie.get('bk_uid'),
   };
 };
 
@@ -78,7 +78,7 @@ export class BkHttpResponse {
       return validate;
     }
 
-    return this.response.result;
+    return this.response.code === 0 || this.response.result;
   }
 
   validate(showSuccess = false, showError = true, validateFn?: (resp: IHttpResponse) => boolean) {
@@ -108,7 +108,9 @@ export const BkRequest = (name: string, params: any, method: string = 'post', ba
     .create({
       baseURL,
       withCredentials: true,
-      headers: { 'X-Requested-With': 'XMLHttpRequest' },
+      headers: {
+        'X-Requested-With': 'XMLHttpRequest',
+      },
       responseType: 'json',
     })
     .request({
@@ -124,8 +126,8 @@ export const BkRequest = (name: string, params: any, method: string = 'post', ba
       return Promise.reject(err);
     });
 
-export const CC_Request = (name: string, params: any = {}, method: string = 'post', env = 'DEV') =>
-  BkRequest(name, params, method, `${BASE_URI[env]?.CC_API}/api/c/compapi/v2/cc/`);
+export const CC_Request = (name: string, params: any = {}, method: string = 'get', env = 'DEV') =>
+  BkRequest(name, params, method, `${BASE_URI[env]?.BK_BCS_BSCP_API}/api/c/compapi/v2/cc/`);
 
-export const Self_Request = (name: string, params: any = {}, method: string = 'post', env = 'DEV') =>
-  BkRequest(name, params, method, `${BASE_URI[env]?.BSCP_API}/api/v1/`);
+export const Self_Request = (name: string, params: any = {}, method: string = 'get', env = 'DEV') =>
+  BkRequest(name, params, method, `${BASE_URI[env]?.BK_BCS_BSCP_API}/api/v1/`);
