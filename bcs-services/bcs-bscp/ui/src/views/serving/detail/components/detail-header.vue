@@ -19,9 +19,11 @@
   }
   const activeTab = ref(getDefaultTab())
 
-  const handleTabChange = (val) => {
+  const handleTabChange = (val: string) => {
     const tab = tabs.value.find(item => item.name === val)
-    router.push({ name: tab.routeName })
+    if (tab) {
+      router.push({ name: tab.routeName })
+    }
   }
   
 </script>

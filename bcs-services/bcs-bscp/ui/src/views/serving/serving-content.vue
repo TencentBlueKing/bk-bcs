@@ -1,11 +1,34 @@
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref, watch, defineProps } from "vue";
+import { computed, onMounted, ref, Ref, watch, defineProps } from "vue";
 import { useRouter } from 'vue-router'
 import { Plus, Del } from "bkui-vue/lib/icon";
 import InfoBox from "bkui-vue/lib/info-box";
 import { useI18n } from "vue-i18n";
 import { deleteApp, getAppList, getBizList, createApp, updateApp, IAppListQuery } from "../../api";
-import { FilterOp, RuleOp } from '../../constants/index'
+
+type IServingItem = {
+  id?: number,
+  biz_id: number,
+  spec: {
+    name: string,
+    deploy_type: string,
+    config_type: string,
+    mode: string,
+    memo: string,
+    reload: {
+      file_reload_spec: {
+        reload_file_path: string
+      },
+      reload_type: string
+    }
+  },
+  revision: {
+    creator: string,
+    reviser: string,
+    create_at: string,
+    update_at: string,
+  }
+}
 
 const router = useRouter()
 const { t } = useI18n();
@@ -19,7 +42,7 @@ const pagination = ref({
   limit: 50,
   count: 0,
 });
-const servingList = ref([])
+const servingList = ref([]) as Ref<IServingItem[]>
 
 const isEmpty = computed(() => {
   return servingList.value.length === 0;
@@ -181,7 +204,7 @@ const handleItemMemoBlur = () => {
   updateApp({ id, biz_id, data }).then(resp => resp.validate(true));
 }
 
-const handleNameInputChange = (val) => {
+const handleNameInputChange = (val: string) => {
   if (!val) {
     handleSearch()
   }

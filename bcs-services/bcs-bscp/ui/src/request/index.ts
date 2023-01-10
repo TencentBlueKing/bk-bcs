@@ -52,7 +52,7 @@ export interface IHttpResponse {
   result: boolean,
   code: number,
   message: string,
-  data: Record<string, any> | string | number | boolean | null | undefined,
+  data: any,
   request_id: string,
   permission: Record<string, any>
 }

@@ -9,7 +9,7 @@
     }
   })
 
-  const codeEditorRef = ref(null)
+  const codeEditorRef = ref()
   let editor: monaco.editor.IStandaloneCodeEditor
   const val = ref('')
 
@@ -34,7 +34,7 @@
 <template>
   <section class="code-editor-wrapper" :style="`height: ${height}px`" ref="codeEditorRef"></section>
 </template>
-<style lang="postcss" scoped>
+<style lang="scss" scoped>
   .code-editor-wrapper {
     .monaco-editor {
       width: 100%;

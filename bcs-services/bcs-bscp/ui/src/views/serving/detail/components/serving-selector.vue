@@ -1,7 +1,10 @@
 <script setup lang="ts">
-  import { ref, reactive } from 'vue'
+  import { ref, Ref } from 'vue'
 
-  const servingList = ref([])
+  type IServingItem = {
+    id: number
+  }
+  const servingList = ref([]) as Ref<IServingItem[]>
 </script>
 <template>
   <bk-select>

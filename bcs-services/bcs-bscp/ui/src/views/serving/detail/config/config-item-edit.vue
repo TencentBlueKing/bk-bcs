@@ -1,6 +1,6 @@
 <script setup lang="ts">
   import { defineProps, defineEmits, ref, computed, watch } from 'vue'
-  import cloneDeep from 'lodash.clonedeep'
+  import { cloneDeep } from 'lodash'
   import { InfoLine, Upload, FilliscreenLine } from 'bkui-vue/lib/icon'
   import CodeEditor from '../../../../components/code-editor/index.vue'
 
@@ -18,15 +18,15 @@
   const isShow = ref(props.show)
   const localVal = ref(cloneDeep(props.config))
   const pending = ref(false)
-  const formRef = ref(null)
+  const formRef = ref()
   const rules = {
     name: [
       {
-        validator: value => value.length < 64,
+        validator: (value: string) => value.length < 64,
         message: '最大长度64个字符'
       },
       {
-        validator: value => {
+        validator: (value: string) => {
           return /^[a-zA-Z0-9][a-zA-Z0-9_\-\.]*[a-zA-Z0-9]?$/.test(value)
         },
         message: '请使用英文、数字、下划线、中划线、点，且必须以英文、数字开头和结尾'
@@ -34,7 +34,7 @@
     ],
     path: [
       {
-        validator: value => value.length < 256,
+        validator: (value: string) => value.length < 256,
         message: '最大长度256个字符'
       }
     ],
