@@ -417,7 +417,7 @@ func loadConfig() {
 	}
 
 	if len(config.Get("conf").String("")) > 0 {
-		err = config.Load(microFile.NewSource(microFile.WithPath(config.Get("conf").String(""))))
+		err = config.Load(microFile.NewSource(microFile.WithPath(config.Get("conf").String(""))), envSource)
 		if err != nil {
 			blog.Fatalf("load config from file failed, err %s", err.Error())
 		}
