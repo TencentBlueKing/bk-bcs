@@ -62,7 +62,7 @@ export default {
         if (isNaN(value)) {
           value = _self.$attrs.min === Number.MIN_SAFE_INTEGER ? 0 : _self.$attrs.min;
         }
-        _self.$emit('input', value, event);
+        _self.$emit('input', _self.parseNumber ? Number(value) : String(value), event);
       };
     }
 
