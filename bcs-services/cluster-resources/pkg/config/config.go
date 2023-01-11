@@ -47,6 +47,32 @@ func LoadConf(filePath string) (*ClusterResourcesConf, error) {
 	if err = yaml.Unmarshal(yamlFile, conf); err != nil {
 		return nil, err
 	}
+
+	//  变量 fallback to env
+	if conf.Global.Basic.AppCode == "" {
+		conf.Global.Basic.AppCode = envs.BKAppCode
+	}
+	if conf.Global.Basic.AppSecret == "" {
+		conf.Global.Basic.AppSecret = envs.BKAppSecret
+	}
+	if conf.Global.Basic.BKAPIGWHost == "" {
+		conf.Global.Basic.BKAPIGWHost = envs.BKIAMGatewayHost
+	}
+	if conf.Global.Basic.BKPaaSHost == "" {
+		conf.Global.Basic.BKPaaSHost = envs.BKPaaSHost
+	}
+
+	if conf.Global.IAM.SystemID == "" {
+		conf.Global.IAM.SystemID = envs.BKIAMSystemID
+	}
+	if conf.Global.IAM.Host == "" {
+		conf.Global.IAM.Host = envs.BKIAMHost
+	}
+
+	if conf.Redis.Password == "" {
+		conf.Redis.Password = envs.RedisPassword
+	}
+
 	for _, f := range []func() error{
 		// 初始化 Server.Address
 		conf.initServerAddress,
