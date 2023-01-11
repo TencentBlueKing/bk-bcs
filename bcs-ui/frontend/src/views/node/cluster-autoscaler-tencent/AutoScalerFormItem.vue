@@ -106,7 +106,6 @@ export default defineComponent({
       margin-top: 0;
       font-size: 12px;
       width: 100%;
-      user-select: none;
   }
   .bk-label {
       font-size: 12px;

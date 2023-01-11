@@ -357,7 +357,7 @@
           <template #default="{ row }">
             <bcs-button
               text
-              v-if="taskStatusColorMap[row.task.status] === 'red'"
+              v-if="row.task && taskStatusColorMap[row.task.status] === 'red'"
               @click="handleRetryTask(row)">{{$t('重试')}}</bcs-button>
             <span v-else>--</span>
           </template>
@@ -974,8 +974,11 @@ export default defineComponent({
         limit: recordPagination.value.limit,
         page: recordPagination.value.current,
       });
-      recordList.value = results;
-      if (recordList.value.some(row => row.task.status === 'RUNNING')) {
+      recordList.value = results.map(item => ({
+        ...item,
+        taskID: item.taskID || Math.random() * 1000,
+      }));
+      if (recordList.value.some(row => row.task?.status === 'RUNNING')) {
         startTaskPool();
       } else {
         stopTaskPool();

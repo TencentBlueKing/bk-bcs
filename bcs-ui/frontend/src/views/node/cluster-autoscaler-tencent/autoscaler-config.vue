@@ -59,7 +59,7 @@
           <bk-radio-group v-model="autoscalerData.expander">
             <bk-radio value="random">Random</bk-radio>
             <bk-radio value="least-waste">Least Waste</bk-radio>
-            <bk-radio value="most-pod">Most Pods</bk-radio>
+            <bk-radio value="most-pods">Most Pods</bk-radio>
           </bk-radio-group>
         </bk-form-item>
         <bk-form-item :label="$t('触发扩容资源阈值')">
