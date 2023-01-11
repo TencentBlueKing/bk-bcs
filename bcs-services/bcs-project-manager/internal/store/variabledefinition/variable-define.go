@@ -17,6 +17,7 @@ package variabledefinition
 import (
 	"context"
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 
@@ -152,13 +153,17 @@ var SystemVariables = map[string]*VariableDefinition{
 	},
 }
 
-// FilterSystemVariablesByScope filter system variables by scope
-func FilterSystemVariablesByScope(scope []string) []*VariableDefinition {
+// FilterSystemVariables filter system variables
+func FilterSystemVariables(scope []string, searchKey string) []*VariableDefinition {
 	variables := []*VariableDefinition{}
 	for _, v := range SystemVariables {
-		if stringx.StringInSlice(v.Scope, scope) {
-			variables = append(variables, v)
+		if !stringx.StringInSlice(v.Scope, scope) {
+			continue
 		}
+		if searchKey != "" && !strings.Contains(strings.ToLower(v.Key), strings.ToLower(searchKey)) {
+			continue
+		}
+		variables = append(variables, v)
 	}
 	return variables
 }

@@ -280,7 +280,7 @@ func requestListNamespacesAndParse(req gorequest.SuperAgent) (*listNamespaceData
 
 	if resp.Code != 0 {
 		logging.Error("request paas-cc api error, code: %d, message: %s", resp.Code, resp.Message)
-		return nil, errorx.NewRequestBCSCCErr(err.Error())
+		return nil, errorx.NewRequestBCSCCErr(resp.Message)
 	}
 	return &resp.Data, nil
 }

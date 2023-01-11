@@ -17,6 +17,7 @@ proto:
 # build migration
 build-migration: tidy
 	go build -ldflags ${LDFLAGS} -o bcs-project-migration ./script/migrations/project/migrate.go
+	go build -ldflags ${LDFLAGS} -o bcs-variable-migration ./script/migrations/variable/migrate.go
 
 # build service
 build-main: tidy

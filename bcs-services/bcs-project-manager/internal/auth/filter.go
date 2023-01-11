@@ -31,20 +31,20 @@ func ListAuthorizedProjectIDs(username string) ([]string, bool, error) {
 	// 组装 iam request
 	iamReq := makeIAMRequest(username, ProjectView)
 	if err := iamReq.Validate(); err != nil {
-		return nil, false, err
+		return []string{}, false, err
 	}
 	// 获取 policy
 	policy, err := makeIAMPolicy(iamReq)
 	if err != nil || len(policy) == 0 {
-		return nil, false, err
+		return []string{}, false, err
 	}
 	f, err := makeFilter(policy)
 	if err != nil || len(f) == 0 {
-		return nil, false, err
+		return []string{}, false, err
 	}
 	// 解析policy values，获取project id
 	if f["op"] == iamOP.Any {
-		return nil, true, nil
+		return []string{}, true, nil
 	}
 	// value 为 []interface{}
 	val, _ := f["value"].([]interface{})

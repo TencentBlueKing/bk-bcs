@@ -50,10 +50,10 @@ func (la *ListAction) Do(ctx context.Context,
 	// inject system build in variables
 	var systems []*vdm.VariableDefinition
 	if la.req.GetScope() == "" {
-		systems = vdm.FilterSystemVariablesByScope(
-			[]string{vdm.VariableScopeGlobal, vdm.VariableScopeCluster, vdm.VariableScopeNamespace})
+		systems = vdm.FilterSystemVariables(
+			[]string{vdm.VariableScopeGlobal, vdm.VariableScopeCluster, vdm.VariableScopeNamespace}, req.GetSearchKey())
 	} else {
-		systems = vdm.FilterSystemVariablesByScope([]string{la.req.GetScope()})
+		systems = vdm.FilterSystemVariables([]string{la.req.GetScope()}, req.GetSearchKey())
 	}
 	if la.req.Offset == 0 {
 		variables = append(variables, systems...)

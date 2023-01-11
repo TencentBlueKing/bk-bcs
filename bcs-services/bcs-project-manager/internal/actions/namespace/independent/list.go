@@ -48,11 +48,12 @@ func (a *IndependentNamespaceAction) ListNamespaces(ctx context.Context,
 	if err != nil {
 		return errorx.NewClusterErr(err)
 	}
-	quotaList, err := client.CoreV1().ResourceQuotas("").List(ctx, metav1.ListOptions{})
 	quotaMap := map[string]corev1.ResourceQuota{}
-	for _, quota := range quotaList.Items {
-		if quota.GetName() == quota.GetNamespace() {
-			quotaMap[quota.GetName()] = quota
+	if quotaList, err := client.CoreV1().ResourceQuotas("").List(ctx, metav1.ListOptions{}); err == nil {
+		for _, quota := range quotaList.Items {
+			if quota.GetName() == quota.GetNamespace() {
+				quotaMap[quota.GetName()] = quota
+			}
 		}
 	}
 	variablesMap, err := batchListNamespaceVariables(ctx, req.GetProjectCode(), req.GetClusterID(), nsList.Items)

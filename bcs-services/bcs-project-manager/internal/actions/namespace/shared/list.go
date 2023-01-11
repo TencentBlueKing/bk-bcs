@@ -73,15 +73,12 @@ func (a *SharedNamespaceAction) ListNamespaces(ctx context.Context,
 		logging.Error("list namespaces in cluster %s failed, err: %s", req.GetClusterID(), err.Error())
 		return errorx.NewClusterErr(err)
 	}
-	quotaList, err := client.CoreV1().ResourceQuotas("").List(ctx, metav1.ListOptions{})
-	if err != nil {
-		logging.Error("list ResourceQuota in cluster %s failed, err: %s", req.GetClusterID(), err.Error())
-		return errorx.NewClusterErr(err)
-	}
 	quotaMap := map[string]corev1.ResourceQuota{}
-	for _, quota := range quotaList.Items {
-		if quota.GetName() == quota.GetNamespace() {
-			quotaMap[quota.GetName()] = quota
+	if quotaList, err := client.CoreV1().ResourceQuotas("").List(ctx, metav1.ListOptions{}); err == nil {
+		for _, quota := range quotaList.Items {
+			if quota.GetName() == quota.GetNamespace() {
+				quotaMap[quota.GetName()] = quota
+			}
 		}
 	}
 	namespaces := nsutils.FilterNamespaces(nsList, true, req.GetProjectCode())
