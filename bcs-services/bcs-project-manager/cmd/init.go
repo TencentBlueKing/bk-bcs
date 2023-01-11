@@ -126,7 +126,9 @@ func (p *ProjectService) Init() error {
 // Run helm manager server
 func (p *ProjectService) Run() error {
 	// manage namespace scheduled task
-	go p.namespaceManager.Run()
+	if p.opt.ITSM.Enable {
+		go p.namespaceManager.Run()
+	}
 	// run the service
 	if err := p.microSvc.Run(); err != nil {
 		logging.Error("run micro service failed, err: %s", err.Error())

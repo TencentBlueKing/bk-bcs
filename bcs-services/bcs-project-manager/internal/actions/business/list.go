@@ -16,6 +16,7 @@ package business
 
 import (
 	"context"
+	"strconv"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/cmdb"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store"
@@ -57,7 +58,7 @@ func (ga *ListAction) Do(ctx context.Context, req *proto.ListBusinessRequest) ([
 
 	for _, business := range searchData.Info {
 		retData := &proto.BusinessData{
-			BusinessID: uint32(business.BKBizID),
+			BusinessID: strconv.Itoa(int(business.BKBizID)),
 			Name:       business.BKBizName,
 			Maintainer: stringx.SplitString(business.BKBizMaintainer),
 		}

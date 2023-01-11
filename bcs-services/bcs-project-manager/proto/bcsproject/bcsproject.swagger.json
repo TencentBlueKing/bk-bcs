@@ -1628,8 +1628,7 @@
       "type": "object",
       "properties": {
         "businessID": {
-          "type": "integer",
-          "format": "int64",
+          "type": "string",
           "description": "业务ID",
           "title": "businessID"
         },
@@ -3007,6 +3006,11 @@
           "type": "string",
           "description": "中心名称, 保留字段, 默认为空",
           "title": "centerName"
+        },
+        "businessName": {
+          "type": "string",
+          "description": "项目绑定的蓝鲸CMDB中业务名称",
+          "title": "businessName"
         }
       },
       "description": "项目的基本信息",

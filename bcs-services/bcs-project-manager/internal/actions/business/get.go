@@ -16,6 +16,8 @@ package business
 
 import (
 	"context"
+	"fmt"
+	"strconv"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/cmdb"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store"
@@ -58,13 +60,14 @@ func (ga *GetAction) Do(ctx context.Context, req *proto.GetBusinessRequest) (*pr
 	}
 
 	if searchData.Count != 1 {
-		return nil, errorx.NewRequestCMDBErr(err.Error())
+		return nil, errorx.NewReadableErr(errorx.ParamErr,
+			fmt.Sprintf("can not find business %s", p.BusinessID))
 	}
 
 	businessInfo := searchData.Info[0]
 
 	retData := &proto.BusinessData{
-		BusinessID: uint32(businessInfo.BKBizID),
+		BusinessID: strconv.Itoa(int(businessInfo.BKBizID)),
 		Name:       businessInfo.BKBizName,
 		Maintainer: stringx.SplitString(businessInfo.BKBizMaintainer),
 	}

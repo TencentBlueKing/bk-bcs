@@ -208,6 +208,10 @@ message Project {
     title: "centerName", 
     description: "中心名称, 保留字段, 默认为空"
   }];
+  string businessName = 23[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "businessName", 
+    description: "项目绑定的蓝鲸CMDB中业务名称"
+  }];
 }
 
 message CreateProjectRequest {
@@ -696,7 +700,7 @@ message GetBusinessTopologyResponse{
 }
 
 message BusinessData {
-  uint32 businessID = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  string businessID = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title : "businessID",
     description: "业务ID"
   }];

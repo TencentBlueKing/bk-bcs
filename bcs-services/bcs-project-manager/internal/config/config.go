@@ -111,6 +111,7 @@ type IAMConfig struct {
 
 // ITSMConfig itsm操作需要的配置
 type ITSMConfig struct {
+	Enable                   bool   `yaml:"enable" usage:"enable ITSM sync"`
 	GatewayHost              string `yaml:"gatewayHost" usage:"gateway host"`
 	CreateNamespaceServiceID int    `yaml:"createNsSvcID" usage:"service id for create ns service"`
 	UpdateNamespaceServiceID int    `yaml:"updateNsSvcID" usage:"service id for update ns service"`

@@ -100,6 +100,8 @@ func (m *Project) validate(all bool) error {
 
 	// no validation rules for CenterName
 
+	// no validation rules for BusinessName
+
 	if len(errors) > 0 {
 		return ProjectMultiError(errors)
 	}
