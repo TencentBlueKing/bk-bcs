@@ -41,3 +41,4 @@ export const editProject = request2('put', '/projects/$projectId');
 export const fetchProjectList = request2('get', '/authorized_projects');
 export const fetchAllProjectList = request2('get', '/projects');
 export const businessList = request2('get', '/business');
+export const projectBusiness = request2('get', '/projects/$projectCode/business');
