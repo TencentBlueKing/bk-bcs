@@ -72,9 +72,6 @@ export const batchReschedulePod = request('put', `${CR_API_URL}/projects/$projec
 export const crdEnlargeCapacityChange = request('put', `${CR_API_URL}/projects/$projectId/clusters/$clusterId/crds/$crdName/custom_objects/$cobjName/scale`); // crd扩缩容
 export const batchRescheduleCrdPod = request('put', `${CR_API_URL}/projects/$projectId/clusters/$clusterId/crds/$crdName/custom_objects/$cobjName/reschedule`); // crd-pod批量重新调度
 
-// apply hosts
-export const getBizMaintainers = request('get', '/api/projects/$projectId/biz_maintainers/');
-
 // node
 export const fetchBizTopo = request('get', '/api/projects/$projectId/cc/topology/');
 export const fetchBizHosts = request('post', '/api/projects/$projectId/cc/hosts/');
@@ -209,7 +206,6 @@ export const nodeUnCordon = request('put', `${prefix}/clustermanager/v1/node/unc
 export default {
   dashbordList,
   projectFeatureFlag,
-  getBizMaintainers,
   podMetric,
   containerMetric,
   retrieveDetail,

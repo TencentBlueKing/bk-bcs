@@ -463,7 +463,7 @@ export default {
              */
     async getBizMaintainers() {
       const res = await this.$store.dispatch('cluster/getBizMaintainers');
-      this.maintainers = res.maintainers;
+      this.maintainers = res.maintainer;
       this.hasAuth = this.maintainers.includes(this.userInfo.username);
     },
     /**

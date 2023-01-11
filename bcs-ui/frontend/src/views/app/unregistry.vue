@@ -30,8 +30,8 @@
             searchable>
             <bcs-option
               v-for="item in ccList"
-              :key="item.id"
-              :id="item.id"
+              :key="item.businessID"
+              :id="String(item.businessID)"
               :name="item.name">
             </bcs-option>
           </bcs-select>
@@ -170,11 +170,8 @@ export default {
     async fetchCCList() {
       if (!this.curProject.project_id) return;
 
-      const res = await this.$store.dispatch('getCCList', {
-        project_kind: this.kind,
-        project_id: this.curProject.project_id,
-      }).catch(() => ({ data: [] }));
-      this.ccList = [...(res.data || [])];
+      const { getBusinessList } = useProject();
+      this.ccList = await getBusinessList();
     },
   },
 };
