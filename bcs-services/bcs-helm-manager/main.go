@@ -24,6 +24,7 @@ import (
 	"github.com/micro/go-micro/v2/config/encoder/yaml"
 	"github.com/micro/go-micro/v2/config/reader"
 	"github.com/micro/go-micro/v2/config/reader/json"
+	"github.com/micro/go-micro/v2/config/source/env"
 	microFile "github.com/micro/go-micro/v2/config/source/file"
 	microFlg "github.com/micro/go-micro/v2/config/source/flag"
 )
@@ -53,8 +54,12 @@ func main() {
 		blog.Fatalf("load config from flag failed, %s", err.Error())
 	}
 
+	envSource := env.NewSource(
+		env.WithStrippedPrefix("HELM"),
+	)
+
 	if len(config.Get("conf").String("")) > 0 {
-		err = config.Load(microFile.NewSource(microFile.WithPath(config.Get("conf").String(""))))
+		err = config.Load(microFile.NewSource(microFile.WithPath(config.Get("conf").String(""))), envSource)
 		if err != nil {
 			blog.Fatalf("load config from file failed, err %s", err.Error())
 		}
