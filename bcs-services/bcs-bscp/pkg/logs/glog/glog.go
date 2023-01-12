@@ -269,7 +269,10 @@ func (m *modulePat) match(file string) bool {
 	if m.literal {
 		return file == m.pattern
 	}
-	match, _ := filepath.Match(m.pattern, file)
+	match, err := filepath.Match(m.pattern, file)
+	if err != nil {
+		panic(fmt.Sprintf("file path match fail, error: %v", err))
+	}
 	return match
 }
 
@@ -420,8 +423,8 @@ func init() {
 	logging.stderrThreshold = errorLog
 	logging.toStderr = false
 	logging.alsoToStderr = false
-	_ = logging.vmodule.Set("")
-	_ = logging.traceLocation.Set("")
+	logging.vmodule.Set("")
+	logging.traceLocation.Set("")
 
 	logging.setVState(0, nil, false)
 	go logging.flushDaemon()

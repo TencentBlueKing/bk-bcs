@@ -46,7 +46,7 @@ func (c *client) GetReleasedCI(kt *kit.Kit, bizID uint32, releaseID uint32) (str
 	if state.Acquired || (!state.Acquired && state.WithLimit) {
 
 		start := time.Now()
-		ci, err := c.refreshReleasedCICache(kt, bizID, releaseID)
+		ci, err = c.refreshReleasedCICache(kt, bizID, releaseID)
 		if err != nil {
 			state.Release(true)
 			return "", err

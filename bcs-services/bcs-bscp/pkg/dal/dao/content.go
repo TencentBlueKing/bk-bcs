@@ -79,7 +79,7 @@ func (dao *contentDao) Create(kit *kit.Kit, content *table.Content) (uint32, err
 
 			// audit this to be create content details.
 			au := &AuditOption{Txn: txn, ResShardingUid: opt.ShardingUid}
-			if err := dao.auditDao.Decorator(kit, content.Attachment.BizID,
+			if err = dao.auditDao.Decorator(kit, content.Attachment.BizID,
 				enumor.Content).AuditCreate(content, au); err != nil {
 				return fmt.Errorf("audit create content failed, err: %v", err)
 			}
@@ -134,7 +134,8 @@ func (dao *contentDao) List(kit *kit.Kit, opts *types.ListContentsOption) (
 	if opts.Page.Count {
 		// this is a count request, then do count operation only.
 		sql = fmt.Sprintf(`SELECT COUNT(*) FROM %s %s`, table.ContentTable, whereExpr)
-		count, err := dao.orm.Do(dao.sd.ShardingOne(opts.BizID).DB()).Count(kit.Ctx, sql)
+		var count uint32
+		count, err = dao.orm.Do(dao.sd.ShardingOne(opts.BizID).DB()).Count(kit.Ctx, sql)
 		if err != nil {
 			return nil, err
 		}

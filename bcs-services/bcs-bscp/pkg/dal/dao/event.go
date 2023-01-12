@@ -222,7 +222,8 @@ func (ed *eventDao) List(kt *kit.Kit, opts *types.ListEventsOption) (*types.List
 	if opts.Page.Count {
 		// this is a count request, then do count operation only.
 		sql := fmt.Sprintf(`SELECT COUNT(*) FROM %s %s`, table.EventTable, whereExpr)
-		count, err := ed.orm.Do(ed.sd.Event().DB()).Count(kt.Ctx, sql)
+		var count uint32
+		count, err = ed.orm.Do(ed.sd.Event().DB()).Count(kt.Ctx, sql)
 		if err != nil {
 			return nil, err
 		}

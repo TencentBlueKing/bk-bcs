@@ -44,8 +44,9 @@ func (c *client) GetAppMeta(kt *kit.Kit, bizID uint32, appID uint32) (string, er
 	// do not find app in the cache, then try get from db directly.
 	state := c.rLock.Acquire(keys.ResKind.AppMeta(appID))
 	if state.Acquired || (!state.Acquired && state.WithLimit) {
+		var appMeta string
 		start := time.Now()
-		appMeta, err := c.refreshAppMetaCache(kt, bizID, appID)
+		appMeta, err = c.refreshAppMetaCache(kt, bizID, appID)
 		if err != nil {
 			state.Release(true)
 			return "", err

@@ -79,7 +79,7 @@ func (dao *commitDao) Create(kit *kit.Kit, commit *table.Commit) (uint32, error)
 
 			// audit this to be create commit details.
 			au := &AuditOption{Txn: txn, ResShardingUid: opt.ShardingUid}
-			if err := dao.auditDao.Decorator(kit, commit.Attachment.BizID,
+			if err = dao.auditDao.Decorator(kit, commit.Attachment.BizID,
 				enumor.Content).AuditCreate(commit, au); err != nil {
 				return fmt.Errorf("audit create commit failed, err: %v", err)
 			}
@@ -134,7 +134,8 @@ func (dao *commitDao) List(kit *kit.Kit, opts *types.ListCommitsOption) (
 	if opts.Page.Count {
 		// this is a count request, then do count operation only.
 		sql = fmt.Sprintf(`SELECT COUNT(*) FROM %s %s`, table.CommitsTable, whereExpr)
-		count, err := dao.orm.Do(dao.sd.ShardingOne(opts.BizID).DB()).Count(kit.Ctx, sql)
+		var count uint32
+		count, err = dao.orm.Do(dao.sd.ShardingOne(opts.BizID).DB()).Count(kit.Ctx, sql)
 		if err != nil {
 			return nil, err
 		}

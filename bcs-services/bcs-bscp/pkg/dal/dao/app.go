@@ -138,7 +138,7 @@ func (ap *appDao) Create(kit *kit.Kit, app *table.App) (uint32, error) {
 
 		// audit this to be create app details.
 		au := &AuditOption{Txn: txn, ResShardingUid: opt.ShardingUid}
-		if err := ap.auditDao.Decorator(kit, app.BizID, enumor.App).AuditCreate(app, au); err != nil {
+		if err = ap.auditDao.Decorator(kit, app.BizID, enumor.App).AuditCreate(app, au); err != nil {
 			return fmt.Errorf("audit create app failed, err: %v", err)
 		}
 
@@ -152,7 +152,7 @@ func (ap *appDao) Create(kit *kit.Kit, app *table.App) (uint32, error) {
 			Attachment: &table.EventAttachment{BizID: app.BizID, AppID: app.ID},
 			Revision:   &table.CreatedRevision{Creator: kit.User, CreatedAt: time.Now()},
 		}
-		if err := eDecorator.Fire(one); err != nil {
+		if err = eDecorator.Fire(one); err != nil {
 			logs.Errorf("fire create app: %s event failed, err: %v, rid: %s", app.ID, err, kit.Rid)
 			return errf.New(errf.DBOpFailed, "fire event failed, "+err.Error())
 		}

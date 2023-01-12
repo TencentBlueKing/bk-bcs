@@ -29,19 +29,19 @@ import (
 
 // CreateContent create content.
 func (s *Service) CreateContent(ctx context.Context, req *pbds.CreateContentReq) (*pbds.CreateResp, error) {
-	kit := kit.FromGrpcContext(ctx)
+	grpcKit := kit.FromGrpcContext(ctx)
 
 	content := &table.Content{
 		Spec:       req.Spec.ContentSpec(),
 		Attachment: req.Attachment.ContentAttachment(),
 		Revision: &table.CreatedRevision{
-			Creator:   kit.User,
+			Creator:   grpcKit.User,
 			CreatedAt: time.Now(),
 		},
 	}
-	id, err := s.dao.Content().Create(kit, content)
+	id, err := s.dao.Content().Create(grpcKit, content)
 	if err != nil {
-		logs.Errorf("create content failed, err: %v, rid: %s", err, kit.Rid)
+		logs.Errorf("create content failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
 	}
 
@@ -51,12 +51,12 @@ func (s *Service) CreateContent(ctx context.Context, req *pbds.CreateContentReq)
 
 // ListContents list contents by query condition.
 func (s *Service) ListContents(ctx context.Context, req *pbds.ListContentsReq) (*pbds.ListContentsResp, error) {
-	kit := kit.FromGrpcContext(ctx)
+	grpcKit := kit.FromGrpcContext(ctx)
 
 	// parse pb struct filter to filter.Expression.
 	filter, err := pbbase.UnmarshalFromPbStructToExpr(req.Filter)
 	if err != nil {
-		logs.Errorf("unmarshal pb struct to expression failed, err: %v, rid: %s", err, kit.Rid)
+		logs.Errorf("unmarshal pb struct to expression failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
 	}
 
@@ -67,9 +67,9 @@ func (s *Service) ListContents(ctx context.Context, req *pbds.ListContentsReq) (
 		Page:   req.Page.BasePage(),
 	}
 
-	details, err := s.dao.Content().List(kit, query)
+	details, err := s.dao.Content().List(grpcKit, query)
 	if err != nil {
-		logs.Errorf("list content failed, err: %v, rid: %s", err, kit.Rid)
+		logs.Errorf("list content failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
 	}
 

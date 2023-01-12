@@ -25,6 +25,7 @@ type HostConf struct {
 	BKMonitorHOst         string `yaml:"bk_monitor_host"`
 }
 
+// FrontendConf 配置
 type FrontendConf struct {
 	Docs map[string]string `yaml:"docs"`
 	Host *HostConf         `yaml:"hosts"`
