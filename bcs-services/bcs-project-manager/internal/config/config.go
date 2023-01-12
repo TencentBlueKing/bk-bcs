@@ -144,8 +144,10 @@ type CMDBConfig struct {
 
 // BCSCCConfig 请求的 bcs cc 服务配置
 type BCSCCConfig struct {
-	Enable bool   `yaml:"enable" usage:"enable bcs cc double write"`
-	Host   string `yaml:"host" usage:"access bcs cc api host"`
+	Enable     bool   `yaml:"enable" usage:"enable bcs cc double write"`
+	Host       string `yaml:"host" usage:"access bcs cc api host"`
+	SSMHost    string `yaml:"ssmHost" usage:"ssm host"`
+	UseGateway bool   `yaml:"useGateway" usage:"whether to access the bcscc through a gateway"`
 }
 
 // BCSGatewayConfig BCS 网关配置

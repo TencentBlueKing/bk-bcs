@@ -16,6 +16,7 @@ package component
 
 import (
 	"errors"
+	"fmt"
 	"time"
 
 	goReq "github.com/parnurzeal/gorequest"
@@ -28,6 +29,15 @@ import (
 func Request(req goReq.SuperAgent, timeout int, proxy string, headers map[string]string) (string, error) {
 	client := goReq.New().Timeout(time.Duration(timeout) * time.Second)
 	// request by method
+	index := 0
+	for k, _ := range req.QueryData {
+		if index == 0 {
+			req.Url = fmt.Sprintf("%s?%s=%s", req.Url, k, req.QueryData.Get(k))
+		} else {
+			req.Url = fmt.Sprintf("%s&%s=%s", req.Url, k, req.QueryData.Get(k))
+		}
+		index++
+	}
 	client = client.CustomMethod(req.Method, req.Url)
 	// set proxy
 	if proxy != "" {
@@ -37,8 +47,12 @@ func Request(req goReq.SuperAgent, timeout int, proxy string, headers map[string
 	for key, val := range headers {
 		client = client.Set(key, val)
 	}
+	for key, _ := range req.Header {
+		client = client.Set(key, req.Header.Get(key))
+	}
 	// request data
-	client = client.Send(req.QueryData).Send(req.Data)
+
+	client = client.Send(req.Data)
 	client = client.SetDebug(req.Debug)
 	_, body, errs := client.End()
 

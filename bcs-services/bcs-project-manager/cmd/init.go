@@ -42,6 +42,7 @@ import (
 	grpcCred "google.golang.org/grpc/credentials"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/auth"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/cache"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/clientset"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/clustermanager"
@@ -105,6 +106,7 @@ func (p *ProjectService) Init() error {
 	for _, f := range []func() error{
 		p.initTLSConfig,
 		p.initMongo,
+		p.initCache,
 		p.initEtcd,
 		p.initRegistry,
 		p.initDiscovery,
@@ -180,6 +182,12 @@ func (p *ProjectService) initMongo() error {
 	store.InitModel(store.GetMongo())
 	p.model = store.GetModel()
 	logging.Info("init mongo successfully")
+	return nil
+}
+
+// initCache init cache
+func (p *ProjectService) initCache() error {
+	cache.InitCache()
 	return nil
 }
 
