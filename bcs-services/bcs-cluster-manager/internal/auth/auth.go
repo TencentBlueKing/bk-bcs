@@ -31,15 +31,26 @@ import (
 
 // NoAuthMethod 不需要用户身份认证的方法
 var NoAuthMethod = []string{
+	// 集群相关
+	"ClusterManager.ListCluster",
+	"ClusterManager.GetCluster",
+	"ClusterManager.GetNodeInfo",
 	"ClusterManager.CheckCloudKubeConfig",
 	"ClusterManager.ListCommonCluster",
 	"ClusterManager.CheckNodeInCluster",
+	// credential
+	"ClusterManager.GetClusterCredential",
+	"ClusterManager.UpdateClusterCredential",
+	"ClusterManager.DeleteClusterCredential",
+	"ClusterManager.ListClusterCredential",
+	// cloud
 	"ClusterManager.GetCloud",
 	"ClusterManager.ListCloud",
+	// vpc
 	"ClusterManager.ListCloudVPC",
 	"ClusterManager.ListCloudRegions",
 	"ClusterManager.GetVPCCidr",
-	"ClusterManager.ListCloudAccountToPerm",
+	// cloud resource && support interface
 	"ClusterManager.GetCloudRegions",
 	"ClusterManager.GetCloudRegionZones",
 	"ClusterManager.ListCloudRegionCluster",
@@ -49,8 +60,47 @@ var NoAuthMethod = []string{
 	"ClusterManager.ListCloudOsImage",
 	"ClusterManager.ListOperationLogs",
 	"ClusterManager.ListResourceSchema",
+	"ClusterManager.GetResourceSchema",
 	"ClusterManager.QueryPermByActionID",
+	"ClusterManager.ListBKCloud",
+	"ClusterManager.ListCCTopology",
+	"ClusterManager.GetBkSopsTemplateList",
+	"ClusterManager.GetBkSopsTemplateInfo",
+	"ClusterManager.GetInnerTemplateValues",
+	"ClusterManager.DebugBkSopsTask",
 	"ClusterManager.Health",
+	"ClusterManager.GetExternalNodeScriptByGroupID",
+
+	// nodeGroup resource
+	"ClusterManager.GetNodeGroup",
+	"ClusterManager.ListNodeGroup",
+	"ClusterManager.ListNodesInGroup",
+	"ClusterManager.ListNodesInGroupV2",
+	"ClusterManager.UpdateGroupDesiredSize",
+	"ClusterManager.UpdateGroupMinMaxSize",
+
+	// task resource
+	"ClusterManager.RetryTask",
+	"ClusterManager.GetTask",
+	"ClusterManager.ListTask",
+
+	// CA paras resource
+	"ClusterManager.GetAutoScalingOption",
+	"ClusterManager.ListAutoScalingOption",
+
+	// nodeTemplate
+	"ClusterManager.CreateNodeTemplate",
+	"ClusterManager.UpdateNodeTemplate",
+	"ClusterManager.DeleteNodeTemplate",
+	"ClusterManager.ListNodeTemplate",
+	"ClusterManager.GetNodeTemplate",
+
+	// cloud account
+	"ClusterManager.ListCloudAccount",
+	"ClusterManager.ListCloudAccountToPerm",
+
+	// cloud module flag
+	"ClusterManager.ListCloudModuleFlag",
 }
 
 // ClientPermissions client 类型用户拥有的权限，clientID -> actions
