@@ -15,14 +15,15 @@ package azure
 
 import (
 	"fmt"
-	"strings"
 
-	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/cloud"
-	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/constant"
-	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
 	"github.com/pkg/errors"
 	k8scorev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/cloud"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/constant"
+	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
 )
 
 // Alb client to operate Azure lb and appGateway instance
@@ -120,9 +121,19 @@ func (a *Alb) EnsureListener(region string, listener *networkextensionv1.Listene
 	}
 	switch listener.Spec.Protocol {
 	case AzureProtocolTCP, AzureProtocolUDP:
-		return a.ensureLoadBalancerListener(region, listener)
+		retMap, err := a.ensureLoadBalancerListener(region, []*networkextensionv1.Listener{listener})
+		if err != nil {
+			return "", err
+		}
+		if cloudRes, ok := retMap[listener.GetName()]; !ok {
+			return "", fmt.Errorf("ensure failed")
+		} else if cloudRes.IsError {
+			return "", cloudRes.Err
+		}
+		return listener.GetName(), nil
 	case AzureProtocolHTTP, AzureProtocolHTTPS:
-		return a.ensureApplicationGatewayListener(region, listener)
+		return listener.GetName(), a.ensureApplicationGatewayListener(region,
+			[]*networkextensionv1.Listener{listener})
 	default:
 		return "", fmt.Errorf("invalid protocol %s", listener.Spec.Protocol)
 	}
@@ -136,9 +147,9 @@ func (a *Alb) DeleteListener(region string, listener *networkextensionv1.Listene
 	}
 	switch listener.Spec.Protocol {
 	case AzureProtocolTCP, AzureProtocolUDP:
-		return a.deleteLoadBalancerListener(region, listener)
+		return a.deleteLoadBalancerListener(region, []*networkextensionv1.Listener{listener})
 	case AzureProtocolHTTP, AzureProtocolHTTPS:
-		return a.deleteApplicationGatewayListener(region, listener)
+		return a.deleteApplicationGatewayListener(region, []*networkextensionv1.Listener{listener})
 	default:
 		return fmt.Errorf("invalid protocol %s", listener.Spec.Protocol)
 	}
@@ -149,14 +160,52 @@ func (a *Alb) DeleteListener(region string, listener *networkextensionv1.Listene
 func (a *Alb) EnsureMultiListeners(region, lbID string, listeners []*networkextensionv1.Listener) (map[string]cloud.Result,
 	error) {
 	retMap := make(map[string]cloud.Result)
-	for _, listener := range listeners {
-		liName, err := a.EnsureListener(region, listener)
+	if len(listeners) == 0 {
+		return retMap, nil
+	}
+	listenerGroup := splitListenersToDiffProtocol(listeners)
+	for _, group := range listenerGroup {
+		if len(group) == 0 {
+			continue
+		}
+
+		var err error
+		switch group[0].Spec.Protocol {
+		case AzureProtocolTCP, AzureProtocolUDP:
+			l4RetMap, err := a.ensureLoadBalancerListener(region, group)
+			if err != nil {
+				for _, li := range group {
+					retMap[li.GetName()] = cloud.Result{IsError: true, Err: err}
+				}
+				continue
+			}
+			for liName, res := range l4RetMap {
+				retMap[liName] = res
+			}
+			continue
+		case AzureProtocolHTTP, AzureProtocolHTTPS:
+			err = a.ensureApplicationGatewayListener(region, group)
+		default:
+			err = fmt.Errorf("invalid protocol %s", group[0].Spec.Protocol)
+		}
+
 		if err != nil {
-			err = errors.Wrapf(err, "ensure multi listener failed in listener'%s/%s'", listener.GetNamespace(),
-				listener.GetName())
-			retMap[listener.Name] = cloud.Result{IsError: true, Err: err}
-		} else {
-			retMap[listener.Name] = cloud.Result{IsError: false, Res: liName}
+			err = errors.Wrapf(err, "ensure multi listener failed, protocol: %s", group[0].Spec.Protocol)
+			blog.Warnf("%s", err.Error())
+			for _, li := range group {
+				retMap[li.GetName()] = cloud.Result{
+					IsError: true,
+					Err:     err,
+				}
+			}
+			continue
+		}
+
+		for _, li := range group {
+			retMap[li.GetName()] = cloud.Result{
+				IsError: false,
+				Res:     li.GetName(),
+			}
 		}
 	}
 	return retMap, nil
@@ -164,11 +213,29 @@ func (a *Alb) EnsureMultiListeners(region, lbID string, listeners []*networkexte
 
 // DeleteMultiListeners delete multiple listeners from cloud
 func (a *Alb) DeleteMultiListeners(region, lbID string, listeners []*networkextensionv1.Listener) error {
-	for _, listener := range listeners {
-		err := a.DeleteListener(region, listener)
+	if len(listeners) == 0 {
+		return nil
+	}
+	listenerGroup := splitListenersToDiffProtocol(listeners)
+	for _, group := range listenerGroup {
+		if len(group) == 0 {
+			continue
+		}
+
+		var err error
+		switch group[0].Spec.Protocol {
+		case AzureProtocolTCP, AzureProtocolUDP:
+			err = a.deleteLoadBalancerListener(region, group)
+		case AzureProtocolHTTP, AzureProtocolHTTPS:
+			err = a.deleteApplicationGatewayListener(region, group)
+		default:
+			err = fmt.Errorf("invalid protocol %s", group[0].Spec.Protocol)
+		}
+
 		if err != nil {
-			return errors.Wrapf(err, "delete multi listener failed in listener: '%s/%s'",
-				listener.GetNamespace(), listener.Name)
+			err = errors.Wrapf(err, "delete multi listener failed, protocol: %s", group[0].Spec.Protocol)
+			blog.Warnf("%s", err.Error())
+			return err
 		}
 	}
 	return nil
@@ -176,46 +243,25 @@ func (a *Alb) DeleteMultiListeners(region, lbID string, listeners []*networkexte
 
 // EnsureSegmentListener ensure listener with port segment
 func (a *Alb) EnsureSegmentListener(region string, listener *networkextensionv1.Listener) (string, error) {
-	if listener.Spec.EndPort == 0 {
-		return a.EnsureListener(region, listener)
+	listenerList := splitSegListener([]*networkextensionv1.Listener{listener})
+	resMap, err := a.ensureLoadBalancerListener(region, listenerList)
+	if err != nil {
+		return "", err
 	}
-	// create listener for each port
-	portIndex := 0
-	listenerIds := make([]string, 0)
-	for i := listener.Spec.Port; i <= listener.Spec.EndPort; i++ {
-		// generate single port listener to ensure listener
-		li := listener.DeepCopy()
-		li.Spec.Port = i
-		li.Spec.EndPort = 0
-		if li.Spec.TargetGroup != nil {
-			for j := range li.Spec.TargetGroup.Backends {
-				li.Spec.TargetGroup.Backends[j].Port += portIndex
-			}
+	if res, ok := resMap[listener.GetName()]; ok {
+		if res.IsError {
+			return "", res.Err
 		}
-		portIndex++
-		liID, err := a.EnsureListener(region, li)
-		if err != nil {
-			return "", errors.Wrapf(err, "ensure listener %s(%d) failed", listener.Name, li.Spec.Port)
-		}
-		listenerIds = append(listenerIds, liID)
+		return res.Res, nil
 	}
-	return strings.Join(listenerIds, ","), nil
+	return "", fmt.Errorf("ensure failed")
 }
 
 // EnsureMultiSegmentListeners ensure multi segment listeners
 func (a *Alb) EnsureMultiSegmentListeners(region, lbID string, listeners []*networkextensionv1.Listener) (
 	map[string]cloud.Result, error) {
-	retMap := make(map[string]cloud.Result)
-	for _, listener := range listeners {
-		liID, err := a.EnsureSegmentListener(region, listener)
-		if err != nil {
-			err = errors.Wrapf(err, "ensure multi segment listener failed in %s", listener.Name)
-			retMap[listener.Name] = cloud.Result{IsError: true, Err: err}
-		} else {
-			retMap[listener.Name] = cloud.Result{IsError: false, Res: liID}
-		}
-	}
-	return retMap, nil
+	listenerList := splitSegListener(listeners)
+	return a.ensureLoadBalancerListener(region, listenerList)
 }
 
 // DeleteSegmentListener delete segment listener
@@ -223,16 +269,11 @@ func (a *Alb) DeleteSegmentListener(region string, listener *networkextensionv1.
 	if listener.Spec.EndPort == 0 {
 		return a.DeleteListener(region, listener)
 	}
-	// delete listener for each port
-	for i := listener.Spec.Port; i <= listener.Spec.EndPort; i++ {
-		// generate single port listener to ensure listener
-		li := listener.DeepCopy()
-		li.Spec.Port = i
-		li.Spec.EndPort = 0
-		err := a.DeleteListener(region, li)
-		if err != nil {
-			return errors.Wrapf(err, "delete segment listener failed in %s(%d)", li.Name, li.Spec.Port)
-		}
+
+	listenerList := splitSegListener([]*networkextensionv1.Listener{listener})
+	err := a.deleteLoadBalancerListener(region, listenerList)
+	if err != nil {
+		return err
 	}
 	return nil
 }
