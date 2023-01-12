@@ -79,6 +79,7 @@ type BcsUser struct {
 	DeletedAt *time.Time `json:"deleted_at" gorm:"type:timestamp null;default:null"` // user-token删除时间
 }
 
+// GetDeletedAtStr return str  "" or str converted from user delete time
 func (u *BcsUser) GetDeletedAtStr() string {
 	if u != nil && u.DeletedAt != nil {
 		return u.DeletedAt.Format(timeFormatter)
