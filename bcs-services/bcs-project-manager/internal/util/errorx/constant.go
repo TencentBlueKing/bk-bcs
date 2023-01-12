@@ -69,13 +69,17 @@ const (
 	// NoMaintainerRoleErrMsg TODO
 	NoMaintainerRoleErrMsg = "user is not biz maintainer role"
 	// RequestBCSCCErr TODO
-	RequestBCSCCErr = commErr.AdditionErrorCode + 510
+	RequestBKSSMErr = commErr.AdditionErrorCode + 510
+	// RequestBCSCCErrMsg TODO
+	RequestBKSSMMsg = "request bk ssm api error"
+	// RequestBCSCCErr TODO
+	RequestBCSCCErr = commErr.AdditionErrorCode + 511
 	// RequestBCSCCErrMsg TODO
 	RequestBCSCCErrMsg = "request bcs cc api error"
 	// RequestITSMErr TODO
-	RequestITSMErr = commErr.AdditionErrorCode + 510
+	RequestITSMErr = commErr.AdditionErrorCode + 512
 	// RequestITSMErrMsg TODO
-	RequestITSMErrMsg = "request itsm api error"
+	RequestITSMErrMsg = "request bk itsm api error"
 	// NoPermissionErr 无权限
 	NoPermissionErr = 40403
 )

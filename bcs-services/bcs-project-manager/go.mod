@@ -94,7 +94,6 @@ require (
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/oxtoacart/bpool v0.0.0-20190530202638-03653db5a59c // indirect
-	github.com/patrickmn/go-cache v2.1.0+incompatible // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/prometheus/client_model v0.2.0 // indirect
@@ -138,4 +137,5 @@ require (
 	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20221202065239-dbcdd8bb376e
 	github.com/Tencent/bk-bcs/bcs-services/pkg v0.0.0-20221018081229-065aeef813e6
 	github.com/coreos/etcd v3.3.25+incompatible
+	github.com/patrickmn/go-cache v2.1.0+incompatible
 )
