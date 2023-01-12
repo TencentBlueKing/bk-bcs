@@ -78,12 +78,25 @@ type (
 
 	// UpdateNamespaceRequest 更新命名参数
 	UpdateNamespaceRequest struct {
-		ProjectCode string        `json:"projectCode"`
-		ClusterID   string        `json:"clusterID"`
-		Name        string        `json:"name"`
-		Quota       Quota         `json:"quota"`
-		Labels      []Labels      `json:"labels,omitempty"`
-		Annotations []Annotations `json:"annotations,omitempty"`
+		ProjectCode string          `json:"projectCode"`
+		ClusterID   string          `json:"clusterID"`
+		Name        string          `json:"name"`
+		Quota       Quota           `json:"quota"`
+		Labels      []Labels        `json:"labels,omitempty"`
+		Variables   []VariableValue `json:"variables"`
+		Annotations []Annotations   `json:"annotations,omitempty"`
+	}
+
+	// VariableValue 变量值
+	VariableValue struct {
+		Id          string `json:"id,omitempty"`
+		Key         string `json:"key,omitempty"`
+		Name        string `json:"name,omitempty"`
+		ClusterID   string `json:"clusterID,omitempty"`
+		ClusterName string `json:"clusterName,omitempty"`
+		Namespace   string `json:"namespace,omitempty"`
+		Value       string `json:"value,omitempty"`
+		Scope       string `json:"scope,omitempty"`
 	}
 
 	// Labels 标签
