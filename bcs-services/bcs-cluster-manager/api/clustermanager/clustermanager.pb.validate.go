@@ -9271,16 +9271,7 @@ func (m *NodeTemplate) validate(all bool) error {
 
 	}
 
-	if !strings.HasPrefix(m.GetDockerGraphPath(), "/") {
-		err := NodeTemplateValidationError{
-			field:  "DockerGraphPath",
-			reason: "value does not have prefix \"/\"",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
+	// no validation rules for DockerGraphPath
 
 	// no validation rules for MountTarget
 
@@ -32840,10 +32831,10 @@ func (m *UpdateAutoScalingOptionRequest) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if val := m.GetScaleDownDelayAfterDelete(); val < 60 || val > 86400 {
+	if val := m.GetScaleDownDelayAfterDelete(); val < 0 || val > 86400 {
 		err := UpdateAutoScalingOptionRequestValidationError{
 			field:  "ScaleDownDelayAfterDelete",
-			reason: "value must be inside range [60, 86400]",
+			reason: "value must be inside range [0, 86400]",
 		}
 		if !all {
 			return err

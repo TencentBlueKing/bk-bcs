@@ -3082,7 +3082,7 @@ message NodeTemplate {
   string dockerGraphPath = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "dockerGraphPath",
     description: "节点运行时为docker时设置信息数据目录，BCS默认设置/data/bcs/service/docker"
-  }, (validate.rules).string.prefix = "/"];
+  }];
   string mountTarget = 7[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "mountTarget",
     description: "节点数据盘挂载点, 默认不挂载数据盘,无数据盘或有多块数据盘的云主机此设置不生效。BCS默认/data"
@@ -8490,7 +8490,7 @@ message UpdateAutoScalingOptionRequest {
   uint32 scaleDownDelayAfterDelete = 25[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "scaleDownDelayAfterDelete",
     description: "scale-down-delay-after-delete,连续两次缩容时间间隔，单位秒"
-  },(validate.rules).uint32 = {gte: 60, lte: 86400}];
+  },(validate.rules).uint32 = {gte: 0, lte: 86400}];
   uint32 scaleDownDelayAfterFailure = 26[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "scaleDownDelayAfterFailure",
     description: "scale-down-delay-after-failure,缩容失败后重试时间间隔，单位秒"
