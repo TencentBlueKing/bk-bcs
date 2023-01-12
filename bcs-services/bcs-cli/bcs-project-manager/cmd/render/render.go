@@ -28,6 +28,7 @@ var (
 		kubectl-bcs-project-manager render`))
 )
 
+// NewCmdRender 新建Cmd渲染
 func NewCmdRender() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "render",

@@ -32,6 +32,8 @@ const (
 )
 
 type (
+
+	// ListVariableDefinitionsRequest 列表变量定义请求
 	ListVariableDefinitionsRequest struct {
 		Scope     string `url:"scope,omitempty"`
 		SearchKey string `url:"searchKey,omitempty"`
@@ -40,6 +42,7 @@ type (
 		All       bool   `url:"all,omitempty"`
 	}
 
+	// CreateVariableRequest 创建变量请求
 	CreateVariableRequest struct {
 		ProjectCode string `json:"projectCode"`
 		Name        string `json:"name"`
@@ -49,6 +52,7 @@ type (
 		Desc        string `json:"desc"`
 	}
 
+	// UpdateVariableRequest 更新变量请求
 	UpdateVariableRequest struct {
 		ProjectCode string `json:"projectCode"`
 		VariableID  string `json:"variableID"`
@@ -59,10 +63,12 @@ type (
 		Desc        string `json:"desc"`
 	}
 
+	// DeleteVariableDefinitionsRequest 删除变量定义请求
 	DeleteVariableDefinitionsRequest struct {
 		IdList string `url:"idList,omitempty"`
 	}
 
+	// RenderVariablesRequest 渲染变量请求
 	RenderVariablesRequest struct {
 		KeyList string `url:"keyList,omitempty"`
 	}

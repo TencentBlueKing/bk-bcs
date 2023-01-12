@@ -39,6 +39,7 @@ type Config struct {
 	Operator string
 }
 
+// ProjectManagerClient 项目服务客户端
 type ProjectManagerClient struct {
 	cfg   *Config
 	ctx   context.Context
