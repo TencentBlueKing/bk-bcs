@@ -81,7 +81,7 @@ export class BkHttpResponse {
     return this.response.code === 0 || this.response.result;
   }
 
-  validate(showSuccess = false, showError = true, validateFn?: (resp: IHttpResponse) => boolean) {
+  validate(showSuccess = false, showError = true, validateFn?: (resp: IHttpResponse) => boolean): any {
     return new Promise((resolve, reject) => {
       if (this.isSuccess(validateFn)) {
         if (showSuccess) {
@@ -92,13 +92,8 @@ export class BkHttpResponse {
         }
         resolve(this.response.data);
 
-      } else {
-        BkMessage({
-          message: this.response.message,
-          theme: 'error'
-        });
-        reject(this.response.message);
       }
+      reject(this.response.message);
     })
   }
 }
@@ -117,8 +112,9 @@ export const BkRequest = (name: string, params: any, method: string = 'post', ba
       method,
       url: name,
       ...getRequestConfig(method, params, appendDefParam),
-    }).then(res => Promise.resolve(new BkHttpResponse(res.data)))
-    .catch(err => {
+    }).then(res => {
+      return new BkHttpResponse(res.data).validate(false, true)
+    }).catch(err => {
       BkMessage({
         message: err.message || err,
         theme: 'error'

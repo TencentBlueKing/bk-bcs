@@ -3,17 +3,16 @@
   import { cloneDeep } from 'lodash'
   import { InfoLine, Upload, FilliscreenLine } from 'bkui-vue/lib/icon'
   import CodeEditor from '../../../../components/code-editor/index.vue'
+  import { createServingConfigItem, updateServingConfigItem } from '../../../../api/config'
+  import { IServingEditParams } from '../../../../types'
 
-  const props = defineProps({
-    type: String,
-    show: Boolean,
-    config: {
-      type: Object,
-      default: () => {}
-    }
-  })
+  const props = defineProps<{
+    show: boolean,
+    config: IServingEditParams,
+    bkBizId: number
+  }>()
 
-  const emit = defineEmits(['update:show'])
+  const emit = defineEmits(['update:show', 'confirm'])
 
   const isShow = ref(props.show)
   const localVal = ref(cloneDeep(props.config))
@@ -40,8 +39,12 @@
     ],
   }
 
+  const type = computed(() => {
+    return typeof props.config.id === 'number' ? 'edit' : 'new'
+  })  
+
   const title = computed(() => {
-    return props.type === 'edit' ? '编辑配置项' : '新增配置项'
+    return type.value === 'edit' ? '编辑配置项' : '新增配置项'
   })
 
   watch(() => props.show, (val) => {
@@ -49,10 +52,22 @@
     localVal.value = cloneDeep(props.config)
   })
 
-  const handleSubmit = () => {
-    formRef.value.validate().then(() => {
+  const handleSubmit = async() => {
+    try {
+      await formRef.value.validate()
+      pending.value = true
+      if (type.value === 'edit') {
+        await updateServingConfigItem(localVal.value)
+      } else {
+        await createServingConfigItem(localVal.value)
+      }
       close()
-    })
+      emit('confirm')
+    } catch (e) {
+      console.error(e)
+    } finally {
+      pending.value = false
+    }
   }
 
   const close = () => {

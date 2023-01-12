@@ -1,26 +1,25 @@
 <script setup lang="ts">
-  import { ref } from 'vue'
+  import { defineProps, ref, computed, watch } from 'vue'
+  import { useRoute } from 'vue-router'
   import VersionList from './version-list.vue'
   import ConfigList from './config-list.vue'
-  import ConfigItemEdit from './config-item-edit.vue'
+  import CreateBtn from './create-btn.vue'
 
-  const configEditData = ref({
-    show: false,
-    type: 'new',
-    data: {}
+  const route = useRoute()
+
+  const props = defineProps<{
+    bkBizId: number
+  }>()
+
+  const appId = ref(Number(route.params.id))
+  const configList = ref()
+
+  watch(() => route.params.id, (val) => {
+    appId.value = Number(val)
   })
 
-  const handleCreateConfigItem = () => {
-    configEditData.value.show = true
-    configEditData.value.data = {
-      biz_id: 0,
-      app_id: 0,
-      name: '',
-      path: '',
-      file_type: 'text',
-      user_group: '',
-      privilege: ''
-    }
+  const updateConfigList = () => {
+    configList.value.refreshConfigList()
   }
 
 </script>
@@ -39,10 +38,9 @@
           <bk-button theme="primary">生成版本</bk-button>
         </section>
       </section>
-      <bk-button style="margin: 16px 0;" outline theme="primary" @click="handleCreateConfigItem">新增配置项</bk-button>
-      <ConfigList />
+      <CreateBtn :bk-biz-id="props.bkBizId" :app-id="appId" @update="updateConfigList" />
+      <ConfigList ref="configList" :bk-biz-id="props.bkBizId" :app-id="appId" />
     </section>
-    <ConfigItemEdit v-model:show="configEditData.show" :type="configEditData.type" :config="configEditData.data"/>
   </section>
 </template>
 <style lang="scss" scoped>

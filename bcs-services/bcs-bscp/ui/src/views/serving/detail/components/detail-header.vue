@@ -1,11 +1,15 @@
 <script setup lang="ts">
   import { useRoute, useRouter } from 'vue-router'
-  import { ref } from 'vue'
+  import { defineProps, ref } from 'vue'
   import ServingSelector from './serving-selector.vue'
   import { Help } from "bkui-vue/lib/icon";
 
   const route = useRoute()
   const router = useRouter()
+
+  const props = defineProps<{
+    bkBizId: number
+  }>()
 
   const tabs = ref([
     { name: 'config', label: '配置管理', routeName: 'serving-config' },
@@ -19,18 +23,22 @@
   }
   const activeTab = ref(getDefaultTab())
 
+  const handleAppChange = (id: number) => {
+    router.push({ name: 'serving-config', params: { id } })
+  }
+
   const handleTabChange = (val: string) => {
     const tab = tabs.value.find(item => item.name === val)
     if (tab) {
       router.push({ name: tab.routeName })
     }
   }
-  
+
 </script>
 <template>
   <div class="serving-detail-header">
     <div class="serving-list-wrapper">
-      <ServingSelector></ServingSelector>
+      <ServingSelector :value="Number(route.params.id)" :bk-biz-id="props.bkBizId" @change="handleAppChange" />
     </div>
     <div class="detail-header-tabs">
       <BkTab type="unborder-card" v-model:active="activeTab" @change="handleTabChange">

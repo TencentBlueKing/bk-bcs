@@ -1,11 +1,4 @@
 import { CC_Request, Self_Request } from "../request"
-import { IPage, IRequestFilter } from '../constants'
-
-const def_Page: IPage = {
-  count: 0,
-  start: 0,
-  limit: 50
-};
 
 export const getBizList = () => {
   return CC_Request('search_business/', { fields: ['bk_biz_id', 'bk_biz_name'] });
@@ -23,7 +16,8 @@ export type IAppListQuery = {
   start?: number,
   limit?: number 
 }
-export const getAppList = (biz_id: number, params: IAppListQuery) => {
+
+export const getAppList = (biz_id: number, params: IAppListQuery = {}) => {
   return Self_Request(`config/list/app/app/biz_id/${biz_id}`, params);
 }
 
