@@ -99,11 +99,6 @@ urlpatterns = [
         'api/log_collect/projects/<slug:project_id>/',
         include('backend.container_service.observability.log_collect.urls'),
     ),
-    # cluster manager的代理请求
-    url(
-        r"^{}".format(settings.CLUSTER_MANAGER_PROXY["PREFIX_PATH"]),
-        include("backend.container_service.clusters.mgr.proxy.urls"),
-    ),
 ]
 
 # 导入版本特定的urls
