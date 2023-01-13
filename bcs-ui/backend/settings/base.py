@@ -477,16 +477,6 @@ BCS_APIGW_TOKEN = os.environ.get("BCS_APIGW_TOKEN", "")
 # 直连新版bcs api的地址, 必须 https 协议
 BCS_APIGW_DOMAIN = {"prod": os.environ.get("BCS_APIGW_PROD_DOMAIN", "")}
 
-# cluster manager的代理配置
-CLUSTER_MANAGER_PROXY = {
-    # cluster manager 服务的 host
-    "HOST": BCS_APIGW_DOMAIN["prod"],
-    # 访问 cluster manager 的 token
-    "TOKEN": BCS_APIGW_TOKEN,
-    # 前端访问的前缀
-    "PREFIX_PATH": "api/cluster_manager/proxy/",
-}
-
 # 版本日志放置的路径
 CHANGE_LOG_PATH = os.path.join(BASE_DIR, "CHANGELOG")
 
