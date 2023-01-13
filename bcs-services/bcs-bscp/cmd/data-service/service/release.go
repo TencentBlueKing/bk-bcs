@@ -27,23 +27,23 @@ import (
 
 // CreateRelease create release.
 func (s *Service) CreateRelease(ctx context.Context, req *pbds.CreateReleaseReq) (*pbds.CreateResp, error) {
-	kit := kit.FromGrpcContext(ctx)
+	grpcKit := kit.FromGrpcContext(ctx)
 
 	releasedCIs := make([]*table.ReleasedConfigItem, 0)
 	// TODO: need to change batch operator to query config item and it's commit.
 	// step1: query app's all config items.
-	cfgItems, err := s.queryAppConfigItemList(kit, req.Attachment.BizId, req.Attachment.AppId)
+	cfgItems, err := s.queryAppConfigItemList(grpcKit, req.Attachment.BizId, req.Attachment.AppId)
 	if err != nil {
-		logs.Errorf("query app config item list failed, err: %v, rid: %s", err, kit.Rid)
+		logs.Errorf("query app config item list failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
 	}
 
 	// step2: query config item newest commit
 	now := time.Now()
 	for _, item := range cfgItems {
-		commit, err := s.queryCILatestCommit(kit, req.Attachment.BizId, req.Attachment.AppId, item.ID)
+		commit, err := s.queryCILatestCommit(grpcKit, req.Attachment.BizId, req.Attachment.AppId, item.ID)
 		if err != nil {
-			logs.Errorf("query config item latest commit failed, err: %v, rid: %s", err, kit.Rid)
+			logs.Errorf("query config item latest commit failed, err: %v, rid: %s", err, grpcKit.Rid)
 			return nil, err
 		}
 
@@ -53,14 +53,14 @@ func (s *Service) CreateRelease(ctx context.Context, req *pbds.CreateReleaseReq)
 			ConfigItemSpec: item.Spec,
 			Attachment:     commit.Attachment,
 			Revision: &table.CreatedRevision{
-				Creator:   kit.User,
+				Creator:   grpcKit.User,
 				CreatedAt: now,
 			},
 		})
 	}
 
 	// step3: begin transaction to create release and released config item.
-	tx, err := s.dao.BeginTx(kit, req.Attachment.BizId)
+	tx, err := s.dao.BeginTx(grpcKit, req.Attachment.BizId)
 	if err != nil {
 		return nil, err
 	}
@@ -69,14 +69,14 @@ func (s *Service) CreateRelease(ctx context.Context, req *pbds.CreateReleaseReq)
 		Spec:       req.Spec.ReleaseSpec(),
 		Attachment: req.Attachment.ReleaseAttachment(),
 		Revision: &table.CreatedRevision{
-			Creator:   kit.User,
+			Creator:   grpcKit.User,
 			CreatedAt: now,
 		},
 	}
-	id, err := s.dao.Release().CreateWithTx(kit, tx, release)
+	id, err := s.dao.Release().CreateWithTx(grpcKit, tx, release)
 	if err != nil {
-		tx.Rollback(kit)
-		logs.Errorf("create release failed, err: %v, rid: %s", err, kit.Rid)
+		tx.Rollback(grpcKit)
+		logs.Errorf("create release failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
 	}
 
@@ -85,14 +85,14 @@ func (s *Service) CreateRelease(ctx context.Context, req *pbds.CreateReleaseReq)
 		rci.ReleaseID = release.ID
 	}
 
-	if err = s.dao.ReleasedCI().BulkCreateWithTx(kit, tx, releasedCIs); err != nil {
-		tx.Rollback(kit)
-		logs.Errorf("bulk create released config item failed, err: %v, rid: %s", err, kit.Rid)
+	if err = s.dao.ReleasedCI().BulkCreateWithTx(grpcKit, tx, releasedCIs); err != nil {
+		tx.Rollback(grpcKit)
+		logs.Errorf("bulk create released config item failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
 	}
 
 	// step6: commit transaction.
-	if err = tx.Commit(kit); err != nil {
+	if err = tx.Commit(grpcKit); err != nil {
 		return nil, err
 	}
 
@@ -102,12 +102,12 @@ func (s *Service) CreateRelease(ctx context.Context, req *pbds.CreateReleaseReq)
 
 // ListReleases list releases.
 func (s *Service) ListReleases(ctx context.Context, req *pbds.ListReleasesReq) (*pbds.ListReleasesResp, error) {
-	kit := kit.FromGrpcContext(ctx)
+	grpcKit := kit.FromGrpcContext(ctx)
 
 	// parse pb struct filter to filter.Expression.
 	filter, err := pbbase.UnmarshalFromPbStructToExpr(req.Filter)
 	if err != nil {
-		logs.Errorf("unmarshal pb struct to expression failed, err: %v, rid: %s", err, kit.Rid)
+		logs.Errorf("unmarshal pb struct to expression failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
 	}
 
@@ -118,9 +118,9 @@ func (s *Service) ListReleases(ctx context.Context, req *pbds.ListReleasesReq) (
 		Page:   req.Page.BasePage(),
 	}
 
-	details, err := s.dao.Release().List(kit, query)
+	details, err := s.dao.Release().List(grpcKit, query)
 	if err != nil {
-		logs.Errorf("list release failed, err: %v, rid: %s", err, kit.Rid)
+		logs.Errorf("list release failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
 	}
 

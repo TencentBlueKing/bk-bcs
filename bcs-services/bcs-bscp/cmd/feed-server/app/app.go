@@ -115,7 +115,7 @@ func (fs *feedServer) prepare(opt *options.Option) error {
 	fs.sd = sd
 
 	// init bscp control tool
-	if err := ctl.LoadCtl(ctl.WithBasics(sd)...); err != nil {
+	if err = ctl.LoadCtl(ctl.WithBasics(sd)...); err != nil {
 		return fmt.Errorf("load control tool failed, err: %v", err)
 	}
 

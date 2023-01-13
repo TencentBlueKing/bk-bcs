@@ -80,7 +80,7 @@ type Client interface {
 	Healthz() error
 }
 
-// NewCluster create a redis cluster client.
+// NewRedisCache create a redis cluster client.
 func NewRedisCache(opt cc.RedisCluster) (Client, error) {
 	var (
 		client RedisClient

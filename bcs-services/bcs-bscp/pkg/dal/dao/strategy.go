@@ -69,12 +69,12 @@ func (dao *strategyDao) Create(kt *kit.Kit, strategy *table.Strategy) (uint32, e
 
 	// strategy works at namespace mode, scope.selector should be matchAll.
 	if strategy.Spec.Mode == table.Namespace || strategy.Spec.AsDefault {
-		if err := dao.setDefaultValue(strategy); err != nil {
+		if err = dao.setDefaultValue(strategy); err != nil {
 			return 0, err
 		}
 	}
 
-	if err := strategy.ValidateCreate(); err != nil {
+	if err = strategy.ValidateCreate(); err != nil {
 		return 0, err
 	}
 
@@ -84,12 +84,12 @@ func (dao *strategyDao) Create(kt *kit.Kit, strategy *table.Strategy) (uint32, e
 		strategy.Spec.Namespace = table.DefaultNamespace
 	}
 
-	if err := dao.validateAttachmentResExist(kt, strategy.Attachment); err != nil {
+	if err = dao.validateAttachmentResExist(kt, strategy.Attachment); err != nil {
 		return 0, err
 	}
 
 	// validate strategy binding release exist.
-	if err := dao.validateReleaseExist(kt, strategy); err != nil {
+	if err = dao.validateReleaseExist(kt, strategy); err != nil {
 		return 0, err
 	}
 
@@ -109,29 +109,29 @@ func (dao *strategyDao) Create(kt *kit.Kit, strategy *table.Strategy) (uint32, e
 
 			// validate default strategy already exist.
 			if strategy.Spec.AsDefault {
-				if err := dao.validateDefaultStrategyNotExist(kt, strategy.Attachment, lo); err != nil {
+				if err = dao.validateDefaultStrategyNotExist(kt, strategy.Attachment, lo); err != nil {
 					return err
 				}
 			}
 
 			// validate namespace only under strategy set.
 			if !strategy.Spec.AsDefault && mode == table.Namespace {
-				if err := dao.validateNamespaceExist(kt, strategy.Attachment, strategy.Spec.Namespace, lo); err != nil {
+				if err = dao.validateNamespaceExist(kt, strategy.Attachment, strategy.Spec.Namespace, lo); err != nil {
 					return err
 				}
 			}
 
-			if err := dao.validateAppStrategyNumber(kt, strategy.Attachment, strategy.Spec.Mode, lo); err != nil {
+			if err = dao.validateAppStrategyNumber(kt, strategy.Attachment, strategy.Spec.Mode, lo); err != nil {
 				return err
 			}
 
-			if err := dao.orm.Txn(txn).Insert(kt.Ctx, sql, strategy); err != nil {
+			if err = dao.orm.Txn(txn).Insert(kt.Ctx, sql, strategy); err != nil {
 				return err
 			}
 
 			// audit this to create strategy details.
 			au := &AuditOption{Txn: txn, ResShardingUid: opt.ShardingUid}
-			if err := dao.auditDao.Decorator(kt, strategy.Attachment.BizID,
+			if err = dao.auditDao.Decorator(kt, strategy.Attachment.BizID,
 				enumor.Strategy).AuditCreate(strategy, au); err != nil {
 				return fmt.Errorf("audit create strategy failed, err: %v", err)
 			}
@@ -198,16 +198,16 @@ func (dao *strategyDao) Update(kit *kit.Kit, strategy *table.Strategy) error {
 		}
 	}
 
-	if err := strategy.ValidateUpdate(s.Spec.AsDefault, s.Spec.Mode == table.Namespace); err != nil {
+	if err = strategy.ValidateUpdate(s.Spec.AsDefault, s.Spec.Mode == table.Namespace); err != nil {
 		return err
 	}
 
-	if err := dao.validateAttachmentAppExist(kit, strategy.Attachment); err != nil {
+	if err = dao.validateAttachmentAppExist(kit, strategy.Attachment); err != nil {
 		return err
 	}
 
 	// validate strategy binding release exist.
-	if err := dao.validateReleaseExist(kit, strategy); err != nil {
+	if err = dao.validateReleaseExist(kit, strategy); err != nil {
 		return err
 	}
 
@@ -296,7 +296,8 @@ func (dao *strategyDao) List(kit *kit.Kit, opts *types.ListStrategiesOption) (
 	if opts.Page.Count {
 		// this is a count request, then do count operation only.
 		sql = fmt.Sprintf(`SELECT COUNT(*) FROM %s %s`, table.StrategyTable, whereExpr)
-		count, err := dao.orm.Do(dao.sd.ShardingOne(opts.BizID).DB()).Count(kit.Ctx, sql)
+		var count uint32
+		count, err = dao.orm.Do(dao.sd.ShardingOne(opts.BizID).DB()).Count(kit.Ctx, sql)
 		if err != nil {
 			return nil, err
 		}

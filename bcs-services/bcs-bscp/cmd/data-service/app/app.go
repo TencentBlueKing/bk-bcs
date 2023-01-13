@@ -112,7 +112,7 @@ func (ds *dataService) prepare(opt *options.Option) error {
 	ds.sd = sd
 
 	// init bscp control tool
-	if err := ctl.LoadCtl(ctl.WithBasics(sd)...); err != nil {
+	if err = ctl.LoadCtl(ctl.WithBasics(sd)...); err != nil {
 		return fmt.Errorf("load control tool failed, err: %v", err)
 	}
 
@@ -160,7 +160,7 @@ func (ds *dataService) listenAndServe() error {
 
 	// initialize and register standard grpc server grpcMetrics.
 	grpcMetrics.InitializeMetrics(serve)
-	if err := metrics.Register().Register(grpcMetrics); err != nil {
+	if err = metrics.Register().Register(grpcMetrics); err != nil {
 		return fmt.Errorf("register metrics failed, err: %v", err)
 	}
 

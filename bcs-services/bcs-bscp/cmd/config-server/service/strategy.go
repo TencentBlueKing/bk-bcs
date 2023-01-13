@@ -27,12 +27,12 @@ import (
 
 // CreateStrategy create a strategy
 func (s *Service) CreateStrategy(ctx context.Context, req *pbcs.CreateStrategyReq) (*pbcs.CreateStrategyResp, error) {
-	kit := kit.FromGrpcContext(ctx)
+	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.CreateStrategyResp)
 
 	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.Strategy, Action: meta.Create,
 		ResourceID: req.AppId}, BizID: req.BizId}
-	err := s.authorizer.AuthorizeWithResp(kit, resp, res)
+	err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res)
 	if err != nil {
 		return resp, nil
 	}
@@ -52,10 +52,10 @@ func (s *Service) CreateStrategy(ctx context.Context, req *pbcs.CreateStrategyRe
 			Memo:      req.Memo,
 		},
 	}
-	rp, err := s.client.DS.CreateStrategy(kit.RpcCtx(), r)
+	rp, err := s.client.DS.CreateStrategy(grpcKit.RpcCtx(), r)
 	if err != nil {
-		errf.Error(err).AssignResp(kit, resp)
-		logs.Errorf("create strategy failed, err: %v, rid: %s", err, kit.Rid)
+		errf.Error(err).AssignResp(grpcKit, resp)
+		logs.Errorf("create strategy failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return resp, nil
 	}
 
@@ -68,12 +68,12 @@ func (s *Service) CreateStrategy(ctx context.Context, req *pbcs.CreateStrategyRe
 
 // DeleteStrategy delete a strategy
 func (s *Service) DeleteStrategy(ctx context.Context, req *pbcs.DeleteStrategyReq) (*pbcs.DeleteStrategyResp, error) {
-	kit := kit.FromGrpcContext(ctx)
+	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.DeleteStrategyResp)
 
 	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.Strategy, Action: meta.Delete,
 		ResourceID: req.AppId}, BizID: req.BizId}
-	err := s.authorizer.AuthorizeWithResp(kit, resp, res)
+	err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res)
 	if err != nil {
 		return resp, nil
 	}
@@ -85,10 +85,10 @@ func (s *Service) DeleteStrategy(ctx context.Context, req *pbcs.DeleteStrategyRe
 			AppId: req.AppId,
 		},
 	}
-	_, err = s.client.DS.DeleteStrategy(kit.RpcCtx(), r)
+	_, err = s.client.DS.DeleteStrategy(grpcKit.RpcCtx(), r)
 	if err != nil {
-		errf.Error(err).AssignResp(kit, resp)
-		logs.Errorf("delete strategy failed, err: %v, rid: %s", err, kit.Rid)
+		errf.Error(err).AssignResp(grpcKit, resp)
+		logs.Errorf("delete strategy failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return resp, nil
 	}
 
@@ -98,12 +98,12 @@ func (s *Service) DeleteStrategy(ctx context.Context, req *pbcs.DeleteStrategyRe
 
 // UpdateStrategy update a strategy
 func (s *Service) UpdateStrategy(ctx context.Context, req *pbcs.UpdateStrategyReq) (*pbcs.UpdateStrategyResp, error) {
-	kit := kit.FromGrpcContext(ctx)
+	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.UpdateStrategyResp)
 
 	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.Strategy, Action: meta.Update,
 		ResourceID: req.AppId}, BizID: req.BizId}
-	err := s.authorizer.AuthorizeWithResp(kit, resp, res)
+	err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res)
 	if err != nil {
 		return resp, nil
 	}
@@ -122,10 +122,10 @@ func (s *Service) UpdateStrategy(ctx context.Context, req *pbcs.UpdateStrategyRe
 			Memo:      req.Memo,
 		},
 	}
-	_, err = s.client.DS.UpdateStrategy(kit.RpcCtx(), r)
+	_, err = s.client.DS.UpdateStrategy(grpcKit.RpcCtx(), r)
 	if err != nil {
-		errf.Error(err).AssignResp(kit, resp)
-		logs.Errorf("update strategy failed, err: %v, rid: %s", err, kit.Rid)
+		errf.Error(err).AssignResp(grpcKit, resp)
+		logs.Errorf("update strategy failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return resp, nil
 	}
 
@@ -135,22 +135,22 @@ func (s *Service) UpdateStrategy(ctx context.Context, req *pbcs.UpdateStrategyRe
 
 // ListStrategies list strategies with filter
 func (s *Service) ListStrategies(ctx context.Context, req *pbcs.ListStrategiesReq) (*pbcs.ListStrategiesResp, error) {
-	kit := kit.FromGrpcContext(ctx)
+	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.ListStrategiesResp)
 
 	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.Strategy, Action: meta.Find}, BizID: req.BizId}
-	err := s.authorizer.AuthorizeWithResp(kit, resp, res)
+	err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res)
 	if err != nil {
 		return resp, nil
 	}
 
 	if req.Page == nil {
-		errf.Error(errf.New(errf.InvalidParameter, "page is null")).AssignResp(kit, resp)
+		errf.Error(errf.New(errf.InvalidParameter, "page is null")).AssignResp(grpcKit, resp)
 		return resp, nil
 	}
 
-	if err := req.Page.BasePage().Validate(types.DefaultPageOption); err != nil {
-		errf.Error(err).AssignResp(kit, resp)
+	if err = req.Page.BasePage().Validate(types.DefaultPageOption); err != nil {
+		errf.Error(err).AssignResp(grpcKit, resp)
 		return resp, nil
 	}
 
@@ -160,10 +160,10 @@ func (s *Service) ListStrategies(ctx context.Context, req *pbcs.ListStrategiesRe
 		Filter: req.Filter,
 		Page:   req.Page,
 	}
-	rp, err := s.client.DS.ListStrategies(kit.RpcCtx(), r)
+	rp, err := s.client.DS.ListStrategies(grpcKit.RpcCtx(), r)
 	if err != nil {
-		errf.Error(err).AssignResp(kit, resp)
-		logs.Errorf("list strategies failed, err: %v, rid: %s", err, kit.Rid)
+		errf.Error(err).AssignResp(grpcKit, resp)
+		logs.Errorf("list strategies failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return resp, nil
 	}
 

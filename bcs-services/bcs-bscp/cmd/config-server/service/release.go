@@ -28,12 +28,12 @@ import (
 
 // CreateRelease create a release
 func (s *Service) CreateRelease(ctx context.Context, req *pbcs.CreateReleaseReq) (*pbcs.CreateReleaseResp, error) {
-	kit := kit.FromGrpcContext(ctx)
+	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.CreateReleaseResp)
 
 	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.Release, Action: meta.Create,
 		ResourceID: req.AppId}, BizID: req.BizId}
-	err := s.authorizer.AuthorizeWithResp(kit, resp, res)
+	err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res)
 	if err != nil {
 		return resp, nil
 	}
@@ -48,10 +48,10 @@ func (s *Service) CreateRelease(ctx context.Context, req *pbcs.CreateReleaseReq)
 			Memo: req.Memo,
 		},
 	}
-	rp, err := s.client.DS.CreateRelease(kit.RpcCtx(), r)
+	rp, err := s.client.DS.CreateRelease(grpcKit.RpcCtx(), r)
 	if err != nil {
-		errf.Error(err).AssignResp(kit, resp)
-		logs.Errorf("create release failed, err: %v, rid: %s", err, kit.Rid)
+		errf.Error(err).AssignResp(grpcKit, resp)
+		logs.Errorf("create release failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return resp, nil
 	}
 
@@ -64,23 +64,23 @@ func (s *Service) CreateRelease(ctx context.Context, req *pbcs.CreateReleaseReq)
 
 // ListReleases list releases with options
 func (s *Service) ListReleases(ctx context.Context, req *pbcs.ListReleasesReq) (*pbcs.ListReleasesResp, error) {
-	kit := kit.FromGrpcContext(ctx)
+	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.ListReleasesResp)
 
 	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.Release, Action: meta.Find,
 		ResourceID: req.AppId}, BizID: req.BizId}
-	err := s.authorizer.AuthorizeWithResp(kit, resp, res)
+	err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res)
 	if err != nil {
 		return resp, nil
 	}
 
 	if req.Page == nil {
-		errf.Error(errf.New(errf.InvalidParameter, "page is null")).AssignResp(kit, resp)
+		errf.Error(errf.New(errf.InvalidParameter, "page is null")).AssignResp(grpcKit, resp)
 		return resp, nil
 	}
 
-	if err := req.Page.BasePage().Validate(types.DefaultPageOption); err != nil {
-		errf.Error(err).AssignResp(kit, resp)
+	if err = req.Page.BasePage().Validate(types.DefaultPageOption); err != nil {
+		errf.Error(err).AssignResp(grpcKit, resp)
 		return resp, nil
 	}
 
@@ -90,10 +90,10 @@ func (s *Service) ListReleases(ctx context.Context, req *pbcs.ListReleasesReq) (
 		Filter: req.Filter,
 		Page:   req.Page,
 	}
-	rp, err := s.client.DS.ListReleases(kit.RpcCtx(), r)
+	rp, err := s.client.DS.ListReleases(grpcKit.RpcCtx(), r)
 	if err != nil {
-		errf.Error(err).AssignResp(kit, resp)
-		logs.Errorf("list releases failed, err: %v, rid: %s", err, kit.Rid)
+		errf.Error(err).AssignResp(grpcKit, resp)
+		logs.Errorf("list releases failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return resp, nil
 	}
 
@@ -108,17 +108,17 @@ func (s *Service) ListReleases(ctx context.Context, req *pbcs.ListReleasesReq) (
 // ListReleasedConfigItems list a release's configure items.
 func (s *Service) ListReleasedConfigItems(ctx context.Context, req *pbcs.ListReleasedConfigItemsReq) (
 	*pbcs.ListReleasedConfigItemsResp, error) {
-	kit := kit.FromGrpcContext(ctx)
+	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.ListReleasedConfigItemsResp)
 
 	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.ReleasedCI, Action: meta.Find}, BizID: req.BizId}
-	err := s.authorizer.AuthorizeWithResp(kit, resp, res)
+	err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res)
 	if err != nil {
 		return resp, nil
 	}
 
-	if err := req.Page.BasePage().Validate(types.DefaultPageOption); err != nil {
-		errf.Error(err).AssignResp(kit, resp)
+	if err = req.Page.BasePage().Validate(types.DefaultPageOption); err != nil {
+		errf.Error(err).AssignResp(grpcKit, resp)
 		return resp, nil
 	}
 
@@ -135,8 +135,8 @@ func (s *Service) ListReleasedConfigItems(ctx context.Context, req *pbcs.ListRel
 	}
 	pbFilter, err := ft.MarshalPB()
 	if err != nil {
-		errf.Error(err).AssignResp(kit, resp)
-		logs.Errorf("list releases failed, err: %v, rid: %s", err, kit.Rid)
+		errf.Error(err).AssignResp(grpcKit, resp)
+		logs.Errorf("list releases failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return resp, nil
 	}
 
@@ -145,10 +145,10 @@ func (s *Service) ListReleasedConfigItems(ctx context.Context, req *pbcs.ListRel
 		Filter: pbFilter,
 		Page:   req.Page,
 	}
-	rp, err := s.client.DS.ListReleasedConfigItems(kit.RpcCtx(), r)
+	rp, err := s.client.DS.ListReleasedConfigItems(grpcKit.RpcCtx(), r)
 	if err != nil {
-		errf.Error(err).AssignResp(kit, resp)
-		logs.Errorf("list released config items failed, err: %v, rid: %s", err, kit.Rid)
+		errf.Error(err).AssignResp(grpcKit, resp)
+		logs.Errorf("list released config items failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return resp, nil
 	}
 

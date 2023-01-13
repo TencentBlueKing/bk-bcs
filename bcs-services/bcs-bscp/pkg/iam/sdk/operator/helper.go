@@ -48,7 +48,10 @@ func toFloat64(val interface{}) float64 {
 	case uint64:
 		return float64(val.(uint64))
 	case json.Number:
-		val, _ := val.(json.Number).Float64()
+		val, err := val.(json.Number).Float64()
+		if err != nil {
+			panic(fmt.Sprintf("type is not float64, error: %v", err))
+		}
 		return val
 	case float64:
 		return val.(float64)

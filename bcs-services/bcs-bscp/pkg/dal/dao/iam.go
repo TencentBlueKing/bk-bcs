@@ -71,8 +71,9 @@ func (r *iamDao) ListInstances(kt *kit.Kit, opts *types.ListInstancesOption) (
 	var sql string
 	if opts.Page.Count {
 		// count instance data by whereExpr
-		sql := fmt.Sprintf(`SELECT COUNT(*) FROM %s %s`, opts.TableName, whereExpr)
-		count, err := r.orm.Do(r.sd.ShardingOne(opts.BizID).DB()).Count(kt.Ctx, sql)
+		sql = fmt.Sprintf(`SELECT COUNT(*) FROM %s %s`, opts.TableName, whereExpr)
+		var count uint32
+		count, err = r.orm.Do(r.sd.ShardingOne(opts.BizID).DB()).Count(kt.Ctx, sql)
 		if err != nil {
 			return nil, err
 		}

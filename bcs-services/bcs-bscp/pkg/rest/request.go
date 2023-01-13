@@ -340,8 +340,8 @@ func (r *Request) Do() *Result {
 	for try := 0; try < maxRetryCycle; try++ {
 		for index, host := range hosts {
 			retries = try + index
-			url := host + r.WrapURL().String()
-			req, err := http.NewRequest(string(r.verb), url, bytes.NewReader(r.body))
+			urlString := host + r.WrapURL().String()
+			req, err := http.NewRequest(string(r.verb), urlString, bytes.NewReader(r.body))
 			if err != nil {
 				result.Err = err
 				result.Rid = rid
@@ -362,7 +362,7 @@ func (r *Request) Do() *Result {
 			req.Header.Set("Accept", "application/json")
 
 			if retries > 0 {
-				r.tryThrottle(url)
+				r.tryThrottle(urlString)
 			}
 
 			start := time.Now()
@@ -372,8 +372,8 @@ func (r *Request) Do() *Result {
 				// "Connection reset by peer" is a special err which in most scenario is a transient error.
 				// Which means that we can retry it. And so does the GET operation.
 				// While the other "write" operation can not simply retry it again, because they are not idempotent.
-				logs.Errorf("http request %s %s with body %s, but %v, rid: %s", string(r.verb), url, r.body, err, rid)
-				r.checkToleranceLatency(&start, url, rid)
+				logs.Errorf("http request %s %s with body %s, but %v, rid: %s", string(r.verb), urlString, r.body, err, rid)
+				r.checkToleranceLatency(&start, urlString, rid)
 				if !isConnectionReset(err) || r.verb != GET {
 					result.Err = err
 					result.Rid = rid
@@ -397,7 +397,7 @@ func (r *Request) Do() *Result {
 			}
 
 			// record latency if needed
-			r.checkToleranceLatency(&start, url, rid)
+			r.checkToleranceLatency(&start, urlString, rid)
 
 			var body []byte
 			if resp.Body != nil {
@@ -410,7 +410,7 @@ func (r *Request) Do() *Result {
 					}
 					result.Err = err
 					result.Rid = rid
-					logs.Errorf("http request %s %s with body %s, err: %v, rid: %s", string(r.verb), url, r.body,
+					logs.Errorf("http request %s %s with body %s, err: %v, rid: %s", string(r.verb), urlString, r.body,
 						err, rid)
 					return result
 				}
@@ -419,7 +419,7 @@ func (r *Request) Do() *Result {
 
 			if logs.V(4) {
 				logs.Infof("http request cost: %dms, %s %s with body %s, response status: %s, response body: %s, rid: "+
-					"%s", time.Since(start)/time.Millisecond, string(r.verb), url, r.body, resp.Status, body, rid)
+					"%s", time.Since(start)/time.Millisecond, string(r.verb), urlString, r.body, resp.Status, body, rid)
 			}
 
 			result.Body = body

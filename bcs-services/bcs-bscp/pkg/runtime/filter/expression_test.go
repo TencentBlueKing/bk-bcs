@@ -136,7 +136,7 @@ func TestExpressionOr(t *testing.T) {
 
 	fmt.Println(string(js))
 
-	if err := expr.Validate(); err != nil {
+	if err = expr.Validate(); err != nil {
 		t.Errorf("validate expression failed, err: %v", err)
 		return
 	}

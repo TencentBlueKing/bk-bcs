@@ -63,19 +63,19 @@ func (s *Service) CreateApp(ctx context.Context, req *pbds.CreateAppReq) (*pbds.
 
 // UpdateApp update application.
 func (s *Service) UpdateApp(ctx context.Context, req *pbds.UpdateAppReq) (*pbbase.EmptyResp, error) {
-	kit := kit.FromGrpcContext(ctx)
+	grpcKit := kit.FromGrpcContext(ctx)
 
 	app := &table.App{
 		ID:    req.Id,
 		BizID: req.BizId,
 		Spec:  req.Spec.AppSpec(),
 		Revision: &table.Revision{
-			Reviser:   kit.User,
+			Reviser:   grpcKit.User,
 			UpdatedAt: time.Now(),
 		},
 	}
-	if err := s.dao.App().Update(kit, app); err != nil {
-		logs.Errorf("update app failed, err: %v, rid: %s", err, kit.Rid)
+	if err := s.dao.App().Update(grpcKit, app); err != nil {
+		logs.Errorf("update app failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
 	}
 
@@ -84,14 +84,14 @@ func (s *Service) UpdateApp(ctx context.Context, req *pbds.UpdateAppReq) (*pbbas
 
 // DeleteApp delete application.
 func (s *Service) DeleteApp(ctx context.Context, req *pbds.DeleteAppReq) (*pbbase.EmptyResp, error) {
-	kit := kit.FromGrpcContext(ctx)
+	grpcKit := kit.FromGrpcContext(ctx)
 
 	app := &table.App{
 		ID:    req.Id,
 		BizID: req.BizId,
 	}
-	if err := s.dao.App().Delete(kit, app); err != nil {
-		logs.Errorf("delete app failed, err: %v, rid: %s", err, kit.Rid)
+	if err := s.dao.App().Delete(grpcKit, app); err != nil {
+		logs.Errorf("delete app failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
 	}
 
@@ -100,12 +100,12 @@ func (s *Service) DeleteApp(ctx context.Context, req *pbds.DeleteAppReq) (*pbbas
 
 // ListApps list apps by query condition.
 func (s *Service) ListApps(ctx context.Context, req *pbds.ListAppsReq) (*pbds.ListAppsResp, error) {
-	kit := kit.FromGrpcContext(ctx)
+	grpcKit := kit.FromGrpcContext(ctx)
 
 	// parse pb struct filter to filter.Expression.
 	filter, err := pbbase.UnmarshalFromPbStructToExpr(req.Filter)
 	if err != nil {
-		logs.Errorf("unmarshal pb struct to expression failed, err: %v, rid: %s", err, kit.Rid)
+		logs.Errorf("unmarshal pb struct to expression failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
 	}
 
@@ -115,9 +115,9 @@ func (s *Service) ListApps(ctx context.Context, req *pbds.ListAppsReq) (*pbds.Li
 		Page:   req.Page.BasePage(),
 	}
 
-	details, err := s.dao.App().List(kit, query)
+	details, err := s.dao.App().List(grpcKit, query)
 	if err != nil {
-		logs.Errorf("list apps failed, err: %v, rid: %s", err, kit.Rid)
+		logs.Errorf("list apps failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
 	}
 
