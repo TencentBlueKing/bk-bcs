@@ -21,6 +21,12 @@ import (
 	"time"
 
 	"github.com/patrickmn/go-cache"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/baggage"
+	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/propagation"
+	"go.opentelemetry.io/otel/trace"
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/runmode"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/runtime"
@@ -94,12 +100,37 @@ func (c *ProjClient) fetchProjInfoWithCache(ctx context.Context, projectID strin
 // fetchProjInfo 获取项目信息
 func (c *ProjClient) fetchProjInfo(ctx context.Context, projectID string) (*Project, error) {
 	url := fmt.Sprintf("%s/bcsapi/v4/bcsproject/v1/projects/%s", config.G.BCSAPIGW.Host, projectID)
+
+	// 添加链路追踪
+	tracer := otel.Tracer("fetchProjInfo")
+	commonAttrs := []attribute.KeyValue{
+		attribute.String("component", "http"),
+		attribute.String("method", "get"),
+		attribute.String("url", url),
+	}
+	ctx, span := tracer.Start(ctx, "bcsapi/v4/bcsproject/v1/projects", trace.WithSpanKind(trace.SpanKindClient), trace.WithAttributes(commonAttrs...))
+
+	defer span.End()
+
+	p := propagation.Baggage{}
+
+	traceMember, _ := baggage.NewMember("trace-id", span.SpanContext().TraceID().String())
+	spanMember, _ := baggage.NewMember("span-id", span.SpanContext().SpanID().String())
+	b, _ := baggage.New(traceMember, spanMember)
+
+	ctxBaggage := baggage.ContextWithBaggage(ctx, b)
+
 	resp, err := httpclient.GetClient().R().
 		SetContext(ctx).
 		SetHeader("X-Project-Username", ""). // bcs_project 要求有这个header
 		SetAuthToken(config.G.BCSAPIGW.AuthToken).
 		Get(url)
-
+	// 传递请求头
+	p.Inject(ctxBaggage, propagation.HeaderCarrier(resp.Header()))
+	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
+	}
 	if err != nil {
 		return nil, nil
 	}

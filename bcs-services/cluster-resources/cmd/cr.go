@@ -16,10 +16,14 @@
 package cmd
 
 import (
+	"context"
 	"flag"
 	"fmt"
+	"log"
 	"math/rand"
 	"time"
+
+	"go.opentelemetry.io/otel"
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/cache/redis"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/conf"
@@ -27,6 +31,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/config"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/i18n"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/logging"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/tracing/jaeger"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/version"
 )
@@ -72,6 +77,19 @@ func Start() {
 	if err = i18n.InitMsgMap(); err != nil {
 		panic(errorx.New(errcode.General, "init i18n message map failed: %v", err))
 	}
+
+	//初始化 Tracer
+	tp, err := jaeger.InitTracingInstance(&crConf.Tracing)
+	if err != nil {
+		panic(errorx.New(errcode.General, "initTracingInstance failed: %v", err))
+	}
+
+	defer func() {
+		if err := tp.Shutdown(context.Background()); err != nil {
+			log.Fatal(err)
+		}
+	}()
+	otel.SetTracerProvider(tp)
 
 	crSvc := newClusterResourcesService(crConf)
 	if err = crSvc.Init(); err != nil {

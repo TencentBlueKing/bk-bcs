@@ -114,3 +114,8 @@ crGlobal:
   sharedCluster:
     enabledCObjKinds: []
     enabledCRDs: []
+
+# TRACING 相关配置
+tracing:
+  tracingEnabled: false
+  exporterURL: "http://localhost:14268/api/traces"

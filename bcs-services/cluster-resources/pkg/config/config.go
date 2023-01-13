@@ -27,6 +27,7 @@ import (
 	"github.com/TencentBlueKing/iam-go-sdk/metric"
 	jwtGo "github.com/dgrijalva/jwt-go"
 	"github.com/sirupsen/logrus"
+	"go.opentelemetry.io/otel/attribute"
 	"gopkg.in/yaml.v3"
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/envs"
@@ -96,6 +97,16 @@ type ClusterResourcesConf struct {
 	Log     LogConf     `yaml:"log"`
 	Redis   RedisConf   `yaml:"redis"`
 	Global  GlobalConf  `yaml:"crGlobal"`
+	Tracing TracingConf `yaml:"tracing"`
+}
+
+// TracingConf 链路追踪配置
+type TracingConf struct {
+	TracingEnabled bool `yaml:"tracingEnabled" usage:"tracing enabled"`
+
+	ExporterURL string `yaml:"exporterURL" usage:"url of exporter"`
+
+	ResourceAttrs []attribute.KeyValue `yaml:"resourceAttrs" usage:"attributes of traced service"`
 }
 
 func (c *ClusterResourcesConf) initServerAddress() error {
@@ -271,7 +282,7 @@ type BCSAPIGatewayConf struct {
 // IAMConf 权限中心相关配置
 type IAMConf struct {
 	Host       string     `yaml:"host" usage:"权限中心 V3 Host"`
-	SystemID   string     `yaml:"systemID" usage:"接入系统的 ID"`                                  // nolint:tagliatelle
+	SystemID   string     `yaml:"systemID" usage:"接入系统的 ID"`                                        // nolint:tagliatelle
 	UseBKAPIGW bool       `yaml:"useBKApiGW" usage:"为真则使用蓝鲸 apigw，否则使用 iamHost + bkPaaSHost"` // nolint:tagliatelle
 	Metric     bool       `yaml:"metric" usage:"支持 prometheus metrics"`
 	Debug      bool       `yaml:"debug" usage:"启用 iam 调试模式"`

@@ -36,6 +36,7 @@ require (
 	github.com/stretchr/testify v1.7.0
 	github.com/tmc/grpc-websocket-proxy v0.0.0-20200122045848-3419fae592fc
 	go-micro.dev/v4 v4.8.1
+	go.opentelemetry.io/otel/sdk v1.3.0
 	go.uber.org/zap v1.19.1
 	google.golang.org/genproto v0.0.0-20211020151524-b7c3a969101a
 	google.golang.org/grpc v1.42.0
@@ -73,6 +74,7 @@ require (
 	github.com/go-git/go-billy/v5 v5.3.1 // indirect
 	github.com/go-git/go-git/v5 v5.4.2 // indirect
 	github.com/go-logr/logr v1.2.1 // indirect
+	github.com/go-logr/stdr v1.2.0 // indirect
 	github.com/go-playground/locales v0.13.0 // indirect
 	github.com/go-playground/universal-translator v0.17.0 // indirect
 	github.com/go-playground/validator/v10 v10.4.1 // indirect
@@ -102,6 +104,7 @@ require (
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/nxadm/tail v1.4.8 // indirect
+	github.com/openzipkin/zipkin-go v0.3.0 // indirect
 	github.com/oxtoacart/bpool v0.0.0-20190530202638-03653db5a59c // indirect
 	github.com/parnurzeal/gorequest v0.2.16 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
@@ -122,6 +125,10 @@ require (
 	go.etcd.io/etcd/api/v3 v3.5.2 // indirect
 	go.etcd.io/etcd/client/pkg/v3 v3.5.2 // indirect
 	go.etcd.io/etcd/client/v3 v3.5.2 // indirect
+	go.opentelemetry.io/otel v1.3.0 // indirect
+	go.opentelemetry.io/otel/exporters/jaeger v1.3.0 // indirect
+	go.opentelemetry.io/otel/exporters/zipkin v1.3.0 // indirect
+	go.opentelemetry.io/otel/trace v1.3.0 // indirect
 	go.uber.org/atomic v1.9.0 // indirect
 	go.uber.org/multierr v1.8.0 // indirect
 	golang.org/x/crypto v0.0.0-20220829220503-c86fa9a7ed90 // indirect

@@ -21,6 +21,12 @@ import (
 	"time"
 
 	"github.com/patrickmn/go-cache"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/baggage"
+	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/propagation"
+	"go.opentelemetry.io/otel/trace"
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/runmode"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/runtime"
@@ -96,11 +102,36 @@ func (c *CMClient) fetchClusterInfoWithCache(ctx context.Context, clusterID stri
 func (c *CMClient) fetchClusterInfo(ctx context.Context, clusterID string) (*Cluster, error) {
 	url := fmt.Sprintf("%s/bcsapi/v4/clustermanager/v1/cluster/%s", config.G.BCSAPIGW.Host, clusterID)
 
+	// 添加链路追踪
+	tracer := otel.Tracer("fetchClusterInfo")
+	commonAttrs := []attribute.KeyValue{
+		attribute.String("component", "http"),
+		attribute.String("method", "get"),
+		attribute.String("url", url),
+	}
+	ctx, span := tracer.Start(ctx, "bcsapi/v4/clustermanager/v1/cluster", trace.WithSpanKind(trace.SpanKindClient), trace.WithAttributes(commonAttrs...))
+
+	defer span.End()
+
+	p := propagation.Baggage{}
+
+	traceMember, _ := baggage.NewMember("trace-id", span.SpanContext().TraceID().String())
+	spanMember, _ := baggage.NewMember("span-id", span.SpanContext().SpanID().String())
+	b, _ := baggage.New(traceMember, spanMember)
+
+	ctxBaggage := baggage.ContextWithBaggage(ctx, b)
+
 	resp, err := httpclient.GetClient().R().
 		SetContext(ctx).
 		SetAuthToken(config.G.BCSAPIGW.AuthToken).
 		Get(url)
 
+	// 传递请求头
+	p.Inject(ctxBaggage, propagation.HeaderCarrier(resp.Header()))
+	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
+	}
 	if err != nil {
 		return nil, err
 	}
