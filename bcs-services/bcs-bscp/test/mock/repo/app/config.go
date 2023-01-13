@@ -166,19 +166,19 @@ func (s *Setting) trySetDefault() {
 
 // LoadSettings load service's configuration
 func LoadSettings(sys *cc.SysOption) (*Setting, error) {
-	if len(sys.ConfigFile) == 0 {
+	if len(sys.ConfigFiles) == 0 {
 		return nil, errors.New("service's configuration file path is not configured")
 	}
 
 	// configure file is configured, then load configuration from file.
-	file, err := ioutil.ReadFile(sys.ConfigFile)
+	file, err := ioutil.ReadFile(sys.ConfigFiles[0])
 	if err != nil {
-		return nil, fmt.Errorf("load setting from file: %s failed, err: %v", sys.ConfigFile, err)
+		return nil, fmt.Errorf("load setting from file: %s failed, err: %v", sys.ConfigFiles[0], err)
 	}
 
 	s := new(Setting)
 	if err := yaml.Unmarshal(file, s); err != nil {
-		return nil, fmt.Errorf("unmarshal setting yaml from file: %s failed, err: %v", sys.ConfigFile, err)
+		return nil, fmt.Errorf("unmarshal setting yaml from file: %s failed, err: %v", sys.ConfigFiles[0], err)
 	}
 
 	if err = s.trySetFlagBindIP(sys.BindIP); err != nil {

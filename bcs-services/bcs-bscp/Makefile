@@ -51,6 +51,10 @@ init:
 	go install github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway@v1.16.0
 	go install github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger@v1.16.0
 
+.PHONY: tidy
+tidy:
+	go mod tidy -compat=1.17
+
 pre:
 	@echo -e "\e[34;1mBuilding...\n\033[0m"
 	mkdir -p ${OUTPUT_DIR}

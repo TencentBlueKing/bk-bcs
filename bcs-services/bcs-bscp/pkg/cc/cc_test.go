@@ -23,8 +23,8 @@ func TestCC(t *testing.T) {
 	InitService(APIServerName)
 
 	sys := &SysOption{
-		ConfigFile: "../../cmd/api-server/etc/api_server.yaml",
-		BindIP:     net.IPv4(127, 0, 0, 1),
+		ConfigFiles: []string{"../../cmd/api-server/etc/api_server.yaml"},
+		BindIP:      net.IPv4(127, 0, 0, 1),
 	}
 
 	if err := LoadSettings(sys); err != nil {

@@ -30,7 +30,6 @@ func TestRearrangeSQLDataWithOption(t *testing.T) {
 		Spec: &table.AppSpec{
 			Name:       "demo",
 			ConfigType: table.File,
-			DeployType: table.Common,
 			Memo:       "",
 		},
 		Revision: &table.Revision{
@@ -184,7 +183,6 @@ func TestGetTaggedDbField(t *testing.T) {
 		Spec: &table.AppSpec{
 			Name:       "demo",
 			ConfigType: table.File,
-			DeployType: table.Common,
 			Memo:       "",
 		},
 		Revision: &table.Revision{
