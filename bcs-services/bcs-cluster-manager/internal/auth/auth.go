@@ -32,17 +32,10 @@ import (
 // NoAuthMethod 不需要用户身份认证的方法
 var NoAuthMethod = []string{
 	// 集群相关
-	"ClusterManager.ListCluster",
-	"ClusterManager.GetCluster",
 	"ClusterManager.GetNodeInfo",
 	"ClusterManager.CheckCloudKubeConfig",
 	"ClusterManager.ListCommonCluster",
 	"ClusterManager.CheckNodeInCluster",
-	// credential
-	"ClusterManager.GetClusterCredential",
-	"ClusterManager.UpdateClusterCredential",
-	"ClusterManager.DeleteClusterCredential",
-	"ClusterManager.ListClusterCredential",
 	// cloud
 	"ClusterManager.GetCloud",
 	"ClusterManager.ListCloud",

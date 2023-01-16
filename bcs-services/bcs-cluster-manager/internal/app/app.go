@@ -57,6 +57,7 @@ import (
 	ssmAuth "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/cmdb"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/gse"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/install/helm"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/nodeman"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/passcc"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/user"
@@ -333,6 +334,19 @@ func (cm *ClusterManager) initRemoteClient() error {
 		Server:     cm.opt.Gse.Server,
 		Debug:      cm.opt.Gse.Debug,
 	}); err != nil {
+		return err
+	}
+
+	// init helm client
+	err = helm.SetHelmManagerClient(&helm.Options{
+		Enable:          cm.opt.Helm.Enable,
+		GateWay:         cm.opt.Helm.GateWay,
+		Token:           cm.opt.Helm.Token,
+		Module:          cm.opt.Helm.Module,
+		EtcdRegistry:    cm.microRegistry,
+		ClientTLSConfig: cm.clientTLSConfig,
+	})
+	if err != nil {
 		return err
 	}
 

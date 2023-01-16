@@ -55,7 +55,13 @@ func GetComponentInstaller(opts InstallOptions) (install.Installer, error) {
 		installer = bkapi.NewBKAPIInstaller(opts.ProjectID, opts.ChartName, opts.ReleaseName, opts.ReleaseNamespace,
 			opts.IsPublicRepo, client, debug)
 	case helm.Helm:
-		installer, err = helm.NewHelmInstaller("", opts.ChartName, opts.ReleaseName, opts.ReleaseNamespace, nil)
+		installer, err = helm.NewHelmInstaller(helm.HelmOptions{
+			ProjectID:   opts.ProjectID,
+			Namespace:   opts.ReleaseNamespace,
+			ReleaseName: opts.ReleaseName,
+			ChartName:   opts.ChartName,
+			IsPublic:    opts.IsPublicRepo,
+		}, helm.GetHelmManagerClient(), false)
 	default:
 		err = fmt.Errorf("installer not support type[%s]", opts.InstallType.String())
 	}

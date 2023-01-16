@@ -15,6 +15,7 @@ package blueking
 
 import (
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/common"
 	"strings"
 	"sync"
 	"time"
@@ -215,21 +216,7 @@ func (t *Task) BuildImportClusterTask(cls *proto.Cluster, opt *cloudprovider.Imp
 	task.StepSequence = append(task.StepSequence, importClusterNodesTask)
 
 	// step1: install cluster watch component
-	installWatchComponentStep := &proto.Step{
-		Name:       installWatchComponentTask,
-		System:     "api",
-		Params:     make(map[string]string),
-		Retry:      0,
-		Start:      nowStr,
-		Status:     cloudprovider.TaskStatusNotStarted,
-		TaskMethod: cloudprovider.WatchTask,
-		TaskName:   "安装集群watch组件",
-	}
-	installWatchComponentStep.Params[cloudprovider.ProjectIDKey.String()] = cls.ProjectID
-	installWatchComponentStep.Params[cloudprovider.ClusterIDKey.String()] = cls.ClusterID
-
-	task.Steps[installWatchComponentTask] = installWatchComponentStep
-	task.StepSequence = append(task.StepSequence, installWatchComponentTask)
+	common.BuildWatchComponentTaskStep(task, cls)
 
 	// set current step
 	if len(task.StepSequence) == 0 {

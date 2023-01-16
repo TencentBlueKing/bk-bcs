@@ -598,3 +598,11 @@ func getNodeDualAddress(node *corev1.Node) (string, string) {
 	ipv4s, ipv6s := getNodeIPAddress(node)
 	return utils.SliceToString(ipv4s), utils.SliceToString(ipv6s)
 }
+
+func shieldClusterInfo(cluster *proto.Cluster) *proto.Cluster {
+	if cluster != nil {
+		cluster.KubeConfig = ""
+	}
+
+	return cluster
+}

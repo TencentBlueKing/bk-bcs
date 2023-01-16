@@ -11,30 +11,6 @@
  *
  */
 
-package install
+package helm
 
-import "time"
 
-// Installer is the interface for app installer
-type Installer interface {
-	IsInstalled(clusterID string) (bool, error)
-	Install(clusterID, values string) error
-	Upgrade(clusterID, values string) error
-	Uninstall(clusterID string) error
-	CheckAppStatus(clusterID string, timeout time.Duration) (bool, error)
-}
-
-// InstallerType type
-type InstallerType string
-
-// String toString
-func (it InstallerType) String() string {
-	return string(it)
-}
-
-var (
-	// DefaultCmdFlag xxx
-	DefaultCmdFlag = []map[string]interface{}{{"--insecure-skip-tls-verify": ""}, {"--wait": true}}
-	// DefaultArgsFlag xxx
-	DefaultArgsFlag = []string{"--insecure-skip-tls-verify", "--wait"}
-)

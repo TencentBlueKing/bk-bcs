@@ -15478,6 +15478,338 @@ var _ interface {
 	ErrorName() string
 } = ListCommonClusterRespValidationError{}
 
+// Validate checks the field values on ListProjectClusterReq with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *ListProjectClusterReq) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ListProjectClusterReq with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// ListProjectClusterReqMultiError, or nil if none found.
+func (m *ListProjectClusterReq) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ListProjectClusterReq) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if utf8.RuneCountInString(m.GetProjectID()) > 100 {
+		err := ListProjectClusterReqValidationError{
+			field:  "ProjectID",
+			reason: "value length must be at most 100 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	// no validation rules for Operator
+
+	if len(errors) > 0 {
+		return ListProjectClusterReqMultiError(errors)
+	}
+
+	return nil
+}
+
+// ListProjectClusterReqMultiError is an error wrapping multiple validation
+// errors returned by ListProjectClusterReq.ValidateAll() if the designated
+// constraints aren't met.
+type ListProjectClusterReqMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ListProjectClusterReqMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ListProjectClusterReqMultiError) AllErrors() []error { return m }
+
+// ListProjectClusterReqValidationError is the validation error returned by
+// ListProjectClusterReq.Validate if the designated constraints aren't met.
+type ListProjectClusterReqValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ListProjectClusterReqValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ListProjectClusterReqValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ListProjectClusterReqValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ListProjectClusterReqValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ListProjectClusterReqValidationError) ErrorName() string {
+	return "ListProjectClusterReqValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ListProjectClusterReqValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sListProjectClusterReq.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ListProjectClusterReqValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ListProjectClusterReqValidationError{}
+
+// Validate checks the field values on ListProjectClusterResp with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *ListProjectClusterResp) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ListProjectClusterResp with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// ListProjectClusterRespMultiError, or nil if none found.
+func (m *ListProjectClusterResp) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ListProjectClusterResp) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	// no validation rules for Result
+
+	for idx, item := range m.GetData() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, ListProjectClusterRespValidationError{
+						field:  fmt.Sprintf("Data[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, ListProjectClusterRespValidationError{
+						field:  fmt.Sprintf("Data[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return ListProjectClusterRespValidationError{
+					field:  fmt.Sprintf("Data[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	{
+		sorted_keys := make([]string, len(m.GetClusterExtraInfo()))
+		i := 0
+		for key := range m.GetClusterExtraInfo() {
+			sorted_keys[i] = key
+			i++
+		}
+		sort.Slice(sorted_keys, func(i, j int) bool { return sorted_keys[i] < sorted_keys[j] })
+		for _, key := range sorted_keys {
+			val := m.GetClusterExtraInfo()[key]
+			_ = val
+
+			// no validation rules for ClusterExtraInfo[key]
+
+			if all {
+				switch v := interface{}(val).(type) {
+				case interface{ ValidateAll() error }:
+					if err := v.ValidateAll(); err != nil {
+						errors = append(errors, ListProjectClusterRespValidationError{
+							field:  fmt.Sprintf("ClusterExtraInfo[%v]", key),
+							reason: "embedded message failed validation",
+							cause:  err,
+						})
+					}
+				case interface{ Validate() error }:
+					if err := v.Validate(); err != nil {
+						errors = append(errors, ListProjectClusterRespValidationError{
+							field:  fmt.Sprintf("ClusterExtraInfo[%v]", key),
+							reason: "embedded message failed validation",
+							cause:  err,
+						})
+					}
+				}
+			} else if v, ok := interface{}(val).(interface{ Validate() error }); ok {
+				if err := v.Validate(); err != nil {
+					return ListProjectClusterRespValidationError{
+						field:  fmt.Sprintf("ClusterExtraInfo[%v]", key),
+						reason: "embedded message failed validation",
+						cause:  err,
+					}
+				}
+			}
+
+		}
+	}
+
+	if all {
+		switch v := interface{}(m.GetWebAnnotations()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, ListProjectClusterRespValidationError{
+					field:  "WebAnnotations",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, ListProjectClusterRespValidationError{
+					field:  "WebAnnotations",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetWebAnnotations()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return ListProjectClusterRespValidationError{
+				field:  "WebAnnotations",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if len(errors) > 0 {
+		return ListProjectClusterRespMultiError(errors)
+	}
+
+	return nil
+}
+
+// ListProjectClusterRespMultiError is an error wrapping multiple validation
+// errors returned by ListProjectClusterResp.ValidateAll() if the designated
+// constraints aren't met.
+type ListProjectClusterRespMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ListProjectClusterRespMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ListProjectClusterRespMultiError) AllErrors() []error { return m }
+
+// ListProjectClusterRespValidationError is the validation error returned by
+// ListProjectClusterResp.Validate if the designated constraints aren't met.
+type ListProjectClusterRespValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ListProjectClusterRespValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ListProjectClusterRespValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ListProjectClusterRespValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ListProjectClusterRespValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ListProjectClusterRespValidationError) ErrorName() string {
+	return "ListProjectClusterRespValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ListProjectClusterRespValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sListProjectClusterResp.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ListProjectClusterRespValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ListProjectClusterRespValidationError{}
+
 // Validate checks the field values on ListClusterReq with the rules defined in
 // the proto definition for this message. If any rules are violated, the first
 // error encountered is returned, or nil if there are no violations.
@@ -24236,8 +24568,6 @@ func (m *GetCloudRequest) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	// no validation rules for ShowCredential
-
 	if len(errors) > 0 {
 		return GetCloudRequestMultiError(errors)
 	}
@@ -24495,8 +24825,6 @@ func (m *ListCloudRequest) validate(all bool) error {
 	// no validation rules for Updater
 
 	// no validation rules for CloudProvider
-
-	// no validation rules for ShowCredential
 
 	if len(errors) > 0 {
 		return ListCloudRequestMultiError(errors)

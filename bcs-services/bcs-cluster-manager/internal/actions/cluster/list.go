@@ -98,7 +98,7 @@ func (la *ListAction) getSharedCluster() error {
 
 	clusterIDs := make([]string, 0)
 	for i := range clusterList {
-		la.clusterList = append(la.clusterList, &clusterList[i])
+		la.clusterList = append(la.clusterList, shieldClusterInfo(&clusterList[i]))
 		clusterIDs = append(clusterIDs, clusterList[i].ClusterID)
 	}
 
@@ -177,7 +177,7 @@ func (la *ListAction) listCluster() error {
 		if clusterList[i].IsShared {
 			clusterList[i].IsShared = false
 		}
-		la.clusterList = append(la.clusterList, &clusterList[i])
+		la.clusterList = append(la.clusterList, shieldClusterInfo(&clusterList[i]))
 		clusterIDList = append(clusterIDList, clusterList[i].ClusterID)
 	}
 
@@ -355,7 +355,7 @@ func (la *ListCommonClusterAction) listCluster() error {
 
 	clusterIDList := make([]string, 0)
 	for i := range clusterList {
-		la.clusterList = append(la.clusterList, &clusterList[i])
+		la.clusterList = append(la.clusterList, shieldClusterInfo(&clusterList[i]))
 		clusterIDList = append(clusterIDList, clusterList[i].ClusterID)
 	}
 
@@ -542,6 +542,7 @@ func (la *ListMastersInClusterAction) listNodes() error {
 		return err
 	}
 	for _, v := range cls.Master {
+		v.Passwd = ""
 		la.nodes = append(la.nodes, transNodeToClusterNode(v))
 	}
 

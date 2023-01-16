@@ -180,6 +180,15 @@ type BCSAppConfig struct {
 	Debug      bool   `json:"debug"`
 }
 
+// HelmConfig for helm
+type HelmConfig struct {
+	Enable bool `json:"enable"`
+	// GateWay address
+	GateWay string `json:"gateWay"`
+	Token   string `json:"token"`
+	Module  string `json:"module"`
+}
+
 // AutoScaler Config for autoscaler
 type AutoScaler struct {
 	ChartName        string `json:"chartName"`
@@ -203,6 +212,7 @@ type ComponentDeploy struct {
 	Watch         BcsWatch   `json:"watch"`
 	BCSAPIGateway string     `json:"bcsApiGateway"`
 	Token         string     `json:"token"`
+	DeployService string     `json:"deployService"`
 }
 
 // AuthConfig config for auth
@@ -249,6 +259,7 @@ type ClusterManagerOptions struct {
 	Auth               AuthConfig            `json:"auth"`
 	Gse                GseConfig             `json:"gse"`
 	BCSAppConfig       BCSAppConfig          `json:"bcsapp"`
+	Helm               HelmConfig            `json:"helm"`
 	ComponentDeploy    ComponentDeploy       `json:"componentDeploy"`
 	ResourceSchemaPath string                `json:"resourceSchemaPath"`
 	Debug              bool                  `json:"debug"`
