@@ -17,12 +17,11 @@ import (
 	"context"
 	"crypto/tls"
 	"errors"
-	"net"
-	"net/http"
-	"strings"
-
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/types"
+	"github.com/Tencent/bk-bcs/bcs-common/common/util"
+	"net"
+	"net/http"
 )
 
 var ErrListenNull = errors.New(
@@ -49,6 +48,7 @@ func (s *IPv6Server) verifyIp() (ips []string) {
 		if net.ParseIP(v) != nil {
 			ips = append(ips, v)
 		}
+
 	}
 	return ips
 }
@@ -67,8 +67,7 @@ func (s *IPv6Server) Listen() (listeners []net.Listener, err error) {
 	for _, v := range s.joinHostPort() {
 		listen, err := net.Listen(s.network, v)
 		if err != nil {
-			if strings.Contains(err.Error(), "bind: cannot assign requested address") {
-				// 单栈环境，会出现该错误
+			if util.CheckBindError(err) {
 				blog.Warn("unable to listen %s, err: %s", v, err.Error())
 				continue
 			}
