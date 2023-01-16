@@ -17,13 +17,13 @@ import (
 	"context"
 	"net"
 	"net/http"
-	"strings"
 	"sync"
 
 	"github.com/pkg/errors"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/types"
+	"github.com/Tencent/bk-bcs/bcs-common/common/util"
 )
 
 // Connection 新的连接
@@ -68,8 +68,7 @@ func NewDualStackListener() *DualStackListener {
 func (d *DualStackListener) addSubListener(address string) error {
 	listen, err := net.Listen(types.TCP, address)
 	if err != nil {
-		if strings.Contains(err.Error(), "bind: cannot assign requested address") {
-			// 单栈环境，会出现该错误
+		if util.CheckBindError(err) {
 			blog.Warn("unable to listen %s, err: %s", address, err.Error())
 			return nil
 		}

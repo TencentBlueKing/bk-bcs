@@ -96,3 +96,27 @@ func InitIPv6Address(ip string) string {
 	}
 	return net.IPv6loopback.String()
 }
+
+// errorIsBindAlreadyInUse 单栈ipv6环境，会出现该错误
+func errorIsBindAlreadyInUse(err error) bool {
+	return strings.Contains(err.Error(), "bind: address already in use")
+}
+
+// errorIsBindingCannotAssignAddress 单栈ipv4环境，会出现该错误
+func errorIsBindingCannotAssignAddress(err error) bool {
+	return strings.Contains(err.Error(), "bind: cannot assign requested address")
+}
+
+// CheckBindError 检查listen绑定错误
+func CheckBindError(err error) bool {
+	checkFunSets := []func(error) bool{
+		errorIsBindAlreadyInUse,
+		errorIsBindingCannotAssignAddress,
+	}
+	for _, fun := range checkFunSets {
+		if fun(err) {
+			return true
+		}
+	}
+	return false
+}
