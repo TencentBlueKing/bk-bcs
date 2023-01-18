@@ -43,7 +43,8 @@ type WebServer struct {
 // NewWebServer :
 func NewWebServer(ctx context.Context, addr string, addrIPv6 string) (*WebServer, error) {
 	gin.SetMode(gin.ReleaseMode)
-	engine := gin.Default()
+	engine := gin.New()
+	engine.Use(gin.Recovery(), gin.Logger(), cors.Default())
 
 	srv := &http.Server{Addr: addr, Handler: engine}
 
@@ -80,12 +81,15 @@ func (w *WebServer) Close() error {
 	return w.srv.Shutdown(w.ctx)
 }
 
+func staticCacheControl(c *gin.Context) {
+	// cache one day
+	c.Header("Cache-Control", "max-age=86400, public")
+}
+
 // newRoutes xxx
 // @Title     BCS-Monitor OpenAPI
 // @BasePath  /bcsapi/v4/monitor/api/projects/:projectId/clusters/:clusterId
 func (w *WebServer) newRoutes(engine *gin.Engine) {
-	engine.Use(gin.Recovery(), gin.Logger(), cors.Default())
-
 	// openapi 文档
 	// 访问 swagger/index.html, swagger/doc.json
 	engine.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
@@ -96,13 +100,21 @@ func (w *WebServer) newRoutes(engine *gin.Engine) {
 
 	// 注册模板和静态资源
 	engine.SetHTMLTemplate(bscp.WebTemplate())
+	webFaviconPath := bscp.WebFaviconPath()
 
-	engine.Group("").StaticFS("/web", http.FS(bscp.WebStatic()))
+	engine.Group("", staticCacheControl).StaticFileFS("/favicon.ico", webFaviconPath, http.FS(bscp.WebStatic()))
+	engine.Group("", staticCacheControl).StaticFS("/web", http.FS(bscp.WebStatic()))
 	engine.GET("", w.IndexHandler)
 
 	if config.G.Web.RoutePrefix != "" {
-		engine.Group(config.G.Web.RoutePrefix).StaticFS("/web", http.FS(bscp.WebStatic()))
+		engine.Group(config.G.Web.RoutePrefix, staticCacheControl).StaticFileFS("/favicon.ico", webFaviconPath, http.FS(bscp.WebStatic()))
+		engine.Group(config.G.Web.RoutePrefix, staticCacheControl).StaticFS("/web", http.FS(bscp.WebStatic()))
 		engine.Group(config.G.Web.RoutePrefix).GET("", w.IndexHandler)
+	}
+
+	// 本地开发模式
+	if config.G.IsDevMode() {
+		engine.Any("/bscp/api/*path", ReverseAPIHandler("bscp_api", config.G.BCS.Host))
 	}
 
 	// vue 自定义路由, 前端返回404
@@ -115,6 +127,11 @@ func (w *WebServer) IndexHandler(c *gin.Context) {
 		"BK_STATIC_URL":   path.Join(config.G.Web.RoutePrefix, "/web"),
 		"RUN_ENV":         config.G.Base.RunEnv,
 		"BK_BCS_BSCP_API": config.G.BCS.Host + "/bscp",
+	}
+
+	// 本地开发模式
+	if config.G.IsDevMode() {
+		data["BK_BCS_BSCP_API"] = "/bscp"
 	}
 
 	c.HTML(http.StatusOK, "index.html", data)
@@ -138,6 +155,7 @@ func ReverseAPIHandler(name, remoteURL string) gin.HandlerFunc {
 			req.Host = remote.Host
 			req.URL.Scheme = remote.Scheme
 			req.URL.Host = remote.Host
+			klog.InfoS("forward request", "name", name, "url", req.URL)
 		}
 
 		proxy.ServeHTTP(c.Writer, c.Request)

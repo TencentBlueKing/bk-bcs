@@ -16,6 +16,7 @@ import (
 	"embed"
 	"html/template"
 	"io/fs"
+	"strings"
 )
 
 //go:embed ui/dist
@@ -28,8 +29,28 @@ type Config struct {
 
 // WebStatic 静态资源
 func WebStatic() fs.FS {
-	static, _ := fs.Sub(frontendAssets, "ui/dist")
+	static, err := fs.Sub(frontendAssets, "ui/dist")
+	if err != nil {
+		panic(err)
+	}
 	return static
+}
+
+// WebFaviconPath 站点 icon 路径
+func WebFaviconPath() string {
+	entrys, err := frontendAssets.ReadDir("ui/dist/static")
+	if err != nil {
+		panic(err)
+	}
+	for _, v := range entrys {
+		if v.IsDir() {
+			continue
+		}
+		if strings.Contains(v.Name(), "favicon") {
+			return "/static/" + v.Name()
+		}
+	}
+	panic("favicon not found")
 }
 
 // WebTemplate html 摸版
