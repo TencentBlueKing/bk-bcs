@@ -48,19 +48,19 @@ var HPAComplex = model.HPA{
 		Resource: model.ResourceMetric{
 			Items: []model.ResourceMetricItem{
 				{
-					Name:  "cpu",
-					Type:  resCsts.HPATargetTypeAverageValue,
-					Value: "80",
+					Name:   resCsts.MetricResCPU,
+					Type:   resCsts.HPATargetTypeAverageValue,
+					CPUVal: 500,
 				},
 				{
-					Name:  "gpu",
-					Type:  resCsts.HPATargetTypeUtilization,
-					Value: "50",
+					Name:    "gpu",
+					Type:    resCsts.HPATargetTypeUtilization,
+					Percent: 50,
 				},
 				{
-					Name:  "memory",
-					Type:  resCsts.HPATargetTypeAverageValue,
-					Value: "60",
+					Name:   resCsts.MetricResMem,
+					Type:   resCsts.HPATargetTypeAverageValue,
+					MEMVal: 512,
 				},
 			},
 		},
@@ -211,9 +211,9 @@ var HPASimple = model.HPA{
 		Resource: model.ResourceMetric{
 			Items: []model.ResourceMetricItem{
 				{
-					Name:  "cpu",
-					Type:  resCsts.HPATargetTypeAverageValue,
-					Value: "80",
+					Name:   resCsts.MetricResCPU,
+					Type:   resCsts.HPATargetTypeAverageValue,
+					CPUVal: 500,
 				},
 			},
 		},

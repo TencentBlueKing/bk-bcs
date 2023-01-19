@@ -223,11 +223,11 @@ func diffRetCanIgnored(ret mapx.DiffRet) bool {
 		return true
 	}
 	// cpu, memory 字段兼容单位转换
-	if strings.HasSuffix(ret.Dotted, "cpu") &&
+	if strings.HasSuffix(ret.Dotted, resCsts.MetricResCPU) &&
 		util.ConvertCPUUnit(ret.OldVal.(string)) == util.ConvertCPUUnit(ret.NewVal.(string)) {
 		return true
 	}
-	if strings.HasSuffix(ret.Dotted, "memory") &&
+	if strings.HasSuffix(ret.Dotted, resCsts.MetricResMem) &&
 		util.ConvertMemoryUnit(ret.OldVal.(string)) == util.ConvertMemoryUnit(ret.NewVal.(string)) {
 		return true
 	}

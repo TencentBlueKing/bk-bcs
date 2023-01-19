@@ -35,9 +35,9 @@ var lightHPAManifest = map[string]interface{}{
 		"metrics": []interface{}{
 			map[string]interface{}{
 				"resource": map[string]interface{}{
-					"name": "cpu",
+					"name": resCsts.MetricResCPU,
 					"target": map[string]interface{}{
-						"averageValue": "80",
+						"averageValue": "1000m",
 						"type":         "AverageValue",
 					},
 				},
@@ -45,7 +45,7 @@ var lightHPAManifest = map[string]interface{}{
 			},
 			map[string]interface{}{
 				"resource": map[string]interface{}{
-					"name": "cpu",
+					"name": resCsts.MetricResCPU,
 					"target": map[string]interface{}{
 						"averageUtilization": int64(50),
 						"type":               "Utilization",
@@ -55,9 +55,9 @@ var lightHPAManifest = map[string]interface{}{
 			},
 			map[string]interface{}{
 				"resource": map[string]interface{}{
-					"name": "memory",
+					"name": resCsts.MetricResMem,
 					"target": map[string]interface{}{
-						"averageValue": "60",
+						"averageValue": "1024Mi",
 						"type":         "AverageValue",
 					},
 				},
@@ -215,19 +215,19 @@ var exceptedHPASpec = model.HPASpec{
 	Resource: model.ResourceMetric{
 		Items: []model.ResourceMetricItem{
 			{
-				Name:  "cpu",
-				Type:  resCsts.HPATargetTypeAverageValue,
-				Value: "80",
+				Name:   resCsts.MetricResCPU,
+				Type:   resCsts.HPATargetTypeAverageValue,
+				CPUVal: 1000,
 			},
 			{
-				Name:  "cpu",
-				Type:  resCsts.HPATargetTypeUtilization,
-				Value: "50",
+				Name:    resCsts.MetricResCPU,
+				Type:    resCsts.HPATargetTypeUtilization,
+				Percent: 50,
 			},
 			{
-				Name:  "memory",
-				Type:  resCsts.HPATargetTypeAverageValue,
-				Value: "60",
+				Name:   resCsts.MetricResMem,
+				Type:   resCsts.HPATargetTypeAverageValue,
+				MEMVal: 1024,
 			},
 		},
 	},

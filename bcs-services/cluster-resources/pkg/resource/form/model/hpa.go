@@ -46,9 +46,11 @@ type ResourceMetric struct {
 
 // ResourceMetricItem xxx
 type ResourceMetricItem struct {
-	Name  string `structs:"name"`
-	Type  string `structs:"type"`
-	Value string `structs:"value"`
+	Name    string `structs:"name"`
+	Type    string `structs:"type"`
+	Percent int64  `structs:"percent"`
+	CPUVal  int    `structs:"cpuVal"`
+	MEMVal  int    `structs:"memVal"`
 }
 
 // ContainerResMetric NOTE ContainerResource 指标目前未启用

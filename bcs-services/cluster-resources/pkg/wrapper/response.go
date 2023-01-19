@@ -42,7 +42,7 @@ func NewResponseFormatWrapper() server.HandlerWrapper {
 				r.RequestID = getRequestID(ctx)
 				r.Message, r.Code = getRespMsgCode(err)
 				if err != nil {
-					r.Data = genNewRespData(err)
+					r.Data = genNewRespData(ctx, err)
 					// 返回 nil 避免框架重复处理 error
 					return nil
 				}
@@ -83,12 +83,12 @@ func getRespMsgCode(err interface{}) (string, int32) {
 }
 
 // genNewRespData 根据不同错误类型，更新 Data 字段信息
-func genNewRespData(err interface{}) *structpb.Struct {
+func genNewRespData(ctx context.Context, err interface{}) *structpb.Struct {
 	switch e := err.(type) {
 	case *perm.IAMPermError:
 		perms, genPermErr := e.Perms()
 		if genPermErr != nil {
-			log.Warn(context.TODO(), "generate iam perm apply url failed: %v", genPermErr)
+			log.Warn(ctx, "generate iam perm apply url failed: %v", genPermErr)
 		}
 		spbPerms, _ := pbstruct.Map2pbStruct(perms)
 		return spbPerms

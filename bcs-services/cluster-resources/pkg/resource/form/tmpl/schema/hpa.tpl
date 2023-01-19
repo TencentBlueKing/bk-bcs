@@ -106,7 +106,9 @@ resource:
         required:
           - name
           - type
-          - value
+          - percent
+          - cpuVal
+          - memVal
         properties:
           name:
             title: {{ i18n "资源" .lang }}
@@ -121,10 +123,29 @@ resource:
                     value: cpu
                   - label: Memory
                     value: memory
+            ui:reactions:
+              # 仅当资源类型为 cpu 且指标类型为 AverageValue 时，展示 mCPUs 为单位的输入框
+              - target: "{{`{{`}} $widgetNode?.getSibling('cpuVal')?.id {{`}}`}}"
+                if: "{{`{{`}} $self.value === 'cpu' && $widgetNode?.getSibling('type')?.instance?.value === 'AverageValue' {{`}}`}}"
+                then:
+                  state:
+                    visible: true
+                else:
+                  state:
+                    visible: false
+              # 仅当资源类型为 memory 且指标类型为 AverageValue 时，展示 Mi 为单位的输入框
+              - target: "{{`{{`}} $widgetNode?.getSibling('memVal')?.id {{`}}`}}"
+                if: "{{`{{`}} $self.value === 'memory' && $widgetNode?.getSibling('type')?.instance?.value === 'AverageValue' {{`}}`}}"
+                then:
+                  state:
+                    visible: true
+                else:
+                  state:
+                    visible: false
           type:
             title: {{ i18n "指标类型" .lang }}
             type: string
-            default: AverageValue
+            default: Utilization
             ui:component:
               name: select
               props:
@@ -132,15 +153,76 @@ resource:
                 datasource:
                   - label: AverageValue
                     value: AverageValue
+                    disabled: false
+                    tips: {{ i18n "工作负载资源使用绝对数值" .lang }}
                   - label: AverageUtilization
                     value: Utilization
-          value:
+                    disabled: false
+                    tips: {{ i18n "工作负载所有 Pod 资源实际使用值 / 资源 Request 值" .lang }}
+            ui:reactions:
+              # 仅当指标类型为 Utilization 时，展示 % 为单位的输入框
+              - target: "{{`{{`}} $widgetNode?.getSibling('percent')?.id {{`}}`}}"
+                if: "{{`{{`}} $self.value === 'Utilization' {{`}}`}}"
+                then:
+                  state:
+                    visible: true
+                else:
+                  state:
+                    visible: false
+              # 仅当指标类型为 AverageValue 且资源类型为 cpu 时，展示 mCPUs 为单位的输入框
+              - target: "{{`{{`}} $widgetNode?.getSibling('cpuVal')?.id {{`}}`}}"
+                if: "{{`{{`}} $self.value === 'AverageValue' && $widgetNode?.getSibling('name')?.instance?.value === 'cpu' {{`}}`}}"
+                then:
+                  state:
+                    visible: true
+                else:
+                  state:
+                    visible: false
+              # 仅当指标类型为 AverageValue 且资源类型为 memory 时，展示 Mi 为单位的输入框
+              - target: "{{`{{`}} $widgetNode?.getSibling('memVal')?.id {{`}}`}}"
+                if: "{{`{{`}} $self.value === 'AverageValue' && $widgetNode?.getSibling('name')?.instance?.value === 'memory' {{`}}`}}"
+                then:
+                  state:
+                    visible: true
+                else:
+                  state:
+                    visible: false
+          percent:
             title: {{ i18n "值" .lang }}
-            type: string
-            default: "80"
+            type: integer
+            default: 80
+            ui:component:
+              name: bfInput
+              props:
+                max: 100
+                unit: "%"
             ui:rules:
-              - required
-              - maxLength64
+              - validator: "{{`{{`}} $widgetNode?.getSibling('type')?.instance?.value !== 'Utilization' || $self.value {{`}}`}}"
+                message: {{ i18n "值不能为零或空" .lang }}
+          cpuVal:
+            title: {{ i18n "值" .lang }}
+            type: integer
+            default: 2000
+            ui:component:
+              name: bfInput
+              props:
+                max: 256000
+                unit: mCPUs
+            ui:rules:
+              - validator: "{{`{{`}} $widgetNode?.getSibling('type')?.instance?.value !== 'AverageValue' || $widgetNode?.getSibling('name')?.instance?.value !== 'cpu' || $self.value {{`}}`}}"
+                message: {{ i18n "值不能为零或空" .lang }}
+          memVal:
+            title: {{ i18n "值" .lang }}
+            type: integer
+            default: 1024
+            ui:component:
+              name: bfInput
+              props:
+                max: 256000
+                unit: Mi
+            ui:rules:
+              - validator: "{{`{{`}} $widgetNode?.getSibling('type')?.instance?.value !== 'AverageValue' || $widgetNode?.getSibling('name')?.instance?.value !== 'memory' || $self.value {{`}}`}}"
+                message: {{ i18n "值不能为零或空" .lang }}
         ui:group:
           props:
             showTitle: false

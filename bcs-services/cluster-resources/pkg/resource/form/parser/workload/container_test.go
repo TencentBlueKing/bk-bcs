@@ -69,14 +69,14 @@ var containerConf4Test = []interface{}{
 		},
 		"resources": map[string]interface{}{
 			"requests": map[string]interface{}{
-				"memory":                    "128Mi",
-				"cpu":                       "100m",
+				resCsts.MetricResMem:        "128Mi",
+				resCsts.MetricResCPU:        "100m",
 				"tke.cloud.tencent.com/eip": "2",
 			},
 			"limits": map[string]interface{}{
-				"memory":           "1Gi",
-				"cpu":              "0.5",
-				"tencent.com/fgpu": "5",
+				resCsts.MetricResMem: "1Gi",
+				resCsts.MetricResCPU: "0.5",
+				"tencent.com/fgpu":   "5",
 			},
 		},
 		"env": []interface{}{

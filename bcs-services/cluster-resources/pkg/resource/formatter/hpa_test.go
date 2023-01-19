@@ -18,6 +18,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+
+	resCsts "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/constants"
 )
 
 var lightHPAManifest1 = map[string]interface{}{
@@ -542,7 +544,7 @@ var lightHPAManifest = map[string]interface{}{
 		"metrics": []interface{}{
 			map[string]interface{}{
 				"resource": map[string]interface{}{
-					"name": "cpu",
+					"name": resCsts.MetricResCPU,
 					"target": map[string]interface{}{
 						"averageUtilization": 56,
 						"type":               "Utilization",

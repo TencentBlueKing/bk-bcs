@@ -542,6 +542,12 @@
   en: ResourceMetric
 - msgID: 指标类型
   en: MetricType
+- msgID: 工作负载资源使用绝对数值
+  en: "workload absolute resource usage value"
+- msgID: "工作负载所有 Pod 资源实际使用值 / 资源 Request 值"
+  en: "resource usage value of all workload's pod / request value"
+- msgID: 值不能为零或空
+  en: "value can't be zero or empty"
 - msgID: "ContainerResource 指标"
   en: ContainerResourceMetric
 - msgID: 指标名称

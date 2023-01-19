@@ -190,7 +190,7 @@ func genResExtra(requirement map[string]interface{}) []model.ResExtra {
 	extra := []model.ResExtra{}
 	for key, value := range requirement {
 		// cpu, memory 作为固定的指标，不会加入到 extra
-		if key == "cpu" || key == "memory" {
+		if key == resCsts.MetricResCPU || key == resCsts.MetricResMem {
 			continue
 		}
 		extra = append(extra, model.ResExtra{

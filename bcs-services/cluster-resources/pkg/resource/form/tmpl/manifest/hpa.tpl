@@ -12,7 +12,7 @@ maxReplicas: {{ .maxReplicas }}
 - type: Resource
   resource:
     name: {{ .name | quote }}
-    {{- include "hpa.metricTarget" . | nindent 4 }}
+    {{- include "hpa.resMetricTarget" . | nindent 4 }}
 {{- end }}
 {{- end }}
 
@@ -82,6 +82,23 @@ selector:
     {{- include "common.kvSlice2Map" .labels | indent 6 }}
   {{- end }}
 {{- end }}
+{{- end }}
+
+# Resource 指标特有子模板，为 CPU, Memory 指标类型做特化
+{{- define "hpa.resMetricTarget" -}}
+target:
+  type: {{ .type }}
+  {{- if eq .type "AverageValue" }}
+  {{- if eq .name "cpu" }}
+  averageValue: {{ .cpuVal }}m
+  {{- end }}
+  {{- if eq .name "memory" }}
+  averageValue: {{ .memVal }}Mi
+  {{- end }}
+  {{- end }}
+  {{- if eq .type "Utilization" }}
+  averageUtilization: {{ .percent }}
+  {{- end }}
 {{- end }}
 
 {{- define "hpa.metricTarget" -}}

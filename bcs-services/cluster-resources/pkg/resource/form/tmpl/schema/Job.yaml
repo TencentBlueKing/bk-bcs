@@ -1,4 +1,4 @@
-title: cronjob
+title: job
 type: object
 properties:
   {{- include "common.metadata" . | indent 2 }}

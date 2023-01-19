@@ -23,7 +23,7 @@ spec:
         name: "cpu"
         target:
           type: AverageValue
-          averageValue: 80
+          averageValue: 500m
     - type: Resource
       resource:
         name: "gpu"
@@ -35,7 +35,7 @@ spec:
         name: "memory"
         target:
           type: AverageValue
-          averageValue: 60
+          averageValue: 512Mi
     - type: External
       external:
         metric:

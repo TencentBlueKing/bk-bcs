@@ -24,6 +24,7 @@ import (
 	resCsts "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/constants"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/model"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/parser/common"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/parser/util"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
 )
 
@@ -61,11 +62,22 @@ func ParseHPASpec(manifest map[string]interface{}, spec *model.HPASpec) {
 
 func genResMetricItem(m map[string]interface{}) model.ResourceMetricItem {
 	ms := m["resource"].(map[string]interface{})
-	return model.ResourceMetricItem{
-		Name:  mapx.GetStr(ms, "name"),
-		Type:  mapx.GetStr(ms, "target.type"),
-		Value: getMetricValue(ms),
+	resName := mapx.GetStr(ms, "name")
+	targetType := mapx.GetStr(ms, "target.type")
+	percent, cpuVal, memVal := int64(0), 0, 0
+
+	if targetType == resCsts.HPATargetTypeAverageValue {
+		avgVal := mapx.GetStr(ms, "target.averageValue")
+		if resName == resCsts.MetricResCPU {
+			cpuVal = util.ConvertCPUUnit(avgVal)
+		} else if resName == resCsts.MetricResMem {
+			memVal = util.ConvertMemoryUnit(avgVal)
+		}
+	} else if targetType == resCsts.HPATargetTypeUtilization {
+		percent = mapx.GetInt64(ms, "target.averageUtilization")
 	}
+
+	return model.ResourceMetricItem{Name: resName, Type: targetType, Percent: percent, CPUVal: cpuVal, MEMVal: memVal}
 }
 
 func genContainerResMetricItem(m map[string]interface{}) model.ContainerResMetricItem {

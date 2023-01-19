@@ -54,7 +54,7 @@ spec:
         paths:
           {{- range .paths }}
           - backend:
-              {{- include "network.ingress.backend" (dict "svcName" .targetSVC "svcPort" .port "apiVersion" $.metadata.apiVersion ) | nindent 14 }}
+              {{- include "network.ingress.backend" (dict "svcName" .targetSVC "svcPort" .port "apiVersion" $.metadata.apiVersion) | nindent 14 }}
             path: {{ .path | quote }}
             # v1 版本才支持 pathType
             {{- if and (eq $.metadata.apiVersion "networking.k8s.io/v1") .type }}
