@@ -10,13 +10,8 @@
       <bk-guide></bk-guide>
     </div>
     <div class="biz-content-wrapper p0" v-bkloading="{ isLoading: isInitLoading, opacity: 0.1 }">
-      <app-exception
-        v-if="exceptionCode && !isInitLoading"
-        :type="exceptionCode.code"
-        :text="exceptionCode.msg">
-      </app-exception>
 
-      <template v-if="!exceptionCode && !isInitLoading">
+      <template v-if="!isInitLoading">
         <div class="biz-panel-header">
           <div class="left">
             <bk-button @click.stop.prevent="removeSecrets" v-if="curPageData.length">
@@ -149,7 +144,7 @@
         :quick-close="true"
         :is-show.sync="secretSlider.isShow"
         :title="secretSlider.title"
-        :width="'640'">
+        :width="640">
         <div class="p30" slot="content">
           <table class="bk-table biz-data-table has-table-bordered">
             <thead>
@@ -207,7 +202,7 @@
         :quick-close="false"
         :is-show.sync="addSlider.isShow"
         :title="addSlider.title"
-        :width="'800'">
+        :width="800">
         <div class="p30 bk-resource-secret" slot="content" v-bkloading="{ isLoading: isSecretLoading }">
           <div>
             <div class="bk-form-item">
@@ -293,16 +288,13 @@
 
 <script>
 import { catchErrorHandler, formatDate } from '@/common/util';
-import globalMixin from '@/mixins/global';
 
 export default {
-  mixins: [globalMixin],
   data() {
     return {
       formatDate,
       isInitLoading: true,
       isPageLoading: false,
-      exceptionCode: null,
       searchKeyword: '',
       searchScope: '',
       curSecret: null,

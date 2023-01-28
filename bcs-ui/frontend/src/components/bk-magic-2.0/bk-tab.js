@@ -34,7 +34,7 @@ export default {
       type: String,
       default: 'border-card',
       validator(val) {
-        return ['card', 'border-card', 'unborder-card', 'vertical-card'].includes(val);
+        return ['card', 'border-card', 'unborder-card', 'vertical-card', 'fill'].includes(val);
       },
     },
   },
@@ -46,10 +46,6 @@ export default {
         vnode.context = this._self;
         return vnode;
       });
-    if (this.$props.type === 'fill') {
-      this.$props.type = 'border-card';
-    }
-    this.$props.active = this.$props.activeName;
     // eslint-disable-next-line @typescript-eslint/prefer-optional-chain
     if (this.$listeners && this.$listeners['tab-changed']) {
       this.$listeners['tab-change'] = this.$listeners['tab-changed'];
@@ -57,7 +53,11 @@ export default {
 
     return h('bcs-tab', {
       on: this.$listeners, // 透传事件
-      props: Object.assign({}, this.$props, this.$attrs), // 透传props
+      props: Object.assign({}, {
+        ...this.$props,
+        active: this.$props.activeName,
+        type: this.$props.type === 'fill' ? 'border-card' : this.$props.type,
+      }, this.$attrs), // 透传props
       scopedSlots: this.$scopedSlots, // 透传scopedSlots
       attrs: this.$attrs, // 透传属性，非props
     }, slots);

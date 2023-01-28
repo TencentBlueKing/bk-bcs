@@ -16,10 +16,18 @@ package release
 import (
 	"context"
 
+	"helm.sh/helm/v3/pkg/chart"
+	"helm.sh/helm/v3/pkg/release"
+	helmrelease "helm.sh/helm/v3/pkg/release"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/cli-runtime/pkg/resource"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
 	helmmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/proto/bcs-helm-manager"
+)
+
+const (
+	defaultHelmUser = "admin"
 )
 
 // Handler 定义了 helm release 的client集合
@@ -51,11 +59,36 @@ type Release struct {
 	Description  string
 	Values       string
 	Manifest     string
+	Hooks        []*helmrelease.Hook
+	Infos        []*resource.Info
 	Objects      []runtime.Object
+	Notes        string
+}
+
+// Transfer2Release transfer the data into helm release struct
+func (r *Release) Transfer2Release() *helmrelease.Release {
+	if r == nil {
+		return nil
+	}
+	return &helmrelease.Release{
+		Name: r.Name,
+		Info: &helmrelease.Info{
+			Status: helmrelease.Status(r.Status),
+			Notes:  r.Notes,
+		},
+		Chart:     &chart.Chart{Metadata: &chart.Metadata{Name: r.Chart}},
+		Manifest:  r.Manifest,
+		Hooks:     r.Hooks,
+		Version:   r.Revision,
+		Namespace: r.Namespace,
+	}
 }
 
 // Transfer2Proto transfer the data into protobuf struct
-func (r *Release) Transfer2Proto() *helmmanager.Release {
+func (r *Release) Transfer2Proto(projectCode, clusterID string) *helmmanager.Release {
+	if r == nil {
+		return nil
+	}
 	return &helmmanager.Release{
 		Name:         common.GetStringP(r.Name),
 		Namespace:    common.GetStringP(r.Namespace),
@@ -65,11 +98,20 @@ func (r *Release) Transfer2Proto() *helmmanager.Release {
 		ChartVersion: common.GetStringP(r.ChartVersion),
 		AppVersion:   common.GetStringP(r.AppVersion),
 		UpdateTime:   common.GetStringP(r.UpdateTime),
+		CreateBy:     common.GetStringP(defaultHelmUser),
+		UpdateBy:     common.GetStringP(defaultHelmUser),
+		Message:      common.GetStringP(r.Description),
+		Repo:         common.GetStringP(""),
+		ProjectCode:  common.GetStringP(projectCode),
+		ClusterID:    common.GetStringP(clusterID),
 	}
 }
 
 // Transfer2DetailProto transfer the data into detail protobuf struct
 func (r *Release) Transfer2DetailProto() *helmmanager.ReleaseDetail {
+	if r == nil {
+		return nil
+	}
 	return &helmmanager.ReleaseDetail{
 		Name:         common.GetStringP(r.Name),
 		Namespace:    common.GetStringP(r.Namespace),
@@ -79,11 +121,21 @@ func (r *Release) Transfer2DetailProto() *helmmanager.ReleaseDetail {
 		ChartVersion: common.GetStringP(r.ChartVersion),
 		AppVersion:   common.GetStringP(r.AppVersion),
 		UpdateTime:   common.GetStringP(r.UpdateTime),
+		Values:       []string{r.Values},
+		Description:  common.GetStringP(r.Description),
+		Notes:        common.GetStringP(r.Notes),
+		CreateBy:     common.GetStringP(defaultHelmUser),
+		UpdateBy:     common.GetStringP(defaultHelmUser),
+		Message:      common.GetStringP(r.Description),
+		Repo:         common.GetStringP(""),
 	}
 }
 
 // Transfer2HistoryProto transfer the data into history protobuf struct
 func (r *Release) Transfer2HistoryProto() *helmmanager.ReleaseHistory {
+	if r == nil {
+		return nil
+	}
 	return &helmmanager.ReleaseHistory{
 		Revision:     common.GetUint32P(uint32(r.Revision)),
 		Name:         common.GetStringP(r.Name),
@@ -118,14 +170,7 @@ func (r ReleasesSlice) Swap(i, j int) {
 
 // Config 定义了 Handler 的配置参数
 type Config struct {
-	APIServer string
-	Token     string
-
-	KubeConfigTemplate string
-	HelmBinary         string
-
 	PatchTemplates []*File
-	VarTemplates   []*File
 }
 
 // GetOption 定义了 Cluster.Get 的查询参数
@@ -149,25 +194,39 @@ type ListOption struct {
 // HelmInstallConfig 定义了helm执行install时的控制参数
 type HelmInstallConfig struct {
 	// simulate a install action
-	DryRun bool
+	DryRun     bool
+	Replace    bool
+	ClientOnly bool
 
-	Name      string
-	Namespace string
+	ProjectCode string
+	Name        string
+	Namespace   string
 
 	Args []string
 
 	Chart               *File
 	Values              []*File
 	PatchTemplateValues map[string]string
-	VarTemplateValues   map[string]string
 }
 
 // HelmInstallResult 定义了helm执行install的返回结果
 type HelmInstallResult struct {
+	Release    *release.Release
 	Revision   int
 	Status     string
 	AppVersion string
 	UpdateTime string
+}
+
+// ToUpgradeResult transfer to upgrade result
+func (h *HelmInstallResult) ToUpgradeResult() *HelmUpgradeResult {
+	return &HelmUpgradeResult{
+		Release:    h.Release,
+		Revision:   h.Revision,
+		Status:     h.Status,
+		AppVersion: h.AppVersion,
+		UpdateTime: h.UpdateTime,
+	}
 }
 
 // HelmUninstallConfig 定义了helm执行uninstall时的控制参数
@@ -188,19 +247,34 @@ type HelmUpgradeConfig struct {
 	// simulate a upgrade action
 	DryRun bool
 
-	Name      string
-	Namespace string
+	ProjectCode string
+	Name        string
+	Namespace   string
 
 	Args []string
 
 	Chart               *File
 	Values              []*File
 	PatchTemplateValues map[string]string
-	VarTemplateValues   map[string]string
+}
+
+// ToInstallConfig transfer to install config
+func (h *HelmUpgradeConfig) ToInstallConfig() HelmInstallConfig {
+	return HelmInstallConfig{
+		DryRun:              h.DryRun,
+		ProjectCode:         h.ProjectCode,
+		Name:                h.Name,
+		Namespace:           h.Namespace,
+		Args:                h.Args,
+		Chart:               h.Chart,
+		Values:              h.Values,
+		PatchTemplateValues: h.PatchTemplateValues,
+	}
 }
 
 // HelmUpgradeResult 定义了helm执行upgrade时的返回结果
 type HelmUpgradeResult struct {
+	Release    *release.Release
 	Revision   int
 	Status     string
 	AppVersion string

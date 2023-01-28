@@ -20,15 +20,16 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
+	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/middleware"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/logging"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store"
 	vdm "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/variabledefinition"
 	vvm "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/variablevalue"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/entity"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/errorx"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/stringx"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/proto/bcsproject"
-	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/middleware"
 )
 
 // ImportAction action for import variables
@@ -36,6 +37,7 @@ type ImportAction struct {
 	ctx   context.Context
 	model store.ProjectModel
 	req   *proto.ImportVariablesRequest
+	resp  *proto.ImportVariablesResponse
 }
 
 // NewImportVariablesAction new import variables action
@@ -46,30 +48,25 @@ func NewImportVariablesAction(model store.ProjectModel) *ImportAction {
 }
 
 // Do import variables request
-func (ca *ImportAction) Do(ctx context.Context, req *proto.ImportVariablesRequest) error {
+func (ca *ImportAction) Do(ctx context.Context,
+	req *proto.ImportVariablesRequest, resp *proto.ImportVariablesResponse) error {
 	ca.ctx = ctx
 	ca.req = req
+	ca.resp = resp
 	var username string
 	if authUser, err := middleware.GetUserFromContext(ca.ctx); err == nil {
 		username = authUser.GetUsername()
 	}
+	if err := ca.validateParam(ca.req, ca.resp); err != nil {
+		return err
+	}
 	for _, variable := range ca.req.GetData() {
-		definition, err := ca.model.GetVariableDefinitionByKey(ca.ctx, ca.req.GetProjectCode(), variable.Key)
-		if err != nil && err != drivers.ErrTableRecordNotFound {
+		if _, ok := vdm.SystemVariables[variable.GetKey()]; ok {
+			return errorx.NewReadableErr(errorx.ParamErr, fmt.Sprintf("key 不能与系统变量[%s] 相同", variable.GetKey()))
+		}
+		definition, err := ca.upsertVariableDefinition(variable, username)
+		if err != nil {
 			return err
-		}
-		// create variable definition if not exists
-		if err == drivers.ErrTableRecordNotFound {
-			if iErr := ca.createVariableDefinition(definition, variable, username); iErr != nil {
-				return iErr
-			}
-		}
-		// update variable definition if exists
-		if err == nil {
-			// check if old scope equals new
-			if uErr := ca.updateVariableDefinition(definition, variable, username); uErr != nil {
-				return uErr
-			}
 		}
 		if err := ca.upsertVariableValues(definition, variable, username); err != nil {
 			return err
@@ -78,13 +75,48 @@ func (ca *ImportAction) Do(ctx context.Context, req *proto.ImportVariablesReques
 	return nil
 }
 
-func (ca *ImportAction) createVariableDefinition(definition *vdm.VariableDefinition,
-	variable *proto.ImportVariableData, username string) error {
-	definition = &vdm.VariableDefinition{}
+func (ca *ImportAction) validateParam(req *proto.ImportVariablesRequest, resp *proto.ImportVariablesResponse) error {
+	for _, variable := range ca.req.GetData() {
+		if _, ok := vdm.SystemVariables[variable.GetKey()]; ok {
+			return errorx.NewReadableErr(errorx.ParamErr, fmt.Sprintf("不能与系统变量 key[%s] 重复", variable.GetKey()))
+		}
+		if !stringx.StringInSlice(variable.GetScope(),
+			[]string{vdm.VariableScopeGlobal, vdm.VariableScopeCluster, vdm.VariableScopeNamespace}) {
+			return errorx.NewReadableErr(errorx.ParamErr, "作用域只能为 [global,cluster,namespace]")
+		}
+	}
+	return nil
+}
+
+func (ca *ImportAction) upsertVariableDefinition(variable *proto.ImportVariableData, username string) (
+	*vdm.VariableDefinition, error) {
+	definition, err := ca.model.GetVariableDefinitionByKey(ca.ctx, ca.req.GetProjectCode(), variable.Key)
+	if err != nil && err != drivers.ErrTableRecordNotFound {
+		logging.Error("get variable key %s in project %s failed, err: %s", variable.Key, ca.req.GetProjectCode(), err.Error())
+		return nil, errorx.NewDBErr(err.Error())
+	}
+	if err == drivers.ErrTableRecordNotFound {
+		// create if not exists
+		newDefinition, cErr := ca.createVariableDefinition(variable, username)
+		if cErr != nil {
+			return nil, cErr
+		}
+		definition = newDefinition
+	}
+	// update if exists
+	if err := ca.updateVariableDefinition(definition, variable, username); err != nil {
+		return nil, err
+	}
+	return definition, nil
+}
+
+func (ca *ImportAction) createVariableDefinition(variable *proto.ImportVariableData, username string) (
+	*vdm.VariableDefinition, error) {
+	definition := &vdm.VariableDefinition{}
 	definition.ProjectCode = ca.req.GetProjectCode()
 	definition.Key = variable.Key
 	definition.Name = variable.Name
-	definition.Category = vdm.VariableDefinitionCategoryCustom
+	definition.Category = vdm.VariableCategoryCustom
 	definition.Scope = variable.Scope
 	definition.Description = variable.Desc
 	definition.Default = variable.Value
@@ -94,23 +126,23 @@ func (ca *ImportAction) createVariableDefinition(definition *vdm.VariableDefinit
 	if err != nil {
 		logging.Error("try generate id and insert variable definition projectCode [%s], key [%s] failed, err: %s",
 			definition.ProjectCode, definition.Key, err.Error())
-		return err
+		return nil, errorx.NewDBErr(err.Error())
 	}
-	return nil
+	return definition, nil
 }
 
 func (ca *ImportAction) updateVariableDefinition(definition *vdm.VariableDefinition,
 	variable *proto.ImportVariableData, username string) error {
 	// check if old scope equals new
 	if definition.Scope != variable.Scope {
-		return fmt.Errorf("不能更改原有变量key(%s)的作用范围(%s)",
-			variable.Key, variable.Scope)
+		return errorx.NewReadableErr(errorx.ParamErr,
+			fmt.Sprintf("不能更改原有变量key(%s)的作用范围(%s)", variable.Key, variable.Scope))
 	}
 	definition.Name = variable.Name
 	definition.Description = variable.Desc
 	definition.Default = variable.Value
 	// 覆盖之前导入没有设置类型的变量
-	definition.Category = vdm.VariableDefinitionCategoryCustom
+	definition.Category = vdm.VariableCategoryCustom
 	vd := entity.M{
 		vdm.FieldKeyID:          definition.ID,
 		vdm.FieldKeyName:        variable.Name,
@@ -121,19 +153,17 @@ func (ca *ImportAction) updateVariableDefinition(definition *vdm.VariableDefinit
 	}
 	definition, err := ca.model.UpdateVariableDefinition(ca.ctx, vd)
 	if err != nil {
-		logging.Error("failed to import variables to db, err: %s",
-			err.Error())
-		return err
+		logging.Error("update variable definition %s db failed, err: %s", definition.ID, err.Error())
+		return errorx.NewDBErr(err.Error())
 	}
 	return nil
 }
 
 func (ca *ImportAction) upsertVariableValues(definition *vdm.VariableDefinition,
 	variable *proto.ImportVariableData, username string) error {
-	for _, entry := range variable.Vars {
+	for _, entry := range variable.GetVars() {
 		entity := &vvm.VariableValue{
 			VariableID: definition.ID,
-			Key:        definition.Key,
 			Scope:      definition.Scope,
 			ClusterID:  entry.ClusterID,
 			Namespace:  entry.Namespace,
@@ -142,9 +172,8 @@ func (ca *ImportAction) upsertVariableValues(definition *vdm.VariableDefinition,
 			Updater:    username,
 		}
 		if err := ca.model.UpsertVariableValue(ca.ctx, entity); err != nil {
-			logging.Error("failed to import variables to db, err: %s",
-				err.Error())
-			return err
+			logging.Error("upsert variable value %s in db failed, err: %s", entity.VariableID, err.Error())
+			return errorx.NewDBErr(err.Error())
 		}
 	}
 	return nil

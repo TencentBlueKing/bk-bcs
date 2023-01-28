@@ -17,15 +17,18 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"regexp"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/jwt"
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/cluster"
+	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/namespace"
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/project"
 	jwtGo "github.com/dgrijalva/jwt-go"
 	"github.com/micro/go-micro/v2/server"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/utils/contextx"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/utils/stringx"
 	middleauth "github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/middleware"
@@ -38,7 +41,6 @@ type JWTClientConfig struct {
 	PublicKeyFile  string
 	PrivateKey     string
 	PrivateKeyFile string
-	ExemptClients  string
 }
 
 var (
@@ -105,7 +107,7 @@ var NoAuthMethod = []string{
 // SkipHandler skip handler
 func SkipHandler(ctx context.Context, req server.Request) bool {
 	// disable auth
-	if !jwtConfig.Enable {
+	if !options.GlobalOptions.JWT.Enable {
 		return true
 	}
 	return stringx.StringInSlice(req.Method(), NoAuthMethod)
@@ -113,36 +115,58 @@ func SkipHandler(ctx context.Context, req server.Request) bool {
 
 // SkipClient skip client
 func SkipClient(ctx context.Context, req server.Request, client string) bool {
-	clientIDs := stringx.SplitString(jwtConfig.ExemptClients)
-	return stringx.StringInSlice(client, clientIDs)
+	resourceID, err := getResourceID(req)
+	if err != nil {
+		return false
+	}
+
+	creds := options.GlobalOptions.Credentials
+	for _, v := range creds {
+		if !v.Enable {
+			continue
+		}
+		if v.Name != client {
+			continue
+		}
+		if match, _ := regexp.MatchString(v.Scopes.ProjectCode, resourceID.ProjectCode); match &&
+			len(v.Scopes.ProjectCode) != 0 {
+			return true
+		}
+		if match, _ := regexp.MatchString(v.Scopes.ClusterID, resourceID.ClusterID); match &&
+			len(v.Scopes.ClusterID) != 0 {
+			return true
+		}
+	}
+	return false
 }
 
-// resourceID resource id
-type resourceID struct {
-	ProjectCode string `json:"projectCode,omitempty"`
-	ProjectID   string `json:"projectID,omitempty"`
-	ClusterID   string `json:"clusterID,omitempty"`
+func getResourceID(req server.Request) (*options.CredentialScope, error) {
+	body := req.Body()
+	b, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+
+	resourceID := &options.CredentialScope{}
+	err = json.Unmarshal(b, resourceID)
+	if err != nil {
+		return nil, err
+	}
+	return resourceID, nil
 }
 
 // CheckUserPerm check user perm
 func CheckUserPerm(ctx context.Context, req server.Request, username string) (bool, error) {
 	blog.Infof("CheckUserPerm: method/%s, username: %s", req.Method(), username)
 
-	body := req.Body()
-	b, err := json.Marshal(body)
-	if err != nil {
-		return false, err
-	}
-
-	resourceID := &resourceID{}
-	err = json.Unmarshal(b, resourceID)
-	if err != nil {
-		return false, err
-	}
-
 	action, ok := ActionPermissions[req.Method()]
 	if !ok {
 		return false, errors.New("operation has not authorized")
+	}
+
+	resourceID, err := getResourceID(req)
+	if err != nil {
+		return false, err
 	}
 
 	resourceID.ProjectID = contextx.GetProjectIDFromCtx(ctx)
@@ -154,7 +178,7 @@ func CheckUserPerm(ctx context.Context, req server.Request, username string) (bo
 	return allow, nil
 }
 
-func callIAM(username, action string, resourceID resourceID) (bool, string, error) {
+func callIAM(username, action string, resourceID options.CredentialScope) (bool, string, error) {
 	// related actions
 	switch action {
 	case cluster.CanManageClusterOperation:
@@ -165,6 +189,18 @@ func callIAM(username, action string, resourceID resourceID) (bool, string, erro
 		return ProjectIamClient.CanEditProject(username, resourceID.ProjectID)
 	case project.CanViewProjectOperation:
 		return ProjectIamClient.CanViewProject(username, resourceID.ProjectID)
+	case namespace.CanCreateNamespaceScopedResourceOperation:
+		return NamespaceIamClient.CanCreateNamespaceScopedResource(username, resourceID.ProjectID,
+			resourceID.ClusterID, resourceID.Namespace)
+	case namespace.CanViewNamespaceScopedResourceOperation:
+		return NamespaceIamClient.CanViewNamespaceScopedResource(username, resourceID.ProjectID,
+			resourceID.ClusterID, resourceID.Namespace)
+	case namespace.CanUpdateNamespaceScopedResourceOperation:
+		return NamespaceIamClient.CanUpdateNamespaceScopedResource(username, resourceID.ProjectID,
+			resourceID.ClusterID, resourceID.Namespace)
+	case namespace.CanDeleteNamespaceScopedResourceOperation:
+		return NamespaceIamClient.CanDeleteNamespaceScopedResource(username, resourceID.ProjectID,
+			resourceID.ClusterID, resourceID.Namespace)
 	default:
 		return false, "", errors.New("permission denied")
 	}

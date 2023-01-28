@@ -15,15 +15,15 @@
 package resource
 
 import (
-	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
+	resCsts "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/constants"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/slice"
 )
 
 // ScalableResKinds 允许扩缩容的资源类型
-var ScalableResKinds = []string{res.Deploy, res.STS, res.GDeploy, res.GSTS}
+var ScalableResKinds = []string{resCsts.Deploy, resCsts.STS, resCsts.GDeploy, resCsts.GSTS}
 
 // ReschedulableResKinds 允许重新调度的资源类型（不含 Pod）
-var ReschedulableResKinds = []string{res.Deploy, res.STS, res.GDeploy, res.GSTS}
+var ReschedulableResKinds = []string{resCsts.Deploy, resCsts.STS, resCsts.GDeploy, resCsts.GSTS}
 
 func isScalable(kind string) bool {
 	return slice.StringInSlice(kind, ScalableResKinds)

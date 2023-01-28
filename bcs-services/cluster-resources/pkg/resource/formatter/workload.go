@@ -23,6 +23,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/slice"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/stringx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/timex"
 )
 
@@ -38,6 +39,11 @@ func FormatDeploy(manifest map[string]interface{}) map[string]interface{} {
 	ret := FormatWorkloadRes(manifest)
 	ret["status"] = newDeployStatusParser(manifest).Parse()
 	return ret
+}
+
+// FormatRS xxx
+func FormatRS(manifest map[string]interface{}) map[string]interface{} {
+	return FormatWorkloadRes(manifest)
 }
 
 // FormatSTS xxx
@@ -78,40 +84,51 @@ func FormatJob(manifest map[string]interface{}) map[string]interface{} {
 	return ret
 }
 
-// FormatPo xxx
+// FormatPo ...
 func FormatPo(manifest map[string]interface{}) map[string]interface{} {
 	ret := CommonFormatRes(manifest)
 	ret["images"] = parseContainerImages(manifest, "spec.containers")
 	parser := PodStatusParser{Manifest: manifest}
 	ret["status"] = parser.Parse()
 	readyCnt, totalCnt, restartCnt := 0, 0, int64(0)
-	if status, ok := manifest["status"].(map[string]interface{}); ok {
-		if containerStatuses, ok := status["containerStatuses"]; ok {
-			for _, s := range containerStatuses.([]interface{}) {
-				if s.(map[string]interface{})["ready"].(bool) {
-					readyCnt++
-				}
-				totalCnt++
-				restartCnt += s.(map[string]interface{})["restartCount"].(int64)
-			}
+	for _, s := range mapx.GetList(manifest, "status.containerStatuses") {
+		if s.(map[string]interface{})["ready"].(bool) {
+			readyCnt++
 		}
+		totalCnt++
+		restartCnt += s.(map[string]interface{})["restartCount"].(int64)
 	}
 	ret["readyCnt"], ret["totalCnt"], ret["restartCnt"] = readyCnt, totalCnt, restartCnt
+
+	podIPSet := set.NewStringSet()
+	podIP := mapx.GetStr(manifest, "status.podIP")
+	podIPSet.Add(podIP)
+
+	// 双栈集群特有字段
+	for _, item := range mapx.GetList(manifest, "status.podIPs") {
+		ip := item.(map[string]interface{})["ip"].(string)
+		podIPSet.Add(ip)
+	}
+
+	// 同时兼容 ipv4 / ipv6 集群
+	ret["podIPv4"], ret["podIPv6"] = "", ""
+	for _, ip := range podIPSet.ToSlice() {
+		switch {
+		case stringx.IsIPv4(ip):
+			ret["podIPv4"] = ip
+		case stringx.IsIPv6(ip):
+			ret["podIPv6"] = ip
+		}
+	}
 	return ret
 }
 
 // 工具方法/解析器
 
-// StatusChecker xxx
-type StatusChecker interface {
-	// IsNormal 判断当前资源是否为正常状态
-	IsNormal(map[string]interface{}) bool
-}
-
 // DeployStatusChecker xxx
 type DeployStatusChecker struct{}
 
-// IsNormal xxx
+// IsNormal 检查逻辑：检查以下四个字段值是否相等
 func (c *DeployStatusChecker) IsNormal(manifest map[string]interface{}) bool {
 	return slice.AllInt64Equal([]int64{
 		mapx.GetInt64(manifest, "status.availableReplicas"),
@@ -124,13 +141,18 @@ func (c *DeployStatusChecker) IsNormal(manifest map[string]interface{}) bool {
 // STSStatusChecker xxx
 type STSStatusChecker struct{}
 
-// IsNormal xxx
+// IsNormal 检查逻辑：若 status.currentReplicas 存在，则检查与其他几项是否相等，若不存在，则检查剩余几项是否相等
 func (c *STSStatusChecker) IsNormal(manifest map[string]interface{}) bool {
+	replicas := mapx.GetInt64(manifest, "spec.replicas")
+	if curReplicas, err := mapx.GetItems(manifest, "status.currentReplicas"); err == nil {
+		if curReplicas.(int64) != replicas {
+			return false
+		}
+	}
 	return slice.AllInt64Equal([]int64{
-		mapx.GetInt64(manifest, "status.currentReplicas"),
 		mapx.GetInt64(manifest, "status.readyReplicas"),
 		mapx.GetInt64(manifest, "status.updatedReplicas"),
-		mapx.GetInt64(manifest, "spec.replicas"),
+		replicas,
 	})
 }
 
@@ -168,8 +190,7 @@ func newSTSStatusParser(manifest map[string]interface{}) *WorkloadStatusParser {
 // parseContainerImages 遍历每个容器，收集所有 image 信息并去重
 func parseContainerImages(manifest map[string]interface{}, paths string) []string {
 	images := set.NewStringSet()
-	containers, _ := mapx.GetItems(manifest, paths)
-	for _, c := range containers.([]interface{}) {
+	for _, c := range mapx.GetList(manifest, paths) {
 		if image, ok := c.(map[string]interface{})["image"]; ok {
 			images.Add(image.(string))
 		}
@@ -185,7 +206,7 @@ type PodStatusParser struct {
 	totalStatus string
 }
 
-// Parse 状态解析逻辑，参考来源：https://github.com/kubernetes/dashboard/blob/master/src/app/backend/resource/pod/common.go#L40
+// Parse 状态解析逻辑，参考来源：https://github.com/kubernetes/dashboard/blob/92a8491b99afa2cfb94dbe6f3410cadc42b0dc31/modules/api/pkg/resource/pod/common.go#L40
 func (p *PodStatusParser) Parse() string {
 	// 构造轻量化的 PodStatus 用于解析 Pod Status（total）字段
 	podStatus := LightPodStatus{}
@@ -244,8 +265,8 @@ func (p *PodStatusParser) updateStatusByInitContainerStatuses(podStatus *LightPo
 				container.State.Waiting.Reason != "PodInitializing" {
 				p.totalStatus = fmt.Sprintf("Init: %s", container.State.Waiting.Reason)
 			} else {
-				initContainers, _ := mapx.GetItems(p.Manifest, "spec.initContainers")
-				p.totalStatus = fmt.Sprintf("Init: %d/%d", i, len(initContainers.([]interface{})))
+				initContainers := mapx.GetList(p.Manifest, "spec.initContainers")
+				p.totalStatus = fmt.Sprintf("Init: %d/%d", i, len(initContainers))
 			}
 		}
 		break

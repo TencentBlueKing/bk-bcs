@@ -19,6 +19,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	resCsts "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/constants"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/model"
 )
 
@@ -27,6 +28,10 @@ var lightSVCManifest = map[string]interface{}{
 	"kind":       "Service",
 	"metadata": map[string]interface{}{
 		"name": "service-test-12345",
+		"annotations": map[string]interface{}{
+			resCsts.SVCExistLBIDAnnoKey: "lb-abcd",
+			resCsts.SVCSubNetIDAnnoKey:  "subnet-id-1234",
+		},
 	},
 	"spec": map[string]interface{}{
 		"type": "ClusterIP",
@@ -35,7 +40,7 @@ var lightSVCManifest = map[string]interface{}{
 				"name":       "aaa",
 				"port":       int64(80),
 				"protocol":   "TCP",
-				"targetPort": int64(8080),
+				"targetPort": "http",
 			},
 			map[string]interface{}{
 				"name":       "bbb",
@@ -71,25 +76,30 @@ var lightSVCManifest = map[string]interface{}{
 var exceptedSVCSpec = model.SVCSpec{
 	PortConf: model.SVCPortConf{
 		Type: "ClusterIP",
+		LB: model.SVCLB{
+			UseType:   resCsts.CLBUseTypeAutoCreate,
+			ExistLBID: "lb-abcd",
+			SubNetID:  "subnet-id-1234",
+		},
 		Ports: []model.SVCPort{
 			{
 				Name:       "aaa",
 				Port:       80,
 				Protocol:   "TCP",
-				TargetPort: 8080,
+				TargetPort: "http",
 			},
 			{
 				Name:       "bbb",
 				Port:       81,
 				Protocol:   "TCP",
-				TargetPort: 8081,
+				TargetPort: "8081",
 				NodePort:   30000,
 			},
 			{
 				Name:       "ccc",
 				Port:       82,
 				Protocol:   "UDP",
-				TargetPort: 8082,
+				TargetPort: "8082",
 			},
 		},
 	},
@@ -102,7 +112,7 @@ var exceptedSVCSpec = model.SVCSpec{
 		},
 	},
 	SessionAffinity: model.SessionAffinity{
-		Type:       SessionAffinityTypeClientIP,
+		Type:       resCsts.SessionAffinityTypeClientIP,
 		StickyTime: 10800,
 	},
 	IP: model.IPConf{

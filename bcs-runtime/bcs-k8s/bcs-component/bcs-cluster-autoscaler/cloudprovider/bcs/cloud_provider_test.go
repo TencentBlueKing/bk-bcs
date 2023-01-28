@@ -71,6 +71,18 @@ func TestBuildBcsCloudProvider(t *testing.T) {
 			},
 			want: &Provider{
 				NodeGroupCache: &NodeGroupCache{
+					allGroups: []*NodeGroup{
+						{
+							InstanceRef: InstanceRef{
+								Name: "test",
+							},
+							nodeGroupID: "test",
+							scalingType: ScalingTypeClassic,
+							maxSize:     5,
+							minSize:     0,
+							client:      m,
+						},
+					},
 					registeredGroups: []*NodeGroup{
 						{
 							InstanceRef: InstanceRef{
@@ -157,7 +169,7 @@ func TestProvider_NodeGroupForNode(t *testing.T) {
 		minSize:     0,
 	}
 	ins1 := InstanceRef{
-		Name: "ins1",
+		IP: "127.0.0.1",
 	}
 	type fields struct {
 		NodeGroupCache  *NodeGroupCache
@@ -197,7 +209,15 @@ func TestProvider_NodeGroupForNode(t *testing.T) {
 			args: args{
 				node: &apiv1.Node{
 					Spec: apiv1.NodeSpec{
-						ProviderID: "qcloud:///100003/ins1",
+						ProviderID: "127.0.0.1",
+					},
+					Status: apiv1.NodeStatus{
+						Addresses: []apiv1.NodeAddress{
+							{
+								Type:    apiv1.NodeInternalIP,
+								Address: "127.0.0.1",
+							},
+						},
 					},
 				},
 			},

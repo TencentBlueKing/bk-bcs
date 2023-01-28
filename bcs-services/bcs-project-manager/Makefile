@@ -1,4 +1,4 @@
-.PHONY: proto build test tidy
+.PHONY: proto build-migration build-main build test tidy
 
 ifdef VERSION
     VERSION=${VERSION}
@@ -14,9 +14,16 @@ proto:
 	$(MAKE) -C proto/bcsproject clean
 	$(MAKE) -C proto/bcsproject
 
+# build migration
+build-migration: tidy
+	go build -ldflags ${LDFLAGS} -o bcs-project-migration ./script/migrations/project/migrate.go
+	go build -ldflags ${LDFLAGS} -o bcs-variable-migration ./script/migrations/variable/migrate.go
+
 # build service
-build: tidy
+build-main: tidy
 	go build -ldflags ${LDFLAGS} -o bcs-project-manager ./main.go
+
+build: build-migration build-main
 
 # test
 test:

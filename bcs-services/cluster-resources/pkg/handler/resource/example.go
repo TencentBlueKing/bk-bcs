@@ -18,8 +18,9 @@ import (
 	"context"
 	"fmt"
 
-	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
+	resCsts "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/constants"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/example"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/pbstruct"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/slice"
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
@@ -31,7 +32,7 @@ func (h *Handler) GetK8SResTemplate(
 ) (err error) {
 	// 不在列表里面的，则认为是自定义资源
 	if !slice.StringInSlice(req.Kind, example.HasDemoManifestResKinds) {
-		req.Kind = res.CObj
+		req.Kind = resCsts.CObj
 	}
 	conf, err := example.LoadResConf(ctx, req.Kind)
 	if err != nil {
@@ -41,10 +42,12 @@ func (h *Handler) GetK8SResTemplate(
 	if err != nil {
 		return err
 	}
-	for _, tmpl := range conf["items"].([]interface{}) {
+	for _, tmpl := range mapx.GetList(conf, "items") {
 		t, _ := tmpl.(map[string]interface{})
 		path := fmt.Sprintf("%s/%s", conf["class"], t["name"])
-		if t["manifest"], err = example.LoadDemoManifest(path, req.Namespace); err != nil {
+		if t["manifest"], err = example.LoadDemoManifest(
+			ctx, path, req.ClusterID, req.Namespace, req.Kind,
+		); err != nil {
 			return err
 		}
 	}

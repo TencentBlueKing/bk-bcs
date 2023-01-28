@@ -22,9 +22,10 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/page"
+	nsm "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/namespace"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/project"
-	vd "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/variabledefinition"
-	vv "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/variablevalue"
+	vdm "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/variabledefinition"
+	vvm "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/variablevalue"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/entity"
 )
 
@@ -38,26 +39,41 @@ type ProjectModel interface {
 	ListProjects(ctx context.Context, cond *operator.Condition, opt *page.Pagination) ([]project.Project, int64, error)
 	ListProjectByIDs(ctx context.Context, ids []string, opt *page.Pagination) ([]project.Project, int64, error)
 
-	CreateVariableDefinition(ctx context.Context, entity *vd.VariableDefinition) error
-	UpdateVariableDefinition(ctx context.Context, entity entity.M) (*vd.VariableDefinition, error)
-	UpsertVariableDefinition(ctx context.Context, entity *vd.VariableDefinition) error
-	GetVariableDefinition(ctx context.Context, variableID string) (*vd.VariableDefinition, error)
-	GetVariableDefinitionByKey(ctx context.Context, projectCode, key string) (*vd.VariableDefinition, error)
+	GetNamespace(ctx context.Context, projectCode, clusterID, name string) (*nsm.Namespace, error)
+	GetNamespaceByItsmTicketType(ctx context.Context,
+		projectCode, clusterID, namespace, stagingType string) (*nsm.Namespace, error)
+	CreateNamespace(ctx context.Context, ns *nsm.Namespace) error
+	ListNamespaces(ctx context.Context) ([]nsm.Namespace, error)
+	ListNamespacesByItsmTicketType(ctx context.Context,
+		projectCode, clusterID string, types []string) ([]nsm.Namespace, error)
+	UpdateNamespace(ctx context.Context, ns entity.M) (*nsm.Namespace, error)
+	DeleteNamespace(ctx context.Context, projectCode, clusterID, namespace string) error
+
+	CreateVariableDefinition(ctx context.Context, entity *vdm.VariableDefinition) error
+	UpdateVariableDefinition(ctx context.Context, entity entity.M) (*vdm.VariableDefinition, error)
+	UpsertVariableDefinition(ctx context.Context, entity *vdm.VariableDefinition) error
+	GetVariableDefinition(ctx context.Context, variableID string) (*vdm.VariableDefinition, error)
+	GetVariableDefinitionByKey(ctx context.Context, projectCode, key string) (*vdm.VariableDefinition, error)
 	ListVariableDefinitions(ctx context.Context,
-		cond *operator.Condition, opt *page.Pagination) ([]vd.VariableDefinition, int64, error)
+		cond *operator.Condition, opt *page.Pagination) ([]vdm.VariableDefinition, int64, error)
 	DeleteVariableDefinitions(ctx context.Context, ids []string) (int64, error)
 
-	CreateVariableValue(ctx context.Context, vv *vv.VariableValue) error
-	GetVariableValue(ctx context.Context,
-		variableID, clusterID, namespace, scope string) (*vv.VariableValue, error)
-	UpsertVariableValue(ctx context.Context,
-		value *vv.VariableValue) error
+	CreateVariableValue(ctx context.Context, vv *vvm.VariableValue) error
+	GetVariableValue(ctx context.Context, variableID, clusterID, namespace, scope string) (*vvm.VariableValue, error)
+	UpsertVariableValue(ctx context.Context, value *vvm.VariableValue) error
+	ListClusterVariableValues(ctx context.Context, variableID string) ([]vvm.VariableValue, error)
+	ListNamespaceVariableValues(ctx context.Context, variableID, clusterID string) ([]vvm.VariableValue, error)
+	ListVariableValuesInCluster(ctx context.Context, clusterID string) ([]vvm.VariableValue, error)
+	ListVariableValuesInNamespace(ctx context.Context, clusterID, namespace string) ([]vvm.VariableValue, error)
+	ListVariableValuesInAllNamespace(ctx context.Context, clusterID string) ([]vvm.VariableValue, error)
+	DeleteVariableValuesByNamespace(ctx context.Context, clusterID, namespace string) (int64, error)
 }
 
 type modelSet struct {
 	*project.ModelProject
-	*vd.ModelVariableDefinition
-	*vv.ModelVariableValue
+	*nsm.ModelNamespace
+	*vdm.ModelVariableDefinition
+	*vvm.ModelVariableValue
 }
 
 var model *modelSet
@@ -66,8 +82,9 @@ var model *modelSet
 func New(db drivers.DB) ProjectModel {
 	return &modelSet{
 		ModelProject:            project.New(db),
-		ModelVariableDefinition: vd.New(db),
-		ModelVariableValue:      vv.New(db),
+		ModelNamespace:          nsm.New(db),
+		ModelVariableDefinition: vdm.New(db),
+		ModelVariableValue:      vvm.New(db),
 	}
 }
 
@@ -75,8 +92,9 @@ func New(db drivers.DB) ProjectModel {
 func InitModel(db drivers.DB) {
 	model = &modelSet{
 		ModelProject:            project.New(db),
-		ModelVariableDefinition: vd.New(db),
-		ModelVariableValue:      vv.New(db),
+		ModelNamespace:          nsm.New(db),
+		ModelVariableDefinition: vdm.New(db),
+		ModelVariableValue:      vvm.New(db),
 	}
 }
 

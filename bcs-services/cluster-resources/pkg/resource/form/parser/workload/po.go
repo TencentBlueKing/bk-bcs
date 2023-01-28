@@ -20,6 +20,7 @@ import (
 	"github.com/fatih/structs"
 	"github.com/mitchellh/mapstructure"
 
+	resCsts "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/constants"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/model"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/parser/common"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
@@ -50,17 +51,17 @@ func ParsePoSpec(manifest map[string]interface{}, spec *model.PoSpec) {
 // ParseNodeSelect xxx
 // 类型优先级：指定节点 > 调度规则 > 任意节点
 func ParseNodeSelect(podSpec map[string]interface{}, nodeSelect *model.NodeSelect) {
-	nodeSelect.Type = NodeSelectTypeAnyAvailable
+	nodeSelect.Type = resCsts.NodeSelectTypeAnyAvailable
 	nodeSelector, _ := mapx.GetItems(podSpec, "nodeSelector")
 	if nodeSelector != nil {
-		nodeSelect.Type = NodeSelectTypeSchedulingRule
+		nodeSelect.Type = resCsts.NodeSelectTypeSchedulingRule
 		for k, v := range nodeSelector.(map[string]interface{}) {
 			nodeSelect.Selector = append(nodeSelect.Selector, model.NodeSelector{Key: k, Value: v.(string)})
 		}
 	}
 	nodeName, _ := mapx.GetItems(podSpec, "nodeName")
 	if nodeName != nil {
-		nodeSelect.Type = NodeSelectTypeSpecificNode
+		nodeSelect.Type = resCsts.NodeSelectTypeSpecificNode
 		nodeSelect.NodeName = nodeName.(string)
 	}
 }
@@ -73,43 +74,33 @@ func ParseAffinity(podSpec map[string]interface{}, affinity *model.Affinity) {
 
 // ParseNodeAffinity xxx
 func ParseNodeAffinity(manifest map[string]interface{}, nodeAffinity *[]model.NodeAffinity) {
-	if affinity, _ := mapx.GetItems(manifest, "affinity.nodeAffinity"); affinity != nil { // nolint:nestif
-		if terms, _ := mapx.GetItems(
-			affinity.(map[string]interface{}), "requiredDuringSchedulingIgnoredDuringExecution.nodeSelectorTerms",
-		); terms != nil {
-			for _, term := range terms.([]interface{}) {
-				aff := model.NodeAffinity{Priority: AffinityPriorityRequired}
-				if matchExps, ok := term.(map[string]interface{})["matchExpressions"]; ok {
-					aff.Selector.Expressions = parseAffinityExpSelector(matchExps)
-				}
-				if matchFields, ok := term.(map[string]interface{})["matchFields"]; ok {
-					aff.Selector.Fields = parseAffinityFieldSelector(matchFields)
-				}
-				*nodeAffinity = append(*nodeAffinity, aff)
-			}
+	affinity := mapx.GetMap(manifest, "affinity.nodeAffinity")
+	for _, term := range mapx.GetList(
+		affinity, "requiredDuringSchedulingIgnoredDuringExecution.nodeSelectorTerms",
+	) {
+		t, _ := term.(map[string]interface{})
+		aff := model.NodeAffinity{Priority: resCsts.AffinityPriorityRequired}
+		aff.Selector.Expressions = parseAffinityExpSelector(mapx.GetList(t, "matchExpressions"))
+		aff.Selector.Fields = parseAffinityFieldSelector(mapx.GetList(t, "matchFields"))
+		*nodeAffinity = append(*nodeAffinity, aff)
+	}
+	for _, exec := range mapx.GetList(
+		affinity, "preferredDuringSchedulingIgnoredDuringExecution",
+	) {
+		e, _ := exec.(map[string]interface{})
+		aff := model.NodeAffinity{Priority: resCsts.AffinityPriorityPreferred}
+		if weight, ok := e["weight"]; ok {
+			aff.Weight = weight.(int64)
 		}
-		if execs, ok := affinity.(map[string]interface{})["preferredDuringSchedulingIgnoredDuringExecution"]; ok {
-			for _, exec := range execs.([]interface{}) {
-				e, _ := exec.(map[string]interface{})
-				aff := model.NodeAffinity{Priority: AffinityPriorityPreferred}
-				if weight, ok := e["weight"]; ok {
-					aff.Weight = weight.(int64)
-				}
-				if matchExps, _ := mapx.GetItems(e, "preference.matchExpressions"); matchExps != nil {
-					aff.Selector.Expressions = parseAffinityExpSelector(matchExps)
-				}
-				if matchFields, _ := mapx.GetItems(e, "preference.matchFields"); matchFields != nil {
-					aff.Selector.Fields = parseAffinityFieldSelector(matchFields)
-				}
-				*nodeAffinity = append(*nodeAffinity, aff)
-			}
-		}
+		aff.Selector.Expressions = parseAffinityExpSelector(mapx.GetList(e, "preference.matchExpressions"))
+		aff.Selector.Fields = parseAffinityFieldSelector(mapx.GetList(e, "preference.matchFields"))
+		*nodeAffinity = append(*nodeAffinity, aff)
 	}
 }
 
-func parseAffinityExpSelector(matchExps interface{}) []model.ExpSelector {
+func parseAffinityExpSelector(matchExps []interface{}) []model.ExpSelector {
 	selectors := []model.ExpSelector{}
-	for _, exps := range matchExps.([]interface{}) {
+	for _, exps := range matchExps {
 		es, _ := exps.(map[string]interface{})
 		values := []string{}
 		for _, v := range mapx.GetList(es, "values") {
@@ -122,9 +113,9 @@ func parseAffinityExpSelector(matchExps interface{}) []model.ExpSelector {
 	return selectors
 }
 
-func parseAffinityFieldSelector(matchFields interface{}) []model.FieldSelector {
+func parseAffinityFieldSelector(matchFields []interface{}) []model.FieldSelector {
 	selectors := []model.FieldSelector{}
-	for _, fields := range matchFields.([]interface{}) {
+	for _, fields := range matchFields {
 		fs, _ := fields.(map[string]interface{})
 		values := []string{}
 		for _, v := range mapx.GetList(fs, "values") {
@@ -140,12 +131,12 @@ func parseAffinityFieldSelector(matchFields interface{}) []model.FieldSelector {
 // ParsePodAffinity xxx
 func ParsePodAffinity(podSpec map[string]interface{}, podAffinity *[]model.PodAffinity) {
 	typeArgsList := []affinityTypeArgs{
-		{AffinityTypeAffinity, "affinity.podAffinity"},
-		{AffinityTypeAntiAffinity, "affinity.podAntiAffinity"},
+		{resCsts.AffinityTypeAffinity, "affinity.podAffinity"},
+		{resCsts.AffinityTypeAntiAffinity, "affinity.podAntiAffinity"},
 	}
 	priorityArgsList := []affinityPriorityArgs{
 		{
-			AffinityPriorityPreferred,
+			resCsts.AffinityPriorityPreferred,
 			"preferredDuringSchedulingIgnoredDuringExecution",
 			"podAffinityTerm.labelSelector.matchExpressions",
 			"podAffinityTerm.labelSelector.matchLabels",
@@ -153,7 +144,7 @@ func ParsePodAffinity(podSpec map[string]interface{}, podAffinity *[]model.PodAf
 			"podAffinityTerm.topologyKey",
 		},
 		{
-			AffinityPriorityRequired,
+			resCsts.AffinityPriorityRequired,
 			"requiredDuringSchedulingIgnoredDuringExecution",
 			"labelSelector.matchExpressions",
 			"labelSelector.matchLabels",
@@ -189,15 +180,7 @@ func parsePodAffinity(
 	typeArgs affinityTypeArgs,
 	priorityArgs affinityPriorityArgs,
 ) {
-	affinity, _ := mapx.GetItems(podSpec, typeArgs.Paths)
-	if affinity == nil {
-		return
-	}
-	execs, ok := affinity.(map[string]interface{})[priorityArgs.ExecKey]
-	if !ok {
-		return
-	}
-	for _, exec := range execs.([]interface{}) {
+	for _, exec := range mapx.GetList(podSpec, typeArgs.Paths+"."+priorityArgs.ExecKey) {
 		e, _ := exec.(map[string]interface{})
 		namespaces := []string{}
 		for _, ns := range mapx.GetList(e, priorityArgs.NSPaths) {
@@ -212,15 +195,11 @@ func parsePodAffinity(
 		if weight, ok := e["weight"]; ok {
 			aff.Weight = weight.(int64)
 		}
-		if matchExps, _ := mapx.GetItems(e, priorityArgs.ExpPaths); matchExps != nil {
-			aff.Selector.Expressions = parseAffinityExpSelector(matchExps)
-		}
-		if matchLabels, _ := mapx.GetItems(e, priorityArgs.LabelPaths); matchLabels != nil {
-			for k, v := range matchLabels.(map[string]interface{}) {
-				aff.Selector.Labels = append(aff.Selector.Labels, model.LabelSelector{
-					Key: k, Value: v.(string),
-				})
-			}
+		aff.Selector.Expressions = parseAffinityExpSelector(mapx.GetList(e, priorityArgs.ExpPaths))
+		for k, v := range mapx.GetMap(e, priorityArgs.LabelPaths) {
+			aff.Selector.Labels = append(aff.Selector.Labels, model.LabelSelector{
+				Key: k, Value: v.(string),
+			})
 		}
 		*podAffinity = append(*podAffinity, aff)
 	}
@@ -248,25 +227,21 @@ func ParseNetworking(podSpec map[string]interface{}, networking *model.Networkin
 	for _, s := range mapx.GetList(podSpec, "dnsConfig.searches") {
 		networking.Searches = append(networking.Searches, s.(string))
 	}
-	if dnsOpts, _ := mapx.GetItems(podSpec, "dnsConfig.options"); dnsOpts != nil {
-		for _, opt := range dnsOpts.([]interface{}) {
-			networking.DNSResolverOpts = append(networking.DNSResolverOpts, model.DNSResolverOpt{
-				Name:  opt.(map[string]interface{})["name"].(string),
-				Value: opt.(map[string]interface{})["value"].(string),
-			})
-		}
+	for _, opt := range mapx.GetList(podSpec, "dnsConfig.options") {
+		networking.DNSResolverOpts = append(networking.DNSResolverOpts, model.DNSResolverOpt{
+			Name:  opt.(map[string]interface{})["name"].(string),
+			Value: opt.(map[string]interface{})["value"].(string),
+		})
 	}
-	if hostAliases, _ := mapx.GetItems(podSpec, "hostAliases"); hostAliases != nil {
-		for _, hostAlias := range hostAliases.([]interface{}) {
-			alias, _ := hostAlias.(map[string]interface{})
-			hostnames := []string{}
-			for _, hName := range alias["hostnames"].([]interface{}) {
-				hostnames = append(hostnames, hName.(string))
-			}
-			networking.HostAliases = append(networking.HostAliases, model.HostAlias{
-				IP: alias["ip"].(string), Alias: strings.Join(hostnames, ","),
-			})
+	for _, hostAlias := range mapx.GetList(podSpec, "hostAliases") {
+		alias, _ := hostAlias.(map[string]interface{})
+		hostnames := []string{}
+		for _, hName := range mapx.GetList(alias, "hostnames") {
+			hostnames = append(hostnames, hName.(string))
 		}
+		networking.HostAliases = append(networking.HostAliases, model.HostAlias{
+			IP: alias["ip"].(string), Alias: strings.Join(hostnames, ","),
+		})
 	}
 }
 
@@ -282,9 +257,7 @@ func ParseSpecOther(podSpec map[string]interface{}, other *model.SpecOther) {
 	other.RestartPolicy = mapx.Get(podSpec, "restartPolicy", "Always").(string)
 	other.TerminationGracePeriodSecs = mapx.GetInt64(podSpec, "terminationGracePeriodSeconds")
 	other.SAName = mapx.GetStr(podSpec, "serviceAccountName")
-	if imagePullSecrets, ok := podSpec["imagePullSecrets"]; ok {
-		for _, secret := range imagePullSecrets.([]interface{}) {
-			other.ImagePullSecrets = append(other.ImagePullSecrets, secret.(map[string]interface{})["name"].(string))
-		}
+	for _, secret := range mapx.GetList(podSpec, "imagePullSecrets") {
+		other.ImagePullSecrets = append(other.ImagePullSecrets, secret.(map[string]interface{})["name"].(string))
 	}
 }

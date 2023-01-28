@@ -19,6 +19,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	resCsts "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/constants"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/model"
 )
 
@@ -212,40 +213,40 @@ var exceptedContainers = []model.Container{
 		Envs: model.ContainerEnvs{
 			Vars: []model.EnvVar{
 				{
-					Type:  EnvVarTypeKeyVal,
+					Type:  resCsts.EnvVarTypeKeyVal,
 					Name:  "ENV_KEY",
 					Value: "envValue",
 				},
 				{
-					Type:  EnvVarTypePodField,
+					Type:  resCsts.EnvVarTypePodField,
 					Name:  "MY_POD_NAMESPACE",
 					Value: "metadata.namespace",
 				},
 				{
-					Type:   EnvVarTypeResource,
+					Type:   resCsts.EnvVarTypeResource,
 					Name:   "MY_CPU_REQUEST",
 					Source: "busybox",
 					Value:  "requests.cpu",
 				},
 				{
-					Type:   EnvVarTypeCMKey,
+					Type:   resCsts.EnvVarTypeCMKey,
 					Name:   "CM_T_CA_CRT",
 					Source: "kube-user-ca.crt",
 					Value:  "ca.crt",
 				},
 				{
-					Type:   EnvVarTypeSecretKey,
+					Type:   resCsts.EnvVarTypeSecretKey,
 					Name:   "SECRET_T_CA_CRT",
 					Source: "default-token-12345",
 					Value:  "ca.crt",
 				},
 				{
-					Type:   EnvVarTypeCM,
+					Type:   resCsts.EnvVarTypeCM,
 					Name:   "CM_T_",
 					Source: "kube-user-ca.crt",
 				},
 				{
-					Type:   EnvVarTypeSecret,
+					Type:   resCsts.EnvVarTypeSecret,
 					Name:   "SECRET_T_",
 					Source: "default-token-12345",
 				},
@@ -259,7 +260,7 @@ var exceptedContainers = []model.Container{
 				TimeoutSecs:      3,
 				SuccessThreshold: 1,
 				FailureThreshold: 3,
-				Type:             ProbeTypeTCPSocket,
+				Type:             resCsts.ProbeTypeTCPSocket,
 				Port:             80,
 			},
 			LivenessProbe: model.Probe{
@@ -269,7 +270,7 @@ var exceptedContainers = []model.Container{
 				TimeoutSecs:      3,
 				SuccessThreshold: 1,
 				FailureThreshold: 3,
-				Type:             ProbeTypeExec,
+				Type:             resCsts.ProbeTypeExec,
 				Command:          []string{"echo hello"},
 			},
 		},

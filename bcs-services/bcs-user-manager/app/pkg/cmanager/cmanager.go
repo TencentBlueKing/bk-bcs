@@ -24,11 +24,10 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi"
 	bcsapicm "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/clustermanager"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/discovery"
-	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/middleware"
-
 	"github.com/micro/go-micro/v2/registry"
 	"github.com/patrickmn/go-cache"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/discovery"
 )
 
 const (
@@ -120,7 +119,12 @@ func (cm *ClusterManagerClient) GetProjectIDByClusterID(clusterID string) (strin
 	}
 	blog.V(3).Infof("GetProjectIDByClusterID miss clusterID cache")
 
-	cli, err := cm.getClusterManagerClient()
+	cli, close, err := cm.getClusterManagerClient()
+	defer func() {
+		if close != nil {
+			close()
+		}
+	}()
 	if err != nil {
 		blog.Errorf("GetProjectIDByClusterID failed: %v", err)
 		return "", err
@@ -162,7 +166,12 @@ func (cm *ClusterManagerClient) GetBusinessIDByClusterID(clusterID string) (stri
 	}
 	blog.V(3).Infof("GetBusinessIDByClusterID miss clusterID cache")
 
-	cli, err := cm.getClusterManagerClient()
+	cli, close, err := cm.getClusterManagerClient()
+	defer func() {
+		if close != nil {
+			close()
+		}
+	}()
 	if err != nil {
 		blog.Errorf("GetBusinessIDByClusterID failed: %v", err)
 		return "", err
@@ -187,34 +196,32 @@ func (cm *ClusterManagerClient) GetBusinessIDByClusterID(clusterID string) (stri
 	return businessID, nil
 }
 
-func (cm *ClusterManagerClient) getClusterManagerClient() (bcsapicm.ClusterManagerClient, error) {
+func (cm *ClusterManagerClient) getClusterManagerClient() (bcsapicm.ClusterManagerClient, func(), error) {
 	if cm == nil {
-		return nil, errServerNotInit
+		return nil, nil, errServerNotInit
 	}
 
 	// get bcs-cluster-manager server from etcd registry
 	node, err := cm.discovery.GetRandomServiceInstance()
 	if err != nil {
 		blog.Errorf("module[%s] GetRandomServiceInstance failed: %v", cm.opts.Module, err)
-		return nil, err
+		return nil, nil, err
 	}
 	blog.V(4).Infof("get random cluster-manager instance [%s] from etcd registry successful", node.Address)
 
 	cfg := bcsapi.Config{}
 	// discovery hosts
-	cfg.Hosts = []string{node.Address}
+	cfg.Hosts = discovery.GetServerEndpointsFromRegistryNode(node)
 	cfg.TLSConfig = cm.opts.ClientTLSConfig
-	cfg.Header = map[string]string{
-		middleware.InnerClientHeaderKey: "bcs-user-manager",
-	}
-	clusterCli := bcsapi.NewClusterManager(&cfg)
+	cfg.InnerClientName = "bcs-user-manager"
+	clusterCli, close := bcsapicm.NewClusterManager(&cfg)
 
 	if clusterCli == nil {
 		blog.Errorf("create cluster manager cli from config: %+v failed, please check discovery", cfg)
-		return nil, fmt.Errorf("no available clustermanager client")
+		return nil, nil, fmt.Errorf("no available clustermanager client")
 	}
 
-	return clusterCli, nil
+	return clusterCli, close, nil
 }
 
 // Stop stop clusterManagerClient

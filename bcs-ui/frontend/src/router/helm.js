@@ -24,54 +24,39 @@
 * IN THE SOFTWARE.
 */
 
-// Helm应用列表
-const helms = () => import(/* webpackChunkName: 'helm' */'@/views/helm');
-
-// Helm模板列表
-const helmTplList = () => import(/* webpackChunkName: 'helm' */'@/views/helm/tpl-list.vue');
-
-// Helm模板详情
-const helmTplDetail = () => import(/* webpackChunkName: 'helm' */'@/views/helm/tpl-detail.vue');
-
-// Helm实例化
-const helmTplInstance = () => import(/* webpackChunkName: 'helm' */'@/views/helm/tpl-instance.vue');
-
-// Helm app详情
-const helmAppDetail = () => import(/* webpackChunkName: 'helm' */'@/views/helm/app-detail.vue');
+const ChartList = () => import(/* webpackChunkName: 'helm' */'@/views/helm/chart-list.vue');
+const ChartRelease = () => import(/* webpackChunkName: 'helm' */'@/views/helm/release-chart.vue');
+const ReleaseList = () => import(/* webpackChunkName: 'helm' */'@/views/helm/release-list.vue');
 
 const childRoutes = [
   {
-    path: ':projectCode/helm',
-    name: 'helms',
-    component: helms,
+    path: ':projectCode/repos',
+    props: route => ({ ...route.params, ...route.query }),
+    name: 'chartList',
+    component: ChartList,
   },
   {
-    path: ':projectCode/helm/list',
-    name: 'helmTplList',
-    component: helmTplList,
-  },
-  {
-    path: ':projectCode/helm/tpl/:tplId',
-    name: 'helmTplDetail',
-    component: helmTplDetail,
+    path: ':projectCode/repos/:repoName/charts/:chartName/releases',
+    props: true,
+    name: 'releaseChart',
+    component: ChartRelease,
     meta: {
-      menuId: 'helmTplList',
+      menuId: 'chartList',
     },
   },
   {
-    path: ':projectCode/helm/instance/:tplId',
-    name: 'helmTplInstance',
-    component: helmTplInstance,
-    meta: {
-      menuId: 'helmTplList',
-    },
+    path: ':projectCode/releases',
+    props: route => ({ ...route.params, ...route.query }),
+    name: 'releaseList',
+    component: ReleaseList,
   },
   {
-    path: ':projectCode/helm/app/:appId',
-    name: 'helmAppDetail',
-    component: helmAppDetail,
+    path: ':projectCode/clusters/:cluster/repos/:repoName/charts/:chartName/releases/:namespace/:releaseName',
+    props: true,
+    name: 'updateRelease',
+    component: ChartRelease,
     meta: {
-      menuId: 'helms',
+      menuId: 'releaseList',
     },
   },
 ];

@@ -23,11 +23,11 @@ import (
 )
 
 // GetPodContainers 获取 Pod 容器列表
-// @Summary  获取 Pod 容器列表
-// @Tags     Logs
-// @Produce  json
-// @Success  200  {array}  k8sclient.Container
-// @Router   /namespaces/:namespace/pods/:pod/containers [get]
+// @Summary 获取 Pod 容器列表
+// @Tags    Logs
+// @Produce json
+// @Success 200 {array} k8sclient.Container
+// @Router  /namespaces/:namespace/pods/:pod/containers [get]
 func GetPodContainers(c *rest.Context) (interface{}, error) {
 	clusterId := c.Param("clusterId")
 	namespace := c.Param("namespace")
@@ -41,13 +41,13 @@ func GetPodContainers(c *rest.Context) (interface{}, error) {
 }
 
 // GetPodLog 查询容器日志
-// @Summary  查询容器日志
-// @Tags     Logs
-// @Param    container_name  query  string  true  "容器名称"
-// @Param    previous        query  string  true  "是否使用上一次日志, 异常退出使用"
-// @Produce  json
-// @Success  200  {array}  k8sclient.Log
-// @Router   /namespaces/:namespace/pods/:pod/logs [get]
+// @Summary 查询容器日志
+// @Tags    Logs
+// @Param   container_name query string true "容器名称"
+// @Param   previous       query string true "是否使用上一次日志, 异常退出使用"
+// @Produce json
+// @Success 200 {array} k8sclient.Log
+// @Router  /namespaces/:namespace/pods/:pod/logs [get]
 func GetPodLog(c *rest.Context) (interface{}, error) {
 	projectId := c.Param("projectId")
 	clusterId := c.Param("clusterId")
@@ -71,13 +71,13 @@ func GetPodLog(c *rest.Context) (interface{}, error) {
 }
 
 // DownloadPodLog 下载日志
-// @Summary  下载日志
-// @Tags     Logs
-// @Param    container_name  query  string  true  "容器名称"
-// @Param    previous        query  string  true  "是否使用上一次日志, 异常退出使用"
-// @Produce  octet-stream
-// @Success  200  {string}  string
-// @Router   /namespaces/:namespace/pods/:pod/logs/download [get]
+// @Summary 下载日志
+// @Tags    Logs
+// @Param   container_name query string true "容器名称"
+// @Param   previous       query string true "是否使用上一次日志, 异常退出使用"
+// @Produce octet-stream
+// @Success 200 {string} string
+// @Router  /namespaces/:namespace/pods/:pod/logs/download [get]
 func DownloadPodLog(c *rest.Context) {
 	clusterId := c.Param("clusterId")
 	namespace := c.Param("namespace")
@@ -87,6 +87,10 @@ func DownloadPodLog(c *rest.Context) {
 		rest.AbortWithBadRequestError(c, err)
 		return
 	}
+
+	// 下载参数
+	logQuery.TailLines = int64(k8sclient.MAX_TAIL_LINES)
+	logQuery.LimitBytes = int64(k8sclient.MAX_LIMIT_BYTES)
 
 	logs, err := k8sclient.GetPodLogByte(c.Request.Context(), clusterId, namespace, pod, logQuery)
 	if err != nil {

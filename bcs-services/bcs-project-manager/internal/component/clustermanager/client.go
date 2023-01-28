@@ -15,13 +15,18 @@
 package clustermanager
 
 import (
+	"context"
 	"crypto/tls"
 	"errors"
 	"fmt"
 	"math/rand"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/config"
+	common "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/discovery"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/logging"
+	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/middleware"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	grpc "google.golang.org/grpc"
@@ -32,7 +37,21 @@ import (
 var (
 	// ErrNotInited err server not init
 	ErrNotInited = errors.New("server not init")
+
+	// ClusterStatusRunning cluster status running
+	ClusterStatusRunning = "RUNNING"
 )
+
+type authentication struct {
+}
+
+func (a *authentication) GetRequestMetadata(context.Context, ...string) (map[string]string, error) {
+	return map[string]string{middleware.InnerClientHeaderKey: config.ServiceName}, nil
+}
+
+func (a *authentication) RequireTransportSecurity() bool {
+	return true
+}
 
 // ClsManClient xxx
 type ClsManClient struct {
@@ -92,8 +111,9 @@ func NewClusterManager(config *Config) (ClusterManagerClient, func()) {
 	}
 	// create grpc connection
 	header := map[string]string{
-		"x-content-type": "application/grpc+proto",
-		"Content-Type":   "application/grpc",
+		"x-content-type":                "application/grpc+proto",
+		"Content-Type":                  "application/grpc",
+		middleware.InnerClientHeaderKey: common.ServiceDomain,
 	}
 	if len(config.AuthToken) != 0 {
 		header["Authorization"] = fmt.Sprintf("Bearer %s", config.AuthToken)
@@ -101,6 +121,7 @@ func NewClusterManager(config *Config) (ClusterManagerClient, func()) {
 	md := metadata.New(header)
 	var opts []grpc.DialOption
 	opts = append(opts, grpc.WithDefaultCallOptions(grpc.Header(&md)))
+	opts = append(opts, grpc.WithPerRPCCredentials(&authentication{}))
 	if config.TLSConfig != nil {
 		opts = append(opts, grpc.WithTransportCredentials(credentials.NewTLS(config.TLSConfig)))
 	} else {
@@ -128,4 +149,51 @@ func NewClusterManager(config *Config) (ClusterManagerClient, func()) {
 
 	// init cluster manager client
 	return NewClusterManagerClient(conn), func() { conn.Close() }
+}
+
+// GetCluster get cluster by clusterID
+func GetCluster(clusterID string) (*Cluster, error) {
+	cli, closeCon, err := GetClusterManagerClient()
+	if err != nil {
+		logging.Error("get cluster manager client failed, err: %s", err.Error())
+		return nil, err
+	}
+	defer closeCon()
+	req := &GetClusterReq{
+		ClusterID: clusterID,
+	}
+	resp, err := cli.GetCluster(context.Background(), req)
+	if err != nil {
+		logging.Error("get cluster from cluster manager failed, err: %s", err.Error())
+		return nil, err
+	}
+	if resp.GetCode() != 0 {
+		logging.Error("get cluster from cluster manager failed, msg: %s", resp.GetMessage())
+		return nil, errors.New(resp.GetMessage())
+	}
+	return resp.GetData(), nil
+}
+
+// ListClusters list clusters by projectID
+func ListClusters(projectID string) ([]*Cluster, error) {
+	cli, closeCon, err := GetClusterManagerClient()
+	if err != nil {
+		logging.Error("get cluster manager client failed, err: %s", err.Error())
+		return nil, err
+	}
+	defer closeCon()
+	req := &ListClusterReq{
+		ProjectID: projectID,
+		Status:    ClusterStatusRunning,
+	}
+	resp, err := cli.ListCluster(context.Background(), req)
+	if err != nil {
+		logging.Error("list clusters from cluster manager failed, err: %s", err.Error())
+		return nil, err
+	}
+	if resp.GetCode() != 0 {
+		logging.Error("list clusters from cluster manager failed, msg: %s", resp.GetMessage())
+		return nil, errors.New(resp.GetMessage())
+	}
+	return resp.GetData(), nil
 }

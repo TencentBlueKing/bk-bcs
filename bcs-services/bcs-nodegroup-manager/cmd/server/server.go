@@ -23,6 +23,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/encrypt"
 	grpccli "github.com/asim/go-micro/plugins/client/grpc/v4"
 	"github.com/asim/go-micro/plugins/registry/etcd/v4"
 	grpcsvr "github.com/asim/go-micro/plugins/server/grpc/v4"
@@ -37,7 +38,10 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/version"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers/mongo"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-nodegroup-manager/handler"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-nodegroup-manager/pkg/cluster"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-nodegroup-manager/pkg/cluster/requester"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-nodegroup-manager/pkg/controller"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-nodegroup-manager/pkg/resourcemgr"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-nodegroup-manager/pkg/storage"
@@ -69,23 +73,27 @@ type Server struct {
 	svrCancel  context.CancelFunc
 	// etcdSync for leader election
 	etcdSync sync.Sync
-	// lcoalStorage for database connection
+	// localStorage for database connection
 	localStorage storage.Storage
 	// resourceMgr resource-manager client
 	resourceMgr resourcemgr.Client
+	// clusterCli cluster client
+	clusterCli cluster.Client
 	// gatewayServer for grpc gateway
 	gatewayServer http.Server
 	// go-micro v4 grpc server
 	microService micro.Service
 	// controller for NodeGroup management
-	nodeGroupCtl    controller.NodeGroupController
+	nodeGroupCtl controller.Controller
+	// taskController for task management
+	taskController  controller.Controller
 	nodeGroupCancel context.CancelFunc
 }
 
 // Init essential elements for running
 func (s *Server) Init() error {
 	initializer := []func() error{
-		s.initStorage, s.initResourceMgr, s.initResourceMgr,
+		s.initStorage, s.initResourceMgr, s.initClusterCli,
 		s.initMicroService, s.initGatewayServer, s.initLeaderElection,
 	}
 
@@ -97,7 +105,7 @@ func (s *Server) Init() error {
 	return nil
 }
 
-// Run all backgroup services and block
+// Run all background services and block
 // all sub runner function are non-block.
 // it's fatal if sub runner failed.
 func (s *Server) Run() error {
@@ -197,6 +205,7 @@ func (s *Server) startLeaderElection() {
 	select {
 	case <-lost:
 		s.stopController()
+		go s.startLeaderElection()
 	case <-cxt.Done():
 		// server exit
 		if err := leader.Resign(); err != nil {
@@ -214,13 +223,19 @@ func (s *Server) startController() error {
 		Interval:        s.opt.ControllerLoop,
 		Storage:         s.localStorage,
 		ResourceManager: s.resourceMgr,
+		ClusterClient:   s.clusterCli,
 	}
 	s.nodeGroupCtl = controller.NewController(option)
 	if err := s.nodeGroupCtl.Init(); err != nil {
 		return err
 	}
+	s.taskController = controller.NewTaskController(option)
+	if err := s.taskController.Init(); err != nil {
+		return err
+	}
 	cxt, cancel := context.WithCancel(s.svrContext)
 	go s.nodeGroupCtl.Run(cxt)
+	go s.taskController.Run(cxt)
 	s.nodeGroupCancel = cancel
 	return nil
 }
@@ -337,4 +352,18 @@ func (s *Server) initLeaderElection() error {
 		sync.Nodes(hosts...),
 	)
 	return s.etcdSync.Init()
+}
+
+func (s *Server) initClusterCli() error {
+	realAuthToken, err := encrypt.DesDecryptFromBase([]byte(s.opt.Gateway.Token))
+	if err != nil {
+		return fmt.Errorf("init clusterCli failed, encrypt token error:%s", err.Error())
+	}
+	opts := &cluster.ClientOptions{
+		Endpoint: s.opt.Gateway.Endpoint,
+		Token:    string(realAuthToken),
+		Sender:   requester.NewRequester(),
+	}
+	s.clusterCli = cluster.NewClient(opts)
+	return nil
 }

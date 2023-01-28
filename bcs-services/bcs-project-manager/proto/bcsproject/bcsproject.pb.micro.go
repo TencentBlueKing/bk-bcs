@@ -261,68 +261,608 @@ func (h *bCSProjectHandler) ListAuthorizedProjects(ctx context.Context, in *List
 	return h.BCSProjectHandler.ListAuthorizedProjects(ctx, in, out)
 }
 
+// Api Endpoints for Business service
+
+func NewBusinessEndpoints() []*api.Endpoint {
+	return []*api.Endpoint{
+		&api.Endpoint{
+			Name:    "Business.GetBusiness",
+			Path:    []string{"/bcsproject/v1/projects/{projectCode}/business"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "Business.ListBusiness",
+			Path:    []string{"/bcsproject/v1/business"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "Business.GetBusinessTopology",
+			Path:    []string{"/bcsproject/v1/projects/{projectCode}/business/topology"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+	}
+}
+
+// Client API for Business service
+
+type BusinessService interface {
+	GetBusiness(ctx context.Context, in *GetBusinessRequest, opts ...client.CallOption) (*GetBusinessResponse, error)
+	ListBusiness(ctx context.Context, in *ListBusinessRequest, opts ...client.CallOption) (*ListBusinessResponse, error)
+	GetBusinessTopology(ctx context.Context, in *GetBusinessTopologyRequest, opts ...client.CallOption) (*GetBusinessTopologyResponse, error)
+}
+
+type businessService struct {
+	c    client.Client
+	name string
+}
+
+func NewBusinessService(name string, c client.Client) BusinessService {
+	return &businessService{
+		c:    c,
+		name: name,
+	}
+}
+
+func (c *businessService) GetBusiness(ctx context.Context, in *GetBusinessRequest, opts ...client.CallOption) (*GetBusinessResponse, error) {
+	req := c.c.NewRequest(c.name, "Business.GetBusiness", in)
+	out := new(GetBusinessResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *businessService) ListBusiness(ctx context.Context, in *ListBusinessRequest, opts ...client.CallOption) (*ListBusinessResponse, error) {
+	req := c.c.NewRequest(c.name, "Business.ListBusiness", in)
+	out := new(ListBusinessResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *businessService) GetBusinessTopology(ctx context.Context, in *GetBusinessTopologyRequest, opts ...client.CallOption) (*GetBusinessTopologyResponse, error) {
+	req := c.c.NewRequest(c.name, "Business.GetBusinessTopology", in)
+	out := new(GetBusinessTopologyResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// Server API for Business service
+
+type BusinessHandler interface {
+	GetBusiness(context.Context, *GetBusinessRequest, *GetBusinessResponse) error
+	ListBusiness(context.Context, *ListBusinessRequest, *ListBusinessResponse) error
+	GetBusinessTopology(context.Context, *GetBusinessTopologyRequest, *GetBusinessTopologyResponse) error
+}
+
+func RegisterBusinessHandler(s server.Server, hdlr BusinessHandler, opts ...server.HandlerOption) error {
+	type business interface {
+		GetBusiness(ctx context.Context, in *GetBusinessRequest, out *GetBusinessResponse) error
+		ListBusiness(ctx context.Context, in *ListBusinessRequest, out *ListBusinessResponse) error
+		GetBusinessTopology(ctx context.Context, in *GetBusinessTopologyRequest, out *GetBusinessTopologyResponse) error
+	}
+	type Business struct {
+		business
+	}
+	h := &businessHandler{hdlr}
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Business.GetBusiness",
+		Path:    []string{"/bcsproject/v1/projects/{projectCode}/business"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Business.ListBusiness",
+		Path:    []string{"/bcsproject/v1/business"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Business.GetBusinessTopology",
+		Path:    []string{"/bcsproject/v1/projects/{projectCode}/business/topology"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	return s.Handle(s.NewHandler(&Business{h}, opts...))
+}
+
+type businessHandler struct {
+	BusinessHandler
+}
+
+func (h *businessHandler) GetBusiness(ctx context.Context, in *GetBusinessRequest, out *GetBusinessResponse) error {
+	return h.BusinessHandler.GetBusiness(ctx, in, out)
+}
+
+func (h *businessHandler) ListBusiness(ctx context.Context, in *ListBusinessRequest, out *ListBusinessResponse) error {
+	return h.BusinessHandler.ListBusiness(ctx, in, out)
+}
+
+func (h *businessHandler) GetBusinessTopology(ctx context.Context, in *GetBusinessTopologyRequest, out *GetBusinessTopologyResponse) error {
+	return h.BusinessHandler.GetBusinessTopology(ctx, in, out)
+}
+
+// Api Endpoints for Namespace service
+
+func NewNamespaceEndpoints() []*api.Endpoint {
+	return []*api.Endpoint{
+		&api.Endpoint{
+			Name:    "Namespace.CreateNamespace",
+			Path:    []string{"/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces"},
+			Method:  []string{"POST"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "Namespace.CreateNamespaceCallback",
+			Path:    []string{"/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/callback/create"},
+			Method:  []string{"POST"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "Namespace.UpdateNamespace",
+			Path:    []string{"/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}"},
+			Method:  []string{"PUT"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "Namespace.UpdateNamespaceCallback",
+			Path:    []string{"/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/callback/update"},
+			Method:  []string{"POST"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "Namespace.GetNamespace",
+			Path:    []string{"/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "Namespace.ListNamespaces",
+			Path:    []string{"/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "Namespace.DeleteNamespace",
+			Path:    []string{"/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}"},
+			Method:  []string{"DELETE"},
+			Body:    "",
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "Namespace.DeleteNamespaceCallback",
+			Path:    []string{"/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/callback/delete"},
+			Method:  []string{"POST"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "Namespace.SyncNamespace",
+			Path:    []string{"/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/sync"},
+			Method:  []string{"POST"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "Namespace.WithdrawNamespace",
+			Path:    []string{"/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/withdraw"},
+			Method:  []string{"POST"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "Namespace.ListNativeNamespaces",
+			Path:    []string{"/bcsproject/v1/projects/{projectIDOrCode}/clusters/{clusterID}/native/namespaces"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+	}
+}
+
+// Client API for Namespace service
+
+type NamespaceService interface {
+	CreateNamespace(ctx context.Context, in *CreateNamespaceRequest, opts ...client.CallOption) (*CreateNamespaceResponse, error)
+	CreateNamespaceCallback(ctx context.Context, in *NamespaceCallbackRequest, opts ...client.CallOption) (*NamespaceCallbackResponse, error)
+	UpdateNamespace(ctx context.Context, in *UpdateNamespaceRequest, opts ...client.CallOption) (*UpdateNamespaceResponse, error)
+	UpdateNamespaceCallback(ctx context.Context, in *NamespaceCallbackRequest, opts ...client.CallOption) (*NamespaceCallbackResponse, error)
+	GetNamespace(ctx context.Context, in *GetNamespaceRequest, opts ...client.CallOption) (*GetNamespaceResponse, error)
+	ListNamespaces(ctx context.Context, in *ListNamespacesRequest, opts ...client.CallOption) (*ListNamespacesResponse, error)
+	DeleteNamespace(ctx context.Context, in *DeleteNamespaceRequest, opts ...client.CallOption) (*DeleteNamespaceResponse, error)
+	DeleteNamespaceCallback(ctx context.Context, in *NamespaceCallbackRequest, opts ...client.CallOption) (*NamespaceCallbackResponse, error)
+	SyncNamespace(ctx context.Context, in *SyncNamespaceRequest, opts ...client.CallOption) (*SyncNamespaceResponse, error)
+	WithdrawNamespace(ctx context.Context, in *WithdrawNamespaceRequest, opts ...client.CallOption) (*WithdrawNamespaceResponse, error)
+	ListNativeNamespaces(ctx context.Context, in *ListNativeNamespacesRequest, opts ...client.CallOption) (*ListNativeNamespacesResponse, error)
+}
+
+type namespaceService struct {
+	c    client.Client
+	name string
+}
+
+func NewNamespaceService(name string, c client.Client) NamespaceService {
+	return &namespaceService{
+		c:    c,
+		name: name,
+	}
+}
+
+func (c *namespaceService) CreateNamespace(ctx context.Context, in *CreateNamespaceRequest, opts ...client.CallOption) (*CreateNamespaceResponse, error) {
+	req := c.c.NewRequest(c.name, "Namespace.CreateNamespace", in)
+	out := new(CreateNamespaceResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *namespaceService) CreateNamespaceCallback(ctx context.Context, in *NamespaceCallbackRequest, opts ...client.CallOption) (*NamespaceCallbackResponse, error) {
+	req := c.c.NewRequest(c.name, "Namespace.CreateNamespaceCallback", in)
+	out := new(NamespaceCallbackResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *namespaceService) UpdateNamespace(ctx context.Context, in *UpdateNamespaceRequest, opts ...client.CallOption) (*UpdateNamespaceResponse, error) {
+	req := c.c.NewRequest(c.name, "Namespace.UpdateNamespace", in)
+	out := new(UpdateNamespaceResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *namespaceService) UpdateNamespaceCallback(ctx context.Context, in *NamespaceCallbackRequest, opts ...client.CallOption) (*NamespaceCallbackResponse, error) {
+	req := c.c.NewRequest(c.name, "Namespace.UpdateNamespaceCallback", in)
+	out := new(NamespaceCallbackResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *namespaceService) GetNamespace(ctx context.Context, in *GetNamespaceRequest, opts ...client.CallOption) (*GetNamespaceResponse, error) {
+	req := c.c.NewRequest(c.name, "Namespace.GetNamespace", in)
+	out := new(GetNamespaceResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *namespaceService) ListNamespaces(ctx context.Context, in *ListNamespacesRequest, opts ...client.CallOption) (*ListNamespacesResponse, error) {
+	req := c.c.NewRequest(c.name, "Namespace.ListNamespaces", in)
+	out := new(ListNamespacesResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *namespaceService) DeleteNamespace(ctx context.Context, in *DeleteNamespaceRequest, opts ...client.CallOption) (*DeleteNamespaceResponse, error) {
+	req := c.c.NewRequest(c.name, "Namespace.DeleteNamespace", in)
+	out := new(DeleteNamespaceResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *namespaceService) DeleteNamespaceCallback(ctx context.Context, in *NamespaceCallbackRequest, opts ...client.CallOption) (*NamespaceCallbackResponse, error) {
+	req := c.c.NewRequest(c.name, "Namespace.DeleteNamespaceCallback", in)
+	out := new(NamespaceCallbackResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *namespaceService) SyncNamespace(ctx context.Context, in *SyncNamespaceRequest, opts ...client.CallOption) (*SyncNamespaceResponse, error) {
+	req := c.c.NewRequest(c.name, "Namespace.SyncNamespace", in)
+	out := new(SyncNamespaceResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *namespaceService) WithdrawNamespace(ctx context.Context, in *WithdrawNamespaceRequest, opts ...client.CallOption) (*WithdrawNamespaceResponse, error) {
+	req := c.c.NewRequest(c.name, "Namespace.WithdrawNamespace", in)
+	out := new(WithdrawNamespaceResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *namespaceService) ListNativeNamespaces(ctx context.Context, in *ListNativeNamespacesRequest, opts ...client.CallOption) (*ListNativeNamespacesResponse, error) {
+	req := c.c.NewRequest(c.name, "Namespace.ListNativeNamespaces", in)
+	out := new(ListNativeNamespacesResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// Server API for Namespace service
+
+type NamespaceHandler interface {
+	CreateNamespace(context.Context, *CreateNamespaceRequest, *CreateNamespaceResponse) error
+	CreateNamespaceCallback(context.Context, *NamespaceCallbackRequest, *NamespaceCallbackResponse) error
+	UpdateNamespace(context.Context, *UpdateNamespaceRequest, *UpdateNamespaceResponse) error
+	UpdateNamespaceCallback(context.Context, *NamespaceCallbackRequest, *NamespaceCallbackResponse) error
+	GetNamespace(context.Context, *GetNamespaceRequest, *GetNamespaceResponse) error
+	ListNamespaces(context.Context, *ListNamespacesRequest, *ListNamespacesResponse) error
+	DeleteNamespace(context.Context, *DeleteNamespaceRequest, *DeleteNamespaceResponse) error
+	DeleteNamespaceCallback(context.Context, *NamespaceCallbackRequest, *NamespaceCallbackResponse) error
+	SyncNamespace(context.Context, *SyncNamespaceRequest, *SyncNamespaceResponse) error
+	WithdrawNamespace(context.Context, *WithdrawNamespaceRequest, *WithdrawNamespaceResponse) error
+	ListNativeNamespaces(context.Context, *ListNativeNamespacesRequest, *ListNativeNamespacesResponse) error
+}
+
+func RegisterNamespaceHandler(s server.Server, hdlr NamespaceHandler, opts ...server.HandlerOption) error {
+	type namespace interface {
+		CreateNamespace(ctx context.Context, in *CreateNamespaceRequest, out *CreateNamespaceResponse) error
+		CreateNamespaceCallback(ctx context.Context, in *NamespaceCallbackRequest, out *NamespaceCallbackResponse) error
+		UpdateNamespace(ctx context.Context, in *UpdateNamespaceRequest, out *UpdateNamespaceResponse) error
+		UpdateNamespaceCallback(ctx context.Context, in *NamespaceCallbackRequest, out *NamespaceCallbackResponse) error
+		GetNamespace(ctx context.Context, in *GetNamespaceRequest, out *GetNamespaceResponse) error
+		ListNamespaces(ctx context.Context, in *ListNamespacesRequest, out *ListNamespacesResponse) error
+		DeleteNamespace(ctx context.Context, in *DeleteNamespaceRequest, out *DeleteNamespaceResponse) error
+		DeleteNamespaceCallback(ctx context.Context, in *NamespaceCallbackRequest, out *NamespaceCallbackResponse) error
+		SyncNamespace(ctx context.Context, in *SyncNamespaceRequest, out *SyncNamespaceResponse) error
+		WithdrawNamespace(ctx context.Context, in *WithdrawNamespaceRequest, out *WithdrawNamespaceResponse) error
+		ListNativeNamespaces(ctx context.Context, in *ListNativeNamespacesRequest, out *ListNativeNamespacesResponse) error
+	}
+	type Namespace struct {
+		namespace
+	}
+	h := &namespaceHandler{hdlr}
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Namespace.CreateNamespace",
+		Path:    []string{"/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces"},
+		Method:  []string{"POST"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Namespace.CreateNamespaceCallback",
+		Path:    []string{"/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/callback/create"},
+		Method:  []string{"POST"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Namespace.UpdateNamespace",
+		Path:    []string{"/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}"},
+		Method:  []string{"PUT"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Namespace.UpdateNamespaceCallback",
+		Path:    []string{"/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/callback/update"},
+		Method:  []string{"POST"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Namespace.GetNamespace",
+		Path:    []string{"/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Namespace.ListNamespaces",
+		Path:    []string{"/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Namespace.DeleteNamespace",
+		Path:    []string{"/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}"},
+		Method:  []string{"DELETE"},
+		Body:    "",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Namespace.DeleteNamespaceCallback",
+		Path:    []string{"/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/callback/delete"},
+		Method:  []string{"POST"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Namespace.SyncNamespace",
+		Path:    []string{"/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/sync"},
+		Method:  []string{"POST"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Namespace.WithdrawNamespace",
+		Path:    []string{"/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/withdraw"},
+		Method:  []string{"POST"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Namespace.ListNativeNamespaces",
+		Path:    []string{"/bcsproject/v1/projects/{projectIDOrCode}/clusters/{clusterID}/native/namespaces"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	return s.Handle(s.NewHandler(&Namespace{h}, opts...))
+}
+
+type namespaceHandler struct {
+	NamespaceHandler
+}
+
+func (h *namespaceHandler) CreateNamespace(ctx context.Context, in *CreateNamespaceRequest, out *CreateNamespaceResponse) error {
+	return h.NamespaceHandler.CreateNamespace(ctx, in, out)
+}
+
+func (h *namespaceHandler) CreateNamespaceCallback(ctx context.Context, in *NamespaceCallbackRequest, out *NamespaceCallbackResponse) error {
+	return h.NamespaceHandler.CreateNamespaceCallback(ctx, in, out)
+}
+
+func (h *namespaceHandler) UpdateNamespace(ctx context.Context, in *UpdateNamespaceRequest, out *UpdateNamespaceResponse) error {
+	return h.NamespaceHandler.UpdateNamespace(ctx, in, out)
+}
+
+func (h *namespaceHandler) UpdateNamespaceCallback(ctx context.Context, in *NamespaceCallbackRequest, out *NamespaceCallbackResponse) error {
+	return h.NamespaceHandler.UpdateNamespaceCallback(ctx, in, out)
+}
+
+func (h *namespaceHandler) GetNamespace(ctx context.Context, in *GetNamespaceRequest, out *GetNamespaceResponse) error {
+	return h.NamespaceHandler.GetNamespace(ctx, in, out)
+}
+
+func (h *namespaceHandler) ListNamespaces(ctx context.Context, in *ListNamespacesRequest, out *ListNamespacesResponse) error {
+	return h.NamespaceHandler.ListNamespaces(ctx, in, out)
+}
+
+func (h *namespaceHandler) DeleteNamespace(ctx context.Context, in *DeleteNamespaceRequest, out *DeleteNamespaceResponse) error {
+	return h.NamespaceHandler.DeleteNamespace(ctx, in, out)
+}
+
+func (h *namespaceHandler) DeleteNamespaceCallback(ctx context.Context, in *NamespaceCallbackRequest, out *NamespaceCallbackResponse) error {
+	return h.NamespaceHandler.DeleteNamespaceCallback(ctx, in, out)
+}
+
+func (h *namespaceHandler) SyncNamespace(ctx context.Context, in *SyncNamespaceRequest, out *SyncNamespaceResponse) error {
+	return h.NamespaceHandler.SyncNamespace(ctx, in, out)
+}
+
+func (h *namespaceHandler) WithdrawNamespace(ctx context.Context, in *WithdrawNamespaceRequest, out *WithdrawNamespaceResponse) error {
+	return h.NamespaceHandler.WithdrawNamespace(ctx, in, out)
+}
+
+func (h *namespaceHandler) ListNativeNamespaces(ctx context.Context, in *ListNativeNamespacesRequest, out *ListNativeNamespacesResponse) error {
+	return h.NamespaceHandler.ListNativeNamespaces(ctx, in, out)
+}
+
 // Api Endpoints for Variable service
 
 func NewVariableEndpoints() []*api.Endpoint {
 	return []*api.Endpoint{
 		&api.Endpoint{
 			Name:    "Variable.CreateVariable",
-			Path:    []string{"/bcsproject/v1/project/{projectCode}/variables"},
+			Path:    []string{"/bcsproject/v1/projects/{projectCode}/variables"},
 			Method:  []string{"POST"},
 			Body:    "*",
 			Handler: "rpc",
 		},
 		&api.Endpoint{
 			Name:    "Variable.UpdateVariable",
-			Path:    []string{"/bcsproject/v1/project/{projectCode}/variables/{variableID}"},
+			Path:    []string{"/bcsproject/v1/projects/{projectCode}/variables/{variableID}"},
 			Method:  []string{"PUT"},
 			Body:    "*",
 			Handler: "rpc",
 		},
 		&api.Endpoint{
 			Name:    "Variable.ListVariableDefinitions",
-			Path:    []string{"/bcsproject/v1/project/{projectCode}/variables"},
+			Path:    []string{"/bcsproject/v1/projects/{projectCode}/variables"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
 		&api.Endpoint{
 			Name:    "Variable.DeleteVariableDefinitions",
-			Path:    []string{"/bcsproject/v1/project/{projectCode}/variables"},
+			Path:    []string{"/bcsproject/v1/projects/{projectCode}/variables"},
 			Method:  []string{"DELETE"},
 			Body:    "",
 			Handler: "rpc",
 		},
 		&api.Endpoint{
+			Name:    "Variable.ListClustersVariables",
+			Path:    []string{"/bcsproject/v1/projects/{projectCode}/variables/{variableID}/cluster"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "Variable.ListNamespacesVariables",
+			Path:    []string{"/bcsproject/v1/projects/{projectCode}/variables/{variableID}/namespace"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "Variable.UpdateClustersVariables",
+			Path:    []string{"/bcsproject/v1/projects/{projectCode}/variables/{variableID}/cluster"},
+			Method:  []string{"PUT"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "Variable.UpdateNamespacesVariables",
+			Path:    []string{"/bcsproject/v1/projects/{projectCode}/variables/{variableID}/namespace"},
+			Method:  []string{"PUT"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		&api.Endpoint{
 			Name:    "Variable.ListClusterVariables",
-			Path:    []string{"/bcsproject/v1/project/{projectCode}/variables/{variableID}/cluster"},
+			Path:    []string{"/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/variables"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
 		&api.Endpoint{
 			Name:    "Variable.ListNamespaceVariables",
-			Path:    []string{"/bcsproject/v1/project/{projectCode}/variables/{variableID}/namespace"},
+			Path:    []string{"/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/variables"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
 		&api.Endpoint{
 			Name:    "Variable.UpdateClusterVariables",
-			Path:    []string{"/bcsproject/v1/project/{projectCode}/variables/{variableID}/cluster"},
+			Path:    []string{"/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/variables"},
 			Method:  []string{"PUT"},
 			Body:    "*",
 			Handler: "rpc",
 		},
 		&api.Endpoint{
 			Name:    "Variable.UpdateNamespaceVariables",
-			Path:    []string{"/bcsproject/v1/project/{projectCode}/variables/{variableID}/namespace"},
+			Path:    []string{"/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/variables"},
 			Method:  []string{"PUT"},
 			Body:    "*",
 			Handler: "rpc",
 		},
 		&api.Endpoint{
 			Name:    "Variable.ImportVariables",
-			Path:    []string{"/bcsproject/v1/project/{projectCode}/variables/import"},
+			Path:    []string{"/bcsproject/v1/projects/{projectCode}/variables/import"},
 			Method:  []string{"POST"},
 			Body:    "*",
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "Variable.RenderVariables",
+			Path:    []string{"/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/variables/render"},
+			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
 	}
@@ -335,11 +875,16 @@ type VariableService interface {
 	UpdateVariable(ctx context.Context, in *UpdateVariableRequest, opts ...client.CallOption) (*UpdateVariableResponse, error)
 	ListVariableDefinitions(ctx context.Context, in *ListVariableDefinitionsRequest, opts ...client.CallOption) (*ListVariableDefinitionsResponse, error)
 	DeleteVariableDefinitions(ctx context.Context, in *DeleteVariableDefinitionsRequest, opts ...client.CallOption) (*DeleteVariableDefinitionsResponse, error)
+	ListClustersVariables(ctx context.Context, in *ListClustersVariablesRequest, opts ...client.CallOption) (*ListClustersVariablesResponse, error)
+	ListNamespacesVariables(ctx context.Context, in *ListNamespacesVariablesRequest, opts ...client.CallOption) (*ListNamespacesVariablesResponse, error)
+	UpdateClustersVariables(ctx context.Context, in *UpdateClustersVariablesRequest, opts ...client.CallOption) (*UpdateClustersVariablesResponse, error)
+	UpdateNamespacesVariables(ctx context.Context, in *UpdateNamespacesVariablesRequest, opts ...client.CallOption) (*UpdateNamespacesVariablesResponse, error)
 	ListClusterVariables(ctx context.Context, in *ListClusterVariablesRequest, opts ...client.CallOption) (*ListClusterVariablesResponse, error)
 	ListNamespaceVariables(ctx context.Context, in *ListNamespaceVariablesRequest, opts ...client.CallOption) (*ListNamespaceVariablesResponse, error)
 	UpdateClusterVariables(ctx context.Context, in *UpdateClusterVariablesRequest, opts ...client.CallOption) (*UpdateClusterVariablesResponse, error)
 	UpdateNamespaceVariables(ctx context.Context, in *UpdateNamespaceVariablesRequest, opts ...client.CallOption) (*UpdateNamespaceVariablesResponse, error)
 	ImportVariables(ctx context.Context, in *ImportVariablesRequest, opts ...client.CallOption) (*ImportVariablesResponse, error)
+	RenderVariables(ctx context.Context, in *RenderVariablesRequest, opts ...client.CallOption) (*RenderVariablesResponse, error)
 }
 
 type variableService struct {
@@ -387,6 +932,46 @@ func (c *variableService) ListVariableDefinitions(ctx context.Context, in *ListV
 func (c *variableService) DeleteVariableDefinitions(ctx context.Context, in *DeleteVariableDefinitionsRequest, opts ...client.CallOption) (*DeleteVariableDefinitionsResponse, error) {
 	req := c.c.NewRequest(c.name, "Variable.DeleteVariableDefinitions", in)
 	out := new(DeleteVariableDefinitionsResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *variableService) ListClustersVariables(ctx context.Context, in *ListClustersVariablesRequest, opts ...client.CallOption) (*ListClustersVariablesResponse, error) {
+	req := c.c.NewRequest(c.name, "Variable.ListClustersVariables", in)
+	out := new(ListClustersVariablesResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *variableService) ListNamespacesVariables(ctx context.Context, in *ListNamespacesVariablesRequest, opts ...client.CallOption) (*ListNamespacesVariablesResponse, error) {
+	req := c.c.NewRequest(c.name, "Variable.ListNamespacesVariables", in)
+	out := new(ListNamespacesVariablesResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *variableService) UpdateClustersVariables(ctx context.Context, in *UpdateClustersVariablesRequest, opts ...client.CallOption) (*UpdateClustersVariablesResponse, error) {
+	req := c.c.NewRequest(c.name, "Variable.UpdateClustersVariables", in)
+	out := new(UpdateClustersVariablesResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *variableService) UpdateNamespacesVariables(ctx context.Context, in *UpdateNamespacesVariablesRequest, opts ...client.CallOption) (*UpdateNamespacesVariablesResponse, error) {
+	req := c.c.NewRequest(c.name, "Variable.UpdateNamespacesVariables", in)
+	out := new(UpdateNamespacesVariablesResponse)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -444,6 +1029,16 @@ func (c *variableService) ImportVariables(ctx context.Context, in *ImportVariabl
 	return out, nil
 }
 
+func (c *variableService) RenderVariables(ctx context.Context, in *RenderVariablesRequest, opts ...client.CallOption) (*RenderVariablesResponse, error) {
+	req := c.c.NewRequest(c.name, "Variable.RenderVariables", in)
+	out := new(RenderVariablesResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // Server API for Variable service
 
 type VariableHandler interface {
@@ -451,11 +1046,16 @@ type VariableHandler interface {
 	UpdateVariable(context.Context, *UpdateVariableRequest, *UpdateVariableResponse) error
 	ListVariableDefinitions(context.Context, *ListVariableDefinitionsRequest, *ListVariableDefinitionsResponse) error
 	DeleteVariableDefinitions(context.Context, *DeleteVariableDefinitionsRequest, *DeleteVariableDefinitionsResponse) error
+	ListClustersVariables(context.Context, *ListClustersVariablesRequest, *ListClustersVariablesResponse) error
+	ListNamespacesVariables(context.Context, *ListNamespacesVariablesRequest, *ListNamespacesVariablesResponse) error
+	UpdateClustersVariables(context.Context, *UpdateClustersVariablesRequest, *UpdateClustersVariablesResponse) error
+	UpdateNamespacesVariables(context.Context, *UpdateNamespacesVariablesRequest, *UpdateNamespacesVariablesResponse) error
 	ListClusterVariables(context.Context, *ListClusterVariablesRequest, *ListClusterVariablesResponse) error
 	ListNamespaceVariables(context.Context, *ListNamespaceVariablesRequest, *ListNamespaceVariablesResponse) error
 	UpdateClusterVariables(context.Context, *UpdateClusterVariablesRequest, *UpdateClusterVariablesResponse) error
 	UpdateNamespaceVariables(context.Context, *UpdateNamespaceVariablesRequest, *UpdateNamespaceVariablesResponse) error
 	ImportVariables(context.Context, *ImportVariablesRequest, *ImportVariablesResponse) error
+	RenderVariables(context.Context, *RenderVariablesRequest, *RenderVariablesResponse) error
 }
 
 func RegisterVariableHandler(s server.Server, hdlr VariableHandler, opts ...server.HandlerOption) error {
@@ -464,11 +1064,16 @@ func RegisterVariableHandler(s server.Server, hdlr VariableHandler, opts ...serv
 		UpdateVariable(ctx context.Context, in *UpdateVariableRequest, out *UpdateVariableResponse) error
 		ListVariableDefinitions(ctx context.Context, in *ListVariableDefinitionsRequest, out *ListVariableDefinitionsResponse) error
 		DeleteVariableDefinitions(ctx context.Context, in *DeleteVariableDefinitionsRequest, out *DeleteVariableDefinitionsResponse) error
+		ListClustersVariables(ctx context.Context, in *ListClustersVariablesRequest, out *ListClustersVariablesResponse) error
+		ListNamespacesVariables(ctx context.Context, in *ListNamespacesVariablesRequest, out *ListNamespacesVariablesResponse) error
+		UpdateClustersVariables(ctx context.Context, in *UpdateClustersVariablesRequest, out *UpdateClustersVariablesResponse) error
+		UpdateNamespacesVariables(ctx context.Context, in *UpdateNamespacesVariablesRequest, out *UpdateNamespacesVariablesResponse) error
 		ListClusterVariables(ctx context.Context, in *ListClusterVariablesRequest, out *ListClusterVariablesResponse) error
 		ListNamespaceVariables(ctx context.Context, in *ListNamespaceVariablesRequest, out *ListNamespaceVariablesResponse) error
 		UpdateClusterVariables(ctx context.Context, in *UpdateClusterVariablesRequest, out *UpdateClusterVariablesResponse) error
 		UpdateNamespaceVariables(ctx context.Context, in *UpdateNamespaceVariablesRequest, out *UpdateNamespaceVariablesResponse) error
 		ImportVariables(ctx context.Context, in *ImportVariablesRequest, out *ImportVariablesResponse) error
+		RenderVariables(ctx context.Context, in *RenderVariablesRequest, out *RenderVariablesResponse) error
 	}
 	type Variable struct {
 		variable
@@ -476,62 +1081,94 @@ func RegisterVariableHandler(s server.Server, hdlr VariableHandler, opts ...serv
 	h := &variableHandler{hdlr}
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "Variable.CreateVariable",
-		Path:    []string{"/bcsproject/v1/project/{projectCode}/variables"},
+		Path:    []string{"/bcsproject/v1/projects/{projectCode}/variables"},
 		Method:  []string{"POST"},
 		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "Variable.UpdateVariable",
-		Path:    []string{"/bcsproject/v1/project/{projectCode}/variables/{variableID}"},
+		Path:    []string{"/bcsproject/v1/projects/{projectCode}/variables/{variableID}"},
 		Method:  []string{"PUT"},
 		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "Variable.ListVariableDefinitions",
-		Path:    []string{"/bcsproject/v1/project/{projectCode}/variables"},
+		Path:    []string{"/bcsproject/v1/projects/{projectCode}/variables"},
 		Method:  []string{"GET"},
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "Variable.DeleteVariableDefinitions",
-		Path:    []string{"/bcsproject/v1/project/{projectCode}/variables"},
+		Path:    []string{"/bcsproject/v1/projects/{projectCode}/variables"},
 		Method:  []string{"DELETE"},
 		Body:    "",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Variable.ListClustersVariables",
+		Path:    []string{"/bcsproject/v1/projects/{projectCode}/variables/{variableID}/cluster"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Variable.ListNamespacesVariables",
+		Path:    []string{"/bcsproject/v1/projects/{projectCode}/variables/{variableID}/namespace"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Variable.UpdateClustersVariables",
+		Path:    []string{"/bcsproject/v1/projects/{projectCode}/variables/{variableID}/cluster"},
+		Method:  []string{"PUT"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Variable.UpdateNamespacesVariables",
+		Path:    []string{"/bcsproject/v1/projects/{projectCode}/variables/{variableID}/namespace"},
+		Method:  []string{"PUT"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "Variable.ListClusterVariables",
-		Path:    []string{"/bcsproject/v1/project/{projectCode}/variables/{variableID}/cluster"},
+		Path:    []string{"/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/variables"},
 		Method:  []string{"GET"},
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "Variable.ListNamespaceVariables",
-		Path:    []string{"/bcsproject/v1/project/{projectCode}/variables/{variableID}/namespace"},
+		Path:    []string{"/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/variables"},
 		Method:  []string{"GET"},
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "Variable.UpdateClusterVariables",
-		Path:    []string{"/bcsproject/v1/project/{projectCode}/variables/{variableID}/cluster"},
+		Path:    []string{"/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/variables"},
 		Method:  []string{"PUT"},
 		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "Variable.UpdateNamespaceVariables",
-		Path:    []string{"/bcsproject/v1/project/{projectCode}/variables/{variableID}/namespace"},
+		Path:    []string{"/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/variables"},
 		Method:  []string{"PUT"},
 		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "Variable.ImportVariables",
-		Path:    []string{"/bcsproject/v1/project/{projectCode}/variables/import"},
+		Path:    []string{"/bcsproject/v1/projects/{projectCode}/variables/import"},
 		Method:  []string{"POST"},
 		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Variable.RenderVariables",
+		Path:    []string{"/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/variables/render"},
+		Method:  []string{"GET"},
 		Handler: "rpc",
 	}))
 	return s.Handle(s.NewHandler(&Variable{h}, opts...))
@@ -557,6 +1194,22 @@ func (h *variableHandler) DeleteVariableDefinitions(ctx context.Context, in *Del
 	return h.VariableHandler.DeleteVariableDefinitions(ctx, in, out)
 }
 
+func (h *variableHandler) ListClustersVariables(ctx context.Context, in *ListClustersVariablesRequest, out *ListClustersVariablesResponse) error {
+	return h.VariableHandler.ListClustersVariables(ctx, in, out)
+}
+
+func (h *variableHandler) ListNamespacesVariables(ctx context.Context, in *ListNamespacesVariablesRequest, out *ListNamespacesVariablesResponse) error {
+	return h.VariableHandler.ListNamespacesVariables(ctx, in, out)
+}
+
+func (h *variableHandler) UpdateClustersVariables(ctx context.Context, in *UpdateClustersVariablesRequest, out *UpdateClustersVariablesResponse) error {
+	return h.VariableHandler.UpdateClustersVariables(ctx, in, out)
+}
+
+func (h *variableHandler) UpdateNamespacesVariables(ctx context.Context, in *UpdateNamespacesVariablesRequest, out *UpdateNamespacesVariablesResponse) error {
+	return h.VariableHandler.UpdateNamespacesVariables(ctx, in, out)
+}
+
 func (h *variableHandler) ListClusterVariables(ctx context.Context, in *ListClusterVariablesRequest, out *ListClusterVariablesResponse) error {
 	return h.VariableHandler.ListClusterVariables(ctx, in, out)
 }
@@ -575,6 +1228,10 @@ func (h *variableHandler) UpdateNamespaceVariables(ctx context.Context, in *Upda
 
 func (h *variableHandler) ImportVariables(ctx context.Context, in *ImportVariablesRequest, out *ImportVariablesResponse) error {
 	return h.VariableHandler.ImportVariables(ctx, in, out)
+}
+
+func (h *variableHandler) RenderVariables(ctx context.Context, in *RenderVariablesRequest, out *RenderVariablesResponse) error {
+	return h.VariableHandler.RenderVariables(ctx, in, out)
 }
 
 // Api Endpoints for Healthz service

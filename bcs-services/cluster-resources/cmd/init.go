@@ -17,6 +17,7 @@ package cmd
 import (
 	"context"
 	"crypto/tls"
+	"net"
 	"net/http"
 	"path"
 	"strconv"
@@ -24,9 +25,11 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
-	microEtcd "github.com/asim/go-micro/plugins/registry/etcd/v4"
-	microGrpc "github.com/asim/go-micro/plugins/server/grpc/v4"
+	"github.com/Tencent/bk-bcs/bcs-common/common/tcp/listener"
+	"github.com/Tencent/bk-bcs/bcs-common/common/types"
 	goBindataAssetfs "github.com/elazarl/go-bindata-assetfs"
+	microEtcd "github.com/go-micro/plugins/v4/registry/etcd"
+	microGrpc "github.com/go-micro/plugins/v4/server/grpc"
 	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -114,11 +117,32 @@ func (crSvc *clusterResourcesService) Run() error {
 
 // initMicro 初始化 MicroService
 func (crSvc *clusterResourcesService) initMicro() error {
+	metadata := map[string]string{}
+	dualStackListener := listener.NewDualStackListener()
+
+	grpcPort := strconv.Itoa(crSvc.conf.Server.Port)
+	grpcAddr := net.JoinHostPort(crSvc.conf.Server.Address, grpcPort)
+
+	if err := dualStackListener.AddListenerWithAddr(grpcAddr); err != nil {
+		return err
+	}
+
+	if crSvc.conf.Server.AddressIPv6 != "" {
+		ipv6Addr := net.JoinHostPort(crSvc.conf.Server.AddressIPv6, grpcPort)
+		metadata[types.IPV6] = ipv6Addr
+
+		if err := dualStackListener.AddListenerWithAddr(ipv6Addr); err != nil {
+			return err
+		}
+		log.Info(crSvc.ctx, "grpc serve dualStackListener with ipv6: %s", ipv6Addr)
+	}
+
 	grpcServer := microGrpc.NewServer(
 		server.Name(conf.ServiceDomain),
 		microGrpc.AuthTLS(crSvc.tlsConfig),
 		microGrpc.MaxMsgSize(conf.MaxGrpcMsgSize),
-		server.Address(crSvc.conf.Server.Address+":"+strconv.Itoa(crSvc.conf.Server.Port)),
+		microGrpc.Listener(dualStackListener),
+		server.Address(grpcAddr),
 		server.Registry(crSvc.microRtr),
 		server.RegisterTTL(time.Duration(crSvc.conf.Server.RegisterTTL)*time.Second),
 		server.RegisterInterval(time.Duration(crSvc.conf.Server.RegisterInterval)*time.Second),
@@ -144,7 +168,7 @@ func (crSvc *clusterResourcesService) initMicro() error {
 		return err
 	}
 
-	crSvc.microSvc = micro.NewService(micro.Server(grpcServer))
+	crSvc.microSvc = micro.NewService(micro.Server(grpcServer), micro.Metadata(metadata))
 	log.Info(crSvc.ctx, "register cluster resources handler to micro successfully.")
 	return nil
 }
@@ -309,7 +333,9 @@ func (crSvc *clusterResourcesService) initHTTPService() error {
 		originMux.Handle("/swagger-ui/", http.StripPrefix("/swagger-ui/", fileServer))
 	}
 
-	httpAddr := crSvc.conf.Server.Address + ":" + strconv.Itoa(crSvc.conf.Server.HTTPPort)
+	httpPort := strconv.Itoa(crSvc.conf.Server.HTTPPort)
+	httpAddr := net.JoinHostPort(crSvc.conf.Server.Address, httpPort)
+
 	crSvc.httpServer = &http.Server{
 		Addr: httpAddr,
 		Handler: wsproxy.WebsocketProxy(
@@ -317,14 +343,27 @@ func (crSvc *clusterResourcesService) initHTTPService() error {
 			wsproxy.WithForwardedHeaders(httpUtil.WSHeaderForwarder),
 		),
 	}
+
+	dualStackListener := listener.NewDualStackListener()
+	if err := dualStackListener.AddListenerWithAddr(httpAddr); err != nil {
+		return err
+	}
+	if crSvc.conf.Server.AddressIPv6 != "" {
+		ipv6Addr := net.JoinHostPort(crSvc.conf.Server.AddressIPv6, httpPort)
+		if err := dualStackListener.AddListenerWithAddr(ipv6Addr); err != nil {
+			return err
+		}
+		log.Info(crSvc.ctx, "http serve dualStackListener with ipv6: %s", ipv6Addr)
+	}
+
 	go func() {
 		var err error
 		log.Info(crSvc.ctx, "start http gateway server on address %s", httpAddr)
 		if crSvc.tlsConfig != nil {
 			crSvc.httpServer.TLSConfig = crSvc.tlsConfig
-			err = crSvc.httpServer.ListenAndServeTLS("", "")
+			err = crSvc.httpServer.ServeTLS(dualStackListener, "", "")
 		} else {
-			err = crSvc.httpServer.ListenAndServe()
+			err = crSvc.httpServer.Serve(dualStackListener)
 		}
 		if err != nil {
 			log.Error(crSvc.ctx, "start http gateway server failed: %v", err)
@@ -341,16 +380,29 @@ func (crSvc *clusterResourcesService) initMetricService() error {
 	metricMux := http.NewServeMux()
 	metricMux.Handle("/metrics", promhttp.Handler())
 
-	metricAddr := crSvc.conf.Server.Address + ":" + strconv.Itoa(crSvc.conf.Server.MetricPort)
+	metricPort := strconv.Itoa(crSvc.conf.Server.MetricPort)
+	metricAddr := net.JoinHostPort(crSvc.conf.Server.Address, metricPort)
 	crSvc.metricServer = &http.Server{
 		Addr:    metricAddr,
 		Handler: metricMux,
 	}
 
+	dualStackListener := listener.NewDualStackListener()
+	if err := dualStackListener.AddListenerWithAddr(metricAddr); err != nil {
+		return err
+	}
+	if crSvc.conf.Server.AddressIPv6 != "" {
+		ipv6Addr := net.JoinHostPort(crSvc.conf.Server.AddressIPv6, metricPort)
+		if err := dualStackListener.AddListenerWithAddr(ipv6Addr); err != nil {
+			return err
+		}
+		log.Info(crSvc.ctx, "metric serve dualStackListener with ipv6: %s", ipv6Addr)
+	}
+
 	go func() {
 		var err error
 		log.Info(crSvc.ctx, "start metric server on address %s", metricAddr)
-		if err = crSvc.metricServer.ListenAndServe(); err != nil {
+		if err = crSvc.metricServer.Serve(dualStackListener); err != nil {
 			log.Error(crSvc.ctx, "start metric server failed: %v", err)
 			crSvc.stopCh <- struct{}{}
 		}
@@ -361,8 +413,8 @@ func (crSvc *clusterResourcesService) initMetricService() error {
 // initComponentClient 初始化依赖组件 Client
 func (crSvc *clusterResourcesService) initComponentClient() (err error) {
 	// ClusterManager
-	cluster.InitCMClient(crSvc.microRtr, crSvc.clientTLSConfig)
+	cluster.InitCMClient()
 	// ProjectManager
-	project.InitProjClient(crSvc.microRtr, crSvc.clientTLSConfig)
+	project.InitProjClient()
 	return nil
 }

@@ -18,18 +18,23 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
+	"strings"
+
+	middleauth "github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/middleware"
+	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/namespace"
+	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/project"
+	authutils "github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/utils"
+	"github.com/micro/go-micro/v2/metadata"
+	"github.com/micro/go-micro/v2/server"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/headerkey"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/logging"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/errorx"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/stringx"
-	middleauth "github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/middleware"
-	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/project"
-	"github.com/micro/go-micro/v2/metadata"
-	"github.com/micro/go-micro/v2/server"
 )
 
 // NoAuthEndpoints 不需要用户身份认证的方法
@@ -38,6 +43,10 @@ var NoAuthEndpoints = []string{
 	"Healthz.Healthz",
 	"BCSProject.ListAuthorizedProjects",
 	"BCSProject.ListProjects",
+	"Business.ListBusiness",
+	"Namespace.ListNamespaces",
+	"Namespace.WithdrawNamespace",
+	"Namespace.SyncNamespace",
 }
 
 // NewAuthHeaderAdapter 转换旧的请求头，适配新的鉴权中间件
@@ -77,6 +86,21 @@ func SkipClient(ctx context.Context, req server.Request, client string) bool {
 	if len(client) == 0 {
 		return false
 	}
+	body := req.Body()
+	b, err := json.Marshal(body)
+	if err != nil {
+		return false
+	}
+
+	resourceID := &resourceID{}
+	if uErr := json.Unmarshal(b, resourceID); uErr != nil {
+		return false
+	}
+	if strings.HasPrefix(req.Method(), "Namespace.") {
+		if resourceID.Namespace == "" && resourceID.Name != "" {
+			resourceID.Namespace = resourceID.Name
+		}
+	}
 	for _, p := range config.GlobalConf.ClientActionExemptPerm.ClientActions {
 		if client != p.ClientID {
 			continue
@@ -89,6 +113,15 @@ func SkipClient(ctx context.Context, req server.Request, client string) bool {
 				return true
 			}
 		}
+		for _, method := range p.NamespaceActions {
+			if method == req.Method() {
+				for _, namespace := range p.NamespaceNames {
+					if namespace == resourceID.Namespace {
+						return true
+					}
+				}
+			}
+		}
 	}
 	return false
 }
@@ -98,6 +131,8 @@ type resourceID struct {
 	ProjectCode     string `json:"projectCode,omitempty"`
 	ProjectIDOrCode string `json:"projectIDOrCode,omitempty"`
 	ClusterID       string `json:"clusterID,omitempty"`
+	Namespace       string `json:"namespace,omitempty"`
+	Name            string `json:"name,omitempty"`
 }
 
 func (r *resourceID) check() error {
@@ -119,7 +154,7 @@ func CheckUserPerm(ctx context.Context, req server.Request, username string) (bo
 	logging.Info("CheckUserPerm: method/%s, username: %s", req.Method(), username)
 
 	if len(username) == 0 {
-		return false, errors.New("username is empty")
+		return false, errorx.NewReadableErr(errorx.PermDeniedErr, "用户名为空")
 	}
 	body := req.Body()
 	b, err := json.Marshal(body)
@@ -133,23 +168,39 @@ func CheckUserPerm(ctx context.Context, req server.Request, username string) (bo
 	}
 
 	if cErr := resourceID.check(); cErr != nil {
-		return false, fmt.Errorf("auth failed: err %s", cErr.Error())
+		return false, errorx.NewReadableErr(errorx.ParamErr, "权限校验失败")
 	}
 
 	action, ok := auth.ActionPermissions[req.Method()]
 	if !ok {
-		return false, errors.New("operation has not authorized")
+		return false, errorx.NewReadableErr(errorx.PermDeniedErr, "校验用户权限失败")
 	}
 
-	allow, _, err := callIAM(username, action, *resourceID)
+	allow, url, resources, err := callIAM(username, action, *resourceID)
 	if err != nil {
-		return false, err
+		return false, errorx.NewReadableErr(errorx.PermDeniedErr, "校验用户权限失败")
+	}
+	if !allow && url != "" {
+		return false, &authutils.PermDeniedError{
+			Perms: authutils.PermData{
+				ApplyURL:   url,
+				ActionList: resources,
+			},
+		}
 	}
 	return allow, nil
 }
 
-func callIAM(username, action string, resourceID resourceID) (bool, string, error) {
-	// related actions
+func callIAM(username, action string, resourceID resourceID) (bool, string, []authutils.ResourceAction, error) {
+	var isSharedCluster bool
+	if resourceID.ClusterID != "" {
+		cluster, err := clustermanager.GetCluster(resourceID.ClusterID)
+		if err != nil {
+			logging.Error("get cluster %s from cluster-manager failed, err: %s", cluster, err.Error())
+			return false, "", nil, errorx.NewReadableErr(errorx.PermDeniedErr, "校验用户权限失败")
+		}
+		isSharedCluster = cluster.GetIsShared() && cluster.GetProjectID() != resourceID.ProjectID
+	}
 	switch action {
 	case project.CanViewProjectOperation:
 		return auth.ProjectIamClient.CanViewProject(username, resourceID.ProjectID)
@@ -159,7 +210,22 @@ func callIAM(username, action string, resourceID resourceID) (bool, string, erro
 		return auth.ProjectIamClient.CanEditProject(username, resourceID.ProjectID)
 	case project.CanDeleteProjectOperation:
 		return auth.ProjectIamClient.CanDeleteProject(username, resourceID.ProjectID)
+	case namespace.CanViewNamespaceOperation:
+		return auth.NamespaceIamClient.CanViewNamespace(username,
+			resourceID.ProjectID, resourceID.ClusterID, resourceID.Namespace, isSharedCluster)
+	case namespace.CanListNamespaceOperation:
+		return auth.NamespaceIamClient.CanListNamespace(username,
+			resourceID.ProjectID, resourceID.ClusterID, isSharedCluster)
+	case namespace.CanCreateNamespaceOperation:
+		return auth.NamespaceIamClient.CanCreateNamespace(username,
+			resourceID.ProjectID, resourceID.ClusterID, isSharedCluster)
+	case namespace.CanUpdateNamespaceOperation:
+		return auth.NamespaceIamClient.CanUpdateNamespace(username,
+			resourceID.ProjectID, resourceID.ClusterID, resourceID.Namespace, isSharedCluster)
+	case namespace.CanDeleteNamespaceOperation:
+		return auth.NamespaceIamClient.CanDeleteNamespace(username,
+			resourceID.ProjectID, resourceID.ClusterID, resourceID.Namespace, isSharedCluster)
 	default:
-		return false, "", errors.New("permission denied")
+		return false, "", nil, errorx.NewReadableErr(errorx.PermDeniedErr, "校验用户权限失败")
 	}
 }

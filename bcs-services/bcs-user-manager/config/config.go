@@ -46,6 +46,7 @@ type CertConfig struct {
 // UserMgrConfig is a configuration of bcs-user-manager
 type UserMgrConfig struct {
 	Address         string
+	IPv6Address     string
 	Port            uint
 	InsecureAddress string
 	InsecurePort    uint

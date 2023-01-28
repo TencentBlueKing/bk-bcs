@@ -2,7 +2,7 @@
   <div class="choose-node-template bcs-content-wrapper">
     <bk-form>
       <FormGroup :allow-toggle="false" class="choose-node">
-        <bk-form-item :label="$t('选择节点模板')">
+        <bk-form-item :label="$t('选择节点模板')" v-if="$INTERNAL">
           <div
             class="item-node-template" v-bk-tooltips="{
               disabled: isTkeCluster,
@@ -77,19 +77,31 @@
           class="mw88"
           theme="primary"
           :disabled="!ipList.length"
-          @click="handleConfirm">
+          @click="handleShowConfirmDialog">
           {{$t('确定')}}
         </bk-button>
       </span>
       <bk-button class="mw88 ml10" @click="handleCancel">{{$t('取消')}}</bk-button>
     </div>
+    <tipDialog
+      ref="confirmDialogRef"
+      icon="bcs-icon bcs-icon-exclamation-triangle"
+      :title="$t('确定添加节点')"
+      :sub-title="$t('请确认以下配置:')"
+      :check-list="checkList"
+      :confirm-btn-text="$t('确定')"
+      :cancel-btn-text="$t('取消')"
+      :confirm-loading="confirmLoading"
+      :confirm-callback="handleConfirm">
+    </tipDialog>
     <!-- IP选择器 -->
     <IpSelector v-model="showIpSelector" :ip-list="ipList" @confirm="chooseServer"></IpSelector>
+    <!-- 节点模板详情 -->
     <bcs-sideslider
       :is-show.sync="showDetail"
       :title="currentRow.name"
       quick-close
-      width="800">
+      :width="800">
       <div slot="content">
         <NodeTemplateDetail :data="currentRow"></NodeTemplateDetail>
       </div>
@@ -105,11 +117,12 @@ import IpSelector from '@/components/ip-selector/selector-dialog.vue';
 import StatusIcon from '@/views/dashboard/common/status-icon';
 import $i18n from '@/i18n/i18n-setup';
 import useNode from './use-node';
-import NodeTemplateDetail from './node-template-detail.vue';
+import NodeTemplateDetail from './node-template/node-template-detail.vue';
+import tipDialog from '@/components/tip-dialog/index.vue';
 import { NODE_TEMPLATE_ID } from '@/common/constant';
 
 export default defineComponent({
-  components: { FormGroup, IpSelector, StatusIcon, NodeTemplateDetail },
+  components: { FormGroup, IpSelector, StatusIcon, NodeTemplateDetail, tipDialog },
   props: {
     clusterId: {
       type: String,
@@ -117,7 +130,7 @@ export default defineComponent({
     },
   },
   setup(props, ctx) {
-    const { $bkInfo } = ctx.root;
+    const { $INTERNAL } = ctx.root;
     const isTkeCluster = computed(() => ($store.state as any).cluster.clusterList
       ?.find(item => item.clusterID === props.clusterId)?.provider === 'tencentCloud');
     const loading = ref(false);
@@ -167,36 +180,46 @@ export default defineComponent({
       showIpSelector.value = false;
     };
     const { addNode } = useNode();
-    const handleConfirm = () => {
-      $bkInfo({
-        type: 'warning',
-        clsName: 'custom-info-confirm',
-        subTitle: $i18n.t('请确认是否对 {ip} 等 {num} 个IP进行操作系统初始化和安装容器服务相关组件操作', {
-          ip: ipList.value[0].bk_host_innerip,
+    const confirmDialogRef = ref<any>(null);
+    const checkList = computed(() => [
+      {
+        id: 1,
+        text: $i18n.t('请确认是否对 {ip} 等 {num} 个IP进行操作系统初始化和安装容器服务相关组件操作', {
+          ip: ipList.value[0]?.bk_host_innerip,
           num: ipList.value.length,
         }),
-        title: $i18n.t('确认添加节点'),
-        defaultInfo: true,
-        confirmFn: async () => {
-          const result = await addNode({
-            clusterId: props.clusterId,
-            nodeIps: ipList.value.map(item => item.bk_host_innerip),
-            nodeTemplateID: nodeTemplateID.value,
-          });
-
-          if (result) {
-            $router.push({
-              name: 'clusterDetail',
-              params: {
-                clusterId: props.clusterId,
-              },
-              query: {
-                active: 'node',
-              },
-            });
-          }
-        },
+        isChecked: false,
+      },
+      {
+        id: 2,
+        text: $i18n.t('为了保证集群环境标准化，添加节点会格式化数据盘/dev/vdb，盘内数据将被清除，请确认该数据盘内没有放置业务数据'),
+        isChecked: false,
+      },
+    ]);
+    const handleShowConfirmDialog = () => {
+      confirmDialogRef.value?.show();
+    };
+    const confirmLoading = ref(false);
+    const handleConfirm = async () => {
+      confirmLoading.value = true;
+      const result = await addNode({
+        clusterId: props.clusterId,
+        nodeIps: ipList.value.map(item => item.bk_host_innerip),
+        nodeTemplateID: nodeTemplateID.value,
       });
+      confirmLoading.value = false;
+
+      if (result) {
+        $router.push({
+          name: 'clusterDetail',
+          params: {
+            clusterId: props.clusterId,
+          },
+          query: {
+            active: 'node',
+          },
+        });
+      }
     };
 
     // todo 框架支持数据持久化
@@ -205,9 +228,12 @@ export default defineComponent({
     };
 
     onMounted(() => {
-      handleNodeTemplateList();
+      $INTERNAL && handleNodeTemplateList();
     });
     return {
+      confirmLoading,
+      confirmDialogRef,
+      checkList,
       loading,
       isTkeCluster,
       showDetail,
@@ -220,6 +246,7 @@ export default defineComponent({
       handleRemoveIp,
       chooseServer,
       handleCancel,
+      handleShowConfirmDialog,
       handleConfirm,
       handleGotoNodeTemplate,
       handlePreview,

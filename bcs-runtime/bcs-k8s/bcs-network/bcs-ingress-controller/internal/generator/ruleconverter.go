@@ -118,7 +118,10 @@ func (rc *RuleConverter) generate7LayerListener(region, lbID string) (*networkex
 		networkextensionv1.LabelKeyForIsSegmentListener: networkextensionv1.LabelValueFalse,
 		networkextensionv1.LabelKeyForLoadbalanceID:     GetLabelLBId(lbID),
 		networkextensionv1.LabelKeyForLoadbalanceRegion: region,
+		networkextensionv1.LabelKeyForOwnerKind:         constant.KindIngress,
+		networkextensionv1.LabelKeyForOwnerName:         rc.ingressName,
 	})
+	li.Status.Ingress = rc.ingressName
 	li.Finalizers = append(li.Finalizers, constant.FinalizerNameBcsIngressController)
 	li.Spec.Port = rc.rule.Port
 	li.Spec.Protocol = rc.rule.Protocol
@@ -145,7 +148,11 @@ func (rc *RuleConverter) generateListenerRule(l7Routes []networkextensionv1.Laye
 		liRule.Domain = l7Route.Domain
 		liRule.Path = l7Route.Path
 		liRule.ListenerAttribute = l7Route.ListenerAttribute
-		targetGroup, err := rc.generateTargetGroup(rc.rule.Protocol, l7Route.Services)
+		protocol := rc.rule.Protocol
+		if len(l7Route.ForwardType) != 0 {
+			protocol = l7Route.ForwardType
+		}
+		targetGroup, err := rc.generateTargetGroup(protocol, l7Route.Services)
 		if err != nil {
 			return nil, err
 		}
@@ -173,7 +180,10 @@ func (rc *RuleConverter) generate4LayerListener(region, lbID string) (*networkex
 		networkextensionv1.LabelKeyForIsSegmentListener: networkextensionv1.LabelValueFalse,
 		networkextensionv1.LabelKeyForLoadbalanceID:     GetLabelLBId(lbID),
 		networkextensionv1.LabelKeyForLoadbalanceRegion: region,
+		networkextensionv1.LabelKeyForOwnerKind:         constant.KindIngress,
+		networkextensionv1.LabelKeyForOwnerName:         rc.ingressName,
 	})
+	li.Status.Ingress = rc.ingressName
 	li.Finalizers = append(li.Finalizers, constant.FinalizerNameBcsIngressController)
 	li.Spec.Port = rc.rule.Port
 	li.Spec.Protocol = rc.rule.Protocol

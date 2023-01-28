@@ -32,8 +32,8 @@ type StatefulSetFilter struct {
 	ServiceName     string `json:"serviceName,omitempty" filter:"data.spec.serviceName"`
 }
 
-const statefulSetNestedTimeLayout = nestedTimeLayout
+const statefulSetNestedTimeLayout = NestedTimeLayout
 
-func (t StatefulSetFilter) getCondition() *operator.Condition {
+func (t StatefulSetFilter) GetCondition() *operator.Condition {
 	return qGenerate(t, statefulSetNestedTimeLayout)
 }

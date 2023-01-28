@@ -146,7 +146,7 @@ func (ct *chart) listChartVersionQuery(req *helmmanager.ListChartVersionReq) url
 }
 
 // Detail get chart version detail
-func (ct *chart) Detail(ctx context.Context, req *helmmanager.GetChartDetailReq) (*helmmanager.ChartDetail, error) {
+func (ct *chart) Detail(ctx context.Context, req *helmmanager.GetVersionDetailReq) (*helmmanager.ChartDetail, error) {
 	req.Operator = common.GetStringP(ct.conf.Operator)
 	projectID := req.GetProjectID()
 	if projectID == "" {
@@ -175,7 +175,7 @@ func (ct *chart) Detail(ctx context.Context, req *helmmanager.GetChartDetailReq)
 		return nil, err
 	}
 
-	var r helmmanager.GetChartDetailResp
+	var r helmmanager.GetVersionDetailResp
 	if err = unmarshalPB(resp.Reply, &r); err != nil {
 		return nil, err
 	}

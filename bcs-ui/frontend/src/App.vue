@@ -13,16 +13,18 @@
   </div>
 </template>
 <script>
-import Navigation from '@/views/navigation.vue';
+import Navigation from '@/views/app/navigation.vue';
 import ProjectCreate from '@/views/project/project-create.vue';
-import SharedClusterTips from '@/components/shared-cluster-tips';
-import BkPaaSLogin from '@blueking/paas-login';
+import SharedClusterTips from '@/views/app/shared-cluster-tips.vue';
+import BkPaaSLogin from '@/views/app/login.vue';
 import { bus } from '@/common/bus';
 import { userPermsByAction } from '@/api/base';
-
+import { newUserPermsByAction } from '@/api/modules/cluster-manager';
+import AppApplyPerm from '@/views/app/apply-perm.vue';
+import useProject from '@/views/app/use-project';
 export default {
   name: 'App',
-  components: { Navigation, ProjectCreate, BkPaaSLogin, SharedClusterTips },
+  components: { Navigation, ProjectCreate, BkPaaSLogin, SharedClusterTips, AppApplyPerm },
   data() {
     return {
       isLoading: true,
@@ -55,17 +57,25 @@ export default {
     if (!item && allowDomains[0]) {
       window.location.href = `//${allowDomains[0]}${location.pathname}`;
     }
+    if (!this.$INTERNAL) {
+      localStorage.setItem('appViewMode', 'namespace');
+    }
   },
   created() {
     // 异步权限弹窗
-    bus.$on('show-apply-perm-modal-async', async ({ $actionId, permCtx, resourceName }) => {
+    bus.$on('show-apply-perm-modal-async', async ({ $actionId, permCtx, resourceName, newPerms }) => {
       if (!this.$refs.bkApplyPerm) return;
       this.$refs.bkApplyPerm.dialogConf.isShow = true;
       this.$refs.bkApplyPerm.isLoading = true;
-      const data = await userPermsByAction({
-        $actionId,
-        perm_ctx: permCtx,
-      }).catch(() => ({}));
+      const data = newPerms
+        ? await newUserPermsByAction({
+          $actionId,
+          perm_ctx: permCtx,
+        }).catch(() => ({}))
+        : await userPermsByAction({
+          $actionId,
+          perm_ctx: permCtx,
+        }).catch(() => ({}));
       if (data?.perms?.[$actionId]) {
         this.$bkMessage({
           theme: 'warning',
@@ -116,10 +126,11 @@ export default {
   methods: {
     // 初始化BCS基本数据
     async initBcsBaseData() {
+      const { getProjectList } = useProject();
       this.isLoading = true;
       await Promise.all([
         this.$store.dispatch('userInfo'),
-        this.$store.dispatch('getProjectList'),
+        getProjectList(),
       ]).catch((err) => {
         console.error(err);
       });
@@ -135,8 +146,8 @@ export default {
 <style lang="postcss">
     @import '@/css/reset.css';
     @import '@/css/app.css';
-    @import '@/css/animation.css';
     @import '@/fonts/style.css';
+    @import '@/css/main.css';
 
     .app-container {
         min-width: 1280px;

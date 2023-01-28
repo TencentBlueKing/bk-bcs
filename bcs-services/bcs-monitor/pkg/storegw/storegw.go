@@ -47,7 +47,7 @@ type StoreGW struct {
 }
 
 // NewStoreGW :
-func NewStoreGW(ctx context.Context, logger log.Logger, reg *prometheus.Registry, gprcAdvertiseIP string,
+func NewStoreGW(ctx context.Context, logger log.Logger, reg *prometheus.Registry, grpcAdvertiseIP string,
 	grpcAdvertisePortRangeStr string, confs []*config.StoreConf, storeFunc StoreFactory) (*StoreGW, error) {
 	portRange, err := NewPortRange(grpcAdvertisePortRangeStr)
 	if err != nil {
@@ -62,19 +62,22 @@ func NewStoreGW(ctx context.Context, logger log.Logger, reg *prometheus.Registry
 		stop:            cancel,
 		logger:          logger,
 		reg:             reg,
-		GRPCAdvertiseIP: gprcAdvertiseIP,
+		GRPCAdvertiseIP: grpcAdvertiseIP,
 		portRange:       portRange,
 		stores:          map[string]*Store{},
 		storeFunc:       storeFunc,
 	}
 
+	if err := gw.initStore(); err != nil {
+		return nil, err
+	}
+
 	return gw, nil
 }
 
-// Run 启动服务
-func (s *StoreGW) Run() error {
+// initStore 初始化 store
+func (s *StoreGW) initStore() error {
 	for idx, conf := range s.confs {
-		logger := log.With(s.logger, "provider", conf.Type, "id", idx)
 		port, err := s.portRange.AllocatePort(int64(idx))
 		if err != nil {
 			return err
@@ -82,27 +85,36 @@ func (s *StoreGW) Run() error {
 
 		address := fmt.Sprintf("%s:%d", s.GRPCAdvertiseIP, port)
 
-		storeSvr, err := s.storeFunc(logger, s.reg, conf)
+		storeSvr, err := s.storeFunc(s.logger, s.reg, conf)
 		if err != nil {
 			return err
 		}
 
-		store, err := NewStore(s.ctx, logger, s.reg, address, conf, storeSvr)
+		store, err := NewStore(s.ctx, s.logger, s.reg, address, conf, storeSvr)
 		if err != nil {
 			return err
 		}
 
 		id := strconv.Itoa(idx)
 		s.stores[id] = store
-		go func() {
+	}
+
+	return nil
+}
+
+// Run 启动服务
+func (s *StoreGW) Run() error {
+	for idx, s := range s.stores {
+		go func(idx string, s Store) {
+			logger := log.With(s.logger, "provider", s.Type, "id", idx)
 			// 因为阻塞, 另外启动，同时打印日志
-			err := store.ListenAndServe()
+			err := s.ListenAndServe()
 			if err != nil {
 				level.Error(logger).Log("msg", "ListenAndServe grpc server done", "err", err)
 				return
 			}
 			level.Info(logger).Log("msg", "ListenAndServe grpc server done")
-		}()
+		}(idx, *s)
 	}
 
 	<-s.ctx.Done()
@@ -148,4 +160,13 @@ func (s *StoreGW) TargetGroups() []*Group {
 		}})
 	}
 	return tgs
+}
+
+// GetStoreAddrs 本地 store 地址
+func (s *StoreGW) GetStoreAddrs() []string {
+	addrs := make([]string, 0, len(s.stores))
+	for _, store := range s.stores {
+		addrs = append(addrs, store.Address)
+	}
+	return addrs
 }

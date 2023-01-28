@@ -16,15 +16,18 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/prom"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/types"
-	"github.com/smallnest/chanx"
 	"sync"
 	"time"
+
+	"github.com/smallnest/chanx"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/prom"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/types"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/msgqueue"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/bcsmonitor"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/cmanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/datajob"
@@ -33,20 +36,22 @@ import (
 
 // DataJobHandler handler for dataJob
 type DataJobHandler struct {
-	unSub         func()
-	stopCtx       context.Context
-	stopCancel    context.CancelFunc
-	jobChanList   chan chanx.UnboundedChan
-	chanMap       sync.Map
-	filters       []msgqueue.Filter
-	clients       HandleClients
-	policyFactory datajob.PolicyFactoryInterface
-	concurrency   int64
+	unSub                  func()
+	stopCtx                context.Context
+	stopCancel             context.CancelFunc
+	jobChanList            chan chanx.UnboundedChan
+	chanMap                sync.Map
+	filters                []msgqueue.Filter
+	clients                HandleClients
+	policyFactory          datajob.PolicyFactoryInterface
+	concurrency            int64
+	ignoreBkMonitorCluster bool
 }
 
 // HandlerOptions for DataJobHandler
 type HandlerOptions struct {
-	ChanQueueNum int64
+	ChanQueueNum           int64
+	ignoreBkMonitorCluster bool
 }
 
 // HandleClients handleClients type
@@ -64,13 +69,14 @@ func NewDataJobHandler(opts HandlerOptions, client HandleClients, concurrency in
 	factory := datajob.NewPolicyFactory(client.Store)
 	factory.Init()
 	return &DataJobHandler{
-		stopCtx:       ctx,
-		stopCancel:    cancel,
-		jobChanList:   make(chan chanx.UnboundedChan, opts.ChanQueueNum),
-		chanMap:       sync.Map{},
-		clients:       client,
-		policyFactory: factory,
-		concurrency:   concurrency,
+		stopCtx:                ctx,
+		stopCancel:             cancel,
+		jobChanList:            make(chan chanx.UnboundedChan, opts.ChanQueueNum),
+		chanMap:                sync.Map{},
+		clients:                client,
+		policyFactory:          factory,
+		concurrency:            concurrency,
+		ignoreBkMonitorCluster: opts.ignoreBkMonitorCluster,
 	}
 }
 
@@ -215,8 +221,11 @@ func (h *DataJobHandler) handleOneChan(jobChan chanx.UnboundedChan) {
 		if !ok {
 			continue
 		}
-		h.handleOneJob(value)
 		prom.ReportWaitingJobCount(value.Opts.ClusterID, jobChan.Len())
+		if value.Opts.IsBKMonitor && h.ignoreBkMonitorCluster {
+			continue
+		}
+		h.handleOneJob(value)
 	}
 }
 

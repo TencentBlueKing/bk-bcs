@@ -36,31 +36,27 @@ import router from '@/router';
 import store from '@/store';
 import Authority from '@/directives/authority';
 import config from '@/mixins/config';
-import Exception from '@/components/exception';
 import bkSelector from '@/components/selector';
 import bkDataSearcher from '@/components/data-searcher';
 import bkbcsInput from '@/components/bk-input';
 import bkCombox from '@/components/bk-input/combox';
-import bkTextarea from '@/components/bk-textarea';
-import ApplyPerm from '@/components/apply-perm';
 import bkGuide from '@/components/guide';
 import k8sIngress from '@/views/ingress/k8s-ingress.vue';
 import { chainable } from '@/common/util';
 
-Vue.config.devtools = NODE_ENV === 'development';
+Vue.config.devtools = process.env.NODE_ENV === 'development';
 Vue.prototype.$chainable = chainable;
 
 Vue.use(VueCompositionAPI);
 Vue.use(Authority);
 Vue.use(focus);
 Vue.use(bkmagic2);
-Vue.use(VeeValidate);
+Vue.use(VeeValidate, {
+  fieldsBagName: '_veeFields',
+});
 Vue.mixin(config);
-Vue.component('AppException', Exception);
-Vue.component('AppApplyPerm', ApplyPerm);
 Vue.component('BkbcsInput', bkbcsInput);
 Vue.component('BkCombox', bkCombox);
-Vue.component('BkTextarea', bkTextarea);
 Vue.component('BkSelector', bkSelector);
 Vue.component('BkGuide', bkGuide);
 Vue.component('BkDataSearcher', bkDataSearcher);

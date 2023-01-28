@@ -302,7 +302,7 @@ func TestBufferedAutoscaler_doCron(t *testing.T) {
 	}
 
 	clusterState := clusterstate.NewClusterStateRegistry(provider, clusterStateConfig, context.LogRecorder, newBackoff())
-	sd := NewScaleDown(&context, clusterState, 0)
+	sd := NewScaleDown(&context, clusterState, 0, 0, 0)
 
 	autoscaler := &BufferedAutoscaler{
 		Context:               &context,

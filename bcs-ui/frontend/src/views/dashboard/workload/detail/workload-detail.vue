@@ -22,7 +22,7 @@
           </div>
         </div>
         <div class="btns">
-          <bk-button theme="primary" @click="handleShowYamlPanel">To YAML</bk-button>
+          <bk-button theme="primary" @click="handleShowYamlPanel">{{ $t('查看YAML配置') }}</bk-button>
           <template v-if="!hiddenOperate">
             <bk-button
               theme="primary"
@@ -127,7 +127,7 @@
           :suffix="[$t('入流量'), $t('出流量')]">
         </Metric>
       </div>
-      <bcs-tab class="workload-tab" :active.sync="activePanel" type="card" :label-height="40">
+      <bcs-tab class="workload-tab" :active.sync="activePanel" type="card" :label-height="42">
         <bcs-tab-panel name="pod" label="Pod" v-bkloading="{ isLoading: podLoading }">
           <div class="pod-info-header">
             <bk-button
@@ -173,33 +173,36 @@
               </template>
             </bcs-table-column>
             <bcs-table-column :label="$t('镜像')" min-width="200" :resizable="false" :show-overflow-tooltip="false">
-              <template slot-scope="{ row }">
+              <template #default="{ row }">
                 <span v-bk-tooltips.top="(handleGetExtData(row.metadata.uid, 'images') || []).join('<br />')">
                   {{ (handleGetExtData(row.metadata.uid, 'images') || []).join(', ') }}
                 </span>
               </template>
             </bcs-table-column>
             <bcs-table-column label="Status" width="120" :resizable="false" show-overflow-tooltip>
-              <template slot-scope="{ row }">
+              <template #default="{ row }">
                 <StatusIcon :status="handleGetExtData(row.metadata.uid, 'status')"></StatusIcon>
               </template>
             </bcs-table-column>
             <bcs-table-column label="Ready" width="100" :resizable="false">
-              <template slot-scope="{ row }">
+              <template #default="{ row }">
                 {{handleGetExtData(row.metadata.uid, 'readyCnt')}}/{{handleGetExtData(row.metadata.uid, 'totalCnt')}}
               </template>
             </bcs-table-column>
             <bcs-table-column label="Restarts" width="100" :resizable="false">
-              <template slot-scope="{ row }">{{handleGetExtData(row.metadata.uid, 'restartCnt')}}</template>
+              <template #default="{ row }">{{handleGetExtData(row.metadata.uid, 'restartCnt')}}</template>
             </bcs-table-column>
             <bcs-table-column label="Host IP" width="140" :resizable="false">
-              <template slot-scope="{ row }">{{row.status.hostIP || '--'}}</template>
+              <template #default="{ row }">{{row.status.hostIP || '--'}}</template>
             </bcs-table-column>
-            <bcs-table-column label="Pod IP" width="140" :resizable="false">
-              <template slot-scope="{ row }">{{row.status.podIP || '--'}}</template>
+            <bcs-table-column label="Pod IPv4" width="140" :resizable="false">
+              <template #default="{ row }">{{row.status.podIP || '--'}}</template>
+            </bcs-table-column>
+            <bcs-table-column label="Pod IPv6" width="140" :resizable="false" show-overflow-tooltip>
+              <template #default="{ row }">{{handleGetExtData(row.metadata.uid, 'podIPv6') || '--'}}</template>
             </bcs-table-column>
             <bcs-table-column label="Node" :resizable="false" show-overflow-tooltip>
-              <template slot-scope="{ row }">{{row.spec.nodeName || '--'}}</template>
+              <template #default="{ row }">{{row.spec.nodeName || '--'}}</template>
             </bcs-table-column>
             <bcs-table-column label="Age" :resizable="false">
               <template #default="{ row }">
@@ -218,19 +221,16 @@
             </bcs-table-column>
           </bcs-table>
         </bcs-tab-panel>
-        <bcs-tab-panel name="event" :label="$t('事件')" v-if="category !== 'cronjobs'">
-          <bk-table
-            :data="events"
-            v-bkloading="{ isLoading: eventLoading }"
-            :pagination="pagination"
-            @page-change="handlePageChange"
-            @page-limit-change="handlePageLimitChange">
-            <bk-table-column :label="$t('时间')" prop="eventTime" width="200"></bk-table-column>
-            <bk-table-column :label="$t('组件')" prop="component" width="100"></bk-table-column>
-            <bk-table-column :label="$t('对象')" prop="extraInfo.name" width="200"></bk-table-column>
-            <bk-table-column :label="$t('级别')" prop="level" width="100"></bk-table-column>
-            <bk-table-column :label="$t('事件内容')" prop="describe" min-width="300"></bk-table-column>
-          </bk-table>
+        <bcs-tab-panel name="event" :label="$t('事件')">
+          <EventQueryTableVue
+            class="min-h-[360px]"
+            is-specify-kinds
+            :kinds="kind === 'Deployment' ? [kind,'ReplicaSet', 'Pod'] : [kind, 'Pod']"
+            :cluster-id="clusterId"
+            :namespace="namespace"
+            :name="kindsNames"
+            v-if="!loading">
+          </EventQueryTableVue>
         </bcs-tab-panel>
         <bcs-tab-panel name="label" :label="$t('标签')">
           <bk-table :data="labels">
@@ -244,7 +244,7 @@
             <bk-table-column label="Value" prop="value"></bk-table-column>
           </bk-table>
         </bcs-tab-panel>
-        <bcs-tab-panel name="selector" label="Selector" v-if="['deployments', 'statefulsets'].includes(category)">
+        <bcs-tab-panel name="selector" :label="$t('选择器')" v-if="['deployments', 'statefulsets'].includes(category)">
           <bk-table :data="selectors">
             <bk-table-column label="Key" prop="key"></bk-table-column>
             <bk-table-column label="Value" prop="value"></bk-table-column>
@@ -254,9 +254,18 @@
     </div>
     <bcs-sideslider quick-close :title="metadata.name" :is-show.sync="showYamlPanel" :width="800">
       <template #content>
-        <Ace
+        <CodeEditor
           v-full-screen="{ tools: ['fullscreen', 'copy'], content: yaml }"
-          width="100%" height="100%" lang="yaml" read-only :value="yaml"></Ace>
+          width="100%"
+          height="100%"
+          readonly
+          :options="{
+            roundedSelection: false,
+            scrollBeyondLastLine: false,
+            renderLineHighlight: false,
+          }"
+          :value="yaml">
+        </CodeEditor>
       </template>
     </bcs-sideslider>
     <bcs-dialog class="log-dialog" v-model="logShow" width="80%" :show-footer="false" render-directive="if">
@@ -292,7 +301,7 @@ import StatusIcon from '../../common/status-icon';
 import Metric from '../../common/metric.vue';
 import useDetail from './use-detail';
 import detailBasicList from './detail-basic';
-import Ace from '@/components/ace-editor';
+import CodeEditor from '@/components/monaco-editor/new-editor.vue';
 import fullScreen from '@/directives/full-screen';
 import useInterval from '../../common/use-interval';
 import BcsLog from '@/components/bcs-log/index';
@@ -300,14 +309,11 @@ import useLog from './use-log';
 import usePage from '@/views/dashboard/common/use-page';
 import { timeZoneTransForm } from '@/common/util';
 import useSearch from '../../common/use-search';
+import EventQueryTableVue from '@/views/mc/event-query-table.vue';
 
 export interface IDetail {
   manifest: any;
   manifestExt: any;
-}
-
-export interface IParams {
-  pod_name_list: string[];
 }
 
 export default defineComponent({
@@ -315,8 +321,9 @@ export default defineComponent({
   components: {
     StatusIcon,
     Metric,
-    Ace,
+    CodeEditor,
     BcsLog,
+    EventQueryTableVue,
   },
   directives: {
     bkOverflowTips,
@@ -428,7 +435,7 @@ export default defineComponent({
     // 获取pod manifestExt数据
     const handleGetExtData = (uid, prop) => workloadPods.value?.manifestExt?.[uid]?.[prop];
     // 指标参数
-    const params = computed<IParams | null>(() => {
+    const params = computed<Record<string, any>|null>(() => {
       const list = pods.value.map(item => item.metadata.name);
       return list.length
         ? { pod_name_list: list, $namespaceId: props.namespace }
@@ -539,7 +546,7 @@ export default defineComponent({
         pre += `${index > 0 ? ',' : ''}${key}=${matchLabels[key]}`;
         return pre;
       }, '');
-      let result = false
+      let result = false;
       if (['Deployment', 'Statefulset'].includes(props.kind)) {
         result = await $store.dispatch('dashboard/batchReschedulePod', {
           $namespace: props.namespace,
@@ -569,65 +576,43 @@ export default defineComponent({
     };
 
     // 事件列表
-    const events = ref([]);
-    const eventLoading = ref(false);
-    const categoryMap = {
-      deployments: 'deployment',
-      daemonsets: 'daemonset',
-      statefulsets: 'statefulset',
-      jobs: 'job',
-      custom_objects: 'custom_objects',
-    }; // 兼容老接口 category 类型
-    const pagination = ref({
-      current: 1,
-      count: 0,
-      limit: 10,
-    });
-    const handleGetEventList = async () => {
-      // cronjobs 不支持事件查询
-      if (props.category === 'cronjobs') return;
-
-      eventLoading.value = true;
-      const params = {
-        projectId: projectId.value,
-        instanceId: 0,
-        cluster_id: clusterId.value,
-        offset: (pagination.value.current - 1) * pagination.value.limit,
-        limit: pagination.value.limit,
-        name: props.name,
-        namespace: props.namespace,
-        category: categoryMap[props.category],
-      };
-      const { data } = await $store.dispatch('app/getEventList', params)
-        .catch(() => ({ data: { data: [], total: 0 } }));
-      pagination.value.count = data.total;
-      events.value = data.data;
-      eventLoading.value = false;
-    };
-    const handlePageChange = (page) => {
-      pagination.value.current = page;
-      handleGetEventList();
-    };
-    const handlePageLimitChange = (limit) => {
-      pagination.value.current = 1;
-      pagination.value.limit = limit;
-      handleGetEventList();
-    };
+    const kindsNames = computed(() => [
+      props.name,
+      ...pods.value.map(item => item.metadata.name),
+      ...rsNames.value,
+    ]);
 
     // 刷新Pod状态
     const handleRefreshPodsStatus = async () => {
       workloadPods.value = await handleGetPodsData();
     };
     const { start, stop } = useInterval(handleRefreshPodsStatus, 8000);
+
+    // 获取RS资源
+    const rsData = ref<any>({});
+    const rsNames = computed(() => rsData.value?.manifest?.items?.map(item => item.metadata.name) || []);
+    const handleGetRSData = async () => {
+      if (props.kind !== 'Deployment') return;
+      rsData.value = await $store.dispatch('dashboard/getReplicasets', {
+        $namespaceId: props.namespace,
+        ownerName: props.name,
+      });
+    };
+
+    const loading = ref(true);
     onMounted(async () => {
+      loading.value = true;
       // 详情接口前置
       if (props.category === 'custom_objects') {
         await handleGetCustomObjectDetail();
       } else {
         await handleGetDetail();
       }
-      await handleGetWorkloadPods();
-      handleGetEventList();
+      await Promise.all([
+        handleGetWorkloadPods(),
+        handleGetRSData(),
+      ]);
+      loading.value = false;
       // 开启轮询
       start();
     });
@@ -636,6 +621,7 @@ export default defineComponent({
     });
 
     return {
+      loading,
       batchBtnLoading,
       updateStrategyMap,
       isLoading,
@@ -663,12 +649,8 @@ export default defineComponent({
       showYamlPanel,
       projectId,
       clusterId,
-      events,
-      eventLoading,
-      pagination,
+      kindsNames,
       timeZoneTransForm,
-      handlePageChange,
-      handlePageLimitChange,
       handleShowYamlPanel,
       gotoPodDetail,
       handleGetExtData,
@@ -697,36 +679,5 @@ export default defineComponent({
 });
 </script>
 <style lang="postcss" scoped>
-@import './detail-info.css';
-@import './pod-log.css';
-.workload-detail {
-    width: 100%;
-    /deep/ .bk-sideslider .bk-sideslider-content {
-        height: 100%;
-    }
-    &-info {
-        @mixin detail-info 3;
-    }
-    &-body {
-        background: #FAFBFD;
-        padding: 0 24px;
-        .workload-metric {
-            display: flex;
-            background: #fff;
-            margin-top: 16px;
-            height: 230px;
-        }
-        .workload-tab {
-            margin-top: 16px;
-        }
-        .pod-info-header {
-          display: flex;
-          justify-content: space-between;
-          margin-bottom: 20px;
-          .search-input {
-            width: 350px;
-          }
-        }
-    }
-}
+@import './workload-detail.css';
 </style>

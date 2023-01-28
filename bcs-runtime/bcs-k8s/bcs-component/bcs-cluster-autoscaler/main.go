@@ -27,9 +27,13 @@ import (
 	"syscall"
 	"time"
 
+	cloudBuilder "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/cloudprovider/builder"
+	coreinternal "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/core"
+	metricsinternal "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/metrics"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/scalingconfig"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/simulator"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/spf13/pflag"
-
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apiserver/pkg/server/mux"
 	"k8s.io/apiserver/pkg/server/routes"
@@ -53,11 +57,6 @@ import (
 	componentbaseconfig "k8s.io/component-base/config"
 	"k8s.io/klog"
 	"k8s.io/kubernetes/pkg/client/leaderelectionconfig"
-
-	cloudBuilder "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/cloudprovider/builder"
-	coreinternal "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/core"
-	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/scalingconfig"
-	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/simulator"
 )
 
 // MultiStringFlag is a flag for passing multiple parameters using same flag
@@ -146,6 +145,8 @@ var (
 	maxBulkSoftTaintCount = flag.Int("max-bulk-soft-taint-count", 10,
 		"Maximum number of nodes that can be tainted/untainted PreferNoSchedule at the same time."+
 			"Set to 0 to turn off such tainting.")
+	maxBulkScaleUpCount = flag.Int("max-bulk-scale-up-count", 100,
+		"Maximum number of nodes that can be scale up at the same time. Set to 0 to turn off such scaling up")
 	maxBulkSoftTaintTime = flag.Duration("max-bulk-soft-taint-time", 3*time.Second,
 		"Maximum duration of tainting/untainting nodes as PreferNoSchedule at the same time.")
 	maxEmptyBulkDeleteFlag = flag.Int("max-empty-bulk-delete", 10,
@@ -160,6 +161,10 @@ var (
 		"Should CA scale up when there 0 ready nodes.")
 	maxNodeProvisionTime = flag.Duration("max-node-provision-time", 15*time.Minute,
 		"Maximum time CA waits for node to be provisioned")
+	maxNodeStartupTime = flag.Duration("max-node-startup-time", 15*time.Minute,
+		"Maximum time CA waits for node to be ready")
+	maxNodeStartScheduleTime = flag.Duration("max-node-start-schedule-time", 15*time.Minute,
+		"Maximum time CA waits for node to be schedulable")
 	nodeGroupsFlag = multiStringFlag("nodes",
 		"sets min,max size and other configuration data for a node group in a format accepted by cloud provider."+
 			"Can be used multiple times. Format: <min>:<max>:<other...>")
@@ -216,6 +221,8 @@ var (
 		"Specifies a taint to ignore in node templates when considering to scale a node group")
 	awsUseStaticInstanceList = flag.Bool("aws-use-static-instance-list", false,
 		"Should CA fetch instance types in runtime or use a static list. AWS only")
+	bufferedCPURatio      = flag.Float64("buffer-cpu-ratio", 0, "ratio of buffered cpu")
+	bufferedMemRatio      = flag.Float64("buffer-mem-ratio", 0, "ratio of buffered memory")
 	bufferedResourceRatio = flag.Float64("buffer-resource-ratio", 0, "ratio of buffered resources")
 	enableProfiling       = flag.Bool("profiling", false, "Is debug/pprof endpoint enabled")
 
@@ -265,6 +272,8 @@ func createAutoscalingOptions() scalingconfig.Options {
 			MaxEmptyBulkDelete:                  *maxEmptyBulkDeleteFlag,
 			MaxGracefulTerminationSec:           *maxGracefulTerminationFlag,
 			MaxNodeProvisionTime:                *maxNodeProvisionTime,
+			MaxNodeStartupTime:                  *maxNodeStartupTime,
+			MaxNodeStartScheduleTime:            *maxNodeStartScheduleTime,
 			MaxNodesTotal:                       *maxNodesTotal,
 			MaxCoresTotal:                       maxCoresTotal,
 			MinCoresTotal:                       minCoresTotal,
@@ -298,10 +307,13 @@ func createAutoscalingOptions() scalingconfig.Options {
 			NodeDeletionDelayTimeout:            *nodeDeletionDelayTimeout,
 			AWSUseStaticInstanceList:            *awsUseStaticInstanceList,
 		},
+		BufferedCPURatio:      *bufferedCPURatio,
+		BufferedMemRatio:      *bufferedMemRatio,
 		BufferedResourceRatio: *bufferedResourceRatio,
 		WebhookMode:           *webhookMode,
 		WebhookModeConfig:     *webhookModeConfig,
 		WebhookModeToken:      *webhookModeToken,
+		MaxBulkScaleUpCount:   *maxBulkScaleUpCount,
 	}
 }
 
@@ -379,6 +391,7 @@ func buildAutoscaler() (core.Autoscaler, error) {
 
 func run(healthCheck *metrics.HealthCheck) {
 	metrics.RegisterAll(*emitPerNodeGroupMetrics)
+	metricsinternal.RegisterLocal()
 
 	autoscaler, err := buildAutoscaler()
 	if err != nil {

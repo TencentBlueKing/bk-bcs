@@ -111,6 +111,7 @@ class RecordReleases:
                 "sys_variables": system_variables,
                 "version": chart_version.version,
                 "cmd_flags": '[]',
+                "enable_helm": True,
             }
             # 记录到db中
             app = App.objects.create(**rec)

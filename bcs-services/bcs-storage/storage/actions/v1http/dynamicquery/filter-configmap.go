@@ -25,8 +25,8 @@ type ConfigMapFilter struct {
 	APIVersion string `json:"apiVersion,omitempty" filter:"data.apiVersion"`
 }
 
-const configMapNestedTimeLayout = nestedTimeLayout
+const configMapNestedTimeLayout = NestedTimeLayout
 
-func (t ConfigMapFilter) getCondition() *operator.Condition {
+func (t ConfigMapFilter) GetCondition() *operator.Condition {
 	return qGenerate(t, configMapNestedTimeLayout)
 }

@@ -35,7 +35,7 @@ INNER_PACKAGEPATH=build/bcs.${VERSION}
 .PHONY: init
 init:
 	go install github.com/golang/protobuf/protoc-gen-go@latest
-	go install go install go-micro.dev/v4/cmd/protoc-gen-micro@v4.7.0
+	go install go-micro.dev/v4/cmd/protoc-gen-micro@v4.7.0
 	go install github.com/micro/micro/v3/cmd/protoc-gen-openapi@latest
 	go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-openapiv2@v2.7.3
 	go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-grpc-gateway@v2.7.3
@@ -55,7 +55,7 @@ rs-proto:
 
 .PHONY: build
 build:
-	go build -o bcs-nodegroup-manager *.go
+	go build ${LDFLAG} -o bcs-nodegroup-manager *.go
 
 .PHONY: test
 test:

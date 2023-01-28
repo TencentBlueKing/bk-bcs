@@ -79,3 +79,26 @@ func TestRand(t *testing.T) {
 	assert.Equal(t, 15, len(stringx.Rand(15, "abcd1234")))
 	assert.Equal(t, "aaa", stringx.Rand(3, "a"))
 }
+
+func TestExtractNumberPrefix(t *testing.T) {
+	assert.Equal(t, "", stringx.ExtractNumberPrefix(""))
+	assert.Equal(t, "", stringx.ExtractNumberPrefix("abc"))
+	assert.Equal(t, "123", stringx.ExtractNumberPrefix("123"))
+	assert.Equal(t, "123", stringx.ExtractNumberPrefix("123+abc"))
+	assert.Equal(t, "456", stringx.ExtractNumberPrefix("456-abc-789"))
+	assert.Equal(t, "4", stringx.ExtractNumberPrefix("4bca8j72"))
+}
+
+func TestIsIPv4(t *testing.T) {
+	assert.Equal(t, false, stringx.IsIPv4("127.0.0.256"))
+	assert.Equal(t, false, stringx.IsIPv4("0.0.0.0"))
+	assert.Equal(t, false, stringx.IsIPv4("fe80::4ae:1ff:fe2e:94f8"))
+	assert.Equal(t, true, stringx.IsIPv4("127.0.0.1"))
+}
+
+func TestIsIPv6(t *testing.T) {
+	assert.Equal(t, false, stringx.IsIPv6(":::"))
+	assert.Equal(t, false, stringx.IsIPv6("::"))
+	assert.Equal(t, false, stringx.IsIPv6("127.0.0.1"))
+	assert.Equal(t, true, stringx.IsIPv6("fe80::4ae:1ff:fe2e:94f8"))
+}

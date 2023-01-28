@@ -4,10 +4,12 @@ metadata:
   name: gdeploy-simple-ioe1uufguy
   namespace: default
   labels:
-    "label-key-1": "label-val-1"
+    label-key-1: label-val-1
     io.tencent.bcs.dev/deletion-allow: Always
   annotations:
-    "io.tencent.bcs.editFormat": "form"
+    io.tencent.bcs.editFormat: form
+    io.tencent.paas.creator: anonymous
+    io.tencent.paas.updator: anonymous
 spec:
   minReadySeconds: 0
   selector:

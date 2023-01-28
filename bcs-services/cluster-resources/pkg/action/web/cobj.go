@@ -23,14 +23,14 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/featureflag"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/i18n"
-	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
+	resCsts "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/constants"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/validator"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/slice"
 )
 
-// GenCObjListWebAnnos 生成获取自定义资源列表请求的 WebAnnotations
-func GenCObjListWebAnnos(
+// GenListCObjWebAnnos 生成获取自定义资源列表请求的 WebAnnotations
+func GenListCObjWebAnnos(
 	ctx context.Context, cobjListRespData map[string]interface{}, crdInfo map[string]interface{}, format string,
 ) (*spb.Struct, error) {
 	kind := crdInfo["kind"].(string)
@@ -68,7 +68,7 @@ func GenRetrieveCObjWebAnnos(
 
 // requireDeletionProtectWebAnno 判断是否需要提供删除保护的 webAnnotations 信息
 func requireDeletionProtectWebAnno(kind, format string) bool {
-	return slice.StringInSlice(kind, []string{res.GDeploy, res.HookTmpl, res.GSTS}) &&
+	return slice.StringInSlice(kind, []string{resCsts.GDeploy, resCsts.HookTmpl, resCsts.GSTS}) &&
 		(format == action.DefaultFormat || format == action.ManifestFormat)
 }
 
@@ -88,26 +88,26 @@ func genResListDeleteProtectAnnoFuncs(ctx context.Context, manifests []interface
 // genDeleteProtectTips 生成删除保护相关的 Tips，为空表示允许删除
 func genDeleteProtectTips(ctx context.Context, manifest map[string]interface{}, kind string) string {
 	replicas := mapx.GetInt64(manifest, "spec.replicas")
-	editMode := mapx.Get(manifest, []string{"metadata", "annotations", res.EditModeAnnoKey}, res.EditModeYaml)
+	editMode := mapx.Get(manifest, []string{"metadata", "annotations", resCsts.EditModeAnnoKey}, resCsts.EditModeYaml)
 
-	paths := []string{"metadata", "labels", res.DeletionProtectLabelKey}
-	dpPolicy := mapx.Get(manifest, paths, res.DeletionProtectPolicyNotAllow)
-	if dpPolicy == res.DeletionProtectPolicyAlways {
+	paths := []string{"metadata", "labels", resCsts.DeletionProtectLabelKey}
+	dpPolicy := mapx.Get(manifest, paths, resCsts.DeletionProtectPolicyNotAllow)
+	if dpPolicy == resCsts.DeletionProtectPolicyAlways {
 		return ""
 	}
 
 	tips := ""
-	if editMode == res.EditModeForm {
+	if editMode == resCsts.EditModeForm {
 		tips = i18n.GetMsg(ctx, "配置信息->删除保护策略->总是允许删除")
 	} else {
 		tips = fmt.Sprintf(
 			i18n.GetMsg(ctx, "标签字段 %s: %s"),
-			res.DeletionProtectLabelKey,
-			res.DeletionProtectPolicyAlways,
+			resCsts.DeletionProtectLabelKey,
+			resCsts.DeletionProtectPolicyAlways,
 		)
 	}
 	// 当类型是 GameDeploy/GameSTS，保护策略为 Cascading，实例数为 0 时候是可以删除的
-	if (kind == res.GDeploy || kind == res.GSTS) && dpPolicy == res.DeletionProtectPolicyCascading {
+	if (kind == resCsts.GDeploy || kind == resCsts.GSTS) && dpPolicy == resCsts.DeletionProtectPolicyCascading {
 		if replicas == 0 {
 			return ""
 		}

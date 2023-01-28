@@ -22,8 +22,8 @@ type IPPoolStaticFilter struct {
 	ClusterId string `json:"clusterId" filter:"clusterId"`
 }
 
-const ipPoolStaticNestedTimeLayout = nestedTimeLayout
+const ipPoolStaticNestedTimeLayout = NestedTimeLayout
 
-func (t IPPoolStaticFilter) getCondition() *operator.Condition {
+func (t IPPoolStaticFilter) GetCondition() *operator.Condition {
 	return qGenerate(t, ipPoolStaticNestedTimeLayout)
 }

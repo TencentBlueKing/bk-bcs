@@ -89,7 +89,7 @@ func (pbih *portBindingItemHandler) ensureItem(
 		if listener.Spec.TargetGroup != nil && len(listener.Spec.TargetGroup.Backends) != 0 {
 			// listener has not synced
 			if listener.Status.Status != networkextensionv1.ListenerStatusSynced {
-				blog.Warnf("listener %s/%s changes not synced", listenerName, item.PoolNamespace)
+				blog.V(4).Infof("listener %s/%s changes not synced", listenerName, item.PoolNamespace)
 				return pbih.generateStatus(item, constant.PortBindingItemStatusNotReady)
 			}
 			// listener has targetGroup and targetGroup(include pod ip) has no changed
@@ -97,9 +97,9 @@ func (pbih *portBindingItemHandler) ensureItem(
 				countReady++
 				continue
 			}
-			//listener has targetGroup but targetGroup(include pod ip) has changed
+			// listener has targetGroup but targetGroup(include pod ip) has changed
 		}
-		//listener has no targetGroup or ip has changed
+		// listener has no targetGroup or ip has changed
 		listener.Spec.ListenerAttribute = portPool.Spec.ListenerAttribute
 		if item.ListenerAttribute != nil {
 			listener.Spec.ListenerAttribute = item.ListenerAttribute
@@ -135,7 +135,7 @@ func (pbih *portBindingItemHandler) ensureItem(
 	// 		return pbih.generateStatus(item, constant.PortBindingItemStatusNotReady)
 	// 	}
 	// }
-	//return pbih.generateStatus(item, constant.PortBindingItemStatusReady)
+	// return pbih.generateStatus(item, constant.PortBindingItemStatusReady)
 }
 
 func (pbih *portBindingItemHandler) generateStatus(
@@ -176,6 +176,7 @@ func (pbih *portBindingItemHandler) deleteItem(
 			return pbih.generateStatus(item, constant.PortBindingItemStatusDeleting)
 		}
 		listener.Spec.TargetGroup = nil
+		listener.Status.Status = networkextensionv1.ListenerStatusNotSynced
 		if err := pbih.k8sClient.Update(context.Background(), listener, &client.UpdateOptions{}); err != nil {
 			blog.Warnf("failed to update listener %s/%s, err %s", listenerName, item.PoolNamespace, err.Error())
 			return pbih.generateStatus(item, constant.PortBindingItemStatusDeleting)

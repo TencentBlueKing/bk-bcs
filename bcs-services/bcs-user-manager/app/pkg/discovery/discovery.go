@@ -23,7 +23,7 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-
+	"github.com/Tencent/bk-bcs/bcs-common/common/types"
 	"github.com/micro/go-micro/v2/registry"
 )
 
@@ -223,4 +223,16 @@ func (sd *ServiceDiscovery) Stop() {
 	if sd != nil {
 		sd.cancel()
 	}
+}
+
+// GetServerEndpointsFromRegistryNode get dual address
+func GetServerEndpointsFromRegistryNode(nodeServer *registry.Node) []string {
+	// ipv4 server address
+	endpoints := []string{nodeServer.Address}
+	// ipv6 server address
+	if ipv6Address := nodeServer.Metadata[types.IPV6]; ipv6Address != "" {
+		endpoints = append(endpoints, ipv6Address)
+	}
+
+	return endpoints
 }

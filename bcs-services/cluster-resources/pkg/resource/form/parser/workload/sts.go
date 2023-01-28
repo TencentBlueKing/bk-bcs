@@ -17,9 +17,9 @@ package workload
 import (
 	"github.com/fatih/structs"
 
+	resCsts "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/constants"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/model"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/parser/common"
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/parser/storage"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/parser/util"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
 )
@@ -52,17 +52,17 @@ func ParseSTSSpec(manifest map[string]interface{}, spec *model.STSSpec) {
 func ParseSTSReplicas(manifest map[string]interface{}, replicas *model.STSReplicas) {
 	replicas.SVCName = mapx.GetStr(manifest, "spec.serviceName")
 	replicas.Cnt = mapx.GetInt64(manifest, "spec.replicas")
-	replicas.UpdateStrategy = mapx.Get(manifest, "spec.updateStrategy.type", DefaultUpdateStrategy).(string)
+	replicas.UpdateStrategy = mapx.Get(
+		manifest, "spec.updateStrategy.type", resCsts.DefaultUpdateStrategy,
+	).(string)
 	replicas.PodManPolicy = mapx.Get(manifest, "spec.podManagementPolicy", "OrderedReady").(string)
 	replicas.Partition = mapx.GetInt64(manifest, "spec.updateStrategy.rollingUpdate.partition")
 }
 
 // ParseSTSVolumeClaimTmpl ...
 func ParseSTSVolumeClaimTmpl(manifest map[string]interface{}, claimTmpl *model.STSVolumeClaimTmpl) {
-	if claims, _ := mapx.GetItems(manifest, "spec.volumeClaimTemplates"); claims != nil {
-		for _, c := range claims.([]interface{}) {
-			claimTmpl.Claims = append(claimTmpl.Claims, parseVolumeClaim(c.(map[string]interface{})))
-		}
+	for _, c := range mapx.GetList(manifest, "spec.volumeClaimTemplates") {
+		claimTmpl.Claims = append(claimTmpl.Claims, parseVolumeClaim(c.(map[string]interface{})))
 	}
 }
 
@@ -70,7 +70,7 @@ func ParseSTSVolumeClaimTmpl(manifest map[string]interface{}, claimTmpl *model.S
 func parseVolumeClaim(raw map[string]interface{}) model.VolumeClaim {
 	vc := model.VolumeClaim{
 		PVCName:     mapx.GetStr(raw, "metadata.name"),
-		ClaimType:   storage.PVCTypeUseExistPV,
+		ClaimType:   resCsts.PVCTypeUseExistPV,
 		PVName:      mapx.GetStr(raw, "spec.volumeName"),
 		SCName:      mapx.GetStr(raw, "spec.storageClassName"),
 		StorageSize: util.ConvertStorageUnit(mapx.GetStr(raw, "spec.resources.requests.storage")),
@@ -78,7 +78,7 @@ func parseVolumeClaim(raw map[string]interface{}) model.VolumeClaim {
 	}
 	// 如果没有指定 PVName，则认为是要根据 StorageClass 创建
 	if vc.PVName == "" {
-		vc.ClaimType = storage.PVCTypeCreateBySC
+		vc.ClaimType = resCsts.PVCTypeCreateBySC
 	}
 	if accessModes := mapx.GetList(raw, "spec.accessModes"); len(accessModes) != 0 {
 		for _, am := range accessModes {

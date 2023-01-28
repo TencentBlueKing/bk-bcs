@@ -26,10 +26,12 @@ import (
 	"gopkg.in/yaml.v3"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/ctxkey"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/envs"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/handler"
 	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
 	cli "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/client"
+	resCsts "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/constants"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/example"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/parser/util"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/parser/workload"
@@ -88,7 +90,10 @@ var deployManifest4RenderTest = map[string]interface{}{
 
 func TestManifestRenderer(t *testing.T) {
 	formData := workload.ParseDeploy(deployManifest4RenderTest)
-	manifest, err := NewManifestRenderer(context.TODO(), formData, envs.TestClusterID, res.Deploy).Render()
+	ctx := context.WithValue(context.TODO(), ctxkey.UsernameKey, envs.AnonymousUsername)
+	manifest, err := NewManifestRenderer(
+		ctx, formData, envs.TestClusterID, resCsts.Deploy, resCsts.UpdateAction,
+	).Render()
 	assert.Nil(t, err)
 
 	assert.Equal(t, "busybox", mapx.GetStr(manifest, "metadata.labels.app"))
@@ -98,7 +103,9 @@ func TestManifestRenderer(t *testing.T) {
 	// 注入信息检查
 	assert.Equal(t, "apps/v1", mapx.GetStr(manifest, "apiVersion"))
 
-	assert.Equal(t, res.EditModeForm, mapx.GetStr(manifest, []string{"metadata", "annotations", res.EditModeAnnoKey}))
+	assert.Equal(t, resCsts.EditModeForm, mapx.GetStr(
+		manifest, []string{"metadata", "annotations", resCsts.EditModeAnnoKey},
+	))
 }
 
 type manifestRenderTestData struct {
@@ -128,7 +135,7 @@ var testCaseData = []manifestRenderTestData{
 	{"config/secret_basic_auth.yaml", formdata.SecretBasicAuth, true},
 	{"config/secret_ssh_auth.yaml", formdata.SecretSSHAuth, true},
 	{"config/secret_tls.yaml", formdata.SecretTLS, true},
-	{"config/secret_sa_token.yaml", formdata.SecretSAToken, true},
+	{"config/secret_sa_token.yaml", formdata.SecretSAToken, false},
 	// 存储类
 	{"storage/pv_complex.yaml", formdata.PVComplex, false},
 	{"storage/pvc_complex.yaml", formdata.PVCComplex, true},
@@ -140,13 +147,14 @@ var testCaseData = []manifestRenderTestData{
 	{"custom/gdeploy_complex.yaml", formdata.GDeployComplex, false},
 	{"custom/gdeploy_simple.yaml", formdata.GDeploySimple, false},
 	{"custom/gsts_complex.yaml", formdata.GSTSComplex, false},
+	{"custom/gsts_simple.yaml", formdata.GSTSSimple, false},
 	{"custom/hook_tmpl_complex.yaml", formdata.HookTmplComplex, false},
 }
 
 func TestManifestRenderByPipe(t *testing.T) {
 	ctx := handler.NewInjectedContext("", "", "")
 	pathPrefix := path.GetCurPKGPath() + "/testdata/manifest/"
-	clusterConf := res.NewClusterConfig(envs.TestClusterID)
+	clusterConf := res.NewClusterConf(envs.TestClusterID)
 
 	// TODO 考虑下拆分函数，逻辑太多了可读性差
 	for _, data := range testCaseData {
@@ -161,7 +169,7 @@ func TestManifestRenderByPipe(t *testing.T) {
 		// 根据表单数据渲染的结果
 		formDataMap := structs.Map(data.formData)
 		resKind := mapx.GetStr(formDataMap, "metadata.kind")
-		result, err := NewManifestRenderer(ctx, formDataMap, envs.TestClusterID, resKind).Render()
+		result, err := NewManifestRenderer(ctx, formDataMap, envs.TestClusterID, resKind, resCsts.UpdateAction).Render()
 		assert.Nil(t, err, "kind [%s] manifest render failed: %v", resKind, err)
 
 		// 做对比确保一致（在同步随机名称后）
@@ -182,7 +190,7 @@ func TestManifestRenderByPipe(t *testing.T) {
 		namespace := mapx.GetStr(result, "metadata.namespace")
 		resCli := cli.NewResClient(clusterConf, k8sRes)
 
-		_, err = resCli.Create(ctx, result, (namespace != ""), metav1.CreateOptions{})
+		_, err = resCli.Create(ctx, result, namespace != "", metav1.CreateOptions{})
 		assert.Nil(
 			t, err, "create k8s res [apiVersion: %s, kind: %s, name: %s] failed: %v", apiVersion, resKind, resName, err,
 		)

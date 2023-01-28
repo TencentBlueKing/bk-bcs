@@ -22,7 +22,7 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
-	microEtcd "github.com/asim/go-micro/plugins/registry/etcd/v4"
+	microEtcd "github.com/go-micro/plugins/v4/registry/etcd"
 	"go-micro.dev/v4/registry"
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/cache/redis"
@@ -125,12 +125,12 @@ func (c *DependencyServiceChecker) doOnce() error {
 	}
 
 	// 检查 ClusterManager 服务，若服务未注册，则返回错误
-	if _, err := cluster.NewCMClient(c.microRtr, c.cliTLSConf); err != nil {
+	if _, err := cluster.NewCMClient(); err != nil {
 		return err
 	}
 
 	// 检查 BcsProject 服务，若服务未注册，则返回错误
-	if _, err := project.NewProjClient(c.microRtr, c.cliTLSConf); err != nil {
+	if _, err := project.NewProjClient(); err != nil {
 		return err
 	}
 	return nil

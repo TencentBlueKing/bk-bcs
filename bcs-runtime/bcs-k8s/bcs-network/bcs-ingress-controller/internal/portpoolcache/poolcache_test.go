@@ -13,6 +13,7 @@
 package portpoolcache
 
 import (
+	"fmt"
 	"reflect"
 	"testing"
 
@@ -27,6 +28,7 @@ func getNewCache() (*Cache, error) {
 		LoadBalancerIDs: []string{"lb1", "lb2"},
 		StartPort:       30000,
 		EndPort:         31000,
+		Protocol:        []string{"TCP"},
 		Status:          constant.PortBindingStatusReady,
 	}); err != nil {
 		return nil, err
@@ -36,11 +38,36 @@ func getNewCache() (*Cache, error) {
 		LoadBalancerIDs: []string{"lb3", "lb4"},
 		StartPort:       30000,
 		EndPort:         31000,
+		Protocol:        []string{"TCP"},
 		Status:          constant.PortBindingStatusReady,
 	}); err != nil {
 		return nil, err
 	}
 	return cache, nil
+}
+
+func TestSetItemStatus(t *testing.T) {
+	poolKey := "test1.ns1"
+	newStatus := &networkextensionv1.PortPoolItemStatus{
+		ItemName:        "item2",
+		LoadBalancerIDs: []string{"lb3", "lb4"},
+		StartPort:       30000,
+		EndPort:         32000,
+		Protocol:        []string{"TCP"},
+		Status:          constant.PortBindingStatusReady,
+	}
+	cache, err := getNewCache()
+	if err != nil {
+		t.Fatalf("fail, %s", err.Error())
+	}
+	cache.SetPortPoolItemStatus(poolKey, newStatus)
+	for poolKey, pool := range cache.portPoolMap {
+		for _, item := range pool.ItemList {
+			for protocol, list := range item.PortListMap {
+				fmt.Printf("%s/%s :%d/%d", poolKey, protocol, list.GetAvailabePortNum(), list.GetAvailabePortNum())
+			}
+		}
+	}
 }
 
 // TestCache tests cache functions

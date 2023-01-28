@@ -82,6 +82,9 @@ func (la *ListAction) listProjects() ([]*pm.Project, int64, error) {
 		if la.req.Kind != "" {
 			condM["kind"] = []string{la.req.Kind}
 		}
+		if la.req.BusinessID != "" {
+			condM["businessID"] = []string{la.req.GetBusinessID()}
+		}
 		cond = operator.NewLeafCondition(operator.In, condM)
 	}
 
@@ -116,17 +119,21 @@ func (lap *ListAuthorizedProject) Do(ctx context.Context,
 	req *proto.ListAuthorizedProjReq) (*map[string]interface{}, error) {
 	var projects []pm.Project
 	var total int64
-	authUser, ok := ctx.Value(middleware.AuthUserKey).(middleware.AuthUser)
-	if ok && authUser.Username != "" {
+	authUser, err := middleware.GetUserFromContext(ctx)
+	if err == nil && authUser.Username != "" {
 		// with username
-		ids, err := auth.ListAuthorizedProjectIDs(authUser.Username)
+		ids, any, err := auth.ListAuthorizedProjectIDs(authUser.Username)
 		// 没有权限的项目时，返回为空，并记录信息
-		if ids == nil || err != nil {
-			logging.Error("%s no permission project", authUser.Username)
+		if err != nil {
+			logging.Error("get user project permissions failed, err: %s", err.Error())
 			return nil, nil
 		}
 		// 通过 project id 获取项目详情
-		projects, total, err = lap.model.ListProjectByIDs(ctx, ids, &page.Pagination{All: true})
+		if any {
+			projects, total, err = lap.model.ListProjects(ctx, operator.EmptyCondition, &page.Pagination{All: true})
+		} else {
+			projects, total, err = lap.model.ListProjectByIDs(ctx, ids, &page.Pagination{All: true})
+		}
 		if err != nil {
 			return nil, err
 		}

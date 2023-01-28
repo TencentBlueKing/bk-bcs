@@ -14,7 +14,7 @@
 
 package errorx
 
-import "fmt"
+import "github.com/pkg/errors"
 
 // BaseError ClusterResources 模块基础 Error
 type BaseError struct {
@@ -22,17 +22,22 @@ type BaseError struct {
 	err  error
 }
 
-// Error xxx
+// Error ...
 func (e *BaseError) Error() string {
 	return e.err.Error()
 }
 
-// Code xxx
+// Code ...
 func (e *BaseError) Code() int {
 	return e.code
 }
 
-// New xxx
+// Unwrap ...
+func (e *BaseError) Unwrap() error {
+	return e.err
+}
+
+// New ...
 func New(code int, msg string, vars ...interface{}) error {
-	return &BaseError{code: code, err: fmt.Errorf(msg, vars...)}
+	return &BaseError{code: code, err: errors.Errorf(msg, vars...)}
 }

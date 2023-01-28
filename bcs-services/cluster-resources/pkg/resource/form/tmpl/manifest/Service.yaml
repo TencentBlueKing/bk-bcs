@@ -1,14 +1,38 @@
 apiVersion: {{ .metadata.apiVersion }}
 kind: Service
-{{ include "common.metadata" .metadata }}
+metadata:
+  name: {{ .metadata.name }}
+  namespace: {{ .metadata.namespace }}
+  {{- if .metadata.labels }}
+  labels:
+    {{- include "common.labelSlice2Map" .metadata.labels | indent 4 }}
+  {{- end }}
+  annotations:
+    {{- range .metadata.annotations }}
+    {{- if and (ne .key "service.kubernetes.io/tke-existed-lbid") (ne .key "service.kubernetes.io/qcloud-loadbalancer-internal-subnetid") }}
+    {{ .key | quote }}: {{ .value | default "" | quote }}
+    {{- end }}
+    {{- end }}
+    {{- if eq .spec.portConf.type "LoadBalancer" }}
+    {{- if eq .spec.portConf.lb.useType "useExists" }}
+    service.kubernetes.io/tke-existed-lbid: {{ .spec.portConf.lb.existLBID | quote }}
+    {{- else }}
+    service.kubernetes.io/qcloud-loadbalancer-internal-subnetid: {{ .spec.portConf.lb.subNetID | quote }}
+    {{- end }}
+    {{- end }}
+  {{- if .metadata.resVersion }}
+  resourceVersion: {{ .metadata.resVersion | quote }}
+  {{- end }}
 spec:
   type: {{ .spec.portConf.type }}
   {{- if .spec.portConf.ports }}
   ports:
   {{- range .spec.portConf.ports }}
-  - name: {{ .name }}
+  - protocol: {{ .protocol }}
+    {{- if .name }}
+    name: {{ .name }}
+    {{- end }}
     port: {{ .port }}
-    protocol: {{ .protocol }}
     targetPort: {{ .targetPort }}
     {{- if and (ne $.spec.portConf.type "ClusterIP") .nodePort }}
     nodePort: {{ .nodePort }}

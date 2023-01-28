@@ -163,7 +163,6 @@ var NoInjectProjClusterEndpoints = []string{
 	"Resource.Subscribe",
 	// Example & Tmpl API 不需要 Info 注入
 	"Resource.GetK8SResTemplate",
-	"Resource.GetResFormSchema",
 	"Resource.GetFormSupportedAPIVersions",
 	// 清理缓存无需获取 Info 信息
 	"Resource.InvalidateDiscoveryCache",

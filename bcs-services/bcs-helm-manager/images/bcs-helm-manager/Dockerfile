@@ -12,7 +12,6 @@ RUN mkdir -p /data/bcs/bcs-helm-manager/runtime
 
 ADD bcs-helm-manager /data/bcs/bcs-helm-manager/
 ADD bcs-helm-manager-migrator /data/bcs/bcs-helm-manager/
-ADD bcs-helm-manager.json.template /data/bcs/bcs-helm-manager/
 ADD container-start.sh /data/bcs/bcs-helm-manager/
 ADD swagger/swagger-ui /data/bcs/swagger
 RUN chmod +x /data/bcs/bcs-helm-manager/container-start.sh

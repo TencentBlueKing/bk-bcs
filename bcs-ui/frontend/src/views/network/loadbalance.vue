@@ -1,20 +1,17 @@
 <!-- eslint-disable vue/multi-word-component-names -->
 <template>
-  <component v-bind:is="currentView" v-if="curProject.project_id" ref="loadbalance"></component>
+  <component v-bind:is="currentView" ref="loadbalance"></component>
 </template>
 
 <script>
 import k8sLoadBalance from './loadbalance/k8s/index';
-import globalMixin from '@/mixins/global';
 
 export default {
   components: {
     k8sLoadBalance,
   },
-  mixins: [globalMixin],
   data() {
     return {
-      curProject: {},
       currentView: k8sLoadBalance,
     };
   },
@@ -24,7 +21,6 @@ export default {
     },
   },
   mounted() {
-    this.curProject = this.initCurProject();
     this.$store.commit('network/updateLoadBalanceList', []);
   },
   beforeDestroy() {

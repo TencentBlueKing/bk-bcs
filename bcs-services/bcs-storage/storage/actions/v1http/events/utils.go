@@ -16,24 +16,24 @@ package events
 import (
 	"context"
 	"fmt"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/v1http/dynamic"
 	"net/http"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/emicklei/go-restful"
+	"go-micro.dev/v4/broker"
+	mopt "go.mongodb.org/mongo-driver/mongo/options"
+	"go.mongodb.org/mongo-driver/mongo/readpref"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/codec"
 	"github.com/Tencent/bk-bcs/bcs-common/common/types"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/msgqueue"
+	msgqueue "github.com/Tencent/bk-bcs/bcs-common/pkg/msgqueuev4"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/lib"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/utils/metrics"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/apiserver"
-	"github.com/emicklei/go-restful"
-	"github.com/micro/go-micro/v2/broker"
-	"go.mongodb.org/mongo-driver/bson"
 )
 
 func getExtra(req *restful.Request) operator.M {
@@ -144,69 +144,175 @@ func listEvent(req *restful.Request) ([]operator.M, int64, error) {
 
 	blog.Infof("clusterIDs: %s", clusterIDs)
 	fields := lib.GetQueryParamStringArray(req, fieldTag, ",")
+
 	limit, err := lib.GetQueryParamInt64(req, limitTag, 0)
 	if err != nil {
 		return nil, 0, err
 	}
+
 	offset, err := lib.GetQueryParamInt64(req, offsetTag, 0)
 	if err != nil {
 		return nil, 0, err
 	}
+
 	condition := getCondition(req)
 
-	getOption := &lib.StoreGetOption{
+	// set read preference, read from secondary node
+	secondary := readpref.Secondary()
+	dbOpts := mopt.Database().SetReadPreference(secondary)
+
+	// option
+	opt := &lib.StoreGetOption{
 		Fields: fields,
 		Sort: map[string]int{
 			eventTimeTag: -1,
 		},
-		Cond:   condition,
-		Offset: offset,
-		Limit:  limit,
+		Cond:            condition,
+		Offset:          offset,
+		Limit:           limit,
+		DatabaseOptions: dbOpts,
 	}
 
-	eventDBClient := apiserver.GetAPIResource().GetDBClient(dbConfig)
+	return GetEventList(req.Request.Context(), clusterIDs, opt)
+}
 
-	store := lib.NewStore(
-		eventDBClient,
-		apiserver.GetAPIResource().GetEventBus(dbConfig))
-	var mList []operator.M
-	var count int64
+func getJsonExtra(params map[string]string) operator.M {
+	raw := params[extraTag]
 
-	for _, clusterID := range clusterIDs {
-		eList, err := store.Get(req.Request.Context(), tablePrefix+clusterID, getOption)
-		if err != nil {
-			blog.Errorf("get event list failed, err %s", err.Error())
-			return nil, 0, err
-		}
-		c, err := store.Count(req.Request.Context(), tablePrefix+clusterID, getOption)
-		if err != nil {
-			blog.Errorf("count event list failed, err %s", err.Error())
-			return nil, 0, err
-		}
+	extra := make(operator.M)
+	err := lib.NewExtra(raw).Unmarshal(&extra)
+	if err != nil {
+		blog.Errorf("decode extra %s failed, err %s", raw, err)
+	}
+	return extra
+}
 
-		mList = append(mList, eList...)
-		count += c
+func getJsonExtraContain(params map[string]string) operator.M {
+	raw := params[extraConTag]
+
+	extraContain := make(operator.M)
+	err := lib.NewExtra(raw).Unmarshal(&extraContain)
+	if err != nil {
+		blog.Errorf("decode extraContain %s failed, err %s", raw, err)
+	}
+	return extraContain
+}
+
+func getJsonCondition(params map[string]string) *operator.Condition {
+	timeConds := getJsonTimeConds(params)
+	commonConds := getJsonCommonConds(params)
+	commonConds = append(commonConds, timeConds...)
+	var condition *operator.Condition
+	if len(commonConds) != 0 {
+		condition = operator.NewBranchCondition(operator.And, commonConds...)
+	} else {
+		condition = operator.EmptyCondition
 	}
 
-	countTmp, err := store.Count(req.Request.Context(), tableName, getOption)
+	// handle the extra field
+	var extraConds []*operator.Condition
+	extra := getJsonExtra(params)
+	features := make(operator.M)
+	for k, v := range extra {
+		if _, ok := v.([]interface{}); !ok {
+			features[k] = []interface{}{v}
+			continue
+		}
+		features[k] = v
+	}
+
+	if len(features) > 0 {
+		extraConds = append(extraConds, operator.NewLeafCondition(operator.In, features))
+	}
+
+	// handle the extra contain field
+	extraCon := getJsonExtraContain(params)
+	featuresCon := make(operator.M)
+	for k, v := range extraCon {
+		if _, ok := v.(string); !ok {
+			continue
+		}
+		featuresCon[k] = v.(string)
+	}
+
+	if len(featuresCon) > 0 {
+		extraConds = append(extraConds, operator.NewLeafCondition(operator.Con, featuresCon))
+	}
+	if len(extraConds) != 0 {
+		condition = operator.NewBranchCondition(operator.And, extraConds...)
+	}
+	return condition
+}
+
+func getJsonCommonConds(params map[string]string) []*operator.Condition {
+	var condList []*operator.Condition
+	for _, k := range conditionTagList {
+		if v := params[k]; v != "" {
+			condList = append(condList, operator.NewLeafCondition(operator.In,
+				operator.M{k: strings.Split(v, ",")}))
+		}
+	}
+	return condList
+}
+
+func getJsonTimeConds(params map[string]string) []*operator.Condition {
+	var condList []*operator.Condition
+	if tmp, _ := strconv.ParseInt(params[timeBeginTag], 10, 64); tmp > 0 {
+		condList = append(condList, operator.NewLeafCondition(operator.Gt, operator.M{
+			eventTimeTag: time.Unix(tmp, 0)}))
+	}
+
+	if tmp, _ := strconv.ParseInt(params[timeEndTag], 10, 64); tmp > 0 {
+		condList = append(condList, operator.NewLeafCondition(operator.Lt, operator.M{
+			eventTimeTag: time.Unix(tmp, 0)}))
+	}
+
+	return condList
+}
+
+func postEvent(req *restful.Request) ([]operator.M, int64, error) {
+	eventParams := map[string]string{}
+	if err := codec.DecJsonReader(req.Request.Body, eventParams); err != nil {
+		return nil, 0, err
+	}
+
+	clusterIDs := lib.GetJsonParamStringArray(eventParams, clusterIDTag, ",")
+	if clusterIDs == nil {
+		return nil, 0, fmt.Errorf("clusterID is empty")
+	}
+
+	blog.Infof("clusterIDs: %s", clusterIDs)
+	fields := lib.GetJsonParamStringArray(eventParams, fieldTag, ",")
+
+	limit, err := lib.GetJsonParamInt64(eventParams, limitTag, 0)
 	if err != nil {
 		return nil, 0, err
 	}
-	count += countTmp
 
-	if int64(len(mList)) < limit {
-		getOption.Limit = limit - int64(len(mList))
-		tmpList, err := store.Get(req.Request.Context(), tableName, getOption)
-		if err != nil {
-			return nil, 0, err
-		}
-		mList = append(mList, tmpList...)
-	} else if int64(len(mList)) > limit {
-		mList = mList[:limit]
+	offset, err := lib.GetJsonParamInt64(eventParams, offsetTag, 0)
+	if err != nil {
+		return nil, 0, err
 	}
 
-	lib.FormatTime(mList, []string{eventTimeTag})
-	return mList, count, nil
+	condition := getJsonCondition(eventParams)
+
+	// set read preference, read from secondary node
+	secondary := readpref.Secondary()
+	dbOpts := mopt.Database().SetReadPreference(secondary)
+
+	// option
+	opt := &lib.StoreGetOption{
+		Fields: fields,
+		Sort: map[string]int{
+			eventTimeTag: -1,
+		},
+		Cond:            condition,
+		Offset:          offset,
+		Limit:           limit,
+		DatabaseOptions: dbOpts,
+	}
+
+	return GetEventList(req.Request.Context(), clusterIDs, opt)
 }
 
 func getReqData(req *restful.Request) (operator.M, error) {
@@ -231,96 +337,19 @@ func getReqData(req *restful.Request) (operator.M, error) {
 }
 
 func insert(req *restful.Request) error {
+	// 参数
 	data, err := getReqData(req)
 	if err != nil {
 		return err
 	}
-	dynamicData := lib.CopyMap(data)
-
-	putOption := &lib.StorePutOption{
-		UniqueKey: eventIndexKeys,
-	}
-	store := lib.NewStore(
-		apiserver.GetAPIResource().GetDBClient(dbConfig),
-		apiserver.GetAPIResource().GetEventBus(dbConfig))
-	data[createTimeTag] = time.Now()
-	err = store.Put(req.Request.Context(), tablePrefix+data[clusterIDTag].(string), data, putOption)
-	if err != nil {
-		if strings.Contains(err.Error(), "duplicate key") {
-			return nil
-		}
-		return fmt.Errorf("failed to insert, err %s", err.Error())
+	// 表名
+	resourceType := TablePrefix + data[clusterIDTag].(string)
+	// option
+	opt := &lib.StorePutOption{
+		UniqueKey: EventIndexKeys,
 	}
 
-	if dynamicData[dataTag] != nil {
-		if _, ok := dynamicData[dataTag].(map[string]interface{}); ok {
-			dynamicData[namespaceTag] = dynamicData[dataTag].(map[string]interface{})["metadata"].(map[string]interface{})["namespace"].(string)
-			dynamicData[resourceNameTag] = dynamicData[dataTag].(map[string]interface{})["metadata"].(map[string]interface{})["name"].(string)
-			dynamicData[resourceTypeTag] = EventResource
-
-			features := make(operator.M)
-			for _, key := range nsFeatTags {
-				features[key] = dynamicData[key]
-			}
-			// dynamic event
-			err = dynamic.PutData(req.Request.Context(), dynamicData, features, nsFeatTags, EventResource)
-			if err != nil {
-				blog.Errorf("dymanic event put data failed, err %s", err.Error())
-			}
-		}
-	}
-
-	hasIndex, err := store.GetDB().Table(tablePrefix+data[clusterIDTag].(string)).HasIndex(req.Request.Context(),
-		eventTimeTag)
-
-	if err != nil {
-		return fmt.Errorf("failed to get index, err %s", err.Error())
-	}
-
-	if !hasIndex {
-		index := drivers.Index{
-			Name: eventTimeTag,
-			Key: bson.D{
-				bson.E{Key: eventTimeTag, Value: -1},
-			},
-		}
-		err = store.GetDB().Table(tablePrefix+data[clusterIDTag].(string)).CreateIndex(req.Request.Context(), index)
-		if err != nil {
-			return fmt.Errorf("failed to create index, err %s", err.Error())
-		}
-	}
-
-	queueData := lib.CopyMap(data)
-	queueData[resourceTypeTag] = EventResource
-	env := typeofToString(queueData[envTag])
-
-	if extra, ok := queueData[extraInfoTag]; ok {
-		if d, ok := extra.(types.EventExtraInfo); ok {
-			queueData[nameSpaceTag] = d.Namespace
-			queueData[resourceNameTag] = d.Name
-			queueData[resourceKindTag] =
-				func(env string) interface{} {
-					switch env {
-					case string(types.Event_Env_K8s):
-						return data[kindTag]
-					case string(types.Event_Env_Mesos):
-						return d.Kind
-					}
-
-					return ""
-				}(env)
-		}
-	}
-
-	// queueFlag true
-	if apiserver.GetAPIResource().GetMsgQueue().QueueFlag {
-		err = publishEventResourceToQueue(queueData, eventFeatTags, msgqueue.EventTypeUpdate)
-		if err != nil {
-			blog.Errorf("publishEventResourceToQueue failed, err %s", err.Error())
-		}
-	}
-
-	return nil
+	return AddEvent(req.Request.Context(), resourceType, data, opt)
 }
 
 func watch(req *restful.Request, resp *restful.Response) {
@@ -331,10 +360,8 @@ func watch(req *restful.Request, resp *restful.Response) {
 		return
 	}
 	newWatchOption := &lib.WatchServerOption{
-		Store: lib.NewStore(
-			apiserver.GetAPIResource().GetDBClient(dbConfig),
-			apiserver.GetAPIResource().GetEventBus(dbConfig)),
-		TableName: tablePrefix + clusterID,
+		Store:     GetStore(),
+		TableName: TablePrefix + clusterID,
 		Req:       req,
 		Resp:      resp,
 	}

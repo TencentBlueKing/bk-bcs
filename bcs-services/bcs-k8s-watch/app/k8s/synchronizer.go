@@ -124,7 +124,7 @@ func (sync *Synchronizer) RunOnce() error {
 		namespaces = []string{sync.namespace}
 	}
 
-	for resourceType, resourceObjType := range resources.WatcherConfigList {
+	for resourceType, resourceObjType := range resources.K8sWatcherConfigList {
 		labelSelector := sync.labelSelectors[resourceType]
 		if curSelector, ok := sync.labelSelectors[resourceType]; ok {
 			labelSelector = curSelector
@@ -140,19 +140,19 @@ func (sync *Synchronizer) RunOnce() error {
 		}
 	}
 
-	for resourceType, watcher := range sync.crdWatchers {
+	for _, watcher := range sync.crdWatchers {
 		w := watcher.(*Watcher)
 		if !w.controller.HasSynced() {
 			continue
 		}
 		if w.resourceNamespaced {
-			glog.Info("begin to sync %s", resourceType)
-			sync.syncNamespaceResource(resourceType, namespaces, "", w)
-			glog.Info("sync %s done", resourceType)
+			glog.Info("begin to sync %s", w.resourceType)
+			sync.syncNamespaceResource(w.resourceType, namespaces, "", w)
+			glog.Info("sync %s done", w.resourceType)
 		} else {
-			glog.Info("begin to sync %s", resourceType)
-			sync.syncClusterResource(resourceType, "", w)
-			glog.Info("sync %s done", resourceType)
+			glog.Info("begin to sync %s", w.resourceType)
+			sync.syncClusterResource(w.resourceType, "", w)
+			glog.Info("sync %s done", w.resourceType)
 		}
 	}
 

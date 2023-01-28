@@ -33,6 +33,8 @@ const (
 	DBErr = commErr.AdditionErrorCode + 501
 	// DBErrMsg DB操作失败消息
 	DBErrMsg = "db error"
+	// ClusterMsg 集群操作失败消息
+	ClusterMsg = "cluster error"
 	// UnauthErr 未认证/认证失败
 	UnauthErr = commErr.AdditionErrorCode + 401
 	// UnauthErrMsg 认证失败消息
@@ -61,13 +63,23 @@ const (
 	// RequestCMDBErr 请求 cmdb api 异常
 	RequestCMDBErr = commErr.AdditionErrorCode + 509
 	// RequestCMDBErrMsg TODO
-	RequestCMDBErrMsg = "request iam api error"
+	RequestCMDBErrMsg = "request cmdb api error"
 	// NoMaintainerRoleErr 用户不为运维角色
 	NoMaintainerRoleErr = commErr.AdditionErrorCode + 407
 	// NoMaintainerRoleErrMsg TODO
 	NoMaintainerRoleErrMsg = "user is not biz maintainer role"
 	// RequestBCSCCErr TODO
-	RequestBCSCCErr = commErr.AdditionErrorCode + 510
+	RequestBKSSMErr = commErr.AdditionErrorCode + 510
+	// RequestBCSCCErrMsg TODO
+	RequestBKSSMMsg = "request bk ssm api error"
+	// RequestBCSCCErr TODO
+	RequestBCSCCErr = commErr.AdditionErrorCode + 511
 	// RequestBCSCCErrMsg TODO
 	RequestBCSCCErrMsg = "request bcs cc api error"
+	// RequestITSMErr TODO
+	RequestITSMErr = commErr.AdditionErrorCode + 512
+	// RequestITSMErrMsg TODO
+	RequestITSMErrMsg = "request bk itsm api error"
+	// NoPermissionErr 无权限
+	NoPermissionErr = 40403
 )

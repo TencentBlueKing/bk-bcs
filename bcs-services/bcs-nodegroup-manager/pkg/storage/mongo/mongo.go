@@ -17,6 +17,7 @@ import (
 	"sync"
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-nodegroup-manager/pkg/storage"
 )
 
@@ -26,15 +27,19 @@ const (
 	actionTableName    = "action"
 	eventTableName     = "event"
 	nodeGroupTableName = "node_group"
+	taskTableName      = "task"
 )
 
 const (
-	nameKey        = "name"
-	nodeGroupIDKey = "node_group_id"
-	clusterIDKey   = "cluster_id"
-	eventKey       = "event"
-	eventTimeKey   = "event_time"
-	isDeletedKey   = "is_deleted"
+	nameKey         = "name"
+	nodeGroupIDKey  = "node_group_id"
+	clusterIDKey    = "cluster_id"
+	eventKey        = "event"
+	eventTimeKey    = "event_time"
+	isDeletedKey    = "is_deleted"
+	taskIDKey       = "task_id"
+	strategyTypeKey = "strategy.type"
+	strategyKey     = "node_group_strategy"
 )
 
 type server struct {
@@ -42,6 +47,7 @@ type server struct {
 	*ModelGroup
 	*ModelAction
 	*ModelEvent
+	*ModelTask
 }
 
 // NewServer new db server
@@ -51,6 +57,7 @@ func NewServer(db drivers.DB) storage.Storage {
 		ModelGroup:    NewModelGroup(db),
 		ModelAction:   NewModelAction(db),
 		ModelEvent:    NewModelEvent(db),
+		ModelTask:     NewModelTask(db),
 	}
 }
 

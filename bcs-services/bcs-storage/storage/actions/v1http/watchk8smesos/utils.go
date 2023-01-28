@@ -21,7 +21,6 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/codec"
 	bcstypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/apiserver"
 	sto "github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/store"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/types"
 )
@@ -35,79 +34,88 @@ func getReqData(req *restful.Request) (interface{}, error) {
 }
 
 func get(req *restful.Request, env string) (interface{}, error) {
-	resType := req.PathParameter(tableTag)
-	clusterID := req.PathParameter(clusterIDTag)
-	ns := req.PathParameter(namespaceTag)
-	name := req.PathParameter(nameTag)
-	store := apiserver.GetAPIResource().GetStoreClient(dbConfig)
-	rawObj, err := store.Get(req.Request.Context(), types.ObjectType(resType), types.ObjectKey{
-		ClusterID: clusterID,
-		Namespace: ns,
-		Name:      name,
-	}, &sto.GetOptions{Env: env})
+	// 表名
+	resType := types.ObjectType(req.PathParameter(tableTag))
+	// 参数
+	key := types.ObjectKey{
+		ClusterID: req.PathParameter(clusterIDTag),
+		Namespace: req.PathParameter(namespaceTag),
+		Name:      req.PathParameter(nameTag),
+	}
+
+	// option
+	opt := &sto.GetOptions{Env: env}
+
+	// 查询数据
+	data, err := GetData(req.Request.Context(), resType, key, opt)
 	if err != nil {
 		return nil, err
 	}
-	return rawObj.GetData(), nil
+	return data, nil
 }
 
 func list(req *restful.Request, env string) ([]string, error) {
-	resType := req.PathParameter(tableTag)
+	// 表名
+	resType := types.ObjectType(req.PathParameter(tableTag))
+	// 参数
 	clusterID := req.PathParameter(clusterIDTag)
 	ns := req.PathParameter(namespaceTag)
 
-	store := apiserver.GetAPIResource().GetStoreClient(dbConfig)
-	objList, err := store.List(req.Request.Context(), types.ObjectType(resType), &sto.ListOptions{
+	// option
+	opt := &sto.ListOptions{
 		Env:       env,
 		Cluster:   clusterID,
 		Namespace: ns,
-	})
-	if err != nil {
-		return nil, err
 	}
-	var retList []string
-	for _, obj := range objList {
-		retList = append(retList, fmt.Sprintf("%s.%s", obj.GetNamespace(), obj.GetName()))
-	}
-	return retList, nil
+
+	return GetList(req.Request.Context(), resType, opt)
 }
 
 func put(req *restful.Request, env string) error {
-	resType := req.PathParameter(tableTag)
+	// 表名
+	resType := types.ObjectType(req.PathParameter(tableTag))
+	// 参数
 	clusterID := req.PathParameter(clusterIDTag)
 	ns := req.PathParameter(namespaceTag)
 	name := req.PathParameter(nameTag)
+
 	dataRaw, err := getReqData(req)
 	if err != nil {
 		return err
 	}
-
 	data, ok := dataRaw.(map[string]interface{})
 	if !ok {
 		return fmt.Errorf("invalid data format")
 	}
 	data[updateTimeTag] = time.Now()
+
 	newObj := &types.RawObject{
 		Meta: types.Meta{
-			Type:      types.ObjectType(resType),
+			Type:      resType,
 			ClusterID: clusterID,
 			Namespace: ns,
 			Name:      name,
 		},
 		Data: data,
 	}
-	store := apiserver.GetAPIResource().GetStoreClient(dbConfig)
-	return store.Update(req.Request.Context(), newObj, &sto.UpdateOptions{
+
+	// option
+	opt := &sto.UpdateOptions{
 		Env:             env,
 		CreateNotExists: true,
-	})
+	}
+
+	return PutData(req.Request.Context(), newObj, opt)
 }
 
 func remove(req *restful.Request, env string) error {
+	// 表名
 	resType := req.PathParameter(tableTag)
+	// 参数
 	clusterID := req.PathParameter(clusterIDTag)
 	ns := req.PathParameter(namespaceTag)
 	name := req.PathParameter(nameTag)
+
 	newObj := &types.RawObject{
 		Meta: types.Meta{
 			Type:      types.ObjectType(resType),
@@ -116,11 +124,14 @@ func remove(req *restful.Request, env string) error {
 			Name:      name,
 		},
 	}
-	store := apiserver.GetAPIResource().GetStoreClient(dbConfig)
-	return store.Delete(req.Request.Context(), newObj, &sto.DeleteOptions{
+
+	// option
+	opt := &sto.DeleteOptions{
 		Env:            env,
 		IgnoreNotFound: true,
-	})
+	}
+
+	return RemoveDta(req.Request.Context(), newObj, opt)
 }
 
 func urlK8SPath(oldURL string) string {

@@ -17,18 +17,45 @@ properties:
             datasource:
               - label: qcloud
                 value: qcloud
+                disabled: false
+                tips: ""
               - label: nginx
                 value: nginx
-              # TODO bcs 后续支持
-              # - label: bcs
-              #   value: bcs
-        # 当选择类型为 qcloud 时候，指定 apiVersion 为 extensions/v1beta1
+                disabled: true
+                tips: {{ i18n "暂时不支持该控制器" .lang }}
+              - label: bcs
+                value: bcs
+                disabled: true
+                tips: {{ i18n "暂时不支持该控制器" .lang }}
         ui:reactions:
-          - target: metadata.apiVersion
+          # qcloud 暂时不支持 defaultBackend
+          - target: spec.defaultBackend.targetSVC
             if: "{{`{{`}} $self.value === 'qcloud' {{`}}`}}"
             then:
               state:
-                value: "extensions/v1beta1"
+                value: ""
+                disabled: true
+            else:
+              state:
+                disabled: false
+          - target: spec.defaultBackend.port
+            if: "{{`{{`}} $self.value === 'qcloud' {{`}}`}}"
+            then:
+              state:
+                value: 0
+                disabled: true
+            else:
+              state:
+                disabled: false
+          # TODO 目前只支持 qcloud 的重定向，nginx 后续支持了再开放
+          - target: spec.cert.autoRewriteHttp
+            if: "{{`{{`}} $self.value === 'qcloud' {{`}}`}}"
+            then:
+              state:
+                visible: true
+            else:
+              state:
+                visible: false
     ui:group:
       props:
         border: true

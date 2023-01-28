@@ -17,13 +17,16 @@ import (
 	"fmt"
 	"strings"
 
+	goyaml "github.com/goccy/go-yaml"
+	"github.com/goccy/go-yaml/parser"
 	cmdtpl "github.com/vmware-tanzu/carvel-ytt/pkg/cmd/template"
 	"github.com/vmware-tanzu/carvel-ytt/pkg/cmd/ui"
 	"github.com/vmware-tanzu/carvel-ytt/pkg/files"
+	"gopkg.in/yaml.v2"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/release"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/utils/mapx"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/utils/stringx"
 )
 
@@ -61,28 +64,37 @@ type patcher struct {
 
 // Run implements the post-render Run method, do the render
 func (p *patcher) Run(renderedManifests *bytes.Buffer) (*bytes.Buffer, error) {
-	// 处理 yaml 转换 json，添加指定的 key 和 value
-	splitedStrArr := stringx.SplitYaml2Array(renderedManifests.String(), "")
+	manifest, err := p.do(renderedManifests)
+	if err != nil {
+		return nil, err
+	}
+	// 注入指定的值
+	splitManifests := stringx.SplitManifests(manifest.String())
+	if err != nil {
+		return nil, fmt.Errorf("SplitYAML error, %s", err.Error())
+	}
 	var yList []string
-	for _, s := range splitedStrArr {
-		j, err := stringx.Yaml2Json(s)
-		if err != nil {
-			return nil, err
-		}
+	for _, s := range splitManifests {
 		// 向 metadata.labels 中注入 `io.tencent.bcs.controller.name`
 		// 向 spec.template.metadata.labels 中注入 `io.tencent.bcs.controller.name`
-		j = inject4MetadataLabels(j)
-		y, err := stringx.Json2Yaml(j)
+		j, err := inject4MetadataLabels(s)
 		if err != nil {
-			return nil, err
+			blog.Errorf("inject4MetadataLabels error, %s", err.Error())
+			yList = append(yList, s)
+			continue
 		}
-		yList = append(yList, string(y))
+		yList = append(yList, strings.TrimRight(j, "\n"))
 	}
-	yl := stringx.JoinStringBySeparator(yList, "", true)
+	yl := stringx.JoinStringBySeparator(yList, "", false)
+	// 添加换行
+	yl += "\n"
 	// 写回数据
 	buf := new(bytes.Buffer)
-	buf.WriteString(yl)
-	return p.do(buf)
+	_, err = buf.WriteString(yl)
+	if err != nil {
+		return nil, err
+	}
+	return buf, nil
 }
 
 func (p *patcher) do(data *bytes.Buffer) (*bytes.Buffer, error) {
@@ -101,28 +113,80 @@ func (p *patcher) do(data *bytes.Buffer) (*bytes.Buffer, error) {
 		return nil, out.Err
 	}
 	if len(out.Files) == 0 {
-		return nil, fmt.Errorf("no data output from patcher")
+		return data, nil
 	}
 	return bytes.NewBuffer(out.Files[0].Bytes()), nil
 }
 
 // inject4MetadataLabels 兼容逻辑，目的是向metadata注入label
-func inject4MetadataLabels(j map[interface{}]interface{}) map[interface{}]interface{} {
+func inject4MetadataLabels(manifest string) (string, error) {
+	// 转换为常用格式, goyaml 库不能识别 |2- 之类的描述符
+	var n yaml.MapSlice
+	if err := yaml.Unmarshal([]byte(manifest), &n); err != nil {
+		return manifest, err
+	}
+	out, err := yaml.Marshal(&n)
+	if err != nil {
+		return manifest, err
+	}
+	s := string(out)
+
 	// 限制下面几个注入指定的 key:val
-	kinds := []string{"Deployment", "DaemonSet", "Job", "DaemonSet"}
-	// 允许metadata中label注入的资源类型
-	for _, kind := range kinds {
-		if j["kind"] != kind {
-			continue
+	kinds := []string{"Deployment", "StatefulSet", "Job", "DaemonSet"}
+
+	// parse name
+	namePath, err := goyaml.PathString("$.metadata.name")
+	if err != nil {
+		return s, err
+	}
+	var name string
+	if err := namePath.Read(strings.NewReader(s), &name); err != nil {
+		return s, err
+	}
+
+	// parse kind
+	kindPath, err := goyaml.PathString("$.kind")
+	if err != nil {
+		return s, err
+	}
+	var kind string
+	if err := kindPath.Read(strings.NewReader(s), &kind); err != nil {
+		return s, err
+	}
+
+	// parse label
+	labelPath, err := goyaml.PathString(fmt.Sprintf("$.metadata.labels.'%s'", labelKey))
+	if err != nil {
+		return s, err
+	}
+	// parse spec label
+	specLabelPath, err := goyaml.PathString(fmt.Sprintf("$.spec.template.metadata.labels.'%s'", labelKey))
+	if err != nil {
+		return s, err
+	}
+
+	// parse origin yaml
+	f, err := parser.ParseBytes([]byte(s), 0)
+	if err != nil {
+		return s, err
+	}
+
+	// inject service metadata
+	if kind == "Service" {
+		if err := labelPath.ReplaceWithReader(f, strings.NewReader(name)); err != nil {
+			return s, err
 		}
-		// 断言格式
-		name, _ := mapx.GetItems(j, []string{"metadata", "name"})
-		mapx.SetItems(j, []string{"metadata", "labels", labelKey}, name)
-		mapx.SetItems(j, []string{"spec", "template", "metadata", "labels", labelKey}, name)
+		return f.String(), nil
 	}
-	if j["kind"] == "Service" {
-		name, _ := mapx.GetItems(j, []string{"metadata", "name"})
-		mapx.SetItems(j, []string{"metadata", "labels", labelKey}, name)
+	if stringx.StringInSlice(kind, kinds) {
+		if err := labelPath.ReplaceWithReader(f, strings.NewReader(name)); err != nil {
+			return s, err
+		}
+		if err := specLabelPath.ReplaceWithReader(f, strings.NewReader(name)); err != nil {
+			return s, err
+		}
+		return f.String(), nil
 	}
-	return j
+
+	return manifest, nil
 }

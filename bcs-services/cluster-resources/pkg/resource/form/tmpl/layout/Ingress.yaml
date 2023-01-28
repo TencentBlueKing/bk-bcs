@@ -14,12 +14,13 @@
                 prop: rules
           prop: ruleConf
       - - group:
-            - [ "clbUseType", ".", ".", "." ]
+            - [ "clbUseType", ".", "." ]
           prop: network
       - - group:
             - [ "targetSVC", "port" ]
           prop: defaultBackend
       - - group:
+            - [ "autoRewriteHttp", "." ]
             - - group:
                   - [ "secretName", "." ]
                   - [ "hosts", "." ]

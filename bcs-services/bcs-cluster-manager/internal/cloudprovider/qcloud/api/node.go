@@ -486,6 +486,7 @@ func InstanceToNode(inst *cvm.Instance, zoneInfo map[string]uint32) *proto.Node 
 		VPC:          *inst.VirtualPrivateCloud.VpcId,
 		ZoneID:       *inst.Placement.Zone,
 		Zone:         zoneID,
+		InnerIPv6:    utils.SlicePtrToString(inst.IPv6Addresses),
 	}
 	return node
 }
@@ -820,7 +821,7 @@ func (nm *NodeManager) DescribeImages(imageType string, opt *cloudprovider.Commo
 // ListOsImage list image os
 func (nm *NodeManager) ListOsImage(provider string, opt *cloudprovider.CommonOption) ([]*proto.OsImage, error) {
 	os := make([]*proto.OsImage, 0)
-	for _, v := range ImageOsList {
+	for _, v := range utils.ImageOsList {
 		if provider == v.Provider {
 			os = append(os, v)
 		}

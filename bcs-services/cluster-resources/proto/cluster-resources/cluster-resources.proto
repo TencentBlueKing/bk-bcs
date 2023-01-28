@@ -179,6 +179,16 @@ service Workload {
 		};
 	}
 
+	rpc ListRS(ResListReq) returns (CommonResp) {
+		option (google.api.http) = {
+			get: "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/replicasets"
+		};
+		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+			description: "获取 ReplicasSet 列表"
+			summary: "ListRS API"
+		};
+	}
+
 	rpc ListDS(ResListReq) returns (CommonResp) {
 		option (google.api.http) = {
 			get: "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/daemonsets"
@@ -409,7 +419,7 @@ service Workload {
 		};
 	}
 
-	rpc ListPo(PodResListReq) returns (CommonResp) {
+	rpc ListPo(ResListReq) returns (CommonResp) {
 		option (google.api.http) = {
 			get: "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/pods"
 		};
@@ -669,6 +679,16 @@ service Network {
 		};
 	}
 
+	rpc GetEPStatus(ResGetReq) returns (CommonResp) {
+		option (google.api.http) = {
+			get: "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/networks/endpoints/{name}/status"
+		};
+		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+			description: "获取 Endpoints 状态"
+			summary: "GetEPStatus API"
+		};
+	}
+
 	rpc CreateEP(ResCreateReq) returns (CommonResp) {
 		option (google.api.http) = {
 			post: "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/networks/endpoints"
@@ -880,6 +900,16 @@ service Storage {
 		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
 			description: "获取 PersistentVolumeClaim"
 			summary: "GetPVC API"
+		};
+	}
+
+	rpc GetPVCMountInfo(ResGetReq) returns (CommonResp) {
+		option (google.api.http) = {
+			get: "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/storages/persistent_volume_claims/{name}/mount_info"
+		};
+		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+			description: "获取 PersistentVolumeClaim 被 Pod 挂载的信息"
+			summary: "GetPVCBoundInfo API"
 		};
 	}
 
@@ -1367,9 +1397,18 @@ message ResListReq {
 	string apiVersion = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "apiVersion"
 	}, (validate.rules).string = {max_len: 63}];
-	string format = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+	string ownerName = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "所属资源名称"
+	}, (validate.rules).string = {max_len: 256}];
+	string ownerKind = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "所属资源类型"
+	}, (validate.rules).string = {max_len: 64}];
+	string format = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "资源配置格式（manifest/selectItems）"
 	}, (validate.rules).string = {in: ["", "manifest", "selectItems"]}];
+	string scene = 9 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "使用场景", description: "仅 selectItems 格式下有效"
+	}, (validate.rules).string = {max_len: 32}];
 }
 
 message ResGetReq {
@@ -1501,36 +1540,9 @@ message ResBatchRescheduleReq {
 	}];
 }
 
-message PodResListReq {
-	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
-		json_schema: {title: "PodResListReq", description: "Pod 资源列表查询请求体"}
-	};
-	string projectID = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-		title: "项目 ID"
-	}, (validate.rules).string = {pattern: "^[0-9a-f]{32}$"}];
-	string clusterID = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-		title: "集群 ID"
-	}, (validate.rules).string = {min_len: 13, max_len: 14}];
-	string namespace = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-		title: "命名空间"
-	}, (validate.rules).string = {max_len: 63, pattern: "^[0-9a-zA-Z-]+$"}];
-	string labelSelector = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-		title: "标签选择器"
-	}, (validate.rules).string = {max_len: 2048}];
-	string ownerName = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-		title: "所属资源名称"
-	}, (validate.rules).string = {max_len: 256}];
-	string ownerKind = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-		title: "所属资源类型"
-	}, (validate.rules).string = {max_len: 64}];
-	string format = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-		title: "资源配置格式（manifest/selectItems）"
-	}, (validate.rules).string = {in: ["", "manifest", "selectItems"]}];
-}
-
 message ListPoByNodeReq {
 	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
-		json_schema: {title: "PodResListReq", description: "Pod 资源列表查询请求体"}
+		json_schema: {title: "ListPoByNodeReq", description: "Pod 资源列表查询请求体"}
 	};
 	string projectID = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "项目 ID"
@@ -1619,6 +1631,9 @@ message CObjListReq {
 	string format = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "资源配置格式（manifest/selectItems）"
 	}, (validate.rules).string = {in: ["", "manifest", "selectItems"]}];
+	string scene = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "使用场景", description: "仅 selectItems 格式下有效"
+	}, (validate.rules).string = {max_len: 32}];
 }
 
 message CObjGetReq {
@@ -1950,4 +1965,7 @@ message GetResSelectItemsReq {
 	string namespace = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "命名空间"
 	}, (validate.rules).string = {min_len: 1, max_len: 128}];
+	string scene = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "使用场景"
+	}, (validate.rules).string = {max_len: 32}];
 }

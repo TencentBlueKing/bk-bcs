@@ -68,6 +68,20 @@ func (_m *Storage) CreateNodeGroupStrategy(strategy *storage.NodeGroupMgrStrateg
 	return r0
 }
 
+// CreateTask provides a mock function with given fields: task, opt
+func (_m *Storage) CreateTask(task *storage.ScaleDownTask, opt *storage.CreateOptions) error {
+	ret := _m.Called(task, opt)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(*storage.ScaleDownTask, *storage.CreateOptions) error); ok {
+		r0 = rf(task, opt)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // DeleteNodeGroup provides a mock function with given fields: nodegroupID, opt
 func (_m *Storage) DeleteNodeGroup(nodegroupID string, opt *storage.DeleteOptions) (*storage.NodeGroup, error) {
 	ret := _m.Called(nodegroupID, opt)
@@ -130,6 +144,29 @@ func (_m *Storage) DeleteNodeGroupStrategy(name string, opt *storage.DeleteOptio
 	var r1 error
 	if rf, ok := ret.Get(1).(func(string, *storage.DeleteOptions) error); ok {
 		r1 = rf(name, opt)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// DeleteTask provides a mock function with given fields: taskID, opt
+func (_m *Storage) DeleteTask(taskID string, opt *storage.DeleteOptions) (*storage.ScaleDownTask, error) {
+	ret := _m.Called(taskID, opt)
+
+	var r0 *storage.ScaleDownTask
+	if rf, ok := ret.Get(0).(func(string, *storage.DeleteOptions) *storage.ScaleDownTask); ok {
+		r0 = rf(taskID, opt)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*storage.ScaleDownTask)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string, *storage.DeleteOptions) error); ok {
+		r1 = rf(taskID, opt)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -206,6 +243,29 @@ func (_m *Storage) GetNodeGroupStrategy(name string, opt *storage.GetOptions) (*
 	return r0, r1
 }
 
+// GetTask provides a mock function with given fields: taskID, opt
+func (_m *Storage) GetTask(taskID string, opt *storage.GetOptions) (*storage.ScaleDownTask, error) {
+	ret := _m.Called(taskID, opt)
+
+	var r0 *storage.ScaleDownTask
+	if rf, ok := ret.Get(0).(func(string, *storage.GetOptions) *storage.ScaleDownTask); ok {
+		r0 = rf(taskID, opt)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*storage.ScaleDownTask)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string, *storage.GetOptions) error); ok {
+		r1 = rf(taskID, opt)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // ListNodeGroupAction provides a mock function with given fields: nodeGroupID, opt
 func (_m *Storage) ListNodeGroupAction(nodeGroupID string, opt *storage.ListOptions) ([]*storage.NodeGroupAction, error) {
 	ret := _m.Called(nodeGroupID, opt)
@@ -222,6 +282,29 @@ func (_m *Storage) ListNodeGroupAction(nodeGroupID string, opt *storage.ListOpti
 	var r1 error
 	if rf, ok := ret.Get(1).(func(string, *storage.ListOptions) error); ok {
 		r1 = rf(nodeGroupID, opt)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// ListNodeGroupActionByTaskID provides a mock function with given fields: taskID, opt
+func (_m *Storage) ListNodeGroupActionByTaskID(taskID string, opt *storage.ListOptions) ([]*storage.NodeGroupAction, error) {
+	ret := _m.Called(taskID, opt)
+
+	var r0 []*storage.NodeGroupAction
+	if rf, ok := ret.Get(0).(func(string, *storage.ListOptions) []*storage.NodeGroupAction); ok {
+		r0 = rf(taskID, opt)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]*storage.NodeGroupAction)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string, *storage.ListOptions) error); ok {
+		r1 = rf(taskID, opt)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -275,6 +358,29 @@ func (_m *Storage) ListNodeGroupStrategies(opt *storage.ListOptions) ([]*storage
 	return r0, r1
 }
 
+// ListNodeGroupStrategiesByType provides a mock function with given fields: strategyType, opt
+func (_m *Storage) ListNodeGroupStrategiesByType(strategyType string, opt *storage.ListOptions) ([]*storage.NodeGroupMgrStrategy, error) {
+	ret := _m.Called(strategyType, opt)
+
+	var r0 []*storage.NodeGroupMgrStrategy
+	if rf, ok := ret.Get(0).(func(string, *storage.ListOptions) []*storage.NodeGroupMgrStrategy); ok {
+		r0 = rf(strategyType, opt)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]*storage.NodeGroupMgrStrategy)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string, *storage.ListOptions) error); ok {
+		r1 = rf(strategyType, opt)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // ListNodeGroups provides a mock function with given fields: opt
 func (_m *Storage) ListNodeGroups(opt *storage.ListOptions) ([]*storage.NodeGroup, error) {
 	ret := _m.Called(opt)
@@ -291,6 +397,52 @@ func (_m *Storage) ListNodeGroups(opt *storage.ListOptions) ([]*storage.NodeGrou
 	var r1 error
 	if rf, ok := ret.Get(1).(func(*storage.ListOptions) error); ok {
 		r1 = rf(opt)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// ListTasks provides a mock function with given fields: opt
+func (_m *Storage) ListTasks(opt *storage.ListOptions) ([]*storage.ScaleDownTask, error) {
+	ret := _m.Called(opt)
+
+	var r0 []*storage.ScaleDownTask
+	if rf, ok := ret.Get(0).(func(*storage.ListOptions) []*storage.ScaleDownTask); ok {
+		r0 = rf(opt)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]*storage.ScaleDownTask)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(*storage.ListOptions) error); ok {
+		r1 = rf(opt)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// ListTasksByStrategy provides a mock function with given fields: strategyName, opt
+func (_m *Storage) ListTasksByStrategy(strategyName string, opt *storage.ListOptions) ([]*storage.ScaleDownTask, error) {
+	ret := _m.Called(strategyName, opt)
+
+	var r0 []*storage.ScaleDownTask
+	if rf, ok := ret.Get(0).(func(string, *storage.ListOptions) []*storage.ScaleDownTask); ok {
+		r0 = rf(strategyName, opt)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]*storage.ScaleDownTask)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string, *storage.ListOptions) error); ok {
+		r1 = rf(strategyName, opt)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -360,6 +512,29 @@ func (_m *Storage) UpdateNodeGroupStrategy(strategy *storage.NodeGroupMgrStrateg
 	var r1 error
 	if rf, ok := ret.Get(1).(func(*storage.NodeGroupMgrStrategy, *storage.UpdateOptions) error); ok {
 		r1 = rf(strategy, opt)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// UpdateTask provides a mock function with given fields: task, opt
+func (_m *Storage) UpdateTask(task *storage.ScaleDownTask, opt *storage.UpdateOptions) (*storage.ScaleDownTask, error) {
+	ret := _m.Called(task, opt)
+
+	var r0 *storage.ScaleDownTask
+	if rf, ok := ret.Get(0).(func(*storage.ScaleDownTask, *storage.UpdateOptions) *storage.ScaleDownTask); ok {
+		r0 = rf(task, opt)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*storage.ScaleDownTask)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(*storage.ScaleDownTask, *storage.UpdateOptions) error); ok {
+		r1 = rf(task, opt)
 	} else {
 		r1 = ret.Error(1)
 	}

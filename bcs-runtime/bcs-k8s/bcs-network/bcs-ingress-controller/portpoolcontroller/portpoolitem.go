@@ -57,6 +57,7 @@ func (ppih *PortPoolItemHandler) ensurePortPoolItem(
 			StartPort:       item.StartPort,
 			EndPort:         item.EndPort,
 			SegmentLength:   item.SegmentLength,
+			Protocol:        common.GetPortPoolItemProtocols(item.Protocol),
 			External:        item.External,
 		}
 	} else {
@@ -64,6 +65,7 @@ func (ppih *PortPoolItemHandler) ensurePortPoolItem(
 		retItemStatus = itemStatus.DeepCopy()
 		retItemStatus.EndPort = item.EndPort
 		retItemStatus.External = item.External
+		retItemStatus.Protocol = common.GetPortPoolItemProtocols(item.Protocol)
 	}
 	// check loadbalanceIDs
 	lbIDs := make([]string, len(item.LoadBalancerIDs))
@@ -246,12 +248,7 @@ func (ppih *PortPoolItemHandler) ensureListeners(region, lbID, itemName string, 
 
 	notReady := false
 	for p := startPort; p < endPort; p += segment {
-		protocolList := make([]string, 0)
-		if len(protocol) == 0 {
-			protocolList = []string{constant.PortPoolPortProtocolTCP, constant.PortPoolPortProtocolUDP}
-		} else {
-			protocolList = strings.Split(protocol, ",")
-		}
+		protocolList := common.GetPortPoolItemProtocols(protocol)
 		for _, protocol := range protocolList {
 			tmpStartPort := p
 			tmpEndPort := 0
@@ -278,7 +275,7 @@ func (ppih *PortPoolItemHandler) ensureListeners(region, lbID, itemName string, 
 				}
 				if len(listener.Status.ListenerID) == 0 {
 					notReady = true
-					blog.Warnf("listener %s is not ready", tmpName)
+					blog.V(4).Infof("listener %s is not ready", tmpName)
 				}
 			}
 		}
@@ -306,7 +303,10 @@ func (ppih *PortPoolItemHandler) generateListener(
 		netextv1.LabelKeyForLoadbalanceID:                               generator.GetLabelLBId(lbID),
 		netextv1.LabelKeyForLoadbalanceRegion:                           region,
 		common.GetPortPoolListenerLabelKey(ppih.PortPoolName, itemName): netextv1.LabelValueForPortPoolItemName,
+		netextv1.LabelKeyForOwnerKind:                                   constant.KindPortPool,
+		netextv1.LabelKeyForOwnerName:                                   ppih.PortPoolName,
 	})
+	li.Status.PortPool = ppih.PortPoolName
 	li.Finalizers = append(li.Finalizers, constant.FinalizerNameBcsIngressController)
 	li.Spec.Port = int(startPort)
 	li.Spec.EndPort = int(endPort)

@@ -29,6 +29,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/project"
 	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
 	cli "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/client"
+	resCsts "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/constants"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/formatter"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
@@ -97,11 +98,12 @@ func (h *Handler) Subscribe(
 var (
 	// 支持订阅的 k8s 原生资源类型
 	subscribableNativeKinds = []string{
-		res.NS, res.Deploy, res.STS, res.DS, res.CJ, res.Job, res.Po, res.Ing, res.SVC,
-		res.EP, res.CM, res.Secret, res.PV, res.PVC, res.SC, res.HPA, res.SA, res.CRD,
+		resCsts.NS, resCsts.Deploy, resCsts.STS, resCsts.DS, resCsts.CJ, resCsts.Job, resCsts.Po,
+		resCsts.Ing, resCsts.SVC, resCsts.EP, resCsts.CM, resCsts.Secret, resCsts.PV, resCsts.PVC,
+		resCsts.SC, resCsts.HPA, resCsts.SA, resCsts.CRD,
 	}
 	// 支持订阅的 k8s 原生资源类型（集群维度）
-	subscribableClusterScopedKinds = []string{res.NS, res.PV, res.SC, res.CRD}
+	subscribableClusterScopedKinds = []string{resCsts.NS, resCsts.PV, resCsts.SC, resCsts.CRD}
 )
 
 // maybeCobjKind 若不是指定订阅的原生类型，则假定其是自定义资源
@@ -151,7 +153,7 @@ func validateSubscribeParams(ctx context.Context, req *clusterRes.SubscribeReq) 
 			)
 		}
 		// 自定义资源 & 没有指定命名空间则查询 CRD 检查配置
-		if req.Namespace == "" && crdInfo["scope"].(string) == res.NamespacedScope {
+		if req.Namespace == "" && crdInfo["scope"].(string) == resCsts.NamespacedScope {
 			return errorx.New(errcode.ValidateErr, i18n.GetMsg(ctx, "查询当前自定义资源事件需要指定 Namespace"))
 		}
 	} else if !slice.StringInSlice(req.Kind, subscribableClusterScopedKinds) && req.Namespace == "" {
@@ -162,28 +164,28 @@ func validateSubscribeParams(ctx context.Context, req *clusterRes.SubscribeReq) 
 
 // genResWatcher 获取某类资源对应的 watcher
 func genResWatcher(ctx context.Context, req *clusterRes.SubscribeReq) (watch.Interface, error) {
-	clusterConf := res.NewClusterConfig(req.ClusterID)
+	clusterConf := res.NewClusterConf(req.ClusterID)
 
-	timeout := int64(res.WatchTimeout)
+	timeout := int64(resCsts.WatchTimeout)
 	opts := metav1.ListOptions{ResourceVersion: req.ResourceVersion, TimeoutSeconds: &timeout}
 	clusterInfo, err := cluster.FromContext(ctx)
 	if err != nil {
 		return nil, err
 	}
 	// 命名空间，CRD watcher 特殊处理
-	if req.Kind == res.NS {
+	if req.Kind == resCsts.NS {
 		projInfo, fetchProjErr := project.FromContext(ctx)
 		if fetchProjErr != nil {
 			return nil, err
 		}
 		return cli.NewNSClient(ctx, clusterConf).Watch(ctx, projInfo.Code, clusterInfo.Type, opts)
 	}
-	if req.Kind == res.CRD {
+	if req.Kind == resCsts.CRD {
 		return cli.NewCRDClient(ctx, clusterConf).Watch(ctx, clusterInfo.Type, opts)
 	}
 	// HPA 资源强制指定为 autoscaling/v2beta2
-	if req.Kind == res.HPA {
-		req.ApiVersion = res.DefaultHPAGroupVersion
+	if req.Kind == resCsts.HPA {
+		req.ApiVersion = resCsts.DefaultHPAGroupVersion
 	}
 	k8sRes, err := res.GetGroupVersionResource(ctx, clusterConf, req.Kind, req.ApiVersion)
 	if err != nil {

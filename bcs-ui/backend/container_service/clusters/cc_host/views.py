@@ -20,6 +20,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from backend.bcs_web.viewsets import SystemViewSet
+from backend.container_service.projects import base as Project
 from backend.components import cc
 from backend.components.base import BaseCompError, CompParseBkCommonResponseError
 from backend.container_service.clusters.serializers import FetchCCHostSLZ
@@ -40,7 +41,8 @@ class CCViewSet(SystemViewSet):
         """查询业务实例拓扑"""
         try:
             lang = request.COOKIES.get(settings.LANGUAGE_COOKIE_NAME, settings.LANGUAGE_CODE)
-            topo_info = cc.BizTopoQueryService(request.user.username, request.project.cc_app_id, lang).fetch()
+            project = Project.get_project(request.user.token.access_token, project_id)
+            topo_info = cc.BizTopoQueryService(request.user.username, project["cc_app_id"], lang).fetch()
         except CompParseBkCommonResponseError as e:
             raise error_codes.ComponentError(_('查询业务拓扑信息失败：{}').format(e))
         except BaseCompError as e:

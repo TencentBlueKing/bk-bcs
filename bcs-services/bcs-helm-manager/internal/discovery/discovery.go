@@ -15,11 +15,12 @@ package discovery
 
 import (
 	"fmt"
+	"math/rand"
 	"sync"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-
+	"github.com/Tencent/bk-bcs/bcs-common/common/types"
 	"github.com/micro/go-micro/v2/registry"
 )
 
@@ -138,16 +139,39 @@ func (md *ModuleDiscovery) watchRegistry(w registry.Watcher) error {
 		}
 		blog.V(5).Infof("get services %v", svcs)
 
-		if md.handler == nil {
-			blog.Warnf("event handler for discovery service module %s is empty", md.module)
-			continue
-		}
 		md.Lock()
 		md.curServices = svcs
 		md.Unlock()
-		md.handler(svcs)
+
+		if md.handler != nil {
+			blog.Infof("event handler update discovery service module %s", md.module)
+			md.handler(svcs)
+		}
 	}
 	return nil
+}
+
+// GetRandServiceInst get rand service instance
+func (md *ModuleDiscovery) GetRandServiceInst() (*registry.Node, error) {
+	allNodes := []*registry.Node{}
+
+	if len(md.curServices) == 0 {
+		blog.Error("discovery %s has no local service cache!", md.module)
+		return nil, fmt.Errorf("discovery %s has no local service cache", md.module)
+	}
+
+	md.Lock()
+	defer md.Unlock()
+
+	for _, svc := range md.curServices {
+		allNodes = append(allNodes, svc.Nodes...)
+	}
+	nodeLen := len(allNodes)
+	if nodeLen == 0 {
+		blog.Error("found no available node for service: %s", md.module)
+		return nil, fmt.Errorf("found no available node for service: %s", md.module)
+	}
+	return allNodes[rand.Int()%nodeLen], nil
 }
 
 // GetService get service from remote
@@ -175,4 +199,16 @@ func (md *ModuleDiscovery) Stop() {
 	default:
 		close(md.stop)
 	}
+}
+
+// GetServerEndpointsFromRegistryNode get dual address
+func GetServerEndpointsFromRegistryNode(nodeServer *registry.Node) []string {
+	// ipv4 server address
+	endpoints := []string{nodeServer.Address}
+	// ipv6 server address
+	if ipv6Address := nodeServer.Metadata[types.IPV6]; ipv6Address != "" {
+		endpoints = append(endpoints, ipv6Address)
+	}
+
+	return endpoints
 }

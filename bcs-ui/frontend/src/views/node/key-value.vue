@@ -9,13 +9,13 @@
     <div class="key-value" v-for="(item, index) in labels" :key="index">
       <bcs-input
         v-model="item.key"
-        :placeholder="keyPlaceholder"
+        :placeholder="$t('键')"
         @change="handleLabelKeyChange">
       </bcs-input>
       <span class="ml8 mr8">=</span>
       <bcs-input
         v-model="item.value"
-        :placeholder="valuePlaceholder"
+        :placeholder="$t('值')"
         @change="handleLabelValueChange"
       ></bcs-input>
       <i class="bk-icon icon-plus-circle ml15" @click="handleAddLabel(index)"></i>
@@ -43,14 +43,6 @@ export default defineComponent({
     value: {
       type: Object,
       default: () => ({}),
-    },
-    keyPlaceholder: {
-      type: String,
-      default: '',
-    },
-    valuePlaceholder: {
-      type: String,
-      default: '',
     },
     minItem: {
       type: Number,
@@ -113,6 +105,14 @@ export default defineComponent({
 });
 </script>
 <style lang="postcss" scoped>
+.add-btn {
+    font-size: 14px;
+    color: #3a84ff;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    height: 32px;
+}
 .key-value {
     display: flex;
     align-items: center;

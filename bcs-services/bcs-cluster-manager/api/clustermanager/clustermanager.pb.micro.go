@@ -11,7 +11,6 @@ import (
 	_ "github.com/golang/protobuf/ptypes/wrappers"
 	_ "github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger/options"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
-	_ "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	math "math"
 )
 
@@ -99,6 +98,12 @@ func NewClusterManagerEndpoints() []*api.Endpoint {
 			Handler: "rpc",
 		},
 		&api.Endpoint{
+			Name:    "ClusterManager.ListMastersInCluster",
+			Path:    []string{"/clustermanager/v1/cluster/{clusterID}/master"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		&api.Endpoint{
 			Name:    "ClusterManager.DeleteCluster",
 			Path:    []string{"/clustermanager/v1/cluster/{clusterID}"},
 			Method:  []string{"DELETE"},
@@ -161,6 +166,20 @@ func NewClusterManagerEndpoints() []*api.Endpoint {
 			Name:    "ClusterManager.DrainNode",
 			Path:    []string{"/clustermanager/v1/node/drain"},
 			Method:  []string{"POST"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "ClusterManager.UpdateNodeLabels",
+			Path:    []string{"/clustermanager/v1/node/labels"},
+			Method:  []string{"PUT"},
+			Body:    "*",
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "ClusterManager.UpdateNodeTaints",
+			Path:    []string{"/clustermanager/v1/node/taints"},
+			Method:  []string{"PUT"},
 			Body:    "*",
 			Handler: "rpc",
 		},
@@ -657,6 +676,18 @@ func NewClusterManagerEndpoints() []*api.Endpoint {
 			Body:    "*",
 			Handler: "rpc",
 		},
+		&api.Endpoint{
+			Name:    "ClusterManager.ListBKCloud",
+			Path:    []string{"/clustermanager/v1/nodeman/cloud"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		&api.Endpoint{
+			Name:    "ClusterManager.ListCCTopology",
+			Path:    []string{"/clustermanager/v1/cluster/{clusterID}/cc/topology"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
 	}
 }
 
@@ -672,6 +703,7 @@ type ClusterManagerService interface {
 	AddNodesToCluster(ctx context.Context, in *AddNodesRequest, opts ...client.CallOption) (*AddNodesResponse, error)
 	DeleteNodesFromCluster(ctx context.Context, in *DeleteNodesRequest, opts ...client.CallOption) (*DeleteNodesResponse, error)
 	ListNodesInCluster(ctx context.Context, in *ListNodesInClusterRequest, opts ...client.CallOption) (*ListNodesInClusterResponse, error)
+	ListMastersInCluster(ctx context.Context, in *ListMastersInClusterRequest, opts ...client.CallOption) (*ListMastersInClusterResponse, error)
 	DeleteCluster(ctx context.Context, in *DeleteClusterReq, opts ...client.CallOption) (*DeleteClusterResp, error)
 	GetCluster(ctx context.Context, in *GetClusterReq, opts ...client.CallOption) (*GetClusterResp, error)
 	ListCluster(ctx context.Context, in *ListClusterReq, opts ...client.CallOption) (*ListClusterResp, error)
@@ -683,6 +715,8 @@ type ClusterManagerService interface {
 	CordonNode(ctx context.Context, in *CordonNodeRequest, opts ...client.CallOption) (*CordonNodeResponse, error)
 	UnCordonNode(ctx context.Context, in *UnCordonNodeRequest, opts ...client.CallOption) (*UnCordonNodeResponse, error)
 	DrainNode(ctx context.Context, in *DrainNodeRequest, opts ...client.CallOption) (*DrainNodeResponse, error)
+	UpdateNodeLabels(ctx context.Context, in *UpdateNodeLabelsRequest, opts ...client.CallOption) (*UpdateNodeLabelsResponse, error)
+	UpdateNodeTaints(ctx context.Context, in *UpdateNodeTaintsRequest, opts ...client.CallOption) (*UpdateNodeTaintsResponse, error)
 	//* cluster credential management
 	GetClusterCredential(ctx context.Context, in *GetClusterCredentialReq, opts ...client.CallOption) (*GetClusterCredentialResp, error)
 	UpdateClusterCredential(ctx context.Context, in *UpdateClusterCredentialReq, opts ...client.CallOption) (*UpdateClusterCredentialResp, error)
@@ -770,11 +804,15 @@ type ClusterManagerService interface {
 	ListOperationLogs(ctx context.Context, in *ListOperationLogsRequest, opts ...client.CallOption) (*ListOperationLogsResponse, error)
 	// ** ResourceSchema **
 	// ListResourceSchema
-	ListResourceSchema(ctx context.Context, in *ListResourceSchemaRequest, opts ...client.CallOption) (*ListResourceSchemaResponse, error)
+	ListResourceSchema(ctx context.Context, in *ListResourceSchemaRequest, opts ...client.CallOption) (*CommonListResp, error)
 	// GetResourceSchema
-	GetResourceSchema(ctx context.Context, in *GetResourceSchemaRequest, opts ...client.CallOption) (*GetResourceSchemaResponse, error)
+	GetResourceSchema(ctx context.Context, in *GetResourceSchemaRequest, opts ...client.CallOption) (*CommonResp, error)
 	// Perm interface
 	QueryPermByActionID(ctx context.Context, in *QueryPermByActionIDRequest, opts ...client.CallOption) (*QueryPermByActionIDResponse, error)
+	// third party
+	// list bk cloud
+	ListBKCloud(ctx context.Context, in *ListBKCloudRequest, opts ...client.CallOption) (*CommonListResp, error)
+	ListCCTopology(ctx context.Context, in *ListCCTopologyRequest, opts ...client.CallOption) (*CommonResp, error)
 }
 
 type clusterManagerService struct {
@@ -862,6 +900,16 @@ func (c *clusterManagerService) DeleteNodesFromCluster(ctx context.Context, in *
 func (c *clusterManagerService) ListNodesInCluster(ctx context.Context, in *ListNodesInClusterRequest, opts ...client.CallOption) (*ListNodesInClusterResponse, error) {
 	req := c.c.NewRequest(c.name, "ClusterManager.ListNodesInCluster", in)
 	out := new(ListNodesInClusterResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerService) ListMastersInCluster(ctx context.Context, in *ListMastersInClusterRequest, opts ...client.CallOption) (*ListMastersInClusterResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.ListMastersInCluster", in)
+	out := new(ListMastersInClusterResponse)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -962,6 +1010,26 @@ func (c *clusterManagerService) UnCordonNode(ctx context.Context, in *UnCordonNo
 func (c *clusterManagerService) DrainNode(ctx context.Context, in *DrainNodeRequest, opts ...client.CallOption) (*DrainNodeResponse, error) {
 	req := c.c.NewRequest(c.name, "ClusterManager.DrainNode", in)
 	out := new(DrainNodeResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerService) UpdateNodeLabels(ctx context.Context, in *UpdateNodeLabelsRequest, opts ...client.CallOption) (*UpdateNodeLabelsResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.UpdateNodeLabels", in)
+	out := new(UpdateNodeLabelsResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerService) UpdateNodeTaints(ctx context.Context, in *UpdateNodeTaintsRequest, opts ...client.CallOption) (*UpdateNodeTaintsResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.UpdateNodeTaints", in)
+	out := new(UpdateNodeTaintsResponse)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -1689,9 +1757,9 @@ func (c *clusterManagerService) ListOperationLogs(ctx context.Context, in *ListO
 	return out, nil
 }
 
-func (c *clusterManagerService) ListResourceSchema(ctx context.Context, in *ListResourceSchemaRequest, opts ...client.CallOption) (*ListResourceSchemaResponse, error) {
+func (c *clusterManagerService) ListResourceSchema(ctx context.Context, in *ListResourceSchemaRequest, opts ...client.CallOption) (*CommonListResp, error) {
 	req := c.c.NewRequest(c.name, "ClusterManager.ListResourceSchema", in)
-	out := new(ListResourceSchemaResponse)
+	out := new(CommonListResp)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -1699,9 +1767,9 @@ func (c *clusterManagerService) ListResourceSchema(ctx context.Context, in *List
 	return out, nil
 }
 
-func (c *clusterManagerService) GetResourceSchema(ctx context.Context, in *GetResourceSchemaRequest, opts ...client.CallOption) (*GetResourceSchemaResponse, error) {
+func (c *clusterManagerService) GetResourceSchema(ctx context.Context, in *GetResourceSchemaRequest, opts ...client.CallOption) (*CommonResp, error) {
 	req := c.c.NewRequest(c.name, "ClusterManager.GetResourceSchema", in)
-	out := new(GetResourceSchemaResponse)
+	out := new(CommonResp)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -1712,6 +1780,26 @@ func (c *clusterManagerService) GetResourceSchema(ctx context.Context, in *GetRe
 func (c *clusterManagerService) QueryPermByActionID(ctx context.Context, in *QueryPermByActionIDRequest, opts ...client.CallOption) (*QueryPermByActionIDResponse, error) {
 	req := c.c.NewRequest(c.name, "ClusterManager.QueryPermByActionID", in)
 	out := new(QueryPermByActionIDResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerService) ListBKCloud(ctx context.Context, in *ListBKCloudRequest, opts ...client.CallOption) (*CommonListResp, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.ListBKCloud", in)
+	out := new(CommonListResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerService) ListCCTopology(ctx context.Context, in *ListCCTopologyRequest, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.ListCCTopology", in)
+	out := new(CommonResp)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -1731,6 +1819,7 @@ type ClusterManagerHandler interface {
 	AddNodesToCluster(context.Context, *AddNodesRequest, *AddNodesResponse) error
 	DeleteNodesFromCluster(context.Context, *DeleteNodesRequest, *DeleteNodesResponse) error
 	ListNodesInCluster(context.Context, *ListNodesInClusterRequest, *ListNodesInClusterResponse) error
+	ListMastersInCluster(context.Context, *ListMastersInClusterRequest, *ListMastersInClusterResponse) error
 	DeleteCluster(context.Context, *DeleteClusterReq, *DeleteClusterResp) error
 	GetCluster(context.Context, *GetClusterReq, *GetClusterResp) error
 	ListCluster(context.Context, *ListClusterReq, *ListClusterResp) error
@@ -1742,6 +1831,8 @@ type ClusterManagerHandler interface {
 	CordonNode(context.Context, *CordonNodeRequest, *CordonNodeResponse) error
 	UnCordonNode(context.Context, *UnCordonNodeRequest, *UnCordonNodeResponse) error
 	DrainNode(context.Context, *DrainNodeRequest, *DrainNodeResponse) error
+	UpdateNodeLabels(context.Context, *UpdateNodeLabelsRequest, *UpdateNodeLabelsResponse) error
+	UpdateNodeTaints(context.Context, *UpdateNodeTaintsRequest, *UpdateNodeTaintsResponse) error
 	//* cluster credential management
 	GetClusterCredential(context.Context, *GetClusterCredentialReq, *GetClusterCredentialResp) error
 	UpdateClusterCredential(context.Context, *UpdateClusterCredentialReq, *UpdateClusterCredentialResp) error
@@ -1829,11 +1920,15 @@ type ClusterManagerHandler interface {
 	ListOperationLogs(context.Context, *ListOperationLogsRequest, *ListOperationLogsResponse) error
 	// ** ResourceSchema **
 	// ListResourceSchema
-	ListResourceSchema(context.Context, *ListResourceSchemaRequest, *ListResourceSchemaResponse) error
+	ListResourceSchema(context.Context, *ListResourceSchemaRequest, *CommonListResp) error
 	// GetResourceSchema
-	GetResourceSchema(context.Context, *GetResourceSchemaRequest, *GetResourceSchemaResponse) error
+	GetResourceSchema(context.Context, *GetResourceSchemaRequest, *CommonResp) error
 	// Perm interface
 	QueryPermByActionID(context.Context, *QueryPermByActionIDRequest, *QueryPermByActionIDResponse) error
+	// third party
+	// list bk cloud
+	ListBKCloud(context.Context, *ListBKCloudRequest, *CommonListResp) error
+	ListCCTopology(context.Context, *ListCCTopologyRequest, *CommonResp) error
 }
 
 func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, opts ...server.HandlerOption) error {
@@ -1846,6 +1941,7 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		AddNodesToCluster(ctx context.Context, in *AddNodesRequest, out *AddNodesResponse) error
 		DeleteNodesFromCluster(ctx context.Context, in *DeleteNodesRequest, out *DeleteNodesResponse) error
 		ListNodesInCluster(ctx context.Context, in *ListNodesInClusterRequest, out *ListNodesInClusterResponse) error
+		ListMastersInCluster(ctx context.Context, in *ListMastersInClusterRequest, out *ListMastersInClusterResponse) error
 		DeleteCluster(ctx context.Context, in *DeleteClusterReq, out *DeleteClusterResp) error
 		GetCluster(ctx context.Context, in *GetClusterReq, out *GetClusterResp) error
 		ListCluster(ctx context.Context, in *ListClusterReq, out *ListClusterResp) error
@@ -1856,6 +1952,8 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		CordonNode(ctx context.Context, in *CordonNodeRequest, out *CordonNodeResponse) error
 		UnCordonNode(ctx context.Context, in *UnCordonNodeRequest, out *UnCordonNodeResponse) error
 		DrainNode(ctx context.Context, in *DrainNodeRequest, out *DrainNodeResponse) error
+		UpdateNodeLabels(ctx context.Context, in *UpdateNodeLabelsRequest, out *UpdateNodeLabelsResponse) error
+		UpdateNodeTaints(ctx context.Context, in *UpdateNodeTaintsRequest, out *UpdateNodeTaintsResponse) error
 		GetClusterCredential(ctx context.Context, in *GetClusterCredentialReq, out *GetClusterCredentialResp) error
 		UpdateClusterCredential(ctx context.Context, in *UpdateClusterCredentialReq, out *UpdateClusterCredentialResp) error
 		DeleteClusterCredential(ctx context.Context, in *DeleteClusterCredentialReq, out *DeleteClusterCredentialResp) error
@@ -1928,9 +2026,11 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		ListCloudInstanceTypes(ctx context.Context, in *ListCloudInstanceTypeRequest, out *ListCloudInstanceTypeResponse) error
 		ListCloudOsImage(ctx context.Context, in *ListCloudOsImageRequest, out *ListCloudOsImageResponse) error
 		ListOperationLogs(ctx context.Context, in *ListOperationLogsRequest, out *ListOperationLogsResponse) error
-		ListResourceSchema(ctx context.Context, in *ListResourceSchemaRequest, out *ListResourceSchemaResponse) error
-		GetResourceSchema(ctx context.Context, in *GetResourceSchemaRequest, out *GetResourceSchemaResponse) error
+		ListResourceSchema(ctx context.Context, in *ListResourceSchemaRequest, out *CommonListResp) error
+		GetResourceSchema(ctx context.Context, in *GetResourceSchemaRequest, out *CommonResp) error
 		QueryPermByActionID(ctx context.Context, in *QueryPermByActionIDRequest, out *QueryPermByActionIDResponse) error
+		ListBKCloud(ctx context.Context, in *ListBKCloudRequest, out *CommonListResp) error
+		ListCCTopology(ctx context.Context, in *ListCCTopologyRequest, out *CommonResp) error
 	}
 	type ClusterManager struct {
 		clusterManager
@@ -1988,6 +2088,12 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.ListNodesInCluster",
 		Path:    []string{"/clustermanager/v1/cluster/{clusterID}/node"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.ListMastersInCluster",
+		Path:    []string{"/clustermanager/v1/cluster/{clusterID}/master"},
 		Method:  []string{"GET"},
 		Handler: "rpc",
 	}))
@@ -2054,6 +2160,20 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		Name:    "ClusterManager.DrainNode",
 		Path:    []string{"/clustermanager/v1/node/drain"},
 		Method:  []string{"POST"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.UpdateNodeLabels",
+		Path:    []string{"/clustermanager/v1/node/labels"},
+		Method:  []string{"PUT"},
+		Body:    "*",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.UpdateNodeTaints",
+		Path:    []string{"/clustermanager/v1/node/taints"},
+		Method:  []string{"PUT"},
 		Body:    "*",
 		Handler: "rpc",
 	}))
@@ -2550,6 +2670,18 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		Body:    "*",
 		Handler: "rpc",
 	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.ListBKCloud",
+		Path:    []string{"/clustermanager/v1/nodeman/cloud"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.ListCCTopology",
+		Path:    []string{"/clustermanager/v1/cluster/{clusterID}/cc/topology"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
 	return s.Handle(s.NewHandler(&ClusterManager{h}, opts...))
 }
 
@@ -2587,6 +2719,10 @@ func (h *clusterManagerHandler) DeleteNodesFromCluster(ctx context.Context, in *
 
 func (h *clusterManagerHandler) ListNodesInCluster(ctx context.Context, in *ListNodesInClusterRequest, out *ListNodesInClusterResponse) error {
 	return h.ClusterManagerHandler.ListNodesInCluster(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) ListMastersInCluster(ctx context.Context, in *ListMastersInClusterRequest, out *ListMastersInClusterResponse) error {
+	return h.ClusterManagerHandler.ListMastersInCluster(ctx, in, out)
 }
 
 func (h *clusterManagerHandler) DeleteCluster(ctx context.Context, in *DeleteClusterReq, out *DeleteClusterResp) error {
@@ -2627,6 +2763,14 @@ func (h *clusterManagerHandler) UnCordonNode(ctx context.Context, in *UnCordonNo
 
 func (h *clusterManagerHandler) DrainNode(ctx context.Context, in *DrainNodeRequest, out *DrainNodeResponse) error {
 	return h.ClusterManagerHandler.DrainNode(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) UpdateNodeLabels(ctx context.Context, in *UpdateNodeLabelsRequest, out *UpdateNodeLabelsResponse) error {
+	return h.ClusterManagerHandler.UpdateNodeLabels(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) UpdateNodeTaints(ctx context.Context, in *UpdateNodeTaintsRequest, out *UpdateNodeTaintsResponse) error {
+	return h.ClusterManagerHandler.UpdateNodeTaints(ctx, in, out)
 }
 
 func (h *clusterManagerHandler) GetClusterCredential(ctx context.Context, in *GetClusterCredentialReq, out *GetClusterCredentialResp) error {
@@ -2917,14 +3061,22 @@ func (h *clusterManagerHandler) ListOperationLogs(ctx context.Context, in *ListO
 	return h.ClusterManagerHandler.ListOperationLogs(ctx, in, out)
 }
 
-func (h *clusterManagerHandler) ListResourceSchema(ctx context.Context, in *ListResourceSchemaRequest, out *ListResourceSchemaResponse) error {
+func (h *clusterManagerHandler) ListResourceSchema(ctx context.Context, in *ListResourceSchemaRequest, out *CommonListResp) error {
 	return h.ClusterManagerHandler.ListResourceSchema(ctx, in, out)
 }
 
-func (h *clusterManagerHandler) GetResourceSchema(ctx context.Context, in *GetResourceSchemaRequest, out *GetResourceSchemaResponse) error {
+func (h *clusterManagerHandler) GetResourceSchema(ctx context.Context, in *GetResourceSchemaRequest, out *CommonResp) error {
 	return h.ClusterManagerHandler.GetResourceSchema(ctx, in, out)
 }
 
 func (h *clusterManagerHandler) QueryPermByActionID(ctx context.Context, in *QueryPermByActionIDRequest, out *QueryPermByActionIDResponse) error {
 	return h.ClusterManagerHandler.QueryPermByActionID(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) ListBKCloud(ctx context.Context, in *ListBKCloudRequest, out *CommonListResp) error {
+	return h.ClusterManagerHandler.ListBKCloud(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) ListCCTopology(ctx context.Context, in *ListCCTopologyRequest, out *CommonResp) error {
+	return h.ClusterManagerHandler.ListCCTopology(ctx, in, out)
 }

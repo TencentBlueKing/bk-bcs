@@ -29,7 +29,7 @@ import { request } from './request';
 export const projectFeatureFlag = request('get', '/api/projects/$projectId/clusters/$clusterId/feature_flags/');
 
 // log
-export const LOG_API_URL = `${NODE_ENV === 'development' ? '' : window.BCS_API_HOST}/bcsapi/v4/monitor/api/projects/$projectId/clusters/$clusterId`;
+export const LOG_API_URL = `${process.env.NODE_ENV === 'development' ? '' : window.BCS_API_HOST}/bcsapi/v4/monitor/api/projects/$projectId/clusters/$clusterId`;
 export const podContainersList = request('get', `${LOG_API_URL}/namespaces/$namespaceId/pods/$podId/containers`);
 export const podLogs = request('get', `${LOG_API_URL}/namespaces/$namespaceId/pods/$podId/logs`);
 export const podLogsDownloadURL = `${LOG_API_URL}/namespaces/$namespaceId/pods/$podId/logs/download?container_name=$containerName`;
@@ -42,7 +42,7 @@ export const containerMetric = request('post', '/api/metrics/projects/$projectId
 // cluster resource
 // todo
 export const crPrefix = '/bcsapi/v4/clusterresources/v1';
-export const CR_API_URL = `${NODE_ENV === 'development' ? '' : window.BCS_API_HOST}${crPrefix}`;
+export const CR_API_URL = `${process.env.NODE_ENV === 'development' ? '' : window.BCS_API_HOST}${crPrefix}`;
 export const namespaceList = request('get', `${CR_API_URL}/projects/$projectId/clusters/$clusterId/namespaces`);
 export const dashbordList = request('get', `${CR_API_URL}/projects/$projectId/clusters/$clusterId/namespaces/$namespaceId/$type/$category`);// 注意：HPA类型没有子分类$category
 export const formSchema = request('get', `${CR_API_URL}/projects/$projectId/clusters/$clusterId/form_schema`);
@@ -70,17 +70,9 @@ export const fetchNodePodsData = request('get', `${CR_API_URL}/projects/$project
 export const enlargeCapacityChange = request('put', `${CR_API_URL}/projects/$projectId/clusters/$clusterId/namespaces/$namespace/workloads/$category/$name/scale`); // 扩缩容
 export const batchReschedulePod = request('put', `${CR_API_URL}/projects/$projectId/clusters/$clusterId/namespaces/$namespace/workloads/$category/$name/reschedule`); // pod批量重新调度
 export const crdEnlargeCapacityChange = request('put', `${CR_API_URL}/projects/$projectId/clusters/$clusterId/crds/$crdName/custom_objects/$cobjName/scale`); // crd扩缩容
-export const batchRescheduleCrdPod = request('put', `${CR_API_URL}/projects/$projectId/clusters/$clusterId/crds/$crdName/custom_objects/$cobjName/reschedule`) // crd-pod批量重新调度
-
-// apply hosts
-export const getBizMaintainers = request('get', '/api/projects/$projectId/biz_maintainers/');
+export const batchRescheduleCrdPod = request('put', `${CR_API_URL}/projects/$projectId/clusters/$clusterId/crds/$crdName/custom_objects/$cobjName/reschedule`); // crd-pod批量重新调度
 
 // node
-export const getK8sNodes = request('get', '/api/cluster_mgr/projects/$projectId/clusters/$clusterId/nodes/');
-export const fetchK8sNodeLabels = request('post', '/api/cluster_mgr/projects/$projectId/clusters/$clusterId/nodes/labels/');
-export const setK8sNodeLabels = request('put', '/api/cluster_mgr/projects/$projectId/clusters/$clusterId/nodes/labels/');
-export const getNodeTaints = request('post', '/api/cluster_mgr/projects/$projectId/clusters/$clusterId/nodes/taints/');
-export const setNodeTaints = request('put', '/api/cluster_mgr/projects/$projectId/clusters/$clusterId/nodes/taints/');
 export const fetchBizTopo = request('get', '/api/projects/$projectId/cc/topology/');
 export const fetchBizHosts = request('post', '/api/projects/$projectId/cc/hosts/');
 
@@ -90,11 +82,8 @@ export const editProject = request('put', '/api/nav/projects/$projectId/');
 export const logLinks = request('post', '/api/datalog/projects/$projectId/log_links/');
 export const getProjectList = request('get', '/api/nav/projects/');
 
-// cluster
-export const schedulerNode = request('put', '/api/projects/$projectId/clusters/$clusterId/pods/reschedule/');
-
 // Cluster Manager
-const prefix = '/api/cluster_manager/proxy/bcsapi/v4';
+const prefix = `${process.env.NODE_ENV === 'development' ? '' : window.BCS_API_HOST}/bcsapi/v4`;
 export const cloudList = request('get', `${prefix}/clustermanager/v1/cloud`);
 export const createCluster = request('post', `${prefix}/clustermanager/v1/cluster`);
 export const cloudVpc = request('get', `${prefix}/clustermanager/v1/cloudvpc`);
@@ -119,6 +108,8 @@ export const deleteCloudAccounts = request('delete', `${prefix}/clustermanager/v
 export const cloudRegionByAccount = request('get', `${prefix}/clustermanager/v1/clouds/$cloudId/regions`);
 export const cloudClusterList = request('get', `${prefix}/clustermanager/v1/clouds/$cloudId/clusters`);
 export const taskRetry = request('put', `${prefix}/clustermanager/v1/task/$taskId/retry`);
+export const nodemanCloudList = request('get', `${prefix}/clustermanager/v1/nodeman/cloud`);
+export const ccTopology = request('get', `${prefix}/clustermanager/v1/cluster/$clusterId/cc/topology`);
 // token
 export const createToken = request('post', `${prefix}/usermanager/v1/tokens`);
 export const updateToken = request('put', `${prefix}/usermanager/v1/tokens/$token`);
@@ -127,6 +118,7 @@ export const getTokens = request('get', `${prefix}/usermanager/v1/users/$usernam
 // auth
 export const userPerms = request('post', '/api/iam/user_perms/');
 export const userPermsByAction = request('post', '/api/iam/user_perms/actions/$actionId/');
+export const projectViewPerms = request('get', '/api/iam/user_perms/actions/project_view/apply_url/');
 // cluster tools
 export const clusterTools = request('get', '/api/cluster_tools/projects/$projectId/clusters/$clusterId/tools/');
 export const clusterToolsInstall = request('post', '/api/cluster_tools/projects/$projectId/clusters/$clusterId/tools/$toolId/');
@@ -148,11 +140,11 @@ export const bkSopsTemplatevalues = request('get', `${prefix}/clustermanager/v1/
 export const getNodeTemplateInfo = request('get', `${prefix}/clustermanager/v1/node/$innerIP/info`);
 
 // helm
-const helmPrefix = `${NODE_ENV === 'development' ? '' : window.BCS_API_HOST}/bcsapi/v4/helmmanager/v1/projects/$projectCode/clusters/$clusterId`;
+const helmPrefix = `${process.env.NODE_ENV === 'development' ? '' : window.BCS_API_HOST}/bcsapi/v4/helmmanager/v1/projects/$projectCode/clusters/$clusterId`;
 export const helmReleaseHistory = request('get', `${helmPrefix}/namespaces/$namespaceId/releases/$name/history`);
 
 // metric
-const metricPrefix = `${NODE_ENV === 'development' ? '' : window.BCS_API_HOST}/bcsapi/v4/monitor/api/metrics/projects/$projectCode/clusters/$clusterId`;
+const metricPrefix = `${process.env.NODE_ENV === 'development' ? '' : window.BCS_API_HOST}/bcsapi/v4/monitor/api/metrics/projects/$projectCode/clusters/$clusterId`;
 export const clusterCpuUsage = request('get', `${metricPrefix}/cpu_usage`);
 export const clusterDiskUsage = request('get', `${metricPrefix}/disk_usage`);
 export const clusterMemoryUsage = request('get', `${metricPrefix}/memory_usage`);
@@ -168,7 +160,7 @@ export const clusterPodMetric = request('post', `${metricPrefix}/namespaces/$nam
 export const clusterContainersMetric = request('get', `${metricPrefix}/namespaces/$namespaceId/pods/$podId/containers/$containerId/$metric`);
 
 // variable
-const variablePrefix = `${NODE_ENV === 'development' ? '' : window.BCS_API_HOST}/bcsapi/v4/bcsproject/v1/projects/$projectCode`;
+const variablePrefix = `${process.env.NODE_ENV === 'development' ? '' : window.BCS_API_HOST}/bcsapi/v4/bcsproject/v1/projects/$projectCode`;
 export const createVariable = request('post', `${variablePrefix}/variables`);
 export const variableDefinitions = request('get', `${variablePrefix}/variables`);
 export const deleteDefinitions = request('delete', `${variablePrefix}/variables`);
@@ -179,10 +171,41 @@ export const updateClusterVariable = request('put', `${variablePrefix}/variables
 export const namespaceVariable = request('get', `${variablePrefix}/variables/$variableID/namespace`);
 export const updateNamespaceVariable = request('put', `${variablePrefix}/variables/$variableID/namespace`);
 
+// log
+export const createLogCollect = request('post', '/api/log_collect/projects/$projectId/clusters/$clusterId/configs/');
+export const logCollectList = request('get', '/api/log_collect/projects/$projectId/clusters/$clusterId/configs/');
+export const updateLogCollect = request('put', '/api/log_collect/projects/$projectId/clusters/$clusterId/configs/$configId/');
+export const deleteLogCollect = request('delete', '/api/log_collect/projects/$projectId/clusters/$clusterId/configs/$configId/');
+export const retrieveLogCollect = request('get', '/api/log_collect/projects/$projectId/clusters/$clusterId/configs/$configId/');
+export const getLogLinks = request('get', '/api/log_collect/projects/$projectId/log_links/');
+
+// node group(pool)
+export const nodeGroup = request('get', `${prefix}/clustermanager/v1/nodegroup`);
+export const createNodeGroup = request('post', `${prefix}/clustermanager/v1/nodegroup`);
+export const nodeGroupDetail = request('get', `${prefix}/clustermanager/v1/nodegroup/$nodeGroupID`);
+export const updateNodeGroup = request('put', `${prefix}/clustermanager/v1/nodegroup/$nodeGroupID`);
+export const deleteNodeGroup = request('delete', `${prefix}/clustermanager/v1/nodegroup/$nodeGroupID`);
+export const disableNodeGroupAutoScale = request('post', `${prefix}/clustermanager/v1/nodegroup/$nodeGroupID/autoscale/disable`);
+export const enableNodeGroupAutoScale = request('post', `${prefix}/clustermanager/v1/nodegroup/$nodeGroupID/autoscale/enable`);
+export const nodeGroupNodeList = request('get', `${prefix}/clustermanager/v2/nodegroup/$nodeGroupID/node`);
+export const deleteNodeGroupNode = request('delete', `${prefix}/clustermanager/v2/nodegroup/$nodeGroupID/groupnode`);
+export const addNodeGroupNode = request('post', `${prefix}/clustermanager/v1/nodegroup/$nodeGroupID/node`);
+export const resourceSchema = request('get', `${prefix}/clustermanager/v1/resourceschema/$cloudID/$name`);
+export const cloudOsImage = request('get', `${prefix}/clustermanager/v1/clouds/$cloudID/osimage`);
+export const cloudInstanceTypes = request('get', `${prefix}/clustermanager/v1/clouds/$cloudID/instancetypes`);
+export const cloudSecurityGroups = request('get', `${prefix}/clustermanager/v1/clouds/$cloudID/securitygroups`);
+export const cloudSubnets = request('get', `${prefix}/clustermanager/v1/clouds/$cloudID/subnets`);
+export const clusterAutoScaling = request('get', `${prefix}/clustermanager/v1/autoscalingoption/$clusterId`);
+export const updateClusterAutoScaling = request('put', `${prefix}/clustermanager/v1/autoscalingoption/$clusterId`);
+export const toggleClusterAutoScalingStatus = request('put', `${prefix}/clustermanager/v1/autoscalingoption/$clusterId/status `);
+export const clusterAutoScalingLogs = request('get', `${prefix}/clustermanager/v1/operationlogs`);
+export const clusterNodeDrain = request('post', `${prefix}/clustermanager/v1/node/drain`);
+export const nodeCordon = request('put', `${prefix}/clustermanager/v1/node/cordon`);
+export const nodeUnCordon = request('put', `${prefix}/clustermanager/v1/node/uncordon`);
+
 export default {
   dashbordList,
   projectFeatureFlag,
-  getBizMaintainers,
   podMetric,
   containerMetric,
   retrieveDetail,
@@ -191,15 +214,10 @@ export default {
   listContainers,
   retrieveContainerDetail,
   fetchContainerEnvInfo,
-  getK8sNodes,
-  fetchK8sNodeLabels,
-  setK8sNodeLabels,
   resourceCreate,
   resourceUpdate,
   resourceDelete,
   exampleManifests,
-  getNodeTaints,
-  setNodeTaints,
   namespaceList,
   createProject,
   crdList,

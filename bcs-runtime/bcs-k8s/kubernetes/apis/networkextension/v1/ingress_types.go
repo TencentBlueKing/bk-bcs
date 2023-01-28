@@ -44,6 +44,9 @@ const (
 	// Pod CLB weight annotation key
 	AnnotationKeyForLoadbalanceWeight      = "networkextension.bkbcs.tencent.com/clb-weight"
 	AnnotationKeyForLoadbalanceWeightReady = "networkextension.bkbcs.tencent.com/clb-weight-ready"
+
+	// AnnotationKeyForWarnings annotation key for ingress warnings
+	AnnotationKeyForWarnings = "warnings"
 )
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
@@ -95,6 +98,8 @@ type Layer7Route struct {
 	Path              string                    `json:"path,omitempty"`
 	ListenerAttribute *IngressListenerAttribute `json:"listenerAttribute,omitempty"`
 	Services          []ServiceRoute            `json:"services,omitempty"`
+	// ForwardType Forwarding protocol between load balancing and backend services
+	ForwardType string `json:"forwardType,omitempty"`
 }
 
 // ListenerHealthCheck health check setting for listener

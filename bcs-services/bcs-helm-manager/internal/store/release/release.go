@@ -19,13 +19,13 @@ import (
 	"sync"
 	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
+	"go.mongodb.org/mongo-driver/bson"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/store/entity"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/store/utils"
-	"go.mongodb.org/mongo-driver/bson"
 )
 
 const (
@@ -41,7 +41,7 @@ var (
 				bson.E{Key: entity.FieldKeyNamespace, Value: 1},
 				bson.E{Key: entity.FieldKeyName, Value: 1},
 			},
-			Unique: false,
+			Unique: true,
 		},
 	}
 )
@@ -93,15 +93,57 @@ func (m *ModelRelease) CreateRelease(ctx context.Context, release *entity.Releas
 	}
 
 	timestamp := time.Now().UTC().Unix()
-	release.CreateTime = timestamp
+	if release.CreateTime == 0 {
+		release.CreateTime = timestamp
+	}
+	if release.UpdateTime == 0 {
+		release.UpdateTime = timestamp
+	}
+	if len(release.UpdateBy) == 0 {
+		release.UpdateBy = release.CreateBy
+	}
 	if _, err := m.db.Table(m.tableName).Insert(ctx, []interface{}{release}); err != nil {
 		return err
 	}
 	return nil
 }
 
+// UpdateRelease update an entity.Release into database
+func (m *ModelRelease) UpdateRelease(ctx context.Context, clusterID, namespace, name string, release entity.M) error {
+	if clusterID == "" || namespace == "" || name == "" {
+		return fmt.Errorf("can not update with empty clusterID, namespace or name")
+	}
+
+	if release == nil {
+		return fmt.Errorf("can not update empty release")
+	}
+
+	if err := m.ensureTable(ctx); err != nil {
+		return err
+	}
+
+	cond := operator.NewLeafCondition(operator.Eq, operator.M{
+		entity.FieldKeyClusterID: clusterID,
+		entity.FieldKeyNamespace: namespace,
+		entity.FieldKeyName:      name,
+	})
+	old := &entity.Release{}
+	if err := m.db.Table(m.tableName).Find(cond).One(ctx, old); err != nil {
+		return err
+	}
+
+	if release[entity.FieldKeyUpdateTime] == nil {
+		release.Update(entity.FieldKeyUpdateTime, time.Now().UTC().Unix())
+	}
+	if err := m.db.Table(m.tableName).Update(ctx, cond, operator.M{"$set": release}); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // GetRelease get a specific entity.Release from database
-func (m *ModelRelease) GetRelease(ctx context.Context, clusterID, namespace, name string, revision int) (
+func (m *ModelRelease) GetRelease(ctx context.Context, clusterID, namespace, name string) (
 	*entity.Release, error) {
 	if clusterID == "" {
 		return nil, fmt.Errorf("can not get with empty clusterID")
@@ -112,9 +154,6 @@ func (m *ModelRelease) GetRelease(ctx context.Context, clusterID, namespace, nam
 	if name == "" {
 		return nil, fmt.Errorf("can not get with empty name")
 	}
-	if revision <= 0 {
-		return nil, fmt.Errorf("can not get with no-positive revision")
-	}
 
 	if err := m.ensureTable(ctx); err != nil {
 		return nil, err
@@ -124,7 +163,6 @@ func (m *ModelRelease) GetRelease(ctx context.Context, clusterID, namespace, nam
 		entity.FieldKeyClusterID: clusterID,
 		entity.FieldKeyNamespace: namespace,
 		entity.FieldKeyName:      name,
-		entity.FieldKeyRevision:  revision,
 	})
 
 	release := &entity.Release{}
@@ -164,7 +202,7 @@ func (m *ModelRelease) ListRelease(ctx context.Context, cond *operator.Condition
 }
 
 // DeleteRelease delete a specific entity.Release from database
-func (m *ModelRelease) DeleteRelease(ctx context.Context, clusterID, namespace, name string, revision int) error {
+func (m *ModelRelease) DeleteRelease(ctx context.Context, clusterID, namespace, name string) error {
 	if clusterID == "" {
 		return fmt.Errorf("can not get with empty clusterID")
 	}
@@ -173,9 +211,6 @@ func (m *ModelRelease) DeleteRelease(ctx context.Context, clusterID, namespace, 
 	}
 	if name == "" {
 		return fmt.Errorf("can not get with empty name")
-	}
-	if revision <= 0 {
-		return fmt.Errorf("can not get with no-positive revision")
 	}
 
 	if err := m.ensureTable(ctx); err != nil {
@@ -186,45 +221,11 @@ func (m *ModelRelease) DeleteRelease(ctx context.Context, clusterID, namespace, 
 		entity.FieldKeyClusterID: clusterID,
 		entity.FieldKeyNamespace: namespace,
 		entity.FieldKeyName:      name,
-		entity.FieldKeyRevision:  revision,
 	})
 
 	if _, err := m.db.Table(m.tableName).Delete(ctx, cond); err != nil {
 		return err
 	}
 
-	return nil
-}
-
-// DeleteReleases delete a batch of entity.Release with specific clusterID-namespace-name and delete all the revisions
-func (m *ModelRelease) DeleteReleases(ctx context.Context, clusterID, namespace, name string) error {
-	if clusterID == "" {
-		return fmt.Errorf("can not get with empty clusterID")
-	}
-	if namespace == "" {
-		return fmt.Errorf("can not get with empty namespace")
-	}
-	if name == "" {
-		return fmt.Errorf("can not get with empty name")
-	}
-
-	if err := m.ensureTable(ctx); err != nil {
-		return err
-	}
-
-	cond := operator.NewLeafCondition(operator.Eq, operator.M{
-		entity.FieldKeyClusterID: clusterID,
-		entity.FieldKeyNamespace: namespace,
-		entity.FieldKeyName:      name,
-	})
-
-	blog.Infof("going to delete from %s with clusterID %s, namespace %s, name %s",
-		m.tableName, clusterID, namespace, name)
-	num, err := m.db.Table(m.tableName).Delete(ctx, cond)
-	if err != nil {
-		return err
-	}
-
-	blog.Infof("success to delete %d records from %s", num, m.tableName)
 	return nil
 }

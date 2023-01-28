@@ -38,7 +38,6 @@ import {
   resourceCreate,
   resourceUpdate,
   exampleManifests,
-  namespaceList,
   customResourceList,
   retrieveCustomResourceDetail,
   customResourceCreate,
@@ -55,6 +54,8 @@ import {
   batchReschedulePod,
   batchRescheduleCrdPod,
 } from '@/api/base';
+
+import { pvcMountInfo, getNetworksEndpointsFlag, getReplicasets } from '@/api/modules/cluster-resource';
 
 export default {
   namespaced: true,
@@ -98,14 +99,6 @@ export default {
     //     })
     //     return res.data
     // },
-    // 获取命名空间
-    async getNamespaceList(context, params) {
-      const data = await namespaceList(params).catch(() => ({
-        manifest: {},
-        manifestExt: {},
-      }));
-      return data;
-    },
 
     /**
          * 获取工作负载详情
@@ -293,7 +286,8 @@ export default {
     },
     // 自定义资源删除
     async customResourceDelete(context, params) {
-      const data = await customResourceDelete(params).catch(() => false);
+      const data = await customResourceDelete(params).then(() => true)
+        .catch(() => false);
       return data;
     },
     // 重新调度
@@ -335,6 +329,18 @@ export default {
     // crd重新调度
     async batchRescheduleCrdPod(context, params) {
       const data = await batchRescheduleCrdPod(params).then(() => true);
+      return data;
+    },
+    async getPvcMountInfo(context, params) {
+      const data = await pvcMountInfo(params).catch(() => ({ podNames: [] }));
+      return data;
+    },
+    async getNetworksEndpointsFlag(context, params) {
+      const data = await getNetworksEndpointsFlag(params).catch(() => false);
+      return data.epReady;
+    },
+    async getReplicasets(ctx, params) {
+      const data = await getReplicasets(params).catch(() => ({}));
       return data;
     },
   },

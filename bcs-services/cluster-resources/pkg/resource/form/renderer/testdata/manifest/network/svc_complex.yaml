@@ -4,24 +4,28 @@ metadata:
   name: svc-complex-w3uvctq3v3
   namespace: default
   labels:
-    "label-key-1": "label-val-1"
+    label-key-1: label-val-1
   annotations:
-    "anno-key-1": "anno-val-1"
-    "io.tencent.bcs.editFormat": "form"
+    anno-key-1: anno-val-1
+    service.kubernetes.io/qcloud-loadbalancer-internal-subnetid: subnet-id-1234
+    io.tencent.bcs.editFormat: form
+    io.tencent.paas.creator: anonymous
+    io.tencent.paas.updator: anonymous
 spec:
-  type: ClusterIP
+  type: LoadBalancer
   ports:
     - name: aaa
       port: 80
       protocol: TCP
-      targetPort: 8080
+      targetPort: http
     - name: bbb
       port: 81
       protocol: TCP
       targetPort: 8081
+      nodePort: 30000
     - name: ccc
       port: 82
-      protocol: UDP
+      protocol: TCP
       targetPort: 8082
   selector:
     "select-123": "456"

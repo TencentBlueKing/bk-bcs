@@ -22,7 +22,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/lib"
 	v1http "github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/v1http/utils"
-
 	"github.com/emicklei/go-restful"
 )
 
@@ -44,7 +43,7 @@ var indexKeys = []string{ipTag}
 // Use Mongodb for storage.
 const dbConfig = "mongdb/host"
 
-// GetHost get host
+// GetHost QueryHost host
 func GetHost(req *restful.Request, resp *restful.Response) {
 	const (
 		handler = "GetHost"
@@ -115,7 +114,7 @@ func ListHost(req *restful.Request, resp *restful.Response) {
 	span := v1http.SetHTTPSpanContextInfo(req, handler)
 	defer span.Finish()
 
-	r, err := queryHost(req)
+	r, err := listHost(req)
 	if err != nil {
 		utils.SetSpanLogTagError(span, err)
 		blog.Errorf("%s | err: %v", common.BcsErrStorageListResourceFailStr, err)

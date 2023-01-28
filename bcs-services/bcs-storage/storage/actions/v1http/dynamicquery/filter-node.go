@@ -26,8 +26,8 @@ type NodeFilter struct {
 	CreateTimeEnd   string `json:"createTimeEnd,omitempty" filter:"data.metadata.creationTimestamp,timeR"`
 }
 
-const nodeNestedTimeLayout = nestedTimeLayout
+const nodeNestedTimeLayout = NestedTimeLayout
 
-func (t NodeFilter) getCondition() *operator.Condition {
+func (t NodeFilter) GetCondition() *operator.Condition {
 	return qGenerate(t, nodeNestedTimeLayout)
 }

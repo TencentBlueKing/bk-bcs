@@ -17,6 +17,7 @@ package workload
 import (
 	"github.com/fatih/structs"
 
+	resCsts "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/constants"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/model"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/parser/common"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/parser/util"
@@ -48,9 +49,13 @@ func ParseDSSpec(manifest map[string]interface{}, spec *model.DSSpec) {
 
 // ParseDSReplicas xxx
 func ParseDSReplicas(manifest map[string]interface{}, replicas *model.DSReplicas) {
-	replicas.UpdateStrategy = mapx.Get(manifest, "spec.updateStrategy.type", DefaultUpdateStrategy).(string)
-	replicas.MaxUnavailable, replicas.MUAUnit = DefaultMaxUnavailable, util.UnitPercent
-	if maxUnavailable, err := mapx.GetItems(manifest, "spec.updateStrategy.rollingUpdate.maxUnavailable"); err == nil {
+	replicas.UpdateStrategy = mapx.Get(
+		manifest, "spec.updateStrategy.type", resCsts.DefaultUpdateStrategy,
+	).(string)
+	replicas.MaxUnavailable, replicas.MUAUnit = resCsts.DefaultMaxUnavailable, util.UnitPercent
+	if maxUnavailable, err := mapx.GetItems(
+		manifest, "spec.updateStrategy.rollingUpdate.maxUnavailable",
+	); err == nil {
 		replicas.MaxUnavailable, replicas.MUAUnit = util.AnalyzeIntStr(maxUnavailable)
 	}
 	replicas.MinReadySecs = mapx.GetInt64(manifest, "spec.minReadySeconds")

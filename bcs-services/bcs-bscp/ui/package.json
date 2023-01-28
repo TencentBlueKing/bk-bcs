@@ -1,0 +1,32 @@
+{
+  "name": "bk-bscp",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --force",
+    "build": "vue-tsc --noEmit && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@tencent/bk-icon-bk_bscp": "0.0.2",
+    "@types/js-cookie": "^3.0.2",
+    "@types/lodash.clonedeep": "^4.5.7",
+    "axios": "^0.27.2",
+    "bkui-vue": "0.0.1-beta.340",
+    "js-cookie": "^3.0.1",
+    "monaco-editor": "^0.34.1",
+    "sass": "^1.54.8",
+    "vue": "^3.2.37",
+    "vue-i18n": "9",
+    "vue-router": "^4.1.5"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^3.0.3",
+    "eslint": "^8.23.0",
+    "eslint-plugin-vue": "^9.4.0",
+    "typescript": "^4.6.4",
+    "vite": "^3.0.7",
+    "vue-tsc": "^0.39.5"
+  }
+}

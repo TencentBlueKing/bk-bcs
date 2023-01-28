@@ -32,12 +32,12 @@
   en: "no operate permission!"
 - msgID: "资源类型 `%s` 不支持表单化"
   en: "form edit mode is unsupported for resource kind %s"
-- msgID: "命名空间 %s 在该共享集群中不属于指定项目"
-  en: "namespace %s not belong to project in this shared cluster"
 - msgID: 在共享集群中，只有指定的数类资源可以执行订阅功能
   en: "only several resources allow subscribe events in shared cluster"
 - msgID: 共享集群暂时只支持查询部分自定义资源
   en: "only several custom resources available in shared cluster"
+- msgID: 当前资源已设置为不可变更状态，无法编辑
+  en: "current resource has been set to an immutable state and cannot be edited"
 - msgID: 配置信息->删除保护策略->总是允许删除
   en: "Spec -> Deletion Protect Policy -> Always"
 - msgID: "标签字段 %s: %s"
@@ -46,6 +46,20 @@
   en: "or make sure the number of instances is 0"
 - msgID: 当前实例已添加删除保护功能，若确认要删除，请修改实例
   en: "the deletion protect function has been added to the current instance. If you want to delete it, please modify the instance"
+- msgID: "无法删除 PersistentVolumeClaim，原因："
+  en: "unable to delete PersistentVolumeClaim, reason:"
+- msgID: "已被 Pods %v 挂载"
+  en: "mounted by Pods %v"
+- msgID: "已经被 %s 等共计 %d 个 Pod 挂载"
+  en: "already mounted by a total of %d Pods such as %s"
+- msgID: "非 Available 状态，无法绑定"
+  en: "Non-Available status, unable to bind"
+- msgID: "仅可使用 NodePort，LoadBalancer 类型的 Service"
+  en: "Only NodePort, LoadBalancer type Service can be used"
+- msgID: "仅可使用 tls 证书或 Opaque 类型的 Secret"
+  en: "Only TLS cert or Opaque type secret available"
+- msgID: "仅可使用 dockerconfigjson 类型的 Secret"
+  en: "Only dockerconfigjson type secret available"
 - msgID: 不受支持的生成器格式：%s
   en: "unsupported generator form: %s"
 - msgID: 不受支持的转换器格式：%s
@@ -56,6 +70,8 @@
   en: "reschedule resource %s is unsupported"
 - msgID: "该请求资源类型 %s 在共享集群中不可用"
   en: "current resource %s unavailable in shared cluster"
+- msgID: 清理集群资源缓存时间间隔过短，请稍后再试
+  en: "the interval for clearing the cluster resource cache is too short, please try again later"
 - msgID: "获取资源 APIVersion 信息失败：%v"
   en: "failed to get resource apiVersion: %v"
 - msgID: 数据清洗零值结果为空集合
@@ -238,10 +254,10 @@
   en: "PersistentVolumeClaim Name"
 - msgID: 卷声明类型
   en: ClaimType
-- msgID: 使用已存在的持久卷
-  en: "Use existing persistent volume"
 - msgID: 指定存储类以创建持久卷
   en: "Use storage class to create persistent volume"
+- msgID: 使用已存在的持久卷
+  en: "Use existing persistent volume"
 - msgID: 持久卷名称
   en: PersistentVolume
 - msgID: 存储类名称
@@ -304,13 +320,11 @@
   en: Operator
 - msgID: 影响
   en: Effect
-- msgID: 所有
-  en: All
-- msgID: 不调度
+- msgID: 不调度（NoSchedule）
   en: NoSchedule
-- msgID: 倾向不调度
+- msgID: 倾向不调度（PreferNoSchedule）
   en: PreferNoSchedule
-- msgID: 不执行
+- msgID: 不执行（NoExecute）
   en: NoExecute
 - msgID: 容忍时间
   en: TolerationSecs
@@ -480,16 +494,26 @@
   en: "SubPath In Volume"
 - msgID: 设置为默认类
   en: "Set as default class"
-- msgID: "<a href='https://kubernetes.io/zh-cn/docs/concepts/storage/storage-classes/#parameters' style='color:#87CEFA;' target='view_frame'>参数配置参考文档</a>"
-  en: "<a href='https://kubernetes.io/docs/concepts/storage/storage-classes/#parameters' style='color:#87CEFA;' target='view_frame'>Parameters Docs</a>"
+- msgID: "<a href='https://kubernetes.io/zh-cn/docs/concepts/storage/storage-classes/#parameters' style='color:#1E90FF;' target='view_frame'>参数配置参考文档</a>"
+  en: "<a href='https://kubernetes.io/docs/concepts/storage/storage-classes/#parameters' style='color:#1E90FF;' target='view_frame'>Parameters Docs</a>"
 - msgID: "至少选择一个 AccessMode"
   en: "At lease select an AccessMode"
 - msgID: 控制器
-  en: "Controller"
+  en: Controller
 - msgID: 控制器类
   en: "Controller Class"
+- msgID: 暂时不支持该控制器
+  en: "this ingress controller is unsupported currently"
 - msgID: 数据
   en: Data
+- msgID: 不可变更
+  en: Immutable
+- msgID: "（k8s 1.19+） 保护应用，使之免受意外更新所带来的负面影响;<br>降低对 kube-apiserver 的性能压力，系统会关闭对已标记为不可变更的资源的监视操作"
+  en: "(k8s 1.19+) Protect applications from the negative impact of unexpected updates;<br>Reduce performance pressure on kube-apiserver, the system will turn off monitoring operations for resources marked as immutable"
+- msgID: 值（支持多行文本）
+  en: "value (multi-line text supported)"
+- msgID: "值（明文即可，提交后会自动转换为 base64 编码）"
+  en: "Value (clear text is fine, it will be automatically converted to base64 encoding after submission)"
 - msgID: 仓库地址
   en: Registry
 - msgID: 用户名
@@ -538,42 +562,64 @@
   en: "Will be used as pod & selector label"
 - msgID: 注解
   en: Annotations
+- msgID: "留空将使用默认 StorageClass"
+  en: "Leave blank to use the default StorageClass"
 - msgID: 规则
   en: Rule
 - msgID: 域名
   en: Domain
-- msgID: "目标 SVC"
+- msgID: 需要为绝对路径
+  en: "must be an absolute path"
+- msgID: "目标 Service"
   en: TargetService
 - msgID: "CLB 使用方式"
   en: "CLB Use Type"
-- msgID: "已存在的 CLB 实例：需先手工创建 CLB 实例，Ingress 实例删除时 CLB 实例不会被删除，重建 Ingress 实例后 VIP 不会发生变化<br>自动新建 CLB 实例：无需先手工创建 CLB 实例，Ingress 实例删除时 CLB 实例会随之删除，重建 Ingress 实例后 VIP 会发生变化"
-  en: "Use existing CLB: You need to manually create a CLB instance first, the CLB instance will not be deleted when the Ingress instance is deleted, and the VIP will not change after the Ingress instance is rebuilt<br>Auto create new CLB: No need to manually create a CLB instance first, Ingress When the instance is deleted, the CLB instance will be deleted, and the VIP will change after the Ingress instance is rebuilt"
+- msgID: "已存在的 CLB 实例：需先手工创建 CLB 实例，Ingress 实例删除时 CLB 实例不会被删除，重建 Ingress 实例后 VIP 不会发生变化<br>自动新建 CLB 实例：无需先手工创建 CLB 实例，Ingress 实例删除时 CLB 实例会随之删除，重建 Ingress 实例后 VIP 会发生变化；出于安全原因，自动新建 CLB 实例只支持内网，外网 CLB 请使用 “已存在的 CLB 实例”方案，内网子网 ID 请找资源管理员确认"
+  en: "Use existing CLB: You need to manually create a CLB instance first, the CLB instance will not be deleted when the Ingress instance is deleted, and the VIP will not change after the Ingress instance is rebuilt<br>Auto create new CLB: No need to manually create a CLB instance first, Ingress When the instance is deleted, the CLB instance will be deleted, and the VIP will change after the Ingress instance is rebuilt; for security reasons, the automatic new CLB instance only supports the intranet, and the extranet CLB should use the 'use existing CLB' scheme, please ask the administrator to confirm the intranet subnet ID"
 - msgID: "已存在的 CLB 实例"
   en: "Use existing CLB"
-- msgID: "自动新建 CLB 实例"
+- msgID: "自动创建 CLB 实例"
   en: "Auto create new CLB"
-- msgID: "CLB 类型"
-  en: "CLB Type"
-- msgID: "外网 CLB"
-  en: "External CLB"
-- msgID: "内网 CLB"
-  en: "Internal CLB"
+- msgID: "共享集群暂不支持自动创建 CLB 实例"
+  en: "auto create new clb is unsupported in shared cluster"
+- msgID: 例如：lb-c5xxxxd6
+  en: "example: lb-c5xxxxd6"
 - msgID: "子网 ID"
   en: "SubNet ID"
+- msgID: 例如：subnet-a3xxxxb4
+  en: "example: subnet-a3xxxxb4"
 - msgID: 默认后端
   en: DefaultBackend
-- msgID: "目标 Service"
-  en: TargetService
+- msgID: "控制器类型 qcloud 暂时不支持配置默认后端"
+  en: "controller type qcloud does not currently support configuring the default backend"
+- msgID: 开启自动重定向
+  en: "Enable automatic redirection"
+- msgID: "自动重定向：用户需要先创建出一个 HTTPS:443 监听器，并在其下创建转发规则。通过调用该接口，系统会自动创建出一个 HTTP:80 监听器（如果之前不存在），并在其下创建转发规则，与 HTTPS:443 监听器下的域名等各种配置对应。"
+  en: "Automatic redirection: The user needs to create an HTTPS:443 listener first, and create a forwarding rule under it. By calling this interface, the system will automatically create an HTTP:80 listener (if it does not exist before), and create a forwarding rule under it, corresponding to various configurations such as the domain name under the HTTPS:443 listener."
 - msgID: 端口配置
   en: PortConfig
+- msgID: 负载均衡器
+  en: LoadBalancer
+- msgID: "使用已有：仅支持使用当前未被 TKE 使用的应用型 CLB 以用于公网/内网访问 Service，请勿手动修改由 TKE 创建的 CLB 监听器<br>自动创建：自动创建内网 CLB 以提供内网访问入口，将提供一个可以被集群所有 VPC 下的其他资源访问的入口，支持 TCP/UDP 协议。需要被同一 VPC 下其他集群、云服务器等访问的服务可以选择 VPC 内网访问的形式，因安全原因，暂不支持公网 CLB 自动创建，内网子网 ID 请找资源管理员确认"
+  en: "Use Exists: Only the application-type CLB that is not currently used by TKE is supported to access the Service on the public network/intranet. Do not manually modify the CLB listener created by TKE<br>Auto reate: Automatically create an intranet CLB to Provides an intranet access entry, which will provide an entry that can be accessed by other resources under all VPCs in the cluster, and supports TCP/UDP protocols. Services that need to be accessed by other clusters, cloud servers, etc. under the same VPC can choose the form of VPC intranet access. Due to security reasons, the automatic creation of public network CLBs is not supported, please ask the administrator to confirm the intranet subnet ID"
+- msgID: 使用已有
+  en: "Use Exists"
+- msgID: 自动创建
+  en: "Auto Create"
 - msgID: 监听端口
   en: Port
 - msgID: 目标端口
   en: TargetPort
 - msgID: 节点端口
   en: NodePort
+- msgID: 标签选择器
+  en: LabelSelector
+- msgID: "若没有设置选择器，则不会自动创建 Endpoints，需要手动创建"
+  en: "if no set label selector, endpoints will not be created automatically and need to be created manually"
 - msgID: "Session 亲和性"
   en: SessionAffinity
+- msgID: 最大会话停留时间
+  en: StickyTime
 - msgID: "外部 IP"
   en: ExternalIP
 - msgID: "资源类型 %s APIVersion %s 不在受支持的版本列表 %v 中，请改用 Yaml 模式而非表单化"
@@ -582,6 +628,12 @@
   en: "labels has a duplicate Key"
 - msgID: 注解有重复的键，请检查
   en: "annotations has a duplicate key"
+- msgID: 无集群查看权限
+  en: "no cluster view permission"
+- msgID: 检查共享集群命名空间权限失败
+  en: "checking shared cluster namespace permissions failed"
+- msgID: "命名空间 %s 在该共享集群中不属于指定项目"
+  en: "namespace %s not belong to project in this shared cluster"
 - msgID: "无查看指定节点上运行的 Pod 的权限"
   en: "no permission to view Pods running on the specified node"
 - msgID: "创建 %s 需要指定 metadata.namespace"
@@ -592,5 +644,5 @@
   en: "failed to get project info from context"
 - msgID: "由 Context 获取集群信息失败"
   en: "failed to get cluster info from context"
-- msgID: 无集群查看权限
-  en: "no cluster view permission"
+- msgID: 检测到集群资源变动，尝试同步资源信息中。若近期有升级集群行为，请稍后重试，若依旧失败，请联系容器助手
+  en: "cluster resource changes are detected, and try to synchronize resource information. If you have recently upgraded the cluster, please try again later. If it still fails, please contact the container assistant."

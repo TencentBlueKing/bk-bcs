@@ -39,7 +39,6 @@ func NewBasicEndpoints() []*api.Endpoint {
 			Name:    "Basic.Echo",
 			Path:    []string{"/clusterresources/v1/echo"},
 			Method:  []string{"POST"},
-			Body:    "*",
 			Handler: "rpc",
 		},
 		{
@@ -148,7 +147,6 @@ func RegisterBasicHandler(s server.Server, hdlr BasicHandler, opts ...server.Han
 		Name:    "Basic.Echo",
 		Path:    []string{"/clusterresources/v1/echo"},
 		Method:  []string{"POST"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
@@ -356,35 +354,36 @@ func NewWorkloadEndpoints() []*api.Endpoint {
 			Name:    "Workload.CreateDeploy",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/workloads/deployments"},
 			Method:  []string{"POST"},
-			Body:    "*",
 			Handler: "rpc",
 		},
 		{
 			Name:    "Workload.UpdateDeploy",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/deployments/{name}"},
 			Method:  []string{"PUT"},
-			Body:    "*",
 			Handler: "rpc",
 		},
 		{
 			Name:    "Workload.ScaleDeploy",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/deployments/{name}/scale"},
 			Method:  []string{"PUT"},
-			Body:    "*",
 			Handler: "rpc",
 		},
 		{
 			Name:    "Workload.RescheduleDeployPo",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/deployments/{name}/reschedule"},
 			Method:  []string{"PUT"},
-			Body:    "*",
 			Handler: "rpc",
 		},
 		{
 			Name:    "Workload.DeleteDeploy",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/deployments/{name}"},
 			Method:  []string{"DELETE"},
-			Body:    "",
+			Handler: "rpc",
+		},
+		{
+			Name:    "Workload.ListRS",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/replicasets"},
+			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
 		{
@@ -403,21 +402,18 @@ func NewWorkloadEndpoints() []*api.Endpoint {
 			Name:    "Workload.CreateDS",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/workloads/daemonsets"},
 			Method:  []string{"POST"},
-			Body:    "*",
 			Handler: "rpc",
 		},
 		{
 			Name:    "Workload.UpdateDS",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/daemonsets/{name}"},
 			Method:  []string{"PUT"},
-			Body:    "*",
 			Handler: "rpc",
 		},
 		{
 			Name:    "Workload.DeleteDS",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/daemonsets/{name}"},
 			Method:  []string{"DELETE"},
-			Body:    "",
 			Handler: "rpc",
 		},
 		{
@@ -436,35 +432,30 @@ func NewWorkloadEndpoints() []*api.Endpoint {
 			Name:    "Workload.CreateSTS",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/workloads/statefulsets"},
 			Method:  []string{"POST"},
-			Body:    "*",
 			Handler: "rpc",
 		},
 		{
 			Name:    "Workload.UpdateSTS",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/statefulsets/{name}"},
 			Method:  []string{"PUT"},
-			Body:    "*",
 			Handler: "rpc",
 		},
 		{
 			Name:    "Workload.ScaleSTS",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/statefulsets/{name}/scale"},
 			Method:  []string{"PUT"},
-			Body:    "*",
 			Handler: "rpc",
 		},
 		{
 			Name:    "Workload.RescheduleSTSPo",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/statefulsets/{name}/reschedule"},
 			Method:  []string{"PUT"},
-			Body:    "*",
 			Handler: "rpc",
 		},
 		{
 			Name:    "Workload.DeleteSTS",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/statefulsets/{name}"},
 			Method:  []string{"DELETE"},
-			Body:    "",
 			Handler: "rpc",
 		},
 		{
@@ -483,21 +474,18 @@ func NewWorkloadEndpoints() []*api.Endpoint {
 			Name:    "Workload.CreateCJ",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/workloads/cronjobs"},
 			Method:  []string{"POST"},
-			Body:    "*",
 			Handler: "rpc",
 		},
 		{
 			Name:    "Workload.UpdateCJ",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/cronjobs/{name}"},
 			Method:  []string{"PUT"},
-			Body:    "*",
 			Handler: "rpc",
 		},
 		{
 			Name:    "Workload.DeleteCJ",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/cronjobs/{name}"},
 			Method:  []string{"DELETE"},
-			Body:    "",
 			Handler: "rpc",
 		},
 		{
@@ -516,21 +504,18 @@ func NewWorkloadEndpoints() []*api.Endpoint {
 			Name:    "Workload.CreateJob",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/workloads/jobs"},
 			Method:  []string{"POST"},
-			Body:    "*",
 			Handler: "rpc",
 		},
 		{
 			Name:    "Workload.UpdateJob",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/jobs/{name}"},
 			Method:  []string{"PUT"},
-			Body:    "*",
 			Handler: "rpc",
 		},
 		{
 			Name:    "Workload.DeleteJob",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/jobs/{name}"},
 			Method:  []string{"DELETE"},
-			Body:    "",
 			Handler: "rpc",
 		},
 		{
@@ -555,21 +540,18 @@ func NewWorkloadEndpoints() []*api.Endpoint {
 			Name:    "Workload.CreatePo",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/workloads/pods"},
 			Method:  []string{"POST"},
-			Body:    "*",
 			Handler: "rpc",
 		},
 		{
 			Name:    "Workload.UpdatePo",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/pods/{name}"},
 			Method:  []string{"PUT"},
-			Body:    "*",
 			Handler: "rpc",
 		},
 		{
 			Name:    "Workload.DeletePo",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/pods/{name}"},
 			Method:  []string{"DELETE"},
-			Body:    "",
 			Handler: "rpc",
 		},
 		{
@@ -594,7 +576,6 @@ func NewWorkloadEndpoints() []*api.Endpoint {
 			Name:    "Workload.ReschedulePo",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/pods/{name}/reschedule"},
 			Method:  []string{"PUT"},
-			Body:    "*",
 			Handler: "rpc",
 		},
 		{
@@ -628,6 +609,7 @@ type WorkloadService interface {
 	ScaleDeploy(ctx context.Context, in *ResScaleReq, opts ...client.CallOption) (*CommonResp, error)
 	RescheduleDeployPo(ctx context.Context, in *ResBatchRescheduleReq, opts ...client.CallOption) (*CommonResp, error)
 	DeleteDeploy(ctx context.Context, in *ResDeleteReq, opts ...client.CallOption) (*CommonResp, error)
+	ListRS(ctx context.Context, in *ResListReq, opts ...client.CallOption) (*CommonResp, error)
 	ListDS(ctx context.Context, in *ResListReq, opts ...client.CallOption) (*CommonResp, error)
 	GetDS(ctx context.Context, in *ResGetReq, opts ...client.CallOption) (*CommonResp, error)
 	CreateDS(ctx context.Context, in *ResCreateReq, opts ...client.CallOption) (*CommonResp, error)
@@ -650,7 +632,7 @@ type WorkloadService interface {
 	CreateJob(ctx context.Context, in *ResCreateReq, opts ...client.CallOption) (*CommonResp, error)
 	UpdateJob(ctx context.Context, in *ResUpdateReq, opts ...client.CallOption) (*CommonResp, error)
 	DeleteJob(ctx context.Context, in *ResDeleteReq, opts ...client.CallOption) (*CommonResp, error)
-	ListPo(ctx context.Context, in *PodResListReq, opts ...client.CallOption) (*CommonResp, error)
+	ListPo(ctx context.Context, in *ResListReq, opts ...client.CallOption) (*CommonResp, error)
 	ListPoByNode(ctx context.Context, in *ListPoByNodeReq, opts ...client.CallOption) (*CommonListResp, error)
 	GetPo(ctx context.Context, in *ResGetReq, opts ...client.CallOption) (*CommonResp, error)
 	CreatePo(ctx context.Context, in *ResCreateReq, opts ...client.CallOption) (*CommonResp, error)
@@ -739,6 +721,16 @@ func (c *workloadService) RescheduleDeployPo(ctx context.Context, in *ResBatchRe
 
 func (c *workloadService) DeleteDeploy(ctx context.Context, in *ResDeleteReq, opts ...client.CallOption) (*CommonResp, error) {
 	req := c.c.NewRequest(c.name, "Workload.DeleteDeploy", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *workloadService) ListRS(ctx context.Context, in *ResListReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "Workload.ListRS", in)
 	out := new(CommonResp)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
@@ -967,7 +959,7 @@ func (c *workloadService) DeleteJob(ctx context.Context, in *ResDeleteReq, opts 
 	return out, nil
 }
 
-func (c *workloadService) ListPo(ctx context.Context, in *PodResListReq, opts ...client.CallOption) (*CommonResp, error) {
+func (c *workloadService) ListPo(ctx context.Context, in *ResListReq, opts ...client.CallOption) (*CommonResp, error) {
 	req := c.c.NewRequest(c.name, "Workload.ListPo", in)
 	out := new(CommonResp)
 	err := c.c.Call(ctx, req, out, opts...)
@@ -1107,6 +1099,7 @@ type WorkloadHandler interface {
 	ScaleDeploy(context.Context, *ResScaleReq, *CommonResp) error
 	RescheduleDeployPo(context.Context, *ResBatchRescheduleReq, *CommonResp) error
 	DeleteDeploy(context.Context, *ResDeleteReq, *CommonResp) error
+	ListRS(context.Context, *ResListReq, *CommonResp) error
 	ListDS(context.Context, *ResListReq, *CommonResp) error
 	GetDS(context.Context, *ResGetReq, *CommonResp) error
 	CreateDS(context.Context, *ResCreateReq, *CommonResp) error
@@ -1129,7 +1122,7 @@ type WorkloadHandler interface {
 	CreateJob(context.Context, *ResCreateReq, *CommonResp) error
 	UpdateJob(context.Context, *ResUpdateReq, *CommonResp) error
 	DeleteJob(context.Context, *ResDeleteReq, *CommonResp) error
-	ListPo(context.Context, *PodResListReq, *CommonResp) error
+	ListPo(context.Context, *ResListReq, *CommonResp) error
 	ListPoByNode(context.Context, *ListPoByNodeReq, *CommonListResp) error
 	GetPo(context.Context, *ResGetReq, *CommonResp) error
 	CreatePo(context.Context, *ResCreateReq, *CommonResp) error
@@ -1153,6 +1146,7 @@ func RegisterWorkloadHandler(s server.Server, hdlr WorkloadHandler, opts ...serv
 		ScaleDeploy(ctx context.Context, in *ResScaleReq, out *CommonResp) error
 		RescheduleDeployPo(ctx context.Context, in *ResBatchRescheduleReq, out *CommonResp) error
 		DeleteDeploy(ctx context.Context, in *ResDeleteReq, out *CommonResp) error
+		ListRS(ctx context.Context, in *ResListReq, out *CommonResp) error
 		ListDS(ctx context.Context, in *ResListReq, out *CommonResp) error
 		GetDS(ctx context.Context, in *ResGetReq, out *CommonResp) error
 		CreateDS(ctx context.Context, in *ResCreateReq, out *CommonResp) error
@@ -1175,7 +1169,7 @@ func RegisterWorkloadHandler(s server.Server, hdlr WorkloadHandler, opts ...serv
 		CreateJob(ctx context.Context, in *ResCreateReq, out *CommonResp) error
 		UpdateJob(ctx context.Context, in *ResUpdateReq, out *CommonResp) error
 		DeleteJob(ctx context.Context, in *ResDeleteReq, out *CommonResp) error
-		ListPo(ctx context.Context, in *PodResListReq, out *CommonResp) error
+		ListPo(ctx context.Context, in *ResListReq, out *CommonResp) error
 		ListPoByNode(ctx context.Context, in *ListPoByNodeReq, out *CommonListResp) error
 		GetPo(ctx context.Context, in *ResGetReq, out *CommonResp) error
 		CreatePo(ctx context.Context, in *ResCreateReq, out *CommonResp) error
@@ -1209,35 +1203,36 @@ func RegisterWorkloadHandler(s server.Server, hdlr WorkloadHandler, opts ...serv
 		Name:    "Workload.CreateDeploy",
 		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/workloads/deployments"},
 		Method:  []string{"POST"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "Workload.UpdateDeploy",
 		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/deployments/{name}"},
 		Method:  []string{"PUT"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "Workload.ScaleDeploy",
 		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/deployments/{name}/scale"},
 		Method:  []string{"PUT"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "Workload.RescheduleDeployPo",
 		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/deployments/{name}/reschedule"},
 		Method:  []string{"PUT"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "Workload.DeleteDeploy",
 		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/deployments/{name}"},
 		Method:  []string{"DELETE"},
-		Body:    "",
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Workload.ListRS",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/replicasets"},
+		Method:  []string{"GET"},
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
@@ -1256,21 +1251,18 @@ func RegisterWorkloadHandler(s server.Server, hdlr WorkloadHandler, opts ...serv
 		Name:    "Workload.CreateDS",
 		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/workloads/daemonsets"},
 		Method:  []string{"POST"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "Workload.UpdateDS",
 		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/daemonsets/{name}"},
 		Method:  []string{"PUT"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "Workload.DeleteDS",
 		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/daemonsets/{name}"},
 		Method:  []string{"DELETE"},
-		Body:    "",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
@@ -1289,35 +1281,30 @@ func RegisterWorkloadHandler(s server.Server, hdlr WorkloadHandler, opts ...serv
 		Name:    "Workload.CreateSTS",
 		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/workloads/statefulsets"},
 		Method:  []string{"POST"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "Workload.UpdateSTS",
 		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/statefulsets/{name}"},
 		Method:  []string{"PUT"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "Workload.ScaleSTS",
 		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/statefulsets/{name}/scale"},
 		Method:  []string{"PUT"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "Workload.RescheduleSTSPo",
 		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/statefulsets/{name}/reschedule"},
 		Method:  []string{"PUT"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "Workload.DeleteSTS",
 		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/statefulsets/{name}"},
 		Method:  []string{"DELETE"},
-		Body:    "",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
@@ -1336,21 +1323,18 @@ func RegisterWorkloadHandler(s server.Server, hdlr WorkloadHandler, opts ...serv
 		Name:    "Workload.CreateCJ",
 		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/workloads/cronjobs"},
 		Method:  []string{"POST"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "Workload.UpdateCJ",
 		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/cronjobs/{name}"},
 		Method:  []string{"PUT"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "Workload.DeleteCJ",
 		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/cronjobs/{name}"},
 		Method:  []string{"DELETE"},
-		Body:    "",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
@@ -1369,21 +1353,18 @@ func RegisterWorkloadHandler(s server.Server, hdlr WorkloadHandler, opts ...serv
 		Name:    "Workload.CreateJob",
 		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/workloads/jobs"},
 		Method:  []string{"POST"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "Workload.UpdateJob",
 		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/jobs/{name}"},
 		Method:  []string{"PUT"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "Workload.DeleteJob",
 		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/jobs/{name}"},
 		Method:  []string{"DELETE"},
-		Body:    "",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
@@ -1408,21 +1389,18 @@ func RegisterWorkloadHandler(s server.Server, hdlr WorkloadHandler, opts ...serv
 		Name:    "Workload.CreatePo",
 		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/workloads/pods"},
 		Method:  []string{"POST"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "Workload.UpdatePo",
 		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/pods/{name}"},
 		Method:  []string{"PUT"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "Workload.DeletePo",
 		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/pods/{name}"},
 		Method:  []string{"DELETE"},
-		Body:    "",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
@@ -1447,7 +1425,6 @@ func RegisterWorkloadHandler(s server.Server, hdlr WorkloadHandler, opts ...serv
 		Name:    "Workload.ReschedulePo",
 		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/pods/{name}/reschedule"},
 		Method:  []string{"PUT"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
@@ -1501,6 +1478,10 @@ func (h *workloadHandler) RescheduleDeployPo(ctx context.Context, in *ResBatchRe
 
 func (h *workloadHandler) DeleteDeploy(ctx context.Context, in *ResDeleteReq, out *CommonResp) error {
 	return h.WorkloadHandler.DeleteDeploy(ctx, in, out)
+}
+
+func (h *workloadHandler) ListRS(ctx context.Context, in *ResListReq, out *CommonResp) error {
+	return h.WorkloadHandler.ListRS(ctx, in, out)
 }
 
 func (h *workloadHandler) ListDS(ctx context.Context, in *ResListReq, out *CommonResp) error {
@@ -1591,7 +1572,7 @@ func (h *workloadHandler) DeleteJob(ctx context.Context, in *ResDeleteReq, out *
 	return h.WorkloadHandler.DeleteJob(ctx, in, out)
 }
 
-func (h *workloadHandler) ListPo(ctx context.Context, in *PodResListReq, out *CommonResp) error {
+func (h *workloadHandler) ListPo(ctx context.Context, in *ResListReq, out *CommonResp) error {
 	return h.WorkloadHandler.ListPo(ctx, in, out)
 }
 
@@ -1663,21 +1644,18 @@ func NewNetworkEndpoints() []*api.Endpoint {
 			Name:    "Network.CreateIng",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/networks/ingresses"},
 			Method:  []string{"POST"},
-			Body:    "*",
 			Handler: "rpc",
 		},
 		{
 			Name:    "Network.UpdateIng",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/networks/ingresses/{name}"},
 			Method:  []string{"PUT"},
-			Body:    "*",
 			Handler: "rpc",
 		},
 		{
 			Name:    "Network.DeleteIng",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/networks/ingresses/{name}"},
 			Method:  []string{"DELETE"},
-			Body:    "",
 			Handler: "rpc",
 		},
 		{
@@ -1696,21 +1674,18 @@ func NewNetworkEndpoints() []*api.Endpoint {
 			Name:    "Network.CreateSVC",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/networks/services"},
 			Method:  []string{"POST"},
-			Body:    "*",
 			Handler: "rpc",
 		},
 		{
 			Name:    "Network.UpdateSVC",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/networks/services/{name}"},
 			Method:  []string{"PUT"},
-			Body:    "*",
 			Handler: "rpc",
 		},
 		{
 			Name:    "Network.DeleteSVC",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/networks/services/{name}"},
 			Method:  []string{"DELETE"},
-			Body:    "",
 			Handler: "rpc",
 		},
 		{
@@ -1726,24 +1701,27 @@ func NewNetworkEndpoints() []*api.Endpoint {
 			Handler: "rpc",
 		},
 		{
+			Name:    "Network.GetEPStatus",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/networks/endpoints/{name}/status"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		{
 			Name:    "Network.CreateEP",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/networks/endpoints"},
 			Method:  []string{"POST"},
-			Body:    "*",
 			Handler: "rpc",
 		},
 		{
 			Name:    "Network.UpdateEP",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/networks/endpoints/{name}"},
 			Method:  []string{"PUT"},
-			Body:    "*",
 			Handler: "rpc",
 		},
 		{
 			Name:    "Network.DeleteEP",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/networks/endpoints/{name}"},
 			Method:  []string{"DELETE"},
-			Body:    "",
 			Handler: "rpc",
 		},
 	}
@@ -1764,6 +1742,7 @@ type NetworkService interface {
 	DeleteSVC(ctx context.Context, in *ResDeleteReq, opts ...client.CallOption) (*CommonResp, error)
 	ListEP(ctx context.Context, in *ResListReq, opts ...client.CallOption) (*CommonResp, error)
 	GetEP(ctx context.Context, in *ResGetReq, opts ...client.CallOption) (*CommonResp, error)
+	GetEPStatus(ctx context.Context, in *ResGetReq, opts ...client.CallOption) (*CommonResp, error)
 	CreateEP(ctx context.Context, in *ResCreateReq, opts ...client.CallOption) (*CommonResp, error)
 	UpdateEP(ctx context.Context, in *ResUpdateReq, opts ...client.CallOption) (*CommonResp, error)
 	DeleteEP(ctx context.Context, in *ResDeleteReq, opts ...client.CallOption) (*CommonResp, error)
@@ -1901,6 +1880,16 @@ func (c *networkService) GetEP(ctx context.Context, in *ResGetReq, opts ...clien
 	return out, nil
 }
 
+func (c *networkService) GetEPStatus(ctx context.Context, in *ResGetReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "Network.GetEPStatus", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *networkService) CreateEP(ctx context.Context, in *ResCreateReq, opts ...client.CallOption) (*CommonResp, error) {
 	req := c.c.NewRequest(c.name, "Network.CreateEP", in)
 	out := new(CommonResp)
@@ -1946,6 +1935,7 @@ type NetworkHandler interface {
 	DeleteSVC(context.Context, *ResDeleteReq, *CommonResp) error
 	ListEP(context.Context, *ResListReq, *CommonResp) error
 	GetEP(context.Context, *ResGetReq, *CommonResp) error
+	GetEPStatus(context.Context, *ResGetReq, *CommonResp) error
 	CreateEP(context.Context, *ResCreateReq, *CommonResp) error
 	UpdateEP(context.Context, *ResUpdateReq, *CommonResp) error
 	DeleteEP(context.Context, *ResDeleteReq, *CommonResp) error
@@ -1965,6 +1955,7 @@ func RegisterNetworkHandler(s server.Server, hdlr NetworkHandler, opts ...server
 		DeleteSVC(ctx context.Context, in *ResDeleteReq, out *CommonResp) error
 		ListEP(ctx context.Context, in *ResListReq, out *CommonResp) error
 		GetEP(ctx context.Context, in *ResGetReq, out *CommonResp) error
+		GetEPStatus(ctx context.Context, in *ResGetReq, out *CommonResp) error
 		CreateEP(ctx context.Context, in *ResCreateReq, out *CommonResp) error
 		UpdateEP(ctx context.Context, in *ResUpdateReq, out *CommonResp) error
 		DeleteEP(ctx context.Context, in *ResDeleteReq, out *CommonResp) error
@@ -1989,21 +1980,18 @@ func RegisterNetworkHandler(s server.Server, hdlr NetworkHandler, opts ...server
 		Name:    "Network.CreateIng",
 		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/networks/ingresses"},
 		Method:  []string{"POST"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "Network.UpdateIng",
 		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/networks/ingresses/{name}"},
 		Method:  []string{"PUT"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "Network.DeleteIng",
 		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/networks/ingresses/{name}"},
 		Method:  []string{"DELETE"},
-		Body:    "",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
@@ -2022,21 +2010,18 @@ func RegisterNetworkHandler(s server.Server, hdlr NetworkHandler, opts ...server
 		Name:    "Network.CreateSVC",
 		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/networks/services"},
 		Method:  []string{"POST"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "Network.UpdateSVC",
 		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/networks/services/{name}"},
 		Method:  []string{"PUT"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "Network.DeleteSVC",
 		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/networks/services/{name}"},
 		Method:  []string{"DELETE"},
-		Body:    "",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
@@ -2052,24 +2037,27 @@ func RegisterNetworkHandler(s server.Server, hdlr NetworkHandler, opts ...server
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Network.GetEPStatus",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/networks/endpoints/{name}/status"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "Network.CreateEP",
 		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/networks/endpoints"},
 		Method:  []string{"POST"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "Network.UpdateEP",
 		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/networks/endpoints/{name}"},
 		Method:  []string{"PUT"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "Network.DeleteEP",
 		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/networks/endpoints/{name}"},
 		Method:  []string{"DELETE"},
-		Body:    "",
 		Handler: "rpc",
 	}))
 	return s.Handle(s.NewHandler(&Network{h}, opts...))
@@ -2127,6 +2115,10 @@ func (h *networkHandler) GetEP(ctx context.Context, in *ResGetReq, out *CommonRe
 	return h.NetworkHandler.GetEP(ctx, in, out)
 }
 
+func (h *networkHandler) GetEPStatus(ctx context.Context, in *ResGetReq, out *CommonResp) error {
+	return h.NetworkHandler.GetEPStatus(ctx, in, out)
+}
+
 func (h *networkHandler) CreateEP(ctx context.Context, in *ResCreateReq, out *CommonResp) error {
 	return h.NetworkHandler.CreateEP(ctx, in, out)
 }
@@ -2159,21 +2151,18 @@ func NewConfigEndpoints() []*api.Endpoint {
 			Name:    "Config.CreateCM",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/configs/configmaps"},
 			Method:  []string{"POST"},
-			Body:    "*",
 			Handler: "rpc",
 		},
 		{
 			Name:    "Config.UpdateCM",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/configs/configmaps/{name}"},
 			Method:  []string{"PUT"},
-			Body:    "*",
 			Handler: "rpc",
 		},
 		{
 			Name:    "Config.DeleteCM",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/configs/configmaps/{name}"},
 			Method:  []string{"DELETE"},
-			Body:    "",
 			Handler: "rpc",
 		},
 		{
@@ -2192,21 +2181,18 @@ func NewConfigEndpoints() []*api.Endpoint {
 			Name:    "Config.CreateSecret",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/configs/secrets"},
 			Method:  []string{"POST"},
-			Body:    "*",
 			Handler: "rpc",
 		},
 		{
 			Name:    "Config.UpdateSecret",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/configs/secrets/{name}"},
 			Method:  []string{"PUT"},
-			Body:    "*",
 			Handler: "rpc",
 		},
 		{
 			Name:    "Config.DeleteSecret",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/configs/secrets/{name}"},
 			Method:  []string{"DELETE"},
-			Body:    "",
 			Handler: "rpc",
 		},
 	}
@@ -2387,21 +2373,18 @@ func RegisterConfigHandler(s server.Server, hdlr ConfigHandler, opts ...server.H
 		Name:    "Config.CreateCM",
 		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/configs/configmaps"},
 		Method:  []string{"POST"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "Config.UpdateCM",
 		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/configs/configmaps/{name}"},
 		Method:  []string{"PUT"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "Config.DeleteCM",
 		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/configs/configmaps/{name}"},
 		Method:  []string{"DELETE"},
-		Body:    "",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
@@ -2420,21 +2403,18 @@ func RegisterConfigHandler(s server.Server, hdlr ConfigHandler, opts ...server.H
 		Name:    "Config.CreateSecret",
 		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/configs/secrets"},
 		Method:  []string{"POST"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "Config.UpdateSecret",
 		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/configs/secrets/{name}"},
 		Method:  []string{"PUT"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "Config.DeleteSecret",
 		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/configs/secrets/{name}"},
 		Method:  []string{"DELETE"},
-		Body:    "",
 		Handler: "rpc",
 	}))
 	return s.Handle(s.NewHandler(&Config{h}, opts...))
@@ -2504,21 +2484,18 @@ func NewStorageEndpoints() []*api.Endpoint {
 			Name:    "Storage.CreatePV",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/storages/persistent_volumes"},
 			Method:  []string{"POST"},
-			Body:    "*",
 			Handler: "rpc",
 		},
 		{
 			Name:    "Storage.UpdatePV",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/storages/persistent_volumes/{name}"},
 			Method:  []string{"PUT"},
-			Body:    "*",
 			Handler: "rpc",
 		},
 		{
 			Name:    "Storage.DeletePV",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/storages/persistent_volumes/{name}"},
 			Method:  []string{"DELETE"},
-			Body:    "",
 			Handler: "rpc",
 		},
 		{
@@ -2534,24 +2511,27 @@ func NewStorageEndpoints() []*api.Endpoint {
 			Handler: "rpc",
 		},
 		{
+			Name:    "Storage.GetPVCMountInfo",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/storages/persistent_volume_claims/{name}/mount_info"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		{
 			Name:    "Storage.CreatePVC",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/storages/persistent_volume_claims"},
 			Method:  []string{"POST"},
-			Body:    "*",
 			Handler: "rpc",
 		},
 		{
 			Name:    "Storage.UpdatePVC",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/storages/persistent_volume_claims/{name}"},
 			Method:  []string{"PUT"},
-			Body:    "*",
 			Handler: "rpc",
 		},
 		{
 			Name:    "Storage.DeletePVC",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/storages/persistent_volume_claims/{name}"},
 			Method:  []string{"DELETE"},
-			Body:    "",
 			Handler: "rpc",
 		},
 		{
@@ -2570,21 +2550,18 @@ func NewStorageEndpoints() []*api.Endpoint {
 			Name:    "Storage.CreateSC",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/storages/storage_classes"},
 			Method:  []string{"POST"},
-			Body:    "*",
 			Handler: "rpc",
 		},
 		{
 			Name:    "Storage.UpdateSC",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/storages/storage_classes/{name}"},
 			Method:  []string{"PUT"},
-			Body:    "*",
 			Handler: "rpc",
 		},
 		{
 			Name:    "Storage.DeleteSC",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/storages/storage_classes/{name}"},
 			Method:  []string{"DELETE"},
-			Body:    "",
 			Handler: "rpc",
 		},
 	}
@@ -2600,6 +2577,7 @@ type StorageService interface {
 	DeletePV(ctx context.Context, in *ResDeleteReq, opts ...client.CallOption) (*CommonResp, error)
 	ListPVC(ctx context.Context, in *ResListReq, opts ...client.CallOption) (*CommonResp, error)
 	GetPVC(ctx context.Context, in *ResGetReq, opts ...client.CallOption) (*CommonResp, error)
+	GetPVCMountInfo(ctx context.Context, in *ResGetReq, opts ...client.CallOption) (*CommonResp, error)
 	CreatePVC(ctx context.Context, in *ResCreateReq, opts ...client.CallOption) (*CommonResp, error)
 	UpdatePVC(ctx context.Context, in *ResUpdateReq, opts ...client.CallOption) (*CommonResp, error)
 	DeletePVC(ctx context.Context, in *ResDeleteReq, opts ...client.CallOption) (*CommonResp, error)
@@ -2684,6 +2662,16 @@ func (c *storageService) ListPVC(ctx context.Context, in *ResListReq, opts ...cl
 
 func (c *storageService) GetPVC(ctx context.Context, in *ResGetReq, opts ...client.CallOption) (*CommonResp, error) {
 	req := c.c.NewRequest(c.name, "Storage.GetPVC", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *storageService) GetPVCMountInfo(ctx context.Context, in *ResGetReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "Storage.GetPVCMountInfo", in)
 	out := new(CommonResp)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
@@ -2782,6 +2770,7 @@ type StorageHandler interface {
 	DeletePV(context.Context, *ResDeleteReq, *CommonResp) error
 	ListPVC(context.Context, *ResListReq, *CommonResp) error
 	GetPVC(context.Context, *ResGetReq, *CommonResp) error
+	GetPVCMountInfo(context.Context, *ResGetReq, *CommonResp) error
 	CreatePVC(context.Context, *ResCreateReq, *CommonResp) error
 	UpdatePVC(context.Context, *ResUpdateReq, *CommonResp) error
 	DeletePVC(context.Context, *ResDeleteReq, *CommonResp) error
@@ -2801,6 +2790,7 @@ func RegisterStorageHandler(s server.Server, hdlr StorageHandler, opts ...server
 		DeletePV(ctx context.Context, in *ResDeleteReq, out *CommonResp) error
 		ListPVC(ctx context.Context, in *ResListReq, out *CommonResp) error
 		GetPVC(ctx context.Context, in *ResGetReq, out *CommonResp) error
+		GetPVCMountInfo(ctx context.Context, in *ResGetReq, out *CommonResp) error
 		CreatePVC(ctx context.Context, in *ResCreateReq, out *CommonResp) error
 		UpdatePVC(ctx context.Context, in *ResUpdateReq, out *CommonResp) error
 		DeletePVC(ctx context.Context, in *ResDeleteReq, out *CommonResp) error
@@ -2830,21 +2820,18 @@ func RegisterStorageHandler(s server.Server, hdlr StorageHandler, opts ...server
 		Name:    "Storage.CreatePV",
 		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/storages/persistent_volumes"},
 		Method:  []string{"POST"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "Storage.UpdatePV",
 		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/storages/persistent_volumes/{name}"},
 		Method:  []string{"PUT"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "Storage.DeletePV",
 		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/storages/persistent_volumes/{name}"},
 		Method:  []string{"DELETE"},
-		Body:    "",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
@@ -2860,24 +2847,27 @@ func RegisterStorageHandler(s server.Server, hdlr StorageHandler, opts ...server
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Storage.GetPVCMountInfo",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/storages/persistent_volume_claims/{name}/mount_info"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "Storage.CreatePVC",
 		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/storages/persistent_volume_claims"},
 		Method:  []string{"POST"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "Storage.UpdatePVC",
 		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/storages/persistent_volume_claims/{name}"},
 		Method:  []string{"PUT"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "Storage.DeletePVC",
 		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/storages/persistent_volume_claims/{name}"},
 		Method:  []string{"DELETE"},
-		Body:    "",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
@@ -2896,21 +2886,18 @@ func RegisterStorageHandler(s server.Server, hdlr StorageHandler, opts ...server
 		Name:    "Storage.CreateSC",
 		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/storages/storage_classes"},
 		Method:  []string{"POST"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "Storage.UpdateSC",
 		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/storages/storage_classes/{name}"},
 		Method:  []string{"PUT"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "Storage.DeleteSC",
 		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/storages/storage_classes/{name}"},
 		Method:  []string{"DELETE"},
-		Body:    "",
 		Handler: "rpc",
 	}))
 	return s.Handle(s.NewHandler(&Storage{h}, opts...))
@@ -2946,6 +2933,10 @@ func (h *storageHandler) ListPVC(ctx context.Context, in *ResListReq, out *Commo
 
 func (h *storageHandler) GetPVC(ctx context.Context, in *ResGetReq, out *CommonResp) error {
 	return h.StorageHandler.GetPVC(ctx, in, out)
+}
+
+func (h *storageHandler) GetPVCMountInfo(ctx context.Context, in *ResGetReq, out *CommonResp) error {
+	return h.StorageHandler.GetPVCMountInfo(ctx, in, out)
 }
 
 func (h *storageHandler) CreatePVC(ctx context.Context, in *ResCreateReq, out *CommonResp) error {
@@ -3000,21 +2991,18 @@ func NewRBACEndpoints() []*api.Endpoint {
 			Name:    "RBAC.CreateSA",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/rbac/service_accounts"},
 			Method:  []string{"POST"},
-			Body:    "*",
 			Handler: "rpc",
 		},
 		{
 			Name:    "RBAC.UpdateSA",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/rbac/service_accounts/{name}"},
 			Method:  []string{"PUT"},
-			Body:    "*",
 			Handler: "rpc",
 		},
 		{
 			Name:    "RBAC.DeleteSA",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/rbac/service_accounts/{name}"},
 			Method:  []string{"DELETE"},
-			Body:    "",
 			Handler: "rpc",
 		},
 	}
@@ -3130,21 +3118,18 @@ func RegisterRBACHandler(s server.Server, hdlr RBACHandler, opts ...server.Handl
 		Name:    "RBAC.CreateSA",
 		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/rbac/service_accounts"},
 		Method:  []string{"POST"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "RBAC.UpdateSA",
 		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/rbac/service_accounts/{name}"},
 		Method:  []string{"PUT"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "RBAC.DeleteSA",
 		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/rbac/service_accounts/{name}"},
 		Method:  []string{"DELETE"},
-		Body:    "",
 		Handler: "rpc",
 	}))
 	return s.Handle(s.NewHandler(&RBAC{h}, opts...))
@@ -3194,21 +3179,18 @@ func NewHPAEndpoints() []*api.Endpoint {
 			Name:    "HPA.CreateHPA",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/hpa"},
 			Method:  []string{"POST"},
-			Body:    "*",
 			Handler: "rpc",
 		},
 		{
 			Name:    "HPA.UpdateHPA",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/hpa/{name}"},
 			Method:  []string{"PUT"},
-			Body:    "*",
 			Handler: "rpc",
 		},
 		{
 			Name:    "HPA.DeleteHPA",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/hpa/{name}"},
 			Method:  []string{"DELETE"},
-			Body:    "",
 			Handler: "rpc",
 		},
 	}
@@ -3324,21 +3306,18 @@ func RegisterHPAHandler(s server.Server, hdlr HPAHandler, opts ...server.Handler
 		Name:    "HPA.CreateHPA",
 		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/hpa"},
 		Method:  []string{"POST"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "HPA.UpdateHPA",
 		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/hpa/{name}"},
 		Method:  []string{"PUT"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "HPA.DeleteHPA",
 		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/hpa/{name}"},
 		Method:  []string{"DELETE"},
-		Body:    "",
 		Handler: "rpc",
 	}))
 	return s.Handle(s.NewHandler(&HPA{h}, opts...))
@@ -3400,35 +3379,30 @@ func NewCustomResEndpoints() []*api.Endpoint {
 			Name:    "CustomRes.CreateCObj",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/crds/{CRDName}/custom_objects"},
 			Method:  []string{"POST"},
-			Body:    "*",
 			Handler: "rpc",
 		},
 		{
 			Name:    "CustomRes.UpdateCObj",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/crds/{CRDName}/custom_objects/{cobjName}"},
 			Method:  []string{"PUT"},
-			Body:    "*",
 			Handler: "rpc",
 		},
 		{
 			Name:    "CustomRes.ScaleCObj",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/crds/{CRDName}/custom_objects/{cobjName}/scale"},
 			Method:  []string{"PUT"},
-			Body:    "*",
 			Handler: "rpc",
 		},
 		{
 			Name:    "CustomRes.DeleteCObj",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/crds/{CRDName}/custom_objects/{cobjName}"},
 			Method:  []string{"DELETE"},
-			Body:    "",
 			Handler: "rpc",
 		},
 		{
 			Name:    "CustomRes.RescheduleCObjPo",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/crds/{CRDName}/custom_objects/{cobjName}/reschedule"},
 			Method:  []string{"PUT"},
-			Body:    "*",
 			Handler: "rpc",
 		},
 	}
@@ -3608,35 +3582,30 @@ func RegisterCustomResHandler(s server.Server, hdlr CustomResHandler, opts ...se
 		Name:    "CustomRes.CreateCObj",
 		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/crds/{CRDName}/custom_objects"},
 		Method:  []string{"POST"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "CustomRes.UpdateCObj",
 		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/crds/{CRDName}/custom_objects/{cobjName}"},
 		Method:  []string{"PUT"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "CustomRes.ScaleCObj",
 		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/crds/{CRDName}/custom_objects/{cobjName}/scale"},
 		Method:  []string{"PUT"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "CustomRes.DeleteCObj",
 		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/crds/{CRDName}/custom_objects/{cobjName}"},
 		Method:  []string{"DELETE"},
-		Body:    "",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "CustomRes.RescheduleCObjPo",
 		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/crds/{CRDName}/custom_objects/{cobjName}/reschedule"},
 		Method:  []string{"PUT"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	return s.Handle(s.NewHandler(&CustomRes{h}, opts...))
@@ -3703,14 +3672,12 @@ func NewResourceEndpoints() []*api.Endpoint {
 			Name:    "Resource.InvalidateDiscoveryCache",
 			Path:    []string{"/clusterresources/v1/invalidate_discovery_cache"},
 			Method:  []string{"POST"},
-			Body:    "*",
 			Handler: "rpc",
 		},
 		{
 			Name:    "Resource.FormDataRenderPreview",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/render_manifest_preview"},
 			Method:  []string{"POST"},
-			Body:    "*",
 			Handler: "rpc",
 		},
 		{
@@ -3927,14 +3894,12 @@ func RegisterResourceHandler(s server.Server, hdlr ResourceHandler, opts ...serv
 		Name:    "Resource.InvalidateDiscoveryCache",
 		Path:    []string{"/clusterresources/v1/invalidate_discovery_cache"},
 		Method:  []string{"POST"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "Resource.FormDataRenderPreview",
 		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/render_manifest_preview"},
 		Method:  []string{"POST"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{

@@ -22,6 +22,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/bcscc"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/cmdb"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/iam"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/logging"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store"
 	pm "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/project"
@@ -53,19 +54,34 @@ func (ua *UpdateAction) Do(ctx context.Context, req *proto.UpdateProjectRequest)
 	if err := ua.validate(); err != nil {
 		return nil, errorx.NewParamErr(err)
 	}
-
 	// 获取要更新的项目信息
 	p, err := ua.model.GetProject(ua.ctx, req.ProjectID)
 	if err != nil {
 		logging.Error("project: %s not found", req.ProjectID)
 		return nil, errorx.NewParamErr(err)
 	}
+	oldProject := *p
 	if err := ua.updateProject(p); err != nil {
 		return nil, errorx.NewDBErr(err)
 	}
+	if req.GetBusinessID() != "" && oldProject.BusinessID == "" || oldProject.BusinessID == "0" {
+		// 为业务的业务运维授予项目分级管理员权限
+		matainers, err := cmdb.GetBusinessMaintainers(req.GetBusinessID())
+		if err != nil {
+			logging.Error("get business %s maintainers failed, err: %s", req.GetBusinessID(), err.Error())
+		}
+		if err := iam.CreateProjectPermManager(p.ProjectID, p.Name, matainers); err != nil {
+			logging.Error("create project %s perm manager failed, err: %s", p.ProjectCode, err.Error())
+		}
+	}
 
 	// 更新 bcs cc 中的数据
-	go bcscc.UpdateProject(p)
+	go func() {
+		if err := bcscc.UpdateProject(p); err != nil {
+			logging.Error("[ALARM-CC-PROJECT] update project %s/%s in paas-cc failed, err: %s",
+				p.ProjectID, p.ProjectCode, err.Error())
+		}
+	}()
 
 	return p, nil
 }

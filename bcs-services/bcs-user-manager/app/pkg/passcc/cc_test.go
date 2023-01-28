@@ -46,11 +46,12 @@ func TestConfig_GetSharedNamespaces(t *testing.T) {
 	}
 	t.Log(token)
 
-	namespaces, err := server.GetProjectSharedNamespaces("1a193c8b5de5440a887a1c5126ceea77", "BCS-K8S-15171")
+	namespaces, err := server.GetProjectSharedNamespaces("xxx", "xxx")
 	if err != nil {
 		t.Fatal(err)
 	}
 
+	t.Log(len(namespaces))
 	for _, ns := range namespaces {
 		t.Logf(ns)
 	}

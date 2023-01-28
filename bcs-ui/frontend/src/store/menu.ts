@@ -258,13 +258,13 @@ const menu: IMenu = {
       children: [
         {
           name: release,
-          routeName: 'helms',
-          id: 'helms',
+          routeName: 'releaseList',
+          id: 'releaseList',
         },
         {
           name: chart,
-          routeName: 'helmTplList',
-          id: 'helmTplList',
+          routeName: 'chartList',
+          id: 'chartList',
         },
       ],
       id: 'HELM',

@@ -18,6 +18,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+
+	resCsts "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/constants"
 )
 
 var lightIngManifest = map[string]interface{}{
@@ -25,9 +27,16 @@ var lightIngManifest = map[string]interface{}{
 	"kind":       "Ingress",
 	"metadata": map[string]interface{}{
 		"creationTimestamp": "2022-01-01T10:00:00Z",
+		"annotations": map[string]interface{}{
+			"kubernetes.io/ingress.class":                 resCsts.IngClsQCloud,
+			"kubernetes.io/ingress.qcloud-loadbalance-id": "lb-c5xxxxd7",
+			"kubernetes.io/ingress.existLbId":             "lb-c5xxxxd6",
+			"kubernetes.io/ingress.subnetId":              "subnet-a3xxxxb4",
+			"ingress.cloud.tencent.com/auto-rewrite":      "true",
+		},
 	},
 	"spec": map[string]interface{}{
-		"ingressClassName": "nginx",
+		"ingressClassName": "qcloud",
 		"rules": []interface{}{
 			map[string]interface{}{
 				"host": "bcs-cr.example.com",
@@ -176,13 +185,33 @@ func TestFormatIng(t *testing.T) {
 		},
 	}
 	assert.Equal(t, excepted, ret["rules"])
+	assert.Equal(t, resCsts.IngClsQCloud, ret["controller"])
+	assert.Equal(t, resCsts.CLBUseTypeUseExists, ret["clbUseType"])
+	assert.Equal(t, "lb-c5xxxxd6", ret["existLBID"])
+	assert.Equal(t, "lb-c5xxxxd7", ret["clbID"])
+	assert.Equal(t, "subnet-a3xxxxb4", ret["subNetID"])
+	assert.Equal(t, true, ret["autoRewrite"])
 }
 
 var lightSVCManifest = map[string]interface{}{
 	"metadata": map[string]interface{}{
 		"creationTimestamp": "2022-01-01T10:00:00Z",
+		"annotations": map[string]interface{}{
+			resCsts.SVCCurLBIDAnnoKey:   "lb-c5xxxxd7",
+			resCsts.SVCExistLBIDAnnoKey: "lb-c5xxxxd6",
+			resCsts.SVCSubNetIDAnnoKey:  "subnet-a3xxxxb4",
+		},
 	},
 	"spec": map[string]interface{}{
+		"clusterIP": "127.0.0.2",
+		"clusterIPs": []interface{}{
+			"127.0.0.2",
+			"::7f00:0001",
+		},
+		"externalIPs": []interface{}{
+			"127.0.0.2",
+			"127.0.0.3",
+		},
 		"ports": []interface{}{
 			map[string]interface{}{
 				"nodePort":   30600,
@@ -212,7 +241,7 @@ var lightSVCManifest = map[string]interface{}{
 }
 
 func TestParseSVCExternalIPs(t *testing.T) {
-	assert.Equal(t, []string{"127.0.0.1", "localhost"}, parseSVCExternalIPs(lightSVCManifest))
+	assert.Equal(t, []string{"127.0.0.1", "localhost", "127.0.0.2", "127.0.0.3"}, parseSVCExternalIPs(lightSVCManifest))
 }
 
 func TestParseSVCPorts(t *testing.T) {
@@ -221,8 +250,14 @@ func TestParseSVCPorts(t *testing.T) {
 
 func TestFormatSVC(t *testing.T) {
 	ret := FormatSVC(lightSVCManifest)
-	assert.Equal(t, []string{"127.0.0.1", "localhost"}, ret["externalIP"])
+	assert.Equal(t, []string{"127.0.0.1", "localhost", "127.0.0.2", "127.0.0.3"}, ret["externalIP"])
 	assert.Equal(t, []string{"8080:30600/TCP", "8090/TCP"}, ret["ports"])
+	assert.Equal(t, "lb-c5xxxxd7", ret["clbID"])
+	assert.Equal(t, "lb-c5xxxxd6", ret["existLBID"])
+	assert.Equal(t, "subnet-a3xxxxb4", ret["subnetID"])
+	assert.Equal(t, int64(0), ret["stickyTime"])
+	assert.Equal(t, "127.0.0.2", ret["clusterIPv4"])
+	assert.Equal(t, "::7f00:0001", ret["clusterIPv6"])
 }
 
 var lightEndpointsManifest = map[string]interface{}{

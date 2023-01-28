@@ -19,7 +19,8 @@ import (
 	"net/http"
 	"strings"
 	"sync"
-	"time"
+
+	"github.com/pkg/errors"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/types"
@@ -139,10 +140,6 @@ func (d *DualStackListener) subAccept(accept func() *Connection) {
 			return
 		case d.connections <- accept():
 			// 继续执行
-			continue
-		default:
-			// 5ms
-			time.Sleep(5 * time.Millisecond)
 		}
 	}
 }
@@ -161,16 +158,14 @@ func (d *DualStackListener) close() {
 // Any blocked Accept operations will be unblocked and return errors.
 func (d *DualStackListener) Close() error {
 	defer d.close()
-
-	// 取消所有子Listener，停止读取accept
-	go d.cancel()
-
 	// 关闭子Listener
 	for _, listener := range d.subListeners {
 		if err := listener.Close(); err != nil {
-			return err
+			return errors.Wrapf(err, "close sub listener failed.addr:%v", listener.Addr())
 		}
 	}
+	// 取消所有子Listener，停止读取accept
+	d.cancel()
 	return nil
 }
 

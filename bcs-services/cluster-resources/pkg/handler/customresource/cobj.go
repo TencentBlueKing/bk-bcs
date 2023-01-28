@@ -26,8 +26,8 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action/web"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/i18n"
-	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
 	cli "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/client"
+	resCsts "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/constants"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/pbstruct"
@@ -50,7 +50,9 @@ func (h *Handler) ListCObj(
 	}
 	kind, apiVersion := crdInfo["kind"].(string), crdInfo["apiVersion"].(string)
 	respData, err := respUtil.BuildListAPIRespData(
-		ctx, req.ClusterID, kind, apiVersion, req.Namespace, req.Format, metav1.ListOptions{},
+		ctx, respUtil.ListParams{
+			req.ClusterID, kind, apiVersion, req.Namespace, req.Format, req.Scene,
+		}, metav1.ListOptions{},
 	)
 	if err != nil {
 		return err
@@ -59,7 +61,7 @@ func (h *Handler) ListCObj(
 		return err
 	}
 
-	resp.WebAnnotations, err = web.GenCObjListWebAnnos(ctx, respData, crdInfo, req.Format)
+	resp.WebAnnotations, err = web.GenListCObjWebAnnos(ctx, respData, crdInfo, req.Format)
 	return err
 }
 
@@ -79,7 +81,9 @@ func (h *Handler) GetCObj(
 	}
 	kind, apiVersion := crdInfo["kind"].(string), crdInfo["apiVersion"].(string)
 	respData, err := respUtil.BuildRetrieveAPIRespData(
-		ctx, req.ClusterID, kind, apiVersion, req.Namespace, req.CobjName, req.Format, metav1.GetOptions{},
+		ctx, respUtil.GetParams{
+			req.ClusterID, kind, apiVersion, req.Namespace, req.CobjName, req.Format,
+		}, metav1.GetOptions{},
 	)
 	if err != nil {
 		return err
@@ -102,7 +106,7 @@ func (h *Handler) CreateCObj(
 	}
 	kind, apiVersion := crdInfo["kind"].(string), crdInfo["apiVersion"].(string)
 
-	transformer, err := trans.New(ctx, req.RawData.AsMap(), req.ClusterID, kind, req.Format)
+	transformer, err := trans.New(ctx, req.RawData.AsMap(), req.ClusterID, kind, resCsts.CreateAction, req.Format)
 	if err != nil {
 		return err
 	}
@@ -135,7 +139,7 @@ func (h *Handler) UpdateCObj(
 	}
 	kind, apiVersion := crdInfo["kind"].(string), crdInfo["apiVersion"].(string)
 
-	transformer, err := trans.New(ctx, req.RawData.AsMap(), req.ClusterID, kind, req.Format)
+	transformer, err := trans.New(ctx, req.RawData.AsMap(), req.ClusterID, kind, resCsts.UpdateAction, req.Format)
 	if err != nil {
 		return err
 	}
@@ -172,7 +176,7 @@ func (h *Handler) ScaleCObj(
 
 // DeleteCObj 删除某个自定义资源
 func (h *Handler) DeleteCObj(
-	ctx context.Context, req *clusterRes.CObjDeleteReq, resp *clusterRes.CommonResp,
+	ctx context.Context, req *clusterRes.CObjDeleteReq, _ *clusterRes.CommonResp,
 ) error {
 	crdInfo, err := cli.GetCRDInfo(ctx, req.ClusterID, req.CRDName)
 	if err != nil {
@@ -192,7 +196,7 @@ func (h *Handler) DeleteCObj(
 
 // RescheduleCObjPo 重新调度自定义资源下属的 Pod（仅 GameDeployment, GameStatefulSet 可用）
 func (h *Handler) RescheduleCObjPo(
-	ctx context.Context, req *clusterRes.CObjBatchRescheduleReq, resp *clusterRes.CommonResp,
+	ctx context.Context, req *clusterRes.CObjBatchRescheduleReq, _ *clusterRes.CommonResp,
 ) error {
 	crdInfo, err := cli.GetCRDInfo(ctx, req.ClusterID, req.CRDName)
 	if err != nil {
@@ -206,7 +210,7 @@ func (h *Handler) RescheduleCObjPo(
 
 // validateNSParam 校验 CObj 相关请求中命名空间参数，若 CRD 中定义为集群维度，则不需要，否则需要指定命名空间
 func validateNSParam(ctx context.Context, crdInfo map[string]interface{}, namespace string) error {
-	if namespace == "" && crdInfo["scope"].(string) == res.NamespacedScope {
+	if namespace == "" && crdInfo["scope"].(string) == resCsts.NamespacedScope {
 		return errorx.New(errcode.ValidateErr, i18n.GetMsg(ctx, "查看/操作自定义资源 %s 需要指定命名空间"), crdInfo["name"])
 	}
 	return nil

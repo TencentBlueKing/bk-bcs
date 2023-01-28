@@ -4,9 +4,7 @@
 @import './variable.css';
 @import './mixins/clearfix.css';
 @import './mixins/ellipsis.css';
-@import './cc-icon/style.css';
 @import './bk-patch.css';
-@import './animation.css';
 
 html,
 body {
@@ -67,24 +65,6 @@ input:-webkit-autofill, textarea:-webkit-autofill, select:-webkit-autofill {
     margin: 17px 20px;
 }
 
-.bcs-footer {
-    font-size: 12px;
-    text-align: center;
-    margin-top: 25px;
-    a {
-        color: #3c96ff;
-    }
-}
-
-.biz-copyright {
-    font-size: 12px;
-    color: #b7c0ca;
-    width: 100%;
-    text-align: center;
-    line-height: 20px;
-    padding: 0px 15px 25px;
-}
-
 .biz-container {
     width: 100%;
     display: flex;
@@ -142,12 +122,6 @@ input:-webkit-autofill, textarea:-webkit-autofill, select:-webkit-autofill {
 
 .biz-action-box {
     padding: 20px;
-}
-
-biz-actions {
-    float: right;
-    margin: 14px 20px;
-    line-height: 30px;
 }
 
 .biz-tip-box {
@@ -575,7 +549,7 @@ biz-actions {
         width: 7px;
         height: 12px;
         display: inline-block;
-        background: url(../images/sort.png) 0 0 no-repeat;
+        background: url(@/images/sort.png) 0 0 no-repeat;
         cursor: pointer;
         &.asc {
             background-position: -38px 0;
@@ -2561,7 +2535,7 @@ div::-webkit-scrollbar-thumb {
     left: 0;
     height: 100% !important;
     width: 100% !important;
-    z-index: 100;
+    z-index: 9999;
 }
 
 .lh20 {
@@ -2569,11 +2543,11 @@ div::-webkit-scrollbar-thumb {
 }
 
 .bcs-button-ellipsis span {
-    @mixin bcs-ellipsis
+    @mixin bcs-ellipsis;
 }
 
 .bcs-ellipsis {
-    @mixin bcs-ellipsis
+    @mixin bcs-ellipsis;
 }
 .ace_search_options {
     display: none !important;
@@ -2619,7 +2593,7 @@ div::-webkit-scrollbar-thumb {
     }
 }
 .bcs-cursor-element {
-    background: url("../images/lock.svg");
+    background: url("@/images/lock.svg");
     height: 16px;
     width: 12px;
 }
@@ -2687,26 +2661,4 @@ div::-webkit-scrollbar-thumb {
 }
 .mw88 {
     min-width: 88px;
-}
-.bcs-dropdown-item {
-    display: block;
-    height: 32px;
-    line-height: 33px;
-    padding: 0 16px;
-    color: #63656e;
-    font-size: 12px;
-    text-decoration: none;
-    white-space: nowrap;
-    cursor: pointer;
-    &:hover {
-        background-color: #eaf3ff;
-        color: #3a84ff;
-    }
-    &.disabled {
-        color: #dcdee5;
-        cursor: not-allowed;
-    }
-    .bk-button-text {
-        font-size: 12px;
-    }
 }

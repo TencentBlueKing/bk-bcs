@@ -30,6 +30,7 @@ func TestVerifyIpv6(t *testing.T) {
 		ip   string
 		want bool
 	}{
+		{"fd08:1:2::3", true},
 		{net.IPv6loopback.String(), true},
 		{net.IPv6linklocalallrouters.String(), true},
 		{net.IPv6unspecified.String(), true},
@@ -81,4 +82,10 @@ func TestGetIpv6Address(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestInitIPv6Address(t *testing.T) {
+	ip := "fd08:1:2::3"
+	InitIPv6Address(&ip)
+	t.Log(ip)
 }

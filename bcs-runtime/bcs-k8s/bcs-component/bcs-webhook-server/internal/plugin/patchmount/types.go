@@ -20,6 +20,9 @@ const (
 
 	patchMountLxcfs    = "lxcfs"
 	patchMountCgroupfs = "cgroupfs"
+
+	// 丢与/sys/devices 不隔离
+	disableMountSysDevicesAnnotationKey = pluginAnnotationKey + "/disable-sys-devices"
 )
 
 var mountPropagation = corev1.MountPropagationHostToContainer
@@ -61,11 +64,13 @@ var lxcfsVolumeMountsTemplate = []corev1.VolumeMount{
 		Name:      "lxcfs-proc-loadavg",
 		MountPath: "/proc/loadavg",
 	},
-	{
-		Name:      "lxcfs-sys-devices-system-cpu-online",
-		MountPath: "/sys/devices/system/cpu/online",
-	},
 }
+
+var lxcfsVolumeMountsTemplateSysDevices = corev1.VolumeMount{
+	Name:      "lxcfs-sys-devices-system-cpu-online",
+	MountPath: "/sys/devices/system/cpu/online",
+}
+
 var lxcfsVolumesTemplate = []corev1.Volume{
 	{
 		Name: "lxcfs-upper-dir",
@@ -139,13 +144,14 @@ var lxcfsVolumesTemplate = []corev1.Volume{
 			},
 		},
 	},
-	{
-		Name: "lxcfs-sys-devices-system-cpu-online",
-		VolumeSource: corev1.VolumeSource{
-			HostPath: &corev1.HostPathVolumeSource{
-				Path: "/var/lib/lxc/lxcfs/sys/devices/system/cpu/online",
-				Type: &file,
-			},
+}
+
+var lxcfsVolumesTemplateSysDevices = corev1.Volume{
+	Name: "lxcfs-sys-devices-system-cpu-online",
+	VolumeSource: corev1.VolumeSource{
+		HostPath: &corev1.HostPathVolumeSource{
+			Path: "/var/lib/lxc/lxcfs/sys/devices/system/cpu/online",
+			Type: &file,
 		},
 	},
 }
@@ -175,11 +181,13 @@ var cgroupfsVolumeMountsTemplate = []corev1.VolumeMount{
 		Name:      "cgroupfs-proc-loadavg",
 		MountPath: "/proc/loadavg",
 	},
-	{
-		Name:      "cgroupfs-sys-devices-system-cpu",
-		MountPath: "/sys/devices/system/cpu",
-	},
 }
+
+var cgroupfsVolumeMountsTemplateSysDevices = corev1.VolumeMount{
+	Name:      "cgroupfs-sys-devices-system-cpu",
+	MountPath: "/sys/devices/system/cpu",
+}
+
 var cgroupfsVolumesTemplate = []corev1.Volume{
 	{
 		Name: "cgroupfs-proc-cpuinfo",
@@ -235,13 +243,14 @@ var cgroupfsVolumesTemplate = []corev1.Volume{
 			},
 		},
 	},
-	{
-		Name: "cgroupfs-sys-devices-system-cpu",
-		VolumeSource: corev1.VolumeSource{
-			HostPath: &corev1.HostPathVolumeSource{
-				Path: "/cgroupfs/sys/devices/system/cpu",
-				Type: &dir,
-			},
+}
+
+var cgroupfsVolumesTemplateSysDevices = corev1.Volume{
+	Name: "cgroupfs-sys-devices-system-cpu",
+	VolumeSource: corev1.VolumeSource{
+		HostPath: &corev1.HostPathVolumeSource{
+			Path: "/cgroupfs/sys/devices/system/cpu",
+			Type: &dir,
 		},
 	},
 }

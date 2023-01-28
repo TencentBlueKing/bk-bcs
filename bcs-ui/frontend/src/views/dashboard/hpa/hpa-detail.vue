@@ -42,7 +42,7 @@
       </div>
     </div>
     <!-- 状态、标签、注解 -->
-    <bcs-tab class="mt20" :label-height="40">
+    <bcs-tab class="mt20" :label-height="42">
       <bcs-tab-panel name="conditions" :label="$t('状态（Conditions）')">
         <bk-table :data="data.status.conditions || []">
           <bk-table-column :label="$t('类别')" prop="type"></bk-table-column>
@@ -80,6 +80,13 @@
           <bk-table-column label="Value" prop="value"></bk-table-column>
         </bk-table>
       </bcs-tab-panel>
+      <bcs-tab-panel name="event" :label="$t('事件')">
+        <EventQueryTableVue
+          is-specify-kinds
+          :kinds="data.kind"
+          :namespace="data.metadata.namespace"
+          :name="data.metadata.name" />
+      </bcs-tab-panel>
     </bcs-tab>
   </div>
 </template>
@@ -87,10 +94,11 @@
 import { defineComponent } from '@vue/composition-api';
 import StatusIcon from '../common/status-icon';
 import { formatTime } from '@/common/util';
+import EventQueryTableVue from '@/views/mc/event-query-table.vue';
 
 export default defineComponent({
   name: 'HPADetail',
-  components: { StatusIcon },
+  components: { StatusIcon, EventQueryTableVue },
   props: {
     // 当前行数据
     data: {
@@ -128,8 +136,8 @@ export default defineComponent({
     /deep/ .bk-tab-label-item {
         background-color: #FAFBFD;
         border-bottom: 1px solid #dcdee5;
-        line-height: 39px !important;
-        height: 39px;
+        line-height: 41px !important;
+        height: 41px;
         &.active {
             border-bottom: none;
         }
@@ -160,6 +168,14 @@ export default defineComponent({
                 }
                 span {
                     padding: 0 15px;
+                    flex: 1;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    white-space: normal;
+                    word-break: break-all;
+                    display: -webkit-box;
+                    -webkit-line-clamp: 1;
+                    -webkit-box-orient: vertical;
                 }
             }
         }

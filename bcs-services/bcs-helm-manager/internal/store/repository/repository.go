@@ -123,7 +123,7 @@ func (m *ModelRepository) UpdateRepository(ctx context.Context, projectID, name 
 		return err
 	}
 
-	repository[entity.FieldKeyUpdateTime] = time.Now().UTC().Unix()
+	repository.Update(entity.FieldKeyUpdateTime, time.Now().UTC().Unix())
 	if err := m.db.Table(m.tableName).Update(ctx, cond, operator.M{"$set": repository}); err != nil {
 		return err
 	}

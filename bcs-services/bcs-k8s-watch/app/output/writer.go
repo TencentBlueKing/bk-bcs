@@ -162,16 +162,12 @@ func (w *Writer) initWatcherResourceDistributeQueue(clusterID string, resource s
 }
 
 func (w *Writer) init(clusterID string, storageService *bcs.InnerService) error {
-	for resource := range resources.WatcherConfigList {
+	for resource := range resources.K8sWatcherConfigList {
 		act := action.NewStorageAction(clusterID, resource, storageService)
 		w.Handlers[resource] = NewHandler(clusterID, resource, act)
 		w.initWatcherResourceDistributeQueue(clusterID, resource, act)
 	}
 
-	for resource := range resources.BkbcsWatcherConfigList {
-		act := action.NewStorageAction(clusterID, resource, storageService)
-		w.Handlers[resource] = NewHandler(clusterID, resource, act)
-	}
 	return nil
 }
 

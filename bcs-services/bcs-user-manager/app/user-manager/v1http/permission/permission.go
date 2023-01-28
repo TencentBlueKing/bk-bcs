@@ -55,10 +55,10 @@ type GetPermissionForm struct {
 
 // VerifyPermissionForm request form for permission
 type VerifyPermissionForm struct {
-	UserToken    string `json:"user_token" validate:"required"`
-	ResourceType string `json:"resource_type" validate:"required"`
-	Resource     string `json:"resource"`
-	Action       string `json:"action" validate:"required"`
+	UserToken    string       `json:"user_token" validate:"required"`
+	ResourceType ResourceType `json:"resource_type" validate:"required"`
+	Resource     string       `json:"resource"`
+	Action       string       `json:"action" validate:"required"`
 }
 
 // VerifyPermissionResponse http verify response
@@ -75,14 +75,14 @@ type OwnedPermissions struct {
 // UserResourceAction resource operation action
 type UserResourceAction struct {
 	UserId       uint
-	ResourceType string
+	ResourceType ResourceType
 	Resource     string
 	Actions      string
 }
 
 // UserPermissions user permission definition
 type UserPermissions struct {
-	ResourceType string
+	ResourceType ResourceType
 	Resource     string
 	Actions      string
 }
@@ -408,7 +408,7 @@ func VerifyPermission(request *restful.Request, response *restful.Response) {
 }
 
 // verifyResourceReplica verify whether a user have permission for s resource, return true or false
-func verifyResourceReplica(userID uint, resourceType, resource, action string) (bool, string) {
+func verifyResourceReplica(userID uint, resourceType ResourceType, resource, action string) (bool, string) {
 	var op []OwnedPermissions
 	if resource == "" {
 		// sqlstore.GCoreDB.Table("bcs_user_resource_roles").Select("bcs_roles.actions").
@@ -597,7 +597,7 @@ func (cli *PermVerifyClient) VerifyPermissionV2(request *restful.Request, respon
 	}
 
 	// skip permission if user is admin
-	if user.UserType == models.AdminUser {
+	if user.IsAdmin() {
 		data := utils.CreateResponseData(nil, "success", &VerifyPermissionResponse{
 			Allowed: true,
 			Message: fmt.Sprintf("admin user skip cluster permission check"),
@@ -632,13 +632,9 @@ func (cli *PermVerifyClient) VerifyPermissionV2(request *restful.Request, respon
 			ClusterID:   req.ClusterID,
 			URL:         req.RequestURL,
 		}
-		user := UserInfo{
-			UserID:   user.ID,
-			UserName: user.Name,
-		}
 
 		blog.Log(ctx).Infof("user %s access to type: %s, resource: [%s]:[%s], action: %s, url: %s, project: %s",
-			user.UserName, "cluster", resource.ClusterType, resource.ClusterID, req.Action, req.RequestURL,
+			user.Name, "cluster", resource.ClusterType, resource.ClusterID, req.Action, req.RequestURL,
 			req.ProjectID)
 
 		allowed, message := cli.VerifyClusterPermission(ctx, user, req.Action, resource)
@@ -647,7 +643,7 @@ func (cli *PermVerifyClient) VerifyPermissionV2(request *restful.Request, respon
 			Message: message,
 		})
 		blog.Log(ctx).Infof("user %s access to type: %s, resource: %s, action: %s, permission: %t",
-			user.UserName, "cluster", resource.ClusterType, req.Action, allowed)
+			user.Name, "cluster", resource.ClusterType, req.Action, allowed)
 		_, _ = response.Write([]byte(data))
 	case "storage":
 		allowed, message := verifyResourceReplica(user.ID, req.ResourceType, req.Resource, req.Action)

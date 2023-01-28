@@ -16,7 +16,9 @@ package network
 
 import (
 	"github.com/fatih/structs"
+	"github.com/spf13/cast"
 
+	resCsts "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/constants"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/model"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/parser/common"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
@@ -42,8 +44,14 @@ func ParseSVCSpec(manifest map[string]interface{}, spec *model.SVCSpec) {
 		}
 	}
 	// spec.SessionAffinity
-	spec.SessionAffinity.Type = mapx.Get(manifest, "spec.sessionAffinity", SessionAffinityTypeNone).(string)
-	spec.SessionAffinity.StickyTime = mapx.GetInt64(manifest, "spec.sessionAffinityConfig.clientIP.timeoutSeconds")
+	spec.SessionAffinity.Type = mapx.Get(
+		manifest, "spec.sessionAffinity", resCsts.SessionAffinityTypeNone,
+	).(string)
+	spec.SessionAffinity.StickyTime = mapx.Get(
+		manifest,
+		"spec.sessionAffinityConfig.clientIP.timeoutSeconds",
+		resCsts.DefaultSessionAffinityStickyTime,
+	).(int64)
 	// spec.IP
 	spec.IP.Address = mapx.GetStr(manifest, "spec.clusterIP")
 	for _, ip := range mapx.GetList(manifest, "spec.externalIPs") {
@@ -54,13 +62,29 @@ func ParseSVCSpec(manifest map[string]interface{}, spec *model.SVCSpec) {
 // ParseSVCPortConf ...
 func ParseSVCPortConf(manifest map[string]interface{}, portConf *model.SVCPortConf) {
 	portConf.Type = mapx.GetStr(manifest, "spec.type")
+
+	// 负载均衡器
+	existLBIDPath := []string{"metadata", "annotations", resCsts.SVCExistLBIDAnnoKey}
+	portConf.LB.ExistLBID = mapx.GetStr(manifest, existLBIDPath)
+
+	subNetIDPath := []string{"metadata", "annotations", resCsts.SVCSubNetIDAnnoKey}
+	portConf.LB.SubNetID = mapx.GetStr(manifest, subNetIDPath)
+
+	// 如果已指定子网 ID，则使用模式为自动创建新 clb，否则为使用已存在的 clb
+	if portConf.LB.SubNetID != "" {
+		portConf.LB.UseType = resCsts.CLBUseTypeAutoCreate
+	} else {
+		portConf.LB.UseType = resCsts.CLBUseTypeUseExists
+	}
+
+	// 端口配置
 	for _, port := range mapx.GetList(manifest, "spec.ports") {
 		p := port.(map[string]interface{})
 		portConf.Ports = append(portConf.Ports, model.SVCPort{
 			Name:       mapx.GetStr(p, "name"),
 			Port:       mapx.GetInt64(p, "port"),
 			Protocol:   mapx.GetStr(p, "protocol"),
-			TargetPort: mapx.GetInt64(p, "targetPort"),
+			TargetPort: cast.ToString(mapx.Get(p, "targetPort", "")),
 			NodePort:   mapx.GetInt64(p, "nodePort"),
 		})
 	}

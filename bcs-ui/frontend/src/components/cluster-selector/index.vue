@@ -36,7 +36,7 @@
           }
         }" @click="gotCreateCluster">
         <i class="bcs-icon bcs-icon-plus-circle"></i>
-        {{ $t('新增集群') }}
+        {{ $t('新建集群') }}
       </span>
       <span class="line">|</span>
       <span

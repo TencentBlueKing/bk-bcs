@@ -15,8 +15,9 @@ package controller
 import (
 	"testing"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-nodegroup-manager/pkg/storage"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-nodegroup-manager/pkg/storage"
 )
 
 func TestSimpleBalancer_Ceil(t *testing.T) {
@@ -82,6 +83,35 @@ func TestWeightBalancer_Limitation(t *testing.T) {
 	// nodegroup sorted: NodeGroup2, NodeGroup3, NodeGroup1
 	// expect result: 5, 10, 0
 	expected := []int{5, 10, 0}
+	for i, node := range nodeInfos {
+		assertion.Equal(expected[i], node.partition)
+	}
+}
+
+func TestWeightBalancer(t *testing.T) {
+	assertion := assert.New(t)
+	// init simple GroupInfo
+	groups := []*storage.GroupInfo{
+		{NodeGroupID: "NodeGroup1", ClusterID: "ClusterID1", Weight: 1},
+		{NodeGroupID: "NodeGroup2", ClusterID: "ClusterID1", Weight: 1},
+	}
+	// init simple NodeGroup info
+	nodeGroups := map[string]*storage.NodeGroup{
+		"NodeGroup1": {
+			NodeGroupID: "NodeGroup1", MaxSize: 4, MinSize: 0, DesiredSize: 15, CmDesiredSize: 2,
+			NodeIPs: []string{"IP", "IP"},
+		},
+		"NodeGroup2": {
+			NodeGroupID: "NodeGroup2", MaxSize: 4, MinSize: 0, DesiredSize: 15, CmDesiredSize: 2,
+			NodeIPs: []string{"IP", "IP"},
+		},
+	}
+
+	allo := newWeightBalancer(groups, nodeGroups)
+	nodeInfos := allo.distribute(2)
+	// nodegroup sorted: NodeGroup2, NodeGroup3, NodeGroup1
+	// expect result: 5, 10, 0
+	expected := []int{1, 1}
 	for i, node := range nodeInfos {
 		assertion.Equal(expected[i], node.partition)
 	}

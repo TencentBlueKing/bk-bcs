@@ -1,0 +1,22 @@
+base_conf:
+  app_code: ""
+  app_secret: ""
+  time_zone: Asia/Shanghai
+  language_code: en
+  run_env: dev
+
+bcs_conf:
+  host: ""
+  token: ""
+  jwt_public_key: ""
+
+web:
+  route_prefix: /bscp/ui
+  host: ""
+  preferred_domains: ""
+
+etcd:
+  endpoints: 127.0.0.1:2379
+  ca: ""
+  cert: ""
+  key: ""

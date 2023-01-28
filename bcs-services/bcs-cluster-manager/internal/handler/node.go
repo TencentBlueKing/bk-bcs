@@ -69,3 +69,35 @@ func (cm *ClusterManager) DrainNode(ctx context.Context,
 	blog.Infof("reqID: %s, action: DrainNode, req %v, resp %v", reqID, utils.ToJSONString(req), utils.ToJSONString(resp))
 	return nil
 }
+
+// UpdateNodeLabels implements interface cmproto.ClusterManagerServer
+func (cm *ClusterManager) UpdateNodeLabels(ctx context.Context,
+	req *cmproto.UpdateNodeLabelsRequest, resp *cmproto.UpdateNodeLabelsResponse) error {
+	reqID, err := requestIDFromContext(ctx)
+	if err != nil {
+		return err
+	}
+	start := time.Now()
+	ca := node.NewUpdateNodeLabelsAction(cm.model, cm.kubeOp)
+	ca.Handle(ctx, req, resp)
+	metrics.ReportAPIRequestMetric("UpdateNodeLabels", "grpc", strconv.Itoa(int(resp.Code)), start)
+	blog.Infof("reqID: %s, action: UpdateNodeLabels, req %v, resp %v", reqID, utils.ToJSONString(req),
+		utils.ToJSONString(resp))
+	return nil
+}
+
+// UpdateNodeTaints implements interface cmproto.ClusterManagerServer
+func (cm *ClusterManager) UpdateNodeTaints(ctx context.Context,
+	req *cmproto.UpdateNodeTaintsRequest, resp *cmproto.UpdateNodeTaintsResponse) error {
+	reqID, err := requestIDFromContext(ctx)
+	if err != nil {
+		return err
+	}
+	start := time.Now()
+	ca := node.NewUpdateNodeTaintsAction(cm.model, cm.kubeOp)
+	ca.Handle(ctx, req, resp)
+	metrics.ReportAPIRequestMetric("UpdateNodeTaints", "grpc", strconv.Itoa(int(resp.Code)), start)
+	blog.Infof("reqID: %s, action: UpdateNodeTaints, req %v, resp %v", reqID, utils.ToJSONString(req),
+		utils.ToJSONString(resp))
+	return nil
+}

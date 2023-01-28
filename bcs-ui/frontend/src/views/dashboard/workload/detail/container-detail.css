@@ -1,0 +1,20 @@
+@import './detail-info.css';
+.workload-detail {
+    width: 100%;
+    &-info {
+        @mixin detail-info 4;
+    }
+    &-body {
+        background: #FAFBFD;
+        padding: 0 24px;
+        .workload-metric {
+            display: flex;
+            background: #fff;
+            margin-top: 16px;
+            height: 230px;
+        }
+        .workload-tab {
+            margin-top: 16px;
+        }
+    }
+}

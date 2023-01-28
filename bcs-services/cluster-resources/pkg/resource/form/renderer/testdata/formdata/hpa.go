@@ -18,9 +18,8 @@ import (
 	"strings"
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/envs"
-	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
+	resCsts "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/constants"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/model"
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/parser/hpa"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/stringx"
 )
 
@@ -28,7 +27,7 @@ import (
 var HPAComplex = model.HPA{
 	Metadata: model.Metadata{
 		APIVersion: "autoscaling/v2beta2",
-		Kind:       res.HPA,
+		Kind:       resCsts.HPA,
 		Name:       "hpa-complex-" + strings.ToLower(stringx.Rand(10, "")),
 		Namespace:  envs.TestNamespace,
 		Labels: []model.Label{
@@ -50,17 +49,17 @@ var HPAComplex = model.HPA{
 			Items: []model.ResourceMetricItem{
 				{
 					Name:  "cpu",
-					Type:  hpa.HPATargetTypeAverageValue,
+					Type:  resCsts.HPATargetTypeAverageValue,
 					Value: "80",
 				},
 				{
 					Name:  "gpu",
-					Type:  hpa.HPATargetTypeUtilization,
+					Type:  resCsts.HPATargetTypeUtilization,
 					Value: "50",
 				},
 				{
 					Name:  "memory",
-					Type:  hpa.HPATargetTypeAverageValue,
+					Type:  resCsts.HPATargetTypeAverageValue,
 					Value: "60",
 				},
 			},
@@ -69,7 +68,7 @@ var HPAComplex = model.HPA{
 			Items: []model.ExternalMetricItem{
 				{
 					Name:  "ext1",
-					Type:  hpa.HPATargetTypeValue,
+					Type:  resCsts.HPATargetTypeValue,
 					Value: "10",
 					Selector: model.MetricSelector{
 						Expressions: []model.ExpSelector{
@@ -109,7 +108,7 @@ var HPAComplex = model.HPA{
 					APIVersion: "apps/v1",
 					Kind:       "Deployment",
 					ResName:    "deploy-aaa",
-					Type:       hpa.HPATargetTypeAverageValue,
+					Type:       resCsts.HPATargetTypeAverageValue,
 					Value:      "10",
 					Selector: model.MetricSelector{
 						Expressions: []model.ExpSelector{
@@ -136,7 +135,7 @@ var HPAComplex = model.HPA{
 					APIVersion: "tkex.tencent.com/v1alpha1",
 					Kind:       "GameDeployment",
 					ResName:    "gdeploy-xx",
-					Type:       hpa.HPATargetTypeValue,
+					Type:       resCsts.HPATargetTypeValue,
 					Value:      "20",
 					Selector: model.MetricSelector{
 						Expressions: []model.ExpSelector{
@@ -160,7 +159,7 @@ var HPAComplex = model.HPA{
 			Items: []model.PodMetricItem{
 				{
 					Name:  "pod1",
-					Type:  hpa.HPATargetTypeAverageValue,
+					Type:  resCsts.HPATargetTypeAverageValue,
 					Value: "10",
 					Selector: model.MetricSelector{
 						Expressions: []model.ExpSelector{
@@ -191,7 +190,7 @@ var HPAComplex = model.HPA{
 var HPASimple = model.HPA{
 	Metadata: model.Metadata{
 		APIVersion: "autoscaling/v2beta2",
-		Kind:       res.HPA,
+		Kind:       resCsts.HPA,
 		Name:       "hpa-simple-" + strings.ToLower(stringx.Rand(10, "")),
 		Namespace:  envs.TestNamespace,
 		Labels: []model.Label{
@@ -213,7 +212,7 @@ var HPASimple = model.HPA{
 			Items: []model.ResourceMetricItem{
 				{
 					Name:  "cpu",
-					Type:  hpa.HPATargetTypeAverageValue,
+					Type:  resCsts.HPATargetTypeAverageValue,
 					Value: "80",
 				},
 			},

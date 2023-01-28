@@ -3,6 +3,13 @@ data:
   title: {{ i18n "数据" .lang }}
   type: object
   properties:
+    immutable:
+      title: {{ i18n "不可变更" .lang }}
+      type: boolean
+      description: {{ i18n "（k8s 1.19+） 保护应用，使之免受意外更新所带来的负面影响;<br>降低对 kube-apiserver 的性能压力，系统会关闭对已标记为不可变更的资源的监视操作" .lang }}
+      ui:component:
+        props:
+          visible: {{ .featureGates.ImmutableEphemeralVolumes }}
     items:
       type: array
       items:
@@ -22,6 +29,7 @@ data:
             ui:component:
               name: bfInput
               props:
+                placeholder: {{ i18n "值（支持多行文本）" .lang }}
                 maxRows: 6
         ui:group:
           props:
@@ -74,6 +82,7 @@ data:
               visible: true
           else:
             state:
+              value: []
               visible: false
         - target: data.docker.registry
           if: "{{`{{`}} $self.value === 'kubernetes.io/dockerconfigjson' {{`}}`}}"
@@ -179,6 +188,13 @@ data:
           else:
             state:
               visible: false
+    immutable:
+      title: {{ i18n "不可变更" .lang }}
+      type: boolean
+      description: {{ i18n "（k8s 1.19+） 保护应用，使之免受意外更新所带来的负面影响;<br>降低对 kube-apiserver 的性能压力，系统会关闭对已标记为不可变更的资源的监视操作" .lang }}
+      ui:component:
+        props:
+          visible: {{ .featureGates.ImmutableEphemeralVolumes }}
     opaque:
       title: Opaque
       type: array
@@ -199,6 +215,7 @@ data:
             ui:component:
               name: bfInput
               props:
+                placeholder: {{ i18n "值（明文即可，提交后会自动转换为 base64 编码）" .lang }}
                 maxRows: 6
         ui:group:
           props:
@@ -266,6 +283,7 @@ data:
           ui:component:
             name: bfInput
             props:
+              placeholder: {{ i18n "值（明文即可，提交后会自动转换为 base64 编码）" .lang }}
               type: textarea
               rows: 10
           ui:rules:
@@ -277,6 +295,7 @@ data:
           ui:component:
             name: bfInput
             props:
+              placeholder: {{ i18n "值（明文即可，提交后会自动转换为 base64 编码）" .lang }}
               type: textarea
               rows: 10
           ui:rules:
@@ -293,6 +312,7 @@ data:
           ui:component:
             name: bfInput
             props:
+              placeholder: {{ i18n "值（明文即可，提交后会自动转换为 base64 编码）" .lang }}
               type: textarea
               rows: 10
           ui:rules:
@@ -304,6 +324,7 @@ data:
           ui:component:
             name: bfInput
             props:
+              placeholder: {{ i18n "值（明文即可，提交后会自动转换为 base64 编码）" .lang }}
               type: textarea
               rows: 10
     saToken:
@@ -369,6 +390,9 @@ data:
         token:
           title: Token
           type: string
+          ui:component:
+            props:
+              placeholder: {{ i18n "值（明文即可，提交后会自动转换为 base64 编码）" .lang }}
           ui:rules:
             - validator: "{{`{{`}} $self.getValue('data.type') !== 'kubernetes.io/service-account-token' || $self.value !== '' {{`}}`}}"
               message: {{ i18n "值不能为空" .lang }}

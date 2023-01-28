@@ -25,26 +25,20 @@ import (
 func (g *MetricGetter) getK8sClusterCPUMetrics(opts *types.JobCommonOpts,
 	clients *types.Clients) (*types.CPUMetrics, error) {
 	cpuMetrics := &types.CPUMetrics{}
-	CPURequestMetric, err := clients.MonitorClient.QueryByPost(
-		fmt.Sprintf(K8sCPURequest,
-			fmt.Sprintf(ClusterCondition, opts.ClusterID)),
-		opts.CurrentTime)
+	CPURequestMetric, err := clients.MonitorClient.QueryByPost(getK8sCPURequest(opts), opts.CurrentTime)
 	if err != nil {
 		return cpuMetrics, fmt.Errorf("get cluster metrics error: %v", err)
 	}
 	cpuMetrics.CPURequest = GetFloatData(CPURequestMetric)
 
-	CPUUsedMetric, err := clients.MonitorClient.QueryByPost(
-		fmt.Sprintf(ClusterCPUUsage, opts.ClusterID, getDimensionPromql(opts.Dimension)),
-		opts.CurrentTime)
+	CPUUsedMetric, err := clients.MonitorClient.QueryByPost(getK8sCpuUsage(opts), opts.CurrentTime)
 	if err != nil {
 		return cpuMetrics, fmt.Errorf("get cluster metrics error: %v", err)
 	}
 	cpuMetrics.CPUUsed = GetFloatData(CPUUsedMetric)
 
 	totalCPUMetric, err := clients.MonitorClient.QueryByPost(
-		fmt.Sprintf(ClusterTotalCPU, opts.ClusterID),
-		opts.CurrentTime)
+		fmt.Sprintf(ClusterTotalCPU, opts.ClusterID), opts.CurrentTime)
 	if err != nil {
 		return cpuMetrics, fmt.Errorf("get cluster metrics error: %v", err)
 	}
@@ -52,10 +46,7 @@ func (g *MetricGetter) getK8sClusterCPUMetrics(opts *types.JobCommonOpts,
 	if cpuMetrics.TotalCPU != 0 {
 		cpuMetrics.CPUUsage = cpuMetrics.CPUUsed / cpuMetrics.TotalCPU
 	}
-	CPULimitMetric, err := clients.MonitorClient.QueryByPost(
-		fmt.Sprintf(K8sCPULimits,
-			fmt.Sprintf(ClusterCondition, opts.ClusterID)),
-		opts.CurrentTime)
+	CPULimitMetric, err := clients.MonitorClient.QueryByPost(getK8sCPULimit(opts), opts.CurrentTime)
 	if err != nil {
 		return cpuMetrics, fmt.Errorf("get cluster metrics error: %v", err)
 	}
@@ -66,16 +57,12 @@ func (g *MetricGetter) getK8sClusterCPUMetrics(opts *types.JobCommonOpts,
 func (g *MetricGetter) getK8sClusterMemoryMetrics(opts *types.JobCommonOpts,
 	clients *types.Clients) (*types.MemoryMetrics, error) {
 	memoryMetrics := &types.MemoryMetrics{}
-	memoryRequestMetric, err := clients.MonitorClient.QueryByPost(
-		fmt.Sprintf(K8sMemoryRequest,
-			fmt.Sprintf(ClusterCondition, opts.ClusterID)), opts.CurrentTime)
+	memoryRequestMetric, err := clients.MonitorClient.QueryByPost(getK8sMemoryRequest(opts), opts.CurrentTime)
 	if err != nil {
 		return memoryMetrics, fmt.Errorf("get cluster metrics error: %v", err)
 	}
 	memoryMetrics.MemoryRequest = GetInt64Data(memoryRequestMetric)
-	memoryUsedMetric, err := clients.MonitorClient.QueryByPost(
-		fmt.Sprintf(ClusterMemoryUsed, opts.ClusterID, opts.ClusterID, opts.ClusterID, opts.ClusterID, opts.ClusterID),
-		opts.CurrentTime)
+	memoryUsedMetric, err := clients.MonitorClient.QueryByPost(getK8sMemoryUsage(opts), opts.CurrentTime)
 	if err != nil {
 		return memoryMetrics, fmt.Errorf("get cluster metrics error: %v", err)
 	}
@@ -90,9 +77,7 @@ func (g *MetricGetter) getK8sClusterMemoryMetrics(opts *types.JobCommonOpts,
 	if memoryMetrics.TotalMemory != 0 {
 		memoryMetrics.MemoryUsage = float64(memoryMetrics.MemoryUsed) / float64(memoryMetrics.TotalMemory)
 	}
-	memoryLimitMetric, err := clients.MonitorClient.QueryByPost(
-		fmt.Sprintf(K8sMemoryLimit,
-			fmt.Sprintf(ClusterCondition, opts.ClusterID)), opts.CurrentTime)
+	memoryLimitMetric, err := clients.MonitorClient.QueryByPost(getK8sMemoryRequest(opts), opts.CurrentTime)
 	if err != nil {
 		return memoryMetrics, fmt.Errorf("get cluster metrics error: %v", err)
 	}
@@ -126,19 +111,13 @@ func (g *MetricGetter) getK8sNodeCount(opts *types.JobCommonOpts,
 func (g *MetricGetter) getK8sNamespaceCPUMetrics(opts *types.JobCommonOpts,
 	clients *types.Clients) (*types.CPUMetrics, error) {
 	cpuMetrics := &types.CPUMetrics{}
-	query := fmt.Sprintf(K8sCPURequest, fmt.Sprintf(NamespaceCondition, opts.ClusterID, opts.Namespace))
-	CPURequestMetric, err := clients.MonitorClient.QueryByPost(
-		query,
-		opts.CurrentTime)
+	CPURequestMetric, err := clients.MonitorClient.QueryByPost(getK8sCPURequest(opts), opts.CurrentTime)
 	if err != nil {
 		return cpuMetrics, fmt.Errorf("get namespace metrics error: %v", err)
 	}
 	cpuMetrics.CPURequest = GetFloatData(CPURequestMetric)
 
-	CPUUsedMetrics, err := clients.MonitorClient.QueryByPost(
-		fmt.Sprintf(NamespaceCPUUsage, fmt.Sprintf(NamespaceCondition, opts.ClusterID, opts.Namespace),
-			getDimensionPromql(opts.Dimension), NamespaceSumCondition),
-		opts.CurrentTime)
+	CPUUsedMetrics, err := clients.MonitorClient.QueryByPost(getK8sCpuUsage(opts), opts.CurrentTime)
 	if err != nil {
 		return cpuMetrics, fmt.Errorf("get namespace metrics error: %v", err)
 	}
@@ -147,9 +126,7 @@ func (g *MetricGetter) getK8sNamespaceCPUMetrics(opts *types.JobCommonOpts,
 	// if CPURequest != 0 {
 	// 	usage = CPUUsed / CPURequest
 	// }
-	CPULimitsMetric, err := clients.MonitorClient.QueryByPost(
-		fmt.Sprintf(K8sCPULimits, fmt.Sprintf(NamespaceCondition, opts.ClusterID, opts.Namespace)),
-		opts.CurrentTime)
+	CPULimitsMetric, err := clients.MonitorClient.QueryByPost(getK8sCPULimit(opts), opts.CurrentTime)
 	if err != nil {
 		return cpuMetrics, fmt.Errorf("get namespace metrics error: %v", err)
 	}
@@ -160,18 +137,13 @@ func (g *MetricGetter) getK8sNamespaceCPUMetrics(opts *types.JobCommonOpts,
 func (g *MetricGetter) getK8SWorkloadCPU(opts *types.JobCommonOpts,
 	clients *types.Clients) (*types.CPUMetrics, error) {
 	cpuMetrics := &types.CPUMetrics{}
-	podCondition := generatePodCondition(opts.ClusterID, opts.Namespace, opts.WorkloadType, opts.WorkloadName)
-	podCPURequestMetric, err := clients.MonitorClient.QueryByPost(
-		fmt.Sprintf(K8sCPURequest, podCondition),
-		opts.CurrentTime)
+	podCPURequestMetric, err := clients.MonitorClient.QueryByPost(getK8sCPURequest(opts), opts.CurrentTime)
 	if err != nil {
 		return cpuMetrics, fmt.Errorf("get pod metrics error: %v", err)
 	}
 	cpuMetrics.CPURequest = GetFloatData(podCPURequestMetric)
 
-	podCPUUsedMetric, err := clients.MonitorClient.QueryByPost(
-		fmt.Sprintf(WorkloadCPUUsage, podCondition, getDimensionPromql(opts.Dimension), PodSumCondition),
-		opts.CurrentTime)
+	podCPUUsedMetric, err := clients.MonitorClient.QueryByPost(getK8sCpuUsage(opts), opts.CurrentTime)
 	if err != nil {
 		return cpuMetrics, fmt.Errorf("get pod metrics error: %v", err)
 	}
@@ -179,9 +151,7 @@ func (g *MetricGetter) getK8SWorkloadCPU(opts *types.JobCommonOpts,
 	cpuMetrics.CPUUsage = GetFloatData(podCPUUsedMetric)
 
 	// workload limits
-	podCPULimitsMetric, err := clients.MonitorClient.QueryByPost(
-		fmt.Sprintf(K8sCPULimits, podCondition),
-		opts.CurrentTime)
+	podCPULimitsMetric, err := clients.MonitorClient.QueryByPost(getK8sCPULimit(opts), opts.CurrentTime)
 	if err != nil {
 		return cpuMetrics, fmt.Errorf("get pod metrics error: %v", err)
 	}
@@ -192,28 +162,22 @@ func (g *MetricGetter) getK8SWorkloadCPU(opts *types.JobCommonOpts,
 func (g *MetricGetter) getK8sWorkloadMemory(opts *types.JobCommonOpts,
 	clients *types.Clients) (*types.MemoryMetrics, error) {
 	memoryMetrics := &types.MemoryMetrics{}
-	podCondition := generatePodCondition(opts.ClusterID, opts.Namespace, opts.WorkloadType, opts.WorkloadName)
-	podMemoryRequestMetric, err := clients.MonitorClient.QueryByPost(
-		fmt.Sprintf(K8sMemoryRequest, podCondition),
-		opts.CurrentTime)
+	podMemoryRequestMetric, err := clients.MonitorClient.QueryByPost(getK8sMemoryRequest(opts), opts.CurrentTime)
 	if err != nil {
 		return memoryMetrics, fmt.Errorf("get pod metrics error: %v", err)
 	}
 	memoryMetrics.MemoryRequest = GetInt64Data(podMemoryRequestMetric)
-	podMemoryUsedMetric, err := clients.MonitorClient.QueryByPost(
-		fmt.Sprintf(WorkloadMemoryUsed, podCondition, PodSumCondition),
-		opts.CurrentTime)
+
+	podMemoryUsedMetric, err := clients.MonitorClient.QueryByPost(getK8sMemoryUsage(opts), opts.CurrentTime)
 	if err != nil {
 		return memoryMetrics, fmt.Errorf("get pod metrics error: %v", err)
 	}
-
 	memoryMetrics.MemoryUsed = GetInt64Data(podMemoryUsedMetric)
 	if memoryMetrics.MemoryRequest != 0 {
 		memoryMetrics.MemoryUsage = float64(memoryMetrics.MemoryUsed) / float64(memoryMetrics.MemoryRequest)
 	}
-	podMemoryLimitsMetric, err := clients.MonitorClient.QueryByPost(
-		fmt.Sprintf(K8sMemoryLimit, podCondition),
-		opts.CurrentTime)
+
+	podMemoryLimitsMetric, err := clients.MonitorClient.QueryByPost(getK8sMemoryLimit(opts), opts.CurrentTime)
 	if err != nil {
 		return memoryMetrics, fmt.Errorf("get pod metrics error: %v", err)
 	}
@@ -224,17 +188,12 @@ func (g *MetricGetter) getK8sWorkloadMemory(opts *types.JobCommonOpts,
 func (g *MetricGetter) getK8sNamespaceMemoryMetrics(opts *types.JobCommonOpts,
 	clients *types.Clients) (*types.MemoryMetrics, error) {
 	memoryMetrics := &types.MemoryMetrics{}
-	memoryRequestMetric, err := clients.MonitorClient.QueryByPost(
-		fmt.Sprintf(K8sMemoryRequest, fmt.Sprintf(NamespaceCondition, opts.ClusterID, opts.Namespace)),
-		opts.CurrentTime)
+	memoryRequestMetric, err := clients.MonitorClient.QueryByPost(getK8sMemoryRequest(opts), opts.CurrentTime)
 	if err != nil {
 		return memoryMetrics, fmt.Errorf("get namespace metrics error: %v", err)
 	}
 	memoryMetrics.MemoryRequest = GetInt64Data(memoryRequestMetric)
-	memoryUsedMetric, err := clients.MonitorClient.QueryByPost(
-		fmt.Sprintf(NamespaceMemoryUsed, fmt.Sprintf(NamespaceCondition, opts.ClusterID, opts.Namespace),
-			NamespaceSumCondition),
-		opts.CurrentTime)
+	memoryUsedMetric, err := clients.MonitorClient.QueryByPost(getK8sMemoryUsage(opts), opts.CurrentTime)
 	if err != nil {
 		return memoryMetrics, fmt.Errorf("get namespace metrics error: %v", err)
 	}
@@ -242,9 +201,7 @@ func (g *MetricGetter) getK8sNamespaceMemoryMetrics(opts *types.JobCommonOpts,
 	if memoryMetrics.MemoryRequest != 0 {
 		memoryMetrics.MemoryUsage = float64(memoryMetrics.MemoryUsed) / float64(memoryMetrics.MemoryRequest)
 	}
-	memoryLimitsMetric, err := clients.MonitorClient.QueryByPost(
-		fmt.Sprintf(K8sMemoryLimit, fmt.Sprintf(NamespaceCondition, opts.ClusterID, opts.Namespace)),
-		opts.CurrentTime)
+	memoryLimitsMetric, err := clients.MonitorClient.QueryByPost(getK8sMemoryRequest(opts), opts.CurrentTime)
 	if err != nil {
 		return memoryMetrics, fmt.Errorf("get namespace metrics error: %v", err)
 	}

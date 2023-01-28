@@ -15,10 +15,10 @@ package store
 
 import (
 	"context"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/types"
 	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/types"
+
 	datamanager "github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/proto/bcs-data-manager"
 )
 
@@ -55,25 +55,4 @@ type Server interface {
 		request *datamanager.GetPodAutoscalerRequest) (*datamanager.PodAutoscaler, error)
 	GetRawPodAutoscalerInfo(ctx context.Context, opts *types.JobCommonOpts,
 		bucket string) ([]*types.PodAutoscalerData, error)
-}
-
-type server struct {
-	*ModelCluster
-	*ModelNamespace
-	*ModelProject
-	*ModelWorkload
-	*ModelPublic
-	*ModelPodAutoscaler
-}
-
-// NewServer new db server
-func NewServer(db drivers.DB) Server {
-	return &server{
-		ModelCluster:       NewModelCluster(db),
-		ModelNamespace:     NewModelNamespace(db),
-		ModelWorkload:      NewModelWorkload(db),
-		ModelProject:       NewModelProject(db),
-		ModelPublic:        NewModelPublic(db),
-		ModelPodAutoscaler: NewModelPodAutoscaler(db),
-	}
 }

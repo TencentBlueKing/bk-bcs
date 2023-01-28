@@ -58,6 +58,12 @@
               </div>
               <div class="row">
                 <div class="left">
+                  <p>{{$t('集群添加方式')}}</p>
+                </div>
+                <div class="right">{{typeMap[clusterType] || '--'}}</div>
+              </div>
+              <div class="row">
+                <div class="left">
                   <p>{{$t('调度引擎')}}</p>
                 </div>
                 <div class="right">{{clusterInfo.engineType || '--'}}</div>
@@ -89,6 +95,12 @@
               </div>
               <div class="row">
                 <div class="left">
+                  <p>{{$t('集群类型')}}</p>
+                </div>
+                <div class="right">{{masterNum ? $t('独立集群') : $t('托管集群')}}</div>
+              </div>
+              <div class="row">
+                <div class="left">
                   <p>{{$t('Master数量')}}</p>
                 </div>
                 <div class="right">
@@ -106,32 +118,18 @@
                     {{clusterInfo.networkType || '--'}}
                   </div>
                 </div>
-                <div class="row">
-                  <div class="left">
-                    <p>{{$t('所属地域')}}</p>
-                  </div>
-                  <div class="right">
-                    {{clusterInfo.region || '--'}}
-                  </div>
-                </div>
               </template>
-              <div class="row">
-                <div class="left">
-                  <p>{{$t('创建人')}}</p>
-                </div>
-                <div class="right">{{clusterInfo.creator || '--'}}</div>
-              </div>
               <div class="row">
                 <div class="left">
                   <p>{{$t('创建时间')}}</p>
                 </div>
-                <div class="right">{{clusterInfo.createTime || '--'}}</div>
+                <div class="right">{{ moment(clusterInfo.createTime).format('YYYY-MM-DD HH:mm:ss') || '--'}}</div>
               </div>
               <div class="row">
                 <div class="left">
                   <p>{{$t('更新时间')}}</p>
                 </div>
-                <div class="right">{{clusterInfo.updateTime || '--'}}</div>
+                <div class="right">{{ moment(clusterInfo.updateTime).format('YYYY-MM-DD HH:mm:ss') || '--'}}</div>
               </div>
               <div class="row">
                 <div class="left">
@@ -168,7 +166,7 @@
                             class="bk-form-textarea"
                             :value="clusterInfo.description"
                             ref="clusterDescRef">
-                                                    </textarea>
+                          </textarea>
                         </div>
                         <div class="bk-form-inline-item">
                           <bk-button text @click="updateClusterDesc">{{$t('保存')}}</bk-button>
@@ -179,7 +177,7 @@
                   </template>
                 </div>
               </div>
-              <div class="row">
+              <div class="row" v-if="$INTERNAL">
                 <div class="left">
                   <p>{{$t('集群变量')}}</p>
                 </div>
@@ -203,7 +201,14 @@
                   </bk-button>
                 </div>
               </div>
-
+              <div class="row">
+                <div class="left">
+                  <p>{{$t('所属地域')}}</p>
+                </div>
+                <div class="right">
+                  {{clusterRegion ? `${clusterRegion.regionName} (${clusterRegion.region})` : '--'}}
+                </div>
+              </div>
               <div class="row" v-if="providerType === 'tke'">
                 <div class="left">
                   <p>VPC</p>
@@ -216,12 +221,6 @@
                 </div>
                 <div class="right">{{clusterCidr}}</div>
               </div>
-              <!-- <div class="row" v-if="providerType === 'tke'">
-                                <div class="left">
-                                    <p>{{$t('Pod总量')}}</p>
-                                </div>
-                                <div class="right">{{}}</div>
-                            </div> -->
               <div class="row" v-if="providerType === 'tke'">
                 <div class="left">
                   <p>{{$t('Service数量上限/集群')}}</p>
@@ -269,12 +268,21 @@
               :outer-border="false"
               :header-border="false"
               :header-cell-style="{ background: '#fff' }">
-              <bk-table-column :label="$t('主机名称')" prop="host_name">
+              <bk-table-column :label="$t('主机名称')" prop="nodeName">
                 <template #default="{ row }">
-                  {{ row.host_name || '--' }}
+                  {{ row.nodeName || '--' }}
                 </template>
               </bk-table-column>
-              <bk-table-column :label="$t('内网IP')" prop="inner_ip"></bk-table-column>
+              <bk-table-column :label="$t('内网IP')" prop="innerIP">
+                <template #default="{ row }">
+                  {{ row.innerIP || '--' }}
+                </template>
+              </bk-table-column>
+              <bk-table-column label="IPv6" prop="innerIPv6">
+                <template #default="{ row }">
+                  {{ row.innerIPv6 || '--' }}
+                </template>
+              </bk-table-column>
               <bk-table-column :label="$t('Agent状态')" prop="agent">
                 <template #default="{ row }">
                   <StatusIcon :status="String(row.agent)" :status-color-map="statusColorMap">
@@ -285,7 +293,7 @@
               <template v-if="$INTERNAL">
                 <bk-table-column :label="$t('机房')" prop="idc"></bk-table-column>
                 <bk-table-column :label="$t('机架')" prop="rack"></bk-table-column>
-                <bk-table-column :label="$t('机型')" prop="device_class"></bk-table-column>
+                <bk-table-column :label="$t('机型')" prop="deviceClass"></bk-table-column>
               </template>
             </bk-table>
           </div>
@@ -339,9 +347,10 @@
 </template>
 
 <script>
-// import moment from 'moment'
+import moment from 'moment';
 import StatusIcon from '@/views/dashboard/common/status-icon.tsx';
 import useVariable from '@/views/variable/use-variable';
+import { masterList } from '@/api/modules/cluster-manager';
 export default {
   name: 'NodeInfo',
   components: {
@@ -349,6 +358,7 @@ export default {
   },
   data() {
     return {
+      moment,
       masterInfoLoading: false,
       variableInfoLoading: false,
       containerLoading: false,
@@ -375,6 +385,13 @@ export default {
       statusColorMap: {
         1: 'green',
         0: 'red',
+      },
+      clusterRegion: null,
+      typeMap: {
+        1: this.$t('K8S原生集群'),
+        2: this.$t('腾讯云自研云集群（内部)'),
+        3: this.$t('kubeconfig导入集群'),
+        4: this.$t('腾讯云-云凭证导入集群'),
       },
     };
   },
@@ -408,6 +425,19 @@ export default {
       const { multiClusterCIDR = [], clusterIPv4CIDR = '' } = this.clusterInfo.networkSettings;
       return [...multiClusterCIDR, clusterIPv4CIDR].filter(cidr => !!cidr).join(', ');
     },
+    clusterType() {
+      const { provider, clusterCategory, importCategory } = this.clusterInfo;
+      if (provider === 'bluekingCloud' && clusterCategory !== 'importer') {
+        return 1;
+      } if (provider === 'tencentCloud' && clusterCategory !== 'importer') {
+        return 2;
+      } if (provider === 'bluekingCloud' && clusterCategory === 'importer' && importCategory === 'kubeConfig') {
+        return 3;
+      } if (provider === 'tencentCloud' && clusterCategory === 'importer' && importCategory === 'cloud') {
+        return 4;
+      }
+      return '';
+    },
   },
   async created() {
     this.fetchClusterInfo();
@@ -415,8 +445,8 @@ export default {
   },
   methods: {
     /**
-             * 获取当前集群数据
-             */
+     * 获取当前集群数据
+     */
     async fetchClusterInfo() {
       this.containerLoading = true;
       const res = await this.$store.dispatch('clustermanager/clusterDetail', {
@@ -424,12 +454,22 @@ export default {
       }).catch(() => ({}));
       this.clusterInfo = res.data;
       this.providerType = res.extra?.providerType;
+      await this.fetchClusterRegion();
       this.containerLoading = false;
+    },
+    async fetchClusterRegion() {
+      if (![2, 4].includes(this.clusterType) || !this.clusterInfo.cloudAccountID) return;
+
+      const data = await this.$store.dispatch('clustermanager/cloudRegionByAccount', {
+        $cloudId: this.clusterInfo.provider,
+        accountID: this.clusterInfo.cloudAccountID,
+      });
+      this.clusterRegion = data.find(item => item.region === this.clusterInfo.region);
     },
 
     /**
-             * 获取变量信息
-             */
+           * 获取变量信息
+           */
     async fetchVariableInfo() {
       const { handleGetClusterVariables } = useVariable();
       const data = await handleGetClusterVariables({ $clusterId: this.clusterId });
@@ -532,22 +572,21 @@ export default {
     },
 
     /**
-             * 显示 master 信息
-             */
+     * 显示 master 信息
+     */
     async handleShowMasterInfo() {
       this.showMasterInfoDialog = true;
       this.masterInfoLoading = true;
-      const res = await this.$store.dispatch('cluster/getClusterMasterInfo', {
-        projectId: this.projectId,
-        clusterId: this.curCluster.cluster_id,
+      const data = await masterList({
+        $clusterId: this.curCluster.cluster_id,
       }).catch(() => []);
-      this.masterData = res.data;
+      this.masterData = data;
       this.masterInfoLoading = false;
     },
 
     /**
-             * 返回集群首页列表
-             */
+           * 返回集群首页列表
+           */
     goIndex() {
       this.$router.push({
         name: 'clusterMain',
@@ -559,8 +598,8 @@ export default {
     },
 
     /**
-             * 切换到节点管理
-             */
+           * 切换到节点管理
+           */
     goOverview() {
       this.$router.push({
         name: 'clusterOverview',
@@ -573,8 +612,8 @@ export default {
     },
 
     /**
-             * 切换到节点管理
-             */
+           * 切换到节点管理
+           */
     goNode() {
       this.$router.push({
         name: 'clusterNode',

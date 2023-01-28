@@ -18,13 +18,14 @@ import (
 	"fmt"
 	"time"
 
+	"k8s.io/api/admission/v1beta1"
+	corev1 "k8s.io/api/core/v1"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-webhook-server/internal/metrics"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-webhook-server/internal/pluginmanager"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-webhook-server/internal/pluginutil"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-webhook-server/internal/types"
-	"k8s.io/api/admission/v1beta1"
-	corev1 "k8s.io/api/core/v1"
 )
 
 func init() {
@@ -114,20 +115,10 @@ func (p *PatchMount) injectRequired(pod *corev1.Pod) bool {
 }
 
 func (p *PatchMount) injectToPod(pod *corev1.Pod, patchMountType string) ([]types.PatchOperation, error) {
-	var volumeMountsTemplate []corev1.VolumeMount
-	var volumesTemplate []corev1.Volume
-
-	switch patchMountType {
-	case patchMountLxcfs:
-		volumeMountsTemplate = lxcfsVolumeMountsTemplate
-		volumesTemplate = lxcfsVolumesTemplate
-	case patchMountCgroupfs:
-		volumeMountsTemplate = cgroupfsVolumeMountsTemplate
-		volumesTemplate = cgroupfsVolumesTemplate
-	default:
-		return nil, fmt.Errorf("unknown patch mount type %s", patchMountType)
+	volumeMountsTemplate, volumesTemplate, err := getMountTypesTemplate(pod, patchMountType)
+	if err != nil {
+		return nil, err
 	}
-
 	var patches []types.PatchOperation
 
 	containers := pod.Spec.Containers
@@ -176,4 +167,33 @@ func (p *PatchMount) injectToPod(pod *corev1.Pod, patchMountType string) ([]type
 // Close closes the plugin
 func (p *PatchMount) Close() error {
 	return nil
+}
+
+func getMountTypesTemplate(pod *corev1.Pod, patchMountType string) ([]corev1.VolumeMount, []corev1.Volume, error) {
+	var volumeMountsTemplate []corev1.VolumeMount
+	var volumesTemplate []corev1.Volume
+
+	disableMountSysDevices := pod.Annotations[disableMountSysDevicesAnnotationKey] == "true"
+	switch patchMountType {
+	case patchMountLxcfs:
+		if disableMountSysDevices {
+			volumeMountsTemplate = lxcfsVolumeMountsTemplate
+			volumesTemplate = lxcfsVolumesTemplate
+		} else {
+			volumeMountsTemplate = append(lxcfsVolumeMountsTemplate, lxcfsVolumeMountsTemplateSysDevices)
+			volumesTemplate = append(lxcfsVolumesTemplate, lxcfsVolumesTemplateSysDevices)
+		}
+	case patchMountCgroupfs:
+		if disableMountSysDevices {
+			volumeMountsTemplate = cgroupfsVolumeMountsTemplate
+			volumesTemplate = cgroupfsVolumesTemplate
+		} else {
+			volumeMountsTemplate = append(cgroupfsVolumeMountsTemplate, cgroupfsVolumeMountsTemplateSysDevices)
+			fmt.Println(len(volumeMountsTemplate))
+			volumesTemplate = append(cgroupfsVolumesTemplate, cgroupfsVolumesTemplateSysDevices)
+		}
+	default:
+		return nil, nil, fmt.Errorf("unknown patch mount type %s", patchMountType)
+	}
+	return volumeMountsTemplate, volumesTemplate, nil
 }

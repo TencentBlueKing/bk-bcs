@@ -23,23 +23,69 @@
       </div>
     </div>
     <!-- 配置、标签、注解 -->
-    <bcs-tab class="mt20" :label-height="40">
+    <bcs-tab class="mt20" type="card" :label-height="42">
       <bcs-tab-panel name="config" :label="$t('配置')">
-        <p class="detail-title">Addresses</p>
-        <bk-table :data="addresses" class="mb20">
-          <bk-table-column label="IP" prop="ip" width="140"></bk-table-column>
-          <bk-table-column label="NodeName" prop="nodeName"></bk-table-column>
-          <bk-table-column label="TargetRef">
-            <template #default="{ row }">
-              <span>{{ row.targetRef ? `${row.targetRef.kind}:${row.targetRef.name}` : '--' }}</span>
+        <bcs-collapse v-model="activeCollapseName">
+          <bcs-collapse-item
+            v-for="(item, index) in (data.subsets || [])"
+            :name="String(index)"
+            :key="index"
+            hide-arrow
+            class="mb-[16px]">
+            <div class="flex items-center rounded-sm bg-[#f5f7fa] px-3.5 text-[#313238] font-bold">
+              <i
+                class="bk-icon icon-down-shape !text-base mr-[5px] transition-all"
+                :style="{
+                  transform: activeCollapseName.includes(String(index)) ? 'rotate(0deg)' : 'rotate(-90deg)',
+                }"></i>
+              {{ `SubSet ${index + 1}` }}
+            </div>
+            <template #content>
+              <div class="px-[16px] pt-[16px]">
+                <!-- Addresses and notReadyAddresses -->
+                <p class="detail-title">Addresses</p>
+                <bk-table
+                  :data="(item.addresses || [])
+                    .map(item => ({
+                      ...item,
+                      status: 'normal'
+                    }))
+                    .concat(item.notReadyAddresses || [])"
+                  class="mb20">
+                  <bk-table-column label="IP" prop="ip" width="140"></bk-table-column>
+                  <bk-table-column label="NodeName" prop="nodeName">
+                    <template #default="{ row }">
+                      {{ row.nodeName || '--' }}
+                    </template>
+                  </bk-table-column>
+                  <bk-table-column label="TargetRef">
+                    <template #default="{ row }">
+                      <span>{{ row.targetRef ? `${row.targetRef.kind}:${row.targetRef.name}` : '--' }}</span>
+                    </template>
+                  </bk-table-column>
+                  <bk-table-column label="Status">
+                    <template #default="{ row }">
+                      <StatusIcon :status="String(row.status === 'normal')">
+                        {{row.status === 'normal' ? $t('正常') : $t('异常')}}
+                      </StatusIcon>
+                    </template>
+                  </bk-table-column>
+                </bk-table>
+                <!-- Ports -->
+                <p class="detail-title">Ports</p>
+                <bk-table :data="item.ports">
+                  <bk-table-column label="Name" prop="name">
+                    <template #default="{ row }">
+                      {{row.name || '--'}}
+                    </template>
+                  </bk-table-column>
+                  <bk-table-column label="Protocol" prop="protocol"></bk-table-column>
+                  <bk-table-column label="Port" prop="port"></bk-table-column>
+                </bk-table>
+              </div>
             </template>
-          </bk-table-column>
-        </bk-table>
-        <p class="detail-title">Ports</p>
-        <bk-table :data="ports">
-          <bk-table-column label="Protocol" prop="protocol"></bk-table-column>
-          <bk-table-column label="Port" prop="port"></bk-table-column>
-        </bk-table>
+          </bcs-collapse-item>
+        </bcs-collapse>
       </bcs-tab-panel>
       <bcs-tab-panel name="label" :label="$t('标签')">
         <bk-table :data="handleTransformObjToArr(data.metadata.labels)">
@@ -53,14 +99,24 @@
           <bk-table-column label="Value" prop="value"></bk-table-column>
         </bk-table>
       </bcs-tab-panel>
+      <bcs-tab-panel name="event" :label="$t('事件')">
+        <EventQueryTableVue
+          is-specify-kinds
+          :kinds="data.kind"
+          :namespace="data.metadata.namespace"
+          :name="data.metadata.name" />
+      </bcs-tab-panel>
     </bcs-tab>
   </div>
 </template>
 <script lang="ts">
-import { defineComponent, watch, toRefs, ref } from '@vue/composition-api';
+import { defineComponent, ref, toRefs, watch } from '@vue/composition-api';
+import StatusIcon from '@/views/dashboard/common/status-icon';
+import EventQueryTableVue from '@/views/mc/event-query-table.vue';
 
 export default defineComponent({
   name: 'EndpointsDetail',
+  components: { StatusIcon, EventQueryTableVue },
   props: {
     // 当前行数据
     data: {
@@ -75,19 +131,10 @@ export default defineComponent({
   },
   setup(props) {
     const { data } = toRefs(props);
-    const addresses = ref<any[]>([]);
-    const ports = ref<any[]>([]);
-
+    const activeCollapseName = ref(data.value.subsets?.map((_, index) => String(index)));
     watch(data, () => {
-      addresses.value = [];
-      ports.value = [];
-      const subsets = data.value.subsets || [];
-      subsets.forEach((item) => {
-        addresses.value.push(...(item.addresses || []));
-        ports.value.push(...(item.ports || []));
-      });
-    }, { immediate: true, deep: true });
-
+      activeCollapseName.value = data.value.subsets?.map((_, index) => String(index) || []);
+    });
     const handleTransformObjToArr = (obj) => {
       if (!obj) return [];
 
@@ -101,8 +148,7 @@ export default defineComponent({
     };
 
     return {
-      addresses,
-      ports,
+      activeCollapseName,
       handleTransformObjToArr,
     };
   },

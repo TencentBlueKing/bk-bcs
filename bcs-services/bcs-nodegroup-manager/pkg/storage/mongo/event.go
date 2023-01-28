@@ -85,9 +85,7 @@ func (m *ModelEvent) ListNodeGroupEvent(nodeGroupID string, opt *storage.ListOpt
 	}
 	page := opt.Page
 	limit := opt.Limit
-	if opt.Limit == 0 {
-		limit = defaultSize
-	}
+
 	cond := make([]*operator.Condition, 0)
 	if nodeGroupID != "" {
 		cond = append(cond, operator.NewLeafCondition(operator.Eq, operator.M{
@@ -97,6 +95,15 @@ func (m *ModelEvent) ListNodeGroupEvent(nodeGroupID string, opt *storage.ListOpt
 	cond = append(cond, operator.NewLeafCondition(operator.Eq, operator.M{
 		isDeletedKey: opt.ReturnSoftDeletedItems,
 	}))
+	if !opt.DoPagination && opt.Limit == 0 {
+		count, err := m.DB.Table(m.TableName).Find(operator.NewBranchCondition(operator.And, cond...)).Count(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("get event count err:%v", err)
+		}
+		limit = int(count)
+	} else if limit == 0 {
+		limit = defaultSize
+	}
 	nodeEventList := make([]*storage.NodeGroupEvent, 0)
 	err = m.DB.Table(m.TableName).Find(operator.NewBranchCondition(operator.And, cond...)).
 		WithSort(map[string]interface{}{nodeGroupIDKey: 1}).

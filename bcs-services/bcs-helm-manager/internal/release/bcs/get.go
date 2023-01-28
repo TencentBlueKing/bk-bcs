@@ -17,6 +17,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"helm.sh/helm/v3/pkg/chartutil"
+	"k8s.io/apimachinery/pkg/runtime"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/release"
@@ -48,11 +49,18 @@ func (c *cluster) get(ctx context.Context, op release.GetOption) (*release.Relea
 		Description:  rl.Info.Description,
 		Values:       valuesYaml,
 		Manifest:     rl.Manifest,
+		Hooks:        rl.Hooks,
+		Notes:        rl.Info.Notes,
 	}
 	if op.GetObject {
-		re.Objects, err = ManifestToK8sResources(op.Namespace, re.Manifest, c.sdkClientGroup.Config(c.clusterID))
+		re.Objects = make([]runtime.Object, 0)
+		infos, err := ManifestToK8sResources(op.Namespace, re.Manifest, c.sdkClientGroup.Config(c.clusterID))
 		if err != nil {
 			return re, err
+		}
+		re.Infos = infos
+		for _, v := range infos {
+			re.Objects = append(re.Objects, v.Object)
 		}
 	}
 	return re, nil

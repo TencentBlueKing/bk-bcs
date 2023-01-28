@@ -188,7 +188,7 @@ func (t *tokenNotify) sendEmail(token models.BcsUser) *APIResponse {
 	if t.dryRun {
 		resp = &APIResponse{
 			Result:    true,
-			Code:      "0",
+			Code:      0,
 			Message:   "dry run",
 			RequestID: "dry run",
 		}
@@ -197,7 +197,7 @@ func (t *tokenNotify) sendEmail(token models.BcsUser) *APIResponse {
 		if err != nil {
 			resp = &APIResponse{
 				Result:  false,
-				Code:    "-1",
+				Code:    -1,
 				Message: err.Error(),
 			}
 			blog.Errorf("send email err: %s", err.Error())
@@ -213,16 +213,15 @@ func (t *tokenNotify) sendRtx(token models.BcsUser) *APIResponse {
 		blog.Errorf("generate rtx content err: %s", err.Error())
 	}
 	payload := map[string]interface{}{
-		"sender":   token.Name,
-		"receiver": token.Name,
-		"title":    t.rtxTitle,
-		"message":  rtxContent,
+		"receiver__username": token.Name,
+		"title":              t.rtxTitle,
+		"content":            rtxContent,
 	}
 	var resp *APIResponse
 	if t.dryRun {
 		resp = &APIResponse{
 			Result:    true,
-			Code:      "0",
+			Code:      0,
 			Message:   "dry run",
 			RequestID: "dry run",
 		}
@@ -231,7 +230,7 @@ func (t *tokenNotify) sendRtx(token models.BcsUser) *APIResponse {
 		if err != nil {
 			resp = &APIResponse{
 				Result:  false,
-				Code:    "-1",
+				Code:    -1,
 				Message: err.Error(),
 			}
 			blog.Errorf("send rtx err: %s", err.Error())
@@ -266,7 +265,7 @@ func (t *tokenNotify) insertRecord(resp *APIResponse, token models.BcsUser, noti
 // APIResponse is the response format of esb api
 type APIResponse struct {
 	Result    bool        `json:"result"`
-	Code      string      `json:"code"`
+	Code      int         `json:"code"`
 	Data      interface{} `json:"data"`
 	Message   string      `json:"message"`
 	RequestID string      `json:"request_id"`

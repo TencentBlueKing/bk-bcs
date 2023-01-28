@@ -114,7 +114,7 @@ func QueryMultiValues(ctx context.Context, projectId string, promqlMap map[strin
 
 			// 多个查询不报错, 有默认值
 			if err != nil {
-				klog.Warningf("query %s error, %s", promql, err)
+				klog.Warningf("query_multi_values %s error, %s", promql, err)
 				resultMap[key] = defaultValue
 			} else {
 				resultMap[key] = GetFirstValue(vector)

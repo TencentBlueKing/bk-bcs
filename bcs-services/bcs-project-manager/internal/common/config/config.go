@@ -16,6 +16,8 @@
 package config
 
 const (
+	// ServiceName BCS 服务名称
+	ServiceName = "bcs-project-manager"
 	// ServiceDomain 域名，用于注册到APISIX
 	ServiceDomain = "project.bkbcs.tencent.com"
 	// ClusterManagerDomain 用于发现 ClusterManager 服务
@@ -28,9 +30,18 @@ const (
 	// TimeLayout time layout
 	TimeLayout = "2006-01-02 15:04:05"
 
+	// AnnotationKeyProjectCode annotation key projectCode
+	AnnotationKeyProjectCode = "io.tencent.bcs.projectcode"
+
+	// AnnotationKeyProjectCode annotation key projectCode
+	AnnotationKeyCreator = "io.tencent.bcs.creator"
+
 	// MaxMsgSize grpc限制的message的最大值
 	MaxMsgSize int = 50 * 1024 * 1024
 
 	// AnonymousUsername 匿名用户
 	AnonymousUsername = "anonymous"
+
+	// NamespaceSyncLockPrefix etcd distributed lock prefix for sync namespace
+	NamespaceSyncLockPrefix = "namespace-sync"
 )

@@ -1,17 +1,18 @@
 apiVersion: tkex.tencent.com/v1alpha1
 kind: GameStatefulSet
-
 metadata:
   name: gsts-complex-upa94chrxk
   namespace: default
   labels:
-    "label-key-1": "label-val-1"
-    "label-key-2": "label-val-2"
+    label-key-1: label-val-1
+    label-key-2: label-val-2
     io.tencent.bcs.dev/deletion-allow: Cascading
   annotations:
-    "anno-key-1": "anno-val-1"
-    "anno-key-2": "anno-val-2"
-    "io.tencent.bcs.editFormat": "form"
+    anno-key-1: anno-val-1
+    anno-key-2: anno-val-2
+    io.tencent.bcs.editFormat: form
+    io.tencent.paas.creator: anonymous
+    io.tencent.paas.updator: anonymous
 spec:
   serviceName: svc-complex-y3xk1r9vg9
   podManagementPolicy: OrderedReady
@@ -191,6 +192,36 @@ spec:
                       operator: Exists
                   matchLabels:
                     "labelKey": "labelVal"
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - topologyKey: "topoKeyTest3"
+              namespaces:
+                - default
+              labelSelector:
+                matchExpressions:
+                  - key: "testKey3"
+                    operator: In
+                    values:
+                      - "testVal3"
+                      - "testVal4"
+                matchLabels:
+                  "testKey4": "testVal4"
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 50
+              podAffinityTerm:
+                topologyKey: "topoKeyTest2"
+                namespaces:
+                  - default
+                  - kube-system
+                labelSelector:
+                  matchExpressions:
+                    - key: "testKey2"
+                      operator: In
+                      values:
+                        - "testVal2"
+                        - "testVal2"
+                  matchLabels:
+                    "testKey3": "testVal3"
         nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
             nodeSelectorTerms:

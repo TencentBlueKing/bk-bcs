@@ -18,11 +18,20 @@ import (
 	"context"
 	"testing"
 
+	"github.com/spf13/cast"
 	"github.com/stretchr/testify/assert"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 const testClusterID = "BCS-K8S-T99999"
+
+const (
+	// ResKindDeploy ...
+	ResKindDeploy = "Deployment"
+
+	// ResKindPo ...
+	ResKindPo = "Pod"
+)
 
 func TestGenCacheKey(t *testing.T) {
 	k := genCacheKey(testClusterID, "v1")
@@ -38,20 +47,20 @@ func TestGenCacheKey(t *testing.T) {
 func TestFilterResByKind(t *testing.T) {
 	allRes := []*metav1.APIResourceList{{
 		GroupVersion: "v1",
-		APIResources: []metav1.APIResource{{Kind: Po}},
+		APIResources: []metav1.APIResource{{Kind: ResKindPo}},
 	}, {
 		GroupVersion: "apps/v1",
-		APIResources: []metav1.APIResource{{Kind: Deploy}},
+		APIResources: []metav1.APIResource{{Kind: ResKindDeploy}},
 	}}
 
 	// groupVersion 特殊情况（只有 version，没有 group）
-	res, err := filterResByKind(Po, testClusterID, "", allRes)
+	res, err := filterResByKind(ResKindPo, testClusterID, "", allRes)
 	assert.Nil(t, err)
 	assert.Equal(t, "", res.Group)
 	assert.Equal(t, "v1", res.Version)
 
 	// 普通情况
-	res, err = filterResByKind(Deploy, testClusterID, "", allRes)
+	res, err = filterResByKind(ResKindDeploy, testClusterID, "", allRes)
 	assert.Nil(t, err)
 	assert.Equal(t, "apps", res.Group)
 	assert.Equal(t, "v1", res.Version)
@@ -66,7 +75,7 @@ func getResByDiscovery(t *testing.T, rcc *RedisCacheClient) {
 	t.Helper()
 
 	// preferred deployment
-	res, err := rcc.getPreferredResource(Deploy)
+	res, err := rcc.getPreferredResource(ResKindDeploy)
 	assert.Nil(t, err)
 	assert.Equal(t, "deployments", res.Resource)
 
@@ -75,18 +84,18 @@ func getResByDiscovery(t *testing.T, rcc *RedisCacheClient) {
 	assert.NotNil(t, err)
 
 	// v1 pod
-	res, err = rcc.getResWithGroupVersion(Po, "v1")
+	res, err = rcc.getResWithGroupVersion(ResKindPo, "v1")
 	assert.Nil(t, err)
 	assert.Equal(t, "", res.Group)
 	assert.Equal(t, "v1", res.Version)
 
 	// v3 deployment (not exists)
-	_, err = rcc.getResWithGroupVersion(Deploy, "v3")
+	_, err = rcc.getResWithGroupVersion(ResKindDeploy, "v3")
 	assert.NotNil(t, err)
 }
 
 func TestRedisCacheClient(t *testing.T) {
-	rcc, _ := NewRedisCacheClient4Conf(context.TODO(), NewClusterConfig(testClusterID))
+	rcc, _ := NewRedisCacheClient4Conf(context.TODO(), NewClusterConf(testClusterID))
 
 	// 检查确保 Redis 中对应键不存在
 	srV1Key := genCacheKey(testClusterID, "v1")
@@ -115,6 +124,9 @@ func TestRedisCacheClient(t *testing.T) {
 	// 清理缓存内容
 	assert.Nil(t, rcc.ClearCache())
 
+	// 触发缓存锁
+	assert.NotNil(t, rcc.ClearCache())
+
 	// rcc 其他方法测试
 	_ = rcc.RESTClient()
 
@@ -135,27 +147,38 @@ func TestRedisCacheClient(t *testing.T) {
 }
 
 func TestGetGroupVersionResource(t *testing.T) {
-	clusterConf := NewClusterConfig(testClusterID)
+	ctx := context.TODO()
+	clusterConf := NewClusterConf(testClusterID)
 
-	ret, err := GetGroupVersionResource(context.TODO(), clusterConf, Deploy, "")
+	ret, err := GetGroupVersionResource(ctx, clusterConf, ResKindDeploy, "")
 	assert.Nil(t, err)
 	assert.Equal(t, ret.Resource, "deployments")
 
-	ret, err = GetGroupVersionResource(context.TODO(), clusterConf, Po, "v1")
+	ret, err = GetGroupVersionResource(ctx, clusterConf, ResKindPo, "v1")
 	assert.Nil(t, err)
 	assert.Equal(t, ret.Resource, "pods")
 
-	_, err = GetGroupVersionResource(context.TODO(), clusterConf, "NotExistsKind", "")
+	_, err = GetGroupVersionResource(ctx, clusterConf, "NotExistsKind", "")
 	assert.NotNil(t, err)
 
-	_, err = GetGroupVersionResource(context.TODO(), clusterConf, "NotExistsKind", "v1")
+	_, err = GetGroupVersionResource(ctx, clusterConf, "NotExistsKind", "v1")
 	assert.NotNil(t, err)
 }
 
 func TestGetResPreferredVersion(t *testing.T) {
-	apiVersion, _ := GetResPreferredVersion(context.TODO(), testClusterID, Deploy)
+	ctx := context.TODO()
+	apiVersion, _ := GetResPreferredVersion(ctx, testClusterID, ResKindDeploy)
 	assert.Equal(t, apiVersion, "apps/v1")
 
-	apiVersion, _ = GetResPreferredVersion(context.TODO(), testClusterID, Po)
+	apiVersion, _ = GetResPreferredVersion(ctx, testClusterID, ResKindPo)
 	assert.Equal(t, apiVersion, "v1")
+}
+
+func TestGetServerVersion(t *testing.T) {
+	ver, err := GetServerVersion(context.TODO(), testClusterID)
+	assert.Nil(t, err, "failed to get server version info")
+
+	// 这里假定运行单元测试的集群，版本是 1.20+，如果后续升 2.x，需要调整下
+	assert.Equal(t, "1", ver.Major)
+	assert.Greater(t, cast.ToInt(ver.Minor), 20)
 }

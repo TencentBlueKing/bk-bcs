@@ -1,7 +1,19 @@
 <template>
   <div class="tencent-cloud">
     <div class="tencent-cloud-operate">
-      <bk-button theme="primary" @click="handleShowCreateDialog">{{$t('新建凭证')}}</bk-button>
+      <bk-button
+        theme="primary"
+        v-authority="{
+          actionId: 'cloud_account_create',
+          resourceName: curProject.project_name,
+          newPerms: true,
+          permCtx: {
+            resource_type: 'project',
+            project_id: curProject.project_id,
+            operator: user.username
+          }
+        }"
+        @click="handleShowCreateDialog">{{$t('新建凭证')}}</bk-button>
       <bk-input
         class="w400"
         :placeholder="$t('搜索名称、SecretID、集群ID')"
@@ -53,7 +65,22 @@
       </bcs-table-column>
       <bcs-table-column :label="$t('操作')" width="100">
         <template #default="{ row }">
-          <bk-button text @click="handleDeleteAccount(row)">{{$t('删除')}}</bk-button>
+          <bk-button
+            text
+            v-authority="{
+              clickable: webAnnotations.perms[row.account.accountID]
+                && webAnnotations.perms[row.account.accountID].cloud_account_manage,
+              actionId: 'cloud_account_manage',
+              resourceName: row.account.accountName,
+              disablePerms: true,
+              newPerms: true,
+              permCtx: {
+                project_id: row.account.projectID,
+                account_id: row.account.accountID,
+                operator: user.username
+              }
+            }"
+            @click="handleDeleteAccount(row)">{{$t('删除')}}</bk-button>
         </template>
       </bcs-table-column>
     </bcs-table>
@@ -135,6 +162,13 @@ export default defineComponent({
           message: $i18n.t('必填项'),
           trigger: 'blur',
         },
+        {
+          message: $i18n.t('不支持中文字符'),
+          trigger: 'blur',
+          validator(val) {
+            return !(/[\u4E00-\u9FA5]/g.test(val));
+          },
+        },
       ],
       'account.secretKey': [
         {
@@ -142,18 +176,29 @@ export default defineComponent({
           message: $i18n.t('必填项'),
           trigger: 'blur',
         },
+        {
+          message: $i18n.t('不支持中文字符'),
+          trigger: 'blur',
+          validator(val) {
+            return !(/[\u4E00-\u9FA5]/g.test(val));
+          },
+        },
       ],
     });
+    const webAnnotations = ref({ perms: {} });
     const keys = ref(['account.accountName', 'account.account.secretID', 'clusters']); // 模糊搜索字段
     const { tableDataMatchSearch, searchValue } = useTableSearch(data, keys);
     const { pageChange, pageSizeChange, curPageData, pageConf } = usePage(tableDataMatchSearch);
 
     const handleGetCloud = async () => {
       loading.value = true;
-      data.value = await $store.dispatch('clustermanager/cloudAccounts', {
+      const res = await $store.dispatch('clustermanager/cloudAccounts', {
         $cloudId: 'tencentCloud',
         projectID: curProject.value.project_id,
+        operator: user.value.username,
       });
+      data.value = res.data;
+      webAnnotations.value = res.web_annotations || { perms: {} };
       loading.value = false;
     };
     const handleDeleteAccount = (row) => {
@@ -206,6 +251,9 @@ export default defineComponent({
       handleGetCloud();
     });
     return {
+      curProject,
+      user,
+      webAnnotations,
       curPageData,
       searchValue,
       showDialog,
@@ -237,7 +285,7 @@ export default defineComponent({
         justify-content: space-between;
     }
 }
- /deep/ .bk-form-content .form-error-tip {
+/deep/ .bk-form-content .form-error-tip {
     text-align: left;
 }
 </style>

@@ -15,13 +15,17 @@
               <span class="value">{{ status.hostIP || '--' }}</span>
             </div>
             <div class="basic-item">
-              <span class="label">Pod IP</span>
+              <span class="label">Pod IPv4</span>
               <span class="value">{{ status.podIP || '--' }}</span>
+            </div>
+            <div class="basic-item">
+              <span class="label">Pod IPv6</span>
+              <span class="value">{{ manifestExt.podIPv6 || '--' }}</span>
             </div>
           </div>
         </div>
         <div class="btns">
-          <bk-button theme="primary" @click="handleShowYamlPanel">To YAML</bk-button>
+          <bk-button theme="primary" @click="handleShowYamlPanel">{{ $t('查看YAML配置') }}</bk-button>
           <template v-if="!hiddenOperate">
             <bk-button
               theme="primary"
@@ -85,7 +89,7 @@
           :suffix="[$t('入流量'), $t('出流量')]">
         </Metric>
       </div>
-      <bcs-tab class="workload-tab" :active.sync="activePanel" type="card" :label-height="40">
+      <bcs-tab class="workload-tab" :active.sync="activePanel" type="card" :label-height="42">
         <bcs-tab-panel name="container" :label="$t('容器')" v-bkloading="{ isLoading: containerLoading }">
           <bk-table :data="container">
             <bk-table-column :label="$t('容器名称')" prop="name">
@@ -106,10 +110,11 @@
                   placement="bottom"
                   theme="light dropdown"
                   :arrow="false"
-                  v-if="row.containerID && $INTERNAL && !isSharedCluster">
+                  v-if="row.containerID && !isSharedCluster">
                   <bk-button style="cursor: default;" text class="ml10">{{ $t('日志检索') }}</bk-button>
                   <div slot="content">
-                    <ul>
+                    <!-- 内部版 -->
+                    <ul v-if="$INTERNAL">
                       <a
                         :href="logLinks[row.containerID] && logLinks[row.containerID].std_log_link"
                         target="_blank" class="dropdown-item">
@@ -121,11 +126,33 @@
                         {{ $t('文件日志检索') }}
                       </a>
                     </ul>
+                    <ul v-else>
+                      <a
+                        :href="logLinks[row.container_id] && logLinks[row.container_id].std_log_link"
+                        target="_blank" class="dropdown-item">
+                        {{ $t('标准日志') }}
+                      </a>
+                      <a
+                        :href="logLinks[row.container_id] && logLinks[row.container_id].file_log_link"
+                        target="_blank" class="dropdown-item">
+                        {{ $t('文件路径日志') }}
+                      </a>
+                    </ul>
                   </div>
                 </bk-popover>
               </template>
             </bk-table-column>
           </bk-table>
+        </bcs-tab-panel>
+        <bcs-tab-panel name="event" :label="$t('事件')">
+          <EventQueryTableVue
+            class="min-h-[360px]"
+            is-specify-kinds
+            :kinds="['Pod']"
+            :cluster-id="clusterId"
+            :namespace="namespace"
+            :name="name">
+          </EventQueryTableVue>
         </bcs-tab-panel>
         <bcs-tab-panel name="conditions" :label="$t('状态（Conditions）')">
           <bk-table :data="conditions">
@@ -254,9 +281,18 @@
     </div>
     <bcs-sideslider quick-close :title="metadata.name" :is-show.sync="showYamlPanel" :width="800">
       <template #content>
-        <Ace
+        <CodeEditor
           v-full-screen="{ tools: ['fullscreen', 'copy'], content: yaml }"
-          width="100%" height="100%" lang="yaml" read-only :value="yaml"></Ace>
+          width="100%"
+          height="100%"
+          readonly
+          :options="{
+            roundedSelection: false,
+            scrollBeyondLastLine: false,
+            renderLineHighlight: false,
+          }"
+          :value="yaml">
+        </CodeEditor>
       </template>
     </bcs-sideslider>
   </div>
@@ -269,8 +305,9 @@ import StatusIcon from '../../common/status-icon';
 import Metric from '../../common/metric.vue';
 import useDetail from './use-detail';
 import { formatTime, timeZoneTransForm } from '@/common/util';
-import Ace from '@/components/ace-editor';
+import CodeEditor from '@/components/monaco-editor/new-editor.vue';
 import fullScreen from '@/directives/full-screen';
+import EventQueryTableVue from '@/views/mc/event-query-table.vue';
 
 export interface IDetail {
   manifest: any;
@@ -288,7 +325,8 @@ export default defineComponent({
   components: {
     StatusIcon,
     Metric,
-    Ace,
+    CodeEditor,
+    EventQueryTableVue,
   },
   directives: {
     bkOverflowTips,
@@ -344,6 +382,7 @@ export default defineComponent({
     const container = ref<any[]>([]);
     const containerLoading = ref(false);
     const logLinks = ref({});
+    const curProject = computed(() => $store.state.curProject);
     const handleGetContainer = async () => {
       containerLoading.value = true;
       container.value = await $store.dispatch('dashboard/listContainers', {
@@ -351,10 +390,15 @@ export default defineComponent({
         $namespaceId: namespace.value,
       });
       const containerIDs = container.value.map(item => item.containerID).filter(id => !!id);
-      if ($INTERNAL && containerIDs.length) {
-        logLinks.value = await $store.dispatch('dashboard/logLinks', {
-          container_ids: containerIDs.join(','),
-        });
+      if (containerIDs.length) {
+        logLinks.value = $INTERNAL
+          ? await $store.dispatch('dashboard/logLinks', {
+            container_ids: containerIDs.join(','),
+          })
+          : await $store.dispatch('crdcontroller/getLogLinks', {
+            container_ids: containerIDs.join(','),
+            bk_biz_id: curProject.value?.cc_app_id,
+          });
       }
       containerLoading.value = false;
     };
@@ -448,6 +492,7 @@ export default defineComponent({
     });
 
     return {
+      clusterId,
       params,
       container,
       conditions,
@@ -472,7 +517,6 @@ export default defineComponent({
       timeZoneTransForm,
       handleShowYamlPanel,
       handleGetStorage,
-      handleGetContainer,
       gotoContainerDetail,
       handleGetExtData,
       formatTime,

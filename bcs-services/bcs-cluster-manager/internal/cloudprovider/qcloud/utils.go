@@ -55,7 +55,7 @@ var (
 	// import cluster task
 	importClusterNodesTask        = fmt.Sprintf("%s-ImportClusterNodesTask", cloudName)
 	registerClusterKubeConfigTask = fmt.Sprintf("%s-RegisterClusterKubeConfigTask", cloudName)
-	installWatchComponentTask = fmt.Sprintf("%s-InstallWatchComponentTask", cloudName)
+	installWatchComponentTask     = fmt.Sprintf("%s-InstallWatchComponentTask", cloudName)
 
 	// create cluster task
 	createClusterShieldAlarmTask  = fmt.Sprintf("%s-CreateClusterShieldAlarmTask", cloudName)
@@ -88,12 +88,15 @@ var (
 
 	// clean node in nodeGroup task
 	cleanNodeGroupNodesTask             = fmt.Sprintf("%s-CleanNodeGroupNodesTask", cloudName)
+	removeHostFromCMDBTask              = fmt.Sprintf("%s-RemoveHostFromCMDBTask", cloudName)
 	checkCleanNodeGroupNodesStatusTask  = fmt.Sprintf("%s-CheckCleanNodeGroupNodesStatusTask", cloudName)
 	updateCleanNodeGroupNodesDBInfoTask = fmt.Sprintf("%s-UpdateCleanNodeGroupNodesDBInfoTask", cloudName)
 
 	// update desired nodes task
 	applyInstanceMachinesTask    = fmt.Sprintf("%s-%s", cloudName, cloudprovider.ApplyInstanceMachinesTask)
 	checkClusterNodesStatusTask  = fmt.Sprintf("%s-CheckClusterNodesStatusTask", cloudName)
+	installGSEAgentTask          = fmt.Sprintf("%s-InstallGSEAgentTask", cloudName)
+	transferHostModuleTask       = fmt.Sprintf("%s-TransferHostModuleTask", cloudName)
 	updateDesiredNodesDBInfoTask = fmt.Sprintf("%s-UpdateDesiredNodesDBInfoTask", cloudName)
 
 	// auto scale task

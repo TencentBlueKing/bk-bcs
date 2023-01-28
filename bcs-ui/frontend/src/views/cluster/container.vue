@@ -8,8 +8,7 @@
       <bk-guide></bk-guide>
     </div>
     <div class="biz-content-wrapper biz-app-instance">
-      <app-exception v-if="exceptionCode" :type="exceptionCode.code" :text="exceptionCode.msg"></app-exception>
-      <div v-else class="biz-app-instance-wrapper">
+      <div class="biz-app-instance-wrapper">
         <div class="biz-app-instance-header">
           <div class="header-item">
             <div class="key-label">{{$t('主机名称：')}}</div>
@@ -418,7 +417,7 @@ import { Decimal } from 'decimal.js';
 import { containerDetailChart } from '@/common/chart-option';
 import { catchErrorHandler, formatBytes } from '@/common/util';
 
-import { createChartOption } from '@/views/app/container-chart-opts';
+import { createChartOption } from '@/views/templateset/app/container-chart-opts';
 
 export default {
   name: 'ClusterContainer',
@@ -448,7 +447,6 @@ export default {
       labelList: [],
       resourceList: [],
       bkMessageInstance: null,
-      exceptionCode: null,
       projectIdTimer: null,
     };
   },

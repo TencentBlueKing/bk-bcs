@@ -14,6 +14,7 @@
 package k8s
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"math/rand"
@@ -26,12 +27,14 @@ import (
 	"github.com/parnurzeal/gorequest"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/fields"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
-	"k8s.io/client-go/rest"
+	"k8s.io/apimachinery/pkg/watch"
+	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/util/workqueue"
 
@@ -39,6 +42,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
 	netservicetypes "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/netservice"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-k8s-watch/app/bcs"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-k8s-watch/app/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-k8s-watch/app/output"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-k8s-watch/app/output/action"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-k8s-watch/pkg/metrics"
@@ -72,56 +76,127 @@ type Watcher struct {
 	resourceType       string
 	resourceNamespaced bool
 	// queue              *queue.Queue
-	eventQueue     workqueue.RateLimitingInterface
-	controller     cache.Controller
-	store          cache.Store
-	writer         *output.Writer
-	sharedWatchers map[string]WatcherInterface
-	stopChan       chan struct{}
-	namespace      string
-	labelSelector  string
-	labelMap       map[string]string
+	eventQueue       workqueue.RateLimitingInterface
+	controller       cache.Controller
+	store            cache.Store
+	writer           *output.Writer
+	sharedWatchers   map[string]WatcherInterface
+	stopChan         chan struct{}
+	namespace        string
+	labelSelector    string
+	labelMap         map[string]string
+	namespaceFilters map[string]struct{}
+	nameFilters      map[string]struct{}
+}
+
+// WatcherOptions provide options for create Watcher
+type WatcherOptions struct {
+	DynamicClient    *dynamic.Interface
+	Namespace        string
+	ResourceType     string
+	GroupVersion     string
+	ResourceName     string
+	ObjType          runtime.Object
+	Writer           *output.Writer
+	SharedWatchers   map[string]WatcherInterface
+	IsNameSpaced     bool
+	LabelSelector    string
+	NamespaceFilters []string
+	NameFilters      []string
+}
+
+// Validate validate WatcherOptions
+func (wo *WatcherOptions) Validate() error {
+	if wo.DynamicClient == nil {
+		return fmt.Errorf("DynamicClient is nil in WatcherOptions")
+	}
+
+	if wo.Writer == nil {
+		return fmt.Errorf("Writer is nil in WatcherOptions")
+	}
+
+	if wo.SharedWatchers == nil {
+		return fmt.Errorf("SharedWatchers is nil in WatcherOptions")
+	}
+
+	return nil
 }
 
 // NewWatcher creates a new watcher of target type resource.
-func NewWatcher(client *rest.Interface, namespace string, resourceType string, resourceName string,
-	objType runtime.Object,
-	writer *output.Writer, sharedWatchers map[string]WatcherInterface, resourceNamespaced bool,
-	labelSelector string) (*Watcher, error) {
+func NewWatcher(wo *WatcherOptions) (*Watcher, error) {
+	if wo == nil {
+		return nil, fmt.Errorf("WatcherOptions can not be nil pointer")
+	}
 
-	labelSet, err := labels.ConvertSelectorToLabelsMap(labelSelector)
+	if err := wo.Validate(); err != nil {
+		return nil, err
+	}
+
+	labelSet, err := labels.ConvertSelectorToLabelsMap(wo.LabelSelector)
 	if err != nil {
 		return nil, err
 	}
 	watcher := &Watcher{
-		resourceType:       resourceType,
-		writer:             writer,
-		sharedWatchers:     sharedWatchers,
-		resourceNamespaced: resourceNamespaced,
+		resourceType:       wo.ResourceType,
+		writer:             wo.Writer,
+		sharedWatchers:     wo.SharedWatchers,
+		resourceNamespaced: wo.IsNameSpaced,
 		// queue:              queue.New(),
 		eventQueue: workqueue.NewRateLimitingQueue(
 			workqueue.NewItemExponentialFailureRateLimiter(
 				eventQueueBackoffBaseDuration,
 				eventQueueBackoffMaxDuration)),
-		namespace:     namespace,
-		labelSelector: labelSelector,
-		labelMap:      labelSet,
+		namespace:        wo.Namespace,
+		labelSelector:    wo.LabelSelector,
+		labelMap:         labelSet,
+		namespaceFilters: map[string]struct{}{},
+		nameFilters:      map[string]struct{}{},
+	}
+	for _, ns := range wo.NamespaceFilters {
+		watcher.namespaceFilters[ns] = struct{}{}
+	}
+	for _, name := range wo.NameFilters {
+		watcher.nameFilters[name] = struct{}{}
 	}
 
-	glog.Infof("NewWatcher with resource type: %s, resource name: %s, namespace: %s, labelSelector: %s", resourceType,
-		resourceName, namespace, labelSelector)
+	glog.Infof("NewWatcher with resource type: %s, resource name: %s, namespace: %s, labelSelector: %s", wo.ResourceType,
+		wo.ResourceName, wo.Namespace, wo.LabelSelector)
 
-	// build list watch.
-	listWatch := cache.NewListWatchFromClient(*client, resourceName, namespace, fields.Everything())
+	gv, err := schema.ParseGroupVersion(wo.GroupVersion)
+	if err != nil {
+		return nil, err
+	}
+	gvr := schema.GroupVersionResource{Group: gv.Group, Version: gv.Version, Resource: wo.ResourceName}
 
-	// if with labelSelector, use label selector to filter resource.
-	if watcher.labelSelector != "" {
-		// apply the specified selector as a filter.
-		optionsModifier := func(options *metav1.ListOptions) {
-			options.LabelSelector = watcher.labelSelector
+	var listWatch *cache.ListWatch
+	if !wo.IsNameSpaced {
+		// unnamespaced resource
+		listWatch = &cache.ListWatch{
+			ListFunc: func(options metav1.ListOptions) (runtime.Object, error) {
+				options.LabelSelector = watcher.labelSelector
+				return (*wo.DynamicClient).Resource(gvr).List(context.TODO(), options)
+			},
+			WatchFunc: func(options metav1.ListOptions) (watch.Interface, error) {
+				options.LabelSelector = watcher.labelSelector
+				timeoutSeconds := int64(5 * time.Minute.Seconds() * (rand.Float64() + 1.0))
+				options.TimeoutSeconds = &timeoutSeconds
+				return (*wo.DynamicClient).Resource(gvr).Watch(context.TODO(), options)
+			},
 		}
-
-		listWatch = cache.NewFilteredListWatchFromClient(*client, resourceName, namespace, optionsModifier)
+	} else {
+		// wo.Namespace specified namespace, if "" watch all namespace
+		listWatch = &cache.ListWatch{
+			ListFunc: func(options metav1.ListOptions) (runtime.Object, error) {
+				options.LabelSelector = watcher.labelSelector
+				return (*wo.DynamicClient).Resource(gvr).Namespace(wo.Namespace).List(context.TODO(), options)
+			},
+			WatchFunc: func(options metav1.ListOptions) (watch.Interface, error) {
+				options.LabelSelector = watcher.labelSelector
+				timeoutSeconds := int64(5 * time.Minute.Seconds() * (rand.Float64() + 1.0))
+				options.TimeoutSeconds = &timeoutSeconds
+				return (*wo.DynamicClient).Resource(gvr).Namespace(wo.Namespace).Watch(context.TODO(), options)
+			},
+		}
 	}
 
 	// register event handler.
@@ -132,7 +207,7 @@ func NewWatcher(client *rest.Interface, namespace string, resourceType string, r
 	}
 
 	// build informer.
-	store, controller := cache.NewInformer(listWatch, objType, 0, eventHandler)
+	store, controller := cache.NewInformer(listWatch, wo.ObjType, 0, eventHandler)
 	watcher.store = store
 	watcher.controller = controller
 
@@ -213,6 +288,12 @@ func (w *Watcher) AddEvent(obj interface{}) {
 		glog.Errorf("Error casting to k8s metav1 object, new obj: %+v", obj)
 		return
 	}
+
+	// ignore managedFields field
+	if !options.IsWatchManagedFields {
+		dMeta.SetManagedFields(nil)
+	}
+
 	item := types.NamespacedName{
 		Name:      dMeta.GetName(),
 		Namespace: dMeta.GetNamespace(),
@@ -245,6 +326,12 @@ func (w *Watcher) DeleteEvent(obj interface{}) {
 		glog.Errorf("Error casting to k8s metav1 object, new obj: %+v", obj)
 		return
 	}
+
+	// ignore managedFields field
+	if !options.IsWatchManagedFields {
+		dMeta.SetManagedFields(nil)
+	}
+
 	item := types.NamespacedName{
 		Name:      dMeta.GetName(),
 		Namespace: dMeta.GetNamespace(),
@@ -260,6 +347,18 @@ func (w *Watcher) UpdateEvent(oldObj, newObj interface{}) {
 		glog.Errorf("Error casting to k8s metav1 object, new obj: %+v", newObj)
 		return
 	}
+	oMeta, ok := oldObj.(metav1.Object)
+	if !ok {
+		glog.Errorf("Error casting to k8s metav1 object, old obj: %+v", oldObj)
+		return
+	}
+
+	// ignore managedFields field
+	if !options.IsWatchManagedFields {
+		nMeta.SetManagedFields(nil)
+		oMeta.SetManagedFields(nil)
+	}
+
 	// compare the object changes for update.
 	if reflect.DeepEqual(oldObj, newObj) {
 		// there is no changes, no need to update.
@@ -270,10 +369,23 @@ func (w *Watcher) UpdateEvent(oldObj, newObj interface{}) {
 
 	// skip unnecessary node update event to reduce writer-queues pressure.
 	if w.resourceType == "Node" {
-		oldNode, oOk := oldObj.(*v1.Node)
-		newNode, nOk := newObj.(*v1.Node)
+		// convert to unstructured object
+		oldNodeUnstructured, oOk := oldObj.(*unstructured.Unstructured)
+		newNodeUnstructured, nOk := newObj.(*unstructured.Unstructured)
 		if !oOk || !nOk {
-			glog.Errorf("Error casting to k8s metav1 object, new obj: %+v", newObj)
+			glog.Errorf("Error casting to k8s metav1 unstructured object, new obj: %+v", newObj)
+			return
+		}
+
+		// convert to corev1 object
+		oldNode, newNode := &v1.Node{}, &v1.Node{}
+		if err := runtime.DefaultUnstructuredConverter.FromUnstructured(oldNodeUnstructured.UnstructuredContent(), oldNode); err != nil {
+			glog.Errorf("Error casting to k8s corev1 object, old obj: %+v", oldObj)
+			return
+		}
+
+		if err := runtime.DefaultUnstructuredConverter.FromUnstructured(newNodeUnstructured.UnstructuredContent(), newNode); err != nil {
+			glog.Errorf("Error casting to k8s corev1 object, new obj: %+v", newObj)
 			return
 		}
 
@@ -379,11 +491,10 @@ func (w *Watcher) isEventShouldFilter(meta types.NamespacedName, eventAction str
 		return true
 	}
 
-	if meta.Namespace == "kube-system" {
+	if _, isFilter := w.namespaceFilters[meta.Namespace]; isFilter {
 		return true
 	}
-
-	if meta.Name == "kubernetes" {
+	if _, isFilter := w.nameFilters[meta.Name]; isFilter {
 		return true
 	}
 	return false

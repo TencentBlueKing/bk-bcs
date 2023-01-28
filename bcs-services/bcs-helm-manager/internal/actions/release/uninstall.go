@@ -16,6 +16,7 @@ import (
 	"context"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/release"
@@ -88,13 +89,7 @@ func (u *UninstallReleaseAction) uninstall() error {
 	}
 
 	// 删掉所有revision的数据
-	if err = u.model.DeleteReleases(u.ctx, clusterID, releaseNamespace, releaseName); err != nil {
-		blog.Errorf("uninstall release, delete releases in store failed, %s, "+
-			"clusterID: %s, namespace: %s, name: %s, operator: %s",
-			err.Error(), clusterID, releaseNamespace, releaseName, username)
-		u.setResp(common.ErrHelmManagerUninstallActionFailed, err.Error())
-		return nil
-	}
+	_ = u.model.DeleteRelease(u.ctx, clusterID, releaseNamespace, releaseName)
 
 	blog.Infof("uninstall release successfully, clusterID: %s, namespace: %s, name: %s, operator: %s",
 		clusterID, releaseNamespace, releaseName, username)

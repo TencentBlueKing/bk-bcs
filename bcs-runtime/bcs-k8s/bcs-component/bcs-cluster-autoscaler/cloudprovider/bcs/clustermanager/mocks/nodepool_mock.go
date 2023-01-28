@@ -124,12 +124,28 @@ func (mr *MockNodePoolClientInterfaceMockRecorder) GetPoolNodeTemplate(np interf
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPoolNodeTemplate", reflect.TypeOf((*MockNodePoolClientInterface)(nil).GetPoolNodeTemplate), np)
 }
 
+// GetTask mocks base method.
+func (m *MockNodePoolClientInterface) GetTask(id string) (*clustermanager.Task, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetTask", id)
+	ret0, _ := ret[0].(*clustermanager.Task)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetTask indicates an expected call of GetTask.
+func (mr *MockNodePoolClientInterfaceMockRecorder) GetTask(id interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTask", reflect.TypeOf((*MockNodePoolClientInterface)(nil).GetTask), id)
+}
+
 // RemoveNodes mocks base method.
-func (m *MockNodePoolClientInterface) RemoveNodes(np string, ips []string) error {
+func (m *MockNodePoolClientInterface) RemoveNodes(np string, ips []string) (string, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "RemoveNodes", np, ips)
-	ret0, _ := ret[0].(error)
-	return ret0
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // RemoveNodes indicates an expected call of RemoveNodes.
@@ -139,11 +155,12 @@ func (mr *MockNodePoolClientInterfaceMockRecorder) RemoveNodes(np, ips interface
 }
 
 // UpdateDesiredNode mocks base method.
-func (m *MockNodePoolClientInterface) UpdateDesiredNode(np string, desiredNode int) error {
+func (m *MockNodePoolClientInterface) UpdateDesiredNode(np string, desiredNode int) (string, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateDesiredNode", np, desiredNode)
-	ret0, _ := ret[0].(error)
-	return ret0
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // UpdateDesiredNode indicates an expected call of UpdateDesiredNode.

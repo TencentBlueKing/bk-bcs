@@ -5,7 +5,6 @@
 
 <script>
 import k8sService from './service/k8s';
-import globalMixin from '@/mixins/global';
 
 export default {
   beforeRouteLeave(to, from, next) {
@@ -15,7 +14,6 @@ export default {
   components: {
     k8sService,
   },
-  mixins: [globalMixin],
   data() {
     return {
       currentView: 'k8sService',
@@ -25,9 +23,6 @@ export default {
     onlineProjectList() {
       return this.$store.state.sideMenu.onlineProjectList;
     },
-  },
-  mounted() {
-    this.curProject = this.initCurProject();
   },
   beforeDestroy() {
     this.$refs.service.leaveCallback();

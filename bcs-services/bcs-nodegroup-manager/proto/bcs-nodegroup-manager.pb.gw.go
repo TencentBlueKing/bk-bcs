@@ -253,13 +253,12 @@ func RegisterNodegroupManagerGwServer(ctx context.Context, mux *runtime.ServeMux
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		var err error
-		ctx, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/nodegroupmanager.NodegroupManager/GetClusterAutoscalerReview", runtime.WithHTTPPathPattern("/nodegroupmanager/v1/autoscaler/review"))
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/nodegroupmanager.NodegroupManager/GetClusterAutoscalerReview", runtime.WithHTTPPathPattern("/nodegroupmanager/v1/autoscaler/review"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_NodegroupManager_GetClusterAutoscalerReview_0(ctx, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_NodegroupManager_GetClusterAutoscalerReview_0(rctx, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
@@ -277,13 +276,12 @@ func RegisterNodegroupManagerGwServer(ctx context.Context, mux *runtime.ServeMux
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		var err error
-		ctx, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/nodegroupmanager.NodegroupManager/CreateNodePoolMgrStrategy", runtime.WithHTTPPathPattern("/nodegroupmanager/v1/nodegroupstrategy"))
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/nodegroupmanager.NodegroupManager/CreateNodePoolMgrStrategy", runtime.WithHTTPPathPattern("/nodegroupmanager/v1/nodegroupstrategy"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_NodegroupManager_CreateNodePoolMgrStrategy_0(ctx, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_NodegroupManager_CreateNodePoolMgrStrategy_0(rctx, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
@@ -301,13 +299,12 @@ func RegisterNodegroupManagerGwServer(ctx context.Context, mux *runtime.ServeMux
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		var err error
-		ctx, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/nodegroupmanager.NodegroupManager/UpdateNodePoolMgrStrategy", runtime.WithHTTPPathPattern("/nodegroupmanager/v1/nodegroupstrategy"))
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/nodegroupmanager.NodegroupManager/UpdateNodePoolMgrStrategy", runtime.WithHTTPPathPattern("/nodegroupmanager/v1/nodegroupstrategy"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_NodegroupManager_UpdateNodePoolMgrStrategy_0(ctx, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_NodegroupManager_UpdateNodePoolMgrStrategy_0(rctx, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
@@ -325,13 +322,12 @@ func RegisterNodegroupManagerGwServer(ctx context.Context, mux *runtime.ServeMux
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		var err error
-		ctx, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/nodegroupmanager.NodegroupManager/GetNodePoolMgrStrategy", runtime.WithHTTPPathPattern("/nodegroupmanager/v1/nodegroupstrategy"))
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/nodegroupmanager.NodegroupManager/GetNodePoolMgrStrategy", runtime.WithHTTPPathPattern("/nodegroupmanager/v1/nodegroupstrategy"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_NodegroupManager_GetNodePoolMgrStrategy_0(ctx, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_NodegroupManager_GetNodePoolMgrStrategy_0(rctx, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
@@ -349,13 +345,12 @@ func RegisterNodegroupManagerGwServer(ctx context.Context, mux *runtime.ServeMux
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		var err error
-		ctx, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/nodegroupmanager.NodegroupManager/ListNodePoolMgrStrategies", runtime.WithHTTPPathPattern("/nodegroupmanager/v1/nodegroupstrategies"))
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/nodegroupmanager.NodegroupManager/ListNodePoolMgrStrategies", runtime.WithHTTPPathPattern("/nodegroupmanager/v1/nodegroupstrategies"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_NodegroupManager_ListNodePoolMgrStrategies_0(ctx, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_NodegroupManager_ListNodePoolMgrStrategies_0(rctx, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
@@ -373,13 +368,12 @@ func RegisterNodegroupManagerGwServer(ctx context.Context, mux *runtime.ServeMux
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		var err error
-		ctx, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/nodegroupmanager.NodegroupManager/DeleteNodePoolMgrStrategy", runtime.WithHTTPPathPattern("/nodegroupmanager/v1/nodegroupstrategy"))
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/nodegroupmanager.NodegroupManager/DeleteNodePoolMgrStrategy", runtime.WithHTTPPathPattern("/nodegroupmanager/v1/nodegroupstrategy"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_NodegroupManager_DeleteNodePoolMgrStrategy_0(ctx, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_NodegroupManager_DeleteNodePoolMgrStrategy_0(rctx, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
@@ -436,13 +430,12 @@ func RegisterNodegroupManagerGwClient(ctx context.Context, mux *runtime.ServeMux
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		var err error
-		ctx, err = runtime.AnnotateContext(ctx, mux, req, "/nodegroupmanager.NodegroupManager/GetClusterAutoscalerReview", runtime.WithHTTPPathPattern("/nodegroupmanager/v1/autoscaler/review"))
+		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/nodegroupmanager.NodegroupManager/GetClusterAutoscalerReview", runtime.WithHTTPPathPattern("/nodegroupmanager/v1/autoscaler/review"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_NodegroupManager_GetClusterAutoscalerReview_0(ctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_NodegroupManager_GetClusterAutoscalerReview_0(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -457,13 +450,12 @@ func RegisterNodegroupManagerGwClient(ctx context.Context, mux *runtime.ServeMux
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		var err error
-		ctx, err = runtime.AnnotateContext(ctx, mux, req, "/nodegroupmanager.NodegroupManager/CreateNodePoolMgrStrategy", runtime.WithHTTPPathPattern("/nodegroupmanager/v1/nodegroupstrategy"))
+		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/nodegroupmanager.NodegroupManager/CreateNodePoolMgrStrategy", runtime.WithHTTPPathPattern("/nodegroupmanager/v1/nodegroupstrategy"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_NodegroupManager_CreateNodePoolMgrStrategy_0(ctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_NodegroupManager_CreateNodePoolMgrStrategy_0(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -478,13 +470,12 @@ func RegisterNodegroupManagerGwClient(ctx context.Context, mux *runtime.ServeMux
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		var err error
-		ctx, err = runtime.AnnotateContext(ctx, mux, req, "/nodegroupmanager.NodegroupManager/UpdateNodePoolMgrStrategy", runtime.WithHTTPPathPattern("/nodegroupmanager/v1/nodegroupstrategy"))
+		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/nodegroupmanager.NodegroupManager/UpdateNodePoolMgrStrategy", runtime.WithHTTPPathPattern("/nodegroupmanager/v1/nodegroupstrategy"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_NodegroupManager_UpdateNodePoolMgrStrategy_0(ctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_NodegroupManager_UpdateNodePoolMgrStrategy_0(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -499,13 +490,12 @@ func RegisterNodegroupManagerGwClient(ctx context.Context, mux *runtime.ServeMux
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		var err error
-		ctx, err = runtime.AnnotateContext(ctx, mux, req, "/nodegroupmanager.NodegroupManager/GetNodePoolMgrStrategy", runtime.WithHTTPPathPattern("/nodegroupmanager/v1/nodegroupstrategy"))
+		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/nodegroupmanager.NodegroupManager/GetNodePoolMgrStrategy", runtime.WithHTTPPathPattern("/nodegroupmanager/v1/nodegroupstrategy"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_NodegroupManager_GetNodePoolMgrStrategy_0(ctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_NodegroupManager_GetNodePoolMgrStrategy_0(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -520,13 +510,12 @@ func RegisterNodegroupManagerGwClient(ctx context.Context, mux *runtime.ServeMux
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		var err error
-		ctx, err = runtime.AnnotateContext(ctx, mux, req, "/nodegroupmanager.NodegroupManager/ListNodePoolMgrStrategies", runtime.WithHTTPPathPattern("/nodegroupmanager/v1/nodegroupstrategies"))
+		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/nodegroupmanager.NodegroupManager/ListNodePoolMgrStrategies", runtime.WithHTTPPathPattern("/nodegroupmanager/v1/nodegroupstrategies"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_NodegroupManager_ListNodePoolMgrStrategies_0(ctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_NodegroupManager_ListNodePoolMgrStrategies_0(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -541,13 +530,12 @@ func RegisterNodegroupManagerGwClient(ctx context.Context, mux *runtime.ServeMux
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		var err error
-		ctx, err = runtime.AnnotateContext(ctx, mux, req, "/nodegroupmanager.NodegroupManager/DeleteNodePoolMgrStrategy", runtime.WithHTTPPathPattern("/nodegroupmanager/v1/nodegroupstrategy"))
+		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/nodegroupmanager.NodegroupManager/DeleteNodePoolMgrStrategy", runtime.WithHTTPPathPattern("/nodegroupmanager/v1/nodegroupstrategy"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_NodegroupManager_DeleteNodePoolMgrStrategy_0(ctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_NodegroupManager_DeleteNodePoolMgrStrategy_0(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)

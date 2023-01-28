@@ -19,6 +19,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	resCsts "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/constants"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/model"
 )
 
@@ -44,7 +45,7 @@ var lightPVCManifest = map[string]interface{}{
 }
 
 var exceptedPVCSpec = model.PVCSpec{
-	ClaimType:   PVCTypeUseExistPV,
+	ClaimType:   resCsts.PVCTypeUseExistPV,
 	PVName:      "task-pv-volume",
 	SCName:      "local-path",
 	StorageSize: 5,

@@ -120,6 +120,7 @@ func TestCreateNodeGroupCache(t *testing.T) {
 			key:  "abcdefghijklmnopqrstuvwx",
 			args: args{},
 			want: &NodeGroupCache{
+				allGroups:              make([]*NodeGroup, 0),
 				registeredGroups:       make([]*NodeGroup, 0),
 				instanceToGroup:        make(map[InstanceRef]*NodeGroup),
 				instanceToCreationType: make(map[InstanceRef]CreationType),
@@ -190,6 +191,7 @@ func TestCreateNodeGroupCacheWithoutEncryption(t *testing.T) {
 			name: "create cache normal",
 			args: args{},
 			want: &NodeGroupCache{
+				allGroups:              make([]*NodeGroup, 0),
 				registeredGroups:       make([]*NodeGroup, 0),
 				instanceToGroup:        make(map[InstanceRef]*NodeGroup),
 				instanceToCreationType: make(map[InstanceRef]CreationType),

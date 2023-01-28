@@ -20,7 +20,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/app"
+	application "github.com/Tencent/bk-bcs/bcs-services/bcs-storage/app"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/app/options"
 )
 
@@ -33,7 +33,9 @@ func main() {
 	blog.InitLogs(op.LogConfig)
 	defer blog.CloseLogs()
 
-	if err := app.Run(op); err != nil {
+	app := application.NewApp(op)
+
+	if err := app.Run(); err != nil {
 		fmt.Fprintf(os.Stderr, "%v\n", err)
 		os.Exit(1)
 	}

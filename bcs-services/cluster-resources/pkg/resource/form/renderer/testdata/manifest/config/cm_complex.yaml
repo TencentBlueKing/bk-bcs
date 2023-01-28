@@ -4,7 +4,10 @@ metadata:
   name: cm-complex-6byc8q0oyc
   namespace: default
   annotations:
-    "io.tencent.bcs.editFormat": "form"
+    io.tencent.bcs.editFormat: form
+    io.tencent.paas.creator: anonymous
+    io.tencent.paas.updator: anonymous
+immutable: true
 data:
   "key1": "value1"
   "key2": "value2\nvalue3\nvalue4"

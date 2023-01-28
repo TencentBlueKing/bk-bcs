@@ -9,13 +9,8 @@
       <bk-guide></bk-guide>
     </div>
     <div class="biz-content-wrapper" style="padding: 0;" v-bkloading="{ isLoading: isInitLoading, opacity: 0.1 }">
-      <app-exception
-        v-if="exceptionCode && !isInitLoading"
-        :type="exceptionCode.code"
-        :text="exceptionCode.msg">
-      </app-exception>
 
-      <template v-if="!exceptionCode && !isInitLoading">
+      <template v-if="!isInitLoading">
         <div class="biz-panel-header">
           <div class="left">
             <bk-button @click.stop.prevent="removeHPAs">
@@ -140,7 +135,6 @@ export default {
   },
   data() {
     return {
-      exceptionCode: null,
       isInitLoading: true,
       isPageLoading: false,
       curPageData: [],
@@ -560,6 +554,8 @@ export default {
         },
         query: {
           cluster_id: row.cluster_id,
+          name: row.ref_name,
+          namespace: row.namespace,
         },
       });
       window.open(location.href);

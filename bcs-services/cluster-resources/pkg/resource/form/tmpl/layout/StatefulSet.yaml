@@ -16,6 +16,7 @@
                 prop: claims
           prop: volumeClaimTmpl
       {{- include "workload.affinity" . | nindent 6 }}
+      {{- include "workload.toleration" . | nindent 6 }}
       {{- include "workload.networking" . | indent 6 }}
       {{- include "workload.security" . | indent 6 }}
       {{- include "workload.other" . | indent 6 }}

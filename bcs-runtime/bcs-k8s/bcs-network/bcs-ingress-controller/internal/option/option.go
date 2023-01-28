@@ -23,6 +23,9 @@ type ControllerOption struct {
 	// Address address for server
 	Address string
 
+	// PodIPs contains ipv4 and ipv6 address get from status.podIPs
+	PodIPs []string
+
 	// Port port for server
 	Port int
 
@@ -63,4 +66,26 @@ type ControllerOption struct {
 	KubernetesQPS int
 	// KubernetesBurst the burst of k8s client request
 	KubernetesBurst int
+
+	// ConflictCheckOpen if false, skip all conflict checking about ingress and port pool
+	ConflictCheckOpen bool
+
+	HttpServerPort uint
+
+	Conf Conf
+
+	ServCert ServCert
+}
+type Conf struct {
+	ServCert        ServCert
+	InsecureAddress string
+	InsecurePort    uint
+	VerifyClientTLS bool
+}
+type ServCert struct {
+	CAFile     string
+	CertFile   string
+	KeyFile    string
+	CertPasswd string
+	IsSSL      bool
 }

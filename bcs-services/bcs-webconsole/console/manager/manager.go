@@ -104,7 +104,7 @@ func (c *ConsoleManager) Run() error {
 			logger.Infof("close %s ConsoleManager done", c.PodCtx.PodName)
 			return nil
 		case <-interval.C:
-			if err := c.tickTimeout(); err != nil {
+			if err := c.handleIdleTimeout(); err != nil {
 				return err
 			}
 			// 自定义函数
@@ -117,13 +117,13 @@ func (c *ConsoleManager) Run() error {
 	}
 }
 
-func (c *ConsoleManager) tickTimeout() error {
+func (c *ConsoleManager) handleIdleTimeout() error {
 	nowTime := time.Now()
-	idleTime := nowTime.Sub(c.LastInputTime).Seconds()
-	if idleTime > TickTimeout {
+	idleTime := nowTime.Sub(c.LastInputTime)
+	if idleTime > c.PodCtx.GetConnIdleTimeout() {
 		// BCS Console 已经分钟无操作
-		msg := fmt.Sprintf("BCS Console 已经 %d 分钟无操作", TickTimeout/60)
-		logger.Infof("tick timeout, close session %s, idle time, %.2f", c.PodCtx.PodName, idleTime)
+		msg := fmt.Sprintf("BCS Console 已经 %d 分钟无操作", int64(idleTime.Minutes()))
+		logger.Infof("conn idle timeout, close session %s, idle time, %s", c.PodCtx.PodName, idleTime)
 		return errors.New(msg)
 	}
 
@@ -135,15 +135,4 @@ func (c *ConsoleManager) tickTimeout() error {
 		return errors.New(msg)
 	}
 	return nil
-}
-
-// emit 提交数据
-func (c *ConsoleManager) emit(data *types.AuditRecord) {
-	dataByte, _ := json.Marshal(data)
-	c.redisClient.RPush(context.Background(), queueName, dataByte)
-}
-
-// startRecord 审计
-func (c *ConsoleManager) startRecord() {
-	c.emit(nil)
 }

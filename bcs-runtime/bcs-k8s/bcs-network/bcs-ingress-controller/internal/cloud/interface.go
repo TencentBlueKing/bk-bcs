@@ -122,6 +122,13 @@ type BackendHealthStatus struct {
 	Status       string
 }
 
+// Result work failed if isError == true
+type Result struct {
+	IsError bool
+	Err     error
+	Res     string
+}
+
 // LoadBalance interface for clb loadbalancer
 type LoadBalance interface {
 	// DescribeLoadBalancer get loadbalancer object by id or name
@@ -140,7 +147,10 @@ type LoadBalance interface {
 	DeleteListener(region string, listener *networkextensionv1.Listener) error
 
 	// EnsureMultiListeners ensure multiple listeners to cloud
-	EnsureMultiListeners(region, lbID string, listeners []*networkextensionv1.Listener) (map[string]string, error)
+	// 当返回error不为空时，意味着这批listener ensure过程全部失败，
+	// 否则， 根据map确认listener ensure是否成功。返回map的key值为listener.name，当map中未包含listener或返回Result中IsError=true
+	// 时，说明该listener ensure过程中出现错误。
+	EnsureMultiListeners(region, lbID string, listeners []*networkextensionv1.Listener) (map[string]Result, error)
 
 	// DeleteMultiListeners delete multiple listeners
 	DeleteMultiListeners(region, lbID string, listeners []*networkextensionv1.Listener) error
@@ -150,7 +160,7 @@ type LoadBalance interface {
 
 	// EnsureMultiSegmentListeners ensure multi segment listener
 	EnsureMultiSegmentListeners(
-		region, lbID string, listeners []*networkextensionv1.Listener) (map[string]string, error)
+		region, lbID string, listeners []*networkextensionv1.Listener) (map[string]Result, error)
 
 	// DeleteSegmentListener delete segment listener
 	DeleteSegmentListener(region string, listener *networkextensionv1.Listener) error

@@ -86,6 +86,24 @@ var (
 		},
 		[]string{"namespace", "name", "scaledObject", "status"},
 	)
+	scalerMetricExecDuration = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Namespace: "keda_metrics_adapter",
+			Subsystem: "gpa",
+			Name:      "exec_duration",
+			Help:      "Duration(seconds) of executing metric in Gauge",
+		},
+		[]string{"namespace", "name", "scaledObject", "metric", "scaler", "status"},
+	)
+	scalerReplicasUpdateDuration = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Namespace: "keda_metrics_adapter",
+			Subsystem: "gpa",
+			Name:      "replicas_update_duration",
+			Help:      "Duration(seconds) of updating replicas in Gauge",
+		},
+		[]string{"namespace", "name", "scaledObject", "status"},
+	)
 	scaledObjectErrors = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
 			Namespace: "keda_metrics_adapter",
@@ -152,6 +170,8 @@ func init() {
 	registry.MustRegister(gpaMaxReplicasValue)
 	registry.MustRegister(scalerExecDuration)
 	registry.MustRegister(scaleUpdateDuration)
+	registry.MustRegister(scalerMetricExecDuration)
+	registry.MustRegister(scalerReplicasUpdateDuration)
 }
 
 // NewServer creates a new http serving instance of prometheus metrics
@@ -212,7 +232,20 @@ func (metricsServer PrometheusMetricServer) RecordScalerExecDuration(namespace, 
 // RecordScalerUpdateDuration records duration by seconds when updating a scale.
 func (metricsServer PrometheusMetricServer) RecordScalerUpdateDuration(namespace, name, scaledObject,
 	status string, duration time.Duration) {
-	scaleUpdateDuration.WithLabelValues(namespace, name, scaledObject, status).Observe(duration.Seconds())
+	scaleUpdateDuration.WithLabelValues(namespace, name, scaledObject,
+		status).Observe(duration.Seconds())
+}
+
+// RecordScalerMetricExecDuration records duration by second when executing metric
+func (metricsServer PrometheusMetricServer) RecordScalerMetricExecDuration(namespace, name, scaledObject, metric,
+	scaler, status string, duration time.Duration) {
+	scalerMetricExecDuration.WithLabelValues(namespace, name, scaledObject, metric, scaler, status).Set(duration.Seconds())
+}
+
+// RecordScalerReplicasUpdateDuration records duration by seconds when updating a scale.
+func (metricsServer PrometheusMetricServer) RecordScalerReplicasUpdateDuration(namespace, name, scaledObject,
+	status string, duration time.Duration) {
+	scalerReplicasUpdateDuration.WithLabelValues(namespace, name, scaledObject, status).Set(duration.Seconds())
 }
 
 // RecordGPAScalerError counts the number of errors occurred in trying get an external metric used by the GPA
@@ -256,6 +289,21 @@ func (metricsServer PrometheusMetricServer) RecordScalerObjectError(namespace st
 }
 
 func getLabels(namespace string, name string, scaledObject string, scaler string, metric string) prometheus.Labels {
-	return prometheus.Labels{"namespace": namespace, "name": name, "scaledObject": scaledObject, "scaler": scaler,
-		"metric": metric}
+	return prometheus.Labels{"namespace": namespace, "name": name, "scaledObject": scaledObject,
+		"scaler": scaler, "metric": metric}
+}
+
+// ResetScalerMetrics reset metrics when delete gpa object
+func (metricsServer PrometheusMetricServer) ResetScalerMetrics(namespace, name string) {
+	labels := prometheus.Labels{"namespace": namespace, "name": name}
+
+	scalerTargetMetricsValue.DeletePartialMatch(labels)
+	scalerCurrentMetricsValue.DeletePartialMatch(labels)
+	scalerDesiredReplicasValue.DeletePartialMatch(labels)
+	scalerMetricExecDuration.DeletePartialMatch(labels)
+	scalerReplicasUpdateDuration.DeletePartialMatch(labels)
+	gpaDesiredReplicasValue.DeletePartialMatch(labels)
+	gpaCurrentReplicasValue.DeletePartialMatch(labels)
+	gpaMinReplicasValue.DeletePartialMatch(labels)
+	gpaMaxReplicasValue.DeletePartialMatch(labels)
 }

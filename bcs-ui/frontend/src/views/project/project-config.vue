@@ -1,4 +1,3 @@
-<!-- eslint-disable max-len -->
 <template>
   <bcs-dialog
     :value="value"
@@ -8,14 +7,14 @@
     :title="title"
     width="500"
     @value-change="handleDialogValueChange">
-    <bk-form v-model="formData">
+    <bk-form>
       <bk-form-item :label="$t('英文缩写')" required>
-        <span>{{ curProject.english_name }}</span>
+        <span>{{ curProject.projectCode }}</span>
       </bk-form-item>
       <bk-form-item :label="$t('编排类型')" required>
         <bk-radio-group v-model="kind">
-          <bk-radio :value="1" disabled>K8S</bk-radio>
-          <!-- <bk-radio :value="2" disabled v-if="$INTERNAL">Mesos</bk-radio> -->
+          <bk-radio value="k8s" disabled>K8S</bk-radio>
+          <!-- <bk-radio value="mesos" disabled v-if="$INTERNAL">Mesos</bk-radio> -->
         </bk-radio-group>
       </bk-form-item>
       <bk-form-item :label="$t('关联CMDB业务')" required>
@@ -25,15 +24,15 @@
             v-model="ccKey"
             :loading="loading"
             :clearable="false"
-            style="flex:1;">
+            style="flex:1;"
+            searchable>
             <bcs-option
               v-for="item in ccList"
-              :key="item.id"
-              :id="item.id"
+              :key="item.businessID"
+              :id="String(item.businessID)"
               :name="item.name">
             </bcs-option>
           </bcs-select>
-          <!-- TODO: 用bk-input会导致 object is not extensible 报错 -->
           <bcs-input :value="curProject.cc_app_name" disabled v-else></bcs-input>
           <span class="ml5" v-bk-tooltips="$t('关联业务后，您可以从对应的业务下选择机器，搭建容器集群')">
             <i class="bcs-icon bcs-icon-info-circle"></i>
@@ -44,7 +43,13 @@
     <template #footer>
       <div class="dialog-footer">
         <span v-bk-tooltips="{ content: $t('该项目下已有集群信息，如需更改绑定业务信息，请先删除已有集群'), disabled: !isHasCluster }">
-          <bk-button theme="primary" :disabled="isHasCluster || !ccList.length" :loading="saveLoading" @click="handleConfirm">{{ $t('保存') }}</bk-button>
+          <bk-button
+            theme="primary"
+            :disabled="isHasCluster || !ccList.length"
+            :loading="saveLoading"
+            @click="handleConfirm">
+            {{ $t('保存') }}
+          </bk-button>
         </span>
         <bk-button class="ml10" @click="handleCancel">{{ $t('取消') }}</bk-button>
       </div>
@@ -54,6 +59,7 @@
 <script lang="ts">
 /* eslint-disable camelcase */
 import { computed, defineComponent, ref, toRefs, watch } from '@vue/composition-api';
+import useProject from '@/views/app/use-project';
 export default defineComponent({
   name: 'ProjectConfig',
   model: {
@@ -68,19 +74,16 @@ export default defineComponent({
   },
   setup: (props, ctx) => {
     const { $store, $i18n } = ctx.root;
+    const { updateProject, getBusinessList } = useProject();
     const curProject = computed(() => $store.state.curProject);
     const title = computed(() => `${$i18n.t('项目')}【${curProject.value.project_name}】`);
     const isHasCluster = computed(() => $store.state.cluster.clusterList.length > 0);
 
     const loading = ref(false);
-    const ccList = ref([]);
+    const ccList = ref<any[]>([]);
     const fetchCCList = async () => {
       loading.value = true;
-      const res = await $store.dispatch('getCCList', {
-        project_kind: curProject.value.kind,
-        project_id: curProject.value.project_id,
-      }).catch(() => ({ data: [] }));
-      ccList.value = res.data;
+      ccList.value = await getBusinessList();
       loading.value = false;
     };
 
@@ -100,20 +103,21 @@ export default defineComponent({
     const kind = ref(curProject.value.kind);
 
     const saveLoading = ref(false);
+
     const handleConfirm = async () => {
       saveLoading.value = true;
-      await $store.dispatch('editProject', Object.assign({}, curProject.value, {
+      const result = await updateProject(Object.assign({}, curProject.value, {
         // deploy_type 值固定，就是原来页面上的：部署类型：容器部署
-        deploy_type: [2],
+        deployType: 2,
         // kind 业务编排类型
-        kind: parseInt(kind.value, 10),
+        kind: kind.value,
         // use_bk 值固定，就是原来页面上的：使用蓝鲸部署服务
-        use_bk: true,
-        cc_app_id: ccKey.value,
+        useBKRes: true,
+        businessID: String(ccKey.value),
       }));
       saveLoading.value = false;
       handleCancel();
-      window.location.reload();
+      result && window.location.reload();
     };
     const handleCancel = () => {
       handleDialogValueChange(false);

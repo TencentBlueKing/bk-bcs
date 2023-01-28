@@ -36,14 +36,20 @@ var (
 	// UpdateDesiredNodesTask task
 	UpdateDesiredNodesTask TaskName = "扩容节点池"
 	// ApplyInstanceMachinesStep step
-	ApplyInstanceMachinesStep StepName = "申请节点任务"
+	ApplyInstanceMachinesStep StepName = "申请节点"
 	// CheckClusterNodesStatusStep step
 	CheckClusterNodesStatusStep StepName = "检测节点状态"
+	// InstallGSEAgentStep step
+	InstallGSEAgentStep StepName = "安装 GSE Agent"
+	// TransferHostModuleStep step
+	TransferHostModuleStep StepName = "转移主机模块"
 
 	// CleanNodesInGroupTask task
 	CleanNodesInGroupTask TaskName = "缩容节点池"
 	// CleanNodeGroupNodesStep step
 	CleanNodeGroupNodesStep StepName = "下架节点池节点"
+	// RemoveHostFromCMDBStep step
+	RemoveHostFromCMDBStep StepName = "移除主机"
 )
 
 // ParamKey xxx
@@ -73,6 +79,12 @@ var (
 	ScalingKey ParamKey = "scaling"
 	// OperatorKey xxx
 	OperatorKey ParamKey = "operator"
+	// BKBizIDKey bk biz id key
+	BKBizIDKey ParamKey = "bkBizID"
+	// BKCloudIDKey bk cloud id key
+	BKCloudIDKey ParamKey = "bkCloudID"
+	// BKModuleIDKey bk module id key
+	BKModuleIDKey ParamKey = "bkModuleID"
 
 	// NodeIPsKey TODO
 	// Task Common Instance

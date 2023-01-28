@@ -31,8 +31,8 @@ type DaemonSetFilter struct {
 	StrategyType    string `json:"updateStrategyType,omitempty" filter:"data.spec.updateStrategy.type"`
 }
 
-const daemonSetNestedTimeLayout = nestedTimeLayout
+const daemonSetNestedTimeLayout = NestedTimeLayout
 
-func (t DaemonSetFilter) getCondition() *operator.Condition {
+func (t DaemonSetFilter) GetCondition() *operator.Condition {
 	return qGenerate(t, daemonSetNestedTimeLayout)
 }

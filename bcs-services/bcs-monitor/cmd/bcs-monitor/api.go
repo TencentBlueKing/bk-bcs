@@ -47,13 +47,14 @@ func APIServerCmd() *cobra.Command {
 // runAPIServer apiserver 子服务
 func runAPIServer(ctx context.Context, g *run.Group, opt *option) error {
 	logger.Infow("listening for requests and metrics", "address", httpAddress)
-	server, err := api.NewAPIServer(ctx, httpAddress)
+	addrIPv6 := getIPv6AddrFromEnv(httpAddress)
+	server, err := api.NewAPIServer(ctx, httpAddress, addrIPv6)
 	if err != nil {
 		return errors.Wrap(err, "apiserver")
 	}
 
 	sdName := fmt.Sprintf("%s-%s", appName, "api")
-	sd, err := discovery.NewServiceDiscovery(ctx, sdName, version.BcsVersion, httpAddress, advertiseAddress)
+	sd, err := discovery.NewServiceDiscovery(ctx, sdName, version.BcsVersion, httpAddress, advertiseAddress, addrIPv6)
 	if err != nil {
 		return err
 	}

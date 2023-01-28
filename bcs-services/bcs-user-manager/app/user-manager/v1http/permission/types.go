@@ -28,8 +28,20 @@ const (
 
 const (
 	// Cluster cluster
-	Cluster = "cluster"
+	Cluster ResourceType = "cluster"
+	// Namespace namespace
+	Namespace ResourceType = "namespace"
+	// NamespaceScoped namespace scoped
+	NamespaceScoped ResourceType = "namespace_scoped"
 )
+
+// ResourceType resource type
+type ResourceType string
+
+// String return  resource type string
+func (rt ResourceType) String() string {
+	return string(rt)
+}
 
 // ClusterType cluster type
 type ClusterType string
@@ -141,8 +153,8 @@ func (vpr *VerifyServicePermissionRequest) validate() error {
 
 // VerifyPermissionReq for permission v2 request
 type VerifyPermissionReq struct {
-	UserToken    string `json:"user_token" validate:"required"`
-	ResourceType string `json:"resource_type" validate:"required"`
+	UserToken    string       `json:"user_token" validate:"required"`
+	ResourceType ResourceType `json:"resource_type" validate:"required"`
 	// clusterType mesos/k8s when ResourceType="cluster"
 	ClusterType ClusterType `json:"cluster_type"`
 	ProjectID   string      `json:"project_id"`

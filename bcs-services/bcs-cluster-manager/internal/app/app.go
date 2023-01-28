@@ -20,6 +20,7 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"net"
 	"net/http"
 	"net/http/pprof"
 	"os"
@@ -39,19 +40,24 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers/mongo"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/http/ipv6server"
+	"github.com/Tencent/bk-bcs/bcs-common/common/tcp/listener"
+	"github.com/Tencent/bk-bcs/bcs-common/common/types"
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/common"
 	clusterops "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/clusterops"
 	cmcommon "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common/marshal"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/discovery"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/handler"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/lock"
 	etcdlock "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/lock/etcd"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/options"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/auth"
+	ssmAuth "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/cmdb"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/gse"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/nodeman"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/passcc"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/user"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
@@ -62,12 +68,14 @@ import (
 	mesostunnel "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/tunnelhandler/mesos"
 	mesoswebconsole "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/tunnelhandler/mesoswebconsole"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
+	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/middleware"
 
 	restful "github.com/emicklei/go-restful"
 	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/micro/go-micro/v2/registry"
 	"github.com/micro/go-micro/v2/registry/etcd"
+	microgrpcserver "github.com/micro/go-micro/v2/server/grpc"
 	microsvc "github.com/micro/go-micro/v2/service"
 	microgrpcsvc "github.com/micro/go-micro/v2/service/grpc"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -96,10 +104,10 @@ type ClusterManager struct {
 	mux *http.ServeMux
 
 	// http server
-	httpServer *http.Server
+	httpServer *ipv6server.IPv6Server
 
 	// extra module server, [pprof, metrics, swagger]
-	extraServer *http.Server
+	extraServer *ipv6server.IPv6Server
 
 	// discovery
 	disc *discovery.ModuleDiscovery
@@ -270,7 +278,7 @@ func (cm *ClusterManager) initRemoteClient() error {
 		return err
 	}
 	// init ssm client
-	err = auth.SetSSMClient(auth.Options{
+	err = ssmAuth.SetSSMClient(ssmAuth.Options{
 		Server:    cm.opt.Ssm.Server,
 		AppCode:   cm.opt.Ssm.AppCode,
 		AppSecret: cm.opt.Ssm.AppSecret,
@@ -302,6 +310,31 @@ func (cm *ClusterManager) initRemoteClient() error {
 		EtcdRegistry:    cm.microRegistry,
 		ClientTLSConfig: cm.clientTLSConfig,
 	})
+
+	// init nodeman client
+	err = nodeman.SetNodeManClient(nodeman.Options{
+		Enable:     cm.opt.NodeMan.Enable,
+		AppCode:    cm.opt.NodeMan.AppCode,
+		BKUserName: cm.opt.NodeMan.BkUserName,
+		AppSecret:  cm.opt.NodeMan.AppSecret,
+		Server:     cm.opt.NodeMan.Server,
+		Debug:      cm.opt.NodeMan.Debug,
+	})
+	if err != nil {
+		return err
+	}
+
+	// init gse client
+	if err := gse.SetGseClient(gse.Options{
+		Enable:     cm.opt.Gse.Enable,
+		AppCode:    cm.opt.Gse.AppCode,
+		AppSecret:  cm.opt.Gse.AppSecret,
+		BKUserName: cm.opt.Gse.BkUserName,
+		Server:     cm.opt.Gse.Server,
+		Debug:      cm.opt.Gse.Debug,
+	}); err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -346,6 +379,38 @@ func (cm *ClusterManager) initIAMClient() error {
 		return err
 	}
 
+	auth.InitPermClient(cm.iamClient)
+
+	return nil
+}
+
+// init jwt client for perm
+func (cm *ClusterManager) initJWTClient() error {
+	return auth.InitJWTClient(cm.opt)
+}
+
+// init client permissions
+func (cm *ClusterManager) initClientPermissions() error {
+	auth.ClientPermissions = make(map[string][]string, 0)
+	if len(cm.opt.Auth.ClientPermissions) == 0 {
+		return nil
+	}
+
+	err := json.Unmarshal([]byte(cm.opt.Auth.ClientPermissions), &auth.ClientPermissions)
+	if err != nil {
+		return fmt.Errorf("parse ClientPermissions error: %s", err.Error())
+	}
+	return nil
+}
+
+// init no auth method
+func (cm *ClusterManager) initNoAuthMethod() error {
+	if len(cm.opt.Auth.NoAuthMethod) == 0 {
+		return nil
+	}
+
+	methods := strings.Split(cm.opt.Auth.NoAuthMethod, ",")
+	auth.NoAuthMethod = append(auth.NoAuthMethod, methods...)
 	return nil
 }
 
@@ -562,6 +627,10 @@ func CustomMatcher(key string) (string, bool) {
 	switch key {
 	case "X-Request-Id":
 		return "X-Request-Id", true
+	case middleware.CustomUsernameHeaderKey:
+		return middleware.CustomUsernameHeaderKey, true
+	case middleware.InnerClientHeaderKey:
+		return middleware.InnerClientHeaderKey, true
 	default:
 		return runtime.DefaultHeaderMatcher(key)
 	}
@@ -572,11 +641,9 @@ func CustomMatcher(key string) (string, bool) {
 func (cm *ClusterManager) initHTTPGateway(router *mux.Router) error {
 	gwmux := runtime.NewServeMux(
 		runtime.WithIncomingHeaderMatcher(CustomMatcher),
-		runtime.WithMarshalerOption(runtime.MIMEWildcard, &marshal.JSONBcs{
-			JSONPb: &runtime.JSONPb{
-				OrigName:     true,
-				EmitDefaults: true,
-			},
+		runtime.WithMarshalerOption(runtime.MIMEWildcard, &runtime.JSONPb{
+			OrigName:     true,
+			EmitDefaults: true,
 		}),
 	)
 	grpcDialOpts := []grpc.DialOption{}
@@ -614,18 +681,20 @@ func (cm *ClusterManager) initHTTPService() error {
 		return err
 	}
 
-	mux := http.NewServeMux()
-	mux.Handle("/", router)
-	cm.initSwagger(mux)
+	muxServe := http.NewServeMux()
+	muxServe.Handle("/", router)
+	cm.initSwagger(muxServe)
 
-	httpAddr := cm.opt.Address + ":" + strconv.Itoa(int(cm.opt.HTTPPort))
-	cm.httpServer = &http.Server{
-		Addr:    httpAddr,
-		Handler: mux,
+	// server address
+	addresses := []string{cm.opt.Address}
+	if len(cm.opt.Ipv6Address) > 0 {
+		addresses = append(addresses, cm.opt.Ipv6Address)
 	}
+	cm.httpServer = ipv6server.NewIPv6Server(addresses, strconv.Itoa(int(cm.opt.HTTPPort)), "", muxServe)
+
 	go func() {
 		var err error
-		blog.Infof("start http gateway server on address %s", httpAddr)
+		blog.Infof("start http gateway server on address %+v", addresses)
 		if cm.tlsConfig != nil {
 			cm.httpServer.TLSConfig = cm.tlsConfig
 			err = cm.httpServer.ListenAndServeTLS("", "")
@@ -672,15 +741,16 @@ func (cm *ClusterManager) initExtraModules() {
 	extraMux := http.NewServeMux()
 	cm.initPProf(extraMux)
 	cm.initMetric(extraMux)
-	extraServerEndpoint := cm.opt.Address + ":" + strconv.Itoa(int(cm.opt.MetricPort))
-	cm.extraServer = &http.Server{
-		Addr:    extraServerEndpoint,
-		Handler: extraMux,
+
+	ips := []string{cm.opt.Address}
+	if len(cm.opt.Ipv6Address) > 0 {
+		ips = append(ips, cm.opt.Ipv6Address)
 	}
+	cm.extraServer = ipv6server.NewIPv6Server(ips, strconv.Itoa(int(cm.opt.MetricPort)), "", extraMux)
 
 	go func() {
 		var err error
-		blog.Infof("start extra modules [pprof, metric] server %s", extraServerEndpoint)
+		blog.Infof("start extra modules [pprof, metric] server %+v", ips)
 		err = cm.extraServer.ListenAndServe()
 		if err != nil {
 			blog.Errorf("extra modules server listen failed, err %s", err.Error())
@@ -690,14 +760,30 @@ func (cm *ClusterManager) initExtraModules() {
 }
 
 func (cm *ClusterManager) initMicro() error {
+	// server listen ip
+	ipv4 := cm.opt.Address
+	ipv6 := cm.opt.Ipv6Address
+	port := strconv.Itoa(int(cm.opt.Port))
+
+	// service inject metadata to discovery center
+	metadata := make(map[string]string)
+	metadata[cmcommon.MicroMetaKeyHTTPPort] = strconv.Itoa(int(cm.opt.HTTPPort))
+
+	// 适配单栈环境（ipv6注册地址不能是本地回环地址）
+	if v := net.ParseIP(ipv6); v != nil && !v.IsLoopback() {
+		metadata[types.IPV6] = net.JoinHostPort(ipv6, port)
+	}
+
+	authWrapper := middleware.NewGoMicroAuth(auth.GetJWTClient()).
+		EnableSkipHandler(auth.SkipHandler).
+		EnableSkipClient(auth.SkipClient).
+		SetCheckUserPerm(auth.CheckUserPerm)
 	// New Service
 	microService := microgrpcsvc.NewService(
 		microsvc.Name(cmcommon.ClusterManagerServiceDomain),
-		microsvc.Metadata(map[string]string{
-			cmcommon.MicroMetaKeyHTTPPort: strconv.Itoa(int(cm.opt.HTTPPort)),
-		}),
+		microsvc.Metadata(metadata),
 		microgrpcsvc.WithTLS(cm.tlsConfig),
-		microsvc.Address(cm.opt.Address+":"+strconv.Itoa(int(cm.opt.Port))),
+		microsvc.Address(net.JoinHostPort(ipv4, port)),
 		microsvc.Registry(cm.microRegistry),
 		microsvc.Version(version.BcsVersion),
 		microsvc.RegisterTTL(30*time.Second),
@@ -713,6 +799,11 @@ func (cm *ClusterManager) initMicro() error {
 			cm.disc.Stop()
 			return nil
 		}),
+		microsvc.WrapHandler(
+			cmcommon.RequestLogWarpper,
+			authWrapper.AuthenticationFunc,
+			authWrapper.AuthorizationFunc,
+		),
 	)
 	microService.Init()
 
@@ -724,8 +815,22 @@ func (cm *ClusterManager) initMicro() error {
 		IAMClient:  cm.iamClient,
 		CmOptions:  cm.opt,
 	})
+	// 创建双栈监听
+	dualStackListener := listener.NewDualStackListener()
+	if err := dualStackListener.AddListener(ipv4, port); err != nil { // 添加IPv4地址监听
+		return err
+	}
+	if err := dualStackListener.AddListener(ipv6, port); err != nil { // 添加IPv6地址监听
+		return err
+	}
+
+	// grpc server
+	grpcServer := microService.Server()
+	if err := grpcServer.Init(microgrpcserver.Listener(dualStackListener)); err != nil {
+		return err
+	}
 	// Register handler
-	cmproto.RegisterClusterManagerHandler(microService.Server(), cm.serverHandler)
+	cmproto.RegisterClusterManagerHandler(grpcServer, cm.serverHandler)
 	cm.microService = microService
 	return nil
 }
@@ -777,6 +882,21 @@ func (cm *ClusterManager) Init() error {
 	}
 	// init IAM client
 	if err := cm.initIAMClient(); err != nil {
+		return err
+	}
+
+	// init jwt client
+	if err := cm.initJWTClient(); err != nil {
+		return err
+	}
+
+	// init client permissions
+	if err := cm.initClientPermissions(); err != nil {
+		return err
+	}
+
+	// init no auth methods
+	if err := cm.initNoAuthMethod(); err != nil {
 		return err
 	}
 

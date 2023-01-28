@@ -14,9 +14,9 @@ package release
 
 import (
 	"context"
-	"strconv"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/release"
@@ -75,73 +75,24 @@ func (i *InstallReleaseAction) install() error {
 	releaseNamespace := i.req.GetNamespace()
 	clusterID := i.req.GetClusterID()
 	projectID := i.req.GetProjectID()
-	repoName := i.req.GetRepository()
 	chartName := i.req.GetChart()
 	chartVersion := i.req.GetVersion()
 	values := i.req.GetValues()
 	username := auth.GetUserFromCtx(i.ctx)
 
-	// 获取对应的仓库信息
-	repository, err := i.model.GetRepository(i.ctx, projectID, repoName)
+	contents, err := i.getContent()
 	if err != nil {
-		blog.Errorf("install release get repository failed, %s, "+
+		blog.Errorf("install release, get contents failed, %s, "+
 			"projectID: %s, clusterID: %s, chartName: %s, chartVersion: %s, namespace: %s, name: %s, operator: %s",
 			err.Error(), projectID, clusterID, chartName, chartVersion, releaseNamespace, releaseName, username)
 		i.setResp(common.ErrHelmManagerInstallActionFailed, err.Error(), nil)
 		return nil
 	}
 
-	// 下载到具体的chart version信息
-	contents, err := i.platform.
-		User(repo.User{
-			Name:     repository.Username,
-			Password: repository.Password,
-		}).
-		Project(repository.ProjectID).
-		Repository(
-			repo.GetRepositoryType(repository.Type),
-			repository.Name,
-		).
-		Chart(chartName).
-		Download(i.ctx, chartVersion)
-	if err != nil {
-		blog.Errorf("install release get chart detail failed, %s, "+
-			"projectID: %s, clusterID: %s, chartName: %s, chartVersion: %s, namespace: %s, name: %s, operator: %s",
-			err.Error(), projectID, clusterID, chartName, chartVersion, releaseNamespace, releaseName, username)
-		i.setResp(common.ErrHelmManagerInstallActionFailed, err.Error(), nil)
-		return nil
-	}
-
-	vls := make([]*release.File, 0, len(values))
-	for index, v := range values {
-		vls = append(vls, &release.File{
-			Name:    "values-" + strconv.Itoa(index) + ".yaml",
-			Content: []byte(v),
-		})
-	}
 	// 执行install操作
-	result, err := i.releaseHandler.Cluster(clusterID).Install(
-		i.ctx,
-		release.HelmInstallConfig{
-			Name:      releaseName,
-			Namespace: releaseNamespace,
-			Chart: &release.File{
-				Name:    chartName + "-" + chartVersion + ".tgz",
-				Content: contents,
-			},
-			Args:   i.req.GetArgs(),
-			Values: vls,
-			PatchTemplateValues: map[string]string{
-				common.PTKProjectID: contextx.GetProjectIDFromCtx(i.ctx),
-				common.PTKClusterID: clusterID,
-				common.PTKNamespace: releaseNamespace,
-				common.PTKCreator:   username,
-				common.PTKUpdator:   username,
-				common.PTKVersion:   chartVersion,
-				common.PTKName:      "",
-			},
-			VarTemplateValues: i.req.GetBcsSysVar(),
-		})
+	result, err := installRelease(i.releaseHandler, contextx.GetProjectIDFromCtx(i.ctx), projectID, clusterID,
+		releaseName, releaseNamespace, chartName, chartVersion, username, username, i.req.GetArgs(),
+		i.req.GetBcsSysVar(), contents, values, false, false, false)
 	if err != nil {
 		blog.Errorf("install release failed, %s, "+
 			"projectID: %s, clusterID: %s, chartName: %s, chartVersion: %s, namespace: %s, name: %s, operator: %s",
@@ -150,28 +101,12 @@ func (i *InstallReleaseAction) install() error {
 		return nil
 	}
 
-	// 存储release信息到store中, 首先先删掉所有revision的数据
-	if err = i.model.DeleteReleases(i.ctx, clusterID, releaseNamespace, releaseNamespace); err != nil {
-		blog.Errorf("install release, delete release in store failed, %s, "+
+	// 存储release信息到store中
+	if err = i.saveDB(result.Revision); err != nil {
+		blog.Warnf("install release, save release in store failed, %s, "+
 			"projectID: %s, clusterID: %s, chartName: %s, chartVersion: %s, namespace: %s, name: %s, operator: %s",
 			err.Error(), projectID, clusterID, chartName, chartVersion, releaseNamespace, releaseName, username)
-		i.setResp(common.ErrHelmManagerInstallActionFailed, err.Error(), nil)
-		return nil
-	}
-	if err = i.model.CreateRelease(i.ctx, &entity.Release{
-		Name:         releaseName,
-		Namespace:    releaseNamespace,
-		ClusterID:    clusterID,
-		ChartName:    chartName,
-		ChartVersion: chartVersion,
-		Revision:     result.Revision,
-		Values:       values,
-	}); err != nil {
-		blog.Errorf("install release, create release in store failed, %s, "+
-			"projectID: %s, clusterID: %s, chartName: %s, chartVersion: %s, namespace: %s, name: %s, operator: %s",
-			err.Error(), projectID, clusterID, chartName, chartVersion, releaseNamespace, releaseName, username)
-		i.setResp(common.ErrHelmManagerInstallActionFailed, err.Error(), nil)
-		return nil
+		// release 不依赖数据库，保存到数据库失败不视为失败
 	}
 
 	blog.Infof("install release successfully, with revision %d, "+
@@ -187,6 +122,55 @@ func (i *InstallReleaseAction) install() error {
 		AppVersion:   result.AppVersion,
 		UpdateTime:   result.UpdateTime,
 	}).Transfer2DetailProto())
+	return nil
+}
+
+func (i *InstallReleaseAction) getContent() ([]byte, error) {
+	// 获取对应的仓库信息
+	repository, err := i.model.GetRepository(i.ctx, i.req.GetProjectID(), i.req.GetRepository())
+	if err != nil {
+		return nil, err
+	}
+
+	// 下载到具体的chart version信息
+	contents, err := i.platform.
+		User(repo.User{
+			Name:     repository.Username,
+			Password: repository.Password,
+		}).
+		Project(repository.GetRepoProjectID()).
+		Repository(
+			repo.GetRepositoryType(repository.Type),
+			repository.GetRepoName(),
+		).
+		Chart(i.req.GetChart()).
+		Download(i.ctx, i.req.GetVersion())
+	if err != nil {
+		return nil, err
+	}
+	return contents, nil
+}
+
+func (i *InstallReleaseAction) saveDB(revision int) error {
+	// 首先先删掉所有revision的数据，因为是安装操作，所以以前的数据都不需要了
+	if err := i.model.DeleteRelease(i.ctx, i.req.GetClusterID(), i.req.GetNamespace(), i.req.GetName()); err != nil {
+		return err
+	}
+	if err := i.model.CreateRelease(i.ctx, &entity.Release{
+		Name:         i.req.GetName(),
+		Namespace:    i.req.GetNamespace(),
+		ProjectCode:  i.req.GetProjectID(),
+		ClusterID:    i.req.GetClusterID(),
+		Repo:         i.req.GetRepository(),
+		ChartName:    i.req.GetChart(),
+		ChartVersion: i.req.GetVersion(),
+		Revision:     revision,
+		Values:       i.req.GetValues(),
+		Args:         i.req.GetArgs(),
+		CreateBy:     auth.GetUserFromCtx(i.ctx),
+	}); err != nil {
+		return err
+	}
 	return nil
 }
 

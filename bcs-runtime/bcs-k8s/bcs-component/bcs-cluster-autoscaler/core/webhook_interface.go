@@ -78,6 +78,8 @@ type NodeGroup struct {
 	NodeTemplate Template `json:"nodeTemplate"`
 	// NodeIPs are the IP of nodes which belongs to the node group
 	NodeIPs []string `json:"nodeIPs"`
+	// Priority is the priority of node group
+	Priority int `json:"priority"`
 }
 
 // Template is the information of node

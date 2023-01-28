@@ -14,19 +14,24 @@ package bkrepo
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"strconv"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/codec"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/repo"
 )
 
 const (
 	repositoryListHelmURI      = "/repository/api/package/page"
-	repositoryDeletePackageURI = "/repository/api/package/delete"
-	repositoryDeleteVersionURI = "/repository/api/version/delete"
+	repositorySearchHelmURI    = "/repository/api/package/search"
+	repositoryGetHelmURI       = "/repository/api/package/info"
+	repositoryDeletePackageURI = "/helm/ext/package/delete"
+	repositoryDeleteVersionURI = "/helm/ext/version/delete"
 )
 
 func (rh *repositoryHandler) listChart(ctx context.Context, option repo.ListOption) (*repo.ListChartData, error) {
@@ -80,9 +85,185 @@ func (rh *repositoryHandler) listHelmChart(ctx context.Context, option repo.List
 }
 
 func (rh *repositoryHandler) getListHelmChartURI(option repo.ListOption) string {
-	return repositoryListHelmURI + "/" + rh.projectID + "/" + rh.repository + "/" +
-		"?pageNumber=" + strconv.FormatInt(option.Page, 10) +
-		"&pageSize=" + strconv.FormatInt(option.Size, 10)
+	return fmt.Sprintf("%s/%s/%s/?pageNumber=%s&pageSize=%s&packageName=%s", repositoryListHelmURI,
+		rh.projectID, rh.repository, strconv.FormatInt(option.Page, 10), strconv.FormatInt(option.Size, 10),
+		option.PackageName)
+}
+
+func (rh *repositoryHandler) searchChart(ctx context.Context, option repo.ListOption) (*repo.ListChartData, error) {
+	if option.Size == 0 {
+		option.Size = 10
+	}
+
+	switch rh.repoType {
+	case repo.RepositoryTypeHelm:
+		return rh.searchHelmChart(ctx, option)
+	case repo.RepositoryTypeOCI:
+		return rh.searchOCIChart(ctx, option)
+	default:
+		return nil, fmt.Errorf("unknown repo type %d", rh.repoType)
+	}
+}
+
+func (rh *repositoryHandler) searchOCIChart(ctx context.Context, option repo.ListOption) (*repo.ListChartData, error) {
+	return rh.listHelmChart(ctx, option)
+}
+
+func (rh *repositoryHandler) searchHelmChart(ctx context.Context, option repo.ListOption) (*repo.ListChartData, error) {
+	req := searchChartReq{
+		Fields: []string{"projectId", "name", "key", "type", "latest", "downloads", "versions", "description",
+			"extension", "createdBy", "createdDate", "lastModifiedBy", "lastModifiedDate"},
+		Page: searchChartPage{PageNumber: int(option.Page), PageSize: int(option.Size)},
+		Sort: searchChartSort{Properties: []string{"lastModifiedDate"}, Direction: SortDesc},
+		Rule: searchChartRule{
+			Relation: "AND",
+			Rules: []searchChartRules{
+				{Field: "projectId", Value: rh.projectID, Operation: "EQ"},
+				{Field: "repoType", Value: "HELM", Operation: "EQ"},
+				{Field: "repoName", Value: rh.repository, Operation: "EQ"},
+				{Field: "name", Value: fmt.Sprintf("*%s*", option.PackageName), Operation: "MATCH"},
+			},
+		},
+	}
+	b, err := json.Marshal(req)
+	if err != nil {
+		return nil, fmt.Errorf("get chart param failed, %s", err.Error())
+	}
+	resp, err := rh.handler.post(ctx, repositorySearchHelmURI, nil, b)
+	if err != nil {
+		blog.Errorf("search helm chart from bk-repo get failed, %s, with projectID %s, repoName %s",
+			err.Error(), rh.projectID, rh.repository)
+		return nil, err
+	}
+
+	var r listPackResp
+	if err = codec.DecJson(resp.Reply, &r); err != nil {
+		blog.Errorf("search helm chart from bk-repo decode failed, %s, with resp %s", err.Error(), resp.Reply)
+		return nil, err
+	}
+	if r.Code != respCodeOK {
+		blog.Errorf("search helm chart from bk-repo get resp with error code %d, message %s, traceID %s",
+			r.Code, r.Message, r.TraceID)
+		return nil, err
+	}
+
+	var data []*repo.Chart
+	for _, item := range r.Data.Records {
+		data = append(data, item.convert2Chart())
+	}
+	return &repo.ListChartData{
+		Total:  r.Data.TotalRecords,
+		Page:   r.Data.PageNumber,
+		Size:   r.Data.PageSize,
+		Charts: data,
+	}, nil
+}
+
+func (rh *repositoryHandler) getChartDetail(ctx context.Context, name string) (
+	*repo.Chart, error) {
+	switch rh.repoType {
+	case repo.RepositoryTypeHelm:
+		return rh.getHelmChart(ctx, name)
+	case repo.RepositoryTypeOCI:
+		return rh.getOCIChart(ctx, name)
+	default:
+		return nil, fmt.Errorf("unknown repo type %d", rh.repoType)
+	}
+}
+
+func (rh *repositoryHandler) getHelmChart(ctx context.Context, name string) (*repo.Chart, error) {
+	resp, err := rh.handler.get(ctx, rh.getHelmChartURI(name), nil, nil)
+	if err != nil {
+		blog.Errorf("get helm chart from bk-repo get failed, %s, with projectID %s, repoName %s",
+			err.Error(), rh.projectID, rh.repository)
+		return nil, err
+	}
+
+	var r getPackResp
+	if err = codec.DecJson(resp.Reply, &r); err != nil {
+		blog.Errorf("get helm chart from bk-repo decode failed, %s, with resp %s", err.Error(), resp.Reply)
+		return nil, err
+	}
+	if r.Code != respCodeOK {
+		blog.Errorf("get helm chart from bk-repo get resp with error code %d, message %s, traceID %s",
+			r.Code, r.Message, r.TraceID)
+		return nil, err
+	}
+
+	return r.Data.convert2Chart(), nil
+}
+
+func (rh *repositoryHandler) getHelmChartURI(name string) string {
+	return fmt.Sprintf("%s/%s/%s?packageKey=helm://%s", repositoryGetHelmURI, rh.projectID, rh.repository, name)
+}
+
+func (rh *repositoryHandler) getOCIChart(ctx context.Context, name string) (*repo.Chart, error) {
+	resp, err := rh.handler.get(ctx, rh.getOCIChartURI(name), nil, nil)
+	if err != nil {
+		blog.Errorf("list helm chart from bk-repo get failed, %s, with projectID %s, repoName %s",
+			err.Error(), rh.projectID, rh.repository)
+		return nil, err
+	}
+
+	var r getPackResp
+	if err = codec.DecJson(resp.Reply, &r); err != nil {
+		blog.Errorf("list helm chart from bk-repo decode failed, %s, with resp %s", err.Error(), resp.Reply)
+		return nil, err
+	}
+	if r.Code != respCodeOK {
+		blog.Errorf("list helm chart from bk-repo get resp with error code %d, message %s, traceID %s",
+			r.Code, r.Message, r.TraceID)
+		return nil, err
+	}
+
+	return r.Data.convert2Chart(), nil
+}
+
+func (rh *repositoryHandler) getOCIChartURI(name string) string {
+	return fmt.Sprintf("%s/%s/%s?packageKey=oci://%s", repositoryGetHelmURI, rh.projectID, rh.repository, name)
+}
+
+type searchChartReq struct {
+	Fields []string        `json:"select"`
+	Page   searchChartPage `json:"page"`
+	Sort   searchChartSort `json:"sort"`
+	Rule   searchChartRule `json:"rule"`
+}
+
+type searchChartPage struct {
+	PageNumber int `json:"pageNumber"`
+	PageSize   int `json:"pageSize"`
+}
+
+type searchChartSort struct {
+	Properties []string `json:"properties"`
+	Direction  Order    `json:"direction"`
+}
+
+type searchChartRule struct {
+	Rules    []searchChartRules `json:"rules"`
+	Relation string             `json:"relation"`
+}
+
+type searchChartRules struct {
+	Field     string `json:"field"`
+	Value     string `json:"value"`
+	Operation string `json:"operation"`
+}
+
+// Order define sort order
+type Order string
+
+const (
+	// SortAsc 升序
+	SortAsc Order = "ASC"
+	// SortDesc 降序
+	SortDesc Order = "DESC"
+)
+
+type getPackResp struct {
+	basicResp
+	Data *pack `json:"data"`
 }
 
 type listPackResp struct {
@@ -97,7 +278,6 @@ type listPackData struct {
 
 type pack struct {
 	ProjectID        string        `json:"projectId"`
-	RepoName         string        `json:"repoName"`
 	Name             string        `json:"name"`
 	Key              string        `json:"key"`
 	Type             string        `json:"type"`
@@ -109,9 +289,9 @@ type pack struct {
 	Extension        packExtension `json:"extension"`
 	HistoryVersion   []string      `json:"historyVersion"`
 	CreatedBy        string        `json:"createdBy"`
-	CreatedDate      string        `json:"createdDate"`
+	CreatedDate      json.Number   `json:"createdDate"`
 	LastModifiedBy   string        `json:"lastModifiedBy"`
-	LastModifiedDate string        `json:"lastModifiedDate"`
+	LastModifiedDate json.Number   `json:"lastModifiedDate"`
 }
 
 type packExtension struct {
@@ -120,7 +300,7 @@ type packExtension struct {
 
 // convert2Chart 将bk-repo HELM仓库中的package信息, 转换为chart信息
 func (p *pack) convert2Chart() *repo.Chart {
-	return &repo.Chart{
+	chart := &repo.Chart{
 		Key:         p.Key,
 		Name:        p.Name,
 		Type:        p.Type,
@@ -129,9 +309,28 @@ func (p *pack) convert2Chart() *repo.Chart {
 		Description: p.Description,
 		CreateBy:    p.CreatedBy,
 		UpdateBy:    p.LastModifiedBy,
-		CreateTime:  p.CreatedDate,
-		UpdateTime:  p.LastModifiedDate,
 	}
+	if i, err := p.CreatedDate.Int64(); err != nil {
+		t, err := time.Parse(time.RFC3339Nano, p.CreatedDate.String())
+		if err != nil {
+			chart.CreateTime = p.CreatedDate.String()
+		} else {
+			chart.CreateTime = t.Format(common.TimeFormat)
+		}
+	} else {
+		chart.CreateTime = time.UnixMilli(i).Format(common.TimeFormat)
+	}
+	if i, err := p.LastModifiedDate.Int64(); err != nil {
+		t, err := time.Parse(time.RFC3339Nano, p.LastModifiedDate.String())
+		if err != nil {
+			chart.UpdateTime = p.LastModifiedDate.String()
+		} else {
+			chart.UpdateTime = t.Format(common.TimeFormat)
+		}
+	} else {
+		chart.UpdateTime = time.UnixMilli(i).Format(common.TimeFormat)
+	}
+	return chart
 }
 
 func (ch *chartHandler) deleteChart(ctx context.Context) error {

@@ -18,8 +18,10 @@ package config
 import (
 	"crypto/rsa"
 	"io/ioutil"
+	"net"
 	"os"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/util"
 	bkiam "github.com/TencentBlueKing/iam-go-sdk"
 	"github.com/TencentBlueKing/iam-go-sdk/logger"
 	"github.com/TencentBlueKing/iam-go-sdk/metric"
@@ -45,6 +47,32 @@ func LoadConf(filePath string) (*ClusterResourcesConf, error) {
 	if err = yaml.Unmarshal(yamlFile, conf); err != nil {
 		return nil, err
 	}
+
+	//  变量 fallback to env
+	if conf.Global.Basic.AppCode == "" {
+		conf.Global.Basic.AppCode = envs.BKAppCode
+	}
+	if conf.Global.Basic.AppSecret == "" {
+		conf.Global.Basic.AppSecret = envs.BKAppSecret
+	}
+	if conf.Global.Basic.BKAPIGWHost == "" {
+		conf.Global.Basic.BKAPIGWHost = envs.BKIAMGatewayHost
+	}
+	if conf.Global.Basic.BKPaaSHost == "" {
+		conf.Global.Basic.BKPaaSHost = envs.BKPaaSHost
+	}
+
+	if conf.Global.IAM.SystemID == "" {
+		conf.Global.IAM.SystemID = envs.BKIAMSystemID
+	}
+	if conf.Global.IAM.Host == "" {
+		conf.Global.IAM.Host = envs.BKIAMHost
+	}
+
+	if conf.Redis.Password == "" {
+		conf.Redis.Password = envs.RedisPassword
+	}
+
 	for _, f := range []func() error{
 		// 初始化 Server.Address
 		conf.initServerAddress,
@@ -62,6 +90,26 @@ func LoadConf(filePath string) (*ClusterResourcesConf, error) {
 	// 初始化全局配置
 	G = &conf.Global
 	return conf, nil
+}
+
+// getIPv6AddrFromEnv 解析ipv6
+func getIPv6AddrFromEnv() string {
+	ipv6 := util.GetIPv6Address(envs.PodIPs)
+	if ipv6 == "" {
+		return ""
+	}
+
+	// 在实际中，ipv6不能是回环地址
+	if v := net.ParseIP(ipv6); v == nil || v.IsLoopback() || v.IsUnspecified() {
+		return ""
+	}
+
+	// local link ipv6 需要带上 interface， 格式如::%eth0
+	if envs.IPv6Interface != "" {
+		ipv6 = ipv6 + "%" + envs.IPv6Interface
+	}
+
+	return ipv6
 }
 
 // ClusterResourcesConf ClusterResources 服务启动配置
@@ -82,6 +130,7 @@ func (c *ClusterResourcesConf) initServerAddress() error {
 		c.Server.Address = envs.LocalIP
 		c.Server.InsecureAddress = envs.LocalIP
 	}
+	c.Server.AddressIPv6 = getIPv6AddrFromEnv()
 	return nil
 }
 
@@ -160,6 +209,7 @@ type EtcdConf struct {
 type ServerConf struct {
 	UseLocalIP       bool   `yaml:"useLocalIP" usage:"是否使用 Local IP"`
 	Address          string `yaml:"address" usage:"服务启动地址"`
+	AddressIPv6      string `yaml:"addressIPv6" usage:"服务启动ipv6地址"`
 	InsecureAddress  string `yaml:"insecureAddress" usage:"服务启动地址（非安全）"`
 	Port             int    `yaml:"port" usage:"GRPC 服务端口"`
 	HTTPPort         int    `yaml:"httpPort" usage:"HTTP 服务端口"`

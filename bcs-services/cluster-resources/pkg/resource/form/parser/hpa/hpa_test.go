@@ -19,6 +19,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	resCsts "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/constants"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/model"
 )
 
@@ -215,17 +216,17 @@ var exceptedHPASpec = model.HPASpec{
 		Items: []model.ResourceMetricItem{
 			{
 				Name:  "cpu",
-				Type:  HPATargetTypeAverageValue,
+				Type:  resCsts.HPATargetTypeAverageValue,
 				Value: "80",
 			},
 			{
 				Name:  "cpu",
-				Type:  HPATargetTypeUtilization,
+				Type:  resCsts.HPATargetTypeUtilization,
 				Value: "50",
 			},
 			{
 				Name:  "memory",
-				Type:  HPATargetTypeAverageValue,
+				Type:  resCsts.HPATargetTypeAverageValue,
 				Value: "60",
 			},
 		},
@@ -234,7 +235,7 @@ var exceptedHPASpec = model.HPASpec{
 		Items: []model.ExternalMetricItem{
 			{
 				Name:  "ext1",
-				Type:  HPATargetTypeValue,
+				Type:  resCsts.HPATargetTypeValue,
 				Value: "10",
 				Selector: model.MetricSelector{
 					Expressions: []model.ExpSelector{
@@ -270,7 +271,7 @@ var exceptedHPASpec = model.HPASpec{
 				APIVersion: "apps/v1",
 				Kind:       "Deployment",
 				ResName:    "deploy-aaa",
-				Type:       HPATargetTypeAverageValue,
+				Type:       resCsts.HPATargetTypeAverageValue,
 				Value:      "10",
 				Selector: model.MetricSelector{
 					Expressions: []model.ExpSelector{
@@ -297,7 +298,7 @@ var exceptedHPASpec = model.HPASpec{
 				APIVersion: "tkex.tencent.com/v1alpha1",
 				Kind:       "GameDeployment",
 				ResName:    "gdeploy-xx",
-				Type:       HPATargetTypeValue,
+				Type:       resCsts.HPATargetTypeValue,
 				Value:      "20",
 				Selector: model.MetricSelector{
 					Expressions: []model.ExpSelector{
@@ -321,7 +322,7 @@ var exceptedHPASpec = model.HPASpec{
 		Items: []model.PodMetricItem{
 			{
 				Name:  "pod1",
-				Type:  HPATargetTypeAverageValue,
+				Type:  resCsts.HPATargetTypeAverageValue,
 				Value: "10",
 				Selector: model.MetricSelector{
 					Expressions: []model.ExpSelector{

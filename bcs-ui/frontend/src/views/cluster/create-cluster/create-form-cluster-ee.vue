@@ -32,9 +32,9 @@
         ></KeyValue>
       </bk-form-item>
       <bk-form-item>
-        <div class="action" @click="toggleSettings">
+        <div class="action">
           <i :class="['bk-icon', expanded ? 'icon-angle-double-up' : 'icon-angle-double-down']"></i>
-          <span>{{ expanded ? $t('收起更多设置') : $t('展开更多设置')}}</span>
+          <span @click="toggleSettings">{{ expanded ? $t('收起更多设置') : $t('展开更多设置')}}</span>
         </div>
       </bk-form-item>
       <bk-form-item :label="$t('选择Master')" property="ipList" error-display-type="normal" required>
@@ -68,14 +68,13 @@
       <div class="create-cluster-dialog">
         <div class="title">{{$t('请确认以下配置')}}:</div>
         <bcs-checkbox-group class="confirm-wrapper" v-model="createConfirm">
-          <bcs-checkbox value="1">{{$t('服务器将按照系统规则修改主机名')}}</bcs-checkbox>
           <bcs-checkbox value="2" class="mt10">{{$t('服务器将安装容器服务相关组件')}}</bcs-checkbox>
         </bcs-checkbox-group>
       </div>
       <template #footer>
         <div>
           <bcs-button
-            :disabled="createConfirm.length < 2"
+            :disabled="createConfirm.length < 1"
             theme="primary"
             :loading="loading"
             @click="handleCreateCluster"
@@ -84,7 +83,7 @@
         </div>
       </template>
     </bcs-dialog>
-    <IpSelector v-model="showIpSelector" @confirm="handleChooseServer"></IpSelector>
+    <IpSelector v-model="showIpSelector" :ip-list="basicInfo.ipList" @confirm="handleChooseServer"></IpSelector>
   </section>
 </template>
 <script lang="ts">
@@ -203,18 +202,14 @@ export default defineComponent({
       showIpSelector.value = true;
     };
     const handleChooseServer = (data) => {
-      data.forEach((item) => {
-        const index = basicInfo.value.ipList.findIndex(ipData => ipData.bk_cloud_id === item.bk_cloud_id
-                        && ipData.bk_host_innerip === item.bk_host_innerip);
-        if (index === -1) {
-          basicInfo.value.ipList.push(item);
-        }
-      });
+      basicInfo.value.ipList = data;
       showIpSelector.value = false;
     };
     const handleShowConfirmDialog = async () => {
       const result = await basicFormRef.value?.validate();
-      if (!result) return;
+      // todo bcs兼容1.0组件，对表单组件做了包装，导致 keyValueRef 取不到
+      const validateKey = basicFormRef.value?.$refs?.extraInfoRef?.$refs?.keyValueRef?.validate();
+      if (!result || !validateKey) return;
       confirmDialog.value = true;
     };
     watch(confirmDialog, (value) => {
@@ -246,10 +241,12 @@ export default defineComponent({
         clusterBasicSettings: basicInfo.value?.clusterBasicSettings,
         networkType: 'overlay',
         extraInfo: {
-          create_cluster: Object.keys(extraInfo).reduce((pre, key) => {
-            pre += `${key}=${extraInfo[key]};`;
+          create_cluster: Object.keys(extraInfo)
+            .reduce<any[]>((pre, key) => {
+            pre.push(`${key}=${extraInfo[key]}`);
             return pre;
-          }, ''),
+          }, [])
+            .join(';'),
         },
         networkSettings: {},
         master: basicInfo.value.ipList.map((item: any) => item.bk_host_innerip),
@@ -314,45 +311,47 @@ export default defineComponent({
 </script>
 <style lang="postcss" scoped>
 .create-form-cluster {
-    padding: 24px;
-    /deep/ .bk-textarea-wrapper {
-        width: 640px;
-        height: 80px;
-    }
-    /deep/ .w640 {
-        width: 640px;
-        background: #fff;
-    }
-    /deep/ .w700 {
-        width: 705px;
-    }
-    /deep/ .btn {
-        width: 88px;
-    }
-    /deep/ .ip-list {
-        max-width: 1000px;
-    }
-    /deep/ .action {
-        i {
-            font-size: 20px;
-        }
-        align-items: center;
-        color: #3a84ff;
-        cursor: pointer;
-        display: flex;
-        font-size: 14px;
-    }
+  padding: 24px;
+  /deep/ .bk-textarea-wrapper {
+      width: 640px;
+      height: 80px;
+  }
+  /deep/ .w640 {
+      width: 640px;
+      background: #fff;
+  }
+  /deep/ .w700 {
+      width: 705px;
+  }
+  /deep/ .btn {
+      width: 88px;
+  }
+  /deep/ .ip-list {
+      max-width: 1000px;
+  }
+  /deep/ .action {
+      i {
+          font-size: 20px;
+      }
+      span {
+          cursor: pointer;
+      }
+      align-items: center;
+      color: #3a84ff;
+      display: flex;
+      font-size: 14px;
+  }
 }
 .create-cluster-dialog {
-    padding: 0 4px 24px 4px;
-    .title {
-        font-size: 14px;
-        font-weight: 700;
-        margin-bottom: 14px
-    }
-    .confirm-wrapper {
-        display: flex;
-        flex-direction: column;
-    }
+  padding: 0 4px 24px 4px;
+  .title {
+      font-size: 14px;
+      font-weight: 700;
+      margin-bottom: 14px
+  }
+  .confirm-wrapper {
+      display: flex;
+      flex-direction: column;
+  }
 }
 </style>

@@ -12,9 +12,25 @@
 
 package cluster
 
+import (
+	v1 "k8s.io/api/core/v1"
+)
+
 // Node for kubernetes node
 type Node struct {
 	Name   string
 	IP     string
+	Status string
 	Labels map[string]string
+}
+
+// IsOptionalForScaleDown check node status
+func (n *Node) IsOptionalForScaleDown(labelKey, taskid string) bool {
+	if n.Status != string(v1.ConditionTrue) {
+		return false
+	}
+	if n.Labels[labelKey] == "" || n.Labels[labelKey] == taskid {
+		return true
+	}
+	return false
 }

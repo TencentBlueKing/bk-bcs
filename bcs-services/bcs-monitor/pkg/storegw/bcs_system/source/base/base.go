@@ -61,13 +61,21 @@ type MetricHandler interface {
 		step time.Duration) ([]*prompb.TimeSeries, error)
 	GetClusterCPUUsed(ctx context.Context, projectId, clusterId string, start, end time.Time,
 		step time.Duration) ([]*prompb.TimeSeries, error)
+	GetClusterCPURequest(ctx context.Context, projectId, clusterId string, start, end time.Time,
+		step time.Duration) ([]*prompb.TimeSeries, error)
 	GetClusterCPUUsage(ctx context.Context, projectId, clusterId string, start, end time.Time,
+		step time.Duration) ([]*prompb.TimeSeries, error)
+	GetClusterCPURequestUsage(ctx context.Context, projectId, clusterId string, start, end time.Time,
 		step time.Duration) ([]*prompb.TimeSeries, error)
 	GetClusterMemoryTotal(ctx context.Context, projectId, clusterId string, start, end time.Time,
 		step time.Duration) ([]*prompb.TimeSeries, error)
 	GetClusterMemoryUsed(ctx context.Context, projectId, clusterId string, start, end time.Time,
 		step time.Duration) ([]*prompb.TimeSeries, error)
+	GetClusterMemoryRequest(ctx context.Context, projectId, clusterId string, start, end time.Time,
+		step time.Duration) ([]*prompb.TimeSeries, error)
 	GetClusterMemoryUsage(ctx context.Context, projectId, clusterId string, start, end time.Time,
+		step time.Duration) ([]*prompb.TimeSeries, error)
+	GetClusterMemoryRequestUsage(ctx context.Context, projectId, clusterId string, start, end time.Time,
 		step time.Duration) ([]*prompb.TimeSeries, error)
 	GetClusterDiskTotal(ctx context.Context, projectId, clusterId string, start, end time.Time,
 		step time.Duration) ([]*prompb.TimeSeries, error)
@@ -75,10 +83,16 @@ type MetricHandler interface {
 		step time.Duration) ([]*prompb.TimeSeries, error)
 	GetClusterDiskUsage(ctx context.Context, projectId, clusterId string, start, end time.Time,
 		step time.Duration) ([]*prompb.TimeSeries, error)
+	GetClusterDiskioUsage(ctx context.Context, projectId, clusterId string, start, end time.Time,
+		step time.Duration) ([]*prompb.TimeSeries, error)
 	GetNodeInfo(ctx context.Context, projectId, clusterId, ip string, t time.Time) (*NodeInfo, error)
 	GetNodeCPUUsage(ctx context.Context, projectId, clusterId, ip string, start, end time.Time,
 		step time.Duration) ([]*prompb.TimeSeries, error)
+	GetNodeCPURequestUsage(ctx context.Context, projectId, clusterId, ip string, start, end time.Time,
+		step time.Duration) ([]*prompb.TimeSeries, error)
 	GetNodeMemoryUsage(ctx context.Context, projectId, clusterId, ip string, start, end time.Time,
+		step time.Duration) ([]*prompb.TimeSeries, error)
+	GetNodeMemoryRequestUsage(ctx context.Context, projectId, clusterId, ip string, start, end time.Time,
 		step time.Duration) ([]*prompb.TimeSeries, error)
 	GetNodeDiskUsage(ctx context.Context, projectId, clusterId, ip string, start, end time.Time,
 		step time.Duration) ([]*prompb.TimeSeries, error)
@@ -108,6 +122,12 @@ type MetricHandler interface {
 		start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error)
 	GetContainerMemoryLimit(ctx context.Context, projectId, clusterId, namespace, podname string,
 		containerNameList []string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error)
+	GetContainerGPUMemoryUsage(ctx context.Context, projectId, clusterId, namespace, podname string,
+		containerNameList []string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error)
+	GetContainerGPUUsed(ctx context.Context, projectId, clusterId, namespace, podname string,
+		containerNameList []string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error)
+	GetContainerGPUUsage(ctx context.Context, projectId, clusterId, namespace, podname string,
+		containerNameList []string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error)
 	GetContainerDiskReadTotal(ctx context.Context, projectId, clusterId, namespace, podname string,
 		containerNameList []string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error)
 	GetContainerDiskWriteTotal(ctx context.Context, projectId, clusterId, namespace, podname string,
@@ -115,10 +135,10 @@ type MetricHandler interface {
 }
 
 // GetNodeMatch 按集群node节点正则匹配
-func GetNodeMatch(ctx context.Context, clusterId string, withRegex bool) (string, error) {
-	nodeList, err := k8sclient.GetNodeList(ctx, clusterId, true)
+func GetNodeMatch(ctx context.Context, clusterId string, withRegex bool) (string, string, error) {
+	nodeList, nodeNameList, err := k8sclient.GetNodeList(ctx, clusterId, true)
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 
 	instanceList := make([]string, 0, len(nodeList))
@@ -129,7 +149,7 @@ func GetNodeMatch(ctx context.Context, clusterId string, withRegex bool) (string
 			instanceList = append(instanceList, node)
 		}
 	}
-	return strings.Join(instanceList, "|"), nil
+	return strings.Join(instanceList, "|"), strings.Join(nodeNameList, "|"), nil
 }
 
 func sampleStreamToSeries(m *model.SampleStream) *prompb.TimeSeries {

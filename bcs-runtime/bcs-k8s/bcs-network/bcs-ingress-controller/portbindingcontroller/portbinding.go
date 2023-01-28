@@ -28,20 +28,23 @@ import (
 	k8scorev1 "k8s.io/api/core/v1"
 	k8smetav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	k8stypes "k8s.io/apimachinery/pkg/types"
+	"k8s.io/client-go/tools/record"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 type portBindingHandler struct {
 	ctx         context.Context
 	k8sClient   client.Client
+	eventer     record.EventRecorder
 	itemHandler *portBindingItemHandler
 }
 
-func newPortBindingHandler(ctx context.Context, k8sClient client.Client) *portBindingHandler {
+func newPortBindingHandler(ctx context.Context, k8sClient client.Client, eventer record.EventRecorder) *portBindingHandler {
 	return &portBindingHandler{
 		ctx:         ctx,
 		k8sClient:   k8sClient,
 		itemHandler: newPortBindingItemHandler(ctx, k8sClient),
+		eventer:     eventer,
 	}
 }
 
@@ -78,28 +81,35 @@ func (pbh *portBindingHandler) ensurePortBinding(
 	}
 	if unreadyNum == 0 {
 		portBinding.Status.Status = constant.PortBindingStatusReady
+		pbh.recordEvent(portBinding, k8scorev1.EventTypeNormal, ReasonPortBindingReady, MsgPortBindingReady)
+	} else {
+		portBinding.Status.Status = constant.PortBindingStatusNotReady
+		pbh.recordEvent(portBinding, k8scorev1.EventTypeNormal, ReasonPortBindingNotReady,
+			fmt.Sprintf(MsgPortBindingNotReady, unreadyNum))
 	}
+
 	if err := pbh.k8sClient.Status().Update(context.Background(), portBinding, &client.UpdateOptions{}); err != nil {
 		return true, fmt.Errorf("ensure port binding %s/%s failed, err %s",
 			portBinding.GetName(), portBinding.GetNamespace(), err.Error())
 	}
-	if portBinding.Status.Status == constant.PortBindingStatusReady {
-		if err := pbh.updatePodCondition(pod); err != nil {
-			return true, err
-		}
-		if err := pbh.patchPodAnnotation(pod); err != nil {
-			return true, err
-		}
+
+	if err := pbh.updatePodCondition(pod, portBinding.Status.Status); err != nil {
+		return true, err
+	}
+	if err := pbh.patchPodAnnotation(pod, portBinding.Status.Status); err != nil {
+		return true, err
 	}
 
 	if err := pbh.ensurePod(pod, portBinding); err != nil {
 		return true, errors.Wrapf(err, "ensurePod[%s/%s] failed", pod.GetNamespace(), pod.GetName())
 	}
+	pbh.recordEvent(portBinding, k8scorev1.EventTypeNormal, ReasonPortBindingUpdatePodSuccess,
+		MsgPortBindingUpdatePodSuccess)
 
 	return retry, nil
 }
 
-func (pbh *portBindingHandler) updatePodCondition(pod *k8scorev1.Pod) error {
+func (pbh *portBindingHandler) updatePodCondition(pod *k8scorev1.Pod, status string) error {
 	if _, ok := pod.Annotations[constant.AnnotationForPortPoolReadinessGate]; !ok {
 		return nil
 	}
@@ -107,15 +117,21 @@ func (pbh *portBindingHandler) updatePodCondition(pod *k8scorev1.Pod) error {
 	for i, condition := range pod.Status.Conditions {
 		if condition.Type == constant.ConditionTypeBcsIngressPortBinding {
 			if condition.Status == k8scorev1.ConditionFalse {
-				pod.Status.Conditions[i].Status = k8scorev1.ConditionTrue
-				pod.Status.Conditions[i].Reason = constant.ConditionReasonReadyBcsIngressPortBinding
-				pod.Status.Conditions[i].Message = constant.ConditionMessageReadyBcsIngressPortBinding
+				if status == constant.PortBindingStatusReady {
+					pod.Status.Conditions[i].Status = k8scorev1.ConditionTrue
+					pod.Status.Conditions[i].Reason = constant.ConditionReasonReadyBcsIngressPortBinding
+					pod.Status.Conditions[i].Message = constant.ConditionMessageReadyBcsIngressPortBinding
+				} else {
+					pod.Status.Conditions[i].Status = k8scorev1.ConditionFalse
+					pod.Status.Conditions[i].Reason = constant.ConditionReasonNotReadyBcsIngressPortBinding
+					pod.Status.Conditions[i].Message = constant.ConditionMessageNotReadyBcsIngressPortBinding
+				}
 			}
 			found = true
 			break
 		}
 	}
-	if !found {
+	if !found && status == constant.PortBindingStatusReady {
 		pod.Status.Conditions = append(pod.Status.Conditions, k8scorev1.PodCondition{
 			Type:    constant.ConditionTypeBcsIngressPortBinding,
 			Status:  k8scorev1.ConditionTrue,
@@ -130,10 +146,10 @@ func (pbh *portBindingHandler) updatePodCondition(pod *k8scorev1.Pod) error {
 	return nil
 }
 
-func (pbh *portBindingHandler) patchPodAnnotation(pod *k8scorev1.Pod) error {
+func (pbh *portBindingHandler) patchPodAnnotation(pod *k8scorev1.Pod, status string) error {
 	rawPatch := client.RawPatch(k8stypes.MergePatchType, []byte(
 		"{\"metadata\":{\"annotations\":{\""+constant.AnnotationForPortPoolBindingStatus+
-			"\":\""+constant.AnnotationForPodStatusReady+"\"}}}"))
+			"\":\""+status+"\"}}}"))
 	updatePod := &k8scorev1.Pod{
 		ObjectMeta: k8smetav1.ObjectMeta{
 			Name:      pod.GetName(),
@@ -194,17 +210,19 @@ func (pbh *portBindingHandler) cleanPortBinding(portBinding *networkextensionv1.
 		itemStatus := pbh.itemHandler.deleteItem(item)
 		portBinding.Status.PortBindingStatusList = append(portBinding.Status.PortBindingStatusList, itemStatus)
 	}
-	allCleaned := true
+	notCleanedNum := 0
 	for _, status := range portBinding.Status.PortBindingStatusList {
 		if status.Status != constant.PortBindingItemStatusCleaned {
-			allCleaned = false
-			break
+			notCleanedNum++
 		}
 	}
-	if allCleaned {
+	if notCleanedNum == 0 {
 		portBinding.Status.Status = constant.PortBindingStatusCleaned
+		pbh.recordEvent(portBinding, k8scorev1.EventTypeNormal, ReasonPortBindingCleanSuccess, MsgPortBindingCleanSuccess)
 	} else {
 		portBinding.Status.Status = constant.PortBindingStatusCleaning
+		pbh.recordEvent(portBinding, k8scorev1.EventTypeWarning, ReasonPortBindingCleaning,
+			fmt.Sprintf(MsgPortBindingCleaning, notCleanedNum))
 	}
 	portBinding.Status.UpdateTime = bcsnetcommon.FormatTime(time.Now())
 	if err := pbh.k8sClient.Status().Update(
@@ -213,7 +231,7 @@ func (pbh *portBindingHandler) cleanPortBinding(portBinding *networkextensionv1.
 			portBinding.GetName(), portBinding.GetNamespace(), err.Error())
 	}
 
-	return !allCleaned, nil
+	return notCleanedNum != 0, nil
 }
 
 func (pbh *portBindingHandler) ensurePod(pod *k8scorev1.Pod, portBinding *networkextensionv1.PortBinding) error {

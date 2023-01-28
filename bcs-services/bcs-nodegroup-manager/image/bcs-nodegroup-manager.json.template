@@ -18,6 +18,10 @@
     "key": "${bcsEtcdKeyFile}",
     "ca": "${bcsEtcdCAFile}"
   },
+  "gateway": {
+      "endpoint": "${bcsGatewayEndpoint}",
+      "token": "${bcsGatewayToken}"
+  },
   "address": "${localIp}",
   "port": ${bcsNodeGroupManagerPort},
   "httpport": ${bcsNodeGroupManagerHTTPPort},

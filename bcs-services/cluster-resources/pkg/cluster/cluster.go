@@ -17,6 +17,7 @@ package cluster
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/ctxkey"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
@@ -27,24 +28,25 @@ import (
 
 // Cluster BCS 集群信息
 type Cluster struct {
-	ID     string
-	Name   string
-	Type   string
-	ProjID string
+	ID       string `json:"clusterID"`
+	Name     string `json:"clusterName"`
+	ProjID   string `json:"projectID"`
+	Status   string `json:"status"`
+	IsShared bool   `json:"is_shared"`
+	Type     string `json:"-"`
+}
+
+// String :
+func (c *Cluster) String() string {
+	return fmt.Sprintf("cluster<%s|%s, %s>", c.Name, c.Type, c.ID)
 }
 
 // GetClusterInfo xxx
 func GetClusterInfo(ctx context.Context, clusterID string) (*Cluster, error) {
-	info, err := fetchClusterInfo(ctx, clusterID)
-	if err != nil {
-		return &Cluster{}, err
+	if runtime.RunMode == runmode.Dev || runtime.RunMode == runmode.UnitTest {
+		return fetchMockClusterInfo(clusterID)
 	}
-	return &Cluster{
-		ID:     info["id"].(string),
-		Name:   info["name"].(string),
-		Type:   info["type"].(string),
-		ProjID: info["projID"].(string),
-	}, nil
+	return clusterMgrCli.fetchClusterInfoWithCache(ctx, clusterID)
 }
 
 // FromContext 通过 Context 获取集群信息
@@ -54,12 +56,4 @@ func FromContext(ctx context.Context) (*Cluster, error) {
 		return nil, errorx.New(errcode.General, "cluster info not exists in context")
 	}
 	return c.(*Cluster), nil
-}
-
-// fetchClusterInfo 获取集群信息（ClusterManager）
-func fetchClusterInfo(ctx context.Context, clusterID string) (map[string]interface{}, error) {
-	if runtime.RunMode == runmode.Dev || runtime.RunMode == runmode.UnitTest {
-		return fetchMockClusterInfo(clusterID)
-	}
-	return clusterMgrCli.fetchClusterInfoWithCache(ctx, clusterID)
 }

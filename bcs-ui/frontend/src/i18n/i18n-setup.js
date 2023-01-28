@@ -44,10 +44,10 @@ const messages = {
 };
 
 let curLang = cookie.parse(document.cookie).blueking_language || 'zh-cn';
-if (['zh-CN', 'zh-cn', 'cn', 'zhCN', 'zhcn'].indexOf(curLang) > -1) {
-  curLang = 'zh-CN';
-} else {
+if (['en-US', 'enUS', 'enus', 'en-us', 'en'].includes(curLang)) {
   curLang = 'en-US';
+} else {
+  curLang = 'zh-CN';
 }
 
 // 代码中获取当前语言 this.$i18n.locale

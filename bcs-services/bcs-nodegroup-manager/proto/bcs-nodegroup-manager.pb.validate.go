@@ -2479,6 +2479,8 @@ func (m *ReservedNodeGroup) validate(all bool) error {
 
 	// no validation rules for NodeGroup
 
+	// no validation rules for ConsumerId
+
 	if len(errors) > 0 {
 		return ReservedNodeGroupMultiError(errors)
 	}
@@ -2583,6 +2585,8 @@ func (m *ElasticNodeGroup) validate(all bool) error {
 	// no validation rules for ClusterId
 
 	// no validation rules for NodeGroup
+
+	// no validation rules for ConsumerId
 
 	// no validation rules for Weight
 
@@ -2728,6 +2732,8 @@ func (m *Strategy) validate(all bool) error {
 		}
 	}
 
+	// no validation rules for ScaleDownBeforeDDL
+
 	if len(errors) > 0 {
 		return StrategyMultiError(errors)
 	}
@@ -2828,6 +2834,8 @@ func (m *Buffer) validate(all bool) error {
 	// no validation rules for Low
 
 	// no validation rules for High
+
+	// no validation rules for ReservedDays
 
 	if len(errors) > 0 {
 		return BufferMultiError(errors)

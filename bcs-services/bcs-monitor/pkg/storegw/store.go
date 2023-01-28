@@ -32,6 +32,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/storegw/bcs_system"
 	bkmonitor "github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/storegw/bk_monitor"
+	prom "github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/storegw/prometheus"
 )
 
 const (
@@ -39,6 +40,8 @@ const (
 	BKMONITOR config.StoreProvider = "BK_MONITOR"
 	// BCS_SYSTEM TODO
 	BCS_SYSTEM config.StoreProvider = "BCS_SYSTEM"
+	// PROMETHEUS prometheus 原生数据源
+	PROMETHEUS config.StoreProvider = "PROMETHEUS"
 )
 
 // Store GW Store 基类
@@ -65,6 +68,8 @@ func GetStoreSvr(logger log.Logger, reg *prometheus.Registry, conf *config.Store
 		return bkmonitor.NewBKMonitorStore(config)
 	case string(BCS_SYSTEM):
 		return bcs_system.NewBCSSystemStore(config)
+	case string(PROMETHEUS):
+		return prom.NewPromStore(config)
 	default:
 		return nil, errors.Errorf("store with type %s is not supported", conf.Type)
 	}

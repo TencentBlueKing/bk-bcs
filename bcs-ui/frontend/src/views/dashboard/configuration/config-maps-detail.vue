@@ -20,12 +20,29 @@
         <label>{{ $t('存在时间') }}</label>
         <span>{{ extData.age }}</span>
       </div>
+      <div class="basic-info-item">
+        <label>{{ $t('不可变更') }}</label>
+        <span>{{ extData.immutable ? $t('是') : $t('否') }}</span>
+      </div>
     </div>
-    <bcs-tab class="mt20" type="card" :label-height="40">
+    <bcs-tab class="mt20" type="card" :label-height="42">
       <bcs-tab-panel name="data" label="Data">
-        <bk-table :data="handleTransformObjToArr(data.data)">
+        <bk-table
+          :data="handleTransformObjToArr(data.data)"
+          @row-mouse-enter="handleMouseEnter"
+          @row-mouse-leave="handleMouseLeave">
           <bk-table-column label="Key" prop="key"></bk-table-column>
           <bk-table-column label="Value" prop="value"></bk-table-column>
+          <bk-table-column label="" width="40">
+            <template #default="{ row, $index }">
+              <span
+                v-bk-tooltips.top="$t('复制')"
+                v-show="$index === ativeIndex"
+                @click="handleCopyContent(row.value)">
+                <i class="bcs-icon bcs-icon-copy"></i>
+              </span>
+            </template>
+          </bk-table-column>
         </bk-table>
       </bcs-tab-panel>
       <bcs-tab-panel name="lebel" :label="$t('标签')">
@@ -40,14 +57,24 @@
           <bk-table-column label="Value" prop="value"></bk-table-column>
         </bk-table>
       </bcs-tab-panel>
+      <bcs-tab-panel name="event" :label="$t('事件')">
+        <EventQueryTableVue
+          is-specify-kinds
+          :kinds="data.kind"
+          :namespace="data.metadata.namespace"
+          :name="data.metadata.name" />
+      </bcs-tab-panel>
     </bcs-tab>
   </div>
 </template>
 <script lang="ts">
 import { defineComponent } from '@vue/composition-api';
+import useTableHover from '../common/use-table-hover';
+import EventQueryTableVue from '@/views/mc/event-query-table.vue';
 
 export default defineComponent({
   name: 'ConfigMapsDetail',
+  components: { EventQueryTableVue },
   props: {
     // 当前行数据
     data: {
@@ -72,8 +99,19 @@ export default defineComponent({
       }, []);
     };
 
+    const {
+      ativeIndex,
+      handleMouseEnter,
+      handleMouseLeave,
+      handleCopyContent,
+    } = useTableHover();
+
     return {
       handleTransformObjToArr,
+      ativeIndex,
+      handleMouseEnter,
+      handleMouseLeave,
+      handleCopyContent,
     };
   },
 });

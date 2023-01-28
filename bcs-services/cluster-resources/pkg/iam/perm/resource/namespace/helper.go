@@ -19,6 +19,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/iam/perm"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/iam/perm/resource/cluster"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/basic"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/hash"
 )
 
@@ -31,7 +32,7 @@ func calcNamespaceID(clusterID, namespace string) string {
 		return ""
 	}
 	clusterIDx := clusterID[strings.LastIndex(clusterID, "-")+1:]
-	return clusterIDx + ":" + hash.MD5Digest(namespace)[8:16] + namespace[:2]
+	return clusterIDx + ":" + hash.MD5Digest(namespace)[8:16] + namespace[:basic.MinInt(2, len(namespace))]
 }
 
 // FetchBatchNSScopedResMultiActionPerm 获取对多个命名空间域资源的 CURD 权限信息

@@ -34,6 +34,7 @@ type NodeGroupCache struct {
 	cacheMutex             sync.Mutex
 	lastUpdateTime         time.Time
 	getNodes               GetNodes
+	allGroups              []*NodeGroup
 }
 
 const (
@@ -58,6 +59,7 @@ func NewNodeGroupCache(getNodes GetNodes) *NodeGroupCache {
 		instanceToGroup:        make(map[InstanceRef]*NodeGroup),
 		instanceToCreationType: make(map[InstanceRef]CreationType),
 		getNodes:               getNodes,
+		allGroups:              make([]*NodeGroup, 0),
 	}
 
 	return registry
@@ -69,6 +71,7 @@ func (m *NodeGroupCache) Register(group *NodeGroup) {
 	defer m.cacheMutex.Unlock()
 
 	m.registeredGroups = append(m.registeredGroups, group)
+	m.allGroups = append(m.allGroups, group)
 }
 
 // GetRegisteredNodeGroups get all the registered node group in node group cache
@@ -118,6 +121,17 @@ func (m *NodeGroupCache) regenerateCache() error {
 }
 
 func (m *NodeGroupCache) regenerateCacheForInternal() error {
+	registeredGroups := make([]*NodeGroup, 0)
+	for i := range m.allGroups {
+		apigroup, err := m.allGroups[i].GetNodeGroup()
+		if err != nil {
+			return err
+		}
+		if apigroup.EnableAutoscale {
+			registeredGroups = append(registeredGroups, m.allGroups[i])
+		}
+	}
+	m.registeredGroups = registeredGroups
 
 	now := time.Now()
 	if m.lastUpdateTime.Add(3 * time.Minute).After(time.Now()) {

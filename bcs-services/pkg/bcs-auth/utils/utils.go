@@ -15,12 +15,15 @@
 package utils
 
 import (
+	"crypto/md5"
 	"errors"
 	"fmt"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
-	bkiam "github.com/TencentBlueKing/iam-go-sdk"
+	"io"
+	"strings"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
+	bkiam "github.com/TencentBlueKing/iam-go-sdk"
 )
 
 var (
@@ -28,10 +31,41 @@ var (
 	ErrServerNotInited = errors.New("server not init")
 )
 
+const (
+	PermDeniedCode = 40300
+)
+
+// PermDeniedError permission denied,user need to apply
+type PermDeniedError struct {
+	Perms PermData `json:"perms"`
+}
+
+type PermData struct {
+	ApplyURL   string           `json:"apply_url"`
+	ActionList []ResourceAction `json:"action_list"`
+}
+
+func (e *PermDeniedError) Error() string {
+	var actions string
+	for _, action := range e.Perms.ActionList {
+		actions = actions + " " + action.Action
+	}
+	return fmt.Sprintf("permission denied, need%s permition", actions)
+}
+
+func (e *PermDeniedError) Data() string {
+	var actions string
+	for _, action := range e.Perms.ActionList {
+		actions = actions + " " + action.Action
+	}
+	return fmt.Sprintf("permission denied, need%s permition", actions)
+}
+
 // ResourceAction for multi action multi resources
 type ResourceAction struct {
-	Resource string
-	Action   string
+	Resource string `json:"-"`
+	Type     string `json:"resource_type"`
+	Action   string `json:"action_id"`
 }
 
 // CheckResourceRequest xxx
@@ -132,4 +166,19 @@ func WithAncestors(ancestors []iam.Ancestor) AuthorizeCreatorOption {
 	return func(q *AuthorizeCreatorOptions) {
 		q.Ancestors = ancestors
 	}
+}
+
+// CalcIAMNsID 计算命名空间在 IAM 中的 ID，格式：{集群5位数字ID}:{md5(命名空间名称)}{命名空间名称前两位}
+// 如 `BCS-K8S-40000:default` 会被处理成 `40000:5f03d33dde`
+func CalcIAMNsID(clusterID, namespace string) string {
+	s := strings.Split(clusterID, "-")
+	clusterIDNum := s[len(s)-1]
+	h := md5.New()
+	io.WriteString(h, namespace)
+	b := h.Sum(nil)
+	name := namespace
+	if len(namespace) >= 2 {
+		name = namespace[:2]
+	}
+	return fmt.Sprintf("%s:%x%s", clusterIDNum, b[4:8], name)
 }

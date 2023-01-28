@@ -24,7 +24,8 @@ export default function useTableSearch(data: Ref<any[]>, keys: Ref<any[]>): ITab
         }
         return pre;
       }, item);
-      return String(str).includes(searchValue.value);
+      return String(str).toLowerCase()
+        .includes(searchValue.value.toLowerCase());
     }));
   });
 

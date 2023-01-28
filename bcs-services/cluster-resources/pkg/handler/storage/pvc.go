@@ -19,10 +19,13 @@ import (
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action/perm"
 	resAction "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action/resource"
+	respUtil "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action/resp"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action/web"
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/featureflag"
-	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
+	cli "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/client"
+	resCsts "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/constants"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/pbstruct"
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
 )
 
@@ -30,15 +33,21 @@ import (
 func (h *Handler) ListPVC(
 	ctx context.Context, req *clusterRes.ResListReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = resAction.NewResMgr(req.ClusterID, req.ApiVersion, res.PVC).List(
-		ctx, req.Namespace, req.Format, metav1.ListOptions{LabelSelector: req.LabelSelector},
+	if err = perm.CheckNSAccess(ctx, req.ClusterID, req.Namespace); err != nil {
+		return err
+	}
+	respData, err := respUtil.BuildListAPIRespData(
+		ctx, respUtil.ListParams{
+			req.ClusterID, resCsts.PVC, req.ApiVersion, req.Namespace, req.Format, req.Scene,
+		}, metav1.ListOptions{LabelSelector: req.LabelSelector},
 	)
 	if err != nil {
 		return err
 	}
-	resp.WebAnnotations, err = web.NewAnnos(
-		web.NewFeatureFlag(featureflag.FormCreate, false),
-	).ToPbStruct()
+	if resp.Data, err = pbstruct.Map2pbStruct(respData); err != nil {
+		return err
+	}
+	resp.WebAnnotations, err = web.GenListPVCWebAnnos(ctx, req.ClusterID, req.Namespace, respData)
 	return err
 }
 
@@ -46,15 +55,40 @@ func (h *Handler) ListPVC(
 func (h *Handler) GetPVC(
 	ctx context.Context, req *clusterRes.ResGetReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = resAction.NewResMgr(req.ClusterID, req.ApiVersion, res.PVC).Get(
-		ctx, req.Namespace, req.Name, req.Format, metav1.GetOptions{},
+	if err = perm.CheckNSAccess(ctx, req.ClusterID, req.Namespace); err != nil {
+		return err
+	}
+	respData, err := respUtil.BuildRetrieveAPIRespData(
+		ctx, respUtil.GetParams{
+			req.ClusterID, resCsts.PVC, req.ApiVersion, req.Namespace, req.Name, req.Format,
+		}, metav1.GetOptions{},
 	)
 	if err != nil {
 		return err
 	}
-	resp.WebAnnotations, err = web.NewAnnos(
-		web.NewFeatureFlag(featureflag.FormUpdate, false),
-	).ToPbStruct()
+	if resp.Data, err = pbstruct.Map2pbStruct(respData); err != nil {
+		return err
+	}
+	resp.WebAnnotations, err = web.GenRetrievePVCWebAnnos(ctx, req.ClusterID, req.Namespace, resp.Data.AsMap())
+	return err
+}
+
+// GetPVCMountInfo 获取 PVC 被挂载的 Pod 的名称信息
+func (h *Handler) GetPVCMountInfo(
+	ctx context.Context, req *clusterRes.ResGetReq, resp *clusterRes.CommonResp,
+) (err error) {
+	if err = perm.CheckNSAccess(ctx, req.ClusterID, req.Namespace); err != nil {
+		return err
+	}
+
+	pvcMountInfo := cli.NewPodCliByClusterID(ctx, req.ClusterID).GetPVCMountInfo(
+		ctx, req.Namespace, metav1.ListOptions{},
+	)
+	podNames, ok := pvcMountInfo[req.Name]
+	if !ok {
+		podNames = []string{}
+	}
+	resp.Data, err = pbstruct.Map2pbStruct(map[string]interface{}{"podNames": podNames})
 	return err
 }
 
@@ -62,7 +96,7 @@ func (h *Handler) GetPVC(
 func (h *Handler) CreatePVC(
 	ctx context.Context, req *clusterRes.ResCreateReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = resAction.NewResMgr(req.ClusterID, "", res.PVC).Create(
+	resp.Data, err = resAction.NewResMgr(req.ClusterID, "", resCsts.PVC).Create(
 		ctx, req.RawData, req.Format, true, metav1.CreateOptions{},
 	)
 	return err
@@ -72,7 +106,7 @@ func (h *Handler) CreatePVC(
 func (h *Handler) UpdatePVC(
 	ctx context.Context, req *clusterRes.ResUpdateReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = resAction.NewResMgr(req.ClusterID, "", res.PVC).Update(
+	resp.Data, err = resAction.NewResMgr(req.ClusterID, "", resCsts.PVC).Update(
 		ctx, req.Namespace, req.Name, req.RawData, req.Format, metav1.UpdateOptions{},
 	)
 	return err
@@ -82,7 +116,7 @@ func (h *Handler) UpdatePVC(
 func (h *Handler) DeletePVC(
 	ctx context.Context, req *clusterRes.ResDeleteReq, _ *clusterRes.CommonResp,
 ) error {
-	return resAction.NewResMgr(req.ClusterID, "", res.PVC).Delete(
+	return resAction.NewResMgr(req.ClusterID, "", resCsts.PVC).Delete(
 		ctx, req.Namespace, req.Name, metav1.DeleteOptions{},
 	)
 }

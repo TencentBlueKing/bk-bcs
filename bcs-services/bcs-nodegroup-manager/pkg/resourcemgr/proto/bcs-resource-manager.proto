@@ -8,13 +8,13 @@ import "protoc-gen-swagger/options/annotations.proto";
 import "validate/validate.proto";
 
 option (grpc.gateway.protoc_gen_swagger.options.openapiv2_swagger) = {
-  info : {
-    title : "Resource Manager API Doc"
-    version : "0.1.0"
-  };
-  schemes : HTTP
-  consumes : "application/json"
-  produces : "application/json"
+    info : {
+        title : "Resource Manager API Doc"
+        version : "0.1.0"
+    };
+    schemes : HTTP
+    consumes : "application/json"
+    produces : "application/json"
 };
 
 service ResourceManager {
@@ -320,6 +320,37 @@ service ResourceManager {
         };
     }
 
+    rpc ListDeviceRecordByPool(ListDeviceRecordByPoolReq) returns (ListDeviceRecordResp) {
+        option (google.api.http) = {
+            get : "/resourcemanager/v1/resource_pools/{poolID}/device_records"
+        };
+        option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+            description : "查询资源池(自建)中的设备记录(aka订单)列表"
+            summary : "查询资源池(自建)中的设备记录(aka订单)列表"
+        };
+    }
+
+    rpc CreateDeviceRecordByPool(CreateDeviceRecordByPoolReq) returns (CreateDeviceRecordByPoolResp) {
+        option (google.api.http) = {
+            post : "/resourcemanager/v1/resource_pools/{poolID}/device_records",
+            body: "*"
+        };
+        option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+            description : "新建资源池(自建)中的设备记录(aka订单)"
+            summary : "新建资源池(自建)中的设备记录(aka订单)"
+        };
+    }
+
+    // rpc ReturnDeviceByDeviceRecord(ListDeviceRecordByPoolReq) returns (ListDeviceRecordResp) {
+    //     option (google.api.http) = {
+    //         put : "/resourcemanager/v1/resource_pools/{poolID}/device_records/{deviceRecordID}/return"
+    //     };
+    //     option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+    //         description : "返回资源池(自建)中的设备记录(aka订单)中的设备"
+    //         summary : "返回资源池(自建)中的设备记录(aka订单)中的设备"
+    //     };
+    // }
+
     //* device
     rpc GetDevice(GetDeviceReq) returns (GetDeviceResp) {
         option (google.api.http) = {
@@ -354,8 +385,8 @@ service ResourceManager {
 message AvailableReq {
     option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
         json_schema : {
-          title : "AvailableReq"
-          description : "查询resource-manager服务是否可用参数"
+            title : "AvailableReq"
+            description : "查询resource-manager服务是否可用参数"
         }
     };
 }
@@ -1683,8 +1714,8 @@ message DeleteProviderResp {
 message QueryProviderOrderReq {
     option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
         json_schema : {
-          title : "QueryProviderOrderReq"
-          description : "查询给定的provider order参数"
+            title : "QueryProviderOrderReq"
+            description : "查询给定的provider order参数"
         }
     };
 
@@ -1705,8 +1736,8 @@ message QueryProviderOrderReq {
 message QueryProviderOrderResp {
     option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
         json_schema : {
-          title : "QueryProviderOrderResp"
-          description : "查询给定的provider order返回"
+            title : "QueryProviderOrderResp"
+            description : "查询给定的provider order返回"
         }
     };
 
@@ -1750,8 +1781,8 @@ message ProviderOrder {
 message QueryProviderNetworkReq {
     option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
         json_schema : {
-          title : "QueryProviderNetworkReq"
-          description : "查询给定的provider network参数"
+            title : "QueryProviderNetworkReq"
+            description : "查询给定的provider network参数"
         }
     };
 
@@ -1776,8 +1807,8 @@ message QueryProviderNetworkReq {
 message QueryProviderNetworkResp {
     option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
         json_schema : {
-          title : "QueryProviderNetworkResp"
-          description : "查询给定的provider network返回"
+            title : "QueryProviderNetworkResp"
+            description : "查询给定的provider network返回"
         }
     };
 
@@ -2645,6 +2676,52 @@ message ListResourceReq {
         description : "poolID"
     }, (validate.rules).string = {min_len : 2, max_len : 30, pattern : "^[0-9a-zA-Z-]+$"}];
 
+    optional string consumable = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "consumable",
+        description: "过滤只能被消费的资源"
+    }];
+
+    optional string matchConsumerID = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "matchConsumerID",
+        description: "过滤只能被特定Consumer消费的资源"
+    }];
+
+    optional string matchDeviceRecordID = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "matchDeviceRecordID",
+        description: "过滤只能被特定DeviceRecord消费的资源"
+    }];
+}
+
+message ListDeviceRecordByPoolReq {
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+        json_schema : {
+            title : "ListDeviceRecordReq"
+            description : "list device record的参数"
+        }
+    };
+
+    required string poolID = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "poolID",
+        description : "poolID"
+    }, (validate.rules).string = {min_len : 2, max_len : 30, pattern : "^[0-9a-zA-Z-]+$"}];
+
+
+    optional string sort = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "sort",
+        description: "排序顺序"
+    }];
+    optional bool desc = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "desc",
+        description: "排序是否为倒序, 仅在sort指定时有效"
+    }];
+    optional int64 offset = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "offset",
+        description: "偏移量"
+    }];
+    optional int64 limit = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "limit",
+        description: "长度"
+    }];
 }
 
 message ListResourceResp {
@@ -2669,6 +2746,58 @@ message ListResourceResp {
     repeated Resource data = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "data",
         description: "资源池pool"
+    }];
+}
+
+message CreateDeviceRecordByPoolReq {
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+        json_schema : {
+            title : "CreateDeviceRecordByPoolReq"
+            description : "创建设备订单返回"
+        }
+    };
+
+    required string poolID = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "poolID",
+        description : "poolID"
+    }, (validate.rules).string = {min_len : 2, max_len : 30, pattern : "^[0-9a-zA-Z-]+$"}];
+    optional uint32 num = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "num",
+        description : "设备数量"
+    }];
+    optional ConsumeDesire desire = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "desire",
+        description : "对设备的要求, 按队列顺序优先级尝试满足"
+    }];
+    optional string drainDelay = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "drainDelay",
+        description : "最大抽离延迟时间, 格式如4h"
+    }];
+}
+
+message CreateDeviceRecordByPoolResp {
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+        json_schema : {
+            title : "CreateDeviceRecordByPoolResp"
+            description : "f"
+        }
+    };
+
+    optional uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "code",
+        description : "返回错误码"
+    }];
+    optional string message = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "message",
+        description : "返回错误信息"
+    }];
+    optional bool result = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "result",
+        description : "返回结果"
+    }];
+    optional DeviceRecord data = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "data",
+        description: "设备信息"
     }];
 }
 

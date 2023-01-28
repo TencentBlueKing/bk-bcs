@@ -21,6 +21,7 @@ import (
 
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
+	icommon "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
@@ -459,4 +460,19 @@ func TestRemoveNodeFromNodePool(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+}
+
+func TestClient_DescribeOSImages(t *testing.T) {
+	cli := getClient(regions.Nanjing)
+
+	images, err := cli.DescribeOsImages(icommon.PublicImageProvider)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for _, image := range images {
+		fmt.Printf("%+v %+v %+v %+v\n", image.OsName, image.Status, image.ImageID, image.Arch)
+	}
+
+	t.Log(len(images))
 }

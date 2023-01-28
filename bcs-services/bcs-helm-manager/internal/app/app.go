@@ -18,18 +18,24 @@ import (
 	"crypto/tls"
 	"fmt"
 	"io/ioutil"
+	"net"
 	"net/http"
 	"os"
+	"os/signal"
 	"path"
 	"path/filepath"
 	"strconv"
 	"strings"
+	"syscall"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/encrypt"
+	"github.com/Tencent/bk-bcs/bcs-common/common/http/ipv6server"
 	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
 	"github.com/Tencent/bk-bcs/bcs-common/common/static"
+	"github.com/Tencent/bk-bcs/bcs-common/common/types"
+	"github.com/Tencent/bk-bcs/bcs-common/common/util"
 	"github.com/Tencent/bk-bcs/bcs-common/common/version"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers/mongo"
@@ -46,9 +52,12 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/component/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/component/project"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/component/storage"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/discovery"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/handler"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/operation"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/release"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/release/bcs"
@@ -70,10 +79,10 @@ type HelmManager struct {
 	discovery *discovery.ModuleDiscovery
 
 	// http service
-	httpServer *http.Server
+	httpServer *ipv6server.IPv6Server
 
 	// metric service
-	metricServer *http.Server
+	metricServer *ipv6server.IPv6Server
 
 	// tls config for helm manager service and client side
 	tlsConfig       *tls.Config
@@ -134,6 +143,19 @@ func (hm *HelmManager) Run() error {
 	}
 	blog.CloseLogs()
 	return nil
+}
+
+// RegistryStop registry stop signal
+func (hm *HelmManager) RegistryStop() {
+	go func() {
+		// listening OS shutdown singal
+		signalChan := make(chan os.Signal, 1)
+		signal.Notify(signalChan, syscall.SIGINT, syscall.SIGTERM)
+		<-signalChan
+		blog.Infof("Got OS shutdown signal, shutting down bcs-helm-manager server gracefully...")
+
+		hm.ctxCancelFunc()
+	}()
 }
 
 // initModel decode the connection info from the config and init a new store.HelmManagerModel
@@ -207,24 +229,6 @@ func (hm *HelmManager) initPlatform() error {
 
 // initReleaseHandler init a new release.Handler, for handling operations to helm-client
 func (hm *HelmManager) initReleaseHandler() error {
-	token := hm.opt.Release.Token
-	if token != "" && hm.opt.Release.Encrypted {
-		realToken, err := encrypt.DesDecryptFromBase([]byte(token))
-		if err != nil {
-			blog.Errorf("init release handler decode token failed: %s", err.Error())
-			return err
-		}
-
-		token = string(realToken)
-	}
-
-	template, err := os.ReadFile(hm.opt.Release.KubeConfigTemplate)
-	if err != nil {
-		blog.Errorf("init release handler load template file %s failed: %s",
-			hm.opt.Release.KubeConfigTemplate, err.Error())
-		return err
-	}
-
 	// load patch template files from config
 	patches, err := loadYamlFilesFromDir(hm.opt.Release.PatchDir)
 	if err != nil {
@@ -233,23 +237,10 @@ func (hm *HelmManager) initReleaseHandler() error {
 		return err
 	}
 
-	// load var template files from config
-	vars, err := loadYamlFilesFromDir(hm.opt.Release.VarDir)
-	if err != nil {
-		blog.Errorf("init release handler load var dir %s failed: %s",
-			hm.opt.Release.VarDir, err.Error())
-		return err
-	}
-
 	hm.releaseHandler = bcs.New(release.Config{
-		APIServer:          hm.opt.Release.APIServer,
-		Token:              string(token),
-		KubeConfigTemplate: string(template),
-		HelmBinary:         hm.opt.Release.Binary,
-		PatchTemplates:     patches,
-		VarTemplates:       vars,
+		PatchTemplates: patches,
 	})
-	blog.Infof("init release handler successfully to %s", hm.opt.Release.APIServer)
+	blog.Info("init release handler successfully")
 	return nil
 }
 
@@ -287,22 +278,35 @@ func (hm *HelmManager) initDiscovery() error {
 }
 
 func (hm *HelmManager) initMicro() error {
+	// server listen ip
+	ipv4 := hm.opt.Address
+	ipv6 := hm.opt.IPv6Address
+	port := strconv.Itoa(int(hm.opt.Port))
+
+	// service inject metadata to discovery center
+	metadata := make(map[string]string)
+	metadata[common.MicroMetaKeyHTTPPort] = strconv.Itoa(int(hm.opt.HTTPPort))
+
+	// 适配单栈环境（ipv6注册地址不能是本地回环地址）
+	if v := net.ParseIP(ipv6); v != nil && !v.IsLoopback() {
+		metadata[types.IPV6] = net.JoinHostPort(ipv6, port)
+	}
+
 	authWrapper := middleauth.NewGoMicroAuth(auth.GetJWTClient()).
 		EnableSkipHandler(auth.SkipHandler).
 		EnableSkipClient(auth.SkipClient).
 		SetCheckUserPerm(auth.CheckUserPerm)
 	svc := microGrpc.NewService(
 		microSvc.Name(common.ServiceDomain),
-		microSvc.Metadata(map[string]string{
-			common.MicroMetaKeyHTTPPort: strconv.Itoa(int(hm.opt.HTTPPort)),
-		}),
+		microSvc.Metadata(metadata),
 		microGrpc.WithTLS(hm.tlsConfig),
-		microSvc.Address(hm.opt.Address+":"+strconv.Itoa(int(hm.opt.Port))),
+		microSvc.Address(net.JoinHostPort(ipv4, port)),
 		microSvc.Registry(hm.microRgt),
 		microSvc.Version(version.BcsVersion),
 		microSvc.RegisterTTL(30*time.Second),
 		microSvc.RegisterInterval(25*time.Second),
 		microSvc.Context(hm.ctx),
+		runtimex.MaxMsgSize(10*1024*1024),
 		microSvc.BeforeStart(func() error {
 			return nil
 		}),
@@ -313,7 +317,16 @@ func (hm *HelmManager) initMicro() error {
 			hm.discovery.Stop()
 			return nil
 		}),
+		microSvc.AfterStop(func() error {
+			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+			defer cancel()
+			hm.httpServer.Shutdown(ctx)
+			operation.GlobalOperator.TerminateOperation()
+			operation.GlobalOperator.WaitTerminate(ctx, time.Second)
+			return nil
+		}),
 		microSvc.WrapHandler(
+			wrapper.RequestLogWarpper,
 			wrapper.RequestIDWrapper,
 			authWrapper.AuthenticationFunc,
 			wrapper.ParseProjectIDWrapper,
@@ -323,7 +336,7 @@ func (hm *HelmManager) initMicro() error {
 	svc.Init()
 
 	if err := helmmanager.RegisterHelmManagerHandler(
-		svc.Server(), handler.NewHelmManager(hm.model, hm.platform, hm.releaseHandler)); err != nil {
+		svc.Server(), handler.NewHelmManager(hm.model, hm.platform, hm.opt, hm.releaseHandler)); err != nil {
 		blog.Errorf("register helm manager handler to micro failed: %s", err.Error())
 		return nil
 	}
@@ -337,7 +350,9 @@ func (hm *HelmManager) initHTTPService() error {
 	router := mux.NewRouter()
 	rmMux := ggRuntime.NewServeMux(
 		ggRuntime.WithIncomingHeaderMatcher(runtimex.CustomHeaderMatcher),
-		ggRuntime.WithMarshalerOption(ggRuntime.MIMEWildcard, &ggRuntime.JSONPb{OrigName: true, EmitDefaults: true}),
+		ggRuntime.WithOutgoingHeaderMatcher(runtimex.CustomHeaderMatcher),
+		ggRuntime.WithMarshalerOption(ggRuntime.MIMEWildcard, &ggRuntime.HTTPBodyMarshaler{
+			Marshaler: &ggRuntime.JSONPb{OrigName: true, EmitDefaults: true}}),
 		ggRuntime.WithDisablePathLengthFallback(),
 		ggRuntime.WithProtoErrorHandler(runtimex.CustomHTTPError),
 	)
@@ -369,14 +384,16 @@ func (hm *HelmManager) initHTTPService() error {
 	mux.Handle("/", router)
 	blog.Info("register grpc service handler to path /")
 
-	httpAddr := hm.opt.Address + ":" + strconv.Itoa(int(hm.opt.HTTPPort))
-	hm.httpServer = &http.Server{
-		Addr:    httpAddr,
-		Handler: mux,
+	// server address
+	addresses := []string{hm.opt.Address}
+	if len(hm.opt.IPv6Address) > 0 {
+		addresses = append(addresses, hm.opt.IPv6Address)
 	}
+	hm.httpServer = ipv6server.NewIPv6Server(addresses, strconv.Itoa(int(hm.opt.HTTPPort)), "", mux)
+
 	go func() {
 		var err error
-		blog.Infof("start http gateway server on address %s", httpAddr)
+		blog.Infof("start http gateway server on address %+v", addresses)
 		if hm.tlsConfig != nil {
 			hm.httpServer.TLSConfig = hm.tlsConfig
 			err = hm.httpServer.ListenAndServeTLS("", "")
@@ -393,32 +410,35 @@ func (hm *HelmManager) initHTTPService() error {
 
 // initMetric brings up a service and listen on a metric port, for providing metric data
 func (hm *HelmManager) initMetric() error {
-	metricAddr := hm.opt.Address + ":" + strconv.Itoa(int(hm.opt.MetricPort))
 	metricMux := http.NewServeMux()
 	blog.Info("init metric handler")
 	metricMux.Handle("/metrics", promhttp.Handler())
-	hm.metricServer = &http.Server{
-		Addr:    metricAddr,
-		Handler: metricMux,
+	// server address
+	addresses := []string{hm.opt.Address}
+	if len(hm.opt.IPv6Address) > 0 {
+		addresses = append(addresses, hm.opt.IPv6Address)
 	}
+	hm.metricServer = ipv6server.NewIPv6Server(addresses, strconv.Itoa(int(hm.opt.MetricPort)), "", metricMux)
 
 	go func() {
 		var err error
-		blog.Infof("start metric server on address %s", metricAddr)
+		blog.Infof("start metric server on address %+v", addresses)
 		if err = hm.metricServer.ListenAndServe(); err != nil {
 			blog.Errorf("start metric server failed, %s", err.Error())
 			hm.stopCh <- struct{}{}
 		}
 	}()
+
+	operation.GlobalOperator.ReportOperatorCount()
 	return nil
 }
 
 // initTLSConfig xxx
 // init server and client tls config
 func (hm *HelmManager) initTLSConfig() error {
-	if len(hm.opt.ServerCert) != 0 && len(hm.opt.ServerKey) != 0 && len(hm.opt.ServerCa) != 0 {
-		tlsConfig, err := ssl.ServerTslConfVerityClient(hm.opt.ServerCa, hm.opt.ServerCert,
-			hm.opt.ServerKey, static.ServerCertPwd)
+	if len(hm.opt.TLS.ServerCert) != 0 && len(hm.opt.TLS.ServerKey) != 0 && len(hm.opt.TLS.ServerCa) != 0 {
+		tlsConfig, err := ssl.ServerTslConfVerityClient(hm.opt.TLS.ServerCa, hm.opt.TLS.ServerCert,
+			hm.opt.TLS.ServerKey, static.ServerCertPwd)
 		if err != nil {
 			blog.Errorf("load helm manager server tls config failed, err %s", err.Error())
 			return err
@@ -427,9 +447,9 @@ func (hm *HelmManager) initTLSConfig() error {
 		blog.Info("load helm manager server tls config successfully")
 	}
 
-	if len(hm.opt.ClientCert) != 0 && len(hm.opt.ClientKey) != 0 && len(hm.opt.ClientCa) != 0 {
-		tlsConfig, err := ssl.ClientTslConfVerity(hm.opt.ClientCa, hm.opt.ClientCert,
-			hm.opt.ClientKey, static.ClientCertPwd)
+	if len(hm.opt.TLS.ClientCert) != 0 && len(hm.opt.TLS.ClientKey) != 0 && len(hm.opt.TLS.ClientCa) != 0 {
+		tlsConfig, err := ssl.ClientTslConfVerity(hm.opt.TLS.ClientCa, hm.opt.TLS.ClientCert,
+			hm.opt.TLS.ClientKey, static.ClientCertPwd)
 		if err != nil {
 			blog.Errorf("load helm manager client tls config failed, err %s", err.Error())
 			return err
@@ -447,7 +467,6 @@ func (hm *HelmManager) initJWTClient() error {
 		PublicKeyFile:  hm.opt.JWT.PublicKeyFile,
 		PrivateKey:     hm.opt.JWT.PrivateKey,
 		PrivateKeyFile: hm.opt.JWT.PrivateKeyFile,
-		ExemptClients:  hm.opt.ExemptClients.ClientIDs,
 	}
 	if _, err := auth.NewJWTClient(conf); err != nil {
 		blog.Error("init jwt client error, %s", err.Error())
@@ -512,13 +531,27 @@ func (hm *HelmManager) getServerAddress() error {
 		hm.opt.Address = envx.LocalIP
 		hm.opt.InsecureAddress = envx.LocalIP
 	}
+	hm.opt.IPv6Address = util.InitIPv6Address(hm.opt.IPv6Address)
 	return nil
 }
 
 // InitComponentConfig init component config
 func (hm *HelmManager) InitComponentConfig() error {
-	c := project.ProjectClient{Host: hm.opt.ProjectService.Host, Token: hm.opt.App.Token}
-	project.NewClient(c)
-	blog.Info("init project client successfully")
+	err := project.NewClient(hm.clientTLSConfig, hm.microRgt)
+	if err != nil {
+		blog.Error("init project client error, %s", err.Error())
+		return err
+	}
+	err = clustermanager.NewClient(hm.clientTLSConfig, hm.microRgt)
+	if err != nil {
+		blog.Error("init clustermanager client error, %s", err.Error())
+		return err
+	}
+	err = storage.NewClient(hm.clientTLSConfig)
+	if err != nil {
+		blog.Error("init storage client error, %s", err.Error())
+		return err
+	}
+	blog.Info("init all client successfully")
 	return nil
 }

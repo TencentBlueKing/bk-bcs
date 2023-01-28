@@ -20,6 +20,7 @@ import (
 	"github.com/fatih/structs"
 	"github.com/stretchr/testify/assert"
 
+	resCsts "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/constants"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/model"
 )
 
@@ -272,7 +273,7 @@ func TestParsePo(t *testing.T) {
 }
 
 var exceptedSelect = model.NodeSelect{
-	Type:     NodeSelectTypeSpecificNode,
+	Type:     resCsts.NodeSelectTypeSpecificNode,
 	NodeName: "vm-123",
 	Selector: []model.NodeSelector{
 		{Key: "kubernetes.io/arch", Value: "amd64"},
@@ -288,7 +289,7 @@ func TestParseNodeSelect(t *testing.T) {
 var exceptedAffinity = model.Affinity{
 	NodeAffinity: []model.NodeAffinity{
 		{
-			Priority: AffinityPriorityRequired,
+			Priority: resCsts.AffinityPriorityRequired,
 			Selector: model.NodeAffinitySelector{
 				Expressions: []model.ExpSelector{
 					{Key: "testKey", Op: "In", Values: "testValue1"},
@@ -299,7 +300,7 @@ var exceptedAffinity = model.Affinity{
 			},
 		},
 		{
-			Priority: AffinityPriorityPreferred,
+			Priority: resCsts.AffinityPriorityPreferred,
 			Weight:   10,
 			Selector: model.NodeAffinitySelector{
 				Expressions: []model.ExpSelector{
@@ -313,8 +314,8 @@ var exceptedAffinity = model.Affinity{
 	},
 	PodAffinity: []model.PodAffinity{
 		{
-			Type:     AffinityTypeAffinity,
-			Priority: AffinityPriorityPreferred,
+			Type:     resCsts.AffinityTypeAffinity,
+			Priority: resCsts.AffinityPriorityPreferred,
 			Namespaces: []string{
 				"kube-system",
 				"default",
@@ -331,8 +332,8 @@ var exceptedAffinity = model.Affinity{
 			},
 		},
 		{
-			Type:     AffinityTypeAffinity,
-			Priority: AffinityPriorityRequired,
+			Type:     resCsts.AffinityTypeAffinity,
+			Priority: resCsts.AffinityPriorityRequired,
 			Namespaces: []string{
 				"kube-node-lease",
 				"default",
@@ -348,8 +349,8 @@ var exceptedAffinity = model.Affinity{
 			},
 		},
 		{
-			Type:     AffinityTypeAntiAffinity,
-			Priority: AffinityPriorityPreferred,
+			Type:     resCsts.AffinityTypeAntiAffinity,
+			Priority: resCsts.AffinityPriorityPreferred,
 			Namespaces: []string{
 				"default",
 				"kube-system",
@@ -366,8 +367,8 @@ var exceptedAffinity = model.Affinity{
 			},
 		},
 		{
-			Type:     AffinityTypeAntiAffinity,
-			Priority: AffinityPriorityRequired,
+			Type:     resCsts.AffinityTypeAntiAffinity,
+			Priority: resCsts.AffinityPriorityRequired,
 			Namespaces: []string{
 				"default",
 			},

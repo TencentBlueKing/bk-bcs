@@ -38,7 +38,7 @@ type RepositoryClient interface {
 type ChartClient interface {
 	List(ctx context.Context, req *helmmanager.ListChartReq) (*helmmanager.ChartListData, error)
 	Versions(ctx context.Context, req *helmmanager.ListChartVersionReq) (*helmmanager.ChartVersionListData, error)
-	Detail(ctx context.Context, req *helmmanager.GetChartDetailReq) (*helmmanager.ChartDetail, error)
+	Detail(ctx context.Context, req *helmmanager.GetVersionDetailReq) (*helmmanager.ChartDetail, error)
 }
 
 // ReleaseClient define the release operation handler

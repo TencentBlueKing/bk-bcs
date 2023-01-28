@@ -17,6 +17,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/pkg/common"
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
 )
 
@@ -41,6 +43,7 @@ func (c *Cache) Start() {
 		case <-ticker.C:
 			portPoolCapacityMetric.Reset()
 			portPoolAllocatedMetric.Reset()
+			blog.V(4).Infof("pool cache info: %s", common.ToJsonString(c.portPoolMap))
 			for poolKey, pool := range c.portPoolMap {
 				for _, item := range pool.ItemList {
 					for protocol, list := range item.PortListMap {

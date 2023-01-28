@@ -6,9 +6,9 @@
       class="cluster-node-tip"
     >
       <div slot="title">
-        {{$t('集群就绪后，您可以创建命名空间、推送项目镜像到仓库，然后通过服务配置模板集部署服务 ')}}
+        {{$t('集群就绪后，您可以创建命名空间、推送项目镜像到仓库，然后通过服务配置模板集部署服务。')}}
         <i18n
-          path="当前集群已添加节点数（含Master） {nodes}，还可添加节点数 {realRemainNodesCount}，当容器网络资源超额使用时，会触发容器网络自动扩容，扩容后最多可以添加 {maxRemainNodesCount} 个节点"
+          path="当前集群已添加节点数（含Master） {nodes}，还可添加节点数 {realRemainNodesCount}，当容器网络资源超额使用时，会触发容器网络自动扩容，扩容后最多可以添加 {maxRemainNodesCount} 个节点。"
           v-if="maxRemainNodesCount > 0"
         >
           <span place="nodes" class="num">{{nodesCount}}</span>
@@ -24,7 +24,7 @@
           <span
             v-bk-tooltips="{
               disabled: !isImportCluster,
-              content: $t('kubeconfig导入集群，节点管理功能不可用')
+              content: $t('导入集群，节点管理功能不可用')
             }">
             <bcs-button
               theme="primary"
@@ -45,6 +45,13 @@
               @click="handleAddNode"
             >{{$t('添加节点')}}</bcs-button>
           </span>
+        </template>
+        <template v-if="$INTERNAL && curSelectedCluster.providerType === 'tke' && !nodeMenu">
+          <apply-host
+            class="mr10"
+            :title="$t('申请Node服务器')"
+            :cluster-id="localClusterId"
+            :is-backfill="true" />
         </template>
         <bcs-dropdown-menu
           :disabled="!selections.length"
@@ -71,7 +78,7 @@
               :disabled="isImportCluster"
               v-bk-tooltips="{
                 disabled: !isImportCluster,
-                content: $t('kubeconfig导入集群，节点管理功能不可用')
+                content: $t('导入集群，节点管理功能不可用')
               }"
               @click="handleBatchReAddNodes">{{$t('失败重试')}}</li>
             <div
@@ -84,7 +91,7 @@
               :disabled="isImportCluster"
               v-bk-tooltips="{
                 disabled: !isImportCluster,
-                content: $t('kubeconfig导入集群，节点管理功能不可用')
+                content: $t('导入集群，节点管理功能不可用')
               }"
               @click="handleBatchDeleteNodes">{{$t('删除')}}</li>
             <!-- <li>{{$t('导出')}}</li> -->
@@ -105,12 +112,6 @@
             </li>
           </ul>
         </bcs-dropdown-menu>
-        <template v-if="$INTERNAL && curSelectedCluster.providerType === 'tke' && !nodeMenu">
-          <bcs-divider style="margin: 0 15px" direction="vertical"></bcs-divider>
-          <apply-host
-            :cluster-id="localClusterId"
-            :is-backfill="true" />
-        </template>
       </div>
       <div class="right">
         <ClusterSelect
@@ -203,6 +204,11 @@
             </bcs-button>
           </template>
         </bcs-table-column>
+        <bcs-table-column label="IPv6" props="innerIPv6" min-width="200" sortable>
+          <template #default="{ row }">
+            {{ row.innerIPv6 || '--' }}
+          </template>
+        </bcs-table-column>
         <bcs-table-column
           :label="$t('状态')"
           :filters="filtersDataSource.status"
@@ -229,6 +235,7 @@
           :label="$t('所属集群')"
           prop="cluster_name"
           key="cluster_name"
+          show-overflow-tooltip
           v-if="isColumnRender('cluster_name')"
         ></bcs-table-column>
         <bcs-table-column
@@ -414,7 +421,7 @@
                 placement="bottom"
                 theme="light dropdown"
                 :arrow="false">
-                <span class="more-operate"><i class="bcs-icon bcs-icon-more"></i></span>
+                <span class="bcs-icon-more-btn"><i class="bcs-icon bcs-icon-more"></i></span>
                 <template #content>
                   <ul class="bcs-dropdown-list">
                     <template v-if="row.status === 'RUNNING'">
@@ -429,7 +436,7 @@
                       :class="['bcs-dropdown-item', { disabled: isImportCluster }]"
                       v-bk-tooltips="{
                         disabled: !isImportCluster,
-                        content: $t('kubeconfig导入集群，节点管理功能不可用')
+                        content: $t('导入集群，节点管理功能不可用')
                       }"
                       v-if="['REMOVE-FAILURE', 'ADD-FAILURE', 'REMOVABLE', 'NOTREADY'].includes(row.status)"
                       @click="handleDeleteNode(row)"
@@ -446,7 +453,6 @@
           <bcs-table-setting-content
             :fields="tableSetting.fields"
             :selected="tableSetting.selectedFields"
-            :max="tableSetting.max"
             :size="tableSetting.size"
             @setting-change="handleSettingChange"
           >
@@ -474,7 +480,7 @@
     >
       <template #header>
         <span>{{setLabelConf.title}}</span>
-        <span class="sideslider-tips">{{$t('标签有助于整理你的资源（如 env:prod）')}}</span>
+        <span class="sideslider-tips">{{$t('标签有助于整理你的资源')}}</span>
       </template>
       <template #content>
         <KeyValue
@@ -482,7 +488,13 @@
           :model-value="setLabelConf.data"
           :loading="setLabelConf.btnLoading"
           :key-desc="setLabelConf.keyDesc"
-          v-bkloading="{ isLoading: setLabelConf.loading }"
+          :key-rules="[
+            {
+              message: $i18n.t('有效的标签键有两个段：可选的前缀和名称，用斜杠（/）分隔。 名称段是必需的，必须小于等于 63 个字符，以字母数字字符（[a-z0-9A-Z]）开头和结尾， 带有破折号（-），下划线（_），点（ .）和之间的字母数字。 前缀是可选的。如果指定，前缀必须是 DNS 子域：由点（.）分隔的一系列 DNS 标签，总共不超过 253 个字符， 后跟斜杠（/）。'),
+              validator: LABEL_KEY_REGEXP
+            }
+          ]"
+          :min-items="0"
           @cancel="handleLabelEditCancel"
           @confirm="handleLabelEditConfirm"
         ></KeyValue>
@@ -529,7 +541,8 @@
       :confirming-btn-text="$t('删除中...')"
       :canceling-btn-text="$t('取消')"
       :confirm-callback="confirmDelNode"
-      :cancel-callback="cancelDelNode">
+      :cancel-callback="cancelDelNode"
+      :title="removeNodeDialogTitle">
     </tip-dialog>
     <!-- IP选择器 -->
     <IpSelector v-model="showIpSelector" @confirm="chooseServer"></IpSelector>
@@ -540,7 +553,7 @@ import { defineComponent, ref, PropType, onMounted, watch, set, computed } from 
 import StatusIcon from '@/views/dashboard/common/status-icon';
 import ClusterSelect from '@/components/cluster-selector/cluster-select.vue';
 import LoadingIcon from '@/components/loading-icon.vue';
-import { nodeStatusColorMap, nodeStatusMap } from '@/common/constant';
+import { nodeStatusColorMap, nodeStatusMap, LABEL_KEY_REGEXP } from '@/common/constant';
 import useNode from './use-node';
 import useTableSetting from './use-table-setting';
 import usePage from '@/views/dashboard/common/use-page';
@@ -578,7 +591,7 @@ export default defineComponent({
   props: {
     selectedFields: {
       type: Array as PropType<Array<string>>,
-      default: ['source_type', 'taint'],
+      default: () => ['source_type', 'taint'],
     },
     clusterId: {
       type: String,
@@ -597,6 +610,65 @@ export default defineComponent({
     const { $i18n, $router, $bkMessage, $store, $bkInfo } = ctx.root;
     const webAnnotations = computed(() => $store.state.cluster.clusterWebAnnotations);
     const curProject = computed(() => $store.state.curProject);
+
+    // 表格表头搜索项配置
+    const filtersDataSource = ref({
+      status: Object.keys(nodeStatusMap).map(key => ({
+        text: nodeStatusMap[key],
+        value: key,
+      })),
+    });
+    // 表格搜索项选中值
+    const filteredValue = ref<Record<string, string[]>>({
+      status: [],
+    });
+    // searchSelect数据源配置
+    const searchSelectDataSource = computed<ISearchSelectData[]>(() => [
+      {
+        name: $i18n.t('IP地址'),
+        id: 'ip',
+        placeholder: $i18n.t('多IP用空格符分割'),
+      },
+      {
+        name: $i18n.t('状态'),
+        id: 'status',
+        multiable: true,
+        children: Object.keys(nodeStatusMap).map(key => ({
+          id: key,
+          name: nodeStatusMap[key],
+        })),
+      },
+      {
+        name: $i18n.t('标签'),
+        id: 'labels',
+        multiable: true,
+        children: labels.value.map(label => ({
+          id: label,
+          name: label,
+        })),
+      },
+    ]);
+    // 表格搜索联动
+    const {
+      tableKey,
+      searchSelectData,
+      searchSelectValue,
+      handleFilterChange,
+      handleSearchSelectChange,
+      handleClearSearchSelect,
+    } = useTableSearchSelect({
+      searchSelectDataSource,
+      filteredValue,
+    });
+    const searchSelectChange = (list) => {
+      handleResetCheckStatus();
+      handleSearchSelectChange(list);
+    };
+
+    watch(searchSelectValue, () => {
+      handleResetPage();
+    });
+
     // 表格设置字段配置
     const fields = [
       {
@@ -636,65 +708,6 @@ export default defineComponent({
         label: $i18n.t('磁盘IO'),
       },
     ];
-    // 表格表头搜索项配置
-    const filtersDataSource = ref({
-      status: Object.keys(nodeStatusMap).map(key => ({
-        text: nodeStatusMap[key],
-        value: key,
-      })),
-    });
-    // 表格搜索项选中值
-    const filteredValue = ref<Record<string, string[]>>({
-      status: [],
-    });
-    // searchSelect数据源配置
-    const searchSelectDataSource = computed<ISearchSelectData[]>(() => [
-      {
-        name: $i18n.t('IP地址'),
-        id: 'inner_ip',
-        placeholder: $i18n.t('多IP用换行符分割'),
-      },
-      {
-        name: $i18n.t('状态'),
-        id: 'status',
-        multiable: true,
-        children: Object.keys(nodeStatusMap).map(key => ({
-          id: key,
-          name: nodeStatusMap[key],
-        })),
-      },
-      {
-        name: $i18n.t('标签'),
-        id: 'labels',
-        multiable: true,
-        children: labels.value.map(label => ({
-          id: label,
-          name: label,
-        })),
-      },
-    ]);
-    // 表格搜索联动
-    const {
-      tableKey,
-      searchSelectData,
-      searchSelectValue,
-      handleFilterChange,
-      handleSearchSelectChange,
-      handleClearSearchSelect,
-      // handleResetSearchSelect
-    } = useTableSearchSelect({
-      searchSelectDataSource,
-      filteredValue,
-    });
-    const searchSelectChange = (list) => {
-      handleResetCheckStatus();
-      handleSearchSelectChange(list);
-    };
-
-    watch(searchSelectValue, () => {
-      handleResetPage();
-    });
-
     const {
       tableSetting,
       handleSettingChange,
@@ -715,13 +728,14 @@ export default defineComponent({
     const {
       getNodeList,
       getTaskData,
-      toggleNodeDispatch,
+      handleCordonNodes,
+      handleUncordonNodes,
       schedulerNode,
       deleteNode,
       addNode,
       getNodeOverview,
-      batchToggleNodeDispatch,
       retryTask,
+      setNodeLabels,
     } = useNode();
 
     const tableLoading = ref(false);
@@ -740,31 +754,39 @@ export default defineComponent({
       searchSelectValue.value.forEach((item) => {
         let tmp: string[] = [];
         if (Array.isArray(item.values)) {
-          if (item.id === 'inner_ip') {
+          // 下拉选择搜索
+          if (item.id === 'ip') {
+            // 处理IP字段多值情况
             item.values.forEach((v) => {
-              tmp.push(...v.id.replace(/\s+/g, '').split('|'));
+              const splitCode = String(v).indexOf('|') > -1 ? '|' : ' ';
+              tmp.push(...v.id.trim().split(splitCode));
             });
           } else {
             tmp = item.values.map(v => v.id);
           }
-          searchValues.push({
-            id: item.id,
-            value: new Set(tmp),
-          });
+        } else {
+          // 自定义IP模糊搜索
+          tmp = String(item.id).split(' ');
         }
+        searchValues.push({
+          id: item.id,
+          value: new Set(tmp),
+        });
       });
       return searchValues;
     });
     // 过滤后的表格数据
     const filterTableData = computed(() => {
-      if (!searchSelectValue.value.length) return tableData.value;
+      if (!parseSearchSelectValue.value.length) return tableData.value;
 
-      return tableData.value.filter(row => parseSearchSelectValue.value.some((item) => {
-        if (!row[item.id]) return false;
+      return tableData.value.filter(row => parseSearchSelectValue.value.every((item) => {
         if (item.id === 'labels') {
           return Object.keys(row[item.id]).some(key => item.value.has(`${key}=${row[item.id][key]}`));
         }
-        return item.value.has(row[item.id].toLowerCase());
+        if (item.id in row) {
+          return item.value.has(String(row[item.id]).toLowerCase());
+        }
+        return item.value.has(row.innerIP) || item.value.has(row.innerIPv6);
       }));
     });
     // 分页后的表格数据
@@ -805,7 +827,7 @@ export default defineComponent({
         params: {
           nodeId: row.inner_ip,
           nodeName: row.name,
-          clusterId: row.cluster_id,
+          clusterId: row.cluster_id || localClusterId.value,
         },
       });
     };
@@ -876,7 +898,6 @@ export default defineComponent({
     // 设置标签（批量设置标签的交互有点奇怪，后续优化）
     const setLabelConf = ref<{
       isShow: boolean;
-      loading: boolean;
       btnLoading: boolean;
       keyDesc: any;
       rows: any[];
@@ -884,25 +905,18 @@ export default defineComponent({
       title: string;
     }>({
       isShow: false,
-      loading: false,
       btnLoading: false,
       keyDesc: '',
       rows: [],
       data: [],
       title: '',
     });
-    const handleSetLabel = async (row) => {
+    const handleSetLabel = async (selections: Record<string, any>[] | Record<string, any>) => {
       setLabelConf.value.isShow = true;
-      const rows = Array.isArray(row) ? row : [row];
-      setLabelConf.value.loading = true;
-      const data = await $store.dispatch('cluster/fetchK8sNodeLabels', {
-        $clusterId: localClusterId.value,
-        node_name_list: rows.map(item => item.name),
-      });
-      setLabelConf.value.loading = false;
+      const rows = Array.isArray(selections) ? selections : [selections];
       // 批量设置时暂时只展示相同Key的项
       const labelArr = rows.reduce<any[]>((pre, row) => {
-        const label = data[row.inner_ip];
+        const label = row.labels;
         Object.keys(label).forEach((key) => {
           const index = pre.findIndex(item => item.key === key);
           if (index > -1) {
@@ -958,16 +972,13 @@ export default defineComponent({
     };
     const handleLabelEditConfirm = async (labels) => {
       setLabelConf.value.btnLoading = true;
-
-      const result = await $store.dispatch('cluster/setK8sNodeLabels', {
-        // eslint-disable-next-line camelcase
-        $clusterId: localClusterId.value,
-        node_label_list: setLabelConf.value.rows.map(item => ({
-          node_name: item.name,
+      const result = await setNodeLabels({
+        clusterID: localClusterId.value,
+        nodes: setLabelConf.value.rows.map(item => ({
+          nodeName: item.nodeName,
           labels: mergeLaels(item.labels, labels),
         })),
-      }).then(() => true)
-        .catch(() => false);
+      });
       setLabelConf.value.btnLoading = false;
       if (result) {
         handleLabelEditCancel();
@@ -1002,10 +1013,9 @@ export default defineComponent({
         title: $i18n.t('确认对节点 {ip} 停止调度', { ip: row.inner_ip }),
         subTitle: $i18n.t('如果有使用Ingress及LoadBalancer类型的Service，节点停止调度后，Service Controller会剔除LB到nodePort的映射'),
         callback: async () => {
-          const result = await toggleNodeDispatch({
-            clusterId: row.cluster_id,
-            nodeName: [row.name],
-            status: 'REMOVABLE',
+          const result = await handleCordonNodes({
+            clusterID: row.cluster_id,
+            nodes: [row.nodeName],
           });
           result && handleGetNodeData();
         },
@@ -1017,10 +1027,9 @@ export default defineComponent({
         title: $i18n.t('确认允许调度'),
         subTitle: $i18n.t('确认对节点 {ip} 允许调度', { ip: row.inner_ip }),
         callback: async () => {
-          const result = await toggleNodeDispatch({
-            clusterId: row.cluster_id,
-            nodeName: [row.name],
-            status: 'RUNNING',
+          const result = await handleUncordonNodes({
+            clusterID: row.cluster_id,
+            nodes: [row.nodeName],
           });
           result && handleGetNodeData();
         },
@@ -1034,7 +1043,7 @@ export default defineComponent({
         callback: async () => {
           await schedulerNode({
             clusterId: row.cluster_id,
-            nodeIps: [row.inner_ip],
+            nodes: [row.nodeName],
           });
           // result && handleGetNodeData()
         },
@@ -1060,10 +1069,11 @@ export default defineComponent({
       },
     ]);
     const curDeleteRows = ref<any[]>([]);
+    const removeNodeDialogTitle = ref<TranslateResult>('');
     const handleDeleteNode = async (row) => {
       if (isImportCluster.value) return;
       curDeleteRows.value = [row];
-      removeNodeDialog.value.title = $i18n.t('确认要删除节点【{innerIp}】？', {
+      removeNodeDialogTitle.value = $i18n.t('确认要删除节点【{innerIp}】？', {
         innerIp: row.inner_ip,
       });
       removeNodeDialog.value.show();
@@ -1116,10 +1126,9 @@ export default defineComponent({
           num: selections.value.length,
         }),
         callback: async () => {
-          const result = await batchToggleNodeDispatch({
-            clusterId: localClusterId.value,
-            nodeNameList: selections.value.map(item => item.name),
-            status: 'RUNNING',
+          const result = await handleUncordonNodes({
+            clusterID: localClusterId.value,
+            nodes: selections.value.map(item => item.nodeName),
           });
           result && handleGetNodeData();
         },
@@ -1136,10 +1145,9 @@ export default defineComponent({
           num: selections.value.length,
         }),
         callback: async () => {
-          const result = await batchToggleNodeDispatch({
-            clusterId: localClusterId.value,
-            nodeNameList: selections.value.map(item => item.name),
-            status: 'REMOVABLE',
+          const result = await handleCordonNodes({
+            clusterID: localClusterId.value,
+            nodes: selections.value.map(item => item.nodeName),
           });
           result && handleGetNodeData();
         },
@@ -1199,7 +1207,7 @@ export default defineComponent({
         callback: async () => {
           await schedulerNode({
             clusterId: localClusterId.value,
-            nodeIps: selections.value.map(item => item.inner_ip),
+            nodes: selections.value.map(item => item.nodeName),
           });
           // result && handleGetNodeData()
         },
@@ -1286,7 +1294,7 @@ export default defineComponent({
         (function (item) {
           promiseList.push(getNodeOverview({
             nodeIP: item.inner_ip,
-            clusterId: item.cluster_id,
+            clusterId: localClusterId.value,
           }).then((data) => {
             set(nodeMetric.value, item.inner_ip, data);
           }));
@@ -1383,6 +1391,7 @@ export default defineComponent({
       }
     });
     return {
+      removeNodeDialogTitle,
       nodesCount,
       realRemainNodesCount,
       maxRemainNodesCount,
@@ -1455,31 +1464,14 @@ export default defineComponent({
       webAnnotations,
       curProject,
       isImportCluster,
+      LABEL_KEY_REGEXP,
     };
   },
 });
 </script>
 <style lang="postcss" scoped>
 >>> .bk-table-header-wrapper {
-  border-top: 1px solid #dfe0e5;
-}
->>> .more-operate {
-  font-size: 18px;
-  font-weight: bold;
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  color: #979ba5;
-  position: relative;
-  top: 1px;
-  &:hover {
-    background: #ddd;
-    color: #3a84ff
-  }
+    border-top: 1px solid #dfe0e5;
 }
 .cluster-node-wrapper {
     margin: 0 20px;

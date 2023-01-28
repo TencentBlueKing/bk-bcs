@@ -10,13 +10,7 @@
       <bk-guide></bk-guide>
     </div>
     <div class="biz-content-wrapper" style="padding: 0;" v-bkloading="{ isLoading: isInitLoading, opacity: 0.1 }">
-      <app-exception
-        v-if="exceptionCode && !isInitLoading"
-        :type="exceptionCode.code"
-        :text="exceptionCode.msg">
-      </app-exception>
-
-      <template v-if="!exceptionCode && !isInitLoading">
+      <template v-if="!isInitLoading">
         <div class="biz-panel-header">
           <div class="left">
             <bk-button type="primary" @click.stop.prevent="createLoadBlance">
@@ -631,7 +625,7 @@
         :quick-close="true"
         :is-show.sync="detailSliderConf.isShow"
         :title="detailSliderConf.title"
-        :width="'700'">
+        :width="700">
         <div class="p30" slot="content">
           <p class="data-title">
             {{$t('基础信息')}}
@@ -783,6 +777,7 @@
 import { catchErrorHandler } from '@/common/util';
 import bkKeyer from '@/components/keyer';
 import bkExpression from './expression';
+import { useNamespace } from '@/views/dashboard/namespace/use-namespace';
 
 export default {
   components: {
@@ -793,7 +788,6 @@ export default {
     return {
       isInitLoading: true,
       isPageLoading: false,
-      exceptionCode: null,
       curPageData: [],
       isDataSaveing: false,
       prmissions: {},
@@ -1459,10 +1453,13 @@ export default {
              */
     async getNameSpaceList() {
       try {
-        const { projectId } = this;
         const { clusterId } = this;
-        const res = await this.$store.dispatch('crdcontroller/getNameSpaceListByCluster', { projectId, clusterId });
-        const list = res.data;
+        const { getNamespaceData } = useNamespace();
+
+        const res = await getNamespaceData({
+          $clusterId: clusterId,
+        });
+        const list = res;
         list.forEach((item) => {
           item.isSelected = false;
         });

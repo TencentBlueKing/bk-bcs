@@ -24,6 +24,8 @@ const (
 	UsernamContextKey ContextKey = "username"
 	// ProjectIDContextKey projectID context key
 	ProjectIDContextKey ContextKey = "projectID"
+	// ProjectCodeContextKey projectCode context key
+	ProjectCodeContextKey ContextKey = "projectCode"
 )
 
 // HeaderKey string

@@ -298,7 +298,10 @@ func (slc *segmentListenerConverter) generateListener(start, end, rsStart int) (
 		networkextensionv1.LabelKeyForIsSegmentListener: segLabelValue,
 		networkextensionv1.LabelKeyForLoadbalanceID:     GetLabelLBId(slc.lbID),
 		networkextensionv1.LabelKeyForLoadbalanceRegion: slc.region,
+		networkextensionv1.LabelKeyForOwnerKind:         constant.KindIngress,
+		networkextensionv1.LabelKeyForOwnerName:         slc.ingressName,
 	})
+	li.Status.Ingress = slc.ingressName
 	li.Finalizers = append(li.Finalizers, constant.FinalizerNameBcsIngressController)
 	li.Spec.Port = start
 	li.Spec.EndPort = end

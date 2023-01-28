@@ -18,11 +18,9 @@ import (
 	"strings"
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/envs"
-	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
+	resCsts "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/constants"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/model"
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/parser/storage"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/parser/util"
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/parser/workload"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/stringx"
 )
 
@@ -30,7 +28,7 @@ import (
 var DeployComplex = model.Deploy{
 	Metadata: model.Metadata{
 		APIVersion: "apps/v1",
-		Kind:       res.Deploy,
+		Kind:       resCsts.Deploy,
 		Name:       "deploy-complex-" + strings.ToLower(stringx.Rand(10, "")),
 		Namespace:  envs.TestNamespace,
 		Labels: []model.Label{
@@ -45,7 +43,7 @@ var DeployComplex = model.Deploy{
 	Spec: model.DeploySpec{
 		Replicas: model.DeployReplicas{
 			Cnt:                  2,
-			UpdateStrategy:       workload.DefaultUpdateStrategy,
+			UpdateStrategy:       resCsts.DefaultUpdateStrategy,
 			MaxSurge:             0,
 			MSUnit:               util.UnitCnt,
 			MaxUnavailable:       20,
@@ -71,7 +69,7 @@ var DeployComplex = model.Deploy{
 var DeploySimple = model.Deploy{
 	Metadata: model.Metadata{
 		APIVersion: "apps/v1",
-		Kind:       res.Deploy,
+		Kind:       resCsts.Deploy,
 		Name:       "deploy-simple-" + strings.ToLower(stringx.Rand(10, "")),
 		Namespace:  envs.TestNamespace,
 		Labels: []model.Label{
@@ -81,7 +79,7 @@ var DeploySimple = model.Deploy{
 	Spec: model.DeploySpec{
 		Replicas: model.DeployReplicas{
 			Cnt:            2,
-			UpdateStrategy: workload.DefaultUpdateStrategy,
+			UpdateStrategy: resCsts.DefaultUpdateStrategy,
 			MaxSurge:       1,
 			MSUnit:         util.UnitCnt,
 		},
@@ -103,7 +101,7 @@ var DeploySimple = model.Deploy{
 var STSComplex = model.STS{
 	Metadata: model.Metadata{
 		APIVersion: "apps/v1",
-		Kind:       res.STS,
+		Kind:       resCsts.STS,
 		Name:       "sts-complex-" + strings.ToLower(stringx.Rand(10, "")),
 		Namespace:  envs.TestNamespace,
 		Labels: []model.Label{
@@ -119,7 +117,7 @@ var STSComplex = model.STS{
 		Replicas: model.STSReplicas{
 			SVCName:        "svc-complex-y3xk1r9vg9",
 			Cnt:            2,
-			UpdateStrategy: workload.DefaultUpdateStrategy,
+			UpdateStrategy: resCsts.DefaultUpdateStrategy,
 			PodManPolicy:   "OrderedReady",
 			Partition:      3,
 		},
@@ -127,7 +125,7 @@ var STSComplex = model.STS{
 			Claims: []model.VolumeClaim{
 				{
 					PVCName:     "pvc-complex-k42wnpaqn7",
-					ClaimType:   storage.PVCTypeCreateBySC,
+					ClaimType:   resCsts.PVCTypeCreateBySC,
 					PVName:      "",
 					SCName:      "standard",
 					StorageSize: 1,
@@ -153,7 +151,7 @@ var STSComplex = model.STS{
 var DSComplex = model.DS{
 	Metadata: model.Metadata{
 		APIVersion: "apps/v1",
-		Kind:       res.DS,
+		Kind:       resCsts.DS,
 		Name:       "ds-complex-" + strings.ToLower(stringx.Rand(10, "")),
 		Namespace:  envs.TestNamespace,
 		Labels: []model.Label{
@@ -167,7 +165,7 @@ var DSComplex = model.DS{
 	},
 	Spec: model.DSSpec{
 		Replicas: model.DSReplicas{
-			UpdateStrategy: workload.DefaultUpdateStrategy,
+			UpdateStrategy: resCsts.DefaultUpdateStrategy,
 			MaxUnavailable: 20,
 			MUAUnit:        util.UnitPercent,
 			MinReadySecs:   0,
@@ -190,7 +188,7 @@ var DSComplex = model.DS{
 var CJComplex = model.CJ{
 	Metadata: model.Metadata{
 		APIVersion: "batch/v1",
-		Kind:       res.CJ,
+		Kind:       resCsts.CJ,
 		Name:       "cj-complex-" + strings.ToLower(stringx.Rand(10, "")),
 		Namespace:  envs.TestNamespace,
 		Labels: []model.Label{
@@ -240,7 +238,7 @@ var CJComplex = model.CJ{
 var JobComplex = model.Job{
 	Metadata: model.Metadata{
 		APIVersion: "batch/v1",
-		Kind:       res.Job,
+		Kind:       resCsts.Job,
 		Name:       "job-complex-" + strings.ToLower(stringx.Rand(10, "")),
 		Namespace:  envs.TestNamespace,
 		Labels: []model.Label{
@@ -284,7 +282,7 @@ var JobComplex = model.Job{
 var PodComplex = model.Po{
 	Metadata: model.Metadata{
 		APIVersion: "v1",
-		Kind:       res.Po,
+		Kind:       resCsts.Po,
 		Name:       "pod-complex-" + strings.ToLower(stringx.Rand(10, "")),
 		Namespace:  envs.TestNamespace,
 		Labels: []model.Label{
@@ -329,7 +327,7 @@ var initContainers = []model.Container{
 		Envs: model.ContainerEnvs{
 			Vars: []model.EnvVar{
 				{
-					Type:  workload.EnvVarTypeKeyVal,
+					Type:  resCsts.EnvVarTypeKeyVal,
 					Name:  "ENV_KEY",
 					Value: "envValue",
 				},
@@ -384,40 +382,40 @@ var containers = []model.Container{
 		Envs: model.ContainerEnvs{
 			Vars: []model.EnvVar{
 				{
-					Type:  workload.EnvVarTypeKeyVal,
+					Type:  resCsts.EnvVarTypeKeyVal,
 					Name:  "ENV_KEY",
 					Value: "envValue",
 				},
 				{
-					Type:  workload.EnvVarTypePodField,
+					Type:  resCsts.EnvVarTypePodField,
 					Name:  "MY_POD_NAMESPACE",
 					Value: "metadata.namespace",
 				},
 				{
-					Type:   workload.EnvVarTypeResource,
+					Type:   resCsts.EnvVarTypeResource,
 					Name:   "MY_CPU_REQUEST",
 					Source: "busybox",
 					Value:  "requests.cpu",
 				},
 				{
-					Type:   workload.EnvVarTypeCMKey,
+					Type:   resCsts.EnvVarTypeCMKey,
 					Name:   "CM_T_CA_CRT",
 					Source: "kube-user-ca.crt",
 					Value:  "ca.crt",
 				},
 				{
-					Type:   workload.EnvVarTypeSecretKey,
+					Type:   resCsts.EnvVarTypeSecretKey,
 					Name:   "SECRET_T_CA_CRT",
 					Source: "default-token-12345",
 					Value:  "ca.crt",
 				},
 				{
-					Type:   workload.EnvVarTypeCM,
+					Type:   resCsts.EnvVarTypeCM,
 					Name:   "CM_T_",
 					Source: "kube-user-ca.crt",
 				},
 				{
-					Type:   workload.EnvVarTypeSecret,
+					Type:   resCsts.EnvVarTypeSecret,
 					Name:   "SECRET_T_",
 					Source: "default-token-12345",
 				},
@@ -431,7 +429,7 @@ var containers = []model.Container{
 				TimeoutSecs:      3,
 				SuccessThreshold: 1,
 				FailureThreshold: 3,
-				Type:             workload.ProbeTypeTCPSocket,
+				Type:             resCsts.ProbeTypeTCPSocket,
 				Port:             80,
 			},
 			LivenessProbe: model.Probe{
@@ -441,7 +439,7 @@ var containers = []model.Container{
 				TimeoutSecs:      3,
 				SuccessThreshold: 1,
 				FailureThreshold: 3,
-				Type:             workload.ProbeTypeExec,
+				Type:             resCsts.ProbeTypeExec,
 				Command:          []string{"echo hello"},
 			},
 		},
@@ -563,7 +561,7 @@ var volume = model.WorkloadVolume{
 }
 
 var nodeSelect = model.NodeSelect{
-	Type:     workload.NodeSelectTypeSpecificNode,
+	Type:     resCsts.NodeSelectTypeSpecificNode,
 	NodeName: "vm-123",
 	Selector: []model.NodeSelector{
 		{Key: "kubernetes.io/arch", Value: "amd64"},
@@ -573,7 +571,7 @@ var nodeSelect = model.NodeSelect{
 var affinity = model.Affinity{
 	NodeAffinity: []model.NodeAffinity{
 		{
-			Priority: workload.AffinityPriorityRequired,
+			Priority: resCsts.AffinityPriorityRequired,
 			Selector: model.NodeAffinitySelector{
 				Expressions: []model.ExpSelector{
 					{Key: "testKey", Op: "In", Values: "testValue1"},
@@ -584,7 +582,7 @@ var affinity = model.Affinity{
 			},
 		},
 		{
-			Priority: workload.AffinityPriorityPreferred,
+			Priority: resCsts.AffinityPriorityPreferred,
 			Weight:   10,
 			Selector: model.NodeAffinitySelector{
 				Expressions: []model.ExpSelector{
@@ -598,8 +596,8 @@ var affinity = model.Affinity{
 	},
 	PodAffinity: []model.PodAffinity{
 		{
-			Type:     workload.AffinityTypeAffinity,
-			Priority: workload.AffinityPriorityPreferred,
+			Type:     resCsts.AffinityTypeAffinity,
+			Priority: resCsts.AffinityPriorityPreferred,
 			Namespaces: []string{
 				"kube-system",
 				"default",
@@ -616,8 +614,8 @@ var affinity = model.Affinity{
 			},
 		},
 		{
-			Type:     workload.AffinityTypeAffinity,
-			Priority: workload.AffinityPriorityRequired,
+			Type:     resCsts.AffinityTypeAffinity,
+			Priority: resCsts.AffinityPriorityRequired,
 			Namespaces: []string{
 				"kube-node-lease",
 				"default",
@@ -633,8 +631,8 @@ var affinity = model.Affinity{
 			},
 		},
 		{
-			Type:     workload.AffinityTypeAntiAffinity,
-			Priority: workload.AffinityPriorityPreferred,
+			Type:     resCsts.AffinityTypeAntiAffinity,
+			Priority: resCsts.AffinityPriorityPreferred,
 			Namespaces: []string{
 				"default",
 				"kube-system",
@@ -651,8 +649,8 @@ var affinity = model.Affinity{
 			},
 		},
 		{
-			Type:     workload.AffinityTypeAntiAffinity,
-			Priority: workload.AffinityPriorityRequired,
+			Type:     resCsts.AffinityTypeAntiAffinity,
+			Priority: resCsts.AffinityPriorityRequired,
 			Namespaces: []string{
 				"default",
 			},

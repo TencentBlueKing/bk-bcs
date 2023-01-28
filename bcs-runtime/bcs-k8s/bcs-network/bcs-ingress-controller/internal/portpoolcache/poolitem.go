@@ -33,21 +33,21 @@ type CachePoolItem struct {
 
 // NewCachePoolItem create pool item object
 func NewCachePoolItem(
-	poolKey string, protocolList []string, itemStatus *networkextensionv1.PortPoolItemStatus) (*CachePoolItem, error) {
+	poolKey string, itemStatus *networkextensionv1.PortPoolItemStatus) (*CachePoolItem, error) {
 	if itemStatus == nil {
 		return nil, fmt.Errorf("original item status cannot be empty")
 	}
-	if len(protocolList) == 0 {
+	if len(itemStatus.Protocol) == 0 {
 		return nil, fmt.Errorf("protocol list cannot be empty")
 	}
 	newItem := &CachePoolItem{
 		PoolKey:      poolKey,
-		ProtocolList: protocolList,
+		ProtocolList: itemStatus.Protocol,
 		ItemStatus:   itemStatus,
 		Status:       itemStatus.Status,
 		PortListMap:  make(map[string]*CachePortList),
 	}
-	for _, protocol := range protocolList {
+	for _, protocol := range itemStatus.Protocol {
 		newList, err := NewCachePortList(protocol,
 			int(itemStatus.StartPort), int(itemStatus.EndPort), int(itemStatus.SegmentLength))
 		if err != nil {
@@ -87,11 +87,10 @@ func (cpi *CachePoolItem) IncreaseEndPort(endPort int) error {
 // AllocateAllProtocolPort allocate one port with all protocol
 func (cpi *CachePoolItem) AllocateAllProtocolPort() map[string]*CachePort {
 	retMap := make(map[string]*CachePort)
-	if len(cpi.ProtocolList) == 1 {
-		protocol := cpi.ProtocolList[0]
-		port := cpi.PortListMap[protocol].AllocateOne()
-		retMap[protocol] = port
-		return retMap
+	if len(cpi.ProtocolList) < 2 {
+		// Note: AllocateAllProtocolPort方法需要同时分配TCP、UDP协议端口
+		// 目前portpool只处理TCP、UDP两种协议， 当协议小于2时，认为无法分配
+		return nil
 	}
 	protocol := cpi.ProtocolList[0]
 	list := cpi.PortListMap[protocol]

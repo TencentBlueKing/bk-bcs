@@ -73,13 +73,13 @@ podAffinity:
   {{- include "podAffinity.preferred" $podAffinity | nindent 2 }}
   {{- end }}
 {{- end }}
-{{- $podAntiAffinity := filterMatchKVFormSlice .spec.affinity.podAffinity "type" "antiAffinity" }}
+{{- $podAntiAffinity := filterMatchKVFormSlice .podAffinity "type" "antiAffinity" }}
 {{- if $podAntiAffinity }}
 podAntiAffinity:
   {{- if matchKVInSlice $podAntiAffinity "priority" "required" }}
   {{- include "podAffinity.required" $podAntiAffinity | nindent 2 }}
   {{- end }}
-  {{- if matchKVInSlice $podAffinity "priority" "preferred" }}
+  {{- if matchKVInSlice $podAntiAffinity "priority" "preferred" }}
   {{- include "podAffinity.preferred" $podAntiAffinity | nindent 2 }}
   {{- end }}
 {{- end }}

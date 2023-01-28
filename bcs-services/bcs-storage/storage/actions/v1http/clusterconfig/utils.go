@@ -14,6 +14,7 @@
 package clusterconfig
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 	"strings"
@@ -23,21 +24,17 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/types"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/lib"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/apiserver"
 	storageErr "github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/errors"
-
 	"github.com/emicklei/go-restful"
 )
 
 func getService(req *restful.Request) string {
-	service := req.PathParameter(serviceTag)
-	if service == "" {
-		service = req.QueryParameter(serviceTag)
-		if service == "" {
-			service = "test"
+	for _, service := range []string{req.PathParameter(serviceTag), req.QueryParameter(serviceTag)} {
+		if service != "" {
+			return service
 		}
 	}
-	return service
+	return "test"
 }
 
 func getSvcCondition(req *restful.Request) *operator.Condition {
@@ -48,58 +45,6 @@ func getTemplateCondition(req *restful.Request) *operator.Condition {
 	return operator.NewLeafCondition(operator.Eq, operator.M{serviceTag: getService(req)})
 }
 
-func getTemplate(req *restful.Request) (string, error) {
-	condition := getTemplateCondition(req)
-	getOption := &lib.StoreGetOption{
-		Cond: condition,
-		Sort: map[string]int{
-			versionTag: -1,
-		},
-	}
-	store := lib.NewStore(
-		apiserver.GetAPIResource().GetDBClient(dbConfig),
-		apiserver.GetAPIResource().GetEventBus(dbConfig))
-	mList, err := store.Get(req.Request.Context(), tableTpl, getOption)
-	if err != nil {
-		return "", err
-	}
-	if len(mList) == 0 {
-		err := storageErr.ConfigTemplateNoFound
-		blog.Errorf("%s", err.Error())
-		return "", err
-	}
-	vs, _ := mList[0][dataTag]
-	s, ok := vs.(string)
-	if !ok {
-		err := storageErr.ConfigTemplateInvalid
-		blog.Errorf("%s", err.Error())
-		return "", err
-	}
-	return s, nil
-}
-
-func getStableVersion(req *restful.Request) (string, error) {
-	condition := operator.NewLeafCondition(operator.Eq, operator.M{serviceTag: getService(req)})
-	getOption := &lib.StoreGetOption{
-		Cond: condition,
-	}
-	store := lib.NewStore(
-		apiserver.GetAPIResource().GetDBClient(dbConfig),
-		apiserver.GetAPIResource().GetEventBus(dbConfig))
-	mList, err := store.Get(req.Request.Context(), tableVer, getOption)
-	if err != nil {
-		return "", err
-	}
-	vs, _ := mList[0][dataTag]
-	s, ok := vs.(string)
-	if !ok {
-		err := storageErr.StableVersionInvalid
-		blog.Errorf("%v", err)
-		return "", err
-	}
-	return s, nil
-}
-
 func getClsCondition(req *restful.Request) *operator.Condition {
 	clusterID := lib.GetQueryParamString(req, clusterIdTag)
 	features := operator.M{clusterIdTag: clusterID}
@@ -108,13 +53,7 @@ func getClsCondition(req *restful.Request) *operator.Condition {
 
 func getCls(req *restful.Request) ([]operator.M, error) {
 	condition := getClsCondition(req)
-	getOption := &lib.StoreGetOption{
-		Cond: condition,
-	}
-	store := lib.NewStore(
-		apiserver.GetAPIResource().GetDBClient(dbConfig),
-		apiserver.GetAPIResource().GetEventBus(dbConfig))
-	mList, err := store.Get(req.Request.Context(), tableCls, getOption)
+	mList, err := GetClusterInfo(req.Request.Context(), condition)
 	if err != nil {
 		return nil, err
 	}
@@ -136,37 +75,16 @@ func getMultiClsCondition(req *restful.Request) *operator.Condition {
 
 func getMultiCls(req *restful.Request) ([]operator.M, error) {
 	condition := getMultiClsCondition(req)
-	getOption := &lib.StoreGetOption{
-		Cond: condition,
-	}
-	store := lib.NewStore(
-		apiserver.GetAPIResource().GetDBClient(dbConfig),
-		apiserver.GetAPIResource().GetEventBus(dbConfig))
-	mList, err := store.Get(req.Request.Context(), tableCls, getOption)
+	mList, err := GetClusterInfo(req.Request.Context(), condition)
 	if err != nil {
 		return nil, err
 	}
 	return mList, nil
 }
 
-func getSvc(req *restful.Request) ([]operator.M, error) {
-	condition := getSvcCondition(req)
-	getOption := &lib.StoreGetOption{
-		Cond: condition,
-	}
-	store := lib.NewStore(
-		apiserver.GetAPIResource().GetDBClient(dbConfig),
-		apiserver.GetAPIResource().GetEventBus(dbConfig))
-	mList, err := store.Get(req.Request.Context(), tableSvc, getOption)
-	if err != nil {
-		return nil, err
-	}
-	return mList, nil
-}
-
-func getSvcSet(req *restful.Request) (svcConfigSet *types.ConfigSet, err error) {
+func getSvcSet(ctx context.Context, resourceType string, opt *lib.StoreGetOption) (svcConfigSet *types.ConfigSet, err error) {
 	var svcConfig []operator.M
-	if svcConfig, err = getSvc(req); err != nil || len(svcConfig) == 0 {
+	if svcConfig, err = GetData(ctx, resourceType, opt); err != nil || len(svcConfig) == 0 {
 		if err == nil {
 			err = storageErr.ServiceConfigNoFound
 		}
@@ -182,15 +100,9 @@ func getSvcSet(req *restful.Request) (svcConfigSet *types.ConfigSet, err error) 
 	return
 }
 
-func getClsSet(req *restful.Request, clsFunc func(req *restful.Request) ([]operator.M, error)) (
-	[]types.ClusterSet, error) {
-	clsConfig := make([]operator.M, 0)
-	var err error
-	if clsConfig, err = clsFunc(req); err != nil {
-		return nil, err
-	}
+func getClsSet(clsConfig []operator.M) (clusterSet []types.ClusterSet, err error) {
 	var clsConfigSet *types.ConfigSet
-	clusterSet := make([]types.ClusterSet, 0, len(clsConfig))
+	clusterSet = make([]types.ClusterSet, 0, len(clsConfig))
 	for _, clusterRaw := range clsConfig {
 		clsConfigRawID, _ := clusterRaw[clusterIdTag]
 		clsConfigRawData, _ := clusterRaw[dataTag]
@@ -205,32 +117,20 @@ func getClsSet(req *restful.Request, clsFunc func(req *restful.Request) ([]opera
 	return clusterSet, err
 }
 
-func generateData(
-	req *restful.Request,
-	clsFunc func(req *restful.Request) ([]operator.M, error)) (types.DeployConfig, error) {
-
-	var svcConfigSet *types.ConfigSet
-	var clsConfigSet []types.ClusterSet
-	var stableVersion string
-
-	var err error
-	if svcConfigSet, err = getSvcSet(req); err != nil {
-		return types.DeployConfig{}, err
+func generateData(req *restful.Request, clsFunc func(req *restful.Request) ([]operator.M, error)) (config *types.DeployConfig, err error) {
+	var clsConfig []operator.M
+	//service name
+	service := getService(req)
+	// option
+	opt := &lib.StoreGetOption{
+		Cond: getSvcCondition(req),
 	}
-	if clsConfigSet, err = getClsSet(req, clsFunc); err != nil {
-		return types.DeployConfig{}, err
-	}
-	if stableVersion, err = getStableVersion(req); err != nil {
-		return types.DeployConfig{}, err
+	// 获取 cls config
+	if clsConfig, err = clsFunc(req); err != nil {
+		return &types.DeployConfig{}, err
 	}
 
-	config := types.DeployConfig{
-		Service:       getService(req),
-		ServiceConfig: *svcConfigSet,
-		Clusters:      clsConfigSet,
-		StableVersion: stableVersion,
-	}
-	return config, nil
+	return GenerateData(req.Request.Context(), opt, clsConfig, service)
 }
 
 func getReqData(req *restful.Request) (operator.M, error) {
@@ -263,19 +163,21 @@ func getReqData(req *restful.Request) (operator.M, error) {
 		return "false"
 	}()
 
-	template, err := getTemplate(req)
+	template, err := GetTemplate(req.Request.Context(), getTemplateCondition(req))
 	if err != nil {
 		return nil, err
 	}
 	str := renderConfig.Render(template)
 
 	r := lib.CopyMap(operator.M{clusterIdTag: clusterID})
-	blog.Infof(str)
+	blog.Infof("renderConfig data: %s", str)
+
 	var data map[string]interface{}
 	err = codec.DecJson([]byte(str), &data)
 	if err != nil {
 		return nil, err
 	}
+
 	r[dataTag] = data
 	return r, nil
 }
@@ -289,45 +191,29 @@ func getVerData(req *restful.Request) (string, error) {
 }
 
 func putClsConfig(req *restful.Request) error {
-
 	data, err := getReqData(req)
 	if err != nil {
 		return err
 	}
-
-	condition := getClsCondition(req)
-	putOption := &lib.StorePutOption{
-		Cond:          condition,
+	// option
+	opt := &lib.StorePutOption{
+		Cond:          getClsCondition(req),
 		CreateTimeKey: createTimeTag,
 		UpdateTimeKey: updateTimeTag,
 	}
 
-	store := lib.NewStore(
-		apiserver.GetAPIResource().GetDBClient(dbConfig),
-		apiserver.GetAPIResource().GetEventBus(dbConfig))
-	err = store.Put(req.Request.Context(), tableCls, data, putOption)
-	if err != nil {
-		return err
-	}
-	return nil
+	return SaveClusterInfoConfig(req.Request.Context(), data, opt)
 }
 
 func putStableVersion(req *restful.Request) error {
 	version, err := getVerData(req)
 	if err != nil {
-		blog.Errorf("Failed to get version data. err %s", err.Error())
-		return fmt.Errorf("Failed to get version data. err %s", err.Error())
+		errMsg := fmt.Sprintf("Failed to get version data. err %s", err.Error())
+		blog.Errorf(errMsg)
+		return fmt.Errorf(errMsg)
 	}
-
 	service := getService(req)
-	condition := operator.NewLeafCondition(operator.Eq, operator.M{serviceTag: service})
-	putOption := &lib.StorePutOption{
-		Cond: condition,
-	}
-	store := lib.NewStore(
-		apiserver.GetAPIResource().GetDBClient(dbConfig),
-		apiserver.GetAPIResource().GetEventBus(dbConfig))
-	if err := store.Put(req.Request.Context(), tableVer, operator.M{dataTag: version}, putOption); err != nil {
+	if err = SaveStableVersion(req.Request.Context(), service, version); err != nil {
 		blog.Errorf("Failed to set stable version of %s. err %s", service, err.Error())
 		return err
 	}
@@ -339,7 +225,7 @@ func urlPath(oldURL string) string {
 }
 
 func wrapIP(s []string, df string) (r []string) {
-	r = []string{}
+	r = make([]string, 0, len(s))
 	for _, v := range s {
 		if !strings.Contains(v, ":") {
 			v += ":" + df
@@ -350,7 +236,7 @@ func wrapIP(s []string, df string) (r []string) {
 }
 
 func unwrapIP(s []string) (r []string) {
-	r = []string{}
+	r = make([]string, 0, len(s))
 	for _, v := range s {
 		if strings.Contains(v, ":") {
 			v = strings.Split(v, ":")[0]

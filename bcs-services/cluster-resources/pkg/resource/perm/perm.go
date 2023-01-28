@@ -47,7 +47,7 @@ func genPermAndCtx(res, action, username, projectID, clusterID, namespace string
 	// 因此这里直接根据命名空间是否为空判断权限类型即可（命名空间类型除外）
 	switch {
 	case res == "namespaces":
-		// 获取命名空间列表 / 创建命名空间，务必确保命名空间是空
+		// 获取命名空间列表 / 创建命名空间，务必确保命名空间为空
 		if action == crAction.List || action == crAction.Create {
 			namespace = ""
 		}

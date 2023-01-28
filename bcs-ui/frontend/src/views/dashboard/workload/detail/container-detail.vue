@@ -65,7 +65,7 @@
           :suffix="[$t('读'), $t('写')]">
         </Metric>
       </div>
-      <bcs-tab class="workload-tab" :active.sync="activePanel" type="card" :label-height="40">
+      <bcs-tab class="workload-tab" :active.sync="activePanel" type="card" :label-height="42">
         <bcs-tab-panel name="ports" :label="$t('端口映射')">
           <bk-table :data="ports">
             <bk-table-column label="Name" prop="name">
@@ -145,14 +145,6 @@ import { defineComponent, toRefs, computed, onMounted, ref } from '@vue/composit
 import { bkOverflowTips } from 'bk-magic-vue';
 import Metric from '../../common/metric.vue';
 
-export interface IContainerDetail {
-  command: object;
-  labels: any[];
-  ports: any[];
-  resources: object;
-  volumes: any[];
-}
-
 export default defineComponent({
   name: 'ContainerDetail',
   components: {
@@ -195,7 +187,7 @@ export default defineComponent({
     // 环境变量表格loading
     const envsTableLoading = ref(false);
     // 详情数据
-    const detail = ref<IContainerDetail|null>(null);
+    const detail = ref<Record<string, any>|null>(null);
     const activePanel = ref('ports');
 
     // 图表指标参数
@@ -249,6 +241,7 @@ export default defineComponent({
     });
 
     return {
+      envsTableLoading,
       params,
       isLoading,
       detail,
@@ -266,24 +259,5 @@ export default defineComponent({
 });
 </script>
 <style lang="postcss" scoped>
-@import './detail-info.css';
-.workload-detail {
-    width: 100%;
-    &-info {
-        @mixin detail-info 4;
-    }
-    &-body {
-        background: #FAFBFD;
-        padding: 0 24px;
-        .workload-metric {
-            display: flex;
-            background: #fff;
-            margin-top: 16px;
-            height: 230px;
-        }
-        .workload-tab {
-            margin-top: 16px;
-        }
-    }
-}
+@import './container-detail.css';
 </style>

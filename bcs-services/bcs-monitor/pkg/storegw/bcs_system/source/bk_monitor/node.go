@@ -92,6 +92,16 @@ func (m *BKMonitor) GetNodeCPUUsage(ctx context.Context, projectId, clusterId, i
 	return m.handleNodeMetric(ctx, projectId, clusterId, ip, promql, start, end, step)
 }
 
+// GetNodeCPURequestUsage 节点CPU装箱率
+func (m *BKMonitor) GetNodeCPURequestUsage(ctx context.Context, projectId, clusterId, ip string, start, end time.Time,
+	step time.Duration) ([]*prompb.TimeSeries, error) {
+	promql := `
+		sum(kube_pod_container_resource_requests_cpu_cores{cluster_id="%<clusterId>s", job="kube-state-metrics", node=~"%<ip>s", %<provider>s}) /
+		count(bkmonitor:system:cpu_detail:usage{cluster_id="%<clusterId>s", ip=~"%<ip>s", %<provider>s}) * 100`
+
+	return m.handleNodeMetric(ctx, projectId, clusterId, ip, promql, start, end, step)
+}
+
 // GetNodeMemoryUsage 内存使用率
 func (m *BKMonitor) GetNodeMemoryUsage(ctx context.Context, projectId, clusterId, ip string, start, end time.Time,
 	step time.Duration) ([]*prompb.TimeSeries, error) {
@@ -99,6 +109,16 @@ func (m *BKMonitor) GetNodeMemoryUsage(ctx context.Context, projectId, clusterId
 		(sum(bkmonitor:system:mem:used{cluster_id="%<clusterId>s", ip="%<ip>s", %<provider>s}) /
 		sum(bkmonitor:system:mem:total{cluster_id="%<clusterId>s", ip="%<ip>s", %<provider>s})) *
 		100`
+
+	return m.handleNodeMetric(ctx, projectId, clusterId, ip, promql, start, end, step)
+}
+
+// GetNodeMemoryRequestUsage 内存装箱率
+func (m *BKMonitor) GetNodeMemoryRequestUsage(ctx context.Context, projectId, clusterId, ip string, start, end time.Time,
+	step time.Duration) ([]*prompb.TimeSeries, error) {
+	promql := `
+		sum(kube_pod_container_resource_requests_memory_bytes{cluster_id="%<clusterId>s", job="kube-state-metrics", node=~"%<ip>s", %<provider>s}) /
+		sum(bkmonitor:system:mem:total{cluster_id="%<clusterId>s", ip=~"%<ip>s", %<provider>s}) * 100`
 
 	return m.handleNodeMetric(ctx, projectId, clusterId, ip, promql, start, end, step)
 }

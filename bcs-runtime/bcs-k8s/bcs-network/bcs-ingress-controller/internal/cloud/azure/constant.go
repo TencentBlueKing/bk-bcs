@@ -43,4 +43,12 @@ const (
 	DefaultBackendPoolName = "bkbcs-default-backendaddresspool"
 	// DefaultBackendSettingName name for default backend setting
 	DefaultBackendSettingName = "bkbcs-default-backendsetting"
+
+	// CreateGoroutineLimit define how much goroutines can be used to create resource each time
+	CreateGoroutineLimit = 10
+	// DeleteGoroutineLimit  define how much goroutines can be used to delete resource each time
+	DeleteGoroutineLimit = 10
+
+	// osEnvSep sep of os env
+	osEnvSep = ","
 )

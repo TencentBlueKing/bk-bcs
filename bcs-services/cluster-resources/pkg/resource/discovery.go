@@ -41,6 +41,17 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/stringx"
 )
 
+const (
+	// ResCacheTTL 资源信息默认过期时间 14 天
+	ResCacheTTL = 14 * 24 * 60 * 60
+
+	// ResCacheKeyPrefix 集群资源信息 Redis 缓存键前缀
+	ResCacheKeyPrefix = "osrcp"
+
+	// CacheLockTTL 自动重置 ServerGroup 缓存时间间隔 10 分钟
+	CacheLockTTL = 10 * 60
+)
+
 // RedisCacheClient 基于 Redis 缓存的，单个集群资源信息 Client
 type RedisCacheClient struct {
 	ctx      context.Context
@@ -120,6 +131,10 @@ func (d *RedisCacheClient) Fresh() bool {
 func (d *RedisCacheClient) ClearCache() error {
 	log.Warn(d.ctx, "invalidate cluster %s discovery cache", d.clusterID)
 
+	if err := d.checkCacheLock(); err != nil {
+		return err
+	}
+
 	var ret []byte
 	allGroupCacheKey := genCacheKey(d.clusterID, "")
 	if err := d.rdsCache.Get(allGroupCacheKey, &ret); err != nil {
@@ -142,7 +157,11 @@ func (d *RedisCacheClient) ClearCache() error {
 		}
 	}
 	// 最后再删除 AllGroup 的缓存
-	return d.rdsCache.Delete(allGroupCacheKey)
+	if err := d.rdsCache.Delete(allGroupCacheKey); err != nil {
+		return err
+	}
+
+	return d.setCacheLock()
 }
 
 // ServerGroups 获取集群中的 Group，包含 versions, preferred 信息（支持 redis 缓存）
@@ -250,6 +269,31 @@ func (d *RedisCacheClient) writeCache(groupVersion string, obj runtime.Object) e
 	return nil
 }
 
+// checkCacheLock 检查缓存锁
+func (d *RedisCacheClient) checkCacheLock() error {
+	lockCacheKey := genLockKey(d.clusterID)
+	if d.rdsCache.Exists(lockCacheKey) {
+		log.Warn(d.ctx, "the interval is too short for reset cluster %s cache, please try again later", d.clusterID)
+		return errorx.New(errcode.General, i18n.GetMsg(d.ctx, "清理集群资源缓存时间间隔过短，请稍后再试"))
+	}
+	return nil
+}
+
+// setCacheLock 设置缓存锁
+func (d *RedisCacheClient) setCacheLock() error {
+	lockCacheKey := genLockKey(d.clusterID)
+	return d.rdsCache.Set(lockCacheKey, "locked", CacheLockTTL*time.Second)
+}
+
+// GetServerVersion 获取集群版本信息
+func GetServerVersion(ctx context.Context, clusterID string) (*version.Info, error) {
+	cli, err := NewRedisCacheClient4Conf(ctx, NewClusterConf(clusterID))
+	if err != nil {
+		return nil, err
+	}
+	return cli.ServerVersion()
+}
+
 // GetGroupVersionResource 根据配置，名称等信息，获取指定资源对应的 GroupVersionResource
 // 若指定 GroupVersion，则在对应的 Group 中寻找资源信息，否则获取 preferred version
 // 包含刷新缓存逻辑，若首次从缓存中找不到对应资源，会刷新缓存再次查询，若还是找不到，则返回错误
@@ -280,7 +324,7 @@ func GetGroupVersionResource(
 
 // GetResPreferredVersion 获取某类资源在集群中的 Preferred 版本
 func GetResPreferredVersion(ctx context.Context, clusterID, kind string) (string, error) {
-	resInfo, err := GetGroupVersionResource(ctx, NewClusterConfig(clusterID), kind, "")
+	resInfo, err := GetGroupVersionResource(ctx, NewClusterConf(clusterID), kind, "")
 	if err != nil {
 		return "", errorx.New(errcode.General, i18n.GetMsg(ctx, "获取资源 APIVersion 信息失败：%v"), err)
 	}
@@ -330,6 +374,11 @@ func genCacheKey(clusterID, groupVersion string) cache.StringKey {
 	}
 	// 否则则为指定 group version 拥有的资源
 	return cache.NewStringKey(fmt.Sprintf("%s:%s:serverresources", clusterID, groupVersion))
+}
+
+// 生成缓存重置锁 Redis 键
+func genLockKey(clusterID string) cache.StringKey {
+	return cache.NewStringKey(fmt.Sprintf("%s:cache-lock", clusterID))
 }
 
 func newRedisCacheClient(

@@ -21,6 +21,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/repo"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/store"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/utils/contextx"
 	helmmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/proto/bcs-helm-manager"
 )
 
@@ -84,10 +85,10 @@ func (l *ListChartVersionAction) list() error {
 			Name:     repository.Username,
 			Password: repository.Password,
 		}).
-		Project(repository.ProjectID).
+		Project(repository.GetRepoProjectID()).
 		Repository(
 			repo.GetRepositoryType(repository.Type),
-			repository.Name,
+			repository.GetRepoName(),
 		).
 		Chart(chartName).
 		ListVersion(l.ctx, l.getOption())
@@ -171,7 +172,7 @@ func (l *ListChartVersionV1Action) Handle(ctx context.Context,
 }
 
 func (l *ListChartVersionV1Action) list() error {
-	projectCode := l.req.GetProjectCode()
+	projectCode := contextx.GetProjectCodeFromCtx(l.ctx)
 	repoName := l.req.GetRepoName()
 	chartName := l.req.GetName()
 	username := auth.GetUserFromCtx(l.ctx)
@@ -190,10 +191,10 @@ func (l *ListChartVersionV1Action) list() error {
 			Name:     repository.Username,
 			Password: repository.Password,
 		}).
-		Project(repository.ProjectID).
+		Project(repository.GetRepoProjectID()).
 		Repository(
 			repo.GetRepositoryType(repository.Type),
-			repository.Name,
+			repository.GetRepoName(),
 		).
 		Chart(chartName).
 		ListVersion(l.ctx, l.getOption())

@@ -16,12 +16,12 @@ import (
 	"context"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/release"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/repo"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/store"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/store/entity"
 	helmmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/proto/bcs-helm-manager"
 )
 
@@ -92,10 +92,8 @@ func (r *RollbackReleaseAction) rollback() error {
 		return nil
 	}
 
-	// 查询当前release的revision
-	_, record, err := handler.List(r.ctx,
-		release.ListOption{
-			Size:      1,
+	record, err := handler.Get(r.ctx,
+		release.GetOption{
 			Namespace: releaseNamespace,
 			Name:      releaseName,
 		})
@@ -106,42 +104,35 @@ func (r *RollbackReleaseAction) rollback() error {
 		r.setResp(common.ErrHelmManagerRollbackActionFailed, err.Error())
 		return nil
 	}
-	if len(record) == 0 {
-		blog.Errorf("rollback release get current revision failed, release not found, "+
-			"clusterID: %s, namespace: %s, name: %s, rollback to revision %d, operator: %s",
-			clusterID, releaseNamespace, releaseName, revision, username)
-		r.setResp(common.ErrHelmManagerRollbackActionFailed, "release not found")
-		return nil
-	}
-	currentRevision := record[0].Revision
 
-	// 存储release信息到store中, 首先先删掉原来的同revision的数据
-	if err = r.model.DeleteRelease(r.ctx, clusterID, releaseNamespace, releaseNamespace, currentRevision); err != nil {
-		blog.Errorf("rollback release, delete release in store failed, %s, "+
-			"clusterID: %s, namespace: %s, name: %s, revision: %d, operator: %s",
-			err.Error(), clusterID, releaseNamespace, releaseName, currentRevision, username)
-		r.setResp(common.ErrHelmManagerRollbackActionFailed, err.Error())
-		return nil
-	}
-	if err = r.model.CreateRelease(r.ctx, &entity.Release{
-		Name:       releaseName,
-		Namespace:  releaseNamespace,
-		ClusterID:  clusterID,
-		Revision:   currentRevision,
-		RollbackTo: int(revision),
-	}); err != nil {
-		blog.Errorf("rollback release, create release in store failed, %s, "+
-			"clusterID: %s, namespace: %s, name: %s, revision: %d, operator: %s",
-			err.Error(), clusterID, releaseNamespace, releaseName, currentRevision, username)
-		r.setResp(common.ErrHelmManagerRollbackActionFailed, err.Error())
-		return nil
+	// 存储release信息到store中
+	if err = r.saveDB(int(revision), record.Revision); err != nil {
+		blog.Warnf("rollback release, save release in store failed, %s, "+
+			"clusterID: %s, namespace: %s, name: %s, rollback to revision %d, operator: %s",
+			err.Error(), clusterID, releaseNamespace, releaseName, revision, username)
+		// 回滚 release 不依赖 db，db 报错也视为 release 回滚成功
 	}
 
 	blog.Infof("rollback release successfully, rollback to revision %d and current revision is %d, "+
 		"clusterID: %s, namespace: %s, name: %s, operator: %s",
-		revision, currentRevision, clusterID, releaseNamespace, releaseName, username)
+		revision, record.Revision, clusterID, releaseNamespace, releaseName, username)
 	r.setResp(common.ErrHelmManagerSuccess, "ok")
 	return nil
+}
+
+func (r *RollbackReleaseAction) saveDB(targetRevision, currentRevision int) error {
+	rl, err := r.model.GetRelease(r.ctx, r.req.GetClusterID(), r.req.GetNamespace(), r.req.GetName())
+	if err != nil {
+		return err
+	}
+
+	if err = r.model.DeleteRelease(r.ctx, r.req.GetClusterID(), r.req.GetNamespace(), r.req.GetName()); err != nil {
+		return err
+	}
+
+	rl.CreateBy = auth.GetUserFromCtx(r.ctx)
+	rl.Revision = currentRevision
+	return r.model.CreateRelease(r.ctx, rl)
 }
 
 func (r *RollbackReleaseAction) setResp(err common.HelmManagerError, message string) {

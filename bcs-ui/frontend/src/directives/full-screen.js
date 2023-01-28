@@ -28,9 +28,6 @@ import { copyText } from '@/common/util';
 
 export default {
   inserted(el, bind) {
-    const { parentNode } = el;
-    if (!parentNode) return;
-
     const tools = bind.value?.tools || ['fullscreen'];
     if (!tools || !tools.length) return;
 
@@ -79,15 +76,16 @@ export default {
         },
       },
     };
-    parentNode.style.position = 'relative';
+    el.style.position = 'relative';
 
+    const css = bind.value?.css || '';
     tools.forEach((tool, index) => {
       const icon = document.createElement('i');
       icon.className = el.defaultConfig[tool]?.icon;
-      icon.style.cssText = `position: absolute;right: ${(index + 1) * 20}px;top: 15px;cursor: pointer;z-index: 200;margin-right: ${index * 10}px`;
+      icon.style.cssText = `position: absolute;right: ${(index + 1) * 20}px;top: 15px;cursor: pointer;z-index: 200;margin-right: ${index * 10}px;color: #fff;${css}`;
       el[tool] = icon;
       icon.addEventListener('click', el.defaultConfig[tool]?.handler);
-      parentNode.append(icon);
+      el.append(icon);
     });
   },
   unbind(el, bind) {

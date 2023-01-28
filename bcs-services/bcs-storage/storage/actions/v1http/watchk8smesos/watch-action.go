@@ -14,21 +14,20 @@
 package watchk8smesos
 
 import (
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/tracing/utils"
-	v1http "github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/v1http/utils"
-	"github.com/emicklei/go-restful"
-
 	"github.com/Tencent/bk-bcs/bcs-common/common"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/tracing/utils"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/lib"
+	v1http "github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/v1http/utils"
+	"github.com/emicklei/go-restful"
 )
 
 const (
-	k8sEnv         = "k8s"
-	urlK8SPrefix   = "/" + k8sEnv
-	mesosEnv       = "mesos"
-	urlMesosPrefix = "/" + mesosEnv
+	K8sEnv         = "k8s"
+	urlK8SPrefix   = "/" + K8sEnv
+	MesosEnv       = "mesos"
+	urlMesosPrefix = "/" + MesosEnv
 
 	clusterIDTag  = "clusterId"
 	tableTag      = "resourceType"
@@ -48,7 +47,7 @@ func K8SGetWatchResource(req *restful.Request, resp *restful.Response) {
 	span := v1http.SetHTTPSpanContextInfo(req, handler)
 	defer span.Finish()
 
-	r, err := get(req, k8sEnv)
+	r, err := get(req, K8sEnv)
 	if err != nil {
 		utils.SetSpanLogTagError(span, err)
 		blog.Errorf("%s | err: %v", common.BcsErrStorageGetResourceFailStr, err)
@@ -69,7 +68,7 @@ func K8SPutWatchResource(req *restful.Request, resp *restful.Response) {
 	span := v1http.SetHTTPSpanContextInfo(req, handler)
 	defer span.Finish()
 
-	if err := put(req, k8sEnv); err != nil {
+	if err := put(req, K8sEnv); err != nil {
 		utils.SetSpanLogTagError(span, err)
 		blog.Errorf("%s | err: %v", common.BcsErrStorageRestRequestDataIsNotJsonStr, err)
 		lib.ReturnRest(&lib.RestResponse{
@@ -89,7 +88,7 @@ func K8SDeleteWatchResource(req *restful.Request, resp *restful.Response) {
 	span := v1http.SetHTTPSpanContextInfo(req, handler)
 	defer span.Finish()
 
-	if err := remove(req, k8sEnv); err != nil {
+	if err := remove(req, K8sEnv); err != nil {
 		utils.SetSpanLogTagError(span, err)
 		blog.Errorf("%s | err: %v", common.BcsErrStorageDeleteResourceFailStr, err)
 		lib.ReturnRest(&lib.RestResponse{
@@ -109,7 +108,7 @@ func K8SListWatchResource(req *restful.Request, resp *restful.Response) {
 	span := v1http.SetHTTPSpanContextInfo(req, handler)
 	defer span.Finish()
 
-	r, err := list(req, k8sEnv)
+	r, err := list(req, K8sEnv)
 	if err != nil {
 		utils.SetSpanLogTagError(span, err)
 		blog.Errorf("%s | err: %v", common.BcsErrStorageListResourceFailStr, err)
@@ -131,7 +130,7 @@ func MesosGetWatchResource(req *restful.Request, resp *restful.Response) {
 	span := v1http.SetHTTPSpanContextInfo(req, handler)
 	defer span.Finish()
 
-	r, err := get(req, mesosEnv)
+	r, err := get(req, MesosEnv)
 	if err != nil {
 		utils.SetSpanLogTagError(span, err)
 		blog.Errorf("%s | err: %v", common.BcsErrStorageGetResourceFailStr, err)
@@ -152,7 +151,7 @@ func MesosPutWatchResource(req *restful.Request, resp *restful.Response) {
 	span := v1http.SetHTTPSpanContextInfo(req, handler)
 	defer span.Finish()
 
-	if err := put(req, mesosEnv); err != nil {
+	if err := put(req, MesosEnv); err != nil {
 		utils.SetSpanLogTagError(span, err)
 		blog.Errorf("%s | err: %v", common.BcsErrStorageRestRequestDataIsNotJsonStr, err)
 		lib.ReturnRest(&lib.RestResponse{
@@ -172,7 +171,7 @@ func MesosDeleteWatchResource(req *restful.Request, resp *restful.Response) {
 	span := v1http.SetHTTPSpanContextInfo(req, handler)
 	defer span.Finish()
 
-	if err := remove(req, mesosEnv); err != nil {
+	if err := remove(req, MesosEnv); err != nil {
 		utils.SetSpanLogTagError(span, err)
 		blog.Errorf("%s | err: %v", common.BcsErrStorageDeleteResourceFailStr, err)
 		lib.ReturnRest(&lib.RestResponse{
@@ -192,7 +191,7 @@ func MesosListWatchResource(req *restful.Request, resp *restful.Response) {
 	span := v1http.SetHTTPSpanContextInfo(req, handler)
 	defer span.Finish()
 
-	r, err := list(req, mesosEnv)
+	r, err := list(req, MesosEnv)
 	if err != nil {
 		utils.SetSpanLogTagError(span, err)
 		blog.Errorf("%s | err: %v", common.BcsErrStorageListResourceFailStr, err)

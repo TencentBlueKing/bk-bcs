@@ -27,8 +27,8 @@ type ExportServiceFilter struct {
 	Balance     string `json:"balance,omitempty" filter:"data.balance"`
 }
 
-const exportServiceNestedTimeLayout = nestedTimeLayout
+const exportServiceNestedTimeLayout = NestedTimeLayout
 
-func (t ExportServiceFilter) getCondition() *operator.Condition {
+func (t ExportServiceFilter) GetCondition() *operator.Condition {
 	return qGenerate(t, exportServiceNestedTimeLayout)
 }

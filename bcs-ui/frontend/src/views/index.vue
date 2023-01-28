@@ -1,7 +1,7 @@
 <template>
   <div class="biz-container app-container" v-bkloading="{ isLoading, zIndex: 10 }">
     <!-- isLoading为解决当前集群和项目信息未设置时界面依赖时序问题 -->
-    <template v-if="curProject && curProject.kind !== 0 && !isLoading">
+    <template v-if="curProject && curProject.kind !== '' && !isLoading">
       <SideNav class="biz-side-bar" :key="$i18n.locale"></SideNav>
       <div class="bcs-content">
         <ContentHeader
@@ -15,27 +15,21 @@
       <!-- 终端 -->
       <SideTerminal></SideTerminal>
     </template>
-    <template v-else-if="curProject && curProject.kind === 0">
+    <template v-else-if="curProject && curProject.kind === ''">
       <Unregistry :cur-project="curProject"></Unregistry>
     </template>
-    <bk-exception type="403" v-else-if="!projectList.length">
-      <span>{{$t('无项目权限')}}</span>
-      <div class="text-subtitle">{{$t('你没有相应项目的访问权限，请前往申请相关项目权限')}}</div>
-      <div style="display: flex;align-items: center; justify-content: center;">
-        <a class="bk-text-button text-wrap" @click="handleGotoIAM">{{$t('去申请')}}</a>
-        <a class="bk-text-button text-wrap" @click="handleGotoProjectManage">{{$t('创建项目')}}</a>
-      </div>
-    </bk-exception>
+    <EmptyProjectGUide v-else-if="!projectList.length"></EmptyProjectGUide>
   </div>
 </template>
 <script lang="ts">
 /* eslint-disable camelcase */
 import { computed, defineComponent, onBeforeMount, ref } from '@vue/composition-api';
-import SideNav from './side-nav.vue';
-import SideTerminal from '@/components/terminal/index.vue';
-import Unregistry from '@/views/unregistry.vue';
-import ContentHeader from '@/views/content-header.vue';
-import { getProjectList } from '@/api/base';
+import SideNav from './app/side-nav.vue';
+import SideTerminal from '@/views/app/terminal.vue';
+import Unregistry from '@/views/app/unregistry.vue';
+import ContentHeader from '@/components/layout/Header.vue';
+import useProject from '@/views/app/use-project';
+import EmptyProjectGUide from '@/views/app/empty-project-guide.vue';
 
 export default defineComponent({
   name: 'BcsHome',
@@ -44,13 +38,12 @@ export default defineComponent({
     SideTerminal,
     Unregistry,
     ContentHeader,
+    EmptyProjectGUide,
   },
   setup(props, ctx) {
     // 项目和集群的清空已经赋值操作有时序关系，请勿随意调整顺序
     const { $store, $route, $router, $bkMessage } = ctx.root;
-    const handleGotoIAM = () => {
-      window.open(window.BK_IAM_APP_URL);
-    };
+
     const handleSetClusterStorageInfo = (curCluster?) => {
       if (curCluster) {
         localStorage.setItem('bcs-cluster', curCluster.cluster_id);
@@ -83,16 +76,17 @@ export default defineComponent({
     const validateProject = async () => {
       // 1. 开启容器服务，且项目存在
       if (curProject.value) {
-        return curProject.value.kind !== 0;
+        return curProject.value.kind !== '';
       }
 
       // 2. 校验项目不存在，但是ProjectCode存在的情况
       const _projectCode = projectCode || localProjectCode;
       if (!_projectCode || !projectList.value.length) return false;
 
-      const projectData = await getProjectList({
-        project_code: _projectCode,
-        with_perms: false,
+      const { getAllProjectList } = useProject();
+      const { data: projectData } = await getAllProjectList({
+        projectCode: _projectCode,
+        all: true,
       });
       if (projectData?.length) {
         // 项目存在，但是无权限
@@ -188,7 +182,7 @@ export default defineComponent({
 
       // 初始路由处理
       if ($route.name === 'entry') {
-        if (curProject.value?.kind === 2) {
+        if (curProject.value?.kind === 'mesos') {
           // mesos需要二次刷新界面重新获取资源
           const route = $router.resolve({
             name: 'clusterMain',
@@ -222,22 +216,10 @@ export default defineComponent({
       isLoading.value = false;
     });
 
-    function handleGotoProjectManage() {
-      if (window.REGION === 'ieod') {
-        window.open(`${window.DEVOPS_HOST}/console/pm`);
-      } else {
-        if ($route.name === 'projectManage') return;
-        $router.push({
-          name: 'projectManage',
-        });
-      }
-    }
     return {
       isLoading,
       curProject,
-      handleGotoIAM,
       projectList,
-      handleGotoProjectManage,
     };
   },
 });

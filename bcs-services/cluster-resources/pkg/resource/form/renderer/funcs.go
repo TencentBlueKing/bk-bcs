@@ -25,7 +25,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/i18n"
-	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
+	resCsts "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/constants"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/slice"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/stringx"
@@ -50,10 +50,13 @@ func newTmplFuncMap() template.FuncMap {
 		"genDockerConfigJson":    genDockerConfigJSON,
 
 		// 辅助类方法
-		"isNSRequired":    isNSRequired,
-		"isLabelRequired": isLabelRequired,
-		"isLabelVisible":  isLabelVisible,
-		"isAnnoVisible":   isAnnoVisible,
+		"isNSRequired":        isNSRequired,
+		"isLabelRequired":     isLabelRequired,
+		"isLabelVisible":      isLabelVisible,
+		"isLabelAsSelector":   isLabelAsSelector,
+		"isLabelEditDisabled": isLabelEditDisabled,
+		"isAnnoVisible":       isAnnoVisible,
+		"canRenderResVersion": canRenderResVersion,
 
 		// This is a placeholder for the "include" function, which is late-bound to a template.
 		// By declaring it here, we preserve the integrity of the linter.
@@ -110,24 +113,46 @@ func initTemplate(baseDir, tmplPattern string) (*template.Template, error) {
 
 // 指定资源类型是否必须填写命名空间
 func isNSRequired(kind string) bool {
-	return !slice.StringInSlice(kind, []string{res.PV, res.SC})
+	return !slice.StringInSlice(kind, []string{resCsts.PV, resCsts.SC})
 }
 
 // 指定资源类型是否必须填写 labels
 func isLabelRequired(kind string) bool {
 	return !slice.StringInSlice(kind, []string{
-		res.HookTmpl, res.Ing, res.SVC, res.EP, res.CM, res.Secret, res.PV, res.PVC, res.SC,
+		resCsts.HookTmpl, resCsts.Ing, resCsts.SVC, resCsts.EP, resCsts.HPA,
+		resCsts.Po, resCsts.CM, resCsts.Secret, resCsts.PV, resCsts.PVC, resCsts.SC,
 	})
 }
 
 // 指定资源类型是否展示 labels
 func isLabelVisible(kind string) bool {
-	return !slice.StringInSlice(kind, []string{res.HookTmpl})
+	return !slice.StringInSlice(kind, []string{resCsts.HookTmpl})
+}
+
+// 判断对于当前这种资源类型，labels 是否会被用于 selector 的配置，主要是Workloads 类型（除 Pod 外）
+func isLabelAsSelector(kind string) bool {
+	return slice.StringInSlice(kind, []string{
+		resCsts.Deploy, resCsts.STS, resCsts.DS, resCsts.CJ, resCsts.Job, resCsts.GDeploy, resCsts.GSTS,
+	})
+}
+
+// 判断资源类型和使用场景下，能否编辑 labels
+func isLabelEditDisabled(kind, action string) bool {
+	if action == "create" {
+		return false
+	}
+	// 因设计原因，labels 也会作为某些资源 selector 的配置，因此不允许更新时候修改，后续可能会评估开放
+	return isLabelAsSelector(kind)
 }
 
 // 指定资源类型是否展示 annotations
 func isAnnoVisible(kind string) bool {
-	return !slice.StringInSlice(kind, []string{res.HookTmpl})
+	return !slice.StringInSlice(kind, []string{resCsts.HookTmpl})
+}
+
+// 指定资源类型能否渲染 metadata.resourceVersion
+func canRenderResVersion(kind string) bool {
+	return !slice.StringInSlice(kind, resCsts.RemoveResVersionKinds)
 }
 
 // 生成 dockerconfigjson

@@ -17,6 +17,7 @@ package network
 import (
 	"github.com/fatih/structs"
 
+	resCsts "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/constants"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/model"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/parser/common"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
@@ -34,8 +35,8 @@ func ParseIng(manifest map[string]interface{}) map[string]interface{} {
 
 // ParseIngController ...
 func ParseIngController(manifest map[string]interface{}, controller *model.IngController) {
-	clsNamePath := []string{"metadata", "annotations", IngClsAnnoKey}
-	controller.Type = mapx.Get(manifest, clsNamePath, IngClsNginx).(string)
+	clsNamePath := []string{"metadata", "annotations", resCsts.IngClsAnnoKey}
+	controller.Type = mapx.Get(manifest, clsNamePath, resCsts.IngClsNginx).(string)
 }
 
 // ParseIngSpec ...
@@ -72,22 +73,17 @@ func ParseIngRuleConf(manifest map[string]interface{}, ruleConf *model.IngRuleCo
 
 // ParseIngNetwork ...
 func ParseIngNetwork(manifest map[string]interface{}, network *model.IngNetwork) {
-	existLBIDPath := []string{"metadata", "annotations", IngExistLBIDAnnoKey}
+	existLBIDPath := []string{"metadata", "annotations", resCsts.IngExistLBIDAnnoKey}
 	network.ExistLBID = mapx.GetStr(manifest, existLBIDPath)
-	// 如果已指定 clb，则使用模式为使用已存在的 clb，否则为自动创建新 clb
-	if network.ExistLBID != "" {
-		network.CLBUseType = CLBUseTypeUseExists
-	} else {
-		network.CLBUseType = CLBUseTypeAutoCreate
-	}
 
-	subNetIDPath := []string{"metadata", "annotations", IngSubNetIDAnnoKey}
+	subNetIDPath := []string{"metadata", "annotations", resCsts.IngSubNetIDAnnoKey}
 	network.SubNetID = mapx.GetStr(manifest, subNetIDPath)
-	// 如果已指定子网 ID，则认为是内网 clb，否则为外网 clb
+
+	// 如果已指定子网 ID，则使用模式为为自动创建新 clb，否则使用已存在的 clb
 	if network.SubNetID != "" {
-		network.CLBType = CLBTypeInternal
+		network.CLBUseType = resCsts.CLBUseTypeAutoCreate
 	} else {
-		network.CLBType = CLBTypeExternal
+		network.CLBUseType = resCsts.CLBUseTypeUseExists
 	}
 }
 
@@ -105,6 +101,9 @@ func ParseIngDefaultBackend(manifest map[string]interface{}, bak *model.IngDefau
 
 // ParseIngCert ...
 func ParseIngCert(manifest map[string]interface{}, cert *model.IngCert) {
+	if mapx.GetStr(manifest, []string{"metadata", "annotations", resCsts.IngAutoRewriteHTTPAnnoKey}) == "true" {
+		cert.AutoRewriteHTTP = true
+	}
 	for _, tls := range mapx.GetList(manifest, "spec.tls") {
 		t := tls.(map[string]interface{})
 		hosts := []string{}

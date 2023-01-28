@@ -15,9 +15,8 @@ package types
 import (
 	"encoding/json"
 
-	"github.com/mitchellh/mapstructure"
-
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/mitchellh/mapstructure"
 )
 
 const (

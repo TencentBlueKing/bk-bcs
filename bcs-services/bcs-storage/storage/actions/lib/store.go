@@ -23,6 +23,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/opentracing/opentracing-go"
 	"go.mongodb.org/mongo-driver/bson"
+	mopt "go.mongodb.org/mongo-driver/mongo/options"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
@@ -46,12 +47,13 @@ const (
 
 // StoreGetOption option for get action
 type StoreGetOption struct {
-	Fields         []string
-	Sort           map[string]int
-	Cond           *operator.Condition
-	Offset         int64
-	Limit          int64
-	IsAllDocuments bool
+	Fields          []string
+	Sort            map[string]int
+	Cond            *operator.Condition
+	Offset          int64
+	Limit           int64
+	IsAllDocuments  bool
+	DatabaseOptions *mopt.DatabaseOptions
 }
 
 // StorePutOption option for put action
@@ -157,6 +159,9 @@ func (a *Store) Get(ctx context.Context, resourceType string, opt *StoreGetOptio
 		if !opt.IsAllDocuments {
 			finder = finder.WithLimit(storeActionDefaultLimit)
 		}
+	}
+	if opt.DatabaseOptions != nil {
+		finder = finder.WithDatabaseOptions(opt.DatabaseOptions)
 	}
 
 	if err := finder.All(ctx, &mList); err != nil {

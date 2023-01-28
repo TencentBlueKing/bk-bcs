@@ -6,7 +6,7 @@
         handlePageChange, handlePageSizeChange,
         handleGetExtData, handleShowDetail,
         handleSortChange,handleUpdateResource,
-        handleDeleteResource
+        handleDeleteResource, webAnnotations
       }">
       <bk-table
         :data="curPageData"
@@ -38,10 +38,25 @@
               {{ handleGetExtData(row.metadata.uid, 'age') }}</span>
           </template>
         </bk-table-column>
+        <bk-table-column :label="$t('编辑模式')" width="100">
+          <template slot-scope="{ row }">
+            <span>
+              {{handleGetExtData(row.metadata.uid, 'editMode') === 'form'
+                ? $t('表单') : 'YAML'}}
+            </span>
+          </template>
+        </bk-table-column>
         <bk-table-column :label="$t('操作')" :resizable="false" width="150">
           <template #default="{ row }">
             <bk-button
               text
+              v-authority="{
+                clickable: webAnnotations.perms.items[row.metadata.uid]
+                  ? webAnnotations.perms.items[row.metadata.uid].updateBtn.clickable : true,
+                content: webAnnotations.perms.items[row.metadata.uid]
+                  ? webAnnotations.perms.items[row.metadata.uid].updateBtn.tip : '',
+                disablePerms: true
+              }"
               @click="handleUpdateResource(row)">{{ $t('更新') }}</bk-button>
             <bk-button
               class="ml10" text

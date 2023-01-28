@@ -115,7 +115,7 @@ func newWeightBalancer(groups []*storage.GroupInfo, nodegroups map[string]*stora
 // weightBalancer allocates resources with weight in random mode.
 // when nodegroup scales down, its resource may be not enough for releasing.
 // so scaledown operation is not balance between all elastic nodegroups,
-// controller had to relese more node from other specified nodegroups.
+// controller had to release more node from other specified nodegroups.
 type weightBalancer struct {
 	nodes []*nodeGroup
 	ruler []int

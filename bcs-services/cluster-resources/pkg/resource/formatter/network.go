@@ -17,7 +17,11 @@ package formatter
 import (
 	"fmt"
 
+	"github.com/TencentBlueKing/gopkg/collection/set"
+
+	resCsts "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/constants"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/stringx"
 )
 
 // FormatNetworkRes xxx
@@ -39,6 +43,29 @@ func FormatIng(manifest map[string]interface{}) map[string]interface{} {
 	ret["addresses"] = parseIngAddrs(manifest)
 	ret["defaultPorts"] = getIngDefaultPort(manifest)
 	ret["rules"] = parseRulesFunc(manifest)
+
+	annotations := mapx.GetMap(manifest, "metadata.annotations")
+	// 控制器
+	ret["controller"] = mapx.Get(annotations, []string{resCsts.IngClsAnnoKey}, resCsts.IngClsNginx).(string)
+
+	lbIDPaths := []string{resCsts.IngExistLBIDAnnoKey}
+	ret["existLBID"] = mapx.GetStr(annotations, lbIDPaths)
+	// 实际绑定的 CLB ID，qcloud 类型的 ingress 会取实际使用的，其他类型的取默认指定的
+	if ret["controller"] == resCsts.IngClsQCloud {
+		lbIDPaths = []string{resCsts.IngQcloudCurLBIDAnnoKey}
+	}
+	ret["clbID"] = mapx.GetStr(annotations, lbIDPaths)
+	// 内网子网 ID
+	ret["subNetID"] = mapx.GetStr(annotations, []string{resCsts.IngSubNetIDAnnoKey})
+
+	// CLB 使用方式，如果已指定 clb，则使用模式为使用已存在的 clb，否则为自动创建新 clb
+	if ret["existLBID"] != "" {
+		ret["clbUseType"] = resCsts.CLBUseTypeUseExists
+	} else {
+		ret["clbUseType"] = resCsts.CLBUseTypeAutoCreate
+	}
+	// 重定向 HTTP 端口到 HTTPS
+	ret["autoRewrite"] = mapx.GetStr(annotations, []string{resCsts.IngAutoRewriteHTTPAnnoKey}) == "true"
 	return ret
 }
 
@@ -47,6 +74,43 @@ func FormatSVC(manifest map[string]interface{}) map[string]interface{} {
 	ret := FormatNetworkRes(manifest)
 	ret["externalIP"] = parseSVCExternalIPs(manifest)
 	ret["ports"] = parseSVCPorts(manifest)
+
+	annotations := mapx.GetMap(manifest, "metadata.annotations")
+	// 实际绑定的 clb id
+	ret["clbID"] = mapx.GetStr(annotations, []string{resCsts.SVCCurLBIDAnnoKey})
+	// 创建时候指定的已存在的 clb id
+	ret["existLBID"] = mapx.GetStr(annotations, []string{resCsts.SVCExistLBIDAnnoKey})
+	// 创建时候指定的内网子网 id
+	ret["subnetID"] = mapx.GetStr(annotations, []string{resCsts.SVCSubNetIDAnnoKey})
+
+	// CLB 使用方式，如果已指定 clb，则使用模式为使用已存在的 clb，否则为自动创建新 clb
+	if ret["existLBID"] != "" {
+		ret["clbUseType"] = resCsts.CLBUseTypeUseExists
+	} else {
+		ret["clbUseType"] = resCsts.CLBUseTypeAutoCreate
+	}
+
+	ret["stickyTime"] = mapx.GetInt64(manifest, "spec.sessionAffinityConfig.clientIP.timeoutSeconds")
+
+	clusterIPSet := set.NewStringSet()
+	clusterIP := mapx.GetStr(manifest, "spec.clusterIP")
+	clusterIPSet.Add(clusterIP)
+
+	// 双栈集群特有字段
+	for _, ip := range mapx.GetList(manifest, "spec.clusterIPs") {
+		clusterIPSet.Add(ip.(string))
+	}
+
+	// 同时兼容 ipv4 / ipv6 集群
+	ret["clusterIPv4"], ret["clusterIPv6"] = "", ""
+	for _, ip := range clusterIPSet.ToSlice() {
+		switch {
+		case stringx.IsIPv4(ip):
+			ret["clusterIPv4"] = ip
+		case stringx.IsIPv6(ip):
+			ret["clusterIPv6"] = ip
+		}
+	}
 	return ret
 }
 
@@ -136,7 +200,11 @@ func parseV1beta1IngRules(manifest map[string]interface{}) (rules []map[string]i
 
 // parseSVCExternalIPs 解析 SVC ExternalIP
 func parseSVCExternalIPs(manifest map[string]interface{}) []string {
-	return parseIngAddrs(manifest)
+	externalIPs := parseIngAddrs(manifest)
+	for _, ip := range mapx.GetList(manifest, "spec.externalIPs") {
+		externalIPs = append(externalIPs, ip.(string))
+	}
+	return externalIPs
 }
 
 // parseSVCPorts 解析 SVC Ports
@@ -159,13 +227,13 @@ func parseEndpoints(manifest map[string]interface{}) (endpoints []string) {
 		return endpoints
 	}
 	// endpoints 为 subsets ips 与 ports 的笛卡儿积
-	for _, subset := range manifest["subsets"].([]interface{}) {
+	for _, subset := range mapx.GetList(manifest, "subsets") {
 		ss, _ := subset.(map[string]interface{})
 		if _, exists := ss["addresses"]; !exists {
 			continue
 		}
-		for _, addr := range ss["addresses"].([]interface{}) {
-			for _, p := range ss["ports"].([]interface{}) {
+		for _, addr := range mapx.GetList(ss, "addresses") {
+			for _, p := range mapx.GetList(ss, "ports") {
 				addr, _ := addr.(map[string]interface{})
 				p, _ := p.(map[string]interface{})
 				endpoints = append(endpoints, fmt.Sprintf("%s:%d", addr["ip"], p["port"]))

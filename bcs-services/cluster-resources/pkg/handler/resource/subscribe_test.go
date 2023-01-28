@@ -25,6 +25,7 @@ import (
 	log "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/logging"
 	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
 	cli "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/client"
+	resCsts "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/constants"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/example"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
@@ -41,7 +42,7 @@ func TestValidateSubscribeParams(t *testing.T) {
 		ResourceVersion: "0",
 	}
 	// 检查命名空间域原生资源
-	req.Kind = res.Deploy
+	req.Kind = resCsts.Deploy
 	ctx := handler.NewInjectedContext("", "", "")
 	// 需要指定命名空间
 	err = validateSubscribeParams(ctx, &req)
@@ -52,7 +53,7 @@ func TestValidateSubscribeParams(t *testing.T) {
 	assert.Nil(t, validateSubscribeParams(ctx, &req))
 
 	// 检查集群域原生资源
-	req.Kind = res.PV
+	req.Kind = resCsts.PV
 	assert.Nil(t, validateSubscribeParams(ctx, &req))
 
 	// 检查命名空间域自定义资源
@@ -92,7 +93,7 @@ func TestSubscribe(t *testing.T) {
 	req := clusterRes.SubscribeReq{
 		ProjectID:       envs.TestProjectID,
 		ClusterID:       envs.TestClusterID,
-		Kind:            res.Po,
+		Kind:            resCsts.Po,
 		ResourceVersion: "0",
 		Namespace:       envs.TestNamespace,
 	}
@@ -113,7 +114,7 @@ func TestSubscribeDisabledKind(t *testing.T) {
 		ClusterID:       envs.TestSharedClusterID,
 		ResourceVersion: "0",
 	}
-	for _, kind := range []string{res.PV, res.SC} {
+	for _, kind := range []string{resCsts.PV, resCsts.SC} {
 		req.Kind = kind
 		err := h.Subscribe(ctx, &req, &mockSubscribeStream{})
 		assert.NotNil(t, err)
@@ -131,7 +132,7 @@ func TestSubscribeCMInSharedCluster(t *testing.T) {
 		ProjectID:       envs.TestProjectID,
 		ClusterID:       envs.TestSharedClusterID,
 		ResourceVersion: "0",
-		Kind:            res.CM,
+		Kind:            resCsts.CM,
 		Namespace:       envs.TestNamespace,
 	}
 
@@ -140,10 +141,10 @@ func TestSubscribeCMInSharedCluster(t *testing.T) {
 	assert.Contains(t, err.Error(), "不属于指定项目")
 
 	// 在共享集群项目命名空间中创建 configmap 确保存在事件
-	cmManifest, _ := example.LoadDemoManifest("config/simple_configmap", "")
+	cmManifest, _ := example.LoadDemoManifest(ctx, "config/simple_configmap", "", "", resCsts.CM)
 	_ = mapx.SetItems(cmManifest, "metadata.namespace", envs.TestSharedClusterNS)
-	clusterConf := res.NewClusterConfig(envs.TestSharedClusterID)
-	cmRes, err := res.GetGroupVersionResource(ctx, clusterConf, res.CM, "")
+	clusterConf := res.NewClusterConf(envs.TestSharedClusterID)
+	cmRes, err := res.GetGroupVersionResource(ctx, clusterConf, resCsts.CM, "")
 	assert.Nil(t, err)
 	_, err = cli.NewResClient(clusterConf, cmRes).Create(ctx, cmManifest, true, metav1.CreateOptions{})
 	assert.Nil(t, err)

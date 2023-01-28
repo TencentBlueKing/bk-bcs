@@ -19,16 +19,15 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/constant"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
+	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/middleware"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/logging"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store"
 	vdm "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/variabledefinition"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/errorx"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/stringx"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/proto/bcsproject"
-	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/middleware"
-
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 )
 
 // CreateAction action for create variable definition
@@ -36,6 +35,7 @@ type CreateAction struct {
 	ctx   context.Context
 	model store.ProjectModel
 	req   *proto.CreateVariableRequest
+	resp  *proto.CreateVariableResponse
 }
 
 // NewCreateAction new create variable definition action
@@ -46,25 +46,36 @@ func NewCreateAction(model store.ProjectModel) *CreateAction {
 }
 
 // Do create variable definition request
-func (ca *CreateAction) Do(ctx context.Context, req *proto.CreateVariableRequest) (*vdm.VariableDefinition, error) {
+func (ca *CreateAction) Do(ctx context.Context,
+	req *proto.CreateVariableRequest, resp *proto.CreateVariableResponse) error {
 	ca.ctx = ctx
 	ca.req = req
+	ca.resp = resp
 
-	vd, err := ca.createVariable()
+	err := ca.createVariable()
 	if err != nil {
-		return nil, errorx.NewDBErr(err)
+		return err
 	}
-	return vd, nil
+	return nil
 }
 
-func (ca *CreateAction) createVariable() (*vdm.VariableDefinition, error) {
+func (ca *CreateAction) createVariable() error {
+	// check if key is system variables
+	if _, ok := vdm.SystemVariables[ca.req.GetKey()]; ok {
+		return errorx.NewReadableErr(errorx.ParamErr, fmt.Sprintf("不能与系统变量 key[%s] 重复", ca.req.GetKey()))
+	}
+	// check if key is valid
+	if !stringx.StringInSlice(ca.req.GetScope(),
+		[]string{vdm.VariableScopeGlobal, vdm.VariableScopeCluster, vdm.VariableScopeNamespace}) {
+		return errorx.NewReadableErr(errorx.ParamErr, "作用域只能为 [global,cluster,namespace]")
+	}
 	// check if key exists in project
 	_, err := ca.model.GetVariableDefinitionByKey(ca.ctx, ca.req.GetProjectCode(), ca.req.GetKey())
 	if err == nil {
-		return nil, fmt.Errorf("variable key %s alread exists in project", ca.req.GetKey())
+		return errorx.NewReadableErr(errorx.ParamErr, fmt.Sprintf("变量 key[%s] 在项目中已存在", ca.req.GetKey()))
 	} else if err != drivers.ErrTableRecordNotFound {
 		logging.Error("get variable definition from db failed, err: ", err.Error())
-		return nil, err
+		return err
 	}
 	// construct variable definition and create
 	vd := &vdm.VariableDefinition{
@@ -74,7 +85,7 @@ func (ca *CreateAction) createVariable() (*vdm.VariableDefinition, error) {
 		Description: ca.req.GetDesc(),
 		ProjectCode: ca.req.GetProjectCode(),
 		Scope:       ca.req.GetScope(),
-		Category:    constant.VariableCategoryCustom,
+		Category:    vdm.VariableCategoryCustom,
 		CreateTime:  time.Now().Format(time.RFC3339),
 	}
 	if authUser, err := middleware.GetUserFromContext(ca.ctx); err == nil {
@@ -82,9 +93,19 @@ func (ca *CreateAction) createVariable() (*vdm.VariableDefinition, error) {
 	}
 	err = ca.tryGenerateIDAndDoCreate(vd)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	return vd, nil
+	ca.resp.Message = "ok"
+	ca.resp.Data = &proto.CreateVariableData{
+		Id:          vd.ID,
+		ProjectCode: vd.ProjectCode,
+		Name:        vd.Name,
+		Key:         vd.Key,
+		Scope:       vd.Scope,
+		Default:     vd.Default,
+		Desc:        vd.Description,
+	}
+	return nil
 }
 
 func (ca *CreateAction) tryGenerateIDAndDoCreate(definition *vdm.VariableDefinition) error {

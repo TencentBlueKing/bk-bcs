@@ -33,7 +33,7 @@ func (h *Handler) InvalidateDiscoveryCache(
 		return errorx.New(errcode.NoIAMPerm, i18n.GetMsg(ctx, "无指定操作权限"))
 	}
 
-	cli, err := res.NewRedisCacheClient4Conf(ctx, res.NewClusterConfig(req.ClusterID))
+	cli, err := res.NewRedisCacheClient4Conf(ctx, res.NewClusterConf(req.ClusterID))
 	if err != nil {
 		return err
 	}

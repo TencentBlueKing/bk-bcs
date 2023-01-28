@@ -320,10 +320,6 @@
     right: 13px;
 }
 
-.bk-tag.bk-danger {
-    cursor: pointer;
-}
-
 @media screen and (max-width: $mediaWidth) {
     .biz-text-wrapper {
         max-width: 130px;

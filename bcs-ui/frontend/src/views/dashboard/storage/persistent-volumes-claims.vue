@@ -3,16 +3,26 @@
     title="PersistentVolumeClaims"
     kind="PersistentVolumeClaim" category="persistent_volume_claims" type="storages">
     <template
-      #default="{ curPageData, pageConf,
-                  handlePageChange, handlePageSizeChange,
-                  handleGetExtData, handleSortChange, handleUpdateResource, handleDeleteResource }">
+      #default="{
+        curPageData, pageConf,
+        handlePageChange, handlePageSizeChange,
+        handleGetExtData, handleSortChange,
+        handleUpdateResource, handleDeleteResource,
+        handleShowDetail, webAnnotations
+      }">
       <bk-table
         :data="curPageData"
         :pagination="pageConf"
         @page-change="handlePageChange"
         @page-limit-change="handlePageSizeChange"
         @sort-change="handleSortChange">
-        <bk-table-column :label="$t('名称')" prop="metadata.name" sortable></bk-table-column>
+        <bk-table-column :label="$t('名称')" prop="metadata.name" sortable>
+          <template #default="{ row }">
+            <bk-button
+              class="bcs-button-ellipsis" text
+              @click="handleShowDetail(row)">{{ row.metadata.name }}</bk-button>
+          </template>
+        </bk-table-column>
         <bk-table-column :label="$t('命名空间')" prop="metadata.namespace" sortable></bk-table-column>
         <bk-table-column label="Status">
           <template #default="{ row }">
@@ -50,21 +60,45 @@
               {{ handleGetExtData(row.metadata.uid, 'age') }}</span>
           </template>
         </bk-table-column>
+        <bk-table-column :label="$t('编辑模式')" width="100">
+          <template slot-scope="{ row }">
+            <span>
+              {{handleGetExtData(row.metadata.uid, 'editMode') === 'form'
+                ? $t('表单') : 'YAML'}}
+            </span>
+          </template>
+        </bk-table-column>
         <bk-table-column :label="$t('操作')" :resizable="false" width="150">
           <template #default="{ row }">
             <bk-button text @click="handleUpdateResource(row)">{{ $t('更新') }}</bk-button>
-            <bk-button class="ml10" text @click="handleDeleteResource(row)">{{ $t('删除') }}</bk-button>
+            <bk-button
+              class="ml10"
+              text
+              v-authority="{
+                clickable: webAnnotations.perms.items[row.metadata.uid]
+                  ? webAnnotations.perms.items[row.metadata.uid].deleteBtn.clickable : true,
+                content: webAnnotations.perms.items[row.metadata.uid]
+                  ? webAnnotations.perms.items[row.metadata.uid].deleteBtn.tip : '',
+                disablePerms: true
+              }"
+              @click="handleDeleteResource(row)">
+              {{ $t('删除') }}
+            </bk-button>
           </template>
         </bk-table-column>
       </bk-table>
+    </template>
+    <template #detail="{ data, extData }">
+      <PvcDetail :data="data" :ext-data="extData"></PvcDetail>
     </template>
   </BaseLayout>
 </template>
 <script>
 import { defineComponent } from '@vue/composition-api';
 import BaseLayout from '@/views/dashboard/common/base-layout';
+import PvcDetail from './pvc-detail.vue';
 
 export default defineComponent({
-  components: { BaseLayout },
+  components: { BaseLayout, PvcDetail },
 });
 </script>

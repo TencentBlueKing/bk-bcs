@@ -27,6 +27,7 @@ mongo:
 server:
   useLocalIP: false
   address: "127.0.0.1"
+  ipv6Address: ""
   insecureAddress: "127.0.0.1"
   port: 8091
   httpPort: 8090
@@ -41,7 +42,8 @@ client:
   key: ""
   ca: ""
 swagger:
-  dir: "."
+  enable: true
+  dir: "/data/bcs/swagger"
 log:
   level: "info"
   flushInterval: 5
@@ -50,6 +52,7 @@ log:
   size: 100
   age: 7
   backups: 5
+  alsoToStdErr: true
 jwt:
   enable: true
   publicKeyFile: "../../test/jwt/app.rsa.pub"
@@ -63,11 +66,15 @@ iam:
   iamHost: ""
   bkPaaSHost: ""
   debug: false
+itsm:
+  gatewayHost: ""
+  createNsSvcID: 0
+  updateNsSvcID: 0
+  deleteNsSvcID: 0
 clientActionExemptPerm:
   clientActions:
   - clientID: test
-    actions:
-    - create
+    all: true
 cmdb:
   bkSupplierAccount: "tencent"
   host: "http://localhost:80"
@@ -75,4 +82,8 @@ cmdb:
   proxy: ""
   debug: false
 bcscc:
+  enable: false
   host: ""
+bcsGateway:
+  host: ""
+  token: ""

@@ -3,7 +3,7 @@
   <div class="apply-host-wrapper" v-if="$INTERNAL">
     <div class="apply-host-btn">
       <bk-popover placement="bottom" v-if="!hasAuth" transfer>
-        <span class="bk-default bk-button-normal bk-button is-disabled">{{$t('申请服务器')}}</span>
+        <span class="bk-default bk-button-normal bk-button is-disabled">{{title}}</span>
         <div slot="content" style="width: 220px;">
           {{ authTips.content }}
         </div>
@@ -18,7 +18,7 @@
         v-else
         :theme="theme"
         @click="handleOpenApplyHost">
-        {{$t('申请服务器')}}
+        {{title}}
       </bk-button>
     </div>
     <bcs-dialog
@@ -26,7 +26,7 @@
       v-model="applyDialogShow"
       :close-icon="false"
       :width="1000"
-      :title="$t('申请服务器')"
+      :title="title"
       render-directive="if"
       header-position="left"
       ext-cls="apply-host-dialog">
@@ -189,10 +189,10 @@
               </bk-table-column>
               <bk-table-column
                 :label="$t('机型')"
-                prop="model" :show-overflow-tooltip="{ interactive: false }"></bk-table-column>
+                prop="model" show-overflow-tooltip></bk-table-column>
               <bk-table-column
                 :label="$t('规格')"
-                prop="specifications" :show-overflow-tooltip="{ interactive: false }"></bk-table-column>
+                prop="specifications" show-overflow-tooltip></bk-table-column>
               <bk-table-column :label="$t('园区')" prop="zone" key="zone">
                 {{ zoneName }}
               </bk-table-column>
@@ -203,7 +203,7 @@
                   {{ cvmData[row.specifications] }}
                 </template>
               </bk-table-column>
-              <bk-table-column :label="$t('备注')" prop="description" :show-overflow-tooltip="{ interactive: false }">
+              <bk-table-column :label="$t('备注')" prop="description" show-overflow-tooltip>
                 <template #default="{ row }">
                   {{ row.description || '--' }}
                 </template>
@@ -243,6 +243,10 @@ export default {
       default: false,
     },
     clusterId: {
+      type: String,
+      default: '',
+    },
+    title: {
       type: String,
       default: '',
     },
@@ -463,7 +467,7 @@ export default {
              */
     async getBizMaintainers() {
       const res = await this.$store.dispatch('cluster/getBizMaintainers');
-      this.maintainers = res.maintainers;
+      this.maintainers = res.maintainer;
       this.hasAuth = this.maintainers.includes(this.userInfo.username);
     },
     /**
@@ -739,7 +743,7 @@ export default {
     async getCvmCapacity() {
       if (!this.formdata.zone_id || !this.formdata.region || !this.$INTERNAL) return;
       this.isHostLoading = true;
-      const srePrefix = `${NODE_ENV === 'development' ? '' : window.BCS_CONFIG?.host?.BKSRE_HOST}`;
+      const srePrefix = `${process.env.NODE_ENV === 'development' ? '' : window.BCS_CONFIG?.host?.BKSRE_HOST}`;
       const cvmCapacity = request('get', `${srePrefix}/bcsadmin/cvmcapacity`);
       this.cvmData = await cvmCapacity({
         zone_id: this.formdata.zone_id,

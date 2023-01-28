@@ -28,8 +28,6 @@ const (
 	NameSpaceDelete iam.ActionID = "namespace_delete"
 	// NameSpaceList xxx
 	NameSpaceList iam.ActionID = "namespace_list"
-	// NameSpaceUse xxx
-	NameSpaceUse iam.ActionID = "namespace_use"
 )
 
 const (

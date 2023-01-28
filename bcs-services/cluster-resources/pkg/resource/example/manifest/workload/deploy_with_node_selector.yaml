@@ -1,0 +1,28 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deployment-test
+  namespace: default
+  labels:
+    app: machine-learning-2022
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: machine-learning-2022
+  template:
+    metadata:
+      labels:
+        app: machine-learning-2022
+    spec:
+      containers:
+        - name: ml
+          image: machine-learning:latest
+          command:
+            - /bin/bash
+            - '-c'
+          args:
+            - start_train.sh
+      nodeSelector:
+        beta.amd.com/gpu.family.AI: "1"

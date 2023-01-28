@@ -9,7 +9,7 @@ metadata:
   {{- end }}
   annotations:
     {{- range .metadata.annotations }}
-    {{- if and (ne .key "kubernetes.io/ingress.class") (ne .key "kubernetes.io/ingress.existLbId") (ne .key "ingress.cloud.tencent.com/pass-to-target") (ne .key "kubernetes.io/ingress.subnetId") }}
+    {{- if and (ne .key "kubernetes.io/ingress.class") (ne .key "kubernetes.io/ingress.existLbId") (ne .key "ingress.cloud.tencent.com/pass-to-target") (ne .key "kubernetes.io/ingress.subnetId") (ne .key "ingress.cloud.tencent.com/auto-rewrite") }}
     {{ .key | quote }}: {{ .value | default "" | quote }}
     {{- end }}
     {{- end }}
@@ -20,15 +20,19 @@ metadata:
     {{- if eq .controller.type "qcloud" }}
     {{- if eq .spec.network.clbUseType "useExists" }}
     kubernetes.io/ingress.existLbId: {{ .spec.network.existLBID | quote }}
-    {{- else }}
-    {{- if and (.spec.network.subNetID) (eq .spec.network.clbType "internal") }}
+    {{- else if .spec.network.subNetID }}
     kubernetes.io/ingress.subnetId: {{ .spec.network.subNetID | quote }}
+    {{- end }}
+    {{- if .spec.cert.autoRewriteHttp }}
+    ingress.cloud.tencent.com/auto-rewrite: "true"
     {{- end }}
     ingress.cloud.tencent.com/pass-to-target: "true"
     {{- end }}
-    {{- end }}
+  {{- if .metadata.resVersion }}
+  resourceVersion: {{ .metadata.resVersion | quote }}
+  {{- end }}
 spec:
-  {{- if and .spec.defaultBackend.targetSVC .spec.defaultBackend.port }}
+  {{- if and (ne .controller.type "qcloud") .spec.defaultBackend.targetSVC .spec.defaultBackend.port }}
   defaultBackend:
     {{- include "network.ingress.backend" (dict "svcName" .spec.defaultBackend.targetSVC "svcPort" .spec.defaultBackend.port "apiVersion" .metadata.apiVersion) | nindent 4 }}
   {{- end }}

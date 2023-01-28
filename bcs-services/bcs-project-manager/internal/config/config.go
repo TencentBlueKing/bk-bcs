@@ -20,6 +20,7 @@ import (
 
 	"gopkg.in/yaml.v2"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/util"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/envs"
 )
 
@@ -47,6 +48,7 @@ type MongoConfig struct {
 type ServerConfig struct {
 	UseLocalIP      bool   `yaml:"useLocalIP" usage:"是否使用 Local IP"`
 	Address         string `yaml:"address" usage:"server address"`
+	Ipv6Address     string `yaml:"ipv6Address" usage:"server ipv6 address"`
 	InsecureAddress string `yaml:"insecureAddress" usage:"insecurue server address"`
 	Port            int    `yaml:"port" usage:"grpc port"`
 	HTTPPort        int    `yaml:"httpPort" usage:"http port"`
@@ -107,16 +109,27 @@ type IAMConfig struct {
 	Debug       bool   `yaml:"debug" usage:"debug mode"`
 }
 
+// ITSMConfig itsm操作需要的配置
+type ITSMConfig struct {
+	Enable                   bool   `yaml:"enable" usage:"enable ITSM sync"`
+	GatewayHost              string `yaml:"gatewayHost" usage:"gateway host"`
+	CreateNamespaceServiceID int    `yaml:"createNsSvcID" usage:"service id for create ns service"`
+	UpdateNamespaceServiceID int    `yaml:"updateNsSvcID" usage:"service id for update ns service"`
+	DeleteNamespaceServiceID int    `yaml:"deleteNsSvcID" usage:"service id for delete ns service"`
+}
+
 // ClientActionsConfig Client级别的访问
 type ClientActionsConfig struct {
-	ClientID string   `yaml:"clientID" usage:"client id"`
-	Actions  []string `yaml:"actions" usage:"action name"`
-	All      bool     `yaml:"all" usage:"exempt all permissions"`
+	ClientID         string   `yaml:"clientID" usage:"client id"`
+	Actions          []string `yaml:"actions" usage:"action name"`
+	All              bool     `yaml:"all" usage:"exempt all permissions"`
+	NamespaceActions []string `yaml:"namespaceActions" usage:"actions name for namespace"`
+	NamespaceNames   []string `yaml:"namespaceNames" usage:"name for namespace actions"`
 }
 
 // ClientActionExemptPermConfig 非用户态跳过指定动作的权限
 type ClientActionExemptPermConfig struct {
-	ClientActions []ClientActionsConfig `yaml:"clientActions" usage:"exempt perm for client id action, example: [{clientID: bcs-inner, actions: [create, view]}]"`
+	ClientActions []ClientActionsConfig `yaml:"clientActions" usage:"exempt perm for client id action"`
 }
 
 // CMDBConfig 请求的 CMDB 服务配置
@@ -125,12 +138,16 @@ type CMDBConfig struct {
 	Host              string `yaml:"host" usage:"access cmdb api host"`
 	Timeout           int    `yaml:"timeout" usage:"request cmdb api timeout"`
 	Proxy             string `yaml:"proxy" usage:"proxy"`
+	BKUsername        string `yaml:"bkUsername" usage:"username to operate"`
 	Debug             bool   `yaml:"debug" usage:"debug"`
 }
 
 // BCSCCConfig 请求的 bcs cc 服务配置
 type BCSCCConfig struct {
-	Host string `yaml:"host" usage:"access bcs cc api host"`
+	Enable     bool   `yaml:"enable" usage:"enable bcs cc double write"`
+	Host       string `yaml:"host" usage:"access bcs cc api host"`
+	SSMHost    string `yaml:"ssmHost" usage:"ssm host"`
+	UseGateway bool   `yaml:"useGateway" usage:"whether to access the bcscc through a gateway"`
 }
 
 // BCSGatewayConfig BCS 网关配置
@@ -149,6 +166,7 @@ type ProjectConfig struct {
 	Client                 ClientConfig                 `yaml:"client"`
 	JWT                    JWTConfig                    `yaml:"jwt"`
 	IAM                    IAMConfig                    `yaml:"iam"`
+	ITSM                   ITSMConfig                   `yaml:"itsm"`
 	ClientActionExemptPerm ClientActionExemptPermConfig `yaml:"clientActionExemptPerm"`
 	CMDB                   CMDBConfig                   `yaml:"cmdb"`
 	BCSCC                  BCSCCConfig                  `yaml:"bcscc"`
@@ -158,8 +176,9 @@ type ProjectConfig struct {
 
 func (conf *ProjectConfig) initServerAddress() error {
 	// 若指定使用 LOCAL_IP 且环境变量中 LOCAL_IP 有值，则替换掉 Server.Address
-	if conf.Server.UseLocalIP && envs.LocalIP != "" {
+	if conf.Server.UseLocalIP {
 		conf.Server.Address = envs.LocalIP
+		conf.Server.Ipv6Address = util.InitIPv6Address(envs.LocalIPV6)
 		conf.Server.InsecureAddress = envs.LocalIP
 	}
 	return nil

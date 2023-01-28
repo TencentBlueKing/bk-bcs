@@ -17,6 +17,7 @@ package storage
 import (
 	"github.com/fatih/structs"
 
+	resCsts "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/constants"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/model"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/parser/common"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/parser/util"
@@ -41,14 +42,14 @@ func ParsePVSpec(manifest map[string]interface{}, spec *model.PVSpec) {
 		}
 	}
 	if local := mapx.GetMap(manifest, "spec.local"); len(local) != 0 {
-		spec.Type = PVTypeLocalVolume
+		spec.Type = resCsts.PVTypeLocalVolume
 		spec.LocalPath = mapx.GetStr(local, "path")
 	} else if hp := mapx.GetMap(manifest, "spec.hostPath"); len(hp) != 0 {
-		spec.Type = PVTypeHostPath
+		spec.Type = resCsts.PVTypeHostPath
 		spec.HostPath = mapx.GetStr(hp, "path")
 		spec.HostPathType = mapx.GetStr(hp, "type")
 	} else if nfs := mapx.GetMap(manifest, "spec.nfs"); len(nfs) != 0 {
-		spec.Type = PVTypeNFS
+		spec.Type = resCsts.PVTypeNFS
 		spec.NFSPath = mapx.GetStr(nfs, "path")
 		spec.NFSServer = mapx.GetStr(nfs, "server")
 		spec.NFSReadOnly = mapx.GetBool(nfs, "readOnly")

@@ -12,7 +12,6 @@
  * limitations under the License.
  */
 
-// Package redis xxx
 package redis
 
 import (
@@ -31,7 +30,7 @@ const (
 	CacheKeyPrefix = "bcs-services-cr"
 )
 
-// Cache xxx
+// Cache 缓存实例
 type Cache struct {
 	name      string        // 缓存键名
 	keyPrefix string        // 缓存键前缀
@@ -64,7 +63,7 @@ func (c *Cache) genKey(key string) string {
 	return c.keyPrefix + ":" + key
 }
 
-// Set xxx
+// Set 将 value 存储到 redis 中（键为 key 值），若 duration 为 0，则使用默认值（Cache.exp）
 func (c *Cache) Set(key crCache.Key, value interface{}, duration time.Duration) error {
 	if duration == time.Duration(0) {
 		duration = c.exp
@@ -78,20 +77,20 @@ func (c *Cache) Set(key crCache.Key, value interface{}, duration time.Duration) 
 	})
 }
 
-// Exists xxx
+// Exists 检查 key 在 redis 中是否存在
 func (c *Cache) Exists(key crCache.Key) bool {
 	k := c.genKey(key.Key())
 	count, err := c.cli.Exists(context.TODO(), k).Result()
 	return err == nil && count == 1
 }
 
-// Get xxx
+// Get 从 redis 中获取值，并存储到 value 中，如果获取不到，返回 error
 func (c *Cache) Get(key crCache.Key, value interface{}) error {
 	k := c.genKey(key.Key())
 	return c.codec.Get(context.TODO(), k, value)
 }
 
-// Delete xxx
+// Delete 从 redis 中删除指定的键
 func (c *Cache) Delete(key crCache.Key) error {
 	k := c.genKey(key.Key())
 	_, err := c.cli.Del(context.TODO(), k).Result()

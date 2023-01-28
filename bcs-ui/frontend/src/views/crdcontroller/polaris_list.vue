@@ -10,12 +10,7 @@
       <bk-guide></bk-guide>
     </div>
     <div class="biz-content-wrapper" style="padding: 0;" v-bkloading="{ isLoading: isInitLoading, opacity: 0.1 }">
-      <app-exception
-        v-if="exceptionCode && !isInitLoading"
-        :type="exceptionCode.code"
-        :text="exceptionCode.msg">
-      </app-exception>
-      <template v-if="!exceptionCode && !isInitLoading">
+      <template v-if="!isInitLoading">
         <div class="biz-panel-header">
           <div class="left">
             <bk-button type="primary" @click.stop.prevent="createPolarisRules">
@@ -301,6 +296,8 @@
 
 <script>
 import { defineComponent, reactive, toRefs, computed, onMounted, watch } from '@vue/composition-api';
+import { useNamespace } from '@/views/dashboard/namespace/use-namespace';
+
 export default defineComponent({
   name: 'CrdcontrollerPolarisInstances',
   components: {
@@ -322,7 +319,6 @@ export default defineComponent({
       isInitLoading: true,
       isDataSaveing: false,
       isPageLoading: false,
-      exceptionCode: null,
       isTokenExist: false,
       isReadonly: false,
       pageConf: {
@@ -527,13 +523,20 @@ export default defineComponent({
       state.curPageData = JSON.parse(JSON.stringify(data));
     };
 
+
+    
+    const { getNamespaceData } = useNamespace();
+
     /**
              * 获取命名空间列表
              */
     const getNameSpaceList = async () => {
-      const res = await $store.dispatch('crdcontroller/getNameSpaceListByCluster', { projectId, clusterId }).catch(() => false);
+
+      const res = await getNamespaceData({
+        $clusterId: clusterId,
+      });
       if (!res) return;
-      const list = res.data;
+      const list = res;
       list.forEach((item) => {
         item.isSelected = false;
         item.id = item.name;

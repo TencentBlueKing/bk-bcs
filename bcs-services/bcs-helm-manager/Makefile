@@ -32,7 +32,6 @@ LDFLAG=-ldflags "-X github.com/Tencent/bk-bcs/bcs-common/common/static.Zookeeper
 INNER_PACKAGEPATH=build/bcs.${VERSION}
 
 proto:
-	$(MAKE) -C proto/bcs-helm-manager clean
 	$(MAKE) -C proto/bcs-helm-manager
 
 build: tidy

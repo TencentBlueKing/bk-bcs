@@ -1,28 +1,49 @@
 import Vue from 'vue';
 import store from '@/store';
 import { computed } from '@vue/composition-api';
+import {
+  getK8sNodes,
+  schedulerNode as handleSchedulerNode,
+  cordonNodes,
+  uncordonNodes,
+  setNodeLabels as handleSetNodeLabels,
+  setNodeTaints as handleSetNodeTaints,
+} from '@/api/modules/cluster-manager';
 
-const { $bkMessage } = Vue.prototype;
+const { $bkMessage, $bkInfo } = Vue.prototype;
 
 export interface INodesParams {
   clusterId: string;
   nodeIps: string[];
+  nodeIP: string[];
+  nodes: string[];
   nodeTemplateID?: string;
 }
-export interface INodeParams {
-  clusterId: string;
-  nodeIP: string[];
-  status: 'REMOVABLE' | 'RUNNING';
+
+export interface INodeCordonParams {
+  clusterID: string;
+  nodes: string[];
 }
-export interface INodeDispatchParams {
-  clusterId: string;
-  nodeName: string[];
-  status: 'REMOVABLE' | 'RUNNING';
+
+export interface ILabelsItem {
+  nodeName: string
+  labels: Record<string, string>
 }
-export interface IBatchDispatchParams {
-  clusterId: string;
-  nodeNameList: string[];
-  status: 'REMOVABLE' | 'RUNNING';
+
+export interface ITaint {
+  key: string
+  value: string
+  effect: string
+}
+
+export interface ITaintsItem {
+  nodeName: string
+  taints: Array<ITaint>
+}
+
+export interface ILabelsAndTaintsParams<T> {
+  nodes: Array<T>
+  clusterID: string
 }
 
 export default function useNode() {
@@ -36,13 +57,19 @@ export default function useNode() {
       console.warn('clusterId is empty');
       return [];
     }
-    const data = await store.dispatch('cluster/getK8sNodes', {
+    const data = await getK8sNodes({
       $clusterId: clusterId,
     }).catch(() => []);
-    return data;
+    return data.map(item => ({
+      ...item,
+      // 兼容就接口数据
+      inner_ip: item.innerIP,
+      name: item.nodeName,
+      cluster_id: item.clusterID,
+    }));
   };
   // 添加节点
-  const addNode = async (params: INodesParams) => {
+  const addNode = async (params: Pick<INodesParams, 'clusterId' | 'nodeIps' | 'nodeTemplateID'>) => {
     const { clusterId, nodeIps = [], nodeTemplateID = '' } = params;
     if (!clusterId || !nodeIps.length) {
       console.warn('clusterId or is nodes is empty');
@@ -61,7 +88,7 @@ export default function useNode() {
     return result;
   };
   // 任务数据
-  const getTaskData = async (params: Omit<INodeParams, 'status'>) => {
+  const getTaskData = async (params: Pick<INodesParams, 'clusterId' | 'nodeIP'>) => {
     const { clusterId, nodeIP } = params;
     if (!clusterId || !nodeIP) {
       console.warn('clusterId or nodeIP is empty');
@@ -81,7 +108,7 @@ export default function useNode() {
     };
   };
   // 任务重试
-  const retryTask = async (params: Omit<INodeParams, 'status'>) => {
+  const retryTask = async (params: Pick<INodesParams, 'clusterId' | 'nodeIP'>) => {
     const { latestTask } = await getTaskData({
       clusterId: params.clusterId,
       nodeIP: params.nodeIP,
@@ -92,59 +119,69 @@ export default function useNode() {
     });
     return result;
   };
-  // 停止/允许 调度
-  const toggleNodeDispatch = async (params: INodeDispatchParams) => {
-    const { clusterId, nodeName, status } = params;
-    if (!clusterId || !nodeName || !['REMOVABLE', 'RUNNING'].includes(status)) {
-      console.warn('clusterId or nodeName or status is empty');
+  // 停止调度
+  const handleCordonNodes = async (params: INodeCordonParams) => {
+    const { clusterID, nodes } = params;
+    if (!clusterID || !nodes?.length) {
+      console.warn('clusterId or innerIPs is empty');
       return;
     }
-    const result = await store.dispatch('cluster/updateNodeStatus', {
-      projectId: projectId.value,
-      clusterId,
-      nodeName,
-      status,
+    const result = await cordonNodes({
+      clusterID,
+      nodes,
     }).catch(() => false);
     result && $bkMessage({
       theme: 'success',
-      message: status === 'REMOVABLE' ? window.i18n.t('停止调度成功') : window.i18n.t('允许调度成功'),
+      message: window.i18n.t('停止调度成功'),
     });
     return result;
   };
-  // 批量调度
-  const batchToggleNodeDispatch = async (params: IBatchDispatchParams) => {
-    const { clusterId, nodeNameList, status } = params;
-    const result = await store.dispatch('cluster/batchUpdateNodeStatus', {
-      projectId: projectId.value,
-      clusterId,
-      nodeNameList,
-      status,
-    });
+  // 允许调度
+  const handleUncordonNodes = async (params: INodeCordonParams) => {
+    const { clusterID, nodes } = params;
+    if (!clusterID || !nodes?.length) {
+      console.warn('clusterId or innerIPs is empty');
+      return;
+    }
+    const result = await uncordonNodes({
+      clusterID,
+      nodes,
+    }).catch(() => false);
     result && $bkMessage({
       theme: 'success',
-      message: window.i18n.t('操作成功'),
+      message: window.i18n.t('允许调度成功'),
     });
     return result;
   };
   // Pod驱逐
-  const schedulerNode = async (params: INodesParams) => {
-    const { clusterId, nodeIps = [] } = params;
-    if (!clusterId || !nodeIps.length) {
+  const schedulerNode = async (params: Pick<INodesParams, 'clusterId' | 'nodes'>) => {
+    const { clusterId, nodes = [] } = params;
+    if (!clusterId || !nodes.length) {
       console.warn('clusterId or nodeIps or status is empty');
       return;
     }
-    const result = await store.dispatch('cluster/schedulerNode', {
-      $clusterId: clusterId,
-      host_ips: nodeIps,
-    }).catch(() => false);
-    result && $bkMessage({
-      theme: 'success',
-      message: window.i18n.t('Pod驱逐成功'),
-    });
-    return result;
+    const data = await handleSchedulerNode({
+      clusterID: clusterId,
+      nodes,
+    }).catch(() => null);
+    if (data?.fail?.length) {
+      $bkInfo({
+        type: 'error',
+        title: window.i18n.t('以下调度节点失败'),
+        defaultInfo: true,
+        clsName: 'custom-info-confirm',
+        subTitle: data.fail.map(item => `${item.nodeName}(${item.message})`).join(', '),
+      });
+    } else if (data && !data.fail?.length) {
+      $bkMessage({
+        theme: 'success',
+        message: window.i18n.t('Pod驱逐成功'),
+      });
+    }
+    return data && !data.fail?.length;
   };
   // 删除节点
-  const deleteNode = async (params: INodesParams) => {
+  const deleteNode = async (params: Pick<INodesParams, 'clusterId'|'nodeIps'>) => {
     const { clusterId = '', nodeIps = [] } = params;
     if (!clusterId || !nodeIps.length) {
       console.warn('clusterId or is nodes is empty');
@@ -161,7 +198,7 @@ export default function useNode() {
     return result;
   };
   // 节点指标信息
-  const getNodeOverview = async (params: Omit<INodeParams, 'status'>) => {
+  const getNodeOverview = async (params: Pick<INodesParams, 'clusterId'|'nodeIP'>) => {
     const { clusterId = '', nodeIP = '' } = params;
     if (!clusterId || !nodeIP) {
       console.warn('clusterId or nodeIP or status is empty');
@@ -174,15 +211,29 @@ export default function useNode() {
     }).catch(() => ({}));
     return data;
   };
+  // 设置节点标签
+  const setNodeLabels = async (params: ILabelsAndTaintsParams<ILabelsItem>) => {
+    const result = await handleSetNodeLabels(params).then(() => true)
+      .catch(() => false);
+    return result;
+  };
+  // 设置节点污点
+  const setNodeTaints = async (params: ILabelsAndTaintsParams<ITaintsItem>) => {
+    const result = await handleSetNodeTaints(params).then(() => true)
+      .catch(() => false);
+    return result;
+  };
   return {
     getNodeList,
     getTaskData,
-    toggleNodeDispatch,
+    handleUncordonNodes,
+    handleCordonNodes,
     schedulerNode,
     deleteNode,
     addNode,
     getNodeOverview,
-    batchToggleNodeDispatch,
     retryTask,
+    setNodeLabels,
+    setNodeTaints,
   };
 }

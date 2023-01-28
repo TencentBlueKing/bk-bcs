@@ -32,6 +32,12 @@ spec:
     - jsonPath: .spec.loadbalancerID
       name: loadbalancerID
       type: string
+    - jsonPath: .status.ingress
+      name: ingress
+      type: string
+    - jsonPath: .status.portpool
+      name: portpool
+      type: string
     name: v1
     schema:
       openAPIV3Schema:
@@ -300,10 +306,16 @@ spec:
                       type: object
                     type: array
                 type: object
+              ingress:
+                type: string
               listenerID:
                 description: 'INSERT ADDITIONAL STATUS FIELD - define observed state
                   of cluster Important: Run "make" to regenerate code after modifying
                   this file'
+                type: string
+              msg:
+                type: string
+              portpool:
                 type: string
               status:
                 type: string

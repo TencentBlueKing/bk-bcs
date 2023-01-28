@@ -23,7 +23,7 @@ function api() {
 function query {
     ./bin/bcs-monitor query \
     --http-address 0.0.0.0:10902 \
-    --store 11.187.114.115:30911 \
+    --store 127.0.0.1:13901 \
     --advertise-address clb:11902 \
     --config ./etc/config_dev.yaml \
     --credential-config ./etc/credentials_dev.yaml \
@@ -32,6 +32,7 @@ function query {
 
 function storegw() {
     ./bin/bcs-monitor storegw \
+        --grpc-address 0.0.0.0:13901 \
         --http-address 0.0.0.0:13902 \
         --config ./etc/config_dev.yaml
 }

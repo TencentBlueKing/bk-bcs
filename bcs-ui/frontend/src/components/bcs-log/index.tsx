@@ -2,7 +2,7 @@
 import { defineComponent, reactive, toRefs, ref, watch, onBeforeUnmount } from '@vue/composition-api';
 import LogHeader from './layout/log-header';
 import LogContent, { ILogData } from './layout/log-content';
-import './style/log.scss';
+import './style/log.css';
 
 interface IState {
   log: ILogData[]; // 日志内容
@@ -120,9 +120,12 @@ export default defineComponent({
     };
 
     const handleDownload = () => {
+      const { $clusterId, $namespaceId, $podId, container_name } = getParams();
       $store.dispatch('log/downloadLogs', {
-        ...getParams(),
-        $containerName: state.container,
+        $clusterId,
+        $namespaceId,
+        $podId,
+        $containerName: container_name,
       });
     };
 
@@ -148,17 +151,17 @@ export default defineComponent({
         });
         logSSR?.addEventListener('message', (event: MessageEvent) => {
           try {
-            const data: ILogData = JSON.parse(event.data);
-            state.log.push(data);
+            const data: ILogData[] = JSON.parse(event.data);
             setTimeout(() => {
-              contentRef.value?.scrollIntoIndex();
-              const ids = [data.time];
-              contentRef.value?.setHoverIds(ids);
-              // 关闭hover效果
-              setTimeout(() => {
-                contentRef.value?.removeHoverIds(ids);
-              }, 1000);
+              state.log.push(...data);
             }, 0);
+            contentRef.value?.scrollIntoIndex();
+            const ids = data.map(item => item.time) ;
+            contentRef.value?.setHoverIds(ids);
+            // 关闭hover效果
+            setTimeout(() => {
+              contentRef.value?.removeHoverIds(ids);
+            }, 1000);
           } catch (err) {
             console.log(err);
           }
@@ -199,7 +202,7 @@ export default defineComponent({
   },
   render() {
     return (
-            <article class="container" v-bkloading={{ isLoading: this.globalLoading, opacity: 0.1 }}>
+            <article class="log-container" v-bkloading={{ isLoading: this.globalLoading, opacity: 0.1 }}>
                 <log-header
                     title={this.podId}
                     containerList={this.containerList}

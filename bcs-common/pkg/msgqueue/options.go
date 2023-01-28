@@ -14,9 +14,10 @@
 package msgqueue
 
 import (
-	"errors"
 	"regexp"
 	"time"
+
+	"github.com/pkg/errors"
 )
 
 // QueueKind define queueType
@@ -226,7 +227,7 @@ type StatefulSetInfo struct {
 // check options validation
 func validateNatsMqOptions(n *QueueOptions) error {
 	if !(len(n.CommonOptions.Address) > 0 && regexp.MustCompile("^nat(s)?://.*").MatchString(n.CommonOptions.Address)) {
-		return errors.New("natstreaming options address error")
+		return errors.Errorf("natstreaming options address '%s' error", n.CommonOptions.Address)
 	}
 
 	if n.NatsOptions.ClusterID == "" || n.NatsOptions.ClientID == "" {
@@ -246,7 +247,7 @@ func validateNatsMqOptions(n *QueueOptions) error {
 
 func validateRabbitMqOptions(r *QueueOptions) error {
 	if !(len(r.CommonOptions.Address) > 0 && regexp.MustCompile("^amqp(s)?://.*").MatchString(r.CommonOptions.Address)) {
-		return errors.New("rabbitmq options address error")
+		return errors.Errorf("rabbitmq address '%s' error", r.CommonOptions.Address)
 	}
 
 	if r.Exchange.Name == "" {

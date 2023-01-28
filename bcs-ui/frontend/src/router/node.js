@@ -25,9 +25,17 @@
 */
 
 const Node = () => import(/* webpackChunkName: 'node' */'@/views/node/node.vue');
-const NodeTemplate = () => import(/* webpackChunkName: 'node'  */'@/views/node/node-template.vue');
-const EditNodeTemplate = () => import(/* webpackChunkName: 'node' */'@/views/node/edit-node-template.vue');
+const NodeTemplate = () => import(/* webpackChunkName: 'node'  */'@/views/node/node-template/node-template.vue');
+const EditNodeTemplate = () => import(/* webpackChunkName: 'node' */'@/views/node/node-template/edit-node-template.vue');
 const AddClusterNode = () => import(/* webpackChunkName: 'node' */'@/views/node/add-cluster-node.vue');
+const AutoScalerConfig = () => import(/* webpackChunkName: 'node' */'@/views/node/cluster-autoscaler-tencent/autoscaler-config.vue');
+const NodePool = () => import(/* webpackChunkName: 'node' */'@/views/node/cluster-autoscaler-tencent/node-pool.vue');
+const NodePoolDetail = () => import(/* webpackChunkName: 'node' */'@/views/node/cluster-autoscaler-tencent/node-pool-detail.vue');
+const EditNodePool = () => import(/* webpackChunkName: 'node' */'@/views/node/cluster-autoscaler-tencent/edit-node-pool.vue');
+const InternalAutoScalerConfig = () => import(/* webpackChunkName: 'node' */'@/views/node/cluster-autoscaler/autoscaler-config.vue');
+const InternalNodePool = () => import(/* webpackChunkName: 'node' */'@/views/node/cluster-autoscaler/node-pool.vue');
+const InternalNodePoolDetail = () => import(/* webpackChunkName: 'node' */'@/views/node/cluster-autoscaler/node-pool-detail.vue');
+const InternalEditNodePool = () => import(/* webpackChunkName: 'node' */'@/views/node/cluster-autoscaler/edit-node-pool.vue');
 
 const childRoutes = [
   // domain/bcs/projectCode/node 节点页面
@@ -76,6 +84,30 @@ const childRoutes = [
       title: window.i18n.t('添加节点'),
       menuId: 'CLUSTER',
     },
+  },
+  {
+    path: ':projectCode/cluster/:clusterId/autoscaler',
+    name: 'autoScalerConfig',
+    props: true,
+    component: window.REGION === 'ieod' ? InternalAutoScalerConfig : AutoScalerConfig,
+  },
+  {
+    path: ':projectCode/cluster/:clusterId/nodepool',
+    name: 'nodePool',
+    props: true,
+    component: window.REGION === 'ieod' ? InternalNodePool : NodePool,
+  },
+  {
+    path: ':projectCode/cluster/:clusterId/nodepool/:nodeGroupID',
+    name: 'editNodePool',
+    props: true,
+    component: window.REGION === 'ieod' ? InternalEditNodePool : EditNodePool,
+  },
+  {
+    path: ':projectCode/cluster/:clusterId/nodepool/detail/:nodeGroupID',
+    name: 'nodePoolDetail',
+    props: true,
+    component: window.REGION === 'ieod' ? InternalNodePoolDetail : NodePoolDetail,
   },
 ];
 

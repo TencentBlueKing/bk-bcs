@@ -15,12 +15,15 @@ package node
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/clusterops"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
 // DrainNodeAction action for drain node
@@ -52,35 +55,74 @@ func (ua *DrainNodeAction) validate() error {
 }
 
 func (ua *DrainNodeAction) drainClusterNodes() error {
+	// new drainer
 	drainer := clusterops.DrainHelper{
-		Force:                           ua.req.Force,
+		Force:                           true,
 		GracePeriodSeconds:              int(ua.req.GracePeriodSeconds),
-		IgnoreAllDaemonSets:             ua.req.IgnoreAllDaemonSets,
+		IgnoreAllDaemonSets:             true,
 		Timeout:                         int(ua.req.Timeout),
-		DeleteLocalData:                 ua.req.DeleteLocalData,
+		DeleteLocalData:                 true,
 		Selector:                        ua.req.Selector,
 		PodSelector:                     ua.req.PodSelector,
 		DisableEviction:                 ua.req.DisableEviction,
 		DryRun:                          ua.req.DryRun,
 		SkipWaitForDeleteTimeoutSeconds: int(ua.req.SkipWaitForDeleteTimeoutSeconds),
 	}
-	for _, ip := range ua.req.InnerIPs {
-		err := ua.k8sOp.ClusterUpdateScheduleNode(ua.ctx, clusterops.NodeInfo{
-			ClusterID: ua.req.ClusterID,
-			NodeIP:    ip,
-			Desired:   true,
-		})
+
+	// get node names
+	if len(ua.req.Nodes) == 0 && len(ua.req.InnerIPs) > 0 {
+		option := clusterops.ListNodeOption{ClusterID: ua.req.ClusterID, NodeIPs: ua.req.InnerIPs}
+		nodes, err := ua.k8sOp.ListClusterNodesByIPsOrNames(ua.ctx, option)
 		if err != nil {
-			blog.Errorf("drainClusterNodes[%s] failed: %+v", ip, err)
-			ua.failed = append(ua.failed, ip)
-			continue
+			blog.Errorf("get nodename by ips failed in cluster %s, err %s", ua.req.ClusterID, err.Error())
+			return fmt.Errorf("get nodename by ips failed in cluster %s, err %s", ua.req.ClusterID, err.Error())
 		}
-		err = ua.k8sOp.DrainNode(ua.ctx, ua.req.ClusterID, ip, drainer)
-		if err != nil {
-			blog.Errorf("drainClusterNodes[%s] failed: %+v", ip, err)
-			ua.failed = append(ua.failed, ip)
-			continue
+		for _, v := range nodes {
+			ua.req.Nodes = append(ua.req.Nodes, v.Name)
 		}
+	}
+
+	successCh := make(chan *cmproto.NodeOperationStatusInfo, len(ua.req.Nodes))
+	failCh := make(chan *cmproto.NodeOperationStatusInfo, len(ua.req.Nodes))
+
+	barrier := utils.NewRoutinePool(50)
+	defer barrier.Close()
+	barrier.Add(len(ua.req.Nodes))
+	for i := range ua.req.Nodes {
+		go func(node string) {
+			defer barrier.Done()
+			ctx, cancel := context.WithTimeout(context.Background(), clusterops.DefaultTimeout)
+			defer cancel()
+			if err := ua.k8sOp.ClusterUpdateScheduleNode(ctx, clusterops.NodeInfo{
+				ClusterID: ua.req.ClusterID,
+				NodeName:  node,
+				Desired:   true,
+			}); err != nil {
+				failCh <- &cmproto.NodeOperationStatusInfo{NodeName: node, Message: err.Error()}
+				blog.Errorf("drainClusterNodes[%s] failed in cluster %s, err %s", node, ua.req.ClusterID, err.Error())
+				return
+			}
+			if err := ua.k8sOp.DrainNode(ua.ctx, ua.req.ClusterID, node, drainer); err != nil {
+				failCh <- &cmproto.NodeOperationStatusInfo{NodeName: node, Message: err.Error()}
+				blog.Errorf("drainClusterNodes[%s] failed in cluster %s, err %s", node, ua.req.ClusterID, err.Error())
+				return
+			}
+			successCh <- &cmproto.NodeOperationStatusInfo{NodeName: node}
+		}(ua.req.Nodes[i])
+	}
+	barrier.Wait()
+	close(successCh)
+	close(failCh)
+
+	ua.resp.Data = &cmproto.NodeOperationStatus{
+		Success: make([]*cmproto.NodeOperationStatusInfo, 0),
+		Fail:    make([]*cmproto.NodeOperationStatusInfo, 0),
+	}
+	for v := range successCh {
+		ua.resp.Data.Success = append(ua.resp.Data.Success, v)
+	}
+	for v := range failCh {
+		ua.resp.Data.Fail = append(ua.resp.Data.Fail, v)
 	}
 
 	return nil
@@ -90,7 +132,6 @@ func (ua *DrainNodeAction) setResp(code uint32, msg string) {
 	ua.resp.Code = code
 	ua.resp.Message = msg
 	ua.resp.Result = (code == common.BcsErrClusterManagerSuccess)
-	ua.resp.Fail = ua.failed
 }
 
 // Handle handles node drain

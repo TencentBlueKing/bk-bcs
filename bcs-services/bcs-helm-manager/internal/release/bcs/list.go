@@ -14,62 +14,64 @@ package bcs
 
 import (
 	"context"
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/release"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	rspb "helm.sh/helm/v3/pkg/release"
 	"helm.sh/helm/v3/pkg/releaseutil"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/release"
 )
 
 func (c *cluster) list(ctx context.Context, option release.ListOption) (int, []*release.Release, error) {
 	clientSet := c.ensureSdkClient()
 
-	results, err := clientSet.List(ctx, option.Namespace)
+	results, err := clientSet.List(ctx, option)
 	if err != nil {
 		blog.Errorf("list helm release from cluster failed, %s, cluster: %s, namespace: %s",
 			err.Error(), c.clusterID, option.Namespace)
 		return 0, nil, err
 	}
 
-	if option.Name != "" {
-		results = filterNameReleases(option.Name, results)
-	}
-	releaseutil.SortByDate(results)
+	releaseutil.Reverse(results, releaseutil.SortByDate)
 
 	total := len(results)
-	results = filterIndex(int(option.Page*option.Size), int(option.Size), results)
+	if option.Page > 0 && option.Size > 0 {
+		results = filterIndex(int((option.Page-1)*option.Size), int(option.Size), results)
+	}
 
 	r := make([]*release.Release, 0, len(results))
 	for _, item := range results {
 		chartVersion := ""
-		if item.Chart.Metadata != nil {
+		if item.Chart != nil && item.Chart.Metadata != nil {
 			chartVersion = item.Chart.Metadata.Version
 		}
 
-		r = append(r, &release.Release{
+		manifest := item.Manifest
+		for _, v := range item.Hooks {
+			manifest += "---\n" + v.Manifest
+		}
+		rl := &release.Release{
 			Name:         item.Name,
 			Namespace:    item.Namespace,
 			Revision:     item.Version,
-			Status:       item.Info.Status.String(),
-			Chart:        item.Chart.Name(),
 			ChartVersion: chartVersion,
-			AppVersion:   item.Chart.AppVersion(),
-			UpdateTime:   item.Info.LastDeployed.Local().String(),
-		})
+			Hooks:        item.Hooks,
+			Manifest:     item.Manifest,
+		}
+		if item.Info != nil {
+			rl.Status = item.Info.Status.String()
+			rl.Description = item.Info.Description
+			rl.UpdateTime = item.Info.LastDeployed.Local().Format(common.TimeFormat)
+		}
+		if item.Chart != nil {
+			rl.Chart = item.Chart.Name()
+			rl.AppVersion = item.Chart.AppVersion()
+		}
+		r = append(r, rl)
 	}
 
 	return total, r, nil
-}
-
-func filterNameReleases(name string, releases []*rspb.Release) []*rspb.Release {
-	var list = make([]*rspb.Release, 0, len(releases))
-	for _, rls := range releases {
-		// if name is not empty, then should filter by it.
-		if name == "" || name == rls.Name {
-			list = append(list, rls)
-		}
-	}
-	return list
 }
 
 // filterIndex handle the offset and limit from release.ListOption

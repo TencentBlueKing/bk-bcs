@@ -22,6 +22,7 @@ import (
 	"github.com/stretchr/testify/mock"
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-nodegroup-manager/pkg/storage"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-nodegroup-manager/pkg/storage/mongo/mocks"
 )
@@ -391,8 +392,6 @@ func Test_DeleteNodeGroupAction(t *testing.T) {
 		UpdatedTime: time.Now(),
 		IsDeleted:   false,
 	}
-	deletedAction := action
-	deletedAction.IsDeleted = true
 	tests := []struct {
 		name    string
 		action  *storage.NodeGroupAction

@@ -20,12 +20,18 @@ import (
 	"github.com/TencentBlueKing/bkmonitor-kits/logger"
 	"github.com/TencentBlueKing/bkmonitor-kits/logger/gokit"
 	"github.com/oklog/run"
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/thanos-io/thanos/pkg/component"
+	"github.com/thanos-io/thanos/pkg/extgrpc"
 	"github.com/thanos-io/thanos/pkg/extprom"
 	"github.com/thanos-io/thanos/pkg/prober"
+	"github.com/thanos-io/thanos/pkg/query"
+	"github.com/thanos-io/thanos/pkg/runutil"
+	grpcserver "github.com/thanos-io/thanos/pkg/server/grpc"
 	httpserver "github.com/thanos-io/thanos/pkg/server/http"
+	"github.com/thanos-io/thanos/pkg/store"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/api"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/config"
@@ -34,6 +40,7 @@ import (
 
 var (
 	grpcAdvertisePortRangeStr string
+	grpcAdvertiseIP           string
 )
 
 // StoreGWCmd StoreGW 命令
@@ -50,7 +57,9 @@ func StoreGWCmd() *cobra.Command {
 	flags := cmd.Flags()
 	flags.StringVar(&config.G.StoreGW.HTTP.Address, "http-address", config.G.StoreGW.HTTP.Address,
 		"Listen host:port for HTTP endpoints.")
-	flags.StringVar(&config.G.StoreGW.GRPC.Address, "grpc-advertise-ip", "127.0.0.1", "grpc advertise ip")
+	flags.StringVar(&config.G.StoreGW.GRPC.Address, "grpc-address", config.G.StoreGW.GRPC.Address,
+		"Listen host:port for grpc endpoints.")
+	flags.StringVar(&grpcAdvertiseIP, "grpc-advertise-ip", "127.0.0.1", "grpc advertise ip")
 	flags.StringVar(&grpcAdvertisePortRangeStr, "grpc-advertise-port-range", "28000-29000", "grpc advertise port range")
 
 	// 设置配置命令行优先级高与配置文件
@@ -62,43 +71,105 @@ func StoreGWCmd() *cobra.Command {
 
 func runStoreGW(ctx context.Context, g *run.Group, opt *option) error {
 	kitLogger := gokit.NewLogger(logger.StandardLogger())
-	gw, err := storegw.NewStoreGW(ctx, kitLogger, opt.reg, config.G.StoreGW.GRPC.Address, grpcAdvertisePortRangeStr,
-		config.G.StoreGWList, storegw.GetStoreSvr)
+	gw, err := storegw.NewStoreGW(ctx, kitLogger, opt.reg, grpcAdvertiseIP, grpcAdvertisePortRangeStr, config.G.StoreGWList, storegw.GetStoreSvr)
 	if err != nil {
 		return err
 	}
 
-	httpProbe := prober.NewHTTP()
-	statusProber := prober.Combine(
-		httpProbe,
-		prober.NewInstrumentation(component.Store, kitLogger, extprom.WrapRegistererWithPrefix("bcsmonitor_", opt.reg)),
-	)
+	// 可用性评估，必须全部grpc端口,可用，才ready
 
-	srv := httpserver.New(kitLogger, opt.reg, component.Store, httpProbe,
-		httpserver.WithListen(config.G.StoreGW.HTTP.Address),
-		httpserver.WithGracePeriod(time.Duration(config.G.StoreGW.HTTP.GracePeriod)),
-	)
+	// http 服务
+	{
+		httpProbe := prober.NewHTTP()
+		statusProber := prober.Combine(
+			httpProbe,
+			prober.NewInstrumentation(component.Store, kitLogger, extprom.WrapRegistererWithPrefix("bcsmonitor_", opt.reg)),
+		)
 
-	router := api.RegisterStoreGWRoutes(gw)
-	srv.Handle("/", router)
+		httpSrv := httpserver.New(kitLogger, opt.reg, component.Store, httpProbe,
+			httpserver.WithListen(config.G.StoreGW.HTTP.Address),
+			httpserver.WithGracePeriod(time.Duration(config.G.StoreGW.HTTP.GracePeriod)),
+		)
 
-	g.Add(func() error {
-		statusProber.Healthy()
-		statusProber.Ready()
+		router := api.RegisterStoreGWRoutes(gw)
+		httpSrv.Handle("/", router)
 
-		return srv.ListenAndServe()
-	}, func(err error) {
-		defer statusProber.NotHealthy(err)
-		defer statusProber.NotReady(err)
+		g.Add(func() error {
+			statusProber.Healthy()
+			statusProber.Ready()
 
-		srv.Shutdown(err)
-	})
+			return httpSrv.ListenAndServe()
+		}, func(err error) {
+			defer statusProber.NotHealthy(err)
+			defer statusProber.NotReady(err)
 
-	g.Add(func() error {
-		return gw.Run()
-	}, func(err error) {
-		gw.Shutdown(err)
-	})
+			httpSrv.Shutdown(err)
+		})
+	}
+
+	// Periodically update the store set with the addresses we see in our cluster.
+	var endpoints *query.EndpointSet
+	{
+		dialOpts, err := extgrpc.StoreClientGRPCOpts(kitLogger, opt.reg, opt.tracer, false, false, "", "", "", "")
+		if err != nil {
+			return errors.Wrap(err, "building gRPC client")
+		}
+		endpoints = query.NewEndpointSet(kitLogger, opt.reg,
+			func() (specs []*query.GRPCEndpointSpec) {
+				for _, addr := range gw.GetStoreAddrs() {
+					specs = append(specs, query.NewGRPCEndpointSpec(addr, true))
+				}
+				return specs
+			},
+			dialOpts,
+			time.Second*30,
+		)
+
+		ctx, cancel := context.WithCancel(ctx)
+		g.Add(func() error {
+			return runutil.Repeat(5*time.Second, ctx.Done(), func() error {
+				endpoints.Update(ctx)
+				return nil
+			})
+		}, func(error) {
+			cancel()
+			endpoints.Close()
+		})
+	}
+
+	// proxyStore grpc 服务
+	{
+
+		proxyStore := store.NewProxyStore(kitLogger, opt.reg, endpoints.GetStoreClients, component.Query, nil, time.Minute*2)
+		grpcProbe := prober.NewGRPC()
+		grpcSrv := grpcserver.New(kitLogger, opt.reg, nil, nil, nil, component.Store, grpcProbe,
+			grpcserver.WithServer(store.RegisterStoreServer(proxyStore)),
+			grpcserver.WithListen(config.G.StoreGW.GRPC.Address),
+			grpcserver.WithGracePeriod(time.Duration(0)),
+			grpcserver.WithMaxConnAge(time.Minute*5), // 5分钟主动重连, pod 扩容等需要
+		)
+
+		g.Add(func() error {
+			grpcProbe.Healthy()
+			grpcProbe.Ready()
+
+			return grpcSrv.ListenAndServe()
+		}, func(err error) {
+			defer grpcProbe.NotHealthy(err)
+			defer grpcProbe.NotReady(err)
+
+			grpcSrv.Shutdown(err)
+		})
+	}
+
+	// 自定义 store grpc 服务
+	{
+		g.Add(func() error {
+			return gw.Run()
+		}, func(err error) {
+			gw.Shutdown(err)
+		})
+	}
 
 	return err
 }

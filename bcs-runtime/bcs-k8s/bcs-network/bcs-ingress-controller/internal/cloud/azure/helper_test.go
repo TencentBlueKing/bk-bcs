@@ -17,8 +17,9 @@ import (
 	"log"
 	"testing"
 
-	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
 )
 
 // TestEnsureApplicationGatewayListener test ensure azure application gateway listener
@@ -95,11 +96,11 @@ func TestEnsureApplicationGatewayListener(t *testing.T) {
 		log.Fatal(err)
 	}
 
-	res, err := alb.ensureApplicationGatewayListener("", listener)
+	err = alb.ensureApplicationGatewayListener("", []*networkextensionv1.Listener{listener})
 	if err != nil {
 		log.Fatal(err)
 	}
-	log.Println(res)
+	// log.Println(res)
 	//
 	// res, err = alb.ensureApplicationGatewayListener("", listener2)
 	// if err != nil {
@@ -174,7 +175,7 @@ func TestDeleteAppGwListener(t *testing.T) {
 		log.Fatal(err)
 	}
 
-	err = alb.deleteApplicationGatewayListener("", listener)
+	err = alb.deleteApplicationGatewayListener("", []*networkextensionv1.Listener{listener})
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -208,7 +209,7 @@ func TestEnsureLBListener(t *testing.T) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	res, err := alb.ensureLoadBalancerListener("", listener)
+	res, err := alb.ensureLoadBalancerListener("", []*networkextensionv1.Listener{listener})
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -242,7 +243,7 @@ func TestDeleteLBListener(t *testing.T) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	err = alb.deleteLoadBalancerListener("", listener)
+	err = alb.deleteLoadBalancerListener("", []*networkextensionv1.Listener{listener})
 	if err != nil {
 		log.Fatal(err)
 	}

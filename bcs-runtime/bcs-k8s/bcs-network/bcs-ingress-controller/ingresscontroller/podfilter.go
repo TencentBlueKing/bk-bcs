@@ -24,21 +24,23 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/ingresscache"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/metrics"
-	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
 )
 
 // PodFilter filter for pod event
 type PodFilter struct {
-	filterName string
-	cli        client.Client
+	filterName   string
+	cli          client.Client
+	ingressCache ingresscache.IngressCache
 }
 
 // NewPodFilter create pod filter
-func NewPodFilter(cli client.Client) *PodFilter {
+func NewPodFilter(cli client.Client, ingressCache ingresscache.IngressCache) *PodFilter {
 	return &PodFilter{
-		filterName: "pod",
-		cli:        cli,
+		filterName:   "pod",
+		cli:          cli,
+		ingressCache: ingressCache,
 	}
 }
 
@@ -48,19 +50,19 @@ func isServiceMatchesPod(svc *k8scorev1.Service, pod *k8scorev1.Pod) bool {
 }
 
 func (pf *PodFilter) enqueuePodRelatedIngress(pod *k8scorev1.Pod, q workqueue.RateLimitingInterface) {
-	ingresses := pf.findPodIngresses(pod)
-	if len(ingresses) == 0 {
+	ingressMeta := pf.findPodIngresses(pod)
+	if len(ingressMeta) == 0 {
 		return
 	}
-	for _, ingress := range ingresses {
+	for _, meta := range ingressMeta {
 		q.Add(reconcile.Request{NamespacedName: types.NamespacedName{
-			Name:      ingress.GetName(),
-			Namespace: ingress.GetNamespace(),
+			Name:      meta.Name,
+			Namespace: meta.Namespace,
 		}})
 	}
 }
 
-func (pf *PodFilter) findPodIngresses(pod *k8scorev1.Pod) []*networkextensionv1.Ingress {
+func (pf *PodFilter) findPodIngresses(pod *k8scorev1.Pod) []ingresscache.IngressMeta {
 	// find ingresses of pod related services
 	svcList := &k8scorev1.ServiceList{}
 	err := pf.cli.List(context.TODO(), svcList, &client.ListOptions{Namespace: pod.GetNamespace()})
@@ -68,25 +70,16 @@ func (pf *PodFilter) findPodIngresses(pod *k8scorev1.Pod) []*networkextensionv1.
 		blog.Warnf("list services in namespace %s failed, err %s", pod.GetNamespace(), err.Error())
 		return nil
 	}
-	ingressList := &networkextensionv1.IngressList{}
-	err = pf.cli.List(context.TODO(), ingressList, &client.ListOptions{})
-	if err != nil {
-		blog.Warnf("list bcs ingresses failed, err %s", err.Error())
-		return nil
-	}
-	var retList []*networkextensionv1.Ingress
+	var retList []ingresscache.IngressMeta
 	for _, svc := range svcList.Items {
 		if isServiceMatchesPod(&svc, pod) {
-			retList = append(retList, findIngressesByService(svc.GetName(), svc.GetNamespace(), ingressList)...)
+			retList = append(retList, pf.ingressCache.GetRelatedIngressOfService(svc.GetNamespace(), svc.GetName())...)
 		}
 	}
-
 	// find ingresses of pod related workloads
 	for _, owner := range pod.GetOwnerReferences() {
-		ingresses := findIngressesByWorkload(owner.Kind, owner.Name, pod.GetNamespace(), ingressList)
-		if len(ingresses) != 0 {
-			retList = append(retList, ingresses...)
-		}
+		retList = append(retList, pf.ingressCache.GetRelatedIngressOfWorkload(owner.Kind, pod.GetNamespace(),
+			owner.Name)...)
 	}
 
 	// deduplicate ingresses

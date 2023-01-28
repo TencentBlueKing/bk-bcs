@@ -23,6 +23,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-nodegroup-manager/pkg/storage"
 )
 
@@ -34,6 +35,12 @@ var (
 				bson.E{Key: nodeGroupIDKey, Value: 1},
 			},
 			Name: nodeGroupTableName + "_1",
+		},
+		{
+			Key: bson.D{
+				bson.E{Key: nodeGroupIDKey, Value: 1},
+			},
+			Name: nodeGroupIDKey + "_1",
 		},
 	}
 )
@@ -64,13 +71,20 @@ func (m *ModelGroup) ListNodeGroups(opt *storage.ListOptions) ([]*storage.NodeGr
 	}
 	page := opt.Page
 	limit := opt.Limit
-	if opt.Limit == 0 {
-		limit = defaultSize
-	}
+
 	cond := make([]*operator.Condition, 0)
 	cond = append(cond, operator.NewLeafCondition(operator.Eq, operator.M{
 		isDeletedKey: opt.ReturnSoftDeletedItems,
 	}))
+	if !opt.DoPagination && opt.Limit == 0 {
+		count, err := m.DB.Table(m.TableName).Find(operator.NewBranchCondition(operator.And, cond...)).Count(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("get group count err:%v", err)
+		}
+		limit = int(count)
+	} else if limit == 0 {
+		limit = defaultSize
+	}
 	nodeGroupList := make([]*storage.NodeGroup, 0)
 	err = m.DB.Table(m.TableName).Find(operator.NewBranchCondition(operator.And, cond...)).
 		WithSort(map[string]interface{}{nodeGroupIDKey: 1}).

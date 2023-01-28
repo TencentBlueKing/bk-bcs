@@ -24,6 +24,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/envs"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/i18n"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/validator"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/schema"
 )
 
 func TestSchemaRenderer(t *testing.T) {
@@ -31,9 +32,24 @@ func TestSchemaRenderer(t *testing.T) {
 
 	// 默认版本（中文）
 	for kind := range validator.FormSupportedResAPIVersion {
-		_, err := NewSchemaRenderer(context.TODO(), envs.TestClusterID, kind, "default", "").Render()
+		result, err := NewSchemaRenderer(context.TODO(), envs.TestClusterID, kind, "default", "").Render()
 		assert.Nil(t, err)
-		// TODO 如何在单元测试中验证 schema 的合法性？（非标准 schema）
+
+		// 验证 schema 的合法性
+		loader := schema.NewGoLoader(result["schema"])
+
+		jsonSchema, err := schema.NewSchema(loader)
+		assert.Nil(t, err)
+		assert.NotNil(t, jsonSchema)
+
+		// 确保没有重要的修改建议
+		suggestions, err := jsonSchema.Review()
+		assert.Nil(t, err)
+		assert.Equal(t, 0, len(suggestions.Major()), "kind %s's schema have major suggestions", kind)
+
+		// 确保原配置中，没有多余的配置
+		diffRet := jsonSchema.Diff()
+		assert.Equal(t, 0, len(diffRet))
 	}
 
 	// 英文版本

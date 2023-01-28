@@ -84,6 +84,24 @@ func (m *BKMonitor) GetContainerMemoryLimit(ctx context.Context, projectId, clus
 		step)
 }
 
+// GetContainerGPUMemoryUsage 容器GPU显卡使用率
+func (m *BKMonitor) GetContainerGPUMemoryUsage(ctx context.Context, projectId, clusterId, namespace, podname string,
+	containerNameList []string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {
+	return nil, nil
+}
+
+// GetContainerGPUUsed 容器GPU使用量
+func (m *BKMonitor) GetContainerGPUUsed(ctx context.Context, projectId, clusterId, namespace, podname string,
+	containerNameList []string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {
+	return nil, nil
+}
+
+// GetContainerGPUUsage 容器GPU使用率
+func (m *BKMonitor) GetContainerGPUUsage(ctx context.Context, projectId, clusterId, namespace, podname string,
+	containerNameList []string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {
+	return nil, nil
+}
+
 // GetContainerDiskReadTotal 容器磁盘读
 func (m *BKMonitor) GetContainerDiskReadTotal(ctx context.Context, projectId, clusterId, namespace, podname string,
 	containerNameList []string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {

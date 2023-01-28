@@ -139,20 +139,6 @@ export default {
     },
 
     /**
-         * 获取所有命名空间
-         *
-         * @param {Object} context store 上下文对象
-         * @param {Object} params 参数
-         *
-         * @return {Promise} promise 对象
-         */
-    getAllNamespaceList(context, params, config = {}) {
-      const { projectId } = params;
-      delete params.projectId;
-      return http.get(`${DEVOPS_BCS_API_URL}/api/configuration/${projectId}/namespace/?${json2Query(params)}`, {}, config);
-    },
-
-    /**
          * 预览配置
          *
          * @param {Object} context store 上下文对象

@@ -18,6 +18,12 @@ import (
 	"fmt"
 	"time"
 
+	contextinternal "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/context"
+	estimatorinternal "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/estimator"
+	metricsinternal "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/metrics"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/scalingconfig"
+
+	apiv1 "k8s.io/api/core/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/autoscaler/cluster-autoscaler/cloudprovider"
@@ -37,10 +43,6 @@ import (
 	kubeclient "k8s.io/client-go/kubernetes"
 	"k8s.io/klog"
 	schedulernodeinfo "k8s.io/kubernetes/pkg/scheduler/nodeinfo"
-
-	contextinternal "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/context"
-	estimatorinternal "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/estimator"
-	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/scalingconfig"
 )
 
 // BufferedAutoscaler is an autoscaler which has all the core functionality of a CA
@@ -59,10 +61,13 @@ type BufferedAutoscaler struct {
 	processorCallbacks      *bufferedAutoscalerProcessorCallbacks
 	initialized             bool
 	// Caches nodeInfo computed for previously seen nodes
-	nodeInfoCache map[string]*schedulernodeinfo.NodeInfo
-	ignoredTaints taintKeySet
-	ratio         float64
-	webhook       Webhook
+	nodeInfoCache       map[string]*schedulernodeinfo.NodeInfo
+	ignoredTaints       taintKeySet
+	CPURatio            float64
+	MemRatio            float64
+	ratio               float64
+	webhook             Webhook
+	maxBulkScaleUpCount int
 }
 
 type bufferedAutoscalerProcessorCallbacks struct {
@@ -106,7 +111,7 @@ func NewBufferedAutoscaler(
 	cloudProvider cloudprovider.CloudProvider,
 	expanderStrategy expander.Strategy,
 	estimatorBuilder estimatorinternal.ExtendedEstimatorBuilder,
-	backoff backoff.Backoff, ratio float64,
+	backoff backoff.Backoff, cpuRatio, memRatio, ratio float64,
 	client kubeclient.Interface) core.Autoscaler {
 
 	processorCallbacks := newBufferedAutoscalerProcessorCallbacks()
@@ -117,6 +122,8 @@ func NewBufferedAutoscaler(
 		MaxTotalUnreadyPercentage: opts.MaxTotalUnreadyPercentage,
 		OkTotalUnreadyCount:       opts.OkTotalUnreadyCount,
 		MaxNodeProvisionTime:      opts.MaxNodeProvisionTime,
+		MaxNodeStartupTime:        opts.MaxNodeStartupTime,
+		MaxNodeStartScheduleTime:  opts.MaxNodeStartScheduleTime,
 	}
 
 	ignoredTaints := make(taintKeySet)
@@ -128,14 +135,17 @@ func NewBufferedAutoscaler(
 	clusterStateRegistry := clusterstate.NewClusterStateRegistry(autoscalingContext.CloudProvider, clusterStateConfig,
 		autoscalingContext.LogRecorder, backoff)
 
-	scaleDown := NewScaleDown(autoscalingContext, clusterStateRegistry, ratio)
+	scaleDown := NewScaleDown(autoscalingContext, clusterStateRegistry, cpuRatio, memRatio, ratio)
 
 	var webhook Webhook
 	switch opts.WebhookMode {
 	case WebMode:
-		webhook = NewWebScaler(opts.WebhookModeConfig, opts.WebhookModeToken)
+		webhook = NewWebScaler(client, opts.ConfigNamespace,
+			opts.WebhookModeConfig, opts.WebhookModeToken)
+		metricsinternal.RegisterWebhookParams("Web", opts.WebhookModeConfig)
 	case ConfigMapMode:
-		webhook = NewConfigMapScaler(client, opts.WebhookModeConfig)
+		webhook = NewConfigMapScaler(client, opts.ConfigNamespace, opts.WebhookModeConfig)
+		metricsinternal.RegisterWebhookParams("ConfigMap", opts.WebhookModeConfig)
 	default:
 		webhook = nil
 	}
@@ -152,8 +162,11 @@ func NewBufferedAutoscaler(
 		clusterStateRegistry:    clusterStateRegistry,
 		nodeInfoCache:           make(map[string]*schedulernodeinfo.NodeInfo),
 		ignoredTaints:           ignoredTaints,
+		CPURatio:                cpuRatio,
+		MemRatio:                memRatio,
 		ratio:                   ratio,
 		webhook:                 webhook,
+		maxBulkScaleUpCount:     opts.MaxBulkScaleUpCount,
 	}
 }
 
@@ -541,8 +554,21 @@ func (b *BufferedAutoscaler) doScaleUp(autoscalingContext *contextinternal.Conte
 	// we tread pods with nominated node-name as scheduled for sake of scale-up considerations
 	scheduledPods = append(scheduledPods, unschedulableWaitingForLowerPriorityPreemption...)
 
+	// 过滤特殊资源
+	prunedUnschedulablePods := make([]*apiv1.Pod, 0)
+	for i := range unschedulablePods {
+		pod := unschedulablePods[i].DeepCopy()
+		for j := range pod.Spec.Containers {
+			delete(pod.Spec.Containers[j].Resources.Requests, "cloud.bkbcs.tencent.com/eip")
+			delete(pod.Spec.Containers[j].Resources.Requests, "tke.cloud.tencent.com/eni-ip")
+			delete(pod.Spec.Containers[j].Resources.Requests, "tke.cloud.tencent.com/direct-eni")
+			delete(pod.Spec.Containers[j].Resources.Requests, "ephemeral-storage")
+		}
+		prunedUnschedulablePods = append(prunedUnschedulablePods, pod)
+	}
+
 	unschedulablePodsToHelp, scheduledPods, err := b.processors.PodListProcessor.Process(
-		b.AutoscalingContext, unschedulablePods, scheduledPods, allNodes, readyNodes,
+		b.AutoscalingContext, prunedUnschedulablePods, scheduledPods, allNodes, readyNodes,
 		getUpcomingNodeInfos(b.clusterStateRegistry, nodeInfosForGroups))
 	if err != nil {
 		klog.Error(err)
@@ -557,7 +583,7 @@ func (b *BufferedAutoscaler) doScaleUp(autoscalingContext *contextinternal.Conte
 		klog.Error(typedErr)
 		return scaleUpStatus, scaleUpStatusProcessorAlreadyCalled, scheduledPods, typedErr
 	}
-	bufferNotEnough := checkResourceNotEnough(nodeInfos, b.ratio)
+	bufferNotEnough := checkResourceNotEnough(nodeInfos, b.CPURatio, b.MemRatio, b.ratio)
 	shouldScaleUp := false
 
 	if len(unschedulablePodsToHelp) == 0 {
@@ -584,7 +610,7 @@ func (b *BufferedAutoscaler) doScaleUp(autoscalingContext *contextinternal.Conte
 
 		scaleUpStatus, typedErr = ScaleUp(autoscalingContext, b.processors, b.clusterStateRegistry, unschedulablePodsToHelp,
 			readyNodes, daemonsets,
-			nodeInfosForGroups, b.ignoredTaints, nodeInfos, bufferNotEnough)
+			nodeInfosForGroups, b.ignoredTaints, nodeInfos, bufferNotEnough, b.maxBulkScaleUpCount)
 
 		metrics.UpdateDurationFromStart(metrics.ScaleUp, scaleUpStart)
 

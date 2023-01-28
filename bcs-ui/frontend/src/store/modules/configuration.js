@@ -543,32 +543,6 @@ export default {
     },
 
     /**
-         * 获取命名空间
-         *
-         * @param {Object} context store 上下文对象
-         * @param {string} projectId 项目 id
-         * @param {boolean} isGroupBy 是否需要 group_by
-         *
-         * @return {Promise} promise 对象
-         */
-    getNamespaceList(context, { projectId, isGroupBy }, config = {}) {
-      return http.get(
-        // `${DEVOPS_BCS_API_URL}/api/configuration/${projectId}/namespace/${isGroupBy ? '?group_by=env_type' : ''}`
-        `${DEVOPS_BCS_API_URL}/api/configuration/${projectId}/namespace/${isGroupBy ? '?group_by=cluster_name' : ''}`,
-        {},
-        config,
-      );
-    },
-
-    getNamespaceListByClusterId(context, { projectId, clusterId }, config = {}) {
-      return http.get(
-        `${DEVOPS_BCS_API_URL}/api/configuration/${projectId}/namespace/${clusterId ? `?cluster_id=${clusterId}` : ''}`,
-        {},
-        config,
-      );
-    },
-
-    /**
          * 添加命名空间
          *
          * @param {Object} context store 上下文对象

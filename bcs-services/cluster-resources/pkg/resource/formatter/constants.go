@@ -15,46 +15,48 @@
 package formatter
 
 import (
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
+	resCsts "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/constants"
 )
 
 // Kind2FormatFuncMap 各资源类型对应 FormatFunc
 var Kind2FormatFuncMap = map[string]func(manifest map[string]interface{}) map[string]interface{}{
 	// namespace
-	resource.NS: FormatNS,
+	resCsts.NS: FormatNS,
 
 	// workload
-	resource.CJ:     FormatCJ,
-	resource.DS:     FormatWorkloadRes,
-	resource.Deploy: FormatDeploy,
-	resource.Job:    FormatJob,
-	resource.Po:     FormatPo,
-	resource.STS:    FormatSTS,
+	resCsts.CJ:     FormatCJ,
+	resCsts.DS:     FormatWorkloadRes,
+	resCsts.Deploy: FormatDeploy,
+	resCsts.RS:     FormatRS,
+	resCsts.Job:    FormatJob,
+	resCsts.Po:     FormatPo,
+	resCsts.STS:    FormatSTS,
 
 	// network
-	resource.Ing: FormatIng,
-	resource.SVC: FormatSVC,
-	resource.EP:  FormatEP,
+	resCsts.Ing: FormatIng,
+	resCsts.SVC: FormatSVC,
+	resCsts.EP:  FormatEP,
 
 	// configuration
-	resource.CM:     FormatConfigRes,
-	resource.Secret: FormatConfigRes,
+	resCsts.CM:     FormatConfigRes,
+	resCsts.Secret: FormatConfigRes,
 
 	// storage
-	resource.PV:  FormatPV,
-	resource.PVC: FormatPVC,
-	resource.SC:  FormatSC,
+	resCsts.PV:  FormatPV,
+	resCsts.PVC: FormatPVC,
+	resCsts.SC:  FormatSC,
 
 	// rbac
-	resource.SA: FormatSA,
+	resCsts.SA: FormatSA,
 
 	// hpa
-	resource.HPA: FormatHPA,
+	resCsts.HPA: FormatHPA,
 
 	// CustomResource
-	resource.CRD:     FormatCRD,
-	resource.GDeploy: FormatGDeploy,
-	resource.CObj:    FormatCObj,
+	resCsts.CRD:     FormatCRD,
+	resCsts.GDeploy: FormatGDeploy,
+	resCsts.GSTS:    FormatGSTS,
+	resCsts.CObj:    FormatCObj,
 }
 
 const (

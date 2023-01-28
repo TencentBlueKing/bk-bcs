@@ -16,6 +16,7 @@ package promclient
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -24,24 +25,53 @@ import (
 	"github.com/pkg/errors"
 	"github.com/prometheus/common/model"
 	"github.com/prometheus/prometheus/promql/parser"
+	"github.com/thanos-io/thanos/pkg/store/storepb"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component"
 )
+
+// PromStatus prometheus api status
+type PromStatus string
+
+const (
+	// PromSuccess prometheus api success
+	PromSuccess PromStatus = "success"
+	// PromError prometheus api error
+	PromError PromStatus = "error"
+)
+
+// BaseResponse prometheus api response
+type BaseResponse struct {
+	Status PromStatus `json:"status"`
+	// Only set if status is "error".
+	Error     string   `json:"error,omitempty"`
+	ErrorType string   `json:"errorType,omitempty"`
+	Warnings  []string `json:"warnings,omitempty"` // Extra field supported by Thanos Querier.
+}
+
+// IsSuccess check prometheus api is success
+func (r BaseResponse) IsSuccess() bool {
+	return r.Status == PromSuccess
+}
 
 // Result xxx
 // Decode only ResultType and load Result only as RawJson since we don't know
 // structure of the Result yet.
 type Result struct {
-	Data      ResultData `json:"data"`
-	Error     string     `json:"error,omitempty"`
-	ErrorType string     `json:"errorType,omitempty"`
-	Warnings  []string   `json:"warnings,omitempty"` // Extra field supported by Thanos Querier.
+	Data ResultData `json:"data"`
+	BaseResponse
 }
 
 // ResultData :
 type ResultData struct {
 	ResultType string          `json:"resultType"`
 	Result     json.RawMessage `json:"result"`
+}
+
+// LabelValuesResponse label values response
+type LabelValuesResponse struct {
+	Data []string `json:"data"`
+	BaseResponse
 }
 
 // QueryInstant 查询实时数据
@@ -175,6 +205,84 @@ func QueryRangeMatrix(ctx context.Context, rawURL string, header http.Header, pr
 
 	return matrixResult, m.Warnings, nil
 
+}
+
+// QueryLabels query labels
+func QueryLabels(ctx context.Context, rawURL string, header http.Header, r *storepb.LabelNamesRequest) ([]string, error) {
+	rawURL = fmt.Sprintf("%s/api/v1/labels", strings.TrimSuffix(rawURL, "/"))
+
+	query := make(map[string]string, 0)
+	if r.Start != 0 {
+		query["start"] = strconv.Itoa(int(r.Start))
+	}
+	if r.End != 0 {
+		query["end"] = strconv.Itoa(int(r.End))
+	}
+
+	resp, err := component.GetClient().R().
+		SetContext(ctx).
+		SetQueryParams(query).
+		SetHeaderMultiValues(header).
+		Get(rawURL)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if !resp.IsSuccess() {
+		return nil, errors.Errorf("http code %d != 200", resp.StatusCode())
+	}
+
+	m := LabelValuesResponse{}
+
+	if err = json.Unmarshal(resp.Body(), &m); err != nil {
+		return nil, errors.Wrap(err, "unmarshal query labels response")
+	}
+
+	if m.IsSuccess() {
+		return m.Data, nil
+	}
+
+	return nil, errors.Errorf("errorType: %s, error: %s", m.ErrorType, m.Error)
+}
+
+// QueryLabelValues query label values
+func QueryLabelValues(ctx context.Context, rawURL string, header http.Header, r *storepb.LabelValuesRequest) ([]string, error) {
+	rawURL = fmt.Sprintf("%s/api/v1/label/%s/values", strings.TrimSuffix(rawURL, "/"), r.Label)
+
+	query := make(map[string]string, 0)
+	if r.Start != 0 {
+		query["start"] = strconv.Itoa(int(r.Start))
+	}
+	if r.End != 0 {
+		query["end"] = strconv.Itoa(int(r.End))
+	}
+
+	resp, err := component.GetClient().R().
+		SetContext(ctx).
+		SetPathParams(query).
+		SetHeaderMultiValues(header).
+		Get(rawURL)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if !resp.IsSuccess() {
+		return nil, errors.Errorf("http code %d != 200", resp.StatusCode())
+	}
+
+	m := LabelValuesResponse{}
+
+	if err = json.Unmarshal(resp.Body(), &m); err != nil {
+		return nil, errors.Wrap(err, "unmarshal query label values response")
+	}
+
+	if m.IsSuccess() {
+		return m.Data, nil
+	}
+
+	return nil, errors.Errorf("errorType: %s, error: %s", m.ErrorType, m.Error)
 }
 
 // convertScalarJSONToVector xxx

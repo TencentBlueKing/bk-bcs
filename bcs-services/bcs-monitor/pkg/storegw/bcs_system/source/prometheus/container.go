@@ -90,6 +90,24 @@ func (m *Prometheus) GetContainerMemoryLimit(ctx context.Context, projectId, clu
 		step)
 }
 
+// GetContainerGPUMemoryUsage 容器GPU显卡使用率
+func (m *Prometheus) GetContainerGPUMemoryUsage(ctx context.Context, projectId, clusterId, namespace, podname string,
+	containerNameList []string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {
+	return nil, nil
+}
+
+// GetContainerGPUUsed 容器GPU使用量
+func (m *Prometheus) GetContainerGPUUsed(ctx context.Context, projectId, clusterId, namespace, podname string,
+	containerNameList []string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {
+	return nil, nil
+}
+
+// GetContainerGPUUsage 容器GPU使用率
+func (m *Prometheus) GetContainerGPUUsage(ctx context.Context, projectId, clusterId, namespace, podname string,
+	containerNameList []string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {
+	return nil, nil
+}
+
 // GetContainerDiskReadTotal 容器磁盘读
 func (m *Prometheus) GetContainerDiskReadTotal(ctx context.Context, projectId, clusterId, namespace, podname string,
 	containerNameList []string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {

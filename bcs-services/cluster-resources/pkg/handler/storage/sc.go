@@ -22,7 +22,7 @@ import (
 	resAction "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action/resource"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action/web"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/featureflag"
-	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
+	resCsts "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/constants"
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
 )
 
@@ -30,8 +30,8 @@ import (
 func (h *Handler) ListSC(
 	ctx context.Context, req *clusterRes.ResListReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = resAction.NewResMgr(req.ClusterID, req.ApiVersion, res.SC).List(
-		ctx, "", req.Format, metav1.ListOptions{LabelSelector: req.LabelSelector},
+	resp.Data, err = resAction.NewResMgr(req.ClusterID, req.ApiVersion, resCsts.SC).List(
+		ctx, "", req.Format, req.Scene, metav1.ListOptions{LabelSelector: req.LabelSelector},
 	)
 	if err != nil {
 		return err
@@ -46,7 +46,7 @@ func (h *Handler) ListSC(
 func (h *Handler) GetSC(
 	ctx context.Context, req *clusterRes.ResGetReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = resAction.NewResMgr(req.ClusterID, req.ApiVersion, res.SC).Get(
+	resp.Data, err = resAction.NewResMgr(req.ClusterID, req.ApiVersion, resCsts.SC).Get(
 		ctx, "", req.Name, req.Format, metav1.GetOptions{},
 	)
 	if err != nil {
@@ -62,7 +62,7 @@ func (h *Handler) GetSC(
 func (h *Handler) CreateSC(
 	ctx context.Context, req *clusterRes.ResCreateReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = resAction.NewResMgr(req.ClusterID, "", res.SC).Create(
+	resp.Data, err = resAction.NewResMgr(req.ClusterID, "", resCsts.SC).Create(
 		ctx, req.RawData, req.Format, false, metav1.CreateOptions{},
 	)
 	return err
@@ -72,7 +72,7 @@ func (h *Handler) CreateSC(
 func (h *Handler) UpdateSC(
 	ctx context.Context, req *clusterRes.ResUpdateReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = resAction.NewResMgr(req.ClusterID, "", res.SC).Update(
+	resp.Data, err = resAction.NewResMgr(req.ClusterID, "", resCsts.SC).Update(
 		ctx, "", req.Name, req.RawData, req.Format, metav1.UpdateOptions{},
 	)
 	return err
@@ -82,7 +82,7 @@ func (h *Handler) UpdateSC(
 func (h *Handler) DeleteSC(
 	ctx context.Context, req *clusterRes.ResDeleteReq, _ *clusterRes.CommonResp,
 ) error {
-	return resAction.NewResMgr(req.ClusterID, "", res.SC).Delete(
+	return resAction.NewResMgr(req.ClusterID, "", resCsts.SC).Delete(
 		ctx, "", req.Name, metav1.DeleteOptions{},
 	)
 }

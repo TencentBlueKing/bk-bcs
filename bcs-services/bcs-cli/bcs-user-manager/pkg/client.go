@@ -17,8 +17,10 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
+	netUrl "net/url"
 
 	"github.com/pkg/errors"
 	"github.com/spf13/viper"
@@ -52,26 +54,36 @@ func NewClientWithConfiguration(ctx context.Context) *UserManagerClient {
 	}
 }
 
-func (c *UserManagerClient) do(url string, httpType string, query map[string]string, body interface{}) ([]byte, error) {
+func (c *UserManagerClient) do(url string, httpType string, query netUrl.Values, body interface{}) ([]byte, error) {
 	url = c.cfg.APIServer + url
-	var bodyReader *bytes.Reader
+	var req *http.Request
+	var err error
+
+	_, err = netUrl.Parse(c.cfg.APIServer)
+	if err != nil {
+		return nil, fmt.Errorf("url failed %v", err)
+	}
+
 	if body != nil {
-		bs, err := json.Marshal(body)
+		var bs []byte
+		bs, err = json.Marshal(body)
 		if err != nil {
 			return nil, errors.Wrapf(err, "marshal body failed")
 		}
-		bodyReader = bytes.NewReader(bs)
+		req, err = http.NewRequestWithContext(c.ctx, httpType, url, bytes.NewReader(bs))
+		req.Header.Set("Content-Type", "application/json")
+	} else {
+		req, err = http.NewRequestWithContext(c.ctx, httpType, url, nil)
 	}
-	req, err := http.NewRequestWithContext(c.ctx, httpType, url, bodyReader)
 	if err != nil {
 		return nil, errors.Wrapf(err, "create request failed")
 	}
-	if len(query) != 0 {
-		q := req.URL.Query()
-		for k, v := range query {
-			q.Add(k, v)
-		}
-		req.URL.RawQuery = q.Encode()
+	if query != nil {
+		req.URL.RawQuery = query.Encode()
+	}
+	// 添加鉴权
+	if len(c.cfg.AuthToken) != 0 {
+		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", c.cfg.AuthToken))
 	}
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {

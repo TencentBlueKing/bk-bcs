@@ -13,16 +13,20 @@
 package bcsmonitor
 
 import (
-	"github.com/stretchr/testify/assert"
+	"fmt"
 	"net/http"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/requester"
 )
 
 var (
 	header        = http.Header{}
-	testOps       = BcsMonitorClientOpt{Schema: "", Endpoint: "", Password: "", UserName: "", AppCode: "", AppSecret: ""}
-	testRequester = NewRequester()
+	testOps       = BcsMonitorClientOpt{Endpoint: "", AppCode: "", AppSecret: ""}
+	testRequester = requester.NewRequester()
 )
 
 func TestLabelValues(t *testing.T) {
@@ -30,7 +34,7 @@ func TestLabelValues(t *testing.T) {
 		opts             BcsMonitorClientOpt
 		defaultHeader    http.Header
 		completeEndpoint string
-		requestClient    Requester
+		requestClient    requester.Requester
 	}
 	type args struct {
 		labelName string
@@ -56,12 +60,10 @@ func TestLabelValues(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c := &BcsMonitorClient{
-				opts:             tt.fields.opts,
-				defaultHeader:    tt.fields.defaultHeader,
-				completeEndpoint: tt.fields.completeEndpoint,
-				requestClient:    tt.fields.requestClient,
+				opts:          tt.fields.opts,
+				defaultHeader: tt.fields.defaultHeader,
+				requestClient: tt.fields.requestClient,
 			}
-			c.SetCompleteEndpoint()
 			got, err := c.LabelValues(tt.args.labelName, tt.args.selectors, tt.args.startTime, tt.args.endTime)
 			assert.Equal(t, nil, err)
 			assert.Equal(t, tt.want, got)
@@ -74,7 +76,7 @@ func TestLabels(t *testing.T) {
 		opts             BcsMonitorClientOpt
 		defaultHeader    http.Header
 		completeEndpoint string
-		requestClient    Requester
+		requestClient    requester.Requester
 	}
 	type args struct {
 		selectors []string
@@ -100,12 +102,10 @@ func TestLabels(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c := &BcsMonitorClient{
-				opts:             tt.fields.opts,
-				defaultHeader:    tt.fields.defaultHeader,
-				completeEndpoint: tt.fields.completeEndpoint,
-				requestClient:    tt.fields.requestClient,
+				opts:          tt.fields.opts,
+				defaultHeader: tt.fields.defaultHeader,
+				requestClient: tt.fields.requestClient,
 			}
-			c.SetCompleteEndpoint()
 			got, err := c.Labels(tt.args.selectors, tt.args.startTime, tt.args.endTime)
 			assert.Equal(t, nil, err)
 			assert.Equal(t, tt.want, got)
@@ -118,7 +118,7 @@ func TestQuery(t *testing.T) {
 		opts             BcsMonitorClientOpt
 		defaultHeader    http.Header
 		completeEndpoint string
-		requestClient    Requester
+		requestClient    requester.Requester
 	}
 	type args struct {
 		promql string
@@ -143,12 +143,10 @@ func TestQuery(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c := &BcsMonitorClient{
-				opts:             tt.fields.opts,
-				defaultHeader:    tt.fields.defaultHeader,
-				completeEndpoint: tt.fields.completeEndpoint,
-				requestClient:    tt.fields.requestClient,
+				opts:          tt.fields.opts,
+				defaultHeader: tt.fields.defaultHeader,
+				requestClient: tt.fields.requestClient,
 			}
-			c.SetCompleteEndpoint()
 			got, err := c.Query(tt.args.promql, tt.args.time)
 			assert.Equal(t, nil, err)
 			assert.Equal(t, tt.want, got)
@@ -161,7 +159,7 @@ func TestQueryByPost(t *testing.T) {
 		opts             BcsMonitorClientOpt
 		defaultHeader    http.Header
 		completeEndpoint string
-		requestClient    Requester
+		requestClient    requester.Requester
 	}
 	type args struct {
 		promql string
@@ -186,12 +184,10 @@ func TestQueryByPost(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c := &BcsMonitorClient{
-				opts:             tt.fields.opts,
-				defaultHeader:    tt.fields.defaultHeader,
-				completeEndpoint: tt.fields.completeEndpoint,
-				requestClient:    tt.fields.requestClient,
+				opts:          tt.fields.opts,
+				defaultHeader: tt.fields.defaultHeader,
+				requestClient: tt.fields.requestClient,
 			}
-			c.SetCompleteEndpoint()
 			got, err := c.QueryByPost(tt.args.promql, tt.args.time)
 			assert.Equal(t, nil, err)
 			assert.Equal(t, tt.want, got)
@@ -204,7 +200,7 @@ func TestQueryRange(t *testing.T) {
 		opts             BcsMonitorClientOpt
 		defaultHeader    http.Header
 		completeEndpoint string
-		requestClient    Requester
+		requestClient    requester.Requester
 	}
 	type args struct {
 		promql    string
@@ -231,12 +227,10 @@ func TestQueryRange(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c := &BcsMonitorClient{
-				opts:             tt.fields.opts,
-				defaultHeader:    tt.fields.defaultHeader,
-				completeEndpoint: tt.fields.completeEndpoint,
-				requestClient:    tt.fields.requestClient,
+				opts:          tt.fields.opts,
+				defaultHeader: tt.fields.defaultHeader,
+				requestClient: tt.fields.requestClient,
 			}
-			c.SetCompleteEndpoint()
 			got, err := c.QueryRange(tt.args.promql, tt.args.startTime, tt.args.endTime, tt.args.step)
 			assert.Equal(t, nil, err)
 			assert.Equal(t, tt.want, got)
@@ -249,7 +243,7 @@ func TestQueryRangeByPost(t *testing.T) {
 		opts             BcsMonitorClientOpt
 		defaultHeader    http.Header
 		completeEndpoint string
-		requestClient    Requester
+		requestClient    requester.Requester
 	}
 	type args struct {
 		promql    string
@@ -276,12 +270,10 @@ func TestQueryRangeByPost(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c := &BcsMonitorClient{
-				opts:             tt.fields.opts,
-				defaultHeader:    tt.fields.defaultHeader,
-				completeEndpoint: tt.fields.completeEndpoint,
-				requestClient:    tt.fields.requestClient,
+				opts:          tt.fields.opts,
+				defaultHeader: tt.fields.defaultHeader,
+				requestClient: tt.fields.requestClient,
 			}
-			c.SetCompleteEndpoint()
 			got, err := c.QueryRangeByPost(tt.args.promql, tt.args.startTime, tt.args.endTime, tt.args.step)
 			assert.Equal(t, nil, err)
 			assert.Equal(t, tt.want, got)
@@ -294,7 +286,7 @@ func TestSeries(t *testing.T) {
 		opts             BcsMonitorClientOpt
 		defaultHeader    http.Header
 		completeEndpoint string
-		requestClient    Requester
+		requestClient    requester.Requester
 	}
 	type args struct {
 		selectors []string
@@ -320,12 +312,10 @@ func TestSeries(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c := &BcsMonitorClient{
-				opts:             tt.fields.opts,
-				defaultHeader:    tt.fields.defaultHeader,
-				completeEndpoint: tt.fields.completeEndpoint,
-				requestClient:    tt.fields.requestClient,
+				opts:          tt.fields.opts,
+				defaultHeader: tt.fields.defaultHeader,
+				requestClient: tt.fields.requestClient,
 			}
-			c.SetCompleteEndpoint()
 			got, err := c.Series(tt.args.selectors, tt.args.startTime, tt.args.endTime)
 			assert.Equal(t, nil, err)
 			assert.Equal(t, tt.want, got)
@@ -338,7 +328,7 @@ func TestSeriesByPost(t *testing.T) {
 		opts             BcsMonitorClientOpt
 		defaultHeader    http.Header
 		completeEndpoint string
-		requestClient    Requester
+		requestClient    requester.Requester
 	}
 	type args struct {
 		selectors []string
@@ -364,12 +354,10 @@ func TestSeriesByPost(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c := &BcsMonitorClient{
-				opts:             tt.fields.opts,
-				defaultHeader:    tt.fields.defaultHeader,
-				completeEndpoint: tt.fields.completeEndpoint,
-				requestClient:    tt.fields.requestClient,
+				opts:          tt.fields.opts,
+				defaultHeader: tt.fields.defaultHeader,
+				requestClient: tt.fields.requestClient,
 			}
-			c.SetCompleteEndpoint()
 			got, err := c.SeriesByPost(tt.args.selectors, tt.args.startTime, tt.args.endTime)
 			assert.Equal(t, nil, err)
 			assert.Equal(t, tt.want, got)
@@ -382,7 +370,7 @@ func TestSetQuery(t *testing.T) {
 		opts             BcsMonitorClientOpt
 		defaultHeader    http.Header
 		completeEndpoint string
-		requestClient    Requester
+		requestClient    requester.Requester
 	}
 	type args struct {
 		queryString string
@@ -405,10 +393,9 @@ func TestSetQuery(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c := &BcsMonitorClient{
-				opts:             tt.fields.opts,
-				defaultHeader:    tt.fields.defaultHeader,
-				completeEndpoint: tt.fields.completeEndpoint,
-				requestClient:    tt.fields.requestClient,
+				opts:          tt.fields.opts,
+				defaultHeader: tt.fields.defaultHeader,
+				requestClient: tt.fields.requestClient,
 			}
 			got := c.setQuery(tt.args.queryString, tt.args.key, tt.args.value)
 			assert.Equal(t, tt.want, got)
@@ -421,7 +408,7 @@ func TestSetSelectors(t *testing.T) {
 		opts             BcsMonitorClientOpt
 		defaultHeader    http.Header
 		completeEndpoint string
-		requestClient    Requester
+		requestClient    requester.Requester
 	}
 	type args struct {
 		queryString string
@@ -443,13 +430,22 @@ func TestSetSelectors(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c := &BcsMonitorClient{
-				opts:             tt.fields.opts,
-				defaultHeader:    tt.fields.defaultHeader,
-				completeEndpoint: tt.fields.completeEndpoint,
-				requestClient:    tt.fields.requestClient,
+				opts:          tt.fields.opts,
+				defaultHeader: tt.fields.defaultHeader,
+				requestClient: tt.fields.requestClient,
 			}
 			got := c.setSelectors(tt.args.queryString, tt.args.selectors)
 			assert.Equal(t, tt.want, got)
 		})
 	}
+}
+
+func TestGrayCluster(t *testing.T) {
+	client := NewBcsMonitorClient(testOps, testRequester)
+	defaultHeader := http.Header{}
+	defaultHeader.Add("", "")
+	client.SetDefaultHeader(defaultHeader)
+	clusters, err := client.GetBKMonitorGrayClusterList()
+	fmt.Println(err)
+	fmt.Println(clusters)
 }

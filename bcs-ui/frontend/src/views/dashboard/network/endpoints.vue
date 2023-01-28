@@ -22,15 +22,27 @@
           </template>
         </bk-table-column>
         <bk-table-column :label="$t('命名空间')" prop="metadata.namespace" sortable></bk-table-column>
-        <bk-table-column label="Endpoints" :resizable="false">
+        <bk-table-column label="Endpoints" :resizable="false" :show-overflow-tooltip="false">
           <template #default="{ row }">
-            <span>{{ handleGetExtData(row.metadata.uid, 'endpoints').join(', ') || '--' }}</span>
+            <div v-bk-tooltips="{ content: handleGetExtData(row.metadata.uid, 'endpoints').join('<br/>') }">
+              <span>
+                {{ handleGetExtData(row.metadata.uid, 'endpoints').join(', ') || '--' }}
+              </span>
+            </div>
           </template>
         </bk-table-column>
         <bk-table-column label="Age" :resizable="false" :show-overflow-tooltip="false">
           <template #default="{ row }">
             <span v-bk-tooltips="{ content: handleGetExtData(row.metadata.uid, 'createTime') }">
               {{ handleGetExtData(row.metadata.uid, 'age') }}</span>
+          </template>
+        </bk-table-column>
+        <bk-table-column :label="$t('编辑模式')" width="100">
+          <template slot-scope="{ row }">
+            <span>
+              {{handleGetExtData(row.metadata.uid, 'editMode') === 'form'
+                ? $t('表单') : 'YAML'}}
+            </span>
           </template>
         </bk-table-column>
         <bk-table-column :label="$t('操作')" :resizable="false" width="150">

@@ -22,8 +22,8 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
 	conf "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/config"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/i18n"
-	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
 	cli "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/client"
+	resCsts "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/constants"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/slice"
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
@@ -39,8 +39,8 @@ func CheckNSAccess(ctx context.Context, clusterID, namespace string) error {
 		return nil
 	}
 
-	if !cli.IsProjNSinSharedCluster(ctx, clusterID, namespace) {
-		return errorx.New(errcode.NoPerm, i18n.GetMsg(ctx, "命名空间 %s 在该共享集群中不属于指定项目"), namespace)
+	if err = cli.CheckIsProjNSinSharedCluster(ctx, clusterID, namespace); err != nil {
+		return err
 	}
 	return nil
 }
@@ -61,12 +61,12 @@ func CheckSubscribable(ctx context.Context, req *clusterRes.SubscribeReq) error 
 	}
 
 	// 命名空间可以直接查询，但是不属于项目的需要被过滤掉
-	if req.Kind == res.NS {
+	if req.Kind == resCsts.NS {
 		return nil
 	}
 
-	if !cli.IsProjNSinSharedCluster(ctx, req.ClusterID, req.Namespace) {
-		return errorx.New(errcode.NoPerm, i18n.GetMsg(ctx, "命名空间 %s 在该共享集群中不属于指定项目"), req.Namespace)
+	if err = cli.CheckIsProjNSinSharedCluster(ctx, req.ClusterID, req.Namespace); err != nil {
+		return err
 	}
 	return nil
 }
@@ -85,8 +85,8 @@ func CheckCObjAccess(ctx context.Context, clusterID, crdName, namespace string) 
 		return errorx.New(errcode.NoPerm, i18n.GetMsg(ctx, "共享集群暂时只支持查询部分自定义资源"))
 	}
 
-	if !cli.IsProjNSinSharedCluster(ctx, clusterID, namespace) {
-		return errorx.New(errcode.NoPerm, i18n.GetMsg(ctx, "命名空间 %s 在该共享集群中不属于指定项目"), namespace)
+	if err = cli.CheckIsProjNSinSharedCluster(ctx, clusterID, namespace); err != nil {
+		return err
 	}
 	return nil
 }

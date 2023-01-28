@@ -22,6 +22,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/envs"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/handler"
+	resCsts "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/constants"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/example"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/pbstruct"
@@ -32,7 +33,7 @@ func TestPod(t *testing.T) {
 	h := New()
 	ctx := handler.NewInjectedContext("", "", "")
 
-	manifest, _ := example.LoadDemoManifest("workload/simple_pod", "")
+	manifest, _ := example.LoadDemoManifest(ctx, "workload/simple_pod", "", "", resCsts.Po)
 	resName := mapx.GetStr(manifest, "metadata.name")
 
 	// Create
@@ -42,7 +43,7 @@ func TestPod(t *testing.T) {
 	assert.Nil(t, err)
 
 	// List
-	podListReq := clusterRes.PodResListReq{
+	podListReq := clusterRes.ResListReq{
 		ProjectID: envs.TestProjectID,
 		ClusterID: envs.TestClusterID,
 		Namespace: envs.TestNamespace,

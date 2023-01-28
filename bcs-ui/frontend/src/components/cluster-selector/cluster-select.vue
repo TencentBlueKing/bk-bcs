@@ -15,7 +15,7 @@
   </bcs-select>
 </template>
 <script>
-import { computed, defineComponent, ref, watch, toRefs } from '@vue/composition-api';
+import { computed, defineComponent, ref, watch, toRefs, onMounted } from '@vue/composition-api';
 import { BCS_CLUSTER } from '@/common/constant';
 import useDefaultClusterId from '@/views/node/use-default-clusterId';
 
@@ -57,6 +57,12 @@ export default defineComponent({
       sessionStorage.setItem(BCS_CLUSTER, clusterId);
       ctx.emit('change', clusterId);
     };
+
+    onMounted(() => {
+      if (localValue.value !== props.value) {
+        ctx.emit('change', localValue.value);
+      }
+    });
     return {
       localValue,
       clusterList,
@@ -68,6 +74,8 @@ export default defineComponent({
 <style lang="postcss" scoped>
 .cluster-select {
     min-width: 200px;
-    background-color: #fff;
+    &:not(.is-disabled) {
+      background-color: #fff;
+    }
 }
 </style>

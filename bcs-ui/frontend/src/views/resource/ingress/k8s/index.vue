@@ -152,7 +152,7 @@
         :quick-close="true"
         :is-show.sync="ingressSlider.isShow"
         :title="ingressSlider.title"
-        :width="'800'">
+        :width="800">
         <div class="pt20 pr30 pb20 pl30" slot="content">
           <label class="biz-title">{{$t('主机列表')}}（spec.tls）</label>
           <table class="bk-table biz-data-table has-table-bordered biz-special-bk-table">
@@ -227,7 +227,7 @@
       <bk-sideslider
         :is-show.sync="ingressEditSlider.isShow"
         :title="ingressEditSlider.title"
-        :width="'1020'"
+        :width="1020"
         @hidden="handleCancelUpdate">
         <div slot="content">
           <div class="bk-form biz-configuration-form pt20 pb20 pl10 pr20">
@@ -370,7 +370,6 @@
                             <bk-selector
                               style="width: 180px;"
                               :placeholder="$t('Service名称')"
-                              :disabled="isLoadBalanceEdited"
                               :setting-key="'_name'"
                               :display-key="'_name'"
                               :selected.sync="pathRule.backend.serviceName"
@@ -382,7 +381,6 @@
                             <bk-selector
                               style="width: 180px;"
                               :placeholder="$t('端口')"
-                              :disabled="isLoadBalanceEdited"
                               :setting-key="'_id'"
                               :display-key="'_name'"
                               :selected.sync="pathRule.backend.servicePort"

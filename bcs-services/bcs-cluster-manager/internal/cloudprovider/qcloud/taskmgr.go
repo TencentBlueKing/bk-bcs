@@ -14,19 +14,21 @@
 package qcloud
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
 
+	"github.com/google/uuid"
+
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/tasks"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/template"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
-
-	"github.com/google/uuid"
 )
 
 var taskMgr sync.Once
@@ -85,12 +87,15 @@ func newtask() *Task {
 
 	// clean node in nodeGroup task
 	task.works[cleanNodeGroupNodesTask] = tasks.CleanNodeGroupNodesTask
+	task.works[removeHostFromCMDBTask] = common.RemoveHostFromCMDBTask
 	// task.works[checkCleanNodeGroupNodesStatusTask] = tasks.CheckCleanNodeGroupNodesStatusTask
 	// task.works[updateCleanNodeGroupNodesDBInfoTask] = tasks.UpdateCleanNodeGroupNodesDBInfoTask
 
 	// update desired nodes task
 	task.works[applyInstanceMachinesTask] = tasks.ApplyInstanceMachinesTask
 	task.works[checkClusterNodesStatusTask] = tasks.CheckClusterNodesStatusTask
+	task.works[installGSEAgentTask] = common.InstallGSEAgentTask
+	task.works[transferHostModuleTask] = common.TransferHostModule
 	// business user define sops
 
 	// move nodes to nodeGroup task
@@ -848,6 +853,10 @@ func (t *Task) BuildCleanNodesInGroupTask(nodes []*proto.Node, group *proto.Node
 	if opt == nil || len(opt.Operator) == 0 || opt.Cluster == nil {
 		return nil, fmt.Errorf("BuildCleanNodesInGroupTask TaskOptions is lost")
 	}
+	cluster, err := cloudprovider.GetStorageModel().GetCluster(context.Background(), group.ClusterID)
+	if err != nil {
+		return nil, fmt.Errorf("BuildCleanNodesInGroupTask get cluster %s error, %s", group.ClusterID, err.Error())
+	}
 
 	var (
 		nodeIPs, nodeIDs = make([]string, 0), make([]string, 0)
@@ -920,7 +929,7 @@ func (t *Task) BuildCleanNodesInGroupTask(nodes []*proto.Node, group *proto.Node
 	}
 
 	// setting all steps details
-	// step1: cluster scaleIn to clean cluster nodes
+	// step3: cluster scaleIn to clean cluster nodes
 	cleanStep := &proto.Step{
 		Name:   cleanNodeGroupNodesTask,
 		System: "api",
@@ -942,11 +951,25 @@ func (t *Task) BuildCleanNodesInGroupTask(nodes []*proto.Node, group *proto.Node
 	task.Steps[cleanNodeGroupNodesTask] = cleanStep
 	task.StepSequence = append(task.StepSequence, cleanNodeGroupNodesTask)
 
-	// set current step
-	if len(task.StepSequence) == 0 {
-		return nil, fmt.Errorf("BuildCleanNodesInGroupTask task StepSequence empty")
+	// step4: remove node ip from cmdb
+	removeHostStep := &proto.Step{
+		Name:         removeHostFromCMDBTask,
+		System:       "api",
+		Params:       make(map[string]string),
+		Retry:        0,
+		SkipOnFailed: true,
+		Start:        nowStr,
+		Status:       cloudprovider.TaskStatusNotStarted,
+		// method name is registered name to taskserver
+		TaskMethod: removeHostFromCMDBTask,
+		TaskName:   cloudprovider.RemoveHostFromCMDBStep.String(),
 	}
+	removeHostStep.Params[cloudprovider.BKBizIDKey.String()] = cluster.BusinessID
+	removeHostStep.Params[cloudprovider.NodeIPsKey.String()] = strings.Join(nodeIPs, ",")
+	task.Steps[removeHostFromCMDBTask] = removeHostStep
+	task.StepSequence = append(task.StepSequence, removeHostFromCMDBTask)
 
+	// set current step
 	task.CurrentStep = task.StepSequence[0]
 
 	// set global task paras
@@ -1066,6 +1089,11 @@ func (t *Task) BuildUpdateDesiredNodesTask(desired uint32, group *proto.NodeGrou
 		return nil, fmt.Errorf("BuildUpdateDesiredNodesTask TaskOptions is lost")
 	}
 
+	cluster, err := cloudprovider.GetStorageModel().GetCluster(context.Background(), group.ClusterID)
+	if err != nil {
+		return nil, fmt.Errorf("BuildUpdateDesiredNodesTask get cluster %s error, %s", group.ClusterID, err.Error())
+	}
+
 	// generate main task
 	nowStr := time.Now().Format(time.RFC3339)
 	task := &proto.Task{
@@ -1164,6 +1192,46 @@ func (t *Task) BuildUpdateDesiredNodesTask(desired uint32, group *proto.NodeGrou
 		if err != nil {
 			return nil, fmt.Errorf("BuildUpdateDesiredNodesTask ExtraAddons.PostActions BuildBkSopsStepAction failed: %v", err)
 		}
+	}
+
+	// step5: install gse agent
+	installGSEAgentStep := &proto.Step{
+		Name:         installGSEAgentTask,
+		System:       "api",
+		Params:       make(map[string]string),
+		Retry:        0,
+		SkipOnFailed: true,
+		Start:        nowStr,
+		Status:       cloudprovider.TaskStatusNotStarted,
+		// method name is registered name to taskserver
+		TaskMethod: installGSEAgentTask,
+		TaskName:   cloudprovider.InstallGSEAgentStep.String(),
+	}
+	installGSEAgentStep.Params[cloudprovider.BKBizIDKey.String()] = cluster.BusinessID
+	installGSEAgentStep.Params[cloudprovider.BKCloudIDKey.String()] = strconv.Itoa(int(group.Area.BkCloudID))
+	installGSEAgentStep.Params[cloudprovider.PasswordKey.String()] = passwd
+	task.Steps[installGSEAgentTask] = installGSEAgentStep
+	task.StepSequence = append(task.StepSequence, installGSEAgentTask)
+
+	if group.NodeTemplate != nil && group.NodeTemplate.Module != nil &&
+		len(group.NodeTemplate.Module.ScaleOutModuleID) != 0 {
+		// step6: transfer host module
+		transferHostModuleStep := &proto.Step{
+			Name:         transferHostModuleTask,
+			System:       "api",
+			Params:       make(map[string]string),
+			Retry:        0,
+			SkipOnFailed: true,
+			Start:        nowStr,
+			Status:       cloudprovider.TaskStatusNotStarted,
+			// method name is registered name to taskserver
+			TaskMethod: transferHostModuleTask,
+			TaskName:   cloudprovider.TransferHostModuleStep.String(),
+		}
+		transferHostModuleStep.Params[cloudprovider.BKBizIDKey.String()] = cluster.BusinessID
+		transferHostModuleStep.Params[cloudprovider.BKModuleIDKey.String()] = group.NodeTemplate.Module.ScaleOutModuleID
+		task.Steps[transferHostModuleTask] = transferHostModuleStep
+		task.StepSequence = append(task.StepSequence, transferHostModuleTask)
 	}
 
 	// set current step

@@ -21,6 +21,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/components/iam"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/components/k8sclient"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/sessions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/types"
 
 	"github.com/gin-gonic/gin"
@@ -68,6 +69,56 @@ func PermissionRequired() gin.HandlerFunc {
 	}
 }
 
+// SessionRequired session 权限校验
+func SessionRequired() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		if c.Request.Method == http.MethodOptions {
+			c.Next()
+			return
+		}
+
+		authCtx := MustGetAuthContext(c)
+
+		podCtx, err := validateSession(c, authCtx)
+		if err != nil {
+			c.AbortWithStatusJSON(http.StatusForbidden, types.APIResponse{
+				Code:      types.ApiErrorCode,
+				Message:   err.Error(),
+				RequestID: authCtx.RequestId,
+			})
+			return
+		}
+
+		authCtx.BindSession = podCtx
+		c.Set("auth_context", authCtx)
+
+		c.Next()
+	}
+}
+
+// 校验用户session权限
+func validateSession(c *gin.Context, authCtx *AuthContext) (*types.PodContext, error) {
+	sessionId := GetSessionId(c)
+	if sessionId == "" {
+		return nil, errors.New("session_id is required")
+	}
+
+	podCtx, err := sessions.NewStore().OpenAPIScope().Get(c.Request.Context(), sessionId)
+	if err != nil {
+		return nil, errors.New("session已经过期或不合法")
+	}
+
+	if config.G.IsManager(authCtx.Username, podCtx.ClusterId) {
+		return podCtx, nil
+	}
+
+	if podCtx.HasPerm(authCtx.Username) {
+		return podCtx, nil
+	}
+
+	return nil, errors.New("用户无权限登入此session")
+}
+
 // ValidateProjectCluster xxx
 func ValidateProjectCluster(c *gin.Context, authCtx *AuthContext) error {
 	projectId := GetProjectIdOrCode(c)
@@ -80,7 +131,7 @@ func ValidateProjectCluster(c *gin.Context, authCtx *AuthContext) error {
 		return errors.New("clusterId required")
 	}
 
-	project, err := bcs.GetProject(c.Request.Context(), projectId)
+	project, err := bcs.GetProject(c.Request.Context(), config.G.BCS, projectId)
 	if err != nil {
 		return errors.Wrap(err, "项目不正确")
 	}

@@ -95,6 +95,17 @@ func (m *Prometheus) GetNodeCPUUsage(ctx context.Context, projectId, clusterId, 
 	return m.handleNodeMetric(ctx, projectId, clusterId, ip, promql, start, end, step)
 }
 
+// GetNodeCPURequestUsage 节点CPU装箱率
+func (m *Prometheus) GetNodeCPURequestUsage(ctx context.Context, projectId, clusterId, ip string, start, end time.Time,
+	step time.Duration) ([]*prompb.TimeSeries, error) {
+	promql := `
+		sum(kube_pod_container_resource_requests_cpu_cores{cluster_id="%<clusterId>s", job="kube-state-metrics", node=~"%<ip>s", %<provider>s}) /
+		sum(count without(cpu, mode) (node_cpu_seconds_total{cluster_id="%<clusterId>s", job="node-exporter", mode="idle", instance="%<ip>s:9100", %<provider>s})) *
+		100`
+
+	return m.handleNodeMetric(ctx, projectId, clusterId, ip, promql, start, end, step)
+}
+
 // GetNodeMemoryUsage 节点内存使用率
 func (m *Prometheus) GetNodeMemoryUsage(ctx context.Context, projectId, clusterId, ip string, start, end time.Time,
 	step time.Duration) ([]*prompb.TimeSeries, error) {
@@ -106,6 +117,16 @@ func (m *Prometheus) GetNodeMemoryUsage(ctx context.Context, projectId, clusterI
         sum(node_memory_Shmem_bytes{cluster_id="%<clusterId>s", job="node-exporter", instance="%<ip>s:9100", %<provider>s})) /
         sum(node_memory_MemTotal_bytes{cluster_id="%<clusterId>s", job="node-exporter", instance="%<ip>s:9100", %<provider>s}) *
         100`
+
+	return m.handleNodeMetric(ctx, projectId, clusterId, ip, promql, start, end, step)
+}
+
+// GetNodeMemoryRequestUsage 节点内存装箱率
+func (m *Prometheus) GetNodeMemoryRequestUsage(ctx context.Context, projectId, clusterId, ip string, start, end time.Time,
+	step time.Duration) ([]*prompb.TimeSeries, error) {
+	promql := `
+		sum(kube_pod_container_resource_requests_memory_bytes{cluster_id="%<clusterId>s", job="kube-state-metrics", node=~"%<ip>s", %<provider>s}) /
+		sum(node_memory_MemTotal_bytes{cluster_id="%<clusterId>s", job="node-exporter", instance="%<ip>s:9100", %<provider>s}) * 100`
 
 	return m.handleNodeMetric(ctx, projectId, clusterId, ip, promql, start, end, step)
 }

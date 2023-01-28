@@ -57,7 +57,6 @@ type IngPath struct {
 type IngNetwork struct {
 	CLBUseType string `structs:"clbUseType"`
 	ExistLBID  string `structs:"existLBID"`
-	CLBType    string `structs:"clbType"`
 	SubNetID   string `structs:"subNetID"`
 }
 
@@ -69,7 +68,8 @@ type IngDefaultBackend struct {
 
 // IngCert ...
 type IngCert struct {
-	TLS []IngTLS `structs:"tls"`
+	AutoRewriteHTTP bool     `structs:"autoRewriteHttp"`
+	TLS             []IngTLS `structs:"tls"`
 }
 
 // IngTLS ...
@@ -95,7 +95,15 @@ type SVCSpec struct {
 // SVCPortConf ...
 type SVCPortConf struct {
 	Type  string    `structs:"type"`
+	LB    SVCLB     `structs:"lb"`
 	Ports []SVCPort `structs:"ports"`
+}
+
+// SVCLB Service 负载均衡器表单建模
+type SVCLB struct {
+	UseType   string `structs:"useType"`
+	ExistLBID string `structs:"existLBID"`
+	SubNetID  string `structs:"subNetID"`
 }
 
 // SVCPort ...
@@ -103,7 +111,7 @@ type SVCPort struct {
 	Name       string `structs:"name"`
 	Port       int64  `structs:"port"`
 	Protocol   string `structs:"protocol"`
-	TargetPort int64  `structs:"targetPort"`
+	TargetPort string `structs:"targetPort"`
 	NodePort   int64  `structs:"nodePort"`
 }
 

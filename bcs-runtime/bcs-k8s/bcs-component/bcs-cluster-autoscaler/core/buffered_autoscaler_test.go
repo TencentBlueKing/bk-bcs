@@ -26,6 +26,7 @@ import (
 	"k8s.io/autoscaler/cluster-autoscaler/clusterstate"
 	"k8s.io/autoscaler/cluster-autoscaler/config"
 	"k8s.io/autoscaler/cluster-autoscaler/estimator"
+	"k8s.io/autoscaler/cluster-autoscaler/metrics"
 	"k8s.io/autoscaler/cluster-autoscaler/utils/kubernetes"
 	kube_util "k8s.io/autoscaler/cluster-autoscaler/utils/kubernetes"
 	. "k8s.io/autoscaler/cluster-autoscaler/utils/test"
@@ -134,6 +135,7 @@ func TestBufferedAutoscalerRunOnce(t *testing.T) {
 	daemonSetListerMock := &daemonSetListerMock{}
 	onScaleUpMock := &onScaleUpMock{}
 	onScaleDownMock := &onScaleDownMock{}
+	metrics.RegisterAll(true)
 
 	n1 := BuildTestNode("n1", 1000, 1000)
 	SetNodeReadyState(n1, true, time.Now())
@@ -191,7 +193,7 @@ func TestBufferedAutoscalerRunOnce(t *testing.T) {
 	}
 
 	clusterState := clusterstate.NewClusterStateRegistry(provider, clusterStateConfig, context.LogRecorder, newBackoff())
-	sd := NewScaleDown(&context, clusterState, 0)
+	sd := NewScaleDown(&context, clusterState, 0, 0, 0)
 
 	autoscaler := &BufferedAutoscaler{
 		Context:               &context,
@@ -393,7 +395,7 @@ func TestBufferedAutoscalerRunOnceWithAutoprovisionedEnabled(t *testing.T) {
 	}
 	clusterState := clusterstate.NewClusterStateRegistry(provider, clusterStateConfig, context.LogRecorder, newBackoff())
 
-	sd := NewScaleDown(&context, clusterState, 0)
+	sd := NewScaleDown(&context, clusterState, 0, 0, 0)
 
 	autoscaler := &BufferedAutoscaler{
 		Context:               &context,
@@ -541,7 +543,7 @@ func TestBufferedAutoscalerRunOnceWithALongUnregisteredNode(t *testing.T) {
 		t.Logf("UpdateNodes failed")
 	}
 
-	sd := NewScaleDown(&context, clusterState, 0)
+	sd := NewScaleDown(&context, clusterState, 0, 0, 0)
 
 	autoscaler := &BufferedAutoscaler{
 		Context:               &context,
@@ -672,7 +674,7 @@ func TestBufferedAutoscalerRunOncePodsWithFilterOutSchedulablePodsUsesPackingFal
 	}
 
 	clusterState := clusterstate.NewClusterStateRegistry(provider, clusterStateConfig, context.LogRecorder, newBackoff())
-	sd := NewScaleDown(&context, clusterState, 0)
+	sd := NewScaleDown(&context, clusterState, 0, 0, 0)
 
 	autoscaler := &BufferedAutoscaler{
 		Context:               &context,
@@ -792,7 +794,7 @@ func TestBufferedAutoscalerRunOncePodsWithPriorities(t *testing.T) {
 	}
 
 	clusterState := clusterstate.NewClusterStateRegistry(provider, clusterStateConfig, context.LogRecorder, newBackoff())
-	sd := NewScaleDown(&context, clusterState, 0)
+	sd := NewScaleDown(&context, clusterState, 0, 0, 0)
 
 	autoscaler := &BufferedAutoscaler{
 		Context:               &context,
@@ -917,7 +919,7 @@ func TestBufferedAutoscalerRunOnceWithFilteringOnBinPackingEstimator(t *testing.
 	}
 
 	clusterState := clusterstate.NewClusterStateRegistry(provider, clusterStateConfig, context.LogRecorder, newBackoff())
-	sd := NewScaleDown(&context, clusterState, 0)
+	sd := NewScaleDown(&context, clusterState, 0, 0, 0)
 
 	autoscaler := &BufferedAutoscaler{
 		Context:               &context,
@@ -1007,7 +1009,7 @@ func TestBufferedAutoscalerRunOnceWithFilteringOnOldEstimator(t *testing.T) {
 	}
 
 	clusterState := clusterstate.NewClusterStateRegistry(provider, clusterStateConfig, context.LogRecorder, newBackoff())
-	sd := NewScaleDown(&context, clusterState, 0)
+	sd := NewScaleDown(&context, clusterState, 0, 0, 0)
 
 	autoscaler := &BufferedAutoscaler{
 		Context:               &context,
@@ -1097,7 +1099,7 @@ func TestBufferedAutoscalerRunOnceWithFilteringOnUpcomingNodesEnabledNoScaleUp(t
 	}
 
 	clusterState := clusterstate.NewClusterStateRegistry(provider, clusterStateConfig, context.LogRecorder, newBackoff())
-	sd := NewScaleDown(&context, clusterState, 0)
+	sd := NewScaleDown(&context, clusterState, 0, 0, 0)
 
 	autoscaler := &BufferedAutoscaler{
 		Context:               &context,

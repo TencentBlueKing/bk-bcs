@@ -17,6 +17,7 @@ package wrapper
 import (
 	"context"
 	"fmt"
+	"reflect"
 
 	"github.com/micro/go-micro/v2/errors"
 	"github.com/micro/go-micro/v2/server"
@@ -25,6 +26,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/convert"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/errorx"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/proto/bcsproject"
+	authutils "github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/utils"
 )
 
 // NewResponseWrapper 添加request id, 统一处理返回
@@ -38,38 +40,52 @@ func NewResponseWrapper(fn server.HandlerFunc) server.HandlerFunc {
 
 // RenderResponse 处理返回数据，用于返回统一结构
 func RenderResponse(rsp interface{}, requestID string, err error) error {
-	switch rsp.(type) {
-	case *proto.ProjectResponse:
-		if r, ok := rsp.(*proto.ProjectResponse); ok {
-			r.RequestID = requestID
-			var perm map[string]interface{}
-			r.Message, r.Code, perm = getMsgCodePerm(err)
-			r.WebAnnotations = &proto.Perms{Perms: convert.Map2pbStruct(perm)}
-			if err != nil {
-				r.Data = nil
-				return nil
-			}
-		}
-	case *proto.ListProjectsResponse:
-		if r, ok := rsp.(*proto.ListProjectsResponse); ok {
-			r.RequestID = requestID
-			r.Message, r.Code = getMsgCode(err)
-			if err != nil {
-				r.Data = nil
-				return nil
-			}
-		}
-	case *proto.ListAuthorizedProjResp:
-		if r, ok := rsp.(*proto.ListAuthorizedProjResp); ok {
-			r.RequestID = requestID
-			r.Message, r.Code = getMsgCode(err)
-			if err != nil {
-				r.Data = nil
-				return nil
-			}
-		}
+	// support for data type string,slice and empty,haven't test for map and so on
+	msg, code := getMsgCode(err)
+	v := reflect.ValueOf(rsp)
+	if v.Elem().FieldByName("RequestID").IsValid() {
+		v.Elem().FieldByName("RequestID").SetString(requestID)
 	}
-	return err
+	v.Elem().FieldByName("Message").SetString(msg)
+	v.Elem().FieldByName("Code").SetUint(uint64(code))
+	if err == nil {
+		return nil
+	}
+	switch e := err.(type) {
+	case *authutils.PermDeniedError:
+		if v.Elem().FieldByName("WebAnnotations").IsValid() {
+			perms := &proto.Perms{}
+			permsMap := map[string]interface{}{}
+			permsMap["apply_url"] = e.Perms.ApplyURL
+			actionList := []map[string]string{}
+			for _, actions := range e.Perms.ActionList {
+				actionList = append(actionList, map[string]string{
+					"action_id":     actions.Action,
+					"resource_type": actions.Type,
+				})
+			}
+			permsMap["action_list"] = actionList
+			perms.Perms = convert.Map2pbStruct(permsMap)
+			v.Elem().FieldByName("WebAnnotations").Set(reflect.ValueOf(perms))
+		}
+		return nil
+	default:
+		dataField := v.Elem().FieldByName("Data")
+		if !dataField.IsValid() {
+			return nil
+		}
+		switch dataField.Kind() {
+		case reflect.Interface, reflect.Ptr:
+			if dataField.Elem().CanSet() {
+				tp := reflect.TypeOf(dataField.Elem().Interface())
+				dataField.Elem().Set(reflect.Zero(tp))
+			}
+		default:
+			tp := reflect.TypeOf(dataField.Interface())
+			dataField.Set(reflect.Zero(tp))
+		}
+		return nil
+	}
 }
 
 // getMsgCode 根据不同的错误类型，获取错误信息 & 错误码
@@ -82,21 +98,9 @@ func getMsgCode(err interface{}) (string, uint32) {
 		return e.Error(), e.Code()
 	case *errors.Error:
 		return e.Detail, errorx.InnerErr
+	case *authutils.PermDeniedError:
+		return err.(*authutils.PermDeniedError).Error(), errorx.NoPermissionErr
 	default:
 		return fmt.Sprintf("%s", e), errorx.InnerErr
 	}
-}
-
-// getMsgCodePerm 获取错误信息 & 错误码 & 权限信息
-func getMsgCodePerm(err interface{}) (string, uint32, map[string]interface{}) {
-	if err != nil {
-		if e, ok := err.(*errorx.PermissionDeniedError); ok {
-			return e.Error(), e.Code(), map[string]interface{}{
-				"applyUrl":   e.ApplyUrl(),
-				e.ActionID(): e.HasPerm(),
-			}
-		}
-	}
-	msg, code := getMsgCode(err)
-	return msg, code, nil
 }

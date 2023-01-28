@@ -37,15 +37,48 @@ var (
 		Help:      "api request latency statistic for helm manager api",
 		Buckets:   []float64{0.01, 0.1, 0.5, 0.75, 1.0, 2.0, 3.0, 5.0, 10.0},
 	}, []string{"handler", "status"})
+
+	operationTotal = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Namespace: BkBcsHelmManager,
+		Name:      "operation_total_num",
+		Help:      "The total number of helm manager release operation",
+	}, []string{"action", "status"})
+
+	operationLatency = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+		Namespace: BkBcsHelmManager,
+		Name:      "operation_latency_time",
+		Help:      "latency statistic for helm manager release operation",
+		Buckets:   []float64{0.01, 0.1, 0.5, 0.75, 1.0, 2.0, 3.0, 5.0, 10.0, 15.0, 20.0, 30.0, 600.0},
+	}, []string{"action", "status"})
+
+	operationCount = prometheus.NewGauge(prometheus.GaugeOpts{
+		Namespace: BkBcsHelmManager,
+		Name:      "operation_current_count",
+		Help:      "The current count of operation for helm manager release",
+	})
 )
 
 func init() {
 	prometheus.MustRegister(requestTotalAPI)
 	prometheus.MustRegister(requestLatencyAPI)
+	prometheus.MustRegister(operationTotal)
+	prometheus.MustRegister(operationLatency)
+	prometheus.MustRegister(operationCount)
 }
 
 // ReportAPIRequestMetric report api request metrics
 func ReportAPIRequestMetric(handler, status string, started time.Time) {
 	requestTotalAPI.WithLabelValues(handler, status).Inc()
 	requestLatencyAPI.WithLabelValues(handler, status).Observe(time.Since(started).Seconds())
+}
+
+// ReportOperationMetric report operation metrics
+func ReportOperationMetric(action, status string, started time.Time) {
+	operationTotal.WithLabelValues(action, status).Inc()
+	operationLatency.WithLabelValues(action, status).Observe(time.Since(started).Seconds())
+}
+
+// ReportOperationCountMetric report operation count metrics
+func ReportOperationCountMetric(count int32) {
+	operationCount.Set(float64(count))
 }

@@ -1,9 +1,9 @@
 @font-face {
 	font-family: "bcs";
-	src: url("fonts/iconcool.svg#iconcool") format("svg"),
-url("fonts/iconcool.ttf") format("truetype"),
-url("fonts/iconcool.woff") format("woff"),
-url("fonts/iconcool.eot?#iefix") format("embedded-opentype");
+	src: url("@/fonts/fonts/iconcool.svg#iconcool") format("svg"),
+url("@/fonts/fonts/iconcool.ttf") format("truetype"),
+url("@/fonts/fonts/iconcool.woff") format("woff"),
+url("@/fonts/fonts/iconcool.eot?#iefix") format("embedded-opentype");
     font-weight: normal;
     font-style: normal;
 }
@@ -862,4 +862,10 @@ url("fonts/iconcool.eot?#iefix") format("embedded-opentype");
 }
 .bcs-icon-mobanpeizhi:before {
 	content: "\e223";
+}
+.bcs-icon-machine:before {
+	content: "\e224";
+}
+.bcs-icon-helm-app:before {
+	content: "\e225";
 }

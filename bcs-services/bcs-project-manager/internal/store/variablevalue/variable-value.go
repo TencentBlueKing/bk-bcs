@@ -24,18 +24,16 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/dbtable"
+	vdm "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/variabledefinition"
 )
 
 const (
 	// table name
-	tableName           = "variable_value"
-	FieldKeyID          = "_id"
-	FieldKeyProjectCode = "projectCode"
-	FieldKeyClusterID   = "clusterID"
-	FieldKeyNamespace   = "namespace"
-	FieldKeyKey         = "key"
-	FieldKeyVariableID  = "variableID"
-	FieldKeyScope       = "scope"
+	tableName          = "variable_value"
+	FieldKeyClusterID  = "clusterID"
+	FieldKeyNamespace  = "namespace"
+	FieldKeyVariableID = "variableID"
+	FieldKeyScope      = "scope"
 )
 
 var (
@@ -57,7 +55,6 @@ var (
 type VariableValue struct {
 	// ID          string `json:"id" bson:"_id"`
 	VariableID string `json:"variableID" bson:"variableID"`
-	Key        string `json:"key" bson:"key"`
 	Value      string `json:"value" bson:"value"`
 	Scope      string `json:"scope" bson:"scope"`
 	ClusterID  string `json:"clusterID" bson:"clusterID"`
@@ -145,6 +142,111 @@ func (m *ModelVariableValue) GetVariableValue(ctx context.Context,
 	return value, nil
 }
 
+// ListClusterVariableValues implement for ListClusterVariableValues interface
+func (m *ModelVariableValue) ListClusterVariableValues(ctx context.Context,
+	variableID string) ([]VariableValue, error) {
+	condM := make(operator.M)
+	if err := m.ensureTable(ctx); err != nil {
+		return nil, err
+	}
+	if variableID == "" {
+		return nil, fmt.Errorf("variableID cannot be empty")
+	}
+	condM[FieldKeyVariableID] = variableID
+	condM[FieldKeyScope] = vdm.VariableScopeCluster
+	cond := operator.NewLeafCondition(operator.Eq, condM)
+	values := make([]VariableValue, 0)
+	if err := m.db.Table(m.tableName).Find(cond).All(ctx, &values); err != nil {
+		return nil, err
+	}
+	return values, nil
+}
+
+// ListNamespaceVariableValues implement for ListNamespaceVariableValues interface
+func (m *ModelVariableValue) ListNamespaceVariableValues(ctx context.Context,
+	variableID, clusterID string) ([]VariableValue, error) {
+	condM := make(operator.M)
+	if err := m.ensureTable(ctx); err != nil {
+		return nil, err
+	}
+	if variableID == "" {
+		return nil, fmt.Errorf("variableID cannot be empty")
+	}
+	condM[FieldKeyVariableID] = variableID
+	condM[FieldKeyScope] = vdm.VariableScopeNamespace
+	condM[FieldKeyClusterID] = clusterID
+	cond := operator.NewLeafCondition(operator.Eq, condM)
+	values := make([]VariableValue, 0)
+	if err := m.db.Table(m.tableName).Find(cond).All(ctx, &values); err != nil {
+		return nil, err
+	}
+	return values, nil
+}
+
+// ListVariableValuesInCluster implement for ListVariableValuesInCluster interface
+func (m *ModelVariableValue) ListVariableValuesInCluster(ctx context.Context,
+	clusterID string) ([]VariableValue, error) {
+	condM := make(operator.M)
+	if err := m.ensureTable(ctx); err != nil {
+		return nil, err
+	}
+	if clusterID == "" {
+		return nil, fmt.Errorf("clusterID cannot be empty")
+	}
+	condM[FieldKeyClusterID] = clusterID
+	condM[FieldKeyScope] = vdm.VariableScopeCluster
+	cond := operator.NewLeafCondition(operator.Eq, condM)
+	values := make([]VariableValue, 0)
+	if err := m.db.Table(m.tableName).Find(cond).All(ctx, &values); err != nil {
+		return nil, err
+	}
+	return values, nil
+}
+
+// ListVariableValuesInNamespace implement for ListVariableValuesInNamespace interface
+func (m *ModelVariableValue) ListVariableValuesInNamespace(ctx context.Context,
+	clusterID, namespace string) ([]VariableValue, error) {
+	condM := make(operator.M)
+	if err := m.ensureTable(ctx); err != nil {
+		return nil, err
+	}
+	if clusterID == "" {
+		return nil, fmt.Errorf("clusterID cannot be empty")
+	}
+	if namespace == "" {
+		return nil, fmt.Errorf("namespace cannot be empty")
+	}
+	condM[FieldKeyClusterID] = clusterID
+	condM[FieldKeyNamespace] = namespace
+	condM[FieldKeyScope] = vdm.VariableScopeNamespace
+	cond := operator.NewLeafCondition(operator.Eq, condM)
+	values := make([]VariableValue, 0)
+	if err := m.db.Table(m.tableName).Find(cond).All(ctx, &values); err != nil {
+		return nil, err
+	}
+	return values, nil
+}
+
+// ListVariableValuesInAllNamespace implement for ListVariableValuesInAllNamespace interface
+func (m *ModelVariableValue) ListVariableValuesInAllNamespace(ctx context.Context,
+	clusterID string) ([]VariableValue, error) {
+	condM := make(operator.M)
+	if err := m.ensureTable(ctx); err != nil {
+		return nil, err
+	}
+	if clusterID == "" {
+		return nil, fmt.Errorf("clusterID cannot be empty")
+	}
+	condM[FieldKeyClusterID] = clusterID
+	condM[FieldKeyScope] = vdm.VariableScopeNamespace
+	cond := operator.NewLeafCondition(operator.Eq, condM)
+	values := make([]VariableValue, 0)
+	if err := m.db.Table(m.tableName).Find(cond).All(ctx, &values); err != nil {
+		return nil, err
+	}
+	return values, nil
+}
+
 // UpsertVariableValue upsert variable value
 func (m *ModelVariableValue) UpsertVariableValue(ctx context.Context,
 	value *VariableValue) error {
@@ -162,4 +264,17 @@ func (m *ModelVariableValue) UpsertVariableValue(ctx context.Context,
 	}
 	cond := operator.NewLeafCondition(operator.Eq, condM)
 	return m.db.Table(m.tableName).Upsert(ctx, cond, operator.M{"$set": value})
+}
+
+// DeleteVariableValuesByNamespace batch delete variable value records
+func (m *ModelVariableValue) DeleteVariableValuesByNamespace(ctx context.Context,
+	clusterID, namespace string) (int64, error) {
+	if err := m.ensureTable(ctx); err != nil {
+		return 0, err
+	}
+	cond := operator.NewLeafCondition(operator.Eq, operator.M{
+		FieldKeyClusterID: clusterID,
+		FieldKeyNamespace: namespace,
+	})
+	return m.db.Table(m.tableName).Delete(ctx, cond)
 }

@@ -20,10 +20,10 @@ import (
 )
 
 // GetNodeList 获取集群节点列表
-func GetNodeList(ctx context.Context, clusterId string, excludeMasterRole bool) ([]string, error) {
+func GetNodeList(ctx context.Context, clusterId string, excludeMasterRole bool) ([]string, []string, error) {
 	client, err := GetK8SClientByClusterId(clusterId)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	listOptions := metav1.ListOptions{}
@@ -33,16 +33,18 @@ func GetNodeList(ctx context.Context, clusterId string, excludeMasterRole bool) 
 
 	nodeList, err := client.CoreV1().Nodes().List(ctx, listOptions)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	nodeIPList := make([]string, 0, len(nodeList.Items))
+	nodeNameList := make([]string, 0, len(nodeList.Items))
 	for _, item := range nodeList.Items {
+		nodeNameList = append(nodeNameList, item.Name)
 		for _, addr := range item.Status.Addresses {
 			if addr.Type == v1.NodeInternalIP {
 				nodeIPList = append(nodeIPList, addr.Address)
 			}
 		}
 	}
-	return nodeIPList, nil
+	return nodeIPList, nodeNameList, nil
 }

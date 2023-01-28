@@ -29,16 +29,10 @@ import _ from 'lodash';
 import http from '@/api';
 import { json2Query } from '@/common/util';
 import {
-  getBizMaintainers,
-  getK8sNodes,
-  fetchK8sNodeLabels,
-  setK8sNodeLabels,
-  getNodeTaints,
-  setNodeTaints,
   fetchClusterList,
-  schedulerNode,
   fetchNodePodsData,
 } from '@/api/base';
+import { projectBusiness } from '@/api/modules/project';
 
 export default {
   namespaced: true,
@@ -368,21 +362,6 @@ export default {
     },
 
     /**
-         * 集群 节点列表 pods/taskgroups 迁移
-         *
-         * @param {Object} context store 上下文对象
-         * @param {Object} params 参数
-         * @param {Object} config 请求的配置
-         *
-         * @return {Promise} promise 对象
-         */
-    async schedulerNode(context, params) {
-      const data = await schedulerNode(params).then(() => true)
-        .catch(() => false);
-      return data;
-    },
-
-    /**
          * 集群 节点列表 批量操作
          *
          * @param {Object} context store 上下文对象
@@ -410,14 +389,6 @@ export default {
       return http.put(
         `${DEVOPS_BCS_API_URL}/api/projects/${projectId}/clusters/${clusterId}/nodes/batch/`,
         { inner_ip_list: ipList, status },
-        config,
-      );
-    },
-    batchUpdateNodeStatus(context, params, config = {}) {
-      const { projectId, clusterId, nodeNameList, status } = params;
-      return http.put(
-        `${DEVOPS_BCS_API_URL}/api/cluster_mgr/projects/${projectId}/clusters/${clusterId}/nodes/schedule_status/`,
-        { node_name_list: nodeNameList, status },
         config,
       );
     },
@@ -526,33 +497,6 @@ export default {
     },
 
     /**
-         * 修改节点状态，即停用，启用，重试等操作，移除是另外一个接口
-         *
-         * @param {Object} context store 上下文对象
-         * @param {string} projectId 项目 id
-         * @param {string} clusterId 集群 id
-         * @param {string} nodeId 节点 id 即 ip
-         * @param {string} status 状态值，停用: to_removed, 启用: normal
-         * @param {Object} config 请求的配置
-         *
-         * @return {Promise} promise 对象
-         */
-    updateNodeStatus(context, params, config = {}) {
-      // return http.put(`/api/projects/cluster?invoke=updateNodeStatus`, params).then(response => {
-      //     return response.data
-      // })
-      const { projectId, clusterId, nodeName, status } = params;
-      delete params.projectId;
-      delete params.clusterId;
-      delete params.nodeName;
-      return http.put(
-        `${DEVOPS_BCS_API_URL}/api/cluster_mgr/projects/${projectId}/clusters/${clusterId}/nodes/schedule_status/`,
-        { node_name_list: nodeName, status },
-        config,
-      );
-    },
-
-    /**
          * 集群 节点列表获取 cpu 磁盘 内存占用的数据
          *
          * @param {Object} context store 上下文对象
@@ -639,24 +583,6 @@ export default {
     getNodeLabel(context, { projectId, nodeIds }, config = {}) {
       return http.get(
         `${DEVOPS_BCS_API_URL}/api/projects/${projectId}/node_label_info/?node_ids=${nodeIds}`,
-        {},
-        config,
-      );
-    },
-
-    /**
-         * 获取集群 master 信息
-         *
-         * @param {Object} context store 上下文对象
-         * @param {Object} params 参数
-         * @param {Object} config 请求的配置
-         *
-         * @return {Promise} promise 对象
-         */
-    getClusterMasterInfo(context, { projectId, clusterId }, config = {}) {
-      // return http.get(`/api/projects/cluster?invoke=getClusterMasterInfo`).then(
-      return http.get(
-        `${DEVOPS_BCS_API_URL}/api/projects/${projectId}/clusters/${clusterId}/masters/`,
         {},
         config,
       );
@@ -1156,79 +1082,9 @@ export default {
          * @return {Promise} promise 对象
          */
     async getBizMaintainers(context, params = {}, config = {}) {
-      const data = await getBizMaintainers(params, config).catch(() => ({
-        maintainers: [],
+      const data = await projectBusiness(params, config).catch(() => ({
+        maintainer: [],
       }));
-      return data;
-    },
-
-    /**
-         * 获取 k8s节点列表
-         *
-         * @param {Object} context store 上下文对象
-         * @param {Object} params 参数
-         * @param {Object} config 请求的配置
-         *
-         * @return {Promise} promise 对象
-         */
-    async getK8sNodes(context, params = {}, config = {}) {
-      const data = await getK8sNodes(params, config).catch(() => ([]));
-      return data;
-    },
-
-    /**
-         * 获取 k8s节点labels列表
-         *
-         * @param {Object} context store 上下文对象
-         * @param {Object} params 参数
-         * @param {Object} config 请求的配置
-         *
-         * @return {Promise} promise 对象
-         */
-    async fetchK8sNodeLabels(context, params = {}, config = {}) {
-      const data = await fetchK8sNodeLabels(params, config).catch(() => ({}));
-      return data;
-    },
-
-    /**
-         * 设置 k8s节点labels列表
-         *
-         * @param {Object} context store 上下文对象
-         * @param {Object} params 参数
-         * @param {Object} config 请求的配置
-         *
-         * @return {Promise} promise 对象
-         */
-    async setK8sNodeLabels(context, params = {}, config = {}) {
-      const data = await setK8sNodeLabels(params, config).catch(() => ([]));
-      return data;
-    },
-
-    /**
-         * 设置节点污点
-         *
-         * @param {Object} context store 上下文对象
-         * @param {Object} params 参数
-         * @param {Object} config 请求的配置
-         *
-         * @return {Promise} promise 对象
-         */
-    async setNodeTaints(context, params = {}, config = {}) {
-      const data = await setNodeTaints(params, config).catch(() => ([]));
-      return data;
-    },
-
-    /**
-         * 获取节点污点
-         *
-         * @param {Object} context store 上下文对象
-         * @param {Object} params 参数
-         * @param {Object} config 请求的配置
-         *
-         * @return {Promise} promise 对象
-         */
-    async getNodeTaints(context, params = {}, config = {}) {
-      const data = await getNodeTaints(params, config).catch(() => ({}));
       return data;
     },
 

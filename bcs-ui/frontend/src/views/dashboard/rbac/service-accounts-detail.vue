@@ -21,21 +21,31 @@
         <span>{{ extData.age }}</span>
       </div>
     </div>
-    <div class="mt20 mb10">
-      Scerets
-    </div>
-    <div class="scerets-content">
-      <bk-table :data="data.secrets">
-        <bk-table-column label="name" prop="name"></bk-table-column>
-      </bk-table>
+    <div class="mt20 mb10 scerets-content">
+      <bcs-tab :label-height="42">
+        <bcs-tab-panel name="secrets" label="Secrets">
+          <bk-table :data="data.secrets">
+            <bk-table-column label="name" prop="name"></bk-table-column>
+          </bk-table>
+        </bcs-tab-panel>
+        <bcs-tab-panel name="event" :label="$t('事件')">
+          <EventQueryTableVue
+            is-specify-kinds
+            :kinds="data.kind"
+            :namespace="data.metadata.namespace"
+            :name="data.metadata.name" />
+        </bcs-tab-panel>
+      </bcs-tab>
     </div>
   </div>
 </template>
 <script lang="ts">
 import { defineComponent } from '@vue/composition-api';
+import EventQueryTableVue from '@/views/mc/event-query-table.vue';
 
 export default defineComponent({
   name: 'ConfigMapsDetail',
+  components: { EventQueryTableVue },
   props: {
     // 当前行数据
     data: {
@@ -55,8 +65,8 @@ export default defineComponent({
     /deep/ .bk-tab-label-item {
         background-color: #FAFBFD;
         border-bottom: 1px solid #dcdee5;
-        line-height: 39px !important;
-        height: 39px;
+        line-height: 41px !important;
+        height: 41px;
         &.active {
             border-bottom: none;
         }
@@ -87,6 +97,14 @@ export default defineComponent({
                 }
                 span {
                     padding: 0 15px;
+                    flex: 1;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    white-space: normal;
+                    word-break: break-all;
+                    display: -webkit-box;
+                    -webkit-line-clamp: 1;
+                    -webkit-box-orient: vertical;
                 }
             }
         }

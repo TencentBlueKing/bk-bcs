@@ -1,50 +1,38 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <link rel="icon" href="{{ STATIC_URL }}<%= htmlWebpackPlugin.options.staticUrl %>/images/favicon.ico" type="image/x-icon" />
-        <link rel="shortcut icon" href="{{ STATIC_URL }}<%= htmlWebpackPlugin.options.staticUrl %>/images/favicon.ico" type="image/x-icon" />
+        <link rel="icon" href="<%= process.env.BK_STATIC_URL %>/static/images/favicon.ico" type="image/x-icon" />
+        <link rel="shortcut icon" href="<%= process.env.BK_STATIC_URL %>/static/images/favicon.ico" type="image/x-icon" />
         <meta charset="utf-8">
         <title> loading </title>
     </head>
 <body>
 <div id="app"></div>
 <script>
-    var LOGIN_FULL = '{{ LOGIN_FULL }}'
-    var DEVOPS_HOST = '{{ DEVOPS_HOST }}'
-    var DEVOPS_BCS_API_URL = '{{ DEVOPS_BCS_API_URL }}'
-    var DEVOPS_BCS_HOST = '{{ DEVOPS_BCS_HOST }}'
-    var STATIC_URL = '{{ STATIC_URL }}'
-    var VERSION_STATIC_URL = '<%= htmlWebpackPlugin.options.staticUrl %>'
-    var RUN_ENV = '{{ RUN_ENV }}'
-    var DEVOPS_ARTIFACTORY_HOST = '{{ DEVOPS_ARTIFACTORY_HOST }}'
-    var BK_CC_HOST = '{{ BK_CC_HOST }}'
-    var REGION = '{{ REGION }}'
-    var SITE_URL = '{{ SITE_URL }}'
-    var BK_IAM_APP_URL = '{{ BK_IAM_APP_URL }}'
-
-    var PROJECT_MESOS = 2
-    var PROJECT_K8S = 1
+    var LOGIN_FULL = '<%= process.env.BK_LOGIN_FULL %>'
+    var DEVOPS_HOST = '<%= process.env.BK_DEVOPS_HOST %>'
+    var DEVOPS_BCS_API_URL = '<%= process.env.BK_DEVOPS_BCS_API_URL %>'
+    var BK_STATIC_URL = '<%= process.env.BK_STATIC_URL %>'
+    var RUN_ENV = '<%= process.env.BK_RUN_ENV %>'
+    var DEVOPS_ARTIFACTORY_HOST = '<%= process.env.BK_DEVOPS_ARTIFACTORY_HOST %>'
+    var REGION = '<%= process.env.BK_REGION %>'
+    var SITE_URL = '<%= process.env.BK_SITE_URL %>'
+    var BK_IAM_APP_URL = '<%= process.env.BK_IAM_APP_URL %>'
+    var PROJECT_K8S = 'k8s'
     var PROJECT_TKE = 3
-    // 当前编译发布版本号, 年月日时分秒（eg: 2019212_162010）
-    var RELEASE_VERSION = '<%= htmlWebpackPlugin.options.releaseVersion %>'
-    var IAM_HOST = '{{ IAM_HOST }}'
-    var YUNTI_HOST = '{{ YUNTI_HOST }}'
-    var PAAS_HOST = '{{ PAAS_HOST }}'
-    var SO_HOST = '{{ SO_HOST }}'
-    var UWORK_HOST = '{{ UWORK_HOST }}'
-    var SNIPER_HOST = '{{ SNIPER_HOST }}'
-    var MIRROR_HOST = '{{ MIRROR_HOST }}'
-    var BKMONITOR_HOST = '{{ BKMONITOR_HOST }}'
-    var BCS_API_HOST = '{{ BCS_API_HOST }}'
-    var PREFERRED_DOMAINS = '{{ PREFERRED_DOMAINS }}'
+    var PAAS_HOST = '<%= process.env.BK_PAAS_HOST %>'
+    var BKMONITOR_HOST = '<%= process.env.BK_BKMONITOR_HOST %>'
+    var BCS_API_HOST = '<%= process.env.BK_BCS_API_HOST %>'
+    var PREFERRED_DOMAINS = '<%= process.env.BK_PREFERRED_DOMAINS %>'
+    var BK_CC_HOST = '<%= process.env.BK_CC_HOST %>'
+    // 临时变量
+    var BCS_DEBUG_API_HOST = '{{ BCS_DEBUG_API_HOST }}'
 
-    document.domain = '{{ SESSION_COOKIE_DOMAIN }}'
     // 加载配置文件
     var scriptDom = document.createElement('script')
-    scriptDom.src = '{{ STATIC_URL }}<%= htmlWebpackPlugin.options.staticUrl %>/' + REGION +'.config.js'
+    scriptDom.src = `<%= process.env.BK_STATIC_URL %>/static/${REGION}.config.js`
     var script = document.getElementsByTagName('script')[0]
     script.parentNode.insertBefore(scriptDom, script)
 </script>
-<script src="{{ STATIC_URL }}<%= htmlWebpackPlugin.options.staticUrl %>/lib.bundle.js"></script>
 </body>
 </html>

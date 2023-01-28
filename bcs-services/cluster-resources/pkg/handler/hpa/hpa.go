@@ -23,7 +23,7 @@ import (
 	resAction "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action/resource"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action/web"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/featureflag"
-	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
+	resCsts "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/constants"
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
 )
 
@@ -40,10 +40,10 @@ func (h *Handler) ListHPA(
 	ctx context.Context, req *clusterRes.ResListReq, resp *clusterRes.CommonResp,
 ) (err error) {
 	if req.ApiVersion == "" {
-		req.ApiVersion = res.DefaultHPAGroupVersion
+		req.ApiVersion = resCsts.DefaultHPAGroupVersion
 	}
-	resp.Data, err = resAction.NewResMgr(req.ClusterID, req.ApiVersion, res.HPA).List(
-		ctx, req.Namespace, req.Format, metav1.ListOptions{LabelSelector: req.LabelSelector},
+	resp.Data, err = resAction.NewResMgr(req.ClusterID, req.ApiVersion, resCsts.HPA).List(
+		ctx, req.Namespace, req.Format, req.Scene, metav1.ListOptions{LabelSelector: req.LabelSelector},
 	)
 	if err != nil {
 		return err
@@ -59,9 +59,9 @@ func (h *Handler) GetHPA(
 	ctx context.Context, req *clusterRes.ResGetReq, resp *clusterRes.CommonResp,
 ) (err error) {
 	if req.ApiVersion == "" {
-		req.ApiVersion = res.DefaultHPAGroupVersion
+		req.ApiVersion = resCsts.DefaultHPAGroupVersion
 	}
-	resp.Data, err = resAction.NewResMgr(req.ClusterID, req.ApiVersion, res.HPA).Get(
+	resp.Data, err = resAction.NewResMgr(req.ClusterID, req.ApiVersion, resCsts.HPA).Get(
 		ctx, req.Namespace, req.Name, req.Format, metav1.GetOptions{},
 	)
 	if err != nil {
@@ -77,7 +77,7 @@ func (h *Handler) GetHPA(
 func (h *Handler) CreateHPA(
 	ctx context.Context, req *clusterRes.ResCreateReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = resAction.NewResMgr(req.ClusterID, "", res.HPA).Create(
+	resp.Data, err = resAction.NewResMgr(req.ClusterID, "", resCsts.HPA).Create(
 		ctx, req.RawData, req.Format, true, metav1.CreateOptions{},
 	)
 	return err
@@ -87,7 +87,7 @@ func (h *Handler) CreateHPA(
 func (h *Handler) UpdateHPA(
 	ctx context.Context, req *clusterRes.ResUpdateReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = resAction.NewResMgr(req.ClusterID, "", res.HPA).Update(
+	resp.Data, err = resAction.NewResMgr(req.ClusterID, "", resCsts.HPA).Update(
 		ctx, req.Namespace, req.Name, req.RawData, req.Format, metav1.UpdateOptions{},
 	)
 	return err
@@ -97,7 +97,7 @@ func (h *Handler) UpdateHPA(
 func (h *Handler) DeleteHPA(
 	ctx context.Context, req *clusterRes.ResDeleteReq, _ *clusterRes.CommonResp,
 ) error {
-	return resAction.NewResMgr(req.ClusterID, "", res.HPA).Delete(
+	return resAction.NewResMgr(req.ClusterID, "", resCsts.HPA).Delete(
 		ctx, req.Namespace, req.Name, metav1.DeleteOptions{},
 	)
 }

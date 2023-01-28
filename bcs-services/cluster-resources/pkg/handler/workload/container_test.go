@@ -87,7 +87,7 @@ func getRunningPodNameFromCluster() string {
 	podCli := client.NewPodCliByClusterID(ctx, envs.TestClusterID)
 	ret, _ := podCli.List(ctx, envs.TestNamespace, "", "", metav1.ListOptions{})
 
-	for _, pod := range ret["items"].([]interface{}) {
+	for _, pod := range mapx.GetList(ret, "items") {
 		p, _ := pod.(map[string]interface{})
 		parser := formatter.PodStatusParser{Manifest: p}
 		if parser.Parse() == "Running" {

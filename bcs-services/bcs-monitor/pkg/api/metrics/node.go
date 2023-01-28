@@ -24,12 +24,14 @@ import (
 
 // NodeOveriewMetric 节点概览
 type NodeOveriewMetric struct {
-	ContainerCount string `json:"container_count"`
-	PodCount       string `json:"pod_count"`
-	CPUUsage       string `json:"cpu_usage"`
-	DiskUsage      string `json:"disk_usage"`
-	DiskioUsage    string `json:"diskio_usage"`
-	MemoryUsage    string `json:"memory_usage"`
+	ContainerCount     string `json:"container_count"`
+	PodCount           string `json:"pod_count"`
+	CPUUsage           string `json:"cpu_usage"`
+	CPURequestUsage    string `json:"cpu_request_usage"`
+	DiskUsage          string `json:"disk_usage"`
+	DiskioUsage        string `json:"diskio_usage"`
+	MemoryUsage        string `json:"memory_usage"`
+	MemoryRequestUsage string `json:"memory_request_usage"`
 }
 
 // UsageQuery 节点查询
@@ -112,10 +114,10 @@ func handleNodeMetric(c *rest.Context, promql string) (interface{}, error) {
 }
 
 // GetNodeInfo 节点信息
-// @Summary  节点信息
-// @Tags     Metrics
-// @Success  200  {string}  string
-// @Router   /nodes/:ip/info [get]
+// @Summary 节点信息
+// @Tags    Metrics
+// @Success 200 {string} string
+// @Router  /nodes/:ip/info [get]
 func GetNodeInfo(c *rest.Context) (interface{}, error) {
 	params := map[string]interface{}{
 		"clusterId": c.ClusterId,
@@ -132,10 +134,10 @@ func GetNodeInfo(c *rest.Context) (interface{}, error) {
 }
 
 // GetNodeOverview 查询节点概览
-// @Summary  查询节点概览
-// @Tags     Metrics
-// @Success  200  {string}  string
-// @Router   /nodes/:ip/overview [get]
+// @Summary 查询节点概览
+// @Tags    Metrics
+// @Success 200 {string} string
+// @Router  /nodes/:ip/overview [get]
 func GetNodeOverview(c *rest.Context) (interface{}, error) {
 	params := map[string]interface{}{
 		"clusterId": c.ClusterId,
@@ -145,7 +147,9 @@ func GetNodeOverview(c *rest.Context) (interface{}, error) {
 
 	promqlMap := map[string]string{
 		"cpu":             `bcs:node:cpu:usage{cluster_id="%<clusterId>s", ip="%<ip>s", %<provider>s}`,
+		"cpu_request":     `bcs:node:cpu_request:usage{cluster_id="%<clusterId>s", ip="%<ip>s", %<provider>s}`,
 		"memory":          `bcs:node:memory:usage{cluster_id="%<clusterId>s", ip="%<ip>s", %<provider>s}`,
+		"memory_request":  `bcs:node:memory_request:usage{cluster_id="%<clusterId>s", ip="%<ip>s", %<provider>s}`,
 		"disk":            `bcs:node:disk:usage{cluster_id="%<clusterId>s", ip="%<ip>s", %<provider>s}`,
 		"diskio":          `bcs:node:diskio:usage{cluster_id="%<clusterId>s", ip="%<ip>s", %<provider>s}`,
 		"container_count": `bcs:node:container_count{cluster_id="%<clusterId>s", ip="%<ip>s", %<provider>s}`,
@@ -158,22 +162,24 @@ func GetNodeOverview(c *rest.Context) (interface{}, error) {
 	}
 
 	overview := &NodeOveriewMetric{
-		CPUUsage:       result["cpu"],
-		MemoryUsage:    result["memory"],
-		DiskUsage:      result["disk"],
-		DiskioUsage:    result["diskio"],
-		ContainerCount: result["container_count"],
-		PodCount:       result["pod_count"],
+		CPUUsage:           result["cpu"],
+		CPURequestUsage:    result["cpu_request"],
+		MemoryUsage:        result["memory"],
+		MemoryRequestUsage: result["memory_request"],
+		DiskUsage:          result["disk"],
+		DiskioUsage:        result["diskio"],
+		ContainerCount:     result["container_count"],
+		PodCount:           result["pod_count"],
 	}
 
 	return overview, nil
 }
 
 // GetNodeCPUUsage 查询 CPU 使用率
-// @Summary  查询 CPU 使用率
-// @Tags     Metrics
-// @Success  200  {string}  string
-// @Router   /nodes/:ip/cpu_usage [get]
+// @Summary 查询 CPU 使用率
+// @Tags    Metrics
+// @Success 200 {string} string
+// @Router  /nodes/:ip/cpu_usage [get]
 func GetNodeCPUUsage(c *rest.Context) (interface{}, error) {
 	promql := `bcs:node:cpu:usage{cluster_id="%<clusterId>s", ip="%<ip>s", %<provider>s}`
 
@@ -181,11 +187,23 @@ func GetNodeCPUUsage(c *rest.Context) (interface{}, error) {
 
 }
 
+// GetNodeCPURequestUsage 查询 CPU 装箱率
+// @Summary 查询 CPU 装箱率
+// @Tags    Metrics
+// @Success 200 {string} string
+// @Router  /nodes/:ip/cpu_request_usage [get]
+func GetNodeCPURequestUsage(c *rest.Context) (interface{}, error) {
+	promql := `bcs:node:cpu_request:usage{cluster_id="%<clusterId>s", ip="%<ip>s", %<provider>s}`
+
+	return handleNodeMetric(c, promql)
+
+}
+
 // GetNodeMemoryUsage 节点内存使用率
-// @Summary  节点内存使用率
-// @Tags     Metrics
-// @Success  200  {string}  string
-// @Router   /nodes/:ip/memory_usage [get]
+// @Summary 节点内存使用率
+// @Tags    Metrics
+// @Success 200 {string} string
+// @Router  /nodes/:ip/memory_usage [get]
 func GetNodeMemoryUsage(c *rest.Context) (interface{}, error) {
 	promql := `bcs:node:memory:usage{cluster_id="%<clusterId>s", ip="%<ip>s", %<provider>s}`
 
@@ -193,11 +211,23 @@ func GetNodeMemoryUsage(c *rest.Context) (interface{}, error) {
 
 }
 
+// GetNodeMemoryRequestUsage 节点内存装箱率
+// @Summary 节点内存装箱率
+// @Tags    Metrics
+// @Success 200 {string} string
+// @Router  /nodes/:ip/memory_request_usage [get]
+func GetNodeMemoryRequestUsage(c *rest.Context) (interface{}, error) {
+	promql := `bcs:node:memory_request:usage{cluster_id="%<clusterId>s", ip="%<ip>s", %<provider>s}`
+
+	return handleNodeMetric(c, promql)
+
+}
+
 // GetNodeNetworkTransmitUsage 节点网络发送
-// @Summary  节点网络发送
-// @Tags     Metrics
-// @Success  200  {string}  string
-// @Router   /nodes/:ip/network_receive [get]
+// @Summary 节点网络发送
+// @Tags    Metrics
+// @Success 200 {string} string
+// @Router  /nodes/:ip/network_receive [get]
 func GetNodeNetworkTransmitUsage(c *rest.Context) (interface{}, error) {
 	promql := `bcs:node:network_transmit{cluster_id="%<clusterId>s", ip="%<ip>s", %<provider>s}`
 
@@ -206,10 +236,10 @@ func GetNodeNetworkTransmitUsage(c *rest.Context) (interface{}, error) {
 }
 
 // GetNodeNetworkReceiveUsage 节点网络接收
-// @Summary  节点网络接收
-// @Tags     Metrics
-// @Success  200  {string}  string
-// @Router   /nodes/:ip/network_transmit [get]
+// @Summary 节点网络接收
+// @Tags    Metrics
+// @Success 200 {string} string
+// @Router  /nodes/:ip/network_transmit [get]
 func GetNodeNetworkReceiveUsage(c *rest.Context) (interface{}, error) {
 	promql := `bcs:node:network_receive{cluster_id="%<clusterId>s", ip="%<ip>s", %<provider>s}`
 
@@ -217,11 +247,22 @@ func GetNodeNetworkReceiveUsage(c *rest.Context) (interface{}, error) {
 
 }
 
+// GetNodeDiskUsage 节点磁盘使用率
+// @Summary 节点磁盘使用率
+// @Tags    Metrics
+// @Success 200 {string} string
+// @Router  /nodes/:ip/disk_usage [get]
+func GetNodeDiskUsage(c *rest.Context) (interface{}, error) {
+	promql := `bcs:node:disk:usage{cluster_id="%<clusterId>s", ip="%<ip>s", %<provider>s}`
+
+	return handleNodeMetric(c, promql)
+}
+
 // GetNodeDiskioUsage 节点磁盘IO
-// @Summary  节点磁盘IO
-// @Tags     Metrics
-// @Success  200  {string}  string
-// @Router   /nodes/:ip/diskio_usage [get]
+// @Summary 节点磁盘IO
+// @Tags    Metrics
+// @Success 200 {string} string
+// @Router  /nodes/:ip/diskio_usage [get]
 func GetNodeDiskioUsage(c *rest.Context) (interface{}, error) {
 	promql := `bcs:node:diskio:usage{cluster_id="%<clusterId>s", ip="%<ip>s", %<provider>s}`
 

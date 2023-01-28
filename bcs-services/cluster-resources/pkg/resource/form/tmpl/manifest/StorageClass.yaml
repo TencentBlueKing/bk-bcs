@@ -17,6 +17,9 @@ metadata:
     storageclass.kubernetes.io/is-default-class: "true"
     {{- end }}
   {{- end }}
+  {{- if .metadata.resVersion }}
+  resourceVersion: {{ .metadata.resVersion | quote }}
+  {{- end }}
 {{- if .spec.provisioner }}
 provisioner: {{ .spec.provisioner }}
 {{- end }}

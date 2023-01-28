@@ -321,8 +321,7 @@ func migrateClusterVariables() error {
 		}
 		value := &vvm.VariableValue{}
 		value.VariableID = newDef.ID
-		value.Key = newDef.Key
-		value.Scope = vdm.VariableDefinitionScopeCluster
+		value.Scope = vdm.VariableScopeCluster
 		value.ClusterID = variable.ClusterID
 		temp := &SaasVariableValue{}
 		if err := json.Unmarshal([]byte(variable.Data), temp); err != nil {
@@ -336,6 +335,9 @@ func migrateClusterVariables() error {
 		}
 		if variable.Updated != nil {
 			value.UpdateTime = variable.Updated.Format(timeLayout)
+		}
+		if variable.Updator != "" {
+			value.Updater = variable.Updator
 		}
 		if err := model.UpsertVariableValue(context.Background(), value); err != nil {
 			fmt.Printf("upsert cluster value for variable [%s] in cluster [%s] failed, err: %s\n",
@@ -388,8 +390,7 @@ func migrateNamespaceVariables() error {
 		}
 		value := &vvm.VariableValue{}
 		value.VariableID = newDef.ID
-		value.Key = newDef.Key
-		value.Scope = vdm.VariableDefinitionScopeNamespace
+		value.Scope = vdm.VariableScopeNamespace
 		value.ClusterID = namespace.ClusterID
 		value.Namespace = namespace.Name
 		temp := &SaasVariableValue{}

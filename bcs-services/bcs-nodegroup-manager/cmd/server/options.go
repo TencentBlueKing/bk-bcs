@@ -65,6 +65,12 @@ type ClientConfig struct {
 	clientTLS  *tls.Config // nolint
 }
 
+// GatewayConfig bcs gateway config
+type GatewayConfig struct {
+	Endpoint string `json:"endpoint"`
+	Token    string `json:"token"`
+}
+
 // DefaultOptions create default options for server
 func DefaultOptions() *Options {
 	return &Options{
@@ -84,6 +90,7 @@ func DefaultOptions() *Options {
 			Verbosity:    3,
 			AlsoToStdErr: true,
 		},
+		Gateway: &GatewayConfig{},
 	}
 }
 
@@ -92,10 +99,11 @@ type Options struct {
 	conf.LogConfig
 	ServerConfig
 	ClientConfig
-	ResourceManager string   `json:"resourcemanager"`
-	ControllerLoop  uint     `json:"controllerloop"`
-	Storage         *Storage `json:"storage"`
-	Registry        *Etcd    `json:"registry"`
+	ResourceManager string         `json:"resourcemanager"`
+	ControllerLoop  uint           `json:"controllerloop"`
+	Storage         *Storage       `json:"storage"`
+	Registry        *Etcd          `json:"registry"`
+	Gateway         *GatewayConfig `json:"gateway"`
 }
 
 // Complete all unsetting config items

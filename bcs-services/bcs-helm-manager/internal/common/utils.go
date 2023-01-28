@@ -50,6 +50,12 @@ func GetStringP(s string) *string {
 	return &p
 }
 
+// GetInt32P return ptr of copied int32
+func GetInt32P(s int32) *int32 {
+	p := s
+	return &p
+}
+
 // GetInt64P return ptr of copied int64
 func GetInt64P(s int64) *int64 {
 	p := s

@@ -11,5 +11,6 @@ declare module 'vue/types/vue' {
     $bkInfo: any;
     $bkMessage: any;
     $bkNotify: any;
+    $chainable: (obj: any, path: string) => any;
   }
 }

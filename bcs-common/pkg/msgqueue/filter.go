@@ -60,14 +60,9 @@ type DefaultClusterFilter struct {
 
 // Filter filter clusterID resource by meta
 func (filter *DefaultClusterFilter) Filter(meta map[string]string) bool {
-	if filter == nil || len(meta) == 0 {
-		return true
-	}
-
 	if id, ok := meta[string(filter.FilterKind)]; ok && id == filter.ClusterID {
 		return true
 	}
-
 	return false
 }
 
@@ -79,14 +74,9 @@ type DefaultNamespaceFilter struct {
 
 // Filter filter namespace resource by meta
 func (filter *DefaultNamespaceFilter) Filter(meta map[string]string) bool {
-	if filter == nil || len(meta) == 0 {
-		return true
-	}
-
 	if namespace, ok := meta[string(filter.FilterKind)]; ok && namespace == filter.Namespace {
 		return true
 	}
-
 	return false
 }
 
@@ -98,14 +88,9 @@ type DefaultResourceTypeFilter struct {
 
 // Filter filter resourceType resource by meta
 func (filter *DefaultResourceTypeFilter) Filter(meta map[string]string) bool {
-	if filter == nil || len(meta) == 0 {
-		return true
-	}
-
 	if resourceType, ok := meta[string(filter.FilterKind)]; ok && resourceType == filter.ResourceType {
 		return true
 	}
-
 	return false
 }
 
@@ -117,14 +102,9 @@ type DefaultResourceNameFilter struct {
 
 // Filter filter resourceName resource by meta
 func (filter *DefaultResourceNameFilter) Filter(meta map[string]string) bool {
-	if filter == nil || len(meta) == 0 {
-		return true
-	}
-
 	if name, ok := meta[string(filter.FilterKind)]; ok && name == filter.ResourceName {
 		return true
 	}
-
 	return false
 }
 
@@ -136,13 +116,8 @@ type DefaultEventFilter struct {
 
 // Filter filter resourceEvent resource by meta
 func (filter *DefaultEventFilter) Filter(meta map[string]string) bool {
-	if filter == nil || len(meta) == 0 {
-		return true
-	}
-
 	if event, ok := meta[string(filter.FilterKind)]; ok && event == filter.EventType {
 		return true
 	}
-
 	return false
 }

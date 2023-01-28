@@ -22,7 +22,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/micro/go-micro/v2/server"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/auth"
 	projectClient "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/component/project"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/utils/contextx"
 )
@@ -49,18 +48,18 @@ func ParseProjectIDWrapper(fn server.HandlerFunc) server.HandlerFunc {
 			project.ProjectCode = project.ProjectID
 		}
 
-		username := auth.GetUserFromCtx(ctx)
-		if len(username) == 0 || len(project.ProjectCode) == 0 {
-			blog.Warn("ParseProjectIDWrapper error: username or projectCode is invalid")
+		if len(project.ProjectCode) == 0 {
+			blog.Warn("ParseProjectIDWrapper error: projectCode is empty")
 			return fn(ctx, req, rsp)
 		}
-		projectID, err := projectClient.GetProjectIDByCode(auth.GetUserFromCtx(ctx), project.ProjectCode)
+		pj, err := projectClient.GetProjectByCode(project.ProjectCode)
 		if err != nil {
 			return fmt.Errorf("ParseProjectIDWrapper get projectID error, projectCode: %s, err: %s",
 				project.ProjectCode, err.Error())
 		}
 
-		ctx = context.WithValue(ctx, contextx.ProjectIDContextKey, projectID)
+		ctx = context.WithValue(ctx, contextx.ProjectIDContextKey, pj.ProjectID)
+		ctx = context.WithValue(ctx, contextx.ProjectCodeContextKey, pj.ProjectCode)
 		return fn(ctx, req, rsp)
 	}
 }

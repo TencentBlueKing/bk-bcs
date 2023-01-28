@@ -16,7 +16,9 @@ package stringx
 
 import (
 	"math/rand"
+	"net"
 	"strings"
+	"unicode"
 )
 
 // DefaultCharset 默认字符集（用于生成随机字符串）
@@ -53,4 +55,26 @@ func Rand(n int, charset string) string {
 		b[i] = charset[rand.Intn(len(charset))]
 	}
 	return string(b)
+}
+
+// ExtractNumberPrefix 提取字符串中的数字前缀
+func ExtractNumberPrefix(s string) string {
+	for idx, c := range s {
+		if !unicode.IsDigit(c) {
+			return s[:idx]
+		}
+	}
+	return s
+}
+
+// IsIPv4 是否合法的ipv4地址
+func IsIPv4(s string) bool {
+	ip := net.ParseIP(s)
+	return ip != nil && !ip.IsUnspecified() && strings.Contains(s, ".")
+}
+
+// IsIPv6 是否合法的ipv6地址
+func IsIPv6(s string) bool {
+	ip := net.ParseIP(s)
+	return ip != nil && !ip.IsUnspecified() && strings.Contains(s, ":")
 }

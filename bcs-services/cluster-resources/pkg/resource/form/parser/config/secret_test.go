@@ -19,6 +19,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	resCsts "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/constants"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/model"
 )
 
@@ -28,18 +29,20 @@ func TestParseSecretDataOpaque(t *testing.T) {
 		"kind":       "Secret",
 		"metadata": map[string]interface{}{
 			"annotations": map[string]interface{}{
-				"io.tencent.bcs.editFormat": "form",
+				resCsts.EditModeAnnoKey: "form",
 			},
 			"name":      "secret-test",
 			"namespace": "default",
 		},
-		"type": SecretTypeOpaque,
+		"type":      resCsts.SecretTypeOpaque,
+		"immutable": true,
 		"data": map[string]interface{}{
 			"username": "YWRtaW5fdXNlcg==",
 		},
 	}
 	excepted := model.SecretData{
-		Type: SecretTypeOpaque,
+		Type:      resCsts.SecretTypeOpaque,
+		Immutable: true,
 		Opaque: []model.OpaqueData{
 			{
 				Key:   "username",
@@ -55,13 +58,13 @@ func TestParseSecretDataOpaque(t *testing.T) {
 func TestParseSecretDataDocker(t *testing.T) {
 	// dockerconfigjson
 	secretManifest := map[string]interface{}{
-		"type": SecretTypeDocker,
+		"type": resCsts.SecretTypeDocker,
 		"data": map[string]interface{}{
 			".dockerconfigjson": "eyJhdXRocyI6eyJkb2NrZXIuaW8iOnsidXNlcm5hbWUiOiJhZG1pbl91c2VyIiwicGFzc3dvcmQiOiIifX19",
 		},
 	}
 	excepted := model.SecretData{
-		Type: SecretTypeDocker,
+		Type: resCsts.SecretTypeDocker,
 		Docker: model.DockerRegistryData{
 			Registry: "docker.io",
 			Username: "admin_user",
@@ -76,14 +79,14 @@ func TestParseSecretDataDocker(t *testing.T) {
 
 func TestParseSecretDataBasicAuth(t *testing.T) {
 	secretManifest := map[string]interface{}{
-		"type": SecretTypeBasicAuth,
+		"type": resCsts.SecretTypeBasicAuth,
 		"data": map[string]interface{}{
 			"username": "YWRtaW5fdXNlcjE=",
 			"password": "",
 		},
 	}
 	excepted := model.SecretData{
-		Type: SecretTypeBasicAuth,
+		Type: resCsts.SecretTypeBasicAuth,
 		BasicAuth: model.BasicAuthData{
 			Username: "admin_user1",
 			Password: "",
@@ -96,14 +99,14 @@ func TestParseSecretDataBasicAuth(t *testing.T) {
 
 func TestParseSecretDataSSHAuth(t *testing.T) {
 	secretManifest := map[string]interface{}{
-		"type": SecretTypeSSHAuth,
+		"type": resCsts.SecretTypeSSHAuth,
 		"data": map[string]interface{}{
 			"ssh-privatekey": "LS0tLS1CRUdJTiBSU0EgUFJJVkFURSBLRVktLS0tLQpBCi0tLS0tRU5EIFJTQSBQUklWQVRFIEtFWS0tLS0tCg==",
 			"ssh-publickey":  "LS0tLS1CRUdJTiBSU0EgUFVCTElDIEtFWS0tLS0tCkIKLS0tLS1FTkQgUlNBIFBVQkxJQyBLRVktLS0tLQo=",
 		},
 	}
 	excepted := model.SecretData{
-		Type: SecretTypeSSHAuth,
+		Type: resCsts.SecretTypeSSHAuth,
 		SSHAuth: model.SSHAuthData{
 			PublicKey:  "-----BEGIN RSA PUBLIC KEY-----\nB\n-----END RSA PUBLIC KEY-----\n",
 			PrivateKey: "-----BEGIN RSA PRIVATE KEY-----\nA\n-----END RSA PRIVATE KEY-----\n",
@@ -116,14 +119,14 @@ func TestParseSecretDataSSHAuth(t *testing.T) {
 
 func TestParseSecretDataTLS(t *testing.T) {
 	secretManifest := map[string]interface{}{
-		"type": SecretTypeTLS,
+		"type": resCsts.SecretTypeTLS,
 		"data": map[string]interface{}{
 			"tls.key": "LS0tLS1CRUdJTiBSU0EgUFJJVkFURSBLRVktLS0tLQpBCi0tLS0tRU5EIFJTQSBQUklWQVRFIEtFWS0tLS0tCg==",
 			"tls.crt": "LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCkMKLS0tLS1FTkQgQ0VSVElGSUNBVEUtLS0tLQo=",
 		},
 	}
 	excepted := model.SecretData{
-		Type: SecretTypeTLS,
+		Type: resCsts.SecretTypeTLS,
 		TLS: model.TLSData{
 			PrivateKey: "-----BEGIN RSA PRIVATE KEY-----\nA\n-----END RSA PRIVATE KEY-----\n",
 			Cert:       "-----BEGIN CERTIFICATE-----\nC\n-----END CERTIFICATE-----\n",
@@ -141,7 +144,7 @@ func TestParseSecretDataSAToken(t *testing.T) {
 				"kubernetes.io/service-account.name": "default-x",
 			},
 		},
-		"type": SecretTypeSAToken,
+		"type": resCsts.SecretTypeSAToken,
 		"data": map[string]interface{}{
 			"namespace": "ZGVmYXVsdA==",
 			"token":     "",
@@ -149,7 +152,7 @@ func TestParseSecretDataSAToken(t *testing.T) {
 		},
 	}
 	excepted := model.SecretData{
-		Type: SecretTypeSAToken,
+		Type: resCsts.SecretTypeSAToken,
 		SAToken: model.SATokenData{
 			Namespace: "default",
 			SAName:    "default-x",

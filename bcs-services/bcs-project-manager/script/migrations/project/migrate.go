@@ -27,10 +27,14 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/mysql"
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/page"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/config"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store"
+	pm "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/project"
 )
 
 const (
@@ -45,47 +49,14 @@ var (
 	mysqlUser   string
 	mysqlPwd    string
 	mysqlDBName string
-	mongoHost   string
-	mongoPort   uint
+	mongoAddr   string
 	mongoUser   string
 	mongoPwd    string
 	mongoDBName string
+
+	ccdb  *gorm.DB
+	model store.ProjectModel
 )
-
-func parseFlags() {
-	// mysql
-	flag.StringVar(&mysqlHost, "mysql_host", "", "mysql host")
-	flag.UintVar(&mysqlPort, "mysql_port", 0, "mysql port")
-	flag.StringVar(&mysqlUser, "mysql_user", "", "access mysql username")
-	flag.StringVar(&mysqlPwd, "mysql_pwd", "", "access mysql password")
-	flag.StringVar(&mysqlDBName, "mysql_db_name", "", "access mysql db name")
-
-	// mongo
-	flag.StringVar(&mongoHost, "mongo_host", "", "mongo host")
-	flag.UintVar(&mongoPort, "mongo_port", 0, "mongo port")
-	flag.StringVar(&mongoUser, "mongo_user", "", "access mongo username")
-	flag.StringVar(&mongoPwd, "mongo_pwd", "", "access mongo password")
-	flag.StringVar(&mongoDBName, "mongo_db_name", "", "access mongo db name")
-
-	flag.Parse()
-}
-
-func main() {
-	parseFlags()
-	// 获取数据
-	fmt.Println("migrate start ...")
-	p, err := fetchBCSCCData()
-	if err != nil {
-		fmt.Println(err.Error())
-		return
-	}
-	// 写入 mongo
-	if err := insertProject(p); err != nil {
-		fmt.Println(err.Error())
-		return
-	}
-	fmt.Println("migrate success!")
-}
 
 // BCSCCProjectData ...
 type BCSCCProjectData struct {
@@ -114,81 +85,175 @@ type BCSCCProjectData struct {
 	IsSecrecy   bool   `json:"is_secrecy" gorm:"default:false"`
 }
 
-// fetchBCSCCData xxx
-// bcs cc 中查询数据
-func fetchBCSCCData() ([]BCSCCProjectData, error) {
+func main() {
+	parseFlags()
+	// 获取数据
+	fmt.Printf("[%s] migrate start ...\n", time.Now().Format(time.RFC3339))
+
+	if err := initDB(); err != nil {
+		fmt.Printf("init db failed, err: %s\n", err.Error())
+		return
+	}
+
+	ccProjects, err := fetchBCSCCData()
+	if err != nil {
+		fmt.Println(err.Error())
+		return
+	}
+	var totalCount, insertCount, updateCount int
+	fmt.Printf("total projects length in cc: %d\n", len(ccProjects))
+	projects, _, err := model.ListProjects(context.Background(), operator.EmptyCondition, &page.Pagination{All: true})
+	if err != nil {
+		fmt.Printf("list projects in bcs db failed, err: %s\n", err.Error())
+		return
+	}
+	projectsMap := map[string]pm.Project{}
+	fmt.Printf("total projects length in bcs: %d\n", len(projects))
+	for _, project := range projects {
+		projectsMap[project.ProjectID] = project
+	}
+	for _, ccProject := range ccProjects {
+		project, exists := projectsMap[ccProject.ProjectID]
+		if !exists {
+			if err := insertProject(ccProject); err != nil {
+				fmt.Printf("insert project %s failed, err: %s\n", ccProject.ProjectID, err.Error())
+				return
+			}
+			insertCount++
+			fmt.Printf("insert project %s success, count %d\n", ccProject.ProjectID, insertCount)
+			continue
+		}
+		if checkUpdate(ccProject, project) {
+			if err := updateProject(ccProject, project); err != nil {
+				fmt.Printf("update project %s failed, err: %s\n", ccProject.ProjectID, err.Error())
+				return
+			}
+			updateCount++
+			fmt.Printf("update project %s success, count %d\n", ccProject.ProjectID, updateCount)
+		}
+		totalCount++
+		if totalCount%1000 == 0 {
+			fmt.Printf("[%s] checked projects num: %d\n", time.Now().Format(time.RFC3339), totalCount)
+		}
+	}
+	fmt.Printf("[%s] migrate success! inserted %d projects, updated %d projects\n",
+		time.Now().Format(time.RFC3339), insertCount, updateCount)
+}
+
+func parseFlags() {
+	// mysql
+	flag.StringVar(&mysqlHost, "mysql_host", "", "mysql host")
+	flag.UintVar(&mysqlPort, "mysql_port", 0, "mysql port")
+	flag.StringVar(&mysqlUser, "mysql_user", "", "access mysql username")
+	flag.StringVar(&mysqlPwd, "mysql_pwd", "", "access mysql password")
+	flag.StringVar(&mysqlDBName, "mysql_db_name", "", "access mysql db name")
+
+	// mongo
+	flag.StringVar(&mongoAddr, "mongo_addr", "", "mongo address")
+	flag.StringVar(&mongoUser, "mongo_user", "", "access mongo username")
+	flag.StringVar(&mongoPwd, "mongo_pwd", "", "access mongo password")
+	flag.StringVar(&mongoDBName, "mongo_db_name", "", "access mongo db name")
+
+	flag.Parse()
+}
+
+func initDB() error {
+	// mongo
+	store.InitMongo(&config.MongoConfig{
+		Address:        mongoAddr,
+		ConnectTimeout: 5,
+		Database:       mongoDBName,
+		Username:       mongoUser,
+		Password:       mongoPwd,
+		MaxPoolSize:    10,
+		MinPoolSize:    1,
+		Encrypted:      false,
+	})
+	model = store.New(store.GetMongo())
+
+	// mysql
 	dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=utf8&parseTime=True&loc=Local", mysqlUser, mysqlPwd, mysqlHost,
 		mysqlPort, mysqlDBName)
-
-	// 连接 db
 	db, err := gorm.Open("mysql", dsn)
 	if err != nil {
-		return nil, fmt.Errorf("access mysql error, %s", err.Error())
+		return fmt.Errorf("access mysql error, %s", err.Error())
 	}
 	db.DB().SetConnMaxLifetime(10 * time.Second)
 	db.DB().SetMaxIdleConns(20)
 	db.DB().SetMaxOpenConns(20)
+	ccdb = db
+	return nil
+}
 
+// fetchBCSCCData xxx
+// bcs cc 中查询数据
+func fetchBCSCCData() ([]BCSCCProjectData, error) {
 	// 读取数据
 	var p []BCSCCProjectData
-	db.Table(mysqlTableName).Select("*").Scan(&p)
+	ccdb.Table(mysqlTableName).Select("*").Scan(&p)
 	return p, nil
 }
 
-// insertProject 插入到 mongo
-func insertProject(p []BCSCCProjectData) error {
-	var (
-		client     *mongo.Client
-		err        error
-		collection *mongo.Collection
-	)
-	upsert := true
-	opts := options.ReplaceOptions{Upsert: &upsert}
-	// 建立连接
-	dsn := fmt.Sprintf("mongodb://%s:%s@%s:%d", mongoUser, mongoPwd, mongoHost, mongoPort)
-	if client, err = mongo.Connect(context.TODO(), options.Client().ApplyURI(dsn).
-		SetConnectTimeout(10*time.Second)); err != nil {
-		return fmt.Errorf("access mongo error, %s", err.Error())
+func insertProject(p BCSCCProjectData) error {
+	project := &pm.Project{
+		ProjectID:   p.ProjectID,
+		Name:        p.Name,
+		ProjectCode: p.EnglishName,
+		Creator:     p.Creator,
+		Updater:     p.Updator,
+		Managers:    constructManagers(p.Creator, p.Updator),
+		ProjectType: uint32(p.ProjectType),
+		UseBKRes:    p.UseBK,
+		Description: p.Description,
+		IsOffline:   p.IsOfflined,
+		Kind:        getStrKind(p.Kind),
+		BusinessID:  getBusinessID(p.CCAppID),
+		DeployType:  getDeployType(p.DeployType),
+		BGID:        strconv.Itoa(int(p.BGID)),
+		BGName:      p.BGName,
+		DeptID:      strconv.Itoa(int(p.DeptID)),
+		DeptName:    p.DeptName,
+		CenterID:    strconv.Itoa(int(p.CenterID)),
+		CenterName:  p.CenterName,
+		IsSecret:    p.IsSecrecy,
+		CreateTime:  p.CreatedAt.Format(timeLayout),
+		UpdateTime:  p.CreatedAt.Format(timeLayout),
 	}
-	if err := client.Ping(context.TODO(), nil); err != nil {
-		return fmt.Errorf("mongo ping error, %s", err.Error())
-	}
-	collection = client.Database(mongoDBName).Collection(mongoTableName)
-	// 组装数据
-	for _, i := range p {
-		data := map[string]interface{}{
-			"projectID":   i.ProjectID,
-			"name":        i.Name,
-			"projectCode": i.EnglishName,
-			"creator":     i.Creator,
-			"updater":     i.Updator,
-			"managers":    constructManagers(i.Creator, i.Updator),
-			"projectType": i.ProjectType,
-			"useBKRes":    i.UseBK,
-			"description": i.Description,
-			"isOffline":   i.IsOfflined,
-			"kind":        getStrKind(i.Kind),
-			"businessID":  strconv.Itoa(int(i.CCAppID)),
-			"deployType":  getDeployType(i.DeployType),
-			"bgID":        strconv.Itoa(int(i.BGID)),
-			"bgName":      i.BGName,
-			"deptID":      strconv.Itoa(int(i.DeptID)),
-			"deptName":    i.DeptName,
-			"centerID":    strconv.Itoa(int(i.CenterID)),
-			"centerName":  i.CenterName,
-			"isSecret":    i.IsSecrecy,
-			"createTime":  i.CreatedAt.Format(timeLayout),
-			"updateTime":  i.CreatedAt.Format(timeLayout),
-		}
-		// 插入数据，允许重复操作
-		if _, err := collection.ReplaceOne(
-			context.TODO(), map[string]string{"projectID": i.ProjectID}, data, &opts,
-		); err != nil {
-			return err
-		}
+	return model.CreateProject(context.Background(), project)
+}
+
+func updateProject(c BCSCCProjectData, p pm.Project) error {
+	p.Updater = c.Updator
+	p.Managers = constructManagers(c.Creator, c.Updator)
+	p.Kind = getStrKind(c.Kind)
+	p.BusinessID = getBusinessID(c.CCAppID)
+	p.DeployType = getDeployType(c.DeployType)
+	p.UpdateTime = c.UpdatedAt.Format(timeLayout)
+	return model.UpdateProject(context.Background(), &p)
+}
+
+func checkUpdate(c BCSCCProjectData, p pm.Project) bool {
+	// kind == 0， 未开启， 不需要迁移
+	if c.Kind != 1 && c.Kind != 2 {
+		return false
 	}
 
-	return nil
+	// 类型不一致， 需要修改
+	if getStrKind(c.Kind) != p.Kind {
+		return true
+	}
+
+	// cc == 0， 未开启， 不需要迁移
+	if c.CCAppID == 0 {
+		return false
+	}
+
+	// 其他不相等，需要迁移
+	if getBusinessID(c.CCAppID) != p.BusinessID {
+		return true
+	}
+
+	return false
 }
 
 // getStrKind 获取字符串类型 kind，1 => k8s 2 => mesos
@@ -199,6 +264,15 @@ func getStrKind(kind uint) string {
 		return "mesos"
 	}
 	return ""
+}
+
+// getBusinessID 获取字符串类型 0 => ""
+func getBusinessID(ccAppID uint) string {
+	if ccAppID == 0 {
+		return ""
+	} else {
+		return strconv.Itoa(int(ccAppID))
+	}
 }
 
 func stringInSlice(str string, list []string) bool {

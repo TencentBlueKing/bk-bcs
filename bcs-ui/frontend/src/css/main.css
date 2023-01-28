@@ -1,0 +1,83 @@
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+  .bcs-sideslider-content {
+    padding: 20px 30px;
+  }
+
+  .bcs-icon-more-btn {
+    font-size: 18px;
+    font-weight: bold;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: #979ba5;
+    position: relative;
+    top: 1px;
+    &:hover:not(.disabled) {
+      background: #ddd;
+      color: #3a84ff
+    }
+    &.disabled {
+      color: #dcdee5;
+      cursor: not-allowed;
+    }
+  }
+
+  .bcs-dropdown-item {
+      display: block;
+      height: 32px;
+      line-height: 33px;
+      padding: 0 16px;
+      color: #63656e;
+      font-size: 12px;
+      text-decoration: none;
+      white-space: nowrap;
+      cursor: pointer;
+      &:hover {
+          background-color: #eaf3ff;
+          color: #3a84ff;
+      }
+      &.disabled {
+          color: #dcdee5;
+          cursor: not-allowed;
+      }
+  }
+
+  .bcs-border {
+    border: 1px solid #dfe0e5;
+    border-radius: 2px;
+  }
+
+  .bcs-icon-btn {
+    font-size: 14px;
+    cursor: pointer;
+    &:hover {
+      color: #3a84ff;
+    }
+  }
+
+  .bcs-ellipsis {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: normal;
+    word-break: break-all;
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+}
+}
+
+.bcs-tippy-theme .tippy-content {
+  max-height: 600px;
+  overflow-y: auto;
+}
+
+.bk-dialog-wrapper .bk-dialog {
+  top: 10%;
+}

@@ -14,105 +14,112 @@
 package project
 
 import (
-	"encoding/json"
-	"errors"
+	"context"
+	"crypto/tls"
 	"fmt"
-	"sync"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/parnurzeal/gorequest"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/bcsproject"
+	microRgt "github.com/micro/go-micro/v2/registry"
+	"github.com/patrickmn/go-cache"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/component"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/discovery"
 )
 
-// ProjectClient xxx
-type ProjectClient struct {
-	Host  string
-	Token string
-}
+const (
+	// ProjectManagerServiceName project manager service name
+	ProjectManagerServiceName = "project.bkbcs.tencent.com"
+
+	// cache key
+	cacheProjectKeyPrefix = "project_%s"
+
+	// defaultExpiration
+	defaultExpiration = time.Hour
+)
 
 // Client xxx
-var Client *ProjectClient
+type Client struct {
+	Discovery       *discovery.ModuleDiscovery
+	ClientTLSConfig *tls.Config
+	Cache           *cache.Cache
+}
+
+var client *Client
 
 // NewClient create project service client
-func NewClient(c ProjectClient) *ProjectClient {
-	client := &ProjectClient{Host: c.Host, Token: c.Token}
-	Client = client
-	return client
-}
-
-// ProjectData project service detail
-type ProjectData struct {
-	ProjectID   string `json:"projectID"`
-	Kind        string `json:"kind"`
-	BusinessID  string `json:"businessID"`
-	ProjectCode string `json:"projectCode"`
-	Name        string `json:"name"`
-}
-
-// ProjectResp project service response
-type ProjectResp struct {
-	Code    int         `json:"code"`
-	Data    ProjectData `json:"data"`
-	Message string      `json:"message"`
-}
-
-var (
-	getProjectPath = "/bcsapi/v4/bcsproject/v1/projects/%s"
-	// 默认超时时间设置为20s
-	defaultTimeout = 20
-)
-
-var projectCache *sync.Map = &sync.Map{}
-
-// GetProjectIDByCode get project id from project code
-func GetProjectIDByCode(username string, projectCode string) (string, error) {
-	// load project data from cache
-	v, ok := projectCache.Load(projectCode)
-	if ok {
-		if project, ok := v.(*ProjectData); ok {
-			return project.ProjectID, nil
-		}
-	}
-	p, err := Client.GetProjectDetail(username, projectCode)
+func NewClient(tlsConfig *tls.Config, microRgt microRgt.Registry) error {
+	dis := discovery.NewModuleDiscovery(ProjectManagerServiceName, microRgt)
+	err := dis.Start()
 	if err != nil {
-		return "", fmt.Errorf("GetProjectDetail error: %s", err)
+		return err
 	}
-	// save project data to cache
-	projectCache.Store(projectCode, p)
-	return p.ProjectID, nil
+	client = &Client{
+		Discovery:       dis,
+		ClientTLSConfig: tlsConfig,
+		Cache:           cache.New(defaultExpiration, cache.NoExpiration),
+	}
+	return nil
 }
 
-// GetProjectDetail get project detail from project service
-func (p *ProjectClient) GetProjectDetail(username string, projectCode string) (*ProjectData, error) {
-	path := fmt.Sprintf(getProjectPath, projectCode)
-	url := fmt.Sprintf("%s%s", p.Host, path)
-	authorization := fmt.Sprintf("Bearer %s", p.Token)
-	headers := map[string]string{
-		"Content-Type":       "application/json",
-		"Authorization":      authorization,
-		"X-Project-Username": username,
-	}
-	// 组装请求参数
-	req := gorequest.SuperAgent{
-		Url:    url,
-		Method: "GET",
-	}
-	// 请求接口
-	body, err := component.Request(req, defaultTimeout, "", headers)
+func (p *Client) getProjectClient() (*bcsproject.ProjectClient, error) {
+	node, err := p.Discovery.GetRandServiceInst()
 	if err != nil {
-		blog.Errorf("request project service error, project code: %s, err %s", projectCode, err.Error())
-		return nil, common.ErrHelmManagerRequestComponentFailed.GenError()
-	}
-	var resp ProjectResp
-	if err := json.Unmarshal([]byte(body), &resp); err != nil {
-		blog.Errorf("parse project detail error, body: %v", body)
 		return nil, err
 	}
-	if resp.Code != component.SuccessCode {
-		blog.Errorf("parse project detail error, body: %v", body)
-		return nil, errors.New(resp.Message)
+	blog.V(4).Infof("get random project-manager instance [%s] from etcd registry successful", node.Address)
+
+	cfg := bcsapi.Config{}
+	// discovery hosts
+	cfg.Hosts = discovery.GetServerEndpointsFromRegistryNode(node)
+	cfg.TLSConfig = p.ClientTLSConfig
+	cfg.InnerClientName = "bcs-helm-manager"
+	return bcsproject.NewProjectManagerClient(&cfg), nil
+}
+
+// GetProjectByCode get project from project code
+func GetProjectByCode(projectCode string) (*bcsproject.Project, error) {
+	// load project data from cache
+	key := fmt.Sprintf(cacheProjectKeyPrefix, projectCode)
+	v, ok := client.Cache.Get(key)
+	if ok {
+		if project, ok := v.(*bcsproject.Project); ok {
+			return project, nil
+		}
 	}
-	return &resp.Data, nil
+	cli, err := client.getProjectClient()
+	if err != nil {
+		return nil, err
+	}
+	p, err := cli.Project.GetProject(context.Background(),
+		&bcsproject.GetProjectRequest{ProjectIDOrCode: projectCode})
+	if err != nil {
+		return nil, fmt.Errorf("GetProject error: %s", err)
+	}
+	if p.Code != 0 || p.Data == nil {
+		return nil, fmt.Errorf("GetProject error, code: %d, message: %s, requestID: %s",
+			p.Code, p.GetMessage(), p.GetRequestID())
+	}
+	// save project data to cache
+	client.Cache.Set(key, p.Data, defaultExpiration)
+	return p.Data, nil
+}
+
+// GetVariable get project from project code
+func GetVariable(projectCode, clusterID, namespace string) ([]*bcsproject.VariableValue, error) {
+	client, err := client.getProjectClient()
+	if err != nil {
+		return nil, err
+	}
+	resp, err := client.Variable.RenderVariables(context.Background(),
+		&bcsproject.RenderVariablesRequest{ProjectCode: projectCode, ClusterID: clusterID, Namespace: namespace})
+	if err != nil {
+		return nil, fmt.Errorf("ListNamespaceVariables error: %s", err)
+	}
+	if resp.Code != 0 {
+		return nil, fmt.Errorf("ListNamespaceVariables error, code: %d, message: %s, requestID: %s",
+			resp.Code, resp.GetMessage(), resp.GetRequestID())
+	}
+	return resp.GetData(), nil
 }

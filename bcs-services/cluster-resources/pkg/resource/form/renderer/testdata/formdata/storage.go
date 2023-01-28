@@ -18,9 +18,8 @@ import (
 	"strings"
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/envs"
-	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
+	resCsts "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/constants"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/model"
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/parser/storage"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/stringx"
 )
 
@@ -28,11 +27,11 @@ import (
 var PVComplex = model.PV{
 	Metadata: model.Metadata{
 		APIVersion: "v1",
-		Kind:       res.PV,
+		Kind:       resCsts.PV,
 		Name:       "pv-complex-" + strings.ToLower(stringx.Rand(10, "")),
 	},
 	Spec: model.PVSpec{
-		Type:        storage.PVTypeLocalVolume,
+		Type:        resCsts.PVTypeLocalVolume,
 		SCName:      "local-path",
 		StorageSize: 3,
 		AccessModes: []string{"ReadOnlyMany", "ReadWriteOnce"},
@@ -44,12 +43,12 @@ var PVComplex = model.PV{
 var PVCComplex = model.PVC{
 	Metadata: model.Metadata{
 		APIVersion: "v1",
-		Kind:       res.PVC,
+		Kind:       resCsts.PVC,
 		Name:       "pvc-complex-" + strings.ToLower(stringx.Rand(10, "")),
 		Namespace:  envs.TestNamespace,
 	},
 	Spec: model.PVCSpec{
-		ClaimType:   storage.PVCTypeUseExistPV,
+		ClaimType:   resCsts.PVCTypeUseExistPV,
 		PVName:      "task-pv-volume",
 		SCName:      "local-path",
 		StorageSize: 5,
@@ -61,7 +60,7 @@ var PVCComplex = model.PVC{
 var SCComplex = model.SC{
 	Metadata: model.Metadata{
 		APIVersion: "storage.k8s.io/v1",
-		Kind:       res.SC,
+		Kind:       resCsts.SC,
 		Name:       "sc-complex-" + strings.ToLower(stringx.Rand(10, "")),
 	},
 	Spec: model.SCSpec{

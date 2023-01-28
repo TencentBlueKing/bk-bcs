@@ -73,18 +73,25 @@ func (t *tenantAuthMiddleware) NewHandler(handlerName string, handler http.Handl
 			return
 		}
 
+		scopeClusteID := r.Header.Get("X-Scope-ClusterId")
 		requestID := tracing.RequestIDValue(r, true)
 		logger.Infow("handle request",
 			"request_id", requestID,
 			"handler_name", handlerName,
 			"label_matchers", fmt.Sprintf("%s", labelMatchers),
+			"X-Scope-ClusterId", scopeClusteID,
 			"req", fmt.Sprintf("%s %s", r.Method, r.URL),
+			"query", r.Form.Get("query"),
+			"start", r.Form.Get("start"),
+			"end", r.Form.Get("end"),
+			"step", r.Form.Get("step"),
 		)
 
 		// 返回的 header 写入 request_id
 		w.Header().Set(store.RequestIdHeaderKey(), requestID)
 
 		ctx := store.WithLabelMatchValue(r.Context(), labelMatchers)
+		ctx = store.WithScopeClusterIDValue(ctx, scopeClusteID)
 		ctx = store.WithRequestIDValue(ctx, requestID)
 		r = r.WithContext(ctx)
 		handleFunc(w, r)

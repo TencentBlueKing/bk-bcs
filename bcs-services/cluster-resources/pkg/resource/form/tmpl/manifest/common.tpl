@@ -12,6 +12,9 @@ metadata:
   annotations:
     {{- include "common.kvSlice2Map" .annotations | indent 4 }}
   {{- end }}
+  {{- if and (canRenderResVersion .kind) .resVersion }}
+  resourceVersion: {{ .resVersion | quote }}
+  {{- end }}
 {{- end }}
 
 {{- define "common.labelSlice2Map" -}}

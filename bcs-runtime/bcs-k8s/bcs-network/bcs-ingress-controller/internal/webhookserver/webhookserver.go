@@ -21,17 +21,24 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/pkg/errors"
+
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/http/ipv6server"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/cloud"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/conflicthandler"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/generator"
+
+	v1 "k8s.io/api/admission/v1"
 
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/constant"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/eventer"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/metrics"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/portpoolcache"
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
-	v1 "k8s.io/api/admission/v1"
 
 	"k8s.io/api/admission/v1beta1"
 	k8scorev1 "k8s.io/api/core/v1"
@@ -48,7 +55,7 @@ var (
 
 // ServerOption option of server
 type ServerOption struct {
-	Addr           string
+	Addrs          []string
 	Port           int
 	ServerCertFile string
 	ServerKeyFile  string
@@ -56,18 +63,24 @@ type ServerOption struct {
 
 // Server webhook server
 type Server struct {
-	server *http.Server
+	ipv6Server *ipv6server.IPv6Server
 	// k8s client
-	k8sClient    client.Client
-	eventWatcher eventer.WatchEventInterface
-	poolCache    *portpoolcache.Cache
-	podName      string
-	podNamespace string
+	k8sClient        client.Client
+	lbClient         cloud.LoadBalance
+	eventWatcher     eventer.WatchEventInterface
+	poolCache        *portpoolcache.Cache
+	podName          string
+	podNamespace     string
+	ingressValidater cloud.Validater
+	ingressConverter *generator.IngressConverter
+	defaultRegion    string
+	conflictHandler  *conflicthandler.ConflictHandler
 }
 
 // NewHookServer create new hook server object
-func NewHookServer(opt *ServerOption, k8sClient client.Client, poolCache *portpoolcache.Cache,
-	eventWatcher eventer.WatchEventInterface) (*Server, error) {
+func NewHookServer(opt *ServerOption, k8sClient client.Client, lbClient cloud.LoadBalance, poolCache *portpoolcache.Cache,
+	eventWatcher eventer.WatchEventInterface, validater cloud.Validater, converter *generator.IngressConverter,
+	conflictHandler *conflicthandler.ConflictHandler) (*Server, error) {
 	pair, err := tls.LoadX509KeyPair(opt.ServerCertFile, opt.ServerKeyFile)
 	if err != nil {
 		return nil, fmt.Errorf("load x509 key pair cert %s, key %s failed, err %s",
@@ -75,15 +88,17 @@ func NewHookServer(opt *ServerOption, k8sClient client.Client, poolCache *portpo
 	}
 
 	return &Server{
-		server: &http.Server{
-			Addr:      fmt.Sprintf("%s:%v", opt.Addr, opt.Port),
-			TLSConfig: &tls.Config{Certificates: []tls.Certificate{pair}},
-		},
-		k8sClient:    k8sClient,
-		eventWatcher: eventWatcher,
-		poolCache:    poolCache,
-		podName:      os.Getenv(constant.EnvIngressPodName),
-		podNamespace: os.Getenv(constant.EnvIngressPodNamespace),
+		ipv6Server: ipv6server.NewTlsIPv6Server(opt.Addrs, strconv.Itoa(opt.Port), "",
+			&tls.Config{Certificates: []tls.Certificate{pair}}, nil),
+		k8sClient:        k8sClient,
+		lbClient:         lbClient,
+		eventWatcher:     eventWatcher,
+		poolCache:        poolCache,
+		podName:          os.Getenv(constant.EnvIngressPodName),
+		podNamespace:     os.Getenv(constant.EnvIngressPodNamespace),
+		ingressValidater: validater,
+		ingressConverter: converter,
+		conflictHandler:  conflictHandler,
 	}, nil
 }
 
@@ -95,10 +110,11 @@ func (s *Server) Start(stop <-chan struct{}) error {
 	mux.HandleFunc("/portpool/v1/validate", s.HandleValidatingWebhook)
 	mux.HandleFunc("/portpool/v1/mutate", s.HandleMutatingWebhook)
 	mux.HandleFunc("/crd/v1/validate", s.HandleValidatingCRD)
-	s.server.Handler = mux
+	mux.HandleFunc("/ingress/v1/mutate", s.HandlerValidatingIngress)
+	s.ipv6Server.Server.Handler = mux
 
 	go func() {
-		if err := s.server.ListenAndServeTLS("", ""); err != nil {
+		if err := s.ipv6Server.ListenAndServeTLS("", ""); err != nil {
 			blog.Fatalf("failed to listen and serve webhook server, err %s", err.Error())
 		}
 	}()
@@ -112,7 +128,7 @@ func (s *Server) Start(stop <-chan struct{}) error {
 	}
 	<-stop
 	blog.Infof("Got controller stop signal, shutting down webhook server gracefully...")
-	s.server.Shutdown(context.Background())
+	s.ipv6Server.Shutdown(context.Background())
 	// patch pod label to remove leader
 	if err := s.patchPod(s.podName, s.podNamespace, constant.LeaderLabelValueFalse); err != nil {
 		blog.Errorf("failed to patch pod %s/%s, err %s", s.podNamespace, s.podName, err.Error())
@@ -140,6 +156,10 @@ func (s *Server) HandleMutatingWebhook(w http.ResponseWriter, r *http.Request) {
 // HandleValidatingCRD handle validating CRD delete webhook request
 func (s *Server) HandleValidatingCRD(w http.ResponseWriter, r *http.Request) {
 	s.handleWebhook(w, r, "validateCRD", newDelegateToV1AdmitHandler(s.validatingCRDDelete))
+}
+
+func (s *Server) HandlerValidatingIngress(w http.ResponseWriter, r *http.Request) {
+	s.handleWebhook(w, r, "validateIngress", newDelegateToV1AdmitHandler(s.mutatingIngress))
 }
 
 func (s *Server) handleWebhook(
@@ -203,7 +223,7 @@ func (s *Server) handleWebhook(
 		return
 	}
 
-	blog.V(2).Info(fmt.Sprintf("sending response: %v", responseObj))
+	blog.V(5).Info(fmt.Sprintf("sending response: %v", responseObj))
 	respBytes, err := json.Marshal(responseObj)
 	if err != nil {
 		blog.Error(err.Error())
@@ -233,30 +253,72 @@ func (s *Server) validatingWebhook(ar v1.AdmissionReview) *v1.AdmissionResponse 
 		return &v1.AdmissionResponse{Allowed: true}
 	}
 	// only hook portpool and ingress
-	if req.Kind.Kind != "PortPool" && req.Kind.Kind != "Ingress" {
-		blog.Warnf("kind %s is not PortPool or Ingress", req.Kind.Kind)
+	if req.Kind.Kind != "PortPool" {
+		blog.Warnf("kind %s is not PortPool", req.Kind.Kind)
 		return errResponse(fmt.Errorf("kind %s is not PortPool or Ingress", req.Kind.Kind))
 	}
 	if req.Kind.Group != "networkextension.bkbcs.tencent.com" {
 		blog.Warnf("group %s is not networkextension.bkbcs.tencent.com", req.Kind.Group)
 		return errResponse(fmt.Errorf("group %s is not networkextension.bkbcs.tencent.com", req.Kind.Group))
 	}
-	// validate port pool
-	if req.Kind.Kind == "PortPool" {
-		portPool := &networkextensionv1.PortPool{}
-		if err := json.Unmarshal(req.Object.Raw, portPool); err != nil {
-			blog.Warnf("decode %s to port pool failed, err %s", string(req.Object.Raw), err.Error)
-			return errResponse(fmt.Errorf("decode %s to port pool failed, err %s", string(req.Object.Raw),
-				err.Error()))
-		}
-		if err := s.validatePortPool(portPool); err != nil {
-			blog.Warnf("PortPool %s/%s is invalid, err %s", portPool.GetName(), portPool.GetNamespace(), err.Error())
-			return errResponse(fmt.Errorf("PortPool %s/%s is invalid, err %s",
-				portPool.GetName(), portPool.GetNamespace(), err.Error()))
-		}
+	portPool := &networkextensionv1.PortPool{}
+	if err := json.Unmarshal(req.Object.Raw, portPool); err != nil {
+		blog.Warnf("decode %s to port pool failed, err %s", string(req.Object.Raw), err.Error)
+		return errResponse(fmt.Errorf("decode %s to port pool failed, err %s", string(req.Object.Raw),
+			err.Error()))
+	}
+	if err := s.validatePortPool(portPool); err != nil {
+		blog.Warnf("PortPool %s/%s is invalid, err %s", portPool.GetName(), portPool.GetNamespace(), err.Error())
+		return errResponse(fmt.Errorf("PortPool %s/%s is invalid, err %s",
+			portPool.GetName(), portPool.GetNamespace(), err.Error()))
 	}
 
 	return &v1.AdmissionResponse{Allowed: true}
+}
+
+func (s *Server) mutatingIngress(ar v1.AdmissionReview) *v1.AdmissionResponse {
+	req := ar.Request
+	// only hook create and update operation
+	if req.Operation != v1.Create && req.Operation != v1.Update {
+		blog.Warnf("operation is not create or update, ignore")
+		return &v1.AdmissionResponse{Allowed: true}
+	}
+	// only hook portpool and ingress
+	if req.Kind.Kind != "Ingress" {
+		blog.Warnf("kind %s is not Ingress", req.Kind.Kind)
+		return errResponse(fmt.Errorf("kind %s is not PortPool or Ingress", req.Kind.Kind))
+	}
+	if req.Kind.Group != "networkextension.bkbcs.tencent.com" {
+		blog.Warnf("group %s is not networkextension.bkbcs.tencent.com", req.Kind.Group)
+		return errResponse(fmt.Errorf("group %s is not networkextension.bkbcs.tencent.com", req.Kind.Group))
+	}
+
+	ingress := &networkextensionv1.Ingress{}
+	if err := json.Unmarshal(req.Object.Raw, ingress); err != nil {
+		blog.Warnf("decode %s to ingress failed, err %s", string(req.Object.Raw), err.Error)
+		return errResponse(fmt.Errorf("decode %s to ingress failed, err %s", string(req.Object.Raw),
+			err.Error()))
+	}
+	patches, err := s.mutateIngress(ingress)
+	if err != nil {
+		blog.Warnf("mutate ingress failed, err: %+v", err)
+		return errResponse(err)
+	}
+
+	patchesBytes, err := json.Marshal(patches)
+	if err != nil {
+		err = errors.Wrapf(err, "marshal ingress '%s/%s' patches failed", ingress.GetNamespace(), ingress.GetName())
+		blog.Warnf(err.Error())
+		return errResponse(err)
+	}
+	return &v1.AdmissionResponse{
+		Allowed: true,
+		Patch:   patchesBytes,
+		PatchType: func() *v1.PatchType {
+			pt := v1.PatchTypeJSONPatch
+			return &pt
+		}(),
+	}
 }
 
 func (s *Server) mutatingWebhook(ar v1.AdmissionReview) (response *v1.AdmissionResponse) {
@@ -320,17 +382,14 @@ func (s *Server) mutatingWebhook(ar v1.AdmissionReview) (response *v1.AdmissionR
 
 func (s *Server) validatingCRDDelete(ar v1.AdmissionReview) *v1.AdmissionResponse {
 	allowResp := &v1.AdmissionResponse{Allowed: true}
-
 	req := ar.Request
-	if req.Operation != v1.Delete {
-		blog.Warnf("operation is not delete, ignore")
+	if req.Operation != v1.Delete && req.Kind.Kind != constant.KindCRD {
 		return allowResp
 	}
-	// only hook delete operation of CRD
-	if req.Kind.Kind != constant.KindCRD {
-		blog.Warnf("kind %s is not CRD", req.Kind.Kind)
-		return errResponse(fmt.Errorf("kind %s is not CRD", req.Kind.Kind))
+	if !strings.Contains(req.Name, networkextensionv1.GroupVersion.Group) {
+		return allowResp
 	}
+
 	labels, err := s.getCRDLabelFromAR(ar)
 	if err != nil {
 		blog.Warnf("get CRD from admissionReview failed, err: %s", err.Error())

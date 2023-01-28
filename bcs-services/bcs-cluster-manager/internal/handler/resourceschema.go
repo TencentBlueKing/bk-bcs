@@ -27,7 +27,7 @@ import (
 
 // ListResourceSchema implements interface cmproto.ClusterManagerServer
 func (cm *ClusterManager) ListResourceSchema(ctx context.Context,
-	req *cmproto.ListResourceSchemaRequest, resp *cmproto.ListResourceSchemaResponse) error {
+	req *cmproto.ListResourceSchemaRequest, resp *cmproto.CommonListResp) error {
 	reqID, err := requestIDFromContext(ctx)
 	if err != nil {
 		return err
@@ -42,7 +42,7 @@ func (cm *ClusterManager) ListResourceSchema(ctx context.Context,
 
 // GetResourceSchema implements interface cmproto.ClusterManagerServer
 func (cm *ClusterManager) GetResourceSchema(ctx context.Context,
-	req *cmproto.GetResourceSchemaRequest, resp *cmproto.GetResourceSchemaResponse) error {
+	req *cmproto.GetResourceSchemaRequest, resp *cmproto.CommonResp) error {
 	reqID, err := requestIDFromContext(ctx)
 	if err != nil {
 		return err

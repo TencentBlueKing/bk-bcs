@@ -16,8 +16,9 @@ package auth
 
 import (
 	bcsIAM "github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
+	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/namespace"
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/project"
-	iamPerm "github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/project"
+	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/manager"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/config"
 )
@@ -31,10 +32,34 @@ const (
 	ProjectEdit string = "project_edit"
 	// ProjectDelete 删除项目
 	ProjectDelete string = "project_delete"
+
+	// NamespaceCreate 创建命名空间
+	NamespaceCreate string = "namespace_create"
+	// NamespaceView 查看命名空间
+	NamespaceView string = "namespace_view"
+	// NamespaceEdit 编辑命名空间
+	NamespaceUpdate string = "namespace_update"
+	// NamespaceDelete 删除命名空间
+	NamespaceDelete string = "namespace_delete"
+
+	// NamespaceScopedCreate 资源创建(命名空间域)
+	NamespaceScopedCreate string = "namespace_scoped_create"
+	// NamespaceScopedView 资源查看(命名空间域)
+	NamespaceScopedView string = "namespace_scoped_view"
+	// NamespaceScopedEdit 资源更新(命名空间域)
+	NamespaceScopedUpdate string = "namespace_scoped_update"
+	// NamespaceScopedDelete 资源删除(命名空间域)
+	NamespaceScopedDelete string = "namespace_scoped_delete"
 )
 
-// ProjectIamClient iam client for project
-var ProjectIamClient *project.BCSProjectPerm
+var (
+	// ProjectIamClient iam client for project
+	ProjectIamClient *project.BCSProjectPerm
+	// NamespaceIamClient iam client for project
+	NamespaceIamClient *namespace.BCSNamespacePerm
+	// PermManagerClient iam client for manager
+	PermManagerClient *manager.PermManager
+)
 
 // InitPermClient init perm client
 func InitPermClient() error {
@@ -53,7 +78,9 @@ func InitPermClient() error {
 	if err != nil {
 		return err
 	}
-	ProjectIamClient = iamPerm.NewBCSProjectPermClient(cli)
+	ProjectIamClient = project.NewBCSProjectPermClient(cli)
+	NamespaceIamClient = namespace.NewBCSNamespacePermClient(cli)
+	PermManagerClient = manager.NewBCSPermManagerClient(cli)
 	return nil
 }
 

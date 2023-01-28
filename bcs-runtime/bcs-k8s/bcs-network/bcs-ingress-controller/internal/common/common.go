@@ -18,9 +18,10 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/constant"
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 )
 
 // GetLbRegionAndName from {region}:{lbID}
@@ -37,6 +38,11 @@ func GetLbRegionAndName(lbName string) (string, string, error) {
 		return "", "", fmt.Errorf("lb name %s is invalid", lbName)
 	}
 	return idStrs[0], idStrs[1], nil
+}
+
+// BuildRegionName return {region}:{name}
+func BuildRegionName(region string, name string) string {
+	return fmt.Sprintf("%s:%s", region, name)
 }
 
 // example: arn:aws:elasticloadbalancing:us-west-1:1234567:loadbalancer/net/name/xxx
@@ -99,6 +105,11 @@ func GetPortPoolListenerLabelKey(portPoolName, itemName string) string {
 	return portPoolName + "/" + fmt.Sprintf("%x", (md5.Sum([]byte(itemName))))
 }
 
+// GetIngressProtocolLayer get ingress protocol layer,
+// if all ingress' rules / portMappings in layer4, return transportLayer
+// if all ingress' rules / portMappings in layer7, return applicationLayer
+// else return default layer
+// Now it only used for azure sdk
 func GetIngressProtocolLayer(ingress *networkextensionv1.Ingress) string {
 	transportCnt := 0
 	applicationCnt := 0
@@ -127,4 +138,16 @@ func GetIngressProtocolLayer(ingress *networkextensionv1.Ingress) string {
 		return constant.ProtocolLayerTransport
 	}
 	return constant.ProtocolLayerDefault
+}
+
+// GetPortPoolItemProtocols return protocol list of portpool item.protocol
+func GetPortPoolItemProtocols(itemProtocol string) []string {
+	var protocolList []string
+	if len(itemProtocol) == 0 {
+		protocolList = []string{constant.PortPoolPortProtocolTCP, constant.PortPoolPortProtocolUDP}
+	} else {
+		protocolList = strings.Split(itemProtocol, constant.PortPoolItemProtocolDelimiter)
+	}
+
+	return protocolList
 }

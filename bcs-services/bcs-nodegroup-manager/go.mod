@@ -21,13 +21,14 @@ require (
 	github.com/asim/go-micro/plugins/sync/etcd/v4 v4.7.0
 	github.com/spf13/cobra v1.5.0
 	github.com/spf13/pflag v1.0.5
-	github.com/stretchr/testify v1.7.0
+	github.com/stretchr/testify v1.7.1
 	go.mongodb.org/mongo-driver v1.5.3
 	k8s.io/api v0.23.1
 )
 
 require (
 	github.com/olekukonko/tablewriter v0.0.5
+	github.com/panjf2000/ants/v2 v2.5.0
 	github.com/spf13/viper v1.7.1
 	github.com/tidwall/pretty v1.0.0
 	github.com/ugorji/go/codec v1.2.3

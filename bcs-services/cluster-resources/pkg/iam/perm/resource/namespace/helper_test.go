@@ -23,4 +23,7 @@ import (
 func TestCalcNamespaceID(t *testing.T) {
 	nsID := calcNamespaceID("BCS-K8S-40000", "default")
 	assert.Equal(t, "40000:5f03d33dde", nsID)
+
+	nsID = calcNamespaceID("BCS-K8S-40000", "a")
+	assert.Equal(t, "40000:c0f1b6a8a", nsID)
 }

@@ -32,6 +32,7 @@ func ParseCM(manifest map[string]interface{}) map[string]interface{} {
 
 // ParseCMData ...
 func ParseCMData(manifest map[string]interface{}, spec *model.CMData) {
+	spec.Immutable = mapx.GetBool(manifest, "immutable")
 	for k, v := range mapx.GetMap(manifest, "data") {
 		spec.Items = append(spec.Items, model.OpaqueData{
 			Key: k, Value: v.(string),

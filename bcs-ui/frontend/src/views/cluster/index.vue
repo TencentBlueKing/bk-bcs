@@ -28,7 +28,7 @@
             }"
             @click="goCreateCluster"
           >{{$t('新建集群')}}</bk-button>
-          <apply-host class="ml10" v-if="$INTERNAL" />
+          <apply-host :title="$t('申请Master服务器')" class="ml10" v-if="$INTERNAL" />
         </div>
         <!-- 集群面板 -->
         <div class="biz-cluster-list">
@@ -36,7 +36,7 @@
             <!-- 异常角标 -->
             <div class="bk-mark-corner bk-warning" v-if="showCorner(cluster)"><p>!</p></div>
             <!-- 集群信息 -->
-            <div class="biz-cluster-header">
+            <div class="biz-cluster-header flex flex-col pl-6 justify-center">
               <h2
                 :class="['cluster-title', { clickable: cluster.status === 'RUNNING' }]"
                 v-bk-tooltips.top="{ content: cluster.name, delay: 500 }"
@@ -63,6 +63,41 @@
                 <ul class="bk-dropdown-list" slot="dropdown-content">
                   <li @click="goOverview(cluster)"><a href="javascript:;">{{$t('总览')}}</a></li>
                   <li @click="goClusterInfo(cluster)"><a href="javascript:;">{{$t('集群信息')}}</a></li>
+                  <li v-if="cluster.clusterCategory !== 'importer'" @click="goNodeInfo(cluster)">
+                    <a
+                      href="javascript:;"
+                      v-authority="{
+                        clickable: webAnnotations.perms[cluster.clusterID]
+                          && webAnnotations.perms[cluster.clusterID].cluster_manage,
+                        actionId: 'cluster_manage',
+                        resourceName: cluster.clusterName,
+                        disablePerms: true,
+                        permCtx: {
+                          project_id: curProject.project_id,
+                          cluster_id: cluster.clusterID
+                        }
+                      }"
+                      :disabled="cluster.clusterCategory === 'importer'">
+                      <span>{{$t('节点管理')}}</span>
+                    </a>
+                  </li>
+                  <li @click="goClusterAutoScaler(cluster)">
+                    <a
+                      href="javascript:;"
+                      v-authority="{
+                        clickable: webAnnotations.perms[cluster.clusterID]
+                          && webAnnotations.perms[cluster.clusterID].cluster_manage,
+                        actionId: 'cluster_manage',
+                        resourceName: cluster.clusterName,
+                        disablePerms: true,
+                        permCtx: {
+                          project_id: curProject.project_id,
+                          cluster_id: cluster.clusterID
+                        }
+                      }">
+                      <span>{{$t('弹性扩缩容')}}</span>
+                    </a>
+                  </li>
                   <li
                     v-authority="{
                       clickable: webAnnotations.perms[cluster.clusterID]
@@ -130,24 +165,6 @@
                         ? '0%' : `${getMetricPercent(cluster, item)}%` }"></div>
                   </div>
                 </div>
-                <span>
-                  <bk-button
-                    class="add-node-btn"
-                    v-authority="{
-                      clickable: webAnnotations.perms[cluster.clusterID]
-                        && webAnnotations.perms[cluster.clusterID].cluster_manage,
-                      actionId: 'cluster_manage',
-                      resourceName: cluster.clusterName,
-                      disablePerms: true,
-                      permCtx: {
-                        project_id: curProject.project_id,
-                        cluster_id: cluster.clusterID
-                      }
-                    }"
-                    @click="goNodeInfo(cluster)">
-                    <span>{{$t('节点管理')}}</span>
-                  </bk-button>
-                </span>
               </template>
             </div>
           </div>
@@ -172,15 +189,6 @@
       <div class="biz-guide-box" v-else-if="!isLoading">
         <p class="title">{{$t('欢迎使用容器服务')}}</p>
         <p class="desc">{{$t('使用容器服务，蓝鲸将为您快速搭建、运维和管理容器集群，您可以轻松对容器进行启动、停止等操作，也可以查看集群、容器及服务的状态，以及使用各种组件服务。')}}</p>
-        <p class="desc">
-          <a
-            :href="PROJECT_CONFIG.doc.quickStart"
-            class="guide-link"
-            target="_blank">
-            {{$t('请点击了解更多')}}
-            <i class="bcs-icon bcs-icon-angle-double-right ml5"></i>
-          </a>
-        </p>
         <div class="guide-btn-group">
           <a
             href="javascript:void(0);"
@@ -199,7 +207,7 @@
           <a class="bk-button bk-default bk-button-large" :href="PROJECT_CONFIG.doc.quickStart" target="_blank">
             <span style="margin-left: 0;">{{$t('快速入门指引')}}</span>
           </a>
-          <apply-host class="apply-host ml5" v-if="$INTERNAL" />
+          <apply-host :title="$t('申请Master服务器')" class="apply-host ml5" v-if="$INTERNAL" />
         </div>
       </div>
     </div>
@@ -238,7 +246,6 @@ import { computed, defineComponent, ref } from '@vue/composition-api';
 import ApplyHost from './apply-host.vue';
 import ProjectConfig from '@/views/project/project-config.vue';
 import tipDialog from '@/components/tip-dialog/index.vue';
-import applyPerm from '@/mixins/apply-perm';
 import { useClusterList, useClusterOverview, useClusterOperate, useTask } from './use-cluster';
 import TaskList from '../node/task-list.vue';
 
@@ -250,13 +257,12 @@ export default defineComponent({
     tipDialog,
     TaskList,
   },
-  mixins: [applyPerm],
   setup(props, ctx) {
     const { $store, $router, $i18n, $bkMessage, $bkInfo } = ctx.root;
     const curProject = computed(() => $store.state.curProject);
     const kindMap = ref({
-      1: 'K8S',
-      2: 'Mesos',
+      k8s: 'K8S',
+      mesos: 'Mesos',
     });
     // 获取集群状态的中文
     const statusTextMap = {
@@ -360,32 +366,67 @@ export default defineComponent({
         },
       });
     };
+    // 跳转扩缩容界面
+    const goClusterAutoScaler = (cluster) => {
+      $router.push({
+        name: 'clusterDetail',
+        params: {
+          clusterId: cluster.cluster_id,
+        },
+        query: {
+          active: 'AutoScaler',
+        },
+      });
+    };
     const { deleteCluster, retryCluster } = useClusterOperate(ctx);
     const curOperateCluster = ref<any>(null);
     // 集群删除
     const clusterNoticeDialog = ref<any>(null);
-    const clusterNoticeList = computed(() => [
-      {
-        id: 1,
-        text: $i18n.t('您正在尝试删除集群 {clusterName}，此操作不可逆，请谨慎操作', { clusterName: curOperateCluster.value?.clusterID }),
-        isChecked: false,
-      },
-      {
-        id: 2,
-        text: $i18n.t('请确认已清理该集群下的所有应用与节点'),
-        isChecked: false,
-      },
-      {
-        id: 3,
-        text: $i18n.t('集群删除时会清理集群上的工作负载、服务、路由等集群上的所有资源'),
-        isChecked: false,
-      },
-      {
-        id: 4,
-        text: $i18n.t('集群删除后服务器如不再使用请尽快回收，避免产生不必要的成本'),
-        isChecked: false,
-      },
-    ]);
+    const clusterNoticeList = computed(() => (curOperateCluster.value?.clusterCategory === 'importer'
+      ? [
+        {
+          id: 1,
+          text: $i18n.t('您正在尝试删除集群 {clusterName}，此操作不可逆，请谨慎操作', { clusterName: curOperateCluster.value?.clusterID }),
+          isChecked: false,
+        },
+        {
+          id: 2,
+          text: $i18n.t('删除导入集群不会对集群有任何操作'),
+          isChecked: false,
+        },
+        {
+          id: 3,
+          text: $i18n.t('删除导入集群后蓝鲸容器管理平台会丧失对该集群的管理能力'),
+          isChecked: false,
+        },
+        {
+          id: 4,
+          text: $i18n.t('删除导入集群不会清理集群上的任何资源，删除集群后请视情况手工清理'),
+          isChecked: false,
+        },
+      ]
+      : [
+        {
+          id: 1,
+          text: $i18n.t('您正在尝试删除集群 {clusterName}，此操作不可逆，请谨慎操作', { clusterName: curOperateCluster.value?.clusterID }),
+          isChecked: false,
+        },
+        {
+          id: 2,
+          text: $i18n.t('请确认已清理该集群下的所有应用与节点'),
+          isChecked: false,
+        },
+        {
+          id: 3,
+          text: $i18n.t('集群删除时会清理集群上的工作负载、服务、路由等集群上的所有资源'),
+          isChecked: false,
+        },
+        {
+          id: 4,
+          text: $i18n.t('集群删除后服务器如不再使用请尽快回收，避免产生不必要的成本'),
+          isChecked: false,
+        },
+      ]));
     const confirmDeleteCluster = async () => {
       isLoading.value = true;
       const result = await deleteCluster(curOperateCluster.value);
@@ -518,6 +559,7 @@ export default defineComponent({
       goCreateCluster,
       goOverview,
       goClusterInfo,
+      goClusterAutoScaler,
       clusterNoticeList,
       clusterNoticeDialog,
       confirmDeleteCluster,
@@ -571,6 +613,7 @@ export default defineComponent({
         }
     }
     .guide-btn-group {
+        margin-top: 40px;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -584,7 +627,7 @@ export default defineComponent({
             font-size: 16px;
         }
     }
-    .bk-dropdown-list {
+    /deep/.bk-dropdown-list {
         li.disabled a {
             width: 100%;
             cursor: not-allowed;

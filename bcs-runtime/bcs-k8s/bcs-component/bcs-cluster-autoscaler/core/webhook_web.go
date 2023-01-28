@@ -21,27 +21,32 @@ import (
 	"strings"
 	"time"
 
+	contextinternal "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/context"
+	metricsinternal "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/metrics"
+
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/autoscaler/cluster-autoscaler/clusterstate"
 	"k8s.io/autoscaler/cluster-autoscaler/utils/errors"
+	"k8s.io/autoscaler/cluster-autoscaler/utils/kubernetes"
 	scheduler_util "k8s.io/autoscaler/cluster-autoscaler/utils/scheduler"
+	kubeclient "k8s.io/client-go/kubernetes"
+	v1lister "k8s.io/client-go/listers/core/v1"
 	"k8s.io/klog"
 	schedulernodeinfo "k8s.io/kubernetes/pkg/scheduler/nodeinfo"
-
-	contextinternal "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/context"
 )
 
 var _ Webhook = &WebScaler{}
 
 // WebScaler implements Webhook via web
 type WebScaler struct {
-	url    string
-	token  string
-	client *http.Client
+	url             string
+	token           string
+	client          *http.Client
+	configmapLister v1lister.ConfigMapNamespaceLister
 }
 
 // NewWebScaler initializes a WebScaler
-func NewWebScaler(url, token string) Webhook {
+func NewWebScaler(kubeClient kubeclient.Interface, configNamespace, url, token string) Webhook {
 	tr := &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 	}
@@ -49,7 +54,9 @@ func NewWebScaler(url, token string) Webhook {
 		Transport: tr,
 		Timeout:   5 * time.Second,
 	}
-	return &WebScaler{url: url, token: token, client: client}
+	stopChannel := make(chan struct{})
+	lister := kubernetes.NewConfigMapListerForNamespace(kubeClient, stopChannel, configNamespace)
+	return &WebScaler{url: url, token: token, client: client, configmapLister: lister.ConfigMaps(configNamespace)}
 }
 
 // DoWebhook get responses from webhook, then execute scale based on responses
@@ -61,12 +68,12 @@ func (w *WebScaler) DoWebhook(context *contextinternal.Context,
 	options, candidates, err := w.GetResponses(context, clusterStateRegistry,
 		nodeNameToNodeInfo, nodes, sd)
 	if err != nil {
-		return errors.NewAutoscalerError(errors.ApiCallError,
+		return errors.NewAutoscalerError(errors.InternalError,
 			"failed to get response from web server: %v", err)
 	}
 	err = w.ExecuteScale(context, clusterStateRegistry, sd, nodes, options, candidates, nodeNameToNodeInfo)
 	if err != nil {
-		return errors.NewAutoscalerError(errors.ApiCallError,
+		return errors.NewAutoscalerError(errors.CloudProviderError,
 			"failed to execute scale from web server: %v", err)
 	}
 	return nil
@@ -77,9 +84,16 @@ func (w *WebScaler) GetResponses(context *contextinternal.Context,
 	clusterStateRegistry *clusterstate.ClusterStateRegistry,
 	nodeNameToNodeInfo map[string]*schedulernodeinfo.NodeInfo,
 	nodes []*corev1.Node, sd *ScaleDown) (ScaleUpOptions, ScaleDownCandidates, error) {
+	// get node group's priority
+	newPriorities, err := getPriority(w.configmapLister)
+	if err != nil {
+		context.LogRecorder.Eventf(corev1.EventTypeWarning, "PriorityConfigMapInvalid", err.Error())
+		klog.Warning(err.Error())
+		return nil, nil, err
+	}
 
 	// construct requests
-	req, err := GenerateAutoscalerRequest(context.CloudProvider.NodeGroups(), clusterStateRegistry.GetUpcomingNodes())
+	req, err := GenerateAutoscalerRequest(context.CloudProvider.NodeGroups(), clusterStateRegistry.GetUpcomingNodes(), newPriorities)
 	if err != nil {
 		return nil, nil, fmt.Errorf("Cannot generate autoscaler requests, err: %s", err.Error())
 	}
@@ -94,7 +108,9 @@ func (w *WebScaler) GetResponses(context *contextinternal.Context,
 		return nil, nil, fmt.Errorf(
 			"Cannot marshal review to bytes, err: %s", err.Error())
 	}
+	start := time.Now()
 	result, err := postRequest(w.url, w.token, w.client, b)
+	metricsinternal.UpdateWebhookExecDuration(start)
 	if err != nil {
 		return nil, nil, fmt.Errorf(
 			"Failed to post review to url: %s err: %s", w.url, err.Error())
@@ -109,7 +125,7 @@ func (w *WebScaler) GetResponses(context *contextinternal.Context,
 	// get response
 	faResp.Request = req
 	klog.Infof("Get webhook response from web: %+v", faResp.Response)
-	options, candidates, err := HandleResponse(faResp, nodes, nodeNameToNodeInfo, sd)
+	options, candidates, err := HandleResponse(faResp, nodes, nodeNameToNodeInfo, sd, newPriorities)
 	if err != nil {
 		return nil, nil, err
 	}

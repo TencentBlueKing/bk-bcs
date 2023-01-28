@@ -101,7 +101,7 @@ export default defineComponent({
       panels: [
         {
           name: 'static-topo',
-          label: $i18n.t('静态选择'),
+          label: $i18n.t('静态拓扑'),
         },
         {
           name: 'custom-input',

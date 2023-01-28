@@ -96,12 +96,14 @@ func NewAPIWrapperWithSecretIDKey(id, key string) (*APIWrapper, error) {
 }
 
 // common method for check api response, and do sleep action
-func (a *APIWrapper) checkErrCode(errCode int) {
+func (a *APIWrapper) checkErrCode(errCode int, metricFunc func(ret string)) {
 	if errCode == APIRequestLimitExceededCode {
 		blog.Warnf("request exceed limit, have a rest for %d second", waitPeriodLBDealing)
+		metricFunc(metrics.LibCallStatusExceedLimit)
 		time.Sleep(time.Duration(waitPeriodLBDealing) * time.Second)
 	} else if errCode == APIWrongStatusCode {
 		blog.Warnf("clb is dealing another action, have a rest for %d second", waitPeriodLBDealing)
+		metricFunc(metrics.LibCallStatusLBLock)
 		time.Sleep(time.Duration(waitPeriodLBDealing) * time.Second)
 	}
 }
@@ -162,6 +164,15 @@ func (a *APIWrapper) describeLoadBalancersTaskResult(region string, requestID in
 	req.SecretID = a.secretID
 	req.RequestID = requestID
 
+	// for metric
+	startTime := time.Now()
+	mf := func(ret string) {
+		metrics.ReportLibRequestMetric(
+			SystemNameInMetricTencentCloud,
+			HandlerNameInMetricTencentCloudAPI,
+			req.Action, ret, startTime)
+	}
+
 	var err error
 	var resp *qcloud.DescribeLoadBalancersTaskResultOutput
 	counter := 1
@@ -172,24 +183,28 @@ func (a *APIWrapper) describeLoadBalancersTaskResult(region string, requestID in
 		req.Timestamp = uint(time.Now().Unix())
 		resp, err = a.apiCli.DescribeLoadBalanceTaskResult(req)
 		if err != nil {
+			mf(metrics.LibCallStatusErr)
 			blog.Errorf("DescribeLoadBalanceTaskResult failed, err %s", err.Error())
 			return nil, fmt.Errorf("DescribeLoadBalanceTaskResult failed, err %s", err.Error())
 		}
 		// check response
-		a.checkErrCode(resp.Code)
+		a.checkErrCode(resp.Code, mf)
 		if resp.Code == APIRequestLimitExceededCode || resp.Code == APIWrongStatusCode {
 			continue
 		}
 		if resp.Code != 0 {
+			mf(metrics.LibCallStatusErr)
 			blog.Errorf("DescribeLoadBalanceTaskResult falied, errcode %d", resp.Code)
 			return nil, fmt.Errorf("DescribeLoadBalanceTaskResult falied, errcode %d", resp.Code)
 		}
 		break
 	}
 	if counter > maxRetry {
+		mf(metrics.LibCallStatusTimeout)
 		blog.Errorf("DescribeLoadBalanceTaskResult out of maxRetry %d", maxRetry)
 		return nil, fmt.Errorf("DescribeLoadBalanceTaskResult out of maxRetry %d", maxRetry)
 	}
+	mf(metrics.LibCallStatusOK)
 	return resp, nil
 }
 
@@ -228,7 +243,7 @@ func (a *APIWrapper) Create4LayerListener(region string, req *qcloud.CreateForwa
 			return "", fmt.Errorf("CreateForwardLBFourthLayerListeners failed, err %s", err.Error())
 		}
 		// check response
-		a.checkErrCode(resp.Code)
+		a.checkErrCode(resp.Code, mf)
 		if resp.Code == APIRequestLimitExceededCode || resp.Code == APIWrongStatusCode {
 			continue
 		}
@@ -287,7 +302,7 @@ func (a *APIWrapper) DescribeForwardLBListeners(region string, req *qcloud.Descr
 			return nil, fmt.Errorf("DescribeForwardLBListeners failed, err %s", err.Error())
 		}
 		// check response
-		a.checkErrCode(resp.Code)
+		a.checkErrCode(resp.Code, mf)
 		if resp.Code == APIRequestLimitExceededCode || resp.Code == APIWrongStatusCode {
 			continue
 		}
@@ -342,7 +357,7 @@ func (a *APIWrapper) DescribeForwardLBBackends(region string, req *qcloud.Descri
 			return nil, fmt.Errorf("DescribeForwardLBBackends failed, err %s", err.Error())
 		}
 		// check response
-		a.checkErrCode(resp.Code)
+		a.checkErrCode(resp.Code, mf)
 		if resp.Code == APIRequestLimitExceededCode || resp.Code == APIWrongStatusCode {
 			continue
 		}
@@ -397,7 +412,7 @@ func (a *APIWrapper) RegInstancesWith4LayerListener(region string,
 			return fmt.Errorf("RegisterInstancesWithForwardLBFourthListener failed, err %s", err.Error())
 		}
 		// check response
-		a.checkErrCode(resp.Code)
+		a.checkErrCode(resp.Code, mf)
 		if resp.Code == APIRequestLimitExceededCode || resp.Code == APIWrongStatusCode {
 			continue
 		}
@@ -457,7 +472,7 @@ func (a *APIWrapper) DeRegInstancesWith4LayerListener(region string,
 			return fmt.Errorf("DeregisterInstancesFromForwardLBFourthListener failed, err %s", err.Error())
 		}
 		// check response
-		a.checkErrCode(resp.Code)
+		a.checkErrCode(resp.Code, mf)
 		if resp.Code == APIRequestLimitExceededCode || resp.Code == APIWrongStatusCode {
 			continue
 		}
@@ -515,7 +530,7 @@ func (a *APIWrapper) DeleteListener(region string, req *qcloud.DeleteForwardLBLi
 			return fmt.Errorf("DeleteForwardLBListener failed, err %s", err.Error())
 		}
 		// check response
-		a.checkErrCode(resp.Code)
+		a.checkErrCode(resp.Code, mf)
 		if resp.Code == APIRequestLimitExceededCode || resp.Code == APIWrongStatusCode {
 			continue
 		}

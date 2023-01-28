@@ -10,12 +10,7 @@
             <bk-guide></bk-guide>
         </div>
         <div class="biz-content-wrapper" style="padding: 0;" v-bkloading="{ isLoading: isInitLoading, opacity: 0.1 }">
-            <app-exception
-                v-if="exceptionCode && !isInitLoading"
-                :type="exceptionCode.code"
-                :text="exceptionCode.msg">
-            </app-exception>
-            <div v-show="!exceptionCode && !isInitLoading">
+            <div v-show="!isInitLoading">
                 <div class="biz-lock-box" v-if="updateMsg">
                     <div class="lock-wrapper warning">
                         <i class="bcs-icon bcs-icon-info-circle-shape"></i>
@@ -352,7 +347,6 @@
                 isInitLoading: true,
                 isPageLoading: false,
                 bkMessageInstance: null,
-                exceptionCode: null,
                 dataList: [],
                 dataListTmp: [],
                 curPageData: [],
@@ -1098,11 +1092,15 @@
 
             renderSelectionHeader () {
                 if (this.curPageData.filter(node => node.canDel).length === 0) {
-                    return <bcs-popover v-if={this.curPageData.length} content={this.$t('当前页全是系统命名空间')} placement="left" transfer={true} delay={300}>
+                    return this.curPageData.length ?  
+                            <bcs-popover content={this.$t('当前页全是系统命名空间')} placement="left" transfer={true} delay={300}>
                                 <bk-checkbox name="check-strategy" disabled={true} />
                             </bcs-popover>
+                            : null
                 }
-                return <bk-checkbox v-if={this.curPageData.length} name="check-all-strategy" v-model={this.isCheckAll} onChange={this.checkAllMetric} />
+                return this.curPageData.length ?
+                    <bk-checkbox name="check-all-strategy" v-model={this.isCheckAll} onChange={this.checkAllMetric} />
+                    : null;
             }
         }
     }

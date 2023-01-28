@@ -64,6 +64,18 @@ func (ua *UpdateAction) validate() error {
 	if ua.req.ClusterID == "" {
 		return fmt.Errorf("clusterID is empty")
 	}
+	if err := validateDiskSize(ua.req.NodeTemplate.DataDisks...); err != nil {
+		return err
+	}
+	if err := validateDiskSize(ua.req.LaunchTemplate.DataDisks...); err != nil {
+		return err
+	}
+	if err := validateDiskSize(ua.req.LaunchTemplate.SystemDisk); err != nil {
+		return err
+	}
+	if err := validateInternet(ua.req.LaunchTemplate.InternetAccess); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -86,6 +98,12 @@ func (ua *UpdateAction) modifyNodeGroupField() {
 	group.Tags = ua.req.Tags
 	if len(ua.req.NodeOS) != 0 {
 		group.NodeOS = ua.req.NodeOS
+	}
+	if ua.req.BkCloudID != nil {
+		group.Area = &cmproto.CloudArea{
+			BkCloudID:   ua.req.BkCloudID.GetValue(),
+			BkCloudName: ua.req.CloudAreaName.GetValue(),
+		}
 	}
 	ua.group = group
 }
@@ -185,6 +203,9 @@ func (ua *UpdateAction) modifyNodeGroupNodeTemplate(group *cmproto.NodeGroup) {
 		}
 		if ua.req.NodeTemplate.ExtraArgs != nil {
 			group.NodeTemplate.ExtraArgs = ua.req.NodeTemplate.ExtraArgs
+		}
+		if ua.req.NodeTemplate.Module != nil {
+			group.NodeTemplate.Module = ua.req.NodeTemplate.Module
 		}
 		group.NodeTemplate.UnSchedulable = ua.req.NodeTemplate.UnSchedulable
 		group.NodeTemplate.Taints = ua.req.NodeTemplate.Taints

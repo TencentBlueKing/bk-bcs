@@ -19,6 +19,7 @@ const (
 	LabelValuesPath = "/api/v1/label/%s/values"
 	LabelsPath      = "/api/v1/labels"
 	SeriesPath      = "/api/v1/series"
+	StorePath       = "api/v1/stores"
 )
 
 // CommonResponse common response of prometheus
@@ -75,4 +76,21 @@ type MatrixResult struct {
 type VectorResult struct {
 	Metric map[string]string `json:"metric"`
 	Value  []interface{}     `json:"value"`
+}
+
+type StoreGWResponse struct {
+	Status string      `json:"status"`
+	Data   StoreGWData `json:"data"`
+}
+
+type StoreGWData struct {
+	Query   []StoreGWQuery `json:"query"`
+	Sidecar []StoreGWQuery `json:"sidecar"`
+}
+
+type StoreGWQuery struct {
+	Name      string              `json:"name"`
+	LastCheck string              `json:"lastCheck"`
+	LastError interface{}         `json:"lastError"`
+	LabelSets []map[string]string `json:"labelSets"`
 }

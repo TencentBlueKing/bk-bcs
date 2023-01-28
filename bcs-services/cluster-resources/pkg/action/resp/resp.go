@@ -34,10 +34,10 @@ import (
 
 // BuildListAPIResp xxx
 func BuildListAPIResp(
-	ctx context.Context, clusterID, resKind, groupVersion, namespace, format string, opts metav1.ListOptions,
+	ctx context.Context, params ListParams, opts metav1.ListOptions,
 ) (*structpb.Struct, error) {
 	// NOTE 部分逻辑需要保留 map[string]interface{} 格式以生成 webAnnotations，因此分离出 BuildListAPIRespData
-	respData, err := BuildListAPIRespData(ctx, clusterID, resKind, groupVersion, namespace, format, opts)
+	respData, err := BuildListAPIRespData(ctx, params, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -46,9 +46,9 @@ func BuildListAPIResp(
 
 // BuildRetrieveAPIResp xxx
 func BuildRetrieveAPIResp(
-	ctx context.Context, clusterID, resKind, groupVersion, namespace, name, format string, opts metav1.GetOptions,
+	ctx context.Context, params GetParams, opts metav1.GetOptions,
 ) (*structpb.Struct, error) {
-	respData, err := BuildRetrieveAPIRespData(ctx, clusterID, resKind, groupVersion, namespace, name, format, opts)
+	respData, err := BuildRetrieveAPIRespData(ctx, params, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -63,7 +63,7 @@ func BuildCreateAPIResp(
 	isNSScoped bool,
 	opts metav1.CreateOptions,
 ) (*structpb.Struct, error) {
-	clusterConf := res.NewClusterConfig(clusterID)
+	clusterConf := res.NewClusterConf(clusterID)
 	k8sRes, err := res.GetGroupVersionResource(ctx, clusterConf, resKind, groupVersion)
 	if err != nil {
 		return nil, err
@@ -84,7 +84,7 @@ func BuildUpdateAPIResp(
 	manifest map[string]interface{},
 	opts metav1.UpdateOptions,
 ) (*structpb.Struct, error) {
-	clusterConf := res.NewClusterConfig(clusterID)
+	clusterConf := res.NewClusterConf(clusterID)
 	k8sRes, err := res.GetGroupVersionResource(ctx, clusterConf, resKind, groupVersion)
 	if err != nil {
 		return nil, err
@@ -106,7 +106,7 @@ func BuildPatchAPIResp(
 	data []byte,
 	opts metav1.PatchOptions,
 ) (*structpb.Struct, error) {
-	clusterConf := res.NewClusterConfig(clusterID)
+	clusterConf := res.NewClusterConf(clusterID)
 	k8sRes, err := res.GetGroupVersionResource(ctx, clusterConf, resKind, groupVersion)
 	if err != nil {
 		return nil, err
@@ -124,7 +124,7 @@ func BuildPatchAPIResp(
 func BuildDeleteAPIResp(
 	ctx context.Context, clusterID, resKind, groupVersion, namespace, name string, opts metav1.DeleteOptions,
 ) error {
-	clusterConf := res.NewClusterConfig(clusterID)
+	clusterConf := res.NewClusterConf(clusterID)
 	k8sRes, err := res.GetGroupVersionResource(ctx, clusterConf, resKind, groupVersion)
 	if err != nil {
 		return err
@@ -140,7 +140,9 @@ func BuildListPodRelatedResResp(
 	if err != nil {
 		return nil, err
 	}
-	respDataBuilder, err := NewRespDataBuilder(ctx, relatedRes, resKind, format)
+	respDataBuilder, err := NewRespDataBuilder(
+		ctx, DataBuilderParams{Manifest: relatedRes, Kind: resKind, Format: format},
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -159,8 +161,7 @@ func BuildListContainerAPIResp(ctx context.Context, clusterID, namespace, podNam
 	}
 
 	containers := []map[string]interface{}{}
-	containerStatuses, _ := mapx.GetItems(podManifest, "status.containerStatuses")
-	for _, containerStatus := range containerStatuses.([]interface{}) {
+	for _, containerStatus := range mapx.GetList(podManifest, "status.containerStatuses") {
 		cs, _ := containerStatus.(map[string]interface{})
 		status, reason, message := "", "", ""
 		// state 有且只有一对键值：running / terminated / waiting
@@ -194,15 +195,13 @@ func BuildGetContainerAPIResp(
 
 	// 遍历查找指定容器的 Spec 及 Status，若其中某项不存在，则抛出错误
 	var curContainerSpec, curContainerStatus map[string]interface{}
-	containerSpec, _ := mapx.GetItems(podManifest, "spec.containers")
-	for _, csp := range containerSpec.([]interface{}) {
+	for _, csp := range mapx.GetList(podManifest, "spec.containers") {
 		spec, _ := csp.(map[string]interface{})
 		if containerName == spec["name"].(string) {
 			curContainerSpec = spec
 		}
 	}
-	containerStatuses, _ := mapx.GetItems(podManifest, "status.containerStatuses")
-	for _, containerStatus := range containerStatuses.([]interface{}) {
+	for _, containerStatus := range mapx.GetList(podManifest, "status.containerStatuses") {
 		cs, _ := containerStatus.(map[string]interface{})
 		if containerName == cs["name"].(string) {
 			curContainerStatus = cs
@@ -250,7 +249,7 @@ func BuildUpdateCObjAPIResp(
 	manifest map[string]interface{},
 	opts metav1.UpdateOptions,
 ) (*structpb.Struct, error) {
-	clusterConf := res.NewClusterConfig(clusterID)
+	clusterConf := res.NewClusterConf(clusterID)
 	cobjRes, err := res.GetGroupVersionResource(ctx, clusterConf, resKind, groupVersion)
 	if err != nil {
 		return nil, err

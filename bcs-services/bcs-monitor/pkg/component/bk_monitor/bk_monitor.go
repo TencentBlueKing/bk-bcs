@@ -18,6 +18,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/url"
 	"strconv"
 	"time"
 
@@ -28,6 +29,10 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/storage"
 	"github.com/thanos-io/thanos/pkg/store/storepb"
+)
+
+const (
+	defaultQueryPath = "/query/ts/promql"
 )
 
 // Sample 返回的点
@@ -125,11 +130,27 @@ func (r *BKUnifyQueryResult) ToPromSeriesSet() ([]*prompb.TimeSeries, error) {
 	return promSeriesSet, nil
 }
 
+// getQueryURL 兼容网关/内部k8s service的场景
+func getQueryURL(rawURL string) (string, error) {
+	u, err := url.Parse(rawURL)
+	if err != nil {
+		return "", err
+	}
+	if u.Path == "" {
+		u.Path = defaultQueryPath
+	}
+
+	return u.String(), nil
+}
+
 // QueryByPromQL unifyquery 查询, promql 语法
 // start, end, step 单位秒
-func QueryByPromQL(ctx context.Context, host string, bkBizId string, start, end, step int64,
+func QueryByPromQL(ctx context.Context, rawURL string, bkBizId string, start, end, step int64,
 	labelMatchers []storepb.LabelMatcher) ([]*prompb.TimeSeries, error) {
-	url := fmt.Sprintf("%s/query/ts/promql", host)
+	url, err := getQueryURL(rawURL)
+	if err != nil {
+		return nil, err
+	}
 
 	// 必须的参数 bk_biz_id, 单独拎出来处理
 	bkBizIdMatcher := storepb.LabelMatcher{
@@ -151,6 +172,7 @@ func QueryByPromQL(ctx context.Context, host string, bkBizId string, start, end,
 	resp, err := component.GetClient().R().
 		SetContext(ctx).
 		SetBody(body).
+		SetHeader("X-Bk-Scope-Space-Uid", fmt.Sprintf("bkcc__%s", bkBizId)). // 支持空间参数
 		SetQueryParam("bk_app_code", config.G.Base.AppCode).
 		SetQueryParam("bk_app_secret", config.G.Base.AppSecret).
 		Post(url)

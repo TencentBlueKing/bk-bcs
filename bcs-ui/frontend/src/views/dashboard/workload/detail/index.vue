@@ -58,7 +58,6 @@ export default defineComponent({
     crd: {
       type: String,
       default: '',
-      required: true,
     },
     // kind类型
     kind: {

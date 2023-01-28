@@ -46,14 +46,31 @@ func (la *ListAction) Do(ctx context.Context,
 	req *proto.ListVariableDefinitionsRequest) (*map[string]interface{}, error) {
 	la.ctx = ctx
 	la.req = req
+	variables := []*vdm.VariableDefinition{}
+	// inject system build in variables
+	var systems []*vdm.VariableDefinition
+	if la.req.GetScope() == "" {
+		systems = vdm.FilterSystemVariables(
+			[]string{vdm.VariableScopeGlobal, vdm.VariableScopeCluster, vdm.VariableScopeNamespace}, req.GetSearchKey())
+	} else {
+		systems = vdm.FilterSystemVariables([]string{la.req.GetScope()}, req.GetSearchKey())
+	}
+	if la.req.Offset == 0 {
+		variables = append(variables, systems...)
+		la.req.Limit = la.req.Limit - int64(len(systems))
+	} else {
+		la.req.Offset = la.req.Offset - int64(len(systems))
+	}
 
 	definitions, total, err := la.listVariableDefinitions()
 	if err != nil {
 		return nil, errorx.NewDBErr(err)
 	}
+	variables = append(variables, definitions...)
+
 	data := map[string]interface{}{
-		"total":   uint32(total),
-		"results": definitions,
+		"total":   uint32(total) + uint32(len(systems)),
+		"results": variables,
 	}
 	return &data, nil
 }

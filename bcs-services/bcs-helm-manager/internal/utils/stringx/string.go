@@ -12,7 +12,10 @@
 
 package stringx
 
-import "strings"
+import (
+	"regexp"
+	"strings"
+)
 
 // SplitString 分割字符串, 允许半角逗号、分号及空格
 func SplitString(str string) []string {
@@ -51,19 +54,20 @@ func Errs2String(errs []error) string {
 	return strings.Join(strList, ",")
 }
 
-// SplitYaml2Array 分割 yaml 为数组 string
-// separator 为空时，设置为以 "---\n" 分割
-func SplitYaml2Array(yamlStr string, separator string) []string {
-	if separator == "" {
-		separator = "---\n"
-	}
-	var splitedStrArr []string
-	for _, s := range strings.Split(yamlStr, separator) {
-		// 当为空或\n时，忽略
-		if s == "" || s == "\n" {
+var sep = regexp.MustCompile("(?:^|\\s*\n)---\\s*")
+
+// SplitManifests takes a string of manifest and returns string slice
+func SplitManifests(bigFile string) []string {
+	res := make([]string, 0)
+	bigFileTmp := strings.TrimSpace(bigFile)
+	docs := sep.Split(bigFileTmp, -1)
+	for _, d := range docs {
+		if d == "" {
 			continue
 		}
-		splitedStrArr = append(splitedStrArr, s)
+
+		d = strings.TrimSpace(d)
+		res = append(res, d)
 	}
-	return splitedStrArr
+	return res
 }

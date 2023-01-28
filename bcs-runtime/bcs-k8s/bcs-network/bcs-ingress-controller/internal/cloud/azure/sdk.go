@@ -16,18 +16,22 @@ package azure
 import (
 	"context"
 	"fmt"
+	"math/rand"
 	"os"
 	"runtime"
 	"strconv"
+	"strings"
+	"sync"
 	"time"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork"
+	"github.com/pkg/errors"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/throttle"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/metrics"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/pkg/common"
-	"github.com/pkg/errors"
 )
 
 const (
@@ -45,10 +49,14 @@ const (
 var (
 	// If the delay caused by the frequency limit exceeds this value, it is recorded in the log
 	maxLatency = 120 * time.Millisecond
+	// the maximum number of retries caused by server error or API overrun
+	maxRetry = 25
 	// qps for rate limit
 	defaultThrottleQPS = 50
 	// bucket size for rate limit
 	defaultBucketSize = 50
+	// wait seconds when tencent cloud api is busy
+	waitPeriodLBDealing = 2
 )
 
 // SdkWrapper sdk wrapper for azure
@@ -57,6 +65,8 @@ type SdkWrapper struct {
 
 	clientID              string
 	clientSecret          string
+	clientIDList          []string
+	clientSecretList      []string
 	tenantID              string
 	subscriptionID        string
 	resourceGroupName     string
@@ -66,15 +76,18 @@ type SdkWrapper struct {
 	agFrontIPName string
 	lbFrontIPName string
 
-	credential    *azidentity.DefaultAzureCredential
-	lbCli         *armnetwork.LoadBalancersClient
-	lbAddrPoolCli *armnetwork.LoadBalancerBackendAddressPoolsClient
-	appGatewayCli *armnetwork.ApplicationGatewaysClient
+	credNum           int
+	credList          []*azidentity.ClientSecretCredential
+	lbCliList         []*armnetwork.LoadBalancersClient
+	lbAddrPoolCliList []*armnetwork.LoadBalancerBackendAddressPoolsClient
+	appGatewayCliList []*armnetwork.ApplicationGatewaysClient
 
 	ratelimitqps        int64
 	ratelimitbucketSize int64
 	// rate limiter for calling sdk
 	throttler throttle.RateLimiter
+
+	sync.RWMutex
 }
 
 // NewSdkWrapper create sdk wrapper
@@ -82,26 +95,44 @@ func NewSdkWrapper() (*SdkWrapper, error) {
 	sw := &SdkWrapper{}
 	sw.loadEnv()
 
-	cred, err := azidentity.NewDefaultAzureCredential(nil)
-	if err != nil {
-		return nil, errors.Wrapf(err, "create azure cred failed")
+	credList := make([]*azidentity.ClientSecretCredential, 0)
+	for i := range sw.clientIDList {
+		clientID := sw.clientIDList[i]
+		clientSecret := sw.clientSecretList[i]
+
+		cred, err := azidentity.NewClientSecretCredential(sw.tenantID, clientID, clientSecret, &azidentity.ClientSecretCredentialOptions{})
+		if err != nil {
+			return nil, errors.Wrapf(err, "create azure cred[%d] failed", i)
+		}
+		credList = append(credList, cred)
 	}
 
-	sw.credential = cred
-	sw.lbCli, err = armnetwork.NewLoadBalancersClient(sw.subscriptionID, sw.credential, nil)
-	if err != nil {
-		return nil, errors.Wrapf(err, "create azure lb client failed")
-	}
-	sw.lbAddrPoolCli, err = armnetwork.NewLoadBalancerBackendAddressPoolsClient(sw.subscriptionID,
-		sw.credential, nil)
-	if err != nil {
-		return nil, errors.Wrapf(err, "create azure lb address pool client failed")
+	sw.credList = credList
+	sw.credNum = len(credList)
+
+	for i := range sw.credList {
+		cred := sw.credList[i]
+		lbCli, err := armnetwork.NewLoadBalancersClient(sw.subscriptionID, cred, nil)
+		if err != nil {
+			return nil, errors.Wrapf(err, "create azure lb client[%d] failed", i)
+		}
+		sw.lbCliList = append(sw.lbCliList, lbCli)
+
+		lbAddrPoolCli, err := armnetwork.NewLoadBalancerBackendAddressPoolsClient(sw.subscriptionID, cred, nil)
+		if err != nil {
+			return nil, errors.Wrapf(err, "create azure lb address pool client[%d] failed", i)
+		}
+		sw.lbAddrPoolCliList = append(sw.lbAddrPoolCliList, lbAddrPoolCli)
+
+		appGatewayCli, err := armnetwork.NewApplicationGatewaysClient(sw.subscriptionID, cred, nil)
+		if err != nil {
+			return nil, errors.Wrapf(err, "create azure application gateway client[%d] failed", i)
+		}
+		sw.appGatewayCliList = append(sw.appGatewayCliList, appGatewayCli)
+
 	}
 
-	sw.appGatewayCli, err = armnetwork.NewApplicationGatewaysClient(sw.subscriptionID, sw.credential, nil)
-	if err != nil {
-		return nil, errors.Wrapf(err, "create azure application gateway client failed")
-	}
+	rand.Seed(time.Now().UnixNano())
 	sw.throttler = throttle.NewTokenBucket(sw.ratelimitqps, sw.ratelimitbucketSize)
 	return sw, nil
 }
@@ -127,6 +158,8 @@ func (sw *SdkWrapper) loadEnv() {
 	sw.vNetName = os.Getenv(envNameAzureVNetID)
 	sw.vNetResourceGroupName = os.Getenv(envNameAzureVNetResourceGroup)
 
+	sw.clientIDList = strings.Split(sw.clientID, osEnvSep)
+	sw.clientSecretList = strings.Split(sw.clientSecret, osEnvSep)
 	// if not set, use resourceGroupName
 	if sw.vNetResourceGroupName == "" {
 		sw.vNetResourceGroupName = sw.resourceGroupName
@@ -172,6 +205,21 @@ func (sw *SdkWrapper) tryThrottle() {
 	}
 }
 
+func (sw *SdkWrapper) getLbCli() *armnetwork.LoadBalancersClient {
+	r := rand.Intn(sw.credNum)
+	return sw.lbCliList[r]
+}
+
+func (sw *SdkWrapper) getLbAddrPoolCli() *armnetwork.LoadBalancerBackendAddressPoolsClient {
+	r := rand.Intn(sw.credNum)
+	return sw.lbAddrPoolCliList[r]
+}
+
+func (sw *SdkWrapper) getAppGateWayCli() *armnetwork.ApplicationGatewaysClient {
+	r := rand.Intn(sw.credNum)
+	return sw.appGatewayCliList[r]
+}
+
 // GetLoadBalancer get azure load balancer
 func (sw *SdkWrapper) GetLoadBalancer(region string, loadBalancerName string) (*armnetwork.
 	LoadBalancersClientGetResponse, error) {
@@ -183,13 +231,15 @@ func (sw *SdkWrapper) GetLoadBalancer(region string, loadBalancerName string) (*
 			"GetLoadBalancer", ret, startTime)
 	}
 	sw.tryThrottle()
-	lbResp, err := sw.lbCli.Get(context.TODO(), sw.resourceGroupName, loadBalancerName, nil)
+	lbResp, err := sw.getLbCli().Get(context.TODO(), sw.resourceGroupName, loadBalancerName, nil)
 	if err != nil {
-		if IsNotFoundError(err) {
-			return nil, err
-		}
+		// if IsNotFoundError(err) {
+		// 	return nil, err
+		// }
 		mf(metrics.LibCallStatusErr) // or time out
-		return nil, errors.Wrapf(err, "GetLoadBalancer(region=%s,lbName=%s) failed", region, loadBalancerName)
+		err = errors.Wrapf(err, "GetLoadBalancer(region=%s,lbName=%s) failed", region, loadBalancerName)
+		blog.Errorf("%s", err.Error())
+		return nil, err
 	}
 
 	blog.V(3).Infof("GetLoadBalancer(region=%s,lbName=%s) response: %s", region, loadBalancerName,
@@ -210,14 +260,16 @@ func (sw *SdkWrapper) GetApplicationGateway(region string, appGatewayName string
 			"GetApplicationGateway", ret, startTime)
 	}
 	sw.tryThrottle()
-	appGatewayRsp, err := sw.appGatewayCli.Get(context.TODO(), sw.resourceGroupName, appGatewayName, nil)
+	appGatewayRsp, err := sw.getAppGateWayCli().Get(context.TODO(), sw.resourceGroupName, appGatewayName, nil)
 	if err != nil {
-		if IsNotFoundError(err) {
-			return nil, err
-		}
+		// if IsNotFoundError(err) {
+		// 	return nil, err
+		// }
 		mf(metrics.LibCallStatusErr) // or time out
-		return nil, errors.Wrapf(err, "GetApplicationGateway(region=%s,appGatewayName=%s) failed", region,
+		err = errors.Wrapf(err, "GetApplicationGateway(region=%s,appGatewayName=%s) failed", region,
 			appGatewayName)
+		blog.Errorf("%s", err.Error())
+		return nil, err
 	}
 
 	blog.V(3).Infof("GetApplicationGateway(region=%s,appGatewayName=%s) response: %s", region, appGatewayName,
@@ -232,29 +284,46 @@ func (sw *SdkWrapper) CreateOrUpdateApplicationGateway(appGatewayName string,
 	parameters armnetwork.ApplicationGateway) (*armnetwork.ApplicationGatewaysClientCreateOrUpdateResponse, error) {
 	blog.V(3).Infof("CreateOrUpdateApplicationGateway[%s] request: %s", appGatewayName,
 		common.ToJsonString(parameters))
+	var appGatewayRsp armnetwork.ApplicationGatewaysClientCreateOrUpdateResponse
 
 	startTime := time.Now()
 	mf := func(ret string) {
 		metrics.ReportLibRequestMetric(SystemNameInMetricAzure, HandlerNameInMetricAzureSDK,
 			"CreateOrUpdateApplicationGateway", ret, startTime)
 	}
-	sw.tryThrottle()
-	pollerResp, err := sw.appGatewayCli.BeginCreateOrUpdate(context.TODO(), sw.resourceGroupName, appGatewayName, parameters,
-		nil)
-	if err != nil || pollerResp == nil {
-		mf(metrics.LibCallStatusErr) // or time out
-		return nil, errors.Wrapf(err, "CreateOrUpdateApplicationGateway failed")
-	}
+	counter := 1
+	for ; counter <= maxRetry; counter++ {
+		blog.V(3).Infof("CreateOrUpdateApplicationGateway try %d/%d", counter, maxRetry)
+		sw.tryThrottle()
+		pollerResp, err := sw.getAppGateWayCli().BeginCreateOrUpdate(context.TODO(), sw.resourceGroupName, appGatewayName, parameters,
+			nil)
+		if err != nil {
+			if checkRetryableError(err) {
+				continue
+			}
+			mf(metrics.LibCallStatusErr) // or time out
+			err = errors.Wrapf(err, "CreateOrUpdateApplicationGateway failed")
+			blog.Errorf("%s", err.Error())
+			return nil, err
+		}
 
-	appGatewayRsp, err := pollerResp.PollUntilDone(context.TODO(), nil)
-	if err != nil {
-		mf(metrics.LibCallStatusErr) // or time out
-		return nil, errors.Wrapf(err, "CreateOrUpdateApplicationGateway failed")
+		appGatewayRsp, err = pollerResp.PollUntilDone(context.TODO(), nil)
+		if err != nil {
+			mf(metrics.LibCallStatusErr) // or time out
+			err = errors.Wrapf(err, "CreateOrUpdateApplicationGateway pool resp failed")
+			blog.Errorf("%s", err.Error())
+			return nil, err
+		}
+		blog.V(3).Infof("CreateOrUpdateApplicationGateway response: %s", common.ToJsonString(appGatewayRsp))
+		break
+	}
+	if counter > maxRetry {
+		mf(metrics.LibCallStatusTimeout)
+		blog.Errorf("CreateOrUpdateApplicationGateway[%s] out of maxRetry %d", appGatewayName, maxRetry)
+		return nil, fmt.Errorf("CreateOrUpdateApplicationGateway[%s] out of maxRetry %d", appGatewayName, maxRetry)
 	}
 
 	mf(metrics.LibCallStatusOK)
-	blog.V(3).Infof("CreateOrUpdateApplicationGateway response: %s", common.ToJsonString(appGatewayRsp))
-
 	return &appGatewayRsp, nil
 }
 
@@ -262,29 +331,47 @@ func (sw *SdkWrapper) CreateOrUpdateApplicationGateway(appGatewayName string,
 func (sw *SdkWrapper) CreateOrUpdateLoadBalancer(loadBalancerName string,
 	parameters armnetwork.LoadBalancer) (*armnetwork.LoadBalancersClientCreateOrUpdateResponse, error) {
 	blog.V(3).Infof("CreateOrUpdateBalancer[%s] request: %s", loadBalancerName, common.ToJsonString(parameters))
+	var lb armnetwork.LoadBalancersClientCreateOrUpdateResponse
 
 	startTime := time.Now()
 	mf := func(ret string) {
 		metrics.ReportLibRequestMetric(SystemNameInMetricAzure, HandlerNameInMetricAzureSDK,
 			"CreateOrUpdateBalancer", ret, startTime)
 	}
-	sw.tryThrottle()
-	pollerResp, err := sw.lbCli.BeginCreateOrUpdate(context.TODO(), sw.resourceGroupName, loadBalancerName, parameters,
-		nil)
-	if err != nil {
-		mf(metrics.LibCallStatusErr) // or time out
-		return nil, errors.Wrapf(err, "CreateOrUpdateBalancer failed")
-	}
+	counter := 1
+	for ; counter <= maxRetry; counter++ {
+		blog.V(3).Infof("CreateOrUpdateBalancer try %d/%d", counter, maxRetry)
+		sw.tryThrottle()
+		pollerResp, err := sw.getLbCli().BeginCreateOrUpdate(context.TODO(), sw.resourceGroupName, loadBalancerName,
+			parameters,
+			nil)
+		if err != nil {
+			if checkRetryableError(err) {
+				continue
+			}
+			mf(metrics.LibCallStatusErr) // or time out
+			err = errors.Wrapf(err, "CreateOrUpdateBalancer failed")
+			blog.Errorf("%s", err.Error())
+			return nil, err
+		}
 
-	lb, err := pollerResp.PollUntilDone(context.TODO(), nil)
-	if err != nil {
-		mf(metrics.LibCallStatusErr) // or time out
-		return nil, errors.Wrapf(err, "CreateOrUpdateBalancer failed")
+		lb, err = pollerResp.PollUntilDone(context.TODO(), nil)
+		if err != nil {
+			mf(metrics.LibCallStatusErr) // or time out
+			err = errors.Wrapf(err, "CreateOrUpdateBalancer poll resp failed")
+			blog.Errorf("%s", err.Error())
+			return nil, err
+		}
+		blog.V(3).Infof("CreateOrUpdateBalancer response: %s", common.ToJsonString(lb))
+		break
+	}
+	if counter > maxRetry {
+		mf(metrics.LibCallStatusTimeout)
+		blog.Errorf("CreateOrUpdateBalancer out of maxRetry %d", maxRetry)
+		return nil, fmt.Errorf("CreateOrUpdateBalancer out of maxRetry %d", maxRetry)
 	}
 
 	mf(metrics.LibCallStatusOK)
-	blog.V(3).Infof("CreateOrUpdateBalancer response: %s", common.ToJsonString(lb))
-
 	return &lb, nil
 }
 
@@ -294,29 +381,47 @@ func (sw *SdkWrapper) CreateOrUpdateLoadBalanceBackendAddressPool(loadBalancerNa
 	LoadBalancerBackendAddressPoolsClientCreateOrUpdateResponse, error) {
 	blog.V(3).Infof("createOrUpdateBackendAddressPool[%s] request: %s", loadBalancerName,
 		common.ToJsonString(parameters))
+	var lb armnetwork.LoadBalancerBackendAddressPoolsClientCreateOrUpdateResponse
+	var err error
 
 	startTime := time.Now()
 	mf := func(ret string) {
 		metrics.ReportLibRequestMetric(SystemNameInMetricAzure, HandlerNameInMetricAzureSDK,
 			"createOrUpdateBackendAddressPool", ret, startTime)
 	}
-	sw.tryThrottle()
-	pollerResp, err := sw.lbAddrPoolCli.BeginCreateOrUpdate(context.TODO(), sw.resourceGroupName,
-		loadBalancerName, backendAddressPoolName, parameters, nil)
-	if err != nil {
-		mf(metrics.LibCallStatusErr) // or time out
-		return nil, errors.Wrapf(err, "createOrUpdateBackendAddressPool failed")
-	}
 
-	lb, err := pollerResp.PollUntilDone(context.TODO(), nil)
-	if err != nil {
-		mf(metrics.LibCallStatusErr) // or time out
-		return nil, errors.Wrapf(err, "createOrUpdateBackendAddressPool failed")
+	counter := 1
+	for ; counter <= maxRetry; counter++ {
+		blog.V(3).Infof("createOrUpdateBackendAddressPool try %d/%d", counter, maxRetry)
+		sw.tryThrottle()
+		pollerResp, ierr := sw.getLbAddrPoolCli().BeginCreateOrUpdate(context.TODO(), sw.resourceGroupName,
+			loadBalancerName, backendAddressPoolName, parameters, nil)
+		if ierr != nil {
+			if checkRetryableError(ierr) {
+				continue
+			}
+			mf(metrics.LibCallStatusErr) // or time out
+			ierr = errors.Wrapf(ierr, "createOrUpdateBackendAddressPool failed")
+			blog.Errorf("%s", ierr)
+			return nil, ierr
+		}
+		lb, err = pollerResp.PollUntilDone(context.TODO(), nil)
+		if err != nil {
+			mf(metrics.LibCallStatusErr) // or time out
+			err = errors.Wrapf(err, "createOrUpdateBackendAddressPool poll resp failed")
+			blog.Errorf("%s", err)
+			return nil, err
+		}
+		blog.V(3).Infof("createOrUpdateBackendAddressPool response: %s", common.ToJsonString(lb))
+		break
+	}
+	if counter > maxRetry {
+		mf(metrics.LibCallStatusTimeout)
+		blog.Errorf("createOrUpdateBackendAddressPool out of maxRetry %d", maxRetry)
+		return nil, fmt.Errorf("createOrUpdateBackendAddressPool out of maxRetry %d", maxRetry)
 	}
 
 	mf(metrics.LibCallStatusOK)
-	blog.V(3).Infof("createOrUpdateBackendAddressPool response: %s", common.ToJsonString(lb))
-
 	return &lb, nil
 }
 
@@ -329,30 +434,47 @@ func (sw *SdkWrapper) DeleteLoadBalanceAddressPool(loadBalancerName string, pool
 		metrics.ReportLibRequestMetric(SystemNameInMetricAzure, HandlerNameInMetricAzureSDK,
 			"deleteLoadBalanceAddressPool", ret, startTime)
 	}
-	sw.tryThrottle()
-	pollerResp, err := sw.lbAddrPoolCli.BeginDelete(context.TODO(), sw.resourceGroupName,
-		loadBalancerName, poolName, nil)
-	if err != nil {
-		mf(metrics.LibCallStatusErr) // or time out
-		return errors.Wrapf(err, "deleteLoadBalanceAddressPool failed")
-	}
 
-	lb, err := pollerResp.PollUntilDone(context.TODO(), nil)
-	if err != nil {
-		mf(metrics.LibCallStatusErr) // or time out
-		return errors.Wrapf(err, "deleteLoadBalanceAddressPool failed")
-	}
+	counter := 1
+	for ; counter <= maxRetry; counter++ {
+		blog.V(3).Infof("deleteLoadBalanceAddressPool try %d/%d", counter, maxRetry)
+		sw.tryThrottle()
+		pollerResp, err := sw.getLbAddrPoolCli().BeginDelete(context.TODO(), sw.resourceGroupName,
+			loadBalancerName, poolName, nil)
+		if err != nil {
+			if checkRetryableError(err) {
+				continue
+			}
+			mf(metrics.LibCallStatusErr) // or time out
+			err = errors.Wrapf(err, "deleteLoadBalanceAddressPool failed")
+			blog.Errorf("%s", err)
+			return err
+		}
 
+		_, err = pollerResp.PollUntilDone(context.TODO(), nil)
+		if err != nil {
+			mf(metrics.LibCallStatusErr) // or time out
+			err = errors.Wrapf(err, "deleteLoadBalanceAddressPool poll resp failed")
+			blog.Errorf("%s", err)
+			return err
+		}
+		blog.V(3).Infof("deleteLoadBalanceAddressPool[%s] %s success", loadBalancerName, poolName)
+		break
+	}
+	if counter > maxRetry {
+		mf(metrics.LibCallStatusTimeout)
+		blog.Errorf("deleteLoadBalanceAddressPool[%s] %s out of maxRetry %d", loadBalancerName, poolName, maxRetry)
+		return fmt.Errorf("deleteLoadBalanceAddressPool[%s] %s out of maxRetry %d", loadBalancerName, poolName, maxRetry)
+	}
 	mf(metrics.LibCallStatusOK)
-	blog.V(3).Infof("deleteLoadBalanceAddressPool response: %s", common.ToJsonString(lb))
-
 	return nil
 }
 
 // GetLoadBalanceBackendAddressPool get azure lb address pool
 func (sw *SdkWrapper) GetLoadBalanceBackendAddressPool(loadBalancerName,
 	addrPoolName string) (*armnetwork.LoadBalancerBackendAddressPoolsClientGetResponse, error) {
-
+	var err error
+	var backendAddressPool armnetwork.LoadBalancerBackendAddressPoolsClientGetResponse
 	blog.V(3).Infof("GetLoadBalanceBackendAddressPool(loadBalancer:%s, backendAddressPool:%s)", loadBalancerName,
 		addrPoolName)
 
@@ -361,21 +483,35 @@ func (sw *SdkWrapper) GetLoadBalanceBackendAddressPool(loadBalancerName,
 		metrics.ReportLibRequestMetric(SystemNameInMetricAzure, HandlerNameInMetricAzureSDK,
 			"GetLoadBalanceBackendAddressPool", ret, startTime)
 	}
-	sw.tryThrottle()
-	backendAddressPool, err := sw.lbAddrPoolCli.Get(context.TODO(), sw.resourceGroupName, loadBalancerName,
-		addrPoolName, nil)
-	if err != nil {
-		if IsNotFoundError(err) {
+
+	counter := 1
+	for ; counter <= maxRetry; counter++ {
+		blog.V(3).Infof("GetLoadBalanceBackendAddressPool try %d/%d", counter, maxRetry)
+		sw.tryThrottle()
+		backendAddressPool, err = sw.getLbAddrPoolCli().Get(context.TODO(), sw.resourceGroupName, loadBalancerName,
+			addrPoolName, nil)
+		if err != nil {
+			if checkRetryableError(err) {
+				continue
+			}
+			mf(metrics.LibCallStatusErr) // or time out
+			err = errors.Wrapf(err, "GetLoadBalanceBackendAddressPool(loadBalancer:%s, "+
+				"backendAddressPool:%s) failed", loadBalancerName, addrPoolName)
+			blog.Errorf("%s", err)
 			return nil, err
 		}
-		mf(metrics.LibCallStatusErr) // or time out
-		return nil, errors.Wrapf(err, "GetLoadBalanceBackendAddressPool(loadBalancer:%s, "+
-			"backendAddressPool:%s) failed", loadBalancerName, addrPoolName)
+		blog.V(3).Infof("GetLoadBalanceBackendAddressPool(loadBalancer:%s, backendAddressPool:%s) response: %s",
+			loadBalancerName, *backendAddressPool.Name, common.ToJsonString(backendAddressPool))
+		break
 	}
-
+	if counter > maxRetry {
+		mf(metrics.LibCallStatusTimeout)
+		blog.Errorf("GetLoadBalanceBackendAddressPool(loadBalancer:%s, backendAddressPool:%s) out of maxRetry %d",
+			loadBalancerName, addrPoolName, maxRetry)
+		return nil, fmt.Errorf("GetLoadBalanceBackendAddressPool(loadBalancer:%s, backendAddressPool:%s) out of maxRetry %d", loadBalancerName, addrPoolName,
+			maxRetry)
+	}
 	mf(metrics.LibCallStatusOK)
-	blog.V(3).Infof("GetLoadBalanceBackendAddressPool(loadBalancer:%s, backendAddressPool:%s) response: %s",
-		loadBalancerName, *backendAddressPool.Name, common.ToJsonString(backendAddressPool))
 	return &backendAddressPool, nil
 }
 

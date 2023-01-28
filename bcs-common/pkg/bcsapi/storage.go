@@ -80,6 +80,8 @@ type Storage interface {
 	QueryK8sStorageClass(cluster string) ([]*storage.StorageClass, error)
 	// QueryK8sResourceQuota query ResourceQuota in specified cluster and namespace
 	QueryK8sResourceQuota(cluster, namespace string) ([]*storage.ResourceQuota, error)
+	// QueryK8sReplicaSet query ReplicaSet in specified cluster and namespace
+	QueryK8sReplicaSet(cluster, namespace, name string) ([]*storage.ReplicaSet, error)
 	// QueryMesosNamespace query all namespace in specified cluster
 	QueryMesosNamespace(cluster string) ([]*storage.MesosNamespace, error)
 	// QueryMesosDeployment query all deployment in specified cluster
@@ -113,6 +115,37 @@ type StorageCli struct {
 	Config   *Config
 	Client   *restclient.RESTClient
 	discover registry.Registry
+}
+
+// QueryK8sReplicaSet query k8s replicaset in specified cluster and namespace
+func (c *StorageCli) QueryK8sReplicaSet(cluster, namespace, name string) ([]*storage.ReplicaSet, error) {
+	subPath := "/k8s/dynamic/namespace_resources/clusters/%s/namespaces/" + namespace + "/ReplicaSet?"
+	if name != "" {
+		subPath += "resourceName=" + name + "&"
+	}
+	var replicaSets []*storage.ReplicaSet
+	offset := 0
+	for {
+		var replicaSetTmp []*storage.ReplicaSet
+		path := fmt.Sprintf("%soffset=%d&limit=%d", subPath, offset, storageRequestLimit)
+		response, err := c.query(cluster, path)
+		if err != nil {
+			return nil, err
+		}
+		if err := json.Unmarshal(response.Data, &replicaSetTmp); err != nil {
+			return nil, fmt.Errorf("replicaSets slice decode err: %s", err.Error())
+		}
+		replicaSets = append(replicaSets, replicaSetTmp...)
+		if len(replicaSetTmp) < storageRequestLimit {
+			break
+		}
+	}
+
+	if len(replicaSets) == 0 {
+		blog.V(5).Infof("no replicaSets found in cluster %s", cluster)
+		return nil, nil
+	}
+	return replicaSets, nil
 }
 
 // QueryK8sPvc query pvc in specified cluster and namespace
@@ -504,7 +537,7 @@ func (c *StorageCli) QueryK8SDaemonSet(cluster, namespace string) ([]*storage.Da
 	if namespace == "" {
 		return nil, fmt.Errorf("namespace is empty")
 	}
-	subPath := "/k8s/dynamic/namespace_resources/clusters/%s/namespaces/" + namespace + "/Daemonset"
+	subPath := "/k8s/dynamic/namespace_resources/clusters/%s/namespaces/" + namespace + "/DaemonSet"
 
 	var daemonsets []*storage.DaemonSet
 	offset := 0

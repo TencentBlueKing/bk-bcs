@@ -57,6 +57,8 @@ type ResourceManagerClient interface {
 	ListResourcePool(ctx context.Context, in *ListResourcePoolReq, opts ...grpc.CallOption) (*ListResourcePoolResp, error)
 	ImportResource(ctx context.Context, in *ImportResourceReq, opts ...grpc.CallOption) (*ImportResourceResp, error)
 	ListResource(ctx context.Context, in *ListResourceReq, opts ...grpc.CallOption) (*ListResourceResp, error)
+	ListDeviceRecordByPool(ctx context.Context, in *ListDeviceRecordByPoolReq, opts ...grpc.CallOption) (*ListDeviceRecordResp, error)
+	CreateDeviceRecordByPool(ctx context.Context, in *CreateDeviceRecordByPoolReq, opts ...grpc.CallOption) (*CreateDeviceRecordByPoolResp, error)
 	//* device
 	GetDevice(ctx context.Context, in *GetDeviceReq, opts ...grpc.CallOption) (*GetDeviceResp, error)
 	ListDevices(ctx context.Context, in *ListDevicesReq, opts ...grpc.CallOption) (*ListDevicesResp, error)
@@ -341,6 +343,24 @@ func (c *resourceManagerClient) ListResource(ctx context.Context, in *ListResour
 	return out, nil
 }
 
+func (c *resourceManagerClient) ListDeviceRecordByPool(ctx context.Context, in *ListDeviceRecordByPoolReq, opts ...grpc.CallOption) (*ListDeviceRecordResp, error) {
+	out := new(ListDeviceRecordResp)
+	err := c.cc.Invoke(ctx, "/resourcemanager.ResourceManager/ListDeviceRecordByPool", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *resourceManagerClient) CreateDeviceRecordByPool(ctx context.Context, in *CreateDeviceRecordByPoolReq, opts ...grpc.CallOption) (*CreateDeviceRecordByPoolResp, error) {
+	out := new(CreateDeviceRecordByPoolResp)
+	err := c.cc.Invoke(ctx, "/resourcemanager.ResourceManager/CreateDeviceRecordByPool", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *resourceManagerClient) GetDevice(ctx context.Context, in *GetDeviceReq, opts ...grpc.CallOption) (*GetDeviceResp, error) {
 	out := new(GetDeviceResp)
 	err := c.cc.Invoke(ctx, "/resourcemanager.ResourceManager/GetDevice", in, out, opts...)
@@ -411,6 +431,8 @@ type ResourceManagerServer interface {
 	ListResourcePool(context.Context, *ListResourcePoolReq) (*ListResourcePoolResp, error)
 	ImportResource(context.Context, *ImportResourceReq) (*ImportResourceResp, error)
 	ListResource(context.Context, *ListResourceReq) (*ListResourceResp, error)
+	ListDeviceRecordByPool(context.Context, *ListDeviceRecordByPoolReq) (*ListDeviceRecordResp, error)
+	CreateDeviceRecordByPool(context.Context, *CreateDeviceRecordByPoolReq) (*CreateDeviceRecordByPoolResp, error)
 	//* device
 	GetDevice(context.Context, *GetDeviceReq) (*GetDeviceResp, error)
 	ListDevices(context.Context, *ListDevicesReq) (*ListDevicesResp, error)
@@ -511,6 +533,12 @@ func (UnimplementedResourceManagerServer) ImportResource(context.Context, *Impor
 }
 func (UnimplementedResourceManagerServer) ListResource(context.Context, *ListResourceReq) (*ListResourceResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListResource not implemented")
+}
+func (UnimplementedResourceManagerServer) ListDeviceRecordByPool(context.Context, *ListDeviceRecordByPoolReq) (*ListDeviceRecordResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListDeviceRecordByPool not implemented")
+}
+func (UnimplementedResourceManagerServer) CreateDeviceRecordByPool(context.Context, *CreateDeviceRecordByPoolReq) (*CreateDeviceRecordByPoolResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateDeviceRecordByPool not implemented")
 }
 func (UnimplementedResourceManagerServer) GetDevice(context.Context, *GetDeviceReq) (*GetDeviceResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetDevice not implemented")
@@ -1074,6 +1102,42 @@ func _ResourceManager_ListResource_Handler(srv interface{}, ctx context.Context,
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ResourceManager_ListDeviceRecordByPool_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListDeviceRecordByPoolReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ResourceManagerServer).ListDeviceRecordByPool(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/resourcemanager.ResourceManager/ListDeviceRecordByPool",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ResourceManagerServer).ListDeviceRecordByPool(ctx, req.(*ListDeviceRecordByPoolReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ResourceManager_CreateDeviceRecordByPool_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateDeviceRecordByPoolReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ResourceManagerServer).CreateDeviceRecordByPool(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/resourcemanager.ResourceManager/CreateDeviceRecordByPool",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ResourceManagerServer).CreateDeviceRecordByPool(ctx, req.(*CreateDeviceRecordByPoolReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _ResourceManager_GetDevice_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(GetDeviceReq)
 	if err := dec(in); err != nil {
@@ -1256,6 +1320,14 @@ var ResourceManager_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _ResourceManager_ListResource_Handler,
 		},
 		{
+			MethodName: "ListDeviceRecordByPool",
+			Handler:    _ResourceManager_ListDeviceRecordByPool_Handler,
+		},
+		{
+			MethodName: "CreateDeviceRecordByPool",
+			Handler:    _ResourceManager_CreateDeviceRecordByPool_Handler,
+		},
+		{
 			MethodName: "GetDevice",
 			Handler:    _ResourceManager_GetDevice_Handler,
 		},
@@ -1269,5 +1341,5 @@ var ResourceManager_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "proto/bcs-resource-manager.proto",
+	Metadata: "bcs-resource-manager.proto",
 }

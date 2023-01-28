@@ -51,9 +51,10 @@ import dashboard from '@/store/modules/dashboard';
 import clustermanager from '@/store/modules/clustermanager';
 import token from '@/store/modules/token';
 import { projectFeatureFlag } from '@/api/base';
+import { getProject } from '@/api/modules/project';
 
 Vue.use(Vuex);
-Vue.config.devtools = NODE_ENV === 'development';
+Vue.config.devtools = process.env.NODE_ENV === 'development';
 // cookie 中 zh-cn / en
 let lang = cookie.parse(document.cookie).blueking_language || 'zh-cn';
 if (['zh-CN', 'zh-cn', 'cn', 'zhCN', 'zhcn'].indexOf(lang) > -1) {
@@ -299,49 +300,6 @@ const store = new Vuex.Store({
     },
 
     /**
-         * 获取项目列表
-         *
-         * @param {Object} context store 上下文对象
-         * @param {Object} params 请求参数
-         * @param {Object} config 请求的配置
-         *
-         * @return {Promise} promise 对象
-         */
-    getProjectList(context, params, config = {}) {
-      return http.get(`${DEVOPS_BCS_API_URL}/api/authorized_projects/`, params, config).then((response) => {
-        const data = response.data || [];
-        context.commit('forceUpdateOnlineProjectList', data);
-        return data;
-      });
-    },
-
-    /**
-         * 根据项目 id 查询项目的权限
-         *
-         * @param {Object} context store 上下文对象
-         * @param {Object} params 请求参数
-         * @param {Object} config 请求的配置
-         *
-         * @return {Promise} promise 对象
-         */
-    getProjectPerm(context, { projectCode }) {
-      return http.get(`${DEVOPS_BCS_API_URL}/api/projects/${projectCode}/`);
-    },
-
-    /**
-         * 获取关联 CC 的列表
-         *
-         * @param {Object} context store 上下文对象
-         * @param {Object} params 请求参数
-         * @param {Object} config 请求的配置
-         *
-         * @return {Promise} promise 对象
-         */
-    getCCList(context, params = {}, config = {}) {
-      return http.get(`${DEVOPS_BCS_API_URL}/api/cc/?${json2Query(params)}`, params, config);
-    },
-
-    /**
          * 停用/启用屏蔽
          *
          * @param {Object} context store 上下文对象
@@ -364,9 +322,21 @@ const store = new Vuex.Store({
          *
          * @return {Promise} promise 对象
          */
-    getProject(context, params, config = {}) {
+    getProject(context, params) {
       const { projectId } = params;
-      return http.get(`${DEVOPS_BCS_API_URL}/api/projects/${projectId}/`, params, config);
+      return getProject({
+        $projectId: projectId,
+      }, { needRes: true }).then(res => ({
+        data: {
+          ...res.data,
+          cc_app_id: res.data.businessID,
+          cc_app_name: res.data.businessName,
+          project_id: res.data.projectID,
+          project_name: res.data.name,
+          project_code: res.data.projectCode,
+        },
+      }))
+        .catch(() => ({}));
     },
 
     /**
@@ -467,7 +437,7 @@ store.dispatch = function (_type, _payload, config = {}) {
   const entry = store._actions[type];
 
   if (!entry) {
-    if (NODE_ENV !== 'production') {
+    if (process.env.NODE_ENV !== 'production') {
       console.error(`[vuex] unknown action type: ${type}`);
     }
     return;

@@ -47,6 +47,14 @@
               {{ handleGetExtData(row.metadata.uid, 'age') }}</span>
           </template>
         </bk-table-column>
+        <bk-table-column :label="$t('编辑模式')" width="100">
+          <template slot-scope="{ row }">
+            <span>
+              {{handleGetExtData(row.metadata.uid, 'editMode') === 'form'
+                ? $t('表单') : 'YAML'}}
+            </span>
+          </template>
+        </bk-table-column>
         <bk-table-column :label="$t('操作')" :resizable="false" width="150">
           <template #default="{ row }">
             <bk-button

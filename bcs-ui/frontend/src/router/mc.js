@@ -26,7 +26,7 @@
 
 const MC = () => import(/* webpackChunkName: 'mc' */'@/views/mc');
 const OperateAudit = () => import(/* webpackChunkName: 'mc' */'@/views/mc/operate-audit');
-const EventQuery = () => import(/* webpackChunkName: 'mc' */'@/views/mc/event-query');
+const EventQuery = () => import(/* webpackChunkName: 'mc' */'@/views/mc/new-event-query');
 
 const childRoutes = [
   {

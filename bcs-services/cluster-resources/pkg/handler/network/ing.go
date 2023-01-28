@@ -23,7 +23,7 @@ import (
 	resAction "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action/resource"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action/web"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/featureflag"
-	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
+	resCsts "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/constants"
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
 )
 
@@ -39,14 +39,14 @@ func New() *Handler {
 func (h *Handler) ListIng(
 	ctx context.Context, req *clusterRes.ResListReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = resAction.NewResMgr(req.ClusterID, req.ApiVersion, res.Ing).List(
-		ctx, req.Namespace, req.Format, metav1.ListOptions{LabelSelector: req.LabelSelector},
+	resp.Data, err = resAction.NewResMgr(req.ClusterID, req.ApiVersion, resCsts.Ing).List(
+		ctx, req.Namespace, req.Format, req.Scene, metav1.ListOptions{LabelSelector: req.LabelSelector},
 	)
 	if err != nil {
 		return err
 	}
 	resp.WebAnnotations, err = web.NewAnnos(
-		web.NewFeatureFlag(featureflag.FormCreate, false),
+		web.NewFeatureFlag(featureflag.FormCreate, true),
 	).ToPbStruct()
 	return err
 }
@@ -55,14 +55,14 @@ func (h *Handler) ListIng(
 func (h *Handler) GetIng(
 	ctx context.Context, req *clusterRes.ResGetReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = resAction.NewResMgr(req.ClusterID, req.ApiVersion, res.Ing).Get(
+	resp.Data, err = resAction.NewResMgr(req.ClusterID, req.ApiVersion, resCsts.Ing).Get(
 		ctx, req.Namespace, req.Name, req.Format, metav1.GetOptions{},
 	)
 	if err != nil {
 		return err
 	}
 	resp.WebAnnotations, err = web.NewAnnos(
-		web.NewFeatureFlag(featureflag.FormUpdate, false),
+		web.NewFeatureFlag(featureflag.FormUpdate, true),
 	).ToPbStruct()
 	return err
 }
@@ -71,7 +71,7 @@ func (h *Handler) GetIng(
 func (h *Handler) CreateIng(
 	ctx context.Context, req *clusterRes.ResCreateReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = resAction.NewResMgr(req.ClusterID, "", res.Ing).Create(
+	resp.Data, err = resAction.NewResMgr(req.ClusterID, "", resCsts.Ing).Create(
 		ctx, req.RawData, req.Format, true, metav1.CreateOptions{},
 	)
 	return err
@@ -81,7 +81,7 @@ func (h *Handler) CreateIng(
 func (h *Handler) UpdateIng(
 	ctx context.Context, req *clusterRes.ResUpdateReq, resp *clusterRes.CommonResp,
 ) (err error) {
-	resp.Data, err = resAction.NewResMgr(req.ClusterID, "", res.Ing).Update(
+	resp.Data, err = resAction.NewResMgr(req.ClusterID, "", resCsts.Ing).Update(
 		ctx, req.Namespace, req.Name, req.RawData, req.Format, metav1.UpdateOptions{},
 	)
 	return err
@@ -91,7 +91,7 @@ func (h *Handler) UpdateIng(
 func (h *Handler) DeleteIng(
 	ctx context.Context, req *clusterRes.ResDeleteReq, _ *clusterRes.CommonResp,
 ) error {
-	return resAction.NewResMgr(req.ClusterID, "", res.Ing).Delete(
+	return resAction.NewResMgr(req.ClusterID, "", resCsts.Ing).Delete(
 		ctx, req.Namespace, req.Name, metav1.DeleteOptions{},
 	)
 }

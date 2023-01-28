@@ -20,6 +20,7 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/TencentBlueKing/bkmonitor-kits/logger"
 	"github.com/oklog/run"
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
@@ -27,8 +28,7 @@ import (
 	"github.com/prometheus/common/version"
 	"github.com/spf13/cobra"
 	"github.com/thanos-io/thanos/pkg/tracing/client"
-
-	"github.com/TencentBlueKing/bkmonitor-kits/logger"
+	"go.uber.org/automaxprocs/maxprocs"
 )
 
 type contextKey int
@@ -122,6 +122,11 @@ func main() {
 		os.Exit(0)
 	}
 
+	// Running in container with limits but with empty/wrong value of GOMAXPROCS env var could lead to throttling by cpu
+	// maxprocs will automate adjustment by using cgroups info about cpu limit if it set as value for runtime.GOMAXPROCS.
+	if _, err := maxprocs.Set(maxprocs.Logger(func(template string, args ...interface{}) { logger.Infof(template, args) })); err != nil {
+		logger.Warnw("Failed to set GOMAXPROCS automatically", "err", err)
+	}
 	if err := g.Run(); err != nil && err != ctx.Err() {
 		// Use %+v for github.com/pkg/errors error to print with stack.
 		logger.Errorw("err", fmt.Sprintf("%+v", errors.Wrap(err, "run command failed")))

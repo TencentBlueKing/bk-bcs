@@ -19,12 +19,12 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
+	resCsts "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/constants"
 )
 
 func TestIsFormSupportedCObjKinds(t *testing.T) {
-	assert.True(t, IsFormSupportedCObjKinds(res.GDeploy))
-	assert.True(t, IsFormSupportedCObjKinds(res.HookTmpl))
-	assert.True(t, IsFormSupportedCObjKinds(res.GSTS))
-	assert.False(t, IsFormSupportedCObjKinds(res.HookRun))
+	assert.True(t, IsFormSupportedCObjKinds(resCsts.GDeploy))
+	assert.True(t, IsFormSupportedCObjKinds(resCsts.HookTmpl))
+	assert.True(t, IsFormSupportedCObjKinds(resCsts.GSTS))
+	assert.False(t, IsFormSupportedCObjKinds(resCsts.HookRun))
 }

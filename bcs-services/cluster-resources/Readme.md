@@ -1,4 +1,4 @@
-# BcsServices / ClusterResources 
+# BcsServices / ClusterResources
 
 > 蓝鲸容器服务（Bcs）集群资源层，用于屏蔽底层集群类型，提供统一的 Restful 接口以供 SaaS / OpenAPI 使用
 
@@ -9,11 +9,11 @@
 ```text
 Go                    1.17.5
 etcd                  3.5.0
-protoc                3.12.3
+protoc                3.20.3
 micro                 v4
-go-micro              v4
-protoc-gen-go         latest
-protoc-gen-micro      v4
+go-micro              v1.1.4
+protoc-gen-go         1.5.2
+protoc-gen-micro      v1.0.0
 protoc-grpc-gateway   v1.16.0
 protoc-gen-swagger    v1.16.0
 grpc                  v1.42.0
@@ -21,11 +21,20 @@ grpc                  v1.42.0
 
 ### 环境准备
 
+protoc
+```bash
+# 解压到 $PATH 任意目录
+wget https://github.com/protocolbuffers/protobuf/releases/download/v3.20.3/protoc-3.20.3-linux-x86_64.zip
+```
+
 ```shell script
 # 默认安装在 $GOPATH/bin 下
 export GO111MODULE=on
-go install go-micro.dev/v4/cmd/protoc-gen-micro@v4
-go install github.com/golang/protobuf/protoc-gen-go@latest 
+# go-micro new service 等依赖
+go install github.com/go-micro/cli/cmd/go-micro@v1.1.4
+# proto 依赖
+go install github.com/go-micro/generator/cmd/protoc-gen-micro@v1.0.0
+go install github.com/golang/protobuf/protoc-gen-go@1.5.2
 go install github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger@v1.16.0
 go install github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway@v1.16.0
 
@@ -119,7 +128,7 @@ $ curl http://127.0.0.1:9091/clusterresources/v1/ping
 │   │   │   └── ...
 │   │   ├── errcode // 错误码常量
 │   │   │   └── ...
-│   │   ├── runmode // 运行模式常量 
+│   │   ├── runmode // 运行模式常量
 │   │   │   └── ...
 │   │   ├── runtime // 运行时配置
 │   │   │   └── ...
@@ -197,7 +206,7 @@ $ curl http://127.0.0.1:9091/clusterresources/v1/ping
 │   │   │   └── ...
 │   │   ├── config.go // BCS Cluster Config
 │   │   ├── constants.go // 集群资源等常量
-│   │   └── discovery.go // Redis Discover 实现  
+│   │   └── discovery.go // Redis Discover 实现
 │   ├── service // 服务层逻辑
 │   │   ├── util
 │   │   │   └── ...

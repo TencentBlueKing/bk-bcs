@@ -147,7 +147,7 @@ export default function useDetail(ctx: SetupContext, options: IDetailOptions) {
   // 删除资源
   const handleDeleteResource = () => {
     const kind = detail.value?.manifest?.kind;
-    const { namespace, category, name, type } = options;
+    const { namespace, category, name, type, crd } = options;
     $bkInfo({
       type: 'warning',
       clsName: 'custom-info-confirm',
@@ -155,12 +155,22 @@ export default function useDetail(ctx: SetupContext, options: IDetailOptions) {
       subTitle: `${kind} ${name}`,
       defaultInfo: true,
       confirmFn: async () => {
-        const result = await $store.dispatch('dashboard/resourceDelete', {
-          $namespaceId: namespace,
-          $type: type,
-          $category: category,
-          $name: name,
-        });
+        let result = false;
+        if (type === 'crd') {
+          result = await $store.dispatch('dashboard/customResourceDelete', {
+            namespace,
+            $crd: crd,
+            $category: category,
+            $name: name,
+          });
+        } else {
+          result = await $store.dispatch('dashboard/resourceDelete', {
+            $namespaceId: namespace,
+            $type: type,
+            $category: category,
+            $name: name,
+          });
+        }
         result && $bkMessage({
           theme: 'success',
           message: $i18n.t('删除成功'),

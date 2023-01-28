@@ -17,6 +17,7 @@ package wrapper
 import (
 	"context"
 
+	"github.com/pkg/errors"
 	"go-micro.dev/v4/server"
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/logging"
@@ -28,7 +29,11 @@ func NewLogWrapper() server.HandlerWrapper {
 		return func(ctx context.Context, req server.Request, rsp interface{}) error {
 			logging.Info(ctx, "called func: %s", req.Endpoint())
 			if err := fn(ctx, req, rsp); err != nil {
-				logging.Error(ctx, "call func %s failed, body: %v, error: %+v", req.Endpoint(), req.Body(), err)
+				rawErr := errors.Unwrap(err)
+				if rawErr == nil {
+					rawErr = err
+				}
+				logging.Error(ctx, "call func %s failed, body: %v, error: %+v", req.Endpoint(), req.Body(), rawErr)
 				return err
 			}
 			return nil

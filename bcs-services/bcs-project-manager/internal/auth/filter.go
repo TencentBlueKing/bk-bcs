@@ -23,31 +23,28 @@ import (
 	"github.com/mitchellh/mapstructure"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/config"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/logging"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/errorx"
 )
 
-// ListAuthorizedProjectIDs 过滤有权限的项目 ID
-func ListAuthorizedProjectIDs(username string) ([]string, error) {
+// ListAuthorizedProjectIDs 过滤有权限的项目 ID，如果为 any，则返回 true
+func ListAuthorizedProjectIDs(username string) ([]string, bool, error) {
 	// 组装 iam request
 	iamReq := makeIAMRequest(username, ProjectView)
 	if err := iamReq.Validate(); err != nil {
-		return nil, err
+		return []string{}, false, err
 	}
 	// 获取 policy
 	policy, err := makeIAMPolicy(iamReq)
 	if err != nil || len(policy) == 0 {
-		return nil, err
+		return []string{}, false, err
 	}
 	f, err := makeFilter(policy)
 	if err != nil || len(f) == 0 {
-		return nil, err
+		return []string{}, false, err
 	}
 	// 解析policy values，获取project id
-	// TODO: 切换后，再和前端确认全量返回时的格式
 	if f["op"] == iamOP.Any {
-		logging.Error("%s project filter match any!", username)
-		return nil, nil
+		return []string{}, true, nil
 	}
 	// value 为 []interface{}
 	val, _ := f["value"].([]interface{})
@@ -56,7 +53,7 @@ func ListAuthorizedProjectIDs(username string) ([]string, error) {
 		vStr, _ := v.(string)
 		ids = append(ids, vStr)
 	}
-	return ids, nil
+	return ids, false, nil
 }
 
 // makeIAMRequest 生成 iam request

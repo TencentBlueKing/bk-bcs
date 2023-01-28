@@ -10,13 +10,8 @@
       <bk-guide></bk-guide>
     </div>
     <div class="biz-content-wrapper" style="padding: 0;" v-bkloading="{ isLoading: isInitLoading, opacity: 0.1 }">
-      <app-exception
-        v-if="exceptionCode && !isInitLoading"
-        :type="exceptionCode.code"
-        :text="exceptionCode.msg">
-      </app-exception>
 
-      <template v-if="!exceptionCode && !isInitLoading">
+      <template v-if="!isInitLoading">
         <div class="biz-panel-header">
           <div class="left">
             <bk-button type="primary" @click.stop.prevent="createLoadBlance">
@@ -26,7 +21,7 @@
           </div>
           <div class="right">
             <bk-data-searcher
-              :placeholder="$t('输入名称，按Enter搜索')"
+              :placeholder="$t('输入集群名称，按Enter搜索')"
               :scope-list="searchScopeList"
               :search-key.sync="searchKeyword"
               :search-scope.sync="searchScope"
@@ -78,8 +73,8 @@
               </bk-table-column>
               <bk-table-column :label="$t('操作')" min-width="150">
                 <template slot-scope="props">
-                  <a href="javascript:void(0);" class="bk-text-button" @click.stop.prevent="editLoadBalance(props.row, index)">{{$t('更新')}}</a>
-                  <a href="javascript:void(0);" class="bk-text-button" @click.stop.prevent="removeLoadBalance(props.row, index)">{{$t('删除')}}</a>
+                  <a href="javascript:void(0);" class="bk-text-button" @click.stop.prevent="editLoadBalance(props.row)">{{$t('更新')}}</a>
+                  <a href="javascript:void(0);" class="bk-text-button" @click.stop.prevent="removeLoadBalance(props.row)">{{$t('删除')}}</a>
                 </template>
               </bk-table-column>
             </bk-table>
@@ -174,19 +169,14 @@
           <div class="bk-form-item mt15">
             <label class="bk-label">{{$t('Values内容')}}：</label>
             <div class="bk-form-content">
-              <i v-if="editorIsFullScreen" class="bcs-icon bcs-icon-close icon-btn" :title="$t('关闭全屏')" @click="handleCloseFullScreen"></i>
-              <i v-else class="bcs-icon bcs-icon-full-screen icon-btn" :title="$t('全屏')" @click="handleSetFullScreen"></i>
-              <ace
+              <CodeEditor
                 lang="yaml"
                 :width="'100%'"
                 :height="460"
-                :value="curLoadBalance.values"
-                :read-only="false"
-                :full-screen="editorIsFullScreen"
-                @init="editorInitAfter"
-                @input="yamlEditorInput"
-                @blur="yamlEditorBlur">
-              </ace>
+                v-model="curLoadBalance.values"
+                full-screen
+                @init="editorInitAfter">
+              </CodeEditor>
             </div>
           </div>
 
@@ -208,13 +198,13 @@
 
 <script>
 import yamljs from 'js-yaml';
-import ace from '@/components/ace-editor';
+import CodeEditor from '@/components/monaco-editor/new-editor.vue';
 import nodeSelector from '@/components/node-selector';
 import { catchErrorHandler, formatDate } from '@/common/util';
 
 export default {
   components: {
-    ace,
+    CodeEditor,
     nodeSelector,
   },
   data() {
@@ -254,7 +244,6 @@ export default {
       searchKeyword: '',
       searchScope: '',
       isInitLoading: true,
-      exceptionCode: null,
       isDataSaveing: false,
       isLoadBalanceLoading: false,
       prmissions: {},
@@ -265,7 +254,6 @@ export default {
       },
       chartVersionList: [],
       aceEditor: null,
-      editorIsFullScreen: false,
     };
   },
   computed: {
@@ -348,7 +336,7 @@ export default {
       this.getLoadBalanceList();
     },
 
-    async 'curLoadBalanceChartId'(chartId) {
+    async curLoadBalanceChartId(chartId) {
       await this.handlerSelectChart(chartId);
     },
   },
@@ -468,6 +456,8 @@ export default {
              * @param  {number} index 索引
              */
     async editLoadBalance(loadBalance) {
+      this.loadBalanceSlider.title = this.$t('编辑LoadBalancer');
+      this.loadBalanceSlider.isShow = true;
       const { projectId } = this;
       const projectKind = this.curProject.kind;
       const loadBalanceId = loadBalance.id;
@@ -488,16 +478,12 @@ export default {
         }
         curLoadBalance.node_list = JSON.parse(curLoadBalance.ip_info);
         this.curLoadBalance = Object.assign({}, curLoadBalance);
-        console.error(this.curLoadBalance);
         await this.handlerSelectCluster(this.curLoadBalance.cluster_id);
       } catch (e) {
         catchErrorHandler(e, this);
       } finally {
         this.isDataSaveing = false;
       }
-
-      this.loadBalanceSlider.title = this.$t('编辑LoadBalancer');
-      this.loadBalanceSlider.isShow = true;
     },
 
     /**
@@ -556,10 +542,6 @@ export default {
           this.aceEditor.setValue(this.curLoadBalance.values);
         } catch (e) {
           catchErrorHandler(e, this);
-        } finally {
-          setTimeout(() => {
-            this.aceEditor.gotoLine(0, 0, true);
-          }, 10);
         }
       } else {
         this.curLoadBalance.values = '';
@@ -617,7 +599,7 @@ export default {
              * 搜索LB
              */
     searchLoadBalance() {
-      const keyword = this.searchKeyword.trim();
+      const keyword = this.searchKeyword.trim().toLowerCase();
       const keyList = ['cluster_name', 'name'];
       let list = this.$store.state.network.loadBalanceList;
       let results = [];
@@ -628,7 +610,7 @@ export default {
 
       results = list.filter((item) => {
         for (const key of keyList) {
-          if (item[key].indexOf(keyword) > -1) {
+          if ((item[key].toLowerCase()).indexOf(keyword) > -1) {
             return true;
           }
         }
@@ -1054,24 +1036,6 @@ export default {
              */
     editorInitAfter(editor) {
       this.aceEditor = editor;
-    },
-
-    yamlEditorInput() {
-    },
-    yamlEditorBlur(val) {
-      this.curLoadBalance.values = val;
-    },
-
-    /**
-             * 切换编辑器全屏状态
-             * @param {type}
-             * @return {type}
-             */
-    handleSetFullScreen() {
-      this.editorIsFullScreen = true;
-    },
-    handleCloseFullScreen() {
-      this.editorIsFullScreen = false;
     },
   },
 };

@@ -31,6 +31,7 @@ import (
 	conf "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/config"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/i18n"
 	cli "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/client"
+	resCsts "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/constants"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/slice"
@@ -52,14 +53,26 @@ func NewResMgr(clusterID, groupVersion, kind string) *ResMgr {
 	}
 }
 
+/*
+TODO 重构 ResMgr
+目前存在一个问题，大部分资源使用到了 ResMgr，但其 List，Get 方法返回格式固定为了 structpb.Struct，
+导致在 handler 层如果要使用数据计算 WebAnnotations（如 ConfigMap, GameDeploy 等），则要么解包 xxx.AsMap()，
+要么不使用 ResMgr，直接使用 resp.BuildListApiRespData，这样会导致调用关系比较乱，有些走 ResMgr 有些不走。
+
+考虑的解决方案是：ResMgr 不返回具体的数据，而是一个数据构造方法（比如扩展的 DataBuilder?），根据实际需要的格式获取数据：
+比如要获取 Map，则 NewResMgr().List().AsMap()，要获取 structpb.Struct 则 NewResMgr().List().AsPbStruct()
+*/
+
 // List 请求某类资源（指定命名空间）下的所有资源列表，按指定 format 格式化后返回
 func (m *ResMgr) List(
-	ctx context.Context, namespace, format string, opts metav1.ListOptions,
+	ctx context.Context, namespace, format, scene string, opts metav1.ListOptions,
 ) (*structpb.Struct, error) {
 	if err := m.checkAccess(ctx, namespace, nil); err != nil {
 		return nil, err
 	}
-	return resp.BuildListAPIResp(ctx, m.ClusterID, m.Kind, m.GroupVersion, namespace, format, opts)
+	return resp.BuildListAPIResp(ctx, resp.ListParams{
+		m.ClusterID, m.Kind, m.GroupVersion, namespace, format, scene,
+	}, opts)
 }
 
 // Get 请求某个资源详情，按指定 Format 格式化后返回
@@ -69,14 +82,16 @@ func (m *ResMgr) Get(
 	if err := m.checkAccess(ctx, namespace, nil); err != nil {
 		return nil, err
 	}
-	return resp.BuildRetrieveAPIResp(ctx, m.ClusterID, m.Kind, m.GroupVersion, namespace, name, format, opts)
+	return resp.BuildRetrieveAPIResp(ctx, resp.GetParams{
+		m.ClusterID, m.Kind, m.GroupVersion, namespace, name, format,
+	}, opts)
 }
 
 // Create 创建 k8s 资源，支持以 manifest / formData 格式创建
 func (m *ResMgr) Create(
 	ctx context.Context, rawData *structpb.Struct, format string, isNSScoped bool, opts metav1.CreateOptions,
 ) (*structpb.Struct, error) {
-	transformer, err := trans.New(ctx, rawData.AsMap(), m.ClusterID, m.Kind, format)
+	transformer, err := trans.New(ctx, rawData.AsMap(), m.ClusterID, m.Kind, resCsts.CreateAction, format)
 	if err != nil {
 		return nil, err
 	}
@@ -96,7 +111,7 @@ func (m *ResMgr) Create(
 func (m *ResMgr) Update(
 	ctx context.Context, namespace, name string, rawData *structpb.Struct, format string, opts metav1.UpdateOptions,
 ) (*structpb.Struct, error) {
-	transformer, err := trans.New(ctx, rawData.AsMap(), m.ClusterID, m.Kind, format)
+	transformer, err := trans.New(ctx, rawData.AsMap(), m.ClusterID, m.Kind, resCsts.UpdateAction, format)
 	if err != nil {
 		return nil, err
 	}
@@ -189,8 +204,8 @@ func (m *ResMgr) checkAccess(ctx context.Context, namespace string, manifest map
 	if manifest != nil {
 		namespace = mapx.GetStr(manifest, "metadata.namespace")
 	}
-	if !cli.IsProjNSinSharedCluster(ctx, m.ClusterID, namespace) {
-		return errorx.New(errcode.NoPerm, i18n.GetMsg(ctx, "命名空间 %s 在该共享集群中不属于指定项目"), namespace)
+	if err = cli.CheckIsProjNSinSharedCluster(ctx, m.ClusterID, namespace); err != nil {
+		return err
 	}
 	return nil
 }

@@ -12,7 +12,6 @@
  * limitations under the License.
  */
 
-// Package namespace xxx
 package namespace
 
 import (
@@ -22,8 +21,8 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action"
 	respUtil "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action/resp"
-	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
 	cli "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/client"
+	resCsts "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/constants"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/pbstruct"
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
 )
@@ -55,7 +54,9 @@ func (h *Handler) ListNS(
 		return err
 	}
 
-	respDataBuilder, err := respUtil.NewRespDataBuilder(ctx, ret, res.NS, req.Format)
+	respDataBuilder, err := respUtil.NewRespDataBuilder(
+		ctx, respUtil.DataBuilderParams{ret, resCsts.NS, req.Format, req.Scene},
+	)
 	if err != nil {
 		return err
 	}

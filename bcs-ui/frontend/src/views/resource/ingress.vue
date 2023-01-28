@@ -1,20 +1,17 @@
 <!-- eslint-disable vue/multi-word-component-names -->
 <template>
-  <component v-bind:is="currentView" v-if="curProject.project_id" ref="ingress"></component>
+  <component v-bind:is="currentView" ref="ingress"></component>
 </template>
 
 <script>
 import k8sIngress from './ingress/k8s/index';
-import globalMixin from '@/mixins/global';
 
 export default {
   components: {
     k8sIngress,
   },
-  mixins: [globalMixin],
   data() {
     return {
-      curProject: {},
       currentView: k8sIngress,
     };
   },
@@ -22,10 +19,6 @@ export default {
     onlineProjectList() {
       return this.$store.state.sideMenu.onlineProjectList;
     },
-  },
-  mounted() {
-    this.curProject = this.initCurProject();
-    this.$store.commit('network/updateIngressList', []);
   },
 };
 </script>

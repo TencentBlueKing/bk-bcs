@@ -17,7 +17,9 @@ import (
 	"fmt"
 	"time"
 
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/bcs-health/api"
 	glog "github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -67,9 +69,18 @@ func (alertor *Alertor) DoAlarm(syncData *SyncData) {
 // genHealthInfo generate health info
 func (alertor *Alertor) genHealthInfo(syncData *SyncData) *api.HealthInfo {
 	data := syncData.Data
-	event, ok := data.(*v1.Event)
+	// convert to unstructured object
+	dataUnstructured, ok := data.(*unstructured.Unstructured)
 	if !ok {
-		glog.Errorf("Event Convert object to v1.Event fail! object is %v", data)
+		glog.Errorf("Event Convert object to unstructured event fail! object is %v", data)
+		return nil
+	}
+
+	// convert to corev1 object
+	event := &v1.Event{}
+	err := runtime.DefaultUnstructuredConverter.FromUnstructured(dataUnstructured.UnstructuredContent(), event)
+	if err != nil {
+		glog.Errorf("Event Convert object to v1.Event fail! object is %v", dataUnstructured)
 		return nil
 	}
 

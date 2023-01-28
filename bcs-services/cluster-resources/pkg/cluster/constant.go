@@ -15,7 +15,7 @@
 package cluster
 
 import (
-	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
+	resCsts "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/constants"
 )
 
 // 集群类型
@@ -38,6 +38,6 @@ var SharedClusterTypes = []string{ClusterTypeShared, ClusterTypeFederationShared
 
 // SharedClusterEnabledNativeKinds 共享集群支持的 k8s 原生资源
 var SharedClusterEnabledNativeKinds = []string{
-	res.NS, res.CJ, res.Deploy, res.Job, res.Po, res.STS, res.HPA,
-	res.EP, res.Ing, res.SVC, res.CM, res.Secret, res.PVC, res.SA, res.CRD,
+	resCsts.NS, resCsts.CJ, resCsts.Deploy, resCsts.Job, resCsts.Po, resCsts.STS, resCsts.HPA,
+	resCsts.EP, resCsts.Ing, resCsts.SVC, resCsts.CM, resCsts.Secret, resCsts.PVC, resCsts.SA, resCsts.CRD,
 }

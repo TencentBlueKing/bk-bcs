@@ -20,6 +20,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/store"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/store/entity"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/utils/contextx"
 	helmmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/proto/bcs-helm-manager"
 )
 
@@ -59,14 +60,15 @@ func (u *UpdateRepositoryAction) Handle(ctx context.Context,
 	}
 
 	username := auth.GetUserFromCtx(ctx)
-	return u.update(u.req.GetProjectCode(), u.req.GetName(), (&entity.Repository{}).LoadFromProto(&helmmanager.Repository{
-		Type:      u.req.Type,
-		Remote:    u.req.Remote,
-		RemoteURL: u.req.RemoteURL,
-		Username:  u.req.Username,
-		Password:  u.req.Password,
-		UpdateBy:  &username,
-	}))
+	return u.update(contextx.GetProjectCodeFromCtx(ctx), u.req.GetName(),
+		(&entity.Repository{}).LoadFromProto(&helmmanager.Repository{
+			Type:      u.req.Type,
+			Remote:    u.req.Remote,
+			RemoteURL: u.req.RemoteURL,
+			Username:  u.req.Username,
+			Password:  u.req.Password,
+			UpdateBy:  &username,
+		}))
 }
 
 func (u *UpdateRepositoryAction) update(projectCode, name string, m entity.M) error {

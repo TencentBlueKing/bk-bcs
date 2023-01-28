@@ -20,6 +20,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/handler"
+	resCsts "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/constants"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/example"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/pbstruct"
@@ -30,7 +31,7 @@ func TestEP(t *testing.T) {
 	h := New()
 	ctx := handler.NewInjectedContext("", "", "")
 
-	manifest, _ := example.LoadDemoManifest("network/simple_endpoints", "")
+	manifest, _ := example.LoadDemoManifest(ctx, "network/simple_endpoints", "", "", resCsts.EP)
 	resName := mapx.GetStr(manifest, "metadata.name")
 
 	// Create
@@ -62,6 +63,13 @@ func TestEP(t *testing.T) {
 	respData = getResp.Data.AsMap()
 	assert.Equal(t, "Endpoints", mapx.GetStr(respData, "manifest.kind"))
 	assert.Equal(t, "tVal", mapx.GetStr(respData, "manifest.metadata.annotations.tKey"))
+
+	// GetStatus
+	err = h.GetEPStatus(ctx, &getReq, &getResp)
+	assert.Nil(t, err)
+
+	respData = getResp.Data.AsMap()
+	assert.Equal(t, true, mapx.GetBool(respData, "epReady"))
 
 	// Delete
 	deleteReq := handler.GenResDeleteReq(resName)

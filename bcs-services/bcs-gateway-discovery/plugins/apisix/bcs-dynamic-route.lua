@@ -32,6 +32,7 @@ local plugin_name = "bcs-dynamic-route"
 local bcsapi_prefix = "/bcsapi/v4"
 local clustermanager_credential_path = "/clustermanager/v1/clustercredential"
 local clustermanager_tunnel_path = "/clustermanager/clusters/"
+local CLUSTER_SYNC_READY_KEY = "CLUSTER_SYNC_READY_KEY"
 local last_sync_time
 local last_sync_status
 local credential_global_cache = ngx_shared[plugin_name]
@@ -160,7 +161,7 @@ local function parse_domain_for_node(node)
     end
 end
 
-local function set_upstream(upstream_info, ctx)
+local function set_upstream(upstream_info, ctx, conf)
     local nodes = upstream_info.nodes
     local new_nodes = {}
     if core.table.isarray(nodes) then
@@ -182,9 +183,9 @@ local function set_upstream(upstream_info, ctx)
     end
     upstream_info["nodes"] = new_nodes
     upstream_info["timeout"] = {
-        send = upstream_info.timeout and upstream_info.timeout.send or 15,
-        read = upstream_info.timeout and upstream_info.timeout.read or 15,
-        connect = upstream_info.timeout and upstream_info.timeout.connect or 15,
+        send = upstream_info.timeout and upstream_info.timeout.send or conf.timeout.send,
+        read = upstream_info.timeout and upstream_info.timeout.read or conf.timeout.read,
+        connect = upstream_info.timeout and upstream_info.timeout.connect or conf.timeout.connect,
     }
 
     core.log.info("upstream_info: ", core.json.delay_encode(upstream_info, true))
@@ -257,6 +258,12 @@ local function periodly_sync_cluster_credentials_in_master()
         return nil
     end
 
+    local exists_clusters_ids = credential_global_cache:get_keys(0)
+    local delete_clusters_map = {}
+    for _, cluster_id in ipairs(exists_clusters_ids) do
+        delete_clusters_map[cluster_id] = true
+    end
+
     for _, cluster_credential in ipairs(data["data"]) do
         local cluster_info_cache = credential_global_cache:get(cluster_credential["clusterID"])
         local cluster_info = {}
@@ -326,7 +333,12 @@ local function periodly_sync_cluster_credentials_in_master()
             core.log.info("Cluster (" .. cluster_credential["clusterID"] .. ") credential does not change")
         end
         ::continue::
+        delete_clusters_map[cluster_credential["clusterID"]] = nil
     end
+    for cluster_id, _ in pairs(delete_clusters_map) do
+        credential_global_cache:delete(cluster_id)
+    end
+    credential_global_cache:set(CLUSTER_SYNC_READY_KEY, "ready")
     last_sync_status = true
 end
 
@@ -354,7 +366,7 @@ local function traffic_to_clustermanager(conf, ctx, clusterID, upstream_uri)
             if conf.grayscale_clustermanager_upstream_name and conf.grayscale_clustermanager_upstream_name ~= "" then
                 ctx.var.upstream_uri = clustermanager_tunnel_path .. clusterID .. "/" .. upstream_uri
                 local upstream = bcs_upstreams_util.get_upstream_by_name(conf.grayscale_clustermanager_upstream_name)
-                return set_upstream(upstream, ctx)
+                return set_upstream(upstream, ctx, conf)
                 -- ctx.upstream_id = conf.grayscale_clustermanager_upstream_name
                 -- return
             end
@@ -386,12 +398,12 @@ local function traffic_to_clustermanager(conf, ctx, clusterID, upstream_uri)
             end
             core.request.set_header(ctx, "Authorization", "Bearer " .. token)
             ctx.var.upstream_uri = bcsapi_prefix .. clustermanager_tunnel_path .. clusterID .. "/" .. upstream_uri
-            return set_upstream(upstream, ctx)
+            return set_upstream(upstream, ctx, conf)
         end
     end
     ctx.var.upstream_uri = clustermanager_tunnel_path .. clusterID .. "/" .. upstream_uri
     local upstream = bcs_upstreams_util.get_upstream_by_name(conf.clustermanager_upstream_name)
-    return set_upstream(upstream, ctx)
+    return set_upstream(upstream, ctx, conf)
     -- ctx.upstream_id = conf.clustermanager_upstream_name
 end
 
@@ -402,7 +414,7 @@ local function traffic_to_cluster_apiserver(conf, ctx, cluster_credential, upstr
         core.request.set_header(ctx, "Authorization", "Bearer " .. cluster_credential["user_token"])
     end
     cluster_credential["upstream"]["timeout"] = conf.timeout
-    return set_upstream(cluster_credential["upstream"], ctx)
+    return set_upstream(cluster_credential["upstream"], ctx, conf)
 end
 
 function _M.check_schema(conf)
@@ -477,6 +489,25 @@ end
 
 function _M.destroy()
     timers.unregister_timer("plugin#" .. plugin_name, true)
+end
+
+local function clusters_ready()
+    local ready, _ = credential_global_cache:get(CLUSTER_SYNC_READY_KEY)
+    if ready then
+        return 200, "ok"
+    else
+        return 503, "not ready"
+    end
+end
+
+function _M.control_api()
+    return {
+        {
+            methods = {"GET"},
+            uris = {"/v1/clusters/ready"},
+            handler = clusters_ready,
+        }
+    }
 end
 
 return _M

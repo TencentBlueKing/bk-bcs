@@ -1,7 +1,10 @@
 {{ include "common.metadata" . }}
 - - group:
       - - group:
-            - [ "type", ".", "." ]
+            - [ "type", ".", ".", "." ]
+            - - group:
+                  - [ "useType", ".", ".", "." ]
+                prop: lb
             - - group:
                   - [ "name", "port", "protocol", "targetPort", "nodePort", "." ]
                 container:

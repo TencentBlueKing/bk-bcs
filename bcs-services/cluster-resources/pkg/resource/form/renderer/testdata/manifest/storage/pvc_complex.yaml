@@ -4,7 +4,9 @@ metadata:
   name: pvc-complex-bkg54narnv
   namespace: default
   annotations:
-    "io.tencent.bcs.editFormat": "form"
+    io.tencent.bcs.editFormat: form
+    io.tencent.paas.creator: anonymous
+    io.tencent.paas.updator: anonymous
 spec:
   volumeName: task-pv-volume
   resources:

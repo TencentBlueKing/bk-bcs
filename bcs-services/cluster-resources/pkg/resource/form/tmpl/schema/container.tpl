@@ -26,7 +26,7 @@ initContainers:
   items:
     type: object
     properties:
-      {{- include "container.basic" . | indent 6 }}
+      {{- include "container.basic" (dict "lang" .lang "defaultImage" "busybox:latest" "defaultName" "init") | indent 6 }}
       {{- include "container.command" . | indent 6 }}
       {{- include "container.service" . | indent 6 }}
       {{- include "container.envs" . | indent 6 }}
@@ -58,7 +58,8 @@ containers:
   items:
     type: object
     properties:
-      {{- include "container.basic" . | indent 6 }}
+      # 标准容器的 默认镜像 和 容器名称 与初始容器不同
+      {{- include "container.basic" (dict "lang" .lang "defaultImage" "nginx:latest" "defaultName" "main")  | indent 6 }}
       {{- include "container.command" . | indent 6 }}
       {{- include "container.service" . | indent 6 }}
       {{- include "container.envs" . | indent 6 }}
@@ -95,14 +96,14 @@ basic:
     name:
       title: {{ i18n "容器名称" .lang }}
       type: string
-      default: main
+      default: {{ .defaultName }}
       ui:rules:
         - required
         - maxLength64
     image:
       title: {{ i18n "容器镜像" .lang }}
       type: string
-      default: busybox
+      default: {{ .defaultImage }}
       ui:rules:
         - required
         - maxLength128

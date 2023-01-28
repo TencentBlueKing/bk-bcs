@@ -16,23 +16,17 @@ package project
 
 import (
 	"context"
-	"crypto/tls"
+	"fmt"
 	"sync"
 	"time"
 
 	"github.com/patrickmn/go-cache"
-	"go-micro.dev/v4/registry"
-	"google.golang.org/grpc"
 
-	bcsapiProj "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/bcsproject"
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/conf"
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/runmode"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/runtime"
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/discovery"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/config"
 	log "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/logging"
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
-	grpcUtil "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/grpc"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/httpclient"
 )
 
 var projMgrCli *ProjClient
@@ -55,23 +49,17 @@ func genProjInfoCacheKey(projectID string) string {
 
 // ProjClient xxx
 type ProjClient struct {
-	ServiceName  string
-	EtcdRtr      registry.Registry
-	CliTLSConfig *tls.Config
-	discovery    *discovery.ServiceDiscovery
-	cache        *cache.Cache
-	ctx          context.Context
-	cancel       context.CancelFunc
+	cache *cache.Cache
 }
 
 // InitProjClient 初始化项目管理客户端
-func InitProjClient(microRtr registry.Registry, cliTLSConf *tls.Config) {
+func InitProjClient() {
 	if projMgrCli != nil || runtime.RunMode == runmode.Dev {
 		return
 	}
 	initOnce.Do(func() {
 		var err error
-		if projMgrCli, err = NewProjClient(microRtr, cliTLSConf); err != nil {
+		if projMgrCli, err = NewProjClient(); err != nil {
 			projMgrCli = nil
 			panic(err)
 		}
@@ -79,28 +67,16 @@ func InitProjClient(microRtr registry.Registry, cliTLSConf *tls.Config) {
 }
 
 // NewProjClient xxx
-func NewProjClient(microRtr registry.Registry, cliTLSConf *tls.Config) (*ProjClient, error) {
-	ctx, cancel := context.WithCancel(context.Background())
-	cli := ProjClient{
-		ServiceName:  conf.ProjectMgrServiceName,
-		EtcdRtr:      microRtr,
-		CliTLSConfig: cliTLSConf,
-		discovery:    discovery.NewServiceDiscovery(conf.ProjectMgrServiceName, microRtr),
-		cache:        cache.New(time.Minute*CacheExpireTime, time.Minute*PurgeExpiredCacheTime),
-		ctx:          ctx,
-		cancel:       cancel,
-	}
-	if err := cli.discovery.Start(); err != nil {
-		return nil, err
-	}
+func NewProjClient() (*ProjClient, error) {
+	cli := ProjClient{cache: cache.New(time.Minute*CacheExpireTime, time.Minute*PurgeExpiredCacheTime)}
 	return &cli, nil
 }
 
 // fetchProjInfoWithCache 获取项目信息（支持缓存）
-func (c *ProjClient) fetchProjInfoWithCache(ctx context.Context, projectID string) (map[string]interface{}, error) {
+func (c *ProjClient) fetchProjInfoWithCache(ctx context.Context, projectID string) (*Project, error) {
 	cacheKey := genProjInfoCacheKey(projectID)
 	if info, ok := c.cache.Get(cacheKey); info != nil && ok {
-		return info.(map[string]interface{}), nil
+		return info.(*Project), nil
 	}
 	log.Info(ctx, "project %s info not in cache, start call project manager", projectID)
 
@@ -116,45 +92,22 @@ func (c *ProjClient) fetchProjInfoWithCache(ctx context.Context, projectID strin
 }
 
 // fetchProjInfo 获取项目信息
-func (c *ProjClient) fetchProjInfo(ctx context.Context, projectID string) (map[string]interface{}, error) {
-	cli, grpcConn, err := c.genAvailableCli(ctx)
+func (c *ProjClient) fetchProjInfo(ctx context.Context, projectID string) (*Project, error) {
+	url := fmt.Sprintf("%s/bcsapi/v4/bcsproject/v1/projects/%s", config.G.BCSAPIGW.Host, projectID)
+	resp, err := httpclient.GetClient().R().
+		SetContext(ctx).
+		SetHeader("X-Project-Username", ""). // bcs_project 要求有这个header
+		SetAuthToken(config.G.BCSAPIGW.AuthToken).
+		Get(url)
+
 	if err != nil {
+		return nil, nil
+	}
+
+	project := new(Project)
+	if err := httpclient.UnmarshalBKResult(resp, project); err != nil {
 		return nil, err
 	}
-	defer grpcConn.Close()
 
-	resp, err := cli.GetProject(grpcUtil.SetMD4CTX(ctx), &bcsapiProj.GetProjectRequest{ProjectIDOrCode: projectID})
-	if err != nil {
-		return nil, errorx.New(errcode.ComponentErr, "call for project %s info failed: %v", projectID, err)
-	}
-	if resp.Code != 0 {
-		return nil, errorx.New(errcode.ComponentErr, "project: %s, errMsg: %s", projectID, resp.Message)
-	}
-	projInfo := map[string]interface{}{
-		"id":   projectID,
-		"name": resp.Data.Name,
-		"code": resp.Data.ProjectCode,
-	}
-	log.Info(ctx, "fetch project info: %v", projInfo)
-	return projInfo, nil
-}
-
-// genAvailableCli 获取可用的 ProjManager 服务
-func (c *ProjClient) genAvailableCli(ctx context.Context) (bcsapiProj.BCSProjectClient, *grpc.ClientConn, error) {
-	node, err := c.discovery.GetRandServiceInst(ctx)
-	if err != nil {
-		return nil, nil, err
-	}
-	log.Info(ctx, "get remote project manager instance [%s] from etcd registry successfully", node.Address)
-
-	conn, err := grpcUtil.NewGrpcConn(node.Address, c.CliTLSConfig)
-	if conn == nil || err != nil {
-		log.Error(ctx, "create project manager grpc client with %s failed: %v", node.Address, err)
-	}
-
-	cli := bcsapiProj.NewBCSProjectClient(conn)
-	if cli == nil {
-		return nil, nil, errorx.New(errcode.ComponentErr, "no available project manager client")
-	}
-	return cli, conn, nil
+	return project, nil
 }

@@ -10,13 +10,8 @@
       <bk-guide></bk-guide>
     </div>
     <div class="biz-content-wrapper p0" v-bkloading="{ isLoading: isInitLoading, opacity: 0.1 }">
-      <app-exception
-        v-if="exceptionCode && !isInitLoading"
-        :type="exceptionCode.code"
-        :text="exceptionCode.msg">
-      </app-exception>
 
-      <template v-if="!exceptionCode && !isInitLoading">
+      <template v-if="!isInitLoading">
         <div class="biz-panel-header">
           <div class="left">
             <bk-button @click.stop.prevent="removeConfigmaps" v-if="curPageData.length">
@@ -152,7 +147,7 @@
         :quick-close="true"
         :is-show.sync="configmapSlider.isShow"
         :title="configmapSlider.title"
-        :width="'640'">
+        :width="640">
         <div class="p30" slot="content">
           <table class="bk-table biz-data-table has-table-bordered">
             <thead>
@@ -209,7 +204,7 @@
       <bk-sideslider
         :is-show.sync="addSlider.isShow"
         :title="addSlider.title"
-        :width="'800'"
+        :width="800"
         :quick-close="false">
         <div class="p30 bk-resource-configmap" slot="content">
           <div v-bkloading="{ isLoading: isUpdateLoading }">
@@ -231,7 +226,7 @@
                     <bk-button
                       v-show="!data.isEdit"
                       style="width: 120px;"
-                      :class="['bk-button', { 'bk-primary': curKeyIndex === index }]"
+                      :class="['bk-button bcs-button-ellipsis', { 'bk-primary': curKeyIndex === index }]"
                       @click.stop.prevent="setCurKey(data, index)">
                       {{data.key || $t('未命名')}}
                     </bk-button>
@@ -261,30 +256,29 @@
               <div class="bk-form-item" style="margin-top: 13px;">
                 <label class="bk-label">{{$t('值')}}：</label>
                 <div class="bk-form-content" style="margin-left: 105px;" v-if="curProject.kind === PROJECT_K8S">
-                  <textarea
-                    class="bk-form-textarea"
-                    style="height: 200px;"
-                    v-model="curKeyParams.content"
-                    :placeholder="$t('请输入键') + curKeyParams.key + $t('的内容')"
-                    v-full-screen>
-                                    </textarea>
+                  <div v-full-screen="{ css: 'color: #333' }" class="h-[200px]">
+                    <textarea
+                      class="bk-form-textarea h-full"
+                      v-model="curKeyParams.content"
+                      :placeholder="$t('请输入键') + curKeyParams.key + $t('的内容')">
+                  </textarea>
+                  </div>
                 </div>
                 <div class="bk-form-content" style="margin-left: 105px;" v-else>
-                  <textarea
-                    class="bk-form-textarea"
-                    style="height: 200px;"
-                    v-model="curKeyParams.content"
-                    :placeholder="$t('请输入键') + curKeyParams.key + $t('的内容')"
-                    v-full-screen
-                    v-if="curKeyParams.type === 'file'">
-                                    </textarea>
-                  <textarea
-                    class="bk-form-textarea" style="height: 200px;"
-                    v-model="curKeyParams.content"
-                    :placeholder="$t('请输入在线文件地址，如http://www.example.com/config.txt')"
-                    v-full-screen
-                    v-else>
-                                    </textarea>
+                  <div v-full-screen="{ css: 'color: #333' }" class="h-[200px]">
+                    <textarea
+                      class="bk-form-textarea h-full"
+                      v-model="curKeyParams.content"
+                      :placeholder="$t('请输入键') + curKeyParams.key + $t('的内容')"
+                      v-if="curKeyParams.type === 'file'">
+                  </textarea>
+                    <textarea
+                      class="bk-form-textarea h-full"
+                      v-model="curKeyParams.content"
+                      :placeholder="$t('请输入在线文件地址，如http://www.example.com/config.txt')"
+                      v-else>
+                  </textarea>
+                  </div>
                 </div>
               </div>
             </template>
@@ -323,20 +317,17 @@
 
 <script>
 import { catchErrorHandler, formatDate } from '@/common/util';
-import globalMixin from '@/mixins/global';
 import fullScreen from '@/directives/full-screen';
 
 export default {
   directives: {
     'full-screen': fullScreen,
   },
-  mixins: [globalMixin],
   data() {
     return {
       formatDate,
       isInitLoading: true,
       isPageLoading: false,
-      exceptionCode: null,
       searchKeyword: '',
       searchScope: '',
       curPageData: [],
@@ -373,13 +364,13 @@ export default {
       namespace: '',
       isUpdateLoading: false,
       configmapTimer: null,
-      curProject: {},
       isBatchRemoving: false,
       curSelectedData: [],
       alreadySelectedNums: 0,
       curConfigmapKeyList: [],
       comfigSelectedList: [],
       webAnnotations: { perms: {} },
+      PROJECT_K8S: window.PROJECT_K8S,
     };
   },
   computed: {
@@ -420,6 +411,9 @@ export default {
     curSelectedCluster() {
       return this.searchScopeList.find(item => item.id === this.searchScope) || {};
     },
+    curProject() {
+      return this.$store.state.curProject;
+    },
   },
   watch: {
     isClusterDataReady: {
@@ -450,9 +444,6 @@ export default {
   created() {
     this.initPageConf();
     // this.getConfigmapList()
-  },
-  mounted() {
-    this.curProject = this.initCurProject();
   },
   methods: {
     /**

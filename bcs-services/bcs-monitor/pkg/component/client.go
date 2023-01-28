@@ -21,6 +21,7 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+	"sync"
 	"time"
 
 	"github.com/dustin/go-humanize"
@@ -34,12 +35,16 @@ import (
 
 const (
 	timeout = time.Second * 30
+	// BKAPIRequestIDHeader 蓝鲸网关的请求ID
+	BKAPIRequestIDHeader = "X-Bkapi-Request-Id"
 )
 
 var (
 	maskKeys = map[string]struct{}{
 		"bk_app_secret": {},
 	}
+	clientOnce   sync.Once
+	globalClient *resty.Client
 )
 
 // restyReqToCurl curl 格式的请求日志
@@ -98,6 +103,13 @@ func restyResponseToCurl(resp *resty.Response) string {
 	}
 
 	respMsg := fmt.Sprintf("[%s] %s %s", resp.Status(), resp.Time(), body)
+
+	// 请求蓝鲸网关记录RequestID
+	bkAPIRequestID := resp.RawResponse.Header.Get(BKAPIRequestIDHeader)
+	if bkAPIRequestID != "" {
+		respMsg = fmt.Sprintf("[%s] %s bkapi_request_id=%s %s", resp.Status(), resp.Time(), bkAPIRequestID, body)
+	}
+
 	return respMsg
 }
 
@@ -119,14 +131,20 @@ func restyBeforeRequestHook(c *resty.Client, r *http.Request) error {
 
 // GetClient : 新建Client, 设置公共参数，每次新建，cookies不复用
 func GetClient() *resty.Client {
-	client := resty.New().SetTimeout(timeout)
-	client = client.SetDebug(false) // 更多详情, 可以开启为 true
-	client.SetDebugBodyLimit(1024)
-	client.OnAfterResponse(restyAfterResponseHook)
-	client.SetPreRequestHook(restyBeforeRequestHook)
-	client.OnError(restyErrHook)
-	client.SetTLSClientConfig(&tls.Config{InsecureSkipVerify: true})
-	return client
+	if globalClient == nil {
+		clientOnce.Do(func() {
+			globalClient = resty.New().
+				SetTimeout(timeout).
+				SetDebug(false).   // 更多详情, 可以开启为 true
+				SetCookieJar(nil). // 后台API去掉 cookie 记录
+				SetDebugBodyLimit(1024).
+				OnAfterResponse(restyAfterResponseHook).
+				SetPreRequestHook(restyBeforeRequestHook).
+				OnError(restyErrHook).
+				SetTLSClientConfig(&tls.Config{InsecureSkipVerify: true})
+		})
+	}
+	return globalClient
 }
 
 // BKResult 蓝鲸返回规范的结构体

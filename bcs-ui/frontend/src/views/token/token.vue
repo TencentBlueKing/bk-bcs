@@ -94,21 +94,27 @@
       <div class="example-item">
         <div class="title">{{$t('/root/.kube/demo_config内容示例如下')}}:</div>
         <div class="code-wrapper">
-          <ace
-            :show-gutter="false" lang="yaml" :height="330"
+          <CodeEditor
+            :height="330"
             v-full-screen="{ tools: ['copy'], content: demoConfigExample }"
-            read-only :value="demoConfigExample" width="100%">
-          </ace>
+            readonly
+            :value="demoConfigExample"
+            :options="options"
+            width="100%">
+          </CodeEditor>
         </div>
       </div>
       <div class="example-item">
         <div class="title">{{$t('BCS API')}}:</div>
         <div class="code-wrapper">
-          <ace
-            :show-gutter="false" :height="50"
+          <CodeEditor
+            :height="50"
             v-full-screen="{ tools: ['copy'], content: bcsApiExample }"
-            read-only :value="bcsApiExample" width="100%">
-          </ace>
+            readonly
+            :value="bcsApiExample"
+            :options="options"
+            width="100%">
+          </CodeEditor>
         </div>
       </div>
     </div>
@@ -126,21 +132,27 @@
       <div class="example-item">
         <div class="title">{{$t('/root/.kube/demo_config内容示例如下')}}:</div>
         <div class="code-wrapper">
-          <ace
-            :show-gutter="false" lang="yaml" :height="330"
+          <CodeEditor
+            :height="330"
             v-full-screen="{ tools: ['copy'], content: shareDemoConfigExample }"
-            read-only :value="shareDemoConfigExample" width="100%">
-          </ace>
+            readonly
+            :value="shareDemoConfigExample"
+            :options="options"
+            width="100%">
+          </CodeEditor>
         </div>
       </div>
       <div class="example-item">
         <div class="title">{{$t('BCS API')}}:</div>
         <div class="code-wrapper">
-          <ace
-            :show-gutter="false" :height="50"
+          <CodeEditor
+            :height="50"
             v-full-screen="{ tools: ['copy'], content: shareBcsApiExample }"
-            read-only :value="shareBcsApiExample" width="100%">
-          </ace>
+            readonly
+            :value="shareBcsApiExample"
+            :options="options"
+            width="100%">
+          </CodeEditor>
         </div>
       </div>
     </div>
@@ -213,13 +225,15 @@
 <script lang="ts">
 import { defineComponent, ref, computed, onMounted } from '@vue/composition-api';
 import StatusIcon from '@/views/dashboard/common/status-icon';
-import { copyText } from '@/common/util';
-import * as ace from '@/components/ace-editor';
+import { copyText, renderTemplate } from '@/common/util';
+import CodeEditor from '@/components/monaco-editor/new-editor.vue';
 import fullScreen from '@/directives/full-screen';
+import clusterDemoConfig from 'text-loader?modules!./cluster-demo.yaml';
+import shareClusterDemoConfig from 'text-loader?modules!./share-cluster-demo.yaml';
 
 export default defineComponent({
   name: 'UserToken',
-  components: { StatusIcon, ace },
+  components: { StatusIcon, CodeEditor },
   directives: {
     'full-screen': fullScreen,
   },
@@ -228,6 +242,12 @@ export default defineComponent({
     const goBack = () => {
       $router.back();
     };
+    // editor options
+    const options = ref({
+      roundedSelection: false,
+      scrollBeyondLastLine: false,
+      renderLineHighlight: false,
+    });
     // 用户信息
     const user = computed(() => $store.state.user);
     // 使用案例
@@ -238,62 +258,33 @@ export default defineComponent({
       return list.find(item => item.project_code === projectCode)?.project_id;
     });
     const kubeConfigExample = ref('kubectl --kubeconfig=/root/.kube/demo_config get node');
-    const demoConfig = `apiVersion: v1
-kind: Config
-clusters:
-- cluster:
-    # 独立集群使用的server地址
-    server: '\${bcs_api_host}/clusters/\${cluster_id}/'
-  name: '\${cluster_id}'
-contexts:
-- context:
-    cluster: '\${cluster_id}'
-    user: '\${username}'
-  name: BCS
-current-context: BCS
-users:
-- name: '\${username}'
-  user:
-    token: '\${token}'`;
-    const demoConfigExample = ref(demoConfig
-      .replace(new RegExp(/\$\{username\}/, 'g'), user.value.username)
-      .replace(new RegExp(/\$\{token\}/, 'g'), `\${${$i18n.t('API密钥')}}`)
-      .replace(new RegExp(/\$\{bcs_api_host\}/, 'g'), window.BCS_API_HOST)
-      .replace(new RegExp(/\$\{projectID\}/, 'g'), projectID.value));
+
+    const demoConfigExample = ref(renderTemplate(clusterDemoConfig, {
+      username: user.value.username,
+      token: `\${${$i18n.t('API密钥')}}`,
+      bcs_api_host: window.BCS_API_HOST,
+      projectID: projectID.value,
+    }));
     const apiExample = 'curl -X GET -H "Authorization: Bearer ${token}" -H "accept: application/json" "${bcs_api_host}/clusters/${cluster_id}/version"';
-    const bcsApiExample = ref(apiExample
-      .replace(new RegExp(/\$\{token\}/, 'g'), `\${${$i18n.t('API密钥')}}`)
-      .replace(new RegExp(/\$\{bcs_api_host\}/, 'g'), window.BCS_API_HOST)
-      .replace(new RegExp(/\$\{projectID\}/, 'g'), projectID.value));
+    const bcsApiExample = ref(renderTemplate(apiExample, {
+      token: `\${${$i18n.t('API密钥')}}`,
+      bcs_api_host: window.BCS_API_HOST,
+      projectID: projectID.value,
+    }));
 
     const shareKubeConfigExample = ref('kubectl --kubeconfig=/root/.kube/demo_config get all -n <namespace>');
-    const shareDemoConfig = `apiVersion: v1
-kind: Config
-clusters:
-- cluster:
-    # 共享集群使用的server地址，\${cluster_id}为共享集群ID
-    server: '\${bcs_api_host}/projects/\${projectID}/clusters/\${cluster_id}/'
-  name: '\${cluster_id}'
-contexts:
-- context:
-    cluster: '\${cluster_id}'
-    user: '\${username}'
-  name: BCS
-current-context: BCS
-users:
-- name: '\${username}'
-  user:
-    token: '\${token}'`;
-    const shareDemoConfigExample = ref(shareDemoConfig
-      .replace(new RegExp(/\$\{username\}/, 'g'), user.value.username)
-      .replace(new RegExp(/\$\{token\}/, 'g'), `\${${$i18n.t('API密钥')}}`)
-      .replace(new RegExp(/\$\{bcs_api_host\}/, 'g'), window.BCS_API_HOST)
-      .replace(new RegExp(/\$\{projectID\}/, 'g'), projectID.value));
+    const shareDemoConfigExample = ref(renderTemplate(shareClusterDemoConfig, {
+      username: user.value.username,
+      token: `\${${$i18n.t('API密钥')}}`,
+      bcs_api_host: window.BCS_API_HOST,
+      projectID: projectID.value,
+    }));
     const shareApiExample = 'curl -X GET -H "Authorization: Bearer ${token}" -H "accept: application/json" "${bcs_api_host}/projects/${projectID}/clusters/${cluster_id}/version"';
-    const shareBcsApiExample = ref(shareApiExample
-      .replace(new RegExp(/\$\{token\}/, 'g'), `\${${$i18n.t('API密钥')}}`)
-      .replace(new RegExp(/\$\{bcs_api_host\}/, 'g'), window.BCS_API_HOST)
-      .replace(new RegExp(/\$\{projectID\}/, 'g'), projectID.value));
+    const shareBcsApiExample = ref(renderTemplate(shareApiExample, {
+      token: `\${${$i18n.t('API密钥')}}`,
+      bcs_api_host: window.BCS_API_HOST,
+      projectID: projectID.value,
+    }));
 
     const timeList = ref([
       {
@@ -442,6 +433,7 @@ users:
       getTokenList();
     });
     return {
+      options,
       deleteLoading,
       updateLoading,
       loading,

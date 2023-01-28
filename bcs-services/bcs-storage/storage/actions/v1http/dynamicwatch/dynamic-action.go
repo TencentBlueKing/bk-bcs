@@ -14,9 +14,8 @@
 package dynamicwatch
 
 import (
-	"github.com/emicklei/go-restful"
-
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions"
+	"github.com/emicklei/go-restful"
 )
 
 const (

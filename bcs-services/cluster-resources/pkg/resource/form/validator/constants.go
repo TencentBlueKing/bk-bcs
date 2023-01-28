@@ -14,36 +14,34 @@
 
 package validator
 
-import (
-	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
-)
+import resCsts "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/constants"
 
 // FormSupportedResAPIVersion 支持表单化的资源版本
 var FormSupportedResAPIVersion = map[string][]string{
 	// 工作负载类
-	res.Deploy: {"apps/v1", "extensions/v1", "extensions/v1beta1"},
-	res.DS:     {"apps/v1", "extensions/v1", "extensions/v1beta1"},
-	res.STS:    {"apps/v1"},
-	res.CJ:     {"batch/v1", "batch/v1beta1"},
-	res.Job:    {"batch/v1"},
-	res.Po:     {"v1"},
-	res.HPA:    {"autoscaling/v2beta2", "autoscaling/v2"},
+	resCsts.Deploy: {"apps/v1", "extensions/v1", "extensions/v1beta1"},
+	resCsts.DS:     {"apps/v1", "extensions/v1", "extensions/v1beta1"},
+	resCsts.STS:    {"apps/v1"},
+	resCsts.CJ:     {"batch/v1", "batch/v1beta1"},
+	resCsts.Job:    {"batch/v1"},
+	resCsts.Po:     {"v1"},
+	resCsts.HPA:    {"autoscaling/v2beta2", "autoscaling/v2"},
 	// 网络类
-	res.Ing: {"networking.k8s.io/v1", "networking.k8s.io/v1beta1", "extensions/v1beta1"},
-	res.SVC: {"v1"},
-	res.EP:  {"v1"},
+	resCsts.Ing: {"networking.k8s.io/v1", "networking.k8s.io/v1beta1", "extensions/v1beta1"},
+	resCsts.SVC: {"v1"},
+	resCsts.EP:  {"v1"},
 	// 存储类
-	res.PV:  {"v1"},
-	res.PVC: {"v1"},
-	res.SC:  {"storage.k8s.io/v1"},
+	resCsts.PV:  {"v1"},
+	resCsts.PVC: {"v1"},
+	resCsts.SC:  {"storage.k8s.io/v1"},
 	// 配置类
-	res.CM:     {"v1"},
-	res.Secret: {"v1"},
+	resCsts.CM:     {"v1"},
+	resCsts.Secret: {"v1"},
 	// 自定义资源
-	res.GDeploy:  {"tkex.tencent.com/v1alpha1"},
-	res.HookTmpl: {"tkex.tencent.com/v1alpha1"},
-	res.GSTS:     {"tkex.tencent.com/v1alpha1"},
+	resCsts.GDeploy:  {"tkex.tencent.com/v1alpha1"},
+	resCsts.HookTmpl: {"tkex.tencent.com/v1alpha1"},
+	resCsts.GSTS:     {"tkex.tencent.com/v1alpha1"},
 }
 
 // FormSupportedCObjKinds 支持表单化的自定义资源
-var FormSupportedCObjKinds = []string{res.GDeploy, res.HookTmpl, res.GSTS}
+var FormSupportedCObjKinds = []string{resCsts.GDeploy, resCsts.HookTmpl, resCsts.GSTS}

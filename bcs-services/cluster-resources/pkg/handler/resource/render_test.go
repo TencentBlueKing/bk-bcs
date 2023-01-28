@@ -20,7 +20,10 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/ctxkey"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/envs"
 	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
+	resCsts "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/constants"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/example"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/parser/workload"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/pbstruct"
@@ -29,13 +32,13 @@ import (
 
 func TestFormDataRenderPreview(t *testing.T) {
 	hdlr := New()
-	ctx := context.TODO()
+	ctx := context.WithValue(context.TODO(), ctxkey.UsernameKey, envs.AnonymousUsername)
 
-	manifest, _ := example.LoadDemoManifest("workload/simple_deployment", "")
+	manifest, _ := example.LoadDemoManifest(ctx, "workload/simple_deployment", "", "", resCsts.Deploy)
 	// 类型强制转换，确保解析器正确解析
 	res.ConvertInt2Int64(manifest)
 	formData, _ := pbstruct.Map2pbStruct(workload.ParseDeploy(manifest))
-	req, resp := clusterRes.FormRenderPreviewReq{Kind: res.Deploy, FormData: formData}, clusterRes.CommonResp{}
+	req, resp := clusterRes.FormRenderPreviewReq{Kind: resCsts.Deploy, FormData: formData}, clusterRes.CommonResp{}
 	err := hdlr.FormDataRenderPreview(ctx, &req, &resp)
 	assert.Nil(t, err)
 }

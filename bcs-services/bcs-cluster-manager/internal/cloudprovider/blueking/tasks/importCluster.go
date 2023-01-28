@@ -18,6 +18,7 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -153,9 +154,8 @@ func importClusterInstances(data *cloudprovider.CloudDependBasicInfo) error {
 	return nil
 }
 
-func importClusterNodesToCM(ctx context.Context, ipList []string, opt *cloudprovider.ListNodesOption) error {
-	nodeMgr := api.NodeManager{}
-	nodes, err := nodeMgr.ListNodesByIP(ipList, &cloudprovider.ListNodesOption{
+func importClusterNodesToCM(ctx context.Context, ipList []types.NodeAddress, opt *cloudprovider.ListNodesOption) error {
+	nodes, err := transInstanceIPToNodes(ipList, &cloudprovider.ListNodesOption{
 		Common: opt.Common,
 	})
 	if err != nil {
@@ -188,19 +188,26 @@ func importClusterNodesToCM(ctx context.Context, ipList []string, opt *cloudprov
 	return nil
 }
 
-func getNodeIP(node v1.Node) string {
-	nodeIP := ""
+func getNodeIP(node v1.Node) types.NodeAddress {
+	var nodeAddress types.NodeAddress
+	nodeAddress.NodeName = node.Name
 
 	for _, address := range node.Status.Addresses {
 		if address.Type == v1.NodeInternalIP {
-			nodeIP = address.Address
+			switch {
+			case strings.Contains(address.Address, ":"):
+				nodeAddress.IPv6Address = address.Address
+			default:
+				nodeAddress.IPv4Address = address.Address
+			}
 		}
 	}
 
-	return nodeIP
+	return nodeAddress
 }
 
-func getClusterInstancesByKubeConfig(data *cloudprovider.CloudDependBasicInfo) ([]string, []string, error) {
+func getClusterInstancesByKubeConfig(data *cloudprovider.CloudDependBasicInfo) ([]types.NodeAddress,
+	[]types.NodeAddress, error) {
 	kubeCli, err := clusterops.NewKubeClient(data.Cluster.KubeConfig)
 	if err != nil {
 		return nil, nil, err
@@ -211,7 +218,7 @@ func getClusterInstancesByKubeConfig(data *cloudprovider.CloudDependBasicInfo) (
 		return nil, nil, err
 	}
 
-	masterIPs, nodeIPs := make([]string, 0), make([]string, 0)
+	masterIPs, nodeIPs := make([]types.NodeAddress, 0), make([]types.NodeAddress, 0)
 	for i := range nodeList.Items {
 		ip := getNodeIP(nodeList.Items[i])
 		_, ok := nodeList.Items[i].Labels[icommon.MasterRole]
@@ -226,13 +233,28 @@ func getClusterInstancesByKubeConfig(data *cloudprovider.CloudDependBasicInfo) (
 	return masterIPs, nodeIPs, nil
 }
 
-func transInstanceIPToNodes(ipList []string, opt *cloudprovider.ListNodesOption) ([]*proto.Node, error) {
+func transInstanceIPToNodes(ipList []types.NodeAddress, opt *cloudprovider.ListNodesOption) ([]*proto.Node, error) {
+	var (
+		ipAddressList = make([]string, 0)
+		ipAddressMap  = make(map[string]types.NodeAddress, 0)
+	)
+	for _, ip := range ipList {
+		ipAddressList = append(ipAddressList, ip.IPv4Address)
+		ipAddressMap[ip.IPv4Address] = ip
+	}
+
 	nodeMgr := api.NodeManager{}
-	nodes, err := nodeMgr.ListNodesByIP(ipList, &cloudprovider.ListNodesOption{
+	nodes, err := nodeMgr.ListNodesByIP(ipAddressList, &cloudprovider.ListNodesOption{
 		Common: opt.Common,
 	})
 	if err != nil {
 		return nil, err
+	}
+	for i := range nodes {
+		if address, ok := ipAddressMap[nodes[i].InnerIP]; ok {
+			nodes[i].NodeName = address.NodeName
+			nodes[i].InnerIPv6 = address.IPv6Address
+		}
 	}
 
 	return nodes, nil

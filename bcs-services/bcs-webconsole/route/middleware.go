@@ -20,15 +20,15 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/components/bcs"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/sessions"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/types"
-
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/components/bcs"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/sessions"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/types"
 )
 
 var (

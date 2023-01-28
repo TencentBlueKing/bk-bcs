@@ -374,12 +374,14 @@ type ScaleDown struct {
 	nodeUtilizationMap   map[string]simulatorinternal.UtilizationInfo
 	usageTracker         *simulatorinternal.UsageTracker
 	nodeDeletionTracker  *NodeDeletionTracker
+	cpuRatio             float64
+	memRatio             float64
 	ratio                float64
 }
 
 // NewScaleDown builds new ScaleDown object.
 func NewScaleDown(context *context.Context, clusterStateRegistry *clusterstate.ClusterStateRegistry,
-	ratio float64) *ScaleDown {
+	cpuRatio, memRatio, ratio float64) *ScaleDown {
 	return &ScaleDown{
 		context:              context,
 		clusterStateRegistry: clusterStateRegistry,
@@ -390,6 +392,8 @@ func NewScaleDown(context *context.Context, clusterStateRegistry *clusterstate.C
 		usageTracker:         simulatorinternal.NewUsageTracker(),
 		unneededNodesList:    make([]*apiv1.Node, 0),
 		nodeDeletionTracker:  NewNodeDeletionTracker(),
+		cpuRatio:             cpuRatio,
+		memRatio:             memRatio,
 		ratio:                ratio,
 	}
 }
@@ -863,7 +867,7 @@ func (sd *ScaleDown) TryToScaleDown(allNodes []*apiv1.Node, pods []*apiv1.Pod,
 		for _, node := range emptyNodes {
 			pods := nodeInfos[node.Name]
 			delete(nodeInfos, node.Name)
-			if checkResourceNotEnough(nodeInfos, sd.ratio) {
+			if checkResourceNotEnough(nodeInfos, sd.cpuRatio, sd.memRatio, sd.ratio) {
 				nodeInfos[node.Name] = pods
 				klog.Infof("Skip node %v due to left resource ratio", node.Name)
 				continue

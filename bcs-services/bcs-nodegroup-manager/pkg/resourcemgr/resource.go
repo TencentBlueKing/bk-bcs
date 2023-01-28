@@ -24,6 +24,7 @@ import (
 	"go-micro.dev/v4/registry"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+
 	impl "github.com/Tencent/bk-bcs/bcs-services/bcs-nodegroup-manager/pkg/resourcemgr/proto"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-nodegroup-manager/pkg/storage"
 )
@@ -31,14 +32,18 @@ import (
 const (
 	// success definition for service calls
 	success = 0
+	// LabelKeyDrainDelay 节点抽离时间
+	LabelKeyDrainDelay = "nodeDrainDelay"
+	// LabelKeyDeadline 节点抽离ddl
+	LabelKeyDeadline = "nodeDeadline"
 )
 
-// ListOptions options for list resoruce pools
+// ListOptions options for list resource pools
 type ListOptions struct {
 	PageSize int
 }
 
-// GetOptions options for list resoruce pools
+// GetOptions options for list resource pools
 type GetOptions struct {
 	GetCacheIfEmpty bool
 }
@@ -63,6 +68,12 @@ type Client interface {
 	ListResourcePools(option *ListOptions) ([]*storage.ResourcePool, error)
 	// GetResourcePool get specified ResourcePool according poolID
 	GetResourcePool(poolID string, option *GetOptions) (*storage.ResourcePool, error)
+	// GetResourcePoolByCondition get resource by condition, poolID is essential
+	GetResourcePoolByCondition(poolID, consumerID, deviceRecord string, option *GetOptions) (*storage.ResourcePool, error)
+	// ListTasks list scale down tasks from resource manager
+	ListTasks(poolID, consumerID string, option *ListOptions) ([]*storage.ScaleDownTask, error)
+	// GetTaskByID get task by record id
+	GetTaskByID(recordID string, opt *GetOptions) (*storage.ScaleDownTask, error)
 }
 
 // New create resource-manager client instance
@@ -103,7 +114,7 @@ func (c *innerClient) ListResourcePools(option *ListOptions) ([]*storage.Resourc
 	return nil, fmt.Errorf("Not Implemented")
 }
 
-// GetResourcePool get detail information of resourcepool
+// GetResourcePool get detail information of resource pool
 func (c *innerClient) GetResourcePool(poolID string, option *GetOptions) (*storage.ResourcePool, error) {
 	if len(poolID) == 0 {
 		return nil, fmt.Errorf("lost resource pool ID")
@@ -127,6 +138,87 @@ func (c *innerClient) GetResourcePool(poolID string, option *GetOptions) (*stora
 	}
 	pool := convertToResourcePool(poolID, resp.Data)
 	return pool, nil
+}
+
+// GetResourcePoolByCondition get detail information of resource pool
+func (c *innerClient) GetResourcePoolByCondition(poolID, consumerID, deviceRecord string,
+	option *GetOptions) (*storage.ResourcePool, error) {
+	if len(poolID) == 0 {
+		return nil, fmt.Errorf("lost resource pool ID")
+	}
+	req := &impl.ListResourceReq{
+		PoolID: &poolID,
+	}
+	if consumerID != "" {
+		req.MatchConsumerID = &consumerID
+	}
+	if deviceRecord != "" {
+		req.MatchDeviceRecordID = &deviceRecord
+	}
+	resp, err := c.client.ListResource(context.Background(), req)
+	if err != nil {
+		blog.Errorf("get resource pool details from resource-manager failed, %s", err.Error())
+		return nil, err
+	}
+	if resp.GetCode() != success {
+		blog.Errorf("get resource pool details failed, resource-manager logic err: %s", resp.GetMessage())
+		return nil, fmt.Errorf("resource-manager logic failure, %s", resp.GetMessage())
+	}
+	//convert details to local ResourcePool definition
+	if len(resp.Data) == 0 {
+		blog.Errorf("resource-manager response empty Resource from ResourcePool %s, consumerID:%s, "+
+			"deviceRecord:%s", poolID, consumerID, deviceRecord)
+		return nil, fmt.Errorf("empty resources response")
+	}
+	pool := convertToResourcePool(poolID, resp.Data)
+	return pool, nil
+}
+
+func (c *innerClient) ListTasks(poolID, consumerID string, opt *ListOptions) ([]*storage.ScaleDownTask, error) {
+	localTasks := make([]*storage.ScaleDownTask, 0)
+	req := &impl.ListDeviceRecordByPoolReq{
+		PoolID: &poolID,
+	}
+	resp, err := c.client.ListDeviceRecordByPool(context.Background(), req)
+	if err != nil {
+		blog.Errorf("get device records from resource-manager failed, %s", err.Error())
+		return nil, err
+	}
+	if resp.GetCode() != success {
+		blog.Errorf("get device records failed, resource-manager logic err: %s", resp.GetMessage())
+		return nil, fmt.Errorf("resource-manager logic failure, %s", resp.GetMessage())
+	}
+	//convert details to local ResourcePool definition
+	if len(resp.Data) == 0 {
+		blog.Infof("resource-manager response empty device records from ResourcePool %s", poolID)
+		return nil, fmt.Errorf("empty resources response")
+	}
+	for _, deviceRecord := range resp.Data {
+		blog.Infof("recordId: %s, consumerID:%s", deviceRecord.GetId(), consumerID)
+		_, err := c.GetResourcePoolByCondition(poolID, consumerID, deviceRecord.GetId(), nil)
+		if err != nil {
+			continue
+		}
+		// deviceList 是所有可以缩容的机器
+		task := convertTaskToLocal(deviceRecord)
+		blog.Infof("task:%v", task)
+		localTasks = append(localTasks, task)
+	}
+	return localTasks, nil
+}
+
+func (c *innerClient) GetTaskByID(recordID string, opt *GetOptions) (*storage.ScaleDownTask, error) {
+	req := &impl.GetDeviceRecordReq{DeviceRecordID: &recordID}
+	resp, err := c.client.GetDeviceRecord(context.Background(), req)
+	if err != nil {
+		blog.Errorf("get device record by id %s from resource-manager failed, %s", recordID, err.Error())
+		return nil, err
+	}
+	if resp.GetCode() != success {
+		blog.Errorf("get device records failed, resource-manager logic err: %s", resp.GetMessage())
+		return nil, fmt.Errorf("resource-manager logic failure, %s", resp.GetMessage())
+	}
+	return convertTaskToLocal(resp.Data), nil
 }
 
 func convertToResourcePool(poolID string, res []*impl.Resource) *storage.ResourcePool {
@@ -179,4 +271,15 @@ func convertResourceToLocal(r *impl.Resource) (*storage.Resource, int64) {
 		resource.Phase = storage.NodeConsumedState
 	}
 	return resource, *r.UpdateTime
+}
+
+func convertTaskToLocal(deviceRecord *impl.DeviceRecord) *storage.ScaleDownTask {
+	deadline, _ := time.Parse(time.RFC3339, deviceRecord.GetConsumerLabels()[LabelKeyDeadline])
+	return &storage.ScaleDownTask{
+		TaskID:     deviceRecord.GetId(),
+		TotalNum:   int(deviceRecord.GetNum()),
+		Status:     deviceRecord.GetStatus(),
+		DrainDelay: deviceRecord.GetConsumerLabels()[LabelKeyDrainDelay],
+		Deadline:   deadline,
+	}
 }

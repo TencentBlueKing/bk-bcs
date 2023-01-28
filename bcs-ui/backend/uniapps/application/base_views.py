@@ -531,6 +531,8 @@ class BaseAPI(views.APIView):
             info.created = created
         if inst_state:
             info.ins_state = inst_state
+        if oper_type == 'delete':
+            info.is_deleted = True
         if is_deleted is not None:
             info.is_deleted = is_deleted
         if is_bcs_success is not None:

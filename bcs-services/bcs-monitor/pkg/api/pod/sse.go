@@ -15,7 +15,8 @@ package pod
 
 import (
 	"encoding/base64"
-	"io"
+	"fmt"
+	"time"
 
 	"github.com/TencentBlueKing/bkmonitor-kits/logger"
 	"github.com/gin-contrib/sse"
@@ -24,14 +25,20 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/rest"
 )
 
+const (
+	logMaxCount      = 200
+	sseInterval      = time.Millisecond * 100
+	shellYellowColor = "\033[0;33m"
+)
+
 // PodLogStream Server Sent Events Handler 连接处理函数
-// @Summary  SSE 实时日志流
-// @Tags     Logs
-// @Param    container_name  query  string  true   "容器名称"
-// @Param    started_at      query  string  false  "开始时间"
-// @Produce  text/event-stream
-// @Success  200  {string}  string
-// @Router   /namespaces/:namespace/pods/:pod/logs/stream [get]
+// @Summary SSE 实时日志流
+// @Tags    Logs
+// @Param   container_name query string true  "容器名称"
+// @Param   started_at     query string false "开始时间"
+// @Produce text/event-stream
+// @Success 200 {string} string
+// @Router  /namespaces/:namespace/pods/:pod/logs/stream [get]
 func PodLogStream(c *rest.Context) {
 	clusterId := c.Param("clusterId")
 	namespace := c.Param("namespace")
@@ -59,19 +66,56 @@ func PodLogStream(c *rest.Context) {
 		return
 	}
 
-	c.Stream(func(w io.Writer) bool {
-		log, ok := <-logChan
-		if !ok {
-			return false
-		}
+	var (
+		logCount    int64
+		lastLogTime string
+	)
+	tick := time.NewTicker(sseInterval)
+	defer tick.Stop()
 
-		id := base64.StdEncoding.EncodeToString([]byte(log.Time))
-		c.Render(-1, sse.Event{
-			Event: "message",
-			Data:  log,
-			Id:    id,
-			Retry: 5000, // 5 秒重试
-		})
-		return true
-	})
+	logList := make([]*k8sclient.Log, 0, logMaxCount+1)
+
+	for {
+		select {
+		case <-c.Writer.CloseNotify():
+			return
+		case <-tick.C:
+			if len(logList) == 0 {
+				continue
+			}
+
+			truncateLogCount := logCount - logMaxCount
+			if truncateLogCount > 0 {
+				logList = append(logList, &k8sclient.Log{
+					Log:  fmt.Sprintf("%sWarning, already truncate %d logs...", shellYellowColor, truncateLogCount),
+					Time: lastLogTime,
+				})
+			}
+
+			// id 是最后一个日志时间
+			id := base64.StdEncoding.EncodeToString([]byte(lastLogTime))
+			c.Render(-1, sse.Event{
+				Event: "message",
+				Data:  logList,
+				Id:    id,
+				Retry: 5000, // 5 秒重试
+			})
+			c.Writer.Flush()
+
+			// 清空列表
+			logCount = 0
+			logList = logList[:0]
+		case log, ok := <-logChan:
+			// 服务端主动关闭
+			if !ok {
+				return
+			}
+
+			logCount++
+			if logCount <= logMaxCount {
+				logList = append(logList, log)
+			}
+			lastLogTime = log.Time
+		}
+	}
 }

@@ -122,6 +122,14 @@ func (ng *NodeGroup) UpdateNodeGroup(group *proto.NodeGroup, opt *cloudprovider.
 		return err
 	}
 
+	// update node module
+	if group.NodeTemplate != nil && group.NodeTemplate.Module != nil &&
+		len(group.NodeTemplate.Module.ScaleOutModuleID) != 0 {
+		bkBizID, _ := strconv.Atoi(cluster.BusinessID)
+		bkModuleID, _ := strconv.Atoi(group.NodeTemplate.Module.ScaleOutModuleID)
+		group.NodeTemplate.Module.ScaleOutModuleName = cloudprovider.GetModuleName(bkBizID, bkModuleID)
+	}
+
 	// update imageName
 	if err := ng.updateImageInfo(group); err != nil {
 		return err
@@ -231,7 +239,7 @@ func (ng *NodeGroup) updateImageInfo(group *proto.NodeGroup) error {
 		return nil
 	}
 	imageName := group.LaunchTemplate.ImageInfo.ImageName
-	for _, v := range api.ImageOsList {
+	for _, v := range utils.ImageOsList {
 		if v.ImageID == group.LaunchTemplate.ImageInfo.ImageID {
 			imageName = v.Alias
 			break

@@ -14,7 +14,7 @@
 
 package model
 
-// Metadata xxx
+// Metadata k8s 资源基础信息
 type Metadata struct {
 	APIVersion  string       `structs:"apiVersion"`
 	Kind        string       `structs:"kind"`
@@ -22,15 +22,16 @@ type Metadata struct {
 	Namespace   string       `structs:"namespace"`
 	Labels      []Label      `structs:"labels"`
 	Annotations []Annotation `structs:"annotations"`
+	ResVersion  string       `structs:"resVersion"`
 }
 
-// Label xxx
+// Label k8s 资源标签
 type Label struct {
 	Key   string `structs:"key"`
 	Value string `structs:"value"`
 }
 
-// Annotation xxx
+// Annotation k8s 资源注解
 type Annotation struct {
 	Key   string `structs:"key"`
 	Value string `structs:"value"`

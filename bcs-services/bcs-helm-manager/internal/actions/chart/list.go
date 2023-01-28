@@ -14,6 +14,7 @@ package chart
 
 import (
 	"context"
+	"strings"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
@@ -23,11 +24,12 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/repo"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/store"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/store/entity"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/utils/contextx"
 	helmmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/proto/bcs-helm-manager"
 )
 
 const (
-	defaultSize = 1000
+	defaultSize = 5000
 )
 
 // NewListChartAction return a new ListChartAction instance
@@ -88,10 +90,10 @@ func (l *ListChartAction) list() error {
 			Name:     repository.Username,
 			Password: repository.Password,
 		}).
-		Project(repository.ProjectID).
+		Project(repository.GetRepoProjectID()).
 		Repository(
 			repo.GetRepositoryType(repository.Type),
-			repository.Name,
+			repository.GetRepoName(),
 		).
 		ListChart(l.ctx, l.getOption())
 	if err != nil {
@@ -105,6 +107,7 @@ func (l *ListChartAction) list() error {
 	for _, item := range origin.Charts {
 		chart := item.Transfer2Proto()
 		chart.ProjectID = common.GetStringP(projectID)
+		chart.ProjectCode = common.GetStringP(projectID)
 		chart.Repository = common.GetStringP(repoName)
 		r = append(r, chart)
 	}
@@ -188,7 +191,7 @@ func (l *ListChartActionV1) Handle(ctx context.Context,
 }
 
 func (l *ListChartActionV1) list() error {
-	projectCode := l.req.GetProjectCode()
+	projectCode := contextx.GetProjectCodeFromCtx(l.ctx)
 	repoName := l.req.GetRepoName()
 	username := auth.GetUserFromCtx(l.ctx)
 
@@ -205,12 +208,12 @@ func (l *ListChartActionV1) list() error {
 			Name:     repository.Username,
 			Password: repository.Password,
 		}).
-		Project(repository.ProjectID).
+		Project(repository.GetRepoProjectID()).
 		Repository(
 			repo.GetRepositoryType(repository.Type),
-			repository.Name,
+			repository.GetRepoName(),
 		).
-		ListChart(l.ctx, l.getOption())
+		SearchChart(l.ctx, l.getOption())
 	if err != nil {
 		blog.Errorf("list chart failed, %s, projectCode: %s, repository: %s, operator: %s",
 			err.Error(), projectCode, repoName, username)
@@ -222,6 +225,7 @@ func (l *ListChartActionV1) list() error {
 	for _, item := range origin.Charts {
 		chart := item.Transfer2Proto()
 		chart.ProjectID = common.GetStringP(projectCode)
+		chart.ProjectCode = common.GetStringP(projectCode)
 		chart.Repository = common.GetStringP(repoName)
 		r = append(r, chart)
 	}
@@ -239,7 +243,7 @@ func (l *ListChartActionV1) list() error {
 func (l *ListChartActionV1) getCondition() *operator.Condition {
 	cond := make(operator.M)
 	if l.req.ProjectCode != nil {
-		cond.Update(entity.FieldKeyProjectID, l.req.GetProjectCode())
+		cond.Update(entity.FieldKeyProjectID, contextx.GetProjectCodeFromCtx(l.ctx))
 	}
 	if l.req.RepoName != nil {
 		cond.Update(entity.FieldKeyName, l.req.GetRepoName())
@@ -255,8 +259,9 @@ func (l *ListChartActionV1) getOption() repo.ListOption {
 	}
 
 	return repo.ListOption{
-		Page: int64(l.req.GetPage()),
-		Size: int64(size),
+		PackageName: strings.ToLower(l.req.GetName()),
+		Page:        int64(l.req.GetPage()),
+		Size:        int64(size),
 	}
 }
 

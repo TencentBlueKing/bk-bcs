@@ -22,6 +22,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	bcsconf "github.com/Tencent/bk-bcs/bcs-common/common/conf"
+	"github.com/Tencent/bk-bcs/bcs-common/common/util"
 	mconfig "github.com/micro/go-micro/v2/config"
 	mfile "github.com/micro/go-micro/v2/config/source/file"
 	mflag "github.com/micro/go-micro/v2/config/source/flag"
@@ -35,6 +36,7 @@ func main() {
 	flag.String("etcd_ca", "", "ca file for etcd")
 	// server config
 	flag.String("address", "127.0.0.1", "grpc server address")
+	flag.String("ipv6Address", "", "grpc server ipv6 address")
 	flag.String("insecureaddress", "127.0.0.1", "insecure server address")
 	flag.Uint("port", 8081, "grpc server port")
 	flag.Uint("httpport", 8080, "http server port")
@@ -102,6 +104,9 @@ func main() {
 	if err != nil {
 		blog.Fatalf("scan config failed, err %s", err.Error())
 	}
+	// init serverConfig Ipv6Address
+	opt.ServerConfig.Ipv6Address = util.InitIPv6Address(opt.ServerConfig.Ipv6Address)
+	blog.Infof("service ipv6 server address: %s", opt.ServerConfig.Ipv6Address)
 
 	blog.InitLogs(bcsconf.LogConfig{
 		LogDir:          opt.BcsLog.LogDir,

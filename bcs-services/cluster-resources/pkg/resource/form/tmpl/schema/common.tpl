@@ -71,7 +71,9 @@ metadata:
     labels:
       title: {{ i18n "标签" .lang }}
       type: array
+      {{- if isLabelAsSelector .kind }}
       description: {{ i18n "将作为 Pod & Selector 标签" .lang }}
+      {{- end }}
       minItems: {{ if isLabelRequired .kind }} 1 {{ else }} 0 {{ end }}
       items:
         properties:
@@ -93,7 +95,7 @@ metadata:
         name: bfArray
         props:
           visible: {{ isLabelVisible .kind }}
-          disabled: {{ eq .action "update" }}
+          disabled: {{ isLabelEditDisabled .kind .action }}
     annotations:
       title: {{ i18n "注解" .lang }}
       type: array
@@ -106,7 +108,7 @@ metadata:
               - required
               - maxLength128
             ui:reactions:
-              - if: "{{`{{`}} $self.value === 'io.tencent.bcs.editFormat' {{`}}`}}"
+              - if: "{{`{{`}} $self.value === 'io.tencent.bcs.editFormat' || $self.value === 'io.tencent.paas.creator' || $self.value === 'io.tencent.paas.updator' {{`}}`}}"
                 then:
                   state:
                     disabled: true
@@ -114,7 +116,7 @@ metadata:
                   state:
                     disabled: false
               - target: "{{`{{`}} $widgetNode?.getSibling('value')?.id {{`}}`}}"
-                if: "{{`{{`}} $self.value === 'io.tencent.bcs.editFormat' {{`}}`}}"
+                if: "{{`{{`}} $self.value === 'io.tencent.bcs.editFormat' || $self.value === 'io.tencent.paas.creator' || $self.value === 'io.tencent.paas.updator' {{`}}`}}"
                 then:
                   state:
                     disabled: true
@@ -129,6 +131,13 @@ metadata:
         name: bfArray
         props:
           visible: {{ isAnnoVisible .kind }}
+    resVersion:
+      type: string
+      # resVersion 在更新时会参与数据流动，但是不允许用户编辑
+      ui:component:
+        props:
+          visible: false
+          disabled: true
   ui:group:
     props:
       border: true

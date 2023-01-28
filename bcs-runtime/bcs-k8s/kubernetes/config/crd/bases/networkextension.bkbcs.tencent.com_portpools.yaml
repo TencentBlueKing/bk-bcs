@@ -16,7 +16,11 @@ spec:
     singular: portpool
   scope: Namespaced
   versions:
-  - name: v1
+  - additionalPrinterColumns:
+    - jsonPath: .status.status
+      name: status
+      type: string
+    name: v1
     schema:
       openAPIV3Schema:
         description: PortPool is the Schema for the portpools API
@@ -126,7 +130,6 @@ spec:
                   - endPort
                   - itemName
                   - loadBalancerIDs
-                  - protocol
                   - startPort
                   type: object
                 type: array
@@ -177,6 +180,10 @@ spec:
                             type: string
                         type: object
                       type: array
+                    protocol:
+                      items:
+                        type: string
+                      type: array
                     segmentLength:
                       format: int32
                       type: integer
@@ -189,11 +196,14 @@ spec:
                   - endPort
                   - itemName
                   - message
+                  - protocol
                   - segmentLength
                   - startPort
                   - status
                   type: object
                 type: array
+              status:
+                type: string
             type: object
         type: object
     served: true

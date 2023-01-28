@@ -16,6 +16,7 @@ package sdk
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -23,29 +24,33 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/release"
-
 	"github.com/spf13/pflag"
+	yaml3 "gopkg.in/yaml.v3"
 	"helm.sh/helm/v3/pkg/action"
 	"helm.sh/helm/v3/pkg/chart"
 	"helm.sh/helm/v3/pkg/chart/loader"
+	"helm.sh/helm/v3/pkg/cli/values"
 	rspb "helm.sh/helm/v3/pkg/release"
+	"helm.sh/helm/v3/pkg/storage/driver"
+	"helm.sh/helm/v3/pkg/strvals"
 	"k8s.io/apimachinery/pkg/util/yaml"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
+	projectClient "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/component/project"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/options"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/release"
 )
 
 const (
 	bcsAPIGWK8SBaseURI = "%s/clusters/%s/"
+	defaultMaxHistory  = 10
+	defaultTimeout     = "10s"
 )
 
 // Config 定义了使用sdk的基本参数
 type Config struct {
-	BcsAPI string
-	Token  string
-
 	PatchTemplates []*release.File
-	VarTemplates   []*release.File
 }
 
 // NewGroup return a new Group instance
@@ -95,8 +100,9 @@ func (g *group) getClient(clusterID string) Client {
 	c, ok = g.groups[clusterID]
 	if !ok {
 		flags := genericclioptions.NewConfigFlags(false)
-		flags.APIServer = common.GetStringP(fmt.Sprintf(bcsAPIGWK8SBaseURI, g.config.BcsAPI, clusterID))
-		flags.BearerToken = common.GetStringP(g.config.Token)
+		bcsConfig := options.GetBCSAPIConfigByClusterID(clusterID)
+		flags.APIServer = common.GetStringP(fmt.Sprintf(bcsAPIGWK8SBaseURI, bcsConfig.URL, clusterID))
+		flags.BearerToken = common.GetStringP(bcsConfig.Token)
 		flags.Insecure = common.GetBoolP(true)
 
 		c = &client{
@@ -113,7 +119,7 @@ func (g *group) getClient(clusterID string) Client {
 // Client 定义了支持的helm operation接口
 type Client interface {
 	Get(ctx context.Context, namespace, name string, revision int) (*rspb.Release, error)
-	List(ctx context.Context, namespace string) ([]*rspb.Release, error)
+	List(ctx context.Context, option release.ListOption) ([]*rspb.Release, error)
 	Install(ctx context.Context, config release.HelmInstallConfig) (*release.HelmInstallResult, error)
 	Upgrade(ctx context.Context, config release.HelmUpgradeConfig) (*release.HelmUpgradeResult, error)
 	Uninstall(ctx context.Context, config release.HelmUninstallConfig) (*release.HelmUninstallResult, error)
@@ -146,13 +152,21 @@ func (c *client) Get(_ context.Context, namespace, name string, revision int) (*
 }
 
 // List helm release
-func (c *client) List(_ context.Context, namespace string) ([]*rspb.Release, error) {
+func (c *client) List(_ context.Context, option release.ListOption) ([]*rspb.Release, error) {
 	conf := new(action.Configuration)
-	if err := conf.Init(c.getConfigFlag(namespace), namespace, "", blog.Infof); err != nil {
+	if err := conf.Init(c.getConfigFlag(option.Namespace), option.Namespace, "", blog.Infof); err != nil {
 		return nil, err
 	}
 
-	releases, err := action.NewList(conf).Run()
+	lister := action.NewList(conf)
+	lister.All = true
+	if len(option.Namespace) == 0 {
+		lister.AllNamespaces = true
+	}
+	if len(option.Name) != 0 {
+		lister.Filter = option.Name
+	}
+	releases, err := lister.Run()
 	if err != nil {
 		return nil, err
 	}
@@ -174,10 +188,13 @@ func (c *client) Install(_ context.Context, config release.HelmInstallConfig) (*
 
 	installer := action.NewInstall(conf)
 	installer.DryRun = config.DryRun
+	installer.Replace = config.Replace
+	installer.ClientOnly = config.ClientOnly
 	installer.ReleaseName = config.Name
 	installer.Namespace = config.Namespace
 	installer.PostRenderer = newPatcher(c.group.config.PatchTemplates, config.PatchTemplateValues)
-	if err := parseArgs4Install(installer, config.Args); err != nil {
+	valueOpts := &values.Options{}
+	if err := parseArgs4Install(installer, config.Args, valueOpts); err != nil {
 		blog.Errorf("sdk client install and parse from args failed, %s, args: %v", err.Error(), config.Args)
 		return nil, err
 	}
@@ -191,7 +208,19 @@ func (c *client) Install(_ context.Context, config release.HelmInstallConfig) (*
 	}
 
 	// values数据, 增加Var values在最后
-	values, err := getValues(append(config.Values, c.getVarValue(config.VarTemplateValues)...))
+	vars, err := c.getVarValue(config.ProjectCode, config.Namespace)
+	if err != nil {
+		blog.Errorf("sdk client get vars failed, %s, "+
+			"namespace %s, name %s", err.Error(), config.Namespace, config.Name)
+		return nil, err
+	}
+	values, err := getValues(append(config.Values, vars))
+	if err != nil {
+		blog.Errorf("sdk client install and get values failed, %s, "+
+			"namespace %s, name %s", err.Error(), config.Namespace, config.Name)
+		return nil, err
+	}
+	values, err = mergeValues(valueOpts, values)
 	if err != nil {
 		blog.Errorf("sdk client install and get values failed, %s, "+
 			"namespace %s, name %s", err.Error(), config.Namespace, config.Name)
@@ -213,9 +242,10 @@ func (c *client) Install(_ context.Context, config release.HelmInstallConfig) (*
 	if r.Chart != nil && r.Chart.Metadata != nil {
 		appVersion = r.Chart.Metadata.AppVersion
 	}
-	blog.Infof("sdk client install release successfully name %s, namespace %s, revision: %d",
-		config.Name, config.Namespace, r.Version)
+	blog.Infof("sdk client install release successfully name %s, namespace %s, revision: %d, dryrun: %t",
+		config.Name, config.Namespace, r.Version, config.DryRun)
 	return &release.HelmInstallResult{
+		Release:    r,
 		Revision:   r.Version,
 		Status:     status,
 		AppVersion: appVersion,
@@ -237,7 +267,8 @@ func (c *client) Upgrade(_ context.Context, config release.HelmUpgradeConfig) (*
 	upgrader.DryRun = config.DryRun
 	upgrader.Namespace = config.Namespace
 	upgrader.PostRenderer = newPatcher(c.group.config.PatchTemplates, config.PatchTemplateValues)
-	if err := parseArgs4Upgrade(upgrader, config.Args); err != nil {
+	valueOpts := &values.Options{}
+	if err := parseArgs4Upgrade(upgrader, config.Args, valueOpts); err != nil {
 		blog.Errorf("sdk client upgrade and parse from args failed, %s, args: %v", err.Error(), config.Args)
 		return nil, err
 	}
@@ -251,7 +282,19 @@ func (c *client) Upgrade(_ context.Context, config release.HelmUpgradeConfig) (*
 	}
 
 	// values数据, 增加Var values在最后
-	values, err := getValues(append(config.Values, c.getVarValue(config.VarTemplateValues)...))
+	vars, err := c.getVarValue(config.ProjectCode, config.Namespace)
+	if err != nil {
+		blog.Errorf("sdk client get vars failed, %s, "+
+			"namespace %s, name %s", err.Error(), config.Namespace, config.Name)
+		return nil, err
+	}
+	values, err := getValues(append(config.Values, vars))
+	if err != nil {
+		blog.Errorf("sdk client upgrade and get values failed, %s, "+
+			"namespace %s, name %s", err.Error(), config.Namespace, config.Name)
+		return nil, err
+	}
+	values, err = mergeValues(valueOpts, values)
 	if err != nil {
 		blog.Errorf("sdk client upgrade and get values failed, %s, "+
 			"namespace %s, name %s", err.Error(), config.Namespace, config.Name)
@@ -260,6 +303,18 @@ func (c *client) Upgrade(_ context.Context, config release.HelmUpgradeConfig) (*
 
 	r, err := upgrader.Run(config.Name, chartF, values)
 	if err != nil {
+		// install when upgrade has --install args and release is not exist
+		if e, ok := err.(*driver.StorageDriverError); ok && upgrader.Install &&
+			errors.Is(e.Unwrap(), driver.ErrNoDeployedReleases) {
+			blog.Infof("%s of namespace %s, installing it now.", e.Error(), config.Namespace)
+			result, err := c.Install(context.Background(), config.ToInstallConfig())
+			if err != nil {
+				return nil, err
+			}
+			blog.Infof("sdk client upgrade release successfully name %s, namespace %s, revision: %d",
+				config.Name, config.Namespace, result.Release.Version)
+			return result.ToUpgradeResult(), nil
+		}
 		blog.Errorf("sdk client upgrade failed, %s, "+
 			"namespace %s, name %s", err.Error(), config.Namespace, config.Name)
 		return nil, err
@@ -276,6 +331,7 @@ func (c *client) Upgrade(_ context.Context, config release.HelmUpgradeConfig) (*
 	blog.Infof("sdk client upgrade release successfully name %s, namespace %s, revision: %d",
 		config.Name, config.Namespace, r.Version)
 	return &release.HelmUpgradeResult{
+		Release:    r,
 		Revision:   r.Version,
 		Status:     status,
 		AppVersion: appVersion,
@@ -353,20 +409,58 @@ func (c *client) getConfigFlag(namespace string) *genericclioptions.ConfigFlags 
 	flags.BearerToken = c.cf.BearerToken
 	flags.Insecure = c.cf.Insecure
 	flags.Namespace = common.GetStringP(namespace)
+	flags.Timeout = common.GetStringP(defaultTimeout)
 	return flags
 }
 
-// getVarValue 将给定的var数据渲染到模版中, 并转化为values文件
-func (c *client) getVarValue(vars map[string]string) []*release.File {
-	r := make([]*release.File, 0, 5)
-	for index, f := range c.group.config.VarTemplates {
-		r = append(r, &release.File{
-			Name:    "vars-" + strconv.Itoa(index) + ".yaml",
-			Content: replaceVarTplKey(vars, f.Content),
-		})
+// getVarValue 将命名空间变量转化到 values文件
+// 兼容旧版本，注入 bcs 变量
+func (c *client) getVarValue(projectCode, namespace string) (*release.File, error) {
+	// get project info
+	project, err := projectClient.GetProjectByCode(projectCode)
+	if err != nil {
+		return nil, err
+	}
+	variables, err := projectClient.GetVariable(projectCode, c.clusterID, namespace)
+	if err != nil {
+		blog.Infof("get vars failed: %s", err.Error())
 	}
 
-	return r
+	// generate vars
+	vars := make(map[string]interface{}, 0)
+	kind := 0
+	if project.Kind == "k8s" {
+		kind = 1
+	}
+	bzID, _ := strconv.Atoi(project.BusinessID)
+	bcsVars := map[string]interface{}{
+		"SYS_STANDARD_DATA_ID":     0,
+		"SYS_NON_STANDARD_DATA_ID": 0,
+		"SYS_JFROG_DOMAIN":         "",
+		"SYS_CLUSTER_ID":           c.clusterID,
+		"SYS_NAMESPACE":            namespace,
+		"SYS_CC_APP_ID":            bzID,
+		"SYS_PROJECT_CODE":         project.ProjectCode,
+		"SYS_PROJECT_ID":           project.ProjectID,
+		"SYS_PROJECT_KIND":         kind,
+	}
+	for _, v := range variables {
+		if v == nil {
+			continue
+		}
+		bcsVars[v.Key] = v.Value
+	}
+	vars["__BCS__"] = bcsVars
+	vars["default"] = map[string]interface{}{
+		"__BCS__": bcsVars,
+	}
+
+	// marshal vars to yaml
+	out, err := yaml3.Marshal(vars)
+	if err != nil {
+		return nil, err
+	}
+	return &release.File{Name: "vars.yaml", Content: out}, nil
 }
 
 // getChartFile 从下载的tar包中获取chart数据
@@ -384,7 +478,6 @@ func getChartFile(f *release.File) (*chart.Chart, error) {
 func getValues(fs []*release.File) (map[string]interface{}, error) {
 	base := map[string]interface{}{}
 	for _, value := range fs {
-		blog.Infof("get values from %s: \n%s", value.Name, string(value.Content))
 		currentMap := map[string]interface{}{}
 		if err := yaml.Unmarshal(value.Content, &currentMap); err != nil {
 			return nil, err
@@ -415,6 +508,23 @@ func mergeMaps(a, b map[string]interface{}) map[string]interface{} {
 	return out
 }
 
+func mergeValues(valuesOpts *values.Options, base map[string]interface{}) (map[string]interface{}, error) {
+	// User specified a value via --set
+	for _, value := range valuesOpts.Values {
+		if err := strvals.ParseInto(value, base); err != nil {
+			return nil, fmt.Errorf("failed parsing --set data, %s", err.Error())
+		}
+	}
+
+	// User specified a value via --set-string
+	for _, value := range valuesOpts.StringValues {
+		if err := strvals.ParseIntoString(value, base); err != nil {
+			return nil, fmt.Errorf("failed parsing --set-string data, %s", err.Error())
+		}
+	}
+	return base, nil
+}
+
 // removeValuesTemplate 移除 values 中的 bcs 模版变量
 func removeValuesTemplate(values map[string]interface{}) map[string]interface{} {
 	delete(values, common.BCSPrefix)
@@ -433,20 +543,15 @@ func removeValuesTemplate(values map[string]interface{}) map[string]interface{} 
 	return values
 }
 
-// replaceVarTplKey 替换掉varTemplate中的模版变量, 用于作为最后的values文件, 让用户能够在chart中直接引用.Values.__BCS__相关配置
-// 默认清除所有未渲染的模版变量, 置为空
-func replaceVarTplKey(keys map[string]string, data []byte) []byte {
-	for k, v := range keys {
-		data = []byte(strings.ReplaceAll(string(data), common.Vtk(k), v))
-	}
-
-	return common.EmptyAllVarTemplateKey(data)
-}
-
 // parseArgs4Install 从用户给出的原生参数里, 直接parse到helm的install设置中
 // 当前使用的flags设置版本来源helm.sh/helm/v3 v3.6.3
-func parseArgs4Install(install *action.Install, args []string) error {
+func parseArgs4Install(install *action.Install, args []string, valueOpts *values.Options) error {
+	for i := range args {
+		args[i] = strings.TrimRight(args[i], "=")
+	}
 	f := pflag.NewFlagSet("install", pflag.ContinueOnError)
+	// 兼容更新时传入 history-max 参数，不作使用
+	var _maxHistory int
 
 	f.BoolVar(&install.DisableHooks, "no-hooks", false,
 		"prevent hooks from running during install")
@@ -476,20 +581,28 @@ func parseArgs4Install(install *action.Install, args []string) error {
 	f.BoolVar(&install.Atomic, "atomic", false,
 		"if set, the installation process deletes the installation on failure. "+
 			"The --wait flag will be set automatically if --atomic is used")
+	f.IntVar(&_maxHistory, "history-max", defaultMaxHistory, "limit the maximum number of revisions saved "+
+		"per release. Use 0 for no limit")
 	f.BoolVar(&install.SkipCRDs, "skip-crds", false,
 		"if set, no CRDs will be installed. By default, CRDs are installed if not already present")
 	f.BoolVar(&install.SubNotes, "render-subchart-notes", false,
 		"if set, render subchart notes along with the parent")
+	f.BoolVar(&install.ChartPathOptions.InsecureSkipTLSverify, "insecure-skip-tls-verify", false,
+		"skip tls certificate checks for the chart download")
 
+	addValueOptionsFlags(f, valueOpts)
 	return f.Parse(args)
 }
 
 // parseArgs4Upgrade 从用户给出的原生参数里, 直接parse到helm的upgrade设置中
 // 当前使用的flags设置版本来源helm.sh/helm/v3 v3.6.3
-func parseArgs4Upgrade(upgrade *action.Upgrade, args []string) error {
+func parseArgs4Upgrade(upgrade *action.Upgrade, args []string, valueOpts *values.Options) error {
+	for i := range args {
+		args[i] = strings.TrimRight(args[i], "=")
+	}
 	f := pflag.NewFlagSet("upgrade", pflag.ContinueOnError)
 
-	f.BoolVarP(&upgrade.Install, "install", "i", false,
+	f.BoolVarP(&upgrade.Install, "install", "i", true,
 		"if a release by this name doesn't already exist, run an install")
 	f.BoolVar(&upgrade.Devel, "devel", false,
 		"use development versions, too. Equivalent to version '>0.0.0-0'. If --version is set, this is ignored")
@@ -522,11 +635,30 @@ func parseArgs4Upgrade(upgrade *action.Upgrade, args []string) error {
 	f.BoolVar(&upgrade.Atomic, "atomic", false,
 		"if set, upgrade process rolls back changes made in case of failed upgrade. "+
 			"The --wait flag will be set automatically if --atomic is used")
+	f.IntVar(&upgrade.MaxHistory, "history-max", defaultMaxHistory, "limit the maximum number of revisions saved "+
+		"per release. Use 0 for no limit")
 	f.BoolVar(&upgrade.CleanupOnFail, "cleanup-on-fail", false,
 		"allow deletion of new resources created in this upgrade when upgrade fails")
 	f.BoolVar(&upgrade.SubNotes, "render-subchart-notes", false,
 		"if set, render subchart notes along with the parent")
 	f.StringVar(&upgrade.Description, "description", "", "add a custom description")
+	f.BoolVar(&upgrade.ChartPathOptions.InsecureSkipTLSverify, "insecure-skip-tls-verify", false,
+		"skip tls certificate checks for the chart download")
+	f.BoolVar(&upgrade.Verify, "verify", false, "verify the package before using it")
 
+	addValueOptionsFlags(f, valueOpts)
 	return f.Parse(args)
+}
+
+func addValueOptionsFlags(f *pflag.FlagSet, v *values.Options) {
+	f.StringSliceVarP(&v.ValueFiles, "values", "f", []string{},
+		"specify values in a YAML file or a URL (can specify multiple)")
+	f.StringArrayVar(&v.Values, "set", []string{},
+		"set values on the command line (can specify multiple or separate values with commas: key1=val1,key2=val2)")
+	f.StringArrayVar(&v.StringValues, "set-string", []string{},
+		"set STRING values on the command line (can specify multiple or separate values with commas: "+
+			"key1=val1,key2=val2)")
+	f.StringArrayVar(&v.FileValues, "set-file", []string{},
+		"set values from respective files specified via the command line (can specify multiple or separate "+
+			"values with commas: key1=path1,key2=path2)")
 }

@@ -13,12 +13,20 @@
  */
 package manager
 
-// DefaultCommand 默认命令, 可以优先使用bash, 如果没有, 回退到sh
-var DefaultCommand = []string{
-	"/bin/sh",
-	"-c",
-	"export TERM=xterm-256color; export PS1=\"\\u:\\W$ \"; exec /bin/sh",
-}
+var (
+	// ShCommand sh 命令
+	ShCommand = []string{
+		"/bin/sh",
+		"-c",
+		"export TERM=xterm-256color; export PS1=\"\\u:\\W$ \"; exec /bin/sh",
+	}
+	// BashCommand bash 命令
+	BashCommand = []string{
+		"/bin/bash",
+		"-c",
+		"export TERM=xterm-256color; export PS1=\"\\u:\\W$ \"; exec /bin/bash",
+	}
+)
 
 const (
 	// LongDateTimeLayout xxx
@@ -63,4 +71,7 @@ const (
 	recordInterval = 10
 
 	helloBcsMessage = "Welcome to the BCS Console"
+
+	ShellSH   = "sh"
+	ShellBash = "bash"
 )

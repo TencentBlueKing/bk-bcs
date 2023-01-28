@@ -22,6 +22,8 @@ const (
 	pluginName = "imageacceleration"
 	// configMapName defines the name of configmap that can enable image acceleration
 	configMapName = "bcs-image-acceleration"
+	// secretImagePullItem defines the image pull data of secret
+	secretImagePullItem = ".dockerconfigjson"
 
 	// configMapKeyEnabled key of configmap, namespace will enable image acceleration if value is "true"
 	configMapKeyEnabled = "enabled"

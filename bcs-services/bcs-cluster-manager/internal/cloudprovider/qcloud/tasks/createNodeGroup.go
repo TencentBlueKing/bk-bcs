@@ -26,6 +26,8 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/api"
 	icommon "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
+
 	as "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/as/v20180419"
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
 	tke "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/tke/v20180525"
@@ -279,7 +281,7 @@ func CheckCloudNodeGroupStatusTask(taskID string, stepName string) error {
 	}
 
 	err = cloudprovider.GetStorageModel().UpdateNodeGroup(context.Background(), generateNodeGroupFromAsgAndAsc(group,
-		cloudNodeGroup, asgArr, ascArr[0]))
+		cloudNodeGroup, asgArr, ascArr[0], cluster.BusinessID))
 	if err != nil {
 		blog.Errorf("CreateCloudNodeGroupTask[%s]: updateNodeGroupCloudArgsID[%s] in task %s step %s failed, %s",
 			taskID, nodeGroupID, taskID, stepName, err.Error())
@@ -303,8 +305,14 @@ func CheckCloudNodeGroupStatusTask(taskID string, stepName string) error {
 }
 
 func generateNodeGroupFromAsgAndAsc(group *proto.NodeGroup, cloudNodeGroup *tke.NodePool, asg *as.AutoScalingGroup,
-	asc *as.LaunchConfiguration) *proto.NodeGroup {
+	asc *as.LaunchConfiguration, bkBizIDString string) *proto.NodeGroup {
 	group = generateNodeGroupFromAsg(group, cloudNodeGroup, asg)
+	if group.NodeTemplate != nil && group.NodeTemplate.Module != nil &&
+		len(group.NodeTemplate.Module.ScaleOutModuleID) != 0 {
+		bkBizID, _ := strconv.Atoi(bkBizIDString)
+		bkModuleID, _ := strconv.Atoi(group.NodeTemplate.Module.ScaleOutModuleID)
+		group.NodeTemplate.Module.ScaleOutModuleName = cloudprovider.GetModuleName(bkBizID, bkModuleID)
+	}
 	return generateNodeGroupFromAsc(group, cloudNodeGroup, asc)
 }
 
@@ -413,7 +421,7 @@ func generateInternetAccessible(asc *as.LaunchConfiguration) *proto.InternetAcce
 func generateImageInfo(cloudNodeGroup *tke.NodePool, group *proto.NodeGroup, imageID string) *proto.ImageInfo {
 	imageInfo := &proto.ImageInfo{ImageID: imageID}
 	if cloudNodeGroup != nil && cloudNodeGroup.NodePoolOs != nil {
-		for _, v := range api.ImageOsList {
+		for _, v := range utils.ImageOsList {
 			if v.ImageID == imageID {
 				imageInfo.ImageName = v.Alias
 				break

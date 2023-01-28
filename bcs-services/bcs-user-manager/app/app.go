@@ -18,14 +18,15 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/esb/cmdb"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/jwt"
-
 	"github.com/Tencent/bk-bcs/bcs-common/common"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/encrypt"
 	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
+	"github.com/Tencent/bk-bcs/bcs-common/common/util"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/metrics"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/esb/cmdb"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/jwt"
 	usermanager "github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/options"
@@ -86,6 +87,7 @@ func parseConfig(op *options.UserManagerOptions) (*config.UserMgrConfig, error) 
 	userMgrConfig := config.NewUserMgrConfig()
 
 	userMgrConfig.Address = op.Address
+	userMgrConfig.IPv6Address = util.InitIPv6Address(op.IPv6Address)
 	userMgrConfig.Port = op.Port
 	userMgrConfig.InsecureAddress = op.InsecureAddress
 	userMgrConfig.InsecurePort = op.InsecurePort

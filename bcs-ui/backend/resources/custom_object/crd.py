@@ -19,7 +19,6 @@ from backend.resources.constants import K8sResourceKind
 from backend.utils.basic import getitems
 
 from ..resource import ResourceClient, ResourceObj
-from .constants import PREFERRED_CRD_API_VERSION
 from .formatter import CRDFormatter
 
 
@@ -38,5 +37,5 @@ class CustomResourceDefinition(ResourceClient):
     result_type: Type['ResourceObj'] = CrdObj
     formatter = CRDFormatter()
 
-    def __init__(self, ctx_cluster: CtxCluster, api_version: Optional[str] = PREFERRED_CRD_API_VERSION):
+    def __init__(self, ctx_cluster: CtxCluster, api_version: Optional[str] = None):
         super().__init__(ctx_cluster, api_version)

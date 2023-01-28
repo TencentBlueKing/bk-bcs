@@ -13,9 +13,16 @@
 package stringx
 
 import (
+	"bytes"
+	"fmt"
+	"log"
+	"strings"
 	"testing"
 
+	goyaml "github.com/goccy/go-yaml"
+	"github.com/goccy/go-yaml/parser"
 	"github.com/stretchr/testify/assert"
+	"gopkg.in/yaml.v2"
 )
 
 func TestYaml2Json(t *testing.T) {
@@ -38,4 +45,130 @@ func TestJson2Yaml(t *testing.T) {
 `
 	assert.Nil(t, err)
 	assert.Equal(t, expectedYaml, string(y))
+}
+
+func TestYamlNode(t *testing.T) {
+	y := `
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: configmap-test
+data:
+  group.yaml: |2-
+    a: b
+    c: a
+---
+apiVersion: v1
+kind: Service
+metadata:
+# comment 1
+  name: test-service
+  namespace: default
+  labels:
+    k1: v1
+    c: d
+---
+apiVersion: v1
+kind: Service
+metadata:
+# comment 1
+  name: test-service2
+  namespace: default
+  labels:
+    k1: v1
+    c: d
+`
+	var n yaml.MapSlice
+	err := yaml.Unmarshal([]byte(y), &n)
+	// fmt.Println(n, err)
+	// fmt.Println(n[2])
+	out, err := yaml.Marshal(&n)
+	fmt.Println(string(out), err)
+}
+
+// 乱序
+func TestYamlMap(t *testing.T) {
+	y := `
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: configmap-test
+data:
+  group.yaml: |2-
+    a: b
+    c: a
+---
+apiVersion: v1
+kind: Service
+metadata:
+# comment 1
+  name: test-service
+  namespace: default
+  labels:
+    k1: v1
+    c: d
+`
+	n := make(map[interface{}]interface{}, 0)
+	err := yaml.Unmarshal([]byte(y), &n)
+	fmt.Println(n, err)
+
+	out, err := yaml.Marshal(&n)
+	fmt.Println(string(out), err)
+}
+
+func TestYamlPath(t *testing.T) {
+	y := `
+apiVersion: v1
+kind: Service
+metadata:
+# comment 1
+  name: test-service
+  namespace: default
+  labels:
+    k1: v1
+    c.a: d
+`
+	path, _ := goyaml.PathString("$.metadata.name")
+	path2, _ := goyaml.PathString("$.metadata.namespace")
+	labelpath, _ := goyaml.PathString(fmt.Sprintf("$.metadata.labels.'%s'", "c.a"))
+	var name string
+	path.Read(strings.NewReader(y), &name)
+	f, _ := parser.ParseBytes([]byte(y), 0)
+	path.ReplaceWithReader(f, strings.NewReader("test"))
+	path2.ReplaceWithReader(f, strings.NewReader("test-ns"))
+	labelpath.ReplaceWithReader(f, strings.NewReader(name))
+	fmt.Println(name)
+	fmt.Println(f.String())
+}
+
+func TestYamlYaml(t *testing.T) {
+	y := `
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: configmap-test
+  labels:
+    k1: v1
+data:
+  group.yaml: |2-
+    a: b
+    c: 1
+`
+	var n yaml.MapSlice
+	_ = yaml.Unmarshal([]byte(y), &n)
+	out, _ := yaml.Marshal(&n)
+	path, _ := goyaml.PathString("$.metadata.name")
+	kindpath, _ := goyaml.PathString("$.kind")
+	var name string
+	var kind string
+	path.Read(bytes.NewReader(out), &name)
+	kindpath.Read(bytes.NewReader(out), &kind)
+	fmt.Println(kind)
+	f, err := parser.ParseBytes(out, 0)
+	if err != nil {
+		log.Fatal(err)
+	}
+	path.ReplaceWithReader(f, strings.NewReader("test"))
+	fmt.Println(name)
+	fmt.Println(f.String())
 }

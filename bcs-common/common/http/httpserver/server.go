@@ -41,6 +41,7 @@ type HttpServer struct {
 	certFile               string
 	keyFile                string
 	certPasswd             string
+	tlsConfig              *tls.Config
 	webContainer           *restful.Container
 	router                 *mux.Router
 	*ipv6server.IPv6Server // IPv6 Server
@@ -82,10 +83,10 @@ func (s *HttpServer) GetRouter() *mux.Router {
 }
 
 // SetSsl set http ssl
-func (s *HttpServer) SetSsl(cafile, certfile, keyfile, certPasswd string) {
-	s.caFile = cafile
-	s.certFile = certfile
-	s.keyFile = keyfile
+func (s *HttpServer) SetSsl(caFile, certFile, keyFile, certPasswd string) {
+	s.caFile = caFile
+	s.certFile = certFile
+	s.keyFile = keyFile
 	s.certPasswd = certPasswd
 	s.isSSL = true
 }
@@ -266,7 +267,21 @@ func (s *HttpServer) GetIsSSL() bool {
 
 // GetTLSConfig 获取*http.TLSConfig
 func (s *HttpServer) GetTLSConfig() (*tls.Config, error) {
-	return ssl.ServerTslConf(s.caFile, s.certFile, s.keyFile, s.certPasswd)
+	// 不存在，则创建
+	if s.tlsConfig == nil {
+		var err error // err
+		if s.tlsConfig, err = ssl.ServerTslConf(s.caFile, s.certFile, s.keyFile, s.certPasswd); err != nil {
+			// 创建失败
+			return nil, err
+		}
+	}
+	// 若存在，则直接返回
+	return s.tlsConfig, nil
+}
+
+// SetTLSConfig 设置 *http.TLSConfig
+func (s *HttpServer) SetTLSConfig(tlsConfig *tls.Config) {
+	s.tlsConfig = tlsConfig
 }
 
 // GetPort 获取端口号

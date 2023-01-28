@@ -1,9 +1,11 @@
 <template>
   <BaseLayout title="Deployments" kind="Deployment" category="deployments" type="workloads">
     <template
-      #default="{ curPageData, pageConf, statusMap, updateStrategyMap, handlePageChange, handlePageSizeChange,
-                  handleGetExtData, handleSortChange, gotoDetail, handleUpdateResource, handleDeleteResource,
-                  handleEnlargeCapacity }">
+      #default="{
+        curPageData, pageConf, statusMap, updateStrategyMap, handlePageChange, handlePageSizeChange,
+        handleGetExtData, handleSortChange, gotoDetail, handleUpdateResource, handleDeleteResource,
+        handleEnlargeCapacity, statusFilters, statusFilterMethod
+      }">
       <bk-table
         :data="curPageData"
         :pagination="pageConf"
@@ -41,7 +43,13 @@
             </span>
           </template>
         </bk-table-column>
-        <bk-table-column :label="$t('状态')" min-width="100">
+        <bk-table-column
+          :label="$t('状态')"
+          prop="status"
+          :filters="statusFilters"
+          :filter-method="statusFilterMethod"
+          filter-multiple
+          min-width="100">
           <template slot-scope="{ row }">
             <StatusIcon status="running" v-if="handleGetExtData(row.metadata.uid, 'status') === 'normal'">
               {{statusMap[handleGetExtData(row.metadata.uid, 'status')] || '--'}}
@@ -63,6 +71,11 @@
         <bk-table-column label="Age" width="100" :resizable="false">
           <template slot-scope="{ row }">
             <span>{{handleGetExtData(row.metadata.uid, 'age')}}</span>
+          </template>
+        </bk-table-column>
+        <bk-table-column :label="$t('创建人')">
+          <template slot-scope="{ row }">
+            <span>{{handleGetExtData(row.metadata.uid, 'creator') || '--'}}</span>
           </template>
         </bk-table-column>
         <bk-table-column :label="$t('编辑模式')" width="100">

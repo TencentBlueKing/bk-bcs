@@ -24,8 +24,8 @@ type EndpointsK8sFilter struct {
 	Namespace string `json:"namespace,omitempty" filter:"namespace"`
 }
 
-const endpointsK8sNestedTimeLayout = nestedTimeLayout
+const endpointsK8sNestedTimeLayout = NestedTimeLayout
 
-func (t EndpointsK8sFilter) getCondition() *operator.Condition {
+func (t EndpointsK8sFilter) GetCondition() *operator.Condition {
 	return qGenerate(t, endpointsK8sNestedTimeLayout)
 }

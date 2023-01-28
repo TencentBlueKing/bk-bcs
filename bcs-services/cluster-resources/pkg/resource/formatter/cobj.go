@@ -19,9 +19,10 @@ import (
 	"strings"
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/slice"
 )
 
-// FormatCRD xxx
+// FormatCRD ...
 func FormatCRD(manifest map[string]interface{}) map[string]interface{} {
 	ret := CommonFormatRes(manifest)
 	ret["name"] = mapx.GetStr(manifest, "metadata.name")
@@ -32,16 +33,67 @@ func FormatCRD(manifest map[string]interface{}) map[string]interface{} {
 	return ret
 }
 
-// FormatCObj xxx
+// FormatCObj ...
 func FormatCObj(manifest map[string]interface{}) map[string]interface{} {
 	return CommonFormatRes(manifest)
 }
 
-// FormatGDeploy xxx
-func FormatGDeploy(manifest map[string]interface{}) map[string]interface{} {
+// FormatGWorkload ...
+func FormatGWorkload(manifest map[string]interface{}) map[string]interface{} {
 	ret := CommonFormatRes(manifest)
 	ret["images"] = parseContainerImages(manifest, "spec.template.spec.containers")
 	return ret
+}
+
+// FormatGDeploy ...
+func FormatGDeploy(manifest map[string]interface{}) map[string]interface{} {
+	ret := FormatGWorkload(manifest)
+	// 注：前端针对自定义资源，会根据 AdditionalColumns 自动获取字段数据并展示，
+	// 如果使用 status 字段，则会冲突导致数据覆盖（普通资源不会存在该问题）
+	ret["resStatus"] = newGDeployStatusParser(manifest).Parse()
+	return ret
+}
+
+// FormatGSTS ...
+func FormatGSTS(manifest map[string]interface{}) map[string]interface{} {
+	ret := FormatGWorkload(manifest)
+	ret["resStatus"] = newGSTSStatusParser(manifest).Parse()
+	return ret
+}
+
+// GDeployStatusChecker GameDeployment 状态检查器
+type GDeployStatusChecker struct{}
+
+// IsNormal ...
+func (c *GDeployStatusChecker) IsNormal(manifest map[string]interface{}) bool {
+	return slice.AllInt64Equal([]int64{
+		mapx.GetInt64(manifest, "spec.replicas"),
+		mapx.GetInt64(manifest, "status.readyReplicas"),
+		mapx.GetInt64(manifest, "status.updatedReplicas"),
+		mapx.GetInt64(manifest, "status.updatedReadyReplicas"),
+	})
+}
+
+// GSTSStatusChecker GameStatefulSet 状态检查器
+type GSTSStatusChecker struct{}
+
+// IsNormal ...
+func (c *GSTSStatusChecker) IsNormal(manifest map[string]interface{}) bool {
+	return slice.AllInt64Equal([]int64{
+		mapx.GetInt64(manifest, "spec.replicas"),
+		mapx.GetInt64(manifest, "status.readyReplicas"),
+		mapx.GetInt64(manifest, "status.currentReplicas"),
+		mapx.GetInt64(manifest, "status.updatedReplicas"),
+		mapx.GetInt64(manifest, "status.updatedReadyReplicas"),
+	})
+}
+
+func newGDeployStatusParser(manifest map[string]interface{}) *WorkloadStatusParser {
+	return &WorkloadStatusParser{&GDeployStatusChecker{}, manifest}
+}
+
+func newGSTSStatusParser(manifest map[string]interface{}) *WorkloadStatusParser {
+	return &WorkloadStatusParser{&GSTSStatusChecker{}, manifest}
 }
 
 // parseCObjAPIVersion 根据 CRD 配置解析 cobj ApiVersion

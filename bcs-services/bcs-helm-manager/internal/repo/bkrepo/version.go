@@ -233,7 +233,7 @@ func (ch *chartHandler) downloadHelmChartVersionOrigin(ctx context.Context, vers
 		blog.Errorf("download helm chart version origin from bk-repo get resp with "+
 			"error code %d, message %s, traceID %s",
 			r.Code, r.Message, r.TraceID)
-		return nil, err
+		return nil, fmt.Errorf("download helm chart version error, %s", r.Message)
 	}
 
 	return resp.Reply, nil

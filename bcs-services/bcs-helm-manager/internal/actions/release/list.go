@@ -16,9 +16,9 @@ import (
 	"context"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/release"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/store"
 	helmmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/proto/bcs-helm-manager"
 )
 
@@ -27,22 +27,18 @@ const (
 )
 
 // NewListReleaseAction return a new ListReleaseAction instance
-func NewListReleaseAction(model store.HelmManagerModel, releaseHandler release.Handler) *ListReleaseAction {
+func NewListReleaseAction(releaseHandler release.Handler) *ListReleaseAction {
 	return &ListReleaseAction{
-		model:          model,
 		releaseHandler: releaseHandler,
 	}
 }
 
 // ListReleaseAction provides the action to do list chart release
 type ListReleaseAction struct {
-	ctx context.Context
-
-	model          store.HelmManagerModel
+	ctx            context.Context
 	releaseHandler release.Handler
-
-	req  *helmmanager.ListReleaseReq
-	resp *helmmanager.ListReleaseResp
+	req            *helmmanager.ListReleaseReq
+	resp           *helmmanager.ListReleaseResp
 }
 
 // Handle the listing process
@@ -79,7 +75,7 @@ func (l *ListReleaseAction) list() error {
 
 	r := make([]*helmmanager.Release, 0, len(origin))
 	for _, item := range origin {
-		r = append(r, item.Transfer2Proto())
+		r = append(r, item.Transfer2Proto("", clusterID))
 	}
 	l.setResp(common.ErrHelmManagerSuccess, "ok", &helmmanager.ReleaseListData{
 		Page:  common.GetUint32P(uint32(option.Page)),

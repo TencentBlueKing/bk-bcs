@@ -707,6 +707,21 @@ func TestGetNodeCoresAndMemory(t *testing.T) {
 	cores, memory = getNodeCoresAndMemory(nodeWithMissingCapacity)
 	assert.Equal(t, int64(0), cores)
 	assert.Equal(t, int64(0), memory)
+
+	// filter eklet node
+	ekletNode := BuildTestNode("n1", 2000, 2048*MiB)
+	ekletNode.Labels[nodeInstanceTypeLabelKey] = nodeInstanceTypeEklet
+	cores, memory = getNodeCoresAndMemory(ekletNode)
+	assert.Equal(t, int64(0), cores)
+	assert.Equal(t, int64(0), memory)
+
+	// filer specific node
+	nodeWithAnno := BuildTestNode("n1", 2000, 2048*MiB)
+	nodeWithAnno.Annotations = map[string]string{}
+	nodeWithAnno.Annotations[filterNodeResourceAnnoKey] = "true"
+	cores, memory = getNodeCoresAndMemory(nodeWithAnno)
+	assert.Equal(t, int64(0), cores)
+	assert.Equal(t, int64(0), memory)
 }
 
 func TestGetOldestPod(t *testing.T) {

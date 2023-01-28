@@ -1,23 +1,20 @@
 /* eslint-disable camelcase */
 import { defineComponent, computed, ref, watch, onMounted, toRefs } from '@vue/composition-api';
 import DashboardTopActions from './dashboard-top-actions';
-import { useSelectItemsNamespace } from './use-namespace';
+import { useSelectItemsNamespace } from '../namespace/use-namespace';
 import usePage from './use-page';
-import useSearch from './use-search';
 import useSubscribe, { ISubscribeData, ISubscribeParams } from './use-subscribe';
 import useTableData from './use-table-data';
 import { sort } from '@/common/util';
 import yamljs from 'js-yaml';
-import * as ace from '@/components/ace-editor';
 import './base-layout.css';
 import fullScreen from '@/directives/full-screen';
 import { CUR_SELECT_NAMESPACE, CUR_SELECT_CRD } from '@/common/constant';
+import CodeEditor from '@/components/monaco-editor/new-editor.vue';
 
 export default defineComponent({
   name: 'BaseLayout',
-  components: {
-    ace,
-  },
+  components: { CodeEditor },
   directives: {
     'full-screen': fullScreen,
   },
@@ -37,7 +34,6 @@ export default defineComponent({
     category: {
       type: String,
       default: '',
-      required: true,
     },
     // 轮询时类型（type为crd时，kind仅作为资源详情展示的title用），eg: Deployment、Ingress（注意首字母大写）
     kind: {
@@ -153,6 +149,11 @@ export default defineComponent({
       updating: $i18n.t('更新中'),
       deleting: $i18n.t('删除中'),
     };
+    const statusFilters = computed(() => Object.keys(statusMap).map(key => ({
+      text: statusMap[key],
+      value: key,
+    })));
+    const statusFilterMethod = (value, row) => handleGetExtData(row.metadata.uid, 'status') === value;
 
     // 命名空间
     const namespaceDisabled = computed(() => {
@@ -160,7 +161,7 @@ export default defineComponent({
       return type.value === 'crd' && scope && scope !== 'Namespaced';
     });
     // 获取命名空间
-    const { namespaceLoading, namespaceValue, namespaceList, getNamespaceData } = useSelectItemsNamespace(ctx);
+    const { namespaceLoading, namespaceValue, namespaceList, getNamespaceData } = useSelectItemsNamespace();
 
     // 排序
     const sortData = ref({
@@ -206,15 +207,35 @@ export default defineComponent({
     const additionalColumns = computed(() =>  // 动态表格字段
       webAnnotations.value.additionalColumns || []);
     const tableData = computed(() => {
-      const items = JSON.parse(JSON.stringify(data.value.manifest.items || []));
+      const items = data.value.manifest.items || [];
       const { prop, order } = sortData.value;
       return prop ? sort(items, prop, order) : items;
     });
     const resourceVersion = computed(() => data.value.manifest?.metadata?.resourceVersion || '');
 
     // 模糊搜索功能
-    const keys = ref(['metadata.name']); // 模糊搜索字段
-    const { tableDataMatchSearch, searchValue } = useSearch(tableData, keys);
+    const keys = ref(['metadata.name', 'creator']); // 模糊搜索字段
+    const searchValue = ref('');
+    const tableDataMatchSearch = computed(() => {
+      if (!searchValue.value) return tableData.value;
+
+      return tableData.value.filter(item => keys.value.some((key) => {
+        const extData = data.value.manifestExt?.[item.metadata?.uid] || {};
+        const newItem = {
+          ...extData,
+          ...item,
+        };
+        const tmpKey = String(key).split('.');
+        const str = tmpKey.reduce((pre, key) => {
+          if (typeof pre === 'object') {
+            return pre[key];
+          }
+          return pre;
+        }, newItem);
+        return String(str).toLowerCase()
+          .includes(searchValue.value.toLowerCase());
+      }));
+    });
 
     const handleNamespaceSelected = (value) => {
       localStorage.setItem(`${clusterId.value}-${CUR_SELECT_NAMESPACE}`, value);
@@ -315,7 +336,7 @@ export default defineComponent({
     };
     // 确定扩缩容
     const handleConfirmChangeCapacity = async () => {
-      let result = false
+      let result = false;
       const { name, namespace } = curDetailRow.value.data?.metadata || {};
       if (type.value === 'crd') {
         result = await $store.dispatch('dashboard/crdEnlargeCapacityChange', {
@@ -338,7 +359,7 @@ export default defineComponent({
       });
       handleGetTableData();
     };
-    
+
     // 切换详情类型
     const handleChangeDetailType = (type) => {
       detailType.value.active = type;
@@ -354,9 +375,9 @@ export default defineComponent({
         apiVersion: curDetailRow.value.data.apiVersion,
         kind: curDetailRow.value.data.kind,
         metadata: curDetailRow.value.data.metadata,
-        ...curDetailRow.value.data
-      }
-      return yamljs.dump(newDetailRow || {})
+        ...curDetailRow.value.data,
+      };
+      return yamljs.dump(newDetailRow || {});
     });
     // 创建资源
     const handleCreateResource = () => {
@@ -453,7 +474,7 @@ export default defineComponent({
               $category: category.value,
               $name: name,
             });
-          }
+          };
           result && $bkMessage({
             theme: 'success',
             message: $i18n.t('删除成功'),
@@ -529,6 +550,8 @@ export default defineComponent({
       handleNamespaceSelected,
       handleEnlargeCapacity,
       handleConfirmChangeCapacity,
+      statusFilters,
+      statusFilterMethod,
     };
   },
   render() {
@@ -637,9 +660,9 @@ export default defineComponent({
                                           {
                                               this.namespaceList.map(option => (
                                                   <bcs-option
-                                                      key={option.value}
-                                                      id={option.value}
-                                                      name={option.label}>
+                                                      key={option.name}
+                                                      id={option.name}
+                                                      name={option.name}>
                                                   </bcs-option>
                                               ))
                                           }
@@ -654,7 +677,7 @@ export default defineComponent({
                       clearable
                       v-model={this.nameValue}
                       right-icon="bk-icon icon-search"
-                      placeholder={this.$t('输入名称搜索')}>
+                      placeholder={this.$t('输入名称、创建人搜索')}>
                   </bk-input>
               </div>
           </div>
@@ -680,6 +703,8 @@ export default defineComponent({
                 namespaceDisabled: this.namespaceDisabled,
                 webAnnotations: this.webAnnotations,
                 updateStrategyMap: this.updateStrategyMap,
+                statusFilters: this.statusFilters,
+                statusFilterMethod: this.statusFilterMethod,
               })
           }
         </div>
@@ -720,9 +745,15 @@ export default defineComponent({
                   ? (this.$scopedSlots.detail?.({
                     ...this.curDetailRow,
                   }))
-                  : <ace v-full-screen={{ tools: ['fullscreen', 'copy'], content: this.yaml }}
-                                width="100%" height="100%" lang="yaml"
-                                readOnly={true} value={this.yaml}></ace>),
+                  : <CodeEditor
+                    v-full-screen={{ tools: ['fullscreen', 'copy'], content: this.yaml }}
+                    options={{
+                      roundedSelection: false,
+                      scrollBeyondLastLine: false,
+                      renderLineHighlight: false,
+                    }}
+                    width="100%" height="100%" lang="yaml"
+                    readonly={true} value={this.yaml} />),
               },
             }
             }></bcs-sideslider>
@@ -734,7 +765,7 @@ export default defineComponent({
         >
           <span class="capacity-dialog-content">
             { this.$t('实例数量') }
-            <bk-input v-model={this.replicas} type="number" class="ml10" style="flex: 1;" min="0"></bk-input>
+            <bk-input v-model={this.replicas} type="number" class="ml10" style="flex: 1;" min={0}></bk-input>
           </span>
         </bcs-dialog>
       </div>

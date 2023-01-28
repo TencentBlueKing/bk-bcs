@@ -13,6 +13,15 @@
 package constant
 
 const (
+	// ProtocolTCP protocol of TCP
+	ProtocolTCP = "TCP"
+	// ProtocolUDP protocol of UDP
+	ProtocolUDP = "UDP"
+	// ProtocolHTTPS protocol of HTTPS
+	ProtocolHTTPS = "HTTPS"
+	// ProtocolHTTP protocol of HTTP
+	ProtocolHTTP = "HTTP"
+
 	// LoadBalancerTypeLoadBalancer default type load balancer
 	LoadBalancerTypeLoadBalancer = "loadbalancer"
 	// LoadBalancerTypeApplicationGateway type for azure application gateway
@@ -41,9 +50,16 @@ const (
 	EnvNameIsTCPUDPPortReuse = "TCP_UDP_PORT_REUSE"
 	// EnvNameIsBulkMode env name for option if use bulk interface for cloud lb
 	EnvNameIsBulkMode = "IS_BULK_MODE"
+	// EnvNamePodIPs env name for pod ips
+	EnvNamePodIPs = "POD_IPS"
 
 	// DelimiterForLbID delimiter for lb id
 	DelimiterForLbID = ":"
+
+	// PortPoolStatusReady ready status for port pool
+	PortPoolStatusReady = "Ready"
+	// PortPoolStatusNotReady not ready status for port pool
+	PortPoolStatusNotReady = "NotReady"
 
 	// PortPoolItemStatusError error status of port pool item
 	PortPoolItemStatusError = "Error"
@@ -101,6 +117,10 @@ const (
 	ConditionReasonReadyBcsIngressPortBinding = "Ready"
 	// ConditionMessageReadyBcsIngressPortBinding ready message for port binding condition
 	ConditionMessageReadyBcsIngressPortBinding = "ports ares binded for the pod"
+	// ConditionReasonNotReadyBcsIngressPortBinding unready reason for port binding condition
+	ConditionReasonNotReadyBcsIngressPortBinding = "NotReady"
+	// ConditionMessageNotReadyBcsIngressPortBinding unready message for port binding condition
+	ConditionMessageNotReadyBcsIngressPortBinding = "port are not bound to the pod"
 
 	// PatchOperationAdd patch add operation
 	PatchOperationAdd = "add"
@@ -129,6 +149,9 @@ const (
 	PortPoolPortProtocolUDP = "UDP"
 	// PortPoolPortProtocolTCPUDP protocol of port in pool is tcp&udp
 	PortPoolPortProtocolTCPUDP = "TCP_UDP"
+
+	// PortPoolItemProtocolDelimiter separate protocol in portpool item, like "TCP,UDP"
+	PortPoolItemProtocolDelimiter = ","
 
 	// LoadBalanceCheckFormatWithAp regular expression for check lb format "ap-xxxxx:lb-xxxxx"
 	LoadBalanceCheckFormatWithApLbID = "^(ap|na|eu|sa)-[A-Za-z0-9-]+:lb-[A-Za-z0-9]+"

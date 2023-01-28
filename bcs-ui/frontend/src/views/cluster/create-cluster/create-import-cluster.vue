@@ -1,5 +1,5 @@
 <template>
-  <section class="create-import-cluster" bcs-content-wrapper>
+  <section class="create-import-cluster bcs-content-wrapper">
     <BkForm
       :label-width="labelWidth"
       :model="importClusterInfo"
@@ -48,25 +48,46 @@
           </bcs-select>
         </BkFormItem>
         <BkFormItem :label="$t('云凭证')" property="accountID" error-display-type="normal" required>
-          <bcs-select
-            :loading="accountsLoading"
-            class="w640"
-            :clearable="false"
-            searchable
-            v-model="importClusterInfo.accountID">
-            <bcs-option
-              v-for="item in accountsList"
-              :key="item.account.accountID"
-              :id="item.account.accountID"
-              :name="item.account.accountName">
-            </bcs-option>
-            <template slot="extension">
-              <div class="extension-item" style="cursor: pointer" @click="handleGotoCloudToken">
-                <i class="bk-icon icon-plus-circle"></i>
-                <span>{{ $t('新增凭证') }}</span>
-              </div>
-            </template>
-          </bcs-select>
+          <div style="display: flex;">
+            <bcs-select
+              :loading="accountsLoading"
+              class="w640"
+              :clearable="false"
+              searchable
+              v-model="importClusterInfo.accountID">
+              <bcs-option
+                v-for="item in accountsList"
+                :key="item.account.accountID"
+                :id="item.account.accountID"
+                :name="item.account.accountName"
+                v-authority="{
+                  clickable: webAnnotations.perms[item.account.accountID]
+                    && webAnnotations.perms[item.account.accountID].cloud_account_use,
+                  actionId: 'cloud_account_use',
+                  resourceName: item.account.accountName,
+                  disablePerms: true,
+                  newPerms: true,
+                  permCtx: {
+                    project_id: item.account.projectID,
+                    account_id: item.account.accountID,
+                    operator: user.username
+                  }
+                }">
+              </bcs-option>
+              <template slot="extension">
+                <div class="extension-item" style="cursor: pointer" @click="handleGotoCloudToken">
+                  <i class="bk-icon icon-plus-circle"></i>
+                  <span>{{ $t('新增凭证') }}</span>
+                </div>
+              </template>
+            </bcs-select>
+            <span
+              class="refresh ml10"
+              v-bk-tooltips="$t('刷新列表')"
+              @click="handleGetCloudAccounts">
+              <i class="bcs-icon bcs-icon-reset"></i>
+            </span>
+          </div>
         </BkFormItem>
         <BkFormItem :label="$t('所属区域')" property="region" error-display-type="normal" required>
           <bcs-select
@@ -107,7 +128,7 @@
         <bk-button class="mb10">
           <input
             class="file-input"
-            accept=".yaml,yml"
+            accept="*"
             type="file"
             @change="handleFileChange">
           {{$t('文件导入')}}
@@ -143,7 +164,7 @@
           >{{$t('导入')}}</bk-button>
         </span>
         <bk-button
-          class="btn"
+          class="btn ml5"
           @click="handleCancel"
         >{{$t('取消')}}</bk-button>
       </BkFormItem>
@@ -157,7 +178,7 @@ import { useConfig } from '@/common/use-app';
 import useFormLabel from '@/common/use-form-label';
 import BkForm from 'bk-magic-vue/lib/form';
 import BkFormItem from 'bk-magic-vue/lib/form-item';
-import CodeEditor from '@/views/dashboard/resource-update/resource-editor.vue';
+import CodeEditor from '@/components/monaco-editor/new-editor.vue';
 
 export default defineComponent({
   name: 'CreateImportCluster',
@@ -253,7 +274,7 @@ export default defineComponent({
     // 云服务商
     const templateList = ref<any[]>([]);
     const availableTemplateList = computed(() => templateList.value
-      .filter(item => !item?.confInfo?.disableImportCluster));
+      .filter(item => item.enable === 'true' && !item?.confInfo?.disableImportCluster));
     const templateLoading = ref(false);
     const handleGetCloudList = async () => {
       templateLoading.value = true;
@@ -275,14 +296,19 @@ export default defineComponent({
     };
 
     // 云账户信息
+    const webAnnotations = ref({ perms: {} });
     const accountsLoading = ref(false);
     const accountsList = ref([]);
     const handleGetCloudAccounts = async () => {
+      if (!importClusterInfo.value.provider) return;
       accountsLoading.value = true;
-      accountsList.value = await $store.dispatch('clustermanager/cloudAccounts', {
+      const res = await $store.dispatch('clustermanager/cloudAccounts', {
         $cloudId: importClusterInfo.value.provider,
         projectID: curProject.value.project_id,
+        operator: user.value.username,
       });
+      accountsList.value = res.data;
+      webAnnotations.value = res.web_annotations || { perms: {} };
       accountsLoading.value = false;
     };
 
@@ -391,6 +417,7 @@ export default defineComponent({
       initFormLabelWidth(importFormRef.value);
     });
     return {
+      user,
       codeEditorRef,
       clusterLoading,
       accountsLoading,
@@ -412,6 +439,8 @@ export default defineComponent({
       clusterList,
       handleTest,
       handleGotoCloudToken,
+      handleGetCloudAccounts,
+      webAnnotations,
     };
   },
 });
@@ -461,5 +490,10 @@ export default defineComponent({
 }
 /deep/ .btn-group-first {
   min-width: 100px;
+}
+.refresh {
+  font-size: 12px;
+  color: #3a84ff;
+  cursor: pointer;
 }
 </style>

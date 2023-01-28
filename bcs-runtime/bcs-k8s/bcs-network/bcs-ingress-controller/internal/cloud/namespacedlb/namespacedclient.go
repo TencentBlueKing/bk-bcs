@@ -115,7 +115,7 @@ func (nc *NamespacedLB) EnsureListener(region string, listener *networkextension
 
 // EnsureMultiListeners ensure multiple listeners to cloud
 func (nc *NamespacedLB) EnsureMultiListeners(region, lbID string, listeners []*networkextensionv1.Listener) (
-	map[string]string, error) {
+	map[string]cloud.Result, error) {
 	if len(listeners) == 0 {
 		blog.Warnf("no listeners to be ensured")
 		return nil, nil
@@ -161,7 +161,7 @@ func (nc *NamespacedLB) EnsureSegmentListener(region string, listener *networkex
 
 // EnsureMultiSegmentListeners ensure multi segment listener
 func (nc *NamespacedLB) EnsureMultiSegmentListeners(
-	region, lbID string, listeners []*networkextensionv1.Listener) (map[string]string, error) {
+	region, lbID string, listeners []*networkextensionv1.Listener) (map[string]cloud.Result, error) {
 	if len(listeners) == 0 {
 		blog.Warnf("no segment listeners to be ensured")
 		return nil, nil

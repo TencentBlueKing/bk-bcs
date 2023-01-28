@@ -29,7 +29,7 @@ import (
 	logger "github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/gorilla/websocket"
 	"github.com/pkg/errors"
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/tools/remotecommand"
 )
@@ -239,7 +239,7 @@ func (r *RemoteStreamConn) WaitStreamDone(podCtx *types.PodContext) error {
 		Namespace(podCtx.Namespace).
 		SubResource("exec")
 
-	req.VersionedParams(&v1.PodExecOptions{
+	req.VersionedParams(&corev1.PodExecOptions{
 		Command:   podCtx.Commands,
 		Container: podCtx.ContainerName,
 		Stdin:     true,

@@ -16,7 +16,6 @@ package wrapper
 
 import (
 	"context"
-	"encoding/json"
 
 	"github.com/micro/go-micro/v2/metadata"
 	"github.com/micro/go-micro/v2/server"
@@ -29,14 +28,14 @@ import (
 // NewLogWrapper 记录流水
 func NewLogWrapper(fn server.HandlerFunc) server.HandlerFunc {
 	return func(ctx context.Context, req server.Request, rsp interface{}) error {
-		requestIDKey := ctxkey.RequestIDKey
 		md, _ := metadata.FromContext(ctx)
-		logging.Info("request func %s, request_id: %s, ctx: %v", req.Endpoint(), ctx.Value(requestIDKey), md)
-		if err := fn(ctx, req, rsp); err != nil {
-			logging.Error("request func %s failed, request_id: %s, ctx: %v, body: %v",
-				req.Endpoint(), ctx.Value(requestIDKey), md, req.Body())
+		err := fn(ctx, req, rsp)
+		if err != nil {
+			logging.Error("method %s failed, request_id: %s, req: %v, err: %s, ctx: %v",
+				req.Endpoint(), ctx.Value(ctxkey.RequestIDKey), req.Body(), err.Error(), md)
 			return err
 		}
+		logging.Info("method %s, request_id: %s, req: %v", req.Method(), ctx.Value(ctxkey.RequestIDKey), req.Body())
 		return nil
 	}
 }
@@ -44,11 +43,8 @@ func NewLogWrapper(fn server.HandlerFunc) server.HandlerFunc {
 // NewAuthLogWrapper 记录鉴权日志
 func NewAuthLogWrapper(fn server.HandlerFunc) server.HandlerFunc {
 	return func(ctx context.Context, req server.Request, rsp interface{}) error {
-		if authUser, err := middleware.GetUserFromContext(ctx); err == nil {
-			if b, err := json.Marshal(authUser); err == nil {
-				logging.Info("authUser: %s, method: %s", string(b), req.Method())
-			}
-		}
+		authUser, _ := middleware.GetUserFromContext(ctx)
+		logging.Info("authUser: %v, method: %s, request_id: %s", authUser, req.Method(), ctx.Value(ctxkey.RequestIDKey))
 		return fn(ctx, req, rsp)
 	}
 }
