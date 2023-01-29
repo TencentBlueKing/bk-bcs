@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
+import viteCompression from "vite-plugin-compression"
 
 const viteHtml = (options?: any) => {
   return {
@@ -13,7 +14,10 @@ const viteHtml = (options?: any) => {
 }
 
 export default defineConfig(({ command, mode }) => {
-  const plugins = [vue()];
+  const plugins = [
+    vue(),
+    viteCompression()
+  ];
   console.error('defineConfig command', command);
   if (command === 'build') {
     plugins.push(viteHtml())
@@ -26,7 +30,6 @@ export default defineConfig(({ command, mode }) => {
       assetsDir: 'static',
       copyPublicDir: false,
       target: 'es2015',
-      
       commonjsOptions: {
         transformMixedEsModules: true
       }
