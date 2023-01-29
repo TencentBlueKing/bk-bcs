@@ -11,27 +11,37 @@
  *
  */
 
-package cluster
+package cordon
 
 import (
-	"errors"
-
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-cluster-manager/pkg/manager/types"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
+	"github.com/spf13/cobra"
+	"k8s.io/kubectl/pkg/util/i18n"
+	"k8s.io/kubectl/pkg/util/templates"
 )
 
-// CheckCloudKubeConfig kubeConfig连接集群可用性检测
-func (c *ClusterMgr) CheckCloudKubeConfig(req types.CheckCloudKubeConfigReq) error {
-	resp, err := c.client.CheckCloudKubeConfig(c.ctx, &clustermanager.KubeConfigReq{
-		KubeConfig: req.Kubeconfig,
-	})
-	if err != nil {
-		return err
+var (
+	cordonLong = templates.LongDesc(i18n.T(`
+	mark node as unschedulable.`))
+
+	cordonExample = templates.Examples(i18n.T(`
+	# mark node "foo" as unschedulable
+	kubectl-bcs-cluster-manager cordon`))
+
+	clusterID string
+	innerIPs  []string
+)
+
+// NewCordonCmd 创建cordon子命令实例
+func NewCordonCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "cordon",
+		Short:   i18n.T("mark node as unschedulable."),
+		Long:    cordonLong,
+		Example: cordonExample,
 	}
 
-	if resp != nil && resp.Code != 0 {
-		return errors.New(resp.Message)
-	}
+	// cordon subcommands
+	cmd.AddCommand(newCordonNodeCmd())
 
-	return nil
+	return cmd
 }

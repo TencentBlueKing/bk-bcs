@@ -11,44 +11,44 @@
  *
  */
 
-package cluster
+package get
 
 import (
 	"context"
-	"fmt"
-	"os"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-cluster-manager/cmd/util"
 	clusterMgr "github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-cluster-manager/pkg/manager/cluster"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-cluster-manager/pkg/manager/types"
 	"github.com/spf13/cobra"
 	"k8s.io/klog"
+	"k8s.io/kubectl/pkg/util/i18n"
+	"k8s.io/kubectl/pkg/util/templates"
 )
 
-func newCheckCloudKubeConfigCmd() *cobra.Command {
+var (
+	getClusterExample = templates.Examples(i18n.T(`
+	kubectl-bcs-cluster-manager get cluster --clusterID xxx`))
+)
+
+func newGetClusterCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "checkCloudKubeconfig",
-		Aliases: []string{"checkConfig"},
-		Short:   "check cloud kube config from bcs-cluster-manager",
-		Run:     checkCloudKubeconfig,
+		Use:     "cluster",
+		Short:   "get cluster from bcs-cluster-manager",
+		Example: getClusterExample,
+		Run:     getCluster,
 	}
 
-	cmd.Flags().StringVarP(&file, "file", "f", "./config", "kube config file (required)")
+	cmd.Flags().StringVarP(&clusterID, "clusterID", "c", "", "cluster ID (required)")
+	cmd.MarkFlagRequired("clusterID")
 
 	return cmd
 }
 
-func checkCloudKubeconfig(cmd *cobra.Command, args []string) {
-	data, err := os.ReadFile(file)
+func getCluster(cmd *cobra.Command, args []string) {
+	resp, err := clusterMgr.New(context.Background()).Get(types.GetClusterReq{ClusterID: clusterID})
 	if err != nil {
-		klog.Fatalf("read file failed: %v", err)
+		klog.Fatalf("get cluster failed: %v", err)
 	}
 
-	err = clusterMgr.New(context.Background()).CheckCloudKubeConfig(types.CheckCloudKubeConfigReq{
-		Kubeconfig: string(data),
-	})
-	if err != nil {
-		klog.Fatalf("check cloud kube config failed: %v", err)
-	}
-
-	fmt.Printf("check cloud kube config succeed")
+	util.Output2Json(resp.Data)
 }

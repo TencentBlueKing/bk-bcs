@@ -11,44 +11,46 @@
  *
  */
 
-package cluster
+package get
 
 import (
 	"context"
-	"fmt"
-	"os"
 
-	clusterMgr "github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-cluster-manager/pkg/manager/cluster"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-cluster-manager/cmd/util"
+	cloudvpcMgr "github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-cluster-manager/pkg/manager/cloud_vpc"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-cluster-manager/pkg/manager/types"
 	"github.com/spf13/cobra"
 	"k8s.io/klog"
+	"k8s.io/kubectl/pkg/util/i18n"
+	"k8s.io/kubectl/pkg/util/templates"
 )
 
-func newCheckCloudKubeConfigCmd() *cobra.Command {
+var (
+	getVPCCidrExample = templates.Examples(i18n.T(`
+	kubectl-bcs-cluster-manager get VPCCidr --vpcID xxx`))
+)
+
+func newGetVPCCidrCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "checkCloudKubeconfig",
-		Aliases: []string{"checkConfig"},
-		Short:   "check cloud kube config from bcs-cluster-manager",
-		Run:     checkCloudKubeconfig,
+		Use:     "VPCCidr",
+		Short:   "get VPC Cidr from bcs-cluster-manager",
+		Example: getVPCCidrExample,
+		Run:     getVPCCidr,
 	}
 
-	cmd.Flags().StringVarP(&file, "file", "f", "./config", "kube config file (required)")
+	cmd.Flags().StringVarP(&vpcID, "vpcID", "v", "", `VPC ID (required)`)
+	cmd.MarkFlagRequired("vpcID")
 
 	return cmd
 }
 
-func checkCloudKubeconfig(cmd *cobra.Command, args []string) {
-	data, err := os.ReadFile(file)
-	if err != nil {
-		klog.Fatalf("read file failed: %v", err)
-	}
-
-	err = clusterMgr.New(context.Background()).CheckCloudKubeConfig(types.CheckCloudKubeConfigReq{
-		Kubeconfig: string(data),
+func getVPCCidr(cmd *cobra.Command, args []string) {
+	resp, err := cloudvpcMgr.New(context.Background()).GetVPCCidr(types.GetVPCCidrReq{
+		VPCID: vpcID,
 	})
 	if err != nil {
-		klog.Fatalf("check cloud kube config failed: %v", err)
+		klog.Fatalf("get VPC Cidr failed: %v", err)
 	}
 
-	fmt.Printf("check cloud kube config succeed")
+	util.Output2Json(resp.Data)
 }

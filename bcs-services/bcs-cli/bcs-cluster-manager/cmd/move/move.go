@@ -11,27 +11,38 @@
  *
  */
 
-package cluster
+package move
 
 import (
-	"errors"
-
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-cluster-manager/pkg/manager/types"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
+	"github.com/spf13/cobra"
+	"k8s.io/kubectl/pkg/util/i18n"
+	"k8s.io/kubectl/pkg/util/templates"
 )
 
-// CheckCloudKubeConfig kubeConfig连接集群可用性检测
-func (c *ClusterMgr) CheckCloudKubeConfig(req types.CheckCloudKubeConfigReq) error {
-	resp, err := c.client.CheckCloudKubeConfig(c.ctx, &clustermanager.KubeConfigReq{
-		KubeConfig: req.Kubeconfig,
-	})
-	if err != nil {
-		return err
+var (
+	moveLong = templates.LongDesc(i18n.T(`
+	move some resource to node group.`))
+
+	moveExample = templates.Examples(i18n.T(`
+	# move a cluster variable
+	kubectl-bcs-cluster-manager move`))
+
+	clusterID   string
+	nodeGroupID string
+	nodes       []string
+)
+
+// NewMoveCmd 创建move子命令实例
+func NewMoveCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "move",
+		Short:   i18n.T("move some resource to node group."),
+		Long:    moveLong,
+		Example: moveExample,
 	}
 
-	if resp != nil && resp.Code != 0 {
-		return errors.New(resp.Message)
-	}
+	// move subcommands
+	cmd.AddCommand(newMoveNodesToGroupCmd())
 
-	return nil
+	return cmd
 }
