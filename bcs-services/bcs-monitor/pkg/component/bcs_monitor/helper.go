@@ -13,10 +13,12 @@
 package bcsmonitor
 
 import (
+	"encoding/json"
 	"net/http"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/config"
 	"github.com/prometheus/common/model"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/config"
 )
 
 func getQueryURL() (string, http.Header) {
@@ -27,7 +29,8 @@ func getQueryURL() (string, http.Header) {
 		url = config.G.BCS.QueryURL
 	} else {
 		// 集群内, 走 service 接口
-		url = "http://bcs-monitor-query"
+		//url = "http://bcs-monitor-query"
+		url = "http://192.168.37.160:9090"
 
 		// url = fmt.Sprintf("%s/bcsapi/v4/monitor/query", config.G.BCS.Host)
 		// header.Add("Authorization", fmt.Sprintf("Bearer %s", config.G.BCS.Token))
@@ -53,4 +56,11 @@ func GetLabelSet(vector model.Vector) map[string]string {
 		labelSet[string(k)] = string(v)
 	}
 	return labelSet
+}
+
+// MapToJson map转string
+func MapToJson(param map[string]interface{}) string {
+	dataType, _ := json.Marshal(param)
+	dataString := string(dataType)
+	return dataString
 }

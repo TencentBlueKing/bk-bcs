@@ -22,13 +22,20 @@ import (
 	"strings"
 	"time"
 
+	"github.com/dustin/go-humanize"
 	"github.com/pkg/errors"
 	"github.com/prometheus/common/model"
 	"github.com/prometheus/prometheus/promql/parser"
 	"github.com/thanos-io/thanos/pkg/store/storepb"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/trace"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component"
 )
+
+var tracer = otel.Tracer("prom_client")
 
 // PromStatus prometheus api status
 type PromStatus string
@@ -77,11 +84,17 @@ type LabelValuesResponse struct {
 // QueryInstant 查询实时数据
 func QueryInstant(ctx context.Context, rawURL string, header http.Header, promql string, t time.Time) (*Result, error) {
 	rawURL = strings.TrimSuffix(rawURL, "/") + "/api/v1/query"
-
+	commonAttrs := []attribute.KeyValue{
+		attribute.String("rawURL", rawURL),
+	}
+	ctx, span := tracer.Start(ctx, "QueryInstant", trace.WithSpanKind(trace.SpanKindInternal), trace.WithAttributes(commonAttrs...))
+	defer span.End()
 	data := map[string]string{
 		"query": promql,
 		"time":  t.Format(time.RFC3339Nano),
 	}
+	dataStr, _ := json.Marshal(data)
+	span.SetAttributes(attribute.String("data", string(dataStr)))
 	resp, err := component.GetClient().R().
 		SetContext(ctx).
 		SetFormData(data).
@@ -89,18 +102,33 @@ func QueryInstant(ctx context.Context, rawURL string, header http.Header, promql
 		Post(rawURL)
 
 	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
 		return nil, err
 	}
 
 	if !resp.IsSuccess() {
-		return nil, errors.Errorf("http code %d != 200", resp.StatusCode())
+		err = errors.Errorf("http code %d != 200", resp.StatusCode())
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
+		return nil, err
 	}
 
 	m := Result{}
 
 	if err = json.Unmarshal(resp.Body(), &m); err != nil {
-		return nil, errors.Wrap(err, "unmarshal query instant response")
+		err = errors.Wrap(err, "unmarshal query instant response")
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
+		return nil, err
 	}
+
+	respBody := string(resp.Body())
+	if len(respBody) > 1024 {
+		respBody = fmt.Sprintf("%s...(Total %s)", respBody[:1024], humanize.Bytes(uint64(len(respBody))))
+	}
+	span.SetAttributes(attribute.String("time", t.String()))
+	span.SetAttributes(attribute.Key("rsp").String(respBody))
 
 	return &m, nil
 }
@@ -116,6 +144,13 @@ func QueryRange(ctx context.Context, rawURL string, header http.Header, promql s
 	}
 	rawURL = strings.TrimSuffix(rawURL, "/") + "/api/v1/query_range"
 
+	dataStr, _ := json.Marshal(data)
+	commonAttrs := []attribute.KeyValue{
+		attribute.String("data", string(dataStr)),
+		attribute.String("rawURL", rawURL),
+	}
+	ctx, span := tracer.Start(ctx, "QueryRange", trace.WithSpanKind(trace.SpanKindInternal), trace.WithAttributes(commonAttrs...))
+	defer span.End()
 	resp, err := component.GetClient().R().
 		SetContext(ctx).
 		SetFormData(data).
@@ -123,27 +158,46 @@ func QueryRange(ctx context.Context, rawURL string, header http.Header, promql s
 		Post(rawURL)
 
 	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
 		return nil, err
 	}
 
 	if !resp.IsSuccess() {
-		return nil, errors.Errorf("http code %d != 200", resp.StatusCode())
+		err = errors.Errorf("http code %d != 200", resp.StatusCode())
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
+		return nil, err
 	}
 
 	m := Result{}
 
 	if err = json.Unmarshal(resp.Body(), &m); err != nil {
-		return nil, errors.Wrap(err, "unmarshal query range response")
+		err = errors.Wrap(err, "unmarshal query range response")
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
+		return nil, err
 	}
-
+	respBody := string(resp.Body())
+	if len(respBody) > 1024 {
+		respBody = fmt.Sprintf("%s...(Total %s)", respBody[:1024], humanize.Bytes(uint64(len(respBody))))
+	}
+	span.SetAttributes(attribute.Key("rsp").String(respBody))
 	return &m, nil
 }
 
 // QueryInstantVector 查询实时数据
 func QueryInstantVector(ctx context.Context, rawURL string, header http.Header, promql string,
 	t time.Time) (model.Vector, []string, error) {
+	commonAttrs := []attribute.KeyValue{
+		attribute.String("rawURL", rawURL),
+	}
+	ctx, span := tracer.Start(ctx, "QueryInstantVector", trace.WithSpanKind(trace.SpanKindInternal), trace.WithAttributes(commonAttrs...))
+	defer span.End()
 	m, err := QueryInstant(ctx, rawURL, header, promql, t)
 	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
 		return nil, nil, err
 	}
 
@@ -154,32 +208,60 @@ func QueryInstantVector(ctx context.Context, rawURL string, header http.Header, 
 	switch m.Data.ResultType {
 	case string(parser.ValueTypeVector):
 		if err = json.Unmarshal(m.Data.Result, &vectorResult); err != nil {
-			return nil, nil, errors.Wrap(err, "decode result into ValueTypeVector")
+			err = errors.Wrap(err, "decode result into ValueTypeVector")
+			span.RecordError(err)
+			span.SetStatus(codes.Error, err.Error())
+			return nil, nil, err
 		}
 	case string(parser.ValueTypeScalar):
 		vectorResult, err = convertScalarJSONToVector(m.Data.Result)
 		if err != nil {
-			return nil, nil, errors.Wrap(err, "decode result into ValueTypeScalar")
+			err = errors.Wrap(err, "decode result into ValueTypeScalar")
+			span.RecordError(err)
+			span.SetStatus(codes.Error, err.Error())
+			return nil, nil, err
 		}
 	default:
 		if m.Warnings != nil {
-			return nil, nil, errors.Errorf("error: %s, type: %s, warning: %s", m.Error, m.ErrorType, strings.Join(m.Warnings,
+			err = errors.Errorf("error: %s, type: %s, warning: %s", m.Error, m.ErrorType, strings.Join(m.Warnings,
 				", "))
+			span.RecordError(err)
+			span.SetStatus(codes.Error, err.Error())
+			return nil, nil, err
 		}
 		if m.Error != "" {
-			return nil, nil, errors.Errorf("error: %s, type: %s", m.Error, m.ErrorType)
+			err = errors.Errorf("error: %s, type: %s", m.Error, m.ErrorType)
+			span.RecordError(err)
+			span.SetStatus(codes.Error, err.Error())
+			return nil, nil, err
 		}
-		return nil, nil, errors.Errorf("received status code: 200, unknown response type: '%q'", m.Data.ResultType)
+		err = errors.Errorf("received status code: 200, unknown response type: '%q'", m.Data.ResultType)
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
+		return nil, nil, err
 	}
-
+	vectorResultStr, _ := json.Marshal(vectorResult)
+	respBody := string(vectorResultStr)
+	if len(vectorResultStr) > 1024 {
+		respBody = fmt.Sprintf("%s...(Total %s)", respBody[:1024], humanize.Bytes(uint64(len(respBody))))
+	}
+	span.SetAttributes(attribute.Key("vectorResult").String(respBody))
+	span.SetAttributes(attribute.Key("warnings").StringSlice(m.Warnings))
 	return vectorResult, m.Warnings, nil
 }
 
 // QueryRangeMatrix 查询历史数据
 func QueryRangeMatrix(ctx context.Context, rawURL string, header http.Header, promql string, start time.Time,
 	end time.Time, step time.Duration) (model.Matrix, []string, error) {
+	commonAttrs := []attribute.KeyValue{
+		attribute.String("rawURL", rawURL),
+	}
+	ctx, span := tracer.Start(ctx, "QueryRangeMatrix", trace.WithSpanKind(trace.SpanKindInternal), trace.WithAttributes(commonAttrs...))
+	defer span.End()
 	m, err := QueryRange(ctx, rawURL, header, promql, start, end, step)
 	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
 		return nil, nil, err
 	}
 
@@ -189,20 +271,38 @@ func QueryRangeMatrix(ctx context.Context, rawURL string, header http.Header, pr
 	switch m.Data.ResultType {
 	case string(parser.ValueTypeMatrix):
 		if err = json.Unmarshal(m.Data.Result, &matrixResult); err != nil {
-			return nil, nil, errors.Wrap(err, "decode result into ValueTypeMatrix")
+			err = errors.Wrap(err, "decode result into ValueTypeMatrix")
+			span.RecordError(err)
+			span.SetStatus(codes.Error, err.Error())
+			return nil, nil, err
 		}
 	default:
 		if m.Warnings != nil {
-			return nil, nil, errors.Errorf("error: %s, type: %s, warning: %s", m.Error, m.ErrorType, strings.Join(m.Warnings,
+			err = errors.Errorf("error: %s, type: %s, warning: %s", m.Error, m.ErrorType, strings.Join(m.Warnings,
 				", "))
+			span.RecordError(err)
+			span.SetStatus(codes.Error, err.Error())
+			return nil, nil, err
 		}
 		if m.Error != "" {
-			return nil, nil, errors.Errorf("error: %s, type: %s", m.Error, m.ErrorType)
+			err = errors.Errorf("error: %s, type: %s", m.Error, m.ErrorType)
+			span.RecordError(err)
+			span.SetStatus(codes.Error, err.Error())
+			return nil, nil, err
 		}
 
-		return nil, nil, errors.Errorf("received status code: 200, unknown response type: '%q'", m.Data.ResultType)
+		err = errors.Errorf("received status code: 200, unknown response type: '%q'", m.Data.ResultType)
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
+		return nil, nil, err
 	}
-
+	matrixResultStr, _ := json.Marshal(matrixResult)
+	respBody := string(matrixResultStr)
+	if len(matrixResultStr) > 1024 {
+		respBody = fmt.Sprintf("%s...(Total %s)", respBody[:1024], humanize.Bytes(uint64(len(respBody))))
+	}
+	span.SetAttributes(attribute.Key("matrixResult").String(respBody))
+	span.SetAttributes(attribute.Key("warnings").StringSlice(m.Warnings))
 	return matrixResult, m.Warnings, nil
 
 }
@@ -219,6 +319,14 @@ func QueryLabels(ctx context.Context, rawURL string, header http.Header, r *stor
 		query["end"] = strconv.Itoa(int(r.End))
 	}
 
+	queryStr, _ := json.Marshal(query)
+	commonAttrs := []attribute.KeyValue{
+		attribute.String("query", string(queryStr)),
+		attribute.String("rawURL", rawURL),
+	}
+	ctx, span := tracer.Start(ctx, "QueryLabels", trace.WithSpanKind(trace.SpanKindInternal), trace.WithAttributes(commonAttrs...))
+	defer span.End()
+
 	resp, err := component.GetClient().R().
 		SetContext(ctx).
 		SetQueryParams(query).
@@ -226,24 +334,36 @@ func QueryLabels(ctx context.Context, rawURL string, header http.Header, r *stor
 		Get(rawURL)
 
 	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
 		return nil, err
 	}
 
 	if !resp.IsSuccess() {
-		return nil, errors.Errorf("http code %d != 200", resp.StatusCode())
+		err = errors.Errorf("http code %d != 200", resp.StatusCode())
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
+		return nil, err
 	}
 
 	m := LabelValuesResponse{}
 
 	if err = json.Unmarshal(resp.Body(), &m); err != nil {
-		return nil, errors.Wrap(err, "unmarshal query labels response")
+		err = errors.Wrap(err, "unmarshal query labels response")
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
+		return nil, err
 	}
 
 	if m.IsSuccess() {
+		span.SetAttributes(attribute.StringSlice("data", m.Data))
 		return m.Data, nil
 	}
 
-	return nil, errors.Errorf("errorType: %s, error: %s", m.ErrorType, m.Error)
+	err = errors.Errorf("errorType: %s, error: %s", m.ErrorType, m.Error)
+	span.RecordError(err)
+	span.SetStatus(codes.Error, err.Error())
+	return nil, err
 }
 
 // QueryLabelValues query label values
@@ -257,7 +377,13 @@ func QueryLabelValues(ctx context.Context, rawURL string, header http.Header, r 
 	if r.End != 0 {
 		query["end"] = strconv.Itoa(int(r.End))
 	}
-
+	queryStr, _ := json.Marshal(query)
+	commonAttrs := []attribute.KeyValue{
+		attribute.String("query", string(queryStr)),
+		attribute.String("rawURL", rawURL),
+	}
+	ctx, span := tracer.Start(ctx, "QueryLabels", trace.WithSpanKind(trace.SpanKindInternal), trace.WithAttributes(commonAttrs...))
+	defer span.End()
 	resp, err := component.GetClient().R().
 		SetContext(ctx).
 		SetPathParams(query).
@@ -265,24 +391,36 @@ func QueryLabelValues(ctx context.Context, rawURL string, header http.Header, r 
 		Get(rawURL)
 
 	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
 		return nil, err
 	}
 
 	if !resp.IsSuccess() {
-		return nil, errors.Errorf("http code %d != 200", resp.StatusCode())
+		err = errors.Errorf("http code %d != 200", resp.StatusCode())
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
+		return nil, err
 	}
 
 	m := LabelValuesResponse{}
 
 	if err = json.Unmarshal(resp.Body(), &m); err != nil {
-		return nil, errors.Wrap(err, "unmarshal query label values response")
+		err = errors.Wrap(err, "unmarshal query label values response")
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
+		return nil, err
 	}
 
 	if m.IsSuccess() {
+		span.SetAttributes(attribute.StringSlice("data", m.Data))
 		return m.Data, nil
 	}
 
-	return nil, errors.Errorf("errorType: %s, error: %s", m.ErrorType, m.Error)
+	err = errors.Errorf("errorType: %s, error: %s", m.ErrorType, m.Error)
+	span.RecordError(err)
+	span.SetStatus(codes.Error, err.Error())
+	return nil, err
 }
 
 // convertScalarJSONToVector xxx
