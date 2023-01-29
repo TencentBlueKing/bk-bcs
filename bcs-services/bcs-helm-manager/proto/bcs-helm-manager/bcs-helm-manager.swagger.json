@@ -2110,6 +2110,11 @@
           "type": "string",
           "description": "requestID",
           "title": "requestID"
+        },
+        "web_annotations": {
+          "$ref": "#/definitions/helmmanagerWebAnnotations",
+          "description": "权限信息",
+          "title": "web_annotations"
         }
       },
       "description": "通用列表返回",
@@ -2213,6 +2218,11 @@
           "type": "string",
           "description": "requestID",
           "title": "requestID"
+        },
+        "web_annotations": {
+          "$ref": "#/definitions/helmmanagerWebAnnotations",
+          "description": "权限信息",
+          "title": "web_annotations"
         }
       },
       "description": "创建仓库的返回",
@@ -2242,6 +2252,11 @@
           "type": "string",
           "description": "requestID",
           "title": "requestID"
+        },
+        "web_annotations": {
+          "$ref": "#/definitions/helmmanagerWebAnnotations",
+          "description": "权限信息",
+          "title": "web_annotations"
         }
       },
       "description": "删除 Chart 的返回",
@@ -2271,6 +2286,11 @@
           "type": "string",
           "description": "requestID",
           "title": "requestID"
+        },
+        "web_annotations": {
+          "$ref": "#/definitions/helmmanagerWebAnnotations",
+          "description": "权限信息",
+          "title": "web_annotations"
         }
       },
       "description": "删除 Chart 版本的返回",
@@ -2317,6 +2337,11 @@
           "type": "string",
           "description": "requestID",
           "title": "requestID"
+        },
+        "web_annotations": {
+          "$ref": "#/definitions/helmmanagerWebAnnotations",
+          "description": "权限信息",
+          "title": "web_annotations"
         }
       },
       "description": "删除仓库的返回",
@@ -2371,6 +2396,11 @@
           "type": "string",
           "description": "requestID",
           "title": "requestID"
+        },
+        "web_annotations": {
+          "$ref": "#/definitions/helmmanagerWebAnnotations",
+          "description": "权限信息",
+          "title": "web_annotations"
         }
       },
       "description": "查询chart包详细信息的返回",
@@ -2438,6 +2468,11 @@
           "type": "string",
           "description": "requestID",
           "title": "requestID"
+        },
+        "web_annotations": {
+          "$ref": "#/definitions/helmmanagerWebAnnotations",
+          "description": "权限信息",
+          "title": "web_annotations"
         }
       },
       "description": "获取 chart 关联的 releases 的返回",
@@ -2472,6 +2507,11 @@
           "type": "string",
           "description": "requestID",
           "title": "requestID"
+        },
+        "web_annotations": {
+          "$ref": "#/definitions/helmmanagerWebAnnotations",
+          "description": "权限信息",
+          "title": "web_annotations"
         }
       },
       "description": "查询指定release信息的返回",
@@ -2506,6 +2546,11 @@
           "type": "string",
           "description": "requestID",
           "title": "requestID"
+        },
+        "web_annotations": {
+          "$ref": "#/definitions/helmmanagerWebAnnotations",
+          "description": "权限信息",
+          "title": "web_annotations"
         }
       },
       "description": "查询指定release信息的返回",
@@ -2543,6 +2588,11 @@
           "type": "string",
           "description": "requestID",
           "title": "requestID"
+        },
+        "web_annotations": {
+          "$ref": "#/definitions/helmmanagerWebAnnotations",
+          "description": "权限信息",
+          "title": "web_annotations"
         }
       },
       "description": "release history的返回",
@@ -2577,6 +2627,11 @@
           "type": "string",
           "description": "requestID",
           "title": "requestID"
+        },
+        "web_annotations": {
+          "$ref": "#/definitions/helmmanagerWebAnnotations",
+          "description": "权限信息",
+          "title": "web_annotations"
         }
       },
       "description": "查询仓库的返回",
@@ -2645,6 +2700,11 @@
           "type": "string",
           "description": "requestID",
           "title": "requestID"
+        },
+        "web_annotations": {
+          "$ref": "#/definitions/helmmanagerWebAnnotations",
+          "description": "权限信息",
+          "title": "web_annotations"
         }
       },
       "description": "查询指定版本的chart包详细信息的返回",
@@ -2845,6 +2905,11 @@
           "type": "string",
           "description": "requestID",
           "title": "requestID"
+        },
+        "web_annotations": {
+          "$ref": "#/definitions/helmmanagerWebAnnotations",
+          "description": "权限信息",
+          "title": "web_annotations"
         }
       },
       "description": "安装 release 的返回",
@@ -2913,6 +2978,11 @@
           "type": "string",
           "description": "requestID",
           "title": "requestID"
+        },
+        "web_annotations": {
+          "$ref": "#/definitions/helmmanagerWebAnnotations",
+          "description": "权限信息",
+          "title": "web_annotations"
         }
       },
       "description": "批量查询chart的返回",
@@ -2981,6 +3051,11 @@
           "type": "string",
           "description": "requestID",
           "title": "requestID"
+        },
+        "web_annotations": {
+          "$ref": "#/definitions/helmmanagerWebAnnotations",
+          "description": "权限信息",
+          "title": "web_annotations"
         }
       },
       "description": "查询chart版本的返回",
@@ -3015,6 +3090,11 @@
           "type": "string",
           "description": "requestID",
           "title": "requestID"
+        },
+        "web_annotations": {
+          "$ref": "#/definitions/helmmanagerWebAnnotations",
+          "description": "权限信息",
+          "title": "web_annotations"
         }
       },
       "description": "查询指定集群的chart release信息的返回",
@@ -3091,6 +3171,11 @@
           "type": "string",
           "description": "requestID",
           "title": "requestID"
+        },
+        "web_annotations": {
+          "$ref": "#/definitions/helmmanagerWebAnnotations",
+          "description": "权限信息",
+          "title": "web_annotations"
         }
       },
       "description": "获取仓库列表的返回",
@@ -3483,6 +3568,11 @@
           "type": "string",
           "description": "requestID",
           "title": "requestID"
+        },
+        "web_annotations": {
+          "$ref": "#/definitions/helmmanagerWebAnnotations",
+          "description": "权限信息",
+          "title": "web_annotations"
         }
       },
       "description": "release 预览的返回",
@@ -3694,6 +3784,11 @@
           "type": "string",
           "description": "requestID",
           "title": "requestID"
+        },
+        "web_annotations": {
+          "$ref": "#/definitions/helmmanagerWebAnnotations",
+          "description": "权限信息",
+          "title": "web_annotations"
         }
       },
       "description": "回滚 release 的返回",
@@ -3806,6 +3901,11 @@
           "type": "string",
           "description": "requestID",
           "title": "requestID"
+        },
+        "web_annotations": {
+          "$ref": "#/definitions/helmmanagerWebAnnotations",
+          "description": "权限信息",
+          "title": "web_annotations"
         }
       },
       "description": "卸载 release 的返回",
@@ -3883,6 +3983,11 @@
           "type": "string",
           "description": "requestID",
           "title": "requestID"
+        },
+        "web_annotations": {
+          "$ref": "#/definitions/helmmanagerWebAnnotations",
+          "description": "权限信息",
+          "title": "web_annotations"
         }
       },
       "description": "更新仓库的返回",
@@ -4083,6 +4188,11 @@
           "type": "string",
           "description": "requestID",
           "title": "requestID"
+        },
+        "web_annotations": {
+          "$ref": "#/definitions/helmmanagerWebAnnotations",
+          "description": "权限信息",
+          "title": "web_annotations"
         }
       },
       "description": "升级 release 的返回",

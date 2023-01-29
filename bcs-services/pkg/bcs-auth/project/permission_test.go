@@ -51,7 +51,7 @@ func TestBCSProjectPerm_CanCreateProject(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	allow, url, err := cli.CanCreateProject("liming")
+	allow, url, _, err := cli.CanCreateProject("liming")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -67,7 +67,7 @@ func TestBCSProjectPerm_CanEditProject(t *testing.T) {
 
 	// projectID := "b37778ec757544868a01e1f01f07037f"
 	projectID := "846e8195d9ca4097b354ed190acce4b1"
-	allow, url, err := cli.CanEditProject("liming", projectID)
+	allow, url, _, err := cli.CanEditProject("liming", projectID)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -83,7 +83,7 @@ func TestBCSProjectPerm_CanDeleteProject(t *testing.T) {
 
 	projectID := "b37778ec757544868a01e1f01f07037f"
 	// projectID := "846e8195d9ca4097b354ed190acce4b1"
-	allow, url, err := cli.CanDeleteProject("liming", projectID)
+	allow, url, _, err := cli.CanDeleteProject("liming", projectID)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -99,7 +99,7 @@ func TestBCSProjectPerm_CanViewProject(t *testing.T) {
 
 	// projectID := "b37778ec757544868a01e1f01f07037f"
 	projectID := "846e8195d9ca4097b354ed190acce4b1"
-	allow, url, err := cli.CanViewProject("liming", projectID)
+	allow, url, _, err := cli.CanViewProject("liming", projectID)
 	if err != nil {
 		t.Fatal(err)
 	}

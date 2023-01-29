@@ -51,6 +51,8 @@ const (
 	ErrHelmManagerAuthFailed
 	// ErrHelmManagerRequestComponentFailed TODO
 	ErrHelmManagerRequestComponentFailed
+	// NoPermissionErr auth faile
+	NoPermissionErr = 40403
 )
 
 // Int32 return HelmManagerError's code value

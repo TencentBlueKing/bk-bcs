@@ -31,9 +31,9 @@ func NewBCSClusterPermClient(cli iam.PermClient) *BCSClusterPerm {
 }
 
 // CanCreateCluster check user createCluster perm
-func (bcp *BCSClusterPerm) CanCreateCluster(user string, projectID string) (bool, string, error) {
+func (bcp *BCSClusterPerm) CanCreateCluster(user string, projectID string) (bool, string, []utils.ResourceAction, error) {
 	if bcp == nil {
-		return false, "", utils.ErrServerNotInited
+		return false, "", nil, utils.ErrServerNotInited
 	}
 
 	// related actions
@@ -57,7 +57,7 @@ func (bcp *BCSClusterPerm) CanCreateCluster(user string, projectID string) (bool
 	perms, err := bcp.iamClient.BatchResourceMultiActionsAllowed(relatedActionIDs, req, [][]iam.ResourceNode{clusterNode,
 		projectNode})
 	if err != nil {
-		return false, "", err
+		return false, "", nil, err
 	}
 	blog.V(4).Infof("BCSClusterPerm CanCreateCluster user[%s] %+v", user, perms)
 
@@ -68,11 +68,11 @@ func (bcp *BCSClusterPerm) CanCreateCluster(user string, projectID string) (bool
 		User:      user,
 	}, resources, perms)
 	if err != nil {
-		return false, "", err
+		return false, "", nil, err
 	}
 
 	if allow {
-		return allow, "", nil
+		return allow, "", nil, nil
 	}
 
 	// generate apply url if cluster perm notAllow
@@ -93,13 +93,13 @@ func (bcp *BCSClusterPerm) CanCreateCluster(user string, projectID string) (bool
 	})
 
 	url, _ := bcp.GenerateIAMApplicationURL(iam.SystemIDBKBCS, []iam.ApplicationAction{clusterApp, projectApp})
-	return allow, url, nil
+	return allow, url, resources, nil
 }
 
 // CanManageCluster check user manageCluster perm
-func (bcp *BCSClusterPerm) CanManageCluster(user string, projectID string, clusterID string) (bool, string, error) {
+func (bcp *BCSClusterPerm) CanManageCluster(user string, projectID string, clusterID string) (bool, string, []utils.ResourceAction, error) {
 	if bcp == nil {
-		return false, "", utils.ErrServerNotInited
+		return false, "", nil, utils.ErrServerNotInited
 	}
 
 	// related actions
@@ -123,7 +123,7 @@ func (bcp *BCSClusterPerm) CanManageCluster(user string, projectID string, clust
 	perms, err := bcp.iamClient.BatchResourceMultiActionsAllowed(relatedActionIDs, req, [][]iam.ResourceNode{clusterNode,
 		projectNode})
 	if err != nil {
-		return false, "", err
+		return false, "", nil, err
 	}
 	blog.V(4).Infof("BCSClusterPerm CanManageCluster user[%s] %+v", user, perms)
 
@@ -133,11 +133,11 @@ func (bcp *BCSClusterPerm) CanManageCluster(user string, projectID string, clust
 		User:      user,
 	}, resources, perms)
 	if err != nil {
-		return false, "", err
+		return false, "", nil, err
 	}
 
 	if allow {
-		return allow, "", nil
+		return allow, "", nil, nil
 	}
 
 	// generate apply url
@@ -155,13 +155,13 @@ func (bcp *BCSClusterPerm) CanManageCluster(user string, projectID string, clust
 	})
 
 	url, _ := bcp.GenerateIAMApplicationURL(iam.SystemIDBKBCS, append(clusterApps, projectApp))
-	return allow, url, nil
+	return allow, url, resources, nil
 }
 
 // CanDeleteCluster check user deleteCluster perm
-func (bcp *BCSClusterPerm) CanDeleteCluster(user string, projectID string, clusterID string) (bool, string, error) {
+func (bcp *BCSClusterPerm) CanDeleteCluster(user string, projectID string, clusterID string) (bool, string, []utils.ResourceAction, error) {
 	if bcp == nil {
-		return false, "", utils.ErrServerNotInited
+		return false, "", nil, utils.ErrServerNotInited
 	}
 
 	// related actions
@@ -185,7 +185,7 @@ func (bcp *BCSClusterPerm) CanDeleteCluster(user string, projectID string, clust
 	perms, err := bcp.iamClient.BatchResourceMultiActionsAllowed(relatedActionIDs, req, [][]iam.ResourceNode{clusterNode,
 		projectNode})
 	if err != nil {
-		return false, "", err
+		return false, "", nil, err
 	}
 	blog.V(4).Infof("BCSClusterPerm CanDeleteCluster user[%s] %+v", user, perms)
 
@@ -196,11 +196,11 @@ func (bcp *BCSClusterPerm) CanDeleteCluster(user string, projectID string, clust
 	}, resources, perms)
 
 	if err != nil {
-		return false, "", err
+		return false, "", nil, err
 	}
 
 	if allow {
-		return allow, "", nil
+		return allow, "", nil, nil
 	}
 
 	// generate apply url
@@ -218,13 +218,13 @@ func (bcp *BCSClusterPerm) CanDeleteCluster(user string, projectID string, clust
 	})
 
 	url, _ := bcp.GenerateIAMApplicationURL(iam.SystemIDBKBCS, append(clusterApps, projectApp))
-	return allow, url, nil
+	return allow, url, resources, nil
 }
 
 // CanViewCluster check user viewCluster perm
-func (bcp *BCSClusterPerm) CanViewCluster(user string, projectID string, clusterID string) (bool, string, error) {
+func (bcp *BCSClusterPerm) CanViewCluster(user string, projectID string, clusterID string) (bool, string, []utils.ResourceAction, error) {
 	if bcp == nil {
-		return false, "", utils.ErrServerNotInited
+		return false, "", nil, utils.ErrServerNotInited
 	}
 
 	// related actions
@@ -247,7 +247,7 @@ func (bcp *BCSClusterPerm) CanViewCluster(user string, projectID string, cluster
 	perms, err := bcp.iamClient.BatchResourceMultiActionsAllowed(relatedActionIDs, req, [][]iam.ResourceNode{clusterNode,
 		projectNode})
 	if err != nil {
-		return false, "", err
+		return false, "", nil, err
 	}
 	blog.V(4).Infof("BCSClusterPerm CanViewCluster user[%s] %+v", user, perms)
 
@@ -258,11 +258,11 @@ func (bcp *BCSClusterPerm) CanViewCluster(user string, projectID string, cluster
 	}, resources, perms)
 
 	if err != nil {
-		return false, "", err
+		return false, "", nil, err
 	}
 
 	if allow {
-		return allow, "", nil
+		return allow, "", nil, nil
 	}
 
 	// generate apply url
@@ -280,7 +280,7 @@ func (bcp *BCSClusterPerm) CanViewCluster(user string, projectID string, cluster
 	})
 
 	url, _ := bcp.GenerateIAMApplicationURL(iam.SystemIDBKBCS, append(clusterApps, projectApp))
-	return allow, url, nil
+	return allow, url, resources, nil
 }
 
 // GenerateIAMApplicationURL build permission URL

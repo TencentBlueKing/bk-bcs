@@ -450,7 +450,8 @@ func (bnp *BCSNamespacePerm) CanDeleteNamespace(user,
 }
 
 // CanCreateNamespaceScopedResource check user createNamespaceScopedResource perm
-func (bnp *BCSNamespacePerm) CanCreateNamespaceScopedResource(user, projectID, clusterID, namespace string) (bool, string, error) {
+func (bnp *BCSNamespacePerm) CanCreateNamespaceScopedResource(user, projectID, clusterID, namespace string) (bool,
+	string, []utils.ResourceAction, error) {
 	namespaceID := utils.CalcIAMNsID(clusterID, namespace)
 	// related actions
 	resources := []utils.ResourceAction{
@@ -483,7 +484,7 @@ func (bnp *BCSNamespacePerm) CanCreateNamespaceScopedResource(user, projectID, c
 	perms, err := bnp.iamClient.BatchResourceMultiActionsAllowed(relatedActionIDs, req, [][]iam.ResourceNode{
 		projectNode, clusterNode, namespaceNode, namespaceScopedNode})
 	if err != nil {
-		return false, "", err
+		return false, "", nil, err
 	}
 	blog.V(4).Infof("BCSNamespacePerm CanCreateNamespaceScopedResource user[%s] %+v", user, perms)
 
@@ -494,11 +495,11 @@ func (bnp *BCSNamespacePerm) CanCreateNamespaceScopedResource(user, projectID, c
 		User:      user,
 	}, resources, perms)
 	if err != nil {
-		return false, "", err
+		return false, "", nil, err
 	}
 
 	if allow {
-		return allow, "", nil
+		return allow, "", nil, nil
 	}
 
 	// generate apply url if namespace perm notAllow
@@ -528,11 +529,12 @@ func (bnp *BCSNamespacePerm) CanCreateNamespaceScopedResource(user, projectID, c
 	url, _ := bnp.GenerateIAMApplicationURL(iam.SystemIDBKBCS, []iam.ApplicationAction{
 		clusterApp, projectApp, nsApp, nssApp,
 	})
-	return allow, url, nil
+	return allow, url, resources, nil
 }
 
 // CanViewNamespaceScopedResource check user viewNamespaceScopedResource perm
-func (bnp *BCSNamespacePerm) CanViewNamespaceScopedResource(user, projectID, clusterID, namespace string) (bool, string, error) {
+func (bnp *BCSNamespacePerm) CanViewNamespaceScopedResource(user, projectID, clusterID, namespace string) (bool,
+	string, []utils.ResourceAction, error) {
 	namespaceID := utils.CalcIAMNsID(clusterID, namespace)
 	// related actions
 	resources := []utils.ResourceAction{
@@ -565,7 +567,7 @@ func (bnp *BCSNamespacePerm) CanViewNamespaceScopedResource(user, projectID, clu
 	perms, err := bnp.iamClient.BatchResourceMultiActionsAllowed(relatedActionIDs, req, [][]iam.ResourceNode{
 		projectNode, clusterNode, namespaceNode, namespaceScopedNode})
 	if err != nil {
-		return false, "", err
+		return false, "", nil, err
 	}
 	blog.V(4).Infof("BCSNamespacePerm CanViewNamespaceScopedResource user[%s] %+v", user, perms)
 
@@ -576,11 +578,11 @@ func (bnp *BCSNamespacePerm) CanViewNamespaceScopedResource(user, projectID, clu
 		User:      user,
 	}, resources, perms)
 	if err != nil {
-		return false, "", err
+		return false, "", nil, err
 	}
 
 	if allow {
-		return allow, "", nil
+		return allow, "", nil, nil
 	}
 
 	// generate apply url if namespace perm notAllow
@@ -610,11 +612,12 @@ func (bnp *BCSNamespacePerm) CanViewNamespaceScopedResource(user, projectID, clu
 	url, _ := bnp.GenerateIAMApplicationURL(iam.SystemIDBKBCS, []iam.ApplicationAction{
 		clusterApp, projectApp, nsApp, nssApp,
 	})
-	return allow, url, nil
+	return allow, url, resources, nil
 }
 
 // CanUpdateNamespaceScopedResource check user updateNamespaceScopedResource perm
-func (bnp *BCSNamespacePerm) CanUpdateNamespaceScopedResource(user, projectID, clusterID, namespace string) (bool, string, error) {
+func (bnp *BCSNamespacePerm) CanUpdateNamespaceScopedResource(user, projectID, clusterID, namespace string) (bool,
+	string, []utils.ResourceAction, error) {
 	namespaceID := utils.CalcIAMNsID(clusterID, namespace)
 	// related actions
 	resources := []utils.ResourceAction{
@@ -647,7 +650,7 @@ func (bnp *BCSNamespacePerm) CanUpdateNamespaceScopedResource(user, projectID, c
 	perms, err := bnp.iamClient.BatchResourceMultiActionsAllowed(relatedActionIDs, req, [][]iam.ResourceNode{
 		projectNode, clusterNode, namespaceNode, namespaceScopedNode})
 	if err != nil {
-		return false, "", err
+		return false, "", nil, err
 	}
 	blog.V(4).Infof("BCSNamespacePerm CanUpdateNamespaceScopedResource user[%s] %+v", user, perms)
 
@@ -658,11 +661,11 @@ func (bnp *BCSNamespacePerm) CanUpdateNamespaceScopedResource(user, projectID, c
 		User:      user,
 	}, resources, perms)
 	if err != nil {
-		return false, "", err
+		return false, "", nil, err
 	}
 
 	if allow {
-		return allow, "", nil
+		return allow, "", nil, nil
 	}
 
 	// generate apply url if namespace perm notAllow
@@ -692,11 +695,12 @@ func (bnp *BCSNamespacePerm) CanUpdateNamespaceScopedResource(user, projectID, c
 	url, _ := bnp.GenerateIAMApplicationURL(iam.SystemIDBKBCS, []iam.ApplicationAction{
 		clusterApp, projectApp, nsApp, nssApp,
 	})
-	return allow, url, nil
+	return allow, url, resources, nil
 }
 
 // CanDeleteNamespaceScopedResource check user deleteNamespaceScopedResource perm
-func (bnp *BCSNamespacePerm) CanDeleteNamespaceScopedResource(user, projectID, clusterID, namespace string) (bool, string, error) {
+func (bnp *BCSNamespacePerm) CanDeleteNamespaceScopedResource(user, projectID, clusterID, namespace string) (bool,
+	string, []utils.ResourceAction, error) {
 	namespaceID := utils.CalcIAMNsID(clusterID, namespace)
 	// related actions
 	resources := []utils.ResourceAction{
@@ -729,7 +733,7 @@ func (bnp *BCSNamespacePerm) CanDeleteNamespaceScopedResource(user, projectID, c
 	perms, err := bnp.iamClient.BatchResourceMultiActionsAllowed(relatedActionIDs, req, [][]iam.ResourceNode{
 		projectNode, clusterNode, namespaceNode, namespaceScopedNode})
 	if err != nil {
-		return false, "", err
+		return false, "", nil, err
 	}
 	blog.V(4).Infof("BCSNamespacePerm CanDeleteNamespaceScopedResource user[%s] %+v", user, perms)
 
@@ -740,11 +744,11 @@ func (bnp *BCSNamespacePerm) CanDeleteNamespaceScopedResource(user, projectID, c
 		User:      user,
 	}, resources, perms)
 	if err != nil {
-		return false, "", err
+		return false, "", nil, err
 	}
 
 	if allow {
-		return allow, "", nil
+		return allow, "", nil, nil
 	}
 
 	// generate apply url if namespace perm notAllow
@@ -774,7 +778,7 @@ func (bnp *BCSNamespacePerm) CanDeleteNamespaceScopedResource(user, projectID, c
 	url, _ := bnp.GenerateIAMApplicationURL(iam.SystemIDBKBCS, []iam.ApplicationAction{
 		clusterApp, projectApp, nsApp, nssApp,
 	})
-	return allow, url, nil
+	return allow, url, resources, nil
 }
 
 // GetMultiNamespaceMultiActionPermission only support same instanceSelection

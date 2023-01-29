@@ -45,7 +45,7 @@ import (
 const (
 	bcsAPIGWK8SBaseURI = "%s/clusters/%s/"
 	defaultMaxHistory  = 10
-	defaultTimeout     = "10s"
+	defaultTimeout     = "15s"
 )
 
 // Config 定义了使用sdk的基本参数

@@ -482,6 +482,10 @@ message CreateRepositoryResp {
         title: "requestID",
         description: "requestID"
     }];
+    optional WebAnnotations web_annotations = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "web_annotations",
+        description : "权限信息"
+    }, json_name = "web_annotations"];
 }
 
 message UpdateRepositoryReq {
@@ -550,6 +554,10 @@ message UpdateRepositoryResp {
         title: "requestID",
         description: "requestID"
     }];
+    optional WebAnnotations web_annotations = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "web_annotations",
+        description : "权限信息"
+    }, json_name = "web_annotations"];
 }
 
 message GetRepositoryReq {
@@ -598,6 +606,10 @@ message GetRepositoryResp {
         title: "requestID",
         description: "requestID"
     }];
+    optional WebAnnotations web_annotations = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "web_annotations",
+        description : "权限信息"
+    }, json_name = "web_annotations"];
 }
 
 message ListRepositoryReq {
@@ -642,6 +654,10 @@ message ListRepositoryResp {
         title: "requestID",
         description: "requestID"
     }];
+    optional WebAnnotations web_annotations = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "web_annotations",
+        description : "权限信息"
+    }, json_name = "web_annotations"];
 }
 
 message DeleteRepositoryReq {
@@ -686,6 +702,10 @@ message DeleteRepositoryResp {
         title: "requestID",
         description: "requestID"
     }];
+    optional WebAnnotations web_annotations = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "web_annotations",
+        description : "权限信息"
+    }, json_name = "web_annotations"];
 }
 
 message Repository {
@@ -1167,6 +1187,10 @@ message ListChartV1Resp {
         title: "requestID",
         description: "requestID"
     }];
+    optional WebAnnotations web_annotations = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "web_annotations",
+        description : "权限信息"
+    }, json_name = "web_annotations"];
 }
 
 message GetChartDetailV1Req {
@@ -1219,6 +1243,10 @@ message GetChartDetailV1Resp {
         title: "requestID",
         description: "requestID"
     }];
+    optional WebAnnotations web_annotations = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "web_annotations",
+        description : "权限信息"
+    }, json_name = "web_annotations"];
 }
 
 message ListChartVersionV1Req {
@@ -1279,6 +1307,10 @@ message ListChartVersionV1Resp {
         title: "requestID",
         description: "requestID"
     }];
+    optional WebAnnotations web_annotations = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "web_annotations",
+        description : "权限信息"
+    }, json_name = "web_annotations"];
 }
 
 message GetVersionDetailV1Req {
@@ -1335,6 +1367,10 @@ message GetVersionDetailV1Resp {
         title: "requestID",
         description: "requestID"
     }];
+    optional WebAnnotations web_annotations = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "web_annotations",
+        description : "权限信息"
+    }, json_name = "web_annotations"];
 }
 
 message DeleteChartReq {
@@ -1383,6 +1419,10 @@ message DeleteChartResp {
         title: "requestID",
         description: "requestID"
     }];
+    optional WebAnnotations web_annotations = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "web_annotations",
+        description : "权限信息"
+    }, json_name = "web_annotations"];
 }
 
 message DeleteChartVersionReq {
@@ -1435,6 +1475,10 @@ message DeleteChartVersionResp {
         title: "requestID",
         description: "requestID"
     }];
+    optional WebAnnotations web_annotations = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "web_annotations",
+        description : "权限信息"
+    }, json_name = "web_annotations"];
 }
 
 message DownloadChartReq {
@@ -1517,6 +1561,10 @@ message GetChartReleaseResp {
         title: "requestID",
         description: "requestID"
     }];
+    optional WebAnnotations web_annotations = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "web_annotations",
+        description : "权限信息"
+    }, json_name = "web_annotations"];
 }
 
 message ListReleaseReq {
@@ -1577,6 +1625,10 @@ message ListReleaseResp {
         title: "requestID",
         description: "requestID"
     }];
+    optional WebAnnotations web_annotations = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "web_annotations",
+        description : "权限信息"
+    }, json_name = "web_annotations"];
 }
 
 message GetReleaseDetailReq {
@@ -1629,6 +1681,10 @@ message GetReleaseDetailResp {
         title: "requestID",
         description: "requestID"
     }];
+    optional WebAnnotations web_annotations = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "web_annotations",
+        description : "权限信息"
+    }, json_name = "web_annotations"];
 }
 
 message ReleaseListData {
@@ -2182,6 +2238,10 @@ message GetReleaseDetailV1Resp {
         title: "requestID",
         description: "requestID"
     }];
+    optional WebAnnotations web_annotations = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "web_annotations",
+        description : "权限信息"
+    }, json_name = "web_annotations"];
 }
 
 message InstallReleaseV1Req {
@@ -2262,6 +2322,10 @@ message InstallReleaseV1Resp {
         title: "requestID",
         description: "requestID"
     }];
+    optional WebAnnotations web_annotations = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "web_annotations",
+        description : "权限信息"
+    }, json_name = "web_annotations"];
 }
 
 message UninstallReleaseV1Req {
@@ -2314,6 +2378,10 @@ message UninstallReleaseV1Resp {
         title: "requestID",
         description: "requestID"
     }];
+    optional WebAnnotations web_annotations = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "web_annotations",
+        description : "权限信息"
+    }, json_name = "web_annotations"];
 }
 
 message UpgradeReleaseV1Req {
@@ -2394,6 +2462,10 @@ message UpgradeReleaseV1Resp {
         title: "requestID",
         description: "requestID"
     }];
+    optional WebAnnotations web_annotations = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "web_annotations",
+        description : "权限信息"
+    }, json_name = "web_annotations"];
 }
 
 message RollbackReleaseV1Req {
@@ -2450,6 +2522,10 @@ message RollbackReleaseV1Resp {
         title: "requestID",
         description: "requestID"
     }];
+    optional WebAnnotations web_annotations = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "web_annotations",
+        description : "权限信息"
+    }, json_name = "web_annotations"];
 }
 
 message ReleasePreviewReq {
@@ -2530,6 +2606,10 @@ message ReleasePreviewResp {
         title: "requestID",
         description: "requestID"
     }];
+    optional WebAnnotations web_annotations = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "web_annotations",
+        description : "权限信息"
+    }, json_name = "web_annotations"];
 }
 
 message ReleasePreview {
@@ -2609,6 +2689,10 @@ message GetReleaseHistoryResp {
         title: "requestID",
         description: "requestID"
     }];
+    optional WebAnnotations web_annotations = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "web_annotations",
+        description : "权限信息"
+    }, json_name = "web_annotations"];
 }
 
 message ReleaseHistory {
@@ -2745,6 +2829,10 @@ message CommonResp {
         title: "requestID",
         description: "requestID"
     }];
+    optional WebAnnotations web_annotations = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "web_annotations",
+        description : "权限信息"
+    }, json_name = "web_annotations"];
 }
 
 message CommonListResp {
@@ -2775,6 +2863,10 @@ message CommonListResp {
         title: "requestID",
         description: "requestID"
     }];
+    optional WebAnnotations web_annotations = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "web_annotations",
+        description : "权限信息"
+    }, json_name = "web_annotations"];
 }
 
 message WebAnnotations {

@@ -62,10 +62,10 @@ func NewClient(tlsConfig *tls.Config, microRgt microRgt.Registry) error {
 	return nil
 }
 
-func (p *Client) getClusterClient() (clustermanager.ClusterManagerClient, error) {
+func (p *Client) getClusterClient() (clustermanager.ClusterManagerClient, func(), error) {
 	node, err := p.Discovery.GetRandServiceInst()
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	blog.V(4).Infof("get random cluster-manager instance [%s] from etcd registry successful", node.Address)
 
@@ -74,7 +74,8 @@ func (p *Client) getClusterClient() (clustermanager.ClusterManagerClient, error)
 	cfg.Hosts = discovery.GetServerEndpointsFromRegistryNode(node)
 	cfg.TLSConfig = p.ClientTLSConfig
 	cfg.InnerClientName = "bcs-helm-manager"
-	return bcsapi.NewClusterManager(&cfg), nil
+	cli, close := clustermanager.NewClusterManager(&cfg)
+	return cli, close, nil
 }
 
 // GetCluster get cluster from cluster manager
@@ -86,7 +87,12 @@ func GetCluster(clusterID string) (*clustermanager.Cluster, error) {
 			return cluster, nil
 		}
 	}
-	cli, err := client.getClusterClient()
+	cli, close, err := client.getClusterClient()
+	defer func() {
+		if close != nil {
+			close()
+		}
+	}()
 	if err != nil {
 		return nil, err
 	}

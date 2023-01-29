@@ -68,7 +68,7 @@ func (g *GetReleasePodsAction) Handle(ctx context.Context,
 	}
 	g.setResp(common.ErrHelmManagerSuccess, "ok", result)
 	blog.Infof("get release pods successfully, projectCode: %s, clusterID: %s, namespace: %s, name: %s",
-		g.req.GetProjectCode(), g.req.GetClusterID, g.req.GetNamespace(), g.req.GetName())
+		g.req.GetProjectCode(), g.req.GetClusterID(), g.req.GetNamespace(), g.req.GetName())
 	return nil
 }
 

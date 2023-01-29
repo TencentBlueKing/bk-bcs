@@ -64,13 +64,13 @@ func (bpp *BCSProjectPerm) CanCreateProject(user string) (bool, string, []utils.
 // CanEditProject check user manageCluster perm
 func (bpp *BCSProjectPerm) CanEditProject(user string, projectID string) (bool, string, []utils.ResourceAction, error) {
 	if bpp == nil {
-		return false, "",nil, utils.ErrServerNotInited
+		return false, "", nil, utils.ErrServerNotInited
 	}
 
 	// related actions
 	resources := []utils.ResourceAction{
-		{Type: string(SysProject),Resource: projectID, Action: ProjectView.String()},
-		{Type: string(SysProject),Resource: projectID, Action: ProjectEdit.String()},
+		{Type: string(SysProject), Resource: projectID, Action: ProjectView.String()},
+		{Type: string(SysProject), Resource: projectID, Action: ProjectEdit.String()},
 	}
 
 	// build request iam.request resourceNodes
@@ -84,7 +84,7 @@ func (bpp *BCSProjectPerm) CanEditProject(user string, projectID string) (bool, 
 
 	perms, err := bpp.iamClient.BatchResourceMultiActionsAllowed(relatedActionIDs, req, [][]iam.ResourceNode{projectNode})
 	if err != nil {
-		return false, "",nil, err
+		return false, "", nil, err
 	}
 	blog.V(4).Infof("BCSProjectPerm CanEditProject user[%s] %+v", user, perms)
 
@@ -94,11 +94,11 @@ func (bpp *BCSProjectPerm) CanEditProject(user string, projectID string) (bool, 
 		User:      user,
 	}, resources, perms)
 	if err != nil {
-		return false, "",nil, err
+		return false, "", nil, err
 	}
 
 	if allow {
-		return allow, "",nil, nil
+		return allow, "", nil, nil
 	}
 
 	// generate apply url
@@ -106,19 +106,19 @@ func (bpp *BCSProjectPerm) CanEditProject(user string, projectID string) (bool, 
 		[]string{ProjectEdit.String(), ProjectView.String()}, []string{projectID})
 
 	url, _ := bpp.GenerateIAMApplicationURL(iam.SystemIDBKBCS, append(projectApp))
-	return allow, url,resources, nil
+	return allow, url, resources, nil
 }
 
 // CanDeleteProject check user deleteProject perm
-func (bpp *BCSProjectPerm) CanDeleteProject(user string, projectID string) (bool, string,[]utils.ResourceAction, error) {
+func (bpp *BCSProjectPerm) CanDeleteProject(user string, projectID string) (bool, string, []utils.ResourceAction, error) {
 	if bpp == nil {
-		return false, "",nil, utils.ErrServerNotInited
+		return false, "", nil, utils.ErrServerNotInited
 	}
 
 	// related actions
 	resources := []utils.ResourceAction{
-		{Type: string(SysProject),Resource: projectID, Action: ProjectDelete.String()},
-		{Type: string(SysProject),Resource: projectID, Action: ProjectView.String()},
+		{Type: string(SysProject), Resource: projectID, Action: ProjectDelete.String()},
+		{Type: string(SysProject), Resource: projectID, Action: ProjectView.String()},
 	}
 
 	// build request iam.request resourceNodes
@@ -131,7 +131,7 @@ func (bpp *BCSProjectPerm) CanDeleteProject(user string, projectID string) (bool
 
 	perms, err := bpp.iamClient.BatchResourceMultiActionsAllowed(relatedActionIDs, req, [][]iam.ResourceNode{projectNode})
 	if err != nil {
-		return false, "",nil, err
+		return false, "", nil, err
 	}
 	blog.V(4).Infof("BCSProjectPerm CanDeleteProject user[%s] %+v", user, perms)
 
@@ -142,18 +142,18 @@ func (bpp *BCSProjectPerm) CanDeleteProject(user string, projectID string) (bool
 	}, resources, perms)
 
 	if err != nil {
-		return false, "",nil, err
+		return false, "", nil, err
 	}
 
 	if allow {
-		return allow, "",nil, nil
+		return allow, "", nil, nil
 	}
 
 	// generate apply url
 	projectApp := BuildProjectSameInstanceApplication(false,
 		[]string{ProjectDelete.String(), ProjectView.String()}, []string{projectID})
 	url, _ := bpp.GenerateIAMApplicationURL(iam.SystemIDBKBCS, append(projectApp))
-	return allow, url,resources, nil
+	return allow, url, resources, nil
 }
 
 // CanViewProject check user viewProject perm

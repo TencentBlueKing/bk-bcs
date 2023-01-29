@@ -63,10 +63,10 @@ func NewClient(tlsConfig *tls.Config, microRgt microRgt.Registry) error {
 	return nil
 }
 
-func (p *Client) getProjectClient() (*bcsproject.ProjectClient, error) {
+func (p *Client) getProjectClient() (*bcsproject.ProjectClient, func(), error) {
 	node, err := p.Discovery.GetRandServiceInst()
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	blog.V(4).Infof("get random project-manager instance [%s] from etcd registry successful", node.Address)
 
@@ -75,7 +75,8 @@ func (p *Client) getProjectClient() (*bcsproject.ProjectClient, error) {
 	cfg.Hosts = discovery.GetServerEndpointsFromRegistryNode(node)
 	cfg.TLSConfig = p.ClientTLSConfig
 	cfg.InnerClientName = "bcs-helm-manager"
-	return bcsproject.NewProjectManagerClient(&cfg), nil
+	cli, close := bcsproject.NewProjectManagerClient(&cfg)
+	return cli, close, nil
 }
 
 // GetProjectByCode get project from project code
@@ -88,7 +89,12 @@ func GetProjectByCode(projectCode string) (*bcsproject.Project, error) {
 			return project, nil
 		}
 	}
-	cli, err := client.getProjectClient()
+	cli, close, err := client.getProjectClient()
+	defer func() {
+		if close != nil {
+			close()
+		}
+	}()
 	if err != nil {
 		return nil, err
 	}
@@ -108,7 +114,12 @@ func GetProjectByCode(projectCode string) (*bcsproject.Project, error) {
 
 // GetVariable get project from project code
 func GetVariable(projectCode, clusterID, namespace string) ([]*bcsproject.VariableValue, error) {
-	client, err := client.getProjectClient()
+	client, close, err := client.getProjectClient()
+	defer func() {
+		if close != nil {
+			close()
+		}
+	}()
 	if err != nil {
 		return nil, err
 	}

@@ -53,7 +53,7 @@ func TestBCSClusterPerm_CanCreateCluster(t *testing.T) {
 
 	projectID := "b37778ec757544868a01e1f01f07037f"
 	// projectID := "846e8195d9ca4097b354ed190acce4b1"
-	allow, url, err := cli.CanCreateCluster("liming", projectID)
+	allow, url, _, err := cli.CanCreateCluster("liming", projectID)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -69,7 +69,7 @@ func TestBCSClusterPerm_CanManageCluster(t *testing.T) {
 
 	projectID := "b37778ec757544868a01e1f01f07037f"
 	// projectID := "846e8195d9ca4097b354ed190acce4b1"
-	allow, url, err := cli.CanManageCluster("liming", projectID, "BCS-K8S-15091")
+	allow, url, _, err := cli.CanManageCluster("liming", projectID, "BCS-K8S-15091")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -85,7 +85,7 @@ func TestBCSClusterPerm_CanViewCluster(t *testing.T) {
 
 	// projectID := "b37778ec757544868a01e1f01f07037f"
 	projectID := "846e8195d9ca4097b354ed190acce4b1"
-	allow, url, err := cli.CanViewCluster("liming", projectID, "BCS-K8S-15091")
+	allow, url, _, err := cli.CanViewCluster("liming", projectID, "BCS-K8S-15091")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -101,7 +101,7 @@ func TestBCSClusterPerm_CanDeleteCluster(t *testing.T) {
 
 	projectID := "b37778ec757544868a01e1f01f07037f"
 	// projectID := "846e8195d9ca4097b354ed190acce4b1"
-	allow, url, err := cli.CanDeleteCluster("liming", projectID, "BCS-K8S-15091")
+	allow, url, _, err := cli.CanDeleteCluster("liming", projectID, "BCS-K8S-15091")
 	if err != nil {
 		t.Fatal(err)
 	}

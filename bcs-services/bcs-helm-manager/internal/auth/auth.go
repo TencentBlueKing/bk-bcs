@@ -24,6 +24,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/cluster"
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/namespace"
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/project"
+	authutils "github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/utils"
 	jwtGo "github.com/dgrijalva/jwt-go"
 	"github.com/micro/go-micro/v2/server"
 
@@ -171,14 +172,22 @@ func CheckUserPerm(ctx context.Context, req server.Request, username string) (bo
 
 	resourceID.ProjectID = contextx.GetProjectIDFromCtx(ctx)
 
-	allow, _, err := callIAM(username, action, *resourceID)
+	allow, url, resources, err := callIAM(username, action, *resourceID)
 	if err != nil {
 		return false, err
+	}
+	if !allow && url != "" {
+		return false, &authutils.PermDeniedError{
+			Perms: authutils.PermData{
+				ApplyURL:   url,
+				ActionList: resources,
+			},
+		}
 	}
 	return allow, nil
 }
 
-func callIAM(username, action string, resourceID options.CredentialScope) (bool, string, error) {
+func callIAM(username, action string, resourceID options.CredentialScope) (bool, string, []authutils.ResourceAction, error) {
 	// related actions
 	switch action {
 	case cluster.CanManageClusterOperation:
@@ -202,6 +211,6 @@ func callIAM(username, action string, resourceID options.CredentialScope) (bool,
 		return NamespaceIamClient.CanDeleteNamespaceScopedResource(username, resourceID.ProjectID,
 			resourceID.ClusterID, resourceID.Namespace)
 	default:
-		return false, "", errors.New("permission denied")
+		return false, "", nil, errors.New("permission denied")
 	}
 }

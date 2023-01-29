@@ -57,7 +57,7 @@ func TestPerm_CanCreateNamespace(t *testing.T) {
 		clusterID = os.Getenv("CLUSTER_ID")
 		username  = os.Getenv("PERM_USERNAME")
 	)
-	allow, url, err := cli.CanCreateNamespace(username, projectID, clusterID)
+	allow, url, _, err := cli.CanCreateNamespace(username, projectID, clusterID, false)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -76,7 +76,7 @@ func TestPerm_CanViewNamespace(t *testing.T) {
 		clusterID = os.Getenv("CLUSTER_ID")
 		username  = os.Getenv("PERM_USERNAME")
 	)
-	allow, url, err := cli.CanViewNamespace(username, projectID, clusterID, "bcs-system")
+	allow, url, _, err := cli.CanViewNamespace(username, projectID, clusterID, "bcs-system", false)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -95,7 +95,7 @@ func TestPerm_CanListNamespace(t *testing.T) {
 		clusterID = os.Getenv("CLUSTER_ID")
 		username  = os.Getenv("PERM_USERNAME")
 	)
-	allow, url, err := cli.CanListNamespace(username, projectID, clusterID)
+	allow, url, _, err := cli.CanListNamespace(username, projectID, clusterID, false)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -114,7 +114,7 @@ func TestPerm_CanUpdateNamespace(t *testing.T) {
 		clusterID = os.Getenv("CLUSTER_ID")
 		username  = os.Getenv("PERM_USERNAME")
 	)
-	allow, url, err := cli.CanUpdateNamespace(username, projectID, clusterID, "bcs-system")
+	allow, url, _, err := cli.CanUpdateNamespace(username, projectID, clusterID, "bcs-system", false)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -133,7 +133,7 @@ func TestPerm_CanDeleteNamespace(t *testing.T) {
 		clusterID = os.Getenv("CLUSTER_ID")
 		username  = os.Getenv("PERM_USERNAME")
 	)
-	allow, url, err := cli.CanDeleteNamespace(username, projectID, clusterID, "bcs-system")
+	allow, url, _, err := cli.CanDeleteNamespace(username, projectID, clusterID, "bcs-system", false)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -152,7 +152,7 @@ func TestPerm_CanCreateNamespaceScopedResource(t *testing.T) {
 		clusterID = os.Getenv("CLUSTER_ID")
 		username  = os.Getenv("PERM_USERNAME")
 	)
-	allow, url, err := cli.CanCreateNamespaceScopedResource(username, projectID, clusterID, "bcs-system")
+	allow, url, _, err := cli.CanCreateNamespaceScopedResource(username, projectID, clusterID, "bcs-system")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -171,7 +171,7 @@ func TestPerm_CanViewNamespaceScopedResource(t *testing.T) {
 		clusterID = os.Getenv("CLUSTER_ID")
 		username  = os.Getenv("PERM_USERNAME")
 	)
-	allow, url, err := cli.CanViewNamespaceScopedResource(username, projectID, clusterID, "bcs-system")
+	allow, url, _, err := cli.CanViewNamespaceScopedResource(username, projectID, clusterID, "bcs-system")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -190,7 +190,7 @@ func TestPerm_CanUpdateNamespaceScopedResource(t *testing.T) {
 		clusterID = os.Getenv("CLUSTER_ID")
 		username  = os.Getenv("PERM_USERNAME")
 	)
-	allow, url, err := cli.CanUpdateNamespaceScopedResource(username, projectID, clusterID, "bcs-system")
+	allow, url, _, err := cli.CanUpdateNamespaceScopedResource(username, projectID, clusterID, "bcs-system")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -209,7 +209,7 @@ func TestPerm_CanDeleteNamespaceScopedResource(t *testing.T) {
 		clusterID = os.Getenv("CLUSTER_ID")
 		username  = os.Getenv("PERM_USERNAME")
 	)
-	allow, url, err := cli.CanDeleteNamespaceScopedResource(username, projectID, clusterID, "bcs-system")
+	allow, url, _, err := cli.CanDeleteNamespaceScopedResource(username, projectID, clusterID, "bcs-system")
 	if err != nil {
 		t.Fatal(err)
 	}
