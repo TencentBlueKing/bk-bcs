@@ -75,7 +75,7 @@ func InitTracerProvider(serviceName string, opt ...Option) (*sdktrace.TracerProv
 	}
 
 	if defaultOptions.TracingSwitch == "off" {
-		return &sdktrace.TracerProvider{}, nil
+		return sdktrace.NewTracerProvider(), nil
 	}
 
 	if defaultOptions.TracingType == "jaeger" {
