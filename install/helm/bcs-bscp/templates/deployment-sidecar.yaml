@@ -1,0 +1,102 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "bcs-bscp.fullname" . }}-sidecar
+  labels:
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/name: bcs-bscp-sidecar
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.sidecar.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: {{ .Release.Name }}
+      app.kubernetes.io/name: bcs-bscp-sidecar
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        app.kubernetes.io/instance: {{ .Release.Name }}
+        app.kubernetes.io/name: bcs-bscp-sidecar
+        values-hash: "{{ toYaml .Values.config | sha256sum | trunc 63 }}"
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "bcs-bscp.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: {{ include "common.images.image" ( dict "imageRoot" .Values.image "global" .Values.global) }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+            - name: POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+            - name: POD_IPs # ipv6双栈
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIPs
+          ports:
+            - name: http
+              containerPort: 9630
+              protocol: TCP
+          command:
+            - /bk-bscp/bk-bscp-sidecar/bk-bscp-sidecar
+          args:
+            - --bind-ip=$(POD_IP)
+            - --config-file=/bk-bscp/bk-bscp-sidecar/etc/sidecar.yaml
+            - --config-file=/etc/bcs-bscp/bcs_bscp.yaml
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+          volumeMounts:
+          - name: config
+            mountPath: /etc/bcs-bscp
+          - name: etcd-certs
+            mountPath: /data/bcs/cert/etcd
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      volumes:
+      - name: config
+        configMap:
+          name: bcs-bscp
+      - name: etcd-certs
+        projected:
+          defaultMode: 420
+          sources:
+          - secret:
+              items:
+              - key: ca.crt
+                path: etcd-ca.pem
+              - key: tls.crt
+                path: etcd.pem
+              - key: tls.key
+                path: etcd-key.pem
+              name: bcs-etcd-certs
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

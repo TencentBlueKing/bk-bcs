@@ -15,10 +15,7 @@ package web
 
 import (
 	"context"
-	"fmt"
 	"net/http"
-	"net/http/httputil"
-	"net/url"
 	"path"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/tcp/listener"
@@ -81,11 +78,6 @@ func (w *WebServer) Close() error {
 	return w.srv.Shutdown(w.ctx)
 }
 
-func staticCacheControl(c *gin.Context) {
-	// cache one day
-	c.Header("Cache-Control", "max-age=86400, public")
-}
-
 // newRoutes xxx
 // @Title     BCS-Monitor OpenAPI
 // @BasePath  /bcsapi/v4/monitor/api/projects/:projectId/clusters/:clusterId
@@ -101,14 +93,20 @@ func (w *WebServer) newRoutes(engine *gin.Engine) {
 	// 注册模板和静态资源
 	engine.SetHTMLTemplate(bscp.WebTemplate())
 	webFaviconPath := bscp.WebFaviconPath()
+	rootGZipHandler := StaticGZipHandler("/web/", http.FS(bscp.WebStatic()))
 
-	engine.Group("", staticCacheControl).StaticFileFS("/favicon.ico", webFaviconPath, http.FS(bscp.WebStatic()))
-	engine.Group("", staticCacheControl).StaticFS("/web", http.FS(bscp.WebStatic()))
+	engine.Group("", StaticCacheHandler).StaticFileFS("/favicon.ico", webFaviconPath, http.FS(bscp.WebStatic()))
+	// engine.Group("", StaticCacheHandler).StaticFS("/web", http.FS(bscp.WebStatic()))
+	engine.Group("", StaticCacheHandler).HEAD("/web/*filepath", rootGZipHandler)
+	engine.Group("", StaticCacheHandler).GET("/web/*filepath", rootGZipHandler)
 	engine.GET("", w.IndexHandler)
 
 	if config.G.Web.RoutePrefix != "" {
-		engine.Group(config.G.Web.RoutePrefix, staticCacheControl).StaticFileFS("/favicon.ico", webFaviconPath, http.FS(bscp.WebStatic()))
-		engine.Group(config.G.Web.RoutePrefix, staticCacheControl).StaticFS("/web", http.FS(bscp.WebStatic()))
+		prefixGZipHandler := StaticGZipHandler(path.Join(config.G.Web.RoutePrefix, "/web/"), http.FS(bscp.WebStatic()))
+		engine.Group(config.G.Web.RoutePrefix, StaticCacheHandler).StaticFileFS("/favicon.ico", webFaviconPath, http.FS(bscp.WebStatic()))
+		// engine.Group(config.G.Web.RoutePrefix, StaticCacheHandler).StaticFS("/web", http.FS(bscp.WebStatic()))
+		engine.Group(config.G.Web.RoutePrefix, StaticCacheHandler).HEAD("/web/*filepath", prefixGZipHandler)
+		engine.Group(config.G.Web.RoutePrefix, StaticCacheHandler).GET("/web/*filepath", prefixGZipHandler)
 		engine.Group(config.G.Web.RoutePrefix).GET("", w.IndexHandler)
 	}
 
@@ -135,39 +133,4 @@ func (w *WebServer) IndexHandler(c *gin.Context) {
 	}
 
 	c.HTML(http.StatusOK, "index.html", data)
-}
-
-// ReverseAPIHandler 代理请求， CORS 跨域问题
-func ReverseAPIHandler(name, remoteURL string) gin.HandlerFunc {
-	remote, err := url.Parse(remoteURL)
-	if err != nil {
-		panic(err)
-	}
-
-	if remote.Scheme != "http" && remote.Scheme != "https" {
-		panic(fmt.Errorf("%s '%s' scheme not supported", name, remoteURL))
-	}
-
-	return func(c *gin.Context) {
-		proxy := httputil.NewSingleHostReverseProxy(remote)
-		proxy.Director = func(req *http.Request) {
-			req.Header = c.Request.Header
-			req.Host = remote.Host
-			req.URL.Scheme = remote.Scheme
-			req.URL.Host = remote.Host
-			klog.InfoS("forward request", "name", name, "url", req.URL)
-		}
-
-		proxy.ServeHTTP(c.Writer, c.Request)
-	}
-}
-
-// HealthyHandler 健康检查
-func HealthyHandler(c *gin.Context) {
-	c.Data(http.StatusOK, "text/plain; charset=utf-8", []byte("OK"))
-}
-
-// ReadyHandler 健康检查
-func ReadyHandler(c *gin.Context) {
-	c.Data(http.StatusOK, "text/plain; charset=utf-8", []byte("OK"))
 }

@@ -1,0 +1,19 @@
+apiVersion: v2
+name: bcs-bscp
+description: A Helm chart for module bcs-bscp of BlueKing Container Service(BCS)
+type: application
+version: 1.29.0-alpha.1
+appVersion: v1.29.0-alpha.1
+dependencies:
+  - condition: etcd.enabled
+    name: etcd
+    repository: https://raw.githubusercontent.com/bitnami/charts/eb5f9a9513d987b519f0ecd732e7031241c50328/bitnami
+    version: 6.2.11
+  - name: mariadb
+    repository: "https://raw.githubusercontent.com/bitnami/charts/eb5f9a9513d987b519f0ecd732e7031241c50328/bitnami"
+    version: 9.4.4
+    condition: mariadb.enabled
+  - name: redis
+    repository: "https://raw.githubusercontent.com/bitnami/charts/eb5f9a9513d987b519f0ecd732e7031241c50328/bitnami"
+    version: 14.8.11
+    condition: redis.enabled
