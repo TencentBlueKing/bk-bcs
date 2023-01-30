@@ -16,7 +16,10 @@ const viteHtml = (options?: any) => {
 export default defineConfig(({ command, mode }) => {
   const plugins = [
     vue(),
-    viteCompression()
+    viteCompression({
+      filter: /\.js$/,
+      threshold: 1
+    })
   ];
   console.error('defineConfig command', command);
   if (command === 'build') {
@@ -25,13 +28,20 @@ export default defineConfig(({ command, mode }) => {
 
   return {
     base: "./",
+    publicDir: 'static',
     build: {
       outDir: "dist",
       assetsDir: 'static',
-      copyPublicDir: false,
       target: 'es2015',
       commonjsOptions: {
         transformMixedEsModules: true
+      },
+      rollupOptions: {
+        output: {
+          entryFileNames: 'static/js/[name]-[hash].js',
+          chunkFileNames: 'static/js/[name]-[hash].js',
+          assetFileNames: 'static/[ext]/[name]-[hash].[ext]'
+        }
       }
     },
     plugins,
