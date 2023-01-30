@@ -49,7 +49,7 @@ func WebStatic() fs.FS {
 
 // WebFaviconPath 站点 icon 路径
 func WebFaviconPath() string {
-	entrys, err := frontendAssets.ReadDir("ui/dist/static")
+	entrys, err := frontendAssets.ReadDir("ui/dist")
 	if err != nil {
 		panic(err)
 	}
@@ -58,7 +58,7 @@ func WebFaviconPath() string {
 			continue
 		}
 		if strings.Contains(v.Name(), "favicon") {
-			return "/static/" + v.Name()
+			return "/" + v.Name()
 		}
 	}
 	panic("favicon not found")

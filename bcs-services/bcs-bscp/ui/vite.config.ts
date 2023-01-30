@@ -17,7 +17,7 @@ export default defineConfig(({ command, mode }) => {
   const plugins = [
     vue(),
     viteCompression({
-      filter: /\.js$/,
+      filter: /\.js|.css$/,
       threshold: 1
     })
   ];
