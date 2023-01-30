@@ -12,7 +12,7 @@ make init
 export PATH=`pwd`/.bin:$PATH
 
 # 创建 bscp.io 软连接, 已经 gitignore 了这个文件，不会提交到 git 库
-cd .. && ln -sf bcs-bscp bscp.io
+cd .. && ln -sf bcs-bscp bscp.io && cd bscp.io
 
 # 前面的步骤一次性， OK后编译
 make pb
@@ -20,10 +20,12 @@ make pb
 
 编译二进制
 ```bash
-build_bscp
+make build_bscp
 ```
 
 编译前端和UI模块
+要求 1.14 版本的 NodeJS
+
 ```bash
 make build_frontend
 make build_ui

@@ -200,6 +200,7 @@ type ConfigServerSetting struct {
 	Log     LogOption `yaml:"log"`
 
 	Repo Repository `yaml:"repository"`
+	Esb  Esb        `yaml:"esb"`
 }
 
 // trySetFlagBindIP try set flag bind ip.

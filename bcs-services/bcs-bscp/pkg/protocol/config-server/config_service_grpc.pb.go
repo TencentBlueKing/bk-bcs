@@ -22,6 +22,7 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type ConfigClient interface {
+	ListBiz(ctx context.Context, in *ListBizReq, opts ...grpc.CallOption) (*ListBizResp, error)
 	CreateApp(ctx context.Context, in *CreateAppReq, opts ...grpc.CallOption) (*CreateAppResp, error)
 	UpdateApp(ctx context.Context, in *UpdateAppReq, opts ...grpc.CallOption) (*UpdateAppResp, error)
 	DeleteApp(ctx context.Context, in *DeleteAppReq, opts ...grpc.CallOption) (*DeleteAppResp, error)
@@ -62,6 +63,15 @@ type configClient struct {
 
 func NewConfigClient(cc grpc.ClientConnInterface) ConfigClient {
 	return &configClient{cc}
+}
+
+func (c *configClient) ListBiz(ctx context.Context, in *ListBizReq, opts ...grpc.CallOption) (*ListBizResp, error) {
+	out := new(ListBizResp)
+	err := c.cc.Invoke(ctx, "/pbcs.Config/ListBiz", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 func (c *configClient) CreateApp(ctx context.Context, in *CreateAppReq, opts ...grpc.CallOption) (*CreateAppResp, error) {
@@ -356,6 +366,7 @@ func (c *configClient) ListPublishedInstance(ctx context.Context, in *ListPublis
 // All implementations should embed UnimplementedConfigServer
 // for forward compatibility
 type ConfigServer interface {
+	ListBiz(context.Context, *ListBizReq) (*ListBizResp, error)
 	CreateApp(context.Context, *CreateAppReq) (*CreateAppResp, error)
 	UpdateApp(context.Context, *UpdateAppReq) (*UpdateAppResp, error)
 	DeleteApp(context.Context, *DeleteAppReq) (*DeleteAppResp, error)
@@ -394,6 +405,9 @@ type ConfigServer interface {
 type UnimplementedConfigServer struct {
 }
 
+func (UnimplementedConfigServer) ListBiz(context.Context, *ListBizReq) (*ListBizResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListBiz not implemented")
+}
 func (UnimplementedConfigServer) CreateApp(context.Context, *CreateAppReq) (*CreateAppResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateApp not implemented")
 }
@@ -500,6 +514,24 @@ type UnsafeConfigServer interface {
 
 func RegisterConfigServer(s grpc.ServiceRegistrar, srv ConfigServer) {
 	s.RegisterService(&Config_ServiceDesc, srv)
+}
+
+func _Config_ListBiz_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListBizReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).ListBiz(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/pbcs.Config/ListBiz",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).ListBiz(ctx, req.(*ListBizReq))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 func _Config_CreateApp_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -1085,6 +1117,10 @@ var Config_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "pbcs.Config",
 	HandlerType: (*ConfigServer)(nil),
 	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "ListBiz",
+			Handler:    _Config_ListBiz_Handler,
+		},
 		{
 			MethodName: "CreateApp",
 			Handler:    _Config_CreateApp_Handler,

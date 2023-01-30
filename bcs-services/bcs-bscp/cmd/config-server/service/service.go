@@ -25,6 +25,7 @@ import (
 	"bscp.io/pkg/metrics"
 	pbds "bscp.io/pkg/protocol/data-service"
 	"bscp.io/pkg/serviced"
+	esbcli "bscp.io/pkg/thirdparty/esb/client"
 	"bscp.io/pkg/thirdparty/repo"
 	"bscp.io/pkg/tools"
 
@@ -113,9 +114,16 @@ func newClientSet(sd serviced.Discover, tls cc.TLSConfig) (*ClientSet, error) {
 		return nil, err
 	}
 
+	esbSetting := cc.ConfigServer().Esb
+	esbCli, err := esbcli.NewClient(&esbSetting, metrics.Register())
+	if err != nil {
+		return nil, err
+	}
+
 	cs := &ClientSet{
 		DS:   pbds.NewDataClient(dsConn),
 		Repo: repoCli,
+		Esb:  esbCli,
 	}
 
 	logs.Infof("initialize the client set success.")
@@ -124,8 +132,10 @@ func newClientSet(sd serviced.Discover, tls cc.TLSConfig) (*ClientSet, error) {
 
 // ClientSet defines configure server's all the depends api client.
 type ClientSet struct {
-	// data service's client api
+	// DS data service's client api
 	DS pbds.DataClient
-	// repoCli repo client api.
+	// Repo repoCli repo client api.
 	Repo *repo.Client
+	// Esb Esb client api
+	Esb esbcli.Client
 }

@@ -62,7 +62,7 @@ func (p *proxy) setupFilters(mux *http.ServeMux) http.Handler {
 
 		// 设置测试 user
 		if r.Header.Get(constant.UserKey) == "" {
-			r.Header.Set(constant.UserKey, "dummyUser")
+			r.Header.Set(constant.UserKey, "admin")
 		}
 
 		// 测试 App

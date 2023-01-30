@@ -26,9 +26,10 @@ type esbSearchBizParams struct {
 
 // SearchBizParams is cmdb search business parameter.
 type SearchBizParams struct {
-	Fields            []string     `json:"fields"`
-	Page              BasePage     `json:"page"`
-	BizPropertyFilter *QueryFilter `json:"biz_property_filter,omitempty"`
+	Condition         map[string]string `json:"condition,omitempty"`
+	Fields            []string          `json:"fields"`
+	Page              BasePage          `json:"page"`
+	BizPropertyFilter *QueryFilter      `json:"biz_property_filter,omitempty"`
 }
 
 // BizIDField NOTES
@@ -120,5 +121,7 @@ type SearchBizResult struct {
 
 // Biz is cmdb biz info.
 type Biz struct {
-	BizID int64 `json:"bk_biz_id"`
+	BizID         int64  `json:"bk_biz_id"`
+	BizName       string `json:"bk_biz_name"`
+	BizMaintainer string `json:"bk_biz_maintainer"`
 }
