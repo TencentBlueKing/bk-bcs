@@ -398,6 +398,10 @@ message UpdateProjectRequest {
     title: "centerName", 
     description: "中心名称, 保留字段, 默认为空"
   }];
+  repeated string managers = 18[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "managers", 
+    description: "项目管理员"
+  }];
 }
 
 message DeleteProjectRequest {

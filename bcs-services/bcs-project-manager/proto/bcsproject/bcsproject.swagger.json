@@ -3559,6 +3559,14 @@
           "type": "string",
           "description": "中心名称, 保留字段, 默认为空",
           "title": "centerName"
+        },
+        "managers": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "项目管理员",
+          "title": "managers"
         }
       },
       "description": "更新项目请求",

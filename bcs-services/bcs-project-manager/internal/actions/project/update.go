@@ -171,5 +171,8 @@ func (ua *UpdateAction) updateProject(p *pm.Project) error {
 	if ua.req.CenterName != "" {
 		p.CenterName = req.CenterName
 	}
+	if len(ua.req.GetManagers()) != 0 {
+		p.Managers = stringx.JoinString(ua.req.GetManagers()...)
+	}
 	return ua.model.UpdateProject(ua.ctx, p)
 }
