@@ -63,3 +63,10 @@ func ResourceAttrs(ra []attribute.KeyValue) Option {
 		o.ResourceAttrs = append(o.ResourceAttrs, ra...)
 	}
 }
+
+// OTLPEndpoint sets OpenTelemetry Collector service endpoint
+func OTLPEndpoint(en string) Option {
+	return func(o *Options) {
+		o.OTLPEndpoint = en
+	}
+}
