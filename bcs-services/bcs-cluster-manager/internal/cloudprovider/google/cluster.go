@@ -17,7 +17,6 @@ import (
 	"context"
 	"fmt"
 	"sync"
-	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
@@ -26,7 +25,6 @@ import (
 )
 
 var clusterMgr sync.Once
-var defaultTimeout = 10 * time.Second
 
 func init() {
 	clusterMgr.Do(func() {
@@ -122,4 +120,9 @@ func (c *Cluster) DeleteNodesFromCluster(cls *proto.Cluster, nodes []*proto.Node
 func (c *Cluster) CheckClusterCidrAvailable(cls *proto.Cluster, opt *cloudprovider.CheckClusterCIDROption) (bool,
 	error) {
 	return false, cloudprovider.ErrCloudNotImplemented
+}
+
+// ListOsImage get osimage list
+func (c *Cluster) ListOsImage(provider string, opt *cloudprovider.CommonOption) ([]*proto.OsImage, error) {
+	return nil, cloudprovider.ErrCloudNotImplemented
 }

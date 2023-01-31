@@ -66,7 +66,7 @@ func ImportClusterNodesTask(taskID string, stepName string) error {
 	cloudprovider.GetStorageModel().UpdateCluster(context.Background(), basicInfo.Cluster)
 
 	// update step
-	if err := state.UpdateStepSucc(start, stepName); err != nil {
+	if err = state.UpdateStepSucc(start, stepName); err != nil {
 		blog.Errorf("ImportClusterNodesTask[%s] task %s %s update to storage fatal", taskID, taskID, stepName)
 		return err
 	}
