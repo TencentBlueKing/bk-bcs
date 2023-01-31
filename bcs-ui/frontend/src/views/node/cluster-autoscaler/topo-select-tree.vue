@@ -15,15 +15,12 @@
       }"
       ref="treeRef"
       default-expand-all
-      :default-checked-nodes="[value]">
+      :default-checked-nodes="[value]"
+      :default-selected-node="value"
+      selectable>
       <template #default="{ data }">
         <div @click="handleChangeSelectedNode(data)">
-          <bcs-radio
-            v-if="data.bk_obj_id === 'module'"
-            :checked="value === String(data.bk_inst_id)">
-            {{ data.bk_inst_name }}
-          </bcs-radio>
-          <span v-else>{{ data.bk_inst_name }}</span>
+          {{ data.bk_inst_name }}
         </div>
       </template>
     </bcs-big-tree>
@@ -60,14 +57,16 @@ export default defineComponent({
     const treeRef = ref<any>(null);
     const topoLoading = ref(false);
     const topoData = ref<any[]>([]);
-    const addPathToTreeData = (data: any[], parent: string) => data.map((item) => {
-      const path = parent ? `${parent} / ${item.bk_inst_name}` : item.bk_inst_name;
-      return {
-        ...item,
-        child: addPathToTreeData(item.child, path),
-        path,
-      };
-    });
+    const addPathToTreeData = (data: any[], parent: string) => data
+      .filter(item => !(item.bk_obj_id === 'set' && item.bk_obj_name === 'set'))
+      .map((item) => {
+        const path = parent ? `${parent} / ${item.bk_inst_name}` : item.bk_inst_name;
+        return {
+          ...item,
+          child: addPathToTreeData(item.child, path),
+          path,
+        };
+      });
     const handleGetTopoData = async () => {
       topoLoading.value = true;
       const data = await ccTopology({

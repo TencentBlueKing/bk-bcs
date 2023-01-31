@@ -28,25 +28,32 @@
               {{ statusTextMap[nodePoolData.status] }}
             </StatusIcon>
           </bk-form-item>
-          <bk-form-item :label="$t('节点数量范围')">
-            {{`${nodePoolData.autoScaling.minSize} ~ ${nodePoolData.autoScaling.maxSize}`}}
+          <bk-form-item :label="$t('缩容节点下限')">
+            {{ nodePoolData.autoScaling.minSize }}
+          </bk-form-item>
+          <bk-form-item :label="$t('扩容节点上限')">
+            {{ nodePoolData.autoScaling.maxSize }}
           </bk-form-item>
           <bk-form-item :label="$t('是否开启调度')">
             {{nodePoolData.nodeTemplate.unSchedulable ? $t('否') : $t('是')}}
           </bk-form-item>
-          <bk-form-item label="Labels">
+          <bk-form-item :label="$t('节点 Labels')">
             <bk-button
               text
               size="small"
               style="padding: 0;"
+              v-if="labels.length"
               @click="showLabels = true">{{$t('查看')}}</bk-button>
+            <span v-else>--</span>
           </bk-form-item>
-          <bk-form-item label="Taints">
+          <bk-form-item :label="$t('节点 Taints')">
             <bk-button
               text
               size="small"
               style="padding: 0;"
+              v-if="taints.length"
               @click="showTaints = true">{{$t('查看')}}</bk-button>
+            <span v-else>--</span>
           </bk-form-item>
           <bk-form-item :label="$t('扩缩容模式')">
             {{scalingModeMap[nodePoolData.autoScaling.scalingMode]}}
@@ -101,9 +108,9 @@
           <bk-form-item :label="$t('扩容后转移模块')">
             {{nodePoolData.nodeTemplate.module.scaleOutModuleName || '--'}}
           </bk-form-item>
-          <bk-form-item :label="$t('缩容后转移模块')">
+          <!-- <bk-form-item :label="$t('缩容后转移模块')">
             {{nodePoolData.nodeTemplate.module.scaleInModuleName || '--'}}
-          </bk-form-item>
+          </bk-form-item> -->
         </bk-form>
         <div class="mt20 mb10 panel-header">
           <span class="title">{{$t('Kubelet组件参数')}}</span>

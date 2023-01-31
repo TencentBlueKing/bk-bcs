@@ -141,7 +141,7 @@ export default defineComponent({
         scaleOutExtraAddons: defaultValues.value?.nodeTemplate?.scaleOutExtraAddons || {}, // 扩容后置流程
         scaleInPreScript: defaultValues.value?.nodeTemplate?.scaleInPreScript || '', // 缩容前置脚本
         scaleInExtraAddons: defaultValues.value?.nodeTemplate?.scaleInExtraAddons || {}, // 缩容后置流程
-        labels: defaultValues.value?.nodeTemplate?.labels || {}, // 标签
+        labels: {}, // basic-pool-info里面赋值
       },
       labels: {},
     });
@@ -228,6 +228,9 @@ export default defineComponent({
 });
 </script>
 <style lang="postcss" scoped>
+>>> .bk-resize-layout>.bk-resize-layout-aside:after {
+  content: unset;
+}
 .node-pool {
   >>> .bk-resize-layout-aside {
     border-left: none !important;

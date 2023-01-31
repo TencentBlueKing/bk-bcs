@@ -3448,5 +3448,6 @@ export default {
   ],
   "搜索事件级别、组件": [
     "Search event level, component"
-  ]
+  ],
+  'NotReady节点数大于 {0} 个且超过集群总节点数 {1} 时暂停自动扩缩容': ['']
 }

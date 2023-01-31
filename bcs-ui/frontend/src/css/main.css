@@ -78,6 +78,10 @@
   overflow-y: auto;
 }
 
+.tippy-content {
+  max-width: 600px;
+}
+
 .bk-dialog-wrapper .bk-dialog {
   top: 10%;
 }

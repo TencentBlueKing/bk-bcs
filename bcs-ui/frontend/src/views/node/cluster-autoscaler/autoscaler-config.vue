@@ -33,31 +33,33 @@
             </template>
           </bk-input>
         </bk-form-item>
-        <bk-form-item
-          :label="$t('允许unready节点')"
-          desc-type="icon"
-          desc-icon="bk-icon icon-info-circle"
-          :desc="$t('自动扩缩容保护机制，集群中unready节点大于允许unready节点数量，且unready节点的比例大于设置的比例，会停止Cluster Autoscaler功能，否则Cluster Autoscaler功能正常运行')">
-          <bk-input type="number" :min="0" :max="320000" v-model="autoscalerData.okTotalUnreadyCount">
-            <template slot="append">
-              <div class="group-text">{{$t('个')}}</div>
-            </template>
-          </bk-input>
-        </bk-form-item>
-        <bk-form-item
-          :label="$t('unready节点超过集群总节点')"
-          desc-type="icon"
-          desc-icon="bk-icon icon-info-circle"
-          :desc="$t('节点Ready是根据节点的最新属性conditions.type == Ready并且conditions.status == True来判断的，也可以通过kubectl get node命令获取的status字段是否为 ready 来判定节点是否ready')">
-          <div style="display: flex;">
-            <bcs-input type="number" :min="0" :max="100" v-model="autoscalerData.maxTotalUnreadyPercentage">
-              <template slot="append">
-                <div class="group-text">{{$t('%')}}</div>
-              </template>
-            </bcs-input>
-            <span class="ml8">{{$t('时停止自动扩缩容')}}</span>
-          </div>
-        </bk-form-item>
+      </LayoutGroup>
+      <LayoutGroup :title="$t('扩缩容暂停配置')" class="mb10">
+        <div class="flex">
+          <i18n
+            path="NotReady节点数大于 {0} 个且超过集群总节点数 {1} 时暂停自动扩缩容"
+            class="text-[14px] text-[#63656e] flex items-center">
+            <span place="0" class="px-[5px]">
+              <bk-input type="number" :min="0" :max="320000" v-model="autoscalerData.okTotalUnreadyCount">
+                <template slot="append">
+                  <div class="group-text">{{$t('个')}}</div>
+                </template>
+              </bk-input>
+            </span>
+            <span place="1" class="px-[5px]">
+              <bcs-input type="number" :min="0" :max="100" v-model="autoscalerData.maxTotalUnreadyPercentage">
+                <template slot="append">
+                  <div class="group-text">{{$t('%')}}</div>
+                </template>
+              </bcs-input>
+            </span>
+          </i18n>
+          <span
+            class="ml-[5px] text-[16px] text-[#979ba5] leading-[30px]"
+            v-bk-tooltips="$t('自动扩缩容保护机制，如果NotReady节点数量或比例过大，自动扩容上来的节点也有可能会是NotReady状态，导致业务成本增加，当NotReady节点数不符合暂停触发条件时自动恢复自动扩缩容')">
+            <i class="bk-icon icon-info-circle"></i>
+          </span>
+        </div>
       </LayoutGroup>
       <LayoutGroup :title="$t('自动扩容配置')" class="mb10">
         <bk-form-item
@@ -104,9 +106,9 @@
             </template>
           </bk-input>
         </bk-form-item>
-        <bk-form-item :label="$t('(没有ready节点时) 允许自动扩容')">
+        <!-- <bk-form-item :label="$t('(没有ready节点时) 允许自动扩容')">
           <bk-checkbox v-model="autoscalerData.scaleUpFromZero"></bk-checkbox>
-        </bk-form-item>
+        </bk-form-item> -->
       </LayoutGroup>
       <LayoutGroup collapsible :expanded="!!autoscalerData.isScaleDownEnable">
         <template #title>
@@ -132,15 +134,18 @@
           </bk-input>
         </bk-form-item>
         <bk-form-item
-          :label="$t('执行缩容等待时间')"
+          :label="$t('节点连续空闲')"
           desc-type="icon"
           desc-icon="bk-icon icon-info-circle"
-          :desc="$t('Cluster Autocaler组件评估集群可以缩容多久后开始执行缩容，防止集群容量在短时间内或高或低于设置的缩容阈值造成频繁扩缩容操作默认为600秒，取值范围60 ~ 86400秒')">
-          <bk-input type="number" :min="60" :max="86400" v-model="autoscalerData.scaleDownUnneededTime">
-            <template slot="append">
-              <div class="group-text">{{$t('秒')}}</div>
-            </template>
-          </bk-input>
+          :desc="$t('节点从第一次被标记空闲状态到设定时间内一直处于空闲状态才会被缩容，防止集群资源使用率短时间内波动造成频繁扩缩容操作')">
+          <div class="flex">
+            <bcs-input type="number" :min="60" :max="86400" v-model="autoscalerData.scaleDownUnneededTime">
+              <template slot="append">
+                <div class="group-text">{{$t('秒')}}</div>
+              </template>
+            </bcs-input>
+            <span class="ml8">{{$t('后执行缩容')}}</span>
+          </div>
         </bk-form-item>
         <bk-form-item
           :label="$t('等待 Pod 退出最长时间')"
@@ -175,14 +180,14 @@
             </template>
           </bk-input>
         </bk-form-item>
-        <bk-form-item :label="$t('缩容失败后重试时间间隔')">
+        <!-- <bk-form-item :label="$t('缩容失败后重试时间间隔')">
           <bk-input type="number" :min="60" :max="86400" v-model="autoscalerData.scaleDownDelayAfterFailure">
             <template slot="append">
               <div class="group-text">{{$t('秒')}}</div>
             </template>
           </bk-input>
-        </bk-form-item>
-        <bk-form-item :label="$t('unready节点缩容等待时间')">
+        </bk-form-item> -->
+        <bk-form-item :label="$t('NotReady节点缩容等待时间')">
           <bk-input type="number" :min="60" :max="86400" v-model="autoscalerData.scaleDownUnreadyTime">
             <template slot="append">
               <div class="group-text">{{$t('秒')}}</div>

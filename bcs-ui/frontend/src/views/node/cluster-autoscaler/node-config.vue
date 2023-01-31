@@ -19,7 +19,8 @@
             searchable
             :clearable="false"
             :disabled="isEdit"
-            :placeholder="' '">
+            :placeholder="' '"
+            class="bg-[#fff]">
             <bcs-option id="" :name="$t('全部')"></bcs-option>
             <bcs-option
               v-for="cpuItem in getSchemaByProp('launchTemplate.CPU').enum"
@@ -37,7 +38,8 @@
             searchable
             :clearable="false"
             :disabled="isEdit"
-            :placeholder="' '">
+            :placeholder="' '"
+            class="bg-[#fff]">
             <bcs-option id="" :name="$t('全部')"></bcs-option>
             <bcs-option
               v-for="memItem in getSchemaByProp('launchTemplate.Mem').enum"
@@ -95,7 +97,7 @@
             v-model="nodePoolConfig.launchTemplate.systemDisk.diskType"
             :disabled="isEdit"
             :clearable="false"
-            class="min-width-150">
+            class="min-width-150 bg-[#fff]">
             <bcs-option
               v-for="diskItem in diskEnum"
               :key="diskItem.id"
@@ -131,7 +133,7 @@
               :disabled="isEdit"
               v-model="disk.diskType"
               :clearable="false"
-              class="min-width-150">
+              class="min-width-150 bg-[#fff]">
               <bcs-option
                 v-for="diskItem in diskEnum"
                 :key="diskItem.id"
@@ -160,7 +162,7 @@
           </bk-checkbox>
           <template v-if="disk.autoFormatAndMount">
             <bcs-select
-              class="min-width-80 ml10"
+              class="min-width-80 ml10 bg-[#fff]"
               :disabled="(isEdit || index === 0)"
               v-model="disk.fileSystem"
               :clearable="false">
@@ -606,6 +608,7 @@ export default defineComponent({
     font-size: 14px;
     >>> .group-text {
         line-height: 30px;
+        background-color: #fafbfd;
     }
     >>> .bk-form-content {
         max-width: 650px;
@@ -656,6 +659,7 @@ export default defineComponent({
             border: 1px solid #C4C6CC;
             text-align: center;
             border-left: none;
+            background-color: #fafbfd;
         }
         >>> .bk-select {
             min-width: 110px;
@@ -696,9 +700,6 @@ export default defineComponent({
             display: flex;
             width: auto;
             align-items: center;
-        }
-        .bk-select {
-            background: #fff;
         }
     }
     >>> .add-panel-btn {

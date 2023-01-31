@@ -1,8 +1,11 @@
 <template>
   <div v-bkloading="{ isLoading: bkSopsLoading }">
     <template v-if="!bkSopsTemplateID">
-      <p class="text-[12px] text-[#313238] mb-[10px]">{{$t('Bash脚本内容')}}</p>
-      <pre class="px-[16px] py-[8px] bg-[#F4F4F7] rounded-sm text-[12px]">{{script}}</pre>
+      <template v-if="script">
+        <p class="text-[12px] text-[#313238] mb-[10px]">{{$t('Bash脚本内容')}}</p>
+        <pre class="px-[16px] py-[8px] bg-[#F4F4F7] rounded-sm text-[12px]">{{script}}</pre>
+      </template>
+      <bcs-exception type="empty" scene="part" v-else> </bcs-exception>
     </template>
     <template v-else>
       <p class="text-[12px] text-[#313238] mb-[10px]">{{$t('标准运维模板名称')}}</p>

@@ -21,7 +21,6 @@
                 vertical-align: middle;
                 border-color: #E9EDF2;
                 color: $fontColor;
-                font-size: 13px;
                 padding: 0 10px;
             }
         }
@@ -36,7 +35,6 @@
         vertical-align: bottom;
         border-bottom: 1px solid $borderLightColor;
         color: #666;
-        font-size: 13px;
         font-weight: 400;
         color: #313238;
     }
@@ -1482,15 +1480,6 @@
 
 .bk-button.bk-default.is-disabled, .bk-button.bk-default[disabled] {
     background-color: #f4f6fa;
-}
-
-/* 统一字体为13px */
-.bk-table .cell {
-    font-size: 13px;
-}
-
-.bk-dropdown-menu .bk-dropdown-list >li a {
-    font-size: 13px;
 }
 
 .bk-has-border-tree li:before {

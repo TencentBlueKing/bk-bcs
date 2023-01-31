@@ -8,10 +8,9 @@
       </bk-input>
     </bk-form-item>
     <bk-form-item
-      :label="$t('节点数量范围')"
+      :label="$t('缩容节点下限')"
       property="nodeNumRange"
-      error-display-type="normal"
-      :desc="$t('在设定的节点范围内自动调节，不会超出该设定范围')">
+      error-display-type="normal">
       <bk-input
         class="w74"
         v-model="nodePoolInfo.autoScaling.minSize"
@@ -19,7 +18,11 @@
         :max="getSchemaByProp('autoScaling.minSize').maximum"
         type="number">
       </bk-input>
-      <span class="px-[5px]">~</span>
+    </bk-form-item>
+    <bk-form-item
+      :label="$t('扩容节点上限')"
+      property="nodeNumRange"
+      error-display-type="normal">
       <bk-input
         class="w74"
         v-model="nodePoolInfo.autoScaling.maxSize"
@@ -33,7 +36,7 @@
       :desc="$t('节点池启用后Autoscaler组件将会根据扩容算法使用该节点池资源，开启Autoscaler组件后必须要开启至少一个节点池')">
       <bk-checkbox v-model="nodePoolInfo.enableAutoscale" :disabled="isEdit"></bk-checkbox>
     </bk-form-item>
-    <bk-form-item label="Labels" property="labels" error-display-type="normal">
+    <bk-form-item :label="$t('节点 Labels')" property="labels" error-display-type="normal">
       <KeyValue
         class="labels"
         :min-item="0"
@@ -41,7 +44,7 @@
         v-model="nodePoolInfo.nodeTemplate.labels">
       </KeyValue>
     </bk-form-item>
-    <bk-form-item label="Taints" property="taints" error-display-type="normal">
+    <bk-form-item :label="$t('节点 Taints')" property="taints" error-display-type="normal">
       <span
         class="add-key-value-items" v-if="!nodePoolInfo.nodeTemplate.taints.length"
         @click="handleAddTaints">
@@ -193,6 +196,15 @@ export default defineComponent({
           trigger: 'custom',
           // eslint-disable-next-line max-len
           validator: () => Object.keys(nodePoolInfo.value.nodeTemplate.labels).every(key => !!nodePoolInfo.value.nodeTemplate.labels[key]),
+        },
+        {
+          message: $i18n.t('键和值仅支持英文、数字、下划线、分隔符和小数点'),
+          trigger: 'custom',
+          validator: () => {
+            const keys = Object.keys(nodePoolInfo.value.nodeTemplate.labels);
+            const values = keys.map(key => nodePoolInfo.value.nodeTemplate.labels[key]);
+            return keys.every(v => /^[A-Za-z0-9._-]+$/.test(v)) && values.every(v => /^[A-Za-z0-9._-]+$/.test(v));
+          },
         },
       ],
       taints: [

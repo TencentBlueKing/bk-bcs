@@ -86,7 +86,7 @@ export default defineComponent({
     const handleGotoHelmRelease = () => {
       sessionStorage.setItem(BCS_CLUSTER, $route.params.clusterId);
       $router.push({
-        name: 'helms',
+        name: 'releaseList',
       });
     };
     return {

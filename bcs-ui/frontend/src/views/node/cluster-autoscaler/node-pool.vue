@@ -98,7 +98,9 @@ export default defineComponent({
     const nodePoolData = ref<Record<string, any>>({});
     const handleNextStep = (data) => {
       nodePoolData.value = mergeDeep(nodePoolData.value, data);
-      curStep.value = curStep.value + 1;
+      if (curStep.value + 1 <= steps.value.length) {
+        curStep.value = curStep.value + 1;
+      }
     };
     const handlePreStep = () => {
       curStep.value = curStep.value - 1;
@@ -116,7 +118,7 @@ export default defineComponent({
       schema.value = data?.schema || {};
     };
 
-    // 创建或者编辑节点池
+    // 创建节点池
     const user = computed(() => $store.state.user);
     const saveLoading = ref(false);
     const handleConfirm = async () => {
