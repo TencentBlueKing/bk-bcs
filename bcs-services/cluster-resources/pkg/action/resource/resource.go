@@ -37,11 +37,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/slice"
 )
 
-const (
-	labelCreatorKey = "io.tencent.paas.creator"
-	labelUpdatorKey = "io.tencent.paas.updator"
-)
-
 // ResMgr k8s 资源管理器，包含命名空间校验，集群操作下发，构建响应内容等功能
 type ResMgr struct {
 	ClusterID    string

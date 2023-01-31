@@ -43,6 +43,12 @@ const (
 	LabelKeyForOwnerKind = "owner-kind"
 	// LabelKeyForOwnerName mark which resource generate this listener. Value is name of portpool or ingress.
 	LabelKeyForOwnerName = "owner-name"
+	// LabelKetForTargetGroupType label key for target group type
+	LabelKetForTargetGroupType = "listener.bkbcs.tencent.com/target_group_type"
+	// LabelValueForTargetGroupNormal normal target group
+	LabelValueForTargetGroupNormal = "normal"
+	// LabelValueForTargetGroupEmpty empty target group
+	LabelValueForTargetGroupEmpty = "empty"
 	// ListenerStatusNotSynced shows listener changes are not synced
 	ListenerStatusNotSynced = "NotSynced"
 	// ListenerStatusSynced shows listener changes are synced

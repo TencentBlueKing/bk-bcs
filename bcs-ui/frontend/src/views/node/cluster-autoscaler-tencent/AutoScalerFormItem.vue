@@ -43,11 +43,12 @@
         {{`${autoscalerData[item.prop]} ${item.unit || ''}`}}
         <span v-if="item.suffix" class="ml10">{{item.suffix}}</span>
       </span>
+      <slot name="suffix" :data="item"></slot>
     </bcs-form-item>
   </bcs-form>
 </template>
 <script lang="ts">
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent, PropType } from '@vue/composition-api';
 import $i18n from '@/i18n/i18n-setup';
 import StatusIcon from '@/views/dashboard/common/status-icon';
 import LoadingIcon from '@/components/loading-icon.vue';
@@ -59,7 +60,7 @@ export default defineComponent({
   components: { StatusIcon, LoadingIcon },
   props: {
     list: {
-      type: Array,
+      type: Array as PropType<any[]>,
       default: () => [],
     },
     autoscalerData: {
@@ -105,7 +106,6 @@ export default defineComponent({
       margin-top: 0;
       font-size: 12px;
       width: 100%;
-      user-select: none;
   }
   .bk-label {
       font-size: 12px;

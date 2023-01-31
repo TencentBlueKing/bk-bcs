@@ -90,6 +90,10 @@ func (m *GetAllProjectListRequest) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
+	// no validation rules for StartTime
+
+	// no validation rules for EndTime
+
 	if len(errors) > 0 {
 		return GetAllProjectListRequestMultiError(errors)
 	}
@@ -415,6 +419,10 @@ func (m *GetProjectInfoRequest) validate(all bool) error {
 		}
 		errors = append(errors, err)
 	}
+
+	// no validation rules for StartTime
+
+	// no validation rules for EndTime
 
 	if len(errors) > 0 {
 		return GetProjectInfoRequestMultiError(errors)
@@ -763,6 +771,10 @@ func (m *GetClusterListRequest) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
+	// no validation rules for StartTime
+
+	// no validation rules for EndTime
+
 	if len(errors) > 0 {
 		return GetClusterListRequestMultiError(errors)
 	}
@@ -1061,6 +1073,10 @@ func (m *GetClusterInfoRequest) validate(all bool) error {
 		}
 		errors = append(errors, err)
 	}
+
+	// no validation rules for StartTime
+
+	// no validation rules for EndTime
 
 	if len(errors) > 0 {
 		return GetClusterInfoRequestMultiError(errors)
@@ -1371,6 +1387,10 @@ func (m *GetNamespaceInfoListRequest) validate(all bool) error {
 		}
 		errors = append(errors, err)
 	}
+
+	// no validation rules for StartTime
+
+	// no validation rules for EndTime
 
 	if len(errors) > 0 {
 		return GetNamespaceInfoListRequestMultiError(errors)
@@ -1690,6 +1710,10 @@ func (m *GetNamespaceInfoRequest) validate(all bool) error {
 		}
 		errors = append(errors, err)
 	}
+
+	// no validation rules for StartTime
+
+	// no validation rules for EndTime
 
 	if len(errors) > 0 {
 		return GetNamespaceInfoRequestMultiError(errors)
@@ -2046,6 +2070,10 @@ func (m *GetWorkloadInfoListRequest) validate(all bool) error {
 		}
 		errors = append(errors, err)
 	}
+
+	// no validation rules for StartTime
+
+	// no validation rules for EndTime
 
 	if len(errors) > 0 {
 		return GetWorkloadInfoListRequestMultiError(errors)
@@ -2412,6 +2440,10 @@ func (m *GetWorkloadInfoRequest) validate(all bool) error {
 		}
 		errors = append(errors, err)
 	}
+
+	// no validation rules for StartTime
+
+	// no validation rules for EndTime
 
 	if len(errors) > 0 {
 		return GetWorkloadInfoRequestMultiError(errors)
@@ -5550,6 +5582,10 @@ func (m *GetPodAutoscalerListRequest) validate(all bool) error {
 
 	// no validation rules for PodAutoscalerType
 
+	// no validation rules for StartTime
+
+	// no validation rules for EndTime
+
 	if len(errors) > 0 {
 		return GetPodAutoscalerListRequestMultiError(errors)
 	}
@@ -5882,6 +5918,10 @@ func (m *GetPodAutoscalerRequest) validate(all bool) error {
 	// no validation rules for PodAutoscalerType
 
 	// no validation rules for PodAutoscalerName
+
+	// no validation rules for StartTime
+
+	// no validation rules for EndTime
 
 	if len(errors) > 0 {
 		return GetPodAutoscalerRequestMultiError(errors)

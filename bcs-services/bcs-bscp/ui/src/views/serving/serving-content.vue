@@ -1,84 +1,134 @@
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref, watch } from "vue";
+import { computed, onMounted, ref, Ref, watch, defineProps } from "vue";
+import { useRouter } from 'vue-router'
 import { Plus, Del } from "bkui-vue/lib/icon";
 import InfoBox from "bkui-vue/lib/info-box";
 import { useI18n } from "vue-i18n";
-import { deleteApp, getAppList, getBizList, createApp, updateApp } from "../../api";
+import { IServingItem } from '../../types'
+import { deleteApp, getAppList, getBizList, createApp, updateApp, IAppListQuery } from "../../api";
+
+const router = useRouter()
 const { t } = useI18n();
+const props = defineProps<{
+  type: string
+}>()
+
 const bizList = ref();
 const pagination = ref({
   current: 1,
   limit: 50,
-  count: 1000,
+  count: 0,
 });
-const servingList = ref(
-  new Array(Math.ceil(Math.random() * 50)).fill("").map((_, index) => ({
-    id: 1 + index,
-    biz_id: 1 + index,
-    spec: {
-      name: "myapp",
-      deploy_type: "common",
-      config_type: "file",
-      mode: "normal",
-      memo: "test",
-    },
-    revision: {
-      creator: "tom",
-      reviser: "tom",
-      create_at: "2019-07-29 11:57:20",
-      update_at: "2019-07-29 11:57:20",
-    },
-  }))
-);
+const servingList = ref([]) as Ref<IServingItem[]>
+
 const isEmpty = computed(() => {
   return servingList.value.length === 0;
 });
+
+const getDefaultSetting = () => {
+  return {
+    biz_id: bkBizId.value,
+    name: "",
+    config_type: "file",
+    reload_type: "file",
+    reload_file_path: "/bscp_test",
+    mode: "normal",
+    deploy_type: "common",
+    memo: "",
+  }
+}
 
 const isCreateAppShow = ref(false);
 const isAttrShow = ref(false);
 const appName = ref("");
 const isLoading = ref(false);
 const isBizLoading = ref(false);
-const bkBizId = ref("");
+const createAppPending = ref(false);
+const bkBizId = ref(2); // 目前缺少拉取业务列表的接口，固定写死一个业务ID调试
 const formRef = ref();
-const formData = ref({
-  biz_id: 0,
-  name: "",
-  config_type: "file",
-  mode: "normal",
-  deploy_type: "",
-  memo: "",
-});
+const formData = ref(getDefaultSetting());
 
 const activeAppItem = ref({
-  id: 1,
-  biz_id: 1,
+  id: 0,
+  biz_id: 0,
   spec: {
-    name: "myapp",
-    deploy_type: "common",
-    config_type: "file",
-    mode: "normal",
-    memo: "test",
+    name: "",
+    deploy_type: "",
+    config_type: "",
+    mode: "",
+    memo: "",
+    reload: {
+      file_reload_spec: {
+        reload_file_path: ""
+      },
+      reload_type: ""
+    }
   },
   revision: {
-    creator: "tom",
-    reviser: "tom",
-    create_at: "2019-07-29 11:57:20",
-    update_at: "2019-07-29 11:57:20",
+    creator: "",
+    reviser: "",
+    create_at: "",
+    update_at: "",
   },
 });
 
 const isAttrMemoEdit = ref(false);
 
-const filterPage = computed(() => {
+// 查询条件
+const filterKeyword = computed(() => {
   const { current, limit } = pagination.value;
-  return {
+
+  const rules: IAppListQuery = {
     start: (current - 1) * limit,
     limit: limit,
   };
+  if (appName.value) {
+    rules.name = appName.value
+  }
+  if (props.type === 'mine') {
+    rules.operator = ''
+  }
+  return rules
 });
+
+watch(
+  () => bkBizId.value,
+  (value) => {
+    loadServingList();
+  }
+);
+
+onMounted(() => {
+  loadServingList()
+  // isBizLoading.value = true;
+  // getBizList()
+  //   .then((res) => {
+  //     res.validate().then((data: any) => {
+  //       bizList.value = data?.info || [];
+  //       bkBizId.value = bizList.value[0]?.bk_biz_id;
+  //     });
+  //   })
+  //   .finally(() => {
+  //     isBizLoading.value = false;
+  //   });
+});
+
+const loadServingList = async () => {
+  isLoading.value = true;
+  try {
+    const resp = await getAppList(Number(bkBizId.value), filterKeyword.value)
+    servingList.value = resp.details
+    pagination.value.count = resp.count
+  } catch (e) {
+    console.error(e)
+  } finally {
+      isLoading.value = false;
+  }
+};
+
 const handleCreateAppClick = () => {
   isCreateAppShow.value = true;
+  formData.value = getDefaultSetting()
 };
 
 const handleDeleteItem = (item: any) => {
@@ -87,13 +137,13 @@ const handleDeleteItem = (item: any) => {
     type: "danger",
     headerAlign: "center" as const,
     footerAlign: "center" as const,
-    onConfirm: () => {
+    onConfirm: async () => {
       const { id, biz_id } = item;
-      deleteApp(id, biz_id).then((resp) =>
-        resp.validate().then(() => {
-          loadServingList();
-        })
-      );
+      await deleteApp(id, biz_id)
+      if (servingList.value.length === 1 && pagination.value.current > 1) {
+        pagination.value.current -= 1
+      }
+      loadServingList();
     },
   } as any);
 };
@@ -103,25 +153,54 @@ const handleConfigTypeClick = (type: string) => {
   formData.value.config_type = type;
 };
 
-const handleCreateAppForm = () => {
-  formRef.value.validate().then(() => {
-    createApp(formData.value.biz_id, formData.value).then((resp) =>
-      resp.validate(true).then(() => {
-        isCreateAppShow.value = false;
-        InfoBox({
-          type: "success",
-          title: "服务新建成功",
-          subTitle: "接下来你可以在服务下新增并使用配置项",
-          headerAlign: "center",
-          footerAlign: "center",
-          confirmText: "新增配置项",
-          cancelText: "稍后再说",
-          onConfirm() {},
-        } as any);
-      })
-    );
-  });
+const handleCreateAppForm = async () => {
+  await formRef.value.validate()
+  try {
+    const resp = await createApp(formData.value.biz_id, formData.value)
+    isCreateAppShow.value = false;
+    InfoBox({
+      type: "success",
+      title: "服务新建成功",
+      subTitle: "接下来你可以在服务下新增并使用配置项",
+      headerAlign: "center",
+      footerAlign: "center",
+      confirmText: "新增配置项",
+      cancelText: "稍后再说",
+      onConfirm() {
+        router.push({
+          name: 'serving-config',
+          params: {
+            id: resp.id
+          }
+        })
+      },
+      onClose() {
+        loadServingList()
+      }
+    } as any);
+  } catch (e) {
+    console.error(e)
+  } finally {
+    createAppPending.value = false;
+  }
 };
+
+const handleItemMemoBlur = () => {
+  const { id, biz_id, spec } = activeAppItem.value;
+  const { name, mode, memo, config_type, reload } = spec;
+  const data = {
+    id,
+    biz_id,
+    name,
+    mode,
+    memo,
+    config_type,
+    reload_type: reload.reload_type,
+    reload_file_path: reload.file_reload_spec.reload_file_path,
+    deploy_type: "common",
+  }
+  updateApp({ id, biz_id, data });
+}
 
 const handlePaginationChange = () => {
   loadServingList();
@@ -142,46 +221,17 @@ const handleEditAttrMemo = () => {
   isAttrMemoEdit.value = true;
 };
 
-const handleItemMemoBlur = () => {
-  const { id, biz_id, spec } = activeAppItem.value;
-  const memo = spec.memo;
-  updateApp({ id, biz_id, memo }).then(resp => resp.validate(true));
+const handleNameInputChange = (val: string) => {
+  if (!val) {
+    handleSearch()
+  }
 }
 
-const loadServingList = () => {
-  isLoading.value = true;
-  getAppList(Number(bkBizId.value), {}, filterPage.value)
-    .then((resp) => {
-      resp.validate().then((data: any) => {
-        servingList.value = data?.detail;
-        pagination.value.count = data?.count;
-      });
-    })
-    .finally(() => {
-      isLoading.value = false;
-    });
-};
+const handleSearch = () => {
+  pagination.value.current = 1
+  loadServingList()
+}
 
-onMounted(() => {
-  isBizLoading.value = true;
-  getBizList()
-    .then((res) => {
-      res.validate().then((data: any) => {
-        bizList.value = data?.info || [];
-        bkBizId.value = bizList.value[0]?.bk_biz_id;
-      });
-    })
-    .finally(() => {
-      isBizLoading.value = false;
-    });
-});
-
-watch(
-  () => bkBizId.value,
-  (value) => {
-    loadServingList();
-  }
-);
 </script>
 
 <template>
@@ -199,14 +249,18 @@ watch(
           :loading="isBizLoading"
           id-key="bk_biz_id"
           display-key="bk_biz_name"
-          filterable
-        ></bk-select>
+          filterable>
+        </bk-select>
         <bk-input
           class="search-app-name"
           type="search"
           v-model="appName"
           :placeholder="t('服务名称')"
-        />
+          :clearable="true"
+          @change="handleNameInputChange"
+          @enter="handleSearch"
+          @clear="handleSearch">
+        </bk-input>
       </div>
     </div>
     <div class="content-body">
@@ -241,7 +295,7 @@ watch(
               <div class="item-config">
                 <div class="config-info">
                   <span class="bk-bscp-icon icon-configuration-line"></span>
-                  2个配置项
+                  xx个配置项
                 </div>
                 <div class="time-info">
                   <span class="bk-bscp-icon icon-time-2"></span>
@@ -253,13 +307,13 @@ watch(
                   size="small"
                   @click="() => handleItemAttributeClick(item)"
                   style="width: 50%"
-                  text
-                  >{{ t("服务属性") }}</bk-button
-                >
+                  text>
+                  {{ t("服务属性") }}
+                </bk-button>
                 <span class="divider-middle"></span>
-                <bk-button size="small" style="width: 50%" text>{{
-                  t("配置管理")
-                }}</bk-button>
+                <bk-button size="small" style="width: 50%" text @click="router.push({ name: 'serving-config', params: { id: item.id } })">
+                  {{t("配置管理")}}
+                </bk-button>
               </div>
             </div>
           </div>
@@ -276,8 +330,7 @@ watch(
     <bk-sideslider
       v-model:isShow="isCreateAppShow"
       :title="t('新建服务')"
-      width="640"
-    >
+      width="640">
       <div class="create-app-form">
         <bk-form form-type="vertical" :model="formData" ref="formRef">
           <bk-form-item :label="t('所属业务')" property="biz_id" required>
@@ -304,7 +357,7 @@ watch(
               v-model="formData.memo"
             />
           </bk-form-item>
-          <bk-form-item property="config_type" required>
+          <!-- <bk-form-item property="config_type" required>
             <div class="config-type">
               你想以哪种方式来为您的服务接入配置管理
             </div>
@@ -346,7 +399,7 @@ watch(
                 </div>
               </div>
             </div>
-          </bk-form-item>
+          </bk-form-item> -->
         </bk-form>
       </div>
       <template #footer>
@@ -354,10 +407,11 @@ watch(
           <bk-button
             style="width: 88px"
             theme="primary"
+            :loading="createAppPending"
             @click="handleCreateAppForm"
             >{{ t("提交") }}</bk-button
           >
-          <bk-button style="width: 88px">{{ t("取消") }}</bk-button>
+          <bk-button style="width: 88px" @click="isCreateAppShow = false">{{ t("取消") }}</bk-button>
         </div>
       </template>
     </bk-sideslider>
@@ -517,7 +571,7 @@ watch(
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
-            padding: 8px;
+            padding: 8px 16px;
             height: 32px;
             position: relative;
             .item-tag-del {

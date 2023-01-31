@@ -46,6 +46,12 @@ func (p *Compute) GetClusterCPUUsage(ctx context.Context, projectId, clusterId s
 	return nil, nil
 }
 
+// GetClusterCPURequest 获取CPU Request
+func (p *Compute) GetClusterCPURequest(ctx context.Context, projectId, clusterId string, start, end time.Time,
+	step time.Duration) ([]*prompb.TimeSeries, error) {
+	return nil, nil
+}
+
 // GetClusterCPURequestUsage 获取CPU核心装箱率
 func (p *Compute) GetClusterCPURequestUsage(ctx context.Context, projectId, clusterId string, start, end time.Time,
 	step time.Duration) ([]*prompb.TimeSeries, error) {
@@ -66,6 +72,12 @@ func (p *Compute) GetClusterMemoryUsed(ctx context.Context, projectId, clusterId
 
 // GetClusterMemoryUsage 获取内存使用率
 func (p *Compute) GetClusterMemoryUsage(ctx context.Context, projectId, clusterId string, start, end time.Time,
+	step time.Duration) ([]*prompb.TimeSeries, error) {
+	return nil, nil
+}
+
+// GetClusterMemoryRequest 获取内存 Request
+func (p *Compute) GetClusterMemoryRequest(ctx context.Context, projectId, clusterId string, start, end time.Time,
 	step time.Duration) ([]*prompb.TimeSeries, error) {
 	return nil, nil
 }

@@ -35,7 +35,7 @@ func (g *MetricGetter) getMesosWorkloadMemory(opts *types.JobCommonOpts,
 	memoryMetrics.MemoryLimit = GetInt64Data(podMemoryLimitMetric)
 	memoryMetrics.MemoryRequest = GetInt64Data(podMemoryLimitMetric)
 	podMemoryUsedMetric, err := clients.MonitorClient.QueryByPost(
-		fmt.Sprintf(WorkloadMemoryUsed, podCondition, MesosPodSumCondition),
+		fmt.Sprintf(WorkloadMemoryUsed, podCondition),
 		opts.CurrentTime)
 	if err != nil {
 		return memoryMetrics, fmt.Errorf("get pod metrics error: %v", err)
@@ -60,7 +60,7 @@ func (g *MetricGetter) getMesosWorkloadCPU(opts *types.JobCommonOpts,
 	cpuMetrics.CPULimit = GetFloatData(podCPULimitMetric)
 	cpuMetrics.CPURequest = GetFloatData(podCPULimitMetric)
 	podCPUUsedMetric, err := clients.MonitorClient.QueryByPost(
-		fmt.Sprintf(WorkloadCPUUsage, podCondition, getDimensionPromql(opts.Dimension), MesosPodSumCondition),
+		fmt.Sprintf(WorkloadCPUUsage, podCondition, getDimensionPromql(opts.Dimension, opts.ObjectType)),
 		opts.CurrentTime)
 	if err != nil {
 		return cpuMetrics, fmt.Errorf("get pod metrics error: %v", err)
@@ -114,7 +114,7 @@ func (g *MetricGetter) getMesosNamespaceCPUMetrics(opts *types.JobCommonOpts,
 
 	CPUUsedMetric, err := clients.MonitorClient.QueryByPost(
 		fmt.Sprintf(NamespaceCPUUsage, fmt.Sprintf(NamespaceCondition, opts.ClusterID, opts.Namespace),
-			getDimensionPromql(opts.Dimension), NamespaceSumCondition),
+			getDimensionPromql(opts.Dimension, opts.ObjectType), NamespaceSumCondition),
 		opts.CurrentTime)
 	if err != nil {
 		return cpuMetrics, fmt.Errorf("get namespace metrics error: %v", err)
@@ -161,8 +161,7 @@ func (g *MetricGetter) getMesosClusterMemoryMetrics(opts *types.JobCommonOpts,
 		return memoryMetrics, fmt.Errorf("get cluster metrics error: %v", err)
 	}
 	memoryUsedMetric, err := clients.MonitorClient.QueryByPost(
-		fmt.Sprintf(ClusterMemoryUsed, opts.ClusterID, opts.ClusterID, opts.ClusterID, opts.ClusterID, opts.ClusterID),
-		opts.CurrentTime)
+		getK8sMemoryUsage(opts), opts.CurrentTime)
 	if err != nil {
 		return memoryMetrics, fmt.Errorf("get cluster metrics error: %v", err)
 	}
@@ -193,9 +192,7 @@ func (g *MetricGetter) getMesosClusterCPUMetrics(opts *types.JobCommonOpts,
 		return cpuMetrics, fmt.Errorf("get cluster metrics error: %v", err)
 	}
 
-	CPUUsageMetric, err := clients.MonitorClient.QueryByPost(
-		fmt.Sprintf(ClusterCPUUsage, opts.ClusterID, getDimensionPromql(opts.Dimension)),
-		opts.CurrentTime)
+	CPUUsageMetric, err := clients.MonitorClient.QueryByPost(getK8sCpuUsage(opts), opts.CurrentTime)
 	if err != nil {
 		return cpuMetrics, fmt.Errorf("get cluster metrics error: %v", err)
 	}

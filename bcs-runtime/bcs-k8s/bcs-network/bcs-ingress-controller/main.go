@@ -35,6 +35,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/http/ipv6server"
 	clbv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubedeprecated/apis/clb/v1"
 	ingressctrl "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/ingresscontroller"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/check"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/cloud"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/cloud/aws"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/cloud/azure"
@@ -347,8 +348,15 @@ func main() {
 		blog.Errorf("init http server failed: %v", err.Error())
 		os.Exit(1)
 	}
-
 	blog.Infof("starting http server")
+
+	checkRunner := check.NewCheckRunner(context.Background())
+	checkRunner.
+		Register(check.NewPortBindChecker(mgr.GetClient(), mgr.GetEventRecorderFor("bcs-ingress-controller"))).
+		Register(check.NewListenerChecker(mgr.GetClient())).
+		Start()
+	blog.Infof("starting check runner")
+
 	if err = mgr.Start(ctrl.SetupSignalHandler()); err != nil {
 		blog.Errorf("problem running manager, err %s", err.Error())
 		os.Exit(1)

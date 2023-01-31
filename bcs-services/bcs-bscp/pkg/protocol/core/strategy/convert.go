@@ -150,7 +150,7 @@ func PbScopeSelector(s *table.ScopeSelector) (*ScopeSelector, error) {
 		return nil, nil
 	}
 
-	selector, err := s.Selector.MarshalPB()
+	pbSelector, err := s.Selector.MarshalPB()
 	if err != nil {
 		return nil, err
 	}
@@ -161,7 +161,7 @@ func PbScopeSelector(s *table.ScopeSelector) (*ScopeSelector, error) {
 	}
 
 	return &ScopeSelector{
-		Selector:    selector,
+		Selector:    pbSelector,
 		SubStrategy: subStrategy,
 	}, nil
 }
@@ -241,17 +241,17 @@ func (m *SubScopeSelector) SubScopeSelector() (*table.SubScopeSelector, error) {
 		return nil, nil
 	}
 
-	selector := new(selector.Selector)
+	strategicSelector := new(selector.Selector)
 	if m.Selector != nil {
 		s, err := UnmarshalSelector(m.Selector)
 		if err != nil {
 			return nil, err
 		}
-		selector = s
+		strategicSelector = s
 	}
 
 	return &table.SubScopeSelector{
-		Selector: selector,
+		Selector: strategicSelector,
 	}, nil
 }
 
@@ -261,13 +261,13 @@ func PbSubScopeSelector(s *table.SubScopeSelector) (*SubScopeSelector, error) {
 		return nil, nil
 	}
 
-	selector, err := s.Selector.MarshalPB()
+	pbSelector, err := s.Selector.MarshalPB()
 	if err != nil {
 		return nil, err
 	}
 
 	return &SubScopeSelector{
-		Selector: selector,
+		Selector: pbSelector,
 	}, nil
 }
 

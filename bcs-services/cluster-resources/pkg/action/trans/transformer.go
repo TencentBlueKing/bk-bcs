@@ -25,6 +25,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/renderer"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/slice"
 )
 
 // New 根据 Format 类型，生成不同的 Manifest 转换器
@@ -33,7 +34,7 @@ func New(
 ) (Transformer, error) {
 	switch format {
 	case action.DefaultFormat, action.ManifestFormat:
-		return &DummyTransformer{ctx: ctx, action: uAction, manifest: rawData}, nil
+		return &DummyTransformer{ctx: ctx, action: uAction, kind: kind, manifest: rawData}, nil
 	case action.FormDataFormat:
 		return &FormDataTransformer{ctx: ctx, formData: rawData, clusterID: clusterID, kind: kind, action: uAction}, nil
 	default:
@@ -45,6 +46,7 @@ func New(
 type DummyTransformer struct {
 	ctx      context.Context
 	manifest map[string]interface{}
+	kind     string
 	action   string
 }
 
@@ -63,6 +65,11 @@ func (t *DummyTransformer) ToManifest() (map[string]interface{}, error) {
 		if err := mapx.SetItems(t.manifest, paths, resCsts.EditModeYaml); err != nil {
 			return nil, err
 		}
+	}
+
+	// 检查是否需要强制移除 resourceVersion，仅针对特定类型的资源
+	if slice.StringInSlice(t.kind, resCsts.RemoveResVersionKinds) {
+		delete(t.manifest["metadata"].(map[string]interface{}), "resourceVersion")
 	}
 
 	username := t.ctx.Value(ctxkey.UsernameKey).(string)

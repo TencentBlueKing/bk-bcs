@@ -9,6 +9,8 @@
 <style lang="postcss" scoped>
 .bcs-body {
     .content {
+        max-height: calc(100vh - 112px);
+        overflow: auto;
         padding: 24px;
     }
 }

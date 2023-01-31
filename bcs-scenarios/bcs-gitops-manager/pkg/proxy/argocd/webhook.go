@@ -14,45 +14,33 @@
 package argocd
 
 import (
-	"fmt"
+	"context"
 	"net/http"
 
 	"github.com/gorilla/mux"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy"
-	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/project"
 )
 
 // WebhookPlugin defines the webhook plugin
 type WebhookPlugin struct {
 	*mux.Router
-
-	Session    *Session
-	Permission *project.BCSProjectPerm
-	option     *proxy.GitOpsOptions
+	middleware MiddlewareInterface
 }
 
 // Init initialize webhook plugin
 func (plugin *WebhookPlugin) Init() error {
-	plugin.Permission = project.NewBCSProjectPermClient(plugin.option.IAMClient)
-	plugin.Path("").Methods("POST").HandlerFunc(plugin.executeWebhook)
+	plugin.Path("").Methods("POST").
+		Handler(plugin.middleware.HttpWrapper(plugin.executeWebhook))
 
 	blog.Infof("argocd webhook plugin init successfully")
 	return nil
 }
 
-// TODO: 需增加权限校验
-func (plugin *WebhookPlugin) executeWebhook(w http.ResponseWriter, r *http.Request) {
-	user, err := proxy.GetJWTInfo(r, plugin.option.JWTDecoder)
-	if err != nil {
-		blog.Errorf("request %s get jwt token failure, %s", r.URL.Path, err.Error())
-		http.Error(w,
-			fmt.Sprintf("Bad Request: %s", err.Error()),
-			http.StatusBadRequest,
-		)
-		return
-	}
+// TODO: webhook 保证性能，暂时只做登录态校验
+func (plugin *WebhookPlugin) executeWebhook(ctx context.Context, r *http.Request) *httpResponse {
+	user := ctx.Value("user").(*proxy.UserInfo)
 	blog.Infof("user %s request webhook", user.GetUser())
-	plugin.Session.ServeHTTP(w, r)
+	return nil
 }

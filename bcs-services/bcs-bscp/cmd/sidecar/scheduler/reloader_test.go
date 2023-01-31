@@ -39,7 +39,7 @@ func TestReloader(t *testing.T) {
 	}
 
 	appReloads := map[uint32]*sfs.Reload{
-		testAppID: &sfs.Reload{
+		testAppID: {
 			ReloadType: table.ReloadWithFile,
 			FileReloadSpec: &sfs.FileReloadSpec{
 				ReloadFilePath: testReloadFilePath,

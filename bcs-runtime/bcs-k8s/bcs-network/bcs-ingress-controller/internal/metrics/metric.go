@@ -26,6 +26,10 @@ const (
 	LibCallStatusTimeout = "timeout"
 	// LibCallStatusOK lib call successfully
 	LibCallStatusOK = "ok"
+	// LibCallStatusExceedLimit lib call exceed limit
+	LibCallStatusExceedLimit = "exceed_limit"
+	// LibCallStatusLBLock operate lb is locked
+	LibCallStatusLBLock = "lb_lock"
 
 	// EventTypeAdd type for add event
 	EventTypeAdd = "add"

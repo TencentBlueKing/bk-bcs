@@ -26,6 +26,8 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/api"
 	icommon "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
+
 	as "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/as/v20180419"
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
 	tke "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/tke/v20180525"
@@ -419,7 +421,7 @@ func generateInternetAccessible(asc *as.LaunchConfiguration) *proto.InternetAcce
 func generateImageInfo(cloudNodeGroup *tke.NodePool, group *proto.NodeGroup, imageID string) *proto.ImageInfo {
 	imageInfo := &proto.ImageInfo{ImageID: imageID}
 	if cloudNodeGroup != nil && cloudNodeGroup.NodePoolOs != nil {
-		for _, v := range api.ImageOsList {
+		for _, v := range utils.ImageOsList {
 			if v.ImageID == imageID {
 				imageInfo.ImageName = v.Alias
 				break

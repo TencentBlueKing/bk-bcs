@@ -117,7 +117,7 @@ import IpSelector from '@/components/ip-selector/selector-dialog.vue';
 import StatusIcon from '@/views/dashboard/common/status-icon';
 import $i18n from '@/i18n/i18n-setup';
 import useNode from './use-node';
-import NodeTemplateDetail from './node-template-detail.vue';
+import NodeTemplateDetail from './node-template/node-template-detail.vue';
 import tipDialog from '@/components/tip-dialog/index.vue';
 import { NODE_TEMPLATE_ID } from '@/common/constant';
 

@@ -3,7 +3,11 @@ PRO_DIR   = $(shell pwd)
 BUILDTIME = $(shell date +%Y-%m-%dT%T%z)
 VERSION   = $(shell echo ${ENV_BK_BSCP_VERSION})
 DEBUG     = $(shell echo ${ENV_BK_BSCP_ENABLE_DEBUG})
+PREFIX   ?= $(shell pwd)
+export GOBIN=${PREFIX}/.bin
+export PROTOC_VERSION=3.20.0
 GOBUILD=CGO_ENABLED=0 go build -trimpath
+
 
 # output directory for release package and version for command line
 ifeq ("$(VERSION)", "")
@@ -28,6 +32,24 @@ LDFLAG=-ldflags "-X github.com/Tencent/bk-bcs/bcs-common/common/version.BcsVersi
  -X github.com/Tencent/bk-bcs/bcs-common/common/version.BcsEdition=${bcs_edition}"
 
 default: all
+
+# 不支持v2
+# go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-grpc-gateway@v2.14.0
+# go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-openapiv2@v2.14.0
+.PHONY: init
+init:
+	@echo Download protoc
+	@mkdir -p ${PREFIX}/.bin
+	@cd ${PREFIX}/.bin && \
+		rm -rf protoc-*.zip* && \
+		wget -q https://github.com/protocolbuffers/protobuf/releases/download/v${PROTOC_VERSION}/protoc-${PROTOC_VERSION}-linux-x86_64.zip && \
+		unzip -o protoc-${PROTOC_VERSION}-linux-x86_64.zip && \
+		mv -f bin/protoc . && \
+		rm -rf protoc-*.zip* readme.txt bin
+	go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.28.0
+	go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.2.0
+	go install github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway@v1.16.0
+	go install github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger@v1.16.0
 
 pre:
 	@echo -e "\e[34;1mBuilding...\n\033[0m"

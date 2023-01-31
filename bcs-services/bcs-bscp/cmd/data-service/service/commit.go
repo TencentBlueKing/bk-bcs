@@ -31,16 +31,16 @@ import (
 func (s *Service) CreateCommit(ctx context.Context, req *pbds.CreateCommitReq) (
 	*pbds.CreateResp, error) {
 
-	kit := kit.FromGrpcContext(ctx)
+	grpcKit := kit.FromGrpcContext(ctx)
 
 	opt := &queryContentOption{
 		ID:    req.ContentId,
 		BizID: req.Attachment.BizId,
 		AppID: req.Attachment.AppId,
 	}
-	content, err := s.queryContent(kit, opt)
+	content, err := s.queryContent(grpcKit, opt)
 	if err != nil {
-		logs.Errorf("query content failed, opt: %v, err: %v, rid: %s", opt, err, kit.Rid)
+		logs.Errorf("query content failed, opt: %v, err: %v, rid: %s", opt, err, grpcKit.Rid)
 		return nil, err
 	}
 
@@ -52,13 +52,13 @@ func (s *Service) CreateCommit(ctx context.Context, req *pbds.CreateCommitReq) (
 		},
 		Attachment: req.Attachment.CommitAttachment(),
 		Revision: &table.CreatedRevision{
-			Creator:   kit.User,
+			Creator:   grpcKit.User,
 			CreatedAt: time.Now(),
 		},
 	}
-	id, err := s.dao.Commit().Create(kit, commit)
+	id, err := s.dao.Commit().Create(grpcKit, commit)
 	if err != nil {
-		logs.Errorf("create commit failed, err: %v, rid: %s", err, kit.Rid)
+		logs.Errorf("create commit failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
 	}
 
@@ -70,12 +70,12 @@ func (s *Service) CreateCommit(ctx context.Context, req *pbds.CreateCommitReq) (
 func (s *Service) ListCommits(ctx context.Context, req *pbds.ListCommitsReq) (*pbds.ListCommitsResp,
 	error) {
 
-	kit := kit.FromGrpcContext(ctx)
+	grpcKit := kit.FromGrpcContext(ctx)
 
 	// parse pb struct filter to filter.Expression.
 	filter, err := pbbase.UnmarshalFromPbStructToExpr(req.Filter)
 	if err != nil {
-		logs.Errorf("unmarshal pb struct to expression failed, err: %v, rid: %s", err, kit.Rid)
+		logs.Errorf("unmarshal pb struct to expression failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
 	}
 
@@ -86,9 +86,9 @@ func (s *Service) ListCommits(ctx context.Context, req *pbds.ListCommitsReq) (*p
 		Page:   req.Page.BasePage(),
 	}
 
-	details, err := s.dao.Commit().List(kit, query)
+	details, err := s.dao.Commit().List(grpcKit, query)
 	if err != nil {
-		logs.Errorf("list commit failed, err: %v, rid: %s", err, kit.Rid)
+		logs.Errorf("list commit failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
 	}
 

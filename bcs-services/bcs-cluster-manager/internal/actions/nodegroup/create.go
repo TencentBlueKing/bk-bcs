@@ -299,6 +299,9 @@ func (ca *CreateAction) Handle(ctx context.Context,
 
 func validateDiskSize(disks ...*cmproto.DataDisk) error {
 	for _, v := range disks {
+		if v == nil {
+			continue
+		}
 		size, _ := strconv.Atoi(v.DiskSize)
 		if size < 50 || size > 32000 {
 			return fmt.Errorf("disk size is invalid, it should >=50 and <=32000")

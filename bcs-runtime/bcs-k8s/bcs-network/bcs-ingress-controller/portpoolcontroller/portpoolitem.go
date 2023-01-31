@@ -65,6 +65,7 @@ func (ppih *PortPoolItemHandler) ensurePortPoolItem(
 		retItemStatus = itemStatus.DeepCopy()
 		retItemStatus.EndPort = item.EndPort
 		retItemStatus.External = item.External
+		retItemStatus.Protocol = common.GetPortPoolItemProtocols(item.Protocol)
 	}
 	// check loadbalanceIDs
 	lbIDs := make([]string, len(item.LoadBalancerIDs))
@@ -272,10 +273,9 @@ func (ppih *PortPoolItemHandler) ensureListeners(region, lbID, itemName string, 
 						blog.Warnf("update listener %s failed, err %s", tmpName, err.Error())
 					}
 				}
-				// TODO use listener.status.status to predict listener status
 				if len(listener.Status.ListenerID) == 0 {
 					notReady = true
-					blog.Warnf("listener %s is not ready", tmpName)
+					blog.V(4).Infof("listener %s is not ready", tmpName)
 				}
 			}
 		}

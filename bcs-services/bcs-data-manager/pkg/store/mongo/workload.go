@@ -232,14 +232,14 @@ func (m *ModelWorkload) InsertWorkloadInfo(ctx context.Context, metrics *types.W
 		ClusterIDKey:    opts.ClusterID,
 		NamespaceKey:    opts.Namespace,
 		DimensionKey:    opts.Dimension,
-		WorkloadTypeKey: opts.WorkloadType,
+		WorkloadTypeKey: map[string]string{"$regex": opts.WorkloadType, "$options": "$i"},
 		WorkloadNameKey: opts.WorkloadName,
 		BucketTimeKey:   bucketTime,
 	})
 	newCond := operator.NewLeafCondition(operator.Eq, operator.M{
 		NamespaceKey:    opts.Namespace,
 		DimensionKey:    opts.Dimension,
-		WorkloadTypeKey: opts.WorkloadType,
+		WorkloadTypeKey: map[string]string{"$regex": opts.WorkloadType, "$options": "$i"},
 		WorkloadNameKey: opts.WorkloadName,
 		BucketTimeKey:   bucketTime,
 	})
@@ -340,12 +340,21 @@ func (m *ModelWorkload) GetWorkloadInfoList(ctx context.Context,
 	}
 	if request.WorkloadType != "" {
 		cond = append(cond, operator.NewLeafCondition(operator.Eq, operator.M{
-			WorkloadTypeKey: request.WorkloadType,
+			WorkloadTypeKey: map[string]string{"$regex": request.WorkloadType, "$options": "$i"},
 		}))
 	}
+	startTime := getStartTime(dimension)
+	if request.GetStartTime() != 0 {
+		startTime = time.Unix(request.GetStartTime(), 0)
+	}
 	cond = append(cond, operator.NewLeafCondition(operator.Gte, operator.M{
-		MetricTimeKey: primitive.NewDateTimeFromTime(getStartTime(dimension)),
+		MetricTimeKey: primitive.NewDateTimeFromTime(startTime),
 	}))
+	if request.GetEndTime() != 0 {
+		cond = append(cond, operator.NewLeafCondition(operator.Lte, operator.M{
+			MetricTimeKey: primitive.NewDateTimeFromTime(time.Unix(request.GetEndTime(), 0)),
+		}))
+	}
 	conds := operator.NewBranchCondition(operator.And, cond...)
 	tempWorkloadList := make([]map[string]string, 0)
 	err = m.DB.Table(newTableInfo.TableName).Find(conds).WithProjection(map[string]int{ProjectIDKey: 1, ClusterIDKey: 1,
@@ -383,6 +392,8 @@ func (m *ModelWorkload) GetWorkloadInfoList(ctx context.Context,
 			Dimension:    dimension,
 			WorkloadType: workload[WorkloadTypeKey],
 			WorkloadName: workload[WorkloadNameKey],
+			StartTime:    request.GetStartTime(),
+			EndTime:      request.GetEndTime(),
 		}
 		namespaceInfo, err := m.GetWorkloadInfo(ctx, workloadRequest)
 		if err != nil {
@@ -416,7 +427,7 @@ func (m *ModelWorkload) GetWorkloadInfo(ctx context.Context,
 		ObjectTypeKey:   types.NamespaceType,
 		NamespaceKey:    request.Namespace,
 		WorkloadNameKey: request.WorkloadName,
-		WorkloadTypeKey: request.WorkloadType,
+		WorkloadTypeKey: map[string]string{"$regex": request.WorkloadType, "$options": "$i"},
 	})
 	workloadPublic := types.WorkloadPublicMetrics{
 		SuggestCPU:    0,
@@ -437,20 +448,29 @@ func (m *ModelWorkload) GetWorkloadInfo(ctx context.Context,
 		dimension = types.DimensionMinute
 	}
 	metricStartTime := getStartTime(dimension)
+	if request.GetStartTime() != 0 {
+		metricStartTime = time.Unix(request.GetStartTime(), 0)
+	}
+	metricEndTime := time.Now()
+	if request.GetEndTime() != 0 {
+		metricEndTime = time.Unix(request.GetEndTime(), 0)
+	}
 	pipeline := make([]map[string]interface{}, 0)
 	pipeline = append(pipeline, map[string]interface{}{"$match": map[string]interface{}{
 		ClusterIDKey:    request.ClusterID,
 		DimensionKey:    dimension,
 		NamespaceKey:    request.Namespace,
-		WorkloadTypeKey: request.WorkloadType,
+		WorkloadTypeKey: map[string]string{"$regex": request.WorkloadType, "$options": "$i"},
 		WorkloadNameKey: request.WorkloadName,
 		MetricTimeKey: map[string]interface{}{
 			"$gte": primitive.NewDateTimeFromTime(metricStartTime),
+			"$lte": primitive.NewDateTimeFromTime(metricEndTime),
 		},
 	}}, map[string]interface{}{"$unwind": "$metrics"},
 		map[string]interface{}{"$match": map[string]interface{}{
 			MetricTimeKey: map[string]interface{}{
 				"$gte": primitive.NewDateTimeFromTime(metricStartTime),
+				"$lte": primitive.NewDateTimeFromTime(metricEndTime),
 			},
 		}},
 		map[string]interface{}{"$project": map[string]interface{}{
@@ -716,7 +736,7 @@ func (m *ModelWorkload) generateCond(opts *types.JobCommonOpts, bucket string) [
 	}
 	if opts.WorkloadType != "" {
 		cond = append(cond, operator.NewLeafCondition(operator.Eq, operator.M{
-			WorkloadTypeKey: opts.WorkloadType,
+			WorkloadTypeKey: map[string]string{"$regex": opts.WorkloadType, "$options": "$i"},
 		}))
 	}
 	if opts.WorkloadName != "" {

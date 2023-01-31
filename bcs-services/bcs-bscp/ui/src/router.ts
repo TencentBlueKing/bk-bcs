@@ -18,6 +18,28 @@ const routes = [
       },
     ]
   },
+  {
+    path: '/serving/:id/',
+    name: 'serving-detail',
+    component: () => import('./views/serving/detail/index.vue'),
+    children: [
+      {
+        path: 'config/',
+        name: 'serving-config',
+        component: () => import('./views/serving/detail/config/index.vue')
+      },
+      {
+        path: 'group/',
+        name: 'serving-group',
+        component: () => import('./views/serving/detail/group/index.vue')
+      },
+      {
+        path: 'client/',
+        name: 'serving-client',
+        component: () => import('./views/serving/detail/client/index.vue')
+      }
+    ]
+  }
 ]
 
 const router = createRouter({

@@ -27,11 +27,11 @@ import (
 )
 
 // NewHelmClient create HelmManager SDK implementation
-func NewHelmClient(config *bcsapi.Config) HelmManagerClient {
+func NewHelmClient(config *bcsapi.Config) (HelmManagerClient, func()) {
 	rand.Seed(time.Now().UnixNano())
 	if len(config.Hosts) == 0 {
 		// ! pay more attention for nil return
-		return nil
+		return nil, nil
 	}
 	// create grpc connection
 	header := map[string]string{
@@ -55,6 +55,10 @@ func NewHelmClient(config *bcsapi.Config) HelmManagerClient {
 		auth.Insecure = true
 	}
 	opts = append(opts, grpc.WithPerRPCCredentials(auth))
+	if config.AuthToken != "" {
+		opts = append(opts, grpc.WithPerRPCCredentials(bcsapi.NewTokenAuth(config.AuthToken)))
+	}
+
 	var conn *grpc.ClientConn
 	var err error
 	maxTries := 3
@@ -72,7 +76,7 @@ func NewHelmClient(config *bcsapi.Config) HelmManagerClient {
 	}
 	if conn == nil {
 		blog.Errorf("create no helm manager client after all instance tries")
-		return nil
+		return nil, nil
 	}
-	return NewHelmManagerClient(conn)
+	return NewHelmManagerClient(conn), func() { conn.Close() }
 }

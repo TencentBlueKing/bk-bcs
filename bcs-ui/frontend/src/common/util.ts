@@ -327,13 +327,13 @@ export function formatDate(date, formatStr = 'YYYY-MM-DD hh:mm:ss') {
  *
  * @return {string} 转换后的值
  */
-export function formatBytes(bytes, decimals) {
+export function formatBytes(bytes, decimals = 2) {
   if (isNaN(bytes)) return bytes;
   if (parseFloat(bytes) === 0) {
     return '0 B';
   }
   const k = 1024;
-  const dm = decimals || 2;
+  const dm = decimals;
   const sizes = ['B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
   if (i === -1) {

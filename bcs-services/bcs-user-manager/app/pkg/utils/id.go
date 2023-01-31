@@ -13,35 +13,6 @@
 
 package utils
 
-import (
-	"crypto/md5"
-	"encoding/hex"
-	"fmt"
-	"strings"
-)
-
-func md5V(str string) string {
-	h := md5.New()
-	_, _ = h.Write([]byte(str))
-	return hex.EncodeToString(h.Sum(nil))
-}
-
-// CalIAMNamespaceID trans namespace to permID, permSystem limit 32 length
-func CalIAMNamespaceID(clusterID string, name string) (string, error) {
-	clusterStrs := strings.Split(clusterID, "-")
-	if len(clusterStrs) != 3 {
-		return "", fmt.Errorf("CalIAMNamespaceID err: %v", "length not equal 3")
-	}
-	clusterIDx := clusterStrs[len(clusterStrs)-1]
-
-	iamNsID := clusterIDx + ":" + md5V(name)[8:16] + name[:2]
-	if len(iamNsID) > 32 {
-		return "", fmt.Errorf("CalIAMNamespaceID iamNamespaceID more than 32characters")
-	}
-
-	return iamNsID, nil
-}
-
 // StringInSlice returns true if given string in slice
 func StringInSlice(s string, l []string) bool {
 	for _, objStr := range l {

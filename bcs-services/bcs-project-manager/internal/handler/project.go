@@ -16,15 +16,18 @@ package handler
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/middleware"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/actions/project"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/auth"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/cmdb"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/iam"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/logging"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store"
 	pm "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/project"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/errorx"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/proto/bcsproject"
 )
 
@@ -71,8 +74,21 @@ func (p *ProjectHandler) GetProject(ctx context.Context,
 	if err != nil {
 		return err
 	}
+	businessName := ""
+	if projectInfo.BusinessID != "" && projectInfo.BusinessID != "0" {
+		searchData, err := cmdb.SearchBusiness("", projectInfo.BusinessID)
+		if err != nil {
+			return errorx.NewRequestCMDBErr(err.Error())
+		}
+		if searchData.Count != 1 {
+			return errorx.NewReadableErr(errorx.ParamErr,
+				fmt.Sprintf("can not find business %s", projectInfo.BusinessID))
+		}
+		businessName = searchData.Info[0].BKBizName
+	}
 	// 处理返回数据及权限
 	setResp(resp, projectInfo)
+	resp.Data.BusinessName = businessName
 	return nil
 }
 

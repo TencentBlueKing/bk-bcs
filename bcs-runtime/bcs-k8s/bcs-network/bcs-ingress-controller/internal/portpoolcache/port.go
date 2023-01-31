@@ -212,5 +212,6 @@ func (cpl *CachePortList) IncreaseEndPort(endPort int) error {
 		cpl.Ports = append(cpl.Ports, newPort)
 	}
 	cpl.AvailablePortNum = availableItem
+	cpl.EndPort = endPort
 	return nil
 }

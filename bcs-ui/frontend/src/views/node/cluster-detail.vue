@@ -11,12 +11,32 @@
         <div class="cluster-detail-tab">
           <div
             v-for="item in tabItems"
-            :key="item.com"
-            :class="['item', { active: activeCom === item.com }]"
-            @click="handleChangeActive(item)"
+            :key="item.id"
+            :class="['item', { active: activeId === item.id }]"
+            @click="handleChangeActive(item.id)"
           >
             <span class="icon"><i :class="item.icon"></i></span>
             {{item.title}}
+          </div>
+          <!-- 扩缩容 -->
+          <div
+            :class="['item', { active: activeId === 'AutoScaler' }]"
+            v-if="cloudDetail.confInfo && !cloudDetail.confInfo.disableNodeGroup"
+            v-authority="{
+              clickable: webAnnotations.perms[clusterId]
+                && webAnnotations.perms[clusterId].cluster_manage,
+              actionId: 'cluster_manage',
+              resourceName: clusterName,
+              disablePerms: true,
+              permCtx: {
+                project_id: projectID,
+                cluster_id: clusterId
+              }
+            }"
+            @click="handleChangeActive('AutoScaler')"
+          >
+            <span class="icon"><i class="bcs-icon bcs-icon-kuosuorong"></i></span>
+            {{ $t('弹性扩缩容') }}
           </div>
         </div>
         <div class="cluster-detail-content">
@@ -47,7 +67,9 @@ import overview from '@/views/cluster/overview.vue';
 import info from '@/views/cluster/info.vue';
 import useDefaultClusterId from './use-default-clusterId';
 import $i18n from '@/i18n/i18n-setup';
-import AutoScaler from './autoscaler.vue';
+import AutoScaler from './cluster-autoscaler-tencent/autoscaler.vue';
+import InternalAutoScaler from './cluster-autoscaler/autoscaler.vue';
+import { useCluster, useProject } from '@/common/use-app';
 
 export default defineComponent({
   components: {
@@ -56,6 +78,7 @@ export default defineComponent({
     overview,
     ContentHeader,
     AutoScaler,
+    InternalAutoScaler,
   },
   props: {
     active: {
@@ -71,43 +94,47 @@ export default defineComponent({
   setup(props, ctx) {
     const { $store, $router, $INTERNAL } = ctx.root;
     const { active, clusterId } = toRefs(props);
-    const activeCom = ref(active.value);
+
+    const { clusterList } = useCluster();
+    const { projectID } = useProject();
+    const clusterName = computed(() => clusterList.value.find(item => item.clusterID === clusterId.value)?.clusterName);
+    const webAnnotations = computed(() => $store.state.cluster.clusterWebAnnotations);
+    const activeId = ref(active.value);
+    const activeCom = computed(() => {
+      if (activeId.value === 'AutoScaler') {
+        return $INTERNAL ? InternalAutoScaler : AutoScaler;
+      }
+      return tabItems.value.find(item => item.id === activeId.value)?.com;
+    });
     const curCluster = computed(() => $store.state.cluster.clusterList
       ?.find(item => item.clusterID === clusterId.value) || {});
-    const tabItems = computed(() => {
-      const items = [
-        {
-          icon: 'bcs-icon bcs-icon-bar-chart',
-          title: $i18n.t('总览'),
-          com: 'overview',
-        },
-        {
-          icon: 'bcs-icon bcs-icon-list',
-          title: $i18n.t('节点管理'),
-          com: 'node',
-        },
-        {
-          icon: 'bcs-icon bcs-icon-machine',
-          title: $i18n.t('集群信息'),
-          com: 'info',
-        },
-      ];
-      if (cloudDetail.value.confInfo && !cloudDetail.value?.confInfo?.disableNodeGroup && !$INTERNAL) {
-        items.push({
-          icon: 'bcs-icon bcs-icon-kuosuorong',
-          title: $i18n.t('弹性扩缩容'),
-          com: 'AutoScaler',
-        });
-      }
-      return items;
-    });
-    const handleChangeActive = (item) => {
-      if (activeCom.value === item.com) return;
-      activeCom.value = item.com;
+    const tabItems = ref([
+      {
+        icon: 'bcs-icon bcs-icon-bar-chart',
+        title: $i18n.t('总览'),
+        com: 'overview',
+        id: 'overview',
+      },
+      {
+        icon: 'bcs-icon bcs-icon-list',
+        title: $i18n.t('节点管理'),
+        com: 'node',
+        id: 'node',
+      },
+      {
+        icon: 'bcs-icon bcs-icon-machine',
+        title: $i18n.t('集群信息'),
+        com: 'info',
+        id: 'info',
+      },
+    ]);
+    const handleChangeActive = (activeID) => {
+      if (activeId.value === activeID) return;
+      activeId.value = activeID;
       $router.replace({
         name: 'clusterDetail',
         query: {
-          active: item.com,
+          active: activeID,
         },
       });
     };
@@ -123,10 +150,15 @@ export default defineComponent({
     };
     handleGetCloudDetail();
     return {
+      projectID,
+      clusterName,
+      webAnnotations,
+      cloudDetail,
       isLoading,
       isSingleCluster,
       curCluster,
       tabItems,
+      activeId,
       activeCom,
       handleChangeActive,
     };

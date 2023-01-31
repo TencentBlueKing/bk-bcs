@@ -93,6 +93,15 @@ func (p *Prometheus) GetClusterCPUUsage(ctx context.Context, projectId, clusterI
 	return p.handleClusterMetric(ctx, projectId, clusterId, promql, start, end, step)
 }
 
+// GetClusterCPURequest 获取CPU Request使用量
+func (p *Prometheus) GetClusterCPURequest(ctx context.Context, projectId, clusterId string, start, end time.Time,
+	step time.Duration) ([]*prompb.TimeSeries, error) {
+	promql :=
+		`sum(kube_pod_container_resource_requests_cpu_cores{cluster_id="%<clusterId>s", job="kube-state-metrics", node=~"%<node>s", %<provider>s})`
+
+	return p.handleClusterMetric(ctx, projectId, clusterId, promql, start, end, step)
+}
+
 // GetClusterCPURequestUsage 获取CPU核心装箱率
 func (p *Prometheus) GetClusterCPURequestUsage(ctx context.Context, projectId, clusterId string, start, end time.Time,
 	step time.Duration) ([]*prompb.TimeSeries, error) {
@@ -137,6 +146,15 @@ func (p *Prometheus) GetClusterMemoryUsage(ctx context.Context, projectId, clust
         sum(node_memory_Shmem_bytes{cluster_id="%<clusterId>s", job="node-exporter", instance=~"%<instance>s", %<provider>s})) /
         sum(node_memory_MemTotal_bytes{cluster_id="%<clusterId>s", job="node-exporter", instance=~"%<instance>s", %<provider>s}) *
         100`
+
+	return p.handleClusterMetric(ctx, projectId, clusterId, promql, start, end, step)
+}
+
+// GetClusterMemoryRequest 获取内存 Request
+func (p *Prometheus) GetClusterMemoryRequest(ctx context.Context, projectId, clusterId string, start, end time.Time,
+	step time.Duration) ([]*prompb.TimeSeries, error) {
+	promql :=
+		`sum(kube_pod_container_resource_requests_memory_bytes{cluster_id="%<clusterId>s", job="kube-state-metrics", node=~"%<node>s", %<provider>s})`
 
 	return p.handleClusterMetric(ctx, projectId, clusterId, promql, start, end, step)
 }

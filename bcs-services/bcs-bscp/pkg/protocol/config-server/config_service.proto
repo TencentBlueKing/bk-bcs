@@ -42,6 +42,11 @@ service Config {
             body: "*"
         };
     }
+    rpc ListAppsRest(ListAppsRestReq) returns (ListAppsResp) {
+        option (google.api.http) = {
+            get: "/api/v1/config/list/app/app/biz_id/{biz_id}"
+        };
+    }
 
     rpc CreateConfigItem(CreateConfigItemReq) returns (CreateConfigItemResp) {
         option (google.api.http) = {
@@ -260,6 +265,14 @@ message ListAppsReq {
     uint32 biz_id                 = 1;
     google.protobuf.Struct filter = 2;
     pbbase.BasePage page          = 3;
+}
+
+message ListAppsRestReq {
+    uint32 biz_id   = 1;
+    uint32 start    = 2;
+    uint32 limit    = 3;
+    string operator = 4;
+    string name     = 5;
 }
 
 message ListAppsResp {

@@ -268,6 +268,8 @@ type ClusterManager interface {
 	AddNodesToCluster(cls *proto.Cluster, nodes []*proto.Node, opt *AddNodesOption) (*proto.Task, error)
 	// DeleteNodesFromCluster delete specified nodes from cluster according cloudprovider
 	DeleteNodesFromCluster(cls *proto.Cluster, nodes []*proto.Node, opt *DeleteNodesOption) (*proto.Task, error)
+	// ListOsImage get osimage list
+	ListOsImage(provider string, opt *CommonOption) ([]*proto.OsImage, error)
 }
 
 // NodeGroupManager cloud interface for nodegroup management

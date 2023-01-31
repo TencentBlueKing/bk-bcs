@@ -28,6 +28,7 @@ const (
 )
 
 type (
+	// GetClusterRequest 获取集群请求
 	GetClusterRequest struct {
 		ClusterID string `json:"clusterID,omitempty"`
 	}

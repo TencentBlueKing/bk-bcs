@@ -30,6 +30,7 @@ LOG_FILE = os.path.join(LOGGING_DIR, f'bcs_ui.log')
 LOGGING = get_logging_config(LOG_LEVEL, None, LOG_FILE)
 
 # ******************************** 容器服务相关配置 ********************************
+DEFAULT_BCS_API_ENV = "prod"
 
 # PaaS域名，发送邮件链接需要
 PAAS_HOST = BK_PAAS_HOST

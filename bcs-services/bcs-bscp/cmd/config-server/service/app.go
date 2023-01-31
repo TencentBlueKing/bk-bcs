@@ -67,12 +67,12 @@ func (s *Service) CreateApp(ctx context.Context, req *pbcs.CreateAppReq) (*pbcs.
 
 // UpdateApp update app with options
 func (s *Service) UpdateApp(ctx context.Context, req *pbcs.UpdateAppReq) (*pbcs.UpdateAppResp, error) {
-	kit := kit.FromGrpcContext(ctx)
+	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.UpdateAppResp)
 
 	authRes := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.App, Action: meta.Update, ResourceID: req.Id},
 		BizID: req.BizId}
-	err := s.authorizer.AuthorizeWithResp(kit, resp, authRes)
+	err := s.authorizer.AuthorizeWithResp(grpcKit, resp, authRes)
 	if err != nil {
 		return resp, nil
 	}
@@ -91,10 +91,10 @@ func (s *Service) UpdateApp(ctx context.Context, req *pbcs.UpdateAppReq) (*pbcs.
 			},
 		},
 	}
-	_, err = s.client.DS.UpdateApp(kit.RpcCtx(), r)
+	_, err = s.client.DS.UpdateApp(grpcKit.RpcCtx(), r)
 	if err != nil {
-		errf.Error(err).AssignResp(kit, resp)
-		logs.Errorf("update app failed, err: %v, rid: %s", err, kit.Rid)
+		errf.Error(err).AssignResp(grpcKit, resp)
+		logs.Errorf("update app failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return resp, nil
 	}
 
@@ -145,7 +145,7 @@ func (s *Service) ListApps(ctx context.Context, req *pbcs.ListAppsReq) (*pbcs.Li
 		return resp, nil
 	}
 
-	if err := req.Page.BasePage().Validate(types.DefaultPageOption); err != nil {
+	if err = req.Page.BasePage().Validate(types.DefaultPageOption); err != nil {
 		errf.Error(err).AssignResp(kt, resp)
 		return resp, nil
 	}
@@ -156,6 +156,39 @@ func (s *Service) ListApps(ctx context.Context, req *pbcs.ListAppsReq) (*pbcs.Li
 		Page:   req.Page,
 	}
 	rp, err := s.client.DS.ListApps(kt.RpcCtx(), r)
+	if err != nil {
+		errf.Error(err).AssignResp(kt, resp)
+		logs.Errorf("list apps failed, err: %v, rid: %s", err, kt.Rid)
+		return resp, nil
+	}
+
+	resp.Code = errf.OK
+	resp.Data = &pbcs.ListAppsResp_RespData{
+		Count:   rp.Count,
+		Details: rp.Details,
+	}
+	return resp, nil
+}
+
+// ListAppsRest list apps with rest filter
+func (s *Service) ListAppsRest(ctx context.Context, req *pbcs.ListAppsRestReq) (*pbcs.ListAppsResp, error) {
+	kt := kit.FromGrpcContext(ctx)
+	resp := new(pbcs.ListAppsResp)
+
+	authRes := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.App, Action: meta.Find}, BizID: req.BizId}
+	err := s.authorizer.AuthorizeWithResp(kt, resp, authRes)
+	if err != nil {
+		return resp, nil
+	}
+
+	r := &pbds.ListAppsRestReq{
+		BizId:    req.BizId,
+		Start:    req.Start,
+		Limit:    req.Limit,
+		Operator: req.Operator,
+		Name:     req.Name,
+	}
+	rp, err := s.client.DS.ListAppsRest(kt.RpcCtx(), r)
 	if err != nil {
 		errf.Error(err).AssignResp(kt, resp)
 		logs.Errorf("list apps failed, err: %v, rid: %s", err, kt.Rid)

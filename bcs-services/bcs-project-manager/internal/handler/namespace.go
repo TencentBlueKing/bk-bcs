@@ -181,6 +181,18 @@ func (p *NamespaceHandler) ListNamespaces(ctx context.Context,
 	return nil
 }
 
+// ListNativeNamespaces implement for ListNativeNamespaces interface
+func (p *NamespaceHandler) ListNativeNamespaces(ctx context.Context,
+	req *proto.ListNativeNamespacesRequest, resp *proto.ListNativeNamespacesResponse) error {
+	action, err := na.NewNamespaceFactory(p.model).Action(req.GetClusterID(), req.GetProjectIDOrCode())
+	if err != nil {
+		logging.Error("get namespace client for cluster %s from client factory failed, err: %s",
+			req.GetClusterID(), err.Error())
+		return err
+	}
+	return action.ListNativeNamespaces(ctx, req, resp)
+}
+
 func sortNamespaces(list []*proto.NamespaceData) []*proto.NamespaceData {
 	creating := []*proto.NamespaceData{}
 	updating := []*proto.NamespaceData{}

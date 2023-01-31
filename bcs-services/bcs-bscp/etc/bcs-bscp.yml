@@ -1,3 +1,23 @@
+# 公共日志配置
+log:
+  # log storage directory.
+  logDir: ./log
+  # per file max size, uint: MB.
+  maxPerFileSizeMB: 1024
+  # per line max size, uint: KB.
+  maxPerLineSizeKB: 2
+  # log file max storage number.
+  maxFileNum: 5
+  # whether the restart service log is appended to the latest log file, or whether a new log file is created.
+  logAppend: false
+  # log the log to std err only, it can not be used with AlsoToStdErr at the same time.
+  toStdErr: true
+  # log the log to file and also to std err. it can not be used with ToStdErr at the same time.
+  alsoToStdErr: false
+  # log level.
+  verbosity: 1
+
+# 公共 etcd 配置
 service:
   etcd:
     endpoints:
@@ -7,6 +27,17 @@ service:
       keyFile: ""
       caFile: ""
 
+# data server
+esb:
+  endpoints:
+    - http://127.0.0.1:12345
+  # appCode is the blueking app code of bscp to request esb.
+  appCode: bk_bcs_app
+  # appSecret is the blueking app secret of bscp to request esb.
+  appSecret: xxx
+  user: admin
+
+# cache server
 sharding:
   adminDatabase:
     endpoints:
@@ -24,3 +55,29 @@ redisCluster:
     - 127.0.0.1:6379
   password:
   db: 1
+
+# feed server
+repository:
+  endpoints:
+    - xxx
+  token: xx
+  project: bscp
+  user: xx
+downstream:
+  bounceIntervalHour: 48
+
+# sidecar
+upstream:
+  endpoints:
+    - bcs-bscp-feedserver:9510
+  authentication:
+    user: bcs-bscp
+    token: bcs-bscp
+appSpec:
+  bizID: 2 # 蓝鲸项目
+  applications:
+    - appID: 1 # 手动调用API创建
+      namespace: ""
+      uid: 10
+workspace:
+  rootDirectory: /tmp

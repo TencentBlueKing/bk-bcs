@@ -3,6 +3,8 @@ import {
   fetchAllProjectList,
   editProject,
   getProject,
+  businessList,
+  createProject as handleCreateProject,
 } from '@/api/modules/project';
 import store from '@/store';
 
@@ -12,6 +14,7 @@ export default function useProjects() {
     const projectList = result.results.map(project => ({
       ...project,
       cc_app_id: project.businessID,
+      cc_app_name: project.businessName,
       project_id: project.projectID,
       project_name: project.name,
       project_code: project.projectCode,
@@ -20,7 +23,7 @@ export default function useProjects() {
     return result.results;
   };
 
-  async function getAllProjectList(params: any) {
+  async function getAllProjectList(params: any = {}) {
     const result = await fetchAllProjectList(params,  { needRes: true })
       .catch(() => ({
         data: {},
@@ -32,11 +35,13 @@ export default function useProjects() {
       data: result.data.results.map(project => ({
         ...project,
         cc_app_id: project.businessID,
+        cc_app_name: project.businessName,
         project_id: project.projectID,
         project_name: project.name,
         project_code: project.projectCode,
       })),
-      web_annotations: result.webAnnotations,
+      total: result.data.total,
+      web_annotations: result.web_annotations,
     };
   };
 
@@ -54,7 +59,17 @@ export default function useProjects() {
       project_id: result.projectID,
       project_name: result.name,
       project_code: result.projectCode,
-    }
+    };
+  }
+
+  async function getBusinessList() {
+    return await businessList().catch(() => []);
+  }
+
+  async function createProject(params: any) {
+    const result = handleCreateProject(params).then(() => true)
+      .catch(() => false);
+    return result;
   }
 
   return {
@@ -62,5 +77,7 @@ export default function useProjects() {
     getProjectList,
     getAllProjectList,
     updateProject,
+    getBusinessList,
+    createProject,
   };
 }

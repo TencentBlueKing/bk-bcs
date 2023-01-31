@@ -29,10 +29,10 @@ import _ from 'lodash';
 import http from '@/api';
 import { json2Query } from '@/common/util';
 import {
-  getBizMaintainers,
   fetchClusterList,
   fetchNodePodsData,
 } from '@/api/base';
+import { projectBusiness } from '@/api/modules/project';
 
 export default {
   namespaced: true,
@@ -1082,8 +1082,8 @@ export default {
          * @return {Promise} promise 对象
          */
     async getBizMaintainers(context, params = {}, config = {}) {
-      const data = await getBizMaintainers(params, config).catch(() => ({
-        maintainers: [],
+      const data = await projectBusiness(params, config).catch(() => ({
+        maintainer: [],
       }));
       return data;
     },

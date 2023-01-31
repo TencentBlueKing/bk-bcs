@@ -14,13 +14,13 @@
       <bk-input
         class="search-input"
         clearable
-        :placeholder="$t('输入关键字搜索')"
+        :placeholder="$t('输入项目名称搜索')"
         :right-icon="'bk-icon icon-search'"
         v-model="keyword">
       </bk-input>
     </div>
     <bk-table
-      :data="filterList"
+      :data="projectList"
       :pagination="pagination"
       size="medium"
       @page-change="handlePageChange"
@@ -86,9 +86,10 @@
   </div>
 </template>
 <script lang="ts">
-import { defineComponent, ref, computed, onMounted } from '@vue/composition-api';
+import { defineComponent, ref, onMounted, watch } from '@vue/composition-api';
 import ProjectCreate from './project-create.vue';
-import { getProjectList } from '@/api/base';
+import useProjects from '../app/use-project';
+import useDebouncedRef from '@/common/use-debounce';
 
 export default defineComponent({
   name: 'ProjectManagement',
@@ -97,22 +98,16 @@ export default defineComponent({
   },
   setup: (props, ctx) => {
     const { $router } = ctx.root;
+    const { getAllProjectList } = useProjects();
     const pagination = ref({
       current: 1,
       count: 0,
       limit: 20,
     });
     const projectList = ref<any[]>([]);
-    const filterList = computed(() => projectList.value
-      .filter(item => item.project_name.indexOf(keyword.value) > -1)
-      .slice(
-        pagination.value.limit * (pagination.value.current - 1),
-        pagination.value.limit * pagination.value.current,
-      ));
-
-    const keyword = ref('');
+    const keyword = useDebouncedRef<string>('', 300);
     const showCreateDialog = ref(false);
-    const curProjectData = ref(null);
+    const curProjectData = ref<any>(null);
     const handleGotoProject = (row) => {
       $router.push({
         name: 'clusterMain',
@@ -122,6 +117,11 @@ export default defineComponent({
         },
       });
     };
+    watch(keyword, () => {
+      pagination.value.current = 1;
+      handleGetProjectList();
+    });
+
     const handleEditProject = (row) => {
       curProjectData.value = row;
       showCreateDialog.value = true;
@@ -132,35 +132,37 @@ export default defineComponent({
     };
     const handlePageChange = (page) => {
       pagination.value.current = page;
+      handleGetProjectList();
     };
     const handleLimitChange = (limit) => {
       pagination.value.limit = limit;
+      pagination.value.current = 1;
+      handleGetProjectList();
     };
     const isLoading = ref(false);
     const webAnnotations = ref({ perms: {} });
     const handleGetProjectList = async () => {
       isLoading.value = true;
-      const { data = [], web_annotations: webPerms } = await getProjectList({}, { needRes: true })
-        .catch(() => ({
-          data: [],
-          web_annotations: {
-            perms: {},
-          },
-        }));
+      const { data = [], web_annotations: webPerms, total } = await getAllProjectList({
+        searchName: keyword.value,
+        offset: pagination.value.current - 1,
+        limit: pagination.value.limit,
+      });
       projectList.value = data;
       webAnnotations.value = webPerms;
-      pagination.value.count = projectList.value.length;
+      pagination.value.count = total;
       isLoading.value = false;
     };
+
     onMounted(() => {
       handleGetProjectList();
     });
     return {
+      projectList,
       isLoading,
       webAnnotations,
       pagination,
       keyword,
-      filterList,
       showCreateDialog,
       curProjectData,
       handleGotoProject,
@@ -178,6 +180,8 @@ export default defineComponent({
   padding: 20px 60px 20px 60px;
   background: #f5f7fa;
   width: 100%;
+  max-height: calc(100vh - 52px);
+  overflow: auto;
   .title {
       font-size: 16px;
       color: #313238;

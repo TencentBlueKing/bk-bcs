@@ -111,6 +111,7 @@ type IAMConfig struct {
 
 // ITSMConfig itsm操作需要的配置
 type ITSMConfig struct {
+	Enable                   bool   `yaml:"enable" usage:"enable ITSM sync"`
 	GatewayHost              string `yaml:"gatewayHost" usage:"gateway host"`
 	CreateNamespaceServiceID int    `yaml:"createNsSvcID" usage:"service id for create ns service"`
 	UpdateNamespaceServiceID int    `yaml:"updateNsSvcID" usage:"service id for update ns service"`
@@ -143,8 +144,10 @@ type CMDBConfig struct {
 
 // BCSCCConfig 请求的 bcs cc 服务配置
 type BCSCCConfig struct {
-	Enable bool   `yaml:"enable" usage:"enable bcs cc double write"`
-	Host   string `yaml:"host" usage:"access bcs cc api host"`
+	Enable     bool   `yaml:"enable" usage:"enable bcs cc double write"`
+	Host       string `yaml:"host" usage:"access bcs cc api host"`
+	SSMHost    string `yaml:"ssmHost" usage:"ssm host"`
+	UseGateway bool   `yaml:"useGateway" usage:"whether to access the bcscc through a gateway"`
 }
 
 // BCSGatewayConfig BCS 网关配置

@@ -81,6 +81,23 @@
                       <span>{{$t('节点管理')}}</span>
                     </a>
                   </li>
+                  <li @click="goClusterAutoScaler(cluster)">
+                    <a
+                      href="javascript:;"
+                      v-authority="{
+                        clickable: webAnnotations.perms[cluster.clusterID]
+                          && webAnnotations.perms[cluster.clusterID].cluster_manage,
+                        actionId: 'cluster_manage',
+                        resourceName: cluster.clusterName,
+                        disablePerms: true,
+                        permCtx: {
+                          project_id: curProject.project_id,
+                          cluster_id: cluster.clusterID
+                        }
+                      }">
+                      <span>{{$t('弹性扩缩容')}}</span>
+                    </a>
+                  </li>
                   <li
                     v-authority="{
                       clickable: webAnnotations.perms[cluster.clusterID]
@@ -349,6 +366,18 @@ export default defineComponent({
         },
       });
     };
+    // 跳转扩缩容界面
+    const goClusterAutoScaler = (cluster) => {
+      $router.push({
+        name: 'clusterDetail',
+        params: {
+          clusterId: cluster.cluster_id,
+        },
+        query: {
+          active: 'AutoScaler',
+        },
+      });
+    };
     const { deleteCluster, retryCluster } = useClusterOperate(ctx);
     const curOperateCluster = ref<any>(null);
     // 集群删除
@@ -530,6 +559,7 @@ export default defineComponent({
       goCreateCluster,
       goOverview,
       goClusterInfo,
+      goClusterAutoScaler,
       clusterNoticeList,
       clusterNoticeDialog,
       confirmDeleteCluster,

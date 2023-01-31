@@ -69,11 +69,11 @@ const (
 
 // workload type
 const (
-	DeploymentType       = "deployment"
-	StatefulSetType      = "statefulSet"
-	DaemonSetType        = "daemonSet"
-	GameDeploymentType   = "gameDeployment"
-	GameStatefulSetType  = "gameStatefulSet"
+	DeploymentType       = "Deployment"
+	StatefulSetType      = "StatefulSet"
+	DaemonSetType        = "DaemonSet"
+	GameDeploymentType   = "GameDeployment"
+	GameStatefulSetType  = "GameStatefulSet"
 	MesosApplicationType = "application"
 	MesosDeployment      = "deployment"
 )
@@ -111,6 +111,7 @@ type ClusterMeta struct {
 	ClusterID   string            `json:"clusterID"`
 	ClusterType string            `json:"clusterType"`
 	Label       map[string]string `json:"label"`
+	IsBKMonitor bool              `json:"isBKMonitor"`
 }
 
 // NamespaceMeta meta for namespace
@@ -122,6 +123,7 @@ type NamespaceMeta struct {
 	ClusterType string            `json:"clusterType"`
 	Name        string            `json:"name"`
 	Label       map[string]string `json:"label"`
+	IsBKMonitor bool              `json:"isBKMonitor"`
 }
 
 // WorkloadMeta meta for workload
@@ -135,6 +137,7 @@ type WorkloadMeta struct {
 	ResourceType string            `json:"resourceType"`
 	Name         string            `json:"name"`
 	Label        map[string]string `json:"label"`
+	IsBKMonitor  bool              `json:"isBKMonitor"`
 }
 
 // PodAutoscalerMeta meta for hpa or gpa
@@ -149,6 +152,7 @@ type PodAutoscalerMeta struct {
 	TargetWorkloadName string            `json:"targetWorkloadName"`
 	PodAutoscaler      string            `json:"podAutoscaler"`
 	Label              map[string]string `json:"label"`
+	IsBKMonitor        bool              `json:"isBKMonitor"`
 }
 
 // PublicData for public table
@@ -424,7 +428,9 @@ type JobCommonOpts struct {
 	PodAutoscalerType string
 	Dimension         string
 	CurrentTime       time.Time
+	Timestamp         int64
 	Label             map[string]string
+	IsBKMonitor       bool
 }
 
 // Clients clients for dataJob

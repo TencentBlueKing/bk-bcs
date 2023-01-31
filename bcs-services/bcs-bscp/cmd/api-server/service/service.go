@@ -17,6 +17,8 @@ import (
 	"errors"
 	"net/http"
 
+	"github.com/gorilla/mux"
+
 	"bscp.io/pkg/serviced"
 )
 
@@ -31,7 +33,11 @@ func (s *Service) Handler() (http.Handler, error) {
 		return nil, errors.New("proxy is nil")
 	}
 
-	return s.proxy.handler(), nil
+	router := mux.NewRouter()
+	// 添加 ingress 前缀匹配
+	router.PathPrefix("/bscp/").Handler(http.StripPrefix("/bscp", s.proxy.handler()))
+	router.PathPrefix("/").Handler(s.proxy.handler())
+	return router, nil
 }
 
 // NewService create a service instance.

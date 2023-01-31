@@ -307,3 +307,18 @@ func (c *Cluster) CheckClusterCidrAvailable(cls *proto.Cluster, opt *cloudprovid
 
 	return true, nil
 }
+
+// ListOsImage list image os
+func (c *Cluster) ListOsImage(provider string, opt *cloudprovider.CommonOption) ([]*proto.OsImage, error) {
+	if opt == nil || opt.Account == nil || len(opt.Account.SecretID) == 0 ||
+		len(opt.Account.SecretKey) == 0 || len(opt.Region) == 0 {
+		return nil, fmt.Errorf("qcloud ListOsImage lost authoration")
+	}
+
+	cli, err := api.NewTkeClient(opt)
+	if err != nil {
+		return nil, err
+	}
+
+	return cli.DescribeOsImages(provider)
+}

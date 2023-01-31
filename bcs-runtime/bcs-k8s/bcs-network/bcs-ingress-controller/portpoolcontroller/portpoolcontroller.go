@@ -154,6 +154,21 @@ func (ppr *PortPoolReconciler) initPortPoolCache() error {
 		poolKey := ingresscommon.GetNamespacedNameKey(pool.GetName(), pool.GetNamespace())
 		for _, itemStatus := range pool.Status.PoolItemStatuses {
 			if !ppr.poolCache.IsItemExisted(poolKey, itemStatus.GetKey()) {
+				// 适配旧版本升级（1.28.0-alpha.55以下）
+				if len(itemStatus.Protocol) == 0 {
+					var protocol []string
+					for _, item := range pool.Spec.PoolItems {
+						if item.ItemName == itemStatus.ItemName {
+							protocol = ingresscommon.GetPortPoolItemProtocols(item.Protocol)
+							break
+						}
+					}
+					if len(protocol) == 0 {
+						itemStatus.Protocol = []string{constant.PortPoolPortProtocolTCP, constant.PortPoolPortProtocolUDP}
+					} else {
+						itemStatus.Protocol = protocol
+					}
+				}
 				if err := ppr.poolCache.AddPortPoolItem(poolKey, itemStatus); err != nil {
 					blog.Warnf("failed to add port pool %s item %v to cache, err %s",
 						poolKey, itemStatus, err.Error())

@@ -83,34 +83,29 @@ func (ap *appDao) List(kit *kit.Kit, opts *types.ListAppsOption) (*types.ListApp
 		return nil, err
 	}
 
-	var sql string
-	if opts.Page.Count {
-		// this is a count request, then do count operation only.
-		sql = fmt.Sprintf(`SELECT COUNT(*) FROM %s %s`, table.AppTable, whereExpr)
-		count, err := ap.orm.Do(ap.sd.ShardingOne(opts.BizID).DB()).Count(kit.Ctx, sql)
-		if err != nil {
-			return nil, err
-		}
-
-		return &types.ListAppDetails{Count: count, Details: make([]*table.App, 0)}, nil
+	// do count operation only.
+	countSql := fmt.Sprintf(`SELECT COUNT(*) FROM %s %s`, table.AppTable, whereExpr)
+	count, err := ap.orm.Do(ap.sd.ShardingOne(opts.BizID).DB()).Count(kit.Ctx, countSql)
+	if err != nil {
+		return nil, err
 	}
-	// query app list for now.
 
+	// query app list for now.
 	pageExpr, err := opts.Page.SQLExpr(&types.PageSQLOption{Sort: types.SortOption{Sort: "id", IfNotPresent: true}})
 	if err != nil {
 		return nil, err
 	}
 
-	sql = fmt.Sprintf(`SELECT %s FROM %s %s %s`, table.AppColumns.NamedExpr(),
+	querySql := fmt.Sprintf(`SELECT %s FROM %s %s %s`, table.AppColumns.NamedExpr(),
 		table.AppTable, whereExpr, pageExpr)
 
 	list := make([]*table.App, 0)
-	err = ap.orm.Do(ap.sd.ShardingOne(opts.BizID).DB()).Select(kit.Ctx, &list, sql)
+	err = ap.orm.Do(ap.sd.ShardingOne(opts.BizID).DB()).Select(kit.Ctx, &list, querySql)
 	if err != nil {
 		return nil, err
 	}
 
-	return &types.ListAppDetails{Count: 0, Details: list}, nil
+	return &types.ListAppDetails{Count: count, Details: list}, nil
 }
 
 // Create one app instance
@@ -143,7 +138,7 @@ func (ap *appDao) Create(kit *kit.Kit, app *table.App) (uint32, error) {
 
 		// audit this to be create app details.
 		au := &AuditOption{Txn: txn, ResShardingUid: opt.ShardingUid}
-		if err := ap.auditDao.Decorator(kit, app.BizID, enumor.App).AuditCreate(app, au); err != nil {
+		if err = ap.auditDao.Decorator(kit, app.BizID, enumor.App).AuditCreate(app, au); err != nil {
 			return fmt.Errorf("audit create app failed, err: %v", err)
 		}
 
@@ -157,7 +152,7 @@ func (ap *appDao) Create(kit *kit.Kit, app *table.App) (uint32, error) {
 			Attachment: &table.EventAttachment{BizID: app.BizID, AppID: app.ID},
 			Revision:   &table.CreatedRevision{Creator: kit.User, CreatedAt: time.Now()},
 		}
-		if err := eDecorator.Fire(one); err != nil {
+		if err = eDecorator.Fire(one); err != nil {
 			logs.Errorf("fire create app: %s event failed, err: %v, rid: %s", app.ID, err, kit.Rid)
 			return errf.New(errf.DBOpFailed, "fire event failed, "+err.Error())
 		}

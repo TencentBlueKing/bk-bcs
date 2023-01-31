@@ -81,6 +81,7 @@ func listProject() *cobra.Command {
 	return cmd
 }
 
+// MyProject 授权项目
 func MyProject() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "my-project",

@@ -11,9 +11,11 @@
   "dependencies": {
     "@tencent/bk-icon-bk_bscp": "0.0.2",
     "@types/js-cookie": "^3.0.2",
+    "@types/lodash.clonedeep": "^4.5.7",
     "axios": "^0.27.2",
-    "bkui-vue": "^0.0.1-beta.181",
+    "bkui-vue": "0.0.1-beta.340",
     "js-cookie": "^3.0.1",
+    "monaco-editor": "^0.34.1",
     "sass": "^1.54.8",
     "vue": "^3.2.37",
     "vue-i18n": "9",

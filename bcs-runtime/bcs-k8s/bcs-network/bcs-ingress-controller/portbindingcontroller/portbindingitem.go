@@ -89,7 +89,7 @@ func (pbih *portBindingItemHandler) ensureItem(
 		if listener.Spec.TargetGroup != nil && len(listener.Spec.TargetGroup.Backends) != 0 {
 			// listener has not synced
 			if listener.Status.Status != networkextensionv1.ListenerStatusSynced {
-				blog.Warnf("listener %s/%s changes not synced", listenerName, item.PoolNamespace)
+				blog.V(4).Infof("listener %s/%s changes not synced", listenerName, item.PoolNamespace)
 				return pbih.generateStatus(item, constant.PortBindingItemStatusNotReady)
 			}
 			// listener has targetGroup and targetGroup(include pod ip) has no changed

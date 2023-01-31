@@ -1,6 +1,7 @@
 /* eslint-disable camelcase */
 import { SetupContext, computed, ref, watch, Ref, set } from '@vue/composition-api';
 import useInterval from '@/views/dashboard/common/use-interval';
+import { clusterDetail } from '@/api/modules/cluster-manager';
 
 /**
  * 获取集群列表
@@ -139,5 +140,25 @@ export function useTask(ctx: SetupContext) {
   };
   return {
     taskList,
+  };
+}
+
+export function useClusterInfo() {
+  const clusterData = ref<Record<string, any>>({});
+  const clusterOS = computed(() => clusterData.value?.clusterBasicSettings?.OS);
+  const clusterAdvanceSettings = computed(() => clusterData.value?.clusterAdvanceSettings || {});
+  const extraInfo = computed(() => clusterData.value?.extraInfo || {});
+  const getClusterDetail = async ($clusterId: string, cloudInfo = false) => {
+    clusterData.value = await clusterDetail({
+      $clusterId,
+      cloudInfo,
+    }).catch(() => ({}));
+  };
+  return {
+    clusterOS,
+    getClusterDetail,
+    clusterAdvanceSettings,
+    clusterData,
+    extraInfo,
   };
 }

@@ -14,6 +14,8 @@ source:
   auto_generate_source:
     # 自动生成代码文件的正则表达式，若无统一标识格式，可以指定具体目录，样例可参考test_source举例
     filepath_regex:
+      - ".*/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/core/scale_up.go"
+      - ".*/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/simulator/drain.go"
       - ".*/bcs-runtime/bcs-k8s/bcs-component/bcs-gamedeployment-operator/pkg/apis/.*"
       - ".*/bcs-runtime/bcs-k8s/bcs-component/bcs-gamedeployment-operator/pkg/apis/.*"
       - ".*/bcs-runtime/bcs-k8s/bcs-component/bcs-gamedeployment-operator/pkg/clientset/.*"
@@ -23,6 +25,7 @@ source:
       - ".*/bcs-runtime/bcs-k8s/bcs-component/bcs-gamestatefulset-operator/pkg/clientset/.*"
       - ".*/bcs-runtime/bcs-k8s/bcs-component/bcs-gamestatefulset-operator/pkg/informers/.*"
       - ".*/bcs-runtime/bcs-k8s/bcs-component/bcs-gamestatefulset-operator/pkg/listers/.*"
+      - ".*/bcs-runtime/bcs-k8s/bcs-component/bcs-k8s-csi-tencentcloud/driver/cbs/controller.go"
       - ".*/bcs-runtime/bcs-k8s/kubedeprecated/.*"
       - ".*/bcs-runtime/bcs-k8s/kubernetes/.*"
       - ".*/bcs-runtime/bcs-k8s/kubebkbcs/.*"
@@ -48,6 +51,7 @@ source:
       - ".*/bcs-services/bcs-project-manager/third_party/.*"
       - ".*/bcs-services/bcs-project-manager/internal/component/clustermanager/clustermanager.pb.go"
       - ".*/bcs-services/cluster-resources/pkg/resource/example/manifest/config/simple_secret.yaml"
+      - ".*/bcs-services/cluster-resources/proto/cluster-resources/cluster-resources.pb.validate.go"
       - ".*/bmsf-configuration/internal/protocol/.*"
       - ".*/bcs-runtime/bcs-mesos/bmsf-mesh/pkg/.*"
       - ".*/bcs-runtime/bcs-k8s/bcs-network/.*"
@@ -61,6 +65,16 @@ source:
       - ".*/bcs-services/bcs-helm-manager/proto/.*"
       - ".*/bcs-services/bcs-nodegroup-manager/pkg/resourcemgr/proto/.*"
       - ".*/bcs-services/bcs-project-manager/internal/component/clustermanager/clustermanager.pb.go"
+      - ".*/bcs-runtime/bcs-mesos/bcs-clb-controller/.*"
+      - ".*/bcs-runtime/bcs-mesos/bcs-container-executor/.*"
+      - ".*/bcs-runtime/bcs-mesos/bcs-dns/.*"
+      - ".*/bcs-runtime/bcs-mesos/bcs-hpacontroller/.*"
+      - ".*/bcs-runtime/bcs-mesos/bcs-loadbalance/.*"
+      - ".*/bcs-runtime/bcs-mesos/bcs-mesos-driver/.*"
+      - ".*/bcs-runtime/bcs-mesos/bcs-mesos-watch/.*"
+      - ".*/bcs-runtime/bcs-mesos/bcs-scheduler/.*"
+      - ".*/bcs-services/bcs-storage/pkg/proto/.*"
+      - ".*/bcs-services/cluster-resources/proto/.*"
 
 
   # 提供产品代码库中直接以源码形式存在的第三方代码目录或代码文件名的正则表达。

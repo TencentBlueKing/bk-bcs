@@ -20,7 +20,10 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/google/uuid"
+
 	"bscp.io/pkg/cc"
+	"bscp.io/pkg/criteria/constant"
 	"bscp.io/pkg/criteria/errf"
 	"bscp.io/pkg/logs"
 	"bscp.io/pkg/rest"
@@ -31,6 +34,21 @@ import (
 // setupFilters setups all api filters here. All request would cross here, and we filter request base on URL.
 func (p *proxy) setupFilters(mux *http.ServeMux) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// 设置 RequestID
+		if r.Header.Get(constant.RidKey) == "" {
+			reqID, _ := uuid.NewUUID()
+			r.Header.Set(constant.RidKey, reqID.String())
+		}
+
+		// 设置测试 user
+		if r.Header.Get(constant.UserKey) == "" {
+			r.Header.Set(constant.UserKey, "dummyUser")
+		}
+
+		// 测试 App
+		if r.Header.Get(constant.AppCodeKey) == "" {
+			r.Header.Set(constant.AppCodeKey, "dummyApp")
+		}
 
 		kt, err := gwparser.Parse(r.Context(), r.Header)
 		if err != nil {

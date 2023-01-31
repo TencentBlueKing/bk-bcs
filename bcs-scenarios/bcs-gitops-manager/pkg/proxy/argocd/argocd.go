@@ -68,59 +68,39 @@ func (ops *ArgocdProxy) Stop() {
 
 // initArgoPathHandler
 func (ops *ArgocdProxy) initArgoPathHandler() error {
-	initializer := []func() error{}
-	// project path
-	projectRouter := ops.PathPrefix(common.GitOpsProxyURL + "/api/v1/projects").Subrouter()
-	project := &ProjectPlugin{
-		Router:  projectRouter,
-		Session: ops.session,
-		option:  ops.option,
+	middleware := NewMiddlewareHandler(ops.option, ops.session)
+
+	projectPlugin := &ProjectPlugin{
+		Router:     ops.PathPrefix(common.GitOpsProxyURL + "/api/v1/projects").Subrouter(),
+		middleware: middleware,
 	}
-	initializer = append(initializer, project.Init)
-	// cluster path
-	clusterRouter := ops.PathPrefix(common.GitOpsProxyURL + "/api/v1/clusters").Subrouter()
-	cluster := &ClusterPlugin{
-		Router:  clusterRouter,
-		Session: ops.session,
-		option:  ops.option,
+	clusterPlugin := &ClusterPlugin{
+		Router:     ops.PathPrefix(common.GitOpsProxyURL + "/api/v1/clusters").Subrouter(),
+		middleware: middleware,
 	}
-	initializer = append(initializer, cluster.Init)
-	// repository path
 	repositoryRouter := ops.PathPrefix(common.GitOpsProxyURL + "/api/v1/repositories").Subrouter()
 	repositoryRouter.UseEncodedPath()
-	repository := &RepositoryPlugin{
-		Router:  repositoryRouter,
-		Session: ops.session,
-		option:  ops.option,
+	repositoryPlugin := &RepositoryPlugin{
+		Router:     repositoryRouter,
+		middleware: middleware,
 	}
-	initializer = append(initializer, repository.Init)
-	// application path
-	appRouter := ops.PathPrefix(common.GitOpsProxyURL + "/api/v1/applications").Subrouter()
 	appPlugin := &AppPlugin{
-		Router:  appRouter,
-		Session: ops.session,
-		option:  ops.option,
+		Router:     ops.PathPrefix(common.GitOpsProxyURL + "/api/v1/applications").Subrouter(),
+		middleware: middleware,
 	}
-	initializer = append(initializer, appPlugin.Init)
-
-	// application stream path
-	streamRouter := ops.PathPrefix(common.GitOpsProxyURL + "/api/v1/stream/applications").Subrouter()
 	streamPlugin := &StreamPlugin{
-		Router:     streamRouter,
+		Router:     ops.PathPrefix(common.GitOpsProxyURL + "/api/v1/stream/applications").Subrouter(),
 		appHandler: appPlugin,
-		Session:    ops.session,
-		option:     ops.option,
+		middleware: middleware,
 	}
-	initializer = append(initializer, streamPlugin.Init)
-
-	// webhook path
-	webhookRouter := ops.PathPrefix(common.GitOpsProxyURL + "/api/webhook").Subrouter()
 	webhookPlugin := &WebhookPlugin{
-		Router:  webhookRouter,
-		Session: ops.session,
-		option:  ops.option,
+		Router:     ops.PathPrefix(common.GitOpsProxyURL + "/api/webhook").Subrouter(),
+		middleware: middleware,
 	}
-	initializer = append(initializer, webhookPlugin.Init)
+	initializer := []func() error{
+		projectPlugin.Init, clusterPlugin.Init, repositoryPlugin.Init,
+		appPlugin.Init, streamPlugin.Init, webhookPlugin.Init,
+	}
 
 	// access deny URL, keep in mind that there are paths need to proxy
 	ops.PathPrefix(common.GitOpsProxyURL + "/api/v1/account").HandlerFunc(http.NotFound)

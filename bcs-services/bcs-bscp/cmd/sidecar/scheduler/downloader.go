@@ -425,7 +425,8 @@ func (exec *execDownload) writeToFile(body io.ReadCloser, expectSize uint64, sta
 		// that happen after reading some bytes and also both of the
 		// allowed EOF behaviors.
 		if picked > 0 {
-			cnt, err := exec.file.WriteAt(swap[0:picked], int64(start+totalSize))
+			var cnt int
+			cnt, err = exec.file.WriteAt(swap[0:picked], int64(start+totalSize))
 			if err != nil {
 				return fmt.Errorf("write data to file failed, err: %v", err)
 			}

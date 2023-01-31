@@ -72,67 +72,15 @@ func editClustersNamespace() *cobra.Command {
 				return
 			}
 
-			// 从列表通过名称查找需要编辑的命名空间
-			namespaceList := make(map[string]*bcsproject.NamespaceData, 0)
-			for _, item := range namespaceResp.Data {
-				namespaceList[item.Name] = &bcsproject.NamespaceData{
-					Name:             item.GetName(),
-					Status:           item.GetStatus(),
-					CreateTime:       item.GetCreateTime(),
-					Quota:            item.GetQuota(),
-					Labels:           item.GetLabels(),
-					Annotations:      item.GetAnnotations(),
-					Variables:        item.GetVariables(),
-					ItsmTicketSN:     item.GetItsmTicketSN(),
-					ItsmTicketStatus: item.GetItsmTicketStatus(),
-					ItsmTicketURL:    item.GetItsmTicketURL(),
-					ItsmTicketType:   item.GetItsmTicketType(),
-				}
-			}
-			namespace, ok := namespaceList[name]
-			if !ok {
-				klog.Infoln("No namespace with that name found: %v", name)
+			// 查找返回编辑的命名
+			data, err := editData(projectCode, namespaceResp)
+			if err != nil {
+				klog.Infoln(err)
 				return
 			}
 
-			// 处理变量variable和Quota值为空时显示 [] {}
-			variableValue := make([]pkg.Data, 0)
-			if len(namespace.Variables) != 0 {
-				for _, item := range namespace.Variables {
-					variableValue = append(variableValue, pkg.Data{
-						ID:          item.Id,
-						Key:         item.Key,
-						Name:        item.Name,
-						ClusterID:   item.ClusterID,
-						ClusterName: item.ClusterName,
-						Namespace:   item.Namespace,
-						Value:       item.Value,
-						Scope:       item.Scope,
-					})
-				}
-			}
-			quotaVal := pkg.Quota{}
-			if namespace.Quota != nil {
-				quotaVal = pkg.Quota{
-					CPURequests:    namespace.Quota.CpuRequests,
-					MemoryRequests: namespace.Quota.MemoryRequests,
-					CPULimits:      namespace.Quota.CpuLimits,
-					MemoryLimits:   namespace.Quota.MemoryLimits,
-				}
-			}
-
-			updateNamespace := pkg.UpdateNamespaceTemplate{
-				UpdateNamespaceRequest: pkg.UpdateNamespaceRequest{
-					ProjectCode: projectCode,
-					ClusterID:   clusterID,
-					Name:        namespace.Name,
-					Quota:       quotaVal,
-				},
-				Variable: variableValue,
-			}
-
 			// 原内容
-			marshal, err := json.Marshal(updateNamespace)
+			marshal, err := json.Marshal(data)
 			if err != nil {
 				klog.Infoln("[namespace] deserialize failed: %v", err)
 				return
@@ -159,113 +107,29 @@ func editClustersNamespace() *cobra.Command {
 				klog.Infoln("Edit cancelled, no valid changes were saved.")
 				return
 			}
-			// 把编辑后的内容yaml转成json
-			editedJson, err := yaml.YAMLToJSON(edited)
+
+			// 对比修改前后的数据
+			editAfter, err := contrast(marshal, edited)
 			if err != nil {
-				klog.Infoln("json to yaml failed: %v", err)
+				klog.Infoln(err)
 				return
 			}
 
-			var (
-				editBefore pkg.UpdateNamespaceTemplate
-				editAfter  pkg.UpdateNamespaceTemplate
-			)
-
-			// 生成编辑前数据和编辑后数据做对比
-			{
-				err = json.Unmarshal(editedJson, &editAfter)
-				if err != nil {
-					klog.Infoln("[edit after] deserialize failed: %v", err)
-					return
-				}
-
-				err = json.Unmarshal(marshal, &editBefore)
-				if err != nil {
-					klog.Infoln("[edit before] deserialize failed: %v", err)
-					return
-				}
-
-				// 一定要放在在赋值前
-				// 获取编辑前Variables值 除去能编辑的字段
-				variablesBefore := make([]pkg.Variable, 0)
-				if len(editBefore.Variable) != 0 {
-					for _, item := range editBefore.Variable {
-						variablesBefore = append(variablesBefore, pkg.Variable{
-							ID:          item.ID,
-							Key:         item.Key,
-							Name:        item.Name,
-							ClusterID:   item.ClusterID,
-							ClusterName: item.ClusterName,
-							Namespace:   item.Namespace,
-							Scope:       item.Scope,
-						})
-					}
-				}
-
-				// 获取编辑后Variables值 除去能编辑的字段
-				variablesAfter := make([]pkg.Variable, 0)
-				if len(editAfter.Variable) != 0 {
-					for _, item := range editAfter.Variable {
-						variablesAfter = append(variablesAfter, pkg.Variable{
-							ID:          item.ID,
-							Key:         item.Key,
-							Name:        item.Name,
-							ClusterID:   item.ClusterID,
-							ClusterName: item.ClusterName,
-							Namespace:   item.Namespace,
-							Scope:       item.Scope,
-						})
-					}
-				}
-
-				// 对比前后数据是否一直(已经过滤掉能编辑的值)
-				if !reflect.DeepEqual(variablesBefore, variablesAfter) {
-					klog.Infoln("Variables can only modify values")
-					return
-				}
-
-				// 把能更改的值赋值到编辑前数据
-				editBefore.Quota = editAfter.Quota
-				editBefore.Variable = editAfter.Variable
-			}
-
-			// 对比整个前后数据是否一直
-			if !reflect.DeepEqual(editBefore, editAfter) {
-				klog.Infoln("only edit desc and default value")
-				return
-			}
-
-			// 编辑命名空间操作
-			updateNamespaceData := &pkg.UpdateNamespaceRequest{
+			// 需要提交编辑的数据
+			updateData := &pkg.UpdateNamespaceRequest{
 				ProjectCode: projectCode,
 				ClusterID:   clusterID,
 				Name:        name,
 				Quota:       editAfter.Quota,
+				Variables:   editAfter.Variables,
 			}
 
-			resp, err := client.UpdateNamespace(updateNamespaceData, projectCode, clusterID, name)
+			resp, err := client.UpdateNamespace(updateData, projectCode, clusterID, name)
 			if err != nil {
-				klog.Infoln("update namespace failed: %v", err)
+				klog.Infoln("update project failed: %v", err)
 				return
 			}
-
-			// 编辑命名空间变量操作
-			updateNamespaceVariableData := &pkg.UpdateNamespaceVariablesReq{
-				ProjectCode: projectCode,
-				ClusterID:   clusterID,
-				Namespace:   name,
-				Data:        editAfter.Variable,
-			}
-			res, err := client.UpdateNamespaceVariables(updateNamespaceVariableData)
-			if err != nil {
-				klog.Infoln("update namespace variables failed: %v", err)
-				return
-			}
-			if res.Code != 0 && resp.Code != 0 {
-				klog.Infoln("Failed to update the namespace and variables: %v", err)
-				return
-			}
-			printer.PrintInJSON(nil)
+			printer.PrintInJSON(resp)
 		},
 	}
 
@@ -275,4 +139,146 @@ func editClustersNamespace() *cobra.Command {
 		"Namespace name, length cannot exceed 63 characters, can only contain lowercase letters, numbers, and '-', must start with a letter and cannot end with '-'")
 
 	return cmd
+}
+
+func editData(projectCode string, namespaceData *bcsproject.ListNamespacesResponse) (*pkg.UpdateNamespaceRequest, error) {
+	// 从列表通过名称查找需要编辑的命名空间
+	namespaceList := make(map[string]*bcsproject.NamespaceData, 0)
+	for _, item := range namespaceData.Data {
+		namespaceList[item.Name] = &bcsproject.NamespaceData{
+			Name:             item.GetName(),
+			Status:           item.GetStatus(),
+			CreateTime:       item.GetCreateTime(),
+			Quota:            item.GetQuota(),
+			Used:             item.GetUsed(),
+			Labels:           item.GetLabels(),
+			Annotations:      item.GetAnnotations(),
+			Variables:        item.GetVariables(),
+			ItsmTicketSN:     item.GetItsmTicketSN(),
+			ItsmTicketStatus: item.GetItsmTicketStatus(),
+			ItsmTicketURL:    item.GetItsmTicketURL(),
+			ItsmTicketType:   item.GetItsmTicketType(),
+		}
+	}
+	namespace, ok := namespaceList[name]
+	if !ok {
+		err := fmt.Errorf("no namespace with that name found: %v", name)
+		return nil, err
+	}
+
+	// 处理变量variable和Quota值为空时显示 [] {}
+	variableValue := make([]pkg.VariableValue, 0)
+	if len(namespace.Variables) != 0 {
+		for _, item := range namespace.Variables {
+			variableValue = append(variableValue, pkg.VariableValue{
+				Id:          item.Id,
+				Key:         item.Key,
+				Name:        item.Name,
+				ClusterID:   item.ClusterID,
+				ClusterName: item.ClusterName,
+				Namespace:   item.Namespace,
+				Value:       item.Value,
+				Scope:       item.Scope,
+			})
+		}
+	}
+	quotaVal := pkg.Quota{}
+	if namespace.Quota != nil {
+		quotaVal = pkg.Quota{
+			CPURequests:    namespace.Quota.CpuRequests,
+			MemoryRequests: namespace.Quota.MemoryRequests,
+			CPULimits:      namespace.Quota.CpuLimits,
+			MemoryLimits:   namespace.Quota.MemoryLimits,
+		}
+	}
+
+	// 需要用编辑器打开的数据
+	updateNamespace := &pkg.UpdateNamespaceRequest{
+		ProjectCode: projectCode,
+		ClusterID:   clusterID,
+		Name:        namespace.Name,
+		Quota:       quotaVal,
+		Variables:   variableValue,
+	}
+	return updateNamespace, nil
+}
+
+func contrast(original, edited []byte) (*pkg.UpdateNamespaceRequest, error) {
+
+	// 把编辑后的内容yaml转成json
+	editedJson, err := yaml.YAMLToJSON(edited)
+	if err != nil {
+		err = fmt.Errorf("json to yaml failed: %v", name)
+		return nil, err
+	}
+
+	var (
+		editBefore *pkg.UpdateNamespaceRequest
+		editAfter  *pkg.UpdateNamespaceRequest
+	)
+
+	// 生成编辑前数据和编辑后数据做对比
+	{
+		err = json.Unmarshal(editedJson, &editAfter)
+		if err != nil {
+			err = fmt.Errorf("[edit after] deserialize failed: %v", name)
+			return nil, err
+		}
+
+		err = json.Unmarshal(original, &editBefore)
+		if err != nil {
+			err = fmt.Errorf("[edit before] deserialize failed: %v", name)
+			return nil, err
+		}
+
+		// 一定要放在在赋值前
+		// 获取编辑前Variables值 除去能编辑的字段
+		variablesBefore := make([]pkg.Variable, 0)
+		if len(editBefore.Variables) != 0 {
+			for _, item := range editBefore.Variables {
+				variablesBefore = append(variablesBefore, pkg.Variable{
+					ID:          item.Id,
+					Key:         item.Key,
+					Name:        item.Name,
+					ClusterID:   item.ClusterID,
+					ClusterName: item.ClusterName,
+					Namespace:   item.Namespace,
+					Scope:       item.Scope,
+				})
+			}
+		}
+
+		// 获取编辑后Variables值 除去能编辑的字段
+		variablesAfter := make([]pkg.Variable, 0)
+		if len(editAfter.Variables) != 0 {
+			for _, item := range editAfter.Variables {
+				variablesAfter = append(variablesAfter, pkg.Variable{
+					ID:          item.Id,
+					Key:         item.Key,
+					Name:        item.Name,
+					ClusterID:   item.ClusterID,
+					ClusterName: item.ClusterName,
+					Namespace:   item.Namespace,
+					Scope:       item.Scope,
+				})
+			}
+		}
+
+		// 对比前后数据是否一直(已经过滤掉能编辑的值)
+		if !reflect.DeepEqual(variablesBefore, variablesAfter) {
+			err = fmt.Errorf("variables can only modify values")
+			return nil, err
+		}
+
+		// 把能更改的值赋值到编辑前数据
+		editBefore.Quota = editAfter.Quota
+		editBefore.Variables = editAfter.Variables
+	}
+
+	// 对比整个前后数据是否一直
+	if !reflect.DeepEqual(editBefore, editAfter) {
+		err = fmt.Errorf("only edit desc and default value")
+		return nil, err
+	}
+	return editBefore, nil
 }

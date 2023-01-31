@@ -120,7 +120,7 @@ func startSidecar(cmdStr string) error {
 	}
 
 	// exec cmd.
-	if err := cmd.Start(); err != nil {
+	if err = cmd.Start(); err != nil {
 		return err
 	}
 

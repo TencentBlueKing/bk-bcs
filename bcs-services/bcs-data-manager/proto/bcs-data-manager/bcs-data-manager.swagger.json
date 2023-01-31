@@ -77,6 +77,22 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "startTime",
+            "description": "startTime. 开始时间，时间戳，不传为默认",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "int64"
+          },
+          {
+            "name": "endTime",
+            "description": "endTime. 结束时间，时间戳，不传为现在",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "int64"
           }
         ],
         "tags": [
@@ -117,6 +133,22 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "startTime",
+            "description": "startTime. 开始时间，时间戳，不传为默认",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "int64"
+          },
+          {
+            "name": "endTime",
+            "description": "endTime. 结束时间，时间戳，不传为现在",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "int64"
           }
         ],
         "tags": [
@@ -173,6 +205,22 @@
             "required": false,
             "type": "integer",
             "format": "int64"
+          },
+          {
+            "name": "startTime",
+            "description": "startTime. 开始时间，时间戳，不传为默认",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "int64"
+          },
+          {
+            "name": "endTime",
+            "description": "endTime. 结束时间，时间戳，不传为现在",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "int64"
           }
         ],
         "tags": [
@@ -220,6 +268,22 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "startTime",
+            "description": "startTime. 开始时间，时间戳，不传为默认",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "int64"
+          },
+          {
+            "name": "endTime",
+            "description": "endTime. 结束时间，时间戳，不传为现在",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "int64"
           }
         ],
         "tags": [
@@ -281,6 +345,22 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "startTime",
+            "description": "startTime. 开始时间，时间戳，不传为默认",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "int64"
+          },
+          {
+            "name": "endTime",
+            "description": "endTime. 结束时间，时间戳，不传为现在",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "int64"
           }
         ],
         "tags": [
@@ -379,6 +459,22 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "startTime",
+            "description": "startTime. 开始时间，时间戳，不传为默认",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "int64"
+          },
+          {
+            "name": "endTime",
+            "description": "endTime. 结束时间，时间戳，不传为现在",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "int64"
           }
         ],
         "tags": [
@@ -433,6 +529,22 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "startTime",
+            "description": "startTime. 开始时间，时间戳，不传为默认",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "int64"
+          },
+          {
+            "name": "endTime",
+            "description": "endTime. 结束时间，时间戳，不传为现在",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "int64"
           }
         ],
         "tags": [
@@ -481,6 +593,22 @@
             "in": "query",
             "required": false,
             "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "startTime",
+            "description": "startTime. 开始时间，时间戳，不传为默认",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "int64"
+          },
+          {
+            "name": "endTime",
+            "description": "endTime. 结束时间，时间戳，不传为现在",
+            "in": "query",
+            "required": false,
+            "type": "string",
             "format": "int64"
           }
         ],
@@ -552,6 +680,22 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "startTime",
+            "description": "startTime. 开始时间，时间戳，不传为默认",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "int64"
+          },
+          {
+            "name": "endTime",
+            "description": "endTime. 结束时间，时间戳，不传为现在",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "int64"
           }
         ],
         "tags": [
@@ -613,6 +757,22 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "startTime",
+            "description": "startTime. 开始时间，时间戳，不传为默认",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "int64"
+          },
+          {
+            "name": "endTime",
+            "description": "endTime. 结束时间，时间戳，不传为现在",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "int64"
           }
         ],
         "tags": [
@@ -682,6 +842,22 @@
             "in": "query",
             "required": false,
             "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "startTime",
+            "description": "startTime. 开始时间，时间戳，不传为默认",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "int64"
+          },
+          {
+            "name": "endTime",
+            "description": "endTime. 结束时间，时间戳，不传为现在",
+            "in": "query",
+            "required": false,
+            "type": "string",
             "format": "int64"
           }
         ],

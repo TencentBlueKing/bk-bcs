@@ -18,8 +18,11 @@ import (
 	"fmt"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
+	icommon "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
+
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common/profile"
 	tke "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/tke/v20180525"
@@ -27,7 +30,7 @@ import (
 
 // NewTkeClient init Tke client
 func NewTkeClient(opt *cloudprovider.CommonOption) (*TkeClient, error) {
-	if opt == nil || len(opt.Account.SecretID) == 0 || len(opt.Account.SecretKey) == 0 {
+	if opt == nil || opt.Account == nil || len(opt.Account.SecretID) == 0 || len(opt.Account.SecretKey) == 0 {
 		return nil, cloudprovider.ErrCloudCredentialLost
 	}
 	if len(opt.Region) == 0 {
@@ -43,13 +46,18 @@ func NewTkeClient(opt *cloudprovider.CommonOption) (*TkeClient, error) {
 	if err != nil {
 		return nil, cloudprovider.ErrCloudInitFailed
 	}
+	commonCli, err := NewClient(credential, opt.Region, cpf)
+	if err != nil {
+		return nil, cloudprovider.ErrCloudInitFailed
+	}
 
-	return &TkeClient{tke: cli}, nil
+	return &TkeClient{tke: cli, tkeCommon: commonCli}, nil
 }
 
 // TkeClient xxx
 type TkeClient struct {
 	tke *tke.Client
+	tkeCommon *Client
 }
 
 // TKE cluster relative interface
@@ -913,4 +921,57 @@ func (cli *TkeClient) GetNodeGroupInstances(clusterID, nodeGroupID string) ([]*t
 		total = int(*resp.Response.TotalCount)
 	}
 	return ins, nil
+}
+
+// DescribeOsImages pull common images
+func (cli *TkeClient) DescribeOsImages(provider string) ([]*proto.OsImage, error) {
+	if cli == nil {
+		return nil, cloudprovider.ErrServerIsNil
+	}
+
+	images := make([]*proto.OsImage, 0)
+	if provider == icommon.MarketImageProvider {
+		for _, v := range utils.ImageOsList {
+			if provider == v.Provider {
+				images = append(images, v)
+			}
+		}
+
+		return images, nil
+	}
+
+	req := NewDescribeOSImagesRequest()
+	resp, err := cli.tkeCommon.DescribeOSImages(req)
+	if err != nil {
+		blog.Errorf("DescribeOsImages failed: %v", err)
+		return nil, err
+	}
+	// check response
+	response := resp.Response
+	if response == nil {
+		blog.Errorf("DescribeOsImages but lost response information")
+		return nil, cloudprovider.ErrCloudLostResponse
+	}
+	//check response data
+	blog.Infof("RequestId[%s] tke client DescribeOsImages success: %v",
+		*response.RequestId, *response.TotalCount)
+
+	for _, image := range response.OSImageSeriesSet {
+		if image == nil || *image.Status == "offline" {
+			continue
+		}
+
+		images = append(images, &proto.OsImage{
+			ImageID:              *image.ImageId,
+			Alias:                *image.Alias,
+			Arch:                 *image.Arch,
+			OsCustomizeType:      *image.OsCustomizeType,
+			OsName:               *image.OsName,
+			SeriesName:           *image.SeriesName,
+			Status:               *image.Status,
+			Provider:             icommon.PublicImageProvider,
+		})
+	}
+
+	return images, nil
 }

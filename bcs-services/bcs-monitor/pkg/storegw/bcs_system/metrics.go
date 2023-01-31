@@ -48,6 +48,10 @@ var metricsMaps map[string]metricsFn = map[string]metricsFn{
 		return mp.client.GetClusterCPUUsed(mp.ctx, mp.projectID, mp.clusterID,
 			mp.startTime, mp.endTime, mp.stepDuration)
 	},
+	"bcs:cluster:cpu:request": func(mp metricsParams) ([]*prompb.TimeSeries, error) {
+		return mp.client.GetClusterCPURequest(mp.ctx, mp.projectID, mp.clusterID,
+			mp.startTime, mp.endTime, mp.stepDuration)
+	},
 	"bcs:cluster:cpu:usage": func(mp metricsParams) ([]*prompb.TimeSeries, error) {
 		return mp.client.GetClusterCPUUsage(mp.ctx, mp.projectID, mp.clusterID,
 			mp.startTime, mp.endTime, mp.stepDuration)
@@ -62,6 +66,10 @@ var metricsMaps map[string]metricsFn = map[string]metricsFn{
 	},
 	"bcs:cluster:memory:used": func(mp metricsParams) ([]*prompb.TimeSeries, error) {
 		return mp.client.GetClusterMemoryUsed(mp.ctx, mp.projectID, mp.clusterID,
+			mp.startTime, mp.endTime, mp.stepDuration)
+	},
+	"bcs:cluster:memory:request": func(mp metricsParams) ([]*prompb.TimeSeries, error) {
+		return mp.client.GetClusterMemoryRequest(mp.ctx, mp.projectID, mp.clusterID,
 			mp.startTime, mp.endTime, mp.stepDuration)
 	},
 	"bcs:cluster:memory:usage": func(mp metricsParams) ([]*prompb.TimeSeries, error) {

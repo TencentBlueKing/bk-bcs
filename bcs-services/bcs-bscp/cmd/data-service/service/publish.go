@@ -54,16 +54,16 @@ func (s *Service) PublishStrategy(ctx context.Context, req *pbds.PublishStrategy
 func (s *Service) FinishPublishStrategy(ctx context.Context, req *pbds.FinishPublishStrategyReq) (
 	*pbbase.EmptyResp, error) {
 
-	kit := kit.FromGrpcContext(ctx)
+	grpcKit := kit.FromGrpcContext(ctx)
 
 	opt := &types.FinishPublishOption{
 		BizID:      req.BizId,
 		AppID:      req.AppId,
 		StrategyID: req.StrategyId,
 	}
-	err := s.dao.Publish().FinishPublish(kit, opt)
+	err := s.dao.Publish().FinishPublish(grpcKit, opt)
 	if err != nil {
-		logs.Errorf("finish publish strategy failed, err: %v, rid: %s", err, kit.Rid)
+		logs.Errorf("finish publish strategy failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
 	}
 

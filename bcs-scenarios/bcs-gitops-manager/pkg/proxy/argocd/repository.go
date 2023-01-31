@@ -14,118 +14,65 @@ package argocd
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 
-	"github.com/argoproj/argo-cd/v2/pkg/apis/application/v1alpha1"
 	"github.com/gorilla/mux"
+	"github.com/pkg/errors"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/common"
-	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy"
-	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/project"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
 )
 
 // RepositoryPlugin for internal project authorization
 type RepositoryPlugin struct {
 	*mux.Router
-
-	Session    *Session
-	Permission *project.BCSProjectPerm
-	option     *proxy.GitOpsOptions
+	middleware MiddlewareInterface
 }
 
 // Init all project sub path handler
 // project plugin is a subRouter, all path registed is relative
 func (plugin *RepositoryPlugin) Init() error {
-	// init BCSProjectPermitssion
-	plugin.Permission = project.NewBCSProjectPermClient(plugin.option.IAMClient)
 	plugin.UseEncodedPath()
 	// GET /api/v1/repositories?projects={projects}
-	plugin.Path("").Methods("GET").Queries("projects", "{projects}").HandlerFunc(plugin.listRepositoryHandler)
+	plugin.Path("").Methods("GET").Queries("projects", "{projects}").
+		Handler(plugin.middleware.HttpWrapper(plugin.listRepositoryHandler))
 	// POST /api/v1/repositories, create new repository
-	plugin.Path("").Methods("POST").HandlerFunc(plugin.repositoryCreateHandler)
+	plugin.Path("").Methods("POST").
+		Handler(plugin.middleware.HttpWrapper(plugin.repositoryCreateHandler))
 	// DELETE and Update /api/v1/repositories/{name}
-	plugin.Path("/{repo}").Methods("PUT", "DELETE").HandlerFunc(plugin.repositoryEditHandler)
+	plugin.Path("/{repo}").Methods("PUT", "DELETE").
+		Handler(plugin.middleware.HttpWrapper(plugin.repositoryEditHandler))
 	// GET /api/v1/repositories/{name}
-	plugin.Path("/{repo}").Methods("GET").HandlerFunc(plugin.repositoryViewsHandler)
+	plugin.Path("/{repo}").Methods("GET").
+		Handler(plugin.middleware.HttpWrapper(plugin.repositoryViewsHandler))
 
 	// GET /api/v1/repositories/{repo}/{details}:
 	// apps, helmcharts, refs, validate, appdetails
-	plugin.Path("/{repo}/{details}").Methods("GET", "POST").HandlerFunc(plugin.repositoryViewsHandler)
+	plugin.Path("/{repo}/{details}").Methods("GET", "POST").
+		Handler(plugin.middleware.HttpWrapper(plugin.repositoryViewsHandler))
 
 	blog.Infof("argocd repository plugin init successfully")
 	return nil
 }
 
 // GET /api/v1/repositories?projects={projects}
-func (plugin *RepositoryPlugin) listRepositoryHandler(w http.ResponseWriter, r *http.Request) {
-	// check header user info
-	user, err := proxy.GetJWTInfo(r, plugin.option.JWTDecoder)
-	if err != nil {
-		blog.Errorf("request %s get jwt token failure, %s", r.URL.Path, err.Error())
-		http.Error(w,
-			fmt.Sprintf("Bad Request: %s", err.Error()),
-			http.StatusBadRequest,
-		)
-		return
-	}
-	project := r.URL.Query().Get("projects")
-	// first check relatice project existence
-	appProject, err := plugin.option.Storage.GetProject(r.Context(), project)
-	if err != nil {
-		blog.Errorf("request %s get specified project %s from storage failure, %s", r.URL.Path, project, err.Error())
-		http.Error(w, "gitops storage failure", http.StatusInternalServerError)
-		return
-	}
-	if appProject == nil {
-		blog.Errorf("RepositoryPlugin Serve %s get no project %s", r.URL.Path, project)
-		http.Error(w, "Not Found: Not Found project", http.StatusNotFound)
-		return
-	}
-	projectID := common.GetBCSProjectID(appProject.Annotations)
-	if projectID == "" {
-		blog.Errorf("request %s failure, relative project %s lost control information", r.URL.Path, project)
-		http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
-		return
-	}
-	// verify project View permistion
-	permit, _, err := plugin.Permission.CanViewProject(user.GetUser(), projectID)
-	if err != nil {
-		blog.Errorf("Repository validate project %s view permission for %s failed, %s", project, r.URL.Path, err.Error())
-		http.Error(w, "Authentication system failure", http.StatusInternalServerError)
-		return
-	}
-	blog.Infof("user %s request %s, permission %t", user.GetUser(), r.URL.Path, permit)
-	if !permit {
-		http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
-		return
-	}
-	// permission pass, list all repositories in gitops storage
-	repositories, err := plugin.option.Storage.ListRepository(r.Context())
-	if err != nil {
-		blog.Errorf("request %s get all repositories from storage failure, %s", r.URL.Path, err.Error())
-		http.Error(w, "gitops storage failure", http.StatusInternalServerError)
-		return
-	}
-	// filter specified project
-	items := v1alpha1.Repositories{}
-	for _, repo := range repositories.Items {
-		if repo.Project == project {
-			items = append(items, repo)
+func (plugin *RepositoryPlugin) listRepositoryHandler(ctx context.Context, r *http.Request) *httpResponse {
+	projectName := r.URL.Query().Get("projects")
+	repositoryList, statusCode, err := plugin.middleware.ListRepositories(ctx, projectName)
+	if statusCode != http.StatusOK {
+		return &httpResponse{
+			statusCode: statusCode,
+			err:        errors.Wrapf(err, "list repositories for project '%s' failed", projectName),
 		}
 	}
-	if len(items) == 0 {
-		blog.Infof("user %s request %s get no repositories information", user.GetUser(), r.URL.Path)
-		proxy.JSONResponse(w, &v1alpha1.RepositoryList{})
-		return
+	return &httpResponse{
+		statusCode: http.StatusOK,
+		obj:        repositoryList,
 	}
-	blog.Infof("user %s request %s, %d repositories retrive", user.GetUser(), r.URL.Path, len(items))
-	repositories.Items = items
-	proxy.JSONResponse(w, repositories)
 }
 
 // repository only for local json parse
@@ -137,175 +84,81 @@ type repository struct {
 }
 
 // POST /api/v1/repositories
-func (plugin *RepositoryPlugin) repositoryCreateHandler(w http.ResponseWriter, r *http.Request) {
-	user, err := proxy.GetJWTInfo(r, plugin.option.JWTDecoder)
+func (plugin *RepositoryPlugin) repositoryCreateHandler(ctx context.Context, r *http.Request) *httpResponse {
+	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		blog.Errorf("RepositoryPlugin get jwt info from request %s failed, %s", r.URL.Path, err.Error())
-		http.Error(w, "Unauthorized: "+err.Error(), http.StatusUnauthorized)
-		return
+		return &httpResponse{
+			err:        errors.Wrapf(err, "read body failed"),
+			statusCode: http.StatusBadRequest,
+		}
 	}
 	localRepo := &repository{}
-	body, _ := ioutil.ReadAll(r.Body)
 	if err := json.Unmarshal(body, localRepo); err != nil {
-		blog.Errorf("RepositoryPlugin decode create Repository json failed, %s", err.Error())
-		http.Error(w, "Bad Request: error request format", http.StatusBadRequest)
-		return
+		return &httpResponse{
+			err:        errors.Wrapf(err, "unmarshal body failed"),
+			statusCode: http.StatusBadRequest,
+		}
 	}
-	repo := localRepo.Repo
-	proj := localRepo.Project
-	blog.Infof("RespositoryPlugin Serve %s %s, read body for repo parse", r.Method, r.URL.Path)
+	if localRepo.Repo == "" || localRepo.Project == "" {
+		return &httpResponse{
+			err:        errors.Errorf("repo or project param is empty"),
+			statusCode: http.StatusBadRequest,
+		}
+	}
 	r.Body = ioutil.NopCloser(bytes.NewBuffer(body))
-	// check repo info
-	if repo == "" || proj == "" {
-		blog.Errorf("Respository serve %s failure, no repo or project in request body", r.URL.Path)
-		http.Error(w, "Bad Request: no repo or project information", http.StatusBadRequest)
-		return
-	}
-	argoProject, err := plugin.option.Storage.GetProject(r.Context(), proj)
+	_, statusCode, err := plugin.middleware.CheckProjectPermission(ctx, localRepo.Project, iam.ProjectEdit)
 	if err != nil {
-		blog.Errorf("RepositoryPlugin Serve %s get project %s info failed, %s", r.URL.Path, proj, err.Error())
-		http.Error(w, "gitops project storage failure", http.StatusInternalServerError)
-		return
+		return &httpResponse{
+			statusCode: statusCode,
+			err:        errors.Wrapf(err, "check project '%s' edit permission failed", localRepo.Project),
+		}
 	}
-	if argoProject == nil {
-		blog.Errorf("RepositoryPlugin Serve %s get no project %s", r.URL.Path, proj)
-		http.Error(w, "Not Found: Not Found project", http.StatusNotFound)
-		return
-	}
-	projectID := common.GetBCSProjectID(argoProject.Annotations)
-	if projectID == "" {
-		blog.Errorf("RepositoryPlugin Serve %s get no bcs project control information", r.URL.Path)
-		http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
-		return
-	}
-	permit, _, err := plugin.Permission.CanEditProject(user.GetUser(), projectID)
-	if err != nil {
-		blog.Errorf("Project %s permission edit %s validate for %s failed, %s",
-			proj, r.URL.Path, user.GetUser(), err.Error())
-		http.Error(w, "Unauthorized: Auth center failure", http.StatusUnauthorized)
-		return
-	}
-	blog.Infof("user %s request POST %s, permission %s", user.GetUser(), r.URL.Path, permit)
-	if !permit {
-		http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
-		return
-	}
-	// backend serving
-	plugin.Session.ServeHTTP(w, r)
+	return nil
 }
 
 // DELETE and Update /api/v1/repositories/{name}
-func (plugin *RepositoryPlugin) repositoryEditHandler(w http.ResponseWriter, r *http.Request) {
-	user, err := proxy.GetJWTInfo(r, plugin.option.JWTDecoder)
-	if err != nil {
-		blog.Errorf("RepositoryPlugin get jwt info from request %s failed, %s", r.URL.Path, err.Error())
-		http.Error(w, "Unauthorized: "+err.Error(), http.StatusUnauthorized)
-		return
-	}
+func (plugin *RepositoryPlugin) repositoryEditHandler(ctx context.Context, r *http.Request) *httpResponse {
 	rawRepo := mux.Vars(r)["repo"]
 	repo, err := url.PathUnescape(rawRepo)
 	if err != nil {
-		blog.Errorf("RepositoryPlugin Serve %s decode repo %s failure, %s", r.URL.Path, rawRepo, err.Error())
-		http.Error(w, "Bad Request: malform repository", http.StatusBadRequest)
-		return
+		return &httpResponse{
+			err:        errors.Wrapf(err, "parse repo param failed"),
+			statusCode: http.StatusBadRequest,
+		}
 	}
-	repository, err := plugin.option.Storage.GetRepository(r.Context(), repo)
-	if err != nil {
-		blog.Errorf("RepositoryPlugin Serve %s get Repository %s failure, %s", r.URL.Path, repo, err.Error())
-		http.Error(w, "gitops repository storage failure", http.StatusInternalServerError)
-		return
+
+	statusCode, err := plugin.middleware.CheckRepositoryPermission(ctx, repo, iam.ProjectEdit)
+	if statusCode != http.StatusOK {
+		return &httpResponse{
+			statusCode: statusCode,
+			err:        errors.Wrapf(err, "check update repo '%s' permission failed", repo),
+		}
 	}
-	if repository == nil {
-		blog.Errorf("RepositoryPlugin Serve %s get no Repository", r.URL.Path)
-		http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
-		return
-	}
-	argoProject, err := plugin.option.Storage.GetProject(r.Context(), repository.Project)
-	if err != nil {
-		blog.Errorf("RepositoryPlugin Serve %s get project %s info failed, %s", r.URL.Path, repository.Project, err.Error())
-		http.Error(w, "gitops project storage failure", http.StatusInternalServerError)
-		return
-	}
-	if argoProject == nil {
-		blog.Errorf("RepositoryPlugin Serve %s get no project %s", r.URL.Path, repository.Project)
-		http.Error(w, "Not Found: Not Found project", http.StatusNotFound)
-		return
-	}
-	projectID := common.GetBCSProjectID(argoProject.Annotations)
-	if projectID == "" {
-		blog.Errorf("RepositoryPlugin Serve %s get no bcs project control information", r.URL.Path)
-		http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
-		return
-	}
-	permit, _, err := plugin.Permission.CanEditProject(user.GetUser(), projectID)
-	if err != nil {
-		blog.Errorf("Project %s permission validate for %s failed, %s", repository.Project, r.URL.Path, err.Error())
-		http.Error(w, "Unauthorized: Auth center failure", http.StatusUnauthorized)
-		return
-	}
-	blog.Infof("user %s request %s, permission %s", user.GetUser(), r.URL.Path, permit)
-	if !permit {
-		http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
-		return
-	}
-	// backend serving
-	plugin.Session.ServeHTTP(w, r)
+	return nil
 }
 
-// handle path permission belows:
+// handle path projectPermission belows:
 // GET /api/v1/repositories/{repo}
 // GET /api/v1/repositories/{repo}/apps
 // GET /api/v1/repositories/{repo}/helmcharts
 // GET /api/v1/repositories/{repo}/refs
 // GET /api/v1/repositories/{repo}/appdetails
-func (plugin *RepositoryPlugin) repositoryViewsHandler(w http.ResponseWriter, r *http.Request) {
-	user, err := proxy.GetJWTInfo(r, plugin.option.JWTDecoder)
-	if err != nil {
-		blog.Errorf("RepositoryPlugin get jwt info from request %s failed, %s", r.URL.Path, err.Error())
-		http.Error(w, "Unauthorized: "+err.Error(), http.StatusUnauthorized)
-		return
-	}
+func (plugin *RepositoryPlugin) repositoryViewsHandler(ctx context.Context, r *http.Request) *httpResponse {
 	rawRepo := mux.Vars(r)["repo"]
 	repo, err := url.PathUnescape(rawRepo)
 	if err != nil {
-		blog.Errorf("RepositoryPlugin Serve %s decode repo %s failure, %s", r.URL.Path, rawRepo, err.Error())
-		http.Error(w, "Bad Request: malform repository", http.StatusBadRequest)
-		return
+		return &httpResponse{
+			err:        errors.Wrapf(err, "parse repo param failed"),
+			statusCode: http.StatusBadRequest,
+		}
 	}
-	repository, err := plugin.option.Storage.GetRepository(r.Context(), repo)
-	if err != nil {
-		blog.Errorf("RepositoryPlugin Serve %s get Repository %s failure, %s", r.URL.Path, repo, err.Error())
-		http.Error(w, "gitops repository storage failure", http.StatusInternalServerError)
-		return
+
+	statusCode, err := plugin.middleware.CheckRepositoryPermission(ctx, repo, iam.ProjectView)
+	if statusCode != http.StatusOK {
+		return &httpResponse{
+			statusCode: statusCode,
+			err:        errors.Wrapf(err, "check view repo '%s' permission failed", repo),
+		}
 	}
-	if repository == nil {
-		blog.Errorf("RepositoryPlugin Serve %s get no Repository", r.URL.Path)
-		http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
-		return
-	}
-	argoProject, err := plugin.option.Storage.GetProject(r.Context(), repository.Project)
-	if err != nil {
-		blog.Errorf("RepositoryPlugin Serve %s get project %s info failed, %s", r.URL.Path, repository.Project, err.Error())
-		http.Error(w, "gitops project storage failure", http.StatusInternalServerError)
-		return
-	}
-	projectID := common.GetBCSProjectID(argoProject.Annotations)
-	if projectID == "" {
-		blog.Errorf("RepositoryPlugin Serve %s get no bcs project control information", r.URL.Path)
-		http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
-		return
-	}
-	permit, _, err := plugin.Permission.CanViewProject(user.GetUser(), projectID)
-	if err != nil {
-		blog.Errorf("Project %s permission validate for %s failed, %s", repository.Project, r.URL.Path, err.Error())
-		http.Error(w, "Unauthorized: Auth center failure", http.StatusUnauthorized)
-		return
-	}
-	blog.Infof("user %s request %s, permission %t", user.GetUser(), r.URL.Path, permit)
-	if !permit {
-		http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
-		return
-	}
-	// authorized then go through reverse proxy
-	plugin.Session.ServeHTTP(w, r)
+	return nil
 }

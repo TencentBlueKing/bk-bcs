@@ -24,6 +24,7 @@ import (
 	pbapp "bscp.io/pkg/protocol/core/app"
 	pbbase "bscp.io/pkg/protocol/core/base"
 	pbds "bscp.io/pkg/protocol/data-service"
+	"bscp.io/pkg/runtime/filter"
 	"bscp.io/pkg/thirdparty/esb/cmdb"
 	"bscp.io/pkg/types"
 	"bscp.io/pkg/version"
@@ -62,19 +63,19 @@ func (s *Service) CreateApp(ctx context.Context, req *pbds.CreateAppReq) (*pbds.
 
 // UpdateApp update application.
 func (s *Service) UpdateApp(ctx context.Context, req *pbds.UpdateAppReq) (*pbbase.EmptyResp, error) {
-	kit := kit.FromGrpcContext(ctx)
+	grpcKit := kit.FromGrpcContext(ctx)
 
 	app := &table.App{
 		ID:    req.Id,
 		BizID: req.BizId,
 		Spec:  req.Spec.AppSpec(),
 		Revision: &table.Revision{
-			Reviser:   kit.User,
+			Reviser:   grpcKit.User,
 			UpdatedAt: time.Now(),
 		},
 	}
-	if err := s.dao.App().Update(kit, app); err != nil {
-		logs.Errorf("update app failed, err: %v, rid: %s", err, kit.Rid)
+	if err := s.dao.App().Update(grpcKit, app); err != nil {
+		logs.Errorf("update app failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
 	}
 
@@ -83,14 +84,14 @@ func (s *Service) UpdateApp(ctx context.Context, req *pbds.UpdateAppReq) (*pbbas
 
 // DeleteApp delete application.
 func (s *Service) DeleteApp(ctx context.Context, req *pbds.DeleteAppReq) (*pbbase.EmptyResp, error) {
-	kit := kit.FromGrpcContext(ctx)
+	grpcKit := kit.FromGrpcContext(ctx)
 
 	app := &table.App{
 		ID:    req.Id,
 		BizID: req.BizId,
 	}
-	if err := s.dao.App().Delete(kit, app); err != nil {
-		logs.Errorf("delete app failed, err: %v, rid: %s", err, kit.Rid)
+	if err := s.dao.App().Delete(grpcKit, app); err != nil {
+		logs.Errorf("delete app failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
 	}
 
@@ -99,12 +100,12 @@ func (s *Service) DeleteApp(ctx context.Context, req *pbds.DeleteAppReq) (*pbbas
 
 // ListApps list apps by query condition.
 func (s *Service) ListApps(ctx context.Context, req *pbds.ListAppsReq) (*pbds.ListAppsResp, error) {
-	kit := kit.FromGrpcContext(ctx)
+	grpcKit := kit.FromGrpcContext(ctx)
 
 	// parse pb struct filter to filter.Expression.
 	filter, err := pbbase.UnmarshalFromPbStructToExpr(req.Filter)
 	if err != nil {
-		logs.Errorf("unmarshal pb struct to expression failed, err: %v, rid: %s", err, kit.Rid)
+		logs.Errorf("unmarshal pb struct to expression failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
 	}
 
@@ -112,6 +113,63 @@ func (s *Service) ListApps(ctx context.Context, req *pbds.ListAppsReq) (*pbds.Li
 		BizID:  req.BizId,
 		Filter: filter,
 		Page:   req.Page.BasePage(),
+	}
+
+	details, err := s.dao.App().List(grpcKit, query)
+	if err != nil {
+		logs.Errorf("list apps failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, err
+	}
+
+	resp := &pbds.ListAppsResp{
+		Count:   details.Count,
+		Details: pbapp.PbApps(details.Details),
+	}
+	return resp, nil
+}
+
+// ListApps list apps by query condition.
+func (s *Service) ListAppsRest(ctx context.Context, req *pbds.ListAppsRestReq) (*pbds.ListAppsResp, error) {
+	kit := kit.FromGrpcContext(ctx)
+
+	// 默认分页
+	limit := uint(req.Limit)
+	if limit == 0 {
+		limit = 50
+	}
+
+	page := &types.BasePage{
+		Start: req.Start,
+		Limit: limit,
+	}
+
+	rules := []filter.RuleFactory{}
+	if req.Operator != "" {
+		rules = append(rules, filter.AtomRule{
+			Field: "creator",
+			Op:    filter.OpFactory(filter.Equal),
+			Value: req.Operator,
+		})
+	}
+
+	// 按名称模糊搜索
+	if req.Name != "" {
+		rules = append(rules, filter.AtomRule{
+			Field: "name",
+			Op:    filter.OpFactory(filter.ContainsInsensitive),
+			Value: req.Name,
+		})
+	}
+
+	filter := &filter.Expression{
+		Op:    filter.And,
+		Rules: rules,
+	}
+
+	query := &types.ListAppsOption{
+		BizID:  req.BizId,
+		Filter: filter,
+		Page:   page,
 	}
 
 	details, err := s.dao.App().List(kit, query)

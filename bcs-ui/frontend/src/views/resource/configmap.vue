@@ -226,7 +226,7 @@
                     <bk-button
                       v-show="!data.isEdit"
                       style="width: 120px;"
-                      :class="['bk-button', { 'bk-primary': curKeyIndex === index }]"
+                      :class="['bk-button bcs-button-ellipsis', { 'bk-primary': curKeyIndex === index }]"
                       @click.stop.prevent="setCurKey(data, index)">
                       {{data.key || $t('未命名')}}
                     </bk-button>
@@ -256,30 +256,29 @@
               <div class="bk-form-item" style="margin-top: 13px;">
                 <label class="bk-label">{{$t('值')}}：</label>
                 <div class="bk-form-content" style="margin-left: 105px;" v-if="curProject.kind === PROJECT_K8S">
-                  <textarea
-                    class="bk-form-textarea"
-                    style="height: 200px;"
-                    v-model="curKeyParams.content"
-                    :placeholder="$t('请输入键') + curKeyParams.key + $t('的内容')"
-                    v-full-screen>
-                                    </textarea>
+                  <div v-full-screen="{ css: 'color: #333' }" class="h-[200px]">
+                    <textarea
+                      class="bk-form-textarea h-full"
+                      v-model="curKeyParams.content"
+                      :placeholder="$t('请输入键') + curKeyParams.key + $t('的内容')">
+                  </textarea>
+                  </div>
                 </div>
                 <div class="bk-form-content" style="margin-left: 105px;" v-else>
-                  <textarea
-                    class="bk-form-textarea"
-                    style="height: 200px;"
-                    v-model="curKeyParams.content"
-                    :placeholder="$t('请输入键') + curKeyParams.key + $t('的内容')"
-                    v-full-screen
-                    v-if="curKeyParams.type === 'file'">
-                                    </textarea>
-                  <textarea
-                    class="bk-form-textarea" style="height: 200px;"
-                    v-model="curKeyParams.content"
-                    :placeholder="$t('请输入在线文件地址，如http://www.example.com/config.txt')"
-                    v-full-screen
-                    v-else>
-                                    </textarea>
+                  <div v-full-screen="{ css: 'color: #333' }" class="h-[200px]">
+                    <textarea
+                      class="bk-form-textarea h-full"
+                      v-model="curKeyParams.content"
+                      :placeholder="$t('请输入键') + curKeyParams.key + $t('的内容')"
+                      v-if="curKeyParams.type === 'file'">
+                  </textarea>
+                    <textarea
+                      class="bk-form-textarea h-full"
+                      v-model="curKeyParams.content"
+                      :placeholder="$t('请输入在线文件地址，如http://www.example.com/config.txt')"
+                      v-else>
+                  </textarea>
+                  </div>
                 </div>
               </div>
             </template>
@@ -371,6 +370,7 @@ export default {
       curConfigmapKeyList: [],
       comfigSelectedList: [],
       webAnnotations: { perms: {} },
+      PROJECT_K8S: window.PROJECT_K8S,
     };
   },
   computed: {

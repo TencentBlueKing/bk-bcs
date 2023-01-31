@@ -88,17 +88,17 @@ func (dao *crInstanceDao) Create(kit *kit.Kit, cri *table.CurrentReleasedInstanc
 	eDecorator := dao.event.Eventf(kit)
 	err = dao.sd.ShardingOne(cri.Attachment.BizID).AutoTxn(kit,
 		func(txn *sqlx.Tx, opt *sharding.TxnOption) error {
-			if err := dao.validateAppCRINumber(kit, cri.Attachment, &LockOption{Txn: txn}); err != nil {
+			if err = dao.validateAppCRINumber(kit, cri.Attachment, &LockOption{Txn: txn}); err != nil {
 				return err
 			}
 
-			if err := dao.orm.Txn(txn).Insert(kit.Ctx, sql, cri); err != nil {
+			if err = dao.orm.Txn(txn).Insert(kit.Ctx, sql, cri); err != nil {
 				return err
 			}
 
 			// audit publish this to be published current released instance details.
 			au := &AuditOption{Txn: txn, ResShardingUid: opt.ShardingUid}
-			if err := dao.auditDao.Decorator(kit, cri.Attachment.BizID, enumor.CRInstance).
+			if err = dao.auditDao.Decorator(kit, cri.Attachment.BizID, enumor.CRInstance).
 				AuditPublish(cri, au); err != nil {
 				return fmt.Errorf("audit publish instance failed, err: %v", err)
 			}
@@ -114,7 +114,7 @@ func (dao *crInstanceDao) Create(kit *kit.Kit, cri *table.CurrentReleasedInstanc
 				Attachment: &table.EventAttachment{BizID: cri.Attachment.BizID, AppID: cri.Attachment.AppID},
 				Revision:   &table.CreatedRevision{Creator: kit.User, CreatedAt: time.Now()},
 			}
-			if err := eDecorator.Fire(one); err != nil {
+			if err = eDecorator.Fire(one); err != nil {
 				logs.Errorf("fire publish instance: %s event failed, err: %v, rid: %s", cri.Spec.Uid,
 					err, kit.Rid)
 				return errf.New(errf.DBOpFailed, "fire event failed, "+err.Error())
@@ -166,7 +166,8 @@ func (dao *crInstanceDao) List(kit *kit.Kit, opts *types.ListCRInstancesOption) 
 	if opts.Page.Count {
 		// this is a count request, then do count operation only.
 		sql = fmt.Sprintf(`SELECT COUNT(*) FROM %s %s`, table.CurrentReleasedInstanceTable, whereExpr)
-		count, err := dao.orm.Do(dao.sd.ShardingOne(opts.BizID).DB()).Count(kit.Ctx, sql)
+		var count uint32
+		count, err = dao.orm.Do(dao.sd.ShardingOne(opts.BizID).DB()).Count(kit.Ctx, sql)
 		if err != nil {
 			return nil, err
 		}

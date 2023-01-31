@@ -14,21 +14,23 @@ package worker
 
 import (
 	"context"
+	"fmt"
 	"sync"
 	"time"
-
-	"github.com/panjf2000/ants/v2"
-
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/prom"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/types"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/utils"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/codec"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/msgqueue"
 	"github.com/micro/go-micro/v2/broker"
+	"github.com/panjf2000/ants/v2"
 	"github.com/robfig/cron/v3"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/bcsmonitor"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/kafka"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/prom"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/types"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/utils"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/cmanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/common"
@@ -46,12 +48,15 @@ type Producer struct {
 	cancel          context.CancelFunc
 	resourceGetter  common.GetterInterface
 	concurrency     int
+	bcsMonitorCli   bcsmonitor.ClientInterface
+	needSendKafka   bool
+	kafkaConn       kafka.KafkaInterface
 }
 
 // NewProducer new producer
 func NewProducer(rootCtx context.Context, msgQueue msgqueue.MessageQueue, cron *cron.Cron,
 	cmClient cmanager.ClusterManagerClient, k8sStorageCli, mesosStorageCli bcsapi.Storage,
-	getter common.GetterInterface, concurrency int) *Producer {
+	getter common.GetterInterface, concurrency int, needSendKafka bool) *Producer {
 	ctx, cancel := context.WithCancel(rootCtx)
 	return &Producer{
 		msgQueue:        msgQueue,
@@ -63,12 +68,22 @@ func NewProducer(rootCtx context.Context, msgQueue msgqueue.MessageQueue, cron *
 		cancel:          cancel,
 		resourceGetter:  getter,
 		concurrency:     concurrency,
+		needSendKafka:   needSendKafka,
 	}
+}
+
+func (p *Producer) ImportKafkaConn(conn kafka.KafkaInterface) {
+	p.kafkaConn = conn
 }
 
 // Stop stop producer
 func (p *Producer) Stop() {
 	p.cron.Stop()
+	if p.kafkaConn != nil {
+		if err := p.kafkaConn.Stop(); err != nil {
+			blog.Errorf("stop kafka conn err:%s", err.Error())
+		}
+	}
 }
 
 // Run run producer
@@ -252,6 +267,7 @@ func (p *Producer) ClusterProducer(dimension string) {
 			Dimension:   dimension,
 			ObjectType:  types.ClusterType,
 			Label:       cluster.Label,
+			IsBKMonitor: cluster.IsBKMonitor,
 		}
 		err := p.SendJob(opts)
 		if err != nil {
@@ -296,6 +312,7 @@ func (p *Producer) NamespaceProducer(dimension string) {
 			Dimension:   dimension,
 			ObjectType:  types.NamespaceType,
 			Label:       namespace.Label,
+			IsBKMonitor: namespace.IsBKMonitor,
 		}
 		err := p.SendJob(opts)
 		if err != nil {
@@ -400,6 +417,7 @@ func (p *Producer) getSingleClusterWorkloadList(jobTime time.Time, dimension str
 			Dimension:    dimension,
 			ObjectType:   types.WorkloadType,
 			Label:        workload.Label,
+			IsBKMonitor:  workload.IsBKMonitor,
 		}
 		if err = p.SendJob(opts); err != nil {
 			blog.Errorf("send workload job to msg queue error, opts: %v, err: %v", opts, err)
@@ -520,6 +538,19 @@ func (p *Producer) SendJob(opts types.JobCommonOpts) error {
 		blog.Errorf("send message error: %v", err)
 		return err
 	}
+	if p.needSendKafka {
+		var kafkaMsg []byte
+		opts.Timestamp = opts.CurrentTime.Unix()
+		err = codec.EncJson(opts, &kafkaMsg)
+		if err != nil {
+			blog.Errorf("transfer opts to []byte error, opts: %v, error: %s", opts, err.Error())
+			return err
+		}
+		err := p.kafkaConn.PublishWithTopic(p.ctx, opts.ObjectType, 0, kafkaMsg)
+		if err != nil {
+			return fmt.Errorf("send message to kafka err:%s", err.Error())
+		}
+	}
 	return nil
 }
 
@@ -541,6 +572,7 @@ func (p *Producer) genAndSendAutoscalerJob(autoscalerType, dimension string, job
 			Dimension:         dimension,
 			ObjectType:        types.PodAutoscalerType,
 			Label:             autoscaler.Label,
+			IsBKMonitor:       autoscaler.IsBKMonitor,
 		}
 		if err := p.SendJob(opts); err != nil {
 			blog.Errorf("send gpa job to msg queue error, opts: %v, err: %v", opts, err)

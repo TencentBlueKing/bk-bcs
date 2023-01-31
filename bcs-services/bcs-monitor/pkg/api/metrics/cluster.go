@@ -26,14 +26,16 @@ const (
 
 // Usage 使用量
 type Usage struct {
-	Used  string `json:"used"`
-	Total string `json:"total"`
+	Used    string `json:"used"`
+	Request string `json:"request"`
+	Total   string `json:"total"`
 }
 
 // UsageByte 使用量, bytes单位
 type UsageByte struct {
-	UsedByte  string `json:"used_bytes"`
-	TotalByte string `json:"total_bytes"`
+	UsedByte    string `json:"used_bytes"`
+	RequestByte string `json:"request_bytes"`
+	TotalByte   string `json:"total_bytes"`
 }
 
 // ClusterOverviewMetric 集群概览接口
@@ -45,14 +47,22 @@ type ClusterOverviewMetric struct {
 
 // handleClusterMetric Cluster 处理公共函数
 func handleClusterMetric(c *rest.Context, promql string) (interface{}, error) {
+	query := &UsageQuery{}
+	if err := c.ShouldBindQuery(query); err != nil {
+		return nil, err
+	}
+
+	queryTime, err := query.GetQueryTime()
+	if err != nil {
+		return nil, err
+	}
 	params := map[string]interface{}{
 		"clusterId": c.ClusterId,
 		"provider":  PROVIDER,
 	}
 
-	end := time.Now()
-	start := end.Add(-time.Hour)
-	result, err := bcsmonitor.QueryRange(c.Request.Context(), c.ProjectCode, promql, params, start, end, time.Minute)
+	result, err := bcsmonitor.QueryRange(c.Request.Context(), c.ProjectCode, promql, params, queryTime.Start,
+		queryTime.End, queryTime.Step)
 	if err != nil {
 		return nil, err
 	}
@@ -71,12 +81,14 @@ func GetClusterOverview(c *rest.Context) (interface{}, error) {
 	}
 
 	promqlMap := map[string]string{
-		"cpu_used":     `bcs:cluster:cpu:used{cluster_id="%<clusterId>s", %<provider>s}`,
-		"cpu_total":    `bcs:cluster:cpu:total{cluster_id="%<clusterId>s", %<provider>s}`,
-		"memory_used":  `bcs:cluster:memory:used{cluster_id="%<clusterId>s", %<provider>s}`,
-		"memory_total": `bcs:cluster:memory:total{cluster_id="%<clusterId>s", %<provider>s}`,
-		"disk_used":    `bcs:cluster:disk:used{cluster_id="%<clusterId>s", %<provider>s}`,
-		"disk_total":   `bcs:cluster:disk:total{cluster_id="%<clusterId>s", %<provider>s}`,
+		"cpu_used":       `bcs:cluster:cpu:used{cluster_id="%<clusterId>s", %<provider>s}`,
+		"cpu_request":    `bcs:cluster:cpu:request{cluster_id="%<clusterId>s", %<provider>s}`,
+		"cpu_total":      `bcs:cluster:cpu:total{cluster_id="%<clusterId>s", %<provider>s}`,
+		"memory_used":    `bcs:cluster:memory:used{cluster_id="%<clusterId>s", %<provider>s}`,
+		"memory_request": `bcs:cluster:memory:request{cluster_id="%<clusterId>s", %<provider>s}`,
+		"memory_total":   `bcs:cluster:memory:total{cluster_id="%<clusterId>s", %<provider>s}`,
+		"disk_used":      `bcs:cluster:disk:used{cluster_id="%<clusterId>s", %<provider>s}`,
+		"disk_total":     `bcs:cluster:disk:total{cluster_id="%<clusterId>s", %<provider>s}`,
 	}
 
 	result, err := bcsmonitor.QueryMultiValues(c.Request.Context(), c.ProjectId, promqlMap, params, time.Now())
@@ -86,12 +98,14 @@ func GetClusterOverview(c *rest.Context) (interface{}, error) {
 
 	m := ClusterOverviewMetric{
 		CPUUsage: &Usage{
-			Used:  result["cpu_used"],
-			Total: result["cpu_total"],
+			Used:    result["cpu_used"],
+			Request: result["cpu_request"],
+			Total:   result["cpu_total"],
 		},
 		MemoryUsage: &UsageByte{
-			UsedByte:  result["memory_used"],
-			TotalByte: result["memory_total"],
+			UsedByte:    result["memory_used"],
+			RequestByte: result["memory_request"],
+			TotalByte:   result["memory_total"],
 		},
 		DiskUsage: &UsageByte{
 			UsedByte:  result["disk_used"],

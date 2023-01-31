@@ -1,7 +1,11 @@
+<!-- eslint-disable max-len -->
 <template>
   <bk-form class="node-pool-info" :model="nodePoolInfo" :rules="nodePoolInfoRules" ref="formRef">
     <bk-form-item :label="$t('节点池名称')" property="name" error-display-type="normal" required>
-      <bk-input v-model="nodePoolInfo.name"></bk-input>
+      <bk-input
+        v-model="nodePoolInfo.name"
+        :placeholder="$t('名称不超过255个字符，仅支持中文、英文、数字、下划线，分隔符(-)及小数点')">
+      </bk-input>
     </bk-form-item>
     <bk-form-item
       :label="$t('节点数量范围')"
@@ -15,7 +19,7 @@
         :max="getSchemaByProp('autoScaling.minSize').maximum"
         type="number">
       </bk-input>
-      <span>~</span>
+      <span class="px-[5px]">~</span>
       <bk-input
         class="w74"
         v-model="nodePoolInfo.autoScaling.maxSize"
@@ -29,10 +33,6 @@
       :desc="$t('节点池启用后Autoscaler组件将会根据扩容算法使用该节点池资源，开启Autoscaler组件后必须要开启至少一个节点池')">
       <bk-checkbox v-model="nodePoolInfo.enableAutoscale" :disabled="isEdit"></bk-checkbox>
     </bk-form-item>
-    <!-- <bk-form-item :label="$t('是否开启调度')">
-            <bk-checkbox :true-value="0" :false-value="1"
-                v-model="nodePoolInfo.nodeTemplate.unSchedulable"></bk-checkbox>
-        </bk-form-item> -->
     <bk-form-item label="Labels" property="labels" error-display-type="normal">
       <KeyValue
         class="labels"
@@ -60,88 +60,67 @@
       :label="$t('实例创建策略')"
       :desc="$t('首选可用区（子网）优先：自动扩缩容会在您首选的可用区优先执行扩缩容，若首选可用区无法扩缩容，才会在其他可用区进行扩缩容<br/>多可用区（子网）打散 ：在节点池指定的多可用区（即指定多个子网）之间尽最大努力均匀分配CVM实例，只有配置了多个子网时该策略才能生效')">
       <bk-radio-group v-model="nodePoolInfo.autoScaling.multiZoneSubnetPolicy">
-        <bk-radio value="PRIORITY">{{$t('首选可用区（子网）优先')}}</bk-radio>
-        <bk-radio value="EQUALITY">{{$t('多可用区（子网）打散')}}</bk-radio>
+        <span class="inline-block" v-bk-tooltips="$t('自研上云环境暂不支持修改')">
+          <bk-radio value="PRIORITY" disabled>{{$t('首选可用区（子网）优先')}}</bk-radio>
+          <bk-radio value="EQUALITY" disabled>{{$t('多可用区（子网）打散')}}</bk-radio>
+        </span>
       </bk-radio-group>
     </bk-form-item>
     <bk-form-item
       :label="$t('重试策略')"
       :desc="$t('快速重试 ：立即重试，在较短时间内快速重试，连续失败超过一定次数（5次）后不再重试，<br/>间隔递增重试 ：间隔递增重试，随着连续失败次数的增加，重试间隔逐渐增大，重试间隔从秒级到1天不等，<br/>不重试：不进行重试，直到再次收到用户调用或者告警信息后才会重试')">
       <bk-radio-group v-model="nodePoolInfo.autoScaling.retryPolicy">
-        <bk-radio value="IMMEDIATE_RETRY">{{$t('快速重试')}}</bk-radio>
-        <bk-radio value="INCREMENTAL_INTERVALS">{{$t('间隔递增重试')}}</bk-radio>
-        <bk-radio value="NO_RETRY">{{$t('不重试')}}</bk-radio>
+        <span class="inline-block" v-bk-tooltips="$t('自研上云环境暂不支持修改')">
+          <bk-radio value="IMMEDIATE_RETRY" disabled>{{$t('快速重试')}}</bk-radio>
+          <bk-radio value="INCREMENTAL_INTERVALS" disabled>{{$t('间隔递增重试')}}</bk-radio>
+          <bk-radio value="NO_RETRY" disabled>{{$t('不重试')}}</bk-radio>
+        </span>
       </bk-radio-group>
     </bk-form-item>
     <bk-form-item
       :label="$t('扩缩容模式')"
       :desc="$t('释放模式：缩容时自动释放Cluster AutoScaler判断的空余节点， 扩容时自动创建新的CVM节点加入到伸缩组<br/>关机模式：扩容时优先对已关机的节点执行开机操作，节点数依旧不满足要求时再创建新的CVM节点')">
       <bk-radio-group v-model="nodePoolInfo.autoScaling.scalingMode">
-        <bk-radio value="CLASSIC_SCALING">{{$t('释放模式')}}</bk-radio>
-        <bk-radio value="WAKE_UP_STOPPED_SCALING">{{$t('关机模式')}}</bk-radio>
+        <span class="inline-block" v-bk-tooltips="$t('自研上云环境暂不支持修改')">
+          <bk-radio value="CLASSIC_SCALING" disabled>{{$t('释放模式')}}</bk-radio>
+          <bk-radio value="WAKE_UP_STOPPED_SCALING" disabled>{{$t('关机模式')}}</bk-radio>
+        </span>
       </bk-radio-group>
     </bk-form-item>
     <bk-form-item
-      :label="$t('云区域')"
-      :desc="$t('Cluster Autoscaler组件在扩容节点时会使用节点管理API自动安装gse_agent，以保证监控、日志、标准运维的正常使用，这里的云区域是指节点管理安装gse_agent时指定的云区域，默认为“直连区域”')">
-      <bcs-select
-        :clearable="false"
-        :loading="cloudLoading"
-        v-model="nodePoolInfo.bkCloudID">
-        <bcs-option
-          v-for="item in cloudList"
-          :key="item.bk_cloud_id"
-          :id="item.bk_cloud_id"
-          :name="item.bk_cloud_name">
-        </bcs-option>
-      </bcs-select>
+      :label="$t('扩容后转移模块')"
+      :desc="$t('扩容节点后节点转移到关联业务的CMDB模块')"
+      error-display-type="normal"
+      required
+      property="nodeTemplate.module.scaleOutModuleID">
+      <TopoSelectTree
+        v-model="nodePoolInfo.nodeTemplate.module.scaleOutModuleID"
+        :placeholder="$t('请选择业务 CMDB topo 模块')"
+        :cluster-id="cluster.clusterID"
+        @node-data-change="handleScaleOutDataChange" />
     </bk-form-item>
-    <bk-form-item :label="$t('模块')">
-      <bcs-select
-        :show-empty="false"
-        allow-create
-        v-model="nodePoolInfo.nodeTemplate.module.scaleOutModuleName"
-        @clear="handleClearNode">
-        <bcs-big-tree
-          :data="topoData"
-          :options="{
-            idKey: 'bk_inst_id',
-            childrenKey: 'child',
-            nameKey: 'bk_inst_name'
-          }"
-          ref="treeRef"
-          default-expand-all
-          :default-checked-nodes="[nodePoolInfo.nodeTemplate.module.scaleOutModuleID]">
-          <template #default="{ data, node }">
-            <div @click="handleSelectNode(data, node)">
-              <bcs-radio
-                v-if="data.bk_obj_id === 'module'"
-                :checked="nodePoolInfo.nodeTemplate.module.scaleOutModuleID === String(data.bk_inst_id)">
-                {{ data.bk_inst_name }}
-              </bcs-radio>
-              <span v-else>{{ data.bk_inst_name }}</span>
-            </div>
-          </template>
-        </bcs-big-tree>
-      </bcs-select>
-    </bk-form-item>
-    <bk-form-item class="mt40" v-if="!isEdit">
-      <bk-button theme="primary" @click="handleNext">{{ $t('下一步') }}</bk-button>
-      <bk-button @click="handleCancel">{{ $t('取消') }}</bk-button>
-    </bk-form-item>
+    <!-- <bk-form-item
+      :label="$t('缩容后转移模块')"
+      :desc="$t('缩容节点后节点转移到关联业务的CMDB模块，此选项仅适用于自有资源池场景，平台提供的资源池场景无需选择')">
+      <TopoSelectTree
+        v-model="nodePoolInfo.nodeTemplate.module.scaleInModuleID"
+        :placeholder="$t('请选择业务 CMDB topo 模块')"
+        :cluster-id="cluster.clusterID"
+        @node-data-change="handleScaleInDataChange" />
+    </bk-form-item> -->
   </bk-form>
 </template>
 <script lang="ts">
-import { defineComponent, ref, toRefs, onMounted } from '@vue/composition-api';
-import KeyValue from './key-value.vue';
-import Taints from './new-taints.vue';
-import $router from '@/router/index';
+import { defineComponent, ref, toRefs } from '@vue/composition-api';
+import KeyValue from '../key-value.vue';
+import Taints from '../new-taints.vue';
 import $i18n from '@/i18n/i18n-setup';
-import Schema from './resolve-schema';
-import { nodemanCloudList, ccTopology } from '@/api/base';
+import Schema from '../resolve-schema';
+import TopoSelectTree from './topo-select-tree.vue';
 
 export default defineComponent({
-  components: { KeyValue, Taints },
+  name: 'BasciPoolInfo',
+  components: { KeyValue, Taints, TopoSelectTree },
   props: {
     schema: {
       type: Object,
@@ -161,29 +140,31 @@ export default defineComponent({
       default: () => ({}),
     },
   },
-  setup(props, ctx) {
-    const { defaultValues, schema, cluster } = toRefs(props);
+  setup(props) {
+    const { defaultValues, schema } = toRefs(props);
     const formRef = ref<any>(null);
     const nodePoolInfo = ref({
       name: defaultValues.value.name || '', // 节点名称
       autoScaling: {
-        maxSize: defaultValues.value.autoScaling.maxSize, // 节点数量范围
-        minSize: defaultValues.value.autoScaling.minSize,
-        scalingMode: defaultValues.value.autoScaling.scalingMode, // 扩缩容模式
-        multiZoneSubnetPolicy: defaultValues.value.autoScaling.multiZoneSubnetPolicy, // 实列创建策略
-        retryPolicy: defaultValues.value.autoScaling.retryPolicy, // 重试策略
+        maxSize: defaultValues.value.autoScaling?.maxSize, // 节点数量范围
+        minSize: defaultValues.value.autoScaling?.minSize,
+        scalingMode: defaultValues.value.autoScaling?.scalingMode, // 扩缩容模式
+        multiZoneSubnetPolicy: defaultValues.value.autoScaling?.multiZoneSubnetPolicy, // 实列创建策略
+        retryPolicy: defaultValues.value.autoScaling?.retryPolicy, // 重试策略
       },
       enableAutoscale: defaultValues.value.enableAutoscale, // 是否开启弹性伸缩
       nodeTemplate: {
-        unSchedulable: defaultValues.value.nodeTemplate.unSchedulable || 0, // 是否开启调度 0 代表开启调度，1 不可调度
-        labels: defaultValues.value.nodeTemplate.labels || {}, // 标签
-        taints: defaultValues.value.nodeTemplate.taints || [], // 污点
+        unSchedulable: defaultValues.value.nodeTemplate?.unSchedulable || 0, // 是否开启调度 0 代表开启调度，1 不可调度
+        labels: defaultValues.value.nodeTemplate?.labels || {}, // 标签
+        taints: defaultValues.value.nodeTemplate?.taints || [], // 污点
         module: {
           scaleOutModuleID: defaultValues.value.nodeTemplate?.module?.scaleOutModuleID || '',
           scaleOutModuleName: defaultValues.value.nodeTemplate?.module?.scaleOutModuleName || '',
+          scaleInModuleID: defaultValues.value.nodeTemplate?.module?.scaleInModuleID || '',
+          scaleInModuleName: defaultValues.value.nodeTemplate?.module?.scaleInModuleName || '',
         },
       },
-      bkCloudID: defaultValues.value.bkCloudID || 0,
+      // bkCloudID: defaultValues.value.bkCloudID || 0,
     });
 
     const nodePoolInfoRules = ref({
@@ -192,6 +173,11 @@ export default defineComponent({
           required: true,
           message: $i18n.t('必填项'),
           trigger: 'blur',
+        },
+        {
+          message: $i18n.t('名称2 ~ 255个字符之间，仅支持中文、英文、数字、下划线，分隔符("-")及小数点'),
+          trigger: 'blur',
+          validator: (v: string) => /^[\u4E00-\u9FA5A-Za-z0-9._-]+$/.test(v) && v.length <= 255 && v.length >= 2,
         },
       ],
       nodeNumRange: [
@@ -205,6 +191,7 @@ export default defineComponent({
         {
           message: $i18n.t('标签值不能为空'),
           trigger: 'custom',
+          // eslint-disable-next-line max-len
           validator: () => Object.keys(nodePoolInfo.value.nodeTemplate.labels).every(key => !!nodePoolInfo.value.nodeTemplate.labels[key]),
         },
       ],
@@ -229,8 +216,19 @@ export default defineComponent({
           },
         },
       ],
+      'nodeTemplate.module.scaleOutModuleID': [
+        {
+          required: true,
+          message: $i18n.t('必填项'),
+          trigger: 'blur',
+        },
+      ],
     });
 
+    const validate = async () => {
+      const result = await formRef.value?.validate();
+      return result;
+    };
     const handleAddTaints = () => {
       nodePoolInfo.value.nodeTemplate.taints.push({
         key: '',
@@ -239,76 +237,25 @@ export default defineComponent({
       });
     };
 
-    const handleNext = async () => {
-      const result = await formRef.value?.validate();
-      if (!result) return;
-
-      ctx.emit('next', nodePoolInfo.value);
-    };
-    const handleCancel = () => {
-      $router.back();
-    };
-
     const getSchemaByProp = props => Schema.getSchemaByProp(schema.value, props);
-    // 云区域列表
-    const cloudList = ref<any[]>([]);
-    const cloudLoading = ref(false);
-    const handleGetCloudList = async () => {
-      cloudLoading.value = true;
-      cloudList.value = await nodemanCloudList().catch(() => []);
-      cloudLoading.value = false;
+
+    const handleScaleOutDataChange = (data) => {
+      nodePoolInfo.value.nodeTemplate.module.scaleOutModuleName = data?.path || '';
     };
-    // 模块
-    const treeRef = ref<any>(null);
-    const topoLoading = ref(false);
-    const topoData = ref<any[]>([]);
-    const handleGetTopoData = async () => {
-      topoLoading.value = true;
-      const data = await ccTopology({
-        $clusterId: cluster.value?.clusterID,
-      });
-      topoData.value = [data];
-      topoLoading.value = false;
-    };
-    const getNodePath = (node) => {
-      if (node.parent) {
-        // eslint-disable-next-line camelcase
-        return `${getNodePath(node.parent)} / ${node?.data?.bk_inst_name}`;
-      }
-      // eslint-disable-next-line camelcase
-      return node?.data?.bk_inst_name;
-    };
-    const handleSelectNode = (data, node) => {
-      const path = getNodePath(node);
-      if (data.bk_obj_id === 'module') {
-        nodePoolInfo.value.nodeTemplate.module.scaleOutModuleID = String(data.bk_inst_id);
-        nodePoolInfo.value.nodeTemplate.module.scaleOutModuleName = path;
-      }
-    };
-    const handleClearNode = () => {
-      nodePoolInfo.value.nodeTemplate.module.scaleOutModuleID = '';
-      nodePoolInfo.value.nodeTemplate.module.scaleOutModuleName = '';
+    const handleScaleInDataChange = (data) => {
+      nodePoolInfo.value.nodeTemplate.module.scaleInModuleName = data?.path || '';
     };
 
-    onMounted(() => {
-      handleGetCloudList();
-      handleGetTopoData();
-    });
+
     return {
-      cloudList,
-      cloudLoading,
       formRef,
       nodePoolInfo,
       nodePoolInfoRules,
-      treeRef,
-      topoLoading,
-      topoData,
-      handleNext,
-      handleCancel,
       getSchemaByProp,
       handleAddTaints,
-      handleSelectNode,
-      handleClearNode,
+      handleScaleOutDataChange,
+      handleScaleInDataChange,
+      validate,
     };
   },
 });

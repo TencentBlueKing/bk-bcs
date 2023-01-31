@@ -338,7 +338,7 @@ import $i18n from '@/i18n/i18n-setup';
 import $store from '@/store/index';
 import usePage from '@/views/dashboard/common/use-page';
 import { mergeDeep } from '@/common/util';
-import Schema from './resolve-schema';
+import Schema from '../resolve-schema';
 
 export default defineComponent({
   props: {

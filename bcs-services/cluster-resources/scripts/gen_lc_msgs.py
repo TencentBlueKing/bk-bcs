@@ -16,6 +16,7 @@ limitations under the License.
 # 遍历扫描代码中的国际化数据，提取 msgID，合并已有的 lc_msgs.yaml，排序后输出
 import os
 import re
+from enum import Enum
 from pathlib import Path
 from typing import Dict
 
@@ -28,10 +29,18 @@ GO_SRC_I18N_REGEX = re.compile(r".*?i18n.GetMsg.*?\"(.*)\"[,)]")
 TMPL_I18N_REGEX = re.compile(r".*?i18n.*?\"(.*)\" \.lang")
 
 
+class ExtLangEnum(str, Enum):
+    EN = "en"  # 英文
+    # RU = "ru"  # 俄语
+    # JA = "ja"  # 日语
+
+
 @dataclass
 class LcMsg:
     zh: str
-    en: str
+    en: str = ""
+    # ru: str = ""
+    # ja: str = ""
 
 
 class LcMsgsGenerator:
@@ -69,7 +78,7 @@ class LcMsgsGenerator:
             if match:
                 msg_id = match.group(1)
                 # msg_id 即中文数据
-                self.ls_msgs[msg_id] = LcMsg(msg_id, "")
+                self.ls_msgs[msg_id] = LcMsg(zh=msg_id)
 
     def load_and_merge(self):
         """加载并与现有数据合并"""
@@ -80,15 +89,18 @@ class LcMsgsGenerator:
             # 可能存在不再使用的国际化数据，这里忽略掉
             if msg_id not in self.ls_msgs:
                 continue
-            self.ls_msgs[msg_id] = LcMsg(msg_id, msg["en"])
+
+            ext_lang_msgs = {lang: msg.get(lang, "") for lang in ExtLangEnum}
+            self.ls_msgs[msg_id] = LcMsg(zh=msg_id, **ext_lang_msgs)
 
     def write_to_file(self):
         """覆盖输出到文件"""
         with open(self.lc_msgs_filepath, "w") as fw:
             for msg_id, lc_msg in self.ls_msgs.items():
                 fw.write("- msgID: " + self.quote_when_necessary(msg_id) + "\n")
-                en = lc_msg.en if lc_msg.en else "<TODO>"
-                fw.write("  en: " + self.quote_when_necessary(en) + "\n")
+                for lang in ExtLangEnum:
+                    c = getattr(lc_msg, lang) or "<TODO>"
+                    fw.write(f"  {lang}: " + self.quote_when_necessary(c) + "\n")
 
     @staticmethod
     def quote_when_necessary(s: str) -> str:

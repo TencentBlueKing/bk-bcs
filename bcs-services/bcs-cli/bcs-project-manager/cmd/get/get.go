@@ -34,6 +34,7 @@ var (
 		kubectl-bcs-project-manager list namespaces`))
 )
 
+// NewCmdGet 新建命令Get
 func NewCmdGet() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "list",

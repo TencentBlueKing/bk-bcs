@@ -21,10 +21,14 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/http"
+	"net/url"
 	"strconv"
+	"time"
 
 	"github.com/parnurzeal/gorequest"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/cache"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/logging"
@@ -34,12 +38,16 @@ import (
 )
 
 var (
+	CacheKeyBCSCCAccessToken = "BCSCC_ACCESS_TOKEN"
+	getAccessTokenPath       = "/api/v1/auth/access-tokens"
+
 	createProjectPath   = "/projects/"
 	updateProjectPath   = "/projects/%s/"
 	createNamespacePath = "/projects/%s/clusters/%s/namespaces/"
 	listNamespacesPath  = "/projects/%s/clusters/%s/namespaces/"
 	deleteNamespacePath = "/projects/%s/clusters/%s/namespaces/%d"
-	timeout             = 10
+
+	timeout = 10
 )
 
 type commonResp struct {
@@ -48,11 +56,24 @@ type commonResp struct {
 	RequestID string `json:"request_id"`
 }
 
+type getAccessTokenResp struct {
+	Code      int                `json:"code"`
+	Message   string             `json:"message"`
+	RequestID string             `json:"request_id"`
+	Data      getAccessTokenData `json:"data"`
+}
+
 type listNamespacesResp struct {
 	Code      int               `json:"code"`
 	Message   string            `json:"message"`
 	RequestID string            `json:"request_id"`
 	Data      listNamespaceData `json:"data"`
+}
+
+type getAccessTokenData struct {
+	AccessToken  string `json:"access_token"`
+	RefreshToken string `json:"refresh_token"`
+	ExpiresIn    int64  `json:"expires_in"`
 }
 
 type listNamespaceData struct {
@@ -70,6 +91,48 @@ type NamespaceData struct {
 	Description string `json:"description"`
 }
 
+// GetAccessToken request bcs cc api, get access token by app_code and app_secret
+func GetAccessToken() (string, error) {
+	c := cache.GetCache()
+	if token, exists := c.Get(CacheKeyBCSCCAccessToken); exists {
+		return token.(string), nil
+	}
+	bcsCCConf := config.GlobalConf.BCSCC
+	reqURL := fmt.Sprintf("%s%s", bcsCCConf.SSMHost, getAccessTokenPath)
+	header := http.Header{}
+	header.Add("X-BK-APP-CODE", config.GlobalConf.App.Code)
+	header.Add("X-BK-APP-SECRET", config.GlobalConf.App.Secret)
+	data := map[string]interface{}{}
+	data["grant_type"] = "client_credentials"
+	data["id_provider"] = "client"
+	req := gorequest.SuperAgent{
+		Url:    reqURL,
+		Method: "POST",
+		Header: header,
+		Data:   data,
+	}
+	body, err := component.Request(req, timeout, "", nil)
+	if err != nil {
+		logging.Error("request bk-ssm error, data: %v, err: %v", req.Data, err)
+		return "", errorx.NewRequestBKSSMErr(err)
+	}
+	// 解析返回
+	var resp getAccessTokenResp
+	if err := json.Unmarshal([]byte(body), &resp); err != nil {
+		logging.Error("parse resp error, body: %v", body)
+		return "", err
+	}
+
+	if resp.Code != 0 {
+		logging.Error("request bk-ssm api error, code: %d, message: %s", resp.Code, resp.Message)
+		return "", errorx.NewRequestBKSSMErr(resp.Message)
+	}
+	if resp.Data.ExpiresIn > 10 {
+		c.Add(CacheKeyBCSCCAccessToken, resp.Data.AccessToken, time.Duration(resp.Data.ExpiresIn-5)*time.Second)
+	}
+	return resp.Data.AccessToken, nil
+}
+
 // CreateProject request bcs cc api, create a project record
 func CreateProject(p *pm.Project) error {
 	bcsCCConf := config.GlobalConf.BCSCC
@@ -78,12 +141,21 @@ func CreateProject(p *pm.Project) error {
 	}
 	reqURL := fmt.Sprintf("%s%s", bcsCCConf.Host, createProjectPath)
 	data := constructProjectData(p)
-	data["app_code"] = config.GlobalConf.App.Code
-	data["app_secret"] = config.GlobalConf.App.Secret
 	req := gorequest.SuperAgent{
 		Url:    reqURL,
 		Method: "POST",
 		Data:   data,
+	}
+	req.QueryData = url.Values{}
+	if bcsCCConf.UseGateway {
+		data["app_code"] = config.GlobalConf.App.Code
+		data["app_secret"] = config.GlobalConf.App.Secret
+	} else {
+		accessToken, err := GetAccessToken()
+		if err != nil {
+			return err
+		}
+		req.QueryData.Add("access_token", accessToken)
 	}
 	// 获取返回
 	return requestCommonAndParse(req)
@@ -98,12 +170,21 @@ func UpdateProject(p *pm.Project) error {
 	realPath := fmt.Sprintf(updateProjectPath, p.ProjectID)
 	reqURL := fmt.Sprintf("%s%s", bcsCCConf.Host, realPath)
 	data := constructProjectData(p)
-	data["app_code"] = config.GlobalConf.App.Code
-	data["app_secret"] = config.GlobalConf.App.Secret
 	req := gorequest.SuperAgent{
 		Url:    reqURL,
 		Method: "PUT",
 		Data:   data,
+	}
+	req.QueryData = url.Values{}
+	if bcsCCConf.UseGateway {
+		data["app_code"] = config.GlobalConf.App.Code
+		data["app_secret"] = config.GlobalConf.App.Secret
+	} else {
+		accessToken, err := GetAccessToken()
+		if err != nil {
+			return err
+		}
+		req.QueryData.Add("access_token", accessToken)
 	}
 	return requestCommonAndParse(req)
 }
@@ -129,12 +210,21 @@ func CreateNamespace(projectCode, clusterID, name, creator string) error {
 		"env_type":         "prod",
 		"has_image_secret": false,
 	}
-	data["app_code"] = config.GlobalConf.App.Code
-	data["app_secret"] = config.GlobalConf.App.Secret
 	req := gorequest.SuperAgent{
 		Url:    reqURL,
 		Method: "POST",
 		Data:   data,
+	}
+	req.QueryData = url.Values{}
+	if bcsCCConf.UseGateway {
+		data["app_code"] = config.GlobalConf.App.Code
+		data["app_secret"] = config.GlobalConf.App.Secret
+	} else {
+		accessToken, err := GetAccessToken()
+		if err != nil {
+			return err
+		}
+		req.QueryData.Add("access_token", accessToken)
 	}
 	logging.Info("req data:%v", req)
 	return requestCommonAndParse(req)
@@ -151,12 +241,21 @@ func ListNamespaces(projectCode, clusterID string) (*listNamespaceData, error) {
 	}
 	realPath := fmt.Sprintf(listNamespacesPath, p.ProjectID, clusterID)
 	reqURL := fmt.Sprintf("%s%s", bcsCCConf.Host, realPath)
-	reqURL = reqURL + fmt.Sprintf("?app_code=%s", config.GlobalConf.App.Code)
-	reqURL = reqURL + fmt.Sprintf("&app_secret=%s", config.GlobalConf.App.Secret)
-	reqURL = reqURL + "&desire_all_data=1"
 	req := gorequest.SuperAgent{
 		Url:    reqURL,
 		Method: "GET",
+	}
+	req.QueryData = url.Values{}
+	req.QueryData.Add("desire_all_data", "1")
+	if bcsCCConf.UseGateway {
+		req.QueryData.Add("app_code", config.GlobalConf.App.Code)
+		req.QueryData.Add("app_secret", config.GlobalConf.App.Secret)
+	} else {
+		accessToken, err := GetAccessToken()
+		if err != nil {
+			return nil, err
+		}
+		req.QueryData.Add("access_token", accessToken)
 	}
 	return requestListNamespacesAndParse(req)
 }
@@ -191,11 +290,20 @@ func DeleteNamespace(projectCode, clusterID, name string) error {
 	}
 	realPath := fmt.Sprintf(deleteNamespacePath, p.ProjectID, clusterID, id)
 	reqURL := fmt.Sprintf("%s%s", bcsCCConf.Host, realPath)
-	reqURL = reqURL + fmt.Sprintf("?app_code=%s", config.GlobalConf.App.Code)
-	reqURL = reqURL + fmt.Sprintf("&app_secret=%s", config.GlobalConf.App.Secret)
 	req := gorequest.SuperAgent{
 		Url:    reqURL,
 		Method: "DELETE",
+	}
+	req.QueryData = url.Values{}
+	if bcsCCConf.UseGateway {
+		req.QueryData.Add("app_code", config.GlobalConf.App.Code)
+		req.QueryData.Add("app_secret", config.GlobalConf.App.Secret)
+	} else {
+		accessToken, err := GetAccessToken()
+		if err != nil {
+			return err
+		}
+		req.QueryData.Add("access_token", accessToken)
 	}
 	return requestCommonAndParse(req)
 }
@@ -264,6 +372,7 @@ func requestCommonAndParse(req gorequest.SuperAgent) error {
 }
 
 func requestListNamespacesAndParse(req gorequest.SuperAgent) (*listNamespaceData, error) {
+	
 	// 获取返回数据
 	headers := map[string]string{"Content-Type": "application/json"}
 	body, err := component.Request(req, timeout, "", headers)
@@ -280,7 +389,7 @@ func requestListNamespacesAndParse(req gorequest.SuperAgent) (*listNamespaceData
 
 	if resp.Code != 0 {
 		logging.Error("request paas-cc api error, code: %d, message: %s", resp.Code, resp.Message)
-		return nil, errorx.NewRequestBCSCCErr(err.Error())
+		return nil, errorx.NewRequestBCSCCErr(resp.Message)
 	}
 	return &resp.Data, nil
 }

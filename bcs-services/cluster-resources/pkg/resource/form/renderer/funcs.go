@@ -56,6 +56,7 @@ func newTmplFuncMap() template.FuncMap {
 		"isLabelAsSelector":   isLabelAsSelector,
 		"isLabelEditDisabled": isLabelEditDisabled,
 		"isAnnoVisible":       isAnnoVisible,
+		"canRenderResVersion": canRenderResVersion,
 
 		// This is a placeholder for the "include" function, which is late-bound to a template.
 		// By declaring it here, we preserve the integrity of the linter.
@@ -147,6 +148,11 @@ func isLabelEditDisabled(kind, action string) bool {
 // 指定资源类型是否展示 annotations
 func isAnnoVisible(kind string) bool {
 	return !slice.StringInSlice(kind, []string{resCsts.HookTmpl})
+}
+
+// 指定资源类型能否渲染 metadata.resourceVersion
+func canRenderResVersion(kind string) bool {
+	return !slice.StringInSlice(kind, resCsts.RemoveResVersionKinds)
 }
 
 // 生成 dockerconfigjson

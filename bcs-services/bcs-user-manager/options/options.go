@@ -111,8 +111,8 @@ type ESBConfig struct {
 	AppCode       string `json:"app_code" value:"" usage:"app code"`
 	AppSecret     string `json:"app_secret" value:"" usage:"app secret"`
 	APIHost       string `json:"api_host" value:"" usage:"api host"`
-	SendEmailPath string `json:"send_email_path" value:"/component/compapi/tof/send_mail/" usage:"send email path"`
-	SendRtxPath   string `json:"send_rtx_path" value:"/component/compapi/tof/send_rtx/" usage:"send rtx path"`
+	SendEmailPath string `json:"send_email_path" value:"/api/c/compapi/v2/cmsi/send_mail/" usage:"send email path"`
+	SendRtxPath   string `json:"send_rtx_path" value:"/api/c/compapi/v2/cmsi/send_rtx/" usage:"send rtx path"`
 }
 
 // JWTKeyConfig config jwt sign key
