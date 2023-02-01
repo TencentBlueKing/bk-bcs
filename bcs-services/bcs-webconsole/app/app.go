@@ -58,7 +58,8 @@ var (
 	appName              = "bcs-webconsole"
 	versionTag           = "latest"
 	credentialConfigPath = cli.StringSlice{}
-	serverAddressFlag    = "server_address" // 默认启动ip:port
+	serverAddressFlag    = "server-address" // 默认启动ip
+	serverPortFlag       = "server-port"    // 默认启动port
 	podIPsEnv            = "POD_IPs"        // 双栈监听环境变量
 	ipv6Interface        = "IPV6_INTERFACE" // ipv6本地网关地址
 )
@@ -96,20 +97,26 @@ func (c *WebConsoleManager) Init() error {
 		return err
 	}
 
-	metadata := map[string]string{}
+	// 绑定主端口
 	dualStackListener := listener.NewDualStackListener()
-
-	if err := dualStackListener.AddListenerWithAddr(c.serverAddress); err != nil {
+	if err := dualStackListener.AddListenerWithAddr(getListenAddr(c.serverAddress, c.listenPort)); err != nil {
 		return err
 	}
 
-	ipv6Addr := getIPv6AddrFromEnv(c.listenPort)
+	// IPv6, metadata 都metadata信息
+	metadata := map[string]string{}
+	ipv6Addr := getIPv6AddrFromEnv()
 	if ipv6Addr != "" {
 		metadata[types.IPV6] = ipv6Addr
-		if err := dualStackListener.AddListenerWithAddr(ipv6Addr); err != nil {
+	}
+
+	// 单栈IPv6 可能重复
+	if ipv6Addr != "" && ipv6Addr != c.serverAddress {
+		listenAddr := getListenAddr(ipv6Addr, c.listenPort)
+		if err := dualStackListener.AddListenerWithAddr(listenAddr); err != nil {
 			return err
 		}
-		logger.Infof("dualStackListener with ipv6: %s", ipv6Addr)
+		logger.Infof("dualStackListener with ipv6: %s", listenAddr)
 	}
 
 	microService.Init(
@@ -170,9 +177,14 @@ func (m *WebConsoleManager) initMicroService() (micro.Service, microConf.Config,
 	microCmd := cmd.NewCmd(cmdOptions...)
 	microCmd.App().Flags = []cli.Flag{
 		&cli.StringFlag{
-			Name:    serverAddressFlag,
-			EnvVars: []string{"MICRO_SERVER_ADDRESS"},
-			Usage:   "Bind address for the server. 127.0.0.1:8080",
+			Name:     serverAddressFlag,
+			Required: true,
+			Usage:    "Bind ip address for the server. 127.0.0.1",
+		},
+		&cli.StringFlag{
+			Name:  serverPortFlag,
+			Value: "8083",
+			Usage: "Bind port for the server",
 		},
 		&cli.StringFlag{
 			Name:        "config",
@@ -193,8 +205,7 @@ func (m *WebConsoleManager) initMicroService() (micro.Service, microConf.Config,
 			return err
 		}
 
-		// 解析端口地址
-		m.listenPort = parseListenPort(c)
+		m.listenPort = c.Value(serverPortFlag).(string)
 		m.serverAddress = c.Value(serverAddressFlag).(string)
 
 		// 初始化配置文件
@@ -309,24 +320,8 @@ func checkVersion() bool {
 	return false
 }
 
-// parseListenPort 解析端口
-func parseListenPort(c *cli.Context) string {
-	// 解析端口地址
-	ipv4, ok := c.Value(serverAddressFlag).(string)
-	if !ok || ipv4 == "" {
-		return ""
-	}
-
-	_, port, _ := net.SplitHostPort(ipv4)
-	return port
-}
-
 // getIPv6AddrFromEnv 解析ipv6
-func getIPv6AddrFromEnv(listenPort string) string {
-	if listenPort == "" {
-		return ""
-	}
-
+func getIPv6AddrFromEnv() string {
 	podIPs := os.Getenv(podIPsEnv)
 	if podIPs == "" {
 		return ""
@@ -341,14 +336,24 @@ func getIPv6AddrFromEnv(listenPort string) string {
 	if v := net.ParseIP(ipv6); v == nil || v.IsLoopback() {
 		return ""
 	}
+	return ipv6
+}
 
-	// local link ipv6 需要带上 interface， 格式如::%eth0
-	ipv6Interface := os.Getenv(ipv6Interface)
-	if ipv6Interface != "" {
-		ipv6 = ipv6 + "%" + ipv6Interface
+// getListenAddr
+func getListenAddr(addr, port string) string {
+	if ip := net.ParseIP(addr); ip == nil {
+		return ""
 	}
 
-	return net.JoinHostPort(ipv6, listenPort)
+	if util.IsIPv6(addr) {
+		// local link ipv6 需要带上 interface， 格式如::%eth0
+		ipv6Interface := os.Getenv(ipv6Interface)
+		if ipv6Interface != "" {
+			addr = addr + "%" + ipv6Interface
+		}
+	}
+
+	return net.JoinHostPort(addr, port)
 }
 
 // Run create a pid
