@@ -14,8 +14,12 @@ package ingresscontroller
 
 import (
 	"fmt"
+	"reflect"
+
+	k8scorev1 "k8s.io/api/core/v1"
 
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/ingresscache"
+	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
 )
 
 func deduplicateIngresses(ingresses []ingresscache.IngressMeta) []ingresscache.IngressMeta {
@@ -29,4 +33,39 @@ func deduplicateIngresses(ingresses []ingresscache.IngressMeta) []ingresscache.I
 		}
 	}
 	return retList
+}
+
+func checkPodNeedReconcile(oldPod, newPod *k8scorev1.Pod) bool {
+	if oldPod == nil || newPod == nil {
+		return true
+	}
+	if oldPod.Namespace != newPod.Namespace || oldPod.Name != newPod.Name {
+		return true
+	}
+
+	if oldPod.DeletionTimestamp != newPod.DeletionTimestamp {
+		return true
+	}
+
+	if !reflect.DeepEqual(oldPod.Labels, newPod.Labels) {
+		return true
+	}
+
+	if !reflect.DeepEqual(oldPod.Status, newPod.Status) {
+		return true
+	}
+
+	if !reflect.DeepEqual(oldPod.Spec, newPod.Spec) {
+		return true
+	}
+
+	if oldPod.Annotations == nil || newPod.Annotations == nil {
+		return true
+	}
+	if oldPod.Annotations[networkextensionv1.AnnotationKeyForLoadbalanceWeight] != newPod.
+		Annotations[networkextensionv1.AnnotationKeyForLoadbalanceWeight] {
+		return true
+	}
+
+	return false
 }
