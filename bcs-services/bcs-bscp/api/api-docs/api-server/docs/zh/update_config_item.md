@@ -18,6 +18,8 @@
 | user_group         | string       | 否     | 归属用户组信息, 例如root     |
 | privilege         | string       | 否    | 文件权限，例如 755     |
 | memo         | string       | 否     | 备注。最大长度256个字符，仅允许使用中文、英文、数字、下划线、中划线、空格，且必须以中文、英文、数字开头和结尾    | 
+| sign         | string       | 是     | 配置内容的SHA256，合法长度为64位     |
+| byte_size         | uint64       | 是     | 配置内容的大小，单位：字节     |
 
 ### 调用示例
 ```json

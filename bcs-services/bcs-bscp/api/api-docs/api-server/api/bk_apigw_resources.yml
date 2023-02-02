@@ -417,6 +417,30 @@ paths:
         authConfig:
           userVerifiedRequired: true
         disabledStages: []
+  /api/v1/config/get/config_item/config_item/config_item/{id}/app_id/{app_id}/biz_id/{biz_id}:
+    post:
+      operationId: get_config_item
+      description: 获取配置项详情
+      tags:
+      - 配置项管理
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: get
+          path: /api/v1/config/get/config_item/config_item/config_item/{id}/app_id/{app_id}/biz_id/{biz_id}
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: true
+        disabledStages: []
   /api/v1/config/list/config_item/config_item/app_id/{app_id}/biz_id/{biz_id}:
     post:
       operationId: list_config_item
