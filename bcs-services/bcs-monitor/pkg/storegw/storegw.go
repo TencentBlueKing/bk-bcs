@@ -17,7 +17,6 @@ package storegw
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"strconv"
 
 	"github.com/go-kit/log"
@@ -28,6 +27,7 @@ import (
 	"github.com/thanos-io/thanos/pkg/store/storepb"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/config"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/utils"
 )
 
 // StoreFactory 工厂模式
@@ -83,8 +83,7 @@ func (s *StoreGW) initStore() error {
 			return err
 		}
 
-		address := fmt.Sprintf("%s:%d", s.GRPCAdvertiseIP, port)
-
+		address := utils.GetListenAddr(s.GRPCAdvertiseIP, strconv.FormatInt(port, 10))
 		storeSvr, err := s.storeFunc(s.logger, s.reg, conf)
 		if err != nil {
 			return err

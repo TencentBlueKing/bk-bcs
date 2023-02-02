@@ -26,6 +26,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/discovery"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/query"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/utils"
 )
 
 var (
@@ -46,8 +47,6 @@ func QueryCmd() *cobra.Command {
 		runCmd(cmd, runQuery)
 	}
 
-	cmd.Flags().StringVar(&httpAddress, "http-address", "0.0.0.0:10902", "API listen http ip")
-	cmd.Flags().StringVar(&advertiseAddress, "advertise-address", "", "The IP address on which to advertise the server")
 	cmd.Flags().StringArrayVar(&storeList, "store", []string{}, "Addresses of statically configured store endpoints")
 	cmd.Flags().StringArrayVar(&strictStoreList, "store-strict", []string{}, "Addresses of statically configured store endpoints always used, even if the health check fails")
 	cmd.Flags().StringArrayVar(&httpSDURLs, "store.http-sd-url", []string{},
@@ -59,15 +58,15 @@ func QueryCmd() *cobra.Command {
 func runQuery(ctx context.Context, g *run.Group, opt *option) error {
 	kitLogger := gokit.NewLogger(logger.StandardLogger())
 
-	logger.Infow("listening for requests and metrics", "service", "query", "address", httpAddress)
-	addrIPv6 := getIPv6AddrFromEnv(httpAddress)
-	queryServer, err := query.NewQueryAPI(ctx, opt.reg, opt.tracer, kitLogger, httpAddress, addrIPv6, strictStoreList, storeList, httpSDURLs, g)
+	logger.Infow("listening for requests and metrics", "service", "query", "address", bindAddress)
+	addrIPv6 := utils.GetIPv6AddrFromEnv()
+	queryServer, err := query.NewQueryAPI(ctx, opt.reg, opt.tracer, kitLogger, bindAddress, httpPort, addrIPv6, strictStoreList, storeList, httpSDURLs, g)
 	if err != nil {
 		return errors.Wrap(err, "query")
 	}
 
 	sdName := fmt.Sprintf("%s-%s", appName, "query")
-	sd, err := discovery.NewServiceDiscovery(ctx, sdName, version.BcsVersion, httpAddress, advertiseAddress, addrIPv6)
+	sd, err := discovery.NewServiceDiscovery(ctx, sdName, version.BcsVersion, bindAddress, httpPort, addrIPv6)
 	if err != nil {
 		return err
 	}

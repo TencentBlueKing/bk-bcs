@@ -32,8 +32,9 @@ function query {
 
 function storegw() {
     ./bin/bcs-monitor storegw \
-        --grpc-address 0.0.0.0:13901 \
-        --http-address 0.0.0.0:13902 \
+        --bind-address 0.0.0.0 \
+        --grpc-port 13901 \
+        --http-port 13902 \
         --config ./etc/config_dev.yaml
 }
 

@@ -13,8 +13,6 @@
 
 package config
 
-import "time"
-
 // StoreProvider :
 type StoreProvider string
 
@@ -22,26 +20,4 @@ type StoreProvider string
 type StoreConf struct {
 	Type   StoreProvider `yaml:"type"`
 	Config interface{}   `yaml:"config,omitempty"`
-}
-
-// StoreGWConf :
-type StoreGWConf struct {
-	HTTP *EndpointConfig `yaml:"http" mapstructure:"http"`
-	GRPC *EndpointConfig `yaml:"grpc" mapstructure:"grpc"`
-}
-
-// Init :
-func (s *StoreGWConf) Init() error {
-
-	s.HTTP = &EndpointConfig{
-		Address:     "127.0.0.1:10212",
-		GracePeriod: time.Minute * 2,
-	}
-
-	s.GRPC = &EndpointConfig{
-		Address:     "127.0.0.1:10213",
-		GracePeriod: time.Minute * 2,
-	}
-
-	return nil
 }

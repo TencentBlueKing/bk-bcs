@@ -37,6 +37,7 @@ const (
 	timeout = time.Second * 30
 	// BKAPIRequestIDHeader 蓝鲸网关的请求ID
 	BKAPIRequestIDHeader = "X-Bkapi-Request-Id"
+	userAgent            = "bcs-monitor/v1.0"
 )
 
 var (
@@ -141,7 +142,8 @@ func GetClient() *resty.Client {
 				OnAfterResponse(restyAfterResponseHook).
 				SetPreRequestHook(restyBeforeRequestHook).
 				OnError(restyErrHook).
-				SetTLSClientConfig(&tls.Config{InsecureSkipVerify: true})
+				SetTLSClientConfig(&tls.Config{InsecureSkipVerify: true}).
+				SetHeader("User-Agent", userAgent)
 		})
 	}
 	return globalClient

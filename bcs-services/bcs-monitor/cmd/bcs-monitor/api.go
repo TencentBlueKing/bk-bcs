@@ -17,7 +17,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/TencentBlueKing/bkmonitor-kits/logger"
 	"github.com/oklog/run"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -25,6 +24,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/version"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/api"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/discovery"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/utils"
 )
 
 // APIServerCmd :
@@ -38,23 +38,19 @@ func APIServerCmd() *cobra.Command {
 		runCmd(cmd, runAPIServer)
 	}
 
-	cmd.Flags().StringVar(&httpAddress, "http-address", "0.0.0.0:8089", "API listen http ip")
-	cmd.Flags().StringVar(&advertiseAddress, "advertise-address", "", "The IP address on which to advertise the server")
-
 	return cmd
 }
 
 // runAPIServer apiserver 子服务
 func runAPIServer(ctx context.Context, g *run.Group, opt *option) error {
-	logger.Infow("listening for requests and metrics", "address", httpAddress)
-	addrIPv6 := getIPv6AddrFromEnv(httpAddress)
-	server, err := api.NewAPIServer(ctx, httpAddress, addrIPv6)
+	addrIPv6 := utils.GetIPv6AddrFromEnv()
+	server, err := api.NewAPIServer(ctx, bindAddress, httpPort, addrIPv6)
 	if err != nil {
 		return errors.Wrap(err, "apiserver")
 	}
 
 	sdName := fmt.Sprintf("%s-%s", appName, "api")
-	sd, err := discovery.NewServiceDiscovery(ctx, sdName, version.BcsVersion, httpAddress, advertiseAddress, addrIPv6)
+	sd, err := discovery.NewServiceDiscovery(ctx, sdName, version.BcsVersion, bindAddress, httpPort, addrIPv6)
 	if err != nil {
 		return err
 	}
