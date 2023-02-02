@@ -75,7 +75,7 @@ func (app *App) Run() error {
 }
 
 func initTracingInstance(op *options.StorageOptions) (io.Closer, error) {
-	opts := []tracing.Option{}
+	opts := make([]tracing.Option, 0)
 	if op.Tracing.TracingSwitch != "" {
 		opts = append(opts, tracing.TracerSwitch(op.Tracing.TracingSwitch))
 	}

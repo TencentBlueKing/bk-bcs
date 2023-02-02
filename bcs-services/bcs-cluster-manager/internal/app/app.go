@@ -646,7 +646,7 @@ func (cm *ClusterManager) initHTTPGateway(router *mux.Router) error {
 			EmitDefaults: true,
 		}),
 	)
-	grpcDialOpts := []grpc.DialOption{}
+	grpcDialOpts := make([]grpc.DialOption, 0)
 	if cm.tlsConfig != nil && cm.clientTLSConfig != nil {
 		grpcDialOpts = append(grpcDialOpts, grpc.WithTransportCredentials(grpccred.NewTLS(cm.clientTLSConfig)))
 	} else {
@@ -655,8 +655,9 @@ func (cm *ClusterManager) initHTTPGateway(router *mux.Router) error {
 	err := cmproto.RegisterClusterManagerGwFromEndpoint(
 		context.TODO(),
 		gwmux,
-		cm.opt.Address+":"+strconv.Itoa(int(cm.opt.Port)),
-		grpcDialOpts)
+		net.JoinHostPort(cm.opt.Address, strconv.Itoa(int(cm.opt.Port))),
+		grpcDialOpts,
+	)
 	if err != nil {
 		blog.Errorf("register http gateway failed, err %s", err.Error())
 		return fmt.Errorf("register http gateway failed, err %s", err.Error())

@@ -134,7 +134,7 @@ require (
 )
 
 require (
-	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20221202065239-dbcdd8bb376e
+	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20230202032803-47379be3c4c1
 	github.com/Tencent/bk-bcs/bcs-services/pkg v0.0.0-20221018081229-065aeef813e6
 	github.com/coreos/etcd v3.3.25+incompatible
 	github.com/patrickmn/go-cache v2.1.0+incompatible

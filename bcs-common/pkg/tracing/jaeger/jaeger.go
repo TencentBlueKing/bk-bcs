@@ -18,6 +18,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"net"
 	"os"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -216,14 +217,14 @@ func (j *Jaeger) Init() (io.Closer, error) {
 			port = p
 		}
 		if host != "" && port != "" {
-			cfg.Reporter.LocalAgentHostPort = fmt.Sprintf("%s:%s", host, port)
+			cfg.Reporter.LocalAgentHostPort = net.JoinHostPort(host, port)
 		}
 	}
 
 	metricsFactory := jprom.New().Namespace(metrics.NSOptions{Name: cfg.ServiceName, Tags: nil})
 	metricsFactory = metricsFactory.Namespace(metrics.NSOptions{Name: cfg.ServiceName, Tags: nil})
 
-	jaeOpts := []jaegercfg.Option{}
+	jaeOpts := make([]jaegercfg.Option, 0)
 	if j.Opts.ReportMetrics {
 		blog.Info("Using Prometheus as metrics backend")
 		jaeOpts = append(jaeOpts, jaegercfg.Metrics(metricsFactory))
