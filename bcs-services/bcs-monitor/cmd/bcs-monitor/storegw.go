@@ -22,7 +22,6 @@ import (
 	"github.com/oklog/run"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 	"github.com/thanos-io/thanos/pkg/component"
 	"github.com/thanos-io/thanos/pkg/extgrpc"
 	"github.com/thanos-io/thanos/pkg/extprom"
@@ -36,9 +35,11 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/api"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/storegw"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/utils"
 )
 
 var (
+	grpcPort                  string
 	grpcAdvertisePortRangeStr string
 	grpcAdvertiseIP           string
 )
@@ -55,16 +56,9 @@ func StoreGWCmd() *cobra.Command {
 	}
 
 	flags := cmd.Flags()
-	flags.StringVar(&config.G.StoreGW.HTTP.Address, "http-address", config.G.StoreGW.HTTP.Address,
-		"Listen host:port for HTTP endpoints.")
-	flags.StringVar(&config.G.StoreGW.GRPC.Address, "grpc-address", config.G.StoreGW.GRPC.Address,
-		"Listen host:port for grpc endpoints.")
+	flags.StringVar(&grpcPort, "grpc-port", grpcPort, "Listen host:port for grpc endpoints.")
 	flags.StringVar(&grpcAdvertiseIP, "grpc-advertise-ip", "127.0.0.1", "grpc advertise ip")
 	flags.StringVar(&grpcAdvertisePortRangeStr, "grpc-advertise-port-range", "28000-29000", "grpc advertise port range")
-
-	// 设置配置命令行优先级高与配置文件
-	viper.BindPFlag("store.http.address", cmd.Flag("http-address"))
-	viper.BindPFlag("store.grpc.address", cmd.Flag("grpc-address"))
 
 	return cmd
 }
@@ -87,8 +81,8 @@ func runStoreGW(ctx context.Context, g *run.Group, opt *option) error {
 		)
 
 		httpSrv := httpserver.New(kitLogger, opt.reg, component.Store, httpProbe,
-			httpserver.WithListen(config.G.StoreGW.HTTP.Address),
-			httpserver.WithGracePeriod(time.Duration(config.G.StoreGW.HTTP.GracePeriod)),
+			httpserver.WithListen(utils.GetListenAddr(bindAddress, httpPort)),
+			httpserver.WithGracePeriod(time.Second*5),
 		)
 
 		router := api.RegisterStoreGWRoutes(gw)
@@ -144,7 +138,7 @@ func runStoreGW(ctx context.Context, g *run.Group, opt *option) error {
 		grpcProbe := prober.NewGRPC()
 		grpcSrv := grpcserver.New(kitLogger, opt.reg, nil, nil, nil, component.Store, grpcProbe,
 			grpcserver.WithServer(store.RegisterStoreServer(proxyStore)),
-			grpcserver.WithListen(config.G.StoreGW.GRPC.Address),
+			grpcserver.WithListen(utils.GetListenAddr(bindAddress, grpcPort)),
 			grpcserver.WithGracePeriod(time.Duration(0)),
 			grpcserver.WithMaxConnAge(time.Minute*5), // 5分钟主动重连, pod 扩容等需要
 		)

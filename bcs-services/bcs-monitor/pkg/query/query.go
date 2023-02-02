@@ -38,6 +38,7 @@ import (
 	"github.com/thanos-io/thanos/pkg/ui"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/config"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/utils"
 )
 
 // QueryAPI promql api 服务, 封装 thaons 的API使用
@@ -46,6 +47,7 @@ type QueryAPI struct {
 	endpoints    *query.EndpointSet
 	srv          *httpserver.Server
 	httpAddr     string
+	httpPort     string
 	addrIPv6     string
 	statusProber prober.Probe
 	ctx          context.Context
@@ -61,6 +63,7 @@ func NewQueryAPI(
 	tracer opentracing.Tracer,
 	kitLogger gokit.Logger,
 	httpAddr string,
+	httpPort string,
 	addrIPv6 string,
 	strictStoreList []string,
 	storeList []string,
@@ -79,6 +82,7 @@ func NewQueryAPI(
 		ctx:       ctx,
 		endpoints: discoveryClient.Endpoints(),
 		httpAddr:  httpAddr,
+		httpPort:  httpPort,
 		addrIPv6:  addrIPv6,
 	}
 	logger.Infof("store list: [%v]", storeList)
@@ -141,10 +145,7 @@ func NewQueryAPI(
 
 	api.Register(router.WithPrefix("/api/v1"), tracer, kitLogger, tenantAuthMiddleware, logMiddleware)
 
-	srv := httpserver.New(kitLogger, reg, comp, httpProbe,
-		httpserver.WithListen(httpAddr),
-		httpserver.WithGracePeriod(time.Minute*2),
-	)
+	srv := httpserver.New(kitLogger, reg, comp, httpProbe, httpserver.WithGracePeriod(time.Minute*2))
 	srv.Handle("/", router)
 
 	apiServer.srv = srv
@@ -159,15 +160,18 @@ func (a *QueryAPI) Run() error {
 	a.statusProber.Ready()
 
 	dualStackListener := listener.NewDualStackListener()
-	if err := dualStackListener.AddListenerWithAddr(a.httpAddr); err != nil {
+	addr := utils.GetListenAddr(a.httpAddr, a.httpPort)
+	if err := dualStackListener.AddListenerWithAddr(addr); err != nil {
 		return err
 	}
+	logger.Infow("listening for requests and metrics", "service", "query", "address", addr)
 
-	if a.addrIPv6 != "" {
-		if err := dualStackListener.AddListenerWithAddr(a.addrIPv6); err != nil {
+	if a.addrIPv6 != "" && a.addrIPv6 != a.httpAddr {
+		v6Addr := utils.GetListenAddr(a.addrIPv6, a.httpPort)
+		if err := dualStackListener.AddListenerWithAddr(v6Addr); err != nil {
 			return err
 		}
-		logger.Infof("query serve dualStackListener with ipv6: %s", a.addrIPv6)
+		logger.Infof("query serve dualStackListener with ipv6: %s", v6Addr)
 	}
 
 	return a.srv.Serve(dualStackListener)

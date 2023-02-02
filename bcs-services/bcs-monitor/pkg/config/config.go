@@ -34,9 +34,7 @@ type Configuration struct {
 	mtx         sync.Mutex
 	Base        *BaseConf                  `yaml:"base_conf"`
 	Redis       *RedisConf                 `yaml:"redis"`
-	StoreGW     *StoreGWConf               `yaml:"store"`
 	StoreGWList []*StoreConf               `yaml:"storegw"`
-	API         *APIConf                   `yaml:"query"`
 	Logging     *LogConf                   `yaml:"logging"`
 	BKAPIGW     *BKAPIGWConf               `yaml:"bkapigw_conf"`
 	BKMonitor   *BKMonitorConf             `yaml:"bk_monitor_conf"`
@@ -84,16 +82,6 @@ func newConfiguration() (*Configuration, error) {
 
 	c.Base = &BaseConf{}
 	if err := c.Base.Init(); err != nil {
-		return nil, err
-	}
-
-	c.StoreGW = &StoreGWConf{}
-	if err := c.StoreGW.Init(); err != nil {
-		return nil, err
-	}
-
-	c.API = &APIConf{}
-	if err := c.API.Init(); err != nil {
 		return nil, err
 	}
 

@@ -26,6 +26,7 @@ import (
 	"go-micro.dev/v4/server"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/config"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/utils"
 )
 
 const serverNameSuffix = ".bkbcs.tencent.com"
@@ -37,10 +38,10 @@ type serviceDiscovery struct {
 }
 
 // NewServiceDiscovery :
-func NewServiceDiscovery(ctx context.Context, name, version, bindaddr, advertiseAddr, addrIPv6 string) (*serviceDiscovery, error) {
+func NewServiceDiscovery(ctx context.Context, name, version, bindaddr, bindPort, addrIPv6 string) (*serviceDiscovery, error) {
 	metadata := map[string]string{}
 	if addrIPv6 != "" {
-		metadata[types.IPV6] = addrIPv6
+		metadata[types.IPV6] = utils.GetListenAddr(addrIPv6, bindPort)
 	}
 
 	svr := server.NewServer(
@@ -49,12 +50,7 @@ func NewServiceDiscovery(ctx context.Context, name, version, bindaddr, advertise
 		server.Context(ctx),
 	)
 
-	if advertiseAddr != "" {
-		svr.Init(server.Advertise(advertiseAddr))
-	} else {
-		svr.Init(server.Advertise(bindaddr))
-	}
-
+	svr.Init(server.Advertise(utils.GetListenAddr(bindaddr, bindPort)))
 	service := micro.NewService(micro.Server(svr), micro.Metadata(metadata))
 
 	sd := &serviceDiscovery{srv: service, ctx: ctx}

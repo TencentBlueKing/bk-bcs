@@ -16,11 +16,9 @@ package main
 import (
 	"context"
 	"fmt"
-	"net"
 	"os"
 	"path/filepath"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/util"
 	"github.com/Tencent/bk-bcs/bcs-common/common/version"
 	"github.com/TencentBlueKing/bkmonitor-kits/logger"
 	homedir "github.com/mitchellh/go-homedir"
@@ -33,14 +31,12 @@ import (
 
 var (
 	// Used for flags.
-	cfgFile          string
-	logLevel         string
-	certCfgFiles     []string
-	httpAddress      string
-	advertiseAddress string
-	appName          = "bcs-monitor"
-	podIPsEnv        = "POD_IPs"        // 双栈监听环境变量
-	ipv6Interface    = "IPV6_INTERFACE" // ipv6本地网关地址
+	cfgFile      string
+	logLevel     string
+	certCfgFiles []string
+	bindAddress  string
+	httpPort     string
+	appName      = "bcs-monitor"
 
 	rootCmd = &cobra.Command{
 		Use:   appName,
@@ -67,9 +63,13 @@ func init() {
 	// 不开启 自动排序
 	cobra.EnableCommandSorting = false
 
+	rootCmd.PersistentFlags().StringVar(&bindAddress, "bind-address", "0.0.0.0", "The IP address on which to listen")
+	rootCmd.PersistentFlags().StringVar(&httpPort, "http-port", "10902", "API listen http/metrics port")
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "Config file (default is $HOME/bcs-monitor.yml)")
 	rootCmd.PersistentFlags().StringArrayVar(&certCfgFiles, "credential-config", []string{}, "Credential config file path")
 	rootCmd.PersistentFlags().StringVar(&logLevel, "log.level", "", "Log filtering level.")
+	rootCmd.Flags().SortFlags = false
+	rootCmd.PersistentFlags().SortFlags = false
 
 	// 不开启 completion 子命令
 	rootCmd.CompletionOptions.DisableDefaultCmd = true
@@ -154,40 +154,4 @@ func VersionCmd() *cobra.Command {
 func printVersion() string {
 	v := appName + ", " + version.GetVersion()
 	return v
-}
-
-// getIPv6AddrFromEnv 解析ipv6
-func getIPv6AddrFromEnv(ipv4 string) string {
-	host, listenPort, _ := net.SplitHostPort(ipv4)
-	// ipv4 已经绑定了0.0.0.0 ipv6也不启动
-	if ip := net.ParseIP(host); ip != nil && ip.IsUnspecified() {
-		return ""
-	}
-
-	if listenPort == "" {
-		return ""
-	}
-
-	podIPs := os.Getenv(podIPsEnv)
-	if podIPs == "" {
-		return ""
-	}
-
-	ipv6 := util.GetIPv6Address(podIPs)
-	if ipv6 == "" {
-		return ""
-	}
-
-	// 在实际中，ipv6不能是回环地址
-	if v := net.ParseIP(ipv6); v == nil || v.IsLoopback() {
-		return ""
-	}
-
-	// local link ipv6 需要带上 interface， 格式如::%eth0
-	ipv6Interface := os.Getenv(ipv6Interface)
-	if ipv6Interface != "" {
-		ipv6 = ipv6 + "%" + ipv6Interface
-	}
-
-	return net.JoinHostPort(ipv6, listenPort)
 }
