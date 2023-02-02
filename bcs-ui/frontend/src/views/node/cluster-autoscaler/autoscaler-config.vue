@@ -24,7 +24,6 @@
       <LayoutGroup :title="$t('基本配置')" class="mb10">
         <bk-form-item
           :label="$t('扩缩容检测时间间隔')"
-          desc-type="icon"
           desc-icon="bk-icon icon-info-circle"
           :desc="$t('默认为10秒，取值范围5 ~ 86400秒')">
           <bk-input type="number" :min="5" :max="86400" v-model="autoscalerData.scanInterval">
@@ -64,7 +63,6 @@
       <LayoutGroup :title="$t('自动扩容配置')" class="mb10">
         <bk-form-item
           :label="$t('扩容算法')" :model="autoscalerData"
-          desc-type="icon"
           desc-icon="bk-icon icon-info-circle"
           :desc="$t('random：在有多个节点池时，随机选择节点池<br/>least-waste：在有多个节点池时，以最小浪费原则选择，选择有最少可用资源的节点池<br/>most-pods：在有多个节点池时，选择容量最大（可以创建最多Pod）的节点池')">
           <bk-radio-group v-model="autoscalerData.expander">
@@ -74,10 +72,9 @@
           </bk-radio-group>
         </bk-form-item>
         <bk-form-item
-          desc-type="icon"
           desc-icon="bk-icon icon-info-circle"
           :label="$t('触发扩容资源阈值 (CPU)')"
-          :desc="$t('CPU资源(Request)使用率超过该阈值触发扩容, 无论内存资源使用率是否达到阈值')">
+          :desc="$t('集群整体CPU资源(Request)使用率超过该阈值触发扩容, 无论内存资源使用率是否达到阈值')">
           <bk-input type="number" :min="0" :max="100" v-model="autoscalerData.bufferResourceCpuRatio">
             <template slot="append">
               <div class="group-text">%</div>
@@ -85,10 +82,9 @@
           </bk-input>
         </bk-form-item>
         <bk-form-item
-          desc-type="icon"
           desc-icon="bk-icon icon-info-circle"
           :label="$t('触发扩容资源阈值 (内存)')"
-          :desc="$t('内存资源(Request)使用率超过该阈值触发扩容, 无论CPU资源使用率是否达到阈值')">
+          :desc="$t('集群整体内存资源(Request)使用率超过该阈值触发扩容, 无论CPU资源使用率是否达到阈值')">
           <bk-input type="number" :min="0" :max="100" v-model="autoscalerData.bufferResourceMemRatio">
             <template slot="append">
               <div class="group-text">%</div>
@@ -97,7 +93,6 @@
         </bk-form-item>
         <bk-form-item
           :label="$t('等待节点提供最长时间')"
-          desc-type="icon"
           desc-icon="bk-icon icon-info-circle"
           :desc="$t('如果节点池在设置的时间范围内没有提供可用资源，会导致此次自动扩容失败')">
           <bk-input type="number" :min="60" :max="86400" v-model="autoscalerData.maxNodeProvisionTime">
@@ -123,11 +118,10 @@
           </span>
         </template>
         <bk-form-item
-          desc-type="icon"
           desc-icon="bk-icon icon-info-circle"
           :label="$t('触发缩容资源阈值 (CPU/内存)')"
-          :desc="$t('CPU和内存资源(Request)必须同时低于设定阈值才会触发缩容')">
-          <bk-input type="number" :min="0" :max="100" v-model="autoscalerData.scaleDownUtilizationThreahold">
+          :desc="$t('取整范围0% ~ 80%，节点的CPU和内存资源(Request)必须同时低于设定阈值后会驱逐该节点上的Pod执行缩容流程，如果只考虑缩容空节点，可以把此值设置为0')">
+          <bk-input type="number" :min="0" :max="80" v-model="autoscalerData.scaleDownUtilizationThreahold">
             <template slot="append">
               <div class="group-text">%</div>
             </template>
@@ -135,9 +129,8 @@
         </bk-form-item>
         <bk-form-item
           :label="$t('节点连续空闲')"
-          desc-type="icon"
           desc-icon="bk-icon icon-info-circle"
-          :desc="$t('节点从第一次被标记空闲状态到设定时间内一直处于空闲状态才会被缩容，防止集群资源使用率短时间内波动造成频繁扩缩容操作')">
+          :desc="$t('节点从第一次被标记空闲状态到设定时间内一直处于空闲状态才会被缩容，防止节点资源使用率短时间内波动造成频繁扩缩容操作')">
           <div class="flex">
             <bcs-input type="number" :min="60" :max="86400" v-model="autoscalerData.scaleDownUnneededTime">
               <template slot="append">
@@ -149,7 +142,6 @@
         </bk-form-item>
         <bk-form-item
           :label="$t('等待 Pod 退出最长时间')"
-          desc-type="icon"
           desc-icon="bk-icon icon-info-circle"
           :desc="$t('缩容节点时，等待 pod 停止的最长时间（不会遵守 terminationGracefulPeriodSecond，超时强杀）默认为600秒，取值范围60 ~ 86400秒')">
           <bk-input type="number" :min="60" :max="86400" v-model="autoscalerData.maxGracefulTerminationSec">
@@ -160,10 +152,9 @@
         </bk-form-item>
         <bk-form-item
           :label="$t('扩容后判断缩容时间间隔')"
-          desc-type="icon"
           desc-icon="bk-icon icon-info-circle"
           :desc="$t('扩容节点后多久才继续缩容判断，如果业务自定义初始化任务所需时间比较长，需要适当上调此值，取值范围60 ~ 86400秒')">
-          <bk-input type="number" :min="60" :max="86400" v-model="autoscalerData.scaleDownDelayAfterAdd">
+          <bk-input type="number" :min="1200" :max="86400" v-model="autoscalerData.scaleDownDelayAfterAdd">
             <template slot="append">
               <div class="group-text">{{$t('秒')}}</div>
             </template>
@@ -171,7 +162,7 @@
         </bk-form-item>
         <bk-form-item
           :label="$t('连续两次缩容时间间隔')"
-          desc-type="icon"
+
           desc-icon="bk-icon icon-info-circle"
           :desc="$t('缩容节点后多久再继续缩容节点，默认设置为0，代表与扩缩容检测时间间隔设置的值相同，取值范围0 ~ 86400秒')">
           <bk-input type="number" :min="0" :max="86400" v-model="autoscalerData.scaleDownDelayAfterDelete">

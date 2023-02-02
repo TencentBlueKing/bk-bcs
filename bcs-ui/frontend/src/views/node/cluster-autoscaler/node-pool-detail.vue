@@ -28,13 +28,17 @@
               {{ statusTextMap[nodePoolData.status] }}
             </StatusIcon>
           </bk-form-item>
-          <bk-form-item :label="$t('缩容节点下限')">
+          <bk-form-item
+            :label="$t('缩容节点下限')"
+            :desc="$t('节点池创建时不会自动扩容到缩容节点下限数量，只有节点池扩容节点数量超过缩容节点下限后，之后缩容节点时不会低于缩容节点下限，作为节点池的buffer资源')">
             {{ nodePoolData.autoScaling.minSize }}
           </bk-form-item>
           <bk-form-item :label="$t('扩容节点上限')">
             {{ nodePoolData.autoScaling.maxSize }}
           </bk-form-item>
-          <bk-form-item :label="$t('是否开启调度')">
+          <bk-form-item
+            :label="$t('是否开启调度')"
+            :desc="$t('节点池启用后Autoscaler组件将会根据扩容算法使用该节点池资源，开启Autoscaler组件后必须要开启至少一个节点池')">
             {{nodePoolData.nodeTemplate.unSchedulable ? $t('否') : $t('是')}}
           </bk-form-item>
           <bk-form-item :label="$t('节点 Labels')">
@@ -55,13 +59,19 @@
               @click="showTaints = true">{{$t('查看')}}</bk-button>
             <span v-else>--</span>
           </bk-form-item>
-          <bk-form-item :label="$t('扩缩容模式')">
+          <bk-form-item
+            :label="$t('扩缩容模式')"
+            :desc="$t('释放模式：缩容时自动释放Cluster AutoScaler判断的空余节点， 扩容时自动创建新的CVM节点加入到伸缩组<br/>关机模式：扩容时优先对已关机的节点执行开机操作，节点数依旧不满足要求时再创建新的CVM节点')">
             {{scalingModeMap[nodePoolData.autoScaling.scalingMode]}}
           </bk-form-item>
-          <bk-form-item :label="$t('实例创建策略')">
+          <bk-form-item
+            :label="$t('实例创建策略')"
+            :desc="$t('首选可用区（子网）优先：自动扩缩容会在您首选的可用区优先执行扩缩容，若首选可用区无法扩缩容，才会在其他可用区进行扩缩容<br/>多可用区（子网）打散 ：在节点池指定的多可用区（即指定多个子网）之间尽最大努力均匀分配CVM实例，只有配置了多个子网时该策略才能生效')">
             {{multiZoneSubnetPolicyMap[nodePoolData.autoScaling.multiZoneSubnetPolicy]}}
           </bk-form-item>
-          <bk-form-item :label="$t('重试策略')">
+          <bk-form-item
+            :label="$t('重试策略')"
+            :desc="$t('快速重试 ：立即重试，在较短时间内快速重试，连续失败超过一定次数（5次）后不再重试，<br/>间隔递增重试 ：间隔递增重试，随着连续失败次数的增加，重试间隔逐渐增大，重试间隔从秒级到1天不等，<br/>不重试：不进行重试，直到再次收到用户调用或者告警信息后才会重试')">
             {{retryPolicyMap[nodePoolData.autoScaling.retryPolicy]}}
           </bk-form-item>
           <bk-form-item :label="$t('镜像提供方')">
@@ -101,11 +111,15 @@
           <bk-form-item :label="$t('支持子网')">
             {{nodePoolData.autoScaling.subnetIDs.join(', ') || '--'}}
           </bk-form-item>
-          <bk-form-item :label="$t('安全组')">
+          <bk-form-item
+            :label="$t('安全组')"
+            :desc="$t('内部上云环境根据集群所在VPC由产品自动分配可用子网，尽可能的把集群内的节点分配在不同的可用区，避免集群节点集中在同一可用区')">
             <LoadingIcon v-if="securityGroupLoading">{{ $t('加载中') }}...</LoadingIcon>
             <span v-else>{{ securityGroupNames.join(',') || '--'}}</span>
           </bk-form-item>
-          <bk-form-item :label="$t('扩容后转移模块')">
+          <bk-form-item
+            :label="$t('扩容后转移模块')"
+            :desc="$t('扩容节点后节点转移到关联业务的CMDB模块')">
             {{nodePoolData.nodeTemplate.module.scaleOutModuleName || '--'}}
           </bk-form-item>
           <!-- <bk-form-item :label="$t('缩容后转移模块')">

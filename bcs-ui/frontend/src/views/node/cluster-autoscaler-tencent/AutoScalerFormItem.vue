@@ -6,7 +6,6 @@
       :label="item.name"
       class="form-content-item"
       style="width: 50%;"
-      desc-type="icon"
       desc-icon="bk-icon icon-info-circle"
       :desc="item.desc">
       <template v-if="item.prop === 'status'">

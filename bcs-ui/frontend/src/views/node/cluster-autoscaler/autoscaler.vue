@@ -103,7 +103,11 @@
             </div>
           </template>
         </bcs-table-column>
-        <bcs-table-column :label="$t('缩容节点下限')" align="right" width="120">
+        <bcs-table-column
+          :label="$t('缩容节点下限')"
+          align="right"
+          width="120"
+          :render-header="renderHeader">
           <template #default="{ row }">
             {{ row.autoScaling.minSize }}
           </template>
@@ -328,11 +332,13 @@
               :header-cell-style="{ background: '#fff', borderRight: 'none' }">
               <bcs-table-column :label="$t('步骤名称')" width="120" show-overflow-tooltip>
                 <template #default="{ row: key }">
-                  {{ row.task.steps[key].taskName }}
-                  <i
-                    class="bcs-icon bcs-icon-fenxiang bcs-icon-btn"
-                    v-if="row.task.steps[key].params && row.task.steps[key].params.taskUrl"
-                    @click="handleGotoSops(row.task.steps[key].params.taskUrl)"></i>
+                  <div class="flex items-center">
+                    <span class="bcs-ellipsis">{{ row.task.steps[key].taskName }}</span>
+                    <i
+                      class="bcs-icon bcs-icon-fenxiang bcs-icon-btn text-[#3a84ff] flex-1 ml-[4px]"
+                      v-if="row.task.steps[key].params && row.task.steps[key].params.taskUrl"
+                      @click="handleGotoSops(row.task.steps[key].params.taskUrl)"></i>
+                  </div>
                 </template>
               </bcs-table-column>
               <bcs-table-column :label="$t('步骤信息')" show-overflow-tooltip>
@@ -400,17 +406,15 @@
         </bcs-table-column>
         <bcs-table-column :label="$t('操作')" width="120">
           <template #default="{ row }">
-            <template v-if="row.task && taskStatusColorMap[row.task.status] === 'red'">
-              <bcs-button
-                text
-                @click="handleRetryTask(row)">{{$t('重试')}}</bcs-button>
-              <bcs-button
-                text
-                class="ml-[8px]"
-                :disabled="!(row.task && row.task.nodeIPList && row.task.nodeIPList.length)"
-                @click="handleShowIPList(row)">{{$t('IP列表')}}</bcs-button>
-            </template>
-            <span v-else>--</span>
+            <bcs-button
+              text
+              :disabled="!(row.task && taskStatusColorMap[row.task.status] === 'red')"
+              @click="handleRetryTask(row)">{{$t('重试')}}</bcs-button>
+            <bcs-button
+              text
+              class="ml-[8px]"
+              :disabled="!(row.task && row.task.nodeIPList && row.task.nodeIPList.length)"
+              @click="handleShowIPList(row)">{{$t('IP列表')}}</bcs-button>
           </template>
         </bcs-table-column>
       </bcs-table>
@@ -484,14 +488,14 @@ export default defineComponent({
         name: $i18n.t('触发扩容资源阈值 (CPU)'),
         isBasicProp: true,
         unit: '%',
-        desc: $i18n.t('CPU资源(Request)使用率超过该阈值触发扩容, 无论内存资源使用率是否达到阈值'),
+        desc: $i18n.t('集群整体CPU资源(Request)使用率超过该阈值触发扩容, 无论内存资源使用率是否达到阈值'),
       },
       {
         prop: 'bufferResourceMemRatio',
         name: $i18n.t('触发扩容资源阈值 (内存)'),
         isBasicProp: true,
         unit: '%',
-        desc: $i18n.t('内存资源(Request)使用率超过该阈值触发扩容, 无论CPU资源使用率是否达到阈值'),
+        desc: $i18n.t('集群整体内存资源(Request)使用率超过该阈值触发扩容, 无论CPU资源使用率是否达到阈值'),
       },
       {
         prop: 'maxNodeProvisionTime',
@@ -510,14 +514,14 @@ export default defineComponent({
         name: $i18n.t('触发缩容资源阈值 (CPU/内存)'),
         isBasicProp: true,
         unit: '%',
-        desc: $i18n.t('CPU和内存资源(Request)必须同时低于设定阈值才会触发缩容'),
+        desc: $i18n.t('取整范围0% ~ 80%，节点的CPU和内存资源(Request)必须同时低于设定阈值后会驱逐该节点上的Pod执行缩容流程，如果只考虑缩容空节点，可以把此值设置为0'),
       },
       {
         prop: 'scaleDownUnneededTime',
         name: $i18n.t('节点连续空闲'),
         isBasicProp: true,
         unit: $i18n.t('秒'),
-        desc: $i18n.t('节点从第一次被标记空闲状态到设定时间内一直处于空闲状态才会被缩容，防止集群资源使用率短时间内波动造成频繁扩缩容操作'),
+        desc: $i18n.t('节点从第一次被标记空闲状态到设定时间内一直处于空闲状态才会被缩容，防止节点资源使用率短时间内波动造成频繁扩缩容操作'),
         suffix: $i18n.t('后执行缩容'),
       },
       {
@@ -658,7 +662,7 @@ export default defineComponent({
         {
           name: 'bkTooltips',
           value: {
-            content: $i18n.t('已启用时会作为Cluster Autocaler的资源池，已关闭时不会作为Cluster Autocaler的资源池'),
+            content: $i18n.t('节点池创建时不会自动扩容到缩容节点下限数量，只有节点池扩容节点数量超过缩容节点下限后，之后缩容节点时不会低于缩容节点下限，作为节点池的buffer资源'),
           },
         },
       ],

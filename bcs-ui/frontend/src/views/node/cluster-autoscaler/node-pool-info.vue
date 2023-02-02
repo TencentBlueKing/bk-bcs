@@ -34,7 +34,7 @@
               type="textarea"
               class="mt10"
               :rows="6"
-              placeholder="#!/bin/bash"
+              :placeholder="$t('请输入 bash 脚本')"
               v-model="nodePoolInfoData.nodeTemplate.preStartUserScript">
             </bcs-input>
             <p class="mt-[32px]">{{$t('后置初始化')}}</p>
@@ -47,7 +47,7 @@
                 type="textarea"
                 class="mt10"
                 :rows="6"
-                placeholder="#!/bin/bash"
+                :placeholder="$t('请输入 bash 脚本')"
                 v-if="scaleOutPostActionType === 'simple'"
                 v-model="nodePoolInfoData.nodeTemplate.userScript">
               </bcs-input>
@@ -71,7 +71,7 @@
               type="textarea"
               class="mt10"
               :rows="6"
-              placeholder="#!/bin/bash"
+              :placeholder="$t('请输入 bash 脚本')"
               v-if="scaleInPreActionType === 'simple'"
               v-model="nodePoolInfoData.nodeTemplate.scaleInPreScript">
             </bcs-input>

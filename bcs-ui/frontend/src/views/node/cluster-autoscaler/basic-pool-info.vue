@@ -10,7 +10,8 @@
     <bk-form-item
       :label="$t('缩容节点下限')"
       property="nodeNumRange"
-      error-display-type="normal">
+      error-display-type="normal"
+      :desc="$t('节点池创建时不会自动扩容到缩容节点下限数量，只有节点池扩容节点数量超过缩容节点下限后，之后缩容节点时不会低于缩容节点下限，作为节点池的buffer资源')">
       <bk-input
         class="w74"
         v-model="nodePoolInfo.autoScaling.minSize"
