@@ -49,6 +49,22 @@ func (s *Service) CreateContent(ctx context.Context, req *pbds.CreateContentReq)
 	return resp, nil
 }
 
+// GetContent get content by id
+func (s *Service) GetContent(ctx context.Context, req *pbds.GetContentReq) (*pbds.GetContentResp, error) {
+	grpcKit := kit.FromGrpcContext(ctx)
+
+	content, err := s.dao.Content().Get(grpcKit, req.Id, req.BizId)
+	if err != nil {
+		logs.Errorf("list content failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, err
+	}
+
+	resp := &pbds.GetContentResp{
+		Data: pbcontent.PbContent(content),
+	}
+	return resp, nil
+}
+
 // ListContents list contents by query condition.
 func (s *Service) ListContents(ctx context.Context, req *pbds.ListContentsReq) (*pbds.ListContentsResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)

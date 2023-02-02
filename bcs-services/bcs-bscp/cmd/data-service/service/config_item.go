@@ -92,6 +92,21 @@ func (s *Service) DeleteConfigItem(ctx context.Context, req *pbds.DeleteConfigIt
 	return new(pbbase.EmptyResp), nil
 }
 
+// GetConfigItem get config item detail
+func (s *Service) GetConfigItem(ctx context.Context, req *pbds.GetConfigItemReq) (*pbds.GetConfigItemResp, error) {
+
+	grpcKit := kit.FromGrpcContext(ctx)
+	configItem, err := s.dao.ConfigItem().Get(grpcKit, req.Id, req.BizId)
+	if err != nil {
+		logs.Errorf("get config item failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, err
+	}
+	resp := &pbds.GetConfigItemResp{
+		Data: pbci.PbConfigItem(configItem),
+	}
+	return resp, nil
+}
+
 // ListConfigItems list config items by query condition.
 func (s *Service) ListConfigItems(ctx context.Context, req *pbds.ListConfigItemsReq) (*pbds.ListConfigItemsResp,
 	error) {

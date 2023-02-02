@@ -33,12 +33,15 @@ type DataClient interface {
 	CreateConfigItem(ctx context.Context, in *CreateConfigItemReq, opts ...grpc.CallOption) (*CreateResp, error)
 	UpdateConfigItem(ctx context.Context, in *UpdateConfigItemReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
 	DeleteConfigItem(ctx context.Context, in *DeleteConfigItemReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
+	GetConfigItem(ctx context.Context, in *GetConfigItemReq, opts ...grpc.CallOption) (*GetConfigItemResp, error)
 	ListConfigItems(ctx context.Context, in *ListConfigItemsReq, opts ...grpc.CallOption) (*ListConfigItemsResp, error)
 	// content related interface.
 	CreateContent(ctx context.Context, in *CreateContentReq, opts ...grpc.CallOption) (*CreateResp, error)
+	GetContent(ctx context.Context, in *GetContentReq, opts ...grpc.CallOption) (*GetContentResp, error)
 	ListContents(ctx context.Context, in *ListContentsReq, opts ...grpc.CallOption) (*ListContentsResp, error)
 	// commit related interface.
 	CreateCommit(ctx context.Context, in *CreateCommitReq, opts ...grpc.CallOption) (*CreateResp, error)
+	GetLatestCommit(ctx context.Context, in *GetLatestCommitReq, opts ...grpc.CallOption) (*GetLatestCommitResp, error)
 	ListCommits(ctx context.Context, in *ListCommitsReq, opts ...grpc.CallOption) (*ListCommitsResp, error)
 	// release related interface.
 	CreateRelease(ctx context.Context, in *CreateReleaseReq, opts ...grpc.CallOption) (*CreateResp, error)
@@ -149,6 +152,15 @@ func (c *dataClient) DeleteConfigItem(ctx context.Context, in *DeleteConfigItemR
 	return out, nil
 }
 
+func (c *dataClient) GetConfigItem(ctx context.Context, in *GetConfigItemReq, opts ...grpc.CallOption) (*GetConfigItemResp, error) {
+	out := new(GetConfigItemResp)
+	err := c.cc.Invoke(ctx, "/pbds.Data/GetConfigItem", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *dataClient) ListConfigItems(ctx context.Context, in *ListConfigItemsReq, opts ...grpc.CallOption) (*ListConfigItemsResp, error) {
 	out := new(ListConfigItemsResp)
 	err := c.cc.Invoke(ctx, "/pbds.Data/ListConfigItems", in, out, opts...)
@@ -167,6 +179,15 @@ func (c *dataClient) CreateContent(ctx context.Context, in *CreateContentReq, op
 	return out, nil
 }
 
+func (c *dataClient) GetContent(ctx context.Context, in *GetContentReq, opts ...grpc.CallOption) (*GetContentResp, error) {
+	out := new(GetContentResp)
+	err := c.cc.Invoke(ctx, "/pbds.Data/GetContent", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *dataClient) ListContents(ctx context.Context, in *ListContentsReq, opts ...grpc.CallOption) (*ListContentsResp, error) {
 	out := new(ListContentsResp)
 	err := c.cc.Invoke(ctx, "/pbds.Data/ListContents", in, out, opts...)
@@ -179,6 +200,15 @@ func (c *dataClient) ListContents(ctx context.Context, in *ListContentsReq, opts
 func (c *dataClient) CreateCommit(ctx context.Context, in *CreateCommitReq, opts ...grpc.CallOption) (*CreateResp, error) {
 	out := new(CreateResp)
 	err := c.cc.Invoke(ctx, "/pbds.Data/CreateCommit", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dataClient) GetLatestCommit(ctx context.Context, in *GetLatestCommitReq, opts ...grpc.CallOption) (*GetLatestCommitResp, error) {
+	out := new(GetLatestCommitResp)
+	err := c.cc.Invoke(ctx, "/pbds.Data/GetLatestCommit", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -379,12 +409,15 @@ type DataServer interface {
 	CreateConfigItem(context.Context, *CreateConfigItemReq) (*CreateResp, error)
 	UpdateConfigItem(context.Context, *UpdateConfigItemReq) (*base.EmptyResp, error)
 	DeleteConfigItem(context.Context, *DeleteConfigItemReq) (*base.EmptyResp, error)
+	GetConfigItem(context.Context, *GetConfigItemReq) (*GetConfigItemResp, error)
 	ListConfigItems(context.Context, *ListConfigItemsReq) (*ListConfigItemsResp, error)
 	// content related interface.
 	CreateContent(context.Context, *CreateContentReq) (*CreateResp, error)
+	GetContent(context.Context, *GetContentReq) (*GetContentResp, error)
 	ListContents(context.Context, *ListContentsReq) (*ListContentsResp, error)
 	// commit related interface.
 	CreateCommit(context.Context, *CreateCommitReq) (*CreateResp, error)
+	GetLatestCommit(context.Context, *GetLatestCommitReq) (*GetLatestCommitResp, error)
 	ListCommits(context.Context, *ListCommitsReq) (*ListCommitsResp, error)
 	// release related interface.
 	CreateRelease(context.Context, *CreateReleaseReq) (*CreateResp, error)
@@ -443,17 +476,26 @@ func (UnimplementedDataServer) UpdateConfigItem(context.Context, *UpdateConfigIt
 func (UnimplementedDataServer) DeleteConfigItem(context.Context, *DeleteConfigItemReq) (*base.EmptyResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteConfigItem not implemented")
 }
+func (UnimplementedDataServer) GetConfigItem(context.Context, *GetConfigItemReq) (*GetConfigItemResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetConfigItem not implemented")
+}
 func (UnimplementedDataServer) ListConfigItems(context.Context, *ListConfigItemsReq) (*ListConfigItemsResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListConfigItems not implemented")
 }
 func (UnimplementedDataServer) CreateContent(context.Context, *CreateContentReq) (*CreateResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateContent not implemented")
 }
+func (UnimplementedDataServer) GetContent(context.Context, *GetContentReq) (*GetContentResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetContent not implemented")
+}
 func (UnimplementedDataServer) ListContents(context.Context, *ListContentsReq) (*ListContentsResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListContents not implemented")
 }
 func (UnimplementedDataServer) CreateCommit(context.Context, *CreateCommitReq) (*CreateResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateCommit not implemented")
+}
+func (UnimplementedDataServer) GetLatestCommit(context.Context, *GetLatestCommitReq) (*GetLatestCommitResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetLatestCommit not implemented")
 }
 func (UnimplementedDataServer) ListCommits(context.Context, *ListCommitsReq) (*ListCommitsResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListCommits not implemented")
@@ -671,6 +713,24 @@ func _Data_DeleteConfigItem_Handler(srv interface{}, ctx context.Context, dec fu
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Data_GetConfigItem_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetConfigItemReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).GetConfigItem(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/pbds.Data/GetConfigItem",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).GetConfigItem(ctx, req.(*GetConfigItemReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Data_ListConfigItems_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ListConfigItemsReq)
 	if err := dec(in); err != nil {
@@ -707,6 +767,24 @@ func _Data_CreateContent_Handler(srv interface{}, ctx context.Context, dec func(
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Data_GetContent_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetContentReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).GetContent(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/pbds.Data/GetContent",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).GetContent(ctx, req.(*GetContentReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Data_ListContents_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ListContentsReq)
 	if err := dec(in); err != nil {
@@ -739,6 +817,24 @@ func _Data_CreateCommit_Handler(srv interface{}, ctx context.Context, dec func(i
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(DataServer).CreateCommit(ctx, req.(*CreateCommitReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Data_GetLatestCommit_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetLatestCommitReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).GetLatestCommit(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/pbds.Data/GetLatestCommit",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).GetLatestCommit(ctx, req.(*GetLatestCommitReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1143,6 +1239,10 @@ var Data_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Data_DeleteConfigItem_Handler,
 		},
 		{
+			MethodName: "GetConfigItem",
+			Handler:    _Data_GetConfigItem_Handler,
+		},
+		{
 			MethodName: "ListConfigItems",
 			Handler:    _Data_ListConfigItems_Handler,
 		},
@@ -1151,12 +1251,20 @@ var Data_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Data_CreateContent_Handler,
 		},
 		{
+			MethodName: "GetContent",
+			Handler:    _Data_GetContent_Handler,
+		},
+		{
 			MethodName: "ListContents",
 			Handler:    _Data_ListContents_Handler,
 		},
 		{
 			MethodName: "CreateCommit",
 			Handler:    _Data_CreateCommit_Handler,
+		},
+		{
+			MethodName: "GetLatestCommit",
+			Handler:    _Data_GetLatestCommit_Handler,
 		},
 		{
 			MethodName: "ListCommits",

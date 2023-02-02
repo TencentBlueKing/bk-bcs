@@ -351,6 +351,8 @@ const (
 	Yaml FileFormat = "yaml"
 	// Xml file format
 	Xml FileFormat = "xml"
+	// Text file format
+	Text FileFormat = "text"
 	// Binary file format
 	Binary FileFormat = "binary"
 )
@@ -364,6 +366,7 @@ func (f FileFormat) Validate() error {
 	case Json:
 	case Yaml:
 	case Xml:
+	case Text:
 	case Binary:
 	default:
 		return fmt.Errorf("unsupported file format: %s", f)

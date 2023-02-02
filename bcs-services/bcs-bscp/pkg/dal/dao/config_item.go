@@ -34,6 +34,8 @@ type ConfigItem interface {
 	Create(kit *kit.Kit, configItem *table.ConfigItem) (uint32, error)
 	// Update one configItem instance.
 	Update(kit *kit.Kit, configItem *table.ConfigItem) error
+	// Get configItem by id
+	Get(kit *kit.Kit, id, bizID uint32) (*table.ConfigItem, error)
 	// List configItem with options.
 	List(kit *kit.Kit, opts *types.ListConfigItemsOption) (*types.ListConfigItemDetails, error)
 	// Delete one configItem instance.
@@ -173,6 +175,24 @@ func (dao *configItemDao) Update(kit *kit.Kit, ci *table.ConfigItem) error {
 	}
 
 	return nil
+}
+
+// Get configItem by ID.
+// TODO: !!!current db is sharded by biz_id,it can not adapt bcs project,need redesign
+func (dao *configItemDao) Get(kit *kit.Kit, id, bizID uint32) (*table.ConfigItem, error) {
+
+	if id == 0 {
+		return nil, errf.New(errf.InvalidParameter, "config item id can not be 0")
+	}
+
+	sql := fmt.Sprintf(`SELECT %s FROM %s WHERE id = %d`,
+		table.ConfigItemColumns.NamedExpr(), table.ConfigItemTable, id)
+
+	configItem := &table.ConfigItem{}
+	if err := dao.orm.Do(dao.sd.ShardingOne(bizID).DB()).Get(kit.Ctx, configItem, sql); err != nil {
+		return nil, err
+	}
+	return configItem, nil
 }
 
 // List configItems with options.

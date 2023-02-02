@@ -99,6 +99,23 @@ func (s *Service) ListCommits(ctx context.Context, req *pbds.ListCommitsReq) (*p
 	return resp, nil
 }
 
+// ListCommits get latest commit by config item id
+func (s *Service) GetLatestCommit(ctx context.Context, req *pbds.GetLatestCommitReq) (*pbds.GetLatestCommitResp,
+	error) {
+
+	grpcKit := kit.FromGrpcContext(ctx)
+
+	commit, err := s.queryCILatestCommit(grpcKit, req.BizId, req.AppId, req.ConfigItemId)
+	if err != nil {
+		return nil, err
+	}
+
+	resp := &pbds.GetLatestCommitResp{
+		Data: pbcommit.PbCommit(commit),
+	}
+	return resp, nil
+}
+
 // queryCILatestCommit query config item latest commit.
 func (s *Service) queryCILatestCommit(kit *kit.Kit, bizID, appID, ciID uint32) (*table.Commit, error) {
 	opt := &types.ListCommitsOption{

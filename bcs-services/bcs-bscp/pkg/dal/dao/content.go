@@ -32,6 +32,8 @@ import (
 type Content interface {
 	// Create one content instance.
 	Create(kit *kit.Kit, content *table.Content) (uint32, error)
+	// Get get content by id
+	Get(kit *kit.Kit, id, bizID uint32) (*table.Content, error)
 	// List contents with options.
 	List(kit *kit.Kit, opts *types.ListContentsOption) (*types.ListContentDetails, error)
 }
@@ -93,6 +95,24 @@ func (dao *contentDao) Create(kit *kit.Kit, content *table.Content) (uint32, err
 	}
 
 	return id, nil
+}
+
+// Get content by id.
+// TODO: !!!current db is sharded by biz_id,it can not adapt bcs project,need redesign
+func (dao *contentDao) Get(kit *kit.Kit, id, bizID uint32) (*table.Content, error) {
+
+	if id == 0 {
+		return nil, errf.New(errf.InvalidParameter, "content id can not be 0")
+	}
+
+	sql := fmt.Sprintf(`SELECT %s FROM %s WHERE id = %d`,
+		table.ContentColumns.NamedExpr(), table.ContentTable, id)
+
+	content := &table.Content{}
+	if err := dao.orm.Do(dao.sd.ShardingOne(bizID).DB()).Get(kit.Ctx, content, sql); err != nil {
+		return nil, err
+	}
+	return content, nil
 }
 
 // List contents with options.

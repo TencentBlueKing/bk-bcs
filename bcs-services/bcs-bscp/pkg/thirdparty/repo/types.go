@@ -121,6 +121,26 @@ type CreateRepoReq struct {
 	Description string `json:"description"`
 }
 
+// UploadFileReq is repo upload file request struct
+type UploadFileReq struct {
+	// BizID is business ID
+	BizID uint32 `json:"bizID"`
+	// AppID is application ID
+	AppID uint32 `json:"appID"`
+	// Content is base64 encoded content of file
+	Content string `json:"content"`
+}
+
+// DownloadFileReq is repo download file request struct
+type DownloadFileReq struct {
+	// BizID is business ID
+	BizID uint32 `json:"bizID"`
+	// AppID is application ID
+	AppID uint32 `json:"appID"`
+	// Sign is sha256 encoding of file
+	Sign string `json:"sign"`
+}
+
 // Configuration is repo configuration.
 type Configuration struct {
 	// Type is configuration type(local).
@@ -172,7 +192,7 @@ func GenNodePath(opt *NodeOption) (string, error) {
 	}
 
 	if len(opt.Sign) != 64 {
-		return "", errf.New(errf.InvalidParameter, "file sha256 not is standard format")
+		return "", errf.New(errf.InvalidParameter, "file sha256 is not standard format")
 	}
 
 	repoName, err := GenRepoName(opt.BizID)
