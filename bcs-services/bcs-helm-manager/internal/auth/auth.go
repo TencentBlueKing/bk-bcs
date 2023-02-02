@@ -186,9 +186,11 @@ func callIAM(username, action string, resourceID options.CredentialScope) (bool,
 	case cluster.CanViewClusterOperation:
 		return ClusterIamClient.CanViewCluster(username, resourceID.ProjectID, resourceID.ClusterID)
 	case project.CanEditProjectOperation:
-		return ProjectIamClient.CanEditProject(username, resourceID.ProjectID)
+		allow, url, _, err := ProjectIamClient.CanEditProject(username, resourceID.ProjectID)
+		return allow, url, err
 	case project.CanViewProjectOperation:
-		return ProjectIamClient.CanViewProject(username, resourceID.ProjectID)
+		allow, url, _, err := ProjectIamClient.CanViewProject(username, resourceID.ProjectID)
+		return allow, url, err
 	case namespace.CanCreateNamespaceScopedResourceOperation:
 		return NamespaceIamClient.CanCreateNamespaceScopedResource(username, resourceID.ProjectID,
 			resourceID.ClusterID, resourceID.Namespace)
