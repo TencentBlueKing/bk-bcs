@@ -13,8 +13,8 @@ replace (
 
 require (
 	github.com/DATA-DOG/go-sqlmock v1.5.0
-	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20221205083018-bf769e1603a5
-	github.com/Tencent/bk-bcs/bcs-services/pkg v0.0.0-20220926153300-4e631deaebe4
+	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20230202032803-47379be3c4c1
+	github.com/Tencent/bk-bcs/bcs-services/pkg v0.0.0-20230103023020-f3d4c576e20b
 	github.com/asaskevich/govalidator v0.0.0-20200907205600-7a23bdc65eef
 	github.com/avast/retry-go v3.0.0+incompatible
 	github.com/coreos/etcd v3.3.18+incompatible

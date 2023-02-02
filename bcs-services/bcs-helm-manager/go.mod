@@ -40,8 +40,8 @@ require (
 )
 
 require (
-	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20221128035642-f940db02eecb
-	github.com/Tencent/bk-bcs/bcs-services/pkg v0.0.0-20221128035642-f940db02eecb
+	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20230202032803-47379be3c4c1
+	github.com/Tencent/bk-bcs/bcs-services/pkg v0.0.0-20230106072251-6aee266679bb
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/goccy/go-yaml v1.9.6
 	github.com/micro/go-micro/v2 v2.9.1

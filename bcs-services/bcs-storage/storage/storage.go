@@ -82,22 +82,22 @@ func NewStorageServer(op *options.StorageOptions) (*StorageServer, error) {
 func (s *StorageServer) Init() (err error) {
 	// 证书初始化
 	if err = s.initTlsConfig(); err != nil {
-		return errors.Wrapf(err, "certificate initialization failed.")
+		return errors.Wrapf(err, "certificate initialization failed")
 	}
 
 	// 初始化http
 	if err = s.initHTTPServer(); err != nil {
-		return errors.Wrapf(err, "http server initialization failed.")
+		return errors.Wrapf(err, "http server initialization failed")
 	}
 
 	// v1 http server 注册
 	if err = s.registerV1HttpServerToRegistry(); err != nil {
-		return errors.Wrapf(err, "http v1 initialization failed.")
+		return errors.Wrapf(err, "http v1 initialization failed")
 	}
 
 	// 初始化go-micro
 	if err = s.microServer.Init(s.conf); err != nil {
-		return errors.Wrapf(err, "v2 server initialization failed.")
+		return errors.Wrapf(err, "v2 server initialization failed")
 	}
 
 	return nil
@@ -166,7 +166,7 @@ func (s *StorageServer) initTlsConfig() (err error) {
 
 	// get etcd tls
 	if s.etcdTLSConfig, err = s.conf.Etcd.GetTLSConfig(); err != nil {
-		return errors.Wrapf(err, "storage loading etcd registry tls config failed.")
+		return errors.Wrapf(err, "storage loading etcd registry tls config failed")
 	}
 	// set etcd tls
 	s.microServer.SetEtcdTLSConfig(s.etcdTLSConfig)
@@ -182,7 +182,7 @@ func (s *StorageServer) initTlsConfig() (err error) {
 		s.conf.ClientCert.CertPwd,
 	)
 	if err != nil {
-		return errors.Wrapf(err, "loading client side tls configuration failed.")
+		return errors.Wrapf(err, "loading client side tls configuration failed")
 	}
 	s.microServer.SetClientTLSConfig(cliConfig)
 
@@ -194,7 +194,7 @@ func (s *StorageServer) initTlsConfig() (err error) {
 		s.conf.ServerCert.CertPwd,
 	)
 	if err != nil {
-		return errors.Wrapf(err, "loading server side tls config failed.")
+		return errors.Wrapf(err, "loading server side tls config failed")
 	}
 	s.microServer.SetServerTLSConfig(svrConfig)
 

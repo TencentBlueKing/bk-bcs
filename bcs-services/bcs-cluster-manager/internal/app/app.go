@@ -660,7 +660,7 @@ func (cm *ClusterManager) initHTTPGateway(router *mux.Router) error {
 			EmitDefaults: true,
 		}),
 	)
-	grpcDialOpts := []grpc.DialOption{}
+	grpcDialOpts := make([]grpc.DialOption, 0)
 	if cm.tlsConfig != nil && cm.clientTLSConfig != nil {
 		grpcDialOpts = append(grpcDialOpts, grpc.WithTransportCredentials(grpccred.NewTLS(cm.clientTLSConfig)))
 	} else {
@@ -701,7 +701,7 @@ func (cm *ClusterManager) initHTTPService() error {
 
 	// server address
 	addresses := []string{cm.opt.Address}
-	if len(cm.opt.Ipv6Address) > 0 && (cm.opt.Ipv6Address != cm.opt.Address) {
+	if len(cm.opt.Ipv6Address) > 0 {
 		addresses = append(addresses, cm.opt.Ipv6Address)
 	}
 	cm.httpServer = ipv6server.NewIPv6Server(addresses, strconv.Itoa(int(cm.opt.HTTPPort)), "", muxServe)
@@ -757,7 +757,7 @@ func (cm *ClusterManager) initExtraModules() {
 	cm.initMetric(extraMux)
 
 	ips := []string{cm.opt.Address}
-	if len(cm.opt.Ipv6Address) > 0 && (cm.opt.Ipv6Address != cm.opt.Address) {
+	if len(cm.opt.Ipv6Address) > 0 {
 		ips = append(ips, cm.opt.Ipv6Address)
 	}
 	cm.extraServer = ipv6server.NewIPv6Server(ips, strconv.Itoa(int(cm.opt.MetricPort)), "", extraMux)
@@ -831,13 +831,11 @@ func (cm *ClusterManager) initMicro() error {
 	})
 	// 创建双栈监听
 	dualStackListener := listener.NewDualStackListener()
-	if err := dualStackListener.AddListener(ipv4, port); err != nil { // 添加主地址监听
+	if err := dualStackListener.AddListener(ipv4, port); err != nil { // 添加IPv4地址监听
 		return err
 	}
-	if ipv6 != ipv4 {
-		if err := dualStackListener.AddListener(ipv6, port); err != nil { // 添加副地址监听
-			return err
-		}
+	if err := dualStackListener.AddListener(ipv6, port); err != nil { // 添加IPv6地址监听
+		return err
 	}
 
 	// grpc server

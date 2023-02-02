@@ -15,17 +15,18 @@ package tunnel
 import (
 	"crypto/tls"
 	"fmt"
+	"net"
 	"strconv"
-	"strings"
 	"sync"
+
+	"github.com/micro/go-micro/v2/registry"
+	"github.com/pkg/errors"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/websocketDialer"
 	cmcommon "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/discovery"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/options"
-
-	"github.com/micro/go-micro/v2/registry"
 )
 
 // PeerManager tunnel peer manager
@@ -41,14 +42,11 @@ type PeerManager struct {
 }
 
 // NewPeerManager create peer manager
-func NewPeerManager(
-	opt *options.ClusterManagerOptions,
-	cliTLS *tls.Config,
-	dialerServer *websocketDialer.Server,
+func NewPeerManager(opt *options.ClusterManagerOptions, cliTLS *tls.Config, dialerServer *websocketDialer.Server,
 	disc *discovery.ModuleDiscovery) *PeerManager {
-	// self peerID is ip:port
-	dialerServer.PeerID = fmt.Sprintf("%s:%d", opt.Address, opt.HTTPPort)
 	dialerServer.PeerToken = opt.Tunnel.PeerToken
+	// self peerID is ip:port
+	dialerServer.PeerID = net.JoinHostPort(opt.Address, strconv.Itoa(int(opt.HTTPPort)))
 
 	var urlPrefix string
 	if cliTLS == nil {
@@ -99,20 +97,15 @@ func (pm *PeerManager) discoveryEventHandler(svcs []*registry.Service) {
 }
 
 func getHTTPEndpointFromMeta(node *registry.Node) (string, error) {
-	address := node.Address
-	strs := strings.Split(address, ":")
-	if len(strs) != 2 {
-		return "", fmt.Errorf("invalid server address %s", address)
+	ip, port, err := net.SplitHostPort(node.Address)
+	if err != nil {
+		return "", errors.Wrapf(err, "invalid server address %s", node.Address)
 	}
 	httpPortStr, ok := node.Metadata[cmcommon.MicroMetaKeyHTTPPort]
 	if !ok {
-		httpPortStr = strs[1]
+		httpPortStr = port
 	}
-	_, err := strconv.Atoi(httpPortStr)
-	if err != nil {
-		return "", fmt.Errorf("convert port %s to int failed, err %s", httpPortStr, err.Error())
-	}
-	return strs[0] + ":" + httpPortStr, nil
+	return net.JoinHostPort(ip, httpPortStr), nil
 }
 
 // syncPeers sync peers status, add tunnels to new peers, remove tunnels from deleted peers

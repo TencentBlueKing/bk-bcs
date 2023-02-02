@@ -20,6 +20,7 @@ require (
 	github.com/Azure/go-autorest/autorest v0.11.18
 	github.com/Azure/go-autorest/autorest/adal v0.9.13
 	github.com/RichardKnop/machinery/v2 v2.0.11
+	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20230202032803-47379be3c4c1
 	github.com/Tencent/bk-bcs/bcs-services/pkg v0.0.0-20220927105030-5dbfb77b055c
 	github.com/avast/retry-go v2.7.0+incompatible
 	github.com/coreos/etcd v3.3.25+incompatible
@@ -36,6 +37,7 @@ require (
 	github.com/kirito41dd/xslice v0.0.1
 	github.com/micro/go-micro/v2 v2.9.1
 	github.com/parnurzeal/gorequest v0.2.16
+	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.11.0
 	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/as v1.0.398
 	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common v1.0.417
@@ -144,7 +146,6 @@ require (
 	github.com/oxtoacart/bpool v0.0.0-20190530202638-03653db5a59c // indirect
 	github.com/patrickmn/go-cache v2.1.0+incompatible // indirect
 	github.com/peterbourgon/diskv v2.0.1+incompatible // indirect
-	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/prometheus/client_model v0.2.0 // indirect
 	github.com/prometheus/common v0.28.0 // indirect
@@ -202,7 +203,4 @@ require (
 	sigs.k8s.io/yaml v1.2.0 // indirect
 )
 
-require (
-	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20230113024500-76a555763729
-	gopkg.in/go-playground/assert.v1 v1.2.1 // indirect
-)
+require gopkg.in/go-playground/assert.v1 v1.2.1 // indirect
