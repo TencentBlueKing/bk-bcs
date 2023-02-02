@@ -82,6 +82,12 @@ func (s *serviceDiscovery) init() error {
 // initEtcdRegistry etcd 服务注册
 func (s *serviceDiscovery) initEtcdRegistry() (registry.Registry, error) {
 	endpoints := config.G.Viper.GetString("etcd.endpoints")
+
+	// 添加环境变量
+	if endpoints == "" {
+		endpoints = config.BCS_ETCD_HOST
+	}
+
 	if endpoints == "" {
 		return nil, nil
 	}
