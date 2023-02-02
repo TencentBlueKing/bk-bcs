@@ -174,6 +174,30 @@ func (c *Configurations) ReadFrom(content []byte) error {
 		return err
 	}
 
+	// 添加环境变量
+	if c.Base.AppCode == "" {
+		c.Base.AppCode = BK_APP_CODE
+	}
+	if c.Base.AppSecret == "" {
+		c.Base.AppSecret = BK_APP_SECRET
+	}
+	if c.Redis.Password == "" {
+		c.Redis.Password = REDIS_PASSWORD
+	}
+	if c.BCS.Token == "" {
+		c.BCS.Token = BCS_APIGW_TOKEN
+		for _, v := range c.BCSEnvConf {
+			v.Token = BCS_APIGW_TOKEN
+		}
+	}
+
+	if c.BCS.JWTPubKey == "" {
+		c.BCS.JWTPubKey = BCS_APIGW_PUBLIC_KEY
+		for _, v := range c.BCSEnvConf {
+			v.JWTPubKey = BCS_APIGW_PUBLIC_KEY
+		}
+	}
+
 	if err := c.init(); err != nil {
 		return err
 	}

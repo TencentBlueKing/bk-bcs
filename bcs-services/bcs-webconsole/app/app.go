@@ -286,6 +286,12 @@ func (c *WebConsoleManager) initHTTPService() (*gin.Engine, error) {
 // initEtcdRegistry etcd 服务注册
 func (c *WebConsoleManager) initEtcdRegistry() (registry.Registry, error) {
 	endpoints := c.microConfig.Get("etcd", "endpoints").String("")
+
+	// 添加环境变量
+	if endpoints == "" {
+		endpoints = config.BCS_ETCD_HOST
+	}
+
 	if endpoints == "" {
 		return nil, nil
 	}
