@@ -865,9 +865,14 @@ func (sd *ScaleDown) TryToScaleDown(allNodes []*apiv1.Node, pods []*apiv1.Pod,
 		emptyNodesAfterFilter := make([]*apiv1.Node, 0)
 		nodeInfos := buildNodeInfos(nodesWithoutMaster, getPodsInfos(pods))
 		for _, node := range emptyNodes {
+			// 被移除的节点需先有 soft taint 阻止新 Pod 调度，减少极端情况
+			// 否则移到下一轮循环再判断
+			if !deletetaint.HasDeletionCandidateTaint(node) {
+				continue
+			}
 			pods := nodeInfos[node.Name]
 			delete(nodeInfos, node.Name)
-			if checkResourceNotEnough(nodeInfos, sd.cpuRatio, sd.memRatio, sd.ratio) {
+			if checkResourceNotEnough(nodeInfos, nil, sd.cpuRatio, sd.memRatio, sd.ratio) {
 				nodeInfos[node.Name] = pods
 				klog.Infof("Skip node %v due to left resource ratio", node.Name)
 				continue
@@ -927,6 +932,23 @@ func (sd *ScaleDown) TryToScaleDown(allNodes []*apiv1.Node, pods []*apiv1.Pod,
 	nodesToRemove = sortNodesByDeletionCost(nodesToRemove)
 
 	toRemove := nodesToRemove[0]
+	// 被移除的节点需要先有 soft taint 阻止新 Pod 调度，减少极端情况
+	// 否则移到下一轮循环再判断
+	if !deletetaint.HasDeletionCandidateTaint(toRemove.Node) {
+		klog.V(1).Infof("Node %v should be deleted after soft taint", toRemove.Node.Name)
+		scaleDownStatus.Result = status.ScaleDownNoNodeDeleted
+		return scaleDownStatus, nil
+	}
+	// check resource ratio
+	nodeInfos := buildNodeInfos(nodesWithoutMaster, getPodsInfos(pods))
+	delete(nodeInfos, toRemove.Node.Name)
+	if checkResourceNotEnough(nodeInfos, toRemove.PodsToReschedule,
+		sd.cpuRatio, sd.memRatio, sd.ratio) {
+		klog.Infof("Skip node %v due to left resource ratio", toRemove.Node.Name)
+		scaleDownStatus.Result = status.ScaleDownNoNodeDeleted
+		return scaleDownStatus, nil
+	}
+
 	utilization := sd.nodeUtilizationMap[toRemove.Node.Name]
 	podNames := make([]string, 0, len(toRemove.PodsToReschedule))
 	for _, pod := range toRemove.PodsToReschedule {
@@ -1145,7 +1167,25 @@ func (sd *ScaleDown) deleteNode(node *apiv1.Node, pods []*apiv1.Pod,
 			Err: errors.ToAutoscalerError(errors.ApiCallError, err)}
 	}
 
-	if hasGameServer(pods) {
+	// 获取最新的 drain pod 列表
+	fieldSelector := fmt.Sprintf("spec.nodeName=%s", node.Name)
+	podList, listErr := sd.context.ClientSet.CoreV1().Pods(apiv1.NamespaceAll).List(
+		metav1.ListOptions{FieldSelector: fieldSelector})
+	if listErr != nil {
+		return status.NodeDeleteResult{ResultType: status.NodeDeleteErrorFailedToEvictPods, Err: listErr}
+	}
+	podsOfNode := make([]*apiv1.Pod, 0)
+	for i := range podList.Items {
+		podsOfNode = append(podsOfNode, &podList.Items[i])
+	}
+	podsToDrain, _, _, getErr := simulator.GetPodsForDeletionOnNodeDrain(
+		podsOfNode, []*policyv1.PodDisruptionBudget{}, false, false, false,
+		false, nil, 0, time.Now())
+	if getErr != nil {
+		return status.NodeDeleteResult{ResultType: status.NodeDeleteErrorFailedToEvictPods, Err: getErr}
+	}
+
+	if hasGameServer(podsToDrain) {
 		sd.context.Recorder.Eventf(node, apiv1.EventTypeWarning, "ScaleDownFailed",
 			"failed to evict pods: have gameserver pod")
 		return status.NodeDeleteResult{ResultType: status.NodeDeleteErrorFailedToEvictPods,
@@ -1176,7 +1216,7 @@ func (sd *ScaleDown) deleteNode(node *apiv1.Node, pods []*apiv1.Pod,
 	sd.context.Recorder.Eventf(node, apiv1.EventTypeNormal, "ScaleDown", "marked the node as toBeDeleted/unschedulable")
 
 	// attempt drain
-	evictionResults, err := drainNode(node, pods, sd.context.ClientSet, sd.context.Recorder,
+	evictionResults, err := drainNode(node, podsToDrain, sd.context.ClientSet, sd.context.Recorder,
 		sd.context.MaxGracefulTerminationSec, MaxPodEvictionTime, EvictionRetryTime, PodEvictionHeadroom)
 	if err != nil {
 		return status.NodeDeleteResult{ResultType: status.NodeDeleteErrorFailedToEvictPods,

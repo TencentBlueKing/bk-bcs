@@ -98,7 +98,7 @@ func NewScaleTestAutoscalingContext(
 	// Ignoring error here is safe - if a test doesn't specify valid estimatorName,
 	// it either doesn't need one, or should fail when it turns out to be nil.
 	estimatorBuilder, _ := estimator.NewEstimatorBuilder(options.EstimatorName)
-	extendedEstimatorBuilder, _ := estimatorinternal.NewEstimatorBuilder(options.EstimatorName, 0)
+	extendedEstimatorBuilder, _ := estimatorinternal.NewEstimatorBuilder(options.EstimatorName, 0, 0, 0)
 	return contextinternal.Context{
 		AutoscalingContext: &context.AutoscalingContext{
 			AutoscalingOptions: options,

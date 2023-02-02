@@ -37,18 +37,20 @@ var _ Webhook = &ConfigMapScaler{}
 
 // ConfigMapScaler impletements Webhook via configmap
 type ConfigMapScaler struct {
-	client          kubeclient.Interface
-	namespace       string
-	name            string
-	configmapLister v1lister.ConfigMapNamespaceLister
+	client              kubeclient.Interface
+	namespace           string
+	name                string
+	configmapLister     v1lister.ConfigMapNamespaceLister
+	maxBulkScaleUpCount int
 }
 
 // NewConfigMapScaler initilizes a ConfigMapScaler
-func NewConfigMapScaler(kubeClient kubeclient.Interface, configNamespace, configmapName string) Webhook {
+func NewConfigMapScaler(kubeClient kubeclient.Interface, configNamespace, configmapName string,
+	maxBulkScaleUpCount int) Webhook {
 	stopChannel := make(chan struct{})
 	lister := kubernetes.NewConfigMapListerForNamespace(kubeClient, stopChannel, configNamespace)
 	return &ConfigMapScaler{client: kubeClient, namespace: configNamespace, name: configmapName,
-		configmapLister: lister.ConfigMaps(configNamespace)}
+		configmapLister: lister.ConfigMaps(configNamespace), maxBulkScaleUpCount: maxBulkScaleUpCount}
 }
 
 // DoWebhook get responses from webhook, then execute scale based on responses
@@ -163,7 +165,7 @@ func (c *ConfigMapScaler) ExecuteScale(context *contextinternal.Context,
 	candidates ScaleDownCandidates,
 	nodeNameToNodeInfo map[string]*schedulernodeinfo.NodeInfo) error {
 
-	err := ExecuteScaleUp(context, clusterStateRegistry, options)
+	err := ExecuteScaleUp(context, clusterStateRegistry, options, c.maxBulkScaleUpCount)
 	if err != nil {
 		return err
 	}

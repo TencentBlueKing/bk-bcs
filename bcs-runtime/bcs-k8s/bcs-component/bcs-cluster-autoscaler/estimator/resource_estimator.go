@@ -27,6 +27,9 @@ import (
 	schedulernodeinfo "k8s.io/kubernetes/pkg/scheduler/nodeinfo"
 )
 
+// filterNodeResourceAnnoKey filters nodes when calculating buffer and total resource
+const filterNodeResourceAnnoKey = "io.tencent.bcs.dev/filter-node-resource"
+
 // podInfo contains Pod and score that corresponds to how important it is to handle the pod first.
 type podInfo struct {
 	score float64
@@ -36,17 +39,22 @@ type podInfo struct {
 // ClusterResourceEstimator estimates the number of needed nodes to handle the given amount of pods.
 type ClusterResourceEstimator struct {
 	predicateChecker *simulator.PredicateChecker
-	bufferRatio      float64
 	readyNodes       map[string]*schedulernodeinfo.NodeInfo
+	cpuRatio         float64
+	memRatio         float64
+	resourceRatio    float64
 }
 
 // NewClusterResourceEstimator builds a new BinpackingNodeEstimator.
-func NewClusterResourceEstimator(predicateChecker *simulator.PredicateChecker, ratio float64,
-	readyNodes map[string]*schedulernodeinfo.NodeInfo) *ClusterResourceEstimator {
+func NewClusterResourceEstimator(predicateChecker *simulator.PredicateChecker,
+	readyNodes map[string]*schedulernodeinfo.NodeInfo,
+	cpuRatio, memRatio, resourceRatio float64) *ClusterResourceEstimator {
 	return &ClusterResourceEstimator{
 		predicateChecker: predicateChecker,
-		bufferRatio:      ratio,
 		readyNodes:       readyNodes,
+		cpuRatio:         cpuRatio,
+		memRatio:         memRatio,
+		resourceRatio:    resourceRatio,
 	}
 }
 
@@ -78,7 +86,6 @@ func (estimator *ClusterResourceEstimator) Estimate(pods []*corev1.Pod, nodeTemp
 		newNodesMap[node.Name] = nodeInfo
 		newNodes = append(newNodes, nodeInfo)
 	}
-	klog.Infof("Up coming %v nodes", len(newNodes))
 	for _, podInfo := range podInfos {
 		found := false
 		meta := estimator.predicateChecker.GetPredicateMetadata(podInfo.pod, newNodesMap)
@@ -136,6 +143,12 @@ func (estimator *ClusterResourceEstimator) estimateAccordingToLoad(nodeTemplate 
 		if node.Spec.Unschedulable {
 			continue
 		}
+		if node.Labels["node.kubernetes.io/instance-type"] == "eklet" {
+			continue
+		}
+		if node.Annotations[filterNodeResourceAnnoKey] == "true" {
+			continue
+		}
 		allocatable := nodeInfo.AllocatableResource()
 		sumResourcesList.Add(allocatable.ResourceList())
 		leftResourcesList.Add(singleNodeResource(nodeInfo).ResourceList())
@@ -152,8 +165,7 @@ func (estimator *ClusterResourceEstimator) estimateAccordingToLoad(nodeTemplate 
 		leftResourcesList.Add(allocatableResourceList)
 	}
 
-	activatorName := corev1.ResourceCPU
-	ratio := estimator.bufferRatio
+	var nodeNum float64 = 0
 	leftResources := leftResourcesList.ResourceList()
 	sumResources := sumResourcesList.ResourceList()
 	for name, sum := range sumResources {
@@ -164,29 +176,37 @@ func (estimator *ClusterResourceEstimator) estimateAccordingToLoad(nodeTemplate 
 		if sum.IsZero() {
 			continue
 		}
-		r := float64(left.MilliValue()) / float64(sum.MilliValue())
-		klog.V(4).Infof("Resource name: %v, ratio: %v", name, r)
-		if r < ratio {
-			ratio = r
-			activatorName = name
+		var tmpNode float64
+		switch name {
+		case corev1.ResourceCPU:
+			tmpNode = computeNewNodeNumWithRatio(nodeTemplate, name, sum, left, estimator.cpuRatio)
+		case corev1.ResourceMemory:
+			tmpNode = computeNewNodeNumWithRatio(nodeTemplate, name, sum, left, estimator.memRatio)
+		default:
+			tmpNode = computeNewNodeNumWithRatio(nodeTemplate, name, sum, left, estimator.resourceRatio)
+		}
+		if tmpNode > nodeNum {
+			nodeNum = tmpNode
 		}
 	}
-	if ratio == estimator.bufferRatio {
+	return nodeNum
+}
+
+func computeNewNodeNumWithRatio(nodeTemplate *schedulernodeinfo.NodeInfo, name corev1.ResourceName,
+	sum, left resource.Quantity, ratio float64) float64 {
+	if ratio == 0 {
 		return 0
 	}
-
-	sum := sumResources[activatorName]
-	left := leftResources[activatorName]
+	r := float64(left.MilliValue()) / float64(sum.MilliValue())
 	// (left + num)/ (sum + num) >= ratio
-	klog.V(4).Infof("%v sum: %v, left: %v", activatorName, sum.MilliValue(), left.MilliValue())
-	resourceRequest := (float64(sum.MilliValue())*estimator.bufferRatio - float64(left.MilliValue())) /
-		(1 - estimator.bufferRatio)
+	resourceRequest := (float64(sum.MilliValue())*ratio - float64(left.MilliValue())) / (1 - ratio)
 	nodeResource := nodeTemplate.AllocatableResource()
 	nodeResourceList := nodeResource.ResourceList()
-	nodeCapacity := nodeResourceList[activatorName]
+	nodeCapacity := nodeResourceList[name]
 	num := math.Ceil(resourceRequest / float64(nodeCapacity.MilliValue()))
-	klog.Infof("Desired node number: %v", num)
-	return num
+	klog.V(4).Infof("resource: %v, sum: %v, left: %v, desired-ratio: %v, current-ratio: %v, desired-node: %v",
+		name, sum.MilliValue(), left.MilliValue(), ratio, r, num)
+	return math.Max(0, num)
 }
 
 func singleNodeResource(info *schedulernodeinfo.NodeInfo) *schedulernodeinfo.Resource {

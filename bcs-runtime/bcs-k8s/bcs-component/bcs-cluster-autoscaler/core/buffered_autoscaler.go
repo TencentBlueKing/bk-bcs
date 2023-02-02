@@ -141,21 +141,26 @@ func NewBufferedAutoscaler(
 	switch opts.WebhookMode {
 	case WebMode:
 		webhook = NewWebScaler(client, opts.ConfigNamespace,
-			opts.WebhookModeConfig, opts.WebhookModeToken)
+			opts.WebhookModeConfig, opts.WebhookModeToken, opts.MaxBulkScaleUpCount)
 		metricsinternal.RegisterWebhookParams("Web", opts.WebhookModeConfig)
 	case ConfigMapMode:
-		webhook = NewConfigMapScaler(client, opts.ConfigNamespace, opts.WebhookModeConfig)
+		webhook = NewConfigMapScaler(client, opts.ConfigNamespace,
+			opts.WebhookModeConfig, opts.MaxBulkScaleUpCount)
 		metricsinternal.RegisterWebhookParams("ConfigMap", opts.WebhookModeConfig)
 	default:
 		webhook = nil
 	}
 
+	// Set the initial scale times to be less than the start time so as to
+	// not start in cooldown mode.
+	initialScaleTime := time.Now().Add(-time.Hour)
+
 	return &BufferedAutoscaler{
 		Context:                 autoscalingContext,
 		startTime:               time.Now(),
-		lastScaleUpTime:         time.Now(),
-		lastScaleDownDeleteTime: time.Now(),
-		lastScaleDownFailTime:   time.Now(),
+		lastScaleUpTime:         initialScaleTime,
+		lastScaleDownDeleteTime: initialScaleTime,
+		lastScaleDownFailTime:   initialScaleTime,
 		scaleDown:               scaleDown,
 		processors:              processors,
 		processorCallbacks:      processorCallbacks,
@@ -583,7 +588,7 @@ func (b *BufferedAutoscaler) doScaleUp(autoscalingContext *contextinternal.Conte
 		klog.Error(typedErr)
 		return scaleUpStatus, scaleUpStatusProcessorAlreadyCalled, scheduledPods, typedErr
 	}
-	bufferNotEnough := checkResourceNotEnough(nodeInfos, b.CPURatio, b.MemRatio, b.ratio)
+	bufferNotEnough := checkResourceNotEnough(nodeInfos, nil, b.CPURatio, b.MemRatio, b.ratio)
 	shouldScaleUp := false
 
 	if len(unschedulablePodsToHelp) == 0 {
@@ -639,7 +644,7 @@ func (b *BufferedAutoscaler) deleteCreatedNodesWithErrors() {
 		if err != nil {
 			id := "<nil>"
 			if node != nil {
-				id = node.Spec.ProviderID
+				id = node.Name
 			}
 			klog.Warningf("Cannot determine nodeGroup for node %v; %v", id, err)
 			continue
@@ -660,6 +665,8 @@ func (b *BufferedAutoscaler) deleteCreatedNodesWithErrors() {
 
 		if err != nil {
 			klog.Warningf("Error while trying to delete nodes from %v: %v", nodeGroupsID, err)
+		} else {
+			b.clusterStateRegistry.InvalidateNodeInstancesCacheEntry(nodeGroup)
 		}
 	}
 }

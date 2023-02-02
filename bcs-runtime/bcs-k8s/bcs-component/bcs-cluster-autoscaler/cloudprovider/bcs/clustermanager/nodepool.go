@@ -22,7 +22,7 @@ import (
 	"time"
 )
 
-const httpTimeOut = 3 * time.Second
+const httpTimeOut = 5 * time.Second
 
 // NodePoolClientInterface defines the interface of node pool client
 type NodePoolClientInterface interface {

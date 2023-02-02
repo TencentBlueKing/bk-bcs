@@ -275,7 +275,7 @@ func sortNodesWithCostAndUtilization(nodes []*corev1.Node, candidates []string,
 
 // ExecuteScaleUp execute scale up with scale up options
 func ExecuteScaleUp(context *contextinternal.Context, clusterStateRegistry *clusterstate.ClusterStateRegistry,
-	options ScaleUpOptions) error {
+	options ScaleUpOptions, maxBulkScaleUpCount int) error {
 	nodegroups := context.CloudProvider.NodeGroups()
 	for _, ng := range nodegroups {
 		desired, ok := options[ng.Id()]
@@ -285,6 +285,11 @@ func ExecuteScaleUp(context *contextinternal.Context, clusterStateRegistry *clus
 		target, err := ng.TargetSize()
 		if err != nil {
 			return fmt.Errorf("Cannot get target size of nodegroup %v, err: %v", ng.Id(), err)
+		}
+		if desired-target > maxBulkScaleUpCount {
+			klog.Infof("newNodes(%d) is larger than maxBulkScaleUpCount(%d), set to maxBulkScaleUpCount",
+				desired-target, maxBulkScaleUpCount)
+			desired = target + maxBulkScaleUpCount
 		}
 		info := nodegroupset.ScaleUpInfo{
 			Group:       ng,

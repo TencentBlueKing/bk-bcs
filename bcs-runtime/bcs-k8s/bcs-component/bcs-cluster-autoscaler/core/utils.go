@@ -756,7 +756,7 @@ func getUpcomingNodeInfos(registry *clusterstate.ClusterStateRegistry,
 }
 
 func checkResourceNotEnough(nodes map[string]*schedulernodeinfo.NodeInfo,
-	cpuRatio, memRatio, ratio float64) bool {
+	podsToReschedule []*apiv1.Pod, cpuRatio, memRatio, ratio float64) bool {
 	var leftResourcesList, sumResourcesList schedulernodeinfo.Resource
 	for _, nodeInfo := range nodes {
 		node := nodeInfo.Node()
@@ -777,6 +777,12 @@ func checkResourceNotEnough(nodes map[string]*schedulernodeinfo.NodeInfo,
 		sumResourcesList.Add(allocatable.ResourceList())
 		leftResourcesList.Add(singleNodeResource(nodeInfo).ResourceList())
 	}
+
+	if len(podsToReschedule) > 0 {
+		leftResourcesList = substractRescheduledPodResources(leftResourcesList,
+			podsToReschedule)
+	}
+
 	leftResources := leftResourcesList.ResourceList()
 	sumResources := sumResourcesList.ResourceList()
 	for name, sum := range sumResources {
@@ -808,6 +814,31 @@ func checkResourceNotEnough(nodes map[string]*schedulernodeinfo.NodeInfo,
 		}
 	}
 	return false
+}
+
+func substractRescheduledPodResources(leftResourcesList schedulernodeinfo.Resource,
+	podsToReschedule []*apiv1.Pod) schedulernodeinfo.Resource {
+	var podResources schedulernodeinfo.Resource
+	for _, pod := range podsToReschedule {
+		for _, container := range pod.Spec.Containers {
+			podResources.Add(container.Resources.Requests)
+		}
+	}
+
+	leftResourcesList.AllowedPodNumber = leftResourcesList.AllowedPodNumber - len(podsToReschedule)
+	leftResourcesList.MilliCPU = leftResourcesList.MilliCPU - podResources.MilliCPU
+	leftResourcesList.Memory = leftResourcesList.Memory - podResources.Memory
+	leftResourcesList.EphemeralStorage = leftResourcesList.EphemeralStorage - podResources.EphemeralStorage
+
+	// calculate extend resources
+	for k, v := range podResources.ScalarResources {
+		_, ok := leftResourcesList.ScalarResources[k]
+		if ok {
+			leftResourcesList.ScalarResources[k] = leftResourcesList.ScalarResources[k] - v
+		}
+	}
+
+	return leftResourcesList
 }
 
 func singleNodeResource(info *schedulernodeinfo.NodeInfo) *schedulernodeinfo.Resource {

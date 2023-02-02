@@ -11,6 +11,7 @@ require (
 	github.com/robfig/cron v1.1.0
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.6.1
+	gopkg.in/yaml.v2 v2.4.0
 	k8s.io/api v0.22.0
 	k8s.io/apimachinery v0.16.15
 	k8s.io/apiserver v0.16.15
@@ -175,7 +176,6 @@ require (
 	gopkg.in/ini.v1 v1.62.0 // indirect
 	gopkg.in/square/go-jose.v2 v2.3.1 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
-	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c // indirect
 	honnef.co/go/tools v0.0.1-2020.1.4 // indirect
 	k8s.io/apiextensions-apiserver v0.0.0 // indirect
@@ -204,7 +204,7 @@ replace (
 	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.16.15
 	k8s.io/apimachinery => k8s.io/apimachinery v0.16.15
 	k8s.io/apiserver => k8s.io/apiserver v0.16.15
-	k8s.io/autoscaler/cluster-autoscaler => github.com/OvertimeDog/cluster-autoscaler v0.0.0-20220928034630-019c2b65ce04
+	k8s.io/autoscaler/cluster-autoscaler => github.com/OvertimeDog/cluster-autoscaler v0.0.0-20230202125108-9821a4d526e6
 	k8s.io/cli-runtime => k8s.io/cli-runtime v0.16.15
 	k8s.io/client-go => k8s.io/client-go v0.16.15
 	k8s.io/cloud-provider => k8s.io/cloud-provider v0.16.15

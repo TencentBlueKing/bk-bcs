@@ -99,7 +99,8 @@ func initializeDefaultOptions(opts *AutoscalerOptions) error {
 		opts.ExpanderStrategy = expanderStrategy
 	}
 	if opts.EstimatorBuilder == nil {
-		estimatorBuilder, err := estimatorinternal.NewEstimatorBuilder(opts.EstimatorName, opts.Options.BufferedResourceRatio)
+		estimatorBuilder, err := estimatorinternal.NewEstimatorBuilder(opts.EstimatorName,
+			opts.BufferedCPURatio, opts.BufferedMemRatio, opts.Options.BufferedResourceRatio)
 		if err != nil {
 			return err
 		}

@@ -153,7 +153,7 @@ func (cloud *Provider) NodeGroupForNode(node *apiv1.Node) (cloudprovider.NodeGro
 	}
 
 	if group == nil {
-		klog.V(4).Infof("Instance %v, node(%s) is not found in any group", ref, node.Name)
+		klog.V(6).Infof("Instance %v, node(%s) is not found in any group", ref, node.Name)
 		return group, err
 	}
 	return group, nil

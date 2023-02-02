@@ -39,14 +39,16 @@ var _ Webhook = &WebScaler{}
 
 // WebScaler implements Webhook via web
 type WebScaler struct {
-	url             string
-	token           string
-	client          *http.Client
-	configmapLister v1lister.ConfigMapNamespaceLister
+	url                 string
+	token               string
+	client              *http.Client
+	configmapLister     v1lister.ConfigMapNamespaceLister
+	maxBulkScaleUpCount int
 }
 
 // NewWebScaler initializes a WebScaler
-func NewWebScaler(kubeClient kubeclient.Interface, configNamespace, url, token string) Webhook {
+func NewWebScaler(kubeClient kubeclient.Interface, configNamespace, url, token string,
+	maxBulkScaleUpCount int) Webhook {
 	tr := &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 	}
@@ -56,7 +58,8 @@ func NewWebScaler(kubeClient kubeclient.Interface, configNamespace, url, token s
 	}
 	stopChannel := make(chan struct{})
 	lister := kubernetes.NewConfigMapListerForNamespace(kubeClient, stopChannel, configNamespace)
-	return &WebScaler{url: url, token: token, client: client, configmapLister: lister.ConfigMaps(configNamespace)}
+	return &WebScaler{url: url, token: token, client: client, configmapLister: lister.ConfigMaps(configNamespace),
+		maxBulkScaleUpCount: maxBulkScaleUpCount}
 }
 
 // DoWebhook get responses from webhook, then execute scale based on responses
@@ -139,7 +142,7 @@ func (w *WebScaler) ExecuteScale(context *contextinternal.Context,
 	sd *ScaleDown, nodes []*corev1.Node, options ScaleUpOptions,
 	candidates ScaleDownCandidates,
 	nodeNameToNodeInfo map[string]*schedulernodeinfo.NodeInfo) error {
-	err := ExecuteScaleUp(context, clusterStateRegistry, options)
+	err := ExecuteScaleUp(context, clusterStateRegistry, options, w.maxBulkScaleUpCount)
 	if err != nil {
 		return err
 	}

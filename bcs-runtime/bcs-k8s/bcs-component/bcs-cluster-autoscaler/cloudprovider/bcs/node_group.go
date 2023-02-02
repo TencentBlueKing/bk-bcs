@@ -292,11 +292,24 @@ func (group *NodeGroup) Nodes() ([]cloudprovider.Instance, error) {
 		}
 		cache[instance.NodeID] = instance.InnerIP
 		switch instance.Status {
-		case "creating":
+		case "INITIALIZATION":
 			i.Status.State = cloudprovider.InstanceCreating
-		case "running":
-			// check more node status
+		case "RUNNING":
 			i.Status.State = cloudprovider.InstanceRunning
+		case "ADD-FAILURE":
+			i.Status.State = cloudprovider.InstanceCreating
+			i.Status.ErrorInfo = &cloudprovider.InstanceErrorInfo{
+				ErrorClass:   cloudprovider.OtherErrorClass,
+				ErrorCode:    "add failure",
+				ErrorMessage: "add failed",
+			}
+		case "REMOVE-FAILURE":
+			i.Status.State = cloudprovider.InstanceDeleting
+			i.Status.ErrorInfo = &cloudprovider.InstanceErrorInfo{
+				ErrorClass:   cloudprovider.OtherErrorClass,
+				ErrorCode:    "remove failure",
+				ErrorMessage: "remove failed",
+			}
 		default:
 			i.Status.State = cloudprovider.InstanceDeleting
 		}
