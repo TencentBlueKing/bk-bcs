@@ -13,16 +13,12 @@
 
 package config
 
-import "os"
-
-var (
-	BK_SYSTEM_ID         = os.Getenv("BK_SYSTEM_ID")
-	BK_APP_CODE          = os.Getenv("BK_APP_CODE")
-	BK_APP_SECRET        = os.Getenv("BK_APP_SECRET")
-	BK_PAAS_HOST         = os.Getenv("BK_PAAS_HOST")
-	REDIS_PASSWORD       = os.Getenv("REDIS_PASSWORD")
-	BCS_APIGW_TOKEN      = os.Getenv("BCS_APIGW_TOKEN")
-	BCS_APIGW_PUBLIC_KEY = os.Getenv("BCS_APIGW_PUBLIC_KEY")
-	BCS_ETCD_HOST        = os.Getenv("bcsEtcdHost")
-	BKIAM_GATEWAY_SERVER = os.Getenv("BKIAM_GATEWAY_SERVER")
-)
+// IAMConfig for perm interface
+type IAMConfig struct {
+	External      bool   `yaml:"external"`
+	GatewayServer string `yaml:"gateway_server"`
+	IAMServer     string `yaml:"iam_server"`
+	BkIAMServer   string `yaml:"bk_iam_erver"`
+	Metric        bool   `yaml:"metric"`
+	Debug         bool   `yaml:"debug"`
+}

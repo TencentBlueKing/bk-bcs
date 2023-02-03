@@ -14,20 +14,22 @@
 package middleware
 
 import (
+	"fmt"
 	"net/http"
 	"os"
 	"strings"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/config"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/rest"
-
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component/iam"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/config"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/rest"
 )
 
-// AuthRequired API类型, 兼容多种鉴权模式
-func AuthRequired() gin.HandlerFunc {
+// AuthenticationRequired API类型, 兼容多种认证模式
+func AuthenticationRequired() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		restContext := rest.InitRestContext(c)
 
@@ -42,6 +44,74 @@ func AuthRequired() gin.HandlerFunc {
 		case initContextWithDevEnv(restContext):
 		default:
 			rest.AbortWithUnauthorizedError(restContext, rest.UnauthorizedError)
+			return
+		}
+
+		c.Next()
+	}
+}
+
+// ProjectAuthorization project 鉴权
+func ProjectAuthorization() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		restContext, err := rest.GetRestContext(c)
+		if err != nil {
+			rest.AbortWithWithForbiddenError(restContext, err)
+			return
+		}
+
+		projectID := restContext.ProjectId
+		username := restContext.Username
+
+		// call iam
+		client, err := iam.GetProjectPermClient()
+		if err != nil {
+			rest.AbortWithWithForbiddenError(restContext, err)
+			return
+		}
+		allow, url, _, err := client.CanViewProject(username, projectID)
+		if err != nil {
+			rest.AbortWithWithForbiddenError(restContext, err)
+			return
+		}
+		if !allow {
+			errMsg := fmt.Errorf("permission denied, please apply permission with %s", url)
+			rest.AbortWithWithForbiddenError(restContext, errMsg)
+			return
+		}
+
+		c.Next()
+	}
+}
+
+// NsScopeAuthorization 命名空间域资源鉴权
+func NsScopeAuthorization() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		restContext, err := rest.GetRestContext(c)
+		if err != nil {
+			rest.AbortWithWithForbiddenError(restContext, err)
+			return
+		}
+
+		projectID := restContext.ProjectId
+		clusterID := restContext.ClusterId
+		namespace := c.Param("namespace")
+		username := restContext.Username
+
+		// call iam
+		client, err := iam.GetNsScopePermClient()
+		if err != nil {
+			rest.AbortWithWithForbiddenError(restContext, err)
+			return
+		}
+		allow, url, _, err := client.CanViewNamespaceScopedResource(username, projectID, clusterID, namespace)
+		if err != nil {
+			rest.AbortWithWithForbiddenError(restContext, err)
+			return
+		}
+		if !allow {
+			errMsg := fmt.Errorf("permission denied, please apply permission with %s", url)
+			rest.AbortWithWithForbiddenError(restContext, errMsg)
 			return
 		}
 
