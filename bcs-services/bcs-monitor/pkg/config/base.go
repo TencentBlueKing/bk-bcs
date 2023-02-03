@@ -31,6 +31,7 @@ const (
 type BaseConf struct {
 	AppCode      string              `yaml:"app_code"`
 	AppSecret    string              `yaml:"app_secret"`
+	SystemID     string              `yaml:"system_id"`
 	TimeZone     string              `yaml:"time_zone"`
 	LanguageCode string              `yaml:"language_code"`
 	Managers     []string            `yaml:"managers"`

@@ -39,6 +39,7 @@ type Configuration struct {
 	BKAPIGW     *BKAPIGWConf               `yaml:"bkapigw_conf"`
 	BKMonitor   *BKMonitorConf             `yaml:"bk_monitor_conf"`
 	BCS         *BCSConf                   `yaml:"bcs_conf"`
+	IAM         *IAMConfig                 `yaml:"iam_conf"`
 	Credentials map[string][]*Credential   `yaml:"-"`
 	BCSEnvConf  []*BCSConf                 `yaml:"bcs_env_conf"`
 	BCSEnvMap   map[BCSClusterEnv]*BCSConf `yaml:"-"`
@@ -91,6 +92,8 @@ func newConfiguration() (*Configuration, error) {
 	c.Web = defaultWebConf()
 
 	c.Credentials = map[string][]*Credential{}
+
+	c.IAM = &IAMConfig{}
 
 	c.BKAPIGW = &BKAPIGWConf{}
 	c.BKAPIGW.Init()
@@ -168,6 +171,9 @@ func (c *Configuration) ReadFrom(content []byte) error {
 	if c.Base.AppSecret == "" {
 		c.Base.AppSecret = BK_APP_SECRET
 	}
+	if c.Base.SystemID == "" {
+		c.Base.SystemID = BK_SYSTEM_ID
+	}
 	if c.Redis.Password == "" {
 		c.Redis.Password = REDIS_PASSWORD
 	}
@@ -183,6 +189,11 @@ func (c *Configuration) ReadFrom(content []byte) error {
 		for _, v := range c.BCSEnvConf {
 			v.JWTPubKey = BCS_APIGW_PUBLIC_KEY
 		}
+	}
+
+	// iam env
+	if c.IAM.GatewayServer == "" {
+		c.IAM.GatewayServer = BKIAM_GATEWAY_SERVER
 	}
 
 	if err := c.init(); err != nil {
