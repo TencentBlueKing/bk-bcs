@@ -126,7 +126,7 @@
           :data="searchSelectData"
           :show-condition="false"
           :show-popover-tag-change="false"
-          :placeholder="$t('搜索IP，标签、状态')"
+          :placeholder="$t('搜索IP、标签、状态、所属节点池')"
           v-model="searchSelectValue"
           @change="searchSelectChange"
           @clear="handleClearSearchSelect">
@@ -174,6 +174,7 @@
           :render-header="renderSelection"
           width="70"
           :resizable="false"
+          fixed="left"
         >
           <template #default="{ row }">
             <bcs-checkbox
@@ -182,7 +183,7 @@
             ></bcs-checkbox>
           </template>
         </bcs-table-column>
-        <bcs-table-column :label="$t('内网IP')" prop="inner_ip" width="120" sortable>
+        <bcs-table-column :label="$t('内网IP')" prop="inner_ip" width="120" sortable fixed="left">
           <template #default="{ row }">
             <bcs-button
               :disabled="['INITIALIZATION', 'DELETING'].includes(row.status)"
@@ -204,10 +205,19 @@
             </bcs-button>
           </template>
         </bcs-table-column>
-        <bcs-table-column label="IPv6" props="innerIPv6" min-width="200" sortable>
+        <bcs-table-column
+          label="IPv6"
+          props="innerIPv6"
+          min-width="200"
+          sortable
+          key="innerIPv6"
+          v-if="isColumnRender('innerIPv6')">
           <template #default="{ row }">
             {{ row.innerIPv6 || '--' }}
           </template>
+        </bcs-table-column>
+        <bcs-table-column :label="$t('所属节点池')" width="120" show-overflow-tooltip>
+          <template #default="{ row }">{{ row.nodeGroupName || '--' }}</template>
         </bcs-table-column>
         <bcs-table-column
           :label="$t('状态')"
@@ -374,7 +384,7 @@
             ></RingCell>
           </template>
         </bcs-table-column>
-        <bcs-table-column :label="$t('操作')" width="160">
+        <bcs-table-column :label="$t('操作')" width="160" fixed="right">
           <template #default="{ row }">
             <div
               class="node-operate-wrapper"
@@ -647,6 +657,17 @@ export default defineComponent({
           name: label,
         })),
       },
+      {
+        name: $i18n.t('所属节点池'),
+        id: 'nodeGroupName',
+        multiable: true,
+        children: tableData.value
+          .filter(item => !!item.nodeGroupName)
+          .map(item => ({
+            id: item.nodeGroupName,
+            name: item.nodeGroupName,
+          })),
+      },
     ]);
     // 表格搜索联动
     const {
@@ -672,16 +693,22 @@ export default defineComponent({
     // 表格设置字段配置
     const fields = [
       {
+        id: 'innerIPv6',
+        label: 'IPv6',
+      },
+      {
         id: 'cluster_name',
         label: $i18n.t('所属集群'),
       },
       {
         id: 'container_count',
         label: $i18n.t('容器数量'),
+        disabled: true,
       },
       {
         id: 'pod_count',
         label: $i18n.t('Pod数量'),
+        disabled: true,
       },
       {
         id: 'source_type',
@@ -694,18 +721,22 @@ export default defineComponent({
       {
         id: 'cpu_usage',
         label: 'CPU',
+        disabled: true,
       },
       {
         id: 'memory_usage',
         label: $i18n.t('内存'),
+        disabled: true,
       },
       {
         id: 'disk_usage',
         label: $i18n.t('磁盘'),
+        disabled: true,
       },
       {
         id: 'diskio_usage',
         label: $i18n.t('磁盘IO'),
+        disabled: true,
       },
     ];
     const {
@@ -1542,7 +1573,6 @@ export default defineComponent({
     }
 }
 /deep/ .bk-table-column-setting {
-    border-top: 1px solid #dfe0e5;
     .bk-tooltip-ref {
         display: flex;
         align-items: center;
@@ -1620,5 +1650,11 @@ export default defineComponent({
 }
 /deep/ .bk-table .cell {
     -webkit-line-clamp: 1;
+}
+/deep/ .bk-table-fixed {
+  border-top: 1px solid #dfe0e5;
+}
+/deep/ .bk-table-fixed-right {
+  border-top: 1px solid #dfe0e5;
 }
 </style>

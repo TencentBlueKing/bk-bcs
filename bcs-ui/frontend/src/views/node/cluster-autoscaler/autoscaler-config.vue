@@ -153,7 +153,7 @@
         <bk-form-item
           :label="$t('扩容后判断缩容时间间隔')"
           desc-icon="bk-icon icon-info-circle"
-          :desc="$t('扩容节点后多久才继续缩容判断，如果业务自定义初始化任务所需时间比较长，需要适当上调此值，取值范围60 ~ 86400秒')">
+          :desc="$t('扩容节点后多久才继续缩容判断，如果业务自定义初始化任务所需时间比较长，需要适当上调此值，取值范围1200 ~ 86400秒')">
           <bk-input type="number" :min="1200" :max="86400" v-model="autoscalerData.scaleDownDelayAfterAdd">
             <template slot="append">
               <div class="group-text">{{$t('秒')}}</div>

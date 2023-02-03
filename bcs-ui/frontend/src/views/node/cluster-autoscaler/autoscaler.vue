@@ -391,9 +391,6 @@
               <LoadingIcon v-if="['RUNNING'].includes(row.task.status)">
                 {{ taskStatusMap[row.task.status] }}
               </LoadingIcon>
-              <StatusIcon v-else-if="row.task.status === 'FAILURE' && row.task.taskType.includes('CleanNodeGroupNodes')">
-                {{ $t('下架失败') }}
-              </StatusIcon>
               <StatusIcon
                 :status-color-map="taskStatusColorMap"
                 :status="row.task.status"
@@ -817,8 +814,9 @@ export default defineComponent({
       'ADD-FAILURE': $i18n.t('扩容节点失败'),
       'REMOVE-FAILURE': $i18n.t('缩容节点失败'),
       REMOVABLE: $i18n.t('不可调度'),
-      NOTREADY: window.i18n.t('不正常'),
-      UNKNOWN: window.i18n.t('未知状态'),
+      NOTREADY: $i18n.t('不正常'),
+      UNKNOWN: $i18n.t('未知状态'),
+      'REMOVE-CA-FAILURE': $i18n.t('缩容成功, 下架失败'),
     };
     const nodeColorMap = {
       RUNNING: 'green',
