@@ -51,8 +51,41 @@ func AuthenticationRequired() gin.HandlerFunc {
 	}
 }
 
-// AuthorizationRequired IAM 鉴权
-func AuthorizationRequired() gin.HandlerFunc {
+// ProjectAuthorization project 鉴权
+func ProjectAuthorization() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		restContext, err := rest.GetRestContext(c)
+		if err != nil {
+			rest.AbortWithWithForbiddenError(restContext, err)
+			return
+		}
+
+		projectID := restContext.ProjectId
+		username := restContext.Username
+
+		// call iam
+		client, err := iam.GetProjectPermClient()
+		if err != nil {
+			rest.AbortWithWithForbiddenError(restContext, err)
+			return
+		}
+		allow, url, _, err := client.CanViewProject(username, projectID)
+		if err != nil {
+			rest.AbortWithWithForbiddenError(restContext, err)
+			return
+		}
+		if !allow {
+			errMsg := fmt.Errorf("permission denied, please apply permission with %s", url)
+			rest.AbortWithWithForbiddenError(restContext, errMsg)
+			return
+		}
+
+		c.Next()
+	}
+}
+
+// NsScopeAuthorization 命名空间域资源鉴权
+func NsScopeAuthorization() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		restContext, err := rest.GetRestContext(c)
 		if err != nil {
@@ -62,15 +95,16 @@ func AuthorizationRequired() gin.HandlerFunc {
 
 		projectID := restContext.ProjectId
 		clusterID := restContext.ClusterId
+		namespace := c.Param("namespace")
 		username := restContext.Username
 
 		// call iam
-		client, err := iam.GetClusterPermClient()
+		client, err := iam.GetNsScopePermClient()
 		if err != nil {
 			rest.AbortWithWithForbiddenError(restContext, err)
 			return
 		}
-		allow, url, _, err := client.CanViewCluster(username, projectID, clusterID)
+		allow, url, _, err := client.CanViewNamespaceScopedResource(username, projectID, clusterID, namespace)
 		if err != nil {
 			rest.AbortWithWithForbiddenError(restContext, err)
 			return
