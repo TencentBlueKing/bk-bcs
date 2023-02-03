@@ -5,8 +5,9 @@
 
 [中文文档](./readme.md)
 
-> **Important Note**: The `master` branch may be in an unstable or unavailable state during development*.
-> Please use [releases] (https://github.com/Tencent/bk-bcs/releases) instead of `master` to get stable binaries.
+> **Important Note**:
+> - This repository will be migrated to [TencentBlueking] (https://github.com/TencentBlueking/bk-bcs) in mid-February 2023, if you have **package references** in your code, please pay attention to the migration progress and fix accordingly.
+> - The `master` branch may be in an unstable or unavailable state during development*, Please use [releases] (https://github.com/Tencent/bk-bcs/releases) instead of `master` to get stable binaries.
 
 BlueKing Container Service (BCS, same below) is a container management and orchestration platform for the micro-services under the BlueKing ecosystem.
 

@@ -1,15 +1,17 @@
 ![蓝鲸容器管理平台.png](./docs/logo/bcs_zh_v2.png)
 
 ---
+
 [![license](https://img.shields.io/badge/license-mit-brightgreen.svg?style=flat)](https://github.com/Tencent/bk-bcs/blob/master/LICENSE)[![Release Version](https://img.shields.io/badge/release-1.18.12-brightgreen.svg)](https://github.com/Tencent/bk-bcs/releases) ![BK Pipelines Status](https://api.bkdevops.qq.com/process/api/external/pipelines/projects/bcs/p-c03c759b697f494ab14e01018eccb052/badge?X-DEVOPS-PROJECT-ID=bcs) [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/Tencent/bk-bcs/pulls)
 
 [EnglishDocs](./readme_en.md)
 
-> **重要提示**: `master` 分支在开发过程中可能处于 *不稳定或者不可用状态* 。
-> 请通过[releases](https://github.com/Tencent/bk-bcs/releases) 而非 `master` 去获取稳定的二进制文件。
+> **重要提示**:
+> - 本仓库将于2023年2月中旬迁移至 [TencentBlueking](https://github.com/TencentBlueking/bk-bcs)，若您的代码中进行了**包引用**，请关注迁移进展并进行相应修正。
+> - `master` 分支在开发过程中可能处于 *不稳定或者不可用状态* ，请通过[releases](https://github.com/Tencent/bk-bcs/releases) 而非 `master` 去获取稳定的二进制文件。
+
 
 蓝鲸容器管理平台（Blueking Container Service）定位于打造云原生技术和业务实际应用场景之间的桥梁；聚焦于复杂应用场景的容器化部署技术方案的研发、整合和产品化；致力于为游戏等复杂应用提供一站式、低门槛的容器编排和服务治理服务。
-
 
 ## Overview
 
