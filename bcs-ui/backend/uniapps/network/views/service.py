@@ -18,12 +18,13 @@ import json
 import logging
 
 from django.utils.translation import ugettext_lazy as _
-from rest_framework import viewsets
+from rest_framework import permissions, viewsets
 from rest_framework.exceptions import ValidationError
 from rest_framework.renderers import BrowsableAPIRenderer
 from rest_framework.response import Response
 
 from backend.bcs_web.audit_log import client as activity_client
+from backend.bcs_web.permissions import AccessProjectPermission, ProjectEnableBCS
 from backend.components.bcs import k8s
 from backend.container_service.clusters.base.utils import get_cluster_type
 from backend.container_service.clusters.constants import ClusterType
@@ -86,6 +87,7 @@ DEFAULT_ERROR_CODE = ErrorCode.UnknownError
 
 class Services(viewsets.ViewSet, BaseAPI):
     renderer_classes = (BKAPIRenderer, BrowsableAPIRenderer)
+    permission_classes = (permissions.IsAuthenticated, AccessProjectPermission, ProjectEnableBCS)
 
     def get_services_by_cluster_id(self, request, params, project_id, cluster_id):
         """查询services"""

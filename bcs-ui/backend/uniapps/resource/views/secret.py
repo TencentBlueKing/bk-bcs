@@ -16,10 +16,11 @@ import copy
 import logging
 
 from django.utils.translation import ugettext_lazy as _
-from rest_framework import viewsets
+from rest_framework import permissions, viewsets
 from rest_framework.renderers import BrowsableAPIRenderer
 from rest_framework.response import Response
 
+from backend.bcs_web.permissions import AccessProjectPermission, ProjectEnableBCS
 from backend.components.bcs import k8s
 from backend.container_service.clusters.base.utils import get_cluster_type
 from backend.container_service.clusters.constants import ClusterType
@@ -43,6 +44,7 @@ logger = logging.getLogger(__name__)
 
 class Secrets(viewsets.ViewSet, BaseAPI, ResourceOperate):
     renderer_classes = (BKAPIRenderer, BrowsableAPIRenderer)
+    permission_classes = (permissions.IsAuthenticated, AccessProjectPermission, ProjectEnableBCS)
 
     category = 'secret'
     cate = 'K8sSecret'
