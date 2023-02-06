@@ -111,7 +111,6 @@
           type="number"
           :min="50"
           :max="1024"
-          :parse-number="false"
           v-model="nodePoolConfig.launchTemplate.systemDisk.diskSize"
           :disabled="isEdit">
           <div slot="append" class="group-text">GB</div>
@@ -148,7 +147,6 @@
             :disabled="isEdit"
             :min="10"
             :max="32000"
-            :parse-number="false"
             v-model="disk.diskSize">
             <div slot="append" class="group-text">GB</div>
           </bk-input>
@@ -212,7 +210,6 @@
             class="max-width-150"
             type="number"
             :disabled="isEdit"
-            :parse-number="false"
             v-model="nodePoolConfig.launchTemplate.internetAccess.internetMaxBandwidth">
             <div slot="append" class="group-text">Mbps</div>
           </bk-input>
@@ -515,6 +512,15 @@ export default defineComponent({
       ctx.emit('pre');
     };
     const getNodePoolData = () => {
+      // 系统盘、数据盘、宽度大小要转换为字符串类型
+      // eslint-disable-next-line max-len
+      nodePoolConfig.value.launchTemplate.systemDisk.diskSize = String(nodePoolConfig.value.launchTemplate.systemDisk.diskSize);
+      nodePoolConfig.value.nodeTemplate.dataDisks = nodePoolConfig.value.nodeTemplate.dataDisks.map(item => ({
+        ...item,
+        diskSize: String(item.diskSize),
+      }));
+      // eslint-disable-next-line max-len
+      nodePoolConfig.value.launchTemplate.internetAccess.internetMaxBandwidth = String(nodePoolConfig.value.launchTemplate.internetAccess.internetMaxBandwidth);
       // 数据盘后端存了两个地方
       nodePoolConfig.value.launchTemplate.dataDisks = nodePoolConfig.value.nodeTemplate.dataDisks.map(item => ({
         diskType: item.diskType,

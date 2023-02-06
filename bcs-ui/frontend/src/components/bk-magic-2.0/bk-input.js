@@ -45,24 +45,13 @@ export default {
 
     // eslint-disable-next-line @typescript-eslint/naming-convention, @typescript-eslint/no-this-alias
     const _self = this;
-    try {
-      this.$listeners.input = (value, event) => {
-        if (_self.$attrs.type === 'number') {
-          _self.$emit('input', _self.parseNumber && !isNaN(value) ? Number(value) : String(value), event);
-        } else {
-          _self.$emit('input', value, event);
-        }
-      };
-    } catch (e) {
-      console.warn(e);
-    }
 
     if (_self.$attrs.type === 'number') {
       this.$listeners.blur = (value, event) => {
         if (isNaN(value)) {
           value = _self.$attrs.min === Number.MIN_SAFE_INTEGER ? 0 : _self.$attrs.min;
         }
-        _self.$emit('input', _self.parseNumber ? Number(value) : String(value), event);
+        _self.$emit('input', Number(value), event);
       };
     }
 

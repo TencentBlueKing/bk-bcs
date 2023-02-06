@@ -186,7 +186,7 @@
           </bk-input>
         </bk-form-item>
         <bk-form-item :label="$t('单次缩容最大节点数')">
-          <bk-input type="number" :min="1" :max="320000" v-model="autoscalerData.maxEmptyBulkDelete">
+          <bk-input type="number" :min="1" :max="100" v-model="autoscalerData.maxEmptyBulkDelete">
             <template slot="append">
               <div class="group-text">{{$t('个')}}</div>
             </template>
