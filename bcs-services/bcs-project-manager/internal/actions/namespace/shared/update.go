@@ -19,8 +19,11 @@ import (
 	"math"
 
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/middleware"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/clientset"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/itsm"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/logging"
 	nsm "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/namespace"
@@ -56,10 +59,25 @@ func (a *SharedNamespaceAction) UpdateNamespace(ctx context.Context,
 		logging.Error("parse quantity cpu limits failed, err: %s", err.Error())
 		return err
 	}
+	client, err := clientset.GetClientGroup().Client(req.GetClusterID())
+	if err != nil {
+		logging.Error("get clientset for cluster %s failed, err: %s", req.GetClusterID(), err.Error())
+		return err
+	}
+	oldQuota, err := client.CoreV1().ResourceQuotas(req.GetNamespace()).
+		Get(ctx, req.GetNamespace(), metav1.GetOptions{})
+	if err != nil {
+		logging.Error("get namespace resource quantity %s/%s failed, err: %s",
+			req.GetClusterID(), req.GetNamespace(), err.Error())
+		return err
+	}
+	oldCPULimits := oldQuota.Status.Hard[corev1.ResourceLimitsCPU]
+	oldMemoryLimits := oldQuota.Status.Hard[corev1.ResourceLimitsMemory]
 	// memoryLimits.Value() return unit is byte， needs to be converted to Gi (divide 2^30)
 	itsmResp, err := itsm.SubmitUpdateNamespaceTicket(username,
 		req.GetProjectCode(), req.GetClusterID(), req.GetNamespace(),
-		int(cpuLimits.Value()), int(memoryLimits.Value()/int64(math.Pow(2, 30))))
+		int(cpuLimits.Value()), int(memoryLimits.Value()/int64(math.Pow(2, 30))),
+		int(oldCPULimits.Value()), int(oldMemoryLimits.Value()))
 	if err != nil {
 		logging.Error("itsm create ticket failed, err: %s", err.Error())
 		return err

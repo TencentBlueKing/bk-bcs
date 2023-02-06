@@ -121,7 +121,7 @@ func SubmitCreateNamespaceTicket(username, projectCode, clusterID, namespace str
 
 // SubmitUpdateNamespaceTicket create new itsm update namespace ticket
 func SubmitUpdateNamespaceTicket(username, projectCode, clusterID, namespace string,
-	cpuLimits, memoryLimits int) (*CreateTicketData, error) {
+	cpuLimits, memoryLimits, oldCPULimits, oldMemoryLimits int) (*CreateTicketData, error) {
 	itsmConf := config.GlobalConf.ITSM
 	fields := []map[string]interface{}{
 		{
@@ -147,6 +147,14 @@ func SubmitUpdateNamespaceTicket(username, projectCode, clusterID, namespace str
 		{
 			"key":   "MEMORY_LIMITS",
 			"value": memoryLimits,
+		},
+		{
+			"key":   "OLD_CPU_LIMITS",
+			"value": oldCPULimits,
+		},
+		{
+			"key":   "OLD_MEMORY_LIMITS",
+			"value": oldCPULimits,
 		},
 	}
 	return CreateTicket(username, itsmConf.UpdateNamespaceServiceID, fields)
