@@ -18,12 +18,13 @@ from datetime import datetime
 
 from django.db import transaction
 from django.utils.translation import ugettext_lazy as _
-from rest_framework import viewsets
+from rest_framework import permissions, viewsets
 from rest_framework.exceptions import ValidationError
 from rest_framework.renderers import BrowsableAPIRenderer
 from rest_framework.response import Response
 
 from backend.bcs_web.audit_log import client as log_client
+from backend.bcs_web.permissions import AccessProjectPermission, ProjectEnableBCS
 from backend.container_service.clusters.base import utils as cluster_utils
 from backend.container_service.clusters.base.models import CtxCluster
 from backend.helm.app.models import App
@@ -46,6 +47,7 @@ logger = logging.getLogger(__name__)
 
 class NginxIngressBase(viewsets.ModelViewSet):
     renderer_classes = (BKAPIRenderer,)
+    permission_classes = (permissions.IsAuthenticated, AccessProjectPermission, ProjectEnableBCS)
 
     def get_chart_version(self, project_id, version):
         try:

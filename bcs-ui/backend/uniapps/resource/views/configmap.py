@@ -16,10 +16,11 @@ import copy
 import logging
 
 from django.utils.translation import ugettext_lazy as _
-from rest_framework import viewsets
+from rest_framework import permissions, viewsets
 from rest_framework.renderers import BrowsableAPIRenderer
 from rest_framework.response import Response
 
+from backend.bcs_web.permissions import AccessProjectPermission, ProjectEnableBCS
 from backend.components import paas_cc
 from backend.components.bcs import k8s
 from backend.container_service.clusters.base.utils import get_cluster_type
@@ -45,6 +46,7 @@ logger = logging.getLogger(__name__)
 
 class ConfigMaps(viewsets.ViewSet, BaseAPI, ResourceOperate):
     renderer_classes = (BKAPIRenderer, BrowsableAPIRenderer)
+    permission_classes = (permissions.IsAuthenticated, AccessProjectPermission, ProjectEnableBCS)
 
     cate = 'K8sConfigMap'
     category = 'configmap'
@@ -111,6 +113,7 @@ class ConfigMaps(viewsets.ViewSet, BaseAPI, ResourceOperate):
 
 class ConfigMapListView(viewsets.ViewSet):
     render_classes = (BKAPIRenderer,)
+    permission_classes = (permissions.IsAuthenticated, AccessProjectPermission, ProjectEnableBCS)
 
     def exist_list(self, request, project_id):
         """exist configmap list
