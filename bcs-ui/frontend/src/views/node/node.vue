@@ -126,7 +126,7 @@
           :data="searchSelectData"
           :show-condition="false"
           :show-popover-tag-change="false"
-          :placeholder="$t('搜索IP、标签、状态、所属节点池')"
+          :placeholder="$t('搜索IP、标签、状态、节点来源、所属节点池')"
           v-model="searchSelectValue"
           @change="searchSelectChange"
           @clear="handleClearSearchSelect">
@@ -216,7 +216,23 @@
             {{ row.innerIPv6 || '--' }}
           </template>
         </bcs-table-column>
-        <bcs-table-column :label="$t('所属节点池')" width="120" show-overflow-tooltip>
+        <bcs-table-column
+          :label="$t('节点来源')"
+          :filters="filtersDataSource.nodeSource"
+          :filtered-value="filteredValue.nodeSource"
+          column-key="nodeSource"
+          prop="nodeSource"
+          width="100"
+          v-if="isColumnRender('nodeSource')">
+          <template #default="{ row }">
+            {{ row.nodeGroupID ? $t('节点池') : $t('手动添加') }}
+          </template>
+        </bcs-table-column>
+        <bcs-table-column
+          :label="$t('所属节点池')"
+          min-width="120"
+          show-overflow-tooltip
+          v-if="isColumnRender('nodeGroupID')">
           <template #default="{ row }">{{ row.nodeGroupName || '--' }}</template>
         </bcs-table-column>
         <bcs-table-column
@@ -241,13 +257,6 @@
             </StatusIcon>
           </template>
         </bcs-table-column>
-        <bcs-table-column
-          :label="$t('所属集群')"
-          prop="cluster_name"
-          key="cluster_name"
-          show-overflow-tooltip
-          v-if="isColumnRender('cluster_name')"
-        ></bcs-table-column>
         <bcs-table-column
           :label="$t('容器数量')"
           width="100"
@@ -459,13 +468,12 @@
             </div>
           </template>
         </bcs-table-column>
-        <bcs-table-column type="setting">
+        <bcs-table-column type="setting" :resizable="false">
           <bcs-table-setting-content
             :fields="tableSetting.fields"
             :selected="tableSetting.selectedFields"
             :size="tableSetting.size"
-            @setting-change="handleSettingChange"
-          >
+            @setting-change="handleSettingChange">
           </bcs-table-setting-content>
         </bcs-table-column>
       </bcs-table>
@@ -559,7 +567,7 @@
   </div>
 </template>
 <script lang="ts">
-import { defineComponent, ref, PropType, onMounted, watch, set, computed } from '@vue/composition-api';
+import { defineComponent, ref, onMounted, watch, set, computed } from '@vue/composition-api';
 import StatusIcon from '@/views/dashboard/common/status-icon';
 import ClusterSelect from '@/components/cluster-selector/cluster-select.vue';
 import LoadingIcon from '@/components/loading-icon.vue';
@@ -599,10 +607,6 @@ export default defineComponent({
     TaskList,
   },
   props: {
-    selectedFields: {
-      type: Array as PropType<Array<string>>,
-      default: () => ['source_type', 'taint'],
-    },
     clusterId: {
       type: String,
       default: '',
@@ -625,12 +629,23 @@ export default defineComponent({
     const filtersDataSource = ref({
       status: Object.keys(nodeStatusMap).map(key => ({
         text: nodeStatusMap[key],
-        value: key,
+        value: key.toUpperCase(),
       })),
+      nodeSource: [
+        {
+          text: $i18n.t('手动添加'),
+          value: 'custom',
+        },
+        {
+          text: $i18n.t('节点池'),
+          value: 'nodepool',
+        },
+      ],
     });
     // 表格搜索项选中值
     const filteredValue = ref<Record<string, string[]>>({
       status: [],
+      nodeSource: [],
     });
     // searchSelect数据源配置
     const searchSelectDataSource = computed<ISearchSelectData[]>(() => [
@@ -644,7 +659,7 @@ export default defineComponent({
         id: 'status',
         multiable: true,
         children: Object.keys(nodeStatusMap).map(key => ({
-          id: key,
+          id: key.toUpperCase(),
           name: nodeStatusMap[key],
         })),
       },
@@ -658,15 +673,33 @@ export default defineComponent({
         })),
       },
       {
-        name: $i18n.t('所属节点池'),
-        id: 'nodeGroupName',
+        name: $i18n.t('节点来源'),
+        id: 'nodeSource',
         multiable: true,
-        children: tableData.value
-          .filter(item => !!item.nodeGroupName)
-          .map(item => ({
-            id: item.nodeGroupName,
-            name: item.nodeGroupName,
-          })),
+        children: [
+          {
+            id: 'custom',
+            name: $i18n.t('手动添加'),
+          },
+          {
+            id: 'nodepool',
+            name: $i18n.t('节点池'),
+          },
+        ],
+      },
+      {
+        name: $i18n.t('所属节点池'),
+        id: 'nodeGroupID',
+        multiable: true,
+        children: tableData.value.reduce<any[]>((pre, item) => {
+          if (item.nodeGroupID && pre.every(data => data.id !== item.nodeGroupID)) {
+            pre.push({
+              id: item.nodeGroupID,
+              name: item.nodeGroupName,
+            });
+          }
+          return pre;
+        }, []),
       },
     ]);
     // 表格搜索联动
@@ -697,8 +730,14 @@ export default defineComponent({
         label: 'IPv6',
       },
       {
-        id: 'cluster_name',
-        label: $i18n.t('所属集群'),
+        id: 'nodeSource',
+        label: $i18n.t('节点来源'),
+        defaultChecked: true,
+      },
+      {
+        id: 'nodeGroupID',
+        label: $i18n.t('所属节点池'),
+        defaultChecked: true,
       },
       {
         id: 'container_count',
@@ -743,7 +782,7 @@ export default defineComponent({
       tableSetting,
       handleSettingChange,
       isColumnRender,
-    } = useTableSetting(fields, props.selectedFields);
+    } = useTableSetting(fields);
 
     const sortMethod = (pre, next, prop) => {
       const preNumber = parseFloat(nodeMetric.value[pre.inner_ip]?.[prop] || 0);
@@ -815,7 +854,7 @@ export default defineComponent({
           return Object.keys(row[item.id]).some(key => item.value.has(`${key}=${row[item.id][key]}`));
         }
         if (item.id in row) {
-          return item.value.has(String(row[item.id]).toLowerCase());
+          return item.value.has(row[item.id]);
         }
         return item.value.has(row.innerIP) || item.value.has(row.innerIPv6);
       }));

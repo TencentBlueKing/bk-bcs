@@ -45,14 +45,6 @@
             :node-menu="false"
             :cluster-id="clusterId"
             :hide-cluster-select="true"
-            :selected-fields="[
-              'container_count',
-              'pod_count',
-              'cpu_usage',
-              'memory_usage',
-              'disk_usage',
-              'diskio_usage'
-            ]"
           ></component>
         </div>
       </div>

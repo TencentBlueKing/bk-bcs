@@ -2,7 +2,7 @@ export const BCS_CLUSTER = 'bcs-cluster';
 export const CUR_SELECT_NAMESPACE = 'CUR_SELECT_NAMESPACE';
 export const CUR_SELECT_CRD = 'CUR_SELECT_CRD';
 // 节点管理表格列展示配置
-export const CLUSTER_NODE_TABLE_COL = 'CLUSTER_NODE_TABLE_COL';
+export const CLUSTER_NODE_TABLE_COL = '_CLUSTER_NODE_TABLE_COL_';
 export const nodeStatusColorMap = {
   initialization: 'blue',
   running: 'green',

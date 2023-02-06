@@ -66,6 +66,8 @@ export default function useNode() {
       inner_ip: item.innerIP,
       name: item.nodeName,
       cluster_id: item.clusterID,
+      // todo 方便前端搜索逻辑(节点来源: 节点池、手动添加)
+      nodeSource: item.nodeGroupID ? 'nodepool' : 'custom',
     }));
   };
   // 添加节点

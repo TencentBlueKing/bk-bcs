@@ -301,7 +301,7 @@
       theme="primary"
       header-position="left"
       :title="$t('扩缩容记录')"
-      :width="960"
+      :width="1200"
       v-model="showRecord"
       @cancel="handleRecordCancel">
       <div class="mb15 flex-between">
@@ -330,7 +330,7 @@
               :data="row.task ? row.task.stepSequence : []"
               :outer-border="false"
               :header-cell-style="{ background: '#fff', borderRight: 'none' }">
-              <bcs-table-column :label="$t('步骤名称')" width="120" show-overflow-tooltip>
+              <bcs-table-column :label="$t('步骤名称')" width="150" show-overflow-tooltip>
                 <template #default="{ row: key }">
                   <div class="flex items-center">
                     <span class="bcs-ellipsis">{{ row.task.steps[key].taskName }}</span>
@@ -346,12 +346,12 @@
                   {{ row.task.steps[key].message || '--' }}
                 </template>
               </bcs-table-column>
-              <bcs-table-column :label="$t('开始时间')" width="150" show-overflow-tooltip>
+              <bcs-table-column :label="$t('开始时间')" width="180" show-overflow-tooltip>
                 <template #default="{ row: key }">
                   {{ row.task.steps[key].start }}
                 </template>
               </bcs-table-column>
-              <bcs-table-column :label="$t('结束时间')" width="150" show-overflow-tooltip>
+              <bcs-table-column :label="$t('结束时间')" width="180" show-overflow-tooltip>
                 <template #default="{ row: key }">
                   {{ row.task.steps[key].end }}
                 </template>
@@ -373,14 +373,14 @@
             </bcs-table>
           </template>
         </bcs-table-column>
-        <bcs-table-column :label="$t('事件类型')" width="120" show-overflow-tooltip>
+        <bcs-table-column :label="$t('事件类型')" width="150" show-overflow-tooltip>
           <template #default="{ row }">
             {{row.task ? row.task.taskName : '--'}}
           </template>
         </bcs-table-column>
         <bcs-table-column :label="$t('事件信息')" prop="message" show-overflow-tooltip></bcs-table-column>
-        <bcs-table-column :label="$t('开始时间')" width="150" prop="createTime" show-overflow-tooltip></bcs-table-column>
-        <bcs-table-column :label="$t('结束时间')" width="150" show-overflow-tooltip>
+        <bcs-table-column :label="$t('开始时间')" width="180" prop="createTime" show-overflow-tooltip></bcs-table-column>
+        <bcs-table-column :label="$t('结束时间')" width="180" show-overflow-tooltip>
           <template #default="{ row }">
             {{row.task ? row.task.end : '--'}}
           </template>

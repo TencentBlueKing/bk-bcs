@@ -5,20 +5,30 @@ import { CLUSTER_NODE_TABLE_COL } from '@/common/constant';
 export interface IField {
   id: string;
   label: string | VueI18n.TranslateResult;
+  disabled?: boolean;
+  defaultChecked?: boolean;
 }
 // 表格设置功能
-export default function useTableSetting(fields: Array<IField>, selectedFields: Array<string>) {
-  const stroageFields = JSON.parse(localStorage.getItem(CLUSTER_NODE_TABLE_COL) || '[]');
+export default function useTableSetting(fieldsData: Array<IField>) {
+  const stroageFields = JSON.parse(localStorage.getItem(CLUSTER_NODE_TABLE_COL) || '{}');
   const tableSetting = ref({
     size: 'medium',
-    fields,
-    selectedFields: fields.filter(item => selectedFields.includes(item.id) || stroageFields.includes(item.id)),
+    fields: fieldsData,
+    selectedFields: fieldsData.filter((item) => {
+      if (item.disabled) return true;
+      if (item.id in stroageFields) return stroageFields[item.id];
+      return !!item.defaultChecked;
+    }),
   });
   const isColumnRender = id => tableSetting.value.selectedFields.some(item => item.id === id);
   const handleSettingChange = ({ size, fields }) => {
     tableSetting.value.size = size;
     tableSetting.value.selectedFields = fields;
-    localStorage.setItem(CLUSTER_NODE_TABLE_COL, JSON.stringify(fields.map(item => item.id)));
+    const storageData = fieldsData.reduce((pre, cur) => {
+      pre[cur.id] = fields.some(item => item.id === cur.id);
+      return pre;
+    }, {});
+    localStorage.setItem(CLUSTER_NODE_TABLE_COL, JSON.stringify(storageData));
   };
   return {
     tableSetting,
