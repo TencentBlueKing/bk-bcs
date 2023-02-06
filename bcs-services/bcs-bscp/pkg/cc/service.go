@@ -106,11 +106,18 @@ func (s ApiServerSetting) Validate() error {
 
 // AuthServerSetting defines auth server used setting options.
 type AuthServerSetting struct {
-	Network Network   `yaml:"network"`
-	Service Service   `yaml:"service"`
-	Log     LogOption `yaml:"log"`
+	Network   Network           `yaml:"network"`
+	Service   Service           `yaml:"service"`
+	Log       LogOption         `yaml:"log"`
+	LoginAuth LoginAuthSettings `yaml:"loginAuth"`
+	IAM       IAM               `yaml:"iam"`
+}
 
-	IAM IAM `yaml:"iam"`
+// LoginAuthSettings
+type LoginAuthSettings struct {
+	Provider  string `yaml:"provider"`
+	Host      string `yaml:"host"`
+	InnerHost string `yaml:"innerHost"`
 }
 
 // trySetFlagBindIP try set flag bind ip.

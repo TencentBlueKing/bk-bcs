@@ -19,11 +19,15 @@ import (
 	"fmt"
 	"net/http"
 
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
+
 	"bscp.io/cmd/auth-server/options"
 	"bscp.io/cmd/auth-server/service/auth"
 	"bscp.io/cmd/auth-server/service/iam"
 	"bscp.io/cmd/auth-server/service/initial"
 	"bscp.io/pkg/cc"
+	"bscp.io/pkg/components/bkpaas"
 	"bscp.io/pkg/iam/client"
 	pkgauth "bscp.io/pkg/iam/sdk/auth"
 	"bscp.io/pkg/iam/sys"
@@ -33,9 +37,6 @@ import (
 	pbds "bscp.io/pkg/protocol/data-service"
 	"bscp.io/pkg/serviced"
 	"bscp.io/pkg/tools"
-
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials"
 )
 
 // Service do all the data service's work
@@ -230,4 +231,30 @@ func (s *Service) initLogicModule() error {
 	}
 
 	return nil
+}
+
+// GetUserInfo 获取用户信息
+func (s *Service) GetUserInfo(ctx context.Context, req *pbas.UserCredentialReq) (*pbas.UserInfoResp, error) {
+	// 优先使用 InnerHost
+	host := cc.AuthServer().LoginAuth.Host
+	if cc.AuthServer().LoginAuth.InnerHost != "" {
+		host = cc.AuthServer().LoginAuth.InnerHost
+	}
+
+	switch cc.AuthServer().LoginAuth.Provider {
+	case "BK_PAAS": // 外部 PaaS 平台
+		user, err := bkpaas.GetBKUserInfoByToken(ctx, host, req.GetUid(), req.GetToken())
+		if err != nil {
+			return nil, err
+		}
+		return &pbas.UserInfoResp{Username: user.UserName, AvatarUrl: ""}, nil
+	case "BK_LOGIN": // 统一登入服务
+		user, err := bkpaas.GetBKUserInfoByTicket(ctx, host, req.GetUid(), req.GetToken())
+		if err != nil {
+			return nil, err
+		}
+		return &pbas.UserInfoResp{Username: user.UserName, AvatarUrl: ""}, nil
+	default:
+		return nil, errors.New("provider not supported")
+	}
 }

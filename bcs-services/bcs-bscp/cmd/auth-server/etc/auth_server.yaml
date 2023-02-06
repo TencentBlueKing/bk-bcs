@@ -9,7 +9,7 @@ network:
   # defines tls related options.
   tls:
     # server should be accessed without verifying the TLS certificate.
-    insecureSkipVerify: 
+    insecureSkipVerify:
     # server requires TLS client certificate authentication.
     certFile:
     # server requires TLS client certificate authentication.
@@ -18,6 +18,12 @@ network:
     caFile:
     # the password to decrypt the certificate.
     password:
+
+# 登入鉴权
+loginAuth:
+  provider: ""
+  host: ""
+  innerHost: ""
 
 # defines service related settings.
 service:
@@ -35,7 +41,7 @@ service:
     # defines tls related options.
     tls:
       # server should be accessed without verifying the TLS certificate.
-      insecureSkipVerify: 
+      insecureSkipVerify:
       # server requires TLS client certificate authentication.
       certFile:
       # server requires TLS client certificate authentication.
@@ -57,7 +63,7 @@ iam:
   # defines tls related options.
   tls:
     # server should be accessed without verifying the TLS certificate.
-    insecureSkipVerify: 
+    insecureSkipVerify:
     # server requires TLS client certificate authentication.
     certFile:
     # server requires TLS client certificate authentication.

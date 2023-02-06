@@ -20,17 +20,16 @@ import (
 	"strconv"
 
 	"bscp.io/pkg/cc"
-	"bscp.io/pkg/criteria/constant"
 	"bscp.io/pkg/dal/dao"
 	"bscp.io/pkg/logs"
 	pbds "bscp.io/pkg/protocol/data-service"
+	"bscp.io/pkg/runtime/grpcgw"
 	"bscp.io/pkg/serviced"
 	"bscp.io/pkg/tools"
 
-	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
-	"google.golang.org/grpc/metadata"
 )
 
 // gateway auth server's grpc-gateway.
@@ -106,19 +105,5 @@ func newDataServiceMux() (*runtime.ServeMux, error) {
 
 // newGrpcMux new grpc mux that has some processing of built-in http request to grpc request.
 func newGrpcMux() *runtime.ServeMux {
-	// if grpc-gateway returns a field whose value is the default value of the field
-	// type, it will ignore the field. Turn on the following options to avoid this situation.
-	opt := runtime.WithMarshalerOption(runtime.MIMEWildcard,
-		&runtime.JSONPb{EnumsAsInts: true, EmitDefaults: true, OrigName: true})
-
-	// convert http header to grpc metadata
-	headerOpt := runtime.WithMetadata(func(ctx context.Context, req *http.Request) metadata.MD {
-		return metadata.Pairs(
-			constant.RidKey, req.Header.Get(constant.RidKey),
-			constant.UserKey, req.Header.Get(constant.UserKey),
-			constant.AppCodeKey, req.Header.Get(constant.AppCodeKey),
-		)
-	})
-
-	return runtime.NewServeMux(opt, headerOpt)
+	return runtime.NewServeMux(grpcgw.MetadataOpt, grpcgw.MarshalerOpt)
 }

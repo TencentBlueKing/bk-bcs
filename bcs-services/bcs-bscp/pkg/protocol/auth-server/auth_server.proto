@@ -16,6 +16,13 @@ service Auth {
         };
     }
 
+    // 获取用户鉴权信息
+    rpc GetUserInfo(UserCredentialReq) returns (UserInfoResp) {
+        option (google.api.http) = {
+            get: "/api/v1/auth/user/info"
+        };
+    }
+
     // iam pull resource callback.
     rpc PullResource(PullResourceReq) returns (PullResourceResp) {
         option (google.api.http) = {
@@ -137,4 +144,15 @@ message IamResourceAttribute {
 
 message IamResourceAttributeValue {
     string id = 1;
+}
+
+message UserCredentialReq {
+    string provider = 1;
+    string uid      = 2;
+    string token    = 3;
+}
+
+message UserInfoResp {
+    string username   = 1;
+    string avatar_url = 2;
 }

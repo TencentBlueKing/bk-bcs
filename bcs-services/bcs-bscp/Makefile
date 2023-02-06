@@ -33,9 +33,6 @@ LDFLAG=-ldflags "-X github.com/Tencent/bk-bcs/bcs-common/common/version.BcsVersi
 
 default: all
 
-# 不支持v2
-# go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-grpc-gateway@v2.14.0
-# go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-openapiv2@v2.14.0
 .PHONY: init
 init:
 	@echo Download protoc
@@ -48,8 +45,8 @@ init:
 		rm -rf protoc-*.zip* readme.txt bin
 	go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.28.0
 	go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.2.0
-	go install github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway@v1.16.0
-	go install github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger@v1.16.0
+	go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-grpc-gateway@v2.15.0
+	go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-openapiv2@v2.15.0
 
 .PHONY: tidy
 tidy:

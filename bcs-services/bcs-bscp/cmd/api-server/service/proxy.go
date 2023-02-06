@@ -19,20 +19,18 @@ import (
 	"net/http"
 
 	"bscp.io/pkg/cc"
-	"bscp.io/pkg/criteria/constant"
 	"bscp.io/pkg/iam/auth"
 	"bscp.io/pkg/logs"
 	"bscp.io/pkg/metrics"
 	pbcs "bscp.io/pkg/protocol/config-server"
-	"bscp.io/pkg/runtime/gwparser"
+	"bscp.io/pkg/runtime/grpcgw"
 	"bscp.io/pkg/serviced"
 	"bscp.io/pkg/tools"
 
 	"github.com/gorilla/mux"
-	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
-	"google.golang.org/grpc/metadata"
 )
 
 // proxy all server's mux proxy.
@@ -164,22 +162,5 @@ func newGrpcDialOption(dis serviced.Discover, tls cc.TLSConfig) ([]grpc.DialOpti
 
 // newGrpcMux new grpc mux that has some processing of built-in http request to grpc request.
 func newGrpcMux() *runtime.ServeMux {
-
-	// if grpc-gateway returns a field whose value is the default value of the field
-	// type, it will ignore the field. Turn on the following options to avoid this situation.
-	opt := runtime.WithMarshalerOption(runtime.MIMEWildcard,
-		&runtime.JSONPb{EnumsAsInts: true, EmitDefaults: true, OrigName: true})
-
-	// convert http header to grpc metadata
-	headerOpt := runtime.WithMetadata(func(ctx context.Context, req *http.Request) metadata.MD {
-		// http filter has verified the parse, and the parsing here is sure to be successful.
-		kt, _ := gwparser.Parse(req.Context(), req.Header)
-		return metadata.Pairs(
-			constant.RidKey, kt.Rid,
-			constant.UserKey, kt.User,
-			constant.AppCodeKey, kt.AppCode,
-		)
-	})
-
-	return runtime.NewServeMux(opt, headerOpt)
+	return runtime.NewServeMux(grpcgw.MetadataOpt, grpcgw.MarshalerOpt)
 }
