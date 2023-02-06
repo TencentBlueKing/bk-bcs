@@ -638,6 +638,10 @@ func (m *UpdateProjectRequest) validate(all bool) error {
 
 	// no validation rules for CenterName
 
+	// no validation rules for Managers
+
+	// no validation rules for Creator
+
 	if len(errors) > 0 {
 		return UpdateProjectRequestMultiError(errors)
 	}

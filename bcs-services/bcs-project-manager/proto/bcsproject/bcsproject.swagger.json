@@ -3561,12 +3561,14 @@
           "title": "centerName"
         },
         "managers": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
+          "type": "string",
           "description": "项目管理员",
           "title": "managers"
+        },
+        "creator": {
+          "type": "string",
+          "description": "创建人",
+          "title": "creator"
         }
       },
       "description": "更新项目请求",

@@ -118,7 +118,12 @@ func (ua *UpdateAction) updateProject(p *pm.Project) error {
 	if authUser, err := middleware.GetUserFromContext(ua.ctx); err == nil {
 		p.Updater = authUser.GetUsername()
 		// 更新管理员，添加项目更新者，并且去重
-		managers := stringx.JoinString(p.Managers, authUser.GetUsername())
+		var managers string
+		if ua.req.GetManagers() != "" {
+			managers = stringx.JoinString(ua.req.GetManagers(), authUser.GetUsername())
+		} else {
+			managers = stringx.JoinString(p.Managers, authUser.GetUsername())
+		}
 		managerList := stringx.RemoveDuplicateValues(stringx.SplitString(managers))
 		p.Managers = strings.Join(managerList, ",")
 	}
@@ -171,8 +176,8 @@ func (ua *UpdateAction) updateProject(p *pm.Project) error {
 	if ua.req.CenterName != "" {
 		p.CenterName = req.CenterName
 	}
-	if len(ua.req.GetManagers()) != 0 {
-		p.Managers = stringx.JoinString(ua.req.GetManagers()...)
+	if ua.req.Creator != "" {
+		p.Creator = req.Creator
 	}
 	return ua.model.UpdateProject(ua.ctx, p)
 }
