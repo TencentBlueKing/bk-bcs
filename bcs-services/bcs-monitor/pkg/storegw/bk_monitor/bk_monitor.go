@@ -32,6 +32,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component/k8sclient"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/storegw/clientutil"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/utils"
 )
 
 // BKMonitorStore implements the store node API on top of the Prometheus remote read API.
@@ -161,6 +162,11 @@ func (s *BKMonitorStore) Series(r *storepb.SeriesRequest, srv storepb.Store_Seri
 	if scopeClusterID != "" {
 		clusterId = scopeClusterID
 	}
+	bcsConf := k8sclient.GetBCSConfByClusterId(clusterId)
+	cluster, err := bcs.GetCluster(srv.Context(), bcsConf, clusterId)
+	if err != nil {
+		return err
+	}
 
 	newMatchers := make([]storepb.LabelMatcher, 0, len(r.Matchers))
 	for _, m := range r.Matchers {
@@ -180,15 +186,23 @@ func (s *BKMonitorStore) Series(r *storepb.SeriesRequest, srv storepb.Store_Seri
 
 		newMatchers = append(newMatchers, m)
 	}
-
-	bcsConf := k8sclient.GetBCSConfByClusterId(clusterId)
-	cluster, err := bcs.GetCluster(srv.Context(), bcsConf, clusterId)
-	if err != nil {
-		return err
+	// 必须的参数 bk_biz_id, 单独拎出来处理
+	bkBizIDMatcher := storepb.LabelMatcher{
+		Type:  storepb.LabelMatcher_EQ,
+		Name:  "bk_biz_id",
+		Value: cluster.BKBizID,
 	}
+	newMatchers = append(newMatchers, bkBizIDMatcher)
 
-	promSeriesSet, err := bkmonitor_client.QueryByPromQL(srv.Context(), config.G.BKMonitor.URL, cluster.BKBizID, start, end, step,
-		newMatchers)
+	r.Matchers = newMatchers
+	pql := ""
+	if r.QueryHints != nil && r.QueryHints.Func != nil &&
+		utils.StringInSlice(r.QueryHints.Func.Name, AvailableFuncNames) {
+		// 传递函数到底层数据源，来实现特定的特性，如：把 avg_over_time 之类的时间函数传递到底层数据源，可以忽略 prometheus 回朔特性
+		pql = r.ToPromQL()
+	}
+	promSeriesSet, err := bkmonitor_client.QueryByPromQL(srv.Context(), config.G.BKMonitor.URL, cluster.BKBizID,
+		start, end, step, newMatchers, pql)
 	if err != nil {
 		return err
 	}

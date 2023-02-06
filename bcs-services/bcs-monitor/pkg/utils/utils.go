@@ -25,7 +25,7 @@ const (
 	ipv6Interface = "IPV6_INTERFACE" // ipv6本地网关地址
 )
 
-// getIPv6AddrFromEnv 解析ipv6
+// GetIPv6AddrFromEnv 解析ipv6
 func GetIPv6AddrFromEnv() string {
 	podIPs := os.Getenv(podIPsEnv)
 	if podIPs == "" {
@@ -44,7 +44,7 @@ func GetIPv6AddrFromEnv() string {
 	return ipv6
 }
 
-// GetListenAddr
+// GetListenAddr xxx
 func GetListenAddr(addr, port string) string {
 	if ip := net.ParseIP(addr); ip == nil {
 		return ""
@@ -59,4 +59,14 @@ func GetListenAddr(addr, port string) string {
 	}
 
 	return net.JoinHostPort(addr, port)
+}
+
+// StringInSlice 判断字符串是否存在 Slice 中
+func StringInSlice(str string, list []string) bool {
+	for _, item := range list {
+		if item == str {
+			return true
+		}
+	}
+	return false
 }

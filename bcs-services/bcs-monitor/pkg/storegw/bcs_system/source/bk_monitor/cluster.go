@@ -91,7 +91,7 @@ func (m *BKMonitor) GetClusterCPUUsage(ctx context.Context, projectId, clusterId
 func (m *BKMonitor) GetClusterCPURequest(ctx context.Context, projectId, clusterId string, start, end time.Time,
 	step time.Duration) ([]*prompb.TimeSeries, error) {
 	promql := `
-		sum(kube_pod_container_resource_requests_cpu_cores{cluster_id="%<clusterId>s", job="kube-state-metrics", node=~"%<node>s", %<provider>s})`
+		sum(avg_over_time(kube_pod_container_resource_requests_cpu_cores{cluster_id="%<clusterId>s", job="kube-state-metrics", node=~"%<node>s", %<provider>s}[1m]))`
 
 	return m.handleClusterMetric(ctx, projectId, clusterId, promql, start, end, step)
 }
@@ -100,7 +100,7 @@ func (m *BKMonitor) GetClusterCPURequest(ctx context.Context, projectId, cluster
 func (m *BKMonitor) GetClusterCPURequestUsage(ctx context.Context, projectId, clusterId string, start, end time.Time,
 	step time.Duration) ([]*prompb.TimeSeries, error) {
 	promql := `
-		sum(kube_pod_container_resource_requests_cpu_cores{cluster_id="%<clusterId>s", job="kube-state-metrics", node=~"%<node>s", %<provider>s}) /
+		sum(avg_over_time(kube_pod_container_resource_requests_cpu_cores{cluster_id="%<clusterId>s", job="kube-state-metrics", node=~"%<node>s", %<provider>s}[1m])) /
 		count(bkmonitor:system:cpu_detail:usage{cluster_id="%<clusterId>s", ip=~"%<ip>s", %<provider>s}) * 100
 		`
 
@@ -136,7 +136,7 @@ func (m *BKMonitor) GetClusterMemoryUsage(ctx context.Context, projectId, cluste
 func (m *BKMonitor) GetClusterMemoryRequest(ctx context.Context, projectId, clusterId string, start, end time.Time,
 	step time.Duration) ([]*prompb.TimeSeries, error) {
 	promql := `
-		sum(kube_pod_container_resource_requests_memory_bytes{cluster_id="%<clusterId>s", job="kube-state-metrics", node=~"%<node>s", %<provider>s})`
+		sum(avg_over_time(kube_pod_container_resource_requests_memory_bytes{cluster_id="%<clusterId>s", job="kube-state-metrics", node=~"%<node>s", %<provider>s}[1m]))`
 
 	return m.handleClusterMetric(ctx, projectId, clusterId, promql, start, end, step)
 }
@@ -145,7 +145,7 @@ func (m *BKMonitor) GetClusterMemoryRequest(ctx context.Context, projectId, clus
 func (m *BKMonitor) GetClusterMemoryRequestUsage(ctx context.Context, projectId, clusterId string, start, end time.Time,
 	step time.Duration) ([]*prompb.TimeSeries, error) {
 	promql := `
-		sum(kube_pod_container_resource_requests_memory_bytes{cluster_id="%<clusterId>s", job="kube-state-metrics", node=~"%<node>s", %<provider>s}) /
+		sum(avg_over_time(kube_pod_container_resource_requests_memory_bytes{cluster_id="%<clusterId>s", job="kube-state-metrics", node=~"%<node>s", %<provider>s}[1m])) /
 		sum(bkmonitor:system:mem:total{cluster_id="%<clusterId>s", ip=~"%<ip>s", %<provider>s}) * 100`
 
 	return m.handleClusterMetric(ctx, projectId, clusterId, promql, start, end, step)

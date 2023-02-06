@@ -20,3 +20,8 @@ var AvailableNodeMetrics = []string{
 	"bkmonitor:system:disk:total",
 	"bkmonitor:system:disk:used",
 }
+
+// AvailableFuncNames 允许传递到数据源的函数
+var AvailableFuncNames = []string{
+	"avg_over_time",
+}

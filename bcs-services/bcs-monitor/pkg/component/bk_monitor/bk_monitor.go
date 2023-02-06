@@ -145,20 +145,17 @@ func getQueryURL(rawURL string) (string, error) {
 
 // QueryByPromQL unifyquery 查询, promql 语法
 // start, end, step 单位秒
-func QueryByPromQL(ctx context.Context, rawURL string, bkBizId string, start, end, step int64,
-	labelMatchers []storepb.LabelMatcher) ([]*prompb.TimeSeries, error) {
+func QueryByPromQL(ctx context.Context, rawURL, bkBizID string, start, end, step int64,
+	labelMatchers []storepb.LabelMatcher, rawPromql string) ([]*prompb.TimeSeries, error) {
 	url, err := getQueryURL(rawURL)
 	if err != nil {
 		return nil, err
 	}
 
-	// 必须的参数 bk_biz_id, 单独拎出来处理
-	bkBizIdMatcher := storepb.LabelMatcher{
-		Type:  storepb.LabelMatcher_EQ,
-		Name:  "bk_biz_id",
-		Value: bkBizId,
+	promql := storepb.MatchersToString(labelMatchers...)
+	if rawPromql != "" {
+		promql = rawPromql
 	}
-	promql := storepb.MatchersToString(append(labelMatchers, bkBizIdMatcher)...)
 
 	// 步长, 单位秒
 	stepSecond := fmt.Sprintf("%ss", strconv.FormatInt(step, 10))
@@ -172,7 +169,7 @@ func QueryByPromQL(ctx context.Context, rawURL string, bkBizId string, start, en
 	resp, err := component.GetClient().R().
 		SetContext(ctx).
 		SetBody(body).
-		SetHeader("X-Bk-Scope-Space-Uid", fmt.Sprintf("bkcc__%s", bkBizId)). // 支持空间参数
+		SetHeader("X-Bk-Scope-Space-Uid", fmt.Sprintf("bkcc__%s", bkBizID)). // 支持空间参数
 		SetQueryParam("bk_app_code", config.G.Base.AppCode).
 		SetQueryParam("bk_app_secret", config.G.Base.AppSecret).
 		Post(url)

@@ -48,7 +48,7 @@ func TestQueryByPromQL(t *testing.T) {
 
 	rawURL := os.Getenv("BK_MONITOR_URL")
 
-	series, err := QueryByPromQL(ctx, rawURL, "2", start, end, step, matchers)
+	series, err := QueryByPromQL(ctx, rawURL, "2", start, end, step, matchers, "")
 	assert.NoError(t, err)
 	assert.True(t, len(series) > 1)
 }
