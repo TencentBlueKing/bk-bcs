@@ -289,7 +289,7 @@ func (crSvc *clusterResourcesService) initHTTPService() error {
 	}
 
 	// 循环注册各个 rpc service
-	endpoint := crSvc.conf.Server.Address + ":" + strconv.Itoa(crSvc.conf.Server.Port)
+	endpoint := net.JoinHostPort(crSvc.conf.Server.Address, strconv.Itoa(crSvc.conf.Server.Port))
 	for _, epRegister := range []func(context.Context, *runtime.ServeMux, string, []grpc.DialOption) error{
 		clusterRes.RegisterBasicGwFromEndpoint,
 		clusterRes.RegisterNodeGwFromEndpoint,
