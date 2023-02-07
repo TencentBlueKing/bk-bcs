@@ -45,12 +45,10 @@
                 </template>
               </bk-input>
             </span>
-            <span place="1" class="px-[5px]">
-              <bk-input int type="number" :min="0" :max="100" v-model="autoscalerData.maxTotalUnreadyPercentage">
-                <template slot="append">
-                  <div class="group-text">{{$t('%')}}</div>
-                </template>
+            <span place="1" class="px-[5px] flex">
+              <bk-input class="flex-1" int type="number" :min="0" :max="100" v-model="autoscalerData.maxTotalUnreadyPercentage">
               </bk-input>
+              <div class="w-[42px] flex items-center justify-center bcs-border ml-[-1px] border-[#c4c6cc]">%</div>
             </span>
           </i18n>
           <span
@@ -160,7 +158,6 @@
         </bk-form-item>
         <bk-form-item
           :label="$t('连续两次缩容时间间隔')"
-
           desc-icon="bk-icon icon-info-circle"
           :desc="$t('缩容节点后多久再继续缩容节点，默认设置为0，代表与扩缩容检测时间间隔设置的值相同，取值范围0 ~ 86400秒')">
           <bk-input int type="number" :min="0" :max="86400" v-model="autoscalerData.scaleDownDelayAfterDelete">
@@ -371,7 +368,7 @@ export default defineComponent({
     }
 }
 >>> .bk-input-number {
-    width: 88px;
+    max-width: 88px;
 }
 .switch-autoscaler {
     margin-left: 16px;
