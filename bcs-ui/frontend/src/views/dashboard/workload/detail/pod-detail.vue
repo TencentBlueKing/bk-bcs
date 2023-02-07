@@ -466,7 +466,7 @@ export default defineComponent({
     const clusterId = computed(() => $store.state.curClusterId || $route.query.cluster_id);
     const terminalWins = new Map();
     const handleShowTerminal = (row) => {
-      const url = `${window.BCS_API_HOST}bcsapi/v4/webconsole/projects/${projectId.value}/clusters/${clusterId.value}/?namespace=${props.namespace}&pod_name=${props.name}&container_name=${row.name}`;
+      const url = `${window.BCS_API_HOST}/bcsapi/v4/webconsole/projects/${projectId.value}/clusters/${clusterId.value}/?namespace=${props.namespace}&pod_name=${props.name}&container_name=${row.name}`;
       if (terminalWins.has(row.containerID)) {
         const win = terminalWins.get(row.containerID);
         if (!win.closed) {
