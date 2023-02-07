@@ -14,12 +14,13 @@
 package storage
 
 import (
-	"fmt"
+	"net"
+	"strconv"
 	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
-
 	redis "github.com/go-redis/redis/v8"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
 )
 
 // RedisSession :
@@ -32,7 +33,7 @@ func (r *RedisSession) Init() error {
 	redisConf := config.G.Redis
 
 	r.Client = redis.NewClient(&redis.Options{
-		Addr:        fmt.Sprintf("%v:%v", redisConf.Host, redisConf.Port),
+		Addr:        net.JoinHostPort(redisConf.Host, strconv.Itoa(redisConf.Port)),
 		Password:    redisConf.Password,
 		DB:          redisConf.DB,
 		DialTimeout: time.Duration(redisConf.MaxConnTimeout) * time.Second,
