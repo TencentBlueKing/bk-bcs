@@ -394,7 +394,7 @@ func (p *ProjectService) registerGatewayFromEndPoint(gwMux *runtime.ServeMux, gr
 	if err := proto.RegisterBCSProjectGwFromEndpoint(
 		context.TODO(),
 		gwMux,
-		p.opt.Server.Address+":"+strconv.Itoa(int(p.opt.Server.Port)),
+		net.JoinHostPort(p.opt.Server.Address, strconv.Itoa(int(p.opt.Server.Port))),
 		grpcDialOpts,
 	); err != nil {
 		logging.Error("register project endpoints to http gateway failed, err %s", err.Error())
@@ -404,7 +404,7 @@ func (p *ProjectService) registerGatewayFromEndPoint(gwMux *runtime.ServeMux, gr
 	if err := proto.RegisterBusinessGwFromEndpoint(
 		context.TODO(),
 		gwMux,
-		p.opt.Server.Address+":"+strconv.Itoa(int(p.opt.Server.Port)),
+		net.JoinHostPort(p.opt.Server.Address, strconv.Itoa(int(p.opt.Server.Port))),
 		grpcDialOpts,
 	); err != nil {
 		logging.Error("register business endpoints to http gateway failed, err %s", err.Error())
@@ -414,7 +414,7 @@ func (p *ProjectService) registerGatewayFromEndPoint(gwMux *runtime.ServeMux, gr
 	if err := proto.RegisterNamespaceGwFromEndpoint(
 		context.TODO(),
 		gwMux,
-		p.opt.Server.Address+":"+strconv.Itoa(int(p.opt.Server.Port)),
+		net.JoinHostPort(p.opt.Server.Address, strconv.Itoa(int(p.opt.Server.Port))),
 		grpcDialOpts,
 	); err != nil {
 		logging.Error("register namespace endpoints to gateway failed, err %s", err.Error())
@@ -424,7 +424,7 @@ func (p *ProjectService) registerGatewayFromEndPoint(gwMux *runtime.ServeMux, gr
 	if err := proto.RegisterVariableGwFromEndpoint(
 		context.TODO(),
 		gwMux,
-		p.opt.Server.Address+":"+strconv.Itoa(int(p.opt.Server.Port)),
+		net.JoinHostPort(p.opt.Server.Address, strconv.Itoa(int(p.opt.Server.Port))),
 		grpcDialOpts,
 	); err != nil {
 		logging.Error("register variable endpoints to gateway failed, err %s", err.Error())
@@ -434,7 +434,7 @@ func (p *ProjectService) registerGatewayFromEndPoint(gwMux *runtime.ServeMux, gr
 	if err := proto.RegisterHealthzGwFromEndpoint(
 		context.TODO(),
 		gwMux,
-		p.opt.Server.Address+":"+strconv.Itoa(int(p.opt.Server.Port)),
+		net.JoinHostPort(p.opt.Server.Address, strconv.Itoa(int(p.opt.Server.Port))),
 		grpcDialOpts,
 	); err != nil {
 		logging.Error("register healthz endpoints to gateway failed, err %s", err.Error())
