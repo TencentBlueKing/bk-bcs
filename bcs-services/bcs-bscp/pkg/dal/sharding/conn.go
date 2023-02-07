@@ -25,7 +25,7 @@ import (
 
 // connect to mysql
 func connect(opt cc.Database) (*sqlx.DB, error) {
-	db, err := sqlx.Connect("mysql", uri(opt))
+	db, err := sqlx.Connect("mysql", URI(opt))
 	if err != nil {
 		return nil, fmt.Errorf("connect to mysql failed, err: %v", err)
 	}
@@ -37,8 +37,8 @@ func connect(opt cc.Database) (*sqlx.DB, error) {
 	return db, nil
 }
 
-// uri generate the standard db connection string format uri.
-func uri(opt cc.Database) string {
+// URI generate the standard db connection string format uri.
+func URI(opt cc.Database) string {
 
 	return fmt.Sprintf(
 		"%s:%s@tcp(%s)/%s?parseTime=true&loc=Local&timeout=%ds&readTimeout=%ds&writeTimeout=%ds&charset=%s",

@@ -18,6 +18,7 @@ import (
 	"math"
 	"net"
 	"net/http"
+	"os"
 	"strconv"
 
 	"bscp.io/cmd/data-service/options"
@@ -39,6 +40,16 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 )
+
+// RunServer run the data service
+func RunServer(sysOpt *cc.SysOption) {
+	opts := options.InitOptions(sysOpt)
+	if err := Run(opts); err != nil {
+		fmt.Fprintf(os.Stderr, "start data service failed, err: %v", err)
+		logs.CloseLogs()
+		os.Exit(1)
+	}
+}
 
 // Run start the data service
 func Run(opt *options.Option) error {

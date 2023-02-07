@@ -15,9 +15,6 @@ package options
 
 import (
 	"bscp.io/pkg/cc"
-	"bscp.io/pkg/runtime/flags"
-
-	"github.com/spf13/pflag"
 )
 
 // Option defines the app's runtime flag options.
@@ -26,13 +23,7 @@ type Option struct {
 }
 
 // InitOptions init data service's options from command flags.
-func InitOptions() *Option {
-	sysOpt := flags.SysFlags(pflag.CommandLine)
-
-	// parses the command-line flags from os.Args[1:]. must be called after all flags are defined
-	// and before flags are accessed by the program.
-	pflag.Parse()
-
+func InitOptions(sysOpt *cc.SysOption) *Option {
 	// check if the command-line flag is show current version info cmd.
 	sysOpt.CheckV()
 
