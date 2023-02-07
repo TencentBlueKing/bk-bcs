@@ -26,7 +26,7 @@
           :label="$t('扩缩容检测时间间隔')"
           desc-icon="bk-icon icon-info-circle"
           :desc="$t('默认为10秒，取值范围5 ~ 86400秒')">
-          <bk-input type="number" :min="5" :max="86400" v-model="autoscalerData.scanInterval">
+          <bk-input int type="number" :min="5" :max="86400" v-model="autoscalerData.scanInterval">
             <template slot="append">
               <div class="group-text">{{$t('秒')}}</div>
             </template>
@@ -39,18 +39,18 @@
             path="NotReady节点数大于 {0} 个且超过集群总节点数 {1} 时暂停自动扩缩容"
             class="text-[14px] text-[#63656e] flex items-center">
             <span place="0" class="px-[5px]">
-              <bk-input type="number" :min="0" :max="320000" v-model="autoscalerData.okTotalUnreadyCount">
+              <bk-input int type="number" :min="0" :max="320000" v-model="autoscalerData.okTotalUnreadyCount">
                 <template slot="append">
                   <div class="group-text">{{$t('个')}}</div>
                 </template>
               </bk-input>
             </span>
             <span place="1" class="px-[5px]">
-              <bcs-input type="number" :min="0" :max="100" v-model="autoscalerData.maxTotalUnreadyPercentage">
+              <bk-input int type="number" :min="0" :max="100" v-model="autoscalerData.maxTotalUnreadyPercentage">
                 <template slot="append">
                   <div class="group-text">{{$t('%')}}</div>
                 </template>
-              </bcs-input>
+              </bk-input>
             </span>
           </i18n>
           <span
@@ -75,7 +75,7 @@
           desc-icon="bk-icon icon-info-circle"
           :label="$t('触发扩容资源阈值 (CPU)')"
           :desc="$t('集群整体CPU资源(Request)使用率超过该阈值触发扩容, 无论内存资源使用率是否达到阈值')">
-          <bk-input type="number" :min="0" :max="100" v-model="autoscalerData.bufferResourceCpuRatio">
+          <bk-input int type="number" :min="0" :max="100" v-model="autoscalerData.bufferResourceCpuRatio">
             <template slot="append">
               <div class="group-text">%</div>
             </template>
@@ -85,7 +85,7 @@
           desc-icon="bk-icon icon-info-circle"
           :label="$t('触发扩容资源阈值 (内存)')"
           :desc="$t('集群整体内存资源(Request)使用率超过该阈值触发扩容, 无论CPU资源使用率是否达到阈值')">
-          <bk-input type="number" :min="0" :max="100" v-model="autoscalerData.bufferResourceMemRatio">
+          <bk-input int type="number" :min="0" :max="100" v-model="autoscalerData.bufferResourceMemRatio">
             <template slot="append">
               <div class="group-text">%</div>
             </template>
@@ -95,7 +95,7 @@
           :label="$t('等待节点提供最长时间')"
           desc-icon="bk-icon icon-info-circle"
           :desc="$t('如果节点池在设置的时间范围内没有提供可用资源，会导致此次自动扩容失败')">
-          <bk-input type="number" :min="60" :max="86400" v-model="autoscalerData.maxNodeProvisionTime">
+          <bk-input int type="number" :min="60" :max="86400" v-model="autoscalerData.maxNodeProvisionTime">
             <template slot="append">
               <div class="group-text">{{$t('秒')}}</div>
             </template>
@@ -121,7 +121,7 @@
           desc-icon="bk-icon icon-info-circle"
           :label="$t('触发缩容资源阈值 (CPU/内存)')"
           :desc="$t('取整范围0% ~ 80%，节点的CPU和内存资源(Request)必须同时低于设定阈值后会驱逐该节点上的Pod执行缩容流程，如果只考虑缩容空节点，可以把此值设置为0')">
-          <bk-input type="number" :min="0" :max="80" v-model="autoscalerData.scaleDownUtilizationThreahold">
+          <bk-input int type="number" :min="0" :max="80" v-model="autoscalerData.scaleDownUtilizationThreahold">
             <template slot="append">
               <div class="group-text">%</div>
             </template>
@@ -132,11 +132,9 @@
           desc-icon="bk-icon icon-info-circle"
           :desc="$t('节点从第一次被标记空闲状态到设定时间内一直处于空闲状态才会被缩容，防止节点资源使用率短时间内波动造成频繁扩缩容操作')">
           <div class="flex">
-            <bcs-input type="number" :min="60" :max="86400" v-model="autoscalerData.scaleDownUnneededTime">
-              <template slot="append">
-                <div class="group-text">{{$t('秒')}}</div>
-              </template>
-            </bcs-input>
+            <bk-input int type="number" :min="60" :max="86400" v-model="autoscalerData.scaleDownUnneededTime">
+            </bk-input>
+            <div class="w-[42px] flex items-center justify-center bcs-border ml-[-1px] border-[#c4c6cc]">{{$t('秒')}}</div>
             <span class="ml8">{{$t('后执行缩容')}}</span>
           </div>
         </bk-form-item>
@@ -144,7 +142,7 @@
           :label="$t('等待 Pod 退出最长时间')"
           desc-icon="bk-icon icon-info-circle"
           :desc="$t('缩容节点时，等待 pod 停止的最长时间（不会遵守 terminationGracefulPeriodSecond，超时强杀）默认为600秒，取值范围60 ~ 86400秒')">
-          <bk-input type="number" :min="60" :max="86400" v-model="autoscalerData.maxGracefulTerminationSec">
+          <bk-input int type="number" :min="60" :max="86400" v-model="autoscalerData.maxGracefulTerminationSec">
             <template slot="append">
               <div class="group-text">{{$t('秒')}}</div>
             </template>
@@ -154,7 +152,7 @@
           :label="$t('扩容后判断缩容时间间隔')"
           desc-icon="bk-icon icon-info-circle"
           :desc="$t('扩容节点后多久才继续缩容判断，如果业务自定义初始化任务所需时间比较长，需要适当上调此值，取值范围1200 ~ 86400秒')">
-          <bk-input type="number" :min="1200" :max="86400" v-model="autoscalerData.scaleDownDelayAfterAdd">
+          <bk-input int type="number" :min="1200" :max="86400" v-model="autoscalerData.scaleDownDelayAfterAdd">
             <template slot="append">
               <div class="group-text">{{$t('秒')}}</div>
             </template>
@@ -165,7 +163,7 @@
 
           desc-icon="bk-icon icon-info-circle"
           :desc="$t('缩容节点后多久再继续缩容节点，默认设置为0，代表与扩缩容检测时间间隔设置的值相同，取值范围0 ~ 86400秒')">
-          <bk-input type="number" :min="0" :max="86400" v-model="autoscalerData.scaleDownDelayAfterDelete">
+          <bk-input int type="number" :min="0" :max="86400" v-model="autoscalerData.scaleDownDelayAfterDelete">
             <template slot="append">
               <div class="group-text">{{$t('秒')}}</div>
             </template>
@@ -179,14 +177,14 @@
           </bk-input>
         </bk-form-item> -->
         <bk-form-item :label="$t('NotReady节点缩容等待时间')">
-          <bk-input type="number" :min="60" :max="86400" v-model="autoscalerData.scaleDownUnreadyTime">
+          <bk-input int type="number" :min="60" :max="86400" v-model="autoscalerData.scaleDownUnreadyTime">
             <template slot="append">
               <div class="group-text">{{$t('秒')}}</div>
             </template>
           </bk-input>
         </bk-form-item>
         <bk-form-item :label="$t('单次缩容最大节点数')">
-          <bk-input type="number" :min="1" :max="100" v-model="autoscalerData.maxEmptyBulkDelete">
+          <bk-input int type="number" :min="1" :max="100" v-model="autoscalerData.maxEmptyBulkDelete">
             <template slot="append">
               <div class="group-text">{{$t('个')}}</div>
             </template>

@@ -30,9 +30,10 @@ export default {
       type: [String, Number],
       default: '',
     },
-    parseNumber: {
+    // type 为 number时是否限制为整数
+    int: {
       type: Boolean,
-      default: true,
+      default: false,
     },
   },
   render(h) {
@@ -51,7 +52,7 @@ export default {
         if (isNaN(value)) {
           value = _self.$attrs.min === Number.MIN_SAFE_INTEGER ? 0 : _self.$attrs.min;
         }
-        _self.$emit('input', Number(value), event);
+        _self.$emit('input', this.int ? Math.ceil(value) : Number(value), event);
       };
     }
 

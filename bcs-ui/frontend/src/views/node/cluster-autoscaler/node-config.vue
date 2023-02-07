@@ -109,7 +109,7 @@
         <bk-input
           class="max-width-130 ml10"
           type="number"
-          :min="20"
+          :min="50"
           :max="1000"
           v-model="nodePoolConfig.launchTemplate.systemDisk.diskSize"
           :disabled="isEdit">
@@ -118,7 +118,7 @@
         <p
           class="error-tips ml5"
           v-if="nodePoolConfig.launchTemplate.systemDisk.diskSize % 10 !== 0">
-          {{$t('范围: 20~1000, 步长: 10')}}
+          {{$t('范围: 50~1000, 步长: 10')}}
         </p>
       </div>
       <div class="mt20">

@@ -14,6 +14,7 @@
       :desc="$t('节点池创建时不会自动扩容到缩容节点下限数量，只有节点池扩容节点数量超过缩容节点下限后，之后缩容节点时不会低于缩容节点下限，作为节点池的buffer资源')">
       <bk-input
         class="w74"
+        int
         v-model="nodePoolInfo.autoScaling.minSize"
         :min="getSchemaByProp('autoScaling.minSize').minimum"
         :max="getSchemaByProp('autoScaling.minSize').maximum"
@@ -26,6 +27,7 @@
       error-display-type="normal">
       <bk-input
         class="w74"
+        int
         v-model="nodePoolInfo.autoScaling.maxSize"
         :min="getSchemaByProp('autoScaling.maxSize').minimum"
         :max="getSchemaByProp('autoScaling.maxSize').maximum"
