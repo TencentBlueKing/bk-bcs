@@ -136,7 +136,7 @@ export default {
     },
     async goWebConsole(cluster) {
       const clusterId = cluster.cluster_id;
-      const url = `${DEVOPS_BCS_API_URL}/web_console/projects/${this.projectId}/mgr/#cluster=${clusterId}`;
+      const url = `${window.BCS_API_HOST}bcsapi/v4/webconsole/projects/${this.projectId}/mgr/#cluster=${clusterId}`;
 
       this.keyword = '';
       this.isShow = false;
