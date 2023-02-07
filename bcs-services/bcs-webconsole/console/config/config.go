@@ -181,6 +181,12 @@ func (c *Configurations) ReadFrom(content []byte) error {
 	if c.Base.AppSecret == "" {
 		c.Base.AppSecret = BK_APP_SECRET
 	}
+	if c.Base.BKPaaSHost == "" {
+		c.Base.BKPaaSHost = BK_PAAS_HOST
+	}
+	if c.Auth.Host == "" {
+		c.Auth.Host = BK_IAM_HOST
+	}
 	if c.Redis.Password == "" {
 		c.Redis.Password = REDIS_PASSWORD
 	}

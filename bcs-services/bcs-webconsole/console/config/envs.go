@@ -19,6 +19,7 @@ var (
 	BK_APP_CODE          = os.Getenv("BK_APP_CODE")
 	BK_APP_SECRET        = os.Getenv("BK_APP_SECRET")
 	BK_PAAS_HOST         = os.Getenv("BK_PAAS_HOST")
+	BK_IAM_HOST          = os.Getenv("BK_IAM_HOST")
 	REDIS_PASSWORD       = os.Getenv("REDIS_PASSWORD")
 	BCS_APIGW_TOKEN      = os.Getenv("BCS_APIGW_TOKEN")
 	BCS_APIGW_PUBLIC_KEY = os.Getenv("BCS_APIGW_PUBLIC_KEY")

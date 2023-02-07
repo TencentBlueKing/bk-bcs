@@ -107,7 +107,7 @@ func (c *WebConsoleManager) Init() error {
 	metadata := map[string]string{}
 	ipv6Addr := getIPv6AddrFromEnv()
 	if ipv6Addr != "" {
-		metadata[types.IPV6] = ipv6Addr
+		metadata[types.IPV6] = getListenAddr(ipv6Addr, c.listenPort)
 	}
 
 	// 单栈IPv6 可能重复
