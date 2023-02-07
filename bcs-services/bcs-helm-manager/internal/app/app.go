@@ -366,7 +366,7 @@ func (hm *HelmManager) initHTTPService() error {
 	err := helmmanager.RegisterHelmManagerGwFromEndpoint(
 		context.TODO(),
 		rmMux,
-		hm.opt.Address+":"+strconv.Itoa(int(hm.opt.Port)),
+		net.JoinHostPort(hm.opt.Address, strconv.Itoa(int(hm.opt.Port))),
 		grpcDialOpts)
 	if err != nil {
 		blog.Errorf("register http service failed, err %s", err.Error())
