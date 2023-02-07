@@ -106,20 +106,15 @@
             </bcs-option>
           </bcs-select>
         </div>
-        <bk-input
-          class="max-width-130 ml10"
-          type="number"
-          :min="50"
-          :max="1000"
-          v-model="nodePoolConfig.launchTemplate.systemDisk.diskSize"
-          :disabled="isEdit">
-          <div slot="append" class="group-text">GB</div>
-        </bk-input>
-        <p
-          class="error-tips ml5"
-          v-if="nodePoolConfig.launchTemplate.systemDisk.diskSize % 10 !== 0">
-          {{$t('范围: 50~1000, 步长: 10')}}
-        </p>
+        <bcs-select
+          class="w-[88px] bg-[#fff] ml10"
+          :disabled="isEdit"
+          :clearable="false"
+          v-model="nodePoolConfig.launchTemplate.systemDisk.diskSize">
+          <bcs-option id="50" name="50"></bcs-option>
+          <bcs-option id="100" name="100"></bcs-option>
+        </bcs-select>
+        <div class="bg-[#fafbfd] w-[42px] flex items-center justify-center bcs-border ml-[-1px] border-[#c4c6cc]">GB</div>
       </div>
       <div class="mt20">
         <bk-checkbox
@@ -540,10 +535,9 @@ export default defineComponent({
       const result = await formRef.value?.validate();
       // eslint-disable-next-line max-len
       const validateDataDiskSize = nodePoolConfig.value.nodeTemplate.dataDisks.every(item => item.diskSize % 10 === 0);
-      const validateSystemDiskSize = nodePoolConfig.value.launchTemplate.systemDisk.diskSize % 10 === 0;
       const mountTargetList = nodePoolConfig.value.nodeTemplate.dataDisks.map(item => item.mountTarget);
       const validateDataDiskMountTarget = new Set(mountTargetList).size === mountTargetList.length;
-      if (!result || !validateDataDiskSize || !validateDataDiskMountTarget || !validateSystemDiskSize) return;
+      if (!result || !validateDataDiskSize || !validateDataDiskMountTarget) return;
 
       ctx.emit('next', getNodePoolData());
       ctx.emit('confirm');
