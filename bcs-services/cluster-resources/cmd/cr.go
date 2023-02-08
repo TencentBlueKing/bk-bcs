@@ -16,6 +16,7 @@
 package cmd
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"math/rand"
@@ -27,6 +28,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/config"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/i18n"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/logging"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/tracing"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/version"
 )
@@ -72,6 +74,17 @@ func Start() {
 	if err = i18n.InitMsgMap(); err != nil {
 		panic(errorx.New(errcode.General, "init i18n message map failed: %v", err))
 	}
+
+	//初始化 Tracer
+	shutdown, err := tracing.InitTracing(&crConf.Tracing)
+	if err != nil {
+		logger.Info(err.Error())
+	}
+	defer func() {
+		if err := shutdown(context.Background()); err != nil {
+			logger.Info(fmt.Sprintf("failed to shutdown TracerProvider: %w", err))
+		}
+	}()
 
 	crSvc := newClusterResourcesService(crConf)
 	if err = crSvc.Init(); err != nil {

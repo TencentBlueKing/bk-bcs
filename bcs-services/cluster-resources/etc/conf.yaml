@@ -114,3 +114,9 @@ crGlobal:
   sharedCluster:
     enabledCObjKinds: []
     enabledCRDs: []
+
+  # TRACING 相关配置
+tracing:
+  tracingEnabled: false
+  # OpenTelemetry Collector service endpoint
+  otlpEndpoint: "xxxx"
