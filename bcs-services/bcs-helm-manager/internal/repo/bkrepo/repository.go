@@ -100,7 +100,8 @@ func (rh *repositoryHandler) createRepository(ctx context.Context, rp *repo.Repo
 
 		// TODO: use code to identify
 		if strings.Contains(r.Message, "existed") {
-			return "", errAlreadyExist
+			blog.Infof("repository exist, skip create, data %v, traceID %s", rp, r.TraceID)
+			return rh.getRepoURL(), nil
 		}
 		return "", fmt.Errorf("request error with code %d, %s", r.Code, r.Message)
 	}
