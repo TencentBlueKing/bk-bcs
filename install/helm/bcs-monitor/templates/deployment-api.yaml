@@ -1,0 +1,97 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "bcs-monitor.fullname" . }}-api
+  labels:
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/name: bcs-monitor-api
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.api.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: {{ .Release.Name }}
+      app.kubernetes.io/name: bcs-monitor-api
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        app.kubernetes.io/instance: {{ .Release.Name }}
+        app.kubernetes.io/name: bcs-monitor-api
+        values-hash: "{{ toYaml .Values.config | sha256sum | trunc 63 }}"
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "bcs-monitor.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: {{ include "common.images.image" ( dict "imageRoot" .Values.image "global" .Values.global) }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+            {{- include "bcs-monitor.envs" . | trim | nindent 12 }}
+          args:
+            - api
+            - --bind-address=$(POD_IP)
+            - --http-port=10902
+            - --config=/etc/bcs-monitor/config.yaml
+            - --credential-config=/etc/bcs-monitor-cred/credentials.yaml
+            - --credential-config=/etc/bcs-monitor-cred-manager/credentials.yaml
+          ports:
+            - name: http
+              containerPort: 10902
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /-/healthy
+              port: http
+          readinessProbe:
+            httpGet:
+              path: /-/ready
+              port: http
+          volumeMounts:
+          - name: config
+            mountPath: /etc/bcs-monitor
+          - name: config-credentials
+            mountPath: /etc/bcs-monitor-cred
+          - name: config-credentials-manager
+            mountPath: /etc/bcs-monitor-cred-manager
+          - name: etcd-certs
+            mountPath: /data/bcs/cert/etcd
+          - name: bcs-certs
+            mountPath: /data/bcs/cert/bcs
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+
+      volumes:
+      - name: config
+        configMap:
+          name: bcs-monitor
+      - name: config-credentials
+        configMap:
+          name: bcs-monitor-credentials
+      - name: config-credentials-manager
+        configMap:
+          name: bcs-monitor-credentials-manager
+      {{- include "bcs-common.volumes.bcsServices" . | indent 6 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

@@ -1,0 +1,37 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: bcs-monitor
+  labels:
+    app: bcs-monitor
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    release: "{{ .Release.Name }}"
+data:
+  config.yaml: |
+    {{- toYaml .Values.config | nindent 4 }}
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: bcs-monitor-credentials
+  labels:
+    app: bcs-monitor
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    release: "{{ .Release.Name }}"
+data:
+  credentials.yaml: |-
+    {{- toYaml .Values.config_credentials | nindent 4 }}
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: bcs-monitor-credentials-manager
+  labels:
+    app: bcs-monitor
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    release: "{{ .Release.Name }}"
+data:
+  credentials.yaml: |-
+    {{- toYaml .Values.config_credentials_manager | nindent 4 }}

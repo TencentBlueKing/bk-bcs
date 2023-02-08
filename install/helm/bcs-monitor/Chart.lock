@@ -1,0 +1,9 @@
+dependencies:
+- name: common
+  repository: https://raw.githubusercontent.com/bitnami/charts/eb5f9a9513d987b519f0ecd732e7031241c50328/bitnami
+  version: 1.4.2
+- name: bcs-common
+  repository: file://../bcs-common
+  version: 1.0.6
+digest: sha256:c5cf6ba58d3f802db03c6eafe04242c71536cd5ca9cbaf9286a6fe6bca39c6a7
+generated: "2023-01-11T22:42:47.451341998+08:00"

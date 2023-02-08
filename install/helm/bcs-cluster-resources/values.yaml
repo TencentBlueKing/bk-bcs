@@ -1,0 +1,266 @@
+## bcs-cluster-resources
+global:
+  secret:
+    autoGenerate: false
+    bcsServerCerts: bcs-server-certs
+    bcsClientCerts: bcs-client-certs
+    bcsClientCertsWithoutEncrypted: bcs-client-certs-without-encrypted
+    etcdCerts: bcs-etcd-certs
+    bcsGatewayCerts: bcs-gateway-certs
+
+  # 占位符, 和 bcs-service-stack 保持一致
+  bkAPP:
+    systemID: ""
+    appCode: ""
+    appSecret: ""
+  bkIAM:
+    gateWayHost: ""
+    iamHost: ""
+    bkiamHost: ""
+  storage:
+    redis:
+      password: ""
+
+enabled: true
+
+image:
+  registry: "hub.bktencent.com"
+  repository: blueking/bcs-cluster-resources
+  pullPolicy: IfNotPresent
+  tag: v1.28.0-alpha.75
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: "bcs-cluster-resources"
+
+## 副本数量
+replicaCount: 1
+
+## 健康检查
+probe:
+  liveness:
+    tcpSocket:
+      port: 9091
+  readiness:
+    tcpSocket:
+      port: 9091
+
+## 资源配额
+resources:
+  requests:
+    cpu: 1
+    memory: 512Mi
+  limits:
+    cpu: 2
+    memory: 4Gi
+
+## 环境变量
+envs: {}
+
+## 依赖服务检查，启用后主动检查依赖的其他服务
+checkService: false
+
+## 服务配置
+svcConf:
+  debug: false
+
+  ## Etcd 相关配置
+  etcd:
+    endpoints: "bcs-etcd:2379"
+    cert: "/data/bcs/cert/etcd/etcd.pem"
+    key: "/data/bcs/cert/etcd/etcd-key.pem"
+    ca: "/data/bcs/cert/etcd/etcd-ca.pem"
+
+  ## Server 配置信息
+  server:
+    useLocalIP: true
+    address: ""
+    insecureAddress: ""
+    port: 9090
+    httpPort: 9089
+    metricPort: 9091
+    registerTTL: 30
+    registerInterval: 25
+    cert: "/data/bcs/cert/bcs/bcs-server.crt"
+    certPwd: ""
+    key: "/data/bcs/cert/bcs/bcs-server.key"
+    ca: "/data/bcs/cert/bcs/bcs-ca.crt"
+
+  ## Client 配置信息
+  client:
+    cert: "/data/bcs/cert/bcs/bcs-client.crt"
+    certPwd: ""
+    key: "/data/bcs/cert/bcs/bcs-client.key"
+    ca: "/data/bcs/cert/bcs/bcs-ca.crt"
+
+  ## Swagger 配置信息
+  swagger:
+    ## 生产环境为 false
+    enabled: false
+    ## 生产环境为空，测试环境建议使用 swagger/data
+    dir: ""
+
+  ## 日志配置信息
+  log:
+    ## 日志级别，支持 debug/info/warn/error/panic/fatal
+    level: "info"
+    ## 日志刷新间隔，单位: 秒
+    flushInterval: 5
+    ## 是否自动创建日志目录（若不存在）
+    autoCreateDir: true
+    ## 文件绝对路径
+    path: "/data/bcs/logs/bcs"
+    ## 文件名称
+    name: "cr.log"
+    ## 文件的大小，单位: MB
+    size: 100
+    ## 日志的保存时间，单位: 天
+    age: 7
+    ## 历史文件保留数量
+    backups: 5
+
+  ## Redis 配置信息
+  redis:
+    address: "bcs-redis-master:6379"
+    db: 2
+    password: ""
+    ## 以下项非必须可不启用
+    # dialTimeout: 2
+    # readTimeout: 1
+    # writeTimeout: 1
+    # poolSize: 64
+    # minIdleConns: 64
+
+  ## 全局配置信息
+  crGlobal:
+    auth:
+      ##【重要】非调试模式不应禁用
+      disabled: false
+      jwtPublicKey: "/data/bcs/cert/jwt/public.key"
+
+    ## 项目基础类配置
+    basic:
+      appCode: ""
+      appSecret: ""
+      bkApiGWHost: ""
+      bkPaaSHost: ""
+      healthzToken: ""
+      cacheToken: ""
+
+    ## BCS API 网关配置
+    bcsApiGW:
+      host: "https://bcs-api-gateway"
+      authToken: ""
+      ## 开启后将读取 Secret 挂载到容器中 Env 的值
+      readAuthTokenFromEnv: true
+
+    ## 权限中心相关配置
+    iam:
+      host: ""
+      systemID: ""
+      useBKApiGW: true
+      metric: false
+      debug: false
+
+    ## 共享集群相关配置
+    sharedCluster:
+      enabledCObjKinds:
+        - GameDeployment
+        - GameStatefulSet
+        - GeneralPodAutoscaler
+        - HookRun
+        - HookTemplate
+      enabledCRDs:
+        - gamedeployments.tkex.tencent.com
+        - gamestatefulsets.tkex.tencent.com
+        - generalpodautoscalers.autoscaling.tkex.tencent.com
+        - hookruns.tkex.tencent.com
+        - hooktemplates.tkex.tencent.com
+
+## 挂载的 server. etcd cert 和 jwt key 对应的 secret 名称
+secret:
+  bcsServerCerts: bcs-server-certs
+  bcsClientCerts: bcs-client-certs
+  bcsClientCertsWithoutEncrypted: bcs-client-certs-without-encrypted
+  etcdCerts: bcs-etcd-certs
+  bcsGatewayCerts: bcs-gateway-certs
+
+## Pod 注解配置
+podAnnotations: {}
+
+## Pod 安全性上下文
+podSecurityContext:
+  {}
+  # fsGroup: 2000
+
+## 容器安全性上下文
+securityContext:
+  {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+## 扩缩容配置
+autoscaling:
+  enabled: false
+  minReplicas: 2
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 80
+  targetMemoryUtilizationPercentage: 80
+
+## 网络配置类
+ingress:
+  enabled: false
+  className: ""
+  rules:
+    - host: bcs-cr.example.com
+      paths:
+        - path: /metrics
+          portNumber: 9092
+        - path: /
+          portNumber: 9091
+  tls: []
+
+service:
+  type: ClusterIP
+  ports:
+    - name: grpc
+      port: 9090
+      targetPort: 9090
+      protocol: TCP
+    - name: http
+      port: 9089
+      targetPort: 9089
+      protocol: TCP
+    - name: metric
+      port: 9091
+      targetPort: 9091
+      protocol: TCP
+
+## 权限控制类
+serviceAccount:
+  create: true
+  name: bcs-cluster-resources
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+## 指标，监控等
+metrics:
+  enabled: false
+
+  serviceMonitor:
+    enabled: false
+    interval: ""
+    scrapeTimeout: ""
+
+## 蓝鲸日志采集
+bkLogCollection:
+  enabled: false
+  dataId: 1
