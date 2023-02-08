@@ -1,12 +1,12 @@
 package cmd
 
 import (
+	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
+
 	"bscp.io/cmd/data-service/app"
 	"bscp.io/pkg/cc"
 	"bscp.io/pkg/runtime/flags"
-
-	"github.com/spf13/cobra"
-	"github.com/spf13/pflag"
 )
 
 // SysOpt is the system option

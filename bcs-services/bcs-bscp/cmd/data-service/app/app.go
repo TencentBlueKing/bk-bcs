@@ -21,6 +21,11 @@ import (
 	"os"
 	"strconv"
 
+	gprm "github.com/grpc-ecosystem/go-grpc-prometheus"
+	etcd3 "go.etcd.io/etcd/client/v3"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
+
 	"bscp.io/cmd/data-service/options"
 	"bscp.io/cmd/data-service/service"
 	"bscp.io/pkg/cc"
@@ -34,11 +39,6 @@ import (
 	"bscp.io/pkg/runtime/shutdown"
 	"bscp.io/pkg/serviced"
 	"bscp.io/pkg/tools"
-
-	gprm "github.com/grpc-ecosystem/go-grpc-prometheus"
-	etcd3 "go.etcd.io/etcd/client/v3"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials"
 )
 
 // RunServer run the data service

@@ -38,9 +38,9 @@ Use "bk-bscp-dataservice migrate [command] --help" for more information about a 
 # 对于新加的migration，需要重新编译data-service服务，才能包含并可执行新的migration操作
 $ ./data-service migrate create -n init_schema
 Generated new migration files:
-./db-migration/migrations/20230207215606_init_schema.go
-./db-migration/migrations/sql/20230207215606_init_schema_up.sql
-./db-migration/migrations/sql/20230207215606_init_schema_down.sql
+./cmd/data-service/db-migration/migrations/20230207215606_init_schema.go
+./cmd/data-service/db-migration/migrations/sql/20230207215606_init_schema_up.sql
+./cmd/data-service/db-migration/migrations/sql/20230207215606_init_schema_down.sql
 
 # 为了便于演示，已经用上面同样的方式另外创建了两个测试用的migration，name参数分别为test_mig001和test_mig002
 # 查看当前db的迁移状态，3个pending代表有三个migration待做迁移
@@ -109,5 +109,5 @@ Migration 20230207215606_init_schema pending
 ### 注意事项
 - migrate的up、down、status子命令都需要连接mysql，所以需要用-c参数指定data-service的配置文件，用于获取mysql配置
 - 对于新加的migration，需要重新编译data-service服务，才能包含并可执行新的migration操作
-- data-service的migrate create命令需要在${bscp源码所在根目录}/cmd/data-service目录下运行，才能正常运行且保证生成的migration相关文件在正确位置
+- data-service的migrate create命令需要在bscp源码根目录下运行，才能正常运行且保证生成的migration相关文件在正确位置
 - migrate create指定的migration名称，中划线'-'会被转化成下划线'_'，以保持migration相关文件名称格式统一

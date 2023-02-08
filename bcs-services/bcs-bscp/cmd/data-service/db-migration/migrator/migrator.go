@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"bscp.io/cmd/data-service/db-migration"
+	"bscp.io/pkg/criteria/constant"
 )
 
 var allSQLFiles []string
@@ -67,7 +68,9 @@ func Init(db *sql.DB) (*Migrator, error) {
 
 	// Create `schema_migrations` table to remember which migrations were executed.
 	if _, err := db.Exec(`CREATE TABLE IF NOT EXISTS schema_migrations (
-		version varchar(255)
+		id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+		applied DATETIME ( 6 ) NOT NULL,
+		version VARCHAR ( 255 )
 	);`); err != nil {
 		fmt.Println("Unable to create `schema_migrations` table", err)
 		return migrator, err
@@ -134,7 +137,8 @@ func (m *Migrator) Up(step int) error {
 			return err
 		}
 
-		if _, err := tx.Exec("INSERT INTO `schema_migrations` VALUES(?)", mg.Version); err != nil {
+		if _, err := tx.Exec("INSERT INTO `schema_migrations` (applied, version) VALUES(?, ?)",
+			time.Now().Format(constant.TimeStdFormat), mg.Version); err != nil {
 			tx.Rollback()
 			return err
 		}
@@ -224,13 +228,14 @@ func Create(name string) error {
 
 	var out bytes.Buffer
 
-	t := template.Must(template.ParseFiles("./db-migration/migrator/template.txt"))
+	t := template.Must(template.ParseFiles("./cmd/data-service/db-migration/migrator/schema.tmpl"))
 	err := t.Execute(&out, in)
 	if err != nil {
 		return errors.New("Unable to execute template:" + err.Error())
 	}
 
-	migrationFile, err := os.Create(fmt.Sprintf("./db-migration/migrations/%s_%s.go", version, fileName))
+	migrationFile, err := os.Create(fmt.Sprintf("./cmd/data-service/db-migration/migrations/%s_%s.go",
+		version, fileName))
 	if err != nil {
 		return errors.New("Unable to create migration file:" + err.Error())
 	}
@@ -240,13 +245,15 @@ func Create(name string) error {
 		return errors.New("Unable to write to migration file:" + err.Error())
 	}
 
-	upSQLFile, err := os.Create(fmt.Sprintf("./db-migration/migrations/sql/%s_%s_up.sql", version, fileName))
+	upSQLFile, err := os.Create(fmt.Sprintf("./cmd/data-service/db-migration/migrations/sql/%s_%s_up.sql",
+		version, fileName))
 	if err != nil {
 		return errors.New("Unable to create up sql file:" + err.Error())
 	}
 	defer upSQLFile.Close()
 
-	downSQLFile, err := os.Create(fmt.Sprintf("./db-migration/migrations/sql/%s_%s_down.sql", version, fileName))
+	downSQLFile, err := os.Create(fmt.Sprintf("./cmd/data-service/db-migration/migrations/sql/%s_%s_down.sql",
+		version, fileName))
 	if err != nil {
 		return errors.New("Unable to create down sql file:" + err.Error())
 	}

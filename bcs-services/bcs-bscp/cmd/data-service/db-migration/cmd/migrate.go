@@ -3,12 +3,12 @@ package cmd
 import (
 	"fmt"
 
+	"github.com/spf13/cobra"
+
 	"bscp.io/cmd/data-service/db-migration/migrator"
 	"bscp.io/pkg/cc"
 	// run the init function to add migrations
 	_ "bscp.io/cmd/data-service/db-migration/migrations"
-
-	"github.com/spf13/cobra"
 )
 
 var migrateCmd = &cobra.Command{
