@@ -21,12 +21,14 @@ package main
 
 import (
 	"context"
+	"errors"
 	"flag"
 	"fmt"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/mysql"
@@ -35,6 +37,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store"
 	pm "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/project"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/stringx"
 )
 
 const (
@@ -53,6 +56,7 @@ var (
 	mongoUser   string
 	mongoPwd    string
 	mongoDBName string
+	initProject bool
 
 	ccdb  *gorm.DB
 	model store.ProjectModel
@@ -138,6 +142,14 @@ func main() {
 	}
 	fmt.Printf("[%s] migrate success! inserted %d projects, updated %d projects\n",
 		time.Now().Format(time.RFC3339), insertCount, updateCount)
+	if initProject {
+		fmt.Println("start init built-in project...")
+		if err := initBuiltInProject(); err != nil {
+			fmt.Printf("check and upsert init project failed, err: %s\n", err.Error())
+			return
+		}
+		fmt.Println("init built-in project success!")
+	}
 }
 
 func parseFlags() {
@@ -153,6 +165,9 @@ func parseFlags() {
 	flag.StringVar(&mongoUser, "mongo_user", "", "access mongo username")
 	flag.StringVar(&mongoPwd, "mongo_pwd", "", "access mongo password")
 	flag.StringVar(&mongoDBName, "mongo_db_name", "", "access mongo db name")
+
+	// init built-in project
+	flag.BoolVar(&initProject, "init_project", false, "whether to init the built-in project")
 
 	flag.Parse()
 }
@@ -192,6 +207,43 @@ func fetchBCSCCData() ([]BCSCCProjectData, error) {
 	var p []BCSCCProjectData
 	ccdb.Table(mysqlTableName).Select("*").Scan(&p)
 	return p, nil
+}
+
+// upsertInitProject 初始化集群配置，项目ID / Code 固定
+func initBuiltInProject() error {
+	projectID := stringx.GetEnv("INIT_PROJECT_ID", "")
+	if projectID == "" {
+		return errors.New("init projectID can not be empty")
+	}
+	p := &pm.Project{
+		ProjectID:   projectID,
+		Name:        "蓝鲸",
+		ProjectCode: stringx.GetEnv("INIT_PROJECT_CODE", "blueking"),
+		Creator:     stringx.GetEnv("INIT_PROJECT_USER", "admin"),
+		Updater:     stringx.GetEnv("INIT_PROJECT_USER", "admin"),
+		Managers:    stringx.GetEnv("INIT_PROJECT_USER", "admin"),
+		ProjectType: 0,
+		UseBKRes:    false,
+		Description: "BCS built-in project",
+		IsOffline:   false,
+		Kind:        "k8s",
+		BusinessID:  stringx.GetEnv("INIT_PROJECT_BUSINESS_ID", "2"),
+		DeployType:  2,
+		BGID:        "0",
+		DeptID:      "0",
+		CenterID:    "0",
+		IsSecret:    false,
+		CreateTime:  time.Now().Format(timeLayout),
+		UpdateTime:  time.Now().Format(timeLayout),
+	}
+	_, err := model.GetProject(context.Background(), p.ProjectID)
+	if err == nil {
+		return nil
+	}
+	if err != nil && err != drivers.ErrTableRecordNotFound {
+		return err
+	}
+	return model.CreateProject(context.Background(), p)
 }
 
 func insertProject(p BCSCCProjectData) error {
