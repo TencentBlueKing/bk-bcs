@@ -40,6 +40,9 @@ import (
 	"google.golang.org/grpc"
 	grpcCreds "google.golang.org/grpc/credentials"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
+	"github.com/Tencent/bk-bcs/bcs-common/common/tcp/listener"
+	"github.com/Tencent/bk-bcs/bcs-common/common/types"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/cluster"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/conf"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
@@ -154,6 +157,10 @@ func (crSvc *clusterResourcesService) initMicro() error {
 		server.WrapHandler(
 			// 格式化返回结果
 			wrapper.NewResponseFormatWrapper(),
+		),
+		server.WrapHandler(
+			//	链路追踪
+			wrapper.NewTracingWrapper(),
 		),
 		server.WrapHandler(
 			// 记录 API 访问流水日志
