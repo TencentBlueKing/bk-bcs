@@ -19,6 +19,7 @@ import (
 	"strings"
 	"time"
 
+	clusternet "github.com/clusternet/clusternet/pkg/generated/clientset/versioned"
 	"github.com/hashicorp/go-version"
 	"github.com/pkg/errors"
 	k8sVersion "k8s.io/apimachinery/pkg/version"
@@ -64,6 +65,21 @@ func GetK8SClientByClusterId(clusterId string) (*kubernetes.Clientset, error) {
 		BearerToken: bcsConf.Token,
 	}
 	k8sClient, err := kubernetes.NewForConfig(config)
+	if err != nil {
+		return nil, err
+	}
+	return k8sClient, nil
+}
+
+// GetClusterNetClientByClusterId 通过集群 ID 获取 clusternet client 对象
+func GetClusterNetClientByClusterId(clusterId string) (*clusternet.Clientset, error) {
+	bcsConf := GetBCSConfByClusterId(clusterId)
+	host := fmt.Sprintf("%s/clusters/%s", bcsConf.Host, clusterId)
+	config := &rest.Config{
+		Host:        host,
+		BearerToken: bcsConf.Token,
+	}
+	k8sClient, err := clusternet.NewForConfig(config)
 	if err != nil {
 		return nil, err
 	}

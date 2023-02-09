@@ -36,19 +36,13 @@ import (
 
 // Config 配置
 type Config struct {
-	Dispatch []DispatchConf `yaml:"dispatch"`
-}
-
-// DispatchConf xxx
-type DispatchConf struct {
-	ClusterID  string                       `yaml:"cluster_id"`
-	SourceType clientutil.MonitorSourceType `yaml:"source_type"`
+	Dispatch []clientutil.DispatchConf `yaml:"dispatch"`
 }
 
 // BCSSystemStore implements the store node API on top of the Prometheus remote read API.
 type BCSSystemStore struct {
 	config   *Config
-	dispatch map[string]DispatchConf
+	dispatch map[string]clientutil.DispatchConf
 }
 
 // NewBCSSystemStore :
@@ -60,7 +54,7 @@ func NewBCSSystemStore(conf []byte) (*BCSSystemStore, error) {
 
 	store := &BCSSystemStore{
 		config:   &config,
-		dispatch: make(map[string]DispatchConf, 0),
+		dispatch: make(map[string]clientutil.DispatchConf, 0),
 	}
 
 	for _, d := range config.Dispatch {
@@ -173,7 +167,7 @@ func (s *BCSSystemStore) Series(r *storepb.SeriesRequest, srv storepb.Store_Seri
 		return err
 	}
 
-	client, err := source.ClientFactory(ctx, cluster.ClusterId, s.dispatch[clusterID].SourceType)
+	client, err := source.ClientFactory(ctx, cluster.ClusterId, s.dispatch[clusterID].SourceType, s.dispatch)
 	if err != nil {
 		return err
 	}

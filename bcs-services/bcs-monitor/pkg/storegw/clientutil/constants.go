@@ -16,7 +16,7 @@ package clientutil
 const (
 	// MinStepSeconds 最小步长, 单位秒
 	MinStepSeconds = 60
-	// SeriesStepDelta 查询 Series 的回溯步长, 单位秒
+	// SeriesStepDeltaSeconds 查询 Series 的回溯步长, 单位秒
 	SeriesStepDeltaSeconds = 60 * 5
 )
 
@@ -26,4 +26,12 @@ type MonitorSourceType string
 const (
 	// MonitorSourceCompute 算力 metrics
 	MonitorSourceCompute MonitorSourceType = "compute"
+	// MonitorSourceFederation 联邦集群 metrics
+	MonitorSourceFederation MonitorSourceType = "federation"
 )
+
+// DispatchConf xxx
+type DispatchConf struct {
+	ClusterID  string            `yaml:"cluster_id"`
+	SourceType MonitorSourceType `yaml:"source_type"`
+}

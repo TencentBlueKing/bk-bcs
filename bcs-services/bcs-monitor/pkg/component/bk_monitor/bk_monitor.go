@@ -267,3 +267,18 @@ func QueryGrayClusterMap(ctx context.Context, host string) (map[string]struct{},
 
 	return grepClusterMap, nil
 }
+
+// IsBKMonitorEnabled 集群是否接入到蓝鲸监控
+func IsBKMonitorEnabled(ctx context.Context, clusterId string) (bool, error) {
+	// 不配置则全量接入
+	if len(config.G.BKMonitor.MetadataURL) == 0 {
+		return true, nil
+	}
+	grayClusterMap, err := QueryGrayClusterMap(ctx, config.G.BKMonitor.MetadataURL)
+	if err != nil {
+		return false, err
+	}
+
+	_, ok := grayClusterMap[clusterId]
+	return ok, nil
+}

@@ -18,11 +18,12 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	bkmonitor_client "github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component/bk_monitor"
 	bcstesting "github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/testing"
 )
 
 func TestIsBKMonitorEnabled(t *testing.T) {
-	ok, err := IsBKMonitorEnabled(context.Background(), bcstesting.GetTestClusterId())
+	ok, err := bkmonitor_client.IsBKMonitorEnabled(context.Background(), bcstesting.GetTestClusterId())
 	assert.NoError(t, err)
 	assert.Equal(t, ok, false)
 }
