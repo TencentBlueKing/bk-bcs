@@ -95,6 +95,16 @@ func (c *CreateRepositoryAction) create(takeover bool, data *helmmanager.Reposit
 	r := &entity.Repository{}
 	r.LoadFromProto(data)
 
+	// check repo exist in store
+	dbRepo, err := c.model.GetRepository(c.ctx, data.GetProjectCode(), data.GetName())
+	if err != nil && !errors.Is(err, drivers.ErrTableRecordNotFound) {
+		return err
+	}
+	// repo is exit
+	if dbRepo != nil {
+		return errors.New("repo is exist")
+	}
+
 	projectHandler := c.platform.User(repo.User{
 		Name:     data.GetCreateBy(),
 		Password: data.GetPassword(),

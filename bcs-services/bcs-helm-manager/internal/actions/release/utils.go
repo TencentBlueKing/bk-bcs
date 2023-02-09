@@ -15,6 +15,7 @@ package release
 import (
 	"context"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
@@ -155,4 +156,37 @@ func filterIndex(offset, limit int, release []*helmmanager.Release) []*helmmanag
 	}
 
 	return release[offset : offset+limit]
+}
+
+var shouldRemoveAnnotations = []string{
+	"io.tencent.paas.creator",
+	"io.tencent.paas.updator",
+	"io.tencent.paas.version",
+}
+
+func removeCustomAnnotations(manifest string) *string {
+	// Split the input string into lines
+	lines := strings.Split(manifest, "\n")
+
+	// Create a new slice to store the filtered lines
+	filteredLines := make([]string, 0)
+
+	// Loop through the lines and remove the specified lines
+	for _, line := range lines {
+		shouldRemove := false
+		for _, lineToRemove := range shouldRemoveAnnotations {
+			if strings.Contains(line, lineToRemove) {
+				shouldRemove = true
+				break
+			}
+		}
+
+		if !shouldRemove {
+			filteredLines = append(filteredLines, line)
+		}
+	}
+
+	// Join the filtered lines into a single string
+	result := strings.Join(filteredLines, "\n")
+	return &result
 }

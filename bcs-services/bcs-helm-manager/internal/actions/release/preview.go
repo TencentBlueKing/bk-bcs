@@ -137,13 +137,13 @@ func (r *ReleasePreviewAction) generateReleasePreview(oldRelease,
 	for _, v := range newRelease.Hooks {
 		manifest += "\n---\n" + v.Manifest
 	}
-	preview.NewContent = &manifest
+	preview.NewContent = removeCustomAnnotations(manifest)
 	if oldRelease != nil {
 		oldManifest := oldRelease.Manifest
 		for _, v := range oldRelease.Hooks {
 			oldManifest += "\n---\n" + v.Manifest
 		}
-		preview.OldContent = &oldManifest
+		preview.OldContent = removeCustomAnnotations(oldManifest)
 	}
 
 	// get contents
