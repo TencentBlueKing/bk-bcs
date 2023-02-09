@@ -18,7 +18,13 @@ import (
 	"math"
 	"net"
 	"net/http"
+	"os"
 	"strconv"
+
+	gprm "github.com/grpc-ecosystem/go-grpc-prometheus"
+	etcd3 "go.etcd.io/etcd/client/v3"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 
 	"bscp.io/cmd/data-service/options"
 	"bscp.io/cmd/data-service/service"
@@ -33,12 +39,17 @@ import (
 	"bscp.io/pkg/runtime/shutdown"
 	"bscp.io/pkg/serviced"
 	"bscp.io/pkg/tools"
-
-	gprm "github.com/grpc-ecosystem/go-grpc-prometheus"
-	etcd3 "go.etcd.io/etcd/client/v3"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials"
 )
+
+// RunServer run the data service
+func RunServer(sysOpt *cc.SysOption) {
+	opts := options.InitOptions(sysOpt)
+	if err := Run(opts); err != nil {
+		fmt.Fprintf(os.Stderr, "start data service failed, err: %v", err)
+		logs.CloseLogs()
+		os.Exit(1)
+	}
+}
 
 // Run start the data service
 func Run(opt *options.Option) error {

@@ -13,22 +13,9 @@ limitations under the License.
 package main
 
 import (
-	"fmt"
-	"os"
-
-	"bscp.io/cmd/data-service/app"
-	"bscp.io/cmd/data-service/options"
-	"bscp.io/pkg/cc"
-	"bscp.io/pkg/logs"
+	"bscp.io/cmd/data-service/db-migration/cmd"
 )
 
 func main() {
-	cc.InitService(cc.DataServiceName)
-
-	opts := options.InitOptions()
-	if err := app.Run(opts); err != nil {
-		fmt.Fprintf(os.Stderr, "start data service failed, err: %v", err)
-		logs.CloseLogs()
-		os.Exit(1)
-	}
+	cmd.Execute()
 }

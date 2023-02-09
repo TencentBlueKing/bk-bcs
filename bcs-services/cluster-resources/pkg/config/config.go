@@ -21,17 +21,18 @@ import (
 	"net"
 	"os"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/util"
-	bkiam "github.com/TencentBlueKing/iam-go-sdk"
-	"github.com/TencentBlueKing/iam-go-sdk/logger"
-	"github.com/TencentBlueKing/iam-go-sdk/metric"
 	jwtGo "github.com/dgrijalva/jwt-go"
 	"github.com/sirupsen/logrus"
+	"go.opentelemetry.io/otel/attribute"
 	"gopkg.in/yaml.v3"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/util"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/envs"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
+	bkiam "github.com/TencentBlueKing/iam-go-sdk"
+	"github.com/TencentBlueKing/iam-go-sdk/logger"
+	"github.com/TencentBlueKing/iam-go-sdk/metric"
 )
 
 // G 全局配置，可在业务逻辑中使用
@@ -122,6 +123,13 @@ type ClusterResourcesConf struct {
 	Log     LogConf     `yaml:"log"`
 	Redis   RedisConf   `yaml:"redis"`
 	Global  GlobalConf  `yaml:"crGlobal"`
+	Tracing TracingConf `yaml:"tracing"`
+}
+
+// TracingConf 链路追踪配置
+type TracingConf struct {
+	OTLPEndpoint  string               `yaml:"otlpEndpoint" usage:"OpenTelemetry Collector service endpoint"`
+	ResourceAttrs []attribute.KeyValue `yaml:"resourceAttrs" usage:"attributes of traced service"`
 }
 
 func (c *ClusterResourcesConf) initServerAddress() error {
