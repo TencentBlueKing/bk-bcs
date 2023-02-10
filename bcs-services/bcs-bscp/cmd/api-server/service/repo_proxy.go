@@ -25,6 +25,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/bluele/gcache"
+	"github.com/go-chi/chi/v5"
+	"github.com/tidwall/gjson"
+
 	"bscp.io/pkg/cc"
 	"bscp.io/pkg/criteria/constant"
 	"bscp.io/pkg/criteria/errf"
@@ -37,10 +41,6 @@ import (
 	"bscp.io/pkg/rest"
 	"bscp.io/pkg/runtime/gwparser"
 	"bscp.io/pkg/thirdparty/repo"
-
-	"github.com/bluele/gcache"
-	"github.com/gorilla/mux"
-	"github.com/tidwall/gjson"
 )
 
 const (
@@ -85,7 +85,7 @@ func (p repoProxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// if not created, need to create.
 	if r.Method == http.MethodPut {
 		// parse biz_id.
-		bizIDStr := mux.Vars(r)["biz_id"]
+		bizIDStr := chi.URLParam(r, "biz_id")
 		bizID, err := strconv.ParseUint(bizIDStr, 10, 64)
 		if err != nil {
 			logs.Errorf("biz_id parse uint failed, err: %v, rid: %s", err, kt.Rid)
@@ -444,7 +444,7 @@ func getNodeMetadata(kt *kit.Kit, cli *repo.Client, opt *repo.NodeOption, appID 
 
 // getBizIDAndAppID get biz_id and app_id from req path.
 func getBizIDAndAppID(kt *kit.Kit, req *http.Request) (uint32, uint32, error) {
-	bizIDStr := mux.Vars(req)["biz_id"]
+	bizIDStr := chi.URLParam(req, "biz_id")
 	bizID, err := strconv.ParseUint(bizIDStr, 10, 64)
 	if err != nil {
 		logs.Errorf("biz id parse uint failed, err: %v, rid: %s", err, kt.Rid)
@@ -455,7 +455,7 @@ func getBizIDAndAppID(kt *kit.Kit, req *http.Request) (uint32, uint32, error) {
 		return 0, 0, errf.New(errf.InvalidParameter, "biz_id should > 0")
 	}
 
-	appIDStr := mux.Vars(req)["app_id"]
+	appIDStr := chi.URLParam(req, "app_id")
 	appID, err := strconv.ParseUint(appIDStr, 10, 64)
 	if err != nil {
 		logs.Errorf("app id parse uint failed, err: %v, rid: %s", err, kt.Rid)

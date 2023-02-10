@@ -15,6 +15,7 @@ package auth
 
 import (
 	"fmt"
+	"net/http"
 	"reflect"
 
 	"bscp.io/pkg/cc"
@@ -37,6 +38,10 @@ type Authorizer interface {
 	// AuthorizeWithResp authorize if user has permission to the resources, assign error to response if occurred.
 	// If user is unauthorized, assign error and need applied permissions into response, returns unauthorized error.
 	AuthorizeWithResp(kt *kit.Kit, resp interface{}, resources ...*meta.ResourceAttribute) error
+	// UnifiedAuthentication API 鉴权中间件
+	UnifiedAuthentication(next http.Handler) http.Handler
+	// WebAuthentication 网页鉴权中间件
+	WebAuthentication(next http.Handler) http.Handler
 }
 
 // NewAuthorizer create an authorizer for iam authorize related operation.

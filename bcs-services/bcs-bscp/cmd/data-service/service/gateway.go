@@ -105,5 +105,5 @@ func newDataServiceMux() (*runtime.ServeMux, error) {
 
 // newGrpcMux new grpc mux that has some processing of built-in http request to grpc request.
 func newGrpcMux() *runtime.ServeMux {
-	return runtime.NewServeMux(grpcgw.MetadataOpt, grpcgw.MarshalerOpt)
+	return runtime.NewServeMux(grpcgw.MetadataOpt, grpcgw.JsonMarshalerOpt)
 }

@@ -17,6 +17,8 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/go-chi/render"
+
 	"bscp.io/pkg/logs"
 )
 
@@ -28,9 +30,11 @@ type BaseResp struct {
 
 // Response is a http standard response
 type Response struct {
-	Code    int32       `json:"code"`
-	Message string      `json:"message"`
-	Data    interface{} `json:"data"`
+	Err            error       `json:"-"` // low-level runtime error
+	HTTPStatusCode int         `json:"-"` // http response status code
+	Code           int32       `json:"code"`
+	Message        string      `json:"message"`
+	Data           interface{} `json:"data"`
 }
 
 // NewBaseResp new BaseResp.
@@ -56,4 +60,24 @@ func WriteResp(w http.ResponseWriter, resp interface{}) {
 	}
 
 	return
+}
+
+// Render chi Render 实现
+func (res *Response) Render(w http.ResponseWriter, r *http.Request) error {
+	statusCode := res.HTTPStatusCode
+	if statusCode == 0 {
+		statusCode = http.StatusOK
+	}
+	render.Status(r, statusCode)
+	return nil
+}
+
+// UnauthorizedErrRender 未登入返回
+func UnauthorizedErrRender(err error) render.Renderer {
+	return &Response{Code: 401, Message: err.Error(), HTTPStatusCode: http.StatusUnauthorized}
+}
+
+// OKRender 正常返回
+func OKRender(data interface{}) render.Renderer {
+	return &Response{Data: data}
 }

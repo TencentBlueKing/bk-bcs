@@ -12,13 +12,30 @@ limitations under the License.
 
 package grpcgw
 
-import "github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
+import (
+	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
+	"google.golang.org/protobuf/encoding/protojson"
+)
 
 var (
 	// MetadataOpt 自定义头部
 	MetadataOpt = runtime.WithMetadata(metadataHandler)
+	// AuthLoginOpt
+	AuthLoginOpt = runtime.WithMetadata(authCookieHandler)
 	// MarshalerOption自定义返回结构
 	MarshalerOpt = runtime.WithMarshalerOption(runtime.MIMEWildcard, &jsonResponse{})
+
+	// JsonMarshalerOpt 序列化
+	JsonMarshalerOpt = runtime.WithMarshalerOption(runtime.MIMEWildcard, &runtime.JSONPb{
+		MarshalOptions: protojson.MarshalOptions{
+			EmitUnpopulated: true,
+			UseProtoNames:   true,
+		},
+		UnmarshalOptions: protojson.UnmarshalOptions{
+			DiscardUnknown: true,
+		},
+	})
+
 	// ErrorHandlerOpt 自定义错误处理
 	ErrorHandlerOpt = runtime.WithErrorHandler(errorHandler)
 )

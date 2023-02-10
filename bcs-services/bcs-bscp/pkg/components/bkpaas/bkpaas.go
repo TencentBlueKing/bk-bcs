@@ -11,3 +11,7 @@ limitations under the License.
 */
 
 package bkpaas
+
+type userInfo struct {
+	Username string `json:"username"`
+}

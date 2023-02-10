@@ -235,26 +235,21 @@ func (s *Service) initLogicModule() error {
 
 // GetUserInfo 获取用户信息
 func (s *Service) GetUserInfo(ctx context.Context, req *pbas.UserCredentialReq) (*pbas.UserInfoResp, error) {
+	token := req.GetToken()
+	if token == "" {
+		return nil, errors.New("token not provided")
+	}
+
 	// 优先使用 InnerHost
 	host := cc.AuthServer().LoginAuth.Host
 	if cc.AuthServer().LoginAuth.InnerHost != "" {
 		host = cc.AuthServer().LoginAuth.InnerHost
 	}
 
-	switch cc.AuthServer().LoginAuth.Provider {
-	case "BK_PAAS": // 外部 PaaS 平台
-		user, err := bkpaas.GetBKUserInfoByToken(ctx, host, req.GetUid(), req.GetToken())
-		if err != nil {
-			return nil, err
-		}
-		return &pbas.UserInfoResp{Username: user.UserName, AvatarUrl: ""}, nil
-	case "BK_LOGIN": // 统一登入服务
-		user, err := bkpaas.GetBKUserInfoByTicket(ctx, host, req.GetUid(), req.GetToken())
-		if err != nil {
-			return nil, err
-		}
-		return &pbas.UserInfoResp{Username: user.UserName, AvatarUrl: ""}, nil
-	default:
-		return nil, errors.New("provider not supported")
+	username, err := bkpaas.GetUserInfoByToken(ctx, host, req.GetUid(), token)
+	if err != nil {
+		return nil, err
 	}
+
+	return &pbas.UserInfoResp{Username: username, AvatarUrl: ""}, nil
 }

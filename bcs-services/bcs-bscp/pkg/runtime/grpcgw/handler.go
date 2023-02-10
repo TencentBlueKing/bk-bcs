@@ -15,13 +15,16 @@ package grpcgw
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 
-	"bscp.io/pkg/criteria/constant"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
+
+	"bscp.io/pkg/cc"
+	"bscp.io/pkg/criteria/constant"
 )
 
 // ErrStatus 返回的错误结果体
@@ -36,6 +39,8 @@ func errorHandler(ctx context.Context, mux *runtime.ServeMux, marshaler runtime.
 	s := status.Convert(err)
 	status := &errStatus{Code: 400, Message: s.Message()}
 	body, _ := json.Marshal(status)
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	w.WriteHeader(http.StatusUnauthorized)
 	w.Write(body)
 }
 
@@ -61,4 +66,44 @@ func metadataHandler(ctx context.Context, req *http.Request) metadata.MD {
 		constant.UserKey, req.Header.Get(constant.UserKey),
 		constant.AppCodeKey, req.Header.Get(constant.AppCodeKey),
 	)
+}
+
+// authCookieHandler
+func authCookieHandler(ctx context.Context, req *http.Request) metadata.MD {
+	provider := cc.AuthServer().LoginAuth.Provider
+	var (
+		uid   string
+		token string
+	)
+
+	switch provider {
+	case "BK_PAAS":
+		// cookies 可能不存在场景, 错误忽略
+		tokenCookie, err := req.Cookie("bk_token")
+		if err == nil {
+			token = tokenCookie.Value
+		}
+
+	case "BK_LOGIN":
+		uidCookie, err := req.Cookie("bk_uid")
+		if err != nil {
+			uid = uidCookie.Value
+		}
+
+		tokenCookie, err := req.Cookie("bk_ticket")
+		if err != nil {
+			token = tokenCookie.Value
+		}
+
+	default:
+		panic(errors.New("provider not supported"))
+	}
+
+	md := metadata.New(map[string]string{
+		constant.AuthLoginProviderKey: provider,
+		constant.AuthLoginUID:         uid,
+		constant.AuthLoginToken:       token,
+	})
+
+	return md
 }

@@ -16,6 +16,9 @@ package constant
 // This scope is used to define all the constant keys which is used inside and outside
 // the BSCP system except sidecar.
 const (
+	// KitKey
+	KitKey = "X-BSCP-KIT"
+
 	// RidKey is request id header key.
 	RidKey = "X-Bkapi-Request-Id"
 
@@ -47,4 +50,10 @@ const (
 	SideUserKey = "side-user"
 	// SideWorkspaceDir sidecar workspace dir name.
 	SideWorkspaceDir = "bk-bscp"
+)
+
+const (
+	AuthLoginProviderKey = "auth-login-provider"
+	AuthLoginUID         = "auth-login-uid"
+	AuthLoginToken       = "auth-login-token"
 )

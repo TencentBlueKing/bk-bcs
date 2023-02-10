@@ -18,7 +18,10 @@ import (
 	"net"
 	"net/http"
 	"strconv"
+	"time"
 
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
@@ -28,6 +31,7 @@ import (
 	"bscp.io/pkg/logs"
 	pbas "bscp.io/pkg/protocol/auth-server"
 	"bscp.io/pkg/runtime/grpcgw"
+	"bscp.io/pkg/runtime/handler"
 	"bscp.io/pkg/serviced"
 	"bscp.io/pkg/tools"
 )
@@ -57,9 +61,20 @@ func newGateway(st serviced.State, iamSys *sys.Sys) (*gateway, error) {
 
 // handler return gateway handler.
 func (g *gateway) handler() http.Handler {
-	mux := http.NewServeMux()
-	mux.Handle("/", g.mux)
-	return g.setFilter(mux)
+	r := chi.NewRouter()
+	r.Use(middleware.RequestID)
+	r.Use(middleware.RealIP)
+	r.Use(middleware.Logger)
+	r.Use(middleware.Recoverer)
+	r.Use(middleware.Timeout(60 * time.Second))
+
+	r.HandleFunc("/healthz", g.Healthz)
+	r.Mount("/", handler.RegisterCommonToolHandler())
+	r.Route("/api/v1/auth", func(r chi.Router) {
+		r.With(g.setFilter).Mount("/", g.mux)
+	})
+
+	return r
 }
 
 // newAuthServerMux new auth server mux.

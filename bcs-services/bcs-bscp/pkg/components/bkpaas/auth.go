@@ -1,3 +1,5 @@
+//go:build !bk_login
+
 /*
 Tencent is pleased to support the open source community by making Basic Service Configuration Platform available.
 Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
@@ -22,12 +24,8 @@ import (
 	"bscp.io/pkg/components"
 )
 
-type UserInfo struct {
-	UserName string `json:"username"`
-}
-
-// getBKUserInfoByToken 外部统一鉴权
-func GetBKUserInfoByToken(ctx context.Context, host, uid, token string) (*UserInfo, error) {
+// GetUserInfoByToken BK_PAAS 服务 bk_token 鉴权
+func GetUserInfoByToken(ctx context.Context, host, uid, token string) (string, error) {
 	url := fmt.Sprintf("%s/login/accounts/is_login/", host)
 	resp, err := components.GetClient().R().
 		SetContext(ctx).
@@ -35,41 +33,17 @@ func GetBKUserInfoByToken(ctx context.Context, host, uid, token string) (*UserIn
 		Get(url)
 
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
 	if resp.StatusCode() != http.StatusOK {
-		return nil, errors.Errorf("http code %d != 200, body: %s", resp.StatusCode(), resp.Body())
+		return "", errors.Errorf("http code %d != 200, body: %s", resp.StatusCode(), resp.Body())
 	}
 
-	user := new(UserInfo)
+	user := new(userInfo)
 	if err := components.UnmarshalBKResult(resp, user); err != nil {
-		return nil, err
+		return "", err
 	}
 
-	return user, nil
-}
-
-// GetBKUserInfoByTicket bicket统一鉴权
-func GetBKUserInfoByTicket(ctx context.Context, host, uid, token string) (*UserInfo, error) {
-	url := fmt.Sprintf("%s/user/is_login/", host)
-	resp, err := components.GetClient().R().
-		SetContext(ctx).
-		SetQueryParam("bk_ticket", token).
-		Get(url)
-
-	if err != nil {
-		return nil, err
-	}
-
-	if resp.StatusCode() != http.StatusOK {
-		return nil, errors.Errorf("http code %d != 200, body: %s", resp.StatusCode(), resp.Body())
-	}
-
-	user := new(UserInfo)
-	if err := components.UnmarshalBKResult(resp, user); err != nil {
-		return nil, err
-	}
-
-	return user, nil
+	return user.Username, nil
 }

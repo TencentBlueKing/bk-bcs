@@ -20,11 +20,13 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/go-chi/render"
 	"github.com/google/uuid"
 
 	"bscp.io/pkg/cc"
 	"bscp.io/pkg/criteria/constant"
 	"bscp.io/pkg/criteria/errf"
+	"bscp.io/pkg/kit"
 	"bscp.io/pkg/logs"
 	"bscp.io/pkg/rest"
 	"bscp.io/pkg/runtime/gwparser"
@@ -32,38 +34,17 @@ import (
 )
 
 // setupFilters setups all api filters here. All request would cross here, and we filter request base on URL.
-func (p *proxy) setupFilters(mux *http.ServeMux) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// cors 处理
-		origin := r.Header.Get("Origin")
-		if origin != "" {
-			w.Header().Set("Access-Control-Allow-Origin", origin)
-		} else {
-			w.Header().Set("Access-Control-Allow-Origin", "*")
-		}
-
-		allowHeaders := []string{"Origin", "Content-Length", "Content-Type", "X-Requested-With"}
-		w.Header().Set("Access-Control-Allow-Headers", strings.Join(allowHeaders, ","))
-
-		allowMethods := []string{"GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"}
-		w.Header().Set("Access-Control-Allow-Methods", strings.Join(allowMethods, ","))
-
-		w.Header().Set("Access-Control-Allow-Credentials", "true")
-
-		if r.Method == http.MethodOptions {
-			return
-		}
-
+func (p *proxy) setFilter(next http.Handler) http.Handler {
+	fn := func(w http.ResponseWriter, r *http.Request) {
 		// 设置 RequestID
 		if r.Header.Get(constant.RidKey) == "" {
 			reqID, _ := uuid.NewUUID()
 			r.Header.Set(constant.RidKey, reqID.String())
 		}
 
-		// 设置测试 user
-		if r.Header.Get(constant.UserKey) == "" {
-			r.Header.Set(constant.UserKey, "admin")
-		}
+		// 用户名从登入态获取
+		k := kit.MustGetKit(r.Context())
+		r.Header.Set(constant.UserKey, k.User)
 
 		// 测试 App
 		if r.Header.Get(constant.AppCodeKey) == "" {
@@ -89,8 +70,9 @@ func (p *proxy) setupFilters(mux *http.ServeMux) http.Handler {
 			"rid: %s", r.RequestURI, r.Method, body, kt.AppCode, kt.User, r.RemoteAddr, kt.Rid)
 
 		// handler request.
-		mux.ServeHTTP(w, r)
-	})
+		next.ServeHTTP(w, r)
+	}
+	return http.HandlerFunc(fn)
 }
 
 // Healthz service health check.
@@ -128,4 +110,12 @@ func peekRequest(req *http.Request) (string, error) {
 	}
 
 	return "", nil
+}
+
+// UserInfoHandler 鉴权后的用户信息接口
+func UserInfoHandler(w http.ResponseWriter, r *http.Request) {
+	k := kit.MustGetKit(r.Context())
+
+	user := kit.User{Username: k.User}
+	render.Render(w, r, rest.OKRender(user))
 }

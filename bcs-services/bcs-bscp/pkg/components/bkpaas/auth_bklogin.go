@@ -1,3 +1,5 @@
+//go:build bk_login
+
 /*
 Tencent is pleased to support the open source community by making Basic Service Configuration Platform available.
 Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
@@ -10,42 +12,38 @@ either express or implied. See the License for the specific language governing p
 limitations under the License.
 */
 
-// Package service NOTES
-package service
+package bkpaas
 
 import (
-	"errors"
+	"context"
+	"fmt"
 	"net/http"
 
-	"bscp.io/pkg/serviced"
-	"github.com/go-chi/chi/v5"
+	"github.com/pkg/errors"
+
+	"bscp.io/pkg/components"
 )
 
-// Service do all the api server's work
-type Service struct {
-	proxy *proxy
-}
+// GetUserInfoByToken BK_LIGIN 统一登入服务 bk_ticket 统一鉴权
+func GetUserInfoByToken(ctx context.Context, host, uid, token string) (string, error) {
+	url := fmt.Sprintf("%s/user/is_login/", host)
+	resp, err := components.GetClient().R().
+		SetContext(ctx).
+		SetQueryParam("bk_ticket", token).
+		Get(url)
 
-// Handler return service's handler.
-func (s *Service) Handler() (http.Handler, error) {
-	if s.proxy == nil {
-		return nil, errors.New("proxy is nil")
-	}
-
-	r := chi.NewRouter()
-	r.Mount("/bscp/", http.StripPrefix("/bscp", s.proxy.handler()))
-	r.Mount("/", s.proxy.handler())
-	return r, nil
-}
-
-// NewService create a service instance.
-func NewService(dis serviced.Discover) (*Service, error) {
-	p, err := newProxy(dis)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
-	return &Service{
-		proxy: p,
-	}, nil
+	if resp.StatusCode() != http.StatusOK {
+		return "", errors.Errorf("http code %d != 200, body: %s", resp.StatusCode(), resp.Body())
+	}
+
+	user := new(userInfo)
+	if err := components.UnmarshalBKResult(resp, user); err != nil {
+		return "", err
+	}
+
+	return user.Username, nil
 }

@@ -19,7 +19,7 @@ import (
 	"bscp.io/pkg/criteria/constant"
 	"bscp.io/pkg/logs"
 
-	"github.com/gorilla/mux"
+	"github.com/go-chi/chi/v5"
 )
 
 // Service do all the data service's work
@@ -37,28 +37,26 @@ func NewService(ws string) (*Service, error) {
 // Handler return service handler.
 func (s *Service) Handler() http.Handler {
 
-	router := mux.NewRouter()
-	router.HandleFunc("/repository/api/repo/create", s.createRepo).Methods(http.MethodPost)
-	router.HandleFunc("/repository/api/metadata/{project}/{repo}/file/{sign}", s.queryMetadataInfo).
-		Methods(http.MethodGet)
-	router.HandleFunc("/generic/{project}/{repo}/file/{sign}", s.uploadNode).Methods(http.MethodPut)
-	router.HandleFunc("/generic/{project}/{repo}/file/{sign}", s.getNodeInfo).Methods(http.MethodHead)
-	router.HandleFunc("/generic/{project}/{repo}/file/{sign}", s.downloadNode).Methods(http.MethodGet)
+	r := chi.NewRouter()
+	r.Use(setupFilters)
+	r.Post("/repository/api/repo/create", s.createRepo)
+	r.Get("/repository/api/metadata/{project}/{repo}/file/{sign}", s.queryMetadataInfo)
+	r.Put("/generic/{project}/{repo}/file/{sign}", s.uploadNode)
+	r.Get("/generic/{project}/{repo}/file/{sign}", s.getNodeInfo)
+	r.Get("/generic/{project}/{repo}/file/{sign}", s.downloadNode)
 
-	apiMux := http.NewServeMux()
-	apiMux.Handle("/", router)
-
-	return setupFilters(apiMux)
+	return r
 }
 
-func setupFilters(mux *http.ServeMux) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+func setupFilters(next http.Handler) http.Handler {
+	fn := func(w http.ResponseWriter, r *http.Request) {
 		rid := r.Header.Get(constant.RidKey)
 
 		// request and response details landing log for monitoring and troubleshooting problem.
 		logs.Infof("uri: %s, method: %s, rid: %s", r.RequestURI, r.Method, rid)
 
 		// handler request.
-		mux.ServeHTTP(w, r)
-	})
+		next.ServeHTTP(w, r)
+	}
+	return http.HandlerFunc(fn)
 }

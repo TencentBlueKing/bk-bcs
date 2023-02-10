@@ -27,14 +27,16 @@ import (
 
 	bscp "bscp.io"
 	"bscp.io/pkg/config"
+	"bscp.io/pkg/iam/auth"
 )
 
 // WebServer :
 type WebServer struct {
-	ctx      context.Context
-	engine   *gin.Engine
-	srv      *http.Server
-	addrIPv6 string
+	ctx        context.Context
+	engine     *gin.Engine
+	srv        *http.Server
+	addrIPv6   string
+	authorizer auth.Authorizer
 }
 
 // NewWebServer :

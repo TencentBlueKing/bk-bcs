@@ -21,7 +21,6 @@ network:
 
 # 登入鉴权
 loginAuth:
-  provider: ""
   host: ""
   innerHost: ""
 

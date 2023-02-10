@@ -147,9 +147,8 @@ message IamResourceAttributeValue {
 }
 
 message UserCredentialReq {
-    string provider = 1;
-    string uid      = 2;
-    string token    = 3;
+    string uid   = 2;
+    string token = 3;
 }
 
 message UserInfoResp {

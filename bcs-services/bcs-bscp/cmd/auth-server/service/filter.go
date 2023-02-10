@@ -29,7 +29,6 @@ import (
 	"bscp.io/pkg/iam/sys"
 	"bscp.io/pkg/logs"
 	"bscp.io/pkg/rest"
-	"bscp.io/pkg/runtime/handler"
 	"bscp.io/pkg/runtime/shutdown"
 )
 
@@ -44,17 +43,8 @@ const (
 )
 
 // setFilter set mux request filter.
-func (g *gateway) setFilter(mux *http.ServeMux) http.Handler {
-	var httpHandler http.Handler
-
-	httpHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-
-		// healthz.
-		if r.RequestURI == "/healthz" {
-			g.Healthz(w)
-			return
-		}
-
+func (g *gateway) setFilter(next http.Handler) http.Handler {
+	fn := func(w http.ResponseWriter, r *http.Request) {
 		var module string
 		// path format: /api/{api_version}/{service}/{module}/other
 		paths := strings.Split(r.URL.Path, "/")
@@ -87,17 +77,14 @@ func (g *gateway) setFilter(mux *http.ServeMux) http.Handler {
 			return
 		}
 
-		mux.ServeHTTP(w, r)
-	})
+		next.ServeHTTP(w, r)
+	}
 
-	// add common handler
-	httpHandler = handler.HTTPMiddleware(httpHandler)
-
-	return httpHandler
+	return http.HandlerFunc(fn)
 }
 
 // Healthz service health check.
-func (g *gateway) Healthz(w http.ResponseWriter) {
+func (g *gateway) Healthz(w http.ResponseWriter, r *http.Request) {
 	if shutdown.IsShuttingDown() {
 		logs.Errorf("service healthz check failed, current service is shutting down")
 		w.WriteHeader(http.StatusServiceUnavailable)

@@ -18,19 +18,20 @@ import (
 	"fmt"
 	"net/http"
 
-	"bscp.io/pkg/cc"
-	"bscp.io/pkg/iam/auth"
-	"bscp.io/pkg/logs"
-	"bscp.io/pkg/metrics"
-	pbcs "bscp.io/pkg/protocol/config-server"
-	"bscp.io/pkg/runtime/grpcgw"
-	"bscp.io/pkg/serviced"
-	"bscp.io/pkg/tools"
-
-	"github.com/gorilla/mux"
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
+
+	"bscp.io/pkg/cc"
+	"bscp.io/pkg/iam/auth"
+	"bscp.io/pkg/logs"
+	pbcs "bscp.io/pkg/protocol/config-server"
+	"bscp.io/pkg/runtime/grpcgw"
+	"bscp.io/pkg/runtime/handler"
+	"bscp.io/pkg/serviced"
+	"bscp.io/pkg/tools"
 )
 
 // proxy all server's mux proxy.
@@ -38,6 +39,7 @@ type proxy struct {
 	cfgSvrMux    *runtime.ServeMux
 	repoRevProxy *repoProxy
 	state        serviced.State
+	authorizer   auth.Authorizer
 }
 
 // newProxy create new mux proxy.
@@ -66,6 +68,7 @@ func newProxy(dis serviced.Discover) (*proxy, error) {
 		cfgSvrMux:    cfgSvrMux,
 		repoRevProxy: repoProxy,
 		state:        state,
+		authorizer:   authorizer,
 	}
 
 	return p, nil
@@ -73,40 +76,35 @@ func newProxy(dis serviced.Discover) (*proxy, error) {
 
 // handler return proxy handler.
 func (p *proxy) handler() http.Handler {
-	root := http.NewServeMux()
+	r := chi.NewRouter()
+	r.Use(middleware.RequestID)
+	r.Use(middleware.RealIP)
+	r.Use(middleware.Logger)
+	r.Use(middleware.Recoverer)
+	r.Use(handler.CORS)
+	// r.Use(middleware.Timeout(60 * time.Second))
 
-	// new http mux and set handle.
-	apiMux := http.NewServeMux()
-	apiMux.Handle("/", p.router())
-	root.Handle("/api/v1/", p.setupFilters(apiMux))
+	r.HandleFunc("/healthz", p.Healthz)
+	r.Mount("/", handler.RegisterCommonHandler())
+	// 用户信息
+	r.With(p.authorizer.UnifiedAuthentication).Get("/api/v1/auth/user/info", UserInfoHandler)
 
-	root.HandleFunc("/debug/", http.DefaultServeMux.ServeHTTP)
-	root.HandleFunc("/metrics", metrics.Handler().ServeHTTP)
-	root.HandleFunc("/healthz", p.Healthz)
+	// 服务管理, 配置管理, 分组管理, 发布管理
+	r.Route("/api/v1/config/", func(r chi.Router) {
+		r.Use(p.authorizer.UnifiedAuthentication)
+		r.Use(p.setFilter)
+		r.Mount("/", p.cfgSvrMux)
+	})
 
-	return root
-}
+	// repo 上传 / 下载 API
+	r.Route("/api/v1/api/create/content/upload", func(r chi.Router) {
+		r.Use(p.authorizer.UnifiedAuthentication)
+		r.Use(p.setFilter)
+		r.Put("/{biz_id}/app_id/{app_id}", p.repoRevProxy.ServeHTTP)
+		r.Get("/{biz_id}/app_id/{app_id}", p.repoRevProxy.ServeHTTP)
+	})
 
-// router return proxy router.
-func (p *proxy) router() *mux.Router {
-	router := mux.NewRouter()
-
-	// register config server interfaces.
-	router.PathPrefix("/api/v1/config/").Handler(p.cfgSvrMux)
-
-	// repo http proxy. put: upload
-	router.HandleFunc("/api/v1/api/create/content/upload/biz_id/{biz_id}/app_id/{app_id}",
-		func(w http.ResponseWriter, req *http.Request) {
-			p.repoRevProxy.ServeHTTP(w, req)
-		}).Methods(http.MethodPut)
-
-	// repo http proxy. get: download
-	router.HandleFunc("/api/v1/api/get/content/download/biz_id/{biz_id}/app_id/{app_id}",
-		func(w http.ResponseWriter, req *http.Request) {
-			p.repoRevProxy.ServeHTTP(w, req)
-		}).Methods(http.MethodGet)
-
-	return router
+	return r
 }
 
 // newCfgServerMux new config server mux.
@@ -162,5 +160,5 @@ func newGrpcDialOption(dis serviced.Discover, tls cc.TLSConfig) ([]grpc.DialOpti
 
 // newGrpcMux new grpc mux that has some processing of built-in http request to grpc request.
 func newGrpcMux() *runtime.ServeMux {
-	return runtime.NewServeMux(grpcgw.MetadataOpt, grpcgw.MarshalerOpt)
+	return runtime.NewServeMux(grpcgw.MetadataOpt, grpcgw.JsonMarshalerOpt)
 }

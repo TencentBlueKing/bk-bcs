@@ -19,15 +19,8 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestGetBKUserInfoByToken(t *testing.T) {
-	user, err := GetBKUserInfoByToken(context.Background(), "", "dummyUser", "")
+func TestGetUserInfoByToken(t *testing.T) {
+	username, err := GetUserInfoByToken(context.Background(), "", "dummyUser", "")
 	assert.NoError(t, err)
-	assert.True(t, user.UserName != "")
-}
-
-func TestGetBKUserInfoByTicket(t *testing.T) {
-
-	user, err := GetBKUserInfoByTicket(context.Background(), "", "dummyUser", "")
-	assert.NoError(t, err)
-	assert.True(t, user.UserName == "dummyUser")
+	assert.True(t, username != "")
 }

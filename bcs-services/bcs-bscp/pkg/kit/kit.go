@@ -16,6 +16,7 @@ package kit
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strings"
 	"time"
 
@@ -68,6 +69,12 @@ func FromGrpcContext(ctx context.Context) *Kit {
 
 	// TODO: need to add supplier id and authorization field.
 	return kit
+}
+
+// User 用户信息
+type User struct {
+	Username  string `json:"username"`
+	AvatarUrl string `json:"avatar_url"`
 }
 
 // Kit defines the basic metadata info within a task.
@@ -162,4 +169,16 @@ func (c *Kit) Vas() *Vas {
 		Rid: c.Rid,
 		Ctx: c.Ctx,
 	}
+}
+
+func WithKit(ctx context.Context, kit *Kit) context.Context {
+	return context.WithValue(ctx, constant.KitKey, kit)
+}
+
+func MustGetKit(ctx context.Context) *Kit {
+	k, ok := ctx.Value(constant.KitKey).(*Kit)
+	if !ok {
+		panic(fmt.Errorf("ctx not found kit value"))
+	}
+	return k
 }
