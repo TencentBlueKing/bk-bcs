@@ -15,8 +15,17 @@
 package config
 
 import (
+	"crypto/tls"
+	"errors"
+	"fmt"
+	"strings"
+	"time"
+
 	"github.com/spf13/viper"
+	etcd3 "go.etcd.io/etcd/client/v3"
 	"gopkg.in/yaml.v3"
+
+	"bscp.io/pkg/tools"
 )
 
 // Configuration 配置
@@ -112,4 +121,42 @@ func (c *Configuration) ReadFromViper(v *viper.Viper) error {
 	}
 	c.Viper = v
 	return c.ReadFrom(content)
+}
+
+// EtcdConf etcd配置
+func (c *Configuration) EtcdConf() (*etcd3.Config, error) {
+	endpoints := c.Viper.GetString("etcd.endpoints")
+
+	if endpoints == "" {
+		return nil, errors.New("etcd.endpoints is empty")
+	}
+
+	var tlsC *tls.Config
+	ca := c.Viper.GetString("etcd.ca")
+	cert := c.Viper.GetString("etcd.cert")
+	key := c.Viper.GetString("etcd.key")
+	if ca != "" && cert != "" && key != "" {
+		var err error
+		tlsC, err = tools.ClientTLSConfVerify(true, ca, cert, key, "")
+		if err != nil {
+			return nil, fmt.Errorf("init etcd tls config failed, err: %v", err)
+		}
+	}
+
+	etcdConf := etcd3.Config{
+		Endpoints:   strings.Split(endpoints, ","),
+		TLS:         tlsC,
+		DialTimeout: time.Duration(200) * time.Millisecond,
+	}
+
+	return &etcdConf, nil
+}
+
+// LoginAuthHost
+func (c *Configuration) LoginAuthHost() string {
+	loginAuthHost := c.Viper.GetString("loginAuth.host")
+	if loginAuthHost == "" {
+		panic("loginAuth.host config is empty")
+	}
+	return loginAuthHost
 }

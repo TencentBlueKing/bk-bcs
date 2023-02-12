@@ -127,6 +127,13 @@ clean:
 	@cd ${PRO_DIR}/cmd && make clean
 	@rm -rf ${PRO_DIR}/build
 
+
+.PHONY: openapi
+openapi:
+	@swag init --outputTypes go,json -g pkg/web/web.go --exclude ./
+	@swag fmt -g pkg/web/web.go --exclude ./
+
+
 .PHONY: build_bscp
 build_bscp:
 	@cd ${PRO_DIR}/cmd && make all

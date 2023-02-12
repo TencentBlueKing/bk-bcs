@@ -15,7 +15,9 @@ package auth
 
 import (
 	"net/http"
+	"path/filepath"
 
+	"bscp.io/pkg/components/bkpaas"
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/rest"
 	"github.com/go-chi/render"
@@ -38,17 +40,47 @@ func (a authorizer) UnifiedAuthentication(next http.Handler) http.Handler {
 
 		k := &kit.Kit{User: resp.Username}
 		ctx := kit.WithKit(r.Context(), k)
-		r = r.WithContext(ctx)
 
-		next.ServeHTTP(w, r)
+		next.ServeHTTP(w, r.WithContext(ctx))
 	}
 	return http.HandlerFunc(fn)
 }
 
 // WebAuthentication
 // HTTP 前端鉴权, 异常调整302到登入页面
-func (a authorizer) WebAuthentication(next http.Handler) http.Handler {
-	fn := func(w http.ResponseWriter, r *http.Request) {
+func (a authorizer) WebAuthentication(webHost, loginHost string) func(http.Handler) http.Handler {
+	ignoreExtMap := map[string]struct{}{
+		".js":  {},
+		".css": {},
+		".map": {},
 	}
-	return http.HandlerFunc(fn)
+
+	return func(next http.Handler) http.Handler {
+		fn := func(w http.ResponseWriter, r *http.Request) {
+			// 静态资源过滤, 注意不会带鉴权信息
+			fileExt := filepath.Ext(r.URL.Path)
+			if _, ok := ignoreExtMap[fileExt]; ok {
+				next.ServeHTTP(w, r)
+				return
+			}
+
+			req, err := getUserCredentialFromCookies(r)
+			if err != nil {
+				http.Redirect(w, r, bkpaas.BuildLoginRedirectURL(r, webHost, loginHost), http.StatusFound)
+				return
+			}
+
+			resp, err := a.authClient.GetUserInfo(r.Context(), req)
+			if err != nil {
+				http.Redirect(w, r, bkpaas.BuildLoginRedirectURL(r, webHost, loginHost), http.StatusFound)
+				return
+			}
+
+			k := &kit.Kit{User: resp.Username}
+			ctx := kit.WithKit(r.Context(), k)
+
+			next.ServeHTTP(w, r.WithContext(ctx))
+		}
+		return http.HandlerFunc(fn)
+	}
 }

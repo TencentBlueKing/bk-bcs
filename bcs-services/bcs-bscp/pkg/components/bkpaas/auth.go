@@ -18,6 +18,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"net/url"
 
 	"github.com/pkg/errors"
 
@@ -46,4 +47,10 @@ func GetUserInfoByToken(ctx context.Context, host, uid, token string) (string, e
 	}
 
 	return user.Username, nil
+}
+
+// BuildLoginRedirectURL 登入跳转URL
+func BuildLoginRedirectURL(r *http.Request, webHost, Loginhost string) string {
+	redirectURL := fmt.Sprintf("%s/login/?c_url=%s", Loginhost, url.QueryEscape(buildAbsoluteUri(webHost, r)))
+	return redirectURL
 }

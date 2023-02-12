@@ -12,6 +12,21 @@ limitations under the License.
 
 package bkpaas
 
+import (
+	"fmt"
+	"net/http"
+)
+
 type userInfo struct {
 	Username string `json:"username"`
+}
+
+// BuildAbsoluteUri
+func buildAbsoluteUri(webHost string, r *http.Request) string {
+	// fallback use request host
+	if webHost == "" {
+		webHost = "http://" + r.Host
+	}
+
+	return fmt.Sprintf("%s%s", webHost, r.RequestURI)
 }

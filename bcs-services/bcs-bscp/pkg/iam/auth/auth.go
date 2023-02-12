@@ -41,7 +41,7 @@ type Authorizer interface {
 	// UnifiedAuthentication API 鉴权中间件
 	UnifiedAuthentication(next http.Handler) http.Handler
 	// WebAuthentication 网页鉴权中间件
-	WebAuthentication(next http.Handler) http.Handler
+	WebAuthentication(webHost, loginHost string) func(http.Handler) http.Handler
 }
 
 // NewAuthorizer create an authorizer for iam authorize related operation.

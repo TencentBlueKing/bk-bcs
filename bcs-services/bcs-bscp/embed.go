@@ -33,46 +33,19 @@ var (
 	}
 )
 
-// Config 前端配置
-type Config struct {
-	Docs map[string]string `json:"docs"`
+// IndexConfig 前端配置
+type IndexConfig struct {
+	RunEnv    string
+	StaticURL string
+	APIURL    string
+	ProxyAPI  bool
 }
 
-// WebStatic 静态资源
-func WebStatic() fs.FS {
-	static, err := fs.Sub(frontendAssets, "ui/dist")
-	if err != nil {
-		panic(err)
-	}
-	return static
-}
-
-// WebFaviconPath 站点 icon 路径
-func WebFaviconPath() string {
-	entrys, err := frontendAssets.ReadDir("ui/dist")
-	if err != nil {
-		panic(err)
-	}
-	for _, v := range entrys {
-		if v.IsDir() {
-			continue
-		}
-		if strings.Contains(v.Name(), "favicon") {
-			return "/" + v.Name()
-		}
-	}
-	panic("favicon not found")
-}
-
-// WebTemplate html 摸版
-func WebTemplate() *template.Template {
-	tpl := template.Must(template.New("").ParseFS(frontendAssets, "ui/dist/*.html"))
-	return tpl
-}
-
-type gzipFileHandler struct {
-	root     http.FileSystem
-	fsServer http.Handler
+// EmbedWebServer
+type EmbedWebServer interface {
+	RenderIndexHandler(conf *IndexConfig) http.Handler
+	FaviconHandler(w http.ResponseWriter, r *http.Request)
+	StaticFileHandler(prefix string) http.Handler
 }
 
 type gzipFileInfo struct {
@@ -82,7 +55,68 @@ type gzipFileInfo struct {
 	filePath     string
 }
 
-func (h *gzipFileHandler) shouldCompress(r *http.Request) (bool, *gzipFileInfo) {
+type embedWeb struct {
+	dist     fs.FS
+	tpl      *template.Template
+	root     http.FileSystem
+	fsServer http.Handler
+}
+
+// NewEmbedWeb 初始化模版和fs
+func NewEmbedWeb() *embedWeb {
+	// dist 路径
+	dist, err := fs.Sub(frontendAssets, "ui/dist")
+	if err != nil {
+		panic(err)
+	}
+
+	// 模版路径
+	tpl := template.Must(template.New("").ParseFS(frontendAssets, "ui/dist/*.html"))
+
+	root := http.FS(dist)
+
+	w := &embedWeb{
+		dist:     dist,
+		tpl:      tpl,
+		root:     root,
+		fsServer: http.FileServer(root),
+	}
+	return w
+}
+
+// FaviconHandler favicon Handler
+func (e *embedWeb) FaviconHandler(w http.ResponseWriter, r *http.Request) {
+	// 填写实际的 icon 路径
+	r.URL.Path = "/favicon.ico"
+
+	// 添加缓存
+	w.Header().Set("Content-Type", "image/x-icon")
+	w.Header().Set("Cache-Control", "max-age=86400, public")
+
+	e.fsServer.ServeHTTP(w, r)
+}
+
+// RenderIndexHandler vue html 模板渲染
+func (e *embedWeb) RenderIndexHandler(conf *IndexConfig) http.Handler {
+	fn := func(w http.ResponseWriter, r *http.Request) {
+		tplData := map[string]string{
+			"BK_STATIC_URL":   conf.StaticURL,
+			"RUN_ENV":         conf.RunEnv,
+			"BK_BCS_BSCP_API": conf.APIURL,
+		}
+
+		// 本地开发模式 / 代理请求
+		if conf.ProxyAPI {
+			tplData["BK_BCS_BSCP_API"] = "/bscp"
+		}
+
+		e.tpl.ExecuteTemplate(w, "index.html", tplData)
+	}
+
+	return http.HandlerFunc(fn)
+}
+
+func (e *embedWeb) shouldCompress(r *http.Request) (bool, *gzipFileInfo) {
 	// 必须包含 gzip 编码
 	if !strings.Contains(r.Header.Get("Accept-Encoding"), "gzip") {
 		return false, nil
@@ -106,7 +140,7 @@ func (h *gzipFileHandler) shouldCompress(r *http.Request) (bool, *gzipFileInfo) 
 	}
 
 	filePath := upath + ".gz"
-	gzipFile, err := h.root.Open(filePath)
+	gzipFile, err := e.root.Open(filePath)
 	if err != nil {
 		return false, nil
 	}
@@ -126,25 +160,25 @@ func (h *gzipFileHandler) shouldCompress(r *http.Request) (bool, *gzipFileInfo) 
 	return true, info
 }
 
-func (h *gzipFileHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	if ok, fileInfo := h.shouldCompress(r); ok {
-		r.URL.Path = fileInfo.filePath
-		w.Header().Add("Vary", "Accept-Encoding")
-		w.Header().Set("Content-Encoding", "gzip")
-		w.Header().Set("Content-Length", fileInfo.contentSize)
-		w.Header().Set("Content-Type", fileInfo.contentType)
-		// issue https://github.com/golang/go/issues/44854
-		// w.Header().Set("Last-Modified", fileInfo.lastModified)
-		w.Header().Del("Transfer-Encoding")
+// StaticFileHandler 静态文件处理函数
+func (e *embedWeb) StaticFileHandler(prefix string) http.Handler {
+	fn := func(w http.ResponseWriter, r *http.Request) {
+		if ok, fileInfo := e.shouldCompress(r); ok {
+			r.URL.Path = fileInfo.filePath
+
+			w.Header().Add("Vary", "Accept-Encoding")
+			w.Header().Set("Content-Encoding", "gzip")
+			w.Header().Set("Content-Length", fileInfo.contentSize)
+			w.Header().Set("Content-Type", fileInfo.contentType)
+			// 添加缓存
+			w.Header().Set("Cache-Control", "max-age=86400, public")
+			// issue https://github.com/golang/go/issues/44854
+			// w.Header().Set("Last-Modified", fileInfo.lastModified)
+			w.Header().Del("Transfer-Encoding")
+		}
+
+		e.fsServer.ServeHTTP(w, r)
 	}
 
-	h.fsServer.ServeHTTP(w, r)
-}
-
-// GZipFileServer GZIP 文件服务
-func GZipFileServer(root http.FileSystem) http.Handler {
-	return &gzipFileHandler{
-		root:     root,
-		fsServer: http.FileServer(root),
-	}
+	return http.StripPrefix(prefix, http.HandlerFunc(fn))
 }

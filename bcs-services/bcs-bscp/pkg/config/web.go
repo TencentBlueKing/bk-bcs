@@ -41,7 +41,7 @@ func (c *WebConf) init() error {
 // defaultWebConf 默认配置
 func defaultWebConf() *WebConf {
 	c := &WebConf{
-		Host:             "http://127.0.0.1:8083",
+		Host:             "",
 		RoutePrefix:      "/ui",
 		PreferredDomains: "",
 	}

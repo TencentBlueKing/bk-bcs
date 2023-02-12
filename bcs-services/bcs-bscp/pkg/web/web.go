@@ -15,45 +15,82 @@ package web
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"path"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/tcp/listener"
-	"github.com/gin-contrib/cors"
-	"github.com/gin-gonic/gin"
-	swaggerfiles "github.com/swaggo/files"
-	ginSwagger "github.com/swaggo/gin-swagger"
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
+	httpSwagger "github.com/swaggo/http-swagger"
+	etcd3 "go.etcd.io/etcd/client/v3"
 	"k8s.io/klog/v2"
 
 	bscp "bscp.io"
+	_ "bscp.io/docs"
+	"bscp.io/pkg/cc"
 	"bscp.io/pkg/config"
 	"bscp.io/pkg/iam/auth"
+	"bscp.io/pkg/runtime/handler"
+	"bscp.io/pkg/serviced"
+)
+
+const (
+	// SITE_URL 前端Vue配置, 修改影响用户路由
+	SITE_URL   = "/bcs"
+	STATIC_URL = "/web/static"
 )
 
 // WebServer :
 type WebServer struct {
-	ctx        context.Context
-	engine     *gin.Engine
-	srv        *http.Server
-	addrIPv6   string
-	authorizer auth.Authorizer
+	ctx               context.Context
+	srv               *http.Server
+	addrIPv6          string
+	embedWebServer    bscp.EmbedWebServer
+	discover          serviced.Discover
+	authorizer        auth.Authorizer
+	webAuthentication func(next http.Handler) http.Handler
 }
 
 // NewWebServer :
 func NewWebServer(ctx context.Context, addr string, addrIPv6 string) (*WebServer, error) {
-	gin.SetMode(gin.ReleaseMode)
-	engine := gin.New()
-	engine.Use(gin.Recovery(), gin.Logger(), cors.Default())
+	etcdOpt, err := config.G.EtcdConf()
+	if err != nil {
+		return nil, fmt.Errorf("get etcd config failed, err: %v", err)
+	}
 
-	srv := &http.Server{Addr: addr, Handler: engine}
+	etcdCli, err := etcd3.New(*etcdOpt)
+	if err != nil {
+		return nil, fmt.Errorf("new etcd client failed, err: %v", err)
+	}
+
+	// new discovery client.
+	dis, err := serviced.NewDiscovery(etcdCli)
+	if err != nil {
+		return nil, fmt.Errorf("new discovery faield, err: %v", err)
+	}
+
+	// 鉴权器
+	authorizer, err := auth.NewAuthorizer(dis, cc.TLSConfig{})
+	if err != nil {
+		return nil, fmt.Errorf("new authorizer failed, err: %v", err)
+	}
+
+	// 鉴权中间件
+	webAuthentication := authorizer.WebAuthentication(config.G.Web.Host, config.G.LoginAuthHost())
 
 	s := &WebServer{
-		ctx:      ctx,
-		engine:   engine,
-		srv:      srv,
-		addrIPv6: addrIPv6,
+		ctx:               ctx,
+		addrIPv6:          addrIPv6,
+		discover:          dis,
+		embedWebServer:    bscp.NewEmbedWeb(),
+		authorizer:        authorizer,
+		webAuthentication: webAuthentication,
 	}
-	s.newRoutes(engine)
+
+	srv := &http.Server{Addr: addr, Handler: s.newRouter()}
+	s.srv = srv
 
 	return s, nil
 }
@@ -80,59 +117,76 @@ func (w *WebServer) Close() error {
 	return w.srv.Shutdown(w.ctx)
 }
 
-// newRoutes xxx
-// @Title     BCS-Monitor OpenAPI
-// @BasePath  /bcsapi/v4/monitor/api/projects/:projectId/clusters/:clusterId
-func (w *WebServer) newRoutes(engine *gin.Engine) {
-	// openapi 文档
-	// 访问 swagger/index.html, swagger/doc.json
-	engine.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
-	engine.GET("/-/healthy", HealthyHandler)
-	engine.GET("/-/ready", ReadyHandler)
+func (w *WebServer) newRouter() http.Handler {
+	r := chi.NewRouter()
+	r.Use(middleware.RequestID)
+	r.Use(middleware.RealIP)
+	r.Use(middleware.Logger)
+	r.Use(middleware.Recoverer)
+	r.Use(middleware.Timeout(30 * time.Second))
 
 	// 注册 HTTP 请求
+	r.Get("/-/healthy", HealthyHandler)
+	r.Get("/-/ready", ReadyHandler)
+	r.Get("/healthz", HealthzHandler)
+	// r.Mount("/", handler.RegisterCommonHandler())
 
-	// 注册模板和静态资源
-	engine.SetHTMLTemplate(bscp.WebTemplate())
-	webFaviconPath := bscp.WebFaviconPath()
-	rootGZipHandler := StaticGZipHandler("/web/", http.FS(bscp.WebStatic()))
-
-	engine.Group("", StaticCacheHandler).StaticFileFS("/favicon.ico", webFaviconPath, http.FS(bscp.WebStatic()))
-	// engine.Group("", StaticCacheHandler).StaticFS("/web", http.FS(bscp.WebStatic()))
-	engine.Group("", StaticCacheHandler).HEAD("/web/*filepath", rootGZipHandler)
-	engine.Group("", StaticCacheHandler).GET("/web/*filepath", rootGZipHandler)
-	engine.GET("", w.IndexHandler)
-
-	if config.G.Web.RoutePrefix != "" {
-		prefixGZipHandler := StaticGZipHandler(path.Join(config.G.Web.RoutePrefix, "/web/"), http.FS(bscp.WebStatic()))
-		engine.Group(config.G.Web.RoutePrefix, StaticCacheHandler).StaticFileFS("/favicon.ico", webFaviconPath, http.FS(bscp.WebStatic()))
-		// engine.Group(config.G.Web.RoutePrefix, StaticCacheHandler).StaticFS("/web", http.FS(bscp.WebStatic()))
-		engine.Group(config.G.Web.RoutePrefix, StaticCacheHandler).HEAD("/web/*filepath", prefixGZipHandler)
-		engine.Group(config.G.Web.RoutePrefix, StaticCacheHandler).GET("/web/*filepath", prefixGZipHandler)
-		engine.Group(config.G.Web.RoutePrefix).GET("", w.IndexHandler)
+	if config.G.Web.RoutePrefix != "/" {
+		r.With(w.webAuthentication).Get(config.G.Web.RoutePrefix+"/swagger/*", httpSwagger.Handler(
+			httpSwagger.URL(config.G.Web.RoutePrefix+"/swagger/doc.json"),
+		))
+		r.Mount(config.G.Web.RoutePrefix, http.StripPrefix(config.G.Web.RoutePrefix, w.subRouter()))
 	}
 
-	// 本地开发模式
-	if config.G.IsDevMode() {
-		engine.Any("/bscp/api/*path", ReverseAPIHandler("bscp_api", config.G.BCS.Host))
-	}
+	r.With(w.webAuthentication).Get("/swagger/*", httpSwagger.Handler(httpSwagger.URL("/swagger/doc.json")))
+	r.Mount("/", w.subRouter())
 
-	// vue 自定义路由, 前端返回404
-	engine.NoRoute(w.IndexHandler)
+	return r
 }
 
-// IndexHandler Vue 模板渲染
-func (w *WebServer) IndexHandler(c *gin.Context) {
-	data := gin.H{
-		"BK_STATIC_URL":   path.Join(config.G.Web.RoutePrefix, "/web"),
-		"RUN_ENV":         config.G.Base.RunEnv,
-		"BK_BCS_BSCP_API": config.G.BCS.Host + "/bscp",
+// subRouter xxx
+// @Title     BSCP-UI OpenAPI
+// @BasePath  /bscp
+func (w *WebServer) subRouter() http.Handler {
+	r := chi.NewRouter()
+
+	r.Get("/favicon.ico", w.embedWebServer.FaviconHandler)
+	r.Get("/web/*", w.embedWebServer.StaticFileHandler("/web").ServeHTTP)
+
+	shouldProxyAPI := config.G.IsDevMode()
+	conf := &bscp.IndexConfig{
+		StaticURL: path.Join(config.G.Web.RoutePrefix, "/web"),
+		RunEnv:    config.G.Base.RunEnv,
+		APIURL:    config.G.BCS.Host + "/bscp",
+		ProxyAPI:  shouldProxyAPI,
 	}
 
-	// 本地开发模式
-	if config.G.IsDevMode() {
-		data["BK_BCS_BSCP_API"] = "/bscp"
+	if shouldProxyAPI {
+		r.Mount("/bscp", handler.ReverseProxyHandler("bscp_api", config.G.BCS.Host))
 	}
 
-	c.HTML(http.StatusOK, "index.html", data)
+	// vue 模版渲染
+	r.With(w.webAuthentication).Get("/", w.embedWebServer.RenderIndexHandler(conf).ServeHTTP)
+	r.NotFound(w.webAuthentication(w.embedWebServer.RenderIndexHandler(conf)).ServeHTTP)
+
+	return r
+}
+
+// HealthyHandler Healthz 接口
+// @Summary  Healthz 接口
+// @Tags     Healthz
+// @Success  200  {string}  string
+// @Router   /healthz [get]
+func HealthzHandler(w http.ResponseWriter, r *http.Request) {
+	w.Write([]byte("OK"))
+}
+
+// HealthyHandler 健康检查
+func HealthyHandler(w http.ResponseWriter, r *http.Request) {
+	w.Write([]byte("OK"))
+}
+
+// ReadyHandler 健康检查
+func ReadyHandler(w http.ResponseWriter, r *http.Request) {
+	w.Write([]byte("OK"))
 }
