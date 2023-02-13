@@ -96,12 +96,18 @@ func (p *proxy) handler() http.Handler {
 		r.Mount("/", p.cfgSvrMux)
 	})
 
-	// repo 上传 / 下载 API
+	// repo 上传 API
 	r.Route("/api/v1/api/create/content/upload", func(r chi.Router) {
 		r.Use(p.authorizer.UnifiedAuthentication)
 		r.Use(p.setFilter)
-		r.Put("/{biz_id}/app_id/{app_id}", p.repoRevProxy.ServeHTTP)
-		r.Get("/{biz_id}/app_id/{app_id}", p.repoRevProxy.ServeHTTP)
+		r.Put("/biz_id/{biz_id}/app_id/{app_id}", p.repoRevProxy.ServeHTTP)
+	})
+
+	// repo 下载 API
+	r.Route("/api/v1/api/get/content/download", func(r chi.Router) {
+		r.Use(p.authorizer.UnifiedAuthentication)
+		r.Use(p.setFilter)
+		r.Put("/biz_id/{biz_id}/app_id/{app_id}", p.repoRevProxy.ServeHTTP)
 	})
 
 	return r
