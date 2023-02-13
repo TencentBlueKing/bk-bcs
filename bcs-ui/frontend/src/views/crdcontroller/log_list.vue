@@ -28,8 +28,7 @@
                 :list="nameSpaceList"
                 :setting-key="'name'"
                 :display-key="'name'"
-                :allow-clear="true"
-                @clear="clusterClear">
+                :allow-clear="true">
               </bk-selector>
             </div>
             <div class="left">
@@ -40,8 +39,7 @@
                 :list="appTypes"
                 :setting-key="'id'"
                 :display-key="'name'"
-                :allow-clear="true"
-                @clear="clusterClear">
+                :allow-clear="true">
               </bk-selector>
             </div>
             <div class="left">
@@ -669,7 +667,7 @@
                 </div>
               </div>
             </template>
-            <template v-else-if="curCrdInstance.log_source_type === 'all_containers'">
+            <!-- <template v-else-if="curCrdInstance.log_source_type === 'all_containers'">
               <div class="data-item">
                 <p class="key">{{$t('是否采集')}}：</p>
                 <p class="value">{{curCrdInstance.default_conf.stdout === 'true' ? $t('是') : $t('否')}}</p>
@@ -686,7 +684,7 @@
                 <p class="key">{{$t('文件路径')}}：</p>
                 <p class="value">{{curCrdInstance.default_conf.log_paths_str || '--'}}</p>
               </div>
-            </template>
+            </template> -->
             <template v-else-if="curCrdInstance.log_source_type === 'selected_labels'">
               <div class="data-item">
                 <p class="key">{{$t('是否采集')}}：</p>
@@ -764,6 +762,27 @@
               </tbody>
             </table>
           </div>
+          <bk-table :data="[{}]" size="medium" v-else-if="curCrdInstance.log_source_type === 'all_containers'">
+            <bk-table-column width="100" :label="$t('容器名')">
+              <template #default>{{ $t('所有容器') }}</template>
+            </bk-table-column>
+            <bk-table-column :label="$t('标准输出')">
+              <template #default>
+                <div class="flex flex-col">
+                  <div>{{ `${$t('采集ID')}: ${curCrdInstance.default_conf.std_data_id || '--'}(${curCrdInstance.default_conf.is_std_custom ? $t('自定义') : $t('默认')})` }}</div>
+                  <div>{{ `${$t('是否采集')}: ${curCrdInstance.default_conf.stdout === 'true' ? $t('是') : $t('否')}` }}</div>
+                </div>
+              </template>
+            </bk-table-column>
+            <bk-table-column :label="$t('文件路径')">
+              <template #default>
+                <div class="flex flex-col">
+                  <div>{{ `${$t('采集ID')}: ${curCrdInstance.default_conf.file_data_id || '--'}(${curCrdInstance.default_conf.is_file_custom ? $t('自定义') : $t('默认')})` }}</div>
+                  <div>{{ `${$t('路径')}: ${curCrdInstance.default_conf.log_paths_str || '--'}` }}</div>
+                </div>
+              </template>
+            </bk-table-column>
+          </bk-table>
         </div>
       </bk-sideslider>
     </div>

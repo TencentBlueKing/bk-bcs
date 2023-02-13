@@ -254,7 +254,7 @@
                         <td class="log-source" v-if="$INTERNAL">
                           <p>{{$t('标准日志')}}：{{dataSource.std_data_name || '--'}}</p>
                           <p>{{$t('文件路径日志')}}：{{dataSource.file_data_name || '--'}}</p>
-                          <p>{{$t('系统日志')}}：{{dataSource.sys_data_name || '--'}}</p>
+                          <!-- <p>{{$t('系统日志')}}：{{dataSource.sys_data_name || '--'}}</p> -->
                         </td>
                         <td class="log-source" v-else>
                           <p><a :href="dataSource.std_log_link" class="bk-text-button" target="_blank">{{$t('标准日志')}}</a></p>

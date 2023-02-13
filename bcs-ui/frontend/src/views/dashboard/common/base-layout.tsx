@@ -11,6 +11,7 @@ import './base-layout.css';
 import fullScreen from '@/directives/full-screen';
 import { CUR_SELECT_NAMESPACE, CUR_SELECT_CRD } from '@/common/constant';
 import CodeEditor from '@/components/monaco-editor/new-editor.vue';
+import jp from 'jsonpath';
 
 export default defineComponent({
   name: 'BaseLayout',
@@ -133,15 +134,7 @@ export default defineComponent({
         ],
       }, [column.label]);
     };
-    const getJsonPathValue = (row, path: string) => {
-      const keys = path.split('.').filter(str => !!str);
-      return keys.reduce((data, key) => {
-        if (typeof data === 'object') {
-          return data?.[key];
-        }
-        return data;
-      }, row);
-    };
+    const getJsonPathValue = (row, path: string) => jp.value(row, path.indexOf('$') === 0 ? path : `$.${path}`);
     // 状态
     const statusMap = {
       normal: $i18n.t('正常'),
