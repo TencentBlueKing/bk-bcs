@@ -97,22 +97,22 @@ type UpdateTokenForm struct {
 // checkTokenCreateBy xxx
 // check user token permission, if user is admin, then allow all.
 // if user is not admin, then check the token is belonged to user.
-func checkTokenCreateBy(request *restful.Request, targetUser string) (allow bool, createBy string) {
+func checkTokenCreateBy(request *restful.Request, targetUser string) (allow, isClient bool, createBy string) {
 	currentUser := request.Attribute(constant.CurrentUserAttr)
 	var userToken *models.BcsUser
 	if v, ok := currentUser.(*models.BcsUser); ok {
 		userToken = v
 	} else {
-		return false, ""
+		return false, false, ""
 	}
 
 	if userToken.IsClient() {
-		return true, userToken.Name
+		return true, true, userToken.Name
 	}
 	if userToken.Name == targetUser {
-		return true, userToken.Name
+		return true, false, userToken.Name
 	}
-	return false, ""
+	return false, false, ""
 }
 
 // CreateToken create a token for user.
@@ -134,7 +134,7 @@ func (t *TokenHandler) CreateToken(request *restful.Request, response *restful.R
 	}
 
 	// check token permission
-	allow, createBy := checkTokenCreateBy(request, form.Username)
+	allow, _, createBy := checkTokenCreateBy(request, form.Username)
 	if !allow {
 		message := fmt.Sprintf("errcode: %d, not allow to access tokens", common.BcsErrApiUnauthorized)
 		metrics.ReportRequestAPIMetrics("CreateToken", request.Request.Method, metrics.ErrStatus, start)
@@ -215,7 +215,7 @@ func (t *TokenHandler) GetToken(request *restful.Request, response *restful.Resp
 	username := request.PathParameter("username")
 
 	// check token permission
-	allow, _ := checkTokenCreateBy(request, username)
+	allow, _, _ := checkTokenCreateBy(request, username)
 	if !allow {
 		message := fmt.Sprintf("errcode: %d, not allow to access tokens", common.BcsErrApiUnauthorized)
 		metrics.ReportRequestAPIMetrics("GetToken", request.Request.Method, metrics.ErrStatus, start)
@@ -258,7 +258,7 @@ func (t *TokenHandler) DeleteToken(request *restful.Request, response *restful.R
 	}
 
 	// check token permission
-	allow, _ := checkTokenCreateBy(request, tokenInDB.Name)
+	allow, _, _ := checkTokenCreateBy(request, tokenInDB.Name)
 	if !allow {
 		message := fmt.Sprintf("errcode: %d, not allow to access tokens", common.BcsErrApiUnauthorized)
 		metrics.ReportRequestAPIMetrics("DeleteToken", request.Request.Method, metrics.ErrStatus, start)
@@ -311,7 +311,7 @@ func (t *TokenHandler) UpdateToken(request *restful.Request, response *restful.R
 	}
 
 	// check token permission
-	allow, _ := checkTokenCreateBy(request, tokenInDB.Name)
+	allow, _, _ := checkTokenCreateBy(request, tokenInDB.Name)
 	if !allow {
 		message := fmt.Sprintf("errcode: %d, not allow to access tokens", common.BcsErrApiUnauthorized)
 		metrics.ReportRequestAPIMetrics("UpdateToken", request.Request.Method, metrics.ErrStatus, start)
@@ -387,8 +387,8 @@ func (t *TokenHandler) CreateTempToken(request *restful.Request, response *restf
 	}
 
 	// check token permission
-	allow, createBy := checkTokenCreateBy(request, form.Username)
-	if !allow || form.Username == createBy {
+	allow, isClient, createBy := checkTokenCreateBy(request, form.Username)
+	if !allow || !isClient {
 		message := fmt.Sprintf("errcode: %d, not allow to access tokens", common.BcsErrApiUnauthorized)
 		metrics.ReportRequestAPIMetrics("CreateTempToken", request.Request.Method, metrics.ErrStatus, start)
 		utils.WriteUnauthorizedError(response, common.BcsErrApiUnauthorized, message)
@@ -484,7 +484,7 @@ func (t *TokenHandler) CreateClientToken(request *restful.Request, response *res
 	}
 
 	// check token permission
-	allow, createBy := checkTokenCreateBy(request, form.ClientName)
+	allow, _, createBy := checkTokenCreateBy(request, form.ClientName)
 	if !allow {
 		message := fmt.Sprintf("errcode: %d, not allow to create client token", common.BcsErrApiUnauthorized)
 		metrics.ReportRequestAPIMetrics("CreateClientToken", request.Request.Method, metrics.ErrStatus, start)
