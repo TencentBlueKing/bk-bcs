@@ -460,7 +460,7 @@ func TestCreateTempToken(t *testing.T) {
 		assert.Equal(t, common.BcsErrApiUnauthorized, res.Code)
 	})
 
-	t.Run("can't create by self", func(t *testing.T) {
+	t.Run("can't create by self with plain user", func(t *testing.T) {
 		form := CreateTokenForm{Username: "test", Expiration: 3600}
 		tt, err := newTestToken(form)
 		require.NoError(t, err)
@@ -473,6 +473,30 @@ func TestCreateTempToken(t *testing.T) {
 
 		assert.Equal(t, 401, tt.response.StatusCode())
 		assert.Equal(t, common.BcsErrApiUnauthorized, res.Code)
+	})
+
+	t.Run("allow create by self with admin user", func(t *testing.T) {
+		form := CreateTokenForm{Username: "admin", Expiration: 3600, UserType: 1}
+		tt, err := newTestToken(form)
+		require.NoError(t, err)
+
+		tt.request.SetAttribute(constant.CurrentUserAttr, &models.BcsUser{Name: "admin", UserType: models.ClientUser})
+		tt.mockJWTClient.On("JWTSign", mock.Anything).Once().Return("", nil)
+		tt.mockCache.On("Set", mock.Anything, mock.Anything, time.Duration(form.Expiration)*time.Second).Once().
+			Return("", nil)
+		tt.mockTokenStore.On("CreateTemporaryToken", mock.Anything).Once().Return(nil)
+		tt.tokenHandler.CreateTempToken(tt.request, tt.response)
+		res := &utils.ErrorResponse{}
+		err = json.Unmarshal(tt.recorder.Body.Bytes(), res)
+		require.NoError(t, err)
+
+		tt.mockTokenStore.AssertExpectations(t)
+		tt.mockTokenNotifyStore.AssertExpectations(t)
+		tt.mockCache.AssertExpectations(t)
+		tt.mockJWTClient.AssertExpectations(t)
+		assert.Equal(t, 200, tt.response.StatusCode())
+		assert.Equal(t, 0, res.Code)
+		assert.Equal(t, "success", res.Message)
 	})
 
 }
