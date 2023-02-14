@@ -13,7 +13,6 @@ limitations under the License.
 package api
 
 import (
-	"math"
 	"testing"
 
 	. "github.com/smartystreets/goconvey/convey" // import convey.
@@ -44,10 +43,9 @@ func TestPublish(t *testing.T) {
 	Convey("Publish With Strategy And Finish Publish Strategy Test", t, func() {
 		Convey("1.publish_with_strategy and finish_publish_strategy normal test", func() {
 			// start publishing with strategy
-			req := &pbcs.PublishStrategyReq{
+			req := &pbcs.PublishReq{
 				BizId: cases.TBizID,
 				AppId: appId,
-				Id:    stgId,
 			}
 			ctx, header := cases.GenApiCtxHeader()
 			resp, err := cli.Publish.PublishWithStrategy(ctx, header, req)
@@ -58,7 +56,7 @@ func TestPublish(t *testing.T) {
 			So(resp.Data.Id, ShouldNotEqual, uint32(0))
 
 			// finish publishing with strategy
-			finishReq := &pbcs.FinishPublishStrategyReq{
+			finishReq := &pbcs.FinishPublishReq{
 				BizId: cases.TBizID,
 				AppId: appId,
 				Id:    stgId,
@@ -119,26 +117,22 @@ func TestPublish(t *testing.T) {
 
 		Convey("2.publish_with_strategy abnormal test", func() {
 			// test cases
-			reqs := []*pbcs.PublishStrategyReq{
+			reqs := []*pbcs.PublishReq{
 				{ // biz_id is invalid
 					BizId: cases.WID,
 					AppId: appId,
-					Id:    stgId,
 				},
 				{ // app_id is invalid
 					BizId: cases.TBizID,
 					AppId: cases.WID,
-					Id:    stgId,
 				},
 				{ // strategy_id is invalid
 					BizId: cases.TBizID,
 					AppId: appId,
-					Id:    cases.WID,
 				},
 				{ // strategy_id is not exist
 					BizId: cases.TBizID,
 					AppId: appId,
-					Id:    math.MaxInt32 - 1,
 				},
 			}
 
@@ -152,10 +146,9 @@ func TestPublish(t *testing.T) {
 		})
 
 		Convey("3.publish_with_strategy abnormal test: don't finish a publish and start other publish", func() {
-			req := &pbcs.PublishStrategyReq{
+			req := &pbcs.PublishReq{
 				BizId: cases.TBizID,
 				AppId: appId,
-				Id:    stgId,
 			}
 
 			// start first publish
@@ -175,7 +168,7 @@ func TestPublish(t *testing.T) {
 			So(secondResp.Code, ShouldNotEqual, errf.OK)
 
 			// finish publish with strategy
-			finishReq := &pbcs.FinishPublishStrategyReq{
+			finishReq := &pbcs.FinishPublishReq{
 				BizId: cases.TBizID,
 				AppId: appId,
 				Id:    stgId,
@@ -206,10 +199,9 @@ func TestPublish(t *testing.T) {
 
 		Convey("4.finish_publish_strategy abnormal test", func() {
 			// create a publish_with_strategy for test
-			pubReq := &pbcs.PublishStrategyReq{
+			pubReq := &pbcs.PublishReq{
 				BizId: cases.TBizID,
 				AppId: appId,
-				Id:    stgId,
 			}
 			ctx, header := cases.GenApiCtxHeader()
 			pubResp, err := cli.Publish.PublishWithStrategy(ctx, header, pubReq)
@@ -219,7 +211,7 @@ func TestPublish(t *testing.T) {
 			So(pubResp.Data, ShouldNotBeNil)
 			So(pubResp.Data.Id, ShouldNotEqual, uint32(0))
 
-			reqs := []*pbcs.FinishPublishStrategyReq{
+			reqs := []*pbcs.FinishPublishReq{
 				{ // biz_id is invalid
 					BizId: cases.WID,
 					AppId: appId,

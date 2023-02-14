@@ -58,9 +58,18 @@ type DataClient interface {
 	ListStrategies(ctx context.Context, in *ListStrategiesReq, opts ...grpc.CallOption) (*ListStrategiesResp, error)
 	UpdateStrategy(ctx context.Context, in *UpdateStrategyReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
 	DeleteStrategy(ctx context.Context, in *DeleteStrategyReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
+	// group related interface.
+	CreateGroup(ctx context.Context, in *CreateGroupReq, opts ...grpc.CallOption) (*CreateResp, error)
+	ListGroups(ctx context.Context, in *ListGroupsReq, opts ...grpc.CallOption) (*ListGroupsResp, error)
+	UpdateGroup(ctx context.Context, in *UpdateGroupReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
+	DeleteGroup(ctx context.Context, in *DeleteGroupReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
+	// group category related interface.
+	CreateGroupCategory(ctx context.Context, in *CreateGroupCategoryReq, opts ...grpc.CallOption) (*CreateResp, error)
+	ListGroupCategories(ctx context.Context, in *ListGroupCategoriesReq, opts ...grpc.CallOption) (*ListGroupCategoriesResp, error)
+	DeleteGroupCategory(ctx context.Context, in *DeleteGroupCategoryReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
 	// publish related interface.
-	PublishStrategy(ctx context.Context, in *PublishStrategyReq, opts ...grpc.CallOption) (*PublishStrategyResp, error)
-	FinishPublishStrategy(ctx context.Context, in *FinishPublishStrategyReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
+	Publish(ctx context.Context, in *PublishReq, opts ...grpc.CallOption) (*PublishResp, error)
+	FinishPublish(ctx context.Context, in *FinishPublishReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
 	ListPublishedStrategyHistories(ctx context.Context, in *ListPubStrategyHistoriesReq, opts ...grpc.CallOption) (*ListPubStrategyHistoriesResp, error)
 	// current released instance related interface.
 	CreateCRInstance(ctx context.Context, in *CreateCRInstanceReq, opts ...grpc.CallOption) (*CreateResp, error)
@@ -323,18 +332,81 @@ func (c *dataClient) DeleteStrategy(ctx context.Context, in *DeleteStrategyReq, 
 	return out, nil
 }
 
-func (c *dataClient) PublishStrategy(ctx context.Context, in *PublishStrategyReq, opts ...grpc.CallOption) (*PublishStrategyResp, error) {
-	out := new(PublishStrategyResp)
-	err := c.cc.Invoke(ctx, "/pbds.Data/PublishStrategy", in, out, opts...)
+func (c *dataClient) CreateGroup(ctx context.Context, in *CreateGroupReq, opts ...grpc.CallOption) (*CreateResp, error) {
+	out := new(CreateResp)
+	err := c.cc.Invoke(ctx, "/pbds.Data/CreateGroup", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *dataClient) FinishPublishStrategy(ctx context.Context, in *FinishPublishStrategyReq, opts ...grpc.CallOption) (*base.EmptyResp, error) {
+func (c *dataClient) ListGroups(ctx context.Context, in *ListGroupsReq, opts ...grpc.CallOption) (*ListGroupsResp, error) {
+	out := new(ListGroupsResp)
+	err := c.cc.Invoke(ctx, "/pbds.Data/ListGroups", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dataClient) UpdateGroup(ctx context.Context, in *UpdateGroupReq, opts ...grpc.CallOption) (*base.EmptyResp, error) {
 	out := new(base.EmptyResp)
-	err := c.cc.Invoke(ctx, "/pbds.Data/FinishPublishStrategy", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/pbds.Data/UpdateGroup", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dataClient) DeleteGroup(ctx context.Context, in *DeleteGroupReq, opts ...grpc.CallOption) (*base.EmptyResp, error) {
+	out := new(base.EmptyResp)
+	err := c.cc.Invoke(ctx, "/pbds.Data/DeleteGroup", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dataClient) CreateGroupCategory(ctx context.Context, in *CreateGroupCategoryReq, opts ...grpc.CallOption) (*CreateResp, error) {
+	out := new(CreateResp)
+	err := c.cc.Invoke(ctx, "/pbds.Data/CreateGroupCategory", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dataClient) ListGroupCategories(ctx context.Context, in *ListGroupCategoriesReq, opts ...grpc.CallOption) (*ListGroupCategoriesResp, error) {
+	out := new(ListGroupCategoriesResp)
+	err := c.cc.Invoke(ctx, "/pbds.Data/ListGroupCategories", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dataClient) DeleteGroupCategory(ctx context.Context, in *DeleteGroupCategoryReq, opts ...grpc.CallOption) (*base.EmptyResp, error) {
+	out := new(base.EmptyResp)
+	err := c.cc.Invoke(ctx, "/pbds.Data/DeleteGroupCategory", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dataClient) Publish(ctx context.Context, in *PublishReq, opts ...grpc.CallOption) (*PublishResp, error) {
+	out := new(PublishResp)
+	err := c.cc.Invoke(ctx, "/pbds.Data/Publish", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dataClient) FinishPublish(ctx context.Context, in *FinishPublishReq, opts ...grpc.CallOption) (*base.EmptyResp, error) {
+	out := new(base.EmptyResp)
+	err := c.cc.Invoke(ctx, "/pbds.Data/FinishPublish", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -434,9 +506,18 @@ type DataServer interface {
 	ListStrategies(context.Context, *ListStrategiesReq) (*ListStrategiesResp, error)
 	UpdateStrategy(context.Context, *UpdateStrategyReq) (*base.EmptyResp, error)
 	DeleteStrategy(context.Context, *DeleteStrategyReq) (*base.EmptyResp, error)
+	// group related interface.
+	CreateGroup(context.Context, *CreateGroupReq) (*CreateResp, error)
+	ListGroups(context.Context, *ListGroupsReq) (*ListGroupsResp, error)
+	UpdateGroup(context.Context, *UpdateGroupReq) (*base.EmptyResp, error)
+	DeleteGroup(context.Context, *DeleteGroupReq) (*base.EmptyResp, error)
+	// group category related interface.
+	CreateGroupCategory(context.Context, *CreateGroupCategoryReq) (*CreateResp, error)
+	ListGroupCategories(context.Context, *ListGroupCategoriesReq) (*ListGroupCategoriesResp, error)
+	DeleteGroupCategory(context.Context, *DeleteGroupCategoryReq) (*base.EmptyResp, error)
 	// publish related interface.
-	PublishStrategy(context.Context, *PublishStrategyReq) (*PublishStrategyResp, error)
-	FinishPublishStrategy(context.Context, *FinishPublishStrategyReq) (*base.EmptyResp, error)
+	Publish(context.Context, *PublishReq) (*PublishResp, error)
+	FinishPublish(context.Context, *FinishPublishReq) (*base.EmptyResp, error)
 	ListPublishedStrategyHistories(context.Context, *ListPubStrategyHistoriesReq) (*ListPubStrategyHistoriesResp, error)
 	// current released instance related interface.
 	CreateCRInstance(context.Context, *CreateCRInstanceReq) (*CreateResp, error)
@@ -533,11 +614,32 @@ func (UnimplementedDataServer) UpdateStrategy(context.Context, *UpdateStrategyRe
 func (UnimplementedDataServer) DeleteStrategy(context.Context, *DeleteStrategyReq) (*base.EmptyResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteStrategy not implemented")
 }
-func (UnimplementedDataServer) PublishStrategy(context.Context, *PublishStrategyReq) (*PublishStrategyResp, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method PublishStrategy not implemented")
+func (UnimplementedDataServer) CreateGroup(context.Context, *CreateGroupReq) (*CreateResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateGroup not implemented")
 }
-func (UnimplementedDataServer) FinishPublishStrategy(context.Context, *FinishPublishStrategyReq) (*base.EmptyResp, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method FinishPublishStrategy not implemented")
+func (UnimplementedDataServer) ListGroups(context.Context, *ListGroupsReq) (*ListGroupsResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListGroups not implemented")
+}
+func (UnimplementedDataServer) UpdateGroup(context.Context, *UpdateGroupReq) (*base.EmptyResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateGroup not implemented")
+}
+func (UnimplementedDataServer) DeleteGroup(context.Context, *DeleteGroupReq) (*base.EmptyResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteGroup not implemented")
+}
+func (UnimplementedDataServer) CreateGroupCategory(context.Context, *CreateGroupCategoryReq) (*CreateResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateGroupCategory not implemented")
+}
+func (UnimplementedDataServer) ListGroupCategories(context.Context, *ListGroupCategoriesReq) (*ListGroupCategoriesResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListGroupCategories not implemented")
+}
+func (UnimplementedDataServer) DeleteGroupCategory(context.Context, *DeleteGroupCategoryReq) (*base.EmptyResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteGroupCategory not implemented")
+}
+func (UnimplementedDataServer) Publish(context.Context, *PublishReq) (*PublishResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Publish not implemented")
+}
+func (UnimplementedDataServer) FinishPublish(context.Context, *FinishPublishReq) (*base.EmptyResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method FinishPublish not implemented")
 }
 func (UnimplementedDataServer) ListPublishedStrategyHistories(context.Context, *ListPubStrategyHistoriesReq) (*ListPubStrategyHistoriesResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListPublishedStrategyHistories not implemented")
@@ -1055,38 +1157,164 @@ func _Data_DeleteStrategy_Handler(srv interface{}, ctx context.Context, dec func
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Data_PublishStrategy_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(PublishStrategyReq)
+func _Data_CreateGroup_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateGroupReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(DataServer).PublishStrategy(ctx, in)
+		return srv.(DataServer).CreateGroup(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/pbds.Data/PublishStrategy",
+		FullMethod: "/pbds.Data/CreateGroup",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DataServer).PublishStrategy(ctx, req.(*PublishStrategyReq))
+		return srv.(DataServer).CreateGroup(ctx, req.(*CreateGroupReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Data_FinishPublishStrategy_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(FinishPublishStrategyReq)
+func _Data_ListGroups_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListGroupsReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(DataServer).FinishPublishStrategy(ctx, in)
+		return srv.(DataServer).ListGroups(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/pbds.Data/FinishPublishStrategy",
+		FullMethod: "/pbds.Data/ListGroups",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DataServer).FinishPublishStrategy(ctx, req.(*FinishPublishStrategyReq))
+		return srv.(DataServer).ListGroups(ctx, req.(*ListGroupsReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Data_UpdateGroup_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateGroupReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).UpdateGroup(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/pbds.Data/UpdateGroup",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).UpdateGroup(ctx, req.(*UpdateGroupReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Data_DeleteGroup_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteGroupReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).DeleteGroup(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/pbds.Data/DeleteGroup",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).DeleteGroup(ctx, req.(*DeleteGroupReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Data_CreateGroupCategory_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateGroupCategoryReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).CreateGroupCategory(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/pbds.Data/CreateGroupCategory",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).CreateGroupCategory(ctx, req.(*CreateGroupCategoryReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Data_ListGroupCategories_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListGroupCategoriesReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).ListGroupCategories(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/pbds.Data/ListGroupCategories",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).ListGroupCategories(ctx, req.(*ListGroupCategoriesReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Data_DeleteGroupCategory_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteGroupCategoryReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).DeleteGroupCategory(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/pbds.Data/DeleteGroupCategory",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).DeleteGroupCategory(ctx, req.(*DeleteGroupCategoryReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Data_Publish_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(PublishReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).Publish(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/pbds.Data/Publish",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).Publish(ctx, req.(*PublishReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Data_FinishPublish_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(FinishPublishReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).FinishPublish(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/pbds.Data/FinishPublish",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).FinishPublish(ctx, req.(*FinishPublishReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1315,12 +1543,40 @@ var Data_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Data_DeleteStrategy_Handler,
 		},
 		{
-			MethodName: "PublishStrategy",
-			Handler:    _Data_PublishStrategy_Handler,
+			MethodName: "CreateGroup",
+			Handler:    _Data_CreateGroup_Handler,
 		},
 		{
-			MethodName: "FinishPublishStrategy",
-			Handler:    _Data_FinishPublishStrategy_Handler,
+			MethodName: "ListGroups",
+			Handler:    _Data_ListGroups_Handler,
+		},
+		{
+			MethodName: "UpdateGroup",
+			Handler:    _Data_UpdateGroup_Handler,
+		},
+		{
+			MethodName: "DeleteGroup",
+			Handler:    _Data_DeleteGroup_Handler,
+		},
+		{
+			MethodName: "CreateGroupCategory",
+			Handler:    _Data_CreateGroupCategory_Handler,
+		},
+		{
+			MethodName: "ListGroupCategories",
+			Handler:    _Data_ListGroupCategories_Handler,
+		},
+		{
+			MethodName: "DeleteGroupCategory",
+			Handler:    _Data_DeleteGroupCategory_Handler,
+		},
+		{
+			MethodName: "Publish",
+			Handler:    _Data_Publish_Handler,
+		},
+		{
+			MethodName: "FinishPublish",
+			Handler:    _Data_FinishPublish_Handler,
 		},
 		{
 			MethodName: "ListPublishedStrategyHistories",

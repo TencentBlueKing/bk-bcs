@@ -24,7 +24,6 @@ import (
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/logs"
 	"bscp.io/pkg/runtime/filter"
-	"bscp.io/pkg/runtime/selector"
 	"bscp.io/pkg/types"
 
 	"github.com/jmoiron/sqlx"
@@ -66,13 +65,6 @@ func (dao *strategyDao) Create(kt *kit.Kit, strategy *table.Strategy) (uint32, e
 		return 0, err
 	}
 	strategy.Spec.Mode = mode
-
-	// strategy works at namespace mode, scope.selector should be matchAll.
-	if strategy.Spec.Mode == table.Namespace || strategy.Spec.AsDefault {
-		if err = dao.setDefaultValue(strategy); err != nil {
-			return 0, err
-		}
-	}
 
 	if err = strategy.ValidateCreate(); err != nil {
 		return 0, err
@@ -146,27 +138,6 @@ func (dao *strategyDao) Create(kt *kit.Kit, strategy *table.Strategy) (uint32, e
 	return id, nil
 }
 
-// setDefaultValue if strategy is namespace or default, need to set deafult value.
-func (dao *strategyDao) setDefaultValue(strategy *table.Strategy) error {
-	if strategy.Spec.Scope == nil {
-		strategy.Spec.Scope = &table.ScopeSelector{
-			Selector: &selector.Selector{
-				MatchAll: true,
-			},
-		}
-	} else {
-		if strategy.Spec.Scope.Selector != nil && !strategy.Spec.Scope.Selector.IsEmpty() {
-			return errf.New(errf.InvalidParameter, "strategy set works at namespace mode, scope.selector "+
-				"should be empty")
-		}
-
-		strategy.Spec.Scope.Selector = &selector.Selector{
-			MatchAll: true,
-		}
-	}
-	return nil
-}
-
 // Update one strategy instance.
 func (dao *strategyDao) Update(kit *kit.Kit, strategy *table.Strategy) error {
 
@@ -177,25 +148,6 @@ func (dao *strategyDao) Update(kit *kit.Kit, strategy *table.Strategy) error {
 	s, err := dao.getStrategy(kit, strategy.Attachment.BizID, strategy.Attachment.AppID, strategy.ID)
 	if err != nil {
 		return err
-	}
-
-	// strategy works at namespace mode, scope.selector should be matchAll.
-	if s.Spec.Mode == table.Namespace {
-		if strategy.Spec.Scope == nil {
-			strategy.Spec.Scope = &table.ScopeSelector{
-				Selector: &selector.Selector{
-					MatchAll: true,
-				},
-			}
-		} else {
-			if strategy.Spec.Scope.Selector != nil && !strategy.Spec.Scope.Selector.IsEmpty() {
-				return fmt.Errorf("strategy set works at namespace mode, scope.selector should be empty")
-			}
-
-			strategy.Spec.Scope.Selector = &selector.Selector{
-				MatchAll: true,
-			}
-		}
 	}
 
 	if err = strategy.ValidateUpdate(s.Spec.AsDefault, s.Spec.Mode == table.Namespace); err != nil {
@@ -387,7 +339,7 @@ func (dao *strategyDao) Delete(kit *kit.Kit, strategy *table.Strategy) error {
 			// fire the event with txn to ensure the if save the event failed then the business logic is failed anyway.
 			one := types.Event{
 				Spec: &table.EventSpec{
-					Resource:   table.PublishStrategy,
+					Resource:   table.Publish,
 					ResourceID: strategy.ID,
 					OpType:     table.DeleteOp,
 				},
@@ -444,21 +396,6 @@ func (dao *strategyDao) validateReleaseExist(kt *kit.Kit, strategy *table.Strate
 		if !exist {
 			return errf.New(errf.RecordNotFound, fmt.Sprintf("strategy binding release %d is not exist",
 				strategy.Spec.ReleaseID))
-		}
-	}
-
-	// validate sub strategy binding release exist.
-	if strategy.Spec != nil && strategy.Spec.Scope != nil && strategy.Spec.Scope.SubStrategy != nil &&
-		strategy.Spec.Scope.SubStrategy.Spec != nil && strategy.Spec.Scope.SubStrategy.Spec.ReleaseID != 0 {
-		id := strategy.Spec.Scope.SubStrategy.Spec.ReleaseID
-		exist, err := isResExist(kt, dao.orm, dao.sd.ShardingOne(strategy.Attachment.BizID), table.ReleaseTable,
-			fmt.Sprintf("WHERE id = %d AND biz_id = %d", id, strategy.Attachment.BizID))
-		if err != nil {
-			return err
-		}
-
-		if !exist {
-			return errf.New(errf.RecordNotFound, fmt.Sprintf("sub strategy binding release %d is not exist", id))
 		}
 	}
 

@@ -19,17 +19,17 @@ import (
 	"bscp.io/pkg/iam/meta"
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/logs"
-	"bscp.io/pkg/protocol/config-server"
-	"bscp.io/pkg/protocol/data-service"
+	pbcs "bscp.io/pkg/protocol/config-server"
+	pbds "bscp.io/pkg/protocol/data-service"
 	"bscp.io/pkg/types"
 )
 
-// PublishStrategy publish a strategy
-func (s *Service) PublishStrategy(ctx context.Context, req *pbcs.PublishStrategyReq) (
-	*pbcs.PublishStrategyResp, error) {
+// Publish publish a strategy
+func (s *Service) Publish(ctx context.Context, req *pbcs.PublishReq) (
+	*pbcs.PublishResp, error) {
 
 	grpcKit := kit.FromGrpcContext(ctx)
-	resp := new(pbcs.PublishStrategyResp)
+	resp := new(pbcs.PublishResp)
 
 	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.Strategy, Action: meta.Publish,
 		ResourceID: req.AppId}, BizID: req.BizId}
@@ -38,12 +38,14 @@ func (s *Service) PublishStrategy(ctx context.Context, req *pbcs.PublishStrategy
 		return resp, nil
 	}
 
-	r := &pbds.PublishStrategyReq{
-		BizId:      req.BizId,
-		AppId:      req.AppId,
-		StrategyId: req.Id,
+	r := &pbds.PublishReq{
+		BizId:     req.BizId,
+		AppId:     req.AppId,
+		ReleaseId: req.ReleaseId,
+		All:       req.All,
+		Groups:    req.Groups,
 	}
-	rp, err := s.client.DS.PublishStrategy(grpcKit.RpcCtx(), r)
+	rp, err := s.client.DS.Publish(grpcKit.RpcCtx(), r)
 	if err != nil {
 		errf.Error(err).AssignResp(grpcKit, resp)
 		logs.Errorf("publish strategy failed, err: %v, rid: %s", err, grpcKit.Rid)
@@ -51,18 +53,18 @@ func (s *Service) PublishStrategy(ctx context.Context, req *pbcs.PublishStrategy
 	}
 
 	resp.Code = errf.OK
-	resp.Data = &pbcs.PublishStrategyResp_RespData{
+	resp.Data = &pbcs.PublishResp_RespData{
 		Id: rp.PublishedStrategyHistoryId,
 	}
 	return resp, nil
 }
 
-// FinishPublishStrategy finish the published strategy
-func (s *Service) FinishPublishStrategy(ctx context.Context, req *pbcs.FinishPublishStrategyReq) (
-	*pbcs.FinishPublishStrategyResp, error) {
+// FinishPublish finish the published strategy
+func (s *Service) FinishPublish(ctx context.Context, req *pbcs.FinishPublishReq) (
+	*pbcs.FinishPublishResp, error) {
 
 	grpcKit := kit.FromGrpcContext(ctx)
-	resp := new(pbcs.FinishPublishStrategyResp)
+	resp := new(pbcs.FinishPublishResp)
 
 	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.Strategy, Action: meta.FinishPublish,
 		ResourceID: req.AppId}, BizID: req.BizId}
@@ -71,12 +73,12 @@ func (s *Service) FinishPublishStrategy(ctx context.Context, req *pbcs.FinishPub
 		return resp, nil
 	}
 
-	r := &pbds.FinishPublishStrategyReq{
+	r := &pbds.FinishPublishReq{
 		BizId:      req.BizId,
 		AppId:      req.AppId,
 		StrategyId: req.Id,
 	}
-	_, err = s.client.DS.FinishPublishStrategy(grpcKit.RpcCtx(), r)
+	_, err = s.client.DS.FinishPublish(grpcKit.RpcCtx(), r)
 	if err != nil {
 		errf.Error(err).AssignResp(grpcKit, resp)
 		logs.Errorf("finish publish strategy failed, err: %v, rid: %s", err, grpcKit.Rid)

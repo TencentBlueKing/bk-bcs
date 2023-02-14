@@ -212,21 +212,13 @@ const (
 type StrategySpec struct {
 	Name      string `db:"name" json:"name"`
 	ReleaseID uint32 `db:"release_id" json:"release_id"`
-	// AsDefault(=true) describes this strategy works as a bottom strategy,
-	// which means if an instance can not match the other strategies in
-	// a strategy set, then this instance will use this strategy's
-	// released configure version.
-	// Note:
-	// 1. if a strategy is set to as a bottom strategy, then this strategy
-	// scope's selector must be 'matched all'.
-	// 2. if the strategy works at namespace mode and set as default strategy
-	// at the same time, its namespace must be the *reserved* namespace, as is
-	// 'bscp_default_ns'
+	// AsDefault(=true) describes this strategy works as full release,
+	// which means any instance can match this strategies
 	AsDefault bool `db:"as_default" json:"as_default"`
 
 	// Scope must be empty when this strategy is a default strategy.
 	// Scope must not be empty when this strategy is not a default strategy.
-	Scope *ScopeSelector `db:"scope" json:"scope"`
+	Scope *Scope `db:"scope" json:"scope"`
 
 	// Mode defines what mode of this strategy works at, it is succeeded from
 	// this strategy's app's mode.
@@ -258,12 +250,15 @@ func (s StrategySpec) ValidateCreate() error {
 		return errors.New("invalid strategy release id")
 	}
 
-	if s.Scope == nil {
-		return errors.New("this strategy's scope should be set")
-	}
-
-	if s.Scope.IsEmpty() {
-		return errors.New("this strategy's scope is required")
+	if !s.AsDefault {
+		if len(s.Scope.Groups) == 0 {
+			return errors.New("strategy's scope can not be empty at gray release mode")
+		}
+		for _, group := range s.Scope.Groups {
+			if err := group.ValidateCreate(); err != nil {
+				return err
+			}
+		}
 	}
 
 	if err := s.Mode.Validate(); err != nil {
@@ -272,10 +267,6 @@ func (s StrategySpec) ValidateCreate() error {
 
 	switch s.Mode {
 	case Normal:
-
-		if err := s.Scope.ValidateCreate(s.AsDefault, false); err != nil {
-			return fmt.Errorf("validate scope failed, err: %v", err)
-		}
 
 		if len(s.Namespace) != 0 {
 			return errors.New("strategy set works at normal mode, namespace should be empty")
@@ -300,10 +291,6 @@ func (s StrategySpec) ValidateCreate() error {
 			if err := validator.ValidateNamespace(s.Namespace); err != nil {
 				return err
 			}
-		}
-
-		if err := s.Scope.ValidateCreate(s.AsDefault, true); err != nil {
-			return fmt.Errorf("validate create scope failed, err: %v", err)
 		}
 
 		if strings.HasPrefix(strings.ToLower(s.Namespace), ReservedNamespacePrefix) {
@@ -333,12 +320,6 @@ func (s StrategySpec) ValidateUpdate(asDefault bool, namespaced bool) error {
 
 	if s.ReleaseID <= 0 {
 		return errors.New("release id should be set")
-	}
-
-	if s.Scope != nil && !s.Scope.IsEmpty() {
-		if err := s.Scope.ValidateUpdate(asDefault, namespaced); err != nil {
-			return err
-		}
 	}
 
 	if len(s.Mode) != 0 {
@@ -448,69 +429,47 @@ func (s StrategyAttachment) Validate() error {
 // as is 1 KB.
 const MaxScopeSelectorByteSize = 1 * 1024
 
-// ScopeSelector defines a strategy's working scope.
-// 1. ScopeSelector is stored in mysql with json raw, and each selector,
-// including Strategy selector and its sub strategy selector, has a max
-// size limit, as is MaxScopeSelectorByteSize byte.
-// 2. an instance's version info is matched with the following rules:
-//   (1) check if this instance's uid or labels can match Selector at first,
-//      if not matched, then skip this strategy. if matched, then do next rule.
-//   (2) check if this strategy do not have the SubStrategy, then return with
-//      this strategy's release version.
-//      if this strategy do have a sub strategy, then check this instance's
-//      uid or labels can match this sub strategy's selector or not. if not,
-//      then return this strategy's release version. if yes, then return this
-//      sub-strategy's release version.
-type ScopeSelector struct {
-	// Selector define the strategy's working scope. must be set.
-	// Note:
-	// 1. This Selector is required, must not be empty under any circumstances.
-	// 2. If the strategy's parent strategy set is working at Namespace
-	// strategy set type, then this selector must be
-	// set with matched all policy, which means matched all the instances,
-	// and SubStrategy can be chosen to be configured or not depends on need
-	// under this circumstance.
-	// 3. this Selector's value is decided by the strategy's AsDefault and Namespace
-	// state, different combination of them have the different Selector rules.
-	Selector *selector.Selector `db:"selector" json:"selector"`
-
-	// SubStrategy is the sub-strategy for this strategy.
-	// if the sub strategy is configured, then it's selector can not be set
-	// to match all, and the selector is required.
-	SubStrategy *SubStrategy `db:"sub_strategy" json:"sub_strategy"`
+// Scope defines a strategy's working groups.
+type Scope struct {
+	// Groups defines strategys's working scope
+	Groups []*Group `db:"groups" json:"groups"`
 }
 
 // Scan is used to decode raw message which is read from db into a structured
 // ScopeSelector instance.
-func (s *ScopeSelector) Scan(raw interface{}) error {
+func (s *Scope) Scan(raw interface{}) error {
 	if s == nil {
-		return errors.New("scope selector is not initialized")
+		return errors.New("scope is not initialized")
 	}
 
 	if raw == nil {
 		return errors.New("raw is nil, can not be decoded")
 	}
 
+	if len(s.Groups) == 0 {
+		return errors.New("scope groups is empty")
+	}
+
 	switch v := raw.(type) {
 	case []byte:
 		if err := json.Unmarshal(v, &s); err != nil {
-			return fmt.Errorf("decode into scope selector failed, err: %v", err)
+			return fmt.Errorf("decode into scope failed, err: %v", err)
 
 		}
 		return nil
 	case string:
 		if err := json.Unmarshal([]byte(v), &s); err != nil {
-			return fmt.Errorf("decode into scope selector failed, err: %v", err)
+			return fmt.Errorf("decode into scope failed, err: %v", err)
 		}
 		return nil
 	default:
-		return fmt.Errorf("unsupported scope selector raw type: %T", v)
+		return fmt.Errorf("unsupported scope raw type: %T", v)
 	}
 }
 
 // Value encode the scope selector to a json raw, so that it can be stored to db with
 // json raw.
-func (s *ScopeSelector) Value() (driver.Value, error) {
+func (s *Scope) Value() (driver.Value, error) {
 	if s == nil {
 		return nil, errors.New("scope selector is not initialized, can not be encoded")
 	}
@@ -519,119 +478,22 @@ func (s *ScopeSelector) Value() (driver.Value, error) {
 }
 
 // IsEmpty test whether this scope selector is empty or not.
-func (s ScopeSelector) IsEmpty() bool {
-	if s.Selector == nil && s.SubStrategy == nil {
-		return true
-	}
-
-	if s.Selector != nil {
-		if !s.Selector.IsEmpty() {
-			return false
-		}
-	}
-
-	if s.SubStrategy == nil {
-		return true
-	}
-
-	if !s.SubStrategy.IsEmpty() {
-		return false
-	}
-
-	return true
+func (s Scope) IsEmpty() bool {
+	return len(s.Groups) == 0
 }
 
 // ValidateCreate validate strategy's selector when it is created.
-func (s ScopeSelector) ValidateCreate(asDefault bool, namespaced bool) error {
-	if s.Selector == nil {
-		return errors.New("strategy's selector is empty")
-	}
+func (s Scope) ValidateCreate(asDefault bool, namespaced bool) error {
 
-	if s.Selector.IsEmpty() {
-		return errors.New("strategy's selector is not set")
-	}
-
-	if namespaced && !s.Selector.MatchAll {
-		return errors.New("strategy works at 'namespace' mode, scope.selector should be set to match all")
-	}
-
-	if asDefault && !s.Selector.MatchAll {
-		if !s.Selector.MatchAll {
-			return errors.New("this is a default strategy, scope.selector should be set to match all")
-		}
-
-		// sub strategy should be empty
-		if !(s.SubStrategy == nil || (s.SubStrategy != nil && s.SubStrategy.IsEmpty())) {
-			return errors.New("strategy is the default strategy, its sub-strategy should not be configured")
-		}
-	}
-
-	raw, err := json.Marshal(s.Selector)
-	if err != nil {
-		return fmt.Errorf("marshal strategy selector failed, err: %v", err)
-	}
-
-	if len(raw) > MaxScopeSelectorByteSize {
-		return ErrSelectorByteSizeIsOverMaxLimit
-	}
-
-	if err := s.Selector.Validate(); err != nil {
-		return fmt.Errorf("invalid strategy selector, err: %v", err)
-	}
-
-	if s.SubStrategy != nil {
-		if err := s.SubStrategy.ValidateCreate(); err != nil {
-			return fmt.Errorf("invalid strategy's sub-strategy, err: %v", err)
-		}
+	if s.IsEmpty() {
+		return errors.New("strategy's groups is not set")
 	}
 
 	return nil
 }
 
 // ValidateUpdate validate strategy's selector when it is updated.
-func (s ScopeSelector) ValidateUpdate(asDefault bool, namespaced bool) error {
-	if s.Selector == nil {
-		return errors.New("strategy's selector is empty")
-	}
-
-	if s.Selector.IsEmpty() {
-		return errors.New("strategy's selector is not set")
-	}
-
-	if namespaced && !s.Selector.MatchAll {
-		return errors.New("strategy works at 'namespace' mode, scope.selector should be set to match all")
-	}
-
-	if asDefault {
-		if !s.Selector.MatchAll {
-			return errors.New("this is a default strategy, scope.selector should be set to match all")
-		}
-
-		// sub strategy should be empty
-		if !(s.SubStrategy == nil || (s.SubStrategy != nil && s.SubStrategy.IsEmpty())) {
-			return errors.New("strategy is the default strategy, its sub-strategy should not be configured")
-		}
-	}
-
-	if err := s.Selector.Validate(); err != nil {
-		return fmt.Errorf("invalid strategy selector, err: %v", err)
-	}
-
-	raw, err := json.Marshal(s.Selector)
-	if err != nil {
-		return fmt.Errorf("marshal strategy selector failed, err: %v", err)
-	}
-
-	if len(raw) > MaxScopeSelectorByteSize {
-		return ErrSelectorByteSizeIsOverMaxLimit
-	}
-
-	if s.SubStrategy != nil {
-		if err := s.SubStrategy.ValidateUpdate(); err != nil {
-			return fmt.Errorf("invalid strategy's sub-strategy, err: %v", err)
-		}
-	}
-
+func (s Scope) ValidateUpdate(asDefault bool, namespaced bool) error {
 	return nil
 }
 

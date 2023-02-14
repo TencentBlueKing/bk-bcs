@@ -10,6 +10,7 @@ import "bscp.io/pkg/protocol/core/release/release.proto";
 import "bscp.io/pkg/protocol/core/released-ci/released_ci.proto";
 import "bscp.io/pkg/protocol/core/strategy-set/strategy_set.proto";
 import "bscp.io/pkg/protocol/core/strategy/strategy.proto";
+import "bscp.io/pkg/protocol/core/group/group.proto";
 import "bscp.io/pkg/protocol/core/instance/instance.proto";
 import "google/api/annotations.proto";
 import "google/protobuf/struct.proto";
@@ -145,18 +146,6 @@ service Config {
             delete: "/api/v1/config/delete/strategy_set/strategy_set/strategy_set_id/{id}/app_id/{app_id}/biz_id/{biz_id}"
         };
     }
-    rpc PublishStrategySet(PublishStrategySetReq) returns (PublishStrategySetResp) {
-        option (google.api.http) = {
-            post: "/api/v1/config/update/strategy_set/publish/publish/strategy_set_id/{id}/app_id/{app_id}/biz_id/{biz_id}"
-            body: "*"
-        };
-    }
-    rpc FinishPublishStrategySet(FinishPublishStrategySetReq) returns (FinishPublishStrategySetResp) {
-        option (google.api.http) = {
-            put: "/api/v1/config/update/strategy_set/publish/finish/strategy_set_id/{id}/app_id/{app_id}/biz_id/{biz_id}"
-            body: "*"
-        };
-    }
     rpc ListStrategySets(ListStrategySetsReq) returns (ListStrategySetsResp) {
         option (google.api.http) = {
             post: "/api/v1/config/list/strategy_set/strategy_set/app_id/{app_id}/biz_id/{biz_id}"
@@ -170,32 +159,69 @@ service Config {
             body: "*"
         };
     }
-    rpc DeleteStrategy(DeleteStrategyReq) returns (DeleteStrategyResp) {
-        option (google.api.http) = {
-            delete: "/api/v1/config/delete/strategy/strategy/strategy_id/{id}/app_id/{app_id}/biz_id/{biz_id}"
-        };
-    }
     rpc UpdateStrategy(UpdateStrategyReq) returns (UpdateStrategyResp) {
         option (google.api.http) = {
             put: "/api/v1/config/update/strategy/strategy/strategy_id/{id}/app_id/{app_id}/biz_id/{biz_id}"
             body: "*"
         };
     }
-    rpc PublishStrategy(PublishStrategyReq) returns (PublishStrategyResp) {
+    rpc DeleteStrategy(DeleteStrategyReq) returns (DeleteStrategyResp) {
         option (google.api.http) = {
-            post: "/api/v1/config/update/strategy/publish/publish/strategy_id/{id}/app_id/{app_id}/biz_id/{biz_id}"
-            body: "*"
-        };
-    }
-    rpc FinishPublishStrategy(FinishPublishStrategyReq) returns (FinishPublishStrategyResp) {
-        option (google.api.http) = {
-            put: "/api/v1/config/update/strategy/publish/finish/strategy_id/{id}/app_id/{app_id}/biz_id/{biz_id}"
-            body: "*"
+            delete: "/api/v1/config/delete/strategy/strategy/strategy_id/{id}/app_id/{app_id}/biz_id/{biz_id}"
         };
     }
     rpc ListStrategies(ListStrategiesReq) returns (ListStrategiesResp) {
         option (google.api.http) = {
             post: "/api/v1/config/list/strategy/strategy/app_id/{app_id}/biz_id/{biz_id}"
+            body: "*"
+        };
+    }
+
+    rpc CreateGroup(CreateGroupReq) returns (CreateGroupResp) {
+        option (google.api.http) = {
+            post: "/api/v1/config/create/group/group/group_category_id/{group_category_id}/app_id/{app_id}/biz_id/{biz_id}"
+            body: "*"
+        };
+    }
+    rpc DeleteGroup(DeleteGroupReq) returns (DeleteGroupResp) {
+        option (google.api.http) = {
+            delete: "/api/v1/config/delete/group/group/group_id/{id}/app_id/{app_id}/biz_id/{biz_id}"
+        };
+    }
+    rpc UpdateGroup(UpdateGroupReq) returns (UpdateGroupResp) {
+        option (google.api.http) = {
+            put: "/api/v1/config/update/group/group/group_id/{id}/app_id/{app_id}/biz_id/{biz_id}"
+            body: "*"
+        };
+    }
+    rpc ListGroups(ListGroupsReq) returns (ListGroupsResp) {
+        option (google.api.http) = {
+            post: "/api/v1/config/list/group/group/app_id/{app_id}/biz_id/{biz_id}"
+            body: "*"
+        };
+    }
+
+    rpc CreateGroupCategory(CreateGroupCategoryReq) returns (CreateGroupCategoryResp) {
+        option (google.api.http) = {
+            post: "/api/v1/config/create/group_category/group_category/app_id/{app_id}/biz_id/{biz_id}"
+            body: "*"
+        };
+    }
+    rpc DeleteGroupCategory(DeleteGroupCategoryReq) returns (DeleteGroupCategoryResp) {
+        option (google.api.http) = {
+            delete: "/api/v1/config/delete/group_category/group_category/group_category_id/{id}/app_id/{app_id}/biz_id/{biz_id}"
+        };
+    }
+
+    rpc Publish(PublishReq) returns (PublishResp) {
+        option (google.api.http) = {
+            post: "/api/v1/config/update/strategy/publish/publish/release_id/{release_id}/app_id/{app_id}/biz_id/{biz_id}"
+            body: "*"
+        };
+    }
+    rpc FinishPublish(FinishPublishReq) returns (FinishPublishResp) {
+        option (google.api.http) = {
+            put: "/api/v1/config/update/strategy/publish/finish/strategy_id/{id}/app_id/{app_id}/biz_id/{biz_id}"
             body: "*"
         };
     }
@@ -587,30 +613,6 @@ message DeleteStrategySetResp {
     string message = 2;
 }
 
-message PublishStrategySetReq {
-    uint32 biz_id = 1;
-    uint32 app_id = 2;
-    uint32 id     = 3;
-}
-
-message PublishStrategySetResp {
-    int32 code                    = 1;
-    string message                = 2;
-    pbas.IamPermission permission = 3;
-}
-
-message FinishPublishStrategySetReq {
-    uint32 biz_id = 1;
-    uint32 app_id = 2;
-    uint32 id     = 3;
-}
-
-message FinishPublishStrategySetResp {
-    int32 code                    = 1;
-    string message                = 2;
-    pbas.IamPermission permission = 3;
-}
-
 message ListStrategySetsReq {
     uint32 biz_id                 = 1;
     uint32 app_id                 = 2;
@@ -637,7 +639,7 @@ message CreateStrategyReq {
     uint32 release_id              = 4;
     bool as_default                = 5;
     string name                    = 6;
-    pbstrategy.ScopeSelector scope = 7;
+    repeated uint32 groups         = 7;
     string namespace               = 8;
     string memo                    = 9;
 }
@@ -653,17 +655,6 @@ message CreateStrategyResp {
     pbas.IamPermission permission = 4;
 }
 
-message DeleteStrategyReq {
-    uint32 id     = 1;
-    uint32 biz_id = 2;
-    uint32 app_id = 3;
-}
-
-message DeleteStrategyResp {
-    int32 code                    = 1;
-    string message                = 2;
-    pbas.IamPermission permission = 3;
-}
 
 message UpdateStrategyReq {
     uint32 biz_id                  = 1;
@@ -672,7 +663,7 @@ message UpdateStrategyReq {
     uint32 release_id              = 4;
     bool as_default                = 5;
     string name                    = 6;
-    pbstrategy.ScopeSelector scope = 7;
+    repeated uint32 groups         = 7;
     string memo                    = 8;
 }
 
@@ -682,30 +673,13 @@ message UpdateStrategyResp {
     pbas.IamPermission permission = 3;
 }
 
-message PublishStrategyReq {
-    uint32 biz_id = 1;
-    uint32 app_id = 2;
-    uint32 id     = 3;
+message DeleteStrategyReq {
+    uint32 id     = 1;
+    uint32 biz_id = 2;
+    uint32 app_id = 3;
 }
 
-message PublishStrategyResp {
-    message RespData {
-        uint32 id = 1;
-    }
-
-    int32 code                    = 1;
-    string message                = 2;
-    RespData data                 = 3;
-    pbas.IamPermission permission = 4;
-}
-
-message FinishPublishStrategyReq {
-    uint32 biz_id = 1;
-    uint32 app_id = 2;
-    uint32 id     = 3;
-}
-
-message FinishPublishStrategyResp {
+message DeleteStrategyResp {
     int32 code                    = 1;
     string message                = 2;
     pbas.IamPermission permission = 3;
@@ -728,6 +702,135 @@ message ListStrategiesResp {
     string message                = 2;
     RespData data                 = 3;
     pbas.IamPermission permission = 4;
+}
+
+message CreateGroupReq {
+    uint32 biz_id                   = 1;
+    uint32 app_id                   = 2;
+    uint32 group_category_id        = 3;
+    string name                     = 4;
+    string mode                     = 5;
+    google.protobuf.Struct selector = 6;
+    string uid                      = 7;
+}
+
+message CreateGroupResp {
+    message RespData {
+        uint32 id = 1;
+    }
+
+    int32 code                    = 1;
+    string message                = 2;
+    RespData data                 = 3;
+    pbas.IamPermission permission = 4;
+}
+
+message UpdateGroupReq {
+    uint32 biz_id                   = 1;
+    uint32 app_id                   = 2;
+    uint32 id                       = 3;
+    uint32 group_category_id        = 4;
+    string name                     = 5;
+    string mode                     = 6;
+    google.protobuf.Struct selector = 7;
+    string uid                      = 8;
+}
+
+message UpdateGroupResp {
+    int32 code                    = 1;
+    string message                = 2;
+    pbas.IamPermission permission = 3;
+}
+
+message DeleteGroupReq {
+    uint32 id     = 1;
+    uint32 biz_id = 2;
+    uint32 app_id = 3;
+}
+
+message DeleteGroupResp {
+    int32 code                    = 1;
+    string message                = 2;
+    pbas.IamPermission permission = 3;
+}
+
+message ListGroupsReq {
+    uint32 biz_id                 = 1;
+    uint32 app_id                 = 2;
+    google.protobuf.Struct filter = 3;
+    pbbase.BasePage page          = 4;
+}
+
+message ListGroupsResp {
+    message RespData {
+        uint32 count                         = 1;
+        repeated pbgroup.Group details = 2;
+    }
+
+    int32 code                    = 1;
+    string message                = 2;
+    RespData data                 = 3;
+    pbas.IamPermission permission = 4;
+}
+
+message CreateGroupCategoryReq {
+    uint32 biz_id                   = 1;
+    uint32 app_id                   = 2;
+    string name                     = 3;
+}
+
+message CreateGroupCategoryResp {
+    message RespData {
+        uint32 id = 1;
+    }
+
+    int32 code                    = 1;
+    string message                = 2;
+    RespData data                 = 3;
+    pbas.IamPermission permission = 4;
+}
+
+message DeleteGroupCategoryReq {
+    uint32 id     = 1;
+    uint32 biz_id = 2;
+    uint32 app_id = 3;
+}
+
+message DeleteGroupCategoryResp {
+    int32 code                    = 1;
+    string message                = 2;
+    pbas.IamPermission permission = 3;
+}
+
+message PublishReq {
+    uint32 biz_id          = 1;
+    uint32 app_id          = 2;
+    uint32 release_id      = 3;
+    bool all               = 4;
+    repeated uint32 groups = 5;
+}
+
+message PublishResp {
+    message RespData {
+        uint32 id = 1;
+    }
+
+    int32 code                    = 1;
+    string message                = 2;
+    RespData data                 = 3;
+    pbas.IamPermission permission = 4;
+}
+
+message FinishPublishReq {
+    uint32 biz_id = 1;
+    uint32 app_id = 2;
+    uint32 id     = 3;
+}
+
+message FinishPublishResp {
+    int32 code                    = 1;
+    string message                = 2;
+    pbas.IamPermission permission = 3;
 }
 
 message ListPubStrategyHistoriesReq {

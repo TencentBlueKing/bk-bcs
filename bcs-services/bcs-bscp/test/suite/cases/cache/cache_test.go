@@ -27,7 +27,6 @@ import (
 	pbci "bscp.io/pkg/protocol/core/config-item"
 	pbcontent "bscp.io/pkg/protocol/core/content"
 	pbstrategy "bscp.io/pkg/protocol/core/strategy"
-	"bscp.io/pkg/runtime/selector"
 	"bscp.io/pkg/tools"
 	"bscp.io/test/client"
 	"bscp.io/test/suite"
@@ -44,14 +43,12 @@ func TestCache(t *testing.T) {
 		// The following values are used to generate data and
 		// verify data in the test process.
 		// They need to be defined before they can be used.
-		name           string
-		content        string // content of a config item file
-		nmMainSelector *selector.Selector
-		nmSubSelector  *selector.Selector
-		nmApp          pbapp.App
-		nmConfigItem   pbci.ConfigItem
-		nmContent      pbcontent.Content
-		nmStrategy     pbstrategy.Strategy
+		name         string
+		content      string // content of a config item file
+		nmApp        pbapp.App
+		nmConfigItem pbci.ConfigItem
+		nmContent    pbcontent.Content
+		nmStrategy   pbstrategy.Strategy
 
 		// The following ids need to be assigned after generating resources.
 		// They are used for verification in the test process.
@@ -101,28 +98,11 @@ func TestCache(t *testing.T) {
 			}
 
 			// normal mode strategy.
-			nmMainSelector = cases.GenMainSelector()
-			pbMainSelector, err := nmMainSelector.MarshalPB()
-			So(err, ShouldBeNil)
-			nmSubSelector = cases.GenSubSelector()
-			pbSubSelector, err := nmSubSelector.MarshalPB()
-			So(err, ShouldBeNil)
 			nmStrategy = pbstrategy.Strategy{
 				Spec: &pbstrategy.StrategySpec{
 					AsDefault: false,
 					Name:      name + "_strategy",
 					Namespace: "",
-					Scope: &pbstrategy.ScopeSelector{
-						Selector: pbMainSelector,
-						SubStrategy: &pbstrategy.SubStrategy{
-							Spec: &pbstrategy.SubStrategySpec{
-								Name: "normal_sub_strategy",
-								Scope: &pbstrategy.SubScopeSelector{
-									Selector: pbSubSelector,
-								},
-							},
-						},
-					},
 				},
 			}
 		})
@@ -240,7 +220,6 @@ func TestCache(t *testing.T) {
 			So(nmStgSetResp.Data.Id, ShouldNotEqual, uint32(0))
 
 			// create strategy in normal mode
-			nmStrategy.Spec.Scope.SubStrategy.Spec.ReleaseId = nmReleaseId
 			nmStgReq := &pbconfig.CreateStrategyReq{
 				BizId:         cases.TBizID,
 				AppId:         nmAppResp.Data.Id,
@@ -248,11 +227,7 @@ func TestCache(t *testing.T) {
 				ReleaseId:     nmRelResp.Data.Id,
 				AsDefault:     nmStrategy.Spec.AsDefault,
 				Name:          name + "_strategy",
-				Scope: &pbstrategy.ScopeSelector{
-					Selector:    nmStrategy.Spec.Scope.Selector,
-					SubStrategy: nmStrategy.Spec.Scope.SubStrategy,
-				},
-				Namespace: "",
+				Namespace:     "",
 			}
 			ctx, header = cases.GenApiCtxHeader()
 			nmStgResp, err := cli.ApiClient.Strategy.Create(ctx, header, nmStgReq)
@@ -262,10 +237,9 @@ func TestCache(t *testing.T) {
 			So(nmStgResp.Data.Id, ShouldNotEqual, uint32(0))
 
 			// publish with strategy in normal mode
-			pubStgReq := &pbconfig.PublishStrategyReq{
+			pubStgReq := &pbconfig.PublishReq{
 				BizId: cases.TBizID,
 				AppId: nmAppResp.Data.Id,
-				Id:    nmStgResp.Data.Id,
 			}
 			ctx, header = cases.GenApiCtxHeader()
 			nmPubStgResp, err := cli.ApiClient.Publish.PublishWithStrategy(ctx, header, pubStgReq)
@@ -275,7 +249,7 @@ func TestCache(t *testing.T) {
 			So(nmPubStgResp.Data.Id, ShouldNotEqual, uint32(0))
 
 			// finish publish with strategy in normal mode
-			nmFinishPubStgReq := &pbconfig.FinishPublishStrategyReq{
+			nmFinishPubStgReq := &pbconfig.FinishPublishReq{
 				BizId: cases.TBizID,
 				AppId: nmAppResp.Data.Id,
 				Id:    nmStgResp.Data.Id,

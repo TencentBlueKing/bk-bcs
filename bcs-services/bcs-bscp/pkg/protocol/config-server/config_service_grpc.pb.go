@@ -43,15 +43,19 @@ type ConfigClient interface {
 	CreateStrategySet(ctx context.Context, in *CreateStrategySetReq, opts ...grpc.CallOption) (*CreateStrategySetResp, error)
 	UpdateStrategySet(ctx context.Context, in *UpdateStrategySetReq, opts ...grpc.CallOption) (*UpdateStrategySetResp, error)
 	DeleteStrategySet(ctx context.Context, in *DeleteStrategySetReq, opts ...grpc.CallOption) (*DeleteStrategySetResp, error)
-	PublishStrategySet(ctx context.Context, in *PublishStrategySetReq, opts ...grpc.CallOption) (*PublishStrategySetResp, error)
-	FinishPublishStrategySet(ctx context.Context, in *FinishPublishStrategySetReq, opts ...grpc.CallOption) (*FinishPublishStrategySetResp, error)
 	ListStrategySets(ctx context.Context, in *ListStrategySetsReq, opts ...grpc.CallOption) (*ListStrategySetsResp, error)
 	CreateStrategy(ctx context.Context, in *CreateStrategyReq, opts ...grpc.CallOption) (*CreateStrategyResp, error)
-	DeleteStrategy(ctx context.Context, in *DeleteStrategyReq, opts ...grpc.CallOption) (*DeleteStrategyResp, error)
 	UpdateStrategy(ctx context.Context, in *UpdateStrategyReq, opts ...grpc.CallOption) (*UpdateStrategyResp, error)
-	PublishStrategy(ctx context.Context, in *PublishStrategyReq, opts ...grpc.CallOption) (*PublishStrategyResp, error)
-	FinishPublishStrategy(ctx context.Context, in *FinishPublishStrategyReq, opts ...grpc.CallOption) (*FinishPublishStrategyResp, error)
+	DeleteStrategy(ctx context.Context, in *DeleteStrategyReq, opts ...grpc.CallOption) (*DeleteStrategyResp, error)
 	ListStrategies(ctx context.Context, in *ListStrategiesReq, opts ...grpc.CallOption) (*ListStrategiesResp, error)
+	CreateGroup(ctx context.Context, in *CreateGroupReq, opts ...grpc.CallOption) (*CreateGroupResp, error)
+	DeleteGroup(ctx context.Context, in *DeleteGroupReq, opts ...grpc.CallOption) (*DeleteGroupResp, error)
+	UpdateGroup(ctx context.Context, in *UpdateGroupReq, opts ...grpc.CallOption) (*UpdateGroupResp, error)
+	ListGroups(ctx context.Context, in *ListGroupsReq, opts ...grpc.CallOption) (*ListGroupsResp, error)
+	CreateGroupCategory(ctx context.Context, in *CreateGroupCategoryReq, opts ...grpc.CallOption) (*CreateGroupCategoryResp, error)
+	DeleteGroupCategory(ctx context.Context, in *DeleteGroupCategoryReq, opts ...grpc.CallOption) (*DeleteGroupCategoryResp, error)
+	Publish(ctx context.Context, in *PublishReq, opts ...grpc.CallOption) (*PublishResp, error)
+	FinishPublish(ctx context.Context, in *FinishPublishReq, opts ...grpc.CallOption) (*FinishPublishResp, error)
 	ListPublishedStrategyHistories(ctx context.Context, in *ListPubStrategyHistoriesReq, opts ...grpc.CallOption) (*ListPubStrategyHistoriesResp, error)
 	PublishInstance(ctx context.Context, in *PublishInstanceReq, opts ...grpc.CallOption) (*PublishInstanceResp, error)
 	DeletePublishedInstance(ctx context.Context, in *DeletePublishedInstanceReq, opts ...grpc.CallOption) (*DeletePublishedInstanceResp, error)
@@ -255,24 +259,6 @@ func (c *configClient) DeleteStrategySet(ctx context.Context, in *DeleteStrategy
 	return out, nil
 }
 
-func (c *configClient) PublishStrategySet(ctx context.Context, in *PublishStrategySetReq, opts ...grpc.CallOption) (*PublishStrategySetResp, error) {
-	out := new(PublishStrategySetResp)
-	err := c.cc.Invoke(ctx, "/pbcs.Config/PublishStrategySet", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *configClient) FinishPublishStrategySet(ctx context.Context, in *FinishPublishStrategySetReq, opts ...grpc.CallOption) (*FinishPublishStrategySetResp, error) {
-	out := new(FinishPublishStrategySetResp)
-	err := c.cc.Invoke(ctx, "/pbcs.Config/FinishPublishStrategySet", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func (c *configClient) ListStrategySets(ctx context.Context, in *ListStrategySetsReq, opts ...grpc.CallOption) (*ListStrategySetsResp, error) {
 	out := new(ListStrategySetsResp)
 	err := c.cc.Invoke(ctx, "/pbcs.Config/ListStrategySets", in, out, opts...)
@@ -291,15 +277,6 @@ func (c *configClient) CreateStrategy(ctx context.Context, in *CreateStrategyReq
 	return out, nil
 }
 
-func (c *configClient) DeleteStrategy(ctx context.Context, in *DeleteStrategyReq, opts ...grpc.CallOption) (*DeleteStrategyResp, error) {
-	out := new(DeleteStrategyResp)
-	err := c.cc.Invoke(ctx, "/pbcs.Config/DeleteStrategy", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func (c *configClient) UpdateStrategy(ctx context.Context, in *UpdateStrategyReq, opts ...grpc.CallOption) (*UpdateStrategyResp, error) {
 	out := new(UpdateStrategyResp)
 	err := c.cc.Invoke(ctx, "/pbcs.Config/UpdateStrategy", in, out, opts...)
@@ -309,18 +286,9 @@ func (c *configClient) UpdateStrategy(ctx context.Context, in *UpdateStrategyReq
 	return out, nil
 }
 
-func (c *configClient) PublishStrategy(ctx context.Context, in *PublishStrategyReq, opts ...grpc.CallOption) (*PublishStrategyResp, error) {
-	out := new(PublishStrategyResp)
-	err := c.cc.Invoke(ctx, "/pbcs.Config/PublishStrategy", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *configClient) FinishPublishStrategy(ctx context.Context, in *FinishPublishStrategyReq, opts ...grpc.CallOption) (*FinishPublishStrategyResp, error) {
-	out := new(FinishPublishStrategyResp)
-	err := c.cc.Invoke(ctx, "/pbcs.Config/FinishPublishStrategy", in, out, opts...)
+func (c *configClient) DeleteStrategy(ctx context.Context, in *DeleteStrategyReq, opts ...grpc.CallOption) (*DeleteStrategyResp, error) {
+	out := new(DeleteStrategyResp)
+	err := c.cc.Invoke(ctx, "/pbcs.Config/DeleteStrategy", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -330,6 +298,78 @@ func (c *configClient) FinishPublishStrategy(ctx context.Context, in *FinishPubl
 func (c *configClient) ListStrategies(ctx context.Context, in *ListStrategiesReq, opts ...grpc.CallOption) (*ListStrategiesResp, error) {
 	out := new(ListStrategiesResp)
 	err := c.cc.Invoke(ctx, "/pbcs.Config/ListStrategies", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *configClient) CreateGroup(ctx context.Context, in *CreateGroupReq, opts ...grpc.CallOption) (*CreateGroupResp, error) {
+	out := new(CreateGroupResp)
+	err := c.cc.Invoke(ctx, "/pbcs.Config/CreateGroup", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *configClient) DeleteGroup(ctx context.Context, in *DeleteGroupReq, opts ...grpc.CallOption) (*DeleteGroupResp, error) {
+	out := new(DeleteGroupResp)
+	err := c.cc.Invoke(ctx, "/pbcs.Config/DeleteGroup", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *configClient) UpdateGroup(ctx context.Context, in *UpdateGroupReq, opts ...grpc.CallOption) (*UpdateGroupResp, error) {
+	out := new(UpdateGroupResp)
+	err := c.cc.Invoke(ctx, "/pbcs.Config/UpdateGroup", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *configClient) ListGroups(ctx context.Context, in *ListGroupsReq, opts ...grpc.CallOption) (*ListGroupsResp, error) {
+	out := new(ListGroupsResp)
+	err := c.cc.Invoke(ctx, "/pbcs.Config/ListGroups", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *configClient) CreateGroupCategory(ctx context.Context, in *CreateGroupCategoryReq, opts ...grpc.CallOption) (*CreateGroupCategoryResp, error) {
+	out := new(CreateGroupCategoryResp)
+	err := c.cc.Invoke(ctx, "/pbcs.Config/CreateGroupCategory", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *configClient) DeleteGroupCategory(ctx context.Context, in *DeleteGroupCategoryReq, opts ...grpc.CallOption) (*DeleteGroupCategoryResp, error) {
+	out := new(DeleteGroupCategoryResp)
+	err := c.cc.Invoke(ctx, "/pbcs.Config/DeleteGroupCategory", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *configClient) Publish(ctx context.Context, in *PublishReq, opts ...grpc.CallOption) (*PublishResp, error) {
+	out := new(PublishResp)
+	err := c.cc.Invoke(ctx, "/pbcs.Config/Publish", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *configClient) FinishPublish(ctx context.Context, in *FinishPublishReq, opts ...grpc.CallOption) (*FinishPublishResp, error) {
+	out := new(FinishPublishResp)
+	err := c.cc.Invoke(ctx, "/pbcs.Config/FinishPublish", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -397,15 +437,19 @@ type ConfigServer interface {
 	CreateStrategySet(context.Context, *CreateStrategySetReq) (*CreateStrategySetResp, error)
 	UpdateStrategySet(context.Context, *UpdateStrategySetReq) (*UpdateStrategySetResp, error)
 	DeleteStrategySet(context.Context, *DeleteStrategySetReq) (*DeleteStrategySetResp, error)
-	PublishStrategySet(context.Context, *PublishStrategySetReq) (*PublishStrategySetResp, error)
-	FinishPublishStrategySet(context.Context, *FinishPublishStrategySetReq) (*FinishPublishStrategySetResp, error)
 	ListStrategySets(context.Context, *ListStrategySetsReq) (*ListStrategySetsResp, error)
 	CreateStrategy(context.Context, *CreateStrategyReq) (*CreateStrategyResp, error)
-	DeleteStrategy(context.Context, *DeleteStrategyReq) (*DeleteStrategyResp, error)
 	UpdateStrategy(context.Context, *UpdateStrategyReq) (*UpdateStrategyResp, error)
-	PublishStrategy(context.Context, *PublishStrategyReq) (*PublishStrategyResp, error)
-	FinishPublishStrategy(context.Context, *FinishPublishStrategyReq) (*FinishPublishStrategyResp, error)
+	DeleteStrategy(context.Context, *DeleteStrategyReq) (*DeleteStrategyResp, error)
 	ListStrategies(context.Context, *ListStrategiesReq) (*ListStrategiesResp, error)
+	CreateGroup(context.Context, *CreateGroupReq) (*CreateGroupResp, error)
+	DeleteGroup(context.Context, *DeleteGroupReq) (*DeleteGroupResp, error)
+	UpdateGroup(context.Context, *UpdateGroupReq) (*UpdateGroupResp, error)
+	ListGroups(context.Context, *ListGroupsReq) (*ListGroupsResp, error)
+	CreateGroupCategory(context.Context, *CreateGroupCategoryReq) (*CreateGroupCategoryResp, error)
+	DeleteGroupCategory(context.Context, *DeleteGroupCategoryReq) (*DeleteGroupCategoryResp, error)
+	Publish(context.Context, *PublishReq) (*PublishResp, error)
+	FinishPublish(context.Context, *FinishPublishReq) (*FinishPublishResp, error)
 	ListPublishedStrategyHistories(context.Context, *ListPubStrategyHistoriesReq) (*ListPubStrategyHistoriesResp, error)
 	PublishInstance(context.Context, *PublishInstanceReq) (*PublishInstanceResp, error)
 	DeletePublishedInstance(context.Context, *DeletePublishedInstanceReq) (*DeletePublishedInstanceResp, error)
@@ -479,32 +523,44 @@ func (UnimplementedConfigServer) UpdateStrategySet(context.Context, *UpdateStrat
 func (UnimplementedConfigServer) DeleteStrategySet(context.Context, *DeleteStrategySetReq) (*DeleteStrategySetResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteStrategySet not implemented")
 }
-func (UnimplementedConfigServer) PublishStrategySet(context.Context, *PublishStrategySetReq) (*PublishStrategySetResp, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method PublishStrategySet not implemented")
-}
-func (UnimplementedConfigServer) FinishPublishStrategySet(context.Context, *FinishPublishStrategySetReq) (*FinishPublishStrategySetResp, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method FinishPublishStrategySet not implemented")
-}
 func (UnimplementedConfigServer) ListStrategySets(context.Context, *ListStrategySetsReq) (*ListStrategySetsResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListStrategySets not implemented")
 }
 func (UnimplementedConfigServer) CreateStrategy(context.Context, *CreateStrategyReq) (*CreateStrategyResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateStrategy not implemented")
 }
-func (UnimplementedConfigServer) DeleteStrategy(context.Context, *DeleteStrategyReq) (*DeleteStrategyResp, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method DeleteStrategy not implemented")
-}
 func (UnimplementedConfigServer) UpdateStrategy(context.Context, *UpdateStrategyReq) (*UpdateStrategyResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateStrategy not implemented")
 }
-func (UnimplementedConfigServer) PublishStrategy(context.Context, *PublishStrategyReq) (*PublishStrategyResp, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method PublishStrategy not implemented")
-}
-func (UnimplementedConfigServer) FinishPublishStrategy(context.Context, *FinishPublishStrategyReq) (*FinishPublishStrategyResp, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method FinishPublishStrategy not implemented")
+func (UnimplementedConfigServer) DeleteStrategy(context.Context, *DeleteStrategyReq) (*DeleteStrategyResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteStrategy not implemented")
 }
 func (UnimplementedConfigServer) ListStrategies(context.Context, *ListStrategiesReq) (*ListStrategiesResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListStrategies not implemented")
+}
+func (UnimplementedConfigServer) CreateGroup(context.Context, *CreateGroupReq) (*CreateGroupResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateGroup not implemented")
+}
+func (UnimplementedConfigServer) DeleteGroup(context.Context, *DeleteGroupReq) (*DeleteGroupResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteGroup not implemented")
+}
+func (UnimplementedConfigServer) UpdateGroup(context.Context, *UpdateGroupReq) (*UpdateGroupResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateGroup not implemented")
+}
+func (UnimplementedConfigServer) ListGroups(context.Context, *ListGroupsReq) (*ListGroupsResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListGroups not implemented")
+}
+func (UnimplementedConfigServer) CreateGroupCategory(context.Context, *CreateGroupCategoryReq) (*CreateGroupCategoryResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateGroupCategory not implemented")
+}
+func (UnimplementedConfigServer) DeleteGroupCategory(context.Context, *DeleteGroupCategoryReq) (*DeleteGroupCategoryResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteGroupCategory not implemented")
+}
+func (UnimplementedConfigServer) Publish(context.Context, *PublishReq) (*PublishResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Publish not implemented")
+}
+func (UnimplementedConfigServer) FinishPublish(context.Context, *FinishPublishReq) (*FinishPublishResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method FinishPublish not implemented")
 }
 func (UnimplementedConfigServer) ListPublishedStrategyHistories(context.Context, *ListPubStrategyHistoriesReq) (*ListPubStrategyHistoriesResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListPublishedStrategyHistories not implemented")
@@ -908,42 +964,6 @@ func _Config_DeleteStrategySet_Handler(srv interface{}, ctx context.Context, dec
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Config_PublishStrategySet_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(PublishStrategySetReq)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ConfigServer).PublishStrategySet(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/pbcs.Config/PublishStrategySet",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ConfigServer).PublishStrategySet(ctx, req.(*PublishStrategySetReq))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Config_FinishPublishStrategySet_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(FinishPublishStrategySetReq)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ConfigServer).FinishPublishStrategySet(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/pbcs.Config/FinishPublishStrategySet",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ConfigServer).FinishPublishStrategySet(ctx, req.(*FinishPublishStrategySetReq))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _Config_ListStrategySets_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ListStrategySetsReq)
 	if err := dec(in); err != nil {
@@ -980,24 +1000,6 @@ func _Config_CreateStrategy_Handler(srv interface{}, ctx context.Context, dec fu
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Config_DeleteStrategy_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(DeleteStrategyReq)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ConfigServer).DeleteStrategy(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/pbcs.Config/DeleteStrategy",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ConfigServer).DeleteStrategy(ctx, req.(*DeleteStrategyReq))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _Config_UpdateStrategy_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(UpdateStrategyReq)
 	if err := dec(in); err != nil {
@@ -1016,38 +1018,20 @@ func _Config_UpdateStrategy_Handler(srv interface{}, ctx context.Context, dec fu
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Config_PublishStrategy_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(PublishStrategyReq)
+func _Config_DeleteStrategy_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteStrategyReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ConfigServer).PublishStrategy(ctx, in)
+		return srv.(ConfigServer).DeleteStrategy(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/pbcs.Config/PublishStrategy",
+		FullMethod: "/pbcs.Config/DeleteStrategy",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ConfigServer).PublishStrategy(ctx, req.(*PublishStrategyReq))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Config_FinishPublishStrategy_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(FinishPublishStrategyReq)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ConfigServer).FinishPublishStrategy(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/pbcs.Config/FinishPublishStrategy",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ConfigServer).FinishPublishStrategy(ctx, req.(*FinishPublishStrategyReq))
+		return srv.(ConfigServer).DeleteStrategy(ctx, req.(*DeleteStrategyReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1066,6 +1050,150 @@ func _Config_ListStrategies_Handler(srv interface{}, ctx context.Context, dec fu
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ConfigServer).ListStrategies(ctx, req.(*ListStrategiesReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Config_CreateGroup_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateGroupReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).CreateGroup(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/pbcs.Config/CreateGroup",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).CreateGroup(ctx, req.(*CreateGroupReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Config_DeleteGroup_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteGroupReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).DeleteGroup(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/pbcs.Config/DeleteGroup",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).DeleteGroup(ctx, req.(*DeleteGroupReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Config_UpdateGroup_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateGroupReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).UpdateGroup(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/pbcs.Config/UpdateGroup",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).UpdateGroup(ctx, req.(*UpdateGroupReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Config_ListGroups_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListGroupsReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).ListGroups(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/pbcs.Config/ListGroups",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).ListGroups(ctx, req.(*ListGroupsReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Config_CreateGroupCategory_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateGroupCategoryReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).CreateGroupCategory(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/pbcs.Config/CreateGroupCategory",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).CreateGroupCategory(ctx, req.(*CreateGroupCategoryReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Config_DeleteGroupCategory_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteGroupCategoryReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).DeleteGroupCategory(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/pbcs.Config/DeleteGroupCategory",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).DeleteGroupCategory(ctx, req.(*DeleteGroupCategoryReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Config_Publish_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(PublishReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).Publish(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/pbcs.Config/Publish",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).Publish(ctx, req.(*PublishReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Config_FinishPublish_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(FinishPublishReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).FinishPublish(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/pbcs.Config/FinishPublish",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).FinishPublish(ctx, req.(*FinishPublishReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1234,14 +1362,6 @@ var Config_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Config_DeleteStrategySet_Handler,
 		},
 		{
-			MethodName: "PublishStrategySet",
-			Handler:    _Config_PublishStrategySet_Handler,
-		},
-		{
-			MethodName: "FinishPublishStrategySet",
-			Handler:    _Config_FinishPublishStrategySet_Handler,
-		},
-		{
 			MethodName: "ListStrategySets",
 			Handler:    _Config_ListStrategySets_Handler,
 		},
@@ -1250,24 +1370,48 @@ var Config_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Config_CreateStrategy_Handler,
 		},
 		{
-			MethodName: "DeleteStrategy",
-			Handler:    _Config_DeleteStrategy_Handler,
-		},
-		{
 			MethodName: "UpdateStrategy",
 			Handler:    _Config_UpdateStrategy_Handler,
 		},
 		{
-			MethodName: "PublishStrategy",
-			Handler:    _Config_PublishStrategy_Handler,
-		},
-		{
-			MethodName: "FinishPublishStrategy",
-			Handler:    _Config_FinishPublishStrategy_Handler,
+			MethodName: "DeleteStrategy",
+			Handler:    _Config_DeleteStrategy_Handler,
 		},
 		{
 			MethodName: "ListStrategies",
 			Handler:    _Config_ListStrategies_Handler,
+		},
+		{
+			MethodName: "CreateGroup",
+			Handler:    _Config_CreateGroup_Handler,
+		},
+		{
+			MethodName: "DeleteGroup",
+			Handler:    _Config_DeleteGroup_Handler,
+		},
+		{
+			MethodName: "UpdateGroup",
+			Handler:    _Config_UpdateGroup_Handler,
+		},
+		{
+			MethodName: "ListGroups",
+			Handler:    _Config_ListGroups_Handler,
+		},
+		{
+			MethodName: "CreateGroupCategory",
+			Handler:    _Config_CreateGroupCategory_Handler,
+		},
+		{
+			MethodName: "DeleteGroupCategory",
+			Handler:    _Config_DeleteGroupCategory_Handler,
+		},
+		{
+			MethodName: "Publish",
+			Handler:    _Config_Publish_Handler,
+		},
+		{
+			MethodName: "FinishPublish",
+			Handler:    _Config_FinishPublish_Handler,
 		},
 		{
 			MethodName: "ListPublishedStrategyHistories",

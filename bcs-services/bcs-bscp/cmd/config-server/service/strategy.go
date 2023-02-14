@@ -19,9 +19,12 @@ import (
 	"bscp.io/pkg/iam/meta"
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/logs"
-	"bscp.io/pkg/protocol/config-server"
-	"bscp.io/pkg/protocol/core/strategy"
-	"bscp.io/pkg/protocol/data-service"
+	pbcs "bscp.io/pkg/protocol/config-server"
+	pbbase "bscp.io/pkg/protocol/core/base"
+	pbgroup "bscp.io/pkg/protocol/core/group"
+	pbstrategy "bscp.io/pkg/protocol/core/strategy"
+	pbds "bscp.io/pkg/protocol/data-service"
+	"bscp.io/pkg/runtime/filter"
 	"bscp.io/pkg/types"
 )
 
@@ -37,6 +40,12 @@ func (s *Service) CreateStrategy(ctx context.Context, req *pbcs.CreateStrategyRe
 		return resp, nil
 	}
 
+	groups, err := s.queryGroups(grpcKit.RpcCtx(), req.BizId, req.AppId, req.Groups)
+	if err != nil {
+		errf.Error(err).AssignResp(grpcKit, resp)
+		return resp, nil
+	}
+
 	r := &pbds.CreateStrategyReq{
 		Attachment: &pbstrategy.StrategyAttachment{
 			BizId:         req.BizId,
@@ -47,7 +56,9 @@ func (s *Service) CreateStrategy(ctx context.Context, req *pbcs.CreateStrategyRe
 			Name:      req.Name,
 			ReleaseId: req.ReleaseId,
 			AsDefault: req.AsDefault,
-			Scope:     req.Scope,
+			Scope:     &pbstrategy.Scope{
+				Groups: groups,
+			},
 			Namespace: req.Namespace,
 			Memo:      req.Memo,
 		},
@@ -108,6 +119,12 @@ func (s *Service) UpdateStrategy(ctx context.Context, req *pbcs.UpdateStrategyRe
 		return resp, nil
 	}
 
+	groups, err := s.queryGroups(grpcKit.RpcCtx(), req.BizId, req.AppId, req.Groups)
+	if err != nil {
+		errf.Error(err).AssignResp(grpcKit, resp)
+		return resp, nil
+	}
+
 	r := &pbds.UpdateStrategyReq{
 		Id: req.Id,
 		Attachment: &pbstrategy.StrategyAttachment{
@@ -118,7 +135,9 @@ func (s *Service) UpdateStrategy(ctx context.Context, req *pbcs.UpdateStrategyRe
 			Name:      req.Name,
 			ReleaseId: req.ReleaseId,
 			AsDefault: req.AsDefault,
-			Scope:     req.Scope,
+			Scope:     &pbstrategy.Scope{
+				Groups: groups,
+			},
 			Memo:      req.Memo,
 		},
 	}
@@ -173,4 +192,40 @@ func (s *Service) ListStrategies(ctx context.Context, req *pbcs.ListStrategiesRe
 		Details: rp.Details,
 	}
 	return resp, nil
+}
+
+func (s *Service) queryGroups(ctx context.Context, bizID, appID uint32, groupIDs []uint32) ([]*pbgroup.Group, error) {
+
+	exp := &filter.Expression{
+		Op: filter.And,
+		Rules: []filter.RuleFactory{
+			&filter.AtomRule{
+				Field: "id",
+				Op:    filter.In.Factory(),
+				Value: groupIDs,
+			},
+		},
+	}
+	ft, err := exp.MarshalPB()
+	if err != nil {
+		return nil, err
+	}
+	in := &pbds.ListGroupsReq{
+		BizId:  bizID,
+		AppId:  appID,
+		Filter: ft,
+		Page: &pbbase.BasePage{
+			Count: false,
+			Start: 0,
+			Limit: 0,
+			Order: string(types.Ascending.Order()),
+		},
+	}
+
+	resp, err := s.client.DS.ListGroups(ctx, in)
+	if err != nil {
+		return nil, err
+	}
+	return resp.Details, nil
+
 }

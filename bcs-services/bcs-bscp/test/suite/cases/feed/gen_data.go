@@ -259,17 +259,12 @@ func (g *Generator) namespaceStrategyPublish(ctx context.Context, header http.He
 	}
 	BNSSubStrategyReleaseID = rlResp.Data.Id
 
-	scope, err := cases.GenNamespaceStrategyScope(cases.RandName("sub_strategy"), BNSSubStrategyReleaseID)
-	if err != nil {
-		return fmt.Errorf("gen namespace strategy scope failed, err: %v", err)
-	}
 	// create strategy.
 	styReq := &pbcs.CreateStrategyReq{
 		BizId:         cases.TBizID,
 		AppId:         appID,
 		StrategySetId: stgSetID,
 		Name:          cases.RandName("strategy"),
-		Scope:         scope,
 		Namespace:     BNSNamespace,
 		Memo:          TestDataMemo,
 		ReleaseId:     BNSNamespaceReleaseID,
@@ -284,10 +279,9 @@ func (g *Generator) namespaceStrategyPublish(ctx context.Context, header http.He
 	}
 
 	// publish strategy.
-	pbReq := &pbcs.PublishStrategyReq{
+	pbReq := &pbcs.PublishReq{
 		BizId: cases.TBizID,
 		AppId: appID,
-		Id:    styResp.Data.Id,
 	}
 	pbResp, err := g.Cli.Publish.PublishWithStrategy(ctx, header, pbReq)
 	if err != nil {
@@ -336,17 +330,12 @@ func (g *Generator) normalStrategyPublish(ctx context.Context, header http.Heade
 	}
 	BNMSubStrategyReleaseID = rlResp.Data.Id
 
-	scope, err := cases.GenNormalStrategyScope(cases.RandName("sub_strategy"), BNMSubStrategyReleaseID)
-	if err != nil {
-		return fmt.Errorf("gen normal strategy scope failed, err: %v", err)
-	}
 	// create strategy.
 	styReq := &pbcs.CreateStrategyReq{
 		BizId:         cases.TBizID,
 		AppId:         appID,
 		StrategySetId: stgSetID,
 		Name:          cases.RandName("strategy"),
-		Scope:         scope,
 		Memo:          TestDataMemo,
 		ReleaseId:     BNMMainStrategyReleaseID,
 	}
@@ -360,10 +349,9 @@ func (g *Generator) normalStrategyPublish(ctx context.Context, header http.Heade
 	}
 
 	// publish strategy.
-	pbReq := &pbcs.PublishStrategyReq{
+	pbReq := &pbcs.PublishReq{
 		BizId: cases.TBizID,
 		AppId: appID,
-		Id:    styResp.Data.Id,
 	}
 	pbResp, err := g.Cli.Publish.PublishWithStrategy(ctx, header, pbReq)
 	if err != nil {
@@ -416,10 +404,9 @@ func (g *Generator) defaultStrategyPublish(ctx context.Context, header http.Head
 	}
 
 	// publish strategy.
-	pbReq := &pbcs.PublishStrategyReq{
+	pbReq := &pbcs.PublishReq{
 		BizId: cases.TBizID,
 		AppId: appID,
-		Id:    styResp.Data.Id,
 	}
 	pbResp, err := g.Cli.Publish.PublishWithStrategy(ctx, header, pbReq)
 	if err != nil {

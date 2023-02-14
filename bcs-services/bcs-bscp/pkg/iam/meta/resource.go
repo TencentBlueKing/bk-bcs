@@ -40,6 +40,10 @@ const (
 	Strategy ResourceType = "strategy"
 	// StrategySet resource's bscp auth resource type
 	StrategySet ResourceType = "strategy_set"
+	// Group resource's bscp auth resource type
+	Group ResourceType = "group"
+	// GroupCategory resource's bscp auth resource type
+	GroupCategory ResourceType = "group_category"
 	// PSH resource's bscp auth resource type
 	PSH ResourceType = "published_strategy_history"
 	// Repo represents repository resource's related bscp auth resource type

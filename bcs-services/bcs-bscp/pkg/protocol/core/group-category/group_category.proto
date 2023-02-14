@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+import "bscp.io/pkg/protocol/core/base/base.proto";
+
+package pbgc;
+
+option go_package = "bscp.io/pkg/protocol/core/group-category;pbgc";
+
+// GroupCategory source resource reference: pkg/dal/table/group_category.go
+message GroupCategory {
+    uint32 id                             = 1;
+    GroupCategorySpec spec                = 2;
+    GroupCategoryAttachment attachment    = 3;
+    pbbase.CreatedRevision revision       = 4;
+}
+
+// GroupCategorySpec source resource reference: pkg/dal/table/group_category.go
+message GroupCategorySpec {
+    string name                     = 1;
+}
+
+// GroupCategoryAttachment source resource reference: pkg/dal/table/group_category.go
+message GroupCategoryAttachment {
+    uint32 biz_id                   = 1;
+    uint32 app_id                   = 2;
+}

@@ -26,6 +26,7 @@ import (
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/logs"
 	"bscp.io/pkg/runtime/filter"
+	"bscp.io/pkg/tools"
 	"bscp.io/pkg/types"
 
 	"github.com/jmoiron/sqlx"
@@ -33,10 +34,10 @@ import (
 
 // Publish defines all the publish operation related operations.
 type Publish interface {
-	// PublishStrategy publish an app's release with its strategy.
+	// Publish publish an app's release with its strategy.
 	// once an app's strategy along with its release id is published,
 	// all its released config items are effected immediately.
-	PublishStrategy(kit *kit.Kit, opt *types.PublishStrategyOption) (id uint32, err error)
+	Publish(kit *kit.Kit, opt *types.PublishOption) (id uint32, err error)
 
 	// FinishPublish finish the strategy's publish process when a
 	// strategy is in publishing state.
@@ -62,11 +63,11 @@ type pubDao struct {
 	event    Event
 }
 
-// PublishStrategy publish an app's release with its strategy.
+// Publish publish an app's release with its strategy.
 // once an app's strategy along with its release id is published,
 // all its released config items are effected immediately.
 // return the published strategy history record id.
-func (pd *pubDao) PublishStrategy(kit *kit.Kit, opt *types.PublishStrategyOption) (uint32, error) {
+func (pd *pubDao) Publish(kit *kit.Kit, opt *types.PublishOption) (uint32, error) {
 
 	if opt == nil {
 		return 0, errf.New(errf.InvalidParameter, "publish strategy option is nil")
@@ -76,56 +77,95 @@ func (pd *pubDao) PublishStrategy(kit *kit.Kit, opt *types.PublishStrategyOption
 		return 0, err
 	}
 
-	// get the strategy details to publish it later.
-	pubStrategy := new(table.Strategy)
-	stgExpr := fmt.Sprintf(`SELECT %s FROM %s WHERE id = %d AND biz_id = %d AND app_id = %d`,
-		table.StrategyColumns.NamedExpr(), table.StrategyTable, opt.StrategyID, opt.BizID, opt.AppID)
-
-	if err := pd.orm.Do(pd.sd.MustSharding(opt.BizID)).Get(kit.Ctx, pubStrategy, stgExpr); err != nil {
-		// if it can not find this to be published strategy, return err with error code.
-		if err == orm.ErrRecordNotFound {
-			return 0, errf.New(errf.RecordNotFound, fmt.Sprintf("strategy with id(%d) not found", opt.StrategyID))
-		}
-
-		logs.Errorf("get to be published strategy(%d) failed, err: %v, rid: %s", opt.StrategyID, err, kit.Rid)
-		return 0, errf.New(errf.DBOpFailed, err.Error())
-	}
-
 	eDecorator := pd.event.Eventf(kit)
 	var pshID uint32
 	err := pd.sd.ShardingOne(opt.BizID).AutoTxn(kit, func(txn *sqlx.Tx, options *sharding.TxnOption) error {
-		// should first update the strategy state to publishing to ensure that the current state is not publishing.
-		if err := pd.updateStrategyPublishState(kit, txn, opt.BizID, opt.StrategyID, table.Publishing); err != nil {
-			logs.Errorf("update the strategy(%d) state to publishing failed, err: %v, rid: %s", opt.StrategyID,
-				err, kit.Rid)
+		groups := make([]*table.Group, len(opt.Groups))
+		if !opt.All {
+			// list groups if gray release
+			lgExpr := fmt.Sprintf(`SELECT %s FROM %s WHERE id IN (%s)`,
+				table.GroupColumns.NamedExpr(), table.GroupTable, tools.JoinUint32(opt.Groups, ","))
+			if err := pd.orm.Do(pd.sd.MustSharding(opt.BizID)).Select(kit.Ctx, &groups, lgExpr); err != nil {
+				logs.Errorf("get to be published groups(%s) failed, err: %v, rid: %s",
+					tools.JoinUint32(opt.Groups, ","), err, kit.Rid)
+				return errf.New(errf.DBOpFailed, err.Error())
+			}
+			// if any group can not match,return err
+			if len(groups) != len(opt.Groups) {
+				return errf.New(errf.DBOpFailed,
+					fmt.Sprintf("groups num not matched with id(%s)", tools.JoinUint32(opt.Groups, ",")))
+			}
+		}
+		// create strategy to publish it later
+		now := time.Now()
+		stgID, err := pd.idGen.One(kit, table.GroupTable)
+		stg := &table.Strategy{
+			ID: stgID,
+			Spec: &table.StrategySpec{
+				Name:      "TODO",
+				ReleaseID: opt.ReleaseID,
+				AsDefault: opt.All,
+				Scope: &table.Scope{
+					Groups: groups,
+				},
+				Mode: table.Normal,
+				Memo: "TODO",
+			},
+			State: &table.StrategyState{
+				PubState: table.Publishing,
+			},
+			Attachment: &table.StrategyAttachment{
+				BizID: opt.BizID,
+				AppID: opt.AppID,
+			},
+			Revision: &table.Revision{
+				Creator:   kit.User,
+				Reviser:   kit.User,
+				CreatedAt: now,
+				UpdatedAt: now,
+			},
+		}
+		stgExpr := fmt.Sprintf(`INSERT INTO %s (%s)	VALUES(%s)`, table.StrategyTable,
+			table.StrategyColumns.ColumnExpr(), table.StrategyColumns.ColonNameExpr())
+
+		if err = pd.orm.Txn(txn).Insert(kit.Ctx, stgExpr, stg); err != nil {
 			return err
 		}
 
+		// audit this to create strategy details.
+		auc := &AuditOption{Txn: txn, ResShardingUid: options.ShardingUid}
+		if err = pd.auditDao.Decorator(kit, stg.Attachment.BizID,
+			enumor.Strategy).AuditCreate(stg, auc); err != nil {
+			return fmt.Errorf("audit create strategy failed, err: %v", err)
+		}
+
+		// audit this to publish strategy details.
+		aup := &AuditOption{Txn: txn, ResShardingUid: options.ShardingUid}
+		if err = pd.auditDao.Decorator(kit, stg.Attachment.BizID,
+			enumor.Strategy).AuditPublish(stg, aup); err != nil {
+			return fmt.Errorf("audit publish strategy failed, err: %v", err)
+		}
+
 		// upsert the published strategy to the CurrentPublishedStrategy table for record.
-		if err := pd.upsertToCurrentPublishedStrategy(kit, txn, pubStrategy); err != nil {
+		if err := pd.upsertToCurrentPublishedStrategy(kit, txn, stg); err != nil {
 			logs.Errorf("upsert to current published strategy table failed, err: %v, rid: %s", err, kit.Rid)
 			return err
 		}
 
 		// save history to the PublishedStrategyHistoryTable table for record.
-		id, err := pd.recordPublishedStrategyHistory(kit, txn, pubStrategy, opt)
+		id, err := pd.recordPublishedStrategyHistory(kit, txn, stg, opt)
 		if err != nil {
 			logs.Errorf("record the published strategy history table failed, err: %v, rid: %s", err, kit.Rid)
 			return err
 		}
 		pshID = id
 
-		au := &AuditOption{Txn: txn, ResShardingUid: options.ShardingUid}
-		if err := pd.auditDao.Decorator(kit, opt.BizID, enumor.Strategy).AuditPublish(pubStrategy, au); err != nil {
-			return fmt.Errorf("audit publish strategy failed, err: %v", err)
-		}
-
 		// fire the event with txn to ensure the if save the event failed then the business logic is failed anyway.
 		one := types.Event{
 			Spec: &table.EventSpec{
-				Resource: table.PublishStrategy,
+				Resource: table.Publish,
 				// use the published strategy history id, which represent a real publish operation.
-				ResourceID: opt.StrategyID,
+				ResourceID: opt.ReleaseID,
 				OpType:     table.InsertOp,
 			},
 			Attachment: &table.EventAttachment{BizID: opt.BizID, AppID: opt.AppID},
@@ -216,7 +256,7 @@ func (pd *pubDao) upsertToCurrentPublishedStrategy(kt *kit.Kit, txn *sqlx.Tx, s 
 
 // recordPublishedStrategyHistory record the to be published strategy to its history table.
 func (pd *pubDao) recordPublishedStrategyHistory(kit *kit.Kit, txn *sqlx.Tx, pubStrategy *table.Strategy,
-	opt *types.PublishStrategyOption) (uint32, error) {
+	opt *types.PublishOption) (uint32, error) {
 
 	id, err := pd.idGen.One(kit, table.PublishedStrategyHistoryTable)
 	if err != nil {
@@ -225,7 +265,7 @@ func (pd *pubDao) recordPublishedStrategyHistory(kit *kit.Kit, txn *sqlx.Tx, pub
 
 	published := &table.PublishedStrategyHistory{
 		ID:         id,
-		StrategyID: opt.StrategyID,
+		StrategyID: pubStrategy.ID,
 		Spec:       pubStrategy.Spec,
 		State:      pubStrategy.State,
 		Attachment: pubStrategy.Attachment,

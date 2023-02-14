@@ -19,7 +19,6 @@ import (
 	"bscp.io/pkg/criteria/errf"
 	"bscp.io/pkg/dal/table"
 	pbcs "bscp.io/pkg/protocol/config-server"
-	pbstrategy "bscp.io/pkg/protocol/core/strategy"
 	"bscp.io/pkg/runtime/selector"
 )
 
@@ -126,10 +125,9 @@ func genScene5PublishData(opt *pubOption) error {
 	}
 
 	// publish strategy.
-	pbReq := &pbcs.PublishStrategyReq{
+	pbReq := &pbcs.PublishReq{
 		BizId: opt.bizID,
 		AppId: opt.appID,
-		Id:    styResp.Data.Id,
 	}
 	rid = RequestID()
 	pbResp, err := cli.Publish.PublishWithStrategy(context.Background(), Header(rid), pbReq)
@@ -148,39 +146,13 @@ func genScene5PublishData(opt *pubOption) error {
 			sl = append(sl, elements[j])
 		}
 
-		pbsl, err := genSelector(sl)
-		if err != nil {
-			return fmt.Errorf("gen selector failed, err: %v", err)
-		}
-
 		styReq := &pbcs.CreateStrategyReq{
 			BizId:         opt.bizID,
 			AppId:         opt.appID,
 			StrategySetId: opt.strategySetID,
 			Name:          randName("strategy"),
 			Memo:          memo,
-			Scope: &pbstrategy.ScopeSelector{
-				Selector: pbsl,
-			},
-			ReleaseId: opt.releaseID,
-		}
-
-		if i == 0 {
-			pbsl, err = genSelector([]selector.Element{element5})
-			if err != nil {
-				return fmt.Errorf("gen selector failed, err: %v", err)
-			}
-
-			styReq.Scope.SubStrategy = &pbstrategy.SubStrategy{
-				Spec: &pbstrategy.SubStrategySpec{
-					Name:      randName("sub-strategy"),
-					ReleaseId: opt.releaseID,
-					Scope: &pbstrategy.SubScopeSelector{
-						Selector: pbsl,
-					},
-					Memo: memo,
-				},
-			}
+			ReleaseId:     opt.releaseID,
 		}
 
 		rid = RequestID()
@@ -193,10 +165,9 @@ func genScene5PublishData(opt *pubOption) error {
 		}
 
 		// publish strategy.
-		pbReq := &pbcs.PublishStrategyReq{
+		pbReq := &pbcs.PublishReq{
 			BizId: opt.bizID,
 			AppId: opt.appID,
-			Id:    styResp.Data.Id,
 		}
 		rid = RequestID()
 		pbResp, err := cli.Publish.PublishWithStrategy(context.Background(), Header(rid), pbReq)

@@ -9,7 +9,9 @@ all:
 	@cd released-ci && make
 	@cd strategy && make
 	@cd strategy-set && make
-	@cd event&& make
+	@cd event && make
+	@cd group && make
+	@cd group-category && make
 
 clean:
 	@cd base && make clean
@@ -23,3 +25,5 @@ clean:
 	@cd strategy && make clean
 	@cd strategy-set && make clean
 	@cd event && make clean
+	@cd group && make clean
+	@cd group-category && make clean

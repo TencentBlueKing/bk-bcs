@@ -116,7 +116,6 @@ func genAppData(bizID uint32) error {
 			ReleaseId:     rlResp.Data.Id,
 			AsDefault:     false,
 			Name:          randName("strategy"),
-			Scope:         nil,
 			Namespace:     uuid.UUID(),
 			Memo:          memo,
 		}
@@ -130,19 +129,14 @@ func genAppData(bizID uint32) error {
 		}
 
 		// publish strategy.
-		pbReq := &pbcs.PublishStrategyReq{
+		pbReq := &pbcs.PublishReq{
 			BizId: bizID,
 			AppId: appResp.Data.Id,
-			Id:    styResp.Data.Id,
 		}
 		rid = RequestID()
-		pbResp, err := cli.Publish.PublishWithStrategy(context.Background(), Header(rid), pbReq)
+		_, err = cli.Publish.PublishWithStrategy(context.Background(), Header(rid), pbReq)
 		if err != nil {
 			return fmt.Errorf("create strategy publish err, %v, rid: %s", err, rid)
-		}
-		if pbResp.Code != errf.OK {
-			return fmt.Errorf("create strategy publish failed, code: %d, msg: %s, rid: %s", pbResp.Code,
-				pbResp.Message, rid)
 		}
 
 		// publish instance.

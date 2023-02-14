@@ -19,9 +19,9 @@ import (
 	"bscp.io/pkg/iam/meta"
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/logs"
-	"bscp.io/pkg/protocol/config-server"
-	"bscp.io/pkg/protocol/core/strategy-set"
-	"bscp.io/pkg/protocol/data-service"
+	pbcs "bscp.io/pkg/protocol/config-server"
+	pbss "bscp.io/pkg/protocol/core/strategy-set"
+	pbds "bscp.io/pkg/protocol/data-service"
 	"bscp.io/pkg/types"
 )
 
@@ -97,20 +97,6 @@ func (s *Service) UpdateStrategySet(ctx context.Context, req *pbcs.UpdateStrateg
 
 	resp.Code = errf.OK
 	return resp, nil
-}
-
-// PublishStrategySet publish the strategy set
-func (s *Service) PublishStrategySet(ctx context.Context, req *pbcs.PublishStrategySetReq) (
-	*pbcs.PublishStrategySetResp, error) {
-
-	return nil, nil
-}
-
-// FinishPublishStrategySet finish the published strategy set
-func (s *Service) FinishPublishStrategySet(ctx context.Context, req *pbcs.FinishPublishStrategySetReq) (
-	*pbcs.FinishPublishStrategySetResp, error) {
-
-	return nil, nil
 }
 
 // ListStrategySets list strategy set with filter.

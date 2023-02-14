@@ -1,6 +1,7 @@
 syntax = "proto3";
 
 import "bscp.io/pkg/protocol/core/base/base.proto";
+import "bscp.io/pkg/protocol/core/group/group.proto";
 import "google/protobuf/struct.proto";
 
 package pbstrategy;
@@ -21,7 +22,7 @@ message StrategySpec {
     string name         = 1;
     uint32 release_id   = 2;
     bool as_default     = 3;
-    ScopeSelector scope = 4;
+    Scope scope         = 4;
     string mode         = 5;
     string namespace    = 6;
     string memo         = 7;
@@ -39,10 +40,9 @@ message StrategyAttachment {
     uint32 strategy_set_id = 3;
 }
 
-// ScopeSelector source resource reference: pkg/dal/table/strategy.go
-message ScopeSelector {
-    google.protobuf.Struct selector = 1;
-    SubStrategy sub_strategy        = 2;
+// Scope source resource reference: pkg/dal/table/strategy.go
+message Scope {
+    repeated pbgroup.Group groups = 1;
 }
 
 // SubStrategy source resource reference: pkg/dal/table/strategy.go

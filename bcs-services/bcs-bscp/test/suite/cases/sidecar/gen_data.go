@@ -177,10 +177,9 @@ func (g *generator) initApp1(ctx context.Context, header http.Header) error {
 	}
 
 	// publish strategy.
-	pbReq := &pbcs.PublishStrategyReq{
+	pbReq := &pbcs.PublishReq{
 		BizId: testBizID,
 		AppId: appID,
-		Id:    styResp.Data.Id,
 	}
 	pbResp, err := g.cli.Publish.PublishWithStrategy(ctx, header, pbReq)
 	if err != nil {
@@ -261,10 +260,9 @@ func (g *generator) initApp2(ctx context.Context, header http.Header) error {
 	}
 
 	// publish strategy.
-	pbReq := &pbcs.PublishStrategyReq{
+	pbReq := &pbcs.PublishReq{
 		BizId: testBizID,
 		AppId: appID,
-		Id:    styResp.Data.Id,
 	}
 	pbResp, err := g.cli.Publish.PublishWithStrategy(ctx, header, pbReq)
 	if err != nil {
@@ -398,10 +396,9 @@ func (g *generator) initApp3(ctx context.Context, header http.Header) error {
 		}
 
 		// publish strategy.
-		pbReq := &pbcs.PublishStrategyReq{
+		pbReq := &pbcs.PublishReq{
 			BizId: testBizID,
 			AppId: appID,
-			Id:    styResp.Data.Id,
 		}
 		pbResp, err := g.cli.Publish.PublishWithStrategy(ctx, header, pbReq)
 		if err != nil {
@@ -657,10 +654,9 @@ func (g *generator) simulationApp3(ctx context.Context, header http.Header) erro
 		}
 
 		// publish strategy.
-		pbReq := &pbcs.PublishStrategyReq{
+		pbReq := &pbcs.PublishReq{
 			BizId: testBizID,
 			AppId: testApp3ID,
-			Id:    styResp.Data.Id,
 		}
 		pbResp, err := g.cli.Publish.PublishWithStrategy(ctx, header, pbReq)
 		if err != nil {

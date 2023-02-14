@@ -77,3 +77,21 @@ func (k lockKeyGenerator) StrategySet(bizID uint32, appID uint32) *table.Resourc
 		ResKey:  strconv.FormatInt(int64(appID), 10),
 	}
 }
+
+// Group generate group's lock ResKey
+func (k lockKeyGenerator) Group(bizID uint32, appID uint32) *table.ResourceLock {
+	return &table.ResourceLock{
+		BizID:   bizID,
+		ResType: string(table.GroupTable),
+		ResKey:  strconv.FormatInt(int64(appID), 10),
+	}
+}
+
+// GroupCategory generate group category's lock ResKey
+func (k lockKeyGenerator) GroupCategory(bizID uint32, appID uint32) *table.ResourceLock {
+	return &table.ResourceLock{
+		BizID:   bizID,
+		ResType: string(table.GroupCategoryTable),
+		ResKey:  strconv.FormatInt(int64(appID), 10),
+	}
+}

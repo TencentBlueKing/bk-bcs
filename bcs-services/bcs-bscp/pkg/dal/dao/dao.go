@@ -35,6 +35,8 @@ type Set interface {
 	StrategySet() StrategySet
 	CRInstance() CRInstance
 	Strategy() Strategy
+	Group() Group
+	GroupCategory() GroupCategory
 	Publish() Publish
 	IAM() IAM
 	Event() Event
@@ -176,6 +178,28 @@ func (s *set) Strategy() Strategy {
 		idGen:    s.idGen,
 		auditDao: s.auditDao,
 		event:    s.event,
+		lock:     s.lock,
+	}
+}
+
+// Group returns the group's DAO
+func (s *set) Group() Group {
+	return &groupDao{
+		orm:      s.orm,
+		sd:       s.sd,
+		idGen:    s.idGen,
+		auditDao: s.auditDao,
+		lock:     s.lock,
+	}
+}
+
+// GroupCategory returns the group category's DAO
+func (s *set) GroupCategory() GroupCategory {
+	return &groupCategoryDao{
+		orm:      s.orm,
+		sd:       s.sd,
+		idGen:    s.idGen,
+		auditDao: s.auditDao,
 		lock:     s.lock,
 	}
 }

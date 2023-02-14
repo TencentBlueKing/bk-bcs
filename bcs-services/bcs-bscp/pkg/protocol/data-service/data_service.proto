@@ -9,6 +9,8 @@ import "bscp.io/pkg/protocol/core/release/release.proto";
 import "bscp.io/pkg/protocol/core/released-ci/released_ci.proto";
 import "bscp.io/pkg/protocol/core/strategy-set/strategy_set.proto";
 import "bscp.io/pkg/protocol/core/strategy/strategy.proto";
+import "bscp.io/pkg/protocol/core/group/group.proto";
+import "bscp.io/pkg/protocol/core/group-category/group_category.proto";
 import "bscp.io/pkg/protocol/core/instance/instance.proto";
 import "google/api/annotations.proto";
 import "google/protobuf/struct.proto";
@@ -61,9 +63,20 @@ service Data {
     rpc UpdateStrategy(UpdateStrategyReq) returns (pbbase.EmptyResp) {}
     rpc DeleteStrategy(DeleteStrategyReq) returns (pbbase.EmptyResp) {}
 
+    // group related interface.
+    rpc CreateGroup(CreateGroupReq) returns (CreateResp) {}
+    rpc ListGroups(ListGroupsReq) returns (ListGroupsResp) {}
+    rpc UpdateGroup(UpdateGroupReq) returns (pbbase.EmptyResp) {}
+    rpc DeleteGroup(DeleteGroupReq) returns (pbbase.EmptyResp) {}
+
+    // group category related interface.
+    rpc CreateGroupCategory(CreateGroupCategoryReq) returns (CreateResp) {}
+    rpc ListGroupCategories(ListGroupCategoriesReq) returns (ListGroupCategoriesResp) {}
+    rpc DeleteGroupCategory(DeleteGroupCategoryReq) returns (pbbase.EmptyResp) {}
+
     // publish related interface.
-    rpc PublishStrategy(PublishStrategyReq) returns (PublishStrategyResp) {}
-    rpc FinishPublishStrategy(FinishPublishStrategyReq) returns (pbbase.EmptyResp) {}
+    rpc Publish(PublishReq) returns (PublishResp) {}
+    rpc FinishPublish(FinishPublishReq) returns (pbbase.EmptyResp) {}
     rpc ListPublishedStrategyHistories(ListPubStrategyHistoriesReq) returns (ListPubStrategyHistoriesResp) {}
 
     // current released instance related interface.
@@ -301,17 +314,69 @@ message DeleteStrategyReq {
     pbstrategy.StrategyAttachment attachment = 2;
 }
 
-message PublishStrategyReq {
-    uint32 biz_id      = 1;
-    uint32 app_id      = 2;
-    uint32 strategy_id = 3;
+message CreateGroupReq {
+    pbgroup.GroupAttachment attachment = 1;
+    pbgroup.GroupSpec spec             = 2;
 }
 
-message PublishStrategyResp {
+message ListGroupsReq {
+    uint32 biz_id                 = 1;
+    uint32 app_id                 = 2;
+    google.protobuf.Struct filter = 3;
+    pbbase.BasePage page          = 4;
+}
+
+message ListGroupsResp {
+    uint32 count                   = 1;
+    repeated pbgroup.Group details = 2;
+}
+
+message UpdateGroupReq {
+    uint32 id                          = 1;
+    pbgroup.GroupAttachment attachment = 2;
+    pbgroup.GroupSpec spec             = 3;
+}
+
+message DeleteGroupReq {
+    uint32 id                          = 1;
+    pbgroup.GroupAttachment attachment = 2;
+}
+
+message CreateGroupCategoryReq {
+    pbgc.GroupCategoryAttachment attachment = 1;
+    pbgc.GroupCategorySpec spec             = 2;
+}
+
+message ListGroupCategoriesReq {
+    uint32 biz_id                 = 1;
+    uint32 app_id                 = 2;
+    google.protobuf.Struct filter = 3;
+    pbbase.BasePage page          = 4;
+}
+
+message ListGroupCategoriesResp {
+    uint32 count                           = 1;
+    repeated pbgc.GroupCategory details = 2;
+}
+
+message DeleteGroupCategoryReq {
+    uint32 id                                  = 1;
+    pbgc.GroupCategoryAttachment attachment = 2;
+}
+
+message PublishReq {
+    uint32 biz_id          = 1;
+    uint32 app_id          = 2;
+    uint32 release_id      = 3;
+    bool all               = 4;
+    repeated uint32 groups = 5;
+}
+
+message PublishResp {
     uint32 published_strategy_history_id = 1;
 }
 
-message FinishPublishStrategyReq {
+message FinishPublishReq {
     uint32 biz_id      = 1;
     uint32 app_id      = 2;
     uint32 strategy_id = 3;

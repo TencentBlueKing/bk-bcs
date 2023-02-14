@@ -202,69 +202,6 @@ func CountPage() *pbbase.BasePage {
 	}
 }
 
-// GenNormalStrategyScope generate a strategy scope for normal mode
-func GenNormalStrategyScope(name string, releaseId uint32) (*pbstrategy.ScopeSelector, error) {
-	// create strategy
-	mainSelector, err := GenMainSelector().MarshalPB()
-	if err != nil {
-		return nil, err
-	}
-
-	subSelector, err := GenSubSelector().MarshalPB()
-	if err != nil {
-		return nil, err
-	}
-
-	return &pbstrategy.ScopeSelector{
-		Selector: mainSelector,
-		SubStrategy: &pbstrategy.SubStrategy{
-			Spec: &pbstrategy.SubStrategySpec{
-				Name:      name + "_sub_strategy",
-				ReleaseId: releaseId,
-				Scope: &pbstrategy.SubScopeSelector{
-					Selector: subSelector,
-				},
-			},
-		},
-	}, nil
-}
-
-// GenNamespaceStrategyScope generate a strategy scope for namespace mode
-func GenNamespaceStrategyScope(name string, releaseId uint32) (*pbstrategy.ScopeSelector, error) {
-	subSelector := &selector.Selector{
-		MatchAll: false,
-		LabelsOr: selector.Label{
-			{
-				Key:   "city",
-				Op:    new(selector.InType),
-				Value: []string{"beijing", "shanghai"},
-			},
-			{
-				Key:   "version",
-				Op:    new(selector.GreaterThanEqualType),
-				Value: 11,
-			},
-		},
-	}
-
-	subPbSelector, err := subSelector.MarshalPB()
-	if err != nil {
-		return nil, err
-	}
-
-	return &pbstrategy.ScopeSelector{
-		Selector: nil,
-		SubStrategy: &pbstrategy.SubStrategy{
-			Spec: &pbstrategy.SubStrategySpec{
-				Name:      name + "_sub_strategy",
-				ReleaseId: releaseId,
-				Scope: &pbstrategy.SubScopeSelector{
-					Selector: subPbSelector,
-				},
-			},
-		},
-	}, nil
-}
 
 // GenSubSelector generate a sub selector for test
 func GenSubSelector() *selector.Selector {

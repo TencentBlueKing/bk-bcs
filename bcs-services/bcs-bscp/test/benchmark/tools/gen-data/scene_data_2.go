@@ -101,10 +101,9 @@ func genSceneData2() error {
 	}
 
 	// publish strategy.
-	pbReq := &pbcs.PublishStrategyReq{
+	pbReq := &pbcs.PublishReq{
 		BizId: stressBizId,
 		AppId: appResp.Data.Id,
-		Id:    styResp.Data.Id,
 	}
 	rid = RequestID()
 	pbResp, err := cli.Publish.PublishWithStrategy(context.Background(), Header(rid), pbReq)

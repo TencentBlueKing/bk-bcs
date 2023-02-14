@@ -207,24 +207,6 @@ func (rs *ReleasedService) matchNamespacedStrategyWithLabels(kt *kit.Kit, list [
 				one.StrategyID))
 		}
 
-		// namespaced strategy's scope selector is matched all, ignore it automatically,
-		// but the strategy may have the sub strategy. so test if the label can match the
-		// sub strategy or not now.
-		subStrategy := one.Scope.SubStrategy
-		matched, err := rs.isMatchSubStrategy(subStrategy, meta.Labels)
-		if err != nil {
-			return nil, errf.New(errf.Aborted, fmt.Sprintf("match strattegy's(%d) sub strategy failed, err: %v",
-				one.StrategyID, err))
-		}
-
-		if matched {
-			return &matchedMeta{
-				StrategyID: one.StrategyID,
-				// use sub-strategy's release id
-				ReleaseID: subStrategy.Spec.ReleaseID,
-			}, nil
-		}
-
 		// this app instance does not match the sub strategy, then use the main strategy directly.
 		// because this is a namespaced strategy, app instance's namespace is same with the strategy's
 		// namespace.
@@ -284,6 +266,8 @@ func (rs *ReleasedService) matchNormalStrategyWithLabels(kt *kit.Kit, list []*pt
 
 	var defaultStrategy *ptypes.PublishedStrategyCache
 	for _, one := range list {
+		// TODO: if stragety.MatchAll: matchd[].append(stragety)
+		// select latest release in matchd stragety list
 
 		if one == nil {
 			// this is a compatible policy. it should not happen normally.
@@ -305,29 +289,6 @@ func (rs *ReleasedService) matchNormalStrategyWithLabels(kt *kit.Kit, list []*pt
 		if !mainMatched {
 			// main scope selector does not match this app instance, so skip this strategy and try next strategy.
 			continue
-		}
-
-		// this app instance has already matched the main scope,
-		// it's time to test if it can match the sub strategy.
-		subStrategy := one.Scope.SubStrategy
-		if subStrategy == nil || (subStrategy != nil && subStrategy.IsEmpty()) {
-			// main scope selector is matched, but sub-strategy is not configured,
-			// then use main scope release as matched release.
-			return &matchedMeta{StrategyID: one.StrategyID, ReleaseID: one.ReleaseID}, nil
-		}
-
-		// main scope selector has already matched, and sub strategy is configured,
-		// it's time to test if this app instance can match the sub strategy or not.
-		subMatched, err := rs.isMatchSubStrategy(subStrategy, meta.Labels)
-		if err != nil {
-			return nil, errf.New(errf.Aborted, fmt.Sprintf("match strattegy(%d) sub strategy failed, err: %v",
-				one.StrategyID, err))
-		}
-
-		if subMatched {
-			// main scope selector has already matched the app instance, but sub strategy matched this
-			// app instance now, then use strategy's release id as its release.
-			return &matchedMeta{StrategyID: one.StrategyID, ReleaseID: subStrategy.Spec.ReleaseID}, nil
 		}
 
 		// sub strategy has not matched this app instance. but the main scope has
@@ -358,18 +319,6 @@ func (rs *ReleasedService) isMatchMainScope(kt *kit.Kit, one *ptypes.PublishedSt
 			one.StrategyID))
 	}
 
-	scope := one.Scope
-	if scope.Selector == nil || (scope != nil && scope.Selector.IsEmpty()) {
-		// each strategy's scope can not be empty.
-		return false, errf.New(errf.Aborted, fmt.Sprintf("queried strategy:(%d) scope.selector is nil",
-			one.StrategyID))
-	}
-
-	mainMatched, err := scope.Selector.MatchLabels(labels)
-	if err != nil {
-		return false, errf.New(errf.Aborted, fmt.Sprintf("match strattegy(%d) main scope failed, err: %v",
-			one.StrategyID, err))
-	}
-
-	return mainMatched, nil
+	//TODO: rewrite match logic
+	return false, nil
 }

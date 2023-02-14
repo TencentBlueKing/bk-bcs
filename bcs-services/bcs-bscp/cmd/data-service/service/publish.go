@@ -25,33 +25,35 @@ import (
 	"bscp.io/pkg/types"
 )
 
-// PublishStrategy exec publish strategy.
-func (s *Service) PublishStrategy(ctx context.Context, req *pbds.PublishStrategyReq) (
-	*pbds.PublishStrategyResp, error) {
+// Publish exec publish strategy.
+func (s *Service) Publish(ctx context.Context, req *pbds.PublishReq) (
+	*pbds.PublishResp, error) {
 
 	kt := kit.FromGrpcContext(ctx)
 
-	opt := &types.PublishStrategyOption{
-		BizID:      req.BizId,
-		AppID:      req.AppId,
-		StrategyID: req.StrategyId,
+	opt := &types.PublishOption{
+		BizID:     req.BizId,
+		AppID:     req.AppId,
+		ReleaseID: req.ReleaseId,
+		All:       req.All,
+		Groups:    req.Groups,
 		Revision: &table.CreatedRevision{
 			Creator:   kt.User,
 			CreatedAt: time.Now(),
 		},
 	}
-	pshID, err := s.dao.Publish().PublishStrategy(kt, opt)
+	pshID, err := s.dao.Publish().Publish(kt, opt)
 	if err != nil {
 		logs.Errorf("publish strategy failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
 	}
 
-	resp := &pbds.PublishStrategyResp{PublishedStrategyHistoryId: pshID}
+	resp := &pbds.PublishResp{PublishedStrategyHistoryId: pshID}
 	return resp, nil
 }
 
-// FinishPublishStrategy finish publish strategy.
-func (s *Service) FinishPublishStrategy(ctx context.Context, req *pbds.FinishPublishStrategyReq) (
+// FinishPublish finish publish strategy.
+func (s *Service) FinishPublish(ctx context.Context, req *pbds.FinishPublishReq) (
 	*pbbase.EmptyResp, error) {
 
 	grpcKit := kit.FromGrpcContext(ctx)

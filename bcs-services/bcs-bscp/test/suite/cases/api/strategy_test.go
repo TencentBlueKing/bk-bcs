@@ -22,7 +22,6 @@ import (
 	"bscp.io/pkg/criteria/errf"
 	"bscp.io/pkg/dal/table"
 	pbcs "bscp.io/pkg/protocol/config-server"
-	strategy "bscp.io/pkg/protocol/core/strategy"
 	"bscp.io/pkg/tools"
 	"bscp.io/test/client/api"
 	"bscp.io/test/suite"
@@ -37,15 +36,13 @@ func TestStrategy(t *testing.T) {
 		header  http.Header
 		preName string
 
-		nmAppId    uint32                  // normal mode's app id
-		nmRelId    uint32                  // normal mode's release id
-		nmStgSetId uint32                  // normal mode's strategy set id
-		nmScope    *strategy.ScopeSelector // normal mode's scope
+		nmAppId    uint32 // normal mode's app id
+		nmRelId    uint32 // normal mode's release id
+		nmStgSetId uint32 // normal mode's strategy set id
 
-		nsAppId    uint32                  // namespace mode's app id
-		nsRelId    uint32                  // namespace mode's release id
-		nsStgSetId uint32                  // namespace mode's strategy set id
-		nsScope    *strategy.ScopeSelector // namespace mode's scope
+		nsAppId    uint32 // namespace mode's app id
+		nsRelId    uint32 // namespace mode's release id
+		nsStgSetId uint32 // namespace mode's strategy set id
 	)
 
 	Convey("Prepare For Strategy Test", t, func() {
@@ -61,13 +58,6 @@ func TestStrategy(t *testing.T) {
 		So(nsAppId, ShouldNotEqual, uint32(0))
 		So(nsRelId, ShouldNotEqual, uint32(0))
 		So(nsStgSetId, ShouldNotEqual, uint32(0))
-
-		// generate scope
-		var err error
-		nmScope, err = cases.GenNormalStrategyScope(preName, nmRelId)
-		So(err, ShouldBeNil)
-		nsScope, err = cases.GenNamespaceStrategyScope(preName, nsRelId)
-		So(err, ShouldBeNil)
 	})
 
 	Convey("Create Strategy Test", t, func() {
@@ -81,7 +71,6 @@ func TestStrategy(t *testing.T) {
 				StrategySetId: nsStgSetId,
 				ReleaseId:     nsRelId,
 				AsDefault:     false,
-				Scope:         nsScope,
 			}
 
 			// add name field test case
@@ -143,8 +132,6 @@ func TestStrategy(t *testing.T) {
 				So(one.Spec.Mode, ShouldEqual, string(table.Namespace))
 
 				So(one.Revision, cases.SoRevision)
-				So(one.Spec.Scope.Selector, ShouldNotBeNil)
-				So(one.Spec.Scope.SubStrategy, cases.SoShouldJsonEqual, req.Scope.SubStrategy)
 
 				So(one.Attachment, ShouldNotBeNil)
 				So(one.Attachment.BizId, ShouldEqual, req.BizId)
@@ -164,7 +151,6 @@ func TestStrategy(t *testing.T) {
 				StrategySetId: nmStgSetId,
 				ReleaseId:     nmRelId,
 				AsDefault:     false,
-				Scope:         nmScope,
 				Namespace:     "",
 				Name:          cases.RandName(preName),
 			}
@@ -191,8 +177,6 @@ func TestStrategy(t *testing.T) {
 			So(len(listResp.Data.Details), ShouldEqual, 1)
 			one := listResp.Data.Details[0]
 			So(one, ShouldNotBeNil)
-			So(one.Spec.Scope.Selector, cases.SoShouldJsonEqual, req.Scope.Selector)
-			So(one.Spec.Scope.SubStrategy, cases.SoShouldJsonEqual, req.Scope.SubStrategy)
 
 			rm.AddStrategy(nmAppId, req.StrategySetId, resp.Data.Id)
 		})
@@ -204,7 +188,6 @@ func TestStrategy(t *testing.T) {
 				StrategySetId: nmStgSetId,
 				ReleaseId:     nmRelId,
 				AsDefault:     true,
-				Scope:         nil,
 				Namespace:     "",
 				Name:          cases.RandName(preName),
 			}
@@ -246,7 +229,6 @@ func TestStrategy(t *testing.T) {
 				StrategySetId: nsStgSetId,
 				ReleaseId:     nsRelId,
 				AsDefault:     false,
-				Scope:         nsScope,
 			}
 
 			// AsDefault is true
@@ -300,7 +282,6 @@ func TestStrategy(t *testing.T) {
 						StrategySetId: nsStgSetId,
 						ReleaseId:     nsRelId,
 						AsDefault:     false,
-						Scope:         nsScope,
 						Namespace:     cases.RandName(preName),
 						Name:          cases.RandName(preName),
 					}
@@ -318,7 +299,6 @@ func TestStrategy(t *testing.T) {
 					StrategySetId: nsStgSetId,
 					ReleaseId:     nsRelId,
 					AsDefault:     false,
-					Scope:         nsScope,
 					Namespace:     cases.RandName(preName),
 					Name:          cases.RandName(preName),
 				}
@@ -339,7 +319,6 @@ func TestStrategy(t *testing.T) {
 						StrategySetId: nmStgSetId,
 						ReleaseId:     nmRelId,
 						AsDefault:     false,
-						Scope:         nmScope,
 						Name:          cases.RandName(preName),
 					}
 					ctx, header = cases.GenApiCtxHeader()
@@ -356,7 +335,6 @@ func TestStrategy(t *testing.T) {
 					StrategySetId: nmStgSetId,
 					ReleaseId:     nmRelId,
 					AsDefault:     false,
-					Scope:         nmScope,
 					Name:          cases.RandName(preName),
 				}
 				ctx, header = cases.GenApiCtxHeader()
@@ -376,11 +354,6 @@ func TestStrategy(t *testing.T) {
 
 			selector := cases.GenSubSelector()
 			selector.LabelsOr[0].Value = []string{"nanjing", "hangzhou"}
-			pbSelector, err := selector.MarshalPB()
-			So(err, ShouldBeNil)
-			newScope, err := cases.GenNamespaceStrategyScope(preName, nsRelId)
-			So(err, ShouldBeNil)
-			newScope.SubStrategy.Spec.Scope.Selector = pbSelector
 
 			// test cases
 			reqs := make([]pbcs.UpdateStrategyReq, 0)
@@ -391,7 +364,6 @@ func TestStrategy(t *testing.T) {
 				Id:        stgId,
 				ReleaseId: nsRelId,
 				AsDefault: false,
-				Scope:     nsScope,
 			}
 
 			// add name field test case
@@ -434,8 +406,6 @@ func TestStrategy(t *testing.T) {
 				So(one.Spec.Name, ShouldEqual, req.Name)
 				So(one.Spec.Memo, ShouldEqual, req.Memo)
 				So(one.Spec.AsDefault, ShouldEqual, req.AsDefault)
-				So(one.Spec.Scope.Selector, ShouldNotBeNil)
-				So(one.Spec.Scope.SubStrategy, cases.SoShouldJsonEqual, req.Scope.SubStrategy)
 			}
 		})
 
@@ -452,7 +422,6 @@ func TestStrategy(t *testing.T) {
 				Id:        stgId,
 				ReleaseId: nsRelId,
 				AsDefault: false,
-				Scope:     nsScope,
 			}
 
 			// biz_id is invalid

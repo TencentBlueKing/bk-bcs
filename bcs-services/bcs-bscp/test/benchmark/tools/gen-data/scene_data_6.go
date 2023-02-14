@@ -20,8 +20,6 @@ import (
 	"bscp.io/pkg/criteria/errf"
 	"bscp.io/pkg/dal/table"
 	pbcs "bscp.io/pkg/protocol/config-server"
-	pbstrategy "bscp.io/pkg/protocol/core/strategy"
-	"bscp.io/pkg/runtime/selector"
 )
 
 // genSceneData6 在biz_id=2001，app_id=100006的应用下，创建5个配置项，执行一次兜底策略发布、和199次Namespace策略发布。
@@ -118,10 +116,9 @@ func genScene6PublishData(opt *pubOption) error {
 	}
 
 	// publish strategy.
-	pbReq := &pbcs.PublishStrategyReq{
+	pbReq := &pbcs.PublishReq{
 		BizId: opt.bizID,
 		AppId: opt.appID,
-		Id:    styResp.Data.Id,
 	}
 	rid = RequestID()
 	pbResp, err := cli.Publish.PublishWithStrategy(context.Background(), Header(rid), pbReq)
@@ -142,29 +139,8 @@ func genScene6PublishData(opt *pubOption) error {
 			ReleaseId:     opt.releaseID,
 			AsDefault:     false,
 			Name:          randName("strategy"),
-			Scope:         nil,
 			Namespace:     namespacePrefix + strconv.FormatUint(uint64(i), 10),
 			Memo:          memo,
-		}
-
-		if i == 0 {
-			pbsl, err := genSelector([]selector.Element{element5})
-			if err != nil {
-				return fmt.Errorf("gen selector failed, err: %v", err)
-			}
-
-			styReq.Scope = &pbstrategy.ScopeSelector{
-				SubStrategy: &pbstrategy.SubStrategy{
-					Spec: &pbstrategy.SubStrategySpec{
-						Name:      randName("sub-strategy"),
-						ReleaseId: opt.releaseID,
-						Scope: &pbstrategy.SubScopeSelector{
-							Selector: pbsl,
-						},
-						Memo: memo,
-					},
-				},
-			}
 		}
 
 		rid = RequestID()
@@ -177,10 +153,9 @@ func genScene6PublishData(opt *pubOption) error {
 		}
 
 		// publish strategy.
-		pbReq := &pbcs.PublishStrategyReq{
+		pbReq := &pbcs.PublishReq{
 			BizId: opt.bizID,
 			AppId: opt.appID,
-			Id:    styResp.Data.Id,
 		}
 		rid = RequestID()
 		pbResp, err := cli.Publish.PublishWithStrategy(context.Background(), Header(rid), pbReq)

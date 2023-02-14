@@ -23,16 +23,18 @@ import (
 // GetCPSMaxPageLimit NOTES
 const GetCPSMaxPageLimit = 100
 
-// PublishStrategyOption defines options to publish a strategy
-type PublishStrategyOption struct {
-	BizID      uint32                 `json:"biz_id"`
-	AppID      uint32                 `json:"app_id"`
-	StrategyID uint32                 `json:"strategy_id"`
-	Revision   *table.CreatedRevision `json:"revision"`
+// PublishOption defines options to publish a strategy
+type PublishOption struct {
+	BizID     uint32                 `json:"biz_id"`
+	AppID     uint32                 `json:"app_id"`
+	ReleaseID uint32                 `json:"release_id"`
+	All bool 
+	Groups    []uint32               `json:"groups"`
+	Revision  *table.CreatedRevision `json:"revision"`
 }
 
 // Validate options is valid or not.
-func (ps PublishStrategyOption) Validate() error {
+func (ps PublishOption) Validate() error {
 	if ps.BizID <= 0 {
 		return errf.New(errf.InvalidParameter, "biz_id is invalid")
 	}
@@ -41,8 +43,12 @@ func (ps PublishStrategyOption) Validate() error {
 		return errf.New(errf.InvalidParameter, "app_id is invalid")
 	}
 
-	if ps.StrategyID <= 0 {
-		return errf.New(errf.InvalidParameter, "strategy_id is invalid")
+	if ps.ReleaseID <= 0 {
+		return errf.New(errf.InvalidParameter, "release_id is invalid")
+	}
+
+	if !ps.All && len(ps.Groups) == 0 {
+		return errf.New(errf.InvalidParameter, "groups is not set")
 	}
 
 	if ps.Revision == nil {

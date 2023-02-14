@@ -212,8 +212,6 @@ func TestFeed(t *testing.T) {
 			So(nmStgSetResp.Data.Id, ShouldNotEqual, uint32(0))
 
 			// create strategy
-			scope, err := cases.GenNormalStrategyScope(nmName, nmRelResp.Data.Id)
-			So(err, ShouldBeNil)
 			nmStgReq := &pbcs.CreateStrategyReq{
 				BizId:         cases.TBizID,
 				AppId:         nmAppResp.Data.Id,
@@ -221,7 +219,6 @@ func TestFeed(t *testing.T) {
 				ReleaseId:     nmRelResp.Data.Id,
 				AsDefault:     false,
 				Name:          nmName + "_strategy",
-				Scope:         scope,
 				Namespace:     "",
 			}
 			ctx, header = cases.GenApiCtxHeader()
@@ -232,10 +229,9 @@ func TestFeed(t *testing.T) {
 			So(nmStgResp.Data.Id, ShouldNotEqual, uint32(0))
 
 			// publish with strategy
-			nmPubStgReq := &pbcs.PublishStrategyReq{
+			nmPubStgReq := &pbcs.PublishReq{
 				BizId: cases.TBizID,
 				AppId: nmAppResp.Data.Id,
-				Id:    nmStgResp.Data.Id,
 			}
 			ctx, header = cases.GenApiCtxHeader()
 			nmPubStgResp, err := cli.ApiClient.Publish.PublishWithStrategy(ctx, header, nmPubStgReq)
@@ -245,7 +241,7 @@ func TestFeed(t *testing.T) {
 			So(nmPubStgResp.Data.Id, ShouldNotEqual, uint32(0))
 
 			// finish publish with strategy
-			nmFinishPubStgReq := &pbcs.FinishPublishStrategyReq{
+			nmFinishPubStgReq := &pbcs.FinishPublishReq{
 				BizId: cases.TBizID,
 				AppId: nmAppResp.Data.Id,
 				Id:    nmStgResp.Data.Id,
@@ -353,7 +349,6 @@ func TestFeed(t *testing.T) {
 			So(nsStgSetResp.Data.Id, ShouldNotEqual, uint32(0))
 
 			// create namespace mode strategy scope
-			nsScope, err := cases.GenNamespaceStrategyScope(nmName, nsRelResp.Data.Id)
 			So(err, ShouldBeNil)
 			nsStgReq := &pbcs.CreateStrategyReq{
 				BizId:         cases.TBizID,
@@ -362,7 +357,6 @@ func TestFeed(t *testing.T) {
 				ReleaseId:     nsRelResp.Data.Id,
 				AsDefault:     false,
 				Name:          nsName + "_strategy",
-				Scope:         nsScope,
 				Namespace:     nsStgNamespace,
 			}
 			ctx, header = cases.GenApiCtxHeader()
@@ -373,10 +367,9 @@ func TestFeed(t *testing.T) {
 			So(nsStgResp.Data.Id, ShouldNotEqual, uint32(0))
 
 			// publish with strategy
-			nsPubStgReq := &pbcs.PublishStrategyReq{
+			nsPubStgReq := &pbcs.PublishReq{
 				BizId: cases.TBizID,
 				AppId: nsAppResp.Data.Id,
-				Id:    nsStgResp.Data.Id,
 			}
 			ctx, header = cases.GenApiCtxHeader()
 			nsPubStgResp, err := cli.ApiClient.Publish.PublishWithStrategy(ctx, header, nsPubStgReq)
@@ -386,7 +379,7 @@ func TestFeed(t *testing.T) {
 			So(nsPubStgResp.Data.Id, ShouldNotEqual, uint32(0))
 
 			// finish publish with strategy
-			nsFinishPubStgReq := &pbcs.FinishPublishStrategyReq{
+			nsFinishPubStgReq := &pbcs.FinishPublishReq{
 				BizId: cases.TBizID,
 				AppId: nsAppResp.Data.Id,
 				Id:    nsStgResp.Data.Id,

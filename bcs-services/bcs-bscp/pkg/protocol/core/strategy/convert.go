@@ -17,6 +17,7 @@ import (
 
 	"bscp.io/pkg/dal/table"
 	pbbase "bscp.io/pkg/protocol/core/base"
+	pbgroup "bscp.io/pkg/protocol/core/group"
 	"bscp.io/pkg/runtime/selector"
 
 	pbstruct "github.com/golang/protobuf/ptypes/struct"
@@ -28,13 +29,9 @@ func (m *StrategySpec) StrategySpec() (*table.StrategySpec, error) {
 		return nil, nil
 	}
 
-	scope := new(table.ScopeSelector)
-	var err error
-	if m.Scope != nil {
-		scope, err = m.Scope.ScopeSelector()
-		if err != nil {
-			return nil, err
-		}
+	scope, err := m.Scope.Scope()
+	if err != nil {
+		return nil, err
 	}
 
 	return &table.StrategySpec{
@@ -54,7 +51,7 @@ func PbStrategySpec(spec *table.StrategySpec) (*StrategySpec, error) {
 		return nil, nil
 	}
 
-	scope, err := PbScopeSelector(spec.Scope)
+	scope, err := PbScope(spec.Scope)
 	if err != nil {
 		return nil, err
 	}
@@ -118,51 +115,43 @@ func PbStrategyAttachment(at *table.StrategyAttachment) *StrategyAttachment {
 	}
 }
 
-// ScopeSelector convert pb ScopeSelector to table ScopeSelector
-func (m *ScopeSelector) ScopeSelector() (*table.ScopeSelector, error) {
-	if m == nil {
-		return nil, nil
-	}
-
-	selector := new(selector.Selector)
-	if m.Selector != nil {
-		s, err := UnmarshalSelector(m.Selector)
-		if err != nil {
-			return nil, err
-		}
-		selector = s
-	}
-
-	subStrategy, err := m.SubStrategy.SubStrategy()
-	if err != nil {
-		return nil, err
-	}
-
-	return &table.ScopeSelector{
-		Selector:    selector,
-		SubStrategy: subStrategy,
-	}, nil
-}
-
-// PbScopeSelector convert table ScopeSelector to pb ScopeSelector
-func PbScopeSelector(s *table.ScopeSelector) (*ScopeSelector, error) {
+// Scope convert pb Scope to table Scope
+func (s *Scope) Scope() (*table.Scope, error) {
 	if s == nil {
 		return nil, nil
 	}
 
-	pbSelector, err := s.Selector.MarshalPB()
-	if err != nil {
-		return nil, err
+	groups := make([]*table.Group, len(s.Groups))
+	for _, pg := range s.Groups {
+		g, err := pg.Group()
+		if err != nil {
+			return nil, err
+		}
+		groups = append(groups, g)
 	}
 
-	subStrategy, err := PbSubStrategy(s.SubStrategy)
-	if err != nil {
-		return nil, err
+	return &table.Scope{
+		Groups: groups,
+	}, nil
+}
+
+// PbScope convert table Scope to pb Scope
+func PbScope(s *table.Scope) (*Scope, error) {
+	if s == nil {
+		return nil, nil
 	}
 
-	return &ScopeSelector{
-		Selector:    pbSelector,
-		SubStrategy: subStrategy,
+	groups := make([]*pbgroup.Group, len(s.Groups))
+	for _, tg := range s.Groups {
+		g, err := pbgroup.PbGroup(tg)
+		if err != nil {
+			return nil, err
+		}
+		groups = append(groups, g)
+	}
+
+	return &Scope{
+		Groups: groups,
 	}, nil
 }
 

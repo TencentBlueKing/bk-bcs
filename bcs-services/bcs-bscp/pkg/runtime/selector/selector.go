@@ -14,6 +14,8 @@ limitations under the License.
 package selector
 
 import (
+	"database/sql/driver"
+	"encoding/json"
 	"errors"
 	"fmt"
 
@@ -24,7 +26,7 @@ import (
 	pbstruct "github.com/golang/protobuf/ptypes/struct"
 )
 
-// Selector is struct of strategies in release.
+// Selector defines a group's working scope.
 type Selector struct {
 	// MatchAll is true means this strategy match all the target.
 	// 1. if MatchAll is true, then LabelsOr and LabelsAnd field must be empty.
@@ -39,6 +41,42 @@ type Selector struct {
 
 	// NOTE: when LabelsOr(OR) and LabelsAnd(AND) both exist, the strategy need IN(OR) logical relationship,
 	// eg. (IN(LabelsOr, LabelsAnd), the strategy matched when any labels logical matched.
+}
+
+// Scan is used to decode raw message which is read from db into a structured Selector instance.
+func (s *Selector) Scan(raw interface{}) error {
+	if s == nil {
+		return errors.New("scope selector is not initialized")
+	}
+
+	if raw == nil {
+		return errors.New("raw is nil, can not be decoded")
+	}
+
+	switch v := raw.(type) {
+	case []byte:
+		if err := json.Unmarshal(v, &s); err != nil {
+			return fmt.Errorf("decode into scope selector failed, err: %v", err)
+
+		}
+		return nil
+	case string:
+		if err := json.Unmarshal([]byte(v), &s); err != nil {
+			return fmt.Errorf("decode into scope selector failed, err: %v", err)
+		}
+		return nil
+	default:
+		return fmt.Errorf("unsupported scope selector raw type: %T", v)
+	}
+}
+
+// Value encode the scope selector to a json raw, so that it can be stored to db with json raw.
+func (s *Selector) Value() (driver.Value, error) {
+	if s == nil {
+		return nil, errors.New("scope selector is not initialized, can not be encoded")
+	}
+
+	return json.Marshal(s)
 }
 
 // Unmarshal json to Selector.

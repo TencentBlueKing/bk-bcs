@@ -144,7 +144,7 @@ func (ae *appEvent) eventHandler(events []*types.EventMeta) {
 
 		kt := kit.New()
 		switch one.Spec.Resource {
-		case table.PublishStrategy:
+		case table.Publish:
 			logs.Infof("start do biz: %d, app: %d publish broadcast to all sidecars, event id: %d, rid: %s", ae.bizID,
 				ae.appID, one.ID, kt.Rid)
 

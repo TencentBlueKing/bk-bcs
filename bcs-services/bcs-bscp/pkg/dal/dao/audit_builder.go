@@ -124,6 +124,16 @@ func (ab *AuditBuilder) AuditCreate(cur interface{}, opt *AuditOption) error {
 		ab.toAudit.AppID = sset.Attachment.AppID
 		ab.toAudit.ResourceID = sset.ID
 
+	case *table.Group:
+		sset := cur.(*table.Group)
+		ab.toAudit.AppID = sset.Attachment.AppID
+		ab.toAudit.ResourceID = sset.ID
+
+	case *table.GroupCategory:
+		sset := cur.(*table.GroupCategory)
+		ab.toAudit.AppID = sset.Attachment.AppID
+		ab.toAudit.ResourceID = sset.ID
+
 	case []*table.ReleasedConfigItem:
 		items := cur.([]*table.ReleasedConfigItem)
 		ab.toAudit.AppID = items[0].Attachment.AppID

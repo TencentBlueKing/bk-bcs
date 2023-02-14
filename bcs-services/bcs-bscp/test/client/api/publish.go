@@ -33,12 +33,12 @@ func NewPublishClient(client rest.ClientInterface) *Publish {
 }
 
 // PublishWithStrategy function to publish with strategy.
-func (p *Publish) PublishWithStrategy(ctx context.Context, header http.Header, req *pbcs.PublishStrategyReq) (
-	*pbcs.PublishStrategyResp, error) {
+func (p *Publish) PublishWithStrategy(ctx context.Context, header http.Header, req *pbcs.PublishReq) (
+	*pbcs.PublishResp, error) {
 	resp := p.client.Post().
 		WithContext(ctx).
 		SubResourcef("/config/update/strategy/publish/publish/strategy_id/%d/app_id/%d/biz_id/%d",
-			req.Id, req.AppId, req.BizId).
+			req.ReleaseId, req.AppId, req.BizId).
 		WithHeaders(header).
 		Body(req).
 		Do()
@@ -47,7 +47,7 @@ func (p *Publish) PublishWithStrategy(ctx context.Context, header http.Header, r
 		return nil, resp.Err
 	}
 
-	pbResp := new(pbcs.PublishStrategyResp)
+	pbResp := new(pbcs.PublishResp)
 	if err := resp.Into(pbResp); err != nil {
 		return nil, err
 	}
@@ -57,7 +57,7 @@ func (p *Publish) PublishWithStrategy(ctx context.Context, header http.Header, r
 
 // FinishPublishWithStrategy function to finish publish with strategy.
 func (p *Publish) FinishPublishWithStrategy(ctx context.Context, header http.Header,
-	req *pbcs.FinishPublishStrategyReq) (*pbcs.FinishPublishStrategyResp, error) {
+	req *pbcs.FinishPublishReq) (*pbcs.FinishPublishResp, error) {
 
 	resp := p.client.Put().
 		WithContext(ctx).
@@ -71,7 +71,7 @@ func (p *Publish) FinishPublishWithStrategy(ctx context.Context, header http.Hea
 		return nil, resp.Err
 	}
 
-	pbResp := new(pbcs.FinishPublishStrategyResp)
+	pbResp := new(pbcs.FinishPublishResp)
 	if err := resp.Into(pbResp); err != nil {
 		return nil, err
 	}

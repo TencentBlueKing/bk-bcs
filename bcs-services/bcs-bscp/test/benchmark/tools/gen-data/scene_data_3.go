@@ -19,8 +19,6 @@ import (
 	"bscp.io/pkg/criteria/errf"
 	"bscp.io/pkg/dal/table"
 	pbcs "bscp.io/pkg/protocol/config-server"
-	pbstrategy "bscp.io/pkg/protocol/core/strategy"
-	"bscp.io/pkg/runtime/selector"
 )
 
 // genSceneData3 在biz_id=2001，app_id=100003的应用下，创建5个配置项，执行一次Normal策略发布。
@@ -84,7 +82,6 @@ func genSceneData3() error {
 	}
 
 	// create strategy.
-	pbsl, err := genSelector([]selector.Element{element1})
 	if err != nil {
 		return fmt.Errorf("gen selector failed, err: %v", err)
 	}
@@ -95,9 +92,6 @@ func genSceneData3() error {
 		Name:          randName("strategy"),
 		Memo:          memo,
 		ReleaseId:     rlResp.Data.Id,
-		Scope: &pbstrategy.ScopeSelector{
-			Selector: pbsl,
-		},
 	}
 	rid = RequestID()
 	styResp, err := cli.Strategy.Create(context.Background(), Header(rid), styReq)
@@ -109,10 +103,9 @@ func genSceneData3() error {
 	}
 
 	// publish strategy.
-	pbReq := &pbcs.PublishStrategyReq{
+	pbReq := &pbcs.PublishReq{
 		BizId: stressBizId,
 		AppId: appResp.Data.Id,
-		Id:    styResp.Data.Id,
 	}
 	rid = RequestID()
 	pbResp, err := cli.Publish.PublishWithStrategy(context.Background(), Header(rid), pbReq)

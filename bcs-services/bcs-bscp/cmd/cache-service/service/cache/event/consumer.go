@@ -92,7 +92,7 @@ func (c *consumer) consumeInsertEvent(kt *kit.Kit, events []*table.Event) error 
 
 	for _, event := range events {
 		switch event.Spec.Resource {
-		case table.PublishInstance, table.PublishStrategy:
+		case table.PublishInstance, table.Publish:
 			publishEvent = append(publishEvent, event)
 		case table.Application:
 			insertAppEvent = append(insertAppEvent, event)
@@ -205,7 +205,7 @@ func (c *consumer) consumeDeleteEvent(kt *kit.Kit, events []*table.Event) error 
 	delAppEvents := make([]*table.Event, 0)
 	for _, event := range events {
 		switch event.Spec.Resource {
-		case table.PublishStrategy, table.PublishInstance:
+		case table.Publish, table.PublishInstance:
 			delPublishEvents = append(delPublishEvents, event)
 		case table.Application:
 			delAppEvents = append(delAppEvents, event)
@@ -378,10 +378,6 @@ func (c *consumer) cacheOneAppStrategy(kt *kit.Kit, bizID, appID uint32) (map[ui
 
 			// record publish strategy's release id, these used to add released config item cache.
 			releaseBizID[one.ReleaseID] = bizID
-			if one.Scope != nil && one.Scope.SubStrategy != nil && !one.Scope.SubStrategy.IsEmpty() &&
-				one.Scope.SubStrategy.Spec.ReleaseID > 0 {
-				releaseBizID[one.Scope.SubStrategy.Spec.ReleaseID] = bizID
-			}
 
 			js, err := jsoni.Marshal(one)
 			if err != nil {

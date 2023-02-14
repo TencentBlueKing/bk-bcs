@@ -67,7 +67,7 @@ func PbPublishedStrategies(ss []*types.PublishedStrategyCache) ([]*PublishedStra
 
 	ps := make([]*PublishedStrategy, len(ss))
 	for idx := range ss {
-		scope, err := pbstrategy.PbScopeSelector(ss[idx].Scope)
+		scope, err := pbstrategy.PbScope(ss[idx].Scope)
 		if err != nil {
 			return nil, err
 		}

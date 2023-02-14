@@ -57,7 +57,7 @@ func (c *Cache) Purge(kt *kit.Kit, es []*types.EventMeta) {
 		// no matter what kind of event type, remove the resource from
 		// local cache directly to force update the local cache immediately.
 		switch one.Spec.Resource {
-		case table.PublishStrategy:
+		case table.Publish:
 			switch one.Spec.OpType {
 			case table.InsertOp, table.DeleteOp:
 			default:
