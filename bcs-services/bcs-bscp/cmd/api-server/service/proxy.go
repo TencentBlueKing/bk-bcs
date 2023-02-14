@@ -107,7 +107,7 @@ func (p *proxy) handler() http.Handler {
 	r.Route("/api/v1/api/get/content/download", func(r chi.Router) {
 		r.Use(p.authorizer.UnifiedAuthentication)
 		r.Use(p.setFilter)
-		r.Put("/biz_id/{biz_id}/app_id/{app_id}", p.repoRevProxy.ServeHTTP)
+		r.Get("/biz_id/{biz_id}/app_id/{app_id}", p.repoRevProxy.ServeHTTP)
 	})
 
 	return r
