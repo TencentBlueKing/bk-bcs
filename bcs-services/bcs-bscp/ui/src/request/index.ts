@@ -4,7 +4,8 @@ import { propsMixin } from 'bkui-vue/lib/modal';
 
 const http = axios.create({
   // @ts-ignore
-  baseURL: `${window.BK_BCS_BSCP_API}/api/v1`
+  baseURL: `${window.BK_BCS_BSCP_API}/api/v1`,
+  withCredentials: true
 })
 
 // 错误处理
