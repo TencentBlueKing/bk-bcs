@@ -326,3 +326,27 @@ type DeleteScalingOption struct {
 type UpdateScalingOption struct {
 	CommonOption
 }
+
+// CreateSecurityGroupOption create security group option
+type CreateSecurityGroupOption struct {
+	GroupName        string
+	GroupDescription string
+	ProjectId        string
+	Tags             map[string]string
+}
+
+// CreateSecurityGroupOption create security group option
+type CreateSecurityGroupWithPoliciesOption struct {
+	GroupName        string
+	GroupDescription string
+	ProjectId        string
+	Egress           []*SecurityGroupPolicyOption
+	Ingress          []*SecurityGroupPolicyOption
+}
+
+type SecurityGroupPolicyOption struct {
+	Action    string
+	Protocol  string
+	Port      string
+	CidrBlock string
+}

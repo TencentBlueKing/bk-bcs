@@ -253,3 +253,10 @@ const (
 const (
 	MIMEJSONOrigin = "application/json+origin"
 )
+
+// default bcs security group
+const (
+	GroupName          = "bcs"
+	GroupDescription   = "default security group create by bcs"
+	GroupNameFilterKey = "security-group-name"
+)
