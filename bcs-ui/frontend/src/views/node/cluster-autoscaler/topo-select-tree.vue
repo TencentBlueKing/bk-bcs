@@ -5,6 +5,7 @@
     :placeholder="placeholder"
     searchable
     :remote-method="remote"
+    ref="selectRef"
     @clear="handleClearScaleOutNode">
     <bcs-big-tree
       :data="topoData"
@@ -53,7 +54,7 @@ export default defineComponent({
     },
   },
   setup(props, ctx) {
-    // 模块
+    const selectRef = ref<any>(null);
     const treeRef = ref<any>(null);
     const topoLoading = ref(false);
     const topoData = ref<any[]>([]);
@@ -86,6 +87,7 @@ export default defineComponent({
         ctx.emit('node-data-change', {
           ...data,
         });
+        selectRef.value?.close();
       }
     };
     const handleClearScaleOutNode = () => {
@@ -98,6 +100,7 @@ export default defineComponent({
     });
 
     return {
+      selectRef,
       treeRef,
       topoData,
       remote,

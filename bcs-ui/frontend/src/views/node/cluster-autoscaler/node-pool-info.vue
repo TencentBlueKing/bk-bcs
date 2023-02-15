@@ -62,7 +62,7 @@
             </div>
           </FormGroup>
           <div class="px-[16px]"><bcs-divider class="!my-[0px]"></bcs-divider></div>
-          <FormGroup :title="$t('缩容节点清理配置')" :allow-toggle="false">
+          <FormGroup :title="$t('节点回收前清理配置')" :allow-toggle="false">
             <bcs-select class="max-w-[524px]" :clearable="false" v-model="scaleInPreActionType">
               <bcs-option id="simple" :name="$t('简单脚本执行')"></bcs-option>
               <bcs-option id="complex" :name="$t('标准运维流程执行')"></bcs-option>

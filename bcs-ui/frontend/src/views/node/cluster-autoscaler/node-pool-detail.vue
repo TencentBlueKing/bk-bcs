@@ -28,11 +28,6 @@
               {{ statusTextMap[nodePoolData.status] }}
             </StatusIcon>
           </bk-form-item>
-          <bk-form-item
-            :label="$t('缩容节点下限')"
-            :desc="$t('节点池创建时不会自动扩容到缩容节点下限数量，只有节点池扩容节点数量超过缩容节点下限后，之后缩容节点时不会低于缩容节点下限，作为节点池的buffer资源')">
-            {{ nodePoolData.autoScaling.minSize }}
-          </bk-form-item>
           <bk-form-item :label="$t('扩容节点上限')">
             {{ nodePoolData.autoScaling.maxSize }}
           </bk-form-item>
@@ -41,7 +36,7 @@
             :desc="$t('节点池启用后Autoscaler组件将会根据扩容算法使用该节点池资源，开启Autoscaler组件后必须要开启至少一个节点池')">
             {{nodePoolData.nodeTemplate.unSchedulable ? $t('否') : $t('是')}}
           </bk-form-item>
-          <bk-form-item :label="$t('节点 Labels')">
+          <bk-form-item :label="$t('标签')">
             <bk-button
               text
               size="small"
@@ -50,7 +45,7 @@
               @click="showLabels = true">{{$t('查看')}}</bk-button>
             <span v-else>--</span>
           </bk-form-item>
-          <bk-form-item :label="$t('节点 Taints')">
+          <bk-form-item :label="$t('污点')">
             <bk-button
               text
               size="small"
@@ -108,12 +103,12 @@
               style="padding: 0;"
               @click="showDataDisks = true">{{$t('查看')}}</bk-button>
           </bk-form-item>
-          <bk-form-item :label="$t('支持子网')">
+          <bk-form-item
+            :label="$t('支持子网')"
+            :desc="$t('内部上云环境根据集群所在VPC由产品自动分配可用子网，尽可能的把集群内的节点分配在不同的可用区，避免集群节点集中在同一可用区')">
             {{nodePoolData.autoScaling.subnetIDs.join(', ') || '--'}}
           </bk-form-item>
-          <bk-form-item
-            :label="$t('安全组')"
-            :desc="$t('内部上云环境根据集群所在VPC由产品自动分配可用子网，尽可能的把集群内的节点分配在不同的可用区，避免集群节点集中在同一可用区')">
+          <bk-form-item :label="$t('安全组')">
             <LoadingIcon v-if="securityGroupLoading">{{ $t('加载中') }}...</LoadingIcon>
             <span v-else>{{ securityGroupNames.join(',') || '--'}}</span>
           </bk-form-item>
@@ -143,7 +138,7 @@
               actions-key="postActions"
               key="scaleOutPostAction" />
           </bcs-tab-panel>
-          <bcs-tab-panel :label="$t('缩容节点清理')" name="scaleInPreAction">
+          <bcs-tab-panel :label="$t('节点回收前清理配置')" name="scaleInPreAction">
             <UserAction
               :script="nodePoolData.nodeTemplate.scaleInPreScript"
               :addons="nodePoolData.nodeTemplate.scaleInExtraAddons"

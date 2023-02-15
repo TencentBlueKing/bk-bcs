@@ -59,3 +59,6 @@ export const masterList = request('get', '/cluster/$clusterId/master');
 
 // auth
 export const newUserPermsByAction = request('post', '/perms/actions/$actionId');
+
+// CA
+export const clusterAutoScalingLogsV2 = request('get', '/operationlogs');

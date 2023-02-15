@@ -13,7 +13,7 @@
     <bk-form-item :label="$t('机型配置')">
       <div class="mb15" style="display: flex;">
         <div class="prefix-select">
-          <span class="prefix">CPU</span>
+          <span :class="['prefix', { disabled: isEdit }]">CPU</span>
           <bcs-select
             v-model="nodePoolConfig.launchTemplate.CPU"
             searchable
@@ -29,10 +29,10 @@
               :name="cpuItem">
             </bcs-option>
           </bcs-select>
-          <span class="company">{{$t('核')}}</span>
+          <span :class="['company', { disabled: isEdit }]">{{$t('核')}}</span>
         </div>
         <div class="prefix-select ml30">
-          <span class="prefix">{{$t('内存')}}</span>
+          <span :class="['prefix', { disabled: isEdit }]">{{$t('内存')}}</span>
           <bcs-select
             v-model="nodePoolConfig.launchTemplate.Mem"
             searchable
@@ -48,7 +48,7 @@
               :name="memItem">
             </bcs-option>
           </bcs-select>
-          <span class="company">G</span>
+          <span :class="['company', { disabled: isEdit }]">G</span>
         </div>
       </div>
       <bcs-table
@@ -92,7 +92,7 @@
       </bcs-table>
       <div class="mt25" style="display:flex;align-items:center;">
         <div class="prefix-select">
-          <span class="prefix">{{$t('系统盘')}}</span>
+          <span :class="['prefix', { disabled: isEdit }]">{{$t('系统盘')}}</span>
           <bcs-select
             v-model="nodePoolConfig.launchTemplate.systemDisk.diskType"
             :disabled="isEdit"
@@ -114,7 +114,7 @@
           <bcs-option id="50" name="50"></bcs-option>
           <bcs-option id="100" name="100"></bcs-option>
         </bcs-select>
-        <div class="bg-[#fafbfd] w-[42px] flex items-center justify-center bcs-border ml-[-1px] border-[#c4c6cc]">GB</div>
+        <span :class="['company', { disabled: isEdit }]">GB</span>
       </div>
       <div class="mt20">
         <bk-checkbox
@@ -127,7 +127,7 @@
       <div class="panel" v-for="(disk, index) in nodePoolConfig.nodeTemplate.dataDisks" :key="index">
         <div class="panel-item">
           <div class="prefix-select">
-            <span class="prefix">{{$t('数据盘')}}</span>
+            <span :class="['prefix', { disabled: isEdit }]">{{$t('数据盘')}}</span>
             <bcs-select
               :disabled="isEdit"
               v-model="disk.diskType"
@@ -148,8 +148,8 @@
             :min="50"
             :max="2000"
             v-model="disk.diskSize">
-            <div slot="append" class="group-text">GB</div>
           </bk-input>
+          <span :class="['company', { disabled: isEdit }]">GB</span>
         </div>
         <p class="error-tips" v-if="disk.diskSize % 10 !== 0">{{$t('范围: 50~2000, 步长: 10')}}</p>
         <div class="panel-item mt10">
@@ -211,8 +211,8 @@
             type="number"
             :disabled="isEdit"
             v-model="nodePoolConfig.launchTemplate.internetAccess.internetMaxBandwidth">
-            <div slot="append" class="group-text">Mbps</div>
           </bk-input>
+          <span :class="['company', { disabled: isEdit }]">Mbps</span>
         </div>
       </div>
     </bk-form-item>
@@ -240,8 +240,7 @@
       :label="$t('安全组')"
       property="nodePoolConfig.launchTemplate.securityGroupIDs"
       error-display-type="normal"
-      required
-      :desc="$t('内部上云环境根据集群所在VPC由产品自动分配可用子网，尽可能的把集群内的节点分配在不同的可用区，避免集群节点集中在同一可用区')">
+      required>
       <bcs-select
         :loading="securityGroupsLoading"
         v-model="nodePoolConfig.launchTemplate.securityGroupIDs"
@@ -257,7 +256,9 @@
         </bcs-option>
       </bcs-select>
     </bk-form-item>
-    <bk-form-item :label="$t('支持子网')">
+    <bk-form-item
+      :label="$t('支持子网')"
+      :desc="$t('内部上云环境根据集群所在VPC由产品自动分配可用子网，尽可能的把集群内的节点分配在不同的可用区，避免集群节点集中在同一可用区')">
       <bcs-input
         :placeholder="$t('系统自动分配')"
         disabled></bcs-input>
@@ -657,19 +658,25 @@ export default defineComponent({
             border-radius: 2px 0 0 2px;
             border-radius: 2px 0 0 2px;
             padding: 0 8px;
-        }
-        .company {
-            display: inline-block;
-            width: 30px;
-            height: 32px;
-            border: 1px solid #C4C6CC;
-            text-align: center;
-            border-left: none;
-            background-color: #fafbfd;
+            &.disabled {
+              border-color: #dcdee5;
+            }
         }
         >>> .bk-select {
             min-width: 110px;
             margin-left: -1px;
+        }
+    }
+    .company {
+        display: inline-block;
+        width: 30px;
+        height: 32px;
+        border: 1px solid #C4C6CC;
+        text-align: center;
+        border-left: none;
+        background-color: #fafbfd;
+        &.disabled {
+          border-color: #dcdee5;
         }
     }
     >>> .panel {

@@ -8,22 +8,8 @@
       </bk-input>
     </bk-form-item>
     <bk-form-item
-      :label="$t('缩容节点下限')"
-      property="nodeNumRange"
-      error-display-type="normal"
-      :desc="$t('节点池创建时不会自动扩容到缩容节点下限数量，只有节点池扩容节点数量超过缩容节点下限后，之后缩容节点时不会低于缩容节点下限，作为节点池的buffer资源')">
-      <bk-input
-        class="w74"
-        int
-        v-model="nodePoolInfo.autoScaling.minSize"
-        :min="getSchemaByProp('autoScaling.minSize').minimum"
-        :max="getSchemaByProp('autoScaling.minSize').maximum"
-        type="number">
-      </bk-input>
-    </bk-form-item>
-    <bk-form-item
       :label="$t('扩容节点上限')"
-      property="nodeNumRange"
+      property="maxSize"
       error-display-type="normal">
       <bk-input
         class="w74"
@@ -39,7 +25,7 @@
       :desc="$t('节点池启用后Autoscaler组件将会根据扩容算法使用该节点池资源，开启Autoscaler组件后必须要开启至少一个节点池')">
       <bk-checkbox v-model="nodePoolInfo.enableAutoscale" :disabled="isEdit"></bk-checkbox>
     </bk-form-item>
-    <bk-form-item :label="$t('节点 Labels')" property="labels" error-display-type="normal">
+    <bk-form-item :label="$t('标签')" property="labels" error-display-type="normal">
       <KeyValue
         class="labels"
         :min-item="0"
@@ -47,7 +33,7 @@
         v-model="nodePoolInfo.nodeTemplate.labels">
       </KeyValue>
     </bk-form-item>
-    <bk-form-item :label="$t('节点 Taints')" property="taints" error-display-type="normal">
+    <bk-form-item :label="$t('污点')" property="taints" error-display-type="normal">
       <span
         class="add-key-value-items" v-if="!nodePoolInfo.nodeTemplate.taints.length"
         @click="handleAddTaints">
@@ -186,9 +172,9 @@ export default defineComponent({
           validator: (v: string) => /^[\u4E00-\u9FA5A-Za-z0-9._-]+$/.test(v) && v.length <= 255 && v.length >= 2,
         },
       ],
-      nodeNumRange: [
+      maxSize: [
         {
-          message: $i18n.t('请输入正确节点数量范围'),
+          message: $i18n.t('扩容节点上限要大于缩容节点下限'),
           trigger: 'blur',
           validator: () => nodePoolInfo.value.autoScaling.minSize < nodePoolInfo.value.autoScaling.maxSize,
         },

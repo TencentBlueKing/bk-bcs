@@ -92,8 +92,8 @@
         <bk-form-item
           :label="$t('等待节点提供最长时间')"
           desc-icon="bk-icon icon-info-circle"
-          :desc="$t('如果节点池在设置的时间范围内没有提供可用资源，会导致此次自动扩容失败')">
-          <bk-input int type="number" :min="60" :max="86400" v-model="autoscalerData.maxNodeProvisionTime">
+          :desc="$t('如果节点池在设置的时间范围内没有提供可用资源，会导致此次自动扩容失败，取值范围900 ~ 86400秒')">
+          <bk-input int type="number" :min="900" :max="86400" v-model="autoscalerData.maxNodeProvisionTime">
             <template slot="append">
               <div class="group-text">{{$t('秒')}}</div>
             </template>
@@ -173,8 +173,8 @@
             </template>
           </bk-input>
         </bk-form-item> -->
-        <bk-form-item :label="$t('NotReady节点缩容等待时间')">
-          <bk-input int type="number" :min="60" :max="86400" v-model="autoscalerData.scaleDownUnreadyTime">
+        <bk-form-item :label="$t('NotReady节点缩容等待时间，取值范围1200 ~ 86400秒')">
+          <bk-input int type="number" :min="1200" :max="86400" v-model="autoscalerData.scaleDownUnreadyTime">
             <template slot="append">
               <div class="group-text">{{$t('秒')}}</div>
             </template>

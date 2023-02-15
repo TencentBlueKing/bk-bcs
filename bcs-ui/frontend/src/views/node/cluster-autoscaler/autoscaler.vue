@@ -88,7 +88,10 @@
     <section class="nodepool">
       <div class="group-header">
         <div class="group-header-title">{{$t('节点池管理')}}</div>
-        <bcs-button theme="primary" icon="plus" @click="handleCreatePool">{{$t('新建节点池')}}</bcs-button>
+        <div class="flex">
+          <bcs-button theme="primary" icon="plus" @click="handleCreatePool">{{$t('新建节点池')}}</bcs-button>
+          <bcs-button class="ml5" @click="handleShowRecord({})">{{$t('扩缩容记录')}}</bcs-button>
+        </div>
       </div>
       <bcs-table
         :data="curPageData"
@@ -101,15 +104,6 @@
             <div class="bk-primary bk-button-normal bk-button-text" @click="handleGotoDetail(row)">
               <span class="bcs-ellipsis">{{`${row.nodeGroupID}（${row.name}）`}}</span>
             </div>
-          </template>
-        </bcs-table-column>
-        <bcs-table-column
-          :label="$t('缩容节点下限')"
-          align="right"
-          width="120"
-          :render-header="renderHeader">
-          <template #default="{ row }">
-            {{ row.autoScaling.minSize }}
           </template>
         </bcs-table-column>
         <bcs-table-column :label="$t('扩容节点上限')" align="right" width="120">
@@ -209,15 +203,6 @@
         <bcs-form-item class="form-content-item" :label="$t('节点池名称')">
           <span>{{ currentOperateRow.name }}</span>
         </bcs-form-item>
-        <bcs-form-item class="form-content-item" :label="$t('缩容节点下限')">
-          <span>
-            {{
-              currentOperateRow.autoScaling
-                ? currentOperateRow.autoScaling.minSize
-                : '--'
-            }}
-          </span>
-        </bcs-form-item>
         <bcs-form-item class="form-content-item" :label="$t('扩容节点上限')">
           <span>
             {{
@@ -305,6 +290,7 @@
       v-model="showRecord"
       @cancel="handleRecordCancel">
       <div class="mb15 flex-between">
+        <div></div>
         <bcs-date-picker
           :shortcuts="shortcuts"
           type="datetimerange"
@@ -321,9 +307,11 @@
         :pagination="recordPagination"
         row-key="taskID"
         :expand-row-keys="expandRowKeys"
+        :key="currentOperateRow.nodeGroupID"
         @page-change="recordPageChange"
         @page-limit-change="recordPageSizeChange"
-        @expand-change="handleExpandChange">
+        @expand-change="handleExpandChange"
+        @filter-change="handleFilterChange">
         <bcs-table-column type="expand" width="30">
           <template #default="{ row }">
             <bcs-table
@@ -373,19 +361,44 @@
             </bcs-table>
           </template>
         </bcs-table-column>
-        <bcs-table-column :label="$t('事件类型')" width="150" show-overflow-tooltip>
+        <bcs-table-column
+          :label="$t('事件类型')"
+          width="150"
+          prop="taskType"
+          column-key="taskType"
+          :filters="filters.taskType"
+          :filter-multiple="false"
+          filter-searchable
+          show-overflow-tooltip>
           <template #default="{ row }">
             {{row.task ? row.task.taskName : '--'}}
           </template>
         </bcs-table-column>
         <bcs-table-column :label="$t('事件信息')" prop="message" show-overflow-tooltip></bcs-table-column>
+        <bcs-table-column
+          :label="$t('节点池')"
+          prop="resourceID"
+          :filtered-value="filterValues.resourceID"
+          :filters="filters.resourceID"
+          :filter-multiple="false"
+          filter-searchable
+          column-key="resourceID"
+          show-overflow-tooltip>
+        </bcs-table-column>
         <bcs-table-column :label="$t('开始时间')" width="180" prop="createTime" show-overflow-tooltip></bcs-table-column>
         <bcs-table-column :label="$t('结束时间')" width="180" show-overflow-tooltip>
           <template #default="{ row }">
             {{row.task ? row.task.end : '--'}}
           </template>
         </bcs-table-column>
-        <bcs-table-column :label="$t('状态')" width="150">
+        <bcs-table-column
+          :label="$t('状态')"
+          width="150"
+          prop="status"
+          column-key="status"
+          filter-searchable
+          :filter-multiple="false"
+          :filters="filters.status">
           <template #default="{ row }">
             <template v-if="row.task">
               <LoadingIcon v-if="['RUNNING'].includes(row.task.status)">
@@ -441,7 +454,6 @@ import StatusIcon from '@/views/dashboard/common/status-icon';
 import LoadingIcon from '@/components/loading-icon.vue';
 import usePage from '@/views/dashboard/common/use-page';
 import useInterval from '@/views/dashboard/common/use-interval';
-import { CreateElement } from 'vue';
 import LayoutGroup from '../LayoutGroup.vue';
 import AutoScalerFormItem from '../cluster-autoscaler-tencent/AutoScalerFormItem.vue';
 import { useClusterInfo } from '@/views/cluster/use-cluster';
@@ -652,18 +664,6 @@ export default defineComponent({
         },
       });
     });
-    // 获取节点池列表
-    const renderHeader = (h: CreateElement, data) => h('span', {
-      class: 'custom-header-cell',
-      directives: [
-        {
-          name: 'bkTooltips',
-          value: {
-            content: $i18n.t('节点池创建时不会自动扩容到缩容节点下限数量，只有节点池扩容节点数量超过缩容节点下限后，之后缩容节点时不会低于缩容节点下限，作为节点池的buffer资源'),
-          },
-        },
-      ],
-    }, [data.column.label]);
     const statusTextMap = { // 节点池状态
       RUNNING: $i18n.t('正常'),
       CREATING: $i18n.t('创建中'),
@@ -787,7 +787,7 @@ export default defineComponent({
       $bkInfo({
         type: 'warning',
         clsName: 'custom-info-confirm',
-        subTitle: $i18n.t('确定删除节点池 {name} ', { name: `${row.nodeGroupID}（${row.name}）` }),
+        title: $i18n.t('确定删除节点池 {name} ', { name: `${row.nodeGroupID}（${row.name}）` }),
         defaultInfo: true,
         confirmFn: async () => {
           const result = await $store.dispatch('clustermanager/deleteNodeGroup', {
@@ -965,6 +965,42 @@ export default defineComponent({
       FORCETERMINATE: $i18n.t('强制终止'),
       NOTSTARTED: $i18n.t('未启动'),
     };
+    const taskTypeMap = {
+      CreateCluster: $i18n.t('创建集群'),
+      CreateVirtualCluster: $i18n.t('创建虚拟集群'),
+      ImportCluster: $i18n.t('导入集群'),
+      DeleteCluster: $i18n.t('删除集群'),
+      DeleteVirtualCluster: $i18n.t('删除虚拟集群'),
+      AddNodesToCluster: $i18n.t('上架节点'),
+      RemoveNodesFromCluster: $i18n.t('下架节点'),
+      AddExternalNodesToCluster: $i18n.t('上架第三方节点'),
+      RemoveExternalNodesFromCluster: $i18n.t('下架第三方节点'),
+      CreateNodeGroup: $i18n.t('创建节点池'),
+      UpdateNodeGroup: $i18n.t('更新节点池'),
+      DeleteNodeGroup: $i18n.t('删除节点池'),
+      SwitchNodeGroupAutoScaling: $i18n.t('开启/关闭节点池'),
+      UpdateAutoScalingOption: $i18n.t('更新弹性伸缩配置'),
+      SwitchAutoScalingOptionStatus: $i18n.t('开启/关闭弹性伸缩配置'),
+      UpdateNodeGroupDesiredNode: $i18n.t('扩容节点池'),
+      CleanNodeGroupNodes: $i18n.t('缩容节点池'),
+    };
+    const filters = computed(() => ({
+      taskType: Object.keys(taskTypeMap).map(key => ({ text: taskTypeMap[key], value: key })),
+      status: Object.keys(taskStatusMap).map(key => ({ text: taskStatusMap[key], value: key })),
+      resourceID: nodepoolList.value.map(item => ({
+        text: `${item.nodeGroupID}( ${item.name} )`,
+        value: item.nodeGroupID,
+      })),
+    }));
+    const filterValues = ref<{
+      taskType: string[]
+      status: string[]
+      resourceID: string[]
+    }>({
+      taskType: [],
+      status: [],
+      resourceID: [],
+    });
     const taskStatusColorMap = {
       INITIALIZING: 'green',
       RUNNING: 'green',
@@ -1042,6 +1078,11 @@ export default defineComponent({
         start,
         end,
       ];
+      filterValues.value = {
+        taskType: [],
+        status: [],
+        resourceID: [row.nodeGroupID],
+      };
       currentOperateRow.value = row;
       showRecord.value = true;
       handleGetRecordList();
@@ -1058,13 +1099,16 @@ export default defineComponent({
     };
     const { start: startTaskPool, stop: stopTaskPool } = useInterval(getRecordList, 5000); // 轮询
     async function getRecordList() {
-      const { results = [], count = 0 } = await $store.dispatch('clustermanager/clusterAutoScalingLogs', {
+      const { taskType = [], resourceID = [], status = [] } = filterValues.value;
+      const { results = [], count = 0 } = await $store.dispatch('clustermanager/clusterAutoScalingLogsV2', {
         resourceType: 'nodegroup',
-        resourceID: currentOperateRow.value.nodeGroupID,
+        resourceID: resourceID?.[0],
         startTime: Math.floor(new Date(timeRange.value[0]).getTime() / 1000) || '',
         endTime: Math.floor(new Date(timeRange.value[1]).getTime() / 1000) || '',
         limit: recordPagination.value.limit,
         page: recordPagination.value.current,
+        status: status?.[0],
+        taskType: taskType?.[0],
       });
       recordList.value = results.map(item => ({
         ...item,
@@ -1089,6 +1133,14 @@ export default defineComponent({
       } else {
         expandRowKeys.value.push(row.taskID);
       }
+    };
+    const handleFilterChange = async (filters) => {
+      Object.keys(filters).forEach((key) => {
+        filterValues.value[key] = filters[key];
+      });
+      recordLoading.value = true;
+      await getRecordList();
+      recordLoading.value = false;
     };
 
     // 编辑自动扩缩容
@@ -1177,6 +1229,8 @@ export default defineComponent({
       stopTaskPool();
     });
     return {
+      filters,
+      filterValues,
       ipTableKey,
       showIPList,
       conversionPercentUsed,
@@ -1218,7 +1272,6 @@ export default defineComponent({
       shortcuts,
       recordPagination,
       recordList,
-      renderHeader,
       recordPageChange,
       recordPageSizeChange,
       handleRecordCancel,
@@ -1239,6 +1292,7 @@ export default defineComponent({
       handleExpandChange,
       handleGotoSops,
       handleShowIPList,
+      handleFilterChange,
     };
   },
 });

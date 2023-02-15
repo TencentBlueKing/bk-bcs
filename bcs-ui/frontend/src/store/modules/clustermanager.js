@@ -81,7 +81,7 @@ import {
   nodeUnCordon,
 } from '@/api/base';
 
-import { cloudDetail } from '@/api/modules/cluster-manager';
+import { cloudDetail, clusterAutoScalingLogsV2 } from '@/api/modules/cluster-manager';
 
 export default {
   namespaced: true,
@@ -340,6 +340,14 @@ export default {
     // 扩缩容记录
     async clusterAutoScalingLogs(ctx, params) {
       const data = await clusterAutoScalingLogs(params).catch(() => []);
+      return data;
+    },
+    // 扩缩容记录V2(集群维度)
+    async clusterAutoScalingLogsV2(ctx, params = {}) {
+      const data = await clusterAutoScalingLogsV2({
+        ...params,
+        v2: true,
+      }).catch(() => []);
       return data;
     },
     // 节点池节点列表
