@@ -383,6 +383,7 @@
           :filter-multiple="false"
           filter-searchable
           column-key="resourceID"
+          :key="JSON.stringify(filterValues.resourceID)"
           show-overflow-tooltip>
         </bcs-table-column>
         <bcs-table-column :label="$t('开始时间')" width="180" prop="createTime" show-overflow-tooltip></bcs-table-column>
@@ -1084,6 +1085,11 @@ export default defineComponent({
         resourceID: [row.nodeGroupID],
       };
       currentOperateRow.value = row;
+      filterValues.value = {
+        taskType: [],
+        status: [],
+        resourceID: row.nodeGroupID ? [row.nodeGroupID] : [],
+      };
       showRecord.value = true;
       handleGetRecordList();
     };
