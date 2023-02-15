@@ -123,7 +123,7 @@ values (14, 'strategy_set', 0, now());
 insert into id_generator(id, resource, max_id, updated_at)
 values (15, 'resource_lock', 0, now());
 insert into id_generator(id, resource, max_id, updated_at)
-values (16, 'group', 0, now());
+values (16, 'group_', 0, now());
 insert into id_generator(id, resource, max_id, updated_at)
 values (17, 'group_category', 0, now());
 

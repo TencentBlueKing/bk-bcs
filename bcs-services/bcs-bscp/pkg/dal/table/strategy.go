@@ -446,10 +446,6 @@ func (s *Scope) Scan(raw interface{}) error {
 		return errors.New("raw is nil, can not be decoded")
 	}
 
-	if len(s.Groups) == 0 {
-		return errors.New("scope groups is empty")
-	}
-
 	switch v := raw.(type) {
 	case []byte:
 		if err := json.Unmarshal(v, &s); err != nil {
