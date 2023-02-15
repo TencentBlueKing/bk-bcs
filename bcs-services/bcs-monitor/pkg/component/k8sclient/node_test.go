@@ -21,7 +21,7 @@ import (
 )
 
 func TestGetNodeList(t *testing.T) {
-	c, err := GetNodeList(context.Background(), bcstesting.GetTestClusterId(), true)
+	_, c, err := GetNodeList(context.Background(), bcstesting.GetTestClusterId(), true)
 	assert.NoError(t, err)
 	assert.True(t, true, len(c) > 0)
 }

@@ -42,7 +42,7 @@ func NewPrometheus() *Prometheus {
 // handleClusterMetric Cluster 处理公共函数
 func (m *Prometheus) handleClusterMetric(ctx context.Context, projectId, clusterId string, promql string, start,
 	end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {
-	nodeMatch, err := base.GetNodeMatch(ctx, clusterId, true)
+	nodeMatch, nodeNameMatch, err := base.GetNodeMatch(ctx, clusterId)
 	if err != nil {
 		return nil, err
 	}
@@ -50,6 +50,7 @@ func (m *Prometheus) handleClusterMetric(ctx context.Context, projectId, cluster
 	params := map[string]interface{}{
 		"clusterId":  clusterId,
 		"instance":   nodeMatch,
+		"node":       nodeNameMatch,
 		"fstype":     DISK_FSTYPE,
 		"mountpoint": DISK_MOUNTPOINT,
 		"provider":   PROVIDER,

@@ -124,7 +124,7 @@ func (s *BCSSystemStore) Series(r *storepb.SeriesRequest, srv storepb.Store_Seri
 		// return errors.New("cluster_id is required")
 	}
 
-	ip, err := clientutil.GetLabelMatchValue("ip", r.Matchers)
+	node, err := clientutil.GetLabelMatchValue("node", r.Matchers)
 	if err != nil {
 		return err
 	}
@@ -194,32 +194,32 @@ func (s *BCSSystemStore) Series(r *storepb.SeriesRequest, srv storepb.Store_Seri
 		promSeriesSet, promErr = client.GetClusterDiskUsage(ctx, cluster.ProjectId, cluster.ClusterId,
 			startTime, endTime, stepDuration)
 	case "bcs:node:info":
-		nodeInfo, err := client.GetNodeInfo(ctx, cluster.ProjectId, cluster.ClusterId, ip, endTime)
+		nodeInfo, err := client.GetNodeInfo(ctx, cluster.ProjectId, cluster.ClusterId, node, endTime)
 		promErr = err
 		promSeriesSet = nodeInfo.PromSeries(endTime)
 	case "bcs:node:cpu:usage":
-		promSeriesSet, promErr = client.GetNodeCPUUsage(ctx, cluster.ProjectId, cluster.ClusterId, ip,
+		promSeriesSet, promErr = client.GetNodeCPUUsage(ctx, cluster.ProjectId, cluster.ClusterId, node,
 			startTime, endTime, stepDuration)
 	case "bcs:node:memory:usage":
-		promSeriesSet, promErr = client.GetNodeMemoryUsage(ctx, cluster.ProjectId, cluster.ClusterId, ip,
+		promSeriesSet, promErr = client.GetNodeMemoryUsage(ctx, cluster.ProjectId, cluster.ClusterId, node,
 			startTime, endTime, stepDuration)
 	case "bcs:node:disk:usage":
-		promSeriesSet, promErr = client.GetNodeDiskUsage(ctx, cluster.ProjectId, cluster.ClusterId, ip,
+		promSeriesSet, promErr = client.GetNodeDiskUsage(ctx, cluster.ProjectId, cluster.ClusterId, node,
 			startTime, endTime, stepDuration)
 	case "bcs:node:diskio:usage":
-		promSeriesSet, promErr = client.GetNodeDiskioUsage(ctx, cluster.ProjectId, cluster.ClusterId, ip,
+		promSeriesSet, promErr = client.GetNodeDiskioUsage(ctx, cluster.ProjectId, cluster.ClusterId, node,
 			startTime, endTime, stepDuration)
 	case "bcs:node:pod_count":
-		promSeriesSet, promErr = client.GetNodePodCount(ctx, cluster.ProjectId, cluster.ClusterId, ip,
+		promSeriesSet, promErr = client.GetNodePodCount(ctx, cluster.ProjectId, cluster.ClusterId, node,
 			startTime, endTime, stepDuration)
 	case "bcs:node:container_count":
-		promSeriesSet, promErr = client.GetNodeContainerCount(ctx, cluster.ProjectId, cluster.ClusterId, ip,
+		promSeriesSet, promErr = client.GetNodeContainerCount(ctx, cluster.ProjectId, cluster.ClusterId, node,
 			startTime, endTime, stepDuration)
 	case "bcs:node:network_transmit":
-		promSeriesSet, promErr = client.GetNodeNetworkTransmit(ctx, cluster.ProjectId, cluster.ClusterId, ip,
+		promSeriesSet, promErr = client.GetNodeNetworkTransmit(ctx, cluster.ProjectId, cluster.ClusterId, node,
 			startTime, endTime, stepDuration)
 	case "bcs:node:network_receive":
-		promSeriesSet, promErr = client.GetNodeNetworkReceive(ctx, cluster.ProjectId, cluster.ClusterId, ip,
+		promSeriesSet, promErr = client.GetNodeNetworkReceive(ctx, cluster.ProjectId, cluster.ClusterId, node,
 			startTime, endTime, stepDuration)
 	case "bcs:pod:cpu_usage":
 		promSeriesSet, promErr = client.GetPodCPUUsage(ctx, cluster.ProjectId, cluster.ClusterId, namespace, podNameList,
