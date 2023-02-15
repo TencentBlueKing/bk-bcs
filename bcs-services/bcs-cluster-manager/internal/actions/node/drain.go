@@ -51,6 +51,11 @@ func (ua *DrainNodeAction) validate() error {
 		return err
 	}
 
+	// set default GracePeriodSeconds
+	if ua.req.GracePeriodSeconds == 0 {
+		ua.req.GracePeriodSeconds = -1
+	}
+
 	return nil
 }
 

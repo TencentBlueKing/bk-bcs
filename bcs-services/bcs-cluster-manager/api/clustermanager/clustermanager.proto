@@ -5118,6 +5118,10 @@ message ClusterNode {
     title: "innerIPv6",
     description: "节点ipv6地址"
   }];
+  string nodeGroupName = 25 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "nodeGroupName",
+    description: "节点池名称"
+  }];
 }
 
 message ListMastersInClusterRequest {
@@ -9516,7 +9520,7 @@ message DrainNodeRequest {
       description : "节点名称列表，和节点内网IP列表二选一，优先节点名称列表"
   }];
   bool force = 4;
-  uint32 gracePeriodSeconds = 5;
+  int32 gracePeriodSeconds = 5;
   bool ignoreAllDaemonSets = 6;
   uint32 timeout = 7;
   bool deleteLocalData = 8;

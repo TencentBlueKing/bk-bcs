@@ -16930,6 +16930,8 @@ func (m *ClusterNode) validate(all bool) error {
 
 	// no validation rules for InnerIPv6
 
+	// no validation rules for NodeGroupName
+
 	if len(errors) > 0 {
 		return ClusterNodeMultiError(errors)
 	}

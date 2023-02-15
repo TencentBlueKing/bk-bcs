@@ -6021,6 +6021,11 @@
           "type": "string",
           "description": "节点ipv6地址",
           "title": "innerIPv6"
+        },
+        "nodeGroupName": {
+          "type": "string",
+          "description": "节点池名称",
+          "title": "nodeGroupName"
         }
       },
       "description": "记录节点信息，用于节点列表展示",
@@ -8010,7 +8015,7 @@
         },
         "gracePeriodSeconds": {
           "type": "integer",
-          "format": "int64"
+          "format": "int32"
         },
         "ignoreAllDaemonSets": {
           "type": "boolean",

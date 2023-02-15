@@ -461,11 +461,11 @@ func (la *ListNodesInClusterAction) listNodes() error {
 	}
 	cmNodes := make([]*cmproto.ClusterNode, 0)
 	for i := range nodes {
-		cmNodes = append(cmNodes, transNodeToClusterNode(nodes[i]))
+		cmNodes = append(cmNodes, transNodeToClusterNode(la.model, nodes[i]))
 	}
 
 	k8sNodes := filterNodesRole(la.getK8sNodes(), false)
-	la.nodes = mergeClusterNodes(cmNodes, k8sNodes)
+	la.nodes = mergeClusterNodes(la.req.ClusterID, cmNodes, k8sNodes)
 
 	return nil
 }
@@ -543,7 +543,7 @@ func (la *ListMastersInClusterAction) listNodes() error {
 	}
 	for _, v := range cls.Master {
 		v.Passwd = ""
-		la.nodes = append(la.nodes, transNodeToClusterNode(v))
+		la.nodes = append(la.nodes, transNodeToClusterNode(la.model, v))
 	}
 
 	masters, err := la.k8sOp.ListClusterNodes(la.ctx, la.req.ClusterID)
@@ -552,7 +552,7 @@ func (la *ListMastersInClusterAction) listNodes() error {
 	}
 
 	masters = filterNodesRole(masters, true)
-	la.nodes = mergeClusterNodes(la.nodes, masters)
+	la.nodes = mergeClusterNodes(la.req.ClusterID, la.nodes, masters)
 
 	la.appendNodeAgent()
 	la.appendHostInfo()

@@ -399,24 +399,37 @@ func removeNodeSensitiveInfo(nodes []*proto.Node) {
 	}
 }
 
-func transNodeToClusterNode(node *proto.Node) *proto.ClusterNode {
+func transNodeToClusterNode(model store.ClusterManagerModel, node *proto.Node) *proto.ClusterNode {
+	var (
+		nodeGroupName = ""
+	)
+	if node.NodeGroupID != "" {
+		group, err := model.GetNodeGroup(context.Background(), node.NodeGroupID)
+		if err != nil {
+			blog.Warnf("transNodeToClusterNode GetNodeGroup[%s] failed: %v", node.NodeGroupID, err)
+		} else {
+			nodeGroupName = group.Name
+		}
+	}
+
 	return &proto.ClusterNode{
-		NodeID:       node.NodeID,
-		InnerIP:      node.InnerIP,
-		InstanceType: node.InstanceType,
-		CPU:          node.CPU,
-		Mem:          node.Mem,
-		GPU:          node.GPU,
-		Status:       node.Status,
-		ZoneID:       node.ZoneID,
-		NodeGroupID:  node.NodeGroupID,
-		ClusterID:    node.ClusterID,
-		VPC:          node.VPC,
-		Region:       node.Region,
-		Passwd:       node.Passwd,
-		Zone:         node.Zone,
-		DeviceID:     node.DeviceID,
-		NodeName:     node.NodeName,
+		NodeID:        node.NodeID,
+		InnerIP:       node.InnerIP,
+		InstanceType:  node.InstanceType,
+		CPU:           node.CPU,
+		Mem:           node.Mem,
+		GPU:           node.GPU,
+		Status:        node.Status,
+		ZoneID:        node.ZoneID,
+		NodeGroupID:   node.NodeGroupID,
+		ClusterID:     node.ClusterID,
+		VPC:           node.VPC,
+		Region:        node.Region,
+		Passwd:        node.Passwd,
+		Zone:          node.Zone,
+		DeviceID:      node.DeviceID,
+		NodeName:      node.NodeName,
+		NodeGroupName: nodeGroupName,
 	}
 }
 
@@ -456,8 +469,7 @@ func filterNodesRole(k8sNodes []*corev1.Node, master bool) []*corev1.Node {
 // 1. 集群中不存在的节点，并且在cluster manager中状态处于初始化中、初始化失败、移除中、移除失败状态时，需要展示cluster manager中数据
 // 2. 集群中存在的节点，则以集群中为准，注意状态的转换
 // 3. 适配双栈, 通过nodeName 作为唯一值, 当前数据库nodeName 可能为空, 因此需要适配转换
-func mergeClusterNodes(cmNodes []*proto.ClusterNode, k8sNodes []*corev1.Node) []*proto.ClusterNode {
-	clusterID := ""
+func mergeClusterNodes(clusterID string, cmNodes []*proto.ClusterNode, k8sNodes []*corev1.Node) []*proto.ClusterNode {
 	// cnNodes exist in k8s cluster and get nodeName
 	GetCmNodeNames(cmNodes, k8sNodes)
 
@@ -516,6 +528,7 @@ func mergeClusterNodes(cmNodes []*proto.ClusterNode, k8sNodes []*corev1.Node) []
 					return 0
 				}(node.Spec.Unschedulable),
 				InnerIPv6: ipv6,
+				NodeGroupName: n.NodeGroupName,
 			})
 		} else {
 			nodes2 = append(nodes2, &proto.ClusterNode{
