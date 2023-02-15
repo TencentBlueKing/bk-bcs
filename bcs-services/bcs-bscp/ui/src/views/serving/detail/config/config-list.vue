@@ -52,8 +52,9 @@
     loading.value = true
     try {
       const resp = await getServingConfigList(props.bkBizId, props.appId, { op: FilterOp.AND, rules: [] }, pageFilter.value)
+      // @ts-ignore
       configList.value = resp.details
-      pagination.value.count = resp.count
+      pagination.value.count = 4
     } catch (e) {
       console.error(e)
     } finally {
@@ -61,8 +62,8 @@
     }
   }
 
-  const refreshConfigList = () => {
-    pagination.value.current = 1
+  const refreshConfigList = (current: number = 1) => {
+    pagination.value.current = current
     getConfigList()
   }
 
@@ -103,6 +104,16 @@
     } as any);
   }
 
+  const handlePageLimitChange = (limit: number) => {
+    pagination.value.limit = limit
+    refreshConfigList()
+  }
+
+  const handlePageChange = (val: number) => {
+    pagination.value.current = val
+    getConfigList()
+  }
+
   defineExpose({
     refreshConfigList
   })
@@ -110,7 +121,7 @@
 <template>
   <section class="config-list-table">
     <bk-loading :loading="loading">
-      <bk-table :border="['outer']" :data="configList" :pagination="pagination">
+      <bk-table :border="['outer']" :data="configList">
         <bk-table-column label="配置项名称" prop="spec.name" :sort="true"></bk-table-column>
         <bk-table-column label="配置预览">-</bk-table-column>
         <bk-table-column label="配置格式" prop="spec.file_type"></bk-table-column>
@@ -128,11 +139,21 @@
           </template>
         </bk-table-column>
       </bk-table>
+      <bk-pagination
+        class="table-list-pagination"
+        v-model="pagination.current"
+        location="left"
+        :layout="['total', 'limit', 'list']"
+        :count="pagination.count"
+        :limit="pagination.limit"
+        @change="refreshConfigList($event)"
+        @limit-change="handlePageLimitChange"/>
     </bk-loading>
     <ConfigItemEdit
       v-model:show="editPanelShow"
       :config="activeConfig"
       :bk-biz-id="props.bkBizId"
+      :app-id="props.appId"
       @confirm="refreshConfigList" />
   </section>
 </template>
@@ -145,6 +166,15 @@
   .operate-action-btns {
     .bk-button:not(:last-of-type) {
       margin-right: 8px;
+    }
+  }
+  .table-list-pagination {
+    padding: 12px;
+    border: 1px solid #dcdee5;
+    border-top: none;
+    border-radius: 0 0 2px 2px;
+    :deep(.bk-pagination-list.is-last) {
+      margin-left: auto;
     }
   }
 </style>

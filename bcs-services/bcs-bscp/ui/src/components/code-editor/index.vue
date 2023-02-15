@@ -1,18 +1,20 @@
 <script setup lang="ts">
-  import { ref, defineProps, onMounted, onBeforeUnmount } from 'vue'
+  import { ref, defineProps, defineEmits, onMounted, onBeforeUnmount } from 'vue'
   import * as monaco from 'monaco-editor'
 
-  defineProps({
+  const props = defineProps({
     height: {
       type: Number,
       default: 400
-    }
+    },
+    modelValue: String
   })
+
+  const emit = defineEmits(['update:modelValue'])
 
   const codeEditorRef = ref()
   let editor: monaco.editor.IStandaloneCodeEditor
-  const val = ref('')
-
+  const val = ref(props.modelValue)
 
   onMounted(() => {
     if (!editor) {
@@ -24,6 +26,7 @@
       }
       editor.onDidChangeModelContent((val:any) => {
           val.value = editor.getValue();
+          emit('update:modelValue', val.value)
       })
   })
 
@@ -32,7 +35,7 @@
   })
 </script>
 <template>
-  <section class="code-editor-wrapper" :style="`height: ${height}px`" ref="codeEditorRef"></section>
+  <section class="code-editor-wrapper" :style="`height: ${props.height}px`" ref="codeEditorRef"></section>
 </template>
 <style lang="scss" scoped>
   .code-editor-wrapper {

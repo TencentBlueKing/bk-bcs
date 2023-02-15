@@ -12,7 +12,7 @@
       file_mode: 'unix',
       user: '',
       user_group: 'root',
-      privilege: ''
+      privilege: '',
     }
   }
 
@@ -39,6 +39,7 @@
       v-model:show="slideShow"
       :config="setting"
       :bk-biz-id="props.bkBizId"
+      :app-id="props.appId"
       @confirm="$emit('update')" />
   </section>
 </template>

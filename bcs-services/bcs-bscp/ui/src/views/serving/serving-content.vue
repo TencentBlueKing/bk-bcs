@@ -5,7 +5,7 @@ import { Plus, Del } from "bkui-vue/lib/icon";
 import InfoBox from "bkui-vue/lib/info-box";
 import { useI18n } from "vue-i18n";
 import { IServingItem } from '../../types'
-import { deleteApp, getAppList, getBizList, createApp, updateApp, IAppListQuery } from "../../api";
+import { deleteApp, getAppList, createApp, updateApp, IAppListQuery } from "../../api";
 
 const router = useRouter()
 const { t } = useI18n();
@@ -117,7 +117,9 @@ const loadServingList = async () => {
   isLoading.value = true;
   try {
     const resp = await getAppList(Number(bkBizId.value), filterKeyword.value)
+    // @ts-ignore
     servingList.value = resp.details
+    // @ts-ignore
     pagination.value.count = resp.count
   } catch (e) {
     console.error(e)
@@ -134,7 +136,7 @@ const handleCreateAppClick = () => {
 const handleDeleteItem = (item: any) => {
   InfoBox({
     title: `确认是否删除服务 ${item.spec.name}?`,
-    type: "danger",
+    infoType: "danger",
     headerAlign: "center" as const,
     footerAlign: "center" as const,
     onConfirm: async () => {
@@ -170,6 +172,7 @@ const handleCreateAppForm = async () => {
         router.push({
           name: 'serving-config',
           params: {
+            // @ts-ignore
             id: resp.id
           }
         })
@@ -284,14 +287,7 @@ const handleSearch = () => {
           <div v-for="item in servingList" :key="item.id" class="serving-item">
             <div class="serving-item-body">
               <div class="item-head">{{ item.spec?.name }}</div>
-              <div class="item-tag">
-                <bk-tag>MagicBox</bk-tag>
-                <Del
-                  fill="#979BA5"
-                  class="item-tag-del"
-                  @click="() => handleDeleteItem(item)"
-                />
-              </div>
+              <Del class="item-del-btn" @click="() => handleDeleteItem(item)" />
               <div class="item-config">
                 <div class="config-info">
                   <span class="bk-bscp-icon icon-configuration-line"></span>
@@ -521,6 +517,7 @@ const handleSearch = () => {
       }
 
       .serving-item {
+        position: relative;
         width: 20%;
         height: 165px;
         padding: 0px 8px 16px 8px;
@@ -533,12 +530,11 @@ const handleSearch = () => {
           text-align: left;
 
           &:hover {
-            .item-tag {
-              .item-tag-del {
-                display: block;
-              }
+            .item-del-btn {
+              display: block;
             }
           }
+
           .item-head {
             margin-top: 16px;
             position: relative;
@@ -548,10 +544,9 @@ const handleSearch = () => {
             color: #313238;
             line-height: 22px;
             text-align: left;
-            padding: 0 16px;
+            padding: 0 50px 0 16px;
             display: flex;
             align-items: center;
-            height: 22px;
 
             &::before {
               content: "";
@@ -565,33 +560,28 @@ const handleSearch = () => {
             }
           }
 
-          .item-tag {
-            width: 100%;
-            min-width: 100%;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            padding: 8px 16px;
-            height: 32px;
-            position: relative;
-            .item-tag-del {
-              position: absolute;
-              right: 16px;
-              top: 0;
-              display: none;
-              cursor: pointer;
+          .item-del-btn {
+            position: absolute;
+            right: 18px;
+            top: 18px;
+            display: none;
+            color: #979ba5;
+            cursor: pointer;
+            z-index: 1;
+            &:hover {
+              color: #3a84ff;
             }
           }
 
           .item-config {
             padding: 0 16px;
-            height: 20px;
+            height: 55px;
             font-size: 12px;
             color: #979ba5;
             line-height: 20px;
             margin: 4px 0 12px 0;
             display: flex;
-            align-items: center;
+            align-items: end;
 
             .config-info {
               width: 80px;

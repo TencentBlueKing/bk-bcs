@@ -1,4 +1,4 @@
-import { Self_Request } from "../request"
+import http from "../request"
 import { IPageFilter, IRequestFilter, IServingEditParams } from '../types'
 
 /**
@@ -10,7 +10,7 @@ import { IPageFilter, IRequestFilter, IServingEditParams } from '../types'
  * @returns 
  */
  export const getVersionConfigList = (biz_id: number, release_id: number, filter: IRequestFilter = {}, page: IPageFilter) => {
-  return Self_Request(`/config/list/release/config_item/release_id/${release_id}/biz_id/${biz_id}`, { biz_id, filter, page: { ...page, count: false } });
+  return http.get(`/config/list/release/config_item/release_id/${release_id}/biz_id/${biz_id}`, { params: { filter, page: { ...page, count: false } } });
 }
 
 /**
@@ -22,7 +22,7 @@ import { IPageFilter, IRequestFilter, IServingEditParams } from '../types'
  * @returns 
  */
  export const getServingConfigList = (biz_id: number, app_id: number, filter: IRequestFilter = {} ,page: IPageFilter) => {
-  return Self_Request(`/config/list/config_item/config_item/app_id/${app_id}/biz_id/${biz_id}`, { biz_id, app_id, filter, page }, 'POST');
+  return http.post(`/config/list/config_item/config_item/app_id/${app_id}/biz_id/${biz_id}`, { biz_id, app_id, filter, page });
 }
 
 /**
@@ -34,7 +34,7 @@ import { IPageFilter, IRequestFilter, IServingEditParams } from '../types'
  */
  export const createServingConfigItem = (params: IServingEditParams) => {
   const { biz_id, app_id } = params
-  return Self_Request(`/config/create/config_item/config_item/app_id/${app_id}/biz_id/${biz_id}`, params, 'POST');
+  return http.post(`/config/create/config_item/config_item/app_id/${app_id}/biz_id/${biz_id}`, params);
 }
 
 /**
@@ -46,7 +46,7 @@ import { IPageFilter, IRequestFilter, IServingEditParams } from '../types'
  */
  export const updateServingConfigItem = (params: IServingEditParams) => {
   const { id, biz_id, app_id } = params
-  return Self_Request(`/config/update/config_item/config_item/config_item_id/${id}/app_id/${app_id}/biz_id/${biz_id}`, params, 'PUT');
+  return http.put(`/config/update/config_item/config_item/config_item_id/${id}/app_id/${app_id}/biz_id/${biz_id}`, params);
 }
 
 /**
@@ -57,5 +57,47 @@ import { IPageFilter, IRequestFilter, IServingEditParams } from '../types'
  * @returns 
  */
  export const deleteServingConfigItem = (id: number, bizId: number, appId: number) => {
-  return Self_Request(`/config/delete/config_item/config_item/config_item_id/${id}/app_id/${appId}/biz_id/${bizId}`, {}, 'DELETE');
+  return http.delete(`/config/delete/config_item/config_item/config_item_id/${id}/app_id/${appId}/biz_id/${bizId}`, {});
+}
+
+/**
+ * 上传配置项内容
+ * @param bizId 业务ID
+ * @param appId 应用ID
+ * @param data 配置内容
+ * @param SHA256Str 文件内容的SHA256值
+ * @returns
+ */
+export const updateConfigContent = (bizId: number, appId: number, data: string|File, SHA256Str: string) => {
+  return http.put(`/api/create/content/upload/biz_id/${bizId}/app_id/${appId}`, data, {
+    headers: {
+      'X-Bkapi-File-Content-Overwrite': 'false', 
+      'Content-Type': 'text/plain',
+      'X-Bkapi-File-Content-Id': SHA256Str
+    }
+  })
+}
+
+/**
+ * 创建配置版本
+ * @param bizId 业务ID
+ * @param appId 应用ID
+ * @param name 版本名称
+ * @param memo 版本描述
+ * @returns 
+ */
+export const createVersion = (bizId: number, appId: number, name: string, memo: string) => {
+  return http.post(`/config/create/release/release/app_id/${appId}/biz_id/${bizId}`, { name, memo })
+}
+
+/**
+ * 发布版本
+ * @param bizId 业务ID
+ * @param appId 应用ID
+ * @param name 版本名称
+ * @param memo 版本描述
+ * @returns 
+ */
+export const publishVersion = (bizId: number, appId: number, memo: string) => {
+  return http.post(`/config/create/release/release/app_id/${appId}/biz_id/${bizId}`, { memo })
 }

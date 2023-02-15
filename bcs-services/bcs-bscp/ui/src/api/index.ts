@@ -1,8 +1,4 @@
-import { CC_Request, Self_Request } from "../request"
-
-export const getBizList = () => {
-  return CC_Request('search_business/', { fields: ['bk_biz_id', 'bk_biz_name'] });
-}
+import http from "../request"
 
 /**
  * 获取应用列表
@@ -18,7 +14,7 @@ export type IAppListQuery = {
 }
 
 export const getAppList = (biz_id: number, params: IAppListQuery = {}) => {
-  return Self_Request(`config/list/app/app/biz_id/${biz_id}`, params);
+  return http.get(`config/list/app/app/biz_id/${biz_id}`, { params });
 }
 
 /**
@@ -28,7 +24,7 @@ export const getAppList = (biz_id: number, params: IAppListQuery = {}) => {
  * @returns 
  */
 export const deleteApp = (id: number, biz_id: number) => {
-  return Self_Request(`config/delete/app/app/app_id/${id}/biz_id/${biz_id}`, { id, biz_id }, 'DELETE');
+  return http.delete(`config/delete/app/app/app_id/${id}/biz_id/${biz_id}`);
 }
 
 /**
@@ -38,7 +34,7 @@ export const deleteApp = (id: number, biz_id: number) => {
  * @returns 
  */
 export const createApp = (biz_id: number, params: any) => {
-  return Self_Request(`config/create/app/app/biz_id/${biz_id}`, { biz_id, ...params }, 'POST');
+  return http.post(`config/create/app/app/biz_id/${biz_id}`, { biz_id, ...params });
 }
 
 /**
@@ -48,5 +44,5 @@ export const createApp = (biz_id: number, params: any) => {
  */
 export const updateApp = (params: any) => {
   const { id, biz_id, data } = params;
-  return Self_Request(`config/update/app/app/app_id/${id}/biz_id/${biz_id}`, data, 'PUT');
+  return http.put(`config/update/app/app/app_id/${id}/biz_id/${biz_id}`, data);
 }

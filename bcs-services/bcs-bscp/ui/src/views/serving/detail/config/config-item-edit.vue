@@ -1,22 +1,28 @@
 <script setup lang="ts">
   import { defineProps, defineEmits, ref, computed, watch } from 'vue'
   import { cloneDeep } from 'lodash'
+  import SHA256 from 'crypto-js/sha256'
+  import WordArray from 'crypto-js/lib-typedarrays'
   import { InfoLine, Upload, FilliscreenLine } from 'bkui-vue/lib/icon'
   import CodeEditor from '../../../../components/code-editor/index.vue'
-  import { createServingConfigItem, updateServingConfigItem } from '../../../../api/config'
+  import { createServingConfigItem, updateServingConfigItem, updateConfigContent } from '../../../../api/config'
   import { IServingEditParams } from '../../../../types'
 
   const props = defineProps<{
     show: boolean,
     config: IServingEditParams,
-    bkBizId: number
+    bkBizId: number,
+    appId: number
   }>()
 
   const emit = defineEmits(['update:show', 'confirm'])
 
   const isShow = ref(props.show)
-  const localVal = ref(cloneDeep(props.config))
-  const pending = ref(false)
+  const localVal = ref({ ...props.config })
+  const content = ref('')
+  const file = ref<File>()
+  const submitPending = ref(false)
+  const uploadPending = ref(false)
   const formRef = ref()
   const rules = {
     name: [
@@ -52,21 +58,68 @@
     localVal.value = cloneDeep(props.config)
   })
 
+  // 选择文件后上传
+  const handleFileUpload = async({ file: originalFile } : { file: File }) => {
+    try {
+      file.value = originalFile
+      const res = await uploadContent()
+      console.log(res)
+    } catch (e) {
+      console.error(e)
+    } finally {
+      uploadPending.value = false
+    }
+  }
+
+  // 提交保存
   const handleSubmit = async() => {
     try {
       await formRef.value.validate()
-      pending.value = true
-      if (type.value === 'edit') {
-        await updateServingConfigItem(localVal.value)
+      submitPending.value = true
+      let sign = await generateSHA256()
+      let size = 0
+      if (localVal.value.file_type === 'binary') {
+        // @ts-ignore
+        size = file.value.size
       } else {
-        await createServingConfigItem(localVal.value)
+        size = new Blob([content.value]).size
+        await uploadContent()
+      }
+      const params = { ...localVal.value, ...{ sign, byte_size: size } }
+      if (type.value === 'edit') {
+        await updateServingConfigItem(params)
+      } else {
+        await createServingConfigItem(params)
       }
       close()
       emit('confirm')
     } catch (e) {
       console.error(e)
     } finally {
-      pending.value = false
+      submitPending.value = false
+    }
+  }
+
+  const uploadContent =  async () => {
+    const SHA256Str = await generateSHA256()
+    const data = localVal.value.file_type === 'binary' ? file.value : content.value
+    // @ts-ignore
+    return updateConfigContent(props.bkBizId, props.appId, data, SHA256Str)
+  }
+
+  const generateSHA256 = async () => {
+    if (localVal.value.file_type === 'binary') {
+      return new Promise(resolve => {
+        const reader = new FileReader()
+        // @ts-ignore
+        reader.readAsArrayBuffer(file.value)
+        reader.onload = () => {
+          const wordArray = WordArray.create(reader.result);
+          resolve(SHA256(wordArray).toString())
+        }
+      })
+    } else {
+      return SHA256(content.value).toString()
     }
   }
 
@@ -93,7 +146,7 @@
               <bk-radio label="binary">二进制文件</bk-radio>
             </bk-radio-group>
           </bk-form-item>
-          <template v-if="localVal.file_type === 'binary'">
+          <template v-if="['binary', 'text'].includes(localVal.file_type)">
             <bk-form-item label="文件权限" property="privilege" :required="true">
               <bk-input v-model="localVal.privilege"></bk-input>
             </bk-form-item>
@@ -103,10 +156,18 @@
             <bk-form-item label="配置路径" property="path" :required="true">
               <bk-input v-model="localVal.path"></bk-input>
             </bk-form-item>
-            <bk-form-item label="配置内容" :required="true">
-              <bk-upload theme="button" tip="支持扩展名：.bin" accept=".bin" :multiple="false"></bk-upload>
-            </bk-form-item>
           </template>
+          <bk-form-item v-if="localVal.file_type === 'binary'" label="配置内容" :required="true">
+            <bk-upload
+              url=""
+              theme="button"
+              tip="支持扩展名：.bin"
+              :multiple="false"
+              :limit="1"
+              :size="100"
+              :custom-request="handleFileUpload">
+            </bk-upload>
+          </bk-form-item>
           <bk-form-item v-else label="配置内容" :required="true">
             <div class="code-editor-content">
               <div class="editor-operate-area">
@@ -119,13 +180,13 @@
                   <FilliscreenLine />
                 </div>
               </div>
-              <CodeEditor />
+              <CodeEditor v-model="content"/>
             </div>
           </bk-form-item>
         </bk-form>
       </section>
       <section class="actions-wrapper">
-        <bk-button theme="primary" :loading="pending" @click="handleSubmit">保存</bk-button>
+        <bk-button theme="primary" :loading="submitPending" @click="handleSubmit">保存</bk-button>
         <bk-button @click="close">取消</bk-button>
       </section>
     </bk-sideslider>

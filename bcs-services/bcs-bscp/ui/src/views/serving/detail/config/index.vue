@@ -3,7 +3,9 @@
   import { useRoute } from 'vue-router'
   import VersionList from './version-list.vue'
   import ConfigList from './config-list.vue'
-  import CreateBtn from './create-btn.vue'
+  import CreateConfigItem from './create-config-item.vue'
+  import CreateVersion from './create-version/index.vue'
+  import ReleaseVersion from './release-version/index.vue'
 
   const route = useRoute()
 
@@ -12,6 +14,8 @@
   }>()
 
   const appId = ref(Number(route.params.id))
+  const appName = ref('') // @todo 需要调接口查询应用详情
+  const versionName = ref('已提交的版本名称') // @todo 需要调接口获取
   const configList = ref()
 
   watch(() => route.params.id, (val) => {
@@ -20,6 +24,10 @@
 
   const updateConfigList = () => {
     configList.value.refreshConfigList()
+  }
+
+  const handleUpdateStatus = () => {
+    console.log('刷新配置当前配置状态')
   }
 
 </script>
@@ -35,10 +43,20 @@
           <div class="version-name">未命名版本</div>
         </section>
         <section class="actions-wrapper">
-          <bk-button theme="primary">生成版本</bk-button>
+          <CreateVersion
+            :bk-biz-id="props.bkBizId"
+            :app-id="appId"
+            :app-name="appName"
+            @confirm="handleUpdateStatus" />
+          <ReleaseVersion
+            :bk-biz-id="props.bkBizId"
+            :app-id="appId"
+            :app-name="appName"
+            :version-name="versionName"
+            @confirm="handleUpdateStatus" />
         </section>
       </section>
-      <CreateBtn :bk-biz-id="props.bkBizId" :app-id="appId" @update="updateConfigList" />
+      <CreateConfigItem :bk-biz-id="props.bkBizId" :app-id="appId" @update="updateConfigList" />
       <ConfigList ref="configList" :bk-biz-id="props.bkBizId" :app-id="appId" />
     </section>
   </section>
@@ -88,6 +106,10 @@
         font-size: 14px;
         font-weight: bold;
       }
+    }
+    .actions-wrapper {
+      display: flex;
+      align-items: center;
     }
   }
 </style>

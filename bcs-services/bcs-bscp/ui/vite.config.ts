@@ -48,11 +48,11 @@ export default defineConfig(({ command, mode }) => {
     server: {
       proxy: {
         '/api/c/compapi/v2/cc/': {
-          target: '/',
+          target: 'http://bcs-api.site.bktencent.com/bscp',
           changeOrigin: true,
         },
-        '/dev/api/v1/': {
-          target: '/',
+        '/api/v1/': {
+          target: 'http://bcs-api.site.bktencent.com/bscp',
           changeOrigin: true,
         }
       }

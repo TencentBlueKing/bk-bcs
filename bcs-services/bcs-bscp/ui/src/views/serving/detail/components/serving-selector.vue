@@ -26,6 +26,7 @@
     loading.value = true;
     try {
       const resp = await getAppList(props.bkBizId);
+      // @ts-ignore
       servingList.value = resp.details
     } catch (e) {
       console.error(e);

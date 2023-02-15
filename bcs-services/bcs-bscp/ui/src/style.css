@@ -27,6 +27,12 @@ h1 {
   line-height: 1.1;
 }
 
+ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
 a {
   color: #3A84FF;
   text-decoration: none;
