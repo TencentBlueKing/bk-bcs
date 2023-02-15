@@ -81,7 +81,11 @@
                       <span>{{$t('节点管理')}}</span>
                     </a>
                   </li>
-                  <li @click="goClusterAutoScaler(cluster)">
+                  <li
+                    v-if="clusterExtraInfo
+                      && clusterExtraInfo[cluster.clusterID]
+                      && clusterExtraInfo[cluster.clusterID].autoScale"
+                    @click="goClusterAutoScaler(cluster)">
                     <a
                       href="javascript:;"
                       v-authority="{
@@ -575,6 +579,7 @@ export default defineComponent({
       showCorner,
       goNodeInfo,
       allowDelete,
+      clusterExtraInfo,
       webAnnotations,
     };
   },
