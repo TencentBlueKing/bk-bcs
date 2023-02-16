@@ -83,13 +83,8 @@ Create the name of the service account to use
   value: {{ .Values.global.storage.redis.password }}
 - name: BCS_APIGW_TOKEN
   value: {{ .Values.global.env.BK_BCS_gatewayToken}}
-- name: BCS_APIGW_PUBLIC_KEY
-  valueFrom:
-    secretKeyRef:
-      name: bcs-jwt
-      key: public.key
-- name: bcsEtcdHost
-  value: "{{ include "bcs-common.etcd.host" ( dict "localStorage" .Values.storage "globalStorage" .Values.global.storage "namespace" .Release.Namespace ) }}"
+- name: BCS_MONITOR_USERNAME
+  value: {{ .Values.global.env.BCS_MONITOR_USERNAME}}
 - name: BKIAM_GATEWAY_SERVER
   value: {{ .Values.global.bkIAM.gateWayHost}}
 {{- end }}

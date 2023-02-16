@@ -32,20 +32,19 @@ spec:
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       containers:
-        - name: {{ .Chart.Name }}
+        - name: bcs-monitor-api
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
-          image: {{ include "common.images.image" ( dict "imageRoot" .Values.image "global" .Values.global) }}
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          image: bcs-monitor:latest
+          imagePullPolicy: Never
           env:
             {{- include "bcs-monitor.envs" . | trim | nindent 12 }}
+          command: ["./bcs-monitor"]
           args:
-            - api
+            - "api"
             - --bind-address=$(POD_IP)
-            - --http-port=10902
-            - --config=/etc/bcs-monitor/config.yaml
-            - --credential-config=/etc/bcs-monitor-cred/credentials.yaml
-            - --credential-config=/etc/bcs-monitor-cred-manager/credentials.yaml
+            - "--http-port=10902"
+            - "--config=./config/bcs-monitor.yml"
           ports:
             - name: http
               containerPort: 10902
@@ -59,39 +58,29 @@ spec:
               path: /-/ready
               port: http
           volumeMounts:
-          - name: config
-            mountPath: /etc/bcs-monitor
-          - name: config-credentials
-            mountPath: /etc/bcs-monitor-cred
-          - name: config-credentials-manager
-            mountPath: /etc/bcs-monitor-cred-manager
-          - name: etcd-certs
-            mountPath: /data/bcs/cert/etcd
-          - name: bcs-certs
-            mountPath: /data/bcs/cert/bcs
+            - mountPath: "/config"
+              name: config-volume
+            {{- if eq .Values.credentials.enabled true }}
+            - name: config-credentials
+              mountPath: /etc/bcs-monitor-cred
+            - name: config-credentials-manager
+              mountPath: /etc/bcs-monitor-cred-manager
+            - name: etcd-certs
+              mountPath: /data/bcs/cert/etcd
+            - name: bcs-certs
+              mountPath: /data/bcs/cert/bcs
+            {{- end }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
-
       volumes:
-      - name: config
-        configMap:
-          name: bcs-monitor
-      - name: config-credentials
-        configMap:
-          name: bcs-monitor-credentials
-      - name: config-credentials-manager
-        configMap:
-          name: bcs-monitor-credentials-manager
-      {{- include "bcs-common.volumes.bcsServices" . | indent 6 }}
-      {{- with .Values.nodeSelector }}
-      nodeSelector:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      {{- with .Values.affinity }}
-      affinity:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      {{- with .Values.tolerations }}
-      tolerations:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
+        - name: config-volume
+          configMap:
+            name: bcs-monitor-config     #定义的bcs-monitor.yaml
+        {{- if eq .Values.credentials.enabled true }}
+        - name: config-credentials
+          configMap:
+            name: bcs-monitor-credentials
+        - name: config-credentials-manager
+          configMap:
+            name: bcs-monitor-credentials-manager
+        {{- end }}

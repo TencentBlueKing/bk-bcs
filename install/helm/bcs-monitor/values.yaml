@@ -3,6 +3,7 @@
 # Declare variables to be passed into your templates.
 
 global:
+  namespace: ""
   imageRegistry: ""
   # etcd 依赖配置
   storage:
@@ -33,8 +34,11 @@ global:
   env:
     BK_BCS_gatewayToken: ""
     BK_BCS_jwtPublicKey: ""
+    BCS_MONITOR_USERNAME: "test_user_dev"
 
-# etcd 依赖配置
+credentials:
+  enabled: false
+
 storage:
   etcd:
     endpoints: []
@@ -59,58 +63,76 @@ config_credentials:
 config_credentials_manager:
   credentials: []
 
+
+
 # webconsole 配置
 config:
+  # my global config
   base_conf:
-    system_id: ""
-    app_code: ""
-    app_secret: ""
-    time_zone: Asia/Shanghai
-    language_code: zh-hans
-    run_env: prod
+    app_code: "xx"
+    app_secret: "xx"
+    time_zone: "Asia/Shanghai"
+    language_code: en
+    run_env: dev
+    managers: [ ]
 
   logging:
+    stdout: true
     level: info
-    file: ""
-    stderr: true
+    format: logfmt
+    filename: ""
+    max_size: 1024 # 单位 Mb
+    max_age: 1 # 单位天
+    max_backups: 7
 
-  etcd:
-    endpoints: bcs-etcd:2379
-    ca: /data/bcs/cert/etcd/etcd-ca.pem
-    cert: /data/bcs/cert/etcd/etcd.pem
-    key: /data/bcs/cert/etcd/etcd-key.pem
 
-  redis:
-    host: bcs-redis-master:6379
-    password: ""
-    port: 6379
-    db: 0
+  auth_conf:
+    host: xx
+    is_gateway: xx
+    ssm_host: ""
+
+  bkapigw_conf:
+    host: ""
+    jwt_public_key: ""
 
   bcs_conf:
-    host: http://bcs-api-gateway.bcs-system.svc.cluster.local
-    jwt_public_key:
-    token:
+    verify: false
 
-  bcs_env_conf:
-    - cluster_env: prod
-      host: http://bcs-api-gateway.bcs-system.svc.cluster.local
-      token:
-  
-  iam_conf:
-    gateway_server: ""
-
-  bk_monitor_conf:
-    url: http://bk-monitor-unify-query-http.default.svc.cluster.local:10205
-    metadata_url: ""
 
   web:
-    route_prefix: /bcsapi/v4/monitor
-    host: ""
+    route_prefix: "/bcsapi/v4/monitor"
+    host: http://localhost:11902
+
+  query_conf:
+    host: http://localhost:11902
+
+
+  query_store_conf:
+    static_configs:
+      - targets:
+          - localhost:30911
+    # http_sd_configs:
+    #   - url: xx
+    #     bearer_token: xx
 
   storegw:
-    - type: BCS_SYSTEM
-      config: {}
-    - type: BK_MONITOR
+    #- type: BCS_SYSTEM
+    - type: PROMETHEUS
+      config:
+        url: "http://192.168.37.133:30090"
+
+  etcd:
+    endpoints: ""
+    ca: ""
+    cert: ""
+    key: ""
+
+  tracing_conf:
+    tracing_switch: "on"
+    tracing_type: "jaeger"
+    service_name: "bcs-monitor"
+    exporter_url: "http://192.168.37.150:32666/api/traces"
+
 
 # api 模块独立配置
 api:
@@ -124,11 +146,12 @@ query:
 storegw:
   replicaCount: 1
 
+
 image:
   registry: hub.bktencent.com
   repository: blueking/bcs-monitor
   tag: v1.28.0-alpha.75
-  pullPolicy: Always
+  pullPolicy: Never
 
 imagePullSecrets: []
 nameOverride: ""
@@ -147,7 +170,7 @@ podAnnotations: {}
 
 podSecurityContext:
   {}
-  # fsGroup: 2000
+# fsGroup: 2000
 
 securityContext:
   {}
@@ -156,10 +179,11 @@ securityContext:
   #   - ALL
   # readOnlyRootFilesystem: true
   # runAsNonRoot: true
-  # runAsUser: 1000
+# runAsUser: 1000
+
 
 service:
-  type: ClusterIP
+  type: NodePort
   port: 80
 
 ingress:
@@ -167,8 +191,8 @@ ingress:
   className: ""
   annotations:
     {}
-    # kubernetes.io/ingress.class: nginx
-    # kubernetes.io/tls-acme: "true"
+  # kubernetes.io/ingress.class: nginx
+  # kubernetes.io/tls-acme: "true"
   hosts:
     - host: chart-example.local
       paths:
@@ -179,14 +203,15 @@ ingress:
   #    hosts:
   #      - chart-example.local
 
+
 # 资源限制
-resources:
-  limits:
-    cpu: 2
-    memory: 1Gi
-  requests:
-    cpu: 1
-    memory: 512Mi
+#resources:
+#  limits:
+#    cpu: 2
+#    memory: 1Gi
+#  requests:
+#    cpu: 1
+#    memory: 512Mi
 
 autoscaling:
   enabled: false
@@ -195,8 +220,19 @@ autoscaling:
   targetCPUUtilizationPercentage: 80
   # targetMemoryUtilizationPercentage: 80
 
+
 nodeSelector: {}
 
 tolerations: []
 
 affinity: {}
+
+
+
+
+
+## kube-prometheus-stack 可选prometheus-operatot 9090端口暴露为nodeport方式供外网访问
+#kube-prometheus-stack:
+#  prometheus:
+#    service:
+#      type: NodePort
