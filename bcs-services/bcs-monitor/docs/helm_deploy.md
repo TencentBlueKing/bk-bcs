@@ -29,7 +29,7 @@ git clone https://github.com/Tencent/bk-bcs.git
 [root@control-plane bcs-monitor]# ll
 total 372
 drwxr-xr-x.  2 root root     25 Feb 13 11:48 bin
--rw-r--r--.  1 root root      0 Feb 13 11:37 CHANGELOG.md
+-rw-r--r--.  1 root ryaoxinwangoot      0 Feb 13 11:37 CHANGELOG.md
 drwxr-xr-x.  3 root root     25 Feb 13 11:37 cmd
 -rw-r--r--.  1 root root    148 Feb 13 11:37 Dockerfile
 drwxr-xr-x.  2 root root     41 Feb 13 11:37 docs
