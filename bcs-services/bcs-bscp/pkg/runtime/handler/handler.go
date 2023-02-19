@@ -122,7 +122,14 @@ func CORS(next http.Handler) http.Handler {
 			w.Header().Set("Access-Control-Allow-Origin", "*")
 		}
 
-		allowHeaders := []string{"Origin", "Content-Length", "Content-Type", "X-Requested-With"}
+		allowHeaders := []string{
+			"Origin",
+			"Content-Length",
+			"Content-Type",
+			"X-Requested-With",
+			"X-Bkapi-File-Content-Id",
+			"X-Bkapi-File-Content-Overwrite",
+		}
 		w.Header().Set("Access-Control-Allow-Headers", strings.Join(allowHeaders, ","))
 
 		allowMethods := []string{"GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"}

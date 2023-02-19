@@ -14,6 +14,7 @@
 package components
 
 import (
+	"context"
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
@@ -25,16 +26,22 @@ import (
 	"time"
 
 	"github.com/dustin/go-humanize"
-	resty "github.com/go-resty/resty/v2"
+	"github.com/go-resty/resty/v2"
 	"github.com/pkg/errors"
+	"google.golang.org/grpc/metadata"
 	"k8s.io/klog/v2"
 )
+
+type ctxKey int
 
 const (
 	timeout = time.Second * 30
 	// BKAPIRequestIDHeader 蓝鲸网关的请求ID
 	BKAPIRequestIDHeader = "X-Bkapi-Request-Id"
 	userAgent            = "bcs-bscp/v1.0"
+	requestIDCtxKey      = ctxKey(1)
+	// RequestIDHeaderKey
+	RequestIDHeaderKey = "X-Request-Id"
 )
 
 var (
@@ -44,6 +51,40 @@ var (
 	clientOnce   sync.Once
 	globalClient *resty.Client
 )
+
+// WithLabelMatchValue 设置 RequestId 值
+func WithRequestIDValue(ctx context.Context, id string) context.Context {
+	newCtx := context.WithValue(ctx, requestIDCtxKey, id)
+	return metadata.AppendToOutgoingContext(newCtx, RequestIDHeaderKey, id)
+}
+
+// RequestIDValue 获取 RequestId 值
+func RequestIDValue(ctx context.Context) string {
+	v, ok := ctx.Value(requestIDCtxKey).(string)
+	if !ok || v == "" {
+		return grpcRequestIDValue(ctx)
+	}
+
+	return v
+}
+
+// grpcRequestIDValue grpc 需要单独处理
+func grpcRequestIDValue(ctx context.Context) string {
+	md, ok := metadata.FromIncomingContext(ctx)
+	if !ok {
+		return ""
+	}
+	values := md.Get(RequestIDHeaderKey)
+	if len(values) == 0 {
+		return ""
+	}
+	return values[0]
+}
+
+// SetRequestIDHeaderValue 设置 RequestId 值到头部
+func SetRequestIDHeaderValue(req *http.Request, id string) {
+	req.Header.Set(RequestIDHeaderKey, id)
+}
 
 // restyReqToCurl curl 格式的请求日志
 func restyReqToCurl(r *resty.Request) string {
@@ -72,7 +113,7 @@ func restyReqToCurl(r *resty.Request) string {
 		case string:
 			reqMsg += fmt.Sprintf(" -d %q", body)
 		case io.Reader:
-			reqMsg += fmt.Sprintf(" -d %q (io.Reader)", body)
+			reqMsg += " -d (io.Reader)"
 		default:
 			prtBodyBytes, err := json.Marshal(body)
 			if err != nil {
@@ -112,17 +153,18 @@ func restyResponseToCurl(resp *resty.Response) string {
 }
 
 func restyErrHook(r *resty.Request, err error) {
-	klog.Infof("[%s] REQ: %s", "", restyReqToCurl(r))
-	klog.Infof("[%s] RESP: [err] %s", "", err)
+	klog.Infof("[%s] REQ: %s", RequestIDValue(r.RawRequest.Context()), restyReqToCurl(r))
+	klog.Infof("[%s] RESP: [err] %s", RequestIDValue(r.RawRequest.Context()), err)
 }
 
 func restyAfterResponseHook(c *resty.Client, r *resty.Response) error {
-	klog.Infof("[%s] REQ: %s", "", restyReqToCurl(r.Request))
-	klog.Infof("[%s] RESP: %s", "", restyResponseToCurl(r))
+	klog.Infof("[%s] REQ: %s", RequestIDValue(r.Request.Context()), restyReqToCurl(r.Request))
+	klog.Infof("[%s] RESP: %s", RequestIDValue(r.Request.Context()), restyResponseToCurl(r))
 	return nil
 }
 
 func restyBeforeRequestHook(c *resty.Client, r *http.Request) error {
+	SetRequestIDHeaderValue(r, RequestIDValue(r.Context()))
 	return nil
 }
 
@@ -177,11 +219,9 @@ func (r *BKResult) ValidateCode() error {
 	if err != nil {
 		return err
 	}
-
 	if code != 0 {
 		return errors.Errorf("resp code %d != 0, %s", code, r.Message)
 	}
-
 	return nil
 }
 
@@ -189,7 +229,6 @@ func (r *BKResult) ValidateCode() error {
 // 支持 "00", 0, "0"
 func refineCode(code interface{}) (int, error) {
 	var resultCode int
-
 	switch code := code.(type) {
 	case int:
 		resultCode = code
@@ -204,6 +243,5 @@ func refineCode(code interface{}) (int, error) {
 	default:
 		return -1, errors.Errorf("conversion to int from %T not supported", code)
 	}
-
 	return resultCode, nil
 }
