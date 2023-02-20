@@ -14,6 +14,7 @@ limitations under the License.
 package handler
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"net/http/httputil"
@@ -21,8 +22,11 @@ import (
 	"net/url"
 	"strings"
 
+	"github.com/go-chi/chi/v5/middleware"
+	"github.com/google/uuid"
 	"k8s.io/klog/v2"
 
+	"bscp.io/pkg/components"
 	"bscp.io/pkg/metrics"
 	"bscp.io/pkg/runtime/ctl"
 )
@@ -143,6 +147,31 @@ func CORS(next http.Handler) http.Handler {
 		}
 
 		next.ServeHTTP(w, r)
+	}
+	return http.HandlerFunc(fn)
+}
+
+// RequestIdGenerator request_id
+func RequestIdGenerator() string {
+	uid := uuid.New().String()
+	requestId := strings.Replace(uid, "-", "", -1)
+	return requestId
+}
+
+// RequestID middleware
+func RequestID(next http.Handler) http.Handler {
+	fn := func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		requestID := r.Header.Get(components.RequestIDHeaderKey)
+		if requestID == "" {
+			requestID = RequestIdGenerator()
+		}
+
+		ctx = components.WithRequestIDValue(ctx, requestID)
+		ctx = context.WithValue(ctx, middleware.RequestIDKey, requestID)
+
+		w.Header().Set(components.RequestIDHeaderKey, requestID)
+		next.ServeHTTP(w, r.WithContext(ctx))
 	}
 	return http.HandlerFunc(fn)
 }

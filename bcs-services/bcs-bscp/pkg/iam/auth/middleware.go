@@ -29,12 +29,12 @@ func (a authorizer) UnifiedAuthentication(next http.Handler) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		req, err := getUserCredentialFromCookies(r)
 		if err != nil {
-			render.Render(w, r, rest.UnauthorizedErrRender(err))
+			render.Render(w, r, rest.UnauthorizedErr(err))
 			return
 		}
 		resp, err := a.authClient.GetUserInfo(r.Context(), req)
 		if err != nil {
-			render.Render(w, r, rest.UnauthorizedErrRender(err))
+			render.Render(w, r, rest.UnauthorizedErr(err))
 			return
 		}
 

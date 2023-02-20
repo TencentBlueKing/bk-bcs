@@ -77,7 +77,7 @@ func newProxy(dis serviced.Discover) (*proxy, error) {
 // handler return proxy handler.
 func (p *proxy) handler() http.Handler {
 	r := chi.NewRouter()
-	r.Use(middleware.RequestID)
+	r.Use(handler.RequestID)
 	r.Use(middleware.RealIP)
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)

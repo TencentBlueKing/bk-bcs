@@ -19,6 +19,8 @@ import (
 
 	"github.com/go-chi/render"
 
+	"bscp.io/pkg/cc"
+	"bscp.io/pkg/components/bkpaas"
 	"bscp.io/pkg/logs"
 )
 
@@ -62,8 +64,15 @@ func WriteResp(w http.ResponseWriter, resp interface{}) {
 	return
 }
 
+// OKResponse is a http standard response
+type OKResponse struct {
+	Err            error       `json:"-"` // low-level runtime error
+	HTTPStatusCode int         `json:"-"` // http response status code
+	Data           interface{} `json:"data"`
+}
+
 // Render chi Render 实现
-func (res *Response) Render(w http.ResponseWriter, r *http.Request) error {
+func (res *OKResponse) Render(w http.ResponseWriter, r *http.Request) error {
 	statusCode := res.HTTPStatusCode
 	if statusCode == 0 {
 		statusCode = http.StatusOK
@@ -72,12 +81,56 @@ func (res *Response) Render(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
-// UnauthorizedErrRender 未登入返回
-func UnauthorizedErrRender(err error) render.Renderer {
-	return &Response{Code: 401, Message: err.Error(), HTTPStatusCode: http.StatusUnauthorized}
-}
-
 // OKRender 正常返回
 func OKRender(data interface{}) render.Renderer {
-	return &Response{Data: data}
+	return &OKResponse{Data: data}
+}
+
+// UnauthorizedData 登入错误返回
+type UnauthorizedData struct {
+	LoginURL      string `json:"login_url"`
+	LoginPlainURL string `json:"login_plain_url"`
+}
+
+// PermissionData 没有权限返回
+type PermissionData struct {
+	System     string   `json:"system"`
+	SystemName string   `json:"system_name"`
+	Action     []string `json:"action"`
+}
+
+// ErrorPayload 错误详情
+type ErrorPayload struct {
+	Code    string        `json:"code"`
+	Message string        `json:"message"`
+	Data    interface{}   `json:"data"`
+	Details []interface{} `json:"details"`
+}
+
+// ErrorResponse 错误返回
+type ErrorResponse struct {
+	Err            error         `json:"-"` // low-level runtime error
+	HTTPStatusCode int           `json:"-"` // http response status code
+	Error          *ErrorPayload `json:"error"`
+}
+
+// Render
+func (res *ErrorResponse) Render(w http.ResponseWriter, r *http.Request) error {
+	statusCode := res.HTTPStatusCode
+	if statusCode == 0 {
+		statusCode = http.StatusBadRequest
+	}
+	res.Error.Data = &UnauthorizedData{
+		LoginURL:      bkpaas.BuildLoginURL(r, cc.ApiServer().LoginAuth.Host),
+		LoginPlainURL: bkpaas.BuildLoginPlainURL(r, cc.ApiServer().LoginAuth.Host),
+	}
+
+	render.Status(r, statusCode)
+	return nil
+}
+
+// UnauthorizedErr 未登入返回
+func UnauthorizedErr(err error) render.Renderer {
+	payload := &ErrorPayload{Code: "UNAUTHENTICATED", Message: err.Error()}
+	return &ErrorResponse{Error: payload, HTTPStatusCode: http.StatusUnauthorized}
 }

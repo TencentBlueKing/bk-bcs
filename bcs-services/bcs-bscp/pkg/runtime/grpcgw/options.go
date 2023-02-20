@@ -20,8 +20,6 @@ import (
 var (
 	// MetadataOpt 自定义头部
 	MetadataOpt = runtime.WithMetadata(metadataHandler)
-	// AuthLoginOpt
-	AuthLoginOpt = runtime.WithMetadata(authCookieHandler)
 	// MarshalerOption自定义返回结构
 	MarshalerOpt = runtime.WithMarshalerOption(runtime.MIMEWildcard, &jsonResponse{})
 
