@@ -263,54 +263,41 @@ func (rs *ReleasedService) isMatchSubStrategy(subStrategy *table.SubStrategy, la
 // when the strategy works at normal mode.
 func (rs *ReleasedService) matchNormalStrategyWithLabels(kt *kit.Kit, list []*ptypes.PublishedStrategyCache,
 	meta *types.AppInstanceMeta) (*matchedMeta, error) {
-
-	var defaultStrategy *ptypes.PublishedStrategyCache
+	// find all matched strategies
+	matchedList := []*matchedMeta{}
 	for _, one := range list {
-		// TODO: if stragety.MatchAll: matchd[].append(stragety)
-		// select latest release in matchd stragety list
-
 		if one == nil {
 			// this is a compatible policy. it should not happen normally.
 			logs.Warnf("biz: %d, app: %d strategy got nil strategy, rid: %s", meta.BizID, meta.AppID, kt.Rid)
 			continue
 		}
-
-		if one.AsDefault {
-			// default strategy is matched when no other strategy is matched.
-			defaultStrategy = one
-			continue
-		}
-
-		mainMatched, err := rs.isMatchMainScope(kt, one, meta.Labels)
+		matched, err := rs.isMatchStrategy(kt, one, meta.Labels)
 		if err != nil {
 			return nil, err
 		}
 
-		if !mainMatched {
-			// main scope selector does not match this app instance, so skip this strategy and try next strategy.
-			continue
+		if matched {
+			matchedList = append(matchedList, &matchedMeta{StrategyID: one.StrategyID, ReleaseID: one.ReleaseID})
 		}
-
-		// sub strategy has not matched this app instance. but the main scope has
-		// already matched it. use main scope's release id.
-		return &matchedMeta{StrategyID: one.StrategyID, ReleaseID: one.ReleaseID}, nil
 	}
 
-	// no other strategy is matched for now.
-	if defaultStrategy == nil {
+	if len(matchedList) == 0 {
 		return nil, errf.New(errf.AppInstanceNotMatchedStrategy, "no strategy can match this app instance")
 	}
 
-	if defaultStrategy.StrategyID <= 0 {
-		return nil, errf.New(errf.Aborted, "got invalid default strategy with invalid strategy id")
+	// select latest release in matchd stragety list
+	latestRelease := matchedList[0]
+	for _, matched := range matchedList {
+		if matched.ReleaseID > latestRelease.ReleaseID {
+			latestRelease = matched
+		}
 	}
 
-	// use default strategy as this app instance's matched strategy.
-	return &matchedMeta{StrategyID: defaultStrategy.StrategyID, ReleaseID: defaultStrategy.ReleaseID}, nil
+	return latestRelease, nil
 }
 
-// isMatchMainScope test if a label can match the strategy.
-func (rs *ReleasedService) isMatchMainScope(kt *kit.Kit, one *ptypes.PublishedStrategyCache,
+// isMatchStrategy test if a label can match the strategy.
+func (rs *ReleasedService) isMatchStrategy(kt *kit.Kit, one *ptypes.PublishedStrategyCache,
 	labels map[string]string) (bool, error) {
 
 	if one.Scope == nil {
@@ -319,6 +306,19 @@ func (rs *ReleasedService) isMatchMainScope(kt *kit.Kit, one *ptypes.PublishedSt
 			one.StrategyID))
 	}
 
-	//TODO: rewrite match logic
+	if one.AsDefault {
+		return true, nil
+	}
+
+	for _, group := range one.Scope.Groups {
+		match, err := group.Spec.Selector.MatchLabels(labels)
+		if err != nil {
+			return false, err
+		}
+		if match {
+			return true, nil
+		}
+	}
+
 	return false, nil
 }
