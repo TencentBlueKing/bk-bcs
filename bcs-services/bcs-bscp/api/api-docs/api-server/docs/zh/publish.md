@@ -9,7 +9,10 @@
 | ------------ | ------------ | ------ | ---------------- |
 | biz_id         | uint32       | 是     | 业务ID     |
 | app_id         | uint32       | 是     | 应用ID     |
-| id         | uint32       | 是     | 策略ID     |
+| release_id     | uint32       | 是     | 版本ID     |
+| all            | bool         | 是     | 是否全量发布     |
+| groups         | array       | 是     | 分组ID列表     |
+
 
 ### 调用示例
 ```json
@@ -30,7 +33,7 @@
 | 参数名称     | 参数类型   | 描述                           |
 | ------------ | ---------- | ------------------------------ |
 |      code        |      int32      |            错误码                   |
-|      message        |      string      |             请求信息                  |
+|      message        |      string      |         请求信息                  |
 |       data       |      object      |            响应数据                  |
 
 #### data
