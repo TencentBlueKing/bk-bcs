@@ -98,6 +98,22 @@ func (s *Service) DeleteApp(ctx context.Context, req *pbds.DeleteAppReq) (*pbbas
 	return new(pbbase.EmptyResp), nil
 }
 
+// GetApp get apps by app id.
+func (s *Service) GetApp(ctx context.Context, req *pbds.GetAppReq) (*pbds.GetAppResp, error) {
+	grpcKit := kit.FromGrpcContext(ctx)
+
+	app, err := s.dao.App().Get(grpcKit, req.BizId, req.AppId)
+	if err != nil {
+		logs.Errorf("list apps failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, err
+	}
+
+	resp := &pbds.GetAppResp{
+		Data: pbapp.PbApp(app),
+	}
+	return resp, nil
+}
+
 // ListApps list apps by query condition.
 func (s *Service) ListApps(ctx context.Context, req *pbds.ListAppsReq) (*pbds.ListAppsResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)

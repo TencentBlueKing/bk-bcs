@@ -26,6 +26,7 @@ type ConfigClient interface {
 	CreateApp(ctx context.Context, in *CreateAppReq, opts ...grpc.CallOption) (*CreateAppResp, error)
 	UpdateApp(ctx context.Context, in *UpdateAppReq, opts ...grpc.CallOption) (*UpdateAppResp, error)
 	DeleteApp(ctx context.Context, in *DeleteAppReq, opts ...grpc.CallOption) (*DeleteAppResp, error)
+	GetApp(ctx context.Context, in *GetAppReq, opts ...grpc.CallOption) (*GetAppResp, error)
 	ListApps(ctx context.Context, in *ListAppsReq, opts ...grpc.CallOption) (*ListAppsResp, error)
 	ListAppsRest(ctx context.Context, in *ListAppsRestReq, opts ...grpc.CallOption) (*ListAppsResp, error)
 	CreateConfigItem(ctx context.Context, in *CreateConfigItemReq, opts ...grpc.CallOption) (*CreateConfigItemResp, error)
@@ -100,6 +101,15 @@ func (c *configClient) UpdateApp(ctx context.Context, in *UpdateAppReq, opts ...
 func (c *configClient) DeleteApp(ctx context.Context, in *DeleteAppReq, opts ...grpc.CallOption) (*DeleteAppResp, error) {
 	out := new(DeleteAppResp)
 	err := c.cc.Invoke(ctx, "/pbcs.Config/DeleteApp", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *configClient) GetApp(ctx context.Context, in *GetAppReq, opts ...grpc.CallOption) (*GetAppResp, error) {
+	out := new(GetAppResp)
+	err := c.cc.Invoke(ctx, "/pbcs.Config/GetApp", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -420,6 +430,7 @@ type ConfigServer interface {
 	CreateApp(context.Context, *CreateAppReq) (*CreateAppResp, error)
 	UpdateApp(context.Context, *UpdateAppReq) (*UpdateAppResp, error)
 	DeleteApp(context.Context, *DeleteAppReq) (*DeleteAppResp, error)
+	GetApp(context.Context, *GetAppReq) (*GetAppResp, error)
 	ListApps(context.Context, *ListAppsReq) (*ListAppsResp, error)
 	ListAppsRest(context.Context, *ListAppsRestReq) (*ListAppsResp, error)
 	CreateConfigItem(context.Context, *CreateConfigItemReq) (*CreateConfigItemResp, error)
@@ -471,6 +482,9 @@ func (UnimplementedConfigServer) UpdateApp(context.Context, *UpdateAppReq) (*Upd
 }
 func (UnimplementedConfigServer) DeleteApp(context.Context, *DeleteAppReq) (*DeleteAppResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteApp not implemented")
+}
+func (UnimplementedConfigServer) GetApp(context.Context, *GetAppReq) (*GetAppResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetApp not implemented")
 }
 func (UnimplementedConfigServer) ListApps(context.Context, *ListAppsReq) (*ListAppsResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListApps not implemented")
@@ -654,6 +668,24 @@ func _Config_DeleteApp_Handler(srv interface{}, ctx context.Context, dec func(in
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ConfigServer).DeleteApp(ctx, req.(*DeleteAppReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Config_GetApp_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetAppReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).GetApp(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/pbcs.Config/GetApp",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).GetApp(ctx, req.(*GetAppReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1292,6 +1324,10 @@ var Config_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DeleteApp",
 			Handler:    _Config_DeleteApp_Handler,
+		},
+		{
+			MethodName: "GetApp",
+			Handler:    _Config_GetApp_Handler,
 		},
 		{
 			MethodName: "ListApps",

@@ -43,6 +43,11 @@ service Config {
             delete: "/api/v1/config/delete/app/app/app_id/{id}/biz_id/{biz_id}"
         };
     }
+    rpc GetApp(GetAppReq) returns (GetAppResp) {
+        option (google.api.http) = {
+            get: "/api/v1/config/get/app/app/app_id/{app_id}/biz_id/{biz_id}"
+        };
+    }
     rpc ListApps(ListAppsReq) returns (ListAppsResp) {
         option (google.api.http) = {
             post: "/api/v1/config/list/app/app/biz_id/{biz_id}"
@@ -314,6 +319,18 @@ message DeleteAppResp {
     int32 code                    = 1;
     string message                = 2;
     pbas.IamPermission permission = 3;
+}
+
+message GetAppReq {
+    uint32 biz_id                 = 1;
+    uint32 app_id                 = 2;
+}
+
+message GetAppResp {
+    int32 code                    = 1;
+    string message                = 2;
+    pbapp.App data                = 3;
+    pbas.IamPermission permission = 4;
 }
 
 message ListAppsReq {

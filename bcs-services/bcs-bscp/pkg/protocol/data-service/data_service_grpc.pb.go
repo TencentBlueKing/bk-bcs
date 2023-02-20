@@ -27,6 +27,7 @@ type DataClient interface {
 	CreateApp(ctx context.Context, in *CreateAppReq, opts ...grpc.CallOption) (*CreateResp, error)
 	UpdateApp(ctx context.Context, in *UpdateAppReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
 	DeleteApp(ctx context.Context, in *DeleteAppReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
+	GetApp(ctx context.Context, in *GetAppReq, opts ...grpc.CallOption) (*GetAppResp, error)
 	ListApps(ctx context.Context, in *ListAppsReq, opts ...grpc.CallOption) (*ListAppsResp, error)
 	ListAppsRest(ctx context.Context, in *ListAppsRestReq, opts ...grpc.CallOption) (*ListAppsResp, error)
 	// config item related interface.
@@ -110,6 +111,15 @@ func (c *dataClient) UpdateApp(ctx context.Context, in *UpdateAppReq, opts ...gr
 func (c *dataClient) DeleteApp(ctx context.Context, in *DeleteAppReq, opts ...grpc.CallOption) (*base.EmptyResp, error) {
 	out := new(base.EmptyResp)
 	err := c.cc.Invoke(ctx, "/pbds.Data/DeleteApp", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dataClient) GetApp(ctx context.Context, in *GetAppReq, opts ...grpc.CallOption) (*GetAppResp, error) {
+	out := new(GetAppResp)
+	err := c.cc.Invoke(ctx, "/pbds.Data/GetApp", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -475,6 +485,7 @@ type DataServer interface {
 	CreateApp(context.Context, *CreateAppReq) (*CreateResp, error)
 	UpdateApp(context.Context, *UpdateAppReq) (*base.EmptyResp, error)
 	DeleteApp(context.Context, *DeleteAppReq) (*base.EmptyResp, error)
+	GetApp(context.Context, *GetAppReq) (*GetAppResp, error)
 	ListApps(context.Context, *ListAppsReq) (*ListAppsResp, error)
 	ListAppsRest(context.Context, *ListAppsRestReq) (*ListAppsResp, error)
 	// config item related interface.
@@ -541,6 +552,9 @@ func (UnimplementedDataServer) UpdateApp(context.Context, *UpdateAppReq) (*base.
 }
 func (UnimplementedDataServer) DeleteApp(context.Context, *DeleteAppReq) (*base.EmptyResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteApp not implemented")
+}
+func (UnimplementedDataServer) GetApp(context.Context, *GetAppReq) (*GetAppResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetApp not implemented")
 }
 func (UnimplementedDataServer) ListApps(context.Context, *ListAppsReq) (*ListAppsResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListApps not implemented")
@@ -721,6 +735,24 @@ func _Data_DeleteApp_Handler(srv interface{}, ctx context.Context, dec func(inte
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(DataServer).DeleteApp(ctx, req.(*DeleteAppReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Data_GetApp_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetAppReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).GetApp(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/pbds.Data/GetApp",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).GetApp(ctx, req.(*GetAppReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1445,6 +1477,10 @@ var Data_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DeleteApp",
 			Handler:    _Data_DeleteApp_Handler,
+		},
+		{
+			MethodName: "GetApp",
+			Handler:    _Data_GetApp_Handler,
 		},
 		{
 			MethodName: "ListApps",

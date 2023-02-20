@@ -37,6 +37,8 @@ type App interface {
 	Create(kit *kit.Kit, app *table.App) (uint32, error)
 	// Update one app's info
 	Update(kit *kit.Kit, app *table.App) error
+	// get app with id.
+	Get(kit *kit.Kit, BizID, AppID uint32) (*table.App, error)
 	// List apps with options.
 	List(kit *kit.Kit, opts *types.ListAppsOption) (*types.ListAppDetails, error)
 	// Delete one app instance.
@@ -176,7 +178,7 @@ func (ap *appDao) Update(kit *kit.Kit, app *table.App) error {
 		return errf.New(errf.InvalidParameter, "app is nil")
 	}
 
-	updateApp, err := ap.getApp(kit, app.BizID, app.ID)
+	updateApp, err := ap.Get(kit, app.BizID, app.ID)
 	if err != nil {
 		return fmt.Errorf("get update app failed, err: %v", err)
 	}
@@ -260,7 +262,7 @@ func (ap *appDao) Delete(kit *kit.Kit, app *table.App) error {
 
 	eDecorator := ap.event.Eventf(kit)
 	err := ap.sd.ShardingOne(app.BizID).AutoTxn(kit, func(txn *sqlx.Tx, opt *sharding.TxnOption) error {
-		oldApp, err := ap.getApp(kit, app.BizID, app.ID)
+		oldApp, err := ap.Get(kit, app.BizID, app.ID)
 		if err != nil {
 			return fmt.Errorf("get pre app failed, err: %v", err)
 		}
@@ -310,7 +312,7 @@ func (ap *appDao) Delete(kit *kit.Kit, app *table.App) error {
 	return nil
 }
 
-func (ap *appDao) getApp(kit *kit.Kit, bizID uint32, appID uint32) (*table.App, error) {
+func (ap *appDao) Get(kit *kit.Kit, bizID uint32, appID uint32) (*table.App, error) {
 
 	expr := fmt.Sprintf(`SELECT %s FROM %s WHERE id = %d AND biz_id = %d`,
 		table.AppColumns.NamedExpr(), table.AppTable, appID, bizID)

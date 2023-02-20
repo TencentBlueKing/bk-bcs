@@ -170,6 +170,33 @@ func (s *Service) ListApps(ctx context.Context, req *pbcs.ListAppsReq) (*pbcs.Li
 	return resp, nil
 }
 
+// GetApp get app with app id
+func (s *Service) GetApp(ctx context.Context, req *pbcs.GetAppReq) (*pbcs.GetAppResp, error) {
+	kt := kit.FromGrpcContext(ctx)
+	resp := new(pbcs.GetAppResp)
+
+	authRes := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.App, Action: meta.Find}, BizID: req.BizId}
+	err := s.authorizer.AuthorizeWithResp(kt, resp, authRes)
+	if err != nil {
+		return resp, nil
+	}
+
+	r := &pbds.GetAppReq{
+		BizId: req.BizId,
+		AppId: req.AppId,
+	}
+	rp, err := s.client.DS.GetApp(kt.RpcCtx(), r)
+	if err != nil {
+		errf.Error(err).AssignResp(kt, resp)
+		logs.Errorf("list apps failed, err: %v, rid: %s", err, kt.Rid)
+		return resp, nil
+	}
+
+	resp.Code = errf.OK
+	resp.Data = rp.Data
+	return resp, nil
+}
+
 // ListAppsRest list apps with rest filter
 func (s *Service) ListAppsRest(ctx context.Context, req *pbcs.ListAppsRestReq) (*pbcs.ListAppsResp, error) {
 	kt := kit.FromGrpcContext(ctx)

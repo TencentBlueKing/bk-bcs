@@ -24,6 +24,7 @@ service Data {
     rpc CreateApp(CreateAppReq) returns (CreateResp) {}
     rpc UpdateApp(UpdateAppReq) returns (pbbase.EmptyResp) {}
     rpc DeleteApp(DeleteAppReq) returns (pbbase.EmptyResp) {}
+    rpc GetApp(GetAppReq) returns (GetAppResp) {}
     rpc ListApps(ListAppsReq) returns (ListAppsResp) {}
     rpc ListAppsRest(ListAppsRestReq) returns (ListAppsResp) {}
 
@@ -114,6 +115,15 @@ message UpdateAppReq {
 message DeleteAppReq {
     uint32 id     = 1;
     uint32 biz_id = 2;
+}
+
+message GetAppReq {
+    uint32 biz_id                 = 1;
+    uint32 app_id                 = 2;
+}
+
+message GetAppResp {
+    pbapp.App data = 1;
 }
 
 message ListAppsReq {
