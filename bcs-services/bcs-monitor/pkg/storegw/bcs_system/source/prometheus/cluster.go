@@ -42,7 +42,7 @@ func NewPrometheus() *Prometheus {
 // handleClusterMetric Cluster 处理公共函数
 func (m *Prometheus) handleClusterMetric(ctx context.Context, projectId, clusterId string, promql string, start,
 	end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {
-	nodeMatch, nodeNameMatch, err := base.GetNodeMatch(ctx, clusterId, true)
+	nodeMatch, nodeNameMatch, err := base.GetNodeMatch(ctx, clusterId)
 	if err != nil {
 		return nil, err
 	}
@@ -204,8 +204,8 @@ func (p *Prometheus) GetClusterDiskUsage(ctx context.Context, projectId, cluster
 func (p *Prometheus) GetClusterDiskioUsage(ctx context.Context, projectId, clusterId string, start, end time.Time,
 	step time.Duration) ([]*prompb.TimeSeries, error) {
 	promql :=
-		`sum(max by(instance) (rate(node_disk_io_time_seconds_total{cluster_id="%<clusterId>s", job="node-exporter", instance="%<ip>s:9100", %<provider>s}[2m]))) /
-		count(max by(instance) (rate(node_disk_io_time_seconds_total{cluster_id="%<clusterId>s", job="node-exporter", instance="%<ip>s:9100", %<provider>s}[2m]))) /
+		`sum(max by(instance) (rate(node_disk_io_time_seconds_total{cluster_id="%<clusterId>s", job="node-exporter", instance=~"%<instance>s", %<provider>s}[2m]))) /
+		count(max by(instance) (rate(node_disk_io_time_seconds_total{cluster_id="%<clusterId>s", job="node-exporter", instance=~"%<instance>s", %<provider>s}[2m]))) /
 		* 100)`
 
 	return p.handleClusterMetric(ctx, projectId, clusterId, promql, start, end, step)

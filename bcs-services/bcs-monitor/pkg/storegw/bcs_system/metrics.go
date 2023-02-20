@@ -31,7 +31,7 @@ type metricsParams struct {
 	podName        string
 	podNames       []string
 	containerNames []string
-	ip             string
+	node           string
 	startTime      time.Time
 	endTime        time.Time
 	stepDuration   time.Duration
@@ -97,47 +97,47 @@ var metricsMaps map[string]metricsFn = map[string]metricsFn{
 			mp.startTime, mp.endTime, mp.stepDuration)
 	},
 	"bcs:node:info": func(mp metricsParams) ([]*prompb.TimeSeries, error) {
-		nodeInfo, err := mp.client.GetNodeInfo(mp.ctx, mp.projectID, mp.clusterID, mp.ip, mp.endTime)
+		nodeInfo, err := mp.client.GetNodeInfo(mp.ctx, mp.projectID, mp.clusterID, mp.node, mp.endTime)
 		return nodeInfo.PromSeries(mp.endTime), err
 	},
 	"bcs:node:cpu:usage": func(mp metricsParams) ([]*prompb.TimeSeries, error) {
-		return mp.client.GetNodeCPUUsage(mp.ctx, mp.projectID, mp.clusterID, mp.ip,
+		return mp.client.GetNodeCPUUsage(mp.ctx, mp.projectID, mp.clusterID, mp.node,
 			mp.startTime, mp.endTime, mp.stepDuration)
 	},
 	"bcs:node:cpu_request:usage": func(mp metricsParams) ([]*prompb.TimeSeries, error) {
-		return mp.client.GetNodeCPURequestUsage(mp.ctx, mp.projectID, mp.clusterID, mp.ip,
+		return mp.client.GetNodeCPURequestUsage(mp.ctx, mp.projectID, mp.clusterID, mp.node,
 			mp.startTime, mp.endTime, mp.stepDuration)
 	},
 	"bcs:node:memory:usage": func(mp metricsParams) ([]*prompb.TimeSeries, error) {
-		return mp.client.GetNodeMemoryUsage(mp.ctx, mp.projectID, mp.clusterID, mp.ip,
+		return mp.client.GetNodeMemoryUsage(mp.ctx, mp.projectID, mp.clusterID, mp.node,
 			mp.startTime, mp.endTime, mp.stepDuration)
 	},
 	"bcs:node:memory_request:usage": func(mp metricsParams) ([]*prompb.TimeSeries, error) {
-		return mp.client.GetNodeMemoryRequestUsage(mp.ctx, mp.projectID, mp.clusterID, mp.ip,
+		return mp.client.GetNodeMemoryRequestUsage(mp.ctx, mp.projectID, mp.clusterID, mp.node,
 			mp.startTime, mp.endTime, mp.stepDuration)
 	},
 	"bcs:node:disk:usage": func(mp metricsParams) ([]*prompb.TimeSeries, error) {
-		return mp.client.GetNodeDiskUsage(mp.ctx, mp.projectID, mp.clusterID, mp.ip,
+		return mp.client.GetNodeDiskUsage(mp.ctx, mp.projectID, mp.clusterID, mp.node,
 			mp.startTime, mp.endTime, mp.stepDuration)
 	},
 	"bcs:node:diskio:usage": func(mp metricsParams) ([]*prompb.TimeSeries, error) {
-		return mp.client.GetNodeDiskioUsage(mp.ctx, mp.projectID, mp.clusterID, mp.ip,
+		return mp.client.GetNodeDiskioUsage(mp.ctx, mp.projectID, mp.clusterID, mp.node,
 			mp.startTime, mp.endTime, mp.stepDuration)
 	},
 	"bcs:node:pod_count": func(mp metricsParams) ([]*prompb.TimeSeries, error) {
-		return mp.client.GetNodePodCount(mp.ctx, mp.projectID, mp.clusterID, mp.ip,
+		return mp.client.GetNodePodCount(mp.ctx, mp.projectID, mp.clusterID, mp.node,
 			mp.startTime, mp.endTime, mp.stepDuration)
 	},
 	"bcs:node:container_count": func(mp metricsParams) ([]*prompb.TimeSeries, error) {
-		return mp.client.GetNodeContainerCount(mp.ctx, mp.projectID, mp.clusterID, mp.ip,
+		return mp.client.GetNodeContainerCount(mp.ctx, mp.projectID, mp.clusterID, mp.node,
 			mp.startTime, mp.endTime, mp.stepDuration)
 	},
 	"bcs:node:network_transmit": func(mp metricsParams) ([]*prompb.TimeSeries, error) {
-		return mp.client.GetNodeNetworkTransmit(mp.ctx, mp.projectID, mp.clusterID, mp.ip,
+		return mp.client.GetNodeNetworkTransmit(mp.ctx, mp.projectID, mp.clusterID, mp.node,
 			mp.startTime, mp.endTime, mp.stepDuration)
 	},
 	"bcs:node:network_receive": func(mp metricsParams) ([]*prompb.TimeSeries, error) {
-		return mp.client.GetNodeNetworkReceive(mp.ctx, mp.projectID, mp.clusterID, mp.ip,
+		return mp.client.GetNodeNetworkReceive(mp.ctx, mp.projectID, mp.clusterID, mp.node,
 			mp.startTime, mp.endTime, mp.stepDuration)
 	},
 	"bcs:pod:cpu_usage": func(mp metricsParams) ([]*prompb.TimeSeries, error) {

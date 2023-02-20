@@ -136,7 +136,7 @@ func (s *BCSSystemStore) Series(r *storepb.SeriesRequest, srv storepb.Store_Seri
 		// return errors.New("cluster_id is required")
 	}
 
-	ip, err := clientutil.GetLabelMatchValue("ip", r.Matchers)
+	node, err := clientutil.GetLabelMatchValue("node", r.Matchers)
 	if err != nil {
 		return err
 	}
@@ -181,7 +181,7 @@ func (s *BCSSystemStore) Series(r *storepb.SeriesRequest, srv storepb.Store_Seri
 		podName:        podName,
 		podNames:       podNameList,
 		containerNames: containerNameList,
-		ip:             ip,
+		node:           node,
 		startTime:      startTime,
 		endTime:        endTime,
 		stepDuration:   stepDuration,

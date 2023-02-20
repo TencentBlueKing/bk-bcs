@@ -48,3 +48,23 @@ func GetNodeList(ctx context.Context, clusterId string, excludeMasterRole bool) 
 	}
 	return nodeIPList, nodeNameList, nil
 }
+
+// GetNodeByName 获取集群节点信息
+func GetNodeByName(ctx context.Context, clusterId, name string) ([]string, error) {
+	client, err := GetK8SClientByClusterId(clusterId)
+	if err != nil {
+		return nil, err
+	}
+	node, err := client.CoreV1().Nodes().Get(ctx, name, metav1.GetOptions{})
+	if err != nil {
+		return nil, err
+	}
+	nodeIPList := make([]string, 0)
+
+	for _, addr := range node.Status.Addresses {
+		if addr.Type == v1.NodeInternalIP {
+			nodeIPList = append(nodeIPList, addr.Address)
+		}
+	}
+	return nodeIPList, nil
+}

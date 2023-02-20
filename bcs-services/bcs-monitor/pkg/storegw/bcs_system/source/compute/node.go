@@ -21,67 +21,67 @@ import (
 )
 
 // GetNodeInfo 节点信息
-func (m *Compute) GetNodeInfo(ctx context.Context, projectId, clusterId, ip string, t time.Time) (*base.NodeInfo,
+func (m *Compute) GetNodeInfo(ctx context.Context, projectId, clusterId, node string, t time.Time) (*base.NodeInfo,
 	error) {
 	return nil, nil
 }
 
 // GetNodeCPUUsage 节点CPU使用率
-func (m *Compute) GetNodeCPUUsage(ctx context.Context, projectId, clusterId, ip string, start, end time.Time,
+func (m *Compute) GetNodeCPUUsage(ctx context.Context, projectId, clusterId, node string, start, end time.Time,
 	step time.Duration) ([]*prompb.TimeSeries, error) {
 	return nil, nil
 }
 
 // GetNodeCPURequestUsage 节点CPU装箱率
-func (m *Compute) GetNodeCPURequestUsage(ctx context.Context, projectId, clusterId, ip string, start, end time.Time,
+func (m *Compute) GetNodeCPURequestUsage(ctx context.Context, projectId, clusterId, node string, start, end time.Time,
 	step time.Duration) ([]*prompb.TimeSeries, error) {
 	return nil, nil
 }
 
 // GetNodeMemoryUsage 节点内存使用率
-func (m *Compute) GetNodeMemoryUsage(ctx context.Context, projectId, clusterId, ip string, start, end time.Time,
+func (m *Compute) GetNodeMemoryUsage(ctx context.Context, projectId, clusterId, node string, start, end time.Time,
 	step time.Duration) ([]*prompb.TimeSeries, error) {
 	return nil, nil
 }
 
 // GetNodeMemoryRequestUsage 节点内存装箱率
-func (m *Compute) GetNodeMemoryRequestUsage(ctx context.Context, projectId, clusterId, ip string, start, end time.Time,
+func (m *Compute) GetNodeMemoryRequestUsage(ctx context.Context, projectId, clusterId, node string, start, end time.Time,
 	step time.Duration) ([]*prompb.TimeSeries, error) {
 	return nil, nil
 }
 
 // GetNodeDiskUsage 节点磁盘使用率
-func (m *Compute) GetNodeDiskUsage(ctx context.Context, projectId, clusterId, ip string, start, end time.Time,
+func (m *Compute) GetNodeDiskUsage(ctx context.Context, projectId, clusterId, node string, start, end time.Time,
 	step time.Duration) ([]*prompb.TimeSeries, error) {
 	return nil, nil
 }
 
 // GetNodeDiskioUsage 接触磁盘IO使用率
-func (m *Compute) GetNodeDiskioUsage(ctx context.Context, projectId, clusterId, ip string, start, end time.Time,
+func (m *Compute) GetNodeDiskioUsage(ctx context.Context, projectId, clusterId, node string, start, end time.Time,
 	step time.Duration) ([]*prompb.TimeSeries, error) {
 	return nil, nil
 }
 
 // GetNodePodCount PodCount
-func (m *Compute) GetNodePodCount(ctx context.Context, projectId, clusterId, ip string, start, end time.Time,
+func (m *Compute) GetNodePodCount(ctx context.Context, projectId, clusterId, node string, start, end time.Time,
 	step time.Duration) ([]*prompb.TimeSeries, error) {
 	return nil, nil
 }
 
 // GetNodeContainerCount 容器数量
-func (m *Compute) GetNodeContainerCount(ctx context.Context, projectId, clusterId, ip string, start, end time.Time,
+func (m *Compute) GetNodeContainerCount(ctx context.Context, projectId, clusterId, node string, start, end time.Time,
 	step time.Duration) ([]*prompb.TimeSeries, error) {
 	return nil, nil
 }
 
 // GetNodeNetworkTransmit 网络发送量
-func (m *Compute) GetNodeNetworkTransmit(ctx context.Context, projectId, clusterId, ip string, start, end time.Time,
+func (m *Compute) GetNodeNetworkTransmit(ctx context.Context, projectId, clusterId, node string, start, end time.Time,
 	step time.Duration) ([]*prompb.TimeSeries, error) {
 	return nil, nil
 }
 
 // GetNodeNetworkReceive 节点网络接收量
-func (m *Compute) GetNodeNetworkReceive(ctx context.Context, projectId, clusterId, ip string, start, end time.Time,
+func (m *Compute) GetNodeNetworkReceive(ctx context.Context, projectId, clusterId, node string, start, end time.Time,
 	step time.Duration) ([]*prompb.TimeSeries, error) {
 	return nil, nil
 }

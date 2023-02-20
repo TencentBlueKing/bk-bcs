@@ -14,11 +14,11 @@ package bkmonitor
 
 import (
 	"context"
-	"strings"
 	"time"
 
 	bcsmonitor "github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component/bcs_monitor"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/storegw/bcs_system/source/base"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/utils"
 	"github.com/prometheus/prometheus/prompb"
 )
 
@@ -29,7 +29,7 @@ func (m *BKMonitor) handlePodMetric(ctx context.Context, projectId, clusterId, n
 	params := map[string]interface{}{
 		"clusterId":   clusterId,
 		"namespace":   namespace,
-		"podNameList": strings.Join(podNameList, "|"),
+		"podNameList": utils.StringJoinWithRegex(podNameList, "|", "$"),
 		"provider":    PROVIDER,
 	}
 

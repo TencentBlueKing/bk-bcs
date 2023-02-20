@@ -19,6 +19,7 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component/k8sclient"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/utils"
 	"github.com/prometheus/common/model"
 	"github.com/prometheus/prometheus/prompb"
 )
@@ -32,6 +33,7 @@ type NodeInfo struct {
 	Release       string `json:"release"`       // 内核, 3.10.107-1-tlinux2_kvm_guest-0052
 	DockerVersion string `json:"dockerVersion"` // Docker, 18.6.3-ce-tke.1
 	Sysname       string `json:"sysname"`       // 操作系统, linux
+	IP            string `json:"ip"`            // ip，多个使用 , 分隔
 }
 
 // PromSeries 给 series
@@ -44,6 +46,7 @@ func (n *NodeInfo) PromSeries(t time.Time) []*prompb.TimeSeries {
 		{Name: "release", Value: n.Release},
 		{Name: "dockerVersion", Value: n.DockerVersion},
 		{Name: "sysname", Value: n.Sysname},
+		{Name: "ip", Value: n.IP},
 	}
 
 	sample := []prompb.Sample{
@@ -85,26 +88,26 @@ type MetricHandler interface {
 		step time.Duration) ([]*prompb.TimeSeries, error)
 	GetClusterDiskioUsage(ctx context.Context, projectId, clusterId string, start, end time.Time,
 		step time.Duration) ([]*prompb.TimeSeries, error)
-	GetNodeInfo(ctx context.Context, projectId, clusterId, ip string, t time.Time) (*NodeInfo, error)
-	GetNodeCPUUsage(ctx context.Context, projectId, clusterId, ip string, start, end time.Time,
+	GetNodeInfo(ctx context.Context, projectId, clusterId, nodeName string, t time.Time) (*NodeInfo, error)
+	GetNodeCPUUsage(ctx context.Context, projectId, clusterId, nodeName string, start, end time.Time,
 		step time.Duration) ([]*prompb.TimeSeries, error)
-	GetNodeCPURequestUsage(ctx context.Context, projectId, clusterId, ip string, start, end time.Time,
+	GetNodeCPURequestUsage(ctx context.Context, projectId, clusterId, nodeName string, start, end time.Time,
 		step time.Duration) ([]*prompb.TimeSeries, error)
-	GetNodeMemoryUsage(ctx context.Context, projectId, clusterId, ip string, start, end time.Time,
+	GetNodeMemoryUsage(ctx context.Context, projectId, clusterId, nodeName string, start, end time.Time,
 		step time.Duration) ([]*prompb.TimeSeries, error)
-	GetNodeMemoryRequestUsage(ctx context.Context, projectId, clusterId, ip string, start, end time.Time,
+	GetNodeMemoryRequestUsage(ctx context.Context, projectId, clusterId, nodeName string, start, end time.Time,
 		step time.Duration) ([]*prompb.TimeSeries, error)
-	GetNodeDiskUsage(ctx context.Context, projectId, clusterId, ip string, start, end time.Time,
+	GetNodeDiskUsage(ctx context.Context, projectId, clusterId, nodeName string, start, end time.Time,
 		step time.Duration) ([]*prompb.TimeSeries, error)
-	GetNodeDiskioUsage(ctx context.Context, projectId, clusterId, ip string, start, end time.Time,
+	GetNodeDiskioUsage(ctx context.Context, projectId, clusterId, nodeName string, start, end time.Time,
 		step time.Duration) ([]*prompb.TimeSeries, error)
-	GetNodeNetworkTransmit(ctx context.Context, projectId, clusterId, ip string, start, end time.Time,
+	GetNodeNetworkTransmit(ctx context.Context, projectId, clusterId, nodeName string, start, end time.Time,
 		step time.Duration) ([]*prompb.TimeSeries, error)
-	GetNodeNetworkReceive(ctx context.Context, projectId, clusterId, ip string, start, end time.Time,
+	GetNodeNetworkReceive(ctx context.Context, projectId, clusterId, nodeName string, start, end time.Time,
 		step time.Duration) ([]*prompb.TimeSeries, error)
-	GetNodePodCount(ctx context.Context, projectId, clusterId, ip string, start, end time.Time,
+	GetNodePodCount(ctx context.Context, projectId, clusterId, nodeName string, start, end time.Time,
 		step time.Duration) ([]*prompb.TimeSeries, error)
-	GetNodeContainerCount(ctx context.Context, projectId, clusterId, ip string, start, end time.Time,
+	GetNodeContainerCount(ctx context.Context, projectId, clusterId, nodeName string, start, end time.Time,
 		step time.Duration) ([]*prompb.TimeSeries, error)
 	GetPodCPUUsage(ctx context.Context, projectId, clusterId, namespace string, podNameList []string, start, end time.Time,
 		step time.Duration) ([]*prompb.TimeSeries, error)
@@ -135,21 +138,21 @@ type MetricHandler interface {
 }
 
 // GetNodeMatch 按集群node节点正则匹配
-func GetNodeMatch(ctx context.Context, clusterId string, withRegex bool) (string, string, error) {
+func GetNodeMatch(ctx context.Context, clusterId string) (string, string, error) {
 	nodeList, nodeNameList, err := k8sclient.GetNodeList(ctx, clusterId, true)
 	if err != nil {
 		return "", "", err
 	}
+	return utils.StringJoinWithRegex(nodeList, "|", ".*"), utils.StringJoinWithRegex(nodeNameList, "|", "$"), nil
+}
 
-	instanceList := make([]string, 0, len(nodeList))
-	for _, node := range nodeList {
-		if withRegex {
-			instanceList = append(instanceList, node+`:.*`)
-		} else {
-			instanceList = append(instanceList, node)
-		}
+// GetNodeMatchByName 按集群node节点正则匹配
+func GetNodeMatchByName(ctx context.Context, clusterId, nodeName string) (string, string, error) {
+	nodeIPList, err := k8sclient.GetNodeByName(ctx, clusterId, nodeName)
+	if err != nil {
+		return "", "", err
 	}
-	return strings.Join(instanceList, "|"), strings.Join(nodeNameList, "|"), nil
+	return utils.StringJoinIPWithRegex(nodeIPList, "|", ".*"), strings.Join(nodeIPList, ","), nil
 }
 
 func sampleStreamToSeries(m *model.SampleStream) *prompb.TimeSeries {

@@ -16,6 +16,7 @@ package utils
 import (
 	"net"
 	"os"
+	"strings"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/util"
 )
@@ -69,4 +70,28 @@ func StringInSlice(str string, list []string) bool {
 		}
 	}
 	return false
+}
+
+// StringJoinWithRegex 数组转化为字符串，并添加正则
+func StringJoinWithRegex(list []string, sep, reg string) string {
+	ss := make([]string, 0)
+	for i := range list {
+		if len(list[i]) == 0 {
+			continue
+		}
+		ss = append(ss, list[i]+reg)
+	}
+	return strings.Join(ss, sep)
+}
+
+// StringJoinIPWithRegex 数组转化为字符串，并添加正则
+func StringJoinIPWithRegex(list []string, sep, reg string) string {
+	ss := make([]string, 0)
+	for i := range list {
+		if len(list[i]) == 0 {
+			continue
+		}
+		ss = append(ss, net.JoinHostPort(list[i], "")+reg)
+	}
+	return strings.Join(ss, sep)
 }
