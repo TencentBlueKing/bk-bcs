@@ -62,7 +62,7 @@ func ListClusters(ctx context.Context, bcsConf *config.BCSConf, projectId string
 
 	resp, err := components.GetClient().R().
 		SetContext(ctx).
-		SetBearerAuthToken(bcsConf.Token).
+		SetAuthToken(bcsConf.Token).
 		SetQueryParam("projectID", projectId).
 		Get(url)
 
@@ -93,7 +93,7 @@ func GetCluster(ctx context.Context, bcsConf *config.BCSConf, projectId, cluster
 
 	resp, err := components.GetClient().R().
 		SetContext(ctx).
-		SetBearerAuthToken(bcsConf.Token).
+		SetAuthToken(bcsConf.Token).
 		Get(url)
 
 	if err != nil {
@@ -138,8 +138,8 @@ func CreateTempToken(ctx context.Context, bcsConf *config.BCSConf, username, clu
 	}
 	resp, err := components.GetClient().R().
 		SetContext(ctx).
-		SetBearerAuthToken(bcsConf.Token).
-		SetBodyJsonMarshal(data).
+		SetAuthToken(bcsConf.Token).
+		SetBody(data).
 		Post(url)
 
 	if err != nil {

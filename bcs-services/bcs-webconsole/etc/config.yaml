@@ -7,7 +7,7 @@ base_conf:
 
 logging:
   level: info
-  file:  ""
+  file: ""
   stderr: true
 
 redis:
@@ -30,7 +30,7 @@ bcs_conf:
   host: ""
   token: ""
   jwt_public_key: ""
-  verify: false
+  insecure_skip_verify: false
 
 bcs_env_conf: []
 

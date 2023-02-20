@@ -52,6 +52,9 @@ func GetK8SConfigByClusterId(clusterId string) *rest.Config {
 	config := &rest.Config{
 		Host:        host,
 		BearerToken: bcsConf.Token,
+		TLSClientConfig: rest.TLSClientConfig{
+			Insecure: bcsConf.InsecureSkipVerify,
+		},
 	}
 	return config
 }

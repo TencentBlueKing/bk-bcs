@@ -33,12 +33,12 @@ const (
 
 // BCSConf BCS配置
 type BCSConf struct {
-	Host         string         `yaml:"host"`
-	Token        string         `yaml:"token"`
-	Verify       bool           `yaml:"verify"`
-	JWTPubKey    string         `yaml:"jwt_public_key"`
-	JWTPubKeyObj *rsa.PublicKey `yaml:"-"`
-	ClusterEnv   BCSClusterEnv  `yaml:"cluster_env"`
+	Host               string         `yaml:"host"`
+	Token              string         `yaml:"token"`
+	InsecureSkipVerify bool           `yaml:"insecure_skip_verify"`
+	JWTPubKey          string         `yaml:"jwt_public_key"`
+	JWTPubKeyObj       *rsa.PublicKey `yaml:"-"`
+	ClusterEnv         BCSClusterEnv  `yaml:"cluster_env"`
 }
 
 // Init xxx
@@ -48,7 +48,7 @@ func (c *BCSConf) Init() error {
 	c.Token = ""
 	c.JWTPubKey = ""
 	c.JWTPubKeyObj = nil
-	c.Verify = false
+	c.InsecureSkipVerify = false
 	c.ClusterEnv = ProdCluster
 	return nil
 }

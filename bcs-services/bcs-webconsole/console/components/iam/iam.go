@@ -259,7 +259,7 @@ func GetAccessToken(ctx context.Context) (string, error) {
 		SetContext(ctx).
 		SetHeader("X-BK-APP-CODE", config.G.Base.AppCode).
 		SetHeader("X-BK-APP-SECRET", config.G.Base.AppSecret).
-		SetBodyJsonMarshal(jsonData).
+		SetBody(jsonData).
 		Post(url)
 
 	if err != nil {

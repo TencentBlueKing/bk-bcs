@@ -17,7 +17,8 @@ import "time"
 
 const (
 	// heartbeat:{run_env}
-	webConsoleHeartbeatKey = "bcs::webconsole::heartbeat::%s"
+	webConsolePodHeartbeatKey     = "bcs::webconsole::heartbeat::pods:%s"
+	webConsoleClusterHeartbeatKey = "bcs::webconsole::heartbeat::clusters:%s"
 	// Namespace TODO
 	Namespace = "bcs-webconsole"
 	// KubectlContainerName TODO
@@ -29,5 +30,6 @@ const (
 	UserPodExpireTime = time.Hour * 4
 
 	// UserCtxExpireTime Context 过期时间, 12个小时
-	UserCtxExpireTime = 3600 * 12
+	UserCtxExpireTime    = 3600 * 12
+	clusterExpireSeconds = 3600 * 24 * 7
 )

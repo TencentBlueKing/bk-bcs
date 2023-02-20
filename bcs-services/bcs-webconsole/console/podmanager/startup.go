@@ -153,17 +153,16 @@ func (m *StartupManager) ensureNamespace(name string) error {
 }
 
 // ensureConfigmap : 确保 configmap 配置正确
-func (m *StartupManager) ensureConfigmap(namespace, name string, kubeConfig *clientcmdv1.Config) error {
-	_, err := m.k8sClient.CoreV1().ConfigMaps(namespace).Get(m.ctx, name, metav1.GetOptions{})
+func (m *StartupManager) ensureConfigmap(namespace, name, uid string, kubeConfig *clientcmdv1.Config) error {
+	kubeConfigYaml, err := yaml.Marshal(kubeConfig)
+	if err != nil {
+		return err
+	}
+	configMap := genConfigMap(name, string(kubeConfigYaml), uid)
 
+	_, err = m.k8sClient.CoreV1().ConfigMaps(namespace).Get(m.ctx, name, metav1.GetOptions{})
 	// 不存在，创建
 	if k8sErr.IsNotFound(err) {
-		kubeConfigYaml, err := yaml.Marshal(kubeConfig)
-		if err != nil {
-			return err
-		}
-		configMap := genConfigMap(name, string(kubeConfigYaml))
-
 		if _, err := m.k8sClient.CoreV1().ConfigMaps(namespace).Create(m.ctx, configMap, metav1.CreateOptions{}); err != nil {
 			// 创建失败
 			logger.Errorf("create configmap failed, err :%s", err)
@@ -172,7 +171,17 @@ func (m *StartupManager) ensureConfigmap(namespace, name string, kubeConfig *cli
 		return nil
 	}
 
-	return err
+	if err != nil {
+		return err
+	}
+
+	// 每次刷新配置
+	if _, err := m.k8sClient.CoreV1().ConfigMaps(namespace).Update(m.ctx, configMap, metav1.UpdateOptions{}); err != nil {
+		logger.Errorf("update configmap failed, err :%s", err)
+		return err
+	}
+
+	return nil
 }
 
 // ensurePod 确保 pod 配置正确
@@ -208,7 +217,7 @@ func (m *StartupManager) getExternalKubeConfig(targetClusterId, username string)
 		Token: tokenObj.Token,
 		Cluster: clientcmdv1.Cluster{
 			Server:                fmt.Sprintf("%s/clusters/%s", bcsConf.Host, targetClusterId),
-			InsecureSkipTLSVerify: true,
+			InsecureSkipTLSVerify: bcsConf.InsecureSkipVerify,
 		},
 	}
 
@@ -378,6 +387,15 @@ func makeSlugName(username string) string {
 		username = username[:20]
 	}
 	return fmt.Sprintf("%s-%s", hashId, username)
+}
+
+// getUid
+func getUid(clusterID, username string) string {
+	username = makeSlugName(username)
+	uid := fmt.Sprintf("%s-u%s", clusterID, username)
+	uid = strings.ToLower(uid)
+
+	return uid
 }
 
 // getConfigMapName 获取configMap名称

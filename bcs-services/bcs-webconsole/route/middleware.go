@@ -25,6 +25,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/components"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/components/bcs"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/sessions"
@@ -37,7 +38,11 @@ var (
 )
 
 // RequestIdGenerator xxx
-func RequestIdGenerator() string {
+func RequestIdGenerator(r *http.Request) string {
+	if r.Header.Get("X-Request-ID") != "" {
+		return r.Header.Get("X-Request-ID")
+	}
+
 	uid := uuid.New().String()
 	requestId := strings.Replace(uid, "-", "", -1)
 	return requestId
@@ -79,10 +84,12 @@ func (c *AuthContext) BKAppCode() string {
 func WebAuthRequired() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		authCtx := &AuthContext{
-			RequestId: RequestIdGenerator(),
+			RequestId: RequestIdGenerator(c.Request),
 			StartTime: time.Now(),
 		}
 		c.Set("auth_context", authCtx)
+
+		c.Request = c.Request.WithContext(components.WithRequestIDValue(c.Request.Context(), authCtx.RequestId))
 
 		c.Next()
 	}
@@ -92,10 +99,12 @@ func WebAuthRequired() gin.HandlerFunc {
 func APIAuthRequired() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		authCtx := &AuthContext{
-			RequestId: RequestIdGenerator(),
+			RequestId: RequestIdGenerator(c.Request),
 			StartTime: time.Now(),
 		}
 		c.Set("auth_context", authCtx)
+
+		c.Request = c.Request.WithContext(components.WithRequestIDValue(c.Request.Context(), authCtx.RequestId))
 
 		if c.Request.Method == http.MethodOptions {
 			c.Next()
