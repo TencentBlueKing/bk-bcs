@@ -20,6 +20,10 @@ import (
 	clientcmdv1 "k8s.io/client-go/tools/clientcmd/api/v1"
 )
 
+const (
+	uidKey = "app.kubernetes.io/uid"
+)
+
 // genNamespace 生成 namespace 配置
 func genNamespace(name string) *v1.Namespace {
 	namespace := &v1.Namespace{
@@ -76,7 +80,7 @@ func genKubeConfig(clusterId, username string, authInfo *clusterAuth) *clientcmd
 }
 
 // genConfigMap 生成 configmap 配置
-func genConfigMap(name, config string) *v1.ConfigMap {
+func genConfigMap(name, config, uid string) *v1.ConfigMap {
 	cm := &v1.ConfigMap{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "ConfigMap",
@@ -84,6 +88,10 @@ func genConfigMap(name, config string) *v1.ConfigMap {
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name: name,
+			Labels: map[string]string{
+				"app.kubernetes.io/managed-by": "bcs-webconsole",
+				uidKey:                         uid,
+			},
 		},
 		Data: map[string]string{
 			"config": config,
@@ -94,7 +102,7 @@ func genConfigMap(name, config string) *v1.ConfigMap {
 }
 
 // genPod 生成 Pod 配置
-func genPod(name, namespace, image, configmapName, serviceAccountName string) *v1.Pod {
+func genPod(name, namespace, image, configmapName, serviceAccountName, uid string) *v1.Pod {
 	pod := &v1.Pod{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Pod",
@@ -106,6 +114,7 @@ func genPod(name, namespace, image, configmapName, serviceAccountName string) *v
 				"app.kubernetes.io/managed-by": "bcs-webconsole",
 				"app.kubernetes.io/name":       "bcs-webconsole",
 				"app.kubernetes.io/instance":   name,
+				uidKey:                         uid,
 			},
 		},
 		Spec: v1.PodSpec{
@@ -116,9 +125,9 @@ func genPod(name, namespace, image, configmapName, serviceAccountName string) *v
 					ImagePullPolicy: "Always",
 					Image:           image,
 					VolumeMounts: []v1.VolumeMount{
-						{Name: "kube-config",
-							MountPath: "/root/.kube/config",
-							SubPath:   "config",
+						{
+							Name:      "kube-config",
+							MountPath: "/root/.kube",
 						},
 					},
 				},

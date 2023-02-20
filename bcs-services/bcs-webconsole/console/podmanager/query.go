@@ -108,7 +108,8 @@ func queryByClusterIdExternal(ctx context.Context,
 
 	// kubeconfig cm 配置
 	configmapName := getConfigMapName(targetClusterId, username)
-	startupMgr.ensureConfigmap(namespace, configmapName, kubeConfig)
+	uid := getUid(targetClusterId, username)
+	startupMgr.ensureConfigmap(namespace, configmapName, uid, kubeConfig)
 
 	imageTag, err := GetKubectldVersion(targetClusterId)
 	if err != nil {
@@ -120,7 +121,7 @@ func queryByClusterIdExternal(ctx context.Context,
 	podName := GetPodName(targetClusterId, username)
 	// 外部集群, 默认 default 即可
 	serviceAccountName := "default"
-	podManifest := genPod(podName, namespace, image, configmapName, serviceAccountName)
+	podManifest := genPod(podName, namespace, image, configmapName, serviceAccountName, uid)
 
 	if err := startupMgr.ensurePod(namespace, podName, podManifest); err != nil {
 		return nil, err
@@ -162,8 +163,10 @@ func queryByClusterIdInternal(ctx context.Context, clusterId, username, shell st
 		return nil, err
 	}
 
+	uid := getUid(clusterId, username)
+
 	configmapName := getConfigMapName(clusterId, username)
-	if err := startupMgr.ensureConfigmap(namespace, configmapName, kubeConfig); err != nil {
+	if err := startupMgr.ensureConfigmap(namespace, configmapName, uid, kubeConfig); err != nil {
 		return nil, err
 	}
 
@@ -176,7 +179,7 @@ func queryByClusterIdInternal(ctx context.Context, clusterId, username, shell st
 
 	podName := GetPodName(clusterId, username)
 	serviceAccountName := namespace
-	podManifest := genPod(podName, namespace, image, configmapName, serviceAccountName)
+	podManifest := genPod(podName, namespace, image, configmapName, serviceAccountName, uid)
 
 	if err := startupMgr.ensurePod(namespace, podName, podManifest); err != nil {
 		return nil, err
@@ -275,22 +278,20 @@ func QueryAuthPodCtx(ctx context.Context, clusterId, username string, consoleQue
 		return nil, errors.New("container_id或namespace/pod_name/container_name不能同时为空")
 	}
 
+	// 默认集群内 kubectl
+	targetClusterID := clusterId
+
 	// 集群外 kubectl
 	if config.G.WebConsole.IsExternalMode() {
-		podCtx, err := queryByClusterIdExternal(
-			ctx,
-			config.G.WebConsole.AdminClusterId,
-			username,
-			clusterId,
-			consoleQuery.Shell)
-		return podCtx, err
+		targetClusterID = config.G.WebConsole.AdminClusterId
+
 	}
 
-	// 集群内 kubectl
-	podCtx, err := queryByClusterIdInternal(
+	podCtx, err := queryByClusterIdExternal(
 		ctx,
-		clusterId,
+		targetClusterID,
 		username,
+		clusterId,
 		consoleQuery.Shell,
 	)
 	return podCtx, err

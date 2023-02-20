@@ -60,7 +60,7 @@ func GetProject(ctx context.Context, bcsConf *config.BCSConf, projectIDOrCode st
 	url := fmt.Sprintf("%s/bcsapi/v4/bcsproject/v1/projects/%s", bcsConf.Host, projectIDOrCode)
 	resp, err := components.GetClient().R().
 		SetContext(ctx).
-		SetBearerAuthToken(bcsConf.Token).
+		SetAuthToken(bcsConf.Token).
 		Get(url)
 
 	if err != nil {
