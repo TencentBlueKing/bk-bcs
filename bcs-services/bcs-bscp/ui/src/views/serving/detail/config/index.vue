@@ -2,8 +2,8 @@
   import { defineProps, ref, computed, watch } from 'vue'
   import { useRoute } from 'vue-router'
   import VersionList from './version-list.vue'
-  import ConfigList from './config-list.vue'
-  import CreateConfigItem from './create-config-item.vue'
+  import ConfigList from './config-list/index.vue'
+  import CreateConfig from './config-list/create-config.vue'
   import CreateVersion from './create-version/index.vue'
   import ReleaseVersion from './release-version/index.vue'
 
@@ -56,7 +56,7 @@
             @confirm="handleUpdateStatus" />
         </section>
       </section>
-      <CreateConfigItem :bk-biz-id="props.bkBizId" :app-id="appId" @update="updateConfigList" />
+      <CreateConfig :bk-biz-id="props.bkBizId" :app-id="appId" @confirm="updateConfigList" />
       <ConfigList ref="configList" :bk-biz-id="props.bkBizId" :app-id="appId" />
     </section>
   </section>

@@ -57,8 +57,8 @@ export type IServingItem = {
 
 export type IServingEditParams = {
   id?: number,
-  biz_id: number,
-  app_id: number,
+  biz_id?: number,
+  app_id?: number,
   name: string,
   file_type: string,
   path?: string,

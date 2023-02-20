@@ -11,12 +11,16 @@ const http = axios.create({
 // 错误处理
 http.interceptors.response.use(
   (response) => {
+      // response.data 目前有一下几种情况
+      // 1. data为string类型，下载配置内容
+      // 2. data为object类型，{ code?, data?, message }
       const { data } = response
-      if (data.code === 0) {
-        return data.data
+
+      if (Object.prototype.toString.call(data) === '[Object object]' && 'code' in data && data.code !== 0) {
+        BkMessage({ theme: 'error', message: data.message, ellipsisLine: 3 })
+        return Promise.reject(data.message)
       }
-      BkMessage({ theme: 'error', message: data.message, ellipsisLine: 3 })
-      return Promise.reject(data.message)
+      return response.data
   },
   error => {
       const { response } = error

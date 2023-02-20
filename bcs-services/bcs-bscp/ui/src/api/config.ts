@@ -10,7 +10,7 @@ import { IPageFilter, IRequestFilter, IServingEditParams } from '../types'
  * @returns 
  */
  export const getVersionConfigList = (biz_id: number, release_id: number, filter: IRequestFilter = {}, page: IPageFilter) => {
-  return http.get(`/config/list/release/config_item/release_id/${release_id}/biz_id/${biz_id}`, { params: { filter, page: { ...page, count: false } } });
+  return http.get(`/config/list/release/config_item/release_id/${release_id}/biz_id/${biz_id}`, { params: { filter, page: { ...page, count: false } } }).then(resp => resp.data);
 }
 
 /**
@@ -22,7 +22,7 @@ import { IPageFilter, IRequestFilter, IServingEditParams } from '../types'
  * @returns 
  */
  export const getServingConfigList = (biz_id: number, app_id: number, filter: IRequestFilter = {} ,page: IPageFilter) => {
-  return http.post(`/config/list/config_item/config_item/app_id/${app_id}/biz_id/${biz_id}`, { biz_id, app_id, filter, page });
+  return http.post(`/config/list/config_item/config_item/app_id/${app_id}/biz_id/${biz_id}`, { biz_id, app_id, filter, page }).then(resp => resp.data);
 }
 
 /**
@@ -61,6 +61,17 @@ import { IPageFilter, IRequestFilter, IServingEditParams } from '../types'
 }
 
 /**
+ * 获取配置项详情
+ * @param id 配置ID
+ * @param bizId 业务ID
+ * @param appId 应用ID
+ * @returns 
+ */
+export const getConfigItemDetail = (id: number, bizId: number, appId: number) => {
+  return http.get(`/config/get/config_item/config_item/config_item_id/${id}/app_id/${appId}/biz_id/${bizId}`).then(resp => resp.data);
+}
+
+/**
  * 上传配置项内容
  * @param bizId 业务ID
  * @param appId 应用ID
@@ -73,6 +84,20 @@ export const updateConfigContent = (bizId: number, appId: number, data: string|F
     headers: {
       'X-Bkapi-File-Content-Overwrite': 'false', 
       'Content-Type': 'text/plain',
+      'X-Bkapi-File-Content-Id': SHA256Str
+    }
+  })
+}
+/**
+ * 获取配置项内容
+ * @param bizId 业务ID
+ * @param appId 应用ID
+ * @param SHA256Str 文件内容的SHA256值
+ * @returns 
+ */
+export const getConfigContent = (bizId: number, appId: number, SHA256Str: string) => {
+  return http.get(`/api/get/content/download/biz_id/${bizId}/app_id/${appId}`, {
+    headers: {
       'X-Bkapi-File-Content-Id': SHA256Str
     }
   })

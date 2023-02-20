@@ -1,4 +1,8 @@
 <script setup lang="ts">
+  import { useStore } from 'vuex'
+
+  const store = useStore()
+
 </script>
 
 <template>
@@ -13,8 +17,7 @@
       </div>
     </div>
     <div class="head-right">
-      <span>help</span>
-      <span>UserName</span>
+      <span>{{ store.state.userInfo.username }}</span>
     </div>
   </div>
 </template>

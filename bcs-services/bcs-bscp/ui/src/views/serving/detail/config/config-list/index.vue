@@ -1,10 +1,10 @@
 <script setup lang="ts">
   import { defineProps, ref, computed, watch, onMounted } from 'vue'
   import InfoBox from "bkui-vue/lib/info-box";
-  import { FilterOp, IPageFilter } from '../../../../types'
-  import { getServingConfigList } from '../../../../api/config'
-  import { deleteServingConfigItem } from '../../../../api/config'
-  import ConfigItemEdit from './config-item-edit.vue'
+  import { FilterOp, IPageFilter } from '../../../../../types'
+  import { getServingConfigList } from '../../../../../api/config'
+  import { deleteServingConfigItem } from '../../../../../api/config'
+  import EditConfig from './edit-config.vue'
 
   const props = defineProps<{
     bkBizId: number,
@@ -19,18 +19,7 @@
     limit: 10,
   })
   const editPanelShow = ref(false)
-  const activeConfig = ref({
-    id: 0,
-    biz_id: 0,
-    app_id: 0,
-    name: '',
-    path: '',
-    file_type: '',
-    file_mode: '',
-    user: '',
-    user_group: '',
-    privilege: ''
-  })
+  const activeConfig = ref(0)
 
   const pageFilter = computed(():IPageFilter => {
     return {
@@ -68,21 +57,7 @@
   }
 
   const handleEdit = (config: any) => {
-    const { id, spec } = config
-    const { name, path, file_type, file_mode, permission } = spec
-    const { privilege, user, user_group } = permission
-    activeConfig.value = { 
-      id,
-      biz_id: props.bkBizId,
-      app_id: props.appId,
-      name,
-      file_type,
-      file_mode,
-      path,
-      user,
-      user_group,
-      privilege
-    }
+    activeConfig.value = config.id
     editPanelShow.value = true
   }
 
@@ -149,9 +124,9 @@
         @change="refreshConfigList($event)"
         @limit-change="handlePageLimitChange"/>
     </bk-loading>
-    <ConfigItemEdit
+    <edit-config
       v-model:show="editPanelShow"
-      :config="activeConfig"
+      :config-id="activeConfig"
       :bk-biz-id="props.bkBizId"
       :app-id="props.appId"
       @confirm="refreshConfigList" />

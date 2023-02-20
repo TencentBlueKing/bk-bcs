@@ -1,5 +1,16 @@
 <script setup lang="ts">
+import { onMounted } from 'vue'
+import { useStore } from 'vuex'
+
 import Header from "./components/head.vue";
+
+const store = useStore()
+
+onMounted(() => {
+  store.dispatch('getUserInfo')
+});
+
+
 </script>
 
 <template>

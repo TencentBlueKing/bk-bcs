@@ -1,4 +1,5 @@
 import { createApp } from 'vue';
+import store from './store'
 import './style.css';
 import App from './App.vue';
 import bkui, { bkTooltips, bkEllipsis } from 'bkui-vue';
@@ -12,7 +13,8 @@ const app = createApp(App)
 app.directive('bkTooltips', bkTooltips)
 app.directive('bkEllipsis', bkEllipsis)
 
-app.use(i18n)
+app.use(store)
+.use(i18n)
 .use(router)
 .use(bkui)
 .mount('#app')

@@ -14,7 +14,7 @@ export type IAppListQuery = {
 }
 
 export const getAppList = (biz_id: number, params: IAppListQuery = {}) => {
-  return http.get(`config/list/app/app/biz_id/${biz_id}`, { params });
+  return http.get(`config/list/app/app/biz_id/${biz_id}`, { params }).then(resp => resp.data);
 }
 
 /**
@@ -34,7 +34,7 @@ export const deleteApp = (id: number, biz_id: number) => {
  * @returns 
  */
 export const createApp = (biz_id: number, params: any) => {
-  return http.post(`config/create/app/app/biz_id/${biz_id}`, { biz_id, ...params });
+  return http.post(`config/create/app/app/biz_id/${biz_id}`, { biz_id, ...params }).then(resp => resp.data);
 }
 
 /**
@@ -44,5 +44,5 @@ export const createApp = (biz_id: number, params: any) => {
  */
 export const updateApp = (params: any) => {
   const { id, biz_id, data } = params;
-  return http.put(`config/update/app/app/app_id/${id}/biz_id/${biz_id}`, data);
+  return http.put(`config/update/app/app/app_id/${id}/biz_id/${biz_id}`, data).then(resp => resp.data);
 }
