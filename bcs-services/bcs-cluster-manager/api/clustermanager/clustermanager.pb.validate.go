@@ -1916,6 +1916,10 @@ func (m *Credential) validate(all bool) error {
 
 	// no validation rules for ClientSecret
 
+	// no validation rules for ServiceAccountSecret
+
+	// no validation rules for GkeProjectID
+
 	if len(errors) > 0 {
 		return CredentialMultiError(errors)
 	}
@@ -2851,49 +2855,9 @@ func (m *Account) validate(all bool) error {
 
 	var errors []error
 
-	if utf8.RuneCountInString(m.GetSecretID()) > 64 {
-		err := AccountValidationError{
-			field:  "SecretID",
-			reason: "value length must be at most 64 runes",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
+	// no validation rules for SecretID
 
-	if !_Account_SecretID_Pattern.MatchString(m.GetSecretID()) {
-		err := AccountValidationError{
-			field:  "SecretID",
-			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
-
-	if utf8.RuneCountInString(m.GetSecretKey()) > 64 {
-		err := AccountValidationError{
-			field:  "SecretKey",
-			reason: "value length must be at most 64 runes",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
-
-	if !_Account_SecretKey_Pattern.MatchString(m.GetSecretKey()) {
-		err := AccountValidationError{
-			field:  "SecretKey",
-			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
+	// no validation rules for SecretKey
 
 	// no validation rules for SubscriptionID
 
@@ -2904,6 +2868,10 @@ func (m *Account) validate(all bool) error {
 	// no validation rules for ClientID
 
 	// no validation rules for ClientSecret
+
+	// no validation rules for ServiceAccountSecret
+
+	// no validation rules for GkeProjectID
 
 	if len(errors) > 0 {
 		return AccountMultiError(errors)
@@ -2981,10 +2949,6 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = AccountValidationError{}
-
-var _Account_SecretID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
-
-var _Account_SecretKey_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
 
 // Validate checks the field values on CloudAccount with the rules defined in
 // the proto definition for this message. If any rules are violated, the first
@@ -35067,16 +35031,7 @@ func (m *GetCloudRegionZonesRequest) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if utf8.RuneCountInString(m.GetRegion()) < 2 {
-		err := GetCloudRegionZonesRequestValidationError{
-			field:  "Region",
-			reason: "value length must be at least 2 runes",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
+	// no validation rules for Region
 
 	if utf8.RuneCountInString(m.GetAccountID()) < 2 {
 		err := GetCloudRegionZonesRequestValidationError{

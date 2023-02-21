@@ -11,14 +11,4 @@
  *
  */
 
-// Package manager xxx
-package manager
-
-import (
-	// init aws implementation registry
-	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/aws"
-	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/azure"    // azure xxx
-	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/blueking" // blueking xxx
-	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/google"   // google xxx
-	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud"   // qcloud xxx
-)
+package tasks

@@ -1497,6 +1497,8 @@ message Credential {
   string resourceGroupName = 5;
   string clientID = 6;
   string clientSecret = 7;
+  string serviceAccountSecret = 8;
+  string gkeProjectID = 9;
 }
 
 message BKOpsPlugin {
@@ -1644,11 +1646,11 @@ message Account {
   string secretID = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "secretID",
     description: "腾讯云账号secretID"
-  }, (validate.rules).string = {max_len : 64, pattern : "^[0-9a-zA-Z-]+$"}];
+  }];
   string secretKey = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "secretKey",
     description: "腾讯云账号secretKey"
-  }, (validate.rules).string = {max_len : 64, pattern : "^[0-9a-zA-Z-]+$"}];
+  }];
   string subscriptionID = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "subscriptionID",
     description: "Azure 订阅ID"
@@ -1668,6 +1670,14 @@ message Account {
   string clientSecret = 7[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "clientSecret",
     description: "Azure Service Principal ClientSecret"
+  }];
+  string serviceAccountSecret = 8[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "serviceAccountSecret",
+    description: "Google Cloud service account的json字符串秘钥"
+  }];
+  string gkeProjectID = 9[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "gkeProjectID",
+    description: "Google Cloud 项目ID"
   }];
 }
 
@@ -8889,7 +8899,7 @@ message GetCloudRegionZonesRequest {
   string region = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title : "region",
     description : "地域信息"
-  },(validate.rules).string = {min_len : 2}];
+  }];
   string accountID = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title : "accountID",
     description : "云凭证ID"

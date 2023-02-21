@@ -4520,6 +4520,16 @@
           "type": "string",
           "description": "Azure Service Principal ClientSecret",
           "title": "clientSecret"
+        },
+        "serviceAccountSecret": {
+          "type": "string",
+          "description": "Google Cloud service account的json字符串秘钥",
+          "title": "serviceAccountSecret"
+        },
+        "gkeProjectID": {
+          "type": "string",
+          "description": "Google Cloud 项目ID",
+          "title": "gkeProjectID"
         }
       },
       "description": "用于存储不同cloud的账号信息，不同cloud格式兼容处理",
@@ -7524,6 +7534,12 @@
           "type": "string"
         },
         "clientSecret": {
+          "type": "string"
+        },
+        "serviceAccountSecret": {
+          "type": "string"
+        },
+        "gkeProjectID": {
           "type": "string"
         }
       },
