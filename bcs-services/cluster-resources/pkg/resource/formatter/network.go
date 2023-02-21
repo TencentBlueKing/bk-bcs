@@ -16,6 +16,7 @@ package formatter
 
 import (
 	"fmt"
+	"net"
 
 	"github.com/TencentBlueKing/gopkg/collection/set"
 
@@ -236,7 +237,8 @@ func parseEndpoints(manifest map[string]interface{}) (endpoints []string) {
 			for _, p := range mapx.GetList(ss, "ports") {
 				addr, _ := addr.(map[string]interface{})
 				p, _ := p.(map[string]interface{})
-				endpoints = append(endpoints, fmt.Sprintf("%s:%d", addr["ip"], p["port"]))
+				endpoints = append(endpoints, net.JoinHostPort(fmt.Sprintf("%s", addr["ip"]),
+					fmt.Sprintf("%d", p["port"])))
 			}
 		}
 	}
