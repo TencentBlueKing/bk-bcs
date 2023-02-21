@@ -33,7 +33,8 @@ class GlobalClusterFeatureFlag(BaseFeatureFlag):
     NETWORK = FeatureFlagField(name='NETWORK', label='网络', default=True)
     CONFIGURATION = FeatureFlagField(name='CONFIGURATION', label='配置', default=True)
     TOOLS = FeatureFlagField(name='TOOLS', label='组件库', default=True)
-    REPO = FeatureFlagField(name='REPO', label='仓库', default=True)
+    # 外部版本不支持此特性
+    # REPO = FeatureFlagField(name='REPO', label='仓库', default=True)
     AUDIT = FeatureFlagField(name='AUDIT', label='操作审计', default=True)
     EVENT = FeatureFlagField(name='EVENT', label='事件查询', default=True)
     MONITOR = FeatureFlagField(name='MONITOR', label='监控中心', default=True)
@@ -55,4 +56,5 @@ class SingleClusterFeatureFlag(BaseFeatureFlag):
 class SharedClusterFeatureFlag(BaseFeatureFlag):
     """集群管理 - 单个共享集群"""
 
+    MONITOR = FeatureFlagField(name='MONITOR', label='监控中心', default=True)
     LOG_COLLECTOR = FeatureFlagField(name='LOG_COLLECTOR', label='日志采集', default=True)
