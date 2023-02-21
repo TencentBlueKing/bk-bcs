@@ -24,7 +24,7 @@ require (
 	github.com/coreos/etcd v3.3.25+incompatible
 	github.com/dbdd4us/qcloudapi-sdk-go v0.0.0-20190530123522-c8d9381de48c
 	github.com/deckarep/golang-set v1.7.1
-	github.com/emicklei/go-restful v2.15.0+incompatible
+	github.com/emicklei/go-restful v2.16.0+incompatible
 	github.com/fsnotify/fsnotify v1.4.9
 	github.com/fsouza/go-dockerclient v1.6.0
 	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b
