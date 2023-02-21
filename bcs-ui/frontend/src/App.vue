@@ -9,13 +9,11 @@
     <app-apply-perm ref="bkApplyPerm"></app-apply-perm>
     <!-- 登录弹窗 -->
     <BkPaaSLogin ref="login" :width="width" :height="height"></BkPaaSLogin>
-    <SharedClusterTips ref="sharedClusterTips"></SharedClusterTips>
   </div>
 </template>
 <script>
 import Navigation from '@/views/app/navigation.vue';
 import ProjectCreate from '@/views/project/project-create.vue';
-import SharedClusterTips from '@/views/app/shared-cluster-tips.vue';
 import BkPaaSLogin from '@/views/app/login.vue';
 import { bus } from '@/common/bus';
 import { userPermsByAction } from '@/api/base';
@@ -24,7 +22,7 @@ import AppApplyPerm from '@/views/app/apply-perm.vue';
 import useProject from '@/views/app/use-project';
 export default {
   name: 'App',
-  components: { Navigation, ProjectCreate, BkPaaSLogin, SharedClusterTips, AppApplyPerm },
+  components: { Navigation, ProjectCreate, BkPaaSLogin, AppApplyPerm },
   data() {
     return {
       isLoading: true,
@@ -104,9 +102,6 @@ export default {
     bus.$on('close-login-modal', () => {
       window.location.reload();
     });
-    bus.$on('show-shared-cluster-tips', () => {
-      this.$refs.sharedClusterTips?.show();
-    });
     window.addEventListener('message', (event) => {
       if (event.data === 'closeLoginModal') {
         window.location.reload();
@@ -117,7 +112,6 @@ export default {
   beforeDestroy() {
     bus.$off('show-apply-perm-modal');
     bus.$off('close-login-modal');
-    bus.$off('show-shared-cluster-tips');
     bus.$off('show-apply-perm-modal-async');
   },
   mounted() {

@@ -63,7 +63,7 @@
                         disable: !firstShareCluster
                       }]"
                     @click="handleGotoShareCluster"
-                  >{{$t('共享集群')}}<span class="beta">beta</span>
+                  >{{$t('共享集群')}}
                   </li>
                 </ul>
               </template>
@@ -121,7 +121,6 @@
 import { BCS_CLUSTER } from '@/common/constant';
 import { mapGetters } from 'vuex';
 import useGoHome from '@/common/use-gohome';
-import { bus } from '@/common/bus';
 import systemLog from '@/views/app/log.vue';
 import BcsMd from '@/components/bcs-md/index.vue';
 import featureMd from '../../../static/features.md';
@@ -256,9 +255,6 @@ export default {
     // 共享集群
     async handleGotoShareCluster() {
       if (!this.firstShareCluster) return;
-      if (!this.isSharedCluster) {
-        bus.$emit('show-shared-cluster-tips');
-      }
       await this.handleSaveClusterInfo(this.firstShareCluster);
       this.handleGoHome();
       this.$refs.clusterManagePopover.hideHandler();

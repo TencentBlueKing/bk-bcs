@@ -182,13 +182,14 @@ export default defineComponent({
     const projectCode = computed(() => $store.state.curProjectCode);
     const projectId = computed(() => $store.state.curProjectId);
     const curProject = computed(() => $store.state.curProject);
+    const isSharedCluster = computed(() => $store.state.cluster.curCluster?.is_shared);
     // 菜单切换
     const handleMenuChange = (item: IMenuItem) => {
       // 直接取$route会存在缓存，需要重新从root上获取最新路由信息
       if (ctx.root.$route.name === item.routeName) return;
 
       if (item.id === 'MONITOR') {
-        if ($INTERNAL.value) {
+        if ($INTERNAL.value && !isSharedCluster.value) {
           window.open(`${window.DEVOPS_HOST}/console/monitor/${projectCode.value}/?project_id=${projectId.value}`);
         } else {
           window.open(`${window.BKMONITOR_HOST}/?bizId=${curProject.value.cc_app_id}#/k8s`);
