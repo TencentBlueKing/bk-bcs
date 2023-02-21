@@ -174,14 +174,20 @@ type ProjectConfig struct {
 	BcsGateway             BCSGatewayConfig             `yaml:"bcsGateway"`
 }
 
-func (conf *ProjectConfig) initServerAddress() error {
+func (conf *ProjectConfig) initServerAddress() {
 	// 若指定使用 LOCAL_IP 且环境变量中 LOCAL_IP 有值，则替换掉 Server.Address
 	if conf.Server.UseLocalIP {
 		conf.Server.Address = envs.LocalIP
 		conf.Server.Ipv6Address = util.InitIPv6Address(envs.LocalIPV6)
 		conf.Server.InsecureAddress = envs.LocalIP
 	}
-	return nil
+}
+
+func (conf *ProjectConfig) initMongoPwd() {
+	// 若配置中密码为空，则使用环境变量中的密码
+	if conf.Mongo.Password == "" {
+		conf.Mongo.Password = envs.MongoPwd
+	}
 }
 
 // GlobalConf 项目配置信息，全局都可以使用
@@ -199,6 +205,8 @@ func LoadConfig(filePath string) (*ProjectConfig, error) {
 	}
 	// 初始化服务地址
 	conf.initServerAddress()
+	// 初始化mongo password
+	conf.initMongoPwd()
 	// 用于后续的使用
 	GlobalConf = conf
 	return conf, nil
