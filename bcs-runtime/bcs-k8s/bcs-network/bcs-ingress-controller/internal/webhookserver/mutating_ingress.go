@@ -16,9 +16,10 @@ package webhookserver
 import (
 	"strings"
 
+	"github.com/pkg/errors"
+
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/constant"
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
-	"github.com/pkg/errors"
 )
 
 func (s *Server) mutateIngress(ingress *networkextensionv1.Ingress) ([]PatchOperation, error) {
@@ -38,17 +39,14 @@ func (s *Server) mutateIngress(ingress *networkextensionv1.Ingress) ([]PatchOper
 	var warnings []string
 	warnings = append(warnings, s.ingressConverter.CheckIngressServiceAvailable(ingress)...)
 
-	_, err := s.ingressConverter.GetIngressLoadbalances(ingress)
+	_, err := s.ingressConverter.GetIngressLoadBalancers(ingress)
 	if err != nil {
 		warnings = append(warnings, err.Error())
 	}
 
-	isConflict, msg, err := s.conflictHandler.IsIngressConflict(ingress)
+	err = s.conflictHandler.IsIngressConflict(ingress)
 	if err != nil {
 		return nil, err
-	}
-	if isConflict {
-		return nil, errors.New(msg)
 	}
 
 	var retPatches []PatchOperation

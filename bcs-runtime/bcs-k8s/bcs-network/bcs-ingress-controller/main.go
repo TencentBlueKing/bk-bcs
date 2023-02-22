@@ -320,7 +320,7 @@ func main() {
 	go eventClient.Start(context.Background())
 
 	conflictHandler := conflicthandler.NewConflictHandler(opts.ConflictCheckOpen, opts.IsTCPUDPPortReuse, opts.Region,
-		mgr.GetClient(), ingressConverter)
+		mgr.GetClient(), ingressConverter, mgr.GetEventRecorderFor("bcs-ingress-controller"))
 	// init webhook server
 	webhookServerOpts := &webhookserver.ServerOption{
 		Addrs:          opts.PodIPs,

@@ -18,12 +18,21 @@ import (
 	"fmt"
 
 	"github.com/pkg/errors"
+	"golang.org/x/sync/errgroup"
+	k8scorev1 "k8s.io/api/core/v1"
+	"k8s.io/client-go/tools/record"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/constant"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/generator"
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
+)
+
+const (
+	// 限制并发检查的ingress数量
+	concurrentIngressCheckLimit = 5
 )
 
 // ConflictHandler handle ingress/portPool conflict
@@ -34,46 +43,49 @@ type ConflictHandler struct {
 
 	k8sClient        client.Client
 	ingressConverter *generator.IngressConverter
+
+	eventer record.EventRecorder
 }
 
 // NewConflictHandler return new conflictHandler
 func NewConflictHandler(conflictCheckOpen bool, IsTCPUDPPortReuse bool, defaultRegion string, k8sCli client.Client,
-	igc *generator.IngressConverter) *ConflictHandler {
+	igc *generator.IngressConverter, eventer record.EventRecorder) *ConflictHandler {
 	return &ConflictHandler{
 		conflictCheckOpen: conflictCheckOpen,
 		defaultRegion:     defaultRegion,
 		IsTCPUDPPortReuse: IsTCPUDPPortReuse,
 		k8sClient:         k8sCli,
 		ingressConverter:  igc,
+		eventer:           eventer,
 	}
 }
 
 // IsIngressConflict return true if new ingress conflict with existed ingress/portpool
-func (h *ConflictHandler) IsIngressConflict(ingress *networkextensionv1.Ingress) (bool, string, error) {
+func (h *ConflictHandler) IsIngressConflict(ingress *networkextensionv1.Ingress) error {
 	if !h.conflictCheckOpen {
-		return false, "", nil
+		return nil
 	}
 	res, err := h.getIngressResourceMap(ingress)
 	if err != nil {
-		return false, "", err
+		return err
 	}
 	return h.checkConflict(res, constant.KindIngress, ingress.GetNamespace(), ingress.GetName())
 }
 
 // IsPortPoolConflict return true if new port pool conflict with existed ingress/portpool
-func (h *ConflictHandler) IsPortPoolConflict(pool *networkextensionv1.PortPool) (bool, string, error) {
+func (h *ConflictHandler) IsPortPoolConflict(pool *networkextensionv1.PortPool) error {
 	if !h.conflictCheckOpen {
-		return false, "", nil
+		return nil
 	}
 	res, err := h.getPortPoolResourceMap(pool)
 	if err != nil {
-		return false, "", err
+		return err
 	}
 	return h.checkConflict(res, constant.KindPortPool, pool.GetNamespace(), pool.GetName())
 }
 
 func (h *ConflictHandler) getIngressResourceMap(ingress *networkextensionv1.Ingress) (map[string]*resource, error) {
-	lbObjs, err := h.ingressConverter.GetIngressLoadbalances(ingress)
+	lbObjs, err := h.ingressConverter.GetIngressLoadBalancers(ingress)
 	if err != nil {
 		return nil, err
 	}
@@ -134,78 +146,87 @@ func (h *ConflictHandler) getPortPoolResourceMap(pool *networkextensionv1.PortPo
 	return usedResource, nil
 }
 
-func (h *ConflictHandler) checkConflict(newRes map[string]*resource, newKind, newNamespace, newName string) (bool,
-	string, error) {
-	conflict, msg, err := h.checkConflictWithIngress(newRes, newKind, newNamespace, newName)
+func (h *ConflictHandler) checkConflict(newRes map[string]*resource, newKind, newNamespace, newName string) error {
+	err := h.checkConflictWithIngress(newRes, newKind, newNamespace, newName)
 	if err != nil {
-		return false, "", err
-	}
-	if conflict {
-		return true, msg, nil
+		return err
 	}
 
-	conflict, msg, err = h.checkConflictWithPortPool(newRes, newKind, newNamespace, newName)
+	err = h.checkConflictWithPortPool(newRes, newKind, newNamespace, newName)
 	if err != nil {
-		return false, "", err
-	}
-	if conflict {
-		return true, msg, nil
+		return err
 	}
 
-	return false, "", nil
+	return nil
 }
 
 // checkConflictWithIngress check if newRes conflict with current ingress
 func (h *ConflictHandler) checkConflictWithIngress(requiredResMap map[string]*resource, newKind, newNamespace,
-	newName string) (bool, string, error) {
+	newName string) error {
 	ingressList := &networkextensionv1.IngressList{}
 	if err := h.k8sClient.List(context.TODO(), ingressList); err != nil {
 		err = errors.Wrapf(err, "k8s api server list failed")
-		return false, "", err
+		return err
 	}
 
+	// 可能存在问题： 当缓存失效时，遍历所有ingress上的lbID，可能导致对腾讯云API的访问高峰，触发qps限制。
+	// 但如果不在GetIngressLoadBalancer方法下加多协程，可能导致一个lb上挂多个clb id时查询超时。
+	workGroup := errgroup.Group{}
+	// 设置limit避免同时检查多个ingress导致缓存失效时describeLoadBalancer请求过多
+	workGroup.SetLimit(concurrentIngressCheckLimit)
 	for _, ingress := range ingressList.Items {
-		if newKind == constant.KindIngress && newNamespace == ingress.GetNamespace() && newName == ingress.GetName() {
-			continue
-		}
-
-		lbObjs, err := h.ingressConverter.GetIngressLoadbalances(&ingress)
-		if err != nil {
-			return false, "", err
-		}
-
-		var ingressResMap map[string]*resource
-		for _, lbObj := range lbObjs {
-			regionID := common.BuildRegionName(lbObj.Region, lbObj.LbID)
-			requiredRes, ok := requiredResMap[regionID]
-			if !ok {
-				continue
+		ingress := ingress
+		workGroup.Go(func() error {
+			if newKind == constant.KindIngress && newNamespace == ingress.GetNamespace() && newName == ingress.GetName() {
+				return nil
 			}
 
-			// load resource only when need
-			if ingressResMap == nil {
-				ingressResMap, err = h.getIngressResourceMap(&ingress)
-				if err != nil {
-					return false, "", err
+			// 如果集群中某个ingress的clb失效，可能导致整个集群无法继续工作。 优先跳过检查
+			lbObjs, err := h.ingressConverter.GetIngressLoadBalancers(&ingress)
+			if err != nil {
+				errMsg := fmt.Sprintf("get LoadBalancers for ingress '%s/%s failed, "+
+					"please check ingress and its load balancer', err : %s", ingress.GetNamespace(),
+					ingress.GetName(), err.Error())
+				blog.Errorf(errMsg)
+				h.eventer.Event(&ingress, k8scorev1.EventTypeWarning, "ingress get lb failed", errMsg)
+				return nil
+			}
+
+			var ingressResMap map[string]*resource
+			for _, lbObj := range lbObjs {
+				regionID := common.BuildRegionName(lbObj.Region, lbObj.LbID)
+				requiredRes, ok := requiredResMap[regionID]
+				if !ok {
+					continue
 				}
-			}
-			ingressRes := ingressResMap[regionID]
-			if requiredRes.IsConflict(h.IsTCPUDPPortReuse, ingressRes) {
-				return true, fmt.Sprintf(constant.PortConflictMsg, constant.KindIngress,
-					ingress.GetNamespace(), ingress.GetName(), regionID), nil
-			}
 
-		}
+				// load resource only when need
+				if ingressResMap == nil {
+					ingressResMap, err = h.getIngressResourceMap(&ingress)
+					if err != nil {
+						return err
+					}
+				}
+				ingressRes := ingressResMap[regionID]
+				if requiredRes.IsConflict(h.IsTCPUDPPortReuse, ingressRes) {
+					return errors.Errorf(constant.PortConflictMsg, constant.KindIngress,
+						ingress.GetNamespace(), ingress.GetName(), regionID)
+				}
+
+			}
+			return nil
+		})
 	}
-	return false, "", nil
+
+	return workGroup.Wait()
 }
 
 func (h *ConflictHandler) checkConflictWithPortPool(requireResourceMap map[string]*resource, newKind, newNamespace,
-	newName string) (bool, string, error) {
+	newName string) error {
 	portPoolList := &networkextensionv1.PortPoolList{}
 	if err := h.k8sClient.List(context.TODO(), portPoolList); err != nil {
 		err = errors.Wrapf(err, "k8s api server list failed")
-		return false, "", err
+		return err
 	}
 
 	for _, portPool := range portPoolList.Items {
@@ -216,17 +237,17 @@ func (h *ConflictHandler) checkConflictWithPortPool(requireResourceMap map[strin
 
 		poolResourceMap, err := h.getPortPoolResourceMap(&portPool)
 		if err != nil {
-			return false, "", err
+			return err
 		}
 
 		for regionID, res := range poolResourceMap {
 			if requireRes, ok := requireResourceMap[regionID]; ok {
 				if requireRes.IsConflict(h.IsTCPUDPPortReuse, res) {
-					return true, fmt.Sprintf(constant.PortConflictMsg, constant.KindPortPool,
-						portPool.GetNamespace(), portPool.GetName(), regionID), nil
+					return errors.Errorf(constant.PortConflictMsg, constant.KindPortPool,
+						portPool.GetNamespace(), portPool.GetName(), regionID)
 				}
 			}
 		}
 	}
-	return false, "", nil
+	return nil
 }

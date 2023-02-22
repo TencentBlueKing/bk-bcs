@@ -14,19 +14,19 @@ package webhookserver
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"reflect"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/common"
-	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/constant"
-	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	k8slabels "k8s.io/apimachinery/pkg/labels"
 	k8sselection "k8s.io/apimachinery/pkg/selection"
 	k8stypes "k8s.io/apimachinery/pkg/types"
+
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/common"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/constant"
+	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
 
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -58,12 +58,9 @@ func (s *Server) validatePortPool(newPool *networkextensionv1.PortPool) error {
 	// if err := s.checkPortPoolConflictWithPort(newPool); err != nil {
 	// 	return err
 	// }
-	isConflict, msg, err := s.conflictHandler.IsPortPoolConflict(newPool)
+	err := s.conflictHandler.IsPortPoolConflict(newPool)
 	if err != nil {
 		return err
-	}
-	if isConflict {
-		return errors.New(msg)
 	}
 	return nil
 }

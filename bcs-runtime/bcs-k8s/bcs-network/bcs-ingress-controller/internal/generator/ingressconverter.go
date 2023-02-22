@@ -22,6 +22,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	gocache "github.com/patrickmn/go-cache"
+	"golang.org/x/sync/errgroup"
 	k8sappsv1 "k8s.io/api/apps/v1"
 	k8scorev1 "k8s.io/api/core/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
@@ -38,6 +39,11 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/cloud"
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
+)
+
+const (
+	// 查询loadBalancer并发数限制
+	concurrentLBGetLimit = 5
 )
 
 // IngressConverterOpt option of listener generator
@@ -94,7 +100,7 @@ func NewIngressConverter(opt *IngressConverterOpt,
 
 // get cloud loadbalance info by cloud loadbalance id pair
 // regionIDPair "ap-xxxxx:lb-xxxxxx" "arn:aws:elasticloadbalancing:xxx:xxx:xxx"
-func (g *IngressConverter) getLoadbalanceByID(ns, regionIDPair, protocolLayer string) (*cloud.LoadBalanceObject, error) {
+func (g *IngressConverter) getLoadBalancerByID(ns, regionIDPair, protocolLayer string) (*cloud.LoadBalanceObject, error) {
 	var lbObj *cloud.LoadBalanceObject
 	var err error
 	strs := g.splitRegionIDPair(regionIDPair)
@@ -142,6 +148,18 @@ func (g *IngressConverter) getLoadbalanceByID(ns, regionIDPair, protocolLayer st
 	return lbObj, nil
 }
 
+func (g *IngressConverter) getLoadBalancerByIDWrapper(ns, regionIDPair, protocolLayer string,
+	lbCh chan *cloud.LoadBalanceObject) func() error {
+	return func() error {
+		lb, err := g.getLoadBalancerByID(ns, regionIDPair, protocolLayer)
+		if err != nil {
+			return err
+		}
+		lbCh <- lb
+		return nil
+	}
+}
+
 // split regionIDPair
 // regionIDPair "ap-xxxxx:lb-xxxxxx" "arn:aws:elasticloadbalancing:xxx:xxx:xxx"
 // if regionIDPair has region and id, return 2 string
@@ -155,7 +173,7 @@ func (g *IngressConverter) splitRegionIDPair(regionIDPair string) []string {
 
 // get cloud loadbalance info by cloud loadbalance name pair
 // regionNamePair "ap-xxxxx:lbname"
-func (g *IngressConverter) getLoadbalanceByName(ns, regionNamePair, protocolLayer string) (*cloud.LoadBalanceObject, error) {
+func (g *IngressConverter) getLoadBalancerByName(ns, regionNamePair, protocolLayer string) (*cloud.LoadBalanceObject, error) {
 	var lbObj *cloud.LoadBalanceObject
 	var err error
 	strs := strings.Split(regionNamePair, ":")
@@ -203,11 +221,26 @@ func (g *IngressConverter) getLoadbalanceByName(ns, regionNamePair, protocolLaye
 	return lbObj, nil
 }
 
-// GetIngressLoadbalances get ingress loadbalance objects by annotations
-func (g *IngressConverter) GetIngressLoadbalances(ingress *networkextensionv1.Ingress) (
+func (g *IngressConverter) getLoadBalancerByNameWrapper(ns, regionNamePair, protocolLayer string,
+	lbCh chan *cloud.LoadBalanceObject) func() error {
+	return func() error {
+		lb, err := g.getLoadBalancerByName(ns, regionNamePair, protocolLayer)
+		if err != nil {
+			return err
+		}
+		lbCh <- lb
+		return nil
+	}
+}
+
+// GetIngressLoadBalancers get ingress loadBalancer objects by annotations
+func (g *IngressConverter) GetIngressLoadBalancers(ingress *networkextensionv1.Ingress) (
 	[]*cloud.LoadBalanceObject, error) {
 	protocolLayer := common.GetIngressProtocolLayer(ingress)
 	var lbs []*cloud.LoadBalanceObject
+	var lbCh chan *cloud.LoadBalanceObject
+	workGroup := &errgroup.Group{}
+	workGroup.SetLimit(concurrentLBGetLimit)
 	lbIDStrs, idOk := ingress.Annotations[networkextensionv1.AnnotationKeyForLoadbalanceIDs]
 	lbNameStrs, nameOk := ingress.Annotations[networkextensionv1.AnnotationKeyForLoadbalanceNames]
 	if !idOk && !nameOk {
@@ -226,12 +259,9 @@ func (g *IngressConverter) GetIngressLoadbalances(ingress *networkextensionv1.In
 				return nil, fmt.Errorf("lbid %s invalid", regionIDPair)
 			}
 		}
+		lbCh = make(chan *cloud.LoadBalanceObject, len(lbIDs))
 		for _, regionIDPair := range lbIDs {
-			lbObj, err := g.getLoadbalanceByID(ingress.GetNamespace(), regionIDPair, protocolLayer)
-			if err != nil {
-				return nil, err
-			}
-			lbs = append(lbs, lbObj)
+			workGroup.Go(g.getLoadBalancerByIDWrapper(ingress.GetNamespace(), regionIDPair, protocolLayer, lbCh))
 		}
 	} else if nameOk {
 		names := strings.Split(lbNameStrs, ",")
@@ -243,13 +273,19 @@ func (g *IngressConverter) GetIngressLoadbalances(ingress *networkextensionv1.In
 				return nil, fmt.Errorf("lbname %s invalid", regionNamePair)
 			}
 		}
+		lbCh = make(chan *cloud.LoadBalanceObject, len(names))
 		for _, regionNamePair := range names {
-			lbObj, err := g.getLoadbalanceByName(ingress.GetNamespace(), regionNamePair, protocolLayer)
-			if err != nil {
-				return nil, err
-			}
-			lbs = append(lbs, lbObj)
+			workGroup.Go(g.getLoadBalancerByNameWrapper(ingress.GetNamespace(), regionNamePair, protocolLayer, lbCh))
 		}
+	}
+
+	err := workGroup.Wait()
+	close(lbCh)
+	if err != nil {
+		return nil, err
+	}
+	for lb := range lbCh {
+		lbs = append(lbs, lb)
 	}
 	return lbs, nil
 }
@@ -259,7 +295,7 @@ func (g *IngressConverter) ProcessUpdateIngress(ingress *networkextensionv1.Ingr
 	var warnings []string
 	warnings = append(warnings, g.CheckIngressServiceAvailable(ingress)...)
 
-	lbObjs, err := g.GetIngressLoadbalances(ingress)
+	lbObjs, err := g.GetIngressLoadBalancers(ingress)
 	if err != nil {
 		return warnings, err
 	}
