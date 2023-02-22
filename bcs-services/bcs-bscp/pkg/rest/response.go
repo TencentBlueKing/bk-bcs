@@ -120,9 +120,12 @@ func (res *ErrorResponse) Render(w http.ResponseWriter, r *http.Request) error {
 	if statusCode == 0 {
 		statusCode = http.StatusBadRequest
 	}
-	res.Error.Data = &UnauthorizedData{
-		LoginURL:      bkpaas.BuildLoginURL(r, cc.ApiServer().LoginAuth.Host),
-		LoginPlainURL: bkpaas.BuildLoginPlainURL(r, cc.ApiServer().LoginAuth.Host),
+
+	if res.Error.Code == "UNAUTHENTICATED" {
+		res.Error.Data = &UnauthorizedData{
+			LoginURL:      bkpaas.BuildLoginURL(r, cc.ApiServer().LoginAuth.Host),
+			LoginPlainURL: bkpaas.BuildLoginPlainURL(r, cc.ApiServer().LoginAuth.Host),
+		}
 	}
 
 	render.Status(r, statusCode)

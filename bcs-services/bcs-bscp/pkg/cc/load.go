@@ -17,6 +17,8 @@ import (
 	"fmt"
 	"io/ioutil"
 
+	"bscp.io/pkg/config"
+	"github.com/spf13/viper"
 	"gopkg.in/yaml.v3"
 )
 
@@ -24,6 +26,10 @@ import (
 func LoadSettings(sys *SysOption) error {
 	if len(sys.ConfigFiles) == 0 {
 		return errors.New("service's configuration file path is not configured")
+	}
+
+	if err := initGlobalConf(sys.ConfigFiles); err != nil {
+		return err
 	}
 
 	conf, err := mergeConfigFile(sys.ConfigFiles)
@@ -108,4 +114,19 @@ func loadFromFile(conf []byte) (Setting, error) {
 	}
 
 	return s, nil
+}
+
+// 初始化全局配置
+func initGlobalConf(filenames []string) error {
+	v := viper.New()
+	for _, f := range filenames {
+		fmt.Println(f)
+		v.SetConfigType("yaml")
+		v.SetConfigFile(f)
+		if err := v.MergeInConfig(); err != nil {
+			return err
+		}
+	}
+
+	return config.G.ReadFromViper(v)
 }

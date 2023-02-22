@@ -150,7 +150,7 @@ func (as *apiServer) listenAndServe() error {
 			}
 		}()
 	}
-	logs.Infof("api server listen and serve success.")
+	logs.Infof("api server listen and serve success. addr=%s", addr)
 
 	return nil
 }

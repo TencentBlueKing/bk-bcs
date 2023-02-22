@@ -17,10 +17,13 @@ import (
 	"net/http"
 	"path/filepath"
 
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/render"
+
+	"bscp.io/pkg/components"
 	"bscp.io/pkg/components/bkpaas"
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/rest"
-	"github.com/go-chi/render"
 )
 
 // UnifiedAuthentication
@@ -38,7 +41,13 @@ func (a authorizer) UnifiedAuthentication(next http.Handler) http.Handler {
 			return
 		}
 
-		k := &kit.Kit{User: resp.Username}
+		k := &kit.Kit{
+			User:        resp.Username,
+			Rid:         components.RequestIDValue(r.Context()),
+			AppId:       chi.URLParam(r, "app_id"),
+			SpaceID:     "",
+			SpaceTypeID: "",
+		}
 		ctx := kit.WithKit(r.Context(), k)
 
 		next.ServeHTTP(w, r.WithContext(ctx))

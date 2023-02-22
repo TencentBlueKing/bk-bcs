@@ -2,6 +2,7 @@ syntax = "proto3";
 
 import "google/api/annotations.proto";
 import "google/protobuf/struct.proto";
+import "protoc-gen-openapiv2/options/annotations.proto";
 
 package pbas;
 
@@ -36,6 +37,12 @@ service Auth {
 
     // get iam permission to apply.
     rpc GetPermissionToApply(GetPermissionToApplyReq) returns (GetPermissionToApplyResp) {}
+
+    rpc ListSpace(ListSpaceReq) returns (ListSpaceResp) {
+        option (google.api.http) = {
+            get: "/api/v1/auth/spaces"
+        };
+    }
 }
 
 message InitAuthCenterReq {
@@ -154,4 +161,26 @@ message UserCredentialReq {
 message UserInfoResp {
     string username   = 1;
     string avatar_url = 2;
+}
+
+message ListSpaceReq {
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
+        json_schema: {
+            title: "ListSpace"
+            description: "查询用户有权限的空间列表, 含业务和BCS项目"
+        }
+    };
+}
+
+// Space 项目空间，可同时兼容bk-cmdb, bcs project_code等
+message Space {
+    string space_id        = 1;
+    string space_name      = 2;
+    string space_type_id   = 3;
+    string space_type_name = 4;
+    string space_uid       = 5;
+}
+
+message ListSpaceResp {
+    repeated Space items = 1;
 }

@@ -48,3 +48,9 @@ message Versioning {
     // Patch version when you make backwards compatible bug fixes.
     uint32 Patch = 3;
 }
+
+// 参数错误
+message InvalidArgument {
+    string field   = 1;
+    string message = 2;
+}

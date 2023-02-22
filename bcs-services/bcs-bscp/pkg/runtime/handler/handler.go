@@ -14,12 +14,15 @@ limitations under the License.
 package handler
 
 import (
+	"bytes"
 	"context"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"net/http/httputil"
 	_ "net/http/pprof"
 	"net/url"
+	"regexp"
 	"strings"
 
 	"github.com/go-chi/chi/v5/middleware"
@@ -27,6 +30,8 @@ import (
 	"k8s.io/klog/v2"
 
 	"bscp.io/pkg/components"
+	"bscp.io/pkg/criteria/errf"
+	"bscp.io/pkg/logs"
 	"bscp.io/pkg/metrics"
 	"bscp.io/pkg/runtime/ctl"
 )
@@ -174,4 +179,38 @@ func RequestID(next http.Handler) http.Handler {
 		next.ServeHTTP(w, r.WithContext(ctx))
 	}
 	return http.HandlerFunc(fn)
+}
+
+// RequestBodyLogger 记录 requetBody 的中间件
+func RequestBodyLogger(ignoreRequest func(r *http.Request) bool) func(http.Handler) http.Handler {
+	reg := regexp.MustCompile(`\\s+`)
+	return func(next http.Handler) http.Handler {
+		fn := func(w http.ResponseWriter, r *http.Request) {
+			// 过滤的请求, 直接不记录
+			if ignoreRequest(r) {
+				next.ServeHTTP(w, r)
+				return
+			}
+
+			body, err := ioutil.ReadAll(r.Body)
+			if err != nil {
+				w.WriteHeader(http.StatusForbidden)
+				fmt.Fprintf(w, errf.Error(errf.New(errf.Unknown, err.Error())).Error())
+				return
+			}
+
+			compactedBody := reg.ReplaceAllString(string(body), "")
+			logs.Infof("uri: %s, method: %s, body: %s, remote addr: %s,",
+				r.RequestURI,
+				r.Method,
+				compactedBody,
+				r.RemoteAddr,
+			)
+
+			r.Body = ioutil.NopCloser(bytes.NewBuffer(body))
+			next.ServeHTTP(w, r)
+		}
+
+		return http.HandlerFunc(fn)
+	}
 }

@@ -261,17 +261,17 @@ message ListBizReq {
 
 message ListBizResp {
     message BizData {
-        uint32 biz_id = 1;
-        string biz_name = 2;
-        repeated string biz_maintainer = 3; 
+        uint32 biz_id                  = 1;
+        string biz_name                = 2;
+        repeated string biz_maintainer = 3;
     }
     message RespData {
         repeated BizData biz_list = 1;
     }
 
-    int32 code                    = 1;
-    string message                = 2;
-    RespData data                 = 3;
+    int32 code     = 1;
+    string message = 2;
+    RespData data  = 3;
 }
 
 message CreateAppReq {
@@ -420,9 +420,9 @@ message DeleteConfigItemResp {
 }
 
 message GetConfigItemReq {
-    uint32 id                     = 1;
-    uint32 biz_id                 = 2;
-    uint32 app_id                 = 3;
+    uint32 id     = 1;
+    uint32 biz_id = 2;
+    uint32 app_id = 3;
 }
 
 message GetConfigItemResp {
@@ -650,15 +650,15 @@ message ListStrategySetsResp {
 }
 
 message CreateStrategyReq {
-    uint32 biz_id                  = 1;
-    uint32 app_id                  = 2;
-    uint32 strategy_set_id         = 3;
-    uint32 release_id              = 4;
-    bool as_default                = 5;
-    string name                    = 6;
-    repeated uint32 groups         = 7;
-    string namespace               = 8;
-    string memo                    = 9;
+    uint32 biz_id          = 1;
+    uint32 app_id          = 2;
+    uint32 strategy_set_id = 3;
+    uint32 release_id      = 4;
+    bool as_default        = 5;
+    string name            = 6;
+    repeated uint32 groups = 7;
+    string namespace       = 8;
+    string memo            = 9;
 }
 
 message CreateStrategyResp {
@@ -672,16 +672,15 @@ message CreateStrategyResp {
     pbas.IamPermission permission = 4;
 }
 
-
 message UpdateStrategyReq {
-    uint32 biz_id                  = 1;
-    uint32 app_id                  = 2;
-    uint32 id                      = 3;
-    uint32 release_id              = 4;
-    bool as_default                = 5;
-    string name                    = 6;
-    repeated uint32 groups         = 7;
-    string memo                    = 8;
+    uint32 biz_id          = 1;
+    uint32 app_id          = 2;
+    uint32 id              = 3;
+    uint32 release_id      = 4;
+    bool as_default        = 5;
+    string name            = 6;
+    repeated uint32 groups = 7;
+    string memo            = 8;
 }
 
 message UpdateStrategyResp {
@@ -780,7 +779,7 @@ message ListGroupsReq {
 
 message ListGroupsResp {
     message RespData {
-        uint32 count                         = 1;
+        uint32 count                   = 1;
         repeated pbgroup.Group details = 2;
     }
 
@@ -791,9 +790,9 @@ message ListGroupsResp {
 }
 
 message CreateGroupCategoryReq {
-    uint32 biz_id                   = 1;
-    uint32 app_id                   = 2;
-    string name                     = 3;
+    uint32 biz_id = 1;
+    uint32 app_id = 2;
+    string name   = 3;
 }
 
 message CreateGroupCategoryResp {

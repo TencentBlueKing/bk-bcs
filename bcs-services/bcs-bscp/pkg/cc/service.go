@@ -111,6 +111,7 @@ type AuthServerSetting struct {
 	Log       LogOption         `yaml:"log"`
 	LoginAuth LoginAuthSettings `yaml:"loginAuth"`
 	IAM       IAM               `yaml:"iam"`
+	Esb       Esb               `yaml:"esb"`
 }
 
 // LoginAuthSettings

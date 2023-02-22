@@ -32,6 +32,7 @@ type BaseConf struct {
 	AppCode      string         `yaml:"app_code"`
 	AppSecret    string         `yaml:"app_secret"`
 	TimeZone     string         `yaml:"time_zone"`
+	BKPaaSHost   string         `yaml:"bk_paas_host"` // esb 调用地址
 	LanguageCode string         `yaml:"language_code"`
 	RunEnv       string         `yaml:"run_env"`
 	Location     *time.Location `yaml:"-"`

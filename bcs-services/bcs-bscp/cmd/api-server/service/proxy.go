@@ -27,6 +27,7 @@ import (
 	"bscp.io/pkg/cc"
 	"bscp.io/pkg/iam/auth"
 	"bscp.io/pkg/logs"
+	pbas "bscp.io/pkg/protocol/auth-server"
 	pbcs "bscp.io/pkg/protocol/config-server"
 	"bscp.io/pkg/runtime/grpcgw"
 	"bscp.io/pkg/runtime/handler"
@@ -37,6 +38,7 @@ import (
 // proxy all server's mux proxy.
 type proxy struct {
 	cfgSvrMux    *runtime.ServeMux
+	authSvrMux   http.Handler
 	repoRevProxy *repoProxy
 	state        serviced.State
 	authorizer   auth.Authorizer
@@ -50,6 +52,11 @@ func newProxy(dis serviced.Discover) (*proxy, error) {
 	}
 
 	cfgSvrMux, err := newCfgServerMux(dis)
+	if err != nil {
+		return nil, err
+	}
+
+	authSvrMux, err := newAuthServerMux(dis)
 	if err != nil {
 		return nil, err
 	}
@@ -69,6 +76,7 @@ func newProxy(dis serviced.Discover) (*proxy, error) {
 		repoRevProxy: repoProxy,
 		state:        state,
 		authorizer:   authorizer,
+		authSvrMux:   authSvrMux,
 	}
 
 	return p, nil
@@ -88,29 +96,55 @@ func (p *proxy) handler() http.Handler {
 	r.Mount("/", handler.RegisterCommonHandler())
 	// 用户信息
 	r.With(p.authorizer.UnifiedAuthentication).Get("/api/v1/auth/user/info", UserInfoHandler)
+	r.Route("/api/v1/auth", func(r chi.Router) {
+		r.Use(p.authorizer.UnifiedAuthentication)
+		r.Mount("/", p.authSvrMux)
+	})
 
 	// 服务管理, 配置管理, 分组管理, 发布管理
 	r.Route("/api/v1/config/", func(r chi.Router) {
 		r.Use(p.authorizer.UnifiedAuthentication)
-		r.Use(p.setFilter)
 		r.Mount("/", p.cfgSvrMux)
 	})
 
 	// repo 上传 API
 	r.Route("/api/v1/api/create/content/upload", func(r chi.Router) {
 		r.Use(p.authorizer.UnifiedAuthentication)
-		r.Use(p.setFilter)
 		r.Put("/biz_id/{biz_id}/app_id/{app_id}", p.repoRevProxy.ServeHTTP)
 	})
 
 	// repo 下载 API
 	r.Route("/api/v1/api/get/content/download", func(r chi.Router) {
 		r.Use(p.authorizer.UnifiedAuthentication)
-		r.Use(p.setFilter)
 		r.Get("/biz_id/{biz_id}/app_id/{app_id}", p.repoRevProxy.ServeHTTP)
 	})
 
 	return r
+}
+
+func newAuthServerMux(dis serviced.Discover) (http.Handler, error) {
+	opts, err := newGrpcDialOption(dis, cc.ApiServer().Network.TLS)
+	if err != nil {
+		return nil, err
+	}
+
+	// build conn.
+	conn, err := grpc.Dial(serviced.GrpcServiceDiscoveryName(cc.AuthServerName), opts...)
+	if err != nil {
+		logs.Errorf("dial auth server failed, err: %v", err)
+		return nil, err
+	}
+
+	// new grpc mux.
+	mux := runtime.NewServeMux(grpcgw.MetadataOpt, grpcgw.BKJSONMarshalerOpt, grpcgw.BKErrorHandlerOpt)
+
+	// register client to mux.
+	if err = pbas.RegisterAuthHandler(context.Background(), mux, conn); err != nil {
+		logs.Errorf("register config server handler client failed, err: %v", err)
+		return nil, err
+	}
+
+	return mux, nil
 }
 
 // newCfgServerMux new config server mux.

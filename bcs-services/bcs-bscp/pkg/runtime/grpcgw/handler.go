@@ -13,55 +13,67 @@ limitations under the License.
 package grpcgw
 
 import (
+	"bytes"
 	"context"
-	"encoding/json"
-	"fmt"
 	"net/http"
 
+	"github.com/go-chi/render"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 
 	"bscp.io/pkg/criteria/constant"
+	"bscp.io/pkg/kit"
+	"bscp.io/pkg/rest"
 )
 
-// ErrStatus 返回的错误结果体
-type errStatus struct {
-	Code      int    `json:"code"`
-	Message   string `json:"message"`
-	RequestID string `json:"request_id"`
-	Data      []byte `json:"data"`
+// grpcGatewayErr GRPC-Gateway 错误
+func grpcGatewayErr(s *status.Status) render.Renderer {
+	status := http.StatusBadRequest
+	code := "INVALID_REQUEST"
+
+	switch s.Code() {
+	case codes.NotFound:
+		status = http.StatusNotFound
+		code = "NOT_FOUND"
+	}
+
+	payload := &rest.ErrorPayload{Code: code, Message: s.Err().Error(), Details: s.Details()}
+	return &rest.ErrorResponse{Error: payload, HTTPStatusCode: status}
 }
 
-func errorHandler(ctx context.Context, mux *runtime.ServeMux, marshaler runtime.Marshaler, w http.ResponseWriter, r *http.Request, err error) {
+// bkErrorHandler 蓝鲸规范化的错误返回
+func bkErrorHandler(ctx context.Context, mux *runtime.ServeMux, marshaler runtime.Marshaler, w http.ResponseWriter, r *http.Request, err error) {
 	s := status.Convert(err)
-	status := &errStatus{Code: 400, Message: s.Message()}
-	body, _ := json.Marshal(status)
-	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	w.WriteHeader(http.StatusUnauthorized)
-	w.Write(body)
+	render.Render(w, r, grpcGatewayErr(s))
 }
 
-type jsonResponse struct {
+// bkJSONResponse 蓝鲸规范返回
+type bkJSONResponse struct {
 	runtime.JSONPb
 }
 
-func (j *jsonResponse) Marshal(v interface{}) ([]byte, error) {
-	buf, err := j.JSONPb.Marshal(v)
+// Marshal 蓝鲸规范序列化, 外层统一添加 {"data": %s} 结构
+func (j *bkJSONResponse) Marshal(v interface{}) ([]byte, error) {
+	body, err := j.JSONPb.Marshal(v)
 	if err != nil {
 		return nil, err
 	}
 
-	b := fmt.Sprintf(`{"code": 0, "message": "OK", "request_id": "", "data": %s}`, buf)
+	buf := bytes.NewBufferString(`{"data":`)
+	buf.Write(body)
+	buf.WriteString(`}`)
 
-	return []byte(b), nil
+	return buf.Bytes(), nil
 }
 
-// convert http header to grpc metadata
-func metadataHandler(ctx context.Context, req *http.Request) metadata.MD {
+// kitMetadataHandler convert http header to grpc metadata
+func kitMetadataHandler(ctx context.Context, r *http.Request) metadata.MD {
+	kt := kit.MustGetKit(ctx)
 	return metadata.Pairs(
-		constant.RidKey, req.Header.Get(constant.RidKey),
-		constant.UserKey, req.Header.Get(constant.UserKey),
-		constant.AppCodeKey, req.Header.Get(constant.AppCodeKey),
+		constant.RidKey, kt.Rid,
+		constant.UserKey, kt.User,
+		constant.AppCodeKey, kt.AppCode,
 	)
 }

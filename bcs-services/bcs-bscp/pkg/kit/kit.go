@@ -89,7 +89,10 @@ type Kit struct {
 	Rid string
 
 	// AppCode is app code.
-	AppCode string
+	AppCode     string
+	AppId       string // 对应的应用ID
+	SpaceID     string // 应用对应的SpaceID
+	SpaceTypeID string // 应用对应的SpaceTypeID
 }
 
 // ContextWithRid NOTES

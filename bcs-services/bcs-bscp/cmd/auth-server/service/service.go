@@ -26,16 +26,20 @@ import (
 	"bscp.io/cmd/auth-server/service/auth"
 	"bscp.io/cmd/auth-server/service/iam"
 	"bscp.io/cmd/auth-server/service/initial"
+	"bscp.io/cmd/auth-server/service/space"
 	"bscp.io/pkg/cc"
 	"bscp.io/pkg/components/bkpaas"
 	"bscp.io/pkg/iam/client"
 	pkgauth "bscp.io/pkg/iam/sdk/auth"
 	"bscp.io/pkg/iam/sys"
+	"bscp.io/pkg/kit"
 	"bscp.io/pkg/logs"
 	"bscp.io/pkg/metrics"
 	pbas "bscp.io/pkg/protocol/auth-server"
+	basepb "bscp.io/pkg/protocol/core/base"
 	pbds "bscp.io/pkg/protocol/data-service"
 	"bscp.io/pkg/serviced"
+	esbcli "bscp.io/pkg/thirdparty/esb/client"
 	"bscp.io/pkg/tools"
 )
 
@@ -170,10 +174,17 @@ func newClientSet(sd serviced.Discover, tls cc.TLSConfig, iamSettings cc.IAM, di
 	}
 	logs.Infof("initialize iam auth sdk success.")
 
+	esbSetting := cc.AuthServer().Esb
+	esbCli, err := esbcli.NewClient(&esbSetting, metrics.Register())
+	if err != nil {
+		return nil, err
+	}
+
 	cs := &ClientSet{
 		DS:   ds,
 		sys:  iamSys,
 		auth: authSdk,
+		Esb:  esbCli,
 	}
 	logs.Infof("initialize the client set success.")
 	return cs, nil
@@ -187,6 +198,8 @@ type ClientSet struct {
 	sys *sys.Sys
 	// auth related operate.
 	auth pkgauth.Authorizer
+	// Esb Esb client api
+	Esb esbcli.Client
 }
 
 // PullResource init auth center's auth model.
@@ -252,4 +265,35 @@ func (s *Service) GetUserInfo(ctx context.Context, req *pbas.UserCredentialReq) 
 	}
 
 	return &pbas.UserInfoResp{Username: username, AvatarUrl: ""}, nil
+}
+
+// GetSpaces 获取用户信息
+func (s *Service) ListSpace(ctx context.Context, req *pbas.ListSpaceReq) (*pbas.ListSpaceResp, error) {
+	kt := kit.FromGrpcContext(ctx)
+	if kt.User == "" {
+		err := basepb.InvalidArgumentsErr(&basepb.InvalidArgument{
+			Field:   "kit.user",
+			Message: "kit.user not found in metadata",
+		})
+
+		return nil, err
+	}
+
+	spaceList, err := space.ListSpace(ctx, s.client.Esb, kt.User)
+	if err != nil {
+		return nil, err
+	}
+
+	items := make([]*pbas.Space, 0, len(spaceList))
+	for _, space := range spaceList {
+		items = append(items, &pbas.Space{
+			SpaceId:       space.SpaceId,
+			SpaceName:     space.SpaceName,
+			SpaceTypeId:   space.SpaceTypeID,
+			SpaceTypeName: space.SpaceTypeName,
+			SpaceUid:      space.SpaceUid,
+		})
+	}
+
+	return &pbas.ListSpaceResp{Items: items}, nil
 }

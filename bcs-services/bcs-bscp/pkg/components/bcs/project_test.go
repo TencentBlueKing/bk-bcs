@@ -11,20 +11,20 @@
  *
  */
 
-package config
+package bcs
 
-// BCSConf :
-type BCSConf struct {
-	Host               string `yaml:"host"`
-	Token              string `yaml:"token"`
-	InsecureSkipVerify bool   `yaml:"insecure_skip_verify"`
-}
+import (
+	"context"
+	"fmt"
+	"testing"
 
-// Init :
-func (c *BCSConf) Init() error {
-	// only for development
-	c.Host = ""
-	c.Token = ""
-	c.InsecureSkipVerify = false
-	return nil
+	"github.com/stretchr/testify/assert"
+)
+
+func TestGetProject(t *testing.T) {
+	ctx := context.Background()
+
+	projects, err := ListAuthorizedProjects(ctx, "")
+	assert.NoError(t, err)
+	fmt.Println(projects)
 }

@@ -47,6 +47,7 @@ const (
 var (
 	maskKeys = map[string]struct{}{
 		"bk_app_secret": {},
+		"bk_token":      {},
 	}
 	clientOnce   sync.Once
 	globalClient *resty.Client

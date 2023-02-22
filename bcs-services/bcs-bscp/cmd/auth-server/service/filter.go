@@ -40,6 +40,7 @@ const (
 	initialModule moduleType = "init" // initial bscp auth model in iam module.
 	iamModule     moduleType = "iam"  // iam callback module.
 	userModule    moduleType = "user"
+	spaceModule   moduleType = "space"
 )
 
 // setFilter set mux request filter.
@@ -69,7 +70,7 @@ func (g *gateway) setFilter(next http.Handler) http.Handler {
 				return
 			}
 
-		case initialModule, userModule:
+		case initialModule, userModule, spaceModule:
 
 		default:
 			logs.Errorf("received unknown module's request req: %v", r)

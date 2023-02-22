@@ -18,10 +18,21 @@ import (
 )
 
 var (
-	// MetadataOpt 自定义头部
-	MetadataOpt = runtime.WithMetadata(metadataHandler)
-	// MarshalerOption自定义返回结构
-	MarshalerOpt = runtime.WithMarshalerOption(runtime.MIMEWildcard, &jsonResponse{})
+	// MetadataOpt 自定义鉴权头部
+	MetadataOpt = runtime.WithMetadata(kitMetadataHandler)
+
+	// BKJSONMarshalerOpt 自定义返回结构
+	BKJSONMarshalerOpt = runtime.WithMarshalerOption(runtime.MIMEWildcard, &bkJSONResponse{
+		JSONPb: runtime.JSONPb{
+			MarshalOptions: protojson.MarshalOptions{
+				EmitUnpopulated: true,
+				UseProtoNames:   true,
+			},
+			UnmarshalOptions: protojson.UnmarshalOptions{
+				DiscardUnknown: true,
+			},
+		},
+	})
 
 	// JsonMarshalerOpt 序列化
 	JsonMarshalerOpt = runtime.WithMarshalerOption(runtime.MIMEWildcard, &runtime.JSONPb{
@@ -34,6 +45,6 @@ var (
 		},
 	})
 
-	// ErrorHandlerOpt 自定义错误处理
-	ErrorHandlerOpt = runtime.WithErrorHandler(errorHandler)
+	// BKErrorHandlerOpt 蓝鲸规范的错误返回
+	BKErrorHandlerOpt = runtime.WithErrorHandler(bkErrorHandler)
 )

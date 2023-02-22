@@ -17,8 +17,9 @@ import (
 	"errors"
 	"net/http"
 
-	"bscp.io/pkg/serviced"
 	"github.com/go-chi/chi/v5"
+
+	"bscp.io/pkg/serviced"
 )
 
 // Service do all the api server's work

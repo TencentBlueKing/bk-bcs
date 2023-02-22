@@ -15,6 +15,11 @@ package pbbase
 import (
 	"errors"
 	"fmt"
+
+	spb "google.golang.org/genproto/googleapis/rpc/status"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/anypb"
 )
 
 // Validate the sidecar's version is validate or not.
@@ -33,4 +38,22 @@ func (x *Versioning) Format() string {
 	}
 
 	return fmt.Sprintf("%d.%d.%d", x.Major, x.Minor, x.Patch)
+}
+
+// 错误参数返回
+func InvalidArgumentsErr(e *InvalidArgument, others ...*InvalidArgument) error {
+	errPb, _ := anypb.New(e)
+	s := &spb.Status{
+		Code:    int32(codes.InvalidArgument),
+		Details: []*anypb.Any{errPb},
+	}
+
+	othersPb := make([]*anypb.Any, 0, len(others))
+	for _, v := range others {
+		o, _ := anypb.New(v)
+		othersPb = append(othersPb, o)
+	}
+	s.Details = append(s.Details, othersPb...)
+
+	return status.ErrorProto(s)
 }

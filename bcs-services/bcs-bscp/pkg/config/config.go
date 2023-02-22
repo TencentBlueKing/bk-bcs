@@ -31,27 +31,16 @@ import (
 // Configuration 配置
 type Configuration struct {
 	Viper        *viper.Viper
-	Base         *BaseConf                  `yaml:"base_conf"`
-	BCS          *BCSConf                   `yaml:"bcs_conf"`
-	BCSEnvConf   []*BCSConf                 `yaml:"bcs_env_conf"`
-	BCSEnvMap    map[BCSClusterEnv]*BCSConf `yaml:"-"`
-	Web          *WebConf                   `yaml:"web"`
-	FrontendConf *FrontendConf              `yaml:"frontend_conf"`
+	Base         *BaseConf     `yaml:"base_conf"`
+	BCS          *BCSConf      `yaml:"bcs_conf"`
+	Web          *WebConf      `yaml:"web"`
+	FrontendConf *FrontendConf `yaml:"frontend_conf"`
 }
 
 // init 初始化
 func (c *Configuration) init() error {
 	if err := c.Web.init(); err != nil {
 		return err
-	}
-
-	if err := c.BCS.InitJWTPubKey(); err != nil {
-		return err
-	}
-
-	// 把列表类型转换为map，方便检索
-	for _, conf := range c.BCSEnvConf {
-		c.BCSEnvMap[conf.ClusterEnv] = conf
 	}
 
 	return nil
@@ -73,9 +62,6 @@ func newConfiguration() (*Configuration, error) {
 	c.BCS.Init()
 
 	c.FrontendConf = defaultFrontendConf()
-
-	c.BCSEnvConf = []*BCSConf{}
-	c.BCSEnvMap = map[BCSClusterEnv]*BCSConf{}
 
 	return c, nil
 }

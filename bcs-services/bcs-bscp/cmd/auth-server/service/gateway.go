@@ -13,46 +13,28 @@ limitations under the License.
 package service
 
 import (
-	"context"
-	"fmt"
-	"net"
 	"net/http"
-	"strconv"
 	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
-	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials"
 
-	"bscp.io/pkg/cc"
 	"bscp.io/pkg/iam/sys"
-	"bscp.io/pkg/logs"
-	pbas "bscp.io/pkg/protocol/auth-server"
-	"bscp.io/pkg/runtime/grpcgw"
 	"bscp.io/pkg/runtime/handler"
 	"bscp.io/pkg/serviced"
-	"bscp.io/pkg/tools"
 )
 
 // gateway auth server's grpc-gateway.
 type gateway struct {
 	iamSys *sys.Sys
-	mux    *runtime.ServeMux
 	state  serviced.State
 }
 
 // newGateway create new auth server's grpc-gateway.
 func newGateway(st serviced.State, iamSys *sys.Sys) (*gateway, error) {
-	mux, err := newAuthServerMux()
-	if err != nil {
-		return nil, err
-	}
-
 	g := &gateway{
-		state:  st,
-		mux:    mux,
+		state: st,
+
 		iamSys: iamSys,
 	}
 
@@ -70,55 +52,6 @@ func (g *gateway) handler() http.Handler {
 
 	r.HandleFunc("/healthz", g.Healthz)
 	r.Mount("/", handler.RegisterCommonToolHandler())
-	r.Route("/api/v1/auth", func(r chi.Router) {
-		r.With(g.setFilter).Mount("/", g.mux)
-	})
 
 	return r
-}
-
-// newAuthServerMux new auth server mux.
-func newAuthServerMux() (*runtime.ServeMux, error) {
-	opts := make([]grpc.DialOption, 0)
-
-	network := cc.AuthServer().Network
-	tls := network.TLS
-	if !tls.Enable() {
-		// dial without ssl
-		opts = append(opts, grpc.WithInsecure())
-	} else {
-		// dial with ssl.
-		tlsC, err := tools.ClientTLSConfVerify(tls.InsecureSkipVerify, tls.CAFile, tls.CertFile, tls.KeyFile,
-			tls.Password)
-		if err != nil {
-			return nil, fmt.Errorf("init grpc tls config failed, err: %v", err)
-		}
-
-		cred := credentials.NewTLS(tlsC)
-		opts = append(opts, grpc.WithTransportCredentials(cred))
-	}
-
-	// build conn.
-	addr := net.JoinHostPort(network.BindIP, strconv.Itoa(int(network.RpcPort)))
-	conn, err := grpc.Dial(addr, opts...)
-	if err != nil {
-		logs.Errorf("dial auth server failed, err: %v", err)
-		return nil, err
-	}
-
-	// new grpc mux.
-	mux := newGrpcMux()
-
-	// register client to mux.
-	if err = pbas.RegisterAuthHandler(context.Background(), mux, conn); err != nil {
-		logs.Errorf("register auth server handler client failed, err: %v", err)
-		return nil, err
-	}
-
-	return mux, nil
-}
-
-// newGrpcMux new grpc mux that has some processing of built-in http request to grpc request.
-func newGrpcMux() *runtime.ServeMux {
-	return runtime.NewServeMux(grpcgw.MetadataOpt, grpcgw.MarshalerOpt, grpcgw.ErrorHandlerOpt)
 }

@@ -32,6 +32,7 @@ type AuthClient interface {
 	AuthorizeBatch(ctx context.Context, in *AuthorizeBatchReq, opts ...grpc.CallOption) (*AuthorizeBatchResp, error)
 	// get iam permission to apply.
 	GetPermissionToApply(ctx context.Context, in *GetPermissionToApplyReq, opts ...grpc.CallOption) (*GetPermissionToApplyResp, error)
+	ListSpace(ctx context.Context, in *ListSpaceReq, opts ...grpc.CallOption) (*ListSpaceResp, error)
 }
 
 type authClient struct {
@@ -87,6 +88,15 @@ func (c *authClient) GetPermissionToApply(ctx context.Context, in *GetPermission
 	return out, nil
 }
 
+func (c *authClient) ListSpace(ctx context.Context, in *ListSpaceReq, opts ...grpc.CallOption) (*ListSpaceResp, error) {
+	out := new(ListSpaceResp)
+	err := c.cc.Invoke(ctx, "/pbas.Auth/ListSpace", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // AuthServer is the server API for Auth service.
 // All implementations should embed UnimplementedAuthServer
 // for forward compatibility
@@ -101,6 +111,7 @@ type AuthServer interface {
 	AuthorizeBatch(context.Context, *AuthorizeBatchReq) (*AuthorizeBatchResp, error)
 	// get iam permission to apply.
 	GetPermissionToApply(context.Context, *GetPermissionToApplyReq) (*GetPermissionToApplyResp, error)
+	ListSpace(context.Context, *ListSpaceReq) (*ListSpaceResp, error)
 }
 
 // UnimplementedAuthServer should be embedded to have forward compatible implementations.
@@ -121,6 +132,9 @@ func (UnimplementedAuthServer) AuthorizeBatch(context.Context, *AuthorizeBatchRe
 }
 func (UnimplementedAuthServer) GetPermissionToApply(context.Context, *GetPermissionToApplyReq) (*GetPermissionToApplyResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetPermissionToApply not implemented")
+}
+func (UnimplementedAuthServer) ListSpace(context.Context, *ListSpaceReq) (*ListSpaceResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListSpace not implemented")
 }
 
 // UnsafeAuthServer may be embedded to opt out of forward compatibility for this service.
@@ -224,6 +238,24 @@ func _Auth_GetPermissionToApply_Handler(srv interface{}, ctx context.Context, de
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Auth_ListSpace_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListSpaceReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AuthServer).ListSpace(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/pbas.Auth/ListSpace",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AuthServer).ListSpace(ctx, req.(*ListSpaceReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Auth_ServiceDesc is the grpc.ServiceDesc for Auth service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -250,6 +282,10 @@ var Auth_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetPermissionToApply",
 			Handler:    _Auth_GetPermissionToApply_Handler,
+		},
+		{
+			MethodName: "ListSpace",
+			Handler:    _Auth_ListSpace_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
