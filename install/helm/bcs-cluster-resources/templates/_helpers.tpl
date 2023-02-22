@@ -33,9 +33,6 @@ app.kubernetes.io/name: {{ include "bcs-cluster-resources.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
-{{- define "bcs-cluster-resources.image" -}}
-{{ include "common.images.image" (dict "imageRoot" .Values.image "global" .Values.global) }}
-{{- end -}}
 
 {{- define "bcs-cluster-resources.envs" -}}
 - name: LOCAL_IP

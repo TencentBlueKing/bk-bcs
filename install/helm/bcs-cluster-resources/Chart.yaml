@@ -1,13 +1,13 @@
 apiVersion: v2
-appVersion: v1.28.0-alpha.75
-name: bcs-cluster-resources
+appVersion: latest
+name: cluster-resources
 description: 蓝鲸容器服务 bcs-services/cluster-resources 模块
 type: application
-version: 1.28.0-alpha.75
+version: 0.1.0
 dependencies:
-  - name: common
+  - name: redis
+    version: 17.7.3
     repository: https://charts.bitnami.com/bitnami
-    version: 1.16.0
-  - name: bcs-common
-    repository: file://../bcs-common
-    version: x.x.x
+  - name: etcd
+    version: 8.7.3
+    repository: https://charts.bitnami.com/bitnami

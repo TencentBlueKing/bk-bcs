@@ -23,11 +23,14 @@ global:
 
 enabled: true
 
+## 证书
+certs:
+  enabled: false
+
 image:
-  registry: "hub.bktencent.com"
-  repository: blueking/bcs-cluster-resources
-  pullPolicy: IfNotPresent
-  tag: v1.28.0-alpha.75
+  repository: cluster-resources
+  pullPolicy: Never
+  tag: latest
 
 imagePullSecrets: []
 nameOverride: ""
@@ -52,10 +55,8 @@ resources:
     memory: 512Mi
   limits:
     cpu: 2
-    memory: 4Gi
+    memory: 2Gi
 
-## 环境变量
-envs: {}
 
 ## 依赖服务检查，启用后主动检查依赖的其他服务
 checkService: false
@@ -66,10 +67,10 @@ svcConf:
 
   ## Etcd 相关配置
   etcd:
-    endpoints: "bcs-etcd:2379"
-    cert: "/data/bcs/cert/etcd/etcd.pem"
-    key: "/data/bcs/cert/etcd/etcd-key.pem"
-    ca: "/data/bcs/cert/etcd/etcd-ca.pem"
+    endpoints: "bcs-cluster-resources-etcd:2379"
+    cert: ""
+    key: ""
+    ca: ""
 
   ## Server 配置信息
   server:
@@ -81,17 +82,17 @@ svcConf:
     metricPort: 9091
     registerTTL: 30
     registerInterval: 25
-    cert: "/data/bcs/cert/bcs/bcs-server.crt"
+    cert: ""
     certPwd: ""
-    key: "/data/bcs/cert/bcs/bcs-server.key"
-    ca: "/data/bcs/cert/bcs/bcs-ca.crt"
+    key: ""
+    ca: ""
 
   ## Client 配置信息
   client:
-    cert: "/data/bcs/cert/bcs/bcs-client.crt"
+    cert: ""
     certPwd: ""
-    key: "/data/bcs/cert/bcs/bcs-client.key"
-    ca: "/data/bcs/cert/bcs/bcs-ca.crt"
+    key: ""
+    ca: ""
 
   ## Swagger 配置信息
   swagger:
@@ -121,7 +122,7 @@ svcConf:
 
   ## Redis 配置信息
   redis:
-    address: "bcs-redis-master:6379"
+    address: "bcs-cluster-resources-redis-master:6379"
     db: 2
     password: ""
     ## 以下项非必须可不启用
@@ -131,51 +132,46 @@ svcConf:
     # poolSize: 64
     # minIdleConns: 64
 
+  ## TRACING 相关配置
+  tracing:
+    tracingEnabled: false
+    exporterURL: "http://localhost:14268/api/traces"
+
   ## 全局配置信息
   crGlobal:
     auth:
       ##【重要】非调试模式不应禁用
-      disabled: false
-      jwtPublicKey: "/data/bcs/cert/jwt/public.key"
+      disabled: true
+      jwtPublicKey: ""
 
     ## 项目基础类配置
     basic:
-      appCode: ""
-      appSecret: ""
-      bkApiGWHost: ""
-      bkPaaSHost: ""
+      appCode: "bk_bcs_app"
+      appSecret: "your_app_secret"
+      bkApiGWHost: "http://bkapigw.com"
+      bkPaaSHost: "http://bkpaas.com"
       healthzToken: ""
       cacheToken: ""
 
     ## BCS API 网关配置
     bcsApiGW:
-      host: "https://bcs-api-gateway"
+      host: "http://bcs.apigw.com"
       authToken: ""
       ## 开启后将读取 Secret 挂载到容器中 Env 的值
-      readAuthTokenFromEnv: true
+      readAuthTokenFromEnv: false
 
     ## 权限中心相关配置
     iam:
-      host: ""
-      systemID: ""
-      useBKApiGW: true
+      host: "http://iam.com"
+      systemID: "bk_bcs_app"
+      useBKApiGW: false
       metric: false
       debug: false
 
     ## 共享集群相关配置
     sharedCluster:
-      enabledCObjKinds:
-        - GameDeployment
-        - GameStatefulSet
-        - GeneralPodAutoscaler
-        - HookRun
-        - HookTemplate
-      enabledCRDs:
-        - gamedeployments.tkex.tencent.com
-        - gamestatefulsets.tkex.tencent.com
-        - generalpodautoscalers.autoscaling.tkex.tencent.com
-        - hookruns.tkex.tencent.com
-        - hooktemplates.tkex.tencent.com
+      enabledCObjKinds: []
+      enabledCRDs: []
 
 ## 挂载的 server. etcd cert 和 jwt key 对应的 secret 名称
 secret:
@@ -225,7 +221,7 @@ ingress:
   tls: []
 
 service:
-  type: ClusterIP
+  type: NodePort
   ports:
     - name: grpc
       port: 9090
@@ -264,3 +260,18 @@ metrics:
 bkLogCollection:
   enabled: false
   dataId: 1
+
+redis:
+  architecture: standalone
+  auth:
+    enabled: false
+    
+etcd:
+  replicaCount: 3
+  auth:
+    rbac:
+      create: false
+    token:
+      type: simple
+  persistence:
+    enabled: false

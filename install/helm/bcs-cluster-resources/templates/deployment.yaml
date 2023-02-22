@@ -22,24 +22,15 @@ spec:
       labels:
         {{- include "bcs-cluster-resources.selectorLabels" . | nindent 8 }}
     spec:
-      {{- with .Values.imagePullSecrets }}
-      imagePullSecrets:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      serviceAccountName: {{ include "bcs-cluster-resources.serviceAccountName" . }}
-      securityContext:
-        {{- toYaml .Values.podSecurityContext | nindent 8 }}
       containers:
         - name: main
-          securityContext:
-            {{- toYaml .Values.securityContext | nindent 12 }}
-          image: {{ include "bcs-cluster-resources.image" . }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           command:
             - /bin/bash
             - -c
           args:
-            - bcs-cluster-resources --conf /data/workspace/etc/conf.yaml
+            - bcs-cluster-resources --conf /data/workspace/etc/conf.yaml  
           ports:
             - name: grpc
               containerPort: {{ .Values.svcConf.server.port }}
@@ -61,40 +52,22 @@ spec:
           volumeMounts:
             - name: cr-conf-volume
               mountPath: /data/workspace/etc
+             {{- if eq .Values.certs.enabled true }}
             - name: bcs-certs
               mountPath: /data/bcs/cert/bcs
             - name: etcd-certs
               mountPath: /data/bcs/cert/etcd
             - name: bcs-jwt
               mountPath: /data/bcs/cert/jwt
-      {{- if .Values.checkService }}
-      initContainers:
-        - name: check-service
-          securityContext:
-            {{- toYaml .Values.securityContext | nindent 12 }}
-          image: {{ include "bcs-cluster-resources.image" . }}
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
-          command:
-            - /bin/bash
-            - -c
-          args:
-            - bcs-cluster-resources --conf /data/workspace/etc/conf.yaml --checkService
-          volumeMounts:
-            - name: cr-conf-volume
-              mountPath: /data/workspace/etc
-            - name: bcs-certs
-              mountPath: /data/bcs/cert/bcs
-            - name: etcd-certs
-              mountPath: /data/bcs/cert/etcd
-            - name: bcs-jwt
-              mountPath: /data/bcs/cert/jwt
-      {{- end }}
+             {{- end }}
       volumes:
         - name: cr-conf-volume
           configMap:
             name: {{ include "bcs-cluster-resources.confCMName" . }}
-        {{- include "bcs-common.volumes.bcsServices" . | indent 8 }}
-        {{- include "bcs-common.volumes.bcsJWT" . | nindent 8 }}
+            {{- if eq .Values.certs.enabled true }}
+              {{- include "bcs-common.volumes.bcsServices" . | indent 8 }}
+              {{- include "bcs-common.volumes.bcsJWT" . | nindent 8 }}
+            {{- end }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
