@@ -370,7 +370,7 @@ func (cli *PermVerifyClient) verifyUserNamespacePermission(ctx context.Context, 
 		return false, fmt.Errorf("invalid action[%s]", action)
 	}
 
-	if clusterType == Shared && actionID != namespace.NameSpaceScopedView.String() {
+	if clusterType == Shared && actionID != namespace.NameSpaceView.String() {
 		return false, fmt.Errorf("verifyUserNamespacePermission shared cluster[%s] not support %s permission %s",
 			resource.ClusterID, namespaceScopedType, actionID)
 	}
