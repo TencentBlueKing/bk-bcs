@@ -564,3 +564,53 @@ export const path2Tree = (paths: string[]) => {
   });
   return nodes;
 };
+
+export const validateIPv6 = function (a) {
+  return new RegExp('(?!^(?:(?:.*(?:::.*::|:::).*)|::|[0:]+[01]|.*[^:]:|[0-9a-fA-F](?:.*:.*){8}[0-9a-fA-F]|(?:[0-9a-fA-F]:){1,6}[0-9a-fA-F])$)^(?:(::|[0-9a-fA-F]{1,4}:{1,2})([0-9a-fA-F]{1,4}:{1,2}){0,6}([0-9a-fA-F]{1,4}|::)?)$').test(a);
+};
+const _leftPad = function (d, p, n) {
+  const padding = p.repeat(n);
+  if (d.length < padding.length) {
+    d = padding.substring(0, padding.length - d.length) + d;
+  }
+  return d;
+};
+
+export const normalizeIPv6 = function (a) {
+  if (!validateIPv6(a)) return a;
+
+  a = a.toLowerCase();
+
+  const nh = a.split(/::/g);
+  if (nh.length > 2) {
+    throw new Error(`Invalid address: ${a}`);
+  }
+
+  let sections: any[] = [];
+  if (nh.length === 1) {
+    // full mode
+    sections = a.split(/:/g);
+    if (sections.length !== 8) {
+      throw new Error(`Invalid address: ${a}`);
+    }
+  } else if (nh.length === 2) {
+    // compact mode
+    const n = nh[0];
+    const h = nh[1];
+    const ns = n.split(/:/g);
+    const hs = h.split(/:/g);
+    for (const i in ns) {
+      sections[i] = ns[i];
+    }
+    for (let i = hs.length; i > 0; --i) {
+      sections[7 - (hs.length - i)] = hs[i - 1];
+    }
+  }
+  for (let i = 0; i < 8; ++i) {
+    if (sections[i] === undefined) {
+      sections[i] = '0000';
+    }
+    sections[i] = _leftPad(sections[i], '0', 4);
+  }
+  return sections.join(':');
+};

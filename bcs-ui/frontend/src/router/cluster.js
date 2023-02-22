@@ -161,7 +161,7 @@ const childRoutes = [
   },
   // 集群里的具体节点
   {
-    path: ':projectCode/cluster/:clusterId/node/:nodeId/:nodeName',
+    path: ':projectCode/cluster/:clusterId/node/:nodeName/detail',
     name: 'clusterNodeOverview',
     component: ClusterNodeOverview,
     meta: {

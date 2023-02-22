@@ -318,19 +318,19 @@ const menu: IMenu = {
       children: [
         {
           name: 'Services',
-          routeName: 'service',
+          routeName: 'dashboardNetworkService',
           id: 'service',
         },
         {
           name: 'Ingresses',
-          routeName: 'resourceIngress',
+          routeName: 'dashboardNetworkIngress',
           id: 'resourceIngress',
         },
-        {
-          name: 'LoadBalancers',
-          routeName: 'loadBalance',
-          id: 'loadBalance',
-        },
+        // {
+        //   name: 'LoadBalancers',
+        //   routeName: 'loadBalance',
+        //   id: 'loadBalance',
+        // },
       ],
       id: 'NETWORK',
     },

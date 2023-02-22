@@ -69,6 +69,7 @@ import menuConfig, { IMenuItem, ISpecialMenuItem } from '@/store/menu';
 import { BCS_CLUSTER } from '@/common/constant';
 import useGoHome from '@/common/use-gohome';
 import { useConfig } from '@/common/use-app';
+import useDefaultClusterId from '@/views/node/use-default-clusterId';
 
 export default defineComponent({
   name: 'SideNav',
@@ -183,6 +184,7 @@ export default defineComponent({
     const projectId = computed(() => $store.state.curProjectId);
     const curProject = computed(() => $store.state.curProject);
     // 菜单切换
+    const { defaultClusterId } = useDefaultClusterId();
     const handleMenuChange = (item: IMenuItem) => {
       // 直接取$route会存在缓存，需要重新从root上获取最新路由信息
       if (ctx.root.$route.name === item.routeName) return;
@@ -193,6 +195,14 @@ export default defineComponent({
         } else {
           window.open(`${window.BKMONITOR_HOST}/?bizId=${curProject.value.cc_app_id}#/k8s`);
         }
+      } else if (['service', 'resourceIngress'].includes(item.id)) {
+        const { href } = $router.resolve({
+          name: item.routeName,
+          params: {
+            clusterId: defaultClusterId.value || '',
+          },
+        });
+        window.location.href = href;
       } else {
         $router.push({
           name: item.routeName,

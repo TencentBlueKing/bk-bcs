@@ -36,9 +36,9 @@
       <div class="basic-info-item">
         <label>Endpoints</label>
         <template v-if="endpoints">
-          <bcs-popover placement="top" width="140">
+          <bcs-popover class="flex-1" placement="top">
             <span>{{ endpoints.join(',') }}</span>
-            <div slot="content" style="white-space: normal;">
+            <div slot="content">
               <div v-for="(item, index) in endpoints" :key="index">
                 {{ item }}
               </div>

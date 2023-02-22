@@ -3,7 +3,7 @@
     <div class="biz-top-bar">
       <div class="biz-cluster-node-overview-title">
         <i class="bcs-icon bcs-icon-arrows-left back" @click="goNode"></i>
-        <span>{{nodeId}}</span>
+        <span>{{nodeName}}</span>
       </div>
       <bk-guide></bk-guide>
     </div>
@@ -12,8 +12,8 @@
         <div class="biz-cluster-node-overview-header">
           <div class="header-item">
             <div class="key-label">IP：</div>
-            <bcs-popover :content="nodeId" placement="bottom">
-              <div class="value-label">{{nodeId || '--'}}</div>
+            <bcs-popover :content="nodeInfo.ip" placement="bottom">
+              <div class="value-label">{{nodeInfo.ip || '--'}}</div>
             </bcs-popover>
           </div>
           <div class="header-item">
@@ -224,7 +224,7 @@
           </div>
         </div>
         <bcs-tab class="mt20" type="card" :label-height="42">
-          <bcs-tab-panel name="pod" label="Pod">
+          <bcs-tab-panel name="pod" label="Pods">
             <div class="layout-header">
               <div></div>
               <div class="select-wrapper">
@@ -396,7 +396,7 @@
               is-specify-kinds
               kinds="Node"
               :cluster-id="clusterId"
-              :name="nodeId" />
+              :name="nodeName" />
           </bcs-tab-panel>
         </bcs-tab>
       </div>
@@ -432,7 +432,6 @@ import { useSelectItemsNamespace } from '@/views/dashboard/namespace/use-namespa
 import { nodeOverview } from '@/common/chart-option';
 import { catchErrorHandler, formatBytes } from '@/common/util';
 import { createChartOption } from './node-overview-chart-opts';
-// import { getNodeTemplateInfo } from '@/api/base';
 import EventQueryTable from '../mc/event-query-table.vue';
 
 export default defineComponent({
@@ -474,7 +473,6 @@ export default defineComponent({
     const isTkeCluster = computed(() => ($store.state as any).cluster.clusterList
       ?.find(item => item.clusterID === clusterId.value)?.provider === 'tencentCloud');
     const projectCode = computed(() => $route.params.projectCode);
-    const nodeId = computed(() => $route.params.nodeId);
     const nodeName = computed(() => $route.params.nodeName);
     const curPodsData = computed(() => {
       const { limit, current } = podsDataPagination.value;
@@ -498,7 +496,7 @@ export default defineComponent({
         nodeInfo.value = await $store.dispatch('metric/clusterNodeInfo', {
           $projectCode: projectCode.value,
           $clusterId: clusterId.value,
-          $nodeIP: nodeId.value,
+          $nodeIP: nodeName.value,
         }) || {};
       } catch (e) {
         catchErrorHandler(e, ctx);
@@ -517,7 +515,7 @@ export default defineComponent({
         end_at: moment().utc()
           .format(),
         $projectCode: projectCode.value,
-        $nodeIP: nodeId.value,
+        $nodeIP: nodeName.value,
         $clusterId: clusterId.value,
       };
       if (!params.$nodeIP) return;
@@ -956,7 +954,7 @@ export default defineComponent({
           name: row.name,
           namespace: row.namespace,
           clusterId: clusterId.value,
-          nodeId: nodeId.value,
+          nodeId: nodeName.value,
           nodeName: nodeName.value,
           from: 'nodePods',
         },
@@ -1084,7 +1082,7 @@ export default defineComponent({
     });
 
     return {
-      // nodeTemplateInfo,
+      nodeName,
       isTkeCluster,
       memoryLine,
       networkLine,
@@ -1105,7 +1103,6 @@ export default defineComponent({
       projectId,
       clusterId,
       projectCode,
-      nodeId,
       curPodsData,
       clusterList,
       curCluster,

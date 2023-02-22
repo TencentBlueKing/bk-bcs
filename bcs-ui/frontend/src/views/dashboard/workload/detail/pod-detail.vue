@@ -16,7 +16,7 @@
             </div>
             <div class="basic-item">
               <span class="label">Pod IPv4</span>
-              <span class="value">{{ status.podIP || '--' }}</span>
+              <span class="value">{{ manifestExt.podIPv4 || '--' }}</span>
             </div>
             <div class="basic-item">
               <span class="label">Pod IPv6</span>

@@ -128,7 +128,7 @@
         </Metric>
       </div>
       <bcs-tab class="workload-tab" :active.sync="activePanel" type="card" :label-height="42">
-        <bcs-tab-panel name="pod" label="Pod" v-bkloading="{ isLoading: podLoading }">
+        <bcs-tab-panel name="pod" label="Pods" v-bkloading="{ isLoading: podLoading }">
           <div class="pod-info-header">
             <bk-button
               v-if="showBatchDispatch"

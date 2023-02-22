@@ -177,12 +177,12 @@
         >
           <template #default="{ row }">
             <bcs-checkbox
-              :checked="selections.some(item => item.inner_ip === row.inner_ip)"
+              :checked="selections.some(item => item.nodeName === row.nodeName)"
               @change="(value) => handleRowCheckChange(value, row)"
             ></bcs-checkbox>
           </template>
         </bcs-table-column>
-        <bcs-table-column :label="$t('内网IP')" prop="inner_ip" width="120" sortable>
+        <bcs-table-column :label="$t('内网IP')" prop="nodeName" width="120" sortable>
           <template #default="{ row }">
             <bcs-button
               :disabled="['INITIALIZATION', 'DELETING'].includes(row.status)"
@@ -200,11 +200,16 @@
               }"
               @click="handleGoOverview(row)"
             >
-              {{ row.inner_ip }}
+              {{ row.nodeName }}
             </bcs-button>
           </template>
         </bcs-table-column>
-        <bcs-table-column label="IPv6" props="innerIPv6" min-width="200" sortable>
+        <bcs-table-column
+          label="IPv6"
+          props="innerIPv6"
+          min-width="200"
+          sortable
+          show-overflow-tooltip>
           <template #default="{ row }">
             {{ row.innerIPv6 || '--' }}
           </template>
@@ -246,7 +251,7 @@
           key="container_count"
           v-if="isColumnRender('container_count')">
           <template #default="{ row }">
-            {{ nodeMetric[row.inner_ip] ? nodeMetric[row.inner_ip].container_count : '--'}}
+            {{ nodeMetric[row.nodeName] ? nodeMetric[row.nodeName].container_count : '--'}}
           </template>
         </bcs-table-column>
         <bcs-table-column
@@ -257,7 +262,7 @@
           key="pod_count"
           v-if="isColumnRender('pod_count')">
           <template #default="{ row }">
-            {{ nodeMetric[row.inner_ip] ? nodeMetric[row.inner_ip].pod_count : '--'}}
+            {{ nodeMetric[row.nodeName] ? nodeMetric[row.nodeName].pod_count : '--'}}
           </template>
         </bcs-table-column>
         <bcs-table-column min-width="200" :label="$t('标签')" key="source_type" v-if="isColumnRender('source_type')">
@@ -315,9 +320,9 @@
           v-if="isColumnRender('cpu_usage')"
         >
           <template #default="{ row }">
-            <LoadingCell v-if="!nodeMetric[row.inner_ip]"></LoadingCell>
+            <LoadingCell v-if="!nodeMetric[row.nodeName]"></LoadingCell>
             <RingCell
-              :percent="nodeMetric[row.inner_ip].cpu_usage"
+              :percent="nodeMetric[row.nodeName].cpu_usage"
               fill-color="#3ede78"
               v-else
             ></RingCell>
@@ -332,9 +337,9 @@
           v-if="isColumnRender('memory_usage')"
         >
           <template #default="{ row }">
-            <LoadingCell v-if="!nodeMetric[row.inner_ip]"></LoadingCell>
+            <LoadingCell v-if="!nodeMetric[row.nodeName]"></LoadingCell>
             <RingCell
-              :percent="nodeMetric[row.inner_ip].memory_usage"
+              :percent="nodeMetric[row.nodeName].memory_usage"
               fill-color="#3a84ff"
               v-else
             ></RingCell>
@@ -349,9 +354,9 @@
           v-if="isColumnRender('disk_usage')"
         >
           <template #default="{ row }">
-            <LoadingCell v-if="!nodeMetric[row.inner_ip]"></LoadingCell>
+            <LoadingCell v-if="!nodeMetric[row.nodeName]"></LoadingCell>
             <RingCell
-              :percent="nodeMetric[row.inner_ip].disk_usage"
+              :percent="nodeMetric[row.nodeName].disk_usage"
               fill-color="#853cff"
               v-else
             ></RingCell>
@@ -366,9 +371,9 @@
           v-if="isColumnRender('diskio_usage')"
         >
           <template #default="{ row }">
-            <LoadingCell v-if="!nodeMetric[row.inner_ip]"></LoadingCell>
+            <LoadingCell v-if="!nodeMetric[row.nodeName]"></LoadingCell>
             <RingCell
-              :percent="nodeMetric[row.inner_ip].diskio_usage"
+              :percent="nodeMetric[row.nodeName].diskio_usage"
               fill-color="#853cff"
               v-else
             ></RingCell>
@@ -408,6 +413,7 @@
                 class="mr10"
                 text
                 v-if="['INITIALIZATION', 'DELETING', 'REMOVE-FAILURE', 'ADD-FAILURE'].includes(row.status)"
+                :disabled="!row.inner_ip"
                 @click="handleShowLog(row)"
               >
                 {{$t('查看日志')}}
@@ -415,6 +421,7 @@
               <bk-button
                 text
                 v-if="['REMOVE-FAILURE', 'ADD-FAILURE'].includes(row.status)"
+                :disabled="!row.inner_ip"
                 @click="handleRetry(row)"
               >{{ $t('重试') }}</bk-button>
               <bk-popover
@@ -439,6 +446,7 @@
                         content: $t('导入集群，节点管理功能不可用')
                       }"
                       v-if="['REMOVE-FAILURE', 'ADD-FAILURE', 'REMOVABLE', 'NOTREADY'].includes(row.status)"
+                      :disabled="!row.inner_ip"
                       @click="handleDeleteNode(row)"
                     >
                       {{ $t('删除') }}
@@ -562,7 +570,7 @@ import useTableAcrossCheck from './use-table-across-check';
 import { CheckType } from '@/components/across-check.vue';
 import RingCell from '@/views/cluster/ring-cell.vue';
 import LoadingCell from '@/views/cluster/loading-cell.vue';
-import { copyText } from '@/common/util';
+import { copyText, normalizeIPv6 } from '@/common/util';
 import useInterval from '@/views/dashboard/common/use-interval';
 import KeyValue, { IData } from '@/components/key-value.vue';
 import TaintContent from './taint.vue';
@@ -715,8 +723,8 @@ export default defineComponent({
     } = useTableSetting(fields, props.selectedFields);
 
     const sortMethod = (pre, next, prop) => {
-      const preNumber = parseFloat(nodeMetric.value[pre.inner_ip]?.[prop] || 0);
-      const nextNumber = parseFloat(nodeMetric.value[next.inner_ip]?.[prop] || 0);
+      const preNumber = parseFloat(nodeMetric.value[pre.nodeName]?.[prop] || 0);
+      const nextNumber = parseFloat(nodeMetric.value[next.nodeName]?.[prop] || 0);
       if (preNumber > nextNumber) {
         return -1;
       } if (preNumber < nextNumber) {
@@ -770,7 +778,7 @@ export default defineComponent({
         }
         searchValues.push({
           id: item.id,
-          value: new Set(tmp),
+          value: new Set(tmp.map(t => normalizeIPv6(t))),
         });
       });
       return searchValues;
@@ -825,8 +833,8 @@ export default defineComponent({
       $router.push({
         name: 'clusterNodeOverview',
         params: {
-          nodeId: row.inner_ip,
-          nodeName: row.name,
+          // nodeId: row.inner_ip,
+          nodeName: row.nodeName,
           clusterId: row.cluster_id || localClusterId.value,
         },
       });
@@ -1010,7 +1018,7 @@ export default defineComponent({
     // 停止调度
     const handleStopNode = (row) => {
       bkComfirmInfo({
-        title: $i18n.t('确认对节点 {ip} 停止调度', { ip: row.inner_ip }),
+        title: $i18n.t('确认对节点 {ip} 停止调度', { ip: row.nodeName }),
         subTitle: $i18n.t('如果有使用Ingress及LoadBalancer类型的Service，节点停止调度后，Service Controller会剔除LB到nodePort的映射'),
         callback: async () => {
           const result = await handleCordonNodes({
@@ -1025,7 +1033,7 @@ export default defineComponent({
     const handleEnableNode = (row) => {
       bkComfirmInfo({
         title: $i18n.t('确认允许调度'),
-        subTitle: $i18n.t('确认对节点 {ip} 允许调度', { ip: row.inner_ip }),
+        subTitle: $i18n.t('确认对节点 {ip} 允许调度', { ip: row.nodeName }),
         callback: async () => {
           const result = await handleUncordonNodes({
             clusterID: row.cluster_id,
@@ -1039,7 +1047,7 @@ export default defineComponent({
     const handleSchedulerNode = (row) => {
       bkComfirmInfo({
         title: $i18n.t('确认Pod驱逐'),
-        subTitle: $i18n.t('确认要对节点 {ip} 上的Pod进行驱逐', { ip: row.inner_ip }),
+        subTitle: $i18n.t('确认要对节点 {ip} 上的Pod进行驱逐', { ip: row.nodeName }),
         callback: async () => {
           await schedulerNode({
             clusterId: row.cluster_id,
@@ -1122,7 +1130,7 @@ export default defineComponent({
       bkComfirmInfo({
         title: $i18n.t('请确认是否批量允许调度'),
         subTitle: $i18n.t('请确认是否允许 {ip} 等 {num} 个IP调度', {
-          ip: selections.value[0].inner_ip,
+          ip: selections.value[0].nodeName,
           num: selections.value.length,
         }),
         callback: async () => {
@@ -1141,7 +1149,7 @@ export default defineComponent({
       bkComfirmInfo({
         title: $i18n.t('请确认是否批量停止调度'),
         subTitle: $i18n.t('请确认是否停止 {ip} 等 {num} 个IP调度', {
-          ip: selections.value[0].inner_ip,
+          ip: selections.value[0].nodeName,
           num: selections.value.length,
         }),
         callback: async () => {
@@ -1202,7 +1210,7 @@ export default defineComponent({
         title: $i18n.t('确认Pod驱逐'),
         subTitle: $i18n.t('确认要对 {ip} 等 {num} 个节点上的Pod进行驱逐', {
           num: selections.value.length,
-          ip: selections.value[0].inner_ip,
+          ip: selections.value[0].nodeName,
         }),
         callback: async () => {
           await schedulerNode({
@@ -1288,15 +1296,15 @@ export default defineComponent({
     // 获取节点指标
     const nodeMetric = ref({});
     const handleGetNodeOverview = async () => {
-      const data = curPageData.value.filter(item => !nodeMetric.value[item.inner_ip]);
+      const data = curPageData.value.filter(item => !nodeMetric.value[item.nodeName]);
       const promiseList: Promise<any>[] = [];
       for (let i = 0; i < data.length; i++) {
         (function (item) {
           promiseList.push(getNodeOverview({
-            nodeIP: item.inner_ip,
+            nodeIP: item.nodeName,
             clusterId: localClusterId.value,
           }).then((data) => {
-            set(nodeMetric.value, item.inner_ip, data);
+            set(nodeMetric.value, item.nodeName, data);
           }));
         }(data[i]));
       }

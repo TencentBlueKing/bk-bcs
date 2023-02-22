@@ -388,7 +388,7 @@ export default {
       },
       clusterRegion: null,
       typeMap: {
-        1: this.$t('K8S原生集群'),
+        1: this.$t('k8s原生集群'),
         2: this.$t('腾讯云自研云集群（内部)'),
         3: this.$t('kubeconfig导入集群'),
         4: this.$t('腾讯云-云凭证导入集群'),

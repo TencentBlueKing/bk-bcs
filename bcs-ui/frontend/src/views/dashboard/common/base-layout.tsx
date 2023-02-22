@@ -5,7 +5,7 @@ import { useSelectItemsNamespace } from '../namespace/use-namespace';
 import usePage from './use-page';
 import useSubscribe, { ISubscribeData, ISubscribeParams } from './use-subscribe';
 import useTableData from './use-table-data';
-import { sort } from '@/common/util';
+import { sort, normalizeIPv6 } from '@/common/util';
 import yamljs from 'js-yaml';
 import './base-layout.css';
 import fullScreen from '@/directives/full-screen';
@@ -214,7 +214,9 @@ export default defineComponent({
     const resourceVersion = computed(() => data.value.manifest?.metadata?.resourceVersion || '');
 
     // 模糊搜索功能
-    const keys = ref(['metadata.name', 'creator']); // 模糊搜索字段
+    const keys = ref(kind.value === 'Pod'
+      ? ['metadata.name', 'creator', 'status.hostIP', 'podIPv4', 'podIPv6']
+      : ['metadata.name', 'creator']); // 模糊搜索字段
     const searchValue = ref('');
     const tableDataMatchSearch = computed(() => {
       if (!searchValue.value) return tableData.value;
@@ -233,7 +235,7 @@ export default defineComponent({
           return pre;
         }, newItem);
         return String(str).toLowerCase()
-          .includes(searchValue.value.toLowerCase());
+          .includes(normalizeIPv6(searchValue.value.toLowerCase()));
       }));
     });
 
@@ -677,7 +679,7 @@ export default defineComponent({
                       clearable
                       v-model={this.nameValue}
                       right-icon="bk-icon icon-search"
-                      placeholder={this.$t('输入名称、创建人搜索')}>
+                      placeholder={this.kind === 'Pod' ? this.$t('输入名称、创建人、IP搜索') : this.$t('输入名称、创建人搜索')}>
                   </bk-input>
               </div>
           </div>
