@@ -24,9 +24,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
-	"github.com/Tencent/bk-bcs/bcs-common/common/tcp/listener"
-	"github.com/Tencent/bk-bcs/bcs-common/common/types"
 	goBindataAssetfs "github.com/elazarl/go-bindata-assetfs"
 	microEtcd "github.com/go-micro/plugins/v4/registry/etcd"
 	microGrpc "github.com/go-micro/plugins/v4/server/grpc"
@@ -59,6 +56,7 @@ import (
 	storageHdlr "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/handler/storage"
 	workloadHdlr "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/handler/workload"
 	log "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/logging"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/middleware"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/project"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
 	httpUtil "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/http"
@@ -318,6 +316,7 @@ func (crSvc *clusterResourcesService) initHTTPService() error {
 	}
 
 	router := mux.NewRouter()
+	router.Use(middleware.LoggingMiddleware)
 	router.Handle("/{uri:.*}", rmMux)
 	log.Info(crSvc.ctx, "register grpc service handler to path /")
 

@@ -37,6 +37,7 @@ require (
 	github.com/tmc/grpc-websocket-proxy v0.0.0-20200122045848-3419fae592fc
 	go-micro.dev/v4 v4.8.1
 	go.opentelemetry.io/otel v1.7.0
+	go.opentelemetry.io/otel/trace v1.7.0
 	go.uber.org/zap v1.19.1
 	google.golang.org/genproto v0.0.0-20211118181313-81c1377c94b1
 	google.golang.org/grpc v1.46.0
@@ -135,7 +136,6 @@ require (
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc v1.7.0 // indirect
 	go.opentelemetry.io/otel/exporters/zipkin v1.3.0 // indirect
 	go.opentelemetry.io/otel/sdk v1.7.0 // indirect
-	go.opentelemetry.io/otel/trace v1.7.0 // indirect
 	go.opentelemetry.io/proto/otlp v0.16.0 // indirect
 	go.uber.org/atomic v1.9.0 // indirect
 	go.uber.org/multierr v1.8.0 // indirect
