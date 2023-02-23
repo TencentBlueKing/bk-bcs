@@ -23,6 +23,7 @@ import (
 	"bscp.io/pkg/iam/auth"
 	"bscp.io/pkg/logs"
 	"bscp.io/pkg/metrics"
+	pbas "bscp.io/pkg/protocol/auth-server"
 	pbds "bscp.io/pkg/protocol/data-service"
 	"bscp.io/pkg/serviced"
 	esbcli "bscp.io/pkg/thirdparty/esb/client"
@@ -108,6 +109,12 @@ func newClientSet(sd serviced.Discover, tls cc.TLSConfig) (*ClientSet, error) {
 		return nil, errf.New(errf.Unknown, fmt.Sprintf("dial data service failed, err: %v", err))
 	}
 
+	asConn, err := grpc.Dial(serviced.GrpcServiceDiscoveryName(cc.AuthServerName), opts...)
+	if err != nil {
+		logs.Errorf("dial data service failed, err: %v", err)
+		return nil, errf.New(errf.Unknown, fmt.Sprintf("dial data service failed, err: %v", err))
+	}
+
 	repoSetting := cc.ConfigServer().Repo
 	repoCli, err := repo.NewClient(&repoSetting, metrics.Register())
 	if err != nil {
@@ -122,6 +129,7 @@ func newClientSet(sd serviced.Discover, tls cc.TLSConfig) (*ClientSet, error) {
 
 	cs := &ClientSet{
 		DS:   pbds.NewDataClient(dsConn),
+		AS:   pbas.NewAuthClient(asConn),
 		Repo: repoCli,
 		Esb:  esbCli,
 	}
@@ -134,6 +142,7 @@ func newClientSet(sd serviced.Discover, tls cc.TLSConfig) (*ClientSet, error) {
 type ClientSet struct {
 	// DS data service's client api
 	DS pbds.DataClient
+	AS pbas.AuthClient
 	// Repo repoCli repo client api.
 	Repo *repo.Client
 	// Esb Esb client api

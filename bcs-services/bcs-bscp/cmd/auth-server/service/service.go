@@ -26,7 +26,6 @@ import (
 	"bscp.io/cmd/auth-server/service/auth"
 	"bscp.io/cmd/auth-server/service/iam"
 	"bscp.io/cmd/auth-server/service/initial"
-	"bscp.io/cmd/auth-server/service/space"
 	"bscp.io/pkg/cc"
 	"bscp.io/pkg/components/bkpaas"
 	"bscp.io/pkg/iam/client"
@@ -39,6 +38,7 @@ import (
 	basepb "bscp.io/pkg/protocol/core/base"
 	pbds "bscp.io/pkg/protocol/data-service"
 	"bscp.io/pkg/serviced"
+	"bscp.io/pkg/space"
 	esbcli "bscp.io/pkg/thirdparty/esb/client"
 	"bscp.io/pkg/tools"
 )
@@ -267,8 +267,8 @@ func (s *Service) GetUserInfo(ctx context.Context, req *pbas.UserCredentialReq) 
 	return &pbas.UserInfoResp{Username: username, AvatarUrl: ""}, nil
 }
 
-// GetSpaces 获取用户信息
-func (s *Service) ListSpace(ctx context.Context, req *pbas.ListSpaceReq) (*pbas.ListSpaceResp, error) {
+// ListUserSpace 获取用户信息
+func (s *Service) ListUserSpace(ctx context.Context, req *pbas.ListUserSpaceReq) (*pbas.ListUserSpaceResp, error) {
 	kt := kit.FromGrpcContext(ctx)
 	if kt.User == "" {
 		err := basepb.InvalidArgumentsErr(&basepb.InvalidArgument{
@@ -279,7 +279,7 @@ func (s *Service) ListSpace(ctx context.Context, req *pbas.ListSpaceReq) (*pbas.
 		return nil, err
 	}
 
-	spaceList, err := space.ListSpace(ctx, s.client.Esb, kt.User)
+	spaceList, err := space.ListUserSpace(ctx, s.client.Esb, kt.User)
 	if err != nil {
 		return nil, err
 	}
@@ -295,5 +295,31 @@ func (s *Service) ListSpace(ctx context.Context, req *pbas.ListSpaceReq) (*pbas.
 		})
 	}
 
-	return &pbas.ListSpaceResp{Items: items}, nil
+	return &pbas.ListUserSpaceResp{Items: items}, nil
+}
+
+// QuerySpace 查询 space 信息
+func (s *Service) QuerySpace(ctx context.Context, req *pbas.QuerySpaceReq) (*pbas.QuerySpaceResp, error) {
+	uidList := req.GetSpaceUid()
+	if len(uidList) == 0 {
+		return &pbas.QuerySpaceResp{}, nil
+	}
+
+	spaceList, err := space.QuerySpace(ctx, s.client.Esb, uidList)
+	if err != nil {
+		return nil, err
+	}
+
+	items := make([]*pbas.Space, 0, len(spaceList))
+	for _, space := range spaceList {
+		items = append(items, &pbas.Space{
+			SpaceId:       space.SpaceId,
+			SpaceName:     space.SpaceName,
+			SpaceTypeId:   space.SpaceTypeID,
+			SpaceTypeName: space.SpaceTypeName,
+			SpaceUid:      space.SpaceUid,
+		})
+	}
+
+	return &pbas.QuerySpaceResp{Items: items}, nil
 }

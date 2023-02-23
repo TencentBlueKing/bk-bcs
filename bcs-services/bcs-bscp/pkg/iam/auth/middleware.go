@@ -14,11 +14,13 @@
 package auth
 
 import (
+	"errors"
 	"net/http"
 	"path/filepath"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/render"
+	"google.golang.org/grpc/status"
 
 	"bscp.io/pkg/components"
 	"bscp.io/pkg/components/bkpaas"
@@ -37,7 +39,8 @@ func (a authorizer) UnifiedAuthentication(next http.Handler) http.Handler {
 		}
 		resp, err := a.authClient.GetUserInfo(r.Context(), req)
 		if err != nil {
-			render.Render(w, r, rest.UnauthorizedErr(err))
+			s := status.Convert(err)
+			render.Render(w, r, rest.UnauthorizedErr(errors.New(s.Message())))
 			return
 		}
 

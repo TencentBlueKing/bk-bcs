@@ -16,6 +16,7 @@ import (
 	"context"
 
 	btyp "bscp.io/cmd/feed-server/bll/types"
+	"bscp.io/pkg/criteria/errf"
 	"bscp.io/pkg/dal/table"
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/logs"
@@ -103,8 +104,11 @@ func (ae *appEvent) doFirstMatch(kt *kit.Kit, subSpec *SubscribeSpec) (uint32, u
 
 	matchedRelease, err := ae.sch.handler.GetMatchedRelease(kt, meta)
 	if err != nil {
-		// TODO: filter out the no matched strategies error and handle it specially.
+		// filter out the no matched strategies error and handle it specially.
 		// so that sidecar do not retry repeatedly.
+		if errf.Error(err).Code == errf.RecordNotFound {
+			return 0, 0, nil
+		}
 		return 0, 0, err
 	}
 

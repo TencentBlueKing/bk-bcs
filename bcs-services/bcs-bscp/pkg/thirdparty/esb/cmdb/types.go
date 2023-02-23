@@ -78,12 +78,15 @@ type AtomRule struct {
 	Value    interface{} `json:"value"`
 }
 
+// https://github.com/TencentBlueKing/bk-cmdb/tree/master/src/common/querybuilder 规范文档
 // Operator NOTES
 type Operator string
 
 var (
-	// OperatorEqual NOTES
+	// OperatorEqual 等于
 	OperatorEqual = Operator("equal")
+	// OperatorIn 包含
+	OperatorIn = Operator("in")
 )
 
 // GetDeep get query rule depth.

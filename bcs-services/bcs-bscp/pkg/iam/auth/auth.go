@@ -18,6 +18,10 @@ import (
 	"net/http"
 	"reflect"
 
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/credentials/insecure"
+
 	"bscp.io/pkg/cc"
 	"bscp.io/pkg/criteria/errf"
 	"bscp.io/pkg/iam/meta"
@@ -26,9 +30,6 @@ import (
 	pbas "bscp.io/pkg/protocol/auth-server"
 	"bscp.io/pkg/serviced"
 	"bscp.io/pkg/tools"
-
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials"
 )
 
 // Authorizer defines all the supported functionalities to do auth operation.
@@ -53,7 +54,7 @@ func NewAuthorizer(sd serviced.Discover, tls cc.TLSConfig) (Authorizer, error) {
 
 	if !tls.Enable() {
 		// dial without ssl
-		opts = append(opts, grpc.WithInsecure())
+		opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	} else {
 		// dial with ssl.
 		tlsC, err := tools.ClientTLSConfVerify(tls.InsecureSkipVerify, tls.CAFile, tls.CertFile, tls.KeyFile,

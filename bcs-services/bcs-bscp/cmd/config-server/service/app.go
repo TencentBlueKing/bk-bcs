@@ -14,14 +14,19 @@ package service
 
 import (
 	"context"
+	"strconv"
+
+	"github.com/pkg/errors"
 
 	"bscp.io/pkg/criteria/errf"
 	"bscp.io/pkg/iam/meta"
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/logs"
+	pbas "bscp.io/pkg/protocol/auth-server"
 	pbcs "bscp.io/pkg/protocol/config-server"
 	pbapp "bscp.io/pkg/protocol/core/app"
 	pbds "bscp.io/pkg/protocol/data-service"
+	"bscp.io/pkg/space"
 	"bscp.io/pkg/types"
 )
 
@@ -220,6 +225,44 @@ func (s *Service) ListAppsRest(ctx context.Context, req *pbcs.ListAppsRestReq) (
 		errf.Error(err).AssignResp(kt, resp)
 		logs.Errorf("list apps failed, err: %v, rid: %s", err, kt.Rid)
 		return resp, nil
+	}
+
+	spaceUidMap := map[string]struct{}{}
+	for _, app := range rp.Details {
+		uid := space.BuildSpaceUid(space.BK_CMDB, strconv.Itoa(int(app.BizId)))
+		spaceUidMap[uid] = struct{}{}
+
+	}
+	querySpaceReq := &pbas.QuerySpaceReq{SpaceUid: []string{}}
+	for spaceUid := range spaceUidMap {
+		querySpaceReq.SpaceUid = append(querySpaceReq.SpaceUid, spaceUid)
+	}
+
+	querySpaceResp, err := s.client.AS.QuerySpace(ctx, querySpaceReq)
+	if err != nil {
+		return nil, errors.Wrap(err, "QuerySpace")
+	}
+
+	spaceMap := map[string]*pbas.Space{}
+	for _, s := range querySpaceResp.GetItems() {
+		spaceMap[s.SpaceId] = s
+	}
+
+	// 只填写当前页的space
+	for _, app := range rp.Details {
+		id := strconv.Itoa(int(app.BizId))
+		sp, ok := spaceMap[id]
+		if !ok {
+			app.SpaceId = id
+			app.SpaceName = ""
+			app.SpaceTypeId = ""
+			app.SpaceTypeName = ""
+		} else {
+			app.SpaceId = id
+			app.SpaceName = sp.SpaceName
+			app.SpaceTypeId = sp.SpaceTypeId
+			app.SpaceTypeName = sp.SpaceTypeName
+		}
 	}
 
 	resp.Code = errf.OK

@@ -26,13 +26,14 @@ type AuthClient interface {
 	InitAuthCenter(ctx context.Context, in *InitAuthCenterReq, opts ...grpc.CallOption) (*InitAuthCenterResp, error)
 	// 获取用户鉴权信息
 	GetUserInfo(ctx context.Context, in *UserCredentialReq, opts ...grpc.CallOption) (*UserInfoResp, error)
+	ListUserSpace(ctx context.Context, in *ListUserSpaceReq, opts ...grpc.CallOption) (*ListUserSpaceResp, error)
 	// iam pull resource callback.
 	PullResource(ctx context.Context, in *PullResourceReq, opts ...grpc.CallOption) (*PullResourceResp, error)
 	// authorize resource batch.
 	AuthorizeBatch(ctx context.Context, in *AuthorizeBatchReq, opts ...grpc.CallOption) (*AuthorizeBatchResp, error)
 	// get iam permission to apply.
 	GetPermissionToApply(ctx context.Context, in *GetPermissionToApplyReq, opts ...grpc.CallOption) (*GetPermissionToApplyResp, error)
-	ListSpace(ctx context.Context, in *ListSpaceReq, opts ...grpc.CallOption) (*ListSpaceResp, error)
+	QuerySpace(ctx context.Context, in *QuerySpaceReq, opts ...grpc.CallOption) (*QuerySpaceResp, error)
 }
 
 type authClient struct {
@@ -55,6 +56,15 @@ func (c *authClient) InitAuthCenter(ctx context.Context, in *InitAuthCenterReq, 
 func (c *authClient) GetUserInfo(ctx context.Context, in *UserCredentialReq, opts ...grpc.CallOption) (*UserInfoResp, error) {
 	out := new(UserInfoResp)
 	err := c.cc.Invoke(ctx, "/pbas.Auth/GetUserInfo", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *authClient) ListUserSpace(ctx context.Context, in *ListUserSpaceReq, opts ...grpc.CallOption) (*ListUserSpaceResp, error) {
+	out := new(ListUserSpaceResp)
+	err := c.cc.Invoke(ctx, "/pbas.Auth/ListUserSpace", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -88,9 +98,9 @@ func (c *authClient) GetPermissionToApply(ctx context.Context, in *GetPermission
 	return out, nil
 }
 
-func (c *authClient) ListSpace(ctx context.Context, in *ListSpaceReq, opts ...grpc.CallOption) (*ListSpaceResp, error) {
-	out := new(ListSpaceResp)
-	err := c.cc.Invoke(ctx, "/pbas.Auth/ListSpace", in, out, opts...)
+func (c *authClient) QuerySpace(ctx context.Context, in *QuerySpaceReq, opts ...grpc.CallOption) (*QuerySpaceResp, error) {
+	out := new(QuerySpaceResp)
+	err := c.cc.Invoke(ctx, "/pbas.Auth/QuerySpace", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -105,13 +115,14 @@ type AuthServer interface {
 	InitAuthCenter(context.Context, *InitAuthCenterReq) (*InitAuthCenterResp, error)
 	// 获取用户鉴权信息
 	GetUserInfo(context.Context, *UserCredentialReq) (*UserInfoResp, error)
+	ListUserSpace(context.Context, *ListUserSpaceReq) (*ListUserSpaceResp, error)
 	// iam pull resource callback.
 	PullResource(context.Context, *PullResourceReq) (*PullResourceResp, error)
 	// authorize resource batch.
 	AuthorizeBatch(context.Context, *AuthorizeBatchReq) (*AuthorizeBatchResp, error)
 	// get iam permission to apply.
 	GetPermissionToApply(context.Context, *GetPermissionToApplyReq) (*GetPermissionToApplyResp, error)
-	ListSpace(context.Context, *ListSpaceReq) (*ListSpaceResp, error)
+	QuerySpace(context.Context, *QuerySpaceReq) (*QuerySpaceResp, error)
 }
 
 // UnimplementedAuthServer should be embedded to have forward compatible implementations.
@@ -124,6 +135,9 @@ func (UnimplementedAuthServer) InitAuthCenter(context.Context, *InitAuthCenterRe
 func (UnimplementedAuthServer) GetUserInfo(context.Context, *UserCredentialReq) (*UserInfoResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetUserInfo not implemented")
 }
+func (UnimplementedAuthServer) ListUserSpace(context.Context, *ListUserSpaceReq) (*ListUserSpaceResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListUserSpace not implemented")
+}
 func (UnimplementedAuthServer) PullResource(context.Context, *PullResourceReq) (*PullResourceResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method PullResource not implemented")
 }
@@ -133,8 +147,8 @@ func (UnimplementedAuthServer) AuthorizeBatch(context.Context, *AuthorizeBatchRe
 func (UnimplementedAuthServer) GetPermissionToApply(context.Context, *GetPermissionToApplyReq) (*GetPermissionToApplyResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetPermissionToApply not implemented")
 }
-func (UnimplementedAuthServer) ListSpace(context.Context, *ListSpaceReq) (*ListSpaceResp, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ListSpace not implemented")
+func (UnimplementedAuthServer) QuerySpace(context.Context, *QuerySpaceReq) (*QuerySpaceResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method QuerySpace not implemented")
 }
 
 // UnsafeAuthServer may be embedded to opt out of forward compatibility for this service.
@@ -180,6 +194,24 @@ func _Auth_GetUserInfo_Handler(srv interface{}, ctx context.Context, dec func(in
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(AuthServer).GetUserInfo(ctx, req.(*UserCredentialReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Auth_ListUserSpace_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListUserSpaceReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AuthServer).ListUserSpace(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/pbas.Auth/ListUserSpace",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AuthServer).ListUserSpace(ctx, req.(*ListUserSpaceReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -238,20 +270,20 @@ func _Auth_GetPermissionToApply_Handler(srv interface{}, ctx context.Context, de
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Auth_ListSpace_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ListSpaceReq)
+func _Auth_QuerySpace_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QuerySpaceReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(AuthServer).ListSpace(ctx, in)
+		return srv.(AuthServer).QuerySpace(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/pbas.Auth/ListSpace",
+		FullMethod: "/pbas.Auth/QuerySpace",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AuthServer).ListSpace(ctx, req.(*ListSpaceReq))
+		return srv.(AuthServer).QuerySpace(ctx, req.(*QuerySpaceReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -272,6 +304,10 @@ var Auth_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Auth_GetUserInfo_Handler,
 		},
 		{
+			MethodName: "ListUserSpace",
+			Handler:    _Auth_ListUserSpace_Handler,
+		},
+		{
 			MethodName: "PullResource",
 			Handler:    _Auth_PullResource_Handler,
 		},
@@ -284,8 +320,8 @@ var Auth_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Auth_GetPermissionToApply_Handler,
 		},
 		{
-			MethodName: "ListSpace",
-			Handler:    _Auth_ListSpace_Handler,
+			MethodName: "QuerySpace",
+			Handler:    _Auth_QuerySpace_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

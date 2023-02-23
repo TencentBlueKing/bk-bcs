@@ -154,18 +154,17 @@ func restyResponseToCurl(resp *resty.Response) string {
 }
 
 func restyErrHook(r *resty.Request, err error) {
-	klog.Infof("[%s] REQ: %s", RequestIDValue(r.RawRequest.Context()), restyReqToCurl(r))
 	klog.Infof("[%s] RESP: [err] %s", RequestIDValue(r.RawRequest.Context()), err)
 }
 
 func restyAfterResponseHook(c *resty.Client, r *resty.Response) error {
-	klog.Infof("[%s] REQ: %s", RequestIDValue(r.Request.Context()), restyReqToCurl(r.Request))
 	klog.Infof("[%s] RESP: %s", RequestIDValue(r.Request.Context()), restyResponseToCurl(r))
 	return nil
 }
 
-func restyBeforeRequestHook(c *resty.Client, r *http.Request) error {
-	SetRequestIDHeaderValue(r, RequestIDValue(r.Context()))
+func restyBeforeRequestHook(c *resty.Client, r *resty.Request) error {
+	klog.Infof("[%s] REQ: %s", RequestIDValue(r.RawRequest.Context()), restyReqToCurl(r))
+	SetRequestIDHeaderValue(r.RawRequest, RequestIDValue(r.RawRequest.Context()))
 	return nil
 }
 
@@ -178,8 +177,8 @@ func GetClient() *resty.Client {
 				SetDebug(false).   // 更多详情, 可以开启为 true
 				SetCookieJar(nil). // 后台API去掉 cookie 记录
 				SetDebugBodyLimit(1024).
-				OnAfterResponse(restyAfterResponseHook).
 				SetPreRequestHook(restyBeforeRequestHook).
+				OnAfterResponse(restyAfterResponseHook).
 				OnError(restyErrHook).
 				SetTLSClientConfig(&tls.Config{InsecureSkipVerify: true}).
 				SetHeader("User-Agent", userAgent)
