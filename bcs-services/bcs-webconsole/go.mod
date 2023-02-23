@@ -30,7 +30,7 @@ require (
 	github.com/urfave/cli/v2 v2.3.0
 	go-micro.dev/v4 v4.8.1
 	golang.org/x/sync v0.0.0-20220907140024-f12130a52804
-	golang.org/x/text v0.3.7
+	golang.org/x/text v0.3.8
 	google.golang.org/grpc v1.41.0
 	gopkg.in/yaml.v2 v2.4.0
 	gopkg.in/yaml.v3 v3.0.1
