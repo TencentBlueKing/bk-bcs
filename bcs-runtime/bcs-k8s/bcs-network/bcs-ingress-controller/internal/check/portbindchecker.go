@@ -17,6 +17,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"time"
 
 	k8scorev1 "k8s.io/api/core/v1"
 	k8stypes "k8s.io/apimachinery/pkg/types"
@@ -24,6 +25,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/constant"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/metrics"
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
 )
@@ -33,6 +35,9 @@ const (
 	portBindingItemKey = "%s/%s/%s"
 	// poolNamespace/poolName/poolItemName:startPort
 	conflictKetFormat = "%s/%s/%s:%d"
+
+	// portBindingTimeoutMin 端口绑定超时告警分钟数
+	portBindingTimeoutMin = 10
 )
 
 // PortBindChecker 校验端口重复分配
@@ -118,8 +123,25 @@ func (p *PortBindChecker) recordPortBindingStatusMetric(portBindingList *network
 	cntMap := make(map[string]int)
 	for _, portBinding := range portBindingList.Items {
 		cntMap[portBinding.Status.Status] = cntMap[portBinding.Status.Status] + 1
+
+		// 检查端口时间是否过久
+		if notReadyTimeStr, ok := portBinding.Annotations[constant.AnnotationForPortBindingNotReadyTimestamp]; ok {
+			notReadyTime, err := time.Parse(time.RFC3339Nano, notReadyTimeStr)
+			if err != nil {
+				blog.Warnf("parse not ready time for portbinding '%s/%s' failed, err: %s",
+					portBinding.GetNamespace(), portBinding.Name, err.Error())
+				continue
+			}
+			if time.Now().Sub(notReadyTime).Minutes() > portBindingTimeoutMin {
+				msg := fmt.Sprintf("port binding '%s/%s' bind exceed 10min", portBinding.GetNamespace(),
+					portBinding.GetName())
+				blog.Warn(msg)
+				p.eventer.Event(&portBinding, k8scorev1.EventTypeWarning, "port bind slow", msg)
+			}
+		}
 	}
 
+	metrics.PortBindingTotal.Reset()
 	for status, cnt := range cntMap {
 		metrics.PortBindingTotal.WithLabelValues(status).Set(float64(cnt))
 	}

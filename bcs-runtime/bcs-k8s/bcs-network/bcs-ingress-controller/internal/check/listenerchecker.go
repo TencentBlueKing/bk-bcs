@@ -84,6 +84,8 @@ func (l *listenerChecker) Run() {
 			}
 		}
 	}
+
+	metrics.ListenerTotal.Reset()
 	for key, cnt := range cntMap {
 		status, targetGroupType := transKey(key)
 		metrics.ListenerTotal.WithLabelValues(status, targetGroupType).Set(float64(cnt))

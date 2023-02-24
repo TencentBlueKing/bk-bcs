@@ -301,7 +301,7 @@ func (s *Server) mutatingIngress(ar v1.AdmissionReview) *v1.AdmissionResponse {
 	}
 	patches, err := s.mutateIngress(ingress)
 	if err != nil {
-		blog.Warnf("mutate ingress failed, err: %+v", err)
+		blog.Warnf("mutate ingress failed, err: %v", err)
 		return errResponse(err)
 	}
 

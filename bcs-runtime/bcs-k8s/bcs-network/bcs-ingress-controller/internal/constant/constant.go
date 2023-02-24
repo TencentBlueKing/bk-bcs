@@ -95,6 +95,9 @@ const (
 	// PortBindingStatusCleaned the listener of the port binding is all cleaned
 	PortBindingStatusCleaned = "Cleaned"
 
+	// AnnotationForPortBindingNotReadyTimestamp 记录PortBinding上一次被记为NotReady的时间
+	AnnotationForPortBindingNotReadyTimestamp = "unready_timestamp.networkextension.bkbcs.tencent.com"
+
 	// AnnotationForPodStatusReady pod status ready
 	AnnotationForPodStatusReady = "Ready"
 	// AnnotationForPodStatusNotReady pod status not ready

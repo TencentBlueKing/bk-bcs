@@ -185,16 +185,18 @@ func (pbr *PortBindingReconciler) createPortBinding(pod *k8scorev1.Pod) (ctrl.Re
 		tmpKey := fmt.Sprintf(networkextensionv1.PortPoolBindingLabelKeyFromat, binding.PoolName, binding.PoolNamespace)
 		labels[tmpKey] = binding.PoolItemName
 	}
+	annotations := make(map[string]string)
+	annotations[constant.AnnotationForPortBindingNotReadyTimestamp] = time.Now().Format(time.RFC3339Nano)
 	if duration, ok := pod.Annotations[networkextensionv1.PortPoolBindingAnnotationKeyKeepDuration]; ok {
-		podPortBinding.SetAnnotations(map[string]string{
-			networkextensionv1.PortPoolBindingAnnotationKeyKeepDuration: duration,
-		})
+		annotations[networkextensionv1.PortPoolBindingAnnotationKeyKeepDuration] = duration
 	}
 	podPortBinding.SetLabels(labels)
+	podPortBinding.SetAnnotations(annotations)
 	podPortBinding.Finalizers = append(podPortBinding.Finalizers, constant.FinalizerNameBcsIngressController)
 	podPortBinding.Spec = networkextensionv1.PortBindingSpec{
 		PortBindingList: portBindingList,
 	}
+	podPortBinding.Status.Status = constant.PortBindingStatusNotReady
 
 	if err := pbr.k8sClient.Create(context.Background(), podPortBinding, &client.CreateOptions{}); err != nil {
 		blog.Warnf("failed to create port binding object, err %s", err.Error())
@@ -303,7 +305,8 @@ func getPortBindingPredicate() predicate.Predicate {
 				reflect.DeepEqual(newPoolBinding.Status.PortBindingStatusList,
 					oldPoolBinding.Status.PortBindingStatusList) &&
 				newPoolBinding.Status.Status == oldPoolBinding.Status.Status &&
-				reflect.DeepEqual(newPoolBinding.ObjectMeta, oldPoolBinding.ObjectMeta) {
+				reflect.DeepEqual(newPoolBinding.DeletionTimestamp, oldPoolBinding.DeletionTimestamp) &&
+				reflect.DeepEqual(newPoolBinding.Finalizers, oldPoolBinding.Finalizers) {
 				blog.V(5).Infof("portbinding %+v updated, but spec not change", newPoolBinding)
 				return false
 			}
