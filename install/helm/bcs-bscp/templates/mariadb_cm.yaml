@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: bcs-bscp-mariadb-initscripts
+  labels:
+    app: bcs-bscp-mariadb
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    release: "{{ .Release.Name }}"
+data:
+  {{ (.Files.Glob "sql/20230207215606_init_schema_up.sql").AsConfig | indent 2 }}

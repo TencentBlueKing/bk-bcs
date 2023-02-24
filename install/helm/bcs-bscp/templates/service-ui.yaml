@@ -6,7 +6,7 @@ metadata:
     app.kubernetes.io/instance: {{ .Release.Name }}
     app.kubernetes.io/name: bcs-bscp-ui
 spec:
-  type: {{ .Values.service.type }}
+  type: NodePort
   ports:
     - port: {{ .Values.service.port }}
       targetPort: http

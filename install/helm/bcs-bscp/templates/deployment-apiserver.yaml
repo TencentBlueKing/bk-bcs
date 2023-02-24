@@ -35,8 +35,8 @@ spec:
         - name: {{ .Chart.Name }}
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
-          image: {{ include "common.images.image" ( dict "imageRoot" .Values.image "global" .Values.global) }}
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          image: bcs-bscp:latest
+          imagePullPolicy: Never
           env:
             - name: POD_IP
               valueFrom:
@@ -47,7 +47,7 @@ spec:
                 fieldRef:
                   fieldPath: status.podIPs
             - name: bcsEtcdHost
-              value: "{{ include "bcs-common.etcd.host" ( dict "localStorage" .Values.storage "globalStorage" .Values.global.storage "namespace" .Release.Namespace ) }}"
+              value: bcs-bscp-etcd:2379
           ports:
             - name: http
               containerPort: 8080

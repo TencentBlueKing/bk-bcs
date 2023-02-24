@@ -83,13 +83,3 @@ Create the name of the service account to use
         fieldPath: status.podIPs
 {{- end }}
 
-{{- define "bcs-bscp.volumes" -}}
-- name: POD_IP
-    valueFrom:
-    fieldRef:
-        fieldPath: status.podIP
-- name: POD_IPs # ipv6双栈
-    valueFrom:
-    fieldRef:
-        fieldPath: status.podIPs
-{{- end }}

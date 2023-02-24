@@ -35,8 +35,8 @@ spec:
         - name: {{ .Chart.Name }}
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
-          image: {{ include "common.images.image" ( dict "imageRoot" .Values.image "global" .Values.global) }}
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          image: bcs-bscp:latest
+          imagePullPolicy: Never
           env:
             - name: POD_IP
               valueFrom:

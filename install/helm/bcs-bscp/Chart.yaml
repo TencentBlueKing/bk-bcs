@@ -7,13 +7,13 @@ appVersion: v1.29.0-alpha.1
 dependencies:
   - condition: etcd.enabled
     name: etcd
-    repository: https://raw.githubusercontent.com/bitnami/charts/eb5f9a9513d987b519f0ecd732e7031241c50328/bitnami
-    version: 6.2.11
+    repository: "https://charts.bitnami.com/bitnami"
+    version: 8.7.5
   - name: mariadb
-    repository: "https://raw.githubusercontent.com/bitnami/charts/eb5f9a9513d987b519f0ecd732e7031241c50328/bitnami"
-    version: 9.4.4
+    repository: "https://charts.bitnami.com/bitnami"
+    version: 11.4.7
     condition: mariadb.enabled
   - name: redis
-    repository: "https://raw.githubusercontent.com/bitnami/charts/eb5f9a9513d987b519f0ecd732e7031241c50328/bitnami"
-    version: 14.8.11
+    repository: "https://charts.bitnami.com/bitnami"
+    version: 17.7.5
     condition: redis.enabled

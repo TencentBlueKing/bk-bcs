@@ -21,3 +21,4 @@ metadata:
 data:
   bcs_bscp_ui.yaml: |
     {{- toYaml .Values.ui_config | nindent 4 }}
+
