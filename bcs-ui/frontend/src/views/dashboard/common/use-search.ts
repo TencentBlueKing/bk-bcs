@@ -1,4 +1,5 @@
 import { Ref, computed, ComputedRef, ref } from '@vue/composition-api';
+import { padIPv6, validateIPv6 } from '@/common/util';
 
 export interface ITableSeachResult {
   searchValue: Ref<string>;
@@ -24,6 +25,9 @@ export default function useTableSearch(data: Ref<any[]>, keys: Ref<any[]>): ITab
         }
         return pre;
       }, item);
+      if (validateIPv6(str)) {
+        return padIPv6(str).includes(padIPv6(searchValue.value));
+      }
       return String(str).toLowerCase()
         .includes(searchValue.value.toLowerCase());
     }));

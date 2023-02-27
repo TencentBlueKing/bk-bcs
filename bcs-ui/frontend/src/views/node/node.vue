@@ -182,7 +182,7 @@
             ></bcs-checkbox>
           </template>
         </bcs-table-column>
-        <bcs-table-column :label="$t('内网IP')" prop="nodeName" width="120" sortable>
+        <bcs-table-column :label="$t('节点名')" prop="nodeName" show-overflow-tooltip>
           <template #default="{ row }">
             <bcs-button
               :disabled="['INITIALIZATION', 'DELETING'].includes(row.status)"
@@ -200,10 +200,11 @@
               }"
               @click="handleGoOverview(row)"
             >
-              {{ row.nodeName }}
+              <span class="bcs-ellipsis">{{ row.nodeName }}</span>
             </bcs-button>
           </template>
         </bcs-table-column>
+        <bcs-table-column label="IPv4" width="120" prop="innerIP" sortable></bcs-table-column>
         <bcs-table-column
           label="IPv6"
           props="innerIPv6"
@@ -570,7 +571,7 @@ import useTableAcrossCheck from './use-table-across-check';
 import { CheckType } from '@/components/across-check.vue';
 import RingCell from '@/views/cluster/ring-cell.vue';
 import LoadingCell from '@/views/cluster/loading-cell.vue';
-import { copyText, normalizeIPv6 } from '@/common/util';
+import { copyText, padIPv6 } from '@/common/util';
 import useInterval from '@/views/dashboard/common/use-interval';
 import KeyValue, { IData } from '@/components/key-value.vue';
 import TaintContent from './taint.vue';
@@ -778,7 +779,7 @@ export default defineComponent({
         }
         searchValues.push({
           id: item.id,
-          value: new Set(tmp.map(t => normalizeIPv6(t))),
+          value: new Set(tmp.map(t => padIPv6(t))),
         });
       });
       return searchValues;
@@ -794,7 +795,7 @@ export default defineComponent({
         if (item.id in row) {
           return item.value.has(String(row[item.id]).toLowerCase());
         }
-        return item.value.has(row.innerIP) || item.value.has(row.innerIPv6);
+        return item.value.has(row.innerIP) || item.value.has(padIPv6(row.innerIPv6));
       }));
     });
     // 分页后的表格数据

@@ -141,8 +141,9 @@
             <div v-else></div>
             <bk-input
               v-model="searchValue"
-              :placeholder="$t('请入名称、镜像、Host IP、Pod IP、Node搜索')"
+              :placeholder="$t('请入名称、镜像、IP、Node搜索')"
               class="search-input"
+              clearable
               right-icon="bk-icon icon-search">
             </bk-input>
           </div>
@@ -196,9 +197,9 @@
               <template #default="{ row }">{{row.status.hostIP || '--'}}</template>
             </bcs-table-column>
             <bcs-table-column label="Pod IPv4" width="140" :resizable="false">
-              <template #default="{ row }">{{row.status.podIP || '--'}}</template>
+              <template #default="{ row }">{{handleGetExtData(row.metadata.uid, 'podIPv4') || '--'}}</template>
             </bcs-table-column>
-            <bcs-table-column label="Pod IPv6" width="140" :resizable="false" show-overflow-tooltip>
+            <bcs-table-column label="Pod IPv6" min-width="200" show-overflow-tooltip>
               <template #default="{ row }">{{handleGetExtData(row.metadata.uid, 'podIPv6') || '--'}}</template>
             </bcs-table-column>
             <bcs-table-column label="Node" :resizable="false" show-overflow-tooltip>
@@ -415,9 +416,10 @@ export default defineComponent({
     const pods = computed(() => (workloadPods.value?.manifest?.items || []).map(item => ({
       ...item,
       images: (handleGetExtData(item.metadata?.uid, 'images') || []).join(''),
+      podIPv6: handleGetExtData(item.metadata?.uid, 'podIPv6'),
     })));
     // pods过滤
-    const keys = ref(['metadata.name', 'images', 'status.hostIP', 'status.podIP', 'spec.nodeName']);
+    const keys = ref(['metadata.name', 'images', 'podIPv6', 'status.hostIP', 'status.podIP', 'spec.nodeName']);
     const { searchValue, tableDataMatchSearch } = useSearch(pods, keys);
     // pods分页
     const {

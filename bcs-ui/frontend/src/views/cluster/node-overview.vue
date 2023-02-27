@@ -247,20 +247,20 @@
                   </bcs-option>
                 </bcs-select>
                 <bk-input
-                  class="search-input ml5"
+                  class="search-input ml5 min-w-[350px]"
                   clearable
                   v-model="searchValue"
                   right-icon="bk-icon icon-search"
-                  :placeholder="$t('输入名称搜索')">
+                  :placeholder="$t('输入名称、IP搜索')">
                 </bk-input>
               </div>
             </div>
             <bk-table
               :data="curPodsData"
-              :pagination="podsDataPagination"
+              :pagination="pagination"
               v-bkloading="{ isLoading: podLoading }"
-              @page-change="handlePageChange"
-              @page-limit-change="handlePageLimitChange"
+              @page-change="pageChange"
+              @page-limit-change="pageSizeChange"
             >
               <bk-table-column :label="$t('名称')" min-width="130" sortable :resizable="false">
                 <template #default="{ row }">
@@ -290,36 +290,36 @@
                 </template>
               </bk-table-column>
               <bk-table-column :label="$t('镜像')" min-width="200" :resizable="false" :show-overflow-tooltip="false">
-                <template slot-scope="{ row }">
+                <template #default="{ row }">
                   <span v-bk-tooltips.top="(row.images || []).join('<br />')">
                     {{ (row.images || []).join(', ') }}
                   </span>
                 </template>
               </bk-table-column>
               <bk-table-column label="Status" width="140" :resizable="false">
-                <template slot-scope="{ row }">
+                <template #default="{ row }">
                   <StatusIcon :status="row.status"></StatusIcon>
                 </template>
               </bk-table-column>
               <bk-table-column label="Ready" width="100" :resizable="false">
-                <template slot-scope="{ row }">
+                <template #default="{ row }">
                   {{row.readyCnt}}/{{row.totalCnt}}
                 </template>
               </bk-table-column>
               <bk-table-column label="Restarts" width="100" :resizable="false">
-                <template slot-scope="{ row }">{{row.restartCnt}}</template>
+                <template #default="{ row }">{{row.restartCnt}}</template>
               </bk-table-column>
               <bk-table-column label="Host IP" width="140" :resizable="false">
-                <template slot-scope="{ row }">{{row.hostIP || '--'}}</template>
+                <template #default="{ row }">{{row.hostIP || '--'}}</template>
               </bk-table-column>
               <bk-table-column label="Pod IPv4" width="140" :resizable="false">
-                <template slot-scope="{ row }">{{row.podIP || '--'}}</template>
+                <template #default="{ row }">{{row.podIPv4 || '--'}}</template>
               </bk-table-column>
-              <bk-table-column label="Pod IPv6" min-width="140" :resizable="false">
-                <template slot-scope="{ row }">{{row.podIPv6 || '--'}}</template>
+              <bk-table-column label="Pod IPv6" min-width="200">
+                <template #default="{ row }">{{row.podIPv6 || '--'}}</template>
               </bk-table-column>
               <bk-table-column label="Node" :resizable="false">
-                <template slot-scope="{ row }">{{row.node || '--'}}</template>
+                <template #default="{ row }">{{row.node || '--'}}</template>
               </bk-table-column>
               <bk-table-column label="Age" :resizable="false">
                 <template #default="{ row }">
@@ -422,17 +422,17 @@ import ECharts from 'vue-echarts/components/ECharts.vue';
 import 'echarts/lib/chart/line';
 import 'echarts/lib/component/tooltip';
 import 'echarts/lib/component/legend';
-
 import { BCS_CLUSTER } from '@/common/constant';
 import StatusIcon from '@/views/dashboard/common/status-icon';
 import BcsLog from '@/components/bcs-log/index';
 import useLog from '@/views/dashboard/workload/detail/use-log';
 import { useSelectItemsNamespace } from '@/views/dashboard/namespace/use-namespace';
-
 import { nodeOverview } from '@/common/chart-option';
 import { catchErrorHandler, formatBytes } from '@/common/util';
 import { createChartOption } from './node-overview-chart-opts';
 import EventQueryTable from '../mc/event-query-table.vue';
+import usePage from '@/views/dashboard/common/use-page';
+import useSearch from '@/views/dashboard/common/use-search';
 
 export default defineComponent({
   components: {  StatusIcon, BcsLog, ECharts, EventQueryTable },
@@ -453,17 +453,11 @@ export default defineComponent({
     const nodeInfo = ref<any>({});
     const podsData = ref<any[]>([]);
     const podsWebAnnotations = ref<any>({});
-    const podsDataPagination = ref({
-      current: 1,
-      count: 0,
-      limit: 10,
-    });
     const podLoading = ref(false);
     const cpuLine1 = ref<any>(null);
     const memoryLine1 = ref<any>(null);
     const storageLine1 = ref<any>(null);
     const networkLine1 = ref<any>(null);
-    const searchValue = ref('');
     // 获取命名空间
     const namespaceValue = ref('');
     const { namespaceLoading, namespaceList, getNamespaceData } = useSelectItemsNamespace();
@@ -474,18 +468,16 @@ export default defineComponent({
       ?.find(item => item.clusterID === clusterId.value)?.provider === 'tencentCloud');
     const projectCode = computed(() => $route.params.projectCode);
     const nodeName = computed(() => $route.params.nodeName);
-    const curPodsData = computed(() => {
-      const { limit, current } = podsDataPagination.value;
-      let curData: any[] = [];
-      if (namespaceValue.value === '') {
-        curData = podsData.value.filter(i => i.name.includes(searchValue.value));
-      } else {
-        curData = podsData.value
-          .filter(i => i.namespace.includes(namespaceValue.value) && i.name.includes(searchValue.value.toLowerCase()));
-      }
-      podsDataPagination.value.count = curData.length;
-      return curData.slice(limit * (current - 1), limit * current);
-    });
+    const keys = ref(['name', 'hostIP', 'podIP', 'podIPv4', 'podIPv6']);
+    const { searchValue, tableDataMatchSearch } = useSearch(podsData, keys);
+    const curSearchTableData = computed(() => tableDataMatchSearch.value
+      .filter(item => item.namespace.includes(namespaceValue.value)));
+    const {
+      pagination,
+      curPageData: curPodsData,
+      pageChange,
+      pageSizeChange,
+    } = usePage(curSearchTableData);
     const clusterList = computed(() => $store.state.cluster.clusterList || []);
     const curCluster = computed(() => clusterList.value.find(item => item.clusterID === clusterId.value));
     /**
@@ -927,14 +919,6 @@ export default defineComponent({
       podsWebAnnotations.value = res.webAnnotations;
     };
 
-    const handlePageChange = (page) => {
-      podsDataPagination.value.current = page;
-    };
-
-    const handlePageLimitChange = (limit) => {
-      podsDataPagination.value.limit = limit;
-    };
-
     const updateViewMode = () => {
       localStorage.setItem('FEATURE_CLUSTER', 'done');
       localStorage.setItem(BCS_CLUSTER, curCluster.value.cluster_id);
@@ -1098,7 +1082,6 @@ export default defineComponent({
       nodeInfo,
       podsData,
       podsWebAnnotations,
-      podsDataPagination,
       podLoading,
       projectId,
       clusterId,
@@ -1115,8 +1098,9 @@ export default defineComponent({
       namespaceList,
       searchValue,
       ...useLog(),
-      handlePageLimitChange,
-      handlePageChange,
+      pagination,
+      pageChange,
+      pageSizeChange,
       toggleRange,
       goNode,
       gotoPodDetail,

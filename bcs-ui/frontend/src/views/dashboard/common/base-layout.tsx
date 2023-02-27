@@ -5,7 +5,7 @@ import { useSelectItemsNamespace } from '../namespace/use-namespace';
 import usePage from './use-page';
 import useSubscribe, { ISubscribeData, ISubscribeParams } from './use-subscribe';
 import useTableData from './use-table-data';
-import { sort, normalizeIPv6 } from '@/common/util';
+import { sort, padIPv6 } from '@/common/util';
 import yamljs from 'js-yaml';
 import './base-layout.css';
 import fullScreen from '@/directives/full-screen';
@@ -234,8 +234,11 @@ export default defineComponent({
           }
           return pre;
         }, newItem);
+        if (key === 'podIPv6') {
+          return padIPv6(str).includes(padIPv6(searchValue.value));
+        }
         return String(str).toLowerCase()
-          .includes(normalizeIPv6(searchValue.value.toLowerCase()));
+          .includes(searchValue.value.toLowerCase());
       }));
     });
 

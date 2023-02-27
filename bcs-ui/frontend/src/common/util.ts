@@ -568,49 +568,41 @@ export const path2Tree = (paths: string[]) => {
 export const validateIPv6 = function (a) {
   return new RegExp('(?!^(?:(?:.*(?:::.*::|:::).*)|::|[0:]+[01]|.*[^:]:|[0-9a-fA-F](?:.*:.*){8}[0-9a-fA-F]|(?:[0-9a-fA-F]:){1,6}[0-9a-fA-F])$)^(?:(::|[0-9a-fA-F]{1,4}:{1,2})([0-9a-fA-F]{1,4}:{1,2}){0,6}([0-9a-fA-F]{1,4}|::)?)$').test(a);
 };
-const _leftPad = function (d, p, n) {
-  const padding = p.repeat(n);
-  if (d.length < padding.length) {
-    d = padding.substring(0, padding.length - d.length) + d;
+
+// 补全ipv6
+export function padIPv6(simpeIpv6: string) {
+  if (!validateIPv6(simpeIpv6)) return simpeIpv6;
+
+  simpeIpv6 = simpeIpv6.toUpperCase();
+  if (simpeIpv6 == '::') {
+    return '0000:0000:0000:0000:0000:0000:0000:0000';
   }
-  return d;
-};
-
-export const normalizeIPv6 = function (a) {
-  if (!validateIPv6(a)) return a;
-
-  a = a.toLowerCase();
-
-  const nh = a.split(/::/g);
-  if (nh.length > 2) {
-    throw new Error(`Invalid address: ${a}`);
-  }
-
-  let sections: any[] = [];
-  if (nh.length === 1) {
-    // full mode
-    sections = a.split(/:/g);
-    if (sections.length !== 8) {
-      throw new Error(`Invalid address: ${a}`);
+  const arr = ['0000', '0000', '0000', '0000', '0000', '0000', '0000', '0000'];
+  if (simpeIpv6.startsWith('::')) {
+    const tmpArr = simpeIpv6.substring(2).split(':');
+    for (let i = 0;i < tmpArr.length;i++) {
+      arr[i + 8 - tmpArr.length] = (`0000${tmpArr[i]}`).slice(-4);
     }
-  } else if (nh.length === 2) {
-    // compact mode
-    const n = nh[0];
-    const h = nh[1];
-    const ns = n.split(/:/g);
-    const hs = h.split(/:/g);
-    for (const i in ns) {
-      sections[i] = ns[i];
+  } else if (simpeIpv6.endsWith('::')) {
+    const tmpArr = simpeIpv6.substring(0, simpeIpv6.length - 2).split(':');
+    for (let i = 0;i < tmpArr.length;i++) {
+      arr[i] = (`0000${tmpArr[i]}`).slice(-4);
     }
-    for (let i = hs.length; i > 0; --i) {
-      sections[7 - (hs.length - i)] = hs[i - 1];
+  } else if (simpeIpv6.indexOf('::') >= 0) {
+    const tmpArr = simpeIpv6.split('::');
+    const tmpArr0 = tmpArr[0].split(':');
+    for (let i = 0;i < tmpArr0.length;i++) {
+      arr[i] = (`0000${tmpArr0[i]}`).slice(-4);
+    }
+    const tmpArr1 = tmpArr[1].split(':');
+    for (let i = 0;i < tmpArr1.length;i++) {
+      arr[i + 8 - tmpArr1.length] = (`0000${tmpArr1[i]}`).slice(-4);
+    }
+  } else {
+    const tmpArr = simpeIpv6.split(':');
+    for (let i = 0;i < tmpArr.length;i++) {
+      arr[i + 8 - tmpArr.length] = (`0000${tmpArr[i]}`).slice(-4);
     }
   }
-  for (let i = 0; i < 8; ++i) {
-    if (sections[i] === undefined) {
-      sections[i] = '0000';
-    }
-    sections[i] = _leftPad(sections[i], '0', 4);
-  }
-  return sections.join(':');
+  return arr.join(':');
 };
