@@ -291,19 +291,38 @@ func (h *EventHandler) ensureMultiListeners(listeners []*networkextensionv1.List
 }
 
 func (h *EventHandler) deleteMultiListeners(listeners []*networkextensionv1.Listener) {
-	err := h.lbClient.DeleteMultiListeners(h.region, h.lbID, listeners)
-	if err != nil {
-		blog.Warnf("delete listeners failed, requeue listeners")
-		for _, li := range listeners {
-			obj := k8stypes.NamespacedName{
-				Namespace: li.GetNamespace(),
-				Name:      li.GetName(),
-			}
-			h.recordListenerDeleteFailedEvent(li, err)
-			h.eventQueue.AddRateLimited(obj)
-			h.eventQueue.Done(obj)
-		}
+	if len(listeners) == 0 {
 		return
+	}
+
+	var protocolLayer string
+	var err error
+	switch listeners[0].Spec.Protocol {
+	case constant.ProtocolUDP, constant.ProtocolTCP:
+		protocolLayer = constant.ProtocolLayerTransport
+	case constant.ProtocolHTTP, constant.ProtocolHTTPS:
+		protocolLayer = constant.ProtocolLayerApplication
+	}
+	if _, err = h.lbClient.DescribeLoadBalancer(h.region, h.lbID, "", protocolLayer); err != nil {
+		if err != cloud.ErrLoadbalancerNotFound {
+			blog.Errorf("cloud lb client DescribeLoadBalancer failed, err %s", err.Error())
+			return
+		}
+	} else {
+		err = h.lbClient.DeleteMultiListeners(h.region, h.lbID, listeners)
+		if err != nil {
+			blog.Warnf("delete listeners failed, requeue listeners, err: %s", err.Error())
+			for _, li := range listeners {
+				obj := k8stypes.NamespacedName{
+					Namespace: li.GetNamespace(),
+					Name:      li.GetName(),
+				}
+				h.recordListenerDeleteFailedEvent(li, err)
+				h.eventQueue.AddRateLimited(obj)
+				h.eventQueue.Done(obj)
+			}
+			return
+		}
 	}
 	for _, li := range listeners {
 		li.Finalizers = common.RemoveString(li.Finalizers, constant.FinalizerNameBcsIngressController)
@@ -390,20 +409,35 @@ func (h *EventHandler) ensureListener(li *networkextensionv1.Listener) error {
 }
 
 func (h *EventHandler) deleteListener(li *networkextensionv1.Listener) error {
+	var protocolLayer string
 	var err error
-	if li.Spec.EndPort > 0 {
-		err = h.lbClient.DeleteSegmentListener(h.region, li)
-		if err != nil {
+	switch li.Spec.Protocol {
+	case constant.ProtocolUDP, constant.ProtocolTCP:
+		protocolLayer = constant.ProtocolLayerTransport
+	case constant.ProtocolHTTP, constant.ProtocolHTTPS:
+		protocolLayer = constant.ProtocolLayerApplication
+	}
+	if _, err = h.lbClient.DescribeLoadBalancer(h.region, h.lbID, "", protocolLayer); err != nil {
+		if err != cloud.ErrLoadbalancerNotFound {
 			h.recordListenerDeleteFailedEvent(li, err)
-			blog.Errorf("cloud lb client DeleteSegmentListener failed, err %s", err.Error())
-			return fmt.Errorf("cloud lb client DeleteSegmentListener failed, err %s", err.Error())
+			blog.Errorf("cloud lb client DescribeLoadBalancer failed, err %s", err.Error())
+			return fmt.Errorf("cloud lb client DescribeLoadBalancer failed, err %s", err.Error())
 		}
 	} else {
-		err = h.lbClient.DeleteListener(h.region, li)
-		if err != nil {
-			h.recordListenerDeleteFailedEvent(li, err)
-			blog.Errorf("cloud lb client DeleteListener failed, err %s", err.Error())
-			return fmt.Errorf("cloud lb client DeleteListener failed, err %s", err.Error())
+		if li.Spec.EndPort > 0 {
+			err = h.lbClient.DeleteSegmentListener(h.region, li)
+			if err != nil {
+				h.recordListenerDeleteFailedEvent(li, err)
+				blog.Errorf("cloud lb client DeleteSegmentListener failed, err %s", err.Error())
+				return fmt.Errorf("cloud lb client DeleteSegmentListener failed, err %s", err.Error())
+			}
+		} else {
+			err = h.lbClient.DeleteListener(h.region, li)
+			if err != nil {
+				h.recordListenerDeleteFailedEvent(li, err)
+				blog.Errorf("cloud lb client DeleteListener failed, err %s", err.Error())
+				return fmt.Errorf("cloud lb client DeleteListener failed, err %s", err.Error())
+			}
 		}
 	}
 	li.Finalizers = common.RemoveString(li.Finalizers, constant.FinalizerNameBcsIngressController)
