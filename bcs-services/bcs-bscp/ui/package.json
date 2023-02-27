@@ -13,7 +13,7 @@
     "@types/js-cookie": "^3.0.2",
     "@types/lodash.clonedeep": "^4.5.7",
     "axios": "^0.27.2",
-    "bkui-vue": "0.0.1-beta.366",
+    "bkui-vue": "0.0.1-beta.367",
     "crypto-js": "^4.1.1",
     "js-cookie": "^3.0.1",
     "monaco-editor": "^0.34.1",

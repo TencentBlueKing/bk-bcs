@@ -52,7 +52,7 @@ export type IServingItem = {
     reviser: string,
     create_at: string,
     update_at: string,
-  }
+  },
 }
 
 export type IServingEditParams = {

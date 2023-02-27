@@ -1,4 +1,5 @@
 import axios from 'axios';
+import store from '../store'
 import BkMessage from 'bkui-vue/lib/message';
 import { propsMixin } from 'bkui-vue/lib/modal';
 
@@ -25,6 +26,10 @@ http.interceptors.response.use(
   error => {
       const { response } = error
       if (response) {
+          if (response.status === 401) {
+              store.commit('handleLogin', response.data.error.data.login_url)
+              return
+          }
           let message = response.statusText
           if (response.data && response.data.message) {
               message = response.data.message

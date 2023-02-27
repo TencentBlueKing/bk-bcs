@@ -5,7 +5,7 @@ import { Plus, Del } from "bkui-vue/lib/icon";
 import InfoBox from "bkui-vue/lib/info-box";
 import { useI18n } from "vue-i18n";
 import { IServingItem } from '../../types'
-import { deleteApp, getAppList, createApp, updateApp, IAppListQuery } from "../../api";
+import { getBizList, deleteApp, getAppList, createApp, updateApp, IAppListQuery } from "../../api";
 
 const router = useRouter()
 const { t } = useI18n();
@@ -98,19 +98,13 @@ watch(
   }
 );
 
-onMounted(() => {
+onMounted(async() => {
   loadServingList()
-  // isBizLoading.value = true;
-  // getBizList()
-  //   .then((res) => {
-  //     res.validate().then((data: any) => {
-  //       bizList.value = data?.info || [];
-  //       bkBizId.value = bizList.value[0]?.bk_biz_id;
-  //     });
-  //   })
-  //   .finally(() => {
-  //     isBizLoading.value = false;
-  //   });
+  isBizLoading.value = true;
+  const res = await getBizList()
+  bizList.value = res.items
+  // bkBizId.value = bizList.value[0]?.space_id;
+  isBizLoading.value = false;
 });
 
 const loadServingList = async () => {
@@ -247,12 +241,17 @@ const handleSearch = () => {
       <div class="head-right">
         <bk-select
           v-model="bkBizId"
-          class="bk-select"
-          :list="bizList"
+          class="biz-selector"
           :loading="isBizLoading"
-          id-key="bk_biz_id"
-          display-key="bk_biz_name"
+          id-key="space_id"
+          display-key="space_name"
           filterable>
+          <bk-option v-for="item in bizList" :key="item.space_id">
+            <div class="biz-option-item">
+              <div class="name">{{ item.space_name }}</div>
+              <span class="tag">{{ item.space_type_name }}</span>
+            </div>
+          </bk-option>
         </bk-select>
         <bk-input
           class="search-app-name"
@@ -621,6 +620,25 @@ const handleSearch = () => {
         }
       }
     }
+  }
+}
+
+.biz-option-item {
+  position: relative;
+  padding-right: 25px;
+  .name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .tag {
+    position: absolute;
+    top: 10px;
+    right: -4px;
+    font-size: 12px;
+    line-height: 1;
+    color: #3a84ff;
+    border: 1px solid #3a84ff;
   }
 }
 

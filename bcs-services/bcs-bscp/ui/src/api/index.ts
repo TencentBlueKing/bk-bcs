@@ -1,6 +1,17 @@
 import http from "../request"
 
 /**
+ * 获取空间、项目列表
+ * @param biz_id 业务ID
+ * @param params 查询过滤条件
+ * @returns 
+ */
+
+export const getBizList = () => {
+  return http.get('auth/user/spaces').then(resp => resp.data);
+}
+
+/**
  * 获取应用列表
  * @param biz_id 业务ID
  * @param params 查询过滤条件
