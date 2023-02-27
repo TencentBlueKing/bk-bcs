@@ -24,6 +24,7 @@ import (
 
 	"bscp.io/pkg/components"
 	"bscp.io/pkg/components/bkpaas"
+	"bscp.io/pkg/criteria/constant"
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/rest"
 )
@@ -48,10 +49,15 @@ func (a authorizer) UnifiedAuthentication(next http.Handler) http.Handler {
 			User:        resp.Username,
 			Rid:         components.RequestIDValue(r.Context()),
 			AppId:       chi.URLParam(r, "app_id"),
+			AppCode:     "dummyApp", // 测试 App
 			SpaceID:     "",
 			SpaceTypeID: "",
 		}
 		ctx := kit.WithKit(r.Context(), k)
+
+		r.Header.Set(constant.AppCodeKey, k.AppCode)
+		r.Header.Set(constant.RidKey, k.Rid)
+		r.Header.Set(constant.UserKey, k.User)
 
 		next.ServeHTTP(w, r.WithContext(ctx))
 	}
