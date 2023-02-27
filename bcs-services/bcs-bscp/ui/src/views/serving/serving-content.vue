@@ -44,7 +44,7 @@ const appName = ref("");
 const isLoading = ref(false);
 const isBizLoading = ref(false);
 const createAppPending = ref(false);
-const bkBizId = ref(2); // 目前缺少拉取业务列表的接口，固定写死一个业务ID调试
+const bkBizId = ref();
 const formRef = ref();
 const formData = ref(getDefaultSetting());
 
@@ -99,11 +99,10 @@ watch(
 );
 
 onMounted(async() => {
-  loadServingList()
   isBizLoading.value = true;
   const res = await getBizList()
   bizList.value = res.items
-  // bkBizId.value = bizList.value[0]?.space_id;
+  bkBizId.value = bizList.value[0]?.space_id;
   isBizLoading.value = false;
 });
 
@@ -171,7 +170,7 @@ const handleCreateAppForm = async () => {
           }
         })
       },
-      onClose() {
+      onClosed() {
         loadServingList()
       }
     } as any);
@@ -246,7 +245,7 @@ const handleSearch = () => {
           id-key="space_id"
           display-key="space_name"
           filterable>
-          <bk-option v-for="item in bizList" :key="item.space_id">
+          <bk-option v-for="item in bizList" :key="item.space_id" :value="item.space_id" :label="item.space_name">
             <div class="biz-option-item">
               <div class="name">{{ item.space_name }}</div>
               <span class="tag">{{ item.space_type_name }}</span>
@@ -332,12 +331,16 @@ const handleSearch = () => {
             <bk-select
               v-model="formData.biz_id"
               class="bk-select"
-              :list="bizList"
               :loading="isBizLoading"
-              id-key="bk_biz_id"
-              display-key="bk_biz_name"
-              filterable
-            ></bk-select>
+              display-key="space_name"
+              filterable>
+              <bk-option v-for="item in bizList" :key="item.space_id" :value="item.space_id" :label="item.space_name">
+              <div class="biz-option-item">
+                <div class="name">{{ item.space_name }}</div>
+                <span class="tag">{{ item.space_type_name }}</span>
+              </div>
+            </bk-option>
+            </bk-select>
           </bk-form-item>
           <bk-form-item :label="t('服务名称')" property="name" required>
             <bk-input

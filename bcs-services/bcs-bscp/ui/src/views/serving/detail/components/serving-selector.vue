@@ -61,14 +61,14 @@
   };
 </script>
 <template>
-  <bk-select v-model="localVal" filterable :clearable="false" @change="$emit('change', $event)">
-    <bk-option-group v-for="group in servingList" :key="group.space_id" collapsible :label="group.space_name">
+  <bk-select v-model="localVal" :filterable="true" :clearable="false" @change="$emit('change', $event)">
+    <bk-group v-for="group in servingList" :key="group.space_id" collapsible :label="group.space_name">
       <bk-option
         v-for="item in group.children"
         :key="item.id"
         :value="item.id"
         :label="item.spec.name">
       </bk-option>
-    </bk-option-group>
+    </bk-group>
   </bk-select>
 </template>
