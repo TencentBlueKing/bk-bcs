@@ -19,6 +19,8 @@ import (
 
 	"github.com/hashicorp/go-version"
 	"github.com/pkg/errors"
+	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	k8sVersion "k8s.io/apimachinery/pkg/version"
 )
 
@@ -27,16 +29,36 @@ const (
 	InternalMode = "internal" // 用户自己集群 inCluster 模式
 	// ExternalMode xxx
 	ExternalMode = "external" // 平台集群, 外部模式, 需要设置 AdminClusterId
+
+	// kubectld 默认资源配置, 可通过配置文件覆盖
+	defaultLimitCPU      = "500m"
+	defaultLimitMemory   = "128Mi"
+	defaultRequestCPU    = "200m"
+	defaultRequestMemory = "64Mi"
 )
+
+// ResSpec
+type ResSpec struct {
+	CPU    string `yaml:"cpu"`
+	Memory string `yaml:"memory"`
+}
+
+// Resource 资源限制
+type ResourceConf struct {
+	Limits   *ResSpec `yaml:"limits"`
+	Requests *ResSpec `yaml:"requests"`
+}
 
 // WebConsoleConf webconsole 配置
 type WebConsoleConf struct {
-	AdminClusterId      string     `yaml:"admin_cluster_id"`
-	Mode                string     `yaml:"mode"`            // internal , external
-	KubectldImage       string     `yaml:"kubectld_image"`  // 镜像路径
-	KubectldTags        []string   `yaml:"kubectld_tags"`   // 镜像tags
-	KubectldTagPatterns []*Version `yaml:"-"`               // 镜像解析后的版本
-	GuideDocLinks       []string   `yaml:"guide_doc_links"` // 使用文档链接
+	AdminClusterId      string                  `yaml:"admin_cluster_id"`
+	Mode                string                  `yaml:"mode"`               // internal , external
+	GuideDocLinks       []string                `yaml:"guide_doc_links"`    // 使用文档链接
+	KubectldImage       string                  `yaml:"kubectld_image"`     // 镜像路径
+	KubectldTags        []string                `yaml:"kubectld_tags"`      // 镜像tags
+	KubectldResources   *ResourceConf           `yaml:"kubectld_resources"` // kubectld资源限制
+	KubectldTagPatterns []*Version              `yaml:"-"`                  // 镜像解析后的版本
+	Resources           v1.ResourceRequirements `yaml:"-"`
 }
 
 // Version kubectld 版本
@@ -58,6 +80,60 @@ func (c *WebConsoleConf) Init() error {
 	c.Mode = InternalMode
 	c.KubectldTags = []string{}
 	c.GuideDocLinks = []string{}
+	c.KubectldResources = &ResourceConf{
+		Limits:   &ResSpec{CPU: defaultLimitCPU, Memory: defaultLimitMemory},
+		Requests: &ResSpec{CPU: defaultRequestCPU, Memory: defaultRequestMemory},
+	}
+	c.Resources = v1.ResourceRequirements{
+		Limits: v1.ResourceList{
+			v1.ResourceCPU:    resource.Quantity{},
+			v1.ResourceMemory: resource.Quantity{},
+		},
+		Requests: v1.ResourceList{
+			v1.ResourceCPU:    resource.Quantity{},
+			v1.ResourceMemory: resource.Quantity{},
+		},
+	}
+	return c.parseRes()
+}
+
+// parseRes 解析resources值
+func (c *WebConsoleConf) parseRes() error {
+	if limitCPU, err := resource.ParseQuantity(c.KubectldResources.Limits.CPU); err != nil {
+		return errors.Wrap(err, "parse cpu limit")
+	} else {
+		if limitCPU.CmpInt64(0) != 1 {
+			return errors.New("cpu limit must > 0")
+		}
+		c.Resources.Limits[v1.ResourceCPU] = limitCPU
+	}
+
+	if limitMemory, err := resource.ParseQuantity(c.KubectldResources.Limits.Memory); err != nil {
+		return errors.Wrap(err, "parse memory limit")
+	} else {
+		if limitMemory.CmpInt64(0) != 1 {
+			return errors.New("memory limit must > 0")
+		}
+		c.Resources.Limits[v1.ResourceMemory] = limitMemory
+	}
+
+	if requestCPU, err := resource.ParseQuantity(c.KubectldResources.Requests.CPU); err != nil {
+		return errors.Wrap(err, "parse request cpu")
+	} else {
+		if requestCPU.CmpInt64(0) != 1 {
+			return errors.New("request cpu must > 0")
+		}
+		c.Resources.Requests[v1.ResourceCPU] = requestCPU
+	}
+
+	if requestMemory, err := resource.ParseQuantity(c.KubectldResources.Requests.Memory); err != nil {
+		return errors.Wrap(err, "parse request memory")
+	} else {
+		if requestMemory.CmpInt64(0) != 1 {
+			return errors.New("request memory must > 0")
+		}
+		c.Resources.Requests[v1.ResourceMemory] = requestMemory
+	}
 
 	return nil
 }
