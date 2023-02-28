@@ -36,12 +36,6 @@ import (
 	"bscp.io/pkg/serviced"
 )
 
-const (
-	// SITE_URL 前端Vue配置, 修改影响用户路由
-	SITE_URL   = "/bcs"
-	STATIC_URL = "/web/static"
-)
-
 // WebServer :
 type WebServer struct {
 	ctx               context.Context
@@ -159,6 +153,7 @@ func (w *WebServer) subRouter() http.Handler {
 		RunEnv:    config.G.Base.RunEnv,
 		APIURL:    config.G.BCS.Host + "/bscp",
 		ProxyAPI:  shouldProxyAPI,
+		SiteURL:   config.G.Web.RoutePrefix,
 	}
 
 	if shouldProxyAPI {

@@ -38,6 +38,7 @@ type IndexConfig struct {
 	RunEnv    string
 	StaticURL string
 	APIURL    string
+	SiteURL   string // vue 路由前缀
 	ProxyAPI  bool
 }
 
@@ -103,6 +104,7 @@ func (e *embedWeb) RenderIndexHandler(conf *IndexConfig) http.Handler {
 			"BK_STATIC_URL":   conf.StaticURL,
 			"RUN_ENV":         conf.RunEnv,
 			"BK_BCS_BSCP_API": conf.APIURL,
+			"SITE_URL":        conf.SiteURL,
 		}
 
 		// 本地开发模式 / 代理请求

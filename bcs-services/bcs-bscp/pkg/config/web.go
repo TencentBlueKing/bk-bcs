@@ -21,7 +21,7 @@ import (
 // WebConf web 相关配置
 type WebConf struct {
 	Host             string   `yaml:"host"`
-	RoutePrefix      string   `yaml:"route_prefix"`
+	RoutePrefix      string   `yaml:"route_prefix"` // vue路由, 静态资源前缀
 	PreferredDomains string   `yaml:"preferred_domains"`
 	BaseURL          *url.URL `yaml:"-"`
 }
