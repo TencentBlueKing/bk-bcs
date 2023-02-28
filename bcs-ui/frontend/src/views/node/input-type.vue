@@ -60,7 +60,7 @@ export default defineComponent({
       default: '',
     },
     value: {
-      type: String,
+      type: [String, Number],
       default: '',
     },
     options: {
@@ -73,7 +73,7 @@ export default defineComponent({
     },
   },
   setup(props, ctx) {
-    const inputValue = ref<string>(props.value);
+    const inputValue = ref<string|number>(props.value);
     const popup = ref();
     const handleValueChange = (val) => {
       ctx.emit('change', val);

@@ -140,13 +140,13 @@ export default defineComponent({
       const nodePoolData = nodePoolInfoRef.value?.getNodePoolData();
       const nodeConfigData = nodePoolConfigRef.value?.getNodePoolData();
       const data = {
-        ...mergeDeep(nodeConfigData, nodePoolData),
+        ...mergeDeep(detailData.value, nodeConfigData, nodePoolData),
         $nodeGroupID: detailData.value.nodeGroupID,
         clusterID: curCluster.value.clusterID,
         region: curCluster.value.region,
         updater: user.value.username,
       };
-      console.log(data);
+      console.log(data, detailData.value, nodeConfigData, nodePoolData);
       const result = await $store.dispatch('clustermanager/updateNodeGroup', data);
       saveLoading.value = false;
       if (result) {

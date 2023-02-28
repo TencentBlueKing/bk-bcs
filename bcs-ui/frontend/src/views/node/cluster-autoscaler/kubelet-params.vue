@@ -146,7 +146,7 @@ export default defineComponent({
     });
     watch(kubeletParams, () => {
       ctx.emit('change', handleTransformParamsToKubelet(kubeletParams.value));
-    });
+    }, { deep: true });
 
     const originKubeletParams = ref<any>({});
     const kubeletDiffData = computed(() => Object.keys(kubeletParams.value).reduce<any[]>((pre, key) => {
