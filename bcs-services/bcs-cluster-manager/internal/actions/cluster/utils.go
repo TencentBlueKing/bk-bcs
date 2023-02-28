@@ -15,6 +15,7 @@ package cluster
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"math"
 	"sort"
@@ -28,6 +29,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/util"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions"
@@ -376,6 +378,40 @@ func deleteClusterCredentialInfo(store store.ClusterManagerModel, clusterID stri
 	}
 
 	blog.V(4).Infof("deleteClusterCredentialInfo[%s] successful", clusterID)
+}
+
+// importClusterData record cluster data
+func importClusterData(model store.ClusterManagerModel, cls *proto.Cluster) error {
+	if cls.ClusterID == "" {
+		err := model.CreateCluster(context.Background(), cls)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	}
+
+	dstCls, err := model.GetCluster(context.Background(), cls.ClusterID)
+	if err != nil && !errors.Is(err, drivers.ErrTableRecordNotFound) {
+		return err
+	}
+
+	// db not exist cluster
+	if dstCls == nil {
+		err = model.CreateCluster(context.Background(), cls)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	}
+
+	err = model.UpdateCluster(context.Background(), cls)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func asyncDeleteImportedClusterInfo(ctx context.Context, store store.ClusterManagerModel, cluster *proto.Cluster) {
