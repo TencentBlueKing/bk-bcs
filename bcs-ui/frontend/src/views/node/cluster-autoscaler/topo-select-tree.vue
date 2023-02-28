@@ -5,6 +5,7 @@
     :placeholder="placeholder"
     searchable
     :remote-method="remote"
+    :clearable="false"
     ref="selectRef"
     @clear="handleClearScaleOutNode">
     <bcs-big-tree

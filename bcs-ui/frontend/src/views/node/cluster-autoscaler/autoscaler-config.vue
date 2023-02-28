@@ -9,19 +9,25 @@
         </div>
       </HeaderNav>
     </template>
-    <bk-form :label-width="240" class="config-content" v-bkloading="{ isLoading: configLoading }">
+    <bk-form
+      :label-width="240"
+      class="config-content"
+      v-bkloading="{ isLoading: configLoading }"
+      :rules="rules"
+      :model="autoscalerData"
+      ref="formRef">
       <div class="group-header mb20">
         <span class="group-header-title">{{$t('Cluster Autoscaler配置')}}</span>
-        <span class="switch-autoscaler">
+        <!-- <span class="switch-autoscaler">
           {{$t('Cluster Autoscaler')}}
           <bcs-switcher
             size="small"
             v-model="autoscalerData.enableAutoscale"
             :pre-check="handleToggleAutoScaler"
           ></bcs-switcher>
-        </span>
+        </span> -->
       </div>
-      <LayoutGroup :title="$t('基本配置')" class="mb10">
+      <LayoutGroup :title="$t('基本配置')">
         <bk-form-item
           :label="$t('扩缩容检测时间间隔')"
           desc-icon="bk-icon icon-info-circle"
@@ -33,6 +39,21 @@
           </bk-input>
         </bk-form-item>
       </LayoutGroup>
+      <!-- form-item放在Group内会导致form组件无法注册 -->
+      <bk-form-item
+        :label="$t('扩容后转移模块')"
+        :desc="$t('扩容节点后节点转移到关联业务的CMDB模块')"
+        error-display-type="normal"
+        property="module.scaleOutModuleID"
+        required
+        class="ml-[28px] mb20 mt10">
+        <TopoSelectTree
+          v-model="autoscalerData.module.scaleOutModuleID"
+          :placeholder="$t('请选择业务 CMDB topo 模块')"
+          :cluster-id="clusterId"
+          class="w-[500px]"
+          @node-data-change="handleScaleOutDataChange" />
+      </bk-form-item>
       <LayoutGroup :title="$t('扩缩容暂停配置')" class="mb10">
         <div class="flex">
           <i18n
@@ -62,7 +83,7 @@
         <bk-form-item
           :label="$t('扩容算法')" :model="autoscalerData"
           desc-icon="bk-icon icon-info-circle"
-          :desc="$t('random：在有多个节点池时，随机选择节点池<br/>least-waste：在有多个节点池时，以最小浪费原则选择，选择有最少可用资源的节点池<br/>most-pods：在有多个节点池时，选择容量最大（可以创建最多Pod）的节点池')">
+          :desc="$t('random：在有多个节点规格时，随机选择节点规格<br/>least-waste：在有多个节点规格时，以最小浪费原则选择，选择有最少可用资源的节点规格<br/>most-pods：在有多个节点规格时，选择容量最大（可以创建最多Pod）的节点规格')">
           <bk-radio-group v-model="autoscalerData.expander">
             <bk-radio value="random">Random</bk-radio>
             <bk-radio value="least-waste">Least Waste</bk-radio>
@@ -92,7 +113,7 @@
         <bk-form-item
           :label="$t('等待节点提供最长时间')"
           desc-icon="bk-icon icon-info-circle"
-          :desc="$t('如果节点池在设置的时间范围内没有提供可用资源，会导致此次自动扩容失败，取值范围900 ~ 86400秒')">
+          :desc="$t('如果节点规格在设置的时间范围内没有提供可用资源，会导致此次自动扩容失败，取值范围900 ~ 86400秒')">
           <bk-input int type="number" :min="900" :max="86400" v-model="autoscalerData.maxNodeProvisionTime">
             <template slot="append">
               <div class="group-text">{{$t('秒')}}</div>
@@ -173,7 +194,7 @@
             </template>
           </bk-input>
         </bk-form-item> -->
-        <bk-form-item :label="$t('NotReady节点缩容等待时间，取值范围1200 ~ 86400秒')">
+        <bk-form-item :label="$t('NotReady节点缩容等待时间')" :desc="$t('取值范围1200 ~ 86400秒')">
           <bk-input int type="number" :min="1200" :max="86400" v-model="autoscalerData.scaleDownUnreadyTime">
             <template slot="append">
               <div class="group-text">{{$t('秒')}}</div>
@@ -200,12 +221,14 @@ import $i18n from '@/i18n/i18n-setup';
 import $router from '@/router/index';
 import $store from '@/store/index';
 import LayoutGroup from '../LayoutGroup.vue';
+import TopoSelectTree from './topo-select-tree.vue';
 
 export default defineComponent({
   components: {
     BcsContent,
     HeaderNav,
     LayoutGroup,
+    TopoSelectTree,
   },
   props: {
     clusterId: {
@@ -215,6 +238,16 @@ export default defineComponent({
   },
   setup(props, ctx) {
     const { $bkMessage, $bkInfo } = ctx.root;
+    const formRef = ref<any>(null);
+    const rules = ref({
+      'module.scaleOutModuleID': [
+        {
+          required: true,
+          message: $i18n.t('必填项'),
+          trigger: 'blur',
+        },
+      ],
+    });
     const { clusterList } = useClusterList(ctx);
     const navList = computed(() => [
       {
@@ -238,18 +271,23 @@ export default defineComponent({
       },
     ]);
     const configLoading = ref(false);
-    const autoscalerData = ref<Record<string, string>>({});
+    const autoscalerData = ref<Record<string, any>>({
+      module: {},
+    });
     const handleGetAutoScalerConfig = async () => {
       configLoading.value = true;
       autoscalerData.value = await $store.dispatch('clustermanager/clusterAutoScaling', {
         $clusterId: props.clusterId,
       });
+      autoscalerData.value.module = autoscalerData.value.module || {};
       configLoading.value = false;
     };
 
     const loading = ref(false);
     const user = computed(() => $store.state.user);
     const handleSaveConfig = async () => {
+      const validate = await formRef.value?.validate();
+      if (!validate) return;
       loading.value = true;
       const result = await $store.dispatch('clustermanager/updateClusterAutoScaling', {
         ...autoscalerData.value,
@@ -281,13 +319,13 @@ export default defineComponent({
       });
       if (!autoscalerData.value.enableAutoscale
                         && (!nodepoolList.length || nodepoolList.every(item => !item.enableAutoscale))) {
-        // 开启时前置判断是否存在节点池 或 节点池都是未开启状态时，要提示至少开启一个
+        // 开启时前置判断是否存在节点规格 或 节点规格都是未开启状态时，要提示至少开启一个
         $bkInfo({
           type: 'warning',
           clsName: 'custom-info-confirm',
           subTitle: !nodepoolList.length
-            ? $i18n.t('没有检测到可用节点池，请先创建节点池')
-            : $i18n.t('请至少启用 1 个节点池的自动扩缩容功能或创建新的节点池'),
+            ? $i18n.t('没有检测到可用节点规格，请先创建节点规格')
+            : $i18n.t('请至少启用 1 个节点规格的自动扩缩容功能或创建新的节点规格'),
           defaultInfo: true,
           okText: $i18n.t('立即新建'),
           confirmFn: () => {
@@ -325,10 +363,16 @@ export default defineComponent({
       }
     });
 
+    const handleScaleOutDataChange = (data) => {
+      autoscalerData.value.module.scaleOutModuleName = data?.path || '';
+    };
+
     onMounted(() => {
       handleGetAutoScalerConfig();
     });
     return {
+      rules,
+      formRef,
       navList,
       loading,
       configLoading,
@@ -336,6 +380,7 @@ export default defineComponent({
       handleCancel,
       handleSaveConfig,
       handleToggleAutoScaler,
+      handleScaleOutDataChange,
     };
   },
 });

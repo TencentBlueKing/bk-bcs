@@ -84,12 +84,12 @@
         </LayoutGroup>
       </div>
     </section>
-    <!-- 节点池配置 -->
+    <!-- 节点规格配置 -->
     <section class="nodepool">
       <div class="group-header">
-        <div class="group-header-title">{{$t('节点池管理')}}</div>
+        <div class="group-header-title">{{$t('节点规格管理')}}</div>
         <div class="flex">
-          <bcs-button theme="primary" icon="plus" @click="handleCreatePool">{{$t('新建节点池')}}</bcs-button>
+          <bcs-button theme="primary" icon="plus" @click="handleCreatePool">{{$t('新建节点规格')}}</bcs-button>
           <bcs-button class="ml5" @click="handleShowRecord({})">{{$t('扩缩容记录')}}</bcs-button>
         </div>
       </div>
@@ -99,14 +99,14 @@
         v-bkloading="{ isLoading: nodepoolLoading }"
         @page-change="pageChange"
         @page-limit-change="pageSizeChange">
-        <bcs-table-column :label="$t('节点池 ID (名称)')" min-width="200" show-overflow-tooltip>
+        <bcs-table-column :label="$t('节点规格 ID (名称)')" min-width="200" show-overflow-tooltip>
           <template #default="{ row }">
             <div class="bk-primary bk-button-normal bk-button-text" @click="handleGotoDetail(row)">
               <span class="bcs-ellipsis">{{`${row.nodeGroupID}（${row.name}）`}}</span>
             </div>
           </template>
         </bcs-table-column>
-        <bcs-table-column :label="$t('扩容节点上限')" align="right" width="120">
+        <bcs-table-column :label="$t('节点配额')" align="right" width="120">
           <template #default="{ row }">
             {{ row.autoScaling.maxSize }}
           </template>
@@ -129,7 +129,7 @@
         <bcs-table-column :label="$t('操作系统')" show-overflow-tooltip>
           <template #default>{{clusterOS}}</template>
         </bcs-table-column>
-        <bcs-table-column :label="$t('节点池状态')">
+        <bcs-table-column :label="$t('节点规格状态')">
           <template #default="{ row }">
             <LoadingIcon v-if="['CREATING', 'DELETING', 'UPDATING'].includes(row.status)">
               {{ statusTextMap[row.status] }}
@@ -165,23 +165,23 @@
                           || ['CREATING', 'DELETING', 'UPDATING'].includes(row.status)
                       }]"
                       v-bk-tooltips="{
-                        content: $t('Cluster Autoscaler 需要至少一个节点池开启，请停用 Cluster Autoscaler 后再关闭'),
+                        content: $t('Cluster Autoscaler 需要至少一个节点规格开启，请停用 Cluster Autoscaler 后再关闭'),
                         disabled: !(row.enableAutoscale && disabledAutoscaler)
                       }"
                       @click="handleToggleNodeScaler(row)">
-                      {{row.enableAutoscale ? $t('关闭节点池') : $t('启用节点池')}}
+                      {{row.enableAutoscale ? $t('关闭节点规格') : $t('启用节点规格')}}
                     </li>
-                    <li class="dropdown-item" @click="handleEditPool(row)">{{$t('编辑节点池')}}</li>
+                    <li class="dropdown-item" @click="handleEditPool(row)">{{$t('编辑节点规格')}}</li>
                     <li
                       :class="['dropdown-item', { disabled: disabledDelete || !!row.autoScaling.desiredSize }]"
                       v-bk-tooltips="{
                         content: !!row.autoScaling.desiredSize
-                          ? $t('请删除节点后再删除节点池')
-                          : $t('Cluster Autoscaler 需要至少一个节点池，请停用 Cluster Autoscaler 后再删除'),
+                          ? $t('请删除节点后再删除节点规格')
+                          : $t('Cluster Autoscaler 需要至少一个节点规格，请停用 Cluster Autoscaler 后再删除'),
                         disabled: !(disabledDelete || !!row.autoScaling.desiredSize),
                         placements: 'left'
                       }"
-                      @click="handleDeletePool(row)">{{$t('删除节点池')}}</li>
+                      @click="handleDeletePool(row)">{{$t('删除节点规格')}}</li>
                   </ul>
                 </div>
               </bcs-popover>
@@ -198,12 +198,12 @@
       :width="700"
       v-model="showNodeManage"
       @cancel="handleNodeManageCancel">
-      <bcs-alert type="info" :title="$t('注意：若节点池已开启自动伸缩， 则数量将会随集群负载自动调整')"></bcs-alert>
+      <bcs-alert type="info" :title="$t('注意：若节点规格已开启自动伸缩， 则数量将会随集群负载自动调整')"></bcs-alert>
       <bcs-form class="form-content mt15" :label-width="100">
-        <bcs-form-item class="form-content-item" :label="$t('节点池名称')">
+        <bcs-form-item class="form-content-item" :label="$t('节点规格名称')">
           <span>{{ currentOperateRow.name }}</span>
         </bcs-form-item>
-        <bcs-form-item class="form-content-item" :label="$t('扩容节点上限')">
+        <bcs-form-item class="form-content-item" :label="$t('节点配额')">
           <span>
             {{
               currentOperateRow.autoScaling
@@ -376,7 +376,7 @@
         </bcs-table-column>
         <bcs-table-column :label="$t('事件信息')" prop="message" show-overflow-tooltip></bcs-table-column>
         <bcs-table-column
-          :label="$t('节点池')"
+          :label="$t('节点规格')"
           prop="resourceID"
           :filtered-value="filterValues.resourceID"
           :filters="filters.resourceID"
@@ -474,7 +474,7 @@ export default defineComponent({
     const { $bkInfo, $bkMessage } = ctx.root;
 
     const configLoading = ref(false);
-    const autoscalerData = ref<Record<string, string>>({});
+    const autoscalerData = ref<Record<string, any>>({});
     const basicScalerConfig = ref([
       {
         prop: 'status',
@@ -485,13 +485,18 @@ export default defineComponent({
         name: $i18n.t('扩缩容检测时间间隔'),
         unit: $i18n.t('秒'),
       },
+      {
+        prop: 'scaleOutModuleName',
+        name: $i18n.t('扩容后转移模块'),
+        desc: $i18n.t('扩容节点后节点转移到关联业务的CMDB模块'),
+      },
     ]);
     const autoScalerConfig = ref([
       {
         prop: 'expander',
         name: $i18n.t('扩容算法'),
         isBasicProp: true,
-        desc: $i18n.t('random：在有多个节点池时，随机选择节点池<br/>least-waste：在有多个节点池时，以最小浪费原则选择，选择有最少可用资源的节点池<br/>most-pods：在有多个节点池时，选择容量最大（可以创建最多Pod）的节点池'),
+        desc: $i18n.t('random：在有多个节点规格时，随机选择节点规格<br/>least-waste：在有多个节点规格时，以最小浪费原则选择，选择有最少可用资源的节点规格<br/>most-pods：在有多个节点规格时，选择容量最大（可以创建最多Pod）的节点规格'),
       },
       {
         prop: 'bufferResourceCpuRatio',
@@ -511,7 +516,7 @@ export default defineComponent({
         prop: 'maxNodeProvisionTime',
         name: $i18n.t('等待节点提供最长时间'),
         unit: $i18n.t('秒'),
-        desc: $i18n.t('如果节点池在设置的时间范围内没有提供可用资源，会导致此次自动扩容失败'),
+        desc: $i18n.t('如果节点规格在设置的时间范围内没有提供可用资源，会导致此次自动扩容失败'),
       },
       // {
       //   prop: 'scaleUpFromZero',
@@ -575,6 +580,8 @@ export default defineComponent({
         $clusterId: props.clusterId,
         provider: 'selfProvisionCloud',
       });
+      // 方便展示（会污染数据）
+      autoscalerData.value.scaleOutModuleName = autoscalerData.value.module?.scaleOutModuleName || '--';
       if (autoscalerData.value.status !== 'UPDATING') {
         stop();
       }
@@ -594,17 +601,32 @@ export default defineComponent({
     const handleToggleAutoScaler = async value => new Promise(async (resolve, reject) => {
       if (!autoscalerData.value.enableAutoscale
                         && (!nodepoolList.value.length || nodepoolList.value.every(item => !item.enableAutoscale))) {
-        // 开启时前置判断是否存在节点池 或 节点池都是未开启状态时，要提示至少开启一个
+        // 开启时前置判断是否存在节点规格 或 节点规格都是未开启状态时，要提示至少开启一个
         $bkInfo({
           type: 'warning',
           clsName: 'custom-info-confirm',
-          subTitle: !nodepoolList.value.length
-            ? $i18n.t('没有检测到可用节点池，请先创建节点池')
-            : $i18n.t('请至少启用 1 个节点池的自动扩缩容功能或创建新的节点池'),
+          title: !nodepoolList.value.length
+            ? $i18n.t('没有检测到可用节点规格，请先创建节点规格')
+            : $i18n.t('请至少启用 1 个节点规格的自动扩缩容功能或创建新的节点规格'),
           defaultInfo: true,
           okText: $i18n.t('立即新建'),
           confirmFn: () => {
             handleCreatePool();
+          },
+          cancelFn: () => {
+            // eslint-disable-next-line prefer-promise-reject-errors
+            reject(false);
+          },
+        });
+      } else if (!autoscalerData.value.module?.scaleOutModuleID) {
+        $bkInfo({
+          type: 'warning',
+          clsName: 'custom-info-confirm',
+          title: $i18n.t('转移模块暂未配置'),
+          defaultInfo: true,
+          okText: $i18n.t('编辑配置'),
+          confirmFn: () => {
+            handleEditAutoScaler();
           },
           cancelFn: () => {
             // eslint-disable-next-line prefer-promise-reject-errors
@@ -665,7 +687,7 @@ export default defineComponent({
         },
       });
     });
-    const statusTextMap = { // 节点池状态
+    const statusTextMap = { // 节点规格状态
       RUNNING: $i18n.t('正常'),
       CREATING: $i18n.t('创建中'),
       DELETING: $i18n.t('删除中'),
@@ -730,7 +752,7 @@ export default defineComponent({
       nodepoolLoading.value = false;
     };
     const { start: startPoolInterval, stop: stopPoolInterval } = useInterval(getNodePoolList, 5000); // 轮询
-    // 节点池详情
+    // 节点规格详情
     const handleGotoDetail = (row) => {
       $router.push({
         name: 'nodePoolDetail',
@@ -740,7 +762,7 @@ export default defineComponent({
         },
       });
     };
-    // 至少保证一个节点池处于开启状态
+    // 至少保证一个节点规格处于开启状态
     const disabledAutoscaler = computed(() => autoscalerData.value.enableAutoscale
                     && nodepoolList.value.filter(item => item.enableAutoscale).length <= 1);
     // 单节点开启和关闭弹性伸缩
@@ -779,7 +801,7 @@ export default defineComponent({
     const currentOperateRow = ref<Record<string, any>>({});
     // 删除node pool
     const disabledDelete = computed(() =>
-    // 至少保证一个节点池
+    // 至少保证一个节点规格
       autoscalerData.value.enableAutoscale
                     && nodepoolList.value.length <= 1);
     const handleDeletePool = (row) => {
@@ -788,7 +810,7 @@ export default defineComponent({
       $bkInfo({
         type: 'warning',
         clsName: 'custom-info-confirm',
-        title: $i18n.t('确定删除节点池 {name} ', { name: `${row.nodeGroupID}（${row.name}）` }),
+        title: $i18n.t('确定删除节点规格 {name} ', { name: `${row.nodeGroupID}（${row.name}）` }),
         defaultInfo: true,
         confirmFn: async () => {
           const result = await $store.dispatch('clustermanager/deleteNodeGroup', {
@@ -805,7 +827,7 @@ export default defineComponent({
         },
       });
     };
-    // 节点池节点数量管理
+    // 节点规格节点数量管理
     const nodeStatusMap = {
       INITIALIZATION: $i18n.t('初始化中'),
       RUNNING: $i18n.t('正常'),
@@ -838,7 +860,7 @@ export default defineComponent({
       currentOperateRow.value = {};
       nodeList.value = [];
       stopNodeInterval();
-      // 刷新节点池
+      // 刷新节点规格
       handleGetNodePoolList();
     };
     const handleShowNodeManage = (row) => {
@@ -967,27 +989,37 @@ export default defineComponent({
       NOTSTARTED: $i18n.t('未启动'),
     };
     const taskTypeMap = {
-      CreateCluster: $i18n.t('创建集群'),
-      CreateVirtualCluster: $i18n.t('创建虚拟集群'),
-      ImportCluster: $i18n.t('导入集群'),
-      DeleteCluster: $i18n.t('删除集群'),
-      DeleteVirtualCluster: $i18n.t('删除虚拟集群'),
-      AddNodesToCluster: $i18n.t('上架节点'),
-      RemoveNodesFromCluster: $i18n.t('下架节点'),
-      AddExternalNodesToCluster: $i18n.t('上架第三方节点'),
-      RemoveExternalNodesFromCluster: $i18n.t('下架第三方节点'),
-      CreateNodeGroup: $i18n.t('创建节点池'),
-      UpdateNodeGroup: $i18n.t('更新节点池'),
-      DeleteNodeGroup: $i18n.t('删除节点池'),
-      SwitchNodeGroupAutoScaling: $i18n.t('开启/关闭节点池'),
-      UpdateAutoScalingOption: $i18n.t('更新弹性伸缩配置'),
-      SwitchAutoScalingOptionStatus: $i18n.t('开启/关闭弹性伸缩配置'),
-      UpdateNodeGroupDesiredNode: $i18n.t('扩容节点池'),
-      CleanNodeGroupNodes: $i18n.t('缩容节点池'),
+      CreateNodeGroup: $i18n.t('创建节点规格'),
+      UpdateNodeGroup: $i18n.t('更新节点规格'),
+      DeleteNodeGroup: $i18n.t('删除节点规格'),
+      SwitchNodeGroupAutoScaling: $i18n.t('开启/关闭节点规格'),
+      UpdateNodeGroupDesiredNode: $i18n.t('扩容节点规格'),
+      CleanNodeGroupNodes: $i18n.t('缩容节点规格'),
     };
     const filters = computed(() => ({
       taskType: Object.keys(taskTypeMap).map(key => ({ text: taskTypeMap[key], value: key })),
-      status: Object.keys(taskStatusMap).map(key => ({ text: taskStatusMap[key], value: key })),
+      status: [
+        {
+          text: $i18n.t('初始化中'),
+          value: 'INITIALIZING',
+        },
+        {
+          text: $i18n.t('执行中'),
+          value: 'RUNNING',
+        },
+        {
+          text: $i18n.t('执行成功'),
+          value: 'SUCCESS',
+        },
+        {
+          text: $i18n.t('执行失败'),
+          value: 'FAILURE',
+        },
+        {
+          text: $i18n.t('执行超时'),
+          value: 'TIMEOUT',
+        },
+      ],
       resourceID: nodepoolList.value.map(item => ({
         text: `${item.nodeGroupID}( ${item.name} )`,
         value: item.nodeGroupID,
@@ -1115,6 +1147,7 @@ export default defineComponent({
         page: recordPagination.value.current,
         status: status?.[0],
         taskType: taskType?.[0],
+        clusterID: props.clusterId,
       });
       recordList.value = results.map(item => ({
         ...item,
@@ -1158,7 +1191,7 @@ export default defineComponent({
         },
       });
     };
-    // 新建节点池
+    // 新建节点规格
     const handleCreatePool = () => {
       $router.push({
         name: 'nodePool',
@@ -1167,7 +1200,7 @@ export default defineComponent({
         },
       });
     };
-    // 编辑节点池
+    // 编辑节点规格
     const handleEditPool = (row) => {
       $router.push({
         name: 'editNodePool',

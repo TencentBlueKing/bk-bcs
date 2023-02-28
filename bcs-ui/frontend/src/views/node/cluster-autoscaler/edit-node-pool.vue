@@ -5,17 +5,6 @@
     </template>
     <div v-bkloading="{ isLoading }">
       <bcs-tab class="node-pool-tab mb-[42px]">
-        <bcs-tab-panel :label="$t('节点池信息')" name="basic">
-          <NodePoolInfo
-            :default-values="detailData"
-            :schema="schema"
-            :cluster="curCluster"
-            is-edit
-            :show-footer="false"
-            v-if="!isLoading"
-            ref="nodePoolInfoRef">
-          </NodePoolInfo>
-        </bcs-tab-panel>
         <bcs-tab-panel :label="$t('节点配置')" name="config">
           <NodeConfig
             :default-values="detailData"
@@ -25,6 +14,17 @@
             ref="nodePoolConfigRef"
             v-if="!isLoading">
           </NodeConfig>
+        </bcs-tab-panel>
+        <bcs-tab-panel :label="$t('初始化配置')" name="basic">
+          <NodePoolInfo
+            :default-values="detailData"
+            :schema="schema"
+            :cluster="curCluster"
+            is-edit
+            :show-footer="false"
+            v-if="!isLoading"
+            ref="nodePoolInfoRef">
+          </NodePoolInfo>
         </bcs-tab-panel>
       </bcs-tab>
       <div class="footer">
@@ -48,6 +48,7 @@ import NodePoolInfo from './node-pool-info.vue';
 import NodeConfig from './node-config.vue';
 import $store from '@/store/index';
 import $router from '@/router/index';
+import { mergeDeep } from '@/common/util';
 
 export default defineComponent({
   components: {
@@ -103,7 +104,7 @@ export default defineComponent({
         },
       },
       {
-        title: $i18n.t('编辑节点池'),
+        title: $i18n.t('编辑节点规格'),
         link: null,
       },
     ]);
@@ -131,15 +132,15 @@ export default defineComponent({
     const user = computed(() => $store.state.user);
     const saveLoading = ref(false);
     const handleEditNodePool = async () => {
-      const validate = await nodePoolInfoRef.value?.validate();
-      if (!validate) return;
+      const nodePoolInfoValidate = await nodePoolInfoRef.value?.validate();
+      const nodePoolConfigValidate = await nodePoolConfigRef.value?.validate();
+      if (!nodePoolInfoValidate || !nodePoolConfigValidate) return;
 
       saveLoading.value = true;
       const nodePoolData = nodePoolInfoRef.value?.getNodePoolData();
       const nodeConfigData = nodePoolConfigRef.value?.getNodePoolData();
       const data = {
-        ...nodePoolData,
-        ...nodeConfigData,
+        ...mergeDeep(nodeConfigData, nodePoolData),
         $nodeGroupID: detailData.value.nodeGroupID,
         clusterID: curCluster.value.clusterID,
         region: curCluster.value.region,
@@ -174,6 +175,7 @@ export default defineComponent({
       detailData,
       navList,
       nodePoolInfoRef,
+      nodePoolConfigRef,
       handleCancel,
       handleEditNodePool,
     };
@@ -188,6 +190,10 @@ export default defineComponent({
   .aside .content-wrapper {
     max-height: calc(100vh - 322px);
   }
+}
+
+>>> .node-config-wrapper {
+  max-height: calc(100vh - 272px);
 }
 
 >>> .node-pool-tab {

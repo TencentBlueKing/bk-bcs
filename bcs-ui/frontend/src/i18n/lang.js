@@ -2823,7 +2823,7 @@ export default {
   ],
   "变更中...": ['changing'],
   "确定卸载": ['Confirm Uninstall'],
-  "确定删除节点池 {name} ": [],
+  "确定删除节点规格 {name} ": [],
   '￥{price}元/小时起': [],
   "节点池信息": [
       "Node pool information"

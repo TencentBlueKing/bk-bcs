@@ -72,7 +72,7 @@ export default defineComponent({
           },
         },
         {
-          title: $i18n.t('新建节点池'),
+          title: $i18n.t('新建节点规格'),
           link: null,
         },
       ];
@@ -80,11 +80,11 @@ export default defineComponent({
     });
     const steps = ref([
       {
-        title: $i18n.t('节点池信息'),
+        title: $i18n.t('节点配置'),
         icon: 1,
       },
       {
-        title: $i18n.t('节点配置'),
+        title: $i18n.t('初始化配置'),
         icon: 2,
       },
     ]);
@@ -92,8 +92,8 @@ export default defineComponent({
     const curStepItem = computed<Record<string, any>>(() => steps.value
       .find((_, index) => index + 1 === curStep.value) || {});
     const stepComMap = {
-      1: 'NodePoolInfo',
-      2: 'NodeConfig',
+      1: 'NodeConfig',
+      2: 'NodePoolInfo',
     };
     const nodePoolData = ref<Record<string, any>>({});
     const handleNextStep = (data) => {
@@ -118,7 +118,7 @@ export default defineComponent({
       schema.value = data?.schema || {};
     };
 
-    // 创建节点池
+    // 创建节点规格
     const user = computed(() => $store.state.user);
     const saveLoading = ref(false);
     const handleConfirm = async () => {

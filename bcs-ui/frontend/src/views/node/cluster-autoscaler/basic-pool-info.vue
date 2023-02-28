@@ -1,14 +1,14 @@
 <!-- eslint-disable max-len -->
 <template>
   <bk-form class="node-pool-info" :model="nodePoolInfo" :rules="nodePoolInfoRules" ref="formRef">
-    <bk-form-item :label="$t('节点池名称')" property="name" error-display-type="normal" required>
+    <!-- <bk-form-item :label="$t('节点规格名称')" property="name" error-display-type="normal" required>
       <bk-input
         v-model="nodePoolInfo.name"
         :placeholder="$t('名称不超过255个字符，仅支持中文、英文、数字、下划线，分隔符(-)及小数点')">
       </bk-input>
-    </bk-form-item>
+    </bk-form-item> -->
     <bk-form-item
-      :label="$t('扩容节点上限')"
+      :label="$t('节点配额')"
       property="maxSize"
       error-display-type="normal">
       <bk-input
@@ -21,8 +21,8 @@
       </bk-input>
     </bk-form-item>
     <bk-form-item
-      :label="$t('是否启用节点池')"
-      :desc="$t('节点池启用后Autoscaler组件将会根据扩容算法使用该节点池资源，开启Autoscaler组件后必须要开启至少一个节点池')">
+      :label="$t('是否启用节点规格')"
+      :desc="$t('节点规格启用后Autoscaler组件将会根据扩容算法使用该节点规格资源，开启Autoscaler组件后必须要开启至少一个节点规格')">
       <bk-checkbox v-model="nodePoolInfo.enableAutoscale" :disabled="isEdit"></bk-checkbox>
     </bk-form-item>
     <bk-form-item :label="$t('标签')" property="labels" error-display-type="normal">
@@ -50,7 +50,7 @@
     </bk-form-item>
     <bk-form-item
       :label="$t('实例创建策略')"
-      :desc="$t('首选可用区（子网）优先：自动扩缩容会在您首选的可用区优先执行扩缩容，若首选可用区无法扩缩容，才会在其他可用区进行扩缩容<br/>多可用区（子网）打散 ：在节点池指定的多可用区（即指定多个子网）之间尽最大努力均匀分配CVM实例，只有配置了多个子网时该策略才能生效')">
+      :desc="$t('首选可用区（子网）优先：自动扩缩容会在您首选的可用区优先执行扩缩容，若首选可用区无法扩缩容，才会在其他可用区进行扩缩容<br/>多可用区（子网）打散 ：在节点规格指定的多可用区（即指定多个子网）之间尽最大努力均匀分配CVM实例，只有配置了多个子网时该策略才能生效')">
       <bk-radio-group v-model="nodePoolInfo.autoScaling.multiZoneSubnetPolicy">
         <span class="inline-block" v-bk-tooltips="$t('自研上云环境暂不支持修改')">
           <bk-radio value="PRIORITY" disabled>{{$t('首选可用区（子网）优先')}}</bk-radio>
@@ -79,7 +79,7 @@
         </span>
       </bk-radio-group>
     </bk-form-item>
-    <bk-form-item
+    <!-- <bk-form-item
       :label="$t('扩容后转移模块')"
       :desc="$t('扩容节点后节点转移到关联业务的CMDB模块')"
       error-display-type="normal"
@@ -90,7 +90,7 @@
         :placeholder="$t('请选择业务 CMDB topo 模块')"
         :cluster-id="cluster.clusterID"
         @node-data-change="handleScaleOutDataChange" />
-    </bk-form-item>
+    </bk-form-item> -->
     <!-- <bk-form-item
       :label="$t('缩容后转移模块')"
       :desc="$t('缩容节点后节点转移到关联业务的CMDB模块，此选项仅适用于自有资源池场景，平台提供的资源池场景无需选择')">
@@ -108,11 +108,10 @@ import KeyValue from '../key-value.vue';
 import Taints from '../new-taints.vue';
 import $i18n from '@/i18n/i18n-setup';
 import Schema from '../resolve-schema';
-import TopoSelectTree from './topo-select-tree.vue';
 
 export default defineComponent({
   name: 'BasciPoolInfo',
-  components: { KeyValue, Taints, TopoSelectTree },
+  components: { KeyValue, Taints },
   props: {
     schema: {
       type: Object,
@@ -136,7 +135,7 @@ export default defineComponent({
     const { defaultValues, schema } = toRefs(props);
     const formRef = ref<any>(null);
     const nodePoolInfo = ref({
-      name: defaultValues.value.name || '', // 节点名称
+      // name: defaultValues.value.name || '', // 节点名称
       autoScaling: {
         maxSize: defaultValues.value.autoScaling?.maxSize, // 节点数量范围
         minSize: defaultValues.value.autoScaling?.minSize,
@@ -149,36 +148,36 @@ export default defineComponent({
         unSchedulable: defaultValues.value.nodeTemplate?.unSchedulable || 0, // 是否开启调度 0 代表开启调度，1 不可调度
         labels: defaultValues.value.nodeTemplate?.labels || {}, // 标签
         taints: defaultValues.value.nodeTemplate?.taints || [], // 污点
-        module: {
-          scaleOutModuleID: defaultValues.value.nodeTemplate?.module?.scaleOutModuleID || '',
-          scaleOutModuleName: defaultValues.value.nodeTemplate?.module?.scaleOutModuleName || '',
-          scaleInModuleID: defaultValues.value.nodeTemplate?.module?.scaleInModuleID || '',
-          scaleInModuleName: defaultValues.value.nodeTemplate?.module?.scaleInModuleName || '',
-        },
+        // module: {
+        //   scaleOutModuleID: defaultValues.value.nodeTemplate?.module?.scaleOutModuleID || '',
+        //   scaleOutModuleName: defaultValues.value.nodeTemplate?.module?.scaleOutModuleName || '',
+        //   scaleInModuleID: defaultValues.value.nodeTemplate?.module?.scaleInModuleID || '',
+        //   scaleInModuleName: defaultValues.value.nodeTemplate?.module?.scaleInModuleName || '',
+        // },
       },
       // bkCloudID: defaultValues.value.bkCloudID || 0,
     });
 
     const nodePoolInfoRules = ref({
-      name: [
-        {
-          required: true,
-          message: $i18n.t('必填项'),
-          trigger: 'blur',
-        },
-        {
-          message: $i18n.t('名称2 ~ 255个字符之间，仅支持中文、英文、数字、下划线，分隔符("-")及小数点'),
-          trigger: 'blur',
-          validator: (v: string) => /^[\u4E00-\u9FA5A-Za-z0-9._-]+$/.test(v) && v.length <= 255 && v.length >= 2,
-        },
-      ],
-      maxSize: [
-        {
-          message: $i18n.t('扩容节点上限要大于缩容节点下限'),
-          trigger: 'blur',
-          validator: () => nodePoolInfo.value.autoScaling.minSize < nodePoolInfo.value.autoScaling.maxSize,
-        },
-      ],
+      // name: [
+      //   {
+      //     required: true,
+      //     message: $i18n.t('必填项'),
+      //     trigger: 'blur',
+      //   },
+      //   {
+      //     message: $i18n.t('名称2 ~ 255个字符之间，仅支持中文、英文、数字、下划线，分隔符("-")及小数点'),
+      //     trigger: 'blur',
+      //     validator: (v: string) => /^[\u4E00-\u9FA5A-Za-z0-9._-]+$/.test(v) && v.length <= 255 && v.length >= 2,
+      //   },
+      // ],
+      // maxSize: [
+      //   {
+      //     message: $i18n.t('节点配额太小'),
+      //     trigger: 'blur',
+      //     validator: () => nodePoolInfo.value.autoScaling.minSize < nodePoolInfo.value.autoScaling.maxSize,
+      //   },
+      // ],
       labels: [
         {
           message: $i18n.t('标签值不能为空'),
@@ -217,13 +216,13 @@ export default defineComponent({
           },
         },
       ],
-      'nodeTemplate.module.scaleOutModuleID': [
-        {
-          required: true,
-          message: $i18n.t('必填项'),
-          trigger: 'blur',
-        },
-      ],
+      // 'nodeTemplate.module.scaleOutModuleID': [
+      //   {
+      //     required: true,
+      //     message: $i18n.t('必填项'),
+      //     trigger: 'blur',
+      //   },
+      // ],
     });
 
     const validate = async () => {
@@ -240,13 +239,6 @@ export default defineComponent({
 
     const getSchemaByProp = props => Schema.getSchemaByProp(schema.value, props);
 
-    const handleScaleOutDataChange = (data) => {
-      nodePoolInfo.value.nodeTemplate.module.scaleOutModuleName = data?.path || '';
-    };
-    const handleScaleInDataChange = (data) => {
-      nodePoolInfo.value.nodeTemplate.module.scaleInModuleName = data?.path || '';
-    };
-
 
     return {
       formRef,
@@ -254,8 +246,6 @@ export default defineComponent({
       nodePoolInfoRules,
       getSchemaByProp,
       handleAddTaints,
-      handleScaleOutDataChange,
-      handleScaleInDataChange,
       validate,
     };
   },

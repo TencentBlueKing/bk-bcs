@@ -88,7 +88,14 @@
       </template>
     </bcs-resize-layout>
     <div class="footer" v-if="showFooter">
-      <bk-button theme="primary" @click="handleNext">{{ $t('下一步') }}</bk-button>
+      <bcs-button @click="handlePre">{{$t('上一步')}}</bcs-button>
+      <bcs-button
+        theme="primary"
+        :loading="saveLoading"
+        class="ml10"
+        @click="handleSaveNodePoolData">
+        {{isEdit ? $t('保存节点池') : $t('创建节点池')}}
+      </bcs-button>
       <bk-button class="ml10" @click="handleCancel">{{ $t('取消') }}</bk-button>
     </div>
   </div>
@@ -127,6 +134,10 @@ export default defineComponent({
     showFooter: {
       type: Boolean,
       default: true,
+    },
+    saveLoading: {
+      type: Boolean,
+      default: false,
     },
   },
   setup(props, ctx) {
@@ -190,11 +201,15 @@ export default defineComponent({
 
       return true;
     };
-    const handleNext = async () => {
+    const handlePre = () => {
+      ctx.emit('pre');
+    };
+    const handleSaveNodePoolData = async () => {
       const result = await validate();
       if (!result) return;
 
       ctx.emit('next', getNodePoolData());
+      ctx.emit('confirm');
     };
     const handleCancel = () => {
       $router.back();
@@ -220,9 +235,10 @@ export default defineComponent({
       nodePoolInfoData,
       getNodePoolData,
       validate,
-      handleNext,
+      handlePre,
       handleCancel,
       handleCollapseChange,
+      handleSaveNodePoolData,
     };
   },
 });

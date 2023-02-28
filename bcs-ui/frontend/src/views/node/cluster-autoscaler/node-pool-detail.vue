@@ -11,10 +11,10 @@
       </div>
       <template v-if="nodePoolData">
         <bk-form class="content-wrapper">
-          <bk-form-item :label="$t('节点池名称')">
+          <bk-form-item :label="$t('节点规格名称')">
             {{`${nodePoolData.nodeGroupID} (${nodePoolData.name}) `}}
           </bk-form-item>
-          <bk-form-item :label="$t('节点池状态')">
+          <bk-form-item :label="$t('节点规格状态')">
             <LoadingIcon v-if="['CREATING', 'DELETING', 'UPDATING'].includes(nodePoolData.status)">
               {{ statusTextMap[nodePoolData.status] }}
             </LoadingIcon>
@@ -28,12 +28,12 @@
               {{ statusTextMap[nodePoolData.status] }}
             </StatusIcon>
           </bk-form-item>
-          <bk-form-item :label="$t('扩容节点上限')">
+          <bk-form-item :label="$t('节点配额')">
             {{ nodePoolData.autoScaling.maxSize }}
           </bk-form-item>
           <bk-form-item
             :label="$t('是否开启调度')"
-            :desc="$t('节点池启用后Autoscaler组件将会根据扩容算法使用该节点池资源，开启Autoscaler组件后必须要开启至少一个节点池')">
+            :desc="$t('节点规格启用后Autoscaler组件将会根据扩容算法使用该节点规格资源，开启Autoscaler组件后必须要开启至少一个节点规格')">
             {{nodePoolData.nodeTemplate.unSchedulable ? $t('否') : $t('是')}}
           </bk-form-item>
           <bk-form-item :label="$t('标签')">
@@ -61,7 +61,7 @@
           </bk-form-item>
           <bk-form-item
             :label="$t('实例创建策略')"
-            :desc="$t('首选可用区（子网）优先：自动扩缩容会在您首选的可用区优先执行扩缩容，若首选可用区无法扩缩容，才会在其他可用区进行扩缩容<br/>多可用区（子网）打散 ：在节点池指定的多可用区（即指定多个子网）之间尽最大努力均匀分配CVM实例，只有配置了多个子网时该策略才能生效')">
+            :desc="$t('首选可用区（子网）优先：自动扩缩容会在您首选的可用区优先执行扩缩容，若首选可用区无法扩缩容，才会在其他可用区进行扩缩容<br/>多可用区（子网）打散 ：在节点规格指定的多可用区（即指定多个子网）之间尽最大努力均匀分配CVM实例，只有配置了多个子网时该策略才能生效')">
             {{multiZoneSubnetPolicyMap[nodePoolData.autoScaling.multiZoneSubnetPolicy]}}
           </bk-form-item>
           <bk-form-item
@@ -256,7 +256,7 @@ export default defineComponent({
     const showTaints = ref(false);
     const nodePoolData = ref<any>(null);
     const loading = ref(false);
-    const statusTextMap = { // 节点池状态
+    const statusTextMap = { // 节点规格状态
       RUNNING: $i18n.t('正常'),
       CREATING: $i18n.t('创建中'),
       DELETING: $i18n.t('删除中'),
@@ -306,7 +306,7 @@ export default defineComponent({
         },
       },
       {
-        title: $i18n.t('查看节点池详情'),
+        title: $i18n.t('查看节点规格详情'),
         link: null,
       },
     ]);
@@ -328,7 +328,7 @@ export default defineComponent({
     };
     const { start, stop } = useInterval(getNodeGroupDetail);
 
-    // 编辑节点池详情
+    // 编辑节点规格详情
     const handleEditPool = () => {
       $router.push({
         name: 'editNodePool',
