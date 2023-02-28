@@ -43,6 +43,7 @@ const (
 var (
 	maskKeys = map[string]struct{}{
 		"bk_app_secret": {},
+		"Authorization": {},
 	}
 	clientOnce   sync.Once
 	globalClient *resty.Client
@@ -53,7 +54,11 @@ func restyReqToCurl(r *resty.Request) string {
 	headers := ""
 	for key, values := range r.Header {
 		for _, value := range values {
-			headers += fmt.Sprintf(" -H %q", fmt.Sprintf("%s: %s", key, value))
+			v := value
+			if _, ok := maskKeys[key]; ok {
+				v = "<masked>"
+			}
+			headers += fmt.Sprintf(" -H %q", fmt.Sprintf("%s: %s", key, v))
 		}
 	}
 
@@ -115,18 +120,17 @@ func restyResponseToCurl(resp *resty.Response) string {
 }
 
 func restyErrHook(r *resty.Request, err error) {
-	klog.Infof("[%s] REQ: %s", store.RequestIDValue(r.RawRequest.Context()), restyReqToCurl(r))
 	klog.Infof("[%s] RESP: [err] %s", store.RequestIDValue(r.RawRequest.Context()), err)
 }
 
 func restyAfterResponseHook(c *resty.Client, r *resty.Response) error {
-	klog.Infof("[%s] REQ: %s", store.RequestIDValue(r.Request.Context()), restyReqToCurl(r.Request))
 	klog.Infof("[%s] RESP: %s", store.RequestIDValue(r.Request.Context()), restyResponseToCurl(r))
 	return nil
 }
 
-func restyBeforeRequestHook(c *resty.Client, r *http.Request) error {
-	tracing.SetRequestIDValue(r, store.RequestIDValue(r.Context()))
+func restyBeforeRequestHook(c *resty.Client, r *resty.Request) error {
+	klog.Infof("[%s] REQ: %s", store.RequestIDValue(r.Context()), restyReqToCurl(r))
+	tracing.SetRequestIDValue(r.RawRequest, store.RequestIDValue(r.Context()))
 	return nil
 }
 

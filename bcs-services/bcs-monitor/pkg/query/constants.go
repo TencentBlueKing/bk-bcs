@@ -22,7 +22,7 @@ const (
 	maxConcurrentQueries              = 20 * 1000        // 最大并行查询数, 提供并发查询, bcs-system storegw 也发并发, 如果 20 会blocks自己
 	maxConcurrentSelects              = 4                // 一次查询最多的并行数
 	defaultRangeQueryStep             = time.Second * 30 // 默认查询步长
-	queryTimeout                      = time.Minute * 2  // 查询超时时间
+	queryTimeout                      = time.Second * 20 // 查询超时时间
 	lookbackDelta                     = time.Minute * 5  // 最大回溯时间，当步长太短，回溯去找上一个点的最大时间
 	dynamicLookbackDelta              = true             // 允许具有解析的查询，具有更大的回溯时间
 	enableAutodownsampling            = false            // 自动降采样，（如果max_source_resolution没配置的话）
