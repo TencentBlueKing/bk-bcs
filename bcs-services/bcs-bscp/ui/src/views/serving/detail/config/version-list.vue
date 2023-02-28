@@ -1,73 +1,49 @@
 <script setup lang="ts">
-  import { ref } from 'vue'
+  import { ref, watch, onMounted } from 'vue'
   import { Ellipsis } from 'bkui-vue/lib/icon'
+  import { getConfigVersionList } from '../../../../api/config'
 
-  const versionList = ref([
-    {
-      "id": 1,
-      "spec": {
-          "name": "未命名版本",
-          "memo": "release"
-      },
-      "attachment": {
-          "biz_id": 1,
-          "app_id": 1
-      },
-      "revision": {
-          "creator": "tom",
-          "create_at": "2019-07-29 11:57:20"
-      }
-    },
-    {
-      "id": 2,
-      "spec": {
-          "name": "版本 1：kafka_20220616",
-          "memo": "release"
-      },
-      "attachment": {
-          "biz_id": 1,
-          "app_id": 1
-      },
-      "revision": {
-          "creator": "tom",
-          "create_at": "2019-07-29 11:57:20"
-      }
-    },
-    {
-      "id": 3,
-      "spec": {
-          "name": "端午节活动版本",
-          "memo": "release"
-      },
-      "attachment": {
-          "biz_id": 1,
-          "app_id": 1
-      },
-      "revision": {
-          "creator": "tom",
-          "create_at": "2019-07-29 11:57:20"
-      }
-    },
-    {
-      "id": 4,
-      "spec": {
-          "name": "灰度广东移动",
-          "memo": "release"
-      },
-      "attachment": {
-          "biz_id": 1,
-          "app_id": 1
-      },
-      "revision": {
-          "creator": "tom",
-          "create_at": "2019-07-29 11:57:20"
-      }
-    },
-  ])
+  interface IVersionItem {
+    id: number;
+    attachment: object;
+    revision: object;
+    spec: {
+      name: string
+    };
+  }
+
+  const props = defineProps<{
+    bkBizId: string,
+    appId: number
+  }>()
+
+  const versionListLoading = ref(false)
+  const versionList = ref<IVersionItem[]>([])
+
+  watch(() => props.appId, () => {
+    getVersionList()
+  })
+
+  onMounted(() => {
+    getVersionList()
+  })
+
+  const getVersionList = async() => {
+    try {
+      versionListLoading.value = true
+      const res = await getConfigVersionList(props.bkBizId, props.appId)
+      console.log(res)
+      versionList.value = res.data.details
+    } catch (e) {
+      console.error(e)
+    } finally {
+      versionListLoading.value = false
+    }
+  }
 </script>
 <template>
   <section class="version-container">
-    <section class="version-steps">
+    <section v-if="versionList.length > 0" class="version-steps">
       <section v-for="(version, index) in versionList" class="version-item" :key="version.id">
         <div class="dot-line">
           <div :class="['dot', { first: index === 0, last: index === versionList.length - 1 }]"></div>
@@ -84,6 +60,12 @@
         </bk-dropdown>
       </section>
     </section>
+    <bk-exception
+      v-else
+      style="margin-top: 100px;"
+      description="没有版本数据"
+      type="empty"
+      scene="part" />
   </section>
 </template>
 

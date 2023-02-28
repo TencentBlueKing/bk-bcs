@@ -19,7 +19,7 @@
   }
 
   const props = defineProps<{
-    bkBizId: number,
+    bkBizId: string,
     appId: number
   }>()
 

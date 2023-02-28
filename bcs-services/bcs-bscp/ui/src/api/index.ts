@@ -12,6 +12,14 @@ export const getBizList = () => {
 }
 
 /**
+ * 获取所有业务下的应用列表
+ * @returns 
+ */
+export const getAllApp = () => {
+  return http.get('config/apps ').then(resp => resp.data);
+}
+
+/**
  * 获取应用列表
  * @param biz_id 业务ID
  * @param params 查询过滤条件

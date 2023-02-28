@@ -7,7 +7,7 @@
   import EditConfig from './edit-config.vue'
 
   const props = defineProps<{
-    bkBizId: number,
+    bkBizId: string,
     appId: number
   }>()
 

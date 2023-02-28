@@ -11,7 +11,7 @@
   const props = defineProps<{
     config: IServingEditParams,
     content: string,
-    bkBizId: number,
+    bkBizId: string,
     appId: number,
     submitFn: Function
   }>()

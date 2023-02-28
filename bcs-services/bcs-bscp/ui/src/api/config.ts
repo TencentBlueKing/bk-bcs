@@ -21,7 +21,7 @@ import { IPageFilter, IRequestFilter, IServingEditParams } from '../types'
  * @param page 分页设置
  * @returns 
  */
- export const getServingConfigList = (biz_id: number, app_id: number, filter: IRequestFilter = {} ,page: IPageFilter) => {
+ export const getServingConfigList = (biz_id: string, app_id: number, filter: IRequestFilter = {} ,page: IPageFilter) => {
   return http.post(`/config/list/config_item/config_item/app_id/${app_id}/biz_id/${biz_id}`, { biz_id, app_id, filter, page }).then(resp => resp.data);
 }
 
@@ -60,14 +60,14 @@ import { IPageFilter, IRequestFilter, IServingEditParams } from '../types'
   return http.delete(`/config/delete/config_item/config_item/config_item_id/${id}/app_id/${appId}/biz_id/${bizId}`, {});
 }
 
-/**
+/**npm
  * 获取配置项详情
  * @param id 配置ID
  * @param bizId 业务ID
  * @param appId 应用ID
  * @returns 
  */
-export const getConfigItemDetail = (id: number, bizId: number, appId: number) => {
+export const getConfigItemDetail = (id: number, bizId: string, appId: number) => {
   return http.get(`/config/get/config_item/config_item/config_item_id/${id}/app_id/${appId}/biz_id/${bizId}`).then(resp => resp.data);
 }
 
@@ -79,7 +79,7 @@ export const getConfigItemDetail = (id: number, bizId: number, appId: number) =>
  * @param SHA256Str 文件内容的SHA256值
  * @returns
  */
-export const updateConfigContent = (bizId: number, appId: number, data: string|File, SHA256Str: string) => {
+export const updateConfigContent = (bizId: string, appId: number, data: string|File, SHA256Str: string) => {
   return http.put(`/api/create/content/upload/biz_id/${bizId}/app_id/${appId}`, data, {
     headers: {
       'X-Bkapi-File-Content-Overwrite': 'false', 
@@ -95,7 +95,7 @@ export const updateConfigContent = (bizId: number, appId: number, data: string|F
  * @param SHA256Str 文件内容的SHA256值
  * @returns 
  */
-export const getConfigContent = (bizId: number, appId: number, SHA256Str: string) => {
+export const getConfigContent = (bizId: string, appId: number, SHA256Str: string) => {
   return http.get(`/api/get/content/download/biz_id/${bizId}/app_id/${appId}`, {
     headers: {
       'X-Bkapi-File-Content-Id': SHA256Str
@@ -111,8 +111,19 @@ export const getConfigContent = (bizId: number, appId: number, SHA256Str: string
  * @param memo 版本描述
  * @returns 
  */
-export const createVersion = (bizId: number, appId: number, name: string, memo: string) => {
+export const createVersion = (bizId: string, appId: number, name: string, memo: string) => {
   return http.post(`/config/create/release/release/app_id/${appId}/biz_id/${bizId}`, { name, memo })
+}
+
+/**
+ * 获取配置的版本列表
+ * @param bizId 业务ID
+ * @param appId 应用ID
+ * @returns 
+ */
+export const getConfigVersionList = (bizId: string, appId: number) => {
+  // @todo 接口筛选条件需要修改，目前不能拉全量数据，最大限制是200条
+  return http.post(`config/list/release/release/app_id/${appId}/biz_id/${bizId}`, { filter: { op: 'and', rules: [] }, page: { start: 0, limit: 200 } })
 }
 
 /**
@@ -123,6 +134,6 @@ export const createVersion = (bizId: number, appId: number, name: string, memo: 
  * @param memo 版本描述
  * @returns 
  */
-export const publishVersion = (bizId: number, appId: number, memo: string) => {
+export const publishVersion = (bizId: string, appId: number, memo: string) => {
   return http.post(`/config/create/release/release/app_id/${appId}/biz_id/${bizId}`, { memo })
 }

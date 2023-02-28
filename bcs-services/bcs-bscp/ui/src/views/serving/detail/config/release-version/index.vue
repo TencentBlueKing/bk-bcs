@@ -7,7 +7,7 @@
   import ConfigDiff from '../config-diff.vue'
 
   const props = defineProps<{
-    bkBizId: number,
+    bkBizId: string,
     appId: number,
     appName: string,
     versionName: string

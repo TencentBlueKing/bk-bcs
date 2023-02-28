@@ -1,17 +1,27 @@
 <script setup lang="ts">
-  import { ref } from 'vue'
+  import { ref, watch } from 'vue'
+  import { useRoute } from 'vue-router'
   import LayoutTopBar from "../../../components/layout-top-bar.vue";
   import DetailHeader from "./components/detail-header.vue"
 
-  const bkBizId = ref(2) // 缺少服务按照业务分组接口，暂时写死一个id调试
+  const route = useRoute()
+
+  const bkBizId = ref(String(route.params.spaceId))
+  const appId = ref(Number(route.params.appId))
+
+  watch(() => route.params.appId, val => {
+    appId.value = Number(val)
+    bkBizId.value = String(route.params.spaceId)
+  })
+
 </script>
 <template>
   <div class="serving-detail-page">
     <LayoutTopBar>
       <template #head>
-        <detail-header :bk-biz-id="bkBizId"></detail-header>
+        <detail-header :bk-biz-id="bkBizId" :app-id="appId"></detail-header>
       </template>
-      <router-view :bk-biz-id="bkBizId"></router-view>
+      <router-view :bk-biz-id="bkBizId" :app-id="appId"></router-view>
     </LayoutTopBar>
   </div>
 </template>

@@ -34,6 +34,7 @@ export type IRequestFilterRule = {
 export type IServingItem = {
   id?: number,
   biz_id: number,
+  space_id: string,
   spec: {
     name: string,
     deploy_type: string,
@@ -57,7 +58,7 @@ export type IServingItem = {
 
 export type IServingEditParams = {
   id?: number,
-  biz_id?: number,
+  biz_id?: number|string,
   app_id?: number,
   name: string,
   file_type: string,

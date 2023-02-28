@@ -4,7 +4,7 @@
 
   const props = defineProps<{
     show: boolean,
-    bkBizId: number,
+    bkBizId: string,
     appId: number
   }>()
 

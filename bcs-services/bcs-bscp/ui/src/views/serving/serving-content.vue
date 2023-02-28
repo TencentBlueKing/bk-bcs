@@ -240,11 +240,11 @@ const handleSearch = () => {
       <div class="head-right">
         <bk-select
           v-model="bkBizId"
-          class="biz-selector"
-          :loading="isBizLoading"
           id-key="space_id"
           display-key="space_name"
-          filterable>
+          :loading="isBizLoading"
+          :filterable="true"
+          :clearable="false">
           <bk-option v-for="item in bizList" :key="item.space_id" :value="item.space_id" :label="item.space_name">
             <div class="biz-option-item">
               <div class="name">{{ item.space_name }}</div>
@@ -305,7 +305,7 @@ const handleSearch = () => {
                   {{ t("服务属性") }}
                 </bk-button>
                 <span class="divider-middle"></span>
-                <bk-button size="small" style="width: 50%" text @click="router.push({ name: 'serving-config', params: { id: item.id } })">
+                <bk-button size="small" style="width: 50%" text @click="router.push({ name: 'serving-config', params: { spaceId: item.space_id, appId: item.id } })">
                   {{t("配置管理")}}
                 </bk-button>
               </div>

@@ -10,17 +10,13 @@
   const route = useRoute()
 
   const props = defineProps<{
-    bkBizId: number
+    bkBizId: string,
+    appId: number
   }>()
 
-  const appId = ref(Number(route.params.id))
   const appName = ref('') // @todo 需要调接口查询应用详情
   const versionName = ref('已提交的版本名称') // @todo 需要调接口获取
   const configList = ref()
-
-  watch(() => route.params.id, (val) => {
-    appId.value = Number(val)
-  })
 
   const updateConfigList = () => {
     configList.value.refreshConfigList()
@@ -34,7 +30,7 @@
 <template>
   <section class="serving-config-wrapper">
     <section class="version-list-side">
-      <VersionList />
+      <VersionList :bk-biz-id="props.bkBizId" :app-id="props.appId"/>
     </section>
     <section class="version-config-content">
       <section class="config-content-header">
@@ -45,19 +41,19 @@
         <section class="actions-wrapper">
           <CreateVersion
             :bk-biz-id="props.bkBizId"
-            :app-id="appId"
+            :app-id="props.appId"
             :app-name="appName"
             @confirm="handleUpdateStatus" />
           <ReleaseVersion
             :bk-biz-id="props.bkBizId"
-            :app-id="appId"
+            :app-id="props.appId"
             :app-name="appName"
             :version-name="versionName"
             @confirm="handleUpdateStatus" />
         </section>
       </section>
-      <CreateConfig :bk-biz-id="props.bkBizId" :app-id="appId" @confirm="updateConfigList" />
-      <ConfigList ref="configList" :bk-biz-id="props.bkBizId" :app-id="appId" />
+      <CreateConfig :bk-biz-id="props.bkBizId" :app-id="props.appId" @confirm="updateConfigList" />
+      <ConfigList ref="configList" :bk-biz-id="props.bkBizId" :app-id="props.appId" />
     </section>
   </section>
 </template>
