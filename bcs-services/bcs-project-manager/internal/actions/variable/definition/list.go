@@ -64,7 +64,7 @@ func (la *ListAction) Do(ctx context.Context,
 
 	definitions, total, err := la.listVariableDefinitions()
 	if err != nil {
-		return nil, errorx.NewDBErr(err)
+		return nil, errorx.NewDBErr(err.Error())
 	}
 	variables = append(variables, definitions...)
 

@@ -31,6 +31,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/logging"
 	nsm "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/namespace"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/errorx"
+	quotautils "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/quota"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/proto/bcsproject"
 )
 
@@ -40,7 +41,7 @@ var NamespacePrefix = "ieg-%s-"
 // CreateNamespace implement for CreateNamespace interface
 func (a *SharedNamespaceAction) CreateNamespace(ctx context.Context,
 	req *proto.CreateNamespaceRequest, resp *proto.CreateNamespaceResponse) error {
-	if err := a.validateCreate(ctx, req.GetProjectCode(), req.GetClusterID(), req.GetName()); err != nil {
+	if err := a.validateCreate(ctx, req); err != nil {
 		return err
 	}
 	var username string
@@ -100,31 +101,35 @@ func (a *SharedNamespaceAction) CreateNamespace(ctx context.Context,
 	return nil
 }
 
-func (a *SharedNamespaceAction) validateCreate(ctx context.Context, projectCode, clusterID, namespace string) error {
+func (a *SharedNamespaceAction) validateCreate(ctx context.Context, req *proto.CreateNamespaceRequest) error {
 	// check is namespace name valid
-	if !strings.HasPrefix(namespace, fmt.Sprintf(NamespacePrefix, projectCode)) {
+	if !strings.HasPrefix(req.Name, fmt.Sprintf(NamespacePrefix, req.ProjectCode)) {
 		return errorx.NewReadableErr(errorx.ParamErr, fmt.Sprintf("共享集群命名空间必须以 ieg-[projectCode] 开头"))
 	}
 	// check is namespace name exists
 	stagings, err := a.model.ListNamespacesByItsmTicketType(ctx,
-		projectCode, clusterID, []string{nsm.ItsmTicketTypeCreate})
+		req.ProjectCode, req.ClusterID, []string{nsm.ItsmTicketTypeCreate})
 	for _, staging := range stagings {
-		if staging.Name == namespace {
-			return errorx.NewReadableErr(errorx.ParamErr, fmt.Sprintf("命名空间 [%s] 已存在", namespace))
+		if staging.Name == req.Name {
+			return errorx.NewReadableErr(errorx.ParamErr, fmt.Sprintf("命名空间 [%s] 已存在", req.Name))
 		}
 	}
-	client, err := clientset.GetClientGroup().Client(clusterID)
+	client, err := clientset.GetClientGroup().Client(req.ClusterID)
 	if err != nil {
-		logging.Error("get clientset for cluster %s failed, err: %s", clusterID, err.Error())
+		logging.Error("get clientset for cluster %s failed, err: %s", req.ClusterID, err.Error())
 		return err
 	}
-	_, err = client.CoreV1().Namespaces().Get(ctx, namespace, metav1.GetOptions{})
+	_, err = client.CoreV1().Namespaces().Get(ctx, req.Name, metav1.GetOptions{})
 	if err == nil {
-		return errorx.NewReadableErr(errorx.ParamErr, fmt.Sprintf("命名空间 [%s] 已存在", namespace))
+		return errorx.NewReadableErr(errorx.ParamErr, fmt.Sprintf("命名空间 [%s] 已存在", req.Name))
 	}
 	if !errors.IsNotFound(err) {
-		logging.Error("get namespace in cluster %s failed, err: %s", clusterID, err.Error())
+		logging.Error("get namespace in cluster %s failed, err: %s", req.ClusterID, err.Error())
 		return errorx.NewClusterErr(err.Error())
+	}
+	// check resourceQuota validate
+	if err := quotautils.ValidateResourceQuota(req.Quota); err != nil {
+		return err
 	}
 	return nil
 }

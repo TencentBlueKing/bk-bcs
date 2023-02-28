@@ -47,7 +47,7 @@ func (ca *DeleteAction) Do(ctx context.Context,
 
 	total, err := ca.deleteVariable()
 	if err != nil {
-		return errorx.NewDBErr(err)
+		return errorx.NewDBErr(err.Error())
 	}
 	data := &proto.DeleteVariableDefinitionsData{
 		Total: uint32(total),

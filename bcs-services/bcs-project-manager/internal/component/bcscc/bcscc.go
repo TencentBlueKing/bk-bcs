@@ -114,7 +114,7 @@ func GetAccessToken() (string, error) {
 	body, err := component.Request(req, timeout, "", nil)
 	if err != nil {
 		logging.Error("request bk-ssm error, data: %v, err: %v", req.Data, err)
-		return "", errorx.NewRequestBKSSMErr(err)
+		return "", errorx.NewRequestBKSSMErr(err.Error())
 	}
 	// 解析返回
 	var resp getAccessTokenResp
@@ -355,7 +355,7 @@ func requestCommonAndParse(req gorequest.SuperAgent) error {
 	body, err := component.Request(req, timeout, "", headers)
 	if err != nil {
 		logging.Error("request paas-cc error, data: %v, err: %v", req.Data, err)
-		return errorx.NewRequestBCSCCErr(err)
+		return errorx.NewRequestBCSCCErr(err.Error())
 	}
 	// 解析返回
 	var resp commonResp
@@ -372,13 +372,13 @@ func requestCommonAndParse(req gorequest.SuperAgent) error {
 }
 
 func requestListNamespacesAndParse(req gorequest.SuperAgent) (*listNamespaceData, error) {
-	
+
 	// 获取返回数据
 	headers := map[string]string{"Content-Type": "application/json"}
 	body, err := component.Request(req, timeout, "", headers)
 	if err != nil {
 		logging.Error("request paas-cc error, data: %v, err: %v", req.Data, err)
-		return nil, errorx.NewRequestBCSCCErr(err)
+		return nil, errorx.NewRequestBCSCCErr(err.Error())
 	}
 	// 解析返回
 	var resp listNamespacesResp

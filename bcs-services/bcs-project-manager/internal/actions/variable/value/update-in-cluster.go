@@ -48,7 +48,7 @@ func (la *UpdateClusterVariablesAction) Do(ctx context.Context,
 
 	err := la.updateClusterVariables()
 	if err != nil {
-		return errorx.NewDBErr(err)
+		return errorx.NewDBErr(err.Error())
 	}
 	return nil
 }

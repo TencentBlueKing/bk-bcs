@@ -51,7 +51,7 @@ func (ca *UpdateAction) Do(ctx context.Context, req *proto.UpdateVariableRequest
 
 	vd, err := ca.updateVariable()
 	if err != nil {
-		return nil, errorx.NewDBErr(err)
+		return nil, errorx.NewDBErr(err.Error())
 	}
 	return vd, nil
 }

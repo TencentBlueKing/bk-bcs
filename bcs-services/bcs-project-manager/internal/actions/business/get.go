@@ -47,7 +47,7 @@ func (ga *GetAction) Do(ctx context.Context, req *proto.GetBusinessRequest) (*pr
 
 	p, err := ga.model.GetProject(ctx, req.GetProjectCode())
 	if err != nil {
-		return nil, errorx.NewDBErr(err)
+		return nil, errorx.NewDBErr(err.Error())
 	}
 
 	if p.BusinessID == "" || p.BusinessID == "0" {

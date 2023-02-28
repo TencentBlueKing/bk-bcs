@@ -45,7 +45,7 @@ func (a *IndependentNamespaceAction) GetNamespace(ctx context.Context,
 	}
 	ns, err := client.CoreV1().Namespaces().Get(ctx, req.GetNamespace(), metav1.GetOptions{})
 	if err != nil && !errors.IsNotFound(err) {
-		return errorx.NewClusterErr(err)
+		return errorx.NewClusterErr(err.Error())
 	}
 	if errors.IsNotFound(err) {
 		return errorx.NewReadableErr(errorx.ParamErr, "命名空间不存在")

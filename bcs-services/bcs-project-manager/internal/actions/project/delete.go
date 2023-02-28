@@ -42,7 +42,7 @@ func (da *DeleteAction) Do(ctx context.Context, req *proto.DeleteProjectRequest)
 	da.req = req
 
 	if err := da.model.DeleteProject(ctx, req.ProjectID); err != nil {
-		return errorx.NewDBErr(err)
+		return errorx.NewDBErr(err.Error())
 	}
 
 	return nil

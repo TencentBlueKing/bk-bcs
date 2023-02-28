@@ -95,7 +95,7 @@ func ListTickets(snList []string) ([]TicketsItem, error) {
 		body, err := component.Request(req, timeout, proxy, headers)
 		if err != nil {
 			logging.Error("request list itsm tickets %v failed, %s", snList, err.Error())
-			return nil, errorx.NewRequestITSMErr(err)
+			return nil, errorx.NewRequestITSMErr(err.Error())
 		}
 		// 解析返回的body
 		resp := &ListTicketsResp{}

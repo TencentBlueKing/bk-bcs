@@ -44,7 +44,7 @@ func (ga *GetAction) Do(ctx context.Context, req *proto.GetProjectRequest) (*pm.
 
 	p, err := ga.model.GetProject(ctx, req.ProjectIDOrCode)
 	if err != nil {
-		return nil, errorx.NewDBErr(err)
+		return nil, errorx.NewDBErr(err.Error())
 	}
 
 	return p, nil

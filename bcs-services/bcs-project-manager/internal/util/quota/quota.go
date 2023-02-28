@@ -19,8 +19,28 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 
 	nsm "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/namespace"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/errorx"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/proto/bcsproject"
 )
+
+func ValidateResourceQuota(quota *proto.ResourceQuota) error {
+	if quota == nil {
+		return nil
+	}
+	if _, err := resource.ParseQuantity(quota.CpuLimits); err != nil {
+		return errorx.NewParamErr("invalid cpu limits")
+	}
+	if _, err := resource.ParseQuantity(quota.CpuRequests); err != nil {
+		return errorx.NewParamErr("invalid cpu requests")
+	}
+	if _, err := resource.ParseQuantity(quota.MemoryLimits); err != nil {
+		return errorx.NewParamErr("invalid memory limits")
+	}
+	if _, err := resource.ParseQuantity(quota.MemoryRequests); err != nil {
+		return errorx.NewParamErr("invalid memory requests")
+	}
+	return nil
+}
 
 // TransferToProto transfer k8s ResourceQuota to proto ResourceQuota
 func TransferToProto(q *corev1.ResourceQuota) (

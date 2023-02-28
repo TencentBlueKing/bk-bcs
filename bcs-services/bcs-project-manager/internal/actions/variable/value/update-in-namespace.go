@@ -47,7 +47,7 @@ func (la *UpdateNamespaceVariablesAction) Do(ctx context.Context,
 	la.req = req
 
 	if err := la.updateNamespaceVariables(); err != nil {
-		return errorx.NewDBErr(err)
+		return errorx.NewDBErr(err.Error())
 	}
 	return nil
 }

@@ -52,7 +52,7 @@ func (la *ListAction) Do(ctx context.Context, req *proto.ListProjectsRequest) (*
 
 	projects, total, err := la.listProjects()
 	if err != nil {
-		return nil, errorx.NewDBErr(err)
+		return nil, errorx.NewDBErr(err.Error())
 	}
 	data := map[string]interface{}{
 		"total":   uint32(total),

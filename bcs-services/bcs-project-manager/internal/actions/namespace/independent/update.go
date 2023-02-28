@@ -31,6 +31,9 @@ import (
 // UpdateNamespace implement for UpdateNamespace interface
 func (a *IndependentNamespaceAction) UpdateNamespace(ctx context.Context,
 	req *proto.UpdateNamespaceRequest, resp *proto.UpdateNamespaceResponse) error {
+	if err := quotautils.ValidateResourceQuota(req.Quota); err != nil {
+		return err
+	}
 	client, err := clientset.GetClientGroup().Client(req.GetClusterID())
 	if err != nil {
 		logging.Error("get clientset for cluster %s failed, err: %s", req.GetClusterID(), err.Error())

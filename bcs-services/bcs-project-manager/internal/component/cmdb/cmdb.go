@@ -145,7 +145,7 @@ func SearchBusiness(username string, bizID string) (*SearchBusinessData, error) 
 	// 获取返回数据
 	body, err := component.Request(req, timeout, config.GlobalConf.CMDB.Proxy, headers)
 	if err != nil {
-		return nil, errorx.NewRequestCMDBErr(err)
+		return nil, errorx.NewRequestCMDBErr(err.Error())
 	}
 	// 解析返回的body
 	var resp SearchBusinessResp
@@ -202,7 +202,7 @@ func GetBusinessTopology(bizID string) ([]BusinessTopologyData, error) {
 	// 获取返回数据
 	body, err := component.Request(req, timeout, config.GlobalConf.CMDB.Proxy, headers)
 	if err != nil {
-		return nil, errorx.NewRequestCMDBErr(err)
+		return nil, errorx.NewRequestCMDBErr(err.Error())
 	}
 	// 解析返回的body
 	var resp GetBusinessTopologyResp
