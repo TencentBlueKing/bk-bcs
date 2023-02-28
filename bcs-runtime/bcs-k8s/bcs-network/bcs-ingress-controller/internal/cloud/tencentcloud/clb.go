@@ -18,11 +18,12 @@ import (
 	"strings"
 	"time"
 
+	"sigs.k8s.io/controller-runtime/pkg/client"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/cloud"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/common"
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	tclb "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/clb/v20180317"
 	tcommon "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
@@ -142,6 +143,9 @@ func (c *Clb) DescribeLoadBalancer(region, lbID, name, protocolLayer string) (*c
 	}
 	if resplb.LoadBalancerName != nil {
 		retlb.Name = *resplb.LoadBalancerName
+	}
+	if resplb.Domain != nil {
+		retlb.DNSName = *resplb.Domain
 	}
 	retlb.IPs = tcommon.StringValues(resplb.LoadBalancerVips)
 	return retlb, nil
