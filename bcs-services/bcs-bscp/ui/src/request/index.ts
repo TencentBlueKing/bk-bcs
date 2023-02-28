@@ -4,8 +4,7 @@ import BkMessage from 'bkui-vue/lib/message';
 import { propsMixin } from 'bkui-vue/lib/modal';
 
 const http = axios.create({
-  // @ts-ignore
-  baseURL: `${window.BK_BCS_BSCP_API}/api/v1`,
+  baseURL: `${(<any>window).BK_BCS_BSCP_API}/api/v1`,
   withCredentials: true
 })
 

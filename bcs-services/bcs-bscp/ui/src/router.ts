@@ -43,7 +43,7 @@ const routes = [
 ]
 
 const router = createRouter({
-  history: createWebHistory(),
+  history: createWebHistory((<any>window).SITE_URL),
   routes, // `routes: routes` 的缩写
 });
 
