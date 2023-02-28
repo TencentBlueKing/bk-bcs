@@ -220,6 +220,10 @@ func (c *Configurations) ReadFrom(content []byte) error {
 		return err
 	}
 
+	if err := c.WebConsole.parseRes(); err != nil {
+		return err
+	}
+
 	if err := c.BCS.InitJWTPubKey(); err != nil {
 		return err
 	}

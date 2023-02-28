@@ -18,6 +18,8 @@ import (
 	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	clientcmdv1 "k8s.io/client-go/tools/clientcmd/api/v1"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
 )
 
 const (
@@ -127,9 +129,16 @@ func genPod(name, namespace, image, configmapName, serviceAccountName, uid strin
 					VolumeMounts: []v1.VolumeMount{
 						{
 							Name:      "kube-config",
-							MountPath: "/root/.kube",
+							MountPath: "/etc/kube",
 						},
 					},
+					Env: []v1.EnvVar{
+						{
+							Name:  "KUBECONFIG", // kubectl 配置文件路径
+							Value: "/etc/kube/config",
+						},
+					},
+					Resources: config.G.WebConsole.Resources,
 				},
 			},
 			RestartPolicy: v1.RestartPolicyAlways,
