@@ -45,7 +45,7 @@ func (a *SharedNamespaceAction) ListNamespaces(ctx context.Context,
 		[]string{nsm.ItsmTicketTypeCreate, nsm.ItsmTicketTypeUpdate, nsm.ItsmTicketTypeDelete})
 	if err != nil {
 		logging.Error("list staging namespaces failed, err: %s", err.Error())
-		return errorx.NewDBErr(err)
+		return errorx.NewDBErr(err.Error())
 	}
 	existns := map[string]nsm.Namespace{}
 	creatings := []nsm.Namespace{}
@@ -71,7 +71,7 @@ func (a *SharedNamespaceAction) ListNamespaces(ctx context.Context,
 	nsList, err := client.CoreV1().Namespaces().List(ctx, metav1.ListOptions{})
 	if err != nil {
 		logging.Error("list namespaces in cluster %s failed, err: %s", req.GetClusterID(), err.Error())
-		return errorx.NewClusterErr(err)
+		return errorx.NewClusterErr(err.Error())
 	}
 	quotaMap := map[string]corev1.ResourceQuota{}
 	if quotaList, err := client.CoreV1().ResourceQuotas("").List(ctx, metav1.ListOptions{}); err == nil {
@@ -85,7 +85,7 @@ func (a *SharedNamespaceAction) ListNamespaces(ctx context.Context,
 	variablesMap, err := batchListNamespaceVariables(ctx, req.GetProjectCode(), req.GetClusterID(), namespaces)
 	if err != nil {
 		logging.Error("batch list variables failed, err: %s", err.Error())
-		return errorx.NewClusterErr(err)
+		return errorx.NewClusterErr(err.Error())
 	}
 	retDatas = append(retDatas, loadRetDatasFromCluster(namespaces, variablesMap, quotaMap, existns)...)
 	resp.Data = retDatas

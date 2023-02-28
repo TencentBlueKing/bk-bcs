@@ -46,7 +46,7 @@ func (a *IndependentNamespaceAction) ListNamespaces(ctx context.Context,
 	}
 	nsList, err := client.CoreV1().Namespaces().List(ctx, metav1.ListOptions{})
 	if err != nil {
-		return errorx.NewClusterErr(err)
+		return errorx.NewClusterErr(err.Error())
 	}
 	quotaMap := map[string]corev1.ResourceQuota{}
 	if quotaList, err := client.CoreV1().ResourceQuotas("").List(ctx, metav1.ListOptions{}); err == nil {
@@ -58,7 +58,7 @@ func (a *IndependentNamespaceAction) ListNamespaces(ctx context.Context,
 	}
 	variablesMap, err := batchListNamespaceVariables(ctx, req.GetProjectCode(), req.GetClusterID(), nsList.Items)
 	if err != nil {
-		return errorx.NewDBErr(err)
+		return errorx.NewDBErr(err.Error())
 	}
 	lock := &sync.Mutex{}
 	g, ctx := errgroup.WithContext(ctx)

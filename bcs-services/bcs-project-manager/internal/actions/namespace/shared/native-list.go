@@ -37,7 +37,7 @@ func (a *SharedNamespaceAction) ListNativeNamespaces(ctx context.Context,
 	}
 	nsList, err := client.CoreV1().Namespaces().List(ctx, metav1.ListOptions{})
 	if err != nil {
-		return errorx.NewClusterErr(err)
+		return errorx.NewClusterErr(err.Error())
 	}
 	namespaces := nsList.Items
 	if req.GetProjectIDOrCode() != "-" {

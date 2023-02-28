@@ -22,7 +22,7 @@ import (
 
 func TestProjectError(t *testing.T) {
 	// one message
-	err := NewProjectError(Success, SuccessMsg)
+	err := NewProjectError(Success, SuccessMsg, "")
 	assert.Equal(t, err.Error(), SuccessMsg)
 	// some message
 	err = NewProjectError(ParamErr, ParamErrMsg, "some error")

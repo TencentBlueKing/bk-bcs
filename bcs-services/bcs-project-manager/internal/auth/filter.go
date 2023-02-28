@@ -15,6 +15,8 @@
 package auth
 
 import (
+	"fmt"
+
 	bcsIAM "github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
 	iam "github.com/TencentBlueKing/iam-go-sdk"
 	iamBackendClient "github.com/TencentBlueKing/iam-go-sdk/client"
@@ -96,7 +98,7 @@ func makeFilter(policy map[string]interface{}) (map[string]interface{}, error) {
 	case iamOP.OR, iamOP.AND:
 		return parseContent(expr.Content), nil
 	default:
-		return nil, errorx.NewIAMOPErr("not support op", expr.OP)
+		return nil, errorx.NewIAMOPErr(fmt.Sprintf("not support op: %v", expr.OP))
 	}
 }
 

@@ -71,7 +71,7 @@ func CreateTicket(username string, serviceID int, fields []map[string]interface{
 	body, err := component.Request(req, timeout, proxy, headers)
 	if err != nil {
 		logging.Error("request itsm create ticket failed, %s", err.Error())
-		return nil, errorx.NewRequestITSMErr(err)
+		return nil, errorx.NewRequestITSMErr(err.Error())
 	}
 	// 解析返回的body
 	resp := &CreateTicketResp{}

@@ -47,7 +47,7 @@ func (ga *GetTopologyAction) Do(ctx context.Context,
 
 	p, err := ga.model.GetProject(ctx, req.GetProjectCode())
 	if err != nil {
-		return errorx.NewDBErr(err)
+		return errorx.NewDBErr(err.Error())
 	}
 
 	if p.BusinessID == "" || p.BusinessID == "0" {

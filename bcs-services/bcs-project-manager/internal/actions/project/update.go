@@ -52,17 +52,17 @@ func (ua *UpdateAction) Do(ctx context.Context, req *proto.UpdateProjectRequest)
 	ua.req = req
 
 	if err := ua.validate(); err != nil {
-		return nil, errorx.NewParamErr(err)
+		return nil, errorx.NewReadableErr(errorx.ParamErr, err.Error())
 	}
 	// 获取要更新的项目信息
 	p, err := ua.model.GetProject(ua.ctx, req.ProjectID)
 	if err != nil {
 		logging.Error("project: %s not found", req.ProjectID)
-		return nil, errorx.NewParamErr(err)
+		return nil, errorx.NewParamErr(err.Error())
 	}
 	oldProject := *p
 	if err := ua.updateProject(p); err != nil {
-		return nil, errorx.NewDBErr(err)
+		return nil, errorx.NewDBErr(err.Error())
 	}
 	if req.GetBusinessID() != "" && oldProject.BusinessID == "" || oldProject.BusinessID == "0" {
 		// 为业务的业务运维授予项目分级管理员权限
@@ -91,17 +91,20 @@ func (ua *UpdateAction) validate() error {
 	if ua.req.BusinessID != "" {
 		authUser, ok := ua.ctx.Value(middleware.AuthUserKey).(middleware.AuthUser)
 		if !ok || authUser.Username == "" {
-			return errorx.NewAuthErr()
+			return errorx.NewAuthErr("invalid user")
 		}
 		if _, err := cmdb.IsMaintainer(authUser.Username, ua.req.BusinessID); err != nil {
 			return err
 		}
 	}
-	// check name unique
 	name := ua.req.Name
 	if name == "" {
 		return nil
 	}
+	if len(strings.TrimSpace(name)) == 0 {
+		return fmt.Errorf("name cannot contains only spaces")
+	}
+	// check name unique
 	if p, _ := ua.model.GetProjectByField(ua.ctx, &pm.ProjectField{Name: name}); p != nil {
 		// 如果是同一个项目，忽略名称校验
 		if p.ProjectID == ua.req.ProjectID {

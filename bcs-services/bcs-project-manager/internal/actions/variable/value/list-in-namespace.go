@@ -49,7 +49,7 @@ func (la *ListNamespaceVariablesAction) Do(ctx context.Context,
 
 	variables, err := la.listNamespaceVariables()
 	if err != nil {
-		return nil, errorx.NewDBErr(err)
+		return nil, errorx.NewDBErr(err.Error())
 	}
 	return variables, nil
 }

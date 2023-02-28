@@ -41,9 +41,12 @@ func (c *IndependentNamespaceAction) CreateNamespace(ctx context.Context,
 		// 授权创建者命名空间编辑和查看权限
 		creator = authUser.Username
 	}
+	if err := quotautils.ValidateResourceQuota(req.Quota); err != nil {
+		return err
+	}
 	_, err = c.createNamespace(ctx, req, creator)
 	if err != nil {
-		return errorx.NewClusterErr(err)
+		return errorx.NewClusterErr(err.Error())
 	}
 
 	if err := iam.GrantNamespaceCreatorActions(creator, req.GetClusterID(), req.GetName()); err != nil {
@@ -52,7 +55,7 @@ func (c *IndependentNamespaceAction) CreateNamespace(ctx context.Context,
 	}
 	if req.GetQuota() != nil {
 		if _, err := c.createResourceQuota(ctx, req); err != nil {
-			return errorx.NewClusterErr(err)
+			return errorx.NewClusterErr(err.Error())
 		}
 	}
 	for _, variable := range req.GetVariables() {

@@ -17,6 +17,7 @@ package project
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/middleware"
@@ -50,7 +51,7 @@ func (ca *CreateAction) Do(ctx context.Context, req *proto.CreateProjectRequest)
 	ca.req = req
 
 	if err := ca.validate(); err != nil {
-		return nil, errorx.NewParamErr(err)
+		return nil, errorx.NewReadableErr(errorx.ParamErr, err.Error())
 	}
 
 	// 如果有传递项目ID，则以传递的为准，否则动态生成32位的字符串作为项目ID
@@ -59,12 +60,12 @@ func (ca *CreateAction) Do(ctx context.Context, req *proto.CreateProjectRequest)
 	}
 
 	if err := ca.createProject(); err != nil {
-		return nil, errorx.NewDBErr(err)
+		return nil, errorx.NewDBErr(err.Error())
 	}
 
 	p, err := ca.model.GetProject(ca.ctx, ca.req.ProjectID)
 	if err != nil {
-		return nil, errorx.NewDBErr(err)
+		return nil, errorx.NewDBErr(err.Error())
 	}
 	// 向 bcs cc 写入数据
 	go func() {
@@ -111,6 +112,9 @@ func (ca *CreateAction) createProject() error {
 func (ca *CreateAction) validate() error {
 	// check projectID、projectCode、name
 	projectID, projectCode, name := ca.req.ProjectID, ca.req.ProjectCode, ca.req.Name
+	if len(strings.TrimSpace(name)) == 0 {
+		return fmt.Errorf("name cannot contains only spaces")
+	}
 	if p, _ := ca.model.GetProjectByField(ca.ctx, &pm.ProjectField{ProjectID: projectID, ProjectCode: projectCode,
 		Name: name}); p != nil {
 		if p.ProjectID == projectID {

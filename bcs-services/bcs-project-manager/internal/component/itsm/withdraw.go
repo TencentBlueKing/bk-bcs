@@ -63,7 +63,7 @@ func WithdrawTicket(username, sn string) error {
 	body, err := component.Request(req, timeout, proxy, headers)
 	if err != nil {
 		logging.Error("request itsm withdraw ticket %s failed, %s", sn, err.Error())
-		return errorx.NewRequestITSMErr(err)
+		return errorx.NewRequestITSMErr(err.Error())
 	}
 	// 解析返回的body
 	resp := &OperateTicketResp{}

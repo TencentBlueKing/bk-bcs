@@ -16,6 +16,8 @@
 package auth
 
 import (
+	"fmt"
+
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/jwt"
 	jwtGo "github.com/dgrijalva/jwt-go"
 
@@ -35,7 +37,7 @@ func SetJwtClient() error {
 	jwtOpt, err := getJWTOpt()
 	if err != nil {
 		logging.Error("init jwt client failed, err:%s", err.Error())
-		return errorx.NewAuthErr("parse jwt key error", err.Error())
+		return errorx.NewAuthErr(fmt.Sprintf("parse jwt key error: %s", err.Error()))
 	}
 	if jwtClient, err = jwt.NewJWTClient(*jwtOpt); err != nil {
 		logging.Error("init jwt client failed, err:%s", err.Error())

@@ -27,12 +27,16 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/itsm"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/logging"
 	nsm "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/namespace"
+	quotautils "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/quota"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/proto/bcsproject"
 )
 
 // UpdateNamespace implement for UpdateNamespace interface
 func (a *SharedNamespaceAction) UpdateNamespace(ctx context.Context,
 	req *proto.UpdateNamespaceRequest, resp *proto.UpdateNamespaceResponse) error {
+	if err := quotautils.ValidateResourceQuota(req.Quota); err != nil {
+		return err
+	}
 	var username string
 	if authUser, err := middleware.GetUserFromContext(ctx); err == nil {
 		username = authUser.GetUsername()
