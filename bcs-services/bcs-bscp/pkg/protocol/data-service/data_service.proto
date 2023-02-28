@@ -118,8 +118,8 @@ message DeleteAppReq {
 }
 
 message GetAppReq {
-    uint32 biz_id                 = 1;
-    uint32 app_id                 = 2;
+    uint32 biz_id = 1;
+    uint32 app_id = 2;
 }
 
 message GetAppResp {
@@ -133,7 +133,7 @@ message ListAppsReq {
 }
 
 message ListAppsRestReq {
-    uint32 biz_id   = 1;
+    string biz_id   = 1;  // 多个以逗号分割
     uint32 start    = 2;
     uint32 limit    = 3;
     string operator = 4;
@@ -162,9 +162,9 @@ message DeleteConfigItemReq {
 }
 
 message GetConfigItemReq {
-    uint32 id                     = 1;
-    uint32 biz_id                 = 2;
-    uint32 app_id                 = 3;
+    uint32 id     = 1;
+    uint32 biz_id = 2;
+    uint32 app_id = 3;
 }
 
 message GetConfigItemResp {
@@ -189,9 +189,9 @@ message CreateContentReq {
 }
 
 message GetContentReq {
-    uint32 id                     = 1;
-    uint32 biz_id                 = 2;
-    uint32 app_id                 = 3;
+    uint32 id     = 1;
+    uint32 biz_id = 2;
+    uint32 app_id = 3;
 }
 
 message GetContentResp {
@@ -217,9 +217,9 @@ message CreateCommitReq {
 }
 
 message GetLatestCommitReq {
-    uint32 biz_id                 = 1;
-    uint32 app_id                 = 2;
-    uint32 config_item_id         = 3;
+    uint32 biz_id         = 1;
+    uint32 app_id         = 2;
+    uint32 config_item_id = 3;
 }
 
 message GetLatestCommitResp {
@@ -365,12 +365,12 @@ message ListGroupCategoriesReq {
 }
 
 message ListGroupCategoriesResp {
-    uint32 count                           = 1;
+    uint32 count                        = 1;
     repeated pbgc.GroupCategory details = 2;
 }
 
 message DeleteGroupCategoryReq {
-    uint32 id                                  = 1;
+    uint32 id                               = 1;
     pbgc.GroupCategoryAttachment attachment = 2;
 }
 

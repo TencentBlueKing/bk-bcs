@@ -15,6 +15,7 @@ package service
 import (
 	"context"
 	"strconv"
+	"strings"
 
 	"github.com/pkg/errors"
 
@@ -207,6 +208,66 @@ func (s *Service) ListAppsRest(ctx context.Context, req *pbcs.ListAppsRestReq) (
 	kt := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.ListAppsResp)
 
+	userSpaceResp, err := s.client.AS.ListUserSpace(kt.RpcCtx(), &pbas.ListUserSpaceReq{})
+	if err != nil {
+		return nil, err
+	}
+
+	if len(userSpaceResp.GetItems()) == 0 {
+		return nil, errors.New("use have no spaces")
+	}
+
+	spaceMap := map[string]*pbas.Space{}
+	spaceIdList := []string{}
+	for _, s := range userSpaceResp.GetItems() {
+		spaceMap[s.SpaceId] = s
+		spaceIdList = append(spaceIdList, s.SpaceId)
+	}
+
+	r := &pbds.ListAppsRestReq{
+		BizId:    strings.Join(spaceIdList, ","),
+		Start:    req.Start,
+		Limit:    req.Limit,
+		Operator: req.Operator,
+		Name:     req.Name,
+	}
+	rp, err := s.client.DS.ListAppsRest(kt.RpcCtx(), r)
+	if err != nil {
+		errf.Error(err).AssignResp(kt, resp)
+		logs.Errorf("list apps failed, err: %v, rid: %s", err, kt.Rid)
+		return resp, nil
+	}
+
+	// 只填写当前页的space
+	for _, app := range rp.Details {
+		id := strconv.Itoa(int(app.BizId))
+		sp, ok := spaceMap[id]
+		if !ok {
+			app.SpaceId = id
+			app.SpaceName = ""
+			app.SpaceTypeId = ""
+			app.SpaceTypeName = ""
+		} else {
+			app.SpaceId = id
+			app.SpaceName = sp.SpaceName
+			app.SpaceTypeId = sp.SpaceTypeId
+			app.SpaceTypeName = sp.SpaceTypeName
+		}
+	}
+
+	resp.Code = errf.OK
+	resp.Data = &pbcs.ListAppsResp_RespData{
+		Count:   rp.Count,
+		Details: rp.Details,
+	}
+	return resp, nil
+}
+
+// ListAppsRest list apps with rest filter
+func (s *Service) ListAppsBySpaceRest(ctx context.Context, req *pbcs.ListAppsBySpaceRestReq) (*pbcs.ListAppsResp, error) {
+	kt := kit.FromGrpcContext(ctx)
+	resp := new(pbcs.ListAppsResp)
+
 	authRes := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.App, Action: meta.Find}, BizID: req.BizId}
 	err := s.authorizer.AuthorizeWithResp(kt, resp, authRes)
 	if err != nil {
@@ -214,7 +275,7 @@ func (s *Service) ListAppsRest(ctx context.Context, req *pbcs.ListAppsRestReq) (
 	}
 
 	r := &pbds.ListAppsRestReq{
-		BizId:    req.BizId,
+		BizId:    strconv.Itoa(int(req.BizId)),
 		Start:    req.Start,
 		Limit:    req.Limit,
 		Operator: req.Operator,

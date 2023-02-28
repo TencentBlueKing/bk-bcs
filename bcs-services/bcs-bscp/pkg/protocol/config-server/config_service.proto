@@ -54,7 +54,15 @@ service Config {
             body: "*"
         };
     }
+
+    // 获取用户有权限的 spaces 所有的 apps
     rpc ListAppsRest(ListAppsRestReq) returns (ListAppsResp) {
+        option (google.api.http) = {
+            get: "/api/v1/config/apps"
+        };
+    }
+    // 按 space 查询 app 信息
+    rpc ListAppsBySpaceRest(ListAppsBySpaceRestReq) returns (ListAppsResp) {
         option (google.api.http) = {
             get: "/api/v1/config/list/app/app/biz_id/{biz_id}"
         };
@@ -322,8 +330,8 @@ message DeleteAppResp {
 }
 
 message GetAppReq {
-    uint32 biz_id                 = 1;
-    uint32 app_id                 = 2;
+    uint32 biz_id = 1;
+    uint32 app_id = 2;
 }
 
 message GetAppResp {
@@ -340,6 +348,13 @@ message ListAppsReq {
 }
 
 message ListAppsRestReq {
+    uint32 start    = 2;
+    uint32 limit    = 3;
+    string operator = 4;
+    string name     = 5;
+}
+
+message ListAppsBySpaceRestReq {
     uint32 biz_id   = 1;
     uint32 start    = 2;
     uint32 limit    = 3;

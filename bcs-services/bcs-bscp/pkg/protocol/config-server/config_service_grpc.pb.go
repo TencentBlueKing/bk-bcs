@@ -28,7 +28,10 @@ type ConfigClient interface {
 	DeleteApp(ctx context.Context, in *DeleteAppReq, opts ...grpc.CallOption) (*DeleteAppResp, error)
 	GetApp(ctx context.Context, in *GetAppReq, opts ...grpc.CallOption) (*GetAppResp, error)
 	ListApps(ctx context.Context, in *ListAppsReq, opts ...grpc.CallOption) (*ListAppsResp, error)
+	// 获取用户有权限的 spaces 所有的 apps
 	ListAppsRest(ctx context.Context, in *ListAppsRestReq, opts ...grpc.CallOption) (*ListAppsResp, error)
+	// 按 space 查询 app 信息
+	ListAppsBySpaceRest(ctx context.Context, in *ListAppsBySpaceRestReq, opts ...grpc.CallOption) (*ListAppsResp, error)
 	CreateConfigItem(ctx context.Context, in *CreateConfigItemReq, opts ...grpc.CallOption) (*CreateConfigItemResp, error)
 	UpdateConfigItem(ctx context.Context, in *UpdateConfigItemReq, opts ...grpc.CallOption) (*UpdateConfigItemResp, error)
 	DeleteConfigItem(ctx context.Context, in *DeleteConfigItemReq, opts ...grpc.CallOption) (*DeleteConfigItemResp, error)
@@ -128,6 +131,15 @@ func (c *configClient) ListApps(ctx context.Context, in *ListAppsReq, opts ...gr
 func (c *configClient) ListAppsRest(ctx context.Context, in *ListAppsRestReq, opts ...grpc.CallOption) (*ListAppsResp, error) {
 	out := new(ListAppsResp)
 	err := c.cc.Invoke(ctx, "/pbcs.Config/ListAppsRest", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *configClient) ListAppsBySpaceRest(ctx context.Context, in *ListAppsBySpaceRestReq, opts ...grpc.CallOption) (*ListAppsResp, error) {
+	out := new(ListAppsResp)
+	err := c.cc.Invoke(ctx, "/pbcs.Config/ListAppsBySpaceRest", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -432,7 +444,10 @@ type ConfigServer interface {
 	DeleteApp(context.Context, *DeleteAppReq) (*DeleteAppResp, error)
 	GetApp(context.Context, *GetAppReq) (*GetAppResp, error)
 	ListApps(context.Context, *ListAppsReq) (*ListAppsResp, error)
+	// 获取用户有权限的 spaces 所有的 apps
 	ListAppsRest(context.Context, *ListAppsRestReq) (*ListAppsResp, error)
+	// 按 space 查询 app 信息
+	ListAppsBySpaceRest(context.Context, *ListAppsBySpaceRestReq) (*ListAppsResp, error)
 	CreateConfigItem(context.Context, *CreateConfigItemReq) (*CreateConfigItemResp, error)
 	UpdateConfigItem(context.Context, *UpdateConfigItemReq) (*UpdateConfigItemResp, error)
 	DeleteConfigItem(context.Context, *DeleteConfigItemReq) (*DeleteConfigItemResp, error)
@@ -491,6 +506,9 @@ func (UnimplementedConfigServer) ListApps(context.Context, *ListAppsReq) (*ListA
 }
 func (UnimplementedConfigServer) ListAppsRest(context.Context, *ListAppsRestReq) (*ListAppsResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListAppsRest not implemented")
+}
+func (UnimplementedConfigServer) ListAppsBySpaceRest(context.Context, *ListAppsBySpaceRestReq) (*ListAppsResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListAppsBySpaceRest not implemented")
 }
 func (UnimplementedConfigServer) CreateConfigItem(context.Context, *CreateConfigItemReq) (*CreateConfigItemResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateConfigItem not implemented")
@@ -722,6 +740,24 @@ func _Config_ListAppsRest_Handler(srv interface{}, ctx context.Context, dec func
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ConfigServer).ListAppsRest(ctx, req.(*ListAppsRestReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Config_ListAppsBySpaceRest_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListAppsBySpaceRestReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).ListAppsBySpaceRest(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/pbcs.Config/ListAppsBySpaceRest",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).ListAppsBySpaceRest(ctx, req.(*ListAppsBySpaceRestReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1336,6 +1372,10 @@ var Config_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListAppsRest",
 			Handler:    _Config_ListAppsRest_Handler,
+		},
+		{
+			MethodName: "ListAppsBySpaceRest",
+			Handler:    _Config_ListAppsBySpaceRest_Handler,
 		},
 		{
 			MethodName: "CreateConfigItem",

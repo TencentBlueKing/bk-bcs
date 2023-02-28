@@ -72,19 +72,35 @@ func (ap *appDao) List(kit *kit.Kit, opts *types.ListAppsOption) (*types.ListApp
 		Priority: filter.Priority{"id", "biz_id"},
 		CrownedOption: &filter.CrownedOption{
 			CrownedOp: filter.And,
-			Rules: []filter.RuleFactory{
-				&filter.AtomRule{
-					Field: "biz_id",
-					Op:    filter.Equal.Factory(),
-					Value: opts.BizID,
-				}},
+			Rules:     []filter.RuleFactory{},
 		},
 	}
+
+	// 导航查询场景
+	if len(opts.BizList) > 1 {
+		sqlOpt.CrownedOption.Rules = []filter.RuleFactory{
+			&filter.AtomRule{
+				Field: "biz_id",
+				Op:    filter.OpFactory(filter.In),
+				Value: opts.BizList,
+			},
+		}
+	} else {
+		sqlOpt.CrownedOption.Rules = []filter.RuleFactory{
+			&filter.AtomRule{
+				Field: "biz_id",
+				Op:    filter.OpFactory(filter.Equal),
+				Value: opts.BizID,
+			},
+		}
+	}
+
 	whereExpr, err := opts.Filter.SQLWhereExpr(sqlOpt)
 	if err != nil {
 		return nil, err
 	}
 
+	// 如果 app 有分库分表, 跨 spaces 查询将不可用
 	// do count operation only.
 	countSql := fmt.Sprintf(`SELECT COUNT(*) FROM %s %s`, table.AppTable, whereExpr)
 	count, err := ap.orm.Do(ap.sd.ShardingOne(opts.BizID).DB()).Count(kit.Ctx, countSql)

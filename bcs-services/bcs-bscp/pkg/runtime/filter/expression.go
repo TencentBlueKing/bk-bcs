@@ -134,20 +134,20 @@ func (exp Expression) Validate(opts ...*ExprOption) (hitErr error) {
 // SQLWhereExpr convert this expression and crowned rules to the mysql's WHERE
 // expression automatically.
 // the generated SQL Where expression depends on various options:
-// 1. the Expression itself.
-// 2. the crowned rules.
-// 3. the priority fields which is corresponding to the db's indexes order.
-//    the position of Expression's expression and crowned rules' expression is
-//    determined by the first 'field' occurred in the SQLWhereOption.Priority.
-//    For example, if the first hit field in the SQLWhereOption.Priority is found
-//    in the Expression's rule then the Expression's expression is ahead of the
-//    crowned rule's expression in the final generated SQL WHERE expression.
+//  1. the Expression itself.
+//  2. the crowned rules.
+//  3. the priority fields which is corresponding to the db's indexes order.
+//     the position of Expression's expression and crowned rules' expression is
+//     determined by the first 'field' occurred in the SQLWhereOption.Priority.
+//     For example, if the first hit field in the SQLWhereOption.Priority is found
+//     in the Expression's rule then the Expression's expression is ahead of the
+//     crowned rule's expression in the final generated SQL WHERE expression.
 //
 // Note:
-// 1. if the expression is NULL, then return an empty string "" as the expression
-//    directly without "WHERE" keyword.
-// 2. if the expression is not NULL, then return the expression prefixed with "WHERE"
-//    keyword.
+//  1. if the expression is NULL, then return an empty string "" as the expression
+//     directly without "WHERE" keyword.
+//  2. if the expression is not NULL, then return the expression prefixed with "WHERE"
+//     keyword.
 func (exp *Expression) SQLWhereExpr(opt *SQLWhereOption) (where string, err error) {
 	defer func() {
 		if err != nil {

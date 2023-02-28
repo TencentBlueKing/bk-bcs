@@ -20,9 +20,10 @@ import (
 
 // ListAppsOption defines options to list apps.
 type ListAppsOption struct {
-	BizID  uint32             `json:"biz_id"`
-	Filter *filter.Expression `json:"filter"`
-	Page   *BasePage          `json:"page"`
+	BizList []int              `json:"-"` // 跨 spaces 查询需要
+	BizID   uint32             `json:"biz_id"`
+	Filter  *filter.Expression `json:"filter"`
+	Page    *BasePage          `json:"page"`
 }
 
 // Validate the list app options

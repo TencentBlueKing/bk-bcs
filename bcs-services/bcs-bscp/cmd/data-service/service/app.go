@@ -26,6 +26,7 @@ import (
 	pbds "bscp.io/pkg/protocol/data-service"
 	"bscp.io/pkg/runtime/filter"
 	"bscp.io/pkg/thirdparty/esb/cmdb"
+	"bscp.io/pkg/tools"
 	"bscp.io/pkg/types"
 	"bscp.io/pkg/version"
 )
@@ -177,15 +178,26 @@ func (s *Service) ListAppsRest(ctx context.Context, req *pbds.ListAppsRestReq) (
 		})
 	}
 
+	bizList, err := tools.GetIntList(req.BizId)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(bizList) == 0 {
+		return nil, fmt.Errorf("bizList is empty")
+	}
+
 	filter := &filter.Expression{
 		Op:    filter.And,
 		Rules: rules,
 	}
 
+	// 导航查询的场景
 	query := &types.ListAppsOption{
-		BizID:  req.BizId,
-		Filter: filter,
-		Page:   page,
+		BizList: bizList,
+		BizID:   uint32(bizList[0]),
+		Filter:  filter,
+		Page:    page,
 	}
 
 	details, err := s.dao.App().List(kit, query)
