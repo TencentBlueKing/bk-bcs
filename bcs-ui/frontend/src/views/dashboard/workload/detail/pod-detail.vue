@@ -128,12 +128,12 @@
                     </ul>
                     <ul v-else>
                       <a
-                        :href="logLinks[row.container_id] && logLinks[row.container_id].std_log_link"
+                        :href="logLinks[row.containerID] && logLinks[row.containerID].std_log_link"
                         target="_blank" class="dropdown-item">
                         {{ $t('标准日志') }}
                       </a>
                       <a
-                        :href="logLinks[row.container_id] && logLinks[row.container_id].file_log_link"
+                        :href="logLinks[row.containerID] && logLinks[row.containerID].file_log_link"
                         target="_blank" class="dropdown-item">
                         {{ $t('文件路径日志') }}
                       </a>

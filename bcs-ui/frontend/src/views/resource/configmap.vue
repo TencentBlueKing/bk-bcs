@@ -59,7 +59,7 @@
                       name: row.namespace
                     }
                   }"
-                  @click.stop.prevent="showConfigmapDetail(row, index)">
+                  @click.stop.prevent="showConfigmapDetail(row)">
                   {{row.resourceName}}
                 </a>
               </template>

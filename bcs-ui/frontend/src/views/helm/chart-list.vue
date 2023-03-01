@@ -1,9 +1,6 @@
 <!-- eslint-disable max-len -->
 <template>
   <BcsContent :title="$t('Helm Chart仓库')" hide-back>
-    <template #header-right>
-      <a class="bk-text-button" :href="PROJECT_CONFIG.doc.helm" target="_blank">{{ $t('如何推送Helm Chart到项目仓库？') }}</a>
-    </template>
     <!-- 空仓库状态 -->
     <bcs-exception type="empty" v-if="!repos.length && !loading">
       <div>{{$t('没有数据')}}</div>

@@ -12,11 +12,9 @@
         <bcs-input
           right-icon="bk-icon icon-search"
           class="min-w-[360px] ml-[5px]"
-          :placeholder="$t('输入名称, 按Enter键搜索')"
+          :placeholder="$t('输入名称搜索')"
           clearable
-          :value="searchName"
-          @blur="handleSearch"
-          @enter="handleSearch">
+          v-model="searchName">
         </bcs-input>
       </template>
     </Row>
@@ -71,11 +69,23 @@
             <span
               v-bk-tooltips="{
                 content: row.message,
-                disabled: !row.message || row.status === 'deployed',
-                width: 600,
+                disabled: !row.message ||
+                  ![
+                    'failed',
+                    'failed-install',
+                    'failed-upgrade',
+                    'failed-rollback',
+                    'failed-uninstall'
+                  ].includes(row.status),
                 theme: 'bcs-tippy'
               }"
-              :class="row.message && row.status !== 'deployed' ? 'border-dashed border-0 border-b' : ''">
+              :class="row.message && [
+                'failed',
+                'failed-install',
+                'failed-upgrade',
+                'failed-rollback',
+                'failed-uninstall'
+              ].includes(row.status) ? 'border-dashed border-0 border-b' : ''">
               {{statusTextMap[row.status]}}
             </span>
           </StatusIcon>
@@ -415,9 +425,6 @@ export default defineComponent({
     const ns = ref<string>(props.namespace || sessionStorage.getItem(CUR_SELECT_NAMESPACE) || '');
     const searchName = useDebouncedRef<string>(props.name, 300);
 
-    const handleSearch = (v: string) => {
-      searchName.value = v;
-    };
     // release 列表
     const loading = ref(false);
     const releaseList = ref<any[]>([]);
@@ -718,7 +725,6 @@ export default defineComponent({
       handleConfirmRollback,
       handleDelete,
       handleGotoResourceDetail,
-      handleSearch,
     };
   },
 });

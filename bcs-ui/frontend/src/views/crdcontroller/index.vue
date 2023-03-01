@@ -209,7 +209,7 @@
                 <th style="width: 120px; padding-left: 0;" class="center">{{$t('图标')}}</th>
                 <th style="width: 150px; padding-left: 20px;">{{$t('组件名称')}}</th>
                 <th style="width: 120px; padding-left: 20px">{{$t('版本')}}</th>
-                <th style="width: 100px; padding-left: 20px;">{{$t('状态')}}</th>
+                <th style="width: 120px; padding-left: 20px;">{{$t('状态')}}</th>
                 <th style="width: 390px; padding-left: 20px;" v-if="$INTERNAL">{{$t('数据源信息')}}</th>
                 <th style="width: 390px; padding-left: 20px;" v-else>{{$t('日志查询入口')}}</th>
                 <th style="padding-left: 0;">{{$t('描述')}}</th>

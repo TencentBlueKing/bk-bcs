@@ -32,9 +32,9 @@
           :rules="rules"
           ref="formRef">
           <bk-form-item :label="$t('名称')" required property="name" error-display-type="normal">
-            <bcs-input :disabled="isEdit" v-model="releaseData.name"></bcs-input>
+            <bcs-input :maxlength="64" :disabled="isEdit" v-model="releaseData.name"></bcs-input>
           </bk-form-item>
-          <bk-form-item :label="$t('版本')" required property="version" error-display-type="normal">
+          <bk-form-item :label="$t('版本')" required property="chartVersion" error-display-type="normal">
             <div class="flex items-center">
               <bcs-select
                 class="flex-1"
@@ -400,7 +400,7 @@ export default defineComponent({
           message: $i18n.t('Release名称只能由小写字母数字或者-组成'),
         },
       ],
-      version: [
+      chartVersion: [
         {
           required: true,
           message: $i18n.t('必填项'),

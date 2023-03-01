@@ -44,14 +44,14 @@
                   }
                 }"
                 @click="handleGotoProject(row)">
-                {{row.project_name}}
+                <span class="bcs-ellipsis">{{row.project_name}}</span>
               </bk-button>
               <span class="time">{{ row.updated_at }}</span>
             </div>
           </div>
         </template>
       </bk-table-column>
-      <bk-table-column :label="$t('项目英文名')" prop="english_name"></bk-table-column>
+      <bk-table-column :label="$t('项目英文名')" prop="projectCode"></bk-table-column>
       <bk-table-column :label="$t('项目说明')" prop="description">
         <template #default="{ row }">
           {{ row.description || '--' }}

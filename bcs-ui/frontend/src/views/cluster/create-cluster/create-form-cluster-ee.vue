@@ -2,7 +2,7 @@
   <section class="create-form-cluster bcs-content-wrapper">
     <bk-form :label-width="labelWidth" :model="basicInfo" :rules="basicDataRules" ref="basicFormRef">
       <bk-form-item :label="$t('集群名称')" property="clusterName" error-display-type="normal" required>
-        <bk-input class="w640" v-model="basicInfo.clusterName"></bk-input>
+        <bk-input :maxlength="64" class="w640" v-model="basicInfo.clusterName"></bk-input>
       </bk-form-item>
       <bk-form-item :label="$t('云服务商')" property="provider" error-display-type="normal" required>
         <bcs-select :loading="templateLoading" class="w640" v-model="basicInfo.provider" :clearable="false">

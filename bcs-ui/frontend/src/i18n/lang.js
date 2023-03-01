@@ -3447,5 +3447,6 @@ export default {
   ],
   "搜索事件级别、组件": [
     "Search event level, component"
-  ]
+  ],
+  '确认删除 {name}': []
 }

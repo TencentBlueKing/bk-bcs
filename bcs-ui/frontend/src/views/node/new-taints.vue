@@ -1,7 +1,20 @@
 <template>
   <div>
     <div class="key-value" v-for="(item, index) in taints" :key="index">
-      <Validate :rules="rules" :value="item.key" :meta="index" class="flex-1">
+      <Validate
+        :rules="[
+          {
+            message: $i18n.t('仅支持字母，数字，\'-\'，\'_\' 及 \'/\' 且需以字母数字开头和结尾'),
+            validator: KEY_REGEXP,
+          },
+          {
+            message: $i18n.t('重复键'),
+            validator: (value, meta) => taints.filter((_, i) => i !== meta).every(d => d.key !== value),
+          },
+        ]"
+        :value="item.key"
+        :meta="index"
+        class="flex-1">
         <bcs-input
           v-model="item.key"
           :placeholder="$t('键')"
@@ -9,12 +22,22 @@
         </bcs-input>
       </Validate>
       <span class="ml8 mr8">=</span>
-      <bcs-input
-        v-model="item.value"
-        :placeholder="$t('值')"
-        class="flex-1"
-        @change="handleLabelValueChange"
-      ></bcs-input>
+      <Validate
+        :rules="[
+          {
+            message: $i18n.t('需以字母数字开头和结尾，可包含 \'-\'，\'_\'，\'.\' 和字母数字'),
+            validator: VALUE_REGEXP,
+          },
+        ]"
+        :value="item.value"
+        :meta="index"
+        class="flex-1">
+        <bcs-input
+          v-model="item.value"
+          :placeholder="$t('值')"
+          @change="handleLabelValueChange">
+        </bcs-input>
+      </Validate>
       <bcs-select
         v-model="item.effect"
         class="effect ml15 flex-1"
@@ -39,7 +62,7 @@
 import { computed, defineComponent, ref, watch } from '@vue/composition-api';
 import Validate from '@/components/validate.vue';
 import $i18n from '@/i18n/i18n-setup';
-import { LABEL_KEY_REGEXP } from '@/common/constant';
+import { KEY_REGEXP, VALUE_REGEXP } from '@/common/constant';
 
 interface ITaint {
   key: string;
@@ -66,24 +89,9 @@ export default defineComponent({
       type: Number,
       default: 0,
     },
-    keyRules: {
-      type: Array,
-    },
   },
   setup(props, ctx) {
     const taints = ref<ITaint[]>([]);
-    const rules = ref(props.keyRules
-      ? props.keyRules
-      : [
-        {
-          message: $i18n.t('有效的标签键有两个段：可选的前缀和名称，用斜杠（/）分隔。 名称段是必需的，必须小于等于 63 个字符，以字母数字字符（[a-z0-9A-Z]）开头和结尾， 可带有破折号（-），下划线（_），点（ .）和之间的字母数字。 前缀是可选的。如果指定，前缀必须是 DNS 子域：由点（.）分隔的一系列 DNS 标签，总共不超过 253 个字符， 后跟斜杠（/）。'),
-          validator: LABEL_KEY_REGEXP,
-        },
-        {
-          message: $i18n.t('重复键'),
-          validator: (value, meta) => taints.value.filter((_, i) => i !== meta).every(d => d.key !== value),
-        },
-      ]);
     watch(() => props.value, (data: any[]) => {
       taints.value = data;
       if (taints.value.length < (props.minItem || 0)) {
@@ -113,21 +121,21 @@ export default defineComponent({
       taints.value.splice(index, 1);
     };
     const validate = () => {
-      const data = taints.value.reduce<string[]>((pre, item) => {
-        if (item.key) {
-          pre.push(item.key);
-        }
-        return pre;
-      }, []);
-      const removeDuplicateData = new Set(data);
-      if (data.length !== removeDuplicateData.size) {
+      const keys: string[] = [];
+      const values: string[] = [];
+      taints.value.forEach((item) => {
+        keys.push(item.key);
+        values.push(item.value);
+      });
+      const removeDuplicateData = new Set(keys);
+      if (keys.length !== removeDuplicateData.size) {
         return false;
       }
 
-      return data.every(key => new RegExp(LABEL_KEY_REGEXP).test(key));
+      return keys.every(key => new RegExp(KEY_REGEXP).test(key))
+        && values.every(value => new RegExp(VALUE_REGEXP).test(value)) ;
     };
     return {
-      rules,
       taints,
       disabledDelete,
       handleLabelKeyChange,
@@ -135,6 +143,8 @@ export default defineComponent({
       handleAddLabel,
       handleDeleteLabel,
       validate,
+      KEY_REGEXP,
+      VALUE_REGEXP,
     };
   },
 });

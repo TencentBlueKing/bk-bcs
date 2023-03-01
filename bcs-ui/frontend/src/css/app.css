@@ -1902,7 +1902,9 @@ div.jsoneditor {
         font-size: 14px;
     }
 }
-
+.bk-dialog-header.header-on-left {
+    line-height: 25px;
+}
 /* .biz-remove-dialog,
 .biz-confirm-dialog {
     .bk-dialog-header {
@@ -2598,6 +2600,7 @@ div::-webkit-scrollbar-thumb {
     width: 12px;
 }
 .tippy-tooltip {
+    max-width: 600px;
     &.dropdown-theme {
         padding: 5px 0;
         .dropdown-list {

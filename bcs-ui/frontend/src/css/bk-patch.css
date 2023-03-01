@@ -1124,11 +1124,6 @@
     word-wrap: break-word;
 }
 
-[class^="bcs-icon"],
-[class*="bcs-icon"] {
-    margin-top: -1px;
-}
-
 .bk-form-input-group .input-group-addon.is-left {
     margin-right: -1px;
     border-left: 1px solid #c3cdd7;

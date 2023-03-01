@@ -93,16 +93,16 @@
       :title="$t('新建凭证')">
       <bk-form :label-width="100" :model="account" :rules="formRules" ref="formRef">
         <bk-form-item :label="$t('名称')" property="accountName" error-display-type="normal" required>
-          <bk-input v-model="account.accountName"></bk-input>
+          <bk-input :maxlength="64" v-model="account.accountName"></bk-input>
         </bk-form-item>
         <bk-form-item :label="$t('描述')">
-          <bk-input type="textarea" v-model="account.desc"></bk-input>
+          <bk-input :maxlength="256" type="textarea" v-model="account.desc"></bk-input>
         </bk-form-item>
         <bk-form-item label="SecretID" property="account.secretID" error-display-type="normal" required>
-          <bk-input v-model="account.account.secretID"></bk-input>
+          <bk-input :maxlength="64" v-model="account.account.secretID"></bk-input>
         </bk-form-item>
         <bk-form-item label="SecretKey" property="account.secretKey" error-display-type="normal" required>
-          <bk-input v-model="account.account.secretKey"></bk-input>
+          <bk-input :maxlength="64" v-model="account.account.secretKey"></bk-input>
         </bk-form-item>
       </bk-form>
       <template #footer>

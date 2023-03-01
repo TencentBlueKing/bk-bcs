@@ -70,7 +70,13 @@
           </bcs-input>
         </Validate>
         <span class="equals-sign">=</span>
-        <bcs-input :placeholder="item.placeholder || $t('值')" class="value" v-model="item.value"></bcs-input>
+        <Validate
+          class="value"
+          :rules="valueRules"
+          :value="item.value"
+          :meta="index">
+          <bcs-input :placeholder="item.placeholder || $t('值')" class="value" v-model="item.value"></bcs-input>
+        </Validate>
         <i class="bk-icon icon-plus-circle ml10 mr5" @click="handleAddKeyValue(index)"></i>
         <i
           :class="['bk-icon icon-minus-circle', { disabled: disabledDelete }]"
@@ -159,6 +165,10 @@ export default defineComponent({
       type: Array as PropType<Array<IRule>>,
       default: () => [],
     },
+    valueRules: {
+      type: Array as PropType<Array<IRule>>,
+      default: () => [],
+    },
     minItems: {
       type: Number,
       default: 1,
@@ -169,7 +179,7 @@ export default defineComponent({
     },
   },
   setup(props, ctx) {
-    const { modelValue, keyRules, minItems, uniqueKey } = toRefs(props);
+    const { modelValue, keyRules, valueRules, minItems, uniqueKey } = toRefs(props);
     const keyValueData = ref<IData[]>([]);
     const disabledDelete = computed(() => keyValueData.value.length <= minItems.value);
     watch(modelValue, () => {
@@ -224,19 +234,20 @@ export default defineComponent({
       ...keyRules.value,
     ]);
     const validate = () => {
-      const data = keyValueData.value.reduce<string[]>((pre, item) => {
-        if (item.key) {
-          pre.push(item.key);
-        }
-        return pre;
-      }, []);
+      const keys: string[] = [];
+      const values: string[] = [];
+      keyValueData.value.forEach((item) => {
+        keys.push(item.key);
+        values.push(item.value);
+      });
       if (uniqueKey.value) {
-        const removeDuplicateData = new Set(data);
-        if (data.length !== removeDuplicateData.size) {
+        const removeDuplicateData = new Set(keys);
+        if (keys.length !== removeDuplicateData.size) {
           return false;
         }
       }
-      return data.every(key => keyRules.value.every(rule => new RegExp(rule.validator).test(key)));
+      return keys.every(key => keyRules.value.every(rule => new RegExp(rule.validator).test(key)))
+      && values.every(value => valueRules.value.every(rule => new RegExp(rule.validator).test(value)));
     };
 
     onMounted(() => {

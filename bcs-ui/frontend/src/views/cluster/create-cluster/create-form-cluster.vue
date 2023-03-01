@@ -4,7 +4,7 @@
       <FormGroup :title="$t('基本信息')">
         <bk-form :label-width="labelWidth" :model="basicInfo" :rules="basicDataRules" ref="basicForm">
           <bk-form-item :label="$t('集群名称')" property="clusterName" error-display-type="normal" required>
-            <bk-input v-model="basicInfo.clusterName"></bk-input>
+            <bk-input :maxlength="64" v-model="basicInfo.clusterName"></bk-input>
           </bk-form-item>
           <bk-form-item :label="$t('集群环境')" required>
             <bk-radio-group v-model="basicInfo.environment">

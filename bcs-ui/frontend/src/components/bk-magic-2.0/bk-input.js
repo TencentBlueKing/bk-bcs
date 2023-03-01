@@ -30,9 +30,10 @@ export default {
       type: [String, Number],
       default: '',
     },
-    parseNumber: {
+    // type 为 number时是否限制为整数
+    int: {
       type: Boolean,
-      default: true,
+      default: false,
     },
   },
   render(h) {
@@ -45,16 +46,17 @@ export default {
 
     // eslint-disable-next-line @typescript-eslint/naming-convention, @typescript-eslint/no-this-alias
     const _self = this;
-    try {
+
+    if (_self.$attrs.type === 'number') {
       this.$listeners.input = (value, event) => {
-        if (_self.$attrs.type === 'number') {
-          _self.$emit('input', _self.parseNumber ? Number(value) : String(value), event);
-        } else {
-          _self.$emit('input', value, event);
-        }
+        _self.$emit('input', isNaN(value) ? value : Number(value), event);
       };
-    } catch (e) {
-      console.warn(e);
+      this.$listeners.blur = (value, event) => {
+        if (isNaN(value)) {
+          value = _self.$attrs.min === Number.MIN_SAFE_INTEGER ? 0 : _self.$attrs.min;
+        }
+        _self.$emit('input', this.int ? Math.ceil(value) : Number(value), event);
+      };
     }
 
     return h('bcs-input', {

@@ -30,18 +30,20 @@
           </bk-form-item>
           <bk-form-item
             v-if="!isSharedCluster"
-            :label="$t('标签')">
+            :label="$t('标签')"
+            error-display-type="normal"
+            property="labels">
             <bk-form
               class="flex mb-[10px] items-center"
               v-for="(label, index) in formData.labels"
               :key="index"
               ref="labelsForm">
               <bk-form-item>
-                <bk-input v-model="label.key" placeholder="Key" class="w-[300px]"></bk-input>
+                <bk-input v-model="label.key" placeholder="Key" class="w-[300px]" @blur="validate"></bk-input>
               </bk-form-item>
               <span class="px-[5px]">=</span>
               <bk-form-item>
-                <bk-input :placeholder="$t('值')" v-model="label.value" class="w-[300px]"></bk-input>
+                <bk-input :placeholder="$t('值')" v-model="label.value" class="w-[300px]" @blur="validate"></bk-input>
               </bk-form-item>
               <i class="bk-icon icon-minus-line ml-[5px] cursor-pointer" @click="handleRemoveLabel(index)" />
             </bk-form>
@@ -49,18 +51,20 @@
           </bk-form-item>
           <bk-form-item
             v-if="!isSharedCluster"
-            :label="$t('注解')">
+            :label="$t('注解')"
+            error-display-type="normal"
+            property="annotations">
             <bk-form
               class="flex mb-[10px] items-center"
               v-for="(annotation, index) in formData.annotations"
               :key="index"
               ref="annotationsForm">
               <bk-form-item>
-                <bk-input v-model="annotation.key" placeholder="Key" class="w-[300px]"></bk-input>
+                <bk-input v-model="annotation.key" placeholder="Key" class="w-[300px]" @blur="validate"></bk-input>
               </bk-form-item>
               <span class="px-[5px]">=</span>
               <bk-form-item>
-                <bk-input v-model="annotation.value" placeholder="Value" class="w-[300px]"></bk-input>
+                <bk-input v-model="annotation.value" placeholder="Value" class="w-[300px]" @blur="validate"></bk-input>
               </bk-form-item>
               <i class="bk-icon icon-minus-line ml-[5px] cursor-pointer" @click="handleRemoveAnnotation(index)"></i>
             </bk-form>
@@ -80,6 +84,8 @@
                   class="w-[250px]"
                   type="number"
                   :min="1"
+                  int
+                  :max="512000"
                   :precision="0">
                   <div class="group-text" slot="append">{{ $t('核') }}</div>
                 </bk-input>
@@ -91,6 +97,8 @@
                   class="w-[250px]"
                   type="number"
                   :min="1"
+                  int
+                  :max="1024000"
                   :precision="0">
                   <div class="group-text" slot="append">G</div>
                 </bk-input>
@@ -120,6 +128,7 @@ import { defineComponent, computed, ref } from '@vue/composition-api';
 import LayoutContent from '@/components/layout/Content.vue';
 import { useNamespace } from './use-namespace';
 import { useCluster } from '@/common/use-app';
+import { VALUE_REGEXP } from '@/common/constant';
 
 export default defineComponent({
   name: 'CreateNamespace',
@@ -181,6 +190,28 @@ export default defineComponent({
           trigger: 'blur',
         },
       ] : [],
+      labels: [
+        {
+          validator() {
+            // eslint-disable-next-line no-eval
+            const regx = new RegExp(VALUE_REGEXP);
+            return formData.value.labels.every(item => regx.test(item.key) && regx.test(item.value));
+          },
+          message: $i18n.t('需以字母数字开头和结尾，可包含 \'-\'，\'_\'，\'.\' 和字母数字'),
+          trigger: 'blur',
+        },
+      ],
+      annotations: [
+        {
+          validator() {
+            // eslint-disable-next-line no-eval
+            const regx = new RegExp(VALUE_REGEXP);
+            return formData.value.annotations.every(item => regx.test(item.key) && regx.test(item.value));
+          },
+          message: $i18n.t('需以字母数字开头和结尾，可包含 \'-\'，\'_\'，\'.\' 和字母数字'),
+          trigger: 'blur',
+        },
+      ],
     };
 
     const projectCode = computed(() => $route.params.projectCode);
@@ -218,6 +249,9 @@ export default defineComponent({
       formData.value.annotations.splice(index, 1);
     };
 
+    const validate = () => {
+      namespaceForm.value.validate();
+    };
     const handleCreated = () => {
       namespaceForm.value.validate().then(async () => {
         let { name } = formData.value;
@@ -267,6 +301,7 @@ export default defineComponent({
       handleAddAnnotation,
       handleRemoveAnnotation,
       handleCreated,
+      validate,
     };
   },
 });

@@ -115,7 +115,7 @@
       </div>
       <div class="right">
         <ClusterSelect
-          class="mr10"
+          class="mr10 w-[320px]"
           v-model="localClusterId"
           @change="handleClusterChange"
           v-if="!hideClusterSelect && !isSingleCluster"
@@ -499,8 +499,14 @@
           :key-desc="setLabelConf.keyDesc"
           :key-rules="[
             {
-              message: $i18n.t('有效的标签键有两个段：可选的前缀和名称，用斜杠（/）分隔。 名称段是必需的，必须小于等于 63 个字符，以字母数字字符（[a-z0-9A-Z]）开头和结尾， 带有破折号（-），下划线（_），点（ .）和之间的字母数字。 前缀是可选的。如果指定，前缀必须是 DNS 子域：由点（.）分隔的一系列 DNS 标签，总共不超过 253 个字符， 后跟斜杠（/）。'),
-              validator: LABEL_KEY_REGEXP
+              message: $i18n.t('仅支持字母，数字，\'-\'，\'_\' 及 \'/\' 且需以字母数字开头和结尾'),
+              validator: KEY_REGEXP
+            }
+          ]"
+          :value-rules="[
+            {
+              message: $i18n.t('需以字母数字开头和结尾，可包含 \'-\'，\'_\'，\'.\' 和字母数字'),
+              validator: VALUE_REGEXP
             }
           ]"
           :min-items="0"
@@ -562,7 +568,7 @@ import { defineComponent, ref, PropType, onMounted, watch, set, computed } from 
 import StatusIcon from '@/views/dashboard/common/status-icon';
 import ClusterSelect from '@/components/cluster-selector/cluster-select.vue';
 import LoadingIcon from '@/components/loading-icon.vue';
-import { nodeStatusColorMap, nodeStatusMap, LABEL_KEY_REGEXP } from '@/common/constant';
+import { nodeStatusColorMap, nodeStatusMap, KEY_REGEXP, VALUE_REGEXP } from '@/common/constant';
 import useNode from './use-node';
 import useTableSetting from './use-table-setting';
 import usePage from '@/views/dashboard/common/use-page';
@@ -1473,7 +1479,8 @@ export default defineComponent({
       webAnnotations,
       curProject,
       isImportCluster,
-      LABEL_KEY_REGEXP,
+      KEY_REGEXP,
+      VALUE_REGEXP,
     };
   },
 });

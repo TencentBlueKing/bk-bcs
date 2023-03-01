@@ -42,4 +42,6 @@ export const taskStatusColorMap = {
 export const NODE_TEMPLATE_ID = 'node-template-id';
 export const SPECIAL_REGEXP = /[`~!@#$%^&*()_+<>?:"{},./;'[\]]/;
 export const LABEL_KEY_REGEXP = '^(?=.{1,253}$)([a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*\\/)?([A-Za-z0-9][-A-Za-z0-9_.]{0,61})?[A-Za-z0-9]$';
+export const KEY_REGEXP = '^[a-z0-9A-Z]([-_a-z0-9A-Z]*[a-z0-9A-Z])?((\\.|\\/)[a-z0-9A-Z]([-_a-z0-9A-Z]*[a-z0-9A-Z])?)*$';
+export const VALUE_REGEXP = '(^$|^[a-z0-9A-Z]([-_a-z0-9A-Z]*[a-z0-9A-Z])?(\\.[a-z0-9A-Z]([-_a-z0-9A-Z]*[a-z0-9A-Z])?)*$)';
 

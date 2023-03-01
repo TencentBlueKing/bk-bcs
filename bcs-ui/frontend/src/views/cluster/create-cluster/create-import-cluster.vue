@@ -7,7 +7,7 @@
       class="import-form"
       ref="importFormRef">
       <BkFormItem :label="$t('集群名称')" property="clusterName" error-display-type="normal" required>
-        <bk-input v-model="importClusterInfo.clusterName"></bk-input>
+        <bk-input :maxlength="64" v-model="importClusterInfo.clusterName"></bk-input>
       </BkFormItem>
       <BkFormItem :label="$t('导入方式')">
         <bk-radio-group class="btn-group" v-model="importClusterInfo.importType">
