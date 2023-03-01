@@ -112,11 +112,11 @@
             <LoadingIcon v-if="securityGroupLoading">{{ $t('加载中') }}...</LoadingIcon>
             <span v-else>{{ securityGroupNames.join(',') || '--'}}</span>
           </bk-form-item>
-          <bk-form-item
+          <!-- <bk-form-item
             :label="$t('扩容后转移模块')"
             :desc="$t('扩容节点后节点转移到关联业务的CMDB模块')">
             {{nodePoolData.nodeTemplate.module.scaleOutModuleName || '--'}}
-          </bk-form-item>
+          </bk-form-item> -->
           <!-- <bk-form-item :label="$t('缩容后转移模块')">
             {{nodePoolData.nodeTemplate.module.scaleInModuleName || '--'}}
           </bk-form-item> -->

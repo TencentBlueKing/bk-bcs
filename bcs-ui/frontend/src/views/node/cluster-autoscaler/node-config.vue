@@ -592,7 +592,7 @@ export default defineComponent({
     };
 
     onMounted(async () => {
-      if (!nodePoolConfig.value.nodeTemplate.dataDisks.length) {
+      if (!nodePoolConfig.value.nodeTemplate.dataDisks.length && !isEdit.value) {
         // 必须有一块数据盘
         handleAddDiskData();
       }

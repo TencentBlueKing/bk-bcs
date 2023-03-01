@@ -165,6 +165,15 @@ export default defineComponent({
       isLoading.value = true;
       await handleGetCloudDefaultValues();
       detailData.value = await handleGetNodeGroupDetail();
+      if (!detailData.value.nodeTemplate?.dataDisks?.length) {
+        detailData.value.nodeTemplate.dataDisks = detailData.value.launchTemplate.dataDisks.map((item, index) => ({
+          diskType: item.diskType,
+          diskSize: item.diskSize,
+          fileSystem: item.fileSystem || 'ext4',
+          autoFormatAndMount: true,
+          mountTarget: item.mountTarget || index > 0 ? `/data${index}` : '/data',
+        }));
+      }
       isLoading.value = false;
     });
     return {

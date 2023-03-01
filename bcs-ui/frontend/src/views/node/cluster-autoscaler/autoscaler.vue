@@ -599,7 +599,22 @@ export default defineComponent({
     const user = computed(() => $store.state.user);
     // eslint-disable-next-line @typescript-eslint/no-misused-promises
     const handleToggleAutoScaler = async value => new Promise(async (resolve, reject) => {
-      if (!autoscalerData.value.enableAutoscale
+      if (!autoscalerData.value.module?.scaleOutModuleID) {
+        $bkInfo({
+          type: 'warning',
+          clsName: 'custom-info-confirm',
+          title: $i18n.t('弹性伸缩需要配置模块'),
+          defaultInfo: true,
+          okText: $i18n.t('编辑配置'),
+          confirmFn: () => {
+            handleEditAutoScaler();
+          },
+          cancelFn: () => {
+            // eslint-disable-next-line prefer-promise-reject-errors
+            reject(false);
+          },
+        });
+      } else if (!autoscalerData.value.enableAutoscale
                         && (!nodepoolList.value.length || nodepoolList.value.every(item => !item.enableAutoscale))) {
         // 开启时前置判断是否存在节点规格 或 节点规格都是未开启状态时，要提示至少开启一个
         $bkInfo({
@@ -612,21 +627,6 @@ export default defineComponent({
           okText: $i18n.t('立即新建'),
           confirmFn: () => {
             handleCreatePool();
-          },
-          cancelFn: () => {
-            // eslint-disable-next-line prefer-promise-reject-errors
-            reject(false);
-          },
-        });
-      } else if (!autoscalerData.value.module?.scaleOutModuleID) {
-        $bkInfo({
-          type: 'warning',
-          clsName: 'custom-info-confirm',
-          title: $i18n.t('转移模块暂未配置'),
-          defaultInfo: true,
-          okText: $i18n.t('编辑配置'),
-          confirmFn: () => {
-            handleEditAutoScaler();
           },
           cancelFn: () => {
             // eslint-disable-next-line prefer-promise-reject-errors
