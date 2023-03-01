@@ -72,7 +72,7 @@ func InitDownloader(auth cc.SidecarAuthentication, tlsBytes *sfs.TLSBytes) (map[
 		sem:                     semaphore.NewWeighted(weight),
 		balanceDownloadByteSize: defaultRangeDownloadByteSize,
 	}
-	downloaderMap[cc.S3] = &downloaderCosS3{}
+	downloaderMap[cc.S3] = &downloaderS3{}
 	return downloaderMap, err
 }
 
@@ -100,7 +100,7 @@ func setupDownloadSemWeight() (int64, error) {
 }
 
 // downloader is used to download the configuration items from repository.
-type downloaderCosS3 struct {
+type downloaderS3 struct {
 	AccessKeyID     string
 	SecretAccessKey string
 	Url             string
@@ -108,7 +108,7 @@ type downloaderCosS3 struct {
 }
 
 // Download the configuration items from repository.
-func (dl *downloaderCosS3) Download(vas *kit.Vas, downloadUri string, fileSize uint64, toFile string) error {
+func (dl *downloaderS3) Download(vas *kit.Vas, downloadUri string, fileSize uint64, toFile string) error {
 
 	file, err := os.OpenFile(toFile, os.O_RDWR|os.O_CREATE|os.O_TRUNC, os.ModePerm)
 	if err != nil {
@@ -122,7 +122,7 @@ func (dl *downloaderCosS3) Download(vas *kit.Vas, downloadUri string, fileSize u
 	if err != nil {
 		return err
 	}
-	reader, err := s3Client.GetObject(context.Background(), downloadUri, dl.Name, minio.GetObjectOptions{})
+	reader, err := s3Client.GetObject(context.Background(), dl.Name, downloadUri, minio.GetObjectOptions{})
 	if err != nil {
 		return err
 	}

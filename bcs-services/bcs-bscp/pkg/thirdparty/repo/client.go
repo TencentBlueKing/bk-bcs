@@ -330,6 +330,9 @@ func (c *ClientS3) CreateRepo(ctx context.Context, s3 *CreateRepoReq) error {
 	if err := c.Client.MakeBucket(ctx, s3.Name, minio.MakeBucketOptions{}); err != nil {
 		return err
 	}
+	for !found {
+		found, _ = c.Client.BucketExists(context.Background(), s3.Name)
+	}
 	return nil
 }
 

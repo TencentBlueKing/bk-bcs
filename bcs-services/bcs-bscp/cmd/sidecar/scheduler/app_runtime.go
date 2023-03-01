@@ -280,7 +280,7 @@ func (ar *AppRuntime) downloadReleasedCI(vas *kit.Vas, readiness map[uint32]bool
 			}
 
 			if desc.Repository.RepositoryType == cc.S3 {
-				ar.repository[desc.Repository.RepositoryType] = &downloaderCosS3{
+				ar.repository[desc.Repository.RepositoryType] = &downloaderS3{
 					Url:             desc.Repository.Url,
 					AccessKeyID:     desc.Repository.AccessKeyID,
 					SecretAccessKey: desc.Repository.SecretAccessKey,

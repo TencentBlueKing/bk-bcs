@@ -82,8 +82,9 @@ func TestAppRuntime(t *testing.T) {
 				},
 			},
 			Repository: &sfs.RepositoryV1{
-				Root: downloadAddr,
-				TLS:  nil,
+				Root:           downloadAddr,
+				TLS:            nil,
+				RepositoryType: cc.BK_REPO,
 			},
 		},
 		CursorID:    1,
@@ -138,7 +139,7 @@ func TestAppRuntime(t *testing.T) {
 	}
 }
 
-func testAppRuntimePrepare(rootDir string, bizID, appID uint32) (*AppFileWorkspace, Downloader, Reloader, error) {
+func testAppRuntimePrepare(rootDir string, bizID, appID uint32) (*AppFileWorkspace, map[cc.StorageMode]Downloader, Reloader, error) {
 	sw := cc.SidecarWorkspace{
 		RootDirectory: rootDir,
 		PurgePolicy: &cc.SidecarPurgePolicy{
