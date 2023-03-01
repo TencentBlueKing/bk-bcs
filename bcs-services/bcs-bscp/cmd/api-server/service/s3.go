@@ -102,7 +102,7 @@ func (cs S3Client) UploadFile(w http.ResponseWriter, r *http.Request) {
 	}
 	repoName, err := repo.GenS3Name(uint32(bizID))
 	if err != nil {
-		logs.Errorf("generate cosS3 repository name failed, err: %v, rid: %s", err, kt.Rid)
+		logs.Errorf("generate s3 repository name failed, err: %v, rid: %s", err, kt.Rid)
 		fmt.Fprintf(w, errf.Error(err).Error())
 		return
 	}

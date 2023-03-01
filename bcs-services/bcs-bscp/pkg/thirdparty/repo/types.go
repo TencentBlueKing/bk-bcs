@@ -231,13 +231,13 @@ func NewUriDecorator(r cc.Repository) (UriDecoratorInter, error) {
 	switch strings.ToUpper(string(r.StorageType)) {
 	case string(cc.S3):
 		if len(r.S3.SecretAccessKey) == 0 {
-			return nil, errors.New("cosS3 repository secretAccessKey is empty")
+			return nil, errors.New("s3 repository secretAccessKey is empty")
 		}
 		if len(r.S3.AccessKeyID) == 0 {
-			return nil, errors.New("cosS3 repository accessKeyID is empty")
+			return nil, errors.New("s3 repository accessKeyID is empty")
 		}
 		if len(r.S3.AppID) == 0 {
-			return nil, errors.New("cosS3 repository appID is empty")
+			return nil, errors.New("s3 repository appID is empty")
 		}
 		return &UriS3Decorator{
 			Endpoints:       r.S3.Endpoint,
@@ -371,7 +371,7 @@ type UriDecoratorInter interface {
 	Init(bizID uint32) DecoratorInter
 }
 
-// UriCosS3Decorator is used to generate configure item's download uri
+// UriS3Decorator is used to generate configure item's download uri
 type UriS3Decorator struct {
 	Endpoints       string
 	AccessKeyID     string

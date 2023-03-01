@@ -304,15 +304,15 @@ func (s Repository) validate() error {
 	switch strings.ToUpper(string(s.StorageType)) {
 	case string(S3):
 		if len(s.S3.Endpoint) == 0 {
-			return errors.New("cosS3 endpoint is not set")
+			return errors.New("s3 endpoint is not set")
 		}
 
 		if len(s.S3.AccessKeyID) == 0 {
-			return errors.New("cosS3 accessKeyID is not set")
+			return errors.New("s3 accessKeyID is not set")
 		}
 
 		if len(s.S3.SecretAccessKey) == 0 {
-			return errors.New("cosS3 secretAccessKey is not set")
+			return errors.New("s3 secretAccessKey is not set")
 		}
 	case string(BK_REPO):
 		if len(s.BkRepo.Endpoints) == 0 {
