@@ -91,11 +91,11 @@ func (p repoProxy) UploadFile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//authRes, needReturn := p.authorize(kt, r)
-	//if needReturn {
-	//	fmt.Fprintf(w, authRes)
-	//	return
-	//}
+	authRes, needReturn := p.authorize(kt, r)
+	if needReturn {
+		fmt.Fprintf(w, authRes)
+		return
+	}
 
 	// parse biz_id.
 	bizIDStr := chi.URLParam(r, "biz_id")

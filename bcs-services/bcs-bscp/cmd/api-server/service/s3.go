@@ -33,6 +33,12 @@ func (cs S3Client) DownloadFile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	authRes, needReturn := cs.authorize(kt, r)
+	if needReturn {
+		fmt.Fprintf(w, authRes)
+		return
+	}
+
 	bizIDStr := chi.URLParam(r, "biz_id")
 	bizID, err := strconv.ParseUint(bizIDStr, 10, 64)
 	if err != nil {
@@ -73,6 +79,12 @@ func (cs S3Client) UploadFile(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		fmt.Fprintf(w, errf.Error(err).Error())
+		return
+	}
+
+	authRes, needReturn := cs.authorize(kt, r)
+	if needReturn {
+		fmt.Fprintf(w, authRes)
 		return
 	}
 
