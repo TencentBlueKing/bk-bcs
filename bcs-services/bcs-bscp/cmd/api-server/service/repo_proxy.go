@@ -32,6 +32,7 @@ import (
 	"bscp.io/pkg/cc"
 	"bscp.io/pkg/criteria/constant"
 	"bscp.io/pkg/criteria/errf"
+	"bscp.io/pkg/dal/repository"
 	"bscp.io/pkg/iam/auth"
 	"bscp.io/pkg/iam/meta"
 	"bscp.io/pkg/kit"
@@ -66,8 +67,7 @@ type repoProxy struct {
 	authorizer auth.Authorizer
 }
 
-// ServeHTTP handle request.
-func (p repoProxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (p repoProxy) DownloadFile(w http.ResponseWriter, r *http.Request) {
 	kt, err := gwparser.Parse(r.Context(), r.Header)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -80,49 +80,61 @@ func (p repoProxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, authRes)
 		return
 	}
+	p.proxy.ServeHTTP(w, r)
+}
 
-	// if request is upload file request, need to judge biz repo repository if created.
-	// if not created, need to create.
-	if r.Method == http.MethodPut {
-		// parse biz_id.
-		bizIDStr := chi.URLParam(r, "biz_id")
-		bizID, err := strconv.ParseUint(bizIDStr, 10, 64)
+func (p repoProxy) UploadFile(w http.ResponseWriter, r *http.Request) {
+	kt, err := gwparser.Parse(r.Context(), r.Header)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		fmt.Fprintf(w, errf.Error(err).Error())
+		return
+	}
+
+	//authRes, needReturn := p.authorize(kt, r)
+	//if needReturn {
+	//	fmt.Fprintf(w, authRes)
+	//	return
+	//}
+
+	// parse biz_id.
+	bizIDStr := chi.URLParam(r, "biz_id")
+	bizID, err := strconv.ParseUint(bizIDStr, 10, 64)
+	if err != nil {
+		logs.Errorf("biz_id parse uint failed, err: %v, rid: %s", err, kt.Rid)
+		fmt.Fprintf(w, errf.New(errf.InvalidParameter, err.Error()).Error())
+		return
+	}
+
+	if bizID == 0 {
+		fmt.Fprintf(w, errf.New(errf.InvalidParameter, "biz_id should > 0").Error())
+		return
+	}
+
+	if record, err := p.repoCreatedRecords.Get(bizID); err != nil || record == nil {
+		repoName, err := repo.GenRepoName(uint32(bizID))
 		if err != nil {
-			logs.Errorf("biz_id parse uint failed, err: %v, rid: %s", err, kt.Rid)
-			fmt.Fprintf(w, errf.New(errf.InvalidParameter, err.Error()).Error())
+			logs.Errorf("generate repository name failed, err: %v, rid: %s", err, kt.Rid)
+			fmt.Fprintf(w, errf.Error(err).Error())
 			return
 		}
 
-		if bizID == 0 {
-			fmt.Fprintf(w, errf.New(errf.InvalidParameter, "biz_id should > 0").Error())
+		req := &repo.CreateRepoReq{
+			ProjectID:     cc.ApiServer().Repo.BkRepo.Project,
+			Name:          repoName,
+			Type:          repo.RepositoryType,
+			Category:      repo.CategoryType,
+			Configuration: repo.Configuration{Type: repo.RepositoryCfgType},
+			Description:   fmt.Sprintf("bscp %d business repository", bizID),
+		}
+		if err = p.repoCli.CreateRepo(r.Context(), req); err != nil {
+			logs.Errorf("create repository failed, err: %v, rid: %s", err, kt.Rid)
+			fmt.Fprintf(w, errf.Error(err).Error())
 			return
 		}
 
-		if record, err := p.repoCreatedRecords.Get(bizID); err != nil || record == nil {
-			repoName, err := repo.GenRepoName(uint32(bizID))
-			if err != nil {
-				logs.Errorf("generate repository name failed, err: %v, rid: %s", err, kt.Rid)
-				fmt.Fprintf(w, errf.Error(err).Error())
-				return
-			}
-
-			req := &repo.CreateRepoReq{
-				ProjectID:     cc.ApiServer().Repo.Project,
-				Name:          repoName,
-				Type:          repo.RepositoryType,
-				Category:      repo.CategoryType,
-				Configuration: repo.Configuration{Type: repo.RepositoryCfgType},
-				Description:   fmt.Sprintf("bscp %d business repository", bizID),
-			}
-			if err = p.repoCli.CreateRepo(r.Context(), req); err != nil {
-				logs.Errorf("create repository failed, err: %v, rid: %s", err, kt.Rid)
-				fmt.Fprintf(w, errf.Error(err).Error())
-				return
-			}
-
-			// set cache, to flag this biz repository already created.
-			p.repoCreatedRecords.SetWithExpire(bizID, true, repoRecordCacheExpiration)
-		}
+		// set cache, to flag this biz repository already created.
+		p.repoCreatedRecords.SetWithExpire(bizID, true, repoRecordCacheExpiration)
 	}
 
 	p.proxy.ServeHTTP(w, r)
@@ -164,41 +176,15 @@ type authResp struct {
 }
 
 // newRepoProxy creates a new ReverseProxy for repo.
-func newRepoProxy(authorizer auth.Authorizer) (*repoProxy, error) {
+func newRepoProxy(authorizer auth.Authorizer) (repository.FileApiType, error) {
 	settings := cc.ApiServer().Repo
-	repoCli, err := repo.NewClient(&settings, metrics.Register())
-	if err != nil {
-		return nil, err
+	switch strings.ToUpper(string(settings.StorageType)) {
+	case string(cc.S3):
+		return NewS3Service(settings, authorizer)
+	case string(cc.BK_REPO):
+		return NewRepoService(settings, authorizer)
 	}
-
-	p := &repoProxy{
-		proxy: &httputil.ReverseProxy{
-			// Director must be a function which modifies the request into a new Request
-			// to be sent using Transport. Its response is then copied back to the original
-			// client unmodified. Director must not access the provided Request after returning.
-			Director: newRepoDirector(repoCli),
-
-			// The transport used to perform proxy requests. If nil,
-			// http.DefaultTransport is used.
-			Transport: &http.Transport{
-				Proxy:               http.ProxyFromEnvironment,
-				Dial:                (&net.Dialer{Timeout: 10 * time.Second}).Dial,
-				MaxConnsPerHost:     200,
-				MaxIdleConnsPerHost: 10,
-				IdleConnTimeout:     time.Minute,
-				WriteBufferSize:     defaultWriteBufferSize,
-				ReadBufferSize:      defaultReadBufferSize,
-			},
-
-			// Modify the response returned by the product library and convert it to the bscp response body
-			ModifyResponse: modifyResponse,
-		},
-		repoCli:            repoCli,
-		repoCreatedRecords: gcache.New(1000).EvictType(gcache.TYPE_LRU).Build(), // total size < 8k
-		authorizer:         authorizer,
-	}
-
-	return p, nil
+	return nil, fmt.Errorf("store with type %s is not supported", settings.StorageType)
 }
 
 // modifyResponse modify the response returned by the product library and convert it to the bscp response body.
@@ -350,7 +336,7 @@ func newRepoDirector(cli *repo.Client) func(req *http.Request) {
 
 		sha256 := strings.ToLower(req.Header.Get(constant.ContentIDHeaderKey))
 		opt := &repo.NodeOption{
-			Project: config.Project,
+			Project: config.BkRepo.Project,
 			BizID:   bizID,
 			Sign:    sha256,
 		}
@@ -365,8 +351,8 @@ func newRepoDirector(cli *repo.Client) func(req *http.Request) {
 		req.Header.Set(constant.RidKey, kt.Rid)
 
 		// set repo header.
-		req.Header.Set("Authorization", "Platform "+config.Token)
-		req.Header.Set(repo.HeaderKeyUID, config.User)
+		req.Header.Set("Authorization", "Platform "+config.BkRepo.Token)
+		req.Header.Set(repo.HeaderKeyUID, config.BkRepo.User)
 		req.Header.Set(repo.HeaderKeySHA256, sha256)
 
 		// if it is an upload request, you need to set the upload node metadata.
@@ -467,4 +453,40 @@ func getBizIDAndAppID(kt *kit.Kit, req *http.Request) (uint32, uint32, error) {
 	}
 
 	return uint32(bizID), uint32(appID), nil
+}
+
+func NewRepoService(settings cc.Repository, authorizer auth.Authorizer) (repository.FileApiType, error) {
+	repoCli, err := repo.NewClient(&settings, metrics.Register())
+	if err != nil {
+		return nil, err
+	}
+
+	p := &repoProxy{
+		proxy: &httputil.ReverseProxy{
+			// Director must be a function which modifies the request into a new Request
+			// to be sent using Transport. Its response is then copied back to the original
+			// client unmodified. Director must not access the provided Request after returning.
+			Director: newRepoDirector(repoCli),
+
+			// The transport used to perform proxy requests. If nil,
+			// http.DefaultTransport is used.
+			Transport: &http.Transport{
+				Proxy:               http.ProxyFromEnvironment,
+				Dial:                (&net.Dialer{Timeout: 10 * time.Second}).Dial,
+				MaxConnsPerHost:     200,
+				MaxIdleConnsPerHost: 10,
+				IdleConnTimeout:     time.Minute,
+				WriteBufferSize:     defaultWriteBufferSize,
+				ReadBufferSize:      defaultReadBufferSize,
+			},
+
+			// Modify the response returned by the product library and convert it to the bscp response body
+			ModifyResponse: modifyResponse,
+		},
+		repoCli:            repoCli,
+		repoCreatedRecords: gcache.New(1000).EvictType(gcache.TYPE_LRU).Build(), // total size < 8k
+		authorizer:         authorizer,
+	}
+
+	return p, nil
 }

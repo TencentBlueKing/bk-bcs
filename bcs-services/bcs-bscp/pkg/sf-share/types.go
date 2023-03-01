@@ -168,12 +168,19 @@ type ReleaseEventMetaV1 struct {
 // RepositoryV1 defines repository related metas.
 type RepositoryV1 struct {
 	// Root is the root path to download the configuration items from repository.
-	Root string    `json:"root"`
-	TLS  *TLSBytes `json:"tls,omitempty"`
+	Root            string    `json:"root"`
+	TLS             *TLSBytes `json:"tls,omitempty"`
+	AccessKeyID     string    `json:"accessKeyId"`
+	SecretAccessKey string    `json:"secretAccessKey"`
+	Url             string    `json:"url"`
+	RepositoryType  cc.StorageMode
 }
 
 // DownloadUri generate the fully qualified URI to download the config item from repository.
 func (r RepositoryV1) DownloadUri(rs *RepositorySpecV1) string {
+	if r.RepositoryType == cc.S3 {
+		return rs.Path
+	}
 	subPath := strings.TrimRight(rs.Path, " ")
 	subPath = strings.Trim(subPath, "/")
 	return fmt.Sprintf("%s/%s", r.Root, subPath)
@@ -243,34 +250,38 @@ func (tls *TLSBytes) UnmarshalJSON(bytes []byte) error {
 }
 
 // LoadTLSBytes load tls bytes. if tls is disabled, return nil.
-func LoadTLSBytes(tls cc.TLSConfig) (*TLSBytes, error) {
-	if !tls.Enable() {
-		return new(TLSBytes), nil
-	}
+func LoadTLSBytes(tls cc.Repository) (*TLSBytes, error) {
+	if tls.StorageType == cc.BK_REPO {
 
-	ca, err := ioutil.ReadFile(tls.CAFile)
-	if err != nil {
-		return nil, err
-	}
+		if !tls.BkRepo.TLS.Enable() {
+			return new(TLSBytes), nil
+		}
 
-	cert, err := ioutil.ReadFile(tls.CertFile)
-	if err != nil {
-		return nil, err
-	}
+		ca, err := ioutil.ReadFile(tls.BkRepo.TLS.CAFile)
+		if err != nil {
+			return nil, err
+		}
 
-	key, err := ioutil.ReadFile(tls.KeyFile)
-	if err != nil {
-		return nil, err
-	}
+		cert, err := ioutil.ReadFile(tls.BkRepo.TLS.CertFile)
+		if err != nil {
+			return nil, err
+		}
 
-	tlsBytes := &TLSBytes{
-		InsecureSkipVerify: tls.InsecureSkipVerify,
-		CaFileBytes:        string(ca),
-		CertFileBytes:      string(cert),
-		KeyFileBytes:       string(key),
-	}
+		key, err := ioutil.ReadFile(tls.BkRepo.TLS.KeyFile)
+		if err != nil {
+			return nil, err
+		}
 
-	return tlsBytes, nil
+		tlsBytes := &TLSBytes{
+			InsecureSkipVerify: tls.BkRepo.TLS.InsecureSkipVerify,
+			CaFileBytes:        string(ca),
+			CertFileBytes:      string(cert),
+			KeyFileBytes:       string(key),
+		}
+
+		return tlsBytes, nil
+	}
+	return nil, nil
 }
 
 // RepositorySpecV1 defines the sub path of the related configuration item stored

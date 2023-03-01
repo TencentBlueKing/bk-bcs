@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"strings"
 	"time"
 
 	"bscp.io/pkg/logs"
@@ -235,8 +236,22 @@ func (s IAM) validate() error {
 	return nil
 }
 
+//StorageMode :
+
+type StorageMode string
+
+const (
+	BK_REPO StorageMode = "BK_REPO"
+	S3      StorageMode = "S3"
+)
+
 // Repository defines all the repo related runtime.
 type Repository struct {
+	StorageType StorageMode   `yaml:"storageType"`
+	S3          S3Storage     `yaml:"s3"`
+	BkRepo      BkRepoStorage `yaml:"bkRepo"`
+}
+type BkRepoStorage struct {
 	// Endpoints is a seed list of host:port addresses of repo nodes.
 	Endpoints []string `yaml:"endpoints"`
 	// Token plat authority authentication of repo.
@@ -248,12 +263,20 @@ type Repository struct {
 	TLS  TLSConfig `yaml:"tls"`
 }
 
+type S3Storage struct {
+	Endpoint        string `yaml:"endpoint"`
+	AccessKeyID     string `yaml:"accessKeyID"`
+	SecretAccessKey string `yaml:"secretAccessKey"`
+	UseSSL          bool   `yaml:"useSSL"`
+	AppID           string `yaml:"appID"`
+}
+
 // repoPollingAddrIndex repo request polling address index.
 var repoPollingAddrIndex = 0
 
 // OneEndpoint rotation training strategy, returns the request address of the repo.
 func (s Repository) OneEndpoint() (string, error) {
-	num := len(s.Endpoints)
+	num := len(s.BkRepo.Endpoints)
 	if num == 0 {
 		return "", errors.New("no repo endpoints can be used")
 	}
@@ -261,35 +284,57 @@ func (s Repository) OneEndpoint() (string, error) {
 	var addr string
 	if repoPollingAddrIndex < num-1 {
 		repoPollingAddrIndex = repoPollingAddrIndex + 1
-		addr = s.Endpoints[repoPollingAddrIndex]
+		addr = s.BkRepo.Endpoints[repoPollingAddrIndex]
 	} else {
 		repoPollingAddrIndex = 0
-		addr = s.Endpoints[repoPollingAddrIndex]
+		addr = s.BkRepo.Endpoints[repoPollingAddrIndex]
 	}
 
 	return addr, nil
 }
 
+func (s Repository) trySetDefault() {
+	if len(s.StorageType) == 0 {
+		s.StorageType = BK_REPO
+	}
+}
+
 // validate repo runtime.
 func (s Repository) validate() error {
-	if len(s.Endpoints) == 0 {
-		return errors.New("repo endpoints is not set")
-	}
+	switch strings.ToUpper(string(s.StorageType)) {
+	case string(S3):
+		if len(s.S3.Endpoint) == 0 {
+			return errors.New("cosS3 endpoint is not set")
+		}
 
-	if len(s.Token) == 0 {
-		return errors.New("repo token is not set")
-	}
+		if len(s.S3.AccessKeyID) == 0 {
+			return errors.New("cosS3 accessKeyID is not set")
+		}
 
-	if len(s.Project) == 0 {
-		return errors.New("repo project is not set")
-	}
+		if len(s.S3.SecretAccessKey) == 0 {
+			return errors.New("cosS3 secretAccessKey is not set")
+		}
+	case string(BK_REPO):
+		if len(s.BkRepo.Endpoints) == 0 {
+			return errors.New("bk_repo endpoints is not set")
+		}
 
-	if len(s.User) == 0 {
-		return errors.New("repo user is not set")
-	}
+		if len(s.BkRepo.Token) == 0 {
+			return errors.New("repo token is not set")
+		}
 
-	if err := s.TLS.validate(); err != nil {
-		return fmt.Errorf("repo tls, %v", err)
+		if len(s.BkRepo.Project) == 0 {
+			return errors.New("repo project is not set")
+		}
+
+		if len(s.BkRepo.User) == 0 {
+			return errors.New("repo user is not set")
+		}
+
+		if err := s.BkRepo.TLS.validate(); err != nil {
+			return fmt.Errorf("repo tls, %v", err)
+		}
+
 	}
 
 	return nil

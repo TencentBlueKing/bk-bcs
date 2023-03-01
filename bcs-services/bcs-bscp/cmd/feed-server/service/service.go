@@ -72,7 +72,7 @@ func NewService(sd serviced.Discover, name string) (*Service, error) {
 		return nil, fmt.Errorf("initialize business logical layer failed, err: %v", err)
 	}
 
-	tlsBytes, err := sfs.LoadTLSBytes(cc.FeedServer().Repository.TLS)
+	tlsBytes, err := sfs.LoadTLSBytes(cc.FeedServer().Repository)
 	if err != nil {
 		return nil, fmt.Errorf("conv tls to tls bytes failed, err: %v", err)
 	}

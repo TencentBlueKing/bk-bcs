@@ -13,6 +13,7 @@ limitations under the License.
 package scheduler
 
 import (
+	"context"
 	"crypto/tls"
 	"errors"
 	"fmt"
@@ -23,6 +24,9 @@ import (
 	"strconv"
 	"sync"
 	"time"
+
+	"github.com/minio/minio-go/v7"
+	"github.com/minio/minio-go/v7/pkg/credentials"
 
 	"bscp.io/pkg/cc"
 	"bscp.io/pkg/criteria/constant"
@@ -49,7 +53,7 @@ type Downloader interface {
 }
 
 // InitDownloader init the downloader instance.
-func InitDownloader(auth cc.SidecarAuthentication, tlsBytes *sfs.TLSBytes) (Downloader, error) {
+func InitDownloader(auth cc.SidecarAuthentication, tlsBytes *sfs.TLSBytes) (map[cc.StorageMode]Downloader, error) {
 
 	tlsC, err := tlsConfigFromTLSBytes(tlsBytes)
 	if err != nil {
@@ -61,12 +65,15 @@ func InitDownloader(auth cc.SidecarAuthentication, tlsBytes *sfs.TLSBytes) (Down
 		return nil, fmt.Errorf("get download sem weight failed, err: %v", err)
 	}
 
-	return &downloader{
+	downloaderMap := make(map[cc.StorageMode]Downloader, 2)
+	downloaderMap[cc.BK_REPO] = &downloader{
 		tls:                     tlsC,
 		basicAuth:               auth,
 		sem:                     semaphore.NewWeighted(weight),
 		balanceDownloadByteSize: defaultRangeDownloadByteSize,
-	}, nil
+	}
+	downloaderMap[cc.S3] = &downloaderCosS3{}
+	return downloaderMap, err
 }
 
 // setupDownloadSemWeight maximum combined weight for concurrent download access.
@@ -90,6 +97,40 @@ func setupDownloadSemWeight() (int64, error) {
 	}
 
 	return weight, nil
+}
+
+// downloader is used to download the configuration items from repository.
+type downloaderCosS3 struct {
+	AccessKeyID     string
+	SecretAccessKey string
+	Url             string
+	Name            string
+}
+
+// Download the configuration items from repository.
+func (dl *downloaderCosS3) Download(vas *kit.Vas, downloadUri string, fileSize uint64, toFile string) error {
+
+	file, err := os.OpenFile(toFile, os.O_RDWR|os.O_CREATE|os.O_TRUNC, os.ModePerm)
+	if err != nil {
+		return fmt.Errorf("open the target file failed, err: %v", err)
+	}
+	defer file.Close()
+	s3Client, err := minio.New(dl.Url, &minio.Options{
+		Creds:  credentials.NewStaticV4(dl.AccessKeyID, dl.SecretAccessKey, ""),
+		Secure: true,
+	})
+	if err != nil {
+		return err
+	}
+	reader, err := s3Client.GetObject(context.Background(), downloadUri, dl.Name, minio.GetObjectOptions{})
+	if err != nil {
+		return err
+	}
+	readerSize, _ := reader.Stat()
+	if _, err := io.CopyN(file, reader, readerSize.Size); err != nil {
+		return err
+	}
+	return nil
 }
 
 // downloader is used to download the configuration items from repository.

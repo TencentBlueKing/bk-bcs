@@ -21,27 +21,36 @@ network:
 
 # defines all the repo related settings.
 repository:
-  # endpoints is a list of URLs, format: scheme://addr. e.g: http://127.0.0.1.
-  endpoints:
-    - http://127.0.0.1:2379
-  # token plat authority authentication of repo.
-  token: 
-  # project bscp project name in repo.
-  project: bk_bscp
-  # user bscp project admin user in repo.
-  user: bk_bscp
-  # defines tls related options.
-  tls:
-    # server should be accessed without verifying the TLS certificate.
-    insecureSkipVerify: 
-    # server requires TLS client certificate authentication.
-    certFile:
-    # server requires TLS client certificate authentication.
-    keyFile:
-    # trusted root certificates for server.
-    caFile:
-    # the password to decrypt the certificate.
-    password:
+  # defines storage type s3 , bk_repo
+  storageType: bk_repo
+  s3:
+    endpoint: http://127.0.0.1:2379
+    accessKeyID: xxxxx
+    secretAccessKey: xxxxx
+    useSSL: true
+    appID: xxxxx
+  bkRepo:
+    # endpoints is a list of URLs, format: scheme://addr. e.g: http://127.0.0.1.
+    endpoints:
+      - http://127.0.0.1:2379
+    # token plat authority authentication of repo.
+    token:
+    # project bscp project name in repo.
+    project: bk_bscp
+    # user bscp project admin user in repo.
+    user: bk_bscp
+    # defines tls related options.
+    tls:
+      # server should be accessed without verifying the TLS certificate.
+      insecureSkipVerify:
+      # server requires TLS client certificate authentication.
+      certFile:
+      # server requires TLS client certificate authentication.
+      keyFile:
+      # trusted root certificates for server.
+      caFile:
+      # the password to decrypt the certificate.
+      password:
 
 # defines service related settings.
 service:

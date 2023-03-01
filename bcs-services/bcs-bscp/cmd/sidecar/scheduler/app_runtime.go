@@ -19,6 +19,7 @@ import (
 	"sync"
 	"time"
 
+	"bscp.io/pkg/cc"
 	"bscp.io/pkg/criteria/constant"
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/logs"
@@ -30,7 +31,7 @@ import (
 )
 
 // NewAppRuntime create a new app runtime instance.
-func NewAppRuntime(appID uint32, workspace *AppFileWorkspace, downloader Downloader, reloader Reloader) *AppRuntime {
+func NewAppRuntime(appID uint32, workspace *AppFileWorkspace, downloader map[cc.StorageMode]Downloader, reloader Reloader) *AppRuntime {
 
 	ar := &AppRuntime{
 		appID:          appID,
@@ -55,7 +56,7 @@ type AppRuntime struct {
 	currentRelease *currentRelease
 
 	workspace  *AppFileWorkspace
-	repository Downloader
+	repository map[cc.StorageMode]Downloader
 	reloader   Reloader
 }
 
@@ -278,7 +279,15 @@ func (ar *AppRuntime) downloadReleasedCI(vas *kit.Vas, readiness map[uint32]bool
 				return
 			}
 
-			if err := ar.repository.Download(vas, uri, ciMeta.ContentSpec.ByteSize, filePath); err != nil {
+			if desc.Repository.RepositoryType == cc.S3 {
+				ar.repository[desc.Repository.RepositoryType] = &downloaderCosS3{
+					Url:             desc.Repository.Url,
+					AccessKeyID:     desc.Repository.AccessKeyID,
+					SecretAccessKey: desc.Repository.SecretAccessKey,
+					Name:            desc.Repository.Root,
+				}
+			}
+			if err := ar.repository[desc.Repository.RepositoryType].Download(vas, uri, ciMeta.ContentSpec.ByteSize, filePath); err != nil {
 				hitErr = err
 				logs.Errorf("download app: %d, CI[%d, %s/%s] failed, uri: %s, err: %v, rid: %s", ar.appID, ciMeta.ID,
 					spec.Path, spec.Name, uri, err, vas.Rid)
