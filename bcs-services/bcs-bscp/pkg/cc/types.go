@@ -268,7 +268,7 @@ type S3Storage struct {
 	AccessKeyID     string `yaml:"accessKeyID"`
 	SecretAccessKey string `yaml:"secretAccessKey"`
 	UseSSL          bool   `yaml:"useSSL"`
-	AppID           string `yaml:"appID"`
+	BucketName      string `yaml:"bucketName"`
 }
 
 // repoPollingAddrIndex repo request polling address index.
@@ -313,6 +313,9 @@ func (s Repository) validate() error {
 
 		if len(s.S3.SecretAccessKey) == 0 {
 			return errors.New("s3 secretAccessKey is not set")
+		}
+		if len(s.S3.BucketName) == 0 {
+			return errors.New("s3 bucketName is not set")
 		}
 	case string(BK_REPO):
 		if len(s.BkRepo.Endpoints) == 0 {

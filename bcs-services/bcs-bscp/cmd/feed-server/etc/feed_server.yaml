@@ -28,7 +28,7 @@ repository:
     accessKeyID: xxxxx
     secretAccessKey: xxxxx
     useSSL: true
-    appID: xxxxx
+    bucketName: xxxxx
   bkRepo:
     # endpoints is a list of URLs, format: scheme://addr. e.g: http://127.0.0.1.
     endpoints:

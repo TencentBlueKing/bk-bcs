@@ -339,9 +339,7 @@ func (c *ClientS3) CreateRepo(ctx context.Context, s3 *CreateRepoReq) error {
 // DeleteRepo delete repository in repo. param force: whether to force deletion.
 // If false, the warehouse cannot be deleted when there are files in the warehouse
 func (c *ClientS3) DeleteRepo(ctx context.Context, bizID uint32, forced bool) error {
-	repoName, err := GenRepoName(bizID)
-	bucketName := fmt.Sprintf("%s-%s", repoName, c.Config.S3.AppID)
-	err = c.Client.RemoveBucket(ctx, bucketName)
+	err := c.Client.RemoveBucket(ctx, c.Config.S3.BucketName)
 	if err != nil {
 		return err
 	}

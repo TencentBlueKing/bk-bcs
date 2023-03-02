@@ -236,14 +236,14 @@ func NewUriDecorator(r cc.Repository) (UriDecoratorInter, error) {
 		if len(r.S3.AccessKeyID) == 0 {
 			return nil, errors.New("s3 repository accessKeyID is empty")
 		}
-		if len(r.S3.AppID) == 0 {
-			return nil, errors.New("s3 repository appID is empty")
+		if len(r.S3.BucketName) == 0 {
+			return nil, errors.New("s3 repository bucketName is empty")
 		}
 		return &UriS3Decorator{
 			Endpoints:       r.S3.Endpoint,
 			AccessKeyID:     r.S3.AccessKeyID,
 			SecretAccessKey: r.S3.SecretAccessKey,
-			AppID:           r.S3.AppID,
+			BucketName:      r.S3.BucketName,
 		}, nil
 
 	case string(cc.BK_REPO):
@@ -347,16 +347,11 @@ type RepositoryTypeInter interface {
 	QueryMetadata(ctx context.Context, opt *NodeOption) (map[string]string, error)
 }
 
-func GenS3Name(bizID uint32) (string, error) {
-	if bizID == 0 {
-		return "", errf.New(errf.InvalidParameter, "biz_id should > 0")
+func GenS3NodeFullPath(path, sign string) (string, error) {
+
+	if len(path) == 0 {
+		return "", errf.New(errf.InvalidParameter, "path is required")
 	}
-	appID := cc.ApiServer().Repo.S3.AppID
-
-	return fmt.Sprintf("bscp-%s-biz-%d-%s", version, bizID, appID), nil
-}
-
-func GenS3NodeFullPath(sign string) (string, error) {
 	if len(sign) == 0 {
 		return "", errf.New(errf.InvalidParameter, "sign is required")
 	}
@@ -364,7 +359,7 @@ func GenS3NodeFullPath(sign string) (string, error) {
 		return "", errf.New(errf.InvalidParameter, "file sha256 is not standard format")
 	}
 
-	return fmt.Sprintf("%s%s", nodeFrontPath, sign), nil
+	return fmt.Sprintf("/%s%s%s", path, nodeFrontPath, sign), nil
 }
 
 type UriDecoratorInter interface {
@@ -376,17 +371,16 @@ type UriS3Decorator struct {
 	Endpoints       string
 	AccessKeyID     string
 	SecretAccessKey string
-	AppID           string
+	BucketName      string
 }
 
 // Init initialize an new uri decorator
 func (ud *UriS3Decorator) Init(bizID uint32) DecoratorInter {
-	repoName := fmt.Sprintf("bscp-%s-biz-%d-%s", version, bizID, ud.AppID)
-
+	pathName := fmt.Sprintf("/bscp-%s-biz-%d%s", version, bizID, nodeFrontPath)
 	return &DecoratorS3{
-		root:            repoName,
+		root:            ud.BucketName,
 		url:             ud.root(),
-		pathPrefix:      nodeFrontPath,
+		pathPrefix:      pathName,
 		accessKeyID:     ud.AccessKeyID,
 		secretAccessKey: ud.SecretAccessKey,
 	}

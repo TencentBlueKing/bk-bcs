@@ -38,7 +38,6 @@ import (
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/logs"
 	"bscp.io/pkg/metrics"
-	pbas "bscp.io/pkg/protocol/auth-server"
 	"bscp.io/pkg/rest"
 	"bscp.io/pkg/runtime/gwparser"
 	"bscp.io/pkg/thirdparty/repo"
@@ -50,9 +49,6 @@ const (
 
 	// defaultReadBufferSize is default read buffer size, 4KB.
 	defaultReadBufferSize = 4 << 10
-
-	// repoRecordCacheExpiration repo created record cache expiration.
-	repoRecordCacheExpiration = time.Hour
 )
 
 // repoProxy is http reverse proxy for bkrepo.
@@ -134,7 +130,7 @@ func (p repoProxy) UploadFile(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// set cache, to flag this biz repository already created.
-		p.repoCreatedRecords.SetWithExpire(bizID, true, repoRecordCacheExpiration)
+		p.repoCreatedRecords.SetWithExpire(bizID, true, repository.RepoRecordCacheExpiration)
 	}
 
 	p.proxy.ServeHTTP(w, r)
@@ -142,7 +138,7 @@ func (p repoProxy) UploadFile(w http.ResponseWriter, r *http.Request) {
 
 // authorize the request, returns error response and if the response needs return.
 func (p repoProxy) authorize(kt *kit.Kit, r *http.Request) (string, bool) {
-	bizID, appID, err := getBizIDAndAppID(kt, r)
+	bizID, appID, err := repository.GetBizIDAndAppID(kt, r)
 	if err != nil {
 		logs.Errorf("get biz_id and app_id from request failed, err: %v, rid: %s", err, kt.Rid)
 		return errf.New(errf.InvalidParameter, err.Error()).Error(), true
@@ -158,7 +154,7 @@ func (p repoProxy) authorize(kt *kit.Kit, r *http.Request) (string, bool) {
 			ResourceID: appID}, BizID: bizID}
 	}
 
-	resp := new(authResp)
+	resp := new(repository.AuthResp)
 	err = p.authorizer.AuthorizeWithResp(kt, resp, authRes)
 	if err != nil {
 		respJson, _ := json.Marshal(resp)
@@ -168,19 +164,12 @@ func (p repoProxy) authorize(kt *kit.Kit, r *http.Request) (string, bool) {
 	return "", false
 }
 
-// authResp http response with need apply permission.
-type authResp struct {
-	Code       int32               `json:"code"`
-	Message    string              `json:"message"`
-	Permission *pbas.IamPermission `json:"permission,omitempty"`
-}
-
 // newRepoProxy creates a new ReverseProxy for repo.
 func newRepoProxy(authorizer auth.Authorizer) (repository.FileApiType, error) {
 	settings := cc.ApiServer().Repo
 	switch strings.ToUpper(string(settings.StorageType)) {
 	case string(cc.S3):
-		return NewS3Service(settings, authorizer)
+		return repository.NewS3Service(settings, authorizer)
 	case string(cc.BK_REPO):
 		return NewRepoService(settings, authorizer)
 	}
@@ -328,7 +317,7 @@ func newRepoDirector(cli *repo.Client) func(req *http.Request) {
 		req.Host = elmHost[1]
 		req.URL.Host = elmHost[1]
 
-		bizID, appID, err := getBizIDAndAppID(kt, req)
+		bizID, appID, err := repository.GetBizIDAndAppID(kt, req)
 		if err != nil {
 			logs.Errorf("get biz_id and app_id from request failed, err: %v, rid: %s", err, kt.Rid)
 			return
@@ -426,33 +415,6 @@ func getNodeMetadata(kt *kit.Kit, cli *repo.Client, opt *repo.NodeOption, appID 
 		AppID: appIDs,
 	}
 	return meta.String()
-}
-
-// getBizIDAndAppID get biz_id and app_id from req path.
-func getBizIDAndAppID(kt *kit.Kit, req *http.Request) (uint32, uint32, error) {
-	bizIDStr := chi.URLParam(req, "biz_id")
-	bizID, err := strconv.ParseUint(bizIDStr, 10, 64)
-	if err != nil {
-		logs.Errorf("biz id parse uint failed, err: %v, rid: %s", err, kt.Rid)
-		return 0, 0, err
-	}
-
-	if bizID == 0 {
-		return 0, 0, errf.New(errf.InvalidParameter, "biz_id should > 0")
-	}
-
-	appIDStr := chi.URLParam(req, "app_id")
-	appID, err := strconv.ParseUint(appIDStr, 10, 64)
-	if err != nil {
-		logs.Errorf("app id parse uint failed, err: %v, rid: %s", err, kt.Rid)
-		return 0, 0, err
-	}
-
-	if appID == 0 {
-		return 0, 0, errf.New(errf.InvalidParameter, "app_id should > 0")
-	}
-
-	return uint32(bizID), uint32(appID), nil
 }
 
 func NewRepoService(settings cc.Repository, authorizer auth.Authorizer) (repository.FileApiType, error) {
