@@ -246,7 +246,7 @@ func NewUriDecorator(r cc.Repository) (UriDecoratorInter, error) {
 			BucketName:      r.S3.BucketName,
 		}, nil
 
-	case string(cc.BK_REPO):
+	case string(cc.BkRepo):
 
 		if len(r.BkRepo.Project) == 0 {
 			return nil, errors.New("repository project is empty")
@@ -326,7 +326,7 @@ func (de *Decorator) SecretAccessKey() string {
 	return ""
 }
 func (de *Decorator) GetRepositoryType() cc.StorageMode {
-	return cc.BK_REPO
+	return cc.BkRepo
 }
 
 type DecoratorInter interface {

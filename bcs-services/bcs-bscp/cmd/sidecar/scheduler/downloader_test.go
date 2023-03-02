@@ -61,13 +61,13 @@ func TestDownloader(t *testing.T) {
 
 	vas := kit.NewVas()
 	// test all download.
-	if err = downloader[cc.BK_REPO].Download(vas, smallFileAddr, 1021, smallFileToFile); err != nil {
+	if err = downloader[cc.BkRepo].Download(vas, smallFileAddr, 1021, smallFileToFile); err != nil {
 		t.Errorf("download file failed, err: %v", err)
 		return
 	}
 
 	// test range download.
-	if err = downloader[cc.BK_REPO].Download(vas, bigFileAddr, 93965, bigFileToFile); err != nil {
+	if err = downloader[cc.BkRepo].Download(vas, bigFileAddr, 93965, bigFileToFile); err != nil {
 		t.Errorf("download file failed, err: %v", err)
 		return
 	}

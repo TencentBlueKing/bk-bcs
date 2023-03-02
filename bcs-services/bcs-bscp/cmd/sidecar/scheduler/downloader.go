@@ -66,7 +66,7 @@ func InitDownloader(auth cc.SidecarAuthentication, tlsBytes *sfs.TLSBytes) (map[
 	}
 
 	downloaderMap := make(map[cc.StorageMode]Downloader, 2)
-	downloaderMap[cc.BK_REPO] = &downloader{
+	downloaderMap[cc.BkRepo] = &downloader{
 		tls:                     tlsC,
 		basicAuth:               auth,
 		sem:                     semaphore.NewWeighted(weight),

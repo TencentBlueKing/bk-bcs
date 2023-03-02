@@ -241,15 +241,15 @@ func (s IAM) validate() error {
 type StorageMode string
 
 const (
-	BK_REPO StorageMode = "BK_REPO"
-	S3      StorageMode = "S3"
+	BkRepo StorageMode = "BKREPO"
+	S3     StorageMode = "S3"
 )
 
 // Repository defines all the repo related runtime.
 type Repository struct {
 	StorageType StorageMode   `yaml:"storageType"`
 	S3          S3Storage     `yaml:"s3"`
-	BkRepo      BkRepoStorage `yaml:"bk_repo"`
+	BkRepo      BkRepoStorage `yaml:"bkRepo"`
 }
 type BkRepoStorage struct {
 	// Endpoints is a seed list of host:port addresses of repo nodes.
@@ -295,7 +295,7 @@ func (s Repository) OneEndpoint() (string, error) {
 
 func (s Repository) trySetDefault() {
 	if len(s.StorageType) == 0 {
-		s.StorageType = BK_REPO
+		s.StorageType = BkRepo
 	}
 }
 
@@ -317,7 +317,7 @@ func (s Repository) validate() error {
 		if len(s.S3.BucketName) == 0 {
 			return errors.New("s3 bucketName is not set")
 		}
-	case string(BK_REPO):
+	case string(BkRepo):
 		if len(s.BkRepo.Endpoints) == 0 {
 			return errors.New("bk_repo endpoints is not set")
 		}

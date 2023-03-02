@@ -170,7 +170,7 @@ func newRepoProxy(authorizer auth.Authorizer) (repository.FileApiType, error) {
 	switch strings.ToUpper(string(settings.StorageType)) {
 	case string(cc.S3):
 		return repository.NewS3Service(settings, authorizer)
-	case string(cc.BK_REPO):
+	case string(cc.BkRepo):
 		return NewRepoService(settings, authorizer)
 	}
 	return nil, fmt.Errorf("store with type %s is not supported", settings.StorageType)

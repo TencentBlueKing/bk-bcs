@@ -251,7 +251,7 @@ func (tls *TLSBytes) UnmarshalJSON(bytes []byte) error {
 
 // LoadTLSBytes load tls bytes. if tls is disabled, return nil.
 func LoadTLSBytes(tls cc.Repository) (*TLSBytes, error) {
-	if tls.StorageType == cc.BK_REPO {
+	if tls.StorageType == cc.BkRepo {
 
 		if !tls.BkRepo.TLS.Enable() {
 			return new(TLSBytes), nil
