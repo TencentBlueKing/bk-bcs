@@ -3,10 +3,10 @@
 
 .biz-app-title {
     display: inline-block;
-    height: 60px;
-    line-height: 60px;
+    height: 52px;
+    line-height: 52px;
     font-size: 16px;
-    margin-left: 20px;
+    margin-left: 24px;
 }
 
 .biz-crdcontroller {
@@ -133,12 +133,12 @@
 
     .log-name {
         width: 150px;
-        padding: 0 10px 0 20px;
+        padding: 0 10px 0 14px;
     }
 
     .log-status {
         width: 100px;
-        padding: 0 10px 0 20px;
+        padding: 0 0 0 20px;
     }
 
     .log-source {

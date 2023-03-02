@@ -417,10 +417,6 @@ export default {
     webAnnotations() {
       return this.$store.state.cluster.clusterWebAnnotations;
     },
-    isSingleCluster() {
-      const cluster = this.$store.state.cluster.curCluster;
-      return !!(cluster && Object.keys(cluster).length);
-    },
     clusterCidr() {
       const { multiClusterCIDR = [], clusterIPv4CIDR = '' } = this.clusterInfo.networkSettings;
       return [...multiClusterCIDR, clusterIPv4CIDR].filter(cidr => !!cidr).join(', ');
@@ -506,16 +502,6 @@ export default {
       this.containerLoading = false;
       return result;
     },
-    // 更新当前集群信息
-    handleUpdateCurCluster() {
-      if (!this.isSingleCluster) return;
-      this.$store.commit('cluster/forceUpdateCurCluster', {
-        cluster_id: this.clusterInfo.clusterID,
-        name: this.clusterInfo.clusterName,
-        project_id: this.clusterInfo.projectID,
-        ...this.clusterInfo,
-      });
-    },
 
     // 更新集群名称信息
     async updateClusterName() {
@@ -528,7 +514,6 @@ export default {
       if (result) {
         this.clusterInfo.clusterName = clusterName;
         this.isClusterNameEdit = false;
-        this.handleUpdateCurCluster();
       }
     },
     // 更新集群描述信息

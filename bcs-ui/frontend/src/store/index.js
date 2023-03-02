@@ -27,10 +27,8 @@
 import Vue from 'vue';
 import Vuex from 'vuex';
 import cookie from 'cookie';
-
 import http from '@/api';
-import { unifyObjectStyle, json2Query } from '@/common/util';
-
+import { json2Query } from '@/common/util';
 import depot from '@/store/modules/depot';
 import metric from '@/store/modules/metric';
 import mc from '@/store/modules/mc';
@@ -50,11 +48,10 @@ import storage from '@/store/modules/storage';
 import dashboard from '@/store/modules/dashboard';
 import clustermanager from '@/store/modules/clustermanager';
 import token from '@/store/modules/token';
-import { projectFeatureFlag } from '@/api/base';
 import { getProject } from '@/api/modules/project';
+import VuexStorage from '@/common/vuex-storage';
 
 Vue.use(Vuex);
-Vue.config.devtools = process.env.NODE_ENV === 'development';
 // cookie 中 zh-cn / en
 let lang = cookie.parse(document.cookie).blueking_language || 'zh-cn';
 if (['zh-CN', 'zh-cn', 'cn', 'zhCN', 'zhcn'].indexOf(lang) > -1) {
@@ -86,197 +83,110 @@ const store = new Vuex.Store({
     clustermanager,
     token,
   },
+  plugins: [
+    VuexStorage({
+      key: '__bcs_vuex_stroage__',
+      paths: ['curProject.projectID', 'curProject.projectCode', 'curCluster.clusterID', 'openSideMenu', 'curNamespace'],
+    }),
+  ],
   // 公共 store
   state: {
     curProject: {},
-    curProjectCode: '', // 项目代码
-    curProjectId: '', // 项目ID
-    curClusterId: null,
-    mainContentLoading: false,
-    // 系统当前登录用户
+    curCluster: {},
+    curSideMenu: {},
+    curNamespace: '',
     user: {},
-    // 左侧导航
-    sideMenu: {
-      // 在线的 project
-      onlineProjectList: [],
-    },
-
-    // 当前语言环境
-    lang,
-    isEn: lang === 'en-US',
-
-    // 是否允许路由跳转
-    allowRouterChange: true,
-
-    crdInstanceList: [],
-    // 功能开关
-    featureFlag: {},
-    viewMode: '',
-    curMenuId: '',
-    menuList: [],
+    projectList: [],
+    openSideMenu: true,
+    isEn: lang === 'en-US', // todo 废弃
+    crdInstanceList: [], // todo 放入对于的module中
   },
   // 公共 getters
   getters: {
-    mainContentLoading: state => state.mainContentLoading,
     user: state => state.user,
-    lang: state => state.lang,
-    featureFlag: state => state.featureFlag,
-    curNavName: (state) => {
-      let navName = '';
-      state.menuList.find((menu) => {
-        if (menu?.id === state.curMenuId) {
-          navName = menu?.routeName;
-          return true;
-        } if (menu.children) {
-          const child = menu.children.find(child => child.id === state.curMenuId);
-          navName = child?.routeName;
-          return !!navName;
-        }
-        return false;
-      });
-      return navName;
-    },
-    curProjectCode: state => state.curProjectCode,
-    curProjectId: state => state.curProjectId,
-    curClusterId: state => state.curClusterId,
-    menuList: state => state.menuList,
+    curProjectCode: state => state.curProject?.projectCode,
+    curProjectId: state => state.curProject?.projectID,
+    curClusterId: state => state.curCluster?.clusterID,
+    isSharedCluster: state => !!state.curCluster?.is_shared,
   },
   // 公共 mutations
   mutations: {
-    updateProjectCode(state, code) {
-      state.curProjectCode = code;
-    },
-    updateProjectId(state, id) {
-      state.curProjectId = id;
-    },
     /**
-         * 设置内容区的 loading 是否显示
-         *
-         * @param {Object} state store state
-         * @param {boolean} loading 是否显示 loading
-         */
-    setMainContentLoading(state, loading) {
-      state.mainContentLoading = loading;
-    },
-
-    /**
-         * 更新当前用户 user
-         *
-         * @param {Object} state store state
-         * @param {Object} user user 对象
-         */
+     * 更新当前用户 user
+     *
+     * @param {Object} state store state
+     * @param {Object} user user 对象
+     */
     updateUser(state, user) {
       state.user = Object.assign({}, user);
     },
 
     /**
-         * 更改当前项目信息
-         *
-         * @param {Object} state store state
-         * @param {String} projectId
-         */
+     * 更新菜单展开状态
+     * @param {*} state
+     * @param {*} open
+     */
+    updateOpenSideMenu(state, open) {
+      state.openSideMenu = !!open;
+    },
+
+    /**
+     * 更新当前命名空间
+     * @param {*} state
+     * @param {*} name
+     */
+    updateCurNamespace(state, name) {
+      state.curNamespace = name;
+    },
+    /**
+     * 更改当前项目信息
+     *
+     * @param {Object} state store state
+     * @param {String} projectId
+     */
     updateCurProject(state, project) {
       state.curProject = project || {};
     },
-
     /**
-         * 修改state.curClusterId
-         *
-         * @param {Object} state store state
-         * @param {boolean} val 值
-         */
-    updateCurClusterId(state, val) {
-      state.curClusterId = val;
+     * 更新 store 中的 projectList
+     *
+     * @param {Object} state store state
+     * @param {list} list 项目列表
+     */
+    updateProjectList(state, list) {
+      state.projectList.splice(0, state.projectList.length, ...list);
     },
-
     /**
-         * 修改 state.allowRouterChange
-         *
-         * @param {Object} state store state
-         * @param {boolean} val 值
-         */
-    updateAllowRouterChange(state, val) {
-      state.allowRouterChange = val;
+     * 更新 store.cluster 中的 curCluster
+     *
+     * @param {Object} state store state
+     * @param {Object} cluster cluster 对象
+     */
+    updateCurCluster(state, cluster) {
+      state.curCluster = cluster || {};
     },
-
     /**
-         * 更新 store 中的 onlineProjectList
-         *
-         * @param {Object} state store state
-         * @param {list} list 项目列表
-         */
-    forceUpdateOnlineProjectList(state, list) {
-      state.sideMenu.onlineProjectList.splice(0, state.sideMenu.onlineProjectList.length, ...list);
-    },
-
-    /**
-         * 更新 store 中的 menuList
-         *
-         * @param {Object} state store state
-         * @param {list} list menu 列表
-         * @param {boolean} isDashboard 是否是 dashboard 路由
-         */
-    forceUpdateMenuList(state, data) {
-      const { list, isDashboard } = data;
-      if (isDashboard) {
-        state.sideMenu.dashboardMenuList.splice(0, state.sideMenu.dashboardMenuList.length, ...list);
-      } else if (Boolean(state.curClusterId)
-       && (state.curProject.kind === PROJECT_K8S || state.curProject.kind === PROJECT_TKE)) {
-        state.sideMenu.clusterk8sMenuList.splice(0, state.sideMenu.clusterk8sMenuList.length, ...list);
-      } else if (state.curProject && (state.curProject.kind === PROJECT_K8S || state.curProject.kind === PROJECT_TKE)) {
-        state.sideMenu.k8sMenuList.splice(0, state.sideMenu.k8sMenuList.length, ...list);
-      } else {
-        state.sideMenu.menuList.splice(0, state.sideMenu.menuList.length, ...list);
-      }
-    },
-
-    /**
-         * 更新 store 中的 menuList
-         *
-         * @param {Object} state store state
-         * @param {list} list menu 列表
-         */
-    forceUpdateDevOpsMenuList(state, list) {
-      state.sideMenu.devOpsMenuList.splice(0, state.sideMenu.devOpsMenuList.length, ...list);
-    },
-
-    /**
-         * 更新crdInstanceList
-         * @param {Object} state store state
-         * @param {Object} data data
-         */
+     * 更新crdInstanceList
+     * @param {Object} state store state
+     * @param {Object} data data
+     */
     updateCrdInstanceList(state, data) {
       state.crdInstanceList = data;
     },
-
-    /**
-         * 功能开关
-         * @param {*} state
-         * @param {*} data
-         */
-    setFeatureFlag(state, data) {
-      state.featureFlag = data || {};
-    },
-    updateViewMode(state, mode) {
-      state.viewMode = mode;
-    },
-    updateCurMenuId(state, id) {
-      state.curMenuId = id;
-    },
-    updateMenuList(state, menu = []) {
-      state.menuList = menu;
+    updateCurSideMenu(state, data) {
+      state.curSideMenu = data;
     },
   },
   actions: {
     /**
-         * 获取用户信息
-         *
-         * @param {Object} context store 上下文对象
-         * @param {Object} params 请求参数
-         * @param {Object} config 请求的配置
-         *
-         * @return {Promise} promise 对象
-         */
+     * 获取用户信息
+     *
+     * @param {Object} context store 上下文对象
+     * @param {Object} params 请求参数
+     * @param {Object} config 请求的配置
+     *
+     * @return {Promise} promise 对象
+     */
     userInfo(context, params, config = {}) {
       // return http.get(`/app/index?invoke=userInfo`, {}, config)
       return http.get(`${DEVOPS_BCS_API_URL}/api/user/`, params, config).then((response) => {
@@ -287,67 +197,41 @@ const store = new Vuex.Store({
     },
 
     /**
-         * 根据 user bg info
-         *
-         * @param {Object} context store 上下文对象
-         * @param {Object} params 请求参数
-         * @param {Object} config 请求的配置
-         *
-         * @return {Promise} promise 对象
-         */
-    getUserBgInfo() {
-      return http.get(`${DEVOPS_BCS_API_URL}/api/accounts/user_bg_info/`);
-    },
-
-    /**
-         * 停用/启用屏蔽
-         *
-         * @param {Object} context store 上下文对象
-         * @param {Object} params 请求参数
-         * @param {Object} config 请求的配置
-         *
-         * @return {Promise} promise 对象
-         */
-    editProject(context, params, config = {}) {
-      const projectId = params.project_id;
-      return http.put(`${DEVOPS_BCS_API_URL}/api/projects/${projectId}/`, params, config);
-    },
-
-    /**
-         * 获取项目信息
-         *
-         * @param {Object} context store 上下文对象
-         * @param {Object} params 请求参数
-         * @param {Object} config 请求的配置
-         *
-         * @return {Promise} promise 对象
-         */
+     * 获取项目信息
+     *
+     * @param {Object} context store 上下文对象
+     * @param {Object} params 请求参数
+     * @param {Object} config 请求的配置
+     *
+     * @return {Promise} promise 对象
+     */
     getProject(context, params) {
       const { projectId } = params;
-      return getProject({
-        $projectId: projectId,
-      }, { needRes: true }).then(res => ({
-        data: {
-          ...res.data,
-          cc_app_id: res.data.businessID,
-          cc_app_name: res.data.businessName,
-          project_id: res.data.projectID,
-          project_name: res.data.name,
-          project_code: res.data.projectCode,
-        },
-      }))
+      return getProject({ $projectId: projectId }, { needRes: true })
+        .then((res) => {
+          const data = {
+            ...res.data,
+            cc_app_id: res.data.businessID,
+            cc_app_name: res.data.businessName,
+            project_id: res.data.projectID,
+            project_name: res.data.name,
+            project_code: res.data.projectCode,
+          };
+          context.commit('updateCurProject', data);
+          return { data };
+        })
         .catch(() => ({}));
     },
 
     /**
-         * 项目启用日志采集功能
-         *
-         * @param {Object} context store 上下文对象
-         * @param {string} projectId 项目 id
-         * @param {Object} config 请求的配置
-         *
-         * @return {Promise} promise 对象
-         */
+     * 项目启用日志采集功能
+     *
+     * @param {Object} context store 上下文对象
+     * @param {string} projectId 项目 id
+     * @param {Object} config 请求的配置
+     *
+     * @return {Promise} promise 对象
+     */
     enableLogPlans(context, projectId, config = {}) {
       return http.post(
         `${DEVOPS_BCS_API_URL}/api/datalog/projects/${projectId}/log_plans/`,
@@ -357,14 +241,14 @@ const store = new Vuex.Store({
     },
 
     /**
-         * 获取项目日志采集信息
-         *
-         * @param {Object} context store 上下文对象
-         * @param {string} projectId 项目 id
-         * @param {Object} config 请求的配置
-         *
-         * @return {Promise} promise 对象
-         */
+     * 获取项目日志采集信息
+     *
+     * @param {Object} context store 上下文对象
+     * @param {string} projectId 项目 id
+     * @param {Object} config 请求的配置
+     *
+     * @return {Promise} promise 对象
+     */
     getLogPlans(context, projectId, config = {}) {
       return http.get(
         `${DEVOPS_BCS_API_URL}/api/datalog/projects/${projectId}/log_plans/`,
@@ -374,14 +258,14 @@ const store = new Vuex.Store({
     },
 
     /**
-         * 查询crd列表 (新)
-         *
-         * @param {Object} context store 上下文对象
-         * @param {Object} projectId, clusterId, crdKind
-         * @param {Object} config 请求的配置
-         *
-         * @return {Promise} promise 对象
-         */
+     * 查询crd列表 (新)
+     *
+     * @param {Object} context store 上下文对象
+     * @param {Object} projectId, clusterId, crdKind
+     * @param {Object} config 请求的配置
+     *
+     * @return {Promise} promise 对象
+     */
     getBcsCrdsList(context, { projectId, clusterId, crdKind, params = {} }, config = {}) {
       context.commit('updateCrdInstanceList', []);
       const url = `${DEVOPS_BCS_API_URL}/api/bcs_crd/projects/${projectId}/clusters/${clusterId}/crds/${crdKind}/custom_objects/?${json2Query(params)}`;
@@ -390,65 +274,7 @@ const store = new Vuex.Store({
         return res;
       });
     },
-
-    async getFeatureFlag(context) {
-      const params = {};
-      const { curCluster } = context.state.cluster;
-      // eslint-disable-next-line camelcase
-      if (curCluster?.cluster_id) {
-        params.cluster_type = curCluster.is_shared ? 'SHARED' : 'SINGLE';
-      } else {
-        params.$clusterId = '-';
-      }
-
-      if (context.state.viewMode === 'dashboard') {
-        params.view_mode = 'ResourceDashboard';
-      }
-      const data = await projectFeatureFlag(params, {
-        cancelWhenRouteChange: false,
-      }).catch(() => ({}));
-      context.commit('setFeatureFlag', data);
-      return data;
-    },
   },
 });
-
-/**
- * hack vuex dispatch, add third parameter `config` to the dispatch method
- *
- * 需要对单独的请求做配置的话，无论是 get 还是 post，store.dispatch 都需要三个参数，例如：
- * store.dispatch('example/btn1', {btn: 'btn1'}, {fromCache: true})
- * 其中第二个参数指的是请求本身的参数，第三个参数指的是请求的配置，如果请求本身没有参数，那么
- * 第二个参数也必须占位，store.dispatch('example/btn1', {}, {fromCache: true})
- * 在 store 中需要如下写法：
- * btn1 ({commit, state, dispatch}, params, config) {
- *     return http.get(`/app/index?invoke=btn1`, params, config)
- * }
- *
- * @param {Object|string} _type vuex type
- * @param {Object} _payload vuex payload
- * @param {Object} config config 参数，主要指 http 的参数，详见 src/api/index initConfig
- *
- * @return {Promise} 执行请求的 promise
- */
-store.dispatch = function (_type, _payload, config = {}) {
-  const { type, payload } = unifyObjectStyle(_type, _payload);
-  const action = { type, payload, config };
-  const entry = store._actions[type];
-
-  if (!entry) {
-    if (process.env.NODE_ENV !== 'production') {
-      console.error(`[vuex] unknown action type: ${type}`);
-    }
-    return;
-  }
-
-  store._actionSubscribers.slice().filter(sub => sub.before)
-    .forEach(sub => sub.before(action, store.state));
-
-  return entry.length > 1
-    ? Promise.all(entry.map(handler => handler(payload, config)))
-    : entry[0](payload, config);
-};
 
 export default store;

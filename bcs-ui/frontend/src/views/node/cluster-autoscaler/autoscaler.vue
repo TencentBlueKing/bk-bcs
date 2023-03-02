@@ -449,7 +449,7 @@
 <script lang="ts">
 import { defineComponent, onMounted, ref, computed, onBeforeUnmount } from '@vue/composition-api';
 import $i18n from '@/i18n/i18n-setup';
-import $router from '@/router/index';
+import $router from '@/router';
 import $store from '@/store/index';
 import StatusIcon from '@/views/dashboard/common/status-icon';
 import LoadingIcon from '@/components/loading-icon.vue';
@@ -971,7 +971,7 @@ export default defineComponent({
       if (result) {
         $bkMessage({
           theme: 'success',
-          message: $i18n.t('调度成功'), // todo
+          message: $i18n.t('调度成功'),
         });
         await getNodeList();
       }

@@ -11,7 +11,8 @@
           gotoDetail,
           handleSortChange,
           handleUpdateResource,
-          handleDeleteResource
+          handleDeleteResource,
+          nameValue, handleClearSearchData
         }">
         <bk-table
           :data="curPageData"
@@ -81,6 +82,9 @@
                 @click="handleDeleteResource(row)">{{ $t('删除') }}</bk-button>
             </template>
           </bk-table-column>
+          <template #empty>
+            <BcsEmptyTableStatus :type="nameValue ? 'search-empty' : 'empty'" @clear="handleClearSearchData" />
+          </template>
         </bk-table>
       </template>
     </BaseLayout>
@@ -110,7 +114,7 @@ export default defineComponent({
   setup(props, ctx) {
     const { $route, $store } = ctx.root;
     const projectId = computed(() => $route.params.projectId);
-    const clusterId = computed(() => $store.state.curClusterId);
+    const clusterId = computed(() => $store.getters.curClusterId);
     return {
       projectId,
       clusterId,

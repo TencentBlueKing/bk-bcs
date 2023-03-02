@@ -89,7 +89,7 @@ export default defineComponent({
     },
   },
   setup(props, ctx) {
-    const { $router, $store } = ctx.root;
+    const { $router } = ctx.root;
     // 区分首次进入pod详情还是其他workload详情
     const defaultComId = props.category === 'pods' ? 'PodDetail' : 'WorkloadDetail';
     // 子标题
@@ -138,7 +138,7 @@ export default defineComponent({
       const { id } = item;
       const index = titles.value.findIndex(item => item.id === id);
       if (id === '') {
-        $router.push({ name: $store.getters.curNavName });
+        $router.back();
       } else {
         componentId.value = id;
         if (index > -1) {

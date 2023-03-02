@@ -1,14 +1,7 @@
 <!-- eslint-disable max-len -->
 <template>
   <div class="biz-content">
-    <div class="biz-top-bar">
-      <div class="biz-crd-instance-title">
-        <a href="javascript:void(0);" class="bcs-icon bcs-icon-arrows-left back" @click="goBack"></a>
-        {{$t('日志采集规则')}}
-        <span class="biz-tip ml10">({{$t('集群名称')}}：{{clusterName}})</span>
-      </div>
-      <bk-guide></bk-guide>
-    </div>
+    <Header :title="$t('日志采集规则')" :desc="`(集群名称: ${clusterName})`"></Header>
     <div class="biz-content-wrapper" style="padding: 0;" v-bkloading="{ isLoading: isInitLoading, opacity: 0.1 }">
       <template v-if="!isInitLoading">
         <div class="biz-panel-header">
@@ -797,11 +790,13 @@ import { catchErrorHandler } from '@/common/util';
 import bkKeyer from '@/components/keyer';
 import bkExpression from './expression';
 import { useNamespace } from '@/views/dashboard/namespace/use-namespace';
+import Header from '@/components/layout/Header.vue';
 
 export default {
   components: {
     bkKeyer,
     bkExpression,
+    Header,
   },
   data() {
     return {

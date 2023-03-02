@@ -3,7 +3,12 @@
     <bcs-alert type="info" class="mb20" :title="$t('由于事件数据量过大，平台暂提供单集群 7 天内 或1500万条事件查询，以先到达的指标为准')"></bcs-alert>
     <div class="flex justify-end mb-[20px]">
       <template v-if="!isSpecifyKinds">
-        <ClusterSelect v-model="params.clusterId" searchable :disabled="isSingleCluster"></ClusterSelect>
+        <ClusterSelect
+          v-model="params.clusterId"
+          cluster-type="all"
+          searchable
+          @change="handleClusterChange">
+        </ClusterSelect>
         <NamespaceSelect
           :cluster-id="params.clusterId"
           clearable
@@ -53,6 +58,9 @@
       </bcs-table-column>
       <bcs-table-column :label="$t('事件级别')" prop="level" width="100"></bcs-table-column>
       <bcs-table-column :label="$t('事件内容')" prop="describe" min-width="100" show-overflow-tooltip></bcs-table-column>
+      <template #empty>
+        <BcsEmptyTableStatus :type="searchEmpty ? 'search-empty' : 'empty'" @clear="handleClearSearchData" />
+      </template>
     </bcs-table>
   </div>
 </template>
@@ -117,7 +125,7 @@ export default defineComponent({
       isSpecifyKinds,
     } = toRefs(props);
 
-    const { isSingleCluster, curClusterId, clusterList } = useCluster();
+    const { curClusterId, clusterList } = useCluster();
 
     const isDebugCluster = computed(() => clusterList.value.find(item => item.clusterID === params.value.clusterId || item.clusterID === curClusterId.value)?.environment !== 'prod');
     const shortcuts = ref([
@@ -245,6 +253,8 @@ export default defineComponent({
       searchSelect: [],
       date: [],
     });
+    const searchEmpty = computed(() => !!params.value.namespace
+      || !!params.value.date?.length || !!params.value.searchSelect?.length);
     const parseSearchSelectValue = computed(() => {
       const data = {
         level: '',
@@ -318,6 +328,10 @@ export default defineComponent({
       handleGetEventList();
     }, { deep: true });
 
+    // cluster change
+    const handleClusterChange = () => {
+      params.value.namespace = '';
+    };
     // 事件列表
     const events = ref([]);
     const eventLoading = ref(false);
@@ -391,6 +405,12 @@ export default defineComponent({
       }
     });
 
+    const handleClearSearchData = () => {
+      params.value.namespace = '';
+      params.value.date = [];
+      params.value.searchSelect = [];
+    };
+
     return {
       isDebugCluster,
       kindList,
@@ -400,10 +420,12 @@ export default defineComponent({
       pagination,
       eventLoading,
       shortcuts,
-      isSingleCluster,
+      searchEmpty,
+      handleClearSearchData,
       formatDate,
       handlePageChange,
       handlePageLimitChange,
+      handleClusterChange,
     };
   },
 });

@@ -156,13 +156,13 @@ export default {
   },
   computed: {
     onlineProjectList() {
-      return this.$store.state.sideMenu.onlineProjectList;
+      return this.$store.state.projectList;
     },
     curProjectCode() {
-      return this.$store.state.curProjectCode;
+      return this.$store.getters.curProjectCode;
     },
     curProjectId() {
-      return this.$store.state.curProjectId;
+      return this.$store.getters.curProjectId;
     },
     category() {
       const categoryMap = {

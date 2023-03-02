@@ -127,7 +127,7 @@
             <bk-button type="primary" :loading="isLoading" @click="confirmCreateMetric">
               {{$t('提交')}}
             </bk-button>
-            <bk-button type="button" :disabled="isLoading" @click="hideCreateMetric">
+            <bk-button class="!ml-[5px]" type="button" :disabled="isLoading" @click="hideCreateMetric">
               {{$t('取消')}}
             </bk-button>
           </div>

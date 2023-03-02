@@ -7,17 +7,21 @@
     :disabled="disabled"
     @change="handleClusterChange">
     <bcs-option
-      v-for="item in clusterList"
+      v-for="item in clusterData"
       :key="item.clusterID"
       :id="item.clusterID"
-      :name="item.clusterName"
-    ></bcs-option>
+      :name="item.clusterName">
+      <div class="flex flex-col justify-center h-[46px]">
+        <span class="leading-none bcs-ellipsis">{{ item.clusterName }}</span>
+        <span class="leading-none mt-[8px]">{{ item.clusterID }}</span>
+      </div>
+    </bcs-option>
   </bcs-select>
 </template>
-<script>
-import { computed, defineComponent, ref, watch, toRefs, onMounted } from '@vue/composition-api';
-import { BCS_CLUSTER } from '@/common/constant';
-import useDefaultClusterId from '@/views/node/use-default-clusterId';
+<script lang="ts">
+import { computed, defineComponent, ref, watch, toRefs, onBeforeMount } from '@vue/composition-api';
+import $store from '@/store';
+import { useCluster } from '@/common/use-app';
 
 export default defineComponent({
   name: 'ClusterSelect',
@@ -38,34 +42,46 @@ export default defineComponent({
       type: Boolean,
       default: false,
     },
+    clusterType: {
+      type: String,
+      default: 'normal',
+    },
   },
+  emits: ['change'],
   setup(props, ctx) {
-    const { $store } = ctx.root;
-    const { value } = toRefs(props);
+    const { value, clusterType } = toRefs(props);
 
     watch(value, (v) => {
       localValue.value = v;
     });
 
-    const clusterList = computed(() => $store.state.cluster.clusterList || []);
-    // 集群ID默认规则：props > 单集群ID > sessionStorage > 取列表第一个
-    const { defaultClusterId } = useDefaultClusterId();
-    const localValue = ref(props.value || defaultClusterId.value);
+    const { clusterList } = useCluster();
+    const clusterData = computed(() => {
+      if (clusterType.value === 'normal') {
+        return clusterList.value.filter(item => !item.is_shared);
+      }
+      return clusterList.value;
+    });
+    const localValue = ref<string>(props.value || $store.getters.curClusterId);
 
     const handleClusterChange = (clusterId) => {
       localValue.value = clusterId;
-      sessionStorage.setItem(BCS_CLUSTER, clusterId);
+      $store.commit('updateCurCluster', clusterData.value.find(item => item.clusterID === clusterId));
       ctx.emit('change', clusterId);
     };
 
-    onMounted(() => {
-      if (localValue.value !== props.value) {
-        ctx.emit('change', localValue.value);
+    onBeforeMount(() => {
+      const data = clusterData.value.find(item => item.clusterID === localValue.value);
+      if (!data) {
+        handleClusterChange(clusterData.value[0]?.clusterID);
+      } else if (localValue.value !== props.value) {
+        handleClusterChange(localValue.value);
       }
     });
+
     return {
       localValue,
-      clusterList,
+      clusterData,
       handleClusterChange,
     };
   },
@@ -73,7 +89,7 @@ export default defineComponent({
 </script>
 <style lang="postcss" scoped>
 .cluster-select {
-    min-width: 200px;
+    min-width: 254px;
     &:not(.is-disabled) {
       background-color: #fff;
     }

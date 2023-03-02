@@ -32,19 +32,15 @@ export default defineComponent({
   },
   setup(props, ctx) {
     const { $router } = ctx.root;
-    const { $INTERNAL } = useConfig();
+    const { _INTERNAL_ } = useConfig();
 
     // 自建集群
     const handleCreateCluster = () => {
-      if ($INTERNAL.value) {
-        $router.push({ name: 'createFormCluster' });
-      } else {
-        $router.push({ name: 'createFormClusterEE' });
-      }
+      $router.push({ name: 'createFormCluster' });
     };
     // 导入集群
     const handleImportCluster = () => {
-      if ($INTERNAL.value) return;
+      if (_INTERNAL_.value) return;
       $router.push({ name: 'createImportCluster' });
     };
 
@@ -65,7 +61,6 @@ export default defineComponent({
       handleCreateCluster,
       handleShowDetail,
       handleImportCluster,
-      $INTERNAL,
     };
   },
 });

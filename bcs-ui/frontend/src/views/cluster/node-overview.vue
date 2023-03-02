@@ -1,12 +1,6 @@
 <template>
   <div class="biz-content">
-    <div class="biz-top-bar">
-      <div class="biz-cluster-node-overview-title">
-        <i class="bcs-icon bcs-icon-arrows-left back" @click="goNode"></i>
-        <span>{{nodeId}}</span>
-      </div>
-      <bk-guide></bk-guide>
-    </div>
+    <Header :title="nodeId"></Header>
     <div class="biz-content-wrapper biz-cluster-node-overview">
       <div class="biz-cluster-node-overview-wrapper">
         <div class="biz-cluster-node-overview-header">
@@ -52,26 +46,6 @@
               <div class="value-label">{{nodeInfo.sysname || '--'}}</div>
             </bcs-popover>
           </div>
-          <!-- <template v-if="isTkeCluster">
-            <div class="header-item">
-              <div class="key-label">{{$t('节点模板：')}}</div>
-              <bcs-popover
-                :content="nodeTemplateInfo.name"
-                placement="bottom">
-                <div class="value-label">
-                  {{nodeTemplateInfo.name || '--' }}
-                </div>
-              </bcs-popover>
-            </div>
-            <div class="header-item">
-              <div class="key-label">{{$t('Kubelet组件参数：')}}</div>
-              <div
-                class="value-label"
-                v-bk-tooltips.bottom="nodeTemplateInfo.extraArgs.kubelet.split(';').join('<br>')">
-                {{nodeTemplateInfo.extraArgs.kubelet}}
-              </div>
-            </div>
-          </template> -->
         </div>
         <div class="biz-cluster-node-overview-chart-wrapper">
           <div class="biz-cluster-node-overview-chart">
@@ -290,36 +264,36 @@
                 </template>
               </bk-table-column>
               <bk-table-column :label="$t('镜像')" min-width="200" :resizable="false" :show-overflow-tooltip="false">
-                <template slot-scope="{ row }">
+                <template #default="{ row }">
                   <span v-bk-tooltips.top="(row.images || []).join('<br />')">
                     {{ (row.images || []).join(', ') }}
                   </span>
                 </template>
               </bk-table-column>
               <bk-table-column label="Status" width="140" :resizable="false">
-                <template slot-scope="{ row }">
+                <template #default="{ row }">
                   <StatusIcon :status="row.status"></StatusIcon>
                 </template>
               </bk-table-column>
               <bk-table-column label="Ready" width="100" :resizable="false">
-                <template slot-scope="{ row }">
+                <template #default="{ row }">
                   {{row.readyCnt}}/{{row.totalCnt}}
                 </template>
               </bk-table-column>
               <bk-table-column label="Restarts" width="100" :resizable="false">
-                <template slot-scope="{ row }">{{row.restartCnt}}</template>
+                <template #default="{ row }">{{row.restartCnt}}</template>
               </bk-table-column>
               <bk-table-column label="Host IP" width="140" :resizable="false">
-                <template slot-scope="{ row }">{{row.hostIP || '--'}}</template>
+                <template #default="{ row }">{{row.hostIP || '--'}}</template>
               </bk-table-column>
               <bk-table-column label="Pod IPv4" width="140" :resizable="false">
-                <template slot-scope="{ row }">{{row.podIP || '--'}}</template>
+                <template #default="{ row }">{{row.podIP || '--'}}</template>
               </bk-table-column>
               <bk-table-column label="Pod IPv6" min-width="140" :resizable="false">
-                <template slot-scope="{ row }">{{row.podIPv6 || '--'}}</template>
+                <template #default="{ row }">{{row.podIPv6 || '--'}}</template>
               </bk-table-column>
               <bk-table-column label="Node" :resizable="false">
-                <template slot-scope="{ row }">{{row.node || '--'}}</template>
+                <template #default="{ row }">{{row.node || '--'}}</template>
               </bk-table-column>
               <bk-table-column label="Age" :resizable="false">
                 <template #default="{ row }">
@@ -388,6 +362,11 @@
                   </bk-button>
                 </template>
               </bk-table-column>
+              <template #empty>
+                <BcsEmptyTableStatus
+                  :type="(namespaceValue || searchValue) ? 'search-empty' : 'empty'"
+                  @clear="handleClearSearchData" />
+              </template>
             </bk-table>
           </bcs-tab-panel>
           <bcs-tab-panel name="event" :label="$t('事件')">
@@ -422,21 +401,18 @@ import ECharts from 'vue-echarts/components/ECharts.vue';
 import 'echarts/lib/chart/line';
 import 'echarts/lib/component/tooltip';
 import 'echarts/lib/component/legend';
-
-import { BCS_CLUSTER } from '@/common/constant';
 import StatusIcon from '@/views/dashboard/common/status-icon';
 import BcsLog from '@/components/bcs-log/index';
 import useLog from '@/views/dashboard/workload/detail/use-log';
 import { useSelectItemsNamespace } from '@/views/dashboard/namespace/use-namespace';
-
 import { nodeOverview } from '@/common/chart-option';
 import { catchErrorHandler, formatBytes } from '@/common/util';
 import { createChartOption } from './node-overview-chart-opts';
-// import { getNodeTemplateInfo } from '@/api/base';
+import Header from '@/components/layout/Header.vue';
 import EventQueryTable from '../mc/event-query-table.vue';
 
 export default defineComponent({
-  components: {  StatusIcon, BcsLog, ECharts, EventQueryTable },
+  components: {  StatusIcon, BcsLog, ECharts, EventQueryTable, Header },
   setup(props, ctx) {
     const { $route, $router, $bkInfo, $bkMessage, $store, $i18n } = ctx.root;
     const cpuLine = ref(nodeOverview.cpu);
@@ -474,7 +450,7 @@ export default defineComponent({
     const isTkeCluster = computed(() => ($store.state as any).cluster.clusterList
       ?.find(item => item.clusterID === clusterId.value)?.provider === 'tencentCloud');
     const projectCode = computed(() => $route.params.projectCode);
-    const nodeId = computed(() => $route.params.nodeId);
+    const nodeId = computed(() => $route.params.nodeName);
     const nodeName = computed(() => $route.params.nodeName);
     const curPodsData = computed(() => {
       const { limit, current } = podsDataPagination.value;
@@ -937,18 +913,7 @@ export default defineComponent({
       podsDataPagination.value.limit = limit;
     };
 
-    const updateViewMode = () => {
-      localStorage.setItem('FEATURE_CLUSTER', 'done');
-      localStorage.setItem(BCS_CLUSTER, curCluster.value.cluster_id);
-      sessionStorage.setItem(BCS_CLUSTER, curCluster.value.cluster_id);
-      $store.commit('cluster/forceUpdateCurCluster', curCluster.value.cluster_id ? curCluster.value : {});
-      $store.commit('updateCurClusterId', curCluster.value.cluster_id);
-      $store.commit('updateViewMode', 'dashboard');
-      $store.dispatch('getFeatureFlag');
-    };
-
     const gotoPodDetail = (row) => {
-      updateViewMode();
       $router.push({
         name: 'dashboardWorkloadDetail',
         params: {
@@ -992,7 +957,6 @@ export default defineComponent({
     };
 
     const handleUpdateResource = (row) => {
-      updateViewMode();
       const { name, namespace, editMode } = row || {};
       if (editMode === 'yaml') {
         $router.push({
@@ -1026,21 +990,11 @@ export default defineComponent({
     const handleNamespaceSelected = (val) => {
       namespaceValue.value = val;
     };
-    // const nodeTemplateInfo = ref({
-    //   name: '',
-    //   extraArgs: { kubelet: '' },
-    // });
-    // const fetchNodeTemplateInfo = async () => {
-    //   if (!isTkeCluster.value) return;
 
-    //   const data = await getNodeTemplateInfo({
-    //     $innerIP: nodeId.value,
-    //   });
-    //   nodeTemplateInfo.value = data?.nodeTemplate || {
-    //     name: '',
-    //     extraArgs: { kubelet: '' },
-    //   };
-    // };
+    const handleClearSearchData = () => {
+      namespaceValue.value = '';
+      searchValue.value = '';
+    };
 
     onMounted(async () => {
       // eslint-disable-next-line max-len, no-multi-assign
@@ -1127,6 +1081,7 @@ export default defineComponent({
       handleUpdateResource,
       handleNamespaceSelected,
       formatBytes,
+      handleClearSearchData,
     };
   },
 });

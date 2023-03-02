@@ -51,8 +51,7 @@ import { defineComponent, PropType } from '@vue/composition-api';
 import $i18n from '@/i18n/i18n-setup';
 import StatusIcon from '@/views/dashboard/common/status-icon';
 import LoadingIcon from '@/components/loading-icon.vue';
-import $router from '@/router/index';
-import { BCS_CLUSTER } from '@/common/constant';
+import $router from '@/router';
 
 export default defineComponent({
   name: 'AutoScalerFormItem',
@@ -67,8 +66,7 @@ export default defineComponent({
       default: () => ({}),
     },
   },
-  setup(props, ctx) {
-    const { $route } = ctx.root;
+  setup() {
     // 获取自动扩缩容配置
     const scalerStatusMap = { // 自动扩缩容状态
       NORMAL: $i18n.t('正常'),
@@ -83,7 +81,7 @@ export default defineComponent({
       STOPPED: 'gray',
     };
     const handleGotoHelmRelease = () => {
-      sessionStorage.setItem(BCS_CLUSTER, $route.params.clusterId);
+      // todo 记录集群信息
       $router.push({
         name: 'releaseList',
       });

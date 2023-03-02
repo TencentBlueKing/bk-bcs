@@ -48,3 +48,19 @@ export default defineComponent({
   },
 });
 </script>
+<style lang="postcss" scoped>
+>>> .text-subtitle {
+  color: #979BA5;
+  font-size: 14px;
+  text-align: center;
+  margin-top: 14px;
+}
+>>> .text-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #3A84FF;
+  font-size: 14px;
+  margin-top: 12px;
+}
+</style>

@@ -154,14 +154,10 @@
 
 .biz-cluster-title {
     display: inline-block;
-    height: 60px;
-    line-height: 60px;
+    height: 52px;
+    line-height: 52px;
     font-size: 16px;
-    margin-left: 20px;
-    .cc-info {
-        font-size: 12px;
-        color: #979ba5;
-    }
+    margin-left: 24px;
 }
 
 .biz-guide-box {

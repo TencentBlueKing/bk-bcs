@@ -9,7 +9,8 @@
         handlePageChange,
         handlePageSizeChange,
         handleGetExtData,
-        handleSortChange
+        handleSortChange,
+        nameValue, handleClearSearchData
       }">
       <bk-table
         :data="curPageData"
@@ -61,6 +62,9 @@
               {{ handleGetExtData(row.metadata.uid, 'age') }}</span>
           </template>
         </bk-table-column>
+        <template #empty>
+          <BcsEmptyTableStatus :type="nameValue ? 'search-empty' : 'empty'" @clear="handleClearSearchData" />
+        </template>
       </bk-table>
     </template>
   </BaseLayout>

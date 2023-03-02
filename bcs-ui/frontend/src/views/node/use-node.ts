@@ -47,8 +47,8 @@ export interface ILabelsAndTaintsParams<T> {
 }
 
 export default function useNode() {
-  const projectId = computed(() => store.state.curProjectId);
-  const projectList = computed<any[]>(() => store.state.sideMenu.onlineProjectList);
+  const projectId = computed(() => store.getters.curProjectId);
+  const projectList = computed<any[]>(() => store.state.projectList);
   const curProject = computed(() => projectList.value.find(item => item.project_id === projectId.value));
   const user = computed(() => store.state.user);
   // 获取节点列表

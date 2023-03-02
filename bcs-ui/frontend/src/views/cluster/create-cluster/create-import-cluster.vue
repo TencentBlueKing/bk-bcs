@@ -7,7 +7,7 @@
       class="import-form"
       ref="importFormRef">
       <BkFormItem :label="$t('集群名称')" property="clusterName" error-display-type="normal" required>
-        <bk-input v-model="importClusterInfo.clusterName"></bk-input>
+        <bk-input :maxlength="64" v-model="importClusterInfo.clusterName"></bk-input>
       </BkFormItem>
       <BkFormItem :label="$t('导入方式')">
         <bk-radio-group class="btn-group" v-model="importClusterInfo.importType">
@@ -173,8 +173,6 @@
 </template>
 <script lang="ts">
 import { defineComponent, ref, computed, onMounted, watch } from '@vue/composition-api';
-import useGoHome from '@/common/use-gohome';
-import { useConfig } from '@/common/use-app';
 import useFormLabel from '@/common/use-form-label';
 import BkForm from 'bk-magic-vue/lib/form';
 import BkFormItem from 'bk-magic-vue/lib/form-item';
@@ -188,9 +186,7 @@ export default defineComponent({
     BkFormItem,
   },
   setup(props, ctx) {
-    const { $router, $bkMessage, $i18n, $route, $store } = ctx.root;
-    const { goHome } = useGoHome();
-    const { $INTERNAL } = useConfig();
+    const { $router, $bkMessage, $i18n, $store } = ctx.root;
     const importClusterInfo = ref({
       importType: 'kubeconfig',
       clusterName: '',
@@ -283,7 +279,7 @@ export default defineComponent({
     };
 
     // 区域列表
-    const regionList = ref([]);
+    const regionList = ref<any[]>([]);
     const regionLoading = ref(false);
     const getRegionList = async () => {
       if (!importClusterInfo.value.provider || !importClusterInfo.value.accountID) return;
@@ -298,7 +294,7 @@ export default defineComponent({
     // 云账户信息
     const webAnnotations = ref({ perms: {} });
     const accountsLoading = ref(false);
-    const accountsList = ref([]);
+    const accountsList = ref<any[]>([]);
     const handleGetCloudAccounts = async () => {
       if (!importClusterInfo.value.provider) return;
       accountsLoading.value = true;
@@ -314,7 +310,7 @@ export default defineComponent({
 
     // 集群列表
     const clusterLoading = ref(false);
-    const clusterList = ref([]);
+    const clusterList = ref<any[]>([]);
     const handleGetClusterList = async () => {
       if (!importClusterInfo.value.region || !importClusterInfo.value.provider) return;
 
@@ -404,7 +400,7 @@ export default defineComponent({
           theme: 'success',
           message: $i18n.t('导入成功'),
         });
-        goHome($route);
+        $router.push({ name: 'home' });
       }
     };
     const handleGotoCloudToken = () => {
@@ -433,7 +429,6 @@ export default defineComponent({
       handleFileChange,
       handleImport,
       handleCancel,
-      $INTERNAL,
       regionList,
       getRegionList,
       clusterList,

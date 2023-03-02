@@ -1,8 +1,8 @@
 <template>
-  <div class="user-token bcs-content-wrapper">
+  <div class="user-token">
     <div class="user-token-header">
       <span>
-        <i class="bcs-icon bcs-icon-arrows-left back" @click="goBack"></i>
+        <!-- <i class="bcs-icon bcs-icon-arrows-left back" @click="goBack"></i> -->
         <span class="title">{{$t('API密钥')}}</span>
       </span>
       <a class="bk-text-button help" :href="PROJECT_CONFIG.doc.token" target="_blank">
@@ -252,7 +252,7 @@ export default defineComponent({
     const user = computed(() => $store.state.user);
     // 使用案例
     const projectID = computed(() => {
-      const list = $store.state.sideMenu.onlineProjectList || [];
+      const list = $store.state.projectList || [];
       const { projectCode } = $route.params;
       // eslint-disable-next-line camelcase
       return list.find(item => item.project_code === projectCode)?.project_id;

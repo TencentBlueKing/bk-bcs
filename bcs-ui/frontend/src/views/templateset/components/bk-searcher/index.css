@@ -2,7 +2,6 @@
 
 @import '@/css/variable.css';
 @import '@/css/mixins/clearfix.css';
-@import '@/css/mixins/scroller.css';
 @import '@/css/mixins/ellipsis.css';
 
 .bk-searcher-wrapper {
@@ -17,7 +16,6 @@
         z-index: 1;
 
         .bk-searcher-dropdown-content {
-            @mixin scroller;
             min-width: 100%;
             height: auto;
             background-color: #fff;
@@ -172,7 +170,6 @@
 
         .search-params-wrapper {
             @mixin clearfix;
-            @mixin scroller;
             height: 100%;
             line-height: 1;
 

@@ -37,11 +37,10 @@ import store from '@/store';
 import Authority from '@/directives/authority';
 import config from '@/mixins/config';
 import bkSelector from '@/components/selector';
-import bkDataSearcher from '@/components/data-searcher';
 import bkbcsInput from '@/components/bk-input';
 import bkCombox from '@/components/bk-input/combox';
-import bkGuide from '@/components/guide';
 import k8sIngress from '@/views/ingress/k8s-ingress.vue';
+import BcsEmptyTableStatus from '@/components/empty-table-status.vue';
 import { chainable } from '@/common/util';
 
 Vue.config.devtools = process.env.NODE_ENV === 'development';
@@ -58,9 +57,8 @@ Vue.mixin(config);
 Vue.component('BkbcsInput', bkbcsInput);
 Vue.component('BkCombox', bkCombox);
 Vue.component('BkSelector', bkSelector);
-Vue.component('BkGuide', bkGuide);
-Vue.component('BkDataSearcher', bkDataSearcher);
 Vue.component('K8sIngress', k8sIngress);
+Vue.component('BcsEmptyTableStatus', BcsEmptyTableStatus);
 
 window.bus = bus;
 window.mainComponent = new Vue({

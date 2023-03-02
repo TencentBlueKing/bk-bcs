@@ -3,7 +3,7 @@
     <template
       #default="{ curPageData, pageConf, statusMap, updateStrategyMap, handlePageChange, handlePageSizeChange,
                   handleGetExtData, gotoDetail, handleSortChange,handleUpdateResource,handleDeleteResource,
-                  handleEnlargeCapacity }">
+                  handleEnlargeCapacity,nameValue, handleClearSearchData }">
       <bk-table
         :data="curPageData"
         :pagination="pageConf"
@@ -76,6 +76,9 @@
               @click="handleDeleteResource(row)">{{ $t('删除') }}</bk-button>
           </template>
         </bk-table-column>
+        <template #empty>
+          <BcsEmptyTableStatus :type="nameValue ? 'search-empty' : 'empty'" @clear="handleClearSearchData" />
+        </template>
       </bk-table>
     </template>
   </BaseLayout>

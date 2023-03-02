@@ -601,30 +601,10 @@
             left: 0;
             bottom: 0;
             overflow: hidden;
-            &::-webkit-scrollbar {
-                width: 9px;
-                height: 9px;
-                background-color: white;
-            }
-            ::-webkit-scrollbar-thumb {
-                height: 8px;
-                border-radius: 20px;
-                background-color: #a5a5a5;
-            }
         }
         .log-content {
             overflow-y: auto;
             height: 100%;
-            &::-webkit-scrollbar {
-                width: 9px;
-                height: 9px;
-                background-color: white;
-            }
-            ::-webkit-scrollbar-thumb {
-                height: 8px;
-                border-radius: 20px;
-                background-color: #a5a5a5;
-            }
         }
         .line {
             padding: 0 15px;

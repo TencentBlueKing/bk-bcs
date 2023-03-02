@@ -17,11 +17,9 @@
   </bcs-select>
 </template>
 <script lang="ts">
-import { defineComponent, onMounted, watch, toRefs } from '@vue/composition-api';
-import useDefaultClusterId from '@/views/node/use-default-clusterId';
+import { defineComponent, watch, toRefs } from '@vue/composition-api';
 import { useSelectItemsNamespace } from '@/views/dashboard/namespace/use-namespace';
-import { CUR_SELECT_NAMESPACE } from '@/common/constant';
-
+import $store from '@/store';
 
 export default defineComponent({
   name: 'NamespaceSelect',
@@ -54,32 +52,32 @@ export default defineComponent({
   },
   setup(props, ctx) {
     const { clusterId, value } = toRefs(props);
-    const { defaultClusterId } = useDefaultClusterId();
     const { namespaceLoading, namespaceList, getNamespaceData } = useSelectItemsNamespace();
 
     watch(clusterId,  () => {
-      getNamespaceData({
-        clusterId: clusterId.value || defaultClusterId.value,
-      });
-    });
-
-    watch(namespaceList, () => {
-      const exit = namespaceList.value.find(item => item.name === value.value);
-      if (!exit) {
-        ctx.emit('change', '');
-      }
+      handleGetNsData();
     });
 
     const handleNamespaceChange = (name) => {
+      if (value.value === name) return;
+
+      $store.commit('updateCurNamespace', name);
       ctx.emit('change', name);
-      sessionStorage.setItem(CUR_SELECT_NAMESPACE, name);
     };
 
-    onMounted(() => {
-      getNamespaceData({
-        clusterId: clusterId.value || defaultClusterId.value,
+    const handleGetNsData = async () => {
+      if (!clusterId.value) return;
+      await getNamespaceData({
+        clusterId: clusterId.value,
       });
-    });
+      if (!namespaceList.value.find(item => item.name === value.value)) {
+        handleNamespaceChange('');
+      } else {
+        $store.commit('updateCurNamespace', value.value);
+      }
+    };
+
+    handleGetNsData();
 
     return {
       namespaceLoading,

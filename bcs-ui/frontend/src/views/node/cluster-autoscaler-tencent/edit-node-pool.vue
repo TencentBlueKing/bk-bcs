@@ -45,7 +45,7 @@ import $i18n from '@/i18n/i18n-setup';
 import NodePoolInfo from './node-pool-info.vue';
 import NodeConfig from './node-config.vue';
 import $store from '@/store/index';
-import $router from '@/router/index';
+import $router from '@/router';
 import { mergeDeep } from '@/common/util';
 
 export default defineComponent({

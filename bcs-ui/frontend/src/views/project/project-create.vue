@@ -12,11 +12,17 @@
     @confirm="handleConfirm">
     <bk-form :label-width="labelWidth" :model="formData" :rules="rules" ref="bkFormRef">
       <bk-form-item :label="$t('项目名称')" property="name" error-display-type="normal" required>
-        <bk-input class="create-input" :placeholder="$t('请输入1-32字符的项目名称')" v-model="formData.name"></bk-input>
+        <bk-input
+          :maxlength="64"
+          class="create-input"
+          :placeholder="$t('请输入2-64字符的项目名称')"
+          v-model="formData.name">
+        </bk-input>
       </bk-form-item>
       <bk-form-item :label="$t('项目英文名')" property="projectCode" error-display-type="normal" required>
         <bk-input
           class="create-input"
+          :maxlength="32"
           :placeholder="$t('请输入2-32字符的小写字母、数字、中划线，以小写字母开头')"
           :disabled="isEdit"
           v-model="formData.projectCode">
@@ -76,10 +82,10 @@ export default defineComponent({
           trigger: 'blur',
         },
         {
-          message: $i18n.t('请输入1-32字符的项目名称'),
+          message: $i18n.t('请输入2-64字符的项目名称'),
           trigger: 'blur',
           validator(value) {
-            return /^[\w\W]{1,32}$/g.test(value);
+            return /^[\w\W]{2,64}$/g.test(value);
           },
         },
       ],

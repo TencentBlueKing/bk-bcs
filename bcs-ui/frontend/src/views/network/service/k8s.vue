@@ -2,182 +2,124 @@
 <!-- eslint-disable max-len -->
 <template>
   <div class="biz-content">
-    <div class="biz-top-bar">
-      <div class="biz-service-title">
-        Service
-        <span class="biz-tip ml10">{{$t('请通过模板集或Helm创建Service')}}</span>
-      </div>
-      <bk-guide></bk-guide>
-    </div>
-    <div class="biz-content-wrapper" style="padding: 0;" v-bkloading="{ isLoading: isInitLoading, opacity: 0.1 }">
+    <Header hide-back title="Service" :desc="$t('请通过模板集或Helm创建Service')" />
+    <div class="biz-content-wrapper" style="padding: 0;" v-bkloading="{ isLoading: isInitLoading }">
 
-      <template v-if="!isInitLoading">
-        <div class="biz-panel-header">
-          <div class="left">
-            <bk-button @click.stop.prevent="removeServices" v-if="curPageData.length">
-              <span>{{$t('批量删除')}}</span>
-            </bk-button>
-            <bk-button style="opacity: 0">
-              <span>.</span>
-            </bk-button>
-          </div>
-          <div class="right">
-            <bk-data-searcher
-              :placeholder="$t('输入关键字，按Enter搜索')"
-              :scope-list="searchScopeList"
-              :search-key.sync="searchKeyword"
-              :search-scope.sync="searchScope"
-              :cluster-fixed="!!curClusterId"
-              @search="getServiceList"
-              @refresh="refresh">
-            </bk-data-searcher>
-          </div>
+      <div class="biz-panel-header">
+        <div class="left">
+          <bk-button @click.stop.prevent="removeServices" v-if="curPageData.length">
+            <span>{{$t('批量删除')}}</span>
+          </bk-button>
+          <bk-button style="opacity: 0">
+            <span>.</span>
+          </bk-button>
         </div>
+        <div class="right">
+          <ClusterSearch
+            :placeholder="$t('输入关键字，按Enter搜索')"
+            :search.sync="searchKeyword"
+            :cluster-id.sync="searchScope"
+            @search-change="getServiceList"
+            @refresh="refresh" />
+        </div>
+      </div>
 
-        <div class="biz-service">
-          <div class="biz-table-wrapper" style="border: none;">
-            <bk-table
-              :size="'medium'"
-              :data="curPageData"
-              :pagination="pageConf"
-              v-bkloading="{ isLoading: isPageLoading && !isInitLoading }"
-              @page-limit-change="handlePageLimitChange"
-              @page-change="handlePageChange"
-              @select="handlePageSelect"
-              @select-all="handlePageSelectAll">
-              <bk-table-column type="selection" width="60" :selectable="rowSelectable"></bk-table-column>
-              <bk-table-column :label="$t('名称')" :show-overflow-tooltip="true" min-width="200">
-                <template slot-scope="props">
+      <div class="biz-service">
+        <div class="biz-table-wrapper" style="border: none;">
+          <bk-table
+            :size="'medium'"
+            :data="curPageData"
+            :pagination="pageConf"
+            v-bkloading="{ isLoading: isPageLoading && !isInitLoading }"
+            @page-limit-change="handlePageLimitChange"
+            @page-change="handlePageChange"
+            @select="handlePageSelect"
+            @select-all="handlePageSelectAll">
+            <bk-table-column type="selection" width="60" :selectable="rowSelectable"></bk-table-column>
+            <bk-table-column :label="$t('名称')" :show-overflow-tooltip="true" min-width="200">
+              <template slot-scope="props">
+                <a
+                  href="javascript: void(0)"
+                  class="bk-text-button"
+                  v-authority="{
+                    clickable: webAnnotations.perms[props.row.iam_ns_id]
+                      && webAnnotations.perms[props.row.iam_ns_id].namespace_scoped_view,
+                    actionId: 'namespace_scoped_view',
+                    resourceName: props.row.namespace,
+                    disablePerms: true,
+                    permCtx: {
+                      project_id: projectId,
+                      cluster_id: props.row.cluster_id,
+                      name: props.row.namespace
+                    }
+                  }"
+                  @click.stop.prevent="showServiceDetail(props.row)"
+                >{{props.row.resourceName ? props.row.resourceName : '--'}}</a>
+              </template>
+            </bk-table-column>
+            <bk-table-column :label="$t('所属集群/命名空间')" min-width="200">
+              <template slot-scope="props">
+                <div class="lh20">
+                  <span :class="['cluster-namespace-source', { en: isEn }]">{{$t('所属集群: ')}}</span>
+                  <bcs-popover :content="props.row.clusterId || '--'" placement="top">
+                    <div class="cluster-name">{{curCluster ? curCluster.clusterName : '--'}}</div>
+                  </bcs-popover>
+                </div>
+                <div class="lh20">
+                  <span :class="['cluster-namespace-source', { en: isEn }]">{{$t('命名空间: ')}}</span>
+                  {{props.row.namespace ? props.row.namespace : '--'}}
+                </div>
+              </template>
+            </bk-table-column>
+            <bk-table-column :label="$t('类型')" min-width="150">
+              <template slot-scope="props">
+                {{props.row.data.spec.type}}
+              </template>
+            </bk-table-column>
+            <bk-table-column :label="$t('集群内访问')" min-width="200" :show-overflow-tooltip="false">
+              <template slot-scope="props">
+                <bcs-popover>
+                  <template v-for="(internal, internalIndex) in props.row.accessInternal">
+                    <div :key="internalIndex" v-if="internalIndex < 2">
+                      {{internal}}
+                    </div>
+                  </template>
+                  <div v-if="props.row.accessExternal.length > 2">
+                    ...
+                  </div>
+                  <template slot="content">
+                    <div v-for="(internal, internalIndex) in props.row.accessInternal" :key="internalIndex">
+                      {{internal}}
+                    </div>
+                  </template>
+                </bcs-popover>
+              </template>
+            </bk-table-column>
+            <bk-table-column :label="$t('集群外访问')" min-width="150" :show-overflow-tooltip="false">
+              <template slot-scope="props">
+                <bcs-popover>
+                  <template v-for="(external, externalIndex) in props.row.accessExternal">
+                    <div :key="externalIndex" v-if="externalIndex < 2">
+                      {{external}}
+                    </div>
+                  </template>
+                  <div v-if="props.row.accessExternal.length > 2">
+                    ...
+                  </div>
+                  <template slot="content">
+                    <div v-for="(external, externalIndex) in props.row.accessExternal" :key="externalIndex">
+                      {{external}}
+                    </div>
+                  </template>
+                </bcs-popover>
+              </template>
+            </bk-table-column>
+            <bk-table-column :label="$t('操作')" width="240">
+              <template slot-scope="props">
+                <template v-if="props.row.can_update">
                   <a
-                    href="javascript: void(0)"
+                    href="javascript:void(0);"
                     class="bk-text-button"
-                    v-authority="{
-                      clickable: webAnnotations.perms[props.row.iam_ns_id]
-                        && webAnnotations.perms[props.row.iam_ns_id].namespace_scoped_view,
-                      actionId: 'namespace_scoped_view',
-                      resourceName: props.row.namespace,
-                      disablePerms: true,
-                      permCtx: {
-                        project_id: projectId,
-                        cluster_id: props.row.cluster_id,
-                        name: props.row.namespace
-                      }
-                    }"
-                    @click.stop.prevent="showServiceDetail(props.row)"
-                  >{{props.row.resourceName ? props.row.resourceName : '--'}}</a>
-                </template>
-              </bk-table-column>
-              <bk-table-column :label="$t('所属集群/命名空间')" min-width="200">
-                <template slot-scope="props">
-                  <div class="lh20">
-                    <span :class="['cluster-namespace-source', { en: isEn }]">{{$t('所属集群: ')}}</span>
-                    <bcs-popover :content="props.row.clusterId || '--'" placement="top">
-                      <div class="cluster-name">{{curCluster ? curCluster.clusterName : '--'}}</div>
-                    </bcs-popover>
-                  </div>
-                  <div class="lh20">
-                    <span :class="['cluster-namespace-source', { en: isEn }]">{{$t('命名空间: ')}}</span>
-                    {{props.row.namespace ? props.row.namespace : '--'}}
-                  </div>
-                </template>
-              </bk-table-column>
-              <bk-table-column :label="$t('类型')" min-width="150">
-                <template slot-scope="props">
-                  {{props.row.data.spec.type}}
-                </template>
-              </bk-table-column>
-              <bk-table-column :label="$t('集群内访问')" min-width="200" :show-overflow-tooltip="false">
-                <template slot-scope="props">
-                  <bcs-popover>
-                    <template v-for="(internal, internalIndex) in props.row.accessInternal">
-                      <div :key="internalIndex" v-if="internalIndex < 2">
-                        {{internal}}
-                      </div>
-                    </template>
-                    <div v-if="props.row.accessExternal.length > 2">
-                      ...
-                    </div>
-                    <template slot="content">
-                      <div v-for="(internal, internalIndex) in props.row.accessInternal" :key="internalIndex">
-                        {{internal}}
-                      </div>
-                    </template>
-                  </bcs-popover>
-                </template>
-              </bk-table-column>
-              <bk-table-column :label="$t('集群外访问')" min-width="150" :show-overflow-tooltip="false">
-                <template slot-scope="props">
-                  <bcs-popover>
-                    <template v-for="(external, externalIndex) in props.row.accessExternal">
-                      <div :key="externalIndex" v-if="externalIndex < 2">
-                        {{external}}
-                      </div>
-                    </template>
-                    <div v-if="props.row.accessExternal.length > 2">
-                      ...
-                    </div>
-                    <template slot="content">
-                      <div v-for="(external, externalIndex) in props.row.accessExternal" :key="externalIndex">
-                        {{external}}
-                      </div>
-                    </template>
-                  </bcs-popover>
-                </template>
-              </bk-table-column>
-              <bk-table-column :label="$t('操作')" width="240">
-                <template slot-scope="props">
-                  <template v-if="props.row.can_update">
-                    <a
-                      href="javascript:void(0);"
-                      class="bk-text-button"
-                      v-authority="{
-                        clickable: webAnnotations.perms[props.row.iam_ns_id]
-                          && webAnnotations.perms[props.row.iam_ns_id].namespace_scoped_update,
-                        actionId: 'namespace_scoped_update',
-                        resourceName: props.row.namespace,
-                        disablePerms: true,
-                        permCtx: {
-                          project_id: projectId,
-                          cluster_id: props.row.cluster_id,
-                          name: props.row.namespace
-                        }
-                      }"
-                      @click="showUpdateServicePanel(props.row)"
-                    >{{$t('更新')}}</a>
-                  </template>
-                  <template v-else>
-                    <bcs-popover :content="props.row.can_update_msg" placement="left">
-                      <a href="javascript:void(0);" class="bk-text-button is-disabled">{{$t('更新')}}</a>
-                    </bcs-popover>
-                  </template>
-                  <template v-if="props.row.can_delete">
-                    <a
-                      href="javascript:void(0);"
-                      class="bk-text-button ml15"
-                      v-authority="{
-                        clickable: webAnnotations.perms[props.row.iam_ns_id]
-                          && webAnnotations.perms[props.row.iam_ns_id].namespace_scoped_delete,
-                        actionId: 'namespace_scoped_delete',
-                        resourceName: props.row.namespace,
-                        disablePerms: true,
-                        permCtx: {
-                          project_id: projectId,
-                          cluster_id: props.row.cluster_id,
-                          name: props.row.namespace
-                        }
-                      }"
-                      @click="removeService(props.row)"
-                    >{{$t('删除')}}</a>
-                  </template>
-                  <template v-else>
-                    <bcs-popover :content="props.row.can_delete_msg" placement="left" style="margin-left: 15px;">
-                      <a href="javascript:void(0);" class="bk-text-button is-disabled">{{$t('删除')}}</a>
-                    </bcs-popover>
-                  </template>
-                  <bcs-button
-                    text class="ml15 cl5-router"
-                    :disabled="props.row.access_info.external.CL5"
-                    v-if="$INTERNAL"
                     v-authority="{
                       clickable: webAnnotations.perms[props.row.iam_ns_id]
                         && webAnnotations.perms[props.row.iam_ns_id].namespace_scoped_update,
@@ -190,15 +132,62 @@
                         name: props.row.namespace
                       }
                     }"
-                    @click="showCreateCL5(props.row)">
-                    {{$t('CL5路由')}}
-                  </bcs-button>
+                    @click="showUpdateServicePanel(props.row)"
+                  >{{$t('更新')}}</a>
                 </template>
-              </bk-table-column>
-            </bk-table>
-          </div>
+                <template v-else>
+                  <bcs-popover :content="props.row.can_update_msg" placement="left">
+                    <a href="javascript:void(0);" class="bk-text-button is-disabled">{{$t('更新')}}</a>
+                  </bcs-popover>
+                </template>
+                <template v-if="props.row.can_delete">
+                  <a
+                    href="javascript:void(0);"
+                    class="bk-text-button ml15"
+                    v-authority="{
+                      clickable: webAnnotations.perms[props.row.iam_ns_id]
+                        && webAnnotations.perms[props.row.iam_ns_id].namespace_scoped_delete,
+                      actionId: 'namespace_scoped_delete',
+                      resourceName: props.row.namespace,
+                      disablePerms: true,
+                      permCtx: {
+                        project_id: projectId,
+                        cluster_id: props.row.cluster_id,
+                        name: props.row.namespace
+                      }
+                    }"
+                    @click="removeService(props.row)"
+                  >{{$t('删除')}}</a>
+                </template>
+                <template v-else>
+                  <bcs-popover :content="props.row.can_delete_msg" placement="left" style="margin-left: 15px;">
+                    <a href="javascript:void(0);" class="bk-text-button is-disabled">{{$t('删除')}}</a>
+                  </bcs-popover>
+                </template>
+                <bcs-button
+                  text class="ml15 cl5-router"
+                  :disabled="props.row.access_info.external.CL5"
+                  v-if="$INTERNAL"
+                  v-authority="{
+                    clickable: webAnnotations.perms[props.row.iam_ns_id]
+                      && webAnnotations.perms[props.row.iam_ns_id].namespace_scoped_update,
+                    actionId: 'namespace_scoped_update',
+                    resourceName: props.row.namespace,
+                    disablePerms: true,
+                    permCtx: {
+                      project_id: projectId,
+                      cluster_id: props.row.cluster_id,
+                      name: props.row.namespace
+                    }
+                  }"
+                  @click="showCreateCL5(props.row)">
+                  {{$t('CL5路由')}}
+                </bcs-button>
+              </template>
+            </bk-table-column>
+          </bk-table>
         </div>
-      </template>
+      </div>
 
       <bk-sideslider
         v-if="curServiceDetail"
@@ -617,8 +606,11 @@
 import mixin from './mixin';
 import { catchErrorHandler, formatDate } from '@/common/util';
 import useFormLabel from '@/common/use-form-label';
+import Header from '@/components/layout/Header.vue';
+import ClusterSearch from '@/components/cluster-selector/cluster-search.vue';
 
 export default {
+  components: { Header, ClusterSearch },
   mixins: [mixin],
   data() {
     return {
@@ -766,7 +758,7 @@ export default {
       return this.$store.state.cluster.isClusterDataReady;
     },
     curClusterId() {
-      return this.$store.state.curClusterId;
+      return this.$store.getters.curClusterId;
     },
     userInfo() {
       return this.$store.state.user;
@@ -777,29 +769,9 @@ export default {
     },
   },
   watch: {
-    isClusterDataReady: {
-      immediate: true,
-      handler(val) {
-        if (val) {
-          setTimeout(() => {
-            if (this.searchScopeList.length) {
-              const clusterIds = this.searchScopeList.map(item => item.id);
-              // 使用当前缓存
-              if (sessionStorage['bcs-cluster'] && clusterIds.includes(sessionStorage['bcs-cluster'])) {
-                this.searchScope = sessionStorage['bcs-cluster'];
-              } else {
-                this.searchScope = this.searchScopeList[0].id;
-              }
-            }
-            this.getServiceList();
-          }, 1000);
-        }
-      },
+    searchScope() {
+      this.getServiceList();
     },
-    // curClusterId () {
-    //     this.searchScope = this.curClusterId
-    //     this.getServiceList()
-    // }
   },
   created() {
     this.initPageConf();

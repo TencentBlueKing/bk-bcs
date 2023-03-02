@@ -3,7 +3,10 @@
     <BcsContentHeader
       :title="title"
       :desc="desc"
-      :hide-back="hideBack">
+      :hide-back="hideBack"
+      :tabs="tabs"
+      :active="activeTab"
+      @tab-change="handleTabChange">
       <template #right>
         <slot name="header-right"></slot>
       </template>
@@ -15,7 +18,7 @@
 </template>
 <script lang="ts">
 import BcsContentHeader from '@/components/layout/Header.vue';
-import { defineComponent, ref } from '@vue/composition-api';
+import { defineComponent, ref, PropType } from '@vue/composition-api';
 export default defineComponent({
   name: 'LayoutContent',
   components: {
@@ -34,15 +37,28 @@ export default defineComponent({
       type: Boolean,
       default: false,
     },
+    tabs: {
+      type: Array as PropType<{name: string;displayName: string}[]>,
+      default: () => ([]),
+    },
+    activeTab: {
+      type: String,
+      default: '',
+    },
   },
-  setup() {
+  emits: ['tab-change'],
+  setup(props, ctx) {
     const contentRef = ref<any>(null);
     const handleScollTop = () => {
       contentRef.value.scrollTop = 0;
     };
+    const handleTabChange = (item) => {
+      ctx.emit('tab-change', item);
+    };
     return {
       contentRef,
       handleScollTop,
+      handleTabChange,
     };
   },
 });

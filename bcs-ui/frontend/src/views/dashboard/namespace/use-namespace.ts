@@ -1,6 +1,5 @@
-import { ref } from '@vue/composition-api';
-import { CUR_SELECT_NAMESPACE } from '@/common/constant';
-
+import { ref, watch } from '@vue/composition-api';
+import $store from '@/store';
 import {
   getNamespaceList,
   deleteNamespace,
@@ -112,12 +111,16 @@ export function useSelectItemsNamespace() {
     namespaceList.value = data || [];
     // 初始化默认选中命名空间
     const defaultSelectNamespace = namespaceList.value
-      .find(data => data.name === localStorage.getItem(`${clusterId}-${CUR_SELECT_NAMESPACE}`));
+      .find(data => data.name === $store.state.curNamespace);
     namespaceValue.value = defaultSelectNamespace?.name || namespaceList.value[0]?.name;
-    localStorage.setItem(`${clusterId}-${CUR_SELECT_NAMESPACE}`, namespaceValue.value);
+
     namespaceLoading.value = false;
     return data;
   };
+
+  watch(namespaceValue, () => {
+    $store.commit('updateCurNamespace', namespaceValue.value);
+  });
 
   return {
     namespaceLoading,

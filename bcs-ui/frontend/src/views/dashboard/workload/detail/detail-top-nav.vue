@@ -10,14 +10,13 @@
   </div>
 </template>
 <script lang="ts">
-import { defineComponent, toRefs, computed } from '@vue/composition-api';
-import { BCS_CLUSTER } from '@/common/constant';
+import { defineComponent, PropType, toRefs } from '@vue/composition-api';
 
 export default defineComponent({
   name: 'DetailTopNav',
   props: {
     titles: {
-      type: Array,
+      type: Array as PropType<any[]>,
       default: () => [],
     },
     from: {
@@ -38,38 +37,12 @@ export default defineComponent({
     },
   },
   setup(props, ctx) {
-    const { $router, $store } = ctx.root;
-    const { titles, clusterId, from, nodeId, nodeName } = toRefs(props);
-
-    const clusterList = computed(() => $store.state.cluster.clusterList || []);
-    const curCluster = computed(() => clusterList.value.find(item => item.clusterID === clusterId.value));
+    const { titles } = toRefs(props);
 
     const handleBack = () => {
-      if (from.value === 'nodePods' && titles.value.length === 2) {
-        updateViewMode();
-        $router.push({
-          name: 'clusterNodeOverview',
-          params: {
-            nodeId: nodeId.value,
-            nodeName: nodeName.value,
-            clusterId: clusterId.value,
-          },
-        });
-        return false;
-      }
       const index = titles.value.length - 2;
       if (!titles.value[index]) return;
       routeHop(titles.value[index], index);
-    };
-
-    const updateViewMode = () => {
-      localStorage.setItem('FEATURE_CLUSTER', 'done');
-      localStorage.setItem(BCS_CLUSTER, curCluster.value.cluster_id);
-      sessionStorage.setItem(BCS_CLUSTER, curCluster.value.cluster_id);
-      $store.commit('cluster/forceUpdateCurCluster', curCluster.value.cluster_id ? curCluster.value : {});
-      $store.commit('updateCurClusterId', curCluster.value.cluster_id);
-      $store.commit('updateViewMode', 'cluster');
-      $store.dispatch('getFeatureFlag');
     };
 
     const routeHop = (item, index) => {
@@ -96,7 +69,7 @@ export default defineComponent({
 }
 .header-router {
     display: flex;
-    height: 60px;
+    height: 52px;
     align-items: center;
     font-size: 16px;
     padding-left: 12px;

@@ -5,7 +5,6 @@
         <i class="bcs-icon bcs-icon-arrows-left back" @click="goNodeOverview"></i>
         <span @click="refreshCurRouter">{{containerInfo.container_name || '--'}}</span>
       </div>
-      <bk-guide></bk-guide>
     </div>
     <div class="biz-content-wrapper biz-app-instance">
       <div class="biz-app-instance-wrapper">
@@ -413,10 +412,8 @@ import 'echarts/lib/component/tooltip';
 import 'echarts/lib/component/legend';
 import moment from 'moment';
 import { Decimal } from 'decimal.js';
-
 import { containerDetailChart } from '@/common/chart-option';
 import { catchErrorHandler, formatBytes } from '@/common/util';
-
 import { createChartOption } from '@/views/templateset/app/container-chart-opts';
 
 export default {
@@ -988,7 +985,7 @@ export default {
           projectId: this.projectId,
           projectCode: this.projectCode,
           clusterId: this.clusterId,
-          nodeId: this.nodeId,
+          nodeName: this.nodeId,
         },
       });
     },

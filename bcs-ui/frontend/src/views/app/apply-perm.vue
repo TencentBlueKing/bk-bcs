@@ -74,15 +74,20 @@ export default {
       this.applyUrl = '';
       this.actionList = [{}];
     },
-    show(data = {}) {
+    async show(callbackData = {}) {
+      this.dialogConf.isShow = true;
+      let data = {};
+      if (typeof callbackData === 'function') {
+        this.isLoading = true;
+        data = await callbackData();
+        this.isLoading = false;
+      } else {
+        data = callbackData;
+      }
       const { apply_url, action_list = [] } = data?.perms;
 
       this.applyUrl = apply_url;
       this.actionList = action_list;
-
-      this.$nextTick(() => {
-        this.dialogConf.isShow = true;
-      });
     },
     goApplyUrl() {
       window.open(this.applyUrl);

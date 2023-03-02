@@ -36,6 +36,7 @@
           class="search-input"
           right-icon="bk-icon icon-search"
           :placeholder="$t('搜索名称')"
+          clearable
           v-model="searchValue">
         </bcs-input>
       </template>
@@ -63,14 +64,21 @@
               }
             }"
             @click="showDetail(row)">
-            {{ row.name }}
+            <span class="bcs-ellipsis">{{ row.name }}</span>
           </bk-button>
         </template>
       </bcs-table-column>
       <bcs-table-column :label="$t('状态')">
         <template #default="{ row }">
           <div v-if="!isSharedCluster">
-            {{ row.status || '--' }}
+            <StatusIcon
+              :status-color-map="{
+                'Active': 'green',
+              }"
+              :status="row.status"
+              :pending="['Terminating'].includes(row.status)">
+              {{ row.status || '--' }}
+            </StatusIcon>
           </div>
           <div v-else>
             <span
@@ -243,6 +251,9 @@
           </bk-popover>
         </template>
       </bcs-table-column>
+      <template #empty>
+        <BcsEmptyTableStatus :type="searchValue ? 'search-empty' : 'empty'" @clear="searchValue = ''" />
+      </template>
     </bcs-table>
     <!-- 设置变量 -->
     <bcs-sideslider
@@ -315,23 +326,27 @@
           property="quota"
           error-display-type="normal">
           <div class="flex mr-[20px]">
-            <bcs-input
+            <bk-input
               v-model="setQuotaConf.quota.cpuRequests"
               class="w-[200px]"
               type="number"
               :min="1"
+              int
+              :max="512000"
               :precision="0">
               <div class="group-text" slot="append">{{ $t('核') }}</div>
-            </bcs-input>
+            </bk-input>
             <span class="mx-[10px]">MEN</span>
-            <bcs-input
+            <bk-input
               v-model="setQuotaConf.quota.memoryRequests"
               class="w-[200px]"
               type="number"
               :min="1"
+              int
+              :max="1024000"
               :precision="0">
               <div class="group-text" slot="append">Gi</div>
-            </bcs-input>
+            </bk-input>
           </div>
         </bk-form-item>
       </bk-form>
@@ -374,9 +389,14 @@
           :min-items="0"
           :key-rules="[
             {
-              // eslint-disable-next-line max-len
-              message: $i18n.t('有效的标签键有两个段：可选的前缀和名称，用斜杠（/）分隔。 名称段是必需的，必须小于等于 63 个字符，以字母数字字符（[a-z0-9A-Z]）开头和结尾， 带有破折号（-），下划线（_），点（ .）和之间的字母数字。 前缀是可选的。如果指定，前缀必须是 DNS 子域：由点（.）分隔的一系列 DNS 标签，总共不超过 253 个字符， 后跟斜杠（/）。'),
-              validator: LABEL_KEY_REGEXP
+              message: $i18n.t('仅支持字母，数字，\'-\'，\'_\' 及 \'/\' 且需以字母数字开头和结尾'),
+              validator: KEY_REGEXP
+            }
+          ]"
+          :value-rules="[
+            {
+              message: $i18n.t('需以字母数字开头和结尾，可包含 \'-\'，\'_\'，\'.\' 和字母数字'),
+              validator: VALUE_REGEXP
             }
           ]"
           @cancel="handleLabelEditCancel"
@@ -398,9 +418,14 @@
           :min-items="0"
           :key-rules="[
             {
-              // eslint-disable-next-line max-len
-              message: $i18n.t('有效的标签键有两个段：可选的前缀和名称，用斜杠（/）分隔。 名称段是必需的，必须小于等于 63 个字符，以字母数字字符（[a-z0-9A-Z]）开头和结尾， 带有破折号（-），下划线（_），点（ .）和之间的字母数字。 前缀是可选的。如果指定，前缀必须是 DNS 子域：由点（.）分隔的一系列 DNS 标签，总共不超过 253 个字符， 后跟斜杠（/）。'),
-              validator: LABEL_KEY_REGEXP
+              message: $i18n.t('仅支持字母，数字，\'-\'，\'_\' 及 \'/\' 且需以字母数字开头和结尾'),
+              validator: KEY_REGEXP
+            }
+          ]"
+          :value-rules="[
+            {
+              message: $i18n.t('需以字母数字开头和结尾，可包含 \'-\'，\'_\'，\'.\' 和字母数字'),
+              validator: VALUE_REGEXP
             }
           ]"
           @cancel="handleAnnotationsEditCancel"
@@ -422,10 +447,11 @@ import useSearch from '../common/use-search';
 import { useCluster, useProject } from '@/common/use-app';
 import { useNamespace } from './use-namespace';
 import { timeZoneTransForm } from '@/common/util';
-import { BCS_CLUSTER, LABEL_KEY_REGEXP } from '@/common/constant';
+import { VALUE_REGEXP, KEY_REGEXP } from '@/common/constant';
 import { CreateElement } from 'vue';
 import KeyValue from '@/components/key-value.vue';
 import useInterval from '@/views/dashboard/common/use-interval';
+import StatusIcon from '../common/status-icon';
 
 export default defineComponent({
   name: 'NamespaceList',
@@ -435,6 +461,7 @@ export default defineComponent({
     LayoutRow,
     Detail,
     KeyValue,
+    StatusIcon,
   },
   setup(props, ctx) {
     const { $store, $bkInfo, $i18n, $bkMessage, $router, $route } = ctx.root;
@@ -442,9 +469,7 @@ export default defineComponent({
     const { projectID } = useProject();
     const { isSharedCluster } = useCluster();
 
-    const viewMode = computed(() => $store.state.viewMode);
-
-    const curClusterId = computed(() => $store.state.curClusterId);
+    const curClusterId = computed(() => $store.getters.curClusterId);
 
     const clusterID = ref(curClusterId.value);
 
@@ -509,9 +534,7 @@ export default defineComponent({
       ],
     }, [data.column.label]);
 
-    const clusterList = computed(() => $store.state.cluster.clusterList || []);
     const projectCode = computed(() => $route.params.projectCode);
-    const curCluster = computed(() => clusterList.value.find(item => item.clusterID === clusterID.value));
 
     // 搜索功能
     const { tableDataMatchSearch, searchValue } = useSearch(namespaceData, keys);
@@ -529,7 +552,7 @@ export default defineComponent({
       $bkInfo({
         type: 'warning',
         clsName: 'custom-info-confirm',
-        title: $i18n.t('确认删除当前命名空间'),
+        title: $i18n.t('确认删除 {name}', { name: row.name }),
         subTitle: $i18n.t('删除Namespace将销毁Namespace下的所有资源，销毁后所有数据将被清除且不可恢复，请提前备份好数据。'),
         defaultInfo: true,
         confirmFn: async () => {
@@ -671,21 +694,12 @@ export default defineComponent({
     };
 
     const handleToCreatedPage = () => {
-      if (viewMode.value === 'dashboard') {
-        $router.push({
-          name: 'dashboardNamespaceCreate',
-          query: {
-            kind: 'Namespace',
-          },
-        });
-      } else {
-        $router.push({
-          name: 'namespaceCreate',
-          params: {
-            clusterId: clusterID.value,
-          },
-        });
-      }
+      $router.push({
+        name: 'dashboardNamespaceCreate',
+        query: {
+          kind: 'Namespace',
+        },
+      });
     };
 
     const unitMap = {
@@ -763,20 +777,7 @@ export default defineComponent({
       return typeMap[type];
     };
 
-    const updateViewMode = () => {
-      localStorage.setItem('FEATURE_CLUSTER', 'done');
-      localStorage.setItem(BCS_CLUSTER, curCluster.value.cluster_id);
-      sessionStorage.setItem(BCS_CLUSTER, curCluster.value.cluster_id);
-      $store.commit('cluster/forceUpdateCurCluster', curCluster.value.cluster_id ? curCluster.value : {});
-      $store.commit('updateCurClusterId', curCluster.value.cluster_id);
-      $store.commit('updateViewMode', 'cluster');
-      $store.dispatch('getFeatureFlag');
-    };
-
     const handleGoVar = () => {
-      if (viewMode.value === 'dashboard') {
-        updateViewMode();
-      };
       setVariableConf.value.isShow = false;
       $router.push({
         name: 'var',
@@ -921,7 +922,8 @@ export default defineComponent({
       showSetAnnotations,
       curNamespaceData,
       updateBtnLoading,
-      LABEL_KEY_REGEXP,
+      VALUE_REGEXP,
+      KEY_REGEXP,
       quotaRules,
       setQuotaForm,
       toggleShowQuota,
@@ -968,7 +970,3 @@ export default defineComponent({
     text-align: left;
   }
 </style>
-
-function Boolean(cpuRequests: any) {
-  throw new Error('Function not implemented.');
-}

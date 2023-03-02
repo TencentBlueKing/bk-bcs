@@ -2,13 +2,7 @@
 <!-- eslint-disable max-len -->
 <template>
   <div class="biz-content">
-    <div class="biz-top-bar">
-      <div class="biz-configuration-instantiation-title">
-        <i class="bcs-icon bcs-icon-arrows-left back" @click="goTemplateset(false)"></i>
-        <span @click="refreshCurRouter">{{$t('模板实例化')}}</span>
-      </div>
-      <bk-guide></bk-guide>
-    </div>
+    <Header :title="$t('模板实例化')" />
     <div class="biz-content-wrapper pt0">
       <div class="biz-configuration-instantiation-wrapper">
         <div class="biz-tip mt20 mb15">{{$t('模板实例化操作即平台通过用户配置的模板，生成对应的资源YAML文件，并将它们下发到指定集群的命名空间下。资源创建成功后，可在"应用"和"网络"中查看资源实例详情。')}}</div>
@@ -387,8 +381,8 @@
 import yamljs from 'js-yaml';
 import ace from '@/components/ace-editor';
 import { catchErrorHandler } from '@/common/util';
-import { mapGetters } from 'vuex';
 import { useNamespace } from '@/views/dashboard/namespace/use-namespace';
+import Header from '@/components/layout/Header.vue';
 
 const ARR = [
   'Application',
@@ -419,6 +413,7 @@ const { toString } = Object.prototype;
 export default {
   components: {
     ace,
+    Header,
   },
   data() {
     return {
@@ -530,21 +525,23 @@ export default {
       return this.curTemplate.edit_mode === 'yaml';
     },
     onlineProjectList() {
-      return this.$store.state.sideMenu.onlineProjectList;
+      return this.$store.state.projectList;
     },
     curShowVersionId() {
       return this.$route.params.curShowVersionId;
     },
     curClusterId() {
-      return this.$store.state.curClusterId;
+      return this.$store.getters.curClusterId;
     },
     curProjectId() {
-      return this.$store.state.curProjectId;
+      return this.$store.getters.curProjectId;
     },
     isEn() {
       return this.$store.state.isEn;
     },
-    ...mapGetters('cluster', ['isSharedCluster']),
+    isSharedCluster() {
+      return this.$store.getters.isSharedCluster;
+    },
   },
   created() {
     // router > localStorage > onlineProjectList[0]

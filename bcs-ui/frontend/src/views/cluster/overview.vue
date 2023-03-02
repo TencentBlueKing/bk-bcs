@@ -206,7 +206,7 @@ export default {
       return this.$route.params.clusterId;
     },
     curClusterId() {
-      return this.$store.state.curClusterId;
+      return this.$store.getters.curClusterId;
     },
     curCluster() {
       const data = this.$store.state.cluster.clusterList.find(item => item.cluster_id === this.clusterId) || {};

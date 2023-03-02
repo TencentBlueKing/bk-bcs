@@ -3,9 +3,11 @@
 <script>
 import State from '../k8s-state';
 import mixinBaseList from '../mixins/mixin-base-list';
+import Header from '@/components/layout/Header.vue';
 
 export default {
   name: 'K8SDeployments',
+  components: { Header },
   mixins: [mixinBaseList],
   data() {
     return {

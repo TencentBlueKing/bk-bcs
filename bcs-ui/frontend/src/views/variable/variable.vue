@@ -20,7 +20,7 @@
         <bcs-input
           right-icon="bk-icon icon-search"
           class="ml5 mw320"
-          :placeholder="$t('输入名称搜索')"
+          :placeholder="$t('输入Key搜索')"
           clearable
           v-model="searchKey">
         </bcs-input>
@@ -88,6 +88,9 @@
           </span>
         </template>
       </bcs-table-column>
+      <template #empty>
+        <BcsEmptyTableStatus :type="searchKey ? 'search-empty' : 'empty'" @clear="searchKey = ''" />
+      </template>
     </bcs-table>
     <!-- 新增变量 OR 编辑 -->
     <bcs-dialog
@@ -213,6 +216,7 @@ import BkForm from 'bk-magic-vue/lib/form';
 import CodeEditor from '@/components/monaco-editor/new-editor.vue';
 import exampleData from './variable.json';
 import $store from '@/store';
+import useDebouncedRef from '@/common/use-debounce';
 
 export default defineComponent({
   name: 'VariableManager',
@@ -240,7 +244,7 @@ export default defineComponent({
         name: $i18n.t('命名空间变量'),
       },
     ]);
-    const searchKey = ref('');
+    const searchKey = useDebouncedRef<string>('', 360);
     const scope = ref<Pick<IParams, 'scope'>>('');
     const params = computed<IParams>(() => ({
       limit: pagination.value.limit,
@@ -465,7 +469,7 @@ export default defineComponent({
         mode.value = 'form';
       }
     });
-    const isSharedCluster = computed(() => $store.state.cluster.curCluster?.is_shared);
+    const isSharedCluster = computed(() => $store.state.curCluster?.is_shared);
     async function handleSetVariable(row) {
       showSetSlider.value = true;
       currentRow.value = row;

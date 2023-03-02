@@ -17,7 +17,7 @@ export default {
   },
   computed: {
     onlineProjectList() {
-      return this.$store.state.sideMenu.onlineProjectList;
+      return this.$store.state.projectList;
     },
   },
   mounted() {

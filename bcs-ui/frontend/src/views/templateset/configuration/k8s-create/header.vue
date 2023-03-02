@@ -1,45 +1,43 @@
 <!-- eslint-disable max-len -->
 <template>
-  <div class="biz-top-bar" :style="{ marginBottom: (isNewTemplate) ? '0px' : '55px' }">
-    <i class="biz-back bcs-icon bcs-icon-arrows-left" @click="beforeLeave"></i>
-    <template v-if="exceptionCode">
-      <div class="biz-templateset-title">
-        <span>{{$t('返回模板集')}}</span>
-      </div>
-    </template>
-    <template v-esle>
-      <div class="biz-templateset-title">
-        <span v-show="!isEditName">{{curTemplate.name}}</span>
-        <input
-          type="text"
-          :placeholder="$t('30个以内的字符，Enter保存')"
-          maxlength="30"
-          class="bk-form-input"
-          v-model="editTemplate.name"
-          v-bk-focus v-if="isEditName"
-          @blur="saveTemplate"
-          @keyup.enter="saveTemplate" />
-        <a href="javascript:void(0)" class="bk-text-button bk-default" v-show="!isEditName" @click="editTemplateName">
-          <i class="bcs-icon bcs-icon-edit"></i>
-        </a>
-      </div>
-      <div class="biz-templateset-desc">
-        <span v-show="!isEditDesc">{{curTemplate.desc}}</span>
-        <input
-          type="text"
-          :placeholder="$t('50个以内的字符，Enter保存')"
-          maxlength="50"
-          class="bk-form-input"
-          v-model="editTemplate.desc"
-          v-bk-focus
-          v-if="isEditDesc"
-          @blur="saveTemplate"
-          @keyup.enter="saveTemplate" />
-        <a href="javascript:void(0)" class="bk-text-button bk-default" v-show="!isEditDesc" @click="editTemplateDesc" @keyup.enter="saveTemplate">
-          <i class="bcs-icon bcs-icon-edit"></i>
-        </a>
-      </div>
-      <div class="biz-templateset-action" v-if="!exceptionCode && !isTemplateLoading">
+  <Header :style="{ marginBottom: (isNewTemplate) ? '0px' : '55px' }">
+    <i class="bcs-icon bcs-icon-arrows-left" @click="beforeLeave"></i>
+    <div class="biz-templateset-title">
+      <span>{{$t('返回模板集')}}</span>
+    </div>
+    <div class="biz-templateset-title">
+      <span v-show="!isEditName">{{curTemplate.name}}</span>
+      <input
+        type="text"
+        :placeholder="$t('30个以内的字符，Enter保存')"
+        maxlength="30"
+        class="bk-form-input"
+        v-model="editTemplate.name"
+        v-bk-focus v-if="isEditName"
+        @blur="saveTemplate"
+        @keyup.enter="saveTemplate" />
+      <a href="javascript:void(0)" class="bk-text-button bk-default" v-show="!isEditName" @click="editTemplateName">
+        <i class="bcs-icon bcs-icon-edit"></i>
+      </a>
+    </div>
+    <div class="biz-templateset-desc">
+      <span v-show="!isEditDesc">{{curTemplate.desc}}</span>
+      <input
+        type="text"
+        :placeholder="$t('50个以内的字符，Enter保存')"
+        maxlength="50"
+        class="bk-form-input"
+        v-model="editTemplate.desc"
+        v-bk-focus
+        v-if="isEditDesc"
+        @blur="saveTemplate"
+        @keyup.enter="saveTemplate" />
+      <a href="javascript:void(0)" class="bk-text-button bk-default" v-show="!isEditDesc" @click="editTemplateDesc" @keyup.enter="saveTemplate">
+        <i class="bcs-icon bcs-icon-edit"></i>
+      </a>
+    </div>
+    <template #right>
+      <div v-if="!exceptionCode && !isTemplateLoading">
         <!-- 如果不是新增状态的模板集并且有权限编辑才可查看加锁状态 -->
         <template v-if="String(curTemplateId) !== '0'">
           <template v-if="templateLockStatus.isLocked">
@@ -378,7 +376,7 @@
         </bk-table>
       </div>
     </bk-sideslider>
-  </div>
+  </Header>
 </template>
 
 <script>
@@ -394,9 +392,11 @@ import yamljs from 'js-yaml';
 import base64 from 'base-64';
 import { isObject } from '@/common/util';
 import shlex from 'shlex';
+import Header from '@/components/layout/Header.vue';
 
 export default {
   name: 'HeaderIndex',
+  components: { Header },
   data() {
     return {
       isFromNewTemplate: false,
@@ -4103,4 +4103,24 @@ export default {
 
 <style scoped lang="postcss">
     @import './header.css';
+    .biz-templateset-title {
+        display: inline-block;
+        height: 52px;
+        line-height: 52px;
+        font-size: 16px;
+        vertical-align: middle;
+        .bk-form-input {
+            margin-top: -2px;
+            width: 220px;
+        }
+        .bcs-icon {
+            font-size: 12px;
+            visibility: hidden;
+        }
+        &:hover {
+            .bcs-icon {
+                visibility: visible;
+            }
+        }
+    }
 </style>

@@ -1,6 +1,6 @@
 <!-- eslint-disable max-len -->
 <template>
-  <div class="p-[24px] node-config-wrapper">
+  <div class="p-[24px] node-config-wrapper" ref="nodeConfigRef">
     <FormGroup :title="$t('新建节点规格')" :allow-toggle="false" class="mb-[16px]">
       <bk-form :model="nodePoolConfig" :rules="basicFormRules" ref="basicFormRef">
         <bk-form-item class="max-w-[674px]" :label="$t('节点规格名称')" property="name" required>
@@ -285,7 +285,7 @@
         <bk-form-item :label="$t('运行时版本')" :desc="$t('运行时版本使用TKE集群配置，暂不支持修改')">
           <bcs-input disabled v-model="clusterAdvanceSettings.runtimeVersion"></bcs-input>
         </bk-form-item>
-        <div class="footer" v-if="!isEdit">
+        <div class="bcs-fixed-footer" v-if="!isEdit">
           <bcs-button theme="primary" @click="handleNext">{{$t('下一步')}}</bcs-button>
           <bcs-button class="ml10" @click="handleCancel">{{$t('取消')}}</bcs-button>
         </div>
@@ -295,7 +295,7 @@
 </template>
 <script lang="ts">
 import { computed, defineComponent, onMounted, ref, toRefs, watch } from '@vue/composition-api';
-import $router from '@/router/index';
+import $router from '@/router';
 import $i18n from '@/i18n/i18n-setup';
 import $store from '@/store/index';
 import usePage from '@/views/dashboard/common/use-page';
@@ -331,6 +331,7 @@ export default defineComponent({
   },
   setup(props, ctx) {
     const { defaultValues, cluster, isEdit, schema } = toRefs(props);
+    const nodeConfigRef = ref<any>(null);
     const formRef = ref<any>(null);
     const basicFormRef = ref<any>(null);
     // 磁盘类型
@@ -553,8 +554,14 @@ export default defineComponent({
       return nodePoolConfig.value;
     };
     const validate = async () => {
-      const basicFormValidate = await basicFormRef.value?.validate();
-      const result = await formRef.value?.validate();
+      const basicFormValidate = await basicFormRef.value?.validate().catch(() => false);;
+      if (!basicFormValidate && nodeConfigRef.value) {
+        nodeConfigRef.value.scrollTop = 0;
+      }
+      const result = await formRef.value?.validate().catch(() => false);
+      if (!result && nodeConfigRef.value) {
+        nodeConfigRef.value.scrollTop = nodeConfigRef.value.offsetHeight;
+      }
       // eslint-disable-next-line max-len
       const validateDataDiskSize = nodePoolConfig.value.nodeTemplate.dataDisks.every(item => item.diskSize % 10 === 0);
       const mountTargetList = nodePoolConfig.value.nodeTemplate.dataDisks.map(item => item.mountTarget);
@@ -606,6 +613,7 @@ export default defineComponent({
       clusterAdvanceSettings,
       clusterOS,
       versionList,
+      nodeConfigRef,
       formRef,
       basicFormRef,
       diskEnum,
@@ -638,11 +646,12 @@ export default defineComponent({
 </script>
 <style lang="postcss" scoped>
 .node-config-wrapper {
-  max-height: calc(100vh - 174px);
+  max-height: calc(100vh - 164px);
   overflow: auto;
 }
 .node-config {
     font-size: 14px;
+    overflow: auto;
     >>> .group-text {
         line-height: 30px;
         background-color: #fafbfd;
@@ -774,24 +783,6 @@ export default defineComponent({
     .error-tips {
         color: red;
         font-size: 12px;
-    }
-    >>> .footer {
-      position: fixed;
-      bottom: 0px;
-      height: 60px;
-      display: flex;
-      align-items: center;
-      justify-content: start;
-      padding: 0 24px;
-      background-color: #fff;
-      border-top: 1px solid #dcdee5;
-      box-shadow: 0 -2px 4px 0 rgb(0 0 0 / 5%);
-      z-index: 200;
-      right: 0;
-      width: calc(100% - 261px);
-      .btn {
-          width: 88px;
-      }
     }
 }
 </style>

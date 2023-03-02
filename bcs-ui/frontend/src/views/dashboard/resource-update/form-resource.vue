@@ -7,18 +7,9 @@
       width="280"
       trigger="click"
       @confirm="handleSwitchMode">
-      <SwitchButton :title="$t('切换为 YAML 模式')" />
+      <FixedButton position="unset" :title="$t('切换为 YAML 模式')" />
     </bcs-popconfirm>
-
-    <div class="biz-top-bar">
-      <span class="icon-wrapper" @click="handleCancel">
-        <i class="bcs-icon bcs-icon-arrows-left icon-back"></i>
-      </span>
-      <div class="dashboard-top-title">
-        {{ title }}
-      </div>
-      <DashboardTopActions />
-    </div>
+    <Header :title="title" />
     <div class="form-resource-content" ref="editorWrapperRef">
       <BKForm
         v-model="schemaFormData"
@@ -55,10 +46,10 @@
       </div>
     </div>
 
-    <div class="footer">
+    <div class="bcs-fixed-footer">
       <template v-if="isEdit">
         <bk-button
-          class="btn"
+          class="min-w-[88px]"
           theme="primary"
           v-if="!showDiff"
           @click="handleShowDiff">
@@ -66,7 +57,7 @@
         </bk-button>
         <span v-bk-tooltips.top="{ disabled: !disableUpdate, content: $t('内容未变更') }" v-else>
           <bk-button
-            class="btn"
+            class="min-w-[88px]"
             theme="primary"
             :loading="loading"
             :disabled="disableUpdate"
@@ -74,19 +65,21 @@
             {{$t('更新')}}
           </bk-button>
         </span>
-        <bk-button class="btn ml15" @click="handleToggleDiff">{{showDiff ? $t('继续编辑') : $t('显示差异')}}</bk-button>
-        <bk-button class="btn ml15" @click="handleCancel">{{$t('取消')}}</bk-button>
+        <bk-button
+          class="min-w-[88px] ml15"
+          @click="handleToggleDiff">{{showDiff ? $t('继续编辑') : $t('显示差异')}}</bk-button>
+        <bk-button class="min-w-[88px] ml15" @click="handleCancel">{{$t('取消')}}</bk-button>
       </template>
       <template v-else>
         <bk-button
-          class="btn"
+          class="min-w-[88px]"
           theme="primary"
           :loading="loading"
           @click="handleSaveFormData">
           {{$t('创建')}}
         </bk-button>
-        <bk-button class="btn ml15" @click="handlePreview">{{$t('预览')}}</bk-button>
-        <bk-button class="btn ml15" @click="handleCancel">{{$t('取消')}}</bk-button>
+        <bk-button class="min-w-[88px] ml15" @click="handlePreview">{{$t('预览')}}</bk-button>
+        <bk-button class="min-w-[88px] ml15" @click="handleCancel">{{$t('取消')}}</bk-button>
       </template>
     </div>
 
@@ -120,13 +113,12 @@
 import createForm from '@blueking/bkui-form';
 import '@blueking/bkui-form/dist/bkui-form.css';
 import request from '@/api/request';
-import DashboardTopActions from '../common/dashboard-top-actions';
-import SwitchButton from './switch-mode.vue';
-import { CUR_SELECT_NAMESPACE } from '@/common/constant';
+import FixedButton from './fixed-button.vue';
 import { CR_API_URL } from '@/api/base';
 import CodeEditor from '@/components/monaco-editor/new-editor.vue';
 import fullScreen from '@/directives/full-screen';
 import yamljs from 'js-yaml';
+import Header from '@/components/layout/Header.vue';
 
 const BKForm = createForm({
   namespace: 'bcs',
@@ -138,9 +130,9 @@ const BKForm = createForm({
 export default {
   components: {
     BKForm,
-    DashboardTopActions,
-    SwitchButton,
+    FixedButton,
     CodeEditor,
+    Header,
   },
   directives: {
     'full-screen': fullScreen,
@@ -346,7 +338,7 @@ export default {
         subTitle: this.$t('退出后，你修改的内容将丢失'),
         defaultInfo: true,
         confirmFn: () => {
-          this.$router.push({ name: this.$store.getters.curNavName });
+          this.$router.back();
         },
       });
     },
@@ -429,7 +421,7 @@ export default {
               theme: 'success',
               message: this.$t('更新成功'),
             });
-            this.$router.push({ name: this.$store.getters.curNavName });
+            this.$router.back();
           }
         },
       });
@@ -466,8 +458,8 @@ export default {
           theme: 'success',
           message: this.$t('创建成功'),
         });
-        localStorage.setItem(`${this.clusterId}-${CUR_SELECT_NAMESPACE}`, this.schemaFormData.metadata?.namespace);
-        this.$router.push({ name: this.$store.getters.curNavName });
+        this.$store.commit('updateCurNamespace', this.schemaFormData.metadata?.namespace);
+        this.$router.back();
       }
     },
     // 表单预览
@@ -520,7 +512,7 @@ export default {
     }
     .form-resource-content {
         padding: 20px;
-        max-height: calc(100vh - 172px);
+        max-height: calc(100vh - 162px);
         height: 100%;
         overflow: auto;
     }
@@ -547,23 +539,6 @@ export default {
         }
         .delete {
             color: #e66565;
-        }
-    }
-    .footer {
-        position: fixed;
-        bottom: 0px;
-        height: 60px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background-color: #fff;
-        border-top: 1px solid #dcdee5;
-        box-shadow: 0 -2px 4px 0 rgb(0 0 0 / 5%);
-        z-index: 200;
-        right: 0;
-        width: calc(100% - 261px);
-        .btn {
-            width: 88px;
         }
     }
 }

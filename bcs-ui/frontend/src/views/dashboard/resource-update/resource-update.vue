@@ -8,17 +8,9 @@
       trigger="click"
       v-if="formUpdate"
       @confirm="handleChangeMode">
-      <SwitchButton :title="$t('切换为表单模式')" />
+      <FixedButton position="unset" :title="$t('切换为表单模式')" />
     </bcs-popconfirm>
-    <div class="biz-top-bar">
-      <span class="icon-wrapper" @click="handleCancel">
-        <i class="bcs-icon bcs-icon-arrows-left icon-back"></i>
-      </span>
-      <div class="dashboard-top-title">
-        {{ title }}
-      </div>
-      <DashboardTopActions />
-    </div>
+    <Header :title="title" />
     <div :class="['resource-update', { 'full-screen': fullScreen }]">
       <template v-if="!showDiff">
         <div class="code-editor" ref="editorWrapperRef">
@@ -183,22 +175,21 @@
 /* eslint-disable no-unused-expressions */
 import { defineComponent, computed, toRefs, ref, onMounted, watch, onBeforeUnmount } from '@vue/composition-api';
 import CodeEditor from '@/components/monaco-editor/new-editor.vue';
-import DashboardTopActions from '../common/dashboard-top-actions';
 import { copyText } from '@/common/util';
 import yamljs from 'js-yaml';
 import EditorStatus from './editor-status.vue';
 import BcsMd from '@/components/bcs-md/index.vue';
-import { CUR_SELECT_NAMESPACE } from '@/common/constant';
-import SwitchButton from './switch-mode.vue';
+import FixedButton from './fixed-button.vue';
+import Header from '@/components/layout/Header.vue';
 
 export default defineComponent({
   name: 'ResourceUpdate',
   components: {
     CodeEditor,
-    DashboardTopActions,
     EditorStatus,
     BcsMd,
-    SwitchButton,
+    FixedButton,
+    Header,
   },
   props: {
     // 命名空间（更新的时候需要--crd类型编辑是可能没有，创建的时候为空）
@@ -312,7 +303,7 @@ export default defineComponent({
       }
       return !Object.keys(detail.value).length;
     });
-    const setDetail = (data = {}) => { // 设置代码编辑器初始值
+    const setDetail = (data: any = {}) => { // 设置代码编辑器初始值
       // 特殊处理-> apiVersion、kind、metadata强制排序在前三位
       const newManifest = {
         apiVersion: data.apiVersion,
@@ -514,7 +505,6 @@ export default defineComponent({
         handleResetEditorErr();
       }
     };
-    const clusterId = computed(() => $store.state.curClusterId);
     const handleCreateResource = async () => {
       let result = false;
       if (type.value === 'crd') {
@@ -546,8 +536,8 @@ export default defineComponent({
           theme: 'success',
           message: $i18n.t('创建成功'),
         });
-        localStorage.setItem(`${clusterId.value}-${CUR_SELECT_NAMESPACE}`, detail.value.metadata?.namespace);
-        $router.push({ name: $store.getters.curNavName });
+        $store.commit('updateCurNamespace', detail.value.metadata?.namespace);
+        $router.back();
       }
     };
     const handleUpdateResource = () => {
@@ -597,7 +587,7 @@ export default defineComponent({
               theme: 'success',
               message: $i18n.t('更新成功'),
             });
-            $router.push({ name: $store.getters.curNavName });
+            $router.back();
           }
         },
       });
@@ -619,7 +609,7 @@ export default defineComponent({
         subTitle: $i18n.t('退出后，你修改的内容将丢失'),
         defaultInfo: true,
         confirmFn: () => {
-          $router.push({ name: $store.getters.curNavName });
+          $router.back();
         },
       });
     };

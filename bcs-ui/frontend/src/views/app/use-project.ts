@@ -6,9 +6,13 @@ import {
   businessList,
   createProject as handleCreateProject,
 } from '@/api/modules/project';
-import store from '@/store';
+import $store from '@/store';
+import { computed } from '@vue/composition-api';
 
 export default function useProjects() {
+  const projectList = computed<any[]>(() => $store.state.projectList);
+
+  // 获取当前有权限项目
   async function getProjectList() {
     const result = await fetchProjectList().catch(() => ({ results: [], total: 0 }));
     const projectList = result.results.map(project => ({
@@ -19,10 +23,11 @@ export default function useProjects() {
       project_name: project.name,
       project_code: project.projectCode,
     }));
-    store.commit('forceUpdateOnlineProjectList', projectList);
+    $store.commit('updateProjectList', projectList);
     return result.results;
   };
 
+  // 获取所有项目列表
   async function getAllProjectList(params: any = {}) {
     const result = await fetchAllProjectList(params,  { needRes: true })
       .catch(() => ({
@@ -73,6 +78,7 @@ export default function useProjects() {
   }
 
   return {
+    projectList,
     fetchProjectInfo,
     getProjectList,
     getAllProjectList,

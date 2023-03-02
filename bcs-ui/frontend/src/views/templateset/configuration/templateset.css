@@ -1,6 +1,5 @@
 @import '@/css/variable.css';
 @import '@/css/mixins/ellipsis.css';
-@import '@/css/mixins/scroller.css';
 @import '@/css/mixins/clearfix.css';
 
 .biz-inner-table {
@@ -117,10 +116,10 @@
 
 .biz-config-templateset-title {
     display: inline-block;
-    height: 60px;
-    line-height: 60px;
+    height: 52px;
+    line-height: 52px;
     font-size: 16px;
-    margin-left: 20px;
+    margin-left: 24px;
 }
 
 .biz-templateset-table {
@@ -311,7 +310,6 @@
                 overflow: hidden;
 
                 .namespace-inner {
-                    @mixin scroller $borderWeightColor, 0;
                     /*max-height: 178px;
                     overflow: auto;*/
                     padding-top: 10px;

@@ -167,7 +167,7 @@ export default {
       return this.$route.params.projectCode;
     },
     onlineProjectList() {
-      return this.$store.state.sideMenu.onlineProjectList || [];
+      return this.$store.state.projectList || [];
     },
     curPageData() {
       const { pageSize, curPage } = this.pageConf;

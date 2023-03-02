@@ -4,7 +4,7 @@
       <FormGroup :title="$t('基本信息')">
         <bk-form :label-width="labelWidth" :model="basicInfo" :rules="basicDataRules" ref="basicForm">
           <bk-form-item :label="$t('集群名称')" property="clusterName" error-display-type="normal" required>
-            <bk-input v-model="basicInfo.clusterName"></bk-input>
+            <bk-input :maxlength="64" v-model="basicInfo.clusterName"></bk-input>
           </bk-form-item>
           <bk-form-item :label="$t('集群环境')" required>
             <bk-radio-group v-model="basicInfo.environment">
@@ -80,9 +80,13 @@
         </div>
         <p class="error-tips" v-if="ipErrorTips">{{ ipErrorTips }}</p>
       </FormGroup>
-      <div class="footer">
-        <bk-button class="btn" theme="primary" :loading="creating" @click="showConfirmDialog">{{$t('创建')}}</bk-button>
-        <bk-button class="btn ml15" @click="handleCancel">{{$t('取消')}}</bk-button>
+      <div class="bcs-fixed-footer">
+        <bk-button
+          class="min-w-[88px]"
+          theme="primary"
+          :loading="creating"
+          @click="showConfirmDialog">{{$t('创建')}}</bk-button>
+        <bk-button class="min-w-[88px] ml15" @click="handleCancel">{{$t('取消')}}</bk-button>
       </div>
       <IpSelector v-model="showIpSelector" :ip-list="ipList" @confirm="handleChooseServer"></IpSelector>
       <tipDialog
@@ -347,23 +351,6 @@ export default defineComponent({
     }
     .choose-server-list {
         padding-left: 24px;
-    }
-    .footer {
-        position: fixed;
-        bottom: 0px;
-        height: 60px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background-color: #fff;
-        border-top: 1px solid #dcdee5;
-        box-shadow: 0 -2px 4px 0 rgb(0 0 0 / 5%);
-        z-index: 200;
-        right: 0;
-        width: calc(100% - 261px);
-        .btn {
-            width: 88px;
-        }
     }
     .error-btn {
         border: 1px solid #ea3636;

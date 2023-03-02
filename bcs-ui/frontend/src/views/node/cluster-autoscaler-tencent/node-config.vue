@@ -330,7 +330,7 @@
 </template>
 <script lang="ts">
 import { computed, defineComponent, onMounted, ref, toRefs, watch } from '@vue/composition-api';
-import $router from '@/router/index';
+import $router from '@/router';
 import $i18n from '@/i18n/i18n-setup';
 import $store from '@/store/index';
 import usePage from '@/views/dashboard/common/use-page';

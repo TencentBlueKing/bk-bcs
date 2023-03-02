@@ -175,7 +175,7 @@ export default function useDetail(ctx: SetupContext, options: IDetailOptions) {
           theme: 'success',
           message: $i18n.t('删除成功'),
         });
-        $router.push({ name: $store.getters.curNavName });
+        $router.back();
       },
     });
   };

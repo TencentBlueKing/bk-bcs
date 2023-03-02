@@ -157,7 +157,7 @@ import HeaderNav from '../header-nav.vue';
 import { useClusterList } from '@/views/cluster/use-cluster';
 import $i18n from '@/i18n/i18n-setup';
 import $store from '@/store/index';
-import $router from '@/router/index';
+import $router from '@/router';
 import StatusIcon from '@/views/dashboard/common/status-icon';
 import LoadingIcon from '@/components/loading-icon.vue';
 import useInterval from '@/views/dashboard/common/use-interval';

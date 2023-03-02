@@ -2,100 +2,89 @@
 <!-- eslint-disable max-len -->
 <template>
   <div class="biz-content">
-    <div class="biz-top-bar">
-      <div class="biz-app-title">
-        {{$t('HPA管理')}}
+    <Header hide-back :title="$t('HPA管理')" />
+    <div class="biz-content-wrapper" style="padding: 0;" v-bkloading="{ isLoading: isInitLoading }">
+      <div class="biz-panel-header">
+        <div class="left">
+          <bk-button @click.stop.prevent="removeHPAs">
+            <span>{{$t('批量删除')}}</span>
+          </bk-button>
+        </div>
+        <div class="right">
+          <ClusterSearch
+            :search.sync="searchKeyword"
+            :cluster-id.sync="searchScope"
+            @search-change="searchHPA"
+            @refresh="refresh" />
+        </div>
       </div>
-      <bk-guide></bk-guide>
-    </div>
-    <div class="biz-content-wrapper" style="padding: 0;" v-bkloading="{ isLoading: isInitLoading, opacity: 0.1 }">
-
-      <template v-if="!isInitLoading">
-        <div class="biz-panel-header">
-          <div class="left">
-            <bk-button @click.stop.prevent="removeHPAs">
-              <span>{{$t('批量删除')}}</span>
-            </bk-button>
-          </div>
-          <div class="right">
-            <bk-data-searcher
-              :scope-list="searchScopeList"
-              :search-key.sync="searchKeyword"
-              :search-scope.sync="searchScope"
-              :cluster-fixed="!!curClusterId"
-              @search="searchHPA"
-              @refresh="refresh">
-            </bk-data-searcher>
-          </div>
-        </div>
-        <div class="biz-hpa biz-table-wrapper">
-          <bk-table
-            v-bkloading="{ isLoading: isPageLoading && !isInitLoading }"
-            :data="curPageData"
-            :page-params="pageConf"
-            @page-change="pageChangeHandler"
-            @page-limit-change="changePageSize"
-            @select="handlePageSelect"
-            @select-all="handlePageSelectAll">
-            <bk-table-column type="selection" width="60" :selectable="rowSelectable" />
-            <bk-table-column :label="$t('名称')" prop="name" min-width="100">
-              <template slot-scope="{ row }">
-                {{row.name}}
-              </template>
-            </bk-table-column>
-            <bk-table-column :label="$t('集群')" prop="cluster_name" min-width="100">
-              <template slot-scope="{ row }">
-                {{row.cluster_name}}
-              </template>
-            </bk-table-column>
-            <bk-table-column :label="$t('命名空间')" prop="namespace" :show-overflow-tooltip="true" min-width="150" />
-            <bk-table-column :label="$t('Metric(当前/目标)')" prop="current_metrics_display" :show-overflow-tooltip="true" min-width="150">
-            </bk-table-column>
-            <bk-table-column width="30">
-              <template slot-scope="{ row }">
-                <i class="bcs-icon bcs-icon-info-circle" style="color: #ffb400;" v-if="row.needShowConditions" @click="showConditions(row, index)"></i>
-              </template>
-            </bk-table-column>
-            <bk-table-column :label="$t('实例数(当前/范围)')" prop="replicas" min-width="150">
-              <template slot-scope="{ row }">
-                {{ row.current_replicas }} / {{ row.min_replicas }}-{{ row.max_replicas }}
-              </template>
-            </bk-table-column>
-            <bk-table-column :label="$t('关联资源')" :show-overflow-tooltip="true" prop="deployment" min-width="150">
-              <template slot-scope="{ row }">
-                <bk-button
-                  :disabled="!['Deployment', 'StatefulSet'].includes(row.ref_kind)"
-                  text
-                  @click="handleGotoAppDetail(row)">
-                  <span class="bcs-ellipsis">{{row.ref_name}}</span>
-                </bk-button>
-              </template>
-            </bk-table-column>
-            <bk-table-column :label="$t('来源')" prop="source_type">
-              <template slot-scope="{ row }">
-                {{ row.source_type || '--' }}
-              </template>
-            </bk-table-column>
-            <bk-table-column :label="$t('创建时间')" prop="create_time" min-width="100">
-              <template slot-scope="{ row }">
-                {{ row.create_time || '--' }}
-              </template>
-            </bk-table-column>
-            <bk-table-column :label="$t('创建人')" prop="creator" min-width="100">
-              <template slot-scope="{ row }">
-                {{row.creator || '--'}}
-              </template>
-            </bk-table-column>
-            <bk-table-column :label="$t('操作')" prop="permissions">
-              <template slot-scope="{ row }">
-                <div>
-                  <a href="javascript:void(0);" :class="['bk-text-button']" @click="removeHPA(row)">{{$t('删除')}}</a>
-                </div>
-              </template>
-            </bk-table-column>
-          </bk-table>
-        </div>
-      </template>
+      <div class="biz-hpa biz-table-wrapper">
+        <bk-table
+          v-bkloading="{ isLoading: isPageLoading && !isInitLoading }"
+          :data="curPageData"
+          :page-params="pageConf"
+          @page-change="pageChangeHandler"
+          @page-limit-change="changePageSize"
+          @select="handlePageSelect"
+          @select-all="handlePageSelectAll">
+          <bk-table-column type="selection" width="60" :selectable="rowSelectable" />
+          <bk-table-column :label="$t('名称')" prop="name" min-width="100">
+            <template slot-scope="{ row }">
+              {{row.name}}
+            </template>
+          </bk-table-column>
+          <bk-table-column :label="$t('集群')" prop="cluster_name" min-width="100">
+            <template slot-scope="{ row }">
+              {{row.cluster_name}}
+            </template>
+          </bk-table-column>
+          <bk-table-column :label="$t('命名空间')" prop="namespace" :show-overflow-tooltip="true" min-width="150" />
+          <bk-table-column :label="$t('Metric(当前/目标)')" prop="current_metrics_display" :show-overflow-tooltip="true" min-width="150">
+          </bk-table-column>
+          <bk-table-column width="30">
+            <template slot-scope="{ row }">
+              <i class="bcs-icon bcs-icon-info-circle" style="color: #ffb400;" v-if="row.needShowConditions" @click="showConditions(row, index)"></i>
+            </template>
+          </bk-table-column>
+          <bk-table-column :label="$t('实例数(当前/范围)')" prop="replicas" min-width="150">
+            <template slot-scope="{ row }">
+              {{ row.current_replicas }} / {{ row.min_replicas }}-{{ row.max_replicas }}
+            </template>
+          </bk-table-column>
+          <bk-table-column :label="$t('关联资源')" :show-overflow-tooltip="true" prop="deployment" min-width="150">
+            <template slot-scope="{ row }">
+              <bk-button
+                :disabled="!['Deployment', 'StatefulSet'].includes(row.ref_kind)"
+                text
+                @click="handleGotoAppDetail(row)">
+                <span class="bcs-ellipsis">{{row.ref_name}}</span>
+              </bk-button>
+            </template>
+          </bk-table-column>
+          <bk-table-column :label="$t('来源')" prop="source_type">
+            <template slot-scope="{ row }">
+              {{ row.source_type || '--' }}
+            </template>
+          </bk-table-column>
+          <bk-table-column :label="$t('创建时间')" prop="create_time" min-width="100">
+            <template slot-scope="{ row }">
+              {{ row.create_time || '--' }}
+            </template>
+          </bk-table-column>
+          <bk-table-column :label="$t('创建人')" prop="creator" min-width="100">
+            <template slot-scope="{ row }">
+              {{row.creator || '--'}}
+            </template>
+          </bk-table-column>
+          <bk-table-column :label="$t('操作')" prop="permissions">
+            <template slot-scope="{ row }">
+              <div>
+                <a href="javascript:void(0);" :class="['bk-text-button']" @click="removeHPA(row)">{{$t('删除')}}</a>
+              </div>
+            </template>
+          </bk-table-column>
+        </bk-table>
+      </div>
 
       <bk-dialog
         :is-show="batchDialogConfig.isShow"
@@ -126,12 +115,15 @@
 
 <script>
 import { catchErrorHandler } from '@/common/util';
-
+import Header from '@/components/layout/Header.vue';
 import ConditionsDialog from './conditions-dialog';
+import ClusterSearch from '@/components/cluster-selector/cluster-search.vue';
 
 export default {
   components: {
     ConditionsDialog,
+    Header,
+    ClusterSearch,
   },
   data() {
     return {
@@ -181,7 +173,7 @@ export default {
       return results;
     },
     curClusterId() {
-      return this.$store.state.curClusterId;
+      return this.$store.getters.curClusterId;
     },
   },
   watch: {
@@ -193,22 +185,6 @@ export default {
       this.searchHPA();
     },
   },
-  created() {
-    if (this.searchScopeList.length) {
-      const clusterIds = this.searchScopeList.map(item => item.id);
-      // 使用当前缓存
-      if (this.curClusterId) {
-        this.searchScope = this.curClusterId;
-      } else if (sessionStorage['bcs-cluster'] && clusterIds.includes(sessionStorage['bcs-cluster'])) {
-        this.searchScope = sessionStorage['bcs-cluster'];
-      } else {
-        this.searchScope = this.searchScopeList[0].id;
-      }
-    }
-  },
-  // mounted () {
-  //     this.init()
-  // },
   methods: {
     /**
              * 初始化入口
@@ -223,6 +199,7 @@ export default {
              */
     async getHPAList() {
       try {
+        this.isPageLoading = true;
         await this.$store.dispatch('hpa/getHPAList', {
           projectId: this.projectId,
           clusterId: this.searchScope,

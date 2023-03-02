@@ -8,7 +8,8 @@
         handlePageChange, handlePageSizeChange,
         handleGetExtData, handleSortChange,
         handleUpdateResource, handleDeleteResource,
-        handleShowDetail, webAnnotations
+        handleShowDetail, webAnnotations,
+        nameValue, handleClearSearchData
       }">
       <bk-table
         :data="curPageData"
@@ -86,6 +87,9 @@
             </bk-button>
           </template>
         </bk-table-column>
+        <template #empty>
+          <BcsEmptyTableStatus :type="nameValue ? 'search-empty' : 'empty'" @clear="handleClearSearchData" />
+        </template>
       </bk-table>
     </template>
     <template #detail="{ data, extData }">

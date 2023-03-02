@@ -2,8 +2,10 @@
 
 <script>
 import mixinBaseInstantiation from '../mixins/mixin-base-instantiation';
+import Header from '@/components/layout/Header.vue';
 
 export default {
+  components: { Header },
   mixins: [mixinBaseInstantiation],
   data() {
     return {

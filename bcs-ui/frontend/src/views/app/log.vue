@@ -3,7 +3,7 @@
 <template>
   <bcs-dialog
     class="system-log-dialog"
-    v-model="value"
+    :value="value"
     :width="1105"
     :close-icon="true"
     :show-footer="false"
@@ -89,7 +89,7 @@ export default {
       this.list.sort((a, b) => (b.date).split('-').join('') * 1 - a.date.split('-').join('') * 1);
       this.latestBcsVerSion = this.list[0]?.version || '';
       this.isLoading = false;
-      const curBcsVerSion = localStorage.getItem('bcs_supermen');
+      const curBcsVerSion = localStorage.getItem('__bcs_latest_version__');
       if (curBcsVerSion !== this.latestBcsVerSion && this.list.length) {
         this.$emit('input', true);
       }
@@ -100,7 +100,7 @@ export default {
     handleClose() {
       this.$emit('input', false);
 
-      localStorage.setItem('bcs_supermen', this.latestBcsVerSion);
+      localStorage.setItem('__bcs_latest_version__', this.latestBcsVerSion);
       const $sourceEle = this.$refs.log.cloneNode(true);
       const {
         top: sourceTop,

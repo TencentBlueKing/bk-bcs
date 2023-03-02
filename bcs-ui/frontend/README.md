@@ -150,3 +150,5 @@ CSS文件目前禁止添加新样式，准备通过[tailwindui](https://tailwind
   1. 检查是否安装最新 `Volar` 插件
   2. 检查 Vscode 是否配置 eslint 自动保存配置
   3. 删除 nodemodules 重新安装包，然后重启
+
+- 路由规范

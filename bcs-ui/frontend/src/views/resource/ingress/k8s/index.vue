@@ -2,150 +2,140 @@
 <!-- eslint-disable max-len -->
 <template>
   <div class="biz-content">
-    <div class="biz-top-bar">
-      <div class="biz-topbar-title">
-        Ingresses
-        <span class="biz-tip ml10">{{$t('请通过模板集或Helm创建Ingress')}}</span>
+    <Header hide-back title="Ingresses" :desc="$t('请通过模板集或Helm创建Ingress')" />
+    <div class="biz-content-wrapper p0" v-bkloading="{ isLoading: isInitLoading }">
+      <div class="biz-panel-header">
+        <div class="left">
+          <bk-button
+            class="bk-button bk-default"
+            v-if="curPageData.length"
+            @click.stop.prevent="removeIngresses">
+            <span>{{$t('批量删除')}}</span>
+          </bk-button>
+        </div>
+        <div class="right">
+          <ClusterSearch
+            :placeholder="$t('输入名称或命名空间，按Enter搜索')"
+            :search.sync="searchKeyword"
+            :cluster-id.sync="searchScope"
+            @search-change="getIngressList"
+            @refresh="refresh" />
+        </div>
       </div>
-      <bk-guide></bk-guide>
-    </div>
-    <div class="biz-content-wrapper p0" v-bkloading="{ isLoading: isInitLoading, opacity: 0.1 }">
-      <template v-if="!isInitLoading">
-        <div class="biz-panel-header">
-          <div class="left">
-            <bk-button
-              class="bk-button bk-default"
-              v-if="curPageData.length"
-              @click.stop.prevent="removeIngresses">
-              <span>{{$t('批量删除')}}</span>
-            </bk-button>
-          </div>
-          <div class="right">
-            <bk-data-searcher
-              :scope-list="searchScopeList"
-              :search-key.sync="searchKeyword"
-              :search-scope.sync="searchScope"
-              :cluster-fixed="!!curClusterId"
-              @search="getIngressList"
-              @refresh="refresh">
-            </bk-data-searcher>
-          </div>
-        </div>
 
-        <div class="biz-resource">
-          <div class="biz-table-wrapper">
-            <bk-table
-              :size="'medium'"
-              :data="curPageData"
-              :pagination="pageConf"
-              v-bkloading="{ isLoading: isPageLoading && !isInitLoading, opacity: 1 }"
-              @page-limit-change="handlePageLimitChange"
-              @page-change="handlePageChange"
-              @select="handlePageSelect"
-              @select-all="handlePageSelectAll">
-              <bk-table-column type="selection" width="60" :selectable="rowSelectable"></bk-table-column>
-              <bk-table-column :label="$t('名称')" :show-overflow-tooltip="true" min-width="200">
-                <template slot-scope="props">
-                  <a
-                    href="javascript: void(0)"
-                    class="bk-text-button biz-resource-title"
-                    v-authority="{
-                      clickable: webAnnotations.perms[props.row.iam_ns_id]
-                        && webAnnotations.perms[props.row.iam_ns_id].namespace_scoped_view,
-                      actionId: 'namespace_scoped_view',
-                      resourceName: props.row.namespace,
-                      disablePerms: true,
-                      permCtx: {
-                        project_id: projectId,
-                        cluster_id: props.row.cluster_id,
-                        name: props.row.namespace
-                      }
-                    }"
-                    @click.stop.prevent="showIngressDetail(props.row, index)"
-                  >{{props.row.resourceName}}</a>
-                </template>
-              </bk-table-column>
-              <bk-table-column :label="$t('所属集群')" min-width="150">
-                <template slot-scope="props">
-                  <bcs-popover :content="props.row.cluster_id || '--'" placement="top">
-                    <p class="biz-text-wrapper">{{curCluster ? curCluster.clusterName : '--'}}</p>
-                  </bcs-popover>
-                </template>
-              </bk-table-column>
-              <bk-table-column :label="$t('命名空间')" min-width="130">
-                <template slot-scope="props">
-                  {{props.row.namespace}}
-                </template>
-              </bk-table-column>
-              <bk-table-column :label="$t('来源')" min-width="130">
-                <template slot-scope="props">
-                  {{props.row.source_type ? props.row.source_type : '--'}}
-                </template>
-              </bk-table-column>
-              <bk-table-column :label="$t('创建时间')" min-width="160">
-                <template slot-scope="props">
-                  {{props.row.createTime ? formatDate(props.row.createTime) : '--'}}
-                </template>
-              </bk-table-column>
-              <bk-table-column :label="$t('更新时间')" min-width="160">
-                <template slot-scope="props">
-                  {{props.row.updateTime ? formatDate(props.row.updateTime) : '--'}}
-                </template>
-              </bk-table-column>
-              <bk-table-column :label="$t('更新人')" min-width="100">
-                <template slot-scope="props">
-                  {{props.row.updator || '--'}}
-                </template>
-              </bk-table-column>
-              <bk-table-column :label="$t('操作')" width="150">
-                <template slot-scope="props">
-                  <a
-                    v-if="props.row.can_update"
-                    href="javascript:void(0);"
-                    class="bk-text-button"
-                    v-authority="{
-                      clickable: webAnnotations.perms[props.row.iam_ns_id]
-                        && webAnnotations.perms[props.row.iam_ns_id].namespace_scoped_update,
-                      actionId: 'namespace_scoped_update',
-                      resourceName: props.row.namespace,
-                      disablePerms: true,
-                      permCtx: {
-                        project_id: projectId,
-                        cluster_id: props.row.cluster_id,
-                        name: props.row.namespace
-                      }
-                    }"
-                    @click="showIngressEditDialog(props.row)"
-                  >{{$t('更新')}}</a>
-                  <bcs-popover :content="props.row.can_update_msg" v-else placement="left">
-                    <a href="javascript:void(0);" class="bk-text-button is-disabled">{{$t('更新')}}</a>
-                  </bcs-popover>
-                  <a
-                    v-if="props.row.can_delete"
-                    v-authority="{
-                      clickable: webAnnotations.perms[props.row.iam_ns_id]
-                        && webAnnotations.perms[props.row.iam_ns_id].namespace_scoped_delete,
-                      actionId: 'namespace_scoped_delete',
-                      resourceName: props.row.namespace,
-                      disablePerms: true,
-                      permCtx: {
-                        project_id: projectId,
-                        cluster_id: props.row.cluster_id,
-                        name: props.row.namespace
-                      }
-                    }"
-                    @click.stop="removeIngress(props.row)"
-                    class="bk-text-button ml10"
-                  >{{$t('删除')}}</a>
-                  <bcs-popover :content="props.row.can_delete_msg || $t('不可删除')" v-else placement="left">
-                    <span class="bk-text-button is-disabled ml10">{{$t('删除')}}</span>
-                  </bcs-popover>
-                </template>
-              </bk-table-column>
-            </bk-table>
-          </div>
+      <div class="biz-resource">
+        <div class="biz-table-wrapper">
+          <bk-table
+            :size="'medium'"
+            :data="curPageData"
+            :pagination="pageConf"
+            v-bkloading="{ isLoading: isPageLoading && !isInitLoading, opacity: 1 }"
+            @page-limit-change="handlePageLimitChange"
+            @page-change="handlePageChange"
+            @select="handlePageSelect"
+            @select-all="handlePageSelectAll">
+            <bk-table-column type="selection" width="60" :selectable="rowSelectable"></bk-table-column>
+            <bk-table-column :label="$t('名称')" :show-overflow-tooltip="true" min-width="200">
+              <template slot-scope="props">
+                <a
+                  href="javascript: void(0)"
+                  class="bk-text-button biz-resource-title"
+                  v-authority="{
+                    clickable: webAnnotations.perms[props.row.iam_ns_id]
+                      && webAnnotations.perms[props.row.iam_ns_id].namespace_scoped_view,
+                    actionId: 'namespace_scoped_view',
+                    resourceName: props.row.namespace,
+                    disablePerms: true,
+                    permCtx: {
+                      project_id: projectId,
+                      cluster_id: props.row.cluster_id,
+                      name: props.row.namespace
+                    }
+                  }"
+                  @click.stop.prevent="showIngressDetail(props.row, index)"
+                >{{props.row.resourceName}}</a>
+              </template>
+            </bk-table-column>
+            <bk-table-column :label="$t('所属集群')" min-width="150">
+              <template slot-scope="props">
+                <bcs-popover :content="props.row.cluster_id || '--'" placement="top">
+                  <p class="biz-text-wrapper">{{curCluster ? curCluster.clusterName : '--'}}</p>
+                </bcs-popover>
+              </template>
+            </bk-table-column>
+            <bk-table-column :label="$t('命名空间')" min-width="130">
+              <template slot-scope="props">
+                {{props.row.namespace}}
+              </template>
+            </bk-table-column>
+            <bk-table-column :label="$t('来源')" min-width="130">
+              <template slot-scope="props">
+                {{props.row.source_type ? props.row.source_type : '--'}}
+              </template>
+            </bk-table-column>
+            <bk-table-column :label="$t('创建时间')" min-width="160">
+              <template slot-scope="props">
+                {{props.row.createTime ? formatDate(props.row.createTime) : '--'}}
+              </template>
+            </bk-table-column>
+            <bk-table-column :label="$t('更新时间')" min-width="160">
+              <template slot-scope="props">
+                {{props.row.updateTime ? formatDate(props.row.updateTime) : '--'}}
+              </template>
+            </bk-table-column>
+            <bk-table-column :label="$t('更新人')" min-width="100">
+              <template slot-scope="props">
+                {{props.row.updator || '--'}}
+              </template>
+            </bk-table-column>
+            <bk-table-column :label="$t('操作')" width="150">
+              <template slot-scope="props">
+                <a
+                  v-if="props.row.can_update"
+                  href="javascript:void(0);"
+                  class="bk-text-button"
+                  v-authority="{
+                    clickable: webAnnotations.perms[props.row.iam_ns_id]
+                      && webAnnotations.perms[props.row.iam_ns_id].namespace_scoped_update,
+                    actionId: 'namespace_scoped_update',
+                    resourceName: props.row.namespace,
+                    disablePerms: true,
+                    permCtx: {
+                      project_id: projectId,
+                      cluster_id: props.row.cluster_id,
+                      name: props.row.namespace
+                    }
+                  }"
+                  @click="showIngressEditDialog(props.row)"
+                >{{$t('更新')}}</a>
+                <bcs-popover :content="props.row.can_update_msg" v-else placement="left">
+                  <a href="javascript:void(0);" class="bk-text-button is-disabled">{{$t('更新')}}</a>
+                </bcs-popover>
+                <a
+                  v-if="props.row.can_delete"
+                  v-authority="{
+                    clickable: webAnnotations.perms[props.row.iam_ns_id]
+                      && webAnnotations.perms[props.row.iam_ns_id].namespace_scoped_delete,
+                    actionId: 'namespace_scoped_delete',
+                    resourceName: props.row.namespace,
+                    disablePerms: true,
+                    permCtx: {
+                      project_id: projectId,
+                      cluster_id: props.row.cluster_id,
+                      name: props.row.namespace
+                    }
+                  }"
+                  @click.stop="removeIngress(props.row)"
+                  class="bk-text-button ml10"
+                >{{$t('删除')}}</a>
+                <bcs-popover :content="props.row.can_delete_msg || $t('不可删除')" v-else placement="left">
+                  <span class="bk-text-button is-disabled ml10">{{$t('删除')}}</span>
+                </bcs-popover>
+              </template>
+            </bk-table-column>
+          </bk-table>
         </div>
-      </template>
+      </div>
 
       <bk-sideslider
         v-if="curIngress"
@@ -440,10 +430,14 @@ import { catchErrorHandler, formatDate } from '@/common/util';
 import ingressParams from '@/json/k8s-ingress.json';
 import ruleParams from '@/json/k8s-ingress-rule.json';
 import bkKeyer from '@/components/keyer';
+import Header from '@/components/layout/Header.vue';
+import ClusterSearch from '@/components/cluster-selector/cluster-search.vue';
 
 export default {
   components: {
     bkKeyer,
+    Header,
+    ClusterSearch,
   },
   data() {
     return {
@@ -571,7 +565,7 @@ export default {
       return list;
     },
     curClusterId() {
-      return this.$store.state.curClusterId;
+      return this.$store.getters.curClusterId;
     },
     curCluster() {
       const list = this.$store.state.cluster.clusterList || [];
@@ -579,28 +573,7 @@ export default {
     },
   },
   watch: {
-    isClusterDataReady: {
-      immediate: true,
-      handler(val) {
-        if (val) {
-          setTimeout(() => {
-            if (this.searchScopeList.length) {
-              const clusterIds = this.searchScopeList.map(item => item.id);
-              // 使用当前缓存
-              if (sessionStorage['bcs-cluster'] && clusterIds.includes(sessionStorage['bcs-cluster'])) {
-                this.searchScope = sessionStorage['bcs-cluster'];
-              } else {
-                this.searchScope = this.searchScopeList[0].id;
-              }
-            }
-
-            this.getIngressList();
-          }, 1000);
-        }
-      },
-    },
-    curClusterId() {
-      this.searchScope = this.curClusterId;
+    searchScope() {
       this.getIngressList();
     },
   },

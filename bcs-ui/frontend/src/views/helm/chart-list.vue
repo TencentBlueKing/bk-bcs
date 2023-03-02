@@ -1,8 +1,19 @@
 <!-- eslint-disable max-len -->
 <template>
-  <BcsContent :title="$t('Helm Chart仓库')" hide-back>
+  <BcsContent
+    :title="$t('Helm Chart仓库')"
+    :tabs="repos"
+    :active-tab="activeRepo"
+    hide-back
+    v-bkloading="{ isLoading: loading }"
+    @tab-change="handleTabChange">
     <template #header-right>
-      <a class="bk-text-button" :href="PROJECT_CONFIG.doc.helm" target="_blank">{{ $t('如何推送Helm Chart到项目仓库？') }}</a>
+      <a
+        class="bk-text-button"
+        :href="PROJECT_CONFIG.doc.helm"
+        target="_blank">
+        {{ $t('如何推送Helm Chart到项目仓库？') }}
+      </a>
     </template>
     <!-- 空仓库状态 -->
     <bcs-exception type="empty" v-if="!repos.length && !loading">
@@ -25,146 +36,138 @@
     </bcs-exception>
     <!-- 仓库列表 -->
     <template v-else>
-      <bcs-tab
-        v-bkloading="{ isLoading: loading }"
-        :active.sync="activeRepo"
-        @tab-change="handleTabChange">
-        <bcs-tab-panel
-          v-for="item in repos"
-          :name="item.name"
-          :label="item.displayName"
-          :key="item.name">
-          <Row class="mb-[16px]">
-            <!-- 搜索功能 -->
-            <template #left>
-              <bcs-input
-                right-icon="bk-icon icon-search"
-                class="min-w-[360px]"
-                clearable
-                :placeholder="$t('输入名称搜索')"
-                v-model="searchName">
-              </bcs-input>
-            </template>
-            <template #right>
-              <bcs-popover trigger="click" theme="light">
-                <bcs-button>{{$t('查看仓库信息')}}</bcs-button>
-                <template #content>
-                  <div class="py-[10px]">
-                    <div class="flex leading-[20px]">
-                      <span class="flex w-[80px]">{{$t('仓库地址')}}:</span>
-                      {{item.repoURL}}
-                      <span class="bcs-icon-btn ml-[8px]" @click="handleCopyData(item.repoURL)">
-                        <i class="bcs-icon bcs-icon-copy"></i>
-                      </span>
-                    </div>
-                    <template v-if="item.username && item.password">
-                      <div class="flex leading-[20px]">
-                        <span class="flex w-[80px]">{{$t('用户名')}}:</span>
-                        {{item.username}}
-                        <span class="bcs-icon-btn ml-[8px]" @click="handleCopyData(item.username)">
-                          <i class="bcs-icon bcs-icon-copy"></i>
-                        </span>
-                      </div>
-                      <div class="flex leading-[20px]">
-                        <span class="flex w-[80px]">{{$t('密码')}}:</span>
-                        {{showPassword ? item.password : new Array(10).fill('*').join('')}}
-                        <span class="bcs-icon-btn ml-[8px]" @click="showPassword = !showPassword">
-                          <i :class="['bcs-icon', showPassword ? 'bcs-icon-eye' : 'bcs-icon-eye-slash']"></i>
-                        </span>
-                        <span class="bcs-icon-btn ml-[8px]" @click="handleCopyData(item.password)">
-                          <i class="bcs-icon bcs-icon-copy"></i>
-                        </span>
-                      </div>
-                      <div class="flex items-center leading-[20px]">
-                        <span class="flex w-[100px]">{{$t('添加repo仓库')}}:</span>
-                        <bcs-button
-                          text
-                          size="small"
-                          class="!px-0"
-                          @click="handleCopyData(`helm repo add ${projectCode} ${item.repoURL} --username=${item.username} --password=${item.password}`)">
-                          {{$t('点击复制')}}
-                        </bcs-button>
-                      </div>
-                    </template>
+      <Row class="mb-[16px]">
+        <!-- 搜索功能 -->
+        <template #left>
+          <bcs-input
+            right-icon="bk-icon icon-search"
+            class="min-w-[360px]"
+            clearable
+            :placeholder="$t('输入名称搜索')"
+            v-model="searchName">
+          </bcs-input>
+        </template>
+        <template #right>
+          <bcs-popover trigger="click" theme="light">
+            <bcs-button>{{$t('查看仓库信息')}}</bcs-button>
+            <template #content>
+              <div class="py-[10px]">
+                <div class="flex leading-[20px]">
+                  <span class="flex w-[80px]">{{$t('仓库地址')}}:</span>
+                  {{curRepoItem.repoURL}}
+                  <span class="bcs-icon-btn ml-[8px]" @click="handleCopyData(curRepoItem.repoURL)">
+                    <i class="bcs-icon bcs-icon-copy"></i>
+                  </span>
+                </div>
+                <template v-if="curRepoItem.username && curRepoItem.password">
+                  <div class="flex leading-[20px]">
+                    <span class="flex w-[80px]">{{$t('用户名')}}:</span>
+                    {{curRepoItem.username}}
+                    <span class="bcs-icon-btn ml-[8px]" @click="handleCopyData(curRepoItem.username)">
+                      <i class="bcs-icon bcs-icon-copy"></i>
+                    </span>
+                  </div>
+                  <div class="flex leading-[20px]">
+                    <span class="flex w-[80px]">{{$t('密码')}}:</span>
+                    {{showPassword ? curRepoItem.password : new Array(10).fill('*').join('')}}
+                    <span class="bcs-icon-btn ml-[8px]" @click="showPassword = !showPassword">
+                      <i :class="['bcs-icon', showPassword ? 'bcs-icon-eye' : 'bcs-icon-eye-slash']"></i>
+                    </span>
+                    <span class="bcs-icon-btn ml-[8px]" @click="handleCopyData(curRepoItem.password)">
+                      <i class="bcs-icon bcs-icon-copy"></i>
+                    </span>
+                  </div>
+                  <div class="flex items-center leading-[20px]">
+                    <span class="flex w-[100px]">{{$t('添加repo仓库')}}:</span>
+                    <bcs-button
+                      text
+                      size="small"
+                      class="!px-0"
+                      @click="handleCopyData(`helm repo add ${projectCode} ${curRepoItem.repoURL} --username=${curRepoItem.username} --password=${curRepoItem.password}`)">
+                      {{$t('点击复制')}}
+                    </bcs-button>
                   </div>
                 </template>
-              </bcs-popover>
-              <bcs-button class="ml-[8px]" @click="handleGetChartsTableData">
-                <i class="bcs-icon bcs-icon-reset"></i>
-                {{$t('刷新')}}
-              </bcs-button>
+              </div>
             </template>
-          </Row>
-          <bcs-table
-            :data="curTableConfig.data"
-            :pagination="curTableConfig.pagination"
-            v-bkloading="{ isLoading: chartsLoading }"
-            @page-change="(page) => pageChange(page, item.name)"
-            @page-limit-change="(size) => pageSizeChange(size, item.name)">
-            <bcs-table-column :label="$t('名称')" prop="name" show-overflow-tooltip>
-              <template #default="{ row }">
-                <div class="flex items-center">
-                  <span class="flex items-center justify-center w-[24px] h-[24px] text-[24px] text-[#C4C6CC] mr-[8px]">
-                    <img :src="row.icon" v-if="row.icon" />
-                    <i v-else class="bcs-icon bcs-icon-helm-app"></i>
-                  </span>
-                  <bcs-button text @click="handleShowDetail(row)">
-                    <span class="bcs-ellipsis">{{row.name}}</span>
-                  </bcs-button>
-                </div>
+          </bcs-popover>
+          <bcs-button class="ml-[8px]" @click="handleGetChartsTableData">
+            <i class="bcs-icon bcs-icon-reset"></i>
+            {{$t('刷新')}}
+          </bcs-button>
+        </template>
+      </Row>
+      <bcs-table
+        :data="curTableConfig.data"
+        :pagination="curTableConfig.pagination"
+        v-bkloading="{ isLoading: chartsLoading }"
+        @page-change="(page) => pageChange(page, curRepoItem.name)"
+        @page-limit-change="(size) => pageSizeChange(size, curRepoItem.name)">
+        <bcs-table-column :label="$t('名称')" prop="name" show-overflow-tooltip>
+          <template #default="{ row }">
+            <div class="flex items-center">
+              <span class="flex items-center justify-center w-[24px] h-[24px] text-[24px] text-[#C4C6CC] mr-[8px]">
+                <img :src="row.icon" v-if="row.icon" />
+                <i v-else class="bcs-icon bcs-icon-helm-app"></i>
+              </span>
+              <bcs-button text @click="handleShowDetail(row)">
+                <span class="bcs-ellipsis">{{row.name}}</span>
+              </bcs-button>
+            </div>
+          </template>
+        </bcs-table-column>
+        <bcs-table-column :label="$t('版本')" prop="latestVersion" width="100"></bcs-table-column>
+        <bcs-table-column :label="$t('最近更新')" prop="updateTime" width="200"></bcs-table-column>
+        <bcs-table-column :label="$t('描述')" prop="latestDescription" show-overflow-tooltip></bcs-table-column>
+        <bcs-table-column :label="$t('操作')" width="150">
+          <template #default="{ row }">
+            <bcs-button text @click="handleReleaseChart(row)">{{ $t('部署') }}</bcs-button>
+            <bcs-button
+              text
+              class="ml-[10px]"
+              @click="handleShowVersionDialog(row, 'download')">
+              {{$t('下载版本')}}
+            </bcs-button>
+            <bk-popover
+              placement="bottom"
+              theme="light dropdown"
+              :arrow="false"
+              class="ml-[5px]"
+              v-if="!curRepoItem.public">
+              <span class="bcs-icon-more-btn"><i class="bcs-icon bcs-icon-more"></i></span>
+              <template #content>
+                <ul>
+                  <li
+                    class="bcs-dropdown-item"
+                    v-authority="{
+                      actionId: 'project_edit',
+                      resourceName: curProject.project_name,
+                      permCtx: {
+                        resource_type: 'project',
+                        project_id: curProject.project_id
+                      }
+                    }"
+                    @click="handleDeleteChart(row)">{{$t('删除Chart')}}</li>
+                  <li
+                    class="bcs-dropdown-item"
+                    v-authority="{
+                      actionId: 'project_edit',
+                      resourceName: curProject.project_name,
+                      permCtx: {
+                        resource_type: 'project',
+                        project_id: curProject.project_id
+                      }
+                    }"
+                    @click="handleShowVersionDialog(row, 'delete')">{{$t('删除版本')}}</li>
+                </ul>
               </template>
-            </bcs-table-column>
-            <bcs-table-column :label="$t('版本')" prop="latestVersion" width="100"></bcs-table-column>
-            <bcs-table-column :label="$t('最近更新')" prop="updateTime" width="200"></bcs-table-column>
-            <bcs-table-column :label="$t('描述')" prop="latestDescription" show-overflow-tooltip></bcs-table-column>
-            <bcs-table-column :label="$t('操作')" width="150">
-              <template #default="{ row }">
-                <bcs-button text @click="handleReleaseChart(row)">{{ $t('部署') }}</bcs-button>
-                <bcs-button
-                  text
-                  class="ml-[10px]"
-                  @click="handleShowVersionDialog(row, 'download')">
-                  {{$t('下载版本')}}
-                </bcs-button>
-                <bk-popover
-                  placement="bottom"
-                  theme="light dropdown"
-                  :arrow="false"
-                  class="ml-[5px]"
-                  v-if="!item.public">
-                  <span class="bcs-icon-more-btn"><i class="bcs-icon bcs-icon-more"></i></span>
-                  <template #content>
-                    <ul>
-                      <li
-                        class="bcs-dropdown-item"
-                        v-authority="{
-                          actionId: 'project_edit',
-                          resourceName: curProject.project_name,
-                          permCtx: {
-                            resource_type: 'project',
-                            project_id: curProject.project_id
-                          }
-                        }"
-                        @click="handleDeleteChart(row)">{{$t('删除Chart')}}</li>
-                      <li
-                        class="bcs-dropdown-item"
-                        v-authority="{
-                          actionId: 'project_edit',
-                          resourceName: curProject.project_name,
-                          permCtx: {
-                            resource_type: 'project',
-                            project_id: curProject.project_id
-                          }
-                        }"
-                        @click="handleShowVersionDialog(row, 'delete')">{{$t('删除版本')}}</li>
-                    </ul>
-                  </template>
-                </bk-popover>
-              </template>
-            </bcs-table-column>
-          </bcs-table>
-        </bcs-tab-panel>
-      </bcs-tab>
+            </bk-popover>
+          </template>
+        </bcs-table-column>
+        <template #empty>
+          <BcsEmptyTableStatus :type="searchName ? 'search-empty' : 'empty'" @clear="searchName = ''" />
+        </template>
+      </bcs-table>
       <!-- chart详情 -->
       <bcs-sideslider
         :is-show.sync="showDetail"
@@ -275,13 +278,13 @@ export default defineComponent({
     const activeRepo = ref(props.name);
     const chartTableConfig = ref<ITableConfig[]>([]);
     const chartsLoading = ref(false);
+    const showPassword = ref(false);
     const curTableConfig = computed(() => chartTableConfig.value.find(item => item.name === activeRepo.value) || {
       name: '',
       data: [],
       pagination: {},
     });
-
-    const showPassword = ref(false);
+    const curRepoItem = computed(() => repos.value.find(item => item.name === activeRepo.value) || {});
     // 复制
     const handleCopyData = (value: string) => {
       copyText(value);
@@ -291,11 +294,13 @@ export default defineComponent({
       });
     };
     // 切换仓库
-    const handleTabChange = (name) => {
+    const handleTabChange = (item) => {
+      activeRepo.value = item.name;
       searchName.value = '';
       $router.replace({
+        name: 'chartList',
         query: {
-          name,
+          name: item.name,
         },
       });
       handleGetChartsTableData();
@@ -315,6 +320,7 @@ export default defineComponent({
           count: data.total,
           current: 1,
           limit: 10,
+          showTotalCount: true,
         },
       };
       const index = chartTableConfig.value.findIndex(item => item.name === activeRepo.value);
@@ -459,6 +465,7 @@ export default defineComponent({
     });
 
     return {
+      curRepoItem,
       curProject,
       projectCode,
       showPassword,

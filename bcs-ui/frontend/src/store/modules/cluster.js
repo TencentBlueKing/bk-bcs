@@ -41,18 +41,7 @@ export default {
     // 所以每次改变项目 projectId 的时候，这里的 clusterList 会重新获取
     clusterList: [],
     isClusterDataReady: false,
-    // 集群 id map，主要用于验证 clusterId 是否合法
-    // clusterIdMap: {},
-    // 当前的这个集群，如果是从集群首页进入到之后的页面那么这个是有值的，之后可以直接获取不需要再发请求
-    // 如果是从浏览器地址栏输入 url 进去的，这个为空，需要根据 clusterId 发送请求来获取当前的集群
-    // 同样，当根据 clusterId 获取到集群后，会把获取到的集群赋值给这个变量
-    curCluster: null,
-    allClusterList: [],
     clusterWebAnnotations: { perms: {} },
-  },
-  getters: {
-    // eslint-disable-next-line camelcase
-    isSharedCluster: state => !!state.curCluster?.is_shared,
   },
   mutations: {
     /**
@@ -77,28 +66,8 @@ export default {
         project_id: item.projectID,
         ...item,
       }));
-      // eslint-disable-next-line camelcase
-      const data = state.curCluster?.is_shared
-        ? clusterList.filter(cluster => cluster.is_shared)
-          .sort((pre, current) => {
-            const preID = pre.clusterID.split('-').pop();
-            const currentID = current.clusterID.split('-').pop();
-            return preID - currentID;
-          }) // 共享集群按照集群ID排序
-        : clusterList.filter(cluster => !cluster.is_shared); // 普通集群按照时间排序
-      state.clusterList.splice(0, state.clusterList.length, ...data);
-      state.allClusterList.splice(0, state.allClusterList.length, ...clusterList);
+      state.clusterList.splice(0, state.clusterList.length, ...clusterList);
       state.isClusterDataReady = true;
-    },
-
-    /**
-         * 更新 store.cluster 中的 curCluster
-         *
-         * @param {Object} state store state
-         * @param {Object} cluster cluster 对象
-         */
-    forceUpdateCurCluster(state, cluster) {
-      state.curCluster = Object.assign({}, cluster);
     },
     updateClusterWebAnnotations(state, data) {
       state.clusterWebAnnotations = data;
@@ -128,10 +97,6 @@ export default {
         ...item,
         ...clusterExtraInfo[item.clusterID],
       }));
-      const exitSessionStorageCluster = res.data.find(item => item.clusterID === sessionStorage['bcs-cluster']);
-      if (!exitSessionStorageCluster) {
-        sessionStorage['bcs-cluster'] = '';
-      }
       context.commit('forceUpdateClusterList', res?.data || []);
       context.commit('updateClusterWebAnnotations', res.web_annotations || { perms: {} });
       return res;

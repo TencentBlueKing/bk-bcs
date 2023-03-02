@@ -1,6 +1,5 @@
 @import '@/css/variable.css';
 @import '@/css/mixins/clearfix.css';
-@import '@/css/mixins/scroller.css';
 @import '@/css/mixins/ellipsis.css';
 
 .biz-content-wrapper {
@@ -141,7 +140,6 @@
                     right: 30px;
                 }
                 .selected-namespace-wrapper {
-                    @mixin scroller $borderWeightColor, 6px;
                     width: 100%;
                     margin-top: 10px;
                     display: inline-block;

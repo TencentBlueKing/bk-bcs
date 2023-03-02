@@ -1,14 +1,6 @@
 <template>
     <div class="biz-content">
-        <div class="biz-top-bar">
-            <div class="biz-app-title">
-                {{$t('Metric管理')}}
-                <span class="biz-tip ml10">
-                    {{$t('支持 Prometheus 格式的 Metric')}}
-                </span>
-            </div>
-            <bk-guide></bk-guide>
-        </div>
+        <Header hide-back :title="$t('Metric管理')" :desc="$t('支持 Prometheus 格式的 Metric')"/>
         <div class="biz-content-wrapper" style="padding: 0;" v-bkloading="{ isLoading: isInitLoading, opacity: 0.1 }">
             <div v-show="!isInitLoading">
                 <div class="biz-lock-box" v-if="updateMsg">
@@ -20,7 +12,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="biz-panel-header biz-metric-manage-create" style="padding: 27px 30px 22px 20px;">
+                <div class="biz-panel-header biz-metric-manage-create">
                     <div class="left">
                         <bk-button type="primary" :title="$t('新建Metric')" @click="showCreateMetric">
                             <i class="bcs-icon bcs-icon-plus"></i>
@@ -31,17 +23,14 @@
                         </bk-button>
                     </div>
                     <div class="right">
-                        <searcher
-                            ref="Searcher"
-                            :scope-list="clusterList"
-                            :search-scope.sync="searchClusterId"
+                        <ClusterSearch 
+                            :cluster-id.sync="searchClusterId"
                             :placeholder="$t('输入名称，按Enter搜索')"
-                            :search-key.sync="searchKeyWord"
-                            :cluster-fixed="!!curClusterId"
-                            @update:searchScope="searchMetricByCluster"
-                            @update:searchKey="searchMetricByWord"
-                            @refresh="refresh">
-                        </searcher>
+                            :search.sync="searchKeyWord"
+                            cluster-type="all"
+                            @cluster-change="searchMetricByCluster"
+                            @search-change="searchMetricByWord"
+                            @refresh="refresh"/>
                     </div>
                 </div>
                 <div class="biz-table-wrapper">
@@ -331,16 +320,17 @@
 
 <script>
     import moment from 'moment'
-
+    import Header from '@/components/layout/Header.vue';
     import CreateMetric from './create'
     import EditMetric from './edit'
-    import Searcher from './searcher'
+    import ClusterSearch from '@/components/cluster-selector/cluster-search.vue'
 
     export default {
         components: {
             CreateMetric,
             EditMetric,
-            Searcher
+            ClusterSearch,
+            Header
         },
         data () {
             return {
@@ -378,7 +368,6 @@
                     title: '',
                     closeIcon: false
                 },
-                urlClusterId: '',
                 isCheckAll: false,
                 // 已选择的 nodeList
                 checkedNodeList: [],
@@ -444,7 +433,7 @@
                 }
             },
             curClusterId () {
-                return this.$store.state.curClusterId
+                return this.$store.getters.curClusterId
             },
             clusterList () {
                 return this.$store.state.cluster.clusterList.map(item => {
@@ -468,10 +457,6 @@
                 },
                 immediate: true
             }
-        },
-        async created () {
-            this.urlClusterId = this.$route.query.cluster_id
-            await this.getClusters()
         },
         destroyed () {
             this.bkMessageInstance && this.bkMessageInstance.close()
@@ -504,59 +489,6 @@
                     this.updateMsg = data.update_tooltip || ''
                 } catch (e) {
                     console.error(e)
-                }
-            },
-
-            /**
-             * 获取所有的集群
-             */
-            async getClusters () {
-                try {
-                    if (this.clusterList.length) {
-                        const clusterIds = this.clusterList.map(item => item.cluster_id)
-                        if (this.urlClusterId === null || this.urlClusterId === undefined || this.urlClusterId === '') {
-                            // 使用当前缓存
-                            if (sessionStorage['bcs-cluster'] && clusterIds.includes(sessionStorage['bcs-cluster'])) {
-                                this.urlClusterId = sessionStorage['bcs-cluster']
-                            } else {
-                                this.urlClusterId = this.clusterList[0].cluster_id
-                                sessionStorage['bcs-cluster'] = this.urlClusterId
-                            }
-                        } else {
-                            sessionStorage['bcs-cluster'] = this.urlClusterId
-                        }
-
-                        const cluster = this.clusterList.find(cl => cl.cluster_id === this.urlClusterId)
-                        if (cluster) {
-                            this.searchClusterId = cluster.cluster_id
-                            this.searchClusterName = cluster.cluster_name
-                            // this.addParamsToRouter({ cluster_id: this.searchClusterId })
-
-                            await this.fetchService()
-                            await this.fetchTarget()
-                            await this.fetchData()
-                            this.fetchPrometheusUpdate()
-                        } else {
-                            this.bkMessageInstance = this.$bkMessage({
-                                theme: 'error',
-                                message: `集群 ${this.urlClusterId} 不存在`
-                            })
-                            setTimeout(() => {
-                                this.isInitLoading = false
-                            }, 200)
-                        }
-                    } else {
-                        // 没有集群时，这里就终止了，不会执行 fetchData，所以这里关闭 loading，不能在 finally 里面关闭
-                        // 因为如果集群存在时，还需要 loading fetchData
-                        setTimeout(() => {
-                            this.isInitLoading = false
-                        }, 200)
-                    }
-                } catch (e) {
-                    console.error(e)
-                    setTimeout(() => {
-                        this.isInitLoading = false
-                    }, 200)
                 }
             },
 

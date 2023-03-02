@@ -1,17 +1,14 @@
 <template>
   <div class="biz-content">
-    <div class="biz-top-bar">
-      <div class="biz-cluster-title">
-        {{$t('集群')}}
-        <span class="cc-info ml5">
-          {{`( ${$t('业务')}: ${curProject.cc_app_name}  ${$t('编排类型')}: ${kindMap[curProject.kind]} )`}}
-        </span>
-        <span class="bk-text-button bk-default f12 ml5" @click="handleShowProjectConf">
-          <i class="bcs-icon bcs-icon-edit"></i>
-        </span>
-      </div>
-      <bk-guide></bk-guide>
-    </div>
+    <Header>
+      {{$t('集群')}}
+      <span class="ml5 text-[12px] text-[#979ba5]">
+        {{`( ${$t('业务')}: ${curProject.cc_app_name}  ${$t('编排类型')}: ${kindMap[curProject.kind]} )`}}
+      </span>
+      <span class="bk-text-button bk-default f12 ml5" @click="handleShowProjectConf">
+        <i class="bcs-icon bcs-icon-edit"></i>
+      </span>
+    </Header>
     <div class="biz-content-wrapper biz-cluster-wrapper" v-bkloading="{ isLoading, color: '#fafbfd' }">
       <template v-if="clusterList.length">
         <div class="cluster-btns">
@@ -34,7 +31,14 @@
         <div class="biz-cluster-list">
           <div class="biz-cluster" v-for="cluster in clusterList" :key="cluster.cluster_id">
             <!-- 异常角标 -->
-            <div class="bk-mark-corner bk-warning" v-if="showCorner(cluster)"><p>!</p></div>
+            <div
+              class="bk-mark-corner bk-warning"
+              v-bk-tooltips="{
+                content: $t('集群指标过载')
+              }"
+              v-if="showCorner(cluster)">
+              <p>!</p>
+            </div>
             <!-- 集群信息 -->
             <div class="biz-cluster-header flex flex-col pl-6 justify-center">
               <h2
@@ -252,6 +256,7 @@ import ProjectConfig from '@/views/project/project-config.vue';
 import tipDialog from '@/components/tip-dialog/index.vue';
 import { useClusterList, useClusterOverview, useClusterOperate, useTask } from './use-cluster';
 import TaskList from '../node/task-list.vue';
+import Header from '@/components/layout/Header.vue';
 
 export default defineComponent({
   name: 'ClusterList',
@@ -260,6 +265,7 @@ export default defineComponent({
     ProjectConfig,
     tipDialog,
     TaskList,
+    Header,
   },
   setup(props, ctx) {
     const { $store, $router, $i18n, $bkMessage, $bkInfo } = ctx.root;
@@ -294,7 +300,8 @@ export default defineComponent({
       },
     ];
     // 集群列表
-    const { clusterList, getClusterList, clusterExtraInfo, webAnnotations } = useClusterList(ctx);
+    const { clusterList: clusterData, getClusterList, clusterExtraInfo, webAnnotations } = useClusterList(ctx);
+    const clusterList = computed(() => clusterData.value.filter(item => !item.is_shared));
     const allowDelete = cluster => !!clusterExtraInfo.value[cluster.clusterID]?.canDeleted;
     const isLoading = ref(false);
     const handleGetClusterList = async () => {

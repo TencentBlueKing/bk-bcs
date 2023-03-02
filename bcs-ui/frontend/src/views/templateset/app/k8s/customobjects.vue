@@ -1,26 +1,14 @@
 <template>
   <div class="biz-content">
-    <div class="biz-top-bar">
-      <div class="biz-app-title">
-        CustomObjects
-      </div>
-      <bk-guide></bk-guide>
-    </div>
+    <Header hide-back title="CustomObjects" />
     <div class="biz-content-wrapper" style="padding: 0;" v-bkloading="{ isLoading: isInitLoading, opacity: 0.1 }">
       <template v-if="!isInitLoading">
         <div class="biz-panel-header biz-event-query-query" style="padding-right: 0;">
-          <div class="left">
-            <bk-selector
+          <div class="left !w-[260px]">
+            <ClusterSelect
               :placeholder="$t('请选择集群')"
-              :searchable="true"
-              :setting-key="'cluster_id'"
-              :display-key="'name'"
-              :selected.sync="selectedClusterId"
-              :disabled="!!curClusterId"
-              :list="clusterList"
-              :search-placeholder="$t('输入集群名称搜索')"
-              @item-selected="handleChangeCluster">
-            </bk-selector>
+              :value="selectedClusterId"
+              @change="handleChangeCluster" />
           </div>
           <div class="left" style="width: 290px;">
             <bk-selector
@@ -109,14 +97,17 @@
 
 <script>
 import { catchErrorHandler } from '@/common/util';
-
+import Header from '@/components/layout/Header.vue';
 import GamestatefulsetSideslider from './gamestatefulset-sideslider';
 import { useNamespace } from '@/views/dashboard/namespace/use-namespace';
+import ClusterSelect from '@/components/cluster-selector/cluster-select.vue';
 
 export default {
   name: 'CustomObjects',
   components: {
     GamestatefulsetSideslider,
+    Header,
+    ClusterSelect,
   },
   data() {
     return {
@@ -173,7 +164,7 @@ export default {
       return this.$store.state.isEn;
     },
     curClusterId() {
-      return this.$store.state.curClusterId;
+      return this.$store.getters.curClusterId;
     },
     clusterList() {
       return this.$store.state.cluster.clusterList;

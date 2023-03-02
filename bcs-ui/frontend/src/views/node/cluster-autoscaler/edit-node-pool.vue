@@ -27,14 +27,14 @@
           </NodePoolInfo>
         </bcs-tab-panel>
       </bcs-tab>
-      <div class="footer">
-        <bcs-button
-          theme="primary"
-          style="min-width: 88px"
-          :loading="saveLoading"
-          @click="handleEditNodePool">{{$t('保存')}}</bcs-button>
-        <bcs-button @click="handleCancel">{{$t('取消')}}</bcs-button>
-      </div>
+    </div>
+    <div class="bcs-fixed-footer">
+      <bcs-button
+        theme="primary"
+        class="min-w-[88px]"
+        :loading="saveLoading"
+        @click="handleEditNodePool">{{$t('保存')}}</bcs-button>
+      <bcs-button @click="handleCancel">{{$t('取消')}}</bcs-button>
     </div>
   </BcsContent>
 </template>
@@ -197,16 +197,17 @@ export default defineComponent({
 </script>
 <style lang="postcss" scoped>
 >>> .node-pool-wrapper {
+  height: calc(100vh - 250px);
   .bk-resize-layout-main .main {
-    max-height: calc(100vh - 270px);
+    max-height: calc(100vh - 260px);
   }
   .aside .content-wrapper {
-    max-height: calc(100vh - 322px);
+    max-height: calc(100vh - 312px);
   }
 }
 
 >>> .node-config-wrapper {
-  max-height: calc(100vh - 272px);
+  max-height: calc(100vh - 252px);
 }
 
 >>> .node-pool-tab {
@@ -215,24 +216,7 @@ export default defineComponent({
   }
   .node-config {
     margin-bottom: 0;
-  }
-}
-.footer {
-  position: fixed;
-  bottom: 0px;
-  height: 60px;
-  display: flex;
-  align-items: center;
-  justify-content: start;
-  padding: 0 24px;
-  background-color: #fff;
-  border-top: 1px solid #dcdee5;
-  box-shadow: 0 -2px 4px 0 rgb(0 0 0 / 5%);
-  z-index: 200;
-  right: 0;
-  width: calc(100% - 261px);
-  .btn {
-      width: 88px;
+    max-height: unset;
   }
 }
 </style>

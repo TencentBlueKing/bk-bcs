@@ -1,13 +1,7 @@
 <!-- eslint-disable vue/multi-word-component-names -->
 <template>
   <div class="biz-content">
-    <div class="biz-top-bar">
-      <div class="biz-crd-title">
-        <a class="bcs-icon bcs-icon-arrows-left back" href="javascript:void(0);" @click="goBack"></a>
-        <span>{{curApp.tool_info.name}}</span>
-      </div>
-    </div>
-
+    <Header :title="curApp.tool_info.name" />
     <div class="biz-content-wrapper">
       <div>
         <div class="biz-crd-header">
@@ -166,10 +160,12 @@
 <script>
 import { catchErrorHandler } from '@/common/util';
 import MonacoEditor from '@/components/monaco-editor/editor.vue';
+import Header from '@/components/layout/Header.vue';
 
 export default {
   components: {
     MonacoEditor,
+    Header,
   },
   data() {
     return {

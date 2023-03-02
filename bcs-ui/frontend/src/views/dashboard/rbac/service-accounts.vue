@@ -1,7 +1,7 @@
 <template>
   <BaseLayout title="ServiceAccounts" kind="ServiceAccount" category="service_accounts" type="rbac">
     <template
-      #default="{ curPageData, pageConf,
+      #default="{ curPageData, pageConf, nameValue, handleClearSearchData,
                   handlePageChange, handlePageSizeChange, handleGetExtData,
                   handleShowDetail, handleSortChange,handleUpdateResource,handleDeleteResource }">
       <bk-table
@@ -39,6 +39,9 @@
               @click="handleDeleteResource(row)">{{ $t('删除') }}</bk-button>
           </template>
         </bk-table-column>
+        <template #empty>
+          <BcsEmptyTableStatus :type="nameValue ? 'search-empty' : 'empty'" @clear="handleClearSearchData" />
+        </template>
       </bk-table>
     </template>
     <template #detail="{ data, extData }">

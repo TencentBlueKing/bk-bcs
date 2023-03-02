@@ -16,7 +16,8 @@
           class="search-input"
           v-model="searchValue"
           right-icon="bk-icon icon-search"
-          :placeholder="$t('输入名称、创建者、更新者搜索')">
+          :placeholder="$t('输入名称、创建者、更新者搜索')"
+          clearable>
         </bk-input>
       </div>
       <bcs-table
@@ -51,6 +52,9 @@
             <bk-button text class="ml10" @click="handleDelete(row)">{{$t('删除')}}</bk-button>
           </template>
         </bcs-table-column>
+        <template #empty>
+          <BcsEmptyTableStatus :type="searchValue ? 'search-empty' : 'empty'" @clear="searchValue = ''" />
+        </template>
       </bcs-table>
       <bcs-sideslider
         :is-show.sync="showDetail"
@@ -74,7 +78,7 @@ import { defineComponent, onMounted, ref } from '@vue/composition-api';
 import $i18n from '@/i18n/i18n-setup';
 import usePage from '@/views/dashboard/common/use-page';
 import useSearch from '@/views/dashboard/common/use-search';
-import $router from '@/router/index';
+import $router from '@/router';
 import $store from '@/store/index';
 import NodeTemplateDetail from './node-template-detail.vue';
 import ContentHeader from '@/components/layout/Header.vue';
@@ -139,7 +143,7 @@ export default defineComponent({
       });
     };
     const showDetail = ref(false);
-    const currentRow = ref({});
+    const currentRow = ref<any>({});
     const handleShowDetail = (row) => {
       currentRow.value = row;
       showDetail.value = true;

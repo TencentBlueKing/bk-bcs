@@ -12,7 +12,7 @@ export function useClusterList(ctx: SetupContext) {
   const { $store } = ctx.root;
 
   const clusterList = computed(() => $store.state.cluster.clusterList);
-  const curProjectId = computed(() => $store.state.curProjectId);
+  const curProjectId = computed(() => $store.getters.curProjectId);
   const clusterExtraInfo = ref({});
   const webAnnotations = ref({ perms: {} });
   // 获取集群列表

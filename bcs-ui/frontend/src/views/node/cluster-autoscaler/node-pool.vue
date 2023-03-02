@@ -33,7 +33,7 @@ import NodeConfig from './node-config.vue';
 import $store from '@/store/index';
 import Schema from '../resolve-schema';
 import { mergeDeep } from '@/common/util';
-import $router from '@/router/index';
+import $router from '@/router';
 
 export default defineComponent({
   components: {
@@ -173,6 +173,6 @@ export default defineComponent({
 <style lang="postcss" scoped>
 .node-pool {
   margin: -24px;
-  min-height: 200px;
+  height: calc(100vh - 104px);
 }
 </style>

@@ -4,10 +4,10 @@
 
 .biz-service-title {
     display: inline-block;
-    height: 60px;
-    line-height: 60px;
+    height: 52px;
+    line-height: 52px;
     font-size: 16px;
-    margin-left: 20px;
+    margin-left: 24px;
 }
 
 .biz-service-table>thead>tr>th:first-child,
@@ -142,16 +142,6 @@
     }
     .biz-table-wrapper {
         overflow-x: scroll;
-        &::-webkit-scrollbar {
-            width: 4px;
-            height: 4px;
-            background-color: #fafbfd;
-        }
-        &::-webkit-scrollbar-thumb {
-            height: 5px;
-            border-radius: 2px;
-            background-color: #c4c6cc;
-        }
     }
 }
 

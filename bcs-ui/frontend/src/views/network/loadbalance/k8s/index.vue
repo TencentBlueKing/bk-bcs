@@ -2,85 +2,73 @@
 <!-- eslint-disable max-len -->
 <template>
   <div class="biz-content">
-    <div class="biz-top-bar">
-      <div class="biz-loadbalance-title">
-        LoadBalancer
-        <span data-v-67a1b199="" class="biz-tip ml10">{{$t('K8S官方维护的ingress-nginx')}}</span>
-      </div>
-      <bk-guide></bk-guide>
-    </div>
+    <Header hide-back title="LoadBalancer" :desc="$t('K8S官方维护的ingress-nginx')" />
     <div class="biz-content-wrapper" style="padding: 0;" v-bkloading="{ isLoading: isInitLoading, opacity: 0.1 }">
-
-      <template v-if="!isInitLoading">
-        <div class="biz-panel-header">
-          <div class="left">
-            <bk-button type="primary" @click.stop.prevent="createLoadBlance">
-              <i class="bcs-icon bcs-icon-plus"></i>
-              <span>{{$t('新建LoadBalancer')}}</span>
-            </bk-button>
-          </div>
-          <div class="right">
-            <bk-data-searcher
-              :placeholder="$t('输入集群名称，按Enter搜索')"
-              :scope-list="searchScopeList"
-              :search-key.sync="searchKeyword"
-              :search-scope.sync="searchScope"
-              :cluster-fixed="!!curClusterId"
-              @search="getLoadBalanceList"
-              @refresh="refresh">
-            </bk-data-searcher>
-          </div>
+      <div class="biz-panel-header">
+        <div class="left">
+          <bk-button type="primary" @click.stop.prevent="createLoadBlance">
+            <i class="bcs-icon bcs-icon-plus"></i>
+            <span>{{$t('新建LoadBalancer')}}</span>
+          </bk-button>
         </div>
-        <div class="biz-loadbalance">
-          <div class="biz-table-wrapper">
-            <bk-table
-              :size="'medium'"
-              :data="curPageData"
-              :pagination="pageConf"
-              v-bkloading="{ isLoading: isPageLoading && !isInitLoading }"
-              @page-limit-change="handlePageLimitChange"
-              @page-change="handlePageChange">
-              <bk-table-column :label="$t('所属集群')" min-width="150">
-                <template slot-scope="props">
-                  <bcs-popover :content="props.row.cluster_id" placement="top">
-                    <div class="cluster-name">{{props.row.cluster_name}}</div>
-                  </bcs-popover>
-                </template>
-              </bk-table-column>
-              <bk-table-column :label="$t('命名空间')" min-width="150">
-                <template slot-scope="props">
-                  {{props.row.namespace_name || '--'}}
-                </template>
-              </bk-table-column>
-              <bk-table-column :label="$t('Chart名称及版本')" min-width="150">
-                <template slot-scope="props">
-                  <div class="chart-info" v-if="props.row.chart">
-                    <p>{{$t('名称')}}：{{props.row.chart.name || '--'}}</p>
-                    <p>{{$t('版本')}}：{{props.row.chart.version || '--'}}</p>
-                  </div>
-                  <template v-else>--</template>
-                </template>
-              </bk-table-column>
-              <bk-table-column :label="$t('更新时间')" min-width="150">
-                <template slot-scope="props">
-                  {{formatDate(props.row.updated)}}
-                </template>
-              </bk-table-column>
-              <bk-table-column :label="$t('更新人')" min-width="150">
-                <template slot-scope="props">
-                  {{props.row.updator}}
-                </template>
-              </bk-table-column>
-              <bk-table-column :label="$t('操作')" min-width="150">
-                <template slot-scope="props">
-                  <a href="javascript:void(0);" class="bk-text-button" @click.stop.prevent="editLoadBalance(props.row)">{{$t('更新')}}</a>
-                  <a href="javascript:void(0);" class="bk-text-button" @click.stop.prevent="removeLoadBalance(props.row)">{{$t('删除')}}</a>
-                </template>
-              </bk-table-column>
-            </bk-table>
-          </div>
+        <div class="right">
+          <ClusterSearch
+            :placeholder="$t('输入集群名称，按Enter搜索')"
+            :search.sync="searchKeyword"
+            :cluster-id.sync="searchScope"
+            @search-change="getLoadBalanceList"
+            @refresh="refresh" />
         </div>
-      </template>
+      </div>
+      <div class="biz-loadbalance">
+        <div class="biz-table-wrapper">
+          <bk-table
+            :size="'medium'"
+            :data="curPageData"
+            :pagination="pageConf"
+            v-bkloading="{ isLoading: isPageLoading && !isInitLoading }"
+            @page-limit-change="handlePageLimitChange"
+            @page-change="handlePageChange">
+            <bk-table-column :label="$t('所属集群')" min-width="150">
+              <template slot-scope="props">
+                <bcs-popover :content="props.row.cluster_id" placement="top">
+                  <div class="cluster-name">{{props.row.cluster_name}}</div>
+                </bcs-popover>
+              </template>
+            </bk-table-column>
+            <bk-table-column :label="$t('命名空间')" min-width="150">
+              <template slot-scope="props">
+                {{props.row.namespace_name || '--'}}
+              </template>
+            </bk-table-column>
+            <bk-table-column :label="$t('Chart名称及版本')" min-width="150">
+              <template slot-scope="props">
+                <div class="chart-info" v-if="props.row.chart">
+                  <p>{{$t('名称')}}：{{props.row.chart.name || '--'}}</p>
+                  <p>{{$t('版本')}}：{{props.row.chart.version || '--'}}</p>
+                </div>
+                <template v-else>--</template>
+              </template>
+            </bk-table-column>
+            <bk-table-column :label="$t('更新时间')" min-width="150">
+              <template slot-scope="props">
+                {{formatDate(props.row.updated)}}
+              </template>
+            </bk-table-column>
+            <bk-table-column :label="$t('更新人')" min-width="150">
+              <template slot-scope="props">
+                {{props.row.updator}}
+              </template>
+            </bk-table-column>
+            <bk-table-column :label="$t('操作')" min-width="150">
+              <template slot-scope="props">
+                <a href="javascript:void(0);" class="bk-text-button" @click.stop.prevent="editLoadBalance(props.row)">{{$t('更新')}}</a>
+                <a href="javascript:void(0);" class="bk-text-button" @click.stop.prevent="removeLoadBalance(props.row)">{{$t('删除')}}</a>
+              </template>
+            </bk-table-column>
+          </bk-table>
+        </div>
+      </div>
     </div>
 
     <bk-sideslider
@@ -200,12 +188,16 @@
 import yamljs from 'js-yaml';
 import CodeEditor from '@/components/monaco-editor/new-editor.vue';
 import nodeSelector from '@/components/node-selector';
+import Header from '@/components/layout/Header.vue';
+import ClusterSearch from '@/components/cluster-selector/cluster-search.vue';
 import { catchErrorHandler, formatDate } from '@/common/util';
 
 export default {
   components: {
     CodeEditor,
     nodeSelector,
+    Header,
+    ClusterSearch,
   },
   data() {
     return {
@@ -217,6 +209,7 @@ export default {
         pageSize: 5,
         curPage: 1,
         show: true,
+        limit: 10,
       },
       curLoadBalance: {
         id: '',
@@ -254,6 +247,7 @@ export default {
       },
       chartVersionList: [],
       aceEditor: null,
+      curPageData: [],
     };
   },
   computed: {
@@ -295,7 +289,7 @@ export default {
       return this.$store.state.cluster.isClusterDataReady;
     },
     curClusterId() {
-      return this.$store.state.curClusterId;
+      return this.$store.getters.curClusterId;
     },
   },
   watch: {
@@ -303,34 +297,6 @@ export default {
       const data = this.getDataByPage(this.pageConf.current);
       this.curPageData = this.formatDataToClient(data);
     },
-    curPageData() {
-      this.curPageData.forEach((item) => {
-        if (this.loadBalanceFixStatus.indexOf(item.status) === -1) {
-          this.getLoadBalanceStatus(item);
-        }
-      });
-    },
-    isClusterDataReady: {
-      immediate: true,
-      handler(val) {
-        if (val) {
-          setTimeout(() => {
-            if (this.searchScopeList.length) {
-              const clusterIds = this.searchScopeList.map(item => item.id);
-              // 使用当前缓存
-              if (sessionStorage['bcs-cluster'] && clusterIds.includes(sessionStorage['bcs-cluster'])) {
-                this.searchScope = sessionStorage['bcs-cluster'];
-              } else {
-                this.searchScope = this.searchScopeList[0].id;
-              }
-            }
-
-            this.getLoadBalanceList();
-          }, 1000);
-        }
-      },
-    },
-
     curClusterId() {
       this.searchScope = this.curClusterId;
       this.getLoadBalanceList();
@@ -340,8 +306,9 @@ export default {
       await this.handlerSelectChart(chartId);
     },
   },
-  created() {
+  mounted() {
     this.initPageConf();
+    this.getLoadBalanceList();
   },
   methods: {
     /**

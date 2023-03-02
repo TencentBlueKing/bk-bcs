@@ -78,7 +78,7 @@
 <script lang="ts">
 import { computed, defineComponent, onMounted, ref } from '@vue/composition-api';
 import $store from '@/store/index';
-import $router from '@/router/index';
+import $router from '@/router';
 import $i18n from '@/i18n/i18n-setup';
 
 export default defineComponent({

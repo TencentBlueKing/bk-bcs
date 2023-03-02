@@ -1,14 +1,7 @@
 <!-- eslint-disable max-len -->
 <template>
   <div class="biz-content">
-    <div class="biz-top-bar">
-      <div class="biz-crd-instance-title">
-        <a href="javascript:void(0);" class="bcs-icon bcs-icon-arrows-left back" @click="goBack"></a>
-        {{$t('DB授权配置管理')}}
-        <span class="biz-tip ml10">({{$t('集群名称')}}：{{clusterName}})</span>
-      </div>
-      <bk-guide></bk-guide>
-    </div>
+    <Header :title="$t('DB授权配置管理')" :desc="$t(`(集群名称: ${clusterName})`)" />
     <div class="biz-content-wrapper" style="padding: 0;" v-bkloading="{ isLoading: isInitLoading, opacity: 0.1 }">
       <template v-if="!isInitLoading">
         <div class="biz-panel-header">
@@ -19,14 +12,14 @@
             </bk-button>
           </div>
           <div class="right">
-            <bk-data-searcher
+            <ClusterSearch
               :placeholder="$t('输入关键字，按Enter搜索')"
-              :search-key.sync="searchKeyword"
-              :search-scope.sync="clusterId"
-              :scope-disabled="true"
-              @search="searchCrdInstance"
-              @refresh="refresh">
-            </bk-data-searcher>
+              :search.sync="searchKeyword"
+              :cluster-id.sync="clusterId"
+              :show-cluster-select="false"
+              @search-change="searchCrdInstance"
+              @refresh="refresh"
+            />
           </div>
         </div>
 
@@ -72,6 +65,11 @@
                   <a href="javascript:void(0);" class="bk-text-button" @click="removeCrdInstance(row)">{{$t('删除')}}</a>
                 </template>
               </bk-table-column>
+              <template #empty>
+                <BcsEmptyTableStatus
+                  :type="searchKeyword ? 'search-empty' : 'empty'"
+                  @clear="handleClearSearchData" />
+              </template>
             </bk-table>
           </div>
         </div>
@@ -291,10 +289,14 @@
 <script>
 import { catchErrorHandler } from '@/common/util';
 import bkKeyer from '@/components/keyer';
+import Header from '@/components/layout/Header.vue';
+import ClusterSearch from '@/components/cluster-selector/cluster-search.vue';
 
 export default {
   components: {
     bkKeyer,
+    Header,
+    ClusterSearch,
   },
   data() {
     return {
@@ -935,6 +937,10 @@ export default {
     changeLabels(labels) {
       // this.curCrdInstance.pod_selector = data
       this.curCrdInstance.labels = labels;
+    },
+    handleClearSearchData() {
+      this.searchKeyword = '';
+      this.searchCrdInstance();
     },
   },
 };

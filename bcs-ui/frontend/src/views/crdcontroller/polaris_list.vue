@@ -1,14 +1,7 @@
 <!-- eslint-disable max-len -->
 <template>
   <div class="biz-content">
-    <div class="biz-top-bar">
-      <div class="biz-crd-instance-title">
-        <a href="javascript:void(0);" class="bcs-icon bcs-icon-arrows-left back" @click="goBack"></a>
-        Polaris
-        <span class="biz-tip ml10">({{$t('集群名称')}}：{{ clusterName }})</span>
-      </div>
-      <bk-guide></bk-guide>
-    </div>
+    <Header title="Polaris" :desc="`(集群名称: ${clusterName})`"></Header>
     <div class="biz-content-wrapper" style="padding: 0;" v-bkloading="{ isLoading: isInitLoading, opacity: 0.1 }">
       <template v-if="!isInitLoading">
         <div class="biz-panel-header">
@@ -32,6 +25,7 @@
               </bk-selector>
               <bkbcs-input
                 style="width: 180px;"
+                class="ml-[5px]"
                 :placeholder="$t('Polaris服务名')"
                 :value.sync="searchParams.polaris_name">
               </bkbcs-input>
@@ -172,8 +166,7 @@
                     :placeholder="$t('请选择')"
                     :disabled="isReadonly"
                     :selected.sync="curCrdInstance.namespace"
-                    :list="nameSpaceList"
-                    @item-selected="handleNamespaceSelect">
+                    :list="nameSpaceList">
                   </bk-selector>
                 </div>
               </div>
@@ -204,8 +197,7 @@
                       :placeholder="$t('请选择')"
                       :selected.sync="curCrdInstance.polaris.namespace"
                       :disabled="isReadonly"
-                      :list="polarisNameSpaceList"
-                      @item-selected="handlePolarisNamespaceSelect">
+                      :list="polarisNameSpaceList">
                     </bk-selector>
                   </div>
                 </div>
@@ -297,10 +289,12 @@
 <script>
 import { defineComponent, reactive, toRefs, computed, onMounted, watch } from '@vue/composition-api';
 import { useNamespace } from '@/views/dashboard/namespace/use-namespace';
+import Header from '@/components/layout/Header.vue';
 
 export default defineComponent({
   name: 'CrdcontrollerPolarisInstances',
   components: {
+    Header,
   },
   setup(props, ctx) {
     const { $store, $route, $router, $i18n } = ctx.root;
@@ -524,14 +518,12 @@ export default defineComponent({
     };
 
 
-    
     const { getNamespaceData } = useNamespace();
 
     /**
              * 获取命名空间列表
              */
     const getNameSpaceList = async () => {
-
       const res = await getNamespaceData({
         $clusterId: clusterId,
       });

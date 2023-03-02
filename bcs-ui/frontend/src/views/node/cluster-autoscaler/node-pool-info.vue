@@ -87,14 +87,14 @@
         </div>
       </template>
     </bcs-resize-layout>
-    <div class="footer" v-if="showFooter">
+    <div class="bcs-fixed-footer" v-if="showFooter">
       <bcs-button @click="handlePre">{{$t('上一步')}}</bcs-button>
       <bcs-button
         theme="primary"
         :loading="saveLoading"
         class="ml10"
         @click="handleSaveNodePoolData">
-        {{isEdit ? $t('保存节点池') : $t('创建节点池')}}
+        {{isEdit ? $t('保存节点规格') : $t('创建节点规格')}}
       </bcs-button>
       <bk-button class="ml10" @click="handleCancel">{{ $t('取消') }}</bk-button>
     </div>
@@ -106,7 +106,7 @@ import FormGroup from '@/views/cluster/create-cluster/form-group.vue';
 import BasicPoolInfo from './basic-pool-info.vue';
 import KubeletParams from './kubelet-params.vue';
 import BkSops from './bk-sops.vue';
-import $router from '@/router/index';
+import $router from '@/router';
 import { mergeDeep } from '@/common/util';
 import ActionDoc from '../node-template/action-doc.vue';
 
@@ -244,6 +244,9 @@ export default defineComponent({
 });
 </script>
 <style lang="postcss" scoped>
+.node-pool-wrapper {
+  height: calc(100vh - 104px);
+}
 >>> .bk-resize-layout>.bk-resize-layout-aside:after {
   content: unset;
 }
@@ -262,26 +265,8 @@ export default defineComponent({
   }
 }
 .main {
-  max-height: calc(100vh - 172px);
+  max-height: calc(100vh - 164px);
   overflow: auto;
   padding: 24px;
-}
-.footer {
-  position: fixed;
-  bottom: 0px;
-  height: 60px;
-  display: flex;
-  align-items: center;
-  justify-content: start;
-  padding: 0 24px;
-  background-color: #fff;
-  border-top: 1px solid #dcdee5;
-  box-shadow: 0 -2px 4px 0 rgb(0 0 0 / 5%);
-  z-index: 200;
-  right: 0;
-  width: calc(100% - 261px);
-  .btn {
-      width: 88px;
-  }
 }
 </style>

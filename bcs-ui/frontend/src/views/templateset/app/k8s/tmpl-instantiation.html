@@ -1,11 +1,5 @@
 <div class="biz-content">
-    <div class="biz-top-bar">
-        <div class="biz-configuration-instantiation-title">
-            <i class="bcs-icon bcs-icon-arrows-left back" @click="goTemplateset(false)"></i>
-            <span style="cursor: default;" v-if="tmplAppName">{{category}}{{$t('模板：')}}{{tmplAppName}}{{$t('实例化')}}</span>
-        </div>
-        <bk-guide></bk-guide>
-    </div>
+    <Header :title="`${category}${$t('模板')}: ${tmplAppName}${$t('实例化')}`"></Header>
     <div class="biz-content-wrapper">
         <div class="biz-configuration-instantiation-wrapper" v-bkloading="{isLoading: createInstanceLoading, extCls: 'content-loading'}">
             <div class="biz-configuration-instantiation-header">

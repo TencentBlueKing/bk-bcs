@@ -1,15 +1,10 @@
 <div class="biz-content">
-    <div class="biz-top-bar">
-        <div class="biz-app-title">
-            {{$t('应用列表')}}
-        </div>
-        <bk-guide></bk-guide>
-    </div>
+    <Header hide-back :title="$t('应用列表')"></Header>
     <div class="biz-content-wrapper biz-app-loading" style="padding: 0;">
         <div class="biz-panel-header biz-app-query" style="padding: 27px 20px 15px 20px;">
             <div class="left" v-if="$INTERNAL">
                 <bk-dropdown-menu :align="'center'" ref="toggleDropdown">
-                    <a href="javascript:void(0);" slot="dropdown-trigger" class="dropdown-trigger-btn bk-text-button">
+                    <a href="javascript:void(0);" slot="dropdown-trigger" class="dropdown-trigger-btn bk-text-button bg-[#fff]">
                         <template v-if="viewMode === 'template'">{{$t('集群模板视图')}}</template>
                         <template v-if="viewMode === 'namespace'">{{$t('命名空间视图')}}</template>
                         <i class="bcs-icon bcs-icon-angle-down dropdown-menu-angle-down"></i>
@@ -25,19 +20,13 @@
                 </bk-dropdown-menu>
             </div>
             <div class="left">
-                <div class="cluster-search-warpper">
+                <div class="cluster-search-warpper flex">
                     <span class="label" :class="clusterSearchSelectExpand ? 'is-focus' : ''">{{$t('集群名')}}</span>
-                    <bcs-select class="cluster-search-select"
-                        :disabled="bkSearcherMask || !!curClusterId"
-                        v-model="clusterValue" searchable :clearable="false"
-                        @change="changeCluster"
-                        @toggle="clusterSearchSelectToggle">
-                        <bcs-option v-for="option in $store.state.cluster.clusterList"
-                            :key="option.cluster_id"
-                            :id="option.cluster_id"
-                            :name="option.name">
-                        </bcs-option>
-                    </bcs-select>
+                    <ClusterSelect 
+                        :disabled="bkSearcherMask"
+                        v-model="clusterValue"
+                        @change="changeCluster">
+                    </ClusterSelect>
                 </div>
             </div>
             <div class="right">
@@ -65,7 +54,7 @@
             </div>
         </div>
 
-        <div v-bkloading="{isLoading: showLoading}" :class="tmplMusterList.length || namespaceList.length ? '' : 'biz-app-list-wrapper'">
+        <div v-bkloading="{isLoading: showLoading, color: '#f5f7fa'}" :class="tmplMusterList.length || namespaceList.length ? '' : 'biz-app-list-wrapper min-h-[200px]'">
             <!-------------------------------- 模板集视图 -------------------------------->
             <template v-if="viewMode === 'template'">
                 <p class="biz-tip ml20 mb20">

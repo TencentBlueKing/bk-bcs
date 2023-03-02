@@ -1,13 +1,12 @@
 @import '@/css/variable.css';
 @import '@/css/mixins/ellipsis.css';
-@import '@/css/mixins/scroller.css';
 
 .biz-app-title {
     display: inline-block;
-    height: 60px;
-    line-height: 60px;
+    height: 52px;
+    line-height: 52px;
     font-size: 16px;
-    margin-left: 20px;
+    margin-left: 24px;
 }
 
 .biz-app-query {
@@ -50,16 +49,6 @@
                 border-right: 0;
                 margin-right: -3px;
                 padding-left: 10px;
-                &:after {
-                    content: "";
-                    position: absolute;
-                    display: inline-block;
-                    top: 8px;
-                    right: 3px;
-                    width: 1px;
-                    height: 14px;
-                    background-color: #c4c6cc;
-                }
                 &.is-focus {
                     border-color: #3a84ff;
                 }
@@ -77,7 +66,7 @@
     }
 
     .right {
-        width: calc(100% - 400px);
+        width: calc(100% - 500px);
         &.mesos {
             width: calc(100% - 140px);
         }
@@ -665,7 +654,6 @@
         display: flex;
         max-height: 150px;
         overflow: scroll;
-        @mixin scroller;
 
         &:before {
             content: '';

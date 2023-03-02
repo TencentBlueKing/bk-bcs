@@ -331,7 +331,6 @@ export default {
 <style scoped lang="postcss">
     @import '@/css/variable.css';
     @import '@/css/mixins/ellipsis.css';
-    @import '@/css/mixins/scroller.css';
 
     .biz-var-panel {
         width: 495px;
@@ -399,7 +398,6 @@ export default {
         bottom: 0;
         width: 100%;
         border-top: 1px solid #DDE4EB;
-        @mixin scroller;
 
         .var-name {
             vertical-align: middle;

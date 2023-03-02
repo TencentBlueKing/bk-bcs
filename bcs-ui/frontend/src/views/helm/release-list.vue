@@ -2,21 +2,20 @@
   <BcsContent :title="$t('Helm Release列表')" hide-back>
     <Row>
       <template #right>
-        <ClusterSelect :disabled="isSingleCluster" v-model="clusterID"></ClusterSelect>
+        <ClusterSelect v-model="clusterID" cluster-type="all" @change="handleClusterChange"></ClusterSelect>
         <NamespaceSelect
           :cluster-id="clusterID"
-          class="min-w-[200px] ml-[5px]"
+          class="w-[250px] ml-[5px]"
           :clearable="true"
-          v-model="ns">
+          v-model="ns"
+          @change="handleResetList">
         </NamespaceSelect>
         <bcs-input
           right-icon="bk-icon icon-search"
-          class="min-w-[360px] ml-[5px]"
-          :placeholder="$t('输入名称, 按Enter键搜索')"
+          class="w-[360px] ml-[5px]"
+          :placeholder="$t('输入名称搜索')"
           clearable
-          :value="searchName"
-          @blur="handleSearch"
-          @enter="handleSearch">
+          v-model="searchName">
         </bcs-input>
       </template>
     </Row>
@@ -71,11 +70,23 @@
             <span
               v-bk-tooltips="{
                 content: row.message,
-                disabled: !row.message || row.status === 'deployed',
-                width: 600,
+                disabled: !row.message ||
+                  ![
+                    'failed',
+                    'failed-install',
+                    'failed-upgrade',
+                    'failed-rollback',
+                    'failed-uninstall'
+                  ].includes(row.status),
                 theme: 'bcs-tippy'
               }"
-              :class="row.message && row.status !== 'deployed' ? 'border-dashed border-0 border-b' : ''">
+              :class="row.message && [
+                'failed',
+                'failed-install',
+                'failed-upgrade',
+                'failed-rollback',
+                'failed-uninstall'
+              ].includes(row.status) ? 'border-dashed border-0 border-b' : ''">
               {{statusTextMap[row.status]}}
             </span>
           </StatusIcon>
@@ -203,6 +214,9 @@
           </bk-popover>
         </template>
       </bcs-table-column>
+      <template #empty>
+        <BcsEmptyTableStatus :type="(ns || searchName) ? 'search-empty' : 'empty'" @clear="handleClearSearchData" />
+      </template>
     </bcs-table>
     <!-- release状态 -->
     <bcs-sideslider
@@ -217,6 +231,7 @@
               class="w-[300px]"
               right-icon="bk-icon icon-search"
               :placeholder="$t('输入名称搜索')"
+              clearable
               v-model="resourceName">
             </bcs-input>
           </template>
@@ -251,6 +266,9 @@
                 {{ row.status ? `${row.status.readyReplicas || '-'} / ${row.status.replicas || '-'}` : '- / -' }}
               </template>
             </bcs-table-column>
+            <template #empty>
+              <BcsEmptyTableStatus :type="resourceName ? 'search-empty' : 'empty'" @clear="resourceName = ''" />
+            </template>
           </bcs-table>
         </div>
       </template>
@@ -373,8 +391,7 @@ import { useCluster, useProject } from '@/common/use-app';
 import { copyText } from '@/common/util';
 import $i18n from '@/i18n/i18n-setup';
 import $router from '@/router';
-import { CUR_SELECT_NAMESPACE } from '@/common/constant';
-import useDefaultClusterId from '@/views/node/use-default-clusterId';
+import $store from '@/store';
 
 export default defineComponent({
   name: 'ReleaseList',
@@ -407,17 +424,13 @@ export default defineComponent({
       handlePreviewRelease,
     } = useHelm();
 
-    const { clusterList, isSingleCluster } = useCluster();
+    const { clusterList } = useCluster();
     const { projectID } = useProject();
-    const { defaultClusterId } = useDefaultClusterId();
-    const clusterID = ref(defaultClusterId.value || '');
+    const clusterID = ref($store.getters.curClusterId);
     const clusterName = computed(() => clusterList.value.find(item => item.clusterID === clusterID.value)?.clusterName);
-    const ns = ref<string>(props.namespace || sessionStorage.getItem(CUR_SELECT_NAMESPACE) || '');
-    const searchName = useDebouncedRef<string>(props.name, 300);
+    const ns = ref<string>(props.namespace || $store.state.curNamespace);
+    const searchName = useDebouncedRef<string>(props.name, 360);
 
-    const handleSearch = (v: string) => {
-      searchName.value = v;
-    };
     // release 列表
     const loading = ref(false);
     const releaseList = ref<any[]>([]);
@@ -453,13 +466,6 @@ export default defineComponent({
       current: 1,
       limit: 10,
     });
-    watch(clusterID, () => {
-      ns.value = '';
-    });
-    watch([clusterID, ns, searchName], async () => {
-      pagination.value.current = 1;
-      handleGetList();
-    });
     const { start, stop } = useInterval(() => handleGetList(false));
     watch(releaseList, () => {
       if (releaseList.value.some(item => [
@@ -473,6 +479,19 @@ export default defineComponent({
         stop();
       }
     });
+    // 搜索
+    watch(searchName, () => {
+      handleResetList();
+    });
+    const handleResetList = () => {
+      pagination.value.current = 1;
+      handleGetList();
+    };
+    const handleClusterChange = () => {
+      ns.value = '';
+      handleResetList();
+    };
+
     const handleGetList = async (defaultLoading = true) => {
       if (!clusterID.value) return;
       loading.value = defaultLoading;
@@ -667,13 +686,18 @@ export default defineComponent({
       });
     };
 
+    const handleClearSearchData = () => {
+      ns.value = '';
+      searchName.value = '';
+      handleResetList();
+    };
+
     onMounted(() => {
       handleGetList();
     });
 
     return {
       projectID,
-      isSingleCluster,
       categoryMap,
       curRow,
       clusterID,
@@ -718,7 +742,9 @@ export default defineComponent({
       handleConfirmRollback,
       handleDelete,
       handleGotoResourceDetail,
-      handleSearch,
+      handleClusterChange,
+      handleResetList,
+      handleClearSearchData,
     };
   },
 });

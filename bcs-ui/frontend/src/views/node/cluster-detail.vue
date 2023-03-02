@@ -4,7 +4,6 @@
     <ContentHeader
       :title="curCluster.name"
       :desc="`(${curCluster.clusterID})`"
-      :hide-back="isSingleCluster"
     ></ContentHeader>
     <div class="biz-content-wrapper">
       <div class="cluster-detail">
@@ -58,7 +57,6 @@ import ContentHeader from '@/components/layout/Header.vue';
 import node from './node.vue';
 import overview from '@/views/cluster/overview.vue';
 import info from '@/views/cluster/info.vue';
-import useDefaultClusterId from './use-default-clusterId';
 import $i18n from '@/i18n/i18n-setup';
 import AutoScaler from './cluster-autoscaler-tencent/autoscaler.vue';
 import InternalAutoScaler from './cluster-autoscaler/autoscaler.vue';
@@ -131,7 +129,6 @@ export default defineComponent({
         },
       });
     };
-    const { isSingleCluster } = useDefaultClusterId();
     const cloudDetail = ref<any>({});
     const isLoading = ref(false);
     const handleGetCloudDetail = async () => {
@@ -148,7 +145,6 @@ export default defineComponent({
       webAnnotations,
       cloudDetail,
       isLoading,
-      isSingleCluster,
       curCluster,
       tabItems,
       activeId,

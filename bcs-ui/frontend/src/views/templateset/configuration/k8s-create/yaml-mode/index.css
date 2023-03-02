@@ -1,7 +1,6 @@
 @import '@/css/variable.css';
 @import '@/css/mixins/ellipsis';
 @import '@/css/mixins/clearfix';
-@import '@/css/mixins/scroller';
 
 .biz-yaml-content {
 	display: flex;
@@ -368,7 +367,6 @@
     bottom: 0;
     width: 100%;
     border-top: 1px solid #DDE4EB;
-    @mixin scroller;
 
     .var-name {
         max-width: 170px;

@@ -2,25 +2,18 @@
 <!-- eslint-disable max-len -->
 <template>
   <div class="biz-content">
-    <div class="biz-top-bar">
-      <div class="biz-app-title">
-        {{crdKind === 'BcsLog' ? $t('日志采集') : $t('组件库')}}
-      </div>
-      <bk-guide></bk-guide>
-    </div>
+    <Header hide-back :title="crdKind === 'BcsLog' ? $t('日志采集') : $t('组件库')" />
     <div class="biz-content-wrapper" style="padding: 0;">
       <template>
         <div class="biz-panel-header">
           <div class="right">
-            <bk-data-searcher
-              :scope-list="searchScopeList"
-              :search-key.sync="searchKeyword"
-              :search-scope.sync="searchScope"
-              :cluster-fixed="!!curClusterId"
-              :show-search-input="false"
-              @search="search"
-              @refresh="refresh">
-            </bk-data-searcher>
+            <ClusterSearch
+              :search.sync="searchKeyword"
+              :cluster-id.sync="searchScope"
+              :show-search="false"
+              @search-change="search"
+              @cluster-change="search"
+              @refresh="refresh" />
           </div>
         </div>
         <div class="biz-crdcontroller" v-bkloading="{ isLoading: isPageLoading }" style="min-height: 180px;">
@@ -209,7 +202,7 @@
                 <th style="width: 120px; padding-left: 0;" class="center">{{$t('图标')}}</th>
                 <th style="width: 150px; padding-left: 20px;">{{$t('组件名称')}}</th>
                 <th style="width: 120px; padding-left: 20px">{{$t('版本')}}</th>
-                <th style="width: 100px; padding-left: 20px;">{{$t('状态')}}</th>
+                <th style="width: 120px; padding-left: 20px;">{{$t('状态')}}</th>
                 <th style="width: 390px; padding-left: 20px;" v-if="$INTERNAL">{{$t('数据源信息')}}</th>
                 <th style="width: 390px; padding-left: 20px;" v-else>{{$t('日志查询入口')}}</th>
                 <th style="padding-left: 0;">{{$t('描述')}}</th>
@@ -378,10 +371,14 @@
 <script>
 import { catchErrorHandler } from '@/common/util';
 import MonacoEditor from '@/components/monaco-editor/editor.vue';
+import Header from '@/components/layout/Header.vue';
+import ClusterSearch from '@/components/cluster-selector/cluster-search.vue';
 
 export default {
   components: {
     MonacoEditor,
+    Header,
+    ClusterSearch,
   },
   data() {
     return {
@@ -461,15 +458,15 @@ export default {
       return this.editorOptions.fullScreen ? height : height - 80;
     },
     curClusterId() {
-      return this.$store.state.curClusterId;
+      return this.$store.getters.curClusterId;
     },
   },
-  watch: {
-    curClusterId() {
-      this.searchScope = this.curClusterId;
-      this.search();
-    },
-  },
+  // watch: {
+  //   curClusterId() {
+  //     this.searchScope = this.curClusterId;
+  //     this.search();
+  //   },
+  // },
   mounted() {
     this.init();
   },
@@ -643,10 +640,6 @@ export default {
     },
 
     showInstanceDetail(crdcontroller) {
-      if (window.sessionStorage) {
-        window.sessionStorage['bcs-cluster'] = this.searchScope;
-        window.sessionStorage['bcs-crdcontroller'] = JSON.stringify(crdcontroller);
-      }
       this.$router.push({
         name: 'crdcontrollerInstanceDetail',
         params: {
@@ -658,10 +651,6 @@ export default {
     },
 
     async goControllerInstances(crdcontroller) {
-      if (window.sessionStorage) {
-        window.sessionStorage['bcs-cluster'] = this.searchScope;
-      }
-
       if (this.crdKind === 'BcsLog') {
         try {
           if (this.$INTERNAL) {

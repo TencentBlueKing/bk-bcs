@@ -2,13 +2,7 @@
 <!-- eslint-disable max-len -->
 <template>
   <div class="biz-content">
-    <div class="biz-top-bar">
-      <div class="biz-config-templateset-title">
-        {{$t('模板集')}}
-      </div>
-      <bk-guide></bk-guide>
-    </div>
-
+    <Header hide-back :title="$t('模板集')" />
     <div class="biz-content-wrapper" style="margin: 0; padding: 0;" v-bkloading="{ isLoading: isLoading, opacity: 0.1 }">
       <template v-if="!isLoading">
         <div class="biz-panel-header" style="padding: 20px;">
@@ -426,8 +420,10 @@
 
 <script>
 import { catchErrorHandler } from '@/common/util';
+import Header from '@/components/layout/Header.vue';
 
 export default {
+  components: { Header },
   data() {
     return {
       fileImportIndex: 0,
@@ -529,7 +525,7 @@ export default {
       return this.$store.state.curProject;
     },
     onlineProjectList() {
-      return this.$store.state.sideMenu.onlineProjectList;
+      return this.$store.state.projectList;
     },
   },
   watch: {

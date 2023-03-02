@@ -2,7 +2,7 @@
   <section class="create-form-cluster bcs-content-wrapper">
     <bk-form :label-width="labelWidth" :model="basicInfo" :rules="basicDataRules" ref="basicFormRef">
       <bk-form-item :label="$t('集群名称')" property="clusterName" error-display-type="normal" required>
-        <bk-input class="w640" v-model="basicInfo.clusterName"></bk-input>
+        <bk-input :maxlength="64" class="w640" v-model="basicInfo.clusterName"></bk-input>
       </bk-form-item>
       <bk-form-item :label="$t('云服务商')" property="provider" error-display-type="normal" required>
         <bcs-select :loading="templateLoading" class="w640" v-model="basicInfo.provider" :clearable="false">
@@ -89,9 +89,9 @@
 <script lang="ts">
 import { defineComponent, onMounted, ref, computed, watch } from '@vue/composition-api';
 import IpSelector from '@/components/ip-selector/selector-dialog.vue';
-import useGoHome from '@/common/use-gohome';
 import KeyValue from '@/components/key-value.vue';
 import useFormLabel from '@/common/use-form-label';
+import $router from '@/router';
 
 export default defineComponent({
   name: 'CreateFormCluster',
@@ -100,8 +100,7 @@ export default defineComponent({
     KeyValue,
   },
   setup(props, ctx) {
-    const { $i18n, $route, $bkMessage, $store } = ctx.root;
-    const { goHome } = useGoHome();
+    const { $i18n, $bkMessage, $store } = ctx.root;
     const basicFormRef = ref<any>(null);
     const basicInfo = ref<{
       clusterName: string;
@@ -257,11 +256,11 @@ export default defineComponent({
           theme: 'success',
           message: $i18n.t('创建成功'),
         });
-        goHome($route);
+        $router.push({ name: 'home' });
       }
     };
     const handleCancel = () => {
-      goHome($route);
+      $router.push({ name: 'home' });
     };
     const toggleSettings = () => {
       expanded.value = !expanded.value;

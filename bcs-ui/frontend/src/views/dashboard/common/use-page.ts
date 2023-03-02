@@ -7,6 +7,7 @@ export interface IPageConf {
 
 export interface IPagination extends IPageConf {
   count: number;
+  showTotalCount: boolean;
 }
 
 export interface IOptions extends IPageConf {
@@ -57,6 +58,7 @@ export default function usePageConf(data: Ref<any[]>, options: IOptions = {
 
   const pagination = computed<IPagination>(() => ({
     ...pageConf,
+    showTotalCount: true,
     count: data.value.length,
   }));
 

@@ -6,7 +6,8 @@
           v-model="searchValue"
           :placeholder="$t('请输入参数名称')"
           class="min-w-[278px]"
-          right-icon="bk-icon icon-search">
+          right-icon="bk-icon icon-search"
+          clearable>
         </bcs-input>
         <template v-if="!readonly">
           <i
@@ -65,6 +66,9 @@
           </div>
         </template>
       </bcs-table-column>
+      <template #empty>
+        <BcsEmptyTableStatus :type="searchValue ? 'search-empty' : 'empty'" @clear="searchValue = ''" />
+      </template>
     </bcs-table>
     <bcs-dialog
       :title="$t('预览修改值')"

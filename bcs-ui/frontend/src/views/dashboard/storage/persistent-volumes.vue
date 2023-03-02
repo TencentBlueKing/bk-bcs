@@ -3,7 +3,7 @@
     title="PersistentVolumes"
     kind="PersistentVolume" category="persistent_volumes" type="storages" :show-name-space="false" :show-create="false">
     <template
-      #default="{ curPageData, pageConf,
+      #default="{ curPageData, pageConf, nameValue, handleClearSearchData,
                   handlePageChange, handlePageSizeChange, handleGetExtData, handleSortChange }">
       <bk-table
         :data="curPageData"
@@ -64,6 +64,9 @@
                         <bk-button class="ml10" text @click="handleDeleteResource(row)">{{ $t('删除') }}</bk-button>
                     </template>
                 </bk-table-column> -->
+        <template #empty>
+          <BcsEmptyTableStatus :type="nameValue ? 'search-empty' : 'empty'" @clear="handleClearSearchData" />
+        </template>
       </bk-table>
     </template>
   </BaseLayout>

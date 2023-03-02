@@ -1,4 +1,3 @@
-@import '@/css/mixins/scroller.css';
 @import '@/css/mixins/ellipsis.css';
 
 .biz-templateset-action {
@@ -109,7 +108,6 @@
         background: #fafbfd;
         margin-top: 2px;
         padding: 10px;
-        @mixin scroller;
     }
 
     .empty {

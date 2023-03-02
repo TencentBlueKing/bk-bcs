@@ -1,12 +1,7 @@
 <!-- eslint-disable max-len -->
 <template>
   <div class="biz-content" v-bkloading="{ isLoading: showLoading, opacity: 1 }">
-    <div class="biz-top-bar">
-      <div class="biz-image-detail-title">
-        <span class="bcs-icon bcs-icon-arrows-left" style="color: #3a84ff; cursor: pointer; font-weight: 600;" @click="backImageLibrary"></span>
-        {{imageName}}
-      </div>
-    </div>
+    <Header :title="imageName" />
     <div class="biz-image-detail-content-wrapper">
       <div class="biz-header-content">
         <div class="left-wrapper">
@@ -99,8 +94,10 @@
 
 <script>
 import { getScrollHeight, getScrollTop, getWindowHeight } from '@/common/util';
+import Header from '@/components/layout/Header.vue';
 
 export default {
+  components: { Header },
   props: {
     imageRepo: {
       type: String,

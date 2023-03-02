@@ -32,7 +32,7 @@ import moment from 'moment';
 import { catchErrorHandler } from '@/common/util';
 import bkSearcher from '@/views/templateset/components/bk-searcher';
 import ace from '@/components/ace-editor';
-
+import ClusterSelect from '@/components/cluster-selector/cluster-select.vue';
 import MonacoEditor from '@/components/monaco-editor/editor.vue';
 
 export default {
@@ -40,6 +40,7 @@ export default {
     bkSearcher,
     ace,
     MonacoEditor,
+    ClusterSelect,
   },
   data() {
     return {
@@ -283,7 +284,7 @@ export default {
       return this.$store.state.isEn;
     },
     curClusterId() {
-      return this.$store.state.curClusterId;
+      return this.$store.getters.curClusterId;
     },
     clusterList() {
       return this.$store.state.cluster.clusterList;
@@ -291,14 +292,8 @@ export default {
   },
   created() {
     let clusterId = '';
-    const sessionStorageClusterId = sessionStorage['bcs-cluster'];
     if (this.curClusterId) {
       clusterId = this.curClusterId;
-    } else if (sessionStorageClusterId
-      && this.clusterList.length
-      && this.clusterList.find(item => item.cluster_id === sessionStorageClusterId)) {
-      // 应用进到pod页面，点击返回，回到记录的集群下,而不是选中第一个集群
-      clusterId = sessionStorageClusterId;
     } else if (this.clusterList.length) {
       clusterId = this.clusterList[0].cluster_id;
     }
@@ -313,7 +308,7 @@ export default {
       return;
     }
 
-    const appViewMode = localStorage.getItem('appViewMode');
+    const appViewMode = this.$INTERNAL ? localStorage.getItem('appViewMode') : 'namespace';
     if (appViewMode) {
       this.viewMode = appViewMode;
     } else {
@@ -401,8 +396,6 @@ export default {
     },
 
     changeCluster(clusterId) {
-      // 全部集群状态下，应用列表切换集群记录集群id
-      sessionStorage['bcs-cluster'] = clusterId;
       this.cancelLoopAppList();
       this.cancelLoopInstanceList();
 

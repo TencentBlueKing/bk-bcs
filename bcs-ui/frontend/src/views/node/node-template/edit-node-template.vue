@@ -68,7 +68,8 @@
                   <bcs-input
                     v-model="searchValue"
                     :placeholder="$t('请输入参数名称')"
-                    right-icon="bk-icon icon-search">
+                    right-icon="bk-icon icon-search"
+                    clearable>
                   </bcs-input>
                   <i
                     class="bcs-icon bcs-icon-zhongzhishuju ml15"
@@ -125,6 +126,9 @@
                     </div>
                   </template>
                 </bcs-table-column>
+                <template #empty>
+                  <BcsEmptyTableStatus :type="searchValue ? 'search-empty' : 'empty'" @clear="searchValue = ''" />
+                </template>
               </bcs-table>
             </div>
           </FormGroup>
@@ -223,12 +227,6 @@
             </bk-form-item>
           </FormGroup>
         </bk-form>
-        <div class="footer">
-          <bcs-button class="mw88" theme="primary" :loading="btnLoading" @click="handleCreateOrUpdate">
-            {{isEdit ? $t('保存') : $t('创建')}}
-          </bcs-button>
-          <bcs-button class="mw88 ml10" @click="handleCancel">{{$t('取消')}}</bcs-button>
-        </div>
         <bcs-dialog
           :title="$t('预览修改值')"
           :show-footer="false"
@@ -315,6 +313,12 @@
         </bcs-dialog>
       </template>
     </bcs-resize-layout>
+    <div class="bcs-fixed-footer">
+      <bcs-button class="mw88" theme="primary" :loading="btnLoading" @click="handleCreateOrUpdate">
+        {{isEdit ? $t('保存') : $t('创建')}}
+      </bcs-button>
+      <bcs-button class="mw88 ml10" @click="handleCancel">{{$t('取消')}}</bcs-button>
+    </div>
   </div>
 </template>
 <script lang="ts">
@@ -719,7 +723,6 @@ export default defineComponent({
 <style lang="postcss" scoped>
 .add-node-template {
     padding: 24px 0 24px 24px;
-    max-height: calc(100vh - 172px);
     height: 100%;
     overflow: auto;
     >>> .mw524 {
@@ -828,24 +831,6 @@ export default defineComponent({
         color: #3a84ff;
         cursor: pointer;
     }
-    .footer {
-        position: fixed;
-        bottom: 0px;
-        height: 60px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 0 24px;
-        background-color: #fff;
-        border-top: 1px solid #dcdee5;
-        box-shadow: 0 -2px 4px 0 rgb(0 0 0 / 5%);
-        z-index: 200;
-        right: 0;
-        width: calc(100% - 261px);
-        .btn {
-            width: 88px;
-        }
-    }
 }
 >>> .task-status {
     .loading-icon {
@@ -894,7 +879,7 @@ export default defineComponent({
         margin: 0 24px;
     }
     .bk-resize-layout-main {
-        height: calc(100vh - 220px);
+        height: calc(100vh - 200px);
         overflow: auto;
     }
     &.bk-resize-layout-collapsed {

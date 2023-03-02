@@ -21,9 +21,16 @@
       <i class="bk-icon icon-plus-circle-shape mr5"></i>
       {{$t('添加')}}
     </span>
-    <div class="footer">
-      <bk-button theme="primary" :loading="isSubmitting" @click="handleSubmit">{{$t('确定')}}</bk-button>
-      <bk-button theme="default" @click="handleCancel">{{$t('取消')}}</bk-button>
+    <div>
+      <bk-button
+        theme="primary"
+        class="min-w-[88px]"
+        :loading="isSubmitting"
+        @click="handleSubmit">{{$t('确定')}}</bk-button>
+      <bk-button
+        theme="default"
+        class="min-w-[88px]"
+        @click="handleCancel">{{$t('取消')}}</bk-button>
     </div>
   </div>
 </template>
@@ -162,11 +169,6 @@ export default defineComponent({
       }
       .value {
           width: 200px;
-      }
-  }
-  .footer {
-      button {
-          width: 86px;
       }
   }
 }

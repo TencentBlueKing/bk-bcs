@@ -2,7 +2,6 @@
 
 @import '../../../css/variable.css';
 @import '../../../css/mixins/clearfix.css';
-@import '../../../css/mixins/scroller.css';
 
 .node-searcher {
     position: relative;
@@ -98,7 +97,6 @@
         }
 
         .node-searcher-dropdown-list {
-            @mixin scroller;
             width: 100%;
             max-height: 320px;
             list-style: none;
@@ -159,7 +157,6 @@
 
     .search-params-wrapper {
         @mixin clearfix;
-        @mixin scroller;
         height: 100%;
         line-height: 1;
 

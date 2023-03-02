@@ -1,12 +1,7 @@
 <!-- eslint-disable max-len -->
 <template>
   <div class="biz-content">
-    <div class="biz-top-bar">
-      <div class="biz-operate-audit-title">
-        {{$t('操作审计')}}
-      </div>
-      <bk-guide></bk-guide>
-    </div>
+    <Header hide-back :title="$t('操作审计')" />
     <div class="biz-content-wrapper" style="padding: 0;" v-bkloading="{ isLoading: isInitLoading, opacity: 0.1 }">
       <template v-if="!isInitLoading">
         <div class="biz-panel-header biz-operate-audit-query">
@@ -93,8 +88,11 @@
 </template>
 
 <script>
+import Header from '@/components/layout/Header.vue';
+
 export default {
   name: 'OperateAudit',
+  components: { Header },
   data() {
     // 操作类型下拉框 list
     const activityTypeList = [

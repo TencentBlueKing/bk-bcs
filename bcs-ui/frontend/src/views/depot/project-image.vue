@@ -1,15 +1,8 @@
 <template>
   <div class="biz-content">
-    <div class="biz-top-bar">
-      <div class="biz-project-image-title">
-        {{$t('项目镜像')}}
-      </div>
-      <bk-guide></bk-guide>
-    </div>
-
     <div class="biz-content-wrapper" style="padding: 0;" v-bkloading="{ isLoading: isInitLoading, opacity: 0.1 }">
       <template v-if="!isInitLoading">
-        <div class="biz-panel-header biz-project-image-query">
+        <div class="biz-panel-header biz-project-image-query !pt-[0]">
           <div class="right">
             <div class="biz-search-input" style="width: 300px;">
               <bkbcs-input

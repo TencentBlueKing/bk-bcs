@@ -1,6 +1,5 @@
 /* eslint-disable camelcase */
 import { defineComponent, computed, ref, watch, onMounted, toRefs } from '@vue/composition-api';
-import DashboardTopActions from './dashboard-top-actions';
 import { useSelectItemsNamespace } from '../namespace/use-namespace';
 import usePage from './use-page';
 import useSubscribe, { ISubscribeData, ISubscribeParams } from './use-subscribe';
@@ -9,8 +8,9 @@ import { sort } from '@/common/util';
 import yamljs from 'js-yaml';
 import './base-layout.css';
 import fullScreen from '@/directives/full-screen';
-import { CUR_SELECT_NAMESPACE, CUR_SELECT_CRD } from '@/common/constant';
+import { CUR_SELECT_CRD } from '@/common/constant';
 import CodeEditor from '@/components/monaco-editor/new-editor.vue';
+import Header from '@/components/layout/Header.vue';
 import jp from 'jsonpath';
 
 export default defineComponent({
@@ -102,7 +102,7 @@ export default defineComponent({
     const crdKind = computed(() => currentCrdExt.value.kind);
     // 自定义CRD（GameStatefulSets、GameDeployments、CustomObjects）
     const customCrd = computed(() => (type.value === 'crd' && kind.value !== 'CustomResourceDefinition'));
-    const clusterId = computed(() => $store.state.curClusterId);
+    const clusterId = computed(() => $store.getters.curClusterId);
     const handleGetCrdData = async () => {
       crdLoading.value = true;
       const res = await fetchCRDData();
@@ -231,7 +231,7 @@ export default defineComponent({
     });
 
     const handleNamespaceSelected = (value) => {
-      localStorage.setItem(`${clusterId.value}-${CUR_SELECT_NAMESPACE}`, value);
+      $store.commit('updateCurNamespace', value);
       handleGetTableData();
     };
 
@@ -500,6 +500,9 @@ export default defineComponent({
       handleStartSubscribe();
     });
 
+    const handleClearSearchData = () => {
+      searchValue.value = '';
+    };
     return {
       updateStrategyMap,
       namespaceValue,
@@ -545,6 +548,7 @@ export default defineComponent({
       handleConfirmChangeCapacity,
       statusFilters,
       statusFilterMethod,
+      handleClearSearchData,
     };
   },
   render() {
@@ -593,12 +597,7 @@ export default defineComponent({
     };
     return (
       <div class="biz-content base-layout">
-        <div class="biz-top-bar">
-          <div class="dashboard-top-title">
-            {this.title}
-          </div>
-          <DashboardTopActions />
-        </div>
+        <Header hide-back title={this.title} />
         <div class="biz-content-wrapper" v-bkloading={{ isLoading: this.isLoading, opacity: 1 }}>
           <div class="base-layout-operate mb20">
               {
@@ -611,7 +610,7 @@ export default defineComponent({
                         <div class="select-wrapper">
                             <span class="select-prefix">CRD</span>
                             <bcs-select loading={this.crdLoading}
-                                class="dashboard-select"
+                                class="w-[250px] mr-[5px] bg-[#fff]"
                                 v-model={this.currentCrd}
                                 searchable
                                 clearable={false}
@@ -639,26 +638,29 @@ export default defineComponent({
                               <span class="select-prefix">{this.$t('命名空间')}</span>
                               {
                                   this.namespaceDisabled
-                                    ? <bcs-select class="dashboard-select" placeholder={this.$t('请选择命名空间')} disabled></bcs-select>
+                                    ? <bcs-select
+                                        class="w-[250px] mr-[5px] bg-[#fff]"
+                                        placeholder={this.$t('请选择命名空间')}
+                                        disabled />
                                     : <bcs-select
-                                          v-bk-tooltips={{ disabled: !this.namespaceDisabled, content: this.crdTips }}
-                                          loading={this.namespaceLoading}
-                                          class="dashboard-select"
-                                          v-model={this.namespaceValue}
-                                          onSelected={this.handleNamespaceSelected}
-                                          searchable
-                                          clearable={false}
-                                          disabled={this.namespaceDisabled}
-                                          placeholder={this.$t('请选择命名空间')}>
-                                          {
-                                              this.namespaceList.map(option => (
-                                                  <bcs-option
-                                                      key={option.name}
-                                                      id={option.name}
-                                                      name={option.name}>
-                                                  </bcs-option>
-                                              ))
-                                          }
+                                        v-bk-tooltips={{ disabled: !this.namespaceDisabled, content: this.crdTips }}
+                                        loading={this.namespaceLoading}
+                                        class="w-[250px] mr-[5px] bg-[#fff]"
+                                        v-model={this.namespaceValue}
+                                        onSelected={this.handleNamespaceSelected}
+                                        searchable
+                                        clearable={false}
+                                        disabled={this.namespaceDisabled}
+                                        placeholder={this.$t('请选择命名空间')}>
+                                        {
+                                            this.namespaceList.map(option => (
+                                                <bcs-option
+                                                    key={option.name}
+                                                    id={option.name}
+                                                    name={option.name}>
+                                                </bcs-option>
+                                            ))
+                                        }
                                       </bcs-select>
                               }
                           </div>
@@ -698,6 +700,8 @@ export default defineComponent({
                 updateStrategyMap: this.updateStrategyMap,
                 statusFilters: this.statusFilters,
                 statusFilterMethod: this.statusFilterMethod,
+                nameValue: this.nameValue,
+                handleClearSearchData: this.handleClearSearchData,
               })
           }
         </div>

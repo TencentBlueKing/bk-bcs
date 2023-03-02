@@ -128,12 +128,12 @@
                     </ul>
                     <ul v-else>
                       <a
-                        :href="logLinks[row.container_id] && logLinks[row.container_id].std_log_link"
+                        :href="logLinks[row.containerID] && logLinks[row.containerID].std_log_link"
                         target="_blank" class="dropdown-item">
                         {{ $t('标准日志') }}
                       </a>
                       <a
-                        :href="logLinks[row.container_id] && logLinks[row.container_id].file_log_link"
+                        :href="logLinks[row.containerID] && logLinks[row.containerID].file_log_link"
                         target="_blank" class="dropdown-item">
                         {{ $t('文件路径日志') }}
                       </a>
@@ -463,7 +463,7 @@ export default defineComponent({
     // 容器操作
     // 1. 跳转WebConsole
     const projectId = computed(() => $route.params.projectId);
-    const clusterId = computed(() => $store.state.curClusterId || $route.query.cluster_id);
+    const clusterId = computed(() => $store.getters.curClusterId || $route.query.cluster_id);
     const terminalWins = new Map();
     const handleShowTerminal = (row) => {
       const url = `${window.DEVOPS_BCS_API_URL}/web_console/projects/${projectId.value}/clusters/${clusterId.value}/?namespace=${props.namespace}&pod_name=${props.name}&container_name=${row.name}`;
@@ -483,7 +483,7 @@ export default defineComponent({
     // 2. 日志检索
     const isDropdownShow = ref(false);
 
-    const isSharedCluster = computed(() => $store.getters['cluster/isSharedCluster']);
+    const isSharedCluster = computed(() => $store.getters.isSharedCluster);
 
     onMounted(async () => {
       handleGetDetail();

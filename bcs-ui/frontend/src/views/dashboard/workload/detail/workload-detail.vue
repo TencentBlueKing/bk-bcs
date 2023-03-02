@@ -219,6 +219,9 @@
                   text @click="handleReschedule(row)">{{ $t('重新调度') }}</bk-button>
               </template>
             </bcs-table-column>
+            <template #empty>
+              <BcsEmptyTableStatus :type="searchValue ? 'search-empty' : 'empty'" @clear="searchValue = ''" />
+            </template>
           </bcs-table>
         </bcs-tab-panel>
         <bcs-tab-panel name="event" :label="$t('事件')">
@@ -496,7 +499,7 @@ export default defineComponent({
     };
 
     const projectId = computed(() => $route.params.projectId);
-    const clusterId = computed(() => $store.state.curClusterId || $route.query.cluster_id);
+    const clusterId = computed(() => $store.getters.curClusterId || $route.query.cluster_id);
 
     // 批量调度-打开弹框
     const handelShowRescheduleDialog = () => {

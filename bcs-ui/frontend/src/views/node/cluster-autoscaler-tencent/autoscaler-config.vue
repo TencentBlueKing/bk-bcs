@@ -179,7 +179,7 @@ import BcsContent from '../bcs-content.vue';
 import HeaderNav from '../header-nav.vue';
 import { useClusterList } from '@/views/cluster/use-cluster';
 import $i18n from '@/i18n/i18n-setup';
-import $router from '@/router/index';
+import $router from '@/router';
 import $store from '@/store/index';
 import LayoutGroup from '../LayoutGroup.vue';
 

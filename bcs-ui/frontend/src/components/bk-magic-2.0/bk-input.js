@@ -48,6 +48,9 @@ export default {
     const _self = this;
 
     if (_self.$attrs.type === 'number') {
+      this.$listeners.input = (value, event) => {
+        _self.$emit('input', isNaN(value) ? value : Number(value), event);
+      };
       this.$listeners.blur = (value, event) => {
         if (isNaN(value)) {
           value = _self.$attrs.min === Number.MIN_SAFE_INTEGER ? 0 : _self.$attrs.min;

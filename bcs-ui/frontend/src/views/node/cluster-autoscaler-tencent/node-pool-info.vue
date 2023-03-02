@@ -135,7 +135,7 @@
 import { defineComponent, ref, toRefs, onMounted } from '@vue/composition-api';
 import KeyValue from '../key-value.vue';
 import Taints from '../new-taints.vue';
-import $router from '@/router/index';
+import $router from '@/router';
 import $i18n from '@/i18n/i18n-setup';
 import Schema from '../resolve-schema';
 import { nodemanCloudList, ccTopology } from '@/api/base';

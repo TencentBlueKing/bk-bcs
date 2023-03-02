@@ -15,7 +15,7 @@
         handleDeleteResource,handleSortChange,
         handleShowDetail, renderCrdHeader,
         getJsonPathValue, additionalColumns,
-        webAnnotations
+        webAnnotations,nameValue, handleClearSearchData
       }">
       <bk-table
         :data="curPageData"
@@ -79,6 +79,9 @@
               @click="handleDeleteResource(row)">{{ $t('删除') }}</bk-button>
           </template>
         </bk-table-column>
+        <template #empty>
+          <BcsEmptyTableStatus :type="nameValue ? 'search-empty' : 'empty'" @clear="handleClearSearchData" />
+        </template>
       </bk-table>
     </template>
   </BaseLayout>

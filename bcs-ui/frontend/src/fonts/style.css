@@ -869,3 +869,9 @@ url("@/fonts/fonts/iconcool.eot?#iefix") format("embedded-opentype");
 .bcs-icon-helm-app:before {
 	content: "\e225";
 }
+.bcs-icon-terminal:before {
+	content: "\e226";
+}
+.bcs-icon-loadbalance:before {
+	content: "\e227";
+}

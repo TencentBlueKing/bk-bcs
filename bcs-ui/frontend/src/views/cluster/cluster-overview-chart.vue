@@ -307,7 +307,7 @@ export default {
   },
   computed: {
     curCluster() {
-      return this.$store.state.cluster.curCluster;
+      return this.$store.state.curCluster;
     },
     isEn() {
       return this.$store.state.isEn;

@@ -155,7 +155,7 @@ export default {
       },
     },
     onlineProjectList() {
-      return this.$store.state.sideMenu.onlineProjectList;
+      return this.$store.state.projectList;
     },
     searchParamsList() {
       return this.$route.params.searchParamsList;
@@ -164,10 +164,10 @@ export default {
       return this.$store.state.isEn;
     },
     curClusterId() {
-      return this.$store.state.curClusterId;
+      return this.$store.getters.curClusterId;
     },
     curProjectId() {
-      return this.$store.state.curProjectId;
+      return this.$store.getters.curProjectId;
     },
   },
   created() {
