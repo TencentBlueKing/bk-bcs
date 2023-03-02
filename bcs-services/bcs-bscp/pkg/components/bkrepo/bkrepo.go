@@ -28,7 +28,7 @@ import (
 func Upload(ctx context.Context, raw *http.Request, bizID uint32, appId, sha256 string) (string, error) {
 	config := cc.ApiServer().Repo
 	opt := &repo.NodeOption{
-		Project: config.Project,
+		Project: config.BkRepo.Project,
 		BizID:   bizID,
 		Sign:    sha256,
 	}
@@ -44,8 +44,8 @@ func Upload(ctx context.Context, raw *http.Request, bizID uint32, appId, sha256 
 
 	resp, err := components.GetClient().R().
 		SetContext(ctx).
-		SetHeader("Authorization", "Platform "+config.Token).
-		SetHeader(repo.HeaderKeyUID, config.User).
+		SetHeader("Authorization", "Platform "+config.BkRepo.Token).
+		SetHeader(repo.HeaderKeyUID, config.BkRepo.User).
 		SetHeader(repo.HeaderKeySHA256, sha256).
 		SetHeader(repo.HeaderKeyOverwrite, "true").
 		SetBody(raw.Body).

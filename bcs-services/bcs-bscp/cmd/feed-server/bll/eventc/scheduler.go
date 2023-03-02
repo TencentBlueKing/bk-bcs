@@ -93,7 +93,7 @@ type Scheduler struct {
 	retry        *retryList
 	handler      *Handler
 	serialNumber *atomic.Uint64
-	uriDecorator *repo.UriDecorator
+	uriDecorator repo.UriDecoratorInter
 	// notifyLimiter controls the concurrent of sending the event messages to the
 	// event subscribers.
 	notifyLimiter *semaphore.Weighted
@@ -325,7 +325,11 @@ func (sch *Scheduler) buildEvent(inst *InstanceSpec, ciList []*types.ReleaseCICa
 			ReleaseID: releaseID,
 			CIMetas:   ciMeta,
 			Repository: &sfs.RepositoryV1{
-				Root: uriD.Root(),
+				Root:            uriD.Root(),
+				Url:             uriD.Url(),
+				AccessKeyID:     uriD.AccessKeyID(),
+				SecretAccessKey: uriD.SecretAccessKey(),
+				RepositoryType:  uriD.GetRepositoryType(),
 			},
 		},
 		CursorID: cursorID,

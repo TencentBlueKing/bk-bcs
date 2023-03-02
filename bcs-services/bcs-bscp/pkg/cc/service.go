@@ -82,6 +82,7 @@ func (s *ApiServerSetting) trySetDefault() {
 	s.Network.trySetDefault()
 	s.Service.trySetDefault()
 	s.Log.trySetDefault()
+	s.Repo.trySetDefault()
 
 	return
 }

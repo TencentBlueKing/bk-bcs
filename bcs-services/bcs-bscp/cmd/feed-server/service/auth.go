@@ -67,7 +67,7 @@ var repoProject string
 // ParseBizID parse repo authorize request into biz id.
 func (op AuthRepoReq) ParseBizID() (uint32, error) {
 	if repoProject == "" {
-		repoProject = cc.FeedServer().Repository.Project
+		repoProject = cc.FeedServer().Repository.BkRepo.Project
 	}
 
 	if op.Type != "NODE" || op.Action != "READ" || op.ProjectId != repoProject {
