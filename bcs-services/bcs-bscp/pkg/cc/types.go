@@ -249,7 +249,7 @@ const (
 type Repository struct {
 	StorageType StorageMode   `yaml:"storageType"`
 	S3          S3Storage     `yaml:"s3"`
-	BkRepo      BkRepoStorage `yaml:"bkRepo"`
+	BkRepo      BkRepoStorage `yaml:"bk_repo"`
 }
 type BkRepoStorage struct {
 	// Endpoints is a seed list of host:port addresses of repo nodes.
