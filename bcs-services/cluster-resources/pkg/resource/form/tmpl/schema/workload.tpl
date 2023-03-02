@@ -86,8 +86,8 @@ replicas:
         props:
           max: 4096
       ui:rules:
-        - validator: "{{`{{`}} $self.getValue('spec.replicas.updateStrategy') === 'Recreate' || ($self.getValue('spec.replicas.maxSurge') !== 0 || $self.value !== 0) {{`}}`}}"
-          message: {{ i18n "最大调度 Pod 数量 与最大不可用数量不可均为 0" .lang }}
+        - validator: "{{`{{`}} $self.getValue('spec.replicas.updateStrategy') === 'Recreate' || (($self.getValue('spec.replicas.maxSurge') !== 0 || $self.value !== 0) && ($self.getValue('spec.replicas.muaUnit') !== 'percent' || $self.value <= 100)) {{`}}`}}"
+          message: {{ i18n "最大调度 Pod 数量 与最大不可用数量不可均为 0，且最大不可用数量不可超过 100%" .lang }}
     muaUnit:
       title: {{ i18n "单位" .lang }}
       type: string
