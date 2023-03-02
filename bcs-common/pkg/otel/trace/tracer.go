@@ -156,6 +156,7 @@ func InitTracingProvider(serviceName string, opt ...Option) (func(context.Contex
 			// the service name used to display traces in backends
 			semconv.ServiceNameKey.String(defaultOptions.ServiceName),
 		),
+		resource.WithAttributes(defaultOptions.ResourceAttrs...),
 	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create resource: %w", err)
