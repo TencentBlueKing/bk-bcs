@@ -106,10 +106,18 @@
         </bk-tab>
         <div class="mask" v-show="isDropdownShow"></div>
         <div class="bk-dropdown-menu" :style="{left: `${dropdownLeft}px`, opacity: (isDropdownShow ? 1 : 0)}" v-cloak v-show="isDropdownShow">
-            <div class="bk-dropdown-content right-align is-show" v-cloak>
+            <div data-v-786d2edc="" class="bk-dropdown-content is-show">
+                <div data-v-786d2edc="" class="search-box" style="padding: 2px 7px 7px 7px;border-bottom: 1px solid #eee;">
+                    <div data-v-57ab6568="" data-v-786d2edc="" class="bk-input-box bk-selector">
+                        <input data-v-57ab6568="" v-model="search" type="text" placeholder="请输入集群名或ID" autocomplete="off" class="bk-form-input">
+                        <div data-v-57ab6568="" class="bk-selector-list" style="display: none;">
+                            <ul data-v-57ab6568="" class="selector-list-box"></ul>
+                        </div>
+                    </div>
+                </div>
                 <ul class="bk-dropdown-list">
                     <li>
-                        <a href="javascript:;" v-cloak :class="{selected: index === selectIndex}" @click.stop.prevent="addTerminal(cluster)" v-for="(cluster, index) of clusterList">$[cluster.clusterName]</a>
+                        <a href="javascript:;" v-cloak :class="{selected: index === selectIndex}" @click.stop.prevent="addTerminal(cluster)" v-for="(cluster, index) of clusterList" v-if="showItem(cluster)">$[cluster.clusterName]</a>
                     </li>
                 </ul>
             </div>
@@ -139,9 +147,18 @@
                     clusterList: [],
                     selectIndex: -1,
                     position: 'middle',
+                    search: "",
                 }
             },
             computed: {
+                clusterList() {
+                    const searchText = this.search.trim().toLowerCase()
+                    if (!searchText) return this.list
+                    return this.list.filter(item => {
+                        const matchText = item.text.toLowerCase()
+                        return matchText.indexOf(searchText) !== -1
+                    })
+                },
                 closable() {
                     return this.panels.length > 1
                 }
@@ -150,6 +167,15 @@
                 this.init()
             },
             methods: {
+                showItem(item) {
+                    const searchText = this.search.trim().toLowerCase()
+                    if (!searchText) return true
+                    const attrs = Object.keys(item)
+                    return attrs.some(attr => {
+                        const value = item[attr].toString().toLowerCase()
+                        return value.indexOf(searchText) !== -1
+                    })
+                },
                 clickButton() {
                     this.dialogVisiable = true;
                 },
@@ -235,9 +261,16 @@
                     })
 
                 },
-                handleClick() {
-                    this.isDropdownShow = false
-                    this.isSelectIndex = -1
+                handleClick(event) {
+                    if (event.target.tagName !== "A" && event.target.tagName !== "DIV"){
+                        this.isDropdownShow = true
+                        this.isSelectIndex = -1
+                    }else {
+                        this.isDropdownShow = false
+                        this.isSelectIndex = -1
+                    }
+
+
                 },
                 auto_selected_cluster(clusterList, clusterMatcher) {
                     // 自动选择第一个集群

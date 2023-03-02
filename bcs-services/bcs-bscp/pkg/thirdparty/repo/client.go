@@ -14,9 +14,13 @@ package repo
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"strconv"
+
+	"github.com/minio/minio-go/v7"
+	"github.com/minio/minio-go/v7/pkg/credentials"
 
 	"bscp.io/pkg/cc"
 	"bscp.io/pkg/rest"
@@ -38,11 +42,11 @@ type Client struct {
 // NewClient new repo client.
 func NewClient(repoSetting *cc.Repository, reg prometheus.Registerer) (*Client, error) {
 	tls := &tools.TLSConfig{
-		InsecureSkipVerify: repoSetting.TLS.InsecureSkipVerify,
-		CertFile:           repoSetting.TLS.CertFile,
-		KeyFile:            repoSetting.TLS.KeyFile,
-		CAFile:             repoSetting.TLS.CAFile,
-		Password:           repoSetting.TLS.Password,
+		InsecureSkipVerify: repoSetting.BkRepo.TLS.InsecureSkipVerify,
+		CertFile:           repoSetting.BkRepo.TLS.CertFile,
+		KeyFile:            repoSetting.BkRepo.TLS.KeyFile,
+		CAFile:             repoSetting.BkRepo.TLS.CAFile,
+		Password:           repoSetting.BkRepo.TLS.Password,
 	}
 	cli, err := client.NewClient(tls)
 	if err != nil {
@@ -52,7 +56,7 @@ func NewClient(repoSetting *cc.Repository, reg prometheus.Registerer) (*Client, 
 	c := &client.Capability{
 		Client: cli,
 		Discover: &repoDiscovery{
-			servers: repoSetting.Endpoints,
+			servers: repoSetting.BkRepo.Endpoints,
 		},
 		MetricOpts: client.MetricOption{Register: reg},
 	}
@@ -60,8 +64,8 @@ func NewClient(repoSetting *cc.Repository, reg prometheus.Registerer) (*Client, 
 	header := http.Header{}
 	header.Set("Content-Type", "application/json")
 	header.Set("Accept", "application/json")
-	header.Set("Authorization", fmt.Sprintf("Platform %s", repoSetting.Token))
-	header.Set(HeaderKeyUID, repoSetting.User)
+	header.Set("Authorization", fmt.Sprintf("Platform %s", repoSetting.BkRepo.Token))
+	header.Set(HeaderKeyUID, repoSetting.BkRepo.User)
 
 	return &Client{
 		config:      repoSetting,
@@ -72,14 +76,14 @@ func NewClient(repoSetting *cc.Repository, reg prometheus.Registerer) (*Client, 
 
 // ProjectID return repo project id.
 func (c *Client) ProjectID() string {
-	return c.config.Project
+	return c.config.BkRepo.Project
 }
 
 // IsProjectExist judge repo bscp project already exist.
 func (c *Client) IsProjectExist(ctx context.Context) error {
 	resp := c.client.Get().
 		WithContext(ctx).
-		SubResourcef("/repository/api/project/exist/%s", c.config.Project).
+		SubResourcef("/repository/api/project/exist/%s", c.config.BkRepo.Project).
 		WithHeaders(c.basicHeader).
 		Do()
 	if resp.Err != nil {
@@ -145,7 +149,7 @@ func (c *Client) DeleteRepo(ctx context.Context, bizID uint32, forced bool) erro
 
 	resp := c.client.Delete().
 		WithContext(ctx).
-		SubResourcef("/repository/api/repo/delete/%s/%s", c.config.Project, repoName).
+		SubResourcef("/repository/api/repo/delete/%s/%s", c.config.BkRepo.Project, repoName).
 		WithParam("forced", strconv.FormatBool(forced)).
 		WithHeaders(c.basicHeader).
 		Do()
@@ -263,4 +267,112 @@ func (c *Client) QueryMetadata(ctx context.Context, opt *NodeOption) (map[string
 	}
 
 	return respBody.Data, nil
+}
+
+// Client is s3 client.
+type ClientS3 struct {
+	Config *cc.Repository
+	// http client instance
+	Client *minio.Client
+}
+
+// NewClient new s3 client.
+func NewClientS3(repoSetting *cc.Repository, reg prometheus.Registerer) (*ClientS3, error) {
+	minioClient, err := minio.New(repoSetting.S3.Endpoint, &minio.Options{
+		Creds:  credentials.NewStaticV4(repoSetting.S3.AccessKeyID, repoSetting.S3.SecretAccessKey, ""),
+		Secure: repoSetting.S3.UseSSL,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	c := &client.Capability{
+		MetricOpts: client.MetricOption{Register: reg},
+	}
+	if c.MetricOpts.Register != nil {
+
+		var buckets []float64
+		if len(c.MetricOpts.DurationBuckets) == 0 {
+			// set default buckets
+			buckets = []float64{10, 30, 50, 70, 100, 200, 300, 400, 500, 1000, 2000, 5000}
+		} else {
+			// use user defined buckets
+			buckets = c.MetricOpts.DurationBuckets
+		}
+
+		requestDuration := prometheus.NewHistogramVec(prometheus.HistogramOpts{
+			Name:    "bscp_http_requests_duration_millisecond",
+			Help:    "third party api request duration millisecond.",
+			Buckets: buckets,
+		}, []string{"handler", "status_code", "dimension"})
+
+		if err := c.MetricOpts.Register.Register(requestDuration); err != nil {
+			if are, ok := err.(prometheus.AlreadyRegisteredError); ok {
+				requestDuration = are.ExistingCollector.(*prometheus.HistogramVec)
+			} else {
+				panic(err)
+			}
+		}
+	}
+	return &ClientS3{
+		Config: repoSetting,
+		Client: minioClient,
+	}, nil
+}
+
+// CreateRepo create new repository in s3.
+func (c *ClientS3) CreateRepo(ctx context.Context, s3 *CreateRepoReq) error {
+	found, _ := c.Client.BucketExists(context.Background(), s3.Name)
+
+	if found {
+		return nil
+	}
+	if err := c.Client.MakeBucket(ctx, s3.Name, minio.MakeBucketOptions{}); err != nil {
+		return err
+	}
+	for !found {
+		found, _ = c.Client.BucketExists(context.Background(), s3.Name)
+	}
+	return nil
+}
+
+// DeleteRepo delete repository in repo. param force: whether to force deletion.
+// If false, the warehouse cannot be deleted when there are files in the warehouse
+func (c *ClientS3) DeleteRepo(ctx context.Context, bizID uint32, forced bool) error {
+	err := c.Client.RemoveBucket(ctx, c.Config.S3.BucketName)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// IsNodeExist judge repo node already exist.
+func (c *ClientS3) IsNodeExist(ctx context.Context, bucketName, nodePath string) (bool, error) {
+	_, err := c.Client.StatObject(ctx, bucketName, nodePath, minio.StatObjectOptions{})
+	if err != nil {
+		return false, err
+	}
+	return true, nil
+}
+
+// DeleteNode delete node.
+func (c *ClientS3) DeleteNode(ctx context.Context, bucketName, nodePath string) error {
+	err := c.Client.RemoveObject(ctx, bucketName, nodePath, minio.RemoveObjectOptions{})
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// QueryMetadata query node metadata info. If node not exist, return data is {}.
+func (c *ClientS3) QueryMetadata(ctx context.Context, opt *NodeOption) (map[string]string, error) {
+	bucketName, err := GenRepoName(uint32(opt.BizID))
+	state, err := c.Client.StatObject(ctx, bucketName, opt.Sign, minio.StatObjectOptions{})
+	if err != nil {
+		return nil, err
+	}
+	var dataMeta map[string]string
+	stateJson, _ := json.Marshal(state)
+	json.Unmarshal(stateJson, dataMeta)
+	return dataMeta, nil
 }

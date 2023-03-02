@@ -53,7 +53,7 @@ func New(cs *clientset.ClientSet, cache *lcache.Cache, w eventc.Watcher) (*Relea
 type ReleasedService struct {
 	cs                   *clientset.ClientSet
 	cache                *lcache.Cache
-	uriDecorator         *repo.UriDecorator
+	uriDecorator         repo.UriDecoratorInter
 	watcher              eventc.Watcher
 	wait                 *waitShutdown
 	limiter              *rate.Limiter

@@ -25,6 +25,7 @@ import (
 	"google.golang.org/grpc/credentials"
 
 	"bscp.io/pkg/cc"
+	"bscp.io/pkg/dal/repository"
 	"bscp.io/pkg/iam/auth"
 	"bscp.io/pkg/logs"
 	pbas "bscp.io/pkg/protocol/auth-server"
@@ -39,7 +40,7 @@ import (
 type proxy struct {
 	cfgSvrMux    *runtime.ServeMux
 	authSvrMux   http.Handler
-	repoRevProxy *repoProxy
+	repoRevProxy repository.FileApiType
 	state        serviced.State
 	authorizer   auth.Authorizer
 }
@@ -110,13 +111,13 @@ func (p *proxy) handler() http.Handler {
 	// repo 上传 API
 	r.Route("/api/v1/api/create/content/upload", func(r chi.Router) {
 		r.Use(p.authorizer.UnifiedAuthentication)
-		r.Put("/biz_id/{biz_id}/app_id/{app_id}", p.repoRevProxy.ServeHTTP)
+		r.Put("/biz_id/{biz_id}/app_id/{app_id}", p.repoRevProxy.UploadFile)
 	})
 
 	// repo 下载 API
 	r.Route("/api/v1/api/get/content/download", func(r chi.Router) {
 		r.Use(p.authorizer.UnifiedAuthentication)
-		r.Get("/biz_id/{biz_id}/app_id/{app_id}", p.repoRevProxy.ServeHTTP)
+		r.Get("/biz_id/{biz_id}/app_id/{app_id}", p.repoRevProxy.DownloadFile)
 	})
 
 	return r
