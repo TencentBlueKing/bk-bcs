@@ -28,9 +28,6 @@ import (
 	"context"
 	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/constant"
-	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/metrics"
 	k8scorev1 "k8s.io/api/core/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
@@ -38,6 +35,10 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
+
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/constant"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/metrics"
 
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
 )
@@ -81,36 +82,47 @@ func (pf *PodFilter) Create(e event.CreateEvent, q workqueue.RateLimitingInterfa
 func (pf *PodFilter) Update(e event.UpdateEvent, q workqueue.RateLimitingInterface) {
 	metrics.IncreaseEventCounter(pf.filterName, metrics.EventTypeUpdate)
 
-	pod, ok := e.ObjectNew.(*k8scorev1.Pod)
+	oldPod, ok := e.ObjectOld.(*k8scorev1.Pod)
 	if !ok {
-		blog.Warnf("recv create object is not Pod, event %+v", e)
+		blog.Warnf("recv create old object is not Pod, event %+v", e)
+		return
+	}
+	newPod, ok := e.ObjectNew.(*k8scorev1.Pod)
+	if !ok {
+		blog.Warnf("recv create new object is not Pod, event %+v", e)
 		return
 	}
 
-	if !checkPortPoolAnnotationForPod(pod) {
+	if !checkPortPoolAnnotationForPod(newPod) {
+		blog.V(4).Infof("ignore pod[%s/%s] update", newPod.GetNamespace(), newPod.Name)
+		return
+	}
+
+	if !checkPodNeedReconcile(oldPod, newPod) {
+		blog.V(4).Infof("ignore pod[%s/%s] update", newPod.GetNamespace(), newPod.Name)
 		return
 	}
 
 	// find portbinding related to updated pod
 	portBinding := &networkextensionv1.PortBinding{}
 	err := pf.cli.Get(context.TODO(), types.NamespacedName{
-		Namespace: pod.GetNamespace(),
-		Name:      pod.GetName(),
+		Namespace: newPod.GetNamespace(),
+		Name:      newPod.GetName(),
 	}, portBinding)
 	if err != nil {
 		if k8serrors.IsNotFound(err) {
 			blog.Warnf("not found portbinding '%s/%s' related to updated pod",
-				pod.GetNamespace(), pod.GetName())
+				newPod.GetNamespace(), newPod.GetName())
 			return
 		}
 		blog.Errorf("failed to get portbinding '%s/%s' related to updated pod: %s",
-			pod.GetNamespace(), pod.GetName(), err.Error())
+			newPod.GetNamespace(), newPod.GetName(), err.Error())
 		return
 	}
 
 	q.Add(reconcile.Request{NamespacedName: types.NamespacedName{
-		Name:      pod.GetName(),
-		Namespace: pod.GetNamespace(),
+		Name:      newPod.GetName(),
+		Namespace: newPod.GetNamespace(),
 	}})
 }
 

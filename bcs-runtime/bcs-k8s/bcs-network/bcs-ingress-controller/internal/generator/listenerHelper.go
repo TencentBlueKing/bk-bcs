@@ -80,7 +80,9 @@ func (l *listenerHelper) doDeleteListeners() {
 	l.toDeleteListeners = make(map[string]networkextensionv1.Listener)
 	l.Unlock()
 
-	blog.Infof("delete listener(%d)", len(listenerList))
+	if len(listenerList) != 0 {
+		blog.Infof("delete listener(%d)", len(listenerList))
+	}
 	for _, listener := range listenerList {
 		blog.Infof("delete listener %s/%s", listener.GetNamespace(), listener.GetName())
 		if err := l.client.Delete(context.TODO(), &listener); err != nil {

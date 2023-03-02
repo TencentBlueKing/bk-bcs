@@ -299,9 +299,9 @@ func (s *Server) mutatingIngress(ar v1.AdmissionReview) *v1.AdmissionResponse {
 		return errResponse(fmt.Errorf("decode %s to ingress failed, err %s", string(req.Object.Raw),
 			err.Error()))
 	}
-	patches, err := s.mutateIngress(ingress)
+	patches, err := s.mutateIngress(ingress, req.Operation)
 	if err != nil {
-		blog.Warnf("mutate ingress failed, err: %+v", err)
+		blog.Warnf("mutate ingress failed, err: %v", err)
 		return errResponse(err)
 	}
 

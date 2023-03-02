@@ -188,6 +188,8 @@
   en: MaxSurge
 - msgID: "最大调度 Pod 数量 与最大不可用数量不可均为 0"
   en: "The MaxSurge and MaxUnavailable cannot both be 0"
+- msgID: "最大调度 Pod 数量 与最大不可用数量不可均为 0，且最大不可用数量不可超过 100%"
+  en: "The MaxSurge and MaxUnavailable cannot both be 0, and MaxUnavailable cannot greate than 100%"
 - msgID: 单位
   en: Unit
 - msgID: 个

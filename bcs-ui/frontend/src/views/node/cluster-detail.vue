@@ -20,7 +20,7 @@
           </div>
           <!-- 扩缩容 -->
           <div
-            :class="['item', { active: activeId === 'AutoScaler' }]"
+            :class="['item px-[20px]', { active: activeId === 'AutoScaler' }]"
             v-if="cloudDetail.confInfo && !cloudDetail.confInfo.disableNodeGroup"
             v-authority="{
               clickable: webAnnotations.perms[clusterId]
@@ -37,6 +37,7 @@
           >
             <span class="icon"><i class="bcs-icon bcs-icon-kuosuorong"></i></span>
             {{ $t('弹性扩缩容') }}
+            <bk-tag theme="danger">NEW</bk-tag>
           </div>
         </div>
         <div class="cluster-detail-content">

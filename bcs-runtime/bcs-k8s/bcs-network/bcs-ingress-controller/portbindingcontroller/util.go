@@ -15,13 +15,15 @@ package portbindingcontroller
 import (
 	"encoding/json"
 	"fmt"
+	"reflect"
 	"time"
+
+	"github.com/pkg/errors"
+	k8scorev1 "k8s.io/api/core/v1"
 
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/constant"
 	netpkgcommon "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/pkg/common"
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
-	"github.com/pkg/errors"
-	k8scorev1 "k8s.io/api/core/v1"
 )
 
 // if port binding is expired
@@ -74,4 +76,43 @@ func genUniqueIDOfPortBindingItem(item *networkextensionv1.PortBindingItem) stri
 	}
 
 	return fmt.Sprintf("%s/%s/%s", item.PoolNamespace, item.PoolName, item.GetKey())
+}
+
+func checkPodNeedReconcile(oldPod, newPod *k8scorev1.Pod) bool {
+	if oldPod == nil || newPod == nil {
+		return true
+	}
+	if oldPod.Namespace != newPod.Namespace || oldPod.Name != newPod.Name {
+		return true
+	}
+
+	if oldPod.DeletionTimestamp != newPod.DeletionTimestamp {
+		return true
+	}
+
+	if oldPod.Annotations == nil || newPod.Annotations == nil {
+		return true
+	}
+
+	// 允许用户通过删除该注解实现Pod解绑
+	if oldPod.Annotations[constant.AnnotationForPortPool] != newPod.Annotations[constant.
+		AnnotationForPortPool] {
+		return true
+	}
+	// 允许用户更新PortBinding保留时间
+	if oldPod.Annotations[networkextensionv1.PortPoolBindingAnnotationKeyKeepDuration] != newPod.
+		Annotations[networkextensionv1.PortPoolBindingAnnotationKeyKeepDuration] {
+		return true
+	}
+
+	// Pod状态/IP等变化时需要触发PortBinding调谐
+	if !reflect.DeepEqual(oldPod.Status, newPod.Status) {
+		return true
+	}
+
+	if !reflect.DeepEqual(oldPod.Spec, newPod.Spec) {
+		return true
+	}
+
+	return false
 }

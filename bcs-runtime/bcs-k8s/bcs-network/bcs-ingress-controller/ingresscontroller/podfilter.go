@@ -103,9 +103,19 @@ func (pf *PodFilter) Create(e event.CreateEvent, q workqueue.RateLimitingInterfa
 func (pf *PodFilter) Update(e event.UpdateEvent, q workqueue.RateLimitingInterface) {
 	metrics.IncreaseEventCounter(pf.filterName, metrics.EventTypeUpdate)
 
+	oldPod, ok := e.ObjectOld.(*k8scorev1.Pod)
+	if !ok {
+		blog.Warnf("recv create old object is not Pod, event %+v", e)
+		return
+	}
+
 	newPod, ok := e.ObjectNew.(*k8scorev1.Pod)
 	if !ok {
 		blog.Warnf("recv update object is not Pod, event %+v", e)
+		return
+	}
+	if !checkPodNeedReconcile(oldPod, newPod) {
+		blog.V(4).Infof("ignore pod[%s/%s] update", newPod.GetNamespace(), newPod.Name)
 		return
 	}
 	pf.enqueuePodRelatedIngress(newPod, q)

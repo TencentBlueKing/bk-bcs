@@ -165,11 +165,11 @@ func genSchemaRules(ctx context.Context) map[string]interface{} {
 		// 规则：https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/#syntax-and-character-set
 		"labelKeyRegex": map[string]interface{}{
 			"validator": "/^[a-z0-9A-Z]([-_a-z0-9A-Z]*[a-z0-9A-Z])?((\\.|\\/)[a-z0-9A-Z]([-_a-z0-9A-Z]*[a-z0-9A-Z])?)*$/",
-			"message":   i18n.GetMsg(ctx, "仅支持字母，数字，'-'，'_' 及 '/' 且需以字母数字开头和结尾"),
+			"message":   i18n.GetMsg(ctx, "仅支持字母，数字，'-'，'_'，'.' 及 '/' 且需以字母数字开头和结尾"),
 		},
 		// NOTE 标签值允许为空
 		"labelValRegex": map[string]interface{}{
-			"validator": "/(^$|^[a-z0-9A-Z]([-_a-z0-9A-Z]*[a-z0-9A-Z])?(\\.[a-z0-9A-Z]([-_a-z0-9A-Z]*[a-z0-9A-Z])?)*$)/",
+			"validator": "/^(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])?$/",
 			"message":   i18n.GetMsg(ctx, "需以字母数字开头和结尾，可包含 '-'，'_'，'.' 和字母数字"),
 		},
 	}

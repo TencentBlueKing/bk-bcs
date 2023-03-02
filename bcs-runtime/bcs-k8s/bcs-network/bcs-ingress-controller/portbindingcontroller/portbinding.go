@@ -19,11 +19,13 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/metrics"
+
+	"github.com/pkg/errors"
 
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/constant"
 	bcsnetcommon "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/pkg/common"
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
-	"github.com/pkg/errors"
 
 	k8scorev1 "k8s.io/api/core/v1"
 	k8smetav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -79,6 +81,8 @@ func (pbh *portBindingHandler) ensurePortBinding(
 			retry = true
 		}
 	}
+
+	rawStatus := portBinding.Status.Status
 	if unreadyNum == 0 {
 		portBinding.Status.Status = constant.PortBindingStatusReady
 		pbh.recordEvent(portBinding, k8scorev1.EventTypeNormal, ReasonPortBindingReady, MsgPortBindingReady)
@@ -87,12 +91,16 @@ func (pbh *portBindingHandler) ensurePortBinding(
 		pbh.recordEvent(portBinding, k8scorev1.EventTypeNormal, ReasonPortBindingNotReady,
 			fmt.Sprintf(MsgPortBindingNotReady, unreadyNum))
 	}
+	updateStatus := portBinding.Status.Status
 
 	if err := pbh.k8sClient.Status().Update(context.Background(), portBinding, &client.UpdateOptions{}); err != nil {
 		return true, fmt.Errorf("ensure port binding %s/%s failed, err %s",
 			portBinding.GetName(), portBinding.GetNamespace(), err.Error())
 	}
 
+	if err := pbh.postPortBindingUpdateStatus(rawStatus, updateStatus, portBinding); err != nil {
+		return true, err
+	}
 	if err := pbh.updatePodCondition(pod, portBinding.Status.Status); err != nil {
 		return true, err
 	}
@@ -269,6 +277,67 @@ func (pbh *portBindingHandler) ensurePod(pod *k8scorev1.Pod, portBinding *networ
 		if err := pbh.patchPodBindingAnnotation(pod, podPortBindingList); err != nil {
 			return errors.Wrapf(err, "patch pod[%s/%s] for binding annotation failed",
 				pod.GetNamespace(), pod.GetName())
+		}
+	}
+
+	return nil
+}
+
+func (pbh *portBindingHandler) patchPortBindingAnnotation(
+	portbinding *networkextensionv1.PortBinding, notReadyTimestamp string,
+) error {
+	patchStruct := map[string]interface{}{
+		"metadata": map[string]interface{}{
+			"annotations": map[string]interface{}{
+				constant.AnnotationForPortBindingNotReadyTimestamp: notReadyTimestamp,
+			},
+		},
+	}
+	patchBytes, err := json.Marshal(patchStruct)
+	if err != nil {
+		return errors.Wrapf(err, "marshal patchStruct for portbinding '%s/%s' failed", portbinding.GetNamespace(),
+			portbinding.GetName())
+	}
+	rawPatch := client.RawPatch(k8stypes.MergePatchType, patchBytes)
+	updatePortBinding := &networkextensionv1.PortBinding{
+		ObjectMeta: k8smetav1.ObjectMeta{
+			Name:      portbinding.GetName(),
+			Namespace: portbinding.GetNamespace(),
+		},
+	}
+	if err := pbh.k8sClient.Patch(context.Background(), updatePortBinding, rawPatch, &client.PatchOptions{}); err != nil {
+		return errors.Wrapf(err, "patch portbinding %s/%s annotation failed, patcheStruct: %s",
+			portbinding.GetNamespace(), portbinding.GetName(), string(patchBytes))
+	}
+	return nil
+}
+
+// 处理portBinding状态变化
+func (pbh *portBindingHandler) postPortBindingUpdateStatus(rawStatus, updateStatus string,
+	portBinding *networkextensionv1.PortBinding) error {
+	if rawStatus == updateStatus {
+		return nil
+	}
+
+	// 如果portBinding状态由NotReady/nil转为Ready,则统计Ready时间并清理NotReady时间戳
+	if updateStatus == constant.PortBindingStatusReady {
+		if notReadyTimeStr, ok := portBinding.Annotations[constant.
+			AnnotationForPortBindingNotReadyTimestamp]; ok && notReadyTimeStr != "" {
+			if notReadyTime, err := time.Parse(time.RFC3339Nano, notReadyTimeStr); err != nil {
+				blog.Warnf("parse not ready timestamp failed, err: %s", err.Error())
+			} else {
+				metrics.ReportPortBindMetric(notReadyTime)
+			}
+			if err := pbh.patchPortBindingAnnotation(portBinding, ""); err != nil {
+				blog.Warnf(err.Error())
+				return err
+			}
+		}
+	} else if updateStatus == constant.PortBindingStatusNotReady {
+		// 如果portBinding状态由Ready/nil转为Not Ready,则设置NotReady时间戳
+		if err := pbh.patchPortBindingAnnotation(portBinding, time.Now().Format(time.RFC3339Nano)); err != nil {
+			blog.Warnf(err.Error())
+			return err
 		}
 	}
 

@@ -95,20 +95,23 @@ const (
 	// PortBindingStatusCleaned the listener of the port binding is all cleaned
 	PortBindingStatusCleaned = "Cleaned"
 
+	// AnnotationForPortBindingNotReadyTimestamp 记录PortBinding上一次被记为NotReady的时间
+	AnnotationForPortBindingNotReadyTimestamp = "unready_timestamp.networkextension.bkbcs.tencent.com"
+
 	// AnnotationForPodStatusReady pod status ready
 	AnnotationForPodStatusReady = "Ready"
 	// AnnotationForPodStatusNotReady pod status not ready
 	AnnotationForPodStatusNotReady = "NotReady"
 
-	// AnnotationForPortPool annotation for claims for port pool
+	// AnnotationForPortPool annotation for claims for port pool 声明是否需要注入端口，值为true/ false
 	AnnotationForPortPool = "portpools.networkextension.bkbcs.tencent.com"
-	// AnnotationForPortPoolPorts annotation for port pool ports
+	// AnnotationForPortPoolPorts annotation for port pool ports 声明需要注入的端口池、协议、对应Pod端口等信息
 	AnnotationForPortPoolPorts = "ports.portpools.networkextension.bkbcs.tencent.com"
-	// AnnotationForPortPoolBindings annotation for port pool bindings
+	// AnnotationForPortPoolBindings annotation for port pool bindings 分配的端口信息，创建后通过webhook注入
 	AnnotationForPortPoolBindings = "poolbindings.portpool.networkextension.bkbcs.tencent.com"
-	// AnnotationForPortPoolBindingStatus annotation for port pool ports binding status
+	// AnnotationForPortPoolBindingStatus annotation for port pool ports binding status 声明端口绑定是否成功，值为Ready/NotReady
 	AnnotationForPortPoolBindingStatus = "status.portpools.networkextension.bkbcs.tencent.com"
-	// AnnotationForPortPoolReadinessGate port pool readiness gate
+	// AnnotationForPortPoolReadinessGate port pool readiness gate 声明是否需要为Pod写入端口绑定ReadinessGate
 	AnnotationForPortPoolReadinessGate = "readinessgate.portpools.networkextension.bkbcs.tencent.com"
 
 	// ConditionTypeBcsIngressPortBinding readiness gate condition type for port binding of bcs-ingress-controller

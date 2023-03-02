@@ -140,7 +140,11 @@ export default defineComponent({
       const nodePoolData = nodePoolInfoRef.value?.getNodePoolData();
       const nodeConfigData = nodePoolConfigRef.value?.getNodePoolData();
       const data = {
-        ...mergeDeep(detailData.value, nodeConfigData, nodePoolData),
+        ...mergeDeep({
+          nodeTemplate: {
+            module: detailData.value.nodeTemplate?.module || {},
+          },
+        }, nodeConfigData, nodePoolData),
         $nodeGroupID: detailData.value.nodeGroupID,
         clusterID: curCluster.value.clusterID,
         region: curCluster.value.region,
@@ -165,6 +169,15 @@ export default defineComponent({
       isLoading.value = true;
       await handleGetCloudDefaultValues();
       detailData.value = await handleGetNodeGroupDetail();
+      if (!detailData.value.nodeTemplate?.dataDisks?.length) {
+        detailData.value.nodeTemplate.dataDisks = detailData.value.launchTemplate.dataDisks.map((item, index) => ({
+          diskType: item.diskType,
+          diskSize: item.diskSize,
+          fileSystem: item.fileSystem || 'ext4',
+          autoFormatAndMount: true,
+          mountTarget: item.mountTarget || index > 0 ? `/data${index}` : '/data',
+        }));
+      }
       isLoading.value = false;
     });
     return {
