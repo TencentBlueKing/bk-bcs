@@ -44,7 +44,7 @@
         :label="$t('扩容后转移模块')"
         :desc="$t('扩容节点后节点转移到关联业务的CMDB模块')"
         error-display-type="normal"
-        property="module.scaleOutModuleID"
+        property="scaleOutModuleID"
         required
         class="ml-[28px] mb20 mt10">
         <TopoSelectTree
@@ -240,9 +240,9 @@ export default defineComponent({
     const { $bkMessage, $bkInfo } = ctx.root;
     const formRef = ref<any>(null);
     const rules = ref({
-      'module.scaleOutModuleID': [
+      scaleOutModuleID: [
         {
-          required: true,
+          validator: () => !!autoscalerData.value.module?.scaleOutModuleID,
           message: $i18n.t('必填项'),
           trigger: 'blur',
         },

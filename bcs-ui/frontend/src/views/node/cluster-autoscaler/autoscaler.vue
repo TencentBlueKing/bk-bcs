@@ -603,7 +603,7 @@ export default defineComponent({
         $bkInfo({
           type: 'warning',
           clsName: 'custom-info-confirm',
-          title: $i18n.t('弹性伸缩需要配置模块'),
+          title: $i18n.t('弹性伸缩需要配置扩容后转移模块'),
           defaultInfo: true,
           okText: $i18n.t('编辑配置'),
           confirmFn: () => {

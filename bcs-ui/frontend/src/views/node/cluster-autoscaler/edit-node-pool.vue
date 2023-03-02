@@ -140,7 +140,11 @@ export default defineComponent({
       const nodePoolData = nodePoolInfoRef.value?.getNodePoolData();
       const nodeConfigData = nodePoolConfigRef.value?.getNodePoolData();
       const data = {
-        ...mergeDeep(detailData.value, nodeConfigData, nodePoolData),
+        ...mergeDeep({
+          nodeTemplate: {
+            module: detailData.value.nodeTemplate?.module || {},
+          },
+        }, nodeConfigData, nodePoolData),
         $nodeGroupID: detailData.value.nodeGroupID,
         clusterID: curCluster.value.clusterID,
         region: curCluster.value.region,
