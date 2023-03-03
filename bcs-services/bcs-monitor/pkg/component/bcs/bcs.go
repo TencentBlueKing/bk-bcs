@@ -16,13 +16,21 @@ package bcs
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"time"
+
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/trace"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/storage"
 )
+
+var tracer = otel.Tracer("bcs_client")
 
 // Cluster 集群信息
 type Cluster struct {
@@ -43,6 +51,12 @@ func (c *Cluster) String() string {
 func ListClusters(ctx context.Context, bcsConf *config.BCSConf, projectId string) ([]*Cluster, error) {
 	url := fmt.Sprintf("%s/bcsapi/v4/clustermanager/v1/cluster", bcsConf.Host)
 
+	commonAttrs := []attribute.KeyValue{
+		attribute.String("url", url),
+		attribute.String("projectId", projectId),
+	}
+	ctx, span := tracer.Start(ctx, "ListClusters", trace.WithSpanKind(trace.SpanKindInternal), trace.WithAttributes(commonAttrs...))
+	defer span.End()
 	resp, err := component.GetClient().R().
 		SetContext(ctx).
 		SetAuthToken(bcsConf.Token).
@@ -50,11 +64,15 @@ func ListClusters(ctx context.Context, bcsConf *config.BCSConf, projectId string
 		Get(url)
 
 	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
 		return nil, err
 	}
 
 	var result []*Cluster
 	if err := component.UnmarshalBKResult(resp, &result); err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
 		return nil, err
 	}
 
@@ -66,30 +84,44 @@ func ListClusters(ctx context.Context, bcsConf *config.BCSConf, projectId string
 		}
 		clusters = append(clusters, cluster)
 	}
-
+	clustersStr, _ := json.Marshal(clusters)
+	// 设置额外标签
+	span.SetAttributes(attribute.String("clusters", string(clustersStr)))
 	return clusters, nil
 }
 
 // GetClusterMap 获取全部集群数据, map格式
 func GetClusterMap(ctx context.Context, bcsConf *config.BCSConf) (map[string]*Cluster, error) {
 	cacheKey := fmt.Sprintf("bcs.GetClusterMap:%s", bcsConf.ClusterEnv)
+	commonAttrs := []attribute.KeyValue{
+		attribute.String("cacheKey", cacheKey),
+	}
+	ctx, span := tracer.Start(ctx, "GetClusterMap", trace.WithSpanKind(trace.SpanKindInternal), trace.WithAttributes(commonAttrs...))
+	defer span.End()
+
 	if cacheResult, ok := storage.LocalCache.Slot.Get(cacheKey); ok {
+		resultStr, _ := json.Marshal(cacheResult)
+		span.SetAttributes(attribute.Key("cacheResult").String(string(resultStr)))
 		return cacheResult.(map[string]*Cluster), nil
 	}
 
 	url := fmt.Sprintf("%s/bcsapi/v4/clustermanager/v1/cluster", bcsConf.Host)
-
+	span.SetAttributes(attribute.Key("url").String(url))
 	resp, err := component.GetClient().R().
 		SetContext(ctx).
 		SetAuthToken(bcsConf.Token).
 		Get(url)
 
 	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
 		return nil, err
 	}
 
 	var result []*Cluster
 	if err := component.UnmarshalBKResult(resp, &result); err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
 		return nil, err
 	}
 
@@ -108,33 +140,47 @@ func GetClusterMap(ctx context.Context, bcsConf *config.BCSConf) (map[string]*Cl
 
 	storage.LocalCache.Slot.Set(cacheKey, clusterMap, time.Minute*10)
 
+	clusterMapStr, _ := json.Marshal(clusterMap)
+	span.SetAttributes(attribute.Key("clusterMap").String(string(clusterMapStr)))
 	return clusterMap, nil
 }
 
 // GetCluster 获取集群详情
 func GetCluster(ctx context.Context, bcsConf *config.BCSConf, clusterId string) (*Cluster, error) {
 	cacheKey := fmt.Sprintf("bcs.GetCluster:%s", clusterId)
+	commonAttrs := []attribute.KeyValue{
+		attribute.String("cacheKey", cacheKey),
+	}
+	ctx, span := tracer.Start(ctx, "GetCluster", trace.WithSpanKind(trace.SpanKindInternal), trace.WithAttributes(commonAttrs...))
+	defer span.End()
 	if cacheResult, ok := storage.LocalCache.Slot.Get(cacheKey); ok {
+		resultStr, _ := json.Marshal(cacheResult)
+		span.SetAttributes(attribute.Key("cacheResult").String(string(resultStr)))
 		return cacheResult.(*Cluster), nil
 	}
 
 	url := fmt.Sprintf("%s/bcsapi/v4/clustermanager/v1/cluster/%s", bcsConf.Host, clusterId)
-
+	span.SetAttributes(attribute.Key("url").String(url))
 	resp, err := component.GetClient().R().
 		SetContext(ctx).
 		SetAuthToken(bcsConf.Token).
 		Get(url)
 
 	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
 		return nil, err
 	}
 
 	var cluster *Cluster
 	if err := component.UnmarshalBKResult(resp, &cluster); err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
 		return nil, err
 	}
 
 	storage.LocalCache.Slot.Set(cacheKey, cluster, storage.LocalCache.DefaultExpiration)
-
+	clusterStr, _ := json.Marshal(cluster)
+	span.SetAttributes(attribute.Key("cluster").String(string(clusterStr)))
 	return cluster, nil
 }

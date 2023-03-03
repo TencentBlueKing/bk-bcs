@@ -31,4 +31,8 @@ query:
   store: # store 列表
     - 127.0.0.1:10218
 
-
+tracing_conf:
+  tracing_switch: ""
+  tracing_type: ""
+  service_name: ""
+  exporter_url: ""

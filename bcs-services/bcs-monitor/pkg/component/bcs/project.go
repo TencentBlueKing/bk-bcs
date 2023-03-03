@@ -15,8 +15,13 @@ package bcs
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"time"
+
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/trace"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/config"
@@ -53,11 +58,19 @@ func (p *Project) CreateTime() (time.Time, error) {
 // GetProject 通过 project_id/code 获取项目信息
 func GetProject(ctx context.Context, bcsConf *config.BCSConf, projectIDOrCode string) (*Project, error) {
 	cacheKey := fmt.Sprintf("bcs.GetProject:%s", projectIDOrCode)
+	commonAttrs := []attribute.KeyValue{
+		attribute.String("cacheKey", cacheKey),
+	}
+	ctx, span := tracer.Start(ctx, "GetProject", trace.WithSpanKind(trace.SpanKindInternal), trace.WithAttributes(commonAttrs...))
+	defer span.End()
 	if cacheResult, ok := storage.LocalCache.Slot.Get(cacheKey); ok {
+		resultStr, _ := json.Marshal(cacheResult)
+		span.SetAttributes(attribute.Key("cacheResult").String(string(resultStr)))
 		return cacheResult.(*Project), nil
 	}
 
 	url := fmt.Sprintf("%s/bcsapi/v4/bcsproject/v1/projects/%s", bcsConf.Host, projectIDOrCode)
+	span.SetAttributes(attribute.Key("url").String(url))
 	resp, err := component.GetClient().R().
 		SetContext(ctx).
 		SetHeader("X-Project-Username", ""). // bcs_project 要求有这个header
@@ -65,15 +78,20 @@ func GetProject(ctx context.Context, bcsConf *config.BCSConf, projectIDOrCode st
 		Get(url)
 
 	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
 		return nil, err
 	}
 
 	project := new(Project)
 	if err := component.UnmarshalBKResult(resp, project); err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
 		return nil, err
 	}
 
 	storage.LocalCache.Slot.Set(cacheKey, project, storage.LocalCache.DefaultExpiration)
-
+	projectStr, _ := json.Marshal(project)
+	span.SetAttributes(attribute.Key("project").String(string(projectStr)))
 	return project, nil
 }

@@ -16,6 +16,7 @@ package k8sclient
 import (
 	"bufio"
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/url"
 	"path"
@@ -24,6 +25,9 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/trace"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -171,12 +175,21 @@ func parseLog(rawLog string) (*Log, error) {
 
 // GetPodContainers 获取 Pod 容器名称列表
 func GetPodContainers(ctx context.Context, clusterId, namespace, podname string) ([]*Container, error) {
+	commonAttrs := []attribute.KeyValue{
+		attribute.String("clusterId", string(clusterId)),
+	}
+	ctx, span := tracer.Start(ctx, "GetPodContainers", trace.WithSpanKind(trace.SpanKindInternal), trace.WithAttributes(commonAttrs...))
+	defer span.End()
 	client, err := GetK8SClientByClusterId(clusterId)
 	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
 		return nil, err
 	}
 	pod, err := client.CoreV1().Pods(namespace).Get(ctx, podname, metav1.GetOptions{})
 	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
 		return nil, err
 	}
 
@@ -184,38 +197,66 @@ func GetPodContainers(ctx context.Context, clusterId, namespace, podname string)
 	for _, container := range pod.Spec.Containers {
 		containers = append(containers, &Container{Name: container.Name})
 	}
+	containersStr, _ := json.Marshal(containers)
+	// 设置额外标签
+	span.SetAttributes(attribute.String("containers", string(containersStr)))
 	return containers, nil
 }
 
 // GetPodLogByte 获取日志
 func GetPodLogByte(ctx context.Context, clusterId, namespace, podname string, opt *LogQuery) ([]byte, error) {
+	commonAttrs := []attribute.KeyValue{
+		attribute.String("clusterId", clusterId),
+		attribute.String("namespace", namespace),
+		attribute.String("podname", podname),
+	}
+	ctx, span := tracer.Start(ctx, "GetPodLogByte", trace.WithSpanKind(trace.SpanKindInternal), trace.WithAttributes(commonAttrs...))
+	defer span.End()
 	client, err := GetK8SClientByClusterId(clusterId)
 	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
 		return nil, err
 	}
 
 	opts, err := opt.makeOptions()
 	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
 		return nil, err
 	}
 
 	result := client.CoreV1().Pods(namespace).GetLogs(podname, opts).Do(ctx)
 	if result.Error() != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
 		return nil, result.Error()
 	}
 
 	body, err := result.Raw()
 	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
 		return nil, err
 	}
-
+	podLogBodyStr, _ := json.Marshal(body)
+	span.SetAttributes(attribute.String("podLogBody", string(podLogBodyStr)))
 	return body, nil
 }
 
 // GetPodLog 获取格式的日志列表
 func GetPodLog(ctx context.Context, clusterId, namespace, podname string, opt *LogQuery) (*LogWithPreviousLink, error) {
+	commonAttrs := []attribute.KeyValue{
+		attribute.String("clusterId", clusterId),
+		attribute.String("namespace", namespace),
+		attribute.String("podname", podname),
+	}
+	ctx, span := tracer.Start(ctx, "GetPodLog", trace.WithSpanKind(trace.SpanKindInternal), trace.WithAttributes(commonAttrs...))
+	defer span.End()
 	result, err := GetPodLogByte(ctx, clusterId, namespace, podname, opt)
 	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
 		return nil, err
 	}
 
@@ -241,24 +282,39 @@ func GetPodLog(ctx context.Context, clusterId, namespace, podname string, opt *L
 	}
 
 	logResult := &LogWithPreviousLink{Logs: logList}
+	logResultStr, _ := json.Marshal(logResult)
+	span.SetAttributes(attribute.String("logResult", string(logResultStr)))
 	return logResult, nil
 }
 
 // GetPodLogStream 获取日志流
 func GetPodLogStream(ctx context.Context, clusterId, namespace, podname string, opt *LogQuery) (<-chan *Log, error) {
+	commonAttrs := []attribute.KeyValue{
+		attribute.String("clusterId", clusterId),
+		attribute.String("namespace", namespace),
+		attribute.String("podname", podname),
+	}
+	ctx, span := tracer.Start(ctx, "GetPodLogStream", trace.WithSpanKind(trace.SpanKindInternal), trace.WithAttributes(commonAttrs...))
+	defer span.End()
 	client, err := GetK8SClientByClusterId(clusterId)
 	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
 		return nil, err
 	}
 
 	opts, err := opt.makeOptions()
 	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
 		return nil, err
 	}
 	opts.Follow = true
 
 	reader, err := client.CoreV1().Pods(namespace).GetLogs(podname, opts).Stream(ctx)
 	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
 		return nil, err
 	}
 
@@ -278,6 +334,8 @@ func GetPodLogStream(ctx context.Context, clusterId, namespace, podname string, 
 			logChan <- log
 		}
 	}()
-
+	logChanStr, _ := json.Marshal(logChan)
+	// 设置额外标签
+	span.SetAttributes(attribute.String("logChan", string(logChanStr)))
 	return logChan, nil
 }

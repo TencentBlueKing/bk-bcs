@@ -14,15 +14,30 @@ package k8sclient
 
 import (
 	"context"
+	"encoding/json"
 
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/trace"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+var tracer = otel.Tracer("k8s_client")
+
 // GetNodeList 获取集群节点列表
 func GetNodeList(ctx context.Context, clusterId string, excludeMasterRole bool) ([]string, []string, error) {
+	commonAttrs := []attribute.KeyValue{
+		attribute.String("clusterId", clusterId),
+		attribute.Bool("excludeMasterRole", excludeMasterRole),
+	}
+	ctx, span := tracer.Start(ctx, "GetNodeList", trace.WithSpanKind(trace.SpanKindInternal), trace.WithAttributes(commonAttrs...))
+	defer span.End()
 	client, err := GetK8SClientByClusterId(clusterId)
 	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
 		return nil, nil, err
 	}
 
@@ -33,6 +48,8 @@ func GetNodeList(ctx context.Context, clusterId string, excludeMasterRole bool) 
 
 	nodeList, err := client.CoreV1().Nodes().List(ctx, listOptions)
 	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
 		return nil, nil, err
 	}
 
@@ -46,6 +63,11 @@ func GetNodeList(ctx context.Context, clusterId string, excludeMasterRole bool) 
 			}
 		}
 	}
+	nodeIPListStr, _ := json.Marshal(nodeIPList)
+	nodeNameListStr, _ := json.Marshal(nodeNameList)
+	// 设置额外标签
+	span.SetAttributes(attribute.String("nodeIPList", string(nodeIPListStr)))
+	span.SetAttributes(attribute.String("nodeNameList", string(nodeNameListStr)))
 	return nodeIPList, nodeNameList, nil
 }
 

@@ -45,6 +45,7 @@ type Configuration struct {
 	BCSEnvMap   map[BCSClusterEnv]*BCSConf `yaml:"-"`
 	Web         *WebConf                   `yaml:"web"`
 	QueryStore  *QueryStoreConf            `yaml:"query_store_conf"`
+	TracingConf *TracingConf               `yaml:"tracing_conf"`
 }
 
 // init 初始化
@@ -109,6 +110,7 @@ func newConfiguration() (*Configuration, error) {
 
 	c.BKMonitor = defaultBKMonitorConf()
 
+	c.TracingConf = defaultTracingConf()
 	return c, nil
 }
 

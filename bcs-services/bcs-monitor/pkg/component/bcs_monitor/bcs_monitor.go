@@ -14,15 +14,24 @@ package bcsmonitor
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 	"sync"
 	"time"
 
 	"github.com/chonla/format"
+	"github.com/dustin/go-humanize"
 	"github.com/prometheus/common/model"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/trace"
 	"k8s.io/klog/v2"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component/promclient"
 )
+
+var tracer = otel.Tracer("bcs_monitor_client")
 
 // QueryInstant 查询实时数据, 带格式化
 func QueryInstant(ctx context.Context, projectId string, promql string, params map[string]interface{},
@@ -34,8 +43,30 @@ func QueryInstant(ctx context.Context, projectId string, promql string, params m
 		rawQL = format.Sprintf(promql, params)
 	}
 
+	commonAttrs := []attribute.KeyValue{
+		attribute.String("projectId", projectId),
+		attribute.String("rawQL", rawQL),
+		attribute.String("params", MapToJson(params)),
+	}
+	ctx, span := tracer.Start(ctx, "QueryInstant", trace.WithSpanKind(trace.SpanKindInternal), trace.WithAttributes(commonAttrs...))
+	defer span.End()
+
 	queryURL, header := getQueryURL()
-	return promclient.QueryInstant(ctx, queryURL, header, rawQL, t)
+	instant, err := promclient.QueryInstant(ctx, queryURL, header, rawQL, t)
+	rspData, _ := json.Marshal(instant.Data.Result)
+	respBody := string(rspData)
+	if len(respBody) > 1024 {
+		respBody = fmt.Sprintf("%s...(Total %s)", respBody[:1024], humanize.Bytes(uint64(len(respBody))))
+	}
+	// 设置额外标签
+	span.SetAttributes(attribute.String("queryURL", queryURL))
+	span.SetAttributes(attribute.String("time", t.String()))
+	span.SetAttributes(attribute.Key("rsp").String(respBody))
+	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
+	}
+	return instant, err
 }
 
 // QueryInstantVector 查询实时数据, 带格式化
@@ -48,8 +79,30 @@ func QueryInstantVector(ctx context.Context, projectId string, promql string, pa
 		rawQL = format.Sprintf(promql, params)
 	}
 
+	commonAttrs := []attribute.KeyValue{
+		attribute.String("rawQL", rawQL),
+		attribute.String("projectId", projectId),
+		attribute.String("params", MapToJson(params)),
+	}
+	ctx, span := tracer.Start(ctx, "QueryInstantVector", trace.WithSpanKind(trace.SpanKindInternal), trace.WithAttributes(commonAttrs...))
+	defer span.End()
 	queryURL, header := getQueryURL()
-	return promclient.QueryInstantVector(ctx, queryURL, header, rawQL, t)
+	vectorResult, warnings, err := promclient.QueryInstantVector(ctx, queryURL, header, rawQL, t)
+	rspData, _ := json.Marshal(vectorResult.String())
+	respBody := string(rspData)
+	if len(respBody) > 1024 {
+		respBody = fmt.Sprintf("%s...(Total %s)", respBody[:1024], humanize.Bytes(uint64(len(respBody))))
+	}
+	// 设置额外标签
+	span.SetAttributes(attribute.String("queryURL", queryURL))
+	span.SetAttributes(attribute.String("time", t.String()))
+	span.SetAttributes(attribute.Key("rsp").String(respBody))
+	span.SetAttributes(attribute.Key("warnings").StringSlice(warnings))
+	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
+	}
+	return vectorResult, warnings, err
 }
 
 // QueryRange 查询历史数据 带格式的查询
@@ -61,9 +114,32 @@ func QueryRange(ctx context.Context, projectId string, promql string, params map
 	} else {
 		rawQL = format.Sprintf(promql, params)
 	}
-
+	commonAttrs := []attribute.KeyValue{
+		attribute.String("projectId", projectId),
+		attribute.String("rawQL", rawQL),
+		attribute.String("params", MapToJson(params)),
+	}
+	ctx, span := tracer.Start(ctx, "QueryRange", trace.WithSpanKind(trace.SpanKindInternal), trace.WithAttributes(commonAttrs...))
+	defer span.End()
 	queryURL, header := getQueryURL()
-	return promclient.QueryRange(ctx, queryURL, header, rawQL, start, end, step)
+	queryRangeResult, err := promclient.QueryRange(ctx, queryURL, header, rawQL, start, end, step)
+
+	rspData, _ := json.Marshal(queryRangeResult.Data.Result)
+	respBody := string(rspData)
+	if len(respBody) > 1024 {
+		respBody = fmt.Sprintf("%s...(Total %s)", respBody[:1024], humanize.Bytes(uint64(len(respBody))))
+	}
+	// 设置额外标签
+	span.SetAttributes(attribute.String("queryURL", queryURL))
+	span.SetAttributes(attribute.String("start", start.String()))
+	span.SetAttributes(attribute.String("end", end.String()))
+	span.SetAttributes(attribute.String("step", step.String()))
+	span.SetAttributes(attribute.Key("rsp").String(respBody))
+	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
+	}
+	return queryRangeResult, err
 }
 
 // QueryRangeMatrix 查询历史数据, 包含租户等信息
@@ -75,16 +151,57 @@ func QueryRangeMatrix(ctx context.Context, projectId string, promql string, para
 	} else {
 		rawQL = format.Sprintf(promql, params)
 	}
-
+	commonAttrs := []attribute.KeyValue{
+		attribute.String("projectId", projectId),
+		attribute.String("rawQL", rawQL),
+		attribute.String("params", MapToJson(params)),
+	}
+	ctx, span := tracer.Start(ctx, "QueryRangeMatrix", trace.WithSpanKind(trace.SpanKindInternal), trace.WithAttributes(commonAttrs...))
+	defer span.End()
 	queryURL, header := getQueryURL()
-	return promclient.QueryRangeMatrix(ctx, queryURL, header, rawQL, start, end, step)
+
+	matrixResult, warnings, err := promclient.QueryRangeMatrix(ctx, queryURL, header, rawQL, start, end, step)
+	rspData, _ := json.Marshal(matrixResult.String())
+	respBody := string(rspData)
+	if len(respBody) > 1024 {
+		respBody = fmt.Sprintf("%s...(Total %s)", respBody[:1024], humanize.Bytes(uint64(len(respBody))))
+	}
+	// 设置额外标签
+	span.SetAttributes(attribute.String("queryURL", queryURL))
+	span.SetAttributes(attribute.String("start", start.String()))
+	span.SetAttributes(attribute.String("end", end.String()))
+	span.SetAttributes(attribute.String("step", step.String()))
+	span.SetAttributes(attribute.Key("rsp").String(respBody))
+	span.SetAttributes(attribute.Key("warnings").StringSlice(warnings))
+	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
+	}
+	return matrixResult, warnings, err
 }
 
 // QueryValue 查询第一个值 format 格式 %<var>s
 func QueryValue(ctx context.Context, projectId string, promql string, params map[string]interface{},
 	t time.Time) (string, error) {
-	vector, _, err := QueryInstantVector(ctx, projectId, promql, params, t)
+	commonAttrs := []attribute.KeyValue{
+		attribute.String("promql", promql),
+		attribute.String("params", MapToJson(params)),
+	}
+	ctx, span := tracer.Start(ctx, "QueryValue", trace.WithSpanKind(trace.SpanKindInternal), trace.WithAttributes(commonAttrs...))
+	defer span.End()
+	vector, warnings, err := QueryInstantVector(ctx, projectId, promql, params, t)
+	rspData, _ := json.Marshal(vector.String())
+	respBody := string(rspData)
+	if len(respBody) > 1024 {
+		respBody = fmt.Sprintf("%s...(Total %s)", respBody[:1024], humanize.Bytes(uint64(len(respBody))))
+	}
+	// 设置额外标签
+	span.SetAttributes(attribute.String("time", t.String()))
+	span.SetAttributes(attribute.Key("rsp").String(respBody))
+	span.SetAttributes(attribute.Key("warnings").StringSlice(warnings))
 	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
 		return "", err
 	}
 	return GetFirstValue(vector), nil
@@ -93,6 +210,12 @@ func QueryValue(ctx context.Context, projectId string, promql string, params map
 // QueryMultiValues 查询第一个值 format 格式 %<var>s
 func QueryMultiValues(ctx context.Context, projectId string, promqlMap map[string]string, params map[string]interface{},
 	t time.Time) (map[string]string, error) {
+	commonAttrs := []attribute.KeyValue{
+		attribute.String("projectId", projectId),
+		attribute.String("params", MapToJson(params)),
+	}
+	ctx, span := tracer.Start(ctx, "QueryMultiValues", trace.WithSpanKind(trace.SpanKindInternal), trace.WithAttributes(commonAttrs...))
+	defer span.End()
 	var (
 		wg  sync.WaitGroup
 		mtx sync.Mutex
@@ -124,15 +247,30 @@ func QueryMultiValues(ctx context.Context, projectId string, promqlMap map[strin
 
 	wg.Wait()
 
+	promqlMapStr, _ := json.Marshal(promqlMap)
+	resultMapStr, _ := json.Marshal(resultMap)
+	span.SetAttributes(attribute.String("promql", string(promqlMapStr)))
+	span.SetAttributes(attribute.String("resultMap", string(resultMapStr)))
 	return resultMap, nil
 }
 
 // QueryLabelSet 查询
 func QueryLabelSet(ctx context.Context, projectId string, promql string, params map[string]interface{},
 	t time.Time) (map[string]string, error) {
+	commonAttrs := []attribute.KeyValue{
+		attribute.String("promql", promql),
+		attribute.String("params", MapToJson(params)),
+	}
+	ctx, span := tracer.Start(ctx, "QueryLabelSet", trace.WithSpanKind(trace.SpanKindInternal), trace.WithAttributes(commonAttrs...))
+	defer span.End()
 	vector, _, err := QueryInstantVector(ctx, projectId, promql, params, t)
 	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
 		return nil, err
 	}
-	return GetLabelSet(vector), nil
+	result := GetLabelSet(vector)
+	resultStr, _ := json.Marshal(result)
+	span.SetAttributes(attribute.Key("labelSet").String(string(resultStr)))
+	return result, nil
 }

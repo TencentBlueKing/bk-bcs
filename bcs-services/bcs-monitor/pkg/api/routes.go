@@ -19,7 +19,6 @@ import (
 	"net/http"
 	"path"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/tcp/listener"
 	"github.com/TencentBlueKing/bkmonitor-kits/logger"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-contrib/requestid"
@@ -27,7 +26,9 @@ import (
 	"github.com/prometheus/common/route"
 	swaggerfiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
+	"go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/tcp/listener"
 	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/docs" // docs xxx
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/api/metrics"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/api/pod"
@@ -54,6 +55,7 @@ type APIServer struct {
 func NewAPIServer(ctx context.Context, addr, port, addrIPv6 string) (*APIServer, error) {
 	gin.SetMode(gin.ReleaseMode)
 	engine := gin.Default()
+	engine.Use(otelgin.Middleware("my-server"))
 
 	srv := &http.Server{Addr: addr, Handler: engine}
 
@@ -87,6 +89,16 @@ func (a *APIServer) Run() error {
 		logger.Infof("api serve dualStackListener with ipv6: %s", v6Addr)
 	}
 
+	tp, err := config.InitTracingInstance(config.G.TracingConf)
+	if err != nil {
+		logger.Errorf("initTracingInstance failed: %v", err.Error())
+	}
+
+	defer func() {
+		if err := tp.Shutdown(context.Background()); err != nil {
+			logger.Printf("Error shutting down tracer provider: %v", err)
+		}
+	}()
 	return a.srv.Serve(dualStackListener)
 }
 
