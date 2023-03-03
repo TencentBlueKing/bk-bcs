@@ -46,7 +46,7 @@ const router = new VueRouter({
   mode: 'history',
   routes: [
     {
-      path: '/',
+      path: `${SITE_URL}`,
       name: 'home',
       redirect: {
         name: 'dashboardHome',
@@ -56,8 +56,8 @@ const router = new VueRouter({
       },
     },
     {
-      path: '/projects/:projectCode',
-      name: 'entry',
+      path: `${SITE_URL}/projects/:projectCode`,
+      // name: 'entry',
       components: {
         default: Entry,
         sideMenu: DefaultSideMenu,
@@ -71,7 +71,7 @@ const router = new VueRouter({
     },
     // 资源视图
     {
-      path: '/projects/:projectCode/clusters',
+      path: `${SITE_URL}/projects/:projectCode/clusters`,
       name: 'dashboardIndex',
       components: {
         default: Entry,
@@ -82,13 +82,13 @@ const router = new VueRouter({
       ],
     },
     {
-      path: '/403',
+      path: `${SITE_URL}/403`,
       name: '403',
       props: route => ({ ...route.params, ...route.query }),
       component: Forbidden,
     },
     {
-      path: '/user-token',
+      path: `${SITE_URL}/user-token`,
       name: 'token',
       component: Token,
     },

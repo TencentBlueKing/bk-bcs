@@ -344,7 +344,6 @@ export default defineComponent({
       eventLoading.value = true;
       const [start, end] = params.value.date;
       // todo 临时处理
-      console.log(isDebugCluster.value);
       const eventAction = isDebugCluster.value ? uatStorageEvents : storageEvents;
       const { data = [], total = 0 } = await eventAction({
         offset: (pagination.value.current - 1) * pagination.value.limit,

@@ -455,8 +455,8 @@ import StatusIcon from '@/views/dashboard/common/status-icon';
 import LoadingIcon from '@/components/loading-icon.vue';
 import usePage from '@/views/dashboard/common/use-page';
 import useInterval from '@/views/dashboard/common/use-interval';
-import LayoutGroup from '../LayoutGroup.vue';
-import AutoScalerFormItem from '../cluster-autoscaler-tencent/AutoScalerFormItem.vue';
+import LayoutGroup from '../layout-group.vue';
+import AutoScalerFormItem from '../cluster-autoscaler-tencent/form-item.vue';
 import { useClusterInfo } from '@/views/cluster/use-cluster';
 import { clusterOverview } from '@/api/modules/monitor';
 import { formatBytes } from '@/common/util';
@@ -1397,7 +1397,6 @@ export default defineComponent({
     display: flex;
     flex-wrap: wrap;
     &-item {
-        height: 32px;
         margin-top: 0;
         font-size: 12px;
         width: 100%;

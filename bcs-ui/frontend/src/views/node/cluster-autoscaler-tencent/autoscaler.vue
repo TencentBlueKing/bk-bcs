@@ -349,8 +349,8 @@ import LoadingIcon from '@/components/loading-icon.vue';
 import usePage from '@/views/dashboard/common/use-page';
 import useInterval from '@/views/dashboard/common/use-interval';
 import { CreateElement } from 'vue';
-import LayoutGroup from '../LayoutGroup.vue';
-import AutoScalerFormItem from './AutoScalerFormItem.vue';
+import LayoutGroup from '../layout-group.vue';
+import AutoScalerFormItem from './form-item.vue';
 
 export default defineComponent({
   name: 'AutoScaler',

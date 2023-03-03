@@ -1,7 +1,7 @@
 <!-- eslint-disable max-len -->
 <template>
   <div class="biz-content">
-    <Header title="Polaris" :desc="`(集群名称: ${clusterName})`"></Header>
+    <Header title="Polaris" :desc="`(${$t('集群名称: {name}', { name: clusterName })})`"></Header>
     <div class="biz-content-wrapper" style="padding: 0;" v-bkloading="{ isLoading: isInitLoading, opacity: 0.1 }">
       <template v-if="!isInitLoading">
         <div class="biz-panel-header">

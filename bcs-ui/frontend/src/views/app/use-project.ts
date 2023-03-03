@@ -14,7 +14,8 @@ export default function useProjects() {
 
   // 获取当前有权限项目
   async function getProjectList() {
-    const result = await fetchProjectList().catch(() => ({ results: [], total: 0 }));
+    const result = await fetchProjectList({}, { cancelWhenRouteChange: false })
+      .catch(() => ({ results: [], total: 0 }));
     const projectList = result.results.map(project => ({
       ...project,
       cc_app_id: project.businessID,
@@ -28,8 +29,8 @@ export default function useProjects() {
   };
 
   // 获取所有项目列表
-  async function getAllProjectList(params: any = {}) {
-    const result = await fetchAllProjectList(params,  { needRes: true })
+  async function getAllProjectList(params: any = {}, config = {}) {
+    const result = await fetchAllProjectList(params,  { needRes: true, ...config })
       .catch(() => ({
         data: {},
         webAnnotations: {

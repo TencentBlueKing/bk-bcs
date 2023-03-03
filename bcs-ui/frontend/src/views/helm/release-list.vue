@@ -109,7 +109,7 @@
         </template>
       </bcs-table-column>
       <bcs-table-column :label="$t('更新时间')" prop="updateTime" width="200"></bcs-table-column>
-      <bcs-table-column :label="$t('操作')" width="160">
+      <bcs-table-column :label="$t('操作')" width="200">
         <template #default="{ row }">
           <bcs-button
             text

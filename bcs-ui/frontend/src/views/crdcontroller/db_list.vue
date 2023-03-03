@@ -1,7 +1,7 @@
 <!-- eslint-disable max-len -->
 <template>
   <div class="biz-content">
-    <Header :title="$t('DB授权配置管理')" :desc="$t(`(集群名称: ${clusterName})`)" />
+    <Header :title="$t('DB授权配置管理')" :desc="`(${$t('集群名称: {name}', { name: clusterName })})`" />
     <div class="biz-content-wrapper" style="padding: 0;" v-bkloading="{ isLoading: isInitLoading, opacity: 0.1 }">
       <template v-if="!isInitLoading">
         <div class="biz-panel-header">

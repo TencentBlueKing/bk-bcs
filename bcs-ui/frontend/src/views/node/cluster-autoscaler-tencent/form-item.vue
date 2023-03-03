@@ -99,7 +99,6 @@ export default defineComponent({
   display: flex;
   flex-wrap: wrap;
   &-item {
-      height: 32px;
       margin-top: 0;
       font-size: 12px;
       width: 100%;

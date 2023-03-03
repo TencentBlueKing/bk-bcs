@@ -143,7 +143,8 @@
               v-model="searchValue"
               :placeholder="$t('请入名称、镜像、Host IP、Pod IP、Node搜索')"
               class="search-input"
-              right-icon="bk-icon icon-search">
+              right-icon="bk-icon icon-search"
+              clearable>
             </bk-input>
           </div>
           <bcs-table

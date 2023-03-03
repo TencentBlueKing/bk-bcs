@@ -87,7 +87,10 @@ export default {
       const res = await fetchClusterList({
         projectID,
         operator: context.rootState.user?.username,
-      }, { needRes: true }).catch(() => ({ data: [] }));
+      }, {
+        needRes: true,
+        cancelWhenRouteChange: false,
+      }).catch(() => ({ data: [] }));
       const clusterExtraInfo = res.clusterExtraInfo || {};
       // 兼容以前集群数据
       res.data = res.data.map(item => ({

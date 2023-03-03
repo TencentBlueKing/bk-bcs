@@ -3,5 +3,4 @@ static/
 webpack_cache/
 node_modules/
 ip-selector.js
-src/i18n/lang.js
 bk.config.js

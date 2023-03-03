@@ -175,7 +175,7 @@
                 <template slot-scope="{ row }">
                   <span
                     v-bk-tooltips="{
-                      content: $t('当前区域CVM资源不足，请选择其它机型或联系BK助手(蓝鲸助手)'),
+                      content: $t('当前区域CVM资源不足，请选择其它机型'),
                       disabled: !((cvmData[row.specifications] || 0) < formdata.replicas)
                     }">
                     <bk-radio

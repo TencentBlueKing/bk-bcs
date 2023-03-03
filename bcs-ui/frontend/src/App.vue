@@ -29,7 +29,7 @@ export default defineComponent({
   components: { Navigation, BkPaaSLogin, PermDialog, ProjectGuide },
   setup() {
     const { projectList, getProjectList } = useProject();
-    const isLoading = ref(true);
+    const isLoading = ref(false);
     const applyPermRef = ref<any>(null);
     const loginRef = ref<any>(null);
 
@@ -67,7 +67,9 @@ export default defineComponent({
       await Promise.all([
         $store.dispatch('userInfo'),
         getProjectList(),
-      ]);
+      ]).catch((err) => {
+        console.error(err);
+      });
       isLoading.value = false;
       document.title = $i18n.t('容器管理平台 | 腾讯蓝鲸智云');
     });

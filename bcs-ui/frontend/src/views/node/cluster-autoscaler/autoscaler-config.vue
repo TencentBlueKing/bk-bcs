@@ -220,7 +220,7 @@ import { useClusterList } from '@/views/cluster/use-cluster';
 import $i18n from '@/i18n/i18n-setup';
 import $router from '@/router';
 import $store from '@/store/index';
-import LayoutGroup from '../LayoutGroup.vue';
+import LayoutGroup from '../layout-group.vue';
 import TopoSelectTree from './topo-select-tree.vue';
 
 export default defineComponent({

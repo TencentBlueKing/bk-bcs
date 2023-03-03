@@ -126,7 +126,7 @@
           :data="searchSelectData"
           :show-condition="false"
           :show-popover-tag-change="false"
-          :placeholder="$t('搜索IP、标签、状态、节点来源、所属节点池')"
+          :placeholder="$t('搜索IP、标签、状态、节点来源、所属节点规格')"
           v-model="searchSelectValue"
           @change="searchSelectChange"
           @clear="handleClearSearchSelect">
@@ -222,15 +222,15 @@
           :filtered-value="filteredValue.nodeSource"
           column-key="nodeSource"
           prop="nodeSource"
-          width="100"
+          min-width="130"
           v-if="isColumnRender('nodeSource')">
           <template #default="{ row }">
             {{ row.nodeGroupID ? $t('节点池') : $t('手动添加') }}
           </template>
         </bcs-table-column>
         <bcs-table-column
-          :label="$t('所属节点池')"
-          min-width="120"
+          :label="$t('所属节点规格')"
+          min-width="130"
           show-overflow-tooltip
           v-if="isColumnRender('nodeGroupID')">
           <template #default="{ row }">{{ row.nodeGroupName || '--' }}</template>
@@ -239,7 +239,7 @@
           :label="$t('状态')"
           :filters="filtersDataSource.status"
           :filtered-value="filteredValue.status"
-          width="120"
+          min-width="120"
           column-key="status"
           prop="status">
           <template #default="{ row }">
@@ -259,7 +259,7 @@
         </bcs-table-column>
         <bcs-table-column
           :label="$t('容器数量')"
-          width="100"
+          min-width="100"
           align="right"
           prop="container_count"
           key="container_count"
@@ -270,7 +270,7 @@
         </bcs-table-column>
         <bcs-table-column
           :label="$t('Pod数量')"
-          width="100"
+          min-width="100"
           align="right"
           prop="pod_count"
           key="pod_count"
@@ -331,6 +331,7 @@
           key="cpu_usage"
           sortable
           align="center"
+          min-width="100"
           v-if="isColumnRender('cpu_usage')"
         >
           <template #default="{ row }">
@@ -348,6 +349,7 @@
           key="memory_usage"
           sortable
           align="center"
+          min-width="100"
           v-if="isColumnRender('memory_usage')"
         >
           <template #default="{ row }">
@@ -365,6 +367,7 @@
           key="disk_usage"
           sortable
           align="center"
+          min-width="100"
           v-if="isColumnRender('disk_usage')"
         >
           <template #default="{ row }">
@@ -382,6 +385,7 @@
           key="diskio_usage"
           sortable
           align="center"
+          min-width="100"
           v-if="isColumnRender('diskio_usage')"
         >
           <template #default="{ row }">
@@ -697,7 +701,7 @@ export default defineComponent({
         ],
       },
       {
-        name: $i18n.t('所属节点池'),
+        name: $i18n.t('所属节点规格'),
         id: 'nodeGroupID',
         multiable: true,
         children: tableData.value.reduce<any[]>((pre, item) => {
@@ -745,7 +749,7 @@ export default defineComponent({
       },
       {
         id: 'nodeGroupID',
-        label: $i18n.t('所属节点池'),
+        label: $i18n.t('所属节点规格'),
         defaultChecked: true,
       },
       {

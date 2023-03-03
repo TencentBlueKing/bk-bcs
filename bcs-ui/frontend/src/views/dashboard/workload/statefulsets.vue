@@ -60,7 +60,7 @@
             </span>
           </template>
         </bk-table-column>
-        <bk-table-column :label="$t('操作')" :resizable="false" width="220">
+        <bk-table-column :label="$t('操作')" :resizable="false" width="240">
           <template #default="{ row }">
             <bk-button
               text

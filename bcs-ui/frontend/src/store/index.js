@@ -187,7 +187,7 @@ const store = new Vuex.Store({
      *
      * @return {Promise} promise 对象
      */
-    userInfo(context, params, config = {}) {
+    userInfo(context, params, config = { cancelWhenRouteChange: false }) {
       // return http.get(`/app/index?invoke=userInfo`, {}, config)
       return http.get(`${DEVOPS_BCS_API_URL}/api/user/`, params, config).then((response) => {
         const userData = response.data || {};
@@ -207,7 +207,7 @@ const store = new Vuex.Store({
      */
     getProject(context, params) {
       const { projectId } = params;
-      return getProject({ $projectId: projectId }, { needRes: true })
+      return getProject({ $projectId: projectId }, { needRes: true, cancelWhenRouteChange: false })
         .then((res) => {
           const data = {
             ...res.data,

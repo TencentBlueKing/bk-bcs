@@ -306,7 +306,7 @@
       :title="$t('配额管理：{nsName}', { nsName: setQuotaConf.namespace })">
       <bk-form
         ref="setQuotaForm"
-        :label-width="80"
+        :label-width="120"
         v-bkloading="{ isLoading: setQuotaConf.loading }">
         <bk-form-item :label="$t('配额设置')">
           <bk-switcher
@@ -780,7 +780,7 @@ export default defineComponent({
     const handleGoVar = () => {
       setVariableConf.value.isShow = false;
       $router.push({
-        name: 'var',
+        name: 'variable',
         params: {
           projectCode: projectCode.value,
         },

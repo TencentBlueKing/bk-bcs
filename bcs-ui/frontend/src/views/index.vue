@@ -36,7 +36,7 @@ export default defineComponent({
   },
   setup(props, ctx) {
     const { projectList, getAllProjectList } = useProjects();
-    const loading = ref(true);
+    const loading = ref(true);// 默认不加载视图，等待集群接口加载完
     const currentRoute = computed(() => toRef(reactive($router), 'currentRoute').value);
     const routeMeta = computed(() => currentRoute.value?.meta || {});
     const curProject = computed(() => $store.state.curProject);
@@ -50,7 +50,8 @@ export default defineComponent({
         const { data } = await getAllProjectList({
           projectCode,
           all: true,
-        });
+        }, { cancelWhenRouteChange: false });
+        loading.value = false;
 
         data.length
           ? $router.replace({
@@ -94,7 +95,9 @@ export default defineComponent({
       const data = await Promise.all([
         $store.dispatch('getProject', { projectId: curProject.value?.project_id }),
         $store.dispatch('cluster/getClusterList', curProject.value?.project_id),
-      ]);
+      ]).catch((err) => {
+        console.error(err);
+      });
       // 校验集群ID是否正确
       const clusterList = data[1]?.data || [];
       const cluster = clusterList.find(item => item.clusterID ===  $store.getters.curClusterId);
