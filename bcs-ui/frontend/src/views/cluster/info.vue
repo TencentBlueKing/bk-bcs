@@ -283,14 +283,14 @@
                   {{ row.innerIPv6 || '--' }}
                 </template>
               </bk-table-column>
-              <bk-table-column :label="$t('Agent状态')" prop="agent">
-                <template #default="{ row }">
-                  <StatusIcon :status="String(row.agent)" :status-color-map="statusColorMap">
-                    {{ taskStatusTextMap[String(row.agent)] || $t('未知') }}
-                  </StatusIcon>
-                </template>
-              </bk-table-column>
               <template v-if="$INTERNAL">
+                <bk-table-column :label="$t('Agent状态')" prop="agent">
+                  <template #default="{ row }">
+                    <StatusIcon :status="String(row.agent)" :status-color-map="statusColorMap">
+                      {{ taskStatusTextMap[String(row.agent)] || $t('未知') }}
+                    </StatusIcon>
+                  </template>
+                </bk-table-column>
                 <bk-table-column :label="$t('机房')" prop="idc"></bk-table-column>
                 <bk-table-column :label="$t('机架')" prop="rack"></bk-table-column>
                 <bk-table-column :label="$t('机型')" prop="deviceClass"></bk-table-column>
