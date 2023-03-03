@@ -32,6 +32,7 @@ import (
 	pbcs "bscp.io/pkg/protocol/config-server"
 	"bscp.io/pkg/runtime/grpcgw"
 	"bscp.io/pkg/runtime/handler"
+	"bscp.io/pkg/runtime/webannotation"
 	"bscp.io/pkg/serviced"
 	"bscp.io/pkg/tools"
 )
@@ -99,6 +100,7 @@ func (p *proxy) handler() http.Handler {
 	r.With(p.authorizer.UnifiedAuthentication).Get("/api/v1/auth/user/info", UserInfoHandler)
 	r.Route("/api/v1/auth", func(r chi.Router) {
 		r.Use(p.authorizer.UnifiedAuthentication)
+		r.Use(webannotation.BuildAnnotation(p.authorizer))
 		r.Mount("/", p.authSvrMux)
 	})
 
@@ -137,7 +139,7 @@ func newAuthServerMux(dis serviced.Discover) (http.Handler, error) {
 	}
 
 	// new grpc mux.
-	mux := runtime.NewServeMux(grpcgw.MetadataOpt, grpcgw.BKJSONMarshalerOpt, grpcgw.BKErrorHandlerOpt)
+	mux := runtime.NewServeMux(grpcgw.MetadataOpt, grpcgw.JsonMarshalerOpt, grpcgw.BKErrorHandlerOpt, grpcgw.BSCPResponseOpt)
 
 	// register client to mux.
 	if err = pbas.RegisterAuthHandler(context.Background(), mux, conn); err != nil {

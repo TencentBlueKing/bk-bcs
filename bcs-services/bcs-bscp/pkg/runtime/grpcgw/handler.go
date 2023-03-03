@@ -22,11 +22,13 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/proto"
 
 	"bscp.io/pkg/components"
 	"bscp.io/pkg/criteria/constant"
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/rest"
+	"bscp.io/pkg/runtime/webannotation"
 )
 
 var (
@@ -121,4 +123,14 @@ func kitMetadataHandler(ctx context.Context, r *http.Request) metadata.MD {
 		constant.UserKey, kt.User,
 		constant.AppCodeKey, kt.AppCode,
 	)
+}
+
+// bscpResponse 可动态处理 webannotation
+func bscpResponse(ctx context.Context, w http.ResponseWriter, msg proto.Message) error {
+	ww, ok := w.(*webannotation.AnnotationResponseWriter)
+	if !ok {
+		return nil
+	}
+
+	return ww.Build(ctx, msg)
 }

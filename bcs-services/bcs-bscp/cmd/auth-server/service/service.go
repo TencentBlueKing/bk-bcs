@@ -21,6 +21,7 @@ import (
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/protobuf/proto"
 
 	"bscp.io/cmd/auth-server/options"
 	"bscp.io/cmd/auth-server/service/auth"
@@ -28,6 +29,7 @@ import (
 	"bscp.io/cmd/auth-server/service/initial"
 	"bscp.io/pkg/cc"
 	"bscp.io/pkg/components/bkpaas"
+	iamauth "bscp.io/pkg/iam/auth"
 	"bscp.io/pkg/iam/client"
 	pkgauth "bscp.io/pkg/iam/sdk/auth"
 	"bscp.io/pkg/iam/sys"
@@ -37,6 +39,7 @@ import (
 	pbas "bscp.io/pkg/protocol/auth-server"
 	basepb "bscp.io/pkg/protocol/core/base"
 	pbds "bscp.io/pkg/protocol/data-service"
+	"bscp.io/pkg/runtime/webannotation"
 	"bscp.io/pkg/serviced"
 	"bscp.io/pkg/space"
 	esbcli "bscp.io/pkg/thirdparty/esb/client"
@@ -265,6 +268,24 @@ func (s *Service) GetUserInfo(ctx context.Context, req *pbas.UserCredentialReq) 
 	}
 
 	return &pbas.UserInfoResp{Username: username, AvatarUrl: ""}, nil
+}
+
+// ListUserSpaceAnnotation
+func ListUserSpaceAnnotation(ctx context.Context, kt *kit.Kit, authorizer iamauth.Authorizer, msg proto.Message) (*webannotation.Annotation, error) {
+	resp, ok := msg.(*pbas.ListUserSpaceResp)
+	if !ok {
+		return nil, nil
+	}
+
+	perms := map[string]webannotation.Perm{}
+	for _, v := range resp.GetItems() {
+		perms[v.SpaceId] = webannotation.Perm{"update": false, "delete": false}
+	}
+	return &webannotation.Annotation{Perms: perms}, nil
+}
+
+func init() {
+	webannotation.Register(&pbas.ListUserSpaceResp{}, ListUserSpaceAnnotation)
 }
 
 // ListUserSpace 获取用户信息
