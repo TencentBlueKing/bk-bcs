@@ -193,16 +193,16 @@
             <bcs-table-column label="Restarts" width="100" :resizable="false">
               <template #default="{ row }">{{handleGetExtData(row.metadata.uid, 'restartCnt')}}</template>
             </bcs-table-column>
-            <bcs-table-column label="Host IP" width="140" :resizable="false">
+            <bcs-table-column label="Host IP" min-width="140" show-overflow-tooltip>
               <template #default="{ row }">{{row.status.hostIP || '--'}}</template>
             </bcs-table-column>
-            <bcs-table-column label="Pod IPv4" width="140" :resizable="false">
+            <bcs-table-column label="Pod IPv4" min-width="140" show-overflow-tooltip>
               <template #default="{ row }">{{handleGetExtData(row.metadata.uid, 'podIPv4') || '--'}}</template>
             </bcs-table-column>
             <bcs-table-column label="Pod IPv6" min-width="200" show-overflow-tooltip>
               <template #default="{ row }">{{handleGetExtData(row.metadata.uid, 'podIPv6') || '--'}}</template>
             </bcs-table-column>
-            <bcs-table-column label="Node" :resizable="false" show-overflow-tooltip>
+            <bcs-table-column label="Node" show-overflow-tooltip>
               <template #default="{ row }">{{row.spec.nodeName || '--'}}</template>
             </bcs-table-column>
             <bcs-table-column label="Age" :resizable="false">
