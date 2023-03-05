@@ -3,8 +3,14 @@ base_conf:
   language_code: en
   run_env: dev
 
+#bcs_conf:
+#  host: "http://localhost"
+#
 bcs_conf:
-
+  host: "http://bcs-api.site.bktencent.com"
+  token: "qf70DbohQDNgPFKgTwbPaKlctZrzibAu"
+  jwt_public_key: ""
+  verify: false
 bcs_env_conf:
 
 web:
@@ -23,10 +29,11 @@ frontend_conf:
     BKSRE_HOST: ""
     SRC_IED_HOST: ""
     DEVOPS_HOST: ""
-    devops_bcs_api_url: ""
+    devops_bcs_api_url: "http://localhost"
     DEVOPS_ARTIFACTORY_HOST: ""
     BK_IAM_APP_URL: ""
     PAAS_HOST: ""
     BK_CC_HOST: ""
     BKMONITOR_HOST: ""
+    BCS_API_HOST: ""
   docs: {}

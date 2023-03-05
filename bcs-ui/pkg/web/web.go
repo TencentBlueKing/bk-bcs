@@ -16,43 +16,38 @@ package web
 import (
 	"context"
 	"fmt"
-	"net/http"
+	"github.com/Tencent/bk-bcs/bcs-common/common/tcp/listener"
+	bcsui "github.com/Tencent/bk-bcs/bcs-ui"
+	"github.com/Tencent/bk-bcs/bcs-ui/pkg/config"
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
+	httpSwagger "github.com/swaggo/http-swagger"
 	"net/http/httputil"
 	"net/url"
+	"strings"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/tcp/listener"
-	"github.com/Tencent/bk-bcs/bcs-ui/pkg/config"
-	"github.com/gin-contrib/cors"
-	"github.com/gin-gonic/gin"
-	swaggerfiles "github.com/swaggo/files"
-	ginSwagger "github.com/swaggo/gin-swagger"
 	"k8s.io/klog/v2"
-
-	bcsui "github.com/Tencent/bk-bcs/bcs-ui"
+	"net/http"
 )
 
 // WebServer :
 type WebServer struct {
-	ctx      context.Context
-	engine   *gin.Engine
-	srv      *http.Server
-	addrIPv6 string
+	ctx            context.Context
+	srv            *http.Server
+	addrIPv6       string
+	embedWebServer bcsui.EmbedWebServer
 }
 
 // NewWebServer :
 func NewWebServer(ctx context.Context, addr string, addrIPv6 string) (*WebServer, error) {
-	gin.SetMode(gin.ReleaseMode)
-	engine := gin.Default()
-
-	srv := &http.Server{Addr: addr, Handler: engine}
 
 	s := &WebServer{
-		ctx:      ctx,
-		engine:   engine,
-		srv:      srv,
-		addrIPv6: addrIPv6,
+		ctx:            ctx,
+		addrIPv6:       addrIPv6,
+		embedWebServer: bcsui.NewEmbedWeb(),
 	}
-	s.newRoutes(engine)
+	srv := &http.Server{Addr: addr, Handler: s.newRouter()}
+	s.srv = srv
 
 	return s, nil
 }
@@ -82,90 +77,103 @@ func (a *WebServer) Close() error {
 // newRoutes xxx
 // @Title     BCS-Monitor OpenAPI
 // @BasePath  /bcsapi/v4/monitor/api/projects/:projectId/clusters/:clusterId
-func (a *WebServer) newRoutes(engine *gin.Engine) {
-	engine.Use(gin.Recovery(), gin.Logger(), cors.Default())
+func (w *WebServer) newRouter() http.Handler {
+	r := chi.NewRouter()
+	r.Use(middleware.Logger)
+	r.Use(middleware.Recoverer)
+	r.Use(CORS)
 
 	// openapi 文档
 	// 访问 swagger/index.html, swagger/doc.json
-	engine.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
-	engine.GET("/-/healthy", HealthyHandler)
-	engine.GET("/-/ready", ReadyHandler)
+	r.Get("/swagger/*", httpSwagger.Handler(httpSwagger.URL("/swagger/doc.json")))
+	r.Get("/-/healthy", HealthyHandler)
+	r.Get("/-/ready", ReadyHandler)
 
 	// 注册 HTTP 请求
-
-	// 注册模板和静态资源
-	engine.SetHTMLTemplate(bcsui.WebTemplate())
-
-	// router.Group(routePrefix).StaticFS("/web/static", http.FS(web.WebStatic()))
-	engine.Group("").StaticFS("/web/static", http.FS(bcsui.WebStatic()))
-
 	// 正确路由
-	engine.GET("/bcs", IndexHandler)
-	engine.GET("/bcs/*path", IndexHandler)
+	r.Get("/bcs", w.embedWebServer.IndexHandler().ServeHTTP)
+	r.Get("/bcs/*", w.embedWebServer.IndexHandler().ServeHTTP)
 
 	if config.G.IsDevMode() {
-		engine.Any("/backend/*path", ReverseAPIHandler("bcs_saas_api_url", config.G.FrontendConf.Host.DevOpsBCSAPIURL))
-		engine.Any("/bcsapi/*path", ReverseAPIHandler("bcs_host", config.G.BCS.Host))
+		r.Mount("/backend", ReverseAPIHandler("bcs_saas_api_url", config.G.FrontendConf.Host.DevOpsBCSAPIURL))
+		r.Mount("/bcsapi", ReverseAPIHandler("bcs_host", config.G.BCS.Host))
 	}
 
 	// vue 自定义路由, 前端返回404
-	engine.NoRoute(IndexHandler)
+	r.NotFound(w.embedWebServer.IndexHandler().ServeHTTP)
+
+	return r
 }
 
-// IndexHandler Vue 模板渲染
-func IndexHandler(c *gin.Context) {
-	data := gin.H{
-		"STATIC_URL":              STATIC_URL,
-		"SITE_URL":                SITE_URL,
-		"REGION":                  "ce",
-		"RUN_ENV":                 config.G.Base.RunEnv,
-		"PREFERRED_DOMAINS":       config.G.Web.PreferredDomains,
-		"DEVOPS_HOST":             config.G.FrontendConf.Host.DevOpsHost,
-		"DEVOPS_BCS_API_URL":      config.G.FrontendConf.Host.DevOpsBCSAPIURL,
-		"DEVOPS_ARTIFACTORY_HOST": config.G.FrontendConf.Host.DevOpsArtifactoryHost,
-		"BK_IAM_APP_URL":          config.G.FrontendConf.Host.BKIAMAppURL,
-		"PAAS_HOST":               config.G.FrontendConf.Host.PaaSHost,
-		"BKMONITOR_HOST":          config.G.FrontendConf.Host.BKMonitorHOst,
-		"BCS_API_HOST":            config.G.BCS.Host,
-		"BK_CC_HOST":              config.G.FrontendConf.Host.BKCMDBHost,
-	}
-
-	if config.G.IsDevMode() {
-		data["DEVOPS_BCS_API_URL"] = fmt.Sprintf("%s/backend", config.G.Web.Host)
-		data["BCS_API_HOST"] = config.G.Web.Host
-	}
-	c.HTML(http.StatusOK, "index.html", data)
-}
-
-func ReverseAPIHandler(name, remoteURL string) gin.HandlerFunc {
+//
+func ReverseAPIHandler(name, remoteURL string) http.Handler {
 	remote, err := url.Parse(remoteURL)
 	if err != nil {
-		panic(err)
+		panic(fmt.Errorf("%s '%s' not valid: %s", name, remoteURL, err))
 	}
 
 	if remote.Scheme != "http" && remote.Scheme != "https" {
 		panic(fmt.Errorf("%s '%s' scheme not supported", name, remoteURL))
 	}
 
-	return func(c *gin.Context) {
+	fn := func(w http.ResponseWriter, r *http.Request) {
 		proxy := httputil.NewSingleHostReverseProxy(remote)
 		proxy.Director = func(req *http.Request) {
-			req.Header = c.Request.Header
+			req.Header = r.Header
 			req.Host = remote.Host
 			req.URL.Scheme = remote.Scheme
 			req.URL.Host = remote.Host
+			klog.InfoS("forward request", "name", name, "url", req.URL)
 		}
 
-		proxy.ServeHTTP(c.Writer, c.Request)
+		proxy.ServeHTTP(w, r)
 	}
+
+	return http.HandlerFunc(fn)
 }
 
 // HealthyHandler 健康检查
-func HealthyHandler(c *gin.Context) {
-	c.Data(http.StatusOK, "text/plain; charset=utf-8", []byte("OK"))
+func HealthyHandler(w http.ResponseWriter, r *http.Request) {
+	w.Write([]byte("OK"))
 }
 
 // ReadyHandler 健康检查
-func ReadyHandler(c *gin.Context) {
-	c.Data(http.StatusOK, "text/plain; charset=utf-8", []byte("OK"))
+func ReadyHandler(w http.ResponseWriter, r *http.Request) {
+	w.Write([]byte("OK"))
+}
+
+// CORS 跨域
+func CORS(next http.Handler) http.Handler {
+	fn := func(w http.ResponseWriter, r *http.Request) {
+		// cors 处理
+		origin := r.Header.Get("Origin")
+		if origin != "" {
+			w.Header().Set("Access-Control-Allow-Origin", origin)
+		} else {
+			w.Header().Set("Access-Control-Allow-Origin", "*")
+		}
+
+		allowHeaders := []string{
+			"Origin",
+			"Content-Length",
+			"Content-Type",
+			"X-Requested-With",
+			"X-Bkapi-File-Content-Id",
+			"X-Bkapi-File-Content-Overwrite",
+		}
+		w.Header().Set("Access-Control-Allow-Headers", strings.Join(allowHeaders, ","))
+
+		allowMethods := []string{"GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"}
+		w.Header().Set("Access-Control-Allow-Methods", strings.Join(allowMethods, ","))
+
+		w.Header().Set("Access-Control-Allow-Credentials", "true")
+
+		if r.Method == http.MethodOptions {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	}
+	return http.HandlerFunc(fn)
 }

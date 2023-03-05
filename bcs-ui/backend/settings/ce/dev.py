@@ -20,11 +20,11 @@ SECRET_KEY = "jllc(^rzpe8_udv)oadny2j3ym#qd^x^3ns11_8kq(1rf8qpd2"
 
 DATABASES["default"] = {
     "ENGINE": "django.db.backends.mysql",
-    "NAME": "bcs-app",
+    "NAME": "test_db",
     "USER": "root",
-    "PASSWORD": os.environ.get("DB_PASSWORD", ""),
-    "HOST": os.environ.get("DB_HOST", "127.0.0.1"),
-    "PORT": "3306",
+    "PASSWORD": os.environ.get("DB_PASSWORD", "123456"),
+    "HOST": os.environ.get("DB_HOST", "192.168.37.150"),
+    "PORT": "31194",
     "OPTIONS": {
         "init_command": "SET default_storage_engine=INNODB",
     },
@@ -54,7 +54,7 @@ DEVOPS_ARTIFACTORY_HOST = os.environ.get("BKAPP_ARTIFACTORY_HOST")
 
 BK_PAAS_INNER_HOST = os.environ.get("BK_PAAS_INNER_HOST", BK_PAAS_HOST)
 
-REDIS_URL = os.environ.get("BKAPP_REDIS_URL", "redis://127.0.0.1/0")
+REDIS_URL = os.environ.get("BKAPP_REDIS_URL", "redis://192.168.37.150:31289/0")
 # 解析url
 _rpool = redis.from_url(REDIS_URL).connection_pool
 REDIS_HOST = _rpool.connection_kwargs["host"]

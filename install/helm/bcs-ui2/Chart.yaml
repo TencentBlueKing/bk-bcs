@@ -1,0 +1,7 @@
+apiVersion: v2
+name: bcs-ui
+description: A Helm chart for module bcs-ui of BlueKing Container Service(BCS)
+type: application
+version: 1.29.0-alpha.1
+appVersion: v1.29.0-alpha.1
+

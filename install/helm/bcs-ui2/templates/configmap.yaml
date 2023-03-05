@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: bcs-ui
+  labels:
+    app: bcs-ui
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    release: "{{ .Release.Name }}"
+data:
+  bcs_ui.yaml: |-
+    {{- toYaml .Values.config | nindent 4 }}
