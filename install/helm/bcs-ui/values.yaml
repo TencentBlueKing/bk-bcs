@@ -34,29 +34,7 @@ imagePullSecrets: []
 nameOverride: ""
 fullnameOverride: "bcs-ui"
 
-ui:
-  replicaCount: 1
 
-apiserver:
-  replicaCount: 1
-
-authserver:
-  replicaCount: 1
-
-cacheservice:
-  replicaCount: 1
-
-configserver:
-  replicaCount: 1
-
-dataservice:
-  replicaCount: 1
-
-feedserver:
-  replicaCount: 1
-
-sidecar:
-  replicaCount: 1
 
 serviceAccount:
   # Specifies whether a service account should be created
@@ -92,8 +70,8 @@ config:
   #  host: "http://localhost"
   #
   bcs_conf:
-    host: "http://bcs-api.site.bktencent.com"
-    token: "qf70DbohQDNgPFKgTwbPaKlctZrzibAu"
+    host: ""
+    token: ""
     jwt_public_key: ""
     verify: false
   bcs_env_conf:

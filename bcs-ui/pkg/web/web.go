@@ -16,18 +16,19 @@ package web
 import (
 	"context"
 	"fmt"
-	"github.com/Tencent/bk-bcs/bcs-common/common/tcp/listener"
-	bcsui "github.com/Tencent/bk-bcs/bcs-ui"
-	"github.com/Tencent/bk-bcs/bcs-ui/pkg/config"
-	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
-	httpSwagger "github.com/swaggo/http-swagger"
+	"k8s.io/klog/v2"
+	"net/http"
 	"net/http/httputil"
 	"net/url"
 	"strings"
 
-	"k8s.io/klog/v2"
-	"net/http"
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
+	httpSwagger "github.com/swaggo/http-swagger"
+
+	"github.com/Tencent/bk-bcs/bcs-common/common/tcp/listener"
+	bcsui "github.com/Tencent/bk-bcs/bcs-ui"
+	"github.com/Tencent/bk-bcs/bcs-ui/pkg/config"
 )
 
 // WebServer :
@@ -86,6 +87,8 @@ func (w *WebServer) newRouter() http.Handler {
 	// openapi 文档
 	// 访问 swagger/index.html, swagger/doc.json
 	r.Get("/swagger/*", httpSwagger.Handler(httpSwagger.URL("/swagger/doc.json")))
+
+	r.Get("/healthz", HealthzHandler)
 	r.Get("/-/healthy", HealthyHandler)
 	r.Get("/-/ready", ReadyHandler)
 
@@ -105,7 +108,7 @@ func (w *WebServer) newRouter() http.Handler {
 	return r
 }
 
-//
+// ReverseAPIHandler api代理
 func ReverseAPIHandler(name, remoteURL string) http.Handler {
 	remote, err := url.Parse(remoteURL)
 	if err != nil {
@@ -139,6 +142,11 @@ func HealthyHandler(w http.ResponseWriter, r *http.Request) {
 
 // ReadyHandler 健康检查
 func ReadyHandler(w http.ResponseWriter, r *http.Request) {
+	w.Write([]byte("OK"))
+}
+
+// HealthzHandler 健康检查
+func HealthzHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("OK"))
 }
 

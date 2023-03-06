@@ -35,8 +35,13 @@ spec:
         - name: {{ .Chart.Name }}
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
-          image: 192.168.37.160/devtools/bcs-ui-new:v5
-          imagePullPolicy: IfNotPresent
+          image: bcs-ui:latest
+          imagePullPolicy: Never
+          env:
+            - name: POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
           ports:
             - name: http
               containerPort: 8080
@@ -44,13 +49,14 @@ spec:
           command:
           args:
             - --config=/etc/bcs-ui/bcs_ui.yaml
+            - --http-address=$(POD_IP):8080
           livenessProbe:
             httpGet:
-              path: /-/healthy
+              path: /healthz
               port: http
           readinessProbe:
             httpGet:
-              path: /-/ready
+              path: /healthz
               port: http
           volumeMounts:
           - name: config

@@ -7,8 +7,8 @@ base_conf:
 #  host: "http://localhost"
 #
 bcs_conf:
-  host: "http://bcs-api.site.bktencent.com"
-  token: "qf70DbohQDNgPFKgTwbPaKlctZrzibAu"
+  host: ""
+  token: ""
   jwt_public_key: ""
   verify: false
 bcs_env_conf:
