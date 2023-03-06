@@ -2,8 +2,8 @@
     import { defineProps, ref, watch } from 'vue'
     import { useStore } from 'vuex'
     import { PlayShape } from 'bkui-vue/lib/icon'
-    import Diff from './diff/index.vue'
-    import { IConfigVersionItem } from '../../../../types'
+    import Diff from '../../../../../components/diff/index.vue'
+    import { IConfigVersionItem } from '../../../../../types'
 
     const props = defineProps<{
         versionName?: string,

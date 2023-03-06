@@ -6,8 +6,8 @@
   import { getServingConfigList, getServingVersionConfigList, deleteServingConfigItem } from '../../../../../api/config'
   import EditConfig from './edit-config.vue'
   import CreateConfig from './create-config.vue'
-  import PublishVersion from '../publish-version/index.vue'
-  import ReleaseVersion from '../release-version/index.vue'
+  import PublishVersion from './publish-version/index.vue'
+  import ReleaseVersion from './release-version/index.vue'
 
   const store = useStore()
 
@@ -40,8 +40,6 @@
   })
 
   watch(() => props.appId, (val) => {
-    console.log(val)
-    debugger
     getConfigList()
   })
 
@@ -132,6 +130,7 @@
       </section>
       <section class="actions-wrapper">
         <ReleaseVersion
+          v-if="props.releaseId === 0"
           style="margin-right: 8px"
           :bk-biz-id="props.bkBizId"
           :app-id="props.appId"
@@ -148,7 +147,7 @@
           @confirm="handleUpdateStatus" />
         </section>
       </section>
-    <CreateConfig :bk-biz-id="props.bkBizId" :app-id="props.appId" @confirm="refreshConfigList" />
+    <CreateConfig v-if="props.releaseId === 0" :bk-biz-id="props.bkBizId" :app-id="props.appId" @confirm="refreshConfigList" />
     <section class="config-list-table">
       <bk-loading :loading="loading">
         <bk-table :border="['outer']" :data="configList">
@@ -190,6 +189,9 @@
   </section>
 </template>
 <style lang="scss" scoped>
+  .config-list-wrapper {
+    padding: 0 24px;
+  }
   .config-content-header {
     display: flex;
     align-items: center;

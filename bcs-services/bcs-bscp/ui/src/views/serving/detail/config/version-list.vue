@@ -3,15 +3,8 @@
   import { useStore } from 'vuex'
   import { Ellipsis } from 'bkui-vue/lib/icon'
   import { getConfigVersionList } from '../../../../api/config'
+  import { IVersionItem } from '../../../../types'
 
-  interface IVersionItem {
-    id: number;
-    attachment: object;
-    revision: object;
-    spec: {
-      name: string
-    };
-  }
 
   const store = useStore()
 

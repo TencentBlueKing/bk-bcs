@@ -53,7 +53,7 @@
       // @ts-ignore
       const signature = detail.content.spec.signature
       const configContent = <object | string> await getConfigContent(props.bkBizId, props.appId, signature)
-      content.value = configContent as string
+      content.value = String(configContent)
     } catch (e) {
       console.error(e)
     } finally {

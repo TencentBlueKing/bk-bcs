@@ -1,11 +1,11 @@
 <script setup lang="ts">
     import { defineProps, ref, onMounted } from 'vue'
     import { ArrowsLeft, AngleRight } from 'bkui-vue/lib/icon'
-    import VersionLayout from '../components/version-layout.vue'
+    import VersionLayout from '../../components/version-layout.vue'
     import ConfirmDialog from './confirm-dialog.vue'
-    import ConfigDiff from '../config-diff.vue'
-    import { getConfigVersionList } from '../../../../../api/config'
-    import { IConfigVersionItem } from '../../../../../types'
+    import ConfigDiff from '../../components/config-diff.vue'
+    import { getConfigVersionList } from '../../../../../../api/config'
+    import { IConfigVersionItem } from '../../../../../../types'
 
     const props = defineProps<{
         bkBizId: string,

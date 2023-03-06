@@ -77,3 +77,12 @@ export interface IConfigVersionItem {
     name: string
   };
 }
+
+export interface IVersionItem {
+  id: number;
+  attachment: object;
+  revision: object;
+  spec: {
+    name: string
+  };
+}
