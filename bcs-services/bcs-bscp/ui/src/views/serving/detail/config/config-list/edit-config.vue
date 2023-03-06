@@ -22,6 +22,7 @@
   const props = defineProps<{
     bkBizId: string,
     appId: number,
+    releaseId: number|null
     configId: number,
     show: Boolean
   }>()

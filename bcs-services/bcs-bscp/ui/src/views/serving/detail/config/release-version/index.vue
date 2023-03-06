@@ -1,73 +1,74 @@
 <script setup lang="ts">
-  import { defineProps, ref } from 'vue'
-  import { ArrowsLeft, AngleRight } from 'bkui-vue/lib/icon'
-  import InfoBox from "bkui-vue/lib/info-box";
-  import VersionLayout from '../components/version-layout.vue'
-  import ConfirmDialog from './confirm-dialog.vue'
-  import ConfigDiff from '../config-diff.vue'
+    import { defineProps, ref, onMounted } from 'vue'
+    import { ArrowsLeft, AngleRight } from 'bkui-vue/lib/icon'
+    import VersionLayout from '../components/version-layout.vue'
+    import ConfirmDialog from './confirm-dialog.vue'
+    import ConfigDiff from '../config-diff.vue'
+    import { getConfigVersionList } from '../../../../../api/config'
+    import { IConfigVersionItem } from '../../../../../types'
 
-  const props = defineProps<{
-    bkBizId: string,
-    appId: number,
-    appName: string,
-    versionName: string
-  }>()
-  const showDiffPanel = ref(false)
-  const isConfirmDialogShow = ref(false)
+    const props = defineProps<{
+        bkBizId: string,
+        appId: number,
+        appName: string,
+        configList: Array<IConfigVersionItem>
+    }>()
 
-  const handleSuccess = () => {
-    InfoBox({
-    // @ts-ignore
-      infoType: "success",
-      title: '版本已上线',
-      dialogType: 'confirm',
+    const emit = defineEmits(['confirm'])
+
+    const showDiffPanel = ref(false)
+    const isConfirmDialogShow = ref(false)
+    const versionListLoading = ref(true)
+    const versionList = ref([])
+
+    onMounted(() => {
+        getVersionList()
     })
-  }
+    
+    const getVersionList = async() => {
+        try {
+            versionListLoading.value = true
+            const res = await getConfigVersionList(props.bkBizId, props.appId)
+            versionList.value = res.data.details
+        } catch (e) {
+            console.error(e)
+        } finally {
+            versionListLoading.value = false
+        }
+    }
 
-  const handleFail = (message: string = '') => {
-    InfoBox({
-    // @ts-ignore
-      infoType: "danger",
-      title: '版本上线失败',
-      subTitle: message || 'fasdfgdsfgsdfgertewrt',
-      confirmText: '重试',
-      onConfirm () {
-        isConfirmDialogShow.value = true
-      }
-    })
-  }
+    const handleCreated = () => {
+        handleClose()
+        emit('confirm')
+    }
 
-  const handleClose = () => {
-    showDiffPanel.value = false
-  }
+    const handleClose = () => {
+        showDiffPanel.value = false
+    }
 
 </script>
 <template>
     <section class="create-version">
-        <bk-button theme="primary" @click="showDiffPanel = true">上线版本</bk-button>
+        <bk-button theme="primary" @click="showDiffPanel = true">生成版本</bk-button>
         <VersionLayout v-if="showDiffPanel">
             <template #header>
                 <section class="header-wrapper">
-                    <span class="header-name" @click="handleClose">
+                    <span class="service-name" @click="handleClose">
                         <ArrowsLeft class="arrow-left" />
                         <span class="service-name">{{ props.appName }}</span>
                     </span>
                     <AngleRight class="arrow-right" />
-                    上线版本：{{ props.versionName }}
+                    生成版本
                 </section>
             </template>
-            <config-diff>
-                <template #head>
-                    <div class="diff-left-panel-head">
-                        <span class="version-status">待上线</span>
-                        {{ props.versionName }}
-                        <!-- @todo 待确定这里展示什么名称 -->
-                    </div>
-                </template>
+            <config-diff
+                version-name="未命名版本"
+                :config-list="configList"
+                :version-list="versionList">
             </config-diff>
             <template #footer>
                 <section class="actions-wrapper">
-                    <bk-button theme="primary" style="margin-right: 8px;" @click="isConfirmDialogShow = true">上线版本</bk-button>
+                    <bk-button theme="primary" style="margin-right: 8px;" @click="isConfirmDialogShow = true">生成版本</bk-button>
                     <bk-button @click="handleClose">取消</bk-button>
                 </section>
             </template>
@@ -76,8 +77,7 @@
             v-model:show="isConfirmDialogShow"
             :bk-biz-id="props.bkBizId"
             :app-id="props.appId"
-            @successed="handleSuccess"
-            @failed="handleFail" />
+            @confirm="handleCreated" />
     </section>
 </template>
 <style lang="scss" scoped>
@@ -89,7 +89,7 @@
         font-size: 12px;
         line-height: 1;
     }
-    .header-name {
+    .service-name {
         display: flex;
         align-items: center;
         font-size: 12px;
@@ -103,18 +103,6 @@
     .arrow-right {
         font-size: 24px;
         color: #c4c6cc;
-    }
-    .diff-left-panel-head {
-        padding: 0 24px;
-        font-size: 12px;
-        .version-status {
-            margin-right: 4px;
-            padding: 4px 10px;
-            line-height: 1;
-            color: #14a568;
-            background: #e4faf0;
-            border-radius: 2px;
-        }
     }
     .actions-wrapper {
         display: flex;

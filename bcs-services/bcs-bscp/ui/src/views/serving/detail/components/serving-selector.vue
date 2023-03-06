@@ -66,7 +66,7 @@
       return group.children.find(item => item.id === id)
     })
     if (group) {
-      router.push({ name: 'serving-config', params: { bizId: group.space_id, appId: id } })
+      router.push({ name: 'serving-config', params: { spaceId: group.space_id, appId: id } })
     }
   }
 </script>
@@ -85,6 +85,24 @@
         :label="item.spec.name">
       </bk-option>
     </bk-group>
+    <div class="selector-extensition" slot="extension">
+      <div class="content" @click="router.push({ name: 'serving-mine' })">[icon占位]服务管理</div>
+    </div>
   </bk-select>
 </div>
 </template>
+<style lang="scss" scoped>
+  .selector-extensition {
+    .content {
+      height: 40px;
+      line-height: 40px;
+      text-align: center;
+      border-top: 1px solid #dcdee5;
+      background: #fafbfd;
+      cursor: pointer;
+      &:hover {
+        color: #3a84ff;
+      }
+    }
+  }
+</style>

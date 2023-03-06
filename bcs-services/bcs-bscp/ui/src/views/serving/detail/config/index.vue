@@ -1,59 +1,33 @@
 <script setup lang="ts">
   import { defineProps, ref, computed, watch } from 'vue'
-  import { useRoute } from 'vue-router'
+  import { useStore } from 'vuex'
   import VersionList from './version-list.vue'
   import ConfigList from './config-list/index.vue'
-  import CreateConfig from './config-list/create-config.vue'
-  import CreateVersion from './create-version/index.vue'
-  import ReleaseVersion from './release-version/index.vue'
-
-  const route = useRoute()
 
   const props = defineProps<{
     bkBizId: string,
     appId: number
   }>()
 
-  const appName = ref('') // @todo 需要调接口查询应用详情
-  const versionName = ref('已提交的版本名称') // @todo 需要调接口获取
-  const configList = ref()
+  const versionListRef = ref()
+  const releaseId = ref<number|null>(null) // 当前选中的版本ID
 
-  const updateConfigList = () => {
-    configList.value.refreshConfigList()
+  const updateVersionList = () => {
+    versionListRef.value.getVersionList()
   }
 
-  const handleUpdateStatus = () => {
-    console.log('刷新配置当前配置状态')
+  const handleUpdateReleaseId = (id: number) => {
+    releaseId.value = id
   }
 
 </script>
 <template>
   <section class="serving-config-wrapper">
     <section class="version-list-side">
-      <VersionList :bk-biz-id="props.bkBizId" :app-id="props.appId"/>
+      <VersionList ref="versionListRef" :bk-biz-id="props.bkBizId" :app-id="props.appId" :release-id="releaseId" @updateReleaseId="handleUpdateReleaseId" />
     </section>
     <section class="version-config-content">
-      <section class="config-content-header">
-        <section class="summary-wrapper">
-          <div class="status-tag">编辑中</div>
-          <div class="version-name">未命名版本</div>
-        </section>
-        <section class="actions-wrapper">
-          <CreateVersion
-            :bk-biz-id="props.bkBizId"
-            :app-id="props.appId"
-            :app-name="appName"
-            @confirm="handleUpdateStatus" />
-          <ReleaseVersion
-            :bk-biz-id="props.bkBizId"
-            :app-id="props.appId"
-            :app-name="appName"
-            :version-name="versionName"
-            @confirm="handleUpdateStatus" />
-        </section>
-      </section>
-      <CreateConfig :bk-biz-id="props.bkBizId" :app-id="props.appId" @confirm="updateConfigList" />
-      <ConfigList ref="configList" :bk-biz-id="props.bkBizId" :app-id="props.appId" />
+      <ConfigList ref="configListRef" :bk-biz-id="props.bkBizId" :app-id="props.appId" :release-id="releaseId" @updateVersionList="updateVersionList" />
     </section>
   </section>
 </template>
@@ -76,36 +50,5 @@
     width: calc(100% - 280px);
     height: 100%;
     background: #ffffff;
-  }
-  .config-content-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    height: 64px;
-    border-bottom: 1px solid #dcdee5;
-    .summary-wrapper {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      .status-tag {
-        margin-right: 8px;
-        padding: 0 10px;
-        height: 22px;
-        line-height: 20px;
-        font-size: 12px;
-        color: #63656e;
-        border: 1px solid rgba(151,155,165,0.30);
-        border-radius: 11px;
-      }
-      .version-name {
-        color: #63656e;
-        font-size: 14px;
-        font-weight: bold;
-      }
-    }
-    .actions-wrapper {
-      display: flex;
-      align-items: center;
-    }
   }
 </style>

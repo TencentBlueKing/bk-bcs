@@ -21,8 +21,24 @@ import { IPageFilter, IRequestFilter, IServingEditParams } from '../types'
  * @param page 分页设置
  * @returns 
  */
- export const getServingConfigList = (biz_id: string, app_id: number, filter: IRequestFilter = {} ,page: IPageFilter) => {
+ export const getServingConfigList = (biz_id: string, app_id: number, filter: IRequestFilter = {}, page: IPageFilter) => {
   return http.post(`/config/list/config_item/config_item/app_id/${app_id}/biz_id/${biz_id}`, { biz_id, app_id, filter, page }).then(resp => resp.data);
+}
+
+/**
+ * 获取应用某个版本的配置列表快照
+ * @param biz_id 业务ID
+ * @param release_id 版本Id
+ * @param page 分页设置
+ */
+export const getServingVersionConfigList = (biz_id: string, release_id: number, filter: IRequestFilter = {} , page: IPageFilter) => {
+  return http.post(`/config/list/release/config_item/release_id/${release_id}/biz_id/${biz_id}`, { filter, page }).then(resp => {
+    resp.data.details.forEach((item: { spec: object; config_item_spec?: object }) => {
+      item.spec = { ...item.config_item_spec }
+      delete item.config_item_spec
+    })
+    return resp.data
+  });
 }
 
 /**
@@ -131,9 +147,13 @@ export const getConfigVersionList = (bizId: string, appId: number) => {
  * @param bizId 业务ID
  * @param appId 应用ID
  * @param name 版本名称
- * @param memo 版本描述
+ * @param data 参数
  * @returns 
  */
-export const publishVersion = (bizId: string, appId: number, memo: string) => {
-  return http.post(`/config/create/release/release/app_id/${appId}/biz_id/${bizId}`, { memo })
+export const publishVersion = (bizId: string, appId: number, releaseId: number, data: {
+  groups: Array<number>;
+  all: boolean;
+  memo: string;
+}) => {
+  return http.post(`/config/update/strategy/publish/publish/release_id/${releaseId}/app_id/${appId}/biz_id/${bizId}`, data)
 }

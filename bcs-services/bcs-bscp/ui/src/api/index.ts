@@ -36,6 +36,17 @@ export const getAppList = (biz_id: number, params: IAppListQuery = {}) => {
   return http.get(`config/list/app/app/biz_id/${biz_id}`, { params }).then(resp => resp.data);
 }
 
+
+/**
+ * 
+ * @param biz_id 业务ID
+ * @param app_id 应用ID
+ * @returns 
+ */
+export const getAppDetail = (biz_id: string, app_id: number) => {
+  return http.get(`config/get/app/app/app_id/${app_id}/biz_id/${biz_id}`).then(resp => resp.data);
+}
+
 /**
  * 删除应用
  * @param id 应用ID

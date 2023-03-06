@@ -1,11 +1,23 @@
 <script setup lang="ts">
-    import { defineProps } from 'vue'
+    import { defineProps, ref, watch } from 'vue'
+    import { useStore } from 'vuex'
     import { PlayShape } from 'bkui-vue/lib/icon'
     import Diff from './diff/index.vue'
+    import { IConfigVersionItem } from '../../../../types'
 
     const props = defineProps<{
-        versionName?: String
+        versionName?: string,
+        configList: Array<IConfigVersionItem>
     }>()
+
+    const selectedConfig = ref(0)
+
+    watch(() => props.configList, () => {
+        if (props.configList.length > 0) {
+            // @ts-ignore
+            selectedConfig.value = props.configList[0].id
+        }
+    }, { immediate: true })
 
 </script>
 <template>
@@ -13,27 +25,19 @@
         <aside class="config-list-side">
             <div class="title-area">
                 <span class="title">配置项</span>
-                <span>共 <span class="count">20</span> 处差异</span>
+                <span>共 <span class="count">xx</span> 文件存在差异</span>
             </div>
             <ul class="configs-wrapper">
-                <li class="active">
-                    <div class="name">consumer.properties</div>
+                <li
+                    v-for="config in props.configList"
+                    :key="config.id"
+                    :class="{ active: selectedConfig === config.id }"
+                    @click="selectedConfig = config.id">
+                    <div class="name">{{ config.spec.name }}</div>
                     <div class="count-area">
                         <div class="num">16</div>
                     </div>
-                    <PlayShape class="arrow-icon" />
-                </li>
-                <li>
-                    <div  class="name">log4j.properties</div>
-                </li>
-                <li>
-                    <div class="name">producer.properties</div>
-                    <div class="count-area">
-                        <div class="num">1</div>
-                    </div>
-                </li>
-                <li>
-                    <div class="name">zonkeeper.properties</div>
+                    <PlayShape v-if="selectedConfig === config.id" class="arrow-icon" />
                 </li>
             </ul>
         </aside>

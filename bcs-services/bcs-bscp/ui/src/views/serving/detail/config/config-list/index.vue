@@ -1,16 +1,26 @@
 <script setup lang="ts">
   import { defineProps, ref, computed, watch, onMounted } from 'vue'
+  import { useStore } from 'vuex'
   import InfoBox from "bkui-vue/lib/info-box";
   import { FilterOp, IPageFilter } from '../../../../../types'
-  import { getServingConfigList } from '../../../../../api/config'
-  import { deleteServingConfigItem } from '../../../../../api/config'
+  import { getServingConfigList, getServingVersionConfigList, deleteServingConfigItem } from '../../../../../api/config'
   import EditConfig from './edit-config.vue'
+  import CreateConfig from './create-config.vue'
+  import PublishVersion from '../publish-version/index.vue'
+  import ReleaseVersion from '../release-version/index.vue'
+
+  const store = useStore()
+
+  const emit = defineEmits(['updateVersionList'])
 
   const props = defineProps<{
     bkBizId: string,
-    appId: number
+    appId: number,
+    releaseId: number|null
   }>()
 
+  const appName = store.getters['config/appName']
+  const versionName = store.state.config.currentVersion.name
   const loading = ref(false)
   const configList = ref([])
   const pagination = ref({
@@ -30,6 +40,12 @@
   })
 
   watch(() => props.appId, (val) => {
+    console.log(val)
+    debugger
+    getConfigList()
+  })
+
+  watch(() => props.releaseId, () => {
     getConfigList()
   })
 
@@ -38,11 +54,21 @@
   })
 
   const getConfigList = async () => {
+    // 拉取到版本列表之前不加在列表数据
+    if (typeof props.releaseId !== 'number') {
+      return
+    }
+
     loading.value = true
     try {
-      const resp = await getServingConfigList(props.bkBizId, props.appId, { op: FilterOp.AND, rules: [] }, pageFilter.value)
+      let res
+      if (props.releaseId === 0) {
+        res = await getServingConfigList(props.bkBizId, props.appId, { op: FilterOp.AND, rules: [] }, pageFilter.value)
+      } else {
+        res = await getServingVersionConfigList(props.bkBizId, props.releaseId, { op: FilterOp.AND, rules: [] }, pageFilter.value)
+      }
       // @ts-ignore
-      configList.value = resp.details
+      configList.value = res.details
       pagination.value.count = 4
     } catch (e) {
       console.error(e)
@@ -89,50 +115,112 @@
     getConfigList()
   }
 
+  const handleUpdateStatus = () => {
+    emit('updateVersionList')
+  }
+
   defineExpose({
     refreshConfigList
   })
 </script>
 <template>
-  <section class="config-list-table">
-    <bk-loading :loading="loading">
-      <bk-table :border="['outer']" :data="configList">
-        <bk-table-column label="配置项名称" prop="spec.name" :sort="true"></bk-table-column>
-        <bk-table-column label="配置预览">-</bk-table-column>
-        <bk-table-column label="配置格式" prop="spec.file_type"></bk-table-column>
-        <bk-table-column label="创建人" prop="revision.creator"></bk-table-column>
-        <bk-table-column label="修改人" prop="revision.reviser"></bk-table-column>
-        <bk-table-column label="修改时间" prop="revision.update_at" :sort="true"></bk-table-column>
-        <bk-table-column label="变更状态">-</bk-table-column>
-        <bk-table-column label="操作">
-          <template #default="{ row }">
-            <div class="operate-action-btns">
-              <bk-button text theme="primary" @click="handleEdit(row)">编辑</bk-button>
-              <bk-button text theme="primary" :disabled="true" @click="handleDiff()">对比</bk-button>
-              <bk-button text theme="primary" @click="handleDel(row)">删除</bk-button>
-            </div>
-          </template>
-        </bk-table-column>
-      </bk-table>
-      <bk-pagination
-        class="table-list-pagination"
-        v-model="pagination.current"
-        location="left"
-        :layout="['total', 'limit', 'list']"
-        :count="pagination.count"
-        :limit="pagination.limit"
-        @change="refreshConfigList($event)"
-        @limit-change="handlePageLimitChange"/>
-    </bk-loading>
-    <edit-config
-      v-model:show="editPanelShow"
-      :config-id="activeConfig"
-      :bk-biz-id="props.bkBizId"
-      :app-id="props.appId"
-      @confirm="refreshConfigList" />
+  <section class="config-list-wrapper">
+    <section class="config-content-header">
+      <section class="summary-wrapper">
+        <div class="status-tag">编辑中</div>
+        <div class="version-name">未命名版本</div>
+      </section>
+      <section class="actions-wrapper">
+        <ReleaseVersion
+          style="margin-right: 8px"
+          :bk-biz-id="props.bkBizId"
+          :app-id="props.appId"
+          :app-name="appName"
+          :config-list="configList"
+          @confirm="handleUpdateStatus" />
+        <PublishVersion
+          :bk-biz-id="props.bkBizId"
+          :app-id="props.appId"
+          :release-id="props.releaseId"
+          :app-name="appName"
+          :version-name="versionName"
+          :config-list="configList"
+          @confirm="handleUpdateStatus" />
+        </section>
+      </section>
+    <CreateConfig :bk-biz-id="props.bkBizId" :app-id="props.appId" @confirm="refreshConfigList" />
+    <section class="config-list-table">
+      <bk-loading :loading="loading">
+        <bk-table :border="['outer']" :data="configList">
+          <bk-table-column label="配置项名称" prop="spec.name" :sort="true"></bk-table-column>
+          <bk-table-column label="配置预览">-</bk-table-column>
+          <bk-table-column label="配置格式" prop="spec.file_type"></bk-table-column>
+          <bk-table-column label="创建人" prop="revision.creator"></bk-table-column>
+          <bk-table-column label="修改人" prop="revision.reviser"></bk-table-column>
+          <bk-table-column label="修改时间" prop="revision.update_at" :sort="true"></bk-table-column>
+          <bk-table-column label="变更状态">-</bk-table-column>
+          <bk-table-column label="操作">
+            <template #default="{ row }">
+              <div class="operate-action-btns">
+                <bk-button text theme="primary" @click="handleEdit(row)">编辑</bk-button>
+                <bk-button text theme="primary" :disabled="true" @click="handleDiff()">对比</bk-button>
+                <bk-button text theme="primary" @click="handleDel(row)">删除</bk-button>
+              </div>
+            </template>
+          </bk-table-column>
+        </bk-table>
+        <bk-pagination
+          class="table-list-pagination"
+          v-model="pagination.current"
+          location="left"
+          :layout="['total', 'limit', 'list']"
+          :count="pagination.count"
+          :limit="pagination.limit"
+          @change="refreshConfigList($event)"
+          @limit-change="handlePageLimitChange"/>
+      </bk-loading>
+      <edit-config
+        v-model:show="editPanelShow"
+        :config-id="activeConfig"
+        :bk-biz-id="props.bkBizId"
+        :app-id="props.appId"
+        :release-id="props.releaseId"
+        @confirm="refreshConfigList" />
+    </section>
   </section>
 </template>
 <style lang="scss" scoped>
+  .config-content-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 64px;
+    border-bottom: 1px solid #dcdee5;
+    .actions-wrapper {
+      display: flex;
+      align-items: center;
+    }
+  }
+  .summary-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    .status-tag {
+      margin-right: 8px;
+      padding: 0 10px;
+      height: 22px;
+      line-height: 20px;
+      font-size: 12px;
+      color: #63656e;
+      border: 1px solid rgba(151,155,165,0.30);
+      border-radius: 11px;
+    }
+    .version-name {
+      color: #63656e;
+      font-size: 14px;
+      font-weight: bold;
+    }
+  }
   .config-list-table {
     :deep(.bk-pagination) {
       padding-left: 15px;
