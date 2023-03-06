@@ -131,6 +131,13 @@
                   <bk-button text @click="handleRetry(cluster)">{{ $t('重试') }}</bk-button>
                 </div>
               </div>
+              <!-- 导入失败 -->
+              <div v-else-if="cluster.status === 'IMPORT-FAILURE'">
+                <div class="status-icon danger">
+                  <i class="bcs-icon bcs-icon-close-circle"></i>
+                </div>
+                <p class="status-text">{{ statusTextMap[cluster.status] }}</p>
+              </div>
               <!-- 正常 -->
               <template v-else-if="cluster.status === 'RUNNING'">
                 <!-- 指标信息 -->
@@ -253,6 +260,7 @@ export default defineComponent({
       DELETING: $i18n.t('正在删除中，请稍等···'),
       'CREATE-FAILURE': $i18n.t('创建失败，请重试'),
       'DELETE-FAILURE': $i18n.t('删除失败，请重试'),
+      'IMPORT-FAILURE': $i18n.t('导入失败'),
     };
     // 指标信息配置
     const clusterMetricList = [

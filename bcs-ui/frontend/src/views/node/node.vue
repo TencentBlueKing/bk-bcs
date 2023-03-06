@@ -499,7 +499,7 @@
           :key-desc="setLabelConf.keyDesc"
           :key-rules="[
             {
-              message: $i18n.t('仅支持字母，数字，\'-\'，\'_\' 及 \'/\' 且需以字母数字开头和结尾'),
+              message: $i18n.t('需以字母数字开头和结尾，可包含 \'-\'，\'_\'，\'.\' 和字母数字'),
               validator: KEY_REGEXP
             }
           ]"

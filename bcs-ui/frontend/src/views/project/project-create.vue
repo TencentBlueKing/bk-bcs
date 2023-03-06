@@ -46,6 +46,7 @@
 import { computed, defineComponent, ref, toRefs, watch } from '@vue/composition-api';
 import useFormLabel from '@/common/use-form-label';
 import useProjects from '../app/use-project';
+import { SPECIAL_REGEXP } from '@/common/constant';
 
 export default defineComponent({
   name: 'ProjectCreate',
@@ -82,10 +83,10 @@ export default defineComponent({
           trigger: 'blur',
         },
         {
-          message: $i18n.t('请输入2-64字符的项目名称'),
+          message: $i18n.t('请输入2-64字符，不能包含`~!@#$%^&*()_+<>?:"{},./;\'[]字符和空格'),
           trigger: 'blur',
           validator(value) {
-            return /^[\w\W]{2,64}$/g.test(value);
+            return /^[\w\W]{2,64}$/g.test(value) && !SPECIAL_REGEXP.test(value);
           },
         },
       ],

@@ -128,7 +128,7 @@ import { defineComponent, computed, ref } from '@vue/composition-api';
 import LayoutContent from '@/components/layout/Content.vue';
 import { useNamespace } from './use-namespace';
 import { useCluster } from '@/common/use-app';
-import { VALUE_REGEXP } from '@/common/constant';
+import { KEY_REGEXP } from '@/common/constant';
 
 export default defineComponent({
   name: 'CreateNamespace',
@@ -194,10 +194,10 @@ export default defineComponent({
         {
           validator() {
             // eslint-disable-next-line no-eval
-            const regx = new RegExp(VALUE_REGEXP);
+            const regx = new RegExp(KEY_REGEXP);
             return formData.value.labels.every(item => regx.test(item.key) && regx.test(item.value));
           },
-          message: $i18n.t('需以字母数字开头和结尾，可包含 \'-\'，\'_\'，\'.\' 和字母数字'),
+          message: $i18n.t('仅支持字母，数字，\'-\'，\'_\'，\'.\' 及 \'/\' 且需以字母数字开头和结尾'),
           trigger: 'blur',
         },
       ],
@@ -205,10 +205,10 @@ export default defineComponent({
         {
           validator() {
             // eslint-disable-next-line no-eval
-            const regx = new RegExp(VALUE_REGEXP);
+            const regx = new RegExp(KEY_REGEXP);
             return formData.value.annotations.every(item => regx.test(item.key) && regx.test(item.value));
           },
-          message: $i18n.t('需以字母数字开头和结尾，可包含 \'-\'，\'_\'，\'.\' 和字母数字'),
+          message: $i18n.t('仅支持字母，数字，\'-\'，\'_\'，\'.\' 及 \'/\' 且需以字母数字开头和结尾'),
           trigger: 'blur',
         },
       ],
