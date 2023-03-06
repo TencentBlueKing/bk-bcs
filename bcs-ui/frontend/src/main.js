@@ -39,7 +39,7 @@ import config from '@/mixins/config';
 import bkSelector from '@/components/selector';
 import bkbcsInput from '@/components/bk-input';
 import bkCombox from '@/components/bk-input/combox';
-import k8sIngress from '@/views/ingress/k8s-ingress.vue';
+import k8sIngress from '@/views/deploy-manage/templateset/ingress/k8s-ingress.vue';
 import BcsEmptyTableStatus from '@/components/empty-table-status.vue';
 import { chainable } from '@/common/util';
 

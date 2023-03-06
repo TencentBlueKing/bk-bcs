@@ -1,46 +1,46 @@
 // 资源视图
-const DashboardView = () => import(/* webpackChunkName: 'dashboard' */'@/views/dashboard/dashboard-view.vue');
-const DashboardNamespace = () => import(/* webpackChunkName: 'dashboard' */'@/views/dashboard/namespace/namespace.vue');
-const DashboardNamespaceCreate = () => import(/* webpackChunkName: 'dashboard' */'@/views/dashboard/namespace/create.vue');
-const DashboardWorkloadDeployments = () => import(/* webpackChunkName: 'dashboard' */'@/views/dashboard/workload/deployments.vue');
-const DashboardWorkloadDaemonSets = () => import(/* webpackChunkName: 'dashboard' */'@/views/dashboard/workload/daemonsets.vue');
-const DashboardWorkloadStatefulSets = () => import(/* webpackChunkName: 'dashboard' */'@/views/dashboard/workload/statefulsets.vue');
-const DashboardWorkloadCronJobs = () => import(/* webpackChunkName: 'dashboard' */'@/views/dashboard/workload/cronjobs.vue');
-const DashboardWorkloadJobs = () => import(/* webpackChunkName: 'dashboard' */'@/views/dashboard/workload/jobs.vue');
-const DashboardWorkloadPods = () => import(/* webpackChunkName: 'dashboard' */'@/views/dashboard/workload/pods.vue');
-const DashboardWorkloadDetail = () => import(/* webpackChunkName: 'dashboard' */'@/views/dashboard/workload/detail/index.vue');
+const DashboardView = () => import(/* webpackChunkName: 'dashboard' */'@/views/resource-view/dashboard-view.vue');
+const DashboardNamespace = () => import(/* webpackChunkName: 'dashboard' */'@/views/resource-view/namespace/namespace.vue');
+const DashboardNamespaceCreate = () => import(/* webpackChunkName: 'dashboard' */'@/views/resource-view/namespace/create.vue');
+const DashboardWorkloadDeployments = () => import(/* webpackChunkName: 'dashboard' */'@/views/resource-view/workload/deployments.vue');
+const DashboardWorkloadDaemonSets = () => import(/* webpackChunkName: 'dashboard' */'@/views/resource-view/workload/daemonsets.vue');
+const DashboardWorkloadStatefulSets = () => import(/* webpackChunkName: 'dashboard' */'@/views/resource-view/workload/statefulsets.vue');
+const DashboardWorkloadCronJobs = () => import(/* webpackChunkName: 'dashboard' */'@/views/resource-view/workload/cronjobs.vue');
+const DashboardWorkloadJobs = () => import(/* webpackChunkName: 'dashboard' */'@/views/resource-view/workload/jobs.vue');
+const DashboardWorkloadPods = () => import(/* webpackChunkName: 'dashboard' */'@/views/resource-view/workload/pods.vue');
+const DashboardWorkloadDetail = () => import(/* webpackChunkName: 'dashboard' */'@/views/resource-view/workload/detail/index.vue');
 
 // 资源表单化创建
-const DashboardFormResourceUpdate = () => import(/* webpackChunkName: 'dashboard' */'@/views/dashboard/resource-update/form-resource.vue');
+const DashboardFormResourceUpdate = () => import(/* webpackChunkName: 'dashboard' */'@/views/resource-view/resource-update/form-resource.vue');
 
 // 自定义资源
-const DashboardCRD = () => import(/* webpackChunkName: 'dashboard-custom' */'@/views/dashboard/custom/crd.vue');
-const DashboardGameStatefulSets = () => import(/* webpackChunkName: 'dashboard' */'@/views/dashboard/custom/gamestatefulsets.vue');
-const DashboardGameDeployments = () => import(/* webpackChunkName: 'dashboard' */'@/views/dashboard/custom/gamedeployments.vue');
-const DashboardHookTemplates = () => import(/* webpackChunkName: 'dashboard' */'@/views/dashboard/custom/hookTemplates.vue');
-const DashboardCustomObjects = () => import(/* webpackChunkName: 'dashboard' */'@/views/dashboard/custom/customobjects.vue');
+const DashboardCRD = () => import(/* webpackChunkName: 'dashboard-custom' */'@/views/resource-view/custom/crd.vue');
+const DashboardGameStatefulSets = () => import(/* webpackChunkName: 'dashboard' */'@/views/resource-view/custom/gamestatefulsets.vue');
+const DashboardGameDeployments = () => import(/* webpackChunkName: 'dashboard' */'@/views/resource-view/custom/gamedeployments.vue');
+const DashboardHookTemplates = () => import(/* webpackChunkName: 'dashboard' */'@/views/resource-view/custom/hookTemplates.vue');
+const DashboardCustomObjects = () => import(/* webpackChunkName: 'dashboard' */'@/views/resource-view/custom/customobjects.vue');
 
 // network
-const DashboardNetworkIngress = () => import(/* webpackChunkName: 'dashboard' */'@/views/dashboard/network/ingress.vue');
-const DashboardNetworkService = () => import(/* webpackChunkName: 'dashboard' */'@/views/dashboard/network/service.vue');
-const DashboardNetworkEndpoints = () => import(/* webpackChunkName: 'dashboard' */'@/views/dashboard/network/endpoints.vue');
+const DashboardNetworkIngress = () => import(/* webpackChunkName: 'dashboard' */'@/views/resource-view/network/ingress.vue');
+const DashboardNetworkService = () => import(/* webpackChunkName: 'dashboard' */'@/views/resource-view/network/service.vue');
+const DashboardNetworkEndpoints = () => import(/* webpackChunkName: 'dashboard' */'@/views/resource-view/network/endpoints.vue');
 
 // configs
-const DashboardConfigsConfigMaps = () => import(/* webpackChunkName: 'dashboard' */'@/views/dashboard/configuration/config-maps.vue');
-const DashboardConfigsSecrets = () => import(/* webpackChunkName: 'dashboard' */'@/views/dashboard/configuration/secrets.vue');
+const DashboardConfigsConfigMaps = () => import(/* webpackChunkName: 'dashboard' */'@/views/resource-view/configuration/config-maps.vue');
+const DashboardConfigsSecrets = () => import(/* webpackChunkName: 'dashboard' */'@/views/resource-view/configuration/secrets.vue');
 
 // storage
-const DashboardStoragePersistentVolumesClaims = () => import(/* webpackChunkName: 'dashboard' */'@/views/dashboard/storage/persistent-volumes-claims.vue');
-const DashboardStoragePersistentVolumes = () => import(/* webpackChunkName: 'dashboard' */'@/views/dashboard/storage/persistent-volumes.vue');
-const DashboardStorageStorageClass = () => import(/* webpackChunkName: 'dashboard' */'@/views/dashboard/storage/storage-class.vue');
+const DashboardStoragePersistentVolumesClaims = () => import(/* webpackChunkName: 'dashboard' */'@/views/resource-view/storage/persistent-volumes-claims.vue');
+const DashboardStoragePersistentVolumes = () => import(/* webpackChunkName: 'dashboard' */'@/views/resource-view/storage/persistent-volumes.vue');
+const DashboardStorageStorageClass = () => import(/* webpackChunkName: 'dashboard' */'@/views/resource-view/storage/storage-class.vue');
 
 // rbac
-const DashboardRbacServiceAccounts = () => import(/* webpackChunkName: 'dashboard' */'@/views/dashboard/rbac/service-accounts.vue');
+const DashboardRbacServiceAccounts = () => import(/* webpackChunkName: 'dashboard' */'@/views/resource-view/rbac/service-accounts.vue');
 
-const DashboardResourceUpdate = () => import(/* webpackChunkName: 'dashboard' */'@/views/dashboard/resource-update/resource-update.vue');
+const DashboardResourceUpdate = () => import(/* webpackChunkName: 'dashboard' */'@/views/resource-view/resource-update/resource-update.vue');
 
 // HPA
-const DashboardHPA = () => import(/* webpackChunkName: 'dashboard' */'@/views/dashboard/hpa/hpa.vue');
+const DashboardHPA = () => import(/* webpackChunkName: 'dashboard' */'@/views/resource-view/hpa/hpa.vue');
 
 const childRoutes = [
   {

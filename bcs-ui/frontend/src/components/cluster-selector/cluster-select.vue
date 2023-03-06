@@ -21,7 +21,7 @@
 <script lang="ts">
 import { computed, defineComponent, ref, watch, toRefs, onBeforeMount } from '@vue/composition-api';
 import $store from '@/store';
-import { useCluster } from '@/common/use-app';
+import { useCluster } from '@/composables/use-app';
 
 export default defineComponent({
   name: 'ClusterSelect',

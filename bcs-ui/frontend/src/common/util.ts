@@ -564,3 +564,56 @@ export const path2Tree = (paths: string[]) => {
   });
   return nodes;
 };
+
+
+export const validateIPv6 = function (a) {
+  return new RegExp('(?!^(?:(?:.*(?:::.*::|:::).*)|::|[0:]+[01]|.*[^:]:|[0-9a-fA-F](?:.*:.*){8}[0-9a-fA-F]|(?:[0-9a-fA-F]:){1,6}[0-9a-fA-F])$)^(?:(::|[0-9a-fA-F]{1,4}:{1,2})([0-9a-fA-F]{1,4}:{1,2}){0,6}([0-9a-fA-F]{1,4}|::)?)$').test(a);
+};
+// 补全ipv6
+export function padIPv6(simpeIpv6: string) {
+  if (!validateIPv6(simpeIpv6)) return simpeIpv6;
+  simpeIpv6 = simpeIpv6.toUpperCase();
+  if (simpeIpv6 == '::') {
+    return '0000:0000:0000:0000:0000:0000:0000:0000';
+  }
+  const arr = ['0000', '0000', '0000', '0000', '0000', '0000', '0000', '0000'];
+  if (simpeIpv6.startsWith('::')) {
+    const tmpArr = simpeIpv6.substring(2).split(':');
+    for (let i = 0;i < tmpArr.length;i++) {
+      arr[i + 8 - tmpArr.length] = (`0000${tmpArr[i]}`).slice(-4);
+    }
+  } else if (simpeIpv6.endsWith('::')) {
+    const tmpArr = simpeIpv6.substring(0, simpeIpv6.length - 2).split(':');
+    for (let i = 0;i < tmpArr.length;i++) {
+      arr[i] = (`0000${tmpArr[i]}`).slice(-4);
+    }
+  } else if (simpeIpv6.indexOf('::') >= 0) {
+    const tmpArr = simpeIpv6.split('::');
+    const tmpArr0 = tmpArr[0].split(':');
+    for (let i = 0;i < tmpArr0.length;i++) {
+      arr[i] = (`0000${tmpArr0[i]}`).slice(-4);
+    }
+    const tmpArr1 = tmpArr[1].split(':');
+    for (let i = 0;i < tmpArr1.length;i++) {
+      arr[i + 8 - tmpArr1.length] = (`0000${tmpArr1[i]}`).slice(-4);
+    }
+  } else {
+    const tmpArr = simpeIpv6.split(':');
+    for (let i = 0;i < tmpArr.length;i++) {
+      arr[i + 8 - tmpArr.length] = (`0000${tmpArr[i]}`).slice(-4);
+    }
+  }
+  return arr.join(':');
+};
+export function throttle(fn, delay) {
+  let timer;
+  return function () {
+    if (timer) {
+      return;
+    }
+    timer = setTimeout(() => {
+      fn.apply();
+      timer = null; // 在delay后执行完fn之后清空timer，此时timer为假，throttle触发可以进入计时器
+    }, delay);
+  };
+}

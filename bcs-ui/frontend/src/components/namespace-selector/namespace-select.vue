@@ -18,7 +18,7 @@
 </template>
 <script lang="ts">
 import { defineComponent, watch, toRefs } from '@vue/composition-api';
-import { useSelectItemsNamespace } from '@/views/dashboard/namespace/use-namespace';
+import { useSelectItemsNamespace } from '@/views/resource-view/namespace/use-namespace';
 import $store from '@/store';
 
 export default defineComponent({

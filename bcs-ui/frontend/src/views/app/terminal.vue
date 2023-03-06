@@ -37,9 +37,9 @@
   </FixedButton>
 </template>
 <script lang="ts">
-import { useCluster, useProject } from '@/common/use-app';
+import { useCluster, useProject } from '@/composables/use-app';
 import { computed, defineComponent, ref } from '@vue/composition-api';
-import FixedButton from '../dashboard/resource-update/fixed-button.vue';
+import FixedButton from '../resource-view/resource-update/fixed-button.vue';
 import PopoverSelector from './popover-selector.vue';
 
 export default defineComponent({

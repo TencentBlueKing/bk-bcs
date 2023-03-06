@@ -25,67 +25,67 @@
 */
 
 // 部署管理
-const ChartList = () => import(/* webpackChunkName: 'deploy' */'@/views/helm/chart-list.vue');
-const ChartRelease = () => import(/* webpackChunkName: 'deploy' */'@/views/helm/release-chart.vue');
-const ReleaseList = () => import(/* webpackChunkName: 'deploy' */'@/views/helm/release-list.vue');
+const ChartList = () => import(/* webpackChunkName: 'deploy' */'@/views/deploy-manage/helm/chart-list.vue');
+const ChartRelease = () => import(/* webpackChunkName: 'deploy' */'@/views/deploy-manage/helm/release-chart.vue');
+const ReleaseList = () => import(/* webpackChunkName: 'deploy' */'@/views/deploy-manage/helm/release-list.vue');
 
-const Depot = () => import(/* webpackChunkName: 'deploy' */'@/views/depot/index.vue');
-const ImageDetail = () => import(/* webpackChunkName: 'deploy' */'@/views/depot/image-detail.vue');
-const ImageLibrary = () => import(/* webpackChunkName: 'deploy' */'@/views/depot/image-library.vue');
-const ProjectImage = () => import(/* webpackChunkName: 'deploy' */'@/views/depot/project-image.vue');
+const Depot = () => import(/* webpackChunkName: 'deploy' */'@/views/deploy-manage/image/index.vue');
+const ImageDetail = () => import(/* webpackChunkName: 'deploy' */'@/views/deploy-manage/image/image-detail.vue');
+const ImageLibrary = () => import(/* webpackChunkName: 'deploy' */'@/views/deploy-manage/image/image-library.vue');
+const ProjectImage = () => import(/* webpackChunkName: 'deploy' */'@/views/deploy-manage/image/project-image.vue');
 
-const Variable = () => import(/* webpackChunkName: 'deploy' */'@/views/variable/variable.vue');
+const Variable = () => import(/* webpackChunkName: 'deploy' */'@/views/deploy-manage/variable/variable.vue');
 
 // 首页
-const Configuration = () => import(/* webpackChunkName: 'k8sTemplateset' */'@/views/templateset/configuration/index.vue');
+const Configuration = () => import(/* webpackChunkName: 'k8sTemplateset' */'@/views/deploy-manage/templateset/configuration/index.vue');
 
 // 模板集
-const Templateset = () => import(/* webpackChunkName: 'k8sTemplateset' */'@/views/templateset/configuration/templateset.vue');
+const Templateset = () => import(/* webpackChunkName: 'k8sTemplateset' */'@/views/deploy-manage/templateset/configuration/templateset.vue');
 
 // 模板实例化
-const Instantiation = () => import(/* webpackChunkName: 'k8sTemplateset' */'@/views/templateset/configuration/instantiation.vue');
+const Instantiation = () => import(/* webpackChunkName: 'k8sTemplateset' */'@/views/deploy-manage/templateset/configuration/instantiation.vue');
 
 // 创建 k8s 资源
-const K8sConfigurationCreate = () => import(/* webpackChunkName: 'k8sTemplateset' */'@/views/templateset/configuration/k8sCreate.vue');
+const K8sConfigurationCreate = () => import(/* webpackChunkName: 'k8sTemplateset' */'@/views/deploy-manage/templateset/configuration/k8sCreate.vue');
 
 // 添加模板集 - deployment
-const K8sCreateDeployment = () => import(/* webpackChunkName: 'k8sTemplateset' */'@/views/templateset/configuration/k8s-create/deployment.vue');
+const K8sCreateDeployment = () => import(/* webpackChunkName: 'k8sTemplateset' */'@/views/deploy-manage/templateset/configuration/k8s-create/deployment.vue');
 
 // 添加模板集 - service
-const K8sCreateService = () => import(/* webpackChunkName: 'k8sTemplateset' */'@/views/templateset/configuration/k8s-create/service.vue');
+const K8sCreateService = () => import(/* webpackChunkName: 'k8sTemplateset' */'@/views/deploy-manage/templateset/configuration/k8s-create/service.vue');
 
 // 添加模板集 - configmap
-const K8sCreateConfigmap = () => import(/* webpackChunkName: 'k8sTemplateset' */'@/views/templateset/configuration/k8s-create/configmap.vue');
+const K8sCreateConfigmap = () => import(/* webpackChunkName: 'k8sTemplateset' */'@/views/deploy-manage/templateset/configuration/k8s-create/configmap.vue');
 
 // 添加模板集 - secret
-const K8sCreateSecret = () => import(/* webpackChunkName: 'k8sTemplateset' */'@/views/templateset/configuration/k8s-create/secret.vue');
+const K8sCreateSecret = () => import(/* webpackChunkName: 'k8sTemplateset' */'@/views/deploy-manage/templateset/configuration/k8s-create/secret.vue');
 
 // 添加模板集 - daemonset
-const K8sCreateDaemonset = () => import(/* webpackChunkName: 'k8sTemplateset' */'@/views/templateset/configuration/k8s-create/daemonset.vue');
+const K8sCreateDaemonset = () => import(/* webpackChunkName: 'k8sTemplateset' */'@/views/deploy-manage/templateset/configuration/k8s-create/daemonset.vue');
 
 // 添加模板集 - job
-const K8sCreateJob = () => import(/* webpackChunkName: 'k8sTemplateset' */'@/views/templateset/configuration/k8s-create/job.vue');
+const K8sCreateJob = () => import(/* webpackChunkName: 'k8sTemplateset' */'@/views/deploy-manage/templateset/configuration/k8s-create/job.vue');
 
 // 添加模板集 - statefulset
-const K8sCreateStatefulset = () => import(/* webpackChunkName: 'k8sTemplateset' */'@/views/templateset/configuration/k8s-create/statefulset.vue');
+const K8sCreateStatefulset = () => import(/* webpackChunkName: 'k8sTemplateset' */'@/views/deploy-manage/templateset/configuration/k8s-create/statefulset.vue');
 
 // 添加模板集 - ingress
-const K8sCreateIngress = () => import(/* webpackChunkName: 'k8sTemplateset' */'@/views/templateset/configuration/k8s-create/ingress.vue');
+const K8sCreateIngress = () => import(/* webpackChunkName: 'k8sTemplateset' */'@/views/deploy-manage/templateset/configuration/k8s-create/ingress.vue');
 
 // 添加模板集 - HPA
-const K8sCreateHPA = () => import(/* webpackChunkName: 'k8sTemplateset' */'@/views/templateset/configuration/k8s-create/hpa.vue');
+const K8sCreateHPA = () => import(/* webpackChunkName: 'k8sTemplateset' */'@/views/deploy-manage/templateset/configuration/k8s-create/hpa.vue');
 
 // 添加yaml模板集 - yaml templateset
-const K8sYamlTemplateset = () => import(/* webpackChunkName: 'k8sTemplateset' */'@/views/templateset/configuration/k8s-create/yaml-mode/index.vue');
+const K8sYamlTemplateset = () => import(/* webpackChunkName: 'k8sTemplateset' */'@/views/deploy-manage/templateset/configuration/k8s-create/yaml-mode/index.vue');
 
-const App = () => import(/* webpackChunkName: 'k8sTemplateset' */'@/views/templateset/app/index.vue');
+const App = () => import(/* webpackChunkName: 'k8sTemplateset' */'@/views/deploy-manage/templateset/app/index.vue');
 
-const Service = () => import(/* webpackChunkName: 'k8sTemplateset' */'@/views/network/service.vue');
-const Resource = () => import(/* webpackChunkName: 'k8sTemplateset' */'@/views/resource/index.vue');
-const ResourceConfigmap = () => import(/* webpackChunkName: 'k8sTemplateset' */'@/views/resource/configmap.vue');
-const ResourceSecret = () => import(/* webpackChunkName: 'k8sTemplateset' */'@/views/resource/secret.vue');
-const ResourceIngress = () => import(/* webpackChunkName: 'k8sTemplateset' */'@/views/resource/ingress.vue');
-const HPAIndex = () => import(/* webpackChunkName: 'k8sTemplateset' */'@/views/hpa/index.vue');
+const Service = () => import(/* webpackChunkName: 'k8sTemplateset' */'@/views/deploy-manage/templateset/network/service.vue');
+const Resource = () => import(/* webpackChunkName: 'k8sTemplateset' */'@/views/deploy-manage/templateset/resource/index.vue');
+const ResourceConfigmap = () => import(/* webpackChunkName: 'k8sTemplateset' */'@/views/deploy-manage/templateset/resource/configmap.vue');
+const ResourceSecret = () => import(/* webpackChunkName: 'k8sTemplateset' */'@/views/deploy-manage/templateset/resource/secret.vue');
+const ResourceIngress = () => import(/* webpackChunkName: 'k8sTemplateset' */'@/views/deploy-manage/templateset/resource/ingress.vue');
+const HPAIndex = () => import(/* webpackChunkName: 'k8sTemplateset' */'@/views/deploy-manage/templateset/hpa/index.vue');
 
 const childRoutes = [
   // helm

@@ -301,7 +301,7 @@ export default {
 </script>
 
 <style scoped lang="postcss">
-    @import '../../css/variable.css';
+    @import '@/css/variable.css';
     input[type="number"] {
         &::-webkit-outer-spin-button,&::-webkit-inner-spin-button {
             appearance: none;

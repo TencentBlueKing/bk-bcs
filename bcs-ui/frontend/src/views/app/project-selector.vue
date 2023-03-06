@@ -42,7 +42,7 @@
 </template>
 <script lang="ts">
 import { computed, defineComponent, ref } from '@vue/composition-api';
-import ProjectCreate from '@/views/project/project-create.vue';
+import ProjectCreate from '@/views/project-manage/project/project-create.vue';
 import $router from '@/router';
 import $store from '@/store';
 

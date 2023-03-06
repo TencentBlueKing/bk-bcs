@@ -1,6 +1,6 @@
 
 
-@import '../../css/variable.css';
+@import '@/css/variable.css';
 
 .biz-warning-tip {
     .dialog-wrapper {

@@ -1,16 +1,16 @@
 // 插件管理
-const Index = () => import(/* webpackChunkName: 'plugin' */'@/views/crdcontroller/index.vue');
-const DBList = () => import(/* webpackChunkName: 'plugin' */'@/views/crdcontroller/db_list.vue');
-const LogList = () => import(/* webpackChunkName: 'plugin' */'@/views/crdcontroller/log_list.vue');
-const Detail = () => import(/* webpackChunkName: 'plugin' */'@/views/crdcontroller/detail.vue');
-const BcsPolaris = () => import(/* webpackChunkName: 'plugin' */'@/views/crdcontroller/polaris_list.vue');
-const MetricManage = () => import(/* webpackChunkName: 'plugin' */'@/views/metric/index.vue');
-const LoadBalance = () => import(/* webpackChunkName: 'plugin' */'@/views/network/loadbalance.vue');
-const LoadBalanceDetail = () => import(/* webpackChunkName: 'plugin' */'@/views/network/loadbalance-detail.vue');
+const Index = () => import(/* webpackChunkName: 'plugin' */'@/views/plugin-manage/tools/index.vue');
+const DBList = () => import(/* webpackChunkName: 'plugin' */'@/views/plugin-manage/tools/db_list.vue');
+const LogList = () => import(/* webpackChunkName: 'plugin' */'@/views/plugin-manage/tools/log_list.vue');
+const Detail = () => import(/* webpackChunkName: 'plugin' */'@/views/plugin-manage/tools/detail.vue');
+const BcsPolaris = () => import(/* webpackChunkName: 'plugin' */'@/views/plugin-manage/tools/polaris_list.vue');
+const MetricManage = () => import(/* webpackChunkName: 'plugin' */'@/views/plugin-manage/metric/index.vue');
+const LoadBalance = () => import(/* webpackChunkName: 'plugin' */'@/views/deploy-manage/templateset/network/loadbalance.vue');
+const LoadBalanceDetail = () => import(/* webpackChunkName: 'plugin' */'@/views/deploy-manage/templateset/network/loadbalance-detail.vue');
 
 // 新版日志采集
-const NewLogIndex = () => import(/* webpackChunkName: 'plugin' */'@/views/crdcontroller/new-log/log.vue');
-const NewLogList = () => import(/* webpackChunkName: 'plugin' */'@/views/crdcontroller/new-log/log-list.vue');
+const NewLogIndex = () => import(/* webpackChunkName: 'plugin' */'@/views/plugin-manage/tools/new-log/log.vue');
+const NewLogList = () => import(/* webpackChunkName: 'plugin' */'@/views/plugin-manage/tools/new-log/log-list.vue');
 
 export default [
   // 组件库

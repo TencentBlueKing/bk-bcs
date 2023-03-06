@@ -38,7 +38,7 @@
 import { defineComponent, ref, watch, computed, toRef, reactive } from '@vue/composition-api';
 import $router from '@/router';
 import $store from '@/store';
-import { useCluster, useConfig, useProject } from '@/common/use-app';
+import { useCluster, useConfig, useProject } from '@/composables/use-app';
 import menusData, { IMenu } from './menus';
 
 export default defineComponent({

@@ -37,10 +37,10 @@ Vue.use(VueRouter);
 
 const Entry = () => import(/* webpackChunkName: 'entry' */'@/views/index.vue');
 const DefaultSideMenu = () => import(/* webpackChunkName: 'entry' */'@/views/app/side-menu.vue');
-const DashboardSideMenu = () => import(/* webpackChunkName: 'entry' */'@/views/dashboard/sidebar.vue');
+const DashboardSideMenu = () => import(/* webpackChunkName: 'entry' */'@/views/resource-view/sidebar.vue');
 const NotFound = () => import(/* webpackChunkName: 'entry' */'@/views/app/404.vue');
 const Forbidden = () => import(/* webpackChunkName: 'entry' */'@/views/app/403.vue');
-const Token = () => import(/* webpackChunkName: 'entry' */'@/views/token/token.vue');
+const Token = () => import(/* webpackChunkName: 'entry' */'@/views/user-token/token.vue');
 
 const router = new VueRouter({
   mode: 'history',

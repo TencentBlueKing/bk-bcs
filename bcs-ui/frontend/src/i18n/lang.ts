@@ -3429,7 +3429,7 @@ export default {
   '仅支持字母，数字，\'-\'，\'_\' 及 \'/\' 且需以字母数字开头和结尾': [
     'Only support the letters, numbers, \'-\', \'_\' _ \'and\'/\', and need to start with the letter figures and end',
   ],
-  '需以字母数字开头和结尾，可包含 \'-\'，\'_\'，\'.\' 和字母数字': [
+  '仅支持字母，数字，\'-\'，\'_\'，\'.\' 及 \'/\' 且需以字母数字开头和结尾': [
     'You need to start and end with the letters, which can include \'-\', \'_\', \'.\' And letter numbers',
   ],
   设置注解: [
@@ -3634,7 +3634,7 @@ export default {
     'Enter key search',
   ],
   设置: [
-    'set up',
+    'Set-Up',
   ],
   分区滚动更新: [
     'Partition rolling update',
@@ -3939,4 +3939,37 @@ export default {
   ],
   'Values文件包含两类: <br/>- 以values.yaml或以values.yml结尾, 例如xxx-values.yaml文件 <br/>- bcs-values目录下的以.yml或.yaml结尾的文件': ['Values ​​files include two types: <br/>- end with values.yaml or values.yml, such as xxx-values.yaml file <br/>- files ending with .yml or .yaml under the bcs-values ​​directory'],
   '集群名称: {name}': ['Cluster Name: {name}'],
+  配置信息: [
+    'Configuration information',
+  ],
+  节点名: [
+    'Node',
+  ],
+  k8s原生集群: [
+    'k8s native cluster',
+  ],
+  'Cluster Autoscaler 需要至少一个节点池开启，请停用 Cluster Autoscaler 后再关闭': [
+    'Cluster AutoScale needs to open at least one node pool, please stop the cluster autoscaler before closing',
+  ],
+  关闭节点池: [
+    'Close the node pool',
+  ],
+  请删除节点后再删除节点池: [
+    'Please delete nodes before deleting the node pool',
+  ],
+  'Pod 管理策略': [
+    'POD management strategy',
+  ],
+  '请入名称、镜像、IP、Node搜索': [
+    'Please enter the name, mirror image, IP, node search',
+  ],
+  '输入名称、创建人、IP搜索': [
+    'Enter name, founder, IP search',
+  ],
+  '最大不可用数量（maxUnavailable）: {num}': [
+    'Maxunavailable: {num}',
+  ],
+  '最大调度Pod数量（maxSurge）: {num}': [
+    'Maximum scheduling pod quantity (MaxSurge): {num}',
+  ],
 };
