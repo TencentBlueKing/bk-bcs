@@ -466,6 +466,7 @@ func transNodeToClusterNode(model store.ClusterManagerModel, node *proto.Node) *
 		DeviceID:      node.DeviceID,
 		NodeName:      node.NodeName,
 		NodeGroupName: nodeGroupName,
+		InnerIPv6:     node.InnerIPv6,
 	}
 }
 
@@ -501,6 +502,38 @@ func filterNodesRole(k8sNodes []*corev1.Node, master bool) []*corev1.Node {
 	return nodes
 }
 
+// transK8sNodesToClusterNodes parse master nodes to cluster nodes
+func transK8sNodesToClusterNodes(clusterID string, k8sNodes []*corev1.Node) []*proto.ClusterNode {
+	nodes := make([]*proto.ClusterNode, 0)
+
+	k8sNodesMap := make(map[string]*corev1.Node, 0)
+	for i := range k8sNodes {
+		k8sNodesMap[k8sNodes[i].Name] = k8sNodes[i]
+	}
+
+	for name, node := range k8sNodesMap {
+		ipv4, ipv6 := getNodeDualAddress(node)
+
+		nodes = append(nodes, &proto.ClusterNode{
+			InnerIP:   ipv4,
+			Status:    transNodeStatus(common.StatusRunning, node),
+			ClusterID: clusterID,
+			NodeName:  name,
+			Labels:    node.Labels,
+			Taints:    actions.K8sTaintToTaint(node.Spec.Taints),
+			UnSchedulable: func(u bool) uint32 {
+				if u {
+					return 1
+				}
+				return 0
+			}(node.Spec.Unschedulable),
+			InnerIPv6: ipv6,
+		})
+	}
+
+	return nodes
+}
+
 // mergeClusterNodes merge k8s nodes and db nodes
 // 1. 集群中不存在的节点，并且在cluster manager中状态处于初始化中、初始化失败、移除中、移除失败状态时，需要展示cluster manager中数据
 // 2. 集群中存在的节点，则以集群中为准，注意状态的转换
@@ -513,7 +546,6 @@ func mergeClusterNodes(clusterID string, cmNodes []*proto.ClusterNode, k8sNodes 
 	k8sNodesMap := make(map[string]*corev1.Node, 0)
 
 	for i := range cmNodes {
-		clusterID = cmNodes[i].ClusterID
 		cmNodesMap[cmNodes[i].NodeName] = cmNodes[i]
 	}
 	for i := range k8sNodes {
@@ -563,7 +595,7 @@ func mergeClusterNodes(clusterID string, cmNodes []*proto.ClusterNode, k8sNodes 
 					}
 					return 0
 				}(node.Spec.Unschedulable),
-				InnerIPv6: ipv6,
+				InnerIPv6:     ipv6,
 				NodeGroupName: n.NodeGroupName,
 			})
 		} else {

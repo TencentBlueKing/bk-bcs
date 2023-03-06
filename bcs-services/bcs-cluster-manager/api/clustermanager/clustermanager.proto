@@ -4919,6 +4919,13 @@ message WebAnnotations {
   map<string, google.protobuf.Struct> perms = 1;
 }
 
+message WebAnnotationsV2 {
+  google.protobuf.Struct perms = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "perms",
+    description: "权限信息"
+  }];
+}
+
 message ListNodesInClusterRequest {
   option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
     json_schema : {
@@ -5012,6 +5019,10 @@ message ListNodesInClusterResponse {
   repeated ClusterNode data = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title : "data",
     description : "集群节点列表"
+  }];
+  WebAnnotationsV2 web_annotations = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "web_annotations",
+    description : "权限信息"
   }];
 }
 

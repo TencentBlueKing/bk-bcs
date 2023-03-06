@@ -192,6 +192,7 @@ func (ca *CreateAction) defaultSetting(cls *cmproto.Cluster, cloud *cmproto.Clou
 			blog.Errorf(errMsg.Error())
 			return errMsg
 		}
+		node.Status = common.StatusRunning
 		cls.Master[masterIP] = node
 	}
 	// cluster status

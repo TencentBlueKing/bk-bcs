@@ -16512,6 +16512,135 @@ var _ interface {
 	ErrorName() string
 } = WebAnnotationsValidationError{}
 
+// Validate checks the field values on WebAnnotationsV2 with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// first error encountered is returned, or nil if there are no violations.
+func (m *WebAnnotationsV2) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on WebAnnotationsV2 with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// WebAnnotationsV2MultiError, or nil if none found.
+func (m *WebAnnotationsV2) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *WebAnnotationsV2) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if all {
+		switch v := interface{}(m.GetPerms()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, WebAnnotationsV2ValidationError{
+					field:  "Perms",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, WebAnnotationsV2ValidationError{
+					field:  "Perms",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetPerms()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return WebAnnotationsV2ValidationError{
+				field:  "Perms",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if len(errors) > 0 {
+		return WebAnnotationsV2MultiError(errors)
+	}
+
+	return nil
+}
+
+// WebAnnotationsV2MultiError is an error wrapping multiple validation errors
+// returned by WebAnnotationsV2.ValidateAll() if the designated constraints
+// aren't met.
+type WebAnnotationsV2MultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m WebAnnotationsV2MultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m WebAnnotationsV2MultiError) AllErrors() []error { return m }
+
+// WebAnnotationsV2ValidationError is the validation error returned by
+// WebAnnotationsV2.Validate if the designated constraints aren't met.
+type WebAnnotationsV2ValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e WebAnnotationsV2ValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e WebAnnotationsV2ValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e WebAnnotationsV2ValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e WebAnnotationsV2ValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e WebAnnotationsV2ValidationError) ErrorName() string { return "WebAnnotationsV2ValidationError" }
+
+// Error satisfies the builtin error interface
+func (e WebAnnotationsV2ValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sWebAnnotationsV2.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = WebAnnotationsV2ValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = WebAnnotationsV2ValidationError{}
+
 // Validate checks the field values on ListNodesInClusterRequest with the rules
 // defined in the proto definition for this message. If any rules are
 // violated, the first error encountered is returned, or nil if there are no violations.
@@ -16746,6 +16875,35 @@ func (m *ListNodesInClusterResponse) validate(all bool) error {
 			}
 		}
 
+	}
+
+	if all {
+		switch v := interface{}(m.GetWebAnnotations()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, ListNodesInClusterResponseValidationError{
+					field:  "WebAnnotations",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, ListNodesInClusterResponseValidationError{
+					field:  "WebAnnotations",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetWebAnnotations()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return ListNodesInClusterResponseValidationError{
+				field:  "WebAnnotations",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
 	}
 
 	if len(errors) > 0 {

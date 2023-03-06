@@ -9845,6 +9845,11 @@
           },
           "description": "集群节点列表",
           "title": "data"
+        },
+        "web_annotations": {
+          "$ref": "#/definitions/clustermanagerWebAnnotationsV2",
+          "description": "权限信息",
+          "title": "web_annotations"
         }
       },
       "description": "查询集群节点列表返回",
@@ -13479,6 +13484,16 @@
         }
       },
       "title": "https://github.com/golang/protobuf/issues/1118\nhttps://pkg.go.dev/google.golang.org/protobuf/types/known/structpb#Struct"
+    },
+    "clustermanagerWebAnnotationsV2": {
+      "type": "object",
+      "properties": {
+        "perms": {
+          "type": "object",
+          "description": "权限信息",
+          "title": "perms"
+        }
+      }
     },
     "clustermanagerZoneInfo": {
       "type": "object",

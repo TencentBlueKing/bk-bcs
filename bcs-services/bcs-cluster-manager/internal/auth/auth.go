@@ -17,6 +17,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	authutils "github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/utils"
 	"strings"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -215,14 +216,23 @@ func CheckUserPerm(ctx context.Context, req server.Request, username string) (bo
 		return false, fmt.Errorf("auth failed: err %s", err.Error())
 	}
 
-	allow, _, err := callIAM(username, action, *resourceID)
+	allow, url, resources, err := callIAM(username, action, *resourceID)
 	if err != nil {
 		return false, err
 	}
+	if !allow && url != "" && resources != nil {
+		return false, &authutils.PermDeniedError{
+			Perms: authutils.PermData{
+				ApplyURL:   url,
+				ActionList: resources,
+			},
+		}
+	}
+
 	return allow, nil
 }
 
-func callIAM(username, action string, resourceID resourceID) (bool, string, error) {
+func callIAM(username, action string, resourceID resourceID) (bool, string, []authutils.ResourceAction, error) {
 	// related actions
 	switch action {
 	case cluster.CanCreateClusterOperation:
@@ -242,10 +252,12 @@ func callIAM(username, action string, resourceID resourceID) (bool, string, erro
 	case project.CanDeleteProjectOperation:
 		return ProjectIamClient.CanDeleteProject(username, resourceID.ProjectID)
 	case cloudaccount.CanManageCloudAccountOperation:
-		return CloudAccountIamClient.CanManageCloudAccount(username, resourceID.ProjectID, resourceID.AccountID)
+		allow, url, err := CloudAccountIamClient.CanManageCloudAccount(username, resourceID.ProjectID, resourceID.AccountID)
+		return allow, url, nil, err
 	case cloudaccount.CanUseCloudAccountOperation:
-		return CloudAccountIamClient.CanUseCloudAccount(username, resourceID.ProjectID, resourceID.AccountID)
+		allow, url, err := CloudAccountIamClient.CanUseCloudAccount(username, resourceID.ProjectID, resourceID.AccountID)
+		return allow, url, nil, err
 	default:
-		return false, "", errors.New("permission denied")
+		return false, "", nil, errors.New("permission denied")
 	}
 }

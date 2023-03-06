@@ -16,6 +16,8 @@ package utils
 import (
 	"math/rand"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 // build n length randomString
@@ -82,3 +84,9 @@ func BuildInstancePwd() string {
 
 	return "Bcs#" + string(byteRandom)
 }
+
+// GenUUID generate a uuid
+func GenUUID() string {
+	return uuid.New().String()
+}
+

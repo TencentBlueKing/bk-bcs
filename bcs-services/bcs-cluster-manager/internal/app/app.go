@@ -814,7 +814,8 @@ func (cm *ClusterManager) initMicro() error {
 			return nil
 		}),
 		microsvc.WrapHandler(
-			cmcommon.RequestLogWarpper,
+			utils.RequestLogWarpper,
+			utils.ResponseWrapper,
 			authWrapper.AuthenticationFunc,
 			authWrapper.AuthorizationFunc,
 		),
