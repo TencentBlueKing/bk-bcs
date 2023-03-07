@@ -14,13 +14,17 @@ package service
 
 import (
 	"context"
+	"strconv"
 
+	"bscp.io/pkg/criteria/errf"
 	"bscp.io/pkg/iam/meta"
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/logs"
 	pbcs "bscp.io/pkg/protocol/config-server"
+	pbbase "bscp.io/pkg/protocol/core/base"
 	pbgc "bscp.io/pkg/protocol/core/group-category"
 	pbds "bscp.io/pkg/protocol/data-service"
+	"bscp.io/pkg/runtime/filter"
 )
 
 // CreateGroupCategory create a group category
@@ -28,16 +32,21 @@ func (s *Service) CreateGroupCategory(ctx context.Context, req *pbcs.CreateGroup
 	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.CreateGroupCategoryResp)
 
+	// TODO: change biz_id from uint32 to string
+	bizID, err := strconv.Atoi(grpcKit.SpaceID)
+	if err != nil {
+		return nil, err
+	}
 	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.GroupCategory, Action: meta.Create,
-		ResourceID: req.AppId}, BizID: req.BizId}
-	err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res)
+		ResourceID: req.AppId}, BizID: uint32(bizID)}
+	err = s.authorizer.AuthorizeWithResp(grpcKit, resp, res)
 	if err != nil {
 		return nil, err
 	}
 
 	r := &pbds.CreateGroupCategoryReq{
 		Attachment: &pbgc.GroupCategoryAttachment{
-			BizId: req.BizId,
+			BizId: uint32(bizID),
 			AppId: req.AppId,
 		},
 		Spec: &pbgc.GroupCategorySpec{
@@ -61,17 +70,21 @@ func (s *Service) DeleteGroupCategory(ctx context.Context, req *pbcs.DeleteGroup
 	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.DeleteGroupCategoryResp)
 
+	bizID, err := strconv.Atoi(grpcKit.SpaceID)
+	if err != nil {
+		return nil, err
+	}
 	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.GroupCategory, Action: meta.Delete,
-		ResourceID: req.AppId}, BizID: req.BizId}
-	err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res)
+		ResourceID: req.AppId}, BizID: uint32(bizID)}
+	err = s.authorizer.AuthorizeWithResp(grpcKit, resp, res)
 	if err != nil {
 		return nil, err
 	}
 
 	r := &pbds.DeleteGroupCategoryReq{
-		Id: req.Id,
+		Id: req.GroupCategoryId,
 		Attachment: &pbgc.GroupCategoryAttachment{
-			BizId: req.BizId,
+			BizId: uint32(bizID),
 			AppId: req.AppId,
 		},
 	}
@@ -81,5 +94,59 @@ func (s *Service) DeleteGroupCategory(ctx context.Context, req *pbcs.DeleteGroup
 		return nil, err
 	}
 
+	return resp, nil
+}
+
+// ListGroupCategories list group categories
+func (s *Service) ListGroupCategories(ctx context.Context, req *pbcs.ListGroupCategoriesReq) (*pbcs.ListGroupCategoriesResp, error) {
+	grpcKit := kit.FromGrpcContext(ctx)
+	resp := new(pbcs.ListGroupCategoriesResp)
+
+	bizID, err := strconv.Atoi(grpcKit.SpaceID)
+	if err != nil {
+		return nil, err
+	}
+	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.Group, Action: meta.Find}, BizID: uint32(bizID)}
+	err = s.authorizer.AuthorizeWithResp(grpcKit, resp, res)
+	if err != nil {
+		return nil, err
+	}
+
+	if req.Start < 0 {
+		return nil, errf.New(errf.InvalidParameter, "start has to be greater than 0")
+	}
+
+	if req.Limit < 0 {
+		return nil, errf.New(errf.InvalidParameter, "limit has to be greater than 0")
+	}
+
+	ft := &filter.Expression{
+		Op: filter.And,
+		Rules: []filter.RuleFactory{},
+	}
+	ftpb, err := ft.MarshalPB()
+	if err != nil {
+		return nil, err
+	}
+
+	r := &pbds.ListGroupCategoriesReq{
+		BizId:  uint32(bizID),
+		AppId:  req.AppId,
+		Filter: ftpb,
+		Page: &pbbase.BasePage{
+			Start: req.Start,
+			Limit: req.Limit,
+		},
+	}
+	rp, err := s.client.DS.ListGroupCategories(grpcKit.RpcCtx(), r)
+	if err != nil {
+		logs.Errorf("list groups failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, err
+	}
+
+	resp = &pbcs.ListGroupCategoriesResp{
+		Count:   rp.Count,
+		Details: rp.Details,
+	}
 	return resp, nil
 }
