@@ -21,6 +21,7 @@ import (
 	crAction "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/action"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/ctxkey"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/config"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/i18n"
 	criam "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/iam"
 	iamPerm "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/iam/perm"
@@ -31,6 +32,9 @@ import (
 
 // Validate 权限中心 V3 资源权限校验，支持 命名空间，命名空间域资源，集群域资源权限校验
 func Validate(ctx context.Context, res, action, projectID, clusterID, namespace string) error {
+	if config.G.Auth.Disabled {
+		return nil
+	}
 	username := ctx.Value(ctxkey.UsernameKey).(string)
 	p, pCtx := genPermAndCtx(res, action, username, projectID, clusterID, namespace)
 	if allow, err := canAction(p, pCtx, action); err != nil {

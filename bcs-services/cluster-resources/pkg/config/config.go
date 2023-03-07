@@ -23,7 +23,6 @@ import (
 
 	jwtGo "github.com/dgrijalva/jwt-go"
 	"github.com/sirupsen/logrus"
-	"go.opentelemetry.io/otel/attribute"
 	"gopkg.in/yaml.v3"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/util"
@@ -128,8 +127,10 @@ type ClusterResourcesConf struct {
 
 // TracingConf 链路追踪配置
 type TracingConf struct {
-	OTLPEndpoint  string               `yaml:"otlpEndpoint" usage:"OpenTelemetry Collector service endpoint"`
-	ResourceAttrs []attribute.KeyValue `yaml:"resourceAttrs" usage:"attributes of traced service"`
+	Enabled       bool              `yaml:"enabled" usage:"enable trace"`
+	Endpoint      string            `yaml:"endpoint" usage:"Collector service endpoint"`
+	Token         string            `yaml:"token" usage:"token for collector sevice"`
+	ResourceAttrs map[string]string `yaml:"resourceAttrs" usage:"attributes of traced service"`
 }
 
 func (c *ClusterResourcesConf) initServerAddress() error {

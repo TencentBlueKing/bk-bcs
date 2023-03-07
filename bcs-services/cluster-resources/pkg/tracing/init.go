@@ -17,24 +17,51 @@ import (
 	"context"
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/otel/trace"
+	"go.opentelemetry.io/otel/attribute"
+
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/config"
 )
 
 const (
-	ServiceName = "bcs-cluster-resources"
+	serviceName = "bcs-cluster-resources"
 )
 
+// InitTracing init tracing
 func InitTracing(op *config.TracingConf) (func(context.Context) error, error) {
+	if !op.Enabled {
+		return nil, nil
+	}
 
 	opts := []trace.Option{}
 
-	if op.OTLPEndpoint != "" {
-		opts = append(opts, trace.OTLPEndpoint(op.OTLPEndpoint))
+	if op.Endpoint != "" {
+		opts = append(opts, trace.OTLPEndpoint(op.Endpoint))
 	}
-	tracer, err := trace.InitTracingProvider(ServiceName, opts...)
+
+	attrs := make([]attribute.KeyValue, 0)
+
+	if op.Token != "" {
+		attrs = append(attrs, attribute.String("bk.data.token", op.Token))
+	}
+
+	if op.ResourceAttrs != nil {
+		attrs = append(attrs, newResource(op.ResourceAttrs)...)
+	}
+
+	opts = append(opts, trace.ResourceAttrs(attrs))
+
+	tracer, err := trace.InitTracingProvider(serviceName, opts...)
 	if err != nil {
 		return nil, err
 	}
 
 	return tracer, nil
+}
+
+func newResource(attrs map[string]string) []attribute.KeyValue {
+	attrValues := make([]attribute.KeyValue, 0)
+	for k, v := range attrs {
+		attrValues = append(attrValues, attribute.String(k, v))
+	}
+	return attrValues
 }
