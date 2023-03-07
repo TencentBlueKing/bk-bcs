@@ -106,7 +106,7 @@ func (p *proxy) handler() http.Handler {
 	})
 
 	// 规范后的路由，url 需要包含 {app_id} 变量, 使用 AppVerified 中间件校验和初始化 kit.SpaceID 变量
-	r.Route("/api/v1/config/get/app/app/app_id/{app_id}", func(r chi.Router) {
+	r.Route("/api/v1/config/apps/{app_id}", func(r chi.Router) {
 		r.Use(p.authorizer.UnifiedAuthentication)
 		r.Use(p.authorizer.AppVerified)
 		r.Use(webannotation.BuildAnnotation(p.authorizer))

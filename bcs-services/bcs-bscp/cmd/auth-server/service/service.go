@@ -348,12 +348,12 @@ func (s *Service) QuerySpace(ctx context.Context, req *pbas.QuerySpaceReq) (*pba
 
 // QuerySpaceByAppID 查询space
 func (s *Service) QuerySpaceByAppID(ctx context.Context, req *pbas.QuerySpaceByAppIDReq) (*pbas.Space, error) {
-	appId := req.GetAppId()
-	if appId == 0 {
+	appID := req.GetAppId()
+	if appID == 0 {
 		return nil, errors.New("app_id is required")
 	}
 
-	app, err := s.client.DS.GetAppByID(ctx, &pbds.GetAppByIDReq{AppId: appId})
+	app, err := s.client.DS.GetAppByID(ctx, &pbds.GetAppByIDReq{AppId: appID})
 	if err != nil {
 		return nil, err
 	}
