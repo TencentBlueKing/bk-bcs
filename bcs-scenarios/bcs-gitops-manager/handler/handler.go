@@ -15,9 +15,12 @@ package handler
 import (
 	"context"
 
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/jwt"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/controller"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/store"
 	pb "github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/proto"
+	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/project"
 )
 
 // Options for Handler
@@ -30,6 +33,8 @@ type Options struct {
 	// cluster & project controller for data sync
 	ClusterControl controller.ClusterControl
 	ProjectControl controller.ProjectControl
+	JwtClient      *jwt.JWTClient
+	IamClient      iam.PermClient
 }
 
 // NewGitOpsHandler create handler
@@ -41,12 +46,13 @@ func NewGitOpsHandler(opt *Options) *BcsGitopsHandler {
 
 // BcsGitopsHandler for manager
 type BcsGitopsHandler struct {
-	option *Options
+	option            *Options
+	projectPermission *project.BCSProjectPerm
 }
 
 // Init BCSGitOpsHandler
 func (e *BcsGitopsHandler) Init() error {
-	// nothing todo
+	e.projectPermission = project.NewBCSProjectPermClient(e.option.IamClient)
 	return nil
 }
 
@@ -57,3 +63,10 @@ func (e *BcsGitopsHandler) Ping(ctx context.Context,
 	rsp.Message = "OK"
 	return nil
 }
+
+type errorCode int32
+
+const (
+	failedCode  errorCode = -1
+	successCode errorCode = 0
+)

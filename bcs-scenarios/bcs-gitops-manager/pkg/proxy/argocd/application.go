@@ -16,6 +16,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"strconv"
@@ -27,15 +28,11 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/common"
-	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy"
-	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/store"
 )
 
 // AppPlugin for internal project authorization
 type AppPlugin struct {
 	*mux.Router
-	option *proxy.GitOpsOptions
-
 	middleware MiddlewareInterface
 }
 
@@ -155,7 +152,7 @@ func (plugin *AppPlugin) listApplicationsHandler(ctx context.Context, r *http.Re
 			err:        err,
 		}
 	}
-	appList, err := plugin.option.Storage.ListApplications(r.Context(), &store.ListAppOptions{Project: projectName})
+	appList, err := plugin.middleware.ListApplications(ctx, []string{projectName})
 	if err != nil {
 		return &httpResponse{
 			statusCode: http.StatusInternalServerError,
@@ -169,42 +166,37 @@ func (plugin *AppPlugin) listApplicationsHandler(ctx context.Context, r *http.Re
 
 // Put,Patch,Delete with preifx /api/v1/applications/{name}
 func (plugin *AppPlugin) applicationEditHandler(ctx context.Context, r *http.Request) *httpResponse {
-	return plugin.checkApplicationPermission(ctx, r, iam.ProjectView)
+	appName := mux.Vars(r)["name"]
+	if appName == "" {
+		return &httpResponse{
+			statusCode: http.StatusBadRequest,
+			err:        fmt.Errorf("request application name cannot be empty"),
+		}
+	}
+	_, statusCode, err := plugin.middleware.CheckApplicationPermission(ctx, appName, iam.ProjectEdit)
+	if statusCode != http.StatusOK {
+		return &httpResponse{
+			statusCode: statusCode,
+			err:        err,
+		}
+	}
+	return nil
 }
 
 // GET with prefix /api/v1/applications/{name}
 func (plugin *AppPlugin) applicationViewsHandler(ctx context.Context, r *http.Request) *httpResponse {
-	return plugin.checkApplicationPermission(ctx, r, iam.ProjectEdit)
-}
-
-func (plugin *AppPlugin) checkApplicationPermission(ctx context.Context, r *http.Request,
-	action iam.ActionID) *httpResponse {
 	appName := mux.Vars(r)["name"]
-	app, err := plugin.option.Storage.GetApplication(r.Context(), appName)
-	if err != nil {
+	if appName == "" {
 		return &httpResponse{
-			statusCode: http.StatusInternalServerError,
-			err:        errors.Wrapf(err, "get application '%s' from storage failed", appName),
+			statusCode: http.StatusBadRequest,
+			err:        fmt.Errorf("request application name cannot be empty"),
 		}
 	}
-	if app == nil {
-		return &httpResponse{
-			statusCode: http.StatusNotFound,
-			err:        errors.Errorf("application '%s' not found", appName),
-		}
-	}
-	projectID := common.GetBCSProjectID(app.Annotations)
-	if projectID == "" {
-		return &httpResponse{
-			statusCode: http.StatusUnauthorized,
-			err:        errors.Errorf("application '%s' not under control", appName),
-		}
-	}
-	statusCode, err := plugin.middleware.CheckProjectPermissionByID(ctx, projectID, action)
-	if err != nil {
+	_, statusCode, err := plugin.middleware.CheckApplicationPermission(ctx, appName, iam.ProjectView)
+	if statusCode != http.StatusOK {
 		return &httpResponse{
 			statusCode: statusCode,
-			err:        errors.Wrapf(err, "check project '%s' permission failed", projectID),
+			err:        err,
 		}
 	}
 	return nil

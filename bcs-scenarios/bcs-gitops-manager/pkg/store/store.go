@@ -15,7 +15,7 @@ package store
 import (
 	"context"
 
-	v1alpha1 "github.com/argoproj/argo-cd/v2/pkg/apis/application/v1alpha1"
+	"github.com/argoproj/argo-cd/v2/pkg/apis/application/v1alpha1"
 )
 
 // Options for data storage
@@ -47,6 +47,7 @@ type Store interface {
 	CreateCluster(ctx context.Context, cluster *v1alpha1.Cluster) error
 	GetCluster(ctx context.Context, name string) (*v1alpha1.Cluster, error)
 	ListCluster(ctx context.Context) (*v1alpha1.ClusterList, error)
+	UpdateCluster(ctx context.Context, cluster *v1alpha1.Cluster) error
 
 	// Repository interface
 	GetRepository(ctx context.Context, repo string) (*v1alpha1.Repository, error)

@@ -27,6 +27,7 @@ import (
 	"github.com/argoproj/argo-cd/v2/pkg/apiclient/project"
 	"github.com/argoproj/argo-cd/v2/pkg/apiclient/repository"
 	"github.com/argoproj/argo-cd/v2/pkg/apis/application/v1alpha1"
+	"github.com/pkg/errors"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 )
@@ -68,14 +69,12 @@ func (cd *argo) CreateProject(ctx context.Context, pro *v1alpha1.AppProject) err
 	// ! please make more attension to performance issue
 	connection, client, err := cd.basicClient.NewProjectClient()
 	if err != nil {
-		blog.Errorf("argocd init project client failure, %s", err.Error())
-		return fmt.Errorf("connection broken to store")
+		return errors.Wrapf(err, "argocd init project client failed")
 	}
 	defer connection.Close() // nolint
 	_, err = client.Create(ctx, &project.ProjectCreateRequest{Project: pro})
 	if err != nil {
-		blog.Errorf("argocd create project %s failure, %s", pro.GetName(), err.Error())
-		return fmt.Errorf("store grpc create failed, %s", err.Error())
+		return errors.Wrapf(err, "argocd create project '%s' failed", pro.GetName())
 	}
 	return nil
 }
@@ -84,14 +83,12 @@ func (cd *argo) CreateProject(ctx context.Context, pro *v1alpha1.AppProject) err
 func (cd *argo) UpdateProject(ctx context.Context, pro *v1alpha1.AppProject) error {
 	connection, client, err := cd.basicClient.NewProjectClient()
 	if err != nil {
-		blog.Errorf("argocd init project client failure, %s", err.Error())
-		return fmt.Errorf("connection broken to store")
+		return errors.Wrapf(err, "argocd init project client failed")
 	}
 	defer connection.Close() // nolint
 	_, err = client.Update(ctx, &project.ProjectUpdateRequest{Project: pro})
 	if err != nil {
-		blog.Errorf("argocd update project %s failure, %s", pro.GetName(), err.Error())
-		return fmt.Errorf("store grpc update failed, %s", err.Error())
+		return errors.Wrapf(err, "argocd update project '%s' failed", pro.GetName())
 	}
 	return nil
 }
@@ -100,19 +97,16 @@ func (cd *argo) UpdateProject(ctx context.Context, pro *v1alpha1.AppProject) err
 func (cd *argo) GetProject(ctx context.Context, name string) (*v1alpha1.AppProject, error) {
 	connection, client, err := cd.basicClient.NewProjectClient()
 	if err != nil {
-		blog.Errorf("argocd init project client failure, %s", err.Error())
-		return nil, fmt.Errorf("connection broken to store")
+		return nil, errors.Wrapf(err, "argocd init project client failed")
 	}
 	defer connection.Close() // nolint
 	pro, err := client.Get(ctx, &project.ProjectQuery{Name: name})
 	if err != nil {
 		// filter error that NotFound
 		if strings.Contains(err.Error(), "code = NotFound") {
-			blog.Warnf("argocd get project %s warning, %s", name, err.Error())
-			return nil, nil
+			return nil, errors.Wrapf(err, "argocd get project '%s' not found", name)
 		}
-		blog.Errorf("argocd get project %s failure, %s", name, err.Error())
-		return nil, fmt.Errorf("store grpc get failed, %s", err.Error())
+		return nil, errors.Wrapf(err, "argocd get project '%s' failed", name)
 	}
 	return pro, nil
 }
@@ -121,14 +115,12 @@ func (cd *argo) GetProject(ctx context.Context, name string) (*v1alpha1.AppProje
 func (cd *argo) ListProjects(ctx context.Context) (*v1alpha1.AppProjectList, error) {
 	connection, client, err := cd.basicClient.NewProjectClient()
 	if err != nil {
-		blog.Errorf("argocd init project client failure, %s", err.Error())
-		return nil, fmt.Errorf("connection broken to store")
+		return nil, errors.Wrapf(err, "argocd init project client failed")
 	}
 	defer connection.Close() // nolint
 	pro, err := client.List(ctx, &project.ProjectQuery{})
 	if err != nil {
-		blog.Errorf("argocd list all project %s failure, %s", err.Error())
-		return nil, fmt.Errorf("store grpc list failed, %s", err.Error())
+		return nil, errors.Wrapf(err, "argocd list alll projects failed")
 	}
 	return pro, nil
 }
@@ -139,14 +131,12 @@ func (cd *argo) CreateCluster(ctx context.Context, cls *v1alpha1.Cluster) error 
 	// ! please make more attension to performance issue
 	connection, client, err := cd.basicClient.NewClusterClient()
 	if err != nil {
-		blog.Errorf("argocd init cluster client failure, %s", err.Error())
-		return fmt.Errorf("connection broken to store")
+		return errors.Wrapf(err, "argocd init cluster client failed")
 	}
 	defer connection.Close() // nolint
 	_, err = client.Create(ctx, &cluster.ClusterCreateRequest{Cluster: cls})
 	if err != nil {
-		blog.Errorf("argocd create cluster %s failure, %s", cls.Name, err.Error())
-		return fmt.Errorf("store grpc create failed, %s", err.Error())
+		return errors.Wrapf(err, "argocd create cluster '%s' failed", cls.Name)
 	}
 	return nil
 }
@@ -157,8 +147,7 @@ func (cd *argo) GetCluster(ctx context.Context, name string) (*v1alpha1.Cluster,
 	// ! please make more attension to performance issue
 	connection, client, err := cd.basicClient.NewClusterClient()
 	if err != nil {
-		blog.Errorf("argocd init cluster client failure, %s", err.Error())
-		return nil, fmt.Errorf("connection broken to store")
+		return nil, errors.Wrapf(err, "argocd init cluster client failed")
 	}
 	defer connection.Close() // nolint
 	cls, err := client.Get(ctx, &cluster.ClusterQuery{Name: name})
@@ -169,24 +158,34 @@ func (cd *argo) GetCluster(ctx context.Context, name string) (*v1alpha1.Cluster,
 			blog.Warnf("argocd get cluster %s warning, No Cluster Found if admin access, %s", name, err.Error())
 			return nil, nil
 		}
-		blog.Errorf("argocd get cluster %s failure, %s", name, err.Error())
-		return nil, fmt.Errorf("store grpc get failed, %s", err.Error())
+		return nil, errors.Wrapf(err, "argocd get cluster '%s' failed", name)
 	}
 	return cls, nil
+}
+
+// UpdateCluster will update the annotation field
+func (cd *argo) UpdateCluster(ctx context.Context, argoCluster *v1alpha1.Cluster) error {
+	connection, client, err := cd.basicClient.NewClusterClient()
+	if err != nil {
+		return errors.Wrapf(err, "argocd init cluster client failed")
+	}
+	defer connection.Close() // nolint
+	if _, err := client.Update(ctx, &cluster.ClusterUpdateRequest{Cluster: argoCluster}); err != nil {
+		return errors.Wrapf(err, "update cluster '%s' failed", argoCluster.Name)
+	}
+	return nil
 }
 
 // ListCluster interface
 func (cd *argo) ListCluster(ctx context.Context) (*v1alpha1.ClusterList, error) {
 	connection, client, err := cd.basicClient.NewClusterClient()
 	if err != nil {
-		blog.Errorf("argocd init cluster client failure, %s", err.Error())
-		return nil, fmt.Errorf("connection broken to store")
+		return nil, errors.Wrapf(err, "argocd init cluster client failed")
 	}
 	defer connection.Close() // nolint
 	cls, err := client.List(ctx, &cluster.ClusterQuery{})
 	if err != nil {
-		blog.Errorf("argocd list all cluster %s failure, %s", err.Error())
-		return nil, fmt.Errorf("store grpc list failed, %s", err.Error())
+		return nil, errors.Wrapf(err, "argocd list all clusters failed")
 	}
 	return cls, nil
 }
@@ -197,8 +196,7 @@ func (cd *argo) GetRepository(ctx context.Context, repo string) (*v1alpha1.Repos
 	// ! please make more attension to performance issue
 	connection, client, err := cd.basicClient.NewRepoClient()
 	if err != nil {
-		blog.Errorf("argocd init repository client failure, %s", err.Error())
-		return nil, fmt.Errorf("connection broken to store")
+		return nil, errors.Wrapf(err, "argocd init repo client failed")
 	}
 	defer connection.Close() // nolint
 	repos, err := client.Get(ctx, &repository.RepoQuery{Repo: repo})
@@ -207,8 +205,7 @@ func (cd *argo) GetRepository(ctx context.Context, repo string) (*v1alpha1.Repos
 			blog.Warnf("argocd get Repository %s warning, %s", repo, err.Error())
 			return nil, nil
 		}
-		blog.Errorf("argocd get repository %s failure, %s", repo, err.Error())
-		return nil, fmt.Errorf("store grpc get failed, %s", err.Error())
+		return nil, errors.Wrapf(err, "argocd get repo '%s' failed", repo)
 	}
 	return repos, nil
 }
@@ -217,26 +214,23 @@ func (cd *argo) GetRepository(ctx context.Context, repo string) (*v1alpha1.Repos
 func (cd *argo) ListRepository(ctx context.Context) (*v1alpha1.RepositoryList, error) {
 	connection, client, err := cd.basicClient.NewRepoClient()
 	if err != nil {
-		blog.Errorf("argocd init repository client failure, %s", err.Error())
-		return nil, fmt.Errorf("connection broken to store")
+		return nil, errors.Wrapf(err, "argocd init repo client failed")
 	}
 	defer connection.Close() // nolint
 	repos, err := client.List(ctx, &repository.RepoQuery{})
 	if err != nil {
-		blog.Errorf("argocd list repository %s failure, %s", err.Error())
-		return nil, fmt.Errorf("store grpc list failed, %s", err.Error())
+		return nil, errors.Wrapf(err, "argocd list repos failed")
 	}
 	return repos, nil
 }
 
-// Application interface
+// GetApplication will return application by name
 func (cd *argo) GetApplication(ctx context.Context, name string) (*v1alpha1.Application, error) {
 	// create new single connection per request
 	// ! please make more attension to performance issue
 	connection, client, err := cd.basicClient.NewApplicationClient()
 	if err != nil {
-		blog.Errorf("argocd init application client failure, %s", err.Error())
-		return nil, fmt.Errorf("connection broken to store")
+		return nil, errors.Wrapf(err, "argocd init application client failed")
 	}
 	defer connection.Close() // nolint
 	app, err := client.Get(ctx, &application.ApplicationQuery{Name: &name})
@@ -245,25 +239,21 @@ func (cd *argo) GetApplication(ctx context.Context, name string) (*v1alpha1.Appl
 			blog.Warnf("argocd get application %s warning, %s", name, err.Error())
 			return nil, nil
 		}
-		blog.Errorf("argocd get application %s failure, %s", name, err.Error())
-		return nil, fmt.Errorf("store grpc get failed, %s", err.Error())
+		return nil, errors.Wrapf(err, "argocd get application '%s' failed", name)
 	}
 	return app, nil
 }
 
 // ListApplications interface
-func (cd *argo) ListApplications(ctx context.Context,
-	option *ListAppOptions) (*v1alpha1.ApplicationList, error) {
+func (cd *argo) ListApplications(ctx context.Context, option *ListAppOptions) (*v1alpha1.ApplicationList, error) {
 	connection, client, err := cd.basicClient.NewApplicationClient()
 	if err != nil {
-		blog.Errorf("argocd init application client failure, %s", err.Error())
-		return nil, fmt.Errorf("connection broken to store")
+		return nil, errors.Wrapf(err, "argocd init application client failed")
 	}
 	defer connection.Close() // nolint
 	apps, err := client.List(ctx, &application.ApplicationQuery{Projects: []string{option.Project}})
 	if err != nil {
-		blog.Errorf("argocd lsit application under %s failure, %s", option.Project, err.Error())
-		return nil, fmt.Errorf("store grpc list failed, %s", err.Error())
+		return nil, errors.Wrapf(err, "argocd list application for project '%s' failed", option.Project)
 	}
 	return apps, nil
 }

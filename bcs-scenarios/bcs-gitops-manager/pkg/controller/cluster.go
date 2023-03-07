@@ -15,8 +15,10 @@ package controller
 import (
 	"context"
 	"fmt"
+	"sync"
 	"time"
 
+	"github.com/pkg/errors"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/metadata"
@@ -32,9 +34,9 @@ import (
 // ClusterControl interface definition
 type ClusterControl interface {
 	Controller
-	// only work until context cancel
 	SingleStart(ctx context.Context)
 	ForceSync(projectCode, clusterID string)
+	SyncProject(ctx context.Context, projectCode string) error
 }
 
 // NewClusterController create project controller instance
@@ -47,10 +49,11 @@ func NewClusterController(opt *Options) ClusterControl {
 // ClusterController for bk-bcs cluster information
 // syncing to gitops system. depend on cluster-manager interface
 type cluster struct {
-	syncing bool
-	option  *Options
-	client  cm.ClusterManagerClient
-	conn    *grpc.ClientConn
+	sync.Mutex
+
+	option *Options
+	client cm.ClusterManagerClient
+	conn   *grpc.ClientConn
 }
 
 // Init controller
@@ -78,7 +81,8 @@ func (control *cluster) Stop() {
 	control.conn.Close() // nolint
 }
 
-// Start controller
+// SingleStart will start inner loop for cluster sync, and it
+// will work until context cancel.
 func (control *cluster) SingleStart(ctx context.Context) {
 	blog.Infof("cluster controller single start....")
 	tick := time.NewTicker(time.Second * time.Duration(control.option.Interval))
@@ -89,17 +93,18 @@ func (control *cluster) SingleStart(ctx context.Context) {
 			blog.Infof("cluster controller ask to stop in SingleStart")
 			return
 		case <-tick.C:
-			control.innerLoop(ctx)
+			if err := control.innerLoop(ctx); err != nil {
+				blog.Errorf("inner loop failed: %s", err.Error())
+			}
 		}
 	}
 }
 
 // ForceSync specified cluster information
 func (control *cluster) ForceSync(projectCode, clusterID string) {
-	if control.syncing {
-		blog.Infof("cluster controller is under data synchronization")
-		return
-	}
+	control.Lock()
+	defer control.Unlock()
+
 	// reading data from cluster-manager
 	header := metadata.New(map[string]string{"Authorization": fmt.Sprintf("Bearer %s", control.option.APIToken)})
 	outCxt := metadata.NewOutgoingContext(context.Background(), header)
@@ -117,7 +122,7 @@ func (control *cluster) ForceSync(projectCode, clusterID string) {
 		blog.Warnf("cluster-manager found no cluster %s", clusterID)
 		return
 	}
-	exist, err := control.isClusterExist(response.Data)
+	exist, err := control.checkClusterExist(context.Background(), response.Data)
 	if err != nil {
 		blog.Errorf("cluster controller confirm cluster %s exsitencen failure, %s", clusterID, err.Error())
 		return
@@ -164,16 +169,11 @@ func (control *cluster) initClient() error {
 	return nil
 }
 
-func (control *cluster) innerLoop(ctx context.Context) {
-	control.syncing = true
-	defer func() {
-		control.syncing = false
-	}()
+func (control *cluster) innerLoop(ctx context.Context) error {
 	// list all project in local storage
 	appProjects, err := control.option.Storage.ListProjects(ctx)
 	if err != nil {
-		blog.Errorf("cluster controller get all projects from gitops storage failure, %s", err.Error())
-		return
+		return errors.Wrapf(err, "innerLoop get all projects fro gitops storage failed")
 	}
 	controlledProjects := make(map[string]*v1alpha1.AppProject)
 	for i, pro := range appProjects.Items {
@@ -187,31 +187,55 @@ func (control *cluster) innerLoop(ctx context.Context) {
 		len(appProjects.Items), len(controlledProjects))
 	// list all cluster for every project
 	for proID, appPro := range controlledProjects {
-		control.innerClusterLoop(ctx, proID, appPro)
+		blog.Infof("syncing clusters for project [%s]%s", appPro.Name, proID)
+		if err := control.syncClustersByProject(ctx, proID, appPro); err != nil {
+			blog.Errorf("sync clusters for project [%s]%s failed: %s", appPro.Name, proID, err.Error())
+			continue
+		}
+		blog.Infof("sync clusters for project [%s]%s success", appPro.Name, proID)
 	}
+	return nil
 }
 
-func (control *cluster) innerClusterLoop(ctx context.Context, projectID string, appPro *v1alpha1.AppProject) {
-	header := metadata.New(map[string]string{"Authorization": fmt.Sprintf("Bearer %s", control.option.APIToken)})
-	outCxt := metadata.NewOutgoingContext(ctx, header)
-	clusters, err := control.client.ListCluster(outCxt, &cm.ListClusterReq{ProjectID: projectID})
+// SyncProject sync all clusters by project code
+func (control *cluster) SyncProject(ctx context.Context, projectCode string) error {
+	argoProject, err := control.option.Storage.GetProject(ctx, projectCode)
 	if err != nil {
-		blog.Errorf("cluster controller list all clusters for project [%s]%s failure, %s. recovery from next tick",
-			appPro.Name, projectID, err.Error())
-		return
+		return errors.Wrapf(err, "get project '%s' failed", projectCode)
+	}
+	if argoProject == nil {
+		return errors.Errorf("project '%s' not exist", projectCode)
+	}
+	proID := common.GetBCSProjectID(argoProject.Annotations)
+	if proID == "" {
+		return errors.Errorf("project '%s' is not under control", projectCode)
+	}
+	return control.syncClustersByProject(ctx, proID, argoProject)
+}
+
+func (control *cluster) syncClustersByProject(ctx context.Context, projectID string,
+	appPro *v1alpha1.AppProject) error {
+	control.Lock()
+	defer control.Unlock()
+	bcsCtx := metadata.NewOutgoingContext(ctx,
+		metadata.New(map[string]string{
+			"Authorization": fmt.Sprintf("Bearer %s", control.option.APIToken),
+		}),
+	)
+	clusters, err := control.client.ListCluster(bcsCtx, &cm.ListClusterReq{ProjectID: projectID})
+	if err != nil {
+		return errors.Wrapf(err, "list all clusters for project [%s]%s failed", appPro.Name, projectID)
 	}
 	if clusters.Code != 0 {
-		blog.Errorf("cluster controller list cluster for project [%s]%s failure, cluster-manager logic err: %s",
-			appPro.Name, projectID, err.Error())
-		return
+		return errors.Errorf("list all clusters fro project [%s]%s resp code not 0 but %d: %s",
+			appPro.Name, projectID, clusters.Code, clusters.Message)
 	}
 	if len(clusters.Data) == 0 {
-		blog.Warnf("cluster controller get 0 cluster for project [%s]%s", appPro.Name, projectID)
-		return
+		blog.Warnf("list all clusters fro project [%s]%s not have clusters", appPro.Name, projectID)
+		return nil
 	}
-
 	for _, cls := range clusters.Data {
-		exist, err := control.isClusterExist(cls)
+		exist, err := control.checkClusterExist(ctx, cls)
 		if err != nil {
 			blog.Errorf("cluster controller confirm cluster %s existence failure, %s. wait for next tick",
 				cls.ClusterID, err.Error())
@@ -229,18 +253,39 @@ func (control *cluster) innerClusterLoop(ctx context.Context, projectID string, 
 		blog.Infof("cluster controller add new cluster %s for project [%s]%s",
 			cls.ClusterID, appPro.Name, projectID)
 	}
+	return nil
 }
 
-// isClusterExist check cluster information already in storage
-func (control *cluster) isClusterExist(cls *cm.Cluster) (bool, error) {
-	gitopsCluster, err := control.option.Storage.GetCluster(context.Background(), cls.ClusterID)
+// checkClusterExist check the cluster whether exist. If existed, we need
+// check the cluster's name whether changed, and update the cluster object
+// from argocd.
+func (control *cluster) checkClusterExist(ctx context.Context, cls *cm.Cluster) (bool, error) {
+	argoCluster, err := control.option.Storage.GetCluster(ctx, cls.ClusterID)
 	if err != nil {
-		blog.Errorf("query cluster %s from storage failure, %s", cls.ClusterID, err.Error())
-		return false, err
+		return false, errors.Wrapf(err, "query cluster '%s' from storage failed", cls.ClusterID)
 	}
-	if gitopsCluster == nil {
-		blog.Warnf("no cluster %s in storage", cls.ClusterID)
+	if argoCluster == nil {
+		blog.Warnf("no cluster %s found in storage", cls.ClusterID)
 		return false, nil
+	}
+
+	// we should check the cluster's attr whether there has been a change, if changed
+	// need to update to argocd storage
+	needUpdate := false
+	if argoCluster.Annotations[common.ClusterAliaName] != cls.ClusterName {
+		needUpdate = true
+		argoCluster.Annotations[common.ClusterAliaName] = cls.ClusterName
+	}
+	if argoCluster.Annotations[common.ClusterEnv] != cls.Environment {
+		needUpdate = true
+		argoCluster.Annotations[common.ClusterEnv] = cls.Environment
+	}
+	if !needUpdate {
+		return true, nil
+	}
+	// the cluster will be updated if cluster alias name is changed
+	if err := control.option.Storage.UpdateCluster(ctx, argoCluster); err != nil {
+		return false, errors.Wrapf(err, "update cluster '%s' from gitops storage failed", cls.ClusterID)
 	}
 	return true, nil
 }
@@ -251,9 +296,10 @@ func (control *cluster) saveToStorage(ctx context.Context, cls *cm.Cluster, proj
 	}
 	clusterAnnotation := utils.DeepCopyMap(project.Annotations)
 	clusterAnnotation[common.ClusterAliaName] = cls.ClusterName
+	clusterAnnotation[common.ClusterEnv] = cls.Environment
 	appCluster := &v1alpha1.Cluster{
 		Name:    cls.ClusterID,
-		Server:  fmt.Sprintf("https://%s/clusters/%s/", control.option.APIGateway, cls.ClusterID),
+		Server:  fmt.Sprintf("https://%s/clusters/%s/", control.option.APIGatewayForCluster, cls.ClusterID),
 		Project: project.Name,
 		Config: v1alpha1.ClusterConfig{
 			BearerToken: control.option.APIToken,

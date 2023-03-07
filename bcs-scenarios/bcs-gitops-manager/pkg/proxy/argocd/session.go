@@ -44,10 +44,10 @@ func (s *Session) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 		rw.Write([]byte("URL conversion failure in manager")) // nolint
 		return
 	}
-	proxy := httputil.ReverseProxy{
+	reverseProxy := httputil.ReverseProxy{
 		Director: func(request *http.Request) {
 			request.URL = newURL
-			// settting login session token for pass through, for http 1.x
+			// setting login session token for pass through, for http 1.x
 			token := s.option.Storage.GetToken(request.Context())
 			request.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
 			// for http 2
@@ -69,5 +69,5 @@ func (s *Session) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	}
 	// all ready to serve
 	blog.Infof("GitOps serve %s %s", req.Method, fullPath)
-	proxy.ServeHTTP(rw, req)
+	reverseProxy.ServeHTTP(rw, req)
 }

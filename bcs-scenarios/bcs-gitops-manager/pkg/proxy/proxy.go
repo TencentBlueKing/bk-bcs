@@ -13,11 +13,15 @@
 package proxy
 
 import (
+	"encoding/binary"
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"regexp"
 	"strings"
+
+	"google.golang.org/grpc/encoding"
+	"google.golang.org/grpc/encoding/proto"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
@@ -78,14 +82,18 @@ func (user *UserInfo) GetUser() string {
 // GetJWTInfo from request
 func GetJWTInfo(req *http.Request, client *jwt.JWTClient) (*UserInfo, error) {
 	raw := req.Header.Get("Authorization")
-	if len(raw) == 0 {
-		blog.Errorf("request %s header %+v", req.URL.Path, req.Header)
-		return nil, fmt.Errorf("lost Authorization")
+	return GetJWTInfoWithAuthorization(raw, client)
+}
+
+//GetJWTInfoWithAuthorization 根据 token 获取用户信息
+func GetJWTInfoWithAuthorization(authorization string, client *jwt.JWTClient) (*UserInfo, error) {
+	if len(authorization) == 0 {
+		return nil, fmt.Errorf("lost 'Authorization' header")
 	}
-	if !strings.HasPrefix(raw, "Bearer ") {
-		return nil, fmt.Errorf("Authorization malform")
+	if !strings.HasPrefix(authorization, "Bearer ") {
+		return nil, fmt.Errorf("hader 'Authorization' malform")
 	}
-	token := strings.TrimPrefix(raw, "Bearer ")
+	token := strings.TrimPrefix(authorization, "Bearer ")
 	claim, err := client.JWTDecode(token)
 	if err != nil {
 		return nil, err
@@ -101,8 +109,7 @@ func GetJWTInfo(req *http.Request, client *jwt.JWTClient) (*UserInfo, error) {
 // only use for gitops command line
 func IsAdmin(req *http.Request) bool {
 	token := req.Header.Get(common.HeaderBCSClient)
-	// todo(DeveloperJim): fix me
-	return token == common.HeaderBCSClient
+	return token == common.ServiceNameShort
 }
 
 // JSONResponse convenient tool for response
@@ -112,6 +119,39 @@ func JSONResponse(w http.ResponseWriter, obj interface{}) {
 	w.WriteHeader(http.StatusOK)
 	content, _ := json.Marshal(obj)
 	fmt.Fprintln(w, string(content))
+}
+
+var (
+	grpcSuffixBytes = []byte{128, 0, 0, 0, 54, 99, 111, 110, 116, 101, 110, 116, 45, 116, 121, 112, 101, 58, 32, 97, 112, 112, 108, 105, 99, 97, 116, 105, 111, 110, 47, 103, 114, 112, 99, 43, 112, 114, 111, 116, 111, 13, 10, 103, 114, 112, 99, 45, 115, 116, 97, 116, 117, 115, 58, 32, 48, 13, 10}
+)
+
+// GRPCResponse 将对象通过 grpc 的数据格式返回
+// grpc 返回的 proto 数据格式规定如下：
+// - 第 1 个 byte 表明是否是 compressed, 参见: google.golang.org/grpc/rpc_util.go 中的 compressed
+// - 第 2-5 个 byte 表明 body 的长度，参见: google.golang.org/grpc/rpc_util.go 的 recvMsg 方法
+//   长度需要用到大端转换来获取实际值
+// - 后续的 byte 位是 body + content-type
+// 在获取到 body 字节后，可以通过 grpc.encoding 来反序列化
+func GRPCResponse(w http.ResponseWriter, obj interface{}) {
+	w.Header().Set("Content-Type", "application/grpc+proto")
+	w.Header().Set("grpc-status", "0")
+	w.WriteHeader(http.StatusOK)
+	bs, err := encoding.GetCodec(proto.Name).Marshal(obj)
+	if err != nil {
+		blog.Errorf("grpc proto encoding marshal failed: %s", err.Error())
+		_, _ = w.Write([]byte{})
+		return
+	}
+	header := make([]byte, 4)
+	binary.BigEndian.PutUint32(header, uint32(len(bs)))
+	result := make([]byte, 0, 5+len(bs)+len(grpcSuffixBytes))
+	// grpc 返回的第一个 byte 表明是否是 compressed
+	// 参见: google.golang.org/grpc/rpc_util.go 中的 compressionNone
+	result = append(result, 0)
+	result = append(result, header...)
+	result = append(result, bs...)
+	result = append(result, grpcSuffixBytes...)
+	_, _ = w.Write(result)
 }
 
 // BUG21955Workaround ! copy from argocd
