@@ -66,6 +66,7 @@ type AnnotationResponseWriter struct {
 	http.ResponseWriter
 	authorizer auth.Authorizer
 	annotation *Annotation
+	err        error // low-level runtime error
 }
 
 // NewWrapResponseWriter
@@ -75,6 +76,11 @@ func NewWrapResponseWriter(w http.ResponseWriter, authorizer auth.Authorizer) *A
 
 // Write http write 接口实现
 func (w *AnnotationResponseWriter) Write(data []byte) (int, error) {
+	// 错误不需要特殊处理
+	if w.err != nil {
+		return w.ResponseWriter.Write(data)
+	}
+
 	buf := bytes.NewBufferString(`{"data":`)
 	buf.Write(data)
 
@@ -122,6 +128,11 @@ func (w *AnnotationResponseWriter) Build(ctx context.Context, msg proto.Message)
 	}
 
 	return nil
+}
+
+// SetError 设置错误请求
+func (w *AnnotationResponseWriter) SetError(err error) {
+	w.err = err
 }
 
 // BuildAnnotation http 中间件

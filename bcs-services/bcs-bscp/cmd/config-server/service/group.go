@@ -34,7 +34,7 @@ func (s *Service) CreateGroup(ctx context.Context, req *pbcs.CreateGroupReq) (*p
 		ResourceID: req.AppId}, BizID: req.BizId}
 	err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res)
 	if err != nil {
-		return resp, nil
+		return nil, err
 	}
 
 	r := &pbds.CreateGroupReq{
@@ -52,13 +52,11 @@ func (s *Service) CreateGroup(ctx context.Context, req *pbcs.CreateGroupReq) (*p
 	}
 	rp, err := s.client.DS.CreateGroup(grpcKit.RpcCtx(), r)
 	if err != nil {
-		errf.Error(err).AssignResp(grpcKit, resp)
 		logs.Errorf("create group failed, err: %v, rid: %s", err, grpcKit.Rid)
-		return resp, nil
+		return nil, err
 	}
 
-	resp.Code = errf.OK
-	resp.Data = &pbcs.CreateGroupResp_RespData{
+	resp = &pbcs.CreateGroupResp{
 		Id: rp.Id,
 	}
 	return resp, nil
@@ -73,7 +71,7 @@ func (s *Service) DeleteGroup(ctx context.Context, req *pbcs.DeleteGroupReq) (*p
 		ResourceID: req.AppId}, BizID: req.BizId}
 	err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res)
 	if err != nil {
-		return resp, nil
+		return nil, err
 	}
 
 	r := &pbds.DeleteGroupReq{
@@ -85,12 +83,10 @@ func (s *Service) DeleteGroup(ctx context.Context, req *pbcs.DeleteGroupReq) (*p
 	}
 	_, err = s.client.DS.DeleteGroup(grpcKit.RpcCtx(), r)
 	if err != nil {
-		errf.Error(err).AssignResp(grpcKit, resp)
 		logs.Errorf("delete group failed, err: %v, rid: %s", err, grpcKit.Rid)
-		return resp, nil
+		return nil, err
 	}
 
-	resp.Code = errf.OK
 	return resp, nil
 }
 
@@ -103,7 +99,7 @@ func (s *Service) UpdateGroup(ctx context.Context, req *pbcs.UpdateGroupReq) (*p
 		ResourceID: req.AppId}, BizID: req.BizId}
 	err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res)
 	if err != nil {
-		return resp, nil
+		return nil, err
 	}
 
 	r := &pbds.UpdateGroupReq{
@@ -121,12 +117,10 @@ func (s *Service) UpdateGroup(ctx context.Context, req *pbcs.UpdateGroupReq) (*p
 	}
 	_, err = s.client.DS.UpdateGroup(grpcKit.RpcCtx(), r)
 	if err != nil {
-		errf.Error(err).AssignResp(grpcKit, resp)
 		logs.Errorf("update group failed, err: %v, rid: %s", err, grpcKit.Rid)
-		return resp, nil
+		return nil, err
 	}
 
-	resp.Code = errf.OK
 	return resp, nil
 }
 
@@ -138,17 +132,15 @@ func (s *Service) ListGroups(ctx context.Context, req *pbcs.ListGroupsReq) (*pbc
 	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.Group, Action: meta.Find}, BizID: req.BizId}
 	err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res)
 	if err != nil {
-		return resp, nil
+		return nil, err
 	}
 
 	if req.Page == nil {
-		errf.Error(errf.New(errf.InvalidParameter, "page is null")).AssignResp(grpcKit, resp)
-		return resp, nil
+		return nil, errf.New(errf.InvalidParameter, "page is null")
 	}
 
 	if err = req.Page.BasePage().Validate(types.DefaultPageOption); err != nil {
-		errf.Error(err).AssignResp(grpcKit, resp)
-		return resp, nil
+		return nil, err
 	}
 
 	r := &pbds.ListGroupsReq{
@@ -159,13 +151,11 @@ func (s *Service) ListGroups(ctx context.Context, req *pbcs.ListGroupsReq) (*pbc
 	}
 	rp, err := s.client.DS.ListGroups(grpcKit.RpcCtx(), r)
 	if err != nil {
-		errf.Error(err).AssignResp(grpcKit, resp)
 		logs.Errorf("list groups failed, err: %v, rid: %s", err, grpcKit.Rid)
-		return resp, nil
+		return nil, err
 	}
 
-	resp.Code = errf.OK
-	resp.Data = &pbcs.ListGroupsResp_RespData{
+	resp = &pbcs.ListGroupsResp{
 		Count:   rp.Count,
 		Details: rp.Details,
 	}

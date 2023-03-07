@@ -39,7 +39,7 @@ func (s *Service) CreateApp(ctx context.Context, req *pbcs.CreateAppReq) (*pbcs.
 	authRes := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.App, Action: meta.Create}, BizID: req.BizId}
 	err := s.authorizer.AuthorizeWithResp(kt, resp, authRes)
 	if err != nil {
-		return resp, nil
+		return nil, err
 	}
 
 	r := &pbds.CreateAppReq{
@@ -59,15 +59,11 @@ func (s *Service) CreateApp(ctx context.Context, req *pbcs.CreateAppReq) (*pbcs.
 	}
 	rp, err := s.client.DS.CreateApp(kt.RpcCtx(), r)
 	if err != nil {
-		errf.Error(err).AssignResp(kt, resp)
 		logs.Errorf("create app failed, err: %v, rid: %s", err, kt.Rid)
-		return resp, nil
+		return nil, err
 	}
 
-	resp.Code = errf.OK
-	resp.Data = &pbcs.CreateAppResp_RespData{
-		Id: rp.Id,
-	}
+	resp = &pbcs.CreateAppResp{Id: rp.Id}
 	return resp, nil
 }
 
@@ -80,7 +76,7 @@ func (s *Service) UpdateApp(ctx context.Context, req *pbcs.UpdateAppReq) (*pbcs.
 		BizID: req.BizId}
 	err := s.authorizer.AuthorizeWithResp(grpcKit, resp, authRes)
 	if err != nil {
-		return resp, nil
+		return nil, err
 	}
 
 	r := &pbds.UpdateAppReq{
@@ -99,12 +95,10 @@ func (s *Service) UpdateApp(ctx context.Context, req *pbcs.UpdateAppReq) (*pbcs.
 	}
 	_, err = s.client.DS.UpdateApp(grpcKit.RpcCtx(), r)
 	if err != nil {
-		errf.Error(err).AssignResp(grpcKit, resp)
 		logs.Errorf("update app failed, err: %v, rid: %s", err, grpcKit.Rid)
-		return resp, nil
+		return nil, err
 	}
 
-	resp.Code = errf.OK
 	return resp, nil
 }
 
@@ -117,7 +111,7 @@ func (s *Service) DeleteApp(ctx context.Context, req *pbcs.DeleteAppReq) (*pbcs.
 		BizID: req.BizId}
 	err := s.authorizer.AuthorizeWithResp(kt, resp, authRes)
 	if err != nil {
-		return resp, nil
+		return nil, err
 	}
 
 	r := &pbds.DeleteAppReq{
@@ -126,12 +120,10 @@ func (s *Service) DeleteApp(ctx context.Context, req *pbcs.DeleteAppReq) (*pbcs.
 	}
 	_, err = s.client.DS.DeleteApp(kt.RpcCtx(), r)
 	if err != nil {
-		errf.Error(err).AssignResp(kt, resp)
 		logs.Errorf("delete app failed, err: %v, rid: %s", err, kt.Rid)
-		return resp, nil
+		return nil, err
 	}
 
-	resp.Code = errf.OK
 	return resp, nil
 }
 
@@ -143,17 +135,15 @@ func (s *Service) ListApps(ctx context.Context, req *pbcs.ListAppsReq) (*pbcs.Li
 	authRes := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.App, Action: meta.Find}, BizID: req.BizId}
 	err := s.authorizer.AuthorizeWithResp(kt, resp, authRes)
 	if err != nil {
-		return resp, nil
+		return nil, err
 	}
 
 	if req.Page == nil {
-		errf.Error(errf.New(errf.InvalidParameter, "page is null")).AssignResp(kt, resp)
-		return resp, nil
+		return nil, errf.New(errf.InvalidParameter, "page is null")
 	}
 
 	if err = req.Page.BasePage().Validate(types.DefaultPageOption); err != nil {
-		errf.Error(err).AssignResp(kt, resp)
-		return resp, nil
+		return nil, err
 	}
 
 	r := &pbds.ListAppsReq{
@@ -163,13 +153,11 @@ func (s *Service) ListApps(ctx context.Context, req *pbcs.ListAppsReq) (*pbcs.Li
 	}
 	rp, err := s.client.DS.ListApps(kt.RpcCtx(), r)
 	if err != nil {
-		errf.Error(err).AssignResp(kt, resp)
 		logs.Errorf("list apps failed, err: %v, rid: %s", err, kt.Rid)
-		return resp, nil
+		return nil, err
 	}
 
-	resp.Code = errf.OK
-	resp.Data = &pbcs.ListAppsResp_RespData{
+	resp = &pbcs.ListAppsResp{
 		Count:   rp.Count,
 		Details: rp.Details,
 	}
@@ -177,14 +165,14 @@ func (s *Service) ListApps(ctx context.Context, req *pbcs.ListAppsReq) (*pbcs.Li
 }
 
 // GetApp get app with app id
-func (s *Service) GetApp(ctx context.Context, req *pbcs.GetAppReq) (*pbcs.GetAppResp, error) {
+func (s *Service) GetApp(ctx context.Context, req *pbcs.GetAppReq) (*pbapp.App, error) {
 	kt := kit.FromGrpcContext(ctx)
-	resp := new(pbcs.GetAppResp)
+	resp := new(pbapp.App)
 
 	authRes := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.App, Action: meta.Find}, BizID: req.BizId}
 	err := s.authorizer.AuthorizeWithResp(kt, resp, authRes)
 	if err != nil {
-		return resp, nil
+		return nil, err
 	}
 
 	r := &pbds.GetAppReq{
@@ -193,14 +181,11 @@ func (s *Service) GetApp(ctx context.Context, req *pbcs.GetAppReq) (*pbcs.GetApp
 	}
 	rp, err := s.client.DS.GetApp(kt.RpcCtx(), r)
 	if err != nil {
-		errf.Error(err).AssignResp(kt, resp)
 		logs.Errorf("list apps failed, err: %v, rid: %s", err, kt.Rid)
-		return resp, nil
+		return nil, err
 	}
 
-	resp.Code = errf.OK
-	resp.Data = rp.Data
-	return resp, nil
+	return rp, nil
 }
 
 // ListAppsRest list apps with rest filter
@@ -233,9 +218,8 @@ func (s *Service) ListAppsRest(ctx context.Context, req *pbcs.ListAppsRestReq) (
 	}
 	rp, err := s.client.DS.ListAppsRest(kt.RpcCtx(), r)
 	if err != nil {
-		errf.Error(err).AssignResp(kt, resp)
 		logs.Errorf("list apps failed, err: %v, rid: %s", err, kt.Rid)
-		return resp, nil
+		return nil, err
 	}
 
 	// 只填写当前页的space
@@ -255,8 +239,7 @@ func (s *Service) ListAppsRest(ctx context.Context, req *pbcs.ListAppsRestReq) (
 		}
 	}
 
-	resp.Code = errf.OK
-	resp.Data = &pbcs.ListAppsResp_RespData{
+	resp = &pbcs.ListAppsResp{
 		Count:   rp.Count,
 		Details: rp.Details,
 	}
@@ -271,7 +254,7 @@ func (s *Service) ListAppsBySpaceRest(ctx context.Context, req *pbcs.ListAppsByS
 	authRes := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.App, Action: meta.Find}, BizID: req.BizId}
 	err := s.authorizer.AuthorizeWithResp(kt, resp, authRes)
 	if err != nil {
-		return resp, nil
+		return nil, err
 	}
 
 	r := &pbds.ListAppsRestReq{
@@ -283,9 +266,8 @@ func (s *Service) ListAppsBySpaceRest(ctx context.Context, req *pbcs.ListAppsByS
 	}
 	rp, err := s.client.DS.ListAppsRest(kt.RpcCtx(), r)
 	if err != nil {
-		errf.Error(err).AssignResp(kt, resp)
 		logs.Errorf("list apps failed, err: %v, rid: %s", err, kt.Rid)
-		return resp, nil
+		return nil, err
 	}
 
 	spaceUidMap := map[string]struct{}{}
@@ -326,8 +308,7 @@ func (s *Service) ListAppsBySpaceRest(ctx context.Context, req *pbcs.ListAppsByS
 		}
 	}
 
-	resp.Code = errf.OK
-	resp.Data = &pbcs.ListAppsResp_RespData{
+	resp = &pbcs.ListAppsResp{
 		Count:   rp.Count,
 		Details: rp.Details,
 	}

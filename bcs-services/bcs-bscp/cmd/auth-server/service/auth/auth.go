@@ -75,14 +75,12 @@ func (a *Auth) AuthorizeBatch(ctx context.Context, req *pbas.AuthorizeBatchReq) 
 
 	if len(req.Resources) == 0 {
 		resp.Decisions = make([]*pbas.Decision, 0)
-		resp.Code = errf.OK
 		return resp, nil
 	}
 
 	// if write operations are disabled, returns corresponding error
 	if err := a.isWriteOperationDisabled(kt, req.Resources); err != nil {
-		errf.Error(err).AssignResp(kt, resp)
-		return resp, nil
+		return nil, err
 	}
 
 	// if auth is disabled, returns authorized for all request resources
@@ -91,7 +89,6 @@ func (a *Auth) AuthorizeBatch(ctx context.Context, req *pbas.AuthorizeBatchReq) 
 		for index := range req.Resources {
 			resp.Decisions[index] = &pbas.Decision{Authorized: true}
 		}
-		resp.Code = errf.OK
 		return resp, nil
 	}
 
@@ -99,14 +96,12 @@ func (a *Auth) AuthorizeBatch(ctx context.Context, req *pbas.AuthorizeBatchReq) 
 	resources := pbas.ResourceAttributes(req.Resources)
 	opts, decisions, err := parseAttributesToBatchOptions(kt, req.User.UserInfo(), resources...)
 	if err != nil {
-		errf.Error(err).AssignResp(kt, resp)
 		return resp, nil
 	}
 
 	// all resources are skipped
 	if opts == nil {
 		resp.Decisions = pbas.PbDecisions(decisions)
-		resp.Code = errf.OK
 		return resp, nil
 	}
 
@@ -114,8 +109,7 @@ func (a *Auth) AuthorizeBatch(ctx context.Context, req *pbas.AuthorizeBatchReq) 
 	authDecisions, err := a.auth.AuthorizeBatch(ctx, opts)
 	if err != nil {
 		logs.Errorf("authorize batch failed, ops: %#v, req: %#v, err: %v, rid: %s", err, opts, req, kt.Rid)
-		errf.Error(err).AssignResp(kt, resp)
-		return resp, nil
+		return nil, err
 	}
 
 	index := 0
@@ -135,7 +129,6 @@ func (a *Auth) AuthorizeBatch(ctx context.Context, req *pbas.AuthorizeBatchReq) 
 	}
 
 	resp.Decisions = pbas.PbDecisions(decisions)
-	resp.Code = errf.OK
 	return resp, nil
 }
 
@@ -225,12 +218,10 @@ func (a *Auth) GetPermissionToApply(ctx context.Context, req *pbas.GetPermission
 
 	permission, err := a.getPermissionToApply(kt, pbas.ResourceAttributes(req.Resources))
 	if err != nil {
-		errf.Error(err).AssignResp(kt, resp)
 		return resp, nil
 	}
 
 	resp.Permission = pbas.PbIamPermission(permission)
-	resp.Code = errf.OK
 	return resp, nil
 }
 

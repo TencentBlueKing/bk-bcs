@@ -15,7 +15,6 @@ package service
 import (
 	"context"
 
-	"bscp.io/pkg/criteria/errf"
 	"bscp.io/pkg/iam/meta"
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/logs"
@@ -33,7 +32,7 @@ func (s *Service) CreateGroupCategory(ctx context.Context, req *pbcs.CreateGroup
 		ResourceID: req.AppId}, BizID: req.BizId}
 	err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res)
 	if err != nil {
-		return resp, nil
+		return nil, err
 	}
 
 	r := &pbds.CreateGroupCategoryReq{
@@ -47,13 +46,11 @@ func (s *Service) CreateGroupCategory(ctx context.Context, req *pbcs.CreateGroup
 	}
 	rp, err := s.client.DS.CreateGroupCategory(grpcKit.RpcCtx(), r)
 	if err != nil {
-		errf.Error(err).AssignResp(grpcKit, resp)
 		logs.Errorf("create group category failed, err: %v, rid: %s", err, grpcKit.Rid)
-		return resp, nil
+		return nil, err
 	}
 
-	resp.Code = errf.OK
-	resp.Data = &pbcs.CreateGroupCategoryResp_RespData{
+	resp = &pbcs.CreateGroupCategoryResp{
 		Id: rp.Id,
 	}
 	return resp, nil
@@ -68,7 +65,7 @@ func (s *Service) DeleteGroupCategory(ctx context.Context, req *pbcs.DeleteGroup
 		ResourceID: req.AppId}, BizID: req.BizId}
 	err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res)
 	if err != nil {
-		return resp, nil
+		return nil, err
 	}
 
 	r := &pbds.DeleteGroupCategoryReq{
@@ -80,11 +77,9 @@ func (s *Service) DeleteGroupCategory(ctx context.Context, req *pbcs.DeleteGroup
 	}
 	_, err = s.client.DS.DeleteGroupCategory(grpcKit.RpcCtx(), r)
 	if err != nil {
-		errf.Error(err).AssignResp(grpcKit, resp)
 		logs.Errorf("delete group category failed, err: %v, rid: %s", err, grpcKit.Rid)
-		return resp, nil
+		return nil, err
 	}
 
-	resp.Code = errf.OK
 	return resp, nil
 }

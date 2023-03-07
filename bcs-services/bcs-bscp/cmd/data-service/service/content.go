@@ -50,7 +50,7 @@ func (s *Service) CreateContent(ctx context.Context, req *pbds.CreateContentReq)
 }
 
 // GetContent get content by id
-func (s *Service) GetContent(ctx context.Context, req *pbds.GetContentReq) (*pbds.GetContentResp, error) {
+func (s *Service) GetContent(ctx context.Context, req *pbds.GetContentReq) (*pbcontent.Content, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
 
 	content, err := s.dao.Content().Get(grpcKit, req.Id, req.BizId)
@@ -59,9 +59,7 @@ func (s *Service) GetContent(ctx context.Context, req *pbds.GetContentReq) (*pbd
 		return nil, err
 	}
 
-	resp := &pbds.GetContentResp{
-		Data: pbcontent.PbContent(content),
-	}
+	resp := pbcontent.PbContent(content)
 	return resp, nil
 }
 

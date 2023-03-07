@@ -37,13 +37,12 @@ func (s *Service) CreateStrategy(ctx context.Context, req *pbcs.CreateStrategyRe
 		ResourceID: req.AppId}, BizID: req.BizId}
 	err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res)
 	if err != nil {
-		return resp, nil
+		return nil, err
 	}
 
 	groups, err := s.queryGroups(grpcKit.RpcCtx(), req.BizId, req.AppId, req.Groups)
 	if err != nil {
-		errf.Error(err).AssignResp(grpcKit, resp)
-		return resp, nil
+		return nil, err
 	}
 
 	r := &pbds.CreateStrategyReq{
@@ -56,7 +55,7 @@ func (s *Service) CreateStrategy(ctx context.Context, req *pbcs.CreateStrategyRe
 			Name:      req.Name,
 			ReleaseId: req.ReleaseId,
 			AsDefault: req.AsDefault,
-			Scope:     &pbstrategy.Scope{
+			Scope: &pbstrategy.Scope{
 				Groups: groups,
 			},
 			Namespace: req.Namespace,
@@ -65,13 +64,11 @@ func (s *Service) CreateStrategy(ctx context.Context, req *pbcs.CreateStrategyRe
 	}
 	rp, err := s.client.DS.CreateStrategy(grpcKit.RpcCtx(), r)
 	if err != nil {
-		errf.Error(err).AssignResp(grpcKit, resp)
 		logs.Errorf("create strategy failed, err: %v, rid: %s", err, grpcKit.Rid)
-		return resp, nil
+		return nil, err
 	}
 
-	resp.Code = errf.OK
-	resp.Data = &pbcs.CreateStrategyResp_RespData{
+	resp = &pbcs.CreateStrategyResp{
 		Id: rp.Id,
 	}
 	return resp, nil
@@ -86,7 +83,7 @@ func (s *Service) DeleteStrategy(ctx context.Context, req *pbcs.DeleteStrategyRe
 		ResourceID: req.AppId}, BizID: req.BizId}
 	err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res)
 	if err != nil {
-		return resp, nil
+		return nil, err
 	}
 
 	r := &pbds.DeleteStrategyReq{
@@ -98,12 +95,10 @@ func (s *Service) DeleteStrategy(ctx context.Context, req *pbcs.DeleteStrategyRe
 	}
 	_, err = s.client.DS.DeleteStrategy(grpcKit.RpcCtx(), r)
 	if err != nil {
-		errf.Error(err).AssignResp(grpcKit, resp)
 		logs.Errorf("delete strategy failed, err: %v, rid: %s", err, grpcKit.Rid)
-		return resp, nil
+		return nil, err
 	}
 
-	resp.Code = errf.OK
 	return resp, nil
 }
 
@@ -116,13 +111,12 @@ func (s *Service) UpdateStrategy(ctx context.Context, req *pbcs.UpdateStrategyRe
 		ResourceID: req.AppId}, BizID: req.BizId}
 	err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res)
 	if err != nil {
-		return resp, nil
+		return nil, err
 	}
 
 	groups, err := s.queryGroups(grpcKit.RpcCtx(), req.BizId, req.AppId, req.Groups)
 	if err != nil {
-		errf.Error(err).AssignResp(grpcKit, resp)
-		return resp, nil
+		return nil, err
 	}
 
 	r := &pbds.UpdateStrategyReq{
@@ -135,20 +129,18 @@ func (s *Service) UpdateStrategy(ctx context.Context, req *pbcs.UpdateStrategyRe
 			Name:      req.Name,
 			ReleaseId: req.ReleaseId,
 			AsDefault: req.AsDefault,
-			Scope:     &pbstrategy.Scope{
+			Scope: &pbstrategy.Scope{
 				Groups: groups,
 			},
-			Memo:      req.Memo,
+			Memo: req.Memo,
 		},
 	}
 	_, err = s.client.DS.UpdateStrategy(grpcKit.RpcCtx(), r)
 	if err != nil {
-		errf.Error(err).AssignResp(grpcKit, resp)
 		logs.Errorf("update strategy failed, err: %v, rid: %s", err, grpcKit.Rid)
-		return resp, nil
+		return nil, err
 	}
 
-	resp.Code = errf.OK
 	return resp, nil
 }
 
@@ -160,17 +152,15 @@ func (s *Service) ListStrategies(ctx context.Context, req *pbcs.ListStrategiesRe
 	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.Strategy, Action: meta.Find}, BizID: req.BizId}
 	err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res)
 	if err != nil {
-		return resp, nil
+		return nil, err
 	}
 
 	if req.Page == nil {
-		errf.Error(errf.New(errf.InvalidParameter, "page is null")).AssignResp(grpcKit, resp)
-		return resp, nil
+		return nil, errf.New(errf.InvalidParameter, "page is null")
 	}
 
 	if err = req.Page.BasePage().Validate(types.DefaultPageOption); err != nil {
-		errf.Error(err).AssignResp(grpcKit, resp)
-		return resp, nil
+		return nil, err
 	}
 
 	r := &pbds.ListStrategiesReq{
@@ -181,13 +171,11 @@ func (s *Service) ListStrategies(ctx context.Context, req *pbcs.ListStrategiesRe
 	}
 	rp, err := s.client.DS.ListStrategies(grpcKit.RpcCtx(), r)
 	if err != nil {
-		errf.Error(err).AssignResp(grpcKit, resp)
 		logs.Errorf("list strategies failed, err: %v, rid: %s", err, grpcKit.Rid)
-		return resp, nil
+		return nil, err
 	}
 
-	resp.Code = errf.OK
-	resp.Data = &pbcs.ListStrategiesResp_RespData{
+	resp = &pbcs.ListStrategiesResp{
 		Count:   rp.Count,
 		Details: rp.Details,
 	}

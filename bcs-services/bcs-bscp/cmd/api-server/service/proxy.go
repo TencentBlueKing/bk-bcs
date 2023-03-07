@@ -23,6 +23,7 @@ import (
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/credentials/insecure"
 
 	"bscp.io/pkg/cc"
 	"bscp.io/pkg/dal/repository"
@@ -107,6 +108,7 @@ func (p *proxy) handler() http.Handler {
 	// 服务管理, 配置管理, 分组管理, 发布管理
 	r.Route("/api/v1/config/", func(r chi.Router) {
 		r.Use(p.authorizer.UnifiedAuthentication)
+		r.Use(webannotation.BuildAnnotation(p.authorizer))
 		r.Mount("/", p.cfgSvrMux)
 	})
 
@@ -185,7 +187,7 @@ func newGrpcDialOption(dis serviced.Discover, tls cc.TLSConfig) ([]grpc.DialOpti
 
 	if !tls.Enable() {
 		// dial without ssl
-		opts = append(opts, grpc.WithInsecure())
+		opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	} else {
 		// dial with ssl.
 		tlsC, err := tools.ClientTLSConfVerify(tls.InsecureSkipVerify, tls.CAFile, tls.CertFile, tls.KeyFile,
@@ -203,5 +205,5 @@ func newGrpcDialOption(dis serviced.Discover, tls cc.TLSConfig) ([]grpc.DialOpti
 
 // newGrpcMux new grpc mux that has some processing of built-in http request to grpc request.
 func newGrpcMux() *runtime.ServeMux {
-	return runtime.NewServeMux(grpcgw.MetadataOpt, grpcgw.JsonMarshalerOpt)
+	return runtime.NewServeMux(grpcgw.MetadataOpt, grpcgw.JsonMarshalerOpt, grpcgw.BKErrorHandlerOpt, grpcgw.BSCPResponseOpt)
 }

@@ -100,8 +100,7 @@ func (s *Service) ListCommits(ctx context.Context, req *pbds.ListCommitsReq) (*p
 }
 
 // ListCommits get latest commit by config item id
-func (s *Service) GetLatestCommit(ctx context.Context, req *pbds.GetLatestCommitReq) (*pbds.GetLatestCommitResp,
-	error) {
+func (s *Service) GetLatestCommit(ctx context.Context, req *pbds.GetLatestCommitReq) (*pbcommit.Commit, error) {
 
 	grpcKit := kit.FromGrpcContext(ctx)
 
@@ -110,9 +109,7 @@ func (s *Service) GetLatestCommit(ctx context.Context, req *pbds.GetLatestCommit
 		return nil, err
 	}
 
-	resp := &pbds.GetLatestCommitResp{
-		Data: pbcommit.PbCommit(commit),
-	}
+	resp := pbcommit.PbCommit(commit)
 	return resp, nil
 }
 

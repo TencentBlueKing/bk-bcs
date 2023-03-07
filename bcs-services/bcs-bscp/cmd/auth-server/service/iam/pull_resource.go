@@ -14,6 +14,7 @@ package iam
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"bscp.io/cmd/auth-server/types"
@@ -31,14 +32,12 @@ func (i *IAM) PullResource(ctx context.Context, req *pbas.PullResourceReq) (*pba
 	// if auth is disabled, returns error if iam calls pull resource callback function
 	if i.disableAuth {
 		err := errf.New(errf.Aborted, "authorize function is disabled, can not pull auth resource.")
-		errf.Error(err).AssignResp(kt, resp)
 		logs.Errorf("authorize function is disabled, can not pull auth resource, rid: %s", kt.Rid)
 		return nil, err
 	}
 
 	query, err := req.PullResourceReq()
 	if err != nil {
-		errf.Error(err).AssignResp(kt, resp)
 		logs.Errorf("pb pull resource request convert failed, err: %v, rid: %s", err, kt.Rid)
 		return resp, nil
 	}
@@ -49,70 +48,59 @@ func (i *IAM) PullResource(ctx context.Context, req *pbas.PullResourceReq) (*pba
 		filter, ok := query.Filter.(types.ListInstanceFilter)
 		if !ok {
 			logs.Errorf("filter %v is not the right type for list_instance method, rid: %s", filter, kt.Rid)
-			resp.SetCodeMsg(errf.InvalidParameter, "filter type not right")
-			return resp, nil
+			return nil, errors.New("filter type not right")
 		}
 
 		instance, err := i.ListInstances(kt, query.Type, &filter, query.Page)
 		if err != nil {
 			logs.Errorf("list instance failed, err: %v, rid: %s", err, kt.Rid)
-			errf.Error(err).AssignResp(kt, resp)
-			return resp, nil
+			return nil, err
 		}
 
 		if err = resp.SetData(instance); err != nil {
-			errf.Error(err).AssignResp(kt, resp)
 			logs.Errorf("set data failed, err: %v, rid: %s", err, kt.Rid)
-			return resp, nil
+			return nil, err
 		}
 
 	case types.FetchInstanceInfoMethod:
 		filter, ok := query.Filter.(types.FetchInstanceInfoFilter)
 		if !ok {
 			logs.Errorf("filter %v is not the right type for fetch_instance_info method, rid: %s", filter, kt.Rid)
-			resp.SetCodeMsg(errf.InvalidParameter, "filter type not right")
-			return resp, nil
+			return nil, errors.New("filter type not right")
 		}
 
 		info, err := i.FetchInstanceInfo(kt, query.Type, &filter)
 		if err != nil {
 			logs.Errorf("fetch instance info failed, err: %v, rid: %s", err, kt.Rid)
-			errf.Error(err).AssignResp(kt, resp)
-			return resp, nil
+			return nil, err
 		}
 
 		if err = resp.SetData(info); err != nil {
-			errf.Error(err).AssignResp(kt, resp)
 			logs.Errorf("set data failed, err: %v, rid: %s", err, kt.Rid)
-			return resp, nil
+			return nil, err
 		}
 
 	case types.ListAttrMethod:
 		// attribute authentication is not needed for the time being,
 		// so the interface does not need to be implemented
 		logs.Errorf("pull resource method list_attr not support, rid: %s", kt.Rid)
-		resp.SetCodeMsg(errf.InvalidParameter, "list_attr not support")
-		return resp, nil
+		return resp, errors.New("list_attr not support")
 
 	case types.ListAttrValueMethod:
 		// attribute authentication is not needed for the time being,
 		// so the interface does not need to be implemented
 		logs.Errorf("pull resource method list_attr_value not support, rid: %s", kt.Rid)
-		resp.SetCodeMsg(errf.InvalidParameter, "list_attr_value not support")
-		return resp, nil
+		return resp, errors.New("list_attr_value not support")
 
 	case types.ListInstanceByPolicyMethod:
 		// sdk authentication is used, and there is no need to support this interface.
 		logs.Errorf("pull resource method list_instance_by_policy not support, rid: %s", kt.Rid)
-		resp.SetCodeMsg(errf.InvalidParameter, "list_instance_by_policy not support")
-		return resp, nil
+		return resp, errors.New("list_instance_by_policy not support")
 
 	default:
 		logs.Errorf("pull resource method %s not support, rid: %s", query.Method, kt.Rid)
-		resp.SetCodeMsg(errf.InvalidParameter, fmt.Sprintf("%s not support", query.Method))
-		return resp, nil
+		return resp, fmt.Errorf("%s not support", query.Method)
 	}
 
-	resp.Code = types.SuccessCode
 	return resp, nil
 }

@@ -53,23 +53,19 @@ func (i *Initial) InitAuthCenter(ctx context.Context, req *pbas.InitAuthCenterRe
 	// if auth is disabled, returns error if user wants to init auth center
 	if i.disableAuth {
 		err := errf.New(errf.Aborted, "authorize function is disabled, can not init auth center.")
-		errf.Error(err).AssignResp(kt, resp)
 		logs.Errorf("authorize function is disabled, can not init auth center, rid: %s", kt.Rid)
 		return nil, err
 	}
 
 	if err := req.Validate(); err != nil {
-		errf.Error(err).AssignResp(kt, resp)
 		logs.Errorf("request param validate failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
 	}
 
 	if err := i.iamSys.Register(kt.Ctx, req.Host); err != nil {
-		errf.Error(err).AssignResp(kt, resp)
 		logs.Errorf("register to iam failed, err: %v, rid: %s", err, kt.Rid)
 		return resp, nil
 	}
 
-	resp.Code = errf.OK
 	return resp, nil
 }

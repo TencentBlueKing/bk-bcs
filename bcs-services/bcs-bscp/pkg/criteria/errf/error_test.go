@@ -15,8 +15,6 @@ package errf
 import (
 	"encoding/json"
 	"testing"
-
-	"bscp.io/pkg/kit"
 )
 
 func TestWrap(t *testing.T) {
@@ -39,24 +37,5 @@ func TestWrap(t *testing.T) {
 	if compare.Code != Unknown || compare.Message != "unknown error" {
 		t.Errorf("invalid error format, parse error info failed")
 		return
-	}
-}
-
-func TestAssignResp(t *testing.T) {
-	type BaseResp struct {
-		Code    int32
-		Message string
-	}
-
-	ef := &ErrorF{
-		Code:    Unknown,
-		Message: "unknown error",
-	}
-
-	resp := new(BaseResp)
-	ef.AssignResp(kit.New(), resp)
-
-	if !(resp.Code == ef.Code && resp.Message == ef.Message) {
-		t.Error("errorF assign code message failed")
 	}
 }

@@ -1,6 +1,5 @@
 syntax = "proto3";
 
-import "bscp.io/pkg/protocol/auth-server/auth_server.proto";
 import "bscp.io/pkg/protocol/core/base/base.proto";
 import "bscp.io/pkg/protocol/core/app/app.proto";
 import "bscp.io/pkg/protocol/core/config-item/config_item.proto";
@@ -43,7 +42,7 @@ service Config {
             delete: "/api/v1/config/delete/app/app/app_id/{id}/biz_id/{biz_id}"
         };
     }
-    rpc GetApp(GetAppReq) returns (GetAppResp) {
+    rpc GetApp(GetAppReq) returns (pbapp.App) {
         option (google.api.http) = {
             get: "/api/v1/config/get/app/app/app_id/{app_id}/biz_id/{biz_id}"
         };
@@ -273,13 +272,8 @@ message ListBizResp {
         string biz_name                = 2;
         repeated string biz_maintainer = 3;
     }
-    message RespData {
-        repeated BizData biz_list = 1;
-    }
 
-    int32 code     = 1;
-    string message = 2;
-    RespData data  = 3;
+    repeated BizData biz_list = 1;
 }
 
 message CreateAppReq {
@@ -293,14 +287,7 @@ message CreateAppReq {
 }
 
 message CreateAppResp {
-    message RespData {
-        uint32 id = 1;
-    }
-
-    int32 code                    = 1;
-    string message                = 2;
-    RespData data                 = 3;
-    pbas.IamPermission permission = 4;
+    uint32 id = 1;
 }
 
 message UpdateAppReq {
@@ -312,33 +299,18 @@ message UpdateAppReq {
     string reload_file_path = 6;
 }
 
-message UpdateAppResp {
-    int32 code                    = 1;
-    string message                = 2;
-    pbas.IamPermission permission = 3;
-}
+message UpdateAppResp {}
 
 message DeleteAppReq {
     uint32 id     = 1;
     uint32 biz_id = 2;
 }
 
-message DeleteAppResp {
-    int32 code                    = 1;
-    string message                = 2;
-    pbas.IamPermission permission = 3;
-}
+message DeleteAppResp {}
 
 message GetAppReq {
     uint32 biz_id = 1;
     uint32 app_id = 2;
-}
-
-message GetAppResp {
-    int32 code                    = 1;
-    string message                = 2;
-    pbapp.App data                = 3;
-    pbas.IamPermission permission = 4;
 }
 
 message ListAppsReq {
@@ -363,15 +335,8 @@ message ListAppsBySpaceRestReq {
 }
 
 message ListAppsResp {
-    message RespData {
-        uint32 count               = 1;
-        repeated pbapp.App details = 2;
-    }
-
-    int32 code                    = 1;
-    string message                = 2;
-    RespData data                 = 3;
-    pbas.IamPermission permission = 4;
+    uint32 count               = 1;
+    repeated pbapp.App details = 2;
 }
 
 message CreateConfigItemReq {
@@ -390,14 +355,7 @@ message CreateConfigItemReq {
 }
 
 message CreateConfigItemResp {
-    message RespData {
-        uint32 id = 1;
-    }
-
-    int32 code                    = 1;
-    string message                = 2;
-    RespData data                 = 3;
-    pbas.IamPermission permission = 4;
+    uint32 id = 1;
 }
 
 message UpdateConfigItemReq {
@@ -416,11 +374,7 @@ message UpdateConfigItemReq {
     uint64 byte_size  = 13;
 }
 
-message UpdateConfigItemResp {
-    int32 code                    = 1;
-    string message                = 2;
-    pbas.IamPermission permission = 3;
-}
+message UpdateConfigItemResp {}
 
 message DeleteConfigItemReq {
     uint32 id     = 1;
@@ -428,11 +382,7 @@ message DeleteConfigItemReq {
     uint32 app_id = 3;
 }
 
-message DeleteConfigItemResp {
-    int32 code                    = 1;
-    string message                = 2;
-    pbas.IamPermission permission = 3;
-}
+message DeleteConfigItemResp {}
 
 message GetConfigItemReq {
     uint32 id     = 1;
@@ -441,14 +391,8 @@ message GetConfigItemReq {
 }
 
 message GetConfigItemResp {
-    message RespData {
-        pbci.ConfigItem config_item = 1;
-        pbcontent.Content content   = 2;
-    }
-    int32 code                    = 1;
-    string message                = 2;
-    RespData data                 = 3;
-    pbas.IamPermission permission = 4;
+    pbci.ConfigItem config_item = 1;
+    pbcontent.Content content   = 2;
 }
 
 message ListConfigItemsReq {
@@ -459,15 +403,8 @@ message ListConfigItemsReq {
 }
 
 message ListConfigItemsResp {
-    message RespData {
-        uint32 count                     = 1;
-        repeated pbci.ConfigItem details = 2;
-    }
-
-    int32 code                    = 1;
-    string message                = 2;
-    RespData data                 = 3;
-    pbas.IamPermission permission = 4;
+    uint32 count                     = 1;
+    repeated pbci.ConfigItem details = 2;
 }
 
 message CreateContentReq {
@@ -479,14 +416,7 @@ message CreateContentReq {
 }
 
 message CreateContentResp {
-    message RespData {
-        uint32 id = 1;
-    }
-
-    int32 code                    = 1;
-    string message                = 2;
-    RespData data                 = 3;
-    pbas.IamPermission permission = 4;
+    uint32 id = 1;
 }
 
 message ListContentsReq {
@@ -497,15 +427,8 @@ message ListContentsReq {
 }
 
 message ListContentsResp {
-    message RespData {
-        uint32 count                       = 1;
-        repeated pbcontent.Content details = 2;
-    }
-
-    int32 code                    = 1;
-    string message                = 2;
-    RespData data                 = 3;
-    pbas.IamPermission permission = 4;
+    uint32 count                       = 1;
+    repeated pbcontent.Content details = 2;
 }
 
 message CreateCommitReq {
@@ -517,14 +440,7 @@ message CreateCommitReq {
 }
 
 message CreateCommitResp {
-    message RespData {
-        uint32 id = 1;
-    }
-
-    int32 code                    = 1;
-    string message                = 2;
-    RespData data                 = 3;
-    pbas.IamPermission permission = 4;
+    uint32 id = 1;
 }
 
 message ListCommitsReq {
@@ -535,15 +451,8 @@ message ListCommitsReq {
 }
 
 message ListCommitsResp {
-    message RespData {
-        uint32 count                     = 1;
-        repeated pbcommit.Commit details = 2;
-    }
-
-    int32 code                    = 1;
-    string message                = 2;
-    RespData data                 = 3;
-    pbas.IamPermission permission = 4;
+    uint32 count                     = 1;
+    repeated pbcommit.Commit details = 2;
 }
 
 message CreateReleaseReq {
@@ -554,14 +463,7 @@ message CreateReleaseReq {
 }
 
 message CreateReleaseResp {
-    message RespData {
-        uint32 id = 1;
-    }
-
-    int32 code                    = 1;
-    string message                = 2;
-    RespData data                 = 3;
-    pbas.IamPermission permission = 4;
+    uint32 id = 1;
 }
 
 message ListReleasesReq {
@@ -572,15 +474,8 @@ message ListReleasesReq {
 }
 
 message ListReleasesResp {
-    message RespData {
-        uint32 count                       = 1;
-        repeated pbrelease.Release details = 2;
-    }
-
-    int32 code                    = 1;
-    string message                = 2;
-    RespData data                 = 3;
-    pbas.IamPermission permission = 4;
+    uint32 count                       = 1;
+    repeated pbrelease.Release details = 2;
 }
 
 message ListReleasedConfigItemsReq {
@@ -591,15 +486,8 @@ message ListReleasedConfigItemsReq {
 }
 
 message ListReleasedConfigItemsResp {
-    message RespData {
-        uint32 count                              = 1;
-        repeated pbrci.ReleasedConfigItem details = 2;
-    }
-
-    int32 code                    = 1;
-    string message                = 2;
-    RespData data                 = 3;
-    pbas.IamPermission permission = 4;
+    uint32 count                              = 1;
+    repeated pbrci.ReleasedConfigItem details = 2;
 }
 
 message CreateStrategySetReq {
@@ -610,14 +498,7 @@ message CreateStrategySetReq {
 }
 
 message CreateStrategySetResp {
-    message RespData {
-        uint32 id = 1;
-    }
-
-    int32 code                    = 1;
-    string message                = 2;
-    RespData data                 = 3;
-    pbas.IamPermission permission = 4;
+    uint32 id = 1;
 }
 
 message UpdateStrategySetReq {
@@ -628,11 +509,7 @@ message UpdateStrategySetReq {
     string memo   = 5;
 }
 
-message UpdateStrategySetResp {
-    int32 code                    = 1;
-    string message                = 2;
-    pbas.IamPermission permission = 3;
-}
+message UpdateStrategySetResp {}
 
 message DeleteStrategySetReq {
     uint32 id     = 1;
@@ -640,10 +517,7 @@ message DeleteStrategySetReq {
     uint32 app_id = 3;
 }
 
-message DeleteStrategySetResp {
-    int32 code     = 1;
-    string message = 2;
-}
+message DeleteStrategySetResp {}
 
 message ListStrategySetsReq {
     uint32 biz_id                 = 1;
@@ -653,15 +527,8 @@ message ListStrategySetsReq {
 }
 
 message ListStrategySetsResp {
-    message RespData {
-        uint32 count                      = 1;
-        repeated pbss.StrategySet details = 2;
-    }
-
-    int32 code                    = 1;
-    string message                = 2;
-    RespData data                 = 3;
-    pbas.IamPermission permission = 4;
+    uint32 count                      = 1;
+    repeated pbss.StrategySet details = 2;
 }
 
 message CreateStrategyReq {
@@ -677,14 +544,7 @@ message CreateStrategyReq {
 }
 
 message CreateStrategyResp {
-    message RespData {
-        uint32 id = 1;
-    }
-
-    int32 code                    = 1;
-    string message                = 2;
-    RespData data                 = 3;
-    pbas.IamPermission permission = 4;
+    uint32 id = 1;
 }
 
 message UpdateStrategyReq {
@@ -698,11 +558,7 @@ message UpdateStrategyReq {
     string memo            = 8;
 }
 
-message UpdateStrategyResp {
-    int32 code                    = 1;
-    string message                = 2;
-    pbas.IamPermission permission = 3;
-}
+message UpdateStrategyResp {}
 
 message DeleteStrategyReq {
     uint32 id     = 1;
@@ -710,11 +566,7 @@ message DeleteStrategyReq {
     uint32 app_id = 3;
 }
 
-message DeleteStrategyResp {
-    int32 code                    = 1;
-    string message                = 2;
-    pbas.IamPermission permission = 3;
-}
+message DeleteStrategyResp {}
 
 message ListStrategiesReq {
     uint32 biz_id                 = 1;
@@ -724,15 +576,8 @@ message ListStrategiesReq {
 }
 
 message ListStrategiesResp {
-    message RespData {
-        uint32 count                         = 1;
-        repeated pbstrategy.Strategy details = 2;
-    }
-
-    int32 code                    = 1;
-    string message                = 2;
-    RespData data                 = 3;
-    pbas.IamPermission permission = 4;
+    uint32 count                         = 1;
+    repeated pbstrategy.Strategy details = 2;
 }
 
 message CreateGroupReq {
@@ -746,14 +591,7 @@ message CreateGroupReq {
 }
 
 message CreateGroupResp {
-    message RespData {
-        uint32 id = 1;
-    }
-
-    int32 code                    = 1;
-    string message                = 2;
-    RespData data                 = 3;
-    pbas.IamPermission permission = 4;
+    uint32 id = 1;
 }
 
 message UpdateGroupReq {
@@ -768,9 +606,6 @@ message UpdateGroupReq {
 }
 
 message UpdateGroupResp {
-    int32 code                    = 1;
-    string message                = 2;
-    pbas.IamPermission permission = 3;
 }
 
 message DeleteGroupReq {
@@ -779,11 +614,7 @@ message DeleteGroupReq {
     uint32 app_id = 3;
 }
 
-message DeleteGroupResp {
-    int32 code                    = 1;
-    string message                = 2;
-    pbas.IamPermission permission = 3;
-}
+message DeleteGroupResp {}
 
 message ListGroupsReq {
     uint32 biz_id                 = 1;
@@ -793,15 +624,8 @@ message ListGroupsReq {
 }
 
 message ListGroupsResp {
-    message RespData {
-        uint32 count                   = 1;
-        repeated pbgroup.Group details = 2;
-    }
-
-    int32 code                    = 1;
-    string message                = 2;
-    RespData data                 = 3;
-    pbas.IamPermission permission = 4;
+    uint32 count                   = 1;
+    repeated pbgroup.Group details = 2;
 }
 
 message CreateGroupCategoryReq {
@@ -811,14 +635,7 @@ message CreateGroupCategoryReq {
 }
 
 message CreateGroupCategoryResp {
-    message RespData {
-        uint32 id = 1;
-    }
-
-    int32 code                    = 1;
-    string message                = 2;
-    RespData data                 = 3;
-    pbas.IamPermission permission = 4;
+    uint32 id = 1;
 }
 
 message DeleteGroupCategoryReq {
@@ -827,11 +644,7 @@ message DeleteGroupCategoryReq {
     uint32 app_id = 3;
 }
 
-message DeleteGroupCategoryResp {
-    int32 code                    = 1;
-    string message                = 2;
-    pbas.IamPermission permission = 3;
-}
+message DeleteGroupCategoryResp {}
 
 message PublishReq {
     uint32 biz_id          = 1;
@@ -842,14 +655,7 @@ message PublishReq {
 }
 
 message PublishResp {
-    message RespData {
-        uint32 id = 1;
-    }
-
-    int32 code                    = 1;
-    string message                = 2;
-    RespData data                 = 3;
-    pbas.IamPermission permission = 4;
+    uint32 id = 1;
 }
 
 message FinishPublishReq {
@@ -858,11 +664,7 @@ message FinishPublishReq {
     uint32 id     = 3;
 }
 
-message FinishPublishResp {
-    int32 code                    = 1;
-    string message                = 2;
-    pbas.IamPermission permission = 3;
-}
+message FinishPublishResp {}
 
 message ListPubStrategyHistoriesReq {
     uint32 biz_id                 = 1;
@@ -872,15 +674,8 @@ message ListPubStrategyHistoriesReq {
 }
 
 message ListPubStrategyHistoriesResp {
-    message RespData {
-        uint32 count                                         = 1;
-        repeated pbstrategy.PublishedStrategyHistory details = 2;
-    }
-
-    int32 code                    = 1;
-    string message                = 2;
-    RespData data                 = 3;
-    pbas.IamPermission permission = 4;
+    uint32 count                                         = 1;
+    repeated pbstrategy.PublishedStrategyHistory details = 2;
 }
 
 message PublishInstanceReq {
@@ -892,14 +687,7 @@ message PublishInstanceReq {
 }
 
 message PublishInstanceResp {
-    message RespData {
-        uint32 id = 1;
-    }
-
-    int32 code                    = 1;
-    string message                = 2;
-    RespData data                 = 3;
-    pbas.IamPermission permission = 4;
+    uint32 id = 1;
 }
 
 message DeletePublishedInstanceReq {
@@ -908,11 +696,7 @@ message DeletePublishedInstanceReq {
     uint32 app_id = 3;
 }
 
-message DeletePublishedInstanceResp {
-    int32 code                    = 1;
-    string message                = 2;
-    pbas.IamPermission permission = 3;
-}
+message DeletePublishedInstanceResp {}
 
 message ListPublishedInstanceReq {
     uint32 biz_id                 = 1;
@@ -921,13 +705,6 @@ message ListPublishedInstanceReq {
 }
 
 message ListPublishedInstanceResp {
-    message RespData {
-        uint32 count                                        = 1;
-        repeated pbinstance.CurrentReleasedInstance details = 2;
-    }
-
-    int32 code                    = 1;
-    string message                = 2;
-    RespData data                 = 3;
-    pbas.IamPermission permission = 4;
+    uint32 count                                        = 1;
+    repeated pbinstance.CurrentReleasedInstance details = 2;
 }

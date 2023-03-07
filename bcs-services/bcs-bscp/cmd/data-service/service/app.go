@@ -100,7 +100,7 @@ func (s *Service) DeleteApp(ctx context.Context, req *pbds.DeleteAppReq) (*pbbas
 }
 
 // GetApp get apps by app id.
-func (s *Service) GetApp(ctx context.Context, req *pbds.GetAppReq) (*pbds.GetAppResp, error) {
+func (s *Service) GetApp(ctx context.Context, req *pbds.GetAppReq) (*pbapp.App, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
 
 	app, err := s.dao.App().Get(grpcKit, req.BizId, req.AppId)
@@ -109,10 +109,7 @@ func (s *Service) GetApp(ctx context.Context, req *pbds.GetAppReq) (*pbds.GetApp
 		return nil, err
 	}
 
-	resp := &pbds.GetAppResp{
-		Data: pbapp.PbApp(app),
-	}
-	return resp, nil
+	return pbapp.PbApp(app), nil
 }
 
 // ListApps list apps by query condition.

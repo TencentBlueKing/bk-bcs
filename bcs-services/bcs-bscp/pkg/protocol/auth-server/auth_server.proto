@@ -51,10 +51,7 @@ message InitAuthCenterReq {
     string host = 1;
 }
 
-message InitAuthCenterResp {
-    int32 code     = 1;
-    string message = 2;
-}
+message InitAuthCenterResp {}
 
 message PullResourceReq {
     string type                   = 1;
@@ -64,9 +61,7 @@ message PullResourceReq {
 }
 
 message PullResourceResp {
-    int32 code                  = 1;
-    string message              = 2;
-    google.protobuf.Struct data = 3;
+    google.protobuf.Struct data = 1;
 }
 
 message Page {
@@ -95,9 +90,7 @@ message Basic {
 }
 
 message AuthorizeBatchResp {
-    int32 code                  = 1;
-    string message              = 2;
-    repeated Decision decisions = 3;
+    repeated Decision decisions = 1;
 }
 
 message Decision {
@@ -109,9 +102,7 @@ message GetPermissionToApplyReq {
 }
 
 message GetPermissionToApplyResp {
-    int32 code               = 1;
-    string message           = 2;
-    IamPermission permission = 3;
+    IamPermission permission = 1;
 }
 
 message IamPermission {

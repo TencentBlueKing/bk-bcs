@@ -7,6 +7,7 @@
 package pbcs
 
 import (
+	app "bscp.io/pkg/protocol/core/app"
 	context "context"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
@@ -26,7 +27,7 @@ type ConfigClient interface {
 	CreateApp(ctx context.Context, in *CreateAppReq, opts ...grpc.CallOption) (*CreateAppResp, error)
 	UpdateApp(ctx context.Context, in *UpdateAppReq, opts ...grpc.CallOption) (*UpdateAppResp, error)
 	DeleteApp(ctx context.Context, in *DeleteAppReq, opts ...grpc.CallOption) (*DeleteAppResp, error)
-	GetApp(ctx context.Context, in *GetAppReq, opts ...grpc.CallOption) (*GetAppResp, error)
+	GetApp(ctx context.Context, in *GetAppReq, opts ...grpc.CallOption) (*app.App, error)
 	ListApps(ctx context.Context, in *ListAppsReq, opts ...grpc.CallOption) (*ListAppsResp, error)
 	// 获取用户有权限的 spaces 所有的 apps
 	ListAppsRest(ctx context.Context, in *ListAppsRestReq, opts ...grpc.CallOption) (*ListAppsResp, error)
@@ -110,8 +111,8 @@ func (c *configClient) DeleteApp(ctx context.Context, in *DeleteAppReq, opts ...
 	return out, nil
 }
 
-func (c *configClient) GetApp(ctx context.Context, in *GetAppReq, opts ...grpc.CallOption) (*GetAppResp, error) {
-	out := new(GetAppResp)
+func (c *configClient) GetApp(ctx context.Context, in *GetAppReq, opts ...grpc.CallOption) (*app.App, error) {
+	out := new(app.App)
 	err := c.cc.Invoke(ctx, "/pbcs.Config/GetApp", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -442,7 +443,7 @@ type ConfigServer interface {
 	CreateApp(context.Context, *CreateAppReq) (*CreateAppResp, error)
 	UpdateApp(context.Context, *UpdateAppReq) (*UpdateAppResp, error)
 	DeleteApp(context.Context, *DeleteAppReq) (*DeleteAppResp, error)
-	GetApp(context.Context, *GetAppReq) (*GetAppResp, error)
+	GetApp(context.Context, *GetAppReq) (*app.App, error)
 	ListApps(context.Context, *ListAppsReq) (*ListAppsResp, error)
 	// 获取用户有权限的 spaces 所有的 apps
 	ListAppsRest(context.Context, *ListAppsRestReq) (*ListAppsResp, error)
@@ -498,7 +499,7 @@ func (UnimplementedConfigServer) UpdateApp(context.Context, *UpdateAppReq) (*Upd
 func (UnimplementedConfigServer) DeleteApp(context.Context, *DeleteAppReq) (*DeleteAppResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteApp not implemented")
 }
-func (UnimplementedConfigServer) GetApp(context.Context, *GetAppReq) (*GetAppResp, error) {
+func (UnimplementedConfigServer) GetApp(context.Context, *GetAppReq) (*app.App, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetApp not implemented")
 }
 func (UnimplementedConfigServer) ListApps(context.Context, *ListAppsReq) (*ListAppsResp, error) {

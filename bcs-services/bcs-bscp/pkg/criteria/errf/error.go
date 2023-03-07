@@ -15,11 +15,10 @@ package errf
 import (
 	"encoding/json"
 	"fmt"
-	"reflect"
 	"strings"
 
-	"bscp.io/pkg/kit"
-	"bscp.io/pkg/logs"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 // ErrorF defines an error with error code and message.
@@ -53,30 +52,6 @@ func (e *ErrorF) Format() string {
 // AssignResp used only to assign the values of the Code and Message
 // fields of ErrorF to the Code and Message fields of the response.
 // Node: resp must be a *struct.
-func (e ErrorF) AssignResp(kit *kit.Kit, resp interface{}) {
-	if reflect.ValueOf(resp).Type().Kind() != reflect.Ptr {
-		logs.ErrorDepthf(1, "response is not pointer, rid: %s", kit.Rid)
-		return
-	}
-
-	if _, ok := reflect.TypeOf(resp).Elem().FieldByName("Code"); !ok {
-		logs.ErrorDepthf(1, "response have not 'Code' field, rid: %s", kit.Rid)
-		return
-	}
-
-	if _, ok := reflect.TypeOf(resp).Elem().FieldByName("Message"); !ok {
-		logs.ErrorDepthf(1, "response have not 'Message' field, rid: %s", kit.Rid)
-		return
-	}
-
-	valueOf := reflect.ValueOf(resp).Elem()
-
-	code := valueOf.FieldByName("Code")
-	code.SetInt(int64(e.Code))
-
-	msg := valueOf.FieldByName("Message")
-	msg.SetString(e.Message)
-}
 
 // New an error with error code and message.
 func New(code int32, message string) error {
@@ -129,4 +104,14 @@ func Error(err error) *ErrorF {
 	}
 
 	return ef
+}
+
+// RPCAborted
+func RPCAborted(format string, a ...interface{}) error {
+	return status.Errorf(codes.Aborted, format, a...)
+}
+
+// RPCAbortedErr
+func RPCAbortedErr(err error) error {
+	return status.Errorf(codes.Aborted, err.Error())
 }
