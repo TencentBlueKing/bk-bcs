@@ -39,6 +39,8 @@ type App interface {
 	Update(kit *kit.Kit, app *table.App) error
 	// get app with id.
 	Get(kit *kit.Kit, BizID, AppID uint32) (*table.App, error)
+	// get app only with id.
+	GetByID(kit *kit.Kit, AppID uint32) (*table.App, error)
 	// List apps with options.
 	List(kit *kit.Kit, opts *types.ListAppsOption) (*types.ListAppDetails, error)
 	// Delete one app instance.
@@ -335,6 +337,19 @@ func (ap *appDao) Get(kit *kit.Kit, bizID uint32, appID uint32) (*table.App, err
 
 	one := new(table.App)
 	err := ap.orm.Do(ap.sd.MustSharding(bizID)).Get(kit.Ctx, one, expr)
+	if err != nil {
+		return nil, fmt.Errorf("get app details failed, err: %v", err)
+	}
+
+	return one, nil
+}
+
+// GetByID 通过 AppId 查询
+func (ap *appDao) GetByID(kit *kit.Kit, appID uint32) (*table.App, error) {
+	expr := fmt.Sprintf(`SELECT %s FROM %s WHERE id = %d`, table.AppColumns.NamedExpr(), table.AppTable, appID)
+
+	one := new(table.App)
+	err := ap.orm.Do(ap.sd.Admin().DB()).Get(kit.Ctx, one, expr)
 	if err != nil {
 		return nil, fmt.Errorf("get app details failed, err: %v", err)
 	}

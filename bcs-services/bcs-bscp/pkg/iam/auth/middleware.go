@@ -17,6 +17,7 @@ import (
 	"errors"
 	"net/http"
 	"path/filepath"
+	"strconv"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/render"
@@ -26,6 +27,7 @@ import (
 	"bscp.io/pkg/components/bkpaas"
 	"bscp.io/pkg/criteria/constant"
 	"bscp.io/pkg/kit"
+	pbas "bscp.io/pkg/protocol/auth-server"
 	"bscp.io/pkg/rest"
 )
 
@@ -101,4 +103,36 @@ func (a authorizer) WebAuthentication(webHost, loginHost string) func(http.Handl
 		}
 		return http.HandlerFunc(fn)
 	}
+}
+
+// AppVerified App校验中间件, 需要放到 UnifiedAuthentication 后面, url 需要添加 {app_id} 变量
+func (a authorizer) AppVerified(next http.Handler) http.Handler {
+	fn := func(w http.ResponseWriter, r *http.Request) {
+		kt := kit.MustGetKit(r.Context())
+		appIDStr := chi.URLParam(r, "app_id")
+		if appIDStr == "" {
+			err := errors.New("app_id is required in url params")
+			render.Render(w, r, rest.BadRequest(err))
+			return
+		}
+
+		appID, err := strconv.Atoi(appIDStr)
+		if err != nil {
+			render.Render(w, r, rest.BadRequest(err))
+			return
+		}
+
+		space, err := a.authClient.QuerySpaceByAppID(r.Context(), &pbas.QuerySpaceByAppIDReq{AppId: uint32(appID)})
+		if err != nil {
+			s := status.Convert(err)
+			render.Render(w, r, rest.BadRequest(errors.New(s.Message())))
+			return
+		}
+
+		kt.SpaceID = space.SpaceId
+		kt.SpaceTypeID = space.SpaceTypeId
+		ctx := kit.WithKit(r.Context(), kt)
+		next.ServeHTTP(w, r.WithContext(ctx))
+	}
+	return http.HandlerFunc(fn)
 }

@@ -105,7 +105,14 @@ func (p *proxy) handler() http.Handler {
 		r.Mount("/", p.authSvrMux)
 	})
 
-	// 服务管理, 配置管理, 分组管理, 发布管理
+	// 规范后的路由，url 需要包含 {app_id} 变量, 使用 AppVerified 中间件校验和初始化 kit.SpaceID 变量
+	r.Route("/api/v1/config/get/app/app/app_id/{app_id}", func(r chi.Router) {
+		r.Use(p.authorizer.UnifiedAuthentication)
+		r.Use(p.authorizer.AppVerified)
+		r.Use(webannotation.BuildAnnotation(p.authorizer))
+		r.Mount("/", p.cfgSvrMux)
+	})
+
 	r.Route("/api/v1/config/", func(r chi.Router) {
 		r.Use(p.authorizer.UnifiedAuthentication)
 		r.Use(webannotation.BuildAnnotation(p.authorizer))
@@ -115,12 +122,14 @@ func (p *proxy) handler() http.Handler {
 	// repo 上传 API
 	r.Route("/api/v1/api/create/content/upload", func(r chi.Router) {
 		r.Use(p.authorizer.UnifiedAuthentication)
+		r.Use(p.authorizer.AppVerified)
 		r.Put("/biz_id/{biz_id}/app_id/{app_id}", p.repoRevProxy.UploadFile)
 	})
 
 	// repo 下载 API
 	r.Route("/api/v1/api/get/content/download", func(r chi.Router) {
 		r.Use(p.authorizer.UnifiedAuthentication)
+		r.Use(p.authorizer.AppVerified)
 		r.Get("/biz_id/{biz_id}/app_id/{app_id}", p.repoRevProxy.DownloadFile)
 	})
 

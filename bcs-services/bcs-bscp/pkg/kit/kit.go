@@ -36,9 +36,11 @@ func New() *Kit {
 }
 
 var (
-	lowRidKey  = strings.ToLower(constant.RidKey)
-	lowUserKey = strings.ToLower(constant.UserKey)
-	lowACKey   = strings.ToLower(constant.AppCodeKey)
+	lowRidKey         = strings.ToLower(constant.RidKey)
+	lowUserKey        = strings.ToLower(constant.UserKey)
+	lowACKey          = strings.ToLower(constant.AppCodeKey)
+	lowSpaceIDKey     = strings.ToLower(constant.SpaceIDKey)
+	lowSpaceTypeIDKey = strings.ToLower(constant.SpaceTypeIDKey)
 )
 
 // FromGrpcContext used only to obtain Kit through grpc context.
@@ -63,6 +65,16 @@ func FromGrpcContext(ctx context.Context) *Kit {
 	appCode := md[lowACKey]
 	if len(appCode) != 0 {
 		kit.AppCode = appCode[0]
+	}
+
+	spaceID := md[lowSpaceIDKey]
+	if len(spaceID) != 0 {
+		kit.SpaceID = spaceID[0]
+	}
+
+	lowSpaceTypeIDKey := md[lowSpaceTypeIDKey]
+	if len(lowSpaceTypeIDKey) != 0 {
+		kit.SpaceTypeID = lowSpaceTypeIDKey[0]
 	}
 
 	kit.Ctx = context.WithValue(kit.Ctx, constant.RidKey, rid)
@@ -100,14 +112,21 @@ func (c *Kit) ContextWithRid() context.Context {
 	return context.WithValue(c.Ctx, constant.RidKey, c.Rid)
 }
 
-// RpcCtx create a new rpc request context, context's metadata is copied current context's metadata info.
-func (c *Kit) RpcCtx() context.Context {
+// RPCMetaData
+func (c *Kit) RPCMetaData() metadata.MD {
 	md := metadata.Pairs(
 		constant.RidKey, c.Rid,
 		constant.UserKey, c.User,
 		constant.AppCodeKey, c.AppCode,
+		constant.SpaceIDKey, c.SpaceID,
+		constant.SpaceTypeIDKey, c.SpaceTypeID,
 	)
-	return metadata.NewOutgoingContext(c.Ctx, md)
+	return md
+}
+
+// RpcCtx create a new rpc request context, context's metadata is copied current context's metadata info.
+func (c *Kit) RpcCtx() context.Context {
+	return metadata.NewOutgoingContext(c.Ctx, c.RPCMetaData())
 }
 
 // CtxWithTimeoutMS create a new context with basic info and timout configuration.

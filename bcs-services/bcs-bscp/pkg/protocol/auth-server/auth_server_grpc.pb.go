@@ -22,6 +22,7 @@ const (
 	Auth_InitAuthCenter_FullMethodName       = "/pbas.Auth/InitAuthCenter"
 	Auth_GetUserInfo_FullMethodName          = "/pbas.Auth/GetUserInfo"
 	Auth_ListUserSpace_FullMethodName        = "/pbas.Auth/ListUserSpace"
+	Auth_QuerySpaceByAppID_FullMethodName    = "/pbas.Auth/QuerySpaceByAppID"
 	Auth_PullResource_FullMethodName         = "/pbas.Auth/PullResource"
 	Auth_AuthorizeBatch_FullMethodName       = "/pbas.Auth/AuthorizeBatch"
 	Auth_GetPermissionToApply_FullMethodName = "/pbas.Auth/GetPermissionToApply"
@@ -37,6 +38,8 @@ type AuthClient interface {
 	// 获取用户鉴权信息
 	GetUserInfo(ctx context.Context, in *UserCredentialReq, opts ...grpc.CallOption) (*UserInfoResp, error)
 	ListUserSpace(ctx context.Context, in *ListUserSpaceReq, opts ...grpc.CallOption) (*ListUserSpaceResp, error)
+	// 通过 AppID 查询 Space 信息
+	QuerySpaceByAppID(ctx context.Context, in *QuerySpaceByAppIDReq, opts ...grpc.CallOption) (*Space, error)
 	// iam pull resource callback.
 	PullResource(ctx context.Context, in *PullResourceReq, opts ...grpc.CallOption) (*PullResourceResp, error)
 	// authorize resource batch.
@@ -75,6 +78,15 @@ func (c *authClient) GetUserInfo(ctx context.Context, in *UserCredentialReq, opt
 func (c *authClient) ListUserSpace(ctx context.Context, in *ListUserSpaceReq, opts ...grpc.CallOption) (*ListUserSpaceResp, error) {
 	out := new(ListUserSpaceResp)
 	err := c.cc.Invoke(ctx, Auth_ListUserSpace_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *authClient) QuerySpaceByAppID(ctx context.Context, in *QuerySpaceByAppIDReq, opts ...grpc.CallOption) (*Space, error) {
+	out := new(Space)
+	err := c.cc.Invoke(ctx, Auth_QuerySpaceByAppID_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -126,6 +138,8 @@ type AuthServer interface {
 	// 获取用户鉴权信息
 	GetUserInfo(context.Context, *UserCredentialReq) (*UserInfoResp, error)
 	ListUserSpace(context.Context, *ListUserSpaceReq) (*ListUserSpaceResp, error)
+	// 通过 AppID 查询 Space 信息
+	QuerySpaceByAppID(context.Context, *QuerySpaceByAppIDReq) (*Space, error)
 	// iam pull resource callback.
 	PullResource(context.Context, *PullResourceReq) (*PullResourceResp, error)
 	// authorize resource batch.
@@ -147,6 +161,9 @@ func (UnimplementedAuthServer) GetUserInfo(context.Context, *UserCredentialReq) 
 }
 func (UnimplementedAuthServer) ListUserSpace(context.Context, *ListUserSpaceReq) (*ListUserSpaceResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListUserSpace not implemented")
+}
+func (UnimplementedAuthServer) QuerySpaceByAppID(context.Context, *QuerySpaceByAppIDReq) (*Space, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method QuerySpaceByAppID not implemented")
 }
 func (UnimplementedAuthServer) PullResource(context.Context, *PullResourceReq) (*PullResourceResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method PullResource not implemented")
@@ -222,6 +239,24 @@ func _Auth_ListUserSpace_Handler(srv interface{}, ctx context.Context, dec func(
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(AuthServer).ListUserSpace(ctx, req.(*ListUserSpaceReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Auth_QuerySpaceByAppID_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QuerySpaceByAppIDReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AuthServer).QuerySpaceByAppID(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Auth_QuerySpaceByAppID_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AuthServer).QuerySpaceByAppID(ctx, req.(*QuerySpaceByAppIDReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -316,6 +351,10 @@ var Auth_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListUserSpace",
 			Handler:    _Auth_ListUserSpace_Handler,
+		},
+		{
+			MethodName: "QuerySpaceByAppID",
+			Handler:    _Auth_QuerySpaceByAppID_Handler,
 		},
 		{
 			MethodName: "PullResource",
