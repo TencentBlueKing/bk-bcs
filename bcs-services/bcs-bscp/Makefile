@@ -5,7 +5,8 @@ VERSION   = $(shell echo ${ENV_BK_BSCP_VERSION})
 DEBUG     = $(shell echo ${ENV_BK_BSCP_ENABLE_DEBUG})
 PREFIX   ?= $(shell pwd)
 export GOBIN=${PREFIX}/.bin
-export PROTOC_VERSION=3.20.0
+# protoc v4.22.0
+export PROTOC_VERSION=22.0
 GOBUILD=CGO_ENABLED=0 go build -trimpath
 
 
@@ -43,10 +44,10 @@ init:
 		unzip -o protoc-${PROTOC_VERSION}-linux-x86_64.zip && \
 		mv -f bin/protoc . && \
 		rm -rf protoc-*.zip* readme.txt bin
-	go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.28.0
-	go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.2.0
-	go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-grpc-gateway@v2.15.0
-	go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-openapiv2@v2.15.0
+	go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.28.1
+	go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.3.0
+	go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-grpc-gateway@v2.15.2
+	go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-openapiv2@v2.15.2
 
 .PHONY: tidy
 tidy:

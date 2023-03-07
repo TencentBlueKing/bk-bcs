@@ -35,12 +35,12 @@ package google.protobuf;
 import "google/protobuf/source_context.proto";
 import "google/protobuf/type.proto";
 
-option csharp_namespace     = "Google.Protobuf.WellKnownTypes";
-option java_package         = "com.google.protobuf";
+option java_package = "com.google.protobuf";
 option java_outer_classname = "ApiProto";
-option java_multiple_files  = true;
-option objc_class_prefix    = "GPB";
-option go_package           = "google.golang.org/protobuf/types/known/apipb";
+option java_multiple_files = true;
+option objc_class_prefix = "GPB";
+option csharp_namespace = "Google.Protobuf.WellKnownTypes";
+option go_package = "google.golang.org/protobuf/types/known/apipb";
 
 // Api is a light-weight descriptor for an API Interface.
 //
@@ -52,72 +52,71 @@ option go_package           = "google.golang.org/protobuf/types/known/apipb";
 // this message itself. See https://cloud.google.com/apis/design/glossary for
 // detailed terminology.
 message Api {
-    // The fully qualified name of this interface, including package name
-    // followed by the interface's simple name.
-    string name = 1;
+  // The fully qualified name of this interface, including package name
+  // followed by the interface's simple name.
+  string name = 1;
 
-    // The methods of this interface, in unspecified order.
-    repeated Method methods = 2;
+  // The methods of this interface, in unspecified order.
+  repeated Method methods = 2;
 
-    // Any metadata attached to the interface.
-    repeated Option options = 3;
+  // Any metadata attached to the interface.
+  repeated Option options = 3;
 
-    // A version string for this interface. If specified, must have the form
-    // `major-version.minor-version`, as in `1.10`. If the minor version is
-    // omitted, it defaults to zero. If the entire version field is empty, the
-    // major version is derived from the package name, as outlined below. If the
-    // field is not empty, the version in the package name will be verified to be
-    // consistent with what is provided here.
-    //
-    // The versioning schema uses [semantic
-    // versioning](http://semver.org) where the major version number
-    // indicates a breaking change and the minor version an additive,
-    // non-breaking change. Both version numbers are signals to users
-    // what to expect from different versions, and should be carefully
-    // chosen based on the product plan.
-    //
-    // The major version is also reflected in the package name of the
-    // interface, which must end in `v<major-version>`, as in
-    // `google.feature.v1`. For major versions 0 and 1, the suffix can
-    // be omitted. Zero major versions must only be used for
-    // experimental, non-GA interfaces.
-    //
-    //
-    string version = 4;
+  // A version string for this interface. If specified, must have the form
+  // `major-version.minor-version`, as in `1.10`. If the minor version is
+  // omitted, it defaults to zero. If the entire version field is empty, the
+  // major version is derived from the package name, as outlined below. If the
+  // field is not empty, the version in the package name will be verified to be
+  // consistent with what is provided here.
+  //
+  // The versioning schema uses [semantic
+  // versioning](http://semver.org) where the major version number
+  // indicates a breaking change and the minor version an additive,
+  // non-breaking change. Both version numbers are signals to users
+  // what to expect from different versions, and should be carefully
+  // chosen based on the product plan.
+  //
+  // The major version is also reflected in the package name of the
+  // interface, which must end in `v<major-version>`, as in
+  // `google.feature.v1`. For major versions 0 and 1, the suffix can
+  // be omitted. Zero major versions must only be used for
+  // experimental, non-GA interfaces.
+  //
+  string version = 4;
 
-    // Source context for the protocol buffer service represented by this
-    // message.
-    SourceContext source_context = 5;
+  // Source context for the protocol buffer service represented by this
+  // message.
+  SourceContext source_context = 5;
 
-    // Included interfaces. See [Mixin][].
-    repeated Mixin mixins = 6;
+  // Included interfaces. See [Mixin][].
+  repeated Mixin mixins = 6;
 
-    // The source syntax of the service.
-    Syntax syntax = 7;
+  // The source syntax of the service.
+  Syntax syntax = 7;
 }
 
 // Method represents a method of an API interface.
 message Method {
-    // The simple name of this method.
-    string name = 1;
+  // The simple name of this method.
+  string name = 1;
 
-    // A URL of the input message type.
-    string request_type_url = 2;
+  // A URL of the input message type.
+  string request_type_url = 2;
 
-    // If true, the request is streamed.
-    bool request_streaming = 3;
+  // If true, the request is streamed.
+  bool request_streaming = 3;
 
-    // The URL of the output message type.
-    string response_type_url = 4;
+  // The URL of the output message type.
+  string response_type_url = 4;
 
-    // If true, the response is streamed.
-    bool response_streaming = 5;
+  // If true, the response is streamed.
+  bool response_streaming = 5;
 
-    // Any metadata attached to the method.
-    repeated Option options = 6;
+  // Any metadata attached to the method.
+  repeated Option options = 6;
 
-    // The source syntax of this method.
-    Syntax syntax = 7;
+  // The source syntax of this method.
+  Syntax syntax = 7;
 }
 
 // Declares an API Interface to be included in this interface. The including
@@ -199,10 +198,10 @@ message Method {
 //       ...
 //     }
 message Mixin {
-    // The fully qualified name of the interface which is included.
-    string name = 1;
+  // The fully qualified name of the interface which is included.
+  string name = 1;
 
-    // If non-empty specifies a path under which inherited HTTP paths
-    // are rooted.
-    string root = 2;
+  // If non-empty specifies a path under which inherited HTTP paths
+  // are rooted.
+  string root = 2;
 }

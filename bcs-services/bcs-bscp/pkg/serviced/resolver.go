@@ -15,14 +15,13 @@ package serviced
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"sync"
-
-	"bscp.io/pkg/logs"
 
 	"go.etcd.io/etcd/api/v3/mvccpb"
 	etcd3 "go.etcd.io/etcd/client/v3"
 	"google.golang.org/grpc/resolver"
+
+	"bscp.io/pkg/logs"
 )
 
 // etcdBuilder creates a resolver that will be used to watch name resolution updates.
@@ -43,7 +42,7 @@ func (b *etcdBuilder) Build(target resolver.Target, cc resolver.ClientConn, opts
 	r := &etcdResolver{
 		cli:    b.cli,
 		cc:     cc,
-		target: fmt.Sprintf("%s", target.Endpoint),
+		target: target.Endpoint(),
 		ctx:    ctx,
 		cancel: cancel,
 	}

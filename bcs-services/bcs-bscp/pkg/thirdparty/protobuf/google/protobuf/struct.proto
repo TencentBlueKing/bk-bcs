@@ -32,13 +32,13 @@ syntax = "proto3";
 
 package google.protobuf;
 
-option csharp_namespace     = "Google.Protobuf.WellKnownTypes";
-option cc_enable_arenas     = true;
-option go_package           = "google.golang.org/protobuf/types/known/structpb";
-option java_package         = "com.google.protobuf";
+option cc_enable_arenas = true;
+option go_package = "google.golang.org/protobuf/types/known/structpb";
+option java_package = "com.google.protobuf";
 option java_outer_classname = "StructProto";
-option java_multiple_files  = true;
-option objc_class_prefix    = "GPB";
+option java_multiple_files = true;
+option objc_class_prefix = "GPB";
+option csharp_namespace = "Google.Protobuf.WellKnownTypes";
 
 // `Struct` represents a structured data value, consisting of fields
 // which map to dynamically typed values. In some languages, `Struct`
@@ -49,8 +49,8 @@ option objc_class_prefix    = "GPB";
 //
 // The JSON representation for `Struct` is JSON object.
 message Struct {
-    // Unordered map of dynamically typed values.
-    map<string, Value> fields = 1;
+  // Unordered map of dynamically typed values.
+  map<string, Value> fields = 1;
 }
 
 // `Value` represents a dynamically typed value which can be either
@@ -60,21 +60,21 @@ message Struct {
 //
 // The JSON representation for `Value` is JSON value.
 message Value {
-    // The kind of value.
-    oneof kind {
-        // Represents a null value.
-        NullValue null_value = 1;
-        // Represents a double value.
-        double number_value = 2;
-        // Represents a string value.
-        string string_value = 3;
-        // Represents a boolean value.
-        bool bool_value = 4;
-        // Represents a structured value.
-        Struct struct_value = 5;
-        // Represents a repeated `Value`.
-        ListValue list_value = 6;
-    }
+  // The kind of value.
+  oneof kind {
+    // Represents a null value.
+    NullValue null_value = 1;
+    // Represents a double value.
+    double number_value = 2;
+    // Represents a string value.
+    string string_value = 3;
+    // Represents a boolean value.
+    bool bool_value = 4;
+    // Represents a structured value.
+    Struct struct_value = 5;
+    // Represents a repeated `Value`.
+    ListValue list_value = 6;
+  }
 }
 
 // `NullValue` is a singleton enumeration to represent the null value for the
@@ -82,14 +82,14 @@ message Value {
 //
 //  The JSON representation for `NullValue` is JSON `null`.
 enum NullValue {
-    // Null value.
-    NULL_VALUE = 0;
+  // Null value.
+  NULL_VALUE = 0;
 }
 
 // `ListValue` is a wrapper around a repeated field of values.
 //
 // The JSON representation for `ListValue` is JSON array.
 message ListValue {
-    // Repeated field of dynamically typed values.
-    repeated Value values = 1;
+  // Repeated field of dynamically typed values.
+  repeated Value values = 1;
 }
