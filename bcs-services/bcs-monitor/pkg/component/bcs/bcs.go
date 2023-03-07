@@ -134,7 +134,7 @@ func GetCluster(ctx context.Context, bcsConf *config.BCSConf, clusterId string) 
 		return nil, err
 	}
 
-	storage.LocalCache.Slot.Set(cacheKey, cluster, storage.LocalCache.DefaultExpiration)
+	storage.LocalCache.Slot.Set(cacheKey, cluster, time.Hour)
 
 	return cluster, nil
 }
