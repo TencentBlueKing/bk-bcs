@@ -391,7 +391,7 @@ func (pd *pubDao) ListPSHistory(kit *kit.Kit, opts *types.ListPSHistoriesOption)
 			},
 		},
 	}
-	whereExpr, err := opts.Filter.SQLWhereExpr(sqlOpt)
+	whereExpr, arg, err := opts.Filter.SQLWhereExpr(sqlOpt)
 	if err != nil {
 		return nil, err
 	}
@@ -401,7 +401,7 @@ func (pd *pubDao) ListPSHistory(kit *kit.Kit, opts *types.ListPSHistoriesOption)
 		// this is a count request, then do count operation only.
 		sql = fmt.Sprintf(`SELECT COUNT(*) FROM %s %s`, table.PublishedStrategyHistoryTable, whereExpr)
 		var count uint32
-		count, err = pd.orm.Do(pd.sd.ShardingOne(opts.BizID).DB()).Count(kit.Ctx, sql)
+		count, err = pd.orm.Do(pd.sd.ShardingOne(opts.BizID).DB()).Count(kit.Ctx, sql, arg)
 		if err != nil {
 			return nil, err
 		}

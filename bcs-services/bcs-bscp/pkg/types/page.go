@@ -269,11 +269,11 @@ func (bp BasePage) SQLExpr(ps *PageSQLOption) (where string, err error) {
 		sort = "id"
 	}
 
-	expr := fmt.Sprintf("ORDER BY %s", sort)
+	expr := fmt.Sprintf(" ORDER BY %s", sort)
 
 	if bp.Start == 0 && bp.Limit == 0 {
 		// this is a special scenario, which means query all the resources at once.
-		return fmt.Sprintf("%s %s", expr, bp.Order.Order()), nil
+		return fmt.Sprintf(" %s %s", expr, bp.Order.Order()), nil
 	}
 
 	// if Start >=1, then Limit can not be 0.
@@ -282,6 +282,6 @@ func (bp BasePage) SQLExpr(ps *PageSQLOption) (where string, err error) {
 	}
 
 	// bp.Limit is > 0, already validated upper.
-	expr = fmt.Sprintf("%s %s LIMIT %d OFFSET %d", expr, bp.Order.Order(), bp.Limit, bp.Start)
+	expr = fmt.Sprintf(" %s %s LIMIT %d OFFSET %d", expr, bp.Order.Order(), bp.Limit, bp.Start)
 	return expr, nil
 }

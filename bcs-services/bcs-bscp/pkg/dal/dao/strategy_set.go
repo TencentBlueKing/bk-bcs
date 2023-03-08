@@ -13,6 +13,7 @@ limitations under the License.
 package dao
 
 import (
+	"bytes"
 	"fmt"
 
 	"bscp.io/pkg/criteria/enumor"
@@ -81,8 +82,10 @@ func (dao *strategySetDao) Create(kit *kit.Kit, ss *table.StrategySet) (uint32, 
 
 	ss.ID = id
 
-	sql := fmt.Sprintf(`INSERT INTO %s (%s)	VALUES(%s)`, table.StrategySetTable,
-		table.StrategySetColumns.ColumnExpr(), table.StrategySetColumns.ColonNameExpr())
+	buff := bytes.NewBuffer([]byte{})
+	buff.WriteString(fmt.Sprintf("INSERT INTO %s", table.StrategySetTable))
+	buff.WriteString(fmt.Sprintf(" (%s) ", table.StrategySetColumns.ColumnExpr()))
+	buff.WriteString(fmt.Sprintf("VALUES(%s)", table.StrategySetColumns.ColonNameExpr()))
 
 	err = dao.sd.ShardingOne(ss.Attachment.BizID).AutoTxn(kit,
 		func(txn *sqlx.Tx, opt *sharding.TxnOption) error {
@@ -90,7 +93,7 @@ func (dao *strategySetDao) Create(kit *kit.Kit, ss *table.StrategySet) (uint32, 
 				return err
 			}
 
-			if err := dao.orm.Txn(txn).Insert(kit.Ctx, sql, ss); err != nil {
+			if err := dao.orm.Txn(txn).Insert(kit.Ctx, buff.String(), ss); err != nil {
 				return err
 			}
 
@@ -136,13 +139,15 @@ func (dao *strategySetDao) Update(kit *kit.Kit, ss *table.StrategySet) error {
 
 	ab := dao.auditDao.Decorator(kit, ss.Attachment.BizID, enumor.StrategySet).PrepareUpdate(ss)
 
-	sql := fmt.Sprintf(`UPDATE %s SET %s WHERE id = %d AND biz_id = %d`,
-		table.StrategySetTable, expr, ss.ID, ss.Attachment.BizID)
+	buff := bytes.NewBuffer([]byte{})
+	buff.WriteString(fmt.Sprintf("UPDATE %s ", table.StrategySetTable))
+	buff.WriteString(fmt.Sprintf("SET %s ", expr))
+	buff.WriteString(fmt.Sprintf("WHERE id = %d AND biz_id = %d", ss.ID, ss.Attachment.BizID))
 
 	err = dao.sd.ShardingOne(ss.Attachment.BizID).AutoTxn(kit,
 		func(txn *sqlx.Tx, opt *sharding.TxnOption) error {
 			var effected int64
-			effected, err = dao.orm.Txn(txn).Update(kit.Ctx, sql, toUpdate)
+			effected, err = dao.orm.Txn(txn).Update(kit.Ctx, buff.String(), toUpdate)
 			if err != nil {
 				logs.Errorf("update strategy set: %d failed, err: %v, rid: %v", ss.ID, err, kit.Rid)
 				return err
@@ -204,17 +209,19 @@ func (dao *strategySetDao) List(kit *kit.Kit, opts *types.ListStrategySetsOption
 			},
 		},
 	}
-	whereExpr, err := opts.Filter.SQLWhereExpr(sqlOpt)
+	whereExpr, arg, err := opts.Filter.SQLWhereExpr(sqlOpt)
 	if err != nil {
 		return nil, err
 	}
 
-	var sql string
+	buff := bytes.NewBuffer([]byte{})
 	if opts.Page.Count {
 		// this is a count request, then do count operation only.
-		sql = fmt.Sprintf(`SELECT COUNT(*) FROM %s %s`, table.StrategySetTable, whereExpr)
+		buff.WriteString("SELECT COUNT(*) FROM ")
+		buff.WriteString(string(table.StrategySetTable))
+		buff.WriteString(whereExpr)
 		var count uint32
-		count, err = dao.orm.Do(dao.sd.ShardingOne(opts.BizID).DB()).Count(kit.Ctx, sql)
+		count, err = dao.orm.Do(dao.sd.ShardingOne(opts.BizID).DB()).Count(kit.Ctx, buff.String(), arg)
 		if err != nil {
 			return nil, err
 		}
@@ -228,11 +235,12 @@ func (dao *strategySetDao) List(kit *kit.Kit, opts *types.ListStrategySetsOption
 		return nil, err
 	}
 
-	sql = fmt.Sprintf(`SELECT %s FROM %s %s %s`,
-		table.StrategySetColumns.NamedExpr(), table.StrategySetTable, whereExpr, pageExpr)
+	buff.WriteString(fmt.Sprintf("SELECT %s ", table.StrategySetColumns.NamedExpr()))
+	buff.WriteString(fmt.Sprintf("FROM %s ", table.StrategySetTable))
+	buff.WriteString(fmt.Sprintf("%s %s", whereExpr, pageExpr))
 
 	list := make([]*table.StrategySet, 0)
-	err = dao.orm.Do(dao.sd.ShardingOne(opts.BizID).DB()).Select(kit.Ctx, &list, sql)
+	err = dao.orm.Do(dao.sd.ShardingOne(opts.BizID).DB()).Select(kit.Ctx, &list, buff.String(), arg)
 	if err != nil {
 		return nil, err
 	}
@@ -262,12 +270,13 @@ func (dao *strategySetDao) Delete(kit *kit.Kit, ss *table.StrategySet) error {
 
 	ab := dao.auditDao.Decorator(kit, ss.Attachment.BizID, enumor.StrategySet).PrepareDelete(ss.ID)
 
-	expr := fmt.Sprintf(`DELETE FROM %s WHERE id = %d AND biz_id = %d`, table.StrategySetTable,
-		ss.ID, ss.Attachment.BizID)
+	buff := bytes.NewBuffer([]byte{})
+	buff.WriteString(fmt.Sprintf("DELETE FROM %s ", table.StrategySetTable))
+	buff.WriteString(fmt.Sprintf("WHERE id = %d AND biz_id = %d", ss.ID, ss.Attachment.BizID))
 
 	err := dao.sd.ShardingOne(ss.Attachment.BizID).AutoTxn(kit, func(txn *sqlx.Tx, opt *sharding.TxnOption) error {
 		// delete the strategy set at first.
-		err := dao.orm.Txn(txn).Delete(kit.Ctx, expr)
+		err := dao.orm.Txn(txn).Delete(kit.Ctx, buff.String())
 		if err != nil {
 			return err
 		}

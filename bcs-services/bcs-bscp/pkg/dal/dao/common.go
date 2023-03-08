@@ -13,6 +13,7 @@ limitations under the License.
 package dao
 
 import (
+	"bytes"
 	"fmt"
 
 	"bscp.io/pkg/dal/orm"
@@ -25,10 +26,11 @@ import (
 func isResExist(kit *kit.Kit, orm orm.Interface, sd *sharding.One, tableName table.Name,
 	whereExpr string) (bool, error) {
 
-	expr := fmt.Sprintf("SELECT EXISTS(SELECT * FROM %s %s)", tableName, whereExpr)
+	buff := bytes.NewBuffer([]byte{})
+	buff.WriteString(fmt.Sprintf("SELECT EXISTS(SELECT * FROM %s %s)", tableName, whereExpr))
 
 	var result int8
-	if err := orm.Do(sd.DB()).Get(kit.Ctx, &result, expr); err != nil {
+	if err := orm.Do(sd.DB()).Get(kit.Ctx, &result, buff.String()); err != nil {
 		return false, err
 	}
 

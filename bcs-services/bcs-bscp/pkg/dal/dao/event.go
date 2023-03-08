@@ -214,7 +214,7 @@ func (ed *eventDao) List(kt *kit.Kit, opts *types.ListEventsOption) (*types.List
 		},
 	}
 
-	whereExpr, err := opts.Filter.SQLWhereExpr(sqlOpt)
+	whereExpr, arg, err := opts.Filter.SQLWhereExpr(sqlOpt)
 	if err != nil {
 		return nil, err
 	}
@@ -223,7 +223,7 @@ func (ed *eventDao) List(kt *kit.Kit, opts *types.ListEventsOption) (*types.List
 		// this is a count request, then do count operation only.
 		sql := fmt.Sprintf(`SELECT COUNT(*) FROM %s %s`, table.EventTable, whereExpr)
 		var count uint32
-		count, err = ed.orm.Do(ed.sd.Event().DB()).Count(kt.Ctx, sql)
+		count, err = ed.orm.Do(ed.sd.Event().DB()).Count(kt.Ctx, sql, arg)
 		if err != nil {
 			return nil, err
 		}
@@ -277,7 +277,7 @@ func (ed *eventDao) ListConsumedEvents(kt *kit.Kit, opts *types.ListEventsOption
 		},
 	}
 
-	whereExpr, err := opts.Filter.SQLWhereExpr(sqlOpt)
+	whereExpr, arg, err := opts.Filter.SQLWhereExpr(sqlOpt)
 	if err != nil {
 		return nil, err
 	}
@@ -293,7 +293,7 @@ func (ed *eventDao) ListConsumedEvents(kt *kit.Kit, opts *types.ListEventsOption
 		whereExpr, subSql, pageExpr)
 
 	list := make([]*table.Event, 0)
-	err = ed.orm.Do(ed.sd.Event().DB()).Select(kt.Ctx, &list, sql)
+	err = ed.orm.Do(ed.sd.Event().DB()).Select(kt.Ctx, &list, sql, arg)
 	if err != nil {
 		return nil, err
 	}

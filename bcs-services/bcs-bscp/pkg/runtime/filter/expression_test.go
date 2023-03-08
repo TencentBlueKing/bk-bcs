@@ -88,15 +88,18 @@ func TestExpressionAnd(t *testing.T) {
 	}
 
 	opt := &SQLWhereOption{Priority: []string{"servers", "age", "name"}}
-	sql, err := expr.SQLWhereExpr(opt)
+	sql, arg, err := expr.SQLWhereExpr(opt)
 	if err != nil {
 		t.Errorf("generate expression's sql where expression failed, err: %v", err)
 		return
 	}
 
-	if sql != `WHERE servers IN ('api', 'web') AND age > 18 AND age < 30 AND name = 'bscp'` {
+	if sql != ` WHERE servers IN (?, ?) AND age > ? AND age < ? AND name = ?` {
 		t.Errorf("expression's sql where is not expected, sql: %s", sql)
 		return
+	}
+	for i := 0; i < len(arg); i++ {
+		fmt.Println(arg[i])
 	}
 
 }
@@ -142,18 +145,19 @@ func TestExpressionOr(t *testing.T) {
 	}
 
 	opt := &SQLWhereOption{Priority: []string{"servers", "age", "name"}}
-	sql, err := expr.SQLWhereExpr(opt)
+	sql, arg, err := expr.SQLWhereExpr(opt)
 	if err != nil {
 		t.Errorf("generate expression's sql where expression failed, err: %v", err)
 		return
 	}
 
-	if sql != `WHERE servers IN ('api', 'web') OR age > 18 OR age < 30 OR name = 'bscp'` {
+	if sql != ` WHERE servers IN (?, ?) OR age > ? OR age < ? OR name = ?` {
 		t.Errorf("expression's sql where is not expected, sql: %s", sql)
 		return
 	}
 
 	fmt.Println(sql)
+	fmt.Println(arg)
 }
 
 func TestExpressionValidateOption(t *testing.T) {
@@ -277,48 +281,48 @@ func TestCrownSQLWhereExpr(t *testing.T) {
 		},
 	}
 
-	where, err := expr.SQLWhereExpr(opt)
+	where, arg, err := expr.SQLWhereExpr(opt)
 	if err != nil {
 		t.Errorf("generate SQL Where expression failed, err: %v", err)
-		return
+		//return
 	}
 
 	fmt.Println("where AND-AND expr: ", where)
-	if where != `WHERE biz_id = 20 AND age > 18 AND name = 'bscp' AND created_at > '2021-01-01 08:09:10'` {
+	if where != ` WHERE biz_id = ? AND age > ? AND name = ? AND created_at > ?` {
 		t.Errorf("generate SQL AND-AND Where expression failed, err: %v", err)
-		return
+		//return
 	}
-
+	fmt.Println("a", arg)
 	expr.Op = And
 	opt.CrownedOption.CrownedOp = Or
-	where, err = expr.SQLWhereExpr(opt)
+	where, arg, err = expr.SQLWhereExpr(opt)
 	if err != nil {
 		t.Errorf("generate SQL Where AND-OR expression failed, err: %v", err)
-		return
+		//return
 	}
 
 	fmt.Println("where AND-OR expr: ", where)
-	if where != `WHERE (biz_id = 20 AND created_at > '2021-01-01 08:09:10') OR (age > 18 AND name = 'bscp')` {
+	if where != ` WHERE (biz_id = ? AND created_at > ?) OR (age > ? AND name = ?)` {
 		t.Errorf("generate SQL AND-OR Where expression failed, where: %v", where)
-		return
+		//return
 	}
-
+	fmt.Println("and", arg)
 	expr.Op = Or
 	opt.CrownedOption.CrownedOp = Or
-	where, err = expr.SQLWhereExpr(opt)
+	where, arg, err = expr.SQLWhereExpr(opt)
 	if err != nil {
 		t.Errorf("generate SQL Where OR-OR expression failed, err: %v", err)
 		return
 	}
 
 	fmt.Println("where OR-OR expr: ", where)
-	if where != `WHERE (biz_id = 20 AND created_at > '2021-01-01 08:09:10') OR age > 18 OR name = 'bscp'` {
+	if where != ` WHERE (biz_id = ? AND created_at > ?) OR age > ? OR name = ?` {
 		t.Errorf("generate SQL OR-OR Where expression failed, where: %v", where)
-		return
+		//return
 	}
-
+	fmt.Println("or", arg)
 	opt.Priority = []string{"age", "biz_id"}
-	where, err = expr.SQLWhereExpr(opt)
+	where, arg, err = expr.SQLWhereExpr(opt)
 	if err != nil {
 		t.Errorf("generate SQL Where OR-OR expression failed, err: %v", err)
 		return
@@ -326,43 +330,43 @@ func TestCrownSQLWhereExpr(t *testing.T) {
 
 	// reverse the priority
 	fmt.Println("where OR-OR-PRIORITY expr: ", where)
-	if where != `WHERE age > 18 OR name = 'bscp' OR (biz_id = 20 AND created_at > '2021-01-01 08:09:10')` {
+	if where != ` WHERE age > ? OR name = ? OR (biz_id = ? AND created_at > ?)` {
 		t.Errorf("generate SQL OR-OR-PRIORITY Where expression failed, where: %v", where)
-		return
+		//return
 	}
-
+	fmt.Println("aa", arg)
 	expr.Op = Or
 	opt.CrownedOption.CrownedOp = And
 	opt.Priority = []string{"biz_id", "age"}
-	where, err = expr.SQLWhereExpr(opt)
+	where, arg, err = expr.SQLWhereExpr(opt)
 	if err != nil {
 		t.Errorf("generate SQL Where OR-AND expression failed, err: %v", err)
 		return
 	}
 
 	fmt.Println("where OR-AND expr: ", where)
-	if where != `WHERE (biz_id = 20 AND created_at > '2021-01-01 08:09:10') AND (age > 18 OR name = 'bscp')` {
+	if where != ` WHERE (biz_id = ? AND created_at > ?) AND (age > ? OR name = ?)` {
 		t.Errorf("generate SQL OR-AND Where expression failed, where: %v", where)
-		return
+		//return
 	}
-
+	fmt.Println("aaa", arg)
 	// test NULL crown rules
 	expr.Rules = []RuleFactory{
 		&AtomRule{Field: "name", Op: "eq", Value: "bscp"},
 		&AtomRule{Field: "age", Op: "gt", Value: 18}}
 	opt.CrownedOption.Rules = make([]RuleFactory, 0)
-	where, err = expr.SQLWhereExpr(opt)
+	where, arg, err = expr.SQLWhereExpr(opt)
 	if err != nil {
 		t.Errorf("generate SQL Where NULL crown expr expression failed, err: %v", err)
 		return
 	}
 
 	fmt.Println("where crown NULL expr: ", where)
-	if where != `WHERE age > 18 OR name = 'bscp'` {
+	if where != ` WHERE age > ? OR name = ?` {
 		t.Errorf("generate SQL Where NULL crown expr expression failed, where: %s", where)
-		return
+		//return
 	}
-
+	fmt.Println("aaaa", arg)
 	// test NULL Expression rules
 	expr.Rules = make([]RuleFactory, 0)
 	opt.CrownedOption.Rules = []RuleFactory{&AtomRule{
@@ -370,22 +374,22 @@ func TestCrownSQLWhereExpr(t *testing.T) {
 		Op:    "eq",
 		Value: 8,
 	}}
-	where, err = expr.SQLWhereExpr(opt)
+	where, arg, err = expr.SQLWhereExpr(opt)
 	if err != nil {
 		t.Errorf("generate SQL Where NULL crown expr expression failed, err: %v", err)
 		return
 	}
 
 	fmt.Println("where crown NULL expr: ", where)
-	if where != `WHERE age = 8` {
+	if where != ` WHERE age = ?` {
 		t.Errorf("generate SQL Where NULL crown expr expression failed, where: %s", where)
-		return
+		//return
 	}
-
+	fmt.Println("aaaaa", arg)
 	// test both Expression and crown rules is empty
 	expr.Rules = make([]RuleFactory, 0)
 	opt.CrownedOption.Rules = make([]RuleFactory, 0)
-	where, err = expr.SQLWhereExpr(opt)
+	where, arg, err = expr.SQLWhereExpr(opt)
 	if err != nil {
 		t.Errorf("generate SQL Where both rule is NULL failed, err: %v", err)
 		return
@@ -394,6 +398,7 @@ func TestCrownSQLWhereExpr(t *testing.T) {
 	fmt.Println("where both NULL expr: ", where)
 	if where != "" {
 		t.Errorf("generate SQL Where both rule is NULL failed, where: %s", where)
-		return
+		//return
 	}
+	fmt.Println("bb", arg)
 }

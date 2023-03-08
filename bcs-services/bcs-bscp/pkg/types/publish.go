@@ -25,10 +25,10 @@ const GetCPSMaxPageLimit = 100
 
 // PublishOption defines options to publish a strategy
 type PublishOption struct {
-	BizID     uint32                 `json:"biz_id"`
-	AppID     uint32                 `json:"app_id"`
-	ReleaseID uint32                 `json:"release_id"`
-	All bool 
+	BizID     uint32 `json:"biz_id"`
+	AppID     uint32 `json:"app_id"`
+	ReleaseID uint32 `json:"release_id"`
+	All       bool
 	Groups    []uint32               `json:"groups"`
 	Revision  *table.CreatedRevision `json:"revision"`
 }
