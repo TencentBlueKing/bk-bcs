@@ -25,12 +25,14 @@ http.interceptors.response.use(
   error => {
       const { response } = error
       if (response) {
+          let message = response.statusText
           if (response.status === 401) {
               store.commit('handleLogin', response.data.error.data.login_url)
               return
           }
-          let message = response.statusText
-          if (response.data && response.data.message) {
+          if (response.data.error) {
+            message = response.data.error.message
+          } else if (response.data.message) {
               message = response.data.message
           }
           BkMessage({ theme: 'error', message, ellipsisLine: 3 })

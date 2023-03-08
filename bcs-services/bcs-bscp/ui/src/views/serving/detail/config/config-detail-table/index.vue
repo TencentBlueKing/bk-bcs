@@ -3,11 +3,13 @@
   import { useStore } from 'vuex'
   import InfoBox from "bkui-vue/lib/info-box";
   import { FilterOp, IPageFilter } from '../../../../../types'
+  import { IConfigItem } from '../../../../../../types/config'
   import { getServingConfigList, getServingVersionConfigList, deleteServingConfigItem } from '../../../../../api/config'
   import EditConfig from './edit-config.vue'
   import CreateConfig from './create-config.vue'
   import PublishVersion from './publish-version/index.vue'
   import ReleaseVersion from './release-version/index.vue'
+  import VersionDiffDialog from '../components/version-diff-dialog.vue';
 
   const store = useStore()
 
@@ -22,7 +24,7 @@
   const appName = store.getters['config/appName']
   const versionName = store.state.config.currentVersion.name
   const loading = ref(false)
-  const configList = ref([])
+  const configList = ref<Array<IConfigItem>>([])
   const pagination = ref({
     current: 1,
     count: 0,
@@ -30,6 +32,8 @@
   })
   const editPanelShow = ref(false)
   const activeConfig = ref(0)
+  const isDiffDialogShow = ref(false)
+  const diffConfig = ref()
 
   const pageFilter = computed(():IPageFilter => {
     return {
@@ -80,14 +84,18 @@
     getConfigList()
   }
 
-  const handleEdit = (config: any) => {
+  const handleEdit = (config: IConfigItem) => {
     activeConfig.value = config.id
     editPanelShow.value = true
   }
 
-  const handleDiff = () => {}
+  const handleDiff = (config: IConfigItem) => {
+    console.log(config)
+    diffConfig.value = config
+    isDiffDialogShow.value = true
+  }
 
-  const handleDel = (config: any) => {
+  const handleDel = (config: IConfigItem) => {
     InfoBox({
       title: `确认是否删除配置项 ${config.spec.name}?`,
       type: "danger",
@@ -162,7 +170,7 @@
             <template #default="{ row }">
               <div class="operate-action-btns">
                 <bk-button text theme="primary" @click="handleEdit(row)">编辑</bk-button>
-                <bk-button text theme="primary" :disabled="true" @click="handleDiff()">对比</bk-button>
+                <bk-button text theme="primary" @click="handleDiff(row)">对比</bk-button>
                 <bk-button text theme="primary" @click="handleDel(row)">删除</bk-button>
               </div>
             </template>
@@ -186,6 +194,7 @@
         :release-id="props.releaseId"
         @confirm="refreshConfigList" />
     </section>
+    <VersionDiffDialog v-model:show="isDiffDialogShow" version-name="未命名版本" :config="diffConfig" />
   </section>
 </template>
 <style lang="scss" scoped>
