@@ -36,7 +36,7 @@ export default class RequestQueue {
      *
      * @return {Array|Object} 队列集合或队列对象
      */
-  get(id) {
+  get(id = undefined) {
     if (typeof id === 'undefined') {
       return this.queue;
     }

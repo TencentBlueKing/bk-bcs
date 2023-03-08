@@ -13,6 +13,7 @@ limitations under the License.
 package dao
 
 import (
+	"errors"
 	"fmt"
 
 	"bscp.io/pkg/criteria/enumor"
@@ -54,13 +55,12 @@ type configItemDao struct {
 
 // Create one configItem instance.
 func (dao *configItemDao) Create(kit *kit.Kit, ci *table.ConfigItem) (uint32, error) {
-
 	if ci == nil {
-		return 0, errf.New(errf.InvalidParameter, "config item is nil")
+		return 0, errors.New("config item is nil")
 	}
 
 	if err := ci.ValidateCreate(); err != nil {
-		return 0, errf.New(errf.InvalidParameter, err.Error())
+		return 0, err
 	}
 
 	if err := dao.validateAttachmentResExist(kit, ci.Attachment); err != nil {

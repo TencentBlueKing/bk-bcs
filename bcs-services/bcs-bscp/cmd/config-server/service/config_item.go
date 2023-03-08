@@ -38,7 +38,7 @@ func (s *Service) CreateConfigItem(ctx context.Context, req *pbcs.CreateConfigIt
 		ResourceID: req.AppId}, BizID: req.BizId}
 	err := s.authorizer.AuthorizeWithResp(grpcKit, resp, authRes)
 	if err != nil {
-		return resp, nil
+		return nil, err
 	}
 	// 1. create config_item
 	cciReq := &pbds.CreateConfigItemReq{
@@ -61,9 +61,8 @@ func (s *Service) CreateConfigItem(ctx context.Context, req *pbcs.CreateConfigIt
 	}
 	cciResp, err := s.client.DS.CreateConfigItem(grpcKit.RpcCtx(), cciReq)
 	if err != nil {
-		errf.Error(err).AssignResp(grpcKit, resp)
 		logs.Errorf("create config item failed, err: %v, rid: %s", err, grpcKit.Rid)
-		return resp, nil
+		return nil, err
 	}
 
 	// 2. create content
@@ -80,9 +79,8 @@ func (s *Service) CreateConfigItem(ctx context.Context, req *pbcs.CreateConfigIt
 	}
 	ccResp, err := s.client.DS.CreateContent(grpcKit.RpcCtx(), ccReq)
 	if err != nil {
-		errf.Error(err).AssignResp(grpcKit, resp)
 		logs.Errorf("create config item failed, err: %v, rid: %s", err, grpcKit.Rid)
-		return resp, nil
+		return nil, err
 	}
 
 	// 3. create commit
@@ -97,13 +95,11 @@ func (s *Service) CreateConfigItem(ctx context.Context, req *pbcs.CreateConfigIt
 	}
 	_, err = s.client.DS.CreateCommit(grpcKit.RpcCtx(), ccmReq)
 	if err != nil {
-		errf.Error(err).AssignResp(grpcKit, resp)
 		logs.Errorf("create config item failed, err: %v, rid: %s", err, grpcKit.Rid)
-		return resp, nil
+		return nil, err
 	}
 
-	resp.Code = errf.OK
-	resp.Data = &pbcs.CreateConfigItemResp_RespData{
+	resp = &pbcs.CreateConfigItemResp{
 		Id: cciResp.Id,
 	}
 
@@ -121,7 +117,7 @@ func (s *Service) UpdateConfigItem(ctx context.Context, req *pbcs.UpdateConfigIt
 		ResourceID: req.AppId}, BizID: req.BizId}
 	err := s.authorizer.AuthorizeWithResp(grpcKit, resp, authRes)
 	if err != nil {
-		return resp, nil
+		return nil, err
 	}
 
 	// 1. update config_item
@@ -146,9 +142,8 @@ func (s *Service) UpdateConfigItem(ctx context.Context, req *pbcs.UpdateConfigIt
 	}
 	_, err = s.client.DS.UpdateConfigItem(grpcKit.RpcCtx(), r)
 	if err != nil {
-		errf.Error(err).AssignResp(grpcKit, resp)
 		logs.Errorf("update config item failed, err: %v, rid: %s", err, grpcKit.Rid)
-		return resp, nil
+		return nil, err
 	}
 
 	// 2. check if content sign changed,if changed,create content and commit
@@ -160,14 +155,12 @@ func (s *Service) UpdateConfigItem(ctx context.Context, req *pbcs.UpdateConfigIt
 	}
 	glcResp, err := s.client.DS.GetLatestCommit(grpcKit.RpcCtx(), glcReq)
 	if err != nil {
-		errf.Error(err).AssignResp(grpcKit, resp)
 		logs.Errorf("get config item latest commit failed, err: %v, rid: %s", err, grpcKit.Rid)
-		return resp, nil
+		return nil, err
 	}
 
 	// 2.2 if latest content sign equals request content sign,no need to commit
-	if glcResp.Data.Spec.Content.Signature == req.Sign {
-		resp.Code = errf.OK
+	if glcResp.Spec.Content.Signature == req.Sign {
 		return resp, nil
 	}
 
@@ -185,9 +178,8 @@ func (s *Service) UpdateConfigItem(ctx context.Context, req *pbcs.UpdateConfigIt
 	}
 	ccResp, err := s.client.DS.CreateContent(grpcKit.RpcCtx(), ccReq)
 	if err != nil {
-		errf.Error(err).AssignResp(grpcKit, resp)
 		logs.Errorf("create config item failed, err: %v, rid: %s", err, grpcKit.Rid)
-		return resp, nil
+		return nil, err
 	}
 
 	// 4. create commit
@@ -202,11 +194,9 @@ func (s *Service) UpdateConfigItem(ctx context.Context, req *pbcs.UpdateConfigIt
 	}
 	_, err = s.client.DS.CreateCommit(grpcKit.RpcCtx(), ccmReq)
 	if err != nil {
-		errf.Error(err).AssignResp(grpcKit, resp)
 		logs.Errorf("create config item failed, err: %v, rid: %s", err, grpcKit.Rid)
-		return resp, nil
+		return nil, err
 	}
-	resp.Code = errf.OK
 	return resp, nil
 }
 
@@ -221,7 +211,7 @@ func (s *Service) DeleteConfigItem(ctx context.Context, req *pbcs.DeleteConfigIt
 		ResourceID: req.AppId}, BizID: req.BizId}
 	err := s.authorizer.AuthorizeWithResp(grpcKit, resp, authRes)
 	if err != nil {
-		return resp, nil
+		return nil, err
 	}
 
 	r := &pbds.DeleteConfigItemReq{
@@ -233,12 +223,10 @@ func (s *Service) DeleteConfigItem(ctx context.Context, req *pbcs.DeleteConfigIt
 	}
 	_, err = s.client.DS.DeleteConfigItem(grpcKit.RpcCtx(), r)
 	if err != nil {
-		errf.Error(err).AssignResp(grpcKit, resp)
 		logs.Errorf("delete config item failed, err: %v, rid: %s", err, grpcKit.Rid)
-		return resp, nil
+		return nil, err
 	}
 
-	resp.Code = errf.OK
 	return resp, nil
 }
 
@@ -252,7 +240,7 @@ func (s *Service) GetConfigItem(ctx context.Context, req *pbcs.GetConfigItemReq)
 	authRes := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.ConfigItem, Action: meta.Find}, BizID: req.BizId}
 	err := s.authorizer.AuthorizeWithResp(grpcKit, resp, authRes)
 	if err != nil {
-		return resp, nil
+		return nil, err
 	}
 
 	// 1. get config item
@@ -263,9 +251,8 @@ func (s *Service) GetConfigItem(ctx context.Context, req *pbcs.GetConfigItemReq)
 	}
 	gciResp, err := s.client.DS.GetConfigItem(grpcKit.RpcCtx(), gciReq)
 	if err != nil {
-		errf.Error(err).AssignResp(grpcKit, resp)
 		logs.Errorf("get config item failed, err: %v, rid: %s", err, grpcKit.Rid)
-		return resp, nil
+		return nil, err
 	}
 
 	// 2. get latest commit
@@ -276,28 +263,25 @@ func (s *Service) GetConfigItem(ctx context.Context, req *pbcs.GetConfigItemReq)
 	}
 	glcResp, err := s.client.DS.GetLatestCommit(grpcKit.RpcCtx(), glcReq)
 	if err != nil {
-		errf.Error(err).AssignResp(grpcKit, resp)
 		logs.Errorf("get config item latest commit failed, err: %v, rid: %s", err, grpcKit.Rid)
-		return resp, nil
+		return nil, err
 	}
 
 	// 3. get content
 	gcReq := &pbds.GetContentReq{
-		Id:    glcResp.Data.Spec.ContentId,
+		Id:    glcResp.Spec.ContentId,
 		BizId: req.BizId,
 		AppId: req.AppId,
 	}
 	gcResp, err := s.client.DS.GetContent(grpcKit.RpcCtx(), gcReq)
 	if err != nil {
-		errf.Error(err).AssignResp(grpcKit, resp)
 		logs.Errorf("get config item content failed, err: %v, rid: %s", err, grpcKit.Rid)
-		return resp, nil
+		return nil, err
 	}
 
-	resp.Code = errf.OK
-	resp.Data = &pbcs.GetConfigItemResp_RespData{
-		ConfigItem: gciResp.Data,
-		Content:    gcResp.Data,
+	resp = &pbcs.GetConfigItemResp{
+		ConfigItem: gciResp,
+		Content:    gcResp,
 	}
 	return resp, nil
 }
@@ -312,19 +296,17 @@ func (s *Service) ListConfigItems(ctx context.Context, req *pbcs.ListConfigItems
 	authRes := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.ConfigItem, Action: meta.Find}, BizID: req.BizId}
 	err := s.authorizer.AuthorizeWithResp(grpcKit, resp, authRes)
 	if err != nil {
-		return resp, nil
+		return nil, err
 	}
 
 	if req.Page == nil {
-		errf.Error(errf.New(errf.InvalidParameter, "page is null")).AssignResp(grpcKit, resp)
-		return resp, nil
+		return nil, errf.New(errf.InvalidParameter, "page is null")
 	}
 
 	// TODO: list latest release and compare each config item exists and latest commit id to get changing status
 
 	if err := req.Page.BasePage().Validate(types.DefaultPageOption); err != nil {
-		errf.Error(err).AssignResp(grpcKit, resp)
-		return resp, nil
+		return nil, err
 	}
 
 	r := &pbds.ListConfigItemsReq{
@@ -335,13 +317,11 @@ func (s *Service) ListConfigItems(ctx context.Context, req *pbcs.ListConfigItems
 	}
 	rp, err := s.client.DS.ListConfigItems(grpcKit.RpcCtx(), r)
 	if err != nil {
-		errf.Error(err).AssignResp(grpcKit, resp)
 		logs.Errorf("list config items failed, err: %v, rid: %s", err, grpcKit.Rid)
-		return resp, nil
+		return nil, err
 	}
 
-	resp.Code = errf.OK
-	resp.Data = &pbcs.ListConfigItemsResp_RespData{
+	resp = &pbcs.ListConfigItemsResp{
 		Count:   rp.Count,
 		Details: rp.Details,
 	}

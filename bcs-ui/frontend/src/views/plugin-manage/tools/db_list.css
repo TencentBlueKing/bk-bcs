@@ -1,0 +1,86 @@
+@import '@/css/variable.css';
+@import '@/css/mixins/ellipsis.css';
+@import '@/css/mixins/clearfix.css';
+
+.label-icon {
+    position: absolute;
+    right: -10px;
+}
+
+.key-list {
+    @mixin clearfix;
+
+    li {
+        float: left;
+        margin: 0 5px 0 0;
+        border: 1px solid $borderWeightColor;
+        border-radius: 2px;
+        cursor: pointer;
+        display: flex;
+    }
+
+    .key,
+    .value {
+        float: left;
+        line-height: 22px;
+        text-align: left;
+        padding: 0 10px;
+        font-size: 12px;
+        color: #737987;
+    }
+
+    .value {
+        border-left: 1px solid $borderWeightColor;
+        background-color: #fafbfd;
+    }
+}
+
+.data-title {
+    font-size: 14px;
+    color: #333948;
+    margin-bottom: 10px;
+}
+
+
+.point-box {
+    border: 1px solid $borderWeightColor;
+    margin: 8px 0 0 0;
+    padding: 15px 15px 10px 15px;
+    position: relative;
+    border-radius: 2px;
+
+    &:after {
+        content: '';
+        width: 8px;
+        height: 8px;
+        display: inline-block;
+        border-top: 1px solid #dde4eb;
+        border-right: 1px solid #dde4eb;
+        transform: rotate(-45deg);
+        position: absolute;
+        top: -6px;
+        left: 39px;
+        background: #fff;
+    }
+}
+
+.key-tip-wrapper {
+    height: 34px;
+
+    .key-tip {
+        line-height: 34px;
+    }
+}
+
+.biz-crd-instance-table {
+    >tbody>tr>th,
+    >tbody>tr>td {
+        height: 50px;
+    }
+}
+
+.bk-label {
+    .bcs-icon-question-circle {
+        top: 11px;
+    }
+}

@@ -19,9 +19,9 @@ import (
 	"bscp.io/pkg/iam/meta"
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/logs"
-	"bscp.io/pkg/protocol/config-server"
-	"bscp.io/pkg/protocol/core/commit"
-	"bscp.io/pkg/protocol/data-service"
+	pbcs "bscp.io/pkg/protocol/config-server"
+	pbcommit "bscp.io/pkg/protocol/core/commit"
+	pbds "bscp.io/pkg/protocol/data-service"
 	"bscp.io/pkg/types"
 )
 
@@ -34,7 +34,7 @@ func (s *Service) CreateCommit(ctx context.Context, req *pbcs.CreateCommitReq) (
 		ResourceID: req.AppId}, BizID: req.BizId}
 	err := s.authorizer.AuthorizeWithResp(kit, resp, authRes)
 	if err != nil {
-		return resp, nil
+		return nil, err
 	}
 
 	r := &pbds.CreateCommitReq{
@@ -48,13 +48,11 @@ func (s *Service) CreateCommit(ctx context.Context, req *pbcs.CreateCommitReq) (
 	}
 	rp, err := s.client.DS.CreateCommit(kit.RpcCtx(), r)
 	if err != nil {
-		errf.Error(err).AssignResp(kit, resp)
 		logs.Errorf("create commit failed, err: %v, rid: %s", err, kit.Rid)
-		return resp, nil
+		return nil, err
 	}
 
-	resp.Code = errf.OK
-	resp.Data = &pbcs.CreateCommitResp_RespData{
+	resp = &pbcs.CreateCommitResp{
 		Id: rp.Id,
 	}
 	return resp, nil
@@ -68,17 +66,15 @@ func (s *Service) ListCommits(ctx context.Context, req *pbcs.ListCommitsReq) (*p
 	authRes := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.Commit, Action: meta.Find}, BizID: req.BizId}
 	err := s.authorizer.AuthorizeWithResp(grpcKit, resp, authRes)
 	if err != nil {
-		return resp, nil
+		return nil, err
 	}
 
 	if req.Page == nil {
-		errf.Error(errf.New(errf.InvalidParameter, "page is null")).AssignResp(grpcKit, resp)
-		return resp, nil
+		return nil, errf.New(errf.InvalidParameter, "page is null")
 	}
 
 	if err = req.Page.BasePage().Validate(types.DefaultPageOption); err != nil {
-		errf.Error(err).AssignResp(grpcKit, resp)
-		return resp, nil
+		return nil, err
 	}
 
 	r := &pbds.ListCommitsReq{
@@ -89,13 +85,11 @@ func (s *Service) ListCommits(ctx context.Context, req *pbcs.ListCommitsReq) (*p
 	}
 	rp, err := s.client.DS.ListCommits(grpcKit.RpcCtx(), r)
 	if err != nil {
-		errf.Error(err).AssignResp(grpcKit, resp)
 		logs.Errorf("list commits failed, err: %v, rid: %s", err, grpcKit.Rid)
-		return resp, nil
+		return nil, err
 	}
 
-	resp.Code = errf.OK
-	resp.Data = &pbcs.ListCommitsResp_RespData{
+	resp = &pbcs.ListCommitsResp{
 		Count:   rp.Count,
 		Details: rp.Details,
 	}

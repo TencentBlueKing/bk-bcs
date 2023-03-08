@@ -36,7 +36,7 @@ func (s *Service) CreateStrategySet(ctx context.Context, req *pbcs.CreateStrateg
 		ResourceID: req.AppId}, BizID: req.BizId}
 	err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res)
 	if err != nil {
-		return resp, nil
+		return nil, err
 	}
 
 	r := &pbds.CreateStrategySetReq{
@@ -51,13 +51,11 @@ func (s *Service) CreateStrategySet(ctx context.Context, req *pbcs.CreateStrateg
 	}
 	rp, err := s.client.DS.CreateStrategySet(grpcKit.RpcCtx(), r)
 	if err != nil {
-		errf.Error(err).AssignResp(grpcKit, resp)
 		logs.Errorf("create strategy set failed, err: %v, rid: %s", err, grpcKit.Rid)
-		return resp, nil
+		return nil, err
 	}
 
-	resp.Code = errf.OK
-	resp.Data = &pbcs.CreateStrategySetResp_RespData{
+	resp = &pbcs.CreateStrategySetResp{
 		Id: rp.Id,
 	}
 	return resp, nil
@@ -74,7 +72,7 @@ func (s *Service) UpdateStrategySet(ctx context.Context, req *pbcs.UpdateStrateg
 		ResourceID: req.AppId}, BizID: req.BizId}
 	err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res)
 	if err != nil {
-		return resp, nil
+		return nil, err
 	}
 
 	r := &pbds.UpdateStrategySetReq{
@@ -90,12 +88,10 @@ func (s *Service) UpdateStrategySet(ctx context.Context, req *pbcs.UpdateStrateg
 	}
 	_, err = s.client.DS.UpdateStrategySet(grpcKit.RpcCtx(), r)
 	if err != nil {
-		errf.Error(err).AssignResp(grpcKit, resp)
 		logs.Errorf("update strategy set failed, err: %v, rid: %s", err, grpcKit.Rid)
-		return resp, nil
+		return nil, err
 	}
 
-	resp.Code = errf.OK
 	return resp, nil
 }
 
@@ -109,17 +105,15 @@ func (s *Service) ListStrategySets(ctx context.Context, req *pbcs.ListStrategySe
 	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.StrategySet, Action: meta.Find}, BizID: req.BizId}
 	err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res)
 	if err != nil {
-		return resp, nil
+		return nil, err
 	}
 
 	if req.Page == nil {
-		errf.Error(errf.New(errf.InvalidParameter, "page is null")).AssignResp(grpcKit, resp)
-		return resp, nil
+		return nil, errf.New(errf.InvalidParameter, "page is null")
 	}
 
 	if err = req.Page.BasePage().Validate(types.DefaultPageOption); err != nil {
-		errf.Error(err).AssignResp(grpcKit, resp)
-		return resp, nil
+		return nil, err
 	}
 
 	r := &pbds.ListStrategySetsReq{
@@ -130,13 +124,11 @@ func (s *Service) ListStrategySets(ctx context.Context, req *pbcs.ListStrategySe
 	}
 	rp, err := s.client.DS.ListStrategySets(grpcKit.RpcCtx(), r)
 	if err != nil {
-		errf.Error(err).AssignResp(grpcKit, resp)
 		logs.Errorf("list strategy sets failed, err: %v, rid: %s", err, grpcKit.Rid)
-		return resp, nil
+		return nil, err
 	}
 
-	resp.Code = errf.OK
-	resp.Data = &pbcs.ListStrategySetsResp_RespData{
+	resp = &pbcs.ListStrategySetsResp{
 		Count:   rp.Count,
 		Details: rp.Details,
 	}
@@ -151,9 +143,8 @@ func (s *Service) DeleteStrategySet(ctx context.Context, req *pbcs.DeleteStrateg
 	resp := new(pbcs.DeleteStrategySetResp)
 
 	if err := req.Validate(); err != nil {
-		errf.Error(err).AssignResp(kt, resp)
 		logs.Errorf("request validate failed, err: %v, rid: %s", err, kt.Rid)
-		return resp, nil
+		return nil, err
 	}
 
 	r := &pbds.DeleteStrategySetReq{
@@ -165,11 +156,9 @@ func (s *Service) DeleteStrategySet(ctx context.Context, req *pbcs.DeleteStrateg
 	}
 	_, err := s.client.DS.DeleteStrategySet(kt.RpcCtx(), r)
 	if err != nil {
-		errf.Error(err).AssignResp(kt, resp)
 		logs.Errorf("delete strategy set failed, err: %v, rid: %s", err, kt.Rid)
-		return resp, nil
+		return nil, err
 	}
 
-	resp.Code = errf.OK
 	return resp, nil
 }

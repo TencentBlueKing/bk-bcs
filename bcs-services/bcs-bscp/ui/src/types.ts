@@ -68,3 +68,21 @@ export type IServingEditParams = {
   user_group?: string,
   privilege?: string
 }
+
+export interface IConfigVersionItem {
+  id: number;
+  attachment: object;
+  revision: object;
+  spec: {
+    name: string
+  };
+}
+
+export interface IVersionItem {
+  id: number;
+  attachment: object;
+  revision: object;
+  spec: {
+    name: string
+  };
+}

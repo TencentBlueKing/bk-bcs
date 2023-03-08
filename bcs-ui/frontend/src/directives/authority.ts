@@ -4,9 +4,11 @@ import { DirectiveBinding } from 'vue/types/options';
 import { VueConstructor, VNode } from 'vue';
 import { bus } from '@/common/bus';
 import bkTooltips from 'bk-magic-vue/lib/directives/tooltips';
-import {  userPerms } from '@/api/base';
+import {  userPerms, userPermsByAction } from '@/api/base';
 import { deepEqual } from '@/common/util';
 import { newUserPermsByAction } from '@/api/modules/cluster-manager';
+import  { messageInfo } from '@/common/bkmagic';
+import $i18n from '@/i18n/i18n-setup';
 interface IElement extends HTMLElement {
   [prop: string]: any;
 }
@@ -86,32 +88,36 @@ function init(el: IElement, binding: DirectiveBinding, vNode: VNode) {
 
     delete permCtx?.resource_type;
     const $actionId = Array.isArray(actionId) ? actionId[0] : actionId;
-    bus.$emit('show-apply-perm-modal-async', {
-      $actionId,
-      permCtx,
-      resourceName,
-      newPerms: binding.value?.newPerms,
-    });
-    // const data = await userPermsByAction({
-    //     $actionId,
-    //     perm_ctx: permCtx
-    // }).catch(() => ({}))
 
-    // if (data?.perms?.[$actionId]) {
-    //     Vue.prototype.messageInfo?.(window.i18n.t('当前操作有权限，请刷新界面'))
-    // } else {
-    //     bus.$emit('show-apply-perm-modal', {
-    //         perms: {
-    //             apply_url: data?.perms?.apply_url,
-    //             action_list: [
-    //                 {
-    //                     action_id: actionId,
-    //                     resource_name: resourceName
-    //                 }
-    //             ]
-    //         }
-    //     })
-    // }
+    bus.$emit('show-apply-perm-modal', async () => {
+      const data = binding.value?.newPerms
+        ? await newUserPermsByAction({
+          $actionId,
+          perm_ctx: permCtx,
+        }).catch(() => ({}))
+        : await userPermsByAction({
+          $actionId,
+          perm_ctx: permCtx,
+        }).catch(() => ({}));
+
+      if (data?.perms?.[$actionId]) {
+        messageInfo({
+          theme: 'warning',
+          message: $i18n.t('当前操作有权限，请刷新界面'),
+        });
+      }
+      return {
+        perms: {
+          apply_url: data?.perms?.apply_url,
+          action_list: [
+            {
+              action_id: $actionId,
+              resource_name: resourceName,
+            },
+          ],
+        },
+      };
+    });
   };
 
   cloneEl.addEventListener('mouseenter', cloneEl.mouseEnterHandler);

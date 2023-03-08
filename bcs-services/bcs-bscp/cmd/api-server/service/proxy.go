@@ -23,6 +23,7 @@ import (
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/credentials/insecure"
 
 	"bscp.io/pkg/cc"
 	"bscp.io/pkg/dal/repository"
@@ -32,6 +33,7 @@ import (
 	pbcs "bscp.io/pkg/protocol/config-server"
 	"bscp.io/pkg/runtime/grpcgw"
 	"bscp.io/pkg/runtime/handler"
+	"bscp.io/pkg/runtime/webannotation"
 	"bscp.io/pkg/serviced"
 	"bscp.io/pkg/tools"
 )
@@ -99,12 +101,14 @@ func (p *proxy) handler() http.Handler {
 	r.With(p.authorizer.UnifiedAuthentication).Get("/api/v1/auth/user/info", UserInfoHandler)
 	r.Route("/api/v1/auth", func(r chi.Router) {
 		r.Use(p.authorizer.UnifiedAuthentication)
+		r.Use(webannotation.BuildAnnotation(p.authorizer))
 		r.Mount("/", p.authSvrMux)
 	})
 
 	// 服务管理, 配置管理, 分组管理, 发布管理
 	r.Route("/api/v1/config/", func(r chi.Router) {
 		r.Use(p.authorizer.UnifiedAuthentication)
+		r.Use(webannotation.BuildAnnotation(p.authorizer))
 		r.Mount("/", p.cfgSvrMux)
 	})
 
@@ -137,7 +141,7 @@ func newAuthServerMux(dis serviced.Discover) (http.Handler, error) {
 	}
 
 	// new grpc mux.
-	mux := runtime.NewServeMux(grpcgw.MetadataOpt, grpcgw.BKJSONMarshalerOpt, grpcgw.BKErrorHandlerOpt)
+	mux := runtime.NewServeMux(grpcgw.MetadataOpt, grpcgw.JsonMarshalerOpt, grpcgw.BKErrorHandlerOpt, grpcgw.BSCPResponseOpt)
 
 	// register client to mux.
 	if err = pbas.RegisterAuthHandler(context.Background(), mux, conn); err != nil {
@@ -183,7 +187,7 @@ func newGrpcDialOption(dis serviced.Discover, tls cc.TLSConfig) ([]grpc.DialOpti
 
 	if !tls.Enable() {
 		// dial without ssl
-		opts = append(opts, grpc.WithInsecure())
+		opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	} else {
 		// dial with ssl.
 		tlsC, err := tools.ClientTLSConfVerify(tls.InsecureSkipVerify, tls.CAFile, tls.CertFile, tls.KeyFile,
@@ -201,5 +205,5 @@ func newGrpcDialOption(dis serviced.Discover, tls cc.TLSConfig) ([]grpc.DialOpti
 
 // newGrpcMux new grpc mux that has some processing of built-in http request to grpc request.
 func newGrpcMux() *runtime.ServeMux {
-	return runtime.NewServeMux(grpcgw.MetadataOpt, grpcgw.JsonMarshalerOpt)
+	return runtime.NewServeMux(grpcgw.MetadataOpt, grpcgw.JsonMarshalerOpt, grpcgw.BKErrorHandlerOpt, grpcgw.BSCPResponseOpt)
 }

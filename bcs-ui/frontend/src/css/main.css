@@ -70,7 +70,22 @@
     display: -webkit-box;
     -webkit-line-clamp: 1;
     -webkit-box-orient: vertical;
-}
+  }
+
+  .bcs-fixed-footer {
+    position: absolute;
+    bottom: 0px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    padding: 0 24px;
+    background-color: #fff;
+    border-top: 1px solid #dcdee5;
+    box-shadow: 0 -2px 4px 0 rgb(0 0 0 / 5%);
+    z-index: 100;
+    right: 0;
+    width: 100%;
+  }
 }
 
 .bcs-tippy-theme .tippy-content {

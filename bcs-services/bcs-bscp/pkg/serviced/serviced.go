@@ -26,14 +26,14 @@ import (
 	"sync"
 	"time"
 
-	"bscp.io/pkg/cc"
-	"bscp.io/pkg/logs"
-	"bscp.io/pkg/tools"
-
 	etcd3 "go.etcd.io/etcd/client/v3"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/balancer/roundrobin"
 	"google.golang.org/grpc/resolver"
+
+	"bscp.io/pkg/cc"
+	"bscp.io/pkg/logs"
+	"bscp.io/pkg/tools"
 )
 
 // ServiceDiscover defines all the service and discovery
@@ -283,7 +283,6 @@ func (s *serviced) DisableMasterSlave(disable bool) {
 	s.isMasterRwMux.RUnlock()
 
 	logs.Infof("master-slave disabled status: %v", disable)
-	return
 }
 
 // HealthInfo is etcd health info, e.g. '{"health":"true"}'.
@@ -419,7 +418,6 @@ func (s *serviced) updateMasterFlag(isMaster bool) {
 	s.isMasterRwMux.Lock()
 	s.isMasterFlag = isMaster
 	s.isMasterRwMux.Unlock()
-	return
 }
 
 // updateRegisterFlag update isMasterFlag by rw mux.
@@ -427,7 +425,6 @@ func (s *serviced) updateRegisterFlag(isRegister bool) {
 	s.isRegisteredRWMux.Lock()
 	s.isRegisteredFlag = isRegister
 	s.isRegisteredRWMux.Unlock()
-	return
 }
 
 // updateLeaseID update leaseID by rw mux.
@@ -435,7 +432,6 @@ func (s *serviced) updateLeaseID(id etcd3.LeaseID) {
 	s.leaseIDRWMux.Lock()
 	s.leaseID = id
 	s.leaseIDRWMux.Unlock()
-	return
 }
 
 // isRegister return is register flag by rw mux.

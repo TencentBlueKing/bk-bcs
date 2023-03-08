@@ -1,7 +1,6 @@
 
 
-@import '../../css/variable.css';
-@import '../../css/mixins/scroller.css';
+@import '@/css/variable.css';
 
 @media screen and (max-width: 1440px) {
     .biz-cluster-selector {

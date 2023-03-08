@@ -37,7 +37,7 @@ func (s *Service) PublishInstance(ctx context.Context, req *pbcs.PublishInstance
 		ResourceID: req.AppId}, BizID: req.BizId}
 	err := s.authorizer.AuthorizeWithResp(kit, resp, authRes)
 	if err != nil {
-		return resp, nil
+		return nil, err
 	}
 
 	r := &pbds.CreateCRInstanceReq{
@@ -53,13 +53,11 @@ func (s *Service) PublishInstance(ctx context.Context, req *pbcs.PublishInstance
 	}
 	rp, err := s.client.DS.CreateCRInstance(kit.RpcCtx(), r)
 	if err != nil {
-		errf.Error(err).AssignResp(kit, resp)
 		logs.Errorf("create current released instance failed, err: %v, rid: %s", err, kit.Rid)
-		return resp, nil
+		return nil, err
 	}
 
-	resp.Code = errf.OK
-	resp.Data = &pbcs.PublishInstanceResp_RespData{
+	resp = &pbcs.PublishInstanceResp{
 		Id: rp.Id,
 	}
 	return resp, nil
@@ -76,7 +74,7 @@ func (s *Service) DeletePublishedInstance(ctx context.Context, req *pbcs.DeleteP
 		ResourceID: req.AppId}, BizID: req.BizId}
 	err := s.authorizer.AuthorizeWithResp(grpcKit, resp, authRes)
 	if err != nil {
-		return resp, nil
+		return nil, err
 	}
 
 	r := &pbds.DeleteCRInstanceReq{
@@ -88,12 +86,10 @@ func (s *Service) DeletePublishedInstance(ctx context.Context, req *pbcs.DeleteP
 	}
 	_, err = s.client.DS.DeleteCRInstance(grpcKit.RpcCtx(), r)
 	if err != nil {
-		errf.Error(err).AssignResp(grpcKit, resp)
 		logs.Errorf("delete current released instance failed, err: %v, rid: %s", err, grpcKit.Rid)
-		return resp, nil
+		return nil, err
 	}
 
-	resp.Code = errf.OK
 	return resp, nil
 }
 
@@ -107,17 +103,16 @@ func (s *Service) ListPublishedInstance(ctx context.Context, req *pbcs.ListPubli
 	authRes := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.CRInstance, Action: meta.Find}, BizID: req.BizId}
 	err := s.authorizer.AuthorizeWithResp(grpcKit, resp, authRes)
 	if err != nil {
-		return resp, nil
+		return nil, err
 	}
 
 	if req.Page == nil {
-		errf.Error(errf.New(errf.InvalidParameter, "page is null")).AssignResp(grpcKit, resp)
-		return resp, nil
+		errf.New(errf.InvalidParameter, "page is null")
+		return nil, err
 	}
 
 	if err := req.Page.BasePage().Validate(types.DefaultPageOption); err != nil {
-		errf.Error(err).AssignResp(grpcKit, resp)
-		return resp, nil
+		return nil, err
 	}
 
 	r := &pbds.ListCRInstancesReq{
@@ -127,13 +122,11 @@ func (s *Service) ListPublishedInstance(ctx context.Context, req *pbcs.ListPubli
 	}
 	rp, err := s.client.DS.ListCRInstances(grpcKit.RpcCtx(), r)
 	if err != nil {
-		errf.Error(err).AssignResp(grpcKit, resp)
 		logs.Errorf("list current released instance failed, err: %v, rid: %s", err, grpcKit.Rid)
-		return resp, nil
+		return nil, err
 	}
 
-	resp.Code = errf.OK
-	resp.Data = &pbcs.ListPublishedInstanceResp_RespData{
+	resp = &pbcs.ListPublishedInstanceResp{
 		Count:   rp.Count,
 		Details: rp.Details,
 	}

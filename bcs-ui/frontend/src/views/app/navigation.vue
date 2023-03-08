@@ -1,544 +1,253 @@
+<!-- eslint-disable @typescript-eslint/semi -->
 <template>
   <div>
-    <bcs-navigation navigation-type="top-bottom" :need-menu="false">
+    <bcs-navigation
+      navigation-type="top-bottom"
+      :need-menu="needMenu"
+      :default-open="openSideMenu"
+      :hover-enter-delay="300"
+      @toggle-click="handleToggleClickNav">
       <template #side-header>
-        <span class="title-icon"><img src="@/images/bcs.svg" class="all-icon"></span>
+        <span class="title-icon"><img src="@/images/bcs.svg" class="w-[28px] h-[28px]"></span>
         <span
-          class="title-desc bcs-title-desc"
-          @click="handleGoHome">{{ $INTERNAL ? $t('TKEx-IEG 容器平台') : $t('蓝鲸容器管理平台') }}</span>
+          class="title-desc cursor-pointer"
+          @click="handleGoHome">
+          {{ $INTERNAL ? $t('TKEx-IEG 容器平台') : $t('蓝鲸容器管理平台') }}
+        </span>
       </template>
       <template #header>
-        <div class="bcs-navigation-header">
-          <div class="nav-left">
-            <bcs-select
-              ref="projectSelectRef" class="header-select" :clearable="false" searchable
-              :value="curProjectCode"
-              v-show="$route.name !== 'projectManage'"
-              @change="handleProjectChange">
-              <bcs-option
-                v-for="option in onlineProjectList"
-                :key="option.project_code"
-                :id="option.project_code"
-                :name="option.project_name">
-                <div
-                  class="project-item" v-bk-tooltips="{
-                    content: `${$t('项目名称')}: ${option.project_name}<br/>${$t('业务ID')}: ${option.cc_app_id}`,
-                    placement: 'right',
-                    boundary: 'window'
-                  }">
-                  {{option.project_name}}
-                  <span class="biz-id">{{`(${option.cc_app_id})`}}</span>
-                </div>
-              </bcs-option>
-              <template #extension>
-                <div
-                  class="extension-item"
-                  @click="handleGotoIAM"><i class="bk-icon icon-plus-circle mr5"></i>{{$t('申请权限')}}</div>
-                <div
-                  class="extension-item"
-                  @click="handleGotoProjectManage"><i class="bcs-icon bcs-icon-apps mr5"></i>{{$t('项目管理')}}</div>
-              </template>
-            </bcs-select>
-            <bcs-popover
-              ref="clusterManagePopover"
-              theme="navigation-cluster-manage"
-              :arrow="false"
-              placement="bottom-start"
-              :tippy-options="{ 'hideOnClick': false }"
-              v-if="$INTERNAL">
-              <div class="cluster-manage-angle">
-                <a>{{ $t('集群管理') }}</a>
-                <i class="bk-select-angle bk-icon icon-angle-down angle-down"></i>
-              </div>
-              <template slot="content">
-                <ul class="cluster-manage-angle-content">
-                  <li
-                    :class="['angle-item', { active: !isSharedCluster }]"
-                    @click="handleGotoProjectCluster">{{$t('专用集群')}}</li>
-                  <li
-                    :class="[
-                      'angle-item',
-                      {
-                        active: isSharedCluster,
-                        disable: !firstShareCluster
-                      }]"
-                    @click="handleGotoShareCluster"
-                  >{{$t('共享集群')}}
-                  </li>
-                </ul>
-              </template>
-            </bcs-popover>
-          </div>
-          <div class="nav-right">
-            <bcs-popover theme="light navigation-message" class="mr5" offset="0, 20" placement="bottom" :arrow="false">
-              <div class="flag-box">
-                <i id="siteHelp" class="bcs-icon bcs-icon-help-document-fill"></i>
-              </div>
-              <template slot="content">
-                <ul class="bcs-navigation-admin">
-                  <li class="nav-item" @click="handleGotoHelp">{{ $t('产品文档') }}</li>
-                  <li class="nav-item" @click="handleShowSystemLog">{{ $t('版本日志') }}</li>
-                  <li class="nav-item" @click="handleShowFeatures">{{ $t('功能特性') }}</li>
-                </ul>
-              </template>
-            </bcs-popover>
-            <bcs-popover
-              theme="light navigation-message"
-              :arrow="false" offset="0, 20"
-              placement="bottom-start"
-              :tippy-options="{ 'hideOnClick': false }">
-              <div class="header-user">
-                {{user.username}}
-                <i class="bk-icon icon-down-shape"></i>
-              </div>
-              <template slot="content">
-                <ul class="bcs-navigation-admin">
-                  <li class="nav-item" @click="handleGotoUserToken">{{ $t('API密钥') }}</li>
-                  <li class="nav-item" @click="handleGotoProjectManage">{{ $t('项目管理') }}</li>
-                  <li class="nav-item" @click="handleLogout">{{ $t('退出') }}</li>
-                </ul>
-              </template>
-            </bcs-popover>
-          </div>
-        </div>
+        <!-- 顶部菜单 -->
+        <ol class="flex text-[14px] text-[#96a2b9]">
+          <li
+            v-for="(item, index) in menus"
+            :class="[
+              'mr-[40px] hover:text-[#d3d9e4] cursor-pointer',
+              { 'text-[#d3d9e4]': activeNav.id === item.id }
+            ]"
+            :key="index"
+            @click="handleChangeMenu(item)">
+            {{ item.title }}
+          </li>
+        </ol>
+        <!-- 项目选载 -->
+        <ProjectSelector class="ml-auto w-[240px] mr-[18px]"></ProjectSelector>
+        <!-- 语言切换 -->
+        <PopoverSelector class="mr-[8px]">
+          <span class="header-icon text-[18px]">
+            <i :class="curLang.icon"></i>
+          </span>
+          <template #content>
+            <ul>
+              <li
+                v-for="(item, index) in langs"
+                :key="index"
+                :class="['bcs-dropdown-item', { active: curLang.id === item.id }]"
+                @click="handleChangeLang(item)">
+                <i :class="['text-[18px] mr5', item.icon]"></i>
+                {{item.name}}
+              </li>
+            </ul>
+          </template>
+        </PopoverSelector>
+        <!-- 帮助文档 -->
+        <PopoverSelector class="mr-[8px]">
+          <span id="siteHelp" class="header-icon !text-[16px]">
+            <i class="bcs-icon bcs-icon-help-document-fill"></i>
+          </span>
+          <template #content>
+            <ul>
+              <li class="bcs-dropdown-item" @click="handleGotoHelp">{{ $t('产品文档') }}</li>
+              <li class="bcs-dropdown-item" @click="handleShowSystemLog">{{ $t('版本日志') }}</li>
+              <li class="bcs-dropdown-item" @click="handleShowFeatures">{{ $t('功能特性') }}</li>
+            </ul>
+          </template>
+        </PopoverSelector>
+        <!-- 用户设置 -->
+        <PopoverSelector class="ml-[4px]">
+          <span class="flex items-center text-[#96A2B9] hover:text-[#d3d9e4]">
+            <span class="text-[14px]">{{user.username}}</span>
+            <i class="ml-[4px] text-[12px] bk-icon icon-down-shape"></i>
+          </span>
+          <template #content>
+            <ul>
+              <li class="bcs-dropdown-item" @click="handleGotoUserToken">{{ $t('个人密钥') }}</li>
+              <li class="bcs-dropdown-item" @click="handleLogout">{{ $t('退出登录') }}</li>
+            </ul>
+          </template>
+        </PopoverSelector>
       </template>
+      <!-- 左侧菜单 -->
+      <template #menu>
+        <slot name="sideMenu"></slot>
+      </template>
+      <!-- 视图 -->
       <template #default>
         <slot></slot>
       </template>
     </bcs-navigation>
-    <system-log v-model="showSystemLog" @show-feature="handleShowFeatures"></system-log>
+    <!-- 系统日志 -->
+    <SystemLog v-model="showSystemLog" @show-feature="handleShowFeatures" />
+    <!-- 产品特性 -->
     <bcs-dialog
       v-model="showFeatures"
-      class="version-feature-dialog"
       :title="$t('产品功能特性')"
       :show-footer="false"
       width="480">
-      <BcsMd :code="featureMd"></BcsMd>
+      <BcsMd :code="featureData" />
     </bcs-dialog>
   </div>
 </template>
-<script>
-import { BCS_CLUSTER } from '@/common/constant';
-import { mapGetters } from 'vuex';
-import useGoHome from '@/common/use-gohome';
-import systemLog from '@/views/app/log.vue';
+<script lang="ts">
+import { defineComponent, ref, computed, toRef, reactive } from '@vue/composition-api';
+import SystemLog from '@/views/app/log.vue';
 import BcsMd from '@/components/bcs-md/index.vue';
-import featureMd from '../../../static/features.md';
+import featureData from '../../../static/features.md';
+import ProjectSelector from '@/views/app/project-selector.vue';
+import PopoverSelector from './popover-selector.vue';
+import $store from '@/store';
+import $i18n from '@/i18n/i18n-setup';
+import $router from '@/router';
+import menusData, { IMenu } from './menus';
 
-export default {
+export default defineComponent({
   name: 'NewNavigation',
   components: {
-    systemLog,
+    SystemLog,
     BcsMd,
+    ProjectSelector,
+    PopoverSelector,
   },
-  data() {
-    return {
-      showSystemLog: false,
-      activeLangId: this.$i18n.locale,
-      langs: [
-        {
-          icon: 'bcs-icon-lang-en',
-          name: 'English',
-          id: 'en-US',
-        },
-        {
-          icon: 'bcs-icon-lang-ch',
-          name: '中文',
-          id: 'zh-CN',
-        },
-      ],
-      showFeatures: false,
-      featureMd,
-    };
-  },
-  computed: {
-    curLang() {
-      return this.langs.find(item => item.id === this.activeLangId);
-    },
-    user() {
-      return this.$store.state.user;
-    },
-    onlineProjectList() {
-      return this.$store.state.sideMenu.onlineProjectList;
-    },
-    curProjectCode() {
-      return this.$store.state.curProjectCode || this.$route.params.projectCode;
-    },
-    curCluster() {
-      const cluster = this.$store.state.cluster.curCluster;
-      return cluster && Object.keys(cluster).length ? cluster : null;
-    },
-    curProject() {
-      return this.$store.state.curProject;
-    },
-    allClusterList() {
-      return this.$store.state.cluster.allClusterList || [];
-    },
-    firstShareCluster() {
-      return this.allClusterList.find(item => item.is_shared);
-    },
-    ...mapGetters('cluster', ['isSharedCluster']),
-  },
-  methods: {
-    async handleProjectChange(code) {
-      // 解决组件初始化时触发change事件问题
-      if (code === this.curProjectCode) return;
-      // 切换项目跳转区分:
-      // 1.共享集群下切换项目跳到命名空间
-      // 2.专用集群下切换项目跳转到集群列表
+  setup() {
+    const menus = ref<IMenu[]>(menusData);
+    const langs = ref([
+      {
+        icon: 'bk-icon icon-english',
+        name: 'English',
+        id: 'en-US',
+      },
+      {
+        icon: 'bk-icon icon-chinese',
+        name: '中文',
+        id: 'zh-CN',
+      },
+    ]);
+    const curLang = computed(() => langs.value.find(item => item.id === $i18n.locale) || { id: 'zh-CN', icon: 'bk-icon icon-chinese' });
+    const showSystemLog = ref(false);
+    const showFeatures = ref(false);
+    const user = computed(() => $store.state.user);
+    const curProject = computed(() => $store.state.curProject);
+    const activeNav = computed(() => findCurrentNav(menus.value) || {});
+    // 当前路由
+    const route = computed(() => toRef(reactive($router), 'currentRoute').value);
+    // path上有项目Code且项目开启了容器服务时才显示左侧菜单
+    const needMenu = computed(() => {
+      const { projectCode } = route.value.params;
+      return !!projectCode && route.value.fullPath.indexOf(projectCode) > -1 && !!curProject.value.kind;
+    });
 
-      const name = this.isSharedCluster ? 'namespace' : 'clusterMain';
-      const item = this.onlineProjectList.find(item => item.project_code === code);
-      // 切换不同项目时刷新界面(解决在节点界面有轮询时切换项目集群ID和项目不对应报错问题)
-      const route = this.$router.resolve({
+    // 当前导航
+    const findCurrentNav = (menus: IMenu[]) => menus.find((item) => {
+      if (item.children?.length) return findCurrentNav(item.children);
+
+      return item.route === route.value.name || item.id === route.value.meta?.menuId;
+    });
+
+    // 切换菜单
+    const handleChangeMenu = (item: IMenu) => {
+      const name = item.route || item.children?.[0]?.route || '404';
+      if (route.value.name === name) return;
+
+      $router.push({
         name,
         params: {
-          projectCode: code,
-          // eslint-disable-next-line camelcase
-          projectId: item?.project_id,
+          projectCode: $store.getters.curProjectCode,
+          clusterId: $store.getters.curClusterId,
         },
       });
-      location.href = route.href;
-    },
-    handleGotoUserToken() {
-      if (this.$route.name === 'token') return;
-      this.$router.push({
+    };
+
+    // 左侧菜单折叠和收起
+    const openSideMenu = computed(() => $store.state.openSideMenu);
+    const handleToggleClickNav = (value) => {
+      $store.commit('updateOpenSideMenu', !!value);
+    };
+    // 首页
+    const handleGoHome = () => {
+      $router.push({ name: 'home' });
+    };
+
+    // 切换语言
+    const handleChangeLang = (item) => {
+      $i18n.locale = item.id;
+      document.cookie = `blueking_language=${item.id}`;
+      window.location.reload();
+    };
+    // 帮助文档
+    const handleGotoHelp  = () => {
+      window.open(window.BCS_CONFIG?.doc?.help);
+    };
+    // 版本日志
+    const handleShowSystemLog = () => {
+      showSystemLog.value = true;
+    };
+    // 版本特性
+    const handleShowFeatures = () => {
+      showFeatures.value = true;
+    };
+    // 跳转用户token
+    const handleGotoUserToken = () => {
+      if (route.value.name === 'token') return;
+      $router.push({
         name: 'token',
       });
-    },
-    // 申请项目权限
-    handleGotoIAM() {
-      window.open(window.BK_IAM_APP_URL);
-    },
-    handleGotoProjectManage() {
-      this.$refs.projectSelectRef?.close();
-      if (window.REGION === 'ieod') {
-        window.open(`${window.DEVOPS_HOST}/console/pm`);
-      } else {
-        if (this.$route.name === 'projectManage') return;
-        this.$router.push({
-          name: 'projectManage',
-        });
-      }
-    },
-    handleCreateProject() {
-      this.$refs.projectSelectRef?.close();
-      this.$emit('create-project');
-    },
+    };
+    // 注销登录态
+    const handleLogout = () => {
+      window.location.href = `${window.LOGIN_FULL}?c_url=${window.location}`;
+    };
 
-    handleGotoHelp() {
-      window.open(window.BCS_CONFIG?.doc?.help);
-    },
-
-    /**
-             * 打开版本日志弹框
-             */
-    handleShowSystemLog() {
-      this.showSystemLog = true;
-    },
-
-    // 跳转首页
-    handleGoHome() {
-      const { goHome } = useGoHome();
-      goHome(this.$route);
-    },
-    // 注销
-    handleLogout() {
-      window.location.href = `${LOGIN_FULL}?c_url=${window.location}`;
-    },
-    // 项目集群
-    async handleGotoProjectCluster() {
-      await this.handleSaveClusterInfo({});
-      this.handleGoHome();
-      this.$refs.clusterManagePopover.hideHandler();
-    },
-    // 共享集群
-    async handleGotoShareCluster() {
-      if (!this.firstShareCluster) return;
-      await this.handleSaveClusterInfo(this.firstShareCluster);
-      this.handleGoHome();
-      this.$refs.clusterManagePopover.hideHandler();
-    },
-    // 保存cluster信息
-    async handleSaveClusterInfo(cluster) {
-      localStorage.setItem(BCS_CLUSTER, cluster.cluster_id);
-      sessionStorage.setItem(BCS_CLUSTER, cluster.cluster_id);
-      this.$store.commit('cluster/forceUpdateCurCluster', cluster.cluster_id ? cluster : {});
-      this.$store.commit('updateCurClusterId', cluster.cluster_id);
-      this.$store.commit('updateViewMode', 'cluster');
-      this.$store.commit('cluster/forceUpdateClusterList', this.$store.state.cluster.allClusterList);
-      this.$store.dispatch('getFeatureFlag');
-    },
-    handleChangeLang(item) {
-      document.cookie = `blueking_language=${item.id};`;
-      window.location.reload();
-      // this.activeLangId = item.id
-      // this.$i18n.locale = this.activeLangId
-      // locale.getCurLang().bk.lang = this.activeLangId
-    },
-    handleShowFeatures() {
-      this.showFeatures = true;
-    },
+    return {
+      activeNav,
+      needMenu,
+      curProject,
+      openSideMenu,
+      featureData,
+      menus,
+      langs,
+      curLang,
+      showSystemLog,
+      showFeatures,
+      user,
+      handleGoHome,
+      handleChangeLang,
+      handleGotoHelp,
+      handleShowSystemLog,
+      handleShowFeatures,
+      handleGotoUserToken,
+      handleLogout,
+      handleToggleClickNav,
+      handleChangeMenu,
+    };
   },
-};
+});
+
 </script>
 <style lang="postcss" scoped>
-/deep/ .bk-navigation-wrapper .container-content {
-  max-height: calc(100vh - 52px);
-  padding: 0;
-  overflow: hidden;
+.header-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #768197;
+  cursor: pointer;
+  width: 32px;
+  height: 32px;
+  &:hover {
+    background: linear-gradient(270deg,#253047,#263247);
+    border-radius: 100%;
+    color: #d3d9e4;
+  }
 }
-/deep/ .bk-select .bk-tooltip.bk-select-dropdown {
-    background: transparent;
-}
-/deep/ .bcs-title-desc {
-    cursor: pointer;
-}
-.project-item .biz-id {
-    color: #C4C6CC;
-}
-.all-icon {
-    width: 28px;
-    height: 28px;
-}
-.bcs-navigation-admin {
-    display:flex;
-    flex-direction:column;
-    background:#FFFFFF;
-    border:1px solid #E2E2E2;
-    margin:0;
-    color:#63656E;
-    padding: 6px 0;
-}
-.nav-item {
-    flex:0 0 32px;
-    display:flex;
-    align-items:center;
-    padding:0 20px;
-    list-style:none;
-    .bcs-icon {
-        font-size: 18px;
-    }
-    &.active {
-        color:#3A84FF;
-        background-color:#F0F1F5;
-    }
-    &:hover {
-        color:#3A84FF;
-        cursor:pointer;
-        background-color:#F0F1F5;
-    }
-}
-
-.cluster-manage-angle-content {
-    display:flex;
-    flex-direction:column;
-    background:#262634;
-    border:1px solid #262634;
-    margin:0;
-    color:#FFFFFF;
-    padding: 5px 0;
-}
-.angle-item {
-    flex:0 0 32px;
-    display:flex;
-    align-items:center;
-    padding:0 25px;
-    list-style:none;
-    &:hover {
-        color: #3A84FF;
-        cursor:pointer;
-        .beta {
-            color: #FFFFFF
-        }
-    }
-    &.active {
-        color: #3A84FF;
-        .beta {
-            color: #FFFFFF
-        }
-    }
-    &.disable {
-        color: #fff;
-        cursor: not-allowed;
-    }
-    .beta {
-        display: inline-block;
-        line-height: 16px;
-        background-color: red;
-        border-radius: 6px;
-        padding:0 5px 2px;
-        margin-left: 5px;
-        margin-top: 2px;
-    }
-}
-
-.extension-item {
-    margin: 0 -16px;
-    padding: 0 16px;
-    &:hover {
-        cursor: pointer;
-        background-color: #f0f1f5;
-    }
-}
-/deep/ .create-input {
-    width: 90%;
-}
-.bcs-navigation-header {
-    flex:1;
-    height:100%;
-    display:flex;
-    align-items:center;
-    justify-content: space-between;
-    font-size:14px;
-    .nav-left {
-        flex: 1;
-        display:flex;
-        align-items:center;
-        padding:0;
-        margin:0;
-        .angle-nav {
-            display: flex;
-        }
-        .cluster-manage-angle {
-            display: flex;
-            align-items: center;
-            color: #96A2B9;
-            padding: 15px 0;
-            &:hover {
-                color: #D3D9E4;
-                + .bcs-header-invisible {
-                    height: 200px;
-                    visibility: initial;
-                    transition: all .5s;
-                }
-            }
-            .angle-down {
-                font-size: 22px;
-            }
-        }
-        .header-select {
-            width:240px;
-            margin-right:34px;
-            border:none;
-            background:#252F43;
-            color:#D3D9E4;
-            box-shadow:none;
-        }
-        .header-nav-item {
-            list-style:none;
-            height:50px;
-            display:flex;
-            align-items:center;
-            margin-right:40px;
-            color:#96A2B9;
-            min-width:56px;
-            &:hover {
-                cursor:pointer;
-                color:#D3D9E4;
-            }
-            &.active {
-                color: #fff;
-            }
-        }
-    }
-    .nav-right {
-        display: flex;
-        align-items: center;
-        .header-help {
-            color:#768197;
-            font-size:16px;
-            position:relative;
-            height:32px;
-            width:32px;
-            display:flex;
-            align-items:center;
-            justify-content:center;
-            margin-right:8px;
-            &:hover {
-                background:linear-gradient(270deg,rgba(37,48,71,1) 0%,rgba(38,50,71,1) 100%);
-                border-radius:100%;
-                cursor:pointer;
-                color:#D3D9E4;
-            }
-        }
-        /deep/ .header-user {
-            height:100%;
-            display:flex;
-            align-items:center;
-            justify-content:center;
-            color:#96A2B9;
-            margin-left:8px;
-            .bk-icon {
-                margin-left:5px;
-                font-size:12px;
-            }
-            &:hover {
-                cursor:pointer;
-                color:#3a84ff;
-            }
-        }
-        /deep/ .flag-box {
-            align-items: center;
-            border-radius: 50%;
-            color: #979ba5;
-            cursor: pointer;
-            display: inline-flex;
-            font-size: 16px;
-            height: 32px;
-            justify-content: center;
-            position: relative;
-            transition: background .15s;
-            width: 32px;
-            &:hover {
-                background: #f0f1f5;
-                color: #3a84ff;
-                z-index: 1;
-            }
-        }
-    }
-}
-
-.bcs-header-invisible {
-    position: absolute;
-    top: 52px;
-    left: 0;
-    display: flex;
-    width: 100%;
-    height: 0;
-    background: #262634;
-    color: #fff;
-    padding-left: 270px;
-    box-sizing: border-box;
-    z-index: 999;
-    visibility: hidden;
-    transition: all 0;
-    .angle-list {
-        width: 140px;
-        height: 100%;
-        padding-top: 20px;
-        border-left: 1px solid #30303d;
-    }
-    .angle-list:last-child {
-        border-right: 1px solid #30303d;
-    }
-    .angle-item {
-        cursor: pointer;
-        padding: 0 10px 0 20px;
-        height: 32px;
-        line-height: 32px;
-        color: #D3D9E4;
-        &:hover {
-            background-color: #191929;
-        }
-    }
-}
-.hoverStatus {
-    height: 200px;
-    visibility: initial;
-    transition: all .5s;
-}
-/deep/ .bcs-md-preview {
-    padding: 0 24px 24px 24px;
+>>> .container-content {
+  padding: 0!important;
 }
 </style>

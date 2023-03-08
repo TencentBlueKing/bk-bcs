@@ -100,11 +100,6 @@ func (a authorizer) Authorize(kt *kit.Kit, resources ...*meta.ResourceAttribute)
 		return nil, false, err
 	}
 
-	if resp.Code != errf.OK {
-		logs.Errorf("authorize failed, req: %#v, code: %d, msg: %s, rid: %s", req, resp.Code, resp.Message, kt.Rid)
-		return nil, false, errf.New(resp.Code, resp.Message)
-	}
-
 	authorized := true
 	for _, decision := range resp.Decisions {
 		if !decision.Authorized {
@@ -136,12 +131,6 @@ func (a authorizer) AuthorizeWithResp(kt *kit.Kit, resp interface{}, resources .
 			logs.Errorf("get permission to apply failed, req: %#v, err: %v, rid: %s", req, err, kt.Rid)
 			a.assignAuthorizeResp(kt, resp, errf.DoAuthorizeFailed, "authorize failed", nil)
 			return errf.New(errf.DoAuthorizeFailed, "get permission to apply failed")
-		}
-
-		if permResp.Code != errf.OK {
-			logs.Errorf("get permission to apply failed, req: %#v, resp: %#v, rid: %s", req, permResp, kt.Rid)
-			a.assignAuthorizeResp(kt, resp, permResp.Code, permResp.Message, nil)
-			return errf.New(permResp.Code, permResp.Message)
 		}
 
 		a.assignAuthorizeResp(kt, resp, errf.PermissionDenied, "no permission", permResp.Permission)

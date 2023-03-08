@@ -1,59 +1,42 @@
 <script setup lang="ts">
   import { defineProps, ref, computed, watch } from 'vue'
-  import { useRoute } from 'vue-router'
+  import { AngleDoubleRight } from 'bkui-vue/lib/icon'
   import VersionList from './version-list.vue'
-  import ConfigList from './config-list/index.vue'
-  import CreateConfig from './config-list/create-config.vue'
-  import CreateVersion from './create-version/index.vue'
-  import ReleaseVersion from './release-version/index.vue'
-
-  const route = useRoute()
+  import ConfigDetailTable from './config-detail-table/index.vue'
+  import ConfigDetailList from './config-detail-list.vue'
+  import VersionDetailTable from './version-detail-table.vue'
 
   const props = defineProps<{
     bkBizId: string,
     appId: number
   }>()
 
-  const appName = ref('') // @todo 需要调接口查询应用详情
-  const versionName = ref('已提交的版本名称') // @todo 需要调接口获取
-  const configList = ref()
+  const versionListRef = ref()
+  const releaseId = ref<number|null>(null) // 当前选中的版本ID
+  const versionDetailView = ref(false)
 
-  const updateConfigList = () => {
-    configList.value.refreshConfigList()
+  const updateVersionList = () => {
+    versionListRef.value.getVersionList()
   }
 
-  const handleUpdateStatus = () => {
-    console.log('刷新配置当前配置状态')
+  const handleUpdateReleaseId = (id: number) => {
+    releaseId.value = id
   }
 
 </script>
 <template>
-  <section class="serving-config-wrapper">
+  <section :class="['serving-config-wrapper', { 'version-detail-view': versionDetailView}]">
     <section class="version-list-side">
-      <VersionList :bk-biz-id="props.bkBizId" :app-id="props.appId"/>
+      <VersionDetailTable v-if="versionDetailView" :bk-biz-id="props.bkBizId" :app-id="props.appId" />
+      <VersionList v-else ref="versionListRef" :bk-biz-id="props.bkBizId" :app-id="props.appId" :release-id="releaseId" @updateReleaseId="handleUpdateReleaseId" />
+      <div :class="['view-change-trigger', { extend: versionDetailView }]" @click="versionDetailView = !versionDetailView">
+        <AngleDoubleRight class="arrow-icon" />
+        <span class="text">版本详情</span>
+      </div>
     </section>
     <section class="version-config-content">
-      <section class="config-content-header">
-        <section class="summary-wrapper">
-          <div class="status-tag">编辑中</div>
-          <div class="version-name">未命名版本</div>
-        </section>
-        <section class="actions-wrapper">
-          <CreateVersion
-            :bk-biz-id="props.bkBizId"
-            :app-id="props.appId"
-            :app-name="appName"
-            @confirm="handleUpdateStatus" />
-          <ReleaseVersion
-            :bk-biz-id="props.bkBizId"
-            :app-id="props.appId"
-            :app-name="appName"
-            :version-name="versionName"
-            @confirm="handleUpdateStatus" />
-        </section>
-      </section>
-      <CreateConfig :bk-biz-id="props.bkBizId" :app-id="props.appId" @confirm="updateConfigList" />
-      <ConfigList ref="configList" :bk-biz-id="props.bkBizId" :app-id="props.appId" />
+      <ConfigDetailList :bk-biz-id="props.bkBizId" :app-id="props.appId" v-if="versionDetailView" />
+      <ConfigDetailTable v-else ref="configListRef" :bk-biz-id="props.bkBizId" :app-id="props.appId" :release-id="releaseId" @updateVersionList="updateVersionList" />
     </section>
   </section>
 </template>
@@ -63,49 +46,55 @@
     align-content: center;
     justify-content: space-between;
     height: 100%;
+    &.version-detail-view {
+      .version-list-side {
+        width: calc(100% - 366px);
+      }
+      .version-config-content {
+        width: 366px;
+      }
+    }
   }
   .version-list-side {
+    position: relative;
     width: 280px;
     height: 100%;
     background: #fafbfd;
     box-shadow: 0 2px 2px 0 rgba(0,0,0,0.15);
     z-index: 1;
+    transition: width 0.3 ease-in-out;
+  }
+  .view-change-trigger {
+    position: absolute;
+    top: 37%;
+    right: -16px;
+    padding-top: 8px;
+    width: 16px;
+    color: #ffffff;
+    background: #c4c6cc;
+    border-radius: 0 4px 4px 0;
+    text-align: center;
+    cursor: pointer;
+    &.extend {
+      background: #a3c5fd;
+      .arrow-icon {
+        transform: rotate(180deg);
+      }
+    }
+    .text {
+      display: inline-block;
+      margin-top: -8px;
+      font-size: 12px;
+      transform: scale(0.833);
+    }
+    .arrow-icon {
+      font-size: 14px;
+    }
   }
   .version-config-content {
-    padding: 0 24px;
     width: calc(100% - 280px);
     height: 100%;
     background: #ffffff;
-  }
-  .config-content-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    height: 64px;
-    border-bottom: 1px solid #dcdee5;
-    .summary-wrapper {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      .status-tag {
-        margin-right: 8px;
-        padding: 0 10px;
-        height: 22px;
-        line-height: 20px;
-        font-size: 12px;
-        color: #63656e;
-        border: 1px solid rgba(151,155,165,0.30);
-        border-radius: 11px;
-      }
-      .version-name {
-        color: #63656e;
-        font-size: 14px;
-        font-weight: bold;
-      }
-    }
-    .actions-wrapper {
-      display: flex;
-      align-items: center;
-    }
+    transition: width 0.3 ease-in-out;
   }
 </style>

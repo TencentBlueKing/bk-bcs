@@ -25,8 +25,6 @@
 */
 import http from '@/api';
 import { json2Query } from '@/common/util';
-import router from '@/router';
-import store from '@/store';
 
 const methodsWithoutData = ['get', 'head', 'options', 'delete'];
 const defaultConfig = { needRes: false };
@@ -41,14 +39,12 @@ export const resolveUrlPrefix = (url, { domain = window.DEVOPS_BCS_API_URL, pref
 
 export const parseUrl = (reqMethod, url, body = {}) => {
   let params = JSON.parse(JSON.stringify(body));
+  const storage = JSON.parse(localStorage.getItem('__bcs_vuex_stroage__') || '{}');
   // 全局URL变量替换
-  const { currentRoute } = router;
   const variableData = {
-    $projectId: currentRoute.params.projectId,
-    $clusterId: store.state.curClusterId || currentRoute.query.cluster_id || currentRoute.params.cluster_id,
-    $projectCode: store.state.sideMenu?.onlineProjectList
-      ?.find(item => item.project_id === currentRoute.params.projectId)
-      ?.project_code,
+    $projectId: storage.curProject?.projectID,
+    $clusterId: storage.curCluster?.clusterID,
+    $projectCode: storage.curProject?.projectCode,
   };
   Object.keys(params).forEach((key) => {
     // 自定义url变量

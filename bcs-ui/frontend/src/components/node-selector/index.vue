@@ -106,7 +106,7 @@
 </template>
 
 <script>
-import useNode from '@/views/node/use-node';
+import useNode from '@/views/cluster-manage/node-list/use-node';
 export default {
   props: {
     selected: {
@@ -167,7 +167,7 @@ export default {
       return this.$route.params.projectCode;
     },
     onlineProjectList() {
-      return this.$store.state.sideMenu.onlineProjectList || [];
+      return this.$store.state.projectList || [];
     },
     curPageData() {
       const { pageSize, curPage } = this.pageConf;
@@ -399,8 +399,8 @@ export default {
 </script>
 
 <style scoped lang="postcss">
-    @import '../../css/variable.css';
-    @import '../../css/mixins/clearfix.css';
+    @import '@/css/variable.css';
+    @import '@/css/mixins/clearfix.css';
     @import '../../css/mixins/ellipsis';
     .biz-cluster-create-table-header {
         @mixin clearfix;

@@ -22,11 +22,13 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/proto"
 
 	"bscp.io/pkg/components"
 	"bscp.io/pkg/criteria/constant"
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/rest"
+	"bscp.io/pkg/runtime/webannotation"
 )
 
 var (
@@ -39,7 +41,7 @@ var (
 		codes.NotFound:           "NOT_FOUND",
 		codes.AlreadyExists:      "ALREADY_EXISTS",
 		codes.PermissionDenied:   "PERMISSION_DENIED",
-		codes.ResourceExhausted:  "PERMISSION_DENIED",
+		codes.ResourceExhausted:  "RESOURCE_EXHAUSTED",
 		codes.FailedPrecondition: "FAILED_PRECONDITION",
 		codes.Aborted:            "ABORTED",
 		codes.OutOfRange:         "OUT_OF_RANGE",
@@ -90,6 +92,11 @@ func grpcGatewayErr(s *status.Status) render.Renderer {
 // bkErrorHandler 蓝鲸规范化的错误返回
 func bkErrorHandler(ctx context.Context, mux *runtime.ServeMux, marshaler runtime.Marshaler, w http.ResponseWriter, r *http.Request, err error) {
 	s := status.Convert(err)
+	ww, ok := w.(*webannotation.AnnotationResponseWriter)
+	if ok {
+		ww.SetError(err)
+	}
+
 	render.Render(w, r, grpcGatewayErr(s))
 }
 
@@ -121,4 +128,14 @@ func kitMetadataHandler(ctx context.Context, r *http.Request) metadata.MD {
 		constant.UserKey, kt.User,
 		constant.AppCodeKey, kt.AppCode,
 	)
+}
+
+// bscpResponse 可动态处理 webannotation
+func bscpResponse(ctx context.Context, w http.ResponseWriter, msg proto.Message) error {
+	ww, ok := w.(*webannotation.AnnotationResponseWriter)
+	if !ok {
+		return nil
+	}
+
+	return ww.Build(ctx, msg)
 }

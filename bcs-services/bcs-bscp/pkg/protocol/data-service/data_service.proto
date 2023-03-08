@@ -24,7 +24,7 @@ service Data {
     rpc CreateApp(CreateAppReq) returns (CreateResp) {}
     rpc UpdateApp(UpdateAppReq) returns (pbbase.EmptyResp) {}
     rpc DeleteApp(DeleteAppReq) returns (pbbase.EmptyResp) {}
-    rpc GetApp(GetAppReq) returns (GetAppResp) {}
+    rpc GetApp(GetAppReq) returns (pbapp.App) {}
     rpc ListApps(ListAppsReq) returns (ListAppsResp) {}
     rpc ListAppsRest(ListAppsRestReq) returns (ListAppsResp) {}
 
@@ -32,17 +32,17 @@ service Data {
     rpc CreateConfigItem(CreateConfigItemReq) returns (CreateResp) {}
     rpc UpdateConfigItem(UpdateConfigItemReq) returns (pbbase.EmptyResp) {}
     rpc DeleteConfigItem(DeleteConfigItemReq) returns (pbbase.EmptyResp) {}
-    rpc GetConfigItem(GetConfigItemReq) returns (GetConfigItemResp) {}
+    rpc GetConfigItem(GetConfigItemReq) returns (pbci.ConfigItem) {}
     rpc ListConfigItems(ListConfigItemsReq) returns (ListConfigItemsResp) {}
 
     // content related interface.
     rpc CreateContent(CreateContentReq) returns (CreateResp) {}
-    rpc GetContent(GetContentReq) returns (GetContentResp) {}
+    rpc GetContent(GetContentReq) returns (pbcontent.Content) {}
     rpc ListContents(ListContentsReq) returns (ListContentsResp) {}
 
     // commit related interface.
     rpc CreateCommit(CreateCommitReq) returns (CreateResp) {}
-    rpc GetLatestCommit(GetLatestCommitReq) returns (GetLatestCommitResp) {}
+    rpc GetLatestCommit(GetLatestCommitReq) returns (pbcommit.Commit) {}
     rpc ListCommits(ListCommitsReq) returns (ListCommitsResp) {}
 
     // release related interface.
@@ -122,10 +122,6 @@ message GetAppReq {
     uint32 app_id = 2;
 }
 
-message GetAppResp {
-    pbapp.App data = 1;
-}
-
 message ListAppsReq {
     uint32 biz_id                 = 1;
     google.protobuf.Struct filter = 2;
@@ -167,10 +163,6 @@ message GetConfigItemReq {
     uint32 app_id = 3;
 }
 
-message GetConfigItemResp {
-    pbci.ConfigItem data = 1;
-}
-
 message ListConfigItemsReq {
     uint32 biz_id                 = 1;
     uint32 app_id                 = 2;
@@ -192,10 +184,6 @@ message GetContentReq {
     uint32 id     = 1;
     uint32 biz_id = 2;
     uint32 app_id = 3;
-}
-
-message GetContentResp {
-    pbcontent.Content data = 1;
 }
 
 message ListContentsReq {
@@ -220,10 +208,6 @@ message GetLatestCommitReq {
     uint32 biz_id         = 1;
     uint32 app_id         = 2;
     uint32 config_item_id = 3;
-}
-
-message GetLatestCommitResp {
-    pbcommit.Commit data = 1;
 }
 
 message ListCommitsReq {

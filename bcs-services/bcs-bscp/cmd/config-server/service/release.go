@@ -35,7 +35,7 @@ func (s *Service) CreateRelease(ctx context.Context, req *pbcs.CreateReleaseReq)
 		ResourceID: req.AppId}, BizID: req.BizId}
 	err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res)
 	if err != nil {
-		return resp, nil
+		return nil, err
 	}
 
 	r := &pbds.CreateReleaseReq{
@@ -50,13 +50,11 @@ func (s *Service) CreateRelease(ctx context.Context, req *pbcs.CreateReleaseReq)
 	}
 	rp, err := s.client.DS.CreateRelease(grpcKit.RpcCtx(), r)
 	if err != nil {
-		errf.Error(err).AssignResp(grpcKit, resp)
 		logs.Errorf("create release failed, err: %v, rid: %s", err, grpcKit.Rid)
-		return resp, nil
+		return nil, err
 	}
 
-	resp.Code = errf.OK
-	resp.Data = &pbcs.CreateReleaseResp_RespData{
+	resp = &pbcs.CreateReleaseResp{
 		Id: rp.Id,
 	}
 	return resp, nil
@@ -71,17 +69,15 @@ func (s *Service) ListReleases(ctx context.Context, req *pbcs.ListReleasesReq) (
 		ResourceID: req.AppId}, BizID: req.BizId}
 	err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res)
 	if err != nil {
-		return resp, nil
+		return nil, err
 	}
 
 	if req.Page == nil {
-		errf.Error(errf.New(errf.InvalidParameter, "page is null")).AssignResp(grpcKit, resp)
-		return resp, nil
+		return nil, errf.New(errf.InvalidParameter, "page is null")
 	}
 
 	if err = req.Page.BasePage().Validate(types.DefaultPageOption); err != nil {
-		errf.Error(err).AssignResp(grpcKit, resp)
-		return resp, nil
+		return nil, err
 	}
 
 	r := &pbds.ListReleasesReq{
@@ -92,13 +88,11 @@ func (s *Service) ListReleases(ctx context.Context, req *pbcs.ListReleasesReq) (
 	}
 	rp, err := s.client.DS.ListReleases(grpcKit.RpcCtx(), r)
 	if err != nil {
-		errf.Error(err).AssignResp(grpcKit, resp)
 		logs.Errorf("list releases failed, err: %v, rid: %s", err, grpcKit.Rid)
-		return resp, nil
+		return nil, err
 	}
 
-	resp.Code = errf.OK
-	resp.Data = &pbcs.ListReleasesResp_RespData{
+	resp = &pbcs.ListReleasesResp{
 		Count:   rp.Count,
 		Details: rp.Details,
 	}
@@ -114,12 +108,11 @@ func (s *Service) ListReleasedConfigItems(ctx context.Context, req *pbcs.ListRel
 	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.ReleasedCI, Action: meta.Find}, BizID: req.BizId}
 	err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res)
 	if err != nil {
-		return resp, nil
+		return nil, err
 	}
 
 	if err = req.Page.BasePage().Validate(types.DefaultPageOption); err != nil {
-		errf.Error(err).AssignResp(grpcKit, resp)
-		return resp, nil
+		return nil, err
 	}
 
 	// build query filter.
@@ -135,9 +128,8 @@ func (s *Service) ListReleasedConfigItems(ctx context.Context, req *pbcs.ListRel
 	}
 	pbFilter, err := ft.MarshalPB()
 	if err != nil {
-		errf.Error(err).AssignResp(grpcKit, resp)
 		logs.Errorf("list releases failed, err: %v, rid: %s", err, grpcKit.Rid)
-		return resp, nil
+		return nil, err
 	}
 
 	r := &pbds.ListReleasedCIsReq{
@@ -147,13 +139,11 @@ func (s *Service) ListReleasedConfigItems(ctx context.Context, req *pbcs.ListRel
 	}
 	rp, err := s.client.DS.ListReleasedConfigItems(grpcKit.RpcCtx(), r)
 	if err != nil {
-		errf.Error(err).AssignResp(grpcKit, resp)
 		logs.Errorf("list released config items failed, err: %v, rid: %s", err, grpcKit.Rid)
-		return resp, nil
+		return nil, err
 	}
 
-	resp.Code = errf.OK
-	resp.Data = &pbcs.ListReleasedConfigItemsResp_RespData{
+	resp = &pbcs.ListReleasedConfigItemsResp{
 		Count:   rp.Count,
 		Details: rp.Details,
 	}

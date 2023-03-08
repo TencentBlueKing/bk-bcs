@@ -16,7 +16,6 @@ import (
 	"context"
 	"strings"
 
-	"bscp.io/pkg/criteria/errf"
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/logs"
 	pbcs "bscp.io/pkg/protocol/config-server"
@@ -36,9 +35,8 @@ func (s *Service) ListBiz(ctx context.Context, req *pbcs.ListBizReq) (*pbcs.List
 	}
 	sbresp, err := s.client.Esb.Cmdb().SearchBusiness(ctx, params)
 	if err != nil {
-		errf.Error(err).AssignResp(kt, resp)
 		logs.Errorf("search business failed, err: %v, rid: %s", err, kt.Rid)
-		return resp, nil
+		return nil, err
 	}
 
 	bizList := []*pbcs.ListBizResp_BizData{}
@@ -50,8 +48,7 @@ func (s *Service) ListBiz(ctx context.Context, req *pbcs.ListBizReq) (*pbcs.List
 		})
 	}
 
-	resp.Code = errf.OK
-	resp.Data = &pbcs.ListBizResp_RespData{
+	resp = &pbcs.ListBizResp{
 		BizList: bizList,
 	}
 	return resp, nil

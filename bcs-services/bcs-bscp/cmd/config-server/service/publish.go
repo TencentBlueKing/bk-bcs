@@ -35,7 +35,7 @@ func (s *Service) Publish(ctx context.Context, req *pbcs.PublishReq) (
 		ResourceID: req.AppId}, BizID: req.BizId}
 	err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res)
 	if err != nil {
-		return resp, nil
+		return nil, err
 	}
 
 	r := &pbds.PublishReq{
@@ -47,13 +47,11 @@ func (s *Service) Publish(ctx context.Context, req *pbcs.PublishReq) (
 	}
 	rp, err := s.client.DS.Publish(grpcKit.RpcCtx(), r)
 	if err != nil {
-		errf.Error(err).AssignResp(grpcKit, resp)
 		logs.Errorf("publish strategy failed, err: %v, rid: %s", err, grpcKit.Rid)
-		return resp, nil
+		return nil, err
 	}
 
-	resp.Code = errf.OK
-	resp.Data = &pbcs.PublishResp_RespData{
+	resp = &pbcs.PublishResp{
 		Id: rp.PublishedStrategyHistoryId,
 	}
 	return resp, nil
@@ -70,7 +68,7 @@ func (s *Service) FinishPublish(ctx context.Context, req *pbcs.FinishPublishReq)
 		ResourceID: req.AppId}, BizID: req.BizId}
 	err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res)
 	if err != nil {
-		return resp, nil
+		return nil, err
 	}
 
 	r := &pbds.FinishPublishReq{
@@ -80,12 +78,10 @@ func (s *Service) FinishPublish(ctx context.Context, req *pbcs.FinishPublishReq)
 	}
 	_, err = s.client.DS.FinishPublish(grpcKit.RpcCtx(), r)
 	if err != nil {
-		errf.Error(err).AssignResp(grpcKit, resp)
 		logs.Errorf("finish publish strategy failed, err: %v, rid: %s", err, grpcKit.Rid)
-		return resp, nil
+		return nil, err
 	}
 
-	resp.Code = errf.OK
 	return resp, nil
 }
 
@@ -100,17 +96,15 @@ func (s *Service) ListPublishedStrategyHistories(ctx context.Context, req *pbcs.
 		ResourceID: req.AppId}, BizID: req.BizId}
 	err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res)
 	if err != nil {
-		return resp, nil
+		return nil, err
 	}
 
 	if req.Page == nil {
-		errf.Error(errf.New(errf.InvalidParameter, "page is null")).AssignResp(grpcKit, resp)
-		return resp, nil
+		return nil, errf.New(errf.InvalidParameter, "page is null")
 	}
 
 	if err = req.Page.BasePage().Validate(types.DefaultPageOption); err != nil {
-		errf.Error(err).AssignResp(grpcKit, resp)
-		return resp, nil
+		return nil, err
 	}
 
 	r := &pbds.ListPubStrategyHistoriesReq{
@@ -121,13 +115,11 @@ func (s *Service) ListPublishedStrategyHistories(ctx context.Context, req *pbcs.
 	}
 	rp, err := s.client.DS.ListPublishedStrategyHistories(grpcKit.RpcCtx(), r)
 	if err != nil {
-		errf.Error(err).AssignResp(grpcKit, resp)
 		logs.Errorf("list published strategy histories failed, err: %v, rid: %s", err, grpcKit.Rid)
-		return resp, nil
+		return nil, err
 	}
 
-	resp.Code = errf.OK
-	resp.Data = &pbcs.ListPubStrategyHistoriesResp_RespData{
+	resp = &pbcs.ListPubStrategyHistoriesResp{
 		Count:   rp.Count,
 		Details: rp.Details,
 	}

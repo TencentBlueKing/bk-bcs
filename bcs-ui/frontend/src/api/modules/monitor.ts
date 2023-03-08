@@ -31,3 +31,9 @@ export const podContainersList = request2('get', '/namespaces/$namespaceId/pods/
 export const podLogs = request2('get', '/namespaces/$namespaceId/pods/$podId/logs');
 export const podLogsDownloadURL = `${LOG_API_URL}/namespaces/$namespaceId/pods/$podId/logs/download?container_name=$containerName`;
 export const podLogsStreamURL = `${LOG_API_URL}/namespaces/$namespaceId/pods/$podId/logs/stream?container_name=$containerName&started_at=$startedAt`;
+export const logEntrypoints = request2('get', '/log_collector/entrypoints');
+export const logRules = request2('get', '/log_collector/rules');
+export const ruleDetail = request2('get', '/log_collector/rules/$name');
+export const createLogRule = request2('post', '/log_collector/rules');
+export const updateLogRule = request2('put', '/log_collector/rules/$name');
+export const deleteLogRule = request2('delete', '/log_collector/rules/$name');

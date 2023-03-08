@@ -34,6 +34,9 @@ var (
 		},
 	})
 
+	// BSCPResponseOpt  BSCP 规范返回, 可动态处理 webannotation
+	BSCPResponseOpt = runtime.WithForwardResponseOption(bscpResponse)
+
 	// JsonMarshalerOpt 序列化
 	JsonMarshalerOpt = runtime.WithMarshalerOption(runtime.MIMEWildcard, &runtime.JSONPb{
 		MarshalOptions: protojson.MarshalOptions{

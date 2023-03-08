@@ -9,6 +9,11 @@ html,
 body {
     margin: 0;
     padding: 0;
+    height: 100%;
+    overflow-y: overlay !important;
+    font-family: -apple-system,BlinkMacSystemFont,PingFang SC,Microsoft YaHei,Helvetica Neue,Arial,sans-serif;
+    color: #63656e;
+    letter-spacing: .3px;
 }
 
 ul,
@@ -41,4 +46,15 @@ table {
 td,
 th {
     padding: 0;
+}
+
+*::-webkit-scrollbar {
+    width: 4px !important;
+    height: 4px !important;
+}
+
+*::-webkit-scrollbar-thumb {
+    background: #ddd;
+    border-radius: 20px;
+    box-shadow: inset 0 0 6px hsl(0deg 0% 80% / 30%);
 }

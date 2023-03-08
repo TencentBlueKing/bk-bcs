@@ -19,6 +19,6 @@
 package hack
 
 import (
-	_ "k8s.io/code-generator"                                  // code-generator xxx
-	_ "sigs.k8s.io/controller-tools/cmd/controller-gen@v0.2.5" // controller-gen@v0.2.5 xxx
+	_ "k8s.io/code-generator"                           // code-generator xxx
+	_ "sigs.k8s.io/controller-tools/cmd/controller-gen" // controller-gen@v0.2.5 xxx
 )

@@ -1,24 +1,37 @@
 <script setup lang="ts">
-  import { ref, watch, onMounted } from 'vue'
+  import { ref, computed, watch, onMounted, defineExpose } from 'vue'
+  import { useStore } from 'vuex'
   import { Ellipsis } from 'bkui-vue/lib/icon'
   import { getConfigVersionList } from '../../../../api/config'
+  import { IVersionItem } from '../../../../types'
 
-  interface IVersionItem {
-    id: number;
-    attachment: object;
-    revision: object;
-    spec: {
-      name: string
-    };
-  }
+
+  const store = useStore()
+
+  const emit = defineEmits(['updateReleaseId'])
 
   const props = defineProps<{
     bkBizId: string,
-    appId: number
+    appId: number,
+    releaseId: number|null
   }>()
+
+  const currentConfig: IVersionItem = {
+    id: 0,
+    attachment: {},
+    revision: {},
+    spec: {
+      name: '未命名版本'
+    }
+  }
 
   const versionListLoading = ref(false)
   const versionList = ref<IVersionItem[]>([])
+
+  const listData = computed(() => {
+    return [currentConfig, ...versionList.value]
+  })
+
 
   watch(() => props.appId, () => {
     getVersionList()
@@ -32,21 +45,35 @@
     try {
       versionListLoading.value = true
       const res = await getConfigVersionList(props.bkBizId, props.appId)
-      console.log(res)
-      versionList.value = res.data.details
+      versionList.value = res.data.details.reverse()
+      handleSelectVersion(currentConfig)
     } catch (e) {
       console.error(e)
     } finally {
       versionListLoading.value = false
     }
   }
+
+  const handleSelectVersion = (version: IVersionItem) => {
+    store.commit('config/setCurrentVersion', version)
+    emit('updateReleaseId', version.id)
+  }
+
+  defineExpose({
+    getVersionList
+  })
+
 </script>
 <template>
   <section class="version-container">
-    <section v-if="versionList.length > 0" class="version-steps">
-      <section v-for="(version, index) in versionList" class="version-item" :key="version.id">
+    <bk-loading :loading="versionListLoading">
+      <section
+        v-for="(version, index) in listData"
+        :key="version.id"
+        :class="['version-item', { active: props.releaseId === version.id }]"
+        @click="handleSelectVersion(version)">
         <div class="dot-line">
-          <div :class="['dot', { first: index === 0, last: index === versionList.length - 1 }]"></div>
+          <div :class="['dot', { first: index === 0, last: index === listData.length - 1 }]"></div>
         </div>
         <div class="version-name">{{ version.spec.name }}</div>
         <bk-dropdown class="action-area">
@@ -59,17 +86,15 @@
           </template>
         </bk-dropdown>
       </section>
-    </section>
-    <bk-exception
-      v-else
-      style="margin-top: 100px;"
-      description="没有版本数据"
-      type="empty"
-      scene="part" />
+    </bk-loading>
   </section>
 </template>
 
 <style lang="scss" scoped>
+  .version-container {
+    padding: 16px 0;
+    height: 100%;
+  }
   .version-steps {
     padding: 16px 0;
     overflow: auto;

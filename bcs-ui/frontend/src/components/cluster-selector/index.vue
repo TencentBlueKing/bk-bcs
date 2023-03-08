@@ -18,13 +18,13 @@
           :key="index"
           :class="{ 'active': curClusterId === cluster.cluster_id }"
           @click="handleToggleCluster(cluster)">
-          {{ cluster.name }}
-          <p style="color: #979ba5;">{{ cluster.cluster_id }}</p>
+          <span class="bcs-ellipsis">{{ cluster.name }}</span>
+          <p class="text-[#979ba5]">{{ cluster.cluster_id }}</p>
         </li>
       </ul>
       <div v-else class="cluster-nodata">{{ $t('暂无数据') }}</div>
     </div>
-    <div class="biz-cluster-action" v-if="curViewType === 'cluster' && !isSharedCluster">
+    <div class="biz-cluster-action">
       <span
         class="action-item"
         v-authority="{
@@ -38,22 +38,12 @@
         <i class="bcs-icon bcs-icon-plus-circle"></i>
         {{ $t('新建集群') }}
       </span>
-      <span class="line">|</span>
-      <span
-        class="action-item" @click="handleToggleCluster({
-          name: $t('全部集群'),
-          cluster_id: ''
-        })">
-        <i class="bcs-icon bcs-icon-quanbujiqun"></i>
-        {{ $t('全部集群') }}
-      </span>
     </div>
   </div>
 </template>
 
 <script>
 import { isEmpty } from '@/common/util';
-import { mapGetters } from 'vuex';
 
 export default {
   name: 'ClusterSelector',
@@ -95,9 +85,11 @@ export default {
       return this.$route.meta.isDashboard ? 'dashboard' : 'cluster';
     },
     curClusterId() {
-      return this.$store.state.curClusterId;
+      return this.$store.getters.curClusterId;
     },
-    ...mapGetters('cluster', ['isSharedCluster']),
+    isSharedCluster() {
+      return this.$store.getters.isSharedCluster;
+    },
   },
   watch: {
     value(show) {
@@ -112,27 +104,33 @@ export default {
   },
   methods: {
     /**
-             * 点击除自身元素外，关闭集群选择弹窗
-             */
+     * 点击除自身元素外，关闭集群选择弹窗
+     */
     handleHideClusterSelector() {
       this.$emit('display-change', false);
     },
 
     /**
-             * 集群切换
-             * @param {Object} cluster 集群信息
-             */
+     * 集群切换
+     * @param {Object} cluster 集群信息
+     */
     handleToggleCluster(cluster) {
-      if (this.curClusterId === cluster.cluster_id) return;
+      if (this.curClusterId === cluster.clusterID) return;
 
       this.handleHideClusterSelector();
-      // 抛出选中的集群信息
-      this.$emit('change', cluster);
+      this.$store.commit('updateCurCluster', cluster.clusterID ? cluster : {});
+
+      this.$router.replace({
+        name: this.$route.name,
+        params: {
+          clusterId: cluster.clusterID,
+        },
+      });
     },
 
     /**
-             * 新建集群
-             */
+     * 新建集群
+     */
     async gotCreateCluster() {
       this.handleHideClusterSelector();
       this.$router.push({

@@ -80,8 +80,9 @@ input:-webkit-autofill, textarea:-webkit-autofill, select:-webkit-autofill {
         flex-direction: column;
     }
     .biz-content-wrapper {
+        width: 100%;
         min-height: 400px;
-        max-height: calc(100vh - 112px);
+        max-height: calc(100vh - 104px);
         overflow: auto;
     }
     > section {
@@ -89,28 +90,15 @@ input:-webkit-autofill, textarea:-webkit-autofill, select:-webkit-autofill {
         align-items: stretch;
         flex: 1;
         overflow: hidden;
-        .biz-top-bar {
-            height: 60px;
-            border-bottom: 1px solid $borderWeightColor;
-            background: #fff;
-            box-shadow: 4px 0 3px rgba(0, 0, 0, 0.1);
-        }
     }
     .biz-content {
         position: relative;
         align-items: stretch;
         flex: 1;
-        .biz-top-bar {
-            height: 60px;
-            border-bottom: 1px solid #dde4eb;
-            background: #fff;
-            box-shadow: 4px 0 3px rgba(0, 0, 0, 0.1);
-            position: relative;
-        }
     }
     .biz-panel-header {
         @mixin clearfix;
-        padding: 17px 20px 17px 20px;
+        padding: 16px 20px 16px 20px;
         .left {
             float: left;
         }
@@ -631,7 +619,7 @@ input:-webkit-autofill, textarea:-webkit-autofill, select:-webkit-autofill {
     font-size: 14px;
     padding: 20px 20px 0 20px;
     color: $fontColor;
-    max-height: calc(100vh - 260px);
+    max-height: calc(100vh - 150px);
     overflow: auto;
 }
 
@@ -704,28 +692,6 @@ input:-webkit-autofill, textarea:-webkit-autofill, select:-webkit-autofill {
     color: $iconPrimaryColor;
     cursor: pointer;
     margin-left: 20px;
-}
-
-.biz-templateset-title {
-    display: inline-block;
-    height: 60px;
-    line-height: 60px;
-    font-size: 16px;
-    vertical-align: middle;
-    .bk-form-input {
-        margin-top: -2px;
-        width: 220px;
-    }
-    .bcs-icon {
-        font-size: 12px;
-        margin-left: 5px;
-        visibility: hidden;
-    }
-    &:hover {
-        .bcs-icon {
-            visibility: visible;
-        }
-    }
 }
 
 .biz-guard-tip {
@@ -915,7 +881,6 @@ input:-webkit-autofill, textarea:-webkit-autofill, select:-webkit-autofill {
         padding: 10px 5px 0;
     }
     .code-content {
-        @mixin scroller;
         height: 480px;
         width: 100%;
         margin: 0;
@@ -1006,9 +971,6 @@ input:-webkit-autofill, textarea:-webkit-autofill, select:-webkit-autofill {
     .content {
         padding: 20px 30px 30px 30px;
     }
-    .footer {
-
-    }
 }
 
 .biz-namespace-wrapper {
@@ -1021,7 +983,6 @@ input:-webkit-autofill, textarea:-webkit-autofill, select:-webkit-autofill {
 
     @mixin clearfix;
     .namespace-inner {
-        @mixin scroller;
         /*max-height: 178px;
         overflow: auto;*/
         padding: 10px 0 0;
@@ -1108,10 +1069,10 @@ input:-webkit-autofill, textarea:-webkit-autofill, select:-webkit-autofill {
 
 .biz-topbar-title {
     display: inline-block;
-    height: 60px;
-    line-height: 60px;
+    height: 52px;
+    line-height: 52px;
     font-size: 16px;
-    margin-left: 20px;
+    margin-left: 24px;
 }
 
  /* 覆盖bk-dropdown的错误样式 */
@@ -1902,7 +1863,9 @@ div.jsoneditor {
         font-size: 14px;
     }
 }
-
+.bk-dialog-header.header-on-left {
+    line-height: 25px;
+}
 /* .biz-remove-dialog,
 .biz-confirm-dialog {
     .bk-dialog-header {
@@ -2034,8 +1997,6 @@ div.jsoneditor {
                 overflow: hidden;
 
                 .namespace-inner {
-                    @mixin scroller $borderWeightColor,
-                    0;
                     max-height: 178px;
                     overflow: auto;
                     padding-top: 10px;
@@ -2341,27 +2302,6 @@ div.jsoneditor {
     }
 }
 
-/* 设置默认滚动条样式 */
-div::-webkit-scrollbar {
-    width: 5px;
-    height: 6px;
-    background-color: #e6e6e6;
-}
-div::-webkit-scrollbar-thumb {
-    height: 6px;
-    border-radius: 4px;
-    background-color: #ccc;
-}
-.ace_scrollbar-v::-webkit-scrollbar {
-    width: 6px;
-    background-color: #272822;
-}
-.ace_scrollbar-v::-webkit-scrollbar-thumb {
-    height: 6px;
-    border-radius: 4px;
-    background-color: #666;
-}
-
 .biz-resize-textarea {
     resize: vertical;
 }
@@ -2631,11 +2571,8 @@ div::-webkit-scrollbar-thumb {
 }
 .navigation-message-theme {
     position: relative;
-    top: -20px;
+    top: -10px;
     padding: 0 !important;
-}
-.bk-select-extension:hover {
-    background-color: unset;
 }
 
 .content-loading {
@@ -2643,7 +2580,7 @@ div::-webkit-scrollbar-thumb {
 }
 
 .bcs-content-wrapper {
-    max-height: calc(100vh - 112px);
+    max-height: calc(100vh - 104px);
     overflow: auto;
 }
 .bcs-flex {

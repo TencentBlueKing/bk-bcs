@@ -20,9 +20,9 @@ import (
 	"bscp.io/pkg/iam/meta"
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/logs"
-	"bscp.io/pkg/protocol/config-server"
-	"bscp.io/pkg/protocol/core/content"
-	"bscp.io/pkg/protocol/data-service"
+	pbcs "bscp.io/pkg/protocol/config-server"
+	pbcontent "bscp.io/pkg/protocol/core/content"
+	pbds "bscp.io/pkg/protocol/data-service"
 	"bscp.io/pkg/thirdparty/repo"
 	"bscp.io/pkg/types"
 	"bscp.io/pkg/version"
@@ -37,13 +37,12 @@ func (s *Service) CreateContent(ctx context.Context, req *pbcs.CreateContentReq)
 		ResourceID: req.AppId}, BizID: req.BizId}
 	err := s.authorizer.AuthorizeWithResp(kit, resp, authRes)
 	if err != nil {
-		return resp, nil
+		return nil, err
 	}
 
 	if err := s.validateRepoNodeExist(kit, req); err != nil {
-		errf.Error(err).AssignResp(kit, resp)
 		logs.Errorf("validate file content uploaded failed, err: %v, rid: %s", err, kit.Rid)
-		return resp, nil
+		return nil, err
 	}
 
 	r := &pbds.CreateContentReq{
@@ -59,13 +58,11 @@ func (s *Service) CreateContent(ctx context.Context, req *pbcs.CreateContentReq)
 	}
 	rp, err := s.client.DS.CreateContent(kit.RpcCtx(), r)
 	if err != nil {
-		errf.Error(err).AssignResp(kit, resp)
 		logs.Errorf("create content failed, err: %v, rid: %s", err, kit.Rid)
-		return resp, nil
+		return nil, err
 	}
 
-	resp.Code = errf.OK
-	resp.Data = &pbcs.CreateContentResp_RespData{
+	resp = &pbcs.CreateContentResp{
 		Id: rp.Id,
 	}
 	return resp, nil
@@ -108,17 +105,15 @@ func (s *Service) ListContents(ctx context.Context, req *pbcs.ListContentsReq) (
 	authRes := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.Content, Action: meta.Find}, BizID: req.BizId}
 	err := s.authorizer.AuthorizeWithResp(grpcKit, resp, authRes)
 	if err != nil {
-		return resp, nil
+		return nil, err
 	}
 
 	if req.Page == nil {
-		errf.Error(errf.New(errf.InvalidParameter, "page is null")).AssignResp(grpcKit, resp)
-		return resp, nil
+		return nil, errf.New(errf.InvalidParameter, "page is null")
 	}
 
 	if err = req.Page.BasePage().Validate(types.DefaultPageOption); err != nil {
-		errf.Error(err).AssignResp(grpcKit, resp)
-		return resp, nil
+		return nil, err
 	}
 
 	r := &pbds.ListContentsReq{
@@ -129,13 +124,11 @@ func (s *Service) ListContents(ctx context.Context, req *pbcs.ListContentsReq) (
 	}
 	rp, err := s.client.DS.ListContents(grpcKit.RpcCtx(), r)
 	if err != nil {
-		errf.Error(err).AssignResp(grpcKit, resp)
 		logs.Errorf("list contents failed, err: %v, rid: %s", err, grpcKit.Rid)
-		return resp, nil
+		return nil, err
 	}
 
-	resp.Code = errf.OK
-	resp.Data = &pbcs.ListContentsResp_RespData{
+	resp = &pbcs.ListContentsResp{
 		Count:   rp.Count,
 		Details: rp.Details,
 	}

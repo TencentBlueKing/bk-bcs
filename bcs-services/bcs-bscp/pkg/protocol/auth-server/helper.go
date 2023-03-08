@@ -132,10 +132,3 @@ func (p *PullResourceResp) SetData(data interface{}) error {
 
 	return nil
 }
-
-// SetCodeMsg set resp code and message.
-func (p *PullResourceResp) SetCodeMsg(code int32, msg string) {
-	p.Code = code
-	p.Message = msg
-	return
-}

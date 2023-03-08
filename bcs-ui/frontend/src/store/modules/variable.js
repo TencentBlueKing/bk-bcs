@@ -25,7 +25,7 @@
 */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import http from '@/api';
-import useVariable from '@/views/variable/use-variable';
+import useVariable from '@/views/deploy-manage/variable/use-variable';
 
 export default {
   namespaced: true,

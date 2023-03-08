@@ -16,6 +16,7 @@ import (
 	"context"
 	"time"
 
+	"bscp.io/pkg/criteria/errf"
 	"bscp.io/pkg/dal/table"
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/logs"
@@ -27,9 +28,7 @@ import (
 )
 
 // CreateConfigItem create config item.
-func (s *Service) CreateConfigItem(ctx context.Context, req *pbds.CreateConfigItemReq) (
-	*pbds.CreateResp, error) {
-
+func (s *Service) CreateConfigItem(ctx context.Context, req *pbds.CreateConfigItemReq) (*pbds.CreateResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
 
 	now := time.Now()
@@ -46,7 +45,7 @@ func (s *Service) CreateConfigItem(ctx context.Context, req *pbds.CreateConfigIt
 	id, err := s.dao.ConfigItem().Create(grpcKit, ci)
 	if err != nil {
 		logs.Errorf("create config item failed, err: %v, rid: %s", err, grpcKit.Rid)
-		return nil, err
+		return nil, errf.RPCAbortedErr(err)
 	}
 
 	resp := &pbds.CreateResp{Id: id}
@@ -93,7 +92,7 @@ func (s *Service) DeleteConfigItem(ctx context.Context, req *pbds.DeleteConfigIt
 }
 
 // GetConfigItem get config item detail
-func (s *Service) GetConfigItem(ctx context.Context, req *pbds.GetConfigItemReq) (*pbds.GetConfigItemResp, error) {
+func (s *Service) GetConfigItem(ctx context.Context, req *pbds.GetConfigItemReq) (*pbci.ConfigItem, error) {
 
 	grpcKit := kit.FromGrpcContext(ctx)
 	configItem, err := s.dao.ConfigItem().Get(grpcKit, req.Id, req.BizId)
@@ -101,9 +100,7 @@ func (s *Service) GetConfigItem(ctx context.Context, req *pbds.GetConfigItemReq)
 		logs.Errorf("get config item failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
 	}
-	resp := &pbds.GetConfigItemResp{
-		Data: pbci.PbConfigItem(configItem),
-	}
+	resp := pbci.PbConfigItem(configItem)
 	return resp, nil
 }
 

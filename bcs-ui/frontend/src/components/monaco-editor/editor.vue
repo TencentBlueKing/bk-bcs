@@ -160,7 +160,7 @@ export default {
     },
 
     getModifiedEditor() {
-      return this.diffEditor ? this.editor.getModifiedEditor() : this.editor;
+      return this.diffEditor && this.editor.getModifiedEditor ? this.editor.getModifiedEditor() : this.editor;
     },
 
     focus() {

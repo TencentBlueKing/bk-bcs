@@ -61,7 +61,7 @@ export default defineComponent({
     const handleGotoIAM = () => {
       window.open(href.value);
     };
-    const projectList = computed(() => $store.state.sideMenu.onlineProjectList);
+    const projectList = computed(() => $store.state.projectList);
     onBeforeMount(async () => {
       if (!props.actionId) return;
       isLoading.value = true;

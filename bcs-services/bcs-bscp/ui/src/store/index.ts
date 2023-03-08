@@ -1,7 +1,11 @@
 import { createStore } from 'vuex'
 import http from "../request"
+import config from './config'
 
 const store = createStore({
+  modules: {
+    config
+  },
   state: {
     loginUrl: '',
     showLoginModal: false,
