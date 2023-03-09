@@ -126,6 +126,11 @@ func (ab *AuditBuilder) AuditCreate(cur interface{}, opt *AuditOption) error {
 		ab.toAudit.AppID = sset.Attachment.AppID
 		ab.toAudit.ResourceID = sset.ID
 
+	case *table.Hook:
+		sset := cur.(*table.Hook)
+		ab.toAudit.AppID = sset.Attachment.AppID
+		ab.toAudit.ResourceID = sset.ID
+
 	case *table.Group:
 		sset := cur.(*table.Group)
 		ab.toAudit.AppID = sset.Attachment.AppID
@@ -269,6 +274,13 @@ func (ab *AuditBuilder) PrepareUpdate(updatedTo interface{}) AuditDecorator {
 			return ab
 		}
 
+	case *table.Hook:
+		hook := updatedTo.(*table.Hook)
+		if err := ab.decorateHookUpdate(hook); err != nil {
+			ab.hitErr = err
+			return ab
+		}
+
 	default:
 		logs.Errorf("unsupported audit update resource: %s, type: %s, rid: %v", ab.toAudit.ResourceType,
 			reflect.TypeOf(updatedTo), ab.toAudit.Rid)
@@ -375,6 +387,27 @@ func (ab *AuditBuilder) decorateStrategyUpdate(strategy *table.Strategy) error {
 	return nil
 }
 
+func (ab *AuditBuilder) decorateHookUpdate(hook *table.Hook) error {
+	ab.toAudit.AppID = hook.Attachment.AppID
+	ab.toAudit.ResourceID = hook.ID
+
+	preHook, err := ab.getHook(hook.ID)
+	if err != nil {
+		return err
+	}
+
+	ab.prev = preHook
+
+	changed, err := parseChangedSpecFields(preHook, hook)
+	if err != nil {
+		ab.hitErr = err
+		return fmt.Errorf("parse hook changed spec field failed, err: %v", err)
+	}
+
+	ab.changed = changed
+	return nil
+}
+
 // PrepareDelete prepare the resource's previous instance details by
 // get the instance's detail from db and save it to ab.prev for later use.
 // Note: call this before resource is deleted.
@@ -425,6 +458,16 @@ func (ab *AuditBuilder) PrepareDelete(resID uint32) AuditDecorator {
 		ab.toAudit.AppID = ss.Attachment.AppID
 		ab.toAudit.ResourceID = ss.ID
 		ab.prev = ss
+
+	case enumor.Hook:
+		hook, err := ab.getHook(resID)
+		if err != nil {
+			ab.hitErr = err
+			return ab
+		}
+		ab.toAudit.AppID = hook.Attachment.AppID
+		ab.toAudit.ResourceID = hook.ID
+		ab.prev = hook
 
 	case enumor.CRInstance:
 		cri, err := ab.getCRInstance(resID)
@@ -521,6 +564,19 @@ func (ab *AuditBuilder) getStrategy(strategyID uint32) (*table.Strategy, error) 
 	err := ab.ad.orm.Do(ab.ad.sd.MustSharding(ab.bizID)).Get(ab.kit.Ctx, one, filter)
 	if err != nil {
 		return nil, fmt.Errorf("get strategy details failed, err: %v", err)
+	}
+
+	return one, nil
+}
+
+func (ab *AuditBuilder) getHook(hookID uint32) (*table.Hook, error) {
+	filter := fmt.Sprintf(`SELECT %s FROM %s WHERE id = %d AND biz_id = %d`,
+		table.HookColumns.NamedExpr(), table.HookTable, hookID, ab.bizID)
+
+	one := new(table.Hook)
+	err := ab.ad.orm.Do(ab.ad.sd.MustSharding(ab.bizID)).Get(ab.kit.Ctx, one, filter)
+	if err != nil {
+		return nil, fmt.Errorf("get hook details failed, err: %v", err)
 	}
 
 	return one, nil

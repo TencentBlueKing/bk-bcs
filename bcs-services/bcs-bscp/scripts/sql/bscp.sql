@@ -126,6 +126,8 @@ insert into id_generator(id, resource, max_id, updated_at)
 values (16, 'group_', 0, now());
 insert into id_generator(id, resource, max_id, updated_at)
 values (17, 'group_category', 0, now());
+insert into id_generator(id, resource, max_id, updated_at)
+values (18, 'hook', 0, now());
 
 create table if not exists `archived_app`
 (
@@ -462,6 +464,39 @@ create table if not exists `strategy`
 ) engine = innodb
   default charset = utf8mb4;
 
+create table if not exists `hook`
+(
+    `id`         bigint(1) unsigned not null,
+
+    # spec is a collection of resource's specifics defined with user
+    `name`       varchar(255)       not null,
+    `pre_type`   varchar(20)        not null,
+    `pre_hook`   longtext           not null,
+    `post_type`  varchar(20)        not null,
+    `post_hook`  longtext           not null,
+
+    # attachment is a resource attachment id
+    `biz_id`     bigint(1) unsigned not null,
+    `app_id`     bigint(1) unsigned not null,
+    `release_id` bigint(1) unsigned not null,
+
+    # revision record this resource's revision information
+    `creator`    varchar(64)        not null,
+    `reviser`    varchar(64)        not null,
+    `created_at` datetime(6)        not null,
+    `updated_at` datetime(6)        not null,
+
+    # reserve reserve field.
+    `reserveda`  varchar(255)       default '',
+    `reservedb`  varchar(255)       default '',
+    `reservedc`  bigint(1) unsigned default 0,
+
+    primary key (`id`),
+    unique key `idx_appid_releaseid` (`app_id`, `release_id`),
+    index `idx_bizid_appid` (`biz_id`, `app_id`)
+) engine = innodb
+  default charset = utf8mb4;
+
 create table if not exists `group_`
 (
     `id`                bigint(1) unsigned not null,
@@ -496,23 +531,23 @@ create table if not exists `group_`
 
 create table if not exists `group_category`
 (
-    `id`              bigint(1) unsigned not null,
+    `id`         bigint(1) unsigned not null,
 
     # Spec is a collection of resource's specifics defined with user
-    `name`            varchar(255)       not null,
+    `name`       varchar(255)       not null,
 
     # Attachment is a resource attachment id
-    `biz_id`          bigint(1) unsigned not null,
-    `app_id`          bigint(1) unsigned not null,
+    `biz_id`     bigint(1) unsigned not null,
+    `app_id`     bigint(1) unsigned not null,
 
     # CreatedRevision is a resource's reversion information being created.
-    `creator`         varchar(64)        not null,
-    `created_at`      datetime(6)        not null,
+    `creator`    varchar(64)        not null,
+    `created_at` datetime(6)        not null,
 
     # Reserve reserve field.
-    `reservedA`       varchar(255)       default '',
-    `reservedB`       varchar(255)       default '',
-    `reservedC`       bigint(1) unsigned default 0,
+    `reservedA`  varchar(255)       default '',
+    `reservedB`  varchar(255)       default '',
+    `reservedC`  bigint(1) unsigned default 0,
 
     primary key (`id`),
     unique key `idx_bizID_appID_name` (`biz_id`, `app_id`, `name`),

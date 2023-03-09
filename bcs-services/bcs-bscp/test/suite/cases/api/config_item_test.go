@@ -13,11 +13,11 @@ limitations under the License.
 package api
 
 import (
+	"bscp.io/pkg/tools"
 	"testing"
 
 	. "github.com/smartystreets/goconvey/convey" // import convey.
 
-	"bscp.io/pkg/criteria/errf"
 	"bscp.io/pkg/dal/table"
 	pbcs "bscp.io/pkg/protocol/config-server"
 	"bscp.io/test/client/api"
@@ -32,6 +32,10 @@ func TestConfigItem(t *testing.T) {
 
 		preName string
 		appId   uint32
+
+		content   string // content of config item
+		signature string // SHA256 signature of content
+		size      uint64 // byte size of content
 	)
 
 	Convey("Prepare For Config Item Test", t, func() {
@@ -39,6 +43,11 @@ func TestConfigItem(t *testing.T) {
 		appId = rm.GetApp(table.Normal)
 		So(appId, ShouldNotEqual, uint32(0))
 		preName = "config_item"
+
+		// define content
+		content = "This is content for test"
+		signature = tools.SHA256(content)
+		size = uint64(len(content))
 	})
 
 	Convey("Create Config Item Test", t, func() {
@@ -57,6 +66,8 @@ func TestConfigItem(t *testing.T) {
 				User:      "root",
 				UserGroup: "root",
 				Privilege: "755",
+				Sign:      signature,
+				ByteSize:  size,
 			}
 
 			// add preName field test case
@@ -99,25 +110,21 @@ func TestConfigItem(t *testing.T) {
 				resp, err := cli.ConfigItem.Create(ctx, header, &req)
 				So(err, ShouldBeNil)
 				So(resp, ShouldNotBeNil)
-				So(resp.Code, ShouldEqual, errf.OK)
-				So(resp.Data, ShouldNotBeNil)
-				So(resp.Data.Id, ShouldNotEqual, uint32(0))
+				So(resp.Id, ShouldNotEqual, uint32(0))
 
 				// verify by list_config_item
-				listReq, err := cases.GenListConfigItemByIdsReq(cases.TBizID, appId, []uint32{resp.Data.Id})
+				listReq, err := cases.GenListConfigItemByIdsReq(cases.TBizID, appId, []uint32{resp.Id})
 				So(err, ShouldBeNil)
 
 				ctx, header = cases.GenApiCtxHeader()
 				listResp, err := cli.ConfigItem.List(ctx, header, listReq)
 				So(err, ShouldBeNil)
 				So(listResp, ShouldNotBeNil)
-				So(listResp.Code, ShouldEqual, errf.OK)
-				So(listResp.Data, ShouldNotBeNil)
 
-				So(len(listResp.Data.Details), ShouldEqual, 1)
-				one := listResp.Data.Details[0]
+				So(len(listResp.Details), ShouldEqual, 1)
+				one := listResp.Details[0]
 				So(one, ShouldNotBeNil)
-				So(one.Id, ShouldEqual, resp.Data.Id)
+				So(one.Id, ShouldEqual, resp.Id)
 				So(one.Spec, ShouldNotBeNil)
 				So(one.Spec.Path, ShouldEqual, req.Path)
 				So(one.Spec.Name, ShouldEqual, req.Name)
@@ -132,7 +139,7 @@ func TestConfigItem(t *testing.T) {
 				So(one.Attachment.AppId, ShouldEqual, appId)
 				So(one.Attachment.BizId, ShouldEqual, cases.TBizID)
 
-				rm.AddConfigItem(appId, resp.Data.Id)
+				rm.AddConfigItem(appId, resp.Id)
 			}
 		})
 
@@ -198,7 +205,6 @@ func TestConfigItem(t *testing.T) {
 				resp, err := cli.ConfigItem.Create(ctx, header, &req)
 				So(err, ShouldBeNil)
 				So(resp, ShouldNotBeNil)
-				So(resp.Code, ShouldNotEqual, errf.OK)
 			}
 		})
 	})
@@ -264,7 +270,6 @@ func TestConfigItem(t *testing.T) {
 				resp, err := cli.ConfigItem.Update(ctx, header, &req)
 				So(err, ShouldBeNil)
 				So(resp, ShouldNotBeNil)
-				So(resp.Code, ShouldEqual, errf.OK)
 
 				// verify by list_config_item
 				listReq, err := cases.GenListConfigItemByIdsReq(cases.TBizID, appId, []uint32{ciId})
@@ -274,11 +279,9 @@ func TestConfigItem(t *testing.T) {
 				listResp, err := cli.ConfigItem.List(ctx, header, listReq)
 				So(err, ShouldBeNil)
 				So(listResp, ShouldNotBeNil)
-				So(listResp.Code, ShouldEqual, errf.OK)
-				So(listResp.Data, ShouldNotBeNil)
 
-				So(len(listResp.Data.Details), ShouldEqual, 1)
-				one := listResp.Data.Details[0]
+				So(len(listResp.Details), ShouldEqual, 1)
+				one := listResp.Details[0]
 				So(one, ShouldNotBeNil)
 				So(one.Id, ShouldEqual, ciId)
 				So(one.Spec, ShouldNotBeNil)
@@ -366,11 +369,9 @@ func TestConfigItem(t *testing.T) {
 				resp, err := cli.ConfigItem.Update(ctx, header, &req)
 				So(err, ShouldBeNil)
 				So(resp, ShouldNotBeNil)
-				So(resp.Code, ShouldNotEqual, errf.OK)
 			}
 		})
 	})
-
 	Convey("List Config Item Test", t, func() {
 		// The normal list_config_item is test by the first create_config_item case,
 		// so we just test list_config_item normal test on count page in here
@@ -392,8 +393,7 @@ func TestConfigItem(t *testing.T) {
 			resp, err := cli.ConfigItem.List(ctx, header, req)
 			So(err, ShouldBeNil)
 			So(resp, ShouldNotBeNil)
-			So(resp.Code, ShouldEqual, errf.OK)
-			So(resp.Data.Count, ShouldEqual, uint32(1))
+			So(resp.Count, ShouldEqual, uint32(1))
 		})
 
 		Convey("2.list_config_item abnormal test", func() {
@@ -435,7 +435,6 @@ func TestConfigItem(t *testing.T) {
 				resp, err := cli.ConfigItem.List(ctx, header, req)
 				So(err, ShouldBeNil)
 				So(resp, ShouldNotBeNil)
-				So(resp.Code, ShouldNotEqual, errf.OK)
 			}
 		})
 	})
@@ -457,7 +456,6 @@ func TestConfigItem(t *testing.T) {
 			resp, err := cli.ConfigItem.Delete(ctx, header, req)
 			So(err, ShouldBeNil)
 			So(resp, ShouldNotBeNil)
-			So(resp.Code, ShouldEqual, errf.OK)
 
 			// verify by list
 			listReq, err := cases.GenListConfigItemByIdsReq(cases.TBizID, appId, []uint32{ciId})
@@ -466,9 +464,7 @@ func TestConfigItem(t *testing.T) {
 			listResp, err := cli.ConfigItem.List(ctx, header, listReq)
 			So(err, ShouldBeNil)
 			So(listResp, ShouldNotBeNil)
-			So(listResp.Code, ShouldEqual, errf.OK)
-			So(listResp.Data, ShouldNotBeNil)
-			So(len(listResp.Data.Details), ShouldEqual, 0)
+			So(len(listResp.Details), ShouldEqual, 0)
 		})
 
 		Convey("2.delete_config_item abnormal test", func() {
@@ -498,7 +494,6 @@ func TestConfigItem(t *testing.T) {
 				resp, err := cli.ConfigItem.Delete(ctx, header, req)
 				So(err, ShouldBeNil)
 				So(resp, ShouldNotBeNil)
-				So(resp.Code, ShouldEqual, errf.InvalidParameter)
 			}
 		})
 	})

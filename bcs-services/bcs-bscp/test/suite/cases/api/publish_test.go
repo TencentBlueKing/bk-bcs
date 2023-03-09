@@ -17,7 +17,6 @@ import (
 
 	. "github.com/smartystreets/goconvey/convey" // import convey.
 
-	"bscp.io/pkg/criteria/errf"
 	pbcs "bscp.io/pkg/protocol/config-server"
 	"bscp.io/test/client/api"
 	"bscp.io/test/suite"
@@ -51,9 +50,7 @@ func TestPublish(t *testing.T) {
 			resp, err := cli.Publish.PublishWithStrategy(ctx, header, req)
 			So(err, ShouldBeNil)
 			So(resp, ShouldNotBeNil)
-			So(resp.Code, ShouldEqual, errf.OK)
-			So(resp.Data, ShouldNotBeNil)
-			So(resp.Data.Id, ShouldNotEqual, uint32(0))
+			So(resp.Id, ShouldNotEqual, uint32(0))
 
 			// finish publishing with strategy
 			finishReq := &pbcs.FinishPublishReq{
@@ -65,19 +62,16 @@ func TestPublish(t *testing.T) {
 			finishResp, err := cli.Publish.FinishPublishWithStrategy(ctx, header, finishReq)
 			So(err, ShouldBeNil)
 			So(finishResp, ShouldNotBeNil)
-			So(finishResp.Code, ShouldEqual, errf.OK)
 
 			// verify by list
-			listReq, err := cases.GenListStrategyPublishByIdsReq(cases.TBizID, appId, []uint32{resp.Data.Id})
+			listReq, err := cases.GenListStrategyPublishByIdsReq(cases.TBizID, appId, []uint32{resp.Id})
 			So(err, ShouldBeNil)
 			ctx, header = cases.GenApiCtxHeader()
 			listResp, err := cli.Publish.ListStrategyPublishHistory(ctx, header, listReq)
 			So(err, ShouldBeNil)
 			So(listResp, ShouldNotBeNil)
-			So(listResp.Code, ShouldEqual, errf.OK)
-			So(listResp.Data, ShouldNotBeNil)
-			So(len(listResp.Data.Details), ShouldEqual, 1)
-			oneHistory := listResp.Data.Details[0]
+			So(len(listResp.Details), ShouldEqual, 1)
+			oneHistory := listResp.Details[0]
 
 			// get strategy detail
 			listStgReq, err := cases.GenListStrategyByIdsReq(cases.TBizID, appId, []uint32{stgId})
@@ -87,15 +81,13 @@ func TestPublish(t *testing.T) {
 			listStgResp, err := cli.Strategy.List(ctx, header, listStgReq)
 			So(err, ShouldBeNil)
 			So(listStgResp, ShouldNotBeNil)
-			So(listStgResp.Code, ShouldEqual, errf.OK)
-			So(listStgResp.Data, ShouldNotBeNil)
-			So(len(listStgResp.Data.Details), ShouldEqual, 1)
-			oneStg := listStgResp.Data.Details[0]
+			So(len(listStgResp.Details), ShouldEqual, 1)
+			oneStg := listStgResp.Details[0]
 
 			So(oneHistory.State, ShouldNotBeNil)
 			So(oneHistory.State.PubState, ShouldBeBlank)
 
-			So(oneHistory.Id, ShouldEqual, resp.Data.Id)
+			So(oneHistory.Id, ShouldEqual, resp.Id)
 			So(oneHistory.StrategyId, ShouldEqual, stgId)
 			So(oneHistory.Spec, ShouldNotBeNil)
 			So(oneHistory.Spec.Name, ShouldEqual, oneStg.Spec.Name)
@@ -112,7 +104,7 @@ func TestPublish(t *testing.T) {
 
 			So(oneHistory.StrategyId, ShouldNotBeNil)
 
-			rm.AddPublish(appId, resp.Data.Id)
+			rm.AddPublish(appId, resp.Id)
 		})
 
 		Convey("2.publish_with_strategy abnormal test", func() {
@@ -141,7 +133,6 @@ func TestPublish(t *testing.T) {
 				resp, err := cli.Publish.PublishWithStrategy(ctx, header, req)
 				So(err, ShouldBeNil)
 				So(resp, ShouldNotBeNil)
-				So(resp.Code, ShouldNotEqual, errf.OK)
 			}
 		})
 
@@ -156,16 +147,13 @@ func TestPublish(t *testing.T) {
 			firstResp, err := cli.Publish.PublishWithStrategy(ctx, header, req)
 			So(err, ShouldBeNil)
 			So(firstResp, ShouldNotBeNil)
-			So(firstResp.Code, ShouldEqual, errf.OK)
-			So(firstResp.Data, ShouldNotBeNil)
-			So(firstResp.Data.Id, ShouldNotEqual, uint32(0))
+			So(firstResp.Id, ShouldNotEqual, uint32(0))
 
 			// start second publish
 			ctx, header = cases.GenApiCtxHeader()
 			secondResp, err := cli.Publish.PublishWithStrategy(ctx, header, req)
 			So(err, ShouldBeNil)
 			So(secondResp, ShouldNotBeNil)
-			So(secondResp.Code, ShouldNotEqual, errf.OK)
 
 			// finish publish with strategy
 			finishReq := &pbcs.FinishPublishReq{
@@ -177,23 +165,19 @@ func TestPublish(t *testing.T) {
 			finishResp, err := cli.Publish.FinishPublishWithStrategy(ctx, header, finishReq)
 			So(err, ShouldBeNil)
 			So(finishResp, ShouldNotBeNil)
-			So(finishResp.Code, ShouldEqual, errf.OK)
 
 			// try a new strategy publish after finishing
 			ctx, header = cases.GenApiCtxHeader()
 			secondResp, err = cli.Publish.PublishWithStrategy(ctx, header, req)
 			So(err, ShouldBeNil)
 			So(secondResp, ShouldNotBeNil)
-			So(secondResp.Code, ShouldEqual, errf.OK)
-			So(firstResp.Data, ShouldNotBeNil)
-			So(firstResp.Data.Id, ShouldNotEqual, uint32(0))
+			So(firstResp.Id, ShouldNotEqual, uint32(0))
 
 			// finish upon publish
 			ctx, header = cases.GenApiCtxHeader()
 			finishResp, err = cli.Publish.FinishPublishWithStrategy(ctx, header, finishReq)
 			So(err, ShouldBeNil)
 			So(finishResp, ShouldNotBeNil)
-			So(finishResp.Code, ShouldEqual, errf.OK)
 
 		})
 
@@ -207,9 +191,7 @@ func TestPublish(t *testing.T) {
 			pubResp, err := cli.Publish.PublishWithStrategy(ctx, header, pubReq)
 			So(err, ShouldBeNil)
 			So(pubResp, ShouldNotBeNil)
-			So(pubResp.Code, ShouldEqual, errf.OK)
-			So(pubResp.Data, ShouldNotBeNil)
-			So(pubResp.Data.Id, ShouldNotEqual, uint32(0))
+			So(pubResp.Id, ShouldNotEqual, uint32(0))
 
 			reqs := []*pbcs.FinishPublishReq{
 				{ // biz_id is invalid
@@ -234,7 +216,6 @@ func TestPublish(t *testing.T) {
 				finishResp, err := cli.Publish.FinishPublishWithStrategy(ctx, header, req)
 				So(err, ShouldBeNil)
 				So(finishResp, ShouldNotBeNil)
-				So(finishResp.Code, ShouldNotEqual, errf.OK)
 			}
 		})
 	})
@@ -259,8 +240,7 @@ func TestPublish(t *testing.T) {
 			resp, err := cli.Publish.ListStrategyPublishHistory(ctx, header, req)
 			So(err, ShouldBeNil)
 			So(resp, ShouldNotBeNil)
-			So(resp.Code, ShouldEqual, errf.OK)
-			So(resp.Data.Count, ShouldEqual, uint32(1))
+			So(resp.Count, ShouldEqual, uint32(1))
 		})
 
 		Convey("2.list_strategy_publish_history abnormal test", func() {
@@ -301,7 +281,6 @@ func TestPublish(t *testing.T) {
 				resp, err := cli.StrategySet.List(ctx, header, req)
 				So(err, ShouldBeNil)
 				So(resp, ShouldNotBeNil)
-				So(resp.Code, ShouldNotEqual, errf.OK)
 			}
 		})
 	})

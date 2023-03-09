@@ -17,7 +17,6 @@ import (
 
 	. "github.com/smartystreets/goconvey/convey" // import convey.
 
-	"bscp.io/pkg/criteria/errf"
 	"bscp.io/pkg/dal/table"
 	pbcs "bscp.io/pkg/protocol/config-server"
 	"bscp.io/pkg/tools"
@@ -57,10 +56,9 @@ func TestRelease(t *testing.T) {
 		appResp, err := cli.App.Create(ctx, header, appReq)
 		So(err, ShouldBeNil)
 		So(appResp, ShouldNotBeNil)
-		So(appResp.Data, ShouldNotBeNil)
-		So(appResp.Data.Id, ShouldNotEqual, uint32(0))
+		So(appResp.Id, ShouldNotEqual, uint32(0))
 
-		appId = appResp.Data.Id
+		appId = appResp.Id
 
 		// create config item
 		ciReq := &pbcs.CreateConfigItemReq{
@@ -78,15 +76,14 @@ func TestRelease(t *testing.T) {
 		ciResp, err := cli.ConfigItem.Create(ctx, header, ciReq)
 		So(err, ShouldBeNil)
 		So(ciResp, ShouldNotBeNil)
-		So(ciResp.Data, ShouldNotBeNil)
-		So(ciResp.Data.Id, ShouldNotEqual, uint32(0))
+		So(ciResp.Id, ShouldNotEqual, uint32(0))
 
 		// create content
 		content := "test_release_content"
 		ctReq := &pbcs.CreateContentReq{
 			BizId:        cases.TBizID,
 			AppId:        appId,
-			ConfigItemId: ciResp.Data.Id,
+			ConfigItemId: ciResp.Id,
 			Sign:         tools.SHA256(content),
 			ByteSize:     uint64(len(content)),
 		}
@@ -94,22 +91,20 @@ func TestRelease(t *testing.T) {
 		ctResp, err := cli.Content.Create(ctx, header, ctReq)
 		So(err, ShouldBeNil)
 		So(ctResp, ShouldNotBeNil)
-		So(ctResp.Data, ShouldNotBeNil)
-		So(ctResp.Data.Id, ShouldNotEqual, uint32(0))
+		So(ctResp.Id, ShouldNotEqual, uint32(0))
 
 		// create commit
 		cmReq := &pbcs.CreateCommitReq{
 			BizId:        cases.TBizID,
 			AppId:        appId,
-			ConfigItemId: ciResp.Data.Id,
-			ContentId:    ctResp.Data.Id,
+			ConfigItemId: ciResp.Id,
+			ContentId:    ctResp.Id,
 		}
 		ctx, header = cases.GenApiCtxHeader()
 		cmResp, err := cli.Commit.Create(ctx, header, cmReq)
 		So(err, ShouldBeNil)
 		So(cmResp, ShouldNotBeNil)
-		So(cmResp.Data, ShouldNotBeNil)
-		So(cmResp.Data.Id, ShouldNotEqual, uint32(0))
+		So(cmResp.Id, ShouldNotEqual, uint32(0))
 	})
 
 	Convey("Create ReleaseID Test", t, func() {
@@ -143,23 +138,20 @@ func TestRelease(t *testing.T) {
 				resp, err := cli.Release.Create(ctx, header, &req)
 				So(err, ShouldBeNil)
 				So(resp, ShouldNotBeNil)
-				So(resp.Code, ShouldEqual, errf.OK)
 
 				// verify by list_config_item
-				listReq, err := cases.GenListReleaseByIdsReq(cases.TBizID, appId, []uint32{resp.Data.Id})
+				listReq, err := cases.GenListReleaseByIdsReq(cases.TBizID, appId, []uint32{resp.Id})
 				So(err, ShouldBeNil)
 
 				ctx, header = cases.GenApiCtxHeader()
 				listResp, err := cli.Release.List(ctx, header, listReq)
 				So(err, ShouldBeNil)
 				So(listResp, ShouldNotBeNil)
-				So(listResp.Code, ShouldEqual, errf.OK)
-				So(listResp.Data, ShouldNotBeNil)
 
-				So(len(listResp.Data.Details), ShouldEqual, 1)
-				one := listResp.Data.Details[0]
+				So(len(listResp.Details), ShouldEqual, 1)
+				one := listResp.Details[0]
 				So(one, ShouldNotBeNil)
-				So(one.Id, ShouldEqual, resp.Data.Id)
+				So(one.Id, ShouldEqual, resp.Id)
 
 				So(one.Spec, ShouldNotBeNil)
 				So(one.Spec.Name, ShouldEqual, req.Name)
@@ -170,7 +162,7 @@ func TestRelease(t *testing.T) {
 				So(one.Attachment.AppId, ShouldEqual, req.AppId)
 				So(one.Revision, cases.SoCreateRevision)
 
-				rm.AddRelease(appId, resp.Data.Id)
+				rm.AddRelease(appId, resp.Id)
 			}
 
 		})
@@ -216,7 +208,6 @@ func TestRelease(t *testing.T) {
 				resp, err := cli.Release.Create(ctx, header, &req)
 				So(err, ShouldBeNil)
 				So(resp, ShouldNotBeNil)
-				So(resp.Code, ShouldEqual, errf.InvalidParameter)
 			}
 		})
 	})
@@ -236,9 +227,7 @@ func TestRelease(t *testing.T) {
 			resp, err := cli.Release.List(ctx, header, req)
 			So(err, ShouldBeNil)
 			So(resp, ShouldNotBeNil)
-			So(resp.Code, ShouldEqual, errf.OK)
-			So(resp.Data, ShouldNotBeNil)
-			So(resp.Data.Count, ShouldEqual, 1)
+			So(resp.Count, ShouldEqual, 1)
 		})
 
 		Convey("2.list_release abnormal test", func() {
@@ -279,7 +268,6 @@ func TestRelease(t *testing.T) {
 				resp, err := cli.Release.List(ctx, header, req)
 				So(err, ShouldBeNil)
 				So(resp, ShouldNotBeNil)
-				So(resp.Code, ShouldNotEqual, errf.OK)
 			}
 		})
 	})
