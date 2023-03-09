@@ -433,6 +433,7 @@
         ></KeyValue>
       </div>
     </bk-sideslider>
+    <AppFooter />
   </LayoutContent>
 </template>
 
@@ -452,6 +453,7 @@ import { CreateElement } from 'vue';
 import KeyValue from '@/components/key-value.vue';
 import useInterval from '@/composables/use-interval';
 import StatusIcon from '../../../components/status-icon';
+import AppFooter from '@/views/app/app-footer.vue';
 
 export default defineComponent({
   name: 'NamespaceList',
@@ -462,6 +464,7 @@ export default defineComponent({
     Detail,
     KeyValue,
     StatusIcon,
+    AppFooter,
   },
   setup(props, ctx) {
     const { $store, $bkInfo, $i18n, $bkMessage, $router, $route } = ctx.root;

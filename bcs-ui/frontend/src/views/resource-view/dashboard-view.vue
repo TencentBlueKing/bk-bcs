@@ -16,6 +16,8 @@ export default defineComponent({
     || curClusterId.value
     || clusterList.value[0]?.clusterID);
 
+    // 需要提前更新当前缓存的集群
+    $store.commit('updateCurCluster', clusterList.value.find(item => item.clusterID === clusterID.value));
     onBeforeMount(() => {
       if (
         !currentRoute.value.name
@@ -30,7 +32,6 @@ export default defineComponent({
           clusterId: clusterID.value,
         },
       });
-      $store.commit('updateCurCluster', clusterList.value.find(item => item.clusterID === clusterID.value));
     });
 
     return {
