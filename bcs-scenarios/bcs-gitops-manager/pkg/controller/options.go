@@ -29,6 +29,8 @@ type Options struct {
 	// take affect when in service mode
 	Registry    string
 	RegistryTLS *tls.Config
+	// 专门用于设置 cluster 的地址
+	APIGatewayForCluster string
 	// take effect when in tunnel mode
 	APIGateway string
 	APIToken   string

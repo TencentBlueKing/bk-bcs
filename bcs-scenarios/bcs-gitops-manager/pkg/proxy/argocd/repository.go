@@ -62,7 +62,8 @@ func (plugin *RepositoryPlugin) Init() error {
 // GET /api/v1/repositories?projects={projects}
 func (plugin *RepositoryPlugin) listRepositoryHandler(ctx context.Context, r *http.Request) *httpResponse {
 	projectName := r.URL.Query().Get("projects")
-	repositoryList, statusCode, err := plugin.middleware.ListRepositories(ctx, projectName)
+	repositoryList, statusCode, err := plugin.middleware.
+		ListRepositories(ctx, []string{projectName}, false)
 	if statusCode != http.StatusOK {
 		return &httpResponse{
 			statusCode: statusCode,
@@ -106,7 +107,7 @@ func (plugin *RepositoryPlugin) repositoryCreateHandler(ctx context.Context, r *
 		}
 	}
 	r.Body = ioutil.NopCloser(bytes.NewBuffer(body))
-	_, statusCode, err := plugin.middleware.CheckProjectPermission(ctx, localRepo.Project, iam.ProjectEdit)
+	_, statusCode, err := plugin.middleware.CheckProjectPermission(ctx, localRepo.Project, iam.ProjectView)
 	if err != nil {
 		return &httpResponse{
 			statusCode: statusCode,
@@ -127,7 +128,7 @@ func (plugin *RepositoryPlugin) repositoryEditHandler(ctx context.Context, r *ht
 		}
 	}
 
-	statusCode, err := plugin.middleware.CheckRepositoryPermission(ctx, repo, iam.ProjectEdit)
+	_, statusCode, err := plugin.middleware.CheckRepositoryPermission(ctx, repo, iam.ProjectView)
 	if statusCode != http.StatusOK {
 		return &httpResponse{
 			statusCode: statusCode,
@@ -153,7 +154,7 @@ func (plugin *RepositoryPlugin) repositoryViewsHandler(ctx context.Context, r *h
 		}
 	}
 
-	statusCode, err := plugin.middleware.CheckRepositoryPermission(ctx, repo, iam.ProjectView)
+	_, statusCode, err := plugin.middleware.CheckRepositoryPermission(ctx, repo, iam.ProjectView)
 	if statusCode != http.StatusOK {
 		return &httpResponse{
 			statusCode: statusCode,

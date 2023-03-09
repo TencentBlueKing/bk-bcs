@@ -35,6 +35,8 @@ const (
 	HeaderServerAddressKey = "BCS-GITOPS-ServerAddress"
 	// HeaderBCSClient header for bcs client
 	HeaderBCSClient = "X-BCS-Client"
+	// ServiceNameShort used for bcs-client header
+	ServiceNameShort = "bcs-gitops-manager"
 
 	// ProjectAliaName the alia name for project
 	ProjectAliaName = "bkbcs.tencent.com/projectAliaName"
@@ -45,4 +47,6 @@ const (
 
 	// ClusterAliaName defines the alia's name for project
 	ClusterAliaName = "bkbcs.tencent.com/clusterAliaName"
+	// ClusterEnv defines the cluster env
+	ClusterEnv = "bkbcs.tencent.com/clusterEnv"
 )

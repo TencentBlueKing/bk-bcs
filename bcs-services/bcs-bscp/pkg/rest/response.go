@@ -128,12 +128,19 @@ func (res *ErrorResponse) Render(w http.ResponseWriter, r *http.Request) error {
 		}
 	}
 
+	res.Error.Details = []interface{}{}
 	render.Status(r, statusCode)
 	return nil
 }
 
-// UnauthorizedErr 未登入返回
+// UnauthorizedErr rest 未登入返回
 func UnauthorizedErr(err error) render.Renderer {
 	payload := &ErrorPayload{Code: "UNAUTHENTICATED", Message: err.Error()}
 	return &ErrorResponse{Error: payload, HTTPStatusCode: http.StatusUnauthorized}
+}
+
+// BadRequest rest 通用错误请求
+func BadRequest(err error) render.Renderer {
+	payload := &ErrorPayload{Code: "INVALID_REQUEST", Message: err.Error()}
+	return &ErrorResponse{Error: payload, HTTPStatusCode: http.StatusBadRequest}
 }

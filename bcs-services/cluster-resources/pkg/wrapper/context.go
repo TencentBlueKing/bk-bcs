@@ -46,11 +46,9 @@ func NewContextInjectWrapper() server.HandlerWrapper {
 			if !ok {
 				return errorx.New(errcode.General, "failed to get micro's metadata")
 			}
-			// 1. 获取或生成 request id 注入到 context
-			ctx = context.WithValue(ctx, ctxkey.RequestIDKey, getOrCreateReqID(md))
 
 			username := envs.AnonymousUsername
-			// 2. 从 Metadata（headers）中获取 jwtToken，转换为 username
+			// 1. 从 Metadata（headers）中获取 jwtToken，转换为 username
 			if !canExemptAuth(req) {
 				if username, err = parseUsername(md); err != nil {
 					return err
@@ -58,7 +56,7 @@ func NewContextInjectWrapper() server.HandlerWrapper {
 			}
 			ctx = context.WithValue(ctx, ctxkey.UsernameKey, username)
 
-			// 3. 注入 Project，Cluster 信息
+			// 2. 注入 Project，Cluster 信息
 			if needInjectProjCluster(req) {
 				projInfo, clusterInfo, err := fetchProjCluster(ctx, req)
 				if err != nil {
@@ -68,7 +66,7 @@ func NewContextInjectWrapper() server.HandlerWrapper {
 				ctx = context.WithValue(ctx, ctxkey.ClusterKey, clusterInfo)
 			}
 
-			// 4. 解析语言版本信息
+			// 3. 解析语言版本信息
 			ctx = context.WithValue(ctx, ctxkey.LangKey, i18n.GetLangFromCookies(md))
 
 			// 实际执行业务逻辑，获取返回结果

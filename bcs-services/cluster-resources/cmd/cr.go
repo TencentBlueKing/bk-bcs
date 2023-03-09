@@ -80,11 +80,13 @@ func Start() {
 	if err != nil {
 		logger.Info(err.Error())
 	}
-	defer func() {
-		if err := shutdown(context.Background()); err != nil {
-			logger.Info(fmt.Sprintf("failed to shutdown TracerProvider: %w", err))
-		}
-	}()
+	if shutdown != nil {
+		defer func() {
+			if err := shutdown(context.Background()); err != nil {
+				logging.Info(context.Background(), fmt.Sprintf("failed to shutdown TracerProvider: %s", err.Error()))
+			}
+		}()
+	}
 
 	crSvc := newClusterResourcesService(crConf)
 	if err = crSvc.Init(); err != nil {

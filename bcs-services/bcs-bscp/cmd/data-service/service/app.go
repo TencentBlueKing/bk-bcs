@@ -29,6 +29,7 @@ import (
 	"bscp.io/pkg/tools"
 	"bscp.io/pkg/types"
 	"bscp.io/pkg/version"
+	"github.com/pkg/errors"
 )
 
 // CreateApp create application.
@@ -107,6 +108,19 @@ func (s *Service) GetApp(ctx context.Context, req *pbds.GetAppReq) (*pbapp.App, 
 	if err != nil {
 		logs.Errorf("list apps failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
+	}
+
+	return pbapp.PbApp(app), nil
+}
+
+// GetAppByID
+func (s *Service) GetAppByID(ctx context.Context, req *pbds.GetAppByIDReq) (*pbapp.App, error) {
+	grpcKit := kit.FromGrpcContext(ctx)
+
+	app, err := s.dao.App().GetByID(grpcKit, req.GetAppId())
+	if err != nil {
+		logs.Errorf("get app by id failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, errors.Wrapf(err, "query app by id %d", req.GetAppId())
 	}
 
 	return pbapp.PbApp(app), nil

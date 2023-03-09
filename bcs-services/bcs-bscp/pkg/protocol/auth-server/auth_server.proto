@@ -30,6 +30,9 @@ service Auth {
         };
     }
 
+    // 通过 AppID 查询 Space 信息
+    rpc QuerySpaceByAppID(QuerySpaceByAppIDReq) returns (Space) {}
+
     // iam pull resource callback.
     rpc PullResource(PullResourceReq) returns (PullResourceResp) {
         option (google.api.http) = {
@@ -190,4 +193,14 @@ message QuerySpaceReq {
 
 message QuerySpaceResp {
     repeated Space items = 1;
+}
+
+message QuerySpaceByAppIDReq {
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
+        json_schema: {
+            title: "QuerySpaceByAppID"
+            description: "通过 app_id 查询 Space"
+        }
+    };
+    uint32 app_id = 1;
 }

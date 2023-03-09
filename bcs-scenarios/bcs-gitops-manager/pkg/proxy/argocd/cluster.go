@@ -71,7 +71,7 @@ func (plugin *ClusterPlugin) listClustersHandler(ctx context.Context, r *http.Re
 			err:        errors.Errorf("lost projects param"),
 		}
 	}
-	clusterList, statusCode, err := plugin.middleware.ListClusters(ctx, projectName)
+	clusterList, statusCode, err := plugin.middleware.ListClusters(ctx, []string{projectName})
 	if statusCode != http.StatusOK {
 		return &httpResponse{
 			statusCode: statusCode,

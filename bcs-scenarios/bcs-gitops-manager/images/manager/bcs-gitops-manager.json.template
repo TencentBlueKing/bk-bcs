@@ -24,6 +24,7 @@
   "clientkey": "${clientKeyFile}",
   "debug": ${bcsGitOpsManagerDebug},
   "mode": "${bcsGitOpsManagerMode}",
+  "apigatewayforcluster": "${bcsGitOpsManagerAPIGatewayForCluster}",
   "apigateway": "${bcsGitOpsManagerAPIGateway}",
   "apigatewaytoken": "${bcsGitOpsManagerAPIGatewayToken}",
   "apiconnecttoken": "${bcsGitOpsManagerAPIConnectToken}",

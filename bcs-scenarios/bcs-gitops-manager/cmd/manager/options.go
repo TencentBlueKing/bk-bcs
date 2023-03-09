@@ -38,14 +38,16 @@ type Options struct {
 	common.ClientConfig
 	Registry *common.Registry `json:"registry,omitempty"`
 	// work mode, tunnel/service
-	Mode                string             `json:"mode,omitempty"`
-	APIGateway          string             `json:"apigateway,omitempty"`
-	APIGatewayToken     string             `json:"apigatewaytoken,omitempty"`
-	APIConnectToken     string             `json:"apiconnecttoken,omitempty"`
-	APIConnectURL       string             `json:"apiconnecturl,omitempty"`
-	ClusterSyncInterval uint               `json:"clustersyncinterval,omitempty"`
-	GitOps              *GitOps            `json:"gitops,omitempty"`
-	Auth                *common.AuthConfig `json:"auth,omitempty"`
+	Mode string `json:"mode,omitempty"`
+	// 用于存放 Cluster Server 地址，为空则使用 APIGateway 的值
+	APIGatewayForCluster string             `json:"apigatewayforcluster,omitempty"`
+	APIGateway           string             `json:"apigateway,omitempty"`
+	APIGatewayToken      string             `json:"apigatewaytoken,omitempty"`
+	APIConnectToken      string             `json:"apiconnecttoken,omitempty"`
+	APIConnectURL        string             `json:"apiconnecturl,omitempty"`
+	ClusterSyncInterval  uint               `json:"clustersyncinterval,omitempty"`
+	GitOps               *GitOps            `json:"gitops,omitempty"`
+	Auth                 *common.AuthConfig `json:"auth,omitempty"`
 }
 
 // DefaultOptions for gitops-manager
@@ -126,6 +128,9 @@ func (opt *Options) Validate() error {
 	if opt.Mode == common.ModeTunnel {
 		if len(opt.APIGateway) == 0 || len(opt.APIGatewayToken) == 0 {
 			return fmt.Errorf("lost bcs-api-gateway config in tunnel mode")
+		}
+		if len(opt.APIGatewayForCluster) == 0 {
+			opt.APIGatewayForCluster = opt.APIGateway
 		}
 		if len(opt.APIConnectToken) == 0 || len(opt.APIConnectURL) == 0 {
 			return fmt.Errorf("lost bcs-api-gateway gitops proxy config in tunnel mode")

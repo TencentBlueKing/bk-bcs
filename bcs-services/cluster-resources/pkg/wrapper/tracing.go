@@ -17,49 +17,48 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/dustin/go-humanize"
+	"go-micro.dev/v4/metadata"
 	"go-micro.dev/v4/server"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
+	grpc_codes "google.golang.org/grpc/codes"
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/ctxkey"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/tracing"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
 )
 
 func NewTracingWrapper() server.HandlerWrapper {
 	return func(fn server.HandlerFunc) server.HandlerFunc {
 		return func(ctx context.Context, req server.Request, rsp interface{}) (err error) {
 			// 开始时间
-			startTime := time.Now().UnixNano() / 1000000
-
-			// 把request-id格式转成trace-id格式
-			requestID := ctx.Value(ctxkey.RequestIDKey).(string)
-			if requestID != "" {
-				requestID = strings.Replace(requestID, "-", "", -1)
-				tid, _ := trace.TraceIDFromHex(requestID)
-				sid, _ := trace.SpanIDFromHex(requestID)
-				sc := trace.NewSpanContext(trace.SpanContextConfig{
-					TraceID:    tid,
-					SpanID:     sid,
-					TraceFlags: trace.FlagsSampled,
-					Remote:     true,
-				})
-				ctx = trace.ContextWithSpanContext(ctx, sc)
+			startTime := time.Now()
+			md, ok := metadata.FromContext(ctx)
+			if !ok {
+				return errorx.New(errcode.General, "failed to get micro's metadata")
 			}
+
+			// 获取或生成 request id 注入到 context
+			requestID := getOrCreateReqID(md)
+			ctx = context.WithValue(ctx, ctxkey.RequestIDKey, requestID)
+			ctx = tracing.ContextWithRequestID(ctx, requestID)
 
 			name := fmt.Sprintf("%s.%s", req.Service(), req.Endpoint())
 
-			tracer := otel.Tracer(req.Endpoint())
+			tracer := otel.Tracer(req.Service())
 			commonAttrs := []attribute.KeyValue{
 				attribute.String("component", "gRPC"),
 				attribute.String("method", req.Method()),
 				attribute.String("url", req.Endpoint()),
 			}
-			ctx, span := tracer.Start(ctx, name, trace.WithSpanKind(trace.SpanKindServer), trace.WithAttributes(commonAttrs...))
+			ctx, span := tracer.Start(ctx, name, trace.WithSpanKind(trace.SpanKindServer),
+				trace.WithAttributes(commonAttrs...))
 			defer span.End()
 
 			reqData, _ := json.Marshal(req.Body())
@@ -67,9 +66,7 @@ func NewTracingWrapper() server.HandlerWrapper {
 			err = fn(ctx, req, rsp)
 
 			rspData, _ := json.Marshal(rsp)
-			// 结束时间
-			endTime := time.Now().UnixNano() / 1000000
-			costTime := fmt.Sprintf("%vms", endTime-startTime)
+			elapsedTime := time.Now().Sub(startTime)
 
 			reqBody := string(reqData)
 			if len(reqBody) > 1024 {
@@ -83,11 +80,14 @@ func NewTracingWrapper() server.HandlerWrapper {
 
 			// 设置额外标签
 			span.SetAttributes(attribute.Key("req").String(reqBody))
-			span.SetAttributes(attribute.Key("cost_time").String(costTime))
+			span.SetAttributes(attribute.Key("elapsed_ime").String(elapsedTime.String()))
 			span.SetAttributes(attribute.Key("rsp").String(respBody))
 			if err != nil {
 				span.RecordError(err)
 				span.SetStatus(codes.Error, err.Error())
+				span.SetAttributes(tracing.GRPCStatusCodeKey.Int(int(codes.Error)))
+			} else {
+				span.SetAttributes(tracing.GRPCStatusCodeKey.Int(int(grpc_codes.OK)))
 			}
 
 			return err

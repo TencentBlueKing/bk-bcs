@@ -14,15 +14,17 @@ package service
 
 import (
 	"context"
+	"strconv"
 
 	"bscp.io/pkg/criteria/errf"
 	"bscp.io/pkg/iam/meta"
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/logs"
 	pbcs "bscp.io/pkg/protocol/config-server"
+	pbbase "bscp.io/pkg/protocol/core/base"
 	pbgroup "bscp.io/pkg/protocol/core/group"
 	pbds "bscp.io/pkg/protocol/data-service"
-	"bscp.io/pkg/types"
+	"bscp.io/pkg/runtime/filter"
 )
 
 // CreateGroup create a group
@@ -30,16 +32,20 @@ func (s *Service) CreateGroup(ctx context.Context, req *pbcs.CreateGroupReq) (*p
 	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.CreateGroupResp)
 
+	bizID, err := strconv.Atoi(grpcKit.SpaceID)
+	if err != nil {
+		return nil, err
+	}
 	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.Group, Action: meta.Create,
-		ResourceID: req.AppId}, BizID: req.BizId}
-	err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res)
+		ResourceID: req.AppId}, BizID: uint32(bizID)}
+	err = s.authorizer.AuthorizeWithResp(grpcKit, resp, res)
 	if err != nil {
 		return nil, err
 	}
 
 	r := &pbds.CreateGroupReq{
 		Attachment: &pbgroup.GroupAttachment{
-			BizId:           req.BizId,
+			BizId:           uint32(bizID),
 			AppId:           req.AppId,
 			GroupCategoryId: req.GroupCategoryId,
 		},
@@ -67,17 +73,21 @@ func (s *Service) DeleteGroup(ctx context.Context, req *pbcs.DeleteGroupReq) (*p
 	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.DeleteGroupResp)
 
+	bizID, err := strconv.Atoi(grpcKit.SpaceID)
+	if err != nil {
+		return nil, err
+	}
 	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.Group, Action: meta.Delete,
-		ResourceID: req.AppId}, BizID: req.BizId}
-	err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res)
+		ResourceID: req.AppId}, BizID: uint32(bizID)}
+	err = s.authorizer.AuthorizeWithResp(grpcKit, resp, res)
 	if err != nil {
 		return nil, err
 	}
 
 	r := &pbds.DeleteGroupReq{
-		Id: req.Id,
+		Id: req.GroupId,
 		Attachment: &pbgroup.GroupAttachment{
-			BizId: req.BizId,
+			BizId: uint32(bizID),
 			AppId: req.AppId,
 		},
 	}
@@ -95,17 +105,21 @@ func (s *Service) UpdateGroup(ctx context.Context, req *pbcs.UpdateGroupReq) (*p
 	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.UpdateGroupResp)
 
+	bizID, err := strconv.Atoi(grpcKit.SpaceID)
+	if err != nil {
+		return nil, err
+	}
 	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.Group, Action: meta.Update,
-		ResourceID: req.AppId}, BizID: req.BizId}
-	err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res)
+		ResourceID: req.AppId}, BizID: uint32(bizID)}
+	err = s.authorizer.AuthorizeWithResp(grpcKit, resp, res)
 	if err != nil {
 		return nil, err
 	}
 
 	r := &pbds.UpdateGroupReq{
-		Id: req.Id,
+		Id: req.GroupId,
 		Attachment: &pbgroup.GroupAttachment{
-			BizId: req.BizId,
+			BizId: uint32(bizID),
 			AppId: req.AppId,
 		},
 		Spec: &pbgroup.GroupSpec{
@@ -129,25 +143,52 @@ func (s *Service) ListGroups(ctx context.Context, req *pbcs.ListGroupsReq) (*pbc
 	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.ListGroupsResp)
 
-	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.Group, Action: meta.Find}, BizID: req.BizId}
-	err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res)
+	bizID, err := strconv.Atoi(grpcKit.SpaceID)
+	if err != nil {
+		return nil, err
+	}
+	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.Group, Action: meta.Find}, BizID: uint32(bizID)}
+	err = s.authorizer.AuthorizeWithResp(grpcKit, resp, res)
 	if err != nil {
 		return nil, err
 	}
 
-	if req.Page == nil {
-		return nil, errf.New(errf.InvalidParameter, "page is null")
+	if req.Start < 0 {
+		return nil, errf.New(errf.InvalidParameter, "start has to be greater than 0")
 	}
 
-	if err = req.Page.BasePage().Validate(types.DefaultPageOption); err != nil {
+	if req.Limit < 0 {
+		return nil, errf.New(errf.InvalidParameter, "limit has to be greater than 0")
+	}
+
+	ft := &filter.Expression{
+		Op: filter.And,
+		Rules: []filter.RuleFactory{
+			&filter.AtomRule{
+				Field: "group_category_id",
+				Op:    filter.Equal.Factory(),
+				Value: req.GroupCategoryId,
+			},
+			&filter.AtomRule{
+				Field: "mode",
+				Op:    filter.Equal.Factory(),
+				Value: req.Mode,
+			},
+		},
+	}
+	ftpb, err := ft.MarshalPB()
+	if err != nil {
 		return nil, err
 	}
 
 	r := &pbds.ListGroupsReq{
-		BizId:  req.BizId,
+		BizId:  uint32(bizID),
 		AppId:  req.AppId,
-		Filter: req.Filter,
-		Page:   req.Page,
+		Filter: ftpb,
+		Page: &pbbase.BasePage{
+			Start: req.Start,
+			Limit: req.Limit,
+		},
 	}
 	rp, err := s.client.DS.ListGroups(grpcKit.RpcCtx(), r)
 	if err != nil {

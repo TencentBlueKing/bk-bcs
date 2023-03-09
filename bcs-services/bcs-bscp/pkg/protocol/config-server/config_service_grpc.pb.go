@@ -102,6 +102,7 @@ type ConfigClient interface {
 	ListGroups(ctx context.Context, in *ListGroupsReq, opts ...grpc.CallOption) (*ListGroupsResp, error)
 	CreateGroupCategory(ctx context.Context, in *CreateGroupCategoryReq, opts ...grpc.CallOption) (*CreateGroupCategoryResp, error)
 	DeleteGroupCategory(ctx context.Context, in *DeleteGroupCategoryReq, opts ...grpc.CallOption) (*DeleteGroupCategoryResp, error)
+	ListGroupCategories(ctx context.Context, in *ListGroupCategoriesReq, opts ...grpc.CallOption) (*ListGroupCategoriesResp, error)
 	Publish(ctx context.Context, in *PublishReq, opts ...grpc.CallOption) (*PublishResp, error)
 	FinishPublish(ctx context.Context, in *FinishPublishReq, opts ...grpc.CallOption) (*FinishPublishResp, error)
 	ListPublishedStrategyHistories(ctx context.Context, in *ListPubStrategyHistoriesReq, opts ...grpc.CallOption) (*ListPubStrategyHistoriesResp, error)
@@ -424,6 +425,15 @@ func (c *configClient) DeleteGroupCategory(ctx context.Context, in *DeleteGroupC
 	return out, nil
 }
 
+func (c *configClient) ListGroupCategories(ctx context.Context, in *ListGroupCategoriesReq, opts ...grpc.CallOption) (*ListGroupCategoriesResp, error) {
+	out := new(ListGroupCategoriesResp)
+	err := c.cc.Invoke(ctx, "/pbcs.Config/ListGroupCategories", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *configClient) Publish(ctx context.Context, in *PublishReq, opts ...grpc.CallOption) (*PublishResp, error) {
 	out := new(PublishResp)
 	err := c.cc.Invoke(ctx, Config_Publish_FullMethodName, in, out, opts...)
@@ -518,6 +528,7 @@ type ConfigServer interface {
 	ListGroups(context.Context, *ListGroupsReq) (*ListGroupsResp, error)
 	CreateGroupCategory(context.Context, *CreateGroupCategoryReq) (*CreateGroupCategoryResp, error)
 	DeleteGroupCategory(context.Context, *DeleteGroupCategoryReq) (*DeleteGroupCategoryResp, error)
+	ListGroupCategories(context.Context, *ListGroupCategoriesReq) (*ListGroupCategoriesResp, error)
 	Publish(context.Context, *PublishReq) (*PublishResp, error)
 	FinishPublish(context.Context, *FinishPublishReq) (*FinishPublishResp, error)
 	ListPublishedStrategyHistories(context.Context, *ListPubStrategyHistoriesReq) (*ListPubStrategyHistoriesResp, error)
@@ -631,6 +642,9 @@ func (UnimplementedConfigServer) CreateGroupCategory(context.Context, *CreateGro
 }
 func (UnimplementedConfigServer) DeleteGroupCategory(context.Context, *DeleteGroupCategoryReq) (*DeleteGroupCategoryResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteGroupCategory not implemented")
+}
+func (UnimplementedConfigServer) ListGroupCategories(context.Context, *ListGroupCategoriesReq) (*ListGroupCategoriesResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListGroupCategories not implemented")
 }
 func (UnimplementedConfigServer) Publish(context.Context, *PublishReq) (*PublishResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Publish not implemented")
@@ -1274,6 +1288,24 @@ func _Config_DeleteGroupCategory_Handler(srv interface{}, ctx context.Context, d
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Config_ListGroupCategories_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListGroupCategoriesReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).ListGroupCategories(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/pbcs.Config/ListGroupCategories",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).ListGroupCategories(ctx, req.(*ListGroupCategoriesReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Config_Publish_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(PublishReq)
 	if err := dec(in); err != nil {
@@ -1524,6 +1556,10 @@ var Config_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DeleteGroupCategory",
 			Handler:    _Config_DeleteGroupCategory_Handler,
+		},
+		{
+			MethodName: "ListGroupCategories",
+			Handler:    _Config_ListGroupCategories_Handler,
 		},
 		{
 			MethodName: "Publish",

@@ -18,6 +18,7 @@ import (
 	"context"
 	"strings"
 
+	"github.com/adevjoe/opentelemetry-go-contrib/instrumentation/k8s.io/client-go/transport"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -38,6 +39,7 @@ import (
 
 // NewDynamicClient xxx
 func NewDynamicClient(conf *res.ClusterConf) dynamic.Interface {
+	conf.Rest.WrapTransport = transport.NewWrapperFunc()
 	dynamicCli, _ := dynamic.NewForConfig(conf.Rest)
 	return dynamicCli
 }

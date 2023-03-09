@@ -29,6 +29,7 @@ import (
 	etcdsync "github.com/asim/go-micro/plugins/sync/etcd/v4"
 	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
+	"github.com/pkg/errors"
 	"go-micro.dev/v4"
 	"go-micro.dev/v4/registry"
 	"go-micro.dev/v4/sync"
@@ -81,13 +82,17 @@ type Server struct {
 	gitops proxy.GitOpsProxy
 	// gitops data storage
 	storage store.Store
+
+	jwtClient *jwt.JWTClient
+	iamClient iam.PermClient
 }
 
 // Init all subsystems
 func (s *Server) Init() error {
+	// 初始化所有进程
 	initializer := []func() error{
-		s.initStorage, s.initController, s.initMicroService,
-		s.initHTTPService, s.initLeaderElection,
+		s.initIamJWTClient, s.initStorage, s.initController,
+		s.initMicroService, s.initHTTPService, s.initLeaderElection,
 	}
 	for _, init := range initializer {
 		if err := init(); err != nil {
@@ -143,6 +148,34 @@ func (s *Server) initStorage() error {
 	return nil
 }
 
+func (s *Server) initIamJWTClient() error {
+	// 初始化权限平台 Client
+	iamClient, err := iam.NewIamClient(&iam.Options{
+		SystemID:    s.option.Auth.SystemID,
+		AppCode:     s.option.Auth.AppCode,
+		AppSecret:   s.option.Auth.AppSecret,
+		External:    s.option.Auth.External,
+		GateWayHost: s.option.Auth.Gateway,
+		IAMHost:     s.option.Auth.IAMHost,
+		BkiIAMHost:  s.option.Auth.BKIAM,
+	})
+	if err != nil {
+		return errors.Wrapf(err, "manager init iam client failed")
+	}
+	s.iamClient = iamClient
+
+	// 初始化 JWT Client
+	jwtClient, err := jwt.NewJWTClient(jwt.JWTOptions{
+		VerifyKeyFile: s.option.Auth.VerifyKeyFile,
+		SignKeyFile:   s.option.Auth.SignKeyFile,
+	})
+	if err != nil {
+		return errors.Wrapf(err, "manager init jwt client failed")
+	}
+	s.jwtClient = jwtClient
+	return nil
+}
+
 func (s *Server) initMicroService() error {
 	svc := micro.NewService(
 		micro.Client(grpccli.NewClient(grpccli.AuthTLS(s.option.ClientTLS))),
@@ -167,12 +200,16 @@ func (s *Server) initMicroService() error {
 		AdminNamespace: s.option.GitOps.AdminNamespace,
 		ClusterControl: s.clusterCtl,
 		ProjectControl: s.projectCtl,
+		JwtClient:      s.jwtClient,
+		IamClient:      s.iamClient,
+	}
+	gitopsHandler := handler.NewGitOpsHandler(opt)
+	if err := gitopsHandler.Init(); err != nil {
+		return errors.Wrapf(err, "gitops handler init failed")
 	}
 	if err := pb.RegisterBcsGitopsManagerHandler(
-		s.microService.Server(),
-		handler.NewGitOpsHandler(opt)); err != nil {
-		blog.Errorf("manager register GitOpsManager handler failed, %s", err.Error())
-		return fmt.Errorf("GitOps Handler register failure")
+		s.microService.Server(), gitopsHandler); err != nil {
+		return errors.Wrapf(err, "manager register gitops handler failed")
 	}
 	blog.Infof("manager init micro service successfully")
 	return nil
@@ -213,7 +250,7 @@ func (s *Server) initHTTPService() error {
 		Handler:   bugWork,
 		TLSConfig: s.option.ServerTLS,
 	}
-	blog.Infof("manager init http service succefully")
+	blog.Infof("manager init http service successfully")
 	return nil
 }
 
@@ -273,35 +310,11 @@ func (s *Server) initGrpcGateway(router *mux.Router) error {
 // gitops porxy must be implemented http.Handler, that we can
 // change to other gitops solution easilly
 func (s *Server) initGitOpsProxy(router *mux.Router) error {
-	// first, init auth information
-	iamClient, err := iam.NewIamClient(&iam.Options{
-		SystemID:    s.option.Auth.SystemID,
-		AppCode:     s.option.Auth.AppCode,
-		AppSecret:   s.option.Auth.AppSecret,
-		External:    s.option.Auth.External,
-		GateWayHost: s.option.Auth.Gateway,
-		IAMHost:     s.option.Auth.IAMHost,
-		BkiIAMHost:  s.option.Auth.BKIAM,
-	})
-	if err != nil {
-		blog.Errorf("manager init iam client failure, %s", err.Error())
-		return err
-	}
-	// second, init Auth info decoder
-	jwtClient, err := jwt.NewJWTClient(jwt.JWTOptions{
-		VerifyKeyFile: s.option.Auth.VerifyKeyFile,
-		SignKeyFile:   s.option.Auth.SignKeyFile,
-	})
-	if err != nil {
-		blog.Errorf("manager init jwt client failure, %s", err.Error())
-		return err
-	}
-
 	opt := &proxy.GitOpsOptions{
 		Service:    s.option.GitOps.Service,
 		PathPrefix: common.GitOpsProxyURL,
-		JWTDecoder: jwtClient,
-		IAMClient:  iamClient,
+		JWTDecoder: s.jwtClient,
+		IAMClient:  s.iamClient,
 		Storage:    s.storage,
 	}
 
@@ -341,15 +354,16 @@ func (s *Server) initController() error {
 	s.stops = append(s.stops, utils.StopFunc(cancel))
 	// cluster controller
 	opt := &controller.Options{
-		Context:     ctx,
-		Mode:        s.option.Mode,
-		ClientTLS:   s.option.ClientTLS,
-		Registry:    s.option.Registry.Endpoints,
-		RegistryTLS: s.option.Registry.TLSConfig,
-		APIGateway:  s.option.APIGateway,
-		APIToken:    s.option.APIGatewayToken,
-		Interval:    s.option.ClusterSyncInterval,
-		Storage:     s.storage,
+		Context:              ctx,
+		Mode:                 s.option.Mode,
+		ClientTLS:            s.option.ClientTLS,
+		Registry:             s.option.Registry.Endpoints,
+		RegistryTLS:          s.option.Registry.TLSConfig,
+		APIGatewayForCluster: s.option.APIGatewayForCluster,
+		APIGateway:           s.option.APIGateway,
+		APIToken:             s.option.APIGatewayToken,
+		Interval:             s.option.ClusterSyncInterval,
+		Storage:              s.storage,
 	}
 	s.clusterCtl = controller.NewClusterController(opt)
 	if err := s.clusterCtl.Init(); err != nil {

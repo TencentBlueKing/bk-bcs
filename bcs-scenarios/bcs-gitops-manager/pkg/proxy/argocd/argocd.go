@@ -97,9 +97,15 @@ func (ops *ArgocdProxy) initArgoPathHandler() error {
 		Router:     ops.PathPrefix(common.GitOpsProxyURL + "/api/webhook").Subrouter(),
 		middleware: middleware,
 	}
+	// grpc access handler
+	grpcPlugin := &GrpcPlugin{
+		Router: ops.NewRoute().Path(common.GitOpsProxyURL +
+			"/{package:[a-z]+}.{service:[A-Z][a-zA-Z]+}/{method:[A-Z][a-zA-Z]+}").Subrouter(),
+		middleware: middleware,
+	}
 	initializer := []func() error{
 		projectPlugin.Init, clusterPlugin.Init, repositoryPlugin.Init,
-		appPlugin.Init, streamPlugin.Init, webhookPlugin.Init,
+		appPlugin.Init, streamPlugin.Init, webhookPlugin.Init, grpcPlugin.Init,
 	}
 
 	// access deny URL, keep in mind that there are paths need to proxy
@@ -108,22 +114,11 @@ func (ops *ArgocdProxy) initArgoPathHandler() error {
 	ops.PathPrefix(common.GitOpsProxyURL + "/api/v1/repocreds").HandlerFunc(http.NotFound)
 	ops.PathPrefix(common.GitOpsProxyURL + "/api/v1/settings").HandlerFunc(http.NotFound)
 	ops.PathPrefix(common.GitOpsProxyURL + "/api/v1/certificates").HandlerFunc(http.NotFound)
-
-	// grpc access management
-	grpcPlugin := &GrpcPlugin{
-		Session: ops.session,
-	}
-	ops.HandleFunc(
-		common.GitOpsProxyURL+"/{package:[a-z]+}.{service:[A-Z][a-zA-Z]+}/{method:[A-Z][a-zA-Z]+}",
-		grpcPlugin.ServeHTTP,
-	)
-
 	for _, init := range initializer {
 		if err := init(); err != nil {
 			return err
 		}
 	}
-
 	blog.Infof("Argocd proxy init successfully")
 	return nil
 }

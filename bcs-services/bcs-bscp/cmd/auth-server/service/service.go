@@ -18,6 +18,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strconv"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
@@ -343,4 +344,24 @@ func (s *Service) QuerySpace(ctx context.Context, req *pbas.QuerySpaceReq) (*pba
 	}
 
 	return &pbas.QuerySpaceResp{Items: items}, nil
+}
+
+// QuerySpaceByAppID 查询space
+func (s *Service) QuerySpaceByAppID(ctx context.Context, req *pbas.QuerySpaceByAppIDReq) (*pbas.Space, error) {
+	appID := req.GetAppId()
+	if appID == 0 {
+		return nil, errors.New("app_id is required")
+	}
+
+	app, err := s.client.DS.GetAppByID(ctx, &pbds.GetAppByIDReq{AppId: appID})
+	if err != nil {
+		return nil, err
+	}
+
+	resp := &pbas.Space{
+		SpaceId:       strconv.Itoa(int(app.BizId)),
+		SpaceTypeId:   space.BK_CMDB.ID,
+		SpaceTypeName: space.BCS.ID,
+	}
+	return resp, nil
 }

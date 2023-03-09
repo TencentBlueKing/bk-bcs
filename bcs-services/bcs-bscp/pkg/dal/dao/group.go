@@ -197,17 +197,10 @@ func (dao *groupDao) List(kit *kit.Kit, opts *types.ListGroupsOption) (
 		return nil, err
 	}
 
-	var sql string
-	if opts.Page.Count {
-		// this is a count request, then do count operation only.
-		sql = fmt.Sprintf(`SELECT COUNT(*) FROM %s %s`, table.GroupTable, whereExpr)
-		var count uint32
-		count, err = dao.orm.Do(dao.sd.ShardingOne(opts.BizID).DB()).Count(kit.Ctx, sql, arg)
-		if err != nil {
-			return nil, err
-		}
-
-		return &types.ListGroupDetails{Count: count, Details: make([]*table.Group, 0)}, nil
+	countSql := fmt.Sprintf(`SELECT COUNT(*) FROM %s %s`, table.GroupTable, whereExpr)
+	count, err := dao.orm.Do(dao.sd.ShardingOne(opts.BizID).DB()).Count(kit.Ctx, countSql)
+	if err != nil {
+		return nil, err
 	}
 
 	// query group list for now.
@@ -216,7 +209,7 @@ func (dao *groupDao) List(kit *kit.Kit, opts *types.ListGroupsOption) (
 		return nil, err
 	}
 
-	sql = fmt.Sprintf(`SELECT %s FROM %s %s %s`,
+	sql := fmt.Sprintf(`SELECT %s FROM %s %s %s`,
 		table.GroupColumns.NamedExpr(), table.GroupTable, whereExpr, pageExpr)
 
 	list := make([]*table.Group, 0)
@@ -225,7 +218,7 @@ func (dao *groupDao) List(kit *kit.Kit, opts *types.ListGroupsOption) (
 		return nil, err
 	}
 
-	return &types.ListGroupDetails{Count: 0, Details: list}, nil
+	return &types.ListGroupDetails{Count: count, Details: list}, nil
 }
 
 // Delete one group instance.

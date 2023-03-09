@@ -28,6 +28,7 @@ const (
 	Data_UpdateApp_FullMethodName                      = "/pbds.Data/UpdateApp"
 	Data_DeleteApp_FullMethodName                      = "/pbds.Data/DeleteApp"
 	Data_GetApp_FullMethodName                         = "/pbds.Data/GetApp"
+	Data_GetAppByID_FullMethodName                     = "/pbds.Data/GetAppByID"
 	Data_ListApps_FullMethodName                       = "/pbds.Data/ListApps"
 	Data_ListAppsRest_FullMethodName                   = "/pbds.Data/ListAppsRest"
 	Data_CreateConfigItem_FullMethodName               = "/pbds.Data/CreateConfigItem"
@@ -78,6 +79,7 @@ type DataClient interface {
 	UpdateApp(ctx context.Context, in *UpdateAppReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
 	DeleteApp(ctx context.Context, in *DeleteAppReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
 	GetApp(ctx context.Context, in *GetAppReq, opts ...grpc.CallOption) (*app.App, error)
+	GetAppByID(ctx context.Context, in *GetAppByIDReq, opts ...grpc.CallOption) (*app.App, error)
 	ListApps(ctx context.Context, in *ListAppsReq, opts ...grpc.CallOption) (*ListAppsResp, error)
 	ListAppsRest(ctx context.Context, in *ListAppsRestReq, opts ...grpc.CallOption) (*ListAppsResp, error)
 	// config item related interface.
@@ -170,6 +172,15 @@ func (c *dataClient) DeleteApp(ctx context.Context, in *DeleteAppReq, opts ...gr
 func (c *dataClient) GetApp(ctx context.Context, in *GetAppReq, opts ...grpc.CallOption) (*app.App, error) {
 	out := new(app.App)
 	err := c.cc.Invoke(ctx, Data_GetApp_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dataClient) GetAppByID(ctx context.Context, in *GetAppByIDReq, opts ...grpc.CallOption) (*app.App, error) {
+	out := new(app.App)
+	err := c.cc.Invoke(ctx, Data_GetAppByID_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -536,6 +547,7 @@ type DataServer interface {
 	UpdateApp(context.Context, *UpdateAppReq) (*base.EmptyResp, error)
 	DeleteApp(context.Context, *DeleteAppReq) (*base.EmptyResp, error)
 	GetApp(context.Context, *GetAppReq) (*app.App, error)
+	GetAppByID(context.Context, *GetAppByIDReq) (*app.App, error)
 	ListApps(context.Context, *ListAppsReq) (*ListAppsResp, error)
 	ListAppsRest(context.Context, *ListAppsRestReq) (*ListAppsResp, error)
 	// config item related interface.
@@ -605,6 +617,9 @@ func (UnimplementedDataServer) DeleteApp(context.Context, *DeleteAppReq) (*base.
 }
 func (UnimplementedDataServer) GetApp(context.Context, *GetAppReq) (*app.App, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetApp not implemented")
+}
+func (UnimplementedDataServer) GetAppByID(context.Context, *GetAppByIDReq) (*app.App, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetAppByID not implemented")
 }
 func (UnimplementedDataServer) ListApps(context.Context, *ListAppsReq) (*ListAppsResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListApps not implemented")
@@ -803,6 +818,24 @@ func _Data_GetApp_Handler(srv interface{}, ctx context.Context, dec func(interfa
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(DataServer).GetApp(ctx, req.(*GetAppReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Data_GetAppByID_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetAppByIDReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).GetAppByID(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Data_GetAppByID_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).GetAppByID(ctx, req.(*GetAppByIDReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1531,6 +1564,10 @@ var Data_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetApp",
 			Handler:    _Data_GetApp_Handler,
+		},
+		{
+			MethodName: "GetAppByID",
+			Handler:    _Data_GetAppByID_Handler,
 		},
 		{
 			MethodName: "ListApps",

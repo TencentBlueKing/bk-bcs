@@ -28,6 +28,10 @@ const (
 	// AppCodeKey is blueking application code header key.
 	AppCodeKey = "X-Bkapi-App-Code"
 
+	// Space
+	SpaceIDKey     = "X-Bkapi-Space-Id"
+	SpaceTypeIDKey = "X-Bkapi-Space-Type-Id"
+
 	// LanguageKey the language key word.
 	LanguageKey = "HTTP_BLUEKING_LANGUAGE"
 

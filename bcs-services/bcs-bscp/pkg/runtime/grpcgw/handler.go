@@ -24,8 +24,6 @@ import (
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/proto"
 
-	"bscp.io/pkg/components"
-	"bscp.io/pkg/criteria/constant"
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/rest"
 	"bscp.io/pkg/runtime/webannotation"
@@ -122,12 +120,7 @@ func (j *bkJSONResponse) Marshal(v interface{}) ([]byte, error) {
 // kitMetadataHandler convert http header to grpc metadata
 func kitMetadataHandler(ctx context.Context, r *http.Request) metadata.MD {
 	kt := kit.MustGetKit(ctx)
-	return metadata.Pairs(
-		components.RequestIDHeaderKey, kt.Rid,
-		constant.RidKey, kt.Rid,
-		constant.UserKey, kt.User,
-		constant.AppCodeKey, kt.AppCode,
-	)
+	return kt.RPCMetaData()
 }
 
 // bscpResponse 可动态处理 webannotation
