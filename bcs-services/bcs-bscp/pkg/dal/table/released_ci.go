@@ -27,11 +27,12 @@ var ReleasedCIColumnDescriptor = mergeColumnDescriptors("",
 	ColumnDescriptors{
 		{Column: "id", NamedC: "id", Type: enumor.Numeric},
 		{Column: "release_id", NamedC: "release_id", Type: enumor.Numeric},
+		{Column: "config_item_id", NamedC: "config_item_id", Type: enumor.Numeric},
 		{Column: "commit_id", NamedC: "commit_id", Type: enumor.Numeric}},
 	mergeColumnDescriptors("commit_spec", CommitSpecColumnDescriptor),
 	mergeColumnDescriptors("config_item_spec", RCISpecColumnDescriptor),
-	mergeColumnDescriptors("attachment", CommitAttachmentColumnDescriptor),
-	mergeColumnDescriptors("revision", CreatedRevisionColumnDescriptor))
+	mergeColumnDescriptors("attachment", CIAttachmentColumnDescriptor),
+	mergeColumnDescriptors("revision", RevisionColumnDescriptor))
 
 // ReleasedConfigItem records all the information when a config item
 // is released. it is not editable after created.
@@ -46,6 +47,9 @@ type ReleasedConfigItem struct {
 	// CommitID is this config item's commit id when it is released.
 	CommitID uint32 `db:"commit_id" json:"commit_id"`
 
+	// ConfigItemID is the config item's origin id when it is released.
+	ConfigItemID uint32 `db:"config_item_id" json:"config_item_id"`
+
 	// CommitSpec is this config item's commit spec when it is released.
 	// which is same with the commits' spec information with the upper
 	// CommitID
@@ -54,9 +58,9 @@ type ReleasedConfigItem struct {
 	// ConfigItemSpec is this config item's spec when it is released, which
 	// means it is same with the config item's spec information when it is
 	// released.
-	ConfigItemSpec *ConfigItemSpec   `db:"config_item_spec" json:"config_item_spec"`
-	Attachment     *CommitAttachment `db:"attachment" json:"attachment"`
-	Revision       *CreatedRevision  `db:"revision" json:"revision"`
+	ConfigItemSpec *ConfigItemSpec       `db:"config_item_spec" json:"config_item_spec"`
+	Attachment     *ConfigItemAttachment `db:"attachment" json:"attachment"`
+	Revision       *Revision             `db:"revision" json:"revision"`
 }
 
 // TableName is the released app config's database table name.
@@ -76,6 +80,10 @@ func (r ReleasedConfigItem) Validate() error {
 
 	if r.CommitID <= 0 {
 		return errors.New("invalid commit id")
+	}
+
+	if r.ConfigItemID <= 0 {
+		return errors.New("invalid config item id")
 	}
 
 	if r.CommitSpec == nil {
@@ -106,7 +114,7 @@ func (r ReleasedConfigItem) Validate() error {
 		return errors.New("revision is empty")
 	}
 
-	if err := r.Revision.Validate(); err != nil {
+	if err := r.Revision.ValidateCreate(); err != nil {
 		return err
 	}
 

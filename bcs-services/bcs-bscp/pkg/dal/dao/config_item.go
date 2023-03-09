@@ -230,17 +230,10 @@ func (dao *configItemDao) List(kit *kit.Kit, opts *types.ListConfigItemsOption) 
 		return nil, err
 	}
 
-	var sql string
-	if opts.Page.Count {
-		// this is a count request, then do count operation only.
-		sql = fmt.Sprintf(`SELECT COUNT(*) FROM %s %s`, table.ConfigItemTable, whereExpr)
-		var count uint32
-		count, err = dao.orm.Do(dao.sd.ShardingOne(opts.BizID).DB()).Count(kit.Ctx, sql)
-		if err != nil {
-			return nil, err
-		}
-
-		return &types.ListConfigItemDetails{Count: count, Details: make([]*table.ConfigItem, 0)}, nil
+	countSql := fmt.Sprintf(`SELECT COUNT(*) FROM %s %s`, table.ConfigItemTable, whereExpr)
+	count, err := dao.orm.Do(dao.sd.ShardingOne(opts.BizID).DB()).Count(kit.Ctx, countSql)
+	if err != nil {
+		return nil, err
 	}
 
 	// query config item list for now.
@@ -249,7 +242,7 @@ func (dao *configItemDao) List(kit *kit.Kit, opts *types.ListConfigItemsOption) 
 		return nil, err
 	}
 
-	sql = fmt.Sprintf(`SELECT %s FROM %s %s %s`,
+	sql := fmt.Sprintf(`SELECT %s FROM %s %s %s`,
 		table.ConfigItemColumns.NamedExpr(), table.ConfigItemTable, whereExpr, pageExpr)
 
 	list := make([]*table.ConfigItem, 0)
@@ -258,7 +251,7 @@ func (dao *configItemDao) List(kit *kit.Kit, opts *types.ListConfigItemsOption) 
 		return nil, err
 	}
 
-	return &types.ListConfigItemDetails{Count: 0, Details: list}, nil
+	return &types.ListConfigItemDetails{Count: count, Details: list}, nil
 }
 
 // Delete one configItem instance.

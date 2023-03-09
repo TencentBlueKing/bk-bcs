@@ -309,11 +309,10 @@ func (r Revision) ValidateCreate() error {
 		return errors.New("creator can not be empty")
 	}
 
-	now := time.Now().Unix()
-	if (r.CreatedAt.Unix() <= (now - lagSeconds)) || (r.CreatedAt.Unix() >= (now + lagSeconds)) {
-		return errors.New("invalid create time")
-	}
-
+	// now := time.Now().Unix()
+	// if (r.CreatedAt.Unix() <= (now - lagSeconds)) || (r.CreatedAt.Unix() >= (now + lagSeconds)) {
+	// 	return errors.New("invalid create time")
+	// }
 	return nil
 }
 

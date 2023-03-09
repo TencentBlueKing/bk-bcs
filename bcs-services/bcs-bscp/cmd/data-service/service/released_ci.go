@@ -54,3 +54,18 @@ func (s *Service) ListReleasedConfigItems(ctx context.Context, req *pbds.ListRel
 	}
 	return resp, nil
 }
+
+// GetReleasedConfigItem get released config item
+func (s *Service) GetReleasedConfigItem(ctx context.Context, req *pbds.GetReleasedCIReq) (
+	*pbrci.ReleasedConfigItem, error) {
+
+	kt := kit.FromGrpcContext(ctx)
+
+	releasedCI, err := s.dao.ReleasedCI().Get(kt, req.ConfigItemId, req.BizId, req.ReleaseId)
+	if err != nil {
+		logs.Errorf("get released config item failed, err: %v, rid: %s", err, kt.Rid)
+		return nil, err
+	}
+
+	return pbrci.PbReleasedConfigItem(releasedCI), nil
+}

@@ -54,6 +54,7 @@ const (
 	Config_ListGroups_FullMethodName                     = "/pbcs.Config/ListGroups"
 	Config_CreateGroupCategory_FullMethodName            = "/pbcs.Config/CreateGroupCategory"
 	Config_DeleteGroupCategory_FullMethodName            = "/pbcs.Config/DeleteGroupCategory"
+	Config_ListGroupCategories_FullMethodName            = "/pbcs.Config/ListGroupCategories"
 	Config_Publish_FullMethodName                        = "/pbcs.Config/Publish"
 	Config_FinishPublish_FullMethodName                  = "/pbcs.Config/FinishPublish"
 	Config_ListPublishedStrategyHistories_FullMethodName = "/pbcs.Config/ListPublishedStrategyHistories"
@@ -427,7 +428,7 @@ func (c *configClient) DeleteGroupCategory(ctx context.Context, in *DeleteGroupC
 
 func (c *configClient) ListGroupCategories(ctx context.Context, in *ListGroupCategoriesReq, opts ...grpc.CallOption) (*ListGroupCategoriesResp, error) {
 	out := new(ListGroupCategoriesResp)
-	err := c.cc.Invoke(ctx, "/pbcs.Config/ListGroupCategories", in, out, opts...)
+	err := c.cc.Invoke(ctx, Config_ListGroupCategories_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1298,7 +1299,7 @@ func _Config_ListGroupCategories_Handler(srv interface{}, ctx context.Context, d
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/pbcs.Config/ListGroupCategories",
+		FullMethod: Config_ListGroupCategories_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ConfigServer).ListGroupCategories(ctx, req.(*ListGroupCategoriesReq))

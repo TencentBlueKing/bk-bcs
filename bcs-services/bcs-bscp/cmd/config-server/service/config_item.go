@@ -14,8 +14,8 @@ package service
 
 import (
 	"context"
+	"strconv"
 
-	"bscp.io/pkg/criteria/errf"
 	"bscp.io/pkg/iam/meta"
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/logs"
@@ -24,7 +24,6 @@ import (
 	pbci "bscp.io/pkg/protocol/core/config-item"
 	pbcontent "bscp.io/pkg/protocol/core/content"
 	pbds "bscp.io/pkg/protocol/data-service"
-	"bscp.io/pkg/types"
 )
 
 // CreateConfigItem create config item with option
@@ -237,17 +236,31 @@ func (s *Service) GetConfigItem(ctx context.Context, req *pbcs.GetConfigItemReq)
 	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.GetConfigItemResp)
 
-	authRes := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.ConfigItem, Action: meta.Find}, BizID: req.BizId}
-	err := s.authorizer.AuthorizeWithResp(grpcKit, resp, authRes)
+	bizID, err := strconv.Atoi(grpcKit.SpaceID)
+	if err != nil {
+		return nil, err
+	}
+	authRes := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.ConfigItem, Action: meta.Find}, BizID: uint32(bizID)}
+	err = s.authorizer.AuthorizeWithResp(grpcKit, resp, authRes)
 	if err != nil {
 		return nil, err
 	}
 
+	if req.ReleaseId == 0 {
+		return s.getEditingConfigItem(grpcKit, req.ConfigItemId, uint32(bizID), req.AppId)
+	}
+
+	return s.getReleasedConfigItem(grpcKit, req.ConfigItemId, uint32(bizID), req.AppId, req.ReleaseId)
+
+}
+
+func (s *Service) getEditingConfigItem(grpcKit *kit.Kit, configItemID, bizID, appID uint32) (
+	*pbcs.GetConfigItemResp, error) {
 	// 1. get config item
 	gciReq := &pbds.GetConfigItemReq{
-		Id:    req.Id,
-		BizId: req.BizId,
-		AppId: req.AppId,
+		Id:    configItemID,
+		BizId: uint32(bizID),
+		AppId: appID,
 	}
 	gciResp, err := s.client.DS.GetConfigItem(grpcKit.RpcCtx(), gciReq)
 	if err != nil {
@@ -257,9 +270,9 @@ func (s *Service) GetConfigItem(ctx context.Context, req *pbcs.GetConfigItemReq)
 
 	// 2. get latest commit
 	glcReq := &pbds.GetLatestCommitReq{
-		BizId:        req.BizId,
-		AppId:        req.AppId,
-		ConfigItemId: req.Id,
+		BizId:        uint32(bizID),
+		AppId:        appID,
+		ConfigItemId: configItemID,
 	}
 	glcResp, err := s.client.DS.GetLatestCommit(grpcKit.RpcCtx(), glcReq)
 	if err != nil {
@@ -270,8 +283,8 @@ func (s *Service) GetConfigItem(ctx context.Context, req *pbcs.GetConfigItemReq)
 	// 3. get content
 	gcReq := &pbds.GetContentReq{
 		Id:    glcResp.Spec.ContentId,
-		BizId: req.BizId,
-		AppId: req.AppId,
+		BizId: uint32(bizID),
+		AppId: appID,
 	}
 	gcResp, err := s.client.DS.GetContent(grpcKit.RpcCtx(), gcReq)
 	if err != nil {
@@ -279,9 +292,35 @@ func (s *Service) GetConfigItem(ctx context.Context, req *pbcs.GetConfigItemReq)
 		return nil, err
 	}
 
-	resp = &pbcs.GetConfigItemResp{
+	resp := &pbcs.GetConfigItemResp{
 		ConfigItem: gciResp,
-		Content:    gcResp,
+		Content:    gcResp.Spec,
+	}
+	return resp, nil
+}
+
+func (s *Service) getReleasedConfigItem(grpcKit *kit.Kit, configItemID, bizID, appID, releaseID uint32) (
+	*pbcs.GetConfigItemResp, error) {
+	// 1. get config item
+	grciReq := &pbds.GetReleasedCIReq{
+		ConfigItemId: configItemID,
+		ReleaseId:    releaseID,
+		BizId:        uint32(bizID),
+		AppId:        appID,
+	}
+	releasedCI, err := s.client.DS.GetReleasedConfigItem(grpcKit.RpcCtx(), grciReq)
+	if err != nil {
+		logs.Errorf("get config item failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, err
+	}
+
+	resp := &pbcs.GetConfigItemResp{
+		ConfigItem: &pbci.ConfigItem{
+			Id:         releasedCI.ConfigItemId,
+			Spec:       releasedCI.ConfigItemSpec,
+			Attachment: releasedCI.Attachment,
+		},
+		Content: releasedCI.CommitSpec.Content,
 	}
 	return resp, nil
 }
@@ -293,27 +332,22 @@ func (s *Service) ListConfigItems(ctx context.Context, req *pbcs.ListConfigItems
 	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.ListConfigItemsResp)
 
-	authRes := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.ConfigItem, Action: meta.Find}, BizID: req.BizId}
-	err := s.authorizer.AuthorizeWithResp(grpcKit, resp, authRes)
+	bizID, err := strconv.Atoi(grpcKit.SpaceID)
 	if err != nil {
 		return nil, err
 	}
-
-	if req.Page == nil {
-		return nil, errf.New(errf.InvalidParameter, "page is null")
-	}
-
-	// TODO: list latest release and compare each config item exists and latest commit id to get changing status
-
-	if err := req.Page.BasePage().Validate(types.DefaultPageOption); err != nil {
+	authRes := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.ConfigItem, Action: meta.Find}, BizID: uint32(bizID)}
+	err = s.authorizer.AuthorizeWithResp(grpcKit, resp, authRes)
+	if err != nil {
 		return nil, err
 	}
-
+	// TODO: list latest release and compare each config item exists and latest commit id to get changing status
 	r := &pbds.ListConfigItemsReq{
-		BizId:  req.BizId,
-		AppId:  req.AppId,
-		Filter: req.Filter,
-		Page:   req.Page,
+		BizId:     uint32(bizID),
+		AppId:     req.AppId,
+		ReleaseId: req.ReleaseId,
+		Start:     req.Start,
+		Limit:     req.Limit,
 	}
 	rp, err := s.client.DS.ListConfigItems(grpcKit.RpcCtx(), r)
 	if err != nil {

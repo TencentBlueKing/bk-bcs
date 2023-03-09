@@ -87,13 +87,12 @@ service Config {
     }
     rpc GetConfigItem(GetConfigItemReq) returns (GetConfigItemResp) {
         option (google.api.http) = {
-            get: "/api/v1/config/get/config_item/config_item/config_item_id/{id}/app_id/{app_id}/biz_id/{biz_id}"
+            get: "/api/v1/config/apps/{app_id}/config_items/{config_item_id}"
         };
     }
     rpc ListConfigItems(ListConfigItemsReq) returns (ListConfigItemsResp) {
         option (google.api.http) = {
-            post: "/api/v1/config/list/config_item/config_item/app_id/{app_id}/biz_id/{biz_id}"
-            body: "*"
+            get: "/api/v1/config/apps/{app_id}/config_items"
         };
     }
 
@@ -390,21 +389,21 @@ message DeleteConfigItemReq {
 message DeleteConfigItemResp {}
 
 message GetConfigItemReq {
-    uint32 id     = 1;
-    uint32 biz_id = 2;
-    uint32 app_id = 3;
+    uint32 config_item_id          = 1;
+    uint32 app_id                  = 2;
+    uint32 release_id              = 3;
 }
 
 message GetConfigItemResp {
     pbci.ConfigItem config_item = 1;
-    pbcontent.Content content   = 2;
+    pbcontent.ContentSpec content   = 2;
 }
 
 message ListConfigItemsReq {
-    uint32 biz_id                 = 1;
-    uint32 app_id                 = 2;
-    google.protobuf.Struct filter = 3;
-    pbbase.BasePage page          = 4;
+    uint32 app_id                 = 1;
+    uint32 release_id             = 2;
+    uint32 start                  = 3;
+    uint32 limit                  = 4;
 }
 
 message ListConfigItemsResp {
@@ -661,8 +660,9 @@ message PublishReq {
     uint32 biz_id          = 1;
     uint32 app_id          = 2;
     uint32 release_id      = 3;
-    bool all               = 4;
-    repeated uint32 groups = 5;
+    string memo            = 4;
+    bool all               = 5;
+    repeated uint32 groups = 6;
 }
 
 message PublishResp {

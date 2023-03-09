@@ -26,6 +26,8 @@ func (m *ReleaseSpec) ReleaseSpec() *table.ReleaseSpec {
 	return &table.ReleaseSpec{
 		Name: m.Name,
 		Memo: m.Memo,
+		Deprecated: m.Deprecated,
+		PublishNum: m.PublishNum,
 	}
 }
 
@@ -38,6 +40,8 @@ func PbReleaseSpec(spec *table.ReleaseSpec) *ReleaseSpec {
 	return &ReleaseSpec{
 		Name: spec.Name,
 		Memo: spec.Memo,
+		Deprecated: spec.Deprecated,
+		PublishNum: spec.PublishNum,
 	}
 }
 

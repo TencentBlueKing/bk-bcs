@@ -213,6 +213,12 @@ func (eo EqualOp) SQLExpr(field string, value interface{}) (string, error) {
 		return fmt.Sprintf(`%s = %v`, field, value), nil
 	}
 
+	if tools.IsBoolean(value) {
+		// if this value is numeric, then we still format it with %v
+		// because it is compatible with integer, float, etc.
+		return fmt.Sprintf(`%s = %v`, field, value), nil
+	}
+
 	return fmt.Sprintf(`%s = '%v'`, field, value), nil
 }
 

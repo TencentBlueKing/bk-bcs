@@ -42,6 +42,7 @@ func (s *Service) Publish(ctx context.Context, req *pbcs.PublishReq) (
 		BizId:     req.BizId,
 		AppId:     req.AppId,
 		ReleaseId: req.ReleaseId,
+		Memo:      req.Memo,
 		All:       req.All,
 		Groups:    req.Groups,
 	}

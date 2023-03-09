@@ -84,13 +84,17 @@ var ReleaseSpecColumns = mergeColumns(ReleaseSpecColumnDescriptor)
 // ReleaseSpecColumnDescriptor is ReleaseSpec's column descriptors.
 var ReleaseSpecColumnDescriptor = ColumnDescriptors{
 	{Column: "name", NamedC: "name", Type: enumor.String},
-	{Column: "memo", NamedC: "memo", Type: enumor.String}}
+	{Column: "memo", NamedC: "memo", Type: enumor.String},
+	{Column: "deprecated", NamedC: "deprecated", Type: enumor.Boolean},
+	{Column: "publish_num", NamedC: "publish_num", Type: enumor.Numeric}}
 
 // ReleaseSpec defines all the specifics related with a release, which is
 // set by user.
 type ReleaseSpec struct {
-	Name string `db:"name" json:"name"`
-	Memo string `db:"memo" json:"memo"`
+	Name       string `db:"name" json:"name"`
+	Memo       string `db:"memo" json:"memo"`
+	Deprecated bool   `db:"deprecated" json:"deprecated"`
+	PublishNum uint32 `db:"publish_num" json:"publish_num"`
 }
 
 // Validate a release specifics when it is created.

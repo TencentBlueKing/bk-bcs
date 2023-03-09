@@ -12,6 +12,7 @@ import (
 	commit "bscp.io/pkg/protocol/core/commit"
 	config_item "bscp.io/pkg/protocol/core/config-item"
 	content "bscp.io/pkg/protocol/core/content"
+	released_ci "bscp.io/pkg/protocol/core/released-ci"
 	context "context"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
@@ -44,6 +45,7 @@ const (
 	Data_ListCommits_FullMethodName                    = "/pbds.Data/ListCommits"
 	Data_CreateRelease_FullMethodName                  = "/pbds.Data/CreateRelease"
 	Data_ListReleases_FullMethodName                   = "/pbds.Data/ListReleases"
+	Data_GetReleasedConfigItem_FullMethodName          = "/pbds.Data/GetReleasedConfigItem"
 	Data_ListReleasedConfigItems_FullMethodName        = "/pbds.Data/ListReleasedConfigItems"
 	Data_CreateStrategySet_FullMethodName              = "/pbds.Data/CreateStrategySet"
 	Data_ListStrategySets_FullMethodName               = "/pbds.Data/ListStrategySets"
@@ -100,6 +102,7 @@ type DataClient interface {
 	CreateRelease(ctx context.Context, in *CreateReleaseReq, opts ...grpc.CallOption) (*CreateResp, error)
 	ListReleases(ctx context.Context, in *ListReleasesReq, opts ...grpc.CallOption) (*ListReleasesResp, error)
 	// released config item related interface.
+	GetReleasedConfigItem(ctx context.Context, in *GetReleasedCIReq, opts ...grpc.CallOption) (*released_ci.ReleasedConfigItem, error)
 	ListReleasedConfigItems(ctx context.Context, in *ListReleasedCIsReq, opts ...grpc.CallOption) (*ListReleasedCIsResp, error)
 	// strategy set related interface.
 	CreateStrategySet(ctx context.Context, in *CreateStrategySetReq, opts ...grpc.CallOption) (*CreateResp, error)
@@ -316,6 +319,15 @@ func (c *dataClient) CreateRelease(ctx context.Context, in *CreateReleaseReq, op
 func (c *dataClient) ListReleases(ctx context.Context, in *ListReleasesReq, opts ...grpc.CallOption) (*ListReleasesResp, error) {
 	out := new(ListReleasesResp)
 	err := c.cc.Invoke(ctx, Data_ListReleases_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dataClient) GetReleasedConfigItem(ctx context.Context, in *GetReleasedCIReq, opts ...grpc.CallOption) (*released_ci.ReleasedConfigItem, error) {
+	out := new(released_ci.ReleasedConfigItem)
+	err := c.cc.Invoke(ctx, Data_GetReleasedConfigItem_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -568,6 +580,7 @@ type DataServer interface {
 	CreateRelease(context.Context, *CreateReleaseReq) (*CreateResp, error)
 	ListReleases(context.Context, *ListReleasesReq) (*ListReleasesResp, error)
 	// released config item related interface.
+	GetReleasedConfigItem(context.Context, *GetReleasedCIReq) (*released_ci.ReleasedConfigItem, error)
 	ListReleasedConfigItems(context.Context, *ListReleasedCIsReq) (*ListReleasedCIsResp, error)
 	// strategy set related interface.
 	CreateStrategySet(context.Context, *CreateStrategySetReq) (*CreateResp, error)
@@ -665,6 +678,9 @@ func (UnimplementedDataServer) CreateRelease(context.Context, *CreateReleaseReq)
 }
 func (UnimplementedDataServer) ListReleases(context.Context, *ListReleasesReq) (*ListReleasesResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListReleases not implemented")
+}
+func (UnimplementedDataServer) GetReleasedConfigItem(context.Context, *GetReleasedCIReq) (*released_ci.ReleasedConfigItem, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetReleasedConfigItem not implemented")
 }
 func (UnimplementedDataServer) ListReleasedConfigItems(context.Context, *ListReleasedCIsReq) (*ListReleasedCIsResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListReleasedConfigItems not implemented")
@@ -1106,6 +1122,24 @@ func _Data_ListReleases_Handler(srv interface{}, ctx context.Context, dec func(i
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(DataServer).ListReleases(ctx, req.(*ListReleasesReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Data_GetReleasedConfigItem_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetReleasedCIReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).GetReleasedConfigItem(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Data_GetReleasedConfigItem_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).GetReleasedConfigItem(ctx, req.(*GetReleasedCIReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1628,6 +1662,10 @@ var Data_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListReleases",
 			Handler:    _Data_ListReleases_Handler,
+		},
+		{
+			MethodName: "GetReleasedConfigItem",
+			Handler:    _Data_GetReleasedConfigItem_Handler,
 		},
 		{
 			MethodName: "ListReleasedConfigItems",

@@ -50,12 +50,10 @@ func (s *Service) CreateRelease(ctx context.Context, req *pbds.CreateReleaseReq)
 		releasedCIs = append(releasedCIs, &table.ReleasedConfigItem{
 			CommitID:       commit.ID,
 			CommitSpec:     commit.Spec,
+			ConfigItemID:   item.ID,
 			ConfigItemSpec: item.Spec,
-			Attachment:     commit.Attachment,
-			Revision: &table.CreatedRevision{
-				Creator:   grpcKit.User,
-				CreatedAt: now,
-			},
+			Attachment:     item.Attachment,
+			Revision:       item.Revision,
 		})
 	}
 
