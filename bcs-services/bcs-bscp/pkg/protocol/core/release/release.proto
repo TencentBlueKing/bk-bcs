@@ -16,8 +16,10 @@ message Release {
 
 // ReleaseSpec source resource reference: pkg/dal/table/release.go
 message ReleaseSpec {
-    string name = 1;
-    string memo = 2;
+    string name          = 1;
+    string memo          = 2;
+    bool deprecated      = 3;
+    uint32 publish_num   = 4;
 }
 
 // ReleaseAttachment source resource reference: pkg/dal/table/release.go

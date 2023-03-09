@@ -47,12 +47,13 @@ type EventMeta struct {
 
 // ReleaseCICache is the release config item info which will be stored in cache.
 type ReleaseCICache struct {
-	ID             uint32                 `json:"id"`
-	ReleaseID      uint32                 `json:"reid"`
-	CommitID       uint32                 `json:"cid"`
-	CommitSpec     *CommitSpecCache       `json:"cspec"`
-	ConfigItemSpec *ConfigItemSpecCache   `json:"ispec"`
-	Attachment     *CommitAttachmentCache `json:"am"`
+	ID             uint32                      `json:"id"`
+	ReleaseID      uint32                      `json:"reid"`
+	CommitID       uint32                      `json:"cid"`
+	CommitSpec     *CommitSpecCache            `json:"cspec"`
+	ConfigItemID   uint32                      `json:"config_item_id"`
+	ConfigItemSpec *ConfigItemSpecCache        `json:"ispec"`
+	Attachment     *table.ConfigItemAttachment `json:"am"`
 }
 
 // CommitSpecCache cache struct.
@@ -91,9 +92,10 @@ func ReleaseCICaches(rs []*table.ReleasedConfigItem) []*ReleaseCICache {
 
 	for index, one := range rs {
 		list[index] = &ReleaseCICache{
-			ID:        one.ID,
-			ReleaseID: one.ReleaseID,
-			CommitID:  one.CommitID,
+			ID:           one.ID,
+			ReleaseID:    one.ReleaseID,
+			CommitID:     one.CommitID,
+			ConfigItemID: one.ConfigItemID,
 			CommitSpec: &CommitSpecCache{
 				ContentID: one.CommitSpec.ContentID,
 				Signature: one.CommitSpec.Content.Signature,
@@ -110,10 +112,9 @@ func ReleaseCICaches(rs []*table.ReleasedConfigItem) []*ReleaseCICache {
 					Privilege: one.ConfigItemSpec.Permission.Privilege,
 				},
 			},
-			Attachment: &CommitAttachmentCache{
-				BizID:        one.Attachment.BizID,
-				AppID:        one.Attachment.AppID,
-				ConfigItemID: one.Attachment.ConfigItemID,
+			Attachment: &table.ConfigItemAttachment{
+				BizID: one.Attachment.BizID,
+				AppID: one.Attachment.AppID,
 			},
 		}
 	}

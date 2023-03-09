@@ -360,21 +360,23 @@ create table if not exists `releases`
     `id`         bigint(1) unsigned not null,
 
     # Spec is a collection of resource's specifics defined with user
-    `name`       varchar(255)       not null,
-    `memo`       varchar(256)       default '',
-
-    # Attachment is a resource attachment id
-    `biz_id`     bigint(1) unsigned not null,
-    `app_id`     bigint(1) unsigned not null,
+    `name`        varchar(255)       not null,
+    `memo`        varchar(256)       default '',
+    `deprecated`  boolean            not null,
+    `publish_num` bigint(1) unsigned not null,
+ 
+    # Attachment  is a resource attachment id
+    `biz_id`      bigint(1) unsigned not null,
+    `app_id`      bigint(1) unsigned not null,
 
     # CreatedRevision is a resource's reversion information being created.
-    `creator`    varchar(64)        not null,
-    `created_at` datetime(6)        not null,
+    `creator`     varchar(64)        not null,
+    `created_at`  datetime(6)        not null,
 
     # Reserve reserve field.
-    `reservedA`  varchar(255)       default '',
-    `reservedB`  varchar(255)       default '',
-    `reservedC`  bigint(1) unsigned default 0,
+    `reservedA`   varchar(255)       default '',
+    `reservedB`   varchar(255)       default '',
+    `reservedC`   bigint(1) unsigned default 0,
 
     primary key (`id`),
     index `idx_bizID_appID` (`biz_id`, `app_id`)
@@ -408,9 +410,11 @@ create table if not exists `released_config_item`
     `user_group`     varchar(64)        not null,
     `privilege`      varchar(64)        not null,
 
-    # CreatedRevision is a resource's reversion information being created.
+    # Revision record this resource's revision information
     `creator`        varchar(64)        not null,
+    `reviser`        varchar(64)        not null,
     `created_at`     datetime(6)        not null,
+    `updated_at`     datetime(6)        not null,
 
     # Reserve reserve field.
     `reservedA`      varchar(255)       default '',

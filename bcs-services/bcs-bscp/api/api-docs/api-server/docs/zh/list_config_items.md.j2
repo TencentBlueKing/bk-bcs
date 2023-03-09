@@ -7,59 +7,10 @@
 ### 输入参数
 | 参数名称     | 参数类型     | 必选   | 描述             |
 | ------------ | ------------ | ------ | ---------------- |
-| biz_id         | uint32       | 是     | 业务ID     |
 | app_id         | uint32       | 是     | 应用ID     |
-| filter         | object       | 是     | 查询过滤条件     |
-| page         | object       | 是     | 分页设置    |
-
-{% include '_filter.md.j2' %}
-
-{% include '_page.md.j2' %}
-
-##### 查询参数介绍：
-| 参数名称     | 参数类型       | 描述             |
-| ------------ | ----------- | ---------------- |
-|      id        |      uint32      |            配置项ID                    |
-|name	|string	|	配置项名称 |
-|path	|string	|	配置项路径 |
-|file_type	|enum string	|	文件格式（枚举值：json、yaml、xml、binary） |
-|file_mode	|enum string	|	文件模式（枚举值：win、unix） |
-|user	|string	|	归属用户信息, 例如root |
-|user_group|	string	|	归属用户组信息, 例如root |
-|privilege|	string	|	文件权限，例如755 |
-|      memo        |      string      |            备注                   |
-|      creator        |      string      |            创建者                    |
-|      reviser        |       string     |            最后一次修改的修改者                    |
-|      create_at        |       string     |           创建时间，时间唯一标准格式：2006-01-02 15:04:05                   |
-|      update_at        |       string     |           最后一次修改时间，时间唯一标准格式：2006-01-02 15:04:05                   |
-接口调用者可以根据以上参数自行根据查询场景设置查询规则。
-
-### 调用示例
-如查询指定业务id为8和应用id为7的应用（在请求的url）下，配置项名称为 "server.yaml"，且是 tom 创建的配置项列表详情数据。
-```json
-{
-    "filter": {
-        "op": "and",
-        "rules": [
-            {
-                "field": "name",
-                "op": "eq",
-                "value": "server.yaml"
-            },
-            {
-                "field": "creator",
-                "op": "eq",
-                "value": "tom"
-            }
-        ]
-    },
-    "page": {
-        "count": false,
-        "start": 0,
-        "limit": 200
-    }
-}
-```
+| release_id     | uint32       | 否     | 版本ID     |
+|start	|uint32	|否	|记录开始位置，start 起始值为0|
+|limit	|uint32	|否	|每页限制条数，最大200，不能为0|
 
 ### 响应示例
 ```json

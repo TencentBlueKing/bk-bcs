@@ -29,6 +29,8 @@ import (
 type ReleasedCI interface {
 	// BulkCreateWithTx bulk create released config items with tx.
 	BulkCreateWithTx(kit *kit.Kit, tx *sharding.Tx, items []*table.ReleasedConfigItem) error
+	// Get released config item by id and released id
+	Get(kit *kit.Kit, id, bizID, releasedID uint32) (*table.ReleasedConfigItem, error)
 	// List released config items with options.
 	List(kit *kit.Kit, opts *types.ListReleasedCIsOption) (*types.ListReleasedCIsDetails, error)
 }
@@ -83,6 +85,23 @@ func (dao *releasedCIDao) BulkCreateWithTx(kit *kit.Kit, tx *sharding.Tx, items 
 	return nil
 }
 
+// Get released config item by ID and released id
+func (dao *releasedCIDao) Get(kit *kit.Kit, id, bizID, releasedID uint32) (*table.ReleasedConfigItem, error) {
+
+	if id == 0 {
+		return nil, errf.New(errf.InvalidParameter, "config item id can not be 0")
+	}
+
+	sql := fmt.Sprintf(`SELECT %s FROM %s WHERE config_item_id = %d AND release_id = %d`,
+		table.ReleasedConfigItemColumns.NamedExpr(), table.ReleasedConfigItemTable, id, releasedID)
+
+	releasedCI := &table.ReleasedConfigItem{}
+	if err := dao.orm.Do(dao.sd.ShardingOne(bizID).DB()).Get(kit.Ctx, releasedCI, sql); err != nil {
+		return nil, err
+	}
+	return releasedCI, nil
+}
+
 // List released config items with options.
 func (dao *releasedCIDao) List(kit *kit.Kit, opts *types.ListReleasedCIsOption) (
 	*types.ListReleasedCIsDetails, error) {
@@ -118,17 +137,10 @@ func (dao *releasedCIDao) List(kit *kit.Kit, opts *types.ListReleasedCIsOption) 
 		return nil, err
 	}
 
-	var sql string
-	if opts.Page.Count {
-		// this is a count request, then do count operation only.
-		sql = fmt.Sprintf(`SELECT COUNT(*) FROM %s %s`, table.ReleasedConfigItemTable, whereExpr)
-		var count uint32
-		count, err = dao.orm.Do(dao.sd.ShardingOne(opts.BizID).DB()).Count(kit.Ctx, sql)
-		if err != nil {
-			return nil, err
-		}
-
-		return &types.ListReleasedCIsDetails{Count: count, Details: make([]*table.ReleasedConfigItem, 0)}, nil
+	countSql := fmt.Sprintf(`SELECT COUNT(*) FROM %s %s`, table.ReleasedConfigItemTable, whereExpr)
+	count, err := dao.orm.Do(dao.sd.ShardingOne(opts.BizID).DB()).Count(kit.Ctx, countSql)
+	if err != nil {
+		return nil, err
 	}
 
 	// query released config item list for now.
@@ -137,7 +149,7 @@ func (dao *releasedCIDao) List(kit *kit.Kit, opts *types.ListReleasedCIsOption) 
 		return nil, err
 	}
 
-	sql = fmt.Sprintf(`SELECT %s FROM %s %s %s`,
+	sql := fmt.Sprintf(`SELECT %s FROM %s %s %s`,
 		table.ReleasedConfigItemColumns.NamedExpr(), table.ReleasedConfigItemTable, whereExpr, pageExpr)
 
 	list := make([]*table.ReleasedConfigItem, 0)
@@ -146,5 +158,5 @@ func (dao *releasedCIDao) List(kit *kit.Kit, opts *types.ListReleasedCIsOption) 
 		return nil, err
 	}
 
-	return &types.ListReleasedCIsDetails{Count: 0, Details: list}, nil
+	return &types.ListReleasedCIsDetails{Count: count, Details: list}, nil
 }

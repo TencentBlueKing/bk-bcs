@@ -63,3 +63,15 @@ func IsString(value interface{}) bool {
 		return false
 	}
 }
+
+// IsBoolean test if an interface is the boolean type.
+func IsBoolean(value interface{}) bool {
+	v := reflect.ValueOf(value)
+
+	switch v.Kind() {
+	case reflect.Bool:
+		return true
+	default:
+		return false
+	}
+}

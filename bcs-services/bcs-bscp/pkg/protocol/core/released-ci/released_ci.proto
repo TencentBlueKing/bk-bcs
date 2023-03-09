@@ -14,7 +14,8 @@ message ReleasedConfigItem {
     uint32 release_id                    = 2;
     uint32 commit_id                     = 3;
     pbcommit.CommitSpec commit_spec      = 4;
-    pbci.ConfigItemSpec config_item_spec = 5;
-    pbcommit.CommitAttachment attachment = 6;
-    pbbase.CreatedRevision revision      = 7;
+    uint32 config_item_id                = 5;
+    pbci.ConfigItemSpec config_item_spec = 6;
+    pbci.ConfigItemAttachment attachment = 7;
+    pbbase.Revision revision             = 8;
 }

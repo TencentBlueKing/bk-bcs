@@ -115,17 +115,10 @@ func (dao *releaseDao) List(kit *kit.Kit, opts *types.ListReleasesOption) (
 		return nil, err
 	}
 
-	var sql string
-	if opts.Page.Count {
-		// this is a count request, then do count operation only.
-		sql = fmt.Sprintf(`SELECT COUNT(*) FROM %s %s`, table.ReleaseTable, whereExpr)
-		var count uint32
-		count, err = dao.orm.Do(dao.sd.ShardingOne(opts.BizID).DB()).Count(kit.Ctx, sql)
-		if err != nil {
-			return nil, err
-		}
-
-		return &types.ListReleaseDetails{Count: count, Details: make([]*table.Release, 0)}, nil
+	countSql := fmt.Sprintf(`SELECT COUNT(*) FROM %s %s`, table.ReleaseTable, whereExpr)
+	count, err := dao.orm.Do(dao.sd.ShardingOne(opts.BizID).DB()).Count(kit.Ctx, countSql)
+	if err != nil {
+		return nil, err
 	}
 
 	// query release list for now.
@@ -134,7 +127,7 @@ func (dao *releaseDao) List(kit *kit.Kit, opts *types.ListReleasesOption) (
 		return nil, err
 	}
 
-	sql = fmt.Sprintf(`SELECT %s FROM %s %s %s`,
+	sql := fmt.Sprintf(`SELECT %s FROM %s %s %s`,
 		table.ReleaseColumns.NamedExpr(), table.ReleaseTable, whereExpr, pageExpr)
 
 	list := make([]*table.Release, 0)
@@ -143,7 +136,7 @@ func (dao *releaseDao) List(kit *kit.Kit, opts *types.ListReleasesOption) (
 		return nil, err
 	}
 
-	return &types.ListReleaseDetails{Count: 0, Details: list}, nil
+	return &types.ListReleaseDetails{Count: count, Details: list}, nil
 }
 
 // validateAttachmentResExist validate if attachment resource exists before creating release.
