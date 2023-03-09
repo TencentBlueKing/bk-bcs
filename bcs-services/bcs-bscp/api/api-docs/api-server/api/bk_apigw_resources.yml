@@ -442,7 +442,7 @@ paths:
           userVerifiedRequired: true
         disabledStages: []
   /api/v1/config/apps/{app_id}/config_items/{config_item_id}:
-    post:
+    get:
       operationId: get_config_item
       description: 获取配置项详情
       tags:
@@ -466,7 +466,7 @@ paths:
           userVerifiedRequired: true
         disabledStages: []
   /api/v1/config/apps/{app_id}/config_items:
-    post:
+    get:
       operationId: list_config_items
       description: 查询配置列表
       tags:
@@ -480,7 +480,7 @@ paths:
         matchSubpath: false
         backend:
           type: HTTP
-          method: post
+          method: get
           path: /api/v1/config/apps/{app_id}/config_items
           matchSubpath: false
           timeout: 0
