@@ -1,16 +1,12 @@
 <!-- eslint-disable max-len -->
 <template>
   <div class="cluster-node bcs-content-wrapper">
-    <bcs-alert
-      type="info"
-      class="cluster-node-tip"
-    >
+    <bcs-alert type="info" class="cluster-node-tip">
       <div slot="title">
         {{$t('集群就绪后，您可以创建命名空间、推送项目镜像到仓库，然后通过服务配置模板集部署服务。')}}
         <i18n
           path="当前集群已添加节点数（含Master） {nodes}，还可添加节点数 {realRemainNodesCount}，当容器网络资源超额使用时，会触发容器网络自动扩容，扩容后最多可以添加 {maxRemainNodesCount} 个节点。"
-          v-if="maxRemainNodesCount > 0"
-        >
+          v-if="maxRemainNodesCount > 0">
           <span place="nodes" class="num">{{nodesCount}}</span>
           <span place="realRemainNodesCount" class="num">{{realRemainNodesCount}}</span>
           <span place="maxRemainNodesCount" class="num">{{maxRemainNodesCount}}</span>
@@ -21,11 +17,7 @@
     <div class="cluster-node-operate">
       <div class="left">
         <template v-if="!nodeMenu">
-          <span
-            v-bk-tooltips="{
-              disabled: !isImportCluster,
-              content: $t('导入集群，节点管理功能不可用')
-            }">
+          <span v-bk-tooltips="{ disabled: !isImportCluster, content: $t('导入集群，节点管理功能不可用') }">
             <bcs-button
               theme="primary"
               icon="plus"
@@ -42,8 +34,9 @@
                 }
               }"
               :disabled="isImportCluster"
-              @click="handleAddNode"
-            >{{$t('添加节点')}}</bcs-button>
+              @click="handleAddNode">
+              {{$t('添加节点')}}
+            </bcs-button>
           </span>
         </template>
         <template v-if="$INTERNAL && curSelectedCluster.providerType === 'tke' && !nodeMenu">
@@ -143,12 +136,11 @@
         ref="tableRef"
         :key="tableKey"
         v-bkloading="{ isLoading: tableLoading }"
-        @filter-change="handleFilterChange"
-      >
+        @filter-change="handleFilterChange">
         <template #prepend>
           <transition name="fade">
             <div class="selection-tips" v-if="selectType !== CheckType.Uncheck">
-              <i18n path="已选 {num} 条">
+              <i18n path="已选择 {num} 条数据">
                 <span place="num" class="tips-num">{{selections.length}}</span>
               </i18n>
               <bk-button
@@ -174,8 +166,7 @@
           :render-header="renderSelection"
           width="70"
           :resizable="false"
-          fixed="left"
-        >
+          fixed="left">
           <template #default="{ row }">
             <bcs-checkbox
               :checked="selections.some(item => item.nodeName === row.nodeName)"
@@ -199,8 +190,7 @@
                   cluster_id: localClusterId
                 }
               }"
-              @click="handleGoOverview(row)"
-            >
+              @click="handleGoOverview(row)">
               <span class="bcs-ellipsis">{{ row.nodeName }}</span>
             </bcs-button>
           </template>
@@ -284,7 +274,7 @@
         <bcs-table-column min-width="200" :label="$t('标签')" key="source_type" v-if="isColumnRender('source_type')">
           <template #default="{ row }">
             <span v-if="!row.labels || !Object.keys(row.labels).length">--</span>
-            <bcs-popover v-else :delay="300" placement="left" class="popover">
+            <bcs-popover v-else :delay="300" placement="top" class="popover">
               <div class="row-label">
                 <span class="label" v-for="key in Object.keys(row.labels)" :key="key">
                   {{ `${key}=${row.labels[key]}` }}
@@ -303,7 +293,7 @@
         <bcs-table-column min-width="200" :label="$t('污点')" key="taint" v-if="isColumnRender('taint')">
           <template #default="{ row }">
             <span v-if="!row.taints || !row.taints.length">--</span>
-            <bcs-popover v-else :delay="300" placement="left" class="popover">
+            <bcs-popover v-else :delay="300" placement="top" class="popover">
               <div class="row-label">
                 <span class="label" v-for="(taint, index) in row.taints" :key="index">
                   {{
@@ -328,75 +318,16 @@
           </template>
         </bcs-table-column>
         <bcs-table-column
-          :label="$t('CPU')"
-          :sort-method="(pre, next) => sortMethod(pre, next, 'cpu_usage')"
-          key="cpu_usage"
+          v-for="item in metricColumnConfig"
+          :label="item.label"
+          :sort-method="(pre, next) => sortMethod(pre, next, item.prop)"
+          :key="item.prop"
           sortable
           align="center"
-          min-width="100"
-          v-if="isColumnRender('cpu_usage')"
-        >
+          min-width="120">
           <template #default="{ row }">
             <LoadingCell v-if="!nodeMetric[row.nodeName]"></LoadingCell>
-            <RingCell
-              :percent="nodeMetric[row.nodeName].cpu_usage"
-              fill-color="#3ede78"
-              v-else
-            ></RingCell>
-          </template>
-        </bcs-table-column>
-        <bcs-table-column
-          :label="$t('内存')"
-          :sort-method="(pre, next) => sortMethod(pre, next, 'memory_usage')"
-          key="memory_usage"
-          sortable
-          align="center"
-          min-width="100"
-          v-if="isColumnRender('memory_usage')"
-        >
-          <template #default="{ row }">
-            <LoadingCell v-if="!nodeMetric[row.nodeName]"></LoadingCell>
-            <RingCell
-              :percent="nodeMetric[row.nodeName].memory_usage"
-              fill-color="#3a84ff"
-              v-else
-            ></RingCell>
-          </template>
-        </bcs-table-column>
-        <bcs-table-column
-          :label="$t('磁盘')"
-          :sort-method="(pre, next) => sortMethod(pre, next, 'disk_usage')"
-          key="disk_usage"
-          sortable
-          align="center"
-          min-width="100"
-          v-if="isColumnRender('disk_usage')"
-        >
-          <template #default="{ row }">
-            <LoadingCell v-if="!nodeMetric[row.nodeName]"></LoadingCell>
-            <RingCell
-              :percent="nodeMetric[row.nodeName].disk_usage"
-              fill-color="#853cff"
-              v-else
-            ></RingCell>
-          </template>
-        </bcs-table-column>
-        <bcs-table-column
-          :label="$t('磁盘IO')"
-          :sort-method="(pre, next) => sortMethod(pre, next, 'diskio_usage')"
-          key="diskio_usage"
-          sortable
-          align="center"
-          min-width="100"
-          v-if="isColumnRender('diskio_usage')"
-        >
-          <template #default="{ row }">
-            <LoadingCell v-if="!nodeMetric[row.nodeName]"></LoadingCell>
-            <RingCell
-              :percent="nodeMetric[row.nodeName].diskio_usage"
-              fill-color="#853cff"
-              v-else
-            ></RingCell>
+            <RingCell :percent="nodeMetric[row.nodeName][item.prop]" :fill-color="item.color" v-else />
           </template>
         </bcs-table-column>
         <bcs-table-column :label="$t('操作')" width="160" fixed="right">
@@ -777,25 +708,58 @@ export default defineComponent({
       },
       {
         id: 'cpu_usage',
-        label: 'CPU',
+        label: $i18n.t('CPU使用率'),
         disabled: true,
       },
       {
         id: 'memory_usage',
-        label: $i18n.t('内存'),
+        label: $i18n.t('内存使用率'),
         disabled: true,
       },
       {
         id: 'disk_usage',
-        label: $i18n.t('磁盘'),
+        label: $i18n.t('磁盘使用率'),
         disabled: true,
       },
       {
         id: 'diskio_usage',
-        label: $i18n.t('磁盘IO'),
+        label: $i18n.t('磁盘IO使用率'),
         disabled: true,
       },
     ];
+    // 表格指标列配置
+    const metricColumnConfig = ref([
+      {
+        label: $i18n.t('CPU使用率'),
+        prop: 'cpu_usage',
+        color: '#3ede78',
+      },
+      {
+        label: $i18n.t('内存使用率'),
+        prop: 'memory_usage',
+        color: '#3a84ff',
+      },
+      {
+        label: $i18n.t('CPU装箱率'),
+        prop: 'cpu_request_usage',
+        color: '#3ede78',
+      },
+      {
+        label: $i18n.t('内存装箱率'),
+        prop: 'memory_request_usage',
+        color: '#3a84ff',
+      },
+      {
+        label: $i18n.t('磁盘使用率'),
+        prop: 'disk_usage',
+        color: '#853cff',
+      },
+      {
+        label: $i18n.t('磁盘IO'),
+        prop: 'diskio_usage',
+        color: '#853cff',
+      },
+    ]);
     const {
       tableSetting,
       handleSettingChange,
@@ -1420,7 +1384,11 @@ export default defineComponent({
     });
 
     const { stop, start } = useInterval(async () => {
-      tableData.value = await getNodeList(localClusterId.value);
+      const data = await getNodeList(localClusterId.value);
+      // todo 解决轮询导致指令不断更新，popover消失问题
+      if (JSON.stringify(data) !== JSON.stringify(tableData.value)) {
+        tableData.value = data;
+      }
     }, 5000);
 
     // eslint-disable-next-line max-len
@@ -1477,6 +1445,7 @@ export default defineComponent({
       }
     });
     return {
+      metricColumnConfig,
       removeNodeDialogTitle,
       nodesCount,
       realRemainNodesCount,

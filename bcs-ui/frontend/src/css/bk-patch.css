@@ -1251,10 +1251,6 @@
     }
 }
 
-.bk-table {
-    overflow: auto;
-}
-
 .bk-dialog-outer {
     padding: 0 24px 12px;
     background-color: #fafbfd;

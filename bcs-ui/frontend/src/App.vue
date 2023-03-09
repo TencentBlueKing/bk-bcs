@@ -22,7 +22,7 @@ import ProjectGuide from '@/views/app/empty-project-guide.vue';
 import $store from '@/store';
 import $i18n from '@/i18n/i18n-setup';
 import { bus } from '@/common/bus';
-import useProject from '@/views/app/use-project';
+import useProject from '@/views/project-manage/project/use-project';
 
 export default defineComponent({
   name: 'App',

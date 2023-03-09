@@ -301,8 +301,8 @@
 /* eslint-disable camelcase */
 import { computed, defineComponent, onMounted, ref, toRefs } from '@vue/composition-api';
 import { bkOverflowTips } from 'bk-magic-vue';
-import StatusIcon from '../../../../components/status-icon';
-import Metric from '../../common/metric.vue';
+import StatusIcon from '@/components/status-icon';
+import Metric from '@/components/metric.vue';
 import useDetail from './use-detail';
 import { formatTime, timeZoneTransForm } from '@/common/util';
 import CodeEditor from '@/components/monaco-editor/new-editor.vue';

@@ -143,7 +143,7 @@
 /* eslint-disable camelcase */
 import { defineComponent, toRefs, computed, onMounted, ref } from '@vue/composition-api';
 import { bkOverflowTips } from 'bk-magic-vue';
-import Metric from '../../common/metric.vue';
+import Metric from '@/components/metric.vue';
 
 export default defineComponent({
   name: 'ContainerDetail',

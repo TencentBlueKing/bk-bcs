@@ -90,6 +90,9 @@ export default {
     isSharedCluster() {
       return this.$store.getters.isSharedCluster;
     },
+    curSideRouteName() {
+      return this.$store.state.curSideMenu?.route;
+    },
   },
   watch: {
     value(show) {
@@ -121,7 +124,7 @@ export default {
       this.$store.commit('updateCurCluster', cluster.clusterID ? cluster : {});
 
       this.$router.replace({
-        name: this.$route.name,
+        name: this.curSideRouteName || this.$route.name,
         params: {
           clusterId: cluster.clusterID,
         },

@@ -1,7 +1,8 @@
 <template>
   <BaseLayout
     title="CustomObjects"
-    kind="CustomObject" type="crd"
+    kind="CustomObject"
+    type="crd"
     category="custom_objects"
     default-active-detail-type="yaml" show-crd :show-detail-tab="false">
     <template

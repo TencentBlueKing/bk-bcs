@@ -675,6 +675,7 @@ export default defineComponent({
               theme: 'success',
               message: $i18n.t('更新成功'),
             });
+            handleGetAutoScalerConfig();
             resolve(true);
           } else {
             // eslint-disable-next-line prefer-promise-reject-errors

@@ -66,7 +66,7 @@ const menus: IMenu[] = [
           {
             title: 'Ingress',
             route: 'dashboardNetworkIngress',
-            id: 'INGRES',
+            id: 'INGRESS',
           },
           {
             title: 'Services',
@@ -76,7 +76,7 @@ const menus: IMenu[] = [
           {
             title: 'Endpoints',
             route: 'dashboardNetworkEndpoints',
-            id: 'ENDPOINT',
+            id: 'ENDPOINTS',
           },
         ],
       },
@@ -109,7 +109,7 @@ const menus: IMenu[] = [
           {
             title: 'PersistentVolumesClaims',
             route: 'dashboardStoragePersistentVolumesClaims',
-            id: 'PERSISTENTVOLUMESCLAIM',
+            id: 'PERSISTENTVOLUMECLAIM',
           },
           {
             title: 'StorageClass',
@@ -135,7 +135,7 @@ const menus: IMenu[] = [
         title: 'HPA',
         icon: 'bcs-icon-hpa',
         route: 'dashboardHPA',
-        id: 'HPA',
+        id: 'HORIZONTALPODAUTOSCALER',
       },
       {
         title: $i18n.t('自定义资源'),
@@ -302,7 +302,7 @@ const menus: IMenu[] = [
             route: 'depotMain',
           },
           {
-            title: $i18n.t('Charts包'),
+            title: 'Charts',
             id: 'CHARTLIST',
             route: 'chartList',
           },

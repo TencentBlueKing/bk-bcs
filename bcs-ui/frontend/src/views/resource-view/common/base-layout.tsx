@@ -92,6 +92,7 @@ export default defineComponent({
     // crd 列表
     const crdList = computed(() => (crdData.value?.manifest?.items)
       ?.filter(i => !defaultCustomObjectsMap.value.includes(i.metadata.name)) || []);
+    // 自定义资源当前CRD是从列表里面读取的
     const currentCrdExt = computed(() => {
       const item = crdList.value.find(item => item.metadata.name === currentCrd.value);
       return crdData.value?.manifestExt?.[item?.metadata?.uid] || {};
@@ -392,6 +393,7 @@ export default defineComponent({
           kind: curKind,
           crd: currentCrd.value,
           formUpdate: webAnnotations.value?.featureFlag?.FORM_CREATE,
+          menuId: showCrd.value ? 'CUSTOMOBJECT' : '',
         },
       });
     };
@@ -409,6 +411,7 @@ export default defineComponent({
           kind: curKind,
           crd: currentCrd.value,
           formUpdate: webAnnotations.value?.featureFlag?.FORM_CREATE,
+          menuId: showCrd.value ? 'CUSTOMOBJECT' : '',
         },
       });
     };
@@ -428,6 +431,7 @@ export default defineComponent({
             category: category.value,
             kind: type.value === 'crd' ? kind.value : row.kind,
             crd: currentCrd.value,
+            menuId: showCrd.value ? 'CUSTOMOBJECT' : '',
           },
         });
       } else {
@@ -443,6 +447,7 @@ export default defineComponent({
             kind: type.value === 'crd' ? kind.value : row.kind,
             crd: currentCrd.value,
             formUpdate: webAnnotations.value?.featureFlag?.FORM_CREATE,
+            menuId: showCrd.value ? 'CUSTOMOBJECT' : '',
           },
         });
       }

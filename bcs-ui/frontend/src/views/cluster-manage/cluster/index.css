@@ -110,25 +110,8 @@
 
         .bk-dropdown-menu {
             position: absolute;
-            top: 8px;
-            right: 0;
-        }
-
-        /deep/ .cluster-opera-btn {
-            width: 70px;
-            height: 60px;
-            border: none;
-            background: transparent;
-            font-size: 30px;
-            outline: 0;
-            margin-bottom: -30px;
-            color: #979ba5;
-            position: relative;
-            left: 8px;
-
-            &.hover {
-                color: $primaryColor;
-            }
+            top: 20px;
+            right: 12px;
         }
     }
 
@@ -304,25 +287,6 @@
         display: block;
         margin-top: 10px;
         font-weight: normal;
-    }
-}
-
-.cluster-opera-btn {
-    .bcs-icon.icon-more {
-        color: $fontColor;
-        font-size: 26px;
-        width: 32px;
-        height: 32px;
-        display: inline-block;
-        line-height: 32px;
-    }
-
-    &.hover {
-        .bcs-icon.icon-more {
-            color: $primaryColor;
-            background-color: #F0F1F5;
-            border-radius: 50%;
-        }
     }
 }
 

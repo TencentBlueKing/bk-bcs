@@ -54,6 +54,14 @@
     border-radius: 2px;
   }
 
+  .bcs-border-right {
+    border-right: 1px solid #dfe0e5;
+  }
+
+  .bcs-border-bottom {
+    border-bottom: 1px solid #dfe0e5;
+  }
+
   .bcs-icon-btn {
     font-size: 14px;
     cursor: pointer;
@@ -85,6 +93,17 @@
     z-index: 100;
     right: 0;
     width: 100%;
+  }
+
+  .bcs-form-prefix {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 10px;
+    border: 1px solid #c4c6cc;
+    margin-right: -1px;
+    font-size: 12px;
+    height: 32px;
   }
 }
 

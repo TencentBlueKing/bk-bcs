@@ -59,7 +59,7 @@
 <script lang="ts">
 /* eslint-disable camelcase */
 import { computed, defineComponent, ref, toRefs, watch } from '@vue/composition-api';
-import useProject from '@/views/app/use-project';
+import useProject from '@/views/project-manage/project/use-project';
 export default defineComponent({
   name: 'ProjectConfig',
   model: {
