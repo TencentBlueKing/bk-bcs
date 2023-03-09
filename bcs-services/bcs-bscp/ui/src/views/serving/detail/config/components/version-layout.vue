@@ -1,15 +1,21 @@
 <script setup lang="ts">
 
+  const props = withDefaults(defineProps<{
+    showFooter: boolean
+  }>(), {
+    showFooter: true
+  })
+
 </script>
 <template>
-  <section class="version-layout-container">
+  <section :class="['version-layout-container', { 'without-footer': !showFooter }]">
     <section class="layout-header">
       <slot name="header"></slot>
     </section>
     <section class="layout-content">
       <slot></slot>
     </section>
-    <section class="layout-footer">
+    <section v-if="showFooter" class="layout-footer">
       <slot name="footer"></slot>
     </section>
   </section>
@@ -24,6 +30,11 @@
     height: calc(100vh - 52px);
     background: #ffffff;
     z-index: 1;
+    &.without-footer {
+      .layout-content {
+        height: calc(100% - 48px);
+      }
+    }
     .layout-header {
       position: relative;
       height: 52px;

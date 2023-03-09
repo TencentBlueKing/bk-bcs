@@ -358,8 +358,8 @@ export default defineComponent({
       },
       launchTemplate: {
         imageInfo: {
-          imageID: defaultValues.value.launchTemplate.imageInfo.imageID, // 镜像ID
-          imageName: defaultValues.value.launchTemplate.imageInfo.imageName, // 镜像名称
+          imageID: defaultValues.value.launchTemplate?.imageInfo?.imageID, // 镜像ID
+          imageName: defaultValues.value.launchTemplate?.imageInfo?.imageName, // 镜像名称
         },
         CPU: '',
         Mem: '',

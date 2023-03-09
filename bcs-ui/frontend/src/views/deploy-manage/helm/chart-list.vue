@@ -1,7 +1,7 @@
 <!-- eslint-disable max-len -->
 <template>
   <BcsContent
-    :title="$t('Helm Chart仓库')"
+    title="Charts"
     :tabs="repos"
     :active-tab="activeRepo"
     hide-back

@@ -40,6 +40,7 @@ import {
   clusterPodMetric,
   clusterContainersMetric,
 } from '@/api/base';
+import { clusterNodeMetric } from '@/api/modules/monitor';
 
 export default {
   namespaced: true,
@@ -398,6 +399,10 @@ export default {
     },
     async clusterContainersMetric(ctx, params) {
       const data = await clusterContainersMetric(params).catch(() => ({}));
+      return data;
+    },
+    async clusterNodeMetric(ctx, params) {
+      const data = await clusterNodeMetric(params).catch(() => ({}));
       return data;
     },
   },

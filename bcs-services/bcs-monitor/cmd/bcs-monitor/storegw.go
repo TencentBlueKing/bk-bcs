@@ -33,6 +33,7 @@ import (
 	"github.com/thanos-io/thanos/pkg/store"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/api"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component/bcs"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/storegw"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/utils"
@@ -164,6 +165,8 @@ func runStoreGW(ctx context.Context, g *run.Group, opt *option) error {
 			gw.Shutdown(err)
 		})
 	}
+
+	bcs.CacheListClusters()
 
 	return err
 }

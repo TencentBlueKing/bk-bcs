@@ -166,7 +166,7 @@
             </bcs-table-column>
             <bcs-table-column
               :label="$t('名称')"
-              min-width="130" prop="metadata.name" sortable :resizable="false" show-overflow-tooltip>
+              min-width="130" prop="metadata.name" sortable :resizable="false" show-overflow-tooltip fixed="left">
               <template #default="{ row }">
                 <bk-button
                   class="bcs-button-ellipsis"
@@ -210,11 +210,11 @@
                 <span>{{handleGetExtData(row.metadata.uid, 'age')}}</span>
               </template>
             </bcs-table-column>
-            <bcs-table-column :label="$t('操作')" width="140" :resizable="false">
+            <bcs-table-column :label="$t('操作')" width="140" :resizable="false" fixed="right">
               <template #default="{ row }">
                 <bk-button
                   text :disabled="handleGetExtData(row.metadata.uid, 'status') === 'Terminating'"
-                  @click="handleShowLog(row, clusterId)">{{ $t('日志') }}</bk-button>
+                  @click="handleShowLog(row)">{{ $t('日志') }}</bk-button>
                 <bk-button
                   class="ml10" :disabled="handleGetExtData(row.metadata.uid, 'status') === 'Terminating'"
                   text @click="handleReschedule(row)">{{ $t('重新调度') }}</bk-button>
@@ -272,17 +272,12 @@
         </CodeEditor>
       </template>
     </bcs-sideslider>
-    <bcs-dialog class="log-dialog" v-model="logShow" width="80%" :show-footer="false" render-directive="if">
-      <BcsLog
-        :project-id="projectId"
-        :cluster-id="clusterId"
-        :namespace-id="curNamespace"
-        :pod-id="curPodId"
-        :default-container="defaultContainer"
-        :global-loading="logLoading"
-        :container-list="containerList">
-      </BcsLog>
-    </bcs-dialog>
+    <BcsLog
+      v-model="showLog"
+      :cluster-id="clusterId"
+      :namespace="currentRow.metadata.namespace"
+      :name="currentRow.metadata.name">
+    </BcsLog>
     <bcs-dialog v-model="podRescheduleShow" :title="$t(`确认重新调度以下Pod`)" @confirm="handleConfirmReschedule">
       <template v-if="isBatchReschedule">
         <div v-for="pod in selectPods" :key="pod['metadata']['uid']">
@@ -301,18 +296,17 @@
 /* eslint-disable camelcase */
 import { defineComponent, computed, ref, onMounted, onBeforeUnmount } from '@vue/composition-api';
 import { bkOverflowTips } from 'bk-magic-vue';
-import StatusIcon from '../../../../components/status-icon';
-import Metric from '../../common/metric.vue';
+import StatusIcon from '@/components/status-icon';
+import Metric from '@/components/metric.vue';
 import useDetail from './use-detail';
 import detailBasicList from './detail-basic';
 import CodeEditor from '@/components/monaco-editor/new-editor.vue';
 import fullScreen from '@/directives/full-screen';
-import useInterval from '../../../../composables/use-interval';
-import BcsLog from '@/components/bcs-log/index';
-import useLog from './use-log';
+import useInterval from '@/composables/use-interval';
+import BcsLog from '@/components/bcs-log/log-dialog.vue';
 import usePage from '@/composables/use-page';
 import { timeZoneTransForm } from '@/common/util';
-import useSearch from '../../../../composables/use-search';
+import useSearch from '@/composables/use-search';
 import EventQueryTableVue from '@/views/project-manage/event-query/event-query-table.vue';
 
 export interface IDetail {
@@ -499,10 +493,15 @@ export default defineComponent({
       workloadPods.value = await handleGetPodsData();
       podLoading.value = false;
     };
-
-    const projectId = computed(() => $route.params.projectId);
     const clusterId = computed(() => $store.getters.curClusterId || $route.query.cluster_id);
 
+    // 显示日志
+    const showLog = ref(false);
+    const currentRow = ref<Record<string, any>>({ metadata: {} });
+    const handleShowLog = (row) => {
+      currentRow.value = row;
+      showLog.value = true;
+    };
     // 批量调度-打开弹框
     const handelShowRescheduleDialog = () => {
       isBatchReschedule.value = true;
@@ -652,7 +651,6 @@ export default defineComponent({
       podLoading,
       yaml,
       showYamlPanel,
-      projectId,
       clusterId,
       kindsNames,
       timeZoneTransForm,
@@ -678,7 +676,9 @@ export default defineComponent({
       curPodRowData,
       handelShowRescheduleDialog,
       handlePodSelectable,
-      ...useLog(),
+      showLog,
+      currentRow,
+      handleShowLog,
     };
   },
 });

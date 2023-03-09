@@ -186,12 +186,12 @@ export default defineComponent({
           validator: () => Object.keys(nodePoolInfo.value.nodeTemplate.labels).every(key => !!nodePoolInfo.value.nodeTemplate.labels[key]),
         },
         {
-          message: $i18n.t('键和值仅支持英文、数字、下划线、分隔符和小数点'),
+          message: $i18n.t('键和值仅支持字母，数字，\'-\'，\'_\'，\'.\' 及 \'/\''),
           trigger: 'custom',
           validator: () => {
             const keys = Object.keys(nodePoolInfo.value.nodeTemplate.labels);
             const values = keys.map(key => nodePoolInfo.value.nodeTemplate.labels[key]);
-            return keys.every(v => /^[A-Za-z0-9._-]+$/.test(v)) && values.every(v => /^[A-Za-z0-9._-]+$/.test(v));
+            return keys.every(v => /^[A-Za-z0-9._/-]+$/.test(v)) && values.every(v => /^[A-Za-z0-9._/-]+$/.test(v));
           },
         },
       ],

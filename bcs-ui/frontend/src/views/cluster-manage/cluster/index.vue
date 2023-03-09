@@ -1,7 +1,7 @@
 <template>
   <div class="biz-content">
     <Header>
-      {{$t('集群')}}
+      {{$t('集群总览')}}
       <span class="ml5 text-[12px] text-[#979ba5]">
         {{`( ${$t('业务')}: ${curProject.cc_app_name}  ${$t('编排类型')}: ${kindMap[curProject.kind]} )`}}
       </span>
@@ -61,9 +61,9 @@
               </p>
               <!-- 集群操作菜单 -->
               <bk-dropdown-menu v-if="cluster.status === 'RUNNING'">
-                <bk-button class="cluster-opera-btn" slot="dropdown-trigger">
-                  <i class="bcs-icon bcs-icon-more"></i>
-                </bk-button>
+                <span class="bcs-icon-more-btn" slot="dropdown-trigger">
+                  <i class="text-[24px] bcs-icon bcs-icon-more"></i>
+                </span>
                 <ul class="bk-dropdown-list" slot="dropdown-content">
                   <li @click="goOverview(cluster)"><a href="javascript:;">{{$t('总览')}}</a></li>
                   <li @click="goClusterInfo(cluster)"><a href="javascript:;">{{$t('集群信息')}}</a></li>
@@ -125,9 +125,9 @@
                 </ul>
               </bk-dropdown-menu>
               <bk-dropdown-menu v-else-if="allowDelete(cluster)">
-                <bk-button class="cluster-opera-btn" slot="dropdown-trigger">
-                  <i class="bcs-icon bcs-icon-more"></i>
-                </bk-button>
+                <span class="bcs-icon-more-btn" slot="dropdown-trigger">
+                  <i class="text-[24px] bcs-icon bcs-icon-more"></i>
+                </span>
                 <ul class="bk-dropdown-list" slot="dropdown-content">
                   <li @click="handleDeleteCluster(cluster)">
                     <a href="javascript:;">{{$t('删除')}}</a>

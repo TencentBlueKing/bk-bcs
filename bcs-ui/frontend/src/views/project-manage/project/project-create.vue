@@ -45,7 +45,7 @@
 /* eslint-disable camelcase */
 import { computed, defineComponent, ref, toRefs, watch } from '@vue/composition-api';
 import useFormLabel from '@/composables/use-form-label';
-import useProjects from '@/views/app/use-project';
+import useProjects from '@/views/project-manage/project/use-project';
 import { SPECIAL_REGEXP } from '@/common/constant';
 
 export default defineComponent({

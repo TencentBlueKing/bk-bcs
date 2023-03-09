@@ -115,6 +115,7 @@ export default [
   {
     path: 'clusters/:clusterId/nodes/:nodeName/detail',
     name: 'clusterNodeOverview',
+    props: true,
     component: ClusterNodeOverview,
     meta: {
       menuId: 'NODE',
@@ -125,7 +126,7 @@ export default [
     name: 'nodeMain',
     component: Node,
     meta: {
-      title: window.i18n.t('节点'),
+      title: window.i18n.t('节点列表'),
       hideBack: true,
     },
   },

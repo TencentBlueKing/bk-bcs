@@ -24,7 +24,7 @@ import $router from '@/router';
 import Terminal from '@/views/app/terminal.vue';
 import Unregistry from '@/views/app/unregistry.vue';
 import ContentHeader from '@/components/layout/Header.vue';
-import useProjects from './app/use-project';
+import useProjects from './project-manage/project/use-project';
 import $store from '@/store';
 
 export default defineComponent({

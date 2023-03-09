@@ -27,7 +27,7 @@
 <script lang="ts">
 import { defineComponent, reactive, toRefs, onMounted, ref, watch, computed, PropType } from '@vue/composition-api';
 import moment from 'moment';
-import defaultChartOption from './default-echarts-option';
+import defaultChartOption from '../views/resource-view/common/default-echarts-option';
 import ECharts from 'vue-echarts/components/ECharts.vue';
 import 'echarts/lib/chart/line';
 import 'echarts/lib/component/tooltip';
@@ -80,7 +80,7 @@ export default defineComponent({
       required: true,
     },
     params: {
-      type: Object as PropType<Object|null>,
+      type: Object as PropType<Record<string, any>|null>,
       default: () => ({}),
     },
     colors: {
@@ -108,6 +108,16 @@ export default defineComponent({
   setup(props, ctx) {
     const { $i18n, $store, $route } = ctx.root;
 
+    const metricMap = {
+      cpu_usage: $i18n.t('CPU使用率'),
+      disk_usage: $i18n.t('磁盘使用率'),
+      memory_usage: $i18n.t('内存使用率'),
+      cpu_request_usage: $i18n.t('CPU装箱率'),
+      memory_request_usage: $i18n.t('内存装箱率'),
+      diskio_usage: $i18n.t('磁盘IO'),
+      network_receive: $i18n.t('入流量'),
+      network_transmit: $i18n.t('出流量'),
+    };
     const state = reactive({
       isDropdownShow: false,
       activeTime: {
@@ -145,12 +155,13 @@ export default defineComponent({
     const handleSetChartOptions = (data) => {
       if (!data) return;
 
+      const metrics = Array.isArray(props.metric) ? props.metric : [props.metric];
       const series: any[] = [];
       data.forEach((item, index) => {
         const suffix = metricSuffix.value[index];
         const list = item?.result.map((result) => {
           // series 配置
-          const name = result.metric?.[metricNameProp.value];
+          const name = result.metric?.[metricNameProp.value] || metricMap[metrics[index]];
           const defaultSeries = props.series[index] || {};
           return Object.assign({
             name: suffix ? `${name} ${suffix}` : name,
@@ -197,6 +208,9 @@ export default defineComponent({
         case 'containers':
           if (!props.params) break;
           action = 'metric/clusterContainersMetric';
+        case 'nodes':
+          if (!props.params?.$nodeIP) break;
+          action = 'metric/clusterNodeMetric';
       }
       if (!action) return [];
 

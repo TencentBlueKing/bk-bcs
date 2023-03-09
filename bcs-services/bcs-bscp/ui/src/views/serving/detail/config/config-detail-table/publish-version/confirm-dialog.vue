@@ -76,6 +76,7 @@
 <template>
   <bk-dialog
     title="上线版本"
+    ext-cls="release-version-dialog"
     :is-show="props.show"
     :esc-close="false"
     :quick-close="false"
@@ -110,7 +111,7 @@
   }
 </style>
 <style lang="scss">
-  .bk-modal-wrapper.bk-dialog-wrapper .bk-dialog-header {
+  .release-version-dialog.bk-dialog-wrapper .bk-dialog-header {
     padding-bottom: 20px;
   }
 </style>

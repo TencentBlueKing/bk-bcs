@@ -64,7 +64,7 @@
 </template>
 <script>
 import { isEmpty } from '@/common/util';
-import useProject from '@/views/app/use-project';
+import useProject from '@/views/project-manage/project/use-project';
 
 export default {
   name: 'BcsUnregistry',

@@ -244,7 +244,7 @@ const childRoutes = [
         component: DashboardResourceUpdate,
         beforeEnter: (to, from, next) => {
           // 设置当前详情的父级菜单
-          to.meta.menuId = String(to.query.kind).toUpperCase();
+          to.meta.menuId = String(to.query.menuId || to.query.kind).toUpperCase();
           next();
         },
       },
@@ -255,7 +255,7 @@ const childRoutes = [
         props: route => ({ ...route.params, ...route.query }),
         component: DashboardFormResourceUpdate,
         beforeEnter: (to, from, next) => {
-          to.meta.menuId = String(to.query.kind).toUpperCase();
+          to.meta.menuId = String(to.query.menuId || to.query.kind).toUpperCase();
           next();
         },
       },

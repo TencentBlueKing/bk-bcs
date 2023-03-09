@@ -2137,7 +2137,7 @@ export default {
   '选择所有 {num} 条': [
     'Choose all {num}',
   ],
-  '已选 {num} 条': [
+  '已选择 {num} 条数据': [
     'Selected {num}',
   ],
   '成功复制 {num} 个IP': [
