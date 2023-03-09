@@ -32,7 +32,7 @@
           :rules="rules"
           ref="formRef">
           <bk-form-item :label="$t('名称')" required property="name" error-display-type="normal">
-            <bcs-input :maxlength="64" :disabled="isEdit" v-model="releaseData.name"></bcs-input>
+            <bcs-input :maxlength="53" :disabled="isEdit" v-model="releaseData.name"></bcs-input>
           </bk-form-item>
           <bk-form-item :label="$t('版本')" required property="chartVersion" error-display-type="normal">
             <div class="flex items-center">

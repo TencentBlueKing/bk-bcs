@@ -505,7 +505,7 @@ export default {
 
     // 更新集群名称信息
     async updateClusterName() {
-      const clusterName = this.$refs.clusterNameRef?.curValue;
+      const clusterName = this.$refs.clusterNameRef?.curValue?.trim();
       if (!clusterName) return;
 
       const result = await this.handleUpdateCluster({

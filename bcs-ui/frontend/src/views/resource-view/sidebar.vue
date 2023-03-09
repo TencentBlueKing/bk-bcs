@@ -53,7 +53,7 @@ export default defineComponent({
   justify-content: center;
   height: 52px;
   margin: -12px 0 0 0;
-  padding: 0 20px 0 10px;
+  padding: 0 20px 0 12px;
   font-size: 12px;
   background-color: #fafbfd;
   border-bottom: 1px solid #dde4eb;
