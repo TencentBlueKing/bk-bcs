@@ -3,258 +3,263 @@
     hide-back
     :title="$t('命名空间')"
     v-bkloading="{ isLoading: namespaceLoading }">
-    <LayoutRow class="mb15">
-      <template #left>
-        <!-- 权限详情接口目前暂不支持多个actionID -->
-        <bcs-button
-          class="w-[100px]"
-          theme="primary"
-          icon="plus"
-          v-authority="{
-            clickable: true,
-            actionId: 'namespace_create',
-            autoUpdatePerms: true,
-            permCtx: {
-              resource_type: 'cluster',
-              project_id: projectID,
-              cluster_id: clusterID
-            }
-          }"
-          @click="handleToCreatedPage">
-          {{ $t('创建') }}
-        </bcs-button>
-      </template>
-      <template #right>
-        <ClusterSelect
-          v-if="!curClusterId"
-          v-model="clusterID"
-          class="mr-[10px]"
-          searchable
-          :disabled="!!curClusterId">
-        </ClusterSelect>
-        <bcs-input
-          class="search-input"
-          right-icon="bk-icon icon-search"
-          :placeholder="$t('搜索名称')"
-          clearable
-          v-model="searchValue">
-        </bcs-input>
-      </template>
-    </LayoutRow>
-    <bcs-table
-      :data="curPageData"
-      :pagination="pagination"
-      @page-change="pageChange"
-      @page-limit-change="pageSizeChange">
-      <bcs-table-column :label="$t('名称')" prop="name" min-width="200" show-overflow-tooltip>
-        <template #default="{ row }">
-          <bk-button
-            class="bcs-button-ellipsis"
-            text
-            v-authority="{
-              clickable: webAnnotations.perms[row.name]
-                && webAnnotations.perms[row.name].namespace_view,
-              actionId: 'namespace_view',
-              resourceName: row.name,
-              disablePerms: true,
-              permCtx: {
-                project_id: projectID,
-                cluster_id: clusterID,
-                name: row.name
-              }
-            }"
-            @click="showDetail(row)">
-            <span class="bcs-ellipsis">{{ row.name }}</span>
-          </bk-button>
-        </template>
-      </bcs-table-column>
-      <bcs-table-column :label="$t('状态')">
-        <template #default="{ row }">
-          <div v-if="!isSharedCluster">
-            <StatusIcon
-              :status-color-map="{
-                'Active': 'green',
+    <div class="wrapper flex flex-col place-content-between">
+      <div>
+        <LayoutRow class="mb15">
+          <template #left>
+            <!-- 权限详情接口目前暂不支持多个actionID -->
+            <bcs-button
+              class="w-[100px]"
+              theme="primary"
+              icon="plus"
+              v-authority="{
+                clickable: true,
+                actionId: 'namespace_create',
+                autoUpdatePerms: true,
+                permCtx: {
+                  resource_type: 'cluster',
+                  project_id: projectID,
+                  cluster_id: clusterID
+                }
               }"
-              :status="row.status"
-              :pending="['Terminating'].includes(row.status)">
-              {{ row.status || '--' }}
-            </StatusIcon>
-          </div>
-          <div v-else>
-            <span
-              v-if="row.itsmTicketURL"
-              class="text-[#3a84ff] cursor-pointer"
-              @click="handleToITSM(row.itsmTicketURL)">
-              {{ $t('待审批') }}（{{ itsmTicketTypeMap[row.itsmTicketType] }})
-            </span>
-            <span v-else>{{ $t('正常') }}</span>
-          </div>
-        </template>
-      </bcs-table-column>
-      <bcs-table-column :label="$t('CPU使用率')" prop="cpuUseRate" :render-header="renderHeader">
-        <template #default="{ row }">
-          <bcs-round-progress
-            v-if="row.quota"
-            ext-cls="biz-cluster-ring"
-            width="50px"
-            :percent="row.cpuUseRate"
-            :config="{
-              strokeWidth: 10,
-              bgColor: '#f0f1f5',
-              activeColor: '#3a84ff'
-            }"
-            :num-style="{
-              fontSize: '12px',
-              width: '100%'
-            }"
-            v-bk-tooltips="{
-              content: `${$t('{used}核 / {total}核 (已使用/总量)', {
-                used: row.used ? row.used.cpuLimits : 0,
-                total: row.quota.cpuLimits,
-              })}`
-            }"
-          ></bcs-round-progress>
-          <span class="ml-[16px]" v-else v-bk-tooltips="{ content: $t('未开启命名空间配额') }">--</span>
-        </template>
-      </bcs-table-column>
-      <bcs-table-column :label="$t('内存使用率')" prop="memoryUseRate" :render-header="renderHeader">
-        <template #default="{ row }">
-          <bcs-round-progress
-            v-if="row.quota"
-            ext-cls="biz-cluster-ring"
-            width="50px"
-            :percent="row.memoryUseRate"
-            :config="{
-              strokeWidth: 10,
-              bgColor: '#f0f1f5',
-              activeColor: '#3a84ff'
-            }"
-            :num-style="{
-              fontSize: '12px',
-              width: '100%'
-            }"
-            v-bk-tooltips="{
-              content: `${$t('{used} / {total} (已使用/总量)', {
-                used: row.used ? `${unitConvert(row.used.memoryLimits, 'Gi', 'mem')}Gi` : 0,
-                total: row.quota.memoryLimits,
-              })}`
-            }"
-          ></bcs-round-progress>
-          <span class="ml-[16px]" v-else v-bk-tooltips="{ content: $t('未开启命名空间') }">--</span>
-        </template>
-      </bcs-table-column>
-      <bcs-table-column :label="$t('创建时间')">
-        <template #default="{ row }">
-          {{ row.createTime ? timeZoneTransForm(row.createTime, false) : '--' }}
-        </template>
-      </bcs-table-column>
-      <bcs-table-column :label="$t('操作')" width="200">
-        <template #default="{ row }">
-          <bk-button
-            text
-            class="mr-[10px]"
-            :disabled="applyMap(row.itsmTicketType).setQuota"
-            v-authority="{
-              clickable: webAnnotations.perms[row.name]
-                && webAnnotations.perms[row.name].namespace_update,
-              actionId: 'namespace_update',
-              resourceName: row.name,
-              disablePerms: true,
-              permCtx: {
-                project_id: projectID,
-                cluster_id: clusterID,
-                name: row.name
-              }
-            }"
-            @click="showSetQuota(row)">
-            {{ $t('配额管理') }}
-          </bk-button>
-          <bk-button
-            text
-            class="mr-[10px]"
-            :disabled="applyMap(row.itsmTicketType).setVar"
-            @click="showSetVariable(row)">
-            {{ $t('设置变量值') }}
-          </bk-button>
-          <bk-popover
-            placement="bottom"
-            theme="light dropdown"
-            :arrow="false">
-            <span class="bcs-icon-more-btn"><i class="bcs-icon bcs-icon-more"></i></span>
-            <template #content>
-              <ul class="bcs-dropdown-list">
-                <template v-if="!isSharedCluster">
-                  <li
-                    v-if="!isSharedCluster"
-                    class="bcs-dropdown-item"
-                    v-authority="{
-                      clickable: webAnnotations.perms[row.name]
-                        && webAnnotations.perms[row.name].namespace_update,
-                      actionId: 'namespace_update',
-                      resourceName: row.name,
-                      disablePerms: true,
-                      permCtx: {
-                        project_id: projectID,
-                        cluster_id: clusterID,
-                        name: row.name
-                      }
-                    }"
-                    @click="handleSetLabel(row)">
-                    {{ $t('设置标签') }}
-                  </li>
-                  <li
-                    v-if="!isSharedCluster"
-                    class="bcs-dropdown-item"
-                    v-authority="{
-                      clickable: webAnnotations.perms[row.name]
-                        && webAnnotations.perms[row.name].namespace_update,
-                      actionId: 'namespace_update',
-                      resourceName: row.name,
-                      disablePerms: true,
-                      permCtx: {
-                        project_id: projectID,
-                        cluster_id: clusterID,
-                        name: row.name
-                      }
-                    }"
-                    @click="handleSetAnnotations(row)">
-                    {{ $t('设置注解') }}
-                  </li>
-                </template>
-                <li
-                  v-if="row.itsmTicketURL"
-                  class="bcs-dropdown-item w-[80px]"
-                  @click="withdrawNamespace(row)">
-                  {{ $t('撤回') }}
-                </li>
-                <li
-                  v-else
-                  class="bcs-dropdown-item w-[80px]"
-                  :disabled="applyMap(row.itsmTicketType).delete"
-                  v-authority="{
-                    clickable: webAnnotations.perms[row.name]
-                      && webAnnotations.perms[row.name].namespace_delete,
-                    actionId: 'namespace_delete',
-                    resourceName: row.name,
-                    disablePerms: true,
-                    permCtx: {
-                      project_id: projectID,
-                      cluster_id: clusterID,
-                      name: row.name
-                    }
-                  }"
-                  @click="handleDeleteNamespace(row)">
-                  {{ $t('删除') }}
-                </li>
-              </ul>
+              @click="handleToCreatedPage">
+              {{ $t('创建') }}
+            </bcs-button>
+          </template>
+          <template #right>
+            <ClusterSelect
+              v-if="!curClusterId"
+              v-model="clusterID"
+              class="mr-[10px]"
+              searchable
+              :disabled="!!curClusterId">
+            </ClusterSelect>
+            <bcs-input
+              class="search-input"
+              right-icon="bk-icon icon-search"
+              :placeholder="$t('搜索名称')"
+              clearable
+              v-model="searchValue">
+            </bcs-input>
+          </template>
+        </LayoutRow>
+        <bcs-table
+          :data="curPageData"
+          :pagination="pagination"
+          @page-change="pageChange"
+          @page-limit-change="pageSizeChange">
+          <bcs-table-column :label="$t('名称')" prop="name" min-width="200" show-overflow-tooltip>
+            <template #default="{ row }">
+              <bk-button
+                class="bcs-button-ellipsis"
+                text
+                v-authority="{
+                  clickable: webAnnotations.perms[row.name]
+                    && webAnnotations.perms[row.name].namespace_view,
+                  actionId: 'namespace_view',
+                  resourceName: row.name,
+                  disablePerms: true,
+                  permCtx: {
+                    project_id: projectID,
+                    cluster_id: clusterID,
+                    name: row.name
+                  }
+                }"
+                @click="showDetail(row)">
+                <span class="bcs-ellipsis">{{ row.name }}</span>
+              </bk-button>
             </template>
-          </bk-popover>
-        </template>
-      </bcs-table-column>
-      <template #empty>
-        <BcsEmptyTableStatus :type="searchValue ? 'search-empty' : 'empty'" @clear="searchValue = ''" />
-      </template>
-    </bcs-table>
+          </bcs-table-column>
+          <bcs-table-column :label="$t('状态')">
+            <template #default="{ row }">
+              <div v-if="!isSharedCluster">
+                <StatusIcon
+                  :status-color-map="{
+                    'Active': 'green',
+                  }"
+                  :status="row.status"
+                  :pending="['Terminating'].includes(row.status)">
+                  {{ row.status || '--' }}
+                </StatusIcon>
+              </div>
+              <div v-else>
+                <span
+                  v-if="row.itsmTicketURL"
+                  class="text-[#3a84ff] cursor-pointer"
+                  @click="handleToITSM(row.itsmTicketURL)">
+                  {{ $t('待审批') }}（{{ itsmTicketTypeMap[row.itsmTicketType] }})
+                </span>
+                <span v-else>{{ $t('正常') }}</span>
+              </div>
+            </template>
+          </bcs-table-column>
+          <bcs-table-column :label="$t('CPU使用率')" prop="cpuUseRate" :render-header="renderHeader">
+            <template #default="{ row }">
+              <bcs-round-progress
+                v-if="row.quota"
+                ext-cls="biz-cluster-ring"
+                width="50px"
+                :percent="row.cpuUseRate"
+                :config="{
+                  strokeWidth: 10,
+                  bgColor: '#f0f1f5',
+                  activeColor: '#3a84ff'
+                }"
+                :num-style="{
+                  fontSize: '12px',
+                  width: '100%'
+                }"
+                v-bk-tooltips="{
+                  content: `${$t('{used}核 / {total}核 (已使用/总量)', {
+                    used: row.used ? row.used.cpuLimits : 0,
+                    total: row.quota.cpuLimits,
+                  })}`
+                }"
+              ></bcs-round-progress>
+              <span class="ml-[16px]" v-else v-bk-tooltips="{ content: $t('未开启命名空间配额') }">--</span>
+            </template>
+          </bcs-table-column>
+          <bcs-table-column :label="$t('内存使用率')" prop="memoryUseRate" :render-header="renderHeader">
+            <template #default="{ row }">
+              <bcs-round-progress
+                v-if="row.quota"
+                ext-cls="biz-cluster-ring"
+                width="50px"
+                :percent="row.memoryUseRate"
+                :config="{
+                  strokeWidth: 10,
+                  bgColor: '#f0f1f5',
+                  activeColor: '#3a84ff'
+                }"
+                :num-style="{
+                  fontSize: '12px',
+                  width: '100%'
+                }"
+                v-bk-tooltips="{
+                  content: `${$t('{used} / {total} (已使用/总量)', {
+                    used: row.used ? `${unitConvert(row.used.memoryLimits, 'Gi', 'mem')}Gi` : 0,
+                    total: row.quota.memoryLimits,
+                  })}`
+                }"
+              ></bcs-round-progress>
+              <span class="ml-[16px]" v-else v-bk-tooltips="{ content: $t('未开启命名空间') }">--</span>
+            </template>
+          </bcs-table-column>
+          <bcs-table-column :label="$t('创建时间')">
+            <template #default="{ row }">
+              {{ row.createTime ? timeZoneTransForm(row.createTime, false) : '--' }}
+            </template>
+          </bcs-table-column>
+          <bcs-table-column :label="$t('操作')" width="200">
+            <template #default="{ row }">
+              <bk-button
+                text
+                class="mr-[10px]"
+                :disabled="applyMap(row.itsmTicketType).setQuota"
+                v-authority="{
+                  clickable: webAnnotations.perms[row.name]
+                    && webAnnotations.perms[row.name].namespace_update,
+                  actionId: 'namespace_update',
+                  resourceName: row.name,
+                  disablePerms: true,
+                  permCtx: {
+                    project_id: projectID,
+                    cluster_id: clusterID,
+                    name: row.name
+                  }
+                }"
+                @click="showSetQuota(row)">
+                {{ $t('配额管理') }}
+              </bk-button>
+              <bk-button
+                text
+                class="mr-[10px]"
+                :disabled="applyMap(row.itsmTicketType).setVar"
+                @click="showSetVariable(row)">
+                {{ $t('设置变量值') }}
+              </bk-button>
+              <bk-popover
+                placement="bottom"
+                theme="light dropdown"
+                :arrow="false">
+                <span class="bcs-icon-more-btn"><i class="bcs-icon bcs-icon-more"></i></span>
+                <template #content>
+                  <ul class="bcs-dropdown-list">
+                    <template v-if="!isSharedCluster">
+                      <li
+                        v-if="!isSharedCluster"
+                        class="bcs-dropdown-item"
+                        v-authority="{
+                          clickable: webAnnotations.perms[row.name]
+                            && webAnnotations.perms[row.name].namespace_update,
+                          actionId: 'namespace_update',
+                          resourceName: row.name,
+                          disablePerms: true,
+                          permCtx: {
+                            project_id: projectID,
+                            cluster_id: clusterID,
+                            name: row.name
+                          }
+                        }"
+                        @click="handleSetLabel(row)">
+                        {{ $t('设置标签') }}
+                      </li>
+                      <li
+                        v-if="!isSharedCluster"
+                        class="bcs-dropdown-item"
+                        v-authority="{
+                          clickable: webAnnotations.perms[row.name]
+                            && webAnnotations.perms[row.name].namespace_update,
+                          actionId: 'namespace_update',
+                          resourceName: row.name,
+                          disablePerms: true,
+                          permCtx: {
+                            project_id: projectID,
+                            cluster_id: clusterID,
+                            name: row.name
+                          }
+                        }"
+                        @click="handleSetAnnotations(row)">
+                        {{ $t('设置注解') }}
+                      </li>
+                    </template>
+                    <li
+                      v-if="row.itsmTicketURL"
+                      class="bcs-dropdown-item w-[80px]"
+                      @click="withdrawNamespace(row)">
+                      {{ $t('撤回') }}
+                    </li>
+                    <li
+                      v-else
+                      class="bcs-dropdown-item w-[80px]"
+                      :disabled="applyMap(row.itsmTicketType).delete"
+                      v-authority="{
+                        clickable: webAnnotations.perms[row.name]
+                          && webAnnotations.perms[row.name].namespace_delete,
+                        actionId: 'namespace_delete',
+                        resourceName: row.name,
+                        disablePerms: true,
+                        permCtx: {
+                          project_id: projectID,
+                          cluster_id: clusterID,
+                          name: row.name
+                        }
+                      }"
+                      @click="handleDeleteNamespace(row)">
+                      {{ $t('删除') }}
+                    </li>
+                  </ul>
+                </template>
+              </bk-popover>
+            </template>
+          </bcs-table-column>
+          <template #empty>
+            <BcsEmptyTableStatus :type="searchValue ? 'search-empty' : 'empty'" @clear="searchValue = ''" />
+          </template>
+        </bcs-table>
+      </div>
+      <AppFooter />
+    </div>
     <!-- 设置变量 -->
     <bcs-sideslider
       :is-show.sync="setVariableConf.isShow"
@@ -971,5 +976,8 @@ export default defineComponent({
   }
   ::v-deep .form-error-tip {
     text-align: left;
+  }
+  .wrapper {
+    min-height: calc(100vh - 144px);
   }
 </style>
