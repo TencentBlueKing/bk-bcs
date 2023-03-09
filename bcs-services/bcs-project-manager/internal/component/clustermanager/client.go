@@ -22,6 +22,7 @@ import (
 	"math/rand"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/cache"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/config"
 	common "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/discovery"
@@ -40,6 +41,8 @@ var (
 
 	// ClusterStatusRunning cluster status running
 	ClusterStatusRunning = "RUNNING"
+
+	CacheKeyClusterPrefix = "CLUSTER_%s"
 )
 
 type authentication struct {
@@ -153,6 +156,11 @@ func NewClusterManager(config *Config) (ClusterManagerClient, func()) {
 
 // GetCluster get cluster by clusterID
 func GetCluster(clusterID string) (*Cluster, error) {
+	// 1. if hit, get from cache
+	c := cache.GetCache()
+	if cluster, exists := c.Get(fmt.Sprintf(CacheKeyClusterPrefix, clusterID)); exists {
+		return cluster.(*Cluster), nil
+	}
 	cli, closeCon, err := GetClusterManagerClient()
 	if err != nil {
 		logging.Error("get cluster manager client failed, err: %s", err.Error())
@@ -171,6 +179,7 @@ func GetCluster(clusterID string) (*Cluster, error) {
 		logging.Error("get cluster from cluster manager failed, msg: %s", resp.GetMessage())
 		return nil, errors.New(resp.GetMessage())
 	}
+	c.Add(fmt.Sprintf(CacheKeyClusterPrefix, clusterID), resp.GetData(), time.Hour)
 	return resp.GetData(), nil
 }
 
