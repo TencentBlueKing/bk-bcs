@@ -15,6 +15,7 @@ package dao
 import (
 	"errors"
 	"fmt"
+	"strconv"
 
 	"bscp.io/pkg/criteria/enumor"
 	"bscp.io/pkg/criteria/errf"
@@ -74,9 +75,9 @@ func (dao *configItemDao) Create(kit *kit.Kit, ci *table.ConfigItem) (uint32, er
 	}
 
 	ci.ID = id
-
-	sql := fmt.Sprintf(`INSERT INTO %s (%s)	VALUES(%s)`, table.ConfigItemTable,
-		table.ConfigItemColumns.ColumnExpr(), table.ConfigItemColumns.ColonNameExpr())
+	var sqlSentence []string
+	sqlSentence = append(sqlSentence, "INSERT INTO ", string(table.ConfigItemTable), " (", table.ConfigItemColumns.ColumnExpr(), ")  VALUES(", table.ConfigItemColumns.ColonNameExpr(), ")")
+	sql := filter.SqlJoint(sqlSentence)
 
 	err = dao.sd.ShardingOne(ci.Attachment.BizID).AutoTxn(kit,
 		func(txn *sqlx.Tx, opt *sharding.TxnOption) error {
@@ -139,8 +140,9 @@ func (dao *configItemDao) Update(kit *kit.Kit, ci *table.ConfigItem) error {
 
 	ab := dao.auditDao.Decorator(kit, ci.Attachment.BizID, enumor.ConfigItem).PrepareUpdate(ci)
 
-	sql := fmt.Sprintf(`UPDATE %s SET %s WHERE id = %d AND biz_id = %d`,
-		table.ConfigItemTable, expr, ci.ID, ci.Attachment.BizID)
+	var sqlSentence []string
+	sqlSentence = append(sqlSentence, "UPDATE ", string(table.ConfigItemTable), " SET ", expr, " WHERE id = ", strconv.Itoa(int(ci.ID)), " AND biz_id = ", strconv.Itoa(int(ci.Attachment.BizID)))
+	sql := filter.SqlJoint(sqlSentence)
 
 	err = dao.sd.ShardingOne(ci.Attachment.BizID).AutoTxn(kit,
 		func(txn *sqlx.Tx, opt *sharding.TxnOption) error {
@@ -184,9 +186,9 @@ func (dao *configItemDao) Get(kit *kit.Kit, id, bizID uint32) (*table.ConfigItem
 	if id == 0 {
 		return nil, errf.New(errf.InvalidParameter, "config item id can not be 0")
 	}
-
-	sql := fmt.Sprintf(`SELECT %s FROM %s WHERE id = %d`,
-		table.ConfigItemColumns.NamedExpr(), table.ConfigItemTable, id)
+	var sqlSentence []string
+	sqlSentence = append(sqlSentence, "SELECT ", table.ConfigItemColumns.NamedExpr(), " FROM ", string(table.ConfigItemTable), " WHERE id = ", strconv.Itoa(int(id)))
+	sql := filter.SqlJoint(sqlSentence)
 
 	configItem := &table.ConfigItem{}
 	if err := dao.orm.Do(dao.sd.ShardingOne(bizID).DB()).Get(kit.Ctx, configItem, sql); err != nil {
@@ -231,9 +233,11 @@ func (dao *configItemDao) List(kit *kit.Kit, opts *types.ListConfigItemsOption) 
 	}
 
 	var sql string
+	var sqlSentence []string
 	if opts.Page.Count {
 		// this is a count request, then do count operation only.
-		sql = fmt.Sprintf(`SELECT COUNT(*) FROM %s %s`, table.ConfigItemTable, whereExpr)
+		sqlSentence = append(sqlSentence, "SELECT COUNT(*) FROM ", string(table.ConfigItemTable), whereExpr)
+		sql = filter.SqlJoint(sqlSentence)
 		var count uint32
 		count, err = dao.orm.Do(dao.sd.ShardingOne(opts.BizID).DB()).Count(kit.Ctx, sql, arg)
 		if err != nil {
@@ -249,11 +253,11 @@ func (dao *configItemDao) List(kit *kit.Kit, opts *types.ListConfigItemsOption) 
 		return nil, err
 	}
 
-	sql = fmt.Sprintf(`SELECT %s FROM %s %s %s`,
-		table.ConfigItemColumns.NamedExpr(), table.ConfigItemTable, whereExpr, pageExpr)
+	sqlSentence = append(sqlSentence, "SELECT ", table.ConfigItemColumns.NamedExpr(), " FROM ", string(table.ConfigItemTable), whereExpr, pageExpr)
+	sql = filter.SqlJoint(sqlSentence)
 
 	list := make([]*table.ConfigItem, 0)
-	err = dao.orm.Do(dao.sd.ShardingOne(opts.BizID).DB()).Select(kit.Ctx, &list, sql)
+	err = dao.orm.Do(dao.sd.ShardingOne(opts.BizID).DB()).Select(kit.Ctx, &list, sql, arg)
 	if err != nil {
 		return nil, err
 	}
@@ -278,8 +282,9 @@ func (dao *configItemDao) Delete(kit *kit.Kit, ci *table.ConfigItem) error {
 
 	ab := dao.auditDao.Decorator(kit, ci.Attachment.BizID, enumor.ConfigItem).PrepareDelete(ci.ID)
 
-	expr := fmt.Sprintf(`DELETE FROM %s WHERE id = %d AND biz_id = %d`, table.ConfigItemTable,
-		ci.ID, ci.Attachment.BizID)
+	var sqlSentence []string
+	sqlSentence = append(sqlSentence, "DELETE FROM ", string(table.ConfigItemTable), " WHERE id = ", strconv.Itoa(int(ci.ID)), " AND biz_id = ", strconv.Itoa(int(ci.Attachment.BizID)))
+	expr := filter.SqlJoint(sqlSentence)
 
 	err := dao.sd.ShardingOne(ci.Attachment.BizID).AutoTxn(kit, func(txn *sqlx.Tx, opt *sharding.TxnOption) error {
 		// delete the config item at first.
@@ -318,9 +323,10 @@ func (dao *configItemDao) validateAttachmentResExist(kit *kit.Kit, am *table.Con
 
 // validateAttachmentAppExist validate if attachment resource exists before creating config item.
 func (dao *configItemDao) validateAttachmentAppExist(kit *kit.Kit, am *table.ConfigItemAttachment) error {
-
-	exist, err := isResExist(kit, dao.orm, dao.sd.ShardingOne(am.BizID), table.AppTable,
-		fmt.Sprintf("WHERE id = %d AND biz_id = %d", am.AppID, am.BizID))
+	var sqlSentence []string
+	sqlSentence = append(sqlSentence, "WHERE id = ", strconv.Itoa(int(am.AppID)), " AND biz_id = ", strconv.Itoa(int(am.BizID)))
+	sql := filter.SqlJoint(sqlSentence)
+	exist, err := isResExist(kit, dao.orm, dao.sd.ShardingOne(am.BizID), table.AppTable, sql)
 	if err != nil {
 		return err
 	}
@@ -352,8 +358,9 @@ func (dao *configItemDao) validateAppCINumber(kt *kit.Kit, at *table.ConfigItemA
 func (dao *configItemDao) queryFileMode(kt *kit.Kit, id, bizID uint32) (
 	table.FileMode, error) {
 
-	expr := fmt.Sprintf(`SELECT %s FROM %s WHERE id = %d AND biz_id = %d`, table.ConfigItemSpecColumns.NamedExpr(),
-		table.ConfigItemTable, id, bizID)
+	var sqlSentence []string
+	sqlSentence = append(sqlSentence, "SELECT ", table.ConfigItemSpecColumns.NamedExpr(), " FROM ", string(table.ConfigItemTable), " WHERE id = ", strconv.Itoa(int(id)), " AND biz_id = ", strconv.Itoa(int(bizID)))
+	expr := filter.SqlJoint(sqlSentence)
 
 	one := new(table.ConfigItemSpec)
 	if err := dao.orm.Do(dao.sd.MustSharding(bizID)).Get(kt.Ctx, one, expr); err != nil {

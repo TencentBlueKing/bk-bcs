@@ -14,6 +14,7 @@ package dao
 
 import (
 	"fmt"
+	"strconv"
 
 	"bscp.io/pkg/criteria/enumor"
 	"bscp.io/pkg/criteria/errf"
@@ -151,9 +152,11 @@ func (dao *contentDao) List(kit *kit.Kit, opts *types.ListContentsOption) (
 	}
 
 	var sql string
+	var sqlSentence []string
 	if opts.Page.Count {
 		// this is a count request, then do count operation only.
-		sql = fmt.Sprintf(`SELECT COUNT(*) FROM %s %s`, table.ContentTable, whereExpr)
+		sqlSentence = append(sqlSentence, "SELECT COUNT(*) FROM ", string(table.ContentTable), whereExpr)
+		sql = filter.SqlJoint(sqlSentence)
 		var count uint32
 		count, err = dao.orm.Do(dao.sd.ShardingOne(opts.BizID).DB()).Count(kit.Ctx, sql, arg)
 		if err != nil {
@@ -169,11 +172,11 @@ func (dao *contentDao) List(kit *kit.Kit, opts *types.ListContentsOption) (
 		return nil, err
 	}
 
-	sql = fmt.Sprintf(`SELECT %s FROM %s %s %s`,
-		table.ContentColumns.NamedExpr(), table.ContentTable, whereExpr, pageExpr)
+	sqlSentence = append(sqlSentence, "SELECT ", table.ContentColumns.NamedExpr(), " FROM ", string(table.ContentTable), whereExpr, pageExpr)
+	sql = filter.SqlJoint(sqlSentence)
 
 	list := make([]*table.Content, 0)
-	err = dao.orm.Do(dao.sd.ShardingOne(opts.BizID).DB()).Select(kit.Ctx, &list, sql)
+	err = dao.orm.Do(dao.sd.ShardingOne(opts.BizID).DB()).Select(kit.Ctx, &list, sql, arg)
 	if err != nil {
 		return nil, err
 	}
@@ -184,8 +187,10 @@ func (dao *contentDao) List(kit *kit.Kit, opts *types.ListContentsOption) (
 // validateAttachmentResExist validate if attachment resource exists before creating content.
 func (dao *contentDao) validateAttachmentResExist(kit *kit.Kit, am *table.ContentAttachment) error {
 
-	exist, err := isResExist(kit, dao.orm, dao.sd.ShardingOne(am.BizID), table.AppTable,
-		fmt.Sprintf("WHERE id = %d AND biz_id = %d", am.AppID, am.BizID))
+	var sqlSentence []string
+	sqlSentence = append(sqlSentence, "WHERE id = ", strconv.Itoa(int(am.AppID)), " AND biz_id = ", strconv.Itoa(int(am.BizID)))
+	sql := filter.SqlJoint(sqlSentence)
+	exist, err := isResExist(kit, dao.orm, dao.sd.ShardingOne(am.BizID), table.AppTable, sql)
 	if err != nil {
 		return err
 	}
@@ -194,8 +199,10 @@ func (dao *contentDao) validateAttachmentResExist(kit *kit.Kit, am *table.Conten
 		return errf.New(errf.RelatedResNotExist, fmt.Sprintf("content attached app %d is not exist", am.AppID))
 	}
 
-	exist, err = isResExist(kit, dao.orm, dao.sd.ShardingOne(am.BizID), table.ConfigItemTable,
-		fmt.Sprintf("WHERE id = %d AND biz_id = %d AND app_id = %d", am.ConfigItemID, am.BizID, am.AppID))
+	var sqlSentenceRes []string
+	sqlSentenceRes = append(sqlSentenceRes, "WHERE id = ", strconv.Itoa(int(am.ConfigItemID)), " AND biz_id = ", strconv.Itoa(int(am.BizID)), " AND app_id = ", strconv.Itoa(int(am.AppID)))
+	sqlRes := filter.SqlJoint(sqlSentenceRes)
+	exist, err = isResExist(kit, dao.orm, dao.sd.ShardingOne(am.BizID), table.ConfigItemTable, sqlRes)
 	if err != nil {
 		return err
 	}

@@ -13,8 +13,8 @@ limitations under the License.
 package dao
 
 import (
-	"bytes"
 	"fmt"
+	"strconv"
 	"time"
 
 	"bscp.io/pkg/criteria/enumor"
@@ -93,11 +93,10 @@ func (dao *strategyDao) Create(kt *kit.Kit, strategy *table.Strategy) (uint32, e
 	}
 	strategy.ID = id
 
-	buff := bytes.NewBuffer([]byte{})
-	buff.WriteString(fmt.Sprintf("INSERT INTO %s ", table.StrategyTable))
-	buff.WriteString(fmt.Sprintf("(%s) ", table.StrategyColumns.ColumnExpr()))
-	buff.WriteString(fmt.Sprintf("VALUES(%s)", table.StrategyColumns.ColonNameExpr()))
-
+	var sqlSentence []string
+	sqlSentence = append(sqlSentence, "INSERT INTO ", string(table.StrategyTable), " (", table.StrategyColumns.ColumnExpr(), ") ",
+		"VALUES(", table.StrategyColumns.ColonNameExpr(), ")")
+	sql := filter.SqlJoint(sqlSentence)
 	err = dao.sd.ShardingOne(strategy.Attachment.BizID).AutoTxn(kt,
 		func(txn *sqlx.Tx, opt *sharding.TxnOption) error {
 			lo := &LockOption{Txn: txn}
@@ -120,7 +119,7 @@ func (dao *strategyDao) Create(kt *kit.Kit, strategy *table.Strategy) (uint32, e
 				return err
 			}
 
-			if err = dao.orm.Txn(txn).Insert(kt.Ctx, buff.String(), strategy); err != nil {
+			if err = dao.orm.Txn(txn).Insert(kt.Ctx, sql, strategy); err != nil {
 				return err
 			}
 
@@ -175,14 +174,13 @@ func (dao *strategyDao) Update(kit *kit.Kit, strategy *table.Strategy) error {
 
 	ab := dao.auditDao.Decorator(kit, strategy.Attachment.BizID, enumor.Strategy).PrepareUpdate(strategy)
 
-	buff := bytes.NewBuffer([]byte{})
-	buff.WriteString(fmt.Sprintf("UPDATE %s ", table.StrategyTable))
-	buff.WriteString(fmt.Sprintf("SET %s ", expr))
-	buff.WriteString(fmt.Sprintf("WHERE id = %d AND biz_id = %d", strategy.ID, strategy.Attachment.BizID))
-
+	var sqlSentence []string
+	sqlSentence = append(sqlSentence, "UPDATE ", string(table.StrategyTable), " SET ", expr, " WHERE id = ",
+		strconv.Itoa(int(strategy.ID)), " AND biz_id = ", strconv.Itoa(int(strategy.Attachment.BizID)))
+	sql := filter.SqlJoint(sqlSentence)
 	err = dao.sd.ShardingOne(strategy.Attachment.BizID).AutoTxn(kit,
 		func(txn *sqlx.Tx, opt *sharding.TxnOption) error {
-			effected, err := dao.orm.Txn(txn).Update(kit.Ctx, buff.String(), toUpdate)
+			effected, err := dao.orm.Txn(txn).Update(kit.Ctx, sql, toUpdate)
 			if err != nil {
 				logs.Errorf("update strategy: %d failed, err: %v, rid: %v", strategy.ID, err, kit.Rid)
 				return err
@@ -249,14 +247,13 @@ func (dao *strategyDao) List(kit *kit.Kit, opts *types.ListStrategiesOption) (
 		return nil, err
 	}
 
-	buff := bytes.NewBuffer([]byte{})
+	var sqlSentence []string
 	if opts.Page.Count {
 		// this is a count request, then do count operation only.
-		buff.WriteString("SELECT COUNT(*) FROM ")
-		buff.WriteString(string(table.StrategyTable))
-		buff.WriteString(whereExpr)
+		sqlSentence = append(sqlSentence, "SELECT COUNT(*) FROM ", string(table.StrategyTable), whereExpr)
+		sql := filter.SqlJoint(sqlSentence)
 		var count uint32
-		count, err = dao.orm.Do(dao.sd.ShardingOne(opts.BizID).DB()).Count(kit.Ctx, buff.String(), arg)
+		count, err = dao.orm.Do(dao.sd.ShardingOne(opts.BizID).DB()).Count(kit.Ctx, sql, arg)
 		if err != nil {
 			return nil, err
 		}
@@ -270,15 +267,11 @@ func (dao *strategyDao) List(kit *kit.Kit, opts *types.ListStrategiesOption) (
 		return nil, err
 	}
 
-	buff.WriteString("SELECT ")
-	buff.WriteString(table.StrategyColumns.NamedExpr())
-	buff.WriteString("FROM ")
-	buff.WriteString(string(table.StrategyTable))
-	buff.WriteString(whereExpr)
-	buff.WriteString(pageExpr)
-
+	sqlSentence = append(sqlSentence, "SELECT ", table.StrategyColumns.NamedExpr(), " FROM ", string(table.StrategyTable),
+		whereExpr, pageExpr)
+	sql := filter.SqlJoint(sqlSentence)
 	list := make([]*table.Strategy, 0)
-	err = dao.orm.Do(dao.sd.ShardingOne(opts.BizID).DB()).Select(kit.Ctx, &list, buff.String(), arg)
+	err = dao.orm.Do(dao.sd.ShardingOne(opts.BizID).DB()).Select(kit.Ctx, &list, sql, arg)
 	if err != nil {
 		return nil, err
 	}
@@ -317,14 +310,14 @@ func (dao *strategyDao) Delete(kit *kit.Kit, strategy *table.Strategy) error {
 
 	ab := dao.auditDao.Decorator(kit, strategy.Attachment.BizID, enumor.Strategy).PrepareDelete(strategy.ID)
 
-	buff := bytes.NewBuffer([]byte{})
-	buff.WriteString(fmt.Sprintf("DELETE FROM %s ", table.StrategyTable))
-	buff.WriteString(fmt.Sprintf("WHERE id = %d AND biz_id = %d", strategy.ID, strategy.Attachment.BizID))
-
+	var sqlSentence []string
+	sqlSentence = append(sqlSentence, "DELETE FROM ", string(table.StrategyTable), " WHERE id = ", strconv.Itoa(int(strategy.ID)),
+		" AND biz_id = ", strconv.Itoa(int(strategy.Attachment.BizID)))
+	expr := filter.SqlJoint(sqlSentence)
 	eDecorator := dao.event.Eventf(kit)
 	err = dao.sd.ShardingOne(strategy.Attachment.BizID).AutoTxn(kit, func(txn *sqlx.Tx, opt *sharding.TxnOption) error {
 		// delete the strategy at first.
-		err := dao.orm.Txn(txn).Delete(kit.Ctx, buff.String())
+		err := dao.orm.Txn(txn).Delete(kit.Ctx, expr)
 		if err != nil {
 			return err
 		}
@@ -336,11 +329,11 @@ func (dao *strategyDao) Delete(kit *kit.Kit, strategy *table.Strategy) error {
 		}
 
 		// delete current published strategy.
-		buff := bytes.NewBuffer([]byte{})
-		buff.WriteString(fmt.Sprintf("DELETE FROM %s ", table.CurrentPublishedStrategyTable))
-		buff.WriteString(fmt.Sprintf("WHERE strategy_id = %d AND app_id = %d", strategy.ID, strategy.Attachment.AppID))
-
-		if err = dao.orm.Txn(txn).Delete(kit.Ctx, buff.String()); err != nil {
+		var currentSqlSentence []string
+		currentSqlSentence = append(currentSqlSentence, "DELETE FROM ", string(table.CurrentPublishedStrategyTable),
+			" WHERE strategy_id = ", strconv.Itoa(int(strategy.ID)), " AND app_id = ", strconv.Itoa(int(strategy.Attachment.AppID)))
+		sql := filter.SqlJoint(currentSqlSentence)
+		if err = dao.orm.Txn(txn).Delete(kit.Ctx, sql); err != nil {
 			return fmt.Errorf("delete current published strategy failed, err: %v", err)
 		}
 
@@ -399,10 +392,14 @@ func (dao *strategyDao) validateReleaseExist(kt *kit.Kit, strategy *table.Strate
 		return errf.New(errf.InvalidParameter, "strategy is required")
 	}
 
+	var sqlSentence []string
+
 	// validate main strategy binding release exist.
 	if strategy.Spec != nil && strategy.Spec.ReleaseID != 0 {
-		exist, err := isResExist(kt, dao.orm, dao.sd.ShardingOne(strategy.Attachment.BizID), table.ReleaseTable,
-			fmt.Sprintf("WHERE id = %d AND biz_id = %d", strategy.Spec.ReleaseID, strategy.Attachment.BizID))
+		sqlSentence = append(sqlSentence, " WHERE id = ", strconv.Itoa(int(strategy.Spec.ReleaseID)),
+			" AND biz_id = ", strconv.Itoa(int(strategy.Attachment.BizID)))
+		sql := filter.SqlJoint(sqlSentence)
+		exist, err := isResExist(kt, dao.orm, dao.sd.ShardingOne(strategy.Attachment.BizID), table.ReleaseTable, sql)
 		if err != nil {
 			return err
 		}
@@ -419,8 +416,11 @@ func (dao *strategyDao) validateReleaseExist(kt *kit.Kit, strategy *table.Strate
 // validateAttachmentAppExist validate if attachment app exists before creating strategy.
 func (dao *strategyDao) validateAttachmentAppExist(kit *kit.Kit, am *table.StrategyAttachment) error {
 
-	exist, err := isResExist(kit, dao.orm, dao.sd.ShardingOne(am.BizID), table.AppTable,
-		fmt.Sprintf("WHERE id = %d AND biz_id = %d", am.AppID, am.BizID))
+	var sqlSentence []string
+	sqlSentence = append(sqlSentence, " WHERE id = ", strconv.Itoa(int(am.AppID)),
+		" AND biz_id = ", strconv.Itoa(int(am.BizID)))
+	sql := filter.SqlJoint(sqlSentence)
+	exist, err := isResExist(kit, dao.orm, dao.sd.ShardingOne(am.BizID), table.AppTable, sql)
 	if err != nil {
 		return err
 	}
@@ -434,9 +434,11 @@ func (dao *strategyDao) validateAttachmentAppExist(kit *kit.Kit, am *table.Strat
 
 // validateAttachmentStrategySetExist validate if attachment strategy set exists before creating strategy.
 func (dao *strategyDao) validateAttachmentStrategySetExist(kit *kit.Kit, am *table.StrategyAttachment) error {
-
-	exist, err := isResExist(kit, dao.orm, dao.sd.ShardingOne(am.BizID), table.StrategySetTable,
-		fmt.Sprintf("WHERE id = %d AND biz_id = %d AND app_id = %d", am.StrategySetID, am.BizID, am.AppID))
+	var sqlSentence []string
+	sqlSentence = append(sqlSentence, " WHERE id = ", strconv.Itoa(int(am.StrategySetID)),
+		" AND biz_id = ", strconv.Itoa(int(am.BizID)), " AND app_id = ", strconv.Itoa(int(am.AppID)))
+	sql := filter.SqlJoint(sqlSentence)
+	exist, err := isResExist(kit, dao.orm, dao.sd.ShardingOne(am.BizID), table.StrategySetTable, sql)
 	if err != nil {
 		return err
 	}
@@ -451,13 +453,12 @@ func (dao *strategyDao) validateAttachmentStrategySetExist(kit *kit.Kit, am *tab
 
 func (dao *strategyDao) getStrategy(kit *kit.Kit, bizID, appID, strategyID uint32) (*table.Strategy, error) {
 
-	buff := bytes.NewBuffer([]byte{})
-	buff.WriteString(fmt.Sprintf("SELECT %s ", table.StrategyColumns.NamedExpr()))
-	buff.WriteString(fmt.Sprintf("FROM %s ", table.StrategyTable))
-	buff.WriteString(fmt.Sprintf("WHERE id = %d AND biz_id = %d AND app_id = %d", strategyID, bizID, appID))
-
+	var sqlSentence []string
+	sqlSentence = append(sqlSentence, "SELECT ", table.StrategyColumns.NamedExpr(), " FROM ", string(table.StrategyTable),
+		" WHERE id = ", strconv.Itoa(int(strategyID)), " AND biz_id = ", strconv.Itoa(int(bizID)), " AND app_id = ", strconv.Itoa(int(appID)))
+	sql := filter.SqlJoint(sqlSentence)
 	one := new(table.Strategy)
-	err := dao.orm.Do(dao.sd.MustSharding(bizID)).Get(kit.Ctx, one, buff.String())
+	err := dao.orm.Do(dao.sd.MustSharding(bizID)).Get(kit.Ctx, one, sql)
 	if err != nil {
 		return nil, errf.New(errf.DBOpFailed, fmt.Sprintf("get strategy details failed, err: %v", err))
 	}
@@ -468,8 +469,11 @@ func (dao *strategyDao) getStrategy(kit *kit.Kit, bizID, appID, strategyID uint3
 // validateStrategyNotPublishing validate if strategy is not publishing, returns error if it is publishing
 func (dao *strategyDao) validateStrategyNotPublishing(kit *kit.Kit, strategyID, bizID uint32) error {
 
-	exist, err := isResExist(kit, dao.orm, dao.sd.ShardingOne(bizID), table.StrategyTable,
-		fmt.Sprintf("WHERE id = %d AND biz_id = %d AND pub_state = '%s'", strategyID, bizID, table.Publishing))
+	var sqlSentence []string
+	sqlSentence = append(sqlSentence, " WHERE id = ", strconv.Itoa(int(strategyID)), " AND biz_id = ", strconv.Itoa(int(bizID)),
+		" AND pub_state = '", string(table.Publishing), "'")
+	sql := filter.SqlJoint(sqlSentence)
+	exist, err := isResExist(kit, dao.orm, dao.sd.ShardingOne(bizID), table.StrategyTable, sql)
 	if err != nil {
 		return err
 	}

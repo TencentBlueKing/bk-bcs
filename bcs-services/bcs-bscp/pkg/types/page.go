@@ -15,8 +15,10 @@ package types
 import (
 	"errors"
 	"fmt"
+	"strconv"
 
 	"bscp.io/pkg/criteria/errf"
+	"bscp.io/pkg/runtime/filter"
 )
 
 const (
@@ -268,8 +270,9 @@ func (bp BasePage) SQLExpr(ps *PageSQLOption) (where string, err error) {
 		// identity id as the default sort column.
 		sort = "id"
 	}
-
-	expr := fmt.Sprintf(" ORDER BY %s", sort)
+	var sqlSentence []string
+	sqlSentence = append(sqlSentence, " ORDER BY ", sort)
+	expr := filter.SqlJoint(sqlSentence)
 
 	if bp.Start == 0 && bp.Limit == 0 {
 		// this is a special scenario, which means query all the resources at once.
@@ -282,6 +285,8 @@ func (bp BasePage) SQLExpr(ps *PageSQLOption) (where string, err error) {
 	}
 
 	// bp.Limit is > 0, already validated upper.
-	expr = fmt.Sprintf(" %s %s LIMIT %d OFFSET %d", expr, bp.Order.Order(), bp.Limit, bp.Start)
+	var sqlSentenceLimit []string
+	sqlSentenceLimit = append(sqlSentenceLimit, expr, " ", string(bp.Order.Order()), " LIMIT ", strconv.Itoa(int(bp.Limit)), " OFFSET ", strconv.Itoa(int(bp.Start)))
+	expr = filter.SqlJoint(sqlSentenceLimit)
 	return expr, nil
 }

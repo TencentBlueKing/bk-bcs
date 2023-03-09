@@ -14,6 +14,7 @@ package dao
 
 import (
 	"fmt"
+	"strconv"
 
 	"github.com/jmoiron/sqlx"
 
@@ -72,9 +73,10 @@ func (dao *groupDao) Create(kit *kit.Kit, g *table.Group) (uint32, error) {
 	}
 
 	g.ID = id
+	var sqlSentence []string
+	sqlSentence = append(sqlSentence, "INSERT INTO ", string(table.GroupTable), " (", table.GroupColumns.ColumnExpr(), ")  VALUES(", table.GroupColumns.ColonNameExpr(), ")")
 
-	sql := fmt.Sprintf(`INSERT INTO %s (%s)	VALUES(%s)`, table.GroupTable,
-		table.GroupColumns.ColumnExpr(), table.GroupColumns.ColonNameExpr())
+	sql := filter.SqlJoint(sqlSentence)
 
 	err = dao.sd.ShardingOne(g.Attachment.BizID).AutoTxn(kit,
 		func(txn *sqlx.Tx, opt *sharding.TxnOption) error {
@@ -124,8 +126,10 @@ func (dao *groupDao) Update(kit *kit.Kit, g *table.Group) error {
 
 	ab := dao.auditDao.Decorator(kit, g.Attachment.BizID, enumor.Group).PrepareUpdate(g)
 
-	sql := fmt.Sprintf(`UPDATE %s SET %s WHERE id = %d AND biz_id = %d`,
-		table.GroupTable, expr, g.ID, g.Attachment.BizID)
+	var sqlSentence []string
+	sqlSentence = append(sqlSentence, "UPDATE ", string(table.GroupTable), " SET ", expr, " WHERE id = ", strconv.Itoa(int(g.ID)),
+		" AND biz_id = ", strconv.Itoa(int(g.Attachment.BizID)))
+	sql := filter.SqlJoint(sqlSentence)
 
 	err = dao.sd.ShardingOne(g.Attachment.BizID).AutoTxn(kit,
 		func(txn *sqlx.Tx, opt *sharding.TxnOption) error {
@@ -196,9 +200,10 @@ func (dao *groupDao) List(kit *kit.Kit, opts *types.ListGroupsOption) (
 	if err != nil {
 		return nil, err
 	}
-
-	countSql := fmt.Sprintf(`SELECT COUNT(*) FROM %s %s`, table.GroupTable, whereExpr)
-	count, err := dao.orm.Do(dao.sd.ShardingOne(opts.BizID).DB()).Count(kit.Ctx, countSql)
+	var sqlSentenceCount []string
+	sqlSentenceCount = append(sqlSentenceCount, "SELECT COUNT(*) FROM ", string(table.GroupTable), whereExpr)
+	countSql := filter.SqlJoint(sqlSentenceCount)
+	count, err := dao.orm.Do(dao.sd.ShardingOne(opts.BizID).DB()).Count(kit.Ctx, countSql, arg)
 	if err != nil {
 		return nil, err
 	}
@@ -209,11 +214,12 @@ func (dao *groupDao) List(kit *kit.Kit, opts *types.ListGroupsOption) (
 		return nil, err
 	}
 
-	sql := fmt.Sprintf(`SELECT %s FROM %s %s %s`,
-		table.GroupColumns.NamedExpr(), table.GroupTable, whereExpr, pageExpr)
+	var sqlSentence []string
+	sqlSentence = append(sqlSentence, "SELECT ", table.GroupColumns.NamedExpr(), " FROM ", string(table.GroupTable), whereExpr, pageExpr)
+	sql := filter.SqlJoint(sqlSentence)
 
 	list := make([]*table.Group, 0)
-	err = dao.orm.Do(dao.sd.ShardingOne(opts.BizID).DB()).Select(kit.Ctx, &list, sql)
+	err = dao.orm.Do(dao.sd.ShardingOne(opts.BizID).DB()).Select(kit.Ctx, &list, sql, arg)
 	if err != nil {
 		return nil, err
 	}
@@ -242,9 +248,10 @@ func (dao *groupDao) Delete(kit *kit.Kit, g *table.Group) error {
 	}
 
 	ab := dao.auditDao.Decorator(kit, g.Attachment.BizID, enumor.Group).PrepareDelete(g.ID)
-
-	expr := fmt.Sprintf(`DELETE FROM %s WHERE id = %d AND biz_id = %d`, table.GroupTable,
-		g.ID, g.Attachment.BizID)
+	var sqlSentence []string
+	sqlSentence = append(sqlSentence, "DELETE FROM ", string(table.GroupTable), " WHERE id = ", strconv.Itoa(int(g.ID)),
+		" AND biz_id = ", strconv.Itoa(int(g.Attachment.BizID)))
+	expr := filter.SqlJoint(sqlSentence)
 
 	err := dao.sd.ShardingOne(g.Attachment.BizID).AutoTxn(kit, func(txn *sqlx.Tx, opt *sharding.TxnOption) error {
 		// delete the group at first.
@@ -283,9 +290,10 @@ func (dao *groupDao) validateAttachmentResExist(kit *kit.Kit, am *table.GroupAtt
 
 // validateAttachmentAppExist validate if attachment app exists before creating group.
 func (dao *groupDao) validateAttachmentAppExist(kit *kit.Kit, am *table.GroupAttachment) error {
-
-	exist, err := isResExist(kit, dao.orm, dao.sd.ShardingOne(am.BizID), table.AppTable,
-		fmt.Sprintf("WHERE id = %d AND biz_id = %d", am.AppID, am.BizID))
+	var sqlSentence []string
+	sqlSentence = append(sqlSentence, "WHERE id = ", strconv.Itoa(int(am.AppID)), " AND biz_id = ", strconv.Itoa(int(am.BizID)))
+	sql := filter.SqlJoint(sqlSentence)
+	exist, err := isResExist(kit, dao.orm, dao.sd.ShardingOne(am.BizID), table.AppTable, sql)
 	if err != nil {
 		return err
 	}
@@ -299,8 +307,10 @@ func (dao *groupDao) validateAttachmentAppExist(kit *kit.Kit, am *table.GroupAtt
 
 // validateStrategyNotExist validate this group under if strategy not exist.
 func (dao *groupDao) validateStrategyNotExist(kt *kit.Kit, bizID, id uint32) error {
-	exist, err := isResExist(kt, dao.orm, dao.sd.ShardingOne(bizID), table.StrategyTable,
-		fmt.Sprintf("WHERE biz_id = %d AND strategy_set_id = %d", bizID, id))
+	var sqlSentence []string
+	sqlSentence = append(sqlSentence, "WHERE biz_id = ", strconv.Itoa(int(bizID)), " AND strategy_set_id = ", strconv.Itoa(int(bizID)))
+	sql := filter.SqlJoint(sqlSentence)
+	exist, err := isResExist(kt, dao.orm, dao.sd.ShardingOne(bizID), table.StrategyTable, sql)
 	if err != nil {
 		return err
 	}
