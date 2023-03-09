@@ -29,7 +29,6 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component/bcs"
 	bkmonitor_client "github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component/bk_monitor"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component/k8sclient"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/storegw/clientutil"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/utils"
@@ -54,7 +53,7 @@ func (s *BKMonitorStore) Info(ctx context.Context, r *storepb.InfoRequest) (*sto
 	// 默认配置
 	lsets := []labelpb.ZLabelSet{zset}
 
-	clusterMap, err := bcs.GetClusterMap(ctx, config.G.BCS)
+	clusterMap, err := bcs.GetClusterMap()
 	if err != nil {
 		return nil, err
 	}
@@ -162,8 +161,7 @@ func (s *BKMonitorStore) Series(r *storepb.SeriesRequest, srv storepb.Store_Seri
 	if scopeClusterID != "" {
 		clusterId = scopeClusterID
 	}
-	bcsConf := k8sclient.GetBCSConfByClusterId(clusterId)
-	cluster, err := bcs.GetCluster(srv.Context(), bcsConf, clusterId)
+	cluster, err := bcs.GetCluster(clusterId)
 	if err != nil {
 		return err
 	}
@@ -193,6 +191,7 @@ func (s *BKMonitorStore) Series(r *storepb.SeriesRequest, srv storepb.Store_Seri
 		Value: cluster.BKBizID,
 	}
 	newMatchers = append(newMatchers, bkBizIDMatcher)
+	newMatchers = append(newMatchers, storepb.LabelMatcher{Name: "bcs_cluster_id", Value: clusterId})
 
 	r.Matchers = newMatchers
 	pql := ""

@@ -29,7 +29,6 @@ import (
 	"k8s.io/klog/v2"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component/bcs"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component/k8sclient"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/storegw/bcs_system/source"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/storegw/clientutil"
 )
@@ -161,8 +160,7 @@ func (s *BCSSystemStore) Series(r *storepb.SeriesRequest, srv storepb.Store_Seri
 		return err
 	}
 
-	bcsConf := k8sclient.GetBCSConfByClusterId(clusterID)
-	cluster, err := bcs.GetCluster(ctx, bcsConf, clusterID)
+	cluster, err := bcs.GetCluster(clusterID)
 	if err != nil {
 		return err
 	}

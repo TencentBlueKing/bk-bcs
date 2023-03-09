@@ -14,27 +14,15 @@
 package bcs
 
 import (
-	"context"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/config"
 	bcstesting "github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/testing"
 )
 
-func TestListClusters(t *testing.T) {
-	ctx := context.Background()
-
-	clusters, err := ListClusters(ctx, config.G.BCS, bcstesting.GetTestProjectId())
-	assert.NoError(t, err)
-	assert.Equal(t, len(clusters), 0)
-}
-
 func TestGetCluster(t *testing.T) {
-	ctx := context.Background()
-
-	cluster, err := GetCluster(ctx, config.G.BCS, bcstesting.GetTestClusterId())
+	cluster, err := GetCluster(bcstesting.GetTestClusterId())
 	assert.NoError(t, err)
 	assert.Equal(t, cluster.ProjectId, bcstesting.GetTestProjectId())
 }

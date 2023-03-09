@@ -25,7 +25,7 @@ func IsBKMonitorAgent(c *rest.Context) (interface{}, error) {
 	clusterId := c.Param("clusterId")
 	conf := k8sclient.GetBCSConfByClusterId(clusterId)
 
-	cluster, err := bcs.GetCluster(c.Request.Context(), conf, clusterId)
+	cluster, err := bcs.GetCluster(clusterId)
 	if err != nil {
 		return nil, err
 	}
