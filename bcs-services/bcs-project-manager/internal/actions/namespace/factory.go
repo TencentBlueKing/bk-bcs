@@ -23,6 +23,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/logging"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/errorx"
 )
 
 //NamespaceFactory namespace faction factory
@@ -56,8 +57,11 @@ func (f *NamespaceFactory) Action(clusterID, projectIDOrCode string) (action.Nam
 		logging.Error("get project from db failed, err: %s", err.Error())
 		return nil, err
 	}
-	if cluster.GetIsShared() && cluster.GetProjectID() != project.ProjectID {
-		return shared.NewSharedNamespaceAction(f.model), nil
+	if cluster.GetProjectID() != project.ProjectID {
+		if cluster.GetIsShared() {
+			return shared.NewSharedNamespaceAction(f.model), nil
+		}
+		return nil, errorx.NewReadableErr(errorx.ParamErr, "project or cluster not valid")
 	}
 	return independent.NewIndependentNamespaceAction(f.model), nil
 }
