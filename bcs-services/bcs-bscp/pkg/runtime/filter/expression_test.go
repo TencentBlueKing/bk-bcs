@@ -292,7 +292,7 @@ func TestCrownSQLWhereExpr(t *testing.T) {
 		t.Errorf("generate SQL AND-AND Where expression failed, err: %v", err)
 		//return
 	}
-	fmt.Println("a", arg)
+	fmt.Println("arg :", arg)
 	expr.Op = And
 	opt.CrownedOption.CrownedOp = Or
 	where, arg, err = expr.SQLWhereExpr(opt)

@@ -71,8 +71,9 @@ func (dao *contentDao) Create(kit *kit.Kit, content *table.Content) (uint32, err
 
 	content.ID = id
 
-	sql := fmt.Sprintf(`INSERT INTO %s (%s)	VALUES(%s)`, table.ContentTable, table.ContentColumns.ColumnExpr(),
-		table.ContentColumns.ColonNameExpr())
+	var sqlSentence []string
+	sqlSentence = append(sqlSentence, "INSERT INTO ", string(table.ContentTable), " (", table.ContentColumns.ColumnExpr(), ")  VALUES(", table.ContentColumns.ColonNameExpr(), ")")
+	sql := filter.SqlJoint(sqlSentence)
 
 	err = dao.sd.ShardingOne(content.Attachment.BizID).AutoTxn(kit,
 		func(txn *sqlx.Tx, opt *sharding.TxnOption) error {
@@ -106,8 +107,9 @@ func (dao *contentDao) Get(kit *kit.Kit, id, bizID uint32) (*table.Content, erro
 		return nil, errf.New(errf.InvalidParameter, "content id can not be 0")
 	}
 
-	sql := fmt.Sprintf(`SELECT %s FROM %s WHERE id = %d`,
-		table.ContentColumns.NamedExpr(), table.ContentTable, id)
+	var sqlSentence []string
+	sqlSentence = append(sqlSentence, "SELECT ", table.ContentColumns.NamedExpr(), " FROM ", string(table.ContentTable), " WHERE id = ", strconv.Itoa(int(id)))
+	sql := filter.SqlJoint(sqlSentence)
 
 	content := &table.Content{}
 	if err := dao.orm.Do(dao.sd.ShardingOne(bizID).DB()).Get(kit.Ctx, content, sql); err != nil {

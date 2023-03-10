@@ -16,10 +16,12 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"strconv"
 
 	"bscp.io/pkg/dal/sharding"
 	"bscp.io/pkg/dal/table"
 	"bscp.io/pkg/kit"
+	"bscp.io/pkg/runtime/filter"
 )
 
 // IDGenInterface supplies all the method to generate a resource's
@@ -63,18 +65,19 @@ func (ig *idGenerator) Batch(ctx *kit.Kit, resource table.Name, step int) ([]uin
 		return nil, fmt.Errorf("gen %s unique id, but begin txn failed, err: %v", resource, err)
 	}
 
-	updateExpr := fmt.Sprintf(`
-		UPDATE id_generator 
-		SET max_id = max_id + %d, updated_at = NOW()
-		WHERE resource = "%s"`,
-		step, resource)
+	var sqlSentenceUp []string
+	sqlSentenceUp = append(sqlSentenceUp, "UPDATE id_generator SET max_id = max_id + ", strconv.Itoa(step),
+		", updated_at = NOW()  WHERE resource = '", string(resource), "'")
+	updateExpr := filter.SqlJoint(sqlSentenceUp)
 
 	_, err = txn.ExecContext(ctx.Ctx, updateExpr)
 	if err != nil {
 		return nil, fmt.Errorf("gen %s unique id, but update max_id failed, err: %v", resource, err)
 	}
 
-	queryExpr := fmt.Sprintf(`SELECT max_id from id_generator WHERE resource = "%s"`, resource)
+	var sqlSentence []string
+	sqlSentence = append(sqlSentence, "SELECT max_id from id_generator WHERE resource = '", string(resource), "'")
+	queryExpr := filter.SqlJoint(sqlSentence)
 
 	rows, err := txn.QueryContext(ctx.Ctx, queryExpr)
 	if err != nil {

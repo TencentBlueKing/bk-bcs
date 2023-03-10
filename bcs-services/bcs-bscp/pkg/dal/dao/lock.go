@@ -14,6 +14,7 @@ package dao
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 
 	"bscp.io/pkg/criteria/errf"
@@ -22,6 +23,7 @@ import (
 	"bscp.io/pkg/dal/table"
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/logs"
+	"bscp.io/pkg/runtime/filter"
 
 	"github.com/jmoiron/sqlx"
 )
@@ -66,8 +68,10 @@ func (dao *lockDao) IncreaseCount(kit *kit.Kit, lock *table.ResourceLock, opt *L
 	}
 
 	// update the lock and increase the count.
-	sql := fmt.Sprintf("UPDATE %s SET res_count = res_count + 1 WHERE biz_id = %d AND res_type = '%s' AND "+
-		"res_key = '%s'", table.ResourceLockTable, lock.BizID, lock.ResType, lock.ResKey)
+	var sqlSentence []string
+	sqlSentence = append(sqlSentence, "UPDATE ", string(table.ResourceLockTable), " SET res_count = res_count + 1 WHERE biz_id = ",
+		strconv.Itoa(int(lock.BizID)), " AND res_type = '", lock.ResType, "' AND res_key = '", lock.ResKey, "'")
+	sql := filter.SqlJoint(sqlSentence)
 
 	result, err := opt.Txn.ExecContext(kit.Ctx, sql)
 	if err != nil {
@@ -104,8 +108,10 @@ func (dao *lockDao) IncreaseCount(kit *kit.Kit, lock *table.ResourceLock, opt *L
 	}
 	lock.ID = id
 
-	sql = fmt.Sprintf(`INSERT INTO %s (%s) VALUES (%s)`, table.ResourceLockTable, table.ResLockColumns.ColumnExpr(),
-		table.ResLockColumns.ColonNameExpr())
+	var sqlSentenceIn []string
+	sqlSentenceIn = append(sqlSentenceIn, "INSERT INTO ", string(table.ResourceLockTable), " (", table.ResLockColumns.ColumnExpr(),
+		") VALUES (", table.ResLockColumns.ColonNameExpr(), ")")
+	sql = filter.SqlJoint(sqlSentenceIn)
 	if err := dao.orm.Txn(opt.Txn).Insert(kit.Ctx, sql, lock); err != nil {
 		logs.Errorf("insert lock failed, lock: %v, err: %v, rid: %s", lock, err, kit.Rid)
 		// mysql will add a gap lock if updated row is not exist, and gap lock allows multiple transaction to acquire,
@@ -121,8 +127,10 @@ func (dao *lockDao) IncreaseCount(kit *kit.Kit, lock *table.ResourceLock, opt *L
 }
 
 func (dao *lockDao) getLockCount(kit *kit.Kit, lock *table.ResourceLock, opt *LockOption) (uint32, error) {
-	queryExpr := fmt.Sprintf("SELECT res_count from %s WHERE biz_id = %d AND res_type = '%s' AND res_key = '%s'",
-		table.ResourceLockTable, lock.BizID, lock.ResType, lock.ResKey)
+	var sqlSentence []string
+	sqlSentence = append(sqlSentence, "SELECT res_count from ", string(table.ResourceLockTable), " WHERE biz_id = ", strconv.Itoa(int(lock.BizID)),
+		" AND res_type = '", lock.ResType, "' AND res_key = '", lock.ResKey, "'")
+	queryExpr := filter.SqlJoint(sqlSentence)
 
 	rows, err := opt.Txn.QueryContext(kit.Ctx, queryExpr)
 	if err != nil {
@@ -165,9 +173,11 @@ func (dao *lockDao) DecreaseCount(kit *kit.Kit, lock *table.ResourceLock, opt *L
 	}
 
 	// the current lock is related to more than one resource, decrease the lock count.
+	var sqlSentence []string
 	if count > 1 {
-		sql := fmt.Sprintf("UPDATE %s SET res_count = res_count - 1 WHERE biz_id = %d AND res_type = '%s' AND "+
-			"res_key = '%s'", table.ResourceLockTable, lock.BizID, lock.ResType, lock.ResKey)
+		sqlSentence = append(sqlSentence, "UPDATE ", string(table.ResourceLockTable), " SET res_count = res_count - 1 WHERE biz_id = ", strconv.Itoa(int(lock.BizID)),
+			" AND res_type = '", lock.ResType, "' AND res_key = '", lock.ResKey, "'")
+		sql := filter.SqlJoint(sqlSentence)
 
 		_, err := opt.Txn.ExecContext(kit.Ctx, sql)
 		if err != nil {
@@ -179,8 +189,9 @@ func (dao *lockDao) DecreaseCount(kit *kit.Kit, lock *table.ResourceLock, opt *L
 	}
 
 	// the current lock is related to only one resource, delete the lock.
-	sql := fmt.Sprintf("DELETE FROM %s WHERE biz_id = %d AND res_type = '%s' AND res_key = '%s'",
-		table.ResourceLockTable, lock.BizID, lock.ResType, lock.ResKey)
+	sqlSentence = append(sqlSentence, "DELETE FROM ", string(table.ResourceLockTable), " WHERE biz_id = ", strconv.Itoa(int(lock.BizID)),
+		" AND res_type = '", lock.ResType, "' AND res_key = '", lock.ResKey, "'")
+	sql := filter.SqlJoint(sqlSentence)
 
 	_, err = opt.Txn.ExecContext(kit.Ctx, sql)
 	if err != nil {
@@ -210,8 +221,10 @@ func (dao *lockDao) AddUnique(kit *kit.Kit, lock *table.ResourceLock, opt *LockO
 	}
 	lock.ID = id
 
-	sql := fmt.Sprintf(`INSERT INTO %s (%s) VALUES (%s)`, table.ResourceLockTable, table.ResLockColumns.ColumnExpr(),
-		table.ResLockColumns.ColonNameExpr())
+	var sqlSentence []string
+	sqlSentence = append(sqlSentence, "INSERT INTO ", string(table.ResourceLockTable), " (", table.ResLockColumns.ColumnExpr(),
+		") VALUES (", table.ResLockColumns.ColonNameExpr(), ")")
+	sql := filter.SqlJoint(sqlSentence)
 	if err := dao.orm.Txn(opt.Txn).Insert(kit.Ctx, sql, lock); err != nil {
 		logs.Errorf("insert lock failed, lock: %v, err: %v, rid: %s", lock, err, kit.Rid)
 		if strings.Contains(err.Error(), "Error 1062: Duplicate entry") {
@@ -243,8 +256,10 @@ func (dao *lockDao) DeleteUnique(kit *kit.Kit, lock *table.ResourceLock, opt *Lo
 		return fmt.Errorf("unique lock has %d count", count)
 	}
 
-	sql := fmt.Sprintf("DELETE FROM %s WHERE biz_id = %d AND res_type = '%s' AND res_key = '%s'",
-		table.ResourceLockTable, lock.BizID, lock.ResType, lock.ResKey)
+	var sqlSentence []string
+	sqlSentence = append(sqlSentence, "DELETE FROM ", string(table.ResourceLockTable), " WHERE biz_id = ", strconv.Itoa(int(lock.BizID)),
+		" AND res_type = '", lock.ResType, "' AND res_key = '", lock.ResKey, "'")
+	sql := filter.SqlJoint(sqlSentence)
 
 	_, err = opt.Txn.ExecContext(kit.Ctx, sql)
 	if err != nil {

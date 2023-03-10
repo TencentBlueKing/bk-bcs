@@ -13,8 +13,6 @@ limitations under the License.
 package dao
 
 import (
-	"fmt"
-
 	"bscp.io/pkg/criteria/errf"
 	"bscp.io/pkg/dal/orm"
 	"bscp.io/pkg/dal/sharding"
@@ -90,7 +88,7 @@ func (r *iamDao) ListInstances(kt *kit.Kit, opts *types.ListInstancesOption) (
 	}
 
 	sqlSentence = append(sqlSentence, "SELECT id, name FROM ", string(opts.TableName), whereExpr, pageExpr)
-	sql = fmt.Sprintf(`SELECT id, name FROM %s %s %s`, opts.TableName, whereExpr, pageExpr)
+	sql = filter.SqlJoint(sqlSentence)
 	list := make([]*types.InstanceResource, 0)
 	err = r.orm.Do(r.sd.ShardingOne(opts.BizID).DB()).Select(kt.Ctx, &list, sql, arg)
 	if err != nil {

@@ -74,8 +74,9 @@ func (dao *groupCategoryDao) Create(kit *kit.Kit, gc *table.GroupCategory) (uint
 
 	gc.ID = id
 
-	sql := fmt.Sprintf(`INSERT INTO %s (%s)	VALUES(%s)`, table.GroupCategoryTable,
-		table.GroupCategoryColumns.ColumnExpr(), table.GroupCategoryColumns.ColonNameExpr())
+	var sqlSentence []string
+	sqlSentence = append(sqlSentence, "INSERT INTO ", string(table.GroupCategoryTable), " (", table.GroupCategoryColumns.ColumnExpr(), ")  VALUES(", table.GroupCategoryColumns.ColonNameExpr(), ")")
+	sql := filter.SqlJoint(sqlSentence)
 
 	err = dao.sd.ShardingOne(gc.Attachment.BizID).AutoTxn(kit,
 		func(txn *sqlx.Tx, opt *sharding.TxnOption) error {
@@ -125,8 +126,10 @@ func (dao *groupCategoryDao) Update(kit *kit.Kit, gc *table.GroupCategory) error
 
 	ab := dao.auditDao.Decorator(kit, gc.Attachment.BizID, enumor.GroupCategory).PrepareUpdate(gc)
 
-	sql := fmt.Sprintf(`UPDATE %s SET %s WHERE id = %d AND biz_id = %d`,
-		table.GroupCategoryTable, expr, gc.ID, gc.Attachment.BizID)
+	var sqlSentence []string
+	sqlSentence = append(sqlSentence, "UPDATE ", string(table.GroupCategoryTable), " SET ", expr,
+		" WHERE id = ", strconv.Itoa(int(gc.ID)), " AND biz_id = ", strconv.Itoa(int(gc.Attachment.BizID)))
+	sql := filter.SqlJoint(sqlSentence)
 
 	err = dao.sd.ShardingOne(gc.Attachment.BizID).AutoTxn(kit,
 		func(txn *sqlx.Tx, opt *sharding.TxnOption) error {
