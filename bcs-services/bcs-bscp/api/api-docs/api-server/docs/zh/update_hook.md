@@ -6,14 +6,14 @@
 
 #### 输入参数
 
-| 参数名称     | 参数类型     | 必选   | 描述                                    |
-| ------------ | ------------ | ------ |---------------------------------------|
-| app_id    | uint32       | 是     | 应用ID                                  |
-| release_id | uint32 | 否 | 版本ID，可选项，不传或传0时则为没有发布的脚本              |
-| name | string | 否 | hook脚本名称                              |
-| pre_type | string | 否 | 前置hook脚本类型，当前类型有为shell、python         |
+| 参数名称     | 参数类型     | 必选   | 描述                                 |
+| ------------ | ------------ | ------ |------------------------------------|
+| app_id    | uint32       | 是     | 应用ID                               |
+| release_id | uint32 | 否 | 版本ID            |
+| name | string | 否 | hook脚本名称                           |
+| pre_type | string | 否 | 前置hook脚本类型，当前类型有shell、python       |
 | pre_hook | string | 否 | 前置hook脚本内容，内容格式需和脚本类型相匹配，为内容字节流对应的字符串 |
-| post_type | string | 否    | 后置hook脚本类型，当前类型有为shell、python         |
+| post_type | string | 否    | 后置hook脚本类型，当前类型有shell、python       |
 | post_hook | string       | 否     | 后置hook脚本内容，内容格式需和脚本类型相匹配，为内容字节流对应的字符串 |
 
 #### 调用示例
