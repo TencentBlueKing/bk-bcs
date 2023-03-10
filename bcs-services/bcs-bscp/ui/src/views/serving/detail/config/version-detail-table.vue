@@ -2,7 +2,7 @@
   import { ref, onMounted, computed } from 'vue'
   import { Search } from 'bkui-vue/lib/icon'
   import { getConfigVersionList } from '../../../../api/config';
-  import { IConfigVersionItem, IPageFilter } from '../../../../types'
+  import { IConfigVersionItem, IRequestFilter ,IPageFilter, FilterOp } from '../../../../types'
 
   const props = defineProps<{
     bkBizId: string,
@@ -12,14 +12,14 @@
   const listLoading = ref(true)
   const versionList = ref<Array<IConfigVersionItem>>([])
   const currentTab = ref('available')
-
   const pagination = ref({
     current: 1,
     count: 0,
     limit: 10,
   })
+  const filter = ref<IRequestFilter>({ op: FilterOp.AND, rules: [] })
 
-  const pageFilter = computed(():IPageFilter => {
+  const page = computed(():IPageFilter => {
     return {
       count: false,
       start: (pagination.value.current - 1) * pagination.value.limit,
@@ -33,7 +33,7 @@
 
   const getVersionList = async() => {
     listLoading.value = true
-    const res = await getConfigVersionList(props.bkBizId, props.appId)
+    const res = await getConfigVersionList(props.bkBizId, props.appId, filter.value, page.value)
     versionList.value = res.data.details
     listLoading.value = false
   }

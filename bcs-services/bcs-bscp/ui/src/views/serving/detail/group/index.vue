@@ -2,7 +2,7 @@
   import { ref, onMounted } from 'vue'
   import { Plus, Search } from 'bkui-vue/lib/icon'
   import { ECategoryType } from '../../../../../types/group'
-  import { ICategoryItem, IGroupCategoriesQuery, IGroupItem, ICategoryGroup } from '../../../../../types/group'
+  import { ICategoryItem, IGroupCategoriesQuery, IGroupItem } from '../../../../../types/group'
   import { getGroupCategories } from '../../../../api/group'
   import CreateGroup from './create-group.vue'
   import CategoryGroup from './category-group.vue'
@@ -15,7 +15,7 @@
     { id: ECategoryType.Custom, name: '普通分组' },
     { id: ECategoryType.Debug, name: '调试用分组' }
   ]
-  const categoryList= ref<Array<ICategoryGroup>>([])
+  const categoryList= ref<Array<ICategoryItem>>([])
   const categoryListLoading = ref(true)
   const currentTab = ref<ECategoryType>(categoryTypes[0].id)
   const isCreateDialogShow = ref(false)
@@ -32,14 +32,17 @@
       limit: 100 // @todo 确认分页方式
     }
     const res = await getGroupCategories(props.appId, params)
-    categoryList.value = res.details.map((item: ICategoryItem) => {
-      return { config: item, groups: { count: 0, data: [] } }
-    })
+    categoryList.value = res.details
     categoryListLoading.value = false
+  }
+
+  const refreshCategoryList = () => {
+    getCategoryList()
   }
 
   const handleTabChange = (id: ECategoryType) => {
     currentTab.value = id
+    categoryList.value = []
     getCategoryList()
   }
 
@@ -69,11 +72,20 @@
       <bk-loading :loading="categoryListLoading" style="height: calc(100% - 34px);">
         <div class="group-list-wrapper">
           <template v-if="categoryList.length > 0">
-            <CategoryGroup v-for="category in categoryList" :key="category.config.id" :category-group="category" />
+            <CategoryGroup
+              v-for="category in categoryList"
+              :key="category.id"
+              :app-id="props.appId"
+              :mode="currentTab"
+              :category-group="category" />
           </template>
           <bk-exception v-else type="empty">此服务下暂无分组</bk-exception>
         </div>
-        <CreateGroup :category-list="categoryList" v-model:show="isCreateDialogShow" />
+        <CreateGroup
+          v-model:show="isCreateDialogShow"
+          :category-list="categoryList"
+          :app-id="props.appId"
+          @refreshCategoryList="refreshCategoryList"/>
       </bk-loading>
     </section>
 </template>
@@ -136,5 +148,10 @@
   }
   .group-list-wrapper {
     margin-top: 19px;
+    height: calc(100% - 34px);
+    overflow: auto;
+    .category-group:not(:last-child) {
+      margin-bottom: 16px;
+    }
   }
 </style>

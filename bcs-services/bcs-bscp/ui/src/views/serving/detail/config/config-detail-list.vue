@@ -1,8 +1,9 @@
 <script setup lang="ts">
   import { ref, computed, watch, onMounted } from 'vue'
   import { useStore } from 'vuex'
-  import { FilterOp, IVersionItem, IConfigVersionItem } from '../../../../types'
-  import { getServingConfigList, getServingVersionConfigList } from '../../../../api/config'
+  import { IVersionItem, IConfigVersionItem } from '../../../../types'
+  import { IConfigListQueryParams } from '../../../../../types/config'
+  import { getConfigList } from '../../../../api/config'
 
   const store = useStore()
 
@@ -13,11 +14,6 @@
 
   const loading = ref(false)
   const configList = ref<Array<IConfigVersionItem>>([])
-  const pageFilter = {
-      count: false,
-      start: 0,
-      limit: 200,
-  }
 
   const currentVersion = computed((): IVersionItem => {
     return store.state.config.currentVersion
@@ -28,14 +24,14 @@
   })
 
   watch(() => currentVersion.value.id, () => {
-    getConfigList()
+    getListData()
   } )
 
   onMounted(() => {
-    getConfigList()
+    getListData()
   })
 
-  const getConfigList = async () => {
+  const getListData = async () => {
     // 拉取到版本列表之前不加在列表数据
     if (typeof currentVersion.value.id !== 'number') {
       return
@@ -43,13 +39,14 @@
 
     loading.value = true
     try {
-      let res
-      if (currentVersion.value.id === 0) {
-        res = await getServingConfigList(props.bkBizId, props.appId, { op: FilterOp.AND, rules: [] }, pageFilter)
-      } else {
-        res = await getServingVersionConfigList(props.bkBizId, currentVersion.value.id, { op: FilterOp.AND, rules: [] }, pageFilter)
+      const params: IConfigListQueryParams = {
+        start: 0,
+        limit: 200 // @todo 分页条数待确认
       }
-      // @ts-ignore
+      if (currentVersion.value.id !== 0) {
+        params.release_id = <number>currentVersion.value.id
+      }
+      const res = await getConfigList(props.appId, params)
       configList.value = res.details
     } catch (e) {
       console.error(e)

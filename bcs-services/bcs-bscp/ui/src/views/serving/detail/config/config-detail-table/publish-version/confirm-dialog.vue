@@ -1,6 +1,8 @@
 <script setup lang="ts">
   import { defineProps, defineEmits, ref, watch } from 'vue'
+  import InfoBox from "bkui-vue/lib/info-box";
   import { publishVersion } from '../../../../../../api/config'
+  import CategoryGroupSelect from '../../../group/components/category-group-select.vue';
 
   interface IFormData {
     groups: Array<number>;
@@ -16,7 +18,7 @@
     groups: Array<number>
   }>()
 
-  const emits = defineEmits(['update:show', 'successed', 'failed'])
+  const emits = defineEmits(['update:show', 'confirm'])
 
   const localVal = ref<IFormData>({
     groups: [],
@@ -26,12 +28,12 @@
   const pending = ref(false)
   const formRef = ref()
   const rules = {
-    // group: [
-    //   {
-    //     validator: (value: string) => value === '',
-    //     message: '分组不能为空'
-    //   }
-    // ],
+    groups: [
+      {
+        validator: (value: string) => value.length > 0,
+        message: '分组不能为空'
+      }
+    ],
     memo: [
       {
         validator: (value: string) => value.length <= 100,
@@ -43,6 +45,11 @@
   watch(() => props.groups, (val) => {
     localVal.value.groups = [...val]
   }, { immediate: true })
+
+  // 选择分组
+  const handleGroupChange = (group: number[]) => {
+    localVal.value.groups = group
+  }
 
   const handleClose = () => {
     emits('update:show', false)
@@ -56,17 +63,22 @@
   const handleConfirm = async() => {
     try {
       pending.value = true
-      const data: IFormData = {
-        ...localVal.value,
-        groups: props.groups
-      }
       await formRef.value.validate()
-      await publishVersion(props.bkBizId, props.appId, <number>props.releaseId, data)
-      emits('successed')
+      await publishVersion(props.bkBizId, props.appId, <number>props.releaseId, localVal.value)
+      emits('confirm')
       handleClose()
     } catch (e) {
-      emits('failed', e)
       console.error(e)
+      // InfoBox({
+      // // @ts-ignore
+      //   infoType: "danger",
+      //   title: '版本上线失败',
+      //   subTitle: e.response.data.error.message,
+      //   confirmText: '重试',
+      //   onConfirm () {
+      //     handleConfirm()
+      //   }
+      // })
     } finally {
       pending.value = false
     }
@@ -84,9 +96,8 @@
     @closed="handleClose"
     @confirm="handleConfirm">
       <bk-form class="form-wrapper" form-type="vertical" ref="formRef" :rules="rules" :model="localVal">
-          <bk-form-item label="上线分组" property="group">
-            <bk-select :modelValue="localVal.groups" :multiple="true">
-            </bk-select>
+          <bk-form-item label="上线分组" property="groups">
+            <CategoryGroupSelect :app-id="props.appId" :multiple="true" :value="localVal.groups" @change="handleGroupChange" />
           </bk-form-item>
           <bk-form-item label="上线说明" property="memo">
             <bk-input v-model="localVal.memo" type="textarea" :maxlength="100"></bk-input>

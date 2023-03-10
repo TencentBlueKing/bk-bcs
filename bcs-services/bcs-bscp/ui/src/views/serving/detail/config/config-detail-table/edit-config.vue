@@ -1,9 +1,9 @@
 <script setup lang="ts">
-  import { defineProps, defineEmits, ref, watch } from 'vue'
-  import { cloneDeep } from 'lodash'
+  import { ref, watch } from 'vue'
   import ConfigForm from './config-form.vue'
   import { getConfigItemDetail, getConfigContent, updateServingConfigItem } from '../../../../../api/config'
   import { IServingEditParams } from '../../../../../types'
+  import { transDataToFile } from '../../../../../utils/file'
 
   const getDefaultConfig = () => {
     return {
@@ -31,7 +31,7 @@
 
   const configDetailLoading = ref(true)
   const config = ref<IServingEditParams>(getDefaultConfig())
-  const content = ref('')
+  const content = ref<string|File>('')
 
   watch(
     () => props.show,
@@ -42,18 +42,20 @@
     }
   )
 
+  // 获取配置项详情配置及配置内容
   const getConfigDetail = async() => {
     try {
       configDetailLoading.value = true
-      const detail = await getConfigItemDetail(props.configId, props.bkBizId, props.appId)
-      // @ts-ignore
+      const detail = await getConfigItemDetail(props.configId, props.appId)
       const { name, path, file_type, permission } = detail.config_item.spec
       config.value = { id: props.configId, biz_id: props.bkBizId, app_id: props.appId, name, file_type, path, ...permission }
-
-      // @ts-ignore
-      const signature = detail.content.spec.signature
-      const configContent = <object | string> await getConfigContent(props.bkBizId, props.appId, signature)
-      content.value = String(configContent)
+      const signature = detail.content.signature
+      const configContent = await getConfigContent(props.bkBizId, props.appId, signature)
+      if (file_type === 'binary') {
+        content.value = transDataToFile(configContent, name)
+      } else {
+        content.value = String(configContent)
+      }
     } catch (e) {
       console.error(e)
     } finally {

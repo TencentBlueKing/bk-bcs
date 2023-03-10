@@ -9,7 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@tencent/bk-icon-bk_bscp": "0.0.2",
+    "@tencent/bk-icon-bk_bscp": "0.0.3",
     "@types/js-cookie": "^3.0.2",
     "@types/lodash.clonedeep": "^4.5.7",
     "axios": "^0.27.2",

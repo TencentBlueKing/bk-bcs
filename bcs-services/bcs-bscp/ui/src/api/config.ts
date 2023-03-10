@@ -1,44 +1,15 @@
 import http from "../request"
 import { IPageFilter, IRequestFilter, IServingEditParams } from '../types'
+import { IConfigListQueryParams } from '../../types/config'
 
 /**
- * 获取某个版本下配置列表
- * @param biz_id 业务ID
- * @param release_id 版本ID
- * @param filter 查询过滤条件
- * @param page 分页设置
- * @returns 
- */
- export const getVersionConfigList = (biz_id: number, release_id: number, filter: IRequestFilter = {}, page: IPageFilter) => {
-  return http.get(`/config/list/release/config_item/release_id/${release_id}/biz_id/${biz_id}`, { params: { filter, page: { ...page, count: false } } }).then(resp => resp.data);
-}
-
-/**
- * 获取应用正在编辑版本下配置列表
- * @param biz_id 业务ID
+ * 获取配置项列表，通过release_id区分是否拿某个版本下的配置项列表
  * @param app_id 应用ID
- * @param filter 查询过滤条件
- * @param page 分页设置
+ * @param params 查询参数
  * @returns 
  */
- export const getServingConfigList = (biz_id: string, app_id: number, filter: IRequestFilter = {}, page: IPageFilter) => {
-  return http.post(`/config/list/config_item/config_item/app_id/${app_id}/biz_id/${biz_id}`, { biz_id, app_id, filter, page }).then(resp => resp.data);
-}
-
-/**
- * 获取应用某个版本的配置列表快照
- * @param biz_id 业务ID
- * @param release_id 版本Id
- * @param page 分页设置
- */
-export const getServingVersionConfigList = (biz_id: string, release_id: number, filter: IRequestFilter = {} , page: IPageFilter) => {
-  return http.post(`/config/list/release/config_item/release_id/${release_id}/biz_id/${biz_id}`, { filter, page }).then(resp => {
-    resp.data.details.forEach((item: { spec: object; config_item_spec?: object }) => {
-      item.spec = { ...item.config_item_spec }
-      delete item.config_item_spec
-    })
-    return resp.data
-  });
+export const getConfigList = (app_id: number, params: IConfigListQueryParams = {}) => {
+  return http.get(`/config/apps/${app_id}/config_items`, { params }).then(res => res.data)
 }
 
 /**
@@ -76,15 +47,14 @@ export const getServingVersionConfigList = (biz_id: string, release_id: number, 
   return http.delete(`/config/delete/config_item/config_item/config_item_id/${id}/app_id/${appId}/biz_id/${bizId}`, {});
 }
 
-/**npm
+/**
  * 获取配置项详情
  * @param id 配置ID
- * @param bizId 业务ID
  * @param appId 应用ID
  * @returns 
  */
-export const getConfigItemDetail = (id: number, bizId: string, appId: number) => {
-  return http.get(`/config/get/config_item/config_item/config_item_id/${id}/app_id/${appId}/biz_id/${bizId}`).then(resp => resp.data);
+export const getConfigItemDetail = (id: number, appId: number) => {
+  return http.get(`/config/apps/${appId}/config_items/${id}`).then(resp => resp.data);
 }
 
 /**
@@ -112,11 +82,11 @@ export const updateConfigContent = (bizId: string, appId: number, data: string|F
  * @returns 
  */
 export const getConfigContent = (bizId: string, appId: number, SHA256Str: string) => {
-  return http.get(`/api/get/content/download/biz_id/${bizId}/app_id/${appId}`, {
+  return http.get<string, string>(`/api/get/content/download/biz_id/${bizId}/app_id/${appId}`, {
     headers: {
       'X-Bkapi-File-Content-Id': SHA256Str
     }
-  })
+  }).then(res => res)
 }
 
 /**
@@ -132,14 +102,14 @@ export const createVersion = (bizId: string, appId: number, name: string, memo: 
 }
 
 /**
- * 获取配置的版本列表
+ * 获取版本列表
  * @param bizId 业务ID
  * @param appId 应用ID
  * @returns 
  */
-export const getConfigVersionList = (bizId: string, appId: number) => {
+export const getConfigVersionList = (bizId: string, appId: number, filter: IRequestFilter, page: IPageFilter) => {
   // @todo 接口筛选条件需要修改，目前不能拉全量数据，最大限制是200条
-  return http.post(`config/list/release/release/app_id/${appId}/biz_id/${bizId}`, { filter: { op: 'and', rules: [] }, page: { start: 0, limit: 200 } })
+  return http.post(`config/list/release/release/app_id/${appId}/biz_id/${bizId}`, { filter, page })
 }
 
 /**

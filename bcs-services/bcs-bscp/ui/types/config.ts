@@ -23,3 +23,10 @@ export interface IConfigItem {
     update_at: string;
   }
 }
+
+// 配置项列表查询接口请求参数
+export interface IConfigListQueryParams {
+  release_id?: number;
+  start?: number;
+  limit?: number
+}
