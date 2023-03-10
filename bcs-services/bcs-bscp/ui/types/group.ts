@@ -3,6 +3,17 @@ export const enum ECategoryType {
   Debug = 'debug'
 }
 
+export const enum EGroupRuleType {
+  '=' = 'eq',
+  '!=' = 'ne',
+  '>' = 'gt',
+  '>=' = 'ge',
+  '<' = 'lt',
+  '<=' = 'le',
+  'IN' = 'in',
+  'NOT IN' = 'nin',
+}
+
 export interface IGroupCategoriesQuery {
   mode: ECategoryType;
   start: number;
@@ -49,18 +60,28 @@ export interface IGroupItem {
 
 export interface IGroupEditing {
   id?: number;
-  app_id: number|string;
   group_category_id: number|string;
   name: string;
   mode: string;
-  selector?: string;
-  uid?: number;
+  rules: Array<IGroupRuleItem>;
+  rule_logic: string;
+  uid?: string;
 }
 
-export interface ICategoryGroup {
-  config: ICategoryItem;
-  groups: {
-    count: number;
-    data: Array<IGroupItem>
-  }
+export interface IGroupRuleItem {
+  key: string;
+  op: EGroupRuleType;
+  value: string|number
+}
+
+// 分组新建、编辑提交到接口参数
+export interface IGroupEditArg {
+  name: string;
+  group_category_id: number;
+  mode: ECategoryType;
+  selector?: {
+    labels_and?: Array<IGroupRuleItem>;
+    labels_or?: Array<IGroupRuleItem>
+  };
+  uid?: string
 }

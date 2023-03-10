@@ -5,7 +5,7 @@
     import ConfirmDialog from './confirm-dialog.vue'
     import ConfigDiff from '../../components/config-diff.vue'
     import { getConfigVersionList } from '../../../../../../api/config'
-    import { IConfigVersionItem } from '../../../../../../types'
+    import { IConfigVersionItem, FilterOp } from '../../../../../../types'
 
     const props = defineProps<{
         bkBizId: string,
@@ -20,6 +20,12 @@
     const isConfirmDialogShow = ref(false)
     const versionListLoading = ref(true)
     const versionList = ref([])
+    const filter = { op: FilterOp.AND, rules: [] }
+    const page = {
+        count: false,
+        start: 0,
+        limit: 200 // @todo 分页条数待确认
+    }
 
     onMounted(() => {
         getVersionList()
@@ -28,7 +34,7 @@
     const getVersionList = async() => {
         try {
             versionListLoading.value = true
-            const res = await getConfigVersionList(props.bkBizId, props.appId)
+            const res = await getConfigVersionList(props.bkBizId, props.appId, filter, page)
             versionList.value = res.data.details
         } catch (e) {
             console.error(e)

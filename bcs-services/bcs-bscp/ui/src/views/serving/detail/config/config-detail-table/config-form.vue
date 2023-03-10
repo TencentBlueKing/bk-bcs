@@ -1,16 +1,16 @@
 <script setup lang="ts">
   import { defineProps, defineEmits, ref, computed, watch } from 'vue'
-  import { cloneDeep } from 'lodash'
   import SHA256 from 'crypto-js/sha256'
   import WordArray from 'crypto-js/lib-typedarrays'
-  import { InfoLine, Upload, FilliscreenLine } from 'bkui-vue/lib/icon'
+  import { TextFill, InfoLine, Upload, Done, FilliscreenLine } from 'bkui-vue/lib/icon'
   import CodeEditor from '../../../../../components/code-editor/index.vue'
-  import { createServingConfigItem, updateServingConfigItem, updateConfigContent } from '../../../../../api/config'
   import { IServingEditParams } from '../../../../../types'
+  import { updateConfigContent } from '../../../../../api/config'
+  import { transFileToObject } from '../../../../../utils/file'
 
   const props = defineProps<{
     config: IServingEditParams,
-    content: string,
+    content: string|File,
     bkBizId: string,
     appId: number,
     submitFn: Function
@@ -19,8 +19,8 @@
   const emit = defineEmits(['submit', 'cancel'])
 
   const localVal = ref({ ...props.config })
-  const content = ref(props.content)
-  const file = ref<File>()
+  const stringContent = ref('')
+  const file = ref()
   const submitPending = ref(false)
   const uploadPending = ref(false)
   const formRef = ref()
@@ -45,16 +45,30 @@
     ],
   }
 
-  const type = computed(() => {
-    return typeof props.config.id === 'number' ? 'edit' : 'new'
-  })  
+  // 传入到bk-upload组件的文件对象
+  const fileList = computed(() => {
+    return file.value ? [transFileToObject(file.value)] : []
+  })
+
+  watch(() => props.content, () => {
+    if (props.config.file_type === 'binary') {
+      console.log(props.content)
+      file.value = props.content as File
+    } else {
+      stringContent.value = props.content as string
+    }
+  }, { immediate: true })
 
   // 选择文件后上传
   const handleFileUpload = (option: { file: File }) => {
-    uploadPending.value = false
     return new Promise(resolve => {
+      uploadPending.value = true
       file.value = option.file
-      uploadContent().then(res => resolve(res))
+      uploadContent().then(res => {
+        console.log('uploaded res: ', res)
+        uploadPending.value = false
+        resolve(res)
+      })
     })
   }
 
@@ -66,10 +80,9 @@
       let sign = await generateSHA256()
       let size = 0
       if (localVal.value.file_type === 'binary') {
-        // @ts-ignore
         size = file.value.size
       } else {
-        size = new Blob([content.value]).size
+        size = new Blob([stringContent.value]).size
         await uploadContent()
       }
       const params = { ...localVal.value, ...{ sign, byte_size: size } }
@@ -88,7 +101,7 @@
   // 上传配置内容
   const uploadContent =  async () => {
     const SHA256Str = await generateSHA256()
-    const data = localVal.value.file_type === 'binary' ? file.value : content.value
+    const data = localVal.value.file_type === 'binary' ? file.value : stringContent.value
     // @ts-ignore
     return updateConfigContent(props.bkBizId, props.appId, data, SHA256Str)
   }
@@ -106,7 +119,7 @@
         }
       })
     } else {
-      return SHA256(content.value).toString()
+      return SHA256(stringContent.value).toString()
     }
   }
 
@@ -139,29 +152,38 @@
         </bk-form-item>
         </template>
         <bk-form-item v-if="localVal.file_type === 'binary'" label="配置内容" :required="true">
-        <bk-upload
+          <bk-upload
+            class="config-uploader"
             url=""
             theme="button"
             tip="支持扩展名：.bin"
             :multiple="false"
-            :limit="1"
+            :files="fileList"
             :size="100"
             :custom-request="handleFileUpload">
-        </bk-upload>
+            <template #file="{ file }">
+              <div class="file-wrapper">
+                <Done class="done-icon"/>
+                <TextFill class="file-icon" />
+                <div v-bk-ellipsis class="name">{{ file.name }}</div>
+                ({{ file.size }})
+              </div>
+            </template>
+          </bk-upload>
         </bk-form-item>
         <bk-form-item v-else label="配置内容" :required="true">
         <div class="code-editor-content">
             <div class="editor-operate-area">
-            <div class="tip">
-                <InfoLine />
-                仅支持大小不超过 100M
+              <div class="tip">
+                  <InfoLine />
+                  仅支持大小不超过 100M
+              </div>
+              <div class="btns">
+                  <Upload style="font-size: 14px; margin-right: 10px;" />
+                  <FilliscreenLine />
+              </div>
             </div>
-            <div class="btns">
-                <Upload style="font-size: 14px; margin-right: 10px;" />
-                <FilliscreenLine />
-            </div>
-            </div>
-            <CodeEditor v-model="content"/>
+            <CodeEditor v-model="stringContent" />
         </div>
         </bk-form-item>
     </bk-form>
@@ -179,6 +201,33 @@
     padding: 22px;
     height: calc(100% - 48px);
     overflow: auto;
+  }
+  .config-uploader {
+    :deep(.bk-upload-list__item) {
+      padding: 0;
+      border: none;
+    }
+    .file-wrapper {
+      display: flex;
+      align-items: center;
+      color: #979ba5;
+      font-size: 12px;
+      .done-icon {
+        font-size: 20px;
+        color: #2dcb56;
+      }
+      .file-icon {
+        margin: 0 6px 0 0;
+      }
+      .name {
+        max-width: 360px;
+        margin-right: 4px;
+        color: #63656e;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        overflow: hidden;
+      }
+    }
   }
   .editor-operate-area {
     display: flex;

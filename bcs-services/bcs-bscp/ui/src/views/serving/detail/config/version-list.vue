@@ -4,7 +4,7 @@
   import { Ellipsis, ArrowsLeft, AngleRight } from 'bkui-vue/lib/icon'
   import InfoBox from "bkui-vue/lib/info-box";
   import { getConfigVersionList } from '../../../../api/config'
-  import { IVersionItem } from '../../../../types'
+  import { IVersionItem, FilterOp } from '../../../../types'
   import VersionLayout from './components/version-layout.vue'
   import ConfigDiff from './components/config-diff.vue';
 
@@ -31,6 +31,12 @@
   const versionList = ref<IVersionItem[]>([])
   const showDiffPanel = ref(false)
   const diffVersion = ref()
+  const filter = { op: FilterOp.AND, rules: [] }
+  const page = {
+    count: false,
+    start: 0,
+    limit: 200 // @todo 分页条数待确认
+  }
 
   const listData = computed(() => {
     return [currentConfig, ...versionList.value]
@@ -48,8 +54,8 @@
   const getVersionList = async() => {
     try {
       versionListLoading.value = true
-      const res = await getConfigVersionList(props.bkBizId, props.appId)
-      versionList.value = res.data.details.reverse()
+      const res = await getConfigVersionList(props.bkBizId, props.appId, filter, page)
+      versionList.value = res.data.details
       handleSelectVersion(currentConfig)
     } catch (e) {
       console.error(e)

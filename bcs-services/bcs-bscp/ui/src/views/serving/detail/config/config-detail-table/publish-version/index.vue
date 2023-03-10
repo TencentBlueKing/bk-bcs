@@ -22,7 +22,7 @@
   const isConfirmDialogShow = ref(false)
   const groups = ref([5])
 
-  const handleSuccess = () => {
+  const handleConfirm = () => {
     InfoBox({
     // @ts-ignore
       infoType: "success",
@@ -31,19 +31,6 @@
       onConfirm () {
         emit('confirm')
         handleClose()
-      }
-    })
-  }
-
-  const handleFail = (message: string = '') => {
-    InfoBox({
-    // @ts-ignore
-      infoType: "danger",
-      title: '版本上线失败',
-      subTitle: message || 'fasdfgdsfgsdfgertewrt',
-      confirmText: '重试',
-      onConfirm () {
-        isConfirmDialogShow.value = true
       }
     })
   }
@@ -89,8 +76,7 @@
             :app-id="props.appId"
             :release-id="props.releaseId"
             :groups="groups"
-            @successed="handleSuccess"
-            @failed="handleFail" />
+            @confirm="handleConfirm"/>
     </section>
 </template>
 <style lang="scss" scoped>

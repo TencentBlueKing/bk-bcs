@@ -1,5 +1,5 @@
 // @ts-nocheck
-import isCrossOriginIFrame from './isCrossOriginIFrame'
+import isCrossOriginIFrame from './is-cross-origin-iframe'
 
 const isCrossOrigin = isCrossOriginIFrame()
 const topWindow: Window = isCrossOrigin ? window : window.top
