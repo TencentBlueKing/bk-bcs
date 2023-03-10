@@ -204,6 +204,7 @@ func (dao *contentDao) validateAttachmentResExist(kit *kit.Kit, am *table.Conten
 	var sqlSentenceRes []string
 	sqlSentenceRes = append(sqlSentenceRes, "WHERE id = ", strconv.Itoa(int(am.ConfigItemID)), " AND biz_id = ", strconv.Itoa(int(am.BizID)), " AND app_id = ", strconv.Itoa(int(am.AppID)))
 	sqlRes := filter.SqlJoint(sqlSentenceRes)
+
 	exist, err = isResExist(kit, dao.orm, dao.sd.ShardingOne(am.BizID), table.ConfigItemTable, sqlRes)
 	if err != nil {
 		return err
