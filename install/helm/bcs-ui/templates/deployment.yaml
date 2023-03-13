@@ -1,0 +1,81 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "bcs-ui.fullname" . }}
+  labels:
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/name: bcs-ui
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.apiserver.replicaCount}}
+  {{- end }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: {{ .Release.Name }}
+      app.kubernetes.io/name: bcs-ui
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        app.kubernetes.io/instance: {{ .Release.Name }}
+        app.kubernetes.io/name: bcs-ui
+        values-hash: "{{ toYaml .Values.config | sha256sum | trunc 63 }}"
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "bcs-ui.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: bcs-ui:latest
+          imagePullPolicy: Never
+          env:
+            - name: POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          command:
+          args:
+            - --config=/etc/bcs-ui/bcs_ui.yaml
+            - --http-address=$(POD_IP):8080
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+          volumeMounts:
+          - name: config
+            mountPath: /etc/bcs-ui
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      volumes:
+      - name: config
+        configMap:
+          name: bcs-ui
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

@@ -4,7 +4,10 @@ base_conf:
   run_env: dev
 
 bcs_conf:
-
+  host: ""
+  token: ""
+  jwt_public_key: ""
+  verify: false
 bcs_env_conf:
 
 web:
@@ -29,4 +32,5 @@ frontend_conf:
     PAAS_HOST: ""
     BK_CC_HOST: ""
     BKMONITOR_HOST: ""
+    BCS_API_HOST: ""
   docs: {}
