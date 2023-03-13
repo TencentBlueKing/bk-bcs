@@ -61,7 +61,7 @@ if (['zh-CN', 'zh-cn', 'cn', 'zhCN', 'zhcn'].indexOf(lang) > -1) {
 }
 
 const store = new Vuex.Store({
-  // 模块
+  // todo 废弃模块
   modules: {
     depot,
     metric,
@@ -99,7 +99,7 @@ const store = new Vuex.Store({
     projectList: [],
     openSideMenu: true,
     isEn: lang === 'en-US', // todo 废弃
-    crdInstanceList: [], // todo 放入对于的module中
+    crdInstanceList: [], // todo 放入对应的module中
   },
   // 公共 getters
   getters: {

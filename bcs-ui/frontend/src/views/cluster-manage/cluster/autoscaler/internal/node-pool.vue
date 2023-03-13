@@ -5,24 +5,20 @@
         <bcs-steps style="max-width: 360px" :steps="steps" :cur-step="curStep"></bcs-steps>
       </HeaderNav>
     </template>
-    <div class="node-pool-content" v-bkloading="{ isLoading }">
-      <div class="mb15 title">
-        {{curStepItem.title}}
-      </div>
-      <div class="content-wrapper" v-if="!isLoading">
-        <keep-alive>
-          <component
-            :is="stepComMap[curStep]"
-            :default-values="defaultValues"
-            :node-pool-info="nodePoolInfo"
-            :schema="schema"
-            :cluster="curCluster"
-            :is-edit="isEdit"
-            @next="handleNextStep"
-            @pre="handlePreStep"
-          ></component>
-        </keep-alive>
-      </div>
+    <div v-bkloading="{ isLoading }" class="node-pool">
+      <keep-alive>
+        <component
+          :is="stepComMap[curStep]"
+          :default-values="defaultValues"
+          :schema="schema"
+          :cluster="curCluster"
+          :save-loading="saveLoading"
+          v-if="!isLoading"
+          @next="handleNextStep"
+          @pre="handlePreStep"
+          @confirm="handleConfirm"
+        ></component>
+      </keep-alive>
     </div>
   </BcsContent>
 </template>
@@ -35,7 +31,9 @@ import $i18n from '@/i18n/i18n-setup';
 import NodePoolInfo from './node-pool-info.vue';
 import NodeConfig from './node-config.vue';
 import $store from '@/store/index';
-import Schema from '@/views/cluster-manage/cluster/cluster-autoscaler/resolve-schema';
+import Schema from '@/views/cluster-manage/cluster/autoscaler/resolve-schema';
+import { mergeDeep } from '@/common/util';
+import $router from '@/router';
 
 export default defineComponent({
   components: {
@@ -50,17 +48,12 @@ export default defineComponent({
       default: '',
       required: true,
     },
-    nodeGroupID: {
-      type: String,
-      default: '',
-    },
   },
   setup(props, ctx) {
-    const { clusterId, nodeGroupID } = toRefs(props);
+    const { clusterId } = toRefs(props);
     const { clusterList } = useClusterList(ctx);
     const curCluster = computed(() => ($store.state as any).cluster.clusterList
       ?.find(item => item.clusterID === clusterId.value) || {});
-    const isEdit = computed(() => !!nodeGroupID.value);
     const navList = computed(() => {
       const nav: any[] = [
         {
@@ -78,52 +71,36 @@ export default defineComponent({
             },
           },
         },
-      ];
-      if (isEdit.value) {
-        nav.push(...[
-          {
-            title: `${defaultValues.value?.nodeGroupID} (${defaultValues.value?.name}) `,
-            link: {
-              name: 'nodePoolDetail',
-              params: {
-                clusterId: props.clusterId,
-                nodeGroupID: props.nodeGroupID,
-              },
-            },
-          },
-          {
-            title: isEdit.value ? $i18n.t('编辑节点池') : $i18n.t('新建节点池'),
-            link: null,
-          },
-        ]);
-      } else {
-        nav.push({
-          title: $i18n.t('新建节点池'),
+        {
+          title: $i18n.t('新建节点规格'),
           link: null,
-        });
-      }
+        },
+      ];
       return nav;
     });
     const steps = ref([
       {
-        title: $i18n.t('节点池信息'),
+        title: $i18n.t('节点配置'),
         icon: 1,
       },
       {
-        title: $i18n.t('节点配置'),
+        title: $i18n.t('初始化配置'),
         icon: 2,
       },
     ]);
     const curStep = ref(1);
-    const curStepItem = computed(() => steps.value.find((_, index) => index + 1 === curStep.value) || {});
+    const curStepItem = computed<Record<string, any>>(() => steps.value
+      .find((_, index) => index + 1 === curStep.value) || {});
     const stepComMap = {
-      1: 'NodePoolInfo',
-      2: 'NodeConfig',
+      1: 'NodeConfig',
+      2: 'NodePoolInfo',
     };
-    const nodePoolInfo = ref({});
+    const nodePoolData = ref<Record<string, any>>({});
     const handleNextStep = (data) => {
-      nodePoolInfo.value = data;
-      curStep.value = curStep.value + 1;
+      nodePoolData.value = mergeDeep(nodePoolData.value, data);
+      if (curStep.value + 1 <= steps.value.length) {
+        curStep.value = curStep.value + 1;
+      }
     };
     const handlePreStep = () => {
       curStep.value = curStep.value - 1;
@@ -135,35 +112,49 @@ export default defineComponent({
     const schema = ref({});
     const handleGetCloudDefaultValues = async () => {
       const data = await $store.dispatch('clustermanager/resourceSchema', {
-        $cloudID: curCluster.value.provider,
+        $cloudID: 'selfProvisionCloud', // todo ieod暂时写死
         $name: 'nodegroup',
       });
       schema.value = data?.schema || {};
     };
 
-    // 获取详情
-    const handleGetNodeGroupDetail = async () => {
-      if (!isEdit.value) return;
-
-      const data = await $store.dispatch('clustermanager/nodeGroupDetail', {
-        $nodeGroupID: nodeGroupID.value,
-      });
-      return data;
+    // 创建节点规格
+    const user = computed(() => $store.state.user);
+    const saveLoading = ref(false);
+    const handleConfirm = async () => {
+      saveLoading.value = true;
+      await handleCreateNodePool();
+      saveLoading.value = false;
     };
+    const handleCreateNodePool = async () => {
+      const data = {
+        ...nodePoolData.value,
+        provider: 'selfProvisionCloud',
+        clusterID: curCluster.value.clusterID,
+        region: curCluster.value.region,
+        creator: user.value.username,
+      };
+      console.log(data);
+      const result = await $store.dispatch('clustermanager/createNodeGroup', data);
+      if (result) {
+        $router.push({
+          name: 'clusterDetail',
+          query: {
+            active: 'AutoScaler',
+          },
+        });
+      }
+    };
+
     onMounted(async () => {
       isLoading.value = true;
       await handleGetCloudDefaultValues();
-      if (isEdit.value) {
-        defaultValues.value = await handleGetNodeGroupDetail();
-      } else {
-        defaultValues.value = Schema.getSchemaDefaultValue(schema.value);
-      }
-
+      defaultValues.value = Schema.getSchemaDefaultValue(schema.value);
       isLoading.value = false;
     });
     return {
+      saveLoading,
       curCluster,
-      isEdit,
       isLoading,
       schema,
       defaultValues,
@@ -172,23 +163,16 @@ export default defineComponent({
       curStep,
       curStepItem,
       stepComMap,
-      nodePoolInfo,
       handleNextStep,
       handlePreStep,
+      handleConfirm,
     };
   },
 });
 </script>
 <style lang="postcss" scoped>
-.node-pool-content {
-    background: #fff;
-    border: 1px solid #DDE4EB;
-    border-radius: 2px;
-    padding: 16px 32px 58px 32px;
-    .title {
-        font-size: 14px;
-        font-weight: Bold;
-        line-height: 22px;
-    }
+.node-pool {
+  margin: -24px;
+  height: calc(100vh - 104px);
 }
 </style>

@@ -3996,4 +3996,8 @@ export default {
   '输入名称、IP搜索': [
     'Enter name, IP search',
   ],
+  未启用容器服务: [
+    'Unregistry BCS',
+  ],
+  '确定使用节点模板 {name}': ['Make sure to use node template {name}'],
 };

@@ -22,7 +22,7 @@
           <template slot-scope="{ row }">
             <span>
               <bk-popover placement="top" v-if="$chainable(row.spec, 'strategy.type') === 'RollingUpdate'">
-                <span>{{ $t('滚动升级') }}</span>
+                <span class="border-bottom-tips">{{ $t('滚动升级') }}</span>
                 <div slot="content" v-if="$chainable(row.spec, 'strategy.rollingUpdate.maxSurge')">
                   <p>
                     {{ $t('最大调度Pod数量（maxSurge）: {num}', {
@@ -123,3 +123,10 @@ export default defineComponent({
   components: { BaseLayout, StatusIcon, LoadingIcon },
 });
 </script>
+<style lang="postcss" scoped>
+>>> .border-bottom-tips {
+  display: inline-block;
+  line-height: 18px;
+  border-bottom: 1px dashed #979ba5;
+}
+</style>

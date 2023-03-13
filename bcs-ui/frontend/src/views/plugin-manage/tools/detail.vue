@@ -161,6 +161,7 @@
 import { catchErrorHandler } from '@/common/util';
 import MonacoEditor from '@/components/monaco-editor/editor.vue';
 import Header from '@/components/layout/Header.vue';
+import useHelm from '@/views/deploy-manage/helm/use-helm';
 
 export default {
   components: {
@@ -242,9 +243,8 @@ export default {
       }
     },
     async fetchChartVersionsList() {
-      const { projectId } = this;
-      const { chartName } = this;
-      const res = await this.$store.dispatch('crdcontroller/getChartVersionsList', { projectId, chartName });
+      const { handleGetRepoChartVersions } = useHelm();
+      const res = await handleGetRepoChartVersions('public-repo', this.chartName);
       this.chartVersionsList = res.data;
     },
 
@@ -294,14 +294,13 @@ export default {
       this.updateInstanceLoading = true;
       try {
         const curVersion = this.chartVersionsList.find(i => i.version === this.curApp.chart_version);
-        const chartUrl = curVersion?.urls[0];
         const clusterId = this.curClusterId;
         const crdId = this.curApp.tool_info.id;
         const result = await this.$store.dispatch('crdcontroller/clusterToolsUpgrade', {
           $clusterId: clusterId,
           $toolId: crdId,
           values: this.editorOptions.content || '',
-          chart_url: chartUrl || '',
+          chart_url: curVersion.url || '',
         });
         if (result) {
           this.$bkMessage({

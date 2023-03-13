@@ -13,7 +13,7 @@
         :id="option.projectCode"
         :name="option.name">
         <span
-          class="flex"
+          class="flex items-center"
           v-bk-tooltips="{
             content: option.businessID
               ? `${$t('项目名称')}: ${option.name}<br/>${$t('业务ID')}: ${option.businessID}`

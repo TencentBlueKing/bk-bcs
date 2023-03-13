@@ -2,7 +2,7 @@
   <bcs-popover
     theme="light navigation-message"
     :offset="offset"
-    placement="bottom"
+    :placement="placement"
     :arrow="false"
     :trigger="trigger"
     :tippy-options="{ boundary: 'window' }">

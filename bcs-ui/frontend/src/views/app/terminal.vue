@@ -40,7 +40,7 @@
 import { useCluster, useProject } from '@/composables/use-app';
 import { computed, defineComponent, ref } from '@vue/composition-api';
 import FixedButton from '../resource-view/resource-update/fixed-button.vue';
-import PopoverSelector from './popover-selector.vue';
+import PopoverSelector from '../../components/popover-selector.vue';
 
 export default defineComponent({
   name: 'BcsTerminal',
