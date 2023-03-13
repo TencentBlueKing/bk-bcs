@@ -115,7 +115,7 @@ func (g *GetVersionDetailAction) getDetail() error {
 		}
 	}
 
-	r := origin.Transfer2Proto()
+	r := origin.Transfer2Proto(repository.RepoURL)
 	r.Readme = common.GetStringP(readmeFile)
 	r.ValuesFile = valuesFile
 	g.setResp(common.ErrHelmManagerSuccess, "ok", r)
@@ -268,7 +268,7 @@ func (g *GetVersionDetailV1Action) getDetail() (*helmmanager.ChartDetail, error)
 		}
 	}
 
-	r := origin.Transfer2Proto()
+	r := origin.Transfer2Proto(repository.RepoURL)
 	r.Readme = common.GetStringP(readmeFile)
 	r.ValuesFile = valuesFile
 	blog.Infof("get chart version detail successfully, "+

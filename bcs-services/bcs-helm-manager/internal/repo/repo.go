@@ -18,8 +18,10 @@ import (
 	"bytes"
 	"compress/gzip"
 	"context"
+	"fmt"
 	"io"
 	"path"
+	"strings"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
 	helmmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/proto/bcs-helm-manager"
@@ -220,7 +222,8 @@ type ChartVersion struct {
 }
 
 // Transfer2Proto transfer the data into protobuf struct
-func (cv *ChartVersion) Transfer2Proto() *helmmanager.ChartVersion {
+func (cv *ChartVersion) Transfer2Proto(repoURL string) *helmmanager.ChartVersion {
+	chartURL := fmt.Sprintf("%s/charts/%s-%s.tgz", strings.TrimRight(repoURL, "/"), cv.Name, cv.Version)
 	return &helmmanager.ChartVersion{
 		Name:        common.GetStringP(cv.Name),
 		Version:     common.GetStringP(cv.Version),
@@ -230,6 +233,7 @@ func (cv *ChartVersion) Transfer2Proto() *helmmanager.ChartVersion {
 		UpdateBy:    common.GetStringP(cv.UpdateBy),
 		CreateTime:  common.GetStringP(cv.CreateTime),
 		UpdateTime:  common.GetStringP(cv.UpdateTime),
+		Url:         common.GetStringP(chartURL),
 	}
 }
 
@@ -242,11 +246,13 @@ type ChartDetail struct {
 }
 
 // Transfer2Proto transfer the data into protobuf struct
-func (cd *ChartDetail) Transfer2Proto() *helmmanager.ChartDetail {
+func (cd *ChartDetail) Transfer2Proto(repoURL string) *helmmanager.ChartDetail {
+	chartURL := fmt.Sprintf("%s/charts/%s-%s.tgz", strings.TrimRight(repoURL, "/"), cd.Name, cd.Version)
 	r := &helmmanager.ChartDetail{
 		Name:     common.GetStringP(cd.Name),
 		Version:  common.GetStringP(cd.Version),
 		Contents: make(map[string]*helmmanager.FileContent),
+		Url:      &chartURL,
 	}
 
 	for k, v := range cd.Contents {

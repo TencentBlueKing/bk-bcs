@@ -1906,6 +1906,11 @@
           "additionalProperties": {
             "$ref": "#/definitions/helmmanagerFileContent"
           }
+        },
+        "url": {
+          "type": "string",
+          "description": "chart url",
+          "title": "url"
         }
       }
     },
@@ -1982,6 +1987,11 @@
           "type": "string",
           "description": "更新时间",
           "title": "updateTime"
+        },
+        "url": {
+          "type": "string",
+          "description": "chart url",
+          "title": "url"
         }
       }
     },

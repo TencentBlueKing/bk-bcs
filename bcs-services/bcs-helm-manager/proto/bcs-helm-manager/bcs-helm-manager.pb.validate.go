@@ -2669,6 +2669,8 @@ func (m *ChartVersion) validate(all bool) error {
 
 	// no validation rules for UpdateTime
 
+	// no validation rules for Url
+
 	if len(errors) > 0 {
 		return ChartVersionMultiError(errors)
 	}
@@ -3106,6 +3108,8 @@ func (m *ChartDetail) validate(all bool) error {
 
 		}
 	}
+
+	// no validation rules for Url
 
 	if len(errors) > 0 {
 		return ChartDetailMultiError(errors)

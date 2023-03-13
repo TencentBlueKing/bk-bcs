@@ -1000,6 +1000,10 @@ message ChartVersion {
         title: "updateTime",
         description: "更新时间"
     }];
+    optional string url = 9[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "url",
+        description: "chart url"
+    }];
 }
 
 message GetVersionDetailReq {
@@ -1082,6 +1086,10 @@ message ChartDetail {
     map<string, FileContent> contents = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "contents",
         description: "chart包所含文件"
+    }];
+    optional string url = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "url",
+        description: "chart url"
     }];
 }
 

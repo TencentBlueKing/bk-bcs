@@ -101,7 +101,7 @@ func (l *ListChartVersionAction) list() error {
 
 	r := make([]*helmmanager.ChartVersion, 0, len(origin.Versions))
 	for _, item := range origin.Versions {
-		chart := item.Transfer2Proto()
+		chart := item.Transfer2Proto(repository.RepoURL)
 		r = append(r, chart)
 	}
 	l.setResp(common.ErrHelmManagerSuccess, "ok", &helmmanager.ChartVersionListData{
@@ -207,7 +207,7 @@ func (l *ListChartVersionV1Action) list() error {
 
 	r := make([]*helmmanager.ChartVersion, 0, len(origin.Versions))
 	for _, item := range origin.Versions {
-		chart := item.Transfer2Proto()
+		chart := item.Transfer2Proto(repository.RepoURL)
 		r = append(r, chart)
 	}
 	l.setResp(common.ErrHelmManagerSuccess, "ok", &helmmanager.ChartVersionListData{
