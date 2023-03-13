@@ -16,6 +16,7 @@ package helm
 import (
 	"context"
 	"fmt"
+	"github.com/avast/retry-go"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -166,20 +167,30 @@ func (h *HelmInstaller) Install(clusterID, values string) error {
 		Values:      []string{values},
 		Args:        install.DefaultArgsFlag,
 	}
-	resp, err := h.client.InstallReleaseV1(context.Background(), req)
+
+	resp := &helmmanager.InstallReleaseV1Resp{}
+	err = retry.Do(func() error {
+		resp, err = h.client.InstallReleaseV1(context.Background(), req)
+		if err != nil {
+			blog.Errorf("[HelmInstaller] InstallRelease failed, err: %s", err.Error())
+			return err
+		}
+		if resp == nil {
+			blog.Errorf("[HelmInstaller] InstallRelease failed, resp is empty")
+			return fmt.Errorf("InstallRelease failed, resp is empty")
+		}
+
+		if *resp.Code != 0 || !*resp.Result {
+			blog.Errorf("[HelmInstaller] InstallRelease failed, code: %d, message: %s", *resp.Code, *resp.Message)
+			return fmt.Errorf("InstallRelease failed, code: %d, message: %s", *resp.Code, *resp.Message)
+		}
+
+		return nil
+	}, retry.Attempts(retryCount), retry.Delay(defaultTimeOut))
 	if err != nil {
-		blog.Errorf("[HelmInstaller] InstallRelease failed, err: %s", err.Error())
-		return err
-	}
-	if resp == nil {
-		blog.Errorf("[HelmInstaller] InstallRelease failed, resp is empty")
-		return fmt.Errorf("InstallRelease failed, resp is empty")
+		return fmt.Errorf("call api HelmInstaller InstallRelease failed: %v, resp: %s", err, utils.ToJSONString(resp))
 	}
 
-	if *resp.Code != 0 || !*resp.Result {
-		blog.Errorf("[HelmInstaller] InstallRelease failed, code: %d, message: %s", *resp.Code, *resp.Message)
-		return fmt.Errorf("InstallRelease failed, code: %d, message: %s", *resp.Code, *resp.Message)
-	}
 	return nil
 }
 

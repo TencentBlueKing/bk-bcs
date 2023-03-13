@@ -35,7 +35,8 @@ var (
 )
 
 const (
-	defaultTimeOut = time.Second * 60
+	defaultTimeOut = time.Second * 10
+	retryCount     = 10
 )
 
 // helmClient helm-manager client
@@ -153,4 +154,3 @@ func (hm *HelmClient) Stop() {
 	}
 	hm.cancel()
 }
-

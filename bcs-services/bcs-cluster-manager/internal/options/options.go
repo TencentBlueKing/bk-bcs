@@ -210,6 +210,7 @@ type BcsWatch struct {
 type ComponentDeploy struct {
 	AutoScaler    AutoScaler `json:"autoScaler"`
 	Watch         BcsWatch   `json:"watch"`
+	Registry      string     `json:"registry"`
 	BCSAPIGateway string     `json:"bcsApiGateway"`
 	Token         string     `json:"token"`
 	DeployService string     `json:"deployService"`

@@ -30,7 +30,7 @@ type ComponentValues interface {
 
 // InstallOptions options for installer
 type InstallOptions struct {
-	InstallType install.InstallerType
+	InstallType string
 	ProjectID   string
 	// component dependent paras
 	// chartName
@@ -50,11 +50,11 @@ func GetComponentInstaller(opts InstallOptions) (install.Installer, error) {
 		err       error
 	)
 	switch opts.InstallType {
-	case bkapi.BcsApp:
+	case bkapi.BcsApp.String():
 		client, debug := GetBCSAppClient()
 		installer = bkapi.NewBKAPIInstaller(opts.ProjectID, opts.ChartName, opts.ReleaseName, opts.ReleaseNamespace,
 			opts.IsPublicRepo, client, debug)
-	case helm.Helm:
+	case helm.Helm.String():
 		installer, err = helm.NewHelmInstaller(helm.HelmOptions{
 			ProjectID:   opts.ProjectID,
 			Namespace:   opts.ReleaseNamespace,
@@ -63,7 +63,7 @@ func GetComponentInstaller(opts InstallOptions) (install.Installer, error) {
 			IsPublic:    opts.IsPublicRepo,
 		}, helm.GetHelmManagerClient(), false)
 	default:
-		err = fmt.Errorf("installer not support type[%s]", opts.InstallType.String())
+		err = fmt.Errorf("installer not support type[%s]", opts.InstallType)
 	}
 	if err != nil {
 		return nil, err
