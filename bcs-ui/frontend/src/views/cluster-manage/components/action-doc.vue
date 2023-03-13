@@ -34,7 +34,7 @@
 <script lang="ts">
 import { defineComponent, onMounted, ref } from '@vue/composition-api';
 import postActionDescMd from '../node-template/postaction-desc.md';
-import autoscalerScriptsMd from '../cluster/cluster-autoscaler/internal/autoscaler-scripts.md';
+import autoscalerScriptsMd from '../cluster/autoscaler/internal/autoscaler-scripts.md';
 import { copyText } from '@/common/util';
 import BcsMd from '@/components/bcs-md/index.vue';
 import $i18n from '@/i18n/i18n-setup';

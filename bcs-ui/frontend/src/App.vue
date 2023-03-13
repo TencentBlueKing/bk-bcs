@@ -1,5 +1,5 @@
 <template>
-  <div id="app">
+  <div id="app" v-bkloading="{ isLoading }">
     <Navigation>
       <RouterView v-if="!!projectList.length" />
       <ProjectGuide v-else-if="!isLoading" />

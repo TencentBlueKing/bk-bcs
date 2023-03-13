@@ -335,7 +335,7 @@ import $i18n from '@/i18n/i18n-setup';
 import $store from '@/store/index';
 import usePage from '@/composables/use-page';
 import { mergeDeep } from '@/common/util';
-import Schema from '@/views/cluster-manage/cluster/cluster-autoscaler/resolve-schema';
+import Schema from '@/views/cluster-manage/cluster/autoscaler/resolve-schema';
 
 export default defineComponent({
   props: {

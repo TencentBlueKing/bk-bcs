@@ -52,11 +52,11 @@
 import { computed, defineComponent, ref, toRefs } from '@vue/composition-api';
 import ContentHeader from '@/components/layout/Header.vue';
 import node from '../node-list/node.vue';
-import overview from '@/views/cluster-manage/cluster/cluster-overview/overview.vue';
-import info from '@/views/cluster-manage/cluster/cluster-info/info.vue';
+import overview from '@/views/cluster-manage/cluster/overview/overview.vue';
+import info from '@/views/cluster-manage/cluster/info/info.vue';
 import $i18n from '@/i18n/i18n-setup';
-import AutoScaler from './cluster-autoscaler/tencent/autoscaler.vue';
-import InternalAutoScaler from './cluster-autoscaler/internal/autoscaler.vue';
+import AutoScaler from './autoscaler/tencent/autoscaler.vue';
+import InternalAutoScaler from './autoscaler/internal/autoscaler.vue';
 import { useCluster, useProject } from '@/composables/use-app';
 
 export default defineComponent({

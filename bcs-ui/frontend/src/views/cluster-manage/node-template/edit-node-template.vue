@@ -323,7 +323,7 @@
 </template>
 <script lang="ts">
 import { defineComponent, ref, computed, onMounted, watch } from '@vue/composition-api';
-import FormGroup from '@/views/cluster-manage/cluster/cluster-create/form-group.vue';
+import FormGroup from '@/views/cluster-manage/cluster/create/form-group.vue';
 import KeyValue from '@/views/cluster-manage/components/key-value.vue';
 import Taints from '@/views/cluster-manage/components/new-taints.vue';
 import $store from '@/store/index';
