@@ -122,14 +122,14 @@ func (ch *chartHandler) listHelmChartVersion(ctx context.Context, option repo.Li
 func (ch *chartHandler) getListHelmChartVersionURI(option repo.ListOption) string {
 	return chartVersionListHelmURI + "/" + ch.projectID + "/" + ch.repository + "/" +
 		"?packageKey=helm://" + ch.chartName +
-		"&pageNumber=" + strconv.FormatInt(option.Page, 10) +
+		"&sortProperty=lastModifiedDate&pageNumber=" + strconv.FormatInt(option.Page, 10) +
 		"&pageSize=" + strconv.FormatInt(option.Size, 10)
 }
 
 func (ch *chartHandler) getListOCIChartVersionURI(option repo.ListOption) string {
 	return chartVersionListHelmURI + "/" + ch.projectID + "/" + ch.repository + "/" +
 		"?packageKey=oci://" + ch.chartName +
-		"&pageNumber=" + strconv.FormatInt(option.Page, 10) +
+		"&sortProperty=lastModifiedDate&pageNumber=" + strconv.FormatInt(option.Page, 10) +
 		"&pageSize=" + strconv.FormatInt(option.Size, 10)
 }
 
