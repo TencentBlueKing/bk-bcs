@@ -18,6 +18,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/clusterops"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -25,8 +26,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/types"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/tools/clientcmd"
 )
 
 // ImportClusterNodesTask call gkeInterface or kubeConfig import cluster nodes
@@ -66,7 +65,7 @@ func ImportClusterNodesTask(taskID string, stepName string) error {
 	cloudprovider.GetStorageModel().UpdateCluster(context.Background(), basicInfo.Cluster)
 
 	// update step
-	if err = state.UpdateStepSucc(start, stepName); err != nil {
+	if err := state.UpdateStepSucc(start, stepName); err != nil {
 		blog.Errorf("ImportClusterNodesTask[%s] task %s %s update to storage fatal", taskID, taskID, stepName)
 		return err
 	}
@@ -134,22 +133,7 @@ func importClusterCredential(ctx context.Context, data *cloudprovider.CloudDepen
 }
 
 func importClusterInstances(data *cloudprovider.CloudDependBasicInfo) error {
-	kubeConfigByte, err := base64.StdEncoding.DecodeString(data.Cluster.KubeConfig)
-	if err != nil {
-		return fmt.Errorf("decode kube config failed: %v", err)
-	}
-
-	config, err := clientcmd.RESTConfigFromKubeConfig(kubeConfigByte)
-	if err != nil {
-		return fmt.Errorf("build rest config failed: %v", err)
-	}
-
-	config.Burst = 200
-	config.QPS = 100
-	kubeCli, err := kubernetes.NewForConfig(config)
-	if err != nil {
-		return fmt.Errorf("build kube client failed: %s", err)
-	}
+	kubeCli, err := clusterops.NewKubeClient(data.Cluster.KubeConfig)
 
 	nodes, err := kubeCli.CoreV1().Nodes().List(context.Background(), metav1.ListOptions{})
 	if err != nil {

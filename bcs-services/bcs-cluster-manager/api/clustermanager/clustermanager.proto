@@ -2683,6 +2683,10 @@ message AutoScalingGroup {
     title: "timeRanges",
     description: "定时自动扩容集群节点配置信息"
   }];
+  bool autoUpgrade = 15[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "autoUpgrade",
+    description: "开启自动升级GKE版本功能,如果集群为发布版本,则强制开启"
+  }];
 }
 
 message TimeRange {
@@ -3162,6 +3166,10 @@ message NodeTemplate {
   ModuleInfo module = 25 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "module",
     description: "节点池节点上下架时当前集群业务下转移模块信息"
+  }];
+  uint32 maxPodsPerNode = 26[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "maxPodsPerNode",
+    description: "每个节点的最大Pod数量"
   }];
 }
 
