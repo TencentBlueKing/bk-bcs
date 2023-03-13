@@ -43,7 +43,7 @@
           {{ row.account.desc }}
         </template>
       </bcs-table-column>
-      <bcs-table-column label="SecretID">
+      <bcs-table-column label="SecretID" show-overflow-tooltip>
         <template #default="{ row }">
           {{ row.account.account.secretID }}
         </template>
@@ -155,6 +155,13 @@ export default defineComponent({
           message: $i18n.t('必填项'),
           trigger: 'blur',
         },
+        {
+          message: $i18n.t('仅支持英文、数字和\'-\''),
+          trigger: 'blur',
+          validator(val) {
+            return /^[0-9a-zA-Z-]+$/g.test(val);
+          },
+        },
       ],
       'account.secretID': [
         {
@@ -163,10 +170,10 @@ export default defineComponent({
           trigger: 'blur',
         },
         {
-          message: $i18n.t('不支持中文字符'),
+          message: $i18n.t('仅支持英文、数字和\'-\''),
           trigger: 'blur',
           validator(val) {
-            return !(/[\u4E00-\u9FA5]/g.test(val));
+            return /^[0-9a-zA-Z-]+$/g.test(val);
           },
         },
       ],
@@ -177,10 +184,10 @@ export default defineComponent({
           trigger: 'blur',
         },
         {
-          message: $i18n.t('不支持中文字符'),
+          message: $i18n.t('仅支持英文、数字和\'-\''),
           trigger: 'blur',
           validator(val) {
-            return !(/[\u4E00-\u9FA5]/g.test(val));
+            return /^[0-9a-zA-Z-]+$/g.test(val);
           },
         },
       ],

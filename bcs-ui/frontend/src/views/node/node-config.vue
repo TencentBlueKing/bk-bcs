@@ -634,6 +634,14 @@ export default defineComponent({
       const validateDataDiskMountTarget = new Set(mountTargetList).size === mountTargetList.length;
       if (!result || !validateDataDiskSize || !validateDataDiskMountTarget) return;
 
+      // eslint-disable-next-line max-len
+      nodePoolConfig.value.launchTemplate.systemDisk.diskSize = String(nodePoolConfig.value.launchTemplate.systemDisk.diskSize);
+      nodePoolConfig.value.launchTemplate.dataDisks = nodePoolConfig.value.launchTemplate.dataDisks.map(item => ({
+        ...item,
+        diskSize: String(item.diskSize),
+      }));
+      // eslint-disable-next-line max-len
+      nodePoolConfig.value.launchTemplate.internetAccess.internetMaxBandwidth = String(nodePoolConfig.value.launchTemplate.internetAccess.internetMaxBandwidth);
       // 数据盘后端存了两个地方
       nodePoolConfig.value.nodeTemplate.dataDisks = nodePoolConfig.value.launchTemplate.dataDisks;
 

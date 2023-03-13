@@ -58,6 +58,7 @@ export default function usePageConf(data: Ref<any[]>, options: IOptions = {
   const pagination = computed<IPagination>(() => ({
     ...pageConf,
     count: data.value.length,
+    showTotalCount: true,
   }));
 
   const handleResetPage = () => {

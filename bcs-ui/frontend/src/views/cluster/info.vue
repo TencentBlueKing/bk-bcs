@@ -16,24 +16,29 @@
                 </div>
                 <div class="right">
                   <template v-if="!isClusterNameEdit">
-                    {{clusterInfo.clusterName || '--'}}
-                    <a
-                      href="javascript:void(0);"
-                      class="bk-text-button ml10"
-                      v-authority="{
-                        clickable: webAnnotations.perms[clusterInfo.clusterID]
-                          && webAnnotations.perms[clusterInfo.clusterID].cluster_manage,
-                        actionId: 'cluster_manage',
-                        resourceName: clusterInfo.clusterName,
-                        disablePerms: true,
-                        permCtx: {
-                          project_id: projectId,
-                          cluster_id: clusterInfo.clusterID
-                        }
-                      }"
-                      @click="handleEditClusterName">
-                      <span class="bcs-icon bcs-icon-edit"></span>
-                    </a>
+                    <div class="flex">
+                      <span
+                        class="max-w-[400px] bcs-ellipsis"
+                        :title="clusterInfo.clusterName">
+                        {{clusterInfo.clusterName || '--'}}
+                      </span>
+                      <span
+                        class="bk-text-button ml10"
+                        v-authority="{
+                          clickable: webAnnotations.perms[clusterInfo.clusterID]
+                            && webAnnotations.perms[clusterInfo.clusterID].cluster_manage,
+                          actionId: 'cluster_manage',
+                          resourceName: clusterInfo.clusterName,
+                          disablePerms: true,
+                          permCtx: {
+                            project_id: projectId,
+                            cluster_id: clusterInfo.clusterID
+                          }
+                        }"
+                        @click="handleEditClusterName">
+                        <span class="bcs-icon bcs-icon-edit"></span>
+                      </span>
+                    </div>
                   </template>
                   <template v-else>
                     <div class="bk-form bk-name-form">
@@ -137,24 +142,26 @@
                 </div>
                 <div class="right">
                   <template v-if="!isClusterDescEdit">
-                    {{clusterInfo.description || '--'}}
-                    <a
-                      href="javascript:void(0);"
-                      class="bk-text-button ml10"
-                      v-authority="{
-                        clickable: webAnnotations.perms[clusterInfo.clusterID]
-                          && webAnnotations.perms[clusterInfo.clusterID].cluster_manage,
-                        actionId: 'cluster_manage',
-                        resourceName: clusterInfo.clusterName,
-                        disablePerms: true,
-                        permCtx: {
-                          project_id: projectId,
-                          cluster_id: clusterInfo.clusterID
-                        }
-                      }"
-                      @click="handleEditClusterDesc">
-                      <span class="bcs-icon bcs-icon-edit"></span>
-                    </a>
+                    <span class="flex">
+                      <span class="max-w-[400px] bcs-ellipsis">{{clusterInfo.description || '--'}}</span>
+                      <span
+                        href="javascript:void(0);"
+                        class="bk-text-button ml10"
+                        v-authority="{
+                          clickable: webAnnotations.perms[clusterInfo.clusterID]
+                            && webAnnotations.perms[clusterInfo.clusterID].cluster_manage,
+                          actionId: 'cluster_manage',
+                          resourceName: clusterInfo.clusterName,
+                          disablePerms: true,
+                          permCtx: {
+                            project_id: projectId,
+                            cluster_id: clusterInfo.clusterID
+                          }
+                        }"
+                        @click="handleEditClusterDesc">
+                        <span class="bcs-icon bcs-icon-edit"></span>
+                      </span>
+                    </span>
                   </template>
                   <template v-else>
                     <div class="bk-form bk-desc-form">
@@ -519,7 +526,7 @@ export default {
 
     // 更新集群名称信息
     async updateClusterName() {
-      const clusterName = this.$refs.clusterNameRef?.curValue;
+      const clusterName = this.$refs.clusterNameRef?.curValue?.trim();
       if (!clusterName) return;
 
       const result = await this.handleUpdateCluster({

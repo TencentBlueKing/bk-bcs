@@ -97,21 +97,12 @@
             <!-- <li>{{$t('导出')}}</li> -->
           </ul>
         </bcs-dropdown-menu>
-        <bcs-dropdown-menu ref="copyDropdownRef">
-          <div class="dropdown-trigger-btn" slot="dropdown-trigger">
+        <BcsCascade :list="copyList" @click="handleCopy">
+          <div class="dropdown-trigger-btn">
             <span>{{$t('复制')}}</span>
             <i class="bk-icon icon-angle-down"></i>
           </div>
-          <ul class="bk-dropdown-list" slot="dropdown-content">
-            <li
-              :disabled="item.disabled"
-              v-for="item in ipCopyList" :key="item.id"
-              @click="handleCopy(item)"
-            >
-              {{item.name}}
-            </li>
-          </ul>
-        </bcs-dropdown-menu>
+        </BcsCascade>
       </div>
       <div class="right">
         <ClusterSelect
@@ -207,7 +198,7 @@
         <bcs-table-column label="IPv4" width="120" prop="innerIP" sortable></bcs-table-column>
         <bcs-table-column
           label="IPv6"
-          props="innerIPv6"
+          prop="innerIPv6"
           min-width="200"
           sortable
           show-overflow-tooltip>
@@ -380,7 +371,7 @@
             ></RingCell>
           </template>
         </bcs-table-column>
-        <bcs-table-column :label="$t('操作')" width="160">
+        <bcs-table-column :label="$t('操作')" :resizable="false" width="160">
           <template #default="{ row }">
             <div
               class="node-operate-wrapper"
@@ -458,7 +449,7 @@
             </div>
           </template>
         </bcs-table-column>
-        <bcs-table-column type="setting">
+        <bcs-table-column type="setting" :resizable="false">
           <bcs-table-setting-content
             :fields="tableSetting.fields"
             :selected="tableSetting.selectedFields"
@@ -587,6 +578,7 @@ import { TranslateResult } from 'vue-i18n';
 import IpSelector from '@/components/ip-selector/selector-dialog.vue';
 import useDefaultClusterId from './use-default-clusterId';
 import TaskList from './task-list.vue';
+import BcsCascade from '@/components/cascade.vue';
 
 export default defineComponent({
   name: 'NodeList',
@@ -602,6 +594,7 @@ export default defineComponent({
     ApplyHost,
     IpSelector,
     TaskList,
+    BcsCascade,
   },
   props: {
     selectedFields: {
@@ -847,38 +840,51 @@ export default defineComponent({
       });
     };
 
-    const copyDropdownRef = ref<any>(null);
-    const ipCopyList = computed(() => [
+    // IP复制
+    const copyList = ref([
       {
         id: 'checked',
-        name: $i18n.t('勾选IP'),
-        disabled: !selections.value.length,
+        label: $i18n.t('复制勾选IP'),
+        children: [
+          {
+            id: 'checked-ipv4',
+            label: $i18n.t('复制勾选IPv4'),
+          },
+          {
+            id: 'checked-ipv6',
+            label: $i18n.t('复制勾选IPv6'),
+          },
+        ],
       },
       {
-        id: 'currentPage',
-        name: $i18n.t('当前页IP'),
-        disabled: !curPageData.value.length,
-      },
-      {
-        id: 'allPage',
-        name: $i18n.t('所有IP'),
-        disabled: !filterTableData.value.length,
+        id: 'all',
+        label: $i18n.t('复制所有IP'),
+        children: [
+          {
+            id: 'all-ipv4',
+            label: $i18n.t('复制所有IPv4'),
+          },
+          {
+            id: 'all-ipv6',
+            label: $i18n.t('复制所有IPv6'),
+          },
+        ],
       },
     ]);
-    // IP复制
     const handleCopy = (item) => {
-      if (item.disabled) return;
-
       let ipData: string[] = [];
       switch (item.id) {
-        case 'checked':
-          ipData = selections.value.map(data => data.inner_ip);
+        case 'checked-ipv4':
+          ipData = selections.value.map(data => data.innerIP).filter(ip => !!ip);
           break;
-        case 'currentPage':
-          ipData = curPageData.value.map(data => data.inner_ip);
+        case 'checked-ipv6':
+          ipData = selections.value.map(data => data.innerIPv6).filter(ip => !!ip);
           break;
-        case 'allPage':
-          ipData = filterTableData.value.map(data => data.inner_ip);
+        case 'all-ipv4':
+          ipData = tableData.value.map(data => data.innerIP).filter(ip => !!ip);
+          break;
+        case 'all-ipv6':
+          ipData = tableData.value.map(item => item.innerIPv6).filter(ip => !!ip);
           break;
       }
       copyText(ipData.join('\n'));
@@ -886,7 +892,6 @@ export default defineComponent({
         theme: 'success',
         message: $i18n.t('成功复制 {num} 个IP', { num: ipData.length }),
       });
-      copyDropdownRef.value?.hide();
     };
 
     // 设置污点
@@ -1406,6 +1411,7 @@ export default defineComponent({
       }
     });
     return {
+      copyList,
       removeNodeDialogTitle,
       nodesCount,
       realRemainNodesCount,
@@ -1434,8 +1440,6 @@ export default defineComponent({
       localClusterId,
       CheckType,
       nodeMetric,
-      copyDropdownRef,
-      ipCopyList,
       renderSelection,
       pageChange,
       pageSizeChange,

@@ -21,16 +21,17 @@
                 :id="option.project_code"
                 :name="option.project_name">
                 <div
-                  class="flex project-item"
+                  class="flex items-center project-item"
                   v-bk-tooltips="{
                     content: option.cc_app_id
                       ? `${$t('项目名称')}: ${option.project_name}<br/>${$t('业务ID')}: ${option.cc_app_id}`
-                      : $t('未启用容器服务'),
-                    placement: 'right',
+                      : `${$t('项目名称')}: ${option.project_name}<br/>${$t('未启用容器服务')}`,
+                    placement: 'left',
                     boundary: 'window'
                   }">
-                  <span class="bcs-ellipsis">{{option.project_name}}</span>
+                  <span :class="['bcs-ellipsis', { 'flex-1': !option.cc_app_id }]">{{option.project_name}}</span>
                   <span class="biz-id" v-if="option.cc_app_id">{{`(${option.cc_app_id})`}}</span>
+                  <bcs-tag size="small" v-else>{{ $t('未启用') }}</bcs-tag>
                 </div>
               </bcs-option>
               <template #extension>

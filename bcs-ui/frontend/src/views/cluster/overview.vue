@@ -57,7 +57,7 @@
             </div>
           </div>
 
-          <div class="biz-cluster-overview-chart">
+          <!-- <div class="biz-cluster-overview-chart">
             <div class="chart-box bottom">
               <div class="info">
                 <div class="left">{{$t('节点')}}</div>
@@ -138,7 +138,7 @@
                 </div>
               </Ring>
             </div>
-          </div>
+          </div> -->
         </div>
       </div>
     </div>
@@ -146,7 +146,7 @@
 </template>
 
 <script>
-import Ring from '@/components/ring';
+// import Ring from '@/components/ring';
 import { catchErrorHandler, formatBytes } from '@/common/util';
 
 import ClusterOverviewChart from './cluster-overview-chart';
@@ -154,7 +154,6 @@ import ClusterOverviewChart from './cluster-overview-chart';
 export default {
   name: 'NodeOverview',
   components: {
-    Ring,
     ClusterOverviewChart,
   },
   data() {
@@ -223,7 +222,7 @@ export default {
   async mounted() {
     if (this.curCluster.project_id && this.curCluster.cluster_id) {
       await this.fetchClusterOverview();
-      this.fetchClusterMetrics();
+      // this.fetchClusterMetrics();
       this.prepareChartData();
     }
   },
