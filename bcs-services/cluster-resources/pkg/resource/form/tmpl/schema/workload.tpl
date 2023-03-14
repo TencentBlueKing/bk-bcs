@@ -101,6 +101,17 @@ replicas:
               value: percent
             - label: {{ i18n "个" .lang }}
               value: cnt
+      ui:reactions:
+        - if: "{{`{{`}} $self.value === 'percent' {{`}}`}}"
+          then:
+            state:
+              visible: true
+              value: 25
+          else:
+            state:
+              visible: true
+              value: 1
+          target: spec.replicas.maxUnavailable
     minReadySecs:
       title: {{ i18n "最小就绪时间" .lang }}
       type: integer
@@ -179,6 +190,17 @@ replicas:
               value: percent
             - label: {{ i18n "个" .lang }}
               value: cnt
+      ui:reactions:
+        - if: "{{`{{`}} $self.value === 'percent' {{`}}`}}"
+          then:
+            state:
+              visible: true
+              value: 25
+          else:
+            state:
+              visible: true
+              value: 1
+          target: spec.replicas.maxUnavailable
     minReadySecs:
       title: {{ i18n "最小就绪时间" .lang }}
       type: integer
