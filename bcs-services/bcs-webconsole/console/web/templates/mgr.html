@@ -9,6 +9,7 @@
         body {
             overflow: hidden;
             margin: 0px;
+            font-family: -apple-system, BlinkMacSystemFont, PingFang SC, Microsoft YaHei, Helvetica Neue, Arial, sans-serif;
         }
 
         .console-iframe {
@@ -87,6 +88,11 @@
         .bk-dropdown-menu .bk-dropdown-list>li>a.selected {
             background: #ebf4ff;
             color: #3c96ff
+        }
+
+        .bk-dropdown-menu .bk-dropdown-list {
+            max-height: 260px;
+            overflow: auto;
         }
 
         .bk-dropdown-menu {
@@ -262,10 +268,10 @@
 
                 },
                 handleClick(event) {
-                    if (event.target.tagName !== "A" && event.target.tagName !== "DIV"){
+                    if (event.target.tagName !== "A" && event.target.tagName !== "DIV") {
                         this.isDropdownShow = true
                         this.isSelectIndex = -1
-                    }else {
+                    } else {
                         this.isDropdownShow = false
                         this.isSelectIndex = -1
                     }
