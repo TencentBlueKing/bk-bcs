@@ -13,7 +13,7 @@ limitations under the License.
 package main
 
 import (
-	"bscp.io/cmd/data-service/db-migration/cmd"
+	"bscp.io/cmd/data-service/cmd"
 )
 
 func main() {
