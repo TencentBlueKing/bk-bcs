@@ -31,4 +31,6 @@ import (
 	_ "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-webhook-server/internal/plugin/imageacceleration"
 	// import resource ratio plugin
 	_ "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-webhook-server/internal/plugin/resourceratio"
+	// import filter clb plugin
+	_ "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-webhook-server/internal/plugin/filterclb"
 )
