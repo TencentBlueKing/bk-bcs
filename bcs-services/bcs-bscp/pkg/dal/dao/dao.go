@@ -35,6 +35,7 @@ type Set interface {
 	StrategySet() StrategySet
 	CRInstance() CRInstance
 	Strategy() Strategy
+	Hook() Hook
 	Group() Group
 	GroupCategory() GroupCategory
 	Publish() Publish
@@ -179,6 +180,16 @@ func (s *set) Strategy() Strategy {
 		auditDao: s.auditDao,
 		event:    s.event,
 		lock:     s.lock,
+	}
+}
+
+// Hook returns the group's DAO
+func (s *set) Hook() Hook {
+	return &hookDao{
+		orm:      s.orm,
+		sd:       s.sd,
+		idGen:    s.idGen,
+		auditDao: s.auditDao,
 	}
 }
 

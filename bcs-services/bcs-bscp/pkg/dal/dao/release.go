@@ -112,7 +112,7 @@ func (dao *releaseDao) List(kit *kit.Kit, opts *types.ListReleasesOption) (
 			},
 		},
 	}
-	whereExpr, arg, err := opts.Filter.SQLWhereExpr(sqlOpt)
+	whereExpr, args, err := opts.Filter.SQLWhereExpr(sqlOpt)
 	if err != nil {
 		return nil, err
 	}
@@ -120,7 +120,7 @@ func (dao *releaseDao) List(kit *kit.Kit, opts *types.ListReleasesOption) (
 	var sqlSentenceCount []string
 	sqlSentenceCount = append(sqlSentenceCount, "SELECT COUNT(*) FROM ", string(table.ReleaseTable), whereExpr)
 	countSql := filter.SqlJoint(sqlSentenceCount)
-	count, err := dao.orm.Do(dao.sd.ShardingOne(opts.BizID).DB()).Count(kit.Ctx, countSql)
+	count, err := dao.orm.Do(dao.sd.ShardingOne(opts.BizID).DB()).Count(kit.Ctx, countSql, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -137,7 +137,7 @@ func (dao *releaseDao) List(kit *kit.Kit, opts *types.ListReleasesOption) (
 	sql := filter.SqlJoint(sqlSentence)
 
 	list := make([]*table.Release, 0)
-	err = dao.orm.Do(dao.sd.ShardingOne(opts.BizID).DB()).Select(kit.Ctx, &list, sql, arg)
+	err = dao.orm.Do(dao.sd.ShardingOne(opts.BizID).DB()).Select(kit.Ctx, &list, sql, args...)
 	if err != nil {
 		return nil, err
 	}

@@ -46,12 +46,14 @@ func (ins *Instance) Publish(ctx context.Context, header http.Header, req *pbcs.
 		return nil, resp.Err
 	}
 
-	pbResp := new(pbcs.PublishInstanceResp)
+	pbResp := &struct {
+		Data *pbcs.PublishInstanceResp `json:"data"`
+	}{}
 	if err := resp.Into(pbResp); err != nil {
 		return nil, err
 	}
 
-	return pbResp, nil
+	return pbResp.Data, nil
 }
 
 // Delete to delete publish instance.
@@ -69,12 +71,14 @@ func (ins *Instance) Delete(ctx context.Context, header http.Header, req *pbcs.D
 		return nil, resp.Err
 	}
 
-	pbResp := new(pbcs.DeletePublishedInstanceResp)
+	pbResp := &struct {
+		Data *pbcs.DeletePublishedInstanceResp `json:"data"`
+	}{}
 	if err := resp.Into(pbResp); err != nil {
 		return nil, err
 	}
 
-	return pbResp, nil
+	return pbResp.Data, nil
 }
 
 // List to list publish instance.
@@ -92,10 +96,12 @@ func (ins *Instance) List(ctx context.Context, header http.Header, req *pbcs.Lis
 		return nil, resp.Err
 	}
 
-	pbResp := new(pbcs.ListPublishedInstanceResp)
+	pbResp := &struct {
+		Data *pbcs.ListPublishedInstanceResp `json:"data"`
+	}{}
 	if err := resp.Into(pbResp); err != nil {
 		return nil, err
 	}
 
-	return pbResp, nil
+	return pbResp.Data, nil
 }

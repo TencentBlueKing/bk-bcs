@@ -196,7 +196,7 @@ func (dao *groupCategoryDao) List(kit *kit.Kit, opts *types.ListGroupCategoriesO
 			},
 		},
 	}
-	whereExpr, arg, err := opts.Filter.SQLWhereExpr(sqlOpt)
+	whereExpr, args, err := opts.Filter.SQLWhereExpr(sqlOpt)
 	if err != nil {
 		return nil, err
 	}
@@ -208,7 +208,7 @@ func (dao *groupCategoryDao) List(kit *kit.Kit, opts *types.ListGroupCategoriesO
 		sqlSentence = append(sqlSentence, "SELECT COUNT(*) FROM ", string(table.GroupCategoryTable), whereExpr)
 		sql = filter.SqlJoint(sqlSentence)
 		var count uint32
-		count, err = dao.orm.Do(dao.sd.ShardingOne(opts.BizID).DB()).Count(kit.Ctx, sql, arg)
+		count, err = dao.orm.Do(dao.sd.ShardingOne(opts.BizID).DB()).Count(kit.Ctx, sql, args...)
 		if err != nil {
 			return nil, err
 		}
@@ -226,7 +226,7 @@ func (dao *groupCategoryDao) List(kit *kit.Kit, opts *types.ListGroupCategoriesO
 	sql = filter.SqlJoint(sqlSentence)
 
 	list := make([]*table.GroupCategory, 0)
-	err = dao.orm.Do(dao.sd.ShardingOne(opts.BizID).DB()).Select(kit.Ctx, &list, sql, arg)
+	err = dao.orm.Do(dao.sd.ShardingOne(opts.BizID).DB()).Select(kit.Ctx, &list, sql, args...)
 	if err != nil {
 		return nil, err
 	}

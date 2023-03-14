@@ -86,6 +86,7 @@ func (r *etcdResolver) watcher() {
 	if err != nil {
 		logs.Infof("get %s key failed, err: %v", r.target, err)
 	}
+	logs.V(3).Infof("watcher etcd resolver get target: %s, kvs: %#v", r.target, resp.Kvs)
 
 	r.addresses = make(map[string]resolver.Address)
 	if err == nil {
@@ -97,6 +98,7 @@ func (r *etcdResolver) watcher() {
 			Addresses: r.getAddresses(),
 		})
 	}
+	logs.V(3).Infof("watcher addresses:%#v", r.addresses)
 
 	opts := []etcd3.OpOption{
 		etcd3.WithRev(resp.Header.Revision + 1),
@@ -137,6 +139,7 @@ func (r *etcdResolver) setAddress(key, address string) {
 	}
 
 	r.addresses[key] = addr
+	logs.V(3).Infof("set address key:%s, address:%s, addresses:%#v", key, address, r.addresses)
 }
 
 // delAddress del etcdResolver addresses.
@@ -144,6 +147,7 @@ func (r *etcdResolver) delAddress(key string) {
 	r.Lock()
 	defer r.Unlock()
 	delete(r.addresses, key)
+	logs.V(3).Infof("del address key:%s, addresses:%#v", key, r.addresses)
 }
 
 // getAddresses get grpc addresses.

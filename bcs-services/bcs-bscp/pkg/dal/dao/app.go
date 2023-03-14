@@ -97,7 +97,7 @@ func (ap *appDao) List(kit *kit.Kit, opts *types.ListAppsOption) (*types.ListApp
 			},
 		}
 	}
-	whereExpr, arg, err := opts.Filter.SQLWhereExpr(sqlOpt)
+	whereExpr, args, err := opts.Filter.SQLWhereExpr(sqlOpt)
 	if err != nil {
 		return nil, err
 	}
@@ -107,7 +107,7 @@ func (ap *appDao) List(kit *kit.Kit, opts *types.ListAppsOption) (*types.ListApp
 	var sqlSentence []string
 	sqlSentence = append(sqlSentence, "SELECT COUNT(*) FROM ", string(table.AppTable), whereExpr)
 	countSql := filter.SqlJoint(sqlSentence)
-	count, err := ap.orm.Do(ap.sd.ShardingOne(opts.BizID).DB()).Count(kit.Ctx, countSql, arg)
+	count, err := ap.orm.Do(ap.sd.ShardingOne(opts.BizID).DB()).Count(kit.Ctx, countSql, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -123,7 +123,7 @@ func (ap *appDao) List(kit *kit.Kit, opts *types.ListAppsOption) (*types.ListApp
 	querySql := filter.SqlJoint(sqlQuery)
 
 	list := make([]*table.App, 0)
-	err = ap.orm.Do(ap.sd.ShardingOne(opts.BizID).DB()).Select(kit.Ctx, &list, querySql, arg)
+	err = ap.orm.Do(ap.sd.ShardingOne(opts.BizID).DB()).Select(kit.Ctx, &list, querySql, args...)
 	if err != nil {
 		return nil, err
 	}

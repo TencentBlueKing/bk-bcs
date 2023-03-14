@@ -48,12 +48,14 @@ func (c *Content) Create(ctx context.Context, header http.Header, req *pbcs.Crea
 		return nil, resp.Err
 	}
 
-	pbResp := new(pbcs.CreateContentResp)
+	pbResp := &struct {
+		Data *pbcs.CreateContentResp `json:"data"`
+	}{}
 	if err := resp.Into(pbResp); err != nil {
 		return nil, err
 	}
 
-	return pbResp, nil
+	return pbResp.Data, nil
 }
 
 // Upload function to upload content.
@@ -94,10 +96,12 @@ func (c *Content) List(ctx context.Context, header http.Header, req *pbcs.ListCo
 		return nil, resp.Err
 	}
 
-	pbResp := new(pbcs.ListContentsResp)
+	pbResp := &struct {
+		Data *pbcs.ListContentsResp `json:"data"`
+	}{}
 	if err := resp.Into(pbResp); err != nil {
 		return nil, err
 	}
 
-	return pbResp, nil
+	return pbResp.Data, nil
 }

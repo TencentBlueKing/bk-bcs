@@ -55,8 +55,8 @@ func init() {
 	var totalRequest int64
 
 	flag.StringVar(&clientCfg.ApiHost, "api-host", "http://127.0.0.1:8080", "api http server address")
-	flag.StringVar(&clientCfg.CacheHost, "cache-host", "127.0.0.1:8081", "cache rpc service address")
-	flag.StringVar(&clientCfg.FeedHost, "feed-host", "127.0.0.1:9091", "feed rpc server address")
+	flag.StringVar(&clientCfg.CacheHost, "cache-host", "127.0.0.1:9514", "cache rpc service address")
+	flag.StringVar(&clientCfg.FeedHost, "feed-host", "127.0.0.1:9510", "feed rpc server address")
 	flag.IntVar(&concurrent, "concurrent", 1000, "concurrent request during the load test.")
 	flag.Float64Var(&sustainSeconds, "sustain-seconds", 10, "the load test sustain time in seconds ")
 	flag.Int64Var(&totalRequest, "total-request", 0, "the load test total request,it has higher priority than "+
@@ -64,7 +64,7 @@ func init() {
 	flag.StringVar(&dbCfg.IP, "mysql-ip", "127.0.0.1", "mysql ip address")
 	flag.Int64Var(&dbCfg.Port, "mysql-port", 3306, "mysql port")
 	flag.StringVar(&dbCfg.User, "mysql-user", "root", "mysql login user")
-	flag.StringVar(&dbCfg.Password, "mysql-passwd", "admin", "mysql login password")
+	flag.StringVar(&dbCfg.Password, "mysql-passwd", "root", "mysql login password")
 	flag.StringVar(&dbCfg.DB, "mysql-db", "bk_bscp_admin", "mysql database")
 	flag.StringVar(&SidecarStartCmd, "sidecar-start-cmd", "", "sidecar start command")
 	testing.Init()

@@ -17,7 +17,6 @@ import (
 
 	. "github.com/smartystreets/goconvey/convey" // import convey.
 
-	"bscp.io/pkg/criteria/errf"
 	"bscp.io/pkg/dal/table"
 	pbcs "bscp.io/pkg/protocol/config-server"
 	"bscp.io/pkg/tools"
@@ -67,23 +66,19 @@ func TestContent(t *testing.T) {
 			resp, err := cli.Content.Create(ctx, header, req)
 			So(err, ShouldBeNil)
 			So(resp, ShouldNotBeNil)
-			So(resp.Code, ShouldEqual, errf.OK)
-			So(resp.Data, ShouldNotBeNil)
-			So(resp.Data.Id, ShouldNotEqual, uint32(0))
+			So(resp.Id, ShouldNotEqual, uint32(0))
 
 			// verify by list content
-			listReq, err := cases.GenListContentByIdsReq(cases.TBizID, appId, []uint32{resp.Data.Id})
+			listReq, err := cases.GenListContentByIdsReq(cases.TBizID, appId, []uint32{resp.Id})
 			ctx, header = cases.GenApiCtxHeader()
 			listResp, err := cli.Content.List(ctx, header, listReq)
 			So(err, ShouldBeNil)
 			So(listResp, ShouldNotBeNil)
-			So(listResp.Code, ShouldEqual, errf.OK)
-			So(listResp.Data, ShouldNotBeNil)
-			So(len(listResp.Data.Details), ShouldEqual, 1)
+			So(len(listResp.Details), ShouldEqual, 1)
 
-			one := listResp.Data.Details[0]
+			one := listResp.Details[0]
 			So(one, ShouldNotBeNil)
-			So(one.Id, ShouldEqual, resp.Data.Id)
+			So(one.Id, ShouldEqual, resp.Id)
 
 			So(one.Spec, ShouldNotBeNil)
 			So(one.Spec.ByteSize, ShouldEqual, size)
@@ -96,7 +91,7 @@ func TestContent(t *testing.T) {
 
 			So(one.Revision, cases.SoCreateRevision)
 
-			rm.AddContent(ciId, resp.Data.Id)
+			rm.AddContent(ciId, resp.Id)
 		})
 
 		Convey("2.create_content abnormal test", func() {
@@ -143,7 +138,6 @@ func TestContent(t *testing.T) {
 				resp, err := cli.Content.Create(ctx, header, req)
 				So(err, ShouldBeNil)
 				So(resp, ShouldNotBeNil)
-				So(resp.Code, ShouldEqual, errf.InvalidParameter)
 			}
 		})
 	})
@@ -163,9 +157,7 @@ func TestContent(t *testing.T) {
 			resp, err := cli.Content.List(ctx, header, req)
 			So(err, ShouldBeNil)
 			So(resp, ShouldNotBeNil)
-			So(resp.Code, ShouldEqual, errf.OK)
-			So(resp.Data, ShouldNotBeNil)
-			So(resp.Data.Count, ShouldEqual, 1)
+			So(resp.Count, ShouldEqual, 1)
 		})
 
 		Convey("2.list_content abnormal test", func() {
@@ -207,7 +199,6 @@ func TestContent(t *testing.T) {
 				resp, err := cli.Content.List(ctx, header, req)
 				So(err, ShouldBeNil)
 				So(resp, ShouldNotBeNil)
-				So(resp.Code, ShouldNotEqual, errf.OK)
 			}
 		})
 	})

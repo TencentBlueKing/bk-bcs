@@ -61,7 +61,7 @@ func (r *iamDao) ListInstances(kt *kit.Kit, opts *types.ListInstancesOption) (
 				}},
 		},
 	}
-	whereExpr, arg, err := opts.Filter.SQLWhereExpr(sqlOpt)
+	whereExpr, args, err := opts.Filter.SQLWhereExpr(sqlOpt)
 	if err != nil {
 		return nil, err
 	}
@@ -73,7 +73,7 @@ func (r *iamDao) ListInstances(kt *kit.Kit, opts *types.ListInstancesOption) (
 		sqlSentence = append(sqlSentence, "SELECT COUNT(*) FROM ", string(opts.TableName), whereExpr)
 		sql = filter.SqlJoint(sqlSentence)
 		var count uint32
-		count, err = r.orm.Do(r.sd.ShardingOne(opts.BizID).DB()).Count(kt.Ctx, sql, arg)
+		count, err = r.orm.Do(r.sd.ShardingOne(opts.BizID).DB()).Count(kt.Ctx, sql, args...)
 		if err != nil {
 			return nil, err
 		}
@@ -90,7 +90,7 @@ func (r *iamDao) ListInstances(kt *kit.Kit, opts *types.ListInstancesOption) (
 	sqlSentence = append(sqlSentence, "SELECT id, name FROM ", string(opts.TableName), whereExpr, pageExpr)
 	sql = filter.SqlJoint(sqlSentence)
 	list := make([]*types.InstanceResource, 0)
-	err = r.orm.Do(r.sd.ShardingOne(opts.BizID).DB()).Select(kt.Ctx, &list, sql, arg)
+	err = r.orm.Do(r.sd.ShardingOne(opts.BizID).DB()).Select(kt.Ctx, &list, sql, args...)
 	if err != nil {
 		return nil, err
 	}
