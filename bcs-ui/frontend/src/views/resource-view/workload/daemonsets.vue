@@ -47,7 +47,7 @@
         <bk-table-column label="Available" width="110" :resizable="false">
           <template slot-scope="{ row }">{{row.status.numberAvailable || 0}}</template>
         </bk-table-column>
-        <bk-table-column label="Age" :resizable="false">
+        <bk-table-column label="Age" sortable="custom" prop="createTime" :resizable="false">
           <template #default="{ row }">
             <span>{{handleGetExtData(row.metadata.uid, 'age')}}</span>
           </template>

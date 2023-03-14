@@ -42,7 +42,7 @@
         <bk-table-column label="Up-to-date" width="110" :resizable="false">
           <template slot-scope="{ row }">{{row.status.updatedReplicas || 0}}</template>
         </bk-table-column>
-        <bk-table-column label="Age" prop="extraFE.age" :resizable="false">
+        <bk-table-column label="Age" sortable="custom" prop="createTime" :resizable="false">
           <template #default="{ row }">
             <span>{{handleGetExtData(row.metadata.uid, 'age')}}</span>
           </template>

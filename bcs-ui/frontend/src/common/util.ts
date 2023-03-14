@@ -387,13 +387,22 @@ export const getObjectProps = (obj, key) => {
  * @param {*} arr
  * @param {*} key
  */
-export const sort = (arr, key, order = 'ascending') => {
+export const sort = (arr, key, order = 'ascending', extraDataFn?): any[] => {
   if (!Array.isArray(arr)) return arr;
   const reg = /^[0-9a-zA-Z]/;
   const data = arr.sort((pre, next) => {
     if (isObject(pre) && isObject(next) && key) {
-      const preStr = String(getObjectProps(pre, key));
-      const nextStr = String(getObjectProps(next, key));
+      // 合并extdata数据
+      const preData = {
+        ...pre,
+        ...(extraDataFn?.(pre) || {}),
+      };
+      const nextData = {
+        ...next,
+        ...(extraDataFn?.(next) || {}),
+      };
+      const preStr = String(getObjectProps(preData, key));
+      const nextStr = String(getObjectProps(nextData, key));
       if (reg.test(preStr) && !reg.test(nextStr)) {
         return -1;
       } if (!reg.test(preStr) && reg.test(nextStr)) {
@@ -401,7 +410,7 @@ export const sort = (arr, key, order = 'ascending') => {
       }
       return preStr.localeCompare(nextStr);
     }
-    return (`${pre}`).toString().localeCompare((`${pre}`));
+    return (`${pre}`).toString().localeCompare((`${next}`));
   });
   return order === 'ascending' ? data : data.reverse();
 };

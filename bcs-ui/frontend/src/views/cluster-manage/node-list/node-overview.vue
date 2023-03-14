@@ -84,7 +84,8 @@
           :pagination="pagination"
           v-bkloading="{ isLoading: podLoading }"
           @page-change="pageChange"
-          @page-limit-change="pageSizeChange">
+          @page-limit-change="pageSizeChange"
+          @sort-change="handleSortChange">
           <bk-table-column :label="$t('名称')" min-width="130" sortable :resizable="false" fixed="left">
             <template #default="{ row }">
               <bk-button
@@ -143,7 +144,7 @@
           <bk-table-column label="Node" :resizable="false">
             <template #default="{ row }">{{row.node || '--'}}</template>
           </bk-table-column>
-          <bk-table-column label="Age" :resizable="false">
+          <bk-table-column label="Age" sortable prop="createTime" :resizable="false">
             <template #default="{ row }">
               <span>{{row.age || '--'}}</span>
             </template>
@@ -249,6 +250,7 @@ import BcsLog from '@/components/bcs-log/log-dialog.vue';
 import $router from '@/router/index';
 import $store from '@/store';
 import StatusIcon from '@/components/status-icon';
+import useTableSort from '@/composables/use-table-sort';
 
 export default defineComponent({
   name: 'NodeOverview',
@@ -312,7 +314,7 @@ export default defineComponent({
     };
 
     // Pods数据
-    const podsData = ref<any[]>([]);
+    const allPodsData = ref<any[]>([]);
     const podsWebAnnotations = ref<any>({});
     const podLoading = ref(false);
     const handleGetPodsData = async () => {
@@ -323,7 +325,7 @@ export default defineComponent({
         $nodename: nodeName.value,
       }, { needRes: true }).catch(() => ({ data: [], webAnnotations: {} }));
       podLoading.value = false;
-      podsData.value = res.data;
+      allPodsData.value = res.data;
       podsWebAnnotations.value = res.webAnnotations;
     };
 
@@ -331,6 +333,8 @@ export default defineComponent({
     const namespaceValue = ref('');
     const { namespaceLoading, namespaceList, getNamespaceData } = useSelectItemsNamespace();
 
+    // 排序
+    const { handleSortChange, sortTableData: podsData } = useTableSort(allPodsData);
     // 搜索
     const keys = ref(['name', 'hostIP', 'podIP', 'podIPv4', 'podIPv6']);
     const { searchValue, tableDataMatchSearch } = useSearch(podsData, keys);
@@ -458,6 +462,7 @@ export default defineComponent({
       handleUpdateResource,
       handleDeleteResource,
       handleClearSearchData,
+      handleSortChange,
     };
   },
 });

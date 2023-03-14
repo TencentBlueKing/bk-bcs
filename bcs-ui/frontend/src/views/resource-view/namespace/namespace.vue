@@ -438,7 +438,6 @@
         ></KeyValue>
       </div>
     </bk-sideslider>
-    <AppFooter />
   </LayoutContent>
 </template>
 

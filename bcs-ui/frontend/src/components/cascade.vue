@@ -1,13 +1,15 @@
 <template>
-  <PopoverSelector trigger="mouseenter" placement="bottom-start" offset="0, 5">
-    <slot></slot>
+  <PopoverSelector trigger="manual" placement="bottom-start" offset="0, 5" ref="popoverRef">
+    <div @mouseenter="handleMouseEnter">
+      <slot></slot>
+    </div>
     <template #content>
-      <BcsCascadeItem :list="list" @click="handleClickItem" />
+      <BcsCascadeItem ref="cascadeRef" :list="list" @click="handleClickItem" />
     </template>
   </PopoverSelector>
 </template>
 <script lang="ts">
-import {  defineComponent, PropType } from '@vue/composition-api';
+import {  defineComponent, PropType, ref } from '@vue/composition-api';
 import PopoverSelector from './popover-selector.vue';
 import BcsCascadeItem from './cascade-item.vue';
 
@@ -27,11 +29,20 @@ export default defineComponent({
     },
   },
   setup(props, ctx) {
+    const popoverRef = ref<any>(null);
+    const cascadeRef = ref<any>(null);
     const handleClickItem = (item: IData) => {
       ctx.emit('click', item);
+      cascadeRef.value?.hide();
+    };
+    const handleMouseEnter = () => {
+      popoverRef.value?.show();
     };
     return {
+      popoverRef,
+      cascadeRef,
       handleClickItem,
+      handleMouseEnter,
     };
   },
 });
