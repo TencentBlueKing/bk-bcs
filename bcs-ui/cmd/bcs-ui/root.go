@@ -17,11 +17,10 @@ import (
 	"context"
 	"net"
 	"os"
-	"path/filepath"
+	"strconv"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/util"
 	"github.com/Tencent/bk-bcs/bcs-common/common/version"
-	homedir "github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"go.uber.org/automaxprocs/maxprocs"
@@ -34,14 +33,15 @@ import (
 var (
 	// Used for flags.
 	cfgFile       string
-	httpAddress   string
+	bindAddress   string
+	port          int
 	appName       = "bcs-ui"
 	podIPsEnv     = "POD_IPs"        // 双栈监听环境变量
 	ipv6Interface = "IPV6_INTERFACE" // ipv6本地网关地址
 
 	rootCmd = &cobra.Command{
 		Use:   appName,
-		Short: "bcs ui server",
+		Short: "bcs-ui server",
 	}
 )
 
@@ -54,29 +54,29 @@ func Execute() {
 			klog.InfoS("Failed to set GOMAXPROCS automatically", "err", err)
 		}
 
-		initConfig()
+		addr := net.JoinHostPort(bindAddress, strconv.Itoa(port))
 
-		addrIPv6 := getIPv6AddrFromEnv(httpAddress)
-		svr, err := web.NewWebServer(context.Background(), httpAddress, addrIPv6)
+		addrIPv6 := getIPv6AddrFromEnv(bindAddress)
+		svr, err := web.NewWebServer(context.Background(), bindAddress, addrIPv6)
 		if err != nil {
 			os.Exit(1)
 		}
 
-		klog.InfoS("listening for requests and metrics", "address", httpAddress)
+		klog.InfoS("listening for requests and metrics", "address", addr)
 
 		svr.Run()
 
 	}
-	rootCmd.Version = printVersion()
 
 	err := rootCmd.Execute()
 	if err != nil {
+		klog.Errorf("execute err: %s", err)
 		os.Exit(1)
 	}
 }
 
 func init() {
-	// cobra.OnInitialize(initConfig)
+	cobra.OnInitialize(initConfig)
 
 	// 不开启 自动排序
 	cobra.EnableCommandSorting = false
@@ -84,53 +84,41 @@ func init() {
 	// 不开启 completion 子命令
 	rootCmd.CompletionOptions.DisableDefaultCmd = true
 
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "Config file (default is $HOME/bcs-ui.yml)")
-	rootCmd.PersistentFlags().StringVar(&httpAddress, "http-address", "127.0.0.1:8080", `listen http address`)
+	rootCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "", "config file path")
+	rootCmd.PersistentFlags().StringVar(&bindAddress, "bind-address", "127.0.0.1", `the IP address on which to listen`)
+	rootCmd.PersistentFlags().IntVar(&port, "port", 8080, `listen http/metrics port`)
 
-	// rootCmd.SilenceErrors = true
-	// rootCmd.SilenceUsage = true
-	rootCmd.Version = printVersion()
-
-	// rootCmd.SetVersionTemplate(`{{printf "%s" .Version}}`)
+	rootCmd.SetVersionTemplate(`{{print .Version}}`)
+	rootCmd.Version = version.GetVersion()
 }
 
 func initConfig() {
-	if cfgFile != "" {
-		// Use config file from the flag.
-		viper.SetConfigFile(cfgFile)
-	} else {
-		// Find home directory.
-		home, err := homedir.Dir()
-		cobra.CheckErr(err)
-
-		cwd, err := os.Getwd()
-		cobra.CheckErr(err)
-
-		// Search config in home directory with name (without extension).
-		viper.AddConfigPath("/etc")
-		viper.AddConfigPath(".")
-		viper.AddConfigPath(home)
-		viper.AddConfigPath(filepath.Join(cwd, "etc"))
-
-		viper.SetConfigName("bcs-ui")
-		viper.SetConfigType("yml")
+	// 过滤不需要配置的子命令
+	cmd, _, _ := rootCmd.Find(os.Args[1:])
+	if cmd.Name() == "help" || cmd.Name() == "version" {
+		return
 	}
 
+	if cfgFile == "" {
+		klog.Errorf("config file path is required")
+		os.Exit(1)
+	}
+
+	viper.SetConfigType("yaml")
+	viper.SetConfigFile(cfgFile)
+
 	if err := viper.ReadInConfig(); err != nil {
-		cobra.CheckErr(err)
+		klog.Errorf("parse config file error: %s", err)
+		os.Exit(1)
 	}
 
 	if err := config.G.ReadFromViper(viper.GetViper()); err != nil {
-		cobra.CheckErr(err)
+		klog.Errorf("read config file error: %s", err)
+		os.Exit(1)
 	}
 
 	// 日志配置已经Ready, 后面都需要使用日志
 	klog.Infof("Using config file:%s", viper.ConfigFileUsed())
-}
-
-func printVersion() string {
-	v := appName + ", " + version.GetVersion()
-	return v
 }
 
 // getIPv6AddrFromEnv 解析ipv6

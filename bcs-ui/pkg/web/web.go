@@ -16,17 +16,17 @@ package web
 import (
 	"context"
 	"fmt"
-	"k8s.io/klog/v2"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
 	"strings"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/tcp/listener"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/v5/middleware"
 	httpSwagger "github.com/swaggo/http-swagger"
+	"k8s.io/klog/v2"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/tcp/listener"
 	bcsui "github.com/Tencent/bk-bcs/bcs-ui"
 	"github.com/Tencent/bk-bcs/bcs-ui/pkg/config"
 )
@@ -76,8 +76,6 @@ func (a *WebServer) Close() error {
 }
 
 // newRoutes xxx
-// @Title     BCS-Monitor OpenAPI
-// @BasePath  /bcsapi/v4/monitor/api/projects/:projectId/clusters/:clusterId
 func (w *WebServer) newRouter() http.Handler {
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)

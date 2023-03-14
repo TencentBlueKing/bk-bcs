@@ -86,7 +86,6 @@ func (e *embedWeb) IndexHandler() http.Handler {
 		data := map[string]string{
 			"STATIC_URL":              STATIC_URL,
 			"SITE_URL":                SITE_URL,
-			"REGION":                  "ce",
 			"RUN_ENV":                 config.G.Base.RunEnv,
 			"PREFERRED_DOMAINS":       config.G.Web.PreferredDomains,
 			"DEVOPS_HOST":             config.G.FrontendConf.Host.DevOpsHost,
