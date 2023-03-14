@@ -52,6 +52,7 @@ const (
 	Config_DeleteGroup_FullMethodName                    = "/pbcs.Config/DeleteGroup"
 	Config_UpdateGroup_FullMethodName                    = "/pbcs.Config/UpdateGroup"
 	Config_ListGroups_FullMethodName                     = "/pbcs.Config/ListGroups"
+	Config_ListAllGroups_FullMethodName                  = "/pbcs.Config/ListAllGroups"
 	Config_CreateGroupCategory_FullMethodName            = "/pbcs.Config/CreateGroupCategory"
 	Config_DeleteGroupCategory_FullMethodName            = "/pbcs.Config/DeleteGroupCategory"
 	Config_ListGroupCategories_FullMethodName            = "/pbcs.Config/ListGroupCategories"
@@ -101,6 +102,7 @@ type ConfigClient interface {
 	DeleteGroup(ctx context.Context, in *DeleteGroupReq, opts ...grpc.CallOption) (*DeleteGroupResp, error)
 	UpdateGroup(ctx context.Context, in *UpdateGroupReq, opts ...grpc.CallOption) (*UpdateGroupResp, error)
 	ListGroups(ctx context.Context, in *ListGroupsReq, opts ...grpc.CallOption) (*ListGroupsResp, error)
+	ListAllGroups(ctx context.Context, in *ListAllGroupsReq, opts ...grpc.CallOption) (*ListAllGroupsResp, error)
 	CreateGroupCategory(ctx context.Context, in *CreateGroupCategoryReq, opts ...grpc.CallOption) (*CreateGroupCategoryResp, error)
 	DeleteGroupCategory(ctx context.Context, in *DeleteGroupCategoryReq, opts ...grpc.CallOption) (*DeleteGroupCategoryResp, error)
 	ListGroupCategories(ctx context.Context, in *ListGroupCategoriesReq, opts ...grpc.CallOption) (*ListGroupCategoriesResp, error)
@@ -408,6 +410,15 @@ func (c *configClient) ListGroups(ctx context.Context, in *ListGroupsReq, opts .
 	return out, nil
 }
 
+func (c *configClient) ListAllGroups(ctx context.Context, in *ListAllGroupsReq, opts ...grpc.CallOption) (*ListAllGroupsResp, error) {
+	out := new(ListAllGroupsResp)
+	err := c.cc.Invoke(ctx, Config_ListAllGroups_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *configClient) CreateGroupCategory(ctx context.Context, in *CreateGroupCategoryReq, opts ...grpc.CallOption) (*CreateGroupCategoryResp, error) {
 	out := new(CreateGroupCategoryResp)
 	err := c.cc.Invoke(ctx, Config_CreateGroupCategory_FullMethodName, in, out, opts...)
@@ -527,6 +538,7 @@ type ConfigServer interface {
 	DeleteGroup(context.Context, *DeleteGroupReq) (*DeleteGroupResp, error)
 	UpdateGroup(context.Context, *UpdateGroupReq) (*UpdateGroupResp, error)
 	ListGroups(context.Context, *ListGroupsReq) (*ListGroupsResp, error)
+	ListAllGroups(context.Context, *ListAllGroupsReq) (*ListAllGroupsResp, error)
 	CreateGroupCategory(context.Context, *CreateGroupCategoryReq) (*CreateGroupCategoryResp, error)
 	DeleteGroupCategory(context.Context, *DeleteGroupCategoryReq) (*DeleteGroupCategoryResp, error)
 	ListGroupCategories(context.Context, *ListGroupCategoriesReq) (*ListGroupCategoriesResp, error)
@@ -637,6 +649,9 @@ func (UnimplementedConfigServer) UpdateGroup(context.Context, *UpdateGroupReq) (
 }
 func (UnimplementedConfigServer) ListGroups(context.Context, *ListGroupsReq) (*ListGroupsResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListGroups not implemented")
+}
+func (UnimplementedConfigServer) ListAllGroups(context.Context, *ListAllGroupsReq) (*ListAllGroupsResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListAllGroups not implemented")
 }
 func (UnimplementedConfigServer) CreateGroupCategory(context.Context, *CreateGroupCategoryReq) (*CreateGroupCategoryResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateGroupCategory not implemented")
@@ -1253,6 +1268,24 @@ func _Config_ListGroups_Handler(srv interface{}, ctx context.Context, dec func(i
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Config_ListAllGroups_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListAllGroupsReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).ListAllGroups(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Config_ListAllGroups_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).ListAllGroups(ctx, req.(*ListAllGroupsReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Config_CreateGroupCategory_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(CreateGroupCategoryReq)
 	if err := dec(in); err != nil {
@@ -1549,6 +1582,10 @@ var Config_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListGroups",
 			Handler:    _Config_ListGroups_Handler,
+		},
+		{
+			MethodName: "ListAllGroups",
+			Handler:    _Config_ListAllGroups_Handler,
 		},
 		{
 			MethodName: "CreateGroupCategory",
