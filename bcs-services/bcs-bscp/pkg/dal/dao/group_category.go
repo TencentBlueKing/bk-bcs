@@ -174,7 +174,12 @@ func (dao *groupCategoryDao) List(kit *kit.Kit, opts *types.ListGroupCategoriesO
 		return nil, errf.New(errf.InvalidParameter, "list groupCategory options null")
 	}
 
-	if err := opts.Validate(types.DefaultPageOption); err != nil {
+	po := &types.PageOption{
+		EnableUnlimitedLimit: true,
+		DisabledSort:         false,
+	}
+
+	if err := opts.Validate(po); err != nil {
 		return nil, err
 	}
 

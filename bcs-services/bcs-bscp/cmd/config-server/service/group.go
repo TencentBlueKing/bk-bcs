@@ -202,3 +202,91 @@ func (s *Service) ListGroups(ctx context.Context, req *pbcs.ListGroupsReq) (*pbc
 	}
 	return resp, nil
 }
+
+// ListAllGroups list all groups
+func (s *Service) ListAllGroups(ctx context.Context, req *pbcs.ListAllGroupsReq) (*pbcs.ListAllGroupsResp, error) {
+	grpcKit := kit.FromGrpcContext(ctx)
+	resp := new(pbcs.ListAllGroupsResp)
+
+	bizID, err := strconv.Atoi(grpcKit.SpaceID)
+	if err != nil {
+		return nil, err
+	}
+	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.Group, Action: meta.Find}, BizID: uint32(bizID)}
+	err = s.authorizer.AuthorizeWithResp(grpcKit, resp, res)
+	if err != nil {
+		return nil, err
+	}
+
+	ft := &filter.Expression{
+		Op:    filter.And,
+		Rules: []filter.RuleFactory{},
+	}
+	ftpb, err := ft.MarshalPB()
+	if err != nil {
+		return nil, err
+	}
+
+	lgcReq := &pbds.ListGroupCategoriesReq{
+		BizId:  uint32(bizID),
+		AppId:  req.AppId,
+		Filter: ftpb,
+		Page:   &pbbase.BasePage{},
+	}
+	lgcResp, err := s.client.DS.ListGroupCategories(grpcKit.RpcCtx(), lgcReq)
+	if err != nil {
+		logs.Errorf("list all group categories failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, err
+	}
+
+	ft = &filter.Expression{
+		Op: filter.And,
+		Rules: []filter.RuleFactory{
+			&filter.AtomRule{
+				Field: "mode",
+				Op:    filter.Equal.Factory(),
+				Value: req.Mode,
+			},
+		},
+	}
+	ftpb, err = ft.MarshalPB()
+	if err != nil {
+		return nil, err
+	}
+
+	lgReq := &pbds.ListGroupsReq{
+		BizId:  uint32(bizID),
+		AppId:  req.AppId,
+		Filter: ftpb,
+		Page:   &pbbase.BasePage{},
+	}
+
+	lgResp, err := s.client.DS.ListGroups(grpcKit.RpcCtx(), lgReq)
+	if err != nil {
+		logs.Errorf("list all groups failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, err
+	}
+
+	groupsMap := make(map[uint32][]*pbgroup.Group, len(lgcResp.Details))
+	for _, detail := range lgResp.Details {
+		if _, exists := groupsMap[detail.Attachment.GroupCategoryId]; exists {
+			groupsMap[detail.Attachment.GroupCategoryId] = append(groupsMap[detail.Attachment.GroupCategoryId], detail)
+		} else {
+			groupsMap[detail.Attachment.GroupCategoryId] = []*pbgroup.Group{detail}
+		}
+	}
+	respData := []*pbcs.ListAllGroupsResp_ListAllGroupsData{}
+
+	for _, detail := range lgcResp.Details {
+		respData = append(respData, &pbcs.ListAllGroupsResp_ListAllGroupsData{
+			GroupCategoryId:   detail.Id,
+			GroupCategoryName: detail.Spec.Name,
+			Groups:            groupsMap[detail.Id],
+		})
+	}
+
+	resp = &pbcs.ListAllGroupsResp{
+		Details: respData,
+	}
+	return resp, nil
+}

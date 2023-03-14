@@ -211,6 +211,11 @@ service Config {
             get: "/api/v1/config/apps/{app_id}/group_categories/{group_category_id}/groups"
         };
     }
+    rpc ListAllGroups(ListAllGroupsReq) returns (ListAllGroupsResp) {
+        option (google.api.http) = {
+            get: "/api/v1/config/apps/{app_id}/groups"
+        };
+    }
 
     rpc CreateGroupCategory(CreateGroupCategoryReq) returns (CreateGroupCategoryResp) {
         option (google.api.http) = {
@@ -627,6 +632,21 @@ message ListGroupsReq {
 message ListGroupsResp {
     uint32 count                   = 1;
     repeated pbgroup.Group details = 2;
+}
+
+
+message ListAllGroupsReq {
+    uint32 app_id                   = 1;
+    string mode                     = 3;
+}
+
+message ListAllGroupsResp {
+    message ListAllGroupsData {
+        uint32 group_category_id = 1;
+        string group_category_name = 2;
+        repeated pbgroup.Group groups = 3;
+    }
+    repeated ListAllGroupsData details = 1;
 }
 
 message CreateGroupCategoryReq {
