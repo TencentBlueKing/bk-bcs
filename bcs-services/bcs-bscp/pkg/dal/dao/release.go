@@ -14,6 +14,7 @@ package dao
 
 import (
 	"fmt"
+	"strconv"
 
 	"bscp.io/pkg/criteria/enumor"
 	"bscp.io/pkg/criteria/errf"
@@ -63,9 +64,10 @@ func (dao *releaseDao) CreateWithTx(kit *kit.Kit, tx *sharding.Tx, release *tabl
 	}
 
 	release.ID = id
-
-	sql := fmt.Sprintf(`INSERT INTO %s (%s)	VALUES(%s)`, table.ReleaseTable, table.ReleaseColumns.ColumnExpr(),
-		table.ReleaseColumns.ColonNameExpr())
+	var sqlSentence []string
+	sqlSentence = append(sqlSentence, "INSERT INTO ", string(table.ReleaseTable), " (", table.ReleaseColumns.ColumnExpr(),
+		")  VALUES(", table.ReleaseColumns.ColonNameExpr(), ")")
+	sql := filter.SqlJoint(sqlSentence)
 
 	if err = dao.orm.Txn(tx.Tx()).Insert(kit.Ctx, sql, release); err != nil {
 		return 0, err
@@ -110,12 +112,14 @@ func (dao *releaseDao) List(kit *kit.Kit, opts *types.ListReleasesOption) (
 			},
 		},
 	}
-	whereExpr, err := opts.Filter.SQLWhereExpr(sqlOpt)
+	whereExpr, arg, err := opts.Filter.SQLWhereExpr(sqlOpt)
 	if err != nil {
 		return nil, err
 	}
 
-	countSql := fmt.Sprintf(`SELECT COUNT(*) FROM %s %s`, table.ReleaseTable, whereExpr)
+	var sqlSentenceCount []string
+	sqlSentenceCount = append(sqlSentenceCount, "SELECT COUNT(*) FROM ", string(table.ReleaseTable), whereExpr)
+	countSql := filter.SqlJoint(sqlSentenceCount)
 	count, err := dao.orm.Do(dao.sd.ShardingOne(opts.BizID).DB()).Count(kit.Ctx, countSql)
 	if err != nil {
 		return nil, err
@@ -127,11 +131,13 @@ func (dao *releaseDao) List(kit *kit.Kit, opts *types.ListReleasesOption) (
 		return nil, err
 	}
 
-	sql := fmt.Sprintf(`SELECT %s FROM %s %s %s`,
-		table.ReleaseColumns.NamedExpr(), table.ReleaseTable, whereExpr, pageExpr)
+	var sqlSentence []string
+	sqlSentence = append(sqlSentence, "SELECT ", table.ReleaseColumns.NamedExpr(),
+		" FROM ", string(table.ReleaseTable), whereExpr, pageExpr)
+	sql := filter.SqlJoint(sqlSentence)
 
 	list := make([]*table.Release, 0)
-	err = dao.orm.Do(dao.sd.ShardingOne(opts.BizID).DB()).Select(kit.Ctx, &list, sql)
+	err = dao.orm.Do(dao.sd.ShardingOne(opts.BizID).DB()).Select(kit.Ctx, &list, sql, arg)
 	if err != nil {
 		return nil, err
 	}
@@ -141,9 +147,10 @@ func (dao *releaseDao) List(kit *kit.Kit, opts *types.ListReleasesOption) (
 
 // validateAttachmentResExist validate if attachment resource exists before creating release.
 func (dao *releaseDao) validateAttachmentResExist(kit *kit.Kit, am *table.ReleaseAttachment) error {
-
-	exist, err := isResExist(kit, dao.orm, dao.sd.ShardingOne(am.BizID), table.AppTable,
-		fmt.Sprintf("WHERE id = %d AND biz_id = %d", am.AppID, am.BizID))
+	var sqlSentence []string
+	sqlSentence = append(sqlSentence, " WHERE id = ", strconv.Itoa(int(am.AppID)), " AND biz_id = ", strconv.Itoa(int(am.BizID)))
+	sql := filter.SqlJoint(sqlSentence)
+	exist, err := isResExist(kit, dao.orm, dao.sd.ShardingOne(am.BizID), table.AppTable, sql)
 	if err != nil {
 		return err
 	}

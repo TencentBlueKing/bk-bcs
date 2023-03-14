@@ -17,12 +17,14 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+	"strconv"
 	"time"
 
 	"bscp.io/pkg/criteria/enumor"
 	"bscp.io/pkg/dal/table"
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/logs"
+	filter2 "bscp.io/pkg/runtime/filter"
 )
 
 // initAuditBuilder create a new audit builder instance.
@@ -466,8 +468,9 @@ func (ab *AuditBuilder) Do(opt *AuditOption) error {
 }
 
 func (ab *AuditBuilder) getApp(appID uint32) (*table.App, error) {
-	filter := fmt.Sprintf(`SELECT %s FROM %s WHERE id = %d AND biz_id = %d`,
-		table.AppColumns.NamedExpr(), table.AppTable, appID, ab.bizID)
+	var sqlSentence []string
+	sqlSentence = append(sqlSentence, "SELECT ", table.AppColumns.NamedExpr(), " FROM ", string(table.AppTable), " WHERE id = ", strconv.Itoa(int(appID)), " AND biz_id = ", strconv.Itoa(int(ab.bizID)))
+	filter := filter2.SqlJoint(sqlSentence)
 
 	one := new(table.App)
 	err := ab.ad.orm.Do(ab.ad.sd.MustSharding(ab.bizID)).Get(ab.kit.Ctx, one, filter)
@@ -479,8 +482,10 @@ func (ab *AuditBuilder) getApp(appID uint32) (*table.App, error) {
 }
 
 func (ab *AuditBuilder) getConfigItem(configItemID uint32) (*table.ConfigItem, error) {
-	filter := fmt.Sprintf(`SELECT %s FROM %s WHERE id = %d AND biz_id = %d`,
-		table.ConfigItemColumns.NamedExpr(), table.ConfigItemTable, configItemID, ab.bizID)
+	var sqlSentence []string
+	sqlSentence = append(sqlSentence, "SELECT ", table.ConfigItemColumns.NamedExpr(), " FROM ", string(table.ConfigItemTable),
+		" WHERE id = ", strconv.Itoa(int(configItemID)), " AND biz_id = ", strconv.Itoa(int(ab.bizID)))
+	filter := filter2.SqlJoint(sqlSentence)
 
 	one := new(table.ConfigItem)
 	err := ab.ad.orm.Do(ab.ad.sd.MustSharding(ab.bizID)).Get(ab.kit.Ctx, one, filter)
@@ -492,8 +497,10 @@ func (ab *AuditBuilder) getConfigItem(configItemID uint32) (*table.ConfigItem, e
 }
 
 func (ab *AuditBuilder) getStrategySet(strategySetID uint32) (*table.StrategySet, error) {
-	filter := fmt.Sprintf(`SELECT %s FROM %s WHERE id = %d AND biz_id = %d`,
-		table.StrategySetColumns.NamedExpr(), table.StrategySetTable, strategySetID, ab.bizID)
+	var sqlSentence []string
+	sqlSentence = append(sqlSentence, "SELECT ", table.ConfigItemColumns.NamedExpr(), " FROM ", string(table.StrategySetTable),
+		" WHERE id = ", strconv.Itoa(int(strategySetID)), " AND biz_id = ", strconv.Itoa(int(ab.bizID)))
+	filter := filter2.SqlJoint(sqlSentence)
 
 	one := new(table.StrategySet)
 	err := ab.ad.orm.Do(ab.ad.sd.MustSharding(ab.bizID)).Get(ab.kit.Ctx, one, filter)
@@ -505,8 +512,10 @@ func (ab *AuditBuilder) getStrategySet(strategySetID uint32) (*table.StrategySet
 }
 
 func (ab *AuditBuilder) getStrategy(strategyID uint32) (*table.Strategy, error) {
-	filter := fmt.Sprintf(`SELECT %s FROM %s WHERE id = %d AND biz_id = %d`,
-		table.StrategyColumns.NamedExpr(), table.StrategyTable, strategyID, ab.bizID)
+	var sqlSentence []string
+	sqlSentence = append(sqlSentence, "SELECT ", table.ConfigItemColumns.NamedExpr(), " FROM ", string(table.StrategyTable),
+		" WHERE id = ", strconv.Itoa(int(strategyID)), " AND biz_id = ", strconv.Itoa(int(ab.bizID)))
+	filter := filter2.SqlJoint(sqlSentence)
 
 	one := new(table.Strategy)
 	err := ab.ad.orm.Do(ab.ad.sd.MustSharding(ab.bizID)).Get(ab.kit.Ctx, one, filter)
@@ -518,8 +527,10 @@ func (ab *AuditBuilder) getStrategy(strategyID uint32) (*table.Strategy, error) 
 }
 
 func (ab *AuditBuilder) getCRInstance(criID uint32) (*table.CurrentReleasedInstance, error) {
-	filter := fmt.Sprintf(`SELECT %s FROM %s WHERE id = %d AND biz_id = %d`,
-		table.CurrentReleasedInstanceColumns.NamedExpr(), table.CurrentReleasedInstanceTable, criID, ab.bizID)
+	var sqlSentence []string
+	sqlSentence = append(sqlSentence, "SELECT ", table.ConfigItemColumns.NamedExpr(), " FROM ", string(table.CurrentReleasedInstanceTable),
+		" WHERE id = ", strconv.Itoa(int(criID)), " AND biz_id = ", strconv.Itoa(int(ab.bizID)))
+	filter := filter2.SqlJoint(sqlSentence)
 
 	one := new(table.CurrentReleasedInstance)
 	err := ab.ad.orm.Do(ab.ad.sd.MustSharding(ab.bizID)).Get(ab.kit.Ctx, one, filter)

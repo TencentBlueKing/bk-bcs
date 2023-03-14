@@ -13,22 +13,23 @@ limitations under the License.
 package dao
 
 import (
-	"fmt"
-
 	"bscp.io/pkg/dal/orm"
 	"bscp.io/pkg/dal/sharding"
 	"bscp.io/pkg/dal/table"
 	"bscp.io/pkg/kit"
+	"bscp.io/pkg/runtime/filter"
 )
 
 // isResExist judge the existence of resources matched by table name and where expression.
 func isResExist(kit *kit.Kit, orm orm.Interface, sd *sharding.One, tableName table.Name,
 	whereExpr string) (bool, error) {
 
-	expr := fmt.Sprintf("SELECT EXISTS(SELECT * FROM %s %s)", tableName, whereExpr)
+	var sqlSentence []string
+	sqlSentence = append(sqlSentence, "SELECT EXISTS(SELECT * FROM ", string(tableName), " ", whereExpr)
+	sql := filter.SqlJoint(sqlSentence)
 
 	var result int8
-	if err := orm.Do(sd.DB()).Get(kit.Ctx, &result, expr); err != nil {
+	if err := orm.Do(sd.DB()).Get(kit.Ctx, &result, sql); err != nil {
 		return false, err
 	}
 

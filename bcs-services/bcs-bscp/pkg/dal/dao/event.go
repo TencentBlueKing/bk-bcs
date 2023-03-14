@@ -147,8 +147,9 @@ func (ef *EDecorator) Fire(es ...types.Event) error {
 		return errf.New(errf.Aborted, "insert events, but get event db failed, err: "+err.Error())
 	}
 
-	sql := fmt.Sprintf("INSERT INTO %s (%s) VALUES(%s)", table.EventTable, table.EventColumns.ColumnExpr(),
-		table.EventColumns.ColonNameExpr())
+	var sqlSentence []string
+	sqlSentence = append(sqlSentence, "INSERT INTO ", string(table.EventTable), " (", table.EventColumns.ColumnExpr(), ") VALUES(", table.EventColumns.ColonNameExpr(), ")")
+	sql := filter.SqlJoint(sqlSentence)
 	if err := ef.orm.Do(one.DB()).BulkInsert(ef.kt.Ctx, sql, list); err != nil {
 		return errf.New(errf.InvalidParameter, "insert events failed, err: "+err.Error())
 	}
@@ -178,7 +179,9 @@ func (ef *EDecorator) Finalizer(txnError error) {
 	}
 	joined := strings.Join(in, ",")
 
-	sql := fmt.Sprintf("UPDATE %s SET final_status = %d WHERE id IN(%s)", table.EventTable, state, joined)
+	var sqlSentence []string
+	sqlSentence = append(sqlSentence, "UPDATE ", string(table.EventTable), " SET final_status = ", strconv.Itoa(int(state)), " WHERE id IN(", joined, ")")
+	sql := filter.SqlJoint(sqlSentence)
 	_, err := ef.orm.Do(ef.sd.Event().DB()).Exec(context.TODO(), sql)
 	if err != nil {
 		logs.ErrorDepthf(1, "update event final state to %d failed, id list: %s, err: %v, rid: %s", state, joined,
@@ -214,16 +217,18 @@ func (ed *eventDao) List(kt *kit.Kit, opts *types.ListEventsOption) (*types.List
 		},
 	}
 
-	whereExpr, err := opts.Filter.SQLWhereExpr(sqlOpt)
+	whereExpr, arg, err := opts.Filter.SQLWhereExpr(sqlOpt)
 	if err != nil {
 		return nil, err
 	}
 
+	var sqlSentence []string
 	if opts.Page.Count {
 		// this is a count request, then do count operation only.
-		sql := fmt.Sprintf(`SELECT COUNT(*) FROM %s %s`, table.EventTable, whereExpr)
+		sqlSentence = append(sqlSentence, "SELECT COUNT(*) FROM ", string(table.EventTable), whereExpr)
+		sql := filter.SqlJoint(sqlSentence)
 		var count uint32
-		count, err = ed.orm.Do(ed.sd.Event().DB()).Count(kt.Ctx, sql)
+		count, err = ed.orm.Do(ed.sd.Event().DB()).Count(kt.Ctx, sql, arg)
 		if err != nil {
 			return nil, err
 		}
@@ -237,10 +242,11 @@ func (ed *eventDao) List(kt *kit.Kit, opts *types.ListEventsOption) (*types.List
 		return nil, err
 	}
 
-	sql := fmt.Sprintf(`SELECT %s FROM %s %s %s`, table.EventColumns.NamedExpr(), table.EventTable, whereExpr, pageExpr)
+	sqlSentence = append(sqlSentence, "SELECT ", table.EventColumns.NamedExpr(), " FROM ", string(table.EventTable), whereExpr, pageExpr)
+	sql := filter.SqlJoint(sqlSentence)
 
 	list := make([]*table.Event, 0)
-	err = ed.orm.Do(ed.sd.Event().DB()).Select(kt.Ctx, &list, sql)
+	err = ed.orm.Do(ed.sd.Event().DB()).Select(kt.Ctx, &list, sql, arg)
 	if err != nil {
 		return nil, err
 	}
@@ -277,7 +283,7 @@ func (ed *eventDao) ListConsumedEvents(kt *kit.Kit, opts *types.ListEventsOption
 		},
 	}
 
-	whereExpr, err := opts.Filter.SQLWhereExpr(sqlOpt)
+	whereExpr, arg, err := opts.Filter.SQLWhereExpr(sqlOpt)
 	if err != nil {
 		return nil, err
 	}
@@ -288,12 +294,16 @@ func (ed *eventDao) ListConsumedEvents(kt *kit.Kit, opts *types.ListEventsOption
 		return nil, err
 	}
 
-	subSql := fmt.Sprintf("SELECT resource_id FROM %s WHERE resource = '%s'", table.EventTable, table.CursorReminder)
-	sql := fmt.Sprintf(`SELECT %s FROM %s %s AND id <= (%s) %s`, table.EventColumns.NamedExpr(), table.EventTable,
-		whereExpr, subSql, pageExpr)
+	var sqlSentenceSub []string
+	sqlSentenceSub = append(sqlSentenceSub, "SELECT resource_id FROM ", string(table.EventTable), " WHERE resource = '", string(table.CursorReminder), "'")
+	subSql := filter.SqlJoint(sqlSentenceSub)
+	var sqlSentence []string
+	sqlSentence = append(sqlSentence, "SELECT ", table.EventColumns.NamedExpr(), " FROM ", string(table.EventTable), whereExpr,
+		" AND id <= (", subSql, ") ", pageExpr)
+	sql := filter.SqlJoint(sqlSentence)
 
 	list := make([]*table.Event, 0)
-	err = ed.orm.Do(ed.sd.Event().DB()).Select(kt.Ctx, &list, sql)
+	err = ed.orm.Do(ed.sd.Event().DB()).Select(kt.Ctx, &list, sql, arg)
 	if err != nil {
 		return nil, err
 	}
@@ -308,8 +318,9 @@ func (ed *eventDao) ListConsumedEvents(kt *kit.Kit, opts *types.ListEventsOption
 // consumed.
 func (ed *eventDao) LatestCursor(kt *kit.Kit) (uint32, error) {
 
-	sql := fmt.Sprintf("SELECT resource_id FROM %s WHERE resource = '%s' limit 1", table.EventTable,
-		table.CursorReminder)
+	var sqlSentence []string
+	sqlSentence = append(sqlSentence, "SELECT resource_id FROM ", string(table.EventTable), " WHERE resource = '", string(table.CursorReminder), "' limit 1")
+	sql := filter.SqlJoint(sqlSentence)
 
 	cursor := uint32(0)
 	if err := ed.orm.Do(ed.sd.Event().DB()).Get(kt.Ctx, &cursor, sql); err != nil {
@@ -341,8 +352,10 @@ func (ed *eventDao) RecordCursor(kt *kit.Kit, eventID uint32) error {
 	}
 
 	at := time.Now().Format(constant.TimeStdFormat)
-	sql := fmt.Sprintf("UPDATE %s SET resource_id = %d, created_at = '%s' WHERE id = %d", table.EventTable, eventID,
-		at, table.EventCursorReminderPrimaryID)
+	var sqlSentence []string
+	sqlSentence = append(sqlSentence, "UPDATE ", string(table.EventTable), " SET resource_id = ", strconv.Itoa(int(eventID)),
+		", created_at = '", at, "' WHERE id = ", strconv.Itoa(table.EventCursorReminderPrimaryID))
+	sql := filter.SqlJoint(sqlSentence)
 
 	one := ed.sd.Event()
 	if err := one.Err(); err != nil {
@@ -360,9 +373,10 @@ func (ed *eventDao) RecordCursor(kt *kit.Kit, eventID uint32) error {
 
 	// the cursorReminder event is lost, insert it now, normally this can not happen, because
 	// this event is initialed when the database is created.
-	sql = fmt.Sprintf("INSERT INTO %s (id, biz_id, app_id, op_type, resource, resource_id, creator, created_at) "+
-		"VALUES(%d, 0, 0, '', '%s', %d, '%s', '%s')",
-		table.EventTable, table.EventCursorReminderPrimaryID, table.CursorReminder, eventID, eventUser, at)
+	var sqlSentenceInsert []string
+	sqlSentenceInsert = append(sqlSentenceInsert, "INSERT INTO ", string(table.EventTable), " (id, biz_id, app_id, op_type, resource, resource_id, creator, created_at) ",
+		"VALUES(", strconv.Itoa(table.EventCursorReminderPrimaryID), ", 0, 0, '', '", string(table.CursorReminder), "', ", strconv.Itoa(int(eventID)), ", '", eventUser, "', '", at, "')")
+	sql = filter.SqlJoint(sqlSentenceInsert)
 
 	cnt, err = ed.orm.Do(one.DB()).Exec(kt.Ctx, sql)
 	if err != nil {
@@ -384,8 +398,9 @@ func (ed *eventDao) Purge(kt *kit.Kit, daysAgo uint) error {
 		return fmt.Errorf("get event db failed, err: %v", err)
 	}
 
-	sql := fmt.Sprintf("SELECT id FROM %s WHERE created_at <= (NOW() - INTERVAL %d DAY) ORDER BY id DESC LIMIT 1",
-		table.EventTable, daysAgo)
+	var sqlSentence []string
+	sqlSentence = append(sqlSentence, "SELECT id FROM ", string(table.EventTable), " WHERE created_at <= (NOW() - INTERVAL ", strconv.Itoa(int(daysAgo)), " DAY) ORDER BY id DESC LIMIT 1")
+	sql := filter.SqlJoint(sqlSentence)
 
 	lastID := uint32(0)
 	if err := ed.orm.Do(one.DB()).Get(kt.Ctx, &lastID, sql); err != nil {
@@ -400,7 +415,9 @@ func (ed *eventDao) Purge(kt *kit.Kit, daysAgo uint) error {
 	const step = 100
 
 	for {
-		sql = fmt.Sprintf("DELETE FROM %s WHERE id <= %d ORDER BY id ASC LIMIT %d", table.EventTable, lastID, step)
+		var sqlSentenceDel []string
+		sqlSentenceDel = append(sqlSentenceDel, "DELETE FROM ", string(table.EventTable), " WHERE id <= ", strconv.Itoa(int(lastID)), " ORDER BY id ASC LIMIT ", strconv.Itoa(int(step)))
+		sql = filter.SqlJoint(sqlSentenceDel)
 		cnt, err := ed.orm.Do(one.DB()).Exec(kt.Ctx, sql)
 		if err != nil {
 			return fmt.Errorf("delete event failed, last id: %d, err: %v", lastID, err)

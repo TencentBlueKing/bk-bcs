@@ -69,8 +69,10 @@ func (dao *releasedCIDao) BulkCreateWithTx(kit *kit.Kit, tx *sharding.Tx, items 
 		start++
 	}
 
-	sql := fmt.Sprintf(`INSERT INTO %s (%s)	VALUES(%s)`, table.ReleasedConfigItemTable,
-		table.ReleasedConfigItemColumns.ColumnExpr(), table.ReleasedConfigItemColumns.ColonNameExpr())
+	var sqlSentence []string
+	sqlSentence = append(sqlSentence, "INSERT INTO ", string(table.ReleasedConfigItemTable), " (", table.ReleasedConfigItemColumns.ColumnExpr(),
+		")  VALUES(", table.ReleasedConfigItemColumns.ColonNameExpr(), ")")
+	sql := filter.SqlJoint(sqlSentence)
 
 	if err = dao.orm.Txn(tx.Tx()).BulkInsert(kit.Ctx, sql, items); err != nil {
 		return err
@@ -132,13 +134,15 @@ func (dao *releasedCIDao) List(kit *kit.Kit, opts *types.ListReleasedCIsOption) 
 			},
 		},
 	}
-	whereExpr, err := opts.Filter.SQLWhereExpr(sqlOpt)
+	whereExpr, arg, err := opts.Filter.SQLWhereExpr(sqlOpt)
 	if err != nil {
 		return nil, err
 	}
 
-	countSql := fmt.Sprintf(`SELECT COUNT(*) FROM %s %s`, table.ReleasedConfigItemTable, whereExpr)
-	count, err := dao.orm.Do(dao.sd.ShardingOne(opts.BizID).DB()).Count(kit.Ctx, countSql)
+	var sqlSentenceCount []string
+	sqlSentenceCount = append(sqlSentenceCount, "SELECT COUNT(*) FROM ", string(table.ReleasedConfigItemTable), whereExpr)
+	countSql := filter.SqlJoint(sqlSentenceCount)
+	count, err := dao.orm.Do(dao.sd.ShardingOne(opts.BizID).DB()).Count(kit.Ctx, countSql, arg)
 	if err != nil {
 		return nil, err
 	}
@@ -149,11 +153,11 @@ func (dao *releasedCIDao) List(kit *kit.Kit, opts *types.ListReleasedCIsOption) 
 		return nil, err
 	}
 
-	sql := fmt.Sprintf(`SELECT %s FROM %s %s %s`,
-		table.ReleasedConfigItemColumns.NamedExpr(), table.ReleasedConfigItemTable, whereExpr, pageExpr)
-
+	var sqlSentence []string
+	sqlSentence = append(sqlSentence, "SELECT ", table.ReleasedConfigItemColumns.NamedExpr(), " FROM ", string(table.ReleasedConfigItemTable), whereExpr, pageExpr)
+	sql := filter.SqlJoint(sqlSentence)
 	list := make([]*table.ReleasedConfigItem, 0)
-	err = dao.orm.Do(dao.sd.ShardingOne(opts.BizID).DB()).Select(kit.Ctx, &list, sql)
+	err = dao.orm.Do(dao.sd.ShardingOne(opts.BizID).DB()).Select(kit.Ctx, &list, sql, arg)
 	if err != nil {
 		return nil, err
 	}
