@@ -165,8 +165,8 @@ const handleCreateAppForm = async () => {
         router.push({
           name: 'serving-config',
           params: {
-            // @ts-ignore
-            id: resp.id
+            spaceId: formData.value.biz_id,
+            appId: resp.id
           }
         })
       },

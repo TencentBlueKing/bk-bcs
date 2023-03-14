@@ -101,10 +101,11 @@ func (pd *pubDao) Publish(kit *kit.Kit, opt *types.PublishOption) (uint32, error
 		}
 		// create strategy to publish it later
 		now := time.Now()
-		stgID, err := pd.idGen.One(kit, table.GroupTable)
+		stgID, err := pd.idGen.One(kit, table.StrategyTable)
 		stg := &table.Strategy{
 			ID: stgID,
 			Spec: &table.StrategySpec{
+				// TODO: strategy name
 				Name:      "TODO",
 				ReleaseID: opt.ReleaseID,
 				AsDefault: opt.All,
@@ -112,7 +113,7 @@ func (pd *pubDao) Publish(kit *kit.Kit, opt *types.PublishOption) (uint32, error
 					Groups: groups,
 				},
 				Mode: table.Normal,
-				Memo: "TODO",
+				Memo: opt.Memo,
 			},
 			State: &table.StrategyState{
 				PubState: table.Publishing,
@@ -133,6 +134,9 @@ func (pd *pubDao) Publish(kit *kit.Kit, opt *types.PublishOption) (uint32, error
 			")  VALUES(", table.StrategyColumns.ColonNameExpr(), ")")
 		stgExpr := filter.SqlJoint(sqlSentence)
 
+		if err := stg.Spec.ValidateCreate(); err != nil {
+			return err
+		}
 		if err = pd.orm.Txn(txn).Insert(kit.Ctx, stgExpr, stg); err != nil {
 			return err
 		}
@@ -163,6 +167,13 @@ func (pd *pubDao) Publish(kit *kit.Kit, opt *types.PublishOption) (uint32, error
 			logs.Errorf("record the published strategy history table failed, err: %v, rid: %s", err, kit.Rid)
 			return err
 		}
+
+		// add release publish num
+		if err := pd.increaseReleasePublishNum(kit, txn, stg.Spec.ReleaseID); err != nil {
+			logs.Errorf("increate release publish num failed, err: %v, rid: %s", err, kit.Rid)
+			return err
+		}
+
 		pshID = id
 
 		// fire the event with txn to ensure the if save the event failed then the business logic is failed anyway.
@@ -291,6 +302,16 @@ func (pd *pubDao) recordPublishedStrategyHistory(kit *kit.Kit, txn *sqlx.Tx, pub
 	}
 
 	return id, nil
+}
+
+// increaseReleasePublishNum increase release publish num by 1
+func (pd *pubDao) increaseReleasePublishNum(kit *kit.Kit, txn *sqlx.Tx, releaseID uint32) error {
+	sql := fmt.Sprintf(`UPDATE %s SET publish_num = publish_num + 1 WHERE id = %d`, table.ReleaseTable, releaseID)
+	if _, err := txn.ExecContext(kit.Ctx, sql); err != nil {
+		logs.Errorf("increate release publish num failed, sql: %s, err: %v, rid: %s", sql, err, kit.Rid)
+		return errf.New(errf.DBOpFailed, "insert published strategy history failed, err: "+err.Error())
+	}
+	return nil
 }
 
 // updateStrategyPublishState update a strategy's publish state.

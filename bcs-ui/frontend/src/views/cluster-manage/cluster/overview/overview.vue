@@ -140,14 +140,15 @@
           <div>
             <div class="flex justify-end">
               <span class="text-[32px]">
-                {{ conversionPercentUsed(overviewData.disk_usage.request_bytes, overviewData.disk_usage.total_bytes) }}
+                {{ conversionPercentUsed(
+                  overviewData.diskio_usage.used, overviewData.diskio_usage.total) }}
               </span>
               <sup class="text-[20px]">%</sup>
             </div>
             <!-- <div class="font-bold text-[#853cff] text-[14px]">
-              {{ formatBytes(overviewData.disk_usage.request_bytes || 0) }}
+              {{ formatBytes(overviewData.disk_usage.used || 0) }}
               of
-              {{ formatBytes(overviewData.disk_usage.total_bytes || 0) }}
+              {{ formatBytes(overviewData.disk_usage.total || 0) }}
             </div> -->
           </div>
         </div>
@@ -174,10 +175,16 @@ export default defineComponent({
     const { $route } = ctx.root;
     const { projectCode } = useProject();
     const clusterId = computed(() => $route.params.clusterId);
-    const overviewData = ref({
+    const overviewData = ref<{
+      cpu_usage: any
+      disk_usage: any
+      memory_usage: any
+      diskio_usage: any
+    }>({
       cpu_usage: {},
       disk_usage: {},
       memory_usage: {},
+      diskio_usage: {},
     });
     const getClusterOverview = async () => {
       overviewData.value = await $store.dispatch('metric/clusterOverview', {

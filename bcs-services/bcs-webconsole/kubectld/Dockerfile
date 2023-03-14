@@ -14,7 +14,7 @@ RUN mkdir -p ~/.vim/colors && mkdir -p ~/.vim/autoload && \
     wget -q https://raw.githubusercontent.com/joshdick/onedark.vim/main/colors/onedark.vim -O ~/.vim/colors/onedark.vim
 
 # 安装依赖包
-RUN apk add --update wget bash-completion vim bat
+RUN apk add --update wget bash-completion vim bat jq
 
 # 添加 kubectl 命令行
 RUN wget -q https://dl.k8s.io/release/${KUBECTL_VERSION}/bin/linux/amd64/kubectl && \

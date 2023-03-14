@@ -1,17 +1,102 @@
 <script setup lang="ts">
-  import { ref } from 'vue'
+  import { ref, watch } from 'vue'
   import { RightShape, Del } from 'bkui-vue/lib/icon'
-  import { ICategoryGroup } from '../../../../../types/group'
+  import InfoBox from "bkui-vue/lib/info-box";
+  import { IGroupItem, ICategoryItem, ECategoryType } from '../../../../../types/group'
+  import { getCategoryGroupList, delCategory, deleteGroup } from '../../../../api/group'
+  import RuleTag from './components/rule-tag.vue'
 
   const props = defineProps<{
-    categoryGroup: ICategoryGroup
+    appId: number,
+    mode: ECategoryType,
+    categoryGroup: ICategoryItem
   }>()
 
   const folded = ref(true)
+  const listData = ref<IGroupItem[]>([])
+  const listLoading = ref(false)
+  const pagination = ref({
+    count: 0,
+    limit: 10,
+    current: 1
+  })
+
+  watch(() => folded.value, (val) => {
+    if (!val) {
+      getListData()
+    }
+  })
+
+  const getListData = async() => {
+    listLoading.value = true
+    const params = {
+      mode: props.mode,
+      start: (pagination.value.current - 1) * pagination.value.limit,
+      limit: pagination.value.limit
+    }
+    const res = await getCategoryGroupList(props.appId, props.categoryGroup.id, params)
+    const { count, details } = res
+    listData.value = details
+    listLoading.value = false
+    pagination.value.count = count
+  }
+
+  const refreshList = () => {
+    pagination.value.current = 1
+    getListData()
+  }
+
+  const handlePageLimitChange = (val: number) => {
+    pagination.value.limit = val
+    refreshList()
+  }
 
   const handleToggleFold = () => {
     folded.value = !folded.value
   }
+
+  const handleDeleteCategory = () => {
+    if (listData.value.length > 0) {
+      InfoBox({
+        title: `暂无法删除【${props.categoryGroup.spec.name}】`,
+        subTitle: '请先删除此分类下所有分组',
+        type: "warning",
+        headerAlign: "center" as const,
+        footerAlign: "center" as const
+      } as any)
+    } else {
+      InfoBox({
+        title: `确认是否删除分类【${props.categoryGroup.spec.name}?】`,
+        type: "danger",
+        headerAlign: "center" as const,
+        footerAlign: "center" as const,
+        onConfirm: async () => {
+          await delCategory(props.appId, props.categoryGroup.id)
+          return true
+        },
+      } as any)
+    }
+  }
+
+  // 编辑分组
+  const handleEditGroup = (row: IGroupItem) => { console.log(row) }
+
+  // 删除分组
+  const handleDeleteGroup = (group: IGroupItem) => { 
+    InfoBox({
+      title: `确认是否删除分组【${group.spec.name}?】`,
+      type: "danger",
+      headerAlign: "center" as const,
+      footerAlign: "center" as const,
+      onConfirm: async () => {
+        await deleteGroup(props.appId, group.id)
+        if (listData.value.length === 1 && pagination.value.current > 1) {
+          pagination.value.current = pagination.value.current - 1
+        }
+        getListData()
+      },
+    } as any)
+   }
 
 </script>
 <template>
@@ -19,16 +104,47 @@
     <div :class="['header-area', { 'expanded': !folded }]" @click="handleToggleFold">
       <div class="category-content">
         <RightShape class="arrow-icon" />
-        <span class="name">{{ categoryGroup.config.spec.name }}</span>
+        <span class="name">{{ categoryGroup.spec.name }}</span>
       </div>
-      <Del class="delete-icon" />
+      <Del class="delete-icon" @click.stop="handleDeleteCategory" />
     </div>
-    <bk-table v-if="!folded" class="group-table" :border="['outer']">
-      <bk-table-column label="分组名称"></bk-table-column>
-      <bk-table-column label="分组规则"></bk-table-column>
-      <bk-table-column label="当前上线版本"></bk-table-column>
-      <bk-table-column label="操作"></bk-table-column>
-    </bk-table>
+    <template v-if="!folded">
+      <bk-loading :loading="listLoading">
+        <bk-table class="group-table" :border="['outer']" :data="listData">
+          <bk-table-column label="分组名称" prop="spec.name"></bk-table-column>
+          <bk-table-column label="分组规则">
+            <template #default="{ row }">
+              <template v-if="row.spec && row.spec.mode === ECategoryType.Custom">
+                <rule-tag
+                  v-for="(rule, index) in (row.spec.selector.labels_or || row.spec.selector.labels_and)"
+                  class="tag-item"
+                  :key="index"
+                  :rule="rule"/>
+              </template>
+              <span v-else>-</span>
+            </template>
+          </bk-table-column>
+          <bk-table-column label="当前上线版本"></bk-table-column>
+          <bk-table-column label="操作" :width="180">
+            <template #default="{ row }">
+              <div class="action-btns">
+                <bk-button text theme="primary" @click="handleEditGroup(row)">编辑分组</bk-button>
+                <bk-button text theme="primary" @click="handleDeleteGroup(row)">删除</bk-button>
+              </div>
+            </template>
+          </bk-table-column>
+        </bk-table>
+        <bk-pagination
+          class="table-list-pagination"
+          v-model="pagination.current"
+          location="left"
+          :layout="['total', 'limit', 'list']"
+          :count="pagination.count"
+          :limit="pagination.limit"
+          @change="refreshList"
+          @limit-change="handlePageLimitChange"/>
+      </bk-loading>
+    </template>
   </section>
 </template>
 <style lang="scss" scoped>
@@ -71,5 +187,23 @@
   }
   .group-table {
     margin-top: 8px
+  }
+  .tag-item:not(:first-of-type) {
+    margin-left: 8px;
+  }
+  .action-btns {
+    .bk-button:not(:last-of-type) {
+      margin-right: 8px;
+    }
+  }
+  .table-list-pagination {
+    padding: 12px;
+    border: 1px solid #dcdee5;
+    border-top: none;
+    border-radius: 0 0 2px 2px;
+    background: #ffffff;
+    :deep(.bk-pagination-list.is-last) {
+      margin-left: auto;
+    }
   }
 </style>

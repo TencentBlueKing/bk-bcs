@@ -50,3 +50,7 @@ test:
 .PHONY: docker
 docker:
 	@docker build -t bcs-webconsole:latest .
+
+.PHONY: kubectld
+kubectld:
+	cd kubectld && docker build . -t kubectld:latest

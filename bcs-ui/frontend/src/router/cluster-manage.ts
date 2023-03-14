@@ -2,13 +2,13 @@ import { RouteConfig } from 'vue-router';
 // 集群首页
 const Cluster = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/cluster/index.vue');
 // 创建集群
-const ClusterCreate = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/cluster/cluster-create/create-cluster.vue');
+const ClusterCreate = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/cluster/create/create-cluster.vue');
 // 表单模式
-const CreateFormCluster = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/cluster/cluster-create/create-form-cluster.vue');
+const CreateFormCluster = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/cluster/create/create-form-cluster.vue');
 // ee版本创建集群流程
-const CreateFormClusterEE = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/cluster/cluster-create/create-form-cluster-ee.vue');
+const CreateFormClusterEE = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/cluster/create/create-form-cluster-ee.vue');
 // import模式
-const CreateImportCluster = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/cluster/cluster-create/create-import-cluster.vue');
+const CreateImportCluster = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/cluster/create/create-import-cluster.vue');
 // 集群详情
 const ClusterDetail = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/cluster/cluster-detail.vue');
 const ClusterNodeOverview = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/node-list/node-overview.vue');
@@ -16,14 +16,14 @@ const Node = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-mana
 const NodeTemplate = () => import(/* webpackChunkName: 'cluster'  */'@/views/cluster-manage/node-template/node-template.vue');
 const EditNodeTemplate = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/node-template/edit-node-template.vue');
 const AddClusterNode = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/node-list/add-cluster-node.vue');
-const AutoScalerConfig = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/cluster/cluster-autoscaler/tencent/autoscaler-config.vue');
-const NodePool = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/cluster/cluster-autoscaler/tencent/node-pool.vue');
-const NodePoolDetail = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/cluster/cluster-autoscaler/tencent/node-pool-detail.vue');
-const EditNodePool = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/cluster/cluster-autoscaler/tencent/edit-node-pool.vue');
-const InternalAutoScalerConfig = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/cluster/cluster-autoscaler/internal/autoscaler-config.vue');
-const InternalNodePool = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/cluster/cluster-autoscaler/internal/node-pool.vue');
-const InternalNodePoolDetail = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/cluster/cluster-autoscaler/internal/node-pool-detail.vue');
-const InternalEditNodePool = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/cluster/cluster-autoscaler/internal/edit-node-pool.vue');
+const AutoScalerConfig = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/cluster/autoscaler/tencent/autoscaler-config.vue');
+const NodePool = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/cluster/autoscaler/tencent/node-pool.vue');
+const NodePoolDetail = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/cluster/autoscaler/tencent/node-pool-detail.vue');
+const EditNodePool = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/cluster/autoscaler/tencent/edit-node-pool.vue');
+const InternalAutoScalerConfig = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/cluster/autoscaler/internal/autoscaler-config.vue');
+const InternalNodePool = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/cluster/autoscaler/internal/node-pool.vue');
+const InternalNodePoolDetail = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/cluster/autoscaler/internal/node-pool-detail.vue');
+const InternalEditNodePool = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/cluster/autoscaler/internal/edit-node-pool.vue');
 
 // 集群管理
 export default [

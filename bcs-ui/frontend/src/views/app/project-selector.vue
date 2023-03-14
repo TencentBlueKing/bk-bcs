@@ -12,11 +12,20 @@
         :key="option.projectCode"
         :id="option.projectCode"
         :name="option.name">
-        <span class="flex">
-          <span class="bcs-ellipsis">{{option.name}}</span>
+        <span
+          class="flex items-center"
+          v-bk-tooltips="{
+            content: option.businessID
+              ? `${$t('项目名称')}: ${option.name}<br/>${$t('业务ID')}: ${option.businessID}`
+              : `${$t('项目名称')}: ${option.name}<br/>${$t('未启用容器服务')}`,
+            placement: 'left',
+            boundary: 'window'
+          }">
+          <span :class="['bcs-ellipsis', { 'flex-1': !option.businessID }]">{{option.name}}</span>
           <span class="text-[#C4C6CC]" v-if="option.businessID">
             {{`(${option.businessID})`}}
           </span>
+          <bcs-tag size="small" v-else>{{ $t('未启用') }}</bcs-tag>
         </span>
       </bcs-option>
       <template #extension>

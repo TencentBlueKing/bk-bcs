@@ -47,6 +47,10 @@
           color: #dcdee5;
           cursor: not-allowed;
       }
+      &.active {
+        background-color: #eaf3ff;
+        color: #3a84ff;
+      }
   }
 
   .bcs-border {

@@ -3972,4 +3972,32 @@ export default {
   '最大调度Pod数量（maxSurge）: {num}': [
     'Maximum scheduling pod quantity (MaxSurge): {num}',
   ],
+  磁盘IO使用率: [
+    'Disk IO usage rate',
+  ],
+  CPU装箱率: [
+    'CPU packing rate',
+  ],
+  内存装箱率: [
+    'Memory box rate',
+  ],
+  内核: [
+    'Core',
+  ],
+  'CPU使用率/装箱率': [
+    'CPU usage rate/packing rate',
+  ],
+  '内存使用率/装箱率': [
+    'Memory usage/packing rate',
+  ],
+  '磁盘容量/IO使用率': [
+    'Disk capacity/IO usage rate',
+  ],
+  '输入名称、IP搜索': [
+    'Enter name, IP search',
+  ],
+  未启用容器服务: [
+    'Unregistry BCS',
+  ],
+  '确定使用节点模板 {name}': ['Make sure to use node template {name}'],
 };

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onMounted, ref, watch } from 'vue'
 import { useStore } from 'vuex'
-import isCrossOriginIFrame from './utils/isCrossOriginIFrame'
+import isCrossOriginIFrame from './utils/is-cross-origin-iframe'
 
 import Header from "./components/head.vue";
 

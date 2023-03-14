@@ -441,8 +441,8 @@ paths:
         authConfig:
           userVerifiedRequired: true
         disabledStages: []
-  /api/v1/config/get/config_item/config_item/config_item/{id}/app_id/{app_id}/biz_id/{biz_id}:
-    post:
+  /api/v1/config/apps/{app_id}/config_items/{config_item_id}:
+    get:
       operationId: get_config_item
       description: 获取配置项详情
       tags:
@@ -457,7 +457,7 @@ paths:
         backend:
           type: HTTP
           method: get
-          path: /api/v1/config/get/config_item/config_item/config_item/{id}/app_id/{app_id}/biz_id/{biz_id}
+          path: /api/v1/config/apps/{app_id}/config_items/{config_item_id}
           matchSubpath: false
           timeout: 0
           upstreams: {}
@@ -465,9 +465,9 @@ paths:
         authConfig:
           userVerifiedRequired: true
         disabledStages: []
-  /api/v1/config/list/config_item/config_item/app_id/{app_id}/biz_id/{biz_id}:
-    post:
-      operationId: list_config_item
+  /api/v1/config/apps/{app_id}/config_items:
+    get:
+      operationId: list_config_items
       description: 查询配置列表
       tags:
       - 配置项管理
@@ -480,8 +480,8 @@ paths:
         matchSubpath: false
         backend:
           type: HTTP
-          method: post
-          path: /api/v1/config/list/config_item/config_item/app_id/{app_id}/biz_id/{biz_id}
+          method: get
+          path: /api/v1/config/apps/{app_id}/config_items
           matchSubpath: false
           timeout: 0
           upstreams: {}

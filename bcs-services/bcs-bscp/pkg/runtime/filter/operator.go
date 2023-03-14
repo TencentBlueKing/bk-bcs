@@ -275,7 +275,6 @@ func (gt GreaterThanOp) SQLExpr(field string, value interface{}) (string, []inte
 
 	argList = append(argList, value)
 	return fmt.Sprintf(`%s > ?`, field), argList, nil
-
 }
 
 // GreaterThanEqualOp is greater than equal operator

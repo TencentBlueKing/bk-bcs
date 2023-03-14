@@ -12,6 +12,7 @@
     children: Array<IServingItem>;
   }
 
+  const route = useRoute()
   const router = useRouter()
 
   const props = defineProps<{
@@ -66,7 +67,7 @@
       return group.children.find(item => item.id === id)
     })
     if (group) {
-      router.push({ name: 'serving-config', params: { spaceId: group.space_id, appId: id } })
+      router.push({ name: <string>route.name, params: { spaceId: group.space_id, appId: id } })
     }
   }
 </script>

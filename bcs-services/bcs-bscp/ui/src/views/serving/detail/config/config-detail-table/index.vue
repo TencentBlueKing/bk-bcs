@@ -2,9 +2,8 @@
   import { defineProps, ref, computed, watch, onMounted } from 'vue'
   import { useStore } from 'vuex'
   import InfoBox from "bkui-vue/lib/info-box";
-  import { FilterOp, IPageFilter } from '../../../../../types'
-  import { IConfigItem } from '../../../../../../types/config'
-  import { getServingConfigList, getServingVersionConfigList, deleteServingConfigItem } from '../../../../../api/config'
+  import { IConfigItem, IConfigListQueryParams } from '../../../../../../types/config'
+  import { getConfigList, deleteServingConfigItem } from '../../../../../api/config'
   import EditConfig from './edit-config.vue'
   import CreateConfig from './create-config.vue'
   import PublishVersion from './publish-version/index.vue'
@@ -35,27 +34,19 @@
   const isDiffDialogShow = ref(false)
   const diffConfig = ref()
 
-  const pageFilter = computed(():IPageFilter => {
-    return {
-      count: false,
-      start: (pagination.value.current - 1) * pagination.value.limit,
-      limit: pagination.value.limit,
-    }
-  })
-
-  watch(() => props.appId, (val) => {
-    getConfigList()
+  watch(() => props.appId, () => {
+    getListData()
   })
 
   watch(() => props.releaseId, () => {
-    getConfigList()
+    getListData()
   })
 
   onMounted(() => {
-    getConfigList()
+    getListData()
   })
 
-  const getConfigList = async () => {
+  const getListData = async () => {
     // 拉取到版本列表之前不加在列表数据
     if (typeof props.releaseId !== 'number') {
       return
@@ -63,12 +54,14 @@
 
     loading.value = true
     try {
-      let res
-      if (props.releaseId === 0) {
-        res = await getServingConfigList(props.bkBizId, props.appId, { op: FilterOp.AND, rules: [] }, pageFilter.value)
-      } else {
-        res = await getServingVersionConfigList(props.bkBizId, props.releaseId, { op: FilterOp.AND, rules: [] }, pageFilter.value)
+      const params: IConfigListQueryParams = {
+        start: 0,
+        limit: 200 // @todo 分页条数待确认
       }
+      if (props.releaseId !== 0) {
+        params.release_id = <number>props.releaseId
+      }
+      const res = await getConfigList(props.appId, params)
       // @ts-ignore
       configList.value = res.details
       pagination.value.count = 4
@@ -81,7 +74,7 @@
 
   const refreshConfigList = (current: number = 1) => {
     pagination.value.current = current
-    getConfigList()
+    getListData()
   }
 
   const handleEdit = (config: IConfigItem) => {
@@ -106,7 +99,7 @@
         if (configList.value.length === 1 && pagination.value.current > 1) {
           pagination.value.current -= 1
         }
-        getConfigList();
+        getListData();
       },
     } as any);
   }
@@ -118,7 +111,7 @@
 
   const handlePageChange = (val: number) => {
     pagination.value.current = val
-    getConfigList()
+    getListData()
   }
 
   const handleUpdateStatus = () => {

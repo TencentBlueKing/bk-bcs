@@ -17,11 +17,13 @@ package handler
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/middleware"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/actions/project"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/auth"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/cache"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/cmdb"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/iam"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/logging"
@@ -29,6 +31,10 @@ import (
 	pm "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/project"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/errorx"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/proto/bcsproject"
+)
+
+var (
+	CacheKeyBusinessIDPrefix = "BUSINESS_%s"
 )
 
 // ProjectHandler xxx
@@ -76,15 +82,22 @@ func (p *ProjectHandler) GetProject(ctx context.Context,
 	}
 	businessName := ""
 	if projectInfo.BusinessID != "" && projectInfo.BusinessID != "0" {
-		searchData, err := cmdb.SearchBusiness("", projectInfo.BusinessID)
-		if err != nil {
-			return errorx.NewRequestCMDBErr(err.Error())
+		// get business name from cache
+		c := cache.GetCache()
+		if name, exists := c.Get(fmt.Sprintf(CacheKeyBusinessIDPrefix, projectInfo.BusinessID)); exists {
+			businessName = name.(string)
+		} else {
+			searchData, err := cmdb.SearchBusiness("", projectInfo.BusinessID)
+			if err != nil {
+				return errorx.NewRequestCMDBErr(err.Error())
+			}
+			if searchData.Count != 1 {
+				return errorx.NewReadableErr(errorx.ParamErr,
+					fmt.Sprintf("can not find business %s", projectInfo.BusinessID))
+			}
+			businessName = searchData.Info[0].BKBizName
+			c.Add(fmt.Sprintf(CacheKeyBusinessIDPrefix, projectInfo.BusinessID), businessName, time.Hour)
 		}
-		if searchData.Count != 1 {
-			return errorx.NewReadableErr(errorx.ParamErr,
-				fmt.Sprintf("can not find business %s", projectInfo.BusinessID))
-		}
-		businessName = searchData.Info[0].BKBizName
 	}
 	// 处理返回数据及权限
 	setResp(resp, projectInfo)

@@ -103,7 +103,7 @@ import SystemLog from '@/views/app/log.vue';
 import BcsMd from '@/components/bcs-md/index.vue';
 import featureData from '../../../static/features.md';
 import ProjectSelector from '@/views/app/project-selector.vue';
-import PopoverSelector from './popover-selector.vue';
+import PopoverSelector from '../../components/popover-selector.vue';
 import $store from '@/store';
 import $i18n from '@/i18n/i18n-setup';
 import $router from '@/router';

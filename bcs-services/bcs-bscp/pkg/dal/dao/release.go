@@ -117,19 +117,12 @@ func (dao *releaseDao) List(kit *kit.Kit, opts *types.ListReleasesOption) (
 		return nil, err
 	}
 
-	var sql string
-	var sqlSentence []string
-	if opts.Page.Count {
-		// this is a count request, then do count operation only.
-		sqlSentence = append(sqlSentence, "SELECT COUNT(*) FROM ", string(table.ReleaseTable), whereExpr)
-		sql = filter.SqlJoint(sqlSentence)
-		var count uint32
-		count, err = dao.orm.Do(dao.sd.ShardingOne(opts.BizID).DB()).Count(kit.Ctx, sql, arg)
-		if err != nil {
-			return nil, err
-		}
-
-		return &types.ListReleaseDetails{Count: count, Details: make([]*table.Release, 0)}, nil
+	var sqlSentenceCount []string
+	sqlSentenceCount = append(sqlSentenceCount, "SELECT COUNT(*) FROM ", string(table.ReleaseTable), whereExpr)
+	countSql := filter.SqlJoint(sqlSentenceCount)
+	count, err := dao.orm.Do(dao.sd.ShardingOne(opts.BizID).DB()).Count(kit.Ctx, countSql)
+	if err != nil {
+		return nil, err
 	}
 
 	// query release list for now.
@@ -138,9 +131,10 @@ func (dao *releaseDao) List(kit *kit.Kit, opts *types.ListReleasesOption) (
 		return nil, err
 	}
 
+	var sqlSentence []string
 	sqlSentence = append(sqlSentence, "SELECT ", table.ReleaseColumns.NamedExpr(),
 		" FROM ", string(table.ReleaseTable), whereExpr, pageExpr)
-	sql = filter.SqlJoint(sqlSentence)
+	sql := filter.SqlJoint(sqlSentence)
 
 	list := make([]*table.Release, 0)
 	err = dao.orm.Do(dao.sd.ShardingOne(opts.BizID).DB()).Select(kit.Ctx, &list, sql, arg)
@@ -148,7 +142,7 @@ func (dao *releaseDao) List(kit *kit.Kit, opts *types.ListReleasesOption) (
 		return nil, err
 	}
 
-	return &types.ListReleaseDetails{Count: 0, Details: list}, nil
+	return &types.ListReleaseDetails{Count: count, Details: list}, nil
 }
 
 // validateAttachmentResExist validate if attachment resource exists before creating release.

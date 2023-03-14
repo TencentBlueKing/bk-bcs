@@ -299,10 +299,10 @@ import $router from '@/router';
 import $i18n from '@/i18n/i18n-setup';
 import $store from '@/store/index';
 import usePage from '@/composables/use-page';
-import Schema from '@/views/cluster-manage/cluster/cluster-autoscaler/resolve-schema';
+import Schema from '@/views/cluster-manage/cluster/autoscaler/resolve-schema';
 import { useProject } from '@/composables/use-app';
 import { useClusterInfo } from '@/views/cluster-manage/cluster/use-cluster';
-import FormGroup from '@/views/cluster-manage/cluster/cluster-create/form-group.vue';
+import FormGroup from '@/views/cluster-manage/cluster/create/form-group.vue';
 
 export default defineComponent({
   components: { FormGroup },

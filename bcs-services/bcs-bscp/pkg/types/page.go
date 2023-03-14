@@ -85,7 +85,7 @@ func (sd Order) Order() Order {
 		return Descending
 	default:
 		// set Ascending as the default sort direction.
-		return Ascending
+		return Descending
 	}
 }
 

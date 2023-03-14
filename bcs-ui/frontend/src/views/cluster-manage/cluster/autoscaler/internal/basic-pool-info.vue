@@ -107,7 +107,7 @@ import { defineComponent, ref, toRefs } from '@vue/composition-api';
 import KeyValue from '@/views/cluster-manage/components/key-value.vue';
 import Taints from '@/views/cluster-manage/components/new-taints.vue';
 import $i18n from '@/i18n/i18n-setup';
-import Schema from '@/views/cluster-manage/cluster/cluster-autoscaler/resolve-schema';
+import Schema from '@/views/cluster-manage/cluster/autoscaler/resolve-schema';
 
 export default defineComponent({
   name: 'BasciPoolInfo',

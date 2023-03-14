@@ -35,6 +35,20 @@ func PbReleasedConfigItems(rcis []*table.ReleasedConfigItem) []*ReleasedConfigIt
 	return result
 }
 
+// PbConfigItems convert table ReleasedConfigItems to pb ConfigItems
+func PbConfigItems(rcis []*table.ReleasedConfigItem) []*pbci.ConfigItem {
+	if rcis == nil {
+		return make([]*pbci.ConfigItem, 0)
+	}
+
+	result := make([]*pbci.ConfigItem, len(rcis))
+	for idx := range rcis {
+		result[idx] = PbConfigItem(rcis[idx])
+	}
+
+	return result
+}
+
 // PbReleasedCIFromCache convert types ReleaseCICache to pb ReleasedConfigItems
 func PbReleasedCIFromCache(rs []*types.ReleaseCICache) []*ReleasedConfigItem {
 	list := make([]*ReleasedConfigItem, len(rs))
@@ -51,6 +65,7 @@ func PbReleasedCIFromCache(rs []*types.ReleaseCICache) []*ReleasedConfigItem {
 					ByteSize:  one.CommitSpec.ByteSize,
 				},
 			},
+			ConfigItemId: one.ConfigItemID,
 			ConfigItemSpec: &pbci.ConfigItemSpec{
 				Name:     one.ConfigItemSpec.Name,
 				Path:     one.ConfigItemSpec.Path,
@@ -62,10 +77,9 @@ func PbReleasedCIFromCache(rs []*types.ReleaseCICache) []*ReleasedConfigItem {
 					Privilege: one.ConfigItemSpec.Permission.Privilege,
 				},
 			},
-			Attachment: &pbcommit.CommitAttachment{
-				BizId:        one.Attachment.BizID,
-				AppId:        one.Attachment.AppID,
-				ConfigItemId: one.Attachment.ConfigItemID,
+			Attachment: &pbci.ConfigItemAttachment{
+				BizId: one.Attachment.BizID,
+				AppId: one.Attachment.AppID,
 			},
 		}
 	}
@@ -84,8 +98,23 @@ func PbReleasedConfigItem(rci *table.ReleasedConfigItem) *ReleasedConfigItem {
 		ReleaseId:      rci.ReleaseID,
 		CommitId:       rci.CommitID,
 		CommitSpec:     pbcommit.PbCommitSpec(rci.CommitSpec),
+		ConfigItemId:   rci.ConfigItemID,
 		ConfigItemSpec: pbci.PbConfigItemSpec(rci.ConfigItemSpec),
-		Attachment:     pbcommit.PbCommitAttachment(rci.Attachment),
-		Revision:       pbbase.PbCreatedRevision(rci.Revision),
+		Attachment:     pbci.PbConfigItemAttachment(rci.Attachment),
+		Revision:       pbbase.PbRevision(rci.Revision),
+	}
+}
+
+// PbConfigItem convert table ReleasedConfigItem to pb ConfigItem
+func PbConfigItem(rci *table.ReleasedConfigItem) *pbci.ConfigItem {
+	if rci == nil {
+		return nil
+	}
+
+	return &pbci.ConfigItem{
+		Id:         rci.ConfigItemID,
+		Spec:       pbci.PbConfigItemSpec(rci.ConfigItemSpec),
+		Attachment: pbci.PbConfigItemAttachment(rci.Attachment),
+		Revision:   pbbase.PbRevision(rci.Revision),
 	}
 }

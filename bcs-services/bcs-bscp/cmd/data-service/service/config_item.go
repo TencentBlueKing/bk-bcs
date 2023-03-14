@@ -22,6 +22,7 @@ import (
 	"bscp.io/pkg/logs"
 	pbbase "bscp.io/pkg/protocol/core/base"
 	pbci "bscp.io/pkg/protocol/core/config-item"
+	pbrci "bscp.io/pkg/protocol/core/released-ci"
 	pbds "bscp.io/pkg/protocol/data-service"
 	"bscp.io/pkg/runtime/filter"
 	"bscp.io/pkg/types"
@@ -110,31 +111,56 @@ func (s *Service) ListConfigItems(ctx context.Context, req *pbds.ListConfigItems
 
 	grpcKit := kit.FromGrpcContext(ctx)
 
-	// parse pb struct filter to filter.Expression.
-	filter, err := pbbase.UnmarshalFromPbStructToExpr(req.Filter)
+	if req.ReleaseId == 0 {
+		// list editing config items
+		query := &types.ListConfigItemsOption{
+			BizID: req.BizId,
+			AppID: req.AppId,
+			Filter: &filter.Expression{
+				Op:    filter.And,
+				Rules: []filter.RuleFactory{},
+			},
+			Page: &types.BasePage{
+				Start: req.Start,
+				Limit: uint(req.Limit),
+			},
+		}
+		details, err := s.dao.ConfigItem().List(grpcKit, query)
+		if err != nil {
+			logs.Errorf("list editing config items failed, err: %v, rid: %s", err, grpcKit.Rid)
+			return nil, err
+		}
+		resp := &pbds.ListConfigItemsResp{
+			Count:   details.Count,
+			Details: pbci.PbConfigItems(details.Details),
+		}
+		return resp, nil
+	}
+	// list released config items
+	query := &types.ListReleasedCIsOption{
+		BizID: req.BizId,
+		Filter: &filter.Expression{
+			Op: filter.And,
+			Rules: []filter.RuleFactory{
+				&filter.AtomRule{Field: "release_id", Op: filter.Equal.Factory(), Value: req.ReleaseId},
+			},
+		},
+		Page: &types.BasePage{
+			Start: req.Start,
+			Limit: uint(req.Limit),
+		},
+	}
+	details, err := s.dao.ReleasedCI().List(grpcKit, query)
 	if err != nil {
-		logs.Errorf("unmarshal pn struct to expression failed, err: %v, rid: %s", err, grpcKit.Rid)
+		logs.Errorf("list released config items failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
 	}
-
-	query := &types.ListConfigItemsOption{
-		BizID:  req.BizId,
-		AppID:  req.AppId,
-		Filter: filter,
-		Page:   req.Page.BasePage(),
-	}
-
-	details, err := s.dao.ConfigItem().List(grpcKit, query)
-	if err != nil {
-		logs.Errorf("list config item failed, err: %v, rid: %s", err, grpcKit.Rid)
-		return nil, err
-	}
-
 	resp := &pbds.ListConfigItemsResp{
 		Count:   details.Count,
-		Details: pbci.PbConfigItems(details.Details),
+		Details: pbrci.PbConfigItems(details.Details),
 	}
 	return resp, nil
+
 }
 
 // queryAppConfigItemList query config item list under specific app.

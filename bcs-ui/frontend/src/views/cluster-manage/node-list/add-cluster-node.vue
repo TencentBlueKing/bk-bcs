@@ -83,7 +83,7 @@
       </span>
       <bk-button class="mw88 ml10" @click="handleCancel">{{$t('取消')}}</bk-button>
     </div>
-    <tipDialog
+    <TipDialog
       ref="confirmDialogRef"
       icon="bcs-icon bcs-icon-exclamation-triangle"
       :title="$t('确定添加节点')"
@@ -93,24 +93,24 @@
       :cancel-btn-text="$t('取消')"
       :confirm-loading="confirmLoading"
       :confirm-callback="handleConfirm">
-    </tipDialog>
+    </TipDialog>
     <!-- IP选择器 -->
     <IpSelector v-model="showIpSelector" :ip-list="ipList" @confirm="chooseServer"></IpSelector>
     <!-- 节点模板详情 -->
     <bcs-sideslider
       :is-show.sync="showDetail"
-      :title="currentRow.name"
+      :title="currentTemplate.name"
       quick-close
       :width="800">
       <div slot="content">
-        <NodeTemplateDetail :data="currentRow"></NodeTemplateDetail>
+        <NodeTemplateDetail :data="currentTemplate"></NodeTemplateDetail>
       </div>
     </bcs-sideslider>
   </div>
 </template>
 <script lang="ts">
 import { computed, defineComponent, onMounted, ref } from '@vue/composition-api';
-import FormGroup from '@/views/cluster-manage/cluster/cluster-create/form-group.vue';
+import FormGroup from '@/views/cluster-manage/cluster/create/form-group.vue';
 import $store from '@/store/index';
 import $router from '@/router';
 import IpSelector from '@/components/ip-selector/selector-dialog.vue';
@@ -118,11 +118,11 @@ import StatusIcon from '@/components/status-icon';
 import $i18n from '@/i18n/i18n-setup';
 import useNode from './use-node';
 import NodeTemplateDetail from '@/views/cluster-manage/node-template/node-template-detail.vue';
-import tipDialog from '@/components/tip-dialog/index.vue';
+import TipDialog from '@/components/tip-dialog/index.vue';
 import { NODE_TEMPLATE_ID } from '@/common/constant';
 
 export default defineComponent({
-  components: { FormGroup, IpSelector, StatusIcon, NodeTemplateDetail, tipDialog },
+  components: { FormGroup, IpSelector, StatusIcon, NodeTemplateDetail, TipDialog },
   props: {
     clusterId: {
       type: String,
@@ -130,7 +130,7 @@ export default defineComponent({
     },
   },
   setup(props, ctx) {
-    const { $INTERNAL } = ctx.root;
+    const { $INTERNAL, $bkInfo } = ctx.root;
     const isTkeCluster = computed(() => ($store.state as any).cluster.clusterList
       ?.find(item => item.clusterID === props.clusterId)?.provider === 'tencentCloud');
     const loading = ref(false);
@@ -157,7 +157,7 @@ export default defineComponent({
       window.open(location.href);
     };
     const showDetail = ref(false);
-    const currentRow = computed(() => templateList.value
+    const currentTemplate = computed(() => templateList.value
       .find(item => item.nodeTemplateID === nodeTemplateID.value) || {});
     const handlePreview = () => {
       showDetail.value = true;
@@ -197,7 +197,15 @@ export default defineComponent({
       },
     ]);
     const handleShowConfirmDialog = () => {
-      confirmDialogRef.value?.show();
+      $bkInfo({
+        type: 'warning',
+        clsName: 'custom-info-confirm',
+        title: $i18n.t('确定使用节点模板 {name}', { name: currentTemplate.value.name }),
+        defaultInfo: true,
+        confirmFn: () => {
+          confirmDialogRef.value?.show();
+        },
+      });
     };
     const confirmLoading = ref(false);
     const handleConfirm = async () => {
@@ -237,7 +245,7 @@ export default defineComponent({
       loading,
       isTkeCluster,
       showDetail,
-      currentRow,
+      currentTemplate,
       showIpSelector,
       ipList,
       nodeTemplateID,

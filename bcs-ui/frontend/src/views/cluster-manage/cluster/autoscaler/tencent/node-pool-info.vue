@@ -137,7 +137,7 @@ import KeyValue from '@/views/cluster-manage/components/key-value.vue';
 import Taints from '@/views/cluster-manage/components/new-taints.vue';
 import $router from '@/router';
 import $i18n from '@/i18n/i18n-setup';
-import Schema from '@/views/cluster-manage/cluster/cluster-autoscaler/resolve-schema';
+import Schema from '@/views/cluster-manage/cluster/autoscaler/resolve-schema';
 import { nodemanCloudList, ccTopology } from '@/api/base';
 
 export default defineComponent({
