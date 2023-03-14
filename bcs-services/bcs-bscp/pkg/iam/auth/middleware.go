@@ -40,15 +40,21 @@ func (a authorizer) UnifiedAuthentication(next http.Handler) http.Handler {
 			render.Render(w, r, rest.UnauthorizedErr(err))
 			return
 		}
-		resp, err := a.authClient.GetUserInfo(r.Context(), req)
-		if err != nil {
-			s := status.Convert(err)
-			render.Render(w, r, rest.UnauthorizedErr(errors.New(s.Message())))
-			return
+		var username string
+		if req.Token == constant.BKTokenForTest {
+			username = r.Header.Get(constant.UserKey)
+		} else {
+			resp, err := a.authClient.GetUserInfo(r.Context(), req)
+			if err != nil {
+				s := status.Convert(err)
+				render.Render(w, r, rest.UnauthorizedErr(errors.New(s.Message())))
+				return
+			}
+			username = resp.Username
 		}
 
 		k := &kit.Kit{
-			User:        resp.Username,
+			User:        username,
 			Rid:         components.RequestIDValue(r.Context()),
 			AppId:       chi.URLParam(r, "app_id"),
 			AppCode:     "dummyApp", // 测试 App

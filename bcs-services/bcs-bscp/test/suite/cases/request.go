@@ -21,7 +21,6 @@ import (
 	"bscp.io/pkg/criteria/uuid"
 	pbcs "bscp.io/pkg/protocol/config-server"
 	pbbase "bscp.io/pkg/protocol/core/base"
-	pbstrategy "bscp.io/pkg/protocol/core/strategy"
 	"bscp.io/pkg/runtime/filter"
 	"bscp.io/pkg/runtime/selector"
 	pbstruct "github.com/golang/protobuf/ptypes/struct"
@@ -202,7 +201,6 @@ func CountPage() *pbbase.BasePage {
 	}
 }
 
-
 // GenSubSelector generate a sub selector for test
 func GenSubSelector() *selector.Selector {
 	return &selector.Selector{
@@ -247,6 +245,7 @@ func GenApiCtxHeader() (context.Context, http.Header) {
 	header.Set(constant.UserKey, "suite")
 	header.Set(constant.RidKey, uuid.UUID())
 	header.Set(constant.AppCodeKey, "test")
+	header.Add("Cookie", "bk_token="+constant.BKTokenForTest)
 	return context.Background(), header
 }
 

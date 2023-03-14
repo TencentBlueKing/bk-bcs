@@ -422,7 +422,7 @@ func (pd *pubDao) ListPSHistory(kit *kit.Kit, opts *types.ListPSHistoriesOption)
 			},
 		},
 	}
-	whereExpr, arg, err := opts.Filter.SQLWhereExpr(sqlOpt)
+	whereExpr, args, err := opts.Filter.SQLWhereExpr(sqlOpt)
 	if err != nil {
 		return nil, err
 	}
@@ -434,7 +434,7 @@ func (pd *pubDao) ListPSHistory(kit *kit.Kit, opts *types.ListPSHistoriesOption)
 		sqlSentence = append(sqlSentence, "SELECT COUNT(*) FROM ", string(table.PublishedStrategyHistoryTable), whereExpr)
 		sql = filter.SqlJoint(sqlSentence)
 		var count uint32
-		count, err = pd.orm.Do(pd.sd.ShardingOne(opts.BizID).DB()).Count(kit.Ctx, sql, arg)
+		count, err = pd.orm.Do(pd.sd.ShardingOne(opts.BizID).DB()).Count(kit.Ctx, sql, args...)
 		if err != nil {
 			return nil, err
 		}
@@ -453,7 +453,7 @@ func (pd *pubDao) ListPSHistory(kit *kit.Kit, opts *types.ListPSHistoriesOption)
 	sql = filter.SqlJoint(sqlSentence)
 
 	list := make([]*table.PublishedStrategyHistory, 0)
-	err = pd.orm.Do(pd.sd.ShardingOne(opts.BizID).DB()).Select(kit.Ctx, &list, sql)
+	err = pd.orm.Do(pd.sd.ShardingOne(opts.BizID).DB()).Select(kit.Ctx, &list, sql, args...)
 	if err != nil {
 		return nil, err
 	}

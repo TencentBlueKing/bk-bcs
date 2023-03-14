@@ -227,7 +227,7 @@ func (dao *configItemDao) List(kit *kit.Kit, opts *types.ListConfigItemsOption) 
 			},
 		},
 	}
-	whereExpr, arg, err := opts.Filter.SQLWhereExpr(sqlOpt)
+	whereExpr, args, err := opts.Filter.SQLWhereExpr(sqlOpt)
 	if err != nil {
 		return nil, err
 	}
@@ -235,7 +235,7 @@ func (dao *configItemDao) List(kit *kit.Kit, opts *types.ListConfigItemsOption) 
 	var sqlSentenceCount []string
 	sqlSentenceCount = append(sqlSentenceCount, "SELECT COUNT(*) FROM ", string(table.ConfigItemTable), whereExpr)
 	countSql := filter.SqlJoint(sqlSentenceCount)
-	count, err := dao.orm.Do(dao.sd.ShardingOne(opts.BizID).DB()).Count(kit.Ctx, countSql, arg)
+	count, err := dao.orm.Do(dao.sd.ShardingOne(opts.BizID).DB()).Count(kit.Ctx, countSql, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -251,7 +251,7 @@ func (dao *configItemDao) List(kit *kit.Kit, opts *types.ListConfigItemsOption) 
 	sql := filter.SqlJoint(sqlSentence)
 
 	list := make([]*table.ConfigItem, 0)
-	err = dao.orm.Do(dao.sd.ShardingOne(opts.BizID).DB()).Select(kit.Ctx, &list, sql, arg)
+	err = dao.orm.Do(dao.sd.ShardingOne(opts.BizID).DB()).Select(kit.Ctx, &list, sql, args...)
 	if err != nil {
 		return nil, err
 	}

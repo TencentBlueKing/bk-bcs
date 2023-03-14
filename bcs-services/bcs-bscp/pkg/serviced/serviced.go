@@ -407,9 +407,7 @@ func (s *serviced) isMaster(srvPath, srvKey string) (bool, error) {
 	}
 	firstCR := resp.Kvs[0].CreateRevision
 
-	if logs.V(3) {
-		logs.Infof("current service(%s) master state: %v", srvKey, cr == firstCR)
-	}
+	logs.V(6).Infof("current service(%s) master state: %v", srvKey, cr == firstCR)
 	return cr == firstCR, nil
 }
 

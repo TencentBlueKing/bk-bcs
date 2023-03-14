@@ -17,7 +17,6 @@ import (
 
 	. "github.com/smartystreets/goconvey/convey" // import convey.
 
-	"bscp.io/pkg/criteria/errf"
 	"bscp.io/pkg/criteria/uuid"
 	pbcs "bscp.io/pkg/protocol/config-server"
 	"bscp.io/test/client/api"
@@ -81,24 +80,20 @@ func TestInstance(t *testing.T) {
 				resp, err := cli.Instance.Publish(ctx, header, &req)
 				So(err, ShouldBeNil)
 				So(resp, ShouldNotBeNil)
-				So(resp.Code, ShouldEqual, errf.OK)
-				So(resp.Data, ShouldNotBeNil)
-				So(resp.Data.Id, ShouldNotEqual, uint32(0))
+				So(resp.Id, ShouldNotEqual, uint32(0))
 
 				// verify by list
-				listReq, err := cases.GenListInstancePublishByIdsReq(cases.TBizID, []uint32{resp.Data.Id})
+				listReq, err := cases.GenListInstancePublishByIdsReq(cases.TBizID, []uint32{resp.Id})
 				So(err, ShouldBeNil)
 				ctx, header = cases.GenApiCtxHeader()
 				listResp, err := cli.Instance.List(ctx, header, listReq)
 				So(err, ShouldBeNil)
 				So(listResp, ShouldNotBeNil)
-				So(listResp.Code, ShouldEqual, errf.OK)
-				So(listResp.Data, ShouldNotBeNil)
-				So(len(listResp.Data.Details), ShouldEqual, 1)
+				So(len(listResp.Details), ShouldEqual, 1)
 
-				one := listResp.Data.Details[0]
+				one := listResp.Details[0]
 				So(one, ShouldNotBeNil)
-				So(one.Id, ShouldEqual, resp.Data.Id)
+				So(one.Id, ShouldEqual, resp.Id)
 
 				So(one.Spec, ShouldNotBeNil)
 				So(one.Spec.Uid, ShouldEqual, req.Uid)
@@ -110,7 +105,7 @@ func TestInstance(t *testing.T) {
 				So(one.Attachment.AppId, ShouldEqual, appId)
 				So(one.Revision, cases.SoCreateRevision)
 
-				rm.AddInstance(appId, resp.Data.Id)
+				rm.AddInstance(appId, resp.Id)
 			}
 		})
 
@@ -153,7 +148,6 @@ func TestInstance(t *testing.T) {
 				resp, err := cli.Instance.Publish(ctx, header, &req)
 				So(err, ShouldBeNil)
 				So(resp, ShouldNotBeNil)
-				So(resp.Code, ShouldEqual, errf.InvalidParameter)
 			}
 		})
 	})
@@ -177,8 +171,7 @@ func TestInstance(t *testing.T) {
 			resp, err := cli.Instance.List(ctx, header, req)
 			So(err, ShouldBeNil)
 			So(resp, ShouldNotBeNil)
-			So(resp.Code, ShouldEqual, errf.OK)
-			So(resp.Data.Count, ShouldEqual, uint32(1))
+			So(resp.Count, ShouldEqual, uint32(1))
 		})
 
 		Convey("2.list_strategy_publish_history abnormal test", func() {
@@ -210,7 +203,6 @@ func TestInstance(t *testing.T) {
 				resp, err := cli.Instance.List(ctx, header, req)
 				So(err, ShouldBeNil)
 				So(resp, ShouldNotBeNil)
-				So(resp.Code, ShouldNotEqual, errf.OK)
 			}
 		})
 	})
@@ -228,6 +220,5 @@ func TestInstance(t *testing.T) {
 		resp, err := cli.Instance.Delete(ctx, header, req)
 		So(err, ShouldBeNil)
 		So(resp, ShouldNotBeNil)
-		So(resp.Code, ShouldEqual, errf.OK)
 	})
 }

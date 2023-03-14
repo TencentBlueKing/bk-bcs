@@ -361,7 +361,7 @@ func (s *Service) QuerySpaceByAppID(ctx context.Context, req *pbas.QuerySpaceByA
 	resp := &pbas.Space{
 		SpaceId:       strconv.Itoa(int(app.BizId)),
 		SpaceTypeId:   space.BK_CMDB.ID,
-		SpaceTypeName: space.BCS.ID,
+		SpaceTypeName: space.BK_CMDB.Name,
 	}
 	return resp, nil
 }
