@@ -22,6 +22,7 @@ import (
 	"bscp.io/pkg/dal/table"
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/logs"
+	"bscp.io/pkg/runtime/filter"
 
 	"github.com/jmoiron/sqlx"
 )
@@ -83,8 +84,9 @@ func (au *audit) One(kit *kit.Kit, audit *table.Audit, opt *AuditOption) error {
 
 	audit.ID = id
 
-	sql := fmt.Sprintf(`INSERT INTO %s (%s) VALUES (%s)`, table.AuditTable,
-		table.AuditColumns.ColumnExpr(), table.AuditColumns.ColonNameExpr())
+	var sqlSentence []string
+	sqlSentence = append(sqlSentence, "INSERT INTO ", string(table.AuditTable), " (", table.AuditColumns.ColumnExpr(), ") VALUES (", table.AuditColumns.ColonNameExpr(), ")")
+	sql := filter.SqlJoint(sqlSentence)
 
 	if au.adSharding.ShardingUid() != opt.ResShardingUid {
 		// audit db is different with the resource's db, then do without transaction

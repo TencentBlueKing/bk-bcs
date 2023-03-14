@@ -13,243 +13,244 @@ limitations under the License.
 package filter
 
 import (
+	"fmt"
 	"testing"
 )
 
 func TestEqualSQLExpr(t *testing.T) {
 	// test eq
 	eq := EqualOp(Equal)
-	eqExpr, err := eq.SQLExpr("name", "bscp")
+	eqExpr, argList, err := eq.SQLExpr("name", "bscp")
 	if err != nil {
 		t.Errorf("test eq operator failed, err: %v", err)
 		return
 	}
 
-	if eqExpr != `name = 'bscp'` {
+	if eqExpr != `name = ?` {
 		t.Errorf("test eq operator got wrong expr: %s", eqExpr)
 		return
 	}
-
+	fmt.Println(argList)
 }
 
 func TestNotEqualSQLExpr(t *testing.T) {
 	// test neq
 	ne := NotEqualOp(NotEqual)
-	neExpr, err := ne.SQLExpr("name", "bscp")
+	neExpr, argList, err := ne.SQLExpr("name", "bscp")
 	if err != nil {
 		t.Errorf("test ne operator failed, err: %v", err)
 		return
 	}
 
-	if neExpr != `name != 'bscp'` {
+	if neExpr != `name != ?` {
 		t.Errorf("test ne operator got wrong expr: %s", neExpr)
 		return
 	}
-
+	fmt.Println(argList)
 }
 
 func TestGreaterThanSQLExpr(t *testing.T) {
 
 	// test gt
 	gt := GreaterThanOp(GreaterThan)
-	gtExpr, err := gt.SQLExpr("count", 10)
+	gtExpr, argList, err := gt.SQLExpr("count", 10)
 	if err != nil {
 		t.Errorf("test gt operator failed, err: %v", err)
 		return
 	}
 
-	if gtExpr != `count > 10` {
+	if gtExpr != `count > ?` {
 		t.Errorf("test gt operator got wrong expr: %s", gtExpr)
 		return
 	}
-
+	fmt.Println(argList)
 	// test time scenario
-	gtExpr, err = gt.SQLExpr("create_at", "2022-01-02 15:04:05")
+	gtExpr, argList, err = gt.SQLExpr("create_at", "2022-01-02 15:04:05")
 	if err != nil {
 		t.Errorf("test gt operator with time failed, err: %v", err)
 		return
 	}
 
-	if gtExpr != `create_at > '2022-01-02 15:04:05'` {
+	if gtExpr != `create_at > ?` {
 		t.Errorf("test gt operator with time got wrong expr: %s", gtExpr)
 		return
 	}
-
+	fmt.Println(argList)
 }
 
 func TestGreaterThanEqualSQLExpr(t *testing.T) {
 
 	// test gte
 	gte := GreaterThanEqualOp(GreaterThanEqual)
-	gteExpr, err := gte.SQLExpr("count", 10)
+	gteExpr, argList, err := gte.SQLExpr("count", 10)
 	if err != nil {
 		t.Errorf("test gte operator failed, err: %v", err)
 		return
 	}
 
-	if gteExpr != `count >= 10` {
+	if gteExpr != `count >= ?` {
 		t.Errorf("test gte operator got wrong expr: %s", gteExpr)
 		return
 	}
-
+	fmt.Println(argList)
 	// test with time scenario
-	gteExpr, err = gte.SQLExpr("create_at", "2022-01-02 15:04:05")
+	gteExpr, argList, err = gte.SQLExpr("create_at", "2022-01-02 15:04:05")
 	if err != nil {
 		t.Errorf("test gte operator with time failed, err: %v", err)
 		return
 	}
 
-	if gteExpr != `create_at >= '2022-01-02 15:04:05'` {
+	if gteExpr != `create_at >= ?` {
 		t.Errorf("test gte operator with time got wrong expr: %s", gteExpr)
 		return
 	}
-
+	fmt.Println(argList)
 }
 
 func TestLessThanSQLExpr(t *testing.T) {
 
 	// test lt
 	lt := LessThanOp(LessThan)
-	ltExpr, err := lt.SQLExpr("count", 10)
+	ltExpr, argList, err := lt.SQLExpr("count", 10)
 	if err != nil {
 		t.Errorf("test lt operator failed, err: %v", err)
 		return
 	}
 
-	if ltExpr != `count < 10` {
+	if ltExpr != `count < ?` {
 		t.Errorf("test lt operator got wrong expr: %s", ltExpr)
 		return
 	}
-
+	fmt.Println(argList)
 	// test time scenario
-	ltExpr, err = lt.SQLExpr("create_at", "2022-01-02 15:04:05")
+	ltExpr, argList, err = lt.SQLExpr("create_at", "2022-01-02 15:04:05")
 	if err != nil {
 		t.Errorf("test lt operator with time failed, err: %v", err)
 		return
 	}
 
-	if ltExpr != `create_at < '2022-01-02 15:04:05'` {
+	if ltExpr != `create_at < ?` {
 		t.Errorf("test lt operator with time got wrong expr: %s", ltExpr)
 		return
 	}
-
+	fmt.Println(argList)
 }
 
 func TestLessThanEqualSQLExpr(t *testing.T) {
 
 	// test lte
 	lte := LessThanEqualOp(LessThanEqual)
-	lteExpr, err := lte.SQLExpr("count", 10)
+	lteExpr, argList, err := lte.SQLExpr("count", 10)
 	if err != nil {
 		t.Errorf("test lte operator failed, err: %v", err)
 		return
 	}
 
-	if lteExpr != `count <= 10` {
+	if lteExpr != `count <= ?` {
 		t.Errorf("test lte operator got wrong expr: %s", lteExpr)
 		return
 	}
-
+	fmt.Println(argList)
 	// test time scenario
-	lteExpr, err = lte.SQLExpr("create_at", "2022-01-02 15:04:05")
+	lteExpr, argList, err = lte.SQLExpr("create_at", "2022-01-02 15:04:05")
 	if err != nil {
 		t.Errorf("test lte operator with time failed, err: %v", err)
 		return
 	}
 
-	if lteExpr != `create_at <= '2022-01-02 15:04:05'` {
+	if lteExpr != `create_at <= ?` {
 		t.Errorf("test lte operator with time got wrong expr: %s", lteExpr)
 		return
 	}
-
+	fmt.Println(argList)
 }
 
 func TestInSQLExpr(t *testing.T) {
 
 	// test in
 	in := InOp(In)
-	sinExpr, err := in.SQLExpr("servers", []string{"api", "web"})
+	sinExpr, argList, err := in.SQLExpr("servers", []string{"api", "web"})
 	if err != nil {
 		t.Errorf("test in operator failed, err: %v", err)
 		return
 	}
 
-	if sinExpr != `servers IN ('api', 'web')` {
+	if sinExpr != `servers IN (?, ?)` {
 		t.Errorf("test in operator got wrong expr: %s", sinExpr)
 		return
 	}
-
-	intInExpr, err := in.SQLExpr("ages", []int{18, 30})
+	fmt.Println(argList)
+	intInExpr, argList, err := in.SQLExpr("ages", []int{18, 30})
 	if err != nil {
 		t.Errorf("test in operator failed, err: %v", err)
 		return
 	}
 
-	if intInExpr != `ages IN (18, 30)` {
+	if intInExpr != `ages IN (?, ?)` {
 		t.Errorf("test in operator got wrong expr: %s", sinExpr)
 		return
 	}
-
+	fmt.Println(argList)
 }
 
 func TestNotInSQLExpr(t *testing.T) {
 
 	// test nin
 	nin := NotInOp(NotIn)
-	sinExpr, err := nin.SQLExpr("servers", []string{"api", "web"})
+	sinExpr, argList, err := nin.SQLExpr("servers", []string{"api", "web"})
 	if err != nil {
 		t.Errorf("test nin operator failed, err: %v", err)
 		return
 	}
 
-	if sinExpr != `servers NOT IN ('api', 'web')` {
+	if sinExpr != `servers NOT IN (?, ?)` {
 		t.Errorf("test nin operator got wrong expr: %s", sinExpr)
 		return
 	}
-
-	intInExpr, err := nin.SQLExpr("ages", []int{18, 30})
+	fmt.Println(argList)
+	intInExpr, argList, err := nin.SQLExpr("ages", []int{18, 30})
 	if err != nil {
 		t.Errorf("test nin operator failed, err: %v", err)
 		return
 	}
 
-	if intInExpr != `ages NOT IN (18, 30)` {
+	if intInExpr != `ages NOT IN (?, ?)` {
 		t.Errorf("test nin operator got wrong expr: %s", sinExpr)
 		return
 	}
-
+	fmt.Println(argList)
 }
 
 func TestContainsSensitiveSQLExpr(t *testing.T) {
 
 	// test cs
 	cs := ContainsSensitiveOp(ContainsSensitive)
-	csExpr, err := cs.SQLExpr("name", "bscp-")
+	csExpr, argList, err := cs.SQLExpr("name", "bscp-")
 	if err != nil {
 		t.Errorf("test cis operator failed, err: %v", err)
 		return
 	}
 
-	if csExpr != `name LIKE BINARY '%bscp-%'` {
+	if csExpr != `name LIKE BINARY %?%` {
 		t.Errorf("test cis operator got wrong expr: %s", csExpr)
 		return
 	}
-
+	fmt.Println(argList)
 }
 
 func TestContainsInsensitiveSQLExpr(t *testing.T) {
 
 	// test cis
 	cis := ContainsInsensitiveOp(ContainsInsensitive)
-	cisExpr, err := cis.SQLExpr("name", "bscp-")
+	cisExpr, argList, err := cis.SQLExpr("name", "bscp-")
 	if err != nil {
 		t.Errorf("test cis operator failed, err: %v", err)
 		return
 	}
 
-	if cisExpr != `name LIKE '%bscp-%'` {
+	if cisExpr != `name LIKE %?%` {
 		t.Errorf("test cis operator got wrong expr: %s", cisExpr)
 		return
 	}
-
+	fmt.Println(argList)
 }

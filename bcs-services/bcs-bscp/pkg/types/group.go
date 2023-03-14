@@ -61,6 +61,6 @@ func (opt *ListGroupsOption) Validate(po *PageOption) error {
 
 // ListGroupDetails defines the response details of requested ListGroupsOption.
 type ListGroupDetails struct {
-	Count   uint32            `json:"count"`
+	Count   uint32         `json:"count"`
 	Details []*table.Group `json:"details"`
 }

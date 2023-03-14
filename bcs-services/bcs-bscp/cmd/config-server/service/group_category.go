@@ -121,7 +121,7 @@ func (s *Service) ListGroupCategories(ctx context.Context, req *pbcs.ListGroupCa
 	}
 
 	ft := &filter.Expression{
-		Op: filter.And,
+		Op:    filter.And,
 		Rules: []filter.RuleFactory{},
 	}
 	ftpb, err := ft.MarshalPB()

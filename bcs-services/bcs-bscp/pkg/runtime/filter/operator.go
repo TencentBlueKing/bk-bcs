@@ -158,7 +158,7 @@ type Operator interface {
 	ValidateValue(v interface{}, opt *ExprOption) error
 	// SQLExpr generate an operator's SQL expression with its filed
 	// and value.
-	SQLExpr(field string, value interface{}) (string, error)
+	SQLExpr(field string, value interface{}) (string, []interface{}, error)
 }
 
 // UnknownOp is unknown operator
@@ -176,8 +176,8 @@ func (uo UnknownOp) ValidateValue(_ interface{}, _ *ExprOption) error {
 
 // SQLExpr convert this operator's field and value to a mysql's sub
 // query expression.
-func (uo UnknownOp) SQLExpr(_ string, _ interface{}) (string, error) {
-	return "", errors.New("unknown operator, can not gen sql expression")
+func (uo UnknownOp) SQLExpr(_ string, _ interface{}) (string, []interface{}, error) {
+	return "", []interface{}{}, errors.New("unknown operator, can not gen sql expression")
 }
 
 // EqualOp is equal operator type
@@ -198,28 +198,18 @@ func (eo EqualOp) ValidateValue(v interface{}, opt *ExprOption) error {
 
 // SQLExpr convert this operator's field and value to a mysql's sub
 // query expression.
-func (eo EqualOp) SQLExpr(field string, value interface{}) (string, error) {
+func (eo EqualOp) SQLExpr(field string, value interface{}) (string, []interface{}, error) {
+	var argList []interface{}
 	if len(field) == 0 {
-		return "", errors.New("field is empty")
+		return "", argList, errors.New("field is empty")
 	}
 
 	if !tools.IsBasicValue(value) {
-		return "", errors.New("invalid value field")
+		return "", argList, errors.New("invalid value field")
 	}
 
-	if tools.IsNumeric(value) {
-		// if this value is numeric, then we still format it with %v
-		// because it is compatible with integer, float, etc.
-		return fmt.Sprintf(`%s = %v`, field, value), nil
-	}
-
-	if tools.IsBoolean(value) {
-		// if this value is numeric, then we still format it with %v
-		// because it is compatible with integer, float, etc.
-		return fmt.Sprintf(`%s = %v`, field, value), nil
-	}
-
-	return fmt.Sprintf(`%s = '%v'`, field, value), nil
+	argList = append(argList, value)
+	return fmt.Sprintf(`%s = ?`, field), argList, nil
 }
 
 // NotEqualOp is not equal operator type
@@ -240,22 +230,18 @@ func (ne NotEqualOp) ValidateValue(v interface{}, opt *ExprOption) error {
 
 // SQLExpr convert this operator's field and value to a mysql's sub
 // query expression.
-func (ne NotEqualOp) SQLExpr(field string, value interface{}) (string, error) {
+func (ne NotEqualOp) SQLExpr(field string, value interface{}) (string, []interface{}, error) {
+	var argList []interface{}
 	if len(field) == 0 {
-		return "", errors.New("field is empty")
+		return "", argList, errors.New("field is empty")
 	}
 
 	if !tools.IsBasicValue(value) {
-		return "", errors.New("invalid ne operator's value field")
+		return "", argList, errors.New("invalid ne operator's value field")
 	}
 
-	if tools.IsNumeric(value) {
-		// if this value is numeric, then we still format it with %v
-		// because it is compatible with integer, float, etc.
-		return fmt.Sprintf(`%s != %v`, field, value), nil
-	}
-
-	return fmt.Sprintf(`%s != '%v'`, field, value), nil
+	argList = append(argList, value)
+	return fmt.Sprintf(`%s != ?`, field), argList, nil
 }
 
 // GreaterThanOp is greater than operator
@@ -276,21 +262,19 @@ func (gt GreaterThanOp) ValidateValue(v interface{}, opt *ExprOption) error {
 
 // SQLExpr convert this operator's field and value to a mysql's sub
 // query expression.
-func (gt GreaterThanOp) SQLExpr(field string, value interface{}) (string, error) {
+func (gt GreaterThanOp) SQLExpr(field string, value interface{}) (string, []interface{}, error) {
+	var argList []interface{}
 	if len(field) == 0 {
-		return "", errors.New("field is empty")
+		return "", argList, errors.New("field is empty")
 	}
 
-	numeric, hit := isNumericOrTime(value)
+	_, hit := isNumericOrTime(value)
 	if !hit {
-		return "", errors.New("invalid gt operator's value field, should be a numeric value")
+		return "", argList, errors.New("invalid gt operator's value field, should be a numeric value")
 	}
 
-	if numeric {
-		return fmt.Sprintf(`%s > %v`, field, value), nil
-	}
-
-	return fmt.Sprintf(`%s > '%v'`, field, value), nil
+	argList = append(argList, value)
+	return fmt.Sprintf(`%s > ?`, field), argList, nil
 }
 
 // GreaterThanEqualOp is greater than equal operator
@@ -311,21 +295,20 @@ func (gte GreaterThanEqualOp) ValidateValue(v interface{}, opt *ExprOption) erro
 
 // SQLExpr convert this operator's field and value to a mysql's sub
 // query expression.
-func (gte GreaterThanEqualOp) SQLExpr(field string, value interface{}) (string, error) {
+func (gte GreaterThanEqualOp) SQLExpr(field string, value interface{}) (string, []interface{}, error) {
+	var argList []interface{}
 	if len(field) == 0 {
-		return "", errors.New("field is empty")
+		return "", argList, errors.New("field is empty")
 	}
 
-	numeric, hit := isNumericOrTime(value)
+	_, hit := isNumericOrTime(value)
 	if !hit {
-		return "", errors.New("invalid gte operator's value field, should be a numeric value")
+		return "", argList, errors.New("invalid gte operator's value field, should be a numeric value")
 	}
 
-	if numeric {
-		return fmt.Sprintf(`%s >= %v`, field, value), nil
-	}
+	argList = append(argList, value)
 
-	return fmt.Sprintf(`%s >= '%v'`, field, value), nil
+	return fmt.Sprintf(`%s >= ?`, field), argList, nil
 }
 
 // LessThanOp is less than operator
@@ -346,21 +329,19 @@ func (lt LessThanOp) ValidateValue(v interface{}, opt *ExprOption) error {
 
 // SQLExpr convert this operator's field and value to a mysql's sub
 // query expression.
-func (lt LessThanOp) SQLExpr(field string, value interface{}) (string, error) {
+func (lt LessThanOp) SQLExpr(field string, value interface{}) (string, []interface{}, error) {
+	var argList []interface{}
 	if len(field) == 0 {
-		return "", errors.New("field is empty")
+		return "", argList, errors.New("field is empty")
 	}
 
-	numeric, hit := isNumericOrTime(value)
+	_, hit := isNumericOrTime(value)
 	if !hit {
-		return "", errors.New("invalid lt operator's value field, should be a numeric value")
+		return "", argList, errors.New("invalid lt operator's value field, should be a numeric value")
 	}
 
-	if numeric {
-		return fmt.Sprintf(`%s < %v`, field, value), nil
-	}
-
-	return fmt.Sprintf(`%s < '%v'`, field, value), nil
+	argList = append(argList, value)
+	return fmt.Sprintf(`%s < ?`, field), argList, nil
 }
 
 // LessThanEqualOp is less than equal operator
@@ -381,21 +362,19 @@ func (lte LessThanEqualOp) ValidateValue(v interface{}, opt *ExprOption) error {
 
 // SQLExpr convert this operator's field and value to a mysql's sub
 // query expression.
-func (lte LessThanEqualOp) SQLExpr(field string, value interface{}) (string, error) {
+func (lte LessThanEqualOp) SQLExpr(field string, value interface{}) (string, []interface{}, error) {
+	var argList []interface{}
 	if len(field) == 0 {
-		return "", errors.New("field is empty")
+		return "", argList, errors.New("field is empty")
 	}
 
-	numeric, hit := isNumericOrTime(value)
+	_, hit := isNumericOrTime(value)
 	if !hit {
-		return "", errors.New("invalid lte operator's value field, should be a numeric value")
+		return "", argList, errors.New("invalid lte operator's value field, should be a numeric value")
 	}
 
-	if numeric {
-		return fmt.Sprintf(`%s <= %v`, field, value), nil
-	}
-
-	return fmt.Sprintf(`%s <= '%v'`, field, value), nil
+	argList = append(argList, value)
+	return fmt.Sprintf(`%s <= ?`, field), argList, nil
 }
 
 // InOp is in operator
@@ -446,47 +425,41 @@ func (io InOp) ValidateValue(v interface{}, opt *ExprOption) error {
 
 // SQLExpr convert this operator's field and value to a mysql's sub
 // query expression.
-func (io InOp) SQLExpr(field string, value interface{}) (string, error) {
-
+func (io InOp) SQLExpr(field string, value interface{}) (string, []interface{}, error) {
+	var argList []interface{}
 	if len(field) == 0 {
-		return "", errors.New("field is empty")
+		return "", argList, errors.New("field is empty")
 	}
 
 	switch reflect.TypeOf(value).Kind() {
 	case reflect.Array:
 	case reflect.Slice:
 	default:
-		return "", errors.New("in operator's value should be an array")
+		return "", argList, errors.New("in operator's value should be an array")
 	}
 
 	valOf := reflect.ValueOf(value)
 	length := valOf.Len()
 	if length == 0 {
-		return "", errors.New("invalid in operator's value, at least have one element")
+		return "", argList, errors.New("invalid in operator's value, at least have one element")
 	}
 
 	var joined string
 	for i := 0; i < length; i++ {
 		ele := valOf.Index(i).Interface()
 		if !tools.IsBasicValue(ele) {
-			return "", fmt.Errorf("invalid in operator's value: %v, each element's value should be a basic type",
+			return "", []interface{}{}, fmt.Errorf("invalid in operator's value: %v, each element's value should be a basic type",
 				ele)
 		}
 
-		if tools.IsNumeric(ele) {
-			// if this value is numeric, then we still format it with %v
-			// because it is compatible with integer, float, etc.
-			joined = fmt.Sprintf("%s, %v", joined, ele)
-		} else {
-			joined = fmt.Sprintf("%s, '%v'", joined, ele)
-		}
-
+		joined = fmt.Sprintf("%s, ?", joined)
+		argList = append(argList, ele)
 	}
 
 	joined = strings.Trim(joined, ",")
 	joined = strings.TrimSpace(joined)
 
-	return fmt.Sprintf(`%s IN (%s)`, field, joined), nil
+	return fmt.Sprintf(`%s IN (%s)`, field, joined), argList, nil
 }
 
 // NotInOp is not in operator
@@ -537,45 +510,42 @@ func (nio NotInOp) ValidateValue(v interface{}, opt *ExprOption) error {
 
 // SQLExpr convert this operator's field and value to a mysql's sub
 // query expression.
-func (nio NotInOp) SQLExpr(field string, value interface{}) (string, error) {
+func (nio NotInOp) SQLExpr(field string, value interface{}) (string, []interface{}, error) {
+	var argList []interface{}
 	if len(field) == 0 {
-		return "", errors.New("field is empty")
+		return "", argList, errors.New("field is empty")
 	}
 
 	switch reflect.TypeOf(value).Kind() {
 	case reflect.Array:
 	case reflect.Slice:
 	default:
-		return "", errors.New("nin operator's value should be an array")
+		return "", argList, errors.New("nin operator's value should be an array")
 	}
 
 	valOf := reflect.ValueOf(value)
 	length := valOf.Len()
 	if length == 0 {
-		return "", errors.New("invalid nin operator's value, at least have one element")
+		return "", argList, errors.New("invalid nin operator's value, at least have one element")
 	}
 
 	var joined string
 	for i := 0; i < length; i++ {
 		ele := valOf.Index(i).Interface()
 		if !tools.IsBasicValue(ele) {
-			return "", fmt.Errorf("invalid nin operator's value: %v, each element's value should be a basic type",
+			return "", []interface{}{}, fmt.Errorf("invalid nin operator's value: %v, each element's value should be a basic type",
 				ele)
 		}
 
-		if tools.IsNumeric(ele) {
-			// if this value is numeric, then we still format it with %v
-			// because it is compatible with integer, float, etc.
-			joined = fmt.Sprintf("%s, %v", joined, ele)
-		} else {
-			joined = fmt.Sprintf("%s, '%v'", joined, ele)
-		}
+		joined = fmt.Sprintf("%s, ?", joined)
+		argList = append(argList, ele)
+
 	}
 
 	joined = strings.Trim(joined, ",")
 	joined = strings.TrimSpace(joined)
 
-	return fmt.Sprintf(`%s NOT IN (%s)`, field, joined), nil
+	return fmt.Sprintf(`%s NOT IN (%s)`, field, joined), argList, nil
 }
 
 // ContainsSensitiveOp is contains sensitive operator
@@ -607,25 +577,26 @@ func (cso ContainsSensitiveOp) ValidateValue(v interface{}, opt *ExprOption) err
 
 // SQLExpr convert this operator's field and value to a mysql's sub
 // query expression.
-func (cso ContainsSensitiveOp) SQLExpr(field string, value interface{}) (string, error) {
+func (cso ContainsSensitiveOp) SQLExpr(field string, value interface{}) (string, []interface{}, error) {
+	var argList []interface{}
 	if len(field) == 0 {
-		return "", errors.New("field is empty")
+		return "", argList, errors.New("field is empty")
 	}
 
 	if reflect.TypeOf(value).Kind() != reflect.String {
-		return "", errors.New("cs operator's value should be an string")
+		return "", argList, errors.New("cs operator's value should be an string")
 	}
 
 	s, ok := value.(string)
 	if !ok {
-		return "", errors.New("cs operator's value should be an string")
+		return "", argList, errors.New("cs operator's value should be an string")
 	}
 
 	if len(s) == 0 {
-		return "", errors.New("cs operator's value can not be a empty string")
+		return "", argList, errors.New("cs operator's value can not be a empty string")
 	}
-
-	return fmt.Sprintf(`%s LIKE BINARY '%%%v%%'`, field, value), nil
+	argList = append(argList, value)
+	return fmt.Sprintf(`%s LIKE BINARY %%?%%`, field), argList, nil
 }
 
 // ContainsInsensitiveOp is contains insensitive operator
@@ -657,6 +628,8 @@ func (cio ContainsInsensitiveOp) ValidateValue(v interface{}, opt *ExprOption) e
 
 // SQLExpr convert this operator's field and value to a mysql's sub
 // query expression.
-func (cio ContainsInsensitiveOp) SQLExpr(field string, value interface{}) (string, error) {
-	return fmt.Sprintf(`%s LIKE '%%%v%%'`, field, value), nil
+func (cio ContainsInsensitiveOp) SQLExpr(field string, value interface{}) (string, []interface{}, error) {
+	var argList []interface{}
+	argList = append(argList, value)
+	return fmt.Sprintf(`%s LIKE %%?%%`, field), argList, nil
 }

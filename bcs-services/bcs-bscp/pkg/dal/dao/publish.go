@@ -14,6 +14,7 @@ package dao
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
@@ -83,8 +84,10 @@ func (pd *pubDao) Publish(kit *kit.Kit, opt *types.PublishOption) (uint32, error
 		groups := make([]*table.Group, len(opt.Groups))
 		if !opt.All {
 			// list groups if gray release
-			lgExpr := fmt.Sprintf(`SELECT %s FROM %s WHERE id IN (%s)`,
-				table.GroupColumns.NamedExpr(), table.GroupTable, tools.JoinUint32(opt.Groups, ","))
+			var sqlSentence []string
+			sqlSentence = append(sqlSentence, "SELECT ", table.GroupColumns.NamedExpr(), " FROM ", string(table.GroupTable),
+				" WHERE id IN (", tools.JoinUint32(opt.Groups, ","), ")")
+			lgExpr := filter.SqlJoint(sqlSentence)
 			if err := pd.orm.Do(pd.sd.MustSharding(opt.BizID)).Select(kit.Ctx, &groups, lgExpr); err != nil {
 				logs.Errorf("get to be published groups(%s) failed, err: %v, rid: %s",
 					tools.JoinUint32(opt.Groups, ","), err, kit.Rid)
@@ -126,8 +129,10 @@ func (pd *pubDao) Publish(kit *kit.Kit, opt *types.PublishOption) (uint32, error
 				UpdatedAt: now,
 			},
 		}
-		stgExpr := fmt.Sprintf(`INSERT INTO %s (%s)	VALUES(%s)`, table.StrategyTable,
-			table.StrategyColumns.ColumnExpr(), table.StrategyColumns.ColonNameExpr())
+		var sqlSentence []string
+		sqlSentence = append(sqlSentence, "INSERT INTO ", string(table.StrategyTable), " (", table.StrategyColumns.ColumnExpr(),
+			")  VALUES(", table.StrategyColumns.ColonNameExpr(), ")")
+		stgExpr := filter.SqlJoint(sqlSentence)
 
 		if err := stg.Spec.ValidateCreate(); err != nil {
 			return err
@@ -230,8 +235,9 @@ func (pd *pubDao) upsertToCurrentPublishedStrategy(kt *kit.Kit, txn *sqlx.Tx, s 
 		return fmt.Errorf("prepare parsed sql expr failed, err: %v", err)
 	}
 
-	sql := fmt.Sprintf(`UPDATE %s SET %s WHERE strategy_id = %d`, table.CurrentPublishedStrategyTable,
-		expr, cps.StrategyID)
+	var sqlSentence []string
+	sqlSentence = append(sqlSentence, "UPDATE ", string(table.CurrentPublishedStrategyTable), " SET ", expr, " WHERE strategy_id = ", strconv.Itoa(int(cps.StrategyID)))
+	sql := filter.SqlJoint(sqlSentence)
 	result, err := txn.NamedExecContext(kt.Ctx, sql, toUpdate)
 	if err != nil {
 		return errf.New(errf.DBOpFailed, "update current published strategy failed, err: "+err.Error())
@@ -250,9 +256,10 @@ func (pd *pubDao) upsertToCurrentPublishedStrategy(kt *kit.Kit, txn *sqlx.Tx, s 
 		return nil
 	}
 
-	sql = fmt.Sprintf("INSERT INTO %s (%s) VALUES(%s)",
-		table.CurrentPublishedStrategyTable, table.CurrentPublishedStrategyColumns.ColumnExpr(),
-		table.CurrentPublishedStrategyColumns.ColonNameExpr())
+	var sqlSentenceIn []string
+	sqlSentenceIn = append(sqlSentenceIn, "INSERT INTO ", string(table.CurrentPublishedStrategyTable), " (", table.CurrentPublishedStrategyColumns.ColumnExpr(),
+		") VALUES(", table.CurrentPublishedStrategyColumns.ColonNameExpr(), ")")
+	sql = filter.SqlJoint(sqlSentenceIn)
 
 	if _, err := txn.NamedExecContext(kt.Ctx, sql, cps); err != nil {
 		// concurrency can cause deadlock problems and provide three retries
@@ -284,8 +291,10 @@ func (pd *pubDao) recordPublishedStrategyHistory(kit *kit.Kit, txn *sqlx.Tx, pub
 	}
 	published.State.PubState = ""
 
-	sql := fmt.Sprintf(`INSERT INTO %s (%s)	VALUES(%s)`, table.PublishedStrategyHistoryTable,
-		table.PubStrategyHistoryColumns.ColumnExpr(), table.PubStrategyHistoryColumns.ColonNameExpr())
+	var sqlSentence []string
+	sqlSentence = append(sqlSentence, "INSERT INTO ", string(table.PublishedStrategyHistoryTable), " (", table.PubStrategyHistoryColumns.ColumnExpr(),
+		")  VALUES(", table.PubStrategyHistoryColumns.ColonNameExpr(), ")")
+	sql := filter.SqlJoint(sqlSentence)
 
 	if _, err := txn.NamedExecContext(kit.Ctx, sql, published); err != nil {
 		logs.Errorf("insert published strategy history failed, sql: %s, err: %v, rid: %s", sql, err, kit.Rid)
@@ -317,10 +326,11 @@ func (pd *pubDao) updateStrategyPublishState(kit *kit.Kit, txn *sqlx.Tx, bizID u
 	if err := state.Validate(); err != nil {
 		return errf.New(errf.InvalidParameter, "invalid strategy publish state: "+string(state))
 	}
-
-	expr := fmt.Sprintf("UPDATE %s SET pub_state = '%s', reviser = '%s', updated_at = '%s' "+
-		"WHERE id = %d AND biz_id = %d AND pub_state != '%s'", table.StrategyTable, state, kit.User,
-		time.Now().Format(constant.TimeStdFormat), strategyID, bizID, state)
+	var sqlSentence []string
+	sqlSentence = append(sqlSentence, "UPDATE ", string(table.StrategyTable), " SET pub_state = '", string(state), "', reviser = '",
+		kit.User, "', updated_at = '", time.Now().Format(constant.TimeStdFormat), "' ", "WHERE id = ", strconv.Itoa(int(strategyID)),
+		" AND biz_id = ", strconv.Itoa(int(bizID)), " AND pub_state != '", string(state), "'")
+	expr := filter.SqlJoint(sqlSentence)
 
 	if txn == nil {
 		// update state without an already existed transaction
@@ -412,17 +422,19 @@ func (pd *pubDao) ListPSHistory(kit *kit.Kit, opts *types.ListPSHistoriesOption)
 			},
 		},
 	}
-	whereExpr, err := opts.Filter.SQLWhereExpr(sqlOpt)
+	whereExpr, arg, err := opts.Filter.SQLWhereExpr(sqlOpt)
 	if err != nil {
 		return nil, err
 	}
 
 	var sql string
+	var sqlSentence []string
 	if opts.Page.Count {
 		// this is a count request, then do count operation only.
-		sql = fmt.Sprintf(`SELECT COUNT(*) FROM %s %s`, table.PublishedStrategyHistoryTable, whereExpr)
+		sqlSentence = append(sqlSentence, "SELECT COUNT(*) FROM ", string(table.PublishedStrategyHistoryTable), whereExpr)
+		sql = filter.SqlJoint(sqlSentence)
 		var count uint32
-		count, err = pd.orm.Do(pd.sd.ShardingOne(opts.BizID).DB()).Count(kit.Ctx, sql)
+		count, err = pd.orm.Do(pd.sd.ShardingOne(opts.BizID).DB()).Count(kit.Ctx, sql, arg)
 		if err != nil {
 			return nil, err
 		}
@@ -436,8 +448,9 @@ func (pd *pubDao) ListPSHistory(kit *kit.Kit, opts *types.ListPSHistoriesOption)
 		return nil, err
 	}
 
-	sql = fmt.Sprintf(`SELECT %s FROM %s %s %s`,
-		table.PubStrategyHistoryColumns.NamedExpr(), table.PublishedStrategyHistoryTable, whereExpr, pageExpr)
+	sqlSentence = append(sqlSentence, "SELECT ", table.PubStrategyHistoryColumns.NamedExpr(), " FROM ", string(table.PublishedStrategyHistoryTable),
+		whereExpr, pageExpr)
+	sql = filter.SqlJoint(sqlSentence)
 
 	list := make([]*table.PublishedStrategyHistory, 0)
 	err = pd.orm.Do(pd.sd.ShardingOne(opts.BizID).DB()).Select(kit.Ctx, &list, sql)
@@ -462,8 +475,10 @@ func (pd *pubDao) GetAppCPStrategies(kt *kit.Kit, opts *types.GetAppCPSOption) (
 		return nil, err
 	}
 
-	sql := fmt.Sprintf("SELECT %s FROM %s WHERE biz_id = %d AND app_id = %d %s", types.PublishedStrategyCacheColumn,
-		table.CurrentPublishedStrategyTable, opts.BizID, opts.AppID, pageExpr)
+	var sqlSentence []string
+	sqlSentence = append(sqlSentence, "SELECT ", types.PublishedStrategyCacheColumn, " FROM ", string(table.CurrentPublishedStrategyTable),
+		" WHERE biz_id = ", strconv.Itoa(int(opts.BizID)), " AND app_id = ", strconv.Itoa(int(opts.AppID)), pageExpr)
+	sql := filter.SqlJoint(sqlSentence)
 
 	list := make([]*types.PublishedStrategyCache, 0)
 	if err = pd.orm.Do(pd.sd.ShardingOne(opts.BizID).DB()).Select(kt.Ctx, &list, sql); err != nil {
@@ -480,14 +495,15 @@ func (pd *pubDao) GetAppCpsID(kt *kit.Kit, opts *types.GetAppCpsIDOption) ([]uin
 	}
 
 	var sql string
+	var sqlSentence []string
 	if len(opts.Namespace) != 0 {
 		// query namespace and default cps.
-		sql = fmt.Sprintf("SELECT id FROM %s WHERE app_id = %d AND (namespace = '%s' OR as_default = true)",
-			table.CurrentPublishedStrategyTable, opts.AppID, opts.Namespace)
+		sqlSentence = append(sqlSentence, "SELECT id FROM ", string(table.CurrentPublishedStrategyTable), " WHERE app_id = ", strconv.Itoa(int(opts.AppID)), " AND (namespace = '", opts.Namespace, "' OR as_default = true)")
+		sql = filter.SqlJoint(sqlSentence)
 	} else {
 		// query app all cps.
-		sql = fmt.Sprintf("SELECT id FROM %s WHERE biz_id = %d AND app_id = %d", table.CurrentPublishedStrategyTable,
-			opts.BizID, opts.AppID)
+		sqlSentence = append(sqlSentence, "SELECT id FROM ", string(table.CurrentPublishedStrategyTable), " WHERE biz_id = ", strconv.Itoa(int(opts.BizID)), " AND app_id = ", strconv.Itoa(int(opts.AppID)))
+		sql = filter.SqlJoint(sqlSentence)
 	}
 
 	list := make([]uint32, 0)
