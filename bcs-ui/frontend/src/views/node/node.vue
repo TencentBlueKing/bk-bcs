@@ -848,11 +848,11 @@ export default defineComponent({
         children: [
           {
             id: 'checked-ipv4',
-            label: $i18n.t('复制勾选IPv4'),
+            label: 'IPv4',
           },
           {
             id: 'checked-ipv6',
-            label: $i18n.t('复制勾选IPv6'),
+            label: 'IPv6',
           },
         ],
       },
@@ -862,11 +862,11 @@ export default defineComponent({
         children: [
           {
             id: 'all-ipv4',
-            label: $i18n.t('复制所有IPv4'),
+            label: 'IPv4',
           },
           {
             id: 'all-ipv6',
-            label: $i18n.t('复制所有IPv6'),
+            label: 'IPv6',
           },
         ],
       },

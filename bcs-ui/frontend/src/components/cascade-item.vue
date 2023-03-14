@@ -1,34 +1,45 @@
 <template>
-  <div class="flex">
-    <ul class="bcs-border">
-      <li
-        :class="[
-          'bcs-dropdown-item',
-          {
-            'pr-[5px]': item.children && item.children.length,
-            'active': item.children && item.children.length && activeID === item.id
-          }
-        ]"
-        v-for="item in list"
-        :key="item.id"
-        @click="handleClickItem(item)">
-        <div class="flex place-content-center">
+  <ul class="bcs-border">
+    <li
+      :class="[
+        'bcs-dropdown-item',
+        {
+          'pr-[5px]': item.children && item.children.length,
+          'active': item.children && item.children.length && activeID === item.id
+        }
+      ]"
+      v-for="item, index in list"
+      :key="item.id"
+      @mouseenter="handleMouseEnter(item, index)"
+      @click="handleClickItem(item, index)">
+      <PopoverSelector
+        trigger="manual"
+        placement="right-start"
+        offset="20, -4"
+        :tippy-options="{ flip: false }"
+        ref="popoverRef">
+        <div
+          class="flex place-content-center">
           <span>{{ item.label }}</span>
           <span class="text-[20px] ml-[5px]" v-if="item.children && item.children.length">
             <i class="bk-icon icon-angle-right"></i>
           </span>
         </div>
-      </li>
-    </ul>
-    <BcsCascadeItem
-      :list="activeChildren"
-      class="ml-[-1px]"
-      @click="handleClickItem"
-      v-if="activeChildren.length" />
-  </div>
+        <template #content>
+          <BcsCascadeItem
+            :list="item.children"
+            v-if="item.children && item.children.length && activeID === item.id"
+            ref="childrenItemRef"
+            @click="handleClickItem"
+          />
+        </template>
+      </PopoverSelector>
+    </li>
+  </ul>
 </template>
 <script lang="ts">
-import { defineComponent, PropType, toRefs, ref, computed } from '@vue/composition-api';
+import { defineComponent, PropType, ref } from '@vue/composition-api';
+import PopoverSelector from './popover-selector.vue';
 
 export interface IData {
   id: string
@@ -37,6 +48,7 @@ export interface IData {
 }
 export default defineComponent({
   name: 'BcsCascadeItem',
+  components: { PopoverSelector },
   props: {
     list: {
       type: Array as PropType<IData[]>,
@@ -44,18 +56,34 @@ export default defineComponent({
     },
   },
   setup(props, ctx) {
-    const { list } = toRefs(props);
+    const popoverRef = ref<any[]>([]);
+    const childrenItemRef = ref<any>(null);
     const activeID = ref('');
-    const activeChildren = computed(() => list.value.find(item => item.id === activeID.value)?.children || []);
-    const handleClickItem = (item: IData) => {
+    const handleMouseEnter = (item: IData, index) => {
       activeID.value = item.id;
+      if (!item.children?.length) return;
+      popoverRef.value[index]?.show();
+    };
+    const handleClickItem = (item: IData, index) => {
+      if (item.children?.length) return;
       ctx.emit('click', item);
+      popoverRef.value[index]?.hide();
+    };
+    const hide = () => {
+      props.list.forEach((_, index) => {
+        popoverRef.value[index]?.hide();
+      });
+      childrenItemRef.value?.[0]?.hide();
+      activeID.value = '';
     };
 
     return {
+      popoverRef,
+      childrenItemRef,
       activeID,
-      activeChildren,
       handleClickItem,
+      handleMouseEnter,
+      hide,
     };
   },
 });
