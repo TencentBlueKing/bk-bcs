@@ -58,7 +58,7 @@
           <bk-table-column label="Node" :resizable="false">
             <template #default="{ row }">{{row.spec.nodeName || '--'}}</template>
           </bk-table-column>
-          <bk-table-column label="Age" :resizable="false">
+          <bk-table-column label="Age" sortable="custom" prop="createTime" :resizable="false">
             <template #default="{ row }">
               <span>{{handleGetExtData(row.metadata.uid, 'age')}}</span>
             </template>

@@ -5,7 +5,9 @@
     :placement="placement"
     :arrow="false"
     :trigger="trigger"
-    :tippy-options="{ boundary: 'window' }">
+    :tippy-options="tippyOptions"
+    :always="always"
+    ref="popoverRef">
     <slot></slot>
     <template slot="content">
       <slot name="content"></slot>
@@ -13,7 +15,7 @@
   </bcs-popover>
 </template>
 <script lang="ts">
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent, ref } from '@vue/composition-api';
 
 export default defineComponent({
   name: 'PopoverSelector',
@@ -30,9 +32,28 @@ export default defineComponent({
       type: String,
       default: 'bottom',
     },
+    always: {
+      type: Boolean,
+      default: false,
+    },
+    tippyOptions: {
+      type: Object,
+      default: () => ({}),
+    },
   },
   setup() {
-    return {};
+    const popoverRef = ref<any>(null);
+    const show = () => {
+      popoverRef.value.showHandler();
+    };
+    const hide = () => {
+      popoverRef.value.hideHandler();
+    };
+    return {
+      popoverRef,
+      show,
+      hide,
+    };
   },
 });
 </script>

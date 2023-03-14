@@ -12,12 +12,17 @@
         @page-change="handlePageChange"
         @page-limit-change="handlePageSizeChange"
         @sort-change="handleSortChange">
-        <bk-table-column :label="$t('名称')" prop="metadata.name" min-width="100" sortable>
+        <bk-table-column :label="$t('名称')" prop="metadata.name" min-width="100" sortable="custom">
           <template #default="{ row }">
             <bk-button class="bcs-button-ellipsis" text @click="gotoDetail(row)">{{ row.metadata.name }}</bk-button>
           </template>
         </bk-table-column>
-        <bk-table-column :label="$t('命名空间')" prop="metadata.namespace" min-width="100" sortable></bk-table-column>
+        <bk-table-column
+          :label="$t('命名空间')"
+          prop="metadata.namespace"
+          min-width="100"
+          sortable="custom">
+        </bk-table-column>
         <bk-table-column :label="$t('升级策略')" min-width="100">
           <template slot-scope="{ row }">
             <span>
@@ -70,7 +75,7 @@
         <bk-table-column label="Available" width="100" :resizable="false">
           <template slot-scope="{ row }">{{row.status.availableReplicas || 0}}</template>
         </bk-table-column>
-        <bk-table-column label="Age" width="100" :resizable="false">
+        <bk-table-column label="Age" sortable="custom" prop="createTime" width="100" :resizable="false">
           <template slot-scope="{ row }">
             <span>{{handleGetExtData(row.metadata.uid, 'age')}}</span>
           </template>

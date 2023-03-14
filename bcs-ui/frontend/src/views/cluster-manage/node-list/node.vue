@@ -249,7 +249,11 @@
           key="container_count"
           v-if="isColumnRender('container_count')">
           <template #default="{ row }">
-            {{ nodeMetric[row.nodeName] ? nodeMetric[row.nodeName].container_count : '--'}}
+            {{
+              nodeMetric[row.nodeName]
+                ? nodeMetric[row.nodeName].container_count || '--'
+                : '--'
+            }}
           </template>
         </bcs-table-column>
         <bcs-table-column
@@ -260,7 +264,11 @@
           key="pod_count"
           v-if="isColumnRender('pod_count')">
           <template #default="{ row }">
-            {{ nodeMetric[row.nodeName] ? nodeMetric[row.nodeName].pod_count : '--'}}
+            {{
+              nodeMetric[row.nodeName]
+                ? nodeMetric[row.nodeName].pod_count || '--'
+                : '--'
+            }}
           </template>
         </bcs-table-column>
         <bcs-table-column min-width="200" :label="$t('标签')" key="source_type" v-if="isColumnRender('source_type')">
@@ -884,11 +892,11 @@ export default defineComponent({
         children: [
           {
             id: 'checked-ipv4',
-            label: $i18n.t('复制勾选IPv4'),
+            label: 'IPv4',
           },
           {
             id: 'checked-ipv6',
-            label: $i18n.t('复制勾选IPv6'),
+            label: 'IPv6',
           },
         ],
       },
@@ -898,11 +906,11 @@ export default defineComponent({
         children: [
           {
             id: 'all-ipv4',
-            label: $i18n.t('复制所有IPv4'),
+            label: 'IPv4',
           },
           {
             id: 'all-ipv6',
-            label: $i18n.t('复制所有IPv6'),
+            label: 'IPv6',
           },
         ],
       },
