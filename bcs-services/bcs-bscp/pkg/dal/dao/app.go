@@ -15,6 +15,7 @@ package dao
 import (
 	"errors"
 	"fmt"
+	"strconv"
 	"time"
 
 	"bscp.io/pkg/criteria/enumor"
@@ -96,16 +97,17 @@ func (ap *appDao) List(kit *kit.Kit, opts *types.ListAppsOption) (*types.ListApp
 			},
 		}
 	}
-
-	whereExpr, err := opts.Filter.SQLWhereExpr(sqlOpt)
+	whereExpr, arg, err := opts.Filter.SQLWhereExpr(sqlOpt)
 	if err != nil {
 		return nil, err
 	}
 
 	// 如果 app 有分库分表, 跨 spaces 查询将不可用
 	// do count operation only.
-	countSql := fmt.Sprintf(`SELECT COUNT(*) FROM %s %s`, table.AppTable, whereExpr)
-	count, err := ap.orm.Do(ap.sd.ShardingOne(opts.BizID).DB()).Count(kit.Ctx, countSql)
+	var sqlSentence []string
+	sqlSentence = append(sqlSentence, "SELECT COUNT(*) FROM ", string(table.AppTable), whereExpr)
+	countSql := filter.SqlJoint(sqlSentence)
+	count, err := ap.orm.Do(ap.sd.ShardingOne(opts.BizID).DB()).Count(kit.Ctx, countSql, arg)
 	if err != nil {
 		return nil, err
 	}
@@ -116,11 +118,12 @@ func (ap *appDao) List(kit *kit.Kit, opts *types.ListAppsOption) (*types.ListApp
 		return nil, err
 	}
 
-	querySql := fmt.Sprintf(`SELECT %s FROM %s %s %s`, table.AppColumns.NamedExpr(),
-		table.AppTable, whereExpr, pageExpr)
+	var sqlQuery []string
+	sqlQuery = append(sqlQuery, "SELECT ", table.AppColumns.NamedExpr(), " FROM ", string(table.AppTable), whereExpr, pageExpr)
+	querySql := filter.SqlJoint(sqlQuery)
 
 	list := make([]*table.App, 0)
-	err = ap.orm.Do(ap.sd.ShardingOne(opts.BizID).DB()).Select(kit.Ctx, &list, querySql)
+	err = ap.orm.Do(ap.sd.ShardingOne(opts.BizID).DB()).Select(kit.Ctx, &list, querySql, arg)
 	if err != nil {
 		return nil, err
 	}
@@ -147,9 +150,10 @@ func (ap *appDao) Create(kit *kit.Kit, app *table.App) (uint32, error) {
 
 	app.ID = id
 
-	sql := fmt.Sprintf(`INSERT INTO %s (%s)	VALUES(%s)`, table.AppTable, table.AppColumns.ColumnExpr(),
-		table.AppColumns.ColonNameExpr())
-
+	var sqlSentence []string
+	sqlSentence = append(sqlSentence, "INSERT INTO ", string(table.AppTable),
+		" (", table.AppColumns.ColumnExpr(), ") ", "VALUES(", table.AppColumns.ColonNameExpr(), ")")
+	sql := filter.SqlJoint(sqlSentence)
 	eDecorator := ap.event.Eventf(kit)
 	err = ap.sd.ShardingOne(app.BizID).AutoTxn(kit, func(txn *sqlx.Tx, opt *sharding.TxnOption) error {
 		if err := ap.orm.Txn(txn).Insert(kit.Ctx, sql, app); err != nil {
@@ -213,7 +217,11 @@ func (ap *appDao) Update(kit *kit.Kit, app *table.App) error {
 
 	ab := ap.auditDao.Decorator(kit, app.BizID, enumor.App).PrepareUpdate(app)
 
-	sql := fmt.Sprintf(`UPDATE %s SET %s WHERE id = %d and biz_id = %d`, table.AppTable, expr, app.ID, app.BizID)
+	var sqlSentence []string
+	sqlSentence = append(sqlSentence, "UPDATE ", string(table.AppTable), " SET ", expr, " WHERE id = ",
+		strconv.Itoa(int(app.ID)), " and biz_id = ", strconv.Itoa(int(app.BizID)))
+	sql := filter.SqlJoint(sqlSentence)
+
 	eDecorator := ap.event.Eventf(kit)
 	err = ap.sd.ShardingOne(app.BizID).AutoTxn(kit, func(txn *sqlx.Tx, opt *sharding.TxnOption) error {
 		effected, err := ap.orm.Txn(txn).Update(kit.Ctx, sql, toUpdate)
@@ -276,7 +284,10 @@ func (ap *appDao) Delete(kit *kit.Kit, app *table.App) error {
 
 	ab := ap.auditDao.Decorator(kit, app.BizID, enumor.App).PrepareDelete(app.ID)
 
-	expr := fmt.Sprintf(`DELETE FROM %s WHERE id = %d AND biz_id = %d`, table.AppTable, app.ID, app.BizID)
+	var sqlSentence []string
+	sqlSentence = append(sqlSentence, "DELETE FROM ", string(table.AppTable), " WHERE id = ",
+		strconv.Itoa(int(app.ID)), " AND biz_id = ", strconv.Itoa(int(app.BizID)))
+	sql := filter.SqlJoint(sqlSentence)
 
 	eDecorator := ap.event.Eventf(kit)
 	err := ap.sd.ShardingOne(app.BizID).AutoTxn(kit, func(txn *sqlx.Tx, opt *sharding.TxnOption) error {
@@ -286,7 +297,7 @@ func (ap *appDao) Delete(kit *kit.Kit, app *table.App) error {
 		}
 
 		// delete the app at first.
-		err = ap.orm.Txn(txn).Delete(kit.Ctx, expr)
+		err = ap.orm.Txn(txn).Delete(kit.Ctx, sql)
 		if err != nil {
 			return err
 		}
@@ -332,11 +343,13 @@ func (ap *appDao) Delete(kit *kit.Kit, app *table.App) error {
 
 func (ap *appDao) Get(kit *kit.Kit, bizID uint32, appID uint32) (*table.App, error) {
 
-	expr := fmt.Sprintf(`SELECT %s FROM %s WHERE id = %d AND biz_id = %d`,
-		table.AppColumns.NamedExpr(), table.AppTable, appID, bizID)
+	var sqlSentence []string
+	sqlSentence = append(sqlSentence, "SELECT ", table.AppColumns.NamedExpr(), " FROM ",
+		string(table.AppTable), " WHERE id = ", strconv.Itoa(int(appID)), " AND biz_id = ", strconv.Itoa(int(bizID)))
+	sql := filter.SqlJoint(sqlSentence)
 
 	one := new(table.App)
-	err := ap.orm.Do(ap.sd.MustSharding(bizID)).Get(kit.Ctx, one, expr)
+	err := ap.orm.Do(ap.sd.MustSharding(bizID)).Get(kit.Ctx, one, sql)
 	if err != nil {
 		return nil, fmt.Errorf("get app details failed, err: %v", err)
 	}
@@ -346,8 +359,10 @@ func (ap *appDao) Get(kit *kit.Kit, bizID uint32, appID uint32) (*table.App, err
 
 // GetByID 通过 AppId 查询
 func (ap *appDao) GetByID(kit *kit.Kit, appID uint32) (*table.App, error) {
-	expr := fmt.Sprintf(`SELECT %s FROM %s WHERE id = %d`, table.AppColumns.NamedExpr(), table.AppTable, appID)
-
+	var sqlSentence []string
+	sqlSentence = append(sqlSentence, "SELECT ", table.AppColumns.NamedExpr(), " FROM ", string(table.AppTable),
+		" WHERE id = ", strconv.Itoa(int(appID)))
+	expr := filter.SqlJoint(sqlSentence)
 	one := new(table.App)
 	err := ap.orm.Do(ap.sd.Admin().DB()).Get(kit.Ctx, one, expr)
 	if err != nil {
@@ -359,11 +374,12 @@ func (ap *appDao) GetByID(kit *kit.Kit, appID uint32) (*table.App, error) {
 
 func getAppMode(kit *kit.Kit, orm orm.Interface, sd *sharding.Sharding, bizID, appID uint32) (table.AppMode, error) {
 
-	expr := fmt.Sprintf(`SELECT %s FROM %s WHERE id = %d AND biz_id = %d`, table.AppSpecColumns.NamedExpr(),
-		table.AppTable, appID, bizID)
-
+	var sqlSentence []string
+	sqlSentence = append(sqlSentence, "SELECT ", table.AppColumns.NamedExpr(), " FROM ", string(table.AppTable),
+		" WHERE id = ", strconv.Itoa(int(appID)), " AND biz_id = ", strconv.Itoa(int(bizID)))
+	sql := filter.SqlJoint(sqlSentence)
 	one := new(table.AppSpec)
-	err := orm.Do(sd.MustSharding(bizID)).Get(kit.Ctx, one, expr)
+	err := orm.Do(sd.MustSharding(bizID)).Get(kit.Ctx, one, sql)
 	if err != nil {
 		return "", errf.New(errf.DBOpFailed, fmt.Sprintf("get app mode failed, err: %v", err))
 	}
@@ -389,9 +405,10 @@ func (ap *appDao) archiveApp(kit *kit.Kit, txn *sqlx.Tx, app *table.App) error {
 		CreatedAt: time.Now(),
 	}
 
-	sql := fmt.Sprintf("INSERT INTO %s (%s) VALUES(%s)", table.ArchivedAppTable,
-		table.ArchivedAppColumns.ColumnExpr(), table.ArchivedAppColumns.ColonNameExpr())
-
+	var sqlSentence []string
+	sqlSentence = append(sqlSentence, "INSERT INTO ", string(table.ArchivedAppTable),
+		" (", table.ArchivedAppColumns.ColumnExpr(), ") ", "VALUES(", table.ArchivedAppColumns.ColonNameExpr(), ")")
+	sql := filter.SqlJoint(sqlSentence)
 	err = ap.orm.Txn(txn).Insert(kit.Ctx, sql, archivedApp)
 	if err != nil {
 		return fmt.Errorf("archived delete app failed, err: %v", err)
@@ -409,12 +426,13 @@ func (ap *appDao) ListAppMetaForCache(kt *kit.Kit, bizID uint32, appIDs []uint32
 	}
 
 	appIDList := tools.JoinUint32(appIDs, ",")
-	appSQL := fmt.Sprintf("SELECT id, config_type AS 'spec.config_type', mode AS 'spec.mode', reload_type AS "+
-		"'spec.reload.reload_type', reload_file_path AS 'spec.reload.file_reload_spec.reload_file_path' "+
-		"FROM %s WHERE id IN (%s) AND biz_id = %d", table.AppTable, appIDList, bizID)
-
+	var sqlSentence []string
+	sqlSentence = append(sqlSentence, "SELECT id, config_type AS 'spec.config_type', mode AS 'spec.mode', reload_type AS ",
+		"'spec.reload.reload_type', reload_file_path AS 'spec.reload.file_reload_spec.reload_file_path' ",
+		"FROM ", string(table.AppTable), " WHERE id IN (", appIDList, ") AND biz_id = ", strconv.Itoa(int(bizID)))
+	sql := filter.SqlJoint(sqlSentence)
 	appList := make([]*table.App, 0)
-	if err := ap.orm.Do(ap.sd.MustSharding(bizID)).Select(kt.Ctx, &appList, appSQL); err != nil {
+	if err := ap.orm.Do(ap.sd.MustSharding(bizID)).Select(kt.Ctx, &appList, sql); err != nil {
 		return nil, fmt.Errorf("query db with app failed, err: %v", err)
 	}
 

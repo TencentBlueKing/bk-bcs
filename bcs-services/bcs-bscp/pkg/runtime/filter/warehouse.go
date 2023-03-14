@@ -13,6 +13,7 @@ limitations under the License.
 package filter
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"reflect"
@@ -179,33 +180,37 @@ func rearrangeMixedRulesWithPriority(exprRules []RuleFactory, crownRules []RuleF
 
 // doMixedSQLWhereExpr generated mixed SQL WHERE expression with mixed priority rules.
 func doMixedSQLWhereExpr(exprOp LogicOperator, exprRules []RuleFactory,
-	crownOp LogicOperator, crownRules []RuleFactory, priority []string) (string, error) {
+	crownOp LogicOperator, crownRules []RuleFactory, priority []string) (string, []interface{}, error) {
+
+	var sqlSentence []string
 
 	exprRules, crownRules, typ := rearrangeMixedRulesWithPriority(exprRules, crownRules, priority)
 
-	exprExpr, err := genMixedSQLWhereExpr(exprOp, exprRules)
+	exprExpr, argOp, err := genMixedSQLWhereExpr(exprOp, exprRules)
 	if err != nil {
-		return "", fmt.Errorf("gen mixed expr failed, %v", err)
+		return "", []interface{}{}, fmt.Errorf("gen mixed expr failed, %v", err)
 	}
 
 	// crowned rules is always operate with 'AND' logic operator.
-	crownExpr, err := genMixedSQLWhereExpr(And, crownRules)
+	crownExpr, argAnd, err := genMixedSQLWhereExpr(And, crownRules)
 	if err != nil {
-		return "", fmt.Errorf("gen mixed crown expr failed, %v", err)
+		return "", []interface{}{}, fmt.Errorf("gen mixed crown expr failed, %v", err)
 	}
 
 	switch {
 	case len(exprExpr) == 0 && len(crownExpr) == 0:
 		// both is empty, return "" without prefixed 'WHERE'
-		return "", nil
+		return "", []interface{}{}, nil
 
 	case len(exprExpr) == 0 && len(crownExpr) != 0:
 		// only have crowned rules, then return its expr and prefixed with 'WHERE'
-		return fmt.Sprintf("WHERE %s", crownExpr), nil
+		sqlSentence = append(sqlSentence, " WHERE ", crownExpr)
+		return SqlJoint(sqlSentence), argAnd, nil
 
 	case len(exprExpr) != 0 && len(crownExpr) == 0:
 		// only have Expression rules, then return its expr and prefixed with 'WHERE'
-		return fmt.Sprintf("WHERE %s", exprExpr), nil
+		sqlSentence = append(sqlSentence, " WHERE ", exprExpr)
+		return SqlJoint(sqlSentence), argOp, nil
 
 	default:
 		// generate SQL Where expression as follows:01
@@ -216,15 +221,19 @@ func doMixedSQLWhereExpr(exprOp LogicOperator, exprRules []RuleFactory,
 		switch typ {
 		case exprType:
 			// return fmt.Sprintf("WHERE %s %s (%s)", exprExpr, strings.ToUpper(string(crownOp)), crownExpr), nil
-			return fmt.Sprintf("WHERE %s %s (%s)", exprExpr, strings.ToUpper(string(crownOp)), crownExpr), nil
+			argOp = append(argOp, argAnd...)
+			sqlSentence = append(sqlSentence, " WHERE ", exprExpr, " ", strings.ToUpper(string(crownOp)), " (", crownExpr, ")")
+			return SqlJoint(sqlSentence), argOp, nil
 		case crownType:
+			argAnd = append(argAnd, argOp...)
 			// return fmt.Sprintf("WHERE (%s) %s %s", crownExpr, strings.ToUpper(string(crownOp)), exprExpr), nil
-			return fmt.Sprintf("WHERE (%s) %s %s", crownExpr, strings.ToUpper(string(crownOp)), exprExpr), nil
+			sqlSentence = append(sqlSentence, " WHERE (", crownExpr, ") ", strings.ToUpper(string(crownOp)), " ", exprExpr)
+			return SqlJoint(sqlSentence), argAnd, nil
 		case anyType:
 			// no expr rules and crown rules  at the same time.
-			return "", nil
+			return "", []interface{}{}, nil
 		default:
-			return "", fmt.Errorf("unsupported expr type: %s", typ)
+			return "", []interface{}{}, fmt.Errorf("unsupported expr type: %s", typ)
 		}
 
 	}
@@ -232,56 +241,66 @@ func doMixedSQLWhereExpr(exprOp LogicOperator, exprRules []RuleFactory,
 	// generate SQL where expression with mixed priority.
 	switch typ {
 	case exprType:
+		argOp = append(argOp, argAnd...)
 		// return fmt.Sprintf("WHERE %s %s (%s)", exprExpr, strings.ToUpper(string(crownOp)), crownExpr), nil
-		return fmt.Sprintf("WHERE (%s) %s (%s)", exprExpr, strings.ToUpper(string(crownOp)), crownExpr), nil
+		sqlSentence = append(sqlSentence, " WHERE (", exprExpr, ") ", strings.ToUpper(string(crownOp)),
+			" (", crownExpr, ")")
+		return SqlJoint(sqlSentence), argOp, nil
 	case crownType:
+		argAnd = append(argAnd, argOp...)
 		// return fmt.Sprintf("WHERE (%s) %s %s", crownExpr, strings.ToUpper(string(crownOp)), exprExpr), nil
-		return fmt.Sprintf("WHERE (%s) %s (%s)", crownExpr, strings.ToUpper(string(crownOp)), exprExpr), nil
+		sqlSentence = append(sqlSentence, " WHERE (", crownExpr, ") ", strings.ToUpper(string(crownOp)),
+			" (", exprExpr, ")")
+		return SqlJoint(sqlSentence), argAnd, nil
 	case anyType:
 		// no expr rules and crown rules  at the same time.
-		return "", nil
+		return "", []interface{}{}, nil
 	default:
-		return "", fmt.Errorf("unsupported expr type: %s", typ)
+		return "", []interface{}{}, fmt.Errorf("unsupported expr type: %s", typ)
 	}
 }
 
-func genMixedSQLWhereExpr(op LogicOperator, rules []RuleFactory) (string, error) {
+func genMixedSQLWhereExpr(op LogicOperator, rules []RuleFactory) (string, []interface{}, error) {
 	if len(rules) == 0 {
-		return "", nil
+		return "", []interface{}{}, nil
 	}
 
 	// generate all the sub-expressions which is described by each rule.
 	subExpr := make([]string, 0)
+	argList := make([]interface{}, 0)
 	for _, one := range rules {
-		expr, err := one.SQLExpr()
+		expr, arg, err := one.SQLExpr()
 		if err != nil {
-			return "", err
+			return "", []interface{}{}, err
 		}
 
 		subExpr = append(subExpr, expr)
+		argList = append(argList, arg...)
 	}
 
 	if len(subExpr) == 0 {
-		return "", errors.New("invalid expression with 0 rules to query")
+		return "", []interface{}{}, errors.New("invalid expression with 0 rules to query")
 	}
 
 	switch op {
 	case And:
-		return strings.Join(subExpr, " AND "), nil
+		return strings.Join(subExpr, " AND "), argList, nil
 
 	case Or:
-		return strings.Join(subExpr, " OR "), nil
+		return strings.Join(subExpr, " OR "), argList, nil
 
 	default:
-		return "", fmt.Errorf("unsupported expression's logic operator: %s", op)
+		return "", []interface{}{}, fmt.Errorf("unsupported expression's logic operator: %s", op)
 	}
 }
 
 func doSoloSQLWhereExpr(op LogicOperator, rules []RuleFactory, priority []string) (
-	where string, err error) {
+	where string, args []interface{}, err error) {
+
+	var sqlSentence []string
 
 	if len(rules) == 0 {
-		return "", nil
+		return "", []interface{}{}, nil
 	}
 
 	// rearrange the rules with priority so that the query expression can
@@ -290,28 +309,31 @@ func doSoloSQLWhereExpr(op LogicOperator, rules []RuleFactory, priority []string
 
 	// generate all the sub-expressions which is described by each rule.
 	subExpr := make([]string, 0)
+	argList := make([]interface{}, 0)
 	for _, one := range rearrangedRules {
-		expr, err := one.SQLExpr()
+		expr, arg, err := one.SQLExpr()
 		if err != nil {
-			return "", err
+			return "", []interface{}{}, err
 		}
-
+		argList = append(argList, arg...)
 		subExpr = append(subExpr, expr)
 	}
 
 	if len(subExpr) == 0 {
-		return "", errors.New("invalid expression with 0 rules to query")
+		return "", []interface{}{}, errors.New("invalid expression with 0 rules to query")
 	}
 
 	switch op {
 	case And:
-		return "WHERE " + strings.Join(subExpr, " AND "), nil
+		sqlSentence = append(sqlSentence, " WHERE ", strings.Join(subExpr, " AND "))
+		return SqlJoint(sqlSentence), argList, nil
 
 	case Or:
-		return "WHERE " + strings.Join(subExpr, " OR "), nil
+		sqlSentence = append(sqlSentence, " WHERE ", strings.Join(subExpr, " OR "))
+		return SqlJoint(sqlSentence), argList, nil
 
 	default:
-		return "", fmt.Errorf("unsupported expression's logic operator: %s", op)
+		return "", []interface{}{}, fmt.Errorf("unsupported expression's logic operator: %s", op)
 	}
 }
 
@@ -395,4 +417,12 @@ func ruleType(rules gjson.Result) (RuleType, error) {
 	}
 
 	return AtomType, nil
+}
+
+func SqlJoint(sql []string) string {
+	buff := bytes.NewBuffer([]byte{})
+	for _, value := range sql {
+		buff.WriteString(value)
+	}
+	return buff.String()
 }

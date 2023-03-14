@@ -14,6 +14,7 @@ package dao
 
 import (
 	"fmt"
+	"strconv"
 
 	"bscp.io/pkg/criteria/enumor"
 	"bscp.io/pkg/criteria/errf"
@@ -67,9 +68,10 @@ func (dao *commitDao) Create(kit *kit.Kit, commit *table.Commit) (uint32, error)
 	}
 
 	commit.ID = id
+	var sqlSentence []string
+	sqlSentence = append(sqlSentence, "INSERT INTO ", string(table.CommitsTable), " (", table.CommitsColumns.ColumnExpr(), ")  VALUES(", table.CommitsColumns.ColonNameExpr(), ")")
 
-	sql := fmt.Sprintf(`INSERT INTO %s (%s)	VALUES(%s)`, table.CommitsTable, table.CommitsColumns.ColumnExpr(),
-		table.CommitsColumns.ColonNameExpr())
+	sql := filter.SqlJoint(sqlSentence)
 
 	err = dao.sd.ShardingOne(commit.Attachment.BizID).AutoTxn(kit,
 		func(txn *sqlx.Tx, opt *sharding.TxnOption) error {
@@ -125,17 +127,19 @@ func (dao *commitDao) List(kit *kit.Kit, opts *types.ListCommitsOption) (
 			},
 		},
 	}
-	whereExpr, err := opts.Filter.SQLWhereExpr(sqlOpt)
+	whereExpr, arg, err := opts.Filter.SQLWhereExpr(sqlOpt)
 	if err != nil {
 		return nil, err
 	}
 
 	var sql string
+	var sqlSentence []string
 	if opts.Page.Count {
 		// this is a count request, then do count operation only.
-		sql = fmt.Sprintf(`SELECT COUNT(*) FROM %s %s`, table.CommitsTable, whereExpr)
+		sqlSentence = append(sqlSentence, "SELECT COUNT(*) FROM ", string(table.CommitsTable), whereExpr)
+		sql = filter.SqlJoint(sqlSentence)
 		var count uint32
-		count, err = dao.orm.Do(dao.sd.ShardingOne(opts.BizID).DB()).Count(kit.Ctx, sql)
+		count, err = dao.orm.Do(dao.sd.ShardingOne(opts.BizID).DB()).Count(kit.Ctx, sql, arg)
 		if err != nil {
 			return nil, err
 		}
@@ -149,11 +153,11 @@ func (dao *commitDao) List(kit *kit.Kit, opts *types.ListCommitsOption) (
 		return nil, err
 	}
 
-	sql = fmt.Sprintf(`SELECT %s FROM %s %s %s`,
-		table.CommitsColumns.NamedExpr(), table.CommitsTable, whereExpr, pageExpr)
+	sqlSentence = append(sqlSentence, "SELECT ", table.CommitsColumns.NamedExpr(), " FROM ", string(table.CommitsTable), whereExpr, pageExpr)
+	sql = filter.SqlJoint(sqlSentence)
 
 	list := make([]*table.Commit, 0)
-	err = dao.orm.Do(dao.sd.ShardingOne(opts.BizID).DB()).Select(kit.Ctx, &list, sql)
+	err = dao.orm.Do(dao.sd.ShardingOne(opts.BizID).DB()).Select(kit.Ctx, &list, sql, arg)
 	if err != nil {
 		return nil, err
 	}
@@ -164,8 +168,10 @@ func (dao *commitDao) List(kit *kit.Kit, opts *types.ListCommitsOption) (
 // validateAttachmentResExist validate if attachment resource exists before creating commit.
 func (dao *commitDao) validateAttachmentResExist(kit *kit.Kit, am *table.CommitAttachment) error {
 
-	exist, err := isResExist(kit, dao.orm, dao.sd.ShardingOne(am.BizID), table.AppTable,
-		fmt.Sprintf("WHERE id = %d AND biz_id = %d", am.AppID, am.BizID))
+	var sqlSentence []string
+	sqlSentence = append(sqlSentence, "WHERE id = ", strconv.Itoa(int(am.AppID)), " AND biz_id = ", strconv.Itoa(int(am.BizID)))
+	sql := filter.SqlJoint(sqlSentence)
+	exist, err := isResExist(kit, dao.orm, dao.sd.ShardingOne(am.BizID), table.AppTable, sql)
 	if err != nil {
 		return err
 	}
@@ -174,8 +180,10 @@ func (dao *commitDao) validateAttachmentResExist(kit *kit.Kit, am *table.CommitA
 		return errf.New(errf.RelatedResNotExist, fmt.Sprintf("commit attached app %d is not exist", am.AppID))
 	}
 
-	exist, err = isResExist(kit, dao.orm, dao.sd.ShardingOne(am.BizID), table.ConfigItemTable,
-		fmt.Sprintf("WHERE id = %d AND biz_id = %d AND app_id = %d", am.ConfigItemID, am.BizID, am.AppID))
+	var sqlSentenceRes []string
+	sqlSentenceRes = append(sqlSentenceRes, "WHERE id = ", strconv.Itoa(int(am.ConfigItemID)), " AND biz_id = ", strconv.Itoa(int(am.BizID)), " AND app_id = ", strconv.Itoa(int(am.AppID)))
+	sqlRes := filter.SqlJoint(sqlSentenceRes)
+	exist, err = isResExist(kit, dao.orm, dao.sd.ShardingOne(am.BizID), table.ConfigItemTable, sqlRes)
 	if err != nil {
 		return err
 	}

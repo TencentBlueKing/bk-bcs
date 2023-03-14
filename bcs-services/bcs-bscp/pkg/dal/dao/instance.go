@@ -14,6 +14,7 @@ package dao
 
 import (
 	"fmt"
+	"strconv"
 	"time"
 
 	"bscp.io/pkg/criteria/enumor"
@@ -82,8 +83,10 @@ func (dao *crInstanceDao) Create(kit *kit.Kit, cri *table.CurrentReleasedInstanc
 
 	cri.ID = id
 
-	sql := fmt.Sprintf(`INSERT INTO %s (%s)	VALUES(%s)`, table.CurrentReleasedInstanceTable,
-		table.CurrentReleasedInstanceColumns.ColumnExpr(), table.CurrentReleasedInstanceColumns.ColonNameExpr())
+	var sqlSentence []string
+	sqlSentence = append(sqlSentence, "INSERT INTO ", string(table.CurrentReleasedInstanceTable),
+		" (", table.CurrentReleasedInstanceColumns.ColumnExpr(), ")  VALUES(", table.CurrentReleasedInstanceColumns.ColonNameExpr(), ")")
+	sql := filter.SqlJoint(sqlSentence)
 
 	eDecorator := dao.event.Eventf(kit)
 	err = dao.sd.ShardingOne(cri.Attachment.BizID).AutoTxn(kit,
@@ -157,17 +160,19 @@ func (dao *crInstanceDao) List(kit *kit.Kit, opts *types.ListCRInstancesOption) 
 			},
 		},
 	}
-	whereExpr, err := opts.Filter.SQLWhereExpr(sqlOpt)
+	whereExpr, arg, err := opts.Filter.SQLWhereExpr(sqlOpt)
 	if err != nil {
 		return nil, err
 	}
 
 	var sql string
+	var sqlSentence []string
 	if opts.Page.Count {
 		// this is a count request, then do count operation only.
-		sql = fmt.Sprintf(`SELECT COUNT(*) FROM %s %s`, table.CurrentReleasedInstanceTable, whereExpr)
+		sqlSentence = append(sqlSentence, "SELECT COUNT(*) FROM ", string(table.CurrentReleasedInstanceTable), whereExpr)
+		sql = filter.SqlJoint(sqlSentence)
 		var count uint32
-		count, err = dao.orm.Do(dao.sd.ShardingOne(opts.BizID).DB()).Count(kit.Ctx, sql)
+		count, err = dao.orm.Do(dao.sd.ShardingOne(opts.BizID).DB()).Count(kit.Ctx, sql, arg)
 		if err != nil {
 			return nil, err
 		}
@@ -181,11 +186,12 @@ func (dao *crInstanceDao) List(kit *kit.Kit, opts *types.ListCRInstancesOption) 
 		return nil, err
 	}
 
-	sql = fmt.Sprintf(`SELECT %s FROM %s %s %s`,
-		table.CurrentReleasedInstanceColumns.NamedExpr(), table.CurrentReleasedInstanceTable, whereExpr, pageExpr)
+	sqlSentence = append(sqlSentence, "SELECT ", table.CurrentReleasedInstanceColumns.NamedExpr(), " FROM ",
+		string(table.CurrentReleasedInstanceTable), whereExpr, pageExpr)
+	sql = filter.SqlJoint(sqlSentence)
 
 	list := make([]*table.CurrentReleasedInstance, 0)
-	err = dao.orm.Do(dao.sd.ShardingOne(opts.BizID).DB()).Select(kit.Ctx, &list, sql)
+	err = dao.orm.Do(dao.sd.ShardingOne(opts.BizID).DB()).Select(kit.Ctx, &list, sql, arg)
 	if err != nil {
 		return nil, err
 	}
@@ -217,8 +223,10 @@ func (dao *crInstanceDao) ListAppCRIMeta(kit *kit.Kit, bizID uint32, appID uint3
 	result := make([]*types.AppCRIMeta, 0)
 	var id uint32 = 0
 	for start := uint32(0); ; start += uint32(step) {
-		sql := fmt.Sprintf("SELECT id, uid, release_id FROM %s WHERE biz_id = %d AND app_id = %d AND id > %d %s",
-			table.CurrentReleasedInstanceTable, bizID, appID, id, pageExpr)
+		var sqlSentence []string
+		sqlSentence = append(sqlSentence, "SELECT id, uid, release_id FROM ", string(table.CurrentReleasedInstanceTable),
+			" WHERE biz_id = ", strconv.Itoa(int(bizID)), " AND app_id = ", strconv.Itoa(int(appID)), " AND id > ", strconv.Itoa(int(id)), pageExpr)
+		sql := filter.SqlJoint(sqlSentence)
 
 		list := make([]*CRIMeta, 0)
 		if err := dao.orm.Do(dao.sd.ShardingOne(bizID).DB()).Select(kit.Ctx, &list, sql); err != nil {
@@ -250,8 +258,10 @@ func (dao *crInstanceDao) ListAppCRIMeta(kit *kit.Kit, bizID uint32, appID uint3
 func (dao *crInstanceDao) GetAppCRIMeta(kit *kit.Kit, bizID uint32, appID uint32, uid string) (*types.AppCRIMeta,
 	error) {
 
-	sql := fmt.Sprintf("SELECT uid, release_id FROM %s WHERE uid = '%s' AND app_id = %d",
-		table.CurrentReleasedInstanceTable, uid, appID)
+	var sqlSentence []string
+	sqlSentence = append(sqlSentence, "SELECT uid, release_id FROM ", string(table.CurrentReleasedInstanceTable),
+		" WHERE uid = '", uid, "' AND app_id = ", strconv.Itoa(int(appID)))
+	sql := filter.SqlJoint(sqlSentence)
 
 	result := new(types.AppCRIMeta)
 	if err := dao.orm.Do(dao.sd.ShardingOne(bizID).DB()).Get(kit.Ctx, result, sql); err != nil {
@@ -288,8 +298,10 @@ func (dao *crInstanceDao) Delete(kit *kit.Kit, cri *table.CurrentReleasedInstanc
 
 	ab := dao.auditDao.Decorator(kit, cri.Attachment.BizID, enumor.CRInstance).PrepareDelete(cri.ID)
 
-	expr := fmt.Sprintf(`DELETE FROM %s WHERE id = %d AND biz_id = %d`, table.CurrentReleasedInstanceTable,
-		cri.ID, cri.Attachment.BizID)
+	var sqlSentence []string
+	sqlSentence = append(sqlSentence, "DELETE FROM ", string(table.CurrentReleasedInstanceTable), " WHERE id = ", strconv.Itoa(int(cri.ID)),
+		" AND biz_id = ", strconv.Itoa(int(cri.Attachment.BizID)))
+	expr := filter.SqlJoint(sqlSentence)
 
 	eDecorator := dao.event.Eventf(kit)
 	err = dao.sd.ShardingOne(cri.Attachment.BizID).AutoTxn(kit, func(txn *sqlx.Tx, opt *sharding.TxnOption) error {
@@ -344,8 +356,10 @@ func (dao *crInstanceDao) Delete(kit *kit.Kit, cri *table.CurrentReleasedInstanc
 func (dao *crInstanceDao) queryInstanceSpec(kt *kit.Kit, bizID, appID, id uint32) (*table.ReleasedInstanceSpec,
 	error) {
 
-	sql := fmt.Sprintf("SELECT %s FROM %s WHERE id = %d And biz_id = %d And app_id = %d",
-		table.RISpecColumns.NamedExpr(), table.CurrentReleasedInstanceTable, id, bizID, appID)
+	var sqlSentence []string
+	sqlSentence = append(sqlSentence, "SELECT ", table.RISpecColumns.NamedExpr(), " FROM ", string(table.CurrentReleasedInstanceTable),
+		" WHERE id = ", strconv.Itoa(int(id)), " And biz_id = ", strconv.Itoa(int(bizID)), " And app_id = ", strconv.Itoa(int(appID)))
+	sql := filter.SqlJoint(sqlSentence)
 
 	spec := new(table.ReleasedInstanceSpec)
 	err := dao.orm.Do(dao.sd.ShardingOne(bizID).DB()).Get(kt.Ctx, spec, sql)
@@ -358,8 +372,10 @@ func (dao *crInstanceDao) queryInstanceSpec(kt *kit.Kit, bizID, appID, id uint32
 
 // validateReleaseExist validate if instance's release exists before creating.
 func (dao *crInstanceDao) validateReleaseExist(kt *kit.Kit, bizID, releaseID uint32) error {
-	exist, err := isResExist(kt, dao.orm, dao.sd.ShardingOne(bizID), table.ReleaseTable,
-		fmt.Sprintf("WHERE id = %d AND biz_id = %d", releaseID, bizID))
+	var sqlSentence []string
+	sqlSentence = append(sqlSentence, " WHERE id = ", strconv.Itoa(int(releaseID)), " AND biz_id = ", strconv.Itoa(int(bizID)))
+	sql := filter.SqlJoint(sqlSentence)
+	exist, err := isResExist(kt, dao.orm, dao.sd.ShardingOne(bizID), table.ReleaseTable, sql)
 	if err != nil {
 		return err
 	}
@@ -378,9 +394,10 @@ func (dao *crInstanceDao) validateAttachmentResExist(kit *kit.Kit, am *table.Rel
 
 // validateAttachmentAppExist validate if attachment app exists before creating current release instance.
 func (dao *crInstanceDao) validateAttachmentAppExist(kit *kit.Kit, am *table.ReleaseAttachment) error {
-
-	exist, err := isResExist(kit, dao.orm, dao.sd.ShardingOne(am.BizID), table.AppTable,
-		fmt.Sprintf("WHERE id = %d AND biz_id = %d", am.AppID, am.BizID))
+	var sqlSentence []string
+	sqlSentence = append(sqlSentence, " WHERE id = ", strconv.Itoa(int(am.AppID)), " AND biz_id = ", strconv.Itoa(int(am.BizID)))
+	sql := filter.SqlJoint(sqlSentence)
+	exist, err := isResExist(kit, dao.orm, dao.sd.ShardingOne(am.BizID), table.AppTable, sql)
 	if err != nil {
 		return err
 	}

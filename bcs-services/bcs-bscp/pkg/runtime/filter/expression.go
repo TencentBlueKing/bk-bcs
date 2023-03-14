@@ -148,7 +148,7 @@ func (exp Expression) Validate(opts ...*ExprOption) (hitErr error) {
 //     directly without "WHERE" keyword.
 //  2. if the expression is not NULL, then return the expression prefixed with "WHERE"
 //     keyword.
-func (exp *Expression) SQLWhereExpr(opt *SQLWhereOption) (where string, err error) {
+func (exp *Expression) SQLWhereExpr(opt *SQLWhereOption) (where string, ard []interface{}, err error) {
 	defer func() {
 		if err != nil {
 			err = errf.New(errf.InvalidParameter, err.Error())
@@ -156,20 +156,20 @@ func (exp *Expression) SQLWhereExpr(opt *SQLWhereOption) (where string, err erro
 	}()
 
 	if exp == nil {
-		return "", errors.New("expression is nil")
+		return "", []interface{}{}, errors.New("expression is nil")
 	}
 
 	// validate this expression
 	if err := exp.Validate(); err != nil {
-		return "", err
+		return "", []interface{}{}, err
 	}
 
 	if opt == nil {
-		return "", errors.New("SQLWhereOption is nil")
+		return "", []interface{}{}, errors.New("SQLWhereOption is nil")
 	}
 
 	if err := opt.Validate(); err != nil {
-		return "", err
+		return "", []interface{}{}, err
 	}
 
 	if opt.CrownedOption == nil || (opt.CrownedOption != nil && len(opt.CrownedOption.Rules) == 0) {
@@ -192,7 +192,7 @@ func (exp *Expression) SQLWhereExpr(opt *SQLWhereOption) (where string, err erro
 				opt.Priority)
 
 		default:
-			return "", fmt.Errorf("unsupported crown operator: %s", opt.CrownedOption.CrownedOp)
+			return "", []interface{}{}, fmt.Errorf("unsupported crown operator: %s", opt.CrownedOption.CrownedOp)
 		}
 
 	case Or:
@@ -208,11 +208,11 @@ func (exp *Expression) SQLWhereExpr(opt *SQLWhereOption) (where string, err erro
 				opt.Priority)
 
 		default:
-			return "", fmt.Errorf("unsupported crown operator: %s", opt.CrownedOption.CrownedOp)
+			return "", []interface{}{}, fmt.Errorf("unsupported crown operator: %s", opt.CrownedOption.CrownedOp)
 		}
 
 	default:
-		return "", fmt.Errorf("unsupported expression operator: %s", exp.Op)
+		return "", []interface{}{}, fmt.Errorf("unsupported expression operator: %s", exp.Op)
 	}
 }
 
@@ -283,7 +283,7 @@ type RuleFactory interface {
 	RuleField() string
 	// SQLExpr convert this rule to a mysql's sub
 	// query expression
-	SQLExpr() (string, error)
+	SQLExpr() (string, []interface{}, error)
 }
 
 var _ RuleFactory = new(AtomRule)
@@ -404,7 +404,7 @@ func (ar AtomRule) RuleField() string {
 
 // SQLExpr convert this atom rule to a mysql's sub
 // query expression.
-func (ar AtomRule) SQLExpr() (string, error) {
+func (ar AtomRule) SQLExpr() (string, []interface{}, error) {
 	return ar.Op.Operator().SQLExpr(ar.Field, ar.Value)
 }
 
