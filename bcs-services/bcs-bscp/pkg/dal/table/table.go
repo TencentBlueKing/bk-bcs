@@ -238,7 +238,7 @@ const (
 	// GroupTable is group table's name
 	GroupTable Name = "group_"
 	// HookTable is hook table's name
-	HookTable Name = "hook"
+	HookTable Name = "hooks"
 	// StrategySetTable is strategy set table's name
 	StrategySetTable Name = "strategy_set"
 	// StrategyTable is strategy table's name

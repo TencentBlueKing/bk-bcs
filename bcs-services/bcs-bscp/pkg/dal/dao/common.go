@@ -25,7 +25,7 @@ func isResExist(kit *kit.Kit, orm orm.Interface, sd *sharding.One, tableName tab
 	whereExpr string) (bool, error) {
 
 	var sqlSentence []string
-	sqlSentence = append(sqlSentence, "SELECT EXISTS(SELECT * FROM ", string(tableName), " ", whereExpr)
+	sqlSentence = append(sqlSentence, "SELECT EXISTS(SELECT * FROM ", string(tableName), " ", whereExpr, ")")
 	sql := filter.SqlJoint(sqlSentence)
 
 	var result int8

@@ -206,7 +206,7 @@ func (dao *strategySetDao) List(kit *kit.Kit, opts *types.ListStrategySetsOption
 			},
 		},
 	}
-	whereExpr, arg, err := opts.Filter.SQLWhereExpr(sqlOpt)
+	whereExpr, args, err := opts.Filter.SQLWhereExpr(sqlOpt)
 	if err != nil {
 		return nil, err
 	}
@@ -218,7 +218,7 @@ func (dao *strategySetDao) List(kit *kit.Kit, opts *types.ListStrategySetsOption
 		sqlSentence = append(sqlSentence, "SELECT COUNT(*) FROM ", string(table.StrategySetTable), whereExpr)
 		sql = filter.SqlJoint(sqlSentence)
 		var count uint32
-		count, err = dao.orm.Do(dao.sd.ShardingOne(opts.BizID).DB()).Count(kit.Ctx, sql, arg)
+		count, err = dao.orm.Do(dao.sd.ShardingOne(opts.BizID).DB()).Count(kit.Ctx, sql, args...)
 		if err != nil {
 			return nil, err
 		}
@@ -235,7 +235,7 @@ func (dao *strategySetDao) List(kit *kit.Kit, opts *types.ListStrategySetsOption
 	sqlSentence = append(sqlSentence, "SELECT ", table.StrategySetColumns.NamedExpr(), " FROM ", string(table.StrategySetTable), whereExpr, pageExpr)
 	sql = filter.SqlJoint(sqlSentence)
 	list := make([]*table.StrategySet, 0)
-	err = dao.orm.Do(dao.sd.ShardingOne(opts.BizID).DB()).Select(kit.Ctx, &list, sql, arg)
+	err = dao.orm.Do(dao.sd.ShardingOne(opts.BizID).DB()).Select(kit.Ctx, &list, sql, args...)
 	if err != nil {
 		return nil, err
 	}

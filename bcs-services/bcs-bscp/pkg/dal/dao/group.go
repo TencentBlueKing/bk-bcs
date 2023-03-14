@@ -196,14 +196,14 @@ func (dao *groupDao) List(kit *kit.Kit, opts *types.ListGroupsOption) (
 			},
 		},
 	}
-	whereExpr, arg, err := opts.Filter.SQLWhereExpr(sqlOpt)
+	whereExpr, args, err := opts.Filter.SQLWhereExpr(sqlOpt)
 	if err != nil {
 		return nil, err
 	}
 	var sqlSentenceCount []string
 	sqlSentenceCount = append(sqlSentenceCount, "SELECT COUNT(*) FROM ", string(table.GroupTable), whereExpr)
 	countSql := filter.SqlJoint(sqlSentenceCount)
-	count, err := dao.orm.Do(dao.sd.ShardingOne(opts.BizID).DB()).Count(kit.Ctx, countSql, arg)
+	count, err := dao.orm.Do(dao.sd.ShardingOne(opts.BizID).DB()).Count(kit.Ctx, countSql, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -219,7 +219,7 @@ func (dao *groupDao) List(kit *kit.Kit, opts *types.ListGroupsOption) (
 	sql := filter.SqlJoint(sqlSentence)
 
 	list := make([]*table.Group, 0)
-	err = dao.orm.Do(dao.sd.ShardingOne(opts.BizID).DB()).Select(kit.Ctx, &list, sql, arg)
+	err = dao.orm.Do(dao.sd.ShardingOne(opts.BizID).DB()).Select(kit.Ctx, &list, sql, args...)
 	if err != nil {
 		return nil, err
 	}

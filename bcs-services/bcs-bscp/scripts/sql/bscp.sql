@@ -464,7 +464,7 @@ create table if not exists `strategy`
 ) engine = innodb
   default charset = utf8mb4;
 
-create table if not exists `hook`
+create table if not exists `hooks`
 (
     `id`         bigint(1) unsigned not null,
 

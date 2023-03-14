@@ -570,8 +570,10 @@ func (ab *AuditBuilder) getStrategy(strategyID uint32) (*table.Strategy, error) 
 }
 
 func (ab *AuditBuilder) getHook(hookID uint32) (*table.Hook, error) {
-	filter := fmt.Sprintf(`SELECT %s FROM %s WHERE id = %d AND biz_id = %d`,
-		table.HookColumns.NamedExpr(), table.HookTable, hookID, ab.bizID)
+	var sqlSentence []string
+	sqlSentence = append(sqlSentence, "SELECT ", table.HookColumns.NamedExpr(), " FROM ", string(table.HookTable),
+		" WHERE id = ", strconv.Itoa(int(hookID)), " AND biz_id = ", strconv.Itoa(int(ab.bizID)))
+	filter := filter2.SqlJoint(sqlSentence)
 
 	one := new(table.Hook)
 	err := ab.ad.orm.Do(ab.ad.sd.MustSharding(ab.bizID)).Get(ab.kit.Ctx, one, filter)
@@ -600,11 +602,11 @@ func (ab *AuditBuilder) getCRInstance(criID uint32) (*table.CurrentReleasedInsta
 // parseChangedSpecFields parse the changed filed with pre and cur *structs' Spec field.
 // both pre and curl should be a *struct, if not, it will 'panic'.
 // Note:
-// 1. the pre and cur should be the same structs' pointer, and should
-//    have a 'Spec' struct field.
-// 2. this func only compare 'Spec' field.
-// 3. if one of the cur's Spec's filed value is zero, then this filed will be ignored.
-// 4. the returned update field's key is this field's 'db' tag.
+//  1. the pre and cur should be the same structs' pointer, and should
+//     have a 'Spec' struct field.
+//  2. this func only compare 'Spec' field.
+//  3. if one of the cur's Spec's filed value is zero, then this filed will be ignored.
+//  4. the returned update field's key is this field's 'db' tag.
 func parseChangedSpecFields(pre, cur interface{}) (map[string]interface{}, error) {
 	preV := reflect.ValueOf(pre)
 	if preV.Kind() != reflect.Ptr {

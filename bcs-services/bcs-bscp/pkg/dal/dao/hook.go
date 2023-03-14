@@ -14,6 +14,7 @@ package dao
 
 import (
 	"fmt"
+	"strconv"
 
 	"github.com/jmoiron/sqlx"
 
@@ -71,9 +72,10 @@ func (dao *hookDao) Create(kit *kit.Kit, g *table.Hook) (uint32, error) {
 	}
 
 	g.ID = id
+	var sqlSentence []string
+	sqlSentence = append(sqlSentence, "INSERT INTO ", string(table.HookTable), " (", table.HookColumns.ColumnExpr(), ")  VALUES(", table.HookColumns.ColonNameExpr(), ")")
 
-	sql := fmt.Sprintf(`INSERT INTO %s (%s)	VALUES(%s)`, table.HookTable,
-		table.HookColumns.ColumnExpr(), table.HookColumns.ColonNameExpr())
+	sql := filter.SqlJoint(sqlSentence)
 
 	err = dao.sd.ShardingOne(g.Attachment.BizID).AutoTxn(kit,
 		func(txn *sqlx.Tx, opt *sharding.TxnOption) error {
@@ -123,8 +125,10 @@ func (dao *hookDao) Update(kit *kit.Kit, g *table.Hook) error {
 
 	ab := dao.auditDao.Decorator(kit, g.Attachment.BizID, enumor.Hook).PrepareUpdate(g)
 
-	sql := fmt.Sprintf(`UPDATE %s SET %s WHERE id = %d AND biz_id = %d`,
-		table.HookTable, expr, g.ID, g.Attachment.BizID)
+	var sqlSentence []string
+	sqlSentence = append(sqlSentence, "UPDATE ", string(table.HookTable), " SET ", expr, " WHERE id = ", strconv.Itoa(int(g.ID)),
+		" AND biz_id = ", strconv.Itoa(int(g.Attachment.BizID)))
+	sql := filter.SqlJoint(sqlSentence)
 
 	err = dao.sd.ShardingOne(g.Attachment.BizID).AutoTxn(kit,
 		func(txn *sqlx.Tx, opt *sharding.TxnOption) error {
@@ -191,13 +195,14 @@ func (dao *hookDao) List(kit *kit.Kit, opts *types.ListHooksOption) (
 			},
 		},
 	}
-	whereExpr, err := opts.Filter.SQLWhereExpr(sqlOpt)
+	whereExpr, args, err := opts.Filter.SQLWhereExpr(sqlOpt)
 	if err != nil {
 		return nil, err
 	}
-
-	countSql := fmt.Sprintf(`SELECT COUNT(*) FROM %s %s`, table.HookTable, whereExpr)
-	count, err := dao.orm.Do(dao.sd.ShardingOne(opts.BizID).DB()).Count(kit.Ctx, countSql)
+	var sqlSentenceCount []string
+	sqlSentenceCount = append(sqlSentenceCount, "SELECT COUNT(*) FROM ", string(table.HookTable), whereExpr)
+	countSql := filter.SqlJoint(sqlSentenceCount)
+	count, err := dao.orm.Do(dao.sd.ShardingOne(opts.BizID).DB()).Count(kit.Ctx, countSql, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -208,11 +213,12 @@ func (dao *hookDao) List(kit *kit.Kit, opts *types.ListHooksOption) (
 		return nil, err
 	}
 
-	sql := fmt.Sprintf(`SELECT %s FROM %s %s %s`,
-		table.HookColumns.NamedExpr(), table.HookTable, whereExpr, pageExpr)
+	var sqlSentence []string
+	sqlSentence = append(sqlSentence, "SELECT ", table.HookColumns.NamedExpr(), " FROM ", string(table.HookTable), whereExpr, pageExpr)
+	sql := filter.SqlJoint(sqlSentence)
 
 	list := make([]*table.Hook, 0)
-	err = dao.orm.Do(dao.sd.ShardingOne(opts.BizID).DB()).Select(kit.Ctx, &list, sql)
+	err = dao.orm.Do(dao.sd.ShardingOne(opts.BizID).DB()).Select(kit.Ctx, &list, sql, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -237,8 +243,10 @@ func (dao *hookDao) Delete(kit *kit.Kit, g *table.Hook) error {
 
 	ab := dao.auditDao.Decorator(kit, g.Attachment.BizID, enumor.Hook).PrepareDelete(g.ID)
 
-	expr := fmt.Sprintf(`DELETE FROM %s WHERE id = %d AND biz_id = %d`, table.HookTable,
-		g.ID, g.Attachment.BizID)
+	var sqlSentence []string
+	sqlSentence = append(sqlSentence, "DELETE FROM ", string(table.HookTable), " WHERE id = ", strconv.Itoa(int(g.ID)),
+		" AND biz_id = ", strconv.Itoa(int(g.Attachment.BizID)))
+	expr := filter.SqlJoint(sqlSentence)
 
 	err := dao.sd.ShardingOne(g.Attachment.BizID).AutoTxn(kit, func(txn *sqlx.Tx, opt *sharding.TxnOption) error {
 		// delete the hook at first.
@@ -271,9 +279,10 @@ func (dao *hookDao) validateAttachmentResExist(kit *kit.Kit, am *table.HookAttac
 
 // validateAttachmentAppExist validate if attachment app exists before creating hook.
 func (dao *hookDao) validateAttachmentAppExist(kit *kit.Kit, am *table.HookAttachment) error {
-
-	exist, err := isResExist(kit, dao.orm, dao.sd.ShardingOne(am.BizID), table.AppTable,
-		fmt.Sprintf("WHERE id = %d AND biz_id = %d", am.AppID, am.BizID))
+	var sqlSentence []string
+	sqlSentence = append(sqlSentence, "WHERE id = ", strconv.Itoa(int(am.AppID)), " AND biz_id = ", strconv.Itoa(int(am.BizID)))
+	sql := filter.SqlJoint(sqlSentence)
+	exist, err := isResExist(kit, dao.orm, dao.sd.ShardingOne(am.BizID), table.AppTable, sql)
 	if err != nil {
 		return err
 	}
