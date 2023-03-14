@@ -16,6 +16,7 @@ package version
 
 import (
 	"fmt"
+	"runtime"
 )
 
 // BcsVersion discribes version
@@ -26,7 +27,7 @@ var (
 	BcsTag       = "2017-03-28 Release"
 	BcsBuildTime = "2017-03-28 19:50:00"
 	BcsGitHash   = "unknown"
-	GoVersion    = ""
+	GoVersion    = runtime.Version()
 )
 
 // ShowVersion is the default handler which match the --version flag
