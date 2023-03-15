@@ -7,6 +7,7 @@
           <div class="left !w-[260px]">
             <ClusterSelect
               :placeholder="$t('请选择集群')"
+              cluster-type="all"
               :value="selectedClusterId"
               @change="handleChangeCluster" />
           </div>

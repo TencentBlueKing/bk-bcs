@@ -166,6 +166,9 @@
             outline: none;
             height: 30px;
             margin: 0;
+            &::placeholder {
+                color: #c4c6cc;
+            }
         }
 
         .search-params-wrapper {

@@ -24,6 +24,7 @@
                     <span class="label" :class="clusterSearchSelectExpand ? 'is-focus' : ''">{{$t('集群名')}}</span>
                     <ClusterSelect 
                         :disabled="bkSearcherMask"
+                        :cluster-type="CATEGORY === 'daemonset' ? 'normal' : 'all'"
                         v-model="clusterValue"
                         @change="changeCluster">
                     </ClusterSelect>
@@ -37,6 +38,8 @@
                         :filter-list="bkSearcherFilterList"
                         :fixed-search-params="bkSearcherFixedSearchParams"
                         :mask="bkSearcherMask"
+                        :minInputWidth="300"
+                        :placeholder="$t('选择命名空间、模板集和应用名称搜索')"
                         @getFilterListData="bkSearcherGetFilterListData"
                         @search="bkSearch">
                     </bk-searcher>

@@ -148,6 +148,22 @@
 
           <div class="bk-form-item">
             <div class="bk-form-content">
+              <div class="bk-form-inline-item" style="width: 320px;">
+                <label class="bk-label">{{$t('描述')}}：</label>
+                <div class="bk-form-content">
+                  <bk-input
+                    type="textarea"
+                    :placeholder="$t('请输入')"
+                    :disabled="isReadonly"
+                    v-model="curCrdInstance.description">
+                  </bk-input>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="bk-form-item">
+            <div class="bk-form-content">
               <div class="bk-form-inline-item is-required" style="width: 320px;">
                 <label class="bk-label">{{$t('所属集群')}}：</label>
                 <div class="bk-form-content">
@@ -674,6 +690,24 @@ export default defineComponent({
         ctx.root.$bkMessage({
           theme: 'error',
           message: $i18n.t('请输入规则名'),
+          delay: 5000,
+        });
+        return false;
+      }
+
+      if (state.curCrdInstance.name.length > 63) {
+        ctx.root.$bkMessage({
+          theme: 'error',
+          message: $i18n.t('规则名必须小于等于63字符'),
+          delay: 5000,
+        });
+        return false;
+      }
+
+      if (!/^([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9]$/.test(state.curCrdInstance.name)) {
+        ctx.root.$bkMessage({
+          theme: 'error',
+          message: $i18n.t('规则名以字母数字字符（[a-z0-9A-Z]）开头和结尾， 带有破折号（-），下划线（_），点（ .）和之间的字母数字'),
           delay: 5000,
         });
         return false;

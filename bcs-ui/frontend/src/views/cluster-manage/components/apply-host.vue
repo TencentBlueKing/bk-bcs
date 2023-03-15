@@ -33,7 +33,7 @@
       <bk-alert type="info" class="mb20">
         <template #title>
           <a
-            :href="PROJECT_CONFIG.doc.applyRecords"
+            :href="PROJECT_CONFIG.applyRecords"
             target="_blank"
             class="bk-button-text bk-primary"
             style="font-size: 12px;"

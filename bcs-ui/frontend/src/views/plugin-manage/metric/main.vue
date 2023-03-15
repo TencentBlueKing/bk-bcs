@@ -166,9 +166,9 @@
                         </bk-table-column>
                         <bk-table-column :label="$t('周期(s)')" prop="interval" :min-width="90">
                             <template slot-scope="{ row }">
-                                <template v-for="(endpoint, endpointIndex) in row.spec.endpoints">
-                                    <div :key="endpointIndex">{{endpoint.interval || '--'}}</div>
-                                </template>
+                                <div class="flex flex-col">
+                                    <div v-for="(endpoint, endpointIndex) in row.spec.endpoints" :key="endpointIndex">{{endpoint.interval || '--'}}</div>
+                                </div>
                             </template>
                         </bk-table-column>
                         <bk-table-column :label="$t('操作')" prop="permissions" width="200">
@@ -914,6 +914,10 @@
              */
             async createMetricSuccess () {
                 this.hideCreateMetric()
+                this.$bkMessage({
+                    theme: 'success',
+                    message: this.$t('创建成功')
+                })
                 setTimeout(async () => {
                     await this.refresh()
                 }, 300)
@@ -962,10 +966,6 @@
                     }, `${this.$t('确定要删除Metric')}【${metric.name}】？`),
                     async confirmFn () {
                         try {
-                            me.$bkLoading({
-                                title: me.$createElement('span', me.$t('删除Metric中，请稍候'))
-                            })
-
                             await me.$store.dispatch('metric/deleteServiceMonitor', {
                                 projectId: me.projectId,
                                 clusterId: metric.cluster_id,
@@ -974,10 +974,12 @@
                             })
 
                             await me.refresh()
-                            me.$bkLoading.hide()
+                            me.$bkMessage({
+                                theme: 'success',
+                                message: me.$t('删除成功')
+                            })
                         } catch (e) {
                             console.error(e)
-                            me.$bkLoading.hide()
                         }
                     }
                 })

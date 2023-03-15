@@ -16,7 +16,7 @@
             <bk-alert type="info" class="mb20">
               <div slot="title">
                 {{$t('Deployment是k8s中标准的无状态服务，集成了上线部署、滚动升级、创建副本、回滚等功能')}}，
-                <a class="bk-text-button" :href="PROJECT_CONFIG.doc.k8sDeployment" target="_blank">{{$t('详情查看文档')}}</a>
+                <a class="bk-text-button" :href="PROJECT_CONFIG.k8sDeployment" target="_blank">{{$t('详情查看文档')}}</a>
               </div>
             </bk-alert>
             <template v-if="!deployments.length">

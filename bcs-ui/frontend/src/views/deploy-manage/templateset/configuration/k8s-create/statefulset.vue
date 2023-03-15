@@ -16,7 +16,7 @@
             <bk-alert type="info" class="mb20">
               <div slot="title">
                 {{$t('StatefulSet是k8s中标准的有状态服务，区别于Deployment，它是一个给Pod提供唯一标志的控制器，可以保证部署和扩展的顺序')}}，
-                <a class="bk-text-button" :href="PROJECT_CONFIG.doc.k8sStatefulset" target="_blank">{{$t('详情查看文档')}}</a>
+                <a class="bk-text-button" :href="PROJECT_CONFIG.k8sStatefulset" target="_blank">{{$t('详情查看文档')}}</a>
               </div>
             </bk-alert>
             <template v-if="!statefulsets.length">
