@@ -14,6 +14,7 @@
           <ClusterSearch
             :search.sync="searchKeyword"
             :cluster-id.sync="searchScope"
+            cluster-type="all"
             @search-change="searchHPA"
             @refresh="refresh" />
         </div>

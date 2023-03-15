@@ -122,7 +122,7 @@ export default {
         id: 'wiki',
         iconColor: '#66EFE3',
         desc: this.$t('如果遇到更多问题，需要了解详细信息，请前往iwiki查看'),
-        link: this.PROJECT_CONFIG.doc.quickStart,
+        link: this.PROJECT_CONFIG.quickStart,
         linkText: this.$t('前往iwiki查看'),
       },
     ];

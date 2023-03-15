@@ -10,7 +10,7 @@
     <template #header-right>
       <a
         class="bk-text-button"
-        :href="PROJECT_CONFIG.doc.helm"
+        :href="PROJECT_CONFIG.helm"
         target="_blank">
         {{ $t('如何推送Helm Chart到项目仓库？') }}
       </a>

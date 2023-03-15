@@ -16,7 +16,7 @@
             <bk-alert type="info" class="mb20">
               <div slot="title">
                 {{$t('Job负责批量处理短暂的一次性任务，即仅执行一次的任务，它保证批处理任务的一个或多个Pod成功结束')}}，
-                <a class="bk-text-button" :href="PROJECT_CONFIG.doc.k8sJob" target="_blank">{{$t('详情查看文档')}}</a>
+                <a class="bk-text-button" :href="PROJECT_CONFIG.k8sJob" target="_blank">{{$t('详情查看文档')}}</a>
               </div>
             </bk-alert>
             <template v-if="!jobs.length">

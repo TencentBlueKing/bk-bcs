@@ -18,6 +18,7 @@
             :placeholder="$t('输入名称或命名空间，按Enter搜索')"
             :search.sync="searchKeyword"
             :cluster-id.sync="searchScope"
+            cluster-type="all"
             @search-change="getIngressList"
             @refresh="refresh" />
         </div>

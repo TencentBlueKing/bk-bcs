@@ -29,10 +29,10 @@ export default defineComponent({
             <div class="dashboard-top-actions">
                 {
                     this.$INTERNAL
-                      ? <a href={this.PROJECT_CONFIG.doc.contact} class="bk-text-button" v-bk-tooltips_top={this.$t('蓝鲸容器助手')}>{this.$t('联系我们')}</a>
+                      ? <a href={this.PROJECT_CONFIG.contact} class="bk-text-button" v-bk-tooltips_top={this.$t('蓝鲸容器助手')}>{this.$t('联系我们')}</a>
                       : null
                 }
-                <a href={this.PROJECT_CONFIG.doc.help} target="_blank" class="bk-text-button">{this.$t('帮助')}</a>
+                <a href={this.PROJECT_CONFIG.help} target="_blank" class="bk-text-button">{this.$t('帮助')}</a>
             </div>
     );
   },

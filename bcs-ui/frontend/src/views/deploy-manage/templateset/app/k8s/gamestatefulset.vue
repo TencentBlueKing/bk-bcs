@@ -6,6 +6,7 @@
         <div class="biz-panel-header biz-event-query-query" style="padding-right: 0;">
           <div class="left !w-[260px]">
             <ClusterSelect
+              cluster-type="all"
               :placeholder="$t('请选择集群')"
               :value="selectedClusterId"
               @change="handleChangeCluster" />

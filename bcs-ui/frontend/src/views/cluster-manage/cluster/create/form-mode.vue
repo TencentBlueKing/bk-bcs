@@ -69,7 +69,7 @@
             ></bcs-option>
             <template #extension>
               <a
-                :href="PROJECT_CONFIG.doc.contact"
+                :href="PROJECT_CONFIG.contact"
                 class="bk-text-button"
               >{{ $t('不满足需求，请联系蓝鲸容器助手') }}</a>
             </template>
@@ -85,7 +85,7 @@
               :name="item"></bcs-option>
             <template #extension>
               <a
-                :href="PROJECT_CONFIG.doc.contact"
+                :href="PROJECT_CONFIG.contact"
                 class="bk-text-button"
               >{{ $t('不满足需求，请联系蓝鲸容器助手') }}</a>
             </template>

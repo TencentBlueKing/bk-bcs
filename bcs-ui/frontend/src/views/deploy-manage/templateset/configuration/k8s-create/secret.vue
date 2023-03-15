@@ -16,7 +16,7 @@
             <bk-alert type="info" class="mb20">
               <div slot="title">
                 {{$t('Secret是一种包含少量敏感信息例如密码、token 或 key 的对象，与ConfigMap相比更加安全')}}，
-                <a class="bk-text-button" :href="PROJECT_CONFIG.doc.k8sSecret" target="_blank">{{$t('详情查看文档')}}</a>
+                <a class="bk-text-button" :href="PROJECT_CONFIG.k8sSecret" target="_blank">{{$t('详情查看文档')}}</a>
               </div>
             </bk-alert>
             <template v-if="!secrets.length">

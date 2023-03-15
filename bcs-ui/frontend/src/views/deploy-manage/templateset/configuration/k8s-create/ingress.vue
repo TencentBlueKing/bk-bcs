@@ -54,7 +54,7 @@
             <div slot="title">
               <div>
                 {{$t('Ingress是管理外部访问集群内服务的对象，可配置访问的URL、基于名称的虚拟主机等。 Ingress controller负责实现Ingress，BCS使用的是nginx-controller')}}，
-                <a class="bk-text-button" :href="PROJECT_CONFIG.doc.k8sIngress" target="_blank">{{$t('详情查看文档')}}</a>
+                <a class="bk-text-button" :href="PROJECT_CONFIG.k8sIngress" target="_blank">{{$t('详情查看文档')}}</a>
               </div>
               <div class="mt5">
                 {{$t('提示：调度引擎为BCS-K8S的集群，需在左侧菜单“网络” => “LoadBalancer”中新建LoadBalancer，Ingress规则才能生效（通常单个集群只需要创建一个LoadBalancer）')}}

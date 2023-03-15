@@ -25,23 +25,23 @@
 */
 import Vue from 'vue';
 import VueI18n from 'vue-i18n';
-import { locale, lang } from 'bk-magic-vue';
+import { locale } from 'bk-magic-vue';
 import cookie from 'cookie';
-import langMap from './lang';
+
+const modulesFiles = require.context('.', true, /.json$/);
+const modules = modulesFiles.keys().reduce((modules, modulePath) => {
+  const langName = modulePath.match(/\/(\S*)\//)[1];
+  const moduleName = modulePath.replace(/(.*\/)*([^.]+).*/ig, '$2');
+  const value = modulesFiles(modulePath);
+  modules[langName] = {
+    ...(modules[langName] || {}),
+    [moduleName]: value,
+  };
+  return modules;
+}, {});
+console.log(modules);
 
 Vue.use(VueI18n);
-
-const en = {};
-const cn = {};
-Object.keys(langMap).forEach((key) => {
-  en[key] = langMap[key][0];
-  cn[key] = langMap[key][1] || key;
-});
-
-const messages = {
-  'en-US': Object.assign(lang.enUS, en),
-  'zh-CN': Object.assign(lang.zhCN, cn),
-};
 
 let curLang = cookie.parse(document.cookie).blueking_language || 'zh-cn';
 if (['en-US', 'enUS', 'enus', 'en-us', 'en'].includes(curLang)) {
@@ -54,7 +54,7 @@ if (['en-US', 'enUS', 'enus', 'en-us', 'en'].includes(curLang)) {
 const i18n = new VueI18n({
   locale: curLang,
   fallbackLocale: 'zh-CN',
-  messages,
+  messages: {},
 });
 
 locale.i18n((key, value) => i18n.t(key, value));

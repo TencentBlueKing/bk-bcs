@@ -15,7 +15,7 @@
             <bk-alert type="info" class="mb20">
               <div slot="title">
                 {{$t('ConfigMap是用来存储配置文件的k8s资源对象，它的作用是将配置文件从容器镜像中解耦，从而增强容器应用的可移植性')}}，
-                <a class="bk-text-button" :href="PROJECT_CONFIG.doc.k8sConfigmap" target="_blank">{{$t('详情查看文档')}}</a>
+                <a class="bk-text-button" :href="PROJECT_CONFIG.k8sConfigmap" target="_blank">{{$t('详情查看文档')}}</a>
               </div>
             </bk-alert>
             <template v-if="!configmaps.length">
