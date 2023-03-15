@@ -46,6 +46,7 @@
         <bcs-table
           :data="curPageData"
           :pagination="pagination"
+          size="medium"
           @page-change="pageChange"
           @page-limit-change="pageSizeChange">
           <bcs-table-column :label="$t('名称')" prop="name" min-width="200" show-overflow-tooltip>

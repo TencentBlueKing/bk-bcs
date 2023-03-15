@@ -23,9 +23,10 @@
 * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 * IN THE SOFTWARE.
 */
+import defaultConfig from '../../static/config.json';
 export default {
   data() {
-    return { PROJECT_CONFIG: window.BCS_CONFIG || { doc: {}, str: {} } };
+    return { PROJECT_CONFIG: window.BCS_CONFIG || defaultConfig };
   },
   computed: {
     $INTERNAL() {
