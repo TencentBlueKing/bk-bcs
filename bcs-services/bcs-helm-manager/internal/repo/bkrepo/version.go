@@ -15,6 +15,7 @@ package bkrepo
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"strconv"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -286,15 +287,21 @@ func (ch *chartHandler) getHelmChartVersionDetail(ctx context.Context, version s
 }
 
 func (ch *chartHandler) getDownloadHelmChartVersionURI(version string) string {
-	return chartVersionDownloadHelmURI + "/" + ch.projectID + "/" + ch.repository + "/" +
-		"?packageKey=helm://" + ch.chartName +
-		"&version=" + version
+	u, _ := url.ParseRequestURI(fmt.Sprintf("%s/%s/%s", chartVersionDownloadHelmURI, ch.projectID, ch.repository))
+	q := u.Query()
+	q.Add("packageKey", fmt.Sprintf("helm://%s", ch.chartName))
+	q.Add("version", version)
+	u.RawQuery = q.Encode()
+	return u.String()
 }
 
 func (ch *chartHandler) getDownloadOCIChartVersionURI(version string) string {
-	return chartVersionDownloadHelmURI + "/" + ch.projectID + "/" + ch.repository + "/" +
-		"?packageKey=oci://" + ch.chartName +
-		"&version=" + version
+	u, _ := url.ParseRequestURI(fmt.Sprintf("%s/%s/%s?", chartVersionDownloadHelmURI, ch.projectID, ch.repository))
+	q := u.Query()
+	q.Add("packageKey", fmt.Sprintf("oci://%s", ch.chartName))
+	q.Add("version", version)
+	u.RawQuery = q.Encode()
+	return u.String()
 }
 
 type downloadChartVersionResp struct {
