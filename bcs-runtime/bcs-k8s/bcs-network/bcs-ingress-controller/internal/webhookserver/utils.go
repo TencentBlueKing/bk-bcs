@@ -17,6 +17,8 @@ import (
 	"strconv"
 	"strings"
 
+	corev1 "k8s.io/api/core/v1"
+
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/constant"
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
@@ -53,6 +55,10 @@ func getPoolKey(name, ns string) string {
 	return fmt.Sprintf("%s/%s", name, ns)
 }
 
+func getPoolPortKey(poolNs, poolName, protocol string, port int) string {
+	return fmt.Sprintf("%s/%s/%s/%d", poolNs, poolName, protocol, port)
+}
+
 func parsePoolKey(key string) (string, string, error) {
 	if !strings.Contains(key, "/") {
 		return "", "", fmt.Errorf("invaid pool key %s", key)
@@ -78,8 +84,13 @@ func isPortBindingKeepDurationExisted(portBinding *networkextensionv1.PortBindin
 		return false
 	}
 	_, ok := portBinding.Annotations[networkextensionv1.PortPoolBindingAnnotationKeyKeepDuration]
-	if !ok {
+	return ok
+}
+
+func isPodKeepDurationExisted(pod *corev1.Pod) bool {
+	if pod == nil {
 		return false
 	}
-	return true
+	_, ok := pod.Annotations[networkextensionv1.PortPoolBindingAnnotationKeyKeepDuration]
+	return ok
 }

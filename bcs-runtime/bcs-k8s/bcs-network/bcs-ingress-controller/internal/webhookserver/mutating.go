@@ -125,26 +125,50 @@ func (s *Server) checkExistedPortBinding(pod *k8scorev1.Pod, portList []*portEnt
 		return nil, errors.Errorf("found previous uncleaned portbinding '%s/%s' and need wait",
 			portBinding.GetName(), portBinding.GetNamespace())
 	}
+	// 用户移除了Pod上的KeepDuration标记
+	// TODO 暂不支持修改keep duration时间
+	if !isPodKeepDurationExisted(pod) {
+		blog.Infof("remove pods' '%s/%s' keep duration annotate, delete portBinding quickly",
+			pod.GetNamespace(), pod.GetName())
+		// 移除portBinding上的keepDuration注解，尽快删除
+		if err := s.removePortBindingAnnotation(portBinding); err != nil {
+			return nil, errors.Wrapf(err, "remove portbinding '%s/%s' annotations failed, err: %s",
+				portBinding.GetNamespace(), portBinding.GetName(), err.Error())
+		}
+		if err := s.k8sClient.Delete(context.Background(), portBinding, &client.DeleteOptions{}); err != nil {
+			return nil, errors.Wrapf(err, "delete portbinding '%s/%s' failed",
+				portBinding.GetName(), portBinding.GetNamespace())
+		}
+		return nil, nil
+	}
+
 	// to prevent pod from reusing the old portbinding which is being deleted
 	if portBinding.DeletionTimestamp != nil {
 		return nil, errors.Errorf("portbinding %s/%s is deleting",
 			portBinding.GetName(), portBinding.GetNamespace())
 	}
-	rsPortMap := make(map[int]struct{})
+	rsPortMap := make(map[string]struct{})
 	for _, item := range portBinding.Spec.PortBindingList {
-		if _, ok := rsPortMap[item.RsStartPort]; !ok {
-			rsPortMap[item.RsStartPort] = struct{}{}
+		key := getPoolPortKey(item.PoolNamespace, item.PoolName, item.Protocol, item.RsStartPort)
+		if _, ok := rsPortMap[key]; !ok {
+			rsPortMap[key] = struct{}{}
 		}
 	}
 	for _, port := range portList {
-		if _, ok := rsPortMap[port.port]; !ok {
+		key := getPoolPortKey(port.poolNamespace, port.poolNamespace, port.protocol, port.port)
+		if _, ok := rsPortMap[key]; !ok {
 			blog.Warnf("port '%d' is not in portbinding '%s/%s', need to delete portbinding first",
 				port.port, portBinding.GetName(), portBinding.GetNamespace())
+			// 移除portBinding上的keepDuration注解，尽快删除
+			if err := s.removePortBindingAnnotation(portBinding); err != nil {
+				return nil, errors.Wrapf(err, "remove portbinding '%s/%s' annotations failed, err: %s",
+					portBinding.GetNamespace(), portBinding.GetName(), err.Error())
+			}
 			if err := s.k8sClient.Delete(context.Background(), portBinding, &client.DeleteOptions{}); err != nil {
 				return nil, errors.Wrapf(err, "delete portbinding '%s/%s' failed",
 					portBinding.GetName(), portBinding.GetNamespace())
 			}
-			blog.Warnf("portbinding '%s/%s' is deleted because of port '%d' not in it",
+			blog.Warnf("portbinding '%s/%s' is deleted because of port '%+v' not in it",
 				portBinding.GetName(), portBinding.GetNamespace(), port)
 			return nil, nil
 		}
@@ -517,4 +541,27 @@ func (s *Server) generatePodReadinessGate(pod *k8scorev1.Pod) (PatchOperation, e
 		Op:    op,
 		Value: readinessGates,
 	}, nil
+}
+
+func (s *Server) removePortBindingAnnotation(portBinding *networkextensionv1.PortBinding) error {
+	patchStruct := []PatchOperation{
+		{
+			Op:   "remove",
+			Path: constant.PatchPathPodAnnotations + "/" + networkextensionv1.PortPoolBindingAnnotationKeyKeepDuration,
+		},
+	}
+
+	patchBytes, err := json.Marshal(patchStruct)
+	if err != nil {
+		blog.Errorf("marshal patch struct failed, err: %s", err)
+		return err
+	}
+
+	if err = s.k8sClient.Patch(context.TODO(), portBinding, client.RawPatch(k8stypes.JSONPatchType,
+		patchBytes)); err != nil {
+		blog.Errorf("patch portbinding '%s/%s' failed, err: %s", portBinding.GetNamespace(), portBinding.GetName(), err)
+		return err
+	}
+
+	return nil
 }
