@@ -1,6 +1,7 @@
 const webpack = require('webpack')
 const MonacoWebpackPlugin = require('monaco-editor-webpack-plugin')
 const figlet = require('figlet')
+const CompressionPlugin = require("compression-webpack-plugin");
 
 module.exports = {
   host: process.env.BK_LOCAL_HOST,
@@ -8,10 +9,10 @@ module.exports = {
   cache: true,
   open: true,
   typescript: true,
-  outputDir: process.env.REGION ? `./dist/${process.env.REGION}` : './dist',
+  outputDir: './dist',
   bundleAnalysis: false,
   replaceStatic: {
-    key: '{{ STATIC_URL }}/{{ REGION }}'
+    key: '{{ .STATIC_URL }}'
   },
   resource: {
     main: {
@@ -88,6 +89,15 @@ module.exports = {
     config
       .plugin('braceTheme')
       .use(webpack.ContextReplacementPlugin, [/brace\/theme$/, /^\.\/(monokai)$/]);
+
+    config
+      .plugin('compression')
+      .use(new CompressionPlugin({
+        test: /\.(js|css)(\?.*)?$/i,
+        // compressionOptions: {
+        //   level: 9
+        // }
+      }))
 
     config.devServer
       .set('allowedHosts', 'all')

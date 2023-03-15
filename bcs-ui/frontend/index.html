@@ -29,10 +29,7 @@
     var BCS_DEBUG_API_HOST = '{{ BCS_DEBUG_API_HOST }}'
 
     // 加载配置文件
-    var scriptDom = document.createElement('script')
-    scriptDom.src = `<%= process.env.BK_STATIC_URL %>/static/${REGION}.config.js`
-    var script = document.getElementsByTagName('script')[0]
-    script.parentNode.insertBefore(scriptDom, script)
+    window.BCS_CONFIG = JSON.parse('<%= process.env.BK_BCS_CONFIG %>')
 </script>
 </body>
 </html>

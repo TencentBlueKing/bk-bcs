@@ -5,10 +5,7 @@
   "author": "bkfe",
   "scripts": {
     "dev": "bk-cli-service-webpack dev",
-    "build": "bk-cli-service-webpack build",
-    "build:ce": "cross-env REGION=ce npm run build",
-    "build:ee": "cross-env REGION=ee npm run build",
-    "build:ieod": "cross-env REGION=ieod npm run build"
+    "build": "bk-cli-service-webpack build"
   },
   "dependencies": {
     "@blueking/bkui-form": "0.0.25",
@@ -47,6 +44,7 @@
     "@blueking/babel-preset-bk": "2.1.0-beta6",
     "@blueking/cli-service-webpack": "0.0.0-beta.51",
     "@blueking/eslint-config-bk": "2.1.0-beta.12",
+    "compression-webpack-plugin": "^10.0.0",
     "cross-env": "^7.0.3",
     "enhanced-resolve": "^5.10.0",
     "figlet": "^1.5.2",
