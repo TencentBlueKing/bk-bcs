@@ -47,12 +47,14 @@ func (c *ConfigItem) Create(ctx context.Context, header http.Header, req *pbcs.C
 		return nil, resp.Err
 	}
 
-	pbResp := new(pbcs.CreateConfigItemResp)
+	pbResp := &struct {
+		Data *pbcs.CreateConfigItemResp `json:"data"`
+	}{}
 	if err := resp.Into(pbResp); err != nil {
 		return nil, err
 	}
 
-	return pbResp, nil
+	return pbResp.Data, nil
 }
 
 // Update function to update config item.
@@ -71,12 +73,14 @@ func (c *ConfigItem) Update(ctx context.Context, header http.Header, req *pbcs.U
 		return nil, resp.Err
 	}
 
-	pbResp := new(pbcs.UpdateConfigItemResp)
+	pbResp := &struct {
+		Data *pbcs.UpdateConfigItemResp `json:"data"`
+	}{}
 	if err := resp.Into(pbResp); err != nil {
 		return nil, err
 	}
 
-	return pbResp, nil
+	return pbResp.Data, nil
 }
 
 // Delete function to delete config item.
@@ -95,12 +99,14 @@ func (c *ConfigItem) Delete(ctx context.Context, header http.Header, req *pbcs.D
 		return nil, resp.Err
 	}
 
-	pbResp := new(pbcs.DeleteConfigItemResp)
+	pbResp := &struct {
+		Data *pbcs.DeleteConfigItemResp `json:"data"`
+	}{}
 	if err := resp.Into(pbResp); err != nil {
 		return nil, err
 	}
 
-	return pbResp, nil
+	return pbResp.Data, nil
 }
 
 // List to list config item.
@@ -118,10 +124,12 @@ func (c *ConfigItem) List(ctx context.Context, header http.Header,
 		return nil, resp.Err
 	}
 
-	pbResp := new(pbcs.ListConfigItemsResp)
+	pbResp := &struct {
+		Data *pbcs.ListConfigItemsResp `json:"data"`
+	}{}
 	if err := resp.Into(pbResp); err != nil {
 		return nil, err
 	}
 
-	return pbResp, nil
+	return pbResp.Data, nil
 }

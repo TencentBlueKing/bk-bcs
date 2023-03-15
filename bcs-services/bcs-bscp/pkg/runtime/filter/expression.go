@@ -148,7 +148,7 @@ func (exp Expression) Validate(opts ...*ExprOption) (hitErr error) {
 //     directly without "WHERE" keyword.
 //  2. if the expression is not NULL, then return the expression prefixed with "WHERE"
 //     keyword.
-func (exp *Expression) SQLWhereExpr(opt *SQLWhereOption) (where string, ard []interface{}, err error) {
+func (exp *Expression) SQLWhereExpr(opt *SQLWhereOption) (where string, args []interface{}, err error) {
 	defer func() {
 		if err != nil {
 			err = errf.New(errf.InvalidParameter, err.Error())
