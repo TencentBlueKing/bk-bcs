@@ -220,47 +220,47 @@ func (n Name) Validate() error {
 
 const (
 	// AppTable is app table's name
-	AppTable Name = "application"
+	AppTable Name = "applications"
 	// ArchivedAppTable is archived app table's name
-	ArchivedAppTable Name = "archived_app"
+	ArchivedAppTable Name = "archived_apps"
 	// ContentTable is content table's name
-	ContentTable Name = "content"
+	ContentTable Name = "contents"
 	// ConfigItemTable is config item table's name
-	ConfigItemTable Name = "config_item"
+	ConfigItemTable Name = "config_items"
 	// CommitsTable is commits table's name
 	CommitsTable Name = "commits"
 	// ReleaseTable is release table's name
 	ReleaseTable Name = "releases"
 	// ReleasedConfigItemTable is released config item table's name
-	ReleasedConfigItemTable Name = "released_config_item"
+	ReleasedConfigItemTable Name = "released_config_items"
 	// GroupCategory is group category table's name
-	GroupCategoryTable Name = "group_category"
+	GroupCategoryTable Name = "group_categories"
 	// GroupTable is group table's name
-	GroupTable Name = "group_"
+	GroupTable Name = "groups"
 	// HookTable is hook table's name
 	HookTable Name = "hooks"
 	// StrategySetTable is strategy set table's name
-	StrategySetTable Name = "strategy_set"
+	StrategySetTable Name = "strategy_sets"
 	// StrategyTable is strategy table's name
-	StrategyTable Name = "strategy"
+	StrategyTable Name = "strategies"
 	// CurrentPublishedStrategyTable is current published strategy table's name
-	CurrentPublishedStrategyTable Name = "current_published_strategy"
+	CurrentPublishedStrategyTable Name = "current_published_strategies"
 	// PublishedStrategyHistoryTable is published strategy history table's name
-	PublishedStrategyHistoryTable Name = "published_strategy_history"
+	PublishedStrategyHistoryTable Name = "published_strategy_histories"
 	// CurrentReleasedInstanceTable is current released instance table's name
-	CurrentReleasedInstanceTable Name = "current_released_instance"
+	CurrentReleasedInstanceTable Name = "current_released_instances"
 	// EventTable is event table's name
-	EventTable Name = "event"
+	EventTable Name = "events"
 	// ShardingDBTable is sharding db table's name
-	ShardingDBTable Name = "sharding_db"
+	ShardingDBTable Name = "sharding_dbs"
 	// ShardingBizTable is sharding biz table's name
-	ShardingBizTable Name = "sharding_biz"
+	ShardingBizTable Name = "sharding_bizs"
 	// IDGeneratorTable is id generator table's name
-	IDGeneratorTable Name = "id_generator"
+	IDGeneratorTable Name = "id_generators"
 	// AuditTable is audit table's name
-	AuditTable Name = "audit"
+	AuditTable Name = "audits"
 	// ResourceLockTable is lock table's name
-	ResourceLockTable Name = "resource_lock"
+	ResourceLockTable Name = "resource_locks"
 )
 
 // RevisionColumns defines all the Revision table's columns.
