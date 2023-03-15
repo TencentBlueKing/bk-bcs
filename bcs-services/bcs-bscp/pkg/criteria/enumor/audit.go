@@ -36,6 +36,8 @@ const (
 	CRInstance AuditResourceType = "current_released_instance"
 	// Strategy 策略资源
 	Strategy AuditResourceType = "strategy"
+	// Hook hook脚本资源
+	Hook AuditResourceType = "hook"
 	// Group 分组资源
 	Group AuditResourceType = "group"
 	// GroupCategory 分组分类资源
@@ -51,6 +53,7 @@ var AuditResourceTypeEnums = map[AuditResourceType]bool{
 	Release:       true,
 	StrategySet:   true,
 	Strategy:      true,
+	Hook:          true,
 	Group:         true,
 	GroupCategory: true,
 }

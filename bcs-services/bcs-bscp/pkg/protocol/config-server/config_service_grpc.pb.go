@@ -48,6 +48,10 @@ const (
 	Config_UpdateStrategy_FullMethodName                 = "/pbcs.Config/UpdateStrategy"
 	Config_DeleteStrategy_FullMethodName                 = "/pbcs.Config/DeleteStrategy"
 	Config_ListStrategies_FullMethodName                 = "/pbcs.Config/ListStrategies"
+	Config_CreateHook_FullMethodName                     = "/pbcs.Config/CreateHook"
+	Config_DeleteHook_FullMethodName                     = "/pbcs.Config/DeleteHook"
+	Config_UpdateHook_FullMethodName                     = "/pbcs.Config/UpdateHook"
+	Config_ListHooks_FullMethodName                      = "/pbcs.Config/ListHooks"
 	Config_CreateGroup_FullMethodName                    = "/pbcs.Config/CreateGroup"
 	Config_DeleteGroup_FullMethodName                    = "/pbcs.Config/DeleteGroup"
 	Config_UpdateGroup_FullMethodName                    = "/pbcs.Config/UpdateGroup"
@@ -98,6 +102,10 @@ type ConfigClient interface {
 	UpdateStrategy(ctx context.Context, in *UpdateStrategyReq, opts ...grpc.CallOption) (*UpdateStrategyResp, error)
 	DeleteStrategy(ctx context.Context, in *DeleteStrategyReq, opts ...grpc.CallOption) (*DeleteStrategyResp, error)
 	ListStrategies(ctx context.Context, in *ListStrategiesReq, opts ...grpc.CallOption) (*ListStrategiesResp, error)
+	CreateHook(ctx context.Context, in *CreateHookReq, opts ...grpc.CallOption) (*CreateHookResp, error)
+	DeleteHook(ctx context.Context, in *DeleteHookReq, opts ...grpc.CallOption) (*DeleteHookResp, error)
+	UpdateHook(ctx context.Context, in *UpdateHookReq, opts ...grpc.CallOption) (*UpdateHookResp, error)
+	ListHooks(ctx context.Context, in *ListHooksReq, opts ...grpc.CallOption) (*ListHooksResp, error)
 	CreateGroup(ctx context.Context, in *CreateGroupReq, opts ...grpc.CallOption) (*CreateGroupResp, error)
 	DeleteGroup(ctx context.Context, in *DeleteGroupReq, opts ...grpc.CallOption) (*DeleteGroupResp, error)
 	UpdateGroup(ctx context.Context, in *UpdateGroupReq, opts ...grpc.CallOption) (*UpdateGroupResp, error)
@@ -374,6 +382,42 @@ func (c *configClient) ListStrategies(ctx context.Context, in *ListStrategiesReq
 	return out, nil
 }
 
+func (c *configClient) CreateHook(ctx context.Context, in *CreateHookReq, opts ...grpc.CallOption) (*CreateHookResp, error) {
+	out := new(CreateHookResp)
+	err := c.cc.Invoke(ctx, Config_CreateHook_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *configClient) DeleteHook(ctx context.Context, in *DeleteHookReq, opts ...grpc.CallOption) (*DeleteHookResp, error) {
+	out := new(DeleteHookResp)
+	err := c.cc.Invoke(ctx, Config_DeleteHook_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *configClient) UpdateHook(ctx context.Context, in *UpdateHookReq, opts ...grpc.CallOption) (*UpdateHookResp, error) {
+	out := new(UpdateHookResp)
+	err := c.cc.Invoke(ctx, Config_UpdateHook_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *configClient) ListHooks(ctx context.Context, in *ListHooksReq, opts ...grpc.CallOption) (*ListHooksResp, error) {
+	out := new(ListHooksResp)
+	err := c.cc.Invoke(ctx, Config_ListHooks_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *configClient) CreateGroup(ctx context.Context, in *CreateGroupReq, opts ...grpc.CallOption) (*CreateGroupResp, error) {
 	out := new(CreateGroupResp)
 	err := c.cc.Invoke(ctx, Config_CreateGroup_FullMethodName, in, out, opts...)
@@ -534,6 +578,10 @@ type ConfigServer interface {
 	UpdateStrategy(context.Context, *UpdateStrategyReq) (*UpdateStrategyResp, error)
 	DeleteStrategy(context.Context, *DeleteStrategyReq) (*DeleteStrategyResp, error)
 	ListStrategies(context.Context, *ListStrategiesReq) (*ListStrategiesResp, error)
+	CreateHook(context.Context, *CreateHookReq) (*CreateHookResp, error)
+	DeleteHook(context.Context, *DeleteHookReq) (*DeleteHookResp, error)
+	UpdateHook(context.Context, *UpdateHookReq) (*UpdateHookResp, error)
+	ListHooks(context.Context, *ListHooksReq) (*ListHooksResp, error)
 	CreateGroup(context.Context, *CreateGroupReq) (*CreateGroupResp, error)
 	DeleteGroup(context.Context, *DeleteGroupReq) (*DeleteGroupResp, error)
 	UpdateGroup(context.Context, *UpdateGroupReq) (*UpdateGroupResp, error)
@@ -637,6 +685,18 @@ func (UnimplementedConfigServer) DeleteStrategy(context.Context, *DeleteStrategy
 }
 func (UnimplementedConfigServer) ListStrategies(context.Context, *ListStrategiesReq) (*ListStrategiesResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListStrategies not implemented")
+}
+func (UnimplementedConfigServer) CreateHook(context.Context, *CreateHookReq) (*CreateHookResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateHook not implemented")
+}
+func (UnimplementedConfigServer) DeleteHook(context.Context, *DeleteHookReq) (*DeleteHookResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteHook not implemented")
+}
+func (UnimplementedConfigServer) UpdateHook(context.Context, *UpdateHookReq) (*UpdateHookResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateHook not implemented")
+}
+func (UnimplementedConfigServer) ListHooks(context.Context, *ListHooksReq) (*ListHooksResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListHooks not implemented")
 }
 func (UnimplementedConfigServer) CreateGroup(context.Context, *CreateGroupReq) (*CreateGroupResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateGroup not implemented")
@@ -1196,6 +1256,78 @@ func _Config_ListStrategies_Handler(srv interface{}, ctx context.Context, dec fu
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Config_CreateHook_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateHookReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).CreateHook(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Config_CreateHook_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).CreateHook(ctx, req.(*CreateHookReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Config_DeleteHook_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteHookReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).DeleteHook(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Config_DeleteHook_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).DeleteHook(ctx, req.(*DeleteHookReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Config_UpdateHook_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateHookReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).UpdateHook(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Config_UpdateHook_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).UpdateHook(ctx, req.(*UpdateHookReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Config_ListHooks_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListHooksReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).ListHooks(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Config_ListHooks_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).ListHooks(ctx, req.(*ListHooksReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Config_CreateGroup_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(CreateGroupReq)
 	if err := dec(in); err != nil {
@@ -1566,6 +1698,22 @@ var Config_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListStrategies",
 			Handler:    _Config_ListStrategies_Handler,
+		},
+		{
+			MethodName: "CreateHook",
+			Handler:    _Config_CreateHook_Handler,
+		},
+		{
+			MethodName: "DeleteHook",
+			Handler:    _Config_DeleteHook_Handler,
+		},
+		{
+			MethodName: "UpdateHook",
+			Handler:    _Config_UpdateHook_Handler,
+		},
+		{
+			MethodName: "ListHooks",
+			Handler:    _Config_ListHooks_Handler,
 		},
 		{
 			MethodName: "CreateGroup",

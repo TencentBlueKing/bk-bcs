@@ -201,6 +201,7 @@ func (n Name) Validate() error {
 	case StrategyTable:
 	case GroupCategoryTable:
 	case GroupTable:
+	case HookTable:
 	case CurrentPublishedStrategyTable:
 	case PublishedStrategyHistoryTable:
 	case CurrentReleasedInstanceTable:
@@ -236,6 +237,8 @@ const (
 	GroupCategoryTable Name = "group_category"
 	// GroupTable is group table's name
 	GroupTable Name = "group_"
+	// HookTable is hook table's name
+	HookTable Name = "hooks"
 	// StrategySetTable is strategy set table's name
 	StrategySetTable Name = "strategy_set"
 	// StrategyTable is strategy table's name
