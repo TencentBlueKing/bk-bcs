@@ -16,6 +16,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/url"
 	"strconv"
 	"time"
 
@@ -385,6 +386,10 @@ func (ch *chartHandler) deleteChartVersion(ctx context.Context, version string) 
 }
 
 func (ch *chartHandler) getDeleteVersionURI(version string) string {
-	return fmt.Sprintf("%s/%s/%s?packageKey=%s://%s&version=%s", repositoryDeleteVersionURI, ch.projectID, ch.repository,
-		ch.repoType.PackageKey(), ch.chartName, version)
+	u, _ := url.ParseRequestURI(fmt.Sprintf("%s/%s/%s", repositoryDeleteVersionURI, ch.projectID, ch.repository))
+	q := u.Query()
+	q.Add("packageKey", fmt.Sprintf("%s://%s", ch.repoType.PackageKey(), ch.chartName))
+	q.Add("version", version)
+	u.RawQuery = q.Encode()
+	return u.String()
 }
