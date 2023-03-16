@@ -274,6 +274,20 @@ func (ab *AuditBuilder) PrepareUpdate(updatedTo interface{}) AuditDecorator {
 			return ab
 		}
 
+	case *table.Group:
+		group := updatedTo.(*table.Group)
+		if err := ab.decorateGroupUpdate(group); err != nil {
+			ab.hitErr = err
+			return ab
+		}
+
+	case *table.GroupCategory:
+		groupCategory := updatedTo.(*table.GroupCategory)
+		if err := ab.decorateGroupCategoryUpdate(groupCategory); err != nil {
+			ab.hitErr = err
+			return ab
+		}
+
 	case *table.Hook:
 		hook := updatedTo.(*table.Hook)
 		if err := ab.decorateHookUpdate(hook); err != nil {
@@ -381,6 +395,48 @@ func (ab *AuditBuilder) decorateStrategyUpdate(strategy *table.Strategy) error {
 	if err != nil {
 		ab.hitErr = err
 		return fmt.Errorf("parse strategy changed spec field failed, err: %v", err)
+	}
+
+	ab.changed = changed
+	return nil
+}
+
+func (ab *AuditBuilder) decorateGroupCategoryUpdate(groupCategory *table.GroupCategory) error {
+	ab.toAudit.AppID = groupCategory.Attachment.AppID
+	ab.toAudit.ResourceID = groupCategory.ID
+
+	preGroupCategory, err := ab.getGroupCategory(groupCategory.ID)
+	if err != nil {
+		return err
+	}
+
+	ab.prev = preGroupCategory
+
+	changed, err := parseChangedSpecFields(preGroupCategory, groupCategory)
+	if err != nil {
+		ab.hitErr = err
+		return fmt.Errorf("parse group category changed spec field failed, err: %v", err)
+	}
+
+	ab.changed = changed
+	return nil
+}
+
+func (ab *AuditBuilder) decorateGroupUpdate(group *table.Group) error {
+	ab.toAudit.AppID = group.Attachment.AppID
+	ab.toAudit.ResourceID = group.ID
+
+	preGroup, err := ab.getGroup(group.ID)
+	if err != nil {
+		return err
+	}
+
+	ab.prev = preGroup
+
+	changed, err := parseChangedSpecFields(preGroup, group)
+	if err != nil {
+		ab.hitErr = err
+		return fmt.Errorf("parse group changed spec field failed, err: %v", err)
 	}
 
 	ab.changed = changed
@@ -541,7 +597,7 @@ func (ab *AuditBuilder) getConfigItem(configItemID uint32) (*table.ConfigItem, e
 
 func (ab *AuditBuilder) getStrategySet(strategySetID uint32) (*table.StrategySet, error) {
 	var sqlSentence []string
-	sqlSentence = append(sqlSentence, "SELECT ", table.ConfigItemColumns.NamedExpr(), " FROM ", string(table.StrategySetTable),
+	sqlSentence = append(sqlSentence, "SELECT ", table.StrategySetColumns.NamedExpr(), " FROM ", string(table.StrategySetTable),
 		" WHERE id = ", strconv.Itoa(int(strategySetID)), " AND biz_id = ", strconv.Itoa(int(ab.bizID)))
 	filter := filter2.SqlJoint(sqlSentence)
 
@@ -556,7 +612,7 @@ func (ab *AuditBuilder) getStrategySet(strategySetID uint32) (*table.StrategySet
 
 func (ab *AuditBuilder) getStrategy(strategyID uint32) (*table.Strategy, error) {
 	var sqlSentence []string
-	sqlSentence = append(sqlSentence, "SELECT ", table.ConfigItemColumns.NamedExpr(), " FROM ", string(table.StrategyTable),
+	sqlSentence = append(sqlSentence, "SELECT ", table.StrategyColumns.NamedExpr(), " FROM ", string(table.StrategyTable),
 		" WHERE id = ", strconv.Itoa(int(strategyID)), " AND biz_id = ", strconv.Itoa(int(ab.bizID)))
 	filter := filter2.SqlJoint(sqlSentence)
 
@@ -564,6 +620,37 @@ func (ab *AuditBuilder) getStrategy(strategyID uint32) (*table.Strategy, error) 
 	err := ab.ad.orm.Do(ab.ad.sd.MustSharding(ab.bizID)).Get(ab.kit.Ctx, one, filter)
 	if err != nil {
 		return nil, fmt.Errorf("get strategy details failed, err: %v", err)
+	}
+
+	return one, nil
+}
+
+func (ab *AuditBuilder) getGroupCategory(groupCategoryID uint32) (*table.GroupCategory, error) {
+	var sqlSentence []string
+	sqlSentence = append(sqlSentence, "SELECT ", table.GroupCategoryColumns.NamedExpr(),
+		" FROM ", string(table.GroupCategoryTable),
+		" WHERE id = ", strconv.Itoa(int(groupCategoryID)), " AND biz_id = ", strconv.Itoa(int(ab.bizID)))
+	filter := filter2.SqlJoint(sqlSentence)
+
+	one := new(table.GroupCategory)
+	err := ab.ad.orm.Do(ab.ad.sd.MustSharding(ab.bizID)).Get(ab.kit.Ctx, one, filter)
+	if err != nil {
+		return nil, fmt.Errorf("get group category details failed, err: %v", err)
+	}
+
+	return one, nil
+}
+
+func (ab *AuditBuilder) getGroup(groupID uint32) (*table.Group, error) {
+	var sqlSentence []string
+	sqlSentence = append(sqlSentence, "SELECT ", table.GroupColumns.NamedExpr(), " FROM ", string(table.GroupTable),
+		" WHERE id = ", strconv.Itoa(int(groupID)), " AND biz_id = ", strconv.Itoa(int(ab.bizID)))
+	filter := filter2.SqlJoint(sqlSentence)
+
+	one := new(table.Group)
+	err := ab.ad.orm.Do(ab.ad.sd.MustSharding(ab.bizID)).Get(ab.kit.Ctx, one, filter)
+	if err != nil {
+		return nil, fmt.Errorf("get group details failed, err: %v", err)
 	}
 
 	return one, nil
@@ -586,7 +673,8 @@ func (ab *AuditBuilder) getHook(hookID uint32) (*table.Hook, error) {
 
 func (ab *AuditBuilder) getCRInstance(criID uint32) (*table.CurrentReleasedInstance, error) {
 	var sqlSentence []string
-	sqlSentence = append(sqlSentence, "SELECT ", table.ConfigItemColumns.NamedExpr(), " FROM ", string(table.CurrentReleasedInstanceTable),
+	sqlSentence = append(sqlSentence, "SELECT ", table.CurrentReleasedInstanceColumns.NamedExpr(),
+	" FROM ", string(table.CurrentReleasedInstanceTable),
 		" WHERE id = ", strconv.Itoa(int(criID)), " AND biz_id = ", strconv.Itoa(int(ab.bizID)))
 	filter := filter2.SqlJoint(sqlSentence)
 
