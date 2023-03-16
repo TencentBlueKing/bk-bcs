@@ -1,11 +1,13 @@
 <script setup lang="ts">
-  import { ref, computed, watch, onMounted } from 'vue'
-  import { useStore } from 'vuex'
-  import { IVersionItem, IConfigVersionItem } from '../../../../types'
-  import { IConfigListQueryParams } from '../../../../../types/config'
-  import { getConfigList } from '../../../../api/config'
+  import { ref, watch, onMounted } from 'vue'
+  import { storeToRefs } from 'pinia'
+  import { useConfigStore } from '../../../../../store/config'
+  import { IConfigVersionItem } from '../../../../../types'
+  import { IConfigListQueryParams } from '../../../../../../types/config'
+  import { getConfigList } from '../../../../../api/config'
 
-  const store = useStore()
+  const store = useConfigStore()
+  const { versionData } = storeToRefs(store)
 
   const props = defineProps<{
     bkBizId: string,
@@ -15,15 +17,7 @@
   const loading = ref(false)
   const configList = ref<Array<IConfigVersionItem>>([])
 
-  const currentVersion = computed((): IVersionItem => {
-    return store.state.config.currentVersion
-  })
-
-  const versionName = computed(() => {
-    return store.state.config.currentVersion.spec?.name || ''
-  })
-
-  watch(() => currentVersion.value.id, () => {
+  watch(() => versionData.value.id, () => {
     getListData()
   } )
 
@@ -33,7 +27,7 @@
 
   const getListData = async () => {
     // 拉取到版本列表之前不加在列表数据
-    if (typeof currentVersion.value.id !== 'number') {
+    if (typeof versionData.value.id !== 'number') {
       return
     }
 
@@ -43,8 +37,8 @@
         start: 0,
         limit: 200 // @todo 分页条数待确认
       }
-      if (currentVersion.value.id !== 0) {
-        params.release_id = <number>currentVersion.value.id
+      if (versionData.value.id !== 0) {
+        params.release_id = <number>versionData.value.id
       }
       const res = await getConfigList(props.appId, params)
       configList.value = res.details
@@ -59,7 +53,7 @@
 <template>
   <section class="current-config-list">
     <bk-loading :loading="loading">
-      <h4 class="version-name">{{ versionName }}</h4>
+      <h4 class="version-name">{{ versionData.spec.name }}</h4>
       <div class="config-list-wrapper">
         <div v-for="config in configList" class="config-item" :key="config.id">
           <div class="config-name">{{ config.spec.name }}</div>

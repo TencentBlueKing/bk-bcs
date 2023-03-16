@@ -1,0 +1,21 @@
+// 服务实例的pinia数据
+import { ref } from 'vue'
+import { defineStore } from "pinia";
+
+interface IAppData {
+  id: number|string;
+  spec: {
+      name: string;
+  }
+}
+
+export const useServingStore = defineStore('serving', () => {
+  const appData = ref<IAppData>({
+    id: '',
+    spec: {
+      name: ''
+    }
+  })
+
+  return { appData }
+})

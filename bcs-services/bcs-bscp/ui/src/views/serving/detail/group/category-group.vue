@@ -12,6 +12,8 @@
     categoryGroup: ICategoryItem
   }>()
 
+  const emits = defineEmits(['edit'])
+
   const folded = ref(true)
   const listData = ref<IGroupItem[]>([])
   const listLoading = ref(false)
@@ -79,7 +81,9 @@
   }
 
   // 编辑分组
-  const handleEditGroup = (row: IGroupItem) => { console.log(row) }
+  const handleEditGroup = (group: IGroupItem) => { 
+    emits('edit', group)
+   }
 
   // 删除分组
   const handleDeleteGroup = (group: IGroupItem) => { 

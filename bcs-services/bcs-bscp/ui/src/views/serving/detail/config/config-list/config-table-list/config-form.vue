@@ -3,10 +3,10 @@
   import SHA256 from 'crypto-js/sha256'
   import WordArray from 'crypto-js/lib-typedarrays'
   import { TextFill, InfoLine, Upload, Done, FilliscreenLine } from 'bkui-vue/lib/icon'
-  import CodeEditor from '../../../../../components/code-editor/index.vue'
-  import { IServingEditParams } from '../../../../../types'
-  import { updateConfigContent } from '../../../../../api/config'
-  import { transFileToObject } from '../../../../../utils/file'
+  import CodeEditor from '../../../../../../components/code-editor/index.vue'
+  import { IServingEditParams } from '../../../../../../types'
+  import { updateConfigContent } from '../../../../../../api/config'
+  import { transFileToObject } from '../../../../../../utils/file'
 
   const props = defineProps<{
     config: IServingEditParams,

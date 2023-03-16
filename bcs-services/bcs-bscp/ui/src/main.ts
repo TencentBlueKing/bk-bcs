@@ -1,5 +1,5 @@
 import { createApp } from 'vue';
-import store from './store'
+import { pinia } from './store/index'
 import './style.css';
 import App from './App.vue';
 import bkui, { bkTooltips, bkEllipsis } from 'bkui-vue';
@@ -14,7 +14,8 @@ const app = createApp(App)
 app.directive('bkTooltips', bkTooltips)
 app.directive('bkEllipsis', bkEllipsis)
 
-app.use(store)
+app
+.use(pinia)
 .use(i18n)
 .use(router)
 .use(bkui)

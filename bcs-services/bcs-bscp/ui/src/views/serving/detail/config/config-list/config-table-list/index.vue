@@ -1,27 +1,29 @@
 <script setup lang="ts">
-  import { defineProps, ref, computed, watch, onMounted } from 'vue'
-  import { useStore } from 'vuex'
+  import { defineProps, ref, watch, onMounted } from 'vue'
+  import { storeToRefs } from 'pinia'
+  import { useServingStore } from '../../../../../../store/serving'
+  import { useConfigStore } from '../../../../../../store/config'
   import InfoBox from "bkui-vue/lib/info-box";
-  import { IConfigItem, IConfigListQueryParams } from '../../../../../../types/config'
-  import { getConfigList, deleteServingConfigItem } from '../../../../../api/config'
+  import { IConfigItem, IConfigListQueryParams } from '../../../../../../../types/config'
+  import { getConfigList, deleteServingConfigItem } from '../../../../../../api/config'
   import EditConfig from './edit-config.vue'
   import CreateConfig from './create-config.vue'
   import PublishVersion from './publish-version/index.vue'
   import ReleaseVersion from './release-version/index.vue'
-  import VersionDiffDialog from '../components/version-diff-dialog.vue';
+  import VersionDiffDialog from '../../components/version-diff-dialog.vue';
 
-  const store = useStore()
+  const servingStore = useServingStore()
+  const versionStore = useConfigStore()
+  const { appData } = storeToRefs(servingStore)
+  const { versionData } = storeToRefs(versionStore)
 
   const emit = defineEmits(['updateVersionList'])
 
   const props = defineProps<{
     bkBizId: string,
     appId: number,
-    releaseId: number|null
   }>()
 
-  const appName = store.getters['config/appName']
-  const versionName = store.state.config.currentVersion.name
   const loading = ref(false)
   const configList = ref<Array<IConfigItem>>([])
   const pagination = ref({
@@ -38,7 +40,7 @@
     getListData()
   })
 
-  watch(() => props.releaseId, () => {
+  watch(() => versionData.value.id, () => {
     getListData()
   })
 
@@ -48,7 +50,7 @@
 
   const getListData = async () => {
     // 拉取到版本列表之前不加在列表数据
-    if (typeof props.releaseId !== 'number') {
+    if (typeof versionData.value.id !== 'number' || versionData.value.id === 0) {
       return
     }
 
@@ -58,8 +60,8 @@
         start: 0,
         limit: 200 // @todo 分页条数待确认
       }
-      if (props.releaseId !== 0) {
-        params.release_id = <number>props.releaseId
+      if (versionData.value.id !== 0) {
+        params.release_id = versionData.value.id
       }
       const res = await getConfigList(props.appId, params)
       // @ts-ignore
@@ -131,24 +133,24 @@
       </section>
       <section class="actions-wrapper">
         <ReleaseVersion
-          v-if="props.releaseId === 0"
+          v-if="versionData.id === 0"
           style="margin-right: 8px"
           :bk-biz-id="props.bkBizId"
           :app-id="props.appId"
-          :app-name="appName"
+          :app-name="appData.spec.name"
           :config-list="configList"
           @confirm="handleUpdateStatus" />
         <PublishVersion
           :bk-biz-id="props.bkBizId"
           :app-id="props.appId"
-          :release-id="props.releaseId"
-          :app-name="appName"
-          :version-name="versionName"
+          :release-id="versionData.id"
+          :app-name="appData.spec.name"
+          :version-name="versionData.spec.name"
           :config-list="configList"
           @confirm="handleUpdateStatus" />
         </section>
       </section>
-    <CreateConfig v-if="props.releaseId === 0" :bk-biz-id="props.bkBizId" :app-id="props.appId" @confirm="refreshConfigList" />
+    <CreateConfig v-if="versionData.id === 0" :bk-biz-id="props.bkBizId" :app-id="props.appId" @confirm="refreshConfigList" />
     <section class="config-list-table">
       <bk-loading :loading="loading">
         <bk-table :border="['outer']" :data="configList">
@@ -184,7 +186,7 @@
         :config-id="activeConfig"
         :bk-biz-id="props.bkBizId"
         :app-id="props.appId"
-        :release-id="props.releaseId"
+        :release-id="versionData.id"
         @confirm="refreshConfigList" />
     </section>
     <VersionDiffDialog v-model:show="isDiffDialogShow" version-name="未命名版本" :config="diffConfig" />

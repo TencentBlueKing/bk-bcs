@@ -44,6 +44,10 @@ export interface IGroupItem {
     name: string;
     mode: string;
     uid: string;
+    selector: {
+      labels_and?: IGroupRuleItem[];
+      labels_or?: IGroupRuleItem[];
+    }
   };
   attachment: {
     biz_id: number;
@@ -63,7 +67,7 @@ export interface IGroupEditing {
   group_category_id: number|string;
   name: string;
   mode: string;
-  rules: Array<IGroupRuleItem>;
+  rules: IGroupRuleItem[];
   rule_logic: string;
   uid?: string;
 }
@@ -76,9 +80,10 @@ export interface IGroupRuleItem {
 
 // 分组新建、编辑提交到接口参数
 export interface IGroupEditArg {
+  id?: number,
   name: string;
-  group_category_id: number;
-  mode: ECategoryType;
+  group_category_id?: number;
+  mode?: ECategoryType;
   selector?: {
     labels_and?: Array<IGroupRuleItem>;
     labels_or?: Array<IGroupRuleItem>

@@ -2,10 +2,10 @@
   import { defineProps, ref } from 'vue'
   import { ArrowsLeft, AngleRight } from 'bkui-vue/lib/icon'
   import InfoBox from "bkui-vue/lib/info-box";
-  import VersionLayout from '../../components/version-layout.vue'
+  import VersionLayout from '../../../components/version-layout.vue'
   import ConfirmDialog from './confirm-dialog.vue'
-  import ConfigDiff from '../../components/config-diff.vue'
-  import { IConfigVersionItem } from '../../../../../../types'
+  import ConfigDiff from '../../../components/config-diff.vue'
+  import { IConfigVersionItem } from '../../../../../../../types'
 
   const props = defineProps<{
     bkBizId: string,

@@ -53,6 +53,17 @@ export const createGroup = (app_id: number, params: IGroupEditArg) => {
 }
 
 /**
+ * 编辑分组
+ * @param app_id 应用ID
+ * @param group_id 分组ID
+ * @param params 分组编辑参数
+ * @returns 
+ */
+export const updateGroup = (app_id: number, group_id: number, params: IGroupEditArg) => {
+  return http.put(`/config/apps/${app_id}/groups/${group_id}`, params).then(res => res.data)
+}
+
+/**
  * 删除分组
  * @param app_id 应用ID
  * @param group_id 分组ID

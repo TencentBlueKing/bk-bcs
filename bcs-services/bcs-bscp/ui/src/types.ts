@@ -21,8 +21,8 @@ export const enum RuleOp {
 }
 
 export type IRequestFilter = {
-  op?: FilterOp,
-  rules?: IRequestFilterRule[],
+  op: FilterOp,
+  rules: IRequestFilterRule[],
 }
 
 export type IRequestFilterRule = {
@@ -70,15 +70,6 @@ export type IServingEditParams = {
 }
 
 export interface IConfigVersionItem {
-  id: number;
-  attachment: object;
-  revision: object;
-  spec: {
-    name: string
-  };
-}
-
-export interface IVersionItem {
   id: number;
   attachment: object;
   revision: object;

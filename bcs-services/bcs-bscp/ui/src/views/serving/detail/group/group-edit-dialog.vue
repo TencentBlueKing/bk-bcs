@@ -1,13 +1,15 @@
 <script setup lang="ts">
-  import { ref, nextTick } from 'vue'
+  import { ref, computed, watch, nextTick } from 'vue'
+  import { cloneDeep } from 'lodash'
   import { IGroupEditing, ECategoryType, EGroupRuleType, ICategoryItem, IGroupEditArg, IGroupRuleItem } from '../../../../../types/group'
-  import { createCategory, createGroup } from '../../../../api/group'
+  import { createCategory, createGroup, updateGroup } from '../../../../api/group'
   import { GROUP_RULE_OPS } from '../../../../constants'
-
+  
   const props = defineProps<{
     show: boolean,
+    appId: number,
     categoryList: Array<ICategoryItem>,
-    appId: number
+    group: IGroupEditing
   }>()
 
   const emits = defineEmits(['update:show', 'refreshCategoryList'])
@@ -23,14 +25,7 @@
     custom: ECategoryType.Custom,
     debug: ECategoryType.Debug
   }
-  const formData = ref<IGroupEditing>({
-    name: '',
-    group_category_id: '',
-    mode: ECategoryType.Custom,
-    rule_logic: 'AND',
-    rules: [getDefaultRuleConfig()],
-    uid: ''
-  });
+  const formData = ref<IGroupEditing>(cloneDeep(props.group));
   const rules = {
     name: [
       {
@@ -48,6 +43,21 @@
       }
     ]
   }
+
+  // 是否为编辑态
+  const isEditMode = computed(() => {
+    return 'id' in props.group
+  })
+
+  const title = computed(() => {
+    return isEditMode.value ? '编辑分组' : '创建分组'
+  })
+
+  watch(() => props.show, (val) => {
+    if (val) {
+      formData.value = cloneDeep(props.group)
+    }
+  })
 
   // 选择分类，所选值为字符串类型时创建新分类
   const handleCategoryChange = async (val: string) => {
@@ -85,20 +95,30 @@
 
   const handleConfirm = async () => {
     await formRef.value.validate()
-    pending.value = true
     const { name, group_category_id, mode, rules, rule_logic, uid } = formData.value
-    const params: IGroupEditArg = {
-      name,
-      group_category_id: <number>group_category_id,
-      mode: <ECategoryType>mode
-    }
+    const params: IGroupEditArg = { name }
     if (mode === ECategoryType.Custom) {
       params['selector'] = rule_logic === 'AND' ? { labels_and: rules } : { labels_or: rules }
     } else {
       params.uid = uid
     }
-    await createGroup(props.appId, params)
-    pending.value = false
+    try {
+      pending.value = true
+      // 编辑分组
+      if (isEditMode.value) {
+        params.id = <number>formData.value.id
+        await updateGroup(props.appId, params.id, params)
+      } else { // 创建分组
+        params.group_category_id = <number>group_category_id
+        params.mode = <ECategoryType>mode
+        await createGroup(props.appId, params)
+      }
+    } catch (e) {
+      console.error(e)
+    } finally {
+      pending.value = false
+    }
+
     handleClose()
   }
 
@@ -119,8 +139,8 @@
 </script>
 <template>
   <bk-dialog
-    title="创建分组"
     ext-cls="create-group-dialog"
+    :title="title"
     :is-show="props.show"
     :width="960"
     :esc-close="false"
@@ -155,6 +175,7 @@
             <bk-switcher
               v-model="formData.mode"
               theme="primary"
+              :disabled="isEditMode"
               :true-value="mode.debug"
               :false-value="mode.custom">
             </bk-switcher>
