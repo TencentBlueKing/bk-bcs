@@ -11,10 +11,11 @@
  *
  */
 
-package cluster
+package imported
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"os"
 
@@ -22,33 +23,43 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-cluster-manager/pkg/manager/types"
 	"github.com/spf13/cobra"
 	"k8s.io/klog"
+	"k8s.io/kubectl/pkg/util/i18n"
+	"k8s.io/kubectl/pkg/util/templates"
 )
 
-func newCheckCloudKubeConfigCmd() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:     "checkCloudKubeconfig",
-		Aliases: []string{"checkConfig"},
-		Short:   "check cloud kube config from bcs-cluster-manager",
-		Run:     checkCloudKubeconfig,
-	}
+var (
+	importClusterExample = templates.Examples(i18n.T(`import cluster from json file. file template: 
+	{"clusterID":"","projectID":"","businessID":"100001","engineType":"k8s","isExclusive":false,
+	"clusterType":"single","clusterName":"ceshi","environment":"stag","provider":"tencentCloud"}`))
+)
 
-	cmd.Flags().StringVarP(&file, "file", "f", "./config", "kube config file (required)")
+func newImportClusterCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "cluster",
+		Short:   "import cluster from bcs-cluster-manager",
+		Example: importClusterExample,
+		Run:     importCluster,
+	}
 
 	return cmd
 }
 
-func checkCloudKubeconfig(cmd *cobra.Command, args []string) {
-	data, err := os.ReadFile(file)
+func importCluster(cmd *cobra.Command, args []string) {
+	data, err := os.ReadFile(filename)
 	if err != nil {
 		klog.Fatalf("read file failed: %v", err)
 	}
 
-	err = clusterMgr.New(context.Background()).CheckCloudKubeConfig(types.CheckCloudKubeConfigReq{
-		Kubeconfig: string(data),
-	})
+	req := types.ImportClusterReq{}
+	err = json.Unmarshal(data, &req)
 	if err != nil {
-		klog.Fatalf("check cloud kube config failed: %v", err)
+		klog.Fatalf("unmarshal json file failed: %v", err)
 	}
 
-	fmt.Printf("check cloud kube config succeed")
+	err = clusterMgr.New(context.Background()).Import(req)
+	if err != nil {
+		klog.Fatalf("import cluster failed: %v", err)
+	}
+
+	fmt.Printf("import cluster succeed")
 }
