@@ -211,6 +211,11 @@ const menus: IMenu[] = [
             id: 'RELEASELIST',
             route: 'releaseList',
           },
+          {
+            title: 'Charts',
+            id: 'CHARTLIST',
+            route: 'chartList',
+          },
         ],
       },
       {
@@ -291,23 +296,23 @@ const menus: IMenu[] = [
           },
         ],
       },
-      {
-        title: $i18n.t('仓库'),
-        id: 'REPO',
-        icon: 'bcs-icon-ck-store',
-        children: [
-          {
-            title: $i18n.t('镜像'),
-            id: 'IMAGE',
-            route: 'depotMain',
-          },
-          {
-            title: 'Charts',
-            id: 'CHARTLIST',
-            route: 'chartList',
-          },
-        ],
-      },
+      // {
+      //   title: $i18n.t('仓库'),
+      //   id: 'REPO',
+      //   icon: 'bcs-icon-ck-store',
+      //   children: [
+      //     {
+      //       title: $i18n.t('镜像'),
+      //       id: 'IMAGE',
+      //       route: 'depotMain',
+      //     },
+      //     {
+      //       title: 'Charts',
+      //       id: 'CHARTLIST',
+      //       route: 'chartList',
+      //     },
+      //   ],
+      // },
     ],
   },
   {

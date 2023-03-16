@@ -65,6 +65,7 @@ export default defineComponent({
       popoverRef.value[index]?.show();
     };
     const handleClickItem = (item: IData, index) => {
+      popoverRef.value[index]?.show();
       if (item.children?.length) return;
       ctx.emit('click', item);
       popoverRef.value[index]?.hide();

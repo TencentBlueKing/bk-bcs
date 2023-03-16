@@ -147,7 +147,8 @@
             theme="light dropdown"
             :arrow="false"
             class="ml-[5px]"
-            :disabled="!row.repo">
+            :disabled="!row.repo"
+            trigger="click">
             <span
               :class="['bcs-icon-more-btn', { disabled: !row.repo }]"
               v-bk-tooltips="{

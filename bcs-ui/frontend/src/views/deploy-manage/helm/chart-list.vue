@@ -133,6 +133,7 @@
               theme="light dropdown"
               :arrow="false"
               class="ml-[5px]"
+              trigger="click"
               v-if="!curRepoItem.public">
               <span class="bcs-icon-more-btn"><i class="bcs-icon bcs-icon-more"></i></span>
               <template #content>

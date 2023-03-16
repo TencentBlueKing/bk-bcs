@@ -378,7 +378,8 @@
               <bk-popover
                 placement="bottom"
                 theme="light dropdown"
-                :arrow="false">
+                :arrow="false"
+                trigger="click">
                 <span class="bcs-icon-more-btn"><i class="bcs-icon bcs-icon-more"></i></span>
                 <template #content>
                   <ul class="bcs-dropdown-list">

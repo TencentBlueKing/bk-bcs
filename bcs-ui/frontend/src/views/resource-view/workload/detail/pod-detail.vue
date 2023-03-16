@@ -110,6 +110,7 @@
                   placement="bottom"
                   theme="light dropdown"
                   :arrow="false"
+                  trigger="click"
                   v-if="row.containerID && !isSharedCluster">
                   <bk-button style="cursor: default;" text class="ml10">{{ $t('日志检索') }}</bk-button>
                   <div slot="content">

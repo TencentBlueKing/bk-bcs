@@ -1,6 +1,6 @@
 <template>
   <FixedButton drag position="fixed" class="bottom-[20px] left-[85%]">
-    <PopoverSelector trigger="mouseenter" offset="0, 6" placement="top">
+    <PopoverSelector trigger="click" offset="0, 6" placement="top">
       <div class="flex items-center h-[32px]">
         <i class="bcs-icon bcs-icon-terminal mr5 cursor-default text-[14px]"></i>
         <div class="cursor-default">WebConsole</div>

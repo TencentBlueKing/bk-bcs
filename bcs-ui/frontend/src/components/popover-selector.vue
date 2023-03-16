@@ -7,6 +7,7 @@
     :trigger="trigger"
     :tippy-options="tippyOptions"
     :always="always"
+    :on-hide="onHide"
     ref="popoverRef">
     <slot></slot>
     <template slot="content">
@@ -40,6 +41,7 @@ export default defineComponent({
       type: Object,
       default: () => ({}),
     },
+    onHide: Function,
   },
   setup() {
     const popoverRef = ref<any>(null);
