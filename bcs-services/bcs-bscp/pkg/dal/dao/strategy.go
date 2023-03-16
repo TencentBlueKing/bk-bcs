@@ -94,7 +94,7 @@ func (dao *strategyDao) Create(kt *kit.Kit, strategy *table.Strategy) (uint32, e
 	strategy.ID = id
 
 	var sqlSentence []string
-	sqlSentence = append(sqlSentence, "INSERT INTO ", string(table.StrategyTable), " (", table.StrategyColumns.ColumnExpr(), ") ",
+	sqlSentence = append(sqlSentence, "INSERT INTO ", table.StrategyTable.Name(), " (", table.StrategyColumns.ColumnExpr(), ") ",
 		"VALUES(", table.StrategyColumns.ColonNameExpr(), ")")
 	sql := filter.SqlJoint(sqlSentence)
 	err = dao.sd.ShardingOne(strategy.Attachment.BizID).AutoTxn(kt,
@@ -175,7 +175,7 @@ func (dao *strategyDao) Update(kit *kit.Kit, strategy *table.Strategy) error {
 	ab := dao.auditDao.Decorator(kit, strategy.Attachment.BizID, enumor.Strategy).PrepareUpdate(strategy)
 
 	var sqlSentence []string
-	sqlSentence = append(sqlSentence, "UPDATE ", string(table.StrategyTable), " SET ", expr, " WHERE id = ",
+	sqlSentence = append(sqlSentence, "UPDATE ", table.StrategyTable.Name(), " SET ", expr, " WHERE id = ",
 		strconv.Itoa(int(strategy.ID)), " AND biz_id = ", strconv.Itoa(int(strategy.Attachment.BizID)))
 	sql := filter.SqlJoint(sqlSentence)
 	err = dao.sd.ShardingOne(strategy.Attachment.BizID).AutoTxn(kit,
@@ -250,7 +250,7 @@ func (dao *strategyDao) List(kit *kit.Kit, opts *types.ListStrategiesOption) (
 	var sqlSentence []string
 	if opts.Page.Count {
 		// this is a count request, then do count operation only.
-		sqlSentence = append(sqlSentence, "SELECT COUNT(*) FROM ", string(table.StrategyTable), whereExpr)
+		sqlSentence = append(sqlSentence, "SELECT COUNT(*) FROM ", table.StrategyTable.Name(), whereExpr)
 		sql := filter.SqlJoint(sqlSentence)
 		var count uint32
 		count, err = dao.orm.Do(dao.sd.ShardingOne(opts.BizID).DB()).Count(kit.Ctx, sql, args...)
@@ -267,7 +267,7 @@ func (dao *strategyDao) List(kit *kit.Kit, opts *types.ListStrategiesOption) (
 		return nil, err
 	}
 
-	sqlSentence = append(sqlSentence, "SELECT ", table.StrategyColumns.NamedExpr(), " FROM ", string(table.StrategyTable),
+	sqlSentence = append(sqlSentence, "SELECT ", table.StrategyColumns.NamedExpr(), " FROM ", table.StrategyTable.Name(),
 		whereExpr, pageExpr)
 	sql := filter.SqlJoint(sqlSentence)
 	list := make([]*table.Strategy, 0)
@@ -311,7 +311,7 @@ func (dao *strategyDao) Delete(kit *kit.Kit, strategy *table.Strategy) error {
 	ab := dao.auditDao.Decorator(kit, strategy.Attachment.BizID, enumor.Strategy).PrepareDelete(strategy.ID)
 
 	var sqlSentence []string
-	sqlSentence = append(sqlSentence, "DELETE FROM ", string(table.StrategyTable), " WHERE id = ", strconv.Itoa(int(strategy.ID)),
+	sqlSentence = append(sqlSentence, "DELETE FROM ", table.StrategyTable.Name(), " WHERE id = ", strconv.Itoa(int(strategy.ID)),
 		" AND biz_id = ", strconv.Itoa(int(strategy.Attachment.BizID)))
 	expr := filter.SqlJoint(sqlSentence)
 	eDecorator := dao.event.Eventf(kit)
@@ -330,7 +330,7 @@ func (dao *strategyDao) Delete(kit *kit.Kit, strategy *table.Strategy) error {
 
 		// delete current published strategy.
 		var currentSqlSentence []string
-		currentSqlSentence = append(currentSqlSentence, "DELETE FROM ", string(table.CurrentPublishedStrategyTable),
+		currentSqlSentence = append(currentSqlSentence, "DELETE FROM ", table.CurrentPublishedStrategyTable.Name(),
 			" WHERE strategy_id = ", strconv.Itoa(int(strategy.ID)), " AND app_id = ", strconv.Itoa(int(strategy.Attachment.AppID)))
 		sql := filter.SqlJoint(currentSqlSentence)
 		if err = dao.orm.Txn(txn).Delete(kit.Ctx, sql); err != nil {
@@ -454,7 +454,7 @@ func (dao *strategyDao) validateAttachmentStrategySetExist(kit *kit.Kit, am *tab
 func (dao *strategyDao) getStrategy(kit *kit.Kit, bizID, appID, strategyID uint32) (*table.Strategy, error) {
 
 	var sqlSentence []string
-	sqlSentence = append(sqlSentence, "SELECT ", table.StrategyColumns.NamedExpr(), " FROM ", string(table.StrategyTable),
+	sqlSentence = append(sqlSentence, "SELECT ", table.StrategyColumns.NamedExpr(), " FROM ", table.StrategyTable.Name(),
 		" WHERE id = ", strconv.Itoa(int(strategyID)), " AND biz_id = ", strconv.Itoa(int(bizID)), " AND app_id = ", strconv.Itoa(int(appID)))
 	sql := filter.SqlJoint(sqlSentence)
 	one := new(table.Strategy)

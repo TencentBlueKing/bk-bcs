@@ -72,7 +72,7 @@ func (dao *contentDao) Create(kit *kit.Kit, content *table.Content) (uint32, err
 	content.ID = id
 
 	var sqlSentence []string
-	sqlSentence = append(sqlSentence, "INSERT INTO ", string(table.ContentTable), " (", table.ContentColumns.ColumnExpr(), ")  VALUES(", table.ContentColumns.ColonNameExpr(), ")")
+	sqlSentence = append(sqlSentence, "INSERT INTO ", table.ContentTable.Name(), " (", table.ContentColumns.ColumnExpr(), ")  VALUES(", table.ContentColumns.ColonNameExpr(), ")")
 	sql := filter.SqlJoint(sqlSentence)
 
 	err = dao.sd.ShardingOne(content.Attachment.BizID).AutoTxn(kit,
@@ -108,7 +108,7 @@ func (dao *contentDao) Get(kit *kit.Kit, id, bizID uint32) (*table.Content, erro
 	}
 
 	var sqlSentence []string
-	sqlSentence = append(sqlSentence, "SELECT ", table.ContentColumns.NamedExpr(), " FROM ", string(table.ContentTable), " WHERE id = ", strconv.Itoa(int(id)))
+	sqlSentence = append(sqlSentence, "SELECT ", table.ContentColumns.NamedExpr(), " FROM ", table.ContentTable.Name(), " WHERE id = ", strconv.Itoa(int(id)))
 	sql := filter.SqlJoint(sqlSentence)
 
 	content := &table.Content{}
@@ -157,7 +157,7 @@ func (dao *contentDao) List(kit *kit.Kit, opts *types.ListContentsOption) (
 	var sqlSentence []string
 	if opts.Page.Count {
 		// this is a count request, then do count operation only.
-		sqlSentence = append(sqlSentence, "SELECT COUNT(*) FROM ", string(table.ContentTable), whereExpr)
+		sqlSentence = append(sqlSentence, "SELECT COUNT(*) FROM ", table.ContentTable.Name(), whereExpr)
 		sql = filter.SqlJoint(sqlSentence)
 		var count uint32
 		count, err = dao.orm.Do(dao.sd.ShardingOne(opts.BizID).DB()).Count(kit.Ctx, sql, args...)
@@ -174,7 +174,7 @@ func (dao *contentDao) List(kit *kit.Kit, opts *types.ListContentsOption) (
 		return nil, err
 	}
 
-	sqlSentence = append(sqlSentence, "SELECT ", table.ContentColumns.NamedExpr(), " FROM ", string(table.ContentTable), whereExpr, pageExpr)
+	sqlSentence = append(sqlSentence, "SELECT ", table.ContentColumns.NamedExpr(), " FROM ", table.ContentTable.Name(), whereExpr, pageExpr)
 	sql = filter.SqlJoint(sqlSentence)
 
 	list := make([]*table.Content, 0)

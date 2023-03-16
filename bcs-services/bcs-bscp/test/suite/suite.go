@@ -85,56 +85,56 @@ func init() {
 
 // ClearData clear data.
 func ClearData() error {
-	if _, err := db.Exec("truncate table " + string(table.AppTable)); err != nil {
+	if _, err := db.Exec("truncate table " + table.AppTable.Name()); err != nil {
 		return err
 	}
-	if _, err := db.Exec("truncate table " + string(table.ArchivedAppTable)); err != nil {
+	if _, err := db.Exec("truncate table " + table.ArchivedAppTable.Name()); err != nil {
 		return err
 	}
-	if _, err := db.Exec("truncate table " + string(table.ContentTable)); err != nil {
+	if _, err := db.Exec("truncate table " + table.ContentTable.Name()); err != nil {
 		return err
 	}
-	if _, err := db.Exec("truncate table " + string(table.ConfigItemTable)); err != nil {
+	if _, err := db.Exec("truncate table " + table.ConfigItemTable.Name()); err != nil {
 		return err
 	}
-	if _, err := db.Exec("truncate table " + string(table.CommitsTable)); err != nil {
+	if _, err := db.Exec("truncate table " + table.CommitsTable.Name()); err != nil {
 		return err
 	}
-	if _, err := db.Exec("truncate table " + string(table.ReleaseTable)); err != nil {
+	if _, err := db.Exec("truncate table " + table.ReleaseTable.Name()); err != nil {
 		return err
 	}
-	if _, err := db.Exec("truncate table " + string(table.ReleasedConfigItemTable)); err != nil {
+	if _, err := db.Exec("truncate table " + table.ReleasedConfigItemTable.Name()); err != nil {
 		return err
 	}
-	if _, err := db.Exec("truncate table " + string(table.StrategySetTable)); err != nil {
+	if _, err := db.Exec("truncate table " + table.StrategySetTable.Name()); err != nil {
 		return err
 	}
-	if _, err := db.Exec("truncate table " + string(table.StrategyTable)); err != nil {
+	if _, err := db.Exec("truncate table " + table.StrategyTable.Name()); err != nil {
 		return err
 	}
-	if _, err := db.Exec("truncate table " + string(table.CurrentPublishedStrategyTable)); err != nil {
+	if _, err := db.Exec("truncate table " + table.CurrentPublishedStrategyTable.Name()); err != nil {
 		return err
 	}
-	if _, err := db.Exec("truncate table " + string(table.PublishedStrategyHistoryTable)); err != nil {
+	if _, err := db.Exec("truncate table " + table.PublishedStrategyHistoryTable.Name()); err != nil {
 		return err
 	}
-	if _, err := db.Exec("truncate table " + string(table.CurrentReleasedInstanceTable)); err != nil {
+	if _, err := db.Exec("truncate table " + table.CurrentReleasedInstanceTable.Name()); err != nil {
 		return err
 	}
-	if _, err := db.Exec("truncate table " + string(table.EventTable)); err != nil {
+	if _, err := db.Exec("truncate table " + table.EventTable.Name()); err != nil {
 		return err
 	}
-	if _, err := db.Exec("truncate table " + string(table.AuditTable)); err != nil {
+	if _, err := db.Exec("truncate table " + table.AuditTable.Name()); err != nil {
 		return err
 	}
-	if _, err := db.Exec("truncate table " + string(table.ResourceLockTable)); err != nil {
+	if _, err := db.Exec("truncate table " + table.ResourceLockTable.Name()); err != nil {
 		return err
 	}
-	if _, err := db.Exec("update " + string(table.IDGeneratorTable) +
+	if _, err := db.Exec("update " + table.IDGeneratorTable.Name() +
 		" t1 set t1.max_id = 0 where resource != 'event'"); err != nil {
 		return err
 	}
-	if _, err := db.Exec("update " + string(table.IDGeneratorTable) +
+	if _, err := db.Exec("update " + table.IDGeneratorTable.Name() +
 		" t1 set t1.max_id = 500 where resource = 'event'"); err != nil {
 		return err
 	}

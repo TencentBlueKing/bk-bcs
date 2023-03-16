@@ -74,7 +74,7 @@ func (dao *groupDao) Create(kit *kit.Kit, g *table.Group) (uint32, error) {
 
 	g.ID = id
 	var sqlSentence []string
-	sqlSentence = append(sqlSentence, "INSERT INTO ", string(table.GroupTable), " (", table.GroupColumns.ColumnExpr(), ")  VALUES(", table.GroupColumns.ColonNameExpr(), ")")
+	sqlSentence = append(sqlSentence, "INSERT INTO ", table.GroupTable.Name(), " (", table.GroupColumns.ColumnExpr(), ")  VALUES(", table.GroupColumns.ColonNameExpr(), ")")
 
 	sql := filter.SqlJoint(sqlSentence)
 
@@ -127,7 +127,7 @@ func (dao *groupDao) Update(kit *kit.Kit, g *table.Group) error {
 	ab := dao.auditDao.Decorator(kit, g.Attachment.BizID, enumor.Group).PrepareUpdate(g)
 
 	var sqlSentence []string
-	sqlSentence = append(sqlSentence, "UPDATE ", string(table.GroupTable), " SET ", expr, " WHERE id = ", strconv.Itoa(int(g.ID)),
+	sqlSentence = append(sqlSentence, "UPDATE ", table.GroupTable.Name(), " SET ", expr, " WHERE id = ", strconv.Itoa(int(g.ID)),
 		" AND biz_id = ", strconv.Itoa(int(g.Attachment.BizID)))
 	sql := filter.SqlJoint(sqlSentence)
 
@@ -206,7 +206,7 @@ func (dao *groupDao) List(kit *kit.Kit, opts *types.ListGroupsOption) (
 		return nil, err
 	}
 	var sqlSentenceCount []string
-	sqlSentenceCount = append(sqlSentenceCount, "SELECT COUNT(*) FROM ", string(table.GroupTable), whereExpr)
+	sqlSentenceCount = append(sqlSentenceCount, "SELECT COUNT(*) FROM ", table.GroupTable.Name(), whereExpr)
 	countSql := filter.SqlJoint(sqlSentenceCount)
 	count, err := dao.orm.Do(dao.sd.ShardingOne(opts.BizID).DB()).Count(kit.Ctx, countSql, args...)
 	if err != nil {
@@ -220,7 +220,7 @@ func (dao *groupDao) List(kit *kit.Kit, opts *types.ListGroupsOption) (
 	}
 
 	var sqlSentence []string
-	sqlSentence = append(sqlSentence, "SELECT ", table.GroupColumns.NamedExpr(), " FROM ", string(table.GroupTable), whereExpr, pageExpr)
+	sqlSentence = append(sqlSentence, "SELECT ", table.GroupColumns.NamedExpr(), " FROM ", table.GroupTable.Name(), whereExpr, pageExpr)
 	sql := filter.SqlJoint(sqlSentence)
 
 	list := make([]*table.Group, 0)
@@ -254,7 +254,7 @@ func (dao *groupDao) Delete(kit *kit.Kit, g *table.Group) error {
 
 	ab := dao.auditDao.Decorator(kit, g.Attachment.BizID, enumor.Group).PrepareDelete(g.ID)
 	var sqlSentence []string
-	sqlSentence = append(sqlSentence, "DELETE FROM ", string(table.GroupTable), " WHERE id = ", strconv.Itoa(int(g.ID)),
+	sqlSentence = append(sqlSentence, "DELETE FROM ", table.GroupTable.Name(), " WHERE id = ", strconv.Itoa(int(g.ID)),
 		" AND biz_id = ", strconv.Itoa(int(g.Attachment.BizID)))
 	expr := filter.SqlJoint(sqlSentence)
 
