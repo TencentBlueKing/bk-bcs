@@ -87,9 +87,9 @@ func (p *defaultParser) Parse(ctx context.Context, header http.Header) (*kit.Kit
 		AppCode: header.Get(constant.AppCodeKey),
 	}
 
-	if err := kt.Validate(); err != nil {
-		return nil, errf.New(errf.InvalidParameter, err.Error())
-	}
+	// if err := kt.Validate(); err != nil {
+	// 	return nil, errf.New(errf.InvalidParameter, err.Error())
+	// }
 
 	return kt, nil
 }
