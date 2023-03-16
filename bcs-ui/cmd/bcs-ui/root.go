@@ -17,16 +17,20 @@ import (
 	"context"
 	"net"
 	"os"
+	"os/signal"
 	"strconv"
+	"syscall"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/util"
 	"github.com/Tencent/bk-bcs/bcs-common/common/version"
+	"github.com/oklog/run"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"go.uber.org/automaxprocs/maxprocs"
 	"k8s.io/klog/v2"
 
 	"github.com/Tencent/bk-bcs/bcs-ui/pkg/config"
+	"github.com/Tencent/bk-bcs/bcs-ui/pkg/discovery"
 	"github.com/Tencent/bk-bcs/bcs-ui/pkg/web"
 )
 
@@ -42,35 +46,52 @@ var (
 	rootCmd = &cobra.Command{
 		Use:   appName,
 		Short: "bcs-ui server",
+		Run: func(cmd *cobra.Command, args []string) {
+			RunSrv()
+		},
 	}
 )
 
-// Execute 执行
-func Execute() {
-	rootCmd.Run = func(cmd *cobra.Command, args []string) {
-		// Running in container with limits but with empty/wrong value of GOMAXPROCS env var could lead to throttling by cpu
-		// maxprocs will automate adjustment by using cgroups info about cpu limit if it set as value for runtime.GOMAXPROCS.
-		if _, err := maxprocs.Set(maxprocs.Logger(func(template string, args ...interface{}) { klog.Infof(template, args) })); err != nil {
-			klog.InfoS("Failed to set GOMAXPROCS automatically", "err", err)
-		}
-
-		addr := net.JoinHostPort(bindAddress, strconv.Itoa(port))
-
-		addrIPv6 := getIPv6AddrFromEnv(bindAddress)
-		svr, err := web.NewWebServer(context.Background(), bindAddress, addrIPv6)
-		if err != nil {
-			os.Exit(1)
-		}
-
-		klog.InfoS("listening for requests and metrics", "address", addr)
-
-		svr.Run()
-
+// RunSrv
+func RunSrv() {
+	// Running in container with limits but with empty/wrong value of GOMAXPROCS env var could lead to throttling by cpu
+	// maxprocs will automate adjustment by using cgroups info about cpu limit if it set as value for runtime.GOMAXPROCS.
+	if _, err := maxprocs.Set(maxprocs.Logger(func(template string, args ...interface{}) { klog.Infof(template, args) })); err != nil {
+		klog.InfoS("Failed to set GOMAXPROCS automatically", "err", err)
 	}
 
-	err := rootCmd.Execute()
+	var g run.Group
+
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer stop()
+
+	g.Add(func() error {
+		<-ctx.Done()
+		return ctx.Err()
+	}, func(error) {
+		stop()
+	})
+
+	addr := net.JoinHostPort(bindAddress, strconv.Itoa(port))
+	addrIPv6 := getIPv6AddrFromEnv(addr)
+
+	sd, err := discovery.NewServiceDiscovery(ctx, appName, version.BcsVersion, addr, "", addrIPv6)
 	if err != nil {
-		klog.Errorf("execute err: %s", err)
+		klog.Errorf("init micro sd err: %s, exited", err)
+		os.Exit(1)
+	}
+
+	svr, err := web.NewWebServer(ctx, addr, addrIPv6)
+	if err != nil {
+		klog.Errorf("init web svr err: %s, exited", err)
+		os.Exit(1)
+	}
+	klog.InfoS("listening for requests and metrics", "address", addr)
+
+	g.Add(svr.Run, func(err error) { svr.Close() })
+	g.Add(sd.Run, func(error) {})
+	if err := g.Run(); err != nil && err != ctx.Err() {
+		klog.Errorf("run srv err: %s", err)
 		os.Exit(1)
 	}
 }
