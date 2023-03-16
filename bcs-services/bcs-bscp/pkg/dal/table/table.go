@@ -228,16 +228,6 @@ func (n Name) Validate() error {
 	return nil
 }
 
-// String raw string
-func (n Name) String() string {
-	return string(n)
-}
-
-// Name safe mysql table name
-func (n Name) Name() string {
-	return fmt.Sprintf("`%s`", n)
-}
-
 const (
 	// AppTable is app table's name
 	AppTable Name = "applications"
