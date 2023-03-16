@@ -568,7 +568,7 @@ func (ab *AuditBuilder) Do(opt *AuditOption) error {
 
 func (ab *AuditBuilder) getApp(appID uint32) (*table.App, error) {
 	var sqlSentence []string
-	sqlSentence = append(sqlSentence, "SELECT ", table.AppColumns.NamedExpr(), " FROM ", string(table.AppTable), " WHERE id = ", strconv.Itoa(int(appID)), " AND biz_id = ", strconv.Itoa(int(ab.bizID)))
+	sqlSentence = append(sqlSentence, "SELECT ", table.AppColumns.NamedExpr(), " FROM ", table.AppTable.Name(), " WHERE id = ", strconv.Itoa(int(appID)), " AND biz_id = ", strconv.Itoa(int(ab.bizID)))
 	filter := filter2.SqlJoint(sqlSentence)
 
 	one := new(table.App)
@@ -582,7 +582,7 @@ func (ab *AuditBuilder) getApp(appID uint32) (*table.App, error) {
 
 func (ab *AuditBuilder) getConfigItem(configItemID uint32) (*table.ConfigItem, error) {
 	var sqlSentence []string
-	sqlSentence = append(sqlSentence, "SELECT ", table.ConfigItemColumns.NamedExpr(), " FROM ", string(table.ConfigItemTable),
+	sqlSentence = append(sqlSentence, "SELECT ", table.ConfigItemColumns.NamedExpr(), " FROM ", table.ConfigItemTable.Name(),
 		" WHERE id = ", strconv.Itoa(int(configItemID)), " AND biz_id = ", strconv.Itoa(int(ab.bizID)))
 	filter := filter2.SqlJoint(sqlSentence)
 
@@ -597,7 +597,7 @@ func (ab *AuditBuilder) getConfigItem(configItemID uint32) (*table.ConfigItem, e
 
 func (ab *AuditBuilder) getStrategySet(strategySetID uint32) (*table.StrategySet, error) {
 	var sqlSentence []string
-	sqlSentence = append(sqlSentence, "SELECT ", table.StrategySetColumns.NamedExpr(), " FROM ", string(table.StrategySetTable),
+	sqlSentence = append(sqlSentence, "SELECT ", table.StrategySetColumns.NamedExpr(), " FROM ", table.StrategySetTable.Name(),
 		" WHERE id = ", strconv.Itoa(int(strategySetID)), " AND biz_id = ", strconv.Itoa(int(ab.bizID)))
 	filter := filter2.SqlJoint(sqlSentence)
 
@@ -612,7 +612,7 @@ func (ab *AuditBuilder) getStrategySet(strategySetID uint32) (*table.StrategySet
 
 func (ab *AuditBuilder) getStrategy(strategyID uint32) (*table.Strategy, error) {
 	var sqlSentence []string
-	sqlSentence = append(sqlSentence, "SELECT ", table.StrategyColumns.NamedExpr(), " FROM ", string(table.StrategyTable),
+	sqlSentence = append(sqlSentence, "SELECT ", table.StrategyColumns.NamedExpr(), " FROM ", table.StrategyTable.Name(),
 		" WHERE id = ", strconv.Itoa(int(strategyID)), " AND biz_id = ", strconv.Itoa(int(ab.bizID)))
 	filter := filter2.SqlJoint(sqlSentence)
 
@@ -628,7 +628,7 @@ func (ab *AuditBuilder) getStrategy(strategyID uint32) (*table.Strategy, error) 
 func (ab *AuditBuilder) getGroupCategory(groupCategoryID uint32) (*table.GroupCategory, error) {
 	var sqlSentence []string
 	sqlSentence = append(sqlSentence, "SELECT ", table.GroupCategoryColumns.NamedExpr(),
-		" FROM ", string(table.GroupCategoryTable),
+		" FROM ", table.GroupCategoryTable.Name(),
 		" WHERE id = ", strconv.Itoa(int(groupCategoryID)), " AND biz_id = ", strconv.Itoa(int(ab.bizID)))
 	filter := filter2.SqlJoint(sqlSentence)
 
@@ -643,7 +643,7 @@ func (ab *AuditBuilder) getGroupCategory(groupCategoryID uint32) (*table.GroupCa
 
 func (ab *AuditBuilder) getGroup(groupID uint32) (*table.Group, error) {
 	var sqlSentence []string
-	sqlSentence = append(sqlSentence, "SELECT ", table.GroupColumns.NamedExpr(), " FROM ", string(table.GroupTable),
+	sqlSentence = append(sqlSentence, "SELECT ", table.GroupColumns.NamedExpr(), " FROM ", table.GroupTable.Name(),
 		" WHERE id = ", strconv.Itoa(int(groupID)), " AND biz_id = ", strconv.Itoa(int(ab.bizID)))
 	filter := filter2.SqlJoint(sqlSentence)
 
@@ -658,7 +658,7 @@ func (ab *AuditBuilder) getGroup(groupID uint32) (*table.Group, error) {
 
 func (ab *AuditBuilder) getHook(hookID uint32) (*table.Hook, error) {
 	var sqlSentence []string
-	sqlSentence = append(sqlSentence, "SELECT ", table.HookColumns.NamedExpr(), " FROM ", string(table.HookTable),
+	sqlSentence = append(sqlSentence, "SELECT ", table.HookColumns.NamedExpr(), " FROM ", table.HookTable.Name(),
 		" WHERE id = ", strconv.Itoa(int(hookID)), " AND biz_id = ", strconv.Itoa(int(ab.bizID)))
 	filter := filter2.SqlJoint(sqlSentence)
 
@@ -674,7 +674,7 @@ func (ab *AuditBuilder) getHook(hookID uint32) (*table.Hook, error) {
 func (ab *AuditBuilder) getCRInstance(criID uint32) (*table.CurrentReleasedInstance, error) {
 	var sqlSentence []string
 	sqlSentence = append(sqlSentence, "SELECT ", table.CurrentReleasedInstanceColumns.NamedExpr(),
-	" FROM ", string(table.CurrentReleasedInstanceTable),
+		" FROM ", table.CurrentReleasedInstanceTable.Name(),
 		" WHERE id = ", strconv.Itoa(int(criID)), " AND biz_id = ", strconv.Itoa(int(ab.bizID)))
 	filter := filter2.SqlJoint(sqlSentence)
 

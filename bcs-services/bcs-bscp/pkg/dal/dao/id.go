@@ -66,7 +66,7 @@ func (ig *idGenerator) Batch(ctx *kit.Kit, resource table.Name, step int) ([]uin
 	}
 
 	var sqlSentenceUp []string
-	sqlSentenceUp = append(sqlSentenceUp, "UPDATE ", string(table.IDGeneratorTable), " SET max_id = max_id + ", strconv.Itoa(step),
+	sqlSentenceUp = append(sqlSentenceUp, "UPDATE ", table.IDGeneratorTable.Name(), " SET max_id = max_id + ", strconv.Itoa(step),
 		", updated_at = NOW()  WHERE resource = '", string(resource), "'")
 	updateExpr := filter.SqlJoint(sqlSentenceUp)
 
@@ -76,7 +76,7 @@ func (ig *idGenerator) Batch(ctx *kit.Kit, resource table.Name, step int) ([]uin
 	}
 
 	var sqlSentence []string
-	sqlSentence = append(sqlSentence, "SELECT max_id FROM ", string(table.IDGeneratorTable), " WHERE resource = '", string(resource), "'")
+	sqlSentence = append(sqlSentence, "SELECT max_id FROM ", table.IDGeneratorTable.Name(), " WHERE resource = '", string(resource), "'")
 	queryExpr := filter.SqlJoint(sqlSentence)
 
 	rows, err := txn.QueryContext(ctx.Ctx, queryExpr)

@@ -84,7 +84,7 @@ func (dao *crInstanceDao) Create(kit *kit.Kit, cri *table.CurrentReleasedInstanc
 	cri.ID = id
 
 	var sqlSentence []string
-	sqlSentence = append(sqlSentence, "INSERT INTO ", string(table.CurrentReleasedInstanceTable),
+	sqlSentence = append(sqlSentence, "INSERT INTO ", table.CurrentReleasedInstanceTable.Name(),
 		" (", table.CurrentReleasedInstanceColumns.ColumnExpr(), ")  VALUES(", table.CurrentReleasedInstanceColumns.ColonNameExpr(), ")")
 	sql := filter.SqlJoint(sqlSentence)
 
@@ -169,7 +169,7 @@ func (dao *crInstanceDao) List(kit *kit.Kit, opts *types.ListCRInstancesOption) 
 	var sqlSentence []string
 	if opts.Page.Count {
 		// this is a count request, then do count operation only.
-		sqlSentence = append(sqlSentence, "SELECT COUNT(*) FROM ", string(table.CurrentReleasedInstanceTable), whereExpr)
+		sqlSentence = append(sqlSentence, "SELECT COUNT(*) FROM ", table.CurrentReleasedInstanceTable.Name(), whereExpr)
 		sql = filter.SqlJoint(sqlSentence)
 		var count uint32
 		count, err = dao.orm.Do(dao.sd.ShardingOne(opts.BizID).DB()).Count(kit.Ctx, sql, args...)
@@ -187,7 +187,7 @@ func (dao *crInstanceDao) List(kit *kit.Kit, opts *types.ListCRInstancesOption) 
 	}
 
 	sqlSentence = append(sqlSentence, "SELECT ", table.CurrentReleasedInstanceColumns.NamedExpr(), " FROM ",
-		string(table.CurrentReleasedInstanceTable), whereExpr, pageExpr)
+		table.CurrentReleasedInstanceTable.Name(), whereExpr, pageExpr)
 	sql = filter.SqlJoint(sqlSentence)
 
 	list := make([]*table.CurrentReleasedInstance, 0)
@@ -224,7 +224,7 @@ func (dao *crInstanceDao) ListAppCRIMeta(kit *kit.Kit, bizID uint32, appID uint3
 	var id uint32 = 0
 	for start := uint32(0); ; start += uint32(step) {
 		var sqlSentence []string
-		sqlSentence = append(sqlSentence, "SELECT id, uid, release_id FROM ", string(table.CurrentReleasedInstanceTable),
+		sqlSentence = append(sqlSentence, "SELECT id, uid, release_id FROM ", table.CurrentReleasedInstanceTable.Name(),
 			" WHERE biz_id = ", strconv.Itoa(int(bizID)), " AND app_id = ", strconv.Itoa(int(appID)), " AND id > ", strconv.Itoa(int(id)), pageExpr)
 		sql := filter.SqlJoint(sqlSentence)
 
@@ -259,7 +259,7 @@ func (dao *crInstanceDao) GetAppCRIMeta(kit *kit.Kit, bizID uint32, appID uint32
 	error) {
 
 	var sqlSentence []string
-	sqlSentence = append(sqlSentence, "SELECT uid, release_id FROM ", string(table.CurrentReleasedInstanceTable),
+	sqlSentence = append(sqlSentence, "SELECT uid, release_id FROM ", table.CurrentReleasedInstanceTable.Name(),
 		" WHERE uid = '", uid, "' AND app_id = ", strconv.Itoa(int(appID)))
 	sql := filter.SqlJoint(sqlSentence)
 
@@ -299,7 +299,7 @@ func (dao *crInstanceDao) Delete(kit *kit.Kit, cri *table.CurrentReleasedInstanc
 	ab := dao.auditDao.Decorator(kit, cri.Attachment.BizID, enumor.CRInstance).PrepareDelete(cri.ID)
 
 	var sqlSentence []string
-	sqlSentence = append(sqlSentence, "DELETE FROM ", string(table.CurrentReleasedInstanceTable), " WHERE id = ", strconv.Itoa(int(cri.ID)),
+	sqlSentence = append(sqlSentence, "DELETE FROM ", table.CurrentReleasedInstanceTable.Name(), " WHERE id = ", strconv.Itoa(int(cri.ID)),
 		" AND biz_id = ", strconv.Itoa(int(cri.Attachment.BizID)))
 	expr := filter.SqlJoint(sqlSentence)
 
@@ -357,7 +357,7 @@ func (dao *crInstanceDao) queryInstanceSpec(kt *kit.Kit, bizID, appID, id uint32
 	error) {
 
 	var sqlSentence []string
-	sqlSentence = append(sqlSentence, "SELECT ", table.RISpecColumns.NamedExpr(), " FROM ", string(table.CurrentReleasedInstanceTable),
+	sqlSentence = append(sqlSentence, "SELECT ", table.RISpecColumns.NamedExpr(), " FROM ", table.CurrentReleasedInstanceTable.Name(),
 		" WHERE id = ", strconv.Itoa(int(id)), " And biz_id = ", strconv.Itoa(int(bizID)), " And app_id = ", strconv.Itoa(int(appID)))
 	sql := filter.SqlJoint(sqlSentence)
 

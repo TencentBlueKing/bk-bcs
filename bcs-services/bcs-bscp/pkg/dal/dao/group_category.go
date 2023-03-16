@@ -75,7 +75,7 @@ func (dao *groupCategoryDao) Create(kit *kit.Kit, gc *table.GroupCategory) (uint
 	gc.ID = id
 
 	var sqlSentence []string
-	sqlSentence = append(sqlSentence, "INSERT INTO ", string(table.GroupCategoryTable), " (", table.GroupCategoryColumns.ColumnExpr(), ")  VALUES(", table.GroupCategoryColumns.ColonNameExpr(), ")")
+	sqlSentence = append(sqlSentence, "INSERT INTO ", table.GroupCategoryTable.Name(), " (", table.GroupCategoryColumns.ColumnExpr(), ")  VALUES(", table.GroupCategoryColumns.ColonNameExpr(), ")")
 	sql := filter.SqlJoint(sqlSentence)
 
 	err = dao.sd.ShardingOne(gc.Attachment.BizID).AutoTxn(kit,
@@ -127,7 +127,7 @@ func (dao *groupCategoryDao) Update(kit *kit.Kit, gc *table.GroupCategory) error
 	ab := dao.auditDao.Decorator(kit, gc.Attachment.BizID, enumor.GroupCategory).PrepareUpdate(gc)
 
 	var sqlSentence []string
-	sqlSentence = append(sqlSentence, "UPDATE ", string(table.GroupCategoryTable), " SET ", expr,
+	sqlSentence = append(sqlSentence, "UPDATE ", table.GroupCategoryTable.Name(), " SET ", expr,
 		" WHERE id = ", strconv.Itoa(int(gc.ID)), " AND biz_id = ", strconv.Itoa(int(gc.Attachment.BizID)))
 	sql := filter.SqlJoint(sqlSentence)
 
@@ -210,7 +210,7 @@ func (dao *groupCategoryDao) List(kit *kit.Kit, opts *types.ListGroupCategoriesO
 	var sqlSentence []string
 	if opts.Page.Count {
 		// this is a count request, then do count operation only.
-		sqlSentence = append(sqlSentence, "SELECT COUNT(*) FROM ", string(table.GroupCategoryTable), whereExpr)
+		sqlSentence = append(sqlSentence, "SELECT COUNT(*) FROM ", table.GroupCategoryTable.Name(), whereExpr)
 		sql = filter.SqlJoint(sqlSentence)
 		var count uint32
 		count, err = dao.orm.Do(dao.sd.ShardingOne(opts.BizID).DB()).Count(kit.Ctx, sql, args...)
@@ -227,7 +227,7 @@ func (dao *groupCategoryDao) List(kit *kit.Kit, opts *types.ListGroupCategoriesO
 		return nil, err
 	}
 
-	sqlSentence = append(sqlSentence, "SELECT ", table.GroupCategoryColumns.NamedExpr(), " FROM ", string(table.GroupCategoryTable), whereExpr, pageExpr)
+	sqlSentence = append(sqlSentence, "SELECT ", table.GroupCategoryColumns.NamedExpr(), " FROM ", table.GroupCategoryTable.Name(), whereExpr, pageExpr)
 	sql = filter.SqlJoint(sqlSentence)
 
 	list := make([]*table.GroupCategory, 0)
@@ -261,7 +261,7 @@ func (dao *groupCategoryDao) Delete(kit *kit.Kit, gc *table.GroupCategory) error
 
 	ab := dao.auditDao.Decorator(kit, gc.Attachment.BizID, enumor.GroupCategory).PrepareDelete(gc.ID)
 	var sqlSentence []string
-	sqlSentence = append(sqlSentence, "DELETE FROM ", string(table.GroupCategoryTable), " WHERE id = ", strconv.Itoa(int(gc.ID)),
+	sqlSentence = append(sqlSentence, "DELETE FROM ", table.GroupCategoryTable.Name(), " WHERE id = ", strconv.Itoa(int(gc.ID)),
 		" AND biz_id = ", strconv.Itoa(int(gc.Attachment.BizID)))
 	expr := filter.SqlJoint(sqlSentence)
 
