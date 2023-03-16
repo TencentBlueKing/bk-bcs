@@ -126,6 +126,11 @@ func (ab *AuditBuilder) AuditCreate(cur interface{}, opt *AuditOption) error {
 		ab.toAudit.AppID = sset.Attachment.AppID
 		ab.toAudit.ResourceID = sset.ID
 
+	case *table.Hook:
+		sset := cur.(*table.Hook)
+		ab.toAudit.AppID = sset.Attachment.AppID
+		ab.toAudit.ResourceID = sset.ID
+
 	case *table.Group:
 		sset := cur.(*table.Group)
 		ab.toAudit.AppID = sset.Attachment.AppID
@@ -269,6 +274,27 @@ func (ab *AuditBuilder) PrepareUpdate(updatedTo interface{}) AuditDecorator {
 			return ab
 		}
 
+	case *table.Group:
+		group := updatedTo.(*table.Group)
+		if err := ab.decorateGroupUpdate(group); err != nil {
+			ab.hitErr = err
+			return ab
+		}
+
+	case *table.GroupCategory:
+		groupCategory := updatedTo.(*table.GroupCategory)
+		if err := ab.decorateGroupCategoryUpdate(groupCategory); err != nil {
+			ab.hitErr = err
+			return ab
+		}
+
+	case *table.Hook:
+		hook := updatedTo.(*table.Hook)
+		if err := ab.decorateHookUpdate(hook); err != nil {
+			ab.hitErr = err
+			return ab
+		}
+
 	default:
 		logs.Errorf("unsupported audit update resource: %s, type: %s, rid: %v", ab.toAudit.ResourceType,
 			reflect.TypeOf(updatedTo), ab.toAudit.Rid)
@@ -375,6 +401,69 @@ func (ab *AuditBuilder) decorateStrategyUpdate(strategy *table.Strategy) error {
 	return nil
 }
 
+func (ab *AuditBuilder) decorateGroupCategoryUpdate(groupCategory *table.GroupCategory) error {
+	ab.toAudit.AppID = groupCategory.Attachment.AppID
+	ab.toAudit.ResourceID = groupCategory.ID
+
+	preGroupCategory, err := ab.getGroupCategory(groupCategory.ID)
+	if err != nil {
+		return err
+	}
+
+	ab.prev = preGroupCategory
+
+	changed, err := parseChangedSpecFields(preGroupCategory, groupCategory)
+	if err != nil {
+		ab.hitErr = err
+		return fmt.Errorf("parse group category changed spec field failed, err: %v", err)
+	}
+
+	ab.changed = changed
+	return nil
+}
+
+func (ab *AuditBuilder) decorateGroupUpdate(group *table.Group) error {
+	ab.toAudit.AppID = group.Attachment.AppID
+	ab.toAudit.ResourceID = group.ID
+
+	preGroup, err := ab.getGroup(group.ID)
+	if err != nil {
+		return err
+	}
+
+	ab.prev = preGroup
+
+	changed, err := parseChangedSpecFields(preGroup, group)
+	if err != nil {
+		ab.hitErr = err
+		return fmt.Errorf("parse group changed spec field failed, err: %v", err)
+	}
+
+	ab.changed = changed
+	return nil
+}
+
+func (ab *AuditBuilder) decorateHookUpdate(hook *table.Hook) error {
+	ab.toAudit.AppID = hook.Attachment.AppID
+	ab.toAudit.ResourceID = hook.ID
+
+	preHook, err := ab.getHook(hook.ID)
+	if err != nil {
+		return err
+	}
+
+	ab.prev = preHook
+
+	changed, err := parseChangedSpecFields(preHook, hook)
+	if err != nil {
+		ab.hitErr = err
+		return fmt.Errorf("parse hook changed spec field failed, err: %v", err)
+	}
+
+	ab.changed = changed
+	return nil
+}
+
 // PrepareDelete prepare the resource's previous instance details by
 // get the instance's detail from db and save it to ab.prev for later use.
 // Note: call this before resource is deleted.
@@ -425,6 +514,16 @@ func (ab *AuditBuilder) PrepareDelete(resID uint32) AuditDecorator {
 		ab.toAudit.AppID = ss.Attachment.AppID
 		ab.toAudit.ResourceID = ss.ID
 		ab.prev = ss
+
+	case enumor.Hook:
+		hook, err := ab.getHook(resID)
+		if err != nil {
+			ab.hitErr = err
+			return ab
+		}
+		ab.toAudit.AppID = hook.Attachment.AppID
+		ab.toAudit.ResourceID = hook.ID
+		ab.prev = hook
 
 	case enumor.CRInstance:
 		cri, err := ab.getCRInstance(resID)
@@ -498,7 +597,7 @@ func (ab *AuditBuilder) getConfigItem(configItemID uint32) (*table.ConfigItem, e
 
 func (ab *AuditBuilder) getStrategySet(strategySetID uint32) (*table.StrategySet, error) {
 	var sqlSentence []string
-	sqlSentence = append(sqlSentence, "SELECT ", table.ConfigItemColumns.NamedExpr(), " FROM ", string(table.StrategySetTable),
+	sqlSentence = append(sqlSentence, "SELECT ", table.StrategySetColumns.NamedExpr(), " FROM ", string(table.StrategySetTable),
 		" WHERE id = ", strconv.Itoa(int(strategySetID)), " AND biz_id = ", strconv.Itoa(int(ab.bizID)))
 	filter := filter2.SqlJoint(sqlSentence)
 
@@ -513,7 +612,7 @@ func (ab *AuditBuilder) getStrategySet(strategySetID uint32) (*table.StrategySet
 
 func (ab *AuditBuilder) getStrategy(strategyID uint32) (*table.Strategy, error) {
 	var sqlSentence []string
-	sqlSentence = append(sqlSentence, "SELECT ", table.ConfigItemColumns.NamedExpr(), " FROM ", string(table.StrategyTable),
+	sqlSentence = append(sqlSentence, "SELECT ", table.StrategyColumns.NamedExpr(), " FROM ", string(table.StrategyTable),
 		" WHERE id = ", strconv.Itoa(int(strategyID)), " AND biz_id = ", strconv.Itoa(int(ab.bizID)))
 	filter := filter2.SqlJoint(sqlSentence)
 
@@ -526,9 +625,56 @@ func (ab *AuditBuilder) getStrategy(strategyID uint32) (*table.Strategy, error) 
 	return one, nil
 }
 
+func (ab *AuditBuilder) getGroupCategory(groupCategoryID uint32) (*table.GroupCategory, error) {
+	var sqlSentence []string
+	sqlSentence = append(sqlSentence, "SELECT ", table.GroupCategoryColumns.NamedExpr(),
+		" FROM ", string(table.GroupCategoryTable),
+		" WHERE id = ", strconv.Itoa(int(groupCategoryID)), " AND biz_id = ", strconv.Itoa(int(ab.bizID)))
+	filter := filter2.SqlJoint(sqlSentence)
+
+	one := new(table.GroupCategory)
+	err := ab.ad.orm.Do(ab.ad.sd.MustSharding(ab.bizID)).Get(ab.kit.Ctx, one, filter)
+	if err != nil {
+		return nil, fmt.Errorf("get group category details failed, err: %v", err)
+	}
+
+	return one, nil
+}
+
+func (ab *AuditBuilder) getGroup(groupID uint32) (*table.Group, error) {
+	var sqlSentence []string
+	sqlSentence = append(sqlSentence, "SELECT ", table.GroupColumns.NamedExpr(), " FROM ", string(table.GroupTable),
+		" WHERE id = ", strconv.Itoa(int(groupID)), " AND biz_id = ", strconv.Itoa(int(ab.bizID)))
+	filter := filter2.SqlJoint(sqlSentence)
+
+	one := new(table.Group)
+	err := ab.ad.orm.Do(ab.ad.sd.MustSharding(ab.bizID)).Get(ab.kit.Ctx, one, filter)
+	if err != nil {
+		return nil, fmt.Errorf("get group details failed, err: %v", err)
+	}
+
+	return one, nil
+}
+
+func (ab *AuditBuilder) getHook(hookID uint32) (*table.Hook, error) {
+	var sqlSentence []string
+	sqlSentence = append(sqlSentence, "SELECT ", table.HookColumns.NamedExpr(), " FROM ", string(table.HookTable),
+		" WHERE id = ", strconv.Itoa(int(hookID)), " AND biz_id = ", strconv.Itoa(int(ab.bizID)))
+	filter := filter2.SqlJoint(sqlSentence)
+
+	one := new(table.Hook)
+	err := ab.ad.orm.Do(ab.ad.sd.MustSharding(ab.bizID)).Get(ab.kit.Ctx, one, filter)
+	if err != nil {
+		return nil, fmt.Errorf("get hook details failed, err: %v", err)
+	}
+
+	return one, nil
+}
+
 func (ab *AuditBuilder) getCRInstance(criID uint32) (*table.CurrentReleasedInstance, error) {
 	var sqlSentence []string
-	sqlSentence = append(sqlSentence, "SELECT ", table.ConfigItemColumns.NamedExpr(), " FROM ", string(table.CurrentReleasedInstanceTable),
+	sqlSentence = append(sqlSentence, "SELECT ", table.CurrentReleasedInstanceColumns.NamedExpr(),
+	" FROM ", string(table.CurrentReleasedInstanceTable),
 		" WHERE id = ", strconv.Itoa(int(criID)), " AND biz_id = ", strconv.Itoa(int(ab.bizID)))
 	filter := filter2.SqlJoint(sqlSentence)
 
@@ -544,11 +690,11 @@ func (ab *AuditBuilder) getCRInstance(criID uint32) (*table.CurrentReleasedInsta
 // parseChangedSpecFields parse the changed filed with pre and cur *structs' Spec field.
 // both pre and curl should be a *struct, if not, it will 'panic'.
 // Note:
-// 1. the pre and cur should be the same structs' pointer, and should
-//    have a 'Spec' struct field.
-// 2. this func only compare 'Spec' field.
-// 3. if one of the cur's Spec's filed value is zero, then this filed will be ignored.
-// 4. the returned update field's key is this field's 'db' tag.
+//  1. the pre and cur should be the same structs' pointer, and should
+//     have a 'Spec' struct field.
+//  2. this func only compare 'Spec' field.
+//  3. if one of the cur's Spec's filed value is zero, then this filed will be ignored.
+//  4. the returned update field's key is this field's 'db' tag.
 func parseChangedSpecFields(pre, cur interface{}) (map[string]interface{}, error) {
 	preV := reflect.ValueOf(pre)
 	if preV.Kind() != reflect.Ptr {

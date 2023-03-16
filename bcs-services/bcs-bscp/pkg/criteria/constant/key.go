@@ -38,6 +38,9 @@ const (
 	// BKGWJWTTokenKey is blueking api gateway jwt header key.
 	BKGWJWTTokenKey = "X-Bkapi-JWT"
 
+	// BKTokenForTest is a token for test
+	BKTokenForTest = "bk_token_for_test"
+
 	// ContentIDHeaderKey is common content sha256 id.
 	ContentIDHeaderKey = "X-Bkapi-File-Content-Id"
 )

@@ -10,6 +10,7 @@ all:
 	@cd strategy && make
 	@cd strategy-set && make
 	@cd event && make
+	@cd hook && make
 	@cd group && make
 	@cd group-category && make
 
@@ -25,5 +26,6 @@ clean:
 	@cd strategy && make clean
 	@cd strategy-set && make clean
 	@cd event && make clean
+	@cd hook && make
 	@cd group && make clean
 	@cd group-category && make clean

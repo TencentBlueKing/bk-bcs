@@ -45,12 +45,14 @@ func (a *App) Create(ctx context.Context, header http.Header, req *pbcs.CreateAp
 		return nil, resp.Err
 	}
 
-	pbResp := new(pbcs.CreateAppResp)
+	pbResp := &struct {
+		Data *pbcs.CreateAppResp `json:"data"`
+	}{}
 	if err := resp.Into(pbResp); err != nil {
 		return nil, err
 	}
 
-	return pbResp, nil
+	return pbResp.Data, nil
 }
 
 // Update function to update application.
@@ -66,12 +68,14 @@ func (a *App) Update(ctx context.Context, header http.Header, req *pbcs.UpdateAp
 		return nil, resp.Err
 	}
 
-	pbResp := new(pbcs.UpdateAppResp)
+	pbResp := &struct {
+		Data *pbcs.UpdateAppResp `json:"data"`
+	}{}
 	if err := resp.Into(pbResp); err != nil {
 		return nil, err
 	}
 
-	return pbResp, nil
+	return pbResp.Data, nil
 }
 
 // Delete function to delete application.
@@ -87,12 +91,14 @@ func (a *App) Delete(ctx context.Context, header http.Header, req *pbcs.DeleteAp
 		return nil, resp.Err
 	}
 
-	pbResp := new(pbcs.DeleteAppResp)
+	pbResp := &struct {
+		Data *pbcs.DeleteAppResp `json:"data"`
+	}{}
 	if err := resp.Into(pbResp); err != nil {
 		return nil, err
 	}
 
-	return pbResp, nil
+	return pbResp.Data, nil
 }
 
 // List to list application.
@@ -108,10 +114,11 @@ func (a *App) List(ctx context.Context, header http.Header, req *pbcs.ListAppsRe
 		return nil, resp.Err
 	}
 
-	pbResp := new(pbcs.ListAppsResp)
+	pbResp := &struct {
+		Data *pbcs.ListAppsResp `json:"data"`
+	}{}
 	if err := resp.Into(pbResp); err != nil {
 		return nil, err
 	}
-
-	return pbResp, nil
+	return pbResp.Data, nil
 }

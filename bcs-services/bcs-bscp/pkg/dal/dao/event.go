@@ -106,10 +106,11 @@ type EDecorator struct {
 // event is recorded successfully, because when an event is consumed,
 // its unique id will be used to check if the resource is exists or
 // not:
-//    (1) if not, this event will be ignored.
-//    (2) if yes, this event will be consumed event even if it is not
-//    a real event(because the according operation may have already
-//    been aborted).
+//
+//	(1) if not, this event will be ignored.
+//	(2) if yes, this event will be consumed event even if it is not
+//	a real event(because the according operation may have already
+//	been aborted).
 func (ef *EDecorator) Fire(es ...types.Event) error {
 	if len(es) == 0 {
 		return nil
@@ -217,7 +218,7 @@ func (ed *eventDao) List(kt *kit.Kit, opts *types.ListEventsOption) (*types.List
 		},
 	}
 
-	whereExpr, arg, err := opts.Filter.SQLWhereExpr(sqlOpt)
+	whereExpr, args, err := opts.Filter.SQLWhereExpr(sqlOpt)
 	if err != nil {
 		return nil, err
 	}
@@ -228,7 +229,7 @@ func (ed *eventDao) List(kt *kit.Kit, opts *types.ListEventsOption) (*types.List
 		sqlSentence = append(sqlSentence, "SELECT COUNT(*) FROM ", string(table.EventTable), whereExpr)
 		sql := filter.SqlJoint(sqlSentence)
 		var count uint32
-		count, err = ed.orm.Do(ed.sd.Event().DB()).Count(kt.Ctx, sql, arg)
+		count, err = ed.orm.Do(ed.sd.Event().DB()).Count(kt.Ctx, sql, args...)
 		if err != nil {
 			return nil, err
 		}
@@ -246,7 +247,7 @@ func (ed *eventDao) List(kt *kit.Kit, opts *types.ListEventsOption) (*types.List
 	sql := filter.SqlJoint(sqlSentence)
 
 	list := make([]*table.Event, 0)
-	err = ed.orm.Do(ed.sd.Event().DB()).Select(kt.Ctx, &list, sql, arg)
+	err = ed.orm.Do(ed.sd.Event().DB()).Select(kt.Ctx, &list, sql, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -283,7 +284,7 @@ func (ed *eventDao) ListConsumedEvents(kt *kit.Kit, opts *types.ListEventsOption
 		},
 	}
 
-	whereExpr, arg, err := opts.Filter.SQLWhereExpr(sqlOpt)
+	whereExpr, args, err := opts.Filter.SQLWhereExpr(sqlOpt)
 	if err != nil {
 		return nil, err
 	}
@@ -303,7 +304,7 @@ func (ed *eventDao) ListConsumedEvents(kt *kit.Kit, opts *types.ListEventsOption
 	sql := filter.SqlJoint(sqlSentence)
 
 	list := make([]*table.Event, 0)
-	err = ed.orm.Do(ed.sd.Event().DB()).Select(kt.Ctx, &list, sql, arg)
+	err = ed.orm.Do(ed.sd.Event().DB()).Select(kt.Ctx, &list, sql, args...)
 	if err != nil {
 		return nil, err
 	}

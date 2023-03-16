@@ -4,7 +4,7 @@ import { useSelectItemsNamespace } from '../namespace/use-namespace';
 import usePage from '../../../composables/use-page';
 import useSubscribe, { ISubscribeData, ISubscribeParams } from './use-subscribe';
 import useTableData from './use-table-data';
-import { sort, padIPv6 } from '@/common/util';
+import { padIPv6 } from '@/common/util';
 import yamljs from 'js-yaml';
 import './base-layout.css';
 import fullScreen from '@/directives/full-screen';
@@ -12,6 +12,7 @@ import { CUR_SELECT_CRD } from '@/common/constant';
 import CodeEditor from '@/components/monaco-editor/new-editor.vue';
 import Header from '@/components/layout/Header.vue';
 import jp from 'jsonpath';
+import useTableSort from '@/composables/use-table-sort';
 
 export default defineComponent({
   name: 'BaseLayout',
@@ -157,17 +158,6 @@ export default defineComponent({
     // 获取命名空间
     const { namespaceLoading, namespaceValue, namespaceList, getNamespaceData } = useSelectItemsNamespace();
 
-    // 排序
-    const sortData = ref({
-      prop: '',
-      order: '',
-    });
-    const handleSortChange = (data) => {
-      sortData.value = {
-        prop: data.prop,
-        order: data.order,
-      };
-    };
     // 表格数据
     const {
       isLoading,
@@ -198,13 +188,14 @@ export default defineComponent({
       subscribe && handleStartSubscribe();
     };
 
-    const additionalColumns = computed(() =>  // 动态表格字段
-      webAnnotations.value.additionalColumns || []);
-    const tableData = computed(() => {
-      const items = data.value.manifest.items || [];
-      const { prop, order } = sortData.value;
-      return prop ? sort(items, prop, order) : items;
-    });
+    // 动态表格字段
+    const additionalColumns = computed(() => webAnnotations.value.additionalColumns || []);
+    // 表格数据（排序后）
+    const allTableData = computed(() => data.value.manifest.items || []);
+    const {
+      sortTableData: tableData,
+      handleSortChange,
+    } = useTableSort(allTableData, item => handleGetExtData(item.metadata.uid) || {});
     const resourceVersion = computed(() => data.value.manifest?.metadata?.resourceVersion || '');
 
     // 模糊搜索功能
@@ -510,6 +501,7 @@ export default defineComponent({
       handleStartSubscribe();
     });
 
+    // 清空搜索数据
     const handleClearSearchData = () => {
       searchValue.value = '';
     };

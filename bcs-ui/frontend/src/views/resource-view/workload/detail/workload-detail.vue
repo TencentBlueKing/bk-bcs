@@ -156,6 +156,7 @@
             @page-limit-change="podTablePageSizeChange"
             @select="handleSelectPod"
             @select-all="handleSelectAllPod"
+            @sort-change="handleSortChange"
           >
             <bcs-table-column
               v-if="showBatchDispatch"
@@ -205,7 +206,7 @@
             <bcs-table-column label="Node" show-overflow-tooltip>
               <template #default="{ row }">{{row.spec.nodeName || '--'}}</template>
             </bcs-table-column>
-            <bcs-table-column label="Age" :resizable="false">
+            <bcs-table-column label="Age" sortable prop="createTime" :resizable="false">
               <template #default="{ row }">
                 <span>{{handleGetExtData(row.metadata.uid, 'age')}}</span>
               </template>
@@ -308,6 +309,7 @@ import usePage from '@/composables/use-page';
 import { timeZoneTransForm } from '@/common/util';
 import useSearch from '@/composables/use-search';
 import EventQueryTableVue from '@/views/project-manage/event-query/event-query-table.vue';
+import useTableSort from '@/composables/use-table-sort';
 
 export interface IDetail {
   manifest: any;
@@ -410,11 +412,15 @@ export default defineComponent({
     // 表格选中的pods数据
     const selectPods = ref<any[]>([]);
     // pods数据
-    const pods = computed(() => (workloadPods.value?.manifest?.items || []).map(item => ({
+    const allPodsData = computed(() => (workloadPods.value?.manifest?.items || []).map(item => ({
       ...item,
       images: (handleGetExtData(item.metadata?.uid, 'images') || []).join(''),
       podIPv6: handleGetExtData(item.metadata?.uid, 'podIPv6'),
     })));
+    // 排序
+    const { handleSortChange, sortTableData: pods } = useTableSort(allPodsData, item => ({
+      createTime: handleGetExtData(item.metadata?.uid, 'createTime'),
+    }));
     // pods过滤
     const keys = ref(['metadata.name', 'images', 'podIPv6', 'status.hostIP', 'status.podIP', 'spec.nodeName']);
     const { searchValue, tableDataMatchSearch } = useSearch(pods, keys);
@@ -679,6 +685,7 @@ export default defineComponent({
       showLog,
       currentRow,
       handleShowLog,
+      handleSortChange,
     };
   },
 });

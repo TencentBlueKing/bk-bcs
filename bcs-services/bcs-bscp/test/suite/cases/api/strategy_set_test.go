@@ -17,7 +17,6 @@ import (
 
 	. "github.com/smartystreets/goconvey/convey" // import convey.
 
-	"bscp.io/pkg/criteria/errf"
 	"bscp.io/pkg/dal/table"
 	pbcs "bscp.io/pkg/protocol/config-server"
 	"bscp.io/test/client/api"
@@ -84,9 +83,8 @@ func TestStrategySet(t *testing.T) {
 					resp, err := cli.App.Create(ctx, header, req)
 					So(err, ShouldBeNil)
 					So(resp, ShouldNotBeNil)
-					So(resp.Data, ShouldNotBeNil)
-					So(resp.Data.Id, ShouldNotEqual, uint32(0))
-					rm.AddApp(table.Normal, resp.Data.Id)
+					So(resp.Id, ShouldNotEqual, uint32(0))
+					rm.AddApp(table.Normal, resp.Id)
 				}
 			}
 
@@ -100,25 +98,21 @@ func TestStrategySet(t *testing.T) {
 				resp, err := cli.StrategySet.Create(ctx, header, &req)
 				So(err, ShouldBeNil)
 				So(resp, ShouldNotBeNil)
-				So(resp.Code, ShouldEqual, errf.OK)
-				So(resp.Data, ShouldNotBeNil)
-				So(resp.Data.Id, ShouldNotEqual, uint32(0))
+				So(resp.Id, ShouldNotEqual, uint32(0))
 
 				// verify by list_strategy_set
-				listReq, err := cases.GenListStrategySetByIdsReq(cases.TBizID, appId, []uint32{resp.Data.Id})
+				listReq, err := cases.GenListStrategySetByIdsReq(cases.TBizID, appId, []uint32{resp.Id})
 				So(err, ShouldBeNil)
 
 				ctx, header = cases.GenApiCtxHeader()
 				listResp, err := cli.StrategySet.List(ctx, header, listReq)
 				So(err, ShouldBeNil)
 				So(listResp, ShouldNotBeNil)
-				So(listResp.Code, ShouldEqual, errf.OK)
-				So(listResp.Data, ShouldNotBeNil)
 
-				So(len(listResp.Data.Details), ShouldEqual, 1)
-				one := listResp.Data.Details[0]
+				So(len(listResp.Details), ShouldEqual, 1)
+				one := listResp.Details[0]
 				So(one, ShouldNotBeNil)
-				So(one.Id, ShouldEqual, resp.Data.Id)
+				So(one.Id, ShouldEqual, resp.Id)
 
 				So(one.Spec, ShouldNotBeNil)
 				So(one.Spec.Name, ShouldEqual, req.Name)
@@ -133,7 +127,7 @@ func TestStrategySet(t *testing.T) {
 				So(one.State, ShouldNotBeNil)
 				So(one.State.Status, ShouldEqual, string(table.Enabled))
 
-				rm.AddStrategySet(appId, resp.Data.Id)
+				rm.AddStrategySet(appId, resp.Id)
 			}
 		})
 
@@ -152,7 +146,6 @@ func TestStrategySet(t *testing.T) {
 			resp, err := cli.StrategySet.Create(ctx, header, req)
 			So(err, ShouldBeNil)
 			So(resp, ShouldNotBeNil)
-			So(resp.Code, ShouldEqual, errf.Unknown)
 		})
 
 		Convey("3.create_strategy_set abnormal test", func() {
@@ -171,8 +164,8 @@ func TestStrategySet(t *testing.T) {
 			appResp, err := cli.App.Create(ctx, header, appReq)
 			So(err, ShouldBeNil)
 			So(appResp, ShouldNotBeNil)
-			So(appResp.Data.Id, ShouldNotEqual, uint32(0))
-			appId := appResp.Data.Id
+			So(appResp.Id, ShouldNotEqual, uint32(0))
+			appId := appResp.Id
 
 			// test cases
 			reqs := make([]pbcs.CreateStrategySetReq, 0)
@@ -215,7 +208,6 @@ func TestStrategySet(t *testing.T) {
 				resp, err := cli.StrategySet.Create(ctx, header, &req)
 				So(err, ShouldBeNil)
 				So(resp, ShouldNotBeNil)
-				So(resp.Code, ShouldNotEqual, errf.OK)
 			}
 		})
 	})
@@ -256,7 +248,6 @@ func TestStrategySet(t *testing.T) {
 				resp, err := cli.StrategySet.Update(ctx, header, &req)
 				So(err, ShouldBeNil)
 				So(resp, ShouldNotBeNil)
-				So(resp.Code, ShouldEqual, errf.OK)
 
 				// verify by list_strategy_set
 				listReq, err := cases.GenListStrategySetByIdsReq(cases.TBizID, appId, []uint32{req.Id})
@@ -266,11 +257,9 @@ func TestStrategySet(t *testing.T) {
 				listResp, err := cli.StrategySet.List(ctx, header, listReq)
 				So(err, ShouldBeNil)
 				So(listResp, ShouldNotBeNil)
-				So(listResp.Code, ShouldEqual, errf.OK)
-				So(listResp.Data, ShouldNotBeNil)
 
-				So(len(listResp.Data.Details), ShouldEqual, 1)
-				one := listResp.Data.Details[0]
+				So(len(listResp.Details), ShouldEqual, 1)
+				one := listResp.Details[0]
 				So(one.Spec, ShouldNotBeNil)
 				So(one.Spec.Name, ShouldEqual, req.Name)
 				So(one.Spec.Memo, ShouldEqual, req.Memo)
@@ -330,7 +319,6 @@ func TestStrategySet(t *testing.T) {
 				resp, err := cli.StrategySet.Update(ctx, header, &req)
 				So(err, ShouldBeNil)
 				So(resp, ShouldNotBeNil)
-				So(resp.Code, ShouldNotEqual, errf.OK)
 			}
 		})
 	})
@@ -352,7 +340,6 @@ func TestStrategySet(t *testing.T) {
 			resp, err := cli.StrategySet.Delete(ctx, header, req)
 			So(err, ShouldBeNil)
 			So(resp, ShouldNotBeNil)
-			So(resp.Code, ShouldEqual, errf.OK)
 
 			// verify by list_strategy_set
 			listReq, err := cases.GenListStrategySetByIdsReq(cases.TBizID, appId, []uint32{stgSetId})
@@ -362,9 +349,7 @@ func TestStrategySet(t *testing.T) {
 			listResp, err := cli.StrategySet.List(ctx, header, listReq)
 			So(err, ShouldBeNil)
 			So(listResp, ShouldNotBeNil)
-			So(listResp.Code, ShouldEqual, errf.OK)
-			So(listResp.Data, ShouldNotBeNil)
-			So(len(listResp.Data.Details), ShouldEqual, 0)
+			So(len(listResp.Details), ShouldEqual, 0)
 		})
 
 		Convey("2.delete_strategy_set abnormal test", func() {
@@ -395,7 +380,6 @@ func TestStrategySet(t *testing.T) {
 				resp, err := cli.StrategySet.Delete(ctx, header, req)
 				So(err, ShouldBeNil)
 				So(resp, ShouldNotBeNil)
-				So(resp.Code, ShouldEqual, errf.InvalidParameter)
 			}
 		})
 
@@ -423,8 +407,7 @@ func TestStrategySet(t *testing.T) {
 			resp, err := cli.StrategySet.List(ctx, header, req)
 			So(err, ShouldBeNil)
 			So(resp, ShouldNotBeNil)
-			So(resp.Code, ShouldEqual, errf.OK)
-			So(resp.Data.Count, ShouldEqual, uint32(1))
+			So(resp.Count, ShouldEqual, uint32(1))
 		})
 
 		Convey("2.list_strategy_set abnormal test", func() {
@@ -467,7 +450,6 @@ func TestStrategySet(t *testing.T) {
 				resp, err := cli.StrategySet.List(ctx, header, req)
 				So(err, ShouldBeNil)
 				So(resp, ShouldNotBeNil)
-				So(resp.Code, ShouldNotEqual, errf.OK)
 			}
 		})
 	})

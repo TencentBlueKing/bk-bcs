@@ -15,7 +15,6 @@ package api
 import (
 	"testing"
 
-	"bscp.io/pkg/criteria/errf"
 	"bscp.io/pkg/dal/table"
 	pbcs "bscp.io/pkg/protocol/config-server"
 	"bscp.io/test/client/api"
@@ -52,11 +51,9 @@ func TestCommit(t *testing.T) {
 		resp, err := cli.Content.List(ctx, header, req)
 		So(err, ShouldBeNil)
 		So(resp, ShouldNotBeNil)
-		So(resp.Code, ShouldEqual, errf.OK)
-		So(resp.Data, ShouldNotBeNil)
-		So(len(resp.Data.Details), ShouldEqual, 1)
+		So(len(resp.Details), ShouldEqual, 1)
 
-		one := resp.Data.Details[0]
+		one := resp.Details[0]
 		So(one.Spec, ShouldNotBeNil)
 		ctSign = one.Spec.Signature
 		ctSize = one.Spec.ByteSize
@@ -86,23 +83,19 @@ func TestCommit(t *testing.T) {
 				resp, err := cli.Commit.Create(ctx, header, &req)
 				So(err, ShouldBeNil)
 				So(resp, ShouldNotBeNil)
-				So(resp.Code, ShouldEqual, errf.OK)
-				So(resp.Data, ShouldNotBeNil)
-				So(resp.Data.Id, ShouldNotEqual, uint32(0))
+				So(resp.Id, ShouldNotEqual, uint32(0))
 
 				// verify by list_commit
-				listReq, err := cases.GenListCommitByIdsReq(cases.TBizID, appId, []uint32{resp.Data.Id})
+				listReq, err := cases.GenListCommitByIdsReq(cases.TBizID, appId, []uint32{resp.Id})
 				ctx, header = cases.GenApiCtxHeader()
 				listResp, err := cli.Commit.List(ctx, header, listReq)
 				So(err, ShouldBeNil)
 				So(listResp, ShouldNotBeNil)
-				So(listResp.Code, ShouldEqual, errf.OK)
-				So(listResp.Data, ShouldNotBeNil)
-				So(len(listResp.Data.Details), ShouldEqual, 1)
+				So(len(listResp.Details), ShouldEqual, 1)
 
-				one := listResp.Data.Details[0]
+				one := listResp.Details[0]
 				So(one, ShouldNotBeNil)
-				So(one.Id, ShouldEqual, resp.Data.Id)
+				So(one.Id, ShouldEqual, resp.Id)
 
 				So(one.Spec, ShouldNotBeNil)
 				So(one.Spec.Memo, ShouldEqual, req.Memo)
@@ -118,7 +111,7 @@ func TestCommit(t *testing.T) {
 				So(one.Attachment.BizId, ShouldEqual, cases.TBizID)
 				So(one.Revision, cases.SoCreateRevision)
 
-				rm.AddCommit(ctId, resp.Data.Id)
+				rm.AddCommit(ctId, resp.Id)
 			}
 		})
 
@@ -165,7 +158,6 @@ func TestCommit(t *testing.T) {
 				resp, err := cli.Commit.Create(ctx, header, &req)
 				So(err, ShouldBeNil)
 				So(resp, ShouldNotBeNil)
-				So(resp.Code, ShouldNotEqual, errf.OK)
 			}
 		})
 	})
@@ -187,8 +179,7 @@ func TestCommit(t *testing.T) {
 			resp, err := cli.Commit.List(ctx, header, req)
 			So(err, ShouldBeNil)
 			So(resp, ShouldNotBeNil)
-			So(resp.Code, ShouldEqual, errf.OK)
-			So(resp.Data.Count, ShouldEqual, uint32(1))
+			So(resp.Count, ShouldEqual, uint32(1))
 		})
 
 		Convey("2.list_commit abnormal test", func() {
@@ -227,7 +218,6 @@ func TestCommit(t *testing.T) {
 				resp, err := cli.Commit.List(ctx, header, req)
 				So(err, ShouldBeNil)
 				So(resp, ShouldNotBeNil)
-				So(resp.Code, ShouldNotEqual, errf.OK)
 			}
 		})
 	})

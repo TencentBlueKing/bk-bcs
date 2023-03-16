@@ -9,6 +9,7 @@ import "bscp.io/pkg/protocol/core/release/release.proto";
 import "bscp.io/pkg/protocol/core/released-ci/released_ci.proto";
 import "bscp.io/pkg/protocol/core/strategy-set/strategy_set.proto";
 import "bscp.io/pkg/protocol/core/strategy/strategy.proto";
+import "bscp.io/pkg/protocol/core/hook/hook.proto";
 import "bscp.io/pkg/protocol/core/group/group.proto";
 import "bscp.io/pkg/protocol/core/group-category/group_category.proto";
 import "bscp.io/pkg/protocol/core/instance/instance.proto";
@@ -189,6 +190,30 @@ service Config {
         };
     }
 
+    rpc CreateHook(CreateHookReq) returns (CreateHookResp) {
+        option (google.api.http) = {
+            post: "/api/v1/config/apps/{app_id}/hooks"
+            body: "*"
+        };
+    }
+    rpc DeleteHook(DeleteHookReq) returns (DeleteHookResp) {
+        option (google.api.http) = {
+            delete: "/api/v1/config/apps/{app_id}/hooks/{hook_id}"
+        };
+    }
+    rpc UpdateHook(UpdateHookReq) returns (UpdateHookResp) {
+        option (google.api.http) = {
+            put: "/api/v1/config/apps/{app_id}/hooks/{hook_id}"
+            body: "*"
+        };
+    }
+    rpc ListHooks(ListHooksReq) returns (ListHooksResp) {
+        option (google.api.http) = {
+            post: "/api/v1/config/apps/{app_id}/hooks/list"
+            body: "*"
+        };
+    }
+
     rpc CreateGroup(CreateGroupReq) returns (CreateGroupResp) {
         option (google.api.http) = {
             post: "/api/v1/config/apps/{app_id}/groups"
@@ -209,6 +234,11 @@ service Config {
     rpc ListGroups(ListGroupsReq) returns (ListGroupsResp) {
         option (google.api.http) = {
             get: "/api/v1/config/apps/{app_id}/group_categories/{group_category_id}/groups"
+        };
+    }
+    rpc ListAllGroups(ListAllGroupsReq) returns (ListAllGroupsResp) {
+        option (google.api.http) = {
+            get: "/api/v1/config/apps/{app_id}/groups"
         };
     }
 
@@ -272,8 +302,8 @@ message ListBizReq {
 
 message ListBizResp {
     message BizData {
-        uint32 biz_id                  = 1;
-        string biz_name                = 2;
+        uint32          biz_id         = 1;
+        string          biz_name       = 2;
         repeated string biz_maintainer = 3;
     }
 
@@ -318,9 +348,9 @@ message GetAppReq {
 }
 
 message ListAppsReq {
-    uint32 biz_id                 = 1;
+    uint32                 biz_id = 1;
     google.protobuf.Struct filter = 2;
-    pbbase.BasePage page          = 3;
+    pbbase.BasePage        page   = 3;
 }
 
 message ListAppsRestReq {
@@ -339,7 +369,7 @@ message ListAppsBySpaceRestReq {
 }
 
 message ListAppsResp {
-    uint32 count               = 1;
+    uint32             count   = 1;
     repeated pbapp.App details = 2;
 }
 
@@ -389,25 +419,25 @@ message DeleteConfigItemReq {
 message DeleteConfigItemResp {}
 
 message GetConfigItemReq {
-    uint32 config_item_id          = 1;
-    uint32 app_id                  = 2;
-    uint32 release_id              = 3;
+    uint32 config_item_id = 1;
+    uint32 app_id         = 2;
+    uint32 release_id     = 3;
 }
 
 message GetConfigItemResp {
-    pbci.ConfigItem config_item = 1;
-    pbcontent.ContentSpec content   = 2;
+    pbci.ConfigItem       config_item = 1;
+    pbcontent.ContentSpec content     = 2;
 }
 
 message ListConfigItemsReq {
-    uint32 app_id                 = 1;
-    uint32 release_id             = 2;
-    uint32 start                  = 3;
-    uint32 limit                  = 4;
+    uint32 app_id     = 1;
+    uint32 release_id = 2;
+    uint32 start      = 3;
+    uint32 limit      = 4;
 }
 
 message ListConfigItemsResp {
-    uint32 count                     = 1;
+    uint32                   count   = 1;
     repeated pbci.ConfigItem details = 2;
 }
 
@@ -424,14 +454,14 @@ message CreateContentResp {
 }
 
 message ListContentsReq {
-    uint32 biz_id                 = 1;
-    uint32 app_id                 = 2;
+    uint32                 biz_id = 1;
+    uint32                 app_id = 2;
     google.protobuf.Struct filter = 3;
-    pbbase.BasePage page          = 4;
+    pbbase.BasePage        page   = 4;
 }
 
 message ListContentsResp {
-    uint32 count                       = 1;
+    uint32                     count   = 1;
     repeated pbcontent.Content details = 2;
 }
 
@@ -448,14 +478,14 @@ message CreateCommitResp {
 }
 
 message ListCommitsReq {
-    uint32 biz_id                 = 1;
-    uint32 app_id                 = 2;
+    uint32                 biz_id = 1;
+    uint32                 app_id = 2;
     google.protobuf.Struct filter = 3;
-    pbbase.BasePage page          = 4;
+    pbbase.BasePage        page   = 4;
 }
 
 message ListCommitsResp {
-    uint32 count                     = 1;
+    uint32                   count   = 1;
     repeated pbcommit.Commit details = 2;
 }
 
@@ -471,26 +501,26 @@ message CreateReleaseResp {
 }
 
 message ListReleasesReq {
-    uint32 biz_id                 = 1;
-    uint32 app_id                 = 2;
+    uint32                 biz_id = 1;
+    uint32                 app_id = 2;
     google.protobuf.Struct filter = 3;
-    pbbase.BasePage page          = 4;
+    pbbase.BasePage        page   = 4;
 }
 
 message ListReleasesResp {
-    uint32 count                       = 1;
+    uint32                     count   = 1;
     repeated pbrelease.Release details = 2;
 }
 
 message ListReleasedConfigItemsReq {
-    uint32 biz_id     = 1;
-    uint32 release_id = 2;
+    uint32          biz_id     = 1;
+    uint32          release_id = 2;
     // serial number 3 is reserved for later added filter fields
-    pbbase.BasePage page = 4;
+    pbbase.BasePage page       = 4;
 }
 
 message ListReleasedConfigItemsResp {
-    uint32 count                              = 1;
+    uint32                            count   = 1;
     repeated pbrci.ReleasedConfigItem details = 2;
 }
 
@@ -524,27 +554,27 @@ message DeleteStrategySetReq {
 message DeleteStrategySetResp {}
 
 message ListStrategySetsReq {
-    uint32 biz_id                 = 1;
-    uint32 app_id                 = 2;
+    uint32                 biz_id = 1;
+    uint32                 app_id = 2;
     google.protobuf.Struct filter = 3;
-    pbbase.BasePage page          = 4;
+    pbbase.BasePage        page   = 4;
 }
 
 message ListStrategySetsResp {
-    uint32 count                      = 1;
+    uint32                    count   = 1;
     repeated pbss.StrategySet details = 2;
 }
 
 message CreateStrategyReq {
-    uint32 biz_id          = 1;
-    uint32 app_id          = 2;
-    uint32 strategy_set_id = 3;
-    uint32 release_id      = 4;
-    bool as_default        = 5;
-    string name            = 6;
-    repeated uint32 groups = 7;
-    string namespace       = 8;
-    string memo            = 9;
+    uint32          biz_id          = 1;
+    uint32          app_id          = 2;
+    uint32          strategy_set_id = 3;
+    uint32          release_id      = 4;
+    bool            as_default      = 5;
+    string          name            = 6;
+    repeated uint32 groups          = 7;
+    string          namespace       = 8;
+    string          memo            = 9;
 }
 
 message CreateStrategyResp {
@@ -552,14 +582,14 @@ message CreateStrategyResp {
 }
 
 message UpdateStrategyReq {
-    uint32 biz_id          = 1;
-    uint32 app_id          = 2;
-    uint32 id              = 3;
-    uint32 release_id      = 4;
-    bool as_default        = 5;
-    string name            = 6;
-    repeated uint32 groups = 7;
-    string memo            = 8;
+    uint32          biz_id     = 1;
+    uint32          app_id     = 2;
+    uint32          id         = 3;
+    uint32          release_id = 4;
+    bool            as_default = 5;
+    string          name       = 6;
+    repeated uint32 groups     = 7;
+    string          memo       = 8;
 }
 
 message UpdateStrategyResp {}
@@ -573,24 +603,71 @@ message DeleteStrategyReq {
 message DeleteStrategyResp {}
 
 message ListStrategiesReq {
-    uint32 biz_id                 = 1;
-    uint32 app_id                 = 2;
+    uint32                 biz_id = 1;
+    uint32                 app_id = 2;
     google.protobuf.Struct filter = 3;
-    pbbase.BasePage page          = 4;
+    pbbase.BasePage        page   = 4;
 }
 
 message ListStrategiesResp {
-    uint32 count                         = 1;
+    uint32                       count   = 1;
     repeated pbstrategy.Strategy details = 2;
 }
 
+message CreateHookReq {
+    uint32 app_id     = 1;
+    uint32 release_id = 2;
+    string name       = 3;
+    string pre_type   = 4;
+    string pre_hook   = 5;
+    string post_type  = 6;
+    string post_hook  = 7;
+}
+
+message CreateHookResp {
+    uint32 id = 1;
+}
+
+message UpdateHookReq {
+    uint32 app_id     = 1;
+    uint32 hook_id    = 2;
+    uint32 release_id = 3;
+    string name       = 4;
+    string pre_type   = 5;
+    string pre_hook   = 6;
+    string post_type  = 7;
+    string post_hook  = 8;
+}
+
+message UpdateHookResp {
+}
+
+message DeleteHookReq {
+    uint32 app_id  = 1;
+    uint32 hook_id = 2;
+}
+
+message DeleteHookResp {}
+
+message ListHooksReq {
+    uint32                 app_id = 1;
+    google.protobuf.Struct filter = 2;
+    pbbase.BasePage        page   = 3;
+}
+
+message ListHooksResp {
+    uint32               count   = 1;
+    repeated pbhook.Hook details = 2;
+}
+
+
 message CreateGroupReq {
-    uint32 app_id                   = 1;
-    uint32 group_category_id        = 2;
-    string name                     = 3;
-    string mode                     = 4;
-    google.protobuf.Struct selector = 5;
-    string uid                      = 6;
+    uint32                 app_id            = 1;
+    uint32                 group_category_id = 2;
+    string                 name              = 3;
+    string                 mode              = 4;
+    google.protobuf.Struct selector          = 5;
+    string                 uid               = 6;
 }
 
 message CreateGroupResp {
@@ -598,35 +675,50 @@ message CreateGroupResp {
 }
 
 message UpdateGroupReq {
-    uint32 app_id                   = 1;
-    uint32 group_id                 = 2;
-    string name                     = 3;
-    string mode                     = 4;
+    uint32                 app_id   = 1;
+    uint32                 group_id = 2;
+    string                 name     = 3;
+    string                 mode     = 4;
     google.protobuf.Struct selector = 5;
-    string uid                      = 6;
+    string                 uid      = 6;
 }
 
 message UpdateGroupResp {
 }
 
 message DeleteGroupReq {
-    uint32 app_id                   = 1;
-    uint32 group_id                 = 2;
+    uint32 app_id   = 1;
+    uint32 group_id = 2;
 }
 
 message DeleteGroupResp {}
 
 message ListGroupsReq {
-    uint32 app_id                   = 1;
-    uint32 group_category_id        = 2;
-    string mode                     = 3;
-    uint32 start                    = 4; 
-    uint32 limit                    = 5; 
+    uint32 app_id            = 1;
+    uint32 group_category_id = 2;
+    string mode              = 3;
+    uint32 start             = 4;
+    uint32 limit             = 5;
 }
 
 message ListGroupsResp {
-    uint32 count                   = 1;
+    uint32                 count   = 1;
     repeated pbgroup.Group details = 2;
+}
+
+
+message ListAllGroupsReq {
+    uint32 app_id                   = 1;
+    string mode                     = 3;
+}
+
+message ListAllGroupsResp {
+    message ListAllGroupsData {
+        uint32 group_category_id = 1;
+        string group_category_name = 2;
+        repeated pbgroup.Group groups = 3;
+    }
+    repeated ListAllGroupsData details = 1;
 }
 
 message CreateGroupCategoryReq {
@@ -639,30 +731,30 @@ message CreateGroupCategoryResp {
 }
 
 message DeleteGroupCategoryReq {
-    uint32 app_id              = 1;
-    uint32 group_category_id   = 2;
+    uint32 app_id            = 1;
+    uint32 group_category_id = 2;
 }
 
 message DeleteGroupCategoryResp {}
 
 message ListGroupCategoriesReq {
-    uint32 app_id                   = 1;
-    uint32 start                    = 2; 
-    uint32 limit                    = 3; 
+    uint32 app_id = 1;
+    uint32 start  = 2;
+    uint32 limit  = 3;
 }
 
 message ListGroupCategoriesResp {
-    uint32 count                   = 1;
+    uint32                      count   = 1;
     repeated pbgc.GroupCategory details = 2;
 }
 
 message PublishReq {
-    uint32 biz_id          = 1;
-    uint32 app_id          = 2;
-    uint32 release_id      = 3;
-    string memo            = 4;
-    bool all               = 5;
-    repeated uint32 groups = 6;
+    uint32          biz_id     = 1;
+    uint32          app_id     = 2;
+    uint32          release_id = 3;
+    string          memo       = 4;
+    bool            all        = 5;
+    repeated uint32 groups     = 6;
 }
 
 message PublishResp {
@@ -678,14 +770,14 @@ message FinishPublishReq {
 message FinishPublishResp {}
 
 message ListPubStrategyHistoriesReq {
-    uint32 biz_id                 = 1;
-    uint32 app_id                 = 2;
+    uint32                 biz_id = 1;
+    uint32                 app_id = 2;
     google.protobuf.Struct filter = 3;
-    pbbase.BasePage page          = 4;
+    pbbase.BasePage        page   = 4;
 }
 
 message ListPubStrategyHistoriesResp {
-    uint32 count                                         = 1;
+    uint32                                       count   = 1;
     repeated pbstrategy.PublishedStrategyHistory details = 2;
 }
 
@@ -710,12 +802,12 @@ message DeletePublishedInstanceReq {
 message DeletePublishedInstanceResp {}
 
 message ListPublishedInstanceReq {
-    uint32 biz_id                 = 1;
+    uint32                 biz_id = 1;
     google.protobuf.Struct filter = 2;
-    pbbase.BasePage page          = 3;
+    pbbase.BasePage        page   = 3;
 }
 
 message ListPublishedInstanceResp {
-    uint32 count                                        = 1;
+    uint32                                      count   = 1;
     repeated pbinstance.CurrentReleasedInstance details = 2;
 }

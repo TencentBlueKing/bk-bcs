@@ -109,12 +109,12 @@ func (rm *ResourceManager) GetContent(configItemId uint32) uint32 {
 	}
 }
 
-// AddCommit add a created content id
+// AddCommit add a created commit id
 func (rm *ResourceManager) AddCommit(contentId, commitId uint32) {
 	rm.Commit[contentId] = commitId
 }
 
-// GetCommit get a created content id
+// GetCommit get a created commit id
 func (rm *ResourceManager) GetCommit(contentId uint32) uint32 {
 	if value, ok := rm.Commit[contentId]; !ok {
 		return 0
@@ -164,7 +164,7 @@ func (rm *ResourceManager) GetStrategySet(appId uint32) uint32 {
 	}
 }
 
-// GetAppToStrategySet  get an app id and release id, when app has strategy set
+// GetAppToStrategySet  get an app id and strategy set id, when app has strategy set
 func (rm *ResourceManager) GetAppToStrategySet() (appId, stgSetId uint32) {
 	if len(rm.StrategySet) == 0 {
 		return 0, 0
@@ -196,7 +196,7 @@ func (rm *ResourceManager) GetStrategy(stgSetId uint32) uint32 {
 	return rm.Strategies[stgSetId][0]
 }
 
-// DeleteStrategy delete a created strategy set id
+// DeleteStrategy delete a created strategy id
 func (rm *ResourceManager) DeleteStrategy(appId, stgSetId, stgId uint32) {
 	rm.Strategies[stgSetId] = deleteId(rm.Strategies[stgSetId], stgId)
 	rm.AppToStrategy[appId] = deleteId(rm.AppToStrategy[appId], stgId)

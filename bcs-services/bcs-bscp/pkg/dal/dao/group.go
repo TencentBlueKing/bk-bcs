@@ -174,7 +174,12 @@ func (dao *groupDao) List(kit *kit.Kit, opts *types.ListGroupsOption) (
 		return nil, errf.New(errf.InvalidParameter, "list group options null")
 	}
 
-	if err := opts.Validate(types.DefaultPageOption); err != nil {
+	po := &types.PageOption{
+		EnableUnlimitedLimit: true,
+		DisabledSort:         false,
+	}
+
+	if err := opts.Validate(po); err != nil {
 		return nil, err
 	}
 
@@ -196,14 +201,14 @@ func (dao *groupDao) List(kit *kit.Kit, opts *types.ListGroupsOption) (
 			},
 		},
 	}
-	whereExpr, arg, err := opts.Filter.SQLWhereExpr(sqlOpt)
+	whereExpr, args, err := opts.Filter.SQLWhereExpr(sqlOpt)
 	if err != nil {
 		return nil, err
 	}
 	var sqlSentenceCount []string
 	sqlSentenceCount = append(sqlSentenceCount, "SELECT COUNT(*) FROM ", string(table.GroupTable), whereExpr)
 	countSql := filter.SqlJoint(sqlSentenceCount)
-	count, err := dao.orm.Do(dao.sd.ShardingOne(opts.BizID).DB()).Count(kit.Ctx, countSql, arg)
+	count, err := dao.orm.Do(dao.sd.ShardingOne(opts.BizID).DB()).Count(kit.Ctx, countSql, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -219,7 +224,7 @@ func (dao *groupDao) List(kit *kit.Kit, opts *types.ListGroupsOption) (
 	sql := filter.SqlJoint(sqlSentence)
 
 	list := make([]*table.Group, 0)
-	err = dao.orm.Do(dao.sd.ShardingOne(opts.BizID).DB()).Select(kit.Ctx, &list, sql, arg)
+	err = dao.orm.Do(dao.sd.ShardingOne(opts.BizID).DB()).Select(kit.Ctx, &list, sql, args...)
 	if err != nil {
 		return nil, err
 	}

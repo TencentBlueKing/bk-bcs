@@ -970,3 +970,98 @@ paths:
         authConfig:
           userVerifiedRequired: true
         disabledStages: []
+  /api/v1/config/apps/{app_id}/hooks:
+    post:
+      operationId: create_hook
+      description: 创建hook脚本
+      tags:
+        - hook脚本管理
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: post
+          path:  /api/v1/config/apps/{app_id}/hooks
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: true
+        disabledStages: []
+  /api/v1/config/apps/{app_id}/hooks/{hook_id}:
+    put:
+      operationId: update_hook
+      description: 更新hook脚本
+      tags:
+        - hook脚本管理
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: put
+          path:  /api/v1/config/apps/{app_id}/hooks/{hook_id}
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: true
+        disabledStages: []
+    delete:
+      operationId: delete_hook
+      description: 删除hook脚本
+      tags:
+        - hook脚本管理
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: delete
+          path:  /api/v1/config/apps/{app_id}/hooks/{hook_id}
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: true
+        disabledStages: []
+  /api/v1/config/apps/{app_id}/hooks/list:
+    post:
+      operationId: list_hooks
+      description: 获取hook脚本列表
+      tags:
+        - hook脚本管理
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: post
+          path:  /api/v1/config/apps/{app_id}/hooks/list
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: true
+        disabledStages: []

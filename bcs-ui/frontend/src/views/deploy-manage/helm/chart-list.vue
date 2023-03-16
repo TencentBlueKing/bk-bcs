@@ -116,7 +116,7 @@
             </div>
           </template>
         </bcs-table-column>
-        <bcs-table-column :label="$t('版本')" prop="latestVersion" width="100"></bcs-table-column>
+        <bcs-table-column :label="$t('版本')" prop="latestVersion" width="160" show-overflow-tooltip></bcs-table-column>
         <bcs-table-column :label="$t('最近更新')" prop="updateTime" width="200"></bcs-table-column>
         <bcs-table-column :label="$t('描述')" prop="latestDescription" show-overflow-tooltip></bcs-table-column>
         <bcs-table-column :label="$t('操作')" width="180">
