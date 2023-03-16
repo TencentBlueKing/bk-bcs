@@ -63,7 +63,6 @@ install: pre
 	mkdir -p ${OUTPUT_DIR}/install/
 	@cp -rf ${PRO_DIR}/scripts/install/start_all.sh ${OUTPUT_DIR}/install/
 	@cp -rf ${PRO_DIR}/scripts/install/stop_all.sh ${OUTPUT_DIR}/install/
-	@cp -rf ${PRO_DIR}/scripts/sql/bscp.sql ${OUTPUT_DIR}/install/
 	@echo -e "\e[34;1mPackaging Install Tools Done\n\033[0m"
 
 api: pre
@@ -102,7 +101,6 @@ server: validate api
 	@echo "version: ${VERSION}" > ${OUTPUT_DIR}/VERSION
 	@cp -rf ${PRO_DIR}/server-CHANGELOG.md ${OUTPUT_DIR}
 	@mkdir -p ${OUTPUT_DIR}/install/
-	@cp -rf ${PRO_DIR}/scripts/sql/bscp.sql ${OUTPUT_DIR}/install/
 	@mkdir -p ${OUTPUT_DIR}
 	@mkdir -p ${OUTPUT_DIR}/etc
 	@cd ${PRO_DIR}/cmd && make server

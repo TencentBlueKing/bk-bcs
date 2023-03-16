@@ -66,7 +66,6 @@ cd build/bk-bscp.release-v1.0.0_alpha1-2-g42xxxx5-22.04.25
 │   └── etc																# 服务配置文件存放目录
 ├── ...
 ├── install																# 安装脚本存放目录
-│   ├── bscp.sql													# BSCP DB初始化SQL语句
 │   ├── start_all.sh											# 启动BSCP服务的脚本
 │   └── stop_all.sh												# 停止BSCP服务的脚本
 └── suite-test														# BSCP集成测试
@@ -117,5 +116,4 @@ make package
 │   ├── feed_server.yaml
 │   └── feedserver_api_gw_public.key			# BSCP feedserver API-Gateway网关JWT解析public key
 └── install																# 安装脚本存放目录
-    └── bscp.sql													# BSCP DB初始化SQL语句
 ```
