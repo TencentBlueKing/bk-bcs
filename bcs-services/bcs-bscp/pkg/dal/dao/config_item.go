@@ -76,7 +76,7 @@ func (dao *configItemDao) Create(kit *kit.Kit, ci *table.ConfigItem) (uint32, er
 
 	ci.ID = id
 	var sqlSentence []string
-	sqlSentence = append(sqlSentence, "INSERT INTO ", string(table.ConfigItemTable), " (", table.ConfigItemColumns.ColumnExpr(), ")  VALUES(", table.ConfigItemColumns.ColonNameExpr(), ")")
+	sqlSentence = append(sqlSentence, "INSERT INTO ", table.ConfigItemTable.Name(), " (", table.ConfigItemColumns.ColumnExpr(), ")  VALUES(", table.ConfigItemColumns.ColonNameExpr(), ")")
 	sql := filter.SqlJoint(sqlSentence)
 
 	err = dao.sd.ShardingOne(ci.Attachment.BizID).AutoTxn(kit,
@@ -141,7 +141,7 @@ func (dao *configItemDao) Update(kit *kit.Kit, ci *table.ConfigItem) error {
 	ab := dao.auditDao.Decorator(kit, ci.Attachment.BizID, enumor.ConfigItem).PrepareUpdate(ci)
 
 	var sqlSentence []string
-	sqlSentence = append(sqlSentence, "UPDATE ", string(table.ConfigItemTable), " SET ", expr, " WHERE id = ", strconv.Itoa(int(ci.ID)), " AND biz_id = ", strconv.Itoa(int(ci.Attachment.BizID)))
+	sqlSentence = append(sqlSentence, "UPDATE ", table.ConfigItemTable.Name(), " SET ", expr, " WHERE id = ", strconv.Itoa(int(ci.ID)), " AND biz_id = ", strconv.Itoa(int(ci.Attachment.BizID)))
 	sql := filter.SqlJoint(sqlSentence)
 
 	err = dao.sd.ShardingOne(ci.Attachment.BizID).AutoTxn(kit,
@@ -187,7 +187,7 @@ func (dao *configItemDao) Get(kit *kit.Kit, id, bizID uint32) (*table.ConfigItem
 		return nil, errf.New(errf.InvalidParameter, "config item id can not be 0")
 	}
 	var sqlSentence []string
-	sqlSentence = append(sqlSentence, "SELECT ", table.ConfigItemColumns.NamedExpr(), " FROM ", string(table.ConfigItemTable), " WHERE id = ", strconv.Itoa(int(id)))
+	sqlSentence = append(sqlSentence, "SELECT ", table.ConfigItemColumns.NamedExpr(), " FROM ", table.ConfigItemTable.Name(), " WHERE id = ", strconv.Itoa(int(id)))
 	sql := filter.SqlJoint(sqlSentence)
 
 	configItem := &table.ConfigItem{}
@@ -233,7 +233,7 @@ func (dao *configItemDao) List(kit *kit.Kit, opts *types.ListConfigItemsOption) 
 	}
 
 	var sqlSentenceCount []string
-	sqlSentenceCount = append(sqlSentenceCount, "SELECT COUNT(*) FROM ", string(table.ConfigItemTable), whereExpr)
+	sqlSentenceCount = append(sqlSentenceCount, "SELECT COUNT(*) FROM ", table.ConfigItemTable.Name(), whereExpr)
 	countSql := filter.SqlJoint(sqlSentenceCount)
 	count, err := dao.orm.Do(dao.sd.ShardingOne(opts.BizID).DB()).Count(kit.Ctx, countSql, args...)
 	if err != nil {
@@ -247,7 +247,7 @@ func (dao *configItemDao) List(kit *kit.Kit, opts *types.ListConfigItemsOption) 
 	}
 
 	var sqlSentence []string
-	sqlSentence = append(sqlSentence, "SELECT ", table.ConfigItemColumns.NamedExpr(), " FROM ", string(table.ConfigItemTable), whereExpr, pageExpr)
+	sqlSentence = append(sqlSentence, "SELECT ", table.ConfigItemColumns.NamedExpr(), " FROM ", table.ConfigItemTable.Name(), whereExpr, pageExpr)
 	sql := filter.SqlJoint(sqlSentence)
 
 	list := make([]*table.ConfigItem, 0)
@@ -277,7 +277,7 @@ func (dao *configItemDao) Delete(kit *kit.Kit, ci *table.ConfigItem) error {
 	ab := dao.auditDao.Decorator(kit, ci.Attachment.BizID, enumor.ConfigItem).PrepareDelete(ci.ID)
 
 	var sqlSentence []string
-	sqlSentence = append(sqlSentence, "DELETE FROM ", string(table.ConfigItemTable), " WHERE id = ", strconv.Itoa(int(ci.ID)), " AND biz_id = ", strconv.Itoa(int(ci.Attachment.BizID)))
+	sqlSentence = append(sqlSentence, "DELETE FROM ", table.ConfigItemTable.Name(), " WHERE id = ", strconv.Itoa(int(ci.ID)), " AND biz_id = ", strconv.Itoa(int(ci.Attachment.BizID)))
 	expr := filter.SqlJoint(sqlSentence)
 
 	err := dao.sd.ShardingOne(ci.Attachment.BizID).AutoTxn(kit, func(txn *sqlx.Tx, opt *sharding.TxnOption) error {
@@ -353,7 +353,7 @@ func (dao *configItemDao) queryFileMode(kt *kit.Kit, id, bizID uint32) (
 	table.FileMode, error) {
 
 	var sqlSentence []string
-	sqlSentence = append(sqlSentence, "SELECT ", table.ConfigItemSpecColumns.NamedExpr(), " FROM ", string(table.ConfigItemTable), " WHERE id = ", strconv.Itoa(int(id)), " AND biz_id = ", strconv.Itoa(int(bizID)))
+	sqlSentence = append(sqlSentence, "SELECT ", table.ConfigItemSpecColumns.NamedExpr(), " FROM ", table.ConfigItemTable.Name(), " WHERE id = ", strconv.Itoa(int(id)), " AND biz_id = ", strconv.Itoa(int(bizID)))
 	expr := filter.SqlJoint(sqlSentence)
 
 	one := new(table.ConfigItemSpec)

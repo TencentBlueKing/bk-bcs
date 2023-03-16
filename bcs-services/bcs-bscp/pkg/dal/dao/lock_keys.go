@@ -28,7 +28,7 @@ type lockKeyGenerator struct{}
 func (k lockKeyGenerator) ConfigItem(bizID uint32, appID uint32) *table.ResourceLock {
 	return &table.ResourceLock{
 		BizID:   bizID,
-		ResType: string(table.ConfigItemTable),
+		ResType: table.ConfigItemTable.String(),
 		ResKey:  strconv.FormatInt(int64(appID), 10),
 	}
 }
@@ -37,7 +37,7 @@ func (k lockKeyGenerator) ConfigItem(bizID uint32, appID uint32) *table.Resource
 func (k lockKeyGenerator) CurReleasedInst(bizID uint32, appID uint32) *table.ResourceLock {
 	return &table.ResourceLock{
 		BizID:   bizID,
-		ResType: string(table.CurrentReleasedInstanceTable),
+		ResType: table.CurrentReleasedInstanceTable.String(),
 		ResKey:  strconv.FormatInt(int64(appID), 10),
 	}
 }
@@ -46,7 +46,7 @@ func (k lockKeyGenerator) CurReleasedInst(bizID uint32, appID uint32) *table.Res
 func (k lockKeyGenerator) Strategy(bizID uint32, appID uint32) *table.ResourceLock {
 	return &table.ResourceLock{
 		BizID:   bizID,
-		ResType: string(table.StrategyTable),
+		ResType: table.StrategyTable.String(),
 		ResKey:  strconv.FormatInt(int64(appID), 10),
 	}
 }
@@ -55,7 +55,7 @@ func (k lockKeyGenerator) Strategy(bizID uint32, appID uint32) *table.ResourceLo
 func (k lockKeyGenerator) DefaultStrategy(bizID uint32, strategySetID uint32) *table.ResourceLock {
 	return &table.ResourceLock{
 		BizID:   bizID,
-		ResType: string(table.StrategyTable),
+		ResType: table.StrategyTable.String(),
 		ResKey:  fmt.Sprintf("default-%d", strategySetID),
 	}
 }
@@ -64,7 +64,7 @@ func (k lockKeyGenerator) DefaultStrategy(bizID uint32, strategySetID uint32) *t
 func (k lockKeyGenerator) NamespaceStrategy(bizID uint32, strategySetID uint32, ns string) *table.ResourceLock {
 	return &table.ResourceLock{
 		BizID:   bizID,
-		ResType: string(table.StrategyTable),
+		ResType: table.StrategyTable.String(),
 		ResKey:  fmt.Sprintf("namespace-%d-%s", strategySetID, ns),
 	}
 }
@@ -73,7 +73,7 @@ func (k lockKeyGenerator) NamespaceStrategy(bizID uint32, strategySetID uint32, 
 func (k lockKeyGenerator) StrategySet(bizID uint32, appID uint32) *table.ResourceLock {
 	return &table.ResourceLock{
 		BizID:   bizID,
-		ResType: string(table.StrategySetTable),
+		ResType: table.StrategySetTable.String(),
 		ResKey:  strconv.FormatInt(int64(appID), 10),
 	}
 }
@@ -82,7 +82,7 @@ func (k lockKeyGenerator) StrategySet(bizID uint32, appID uint32) *table.Resourc
 func (k lockKeyGenerator) Group(bizID uint32, appID uint32) *table.ResourceLock {
 	return &table.ResourceLock{
 		BizID:   bizID,
-		ResType: string(table.GroupTable),
+		ResType: table.GroupTable.String(),
 		ResKey:  strconv.FormatInt(int64(appID), 10),
 	}
 }
@@ -91,7 +91,7 @@ func (k lockKeyGenerator) Group(bizID uint32, appID uint32) *table.ResourceLock 
 func (k lockKeyGenerator) GroupCategory(bizID uint32, appID uint32) *table.ResourceLock {
 	return &table.ResourceLock{
 		BizID:   bizID,
-		ResType: string(table.GroupCategoryTable),
+		ResType: table.GroupCategoryTable.String(),
 		ResKey:  strconv.FormatInt(int64(appID), 10),
 	}
 }

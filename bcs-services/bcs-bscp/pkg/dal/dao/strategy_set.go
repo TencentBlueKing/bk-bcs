@@ -83,7 +83,7 @@ func (dao *strategySetDao) Create(kit *kit.Kit, ss *table.StrategySet) (uint32, 
 	ss.ID = id
 
 	var sqlSentence []string
-	sqlSentence = append(sqlSentence, "INSERT INTO ", string(table.StrategySetTable), " (", table.StrategySetColumns.ColumnExpr(),
+	sqlSentence = append(sqlSentence, "INSERT INTO ", table.StrategySetTable.Name(), " (", table.StrategySetColumns.ColumnExpr(),
 		") ", " VALUES(", table.StrategySetColumns.ColonNameExpr(), ")")
 	sql := filter.SqlJoint(sqlSentence)
 	err = dao.sd.ShardingOne(ss.Attachment.BizID).AutoTxn(kit,
@@ -139,7 +139,7 @@ func (dao *strategySetDao) Update(kit *kit.Kit, ss *table.StrategySet) error {
 	ab := dao.auditDao.Decorator(kit, ss.Attachment.BizID, enumor.StrategySet).PrepareUpdate(ss)
 
 	var sqlSentence []string
-	sqlSentence = append(sqlSentence, "UPDATE ", string(table.StrategySetTable), " SET ", expr, " WHERE id = ", strconv.Itoa(int(ss.ID)), " AND biz_id = ", strconv.Itoa(int(ss.Attachment.BizID)))
+	sqlSentence = append(sqlSentence, "UPDATE ", table.StrategySetTable.Name(), " SET ", expr, " WHERE id = ", strconv.Itoa(int(ss.ID)), " AND biz_id = ", strconv.Itoa(int(ss.Attachment.BizID)))
 	sql := filter.SqlJoint(sqlSentence)
 	err = dao.sd.ShardingOne(ss.Attachment.BizID).AutoTxn(kit,
 		func(txn *sqlx.Tx, opt *sharding.TxnOption) error {
@@ -215,7 +215,7 @@ func (dao *strategySetDao) List(kit *kit.Kit, opts *types.ListStrategySetsOption
 	var sql string
 	if opts.Page.Count {
 		// this is a count request, then do count operation only.
-		sqlSentence = append(sqlSentence, "SELECT COUNT(*) FROM ", string(table.StrategySetTable), whereExpr)
+		sqlSentence = append(sqlSentence, "SELECT COUNT(*) FROM ", table.StrategySetTable.Name(), whereExpr)
 		sql = filter.SqlJoint(sqlSentence)
 		var count uint32
 		count, err = dao.orm.Do(dao.sd.ShardingOne(opts.BizID).DB()).Count(kit.Ctx, sql, args...)
@@ -232,7 +232,7 @@ func (dao *strategySetDao) List(kit *kit.Kit, opts *types.ListStrategySetsOption
 		return nil, err
 	}
 
-	sqlSentence = append(sqlSentence, "SELECT ", table.StrategySetColumns.NamedExpr(), " FROM ", string(table.StrategySetTable), whereExpr, pageExpr)
+	sqlSentence = append(sqlSentence, "SELECT ", table.StrategySetColumns.NamedExpr(), " FROM ", table.StrategySetTable.Name(), whereExpr, pageExpr)
 	sql = filter.SqlJoint(sqlSentence)
 	list := make([]*table.StrategySet, 0)
 	err = dao.orm.Do(dao.sd.ShardingOne(opts.BizID).DB()).Select(kit.Ctx, &list, sql, args...)
@@ -266,7 +266,7 @@ func (dao *strategySetDao) Delete(kit *kit.Kit, ss *table.StrategySet) error {
 	ab := dao.auditDao.Decorator(kit, ss.Attachment.BizID, enumor.StrategySet).PrepareDelete(ss.ID)
 
 	var sqlSentence []string
-	sqlSentence = append(sqlSentence, "DELETE FROM ", string(table.StrategySetTable), " WHERE id = ", strconv.Itoa(int(ss.ID)), " AND biz_id = ", strconv.Itoa(int(ss.Attachment.BizID)))
+	sqlSentence = append(sqlSentence, "DELETE FROM ", table.StrategySetTable.Name(), " WHERE id = ", strconv.Itoa(int(ss.ID)), " AND biz_id = ", strconv.Itoa(int(ss.Attachment.BizID)))
 	sql := filter.SqlJoint(sqlSentence)
 
 	err := dao.sd.ShardingOne(ss.Attachment.BizID).AutoTxn(kit, func(txn *sqlx.Tx, opt *sharding.TxnOption) error {
