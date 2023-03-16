@@ -72,12 +72,12 @@ BSCP接口是通过蓝鲸 API 网关对外提供服务。Release包中的api目�
 mysql -uroot -p
 ```
 
-**执行Release包中的install目录下的BSCP DB初始化SQL**
+**BSCP DB初始化**
 
-```sql
-source /data/bscp/install/bscp.sql
+```bash
+# 使用data-service的migrate子命令进行DB初始化，配置文件路径根据实际情况进行调整
+./bk-bscp-dataservice migrate up -c ./etc/data_service.yaml
 ```
-
 
 
 ## 4. 修改微服务配置文件
