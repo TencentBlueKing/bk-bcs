@@ -19,6 +19,7 @@
             :placeholder="$t('输入关键字，按Enter搜索')"
             :search.sync="searchKeyword"
             :cluster-id.sync="searchScope"
+            cluster-type="all"
             @search-change="getServiceList"
             @refresh="refresh" />
         </div>
@@ -555,7 +556,7 @@
             <bcs-alert type="info" class="mb15">
               <div slot="title">
                 <i18n path="具体使用方法参考{article}">
-                  <a place="article" :href="PROJECT_CONFIG.doc.cl5" target="_blank" class="bk-text-button ml5">{{$t('文章')}}</a>
+                  <a place="article" :href="PROJECT_CONFIG.cl5" target="_blank" class="bk-text-button ml5">{{$t('文章')}}</a>
                 </i18n>
               </div>
             </bcs-alert>

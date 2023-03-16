@@ -22,9 +22,10 @@ type HostConf struct {
 	BKIAMAppURL           string `yaml:"bk_iam_app_url"`
 	PaaSHost              string `yaml:"paas_host"`
 	BKCMDBHost            string `yaml:"bk_cmdb_host"`
-	BKMonitorHOst         string `yaml:"bk_monitor_host"`
+	BKMonitorHost         string `yaml:"bk_monitor_host"`
 }
 
+// FrontendConf
 type FrontendConf struct {
 	Docs map[string]string `yaml:"docs"`
 	Host *HostConf         `yaml:"hosts"`

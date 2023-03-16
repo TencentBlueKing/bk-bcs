@@ -19,11 +19,11 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"net/url"
-	"strings"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/tcp/listener"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	httpSwagger "github.com/swaggo/http-swagger"
 	"k8s.io/klog/v2"
 
@@ -41,7 +41,6 @@ type WebServer struct {
 
 // NewWebServer :
 func NewWebServer(ctx context.Context, addr string, addrIPv6 string) (*WebServer, error) {
-
 	s := &WebServer{
 		ctx:            ctx,
 		addrIPv6:       addrIPv6,
@@ -60,7 +59,7 @@ func (a *WebServer) Run() error {
 		return err
 	}
 
-	if a.addrIPv6 != "" {
+	if a.addrIPv6 != "" && a.addrIPv6 != a.srv.Addr {
 		if err := dualStackListener.AddListenerWithAddr(a.addrIPv6); err != nil {
 			return err
 		}
@@ -80,7 +79,6 @@ func (w *WebServer) newRouter() http.Handler {
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
-	r.Use(CORS)
 
 	// openapi 文档
 	// 访问 swagger/index.html, swagger/doc.json
@@ -90,17 +88,27 @@ func (w *WebServer) newRouter() http.Handler {
 	r.Get("/-/healthy", HealthyHandler)
 	r.Get("/-/ready", ReadyHandler)
 
-	// 注册 HTTP 请求
-	// 正确路由
-	r.Get("/bcs", w.embedWebServer.IndexHandler().ServeHTTP)
-	r.Get("/bcs/*", w.embedWebServer.IndexHandler().ServeHTTP)
+	// metrics 配置
+	r.Get("/metrics", promhttp.Handler().ServeHTTP)
 
 	if config.G.IsDevMode() {
 		r.Mount("/backend", ReverseAPIHandler("bcs_saas_api_url", config.G.FrontendConf.Host.DevOpsBCSAPIURL))
 		r.Mount("/bcsapi", ReverseAPIHandler("bcs_host", config.G.BCS.Host))
 	}
 
-	// vue 自定义路由, 前端返回404
+	r.Mount("/", w.subRouter())
+
+	return r
+}
+
+func (w *WebServer) subRouter() http.Handler {
+	r := chi.NewRouter()
+
+	r.Get("/favicon.ico", w.embedWebServer.FaviconHandler)
+	r.Get("/web/*", w.embedWebServer.StaticFileHandler("/web").ServeHTTP)
+
+	// vue 模版渲染
+	r.Get("/", w.embedWebServer.IndexHandler().ServeHTTP)
 	r.NotFound(w.embedWebServer.IndexHandler().ServeHTTP)
 
 	return r
@@ -146,38 +154,4 @@ func ReadyHandler(w http.ResponseWriter, r *http.Request) {
 // HealthzHandler 健康检查
 func HealthzHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("OK"))
-}
-
-// CORS 跨域
-func CORS(next http.Handler) http.Handler {
-	fn := func(w http.ResponseWriter, r *http.Request) {
-		// cors 处理
-		origin := r.Header.Get("Origin")
-		if origin != "" {
-			w.Header().Set("Access-Control-Allow-Origin", origin)
-		} else {
-			w.Header().Set("Access-Control-Allow-Origin", "*")
-		}
-
-		allowHeaders := []string{
-			"Origin",
-			"Content-Length",
-			"Content-Type",
-			"X-Requested-With",
-		}
-		w.Header().Set("Access-Control-Allow-Headers", strings.Join(allowHeaders, ","))
-
-		allowMethods := []string{"GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"}
-		w.Header().Set("Access-Control-Allow-Methods", strings.Join(allowMethods, ","))
-
-		w.Header().Set("Access-Control-Allow-Credentials", "true")
-
-		if r.Method == http.MethodOptions {
-			w.WriteHeader(http.StatusOK)
-			return
-		}
-
-		next.ServeHTTP(w, r)
-	}
-	return http.HandlerFunc(fn)
 }

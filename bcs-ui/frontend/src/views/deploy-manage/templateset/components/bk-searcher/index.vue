@@ -28,9 +28,11 @@
         </template>
         <li ref="searchInputParent">
           <input
-            type="text" class="input" ref="searchInput" v-model="curInputValue"
+            type="text" class="input !h-[32px] !pl-[10px]" ref="searchInput" v-model="curInputValue"
             :style="{ maxWidth: `${maxInputWidth}px`, minWidth: `${minInputWidth}px` }"
             :maxlength="inputSearchKey || showFilterValue ? Infinity : 0"
+            :placeholder="searchParams && searchParams.length
+              ? '' : placeholder"
             @keyup="inputKeyup($event)"
             @keypress="preventKeyboardEvt($event)"
             @keydown="preventKeyboardEvt($event)">
@@ -113,6 +115,10 @@ export default {
     mask: {
       type: Boolean,
       default: false,
+    },
+    placeholder: {
+      type: String,
+      default: '',
     },
   },
   data() {

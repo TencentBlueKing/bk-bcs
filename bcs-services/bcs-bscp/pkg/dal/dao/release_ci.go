@@ -70,7 +70,7 @@ func (dao *releasedCIDao) BulkCreateWithTx(kit *kit.Kit, tx *sharding.Tx, items 
 	}
 
 	var sqlSentence []string
-	sqlSentence = append(sqlSentence, "INSERT INTO ", string(table.ReleasedConfigItemTable), " (", table.ReleasedConfigItemColumns.ColumnExpr(),
+	sqlSentence = append(sqlSentence, "INSERT INTO ", table.ReleasedConfigItemTable.Name(), " (", table.ReleasedConfigItemColumns.ColumnExpr(),
 		")  VALUES(", table.ReleasedConfigItemColumns.ColonNameExpr(), ")")
 	sql := filter.SqlJoint(sqlSentence)
 
@@ -140,7 +140,7 @@ func (dao *releasedCIDao) List(kit *kit.Kit, opts *types.ListReleasedCIsOption) 
 	}
 
 	var sqlSentenceCount []string
-	sqlSentenceCount = append(sqlSentenceCount, "SELECT COUNT(*) FROM ", string(table.ReleasedConfigItemTable), whereExpr)
+	sqlSentenceCount = append(sqlSentenceCount, "SELECT COUNT(*) FROM ", table.ReleasedConfigItemTable.Name(), whereExpr)
 	countSql := filter.SqlJoint(sqlSentenceCount)
 	count, err := dao.orm.Do(dao.sd.ShardingOne(opts.BizID).DB()).Count(kit.Ctx, countSql, args...)
 	if err != nil {
@@ -154,7 +154,7 @@ func (dao *releasedCIDao) List(kit *kit.Kit, opts *types.ListReleasedCIsOption) 
 	}
 
 	var sqlSentence []string
-	sqlSentence = append(sqlSentence, "SELECT ", table.ReleasedConfigItemColumns.NamedExpr(), " FROM ", string(table.ReleasedConfigItemTable), whereExpr, pageExpr)
+	sqlSentence = append(sqlSentence, "SELECT ", table.ReleasedConfigItemColumns.NamedExpr(), " FROM ", table.ReleasedConfigItemTable.Name(), whereExpr, pageExpr)
 	sql := filter.SqlJoint(sqlSentence)
 	list := make([]*table.ReleasedConfigItem, 0)
 	err = dao.orm.Do(dao.sd.ShardingOne(opts.BizID).DB()).Select(kit.Ctx, &list, sql, args...)

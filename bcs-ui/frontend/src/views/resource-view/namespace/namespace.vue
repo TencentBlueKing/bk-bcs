@@ -46,6 +46,7 @@
         <bcs-table
           :data="curPageData"
           :pagination="pagination"
+          size="medium"
           @page-change="pageChange"
           @page-limit-change="pageSizeChange">
           <bcs-table-column :label="$t('名称')" prop="name" min-width="200" show-overflow-tooltip>
@@ -181,7 +182,8 @@
               <bk-popover
                 placement="bottom"
                 theme="light dropdown"
-                :arrow="false">
+                :arrow="false"
+                trigger="click">
                 <span class="bcs-icon-more-btn"><i class="bcs-icon bcs-icon-more"></i></span>
                 <template #content>
                   <ul class="bcs-dropdown-list">

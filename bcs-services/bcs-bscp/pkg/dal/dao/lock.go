@@ -69,7 +69,7 @@ func (dao *lockDao) IncreaseCount(kit *kit.Kit, lock *table.ResourceLock, opt *L
 
 	// update the lock and increase the count.
 	var sqlSentence []string
-	sqlSentence = append(sqlSentence, "UPDATE ", string(table.ResourceLockTable), " SET res_count = res_count + 1 WHERE biz_id = ",
+	sqlSentence = append(sqlSentence, "UPDATE ", table.ResourceLockTable.Name(), " SET res_count = res_count + 1 WHERE biz_id = ",
 		strconv.Itoa(int(lock.BizID)), " AND res_type = '", lock.ResType, "' AND res_key = '", lock.ResKey, "'")
 	sql := filter.SqlJoint(sqlSentence)
 
@@ -109,7 +109,7 @@ func (dao *lockDao) IncreaseCount(kit *kit.Kit, lock *table.ResourceLock, opt *L
 	lock.ID = id
 
 	var sqlSentenceIn []string
-	sqlSentenceIn = append(sqlSentenceIn, "INSERT INTO ", string(table.ResourceLockTable), " (", table.ResLockColumns.ColumnExpr(),
+	sqlSentenceIn = append(sqlSentenceIn, "INSERT INTO ", table.ResourceLockTable.Name(), " (", table.ResLockColumns.ColumnExpr(),
 		") VALUES (", table.ResLockColumns.ColonNameExpr(), ")")
 	sql = filter.SqlJoint(sqlSentenceIn)
 	if err := dao.orm.Txn(opt.Txn).Insert(kit.Ctx, sql, lock); err != nil {
@@ -128,7 +128,7 @@ func (dao *lockDao) IncreaseCount(kit *kit.Kit, lock *table.ResourceLock, opt *L
 
 func (dao *lockDao) getLockCount(kit *kit.Kit, lock *table.ResourceLock, opt *LockOption) (uint32, error) {
 	var sqlSentence []string
-	sqlSentence = append(sqlSentence, "SELECT res_count from ", string(table.ResourceLockTable), " WHERE biz_id = ", strconv.Itoa(int(lock.BizID)),
+	sqlSentence = append(sqlSentence, "SELECT res_count from ", table.ResourceLockTable.Name(), " WHERE biz_id = ", strconv.Itoa(int(lock.BizID)),
 		" AND res_type = '", lock.ResType, "' AND res_key = '", lock.ResKey, "'")
 	queryExpr := filter.SqlJoint(sqlSentence)
 
@@ -175,7 +175,7 @@ func (dao *lockDao) DecreaseCount(kit *kit.Kit, lock *table.ResourceLock, opt *L
 	// the current lock is related to more than one resource, decrease the lock count.
 	var sqlSentence []string
 	if count > 1 {
-		sqlSentence = append(sqlSentence, "UPDATE ", string(table.ResourceLockTable), " SET res_count = res_count - 1 WHERE biz_id = ", strconv.Itoa(int(lock.BizID)),
+		sqlSentence = append(sqlSentence, "UPDATE ", table.ResourceLockTable.Name(), " SET res_count = res_count - 1 WHERE biz_id = ", strconv.Itoa(int(lock.BizID)),
 			" AND res_type = '", lock.ResType, "' AND res_key = '", lock.ResKey, "'")
 		sql := filter.SqlJoint(sqlSentence)
 
@@ -189,7 +189,7 @@ func (dao *lockDao) DecreaseCount(kit *kit.Kit, lock *table.ResourceLock, opt *L
 	}
 
 	// the current lock is related to only one resource, delete the lock.
-	sqlSentence = append(sqlSentence, "DELETE FROM ", string(table.ResourceLockTable), " WHERE biz_id = ", strconv.Itoa(int(lock.BizID)),
+	sqlSentence = append(sqlSentence, "DELETE FROM ", table.ResourceLockTable.Name(), " WHERE biz_id = ", strconv.Itoa(int(lock.BizID)),
 		" AND res_type = '", lock.ResType, "' AND res_key = '", lock.ResKey, "'")
 	sql := filter.SqlJoint(sqlSentence)
 
@@ -222,7 +222,7 @@ func (dao *lockDao) AddUnique(kit *kit.Kit, lock *table.ResourceLock, opt *LockO
 	lock.ID = id
 
 	var sqlSentence []string
-	sqlSentence = append(sqlSentence, "INSERT INTO ", string(table.ResourceLockTable), " (", table.ResLockColumns.ColumnExpr(),
+	sqlSentence = append(sqlSentence, "INSERT INTO ", table.ResourceLockTable.Name(), " (", table.ResLockColumns.ColumnExpr(),
 		") VALUES (", table.ResLockColumns.ColonNameExpr(), ")")
 	sql := filter.SqlJoint(sqlSentence)
 	if err := dao.orm.Txn(opt.Txn).Insert(kit.Ctx, sql, lock); err != nil {
@@ -257,7 +257,7 @@ func (dao *lockDao) DeleteUnique(kit *kit.Kit, lock *table.ResourceLock, opt *Lo
 	}
 
 	var sqlSentence []string
-	sqlSentence = append(sqlSentence, "DELETE FROM ", string(table.ResourceLockTable), " WHERE biz_id = ", strconv.Itoa(int(lock.BizID)),
+	sqlSentence = append(sqlSentence, "DELETE FROM ", table.ResourceLockTable.Name(), " WHERE biz_id = ", strconv.Itoa(int(lock.BizID)),
 		" AND res_type = '", lock.ResType, "' AND res_key = '", lock.ResKey, "'")
 	sql := filter.SqlJoint(sqlSentence)
 

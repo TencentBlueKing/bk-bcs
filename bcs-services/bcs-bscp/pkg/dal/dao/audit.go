@@ -85,7 +85,7 @@ func (au *audit) One(kit *kit.Kit, audit *table.Audit, opt *AuditOption) error {
 	audit.ID = id
 
 	var sqlSentence []string
-	sqlSentence = append(sqlSentence, "INSERT INTO ", string(table.AuditTable), " (", table.AuditColumns.ColumnExpr(), ") VALUES (", table.AuditColumns.ColonNameExpr(), ")")
+	sqlSentence = append(sqlSentence, "INSERT INTO ", table.AuditTable.Name(), " (", table.AuditColumns.ColumnExpr(), ") VALUES (", table.AuditColumns.ColonNameExpr(), ")")
 	sql := filter.SqlJoint(sqlSentence)
 
 	if au.adSharding.ShardingUid() != opt.ResShardingUid {

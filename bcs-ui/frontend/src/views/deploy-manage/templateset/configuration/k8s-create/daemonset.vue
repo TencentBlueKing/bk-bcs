@@ -16,7 +16,7 @@
             <bk-alert type="info" class="mb20">
               <div slot="title">
                 {{$t('DaemonSet能够让所有（或一些特定）的Node节点运行同一个Pod。新加入集群的节点上会新增该Pod；节点被移除时，Pod也会被销毁')}}，
-                <a class="bk-text-button" :href="PROJECT_CONFIG.doc.k8sDaemonset" target="_blank">{{$t('详情查看文档')}}</a>
+                <a class="bk-text-button" :href="PROJECT_CONFIG.k8sDaemonset" target="_blank">{{$t('详情查看文档')}}</a>
               </div>
             </bk-alert>
             <template v-if="!daemonsets.length">

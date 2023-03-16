@@ -10,7 +10,7 @@
     <template #header-right>
       <a
         class="bk-text-button"
-        :href="PROJECT_CONFIG.doc.helm"
+        :href="PROJECT_CONFIG.helm"
         target="_blank">
         {{ $t('如何推送Helm Chart到项目仓库？') }}
       </a>
@@ -133,6 +133,7 @@
               theme="light dropdown"
               :arrow="false"
               class="ml-[5px]"
+              trigger="click"
               v-if="!curRepoItem.public">
               <span class="bcs-icon-more-btn"><i class="bcs-icon bcs-icon-more"></i></span>
               <template #content>

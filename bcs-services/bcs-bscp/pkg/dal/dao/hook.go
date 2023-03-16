@@ -73,7 +73,7 @@ func (dao *hookDao) Create(kit *kit.Kit, g *table.Hook) (uint32, error) {
 
 	g.ID = id
 	var sqlSentence []string
-	sqlSentence = append(sqlSentence, "INSERT INTO ", string(table.HookTable), " (", table.HookColumns.ColumnExpr(), ")  VALUES(", table.HookColumns.ColonNameExpr(), ")")
+	sqlSentence = append(sqlSentence, "INSERT INTO ", table.HookTable.Name(), " (", table.HookColumns.ColumnExpr(), ")  VALUES(", table.HookColumns.ColonNameExpr(), ")")
 
 	sql := filter.SqlJoint(sqlSentence)
 
@@ -126,7 +126,7 @@ func (dao *hookDao) Update(kit *kit.Kit, g *table.Hook) error {
 	ab := dao.auditDao.Decorator(kit, g.Attachment.BizID, enumor.Hook).PrepareUpdate(g)
 
 	var sqlSentence []string
-	sqlSentence = append(sqlSentence, "UPDATE ", string(table.HookTable), " SET ", expr, " WHERE id = ", strconv.Itoa(int(g.ID)),
+	sqlSentence = append(sqlSentence, "UPDATE ", table.HookTable.Name(), " SET ", expr, " WHERE id = ", strconv.Itoa(int(g.ID)),
 		" AND biz_id = ", strconv.Itoa(int(g.Attachment.BizID)))
 	sql := filter.SqlJoint(sqlSentence)
 
@@ -200,7 +200,7 @@ func (dao *hookDao) List(kit *kit.Kit, opts *types.ListHooksOption) (
 		return nil, err
 	}
 	var sqlSentenceCount []string
-	sqlSentenceCount = append(sqlSentenceCount, "SELECT COUNT(*) FROM ", string(table.HookTable), whereExpr)
+	sqlSentenceCount = append(sqlSentenceCount, "SELECT COUNT(*) FROM ", table.HookTable.Name(), whereExpr)
 	countSql := filter.SqlJoint(sqlSentenceCount)
 	count, err := dao.orm.Do(dao.sd.ShardingOne(opts.BizID).DB()).Count(kit.Ctx, countSql, args...)
 	if err != nil {
@@ -214,7 +214,7 @@ func (dao *hookDao) List(kit *kit.Kit, opts *types.ListHooksOption) (
 	}
 
 	var sqlSentence []string
-	sqlSentence = append(sqlSentence, "SELECT ", table.HookColumns.NamedExpr(), " FROM ", string(table.HookTable), whereExpr, pageExpr)
+	sqlSentence = append(sqlSentence, "SELECT ", table.HookColumns.NamedExpr(), " FROM ", table.HookTable.Name(), whereExpr, pageExpr)
 	sql := filter.SqlJoint(sqlSentence)
 
 	list := make([]*table.Hook, 0)
@@ -244,7 +244,7 @@ func (dao *hookDao) Delete(kit *kit.Kit, g *table.Hook) error {
 	ab := dao.auditDao.Decorator(kit, g.Attachment.BizID, enumor.Hook).PrepareDelete(g.ID)
 
 	var sqlSentence []string
-	sqlSentence = append(sqlSentence, "DELETE FROM ", string(table.HookTable), " WHERE id = ", strconv.Itoa(int(g.ID)),
+	sqlSentence = append(sqlSentence, "DELETE FROM ", table.HookTable.Name(), " WHERE id = ", strconv.Itoa(int(g.ID)),
 		" AND biz_id = ", strconv.Itoa(int(g.Attachment.BizID)))
 	expr := filter.SqlJoint(sqlSentence)
 

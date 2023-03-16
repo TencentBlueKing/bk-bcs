@@ -104,7 +104,7 @@ func (cd *argo) GetProject(ctx context.Context, name string) (*v1alpha1.AppProje
 	if err != nil {
 		// filter error that NotFound
 		if strings.Contains(err.Error(), "code = NotFound") {
-			return nil, errors.Wrapf(err, "argocd get project '%s' not found", name)
+			return nil, nil
 		}
 		return nil, errors.Wrapf(err, "argocd get project '%s' failed", name)
 	}

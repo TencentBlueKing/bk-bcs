@@ -1,4 +1,15 @@
 {
   "files.eol": "\n",
   "editor.tabSize": 2,
+  "i18n-ally.localesPaths": [
+    "src/i18n"
+  ],
+  "i18n-ally.sourceLanguage": "zh-CN",
+  "i18n-ally.namespace": true,
+  "i18n-ally.pathMatcher": "{locale}/{namespaces}.json",
+  "i18n-ally.translate.engines": [
+    "google-cn",
+    "google"
+  ],
+  "i18n-ally.keystyle": "nested"
 }

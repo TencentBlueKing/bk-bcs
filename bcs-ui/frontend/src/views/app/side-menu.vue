@@ -17,7 +17,7 @@
       :has-child="menu.children && !!menu.children.length"
       :disabled="disabledMenuIDs.includes(menu.id)"
       @click="handleChangeMenu(menu)">
-      <span>{{ menu.title }}</span>
+      <span :title="menu.title">{{ menu.title }}</span>
       <bcs-tag theme="danger" v-if="menu.tag">{{ menu.tag }}</bcs-tag>
       <template #child>
         <bcs-navigation-menu-item
@@ -27,7 +27,7 @@
           :icon="['bcs-icon', child.icon]"
           :disabled="disabledMenuIDs.includes(child.id)"
           @click="handleChangeMenu(child)">
-          <span>{{ child.title }}</span>
+          <span :title="child.title">{{ child.title }}</span>
           <bcs-tag theme="danger" v-if="child.tag">{{ child.tag }}</bcs-tag>
         </bcs-navigation-menu-item>
       </template>

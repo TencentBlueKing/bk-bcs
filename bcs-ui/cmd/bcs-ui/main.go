@@ -13,16 +13,6 @@
 
 package main
 
-import (
-	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/common/version"
-)
-
 func main() {
-	// metrics 配置
-	metrics := prometheus.NewRegistry()
-	metrics.MustRegister(version.NewCollector("bcs_ui"))
-	prometheus.DefaultRegisterer = metrics
-
-	Execute()
+	rootCmd.Execute()
 }

@@ -29,6 +29,18 @@ import { locale, lang } from 'bk-magic-vue';
 import cookie from 'cookie';
 import langMap from './lang';
 
+// const modulesFiles = require.context('.', true, /.json$/);
+// const modules = modulesFiles.keys().reduce((modules, modulePath) => {
+//   const langName = modulePath.match(/\/(\S*)\//)[1];
+//   const moduleName = modulePath.replace(/(.*\/)*([^.]+).*/ig, '$2');
+//   const value = modulesFiles(modulePath);
+//   modules[langName] = {
+//     ...(modules[langName] || {}),
+//     [moduleName]: value,
+//   };
+//   return modules;
+// }, {});
+
 Vue.use(VueI18n);
 
 const en = {};

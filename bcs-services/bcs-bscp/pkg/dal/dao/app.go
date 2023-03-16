@@ -105,7 +105,7 @@ func (ap *appDao) List(kit *kit.Kit, opts *types.ListAppsOption) (*types.ListApp
 	// 如果 app 有分库分表, 跨 spaces 查询将不可用
 	// do count operation only.
 	var sqlSentence []string
-	sqlSentence = append(sqlSentence, "SELECT COUNT(*) FROM ", string(table.AppTable), whereExpr)
+	sqlSentence = append(sqlSentence, "SELECT COUNT(*) FROM ", table.AppTable.Name(), whereExpr)
 	countSql := filter.SqlJoint(sqlSentence)
 	count, err := ap.orm.Do(ap.sd.ShardingOne(opts.BizID).DB()).Count(kit.Ctx, countSql, args...)
 	if err != nil {
@@ -119,7 +119,7 @@ func (ap *appDao) List(kit *kit.Kit, opts *types.ListAppsOption) (*types.ListApp
 	}
 
 	var sqlQuery []string
-	sqlQuery = append(sqlQuery, "SELECT ", table.AppColumns.NamedExpr(), " FROM ", string(table.AppTable), whereExpr, pageExpr)
+	sqlQuery = append(sqlQuery, "SELECT ", table.AppColumns.NamedExpr(), " FROM ", table.AppTable.Name(), whereExpr, pageExpr)
 	querySql := filter.SqlJoint(sqlQuery)
 
 	list := make([]*table.App, 0)
@@ -151,7 +151,7 @@ func (ap *appDao) Create(kit *kit.Kit, app *table.App) (uint32, error) {
 	app.ID = id
 
 	var sqlSentence []string
-	sqlSentence = append(sqlSentence, "INSERT INTO ", string(table.AppTable),
+	sqlSentence = append(sqlSentence, "INSERT INTO ", table.AppTable.Name(),
 		" (", table.AppColumns.ColumnExpr(), ") ", "VALUES(", table.AppColumns.ColonNameExpr(), ")")
 	sql := filter.SqlJoint(sqlSentence)
 	eDecorator := ap.event.Eventf(kit)
@@ -218,7 +218,7 @@ func (ap *appDao) Update(kit *kit.Kit, app *table.App) error {
 	ab := ap.auditDao.Decorator(kit, app.BizID, enumor.App).PrepareUpdate(app)
 
 	var sqlSentence []string
-	sqlSentence = append(sqlSentence, "UPDATE ", string(table.AppTable), " SET ", expr, " WHERE id = ",
+	sqlSentence = append(sqlSentence, "UPDATE ", table.AppTable.Name(), " SET ", expr, " WHERE id = ",
 		strconv.Itoa(int(app.ID)), " and biz_id = ", strconv.Itoa(int(app.BizID)))
 	sql := filter.SqlJoint(sqlSentence)
 
@@ -285,7 +285,7 @@ func (ap *appDao) Delete(kit *kit.Kit, app *table.App) error {
 	ab := ap.auditDao.Decorator(kit, app.BizID, enumor.App).PrepareDelete(app.ID)
 
 	var sqlSentence []string
-	sqlSentence = append(sqlSentence, "DELETE FROM ", string(table.AppTable), " WHERE id = ",
+	sqlSentence = append(sqlSentence, "DELETE FROM ", table.AppTable.Name(), " WHERE id = ",
 		strconv.Itoa(int(app.ID)), " AND biz_id = ", strconv.Itoa(int(app.BizID)))
 	sql := filter.SqlJoint(sqlSentence)
 
@@ -345,7 +345,7 @@ func (ap *appDao) Get(kit *kit.Kit, bizID uint32, appID uint32) (*table.App, err
 
 	var sqlSentence []string
 	sqlSentence = append(sqlSentence, "SELECT ", table.AppColumns.NamedExpr(), " FROM ",
-		string(table.AppTable), " WHERE id = ", strconv.Itoa(int(appID)), " AND biz_id = ", strconv.Itoa(int(bizID)))
+		table.AppTable.Name(), " WHERE id = ", strconv.Itoa(int(appID)), " AND biz_id = ", strconv.Itoa(int(bizID)))
 	sql := filter.SqlJoint(sqlSentence)
 
 	one := new(table.App)
@@ -360,7 +360,7 @@ func (ap *appDao) Get(kit *kit.Kit, bizID uint32, appID uint32) (*table.App, err
 // GetByID 通过 AppId 查询
 func (ap *appDao) GetByID(kit *kit.Kit, appID uint32) (*table.App, error) {
 	var sqlSentence []string
-	sqlSentence = append(sqlSentence, "SELECT ", table.AppColumns.NamedExpr(), " FROM ", string(table.AppTable),
+	sqlSentence = append(sqlSentence, "SELECT ", table.AppColumns.NamedExpr(), " FROM ", table.AppTable.Name(),
 		" WHERE id = ", strconv.Itoa(int(appID)))
 	expr := filter.SqlJoint(sqlSentence)
 	one := new(table.App)
@@ -375,7 +375,7 @@ func (ap *appDao) GetByID(kit *kit.Kit, appID uint32) (*table.App, error) {
 func getAppMode(kit *kit.Kit, orm orm.Interface, sd *sharding.Sharding, bizID, appID uint32) (table.AppMode, error) {
 
 	var sqlSentence []string
-	sqlSentence = append(sqlSentence, "SELECT ", table.AppColumns.NamedExpr(), " FROM ", string(table.AppTable),
+	sqlSentence = append(sqlSentence, "SELECT ", table.AppColumns.NamedExpr(), " FROM ", table.AppTable.Name(),
 		" WHERE id = ", strconv.Itoa(int(appID)), " AND biz_id = ", strconv.Itoa(int(bizID)))
 	sql := filter.SqlJoint(sqlSentence)
 	one := new(table.AppSpec)
@@ -406,7 +406,7 @@ func (ap *appDao) archiveApp(kit *kit.Kit, txn *sqlx.Tx, app *table.App) error {
 	}
 
 	var sqlSentence []string
-	sqlSentence = append(sqlSentence, "INSERT INTO ", string(table.ArchivedAppTable),
+	sqlSentence = append(sqlSentence, "INSERT INTO ", table.ArchivedAppTable.Name(),
 		" (", table.ArchivedAppColumns.ColumnExpr(), ") ", "VALUES(", table.ArchivedAppColumns.ColonNameExpr(), ")")
 	sql := filter.SqlJoint(sqlSentence)
 	err = ap.orm.Txn(txn).Insert(kit.Ctx, sql, archivedApp)
@@ -429,7 +429,7 @@ func (ap *appDao) ListAppMetaForCache(kt *kit.Kit, bizID uint32, appIDs []uint32
 	var sqlSentence []string
 	sqlSentence = append(sqlSentence, "SELECT id, config_type AS 'spec.config_type', mode AS 'spec.mode', reload_type AS ",
 		"'spec.reload.reload_type', reload_file_path AS 'spec.reload.file_reload_spec.reload_file_path' ",
-		"FROM ", string(table.AppTable), " WHERE id IN (", appIDList, ") AND biz_id = ", strconv.Itoa(int(bizID)))
+		"FROM ", table.AppTable.Name(), " WHERE id IN (", appIDList, ") AND biz_id = ", strconv.Itoa(int(bizID)))
 	sql := filter.SqlJoint(sqlSentence)
 	appList := make([]*table.App, 0)
 	if err := ap.orm.Do(ap.sd.MustSharding(bizID)).Select(kt.Ctx, &appList, sql); err != nil {

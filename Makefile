@@ -284,7 +284,7 @@ tools:
 ui:pre
 	mkdir -p ${PACKAGEPATH}/bcs-ui
 	cp -R ${BCS_CONF_UI_PATH} ${PACKAGEPATH}
-	cd ${BCS_UI_PATH} && ls -la && cd frontend && npm install && npm run build:ce && cd ../ && go mod tidy -compat=1.17 && CGO_ENABLED=0 go build -trimpath ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-ui/bcs-ui ./cmd/bcs-ui
+	cd ${BCS_UI_PATH} && ls -la && cd frontend && npm install && npm run build && cd ../ && go mod tidy -compat=1.17 && CGO_ENABLED=0 go build -trimpath ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-ui/bcs-ui ./cmd/bcs-ui
 
 user-manager:pre
 	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-user-manager

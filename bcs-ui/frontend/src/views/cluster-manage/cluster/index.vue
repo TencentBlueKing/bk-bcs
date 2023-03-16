@@ -219,7 +219,7 @@
             @click="goCreateCluster">
             <span style="margin-left: 0;">{{$t('创建容器集群')}}</span>
           </a>
-          <a class="bk-button bk-default bk-button-large" :href="PROJECT_CONFIG.doc.quickStart" target="_blank">
+          <a class="bk-button bk-default bk-button-large" :href="PROJECT_CONFIG.quickStart" target="_blank">
             <span style="margin-left: 0;">{{$t('快速入门指引')}}</span>
           </a>
           <apply-host :title="$t('申请Master服务器')" class="apply-host ml5" v-if="$INTERNAL" />
