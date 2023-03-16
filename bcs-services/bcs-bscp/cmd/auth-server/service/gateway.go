@@ -50,7 +50,7 @@ func (g *gateway) handler() http.Handler {
 	r.Use(middleware.Recoverer)
 	r.Use(middleware.Timeout(60 * time.Second))
 
-	r.HandleFunc("/healthz", g.Healthz)
+	r.Get("/healthz", g.Healthz)
 	r.Mount("/", handler.RegisterCommonToolHandler())
 
 	return r
