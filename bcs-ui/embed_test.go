@@ -8,12 +8,18 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
-package web
 
-const (
-	// SITE_URL 前端Vue配置, 修改影响用户路由
-	SITE_URL   = "/bcs"
-	STATIC_URL = "/web/static"
+package bcsui
+
+import (
+	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
+
+func TestReadConfigFile(t *testing.T) {
+	config, err := readConfigFile()
+	assert.NoError(t, err)
+	assert.Greater(t, len(config), 1)
+}

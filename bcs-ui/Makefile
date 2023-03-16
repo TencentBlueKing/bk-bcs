@@ -3,16 +3,15 @@ GO                      ?= go
 FIRST_GOPATH            := $(firstword $(subst :, ,$(shell $(GO) env GOPATH)))
 GOHOSTOS                ?= $(shell $(GO) env GOHOSTOS)
 GOHOSTARCH              ?= $(shell $(GO) env GOHOSTARCH)
-GOBUILD=CGO_ENABLED=0 go build -trimpath
+BUILDTIME                = ${shell TZ=Asia/Shanghai date +%Y-%m-%dT%H:%M:%S%z}
+GOBUILD                  = CGO_ENABLED=0 go build -trimpath
 
-# init the build information
 ifdef HASTAG
 	GITTAG=${HASTAG}
 else
-	GITTAG=$(shell git describe --always)
+	GITTAG=$(shell git describe --tags --always --dirty="-dirty")
 endif
 
-BUILDTIME=$(shell date +%Y-%m-%dT%T%z)
 GITHASH=$(shell git rev-parse HEAD)
 VERSION=${GITTAG}-$(shell date +%y.%m.%d)
 bcs_edition?=inner_edition
@@ -40,7 +39,7 @@ requirements.txt:
 
 .PHONY: build_frontend
 build_frontend:
-	cd frontend; npm install; npm run build:ce
+	cd frontend; npm install; npm run build
 
 .PHONY: build_ui
 build_ui:

@@ -17,13 +17,16 @@ package discovery
 import (
 	"context"
 	"strings"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
 	"github.com/Tencent/bk-bcs/bcs-common/common/types"
 	etcd "github.com/go-micro/plugins/v4/registry/etcd"
+	"github.com/urfave/cli/v2"
 	"go-micro.dev/v4"
 	"go-micro.dev/v4/registry"
 	"go-micro.dev/v4/server"
+	"go-micro.dev/v4/util/cmd"
 
 	"github.com/Tencent/bk-bcs/bcs-ui/pkg/config"
 )
@@ -55,7 +58,13 @@ func NewServiceDiscovery(ctx context.Context, name, version, bindaddr, advertise
 		svr.Init(server.Advertise(bindaddr))
 	}
 
-	service := micro.NewService(micro.Server(svr), micro.Metadata(metadata))
+	service := micro.NewService(
+		micro.Server(svr),
+		micro.Metadata(metadata),
+		micro.Cmd(NewDummyCmd()),
+		micro.RegisterTTL(time.Second*30),
+		micro.RegisterInterval(time.Second*15),
+	)
 
 	sd := &serviceDiscovery{srv: service, ctx: ctx}
 	if err := sd.init(); err != nil {
@@ -104,4 +113,27 @@ func (s *serviceDiscovery) initEtcdRegistry() (registry.Registry, error) {
 	}
 
 	return etcdRegistry, nil
+}
+
+// dummyCmd : 去掉 go-micro 命令行使用
+type dummyCmd struct{}
+
+// NewDummyCmd :
+func NewDummyCmd() *dummyCmd {
+	return &dummyCmd{}
+}
+
+// App :
+func (c *dummyCmd) App() *cli.App {
+	return &cli.App{}
+}
+
+// Init :
+func (c *dummyCmd) Init(opts ...cmd.Option) error {
+	return nil
+}
+
+// Options :
+func (c *dummyCmd) Options() cmd.Options {
+	return cmd.Options{}
 }

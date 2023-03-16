@@ -103,6 +103,14 @@ func (c *Configuration) ReadFrom(content []byte) error {
 	return nil
 }
 
+// DebugAPIHost 事件未分离, 在前端分流
+func (c *Configuration) BCSDebugAPIHost() string {
+	if c, ok := c.BCSEnvMap[DebugCLuster]; ok {
+		return c.Host
+	}
+	return c.BCS.Host
+}
+
 // ReadFromViper : read from viper
 func (c *Configuration) ReadFromViper(v *viper.Viper) error {
 	// 不支持inline, 需要使用 yaml 库
