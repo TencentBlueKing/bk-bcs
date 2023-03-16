@@ -68,7 +68,6 @@ import clusterSelector from '@/components/cluster-selector/index.vue';
 import menuConfig, { IMenuItem, ISpecialMenuItem } from '@/store/menu';
 import { BCS_CLUSTER } from '@/common/constant';
 import useGoHome from '@/common/use-gohome';
-import { useConfig } from '@/common/use-app';
 import useDefaultClusterId from '@/views/node/use-default-clusterId';
 
 export default defineComponent({
@@ -79,7 +78,6 @@ export default defineComponent({
   },
   setup(props, ctx) {
     const { $store, $i18n, $router } = ctx.root;
-    const { $INTERNAL } = useConfig();
     const featureCluster = ref(!localStorage.getItem('FEATURE_CLUSTER'));
     const curCluster = computed(() => {
       const cluster = $store.state.cluster.curCluster;
@@ -180,8 +178,6 @@ export default defineComponent({
       }
       return $store.state.curMenuId;
     });
-    const projectCode = computed(() => $store.state.curProjectCode);
-    const projectId = computed(() => $store.state.curProjectId);
     const curProject = computed(() => $store.state.curProject);
     // 菜单切换
     const { defaultClusterId } = useDefaultClusterId();
@@ -190,11 +186,7 @@ export default defineComponent({
       if (ctx.root.$route.name === item.routeName) return;
 
       if (item.id === 'MONITOR') {
-        if ($INTERNAL.value) {
-          window.open(`${window.DEVOPS_HOST}/console/monitor/${projectCode.value}/?project_id=${projectId.value}`);
-        } else {
-          window.open(`${window.BKMONITOR_HOST}/?bizId=${curProject.value.cc_app_id}#/k8s`);
-        }
+        window.open(`${window.BKMONITOR_HOST}/?space_uid=bkci__${curProject.value.projectCode}#/k8s`);
       } else if (['service', 'resourceIngress'].includes(item.id)) {
         const { href } = $router.resolve({
           name: item.routeName,
