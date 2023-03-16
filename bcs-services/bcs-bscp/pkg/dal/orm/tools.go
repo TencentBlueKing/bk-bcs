@@ -105,8 +105,8 @@ func RecursiveGetTaggedFieldValues(v interface{}) (map[string]interface{}, error
 			value := value.FieldByName(name).Interface()
 
 			// this is a special treatment for scenarios where the entire
-			// struct is treated as a field, such as strategy's scope.
-			if tag == "scope" {
+			// struct is treated as a field, such as strategy's scope,group's selector
+			if tag == "scope" || tag == "selector" {
 				kv[tag] = value
 				continue
 			}
