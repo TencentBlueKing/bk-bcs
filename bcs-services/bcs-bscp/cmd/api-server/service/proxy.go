@@ -95,7 +95,7 @@ func (p *proxy) handler() http.Handler {
 	r.Use(handler.CORS)
 	// r.Use(middleware.Timeout(60 * time.Second))
 
-	r.HandleFunc("/healthz", p.Healthz)
+	r.Get("/healthz", p.Healthz)
 	r.Mount("/", handler.RegisterCommonHandler())
 	// 用户信息
 	r.With(p.authorizer.UnifiedAuthentication).Get("/api/v1/auth/user/info", UserInfoHandler)
