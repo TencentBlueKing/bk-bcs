@@ -315,8 +315,10 @@ create table if not exists `releases`
     `id`         bigint(1) unsigned not null,
 
     # Spec is specifics of the resource defined with user
-    `name`       varchar(255)       not null,
-    `memo`       varchar(256) default '',
+    `name`        varchar(255)       not null,
+    `memo`        varchar(256)       default '',
+    `deprecated`  boolean            not null,
+    `publish_num` bigint(1) unsigned not null,
 
     # Attachment is attachment info of the resource
     `biz_id`     bigint(1) unsigned not null,
@@ -358,9 +360,11 @@ create table if not exists `released_config_items`
     `user_group`     varchar(64)        not null,
     `privilege`      varchar(64)        not null,
 
-    # CreatedRevision is reversion info of the resource being created.
+    # Revision is reversion info of the resource being created.
     `creator`        varchar(64)        not null,
+    `reviser`        varchar(64)        not null,
     `created_at`     datetime(6)        not null,
+    `updated_at`     datetime(6)        not null,
 
     primary key (`id`),
     unique key `idx_releaseID_commitID` (`release_id`, `commit_id`),
