@@ -22,20 +22,21 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/emicklei/go-restful/v3"
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
+
 	"bscp.io/cmd/feed-server/bll"
 	"bscp.io/pkg/cc"
 	"bscp.io/pkg/criteria/errf"
 	"bscp.io/pkg/iam/auth"
 	"bscp.io/pkg/logs"
-	"bscp.io/pkg/metrics"
 	"bscp.io/pkg/rest"
-	"bscp.io/pkg/runtime/ctl"
+	"bscp.io/pkg/runtime/handler"
 	"bscp.io/pkg/runtime/shutdown"
 	"bscp.io/pkg/serviced"
 	sfs "bscp.io/pkg/sf-share"
 	"bscp.io/pkg/tools"
-
-	"github.com/emicklei/go-restful/v3"
 )
 
 // Service do all the data service's work
@@ -90,18 +91,10 @@ func NewService(sd serviced.Discover, name string) (*Service, error) {
 
 // ListenAndServeRest listen and serve the restful server
 func (s *Service) ListenAndServeRest() error {
-
-	root := http.NewServeMux()
-	root.HandleFunc("/", s.apiSet().ServeHTTP)
-	root.HandleFunc("/healthz", s.Healthz)
-	root.HandleFunc("/debug/", http.DefaultServeMux.ServeHTTP)
-	root.HandleFunc("/metrics", metrics.Handler().ServeHTTP)
-	root.HandleFunc("/ctl", ctl.Handler().ServeHTTP)
-
 	network := cc.FeedServer().Network
 	server := &http.Server{
 		Addr:    net.JoinHostPort(network.BindIP, strconv.FormatUint(uint64(network.HttpPort), 10)),
-		Handler: root,
+		Handler: s.handler(),
 	}
 
 	if network.TLS.Enable() {
@@ -146,6 +139,22 @@ func (s *Service) ListenAndServeRest() error {
 	s.serve = server
 
 	return nil
+}
+
+func (s *Service) handler() http.Handler {
+	r := chi.NewRouter()
+	r.Use(handler.RequestID)
+	r.Use(middleware.RealIP)
+	r.Use(middleware.Logger)
+	r.Use(middleware.Recoverer)
+
+	// 公共方法
+	r.Get("/healthz", s.Healthz)
+	r.Mount("/", handler.RegisterCommonToolHandler())
+
+	r.Mount("/api/v1/feed", s.apiSet())
+
+	return r
 }
 
 func (s *Service) apiSet() *restful.Container {

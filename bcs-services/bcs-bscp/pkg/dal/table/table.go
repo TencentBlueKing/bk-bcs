@@ -187,6 +187,16 @@ type Tables interface {
 // Name is database table's name type
 type Name string
 
+// String raw string
+func (t Name) String() string {
+	return string(t)
+}
+
+// Name safe mysql table name
+func (t Name) Name() string {
+	return fmt.Sprintf("`%s`", t)
+}
+
 // Validate whether the table name is valid or not.
 func (n Name) Validate() error {
 	switch n {
