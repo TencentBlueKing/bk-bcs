@@ -151,7 +151,10 @@
             :data="curPodTablePageData"
             ref="podTableRef"
             row-key="metadata.uid"
-            :pagination="podTablePagination"
+            :pagination="{
+              ...podTablePagination,
+              limitList: [10]
+            }"
             @page-change="podTablePageChang"
             @page-limit-change="podTablePageSizeChange"
             @select="handleSelectPod"
@@ -295,7 +298,7 @@
 </template>
 <script lang="ts">
 /* eslint-disable camelcase */
-import { defineComponent, computed, ref, onMounted, onBeforeUnmount } from '@vue/composition-api';
+import { defineComponent, computed, ref, onMounted, onBeforeUnmount, watch } from '@vue/composition-api';
 import { bkOverflowTips } from 'bk-magic-vue';
 import StatusIcon from '@/components/status-icon';
 import Metric from '@/components/metric.vue';
@@ -431,6 +434,9 @@ export default defineComponent({
       curPageData: curPodTablePageData,
       pagination: podTablePagination,
     } = usePage(tableDataMatchSearch);
+    watch(searchValue, () => {
+      podTablePageChang(1);
+    });
     // 当前行是否可以勾选
     const handlePodSelectable = row => handleGetExtData(row.metadata.uid, 'status') !== 'Terminating';
     // 是否展示升级策略
@@ -441,7 +447,7 @@ export default defineComponent({
     const handleGetExtData = (uid, prop) => workloadPods.value?.manifestExt?.[uid]?.[prop];
     // 指标参数
     const params = computed<Record<string, any>|null>(() => {
-      const list = pods.value.map(item => item.metadata.name);
+      const list = curPodTablePageData.value.map(item => item.metadata.name);
       return list.length
         ? { pod_name_list: list, $namespaceId: props.namespace }
         : null;
