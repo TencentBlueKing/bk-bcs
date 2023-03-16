@@ -134,9 +134,6 @@ func (pd *pubDao) Publish(kit *kit.Kit, opt *types.PublishOption) (uint32, error
 			")  VALUES(", table.StrategyColumns.ColonNameExpr(), ")")
 		stgExpr := filter.SqlJoint(sqlSentence)
 
-		if err := stg.Spec.ValidateCreate(); err != nil {
-			return err
-		}
 		if err = pd.orm.Txn(txn).Insert(kit.Ctx, stgExpr, stg); err != nil {
 			return err
 		}
