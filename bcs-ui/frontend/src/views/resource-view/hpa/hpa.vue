@@ -47,7 +47,7 @@
             <span>{{ handleGetExtData(row.metadata.uid, 'replicas') }}</span>
           </template>
         </bk-table-column>
-        <bk-table-column label="Age" width="100" :resizable="false" :show-overflow-tooltip="false">
+        <bk-table-column label="Age" width="100" sortable="custom" prop="createTime" :show-overflow-tooltip="false">
           <template #default="{ row }">
             <span v-bk-tooltips="{ content: handleGetExtData(row.metadata.uid, 'createTime') }">
               {{ handleGetExtData(row.metadata.uid, 'age') }}</span>
