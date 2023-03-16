@@ -1,6 +1,11 @@
 <template>
-  <PopoverSelector trigger="manual" placement="bottom-start" offset="0, 5" ref="popoverRef">
-    <div @mouseenter="handleMouseEnter">
+  <PopoverSelector
+    trigger="manual"
+    placement="bottom-start"
+    offset="0, 5"
+    :on-hide="handleHidePopover"
+    ref="popoverRef">
+    <div @mouseenter="handleShowPopover" @click="handleShowPopover">
       <slot></slot>
     </div>
     <template #content>
@@ -35,14 +40,18 @@ export default defineComponent({
       ctx.emit('click', item);
       cascadeRef.value?.hide();
     };
-    const handleMouseEnter = () => {
+    const handleShowPopover = () => {
       popoverRef.value?.show();
+    };
+    const handleHidePopover = () => {
+      cascadeRef.value?.hide();
     };
     return {
       popoverRef,
       cascadeRef,
       handleClickItem,
-      handleMouseEnter,
+      handleShowPopover,
+      handleHidePopover,
     };
   },
 });
