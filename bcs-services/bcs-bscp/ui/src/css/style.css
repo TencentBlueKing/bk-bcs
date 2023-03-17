@@ -1,3 +1,5 @@
+@import './font.css';
+
 :root {
   font-family: -apple-system, BlinkMacSystemFont, PingFang SC, Microsoft YaHei, Helvetica Neue, Arial, sans-serif;
   font-size: 14px;
