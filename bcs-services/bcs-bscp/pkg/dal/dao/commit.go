@@ -69,7 +69,7 @@ func (dao *commitDao) Create(kit *kit.Kit, commit *table.Commit) (uint32, error)
 
 	commit.ID = id
 	var sqlSentence []string
-	sqlSentence = append(sqlSentence, "INSERT INTO ", string(table.CommitsTable), " (", table.CommitsColumns.ColumnExpr(), ")  VALUES(", table.CommitsColumns.ColonNameExpr(), ")")
+	sqlSentence = append(sqlSentence, "INSERT INTO ", table.CommitsTable.Name(), " (", table.CommitsColumns.ColumnExpr(), ")  VALUES(", table.CommitsColumns.ColonNameExpr(), ")")
 
 	sql := filter.SqlJoint(sqlSentence)
 
@@ -136,7 +136,7 @@ func (dao *commitDao) List(kit *kit.Kit, opts *types.ListCommitsOption) (
 	var sqlSentence []string
 	if opts.Page.Count {
 		// this is a count request, then do count operation only.
-		sqlSentence = append(sqlSentence, "SELECT COUNT(*) FROM ", string(table.CommitsTable), whereExpr)
+		sqlSentence = append(sqlSentence, "SELECT COUNT(*) FROM ", table.CommitsTable.Name(), whereExpr)
 		sql = filter.SqlJoint(sqlSentence)
 		var count uint32
 		count, err = dao.orm.Do(dao.sd.ShardingOne(opts.BizID).DB()).Count(kit.Ctx, sql, args...)
@@ -153,7 +153,7 @@ func (dao *commitDao) List(kit *kit.Kit, opts *types.ListCommitsOption) (
 		return nil, err
 	}
 
-	sqlSentence = append(sqlSentence, "SELECT ", table.CommitsColumns.NamedExpr(), " FROM ", string(table.CommitsTable), whereExpr, pageExpr)
+	sqlSentence = append(sqlSentence, "SELECT ", table.CommitsColumns.NamedExpr(), " FROM ", table.CommitsTable.Name(), whereExpr, pageExpr)
 	sql = filter.SqlJoint(sqlSentence)
 
 	list := make([]*table.Commit, 0)

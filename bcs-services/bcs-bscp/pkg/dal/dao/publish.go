@@ -85,7 +85,7 @@ func (pd *pubDao) Publish(kit *kit.Kit, opt *types.PublishOption) (uint32, error
 		if !opt.All {
 			// list groups if gray release
 			var sqlSentence []string
-			sqlSentence = append(sqlSentence, "SELECT ", table.GroupColumns.NamedExpr(), " FROM ", string(table.GroupTable),
+			sqlSentence = append(sqlSentence, "SELECT ", table.GroupColumns.NamedExpr(), " FROM ", table.GroupTable.Name(),
 				" WHERE id IN (", tools.JoinUint32(opt.Groups, ","), ")")
 			lgExpr := filter.SqlJoint(sqlSentence)
 			if err := pd.orm.Do(pd.sd.MustSharding(opt.BizID)).Select(kit.Ctx, &groups, lgExpr); err != nil {
@@ -130,13 +130,10 @@ func (pd *pubDao) Publish(kit *kit.Kit, opt *types.PublishOption) (uint32, error
 			},
 		}
 		var sqlSentence []string
-		sqlSentence = append(sqlSentence, "INSERT INTO ", string(table.StrategyTable), " (", table.StrategyColumns.ColumnExpr(),
+		sqlSentence = append(sqlSentence, "INSERT INTO ", table.StrategyTable.Name(), " (", table.StrategyColumns.ColumnExpr(),
 			")  VALUES(", table.StrategyColumns.ColonNameExpr(), ")")
 		stgExpr := filter.SqlJoint(sqlSentence)
 
-		if err := stg.Spec.ValidateCreate(); err != nil {
-			return err
-		}
 		if err = pd.orm.Txn(txn).Insert(kit.Ctx, stgExpr, stg); err != nil {
 			return err
 		}
@@ -236,7 +233,7 @@ func (pd *pubDao) upsertToCurrentPublishedStrategy(kt *kit.Kit, txn *sqlx.Tx, s 
 	}
 
 	var sqlSentence []string
-	sqlSentence = append(sqlSentence, "UPDATE ", string(table.CurrentPublishedStrategyTable), " SET ", expr, " WHERE strategy_id = ", strconv.Itoa(int(cps.StrategyID)))
+	sqlSentence = append(sqlSentence, "UPDATE ", table.CurrentPublishedStrategyTable.Name(), " SET ", expr, " WHERE strategy_id = ", strconv.Itoa(int(cps.StrategyID)))
 	sql := filter.SqlJoint(sqlSentence)
 	result, err := txn.NamedExecContext(kt.Ctx, sql, toUpdate)
 	if err != nil {
@@ -257,7 +254,7 @@ func (pd *pubDao) upsertToCurrentPublishedStrategy(kt *kit.Kit, txn *sqlx.Tx, s 
 	}
 
 	var sqlSentenceIn []string
-	sqlSentenceIn = append(sqlSentenceIn, "INSERT INTO ", string(table.CurrentPublishedStrategyTable), " (", table.CurrentPublishedStrategyColumns.ColumnExpr(),
+	sqlSentenceIn = append(sqlSentenceIn, "INSERT INTO ", table.CurrentPublishedStrategyTable.Name(), " (", table.CurrentPublishedStrategyColumns.ColumnExpr(),
 		") VALUES(", table.CurrentPublishedStrategyColumns.ColonNameExpr(), ")")
 	sql = filter.SqlJoint(sqlSentenceIn)
 
@@ -292,7 +289,7 @@ func (pd *pubDao) recordPublishedStrategyHistory(kit *kit.Kit, txn *sqlx.Tx, pub
 	published.State.PubState = ""
 
 	var sqlSentence []string
-	sqlSentence = append(sqlSentence, "INSERT INTO ", string(table.PublishedStrategyHistoryTable), " (", table.PubStrategyHistoryColumns.ColumnExpr(),
+	sqlSentence = append(sqlSentence, "INSERT INTO ", table.PublishedStrategyHistoryTable.Name(), " (", table.PubStrategyHistoryColumns.ColumnExpr(),
 		")  VALUES(", table.PubStrategyHistoryColumns.ColonNameExpr(), ")")
 	sql := filter.SqlJoint(sqlSentence)
 
@@ -327,7 +324,7 @@ func (pd *pubDao) updateStrategyPublishState(kit *kit.Kit, txn *sqlx.Tx, bizID u
 		return errf.New(errf.InvalidParameter, "invalid strategy publish state: "+string(state))
 	}
 	var sqlSentence []string
-	sqlSentence = append(sqlSentence, "UPDATE ", string(table.StrategyTable), " SET pub_state = '", string(state), "', reviser = '",
+	sqlSentence = append(sqlSentence, "UPDATE ", table.StrategyTable.Name(), " SET pub_state = '", string(state), "', reviser = '",
 		kit.User, "', updated_at = '", time.Now().Format(constant.TimeStdFormat), "' ", "WHERE id = ", strconv.Itoa(int(strategyID)),
 		" AND biz_id = ", strconv.Itoa(int(bizID)), " AND pub_state != '", string(state), "'")
 	expr := filter.SqlJoint(sqlSentence)
@@ -431,7 +428,7 @@ func (pd *pubDao) ListPSHistory(kit *kit.Kit, opts *types.ListPSHistoriesOption)
 	var sqlSentence []string
 	if opts.Page.Count {
 		// this is a count request, then do count operation only.
-		sqlSentence = append(sqlSentence, "SELECT COUNT(*) FROM ", string(table.PublishedStrategyHistoryTable), whereExpr)
+		sqlSentence = append(sqlSentence, "SELECT COUNT(*) FROM ", table.PublishedStrategyHistoryTable.Name(), whereExpr)
 		sql = filter.SqlJoint(sqlSentence)
 		var count uint32
 		count, err = pd.orm.Do(pd.sd.ShardingOne(opts.BizID).DB()).Count(kit.Ctx, sql, args...)
@@ -448,7 +445,7 @@ func (pd *pubDao) ListPSHistory(kit *kit.Kit, opts *types.ListPSHistoriesOption)
 		return nil, err
 	}
 
-	sqlSentence = append(sqlSentence, "SELECT ", table.PubStrategyHistoryColumns.NamedExpr(), " FROM ", string(table.PublishedStrategyHistoryTable),
+	sqlSentence = append(sqlSentence, "SELECT ", table.PubStrategyHistoryColumns.NamedExpr(), " FROM ", table.PublishedStrategyHistoryTable.Name(),
 		whereExpr, pageExpr)
 	sql = filter.SqlJoint(sqlSentence)
 
@@ -476,7 +473,7 @@ func (pd *pubDao) GetAppCPStrategies(kt *kit.Kit, opts *types.GetAppCPSOption) (
 	}
 
 	var sqlSentence []string
-	sqlSentence = append(sqlSentence, "SELECT ", types.PublishedStrategyCacheColumn, " FROM ", string(table.CurrentPublishedStrategyTable),
+	sqlSentence = append(sqlSentence, "SELECT ", types.PublishedStrategyCacheColumn, " FROM ", table.CurrentPublishedStrategyTable.Name(),
 		" WHERE biz_id = ", strconv.Itoa(int(opts.BizID)), " AND app_id = ", strconv.Itoa(int(opts.AppID)), pageExpr)
 	sql := filter.SqlJoint(sqlSentence)
 
@@ -498,11 +495,11 @@ func (pd *pubDao) GetAppCpsID(kt *kit.Kit, opts *types.GetAppCpsIDOption) ([]uin
 	var sqlSentence []string
 	if len(opts.Namespace) != 0 {
 		// query namespace and default cps.
-		sqlSentence = append(sqlSentence, "SELECT id FROM ", string(table.CurrentPublishedStrategyTable), " WHERE app_id = ", strconv.Itoa(int(opts.AppID)), " AND (namespace = '", opts.Namespace, "' OR as_default = true)")
+		sqlSentence = append(sqlSentence, "SELECT id FROM ", table.CurrentPublishedStrategyTable.Name(), " WHERE app_id = ", strconv.Itoa(int(opts.AppID)), " AND (namespace = '", opts.Namespace, "' OR as_default = true)")
 		sql = filter.SqlJoint(sqlSentence)
 	} else {
 		// query app all cps.
-		sqlSentence = append(sqlSentence, "SELECT id FROM ", string(table.CurrentPublishedStrategyTable), " WHERE biz_id = ", strconv.Itoa(int(opts.BizID)), " AND app_id = ", strconv.Itoa(int(opts.AppID)))
+		sqlSentence = append(sqlSentence, "SELECT id FROM ", table.CurrentPublishedStrategyTable.Name(), " WHERE biz_id = ", strconv.Itoa(int(opts.BizID)), " AND app_id = ", strconv.Itoa(int(opts.AppID)))
 		sql = filter.SqlJoint(sqlSentence)
 	}
 

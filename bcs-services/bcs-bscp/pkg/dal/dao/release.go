@@ -65,7 +65,7 @@ func (dao *releaseDao) CreateWithTx(kit *kit.Kit, tx *sharding.Tx, release *tabl
 
 	release.ID = id
 	var sqlSentence []string
-	sqlSentence = append(sqlSentence, "INSERT INTO ", string(table.ReleaseTable), " (", table.ReleaseColumns.ColumnExpr(),
+	sqlSentence = append(sqlSentence, "INSERT INTO ", table.ReleaseTable.Name(), " (", table.ReleaseColumns.ColumnExpr(),
 		")  VALUES(", table.ReleaseColumns.ColonNameExpr(), ")")
 	sql := filter.SqlJoint(sqlSentence)
 
@@ -118,7 +118,7 @@ func (dao *releaseDao) List(kit *kit.Kit, opts *types.ListReleasesOption) (
 	}
 
 	var sqlSentenceCount []string
-	sqlSentenceCount = append(sqlSentenceCount, "SELECT COUNT(*) FROM ", string(table.ReleaseTable), whereExpr)
+	sqlSentenceCount = append(sqlSentenceCount, "SELECT COUNT(*) FROM ", table.ReleaseTable.Name(), whereExpr)
 	countSql := filter.SqlJoint(sqlSentenceCount)
 	count, err := dao.orm.Do(dao.sd.ShardingOne(opts.BizID).DB()).Count(kit.Ctx, countSql, args...)
 	if err != nil {
@@ -133,7 +133,7 @@ func (dao *releaseDao) List(kit *kit.Kit, opts *types.ListReleasesOption) (
 
 	var sqlSentence []string
 	sqlSentence = append(sqlSentence, "SELECT ", table.ReleaseColumns.NamedExpr(),
-		" FROM ", string(table.ReleaseTable), whereExpr, pageExpr)
+		" FROM ", table.ReleaseTable.Name(), whereExpr, pageExpr)
 	sql := filter.SqlJoint(sqlSentence)
 
 	list := make([]*table.Release, 0)
