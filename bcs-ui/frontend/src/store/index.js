@@ -87,6 +87,17 @@ const store = new Vuex.Store({
     VuexStorage({
       key: '__bcs_vuex_stroage__',
       paths: ['curProject.projectID', 'curProject.projectCode', 'curCluster.clusterID', 'openSideMenu', 'curNamespace'],
+      mutationEffect: [
+        {
+          type: 'cluster/forceUpdateClusterList',
+          effect: (state, $store) => {
+            const isExit = state.cluster.clusterList.some(item => item.clusterID === state.curCluster?.clusterID);
+            if (state.curCluster?.clusterID && !isExit) {
+              $store.commit('updateCurCluster');
+            }
+          },
+        },
+      ],
     }),
   ],
   // 公共 store

@@ -3,10 +3,7 @@ import Vue from 'vue';
 
 declare module 'vue/types/vue' {
   interface Vue {
-    PROJECT_CONFIG: {
-      doc: any;
-      str: any;
-    };
+    PROJECT_CONFIG: Record<string, string>;
     $INTERNAL: boolean;
     $bkInfo: any;
     $bkMessage: any;

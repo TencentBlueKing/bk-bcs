@@ -27,7 +27,7 @@
         <span class="bcs-ellipsis" v-if="data.quota">
           {{data.cpuUseRate.toFixed(2) * 100 }}%
           （{{`${unitConvert(data.used ? data.used.cpuLimits : '0', '', 'cpu')}${$t('核')}`}}
-          / {{`${data.quota.cpuLimits}${$t('核')}`}}）
+          / {{`${unitConvert(data.quota ? data.quota.cpuLimits : '0', '', 'cpu')}${$t('核')}`}}）
         </span>
         <span class="bcs-ellipsis" v-else>{{ $t('未开启命名空间配额') }}</span>
       </div>
@@ -35,7 +35,8 @@
         <label>{{ $t('内存使用率') }}</label>
         <span class="bcs-ellipsis" v-if="data.quota">
           {{data.memoryUseRate.toFixed(2) * 100}}%
-          （{{`${unitConvert(data.used ? data.used.memoryLimits : '0', 'Gi', 'mem')}Gi`}} / {{data.quota.memoryLimits}}）
+          （{{`${unitConvert(data.used ? data.used.memoryLimits : '0', 'Gi', 'mem')}Gi`}}
+          / {{`${unitConvert(data.quota ? data.quota.memoryLimits : '0', 'Gi', 'mem')}Gi`}}）
         </span>
         <span class="bcs-ellipsis" v-else>{{ $t('未开启命名空间配额') }}</span>
       </div>
@@ -83,7 +84,7 @@ export default defineComponent({
   setup() {
     const unitMap = {
       cpu: {
-        list: ['k', 'M', 'G', 'T', 'P', 'E'],
+        list: ['m', '', 'k', 'M', 'G', 'T', 'P', 'E'],
         digit: 3,
         base: 10,
       },
@@ -106,9 +107,9 @@ export default defineComponent({
       const toUnitIndex = list.indexOf(toUnit) || -1;
       const factorial = index - toUnitIndex;
       if (factorial >= 0) {
-        return num * (base ** (digit * factorial));
+        return (num * (base ** (digit * factorial))).toFixed(2);
       }
-      return num / (base ** (Math.abs(digit) * Math.abs(factorial)));
+      return (num / (base ** (Math.abs(digit) * Math.abs(factorial)))).toFixed(2);
     };
     return {
       unitConvert,

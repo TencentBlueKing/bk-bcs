@@ -42,11 +42,13 @@ import bkCombox from '@/components/bk-input/combox';
 import k8sIngress from '@/views/deploy-manage/templateset/ingress/k8s-ingress.vue';
 import BcsEmptyTableStatus from '@/components/empty-table-status.vue';
 import { chainable } from '@/common/util';
+import BcsErrorPlugin from '@/views/app/bcs-error';
 
 Vue.config.devtools = process.env.NODE_ENV === 'development';
 Vue.prototype.$chainable = chainable;
 
 Vue.use(VueCompositionAPI);
+Vue.use(BcsErrorPlugin);
 Vue.use(Authority);
 Vue.use(focus);
 Vue.use(bkmagic2);
