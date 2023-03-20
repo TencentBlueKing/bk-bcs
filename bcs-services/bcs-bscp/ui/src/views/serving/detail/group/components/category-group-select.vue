@@ -1,13 +1,16 @@
 <script setup lang="ts">
-  import { ref, onMounted, watch } from 'vue'
-  import { ECategoryType, IGroupItem, IAllCategoryGroupItem } from '../../../../../../types/group';
+  import { ref, withDefaults, onMounted, watch } from 'vue'
+  import { ECategoryType, IAllCategoryGroupItem } from '../../../../../../types/group';
   import { getAllGroupList } from '../../../../../api/group';
 
-  const props = defineProps<{
+  const props = withDefaults(defineProps<{
+    size: string,
     appId: number,
     multiple: boolean,
     value: string|number|number[]
-  }>()
+  }>(), {
+    size: 'default'
+  })
   const emits = defineEmits(['change'])
 
   const groupList = ref<IAllCategoryGroupItem[]>([])
@@ -38,7 +41,7 @@
 
 </script>
 <template>
-  <bk-select :value="groups" :loading="groupListLoading" multiple-mode="tag" :multiple="props.multiple" @change="emits('change', $event)">
+  <bk-select :value="groups" :size="props.size" :loading="groupListLoading" multiple-mode="tag" :multiple="props.multiple" @change="emits('change', $event)">
     <bk-group v-for="category in groupList" collapsible :key="category.group_category_id" :label="category.group_category_name">
       <bk-option v-for="group in category.groups" :key="group.id" :value="group.id" :label="group.spec.name"></bk-option>
     </bk-group>

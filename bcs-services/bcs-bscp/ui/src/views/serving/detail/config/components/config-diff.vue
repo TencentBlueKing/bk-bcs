@@ -24,7 +24,7 @@
         <aside class="config-list-side">
             <div class="title-area">
                 <span class="title">配置项</span>
-                <span>共 <span class="count">xx</span> 文件存在差异</span>
+                <span>共 <span class="count">xx</span> 项配置有差异</span>
             </div>
             <ul class="configs-wrapper">
                 <li

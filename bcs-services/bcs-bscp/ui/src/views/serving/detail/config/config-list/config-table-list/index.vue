@@ -10,6 +10,7 @@
   import CreateConfig from './create-config.vue'
   import PublishVersion from './publish-version/index.vue'
   import ReleaseVersion from './release-version/index.vue'
+  import ModifyGroup from './modify-group.vue'
   import VersionDiffDialog from '../../components/version-diff-dialog.vue';
 
   const servingStore = useServingStore()
@@ -134,13 +135,13 @@
       <section class="actions-wrapper">
         <ReleaseVersion
           v-if="versionData.id === 0"
-          style="margin-right: 8px"
           :bk-biz-id="props.bkBizId"
           :app-id="props.appId"
           :app-name="appData.spec.name"
           :config-list="configList"
           @confirm="handleUpdateStatus" />
         <PublishVersion
+          style="margin-left: 8px"
           :bk-biz-id="props.bkBizId"
           :app-id="props.appId"
           :release-id="versionData.id"
@@ -148,8 +149,14 @@
           :version-name="versionData.spec.name"
           :config-list="configList"
           @confirm="handleUpdateStatus" />
-        </section>
+        <ModifyGroup
+          style="margin-left: 8px"
+          :bk-biz-id="props.bkBizId"
+          :app-id="props.appId"
+          :release-id="versionData.id"
+          @confirm="handleUpdateStatus" />
       </section>
+    </section>
     <CreateConfig v-if="versionData.id === 0" :bk-biz-id="props.bkBizId" :app-id="props.appId" @confirm="refreshConfigList" />
     <section class="config-list-table">
       <bk-loading :loading="loading">
