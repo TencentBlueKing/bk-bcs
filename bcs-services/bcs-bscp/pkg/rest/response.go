@@ -139,6 +139,12 @@ func UnauthorizedErr(err error) render.Renderer {
 	return &ErrorResponse{Error: payload, HTTPStatusCode: http.StatusUnauthorized}
 }
 
+// PermissionDenied 通用错误请求
+func PermissionDenied(err error) render.Renderer {
+	payload := &ErrorPayload{Code: "PERMISSION_DENIED", Message: err.Error()}
+	return &ErrorResponse{Error: payload, HTTPStatusCode: http.StatusForbidden}
+}
+
 // BadRequest rest 通用错误请求
 func BadRequest(err error) render.Renderer {
 	payload := &ErrorPayload{Code: "INVALID_REQUEST", Message: err.Error()}

@@ -22,18 +22,22 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/emicklei/go-restful/v3"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 
 	"bscp.io/cmd/feed-server/bll"
 	"bscp.io/pkg/cc"
+	"bscp.io/pkg/components"
+	"bscp.io/pkg/criteria/constant"
 	"bscp.io/pkg/criteria/errf"
 	"bscp.io/pkg/iam/auth"
+	"bscp.io/pkg/kit"
 	"bscp.io/pkg/logs"
 	"bscp.io/pkg/rest"
+	rhandler "bscp.io/pkg/rest/handler"
 	"bscp.io/pkg/runtime/handler"
 	"bscp.io/pkg/runtime/shutdown"
+	"bscp.io/pkg/runtime/webannotation"
 	"bscp.io/pkg/serviced"
 	sfs "bscp.io/pkg/sf-share"
 	"bscp.io/pkg/tools"
@@ -152,23 +156,37 @@ func (s *Service) handler() http.Handler {
 	r.Get("/healthz", s.Healthz)
 	r.Mount("/", handler.RegisterCommonToolHandler())
 
-	r.Mount("/api/v1/feed", s.apiSet())
+	// feedserver方法
+	r.Route("/api/v1/feed", func(r chi.Router) {
+		r.Use(s.Authentication)
+		r.Use(webannotation.BuildAnnotation(s.authorizer))
+		r.Method("POST", "/api/v1/feed/list/app/release/type/file/latest", rhandler.RestHandlerFunc(s.ListFileAppLatestReleaseMetaRest))
+		r.Method("POST", "/api/v1/feed/auth/repository/file_pull", rhandler.RestHandlerFunc(s.AuthRepoRest))
+	})
 
 	return r
 }
 
-func (s *Service) apiSet() *restful.Container {
+// Authentication TODO 需要对齐bkrepo/feed回调鉴权方式等
+func (s *Service) Authentication(next http.Handler) http.Handler {
+	fn := func(w http.ResponseWriter, r *http.Request) {
+		k := &kit.Kit{
+			User:        "",
+			Rid:         components.RequestIDValue(r.Context()),
+			AppId:       "",
+			AppCode:     "dummyApp", // 测试 App
+			SpaceID:     "",
+			SpaceTypeID: "",
+		}
+		ctx := kit.WithKit(r.Context(), k)
 
-	handler := rest.NewHandler()
-	handler.Add("pbfs.ListFileAppLatestReleaseMeta", "POST", "/api/v1/feed/list/app/release/type/file/latest",
-		s.ListFileAppLatestReleaseMetaRest)
+		r.Header.Set(constant.AppCodeKey, k.AppCode)
+		r.Header.Set(constant.RidKey, k.Rid)
+		r.Header.Set(constant.UserKey, k.User)
 
-	handler.Add("pbfs.AuthRepo", "POST", "/api/v1/feed/auth/repository/file_pull", s.AuthRepoRest)
-
-	c := restful.NewContainer()
-	handler.Load(c)
-
-	return c
+		next.ServeHTTP(w, r.WithContext(ctx))
+	}
+	return http.HandlerFunc(fn)
 }
 
 // Healthz check whether the service is healthy.

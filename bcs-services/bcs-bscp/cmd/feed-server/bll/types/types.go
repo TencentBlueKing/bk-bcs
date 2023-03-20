@@ -14,6 +14,8 @@ limitations under the License.
 package types
 
 import (
+	"net/http"
+
 	"bscp.io/pkg/criteria/errf"
 	"bscp.io/pkg/criteria/validator"
 	pbci "bscp.io/pkg/protocol/core/config-item"
@@ -38,8 +40,13 @@ type ListFileAppLatestReleaseMetaReq struct {
 	Labels    map[string]string `json:"labels,omitempty"`
 }
 
+// Bind
+func (op *ListFileAppLatestReleaseMetaReq) Bind(r *http.Request) error {
+	return op.Validate()
+}
+
 // Validate options is valid or not.
-func (op ListFileAppLatestReleaseMetaReq) Validate() error {
+func (op *ListFileAppLatestReleaseMetaReq) Validate() error {
 	if op.BizId <= 0 {
 		return errf.New(errf.InvalidParameter, "invalid biz id, should be > 0")
 	}
