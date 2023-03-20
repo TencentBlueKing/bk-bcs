@@ -1,5 +1,5 @@
 <template>
-  <ul class="bcs-border">
+  <ul>
     <li
       :class="[
         'bcs-dropdown-item',
@@ -71,11 +71,13 @@ export default defineComponent({
       popoverRef.value[index]?.hide();
     };
     const hide = () => {
-      props.list.forEach((_, index) => {
-        popoverRef.value[index]?.hide();
-      });
-      childrenItemRef.value?.[0]?.hide();
-      activeID.value = '';
+      setTimeout(() => {
+        props.list.forEach((_, index) => {
+          popoverRef.value[index]?.hide();
+        });
+        childrenItemRef.value?.[0]?.hide();
+        activeID.value = '';
+      }, 0);
     };
 
     return {
