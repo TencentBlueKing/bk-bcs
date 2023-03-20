@@ -17,10 +17,10 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"bscp.io/pkg/iam/auth"
-	"bscp.io/pkg/kit"
 	"google.golang.org/protobuf/proto"
 
+	"bscp.io/pkg/iam/auth"
+	"bscp.io/pkg/kit"
 	"bscp.io/pkg/rest/view/webannotation"
 )
 
