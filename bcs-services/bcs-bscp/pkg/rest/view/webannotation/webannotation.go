@@ -134,14 +134,3 @@ func (w *AnnotationResponseWriter) Build(ctx context.Context, msg proto.Message)
 func (w *AnnotationResponseWriter) SetError(err error) {
 	w.err = err
 }
-
-// BuildAnnotation http 中间件
-func BuildAnnotation(authorizer auth.Authorizer) func(next http.Handler) http.Handler {
-	return func(next http.Handler) http.Handler {
-		fn := func(w http.ResponseWriter, r *http.Request) {
-			ww := NewWrapResponseWriter(w, authorizer)
-			next.ServeHTTP(ww, r)
-		}
-		return http.HandlerFunc(fn)
-	}
-}

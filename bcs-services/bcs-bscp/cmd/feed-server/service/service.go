@@ -34,10 +34,9 @@ import (
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/logs"
 	"bscp.io/pkg/rest"
-	rhandler "bscp.io/pkg/rest/handler"
+	view "bscp.io/pkg/rest/view"
 	"bscp.io/pkg/runtime/handler"
 	"bscp.io/pkg/runtime/shutdown"
-	"bscp.io/pkg/runtime/webannotation"
 	"bscp.io/pkg/serviced"
 	sfs "bscp.io/pkg/sf-share"
 	"bscp.io/pkg/tools"
@@ -159,9 +158,9 @@ func (s *Service) handler() http.Handler {
 	// feedserver方法
 	r.Route("/api/v1/feed", func(r chi.Router) {
 		r.Use(s.Authentication)
-		r.Use(webannotation.BuildAnnotation(s.authorizer))
-		r.Method("POST", "/api/v1/feed/list/app/release/type/file/latest", rhandler.RestHandlerFunc(s.ListFileAppLatestReleaseMetaRest))
-		r.Method("POST", "/api/v1/feed/auth/repository/file_pull", rhandler.RestHandlerFunc(s.AuthRepoRest))
+		r.Use(view.Generic(s.authorizer))
+		r.Method("POST", "/api/v1/feed/list/app/release/type/file/latest", view.GenericFunc(s.ListFileAppLatestReleaseMetaRest))
+		r.Method("POST", "/api/v1/feed/auth/repository/file_pull", view.GenericFunc(s.AuthRepoRest))
 	})
 
 	return r

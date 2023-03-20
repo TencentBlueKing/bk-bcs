@@ -9,7 +9,7 @@ the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS
 either express or implied. See the License for the specific language governing permissions and
 limitations under the License.
 */
-package rest
+package view
 
 import (
 	"errors"
@@ -18,15 +18,16 @@ import (
 	"github.com/go-chi/render"
 
 	"bscp.io/pkg/criteria/errf"
+	"bscp.io/pkg/iam/auth"
 	"bscp.io/pkg/rest"
-	"bscp.io/pkg/runtime/webannotation"
+	"bscp.io/pkg/rest/view/webannotation"
 )
 
-// RestHandlerFunc
-type RestHandlerFunc func(r *http.Request) (interface{}, error)
+// GenericFunc
+type GenericFunc func(r *http.Request) (interface{}, error)
 
 // ServeHTTP handler 函数实现
-func (h RestHandlerFunc) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (h GenericFunc) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	data, err := h(r)
 	// handle returned error here.
 	if err != nil {
@@ -53,5 +54,16 @@ func (h RestHandlerFunc) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		render.Render(w, r, v)
 	default:
 		render.JSON(w, r, v)
+	}
+}
+
+// Generic http 中间件, 返回蓝鲸规范的数据结构
+func Generic(authorizer auth.Authorizer) func(next http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		fn := func(w http.ResponseWriter, r *http.Request) {
+			ww := webannotation.NewWrapResponseWriter(w, authorizer)
+			next.ServeHTTP(ww, r)
+		}
+		return http.HandlerFunc(fn)
 	}
 }

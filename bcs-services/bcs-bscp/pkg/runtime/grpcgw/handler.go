@@ -26,7 +26,7 @@ import (
 
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/rest"
-	"bscp.io/pkg/runtime/webannotation"
+	"bscp.io/pkg/rest/view/webannotation"
 )
 
 var (
