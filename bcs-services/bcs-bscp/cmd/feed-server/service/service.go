@@ -159,8 +159,8 @@ func (s *Service) handler() http.Handler {
 	r.Route("/api/v1/feed", func(r chi.Router) {
 		r.Use(s.Authentication)
 		r.Use(view.Generic(s.authorizer))
-		r.Method("POST", "/api/v1/feed/list/app/release/type/file/latest", view.GenericFunc(s.ListFileAppLatestReleaseMetaRest))
-		r.Method("POST", "/api/v1/feed/auth/repository/file_pull", view.GenericFunc(s.AuthRepoRest))
+		r.Method("POST", "/list/app/release/type/file/latest", view.GenericFunc(s.ListFileAppLatestReleaseMetaRest))
+		r.Method("POST", "/auth/repository/file_pull", view.GenericFunc(s.AuthRepoRest))
 	})
 
 	return r
@@ -170,6 +170,7 @@ func (s *Service) handler() http.Handler {
 func (s *Service) Authentication(next http.Handler) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		k := &kit.Kit{
+			Ctx:         r.Context(),
 			User:        "",
 			Rid:         components.RequestIDValue(r.Context()),
 			AppId:       "",
