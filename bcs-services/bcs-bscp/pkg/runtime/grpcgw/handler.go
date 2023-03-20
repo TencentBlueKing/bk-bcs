@@ -26,7 +26,7 @@ import (
 
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/rest"
-	"bscp.io/pkg/rest/view/webannotation"
+	"bscp.io/pkg/rest/view"
 )
 
 var (
@@ -90,7 +90,7 @@ func grpcGatewayErr(s *status.Status) render.Renderer {
 // bkErrorHandler 蓝鲸规范化的错误返回
 func bkErrorHandler(ctx context.Context, mux *runtime.ServeMux, marshaler runtime.Marshaler, w http.ResponseWriter, r *http.Request, err error) {
 	s := status.Convert(err)
-	ww, ok := w.(*webannotation.AnnotationResponseWriter)
+	ww, ok := w.(*view.GenericResponseWriter)
 	if ok {
 		ww.SetError(err)
 	}
@@ -125,10 +125,10 @@ func kitMetadataHandler(ctx context.Context, r *http.Request) metadata.MD {
 
 // bscpResponse 可动态处理 webannotation
 func bscpResponse(ctx context.Context, w http.ResponseWriter, msg proto.Message) error {
-	ww, ok := w.(*webannotation.AnnotationResponseWriter)
+	ww, ok := w.(*view.GenericResponseWriter)
 	if !ok {
 		return nil
 	}
 
-	return ww.Build(ctx, msg)
+	return ww.BuildWebAnnotation(ctx, msg)
 }

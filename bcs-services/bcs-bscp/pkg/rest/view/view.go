@@ -20,7 +20,6 @@ import (
 	"bscp.io/pkg/criteria/errf"
 	"bscp.io/pkg/iam/auth"
 	"bscp.io/pkg/rest"
-	"bscp.io/pkg/rest/view/webannotation"
 )
 
 // GenericFunc
@@ -31,7 +30,7 @@ func (h GenericFunc) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	data, err := h(r)
 	// handle returned error here.
 	if err != nil {
-		ww, ok := w.(*webannotation.AnnotationResponseWriter)
+		ww, ok := w.(*GenericResponseWriter)
 		if ok {
 			ww.SetError(err)
 		}
@@ -61,7 +60,7 @@ func (h GenericFunc) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func Generic(authorizer auth.Authorizer) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		fn := func(w http.ResponseWriter, r *http.Request) {
-			ww := webannotation.NewWrapResponseWriter(w, authorizer)
+			ww := NewGenericResponseWriter(w, authorizer)
 			next.ServeHTTP(ww, r)
 		}
 		return http.HandlerFunc(fn)
