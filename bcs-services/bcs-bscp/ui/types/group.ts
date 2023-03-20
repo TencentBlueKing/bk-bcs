@@ -14,12 +14,14 @@ export const enum EGroupRuleType {
   'NOT IN' = 'nin',
 }
 
+// 分组分类查询接口参数
 export interface IGroupCategoriesQuery {
   mode: ECategoryType;
   start: number;
   limit: number;
 }
 
+// 分类详情
 export interface ICategoryItem {
   id: number;
   spec: {
@@ -38,6 +40,7 @@ export interface ICategoryItem {
   }
 }
 
+// 分组详情
 export interface IGroupItem {
   id: number;
   spec: {
@@ -62,6 +65,7 @@ export interface IGroupItem {
   }
 }
 
+// 分组编辑数据
 export interface IGroupEditing {
   id?: number;
   group_category_id: number|string;
@@ -72,6 +76,7 @@ export interface IGroupEditing {
   uid?: string;
 }
 
+// 分组规则
 export interface IGroupRuleItem {
   key: string;
   op: EGroupRuleType;
@@ -89,4 +94,11 @@ export interface IGroupEditArg {
     labels_or?: Array<IGroupRuleItem>
   };
   uid?: string
+}
+
+// 全量分类下分组列表单个详情
+export interface IAllCategoryGroupItem {
+  group_category_id: number;
+  group_category_name: string;
+  groups: IGroupItem[];
 }

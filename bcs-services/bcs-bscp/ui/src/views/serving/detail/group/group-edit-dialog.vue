@@ -1,14 +1,14 @@
 <script setup lang="ts">
   import { ref, computed, watch, nextTick } from 'vue'
   import { cloneDeep } from 'lodash'
-  import { IGroupEditing, ECategoryType, EGroupRuleType, ICategoryItem, IGroupEditArg, IGroupRuleItem } from '../../../../../types/group'
+  import { IGroupEditing, ECategoryType, EGroupRuleType, ICategoryItem, IGroupEditArg, IGroupRuleItem, IAllCategoryGroupItem } from '../../../../../types/group'
   import { createCategory, createGroup, updateGroup } from '../../../../api/group'
   import { GROUP_RULE_OPS } from '../../../../constants'
   
   const props = defineProps<{
     show: boolean,
     appId: number,
-    categoryList: Array<ICategoryItem>,
+    categoryList: IAllCategoryGroupItem[],
     group: IGroupEditing
   }>()
 
@@ -165,9 +165,9 @@
               @change="handleCategoryChange">
               <bk-option
                 v-for="category in categoryList"
-                :key="category.id"
-                :value="category.id"
-                :label="category.spec.name">
+                :key="category.group_category_id"
+                :value="category.group_category_id"
+                :label="category.group_category_name">
               </bk-option>
             </bk-select>
           </bk-form-item>

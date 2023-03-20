@@ -2,8 +2,8 @@
   import { ref, onMounted } from 'vue'
   import { Plus, Search } from 'bkui-vue/lib/icon'
   import { ECategoryType, EGroupRuleType } from '../../../../../types/group'
-  import { ICategoryItem, IGroupCategoriesQuery, IGroupEditing, IGroupItem, IGroupRuleItem } from '../../../../../types/group'
-  import { getGroupCategories } from '../../../../api/group'
+  import { IGroupCategoriesQuery, IGroupEditing, IGroupItem, IGroupRuleItem, IAllCategoryGroupItem } from '../../../../../types/group'
+  import { getAllGroupList } from '../../../../api/group'
   import GroupEditDialog from './group-edit-dialog.vue'
   import CategoryGroup from './category-group.vue'
 
@@ -26,25 +26,32 @@
     { id: ECategoryType.Custom, name: '普通分组' },
     { id: ECategoryType.Debug, name: '调试用分组' }
   ]
-  const categoryList= ref<Array<ICategoryItem>>([])
+  const categoryList= ref<IAllCategoryGroupItem[]>([])
   const categoryListLoading = ref(true)
   const currentTab = ref<ECategoryType>(categoryTypes[0].id)
+  const count = ref({
+    [ECategoryType.Custom]: 0,
+    [ECategoryType.Debug]: 0
+  })
   const isGroupDialogShow = ref(false)
   const groupData = ref<IGroupEditing>(getDefaultGroupConfig())
 
   onMounted(() => {
-    getCategoryList()
+    getAllGroupData()
   })
 
-  const getCategoryList = async() => {
+  const getAllGroupData = async() => {
     categoryListLoading.value = true
     const params: IGroupCategoriesQuery = {
       mode: currentTab.value,
       start: 0,
       limit: 100 // @todo 确认分页方式
     }
-    const res = await getGroupCategories(props.appId, params)
+    const res = await getAllGroupList(props.appId, params)
     categoryList.value = res.details
+    count.value[currentTab.value] = res.details.reduce((acc: number, crt: IAllCategoryGroupItem) => {
+      return acc + crt.groups.length
+    }, 0)
     categoryListLoading.value = false
   }
 
@@ -71,13 +78,13 @@
   }
 
   const refreshCategoryList = () => {
-    getCategoryList()
+    getAllGroupData()
   }
 
   const handleTabChange = (id: ECategoryType) => {
     currentTab.value = id
     categoryList.value = []
-    getCategoryList()
+    getAllGroupData()
   }
 
 </script>
@@ -94,7 +101,7 @@
               @click="handleTabChange(item.id)">
               <div class="tab-item-name">
                 {{ item.name }}
-                <span class="count">0</span>
+                <span class="count">{{ count[item.id] }}</span>
               </div>
               <div v-if="index !== categoryTypes.length - 1" class="split-line"></div>
             </div>
@@ -111,7 +118,7 @@
           <template v-if="categoryList.length > 0">
             <CategoryGroup
               v-for="category in categoryList"
-              :key="category.id"
+              :key="category.group_category_id"
               :app-id="props.appId"
               :mode="currentTab"
               :category-group="category"

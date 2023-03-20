@@ -43,6 +43,16 @@ export const getCategoryGroupList = (app_id: number, group_category_id: number, 
 }
 
 /**
+ * 获取全量分组
+ * @param app_id 应用ID
+ * @param params 查询参数
+ * @returns 
+ */
+export const getAllGroupList = (app_id: number, params: IGroupCategoriesQuery) => {
+  return http.get(`/config/apps/${app_id}/groups`, { params }).then(res => res.data)
+}
+
+/**
  * 新增分组
  * @param app_id 应用ID
  * @param params 分组编辑参数

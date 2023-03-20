@@ -1,7 +1,7 @@
 <script setup lang="ts">
   import { ref, onMounted, watch } from 'vue'
-  import { ICategoryItem, ECategoryType, IGroupItem } from '../../../../../../types/group';
-  import { getGroupCategories, getCategoryGroupList } from '../../../../../api/group';
+  import { ECategoryType, IGroupItem, IAllCategoryGroupItem } from '../../../../../../types/group';
+  import { getAllGroupList } from '../../../../../api/group';
 
   const props = defineProps<{
     appId: number,
@@ -10,8 +10,8 @@
   }>()
   const emits = defineEmits(['change'])
 
-  const categoryList = ref<{ config: ICategoryItem, data: IGroupItem[] }[]>([])
-  const categoryLoading = ref(false)
+  const groupList = ref<IAllCategoryGroupItem[]>([])
+  const groupListLoading = ref(false)
   const groups = ref<string|number|number[]>(props.multiple ? [] : '')
 
   watch(() => props.value, (val: string|number|number[]) => {
@@ -19,40 +19,28 @@
   }, { immediate: true })
 
   onMounted(() => {
-    getCategoryList()
+    getGroupList()
   })
 
   // 获取全部分组列表
   // @todo 需要一个拉取所有分组下全量分组的接口，这里调试用暂时遍历拉取
-  const getCategoryList = async() => {
-    categoryLoading.value = true
-    const params = {
+  const getGroupList = async() => {
+    groupListLoading.value = true
+    const query = {
       mode: ECategoryType.Custom,
       start: 0,
-      limit: 200
+      limit: 200,
     }
-    const res = await getGroupCategories(props.appId, params)
-    const list: { config: ICategoryItem, data: IGroupItem[] }[] = []
-    const groupRes = await Promise.all(res.details.map((item: ICategoryItem) => {
-      const query = {
-        mode: ECategoryType.Custom,
-        start: 0,
-        limit: 200,
-      }
-      return getCategoryGroupList(props.appId, item.id, query)
-    }))
-    groupRes.forEach((item: { count: number, details: IGroupItem[] }, index: number) => {
-      list.push({ config: res.details[index], data: item.details })
-    })
-    categoryList.value = list
-    categoryLoading.value = false
+    const res = await getAllGroupList(props.appId, query)
+    groupList.value = res.details
+    groupListLoading.value = false
   }
 
 </script>
 <template>
-  <bk-select :value="groups" :loading="categoryLoading" multiple-mode="tag" :multiple="props.multiple" @change="emits('change', $event)">
-    <bk-group v-for="category in categoryList" collapsible :key="category.config.id" :label="category.config.spec.name">
-      <bk-option v-for="group in category.data" :key="group.id" :value="group.id" :label="group.spec.name"></bk-option>
+  <bk-select :value="groups" :loading="groupListLoading" multiple-mode="tag" :multiple="props.multiple" @change="emits('change', $event)">
+    <bk-group v-for="category in groupList" collapsible :key="category.group_category_id" :label="category.group_category_name">
+      <bk-option v-for="group in category.groups" :key="group.id" :value="group.id" :label="group.spec.name"></bk-option>
     </bk-group>
   </bk-select>
 </template>
