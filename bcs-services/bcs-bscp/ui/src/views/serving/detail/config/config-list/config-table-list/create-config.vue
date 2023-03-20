@@ -1,5 +1,5 @@
 <script setup lang="ts">
-  import { defineProps, defineEmits ,ref } from 'vue'
+  import { ref } from 'vue'
   import ConfigForm from './config-form.vue'
   import { createServingConfigItem } from '../../../../../../api/config'
   import { IServingEditParams } from '../../../../../../types'

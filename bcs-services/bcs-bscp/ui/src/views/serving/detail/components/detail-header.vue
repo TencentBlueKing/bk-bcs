@@ -1,6 +1,5 @@
 <script setup lang="ts">
   import { useRoute, useRouter } from 'vue-router'
-  import { defineProps, ref } from 'vue'
   import ServingSelector from './serving-selector.vue'
   import { Help } from "bkui-vue/lib/icon";
 

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-  import { defineProps, defineEmits, ref, Ref, watch ,onMounted } from 'vue'
+  import { ref, Ref, watch ,onMounted } from 'vue'
   import { useRoute, useRouter } from 'vue-router'
   import { IServingItem } from '../../../../types'
   import { getAllApp } from "../../../../api";

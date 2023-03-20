@@ -1,5 +1,5 @@
 <script setup lang="ts">
-  import { defineProps, defineEmits, ref, watch } from 'vue'
+  import { ref, watch } from 'vue'
   import InfoBox from "bkui-vue/lib/info-box";
   import { publishVersion } from '../../../../../../../api/config'
   import CategoryGroupSelect from '../../../../group/components/category-group-select.vue';

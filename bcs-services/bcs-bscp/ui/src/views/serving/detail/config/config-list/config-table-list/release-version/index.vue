@@ -1,5 +1,5 @@
 <script setup lang="ts">
-    import { defineProps, ref, onMounted } from 'vue'
+    import { ref, onMounted } from 'vue'
     import { ArrowsLeft, AngleRight } from 'bkui-vue/lib/icon'
     import VersionLayout from '../../../components/version-layout.vue'
     import ConfirmDialog from './confirm-dialog.vue'

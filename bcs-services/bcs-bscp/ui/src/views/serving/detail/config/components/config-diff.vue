@@ -1,5 +1,5 @@
 <script setup lang="ts">
-    import { defineProps, ref, watch } from 'vue'
+    import { ref, watch } from 'vue'
     import { PlayShape } from 'bkui-vue/lib/icon'
     import Diff from '../../../../../components/diff/index.vue'
     import { IConfigVersionItem } from '../../../../../types'

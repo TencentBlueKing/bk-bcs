@@ -1,5 +1,5 @@
 <script setup lang="ts">
-  import { defineProps, ref, watch, onMounted } from 'vue'
+  import { ref, watch, onMounted } from 'vue'
   import { storeToRefs } from 'pinia'
   import { useServingStore } from '../../../../../../store/serving'
   import { useConfigStore } from '../../../../../../store/config'
