@@ -47,3 +47,6 @@ url("../assets/fonts/iconcool.eot?#iefix") format("embedded-opentype");
 .icon-add:before {
 	content: "\e109";
 }
+.icon-app-store:before {
+	content: "\e10a";
+}
