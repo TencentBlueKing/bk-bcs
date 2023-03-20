@@ -56,7 +56,7 @@ func (w *GenericResponseWriter) Write(data []byte) (int, error) {
 	return w.ResponseWriter.Write(buf.Bytes())
 }
 
-// Build 动态执行 webannotions 函数
+// BuildWebAnnotation 动态执行 webannotions 函数
 func (w *GenericResponseWriter) BuildWebAnnotation(ctx context.Context, msg proto.Message) error {
 	kt := kit.MustGetKit(ctx)
 
