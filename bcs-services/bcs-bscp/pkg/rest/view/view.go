@@ -18,7 +18,6 @@ import (
 	"github.com/go-chi/render"
 
 	"bscp.io/pkg/criteria/errf"
-	"bscp.io/pkg/iam/auth"
 	"bscp.io/pkg/rest"
 )
 
@@ -53,16 +52,5 @@ func (h GenericFunc) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		render.Render(w, r, v)
 	default:
 		render.JSON(w, r, v)
-	}
-}
-
-// Generic http 中间件, 返回蓝鲸规范的数据结构
-func Generic(authorizer auth.Authorizer) func(next http.Handler) http.Handler {
-	return func(next http.Handler) http.Handler {
-		fn := func(w http.ResponseWriter, r *http.Request) {
-			ww := NewGenericResponseWriter(w, authorizer)
-			next.ServeHTTP(ww, r)
-		}
-		return http.HandlerFunc(fn)
 	}
 }

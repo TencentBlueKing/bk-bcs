@@ -97,3 +97,14 @@ func (w *GenericResponseWriter) SetError(err error) {
 func NewGenericResponseWriter(w http.ResponseWriter, authorizer auth.Authorizer) *GenericResponseWriter {
 	return &GenericResponseWriter{authorizer: authorizer, ResponseWriter: w}
 }
+
+// Generic http 中间件, 返回蓝鲸规范的数据结构
+func Generic(authorizer auth.Authorizer) func(next http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		fn := func(w http.ResponseWriter, r *http.Request) {
+			ww := NewGenericResponseWriter(w, authorizer)
+			next.ServeHTTP(ww, r)
+		}
+		return http.HandlerFunc(fn)
+	}
+}
