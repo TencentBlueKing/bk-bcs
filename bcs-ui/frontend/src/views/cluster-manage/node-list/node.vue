@@ -49,22 +49,31 @@
         <bcs-dropdown-menu
           :disabled="!selections.length"
           class="mr10"
-          v-authority="{
-            clickable: webAnnotations.perms[localClusterId]
-              && webAnnotations.perms[localClusterId].cluster_manage,
-            actionId: 'cluster_manage',
-            resourceName: curSelectedCluster.clusterName,
-            disablePerms: true,
-            permCtx: {
-              project_id: curProject.project_id,
-              cluster_id: localClusterId
-            }
-          }">
-          <div class="dropdown-trigger-btn" slot="dropdown-trigger">
-            <span>{{$t('批量')}}</span>
-            <i class="bk-icon icon-angle-down"></i>
-          </div>
-          <ul class="bk-dropdown-list" slot="dropdown-content">
+          trigger="click"
+          @hide="showBatchMenu = false"
+          @show="showBatchMenu = true">
+          <template #dropdown-trigger>
+            <bcs-button>
+              <div class="h-[30px]">
+                <span class="text-[14px]">{{$t('批量')}}</span>
+                <i :class="['bk-icon icon-angle-down', { 'icon-flip': showBatchMenu }]"></i>
+              </div>
+            </bcs-button>
+          </template>
+          <ul
+            class="bk-dropdown-list"
+            slot="dropdown-content"
+            v-authority="{
+              clickable: webAnnotations.perms[localClusterId]
+                && webAnnotations.perms[localClusterId].cluster_manage,
+              actionId: 'cluster_manage',
+              resourceName: curSelectedCluster.clusterName,
+              disablePerms: true,
+              permCtx: {
+                project_id: curProject.project_id,
+                cluster_id: localClusterId
+              }
+            }">
             <li @click="handleBatchEnableNodes">{{$t('允许调度')}}</li>
             <li @click="handleBatchStopNodes">{{$t('停止调度')}}</li>
             <li
@@ -76,7 +85,7 @@
               @click="handleBatchReAddNodes">{{$t('失败重试')}}</li>
             <div
               style="height:32px;"
-              v-bk-tooltips="{ content: $t('IP状态为停止调度才能做POD驱逐操作'), disabled: !podDisabled, placement: 'top' }">
+              v-bk-tooltips="{ content: $t('IP状态为停止调度才能做POD驱逐操作'), disabled: !podDisabled, placement: 'right' }">
               <li :disabled="podDisabled" @click="handleBatchPodScheduler">{{$t('pod驱逐')}}</li>
             </div>
             <li @click="handleBatchSetLabels">{{$t('设置标签')}}</li>
@@ -90,11 +99,17 @@
             <!-- <li>{{$t('导出')}}</li> -->
           </ul>
         </bcs-dropdown-menu>
-        <BcsCascade :list="copyList" @click="handleCopy">
-          <div class="dropdown-trigger-btn">
-            <span>{{$t('复制')}}</span>
-            <i class="bk-icon icon-angle-down"></i>
-          </div>
+        <BcsCascade
+          :list="copyList"
+          @click="handleCopy"
+          @hide="showCopyMenu = false"
+          @show="showCopyMenu = true">
+          <bcs-button>
+            <div class="h-[30px]">
+              <span class="text-[14px]">{{$t('复制')}}</span>
+              <i :class="['bk-icon icon-angle-down', { 'icon-flip': showCopyMenu }]"></i>
+            </div>
+          </bcs-button>
         </BcsCascade>
       </div>
       <div class="right">
@@ -886,6 +901,7 @@ export default defineComponent({
     };
 
     // IP复制
+    const showCopyMenu = ref(false);
     const copyList = ref([
       {
         id: 'checked',
@@ -1181,6 +1197,7 @@ export default defineComponent({
       tableLoading.value = false;
     };
     // 批量允许调度
+    const showBatchMenu = ref(false);
     const handleBatchEnableNodes = () => {
       if (!selections.value.length) return;
 
@@ -1534,6 +1551,8 @@ export default defineComponent({
       isImportCluster,
       KEY_REGEXP,
       VALUE_REGEXP,
+      showBatchMenu,
+      showCopyMenu,
     };
   },
 });
@@ -1571,20 +1590,6 @@ export default defineComponent({
         .search-select {
             width: 400px;
         }
-    }
-}
-/deep/ .dropdown-trigger-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: 1px solid #c4c6cc;
-    border-radius: 2px;
-    padding: 0 15px;
-    height: 32px;
-    min-width: 68px;
-    font-size: 14px;
-    .icon-angle-down {
-        font-size: 22px;
     }
 }
 /deep/ .bk-dropdown-list {

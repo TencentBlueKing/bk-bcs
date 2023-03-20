@@ -1,21 +1,15 @@
 <template>
-  <PopoverSelector
-    trigger="manual"
-    placement="bottom-start"
-    offset="0, 5"
-    :on-hide="handleHidePopover"
-    ref="popoverRef">
-    <div @mouseenter="handleShowPopover" @click="handleShowPopover">
+  <bcs-dropdown-menu trigger="click" @hide="handleHideDropDown" @show="handleShowDropDown">
+    <template #dropdown-trigger>
       <slot></slot>
-    </div>
-    <template #content>
+    </template>
+    <template #dropdown-content>
       <BcsCascadeItem ref="cascadeRef" :list="list" @click="handleClickItem" />
     </template>
-  </PopoverSelector>
+  </bcs-dropdown-menu>
 </template>
 <script lang="ts">
 import {  defineComponent, PropType, ref } from '@vue/composition-api';
-import PopoverSelector from './popover-selector.vue';
 import BcsCascadeItem from './cascade-item.vue';
 
 export interface IData {
@@ -26,7 +20,7 @@ export interface IData {
 
 export default defineComponent({
   name: 'BcsCascade',
-  components: { PopoverSelector, BcsCascadeItem },
+  components: { BcsCascadeItem },
   props: {
     list: {
       type: Array as PropType<IData[]>,
@@ -34,24 +28,23 @@ export default defineComponent({
     },
   },
   setup(props, ctx) {
-    const popoverRef = ref<any>(null);
     const cascadeRef = ref<any>(null);
     const handleClickItem = (item: IData) => {
       ctx.emit('click', item);
       cascadeRef.value?.hide();
     };
-    const handleShowPopover = () => {
-      popoverRef.value?.show();
+    const handleShowDropDown = () => {
+      ctx.emit('show');
     };
-    const handleHidePopover = () => {
+    const handleHideDropDown = () => {
       cascadeRef.value?.hide();
+      ctx.emit('hide');
     };
     return {
-      popoverRef,
       cascadeRef,
       handleClickItem,
-      handleShowPopover,
-      handleHidePopover,
+      handleShowDropDown,
+      handleHideDropDown,
     };
   },
 });
