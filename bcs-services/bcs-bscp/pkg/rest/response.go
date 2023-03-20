@@ -139,7 +139,7 @@ func UnauthorizedErr(err error) render.Renderer {
 	return &ErrorResponse{Error: payload, HTTPStatusCode: http.StatusUnauthorized}
 }
 
-// PermissionDenied 通用错误请求
+// PermissionDenied 无数据返回
 func PermissionDenied(err error) render.Renderer {
 	payload := &ErrorPayload{Code: "PERMISSION_DENIED", Message: err.Error()}
 	return &ErrorResponse{Error: payload, HTTPStatusCode: http.StatusForbidden}

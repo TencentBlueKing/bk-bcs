@@ -21,7 +21,7 @@ import (
 	"bscp.io/pkg/rest"
 )
 
-// GenericFunc
+// GenericFunc View函数类型, 使用view.GenericFunc(customHandler)
 type GenericFunc func(r *http.Request) (interface{}, error)
 
 // ServeHTTP handler 函数实现

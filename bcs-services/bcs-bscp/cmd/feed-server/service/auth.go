@@ -57,7 +57,7 @@ type AuthRepoReq struct {
 	Nodes     []*AuthRepoNode `json:"nodes,omitempty"`
 }
 
-// Bind
+// Bind go-chi/render Binder 接口实现
 func (op *AuthRepoReq) Bind(r *http.Request) error {
 	return nil
 }

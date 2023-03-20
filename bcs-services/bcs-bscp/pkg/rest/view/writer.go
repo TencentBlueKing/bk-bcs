@@ -24,7 +24,7 @@ import (
 	"bscp.io/pkg/rest/view/webannotation"
 )
 
-// GenericResponseWriter
+// GenericResponseWriter 自定义Write，自动补充 data 和w eb_annotions 数据
 type GenericResponseWriter struct {
 	http.ResponseWriter
 	authorizer auth.Authorizer
@@ -93,7 +93,7 @@ func (w *GenericResponseWriter) SetError(err error) {
 	w.err = err
 }
 
-// NewGenericResponseWriter
+// NewGenericResponseWriter GenericResponseWriter初始化
 func NewGenericResponseWriter(w http.ResponseWriter, authorizer auth.Authorizer) *GenericResponseWriter {
 	return &GenericResponseWriter{authorizer: authorizer, ResponseWriter: w}
 }

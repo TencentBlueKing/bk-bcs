@@ -26,7 +26,7 @@ var (
 	webAnnotationFuncHub = map[string]AnnotationFunc{}
 )
 
-// Perm
+// Perm 类型
 type Perm map[string]bool
 
 // Annotation 注解类型
@@ -34,10 +34,10 @@ type Annotation struct {
 	Perms map[string]Perm `json:"perms"`
 }
 
-// AnnotationFunc
+// AnnotationFunc 函数类型
 type AnnotationFunc func(context.Context, *kit.Kit, auth.Authorizer, proto.Message) (*Annotation, error)
 
-// AnnotationInterface
+// AnnotationInterface 接口
 type AnnotationInterface interface {
 	Annotation(context.Context, *kit.Kit, auth.Authorizer) (*Annotation, error)
 }
@@ -58,7 +58,7 @@ func Register(msg proto.Message, f AnnotationFunc) {
 	webAnnotationFuncHub[name(msg)] = f
 }
 
-// GetAnnotationFunc
+// GetAnnotationFunc 获取 msg 已注册的函数
 func GetAnnotationFunc(msg proto.Message) (AnnotationFunc, bool) {
 	f, ok := webAnnotationFuncHub[name(msg)]
 	return f, ok

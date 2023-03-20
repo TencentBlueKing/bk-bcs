@@ -40,7 +40,7 @@ type ListFileAppLatestReleaseMetaReq struct {
 	Labels    map[string]string `json:"labels,omitempty"`
 }
 
-// Bind
+// Bind go-chi/render Binder 接口实现
 func (op *ListFileAppLatestReleaseMetaReq) Bind(r *http.Request) error {
 	return op.Validate()
 }
