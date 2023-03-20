@@ -24,7 +24,7 @@ import (
 	"bscp.io/pkg/rest/view/webannotation"
 )
 
-// GenericResponseWriter 自定义Write，自动补充 data 和w eb_annotions 数据
+// GenericResponseWriter 自定义Write，自动补充 data 和 web_annotations 数据
 type GenericResponseWriter struct {
 	http.ResponseWriter
 	authorizer auth.Authorizer
