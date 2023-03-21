@@ -5,6 +5,7 @@
   import { IConfigVersionItem } from '../../../../../types'
   import { IConfigListQueryParams } from '../../../../../../types/config'
   import { getConfigList } from '../../../../../api/config'
+  import EditConfig from './config-table-list/edit-config.vue'
 
   const store = useConfigStore()
   const { versionData } = storeToRefs(store)
@@ -16,6 +17,7 @@
 
   const loading = ref(false)
   const configList = ref<Array<IConfigVersionItem>>([])
+  const editDialogShow = ref(false)
 
   watch(() => versionData.value.id, () => {
     getListData()
@@ -49,18 +51,27 @@
     }
   }
 
+  const handleEditConfirm = () => {
+    editDialogShow.value = false
+  }
+
 </script>
 <template>
   <section class="current-config-list">
     <bk-loading :loading="loading">
       <h4 class="version-name">{{ versionData.spec.name }}</h4>
       <div class="config-list-wrapper">
-        <div v-for="config in configList" class="config-item" :key="config.id">
+        <div v-for="config in configList" class="config-item" :key="config.id" @click="editDialogShow = true">
           <div class="config-name">{{ config.spec.name }}</div>
           <div class="config-type">二进制文件</div>
         </div>
       </div>
     </bk-loading>
+    <EditConfig
+      v-model:show="editDialogShow"
+      :bk-biz-id="props.bkBizId"
+      :config-id="props.appId"
+      :app-id="props.appId" />
   </section>
 </template>
 <style lang="scss" scoped>

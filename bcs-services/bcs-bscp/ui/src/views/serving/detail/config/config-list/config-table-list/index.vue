@@ -112,11 +112,6 @@
     refreshConfigList()
   }
 
-  const handlePageChange = (val: number) => {
-    pagination.value.current = val
-    getListData()
-  }
-
   const handleUpdateStatus = () => {
     emit('updateVersionList')
   }
@@ -193,7 +188,6 @@
         :config-id="activeConfig"
         :bk-biz-id="props.bkBizId"
         :app-id="props.appId"
-        :release-id="versionData.id"
         @confirm="refreshConfigList" />
     </section>
     <VersionDiffDialog v-model:show="isDiffDialogShow" version-name="未命名版本" :config="diffConfig" />

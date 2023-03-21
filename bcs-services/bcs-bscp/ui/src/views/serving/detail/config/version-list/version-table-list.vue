@@ -1,18 +1,26 @@
 <script setup lang="ts">
   import { ref, onMounted, computed } from 'vue'
-  import { Search } from 'bkui-vue/lib/icon'
+  import { Search, ArrowsLeft, AngleRight } from 'bkui-vue/lib/icon'
   import InfoBox from "bkui-vue/lib/info-box";
+  import { storeToRefs } from 'pinia'
+  import { useServingStore } from '../../../../../store/serving'
   import { getConfigVersionList } from '../../../../../api/config';
   import { IConfigVersionItem, IRequestFilter ,IPageFilter, FilterOp, RuleOp } from '../../../../../types'
+  import VersionLayout from '../components/version-layout.vue';
+  import ConfigDiff from '../components/config-diff.vue'
+  
+  const { appData } = storeToRefs(useServingStore())
 
   const props = defineProps<{
     bkBizId: string,
     appId: number
   }>()
 
+
   const listLoading = ref(true)
   const versionList = ref<Array<IConfigVersionItem>>([])
   const currentTab = ref('available')
+  const showDiffPanel = ref(false)
   const pagination = ref({
     current: 1,
     count: 0,
@@ -55,6 +63,11 @@
   // 版本对比
   const handleOpenDiff = (version: IConfigVersionItem) => {
     console.log(version)
+    showDiffPanel.value = true
+  }
+
+  const handleDiffClose = () => {
+    showDiffPanel.value = false
   }
 
   // 废弃
@@ -122,6 +135,26 @@
           @change="refreshConfigList($event)"
           @limit-change="handlePageLimitChange"/>
     </bk-loading>
+    <VersionLayout v-if="showDiffPanel" :show-footer="false">
+      <template #header>
+        <section class="header-wrapper">
+          <span class="header-name" @click="handleDiffClose">
+            <ArrowsLeft class="arrow-left" />
+            <span class="service-name">{{ appData.spec.name }}</span>
+          </span>
+          <AngleRight class="arrow-right" />
+          版本对比
+        </section>
+      </template>
+      <config-diff :config-list="[]">
+        <template #head>
+          <div class="diff-left-panel-head">
+            版本对比
+            <!-- @todo 待确定这里展示什么名称 -->
+          </div>
+        </template>
+      </config-diff>
+    </VersionLayout>
   </section>
 </template>
 <style lang="scss" scoped>
@@ -195,5 +228,32 @@
     :deep(.bk-pagination-list.is-last) {
       margin-left: auto;
     }
+  }
+  .header-wrapper {
+    display: flex;
+    align-items: center;
+    padding: 0 24px;
+    height: 100%;
+    font-size: 12px;
+    line-height: 1;
+  }
+  .header-name {
+    display: flex;
+    align-items: center;
+    font-size: 12px;
+    color: #3a84ff;
+    cursor: pointer;
+  }
+  .arrow-left {
+    font-size: 26px;
+    color: #3884ff;
+  }
+  .arrow-right {
+    font-size: 24px;
+    color: #c4c6cc;
+  }
+  .diff-left-panel-head {
+    padding: 0 24px;
+    font-size: 12px;
   }
 </style>

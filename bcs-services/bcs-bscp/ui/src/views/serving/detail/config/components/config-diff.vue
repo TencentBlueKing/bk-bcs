@@ -65,7 +65,7 @@
             align-items: center;
             justify-content: space-between;
             padding: 0 24px;
-            height: 48px;
+            height: 49px;
             color: #979ba5;
             font-size: 12px;
             border-bottom: 1px solid #dcdee5;
@@ -80,7 +80,7 @@
         }
     }
     .configs-wrapper {
-        height: calc(100% - 48px);
+        height: calc(100% - 49px);
         overflow: auto;
         & > li {
             display: flex;

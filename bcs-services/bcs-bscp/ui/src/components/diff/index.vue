@@ -35,7 +35,7 @@
 <style lang="scss" scoped>
     .diff-comp-panel {
         height: 100%;
-        border: 1px solid #dcdee5;
+        border-left: 1px solid #dcdee5;
     }
     .top-area {
         display: flex;
