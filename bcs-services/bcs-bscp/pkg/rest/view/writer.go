@@ -9,73 +9,31 @@ the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS
 either express or implied. See the License for the specific language governing permissions and
 limitations under the License.
 */
-
-package webannotation
+package view
 
 import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"fmt"
 	"net/http"
 
 	"google.golang.org/protobuf/proto"
 
 	"bscp.io/pkg/iam/auth"
 	"bscp.io/pkg/kit"
+	"bscp.io/pkg/rest/view/webannotation"
 )
 
-var (
-	webAnnotationFuncHub = map[string]AnnotationFunc{}
-)
-
-// Perm
-type Perm map[string]bool
-
-// Annotation 注解类型
-type Annotation struct {
-	Perms map[string]Perm `json:"perms"`
-}
-
-// AnnotationFunc
-type AnnotationFunc func(context.Context, *kit.Kit, auth.Authorizer, proto.Message) (*Annotation, error)
-
-// AnnotationInterface
-type AnnotationInterface interface {
-	Annotation(context.Context, *kit.Kit, auth.Authorizer) (*Annotation, error)
-}
-
-// name 类型唯一名称
-func name(msg proto.Message) string {
-	name := proto.MessageName(msg)
-	return string(name)
-}
-
-// Register 注册，部分为防止循环引用使用这种方式
-func Register(msg proto.Message, f AnnotationFunc) {
-	_, ok := webAnnotationFuncHub[name(msg)]
-	if ok {
-		panic(fmt.Errorf("%s duplicate registration", name(msg)))
-	}
-
-	webAnnotationFuncHub[name(msg)] = f
-}
-
-// AnnotationResponseWriter
-type AnnotationResponseWriter struct {
+// GenericResponseWriter 自定义Write，自动补充 data 和 web_annotations 数据
+type GenericResponseWriter struct {
 	http.ResponseWriter
 	authorizer auth.Authorizer
-	annotation *Annotation
+	annotation *webannotation.Annotation
 	err        error // low-level runtime error
 }
 
-// NewWrapResponseWriter
-func NewWrapResponseWriter(w http.ResponseWriter, authorizer auth.Authorizer) *AnnotationResponseWriter {
-	return &AnnotationResponseWriter{authorizer: authorizer, ResponseWriter: w}
-}
-
 // Write http write 接口实现
-func (w *AnnotationResponseWriter) Write(data []byte) (int, error) {
+func (w *GenericResponseWriter) Write(data []byte) (int, error) {
 	// 错误不需要特殊处理
 	if w.err != nil {
 		return w.ResponseWriter.Write(data)
@@ -98,22 +56,22 @@ func (w *AnnotationResponseWriter) Write(data []byte) (int, error) {
 	return w.ResponseWriter.Write(buf.Bytes())
 }
 
-// Build 动态执行 webannotions 函数
-func (w *AnnotationResponseWriter) Build(ctx context.Context, msg proto.Message) error {
+// BuildWebAnnotation 动态执行 webannotions 函数
+func (w *GenericResponseWriter) BuildWebAnnotation(ctx context.Context, msg proto.Message) error {
 	kt := kit.MustGetKit(ctx)
 
 	var (
-		annotation *Annotation
+		annotation *webannotation.Annotation
 		err        error
 	)
 
 	// 优先 interface 模式
-	iface, ok := msg.(AnnotationInterface)
+	iface, ok := msg.(webannotation.AnnotationInterface)
 	if ok {
 		annotation, err = iface.Annotation(ctx, kt, w.authorizer)
 	} else {
 		// 注册模式
-		f, ok := webAnnotationFuncHub[name(msg)]
+		f, ok := webannotation.GetAnnotationFunc(msg)
 		if ok {
 			annotation, err = f(ctx, kt, w.authorizer, msg)
 		}
@@ -131,15 +89,20 @@ func (w *AnnotationResponseWriter) Build(ctx context.Context, msg proto.Message)
 }
 
 // SetError 设置错误请求
-func (w *AnnotationResponseWriter) SetError(err error) {
+func (w *GenericResponseWriter) SetError(err error) {
 	w.err = err
 }
 
-// BuildAnnotation http 中间件
-func BuildAnnotation(authorizer auth.Authorizer) func(next http.Handler) http.Handler {
+// NewGenericResponseWriter GenericResponseWriter初始化
+func NewGenericResponseWriter(w http.ResponseWriter, authorizer auth.Authorizer) *GenericResponseWriter {
+	return &GenericResponseWriter{authorizer: authorizer, ResponseWriter: w}
+}
+
+// Generic http 中间件, 返回蓝鲸规范的数据结构
+func Generic(authorizer auth.Authorizer) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		fn := func(w http.ResponseWriter, r *http.Request) {
-			ww := NewWrapResponseWriter(w, authorizer)
+			ww := NewGenericResponseWriter(w, authorizer)
 			next.ServeHTTP(ww, r)
 		}
 		return http.HandlerFunc(fn)

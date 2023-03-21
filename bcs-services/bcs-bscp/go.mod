@@ -6,7 +6,6 @@ require (
 	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20230130131016-2e3367d1683c
 	github.com/bluele/gcache v0.0.2
 	github.com/dustin/go-humanize v1.0.1
-	github.com/emicklei/go-restful/v3 v3.10.1
 	github.com/go-chi/chi/v5 v5.0.8
 	github.com/go-chi/render v1.0.2
 	github.com/go-redis/redis/v8 v8.11.5

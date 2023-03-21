@@ -13,33 +13,32 @@ limitations under the License.
 package service
 
 import (
+	"net/http"
+
+	"github.com/go-chi/render"
+
 	"bscp.io/cmd/feed-server/bll/types"
 	"bscp.io/pkg/criteria/errf"
 	"bscp.io/pkg/iam/meta"
-	"bscp.io/pkg/rest"
+	"bscp.io/pkg/kit"
 )
 
 // ListFileAppLatestReleaseMetaRest list an app's latest release metadata only when the app's configures is file type.
-func (s *Service) ListFileAppLatestReleaseMetaRest(cts *rest.Contexts) (interface{}, error) {
-
+func (s *Service) ListFileAppLatestReleaseMetaRest(r *http.Request) (interface{}, error) {
+	kt := kit.MustGetKit(r.Context())
 	opt := new(types.ListFileAppLatestReleaseMetaReq)
-	if err := cts.DecodeInto(opt); err != nil {
-		return nil, err
-	}
-	cts.WithMeta(opt.BizId, opt.AppId)
-
-	if err := opt.Validate(); err != nil {
+	if err := render.Bind(r, opt); err != nil {
 		return nil, err
 	}
 
 	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.Release, Action: meta.Find}, BizID: opt.BizId}
-	authorized, err := s.bll.Auth().Authorize(cts.Kit, res)
+	authorized, err := s.bll.Auth().Authorize(kt, res)
 	if err != nil {
 		return nil, err
 	}
 
 	if !authorized {
-		return nil, errf.New(errf.PermissionDenied, "no permission")
+		return nil, errf.ErrPermissionDenied
 	}
 
 	meta := &types.AppInstanceMeta{
@@ -50,10 +49,10 @@ func (s *Service) ListFileAppLatestReleaseMetaRest(cts *rest.Contexts) (interfac
 		Labels:    opt.Labels,
 	}
 
-	cancel := cts.Kit.CtxWithTimeoutMS(1500)
+	cancel := kt.CtxWithTimeoutMS(1500)
 	defer cancel()
 
-	metas, err := s.bll.Release().ListAppLatestReleaseMeta(cts.Kit, meta)
+	metas, err := s.bll.Release().ListAppLatestReleaseMeta(kt, meta)
 	if err != nil {
 		return nil, err
 	}
@@ -62,13 +61,15 @@ func (s *Service) ListFileAppLatestReleaseMetaRest(cts *rest.Contexts) (interfac
 }
 
 // AuthRepoRest repo authorize callback.
-func (s *Service) AuthRepoRest(cts *rest.Contexts) (interface{}, error) {
+func (s *Service) AuthRepoRest(r *http.Request) (interface{}, error) {
+	kt := kit.MustGetKit(r.Context())
+
 	opt := new(AuthRepoReq)
-	if err := cts.DecodeInto(opt); err != nil {
+	if err := render.Bind(r, opt); err != nil {
 		return nil, err
 	}
 
-	if err := s.authRepo(cts.Kit, opt); err != nil {
+	if err := s.authRepo(kt, opt); err != nil {
 		return nil, err
 	}
 
