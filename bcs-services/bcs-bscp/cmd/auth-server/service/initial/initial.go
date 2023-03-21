@@ -51,7 +51,7 @@ func (i *Initial) InitAuthCenter(ctx context.Context, req *pbas.InitAuthCenterRe
 
 	// if auth is disabled, returns error if user wants to init auth center
 	if i.disableAuth {
-		err := errf.New(errf.Aborted, "authorize function is disabled, can not init auth center.")
+		err := errf.RPCAborted("authorize function is disabled, can not init auth center.")
 		logs.Errorf("authorize function is disabled, can not init auth center, rid: %s", kt.Rid)
 		return nil, err
 	}
