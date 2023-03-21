@@ -40,7 +40,7 @@ import (
 	pbas "bscp.io/pkg/protocol/auth-server"
 	basepb "bscp.io/pkg/protocol/core/base"
 	pbds "bscp.io/pkg/protocol/data-service"
-	"bscp.io/pkg/runtime/webannotation"
+	"bscp.io/pkg/rest/view/webannotation"
 	"bscp.io/pkg/serviced"
 	"bscp.io/pkg/space"
 	esbcli "bscp.io/pkg/thirdparty/esb/client"

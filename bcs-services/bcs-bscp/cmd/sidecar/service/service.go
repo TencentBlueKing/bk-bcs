@@ -16,12 +16,10 @@ package service
 import (
 	"net/http"
 
-	"bscp.io/pkg/criteria/errf"
-	"bscp.io/pkg/metrics"
-	"bscp.io/pkg/rest"
-	"bscp.io/pkg/runtime/ctl"
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 
-	"github.com/emicklei/go-restful/v3"
+	"bscp.io/pkg/runtime/handler"
 )
 
 // InitService initial the service instance
@@ -36,30 +34,22 @@ type Service struct {
 
 // Handler returns all the http handler supported by the sidecar's service.
 func (s *Service) Handler() http.Handler {
-	root := http.NewServeMux()
-	root.HandleFunc("/", s.apiSet().ServeHTTP)
-	root.HandleFunc("/healthz", s.Healthz)
-	root.HandleFunc("/debug/", http.DefaultServeMux.ServeHTTP)
-	root.HandleFunc("/metrics", metrics.Handler().ServeHTTP)
-	root.HandleFunc("/ctl", ctl.Handler().ServeHTTP)
+	r := chi.NewRouter()
+	r.Use(handler.RequestID)
+	r.Use(middleware.RealIP)
+	r.Use(middleware.Logger)
+	r.Use(middleware.Recoverer)
 
-	return root
+	// 公共方法
+	r.Get("/healthz", s.Healthz)
+	r.Mount("/", handler.RegisterCommonToolHandler())
+
+	r.Post("/api/v1/sidecar/ping", s.Ping)
+
+	return r
 }
 
 // Healthz check whether the service is healthy.
 func (s *Service) Healthz(w http.ResponseWriter, req *http.Request) {
-	// TODO: implement this
-	rest.WriteResp(w, rest.NewBaseResp(errf.OK, ""))
-	return
-}
-
-func (s *Service) apiSet() *restful.Container {
-
-	handler := rest.NewHandler()
-
-	handler.Add("ping", "POST", "/api/v1/sidecar/ping", s.Ping)
-
-	c := restful.NewContainer()
-	handler.Load(c)
-	return c
+	w.Write([]byte("OK"))
 }

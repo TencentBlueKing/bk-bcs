@@ -1,7 +1,7 @@
 import axios from 'axios';
-import store from '../store'
+import { pinia } from '../store/index';
+import { useUserStore } from '../store/user';
 import BkMessage from 'bkui-vue/lib/message';
-import { propsMixin } from 'bkui-vue/lib/modal';
 
 const http = axios.create({
   baseURL: `${(<any>window).BK_BCS_BSCP_API}/api/v1`,
@@ -27,7 +27,12 @@ http.interceptors.response.use(
       if (response) {
           let message = response.statusText
           if (response.status === 401) {
-              store.commit('handleLogin', response.data.error.data.login_url)
+              const store = useUserStore(pinia)
+
+              store.$patch((state) => {
+                state.loginUrl = response.data.error.data.login_url
+                state.showLoginModal = true
+              })
               return
           }
           if (response.data.error) {

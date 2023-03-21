@@ -14,10 +14,15 @@ package errf
 
 import "errors"
 
-// ErrCPSInconsistent is error when the number of cps to be queried is inconsistent with the
-// number of cps found. because the application cpsID is obtained through db, then the cps
-// details are queried, data inconsistencies may occur.
-var ErrCPSInconsistent = errors.New("current published strategies are inconsistent")
+var (
+	// ErrCPSInconsistent is error when the number of cps to be queried is inconsistent with the
+	// number of cps found. because the application cpsID is obtained through db, then the cps
+	// details are queried, data inconsistencies may occur.
+	ErrCPSInconsistent = errors.New("current published strategies are inconsistent")
 
-// ErrCPSNotFound is error when the current published strategies not found in db.
-var ErrCPSNotFound = errors.New("current published strategies not found")
+	// ErrCPSNotFound is error when the current published strategies not found in db.
+	ErrCPSNotFound = errors.New("current published strategies not found")
+
+	// ErrPermissionDenied
+	ErrPermissionDenied = errors.New("no permission")
+)

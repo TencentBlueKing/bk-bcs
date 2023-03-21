@@ -12,10 +12,9 @@ limitations under the License.
 
 package service
 
-import "bscp.io/pkg/rest"
+import "net/http"
 
 // Ping is a demo restful handler
-func (s *Service) Ping(cts *rest.Contexts) (interface{}, error) {
-
-	return nil, nil
+func (s *Service) Ping(w http.ResponseWriter, r *http.Request) {
+	w.Write([]byte("Pong"))
 }

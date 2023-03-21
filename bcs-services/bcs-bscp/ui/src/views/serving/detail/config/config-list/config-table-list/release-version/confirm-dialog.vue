@@ -1,6 +1,6 @@
 <script setup lang="ts">
-  import { defineProps, defineEmits, ref } from 'vue'
-  import { createVersion } from '../../../../../../api/config'
+  import { ref } from 'vue'
+  import { createVersion } from '../../../../../../../api/config'
 
   const props = defineProps<{
     show: boolean,

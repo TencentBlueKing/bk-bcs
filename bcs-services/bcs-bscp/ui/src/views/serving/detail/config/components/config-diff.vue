@@ -1,6 +1,5 @@
 <script setup lang="ts">
-    import { defineProps, ref, watch } from 'vue'
-    import { useStore } from 'vuex'
+    import { ref, watch } from 'vue'
     import { PlayShape } from 'bkui-vue/lib/icon'
     import Diff from '../../../../../components/diff/index.vue'
     import { IConfigVersionItem } from '../../../../../types'
@@ -25,7 +24,7 @@
         <aside class="config-list-side">
             <div class="title-area">
                 <span class="title">配置项</span>
-                <span>共 <span class="count">xx</span> 文件存在差异</span>
+                <span>共 <span class="count">xx</span> 项配置有差异</span>
             </div>
             <ul class="configs-wrapper">
                 <li

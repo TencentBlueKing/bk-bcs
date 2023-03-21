@@ -1,39 +1,24 @@
-interface State {
-    appData: AppData,
-    currentVersion: VerionConfig
-}
+// 配置管理的pinia数据
+import { ref } from 'vue'
+import { defineStore } from "pinia";
+import { IConfigVersion } from '../../types/config'
 
-interface AppData {
-    id: number;
+export const useConfigStore = defineStore('config', () => {
+  const versionData = ref<IConfigVersion>({
+    id: 0,
+    attachment: {
+      app_id: 0,
+      biz_id: 0
+    },
+    revision: {
+      create_at: '',
+      creator: ''
+    },
     spec: {
-        name: string;
+      name: '',
+      memo: ''
     }
-}
+  })
 
-interface VerionConfig {
-    attachment: object;
-    id: number;
-    revision: object;
-    spec: object;
-}
-
-export default {
-    namespaced: true,
-    state: {
-        appData: {},
-        currentVersion: {}
-    },
-    getters: {
-        appName (state: State) {
-            return state.appData.spec?.name || ''
-        }
-    },
-    mutations: {
-        setAppData (state: State, payload: AppData) {
-            state.appData = payload
-        },
-        setCurrentVersion (state: State, payload: VerionConfig) {
-            state.currentVersion = payload
-        }
-    }
-}
+  return { versionData }
+})

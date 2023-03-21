@@ -1,5 +1,5 @@
 <script setup lang="ts">
-  import { defineProps, defineEmits, ref, Ref, watch ,onMounted } from 'vue'
+  import { ref, Ref, watch ,onMounted } from 'vue'
   import { useRoute, useRouter } from 'vue-router'
   import { IServingItem } from '../../../../types'
   import { getAllApp } from "../../../../api";
@@ -87,7 +87,10 @@
       </bk-option>
     </bk-group>
     <div class="selector-extensition" slot="extension">
-      <div class="content" @click="router.push({ name: 'serving-mine' })">[icon占位]服务管理</div>
+      <div class="content" @click="router.push({ name: 'serving-mine' })">
+        <i class="bk-bscp-icon icon-app-store app-icon"></i>
+        服务管理
+      </div>
     </div>
   </bk-select>
 </div>
@@ -104,6 +107,9 @@
       &:hover {
         color: #3a84ff;
       }
+    }
+    .app-icon {
+      font-size: 14px;
     }
   }
 </style>

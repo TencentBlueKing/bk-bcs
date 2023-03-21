@@ -48,7 +48,6 @@ func NewInitial(iamSys *sys.Sys, disableAuth bool) (*Initial, error) {
 // InitAuthCenter init auth center's auth model.
 func (i *Initial) InitAuthCenter(ctx context.Context, req *pbas.InitAuthCenterReq) (*pbas.InitAuthCenterResp, error) {
 	kt := kit.FromGrpcContext(ctx)
-	resp := new(pbas.InitAuthCenterResp)
 
 	// if auth is disabled, returns error if user wants to init auth center
 	if i.disableAuth {
@@ -64,8 +63,9 @@ func (i *Initial) InitAuthCenter(ctx context.Context, req *pbas.InitAuthCenterRe
 
 	if err := i.iamSys.Register(kt.Ctx, req.Host); err != nil {
 		logs.Errorf("register to iam failed, err: %v, rid: %s", err, kt.Rid)
-		return resp, nil
+		return nil, err
 	}
 
+	resp := new(pbas.InitAuthCenterResp)
 	return resp, nil
 }

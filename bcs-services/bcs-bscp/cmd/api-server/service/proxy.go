@@ -31,9 +31,9 @@ import (
 	"bscp.io/pkg/logs"
 	pbas "bscp.io/pkg/protocol/auth-server"
 	pbcs "bscp.io/pkg/protocol/config-server"
+	"bscp.io/pkg/rest/view"
 	"bscp.io/pkg/runtime/grpcgw"
 	"bscp.io/pkg/runtime/handler"
-	"bscp.io/pkg/runtime/webannotation"
 	"bscp.io/pkg/serviced"
 	"bscp.io/pkg/tools"
 )
@@ -101,7 +101,7 @@ func (p *proxy) handler() http.Handler {
 	r.With(p.authorizer.UnifiedAuthentication).Get("/api/v1/auth/user/info", UserInfoHandler)
 	r.Route("/api/v1/auth", func(r chi.Router) {
 		r.Use(p.authorizer.UnifiedAuthentication)
-		r.Use(webannotation.BuildAnnotation(p.authorizer))
+		r.Use(view.Generic(p.authorizer))
 		r.Mount("/", p.authSvrMux)
 	})
 
@@ -109,13 +109,13 @@ func (p *proxy) handler() http.Handler {
 	r.Route("/api/v1/config/apps/{app_id}", func(r chi.Router) {
 		r.Use(p.authorizer.UnifiedAuthentication)
 		r.Use(p.authorizer.AppVerified)
-		r.Use(webannotation.BuildAnnotation(p.authorizer))
+		r.Use(view.Generic(p.authorizer))
 		r.Mount("/", p.cfgSvrMux)
 	})
 
 	r.Route("/api/v1/config/", func(r chi.Router) {
 		r.Use(p.authorizer.UnifiedAuthentication)
-		r.Use(webannotation.BuildAnnotation(p.authorizer))
+		r.Use(view.Generic(p.authorizer))
 		r.Mount("/", p.cfgSvrMux)
 	})
 
