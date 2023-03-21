@@ -97,8 +97,18 @@ func (p *proxy) handler() http.Handler {
 
 	r.Get("/healthz", p.Healthz)
 	r.Mount("/", handler.RegisterCommonHandler())
+
+	// iam 回调接口
+	r.Route("/api/v1/auth/iam", func(r chi.Router) {
+		r.Use(auth.IAMVerified)
+		r.Use(view.Generic(p.authorizer))
+		r.Mount("/", p.authSvrMux)
+	})
+
 	// 用户信息
 	r.With(p.authorizer.UnifiedAuthentication).Get("/api/v1/auth/user/info", UserInfoHandler)
+
+	// authserver通用接口
 	r.Route("/api/v1/auth", func(r chi.Router) {
 		r.Use(p.authorizer.UnifiedAuthentication)
 		r.Use(view.Generic(p.authorizer))

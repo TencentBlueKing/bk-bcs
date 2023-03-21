@@ -22,17 +22,17 @@ import (
 	"net/http/httputil"
 	_ "net/http/pprof"
 	"net/url"
-	"regexp"
 	"strings"
 
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/go-chi/render"
 	"github.com/google/uuid"
 	"k8s.io/klog/v2"
 
 	"bscp.io/pkg/components"
-	"bscp.io/pkg/criteria/errf"
 	"bscp.io/pkg/logs"
 	"bscp.io/pkg/metrics"
+	"bscp.io/pkg/rest"
 	"bscp.io/pkg/runtime/ctl"
 )
 
@@ -183,7 +183,6 @@ func RequestID(next http.Handler) http.Handler {
 
 // RequestBodyLogger 记录 requetBody 的中间件
 func RequestBodyLogger(ignoreRequest func(r *http.Request) bool) func(http.Handler) http.Handler {
-	reg := regexp.MustCompile(`\\s+`)
 	return func(next http.Handler) http.Handler {
 		fn := func(w http.ResponseWriter, r *http.Request) {
 			// 过滤的请求, 直接不记录
@@ -194,16 +193,14 @@ func RequestBodyLogger(ignoreRequest func(r *http.Request) bool) func(http.Handl
 
 			body, err := ioutil.ReadAll(r.Body)
 			if err != nil {
-				w.WriteHeader(http.StatusForbidden)
-				fmt.Fprintf(w, errf.Error(errf.New(errf.Unknown, err.Error())).Error())
+				render.Render(w, r, rest.BadRequest(err))
 				return
 			}
 
-			compactedBody := reg.ReplaceAllString(string(body), "")
 			logs.Infof("uri: %s, method: %s, body: %s, remote addr: %s,",
 				r.RequestURI,
 				r.Method,
-				compactedBody,
+				body,
 				r.RemoteAddr,
 			)
 
