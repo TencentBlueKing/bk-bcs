@@ -30,7 +30,6 @@ import (
 	"k8s.io/klog/v2"
 
 	"bscp.io/pkg/components"
-	"bscp.io/pkg/logs"
 	"bscp.io/pkg/metrics"
 	"bscp.io/pkg/rest"
 	"bscp.io/pkg/runtime/ctl"
@@ -182,14 +181,19 @@ func RequestID(next http.Handler) http.Handler {
 }
 
 // RequestBodyLogger 记录 requetBody 的中间件
-func RequestBodyLogger(ignoreRequest func(r *http.Request) bool) func(http.Handler) http.Handler {
+func RequestBodyLogger(ignorePattern ...string) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		fn := func(w http.ResponseWriter, r *http.Request) {
-			// 过滤的请求, 直接不记录
-			if ignoreRequest(r) {
-				next.ServeHTTP(w, r)
-				return
+			for _, p := range ignorePattern {
+				if strings.Contains(r.RequestURI, p) {
+					next.ServeHTTP(w, r)
+					return
+				}
 			}
+
+			ww := middleware.NewWrapResponseWriter(w, r.ProtoMajor)
+			buf := bytes.NewBuffer(nil)
+			ww.Tee(buf)
 
 			body, err := ioutil.ReadAll(r.Body)
 			if err != nil {
@@ -197,15 +201,19 @@ func RequestBodyLogger(ignoreRequest func(r *http.Request) bool) func(http.Handl
 				return
 			}
 
-			logs.Infof("uri: %s, method: %s, body: %s, remote addr: %s,",
-				r.RequestURI,
-				r.Method,
-				body,
-				r.RemoteAddr,
-			)
+			defer func() {
+				klog.Infof("REQ: url: %s, method: %s, body: %s, remote_addr: %s\nRESP: status: %d, body: %s",
+					r.RequestURI,
+					r.Method,
+					body,
+					r.RemoteAddr,
+					ww.Status(),
+					buf.String(),
+				)
+			}()
 
 			r.Body = ioutil.NopCloser(bytes.NewBuffer(body))
-			next.ServeHTTP(w, r)
+			next.ServeHTTP(ww, r)
 		}
 
 		return http.HandlerFunc(fn)
