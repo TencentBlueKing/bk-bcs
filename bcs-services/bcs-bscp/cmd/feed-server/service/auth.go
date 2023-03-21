@@ -14,6 +14,7 @@ package service
 
 import (
 	"fmt"
+	"net/http"
 	"strconv"
 	"strings"
 
@@ -54,6 +55,11 @@ type AuthRepoReq struct {
 	ProjectId string          `json:"projectId,omitempty"`
 	RepoName  string          `json:"repoName,omitempty"`
 	Nodes     []*AuthRepoNode `json:"nodes,omitempty"`
+}
+
+// Bind go-chi/render Binder 接口实现
+func (op *AuthRepoReq) Bind(r *http.Request) error {
+	return nil
 }
 
 // AuthRepoNode auth repo node info.

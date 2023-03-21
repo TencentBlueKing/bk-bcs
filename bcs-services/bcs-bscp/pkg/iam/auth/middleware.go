@@ -54,6 +54,7 @@ func (a authorizer) UnifiedAuthentication(next http.Handler) http.Handler {
 		}
 
 		k := &kit.Kit{
+			Ctx:         r.Context(),
 			User:        username,
 			Rid:         components.RequestIDValue(r.Context()),
 			AppId:       chi.URLParam(r, "app_id"),
