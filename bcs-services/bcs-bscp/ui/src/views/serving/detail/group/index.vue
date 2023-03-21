@@ -93,7 +93,7 @@
       <div class="operate-area">
         <div class="action-btns">
           <bk-button theme="primary" @click="handleCreateGroup"><Plus class="button-icon" />创建分组</bk-button>
-          <div class="group-tabs">
+          <!-- <div class="group-tabs">
             <div
               v-for="(item, index) in categoryTypes"
               :key="item.id"
@@ -105,7 +105,7 @@
               </div>
               <div v-if="index !== categoryTypes.length - 1" class="split-line"></div>
             </div>
-          </div>
+          </div> -->
         </div>
         <bk-input class="search-group-input" placeholder="分组名称">
            <template #suffix>
