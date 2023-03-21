@@ -1,3 +1,19 @@
+export interface IConfigVersion {
+  id: number;
+  attachment: {
+    app_id: number;
+    biz_id: number;
+  };
+  revision: {
+    create_at: string;
+    creator: string;
+  };
+  spec: {
+    name: string;
+    memo: string;
+  };
+}
+
 export interface IConfigItem {
   id: number;
   spec: {

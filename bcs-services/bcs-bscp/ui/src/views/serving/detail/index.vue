@@ -1,13 +1,13 @@
 <script setup lang="ts">
   import { onMounted, ref, watch } from 'vue'
   import { useRoute } from 'vue-router'
-  import { useStore } from 'vuex'
+  import { useServingStore } from '../../../store/serving'
   import { getAppDetail } from '../../../api';
   import LayoutTopBar from "../../../components/layout-top-bar.vue";
   import DetailHeader from "./components/detail-header.vue"
 
   const route = useRoute()
-  const store = useStore()
+  const store = useServingStore()
 
   const bkBizId = ref(String(route.params.spaceId))
   const appId = ref(Number(route.params.appId))
@@ -27,7 +27,10 @@
     appDataLoading.value = true
     try {
       const res = await getAppDetail(bkBizId.value, appId.value)
-      store.commit('config/setAppData', res)
+      console.log(res)
+      store.$patch(state => {
+        state.appData = res
+      })
       appDataLoading.value = false
     } catch (e) {
       console.error(e)
