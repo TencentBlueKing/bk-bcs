@@ -1,8 +1,9 @@
 <script setup lang="ts">
   import { ref, onMounted, computed } from 'vue'
   import { Search } from 'bkui-vue/lib/icon'
-  import { getConfigVersionList } from '../../../../api/config';
-  import { IConfigVersionItem, IRequestFilter ,IPageFilter, FilterOp } from '../../../../types'
+  import InfoBox from "bkui-vue/lib/info-box";
+  import { getConfigVersionList } from '../../../../../api/config';
+  import { IConfigVersionItem, IRequestFilter ,IPageFilter, FilterOp, RuleOp } from '../../../../../types'
 
   const props = defineProps<{
     bkBizId: string,
@@ -17,7 +18,14 @@
     count: 0,
     limit: 10,
   })
-  const filter = ref<IRequestFilter>({ op: FilterOp.AND, rules: [] })
+  const filter = ref<IRequestFilter>({
+    op: FilterOp.AND,
+    rules: [{
+      field: "deprecated",
+      op: RuleOp.eq,
+      value: false
+    }]
+  })
 
   const page = computed(():IPageFilter => {
     return {
@@ -38,12 +46,27 @@
     listLoading.value = false
   }
 
+  const handleTabChange = (tab: string) =>  {
+    currentTab.value = tab
+    filter.value.rules[0].value = tab === 'deprecate'
+    refreshConfigList()
+  }
+
+  // 版本对比
   const handleOpenDiff = (version: IConfigVersionItem) => {
     console.log(version)
   }
 
-  const handleSuperseded = (version: IConfigVersionItem) => {
-    console.log(version)
+  // 废弃
+  const handleDeprecate = (id: number) => {
+    InfoBox({
+      title: '确认废弃此版本？',
+      subTitle: '废弃操作无法撤回，请谨慎操作！',
+      headerAlign: "center" as const,
+      footerAlign: "center" as const,
+      onConfirm: () => {
+      },
+    } as any);
   }
 
   const handlePageLimitChange = (limit: number) => {
@@ -61,8 +84,9 @@
   <section class="version-detail-table">
     <div class="head-operate-wrapper">
       <div class="type-tabs">
-        <div :class="['tab-item', { active: currentTab === 'available' }]" @click="currentTab = 'available'">可用版本</div>
-        <div :class="['tab-item', { active: currentTab === 'superseded' }]" @click="currentTab = 'superseded'">废弃版本</div>
+        <div :class="['tab-item', { active: currentTab === 'available' }]" @click="handleTabChange('available')">可用版本</div>
+        <div class="split-line"></div>
+        <div :class="['tab-item', { active: currentTab === 'deprecate' }]" @click="handleTabChange('deprecate')">废弃版本</div>
       </div>
       <bk-input class="version-search-input" placeholder="版本名称/版本说明/修改人">
         <template #suffix>
@@ -84,7 +108,7 @@
           <bk-table-column label="操作">
             <template v-slot="{ row }">
               <bk-button text theme="primary" @click="handleOpenDiff(row)">版本对比</bk-button>
-              <bk-button style="margin-left: 16px;" text theme="primary" @click="handleSuperseded(row)">废弃</bk-button>
+              <bk-button style="margin-left: 16px;" text theme="primary" @click="handleDeprecate(row.id)">废弃</bk-button>
             </template>
           </bk-table-column>
         </bk-table>
@@ -129,6 +153,12 @@
         color: #3a84ff;
         background: #ffffff;
       }
+    }
+    .split-line {
+      margin: 0 4px;
+      width: 1px;
+      height: 14px;
+      background: #dcdee5;
     }
   }
   .version-search-input {

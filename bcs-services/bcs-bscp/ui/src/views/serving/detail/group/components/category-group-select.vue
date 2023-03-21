@@ -1,17 +1,24 @@
 <script setup lang="ts">
-  import { ref, onMounted, watch } from 'vue'
-  import { ICategoryItem, ECategoryType, IGroupItem } from '../../../../../../types/group';
-  import { getGroupCategories, getCategoryGroupList } from '../../../../../api/group';
+  import { ref, withDefaults, onMounted, watch } from 'vue'
+  import { useRoute, useRouter } from 'vue-router'
+  import { ECategoryType, IAllCategoryGroupItem } from '../../../../../../types/group';
+  import { getAllGroupList } from '../../../../../api/group';
 
-  const props = defineProps<{
+  const route = useRoute()
+  const router = useRouter()
+
+  const props = withDefaults(defineProps<{
+    size: string,
     appId: number,
     multiple: boolean,
     value: string|number|number[]
-  }>()
+  }>(), {
+    size: 'default'
+  })
   const emits = defineEmits(['change'])
 
-  const categoryList = ref<{ config: ICategoryItem, data: IGroupItem[] }[]>([])
-  const categoryLoading = ref(false)
+  const groupList = ref<IAllCategoryGroupItem[]>([])
+  const groupListLoading = ref(false)
   const groups = ref<string|number|number[]>(props.multiple ? [] : '')
 
   watch(() => props.value, (val: string|number|number[]) => {
@@ -19,40 +26,63 @@
   }, { immediate: true })
 
   onMounted(() => {
-    getCategoryList()
+    getGroupList()
   })
 
   // 获取全部分组列表
-  // @todo 需要一个拉取所有分组下全量分组的接口，这里调试用暂时遍历拉取
-  const getCategoryList = async() => {
-    categoryLoading.value = true
-    const params = {
+  const getGroupList = async() => {
+    groupListLoading.value = true
+    const query = {
       mode: ECategoryType.Custom,
       start: 0,
-      limit: 200
+      limit: 200,
     }
-    const res = await getGroupCategories(props.appId, params)
-    const list: { config: ICategoryItem, data: IGroupItem[] }[] = []
-    const groupRes = await Promise.all(res.details.map((item: ICategoryItem) => {
-      const query = {
-        mode: ECategoryType.Custom,
-        start: 0,
-        limit: 200,
-      }
-      return getCategoryGroupList(props.appId, item.id, query)
-    }))
-    groupRes.forEach((item: { count: number, details: IGroupItem[] }, index: number) => {
-      list.push({ config: res.details[index], data: item.details })
-    })
-    categoryList.value = list
-    categoryLoading.value = false
+    const res = await getAllGroupList(props.appId, query)
+    groupList.value = res.details
+    groupListLoading.value = false
+  }
+
+  const handleGoToCreateGroup = () => {
+    const { spaceId, appId } = route.params
+    const targetRoute = router.resolve({ name: 'serving-group', params: { spaceId, appId } })
+    window.open(targetRoute.fullPath, '__blank')
   }
 
 </script>
 <template>
-  <bk-select :value="groups" :loading="categoryLoading" multiple-mode="tag" :multiple="props.multiple" @change="emits('change', $event)">
-    <bk-group v-for="category in categoryList" collapsible :key="category.config.id" :label="category.config.spec.name">
-      <bk-option v-for="group in category.data" :key="group.id" :value="group.id" :label="group.spec.name"></bk-option>
+  <bk-select :value="groups" :size="props.size" :loading="groupListLoading" multiple-mode="tag" :multiple="props.multiple" @change="emits('change', $event)">
+    <bk-group v-for="category in groupList" collapsible :key="category.group_category_id" :label="category.group_category_name">
+      <bk-option v-for="group in category.groups" :key="group.id" :value="group.id" :label="group.spec.name"></bk-option>
     </bk-group>
+    <div class="selector-extensition" slot="extension">
+      <div class="content" @click="handleGoToCreateGroup">
+        <i class="bk-bscp-icon icon-add create-group-icon"></i>
+        服务管理
+      </div>
+    </div>
   </bk-select>
 </template>
+<style lang="scss" scoped>
+  .selector-extensition {
+    .content {
+      height: 40px;
+      line-height: 40px;
+      text-align: center;
+      border-top: 1px solid #dcdee5;
+      background: #fafbfd;
+      font-size: 12px;
+      color: #63656e;
+      cursor: pointer;
+      &:hover {
+        color: #3a84ff;
+        .create-group-icon {
+          color: #3a84ff;
+        }
+      }
+    }
+    .create-group-icon {
+      font-size: 14px;
+      color: #979ba5;
+    }
+  }
+</style>

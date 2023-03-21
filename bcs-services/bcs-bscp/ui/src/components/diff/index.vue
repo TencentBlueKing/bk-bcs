@@ -1,5 +1,4 @@
 <script setup lang="ts">
-    import { defineProps } from 'vue'
     import File from './file.vue'
     import Text from './text.vue'
 

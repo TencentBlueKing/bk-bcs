@@ -1,10 +1,8 @@
 <script setup lang="ts">
-  import { defineProps, ref, computed, watch } from 'vue'
+  import { ref } from 'vue'
   import { AngleDoubleRight } from 'bkui-vue/lib/icon'
-  import VersionList from './version-list.vue'
-  import ConfigDetailTable from './config-detail-table/index.vue'
-  import ConfigDetailList from './config-detail-list.vue'
-  import VersionDetailTable from './version-detail-table.vue'
+  import VersionList from './version-list/index.vue'
+  import ConfigList from './config-list/index.vue'
 
   const props = defineProps<{
     bkBizId: string,
@@ -12,31 +10,32 @@
   }>()
 
   const versionListRef = ref()
-  const releaseId = ref<number|null>(null) // 当前选中的版本ID
-  const versionDetailView = ref(false)
+  const versionDetailView = ref(false) //是否为版本详情视图
 
   const updateVersionList = () => {
     versionListRef.value.getVersionList()
-  }
-
-  const handleUpdateReleaseId = (id: number) => {
-    releaseId.value = id
   }
 
 </script>
 <template>
   <section :class="['serving-config-wrapper', { 'version-detail-view': versionDetailView}]">
     <section class="version-list-side">
-      <VersionDetailTable v-if="versionDetailView" :bk-biz-id="props.bkBizId" :app-id="props.appId" />
-      <VersionList v-else ref="versionListRef" :bk-biz-id="props.bkBizId" :app-id="props.appId" :release-id="releaseId" @updateReleaseId="handleUpdateReleaseId" />
+      <VersionList
+        ref="versionListRef"
+        :version-detail-view="versionDetailView"
+        :bk-biz-id="props.bkBizId"
+        :app-id="props.appId" />
       <div :class="['view-change-trigger', { extend: versionDetailView }]" @click="versionDetailView = !versionDetailView">
         <AngleDoubleRight class="arrow-icon" />
         <span class="text">版本详情</span>
       </div>
     </section>
     <section class="version-config-content">
-      <ConfigDetailList :bk-biz-id="props.bkBizId" :app-id="props.appId" v-if="versionDetailView" />
-      <ConfigDetailTable v-else ref="configListRef" :bk-biz-id="props.bkBizId" :app-id="props.appId" :release-id="releaseId" @updateVersionList="updateVersionList" />
+      <ConfigList
+        :version-detail-view="versionDetailView"
+        :bk-biz-id="props.bkBizId"
+        :app-id="props.appId"
+        @updateVersionList="updateVersionList" />
     </section>
   </section>
 </template>

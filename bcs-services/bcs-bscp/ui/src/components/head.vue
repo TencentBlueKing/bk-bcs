@@ -1,7 +1,9 @@
 <script setup lang="ts">
-  import { useStore } from 'vuex'
+  import { storeToRefs } from 'pinia'
+  import { useUserStore } from '../store/user'
 
-  const store = useStore()
+  const store = useUserStore()
+  const { userInfo } = storeToRefs(store)
 
 </script>
 
@@ -17,7 +19,7 @@
       </div>
     </div>
     <div class="head-right">
-      <span>{{ store.state.userInfo.username }}</span>
+      <span>{{ userInfo.username }}</span>
     </div>
   </div>
 </template>

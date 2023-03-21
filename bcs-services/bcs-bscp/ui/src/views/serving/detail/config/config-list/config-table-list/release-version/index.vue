@@ -1,11 +1,11 @@
 <script setup lang="ts">
-    import { defineProps, ref, onMounted } from 'vue'
+    import { ref, onMounted } from 'vue'
     import { ArrowsLeft, AngleRight } from 'bkui-vue/lib/icon'
-    import VersionLayout from '../../components/version-layout.vue'
+    import VersionLayout from '../../../components/version-layout.vue'
     import ConfirmDialog from './confirm-dialog.vue'
-    import ConfigDiff from '../../components/config-diff.vue'
-    import { getConfigVersionList } from '../../../../../../api/config'
-    import { IConfigVersionItem, FilterOp } from '../../../../../../types'
+    import ConfigDiff from '../../../components/config-diff.vue'
+    import { getConfigVersionList } from '../../../../../../../api/config'
+    import { IConfigVersionItem, FilterOp, RuleOp } from '../../../../../../../types'
 
     const props = defineProps<{
         bkBizId: string,
@@ -20,7 +20,14 @@
     const isConfirmDialogShow = ref(false)
     const versionListLoading = ref(true)
     const versionList = ref([])
-    const filter = { op: FilterOp.AND, rules: [] }
+    const filter = {
+        op: FilterOp.AND,
+        rules: [{
+            field: "deprecated",
+            op: RuleOp.eq,
+            value: false
+        }]
+    }
     const page = {
         count: false,
         start: 0,

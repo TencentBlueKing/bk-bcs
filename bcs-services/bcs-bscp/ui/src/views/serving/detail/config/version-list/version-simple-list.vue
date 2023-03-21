@@ -1,37 +1,53 @@
 <script setup lang="ts">
   import { ref, computed, watch, onMounted, defineExpose } from 'vue'
-  import { useStore } from 'vuex'
+  import { storeToRefs } from 'pinia'
+  import { useServingStore } from '../../../../../store/serving'
+  import { useConfigStore } from '../../../../../store/config'
   import { Ellipsis, ArrowsLeft, AngleRight } from 'bkui-vue/lib/icon'
   import InfoBox from "bkui-vue/lib/info-box";
-  import { getConfigVersionList } from '../../../../api/config'
-  import { IVersionItem, FilterOp } from '../../../../types'
-  import VersionLayout from './components/version-layout.vue'
-  import ConfigDiff from './components/config-diff.vue';
+  import { getConfigVersionList } from '../../../../../api/config'
+  import { FilterOp, RuleOp } from '../../../../../types'
+  import { IConfigVersion } from '../../../../../../types/config'
+  import VersionLayout from '../components/version-layout.vue'
+  import ConfigDiff from '../components/config-diff.vue';
 
-  const store = useStore()
-
-  const emit = defineEmits(['updateReleaseId'])
+  const servingStore = useServingStore()
+  const versionStore = useConfigStore()
+  const { appData } = storeToRefs(servingStore)
+  const { versionData } = storeToRefs(versionStore)
 
   const props = defineProps<{
     bkBizId: string,
     appId: number,
-    releaseId: number|null
   }>()
 
-  const currentConfig: IVersionItem = {
+  const currentConfig: IConfigVersion = {
     id: 0,
-    attachment: {},
-    revision: {},
+    attachment: {
+      app_id: 0,
+      biz_id: 0
+    },
+    revision: {
+      create_at: '',
+      creator: ''
+    },
     spec: {
-      name: '未命名版本'
+      name: '未命名版本',
+      memo: ''
     }
   }
-  const appName = store.getters['config/appName']
   const versionListLoading = ref(false)
-  const versionList = ref<IVersionItem[]>([])
+  const versionList = ref<IConfigVersion[]>([])
   const showDiffPanel = ref(false)
   const diffVersion = ref()
-  const filter = { op: FilterOp.AND, rules: [] }
+  const filter = {
+    op: FilterOp.AND,
+    rules: [{
+      field: "deprecated",
+      op: RuleOp.eq,
+      value: false
+    }]
+  }
   const page = {
     count: false,
     start: 0,
@@ -64,12 +80,13 @@
     }
   }
 
-  const handleSelectVersion = (version: IVersionItem) => {
-    store.commit('config/setCurrentVersion', version)
-    emit('updateReleaseId', version.id)
+  const handleSelectVersion = (version: IConfigVersion) => {
+    versionStore.$patch(state => {
+      state.versionData = version
+    })
   }
 
-  const handleDiffDialogShow = (version: IVersionItem) => {
+  const handleDiffDialogShow = (version: IConfigVersion) => {
     console.log(version)
     diffVersion.value = version
     showDiffPanel.value = true
@@ -101,7 +118,7 @@
       <section
         v-for="(version, index) in listData"
         :key="version.id"
-        :class="['version-item', { active: props.releaseId === version.id }]"
+        :class="['version-item', { active: versionData.id === version.id }]"
         @click="handleSelectVersion(version)">
         <div class="dot-line">
           <div :class="['dot', { first: index === 0, last: index === listData.length - 1 }]"></div>
@@ -123,7 +140,7 @@
         <section class="header-wrapper">
           <span class="header-name" @click="handleDiffClose">
             <ArrowsLeft class="arrow-left" />
-            <span class="service-name">{{ appName }}</span>
+            <span class="service-name">{{ appData.spec.name }}</span>
           </span>
           <AngleRight class="arrow-right" />
           版本对比

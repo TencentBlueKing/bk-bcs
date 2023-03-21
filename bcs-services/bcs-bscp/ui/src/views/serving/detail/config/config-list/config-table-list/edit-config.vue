@@ -1,9 +1,9 @@
 <script setup lang="ts">
   import { ref, watch } from 'vue'
   import ConfigForm from './config-form.vue'
-  import { getConfigItemDetail, getConfigContent, updateServingConfigItem } from '../../../../../api/config'
-  import { IServingEditParams } from '../../../../../types'
-  import { transDataToFile } from '../../../../../utils/file'
+  import { getConfigItemDetail, getConfigContent, updateServingConfigItem } from '../../../../../../api/config'
+  import { IServingEditParams } from '../../../../../../types'
+  import { transDataToFile } from '../../../../../../utils/file'
 
   const getDefaultConfig = () => {
     return {

@@ -1,22 +1,23 @@
 <script setup lang="ts">
 import { onMounted, ref, watch } from 'vue'
-import { useStore } from 'vuex'
+import { useUserStore } from './store/user'
 import isCrossOriginIFrame from './utils/is-cross-origin-iframe'
 
 import Header from "./components/head.vue";
 
-const store = useStore()
+const store = useUserStore()
+const { getUserInfo } = store
 
-const showLoginModal = ref(store.state.showLoginModal)
-
-watch(() => store.state.showLoginModal, () => {
-  const topWindow = isCrossOriginIFrame() ? window : window.top
-  // @ts-ignore
-  topWindow.BLUEKING.corefunc.open_login_dialog(store.state.loginUrl)
+watch(() => store.showLoginModal, (val) => {
+  if (val) {
+    const topWindow = isCrossOriginIFrame() ? window : window.top
+    // @ts-ignore
+    topWindow.BLUEKING.corefunc.open_login_dialog(store.loginUrl)
+  }
 })
 
 onMounted(() => {
-  store.dispatch('getUserInfo')
+  getUserInfo()
 });
 
 

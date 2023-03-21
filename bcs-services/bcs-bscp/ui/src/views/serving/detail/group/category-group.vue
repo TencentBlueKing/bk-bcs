@@ -2,19 +2,22 @@
   import { ref, watch } from 'vue'
   import { RightShape, Del } from 'bkui-vue/lib/icon'
   import InfoBox from "bkui-vue/lib/info-box";
-  import { IGroupItem, ICategoryItem, ECategoryType } from '../../../../../types/group'
+  import { IGroupItem, ICategoryItem, ECategoryType, IAllCategoryGroupItem } from '../../../../../types/group'
   import { getCategoryGroupList, delCategory, deleteGroup } from '../../../../api/group'
   import RuleTag from './components/rule-tag.vue'
 
   const props = defineProps<{
     appId: number,
     mode: ECategoryType,
-    categoryGroup: ICategoryItem
+    categoryGroup: IAllCategoryGroupItem
   }>()
+
+  const emits = defineEmits(['edit'])
 
   const folded = ref(true)
   const listData = ref<IGroupItem[]>([])
   const listLoading = ref(false)
+  const count = ref(props.categoryGroup.groups.length)
   const pagination = ref({
     count: 0,
     limit: 10,
@@ -34,7 +37,7 @@
       start: (pagination.value.current - 1) * pagination.value.limit,
       limit: pagination.value.limit
     }
-    const res = await getCategoryGroupList(props.appId, props.categoryGroup.id, params)
+    const res = await getCategoryGroupList(props.appId, props.categoryGroup.group_category_id, params)
     const { count, details } = res
     listData.value = details
     listLoading.value = false
@@ -58,7 +61,7 @@
   const handleDeleteCategory = () => {
     if (listData.value.length > 0) {
       InfoBox({
-        title: `暂无法删除【${props.categoryGroup.spec.name}】`,
+        title: `暂无法删除【${props.categoryGroup.group_category_name}】`,
         subTitle: '请先删除此分类下所有分组',
         type: "warning",
         headerAlign: "center" as const,
@@ -66,12 +69,12 @@
       } as any)
     } else {
       InfoBox({
-        title: `确认是否删除分类【${props.categoryGroup.spec.name}?】`,
+        title: `确认是否删除分类【${props.categoryGroup.group_category_name}?】`,
         type: "danger",
         headerAlign: "center" as const,
         footerAlign: "center" as const,
         onConfirm: async () => {
-          await delCategory(props.appId, props.categoryGroup.id)
+          await delCategory(props.appId, props.categoryGroup.group_category_id)
           return true
         },
       } as any)
@@ -79,7 +82,9 @@
   }
 
   // 编辑分组
-  const handleEditGroup = (row: IGroupItem) => { console.log(row) }
+  const handleEditGroup = (group: IGroupItem) => { 
+    emits('edit', group)
+   }
 
   // 删除分组
   const handleDeleteGroup = (group: IGroupItem) => { 
@@ -104,7 +109,8 @@
     <div :class="['header-area', { 'expanded': !folded }]" @click="handleToggleFold">
       <div class="category-content">
         <RightShape class="arrow-icon" />
-        <span class="name">{{ categoryGroup.spec.name }}</span>
+        <span class="name">{{ categoryGroup.group_category_name }}</span>
+        <span>（{{ count }}）</span>
       </div>
       <Del class="delete-icon" @click.stop="handleDeleteCategory" />
     </div>
@@ -164,6 +170,9 @@
     .category-content {
       display: flex;
       align-items: center;
+      color: #313238;
+      font-size: 12px;
+      line-height: 16px;
     }
     .arrow-icon {
       display: inline-block;
@@ -172,9 +181,6 @@
     }
     .name {
       margin-left: 9px;
-      color: #313238;
-      font-size: 12px;
-      line-height: 16px;
     }
     .delete-icon {
       font-size: 13px;

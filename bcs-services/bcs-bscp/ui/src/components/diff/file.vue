@@ -1,5 +1,4 @@
 <script setup lang="ts">
-    import { defineProps } from 'vue'
     import { TextFill } from 'bkui-vue/lib/icon'
 
 </script>
