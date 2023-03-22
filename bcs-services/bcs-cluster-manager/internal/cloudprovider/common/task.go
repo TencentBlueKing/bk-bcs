@@ -29,6 +29,15 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/nodeman"
 )
 
+// RegisterCommonActions register common actions
+func RegisterCommonActions() map[string]interface{} {
+	return map[string]interface{}{
+		cloudprovider.BKSOPTask:                  RunBKsopsJob,
+		cloudprovider.WatchTask:                  EnsureWatchComponentTask,
+		cloudprovider.EnsureAutoScalerAction:     EnsureAutoScalerTask,
+	}
+}
+
 // * here are common tasks that for backgroup running
 // * backgroup task running depends on machinery framework
 

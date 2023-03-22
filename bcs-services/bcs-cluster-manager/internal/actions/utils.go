@@ -54,6 +54,7 @@ func GetCloudByCloudID(model store.ClusterManagerModel, cloudID string) (*proto.
 	return cloud, nil
 }
 
+
 // GetNodeGroupByGroupID get nodeGroup info
 func GetNodeGroupByGroupID(model store.ClusterManagerModel, groupID string) (*proto.NodeGroup, error) {
 	nodeGroup, err := model.GetNodeGroup(context.Background(), groupID)

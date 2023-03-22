@@ -406,14 +406,6 @@
             "in": "query",
             "required": false,
             "type": "string"
-          },
-          {
-            "name": "showCredential",
-            "description": "showCredential. cloud密钥是否展示(默认不展示,请注意该信息不可对外暴露)",
-            "in": "query",
-            "required": false,
-            "type": "boolean",
-            "format": "boolean"
           }
         ],
         "tags": [
@@ -513,14 +505,6 @@
             "in": "path",
             "required": true,
             "type": "string"
-          },
-          {
-            "name": "showCredential",
-            "description": "showCredential. cloud密钥是否展示(默认不展示,请注意该信息不可对外暴露)",
-            "in": "query",
-            "required": false,
-            "type": "boolean",
-            "format": "boolean"
           }
         ],
         "tags": [
@@ -4018,6 +4002,46 @@
         ]
       }
     },
+    "/clustermanager/v1/projects/{projectID}/cluster": {
+      "get": {
+        "summary": "查询项目下的集群列表",
+        "description": "获取指定项目下的集群列表",
+        "operationId": "ClusterManager_ListProjectCluster",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerListProjectClusterResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectID",
+            "description": "项目ID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "operator",
+            "description": "operator. 操作者(传参时获取该用户对应集群的权限信息,不传时仅获取集群列表信息)",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      }
+    },
     "/clustermanager/v1/resourceschema/{cloudID}": {
       "get": {
         "summary": "查询资源模型列表",
@@ -6013,6 +6037,11 @@
           "type": "string",
           "description": "节点ipv6地址",
           "title": "innerIPv6"
+        },
+        "nodeGroupName": {
+          "type": "string",
+          "description": "节点池名称",
+          "title": "nodeGroupName"
         }
       },
       "description": "记录节点信息，用于节点列表展示",
@@ -8008,7 +8037,7 @@
         },
         "gracePeriodSeconds": {
           "type": "integer",
-          "format": "int64"
+          "format": "int32"
         },
         "ignoreAllDaemonSets": {
           "type": "boolean",
@@ -9838,6 +9867,11 @@
           },
           "description": "集群节点列表",
           "title": "data"
+        },
+        "web_annotations": {
+          "$ref": "#/definitions/clustermanagerWebAnnotationsV2",
+          "description": "权限信息",
+          "title": "web_annotations"
         }
       },
       "description": "查询集群节点列表返回",
@@ -9929,6 +9963,54 @@
           "title": "results"
         }
       }
+    },
+    "clustermanagerListProjectClusterResp": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clustermanagerCluster"
+          },
+          "description": "集群信息列表",
+          "title": "data"
+        },
+        "clusterExtraInfo": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/clustermanagerExtraInfo"
+          }
+        },
+        "web_annotations": {
+          "$ref": "#/definitions/clustermanagerWebAnnotations",
+          "description": "用户所属项目的集群权限",
+          "title": "web_annotations"
+        }
+      },
+      "description": "查询项目下的集群列表返回",
+      "title": "ListProjectClusterResp",
+      "required": [
+        "code",
+        "message",
+        "data"
+      ]
     },
     "clustermanagerListProjectResponse": {
       "type": "object",
@@ -13430,6 +13512,16 @@
         }
       },
       "title": "https://github.com/golang/protobuf/issues/1118\nhttps://pkg.go.dev/google.golang.org/protobuf/types/known/structpb#Struct"
+    },
+    "clustermanagerWebAnnotationsV2": {
+      "type": "object",
+      "properties": {
+        "perms": {
+          "type": "object",
+          "description": "权限信息",
+          "title": "perms"
+        }
+      }
     },
     "clustermanagerZoneInfo": {
       "type": "object",

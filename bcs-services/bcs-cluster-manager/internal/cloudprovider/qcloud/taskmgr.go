@@ -73,9 +73,6 @@ func newtask() *Task {
 
 	// init qcloud node-group task
 
-	// autoScaler task
-	task.works[ensureAutoScalerTask] = tasks.EnsureAutoScalerTask
-
 	// create nodeGroup task
 	task.works[createCloudNodeGroupTask] = tasks.CreateCloudNodeGroupTask
 	task.works[checkCloudNodeGroupStatusTask] = tasks.CheckCloudNodeGroupStatusTask
@@ -334,21 +331,7 @@ func (t *Task) BuildImportClusterTask(cls *proto.Cluster, opt *cloudprovider.Imp
 	task.StepSequence = append(task.StepSequence, registerClusterKubeConfigTask)
 
 	// step2: install cluster watch component
-	installWatchComponentStep := &proto.Step{
-		Name:       installWatchComponentTask,
-		System:     "api",
-		Params:     make(map[string]string),
-		Retry:      0,
-		Start:      nowStr,
-		Status:     cloudprovider.TaskStatusNotStarted,
-		TaskMethod: cloudprovider.WatchTask,
-		TaskName:   "安装集群watch组件",
-	}
-	installWatchComponentStep.Params[cloudprovider.ProjectIDKey.String()] = cls.ProjectID
-	installWatchComponentStep.Params[cloudprovider.ClusterIDKey.String()] = cls.ClusterID
-
-	task.Steps[installWatchComponentTask] = installWatchComponentStep
-	task.StepSequence = append(task.StepSequence, installWatchComponentTask)
+	common.BuildWatchComponentTaskStep(task, cls)
 
 	// set current step
 	if len(task.StepSequence) == 0 {
@@ -806,21 +789,7 @@ func (t *Task) BuildCreateNodeGroupTask(group *proto.NodeGroup, opt *cloudprovid
 	task.StepSequence = append(task.StepSequence, checkCloudNodeGroupStatusTask)
 
 	// step3. ensure autoscaler in cluster
-	ensureCAStep := &proto.Step{
-		Name:       ensureAutoScalerTask,
-		System:     "api",
-		Params:     make(map[string]string),
-		Retry:      3,
-		Status:     cloudprovider.TaskStatusNotStarted,
-		TaskMethod: ensureAutoScalerTask,
-		TaskName:   "开启自动伸缩组件",
-	}
-	ensureCAStep.Params["ClusterID"] = group.ClusterID
-	ensureCAStep.Params["NodeGroupID"] = group.NodeGroupID
-	ensureCAStep.Params["CloudID"] = group.Provider
-
-	task.Steps[ensureAutoScalerTask] = ensureCAStep
-	task.StepSequence = append(task.StepSequence, ensureAutoScalerTask)
+	common.BuildEnsureAutoScalerTaskStep(task, "", group.ClusterID, group.Provider)
 
 	// set current step
 	if len(task.StepSequence) == 0 {
@@ -1042,22 +1011,8 @@ func (t *Task) BuildDeleteNodeGroupTask(group *proto.NodeGroup, nodes []*proto.N
 
 	// step2. ensure autoscaler to remove this nodegroup
 	if group.EnableAutoscale {
-		ensureAutoScalerStep := &proto.Step{
-			Name:       ensureAutoScalerTask,
-			System:     "api",
-			Params:     make(map[string]string),
-			Retry:      3,
-			Start:      nowStr,
-			Status:     cloudprovider.TaskStatusNotStarted,
-			TaskMethod: ensureAutoScalerTask,
-			TaskName:   fmt.Sprintf("从集群 AutoScaler 移除 NodeGroup[%s]", group.NodeGroupID),
-		}
-		ensureAutoScalerStep.Params["ClusterID"] = group.ClusterID
-		ensureAutoScalerStep.Params["NodeGroupID"] = group.NodeGroupID
-		ensureAutoScalerStep.Params["CloudID"] = group.Provider
-
-		task.Steps[ensureAutoScalerTask] = ensureAutoScalerStep
-		task.StepSequence = append(task.StepSequence, ensureAutoScalerTask)
+		stepName := fmt.Sprintf("从集群 AutoScaler 移除 NodeGroup[%s]", group.NodeGroupID)
+		common.BuildEnsureAutoScalerTaskStep(task, stepName, group.ClusterID, group.Provider)
 	}
 
 	// set current step
@@ -1282,22 +1237,7 @@ func (t *Task) BuildSwitchNodeGroupAutoScalingTask(group *proto.NodeGroup, enabl
 
 	// setting all steps details
 	// step1. ensure auto scaler
-	ensureStep := &proto.Step{
-		Name:       ensureAutoScalerTask,
-		System:     "api",
-		Params:     make(map[string]string),
-		Retry:      3,
-		Start:      nowStr,
-		Status:     cloudprovider.TaskStatusNotStarted,
-		TaskMethod: ensureAutoScalerTask,
-		TaskName:   "安装/更新 AutoScaler",
-	}
-	ensureStep.Params["ClusterID"] = group.ClusterID
-	ensureStep.Params["NodeGroupID"] = group.NodeGroupID
-	ensureStep.Params["CloudID"] = group.Provider
-
-	task.Steps[ensureAutoScalerTask] = ensureStep
-	task.StepSequence = append(task.StepSequence, ensureAutoScalerTask)
+	common.BuildEnsureAutoScalerTaskStep(task, "", group.ClusterID, group.Provider)
 
 	// set current step
 	if len(task.StepSequence) == 0 {
@@ -1343,21 +1283,7 @@ func (t *Task) BuildUpdateAutoScalingOptionTask(scalingOption *proto.ClusterAuto
 
 	// setting all steps details
 	// step1. ensure auto scaler
-	ensureStep := &proto.Step{
-		Name:       ensureAutoScalerTask,
-		System:     "api",
-		Params:     make(map[string]string),
-		Retry:      3,
-		Start:      nowStr,
-		Status:     cloudprovider.TaskStatusNotStarted,
-		TaskMethod: ensureAutoScalerTask,
-		TaskName:   "安装/更新 AutoScaler",
-	}
-	ensureStep.Params["ClusterID"] = scalingOption.ClusterID
-	ensureStep.Params["CloudID"] = scalingOption.Provider
-
-	task.Steps[ensureAutoScalerTask] = ensureStep
-	task.StepSequence = append(task.StepSequence, ensureAutoScalerTask)
+	common.BuildEnsureAutoScalerTaskStep(task, "", scalingOption.ClusterID, scalingOption.Provider)
 
 	// set current step
 	if len(task.StepSequence) == 0 {
@@ -1403,21 +1329,7 @@ func (t *Task) BuildSwitchAutoScalingOptionStatusTask(scalingOption *proto.Clust
 
 	// setting all steps details
 	// step1. ensure auto scaler
-	ensureStep := &proto.Step{
-		Name:       ensureAutoScalerTask,
-		System:     "api",
-		Params:     make(map[string]string),
-		Retry:      3,
-		Start:      nowStr,
-		Status:     cloudprovider.TaskStatusNotStarted,
-		TaskMethod: ensureAutoScalerTask,
-		TaskName:   "安装/更新 AutoScaler",
-	}
-	ensureStep.Params["ClusterID"] = scalingOption.ClusterID
-	ensureStep.Params["CloudID"] = scalingOption.Provider
-
-	task.Steps[ensureAutoScalerTask] = ensureStep
-	task.StepSequence = append(task.StepSequence, ensureAutoScalerTask)
+	common.BuildEnsureAutoScalerTaskStep(task, "", scalingOption.ClusterID, scalingOption.Provider)
 
 	// set current step
 	if len(task.StepSequence) == 0 {

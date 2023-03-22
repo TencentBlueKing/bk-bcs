@@ -141,6 +141,16 @@ service ClusterManager {
     };
   }
 
+  rpc ListProjectCluster(ListProjectClusterReq) returns (ListProjectClusterResp) {
+    option (google.api.http) = {
+      get : "/clustermanager/v1/projects/{projectID}/cluster"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "获取指定项目下的集群列表"
+      summary : "查询项目下的集群列表"
+    };
+  }
+
   rpc ListCommonCluster(ListCommonClusterReq) returns (ListCommonClusterResp) {
     option (google.api.http) = {
       get : "/clustermanager/v1/sharedclusters"
@@ -4697,6 +4707,60 @@ message ListCommonClusterResp {
   ];
 }
 
+message ListProjectClusterReq {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "ListProjectClusterReq"
+      description : "获取项目下的集群列表"
+    }
+  };
+  string projectID = 1 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "projectID",
+      description : "项目ID"
+    },
+    (validate.rules).string = {max_len : 100}
+  ];
+  string operator = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "operator",
+    description : "操作者(传参时获取该用户对应集群的权限信息,不传时仅获取集群列表信息)"
+  }];
+}
+
+message ListProjectClusterResp {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "ListProjectClusterResp"
+      description : "查询项目下的集群列表返回"
+      required : [ "code", "message", "data" ]
+    }
+  };
+
+  uint32 code = 1 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "code",
+      description : "返回错误码"
+  }];
+  string message = 2 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "message",
+    description : "返回错误信息"
+  }];
+  bool result = 3 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
+  {title : "result", description : "返回结果"} ];
+  repeated Cluster data = 4
+  [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "data",
+    description : "集群信息列表"
+  } ];
+  map<string, ExtraInfo> clusterExtraInfo = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "clusterExtraInfo",
+    description : "集群其他标识信息,cluster结构之外的数据获取"
+  }];
+  WebAnnotations web_annotations = 8[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "web_annotations",
+    description : "用户所属项目的集群权限"
+  }];
+}
+
 message ListClusterReq {
   option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
     json_schema : {
@@ -4873,6 +4937,13 @@ message WebAnnotations {
   map<string, google.protobuf.Struct> perms = 1;
 }
 
+message WebAnnotationsV2 {
+  google.protobuf.Struct perms = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "perms",
+    description: "权限信息"
+  }];
+}
+
 message ListNodesInClusterRequest {
   option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
     json_schema : {
@@ -4966,6 +5037,10 @@ message ListNodesInClusterResponse {
   repeated ClusterNode data = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title : "data",
     description : "集群节点列表"
+  }];
+  WebAnnotationsV2 web_annotations = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "web_annotations",
+    description : "权限信息"
   }];
 }
 
@@ -5071,6 +5146,10 @@ message ClusterNode {
   string innerIPv6 = 24 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "innerIPv6",
     description: "节点ipv6地址"
+  }];
+  string nodeGroupName = 25 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "nodeGroupName",
+    description: "节点池名称"
   }];
 }
 
@@ -6781,11 +6860,6 @@ message GetCloudRequest {
       description : "云模板ID"
     }, (validate.rules).string = {min_len : 2, max_len : 20, pattern : "^[0-9a-zA-Z-]+$"}
   ];
-  bool showCredential = 2 [
-    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-      title : "showCredential",
-      description : "cloud密钥是否展示(默认不展示,请注意该信息不可对外暴露)"
-    }];
 }
 
 message GetCloudResponse {
@@ -6848,11 +6922,6 @@ message ListCloudRequest {
     title: "cloudProvider", 
     description: "特性实现模式"
   }];
-  bool showCredential = 7 [
-    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-      title : "showCredential",
-      description : "cloud密钥是否展示(默认不展示,请注意该信息不可对外暴露)"
-    }];
 }
 
 message ListCloudResponse {
@@ -9480,7 +9549,7 @@ message DrainNodeRequest {
       description : "节点名称列表，和节点内网IP列表二选一，优先节点名称列表"
   }];
   bool force = 4;
-  uint32 gracePeriodSeconds = 5;
+  int32 gracePeriodSeconds = 5;
   bool ignoreAllDaemonSets = 6;
   uint32 timeout = 7;
   bool deleteLocalData = 8;

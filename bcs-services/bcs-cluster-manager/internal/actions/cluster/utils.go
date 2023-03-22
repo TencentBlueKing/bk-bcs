@@ -15,6 +15,7 @@ package cluster
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"math"
 	"sort"
@@ -28,6 +29,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/util"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions"
@@ -378,6 +380,40 @@ func deleteClusterCredentialInfo(store store.ClusterManagerModel, clusterID stri
 	blog.V(4).Infof("deleteClusterCredentialInfo[%s] successful", clusterID)
 }
 
+// importClusterData record cluster data
+func importClusterData(model store.ClusterManagerModel, cls *proto.Cluster) error {
+	if cls.ClusterID == "" {
+		err := model.CreateCluster(context.Background(), cls)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	}
+
+	dstCls, err := model.GetCluster(context.Background(), cls.ClusterID)
+	if err != nil && !errors.Is(err, drivers.ErrTableRecordNotFound) {
+		return err
+	}
+
+	// db not exist cluster
+	if dstCls == nil {
+		err = model.CreateCluster(context.Background(), cls)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	}
+
+	err = model.UpdateCluster(context.Background(), cls)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func asyncDeleteImportedClusterInfo(ctx context.Context, store store.ClusterManagerModel, cluster *proto.Cluster) {
 	ctx = cloudprovider.WithTaskIDForContext(ctx,
 		fmt.Sprintf("asyncDeleteImportedClusterInfo:%s", cluster.ClusterID))
@@ -399,24 +435,38 @@ func removeNodeSensitiveInfo(nodes []*proto.Node) {
 	}
 }
 
-func transNodeToClusterNode(node *proto.Node) *proto.ClusterNode {
+func transNodeToClusterNode(model store.ClusterManagerModel, node *proto.Node) *proto.ClusterNode {
+	var (
+		nodeGroupName = ""
+	)
+	if node.NodeGroupID != "" {
+		group, err := model.GetNodeGroup(context.Background(), node.NodeGroupID)
+		if err != nil {
+			blog.Warnf("transNodeToClusterNode GetNodeGroup[%s] failed: %v", node.NodeGroupID, err)
+		} else {
+			nodeGroupName = group.Name
+		}
+	}
+
 	return &proto.ClusterNode{
-		NodeID:       node.NodeID,
-		InnerIP:      node.InnerIP,
-		InstanceType: node.InstanceType,
-		CPU:          node.CPU,
-		Mem:          node.Mem,
-		GPU:          node.GPU,
-		Status:       node.Status,
-		ZoneID:       node.ZoneID,
-		NodeGroupID:  node.NodeGroupID,
-		ClusterID:    node.ClusterID,
-		VPC:          node.VPC,
-		Region:       node.Region,
-		Passwd:       node.Passwd,
-		Zone:         node.Zone,
-		DeviceID:     node.DeviceID,
-		NodeName:     node.NodeName,
+		NodeID:        node.NodeID,
+		InnerIP:       node.InnerIP,
+		InstanceType:  node.InstanceType,
+		CPU:           node.CPU,
+		Mem:           node.Mem,
+		GPU:           node.GPU,
+		Status:        node.Status,
+		ZoneID:        node.ZoneID,
+		NodeGroupID:   node.NodeGroupID,
+		ClusterID:     node.ClusterID,
+		VPC:           node.VPC,
+		Region:        node.Region,
+		Passwd:        node.Passwd,
+		Zone:          node.Zone,
+		DeviceID:      node.DeviceID,
+		NodeName:      node.NodeName,
+		NodeGroupName: nodeGroupName,
+		InnerIPv6:     node.InnerIPv6,
 	}
 }
 
@@ -452,12 +502,43 @@ func filterNodesRole(k8sNodes []*corev1.Node, master bool) []*corev1.Node {
 	return nodes
 }
 
+// transK8sNodesToClusterNodes parse master nodes to cluster nodes
+func transK8sNodesToClusterNodes(clusterID string, k8sNodes []*corev1.Node) []*proto.ClusterNode {
+	nodes := make([]*proto.ClusterNode, 0)
+
+	k8sNodesMap := make(map[string]*corev1.Node, 0)
+	for i := range k8sNodes {
+		k8sNodesMap[k8sNodes[i].Name] = k8sNodes[i]
+	}
+
+	for name, node := range k8sNodesMap {
+		ipv4, ipv6 := getNodeDualAddress(node)
+
+		nodes = append(nodes, &proto.ClusterNode{
+			InnerIP:   ipv4,
+			Status:    transNodeStatus(common.StatusRunning, node),
+			ClusterID: clusterID,
+			NodeName:  name,
+			Labels:    node.Labels,
+			Taints:    actions.K8sTaintToTaint(node.Spec.Taints),
+			UnSchedulable: func(u bool) uint32 {
+				if u {
+					return 1
+				}
+				return 0
+			}(node.Spec.Unschedulable),
+			InnerIPv6: ipv6,
+		})
+	}
+
+	return nodes
+}
+
 // mergeClusterNodes merge k8s nodes and db nodes
 // 1. 集群中不存在的节点，并且在cluster manager中状态处于初始化中、初始化失败、移除中、移除失败状态时，需要展示cluster manager中数据
 // 2. 集群中存在的节点，则以集群中为准，注意状态的转换
 // 3. 适配双栈, 通过nodeName 作为唯一值, 当前数据库nodeName 可能为空, 因此需要适配转换
-func mergeClusterNodes(cmNodes []*proto.ClusterNode, k8sNodes []*corev1.Node) []*proto.ClusterNode {
-	clusterID := ""
+func mergeClusterNodes(clusterID string, cmNodes []*proto.ClusterNode, k8sNodes []*corev1.Node) []*proto.ClusterNode {
 	// cnNodes exist in k8s cluster and get nodeName
 	GetCmNodeNames(cmNodes, k8sNodes)
 
@@ -465,7 +546,6 @@ func mergeClusterNodes(cmNodes []*proto.ClusterNode, k8sNodes []*corev1.Node) []
 	k8sNodesMap := make(map[string]*corev1.Node, 0)
 
 	for i := range cmNodes {
-		clusterID = cmNodes[i].ClusterID
 		cmNodesMap[cmNodes[i].NodeName] = cmNodes[i]
 	}
 	for i := range k8sNodes {
@@ -515,7 +595,8 @@ func mergeClusterNodes(cmNodes []*proto.ClusterNode, k8sNodes []*corev1.Node) []
 					}
 					return 0
 				}(node.Spec.Unschedulable),
-				InnerIPv6: ipv6,
+				InnerIPv6:     ipv6,
+				NodeGroupName: n.NodeGroupName,
 			})
 		} else {
 			nodes2 = append(nodes2, &proto.ClusterNode{
@@ -597,4 +678,12 @@ func getNodeIPAddress(node *corev1.Node) ([]string, []string) {
 func getNodeDualAddress(node *corev1.Node) (string, string) {
 	ipv4s, ipv6s := getNodeIPAddress(node)
 	return utils.SliceToString(ipv4s), utils.SliceToString(ipv6s)
+}
+
+func shieldClusterInfo(cluster *proto.Cluster) *proto.Cluster {
+	if cluster != nil {
+		cluster.KubeConfig = ""
+	}
+
+	return cluster
 }
