@@ -269,6 +269,35 @@ func (c *Client) QueryMetadata(ctx context.Context, opt *NodeOption) (map[string
 	return respBody.Data, nil
 }
 
+// BinaryHead get head data.
+func (c *Client) BinaryHead(ctx context.Context, nodePath string) (*BinaryHeadValue, error) {
+	resp := c.client.Head().
+		WithContext(ctx).
+		SubResourcef(nodePath).
+		WithHeaders(c.basicHeader).
+		Do()
+	if resp.Err != nil {
+		return nil, resp.Err
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("response status code: %d", resp.StatusCode)
+	}
+	fileSize := resp.Header.Get("Content-Length")
+	size, _ := strconv.Atoi(fileSize)
+	message := &BinaryHeadValue{
+		ByteSize: int64(size),
+		Sha256:   resp.Header.Get("X-Checksum-Sha256"),
+	}
+
+	return message, nil
+}
+
+type BinaryHeadValue struct {
+	ByteSize int64  `json:"byte_size"`
+	Sha256   string `json:"sha256"`
+}
+
 // Client is s3 client.
 type ClientS3 struct {
 	Config *cc.Repository
@@ -353,6 +382,21 @@ func (c *ClientS3) IsNodeExist(ctx context.Context, bucketName, nodePath string)
 		return false, err
 	}
 	return true, nil
+}
+
+// BinaryHead get head data
+func (c *ClientS3) BinaryHead(ctx context.Context, bucketName, nodePath string) (*BinaryHeadValue, error) {
+
+	resp, err := c.Client.StatObject(ctx, bucketName, nodePath, minio.StatObjectOptions{Checksum: true})
+	if err != nil {
+		return nil, err
+	}
+	fileSize := resp.Size
+	message := &BinaryHeadValue{
+		ByteSize: fileSize,
+	}
+
+	return message, nil
 }
 
 // DeleteNode delete node.

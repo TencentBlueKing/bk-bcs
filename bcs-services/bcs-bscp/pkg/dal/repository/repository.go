@@ -33,6 +33,7 @@ const (
 
 type FileApiType interface {
 	DownloadFile(w http.ResponseWriter, r *http.Request)
+	BinaryFile(w http.ResponseWriter, r *http.Request)
 	UploadFile(w http.ResponseWriter, r *http.Request)
 }
 
@@ -154,6 +155,52 @@ func (s S3Client) UploadFile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	msg, _ := json.Marshal(ResponseBody{Code: 200, Message: "success"})
+	w.Write(msg)
+}
+
+//BinaryFile get s3 head data
+func (s S3Client) BinaryFile(w http.ResponseWriter, r *http.Request) {
+	kt, err := gwparser.Parse(r.Context(), r.Header)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		fmt.Fprintf(w, errf.Error(err).Error())
+		return
+	}
+
+	authRes, needReturn := s.authorize(kt, r)
+	if needReturn {
+		fmt.Fprintf(w, authRes)
+		return
+	}
+	config := cc.ApiServer().Repo
+
+	bizID, _, err := GetBizIDAndAppID(nil, r)
+	if err != nil {
+		logs.Errorf("get biz_id and app_id from request failed, err: %v, rid: %s", err, kt.Rid)
+		return
+	}
+
+	s3PathName, err := repo.GenRepoName(bizID)
+	if err != nil {
+		logs.Errorf("generate S3 repository name failed, err: %v, rid: %s", err, kt.Rid)
+		fmt.Fprintf(w, errf.Error(err).Error())
+		return
+	}
+	sha256 := strings.ToLower(r.Header.Get(constant.ContentIDHeaderKey))
+	fullPath, err := repo.GenS3NodeFullPath(s3PathName, sha256)
+	if err != nil {
+		logs.Errorf("create S3 FullPath failed, err: %v, err")
+		fmt.Fprintf(w, errf.Error(err).Error())
+		return
+	}
+
+	binary, err := s.s3Cli.BinaryHead(kt.Ctx, config.S3.BucketName, fullPath)
+	if err != nil {
+		logs.Errorf("get binary information failed, err: %v, rid: %s", err)
+		return
+	}
+	binary.Sha256 = sha256
+	msg, _ := json.Marshal(binary)
 	w.Write(msg)
 }
 
