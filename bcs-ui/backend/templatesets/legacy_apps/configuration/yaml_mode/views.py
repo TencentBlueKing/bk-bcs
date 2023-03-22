@@ -13,6 +13,7 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 import json
+import yaml
 import logging
 
 from rest_framework import viewsets
@@ -105,10 +106,30 @@ class YamlTemplateViewSet(viewsets.ViewSet, TemplatePermission):
         """
         template = get_template_by_project_and_id(project_id, template_id)
         data = self._request_data(request, project_id=project_id)
+        for temp_files in data.get("template_files"):
+            duplicate = self.check_duplicate_template_files(temp_files.get("files"))
+            if duplicate:
+                return Response({'code': 400,'message': f'{temp_files.get("resource_name")} 包含同名资源 {duplicate}'})
+
         serializer = serializers.UpdateTemplateSLZ(template, data=data, context={"request": request})
         serializer.is_valid(raise_exception=True)
         template = serializer.save()
         return Response({"template_id": template.id})
+
+    def check_duplicate_template_files(self, files):
+        name_keys = {}
+        for f in files:
+            if f.get("action") == "delete":
+                continue
+            for doc in yaml.safe_load_all(f.get("content")):
+                metadata = doc.get("metadata")
+                name = metadata.get("name")
+                if not name:
+                    continue
+                if name_keys.get(name):
+                    return f.get("name")
+                name_keys[name] = True
+        return ""
 
     def get_template_by_show_version(self, request, project_id, template_id, show_version_id):
         serializer = GetShowVersionSLZ(data=self.kwargs)
