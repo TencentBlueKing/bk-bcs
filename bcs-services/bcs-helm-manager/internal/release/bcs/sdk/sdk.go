@@ -177,7 +177,7 @@ func (c *client) List(_ context.Context, option release.ListOption) ([]*rspb.Rel
 }
 
 // Install helm release through helm client
-func (c *client) Install(_ context.Context, config release.HelmInstallConfig) (*release.HelmInstallResult, error) {
+func (c *client) Install(ctx context.Context, config release.HelmInstallConfig) (*release.HelmInstallResult, error) {
 	blog.Infof("sdk client try install release name %s, namespace %s", config.Name, config.Namespace)
 
 	conf := new(action.Configuration)
@@ -227,7 +227,7 @@ func (c *client) Install(_ context.Context, config release.HelmInstallConfig) (*
 		return nil, err
 	}
 
-	r, err := installer.Run(chartF, values)
+	r, err := installer.Run(ctx, chartF, values)
 	if err != nil {
 		blog.Errorf("sdk client install failed, %s, "+
 			"namespace %s, name %s", err.Error(), config.Namespace, config.Name)
@@ -254,7 +254,7 @@ func (c *client) Install(_ context.Context, config release.HelmInstallConfig) (*
 }
 
 // Upgrade helm release through helm client
-func (c *client) Upgrade(_ context.Context, config release.HelmUpgradeConfig) (*release.HelmUpgradeResult, error) {
+func (c *client) Upgrade(ctx context.Context, config release.HelmUpgradeConfig) (*release.HelmUpgradeResult, error) {
 	blog.Infof("sdk client try upgrade release name %s, namespace %s", config.Name, config.Namespace)
 
 	conf := new(action.Configuration)
@@ -301,7 +301,7 @@ func (c *client) Upgrade(_ context.Context, config release.HelmUpgradeConfig) (*
 		return nil, err
 	}
 
-	r, err := upgrader.Run(config.Name, chartF, values)
+	r, err := upgrader.Run(ctx, config.Name, chartF, values)
 	if err != nil {
 		// install when upgrade has --install args and release is not exist
 		if e, ok := err.(*driver.StorageDriverError); ok && upgrader.Install &&
