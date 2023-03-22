@@ -1,10 +1,14 @@
-import { Store } from 'vuex';
+import { Store, MutationPayload } from 'vuex';
 import { merge, get, set } from 'lodash';
 
 interface Storage {
   getItem: (key: string) => any;
   setItem: (key: string, value: any) => void;
   removeItem: (key: string) => void;
+}
+interface Effect {
+  type: string
+  effect: (state, store) => void
 }
 
 interface Options<State> {
@@ -19,6 +23,7 @@ interface Options<State> {
   getState: (key: string, storage: Storage) => any;
   setState: (key: string, state: any, storage: Storage) => void;
   assertStorage?: (storage: Storage) => void | Error;
+  mutationEffect?: Effect[]
 }
 
 function reducer(state, paths) {
@@ -67,6 +72,13 @@ export default <State>(opt: Partial<Options<State>> = {}) => {
 
   assertStorage(options.storage);
   const savedState = options.getState(options.key, options.storage);
+  const effectMap = (options.mutationEffect || []).reduce<Record<string, Effect['effect']>>((pre, curent) => {
+    if (pre[curent.type]) {
+      console.warn(`repeat type ${curent.type}`);
+    }
+    pre[curent.type] = curent.effect;
+    return pre;
+  }, {});
 
   return (store: Store<State>) => {
     if (typeof savedState === 'object' && savedState !== null) {
@@ -78,7 +90,8 @@ export default <State>(opt: Partial<Options<State>> = {}) => {
         ));
     }
 
-    options.subscriber(store)((mutation, state) => {
+    options.subscriber(store)((mutation: MutationPayload, state) => {
+      effectMap[mutation.type]?.(state, store);
       options.setState(
         options.key,
         options.reducer(state, options.paths),

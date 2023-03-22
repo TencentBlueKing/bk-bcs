@@ -125,7 +125,8 @@ func (p *PortBindChecker) recordPortBindingStatusMetric(portBindingList *network
 		cntMap[portBinding.Status.Status] = cntMap[portBinding.Status.Status] + 1
 
 		// 检查端口时间是否过久
-		if notReadyTimeStr, ok := portBinding.Annotations[constant.AnnotationForPortBindingNotReadyTimestamp]; ok {
+		if notReadyTimeStr, ok := portBinding.Annotations[constant.
+			AnnotationForPortBindingNotReadyTimestamp]; ok && notReadyTimeStr != "" {
 			notReadyTime, err := time.Parse(time.RFC3339Nano, notReadyTimeStr)
 			if err != nil {
 				blog.Warnf("parse not ready time for portbinding '%s/%s' failed, err: %s",

@@ -171,7 +171,7 @@
               </bk-option>
             </bk-select>
           </bk-form-item>
-          <bk-form-item label="调试用分组" required>
+          <!-- <bk-form-item label="调试用分组" required>
             <bk-switcher
               v-model="formData.mode"
               theme="primary"
@@ -180,7 +180,7 @@
               :false-value="mode.custom">
             </bk-switcher>
             <p class="debug-tips">启用调试用分组后，仅可使用 UID 作为分组规则，且配置版本将不跟随主线</p>
-          </bk-form-item>
+          </bk-form-item> -->
           <bk-form-item v-if="formData.mode === ECategoryType.Custom" label="分组规则" required>
             <div v-for="(rule, index) in formData.rules" class="rule-config" :key="index">
               <div

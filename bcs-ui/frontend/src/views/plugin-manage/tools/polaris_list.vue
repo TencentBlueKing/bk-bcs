@@ -146,7 +146,7 @@
             </div>
           </div>
 
-          <div class="bk-form-item">
+          <!-- <div class="bk-form-item">
             <div class="bk-form-content">
               <div class="bk-form-inline-item" style="width: 320px;">
                 <label class="bk-label">{{$t('描述')}}：</label>
@@ -160,7 +160,7 @@
                 </div>
               </div>
             </div>
-          </div>
+          </div> -->
 
           <div class="bk-form-item">
             <div class="bk-form-content">

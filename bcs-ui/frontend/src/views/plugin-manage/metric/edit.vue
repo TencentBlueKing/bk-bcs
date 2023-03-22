@@ -112,7 +112,7 @@
             <bk-button type="primary" :loading="isLoading" @click="confirmEditMetric">
               {{$t('提交')}}
             </bk-button>
-            <bk-button type="button" :disabled="isLoading" @click="hideEditMetric">
+            <bk-button class="!ml-[5px]" type="button" :disabled="isLoading" @click="hideEditMetric">
               {{$t('取消')}}
             </bk-button>
           </div>
@@ -412,6 +412,7 @@ export default {
       try {
         this.isLoading = true;
         await this.$store.dispatch('metric/updateServiceMonitor', Object.assign({}, this.editParams));
+        this.$bkMessage({ theme: 'success', message: this.$t('编辑成功') });
         this.$emit('edit-success');
       } catch (e) {
         console.error(e);

@@ -21,6 +21,7 @@ import (
 
 	k8scorev1 "k8s.io/api/core/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/tools/record"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -289,11 +290,11 @@ func (pbr *PortBindingReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&networkextensionv1.PortBinding{}).
 		Watches(&source.Kind{Type: &k8scorev1.Pod{}}, NewPodFilter(mgr.GetClient())).
-		WithEventFilter(getPortBindingPredicate()).
+		WithEventFilter(pbr.getPortBindingPredicate()).
 		Complete(pbr)
 }
 
-func getPortBindingPredicate() predicate.Predicate {
+func (pbr *PortBindingReconciler) getPortBindingPredicate() predicate.Predicate {
 	return predicate.Funcs{
 		UpdateFunc: func(e event.UpdateEvent) bool {
 			newPoolBinding, okNew := e.ObjectNew.(*networkextensionv1.PortBinding)
@@ -310,6 +311,30 @@ func getPortBindingPredicate() predicate.Predicate {
 				blog.V(5).Infof("portbinding %+v updated, but spec not change", newPoolBinding)
 				return false
 			}
+			return true
+		},
+		DeleteFunc: func(deleteEvent event.DeleteEvent) bool {
+			portBinding, ok := deleteEvent.Object.(*networkextensionv1.PortBinding)
+			if !ok {
+				return true
+			}
+
+			pod := &k8scorev1.Pod{}
+			if err := pbr.k8sClient.Get(pbr.ctx, types.NamespacedName{
+				Namespace: portBinding.GetNamespace(),
+				Name:      portBinding.GetName(),
+			}, pod); err != nil {
+				if k8serrors.IsNotFound(err) {
+					// pod已被删除，portBinding被删除符合预期
+					return false
+				}
+				blog.Warnf("get pod '%s/%s' failed, err: %s", portBinding.GetNamespace(), portBinding.GetName(),
+					err.Error())
+				return true
+			}
+
+			blog.Infof("portBinding '%s/%s' is deleted while pod exist, push reconcile", portBinding.GetNamespace(),
+				portBinding.GetName())
 			return true
 		},
 	}
