@@ -95,6 +95,22 @@ func (s *Schema) parseSchema(docNode interface{}, curSchema *subSchema) error {
 
 	m := cast.ToStringMap(docNode)
 
+	if err := s.parseDesc(curSchema, m); err != nil {
+		return err
+	}
+
+	if err := s.parseItems(curSchema, m); err != nil {
+		return err
+	}
+
+	if err := s.parseProp(curSchema, m); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *Schema) parseDesc(curSchema *subSchema, m map[string]interface{}) error {
 	// type 只支持单类型，不支持复合类型，且必须存在
 	if !mapx.ExistsKey(m, keyType) {
 		return NewRequiredErr(curSchema, keyType)
@@ -142,7 +158,10 @@ func (s *Schema) parseSchema(docNode interface{}, curSchema *subSchema) error {
 			curSchema.Required = append(curSchema.Required, r.(string))
 		}
 	}
+	return nil
+}
 
+func (s *Schema) parseItems(curSchema *subSchema, m map[string]interface{}) error {
 	// minItems
 	if mapx.ExistsKey(m, keyMinItems) {
 		maxItemsIntValue := mustBeInteger(m[keyMinItems])
@@ -206,7 +225,10 @@ func (s *Schema) parseSchema(docNode interface{}, curSchema *subSchema) error {
 		}
 		curSchema.Items = newSchema
 	}
+	return nil
+}
 
+func (s *Schema) parseProp(curSchema *subSchema, m map[string]interface{}) error {
 	// properties
 	if mapx.ExistsKey(m, keyProperties) {
 		if err := s.parseProperties(m[keyProperties], curSchema); err != nil {
@@ -255,7 +277,6 @@ func (s *Schema) parseSchema(docNode interface{}, curSchema *subSchema) error {
 			return err
 		}
 	}
-
 	return nil
 }
 
@@ -316,6 +337,26 @@ func parseUIComp(docNode interface{}, curSchema *subSchema) error {
 	p := cast.ToStringMap(c[keyProps])
 	propsSubPath := genSubPath(keyUIComp, keyProps)
 
+	if err := parseUICompClearable(curSchema, p, propsSubPath); err != nil {
+		return err
+	}
+
+	if err := parseUICompDatasource(curSchema, p, propsSubPath); err != nil {
+		return err
+	}
+
+	if err := parseUICompRemoteConf(curSchema, p, propsSubPath); err != nil {
+		return err
+	}
+
+	if err := parseUICompDisabled(curSchema, p, propsSubPath); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func parseUICompClearable(curSchema *subSchema, p map[string]interface{}, propsSubPath string) error {
 	// ui:component.props.clearable
 	if mapx.ExistsKey(p, keyClearable) {
 		if !isKind(p[keyClearable], reflect.Bool) {
@@ -342,7 +383,10 @@ func parseUIComp(docNode interface{}, curSchema *subSchema) error {
 		multiple := cast.ToBool(p[keyMultiple])
 		curSchema.UIComp.Props.Multiple = &multiple
 	}
+	return nil
+}
 
+func parseUICompDatasource(curSchema *subSchema, p map[string]interface{}, propsSubPath string) error {
 	// ui:component.props.datasource
 	if mapx.ExistsKey(p, keyDataSource) {
 		dsSubPath := genSubPath(propsSubPath, keyDataSource)
@@ -398,7 +442,10 @@ func parseUIComp(docNode interface{}, curSchema *subSchema) error {
 		placeholder := cast.ToString(p[keyPlaceholder])
 		curSchema.UIComp.Props.Placeholder = &placeholder
 	}
+	return nil
+}
 
+func parseUICompRemoteConf(curSchema *subSchema, p map[string]interface{}, propsSubPath string) error {
 	// ui:component.props.remoteconfig
 	if mapx.ExistsKey(p, keyRemoteConf) {
 		rcSubPath := genSubPath(propsSubPath, keyRemoteConf)
@@ -454,7 +501,10 @@ func parseUIComp(docNode interface{}, curSchema *subSchema) error {
 		unit := cast.ToString(p[keyUnit])
 		curSchema.UIComp.Props.Unit = &unit
 	}
+	return nil
+}
 
+func parseUICompDisabled(curSchema *subSchema, p map[string]interface{}, propsSubPath string) error {
 	// ui:component.props.disabled
 	if mapx.ExistsKey(p, keyDisabled) {
 		if !isKind(p[keyDisabled], reflect.Bool) {
