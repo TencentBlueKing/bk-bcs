@@ -124,14 +124,14 @@ func (c *Client) generateGateWayAuth() (string, error) {
 }
 
 // GetAgentStatus get host agent status
-func (c *Client) GetAgentStatus(req *GetAgentStatusReq) (*GetAgentStatusResp, error) {
+func (c *Client) GetAgentStatus(req *GetAgentStatusReqV2) (*GetAgentStatusRespV2, error) {
 	if c == nil {
 		return nil, ErrServerNotInit
 	}
 
 	var (
-		reqURL   = fmt.Sprintf("%s/get_agent_status/", c.server)
-		respData = &GetAgentStatusResp{}
+		reqURL   = fmt.Sprintf("%s/list_agent_state", c.server)
+		respData = &GetAgentStatusRespV2{}
 	)
 
 	_, _, errs := gorequest.New().

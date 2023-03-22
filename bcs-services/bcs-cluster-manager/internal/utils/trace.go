@@ -11,30 +11,22 @@
  *
  */
 
-package install
+package utils
 
-import "time"
+// ContextKey xxx
+type ContextKey string
 
-// Installer is the interface for app installer
-type Installer interface {
-	IsInstalled(clusterID string) (bool, error)
-	Install(clusterID, values string) error
-	Upgrade(clusterID, values string) error
-	Uninstall(clusterID string) error
-	CheckAppStatus(clusterID string, timeout time.Duration) (bool, error)
-}
+const (
+	// RequestIDContextKey 请求的requestID
+	RequestIDContextKey ContextKey = "requestID"
+	// TraceIDContextKey 链路跟踪需要的trace id
+	TraceIDContextKey ContextKey = "traceID"
+	// UsernameContextKey 用户名
+	UsernameContextKey ContextKey = "username"
+)
 
-// InstallerType type
-type InstallerType string
-
-// String toString
-func (it InstallerType) String() string {
-	return string(it)
-}
-
-var (
-	// DefaultCmdFlag xxx
-	DefaultCmdFlag = []map[string]interface{}{{"--insecure-skip-tls-verify": ""}, {"--wait": true}}
-	// DefaultArgsFlag xxx
-	DefaultArgsFlag = []string{"--insecure-skip-tls-verify", "--wait"}
+// HeaderKey string
+const (
+	// RequestIDKey ...
+	RequestIDHeaderKey = "X-Request-Id"
 )

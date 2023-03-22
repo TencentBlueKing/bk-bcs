@@ -70,6 +70,7 @@ func (ga *GetAction) Handle(
 			delete(task.CommonParams, k)
 		}
 	}
+	hiddenTaskPassword(task)
 
 	resp.Data = task
 	ga.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)

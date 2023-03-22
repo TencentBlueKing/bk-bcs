@@ -33,6 +33,9 @@ replicaCount: {{.ReplicaCount}}
 
 namespace: {{.Namespace}}
 
+image:
+  registry: {{.Registry}}
+
 command:
 - ./bcs-cluster-autoscaler
 - --v=4
@@ -44,9 +47,6 @@ command:
 {{end}}
 - --expander={{.Expander}}
 - --skip-nodes-with-local-storage={{.SkipNodesWithLocalStorage}}
-- --initial-node-group-backoff-duration=10s
-- --max-node-group-backoff-duration=3m
-- --node-group-backoff-reset-timeout=5m
 - --scale-down-enabled={{.IsScaleDownEnable}}
 - --max-empty-bulk-delete={{.MaxEmptyBulkDelete}}
 - --scale-down-unneeded-time={{.ScaleDownUnneededTime}}
@@ -63,6 +63,7 @@ command:
 - --scale-down-delay-after-add={{.ScaleDownDelayAfterAdd}}
 - --scale-down-delay-after-delete={{.ScaleDownDelayAfterDelete}}
 - --scale-down-delay-after-failure={{.ScaleDownDelayAfterFailure}}
+- --ignore-daemonsets-utilization=true
 
 env:
   apiAddress: "{{.APIAddress}}"
@@ -112,6 +113,7 @@ type AutoScalerValues struct {
 	ScaleDownDelayAfterAdd           time.Duration
 	ScaleDownDelayAfterDelete        time.Duration
 	ScaleDownDelayAfterFailure       time.Duration
+	Registry                         string
 }
 
 // AutoScaler component paras
@@ -141,6 +143,7 @@ func (as *AutoScaler) GetValues() (string, error) {
 		APIAddress:   op.ComponentDeploy.BCSAPIGateway,
 		Token:        op.ComponentDeploy.Token,
 		ReplicaCount: as.Replicas,
+		Registry:     op.ComponentDeploy.Registry,
 	}
 	values.Expander = as.AutoScalingOption.Expander
 	values.SkipNodesWithLocalStorage = as.AutoScalingOption.SkipNodesWithLocalStorage
