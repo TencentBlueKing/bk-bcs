@@ -88,6 +88,10 @@ type MetricHandler interface {
 		step time.Duration) ([]*prompb.TimeSeries, error)
 	GetClusterDiskioUsage(ctx context.Context, projectId, clusterId string, start, end time.Time,
 		step time.Duration) ([]*prompb.TimeSeries, error)
+	GetClusterDiskioUsed(ctx context.Context, projectId, clusterId string, start, end time.Time,
+		step time.Duration) ([]*prompb.TimeSeries, error)
+	GetClusterDiskioTotal(ctx context.Context, projectId, clusterId string, start, end time.Time,
+		step time.Duration) ([]*prompb.TimeSeries, error)
 	GetNodeInfo(ctx context.Context, projectId, clusterId, nodeName string, t time.Time) (*NodeInfo, error)
 	GetNodeCPUUsage(ctx context.Context, projectId, clusterId, nodeName string, start, end time.Time,
 		step time.Duration) ([]*prompb.TimeSeries, error)

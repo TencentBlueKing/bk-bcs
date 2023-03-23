@@ -303,17 +303,26 @@ func GetLabelMatchValue(name string, matchers []storepb.LabelMatcher) (string, e
 	if m == nil {
 		return "", nil
 	}
+	return m.Value, nil
+}
 
-	if m.Type == storepb.LabelMatcher_EQ {
-		return m.Value, nil
+// GetLabelMatchFromSeries :
+func GetLabelMatchFromSeries(name string, matchers []prompb.Label) *prompb.Label {
+	for _, m := range matchers {
+		if m.Name == name {
+			return &m
+		}
 	}
+	return nil
+}
 
-	if m.Type == storepb.LabelMatcher_RE {
-		return m.Value, nil
+// GetLabelMatchValueFromSeries :
+func GetLabelMatchValueFromSeries(name string, matchers []prompb.Label) string {
+	m := GetLabelMatchFromSeries(name, matchers)
+	if m == nil {
+		return ""
 	}
-
-	// 不支持 "不等于", "正则不等于" 2 个匹配规则
-	return "", errors.Errorf("Not support match type: %s", m.Type)
+	return m.Value
 }
 
 // SampleStreamToSeries :
