@@ -156,8 +156,8 @@ func TestCommit(t *testing.T) {
 			for _, req := range reqs {
 				ctx, header := cases.GenApiCtxHeader()
 				resp, err := cli.Commit.Create(ctx, header, &req)
-				So(err, ShouldBeNil)
-				So(resp, ShouldNotBeNil)
+				So(err, ShouldNotBeNil)
+				So(resp, ShouldBeNil)
 			}
 		})
 	})
@@ -216,8 +216,8 @@ func TestCommit(t *testing.T) {
 			for _, req := range reqs {
 				ctx, header := cases.GenApiCtxHeader()
 				resp, err := cli.Commit.List(ctx, header, req)
-				So(err, ShouldBeNil)
-				So(resp, ShouldNotBeNil)
+				So(err, ShouldNotBeNil)
+				So(resp, ShouldBeNil)
 			}
 		})
 	})

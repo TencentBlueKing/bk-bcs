@@ -49,13 +49,14 @@ func (s *Strategy) Create(ctx context.Context, header http.Header, req *pbcs.Cre
 	}
 
 	pbResp := &struct {
-		Data *pbcs.CreateStrategyResp `json:"data"`
+		Data  *pbcs.CreateStrategyResp `json:"data"`
+		Error *rest.ErrorPayload       `json:"error"`
 	}{}
 	if err := resp.Into(pbResp); err != nil {
 		return nil, err
 	}
 
-	return pbResp.Data, nil
+	return pbResp.Data, pbResp.Error
 }
 
 // Update function to update strategy.
@@ -75,13 +76,14 @@ func (s *Strategy) Update(ctx context.Context, header http.Header, req *pbcs.Upd
 	}
 
 	pbResp := &struct {
-		Data *pbcs.UpdateStrategyResp `json:"data"`
+		Data  *pbcs.UpdateStrategyResp `json:"data"`
+		Error *rest.ErrorPayload       `json:"error"`
 	}{}
 	if err := resp.Into(pbResp); err != nil {
 		return nil, err
 	}
 
-	return pbResp.Data, nil
+	return pbResp.Data, pbResp.Error
 }
 
 // Delete function to delete strategy.
@@ -101,13 +103,14 @@ func (s *Strategy) Delete(ctx context.Context, header http.Header, req *pbcs.Del
 	}
 
 	pbResp := &struct {
-		Data *pbcs.DeleteStrategyResp `json:"data"`
+		Data  *pbcs.DeleteStrategyResp `json:"data"`
+		Error *rest.ErrorPayload       `json:"error"`
 	}{}
 	if err := resp.Into(pbResp); err != nil {
 		return nil, err
 	}
 
-	return pbResp.Data, nil
+	return pbResp.Data, pbResp.Error
 }
 
 // List to list strategy.
@@ -126,11 +129,12 @@ func (s *Strategy) List(ctx context.Context, header http.Header, req *pbcs.ListS
 	}
 
 	pbResp := &struct {
-		Data *pbcs.ListStrategiesResp `json:"data"`
+		Data  *pbcs.ListStrategiesResp `json:"data"`
+		Error *rest.ErrorPayload       `json:"error"`
 	}{}
 	if err := resp.Into(pbResp); err != nil {
 		return nil, err
 	}
 
-	return pbResp.Data, nil
+	return pbResp.Data, pbResp.Error
 }

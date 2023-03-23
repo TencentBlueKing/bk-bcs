@@ -48,13 +48,14 @@ func (p *Publish) PublishWithStrategy(ctx context.Context, header http.Header, r
 	}
 
 	pbResp := &struct {
-		Data *pbcs.PublishResp `json:"data"`
+		Data  *pbcs.PublishResp  `json:"data"`
+		Error *rest.ErrorPayload `json:"error"`
 	}{}
 	if err := resp.Into(pbResp); err != nil {
 		return nil, err
 	}
 
-	return pbResp.Data, nil
+	return pbResp.Data, pbResp.Error
 }
 
 // FinishPublishWithStrategy function to finish publish with strategy.
@@ -74,13 +75,14 @@ func (p *Publish) FinishPublishWithStrategy(ctx context.Context, header http.Hea
 	}
 
 	pbResp := &struct {
-		Data *pbcs.FinishPublishResp `json:"data"`
+		Data  *pbcs.FinishPublishResp `json:"data"`
+		Error *rest.ErrorPayload      `json:"error"`
 	}{}
 	if err := resp.Into(pbResp); err != nil {
 		return nil, err
 	}
 
-	return pbResp.Data, nil
+	return pbResp.Data, pbResp.Error
 }
 
 // ListStrategyPublishHistory function to list strategy publish history.
@@ -99,11 +101,12 @@ func (p *Publish) ListStrategyPublishHistory(ctx context.Context, header http.He
 	}
 
 	pbResp := &struct {
-		Data *pbcs.ListPubStrategyHistoriesResp `json:"data"`
+		Data  *pbcs.ListPubStrategyHistoriesResp `json:"data"`
+		Error *rest.ErrorPayload                 `json:"error"`
 	}{}
 	if err := resp.Into(pbResp); err != nil {
 		return nil, err
 	}
 
-	return pbResp.Data, nil
+	return pbResp.Data, pbResp.Error
 }

@@ -48,13 +48,14 @@ func (c *ConfigItem) Create(ctx context.Context, header http.Header, req *pbcs.C
 	}
 
 	pbResp := &struct {
-		Data *pbcs.CreateConfigItemResp `json:"data"`
+		Data  *pbcs.CreateConfigItemResp `json:"data"`
+		Error *rest.ErrorPayload         `json:"error"`
 	}{}
 	if err := resp.Into(pbResp); err != nil {
 		return nil, err
 	}
 
-	return pbResp.Data, nil
+	return pbResp.Data, pbResp.Error
 }
 
 // Update function to update config item.
@@ -74,13 +75,14 @@ func (c *ConfigItem) Update(ctx context.Context, header http.Header, req *pbcs.U
 	}
 
 	pbResp := &struct {
-		Data *pbcs.UpdateConfigItemResp `json:"data"`
+		Data  *pbcs.UpdateConfigItemResp `json:"data"`
+		Error *rest.ErrorPayload         `json:"error"`
 	}{}
 	if err := resp.Into(pbResp); err != nil {
 		return nil, err
 	}
 
-	return pbResp.Data, nil
+	return pbResp.Data, pbResp.Error
 }
 
 // Delete function to delete config item.
@@ -100,13 +102,14 @@ func (c *ConfigItem) Delete(ctx context.Context, header http.Header, req *pbcs.D
 	}
 
 	pbResp := &struct {
-		Data *pbcs.DeleteConfigItemResp `json:"data"`
+		Data  *pbcs.DeleteConfigItemResp `json:"data"`
+		Error *rest.ErrorPayload         `json:"error"`
 	}{}
 	if err := resp.Into(pbResp); err != nil {
 		return nil, err
 	}
 
-	return pbResp.Data, nil
+	return pbResp.Data, pbResp.Error
 }
 
 // List to list config item.
@@ -115,7 +118,7 @@ func (c *ConfigItem) List(ctx context.Context, header http.Header,
 
 	resp := c.client.Post().
 		WithContext(ctx).
-		SubResourcef("/config/list/config_item/config_item/app_id/%d/biz_id/%d", req.AppId, req.BizId).
+		SubResourcef("/config/apps/%d/config_items", req.AppId).
 		WithHeaders(header).
 		Body(req).
 		Do()
@@ -125,11 +128,12 @@ func (c *ConfigItem) List(ctx context.Context, header http.Header,
 	}
 
 	pbResp := &struct {
-		Data *pbcs.ListConfigItemsResp `json:"data"`
+		Data  *pbcs.ListConfigItemsResp `json:"data"`
+		Error *rest.ErrorPayload        `json:"error"`
 	}{}
 	if err := resp.Into(pbResp); err != nil {
 		return nil, err
 	}
 
-	return pbResp.Data, nil
+	return pbResp.Data, pbResp.Error
 }

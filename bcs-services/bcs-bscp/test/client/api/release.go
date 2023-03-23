@@ -48,13 +48,14 @@ func (r *Release) Create(ctx context.Context, header http.Header, req *pbcs.Crea
 	}
 
 	pbResp := &struct {
-		Data *pbcs.CreateReleaseResp `json:"data"`
+		Data  *pbcs.CreateReleaseResp `json:"data"`
+		Error *rest.ErrorPayload      `json:"error"`
 	}{}
 	if err := resp.Into(pbResp); err != nil {
 		return nil, err
 	}
 
-	return pbResp.Data, nil
+	return pbResp.Data, pbResp.Error
 }
 
 // List to list release.
@@ -72,11 +73,12 @@ func (r *Release) List(ctx context.Context, header http.Header, req *pbcs.ListRe
 	}
 
 	pbResp := &struct {
-		Data *pbcs.ListReleasesResp `json:"data"`
+		Data  *pbcs.ListReleasesResp `json:"data"`
+		Error *rest.ErrorPayload     `json:"error"`
 	}{}
 	if err := resp.Into(pbResp); err != nil {
 		return nil, err
 	}
 
-	return pbResp.Data, nil
+	return pbResp.Data, pbResp.Error
 }

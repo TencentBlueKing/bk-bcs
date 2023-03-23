@@ -20,23 +20,25 @@ import (
 	"bscp.io/pkg/rest"
 )
 
-// App application client
-type App struct {
+// Hook related interface.
+type Hook struct {
 	client rest.ClientInterface
 }
 
-// NewAppClient get a new app client
-func NewAppClient(client rest.ClientInterface) *App {
-	return &App{
+// NewHookClient get a new config item client
+func NewHookClient(client rest.ClientInterface) *Hook {
+	return &Hook{
 		client: client,
 	}
 }
 
-// Create function to create application.
-func (a *App) Create(ctx context.Context, header http.Header, req *pbcs.CreateAppReq) (*pbcs.CreateAppResp, error) {
-	resp := a.client.Post().
+// Create function to create config item.
+func (c *Hook) Create(ctx context.Context, header http.Header, req *pbcs.CreateHookReq) (
+	*pbcs.CreateHookResp, error) {
+
+	resp := c.client.Post().
 		WithContext(ctx).
-		SubResourcef("/config/create/app/app/biz_id/%d", req.BizId).
+		SubResourcef("/config/apps/%d/hooks", req.AppId).
 		WithHeaders(header).
 		Body(req).
 		Do()
@@ -46,8 +48,8 @@ func (a *App) Create(ctx context.Context, header http.Header, req *pbcs.CreateAp
 	}
 
 	pbResp := &struct {
-		Data  *pbcs.CreateAppResp `json:"data"`
-		Error *rest.ErrorPayload  `json:"error"`
+		Data  *pbcs.CreateHookResp `json:"data"`
+		Error *rest.ErrorPayload   `json:"error"`
 	}{}
 	if err := resp.Into(pbResp); err != nil {
 		return nil, err
@@ -56,11 +58,14 @@ func (a *App) Create(ctx context.Context, header http.Header, req *pbcs.CreateAp
 	return pbResp.Data, pbResp.Error
 }
 
-// Update function to update application.
-func (a *App) Update(ctx context.Context, header http.Header, req *pbcs.UpdateAppReq) (*pbcs.UpdateAppResp, error) {
-	resp := a.client.Put().
+// Update function to update config item.
+func (c *Hook) Update(ctx context.Context, header http.Header, req *pbcs.UpdateHookReq) (
+	*pbcs.UpdateHookResp, error) {
+
+	resp := c.client.Put().
 		WithContext(ctx).
-		SubResourcef("/config/update/app/app/app_id/%d/biz_id/%d", req.Id, req.BizId).
+		SubResourcef("/config/apps/%d/hooks/%d",
+			req.AppId, req.HookId).
 		WithHeaders(header).
 		Body(req).
 		Do()
@@ -70,8 +75,8 @@ func (a *App) Update(ctx context.Context, header http.Header, req *pbcs.UpdateAp
 	}
 
 	pbResp := &struct {
-		Data  *pbcs.UpdateAppResp `json:"data"`
-		Error *rest.ErrorPayload  `json:"error"`
+		Data  *pbcs.UpdateHookResp `json:"data"`
+		Error *rest.ErrorPayload   `json:"error"`
 	}{}
 	if err := resp.Into(pbResp); err != nil {
 		return nil, err
@@ -80,11 +85,14 @@ func (a *App) Update(ctx context.Context, header http.Header, req *pbcs.UpdateAp
 	return pbResp.Data, pbResp.Error
 }
 
-// Delete function to delete application.
-func (a *App) Delete(ctx context.Context, header http.Header, req *pbcs.DeleteAppReq) (*pbcs.DeleteAppResp, error) {
-	resp := a.client.Delete().
+// Delete function to delete config item.
+func (c *Hook) Delete(ctx context.Context, header http.Header, req *pbcs.DeleteHookReq) (
+	*pbcs.DeleteHookResp, error) {
+
+	resp := c.client.Delete().
 		WithContext(ctx).
-		SubResourcef("/config/delete/app/app/app_id/%d/biz_id/%d", req.Id, req.BizId).
+		SubResourcef("/config/apps/%d/hooks/%d",
+			req.AppId, req.HookId).
 		WithHeaders(header).
 		Body(req).
 		Do()
@@ -94,8 +102,8 @@ func (a *App) Delete(ctx context.Context, header http.Header, req *pbcs.DeleteAp
 	}
 
 	pbResp := &struct {
-		Data  *pbcs.DeleteAppResp `json:"data"`
-		Error *rest.ErrorPayload  `json:"error"`
+		Data  *pbcs.DeleteHookResp `json:"data"`
+		Error *rest.ErrorPayload   `json:"error"`
 	}{}
 	if err := resp.Into(pbResp); err != nil {
 		return nil, err
@@ -104,11 +112,13 @@ func (a *App) Delete(ctx context.Context, header http.Header, req *pbcs.DeleteAp
 	return pbResp.Data, pbResp.Error
 }
 
-// List to list application.
-func (a *App) List(ctx context.Context, header http.Header, req *pbcs.ListAppsReq) (*pbcs.ListAppsResp, error) {
-	resp := a.client.Post().
+// List to list config item.
+func (c *Hook) List(ctx context.Context, header http.Header,
+	req *pbcs.ListHooksReq) (*pbcs.ListHooksResp, error) {
+
+	resp := c.client.Post().
 		WithContext(ctx).
-		SubResourcef("/config/list/app/app/biz_id/%d", req.BizId).
+		SubResourcef("/config/apps/%d/hooks/list", req.AppId).
 		WithHeaders(header).
 		Body(req).
 		Do()
@@ -118,11 +128,12 @@ func (a *App) List(ctx context.Context, header http.Header, req *pbcs.ListAppsRe
 	}
 
 	pbResp := &struct {
-		Data  *pbcs.ListAppsResp `json:"data"`
-		Error *rest.ErrorPayload `json:"error"`
+		Data  *pbcs.ListHooksResp `json:"data"`
+		Error *rest.ErrorPayload  `json:"error"`
 	}{}
 	if err := resp.Into(pbResp); err != nil {
 		return nil, err
 	}
+
 	return pbResp.Data, pbResp.Error
 }

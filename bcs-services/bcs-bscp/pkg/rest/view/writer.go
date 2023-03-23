@@ -21,15 +21,17 @@ import (
 
 	"bscp.io/pkg/iam/auth"
 	"bscp.io/pkg/kit"
+	"bscp.io/pkg/rest/view/modifier"
 	"bscp.io/pkg/rest/view/webannotation"
 )
 
 // GenericResponseWriter 自定义Write，自动补充 data 和 web_annotations 数据
 type GenericResponseWriter struct {
 	http.ResponseWriter
-	authorizer auth.Authorizer
-	annotation *webannotation.Annotation
-	err        error // low-level runtime error
+	authorizer     auth.Authorizer
+	annotation     *webannotation.Annotation
+	modifyRespFunc modifier.ModifyRespFunc
+	err            error // low-level runtime error
 }
 
 // Write http write 接口实现
@@ -37,6 +39,14 @@ func (w *GenericResponseWriter) Write(data []byte) (int, error) {
 	// 错误不需要特殊处理
 	if w.err != nil {
 		return w.ResponseWriter.Write(data)
+	}
+
+	if w.modifyRespFunc != nil {
+		var err error
+		data, err = w.modifyRespFunc(data)
+		if err != nil {
+			return 0, err
+		}
 	}
 
 	buf := bytes.NewBufferString(`{"data":`)
@@ -86,6 +96,13 @@ func (w *GenericResponseWriter) BuildWebAnnotation(ctx context.Context, msg prot
 	}
 
 	return nil
+}
+
+// SetModifyRespFunc set a function to modify response for a proto msg which needs it
+func (w *GenericResponseWriter) SetModifyRespFunc(msg proto.Message) {
+	if f, ok := modifier.AllModifyRespFunc[string(proto.MessageName(msg))]; ok {
+		w.modifyRespFunc = f
+	}
 }
 
 // SetError 设置错误请求

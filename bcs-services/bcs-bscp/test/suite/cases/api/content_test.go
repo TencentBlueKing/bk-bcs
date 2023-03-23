@@ -15,10 +15,11 @@ package api
 import (
 	"testing"
 
+	pbcs "bscp.io/pkg/protocol/config-server"
 	. "github.com/smartystreets/goconvey/convey" // import convey.
 
+	"bscp.io/pkg/criteria/constant"
 	"bscp.io/pkg/dal/table"
-	pbcs "bscp.io/pkg/protocol/config-server"
 	"bscp.io/pkg/tools"
 	"bscp.io/test/client/api"
 	"bscp.io/test/suite"
@@ -52,6 +53,14 @@ func TestContent(t *testing.T) {
 		size = uint64(len(content))
 	})
 
+	Convey("Upload Content Test", t, func() {
+		ctx, header := cases.GenApiCtxHeader()
+		header.Set(constant.ContentIDHeaderKey, signature)
+		resp, err := cli.Content.Upload(ctx, header, cases.TBizID, appId, content)
+		So(err, ShouldBeNil)
+		So(resp, ShouldNotBeNil)
+	})
+
 	Convey("Create Content Test", t, func() {
 		Convey("1.create_content normal test", func() {
 			// create content
@@ -68,6 +77,7 @@ func TestContent(t *testing.T) {
 			So(resp, ShouldNotBeNil)
 			So(resp.Id, ShouldNotEqual, uint32(0))
 
+			// due to byte_size in response is string type, so it will cause unmarshal err, we skip it for a while
 			// verify by list content
 			listReq, err := cases.GenListContentByIdsReq(cases.TBizID, appId, []uint32{resp.Id})
 			ctx, header = cases.GenApiCtxHeader()
@@ -136,8 +146,8 @@ func TestContent(t *testing.T) {
 			for _, req := range reqs {
 				ctx, header := cases.GenApiCtxHeader()
 				resp, err := cli.Content.Create(ctx, header, req)
-				So(err, ShouldBeNil)
-				So(resp, ShouldNotBeNil)
+				So(err, ShouldNotBeNil)
+				So(resp, ShouldBeNil)
 			}
 		})
 	})
@@ -197,13 +207,9 @@ func TestContent(t *testing.T) {
 			for _, req := range reqs {
 				ctx, header := cases.GenApiCtxHeader()
 				resp, err := cli.Content.List(ctx, header, req)
-				So(err, ShouldBeNil)
-				So(resp, ShouldNotBeNil)
+				So(err, ShouldNotBeNil)
+				So(resp, ShouldBeNil)
 			}
 		})
-	})
-
-	Convey("Upload Content Test", t, func() {
-		// TODO: waite a repo environment
 	})
 }

@@ -48,13 +48,14 @@ func (c *Commit) Create(ctx context.Context, header http.Header, req *pbcs.Creat
 	}
 
 	pbResp := &struct {
-		Data *pbcs.CreateCommitResp `json:"data"`
+		Data  *pbcs.CreateCommitResp `json:"data"`
+		Error *rest.ErrorPayload     `json:"error"`
 	}{}
 	if err := resp.Into(pbResp); err != nil {
 		return nil, err
 	}
 
-	return pbResp.Data, nil
+	return pbResp.Data, pbResp.Error
 }
 
 // List to list commit.
@@ -72,11 +73,12 @@ func (c *Commit) List(ctx context.Context, header http.Header, req *pbcs.ListCom
 	}
 
 	pbResp := &struct {
-		Data *pbcs.ListCommitsResp `json:"data"`
+		Data  *pbcs.ListCommitsResp `json:"data"`
+		Error *rest.ErrorPayload    `json:"error"`
 	}{}
 	if err := resp.Into(pbResp); err != nil {
 		return nil, err
 	}
 
-	return pbResp.Data, nil
+	return pbResp.Data, pbResp.Error
 }

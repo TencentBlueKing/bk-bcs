@@ -40,20 +40,34 @@ func GenListAppByIdsReq(bizId uint32, appIds []uint32) (*pbcs.ListAppsReq, error
 	}, nil
 }
 
-// GenListConfigItemByIdsReq generate a list_config_item request by biz_id and app_ids.
-func GenListConfigItemByIdsReq(bizId, appId uint32, configItemIds []uint32) (*pbcs.ListConfigItemsReq, error) {
-	pbStruct, err := GenQueryFilterByIds(configItemIds)
+// GenListHookByIdsReq generate a list_hook request by app_ids.
+func GenListHookByIdsReq(appId uint32, hookIds []uint32) (*pbcs.ListHooksReq, error) {
+	pbStruct, err := GenQueryFilterByIds(hookIds)
 	if err != nil {
 		return nil, err
 	}
 
-	return &pbcs.ListConfigItemsReq{
-		BizId:  bizId,
+	return &pbcs.ListHooksReq{
 		AppId:  appId,
 		Filter: pbStruct,
 		Page:   ListPage(),
 	}, nil
 }
+
+// GenListConfigItemByIdsReq generate a list_config_item request by biz_id and app_ids.
+//func GenListConfigItemByIdsReq(bizId, appId uint32, configItemIds []uint32) (*pbcs.ListConfigItemsReq, error) {
+//	pbStruct, err := GenQueryFilterByIds(configItemIds)
+//	if err != nil {
+//		return nil, err
+//	}
+//
+//	return &pbcs.ListConfigItemsReq{
+//		BizId:  bizId,
+//		AppId:  appId,
+//		Filter: pbStruct,
+//		Page:   ListPage(),
+//	}, nil
+//}
 
 // GenListContentByIdsReq generate a list_content request by biz_id, app_id and content_ids.
 func GenListContentByIdsReq(bizId, appId uint32, contentIds []uint32) (*pbcs.ListContentsReq, error) {

@@ -15,6 +15,7 @@ package api
 import (
 	"testing"
 
+	"bscp.io/pkg/criteria/constant"
 	. "github.com/smartystreets/goconvey/convey" // import convey.
 
 	"bscp.io/pkg/dal/table"
@@ -32,11 +33,20 @@ func TestRelease(t *testing.T) {
 
 		preName string
 		appId   uint32
+
+		content   string // content of config item
+		signature string // SHA256 signature of content
+		size      uint64 // byte size of content
 	)
 
 	Convey("Prepare For ReleaseID Test", t, func() {
 		cli = suite.GetClient().ApiClient
 		preName = "release_test"
+
+		// define content
+		content = "This is content for test"
+		signature = tools.SHA256(content)
+		size = uint64(len(content))
 
 		// the before test apps have un-commit config item,
 		// which don't meet the condition of create_release.
@@ -71,6 +81,8 @@ func TestRelease(t *testing.T) {
 			User:      "root",
 			UserGroup: "root",
 			Privilege: "755",
+			Sign:      signature,
+			ByteSize:  size,
 		}
 		ctx, header = cases.GenApiCtxHeader()
 		ciResp, err := cli.ConfigItem.Create(ctx, header, ciReq)
@@ -78,14 +90,20 @@ func TestRelease(t *testing.T) {
 		So(ciResp, ShouldNotBeNil)
 		So(ciResp.Id, ShouldNotEqual, uint32(0))
 
+		// upload content
+		ctx, header = cases.GenApiCtxHeader()
+		header.Set(constant.ContentIDHeaderKey, signature)
+		resp, err := cli.Content.Upload(ctx, header, cases.TBizID, appId, content)
+		So(err, ShouldBeNil)
+		So(resp, ShouldNotBeNil)
+
 		// create content
-		content := "test_release_content"
 		ctReq := &pbcs.CreateContentReq{
 			BizId:        cases.TBizID,
 			AppId:        appId,
 			ConfigItemId: ciResp.Id,
-			Sign:         tools.SHA256(content),
-			ByteSize:     uint64(len(content)),
+			Sign:         signature,
+			ByteSize:     size,
 		}
 		ctx, header = cases.GenApiCtxHeader()
 		ctResp, err := cli.Content.Create(ctx, header, ctReq)
@@ -206,8 +224,8 @@ func TestRelease(t *testing.T) {
 			for _, req := range reqs {
 				ctx, header := cases.GenApiCtxHeader()
 				resp, err := cli.Release.Create(ctx, header, &req)
-				So(err, ShouldBeNil)
-				So(resp, ShouldNotBeNil)
+				So(err, ShouldNotBeNil)
+				So(resp, ShouldBeNil)
 			}
 		})
 	})
@@ -221,7 +239,7 @@ func TestRelease(t *testing.T) {
 
 			req, err := cases.GenListReleaseByIdsReq(cases.TBizID, appId, []uint32{releaseId})
 			So(err, ShouldBeNil)
-			req.Page = cases.CountPage()
+			req.Page = cases.ListPage()
 
 			ctx, header := cases.GenApiCtxHeader()
 			resp, err := cli.Release.List(ctx, header, req)
@@ -266,8 +284,8 @@ func TestRelease(t *testing.T) {
 			for _, req := range reqs {
 				ctx, header := cases.GenApiCtxHeader()
 				resp, err := cli.Release.List(ctx, header, req)
-				So(err, ShouldBeNil)
-				So(resp, ShouldNotBeNil)
+				So(err, ShouldNotBeNil)
+				So(resp, ShouldBeNil)
 			}
 		})
 	})

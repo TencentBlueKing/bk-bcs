@@ -42,7 +42,7 @@ func NewFeedClient(host string, c *tools.TLSConfig) (*Client, error) {
 		Discover: &discovery{
 			server: host,
 		},
-		ToleranceLatencyTime: time.Duration(2000),
+		ToleranceLatencyTime: 2 * time.Second,
 		MetricOpts:           client.MetricOption{Register: nil},
 	}
 

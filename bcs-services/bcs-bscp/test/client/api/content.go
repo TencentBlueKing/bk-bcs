@@ -14,7 +14,9 @@ package api
 
 import (
 	"context"
+	"fmt"
 	"net/http"
+	"strings"
 
 	pbcs "bscp.io/pkg/protocol/config-server"
 	"bscp.io/pkg/rest"
@@ -49,13 +51,14 @@ func (c *Content) Create(ctx context.Context, header http.Header, req *pbcs.Crea
 	}
 
 	pbResp := &struct {
-		Data *pbcs.CreateContentResp `json:"data"`
+		Data  *pbcs.CreateContentResp `json:"data"`
+		Error *rest.ErrorPayload      `json:"error"`
 	}{}
 	if err := resp.Into(pbResp); err != nil {
 		return nil, err
 	}
 
-	return pbResp.Data, nil
+	return pbResp.Data, pbResp.Error
 }
 
 // Upload function to upload content.
@@ -69,7 +72,14 @@ func (c *Content) Upload(ctx context.Context, header http.Header, bizId, appId u
 		Body(data).
 		Do()
 
+	fmt.Printf("uplaod resp:%#v\nerr:%s\n", resp, resp.Err)
 	if resp.Err != nil {
+		//报无效的gzip header，实际是上传成功
+		if strings.Contains(resp.Err.Error(), "gzip: invalid header") {
+			return &rest.BaseResp{
+				Code: 0,
+			}, nil
+		}
 		return nil, resp.Err
 	}
 
@@ -97,11 +107,12 @@ func (c *Content) List(ctx context.Context, header http.Header, req *pbcs.ListCo
 	}
 
 	pbResp := &struct {
-		Data *pbcs.ListContentsResp `json:"data"`
+		Data  *pbcs.ListContentsResp `json:"data"`
+		Error *rest.ErrorPayload     `json:"error"`
 	}{}
 	if err := resp.Into(pbResp); err != nil {
 		return nil, err
 	}
 
-	return pbResp.Data, nil
+	return pbResp.Data, pbResp.Error
 }

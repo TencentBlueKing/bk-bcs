@@ -341,9 +341,9 @@ func (dao *strategySetDao) validateAppStrategySetNumber(kt *kit.Kit, at *table.S
 }
 
 // validateStrategyNotExist validate this strategy set under if strategy not exist.
-func (dao *strategySetDao) validateStrategyNotExist(kt *kit.Kit, bizID, id uint32) error {
+func (dao *strategySetDao) validateStrategyNotExist(kt *kit.Kit, id, bizID uint32) error {
 	var sqlSentence []string
-	sqlSentence = append(sqlSentence, " WHERE biz_id = ", strconv.Itoa(int(bizID)), " AND strategy_set_id = %d", strconv.Itoa(int(id)))
+	sqlSentence = append(sqlSentence, " WHERE biz_id = ", strconv.Itoa(int(bizID)), " AND strategy_set_id = ", strconv.Itoa(int(id)))
 	sql := filter.SqlJoint(sqlSentence)
 	exist, err := isResExist(kt, dao.orm, dao.sd.ShardingOne(bizID), table.StrategyTable, sql)
 	if err != nil {
