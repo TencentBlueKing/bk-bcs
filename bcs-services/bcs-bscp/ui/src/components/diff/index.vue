@@ -1,11 +1,66 @@
 <script setup lang="ts">
+    import { ref, watch, onMounted } from 'vue'
+    import { useRoute } from 'vue-router'
+    import { storeToRefs } from 'pinia'
+    import { useServingStore } from '../../store/serving'
+    import { IConfigDiffDetail, IFileConfigContentSummary } from '../../../types/config';
+    import { getConfigContent } from '../../api/config';
+    import { byteUnitConverse } from '../../utils';
     import File from './file.vue'
     import Text from './text.vue'
 
+    const route = useRoute()
+    const { appData } = storeToRefs(useServingStore())
+    const bkBizId = ref(String(route.params.spaceId))
+
     const props = defineProps<{
-        type: String,
-        panelName?: String
+        panelName?: String,
+        config: IConfigDiffDetail,
     }>()
+
+    const current = ref()
+    const base = ref()
+    const contentLoading = ref(true)
+
+    watch(() => props.config, () => {
+        fetchConfigContent()
+    }, { deep: true })
+
+    onMounted(() => {
+        console.log('onMounted')
+        fetchConfigContent()
+    })
+
+    const fetchConfigContent = async () => {
+        console.log('fetch content')
+        contentLoading.value = true
+        const { base: configBase, current: configCurrent } = props.config
+        if (!configCurrent.signature) { // 被删除
+            current.value = ''
+            base.value = await getDetailData(configBase)
+        } else if (!configBase.signature) { // 新增
+            base.value = ''
+            current.value = await getDetailData(configCurrent)
+        } else if (configBase.signature !== configCurrent.signature) { // 修改
+            base.value = await getDetailData(configBase)
+            current.value = await getDetailData(configCurrent)
+        } else { // 未变更
+            const data = await getDetailData(configBase)
+            base.value = data
+            current.value = data
+        }
+        contentLoading.value = false
+    }
+
+    const getDetailData = async (config: { signature: string; byte_size: string, update_at: string }) => {
+        if (props.config.file_type === 'binary') {
+            const { id, name } = props.config
+            const { signature, update_at } = config
+            return { id, name, signature, update_at, size: byteUnitConverse(Number(config.byte_size)) }
+        }
+        const configContent = await getConfigContent(bkBizId.value, <number>appData.value.id, config.signature)
+        return String(configContent)
+    }
 
 </script>
 <template>
@@ -13,22 +68,25 @@
         <div class="top-area">
             <div class="left-panel">
                 <slot name="leftHead">
-                    <div class="panel-name">{{ panelName }}</div>
                 </slot>
             </div>
             <div class="right-panel">
                 <slot name="rightHead">
-                    <div class="config-select-area">
-                        <span>对比版本：</span>
-                        <bk-select>
-                        </bk-select>
-                    </div>
+                    <div class="panel-name">{{ panelName }}</div>
                 </slot>
             </div>
         </div>
-        <div class="detail-area">
-            <File v-if="props.type === 'file'" />
-            <Text v-else />
+        <div v-if="!contentLoading" class="detail-area">
+            <bk-loading style="height: 100%;" :loading="contentLoading">
+                <File
+                    v-if="props.config.file_type === 'binary'"
+                    :current="current"
+                    :base="base" />
+                <Text
+                    v-else
+                    :current="current"
+                    :base="base" />
+            </bk-loading>
         </div>
     </section>
 </template>
@@ -40,10 +98,12 @@
     .top-area {
         display: flex;
         align-items: center;
+        height: 49px;
         color: #313238;
         border-bottom: 1px solid #dcdee5;
         .left-panel,
         .right-panel {
+            height: 100%;
             width: 50%;
         }
         .right-panel {
