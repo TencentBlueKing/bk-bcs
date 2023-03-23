@@ -210,3 +210,21 @@ func (p *Prometheus) GetClusterDiskioUsage(ctx context.Context, projectId, clust
 
 	return p.handleClusterMetric(ctx, projectId, clusterId, promql, start, end, step)
 }
+
+// GetClusterDiskioUsed 集群磁盘IO使用量
+func (p *Prometheus) GetClusterDiskioUsed(ctx context.Context, projectId, clusterId string, start, end time.Time,
+	step time.Duration) ([]*prompb.TimeSeries, error) {
+	promql :=
+		`sum(max by(bk_instance) (rate(node_disk_io_time_seconds_total{cluster_id="%<clusterId>s", instance=~"%<instance>s", %<provider>s}[2m])))`
+
+	return p.handleClusterMetric(ctx, projectId, clusterId, promql, start, end, step)
+}
+
+// GetClusterDiskioTotal 集群磁盘IO
+func (p *Prometheus) GetClusterDiskioTotal(ctx context.Context, projectId, clusterId string, start, end time.Time,
+	step time.Duration) ([]*prompb.TimeSeries, error) {
+	promql :=
+		`count(max by(bk_instance) (rate(node_disk_io_time_seconds_total{cluster_id="%<clusterId>s", instance=~"%<instance>s", %<provider>s}[2m])))`
+
+	return p.handleClusterMetric(ctx, projectId, clusterId, promql, start, end, step)
+}

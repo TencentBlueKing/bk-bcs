@@ -43,6 +43,7 @@ type ClusterOverviewMetric struct {
 	CPUUsage    *Usage     `json:"cpu_usage"`
 	DiskUsage   *UsageByte `json:"disk_usage"`
 	MemoryUsage *UsageByte `json:"memory_usage"`
+	DiskIOUsage *Usage     `json:"diskio_usage"`
 }
 
 // handleClusterMetric Cluster 处理公共函数
@@ -89,6 +90,8 @@ func GetClusterOverview(c *rest.Context) (interface{}, error) {
 		"memory_total":   `bcs:cluster:memory:total{cluster_id="%<clusterId>s", %<provider>s}`,
 		"disk_used":      `bcs:cluster:disk:used{cluster_id="%<clusterId>s", %<provider>s}`,
 		"disk_total":     `bcs:cluster:disk:total{cluster_id="%<clusterId>s", %<provider>s}`,
+		"diskio_used":    `bcs:cluster:diskio:used{cluster_id="%<clusterId>s", %<provider>s}`,
+		"diskio_total":   `bcs:cluster:diskio:total{cluster_id="%<clusterId>s", %<provider>s}`,
 	}
 
 	result, err := bcsmonitor.QueryMultiValues(c.Request.Context(), c.ProjectId, promqlMap, params, time.Now())
@@ -110,6 +113,10 @@ func GetClusterOverview(c *rest.Context) (interface{}, error) {
 		DiskUsage: &UsageByte{
 			UsedByte:  result["disk_used"],
 			TotalByte: result["disk_total"],
+		},
+		DiskIOUsage: &Usage{
+			Used:  result["diskio_used"],
+			Total: result["diskio_total"],
 		},
 	}
 
