@@ -39,10 +39,12 @@ var (
 )
 
 const (
+	confFilePath     = "frontend/dist/static/config.json"
+	defaultStaticURL = "/web"
 	// SITE_URL 前端Vue配置, 修改影响用户路由
-	site_url     = "/bcs"
-	static_url   = "/web"
-	confFilePath = "frontend/dist/static/config.json"
+	defaultSiteURL = "/bcs"
+	// siteURLHeaderKey 前端前缀URL
+	siteURLHeaderKey = "X-BCS-SiteURL"
 )
 
 // EmbedWebServer
@@ -141,9 +143,15 @@ func (e *embedWeb) IndexHandler() http.Handler {
 	bcsConfig := string(bcsConfigBytes)
 
 	fn := func(w http.ResponseWriter, r *http.Request) {
+		// 头部指定 SiteURL, 使用头部的， 多域名访问场景
+		siteURL := r.Header.Get(siteURLHeaderKey)
+		if siteURL == "" {
+			siteURL = path.Join(config.G.Web.RoutePrefix, defaultSiteURL)
+		}
+
 		data := map[string]string{
-			"STATIC_URL":              path.Join(config.G.Web.RoutePrefix, static_url),
-			"SITE_URL":                path.Join(config.G.Web.RoutePrefix, site_url),
+			"STATIC_URL":              path.Join(config.G.Web.RoutePrefix, defaultStaticURL),
+			"SITE_URL":                siteURL,
 			"RUN_ENV":                 config.G.Base.RunEnv,
 			"PREFERRED_DOMAINS":       config.G.Web.PreferredDomains,
 			"DEVOPS_HOST":             config.G.FrontendConf.Host.DevOpsHost,
