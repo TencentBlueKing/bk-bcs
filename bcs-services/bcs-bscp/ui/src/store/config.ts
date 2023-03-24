@@ -4,6 +4,7 @@ import { defineStore } from "pinia";
 import { IConfigVersion } from '../../types/config'
 
 export const useConfigStore = defineStore('config', () => {
+  // 当前选中版本, 用id为0表示未命名版本
   const versionData = ref<IConfigVersion>({
     id: 0,
     attachment: {
@@ -20,5 +21,8 @@ export const useConfigStore = defineStore('config', () => {
     }
   })
 
-  return { versionData }
+  // 是否为版本详情视图
+  const versionDetailView = ref(false)
+
+  return { versionData, versionDetailView }
 })

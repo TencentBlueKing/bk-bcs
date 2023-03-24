@@ -1,26 +1,89 @@
 <script setup lang="ts">
-  import { ref } from 'vue'
+  import { ref, watch } from 'vue'
   import { ArrowsLeft, AngleRight } from 'bkui-vue/lib/icon'
   import InfoBox from "bkui-vue/lib/info-box";
   import VersionLayout from '../../../components/version-layout.vue'
   import ConfirmDialog from './confirm-dialog.vue'
   import ConfigDiff from '../../../components/config-diff.vue'
-  import { IConfigVersionItem } from '../../../../../../../types'
+  import { getConfigVersionList, getConfigList } from '../../../../../../../api/config'
+  import { FilterOp, RuleOp } from '../../../../../../../types'
+  import { IConfigItem, IConfigVersion, IConfigListQueryParams } from '../../../../../../../../types/config'
 
   const props = defineProps<{
     bkBizId: string,
     appId: number,
-    releaseId: number|null,
+    releaseId: number,
     appName: string,
     versionName: string,
-    configList: Array<IConfigVersionItem>
+    configList: IConfigItem[]
   }>()
 
   const emit = defineEmits(['confirm'])
 
   const showDiffPanel = ref(false)
   const isConfirmDialogShow = ref(false)
-  const groups = ref([5])
+  const groups = ref([])
+  const versionListLoading = ref(true)
+  const versionList = ref<IConfigVersion[]>([])
+  const selectedVersion = ref<number>()
+  const baseConfigList = ref<IConfigItem[]>([])
+  const baseConfigLoading = ref(false)
+  const filter = {
+    op: FilterOp.AND,
+    rules: [{
+      field: "deprecated",
+      op: RuleOp.eq,
+      value: false
+    }]
+  }
+  const page = {
+    count: false,
+    start: 0,
+    limit: 200 // @todo 分页条数待确认
+  }
+
+  watch(showDiffPanel, (val) => {
+    if (val) {
+      getVersionList()
+    }
+  })
+
+  // 获取所有版本
+  const getVersionList = async() => {
+    try {
+      versionListLoading.value = true
+      const res = await getConfigVersionList(props.bkBizId, props.appId, filter, page)
+      versionList.value = res.data.details.filter((item: IConfigVersion) => item.id !== props.releaseId)
+    } catch (e) {
+      console.error(e)
+    } finally {
+      versionListLoading.value = false
+    }
+  }
+
+  // 获取某个版本下配置项列表
+  const getConfigsForVersion = async () => {
+    baseConfigLoading.value = true
+    try {
+      const params: IConfigListQueryParams = {
+        release_id: selectedVersion.value,
+        start: 0,
+        limit: 200 // @todo 分页条数待确认
+      }
+
+      const res = await getConfigList(props.appId, params)
+      baseConfigList.value = res.details
+    } catch (e) {
+      console.error(e)
+    } finally {
+      baseConfigLoading.value = false
+    }
+  }
+
+  const handleSelectVersion = (val: number) => {
+    selectedVersion.value = val
+    getConfigsForVersion()
+  }
 
   const handleConfirm = () => {
     InfoBox({
@@ -42,7 +105,7 @@
 </script>
 <template>
     <section class="create-version">
-        <bk-button theme="primary" :disabled=" typeof props.releaseId !== 'number' || props.releaseId === 0"  @click="showDiffPanel = true">上线版本</bk-button>
+        <bk-button theme="primary" :disabled="props.releaseId === 0"  @click="showDiffPanel = true">上线版本</bk-button>
         <VersionLayout v-if="showDiffPanel">
             <template #header>
                 <section class="header-wrapper">
@@ -54,12 +117,34 @@
                     上线版本：{{ props.versionName }}
                 </section>
             </template>
-            <config-diff :config-list="configList">
-                <template #head>
-                    <div class="diff-left-panel-head">
+            <config-diff
+                :current-version="props.releaseId"
+                :base-version="selectedVersion"
+                :current-config-list="props.configList"
+                :base-config-list="baseConfigList">
+                <template #baseHead>
+                    <div class="version-selector">
+                        对比版本：
+                        <bk-select
+                            :model-value="selectedVersion"
+                            style="width: 320px;"
+                            size="small"
+                            :loading="versionListLoading"
+                            :clearable="false"
+                            @change="handleSelectVersion">
+                            <bk-option
+                                v-for="version in versionList"
+                                :key="version.id"
+                                :label="version.spec.name"
+                                :value="version.id">
+                            </bk-option>
+                        </bk-select>
+                    </div>
+                </template>
+                <template #currentHead>
+                    <div class="current-panel-head">
                         <span class="version-status">待上线</span>
                         {{ props.versionName }}
-                        <!-- @todo 待确定这里展示什么名称 -->
                     </div>
                 </template>
             </config-diff>
@@ -103,9 +188,12 @@
         font-size: 24px;
         color: #c4c6cc;
     }
-    .diff-left-panel-head {
+    .current-panel-head {
+        display: flex;
+        align-items: center;
         padding: 0 24px;
         font-size: 12px;
+        height: 100%;
         .version-status {
             margin-right: 4px;
             padding: 4px 10px;
@@ -120,5 +208,12 @@
         align-items: center;
         padding: 0 24px;
         height: 100%;
+    }
+    .version-selector {
+        display: flex;
+        align-items: center;
+        height: 100%;
+        padding: 0 24px;
+        font-size: 12px;
     }
 </style>

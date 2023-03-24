@@ -7,6 +7,7 @@
   import { IServingEditParams } from '../../../../../../types'
   import { updateConfigContent } from '../../../../../../api/config'
   import { transFileToObject } from '../../../../../../utils/file'
+  import { CONFIG_FILE_TYPE } from '../../../../../../constants/index'
 
   const props = defineProps<{
     config: IServingEditParams,
@@ -136,8 +137,7 @@
         </bk-form-item>
         <bk-form-item label="配置格式">
         <bk-radio-group v-model="localVal.file_type" :required="true">
-            <bk-radio label="text">Text</bk-radio>
-            <bk-radio label="binary">二进制文件</bk-radio>
+            <bk-radio v-for="typeItem in CONFIG_FILE_TYPE" :key="typeItem.id" :label="typeItem.id">{{ typeItem.name }}</bk-radio>
         </bk-radio-group>
         </bk-form-item>
         <template v-if="['binary', 'text'].includes(localVal.file_type)">

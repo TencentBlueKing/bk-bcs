@@ -1,7 +1,7 @@
 <script setup lang="ts">
 
   const props = withDefaults(defineProps<{
-    showFooter: boolean
+    showFooter?: boolean
   }>(), {
     showFooter: true
   })
