@@ -73,7 +73,7 @@ func GetProject(ctx context.Context, bcsConf *config.BCSConf, projectIDOrCode st
 		return nil, err
 	}
 
-	storage.LocalCache.Slot.Set(cacheKey, project, storage.LocalCache.DefaultExpiration)
+	storage.LocalCache.Slot.Set(cacheKey, project, time.Hour*24)
 
 	return project, nil
 }
