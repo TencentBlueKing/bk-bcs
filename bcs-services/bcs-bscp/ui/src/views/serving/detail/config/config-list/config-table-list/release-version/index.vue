@@ -4,14 +4,15 @@
     import VersionLayout from '../../../components/version-layout.vue'
     import ConfirmDialog from './confirm-dialog.vue'
     import ConfigDiff from '../../../components/config-diff.vue'
-    import { getConfigVersionList } from '../../../../../../../api/config'
-    import { IConfigVersionItem, FilterOp, RuleOp } from '../../../../../../../types'
+    import { getConfigVersionList, getConfigList } from '../../../../../../../api/config'
+    import { FilterOp, RuleOp } from '../../../../../../../types'
+    import { IConfigItem, IConfigVersion, IConfigListQueryParams } from '../../../../../../../../types/config'
 
     const props = defineProps<{
         bkBizId: string,
         appId: number,
         appName: string,
-        configList: Array<IConfigVersionItem>
+        configList: IConfigItem[]
     }>()
 
     const emit = defineEmits(['confirm'])
@@ -19,7 +20,10 @@
     const showDiffPanel = ref(false)
     const isConfirmDialogShow = ref(false)
     const versionListLoading = ref(true)
-    const versionList = ref([])
+    const versionList = ref<IConfigVersion[]>([])
+    const selectedVersion = ref<number>()
+    const baseConfigList = ref<IConfigItem[]>([])
+    const baseConfigLoading = ref(false)
     const filter = {
         op: FilterOp.AND,
         rules: [{
@@ -38,6 +42,7 @@
         getVersionList()
     })
     
+    // 获取所有版本
     const getVersionList = async() => {
         try {
             versionListLoading.value = true
@@ -50,6 +55,31 @@
         }
     }
 
+    // 获取某个版本下配置项列表
+    const getConfigsForVersion = async () => {
+        baseConfigLoading.value = true
+        try {
+            const params: IConfigListQueryParams = {
+                release_id: selectedVersion.value,
+                start: 0,
+                limit: 200 // @todo 分页条数待确认
+            }
+
+            const res = await getConfigList(props.appId, params)
+            baseConfigList.value = res.details
+        } catch (e) {
+            console.error(e)
+        } finally {
+            baseConfigLoading.value = false
+        }
+    }
+
+    const handleSelectVersion = (val: number) => {
+        selectedVersion.value = val
+        getConfigsForVersion()
+    }
+
+    // 生成版本之后关闭面板，并通知父组件
     const handleCreated = () => {
         handleClose()
         emit('confirm')
@@ -76,8 +106,28 @@
             </template>
             <config-diff
                 version-name="未命名版本"
-                :config-list="configList"
-                :version-list="versionList">
+                :base-version="selectedVersion"
+                :current-config-list="configList"
+                :base-config-list="baseConfigList">
+                <template #baseHead>
+                    <div class="version-selector">
+                        对比版本：
+                        <bk-select
+                            :model-value="selectedVersion"
+                            style="width: 320px;"
+                            size="small"
+                            :loading="versionListLoading"
+                            :clearable="false"
+                            @change="handleSelectVersion">
+                            <bk-option
+                                v-for="version in versionList"
+                                :key="version.id"
+                                :label="version.spec.name"
+                                :value="version.id">
+                            </bk-option>
+                        </bk-select>
+                    </div>
+                </template>
             </config-diff>
             <template #footer>
                 <section class="actions-wrapper">
@@ -122,5 +172,12 @@
         align-items: center;
         padding: 0 24px;
         height: 100%;
+    }
+    .version-selector {
+        display: flex;
+        align-items: center;
+        height: 100%;
+        padding: 0 24px;
+        font-size: 12px;
     }
 </style>

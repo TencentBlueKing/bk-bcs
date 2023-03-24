@@ -6,6 +6,7 @@
   import InfoBox from "bkui-vue/lib/info-box";
   import { IConfigItem, IConfigListQueryParams } from '../../../../../../../types/config'
   import { getConfigList, deleteServingConfigItem } from '../../../../../../api/config'
+  import { getConfigTypeName } from '../../../../../../utils/index'
   import EditConfig from './edit-config.vue'
   import CreateConfig from './create-config.vue'
   import PublishVersion from './publish-version/index.vue'
@@ -37,10 +38,6 @@
   const isDiffDialogShow = ref(false)
   const diffConfig = ref()
 
-  watch(() => props.appId, () => {
-    getListData()
-  })
-
   watch(() => versionData.value.id, () => {
     getListData()
   })
@@ -50,11 +47,6 @@
   })
 
   const getListData = async () => {
-    // 拉取到版本列表之前不加在列表数据
-    if (typeof versionData.value.id !== 'number' || versionData.value.id === 0) {
-      return
-    }
-
     loading.value = true
     try {
       const params: IConfigListQueryParams = {
@@ -112,11 +104,6 @@
     refreshConfigList()
   }
 
-  const handlePageChange = (val: number) => {
-    pagination.value.current = val
-    getListData()
-  }
-
   const handleUpdateStatus = () => {
     emit('updateVersionList')
   }
@@ -163,7 +150,11 @@
         <bk-table :border="['outer']" :data="configList">
           <bk-table-column label="配置项名称" prop="spec.name" :sort="true"></bk-table-column>
           <bk-table-column label="配置预览">-</bk-table-column>
-          <bk-table-column label="配置格式" prop="spec.file_type"></bk-table-column>
+          <bk-table-column label="配置格式">
+            <template #default="{ row }">
+              {{ getConfigTypeName(row.spec?.file_type) }}
+            </template>
+          </bk-table-column>
           <bk-table-column label="创建人" prop="revision.creator"></bk-table-column>
           <bk-table-column label="修改人" prop="revision.reviser"></bk-table-column>
           <bk-table-column label="修改时间" prop="revision.update_at" :sort="true"></bk-table-column>
@@ -171,9 +162,9 @@
           <bk-table-column label="操作">
             <template #default="{ row }">
               <div class="operate-action-btns">
-                <bk-button text theme="primary" @click="handleEdit(row)">编辑</bk-button>
+                <bk-button v-if="versionData.id === 0" text theme="primary" @click="handleEdit(row)">编辑</bk-button>
                 <bk-button text theme="primary" @click="handleDiff(row)">对比</bk-button>
-                <bk-button text theme="primary" @click="handleDel(row)">删除</bk-button>
+                <bk-button v-if="versionData.id === 0" text theme="primary" @click="handleDel(row)">删除</bk-button>
               </div>
             </template>
           </bk-table-column>
@@ -193,10 +184,15 @@
         :config-id="activeConfig"
         :bk-biz-id="props.bkBizId"
         :app-id="props.appId"
-        :release-id="versionData.id"
         @confirm="refreshConfigList" />
     </section>
-    <VersionDiffDialog v-model:show="isDiffDialogShow" version-name="未命名版本" :config="diffConfig" />
+    <VersionDiffDialog
+      v-model:show="isDiffDialogShow"
+      :bk-biz-id="props.bkBizId"
+      :app-id="props.appId"
+      :version-name="versionData.spec.name"
+      :release-id="versionData.id"
+      :config="diffConfig" />
   </section>
 </template>
 <style lang="scss" scoped>

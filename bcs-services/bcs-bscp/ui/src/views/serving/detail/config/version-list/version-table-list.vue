@@ -1,18 +1,47 @@
 <script setup lang="ts">
   import { ref, onMounted, computed } from 'vue'
-  import { Search } from 'bkui-vue/lib/icon'
+  import { Search, ArrowsLeft, AngleRight } from 'bkui-vue/lib/icon'
   import InfoBox from "bkui-vue/lib/info-box";
+  import { storeToRefs } from 'pinia'
+  import { useServingStore } from '../../../../../store/serving'
+  import { useConfigStore } from '../../../../../store/config'
   import { getConfigVersionList } from '../../../../../api/config';
-  import { IConfigVersionItem, IRequestFilter ,IPageFilter, FilterOp, RuleOp } from '../../../../../types'
+  import { IRequestFilter, IPageFilter, FilterOp, RuleOp } from '../../../../../types'
+  import { IConfigVersion } from '../../../../../../types/config';
+  import VersionLayout from '../components/version-layout.vue';
+  import ConfigDiff from '../components/config-diff.vue'
+
+  const configStore = useConfigStore()
+  const { appData } = storeToRefs(useServingStore())
+  const { versionData } = storeToRefs(configStore)
 
   const props = defineProps<{
     bkBizId: string,
     appId: number
   }>()
 
+  const emits = defineEmits(['loaded'])
+
+  const UN_NAMED_VERSION = {
+    id: 0,
+    attachment: {
+      app_id: 0,
+      biz_id: 0
+    },
+    revision: {
+      create_at: '',
+      creator: ''
+    },
+    spec: {
+      name: '未命名版本',
+      memo: ''
+    }
+  }
+
   const listLoading = ref(true)
-  const versionList = ref<Array<IConfigVersionItem>>([])
+  const versionList = ref<Array<IConfigVersion>>([])
   const currentTab = ref('available')
+  const showDiffPanel = ref(false)
   const pagination = ref({
     current: 1,
     count: 0,
@@ -35,15 +64,28 @@
     }
   })
 
-  onMounted(() => {
-    getVersionList()
+  onMounted(async() => {
+    await getVersionList()
+    emits('loaded')
+    handleSelectVersion(undefined, UN_NAMED_VERSION)
   })
 
   const getVersionList = async() => {
     listLoading.value = true
     const res = await getConfigVersionList(props.bkBizId, props.appId, filter.value, page.value)
-    versionList.value = res.data.details
+    if (pagination.value.current === 1 && currentTab.value === 'available') {
+      versionList.value = [UN_NAMED_VERSION, ...res.data.details]
+    } else {
+      versionList.value = res.data.details
+    }
     listLoading.value = false
+  }
+
+  const getRowCls = (data: IConfigVersion) => {
+    if (data.id === versionData.value.id) {
+      return 'selected'
+    }
+    return ''
   }
 
   const handleTabChange = (tab: string) =>  {
@@ -52,9 +94,19 @@
     refreshConfigList()
   }
 
+  const handleSelectVersion = (event: Event|undefined, data: IConfigVersion) => {
+    configStore.$patch((state) => {
+      state.versionData = data
+    })
+  }
+
   // 版本对比
-  const handleOpenDiff = (version: IConfigVersionItem) => {
-    console.log(version)
+  const handleOpenDiff = (version: IConfigVersion) => {
+    // showDiffPanel.value = true
+  }
+
+  const handleDiffClose = () => {
+    showDiffPanel.value = false
   }
 
   // 废弃
@@ -95,7 +147,7 @@
       </bk-input>
     </div>
     <bk-loading :loading="listLoading">
-        <bk-table :border="['outer']" :data="versionList">
+        <bk-table :border="['outer']" :data="versionList" :row-class="getRowCls" @row-click="handleSelectVersion">
           <bk-table-column label="版本" prop="spec.name"></bk-table-column>
           <bk-table-column label="版本描述" prop="spec.memo"></bk-table-column>
           <bk-table-column label="上线次数">xx</bk-table-column>
@@ -107,8 +159,8 @@
           </bk-table-column>
           <bk-table-column label="操作">
             <template v-slot="{ row }">
-              <bk-button text theme="primary" @click="handleOpenDiff(row)">版本对比</bk-button>
-              <bk-button style="margin-left: 16px;" text theme="primary" @click="handleDeprecate(row.id)">废弃</bk-button>
+              <bk-button text theme="primary" @click.stop="handleOpenDiff(row)">版本对比</bk-button>
+              <bk-button style="margin-left: 16px;" text theme="primary" @click.stop="handleDeprecate(row.id)">废弃</bk-button>
             </template>
           </bk-table-column>
         </bk-table>
@@ -122,6 +174,29 @@
           @change="refreshConfigList($event)"
           @limit-change="handlePageLimitChange"/>
     </bk-loading>
+    <VersionLayout v-if="showDiffPanel" :show-footer="false">
+      <template #header>
+        <section class="header-wrapper">
+          <span class="header-name" @click="handleDiffClose">
+            <ArrowsLeft class="arrow-left" />
+            <span class="service-name">{{ appData.spec.name }}</span>
+          </span>
+          <AngleRight class="arrow-right" />
+          版本对比
+        </section>
+      </template>
+      <config-diff
+        :base-version="0"
+        :current-config-list="[]"
+        :base-config-list="[]">
+        <template #head>
+          <div class="diff-left-panel-head">
+            版本对比
+            <!-- @todo 待确定这里展示什么名称 -->
+          </div>
+        </template>
+      </config-diff>
+    </VersionLayout>
   </section>
 </template>
 <style lang="scss" scoped>
@@ -168,6 +243,13 @@
     padding-right: 10px;
     color: #979ba5;
   }
+  .bk-table {
+    :deep(.bk-table-body) {
+      tr.selected td {
+        background: #e1ecff !important;
+      }
+    }
+  }
   .status-tag {
     display: inline-block;
     padding: 0 10px;
@@ -195,5 +277,32 @@
     :deep(.bk-pagination-list.is-last) {
       margin-left: auto;
     }
+  }
+  .header-wrapper {
+    display: flex;
+    align-items: center;
+    padding: 0 24px;
+    height: 100%;
+    font-size: 12px;
+    line-height: 1;
+  }
+  .header-name {
+    display: flex;
+    align-items: center;
+    font-size: 12px;
+    color: #3a84ff;
+    cursor: pointer;
+  }
+  .arrow-left {
+    font-size: 26px;
+    color: #3884ff;
+  }
+  .arrow-right {
+    font-size: 24px;
+    color: #c4c6cc;
+  }
+  .diff-left-panel-head {
+    padding: 0 24px;
+    font-size: 12px;
   }
 </style>

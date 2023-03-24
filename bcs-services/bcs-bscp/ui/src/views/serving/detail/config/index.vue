@@ -1,8 +1,13 @@
 <script setup lang="ts">
   import { ref } from 'vue'
+  import { storeToRefs } from 'pinia'
+  import { useConfigStore } from '../../../../store/config'
   import { AngleDoubleRight } from 'bkui-vue/lib/icon'
   import VersionList from './version-list/index.vue'
   import ConfigList from './config-list/index.vue'
+
+  const store = useConfigStore()
+  const { versionDetailView } = storeToRefs(store)
 
   const props = defineProps<{
     bkBizId: string,
@@ -10,7 +15,14 @@
   }>()
 
   const versionListRef = ref()
-  const versionDetailView = ref(false) //是否为版本详情视图
+  // 版本列表数据在初次加载
+  const versionDataLoading = ref(true)
+
+  // 切换视图
+  const handleToggleView = () => {
+    versionDataLoading.value = true
+    versionDetailView.value = !versionDetailView.value
+  }
 
   const updateVersionList = () => {
     versionListRef.value.getVersionList()
@@ -24,14 +36,16 @@
         ref="versionListRef"
         :version-detail-view="versionDetailView"
         :bk-biz-id="props.bkBizId"
-        :app-id="props.appId" />
-      <div :class="['view-change-trigger', { extend: versionDetailView }]" @click="versionDetailView = !versionDetailView">
+        :app-id="props.appId"
+        :loaded="versionDataLoading = false" />
+      <div :class="['view-change-trigger', { extend: versionDetailView }]" @click="handleToggleView">
         <AngleDoubleRight class="arrow-icon" />
         <span class="text">版本详情</span>
       </div>
     </section>
     <section class="version-config-content">
       <ConfigList
+        v-if="!versionDataLoading"
         :version-detail-view="versionDetailView"
         :bk-biz-id="props.bkBizId"
         :app-id="props.appId"
