@@ -106,10 +106,13 @@ class YamlTemplateViewSet(viewsets.ViewSet, TemplatePermission):
         """
         template = get_template_by_project_and_id(project_id, template_id)
         data = self._request_data(request, project_id=project_id)
-        for temp_files in data.get("template_files"):
-            duplicate = self.check_duplicate_template_files(temp_files.get("files"))
-            if duplicate:
-                return Response({'code': 400,'message': f'{temp_files.get("resource_name")} 包含同名资源 {duplicate}'})
+        try:
+            for temp_files in data.get("template_files"):
+                duplicate = self.check_duplicate_template_files(temp_files.get("files"))
+                if duplicate:
+                    return Response({'code': 400,'message': f'{temp_files.get("resource_name")} 包含同名资源 {duplicate}'})
+        except Exception as err: # yaml 解析错误，则不检测同名资源
+            logger.info('check_duplicate_template_files failed, skip check, project_id: %s, template_id: %s',project_id, template_id)
 
         serializer = serializers.UpdateTemplateSLZ(template, data=data, context={"request": request})
         serializer.is_valid(raise_exception=True)
