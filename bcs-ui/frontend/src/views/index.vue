@@ -13,13 +13,13 @@
         <Terminal />
       </template>
       <!-- 未注册容器服务 -->
-      <Unregistry v-else />
+      <Unregistry :cur-project="curProject" v-else />
     </template>
   </div>
 </template>
 <script lang="ts">
 /* eslint-disable camelcase */
-import { defineComponent, toRef, reactive, computed, onBeforeMount, ref, onErrorCaptured } from '@vue/composition-api';
+import { defineComponent, toRef, reactive, computed, onBeforeMount, ref } from '@vue/composition-api';
 import $router from '@/router';
 import Terminal from '@/views/app/terminal.vue';
 import Unregistry from '@/views/app/unregistry.vue';
@@ -105,13 +105,13 @@ export default defineComponent({
       loading.value = false;
     });
 
-    onErrorCaptured((err: Error, vm, info: string) => {
-      ctx.root.$bkMessage({
-        theme: 'warning',
-        message: `Something is wrong with the component ${vm.$options.name} ${info}`,
-      });
-      return true;
-    });
+    // onErrorCaptured((err: Error, vm, info: string) => {
+    //   ctx.root.$bkMessage({
+    //     theme: 'warning',
+    //     message: `Something is wrong with the component ${vm.$options.name} ${info}`,
+    //   });
+    //   return true;
+    // });
 
     return {
       loading,

@@ -72,7 +72,7 @@ module.exports = {
     config
       .plugin('define')
       .tap(args => {
-        args[0].BK_CI_BUILD_NUM = JSON.stringify(figlet.textSync(`Welcome To BCS ${process.env.BK_CI_BUILD_NUM || 'dev'}`, {
+        args[0].BK_CI_BUILD_NUM = JSON.stringify(figlet.textSync(`Welcome To BCS ${process.env.bcs_version || 'dev'}`, {
           width: 100
         }))
         return args
