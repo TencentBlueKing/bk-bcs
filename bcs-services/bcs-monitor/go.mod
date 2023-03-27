@@ -227,6 +227,6 @@ require (
 replace (
 	github.com/go-resty/resty/v2 => github.com/ifooth/resty/v2 v2.0.0-20230223083514-3015979960de
 	github.com/prometheus/prometheus => github.com/prometheus/prometheus v1.8.2-0.20220308163432-03831554a519
-	github.com/thanos-io/thanos => github.com/ifooth/thanos v0.26.1-0.20221117075138-a986a4c5a32f
+	github.com/thanos-io/thanos => github.com/ifooth/thanos v0.26.1-0.20230320020638-51ebe892541f
 	github.com/vimeo/galaxycache => github.com/thanos-community/galaxycache v0.0.0-20211122094458-3a32041a1f1e
 )

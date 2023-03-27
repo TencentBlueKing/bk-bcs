@@ -88,8 +88,8 @@ func init() {
 }
 
 // IsDevMode 是否本地开发模式
-func (c *Configuration) IsDevMode() bool {
-	return c.Base.RunEnv == DevEnv
+func (c *Configuration) IsLocalDevMode() bool {
+	return c.Base.RunEnv == LocalEnv
 }
 
 // ReadFrom : read from file

@@ -1,10 +1,11 @@
 <script setup lang="ts">
-  import { ref, watch, onMounted } from 'vue'
+  import { ref, onMounted } from 'vue'
   import { storeToRefs } from 'pinia'
   import { useConfigStore } from '../../../../../store/config'
-  import { IConfigVersionItem } from '../../../../../types'
-  import { IConfigListQueryParams } from '../../../../../../types/config'
+  import { IConfigItem, IConfigListQueryParams } from '../../../../../../types/config'
   import { getConfigList } from '../../../../../api/config'
+  import { getConfigTypeName } from '../../../../../utils/index'
+  import EditConfig from './config-table-list/edit-config.vue'
 
   const store = useConfigStore()
   const { versionData } = storeToRefs(store)
@@ -15,11 +16,9 @@
   }>()
 
   const loading = ref(false)
-  const configList = ref<Array<IConfigVersionItem>>([])
-
-  watch(() => versionData.value.id, () => {
-    getListData()
-  } )
+  const configList = ref<Array<IConfigItem>>([])
+  const configId = ref(0)
+  const editDialogShow = ref(false)
 
   onMounted(() => {
     getListData()
@@ -49,18 +48,28 @@
     }
   }
 
+  const handleEditConfigOpen = (id: number) => {
+    editDialogShow.value = true
+    configId.value = id
+  }
+
 </script>
 <template>
   <section class="current-config-list">
     <bk-loading :loading="loading">
       <h4 class="version-name">{{ versionData.spec.name }}</h4>
       <div class="config-list-wrapper">
-        <div v-for="config in configList" class="config-item" :key="config.id">
+        <div v-for="config in configList" class="config-item" :key="config.id" @click="handleEditConfigOpen(config.id)">
           <div class="config-name">{{ config.spec.name }}</div>
-          <div class="config-type">二进制文件</div>
+          <div class="config-type">{{ getConfigTypeName(config.spec.file_type) }}</div>
         </div>
       </div>
     </bk-loading>
+    <EditConfig
+      v-model:show="editDialogShow"
+      :bk-biz-id="props.bkBizId"
+      :app-id="props.appId"
+      :config-id="configId" />
   </section>
 </template>
 <style lang="scss" scoped>
@@ -71,9 +80,10 @@
   }
   .version-name {
     margin: 0 0 16px 0;
+    height: 19px;
     font-size: 14px;
-    color: #63656e;
     font-weight: 700;
+    color: #63656e;
   }
   .config-item {
     display: flex;

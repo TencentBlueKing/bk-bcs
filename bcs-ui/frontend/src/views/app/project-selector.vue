@@ -30,13 +30,15 @@
       </bcs-option>
       <template #extension>
         <div class="flex items-center">
-          <div
-            class="text-center flex-1 cursor-pointer"
-            @click="handleCreateProject">
-            <i class="bk-icon icon-plus-circle mr5"></i>
-            {{$t('新建项目')}}
-          </div>
-          <bcs-divider direction="vertical"></bcs-divider>
+          <template v-if="!$INTERNAL">
+            <div
+              class="text-center flex-1 cursor-pointer"
+              @click="handleCreateProject">
+              <i class="bk-icon icon-plus-circle mr5"></i>
+              {{$t('新建项目')}}
+            </div>
+            <bcs-divider direction="vertical"></bcs-divider>
+          </template>
           <div
             class="text-center flex-1 cursor-pointer"
             @click="handleGotoIAM">

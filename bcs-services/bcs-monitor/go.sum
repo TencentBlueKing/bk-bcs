@@ -1078,8 +1078,8 @@ github.com/ianlancetaylor/demangle v0.0.0-20200824232613-28f6c0f3b639/go.mod h1:
 github.com/ianlancetaylor/demangle v0.0.0-20210905161508-09a460cdf81d/go.mod h1:aYm2/VgdVmcIU8iMfdMvDMsRAQjcfZSKFby6HOFvi/w=
 github.com/ifooth/resty/v2 v2.0.0-20230223083514-3015979960de h1:9exEy3q+4wKj3IEFblE3rhQfQ5AxxlPwjykh6RfxMWU=
 github.com/ifooth/resty/v2 v2.0.0-20230223083514-3015979960de/go.mod h1:9PWDzw47qPphMRFfhsyk0NnSgvluHcljSMVIq3w7q0I=
-github.com/ifooth/thanos v0.26.1-0.20221117075138-a986a4c5a32f h1:DWFJUSN/WSM+Yv6Yj+2kVgPGvq3EYrcwbSI4YRCL23U=
-github.com/ifooth/thanos v0.26.1-0.20221117075138-a986a4c5a32f/go.mod h1:yE4GgQ4dRxDScBTSQGwSFJ/yzPR1q2Szu9iGCLmcFXA=
+github.com/ifooth/thanos v0.26.1-0.20230320020638-51ebe892541f h1:63y2ior7IA8oiUMoSkO/3Sl9si1fDDgtPw4Iv6iyLig=
+github.com/ifooth/thanos v0.26.1-0.20230320020638-51ebe892541f/go.mod h1:yE4GgQ4dRxDScBTSQGwSFJ/yzPR1q2Szu9iGCLmcFXA=
 github.com/imdario/mergo v0.3.4/go.mod h1:2EnlNZ0deacrJVfApfmtdGgDfMuh/nq6Ok1EcJh5FfA=
 github.com/imdario/mergo v0.3.5/go.mod h1:2EnlNZ0deacrJVfApfmtdGgDfMuh/nq6Ok1EcJh5FfA=
 github.com/imdario/mergo v0.3.8/go.mod h1:2EnlNZ0deacrJVfApfmtdGgDfMuh/nq6Ok1EcJh5FfA=

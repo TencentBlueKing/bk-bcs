@@ -91,7 +91,7 @@ func (w *WebServer) newRouter() http.Handler {
 	// metrics 配置
 	r.Get("/metrics", promhttp.Handler().ServeHTTP)
 
-	if config.G.IsDevMode() {
+	if config.G.IsLocalDevMode() {
 		r.Mount("/backend", ReverseAPIHandler("bcs_saas_api_url", config.G.FrontendConf.Host.DevOpsBCSAPIURL))
 		r.Mount("/bcsapi", ReverseAPIHandler("bcs_host", config.G.BCS.Host))
 	}

@@ -10,6 +10,7 @@ interface IAppData {
 }
 
 export const useServingStore = defineStore('serving', () => {
+  // 服务详情数据
   const appData = ref<IAppData>({
     id: '',
     spec: {

@@ -27,7 +27,6 @@
     appDataLoading.value = true
     try {
       const res = await getAppDetail(bkBizId.value, appId.value)
-      console.log(res)
       store.$patch(state => {
         state.appData = res
       })

@@ -114,3 +114,15 @@ func (p *Federation) GetClusterDiskioUsage(ctx context.Context, projectId, clust
 	step time.Duration) ([]*prompb.TimeSeries, error) {
 	return nil, nil
 }
+
+// GetClusterDiskioUsed 集群磁盘IO使用量
+func (p *Federation) GetClusterDiskioUsed(ctx context.Context, projectId, clusterId string, start, end time.Time,
+	step time.Duration) ([]*prompb.TimeSeries, error) {
+	return nil, nil
+}
+
+// GetClusterDiskioTotal 集群磁盘IO
+func (m *Federation) GetClusterDiskioTotal(ctx context.Context, projectId, clusterId string, start, end time.Time,
+	step time.Duration) ([]*prompb.TimeSeries, error) {
+	return nil, nil
+}

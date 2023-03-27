@@ -62,8 +62,8 @@ export default defineComponent({
       if (isSharedCluster.value) {
         disabledIDs.push(...[
           'DAEMONSET',
-          'STORAGE',
-          'RBAC',
+          'PERSISTENTVOLUME',
+          'STORAGECLASS',
           'HPA',
           'CRD',
           'CUSTOMOBJECT',

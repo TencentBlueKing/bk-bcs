@@ -8,7 +8,7 @@ replace (
 	github.com/micro/go-micro/v2 => github.com/OvertimeDog/go-micro/v2 v2.9.3
 	go.etcd.io/bbolt v1.3.4 => github.com/coreos/bbolt v1.3.4
 	google.golang.org/grpc => google.golang.org/grpc v1.26.0
-	helm.sh/helm/v3 => github.com/adevjoe/helm/v3 v3.8.2-fix.2
+	helm.sh/helm/v3 => github.com/adevjoe/helm/v3 v3.8.2-fix.3
 	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.23.1
 	k8s.io/apimachinery => k8s.io/apimachinery v0.23.1
 	k8s.io/cli-runtime => k8s.io/cli-runtime v0.23.1

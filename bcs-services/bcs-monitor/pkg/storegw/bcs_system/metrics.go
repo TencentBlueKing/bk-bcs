@@ -96,6 +96,14 @@ var metricsMaps map[string]metricsFn = map[string]metricsFn{
 		return mp.client.GetClusterDiskioUsage(mp.ctx, mp.projectID, mp.clusterID,
 			mp.startTime, mp.endTime, mp.stepDuration)
 	},
+	"bcs:cluster:diskio:used": func(mp metricsParams) ([]*prompb.TimeSeries, error) {
+		return mp.client.GetClusterDiskioUsed(mp.ctx, mp.projectID, mp.clusterID,
+			mp.startTime, mp.endTime, mp.stepDuration)
+	},
+	"bcs:cluster:diskio:total": func(mp metricsParams) ([]*prompb.TimeSeries, error) {
+		return mp.client.GetClusterDiskioTotal(mp.ctx, mp.projectID, mp.clusterID,
+			mp.startTime, mp.endTime, mp.stepDuration)
+	},
 	"bcs:node:info": func(mp metricsParams) ([]*prompb.TimeSeries, error) {
 		nodeInfo, err := mp.client.GetNodeInfo(mp.ctx, mp.projectID, mp.clusterID, mp.node, mp.endTime)
 		return nodeInfo.PromSeries(mp.endTime), err
