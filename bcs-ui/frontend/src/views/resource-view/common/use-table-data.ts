@@ -16,12 +16,13 @@ export default function useTableData(ctx: SetupContext) {
 
   const { $store } = ctx.root;
 
-  const fetchList = async (type: string, category: string, namespaceId: string) => {
+  const fetchList = async (type: string, category: string, namespaceId: string, clusterId: string) => {
     const action = namespaceId ? 'dashboard/getTableData' : 'dashboard/getTableDataWithoutNamespace';
     const res = await $store.dispatch(action, {
       $type: type,
       $category: category,
       $namespaceId: namespaceId,
+      $clusterId: clusterId,
     });
     return res;
   };
@@ -29,22 +30,24 @@ export default function useTableData(ctx: SetupContext) {
     type: string,
     category: string,
     namespaceId: string,
+    clusterId: string,
   ): Promise<ISubscribeData|undefined> => {
     // persistent_volumes、storage_classes资源和命名空间无关，其余资源必须传命名空间
     if (!namespaceId && !['persistent_volumes', 'storage_classes'].includes(category)) return;
     isLoading.value = true;
-    const res = await fetchList(type, category, namespaceId);
+    const res = await fetchList(type, category, namespaceId, clusterId);
     data.value = res.data;
     webAnnotations.value = res.webAnnotations || {};
     isLoading.value = false;
     return res.data;
   };
 
-  const fetchCRDData = async () => {
-    const res = await $store.dispatch('dashboard/crdList');
+  const fetchCRDData = async (clusterId: string) => {
+    const res = await $store.dispatch('dashboard/crdList', { $clusterId: clusterId });
     return res;
   };
   const handleFetchCustomResourceList = async (
+    clusterId: string,
     crd?: string,
     category?: string,
     namespace?: string,
@@ -55,6 +58,7 @@ export default function useTableData(ctx: SetupContext) {
     const res = await $store.dispatch('dashboard/customResourceList', {
       $crd: crd,
       $category: category,
+      $clusterId: clusterId,
       namespace,
     });
     data.value = res.data;

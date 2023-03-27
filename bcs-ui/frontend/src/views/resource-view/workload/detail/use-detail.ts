@@ -14,6 +14,7 @@ export interface IDetailOptions {
   namespace: string;
   type: string;
   defaultActivePanel: string;
+  clusterId: string;
   crd?: string;
 }
 
@@ -72,7 +73,7 @@ export default function useDetail(ctx: SetupContext, options: IDetailOptions) {
   };
   // 获取workload详情
   const handleGetDetail = async () => {
-    const { namespace, category, name, type } = options;
+    const { namespace, category, name, type, clusterId } = options;
     // workload详情
     isLoading.value = true;
     const res = await $store.dispatch('dashboard/getResourceDetail', {
@@ -80,6 +81,7 @@ export default function useDetail(ctx: SetupContext, options: IDetailOptions) {
       $category: category,
       $name: name,
       $type: type,
+      $clusterId: clusterId,
     });
     detail.value = res.data;
     webAnnotations.value = res.webAnnotations;
@@ -88,13 +90,14 @@ export default function useDetail(ctx: SetupContext, options: IDetailOptions) {
   };
 
   const handleGetCustomObjectDetail = async () => {
-    const { name, crd, namespace } = options;
+    const { name, crd, namespace, clusterId } = options;
     // workload详情
     isLoading.value = true;
     const res = await $store.dispatch('dashboard/getCustomObjectResourceDetail', {
       $crdName: crd,
       $namespaceId: namespace,
       $name: name,
+      $clusterId: clusterId,
     });
     detail.value = res.data;
     webAnnotations.value = res.webAnnotations;
@@ -147,7 +150,7 @@ export default function useDetail(ctx: SetupContext, options: IDetailOptions) {
   // 删除资源
   const handleDeleteResource = () => {
     const kind = detail.value?.manifest?.kind;
-    const { namespace, category, name, type, crd } = options;
+    const { namespace, category, name, type, crd, clusterId } = options;
     $bkInfo({
       type: 'warning',
       clsName: 'custom-info-confirm',
@@ -162,6 +165,7 @@ export default function useDetail(ctx: SetupContext, options: IDetailOptions) {
             $crd: crd,
             $category: category,
             $name: name,
+            $clusterId: clusterId,
           });
         } else {
           result = await $store.dispatch('dashboard/resourceDelete', {
@@ -169,6 +173,7 @@ export default function useDetail(ctx: SetupContext, options: IDetailOptions) {
             $type: type,
             $category: category,
             $name: name,
+            $clusterId: clusterId,
           });
         }
         result && $bkMessage({

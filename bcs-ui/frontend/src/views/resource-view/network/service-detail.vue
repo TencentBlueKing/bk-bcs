@@ -141,6 +141,10 @@ export default defineComponent({
       type: Object,
       default: () => ({}),
     },
+    clusterId: {
+      type: String,
+      required: true,
+    },
   },
   setup(props) {
     const handleTransformObjToArr = (obj) => {
@@ -161,6 +165,7 @@ export default defineComponent({
       const flag = await $store.dispatch('dashboard/getNetworksEndpointsFlag', {
         $namespaces: props.data.metadata.namespace,
         $name: props.data.metadata.name,
+        $clusterId: props.clusterId,
       });
       if (flag) {
         isLoading.value = true;
@@ -169,6 +174,7 @@ export default defineComponent({
           $type: 'networks',
           $category: 'endpoints',
           $name: props.data.metadata.name,
+          $clusterId: props.clusterId,
         });
         endpoints.value = res.data.manifestExt?.endpoints || [];
         isLoading.value = false;

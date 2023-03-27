@@ -184,7 +184,7 @@ export default defineComponent({
     };
     // 帮助文档
     const handleGotoHelp  = () => {
-      window.open(window.BCS_CONFIG?.doc?.help);
+      window.open(window.BCS_CONFIG?.help);
     };
     // 版本日志
     const handleShowSystemLog = () => {
