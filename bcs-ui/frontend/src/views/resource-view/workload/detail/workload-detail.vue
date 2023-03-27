@@ -455,7 +455,7 @@ export default defineComponent({
     const params = computed<Record<string, any>|null>(() => {
       const list = curPodTablePageData.value.map(item => item.metadata.name);
       return list.length
-        ? { pod_name_list: list, $namespaceId: props.namespace }
+        ? { pod_name_list: list, $namespaceId: props.namespace, $clusterId: clusterId.value }
         : null;
     });
 
@@ -549,6 +549,7 @@ export default defineComponent({
       const result = await $store.dispatch('dashboard/reschedulePod', {
         $namespaceId: props.namespace,
         $podId: name,
+        $clusterId: clusterId.value,
       });
       result && $bkMessage({
         theme: 'success',
@@ -573,6 +574,7 @@ export default defineComponent({
           $namespace: props.namespace,
           $name: metadata.value.name,
           $category: props.category,
+          $clusterId: clusterId.value,
           podNames: selectPods.value.map(pod => pod.metadata.name),
           labelSelector,
         });
@@ -580,6 +582,7 @@ export default defineComponent({
         result = await $store.dispatch('dashboard/batchRescheduleCrdPod', {
           $crdName: props.crd,
           $cobjName: metadata.value.name,
+          $clusterId: clusterId.value,
           podNames: selectPods.value.map(pod => pod.metadata.name),
           namespace: props.namespace,
           labelSelector,
@@ -616,6 +619,7 @@ export default defineComponent({
       if (props.kind !== 'Deployment') return;
       rsData.value = await $store.dispatch('dashboard/getReplicasets', {
         $namespaceId: props.namespace,
+        $clusterId: clusterId.value,
         ownerName: props.name,
       });
     };

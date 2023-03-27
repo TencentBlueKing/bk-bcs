@@ -64,7 +64,7 @@ const menus: IMenu[] = [
         id: 'NETWORK',
         children: [
           {
-            title: 'Ingress',
+            title: 'Ingresses',
             route: 'dashboardNetworkIngress',
             id: 'INGRESS',
           },

@@ -381,6 +381,7 @@ export default defineComponent({
     const { name, namespace, clusterId } = toRefs(props);
     const params = computed(() => ({
       $namespaceId: namespace.value,
+      $clusterId: clusterId.value,
       pod_name_list: [name.value],
     }));
 
@@ -394,6 +395,7 @@ export default defineComponent({
       container.value = await $store.dispatch('dashboard/listContainers', {
         $podId: name.value,
         $namespaceId: namespace.value,
+        $clusterId: clusterId.value,
       });
       const containerIDs = container.value.map(item => item.containerID).filter(id => !!id);
       if (containerIDs.length) {
@@ -435,6 +437,7 @@ export default defineComponent({
         $podId: name.value,
         $type: type,
         $namespaceId: namespace.value,
+        $clusterId: clusterId.value,
       }));
       const [pvcs = {}, configmaps = {}, secrets = {}] = await Promise.all(promises);
       storage.value = {

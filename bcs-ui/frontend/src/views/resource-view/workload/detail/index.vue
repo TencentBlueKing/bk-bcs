@@ -174,6 +174,7 @@ export default defineComponent({
           pod: name,
           name: row.name,
           id: row.containerID,
+          clusterId: props.clusterId,
         },
       });
     };

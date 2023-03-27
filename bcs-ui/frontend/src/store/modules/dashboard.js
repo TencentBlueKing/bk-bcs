@@ -245,8 +245,8 @@ export default {
       return data;
     },
     // 获取CRD列表
-    async crdList() {
-      const res = await crdList({}, { needRes: true }).catch(() => ({
+    async crdList(context, params) {
+      const res = await crdList(params, { needRes: true }).catch(() => ({
         data: {
           manifest: {},
           manifestExt: {},

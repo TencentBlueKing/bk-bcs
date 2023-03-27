@@ -171,6 +171,7 @@ export default {
     clusterId: {
       type: String,
       default: '',
+      required: true,
     },
     // yaml模式回退到表单模式还原的数据
     formData: {
@@ -178,7 +179,7 @@ export default {
       default: () => ({}),
     },
     formUpdate: {
-      type: Boolean,
+      type: [Boolean, String],
       default: false,
     },
   },
@@ -285,6 +286,7 @@ export default {
       const data = await this.$store.dispatch('dashboard/renderManifestPreview', {
         kind: this.kind,
         formData,
+        $clusterId: this.clusterId,
       });
       return data;
     },
@@ -296,6 +298,7 @@ export default {
         res = await this.$store.dispatch('dashboard/retrieveCustomResourceDetail', {
           $crd: this.crd,
           $category: this.category,
+          $clusterId: this.clusterId,
           $name: this.name,
           namespace: this.namespace,
           format: 'formData',
@@ -304,6 +307,7 @@ export default {
         res = await this.$store.dispatch('dashboard/getResourceDetail', {
           $namespaceId: this.namespace,
           $category: this.category,
+          $clusterId: this.clusterId,
           $name: this.name,
           $type: this.type,
           format: 'formData',
@@ -323,6 +327,7 @@ export default {
         kind: this.kind,
         namespace: this.namespace,
         action: this.isEdit ? 'update' : 'create',
+        $clusterId: this.clusterId,
       });
     },
     async request(url, config) {
@@ -338,7 +343,7 @@ export default {
         subTitle: this.$t('退出后，你修改的内容将丢失'),
         defaultInfo: true,
         confirmFn: () => {
-          this.$router.back();
+          this.$router.push({ name: this.$store.state.curSideMenu?.route });
         },
       });
     },
@@ -359,6 +364,7 @@ export default {
         params: {
           ...params,
           formData: this.schemaFormData,
+          defaultOriginal: this.original,
           namespace: this.namespace,
         },
         query: {
@@ -394,6 +400,7 @@ export default {
             result = await this.$store.dispatch('dashboard/customResourceUpdate', {
               $crd: this.crd,
               $category: this.category,
+              $clusterId: this.clusterId,
               $name: this.name,
               format: 'formData',
               rawData: this.schemaFormData,
@@ -407,6 +414,7 @@ export default {
               $namespaceId: this.namespace,
               $type: this.type,
               $category: this.category,
+              $clusterId: this.clusterId,
               $name: this.name,
               format: 'formData',
               rawData: this.schemaFormData,
@@ -435,6 +443,7 @@ export default {
         result = await this.$store.dispatch('dashboard/customResourceCreate', {
           $crd: this.crd,
           $category: this.category,
+          $clusterId: this.clusterId,
           format: 'formData',
           rawData: this.schemaFormData,
         }).catch((err) => {
@@ -445,6 +454,7 @@ export default {
         result = await this.$store.dispatch('dashboard/resourceCreate', {
           $type: this.type,
           $category: this.category,
+          $clusterId: this.clusterId,
           format: 'formData',
           rawData: this.schemaFormData,
         }).catch((err) => {

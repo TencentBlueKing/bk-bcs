@@ -226,13 +226,24 @@ export default defineComponent({
       type: Boolean,
       default: false,
     },
+    formUpdate: {
+      type: [Boolean, String],
+      default: false,
+    },
+    // 从表单模式切换过来的数据
     formData: {
       type: Object,
       default: () => ({}),
     },
-    formUpdate: {
-      type: Boolean,
-      default: false,
+    // 从表单模式切换过来的原始数据
+    defaultOriginal: {
+      type: Object,
+      default: () => null,
+    },
+    clusterId: {
+      type: String,
+      default: '',
+      required: true,
     },
   },
   setup(props, ctx) {
@@ -247,13 +258,15 @@ export default defineComponent({
       defaultShowExample,
       formData,
       formUpdate,
+      clusterId,
+      defaultOriginal,
     } = toRefs(props);
     const { clientHeight } = document.body;
 
     onMounted(() => {
       document.addEventListener('keyup', handleExitFullScreen);
       if (formData.value && Object.keys(formData.value).length) {
-        // 表单模式
+        // 从表单模式跳转过来
         handleGetFormDetail();
       } else {
         // manifest模式
@@ -324,6 +337,7 @@ export default defineComponent({
           $category: category.value,
           $name: name.value,
           namespace: namespace.value,
+          $clusterId: clusterId.value,
         });
       } else {
         res = await $store.dispatch('dashboard/getResourceDetail', {
@@ -331,6 +345,7 @@ export default defineComponent({
           $category: category.value,
           $name: name.value,
           $type: type.value,
+          $clusterId: clusterId.value,
         });
       }
       original.value = JSON.parse(JSON.stringify(res.data?.manifest || {})); // 缓存原始值
@@ -345,8 +360,14 @@ export default defineComponent({
       const data = await $store.dispatch('dashboard/renderManifestPreview', {
         kind: kind.value,
         formData: formData.value,
+        $clusterId: clusterId.value,
       });
-      original.value = JSON.parse(JSON.stringify(data || {})); // 缓存原始值
+      if (defaultOriginal.value) {
+        original.value = JSON.parse(JSON.stringify(defaultOriginal.value || {})); // 缓存原始值
+      } else {
+        original.value = JSON.parse(JSON.stringify(data || {})); // 缓存原始值
+      }
+
       setDetail(data);
       isLoading.value = false;
     };
@@ -443,6 +464,7 @@ export default defineComponent({
       examples.value = await $store.dispatch('dashboard/exampleManifests', {
         kind: kind.value, // crd类型的模板kind固定为CustomObject
         namespace: namespace.value,
+        $clusterId: clusterId.value,
       });
 
       // 特殊处理-> apiVersion、kind、metadata强制排序在前三位
@@ -511,6 +533,7 @@ export default defineComponent({
         result = await $store.dispatch('dashboard/customResourceCreate', {
           $crd: crd.value,
           $category: category.value,
+          $clusterId: clusterId.value,
           format: 'manifest',
           rawData: detail.value,
         }).catch((err) => {
@@ -522,6 +545,7 @@ export default defineComponent({
         result = await $store.dispatch('dashboard/resourceCreate', {
           $type: type.value,
           $category: category.value,
+          $clusterId: clusterId.value,
           format: 'manifest',
           rawData: detail.value,
         }).catch((err) => {
@@ -558,6 +582,7 @@ export default defineComponent({
             result = await $store.dispatch('dashboard/customResourceUpdate', {
               $crd: crd.value,
               $category: category.value,
+              $clusterId: clusterId.value,
               $name: name.value,
               rawData: detail.value,
               format: 'manifest',
@@ -572,6 +597,7 @@ export default defineComponent({
               $namespaceId: namespace.value,
               $type: type.value,
               $category: category.value,
+              $clusterId: clusterId.value,
               $name: name.value,
               format: 'manifest',
               rawData: detail.value,
@@ -587,7 +613,8 @@ export default defineComponent({
               theme: 'success',
               message: $i18n.t('更新成功'),
             });
-            $router.back();
+            // 跳转回列表页
+            $router.push({ name: $store.state.curSideMenu?.route });
           }
         },
       });
@@ -609,7 +636,8 @@ export default defineComponent({
         subTitle: $i18n.t('退出后，你修改的内容将丢失'),
         defaultInfo: true,
         confirmFn: () => {
-          $router.back();
+          // 跳转回列表页
+          $router.push({ name: $store.state.curSideMenu?.route });
         },
       });
     };
@@ -695,7 +723,7 @@ export default defineComponent({
     .switch-button-pop {
         position: absolute;
         right: 32px;
-        top: 200px;
+        top: 130px;
         z-index: 1;
     }
     .icon-back {

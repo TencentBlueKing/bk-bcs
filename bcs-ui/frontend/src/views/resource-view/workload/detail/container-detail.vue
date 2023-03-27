@@ -177,9 +177,14 @@ export default defineComponent({
       default: '',
       required: true,
     },
+    clusterId: {
+      type: String,
+      default: '',
+      required: true,
+    },
   },
   setup(props, ctx) {
-    const { name, namespace, pod } = toRefs(props);
+    const { name, namespace, pod, clusterId } = toRefs(props);
     const { $store } = ctx.root;
 
     // 详情loading
@@ -195,6 +200,7 @@ export default defineComponent({
       $namespaceId: namespace.value,
       $containerId: name.value,
       $podId: pod.value,
+      $clusterId: clusterId.value,
     }));
 
     // 端口映射
@@ -218,6 +224,7 @@ export default defineComponent({
         $category: 'pods',
         $name: pod.value,
         $containerName: name.value,
+        $clusterId: clusterId.value,
       });
       isLoading.value = false;
       return detail.value;
@@ -230,6 +237,7 @@ export default defineComponent({
         $namespaceId: namespace.value,
         $podId: pod.value,
         $containerName: name.value,
+        $clusterId: clusterId.value,
       });
       envsTableLoading.value = false;
       return envs.value;
