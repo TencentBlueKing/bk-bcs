@@ -24,6 +24,7 @@ const InternalAutoScalerConfig = () => import(/* webpackChunkName: 'cluster' */'
 const InternalNodePool = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/cluster/autoscaler/internal/node-pool.vue');
 const InternalNodePoolDetail = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/cluster/autoscaler/internal/node-pool-detail.vue');
 const InternalEditNodePool = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/cluster/autoscaler/internal/edit-node-pool.vue');
+const PodDetail = () => import(/* webpackChunkName: 'dashboard' */'@/views/resource-view/workload/detail/index.vue');
 
 // 集群管理
 export default [
@@ -117,6 +118,16 @@ export default [
     name: 'clusterNodeOverview',
     props: true,
     component: ClusterNodeOverview,
+    meta: {
+      menuId: 'NODE',
+    },
+  },
+  // Pods详情
+  {
+    path: 'clusters/:clusterId/nodes/:nodeName/:category/namespaces/:namespace/:name',
+    name: 'nodePodDetail',
+    props: route => ({ ...route.params, kind: route.query.kind, crd: route.query.crd }),
+    component: PodDetail,
     meta: {
       menuId: 'NODE',
     },

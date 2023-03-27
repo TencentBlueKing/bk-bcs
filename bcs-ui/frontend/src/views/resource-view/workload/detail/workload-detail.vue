@@ -298,7 +298,7 @@
 </template>
 <script lang="ts">
 /* eslint-disable camelcase */
-import { defineComponent, computed, ref, onMounted, onBeforeUnmount, watch } from '@vue/composition-api';
+import { defineComponent, computed, ref, onMounted, onBeforeUnmount, watch, toRefs } from '@vue/composition-api';
 import { bkOverflowTips } from 'bk-magic-vue';
 import StatusIcon from '@/components/status-icon';
 import Metric from '@/components/metric.vue';
@@ -361,6 +361,11 @@ export default defineComponent({
       default: '',
       required: true,
     },
+    clusterId: {
+      type: String,
+      default: '',
+      required: true,
+    },
     // 是否隐藏 更新 和 删除操作（兼容集群管理应用详情）
     hiddenOperate: {
       type: Boolean,
@@ -368,7 +373,8 @@ export default defineComponent({
     },
   },
   setup(props, ctx) {
-    const { $store, $bkMessage, $i18n, $route } = ctx.root;
+    const { clusterId } = toRefs(props);
+    const { $store, $bkMessage, $i18n } = ctx.root;
     const updateStrategyMap = ref({
       RollingUpdate: $i18n.t('滚动升级'),
       InplaceUpdate: $i18n.t('原地升级'),
@@ -505,7 +511,6 @@ export default defineComponent({
       workloadPods.value = await handleGetPodsData();
       podLoading.value = false;
     };
-    const clusterId = computed(() => $store.getters.curClusterId || $route.query.cluster_id);
 
     // 显示日志
     const showLog = ref(false);
@@ -663,7 +668,6 @@ export default defineComponent({
       podLoading,
       yaml,
       showYamlPanel,
-      clusterId,
       kindsNames,
       timeZoneTransForm,
       handleShowYamlPanel,

@@ -280,6 +280,7 @@ export default defineComponent({
           category: category.value,
           name: row.metadata.name,
           namespace: row.metadata.namespace,
+          clusterId: clusterId.value,
         },
         query: {
           kind: subscribeKind.value,
