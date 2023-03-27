@@ -63,8 +63,8 @@ type repoProxy struct {
 	authorizer auth.Authorizer
 }
 
-//BinaryFile get repo head data
-func (p repoProxy) BinaryFile(w http.ResponseWriter, r *http.Request) {
+// FileMetadata get repo head data
+func (p repoProxy) FileMetadata(w http.ResponseWriter, r *http.Request) {
 	kt, err := gwparser.Parse(r.Context(), r.Header)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -92,12 +92,12 @@ func (p repoProxy) BinaryFile(w http.ResponseWriter, r *http.Request) {
 		Sign:    sha256,
 	}
 	path, _ := repo.GenNodePath(opt)
-	binary, err := p.repoCli.BinaryHead(kt.Ctx, path)
+	fileMetadata, err := p.repoCli.FileMetadataHead(kt.Ctx, path)
 	if err != nil {
-		logs.Errorf("get binary information failed, err: %v, rid: %s", err, kt.Rid)
+		logs.Errorf("get file metadata information failed, err: %v, rid: %s", err, kt.Rid)
 		return
 	}
-	msg, _ := json.Marshal(binary)
+	msg, _ := json.Marshal(fileMetadata)
 	w.Write(msg)
 }
 

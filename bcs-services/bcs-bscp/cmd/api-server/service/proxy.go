@@ -132,9 +132,9 @@ func (p *proxy) handler() http.Handler {
 	})
 
 	// repo 获取二进制元数据 API
-	r.Route("/api/v1/api/get/content/binary", func(r chi.Router) {
+	r.Route("/api/v1/api/get/content/metadata", func(r chi.Router) {
 		r.Use(p.authorizer.UnifiedAuthentication)
-		r.With(p.authorizer.AppVerified).Get("/biz_id/{biz_id}/app_id/{app_id}", p.repoRevProxy.BinaryFile)
+		r.With(p.authorizer.AppVerified).Get("/biz_id/{biz_id}/app_id/{app_id}", p.repoRevProxy.FileMetadata)
 	})
 
 	return r

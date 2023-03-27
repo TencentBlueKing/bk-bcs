@@ -269,8 +269,8 @@ func (c *Client) QueryMetadata(ctx context.Context, opt *NodeOption) (map[string
 	return respBody.Data, nil
 }
 
-// BinaryHead get head data.
-func (c *Client) BinaryHead(ctx context.Context, nodePath string) (*BinaryHeadValue, error) {
+// FileMetadataHead get head data.
+func (c *Client) FileMetadataHead(ctx context.Context, nodePath string) (*FileMetadataValue, error) {
 	resp := c.client.Head().
 		WithContext(ctx).
 		SubResourcef(nodePath).
@@ -285,7 +285,7 @@ func (c *Client) BinaryHead(ctx context.Context, nodePath string) (*BinaryHeadVa
 	}
 	fileSize := resp.Header.Get("Content-Length")
 	size, _ := strconv.Atoi(fileSize)
-	message := &BinaryHeadValue{
+	message := &FileMetadataValue{
 		ByteSize: int64(size),
 		Sha256:   resp.Header.Get("X-Checksum-Sha256"),
 	}
@@ -293,7 +293,7 @@ func (c *Client) BinaryHead(ctx context.Context, nodePath string) (*BinaryHeadVa
 	return message, nil
 }
 
-type BinaryHeadValue struct {
+type FileMetadataValue struct {
 	ByteSize int64  `json:"byte_size"`
 	Sha256   string `json:"sha256"`
 }
@@ -385,14 +385,14 @@ func (c *ClientS3) IsNodeExist(ctx context.Context, bucketName, nodePath string)
 }
 
 // BinaryHead get head data
-func (c *ClientS3) BinaryHead(ctx context.Context, bucketName, nodePath string) (*BinaryHeadValue, error) {
+func (c *ClientS3) FileMetadataHead(ctx context.Context, bucketName, nodePath string) (*FileMetadataValue, error) {
 
 	resp, err := c.Client.StatObject(ctx, bucketName, nodePath, minio.StatObjectOptions{Checksum: true})
 	if err != nil {
 		return nil, err
 	}
 	fileSize := resp.Size
-	message := &BinaryHeadValue{
+	message := &FileMetadataValue{
 		ByteSize: fileSize,
 	}
 

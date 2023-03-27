@@ -31,12 +31,14 @@ const (
 	RepoRecordCacheExpiration = time.Hour
 )
 
+// FileApiType
 type FileApiType interface {
 	DownloadFile(w http.ResponseWriter, r *http.Request)
-	BinaryFile(w http.ResponseWriter, r *http.Request)
+	FileMetadata(w http.ResponseWriter, r *http.Request)
 	UploadFile(w http.ResponseWriter, r *http.Request)
 }
 
+// DownloadFile
 func (s S3Client) DownloadFile(w http.ResponseWriter, r *http.Request) {
 	kt, err := gwparser.Parse(r.Context(), r.Header)
 	if err != nil {
@@ -86,6 +88,7 @@ func (s S3Client) DownloadFile(w http.ResponseWriter, r *http.Request) {
 	io.Copy(w, reader)
 }
 
+// UploadFile
 func (s S3Client) UploadFile(w http.ResponseWriter, r *http.Request) {
 	kt, err := gwparser.Parse(r.Context(), r.Header)
 	if err != nil {
@@ -158,8 +161,8 @@ func (s S3Client) UploadFile(w http.ResponseWriter, r *http.Request) {
 	w.Write(msg)
 }
 
-//BinaryFile get s3 head data
-func (s S3Client) BinaryFile(w http.ResponseWriter, r *http.Request) {
+// FileMetadata get s3 head data
+func (s S3Client) FileMetadata(w http.ResponseWriter, r *http.Request) {
 	kt, err := gwparser.Parse(r.Context(), r.Header)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -194,13 +197,13 @@ func (s S3Client) BinaryFile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	binary, err := s.s3Cli.BinaryHead(kt.Ctx, config.S3.BucketName, fullPath)
+	fileMetadata, err := s.s3Cli.FileMetadataHead(kt.Ctx, config.S3.BucketName, fullPath)
 	if err != nil {
-		logs.Errorf("get binary information failed, err: %v, rid: %s", err)
+		logs.Errorf("get file metadata information failed, err: %v, rid: %s", err)
 		return
 	}
-	binary.Sha256 = sha256
-	msg, _ := json.Marshal(binary)
+	fileMetadata.Sha256 = sha256
+	msg, _ := json.Marshal(fileMetadata)
 	w.Write(msg)
 }
 
@@ -209,6 +212,7 @@ type ResponseBody struct {
 	Message string
 }
 
+// S3Client
 type S3Client struct {
 	// repoCli s3 client.
 	s3Cli *repo.ClientS3
@@ -253,6 +257,7 @@ type AuthResp struct {
 	Permission *pbas.IamPermission `json:"permission,omitempty"`
 }
 
+// NewS3Service
 func NewS3Service(settings cc.Repository, authorizer auth.Authorizer) (FileApiType, error) {
 	s3Client, err := repo.NewClientS3(&settings, metrics.Register())
 	if err != nil {
