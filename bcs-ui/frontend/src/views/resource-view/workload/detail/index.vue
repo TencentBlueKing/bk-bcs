@@ -157,6 +157,7 @@ export default defineComponent({
         params: {
           name: row.metadata.name,
           namespace: row.metadata.namespace,
+          clusterId: props.clusterId,
           hiddenOperate: props.hiddenOperate,
         },
       });

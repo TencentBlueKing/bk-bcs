@@ -350,7 +350,7 @@ export default defineComponent({
     // 跳转Pods详情
     const gotoPodDetail = (row) => {
       $router.push({
-        name: 'dashboardWorkloadDetail',
+        name: 'nodePodDetail',
         params: {
           category: 'pods',
           name: row.name,

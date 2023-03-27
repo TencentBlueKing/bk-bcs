@@ -847,6 +847,7 @@ export default defineComponent({
       'DELETE-FAILURE': 'red',
       'ADD-FAILURE': 'red',
       'REMOVE-FAILURE': 'red',
+      'REMOVE-CA-FAILURE': 'red',
     };
     const nodeListLoading = ref(false);
     const nodeList = ref<any[]>([]);

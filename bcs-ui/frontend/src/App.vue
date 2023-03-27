@@ -1,5 +1,6 @@
 <template>
-  <div id="app" v-bkloading="{ isLoading }">
+  <!-- 加Loading会导致跟index的loading错位的效果 -->
+  <div id="app">
     <Navigation>
       <RouterView v-if="!!projectList.length" />
       <ProjectGuide v-else-if="!isLoading" />

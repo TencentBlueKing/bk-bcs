@@ -9,6 +9,7 @@
       :kind="kind"
       :crd="crd"
       :hidden-operate="true"
+      :cluster-id="clusterId"
     ></component>
   </keep-alive>
   <!-- <router-view v-else :key="$route.path"></router-view> -->
@@ -206,6 +207,9 @@ export default {
         gamestatefulSetsInstanceDetail: 'gamestatefulsets.tkex.tencent.com',
       };
       return crdMap[this.$route.name];
+    },
+    clusterId() {
+      return this.$route.query?.cluster_id;
     },
   },
   mounted() {
