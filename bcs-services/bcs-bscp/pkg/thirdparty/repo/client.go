@@ -384,7 +384,7 @@ func (c *ClientS3) IsNodeExist(ctx context.Context, bucketName, nodePath string)
 	return true, nil
 }
 
-// BinaryHead get head data
+// FileMetadataHead get head data
 func (c *ClientS3) FileMetadataHead(ctx context.Context, bucketName, nodePath string) (*FileMetadataValue, error) {
 
 	resp, err := c.Client.StatObject(ctx, bucketName, nodePath, minio.StatObjectOptions{Checksum: true})
