@@ -3,11 +3,11 @@ package modifier
 import (
 	"fmt"
 
+	"github.com/tidwall/gjson"
+	"github.com/tidwall/sjson"
 	"google.golang.org/protobuf/proto"
 
 	pbcs "bscp.io/pkg/protocol/config-server"
-	"github.com/tidwall/gjson"
-	"github.com/tidwall/sjson"
 )
 
 // ModifyRespFunc is a function to modify response

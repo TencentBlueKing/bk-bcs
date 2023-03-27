@@ -25,14 +25,14 @@ type Hook struct {
 	client rest.ClientInterface
 }
 
-// NewHookClient get a new config item client
+// NewHookClient get a new hook client
 func NewHookClient(client rest.ClientInterface) *Hook {
 	return &Hook{
 		client: client,
 	}
 }
 
-// Create function to create config item.
+// Create function to create hook.
 func (c *Hook) Create(ctx context.Context, header http.Header, req *pbcs.CreateHookReq) (
 	*pbcs.CreateHookResp, error) {
 
@@ -58,7 +58,7 @@ func (c *Hook) Create(ctx context.Context, header http.Header, req *pbcs.CreateH
 	return pbResp.Data, pbResp.Error
 }
 
-// Update function to update config item.
+// Update function to update hook.
 func (c *Hook) Update(ctx context.Context, header http.Header, req *pbcs.UpdateHookReq) (
 	*pbcs.UpdateHookResp, error) {
 
@@ -85,7 +85,7 @@ func (c *Hook) Update(ctx context.Context, header http.Header, req *pbcs.UpdateH
 	return pbResp.Data, pbResp.Error
 }
 
-// Delete function to delete config item.
+// Delete function to delete hook.
 func (c *Hook) Delete(ctx context.Context, header http.Header, req *pbcs.DeleteHookReq) (
 	*pbcs.DeleteHookResp, error) {
 
@@ -112,7 +112,7 @@ func (c *Hook) Delete(ctx context.Context, header http.Header, req *pbcs.DeleteH
 	return pbResp.Data, pbResp.Error
 }
 
-// List to list config item.
+// List to list hook.
 func (c *Hook) List(ctx context.Context, header http.Header,
 	req *pbcs.ListHooksReq) (*pbcs.ListHooksResp, error) {
 

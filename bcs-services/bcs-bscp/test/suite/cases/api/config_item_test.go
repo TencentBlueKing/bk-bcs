@@ -15,12 +15,11 @@ package api
 import (
 	"testing"
 
-	"bscp.io/pkg/tools"
-
 	. "github.com/smartystreets/goconvey/convey" // import convey.
 
 	"bscp.io/pkg/dal/table"
 	pbcs "bscp.io/pkg/protocol/config-server"
+	"bscp.io/pkg/tools"
 	"bscp.io/test/client/api"
 	"bscp.io/test/suite"
 	"bscp.io/test/suite/cases"

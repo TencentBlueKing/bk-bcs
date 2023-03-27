@@ -15,12 +15,12 @@ package api
 import (
 	"testing"
 
+	. "github.com/smartystreets/goconvey/convey" // import convey.
+
 	"bscp.io/pkg/dal/table"
 	pbcs "bscp.io/pkg/protocol/config-server"
 	"bscp.io/test/suite"
 	"bscp.io/test/suite/cases"
-
-	. "github.com/smartystreets/goconvey/convey" // import convey.
 )
 
 func TestApplication(t *testing.T) {

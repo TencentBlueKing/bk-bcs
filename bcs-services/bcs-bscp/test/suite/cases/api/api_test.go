@@ -15,10 +15,10 @@ package api
 import (
 	"testing"
 
+	. "github.com/smartystreets/goconvey/convey" // import convey.
+
 	"bscp.io/test/suite"
 	"bscp.io/test/suite/cases"
-
-	. "github.com/smartystreets/goconvey/convey" // import convey.
 )
 
 // ResourceManager instance
