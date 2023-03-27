@@ -1,18 +1,15 @@
 <script setup lang="ts">
   import { ref, onMounted, computed } from 'vue'
-  import { Search, ArrowsLeft, AngleRight } from 'bkui-vue/lib/icon'
+  import { Search } from 'bkui-vue/lib/icon'
   import InfoBox from "bkui-vue/lib/info-box";
   import { storeToRefs } from 'pinia'
-  import { useServingStore } from '../../../../../store/serving'
   import { useConfigStore } from '../../../../../store/config'
   import { getConfigVersionList } from '../../../../../api/config';
   import { IRequestFilter, IPageFilter, FilterOp, RuleOp } from '../../../../../types'
   import { IConfigVersion } from '../../../../../../types/config';
-  import VersionLayout from '../components/version-layout.vue';
-  import ConfigDiff from '../components/config-diff.vue'
+  import VersionDiff from '../components/version-diff/index.vue';
 
   const configStore = useConfigStore()
-  const { appData } = storeToRefs(useServingStore())
   const { versionData } = storeToRefs(configStore)
 
   const props = defineProps<{
@@ -42,6 +39,7 @@
   const versionList = ref<Array<IConfigVersion>>([])
   const currentTab = ref('available')
   const showDiffPanel = ref(false)
+  const diffVersion = ref()
   const pagination = ref({
     current: 1,
     count: 0,
@@ -100,13 +98,10 @@
     })
   }
 
-  // 版本对比
+  // 打开版本对比
   const handleOpenDiff = (version: IConfigVersion) => {
-    // showDiffPanel.value = true
-  }
-
-  const handleDiffClose = () => {
-    showDiffPanel.value = false
+    showDiffPanel.value = true
+    diffVersion.value = version
   }
 
   // 废弃
@@ -174,29 +169,9 @@
           @change="refreshConfigList($event)"
           @limit-change="handlePageLimitChange"/>
     </bk-loading>
-    <VersionLayout v-if="showDiffPanel" :show-footer="false">
-      <template #header>
-        <section class="header-wrapper">
-          <span class="header-name" @click="handleDiffClose">
-            <ArrowsLeft class="arrow-left" />
-            <span class="service-name">{{ appData.spec.name }}</span>
-          </span>
-          <AngleRight class="arrow-right" />
-          版本对比
-        </section>
-      </template>
-      <config-diff
-        :base-version="0"
-        :current-config-list="[]"
-        :base-config-list="[]">
-        <template #head>
-          <div class="diff-left-panel-head">
-            版本对比
-            <!-- @todo 待确定这里展示什么名称 -->
-          </div>
-        </template>
-      </config-diff>
-    </VersionLayout>
+    <VersionDiff
+      v-model:show="showDiffPanel"
+      :current-version="diffVersion" />
   </section>
 </template>
 <style lang="scss" scoped>

@@ -6,13 +6,13 @@
   import InfoBox from "bkui-vue/lib/info-box";
   import { IConfigItem, IConfigListQueryParams } from '../../../../../../../types/config'
   import { getConfigList, deleteServingConfigItem } from '../../../../../../api/config'
-  import { getConfigTypeName } from '../../../../../../utils/index'
+  import { getConfigTypeName } from '../../../../../../utils/config'
   import EditConfig from './edit-config.vue'
   import CreateConfig from './create-config.vue'
   import PublishVersion from './publish-version/index.vue'
   import ReleaseVersion from './release-version/index.vue'
   import ModifyGroup from './modify-group.vue'
-  import VersionDiffDialog from '../../components/version-diff-dialog.vue';
+  import VersionDiff from '../../components/version-diff/index.vue'
 
   const servingStore = useServingStore()
   const versionStore = useConfigStore()
@@ -35,8 +35,8 @@
   })
   const editPanelShow = ref(false)
   const activeConfig = ref(0)
-  const isDiffDialogShow = ref(false)
-  const diffConfig = ref()
+  const isDiffPanelShow = ref(false)
+  const diffConfig = ref(0)
 
   watch(() => versionData.value.id, () => {
     getListData()
@@ -78,9 +78,8 @@
   }
 
   const handleDiff = (config: IConfigItem) => {
-    console.log(config)
-    diffConfig.value = config
-    isDiffDialogShow.value = true
+    diffConfig.value = config.id
+    isDiffPanelShow.value = true
   }
 
   const handleDel = (config: IConfigItem) => {
@@ -124,8 +123,6 @@
           v-if="versionData.id === 0"
           :bk-biz-id="props.bkBizId"
           :app-id="props.appId"
-          :app-name="appData.spec.name"
-          :config-list="configList"
           @confirm="handleUpdateStatus" />
         <PublishVersion
           style="margin-left: 8px"
@@ -186,13 +183,10 @@
         :app-id="props.appId"
         @confirm="refreshConfigList" />
     </section>
-    <VersionDiffDialog
-      v-model:show="isDiffDialogShow"
-      :bk-biz-id="props.bkBizId"
-      :app-id="props.appId"
-      :version-name="versionData.spec.name"
-      :release-id="versionData.id"
-      :config="diffConfig" />
+    <VersionDiff
+      v-model:show="isDiffPanelShow"
+      :current-version="versionData"
+      :current-config="diffConfig" />
   </section>
 </template>
 <style lang="scss" scoped>

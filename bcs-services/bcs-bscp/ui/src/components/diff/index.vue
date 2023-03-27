@@ -22,17 +22,15 @@
     const base = ref()
     const contentLoading = ref(true)
 
-    watch(() => props.config, () => {
+    watch(() => props.config, (val) => {
         fetchConfigContent()
-    }, { deep: true })
+    })
 
     onMounted(() => {
-        console.log('onMounted')
         fetchConfigContent()
     })
 
     const fetchConfigContent = async () => {
-        console.log('fetch content')
         contentLoading.value = true
         const { base: configBase, current: configCurrent } = props.config
         if (!configCurrent.signature) { // 被删除
@@ -76,8 +74,8 @@
                 </slot>
             </div>
         </div>
-        <div v-if="!contentLoading" class="detail-area">
-            <bk-loading style="height: 100%;" :loading="contentLoading">
+        <bk-loading class="loading-wrapper" :loading="contentLoading">
+            <div v-if="!contentLoading" class="detail-area">
                 <File
                     v-if="props.config.file_type === 'binary'"
                     :current="current"
@@ -86,8 +84,8 @@
                     v-else
                     :current="current"
                     :base="base" />
-            </bk-loading>
-        </div>
+            </div>
+        </bk-loading>
     </section>
 </template>
 <style lang="scss" scoped>
@@ -100,14 +98,14 @@
         align-items: center;
         height: 49px;
         color: #313238;
-        border-bottom: 1px solid #dcdee5;
+        // border-bottom: 1px solid #dcdee5;
         .left-panel,
         .right-panel {
             height: 100%;
             width: 50%;
         }
         .right-panel {
-            border-left: 1px solid #dcdee5;
+            border-left: 1px solid #1d1d1d;
         }
         .panel-name {
             padding: 16px;
@@ -124,7 +122,10 @@
             font-size: 12px;
         }
     }
-    .detail-area {
+    .loading-wrapper {
         height: calc(100% - 49px);
+    }
+    .detail-area {
+        height: 100%;
     }
 </style>

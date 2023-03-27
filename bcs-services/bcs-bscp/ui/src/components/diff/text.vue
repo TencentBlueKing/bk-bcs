@@ -25,4 +25,7 @@
   .bk-code-diff {
     height: 100%;
   }
+  :deep(.d2h-file-wrapper) {
+    border: none;
+  }
 </style>
