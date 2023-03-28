@@ -316,7 +316,7 @@ func (s *Server) handleForPodCreateFailed(pod *k8scorev1.Pod, portItemListArr []
 	}
 	traceID := uuid.New().String()
 	triggered := make(chan struct{})
-	s.eventWatcher.RegisterPodCreateFailed(traceID, func(event *k8scorev1.Event) {
+	s.eventWatcher.RegisterEventHook(eventer.HookKindPodCreateFailed, traceID, func(event *k8scorev1.Event) {
 		if event.InvolvedObject.Namespace != pod.GetNamespace() || event.InvolvedObject.Name != workloadName {
 			return
 		}
@@ -357,9 +357,9 @@ func (s *Server) handleForPodCreateFailed(pod *k8scorev1.Pod, portItemListArr []
 	timeout := time.After(compensationPodCreateFailedDuration * time.Second)
 	select {
 	case <-triggered:
-		s.eventWatcher.UnRegisterPodCreateFailed(traceID)
+		s.eventWatcher.UnRegisterEventHook(eventer.HookKindPodCreateFailed, traceID)
 	case <-timeout:
-		s.eventWatcher.UnRegisterPodCreateFailed(traceID)
+		s.eventWatcher.UnRegisterEventHook(eventer.HookKindPodCreateFailed, traceID)
 	}
 }
 

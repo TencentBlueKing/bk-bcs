@@ -16,12 +16,19 @@ import (
 	"fmt"
 	"os"
 	"sync"
+	"time"
+
+	k8scorev1 "k8s.io/api/core/v1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/cloud"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/eventer"
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
-	k8scorev1 "k8s.io/api/core/v1"
-	"sigs.k8s.io/controller-runtime/pkg/client"
+)
+
+const (
+	watchServiceEnsuredDuration = time.Minute * 15
 )
 
 // GCLB client to operate GCLB instance
@@ -29,23 +36,27 @@ type GCLB struct {
 	project    string
 	sdkWrapper *SdkWrapper
 	client     client.Client
+
+	eventWatcher eventer.WatchEventInterface
 }
 
 // NewGclb create GCLB client
-func NewGclb(k8sClient client.Client) (*GCLB, error) {
+func NewGclb(k8sClient client.Client, eventWatcher eventer.WatchEventInterface) (*GCLB, error) {
 	sdkWrapper, err := NewSdkWrapper()
 	if err != nil {
 		return nil, err
 	}
 	return &GCLB{
-		sdkWrapper: sdkWrapper,
-		client:     k8sClient,
-		project:    os.Getenv("GCP_PROJECT_ID"),
+		sdkWrapper:   sdkWrapper,
+		client:       k8sClient,
+		eventWatcher: eventWatcher,
+		project:      os.Getenv("GCP_PROJECT_ID"),
 	}, nil
 }
 
 // NewGclbWithSecret create gclb client with k8s secret
-func NewGclbWithSecret(secret *k8scorev1.Secret, k8sClient client.Client) (cloud.LoadBalance, error) {
+func NewGclbWithSecret(secret *k8scorev1.Secret, k8sClient client.Client, eventWatcher eventer.WatchEventInterface) (cloud.LoadBalance,
+	error) {
 	credentials, ok := secret.Data[EnvNameGCPCredentials]
 	if !ok {
 		return nil, fmt.Errorf("lost %s in secret %s/%s", EnvNameGCPCredentials,
@@ -56,9 +67,10 @@ func NewGclbWithSecret(secret *k8scorev1.Secret, k8sClient client.Client) (cloud
 		return nil, err
 	}
 	return &GCLB{
-		sdkWrapper: sdkWrapper,
-		client:     k8sClient,
-		project:    os.Getenv("GCP_PROJECT_ID"),
+		sdkWrapper:   sdkWrapper,
+		client:       k8sClient,
+		eventWatcher: eventWatcher,
+		project:      os.Getenv("GCP_PROJECT_ID"),
 	}, nil
 }
 

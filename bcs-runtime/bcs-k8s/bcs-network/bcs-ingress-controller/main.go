@@ -199,6 +199,17 @@ func main() {
 	}
 	runPrometheusMetrics(opts)
 
+	// init event watcher
+	k8sClient, err := initInClusterClient()
+	if err != nil {
+		blog.Fatalf("init in-cluster client failed: %v", err)
+	}
+	eventWatcher := eventer.NewKubeEventer(k8sClient)
+	if err = eventWatcher.Init(); err != nil {
+		blog.Fatalf("init event watcher failed: %v", err)
+	}
+	go eventWatcher.Start(context.Background())
+
 	var validater cloud.Validater
 	var lbClient cloud.LoadBalance
 	switch opts.Cloud {
@@ -211,7 +222,8 @@ func main() {
 				os.Exit(1)
 			}
 		} else {
-			lbClient = namespacedlb.NewNamespacedLB(mgr.GetClient(), tencentcloud.NewClbWithSecret)
+			lbClient = namespacedlb.NewNamespacedLB(mgr.GetClient(), eventWatcher,
+				tencentcloud.NewClbWithSecret)
 		}
 
 	case constant.CloudAWS:
@@ -223,19 +235,20 @@ func main() {
 				os.Exit(1)
 			}
 		} else {
-			lbClient = namespacedlb.NewNamespacedLB(mgr.GetClient(), aws.NewElbWithSecret)
+			lbClient = namespacedlb.NewNamespacedLB(mgr.GetClient(), eventWatcher, aws.NewElbWithSecret)
 		}
 
 	case constant.CloudGCP:
 		validater = gcp.NewGclbValidater()
 		if !opts.IsNamespaceScope {
-			lbClient, err = gcp.NewGclb(mgr.GetClient())
+			lbClient, err = gcp.NewGclb(mgr.GetClient(), eventWatcher)
 			if err != nil {
 				blog.Errorf("init cloud failed, err %s", err.Error())
 				os.Exit(1)
 			}
 		} else {
-			lbClient = namespacedlb.NewNamespacedLB(mgr.GetClient(), gcp.NewGclbWithSecret)
+			lbClient = namespacedlb.NewNamespacedLB(mgr.GetClient(), eventWatcher,
+				gcp.NewGclbWithSecret)
 		}
 	case constant.CloudAzure:
 		validater = azure.NewAlbValidater()
@@ -246,7 +259,7 @@ func main() {
 				os.Exit(1)
 			}
 		} else {
-			lbClient = namespacedlb.NewNamespacedLB(mgr.GetClient(), azure.NewAlbWithSecret)
+			lbClient = namespacedlb.NewNamespacedLB(mgr.GetClient(), eventWatcher, azure.NewAlbWithSecret)
 		}
 	default:
 		blog.Errorf("unknown cloud type '%s'", opts.Cloud)
@@ -308,17 +321,6 @@ func main() {
 		os.Exit(1)
 	}
 
-	// init event watcher
-	k8sClient, err := initInClusterClient()
-	if err != nil {
-		blog.Fatalf("init in-cluster client failed: %v", err)
-	}
-	eventClient := eventer.NewKubeEventer(k8sClient)
-	if err = eventClient.Init(); err != nil {
-		blog.Fatalf("init event watcher failed: %v", err)
-	}
-	go eventClient.Start(context.Background())
-
 	conflictHandler := conflicthandler.NewConflictHandler(opts.ConflictCheckOpen, opts.IsTCPUDPPortReuse, opts.Region,
 		mgr.GetClient(), ingressConverter, mgr.GetEventRecorderFor("bcs-ingress-controller"))
 	// init webhook server
@@ -329,7 +331,7 @@ func main() {
 		ServerKeyFile:  opts.ServerKeyFile,
 	}
 	webhookServer, err := webhookserver.NewHookServer(webhookServerOpts, mgr.GetClient(), lbClient, portPoolCache,
-		eventClient, validater, ingressConverter, conflictHandler)
+		eventWatcher, validater, ingressConverter, conflictHandler)
 	if err != nil {
 		blog.Errorf("create hook server failed, err %s", err.Error())
 		os.Exit(1)
