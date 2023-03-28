@@ -14,7 +14,7 @@
     currentConfig?: number,
   }>()
 
-  const emits = defineEmits(['update:show'])
+  const emits = defineEmits(['update:show', 'publish'])
 
   const route = useRoute()
   const bkBizId = String(route.params.spaceId)
@@ -270,7 +270,7 @@
     </bk-loading>
     <template #footer>
       <div class="actions-btns">
-        <bk-button v-if="showPublishBtn" class="publish-btn" theme="primary">上线版本</bk-button>
+        <bk-button v-if="showPublishBtn" class="publish-btn" theme="primary" @click="emits('publish')">上线版本</bk-button>
         <bk-button @click="handleClose">关闭</bk-button>
       </div>
     </template>

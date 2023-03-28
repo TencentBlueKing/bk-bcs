@@ -2,21 +2,24 @@
   import { ref, onMounted } from 'vue'
   import { storeToRefs } from 'pinia'
   import { Search } from 'bkui-vue/lib/icon'
-  import { IGroupCategoriesQuery, ECategoryType, IAllCategoryGroupItem, ICategoryTreeItem, IGroupTreeItem, IGroupRuleItem } from '../../../../../../../../../types/group'
+  import { IGroupCategoriesQuery, ECategoryType, IAllCategoryGroupItem, ICategoryTreeItem, IGroupTreeItem, IGroupRuleItem, EGroupRuleType } from '../../../../../../../../../types/group'
   import { getAllGroupList } from '../../../../../../../../api/group';
   import { useServingStore } from '../../../../../../../../store/serving'
   import { GROUP_RULE_OPS } from '../../../../../../../../constants';
 
-
   const { appData } = storeToRefs(useServingStore())
+
+  const emits = defineEmits(['change'])
 
   const categoryListLoading = ref(false)
   const categoryList = ref<ICategoryTreeItem[]>([])
+  const groups = ref<IGroupTreeItem[]>([])
 
   onMounted(() => {
     getAllGroupData()
   })
 
+  // 获取所有分组，并转化为tree组件需要的结构
   const getAllGroupData = async() => {
     categoryListLoading.value = true
     const params: IGroupCategoriesQuery = {
@@ -31,11 +34,10 @@
       const groupsList = groups.map(item => {
         const { id, spec } = item
         const rules = <IGroupRuleItem[]>spec.selector.labels_and || spec.selector.labels_or
-        const rulesWithName: { key: string; opName: string; value: string|number}[] = rules.map(item => {
+        const rulesWithName: { key: string; opName: string; op: EGroupRuleType; value: string|number}[] = rules.map(item => {
           const { key, op, value } = item
           const opType = GROUP_RULE_OPS.find(typeItem => typeItem.id === op)
-          console.log(opType)
-          return { key, value, opName: <string>opType?.name }
+          return { key, value, op, opName: <string>opType?.name }
         })
         return {
           id,
@@ -55,6 +57,20 @@
     categoryListLoading.value = false
   }
 
+  const handleNodeChecked = (selected: string[]) => {
+    const allGroupList: IGroupTreeItem[] = []
+    const list: IGroupTreeItem[] = []
+    categoryList.value.forEach(item => allGroupList.push(...item.children))
+    selected.forEach(item => {
+      const group = allGroupList.find(group => group.__uuid === item)
+      if (group) {
+        list.push(group)
+      }
+    })
+    groups.value = list
+    emits('change', groups.value)
+  }
+
 </script>
 <template>
   <div class="group-tree-select">
@@ -68,7 +84,8 @@
       <bk-tree
         :data="categoryList"
         :show-checkbox="true"
-        :show-node-type-icon="false">
+        :show-node-type-icon="false"
+        @node-checked="handleNodeChecked">
         <template #node="node">
           <div class="node-label">
             <span class="label">{{ node.label }}</span>

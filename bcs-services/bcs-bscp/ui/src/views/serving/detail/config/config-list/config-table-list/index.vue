@@ -146,7 +146,6 @@
       <bk-loading :loading="loading">
         <bk-table :border="['outer']" :data="configList">
           <bk-table-column label="配置项名称" prop="spec.name" :sort="true"></bk-table-column>
-          <bk-table-column label="配置预览">-</bk-table-column>
           <bk-table-column label="配置格式">
             <template #default="{ row }">
               {{ getConfigTypeName(row.spec?.file_type) }}
@@ -159,7 +158,7 @@
           <bk-table-column label="操作">
             <template #default="{ row }">
               <div class="operate-action-btns">
-                <bk-button v-if="versionData.id === 0" text theme="primary" @click="handleEdit(row)">编辑</bk-button>
+                <bk-button text theme="primary" @click="handleEdit(row)">{{ versionData.id === 0 ? '编辑' : '查看' }}</bk-button>
                 <bk-button text theme="primary" @click="handleDiff(row)">对比</bk-button>
                 <bk-button v-if="versionData.id === 0" text theme="primary" @click="handleDel(row)">删除</bk-button>
               </div>

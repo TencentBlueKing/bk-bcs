@@ -113,7 +113,8 @@ export interface ICategoryTreeItem {
 
 // 分组选择树分组节点单个详情
 export interface IGroupTreeItem {
+  __uuid?: string;
   id: number;
   label: string;
-  rules: {key: string; opName: string; value: string|number}[];
+  rules: {key: string; opName?: string; op: EGroupRuleType; value: string|number}[];
 }

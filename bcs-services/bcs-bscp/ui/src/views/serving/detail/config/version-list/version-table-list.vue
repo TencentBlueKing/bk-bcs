@@ -145,9 +145,17 @@
         <bk-table :border="['outer']" :data="versionList" :row-class="getRowCls" @row-click="handleSelectVersion">
           <bk-table-column label="版本" prop="spec.name"></bk-table-column>
           <bk-table-column label="版本描述" prop="spec.memo"></bk-table-column>
-          <bk-table-column label="上线次数">xx</bk-table-column>
-          <bk-table-column label="最后修改人">xx</bk-table-column>
-          <bk-table-column label="最后修改时间">xx</bk-table-column>
+          <bk-table-column label="已上线分组">xx</bk-table-column>
+          <bk-table-column label="创建人">
+            <template v-slot="{ row }">
+              {{ row.revision?.creator || '--' }}
+            </template>
+          </bk-table-column>
+          <bk-table-column label="生成时间">
+            <template v-slot="{ row }">
+              {{ row.revision?.create_at || '--' }}
+            </template>
+          </bk-table-column>
           <bk-table-column label="状态">
             <div class="status-tag unpublished">未上线</div>
             <!-- <div class="status-tag published">已上线上线</div> -->

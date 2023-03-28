@@ -2,11 +2,13 @@
   import Group from './group.vue'
   import Preview from './preview.vue'
 
+  const emits = defineEmits(['change'])
+
 </script>
 <template>
   <div class="select-group-wrapper">
     <div class="group-tree-area">
-      <Group />
+      <Group @change="emits('change', $event)" />
     </div>
     <div class="preview-area">
       <Preview />

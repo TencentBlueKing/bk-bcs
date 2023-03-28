@@ -3,7 +3,7 @@
     import { useRoute } from 'vue-router'
     import { storeToRefs } from 'pinia'
     import { useServingStore } from '../../store/serving'
-    import { IConfigDiffDetail, IFileConfigContentSummary } from '../../../types/config';
+    import { IConfigDiffDetail } from '../../../types/config';
     import { getConfigContent } from '../../api/config';
     import { byteUnitConverse } from '../../utils';
     import File from './file.vue'

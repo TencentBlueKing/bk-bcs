@@ -2,10 +2,10 @@
   import { ref, watch } from 'vue'
   import InfoBox from "bkui-vue/lib/info-box";
   import { publishVersion } from '../../../../../../../api/config'
-  import CategoryGroupSelect from '../../../../group/components/category-group-select.vue';
+  import { IGroupTreeItem } from '../../../../../../../../types/group';
 
   interface IFormData {
-    groups: Array<number>;
+    groups: number[];
     all: boolean;
     memo: string;
   }
@@ -15,10 +15,10 @@
     bkBizId: string,
     appId: number,
     releaseId: number|null,
-    groups: Array<number>
+    groups: IGroupTreeItem[]
   }>()
 
-  const emits = defineEmits(['update:show', 'confirm'])
+  const emits = defineEmits(['confirm', 'update:show'])
 
   const localVal = ref<IFormData>({
     groups: [],
@@ -28,12 +28,6 @@
   const pending = ref(false)
   const formRef = ref()
   const rules = {
-    groups: [
-      {
-        validator: (value: string) => value.length > 0,
-        message: '分组不能为空'
-      }
-    ],
     memo: [
       {
         validator: (value: string) => value.length <= 100,
@@ -43,7 +37,7 @@
   }
 
   watch(() => props.groups, (val) => {
-    localVal.value.groups = [...val]
+    localVal.value.groups = val.map(item => item.id)
   }, { immediate: true })
 
   // 选择分组
@@ -96,8 +90,17 @@
     @closed="handleClose"
     @confirm="handleConfirm">
       <bk-form class="form-wrapper" form-type="vertical" ref="formRef" :rules="rules" :model="localVal">
-          <bk-form-item label="上线分组" property="groups">
-            <CategoryGroupSelect :app-id="props.appId" :multiple="true" :value="localVal.groups" @change="handleGroupChange" />
+          <bk-form-item label="上线分组">
+            <!-- <CategoryGroupSelect :app-id="props.appId" :multiple="true" :value="localVal.groups" @change="handleGroupChange" /> -->
+            <div v-for="group in props.groups" class="group-item" :key="group.id">
+              <div class="name">{{ group.label }}</div>
+              <span class="rules">
+                <span v-for="(rule, index) in group.rules" :key="index" class="rule-item">
+                  {{ `${rule.key} ${rule.opName} ${rule.value}` }}
+                  <span v-if="index < groups.length - 1"> ; </span>
+                </span>
+              </span>
+            </div>
           </bk-form-item>
           <bk-form-item label="上线说明" property="memo">
             <bk-input v-model="localVal.memo" type="textarea" :maxlength="100"></bk-input>
@@ -114,6 +117,29 @@
 <style lang="scss" scoped>
   .form-wrapper {
     padding-bottom: 24px;
+    :deep(.bk-form-label) {
+      font-size: 12px;
+    }
+  }
+  .group-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 8px;
+    .name {
+      padding: 0 10px;
+      height: 22px;
+      line-height: 22px;
+      font-size: 12px;
+      color: #63656e;
+      background: #f0f1f5;
+      border-radius: 2px;
+    }
+    .rules {
+      margin-left: 8px;
+      font-size: 12px;
+      line-height: 22px;
+      color: #c4c6cc;
+    }
   }
   .dialog-footer {
     .bk-button {
