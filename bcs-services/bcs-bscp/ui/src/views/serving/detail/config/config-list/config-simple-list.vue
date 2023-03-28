@@ -4,7 +4,7 @@
   import { useConfigStore } from '../../../../../store/config'
   import { IConfigItem, IConfigListQueryParams } from '../../../../../../types/config'
   import { getConfigList } from '../../../../../api/config'
-  import { getConfigTypeName } from '../../../../../utils/index'
+  import { getConfigTypeName } from '../../../../../utils/config'
   import EditConfig from './config-table-list/edit-config.vue'
 
   const store = useConfigStore()

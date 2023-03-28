@@ -25,7 +25,7 @@
   }
 
   const updateVersionList = () => {
-    versionListRef.value.getVersionList()
+    versionListRef.value.refreshVersionList()
   }
 
 </script>
@@ -88,8 +88,10 @@
     border-radius: 0 4px 4px 0;
     text-align: center;
     cursor: pointer;
-    &.extend {
+    &:hover {
       background: #a3c5fd;
+    }
+    &.extend {
       .arrow-icon {
         transform: rotate(180deg);
       }
