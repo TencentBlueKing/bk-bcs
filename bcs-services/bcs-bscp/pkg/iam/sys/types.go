@@ -75,6 +75,13 @@ const (
 	// TaskHistoryView task history view.
 	TaskHistoryView client.ActionID = "history_view"
 
+	// GroupCreate 分组创建
+	GroupCreate client.ActionID = "group_create"
+	// GroupDelete 分组删除
+	GroupDelete client.ActionID = "group_delete"
+	// GroupEdit 分组编辑
+	GroupEdit client.ActionID = "group_edit"
+
 	// Unsupported is an action that can not be recognized
 	Unsupported client.ActionID = "unsupported"
 	// Skip is an action that no need to auth
@@ -88,8 +95,8 @@ var ActionIDNameMap = map[client.ActionID]string{
 	AppCreate:               "应用创建",
 	AppEdit:                 "应用编辑",
 	AppDelete:               "应用删除",
-	ConfigItemPacking:       "配置项打包",
-	ConfigItemPublish:       "配置项发布",
+	ConfigItemPacking:       "生成版本",
+	ConfigItemPublish:       "上线版本",
 	ConfigItemFinishPublish: "配置项结束发布",
 
 	StrategySetCreate: "策略集创建",
@@ -99,6 +106,10 @@ var ActionIDNameMap = map[client.ActionID]string{
 	StrategyCreate: "策略创建",
 	StrategyEdit:   "策略编辑",
 	StrategyDelete: "策略删除",
+
+	GroupCreate: "分组创建",
+	GroupEdit:   "分组编辑",
+	GroupDelete: "分组删除",
 
 	TaskHistoryView: "任务历史",
 }
