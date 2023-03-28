@@ -20,7 +20,7 @@ network:
 # defines all the repo related settings.
 repository:
   # defines storage type s3 , bkRepo
-  storageType: bk_repo
+  storageType: bkRepo
   s3:
     endpoint: http://127.0.0.1:2379
     accessKeyID: xxxxx

@@ -3,7 +3,7 @@ import { IPageFilter, IRequestFilter, IServingEditParams } from '../types'
 import { IConfigListQueryParams } from '../../types/config'
 
 /**
- * 获取配置项列表，通过release_id区分是否拿某个版本下的配置项列表
+ * 获取配置项列表，通过params中的release_id区分是否拿某个版本下的配置项列表
  * @param app_id 应用ID
  * @param params 查询参数
  * @returns 
@@ -53,8 +53,8 @@ export const getConfigList = (app_id: number, params: IConfigListQueryParams = {
  * @param appId 应用ID
  * @returns 
  */
-export const getConfigItemDetail = (id: number, appId: number) => {
-  return http.get(`/config/apps/${appId}/config_items/${id}`).then(resp => resp.data);
+export const getConfigItemDetail = (id: number, appId: number, params: { release_id?: number } = {}) => {
+  return http.get(`/config/apps/${appId}/config_items/${id}`, { params }).then(resp => resp.data);
 }
 
 /**
@@ -82,6 +82,7 @@ export const updateConfigContent = (bizId: string, appId: number, data: string|F
  * @returns 
  */
 export const getConfigContent = (bizId: string, appId: number, SHA256Str: string) => {
+  console.log(SHA256Str)
   return http.get<string, string>(`/api/get/content/download/biz_id/${bizId}/app_id/${appId}`, {
     headers: {
       'X-Bkapi-File-Content-Id': SHA256Str

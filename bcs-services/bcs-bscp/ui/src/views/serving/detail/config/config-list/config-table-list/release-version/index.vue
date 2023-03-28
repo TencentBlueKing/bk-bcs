@@ -1,126 +1,103 @@
 <script setup lang="ts">
-    import { ref, onMounted } from 'vue'
-    import { ArrowsLeft, AngleRight } from 'bkui-vue/lib/icon'
-    import VersionLayout from '../../../components/version-layout.vue'
-    import ConfirmDialog from './confirm-dialog.vue'
-    import ConfigDiff from '../../../components/config-diff.vue'
-    import { getConfigVersionList } from '../../../../../../../api/config'
-    import { IConfigVersionItem, FilterOp, RuleOp } from '../../../../../../../types'
+  import { ref } from 'vue'
+	import BkMessage from 'bkui-vue/lib/message';
+  import { createVersion } from '../../../../../../../api/config'
 
-    const props = defineProps<{
-        bkBizId: string,
-        appId: number,
-        appName: string,
-        configList: Array<IConfigVersionItem>
-    }>()
+  const props = defineProps<{
+    bkBizId: string,
+    appId: number
+  }>()
 
-    const emit = defineEmits(['confirm'])
+  const emits = defineEmits(['confirm'])
 
-    const showDiffPanel = ref(false)
-    const isConfirmDialogShow = ref(false)
-    const versionListLoading = ref(true)
-    const versionList = ref([])
-    const filter = {
-        op: FilterOp.AND,
-        rules: [{
-            field: "deprecated",
-            op: RuleOp.eq,
-            value: false
-        }]
+  const isConfirmDialogShow = ref(false)
+  const localVal = ref({
+    name: '',
+    memo: '',
+  })
+  const isPublish= ref(false)
+  const pending = ref(false)
+  const formRef = ref()
+  const rules = {
+    memo: [
+      {
+        validator: (value: string) => value.length < 100,
+        message: '最大长度100个字符'
+      }
+    ],
+  }
+
+  const handleConfirm = async() => {
+    try {
+      pending.value = true
+      await formRef.value.validate()
+      await createVersion(props.bkBizId, props.appId, localVal.value.name, localVal.value.memo)
+			BkMessage({ theme: 'success', message: '新版本已生成' })
+      emits('confirm')
+      handleClose()
+    } catch (e) {
+      console.error(e)
+    } finally {
+      pending.value = false
     }
-    const page = {
-        count: false,
-        start: 0,
-        limit: 200 // @todo 分页条数待确认
-    }
+  }
 
-    onMounted(() => {
-        getVersionList()
-    })
-    
-    const getVersionList = async() => {
-        try {
-            versionListLoading.value = true
-            const res = await getConfigVersionList(props.bkBizId, props.appId, filter, page)
-            versionList.value = res.data.details
-        } catch (e) {
-            console.error(e)
-        } finally {
-            versionListLoading.value = false
-        }
+  const handleClose = () => {
+    isConfirmDialogShow.value = false
+    localVal.value = {
+      name: '',
+      memo: '',
     }
-
-    const handleCreated = () => {
-        handleClose()
-        emit('confirm')
-    }
-
-    const handleClose = () => {
-        showDiffPanel.value = false
-    }
+    isPublish.value = false
+  }
 
 </script>
 <template>
-    <section class="create-version">
-        <bk-button theme="primary" @click="showDiffPanel = true">生成版本</bk-button>
-        <VersionLayout v-if="showDiffPanel">
-            <template #header>
-                <section class="header-wrapper">
-                    <span class="service-name" @click="handleClose">
-                        <ArrowsLeft class="arrow-left" />
-                        <span class="service-name">{{ props.appName }}</span>
-                    </span>
-                    <AngleRight class="arrow-right" />
-                    生成版本
-                </section>
-            </template>
-            <config-diff
-                version-name="未命名版本"
-                :config-list="configList"
-                :version-list="versionList">
-            </config-diff>
-            <template #footer>
-                <section class="actions-wrapper">
-                    <bk-button theme="primary" style="margin-right: 8px;" @click="isConfirmDialogShow = true">生成版本</bk-button>
-                    <bk-button @click="handleClose">取消</bk-button>
-                </section>
-            </template>
-        </VersionLayout>
-        <ConfirmDialog
-            v-model:show="isConfirmDialogShow"
-            :bk-biz-id="props.bkBizId"
-            :app-id="props.appId"
-            @confirm="handleCreated" />
-    </section>
+  <bk-button theme="primary" @click="isConfirmDialogShow = true">生成版本</bk-button>
+  <bk-dialog
+    title="生成版本"
+    ext-cls="release-version-dialog"
+    :is-show="isConfirmDialogShow"
+    :esc-close="false"
+    :quick-close="false"
+    :is-loading="pending"
+    @closed="handleClose"
+    @confirm="handleConfirm">
+      <bk-form class="form-wrapper" form-type="vertical" ref="formRef" :rules="rules" :model="localVal">
+        <bk-form-item label="版本名称" property="name" :required="true">
+          <bk-input v-model="localVal.name"></bk-input>
+        </bk-form-item>
+        <bk-form-item label="版本描述" property="memo">
+          <bk-input v-model="localVal.memo" type="textarea" :maxlength="100"></bk-input>
+        </bk-form-item>
+        <bk-checkbox
+          v-model="isPublish"
+          style="margin-bottom: 15px;"
+          :true-label="true"
+          :false-label="false">
+          同时上线版本
+        </bk-checkbox>
+      </bk-form>
+      <template #footer>
+        <div class="dialog-footer">
+          <bk-button theme="primary" :loading="pending" @click="handleConfirm">确定</bk-button>
+          <bk-button :disabled="pending" @click="handleClose">取消</bk-button>
+        </div>
+      </template>
+  </bk-dialog>
 </template>
 <style lang="scss" scoped>
-    .header-wrapper {
-        display: flex;
-        align-items: center;
-        padding: 0 24px;
-        height: 100%;
-        font-size: 12px;
-        line-height: 1;
+  .form-wrapper {
+    padding-bottom: 24px;
+  }
+  .dialog-footer {
+    .bk-button {
+      margin-left: 8px;
     }
-    .service-name {
-        display: flex;
-        align-items: center;
-        font-size: 12px;
-        color: #3a84ff;
-        cursor: pointer;
-    }
-    .arrow-left {
-        font-size: 26px;
-        color: #3884ff;
-    }
-    .arrow-right {
-        font-size: 24px;
-        color: #c4c6cc;
-    }
-    .actions-wrapper {
-        display: flex;
-        align-items: center;
-        padding: 0 24px;
-        height: 100%;
-    }
+  }
+</style>
+<style lang="scss">
+  .release-version-dialog.bk-dialog-wrapper .bk-dialog-header {
+    padding-bottom: 20px;
+  }
 </style>

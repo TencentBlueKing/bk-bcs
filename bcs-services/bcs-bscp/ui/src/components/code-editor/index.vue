@@ -1,13 +1,14 @@
 <script setup lang="ts">
-  import { ref, onMounted, onBeforeUnmount } from 'vue'
+  import { ref, withDefaults, onMounted, onBeforeUnmount } from 'vue'
   import * as monaco from 'monaco-editor'
 
-  const props = defineProps({
-    height: {
-      type: Number,
-      default: 400
-    },
-    modelValue: String
+  const props = withDefaults(defineProps<{
+    height?: number,
+    modelValue: string,
+    editable?: boolean
+  }>(), {
+    height: 400,
+    editable: true
   })
 
   const emit = defineEmits(['update:modelValue'])
@@ -21,7 +22,8 @@
         editor = monaco.editor.create(codeEditorRef.value as HTMLElement, {
           value: val.value,
           theme: 'vs-dark',
-          automaticLayout: true
+          automaticLayout: true,
+          readOnly: !props.editable
         })
       }
       editor.onDidChangeModelContent((val:any) => {

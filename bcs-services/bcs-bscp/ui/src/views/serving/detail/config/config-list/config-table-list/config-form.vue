@@ -1,26 +1,33 @@
 <script setup lang="ts">
-  import { ref, computed, watch } from 'vue'
+  import { ref, withDefaults, computed, watch } from 'vue'
   import SHA256 from 'crypto-js/sha256'
   import WordArray from 'crypto-js/lib-typedarrays'
   import { TextFill, InfoLine, Upload, Done, FilliscreenLine } from 'bkui-vue/lib/icon'
+  import BkMessage from 'bkui-vue/lib/message'
   import CodeEditor from '../../../../../../components/code-editor/index.vue'
   import { IServingEditParams } from '../../../../../../types'
+  import { IFileConfigContentSummary } from '../../../../../../../types/config'
   import { updateConfigContent } from '../../../../../../api/config'
   import { transFileToObject } from '../../../../../../utils/file'
+  import { CONFIG_FILE_TYPE } from '../../../../../../constants/index'
 
-  const props = defineProps<{
+  const props = withDefaults(defineProps<{
     config: IServingEditParams,
-    content: string|File,
+    editable: boolean,
+    content: string|IFileConfigContentSummary,
     bkBizId: string,
     appId: number,
     submitFn: Function
-  }>()
+  }>(), {
+    editable: true
+  })
 
   const emit = defineEmits(['submit', 'cancel'])
 
   const localVal = ref({ ...props.config })
   const stringContent = ref('')
-  const file = ref()
+  const fileContent = ref<IFileConfigContentSummary|File>()
+  const isFileChanged = ref(false) // 标识文件是否被修改，编辑配置项时若文件未修改，不重新上传文件
   const submitPending = ref(false)
   const uploadPending = ref(false)
   const formRef = ref()
@@ -47,13 +54,12 @@
 
   // 传入到bk-upload组件的文件对象
   const fileList = computed(() => {
-    return file.value ? [transFileToObject(file.value)] : []
+    return fileContent.value ? [transFileToObject(<File>fileContent.value)] : []
   })
 
   watch(() => props.content, () => {
     if (props.config.file_type === 'binary') {
-      console.log(props.content)
-      file.value = props.content as File
+      fileContent.value = <IFileConfigContentSummary>props.content
     } else {
       stringContent.value = props.content as string
     }
@@ -61,11 +67,11 @@
 
   // 选择文件后上传
   const handleFileUpload = (option: { file: File }) => {
+    isFileChanged.value = true
     return new Promise(resolve => {
       uploadPending.value = true
-      file.value = option.file
+      fileContent.value = option.file
       uploadContent().then(res => {
-        console.log('uploaded res: ', res)
         uploadPending.value = false
         resolve(res)
       })
@@ -76,11 +82,15 @@
   const handleSubmit = async() => {
     try {
       await formRef.value.validate()
+      if (localVal.value.file_type === 'binary' && fileList.value.length === 0) {
+        BkMessage({ theme: 'error', message: '请上传文件' })
+        return
+      }
       submitPending.value = true
       let sign = await generateSHA256()
       let size = 0
       if (localVal.value.file_type === 'binary') {
-        size = file.value.size
+        size = Number((<IFileConfigContentSummary|File>fileContent.value).size)
       } else {
         size = new Blob([stringContent.value]).size
         await uploadContent()
@@ -101,7 +111,7 @@
   // 上传配置内容
   const uploadContent =  async () => {
     const SHA256Str = await generateSHA256()
-    const data = localVal.value.file_type === 'binary' ? file.value : stringContent.value
+    const data = localVal.value.file_type === 'binary' ? fileContent.value : stringContent.value
     // @ts-ignore
     return updateConfigContent(props.bkBizId, props.appId, data, SHA256Str)
   }
@@ -109,18 +119,20 @@
   // 生成文件或文本的sha256
   const generateSHA256 = async () => {
     if (localVal.value.file_type === 'binary') {
-      return new Promise(resolve => {
-        const reader = new FileReader()
-        // @ts-ignore
-        reader.readAsArrayBuffer(file.value)
-        reader.onload = () => {
-          const wordArray = WordArray.create(reader.result);
-          resolve(SHA256(wordArray).toString())
-        }
-      })
-    } else {
-      return SHA256(stringContent.value).toString()
+      if (isFileChanged.value) {
+        return new Promise(resolve => {
+          const reader = new FileReader()
+          // @ts-ignore
+          reader.readAsArrayBuffer(fileContent.value)
+          reader.onload = () => {
+            const wordArray = WordArray.create(reader.result);
+            resolve(SHA256(wordArray).toString())
+          }
+        })
+      }
+      return (fileContent.value as IFileConfigContentSummary).signature
     }
+    return SHA256(stringContent.value).toString()
   }
 
   const cancel = () => {
@@ -132,23 +144,22 @@
   <section class="form-content">
     <bk-form ref="formRef" :model="localVal" :rules="rules">
         <bk-form-item label="配置项名称" property="name" :required="true">
-        <bk-input v-model="localVal.name"></bk-input>
+          <bk-input v-model="localVal.name" :disabled="!editable"></bk-input>
         </bk-form-item>
         <bk-form-item label="配置格式">
         <bk-radio-group v-model="localVal.file_type" :required="true">
-            <bk-radio label="text">Text</bk-radio>
-            <bk-radio label="binary">二进制文件</bk-radio>
+            <bk-radio v-for="typeItem in CONFIG_FILE_TYPE" :key="typeItem.id" :label="typeItem.id" :disabled="!editable">{{ typeItem.name }}</bk-radio>
         </bk-radio-group>
         </bk-form-item>
         <template v-if="['binary', 'text'].includes(localVal.file_type)">
         <bk-form-item label="文件权限" property="privilege" :required="true">
-            <bk-input v-model="localVal.privilege"></bk-input>
+            <bk-input v-model="localVal.privilege" :disabled="!editable"></bk-input>
         </bk-form-item>
         <bk-form-item label="用户" property="user" :required="true">
-            <bk-input v-model="localVal.user"></bk-input>
+            <bk-input v-model="localVal.user" :disabled="!editable"></bk-input>
         </bk-form-item>
         <bk-form-item label="配置路径" property="path" :required="true">
-            <bk-input v-model="localVal.path"></bk-input>
+            <bk-input v-model="localVal.path" :disabled="!editable"></bk-input>
         </bk-form-item>
         </template>
         <bk-form-item v-if="localVal.file_type === 'binary'" label="配置内容" :required="true">
@@ -157,6 +168,7 @@
             url=""
             theme="button"
             tip="支持扩展名：.bin"
+            :disabled="!editable"
             :multiple="false"
             :files="fileList"
             :size="100"
@@ -178,18 +190,18 @@
                   <InfoLine />
                   仅支持大小不超过 100M
               </div>
-              <div class="btns">
+              <div v-if="editable" class="btns">
                   <Upload style="font-size: 14px; margin-right: 10px;" />
                   <FilliscreenLine />
               </div>
             </div>
-            <CodeEditor v-model="stringContent" />
+            <CodeEditor v-model="stringContent" :editable="editable" />
         </div>
         </bk-form-item>
     </bk-form>
     <section class="actions-wrapper">
-      <bk-button theme="primary" :loading="submitPending" @click="handleSubmit">保存</bk-button>
-      <bk-button @click="cancel">取消</bk-button>
+      <bk-button v-if="props.editable" theme="primary" :disabled="uploadPending" :loading="submitPending" @click="handleSubmit">保存</bk-button>
+      <bk-button @click="cancel">{{ props.editable ? '取消' : '关闭' }}</bk-button>
     </section>
   </section>
 </template>

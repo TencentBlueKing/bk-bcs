@@ -31,11 +31,14 @@ const (
 	RepoRecordCacheExpiration = time.Hour
 )
 
+// FileApiType
 type FileApiType interface {
 	DownloadFile(w http.ResponseWriter, r *http.Request)
+	FileMetadata(w http.ResponseWriter, r *http.Request)
 	UploadFile(w http.ResponseWriter, r *http.Request)
 }
 
+// DownloadFile
 func (s S3Client) DownloadFile(w http.ResponseWriter, r *http.Request) {
 	kt, err := gwparser.Parse(r.Context(), r.Header)
 	if err != nil {
@@ -85,6 +88,7 @@ func (s S3Client) DownloadFile(w http.ResponseWriter, r *http.Request) {
 	io.Copy(w, reader)
 }
 
+// UploadFile
 func (s S3Client) UploadFile(w http.ResponseWriter, r *http.Request) {
 	kt, err := gwparser.Parse(r.Context(), r.Header)
 	if err != nil {
@@ -157,11 +161,58 @@ func (s S3Client) UploadFile(w http.ResponseWriter, r *http.Request) {
 	w.Write(msg)
 }
 
+// FileMetadata get s3 head data
+func (s S3Client) FileMetadata(w http.ResponseWriter, r *http.Request) {
+	kt, err := gwparser.Parse(r.Context(), r.Header)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		fmt.Fprintf(w, errf.Error(err).Error())
+		return
+	}
+
+	authRes, needReturn := s.authorize(kt, r)
+	if needReturn {
+		fmt.Fprintf(w, authRes)
+		return
+	}
+	config := cc.ApiServer().Repo
+
+	bizID, _, err := GetBizIDAndAppID(nil, r)
+	if err != nil {
+		logs.Errorf("get biz_id and app_id from request failed, err: %v, rid: %s", err, kt.Rid)
+		return
+	}
+
+	s3PathName, err := repo.GenRepoName(bizID)
+	if err != nil {
+		logs.Errorf("generate S3 repository name failed, err: %v, rid: %s", err, kt.Rid)
+		fmt.Fprintf(w, errf.Error(err).Error())
+		return
+	}
+	sha256 := strings.ToLower(r.Header.Get(constant.ContentIDHeaderKey))
+	fullPath, err := repo.GenS3NodeFullPath(s3PathName, sha256)
+	if err != nil {
+		logs.Errorf("create S3 FullPath failed, err: %v, err")
+		fmt.Fprintf(w, errf.Error(err).Error())
+		return
+	}
+
+	fileMetadata, err := s.s3Cli.FileMetadataHead(kt.Ctx, config.S3.BucketName, fullPath)
+	if err != nil {
+		logs.Errorf("get file metadata information failed, err: %v, rid: %s", err)
+		return
+	}
+	fileMetadata.Sha256 = sha256
+	msg, _ := json.Marshal(fileMetadata)
+	w.Write(msg)
+}
+
 type ResponseBody struct {
 	Code    int
 	Message string
 }
 
+// S3Client
 type S3Client struct {
 	// repoCli s3 client.
 	s3Cli *repo.ClientS3
@@ -206,6 +257,7 @@ type AuthResp struct {
 	Permission *pbas.IamPermission `json:"permission,omitempty"`
 }
 
+// NewS3Service
 func NewS3Service(settings cc.Repository, authorizer auth.Authorizer) (FileApiType, error) {
 	s3Client, err := repo.NewClientS3(&settings, metrics.Register())
 	if err != nil {

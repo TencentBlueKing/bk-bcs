@@ -1,7 +1,7 @@
 <script setup lang="ts">
 
   const props = withDefaults(defineProps<{
-    showFooter: boolean
+    showFooter?: boolean
   }>(), {
     showFooter: true
   })
@@ -42,7 +42,6 @@
       z-index: 1;
     }
     .layout-content {
-      padding: 24px;
       height: calc(100% - 100px);
       background: #f5f7fa;
       overflow: auto;

@@ -1,28 +1,36 @@
 <script setup lang="ts">
     import { TextFill } from 'bkui-vue/lib/icon'
+    import { IFileConfigContentSummary } from '../../../types/config';
+
+    const props = defineProps<{
+        current: IFileConfigContentSummary,
+        base: IFileConfigContentSummary
+    }>()
 
 </script>
 <template>
     <section class="file-diff">
         <div class="left-version-content">
-            <div class="file-wrapper">
+            <div v-if="props.base" class="file-wrapper">
                 <TextFill class="file-icon" />
                 <div class="content">
-                    <div class="name">host_model.bin</div>
-                    <div class="time">2022-07-20 12:12:12</div>
+                    <div class="name">{{ props.base.name }}</div>
+                    <div class="time">{{ props.base.update_at }}</div>
                 </div>
-                <div class="size">4.24M</div>
+                <div class="size">{{ props.base.size }}</div>
             </div>
+            <bk-exception v-else class="exception-tips" scene="part" type="empty">该版本下文件不存在</bk-exception>
         </div>
         <div class="right-version-content">
-            <div class="file-wrapper">
+            <div v-if="props.current" class="file-wrapper">
                 <TextFill class="file-icon" />
                 <div class="content">
-                    <div class="name">host_model.bin</div>
-                    <div class="time">2022-07-20 12:12:12</div>
+                    <div class="name">{{ props.current.name }}</div>
+                    <div class="time">{{ props.current.update_at }}</div>
                 </div>
-                <div class="size">5.6M</div>
+                <div class="size">{{ props.current.size }}</div>
             </div>
+            <bk-exception v-else class="exception-tips" scene="part" theme="empty">文件已被删除</bk-exception>
         </div>
     </section>
 </template>
@@ -72,5 +80,9 @@
     .size {
         color: #63656e;
         font-weight: 700;
+    }
+    .exception-tips {
+        margin-top: 100px;
+        font-size: 12px;
     }
 </style>

@@ -1065,3 +1065,27 @@ paths:
         authConfig:
           userVerifiedRequired: true
         disabledStages: []
+  /api/v1/api/get/content/metadata/biz_id/{biz_id}/app_id/{app_id}:
+    get:
+      operationId: download_content_metadata
+      description: 下载文件元数据
+      tags:
+        - 配置项元数据管理
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: get
+          path: /api/v1/api/get/content/metadata/biz_id/{biz_id}/app_id/{app_id}
+          matchSubpath: false
+          timeout: 0
+          upstreams: { }
+          transformHeaders: { }
+        authConfig:
+          userVerifiedRequired: true
+        disabledStages: [ ]
