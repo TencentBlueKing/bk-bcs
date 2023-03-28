@@ -23,6 +23,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/cloud"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/common"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/eventer"
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
 
 	tclb "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/clb/v20180317"
@@ -69,7 +70,7 @@ func NewClbWithSecretIDKey(id, key string) (*Clb, error) {
 }
 
 // NewClbWithSecret create clb client with k8s secret
-func NewClbWithSecret(secret *k8scorev1.Secret, _ client.Client) (cloud.LoadBalance, error) {
+func NewClbWithSecret(secret *k8scorev1.Secret, _ client.Client, _ eventer.WatchEventInterface) (cloud.LoadBalance, error) {
 	secretIDBytes, ok := secret.Data[EnvNameTencentCloudAccessKeyID]
 	if !ok {
 		return nil, fmt.Errorf("lost %s in secret %s/%s", EnvNameTencentCloudAccessKeyID,
