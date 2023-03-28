@@ -109,6 +109,8 @@ spec:
                           type: integer
                         sessionTime:
                           type: integer
+                        sniSwitch:
+                          type: integer
                       type: object
                     loadBalancerIDs:
                       items:

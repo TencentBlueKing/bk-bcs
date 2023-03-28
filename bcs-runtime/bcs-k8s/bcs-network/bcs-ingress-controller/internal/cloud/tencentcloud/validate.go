@@ -51,12 +51,26 @@ func (cv *ClbValidater) validateIngressRule(rule *networkextensionv1.IngressRule
 		return false, fmt.Sprintf("invalid port %d, available [1-65535]", rule.Port)
 	}
 	if rule.Protocol == ClbProtocolHTTPS {
-		if rule.Certificate == nil {
-			return false, fmt.Sprintf("certificate cannot be empty for protocol https")
+		// sni off
+		if rule.ListenerAttribute == nil || rule.ListenerAttribute.SniSwitch == 0 {
+			if rule.Certificate == nil {
+				return false, fmt.Sprintf("certificate cannot be empty for protocol https")
+			}
+			if ok, msg := cv.validateCertificate(rule.Certificate); !ok {
+				return false, msg
+			}
+		} else {
+			// sni open
+			for _, route := range rule.Routes {
+				if route.Certificate == nil {
+					return false, fmt.Sprintf("route certificate cannot be empty for protocol https with sni open")
+				}
+				if ok, msg := cv.validateCertificate(route.Certificate); !ok {
+					return false, msg
+				}
+			}
 		}
-		if ok, msg := cv.validateCertificate(rule.Certificate); !ok {
-			return false, msg
-		}
+
 	}
 	if rule.ListenerAttribute != nil {
 		if ok, msg := cv.validateListenerAttribute(rule.ListenerAttribute); !ok {
