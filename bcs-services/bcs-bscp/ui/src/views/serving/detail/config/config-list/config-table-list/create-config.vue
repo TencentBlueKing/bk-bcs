@@ -54,6 +54,7 @@
       <ConfigForm
         :config="setting"
         :content="content"
+        :editable="true"
         :bk-biz-id="props.bkBizId"
         :app-id="props.appId"
         :submit-fn="submitConfig"

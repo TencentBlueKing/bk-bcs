@@ -1,9 +1,13 @@
 <script setup lang="ts">
-  import { ref, watch } from 'vue'
+  import { ref, watch, computed } from 'vue'
+  import { storeToRefs } from 'pinia'
   import ConfigForm from './config-form.vue'
   import { getConfigItemDetail, getConfigContent, updateServingConfigItem } from '../../../../../../api/config'
+  import { IFileConfigContentSummary } from '../../../../../../../types/config'
   import { IServingEditParams } from '../../../../../../types'
-  import { transDataToFile } from '../../../../../../utils/file'
+  import { useConfigStore } from '../../../../../../store/config'
+
+  const { versionData } = storeToRefs(useConfigStore())
 
   const getDefaultConfig = () => {
     return {
@@ -30,7 +34,11 @@
 
   const configDetailLoading = ref(true)
   const config = ref<IServingEditParams>(getDefaultConfig())
-  const content = ref<string|File>('')
+  const content = ref<string|IFileConfigContentSummary>('')
+
+  const editable = computed(() => {
+    return versionData.value.id === 0
+  })
 
   watch(
     () => props.show,
@@ -49,10 +57,10 @@
       const { name, path, file_type, permission } = detail.config_item.spec
       config.value = { id: props.configId, biz_id: props.bkBizId, app_id: props.appId, name, file_type, path, ...permission }
       const signature = detail.content.signature
-      const configContent = await getConfigContent(props.bkBizId, props.appId, signature)
       if (file_type === 'binary') {
-        content.value = transDataToFile(configContent, name)
+        content.value = { name, signature, size: detail.content.byte_size }
       } else {
+        const configContent = await getConfigContent(props.bkBizId, props.appId, signature)
         content.value = String(configContent)
       }
     } catch (e) {
@@ -60,20 +68,6 @@
     } finally {
       configDetailLoading.value = false
     }
-    // const { id, spec } = config
-    // const { privilege, user } = permission
-    // activeConfig.value = { 
-    //   id,
-    //   biz_id: props.bkBizId,
-    //   app_id: props.appId,
-    //   name,
-    //   file_type,
-    //   file_mode,
-    //   path,
-    //   user,
-    //   user_group,
-    //   privilege
-    // }
   }
 
   const submitConfig = (data: IServingEditParams) => {
@@ -87,7 +81,7 @@
 <template>
     <bk-sideslider
       width="640"
-      title="编辑配置项"
+      :title="`${editable ? '编辑' : '查看'}配置项`"
       :is-show="props.show"
       :before-close="close">
         <bk-loading :loading="configDetailLoading" style="height: 100%;">
@@ -95,6 +89,7 @@
             v-if="!configDetailLoading"
             :config="config"
             :content="content"
+            :editable="editable"
             :bk-biz-id="props.bkBizId"
             :app-id="props.appId"
             :submit-fn="submitConfig"

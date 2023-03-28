@@ -53,11 +53,11 @@ export interface IConfigDetail {
 
 // 文件配置概览内容
 export interface IFileConfigContentSummary {
-  id: number;
+  id?: number;
   name: string;
   signature: string;
   size: string;
-  update_at: string;
+  update_at?: string;
 }
 
 // 配置对比差异详情
