@@ -84,13 +84,13 @@ func (a *Auth) AuthorizeBatch(ctx context.Context, req *pbas.AuthorizeBatchReq) 
 	}
 
 	// if auth is disabled, returns authorized for all request resources
-	if a.disableAuth {
-		resp.Decisions = make([]*pbas.Decision, len(req.Resources))
-		for index := range req.Resources {
-			resp.Decisions[index] = &pbas.Decision{Authorized: true}
-		}
-		return resp, nil
-	}
+	// if a.disableAuth {
+	// 	resp.Decisions = make([]*pbas.Decision, len(req.Resources))
+	// 	for index := range req.Resources {
+	// 		resp.Decisions[index] = &pbas.Decision{Authorized: true}
+	// 	}
+	// 	return resp, nil
+	// }
 
 	// parse bscp resource to iam resource
 	resources := pbas.ResourceAttributes(req.Resources)

@@ -32,6 +32,7 @@ import (
 	"bscp.io/pkg/components/bkpaas"
 	iamauth "bscp.io/pkg/iam/auth"
 	"bscp.io/pkg/iam/client"
+	"bscp.io/pkg/iam/meta"
 	pkgauth "bscp.io/pkg/iam/sdk/auth"
 	"bscp.io/pkg/iam/sys"
 	"bscp.io/pkg/kit"
@@ -279,9 +280,24 @@ func ListUserSpaceAnnotation(ctx context.Context, kt *kit.Kit, authorizer iamaut
 	}
 
 	perms := map[string]webannotation.Perm{}
+	authRes := make([]*meta.ResourceAttribute, 0, len(resp.GetItems()))
 	for _, v := range resp.GetItems() {
-		perms[v.SpaceId] = webannotation.Perm{"update": false, "delete": false}
+		bID, _ := strconv.ParseInt(v.SpaceId, 10, 64)
+		authRes = append(authRes, &meta.ResourceAttribute{
+			Basic: &meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource, ResourceID: uint32(bID)}, BizID: uint32(bID)},
+		)
+
 	}
+
+	authResp, _, err := authorizer.Authorize(kt, authRes...)
+	if err != nil {
+		return nil, err
+	}
+
+	for idx, v := range resp.GetItems() {
+		perms[v.SpaceId] = webannotation.Perm{"has_perm": authResp[idx].Authorized}
+	}
+
 	return &webannotation.Annotation{Perms: perms}, nil
 }
 

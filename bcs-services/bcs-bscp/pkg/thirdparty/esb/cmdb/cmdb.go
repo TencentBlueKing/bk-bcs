@@ -27,7 +27,10 @@ import (
 
 // Client is an esb client to request cmdb.
 type Client interface {
+	// SearchBusiness 通用查询
 	SearchBusiness(ctx context.Context, params *SearchBizParams) (*SearchBizResp, error)
+	// ListAllBusiness 读取全部业务列表
+	ListAllBusiness(ctx context.Context) (*SearchBizResult, error)
 }
 
 // NewClient initialize a new cmdb client
@@ -45,7 +48,7 @@ type cmdb struct {
 	client rest.ClientInterface
 }
 
-// SearchBusiness NOTES
+// SearchBusiness 通用查询
 func (c *cmdb) SearchBusiness(ctx context.Context, params *SearchBizParams) (*SearchBizResp, error) {
 	resp := new(SearchBizResp)
 
@@ -72,4 +75,15 @@ func (c *cmdb) SearchBusiness(ctx context.Context, params *SearchBizParams) (*Se
 	}
 
 	return resp, nil
+}
+
+// ListAllBusiness 读取全部业务列表
+func (c *cmdb) ListAllBusiness(ctx context.Context) (*SearchBizResult, error) {
+	params := &SearchBizParams{}
+	resp, err := c.SearchBusiness(ctx, params)
+	if err != nil {
+		return nil, err
+	}
+
+	return &resp.SearchBizResult, nil
 }

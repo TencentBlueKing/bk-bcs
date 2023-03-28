@@ -30,6 +30,23 @@ func genSkipResource(_ *meta.ResourceAttribute) (client.ActionID, []client.Resou
 	return sys.Skip, make([]client.Resource, 0), nil
 }
 
+// genBizResource
+func genBizResource(a *meta.ResourceAttribute) (client.ActionID, []client.Resource, error) {
+	bizRes := client.Resource{
+		System: sys.SystemIDCMDB,
+		Type:   sys.Business,
+		ID:     strconv.FormatUint(uint64(a.BizID), 10),
+	}
+
+	switch a.Basic.Action {
+	case meta.FindBusinessResource:
+		// create app is related to cmdb business resource
+		return sys.BusinessViewResource, []client.Resource{bizRes}, nil
+	default:
+		return "", nil, fmt.Errorf("unsupported bscp action: %s", a.Basic.Action)
+	}
+}
+
 // genAppResource generate application related iam resource.
 func genAppResource(a *meta.ResourceAttribute) (client.ActionID, []client.Resource, error) {
 	bizRes := client.Resource{
