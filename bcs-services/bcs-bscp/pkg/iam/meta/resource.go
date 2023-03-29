@@ -23,7 +23,7 @@ func (r ResourceType) String() string {
 
 const (
 	// Biz 业务
-	Biz ResourceType = "business"
+	Biz ResourceType = "biz"
 	// App resource's bscp auth resource type
 	App ResourceType = "app"
 	// Commit resource's bscp auth resource type

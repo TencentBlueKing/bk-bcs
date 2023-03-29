@@ -208,6 +208,7 @@ func (rs RedisCluster) validate() error {
 type IAM struct {
 	// Endpoints is a seed list of host:port addresses of iam nodes.
 	Endpoints []string `yaml:"endpoints"`
+	APIURL    string   `yaml:"api_url"`
 	// AppCode blueking belong to bscp's appcode.
 	AppCode string `yaml:"appCode"`
 	// AppSecret blueking belong to bscp app's secret.

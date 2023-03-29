@@ -16,9 +16,16 @@ package auth
 import (
 	"context"
 	"fmt"
+	"os"
 	"strings"
 
+	bkiam "github.com/TencentBlueKing/iam-go-sdk"
+	bkiamlogger "github.com/TencentBlueKing/iam-go-sdk/logger"
+	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
+
 	"bscp.io/cmd/auth-server/options"
+	"bscp.io/pkg/cc"
 	"bscp.io/pkg/criteria/errf"
 	"bscp.io/pkg/iam/client"
 	"bscp.io/pkg/iam/meta"
@@ -222,6 +229,55 @@ func (a *Auth) GetPermissionToApply(ctx context.Context, req *pbas.GetPermission
 	}
 
 	resp.Permission = pbas.PbIamPermission(permission)
+	return resp, nil
+}
+
+// CheckPermission
+func (a *Auth) CheckPermission(ctx context.Context, iamSettings cc.IAM, req *meta.ResourceAttribute) (*pbas.CheckPermissionResp, error) {
+	kt := kit.FromGrpcContext(ctx)
+
+	log := &logrus.Logger{
+		Out:          os.Stderr,
+		Formatter:    new(logrus.TextFormatter),
+		Hooks:        make(logrus.LevelHooks),
+		Level:        logrus.DebugLevel,
+		ExitFunc:     os.Exit,
+		ReportCaller: false,
+	}
+
+	bkiamlogger.SetLogger(log)
+
+	actionRequest, err := AdaptIAMResourceOptions(req)
+	if err != nil {
+		return nil, err
+	}
+
+	actionRequest.Subject = bkiam.NewSubject("user", kt.User)
+	// i := bkiam.NewIAM(sys.SystemIDBSCP, iamSettings.AppCode, iamSettings.AppSecret, iamSettings.Endpoints[0], "")
+	i := bkiam.NewAPIGatewayIAM(sys.SystemIDBSCP, iamSettings.AppCode, iamSettings.AppSecret, iamSettings.APIURL)
+	allowed, err := i.IsAllowed(*actionRequest)
+	if err != nil {
+		return nil, err
+	}
+
+	resp := &pbas.CheckPermissionResp{IsAllowed: false}
+	if allowed {
+		resp.IsAllowed = true
+		return resp, nil
+	}
+
+	if req.GenApplyURL {
+		application, err := AdaptIAMApplicationOptions(req)
+		if err != nil {
+			return nil, err
+		}
+		url, err := i.GetApplyURL(*application, "", kt.User)
+		if err != nil {
+			return nil, errors.Wrap(err, "gen apply url")
+		}
+		fmt.Println(err, url)
+	}
+
 	return resp, nil
 }
 

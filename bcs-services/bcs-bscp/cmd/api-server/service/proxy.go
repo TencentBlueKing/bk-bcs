@@ -99,7 +99,7 @@ func (p *proxy) handler() http.Handler {
 	r.Mount("/", handler.RegisterCommonHandler())
 
 	// iam 回调接口
-	r.Route("/api/v1/auth/iam", func(r chi.Router) {
+	r.Route("/api/v1/auth/iam/find/resource", func(r chi.Router) {
 		r.Use(handler.RequestBodyLogger())
 		r.Use(view.Generic(p.authorizer))
 		r.Use(auth.IAMVerified)

@@ -56,7 +56,7 @@ type Service struct {
 	disableAuth bool
 	// disableWriteOpt defines which biz's write operation needs to be disabled
 	disableWriteOpt *options.DisableWriteOption
-
+	iamSettings     cc.IAM
 	// iam logic module.
 	iam *iam.IAM
 	// initial logic module.
@@ -88,6 +88,7 @@ func NewService(sd serviced.Discover, iamSettings cc.IAM, disableAuth bool,
 		gateway:         gateway,
 		disableAuth:     disableAuth,
 		disableWriteOpt: disableWriteOpt,
+		iamSettings:     iamSettings,
 	}
 
 	if err = s.initLogicModule(); err != nil {
@@ -227,6 +228,11 @@ func (s *Service) GetPermissionToApply(ctx context.Context, req *pbas.GetPermiss
 	*pbas.GetPermissionToApplyResp, error) {
 
 	return s.auth.GetPermissionToApply(ctx, req)
+}
+
+// CheckPermission
+func (s *Service) CheckPermission(ctx context.Context, req *pbas.ResourceAttribute) (*pbas.CheckPermissionResp, error) {
+	return s.auth.CheckPermission(ctx, s.iamSettings, req.ResourceAttribute())
 }
 
 // initLogicModule init logic module.

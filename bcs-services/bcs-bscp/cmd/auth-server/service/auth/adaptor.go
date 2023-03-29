@@ -13,7 +13,10 @@
 package auth
 
 import (
+	"errors"
 	"fmt"
+
+	bkiam "github.com/TencentBlueKing/iam-go-sdk"
 
 	"bscp.io/pkg/criteria/errf"
 	"bscp.io/pkg/iam/client"
@@ -60,5 +63,32 @@ func AdaptAuthOptions(a *meta.ResourceAttribute) (client.ActionID, []client.Reso
 		return genSidecarRes(a)
 	default:
 		return "", nil, errf.New(errf.InvalidParameter, fmt.Sprintf("unsupported bscp auth type: %s", a.Basic.Type))
+	}
+}
+
+// AdaptIAMResourceOptions 鉴权, 查看 isAllow 接口使用
+func AdaptIAMResourceOptions(a *meta.ResourceAttribute) (*bkiam.Request, error) {
+	if a == nil {
+		return nil, errors.New("resource attribute is not set")
+	}
+
+	switch a.Basic.Type {
+	case meta.Biz:
+		return genBizIAMResource(a)
+	default:
+		return nil, fmt.Errorf("unsupported bscp auth type: %s", a.Basic.Type)
+	}
+}
+
+// AdaptIAMApplicationOptions 申请链接, applyURL 接口使用
+func AdaptIAMApplicationOptions(a *meta.ResourceAttribute) (*bkiam.Application, error) {
+	if a == nil {
+		return nil, errors.New("resource attribute is not set")
+	}
+	switch a.Basic.Type {
+	case meta.Biz:
+		return genBizIAMApplication(a)
+	default:
+		return nil, fmt.Errorf("unsupported bscp auth type: %s", a.Basic.Type)
 	}
 }

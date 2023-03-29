@@ -20,10 +20,17 @@ import (
 	"bscp.io/pkg/iam/client"
 	"bscp.io/pkg/iam/meta"
 	"bscp.io/pkg/iam/sys"
+	"github.com/TencentBlueKing/iam-go-sdk"
+	bkiam "github.com/TencentBlueKing/iam-go-sdk"
 )
 
 // bizIDAssembleSymbol used to assemble biz_id and resource id's symbol, used in app id generation.
 const bizIDAssembleSymbol = "-"
+
+var (
+	// dummyIAMUser
+	dummyIAMUser = bkiam.NewSubject("user", "")
+)
 
 // genSkipResource generate iam resource for resource, using skip action.
 func genSkipResource(_ *meta.ResourceAttribute) (client.ActionID, []client.Resource, error) {
@@ -44,6 +51,61 @@ func genBizResource(a *meta.ResourceAttribute) (client.ActionID, []client.Resour
 		return sys.BusinessViewResource, []client.Resource{bizRes}, nil
 	default:
 		return "", nil, fmt.Errorf("unsupported bscp action: %s", a.Basic.Action)
+	}
+}
+
+func genBizIAMResource(a *meta.ResourceAttribute) (*bkiam.Request, error) {
+	iamReq := bkiam.NewRequest(
+		sys.SystemIDBSCP,
+		dummyIAMUser,
+		bkiam.NewAction(string(sys.BusinessViewResource)),
+		[]iam.ResourceNode{
+			{
+				System:    sys.SystemIDCMDB,
+				Type:      string(sys.Business),
+				ID:        strconv.FormatUint(uint64(a.BizID), 10),
+				Attribute: map[string]interface{}{},
+			},
+		},
+	)
+
+	switch a.Basic.Action {
+	case meta.FindBusinessResource:
+		// create app is related to cmdb business resource
+		return &iamReq, nil
+	default:
+		return nil, fmt.Errorf("unsupported bscp action: %s", a.Basic.Action)
+	}
+}
+
+func genBizIAMApplication(a *meta.ResourceAttribute) (*bkiam.Application, error) {
+	actions := []bkiam.ApplicationAction{
+		{
+			ID: string(sys.BusinessViewResource),
+			RelatedResourceTypes: []bkiam.ApplicationRelatedResourceType{
+				{
+					SystemID: sys.SystemIDCMDB,
+					Type:     string(sys.Business),
+					Instances: []bkiam.ApplicationResourceInstance{
+						[]iam.ApplicationResourceNode{
+							{
+								Type: string(sys.Business),
+								ID:   strconv.FormatUint(uint64(a.BizID), 10),
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+	application := bkiam.NewApplication(sys.SystemIDBSCP, actions)
+
+	switch a.Basic.Action {
+	case meta.FindBusinessResource:
+		// create app is related to cmdb business resource
+		return &application, nil
+	default:
+		return nil, fmt.Errorf("unsupported bscp action: %s", a.Basic.Action)
 	}
 }
 
