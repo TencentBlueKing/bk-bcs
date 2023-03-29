@@ -128,7 +128,20 @@ func (res *ErrorResponse) Render(w http.ResponseWriter, r *http.Request) error {
 		}
 	}
 
-	res.Error.Details = []interface{}{}
+	switch res.Error.Code {
+	case "UNAUTHENTICATED":
+		res.Error.Data = &UnauthorizedData{
+			LoginURL:      bkpaas.BuildLoginURL(r, cc.ApiServer().LoginAuth.Host),
+			LoginPlainURL: bkpaas.BuildLoginPlainURL(r, cc.ApiServer().LoginAuth.Host),
+		}
+	case "PERMISSION_DENIED":
+		// 把 detail 中拿出来做鉴权详情
+		if len(res.Error.Details) > 0 {
+			res.Error.Data = res.Error.Details[0]
+		}
+		res.Error.Details = []interface{}{}
+	}
+
 	render.Status(r, statusCode)
 	return nil
 }

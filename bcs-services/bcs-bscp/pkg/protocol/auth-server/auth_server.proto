@@ -99,6 +99,12 @@ message ResourceAttribute {
     bool gen_apply_url = 3;
 }
 
+message Basic {
+    string type        = 1;
+    string action      = 2;
+    uint32 resource_id = 3;
+}
+
 message BasicDetail {
     string type          = 1;
     string type_name     = 2;
@@ -108,10 +114,9 @@ message BasicDetail {
     string resource_name = 6;
 }
 
-message Basic {
-    string type        = 1;
-    string action      = 2;
-    uint32 resource_id = 3;
+message ApplyDetail {
+    string apply_url               = 1;
+    repeated BasicDetail resources = 2;
 }
 
 message AuthorizeBatchResp {

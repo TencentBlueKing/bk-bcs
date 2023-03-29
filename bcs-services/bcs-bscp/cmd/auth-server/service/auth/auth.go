@@ -17,6 +17,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 
 	bkiam "github.com/TencentBlueKing/iam-go-sdk"
@@ -266,7 +267,21 @@ func (a *Auth) CheckPermission(ctx context.Context, iamSettings cc.IAM, req *met
 		return resp, nil
 	}
 
+	sErr := errf.PRCPermissionDenied()
+
 	if req.GenApplyURL {
+		applyDetail := &pbas.ApplyDetail{
+			Resources: []*pbas.BasicDetail{
+				{
+					Type:         string(req.Type),
+					Action:       req.Action.String(),
+					ResourceId:   strconv.FormatInt(int64(req.ResourceID), 10),
+					TypeName:     "业务",
+					ActionName:   "业务访问",
+					ResourceName: "蓝鲸",
+				},
+			},
+		}
 		application, err := AdaptIAMApplicationOptions(req)
 		if err != nil {
 			return nil, err
@@ -275,10 +290,16 @@ func (a *Auth) CheckPermission(ctx context.Context, iamSettings cc.IAM, req *met
 		if err != nil {
 			return nil, errors.Wrap(err, "gen apply url")
 		}
-		fmt.Println(err, url)
+		applyDetail.ApplyUrl = url
+		sErr, err := sErr.WithDetails(applyDetail)
+		if err != nil {
+			return nil, err
+		}
+		return nil, sErr.Err()
+
 	}
 
-	return resp, nil
+	return nil, sErr.Err()
 }
 
 func (a *Auth) getPermissionToApply(kt *kit.Kit, resources []*meta.ResourceAttribute) (*meta.IamPermission, error) {

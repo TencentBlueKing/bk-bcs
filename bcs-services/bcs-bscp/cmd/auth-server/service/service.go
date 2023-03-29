@@ -232,7 +232,8 @@ func (s *Service) GetPermissionToApply(ctx context.Context, req *pbas.GetPermiss
 
 // CheckPermission
 func (s *Service) CheckPermission(ctx context.Context, req *pbas.ResourceAttribute) (*pbas.CheckPermissionResp, error) {
-	return s.auth.CheckPermission(ctx, s.iamSettings, req.ResourceAttribute())
+	resp, err := s.auth.CheckPermission(ctx, s.iamSettings, req.ResourceAttribute())
+	return resp, err
 }
 
 // initLogicModule init logic module.

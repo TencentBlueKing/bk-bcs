@@ -40,6 +40,14 @@ type Basic struct {
 	ResourceID uint32
 }
 
+// BasicDetail
+type BasicDetail struct {
+	Basic        `json:",inline"`
+	TypeName     string `json:"type_name"`
+	ActionName   string `json:"action_name"`
+	ResourceName string `json:"resource_name"`
+}
+
 // Decision defines the authorization decision of a resource.
 type Decision struct {
 	// Authorized the authorization decision, whether a user has permission to the resource or not.
