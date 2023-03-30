@@ -79,6 +79,7 @@ type PodContext struct {
 	Source          string         `json:"source"`
 	SessionTimeout  int64          `json:"session_timeout"`   // session 过期时间, 单位分钟
 	ConnIdleTimeout int64          `json:"conn_idle_timeout"` // 空闲时间, 单位分钟
+	SessionId       string         `json:"session_id"`        // session id
 }
 
 // GetConnIdleTimeout 获取空闲过期时间
