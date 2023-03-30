@@ -38,6 +38,7 @@ import (
 	"k8s.io/autoscaler/cluster-autoscaler/utils/gpu"
 	kube_util "k8s.io/autoscaler/cluster-autoscaler/utils/kubernetes"
 	"k8s.io/klog"
+	nodeLabel "k8s.io/kubernetes/cmd/kubeadm/app/constants"
 	schedulerapi "k8s.io/kubernetes/pkg/scheduler/api"
 	schedulernodeinfo "k8s.io/kubernetes/pkg/scheduler/nodeinfo"
 )
@@ -772,6 +773,9 @@ func checkResourceNotEnough(nodes map[string]*schedulernodeinfo.NodeInfo,
 		if node.Annotations[filterNodeResourceAnnoKey] == "true" {
 			continue
 		}
+		if node.Labels[nodeLabel.LabelNodeRoleMaster] == "true" {
+			continue
+		}
 		klog.V(6).Infof("resource: %+v", node.Status.Allocatable)
 		allocatable := nodeInfo.AllocatableResource()
 		sumResourcesList.Add(allocatable.ResourceList())
@@ -794,7 +798,7 @@ func checkResourceNotEnough(nodes map[string]*schedulernodeinfo.NodeInfo,
 			continue
 		}
 		r := float64(left.MilliValue()) / float64(sum.MilliValue())
-		klog.V(6).Infof("Resource :%v, left: %v", name, r)
+		klog.V(4).Infof("Resource :%v, left: %v", name, r)
 		switch name {
 		case apiv1.ResourceCPU:
 			klog.V(4).Infof("%v ratio %v, desired CPU ratio %v", name, r, cpuRatio)

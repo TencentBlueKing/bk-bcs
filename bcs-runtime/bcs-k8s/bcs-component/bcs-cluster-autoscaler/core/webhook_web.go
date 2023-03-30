@@ -74,6 +74,12 @@ func (w *WebScaler) DoWebhook(context *contextinternal.Context,
 		return errors.NewAutoscalerError(errors.InternalError,
 			"failed to get response from web server: %v", err)
 	}
+
+	checkErr := checkResourcesLimits(context, nodes, options, candidates)
+	if checkErr != nil {
+		return checkErr
+	}
+
 	err = w.ExecuteScale(context, clusterStateRegistry, sd, nodes, options, candidates, nodeNameToNodeInfo)
 	if err != nil {
 		return errors.NewAutoscalerError(errors.CloudProviderError,
@@ -96,7 +102,8 @@ func (w *WebScaler) GetResponses(context *contextinternal.Context,
 	}
 
 	// construct requests
-	req, err := GenerateAutoscalerRequest(context.CloudProvider.NodeGroups(), clusterStateRegistry.GetUpcomingNodes(), newPriorities)
+	req, err := GenerateAutoscalerRequest(context.CloudProvider.NodeGroups(), clusterStateRegistry.GetUpcomingNodes(),
+		newPriorities, sd.nodeDeletionTracker)
 	if err != nil {
 		return nil, nil, fmt.Errorf("Cannot generate autoscaler requests, err: %s", err.Error())
 	}
