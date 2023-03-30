@@ -44,5 +44,5 @@ func TestApi(t *testing.T) {
 	// TODO: strategy test depends on group, add group test first
 	//TestStrategy(t)
 	//TestPublish(t)
-	//TestInstance(t)
+	TestInstance(t)
 }

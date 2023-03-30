@@ -15,6 +15,7 @@ package api
 import (
 	"context"
 	"net/http"
+	"reflect"
 
 	pbcs "bscp.io/pkg/protocol/config-server"
 	"bscp.io/pkg/rest"
@@ -54,8 +55,11 @@ func (c *Commit) Create(ctx context.Context, header http.Header, req *pbcs.Creat
 	if err := resp.Into(pbResp); err != nil {
 		return nil, err
 	}
+	if !reflect.ValueOf(pbResp.Error).IsNil() {
+		return nil, pbResp.Error
+	}
 
-	return pbResp.Data, pbResp.Error
+	return pbResp.Data, nil
 }
 
 // List to list commit.
@@ -79,6 +83,9 @@ func (c *Commit) List(ctx context.Context, header http.Header, req *pbcs.ListCom
 	if err := resp.Into(pbResp); err != nil {
 		return nil, err
 	}
+	if !reflect.ValueOf(pbResp.Error).IsNil() {
+		return nil, pbResp.Error
+	}
 
-	return pbResp.Data, pbResp.Error
+	return pbResp.Data, nil
 }

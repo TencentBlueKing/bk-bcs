@@ -15,6 +15,7 @@ package api
 import (
 	"context"
 	"net/http"
+	"reflect"
 
 	pbcs "bscp.io/pkg/protocol/config-server"
 	"bscp.io/pkg/rest"
@@ -55,8 +56,11 @@ func (s *Strategy) Create(ctx context.Context, header http.Header, req *pbcs.Cre
 	if err := resp.Into(pbResp); err != nil {
 		return nil, err
 	}
+	if !reflect.ValueOf(pbResp.Error).IsNil() {
+		return nil, pbResp.Error
+	}
 
-	return pbResp.Data, pbResp.Error
+	return pbResp.Data, nil
 }
 
 // Update function to update strategy.
@@ -82,8 +86,11 @@ func (s *Strategy) Update(ctx context.Context, header http.Header, req *pbcs.Upd
 	if err := resp.Into(pbResp); err != nil {
 		return nil, err
 	}
+	if !reflect.ValueOf(pbResp.Error).IsNil() {
+		return nil, pbResp.Error
+	}
 
-	return pbResp.Data, pbResp.Error
+	return pbResp.Data, nil
 }
 
 // Delete function to delete strategy.
@@ -109,8 +116,11 @@ func (s *Strategy) Delete(ctx context.Context, header http.Header, req *pbcs.Del
 	if err := resp.Into(pbResp); err != nil {
 		return nil, err
 	}
+	if !reflect.ValueOf(pbResp.Error).IsNil() {
+		return nil, pbResp.Error
+	}
 
-	return pbResp.Data, pbResp.Error
+	return pbResp.Data, nil
 }
 
 // List to list strategy.
@@ -135,6 +145,9 @@ func (s *Strategy) List(ctx context.Context, header http.Header, req *pbcs.ListS
 	if err := resp.Into(pbResp); err != nil {
 		return nil, err
 	}
+	if !reflect.ValueOf(pbResp.Error).IsNil() {
+		return nil, pbResp.Error
+	}
 
-	return pbResp.Data, pbResp.Error
+	return pbResp.Data, nil
 }

@@ -15,6 +15,7 @@ package api
 import (
 	"context"
 	"net/http"
+	"reflect"
 
 	pbcs "bscp.io/pkg/protocol/config-server"
 	"bscp.io/pkg/rest"
@@ -54,8 +55,11 @@ func (c *ConfigItem) Create(ctx context.Context, header http.Header, req *pbcs.C
 	if err := resp.Into(pbResp); err != nil {
 		return nil, err
 	}
+	if !reflect.ValueOf(pbResp.Error).IsNil() {
+		return nil, pbResp.Error
+	}
 
-	return pbResp.Data, pbResp.Error
+	return pbResp.Data, nil
 }
 
 // Update function to update config item.
@@ -81,8 +85,11 @@ func (c *ConfigItem) Update(ctx context.Context, header http.Header, req *pbcs.U
 	if err := resp.Into(pbResp); err != nil {
 		return nil, err
 	}
+	if !reflect.ValueOf(pbResp.Error).IsNil() {
+		return nil, pbResp.Error
+	}
 
-	return pbResp.Data, pbResp.Error
+	return pbResp.Data, nil
 }
 
 // Delete function to delete config item.
@@ -108,8 +115,11 @@ func (c *ConfigItem) Delete(ctx context.Context, header http.Header, req *pbcs.D
 	if err := resp.Into(pbResp); err != nil {
 		return nil, err
 	}
+	if !reflect.ValueOf(pbResp.Error).IsNil() {
+		return nil, pbResp.Error
+	}
 
-	return pbResp.Data, pbResp.Error
+	return pbResp.Data, nil
 }
 
 // List to list config item.
@@ -134,6 +144,9 @@ func (c *ConfigItem) List(ctx context.Context, header http.Header,
 	if err := resp.Into(pbResp); err != nil {
 		return nil, err
 	}
+	if !reflect.ValueOf(pbResp.Error).IsNil() {
+		return nil, pbResp.Error
+	}
 
-	return pbResp.Data, pbResp.Error
+	return pbResp.Data, nil
 }

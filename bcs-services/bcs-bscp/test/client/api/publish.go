@@ -15,6 +15,7 @@ package api
 import (
 	"context"
 	"net/http"
+	"reflect"
 
 	pbcs "bscp.io/pkg/protocol/config-server"
 	"bscp.io/pkg/rest"
@@ -54,8 +55,11 @@ func (p *Publish) PublishWithStrategy(ctx context.Context, header http.Header, r
 	if err := resp.Into(pbResp); err != nil {
 		return nil, err
 	}
+	if !reflect.ValueOf(pbResp.Error).IsNil() {
+		return nil, pbResp.Error
+	}
 
-	return pbResp.Data, pbResp.Error
+	return pbResp.Data, nil
 }
 
 // FinishPublishWithStrategy function to finish publish with strategy.
@@ -81,8 +85,11 @@ func (p *Publish) FinishPublishWithStrategy(ctx context.Context, header http.Hea
 	if err := resp.Into(pbResp); err != nil {
 		return nil, err
 	}
+	if !reflect.ValueOf(pbResp.Error).IsNil() {
+		return nil, pbResp.Error
+	}
 
-	return pbResp.Data, pbResp.Error
+	return pbResp.Data, nil
 }
 
 // ListStrategyPublishHistory function to list strategy publish history.
@@ -107,6 +114,9 @@ func (p *Publish) ListStrategyPublishHistory(ctx context.Context, header http.He
 	if err := resp.Into(pbResp); err != nil {
 		return nil, err
 	}
+	if !reflect.ValueOf(pbResp.Error).IsNil() {
+		return nil, pbResp.Error
+	}
 
-	return pbResp.Data, pbResp.Error
+	return pbResp.Data, nil
 }

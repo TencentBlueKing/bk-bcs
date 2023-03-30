@@ -15,6 +15,7 @@ package api
 import (
 	"context"
 	"net/http"
+	"reflect"
 
 	pbcs "bscp.io/pkg/protocol/config-server"
 	"bscp.io/pkg/rest"
@@ -54,8 +55,11 @@ func (r *Release) Create(ctx context.Context, header http.Header, req *pbcs.Crea
 	if err := resp.Into(pbResp); err != nil {
 		return nil, err
 	}
+	if !reflect.ValueOf(pbResp.Error).IsNil() {
+		return nil, pbResp.Error
+	}
 
-	return pbResp.Data, pbResp.Error
+	return pbResp.Data, nil
 }
 
 // List to list release.
@@ -79,6 +83,9 @@ func (r *Release) List(ctx context.Context, header http.Header, req *pbcs.ListRe
 	if err := resp.Into(pbResp); err != nil {
 		return nil, err
 	}
+	if !reflect.ValueOf(pbResp.Error).IsNil() {
+		return nil, pbResp.Error
+	}
 
-	return pbResp.Data, pbResp.Error
+	return pbResp.Data, nil
 }

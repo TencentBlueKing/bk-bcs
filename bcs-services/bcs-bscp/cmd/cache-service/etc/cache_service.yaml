@@ -62,6 +62,8 @@ sharding:
 
 # defines all the redisCluster related settings
 redisCluster:
+  # mode is redis mode, support options: standalone, cluster, default is standalone mode(standalone if not set)
+  mode:
   # endpoints is a seed list of host:port addresses of nodes.
   endpoints:
     - 127.0.0.1:7001

@@ -63,7 +63,7 @@ func init() {
 
 	flag.StringVar(&clientCfg.ApiHost, "api-host", "http://127.0.0.1:8080", "api http server address")
 	flag.StringVar(&clientCfg.CacheHost, "cache-host", "127.0.0.1:9514", "cache rpc service address")
-	flag.StringVar(&clientCfg.FeedHost, "feed-host", "127.0.0.1:9510", "feed rpc server address")
+	flag.StringVar(&clientCfg.FeedHost, "feed-host", "http://127.0.0.1:9610", "feed http server address")
 	flag.IntVar(&concurrent, "concurrent", 1000, "concurrent request during the load test.")
 	flag.Float64Var(&sustainSeconds, "sustain-seconds", 10, "the load test sustain time in seconds ")
 	flag.Int64Var(&totalRequest, "total-request", 0, "the load test total request,it has higher priority than "+
@@ -155,11 +155,11 @@ func ClearData() error {
 		return err
 	}
 	if _, err := db.Exec("update " + table.IDGeneratorTable.Name() +
-		" t1 set t1.max_id = 0 where resource != 'event'"); err != nil {
+		" t1 set t1.max_id = 0 where resource != 'events'"); err != nil {
 		return err
 	}
 	if _, err := db.Exec("update " + table.IDGeneratorTable.Name() +
-		" t1 set t1.max_id = 500 where resource = 'event'"); err != nil {
+		" t1 set t1.max_id = 500 where resource = 'events'"); err != nil {
 		return err
 	}
 

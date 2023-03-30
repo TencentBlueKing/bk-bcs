@@ -16,6 +16,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"reflect"
 	"strings"
 
 	pbcs "bscp.io/pkg/protocol/config-server"
@@ -57,8 +58,11 @@ func (c *Content) Create(ctx context.Context, header http.Header, req *pbcs.Crea
 	if err := resp.Into(pbResp); err != nil {
 		return nil, err
 	}
+	if !reflect.ValueOf(pbResp.Error).IsNil() {
+		return nil, pbResp.Error
+	}
 
-	return pbResp.Data, pbResp.Error
+	return pbResp.Data, nil
 }
 
 // Upload function to upload content.
@@ -113,6 +117,9 @@ func (c *Content) List(ctx context.Context, header http.Header, req *pbcs.ListCo
 	if err := resp.Into(pbResp); err != nil {
 		return nil, err
 	}
+	if !reflect.ValueOf(pbResp.Error).IsNil() {
+		return nil, pbResp.Error
+	}
 
-	return pbResp.Data, pbResp.Error
+	return pbResp.Data, nil
 }

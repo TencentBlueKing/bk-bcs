@@ -51,7 +51,7 @@ func NewFeedClient(host string, c *tools.TLSConfig) (*Client, error) {
 	}, nil
 }
 
-// ListAppFileLatestRelease list application file latest release
+// ListAppFileLatestRelease list application file's latest release
 func (c *Client) ListAppFileLatestRelease(ctx context.Context, header http.Header,
 	req *types.ListFileAppLatestReleaseMetaReq) (*types.ListFileAppLatestReleaseMetaResp, error) {
 
