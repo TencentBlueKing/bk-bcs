@@ -74,6 +74,9 @@ type NodeGroup struct {
 	// UpcomingSize is the number that indicates how many nodes have not registered in
 	// Kubernetes or have not been ready to be used.
 	UpcomingSize int `json:"upcomingSize"`
+	// DeletingSize is the number of nodes  in the node group that
+	// are in the process of deletion
+	DeletingSize int `json:"deletingSize"`
 	// NodeTemplate is the template information of node in the node group
 	NodeTemplate Template `json:"nodeTemplate"`
 	// NodeIPs are the IP of nodes which belongs to the node group

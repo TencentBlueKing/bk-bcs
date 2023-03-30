@@ -131,3 +131,5 @@ zz_generated.openapi.go
 
 /bazel-*
 *.pyc
+.codecc
+.idea
