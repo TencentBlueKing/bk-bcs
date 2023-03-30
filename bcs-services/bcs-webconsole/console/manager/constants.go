@@ -67,6 +67,8 @@ const (
 	// ResizeChannel xxx
 	ResizeChannel = "4"
 
+	LogChannel = "5"
+
 	// 审计上报、ws连接监测时间间隔
 	recordInterval = 10
 
