@@ -9,6 +9,7 @@ the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS
 either express or implied. See the License for the specific language governing permissions and
 limitations under the License.
 */
+
 package view
 
 import (
@@ -28,10 +29,11 @@ import (
 // GenericResponseWriter 自定义Write，自动补充 data 和 web_annotations 数据
 type GenericResponseWriter struct {
 	http.ResponseWriter
-	authorizer     auth.Authorizer
-	annotation     *webannotation.Annotation
-	modifyRespFunc modifier.ModifyRespFunc
-	err            error // low-level runtime error
+	ctx        context.Context
+	msg        proto.Message
+	authorizer auth.Authorizer
+	annotation *webannotation.Annotation
+	err        error // low-level runtime error
 }
 
 // Write http write 接口实现
@@ -41,11 +43,16 @@ func (w *GenericResponseWriter) Write(data []byte) (int, error) {
 		return w.ResponseWriter.Write(data)
 	}
 
-	if w.modifyRespFunc != nil {
-		var err error
-		data, err = w.modifyRespFunc(data)
-		if err != nil {
-			return 0, err
+	w.beforeWriteHook(w.ctx, w.msg)
+
+	if w.msg != nil {
+		w, ok := w.msg.(modifier.RespModifier)
+		if ok {
+			var err error
+			data, err = w.ModifyResp(data)
+			if err != nil {
+				return 0, err
+			}
 		}
 	}
 
@@ -64,6 +71,11 @@ func (w *GenericResponseWriter) Write(data []byte) (int, error) {
 	buf.WriteString("}")
 
 	return w.ResponseWriter.Write(buf.Bytes())
+}
+
+// beforeWriteHook is a hook before write response
+func (w *GenericResponseWriter) beforeWriteHook(ctx context.Context, msg proto.Message) error {
+	return w.BuildWebAnnotation(ctx, msg)
 }
 
 // BuildWebAnnotation 动态执行 webannotions 函数
@@ -98,11 +110,11 @@ func (w *GenericResponseWriter) BuildWebAnnotation(ctx context.Context, msg prot
 	return nil
 }
 
-// SetModifyRespFunc set a function to modify response for a proto msg which needs it
-func (w *GenericResponseWriter) SetModifyRespFunc(msg proto.Message) {
-	if f, ok := modifier.AllModifyRespFunc[string(proto.MessageName(msg))]; ok {
-		w.modifyRespFunc = f
-	}
+// SetWriterAttrs set attributes of the writer
+func (w *GenericResponseWriter) SetWriterAttrs(ctx context.Context, msg proto.Message) error {
+	w.ctx = ctx
+	w.msg = msg
+	return nil
 }
 
 // SetError 设置错误请求
