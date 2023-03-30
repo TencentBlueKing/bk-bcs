@@ -28,7 +28,7 @@ require (
 	github.com/fsnotify/fsnotify v1.4.9
 	github.com/fsouza/go-dockerclient v1.6.0
 	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b
-	github.com/golang/protobuf v1.4.3
+	github.com/golang/protobuf v1.5.0
 	github.com/google/cadvisor v0.32.0
 	github.com/gorilla/websocket v1.4.2
 	github.com/haproxytech/client-native v0.0.0-00010101000000-000000000000
@@ -96,7 +96,7 @@ require (
 	github.com/go-stack/stack v1.8.0 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/snappy v0.0.1 // indirect
-	github.com/google/go-cmp v0.5.4 // indirect
+	github.com/google/go-cmp v0.5.5 // indirect
 	github.com/google/gofuzz v1.1.0 // indirect
 	github.com/google/uuid v1.2.0 // indirect
 	github.com/googleapis/gnostic v0.3.1 // indirect
@@ -109,8 +109,6 @@ require (
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/juju/ratelimit v1.0.1 // indirect
 	github.com/klauspost/compress v1.9.5 // indirect
-	github.com/konsorten/go-windows-terminal-sequences v1.0.3 // indirect
-	github.com/kr/pretty v0.2.0 // indirect
 	github.com/mailru/easyjson v0.7.0 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.1 // indirect
 	github.com/micro/go-micro/v2 v2.9.1 // indirect
@@ -122,12 +120,12 @@ require (
 	github.com/nxadm/tail v1.4.4 // indirect
 	github.com/opencontainers/go-digest v1.0.0-rc1 // indirect
 	github.com/opencontainers/image-spec v1.0.1 // indirect
-	github.com/opencontainers/runc v1.0.0-rc6.0.20181203215513-96ec2177ae84 // indirect
+	github.com/opencontainers/runc v1.1.5 // indirect
 	github.com/opentracing/opentracing-go v1.2.0 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/prometheus/client_model v0.2.0 // indirect
 	github.com/prometheus/procfs v0.2.0 // indirect
-	github.com/sirupsen/logrus v1.6.0 // indirect
+	github.com/sirupsen/logrus v1.8.1 // indirect
 	github.com/tmc/grpc-websocket-proxy v0.0.0-20200427203606-3cfed13b9966 // indirect
 	github.com/xdg-go/pbkdf2 v1.0.0 // indirect
 	github.com/xdg-go/scram v1.0.2 // indirect
@@ -143,14 +141,14 @@ require (
 	golang.org/x/mod v0.3.0 // indirect
 	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d // indirect
 	golang.org/x/sync v0.0.0-20201020160332-67f06af15bc9 // indirect
-	golang.org/x/sys v0.0.0-20201214210602-f9fddec55a1e // indirect
+	golang.org/x/sys v0.0.0-20211116061358-0a5406a5449c // indirect
 	golang.org/x/text v0.3.5 // indirect
 	golang.org/x/time v0.0.0-20191024005414-555d28b269f0 // indirect
 	golang.org/x/tools v0.0.0-20210106214847-113979e3529a // indirect
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
 	google.golang.org/appengine v1.6.1 // indirect
 	google.golang.org/genproto v0.0.0-20200526211855-cb27e3aa2013 // indirect
-	google.golang.org/protobuf v1.23.1-0.20200526195155-81db48ad09cc // indirect
+	google.golang.org/protobuf v1.27.1 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7 // indirect
 	gopkg.in/yaml.v2 v2.3.0 // indirect
