@@ -33,5 +33,6 @@ const (
 // DispatchConf xxx
 type DispatchConf struct {
 	ClusterID  string            `yaml:"cluster_id"`
+	URL        string            `yaml:"url"`
 	SourceType MonitorSourceType `yaml:"source_type"`
 }
