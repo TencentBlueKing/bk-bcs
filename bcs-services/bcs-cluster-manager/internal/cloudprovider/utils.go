@@ -39,11 +39,23 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/types"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 
+	errs "github.com/pkg/errors"
 	k8scorev1 "k8s.io/api/core/v1"
+	rbacv1 "k8s.io/api/rbac/v1"
 	v1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	"k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
+	apierror "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
+)
+
+const (
+	bcsNamespace              = "bcs-system"
+	clusterAdmin              = "cluster-admin"
+	bcsCusterManager          = "bcs-cluster-manager"
+	bcsClusterRoleBindingName = "bcs-system-cm-clusterRoleBinding"
 )
 
 const (
@@ -313,7 +325,7 @@ func UpdateClusterCredentialByConfig(clusterID string, config *types.Config) err
 	}
 
 	if server == "" || caCertData == "" || (token == "" && (clientCert == "" || clientKey == "")) {
-		return fmt.Errorf("importClusterCredential parse kubeConfig failed: %v", "[server|caCertData|token] null")
+		return fmt.Errorf("importClusterCredential parse kubeConfig failed: %v", "[server|caCertData|authInfos] null")
 	}
 
 	// need to handle crypt
@@ -1041,4 +1053,129 @@ func GetCRDByKubeConfig(kubeConfig string) (*v1.CustomResourceDefinitionList, er
 	defer cancel()
 
 	return cli.ApiextensionsV1().CustomResourceDefinitions().List(ctx, metav1.ListOptions{})
+}
+
+// GenerateSAToken generates a serviceAccountToken
+func GenerateSAToken(restConfig *rest.Config) (string, error) {
+	clientSet, err := kubernetes.NewForConfig(restConfig)
+	if err != nil {
+		return "", fmt.Errorf("GenerateSAToken create clientset failed: %v", err)
+	}
+
+	return GenerateServiceAccountToken(clientSet)
+}
+
+// GenerateServiceAccountToken generates a serviceAccountToken for clusterAdmin given a rest clientset
+func GenerateServiceAccountToken(clientset kubernetes.Interface) (string, error) {
+	_, err := clientset.CoreV1().Namespaces().Create(context.TODO(), &k8scorev1.Namespace{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: bcsNamespace,
+		},
+	}, metav1.CreateOptions{})
+	if err != nil && !apierror.IsAlreadyExists(err) {
+		return "", err
+	}
+
+	serviceAccount := &k8scorev1.ServiceAccount{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: bcsCusterManager,
+		},
+	}
+
+	_, err = clientset.CoreV1().ServiceAccounts(bcsNamespace).Create(context.TODO(), serviceAccount, metav1.CreateOptions{})
+	if err != nil && !apierror.IsAlreadyExists(err) {
+		return "", fmt.Errorf("GenerateServiceAccountToken creating service account failed: %v", err)
+	}
+
+	adminRole := &rbacv1.ClusterRole{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: clusterAdmin,
+		},
+		Rules: []rbacv1.PolicyRule{
+			{
+				APIGroups: []string{"*"},
+				Resources: []string{"*"},
+				Verbs:     []string{"*"},
+			},
+			{
+				NonResourceURLs: []string{"*"},
+				Verbs:           []string{"*"},
+			},
+		},
+	}
+	clusterAdminRole, err := clientset.RbacV1().ClusterRoles().Get(context.TODO(), clusterAdmin, metav1.GetOptions{})
+	if err != nil {
+		clusterAdminRole, err = clientset.RbacV1().ClusterRoles().Create(context.TODO(), adminRole, metav1.CreateOptions{})
+		if err != nil {
+			return "", fmt.Errorf("GenerateServiceAccountToken create admin role failed: %v", err)
+		}
+	}
+
+	clusterRoleBinding := &rbacv1.ClusterRoleBinding{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: bcsClusterRoleBindingName,
+		},
+		Subjects: []rbacv1.Subject{
+			{
+				Kind:      "ServiceAccount",
+				Name:      serviceAccount.Name,
+				Namespace: bcsNamespace,
+				APIGroup:  v1.GroupName,
+			},
+		},
+		RoleRef: rbacv1.RoleRef{
+			Kind:     "ClusterRole",
+			Name:     clusterAdminRole.Name,
+			APIGroup: rbacv1.GroupName,
+		},
+	}
+	if _, err = clientset.RbacV1().ClusterRoleBindings().Create(context.TODO(), clusterRoleBinding,
+		metav1.CreateOptions{}); err != nil && !apierror.IsAlreadyExists(err) {
+		return "", fmt.Errorf("GenerateServiceAccountToken create role bindings failed: %v", err)
+	}
+	secret, err := GetSecretForServiceAccount(context.TODO(), clientset, serviceAccount)
+	if err != nil {
+		return "", fmt.Errorf("GenerateServiceAccountToken get secret for service account failed: %v", err)
+	}
+	if token, ok := secret.Data["token"]; ok {
+		return string(token), nil
+	}
+
+	return "", errs.New("GenerateServiceAccountToken fetch serviceAccountToken failed")
+}
+
+// GetSecretForServiceAccount gets Secret for the provided Service Account
+func GetSecretForServiceAccount(ctx context.Context, clientSet kubernetes.Interface, sa *k8scorev1.ServiceAccount) (
+	*k8scorev1.Secret, error) {
+	secretClient := clientSet.CoreV1().Secrets(sa.Namespace)
+	if len(sa.Secrets) == 0 {
+		return nil, errs.New("GetSecretForServiceAccount  serviceAccount secret is nil")
+	}
+	secret, err := secretClient.Get(ctx, sa.Secrets[0].Name, metav1.GetOptions{})
+	if err != nil {
+		return nil, err
+	}
+	return secret, nil
+}
+
+// UpdateNodeGroupCloudNodeGroupID set nodegroup cloudNodeGroupID
+func UpdateNodeGroupCloudNodeGroupID(nodeGroupID string, newGroup *proto.NodeGroup) error {
+	group, err := GetStorageModel().GetNodeGroup(context.Background(), nodeGroupID)
+	if err != nil {
+		return err
+	}
+
+	group.CloudNodeGroupID = newGroup.CloudNodeGroupID
+	if group.AutoScaling != nil && group.AutoScaling.VpcID == "" {
+		group.AutoScaling.VpcID = newGroup.AutoScaling.VpcID
+	}
+	if group.LaunchTemplate != nil {
+		group.LaunchTemplate.InstanceChargeType = newGroup.LaunchTemplate.InstanceChargeType
+	}
+	err = GetStorageModel().UpdateNodeGroup(context.Background(), group)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
