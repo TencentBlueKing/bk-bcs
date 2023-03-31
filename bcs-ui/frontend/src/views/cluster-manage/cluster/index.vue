@@ -1,7 +1,7 @@
 <template>
   <div class="biz-content">
     <Header>
-      {{$t('集群总览')}}
+      {{$t('集群列表')}}
       <span class="ml5 text-[12px] text-[#979ba5]">
         {{`( ${$t('业务')}: ${curProject.cc_app_name}  ${$t('编排类型')}: ${kindMap[curProject.kind]} )`}}
       </span>

@@ -2,15 +2,17 @@
   <bk-exception type="403">
     <span>{{$t('无项目权限')}}</span>
     <div class="text-subtitle">{{$t('你没有相应项目的访问权限，请前往申请相关项目权限')}}</div>
-    <div style="display: flex;align-items: center; justify-content: center;">
-      <a class="bk-text-button text-wrap" @click="handleGotoIAM">{{$t('去申请')}}</a>
-      <a
-        class="bk-text-button text-wrap"
+    <div class="flex items-center justify-center mt-[24px]">
+      <bk-button theme="primary" @click="handleGotoIAM">{{$t('去申请')}}</bk-button>
+      <bk-button
         v-authority="{
           actionId: 'project_create',
           permCtx: {}
         }"
-        @click="handleGotoProjectManage">{{$t('创建项目')}}</a>
+        class="ml-[8px]"
+        @click="handleGotoProjectManage">
+        {{$t('创建项目')}}
+      </bk-button>
     </div>
   </bk-exception>
 </template>

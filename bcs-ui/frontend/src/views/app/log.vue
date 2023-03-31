@@ -23,7 +23,6 @@
             <div v-if="index === 0" class="new-flag">{{ $t('当前版本') }}</div>
           </div>
         </div>
-        <bk-button class="version-features" text @click="handleShowFeature">{{$t('功能特性指引')}}</bk-button>
       </div>
       <div class="layout-right">
         <div class="content-wraper">
@@ -132,9 +131,6 @@ export default {
     },
     dialogChange(val) {
       if (!val) this.handleClose();
-    },
-    handleShowFeature() {
-      this.$emit('show-feature');
     },
   },
 };

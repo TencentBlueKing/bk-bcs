@@ -79,6 +79,9 @@
                   <a href="javascript:void(0);" class="bk-text-button" @click.stop="del(row, index)">{{$t('删除')}}</a>
                 </template>
               </bk-table-column>
+              <template #empty>
+                <BcsEmptyTableStatus :type="searchEmpty ? 'search-empty' : 'empty'" @clear="handleClearSearchData" />
+              </template>
             </bk-table>
           </div>
         </div>
@@ -154,6 +157,7 @@ export default {
       curShowName: '',
       curShowNamespace: '',
       searchKey: '',
+      searchEmpty: false,
     };
   },
   computed: {
@@ -333,6 +337,8 @@ export default {
           this.renderList.splice(0, this.renderList.length, ...this.renderListTmp);
         }
 
+        this.searchEmpty = this.searchKey.trim() && !this.renderList.length;
+
         this.pageConf.curPage = 1;
         this.initPageConf();
         this.curPageData = this.getDataByPage(this.pageConf.curPage);
@@ -509,6 +515,10 @@ export default {
       this.curShowName = '';
       this.curShowNamespace = '';
       this.isShowSideslider = false;
+    },
+    handleClearSearchData() {
+      this.searchKey = '';
+      this.handleClick();
     },
   },
 };

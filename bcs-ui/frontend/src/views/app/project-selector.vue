@@ -41,6 +41,13 @@
           </template>
           <div
             class="text-center flex-1 cursor-pointer"
+            @click="handleGotoProjectManage">
+            <i class="bcs-icon bcs-icon-apps mr5"></i>
+            {{$t('项目管理')}}
+          </div>
+          <bcs-divider direction="vertical"></bcs-divider>
+          <div
+            class="text-center flex-1 cursor-pointer"
             @click="handleGotoIAM">
             <i class="bcs-icon bcs-icon-apps mr5"></i>
             {{$t('申请权限')}}
@@ -66,7 +73,7 @@ export default defineComponent({
 
     // 申请项目权限
     const handleGotoIAM = () => {
-      window.open(window.BK_IAM_APP_URL);
+      window.open(`${window.BK_IAM_APP_URL}apply-join-user-group?system_id=bk_bcs_app`);
     };
     // 创建项目
     const handleCreateProject = () => {
@@ -93,6 +100,16 @@ export default defineComponent({
       });
       window.location.href = href;
     };
+    // 项目管理
+    const handleGotoProjectManage = () => {
+      if (window.REGION === 'ieod') {
+        window.open(`${window.DEVOPS_HOST}/console/pm`);
+      } else {
+        $router.push({
+          name: 'projectManage',
+        });
+      }
+    };
 
     return {
       showCreateDialog,
@@ -100,6 +117,7 @@ export default defineComponent({
       handleGotoIAM,
       handleCreateProject,
       handleProjectChange,
+      handleGotoProjectManage,
     };
   },
 });
